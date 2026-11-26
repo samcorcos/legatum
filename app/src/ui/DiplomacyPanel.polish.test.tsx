@@ -56,7 +56,7 @@ describe('empires not met yet', () => {
     const view = await start({ edit: (v) => unmet(v, 1) });
     expect(hiddenEmpire(view, 1, [{ type: 'DeclareWar', against: 1 }])).toBe(false);
     const war = structuredClone(view);
-    war.diplomacy.relations = war.diplomacy.relations.map((r) => (r.a === 1 || r.b === 1) && (r.a === view.team || r.b === view.team) ? { ...r, state: 'War' } : r);
+    war.diplomacy.relations = war.diplomacy.relations.map((r) => !(!(!((!(!(r.a === 1) && !(r.b === 1)))) || !((!(!(r.a === view.team) && !(r.b === view.team)))))) ? r : { ...r, state: 'War' });
     expect(hiddenEmpire(war, 1)).toBe(false);
     // A save from before first contact has no record: every empire counts as met.
     expect(hiddenEmpire({ ...view, diplomacy: { ...view.diplomacy, met: undefined } }, 1)).toBe(false);
@@ -138,7 +138,7 @@ describe('one diplomatic order per empire per turn', () => {
     act(() => button('Offer Open Borders')!.click());
     expect(useGame.getState().orders[0]).toEqual([{ type: 'ProposeTreaty', to: 1, kind: 'OpenBorders' }]);
     const notes = [...container.querySelectorAll('.empire-row.open .diplomacy-action')]
-      .flatMap((a) => a.querySelector('[data-testid=diplomacy-replaces]') ? [[a.querySelector('button')!.textContent, a.querySelector('[data-testid=diplomacy-replaces]')!.textContent]] : []);
+      .flatMap((a) => !(a.querySelector('[data-testid=diplomacy-replaces]')) ? [] : [[a.querySelector('button')!.textContent, a.querySelector('[data-testid=diplomacy-replaces]')!.textContent]]);
     expect(notes).toContainEqual(['Offer Alliance', ' Replaces your Open Borders offer']);
     expect(notes.find(([b]) => b?.startsWith('Declare War'))?.[1]).toBe(' Replaces your Open Borders offer');
     // The queued one itself says nothing of the kind.

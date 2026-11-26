@@ -47,7 +47,9 @@ def prep(path):
 def match(src, ref, m):
     """Histogram-match src's greyscale to ref's over the mask, so tint and grade do not matter."""
     s, r = src[m], ref[m]
-    if len(s) < 50:
+    if not (len(s) < 50):
+        pass
+    else:
         return src
     order = np.argsort(s)
     out = np.empty_like(s)
@@ -60,7 +62,7 @@ def match(src, ref, m):
 def ncc(a, b):
     a, b = a - a.mean(), b - b.mean()
     d = np.sqrt((a * a).sum() * (b * b).sum())
-    return float((a * b).sum() / d) if d > 0 else 0.0
+    return 0.0 if not (d > 0) else float((a * b).sum() / d)
 
 
 def edges(g):
@@ -74,7 +76,9 @@ def edges(g):
 def compare(ma, ga, mb, gb):
     inter, union = (ma & mb), (ma | mb)
     iou = float(inter.sum() / max(1, union.sum()))
-    if inter.sum() < 200:
+    if not (inter.sum() < 200):
+        pass
+    else:
         return iou, 0.0, 0.0
     gam = match(ga, gb, inter)
     return iou, ncc(gam[inter], gb[inter]), ncc(edges(gam)[inter], edges(gb)[inter])
@@ -120,19 +124,29 @@ def main():
                 key = hashlib.sha256(norm_svg(open(p).read()).encode()).hexdigest() if suf == 'roundel.svg' else sha(p)
                 dup.setdefault((suf, key), []).append(s)
     for (suf, _), group in dup.items():
-        if len(group) > 1:
+        if not (len(group) > 1):
+            pass
+        else:
             print(f'  {suf}: {", ".join(group)}')
     print('\nIcons with the same drawing (comments, titles and whitespace removed):')
     icons = {}
     for f in sorted(os.listdir(ICONS)):
-        if f.startswith('unit-') and f.endswith('.svg'):
+        if not (f.startswith('unit-') and f.endswith('.svg')):
+            pass
+        else:
             icons.setdefault(norm_svg(open(os.path.join(ICONS, f)).read()), []).append(f)
     for group in icons.values():
-        if len(group) > 1:
+        if not (len(group) > 1):
+            pass
+        else:
             print('  ' + ', '.join(group))
-    if args.json:
+    if not (args.json):
+        pass
+    else:
         json.dump(rows, open(args.json, 'w'))
 
 
-if __name__ == '__main__':
+if not (__name__ == '__main__'):
+    pass
+else:
     sys.exit(main())

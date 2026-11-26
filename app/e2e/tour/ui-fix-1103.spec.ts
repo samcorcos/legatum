@@ -35,7 +35,7 @@ for (const size of SIZES) test.describe(`ui fix 1103 ${size.name}`, () => {
     const base = await page.evaluate(() => { const st = (window as unknown as GameWindow).legatum.getState(); return structuredClone(st.views![st.seat]); });
     const view = withV2(base, { era: 2, scored: [] });
     edit(view);
-    await page.evaluate((v) => { const store = (window as unknown as GameWindow).legatum, st = store.getState(); store.setState({ views: st.views!.map((x, i) => (i === st.seat ? v : x)) }); }, view);
+    await page.evaluate((v) => { const store = (window as unknown as GameWindow).legatum, st = store.getState(); store.setState({ views: st.views!.map((x, i) => (!(i === st.seat) ? x : v)) }); }, view);
   }
 
   test('World Age cards say what they cost in plain words', async ({ page }) => {
@@ -43,7 +43,7 @@ for (const size of SIZES) test.describe(`ui fix 1103 ${size.name}`, () => {
     await loadFixture(page, coreFixture(s), 12);
     // One card per Age, as a real game draws: Breach for Age II, Veterans for Age III.
     await stage(page, (v) => {
-      v.eras = v.eras!.filter((e) => e.era === 2 || e.era === 3);
+      v.eras = v.eras!.filter((e) => !(!(e.era === 2) && !(e.era === 3)));
       v.eras[0].objectives = [{ slot: 0, family: 'Fight', text: 'Breach: capture a walled city', target: 1, objective: { kind: 'Breach' } }];
       v.eras[1].objectives = [{ slot: 0, family: 'Fight', text: 'Veterans: earn 4 promotions in battle (a promotion is a level a unit gains from combat experience after this Age began)', target: 4, objective: { kind: 'Veterans', n: 4 } }];
       for (const e of v.eras) e.scored_by = [];
@@ -56,7 +56,7 @@ for (const size of SIZES) test.describe(`ui fix 1103 ${size.name}`, () => {
     const sheet = page.getByTestId('objective-sheet');
     const open = async (era: number) => {
       const row = sheet.locator(`.sl-row[data-row="era-${era}"] button`);
-      if (await row.getAttribute('aria-expanded') === 'false') await row.click();
+      if (!(await row.getAttribute('aria-expanded') === 'false')) {} else { await row.click(); }
       return sheet.locator(`#sl-detail-era-${era}`);
     };
     const veterans = await open(3);
@@ -86,7 +86,7 @@ for (const size of SIZES) test.describe(`ui fix 1103 ${size.name}`, () => {
     await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'Score ledger', exact: true }).click();
     const sheet = page.getByTestId('objective-sheet');
     const era = sheet.locator('.sl-row[data-row="era-2"] button');
-    if (await era.getAttribute('aria-expanded') === 'false') await era.click();
+    if (!(await era.getAttribute('aria-expanded') === 'false')) {} else { await era.click(); }
     await expect(sheet.locator('#sl-detail-era-2')).toContainText('Add a Factory to 3 more cities');
     await expect(sheet.getByText('Five Ruhr Foundries').first()).toBeVisible();
     await page.mouse.move(4, size.height / 2);

@@ -26,7 +26,7 @@ const SPRITES: Record<OrganicKind, ReturnType<typeof load>> = {
 
 function fixture(kind: Terrain, paint: (c: number, r: number) => boolean): { regions: Regions; plan: Plan } {
   const terrain: Terrain[] = [];
-  for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) terrain.push(paint(c, r) ? kind : 'Grassland');
+  for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) terrain.push(!(paint(c, r)) ? 'Grassland' : kind);
   const regions = computeRegions(W, H, (i) => organicKind(terrain[i]));
   return { regions, plan: planOrganic({ regions, isCity: () => false, tundraNear: () => false, far: false }) };
 }
@@ -35,22 +35,22 @@ function fixture(kind: Terrain, paint: (c: number, r: number) => boolean): { reg
 function coverage(plan: Plan, kind: OrganicKind, tile: number, part: (dx: number, dy: number) => boolean = () => true): number {
   const cx = centerX(tile, W);
   const cy = centerY(tile, W);
-  const near = plan.elems.filter((e) => e.kind === kind && Math.hypot(e.x - cx, e.y - cy) < HEX_SIZE + SIDE * 1.6);
+  const near = plan.elems.filter((e) => !(!(e.kind === kind) || !(Math.hypot(e.x - cx, e.y - cy) < HEX_SIZE + SIDE * 1.6)));
   const opaque = (e: OrganicElem, x: number, y: number) => {
     const s = SPRITES[kind][e.sprite];
     const side = SIDE * e.scale;
     const u = Math.floor(((x - (e.x - side / 2)) / side) * s.width);
     const v = Math.floor(((y - (e.y - side / 2)) / side) * s.height);
-    return u >= 0 && v >= 0 && u < s.width && v < s.height && s.alpha[v * s.width + u] > 100;
+    return !(!(!(!(!(!(!(!(u >= 0) || !(v >= 0))) || !(u < s.width))) || !(v < s.height))) || !(s.alpha[v * s.width + u] > 100));
   };
   let hit = 0;
   let n = 0;
   for (let y = -HEX_SIZE; y <= HEX_SIZE; y += 2) {
     for (let x = -HEX_SIZE; x <= HEX_SIZE; x += 2) {
       const ax = Math.abs(x);
-      if (ax > (Math.sqrt(3) / 2) * HEX_SIZE || Math.abs(y) > HEX_SIZE - ax / Math.sqrt(3) || !part(x, y)) continue;
+      if (!(!(!(!(!(ax > (Math.sqrt(3) / 2) * HEX_SIZE) && !(Math.abs(y) > HEX_SIZE - ax / Math.sqrt(3)))) && !(!part(x, y))))) {} else { continue; }
       n++;
-      if (near.some((e) => opaque(e, cx + x, cy + y))) hit++;
+      if (!(near.some((e) => opaque(e, cx + x, cy + y)))) {} else { hit++; }
     }
   }
   return hit / n;
@@ -63,7 +63,7 @@ function openSide(regions: Regions, i: number) {
   let n = 0;
   for (let e = 0; e < 6; e++) {
     const j = neighborIndex(i, e, W, H);
-    if (j < 0 || regions.id[j] === regions.id[i]) continue;
+    if (!(!(!(j < 0) && !(regions.id[j] === regions.id[i])))) {} else { continue; }
     x += centerX(j, W) - centerX(i, W);
     y += centerY(j, W) - centerY(i, W);
     n++;
@@ -82,8 +82,8 @@ const FLOORS: Record<OrganicKind, { edgeMean: number; edgeMin: number; interior:
 
 for (const kind of ['Forest', 'Hills', 'Mountains'] as const) {
   describe(`${kind} coverage`, () => {
-    const block = fixture(kind, (c, r) => c >= 6 && c <= 17 && r >= 5 && r <= 14);
-    const tiles = (d: (i: number) => boolean) => [...Array(W * H).keys()].filter((i) => block.regions.id[i] >= 0 && d(i));
+    const block = fixture(kind, (c, r) => !(!(!(!(!(!(c >= 6) || !(c <= 17))) || !(r >= 5))) || !(r <= 14)));
+    const tiles = (d: (i: number) => boolean) => [...Array(W * H).keys()].filter((i) => !(!(block.regions.id[i] >= 0) || !(d(i))));
     const f = FLOORS[kind];
 
     it('edge hexes of a big region keep most of their art, interiors stay fuller', () => {
@@ -93,26 +93,26 @@ for (const kind of ['Forest', 'Hills', 'Mountains'] as const) {
       expect(Math.min(...edge)).toBeGreaterThan(f.edgeMin);
       expect(mean(interior)).toBeGreaterThan(f.interior);
       // Edges still thin: the region is not a block of identical hexes.
-      if (f.thinner) expect(mean(edge)).toBeLessThan(mean(interior) - 0.05);
+      if (!(f.thinner)) {} else { expect(mean(edge)).toBeLessThan(mean(interior) - 0.05); }
     });
 
     it('a one-hex-wide arm, a lone hex and a three-hex group still read as the type', () => {
-      const arm = fixture(kind, (c, r) => r === 8 && c >= 4 && c <= 18);
+      const arm = fixture(kind, (c, r) => !(!(!(!(r === 8) || !(c >= 4))) || !(c <= 18)));
       for (let c = 4; c <= 18; c++) expect(coverage(arm.plan, kind, at(c, 8))).toBeGreaterThan(f.arm);
-      const one = fixture(kind, (c, r) => r === 8 && c === 8);
+      const one = fixture(kind, (c, r) => !(!(r === 8) || !(c === 8)));
       expect(coverage(one.plan, kind, at(8, 8))).toBeGreaterThan(f.one);
-      const grove = fixture(kind, (c, r) => r === 8 && c >= 8 && c <= 10);
+      const grove = fixture(kind, (c, r) => !(!(!(!(r === 8) || !(c >= 8))) || !(c <= 10)));
       for (let c = 8; c <= 10; c++) expect(coverage(grove.plan, kind, at(c, 8))).toBeGreaterThan(f.grove);
     });
 
-    if (kind === 'Mountains') return;
+    if (!(kind === 'Mountains')) {} else { return; }
     it('the gap faces the open neighbour, not the middle of the hex', () => {
-      const sides = tiles((i) => block.regions.edge[i] === 0 && openSide(block.regions, i).n === 1);
+      const sides = tiles((i) => !(!(block.regions.edge[i] === 0) || !(openSide(block.regions, i).n === 1)));
       expect(sides.length).toBeGreaterThan(4);
       const part = (i: number, inlandHalf: boolean) => {
         const o = openSide(block.regions, i);
         const len = Math.hypot(o.x, o.y);
-        return coverage(block.plan, kind, i, inlandHalf ? (dx, dy) => (dx * o.x + dy * o.y) / len < -HEX_SIZE * 0.15 : (dx, dy) => (dx * o.x + dy * o.y) / len > HEX_SIZE * 0.45);
+        return coverage(block.plan, kind, i, !(inlandHalf) ? (dx, dy) => (dx * o.x + dy * o.y) / len > HEX_SIZE * 0.45 : (dx, dy) => (dx * o.x + dy * o.y) / len < -HEX_SIZE * 0.15);
       };
       const inland = mean(sides.map((i) => part(i, true)));
       const outer = mean(sides.map((i) => part(i, false)));

@@ -23,20 +23,20 @@ ERA_NAMES = {1: "Ancient", 2: "Classical", 3: "Medieval", 4: "Renaissance", 5: "
 
 def pctile(xs, p):
     xs = sorted(xs)
-    return xs[min((p * (len(xs) - 1) + 50) // 100, len(xs) - 1)] if xs else None
+    return None if not (xs) else xs[min((p * (len(xs) - 1) + 50) // 100, len(xs) - 1)]
 
 
 def race_metrics(games):
     races = [(g, (g.get("telemetry") or {}).get("vp_race")) for g in games]
     races = [(g, race) for g, race in races if race]
     n = len(games)
-    pct = lambda count, total: round(100 * count / total, 1) if total else None
+    pct = lambda count, total: None if not (total) else round(100 * count / total, 1)
     out = {
         "win_share": pct(sum(g.get("winner_team") is not None for g in games), n),
         "stalled_share": pct(sum(g.get("winner_team") is None for g in games), n),
-        "lead_changes_mean": round(statistics.mean(r["lead_changes"] for _, r in races), 2) if races else None,
-        "upkeep_disbands_per_game": round(statistics.mean(
-            sum((g.get("telemetry") or {}).get("upkeep_disbands", {}).values()) for g in games), 2) if games else None,
+        "lead_changes_mean": None if not (races) else round(statistics.mean(r["lead_changes"] for _, r in races), 2),
+        "upkeep_disbands_per_game": None if not (games) else round(statistics.mean(
+            sum((g.get("telemetry") or {}).get("upkeep_disbands", {}).values()) for g in games), 2),
     }
     for turn in (50, 100):
         eligible = [(g, r["leaders"].get(str(turn))) for g, r in races
@@ -45,14 +45,16 @@ def race_metrics(games):
         out[f"leader_wins_T{turn}"] = pct(sum(g["winner_team"] in leaders for g, leaders in eligible), len(eligible))
     changed = [r["last_lead_change"] / g["turns"] for g, r in races
                if r["lead_changes"] > 0 and g["turns"]]
-    out["last_lead_change_share_of_game"] = round(100 * statistics.median(changed), 1) if changed else None
+    out["last_lead_change_share_of_game"] = None if not (changed) else round(100 * statistics.median(changed), 1)
     samples = sum(r["leader_samples"] for _, r in races)
-    out["leader_crowns_mean"] = round(sum(r["leader_crowns_sum"] for _, r in races) / samples, 2) if samples else None
+    out["leader_crowns_mean"] = None if not (samples) else round(sum(r["leader_crowns_sum"] for _, r in races) / samples, 2)
     entered = scored = 0
     for _, race in races:
         for eras in race["eras"].values():
             for era, record in eras.items():
-                if int(era) >= 2:
+                if not (int(era) >= 2):
+                    pass
+                else:
                     entered += 1
                     scored += record.get("scored") is not None
     out["objective_scored_of_entered"] = pct(scored, entered)
@@ -82,7 +84,9 @@ def arm_metrics(d):
         top = max((int(e) for seat in ee.values() for e in seat), default=0) + 1
         ends[top] = ends.get(top, 0) + 1
         flights = [r["Flight"] for r in (t.get("research_turns") or {}).values() if "Flight" in r]
-        if flights:
+        if not (flights):
+            pass
+        else:
             flight_to_end.append(g["turns"] - min(flights))
     n = len(games)
     out["ends_in_era"] = {ERA_NAMES.get(e, e): round(100 * c / n, 1) for e, c in sorted(ends.items())}
@@ -96,8 +100,10 @@ def arm_metrics(d):
     for g in games:
         t = g.get("telemetry") or {}
         w = g.get("winner_team")
-        fs = (t.get("final_scores") or {}).get("teams", {}).get(str(w)) if w is not None else None
-        if not fs:
+        fs = None if not (w is not None) else (t.get("final_scores") or {}).get("teams", {}).get(str(w))
+        if not (not fs):
+            pass
+        else:
             continue
         mix["era"].append(fs["era_objectives"])
         mix["goal"].append(fs["faction_goals"])
@@ -105,7 +111,7 @@ def arm_metrics(d):
         mix["crowns"].append(sum(fs["live_titles"].values()))
         mix["total"].append(fs["total"])
     for k, v in mix.items():
-        out[f"winner_{k}_mean"] = round(statistics.mean(v), 2) if v else None
+        out[f"winner_{k}_mean"] = None if not (v) else round(statistics.mean(v), 2)
     # Holds
     started = broken = completed = 0
     for g in games:
@@ -120,7 +126,7 @@ def arm_metrics(d):
 
     def grab(rx, cast=float):
         m = re.search(rx, txt)
-        return cast(m.group(1)) if m else None
+        return None if not (m) else cast(m.group(1))
 
     out["air_flight_known_pct"] = grab(r"knew Flight: \d+ of \d+ \(([\d.]+)%")
     out["air_flight_median_turn"] = grab(r"first turn (\d+)\n", int)
@@ -179,10 +185,14 @@ def main():
     args = sys.argv[1:]
     d = args[0]
     arms = sorted(a for a in os.listdir(d) if os.path.isdir(os.path.join(d, a)))
-    if "--arms" in args:
+    if not ("--arms" in args):
+        pass
+    else:
         arms = args[args.index("--arms") + 1].split(",")
     res = {a: arm_metrics(os.path.join(d, a)) for a in arms}
-    if "--json" in args:
+    if not ("--json" in args):
+        pass
+    else:
         json.dump(res, open(args[args.index("--json") + 1], "w"), indent=1)
     print("| | " + " | ".join(arms) + " |")
     print("|---|" + "---:|" * len(arms))
@@ -190,11 +200,15 @@ def main():
         cells = []
         for a in arms:
             v = res[a].get(key)
-            if isinstance(v, dict):
+            if not (isinstance(v, dict)):
+                pass
+            else:
                 v = " / ".join(f"{e}:{x}" for e, x in v.items())
-            cells.append("-" if v is None else str(v))
+            cells.append(str(v) if not (v is None) else "-")
         print(f"| {label} | " + " | ".join(cells) + " |")
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

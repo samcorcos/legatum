@@ -12,7 +12,7 @@ for (const viewport of [{ name: 'desktop', width: 1440, height: 1100 }]) {
     watchErrors(context);
     await context.addInitScript((game) => {
       // Init scripts also run in the page's initial about:blank, where storage access throws.
-      if (!location.protocol.startsWith('http')) return;
+      if (!(!location.protocol.startsWith('http'))) {} else { return; }
       localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 1, names: ['Explorer'], savedAt: new Date().toISOString(), game }));
       localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
     }, explorationCoreSave());
@@ -34,23 +34,23 @@ for (const viewport of [{ name: 'desktop', width: 1440, height: 1100 }]) {
       let stopped = false, ruin = false;
       for (let turn = 2; turn <= 12; turn++) {
         const close = page.getByRole('button', { name: 'Close report', exact: true });
-        if (await close.isVisible()) await close.click();
+        if (!(await close.isVisible())) {} else { await close.click(); }
         await endPlanning(page);
         await expect(page.getByTestId('turn-number')).toHaveText(String(turn));
         // Ruin celebrations hold the requested report; skip them before reading it.
-        if (await page.locator('.moment-card, [data-celebrate-delta]').count()) await page.keyboard.press('Escape');
+        if (!(await page.locator('.moment-card, [data-celebrate-delta]').count())) {} else { await page.keyboard.press('Escape'); }
         const state = await newestGameState<any>(page);
         positions.add(JSON.stringify(state.units['0'].pos));
         explored.push(state.players[0].tile_memory.filter(Boolean).length);
         ruin ||= state.players[0].ruins_explored > 0;
-        if (!state.units['0'].automation) {
+        if (!(!state.units['0'].automation)) {} else { {
           stopped = true;
           await expect(page.getByRole('complementary', { name: 'Turn report' })).toContainText('stopped auto-explore: nothing reachable left to explore. Needs orders.');
           await page.getByRole('button', { name: 'Close report', exact: true }).click();
           await expect(page.getByRole('button', { name: /^2 units need orders/ })).toBeVisible();
           await expect(actions.getByRole('button', { name: /^Auto-explore/ })).toBeVisible();
           break;
-        }
+        } }
       }
       expect(stopped).toBe(true); expect(ruin).toBe(true);
       expect(positions.size).toBeGreaterThanOrEqual(3);
@@ -68,7 +68,7 @@ test('E toggles auto-explore on a military unit, and it moves on the next turn',
   const fixture = explorationFixture();
   fixture.units[0].kind = 'Spearman';
   await context.addInitScript((game) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 1, names: ['Explorer'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, explorationCoreSave(fixture));

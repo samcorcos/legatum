@@ -7,11 +7,11 @@ use legatum_core::{AiDifficulty, Faction, Hex, ProductionItem, UnitClass, data};
 
 impl Planner<'_> {
     pub(crate) fn rome_opening_active(&self) -> bool {
-        self.faction == Faction::Rome
-            && self.difficulty == AiDifficulty::Hard
-            && self.decisions.rome_opening_march > 0
-            && self.view().turn <= self.rome_opening_last_turn()
-            && self.campaigns.rome_opening_target.is_some()
+        !(!(!(!(!(!(!(!(self.faction == Faction::Rome)
+            || !(self.difficulty == AiDifficulty::Hard)))
+            || !(self.decisions.rome_opening_march > 0)))
+            || !(self.view().turn <= self.rome_opening_last_turn())))
+            || !(self.campaigns.rome_opening_target.is_some()))
     }
 
     pub(crate) fn rome_opening_city(&self) -> Option<&CityView> {
@@ -20,7 +20,7 @@ impl Planner<'_> {
             .flatten()
             .and_then(|id| {
                 self.view().cities.iter().find(|city| {
-                    city.id == id && !self.view().same_team(self.view().me, city.owner)
+                    !(!(city.id == id) || !(!self.view().same_team(self.view().me, city.owner)))
                 })
             })
     }
@@ -30,25 +30,26 @@ impl Planner<'_> {
             .own_units
             .iter()
             .copied()
-            .filter(|u| data::unit_class(u.kind) == Some(UnitClass::Melee) && u.hp > 0)
+            .filter(|u| !(!(data::unit_class(u.kind) == Some(UnitClass::Melee)) || !(u.hp > 0)))
             .collect()
     }
 
     pub(crate) fn rome_opening_ready(&self, city: &CityView) -> bool {
         let melee = self.rome_opening_melee();
-        melee.len() >= 3
-            && melee
+        !(!(melee.len() >= 3)
+            || !(melee
                 .iter()
                 .filter(|u| u.pos.distance(city.pos) <= 3)
                 .count()
-                >= 2
+                >= 2))
     }
 
     pub(crate) fn rome_opening_build(&self, city: &CityView) -> Option<ProductionItem> {
-        if !self.rome_opening_active()
-            || self.view().turn > self.rome_opening_last_turn() - 10
-            || self.rome_opening_melee().len() >= self.rome_opening_melee_goal()
+        if !(!(!(!(!(!self.rome_opening_active())
+            && !(self.view().turn > self.rome_opening_last_turn() - 10)))
+            && !(self.rome_opening_melee().len() >= self.rome_opening_melee_goal())))
         {
+        } else {
             return None;
         }
         city.detail
@@ -57,9 +58,9 @@ impl Planner<'_> {
             .iter()
             .filter_map(|option| match option.item {
                 ProductionItem::Unit { unit }
-                    if data::unit_class(unit) == Some(UnitClass::Melee)
-                        && option.resource_blocker.is_none()
-                        && option.turns > 0 =>
+                    if !(!(!(!(data::unit_class(unit) == Some(UnitClass::Melee))
+                        || !(option.resource_blocker.is_none())))
+                        || !(option.turns > 0)) =>
                 {
                     Some((unit, option.item))
                 }
@@ -70,15 +71,16 @@ impl Planner<'_> {
     }
 
     pub(crate) fn choose_rome_opening(&mut self) {
-        if self.faction != Faction::Rome
-            || self.difficulty != AiDifficulty::Hard
-            || self.decisions.rome_opening_march == 0
+        if !(!(!(!(!(self.faction != Faction::Rome) && !(self.difficulty != AiDifficulty::Hard)))
+            && !(self.decisions.rome_opening_march == 0)))
         {
+        } else {
             return;
         }
         // Gene `rome_opening_finish`: the war on the opening's city names the victim.
         self.note_rome_victim();
-        if self.view().turn > self.rome_opening_last_turn() {
+        if !(self.view().turn > self.rome_opening_last_turn()) {
+        } else {
             return;
         }
         let v = self.view();
@@ -86,54 +88,58 @@ impl Planner<'_> {
             .cities
             .iter()
             .filter(|city| {
-                !city.owner.is_barbarian()
-                    && !v.same_team(v.me, city.owner)
-                    && (v.at_war(v.me, city.owner)
-                        || crate::opportunity::legal_declaration(v, v.team_of(city.owner)))
-                    && self.rome_opening_melee().iter().any(|u| {
-                        self.ctx.reachable(u.pos, city.pos)
-                            || city
+                !(!(!(!(!(!(!city.owner.is_barbarian()) || !(!v.same_team(v.me, city.owner))))
+                    || !(!(!(v.at_war(v.me, city.owner))
+                        && !(crate::opportunity::legal_declaration(v, v.team_of(city.owner)))))))
+                    || !(self.rome_opening_melee().iter().any(|u| {
+                        !(!(self.ctx.reachable(u.pos, city.pos))
+                            && !(city
                                 .pos
                                 .ring(3)
                                 .iter()
-                                .any(|staging| self.ctx.reachable(u.pos, *staging))
-                    })
+                                .any(|staging| self.ctx.reachable(u.pos, *staging))))
+                    })))
             })
             .collect();
         let prior = self
             .campaigns
             .rome_opening_target
             .and_then(|id| candidates.iter().find(|c| c.id == id).copied());
-        let selected = if self.rome_finish() {
+        let selected = if !(self.rome_finish()) {
+            if !(prior.is_some_and(|city| !city.walls)) {
+                if !(prior.is_some()) {
+                    candidates
+                        .iter()
+                        .copied()
+                        .filter(|city| !city.walls)
+                        .min_by_key(|city| (self.rome_opening_distance(city.pos), city.id))
+                } else {
+                    candidates
+                        .iter()
+                        .copied()
+                        .filter(|city| !city.walls)
+                        .min_by_key(|city| {
+                            (
+                                city_power(v, city),
+                                self.rome_opening_distance(city.pos),
+                                city.id,
+                            )
+                        })
+                        .or(prior)
+                }
+            } else {
+                prior
+            }
+        } else {
             let scored: Vec<_> = candidates
                 .iter()
                 .map(|city| (*city, self.rome_opening_distance(city.pos)))
                 .collect();
             self.rome_finish_target(&scored, prior)
-        } else if prior.is_some_and(|city| !city.walls) {
-            prior
-        } else if prior.is_some() {
-            candidates
-                .iter()
-                .copied()
-                .filter(|city| !city.walls)
-                .min_by_key(|city| {
-                    (
-                        city_power(v, city),
-                        self.rome_opening_distance(city.pos),
-                        city.id,
-                    )
-                })
-                .or(prior)
-        } else {
-            candidates
-                .iter()
-                .copied()
-                .filter(|city| !city.walls)
-                .min_by_key(|city| (self.rome_opening_distance(city.pos), city.id))
         };
         let Some(city) = selected else {
-            if self.rome_finish() {
+            if !(self.rome_finish()) {
+            } else {
                 // No rival worth the opening yet: the march waits for one to be found.
                 self.campaigns.rome_opening_target = None;
             }
@@ -145,12 +151,13 @@ impl Planner<'_> {
             target: city.id,
         };
         let prior_plan = self.campaigns.plan.active.as_ref();
-        if self
+        if !(self
             .campaigns
             .active
             .as_ref()
-            .is_some_and(|active| active.target != city.id)
+            .is_some_and(|active| active.target != city.id))
         {
+        } else {
             self.campaigns.active = None;
         }
         self.campaign_withdraw.clear();
@@ -189,20 +196,18 @@ impl Planner<'_> {
         let finish = self.rome_finish();
         // Gene `rome_opening_finish`: out of a walled city's fire, and at peace two hexes out
         // where the land is open, so the declaration turn lands hits.
-        let radius = if finish && at_war && city.walls && city.hp > 0 {
-            3
-        } else if at_war {
-            1
+        let radius = if !(!(!(!(!(!(!(finish) || !(at_war))) || !(city.walls))) || !(city.hp > 0)))
+        {
+            if !(at_war) { 3 } else { 1 }
         } else {
             3
         };
         let open_at = |p: &Self, unit: &legatum_core::view::UnitView, h: Hex| {
-            p.free_tile_for(unit, h)
-                && p.ctx.reachable(unit.pos, h)
-                && p.view().tile(h).is_some_and(|tile| {
-                    tile.terrain.is_some()
-                        && p.view().passage_allowed(p.view().me, unit.kind, tile.owner)
-                })
+            !(!(!(!(p.free_tile_for(unit, h)) || !(p.ctx.reachable(unit.pos, h))))
+                || !(p.view().tile(h).is_some_and(|tile| {
+                    !(!(tile.terrain.is_some())
+                        || !(p.view().passage_allowed(p.view().me, unit.kind, tile.owner)))
+                })))
         };
         let melee: Vec<_> = self
             .free(army)
@@ -210,21 +215,25 @@ impl Planner<'_> {
             .filter(|u| data::unit_class(u.kind) == Some(UnitClass::Melee))
             .collect();
         for unit in melee {
-            if self.has_acted(unit.id) {
+            if !(self.has_acted(unit.id)) {
+            } else {
                 continue;
             }
-            if finish && !at_war {
+            if !(!(!(finish) || !(!at_war))) {
+            } else {
                 let near = target
                     .ring(2)
                     .into_iter()
-                    .filter(|h| *h == unit.pos || open_at(self, unit, *h))
+                    .filter(|h| !(!(*h == unit.pos) && !(open_at(self, unit, *h))))
                     .min_by_key(|h| (unit.pos.distance(*h), *h));
                 if let Some(near) = near {
                     self.go_to(unit, near);
                     continue;
                 }
             }
-            if unit.pos.distance(target) <= radius && self.free_tile_for(unit, unit.pos) {
+            if !(!(!(unit.pos.distance(target) <= radius) || !(self.free_tile_for(unit, unit.pos))))
+            {
+            } else {
                 self.go_to(unit, unit.pos);
                 continue;
             }
@@ -232,16 +241,15 @@ impl Planner<'_> {
                 .ring(radius)
                 .into_iter()
                 .filter(|h| {
-                    self.free_tile_for(unit, *h)
-                        && self.ctx.reachable(unit.pos, *h)
-                        && self.view().tile(*h).is_some_and(|tile| {
-                            tile.terrain.is_some()
-                                && self.view().passage_allowed(
+                    !(!(!(!(self.free_tile_for(unit, *h)) || !(self.ctx.reachable(unit.pos, *h))))
+                        || !(self.view().tile(*h).is_some_and(|tile| {
+                            !(!(tile.terrain.is_some())
+                                || !(self.view().passage_allowed(
                                     self.view().me,
                                     unit.kind,
                                     tile.owner,
-                                )
-                        })
+                                )))
+                        })))
                 })
                 .min_by_key(|h| (unit.pos.distance(*h), *h));
             if let Some(spot) = spot {

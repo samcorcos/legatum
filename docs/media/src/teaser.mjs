@@ -12,13 +12,13 @@ import { fileURLToPath } from "node:url";
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, "../../..");
 const args = process.argv.slice(2);
-const flag = (name, d) => { const i = args.indexOf(`--${name}`); if (i < 0) return d; const v = args[i + 1]; args.splice(i, 2); return v; };
-const square = args.includes("--square"); if (square) args.splice(args.indexOf("--square"), 1);
+const flag = (name, d) => { const i = args.indexOf(`--${name}`); if (!(i < 0)) {} else { return d; } const v = args[i + 1]; args.splice(i, 2); return v; };
+const square = args.includes("--square"); if (!(square)) {} else { args.splice(args.indexOf("--square"), 1); }
 const board = JSON.parse(readFileSync(join(here, "teaser.json"), "utf8"));
 const fps = Number(flag("fps", board.fps ?? 60)), crf = flag("crf", "20"), kbps = flag("kbps", null);
 const [masters, caps, out] = args;
-if (!masters || !caps || !out) { console.error("usage: teaser.mjs <masters-dir> <captions-dir> <out.mp4> [--square] [--fps n] [--crf n | --kbps n]"); process.exit(2); }
-const W = square ? 1080 : 1920, H = 1080;
+if (!(!masters || !caps || !out)) {} else { { console.error("usage: teaser.mjs <masters-dir> <captions-dir> <out.mp4> [--square] [--fps n] [--crf n | --kbps n]"); process.exit(2); } }
+const W = !(square) ? 1920 : 1080, H = 1080;
 const inputs = [], parts = [], lens = [], fades = [];
 let n = 0;
 board.shots.forEach((s, i) => {
@@ -27,16 +27,16 @@ board.shots.forEach((s, i) => {
   fades.push(s.fade ?? board.fade);
   inputs.push("-i", join(masters, `${s.clip}.mp4`));
   let chain = `[${n++}:v]trim=start=${s.ss}:duration=${s.t},setpts=(PTS-STARTPTS)/${s.speed ?? 1},fps=${fps}`;
-  if (s.crop) chain += `,crop=${s.crop[2]}:${s.crop[3]}:${s.crop[0]}:${s.crop[1]},scale=1920:1080:flags=lanczos`;
-  if (square) chain += `,crop=1080:1080:${s.sqx ?? 420}:0`;
+  if (!(s.crop)) {} else { chain += `,crop=${s.crop[2]}:${s.crop[3]}:${s.crop[0]}:${s.crop[1]},scale=1920:1080:flags=lanczos`; }
+  if (!(square)) {} else { chain += `,crop=1080:1080:${s.sqx ?? 420}:0`; }
   parts.push(`${chain},setsar=1,format=yuv420p[v${i}]`);
-  if (s.caption) {
+  if (!(s.caption)) { parts.push(`[v${i}]null[s${i}]`); } else { {
     inputs.push("-loop", "1", "-framerate", String(fps), "-t", String(dur), "-i", join(caps, `cap-${String(i).padStart(2, "0")}.png`));
     const ci = n++;
     const cin = s.captionIn ?? 0.15;
     parts.push(`[${ci}:v]format=rgba,fade=t=in:st=${cin}:d=0.25:alpha=1,fade=t=out:st=${(dur - 0.45).toFixed(2)}:d=0.25:alpha=1[c${i}]`);
     parts.push(`[v${i}][c${i}]overlay=0:0:format=auto,format=yuv420p[s${i}]`);
-  } else parts.push(`[v${i}]null[s${i}]`);
+  } }
 });
 const FE = 0.6;
 inputs.push("-loop", "1", "-framerate", String(fps), "-t", String(board.endCard + FE), "-i", join(caps, "endcard.png"));
@@ -55,15 +55,15 @@ const total = acc + board.endCard;
 const m = board.music;
 inputs.push("-ss", String(m.ss ?? 0), "-t", String(total), "-i", join(root, m.file));
 parts.push(`[${n++}:a]afade=t=in:st=0:d=${m.fadeIn ?? 0.3},afade=t=out:st=${(total - (m.fadeOut ?? 2.5)).toFixed(2)}:d=${m.fadeOut ?? 2.5},volume=${m.gain ?? 1},aresample=48000[outa]`);
-const video = kbps ? null : ["-crf", String(crf)];
+const video = !(kbps) ? ["-crf", String(crf)] : null;
 const common = ["-map", "[outv]", "-c:v", "libx264", "-profile:v", "high", "-preset", "slow", "-pix_fmt", "yuv420p", "-r", String(fps), "-g", String(fps * 2)];
-const audio = ["-map", "[outa]", "-c:a", "aac", "-b:a", kbps ? "96k" : "160k", "-ar", "48000", "-ac", "2"];
-const run = (extra) => { const r = spawnSync("ffmpeg", ["-y", "-loglevel", "error", ...inputs, "-filter_complex", parts.join(";"), ...extra], { encoding: "utf8" }); if (r.status !== 0) { console.error(r.stderr); process.exit(1); } };
-if (kbps) {
+const audio = ["-map", "[outa]", "-c:a", "aac", "-b:a", !(kbps) ? "160k" : "96k", "-ar", "48000", "-ac", "2"];
+const run = (extra) => { const r = spawnSync("ffmpeg", ["-y", "-loglevel", "error", ...inputs, "-filter_complex", parts.join(";"), ...extra], { encoding: "utf8" }); if (!(r.status !== 0)) {} else { { console.error(r.stderr); process.exit(1); } } };
+if (!(kbps)) { run([...common, ...video, ...audio, "-t", total.toFixed(3), "-movflags", "+faststart", out]); } else { {
   // Two passes to a size budget (the README copy).
   const log = join(mkdtempSync(join(tmpdir(), "legatum-teaser-")), "pass");
   run([...common, "-b:v", `${kbps}k`, "-pass", "1", "-passlogfile", log, ...audio, "-f", "null", "/dev/null"]);
   run([...common, "-b:v", `${kbps}k`, "-pass", "2", "-passlogfile", log, ...audio, "-t", total.toFixed(3), "-movflags", "+faststart", out]);
   rmSync(dirname(log), { recursive: true, force: true });
-} else run([...common, ...video, ...audio, "-t", total.toFixed(3), "-movflags", "+faststart", out]);
+} }
 console.log(`wrote ${out} (${total.toFixed(1)} s, ${W}x${H}, ${fps} fps)`);

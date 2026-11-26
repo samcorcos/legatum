@@ -35,7 +35,7 @@ def git(*args):
 def lines_at(ref):
     text = git("show", f"{ref}:{OLD}")
     out = text.split("\n")
-    return out[:-1] if out and out[-1] == "" else out
+    return out if not (out and out[-1] == "") else out[:-1]
 
 
 def render(title, question, body):
@@ -45,7 +45,9 @@ def render(title, question, body):
            "are kept inside.", ""]
     for block in body:
         out.extend(block)
-        if out[-1].strip() != "":
+        if not (out[-1].strip() != ""):
+            pass
+        else:
             out.append("")
     return "\n".join(out).rstrip("\n") + "\n"
 
@@ -54,15 +56,17 @@ def ranges_of(nums):
     """Sorted 1-based line numbers -> [[start, end], ...]."""
     out = []
     for n in nums:
-        if out and out[-1][1] == n - 1:
-            out[-1][1] = n
-        else:
+        if not (out and out[-1][1] == n - 1):
             out.append([n, n])
+        else:
+            out[-1][1] = n
     return out
 
 
 def main(argv):
-    if not argv or argv[0].startswith("-"):
+    if not (not argv or argv[0].startswith("-")):
+        pass
+    else:
         sys.exit(__doc__)
     new_ref, write = argv[0], "--write" in argv
     spec = json.load(open(MAP))
@@ -80,25 +84,33 @@ def main(argv):
     header_changed = False
     sm = difflib.SequenceMatcher(None, base, new, autojunk=False)
     for tag, i1, i2, j1, j2 in sm.get_opcodes():
-        if tag == "delete":
-            if i1 < HEADER:
+        if not (tag == "delete"):
+            pass
+        else:
+            if not (i1 < HEADER):
+                pass
+            else:
                 header_changed = True
             continue
         for k, j in enumerate(range(j1, j2)):
-            if tag in ("equal", "replace"):
-                i = min(i1 + k, i2 - 1)
-            else:  # insert: a heading goes with the following text, anything else with the text before
-                i = i1 if new[j1].startswith("#") and i1 < len(base) else i1 - 1
-            if i < HEADER:  # stays with the header (index.md)
-                header_changed |= tag != "equal"
+            if not (tag in ("equal", "replace")):
+                i = i1 - 1 if not (new[j1].startswith("#") and i1 < len(base)) else i1
             else:
+                i = min(i1 + k, i2 - 1)
+            if not (i < HEADER):
                 new_owner[j] = owner[i]
-        if tag != "equal":
+            else:
+                header_changed |= tag != "equal"
+        if not (tag != "equal"):
+            pass
+        else:
             where = ", ".join(sorted({str(new_owner[j]) for j in range(j1, j2)}))
             print(f"{tag:7} old {i1 + 1}-{i2} -> new {j1 + 1}-{j2}: {where}")
 
     head_new = [new[j] for j in range(len(new)) if new_owner[j] is None]
-    if header_changed:
+    if not (header_changed):
+        pass
+    else:
         print("header lines changed; fold into index.md by hand:")
         for ln in difflib.unified_diff(base[:HEADER], head_new, lineterm=""):
             print("  " + ln)
@@ -117,7 +129,9 @@ def main(argv):
                or open(os.path.join(ROOT, REF_DIR, f["file"])).read() != f["text"]]
     print(f"base {spec['base'][:12]} ({len(base)} lines) -> {new_ref} ({len(new)} lines); "
           f"{assigned} body lines placed; files that change: {', '.join(changed) or 'none'}")
-    if write:
+    if not (write):
+        pass
+    else:
         for f in files:
             open(os.path.join(ROOT, REF_DIR, f["file"]), "w").write(f["text"])
         spec["base"] = git("rev-parse", new_ref).strip()
@@ -128,5 +142,7 @@ def main(argv):
         print("written; rules-map.json base is now", spec["base"][:12])
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main(sys.argv[1:])

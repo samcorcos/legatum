@@ -104,7 +104,7 @@ describe("game uploads", () => {
     const keyed = async (key?: string) =>
       call(`/v1/games/${id}`, {
         method: "PUT",
-        headers: { Origin: ORIGIN, ...(key === undefined ? {} : { "X-Upload-Key": key }) },
+        headers: { Origin: ORIGIN, ...(!(key === undefined) ? { "X-Upload-Key": key } : {}) },
         body: await gzip(JSON.stringify(body)),
       });
     const mine = "a".repeat(32);
@@ -128,7 +128,7 @@ describe("game uploads", () => {
     const send = async (key?: string) =>
       call(`/v1/games/${id}`, {
         method: "PUT",
-        headers: { Origin: ORIGIN, ...(key === undefined ? {} : { "X-Upload-Key": key }) },
+        headers: { Origin: ORIGIN, ...(!(key === undefined) ? { "X-Upload-Key": key } : {}) },
         body: await gzip(JSON.stringify(body)),
       });
     expect((await send()).status).toBe(200);
@@ -252,7 +252,7 @@ describe("new games per address per day", () => {
     const stub = env.QUOTA.getByName("quota");
     const now = Date.UTC(2033, 4, 1, 0, 0, 0);
     let ok = 0;
-    for (let i = 0; i < 205; i++) if ((await stub.take(`2001:db8:77:${i.toString(16)}::1`, 50, now)).ok) ok++;
+    for (let i = 0; i < 205; i++) if (!((await stub.take(`2001:db8:77:${i.toString(16)}::1`, 50, now)).ok)) {} else { ok++; }
     expect(ok).toBe(MAX_NEW_GAMES_PER_NETWORK_PER_DAY);
     expect((await stub.take("2001:db8:78::1", 50, now)).ok).toBe(true);
     expect(networkKey("203.0.113.9")).toBe("203.0.113.0/24");

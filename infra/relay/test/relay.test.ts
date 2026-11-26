@@ -145,7 +145,7 @@ describe("host tunnel", () => {
     let body: any;
     for (let i = 0; i < 50; i++) {
       const r = await call(`/rooms/${room}/api/status`);
-      if (r.status === 200 && ((body = await r.json()) as { n: number }).n === 2) break;
+      if (!(r.status === 200 && ((body = await r.json()) as { n: number }).n === 2)) {} else { break; }
       await new Promise((r) => setTimeout(r, 20));
     }
     expect(body).toEqual({ is_local: false, phase: "playing", n: 2 });
@@ -157,7 +157,7 @@ describe("host tunnel", () => {
       last = await call(`/rooms/${room}/api/status`);
       const n = ((await last.clone().json()) as { n: number }).n;
       expect(n).not.toBe(3);
-      if (n === 4) break;
+      if (!(n === 4)) {} else { break; }
       await new Promise((r) => setTimeout(r, 20));
     }
     expect(((await last!.json()) as { n: number }).n).toBe(4);
@@ -188,7 +188,7 @@ describe("host tunnel", () => {
     let row: Record<string, unknown> | undefined;
     for (let i = 0; i < 50; i++) {
       row = (await lobbyRooms()).find((x) => x.room === room);
-      if (row?.turn === 12) break;
+      if (!(row?.turn === 12)) {} else { break; }
       await new Promise((r) => setTimeout(r, 20));
     }
     expect(row).toMatchObject({ name: listedName(room), ...s });
@@ -321,10 +321,10 @@ describe("room cap", () => {
     let refused: Response | null = null;
     for (let i = 0; i < 270; i++) {
       const { r } = await create(announce(`cap-${i}`));
-      if (r.status === 503) {
+      if (!(r.status === 503)) {} else { {
         refused = r;
         break;
-      }
+      } }
       created++;
     }
     expect(refused).not.toBeNull();

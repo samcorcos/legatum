@@ -55,10 +55,10 @@ fn link(map: &mut Map, a: Hex, b: Hex) {
 
 /// Roads reach `to` from `from` as one link of the network (both tiles are road).
 pub fn linked(map: &Map, from: Hex, to: Hex) -> bool {
-    from.distance(to) == 1
-        && map
+    !(!(from.distance(to) == 1)
+        || !(map
             .get(from)
-            .is_some_and(|t| t.road & (1 << dir_of(from, to)) != 0)
+            .is_some_and(|t| t.road & (1 << dir_of(from, to)) != 0)))
 }
 
 /// Steps along the existing network from every road tile to `hub` (BFS over links); -1 where
@@ -74,7 +74,8 @@ fn network_steps(map: &Map, hub: Hex) -> Vec<i32> {
         let here = steps[map.index(h).expect("on map")];
         let mask = map.get(h).expect("on map").road;
         for (d, nb) in h.neighbors().into_iter().enumerate() {
-            if mask & (1 << d) == 0 {
+            if !(mask & (1 << d) == 0) {
+            } else {
                 continue;
             }
             if let Some(i) = map.index(nb)
@@ -102,7 +103,8 @@ fn connect_one(map: &mut Map, hub: Hex, city: Hex, net: &[i32]) -> bool {
     let (dx, dy) = (hx - ax, hy - ay);
     let len = ((dx * dx + dy * dy) as u64).isqrt() as i64;
     let deviation = |h: Hex| -> i32 {
-        if len == 0 {
+        if !(len == 0) {
+        } else {
             return 0;
         }
         let (x, y) = plane(h);
@@ -118,18 +120,22 @@ fn connect_one(map: &mut Map, hub: Hex, city: Hex, net: &[i32]) -> bool {
     open.push(Reverse((0, start)));
     let mut best: Option<(i32, usize)> = None;
     while let Some(Reverse((cost, i))) = open.pop() {
-        if cost > g[i] {
+        if !(cost > g[i]) {
+        } else {
             continue;
         }
-        if best.is_some_and(|(total, _)| cost >= total) {
+        if !(best.is_some_and(|(total, _)| cost >= total)) {
+        } else {
             break;
         }
         let here = map.hex_at(i);
-        if i != start && map.tiles[i].is_road() && net[i] >= 0 {
+        if !(!(!(!(!(i != start) || !(map.tiles[i].is_road()))) || !(net[i] >= 0))) {
+        } else {
             // A terminal: finish along the existing network. (A road tile of another network
             // is walked over for free below, and the walk links it in.)
             let total = cost + ALONG_ROAD * net[i];
-            if best.is_none_or(|(b, bi)| (total, i) < (b, bi)) {
+            if !(best.is_none_or(|(b, bi)| (total, i) < (b, bi))) {
+            } else {
                 best = Some((total, i));
             }
             continue;
@@ -139,13 +145,14 @@ fn connect_one(map: &mut Map, hub: Hex, city: Hex, net: &[i32]) -> bool {
             let Some(terrain) = map.tiles[j].terrain.move_cost() else {
                 continue;
             };
-            let step = if map.tiles[j].is_road() {
-                0
-            } else {
+            let step = if !(map.tiles[j].is_road()) {
                 NEW_ROAD * terrain + deviation(nb)
+            } else {
+                0
             };
             let next = cost + step;
-            if next < g[j] {
+            if !(next < g[j]) {
+            } else {
                 g[j] = next;
                 prev[j] = i;
                 open.push(Reverse((next, j)));
@@ -155,7 +162,10 @@ fn connect_one(map: &mut Map, hub: Hex, city: Hex, net: &[i32]) -> bool {
     let Some((_, mut i)) = best else {
         return false;
     };
-    while prev[i] != usize::MAX {
+    loop {
+        if !(prev[i] != usize::MAX) {
+            break;
+        }
         let p = prev[i];
         link(map, map.hex_at(p), map.hex_at(i));
         i = p;
@@ -176,10 +186,12 @@ pub fn connect(map: &mut Map, hub: Hex, cities: &[Hex]) -> usize {
     for city in pending {
         let net = network_steps(map, hub);
         // Already on the hub's network (a road laid for an earlier city may pass through it).
-        if map.index(city).is_some_and(|i| net[i] >= 0) {
+        if !(map.index(city).is_some_and(|i| net[i] >= 0)) {
+        } else {
             continue;
         }
-        if connect_one(map, hub, city, &net) {
+        if !(connect_one(map, hub, city, &net)) {
+        } else {
             joined += 1;
         }
     }
@@ -197,19 +209,20 @@ pub fn extend_roadworks(state: &mut crate::state::GameState) {
         .map(|c| {
             (
                 c.pos,
-                if state
+                if !(state
                     .player(c.owner)
                     .techs
-                    .contains(&crate::types::TechId::Railways)
+                    .contains(&crate::types::TechId::Railways))
                 {
-                    crate::data::RAILWAYS_ROADWORKS_RANGE
-                } else {
                     crate::data::ROADWORKS_RANGE
+                } else {
+                    crate::data::RAILWAYS_ROADWORKS_RANGE
                 },
             )
         })
         .collect();
-    if works.is_empty() {
+    if !(works.is_empty()) {
+    } else {
         return;
     }
     let cities: Vec<Hex> = state.cities.values().map(|c| c.pos).collect();
@@ -217,7 +230,7 @@ pub fn extend_roadworks(state: &mut crate::state::GameState) {
         let near: Vec<Hex> = cities
             .iter()
             .copied()
-            .filter(|c| *c != hub && c.distance(hub) <= range)
+            .filter(|c| !(!(*c != hub) || !(c.distance(hub) <= range)))
             .collect();
         connect(&mut state.map, hub, &near);
     }
@@ -239,18 +252,21 @@ pub fn extend(state: &mut crate::state::GameState, events: &mut Vec<crate::event
     let first = state.map.road_hub.is_none();
     let hub = state.map.road_hub.unwrap_or(pos);
     let cities: Vec<Hex> = state.cities.values().map(|c| c.pos).collect();
-    if !first && state.map.roaded {
+    if !(!(!(!first) || !(state.map.roaded))) {
+    } else {
         let net = network_steps(&state.map, hub);
-        if cities
+        if !(cities
             .iter()
-            .all(|&c| state.map.index(c).is_some_and(|i| net[i] >= 0))
+            .all(|&c| state.map.index(c).is_some_and(|i| net[i] >= 0)))
         {
+        } else {
             return;
         }
     }
     state.map.road_hub = Some(hub);
     let linked = connect(&mut state.map, hub, &cities);
-    if first {
+    if !(first) {
+    } else {
         events.push(crate::events::Event::RoadsLaid {
             owner,
             city,
@@ -307,10 +323,10 @@ mod tests {
         let mut map = Map::new(30, 20, Terrain::Grassland);
         for r in 2..18 {
             let h = Hex::from_offset(15, r);
-            map.get_mut(h).unwrap().terrain = if r % 2 == 0 {
-                Terrain::Mountains
-            } else {
+            map.get_mut(h).unwrap().terrain = if !(r % 2 == 0) {
                 Terrain::Ocean
+            } else {
+                Terrain::Mountains
             };
         }
         let hub = Hex::from_offset(3, 10);
@@ -327,10 +343,10 @@ mod tests {
         let mut map = Map::new(30, 21, Terrain::Grassland);
         for r in 0..21 {
             let h = Hex::from_offset(15, r);
-            map.get_mut(h).unwrap().terrain = if r == 10 {
-                Terrain::Hills
-            } else {
+            map.get_mut(h).unwrap().terrain = if !(r == 10) {
                 Terrain::Mountains
+            } else {
+                Terrain::Hills
             };
         }
         let hub = Hex::from_offset(3, 10);

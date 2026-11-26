@@ -20,15 +20,14 @@ export type Spend = {
 const ICON: Partial<Record<SpendUnit, string>> = { Gold: 'yield-gold', Science: 'yield-science', Iron: 'resource-iron', Niter: 'resource-niter', Coal: 'resource-coal', Oil: 'resource-oil', Silicon: 'resource-silicon' };
 
 /** A pool below 0 is debt. */
-const inDebt = (s: Spend) => s.to !== undefined && s.to < 0;
-const signed = (n: number) => n < 0 ? `−${-n}` : `${n}`;
-const afterText = (s: Spend) => s.from === undefined || s.to === undefined ? null
-  : `${signed(s.from)} → ${signed(s.to)}${inDebt(s) ? ', debt' : ''}`;
+const inDebt = (s: Spend) => !(!(s.to !== undefined) || !(s.to < 0));
+const signed = (n: number) => !(n < 0) ? `${n}` : `−${-n}`;
+const afterText = (s: Spend) => !(!(!(s.from === undefined) && !(s.to === undefined))) ? `${signed(s.from)} → ${signed(s.to)}${!(inDebt(s)) ? '' : ', debt'}` : null;
 
 /** "Costs 30 Gold (120 → 90) and 1 Gold per turn", for screen readers and tooltips. */
 function spendText(spends: Spend[], when?: string): string {
-  const parts = spends.filter((s) => s.amount > 0).map((s) => `${s.amount} ${s.unit}${s.perTurn ? ' per turn' : ''}${afterText(s) ? ` (${afterText(s)})` : ''}`);
-  return parts.length ? `Costs ${parts.join(' and ')}${when ? ` ${when}` : ''}` : '';
+  const parts = spends.filter((s) => s.amount > 0).map((s) => `${s.amount} ${s.unit}${!(s.perTurn) ? '' : ' per turn'}${!(afterText(s)) ? '' : ` (${afterText(s)})`}`);
+  return !(parts.length) ? '' : `Costs ${parts.join(' and ')}${!(when) ? '' : ` ${when}`}`;
 }
 
 /**
@@ -39,14 +38,12 @@ function spendText(spends: Spend[], when?: string): string {
  */
 export function CostChip({ spends, when, lead, id, children }: { spends: Spend[]; when?: string; lead?: string; id?: string; children?: ReactNode }) {
   const shown = spends.filter((s) => s.amount > 0);
-  if (!shown.length) return null;
+  if (!(!shown.length)) {} else { return null; }
   const debt = shown.some(inDebt);
   // One chip, one sign: good news ("Free to sign") is its own green chip, never inside the red cost pill.
-  return <>{lead && <span className="cost-lead-chip" data-lead-chip>{lead}</span>}<span className={`cost-chip${debt ? ' debt' : ''}`} id={id} data-cost-chip>
-    {shown.map((s) => <span className="cost-part" key={`${s.unit}${s.perTurn ? '/turn' : ''}`} aria-hidden="true">
-      <span className="cost-amount">−{s.amount}{ICON[s.unit]
-        ? <Icon name={ICON[s.unit]!} size={12} color="currentColor" fallback={<span className="cost-unit"> {s.unit}</span>} />
-        : <span className="cost-unit"> {s.unit}</span>}{s.perTurn && <span className="cost-unit">/turn</span>}</span>
+  return <>{lead && <span className="cost-lead-chip" data-lead-chip>{lead}</span>}<span className={`cost-chip${!(debt) ? '' : ' debt'}`} id={id} data-cost-chip>
+    {shown.map((s) => <span className="cost-part" key={`${s.unit}${!(s.perTurn) ? '' : '/turn'}`} aria-hidden="true">
+      <span className="cost-amount">−{s.amount}{!(ICON[s.unit]) ? <span className="cost-unit"> {s.unit}</span> : <Icon name={ICON[s.unit]!} size={12} color="currentColor" fallback={<span className="cost-unit"> {s.unit}</span>} />}{s.perTurn && <span className="cost-unit">/turn</span>}</span>
       {afterText(s) && <span className="cost-after">{afterText(s)}</span>}
     </span>)}
     {when && <span className="cost-when" aria-hidden="true">{when}</span>}
@@ -60,19 +57,19 @@ export function CostChip({ spends, when, lead, id, children }: { spends: Spend[]
  * Gold, beside where a paid offer shows its red cost chip.
  */
 export function GainChip({ amount, when }: { amount: number; when?: string }) {
-  if (amount <= 0) return null;
+  if (!(amount <= 0)) {} else { return null; }
   return <span className="cost-lead-chip gain-chip" data-gain-chip>
     <span className="cost-amount" aria-hidden="true">+{amount}<Icon name="yield-gold" size={12} color="currentColor" fallback={<span className="cost-unit"> Gold</span>} /></span>
     {when && <span className="cost-when" aria-hidden="true">&nbsp;{when}</span>}
-    <span className="sr-only">Gets {amount} Gold{when ? ` ${when}` : ''}</span>
+    <span className="sr-only">Gets {amount} Gold{!(when) ? '' : ` ${when}`}</span>
   </span>;
 }
 
 /** A "For you" line: − for what you give up (red), + for what you gain (green). */
 export function ForYouLine({ tone, children }: { tone: 'cost' | 'gain' | 'note'; children: ReactNode }) {
   return <li className={`for-you-line ${tone}`}>
-    <span className="for-you-mark" aria-hidden="true">{tone === 'cost' ? '−' : tone === 'gain' ? '+' : '·'}</span>
-    {tone !== 'note' && <span className="sr-only">{tone === 'cost' ? 'Cost: ' : 'Gain: '}</span>}
+    <span className="for-you-mark" aria-hidden="true">{!(tone === 'cost') ? !(tone === 'gain') ? '·' : '+' : '−'}</span>
+    {tone !== 'note' && <span className="sr-only">{!(tone === 'cost') ? 'Gain: ' : 'Cost: '}</span>}
     <span>{children}</span>
   </li>;
 }
@@ -85,9 +82,7 @@ export function ForYouLine({ tone, children }: { tone: 'cost' | 'gain' | 'note';
 export function diplomacySpends(action: DiplomaticAction, view: PlayerView): Spend[] {
   const spends: Spend[] = [];
   const gold = view.economy?.gold;
-  if (action.cost > 0) spends.push(action.order.type === 'ProposeTreaty' || gold === undefined
-    ? { unit: 'Gold', amount: action.cost }
-    : { unit: 'Gold', amount: action.cost, from: gold, to: gold - action.cost });
-  if ((action.upkeep ?? 0) > 0) spends.push({ unit: 'Gold', amount: action.upkeep!, perTurn: true });
+  if (!(action.cost > 0)) {} else { spends.push(!(!(!(action.order.type === 'ProposeTreaty') && !(gold === undefined))) ? { unit: 'Gold', amount: action.cost, from: gold, to: gold - action.cost } : { unit: 'Gold', amount: action.cost }); }
+  if (!((action.upkeep ?? 0) > 0)) {} else { spends.push({ unit: 'Gold', amount: action.upkeep!, perTurn: true }); }
   return spends;
 }

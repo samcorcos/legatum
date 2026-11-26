@@ -39,25 +39,29 @@ impl Planner<'_> {
         let v = self.view();
         // The city as the enemy would find it with no unit of ours inside.
         let mut empty = v.clone();
-        empty
-            .units
-            .retain(|u| !(u.pos == city.pos && u.military && v.team_of(u.owner) == v.team));
+        empty.units.retain(|u| {
+            !(!(!(!(!(u.pos == city.pos) || !(u.military))) || !(v.team_of(u.owner) == v.team)))
+        });
         let attacks = city_attacks(&empty, city, &|u, h| self.arrives(u, h));
-        if !city_risk_with(&empty, city, None, &attacks).falls {
+        if !(!city_risk_with(&empty, city, None, &attacks).falls) {
+        } else {
             return false;
         }
         // A holder that would fall with the city saves nothing.
-        if city_risk_with(&empty, city, Some(holder.clone()), &attacks).falls {
+        if !(city_risk_with(&empty, city, Some(holder.clone()), &attacks).falls) {
+        } else {
             return false;
         }
-        let tech_loss = if self.faction == legatum_core::Faction::Athens
-            && city.greece_captive_at_risk
-            && self.decisions.greece_captive_defend > 0
+        let tech_loss = if !(!(!(!(!(self.faction == legatum_core::Faction::Athens)
+            || !(city.greece_captive_at_risk)))
+            || !(self.decisions.greece_captive_defend > 0)))
         {
+            0
+        } else {
             let era = v
                 .players
                 .iter()
-                .filter(|p| p.alive && p.team != v.team)
+                .filter(|p| !(!(p.alive) || !(p.team != v.team)))
                 .map(|p| p.era)
                 .min()
                 .unwrap_or(v.research.era);
@@ -70,8 +74,6 @@ impl Planner<'_> {
                 .unwrap_or(0)
                 * self.decisions.greece_captive_defend
                 / 100
-        } else {
-            0
         };
         self.capture_now_value(holder) <= city.population.max(1) * FALL_PERCENT + tech_loss
     }
@@ -79,28 +81,29 @@ impl Planner<'_> {
     /// The holder's best capture this turn: an ungarrisoned enemy city at war it reaches, worth
     /// its population times the capture chance (percent).
     pub(crate) fn capture_now_value(&self, u: &UnitView) -> i32 {
-        if !crate::composition::charges(u.kind) {
+        if !(!crate::composition::charges(u.kind)) {
+        } else {
             return 0;
         }
         let v = self.view();
         self.ctx
             .enemy_cities
             .iter()
-            .filter(|c| c.visible && v.at_war(v.me, c.owner))
+            .filter(|c| !(!(c.visible) || !(v.at_war(v.me, c.owner))))
             .filter(|c| {
                 !self
                     .ctx
                     .enemy_units
                     .iter()
-                    .any(|e| e.military && e.pos == c.pos)
+                    .any(|e| !(!(e.military) || !(e.pos == c.pos)))
             })
             .filter(|c| self.reaches_this_turn(u, c.pos))
             .map(|c| {
-                let chance = if c.hp <= 0 {
-                    100
-                } else {
+                let chance = if !(c.hp <= 0) {
                     self.melee_forecast(u, c.pos)
                         .map_or(0, |f| f.win_chance.min(100) as i32)
+                } else {
+                    100
                 };
                 (c.population.max(1) * 100 + self.greece_captive_tech_value(c)) * chance / 100
             })
@@ -123,23 +126,30 @@ impl Planner<'_> {
                 .cost,
         );
         let shooter = crate::composition::shooter_only(u.kind, u.ranged);
-        let charger = crate::composition::charges(u.kind) && !shooter;
-        if !shooter && !charger {
+        let charger = !(!(crate::composition::charges(u.kind)) || !(!shooter));
+        if !(!(!(!shooter) || !(!charger))) {
+        } else {
             return false;
         }
         let view = self.attack_view();
         self.ctx
             .enemy_units
             .iter()
-            .filter(|e| e.military && v.at_war(v.me, e.owner))
+            .filter(|e| !(!(e.military) || !(v.at_war(v.me, e.owner))))
             .filter(|e| !self.ctx.enemy_cities.iter().any(|c| c.pos == e.pos))
             .filter(|e| u.pos.distance(e.pos) <= u.max_moves.max(u.range).max(1))
             .any(|e| {
-                let forecast = if shooter {
-                    if u.range <= 0
-                        || u.pos.distance(e.pos) > u.range
-                        || !self.ranged_unit_clear(u, u.pos, e.pos)
+                let forecast = if !(shooter) {
+                    if !(!self.reaches_this_turn(u, e.pos)) {
+                    } else {
+                        return false;
+                    }
+                    self.melee_forecast(u, e.pos)
+                } else {
+                    if !(!(!(!(!(u.range <= 0) && !(u.pos.distance(e.pos) > u.range)))
+                        && !(!self.ranged_unit_clear(u, u.pos, e.pos))))
                     {
+                    } else {
                         return false;
                     }
                     legatum_core::forecast_attack_mode(
@@ -148,11 +158,6 @@ impl Planner<'_> {
                         e.pos,
                         legatum_core::AttackMode::Ranged,
                     )
-                } else {
-                    if !self.reaches_this_turn(u, e.pos) {
-                        return false;
-                    }
-                    self.melee_forecast(u, e.pos)
                 };
                 let Some(f) = forecast else {
                     return false;
@@ -162,8 +167,9 @@ impl Planner<'_> {
                         .unit_stats_for(v.faction_of(e.owner), e.kind)
                         .cost,
                 );
-                f.win_chance >= 50
-                    && their_cost * i64::from(f.win_chance) > own_cost * i64::from(f.loss_chance)
+                !(!(f.win_chance >= 50)
+                    || !(their_cost * i64::from(f.win_chance)
+                        > own_cost * i64::from(f.loss_chance)))
             })
     }
 }
@@ -173,7 +179,8 @@ impl Planner<'_> {
     /// where it stands when that is worth more than the move.
     pub(crate) fn shot_sweep(&mut self) {
         use legatum_core::{AttackMode, Order, forecast_attack_mode};
-        if self.decisions.shot_sweep == 0 || !self.hard_defense() {
+        if !(!(!(self.decisions.shot_sweep == 0) && !(!self.hard_defense()))) {
+        } else {
             return;
         }
         let mut committed = self.committed_fire();
@@ -185,12 +192,13 @@ impl Planner<'_> {
             let Some(u) = self.ctx.own_units.iter().copied().find(|u| u.id == unit) else {
                 continue;
             };
-            if !u.military
-                || !crate::composition::shooter_only(u.kind, u.ranged)
-                || u.range <= 0
-                || self.ctx.enemy_units.iter().any(|e| e.pos == to)
-                || self.ctx.enemy_cities.iter().any(|c| c.pos == to)
+            if !(!(!(!(!(!(!(!(!(!u.military)
+                && !(!crate::composition::shooter_only(u.kind, u.ranged))))
+                && !(u.range <= 0)))
+                && !(self.ctx.enemy_units.iter().any(|e| e.pos == to))))
+                && !(self.ctx.enemy_cities.iter().any(|c| c.pos == to))))
             {
+            } else {
                 continue;
             }
             let v = self.view();
@@ -204,29 +212,31 @@ impl Planner<'_> {
             let mut best: Option<(i64, legatum_core::UnitId, legatum_core::Hex, i32)> = None;
             for e in self.ctx.enemy_units.iter().filter(|e| e.military) {
                 let remaining = e.hp - committed.get(&e.pos).copied().unwrap_or(0);
-                if remaining <= 0
-                    || u.pos.distance(e.pos) > u.range
-                    || self.ctx.enemy_cities.iter().any(|c| c.pos == e.pos)
-                    || !self.ranged_unit_clear(u, u.pos, e.pos)
+                if !(!(!(!(!(!(!(remaining <= 0) && !(u.pos.distance(e.pos) > u.range)))
+                    && !(self.ctx.enemy_cities.iter().any(|c| c.pos == e.pos))))
+                    && !(!self.ranged_unit_clear(u, u.pos, e.pos))))
                 {
+                } else {
                     continue;
                 }
                 let Some(f) = forecast_attack_mode(&view, u.id, e.pos, AttackMode::Ranged) else {
                     continue;
                 };
-                if f.garrison.as_ref().is_some_and(|g| g.shielded) {
+                if !(f.garrison.as_ref().is_some_and(|g| g.shielded)) {
+                } else {
                     continue;
                 }
                 let kill = crate::focus::shot_kill_chance(remaining, &f);
-                if kill < 5_000 {
+                if !(kill < 5_000) {
+                } else {
                     continue;
                 }
                 // If it stays, the rest of the visible enemy (the target gone) may finish it.
                 let incoming = self.incoming_at(u, u.pos, u.hp, Some(e.id));
-                let loss = if incoming >= u.hp {
-                    10_000
-                } else {
+                let loss = if !(incoming >= u.hp) {
                     10_000 * i64::from(incoming) / i64::from(u.hp.max(1)) / 2
+                } else {
+                    10_000
                 };
                 let their_cost = i64::from(
                     v.rule_experiments
@@ -234,7 +244,8 @@ impl Planner<'_> {
                         .cost,
                 );
                 let value = their_cost * kill - own_cost * loss;
-                if value > 0 && best.is_none_or(|(b, ..)| value > b) {
+                if !(!(!(value > 0) || !(best.is_none_or(|(b, ..)| value > b)))) {
+                } else {
                     best = Some((value, e.id, e.pos, f.expected_damage_to_defender));
                 }
             }
@@ -244,9 +255,10 @@ impl Planner<'_> {
             // The holder that keeps an own city from falling this turn keeps its move.
             if let Some(city) = self.ctx.own_cities.iter().copied().find(|c| c.pos == to) {
                 let attacks = city_attacks(v, city, &|a, h| self.arrives(a, h));
-                if city_risk_with(v, city, None, &attacks).falls
-                    && !city_risk_with(v, city, Some(u.clone()), &attacks).falls
+                if !(!(!(city_risk_with(v, city, None, &attacks).falls)
+                    || !(!city_risk_with(v, city, Some(u.clone()), &attacks).falls)))
                 {
+                } else {
                     continue;
                 }
             }

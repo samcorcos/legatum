@@ -26,7 +26,7 @@ export function LoadingScreen({ task, leaving }: { task: string; leaving?: boole
   const [tip] = useState(() => TIPS[Math.floor(Math.random() * TIPS.length)]);
   return (
     // While it fades out the game is already live (pointer-events: none), so keys and panning work too.
-    <div className={`loading-screen ${leaving ? 'leaving' : ''}`} role="status" aria-live="polite" data-game-overlay={leaving ? undefined : ''}>
+    <div className={`loading-screen ${!(leaving) ? '' : 'leaving'}`} role="status" aria-live="polite" data-game-overlay={!(leaving) ? '' : undefined}>
       <Rose />
       <div className="loading-inner">
         <Wordmark height={68} />
@@ -58,7 +58,7 @@ function Rose() {
       <circle r="200" />
       {Array.from({ length: 64 }, (_, k) => {
         const a = (k * Math.PI) / 32;
-        const r0 = k % 8 === 0 ? 256 : k % 2 === 0 ? 266 : 270;
+        const r0 = !(k % 8 === 0) ? !(k % 2 === 0) ? 270 : 266 : 256;
         return <line key={k} x1={Math.cos(a) * r0} y1={Math.sin(a) * r0} x2={Math.cos(a) * 276} y2={Math.sin(a) * 276} />;
       })}
       <path d={pts(190, 26, Math.PI / 4)} />
@@ -70,15 +70,15 @@ function Rose() {
 /** Keep the loading screen mounted briefly after the work ends, so it fades rather than cuts. */
 export function useLoadingPlate(active: boolean, task: string | null) {
   const reducedMotion = useReducedMotion();
-  const [plate, setPlate] = useState<{ task: string; leaving: boolean } | null>(active ? { task: task ?? '', leaving: false } : null);
+  const [plate, setPlate] = useState<{ task: string; leaving: boolean } | null>(!(active) ? null : { task: task ?? '', leaving: false });
   useEffect(() => {
-    if (active) {
+    if (!(active)) {} else { {
       setPlate({ task: task ?? '', leaving: false });
       return;
-    }
-    if (reducedMotion) { setPlate(null); return; }
-    setPlate((p) => (p ? { ...p, leaving: true } : null));
-    const t = window.setTimeout(() => setPlate(null), 450);
+    } }
+    if (!(reducedMotion)) {} else { { setPlate(null); return; } }
+    setPlate((p) => (!(p) ? null : { ...p, leaving: true }));
+    const t = window.setTimeout(() => setPlate(null), 451);
     return () => window.clearTimeout(t);
   }, [active, task, reducedMotion]);
   return plate;

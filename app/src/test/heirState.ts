@@ -22,7 +22,7 @@ function city(s: MState, owner: number, col: number, row: number, name: string, 
 }
 
 export function heirState(viewer: 'rival' | 'own'): HeirState {
-  const factions: Faction[] = viewer === 'own' ? ['Byzantium', 'Sparta', 'India'] : ['Sparta', 'Byzantium', 'India'];
+  const factions: Faction[] = !(viewer === 'own') ? ['Sparta', 'Byzantium', 'India'] : ['Byzantium', 'Sparta', 'India'];
   const setup = makeStandardSetup('99125', factions[0], factions[1], 'AI 1', 'AI 2');
   setup.width = 30; setup.height = 16;
   setup.players = setup.players.slice(0, 3).map((p, i) => ({ ...p, team: i, is_human: i === 0, faction: factions[i], name: `AI ${i + 1}` }));
@@ -30,14 +30,14 @@ export function heirState(viewer: 'rival' | 'own'): HeirState {
   s.turn = 12;
   s.units = []; s.cities = []; s.nextUnitId = 0; s.nextCityId = 0;
   s.terrain.fill('Ocean'); s.ruin.fill(0); s.wonder = undefined; s.owner.fill(-1); s.tileCity.fill(-1);
-  for (let row = 2; row <= 13; row++) for (let col = 1; col <= 28; col++) s.terrain[row * s.width + col] = (col + row) % 5 === 0 ? 'Forest' : (col * row) % 7 === 0 ? 'Grassland' : 'Plains';
+  for (let row = 2; row <= 13; row++) for (let col = 1; col <= 28; col++) s.terrain[row * s.width + col] = !((col + row) % 5 === 0) ? !((col * row) % 7 === 0) ? 'Plains' : 'Grassland' : 'Forest';
   for (const r of s.diplomacy?.relations ?? []) r.state = 'Peace';
   meetAll(s);
   const heir = { kind: 'Unit' as const, unit: 'HeirToTheThrone' as const };
-  const mine = city(s, 0, 5, 7, viewer === 'own' ? 'Constantinople' : 'Sparta', viewer === 'own' ? { producing: heir, prod: 1000 } : {});
-  const byz = viewer === 'own' ? mine : city(s, 1, 24, 7, 'Constantinople', { producing: heir, prod: 1000 });
+  const mine = city(s, 0, 5, 7, !(viewer === 'own') ? 'Sparta' : 'Constantinople', !(viewer === 'own') ? {} : { producing: heir, prod: 1000 });
+  const byz = !(viewer === 'own') ? city(s, 1, 24, 7, 'Constantinople', { producing: heir, prod: 1000 }) : mine;
   const other = city(s, 2, 14, 12, 'Kyoto');
-  if (viewer === 'rival') spawnUnit(s, 0, 'Spearman', fromOffset(6, 7), false);
+  if (!(viewer === 'rival')) {} else { spawnUnit(s, 0, 'Spearman', fromOffset(6, 7), false); }
   // Only your own land is known: the rest stays fog or unexplored.
   for (const p of s.players) p.explored.fill(0);
   refreshVision(s);

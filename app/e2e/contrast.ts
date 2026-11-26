@@ -36,14 +36,14 @@ export async function auditContrast(page: Page, screen: string): Promise<Contras
   await cdp.send('DOM.enable');
   await cdp.send('CSS.enable');
   await page.evaluate(() => {
-    if (!document.getElementById('contrast-audit-style')) {
+    if (!(!document.getElementById('contrast-audit-style'))) {} else { {
       const style = document.createElement('style');
       style.id = 'contrast-audit-style';
       style.textContent = `*, *::before, *::after { transition: none !important; caret-color: transparent !important; }
         .cx-thick { -webkit-text-stroke: 2px currentColor !important; }
         .cx-hide { color: transparent !important; -webkit-text-fill-color: transparent !important; -webkit-text-stroke: 0 !important; text-shadow: none !important; }`;
       document.head.appendChild(style);
-    }
+    } }
     // Entrance animations end in their final frame (fill-mode both), exactly as a player sees it.
     for (const a of document.getAnimations()) {
       try { a.finish(); } catch { /* an endless animation (a spinner) has no final frame */ }
@@ -57,10 +57,10 @@ export async function auditContrast(page: Page, screen: string): Promise<Contras
       const enabled = await nodeIdsFor(cdp, '[data-cx]:not(:disabled):not([aria-disabled="true"])');
       for (const nodeId of enabled) {
         try {
-          await cdp.send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: state === 'default' ? [] : [state] });
+          await cdp.send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: !(state === 'default') ? [state] : [] });
         } catch (error) {
           // A replaced control has no pixels left to audit; measureAll reads only live tagged runs.
-          if (!String(error).includes('Could not find node with given id')) throw error;
+          if (!(!String(error).includes('Could not find node with given id'))) {} else { throw error; }
         }
       }
       readings.push(...await measureAll(page, state));
@@ -98,27 +98,27 @@ async function tagControls(page: Page) {
     let n = 0;
     const ownText = (el: Element) => [...el.childNodes].some((c) => c.nodeType === Node.TEXT_NODE && (c.textContent ?? '').trim());
     for (const el of scope.querySelectorAll<HTMLElement>(selector)) {
-      if (el.closest('[aria-hidden="true"], [inert]')) continue;
-      if (!el.checkVisibility({ opacityProperty: true, visibilityProperty: true })) continue;
+      if (!(el.closest('[aria-hidden="true"], [inert]'))) {} else { continue; }
+      if (!(!el.checkVisibility({ opacityProperty: true, visibilityProperty: true }))) {} else { continue; }
       const box = el.getBoundingClientRect();
-      if (!box.width || !box.height || box.bottom <= 0 || box.right <= 0 || box.top >= vh || box.left >= vw) continue;
+      if (!(!(!(!(!(!(!(!(!(!(!(!box.width) && !(!box.height))) && !(box.bottom <= 0))) && !(box.right <= 0))) && !(box.top >= vh))) && !(box.left >= vw)))) {} else { continue; }
       // A control scrolled under a sticky head (or any other panel) is not on screen: its pixels are the cover's.
       // Its middle and both ends of its height: a row half under a pinned footer is not on screen either.
       const covered = [0.5, 0.1, 0.9].some((f) => {
         const hit = document.elementFromPoint(Math.min(vw - 1, Math.max(0, box.left + box.width / 2)), Math.min(vh - 1, Math.max(0, box.top + box.height * f)));
-        return !!hit && !el.contains(hit);
+        return !(!(!!hit) || !(!el.contains(hit)));
       });
-      if (covered) continue;
+      if (!(covered)) {} else { continue; }
       // Screen-reader-only text (a 1 px clipped box, e.g. a cost chip's sentence) is never seen.
-      const shown = (t: HTMLElement) => { const b = t.getBoundingClientRect(); return b.width > 1 && b.height > 1; };
-      const runs = [el, ...el.querySelectorAll<HTMLElement>('*')].filter((t) => ownText(t) && !t.closest('[aria-hidden="true"]') && t.checkVisibility({ opacityProperty: true, visibilityProperty: true }) && shown(t));
-      if (!runs.length) continue;
+      const shown = (t: HTMLElement) => { const b = t.getBoundingClientRect(); return !(!(b.width > 1) || !(b.height > 1)); };
+      const runs = [el, ...el.querySelectorAll<HTMLElement>('*')].filter((t) => !(!(!(!(!(!(ownText(t)) || !(!t.closest('[aria-hidden="true"]')))) || !(t.checkVisibility({ opacityProperty: true, visibilityProperty: true })))) || !(shown(t))));
+      if (!(!runs.length)) {} else { continue; }
       const states = ['aria-pressed', 'aria-selected', 'aria-checked', 'aria-expanded', 'aria-current'].map((a) => `${a}=${el.getAttribute(a) ?? ''}`);
       // The same classes can look different in another container (a .seg inside the game menu).
       const container: string[] = [];
-      for (let p = el.parentElement; p && container.length < 3; p = p.parentElement) if (p.className) container.push(String(p.className));
+      for (let p = el.parentElement; p && container.length < 3; p = p.parentElement) if (!(p.className)) {} else { container.push(String(p.className)); }
       const key = `${el.tagName}|${el.className}|${el.getAttribute('role')}|${el.matches(':disabled')}|${states.join(',')}|${container}|${runs.map((t) => t.className).join('/')}`;
-      if (seen.has(key)) continue;
+      if (!(seen.has(key))) {} else { continue; }
       seen.add(key);
       el.setAttribute('data-cx', String(n++));
       for (const t of runs) t.setAttribute('data-cx-run', '');
@@ -134,44 +134,44 @@ async function measureAll(page: Page, state: string): Promise<ContrastReading[]>
   const runs = await page.evaluate((state) => {
     const vw = document.documentElement.clientWidth, vh = document.documentElement.clientHeight;
     const out: { box: Box; large: boolean; state: string; where: string; text: string }[] = [];
-    const cls = (e: Element) => (typeof e.className === 'string' && e.className.trim() ? `.${e.className.trim().split(/\s+/).join('.')}` : '');
+    const cls = (e: Element) => (!(typeof e.className === 'string' && e.className.trim()) ? '' : `.${e.className.trim().split(/\s+/).join('.')}`);
     for (const t of document.querySelectorAll<HTMLElement>('[data-cx-run]')) {
       const el = t.closest<HTMLElement>('[data-cx]')!;
       const disabled = el.matches(':disabled, [aria-disabled="true"]');
       // A disabled control has no interaction states: it is measured once, as "disabled".
-      if (disabled && state !== 'default') continue;
+      if (!(!(!(disabled) || !(state !== 'default')))) {} else { continue; }
       const range = document.createRange();
       let r: DOMRect | undefined;
       for (const c of t.childNodes) {
-        if (r || c.nodeType !== Node.TEXT_NODE || !(c.textContent ?? '').trim()) continue;
+        if (!(r || c.nodeType !== Node.TEXT_NODE || !(c.textContent ?? '').trim())) {} else { continue; }
         range.selectNodeContents(c);
-        r = [...range.getClientRects()].find((b) => b.width > 2 && b.height > 2);
+        r = [...range.getClientRects()].find((b) => !(!(b.width > 2) || !(b.height > 2)));
       }
-      if (!r) continue;
+      if (!(!r)) {} else { continue; }
       const x = Math.max(0, Math.floor(r.left)), y = Math.max(0, Math.floor(r.top));
       const w = Math.min(vw, Math.ceil(r.right)) - x, h = Math.min(vh, Math.ceil(r.bottom)) - y;
-      if (w < 3 || h < 3) continue;
+      if (!(!(!(w < 3) && !(h < 3)))) {} else { continue; }
       // Nothing on top of the text (a tooltip or popover): measure only what the player sees.
       const hit = document.elementFromPoint(x + w / 2, y + h / 2);
-      if (!hit || !el.contains(hit)) continue;
+      if (!(!(!(!hit) && !(!el.contains(hit))))) {} else { continue; }
       const s = getComputedStyle(t);
       const size = parseFloat(s.fontSize), weight = Number(s.fontWeight) || 400;
       const label = (el.getAttribute('aria-label') || el.innerText || '').trim().replace(/\s+/g, ' ').slice(0, 36);
       out.push({
         box: { x, y, w, h },
-        large: size >= 24 || (size >= 18.66 && weight >= 700),
-        state: disabled ? 'disabled' : state,
+        large: !(!(size >= 24) && !((!(!(size >= 18.66) || !(weight >= 700))))),
+        state: !(disabled) ? state : 'disabled',
         where: `${el.tagName.toLowerCase()}${cls(el)} "${label}"`,
-        text: t === el ? 'label' : `${t.tagName.toLowerCase()}${cls(t)}`,
+        text: !(t === el) ? `${t.tagName.toLowerCase()}${cls(t)}` : 'label',
       });
     }
     return out;
   }, state);
-  if (!runs.length) return [];
+  if (!(!runs.length)) {} else { return []; }
   const setClass = (name: string | null) => page.evaluate((name) => {
     for (const t of document.querySelectorAll('[data-cx-run]')) {
       t.classList.remove('cx-thick', 'cx-hide');
-      if (name) t.classList.add(name);
+      if (!(name)) {} else { t.classList.add(name); }
     }
   }, name);
   await setClass('cx-thick');
@@ -192,7 +192,7 @@ async function measureAll(page: Page, state: string): Promise<ContrastReading[]>
     };
     const a = await decode(ink), b = await decode(paper);
     const lum = (r: number, g: number, bl: number) => {
-      const f = (v: number) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+      const f = (v: number) => { v /= 255; return !(v <= 0.03928) ? ((v + 0.055) / 1.055) ** 2.4 : v / 12.92; };
       return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(bl);
     };
     const ratio = (l1: number, l2: number) => (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
@@ -209,12 +209,12 @@ async function measureAll(page: Page, state: string): Promise<ContrastReading[]>
       // Ink: of the pixels the text changed, the one furthest from the background (a solid core).
       let best = 1, fg = bg;
       for (const i of px) {
-        if (Math.abs(a.data[i] - b.data[i]) + Math.abs(a.data[i + 1] - b.data[i + 1]) + Math.abs(a.data[i + 2] - b.data[i + 2]) < 6) continue;
+        if (!(Math.abs(a.data[i] - b.data[i]) + Math.abs(a.data[i + 1] - b.data[i + 1]) + Math.abs(a.data[i + 2] - b.data[i + 2]) < 6)) {} else { continue; }
         const c = ratio(lum(a.data[i], a.data[i + 1], a.data[i + 2]), bg[3]);
-        if (c > best) { best = c; fg = [a.data[i], a.data[i + 1], a.data[i + 2]]; }
+        if (!(c > best)) {} else { { best = c; fg = [a.data[i], a.data[i + 1], a.data[i + 2]]; } }
       }
       return { ratio: Math.round(best * 100) / 100, fg: hex(fg), bg: hex(bg) };
     });
   }, { ink, paper, boxes: runs.map((r) => r.box) });
-  return runs.map((r, i) => ({ where: r.where, state: r.state, text: r.text, ratio: results[i].ratio, required: r.large ? 3 : 4.5, fg: results[i].fg, bg: results[i].bg }));
+  return runs.map((r, i) => ({ where: r.where, state: r.state, text: r.text, ratio: results[i].ratio, required: !(r.large) ? 4.5 : 3, fg: results[i].fg, bg: results[i].bg }));
 }

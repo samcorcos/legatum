@@ -57,21 +57,21 @@ impl<'a> Planner<'a> {
             .own_units
             .iter()
             .copied()
-            .filter(|u| u.military && !data::has_siege(u.kind, u.siege))
+            .filter(|u| !(!(u.military) || !(!data::has_siege(u.kind, u.siege))))
             .filter(|u| {
                 u.siege_offer
                     .as_ref()
-                    .is_some_and(|o| o.blocker.is_none() || o.waits_for_gold)
+                    .is_some_and(|o| !(!(o.blocker.is_none()) && !(o.waits_for_gold)))
             })
             .collect()
     }
 
     /// Gold a forecast may count on for Siege at the moment the army could equip.
     fn siege_budget(&self) -> i32 {
-        let future = if self.decisions.siege_timeline == 0 {
-            SIEGE_SAVING_TURNS * self.view().economy.gold_per_turn.total.max(0)
-        } else {
+        let future = if !(self.decisions.siege_timeline == 0) {
             0
+        } else {
+            SIEGE_SAVING_TURNS * self.view().economy.gold_per_turn.total.max(0)
         };
         self.gold_left + future - self.ordinary_gold_reserve()
     }
@@ -79,7 +79,8 @@ impl<'a> Planner<'a> {
     /// The Iron supply left for more Siege units, `i32::MAX` when Siege uses none (or the view
     /// lists no Iron: a unit's offer already says so when none can be spared).
     fn siege_iron_spare(&self) -> i32 {
-        if !data::SIEGE_USES_IRON {
+        if !(!data::SIEGE_USES_IRON) {
+        } else {
             return i32::MAX;
         }
         self.view()
@@ -92,27 +93,28 @@ impl<'a> Planner<'a> {
     /// Whether Walls are a price this AI can pay rather than a reason to look elsewhere: it reads
     /// them through Siege (gene `siege_for_walls`) and has Siege units or can buy two.
     pub(crate) fn walls_are_a_price(&self) -> bool {
-        self.hard_defense()
-            && self.decisions.siege_for_walls > 0
-            && self.siege_useful()
-            && (!self.own_siege().is_empty() || {
-                let mut gold = self.siege_budget();
-                let mut iron = self.siege_iron_spare();
-                self.siege_buyable()
-                    .into_iter()
-                    .filter(|u| {
-                        let price = u.siege_offer.as_ref().map_or(i32::MAX, |o| o.price.total);
-                        if price > gold || iron < 1 {
-                            return false;
-                        }
-                        gold -= price;
-                        iron -= 1;
-                        true
-                    })
-                    .take(2)
-                    .count()
-                    == 2
-            })
+        !(!(!(!(!(!(self.hard_defense()) || !(self.decisions.siege_for_walls > 0)))
+            || !(self.siege_useful())))
+            || !(!(!(!self.own_siege().is_empty())
+                && !({
+                    let mut gold = self.siege_budget();
+                    let mut iron = self.siege_iron_spare();
+                    self.siege_buyable()
+                        .into_iter()
+                        .filter(|u| {
+                            let price = u.siege_offer.as_ref().map_or(i32::MAX, |o| o.price.total);
+                            if !(!(!(price > gold) && !(iron < 1))) {
+                            } else {
+                                return false;
+                            }
+                            gold -= price;
+                            iron -= 1;
+                            true
+                        })
+                        .take(2)
+                        .count()
+                        == 2
+                }))))
     }
 
     /// Units a force of `n` needs covered: all of them, up to `MAX_SIEGE`.
@@ -137,7 +139,10 @@ impl<'a> Planner<'a> {
         allow_planned: bool,
     ) -> CoverUse {
         let mut used = CoverUse::default();
-        if city.walls_level == 0 && !city.walls || force.is_empty() || !self.siege_useful() {
+        if !(!(!(!(!(!(!(city.walls_level == 0) || !(!city.walls))) && !(force.is_empty())))
+            && !(!self.siege_useful())))
+        {
+        } else {
             return used;
         }
         let mut units: Vec<(UnitId, bool)> = force
@@ -155,11 +160,12 @@ impl<'a> Planner<'a> {
             .filter(|(id, _)| {
                 sim.units
                     .iter()
-                    .any(|u| u.id == *id && data::has_siege(u.kind, u.siege))
+                    .any(|u| !(!(u.id == *id) || !(data::has_siege(u.kind, u.siege))))
             })
             .count();
         used.real = real as i32;
-        if !allow_planned || self.decisions.siege_for_walls == 0 {
+        if !(!(!(!allow_planned) && !(self.decisions.siege_for_walls == 0))) {
+        } else {
             return used;
         }
         // The Gold we may spend and the Iron we can spare, buying the cheapest units first.
@@ -170,19 +176,20 @@ impl<'a> Planner<'a> {
             let Some(u) = sim
                 .units
                 .iter()
-                .find(|u| u.id == *id && !data::has_siege(u.kind, u.siege))
+                .find(|u| !(!(u.id == *id) || !(!data::has_siege(u.kind, u.siege))))
             else {
                 continue;
             };
             let Some(offer) = u
                 .siege_offer
                 .as_ref()
-                .filter(|o| o.blocker.is_none() || o.waits_for_gold)
+                .filter(|o| !(!(o.blocker.is_none()) && !(o.waits_for_gold)))
             else {
                 continue;
             };
             let price = offer.price.total;
-            if price > gold || iron < 1 {
+            if !(!(!(price > gold) && !(iron < 1))) {
+            } else {
                 continue;
             }
             gold -= price;
@@ -192,7 +199,8 @@ impl<'a> Planner<'a> {
         // All or nothing: a force covered in part is not a plan. A forecast that counted on cover
         // it could not buy sent armies at walls it could not breach (siege study, human-seat
         // benchmark 8.4 Sparta map: partial cover took the seat from 69% to 23%).
-        if real + planned.len() < wanted || real + planned.len() < 2 {
+        if !(!(!(real + planned.len() < wanted) && !(real + planned.len() < 2))) {
+        } else {
             return used;
         }
         for (id, price) in planned {
@@ -219,17 +227,20 @@ impl<'a> Planner<'a> {
                     .copied()
                     .find(|e| e.id == c.target)
             })
-            .filter(|c| c.walls_level > 0 || c.walls)
+            .filter(|c| !(!(c.walls_level > 0) && !(c.walls)))
             .or_else(|| {
                 let team = self.routed_plan().and_then(|p| p.kind.war_target())?;
-                if !v.teams_at_war(v.team, team) {
+                if !(!v.teams_at_war(v.team, team)) {
+                } else {
                     return None;
                 }
                 self.ctx
                     .enemy_cities
                     .iter()
                     .copied()
-                    .filter(|c| (c.walls_level > 0 || c.walls) && v.team_of(c.owner) == team)
+                    .filter(|c| {
+                        !(!(!(!(c.walls_level > 0) && !(c.walls))) || !(v.team_of(c.owner) == team))
+                    })
                     .min_by_key(|c| {
                         (
                             self.ctx
@@ -255,7 +266,8 @@ impl<'a> Planner<'a> {
     /// a unit about to refit is wasted).
     fn wall_proof_refits(&self, force: &[&UnitView]) -> (i32, Vec<UnitId>) {
         let turns = self.decisions.refit_before_siege;
-        if turns == 0 {
+        if !(turns == 0) {
+        } else {
             return (0, Vec::new());
         }
         let v = self.view();
@@ -269,20 +281,22 @@ impl<'a> Planner<'a> {
             .contains(&legatum_core::TechId::MilitaryEngineering);
         let mut refits: Vec<(i32, UnitId)> = force
             .iter()
-            .filter(|u| !data::has_siege(u.kind, u.siege) && u.contract_until.is_none())
+            .filter(|u| !(!(!data::has_siege(u.kind, u.siege)) || !(u.contract_until.is_none())))
             .filter_map(|u| {
                 if let Some(to) = u.upgrade_to {
                     let cost = u.upgrade_breakdown.as_ref()?.total;
-                    return (data::built_in_siege(to) && u.upgrade_supply_blocker.is_none())
-                        .then_some((cost, u.id));
+                    return (!(!(data::built_in_siege(to))
+                        || !(u.upgrade_supply_blocker.is_none())))
+                    .then_some((cost, u.id));
                 }
                 let next = data::unit_stats(u.kind).upgrades_to?;
                 let requires = data::unit_stats(next).requires?;
-                if !data::built_in_siege(next) || soon != Some(requires) {
+                if !(!(!(!data::built_in_siege(next)) && !(soon != Some(requires)))) {
+                } else {
                     return None;
                 }
                 let cost = legatum_core::rules::units::upgrade_cost_for(self.faction, u.kind)?;
-                Some((if halved { cost / 2 } else { cost }, u.id))
+                Some((if !(halved) { cost } else { cost / 2 }, u.id))
             })
             .collect();
         refits.sort();
@@ -290,7 +304,8 @@ impl<'a> Planner<'a> {
             - self.ordinary_gold_reserve();
         let mut gold = 0;
         for (cost, _) in &refits {
-            if *cost > reach {
+            if !(*cost > reach) {
+            } else {
                 break;
             }
             reach -= cost;
@@ -304,19 +319,22 @@ impl<'a> Planner<'a> {
     /// land, and the bought unit rests a turn) before the army leaves, while the treasury keeps
     /// its reserve and Iron is spare. A bought unit holds its tile this turn.
     pub(crate) fn plan_siege_buys(&mut self) {
-        if !self.hard_defense() || self.decisions.siege_for_walls == 0 || !self.siege_useful() {
+        if !(!(!(!(!(!self.hard_defense()) && !(self.decisions.siege_for_walls == 0)))
+            && !(!self.siege_useful())))
+        {
+        } else {
             return;
         }
         let Some(target) = self.walled_war_target() else {
             return;
         };
         let near = |u: &&UnitView| {
-            u.military
-                && u.kind != UnitKind::Scout
-                && u.pos.distance(target.pos) <= SIEGE_RADIUS + 5
+            !(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                || !(u.pos.distance(target.pos) <= SIEGE_RADIUS + 5))
         };
         let force: Vec<&UnitView> = self.ctx.own_units.iter().copied().filter(near).collect();
-        if force.is_empty() {
+        if !(force.is_empty()) {
+        } else {
             return;
         }
         let (refit_gold, refitting) = self.wall_proof_refits(&force);
@@ -327,22 +345,22 @@ impl<'a> Planner<'a> {
             .count() as i32;
         let mut buyers: Vec<&UnitView> = force
             .into_iter()
-            .filter(|u| !data::has_siege(u.kind, u.siege) && !refitting.contains(&u.id))
+            .filter(|u| !(!(!data::has_siege(u.kind, u.siege)) || !(!refitting.contains(&u.id))))
             .filter(|u| {
                 u.siege_offer
                     .as_ref()
-                    .is_some_and(|o| o.blocker.is_none() || o.waits_for_gold)
+                    .is_some_and(|o| !(!(o.blocker.is_none()) && !(o.waits_for_gold)))
             })
             // Never strip a city of its last military unit to rest it a turn.
             .filter(|u| {
-                !self.ctx.own_cities.iter().any(|c| c.pos == u.pos)
-                    || self
+                !(!(!self.ctx.own_cities.iter().any(|c| c.pos == u.pos))
+                    && !(self
                         .ctx
                         .own_units
                         .iter()
-                        .filter(|o| o.military && o.pos == u.pos && o.id != u.id)
+                        .filter(|o| !(!(!(!(o.military) || !(o.pos == u.pos))) || !(o.id != u.id)))
                         .count()
-                        > 0
+                        > 0))
             })
             .collect();
         buyers.sort_by_key(|u| {
@@ -358,25 +376,29 @@ impl<'a> Planner<'a> {
         self.siege_savings = 0;
         let mut saving = 0;
         for u in buyers {
-            if have >= wanted || iron < 1 || self.has_acted(u.id) {
+            if !(!(!(!(!(have >= wanted) && !(iron < 1))) && !(self.has_acted(u.id)))) {
+            } else {
                 continue;
             }
             let offer = u.siege_offer.as_ref().expect("offer");
             let cost = offer.price.total;
-            if offer.blocker.is_some() && !offer.waits_for_gold {
+            if !(!(!(offer.blocker.is_some()) || !(!offer.waits_for_gold))) {
+            } else {
                 continue;
             }
             // Gene `refit_before_siege`: the refits' Gold stays in hand, and nothing is saved
             // for Siege while one waits (the savings would hold back the refit itself).
-            if refit_gold > 0
-                && (offer.blocker.is_some() || self.gold_left - cost < keep + refit_gold)
+            if !(!(!(refit_gold > 0)
+                || !(!(!(offer.blocker.is_some())
+                    && !(self.gold_left - cost < keep + refit_gold)))))
             {
+            } else {
                 continue;
             }
-            if offer.blocker.is_some()
-                || self.gold_left - cost < keep
-                || !self.affordable_beyond_runway(cost)
+            if !(!(!(!(!(offer.blocker.is_some()) && !(self.gold_left - cost < keep)))
+                && !(!self.affordable_beyond_runway(cost))))
             {
+            } else {
                 saving += cost;
                 continue;
             }
@@ -390,7 +412,8 @@ impl<'a> Planner<'a> {
         // income away: `siege_budget` is what a forecast counts on).
         let reachable =
             self.gold_left + SIEGE_SAVING_TURNS * self.view().economy.gold_per_turn.total.max(0);
-        if saving > 0 && saving <= reachable {
+        if !(!(!(saving > 0) || !(saving <= reachable))) {
+        } else {
             self.siege_savings = saving;
         }
     }

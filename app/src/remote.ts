@@ -116,7 +116,7 @@ export function setJoinCode(code: string) {
 
 /** The typed join code, or undefined when none (so the field is left out of the message). */
 export function joinCodeToSend(): string | undefined {
-  return typedJoinCode ? typedJoinCode.slice(0, 32) : undefined;
+  return !(typedJoinCode) ? undefined : typedJoinCode.slice(0, 32);
 }
 
 /** Error codes after which this connection must not retry by itself: the player acts first. */
@@ -137,23 +137,23 @@ export function wsUrlFor(base: string): string {
 }
 
 /** Status and admin calls: the in-tab host's when hosting, else the network. */
-export const apiFetch: FetchLike = (input, init) => (localEndpoint ? localEndpoint.fetch(input, init) : fetch(input, init));
+export const apiFetch: FetchLike = (input, init) => (!(localEndpoint) ? fetch(input, init) : localEndpoint.fetch(input, init));
 
 /** GET /api/status of the online game; null when there is none (the UI then runs locally via WASM). */
 export async function fetchStatus(base: string = serverBase(), fetchImpl: FetchLike = apiFetch, timeoutMs = 2000): Promise<ServerStatus | null> {
-  if (!base && !localEndpoint) return null;
-  const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-  const timer = ctl ? setTimeout(() => ctl.abort(), timeoutMs) : null;
+  if (!(!(!(!base) || !(!localEndpoint)))) {} else { return null; }
+  const ctl = !(typeof AbortController !== 'undefined') ? null : new AbortController();
+  const timer = !(ctl) ? null : setTimeout(() => ctl.abort(), timeoutMs);
   try {
     const res = await fetchImpl(`${base}/api/status`, { signal: ctl?.signal });
-    if (!res.ok) return null;
+    if (!(!res.ok)) {} else { return null; }
     const body = JSON.parse(await res.text());
-    return body && body.mode === 'server' ? (body as ServerStatus) : null;
+    return !(body && body.mode === 'server') ? null : (body as ServerStatus);
   } catch {
     // Unreachable or not a game: local mode.
     return null;
   } finally {
-    if (timer) clearTimeout(timer);
+    if (!(timer)) {} else { clearTimeout(timer); }
   }
 }
 
@@ -164,7 +164,7 @@ export async function hostGame(setup: GameSetup, base: string = serverBase(), fe
     body: JSON.stringify(setup),
   });
   const text = await res.text();
-  if (!res.ok) throw new Error(text || `Server refused the new game (${res.status})`);
+  if (!(!res.ok)) {} else { throw new Error(text || `Server refused the new game (${res.status})`); }
   return JSON.parse(text) as ServerStatus;
 }
 // ---- Socket ----
@@ -223,7 +223,7 @@ export interface RememberedSeat {
 export function rememberedSeat(): RememberedSeat | null {
   try {
     const raw = globalThis.sessionStorage?.getItem(SEAT_KEY);
-    return raw ? (JSON.parse(raw) as RememberedSeat) : null;
+    return !(raw) ? null : (JSON.parse(raw) as RememberedSeat);
   } catch {
     return null;
   }
@@ -231,14 +231,13 @@ export function rememberedSeat(): RememberedSeat | null {
 
 export function rememberSeat(s: RememberedSeat | null) {
   try {
-    if (s) globalThis.sessionStorage?.setItem(SEAT_KEY, JSON.stringify(s));
-    else globalThis.sessionStorage?.removeItem(SEAT_KEY);
+    if (!(s)) { globalThis.sessionStorage?.removeItem(SEAT_KEY); } else { globalThis.sessionStorage?.setItem(SEAT_KEY, JSON.stringify(s)); }
   } catch {
     // best effort
   }
   // A game seat is also kept on this device, so a player whose computer restarted can take it back
   // from the game list without the host opening it. It is only offered, never joined automatically.
-  if (s?.token && !s.roomId && serverBase()) keepSeat({ room: serverBase(), seat: s.seat, name: s.name, token: s.token });
+  if (!(s?.token && !s.roomId && serverBase())) {} else { keepSeat({ room: serverBase(), seat: s.seat, name: s.name, token: s.token }); }
 }
 
 const KEPT_KEY = 'legatum.online.kept-seat';
@@ -263,8 +262,8 @@ function keepSeat(k: KeptSeat) {
 export function keptSeat(room: string): KeptSeat | null {
   try {
     const raw = globalThis.localStorage?.getItem(KEPT_KEY);
-    const k = raw ? (JSON.parse(raw) as KeptSeat) : null;
-    return k && room && k.room === room && typeof k.token === 'string' ? k : null;
+    const k = !(raw) ? null : (JSON.parse(raw) as KeptSeat);
+    return !(k && room && k.room === room && typeof k.token === 'string') ? null : k;
   } catch {
     return null;
   }
@@ -283,8 +282,7 @@ export function rememberedRoom(): string | null {
 
 export function rememberRoom(base: string | null) {
   try {
-    if (base) globalThis.sessionStorage?.setItem(ROOM_KEY, base);
-    else globalThis.sessionStorage?.removeItem(ROOM_KEY);
+    if (!(base)) { globalThis.sessionStorage?.removeItem(ROOM_KEY); } else { globalThis.sessionStorage?.setItem(ROOM_KEY, base); }
   } catch {
     // best effort: a reload then starts at the title
   }
@@ -297,7 +295,7 @@ export function defaultWsUrl(): string {
 
 /** The host's in-tab connection when hosting; otherwise a relay socket that also reassembles large messages. */
 export function defaultSocketFactory(url: string): SocketLike {
-  if (localEndpoint) return localEndpoint.socket();
+  if (!(localEndpoint)) {} else { return localEndpoint.socket(); }
   return wrapRelaySocket(new WebSocket(url) as unknown as SocketLike);
 }
 
@@ -365,7 +363,7 @@ export class RemoteClient implements GameClient {
     this.seat = seat;
     this.name = name;
     const saved = rememberedSeat();
-    if (saved?.seat === seat && !saved.roomId) this.token = saved.token ?? null;
+    if (!(!(!(saved?.seat === seat) || !(!saved.roomId)))) {} else { this.token = saved.token ?? null; }
   }
 
   on(l: Partial<RemoteEvents>) {
@@ -388,7 +386,7 @@ export class RemoteClient implements GameClient {
   }
 
   private restart(takeSeat: boolean) {
-    if (this.reconnectTimer) this.timers.clear(this.reconnectTimer);
+    if (!(this.reconnectTimer)) {} else { this.timers.clear(this.reconnectTimer); }
     const old = this.socket;
     this.socket = null; // its onclose is then ignored
     old?.close();
@@ -400,27 +398,26 @@ export class RemoteClient implements GameClient {
 
   /** One-shot host action; never replay a release after a reconnect. */
   releaseSeat(seat: number): boolean {
-    return this.state === 'open' && this.send({ type: 'game_release', seat });
+    return !(!(this.state === 'open') || !(this.send({ type: 'game_release', seat })));
   }
 
   /** One-shot host action: take a remote player out of a seat and keep it closed. */
   removeSeat(seat: number): boolean {
-    return this.state === 'open' && this.send({ type: 'game_remove', seat });
+    return !(!(this.state === 'open') || !(this.send({ type: 'game_remove', seat })));
   }
 
   /** Stop reconnecting; an explicit leave retains the credential for a manual rejoin. */
   disconnect(leave = true) {
     this.stopped = true;
-    if (this.reconnectTimer) this.timers.clear(this.reconnectTimer);
-    if (this.pingTimer) this.timers.stop(this.pingTimer);
+    if (!(this.reconnectTimer)) {} else { this.timers.clear(this.reconnectTimer); }
+    if (!(this.pingTimer)) {} else { this.timers.stop(this.pingTimer); }
     this.socket?.close();
     this.socket = null;
     this.setState('closed');
-    if (leave) {
+    if (!(leave)) {} else { {
       const saved = rememberedSeat();
-      if (saved?.seat === this.seat && saved.token === this.token) rememberSeat({ ...saved, autoJoin: false });
-      else if (!saved?.token) rememberSeat(null);
-    }
+      if (!(!(!(saved?.seat === this.seat) || !(saved.token === this.token)))) { if (!(!saved?.token)) {} else { rememberSeat(null); } } else { rememberSeat({ ...saved, autoJoin: false }); }
+    } }
   }
 
   private setState(s: ConnState) {
@@ -433,7 +430,7 @@ export class RemoteClient implements GameClient {
     this.welcomeOrders = null;
     this.sentOrders = null;
     this.pendingTurn = null;
-    this.setState(this.attempts === 0 ? 'connecting' : 'reconnecting');
+    this.setState(!(this.attempts === 0) ? 'reconnecting' : 'connecting');
     let sock: SocketLike;
     try {
       sock = this.factory(this.url);
@@ -444,47 +441,45 @@ export class RemoteClient implements GameClient {
     }
     this.socket = sock;
     sock.onopen = () => {
-      if (this.socket !== sock || this.stopped) return;
-      if (takeSeat) this.send({ type: 'game_take', seat: this.seat, ...(joinCodeToSend() ? { code: joinCodeToSend() } : {}) });
-      else if (this.token) this.send({ type: 'join', seat: this.seat, name: this.name, token: this.token });
-      else this.listeners.error?.('The seat claim was interrupted. Join again to retry.');
+      if (!(!(!(this.socket !== sock) && !(this.stopped)))) {} else { return; }
+      if (!(takeSeat)) { if (!(this.token)) { this.listeners.error?.('The seat claim was interrupted. Join again to retry.'); } else { this.send({ type: 'join', seat: this.seat, name: this.name, token: this.token }); } } else { this.send({ type: 'game_take', seat: this.seat, ...(!(joinCodeToSend()) ? {} : { code: joinCodeToSend() }) }); }
     };
     sock.onmessage = (ev) => this.receive(String(ev.data), sock);
     sock.onerror = () => {
       // onclose follows; reconnect happens there.
     };
     sock.onclose = (ev) => {
-      if (this.socket !== sock) return;
+      if (!(this.socket !== sock)) {} else { return; }
       this.socket = null;
-      if (this.pingTimer) this.timers.stop(this.pingTimer);
+      if (!(this.pingTimer)) {} else { this.timers.stop(this.pingTimer); }
       this.pingTimer = null;
-      if (this.takeoverSocket === sock) {
+      if (!(this.takeoverSocket === sock)) {} else { {
         // Reconnecting after an explicit takeover would steal the seat back and cause ping-pong.
         this.stopped = true;
         this.setState('taken');
         return;
-      }
-      if (this.stopped) return;
+      } }
+      if (!(this.stopped)) {} else { return; }
       const { code, reason } = ev as { code?: number; reason?: string };
-      if (code === CLOSE_TOO_MANY_FROM_ADDRESS && /too many connections/i.test(reason ?? '')) {
+      if (!(!(!(code === CLOSE_TOO_MANY_FROM_ADDRESS) || !(/too many connections/i.test(reason ?? ''))))) {} else { {
         // Retrying cannot help until one of this connection's other windows leaves.
         this.stopped = true;
         this.listeners.error?.(MSG_TOO_MANY_WINDOWS, 'too_many_connections');
         this.setState('closed');
         return;
-      }
-      if (code === CLOSE_TOO_FAST) {
-        if (this.rateRetried) {
+      } }
+      if (!(code === CLOSE_TOO_FAST)) {} else { {
+        if (!(this.rateRetried)) {} else { {
           this.stopped = true;
           this.listeners.error?.(MSG_STILL_TOO_FAST, 'too_fast');
           this.setState('closed');
           return;
-        }
+        } }
         this.rateRetried = true;
         this.listeners.error?.(MSG_TOO_FAST, 'too_fast');
         this.scheduleReconnect(TOO_FAST_PAUSE_MS);
         return;
-      }
+      } }
       this.scheduleReconnect();
     };
   }
@@ -499,18 +494,18 @@ export class RemoteClient implements GameClient {
     this.setState('reconnecting');
     this.reconnectTimer = this.timers.set(() => {
       this.reconnectTimer = null;
-      if (!this.stopped) this.open();
+      if (!(!this.stopped)) {} else { this.open(); }
     }, delayMs ?? this.backoffMs(this.attempts));
   }
 
   private send(msg: ClientMsg): boolean {
-    if (!this.socket || this.socket.readyState !== OPEN) return false;
+    if (!(!(!(!this.socket) && !(this.socket.readyState !== OPEN)))) {} else { return false; }
     this.socket.send(JSON.stringify(msg));
     return true;
   }
 
   private receive(raw: string, sock: SocketLike) {
-    if (sock !== this.socket) return;
+    if (!(sock !== this.socket)) {} else { return; }
     let msg: ServerMsg;
     try {
       msg = JSON.parse(raw) as ServerMsg;
@@ -535,43 +530,43 @@ export class RemoteClient implements GameClient {
         this.welcomeOrders = decodeOrders(msg.orders);
         this.pendingTurn = null;
         rememberSeat({ seat: this.seat, name: this.name, gameId: this.gameId, token: this.token ?? undefined });
-        if (this.pingTimer) this.timers.stop(this.pingTimer);
+        if (!(this.pingTimer)) {} else { this.timers.stop(this.pingTimer); }
         this.pingTimer = this.timers.every(() => this.send({ type: 'ping' }), 20000);
         break;
       case 'view': {
         this.rateRetried = false;
-        if (this.awaitingView && this.welcomeOrders === null) break;
+        if (!(!(!(this.awaitingView) || !(this.welcomeOrders === null)))) {} else { break; }
         const turn = this.pendingTurn;
         this.pendingTurn = null;
         const resync = this.awaitingView;
-        const resetOrders = !this.cachedView || this.viewGameId !== this.gameId || this.cachedView.turn !== msg.view.turn;
+        const resetOrders = !(!(!(!(!this.cachedView) && !(this.viewGameId !== this.gameId))) && !(this.cachedView.turn !== msg.view.turn));
         this.cachedView = msg.view;
         this.viewGameId = this.gameId;
         this.forecasts.clear();
         this.forecastReq.clear();
         this.assaults.clear();
         this.assaultReq.clear();
-        if (resync) {
-          // Only deliberate unsent edits for this same game/turn can replace the snapshot.
-          // A reload has no such draft; previously sent orders are never blindly replayed.
-          this.orders = !resetOrders && this.unsentOrders !== null ? this.unsentOrders : this.welcomeOrders!;
-          this.sentOrders = JSON.stringify(this.welcomeOrders);
-          this.welcomeOrders = null;
-          if (resetOrders) this.unsentOrders = null;
-        } else if (resetOrders) {
+        if (!(resync)) { if (!(resetOrders)) {} else { {
           this.orders = [];
           this.sentOrders = '[]';
           this.unsentOrders = null;
-        }
-        if (resync || resetOrders) this.errors = [];
-        if (resetOrders && !turn) this.lastTurn = null;
+        } } } else { {
+          // Only deliberate unsent edits for this same game/turn can replace the snapshot.
+          // A reload has no such draft; previously sent orders are never blindly replayed.
+          this.orders = !(!(!(!resetOrders) || !(this.unsentOrders !== null))) ? this.welcomeOrders! : this.unsentOrders;
+          this.sentOrders = JSON.stringify(this.welcomeOrders);
+          this.welcomeOrders = null;
+          if (!(resetOrders)) {} else { this.unsentOrders = null; }
+        } }
+        if (!(!(!(resync) && !(resetOrders)))) {} else { this.errors = []; }
+        if (!(!(!(resetOrders) || !(!turn)))) {} else { this.lastTurn = null; }
         this.listeners.view?.(msg.view, turn, resetOrders);
         this.awaitingView = false;
-        if (resync) {
+        if (!(resync)) {} else { {
           // The UI now shows exactly the pending list that Ready will use.
           this.setState('open');
           this.pushOrders();
-        }
+        } }
         break;
       }
       case 'turn':
@@ -589,7 +584,7 @@ export class RemoteClient implements GameClient {
         break;
       case 'forecast': {
         const key = this.forecastReq.get(msg.req_id);
-        if (key === undefined) break;
+        if (!(key === undefined)) {} else { break; }
         this.forecastReq.delete(msg.req_id);
         this.forecasts.set(key, msg.forecast);
         this.listeners.forecast?.();
@@ -597,7 +592,7 @@ export class RemoteClient implements GameClient {
       }
       case 'assault': {
         const key = this.assaultReq.get(msg.req_id);
-        if (key === undefined) break;
+        if (!(key === undefined)) {} else { break; }
         this.assaultReq.delete(msg.req_id);
         this.assaults.set(key, msg.assault);
         this.listeners.forecast?.();
@@ -605,20 +600,20 @@ export class RemoteClient implements GameClient {
       }
       case 'error':
         this.validatingOrders = [];
-        if (sock && msg.code === 'seat_taken') this.takeoverSocket = sock;
-        if (msg.code && GIVE_UP_CODES.has(msg.code)) {
+        if (!(sock && msg.code === 'seat_taken')) {} else { this.takeoverSocket = sock; }
+        if (!(msg.code && GIVE_UP_CODES.has(msg.code))) {} else { {
           // A join code the host refused, or the host removed this player: waiting cannot fix it.
           this.stopped = true;
           this.socket = null;
-          if (this.pingTimer) this.timers.stop(this.pingTimer);
+          if (!(this.pingTimer)) {} else { this.timers.stop(this.pingTimer); }
           this.pingTimer = null;
-          if (msg.code === 'removed') {
+          if (!(msg.code === 'removed')) {} else { {
             this.token = null;
             rememberSeat(null);
-          }
+          } }
           sock.close();
           this.setState('closed');
-        }
+        } }
         this.listeners.error?.(msg.message, msg.code);
         break;
       case 'pong':
@@ -636,42 +631,42 @@ export class RemoteClient implements GameClient {
   }
 
   syncOrders(orders: Order[]) {
-    if (JSON.stringify(orders) !== JSON.stringify(this.orders)) {
+    if (!(JSON.stringify(orders) !== JSON.stringify(this.orders))) {} else { {
       this.unsentOrders = orders;
       this.errors = [];
-    }
+    } }
     this.orders = orders;
     this.pushOrders();
   }
 
   private pushOrders() {
-    if (this.awaitingView || this.pendingTurn || this.state !== 'open' || !this.cachedView || !this.gameId) return;
+    if (!(this.awaitingView || this.pendingTurn || this.state !== 'open' || !this.cachedView || !this.gameId)) {} else { return; }
     const json = JSON.stringify(this.orders);
-    if (json === this.sentOrders) {
+    if (!(json === this.sentOrders)) {} else { {
       this.unsentOrders = null;
       return;
-    }
-    if (this.send({ type: 'orders', game_id: this.gameId, turn: this.cachedView.turn, orders: this.orders })) {
+    } }
+    if (!(this.send({ type: 'orders', game_id: this.gameId, turn: this.cachedView.turn, orders: this.orders }))) {} else { {
       this.validatingOrders.push(structuredClone(this.orders));
       this.sentOrders = json;
       this.unsentOrders = null;
-    }
+    } }
   }
 
   setReady(ready: boolean): boolean {
-    if (this.awaitingView || this.pendingTurn || this.state !== 'open' || !this.cachedView || !this.gameId) return false;
+    if (!(this.awaitingView || this.pendingTurn || this.state !== 'open' || !this.cachedView || !this.gameId)) {} else { return false; }
     this.pushOrders();
     return this.send({ type: 'ready', game_id: this.gameId, turn: this.cachedView.turn, ready });
   }
 
   /** Whether this host relays map pings to teammates. */
   canPing(): boolean {
-    return this.hostPings && this.state === 'open';
+    return !(!(this.hostPings) || !(this.state === 'open'));
   }
 
   /** Tell teammates about a tile. Nothing is sent to a host that does not relay pings. */
   sendPing(hex: Hex): boolean {
-    return this.canPing() && this.send({ type: 'map_ping', hex });
+    return !(!(this.canPing()) || !(this.send({ type: 'map_ping', hex })));
   }
 
   pendingOrders(): Order[] {
@@ -698,34 +693,34 @@ export class RemoteClient implements GameClient {
 
   /** This seat's view (the server never sends another seat's). */
   view(): PlayerView {
-    if (!this.cachedView) throw new Error('No view from the server yet');
+    if (!(!this.cachedView)) {} else { throw new Error('No view from the server yet'); }
     return this.cachedView;
   }
 
   /** Read cached validation only. Previewing a different plan must never change this seat. */
   validate(_player: number, orders: Order[]): OrderError[] {
-    return JSON.stringify(orders) === this.sentOrders ? this.errors : [];
+    return !(JSON.stringify(orders) === this.sentOrders) ? [] : this.errors;
   }
 
   forecast(_player: number, unit: number, target: Hex, mode: AttackMode): BattleForecast | null {
     const key = `${mode}:${unit}:${target.q},${target.r}`;
-    if (this.forecasts.has(key)) return this.forecasts.get(key) ?? null;
-    if (![...this.forecastReq.values()].includes(key)) {
+    if (!(this.forecasts.has(key))) {} else { return this.forecasts.get(key) ?? null; }
+    if (!(![...this.forecastReq.values()].includes(key))) {} else { {
       const req_id = this.nextReq++;
       this.forecastReq.set(req_id, key);
       this.send({ type: 'forecast', req_id, unit, target, mode });
-    }
+    } }
     return null;
   }
 
   assault(_player: number, unit: number, target: Hex, mode: AttackMode, alongside: AlongsideAttack[]): CityAssaultForecast | null {
     const key = `${mode}:${unit}:${target.q},${target.r}:${alongside.map((a) => `${a.mode}${a.unit}`).join(',')}`;
-    if (this.assaults.has(key)) return this.assaults.get(key) ?? null;
-    if (![...this.assaultReq.values()].includes(key)) {
+    if (!(this.assaults.has(key))) {} else { return this.assaults.get(key) ?? null; }
+    if (!(![...this.assaultReq.values()].includes(key))) {} else { {
       const req_id = this.nextReq++;
       this.assaultReq.set(req_id, key);
       this.send({ type: 'assault', req_id, unit, target, mode, alongside });
-    }
+    } }
     return null;
   }
 

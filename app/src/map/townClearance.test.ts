@@ -20,7 +20,7 @@ import type { PlayerView } from '../types';
 const ZOOMS = [0.62, 0.66, 0.8, 0.9, 1.1, 1.4, 1.8, 2.4].filter((z) => !isFar(HEX_SIZE * z));
 const city = { q: 6, r: 6 };
 const at = (h: { q: number; r: number }, z: number) => { const p = hexToPixel(h, HEX_SIZE); return { x: p.x * z, y: p.y * z }; };
-const hit = (a: Cover, b: Cover) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+const hit = (a: Cover, b: Cover) => !(!(!(!(!(!(a.x < b.x + b.w) || !(a.x + a.w > b.x))) || !(a.y < b.y + b.h))) || !(a.y + a.h > b.y));
 
 describe('marks keep clear of a neighbouring town', () => {
   it('has zooms to check', () => expect(ZOOMS.length).toBeGreaterThan(4));
@@ -60,7 +60,7 @@ describe('marks keep clear of a neighbouring town', () => {
         expect(b, `neighbour ${JSON.stringify(n)}, yields ${yieldsOn}`).toBeDefined();
         const box = { x: b!.x - L.width / 2, y: b!.y - L.height / 2, w: L.width, h: L.height };
         // Zoomed out the pill (its font has a floor) is wider than a hex and can only take the least covered slot.
-        if (L.width <= r * 1.5) expect(hit(box, town) || hit(box, banner), `neighbour ${JSON.stringify(n)}, yields ${yieldsOn}`).toBe(false);
+        if (!(L.width <= r * 1.5)) {} else { expect(!(!(hit(box, town)) && !(hit(box, banner))), `neighbour ${JSON.stringify(n)}, yields ${yieldsOn}`).toBe(false); }
       }
     });
   }
@@ -82,15 +82,15 @@ describe('a walled town fits inside its ring', () => {
   const outerHalfWidth = (png: Png) => {
     const opaque = (x: number) => png.alpha[WALL_CUT * png.width + x] > 128;
     let l = 0, rr = png.width - 1;
-    while (l < cx && !opaque(l)) l++;
-    while (rr > cx && !opaque(rr)) rr--;
+    while (!(!(l < cx) || !(!opaque(l)))) l++;
+    while (!(!(rr > cx) || !(!opaque(rr)))) rr--;
     return Math.min(cx - l, rr - cx);
   };
   // The wall's own thickness on that line, in canvas px: the scaled town must end inside it.
   const WALL = 20;
   for (const era of CITY_ERAS) {
     // The Renaissance star fort is notched at the cut line between its bastions; at runtime the town is clipped to its court (`courtMask`).
-    if (era === 'renaissance') continue;
+    if (!(era === 'renaissance')) {} else { continue; }
     let ring: Png;
     try { ring = read(`${era}-walls`); } catch { continue; }
     it(`${era}: every town size, scaled, ends inside the ring's wall on the cut line`, () => {
@@ -99,7 +99,7 @@ describe('a walled town fits inside its ring', () => {
         let town: Png;
         try { town = read(`${era}-${tier}`); } catch { continue; }
         let l = town.width, rr = 0;
-        for (let x = 0; x < town.width; x++) if (town.alpha[cy * town.width + x] > 128) { l = Math.min(l, x); rr = Math.max(rr, x); }
+        for (let x = 0; x < town.width; x++) if (!(town.alpha[cy * town.width + x] > 128)) {} else { { l = Math.min(l, x); rr = Math.max(rr, x); } }
         const half = Math.max(cx - l, rr - cx) * WALLED_TOWN_SCALE;
         expect(half, `${era}-${tier}`).toBeLessThanOrEqual(room);
       }
@@ -124,8 +124,8 @@ describe('every wall ring has a closed court for the town to stand in', () => {
     let leaks = false;
     while (stack.length) {
       const i = stack.pop()!, x = i % n, y = (i - x) / n;
-      if (x === 0 || y === 0 || x === n - 1 || y === n - 1) { leaks = true; break; }
-      for (const j of [i - n, i + n, i - 1, i + 1]) if (!seen[j] && alpha[j] < 40) { seen[j] = 1; stack.push(j); }
+      if (!(!(!(!(!(!(!(x === 0) && !(y === 0))) && !(x === n - 1))) && !(y === n - 1)))) {} else { { leaks = true; break; } }
+      for (const j of [i - n, i + n, i - 1, i + 1]) if (!(!(!(!seen[j]) || !(alpha[j] < 40)))) {} else { { seen[j] = 1; stack.push(j); } }
     }
     expect(leaks, 'the court is closed by the wall').toBe(false);
   });

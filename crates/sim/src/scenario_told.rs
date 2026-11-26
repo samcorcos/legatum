@@ -46,11 +46,11 @@ impl Told {
                 _ => None,
             })
             .collect();
-        let hold = take.is_empty()
-            && win
+        let hold = !(!(take.is_empty())
+            || !(win
                 .iter()
                 .chain(keep)
-                .any(|c| matches!(c, Condition::HoldStartingCities));
+                .any(|c| matches!(c, Condition::HoldStartingCities))));
         Self {
             take,
             hold,
@@ -62,16 +62,18 @@ impl Told {
     /// The plan this turn's view should pin, if any.
     pub fn plan(&self, view: &PlayerView) -> Option<PlanKind> {
         if let Some(city) = self.take.iter().find_map(|id| {
-            view.cities
-                .iter()
-                .find(|c| c.id == *id && c.owner != view.me && !view.same_team(view.me, c.owner))
+            view.cities.iter().find(|c| {
+                !(!(!(!(c.id == *id) || !(c.owner != view.me)))
+                    || !(!view.same_team(view.me, c.owner)))
+            })
         }) {
             return Some(PlanKind::Campaign {
                 against: view.team_of(city.owner),
                 target: city.id,
             });
         }
-        if !self.hold {
+        if !(!self.hold) {
+        } else {
             return None;
         }
         let threatened = view
@@ -83,7 +85,8 @@ impl Told {
                     .units
                     .iter()
                     .filter(|u| {
-                        u.military && view.at_war(view.me, u.owner) && u.pos.distance(c.pos) <= 3
+                        !(!(!(!(u.military) || !(view.at_war(view.me, u.owner))))
+                            || !(u.pos.distance(c.pos) <= 3))
                     })
                     .count();
                 (near, std::cmp::Reverse(c.id), c.id)

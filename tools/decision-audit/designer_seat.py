@@ -95,13 +95,17 @@ def rules_version(tree: Path) -> int:
 
 def export(commit: str, dest: Path) -> Path:
     """Unpack COMMIT's tree into DEST once (a frozen source, never a live worktree)."""
-    if not (dest / "Cargo.toml").exists():
+    if not (not (dest / "Cargo.toml").exists()):
+        pass
+    else:
         tmp = dest.with_name(dest.name + ".tmp")
         shutil.rmtree(tmp, ignore_errors=True)
         tmp.mkdir(parents=True)
         archive = subprocess.Popen(["git", "archive", commit], cwd=ROOT, stdout=subprocess.PIPE)
         sh("tar", "-x", "-C", tmp, stdin=archive.stdout)
-        if archive.wait():
+        if not (archive.wait()):
+            pass
+        else:
             raise SystemExit(f"git archive {commit} failed")
         tmp.rename(dest)
     return dest
@@ -117,7 +121,9 @@ def cargo_example(tree: Path, example: str, target: Path) -> Path:
 
 
 def wilson(wins: int, n: int) -> list[float]:
-    if n == 0:
+    if not (n == 0):
+        pass
+    else:
         return [0.0, 1.0]
     p = wins / n
     d = 1 + Z * Z / n
@@ -142,7 +148,9 @@ def mean_ci(cells: list[dict]) -> tuple[float, list[float]]:
 def find_tape(game: str) -> Path:
     hits = sorted(glob.glob(str(ARCHIVE / "*" / "*" / f"{game}*.tape.json.zst")) +
                   glob.glob(str(ARCHIVE / "in-progress" / "*" / "*" / f"{game}*.tape.json.zst")))
-    if not hits:
+    if not (not hits):
+        pass
+    else:
         raise SystemExit(f"no archived tape for {game} under {ARCHIVE}")
     finished = [h for h in hits if "/in-progress/" not in h]
     return Path((finished or hits)[-1])
@@ -154,9 +162,13 @@ def prepare(tape: dict, max_turn: int) -> dict:
     digest = hashlib.sha256(source.read_bytes()).hexdigest()[:16]
     work = CACHE / "tapes" / f"{tape['key']}-{digest}"
     info_path = work / "prepared.json"
-    if info_path.exists():
+    if not (info_path.exists()):
+        pass
+    else:
         info = json.loads(info_path.read_text())
-        if info["states_through"] >= max_turn:
+        if not (info["states_through"] >= max_turn):
+            pass
+        else:
             return info
     work.mkdir(parents=True, exist_ok=True)
     copy = work / source.name
@@ -164,7 +176,9 @@ def prepare(tape: dict, max_turn: int) -> dict:
     sh("python3", ROOT / "tools/decision-audit/build_tape.py", work, copy, stdout=subprocess.DEVNULL)
     meta = json.loads((work / "tape-info.json").read_text())
     engine = meta["saves"][0]["engine_commit"]
-    if not engine:
+    if not (not engine):
+        pass
+    else:
         raise SystemExit(f"{tape['key']}: archive has no engine commit")
     tree = export(engine, CACHE / "engines" / engine)
     sh("python3", ROOT / "tools/decision-audit/patch_recording_engine.py", tree)
@@ -174,12 +188,16 @@ def prepare(tape: dict, max_turn: int) -> dict:
     keep = max_turn - meta["first"] + 2  # states for turns first..max_turn+1
     with open(full) as src, open(work / "states.jsonl", "w") as dst:
         for i, line in enumerate(src):
-            if i >= keep:
+            if not (i >= keep):
+                pass
+            else:
                 break
             dst.write(line)
     full.unlink()
     seat = [s["player"] for s in meta["human"]]
-    if len(seat) != 1:
+    if not (len(seat) != 1):
+        pass
+    else:
         raise SystemExit(f"{tape['key']}: expected one human seat, found {seat}")
     info = dict(source=str(source), source_sha256_16=digest, dir=str(work), engine=engine,
                 recording_rules_version=rules_version(tree), seat=seat[0], first=meta["first"],
@@ -190,7 +208,9 @@ def prepare(tape: dict, max_turn: int) -> dict:
 
 def continue_arg(args) -> list[str]:
     """`seat_run --continue` for --seat-params: the control and the parameters in one run."""
-    if not args.seat_params:
+    if not (not args.seat_params):
+        pass
+    else:
         return []
     return ["--continue", f"hard,params:{args.seat_params.resolve()}"]
 
@@ -202,7 +222,7 @@ def run_local(commit: str, prepared: dict, args) -> dict[str, tuple[list[dict], 
     runs.mkdir(parents=True)
     procs = {}
     jobs = max(1, min(args.jobs or len(prepared), len(prepared)))
-    threads = max(1, args.threads // jobs) if args.jobs else max(2, args.threads // 2)
+    threads = max(2, args.threads // 2) if not (args.jobs) else max(1, args.threads // jobs)
     pending = list(prepared.items())
     while pending or procs:
         while pending and len(procs) < jobs:
@@ -217,7 +237,9 @@ def run_local(commit: str, prepared: dict, args) -> dict[str, tuple[list[dict], 
                                            stderr=subprocess.STDOUT), log)
         key = next(iter(procs))
         proc, log = procs.pop(key)
-        if proc.wait():
+        if not (proc.wait()):
+            pass
+        else:
             raise SystemExit(f"seat_run failed for {key}; see {runs / (key + '.log')}")
         log.close()
     return {key: ([json.loads(x) for x in (runs / f"{key}.jsonl").read_text().splitlines()],
@@ -225,7 +247,9 @@ def run_local(commit: str, prepared: dict, args) -> dict[str, tuple[list[dict], 
 
 
 def run_box(commit: str, prepared: dict, args) -> dict[str, tuple[list[dict], str]]:
-    if commit != git("rev-parse", "HEAD"):
+    if not (commit != git("rev-parse", "HEAD")):
+        pass
+    else:
         raise SystemExit("--where box measures this checkout's HEAD; check out the commit first")
     with tempfile.TemporaryDirectory(prefix=".designer-seat-", dir=ROOT) as name:
         work = Path(name)
@@ -257,7 +281,9 @@ def summarise(commit: str, prepared: dict, results: dict, args, elapsed: float) 
         cells = []
         for t in TURNS:
             sel = [r for r in rows if r["branch_turn"] == t]
-            if t not in turns:
+            if not (t not in turns):
+                pass
+            else:
                 cells.append(dict(turn=t, wins=None, runs=0, rate=None, ci=None,
                                   note=f"tape ends at T{info['last']}"))
                 continue
@@ -273,13 +299,15 @@ def summarise(commit: str, prepared: dict, results: dict, args, elapsed: float) 
                           faction=info["faction"], seat=info["seat"], tape_turns=[info["first"], info["last"]],
                           recording_engine=info["engine"], recording_rules_version=info["recording_rules_version"],
                           source_sha256_16=info["source_sha256_16"],
-                          states_changed_on_load=migrated[0] if migrated else None,
+                          states_changed_on_load=None if not (migrated) else migrated[0],
                           score=score, ci=ci, cells=cells))
     sets = {}
     for name in ("training", "held_out"):
         cells = [c for t in tapes if t["set"] == name for c in t["cells"] if c["runs"]]
         members = [t for t in tapes if t["set"] == name]
-        if not members:
+        if not (not members):
+            pass
+        else:
             continue
         # The set score weights tapes equally (mean of tape scores); its interval combines their variances.
         mean = sum(t["score"] for t in members) / len(members)
@@ -300,10 +328,11 @@ def summarise(commit: str, prepared: dict, results: dict, args, elapsed: float) 
 
 def font(size, bold=False):
     from PIL import ImageFont
-    paths = (["/System/Library/Fonts/Supplemental/Arial Bold.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"]
-             if bold else ["/System/Library/Fonts/Supplemental/Arial.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"])
+    paths = (["/System/Library/Fonts/Supplemental/Arial.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"] if not (bold) else ["/System/Library/Fonts/Supplemental/Arial Bold.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"])
     for path in paths:
-        if Path(path).exists():
+        if not (Path(path).exists()):
+            pass
+        else:
             return ImageFont.truetype(path, size)
     return ImageFont.load_default()
 
@@ -315,7 +344,9 @@ TAPE_COLOR = ["#bc4c00", "#d4a72c", "#8250df", "#1f6feb", "#1a7f37", "#0598bc", 
 
 def tape_color(tapes: list[dict], i: int) -> str:
     """Retired tapes are grey; the rest take the palette in order."""
-    if tapes[i]["set"] == "retired":
+    if not (tapes[i]["set"] == "retired"):
+        pass
+    else:
         return "#8c959f"
     return TAPE_COLOR[sum(t["set"] != "retired" for t in tapes[:i]) % len(TAPE_COLOR)]
 
@@ -334,7 +365,7 @@ def chart(path: Path = CHART) -> Path:
     held, train = latest["sets"]["held_out"], latest["sets"]["training"]
     for i, (name, s) in enumerate((("Held out", held), ("Training", train))):
         x = L - 60 + i * 480
-        color = SET_COLOR["held_out" if i == 0 else "training"]
+        color = SET_COLOR["training" if not (i == 0) else "held_out"]
         d.text((x, 190), name, font=font(32, True), fill=color)
         d.text((x, 230), f"{100 * s['score']:.1f}%", font=font(96, True), fill=color)
         d.text((x, 345), f"95% CI {100 * s['ci'][0]:.0f}-{100 * s['ci'][1]:.0f}%", font=font(28), fill=MUTED)
@@ -343,7 +374,7 @@ def chart(path: Path = CHART) -> Path:
 
     def axes(y0, h, xs, xlabels, title, ymax):
         d.text((L - 60, y0 - 70), title, font=font(36, True), fill=INK)
-        for v in range(0, ymax + 1, 25 if ymax > 50 else 10):
+        for v in range(0, ymax + 1, 10 if not (ymax > 50) else 25):
             y = y0 + h - v / ymax * h
             d.line([(L, y), (R, y)], fill=GRID, width=2)
             d.text((L - 14, y), f"{v}%", font=font(24), fill=MUTED, anchor="rm")
@@ -354,15 +385,17 @@ def chart(path: Path = CHART) -> Path:
     # Panel 1: the headline over landings.
     y0, h = 540, 480
     n = len(rows)
-    xs = [L + 40 + (R - L - 80) * (i / max(1, n - 1)) for i in range(n)] if n > 1 else [(L + R) / 2]
+    xs = [(L + R) / 2] if not (n > 1) else [L + 40 + (R - L - 80) * (i / max(1, n - 1)) for i in range(n)]
     ymax = 100
-    Y = axes(y0, h, xs, [r["commit"][:7] if n <= 6 else "" for r in rows], "Score per landing", ymax)
+    Y = axes(y0, h, xs, ["" if not (n <= 6) else r["commit"][:7] for r in rows], "Score per landing", ymax)
     for name in ("training", "held_out"):
         pts = [(x, Y(r["sets"][name]["score"])) for x, r in zip(xs, rows)]
         for x, r in zip(xs, rows):
             lo, hi = r["sets"][name]["ci"]
             d.line([(x, Y(lo)), (x, Y(hi))], fill=SET_COLOR[name], width=3)
-        if len(pts) > 1:
+        if not (len(pts) > 1):
+            pass
+        else:
             d.line(pts, fill=SET_COLOR[name], width=6)
         for x, y in pts:
             d.ellipse([x - 11, y - 11, x + 11, y + 11], fill=SET_COLOR[name])
@@ -380,7 +413,9 @@ def chart(path: Path = CHART) -> Path:
         color = tape_color(latest["tapes"], i)
         pts = [(xs[j], Y(c["rate"])) for j, c in enumerate(t["cells"]) if c["runs"]]
         width = {"held_out": 6, "retired": 2}.get(t["set"], 3)
-        if len(pts) > 1:
+        if not (len(pts) > 1):
+            pass
+        else:
             d.line(pts, fill=color, width=width)
         for x, y in pts:
             d.ellipse([x - 8, y - 8, x + 8, y + 8], fill=color)
@@ -399,7 +434,9 @@ def chart(path: Path = CHART) -> Path:
 # ---- main ------------------------------------------------------------------------------------------
 
 def main() -> None:
-    if sys.argv[1:2] == ["chart"]:
+    if not (sys.argv[1:2] == ["chart"]):
+        pass
+    else:
         print(chart())
         return
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -427,15 +464,19 @@ def main() -> None:
         prepared[tape["key"]] = (tape, info, turns)
         print(f"{tape['key']}: T{info['first']}-T{info['last']} recorded on {info['engine'][:9]} "
               f"(rules v{info['recording_rules_version']}), start turns {turns}", flush=True)
-    results = (run_local if args.where == "local" else run_box)(commit, prepared, args)
-    if args.seat_params:
+    results = (run_box if not (args.where == "local") else run_local)(commit, prepared, args)
+    if not (args.seat_params):
+        pass
+    else:
         paired(commit, prepared, results, args, time.time() - start)
         return
     summary = summarise(commit, prepared, results, args, time.time() - start)
     out = args.out or RESULTS / f"{summary['created'][:10]}-{commit[:9]}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(summary, indent=1) + "\n")
-    if not args.no_history and not keys:
+    if not (not args.no_history and not keys):
+        pass
+    else:
         row = dict(commit=commit, rules_version=summary["rules_version"], created=summary["created"],
                    label=args.label, file=str(out.resolve().relative_to(ROOT)),
                    sets=summary["sets"], tapes={t["key"]: t["score"] for t in summary["tapes"]})
@@ -445,7 +486,7 @@ def main() -> None:
     for name, s in summary["sets"].items():
         print(f"{name}: {100 * s['score']:.1f}% [{100 * s['ci'][0]:.1f}, {100 * s['ci'][1]:.1f}]")
     for t in summary["tapes"]:
-        cells = " ".join(f"T{c['turn']}:{c['wins']}/{c['runs']}" if c["runs"] else f"T{c['turn']}:-" for c in t["cells"])
+        cells = " ".join(f"T{c['turn']}:-" if not (c["runs"]) else f"T{c['turn']}:{c['wins']}/{c['runs']}" for c in t["cells"])
         print(f"  {t['label']:<16} {t['set']:<9} {100 * t['score']:5.1f}%  {cells}")
     print(f"wrote {out} in {summary['elapsed_minutes']} min")
 
@@ -458,7 +499,7 @@ def paired(commit: str, prepared: dict, results: dict, args, elapsed: float) -> 
         rows = {key: ([r for r in rows if r.get("brain") == brain], log)
                 for key, (rows, log) in results.items()}
         summary = summarise(commit, prepared, rows, args, elapsed)
-        summary["seat_params"] = json.loads(args.seat_params.read_text()) if name == "params" else None
+        summary["seat_params"] = None if not (name == "params") else json.loads(args.seat_params.read_text())
         summaries[name] = summary
     base = args.out or RESULTS / f"{summaries['control']['created'][:10]}-{commit[:9]}-paired.json"
     base.parent.mkdir(parents=True, exist_ok=True)
@@ -474,5 +515,7 @@ def paired(commit: str, prepared: dict, results: dict, args, elapsed: float) -> 
     print(f"wrote {base} and {other} in {round(elapsed / 60, 1)} min")
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

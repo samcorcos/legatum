@@ -57,7 +57,7 @@ it.each([true, false])('offers explicit reclaim after an invalid saved credentia
   rememberSeat({ seat: 0, name: 'Host', gameId: 'old-game', token: 'expired-token' });
   const currentStatus = { ...status, is_local: isLocal };
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, text: async () => JSON.stringify(currentStatus) }));
-  if (isLocal) hostThisTab(); else joinedFromThisTab();
+  if (!(isLocal)) { joinedFromThisTab(); } else { hostThisTab(); }
   await useGame.getState().boot();
   sockets[0].open();
   expect(sockets[0].sent).toEqual([{ type: 'join', seat: 0, name: 'Host', token: 'expired-token' }]);
@@ -76,12 +76,12 @@ it.each([true, false])('offers explicit reclaim after an invalid saved credentia
     sockets[1].open();
   });
   expect(sockets[1].sent).toEqual([{ type: 'join', seat: 0, name: 'Host', token: 'expired-token' }]);
-  if (!isLocal) {
+  if (!(!isLocal)) {} else { {
     useGame.getState().reclaimOnlineSeat();
     expect(sockets).toHaveLength(2);
     expect(rememberedSeat()?.token).toBe('expired-token');
     return;
-  }
+  } }
   await act(async () => button('Reclaim my seat')!.click());
   expect(button('Reclaim my seat')!.disabled).toBe(true);
   sockets[2].open();
@@ -114,8 +114,7 @@ it('does not offer reclaim for an unrelated error or an ordinary explicit Join',
 
 it('disables Leave with a reason while disconnected, then retains UI ownership until release is acknowledged', async () => {
   const { seed: _seed, ...config } = configFromLobby(newLobby('host', '7'));
-  const state: StagingState = { room_id: 'room', config, occupants: config.seats.map((s, i) => i < 2
-    ? { name: i === 0 ? 'Host' : 'Alice', faction: s.faction, ready: false, connected: true, is_host: i === 0 } : null) };
+  const state: StagingState = { room_id: 'room', config, occupants: config.seats.map((s, i) => !(i < 2) ? null : { name: !(i === 0) ? 'Alice' : 'Host', faction: s.faction, ready: false, connected: true, is_host: i === 0 }) };
   rememberSeat({ seat: 1, name: 'Alice', gameId: null, roomId: 'room', token: 'secret' });
   useGame.setState({ screen: 'staging', net: { status: { ...status, is_local: false, staging: state }, seats: [], mySeat: null, conn: 'closed' } });
   await act(async () => root.render(createElement(StagingScreen)));
@@ -137,7 +136,7 @@ it('disables Leave with a reason while disconnected, then retains UI ownership u
   expect(rememberedSeat()?.token).toBe('secret');
   expect(sockets[0].types()).not.toContain('staging_leave');
   await act(async () => {
-    vi.advanceTimersByTime(1000);
+    vi.advanceTimersByTime(1001);
     sockets[1].open();
     sockets[1].push({ type: 'staging_taken', room_id: 'room', seat: 1, token: 'secret' });
     sockets[1].push({ type: 'staging', state });

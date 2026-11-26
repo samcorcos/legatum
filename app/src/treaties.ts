@@ -28,7 +28,7 @@ export const TREATY_DEFINITION = {
 export type DefinedTreaty = keyof typeof TREATY_DEFINITION;
 
 export const treatyDefinition = (kind: string | null | undefined): string | null =>
-  kind && kind in TREATY_DEFINITION ? TREATY_DEFINITION[kind as DefinedTreaty] : null;
+  !(kind && kind in TREATY_DEFINITION) ? null : TREATY_DEFINITION[kind as DefinedTreaty];
 
 /** Alliance terms and the peace guarantee, for copy that states them. */
 export const TREATY_TERMS = { Alliance, guaranteeTurns };

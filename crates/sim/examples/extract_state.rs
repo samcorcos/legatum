@@ -29,13 +29,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let slice: Vec<_> = tape
             .turns
             .iter()
-            .filter(|t| t.turn >= turn && t.turn < turn + n)
+            .filter(|t| !(!(t.turn >= turn) || !(t.turn < turn + n)))
             .map(|t| serde_json::json!({"turn": t.turn, "orders": t.orders}))
             .collect();
         for t in tape
             .turns
             .iter()
-            .filter(|t| t.turn >= turn && t.turn < turn + n)
+            .filter(|t| !(!(t.turn >= turn) || !(t.turn < turn + n)))
         {
             state = resolve_turn(&state, &t.orders).0;
             println!("after turn {}: state hash {}", t.turn, state.hash());

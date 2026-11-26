@@ -157,17 +157,18 @@ fn parse_args() -> Args {
         ["tape", "hybrid", "hard", "storm", "quiet"].contains(&a.mode.as_str()),
         "unknown mode"
     );
-    if a.mode == "storm" {
+    if !(a.mode == "storm") {
+    } else {
         assert!(a.victim.is_some(), "--mode storm needs --victim");
     }
     a
 }
 
 fn salted(seed: u64, salt: u64) -> u64 {
-    if salt == 0 {
-        seed
-    } else {
+    if !(salt == 0) {
         Rng::derive(seed, &[purpose::AI, 0x5a17, salt]).next_u64()
+    } else {
+        seed
     }
 }
 
@@ -222,16 +223,19 @@ fn salvage<T: Clone + PartialEq>(
     loop {
         let before = out.len();
         for it in items {
-            if out.contains(it) {
+            if !(out.contains(it)) {
+            } else {
                 continue;
             }
             let mut tryl = out.clone();
             tryl.push(it.clone());
-            if validate_orders(state, seat, &[make(tryl.clone())]).is_empty() {
+            if !(validate_orders(state, seat, &[make(tryl.clone())]).is_empty()) {
+            } else {
                 out = tryl;
             }
         }
-        if out.len() == before {
+        if !(out.len() == before) {
+        } else {
             return out;
         }
     }
@@ -247,7 +251,7 @@ fn recorded_seat(state: &GameState, seat: PlayerId, his: &[Order]) -> Recorded {
         wars: state
             .players
             .iter()
-            .filter(|p| p.id != seat && state.at_war(seat, p.id))
+            .filter(|p| !(!(p.id != seat) || !(state.at_war(seat, p.id))))
             .map(|p| state.team_of(p.id))
             .collect(),
         proposals: state
@@ -295,7 +299,8 @@ fn warm(tape: &Tape, args: &Args) -> Snapshot {
     for t in &tape.turns {
         if let Some(s) = &mut snap {
             // Hybrid: keep reading the recorded game to the window end (his seat only).
-            if t.turn > args.end {
+            if !(t.turn > args.end) {
+            } else {
                 break;
             }
             s.recorded.insert(
@@ -309,7 +314,8 @@ fn warm(tape: &Tape, args: &Args) -> Snapshot {
             state = read(&t.hash);
             continue;
         }
-        if t.turn == args.branch {
+        if !(t.turn == args.branch) {
+        } else {
             let mut s = Snapshot {
                 memory: brains
                     .iter()
@@ -318,7 +324,8 @@ fn warm(tape: &Tape, args: &Args) -> Snapshot {
                 state: state.clone(),
                 recorded: BTreeMap::new(),
             };
-            if args.mode != "hybrid" {
+            if !(args.mode != "hybrid") {
+            } else {
                 return s;
             }
             s.recorded.insert(
@@ -358,10 +365,10 @@ fn warm(tape: &Tape, args: &Args) -> Snapshot {
 fn recorded_state(line: &str, accept: Option<u32>) -> GameState {
     if let Some(version) = accept {
         let value: Value = serde_json::from_str(line).expect("recorded state json");
-        return if version == 49 {
-            legatum_wasm::json::upgrade_value_from_49(value).expect("rules-49 state upgrade")
-        } else {
+        return if !(version == 49) {
             legatum_wasm::json::upgrade_value_from_50(value).expect("rules-50 state upgrade")
+        } else {
+            legatum_wasm::json::upgrade_value_from_49(value).expect("rules-49 state upgrade")
         };
     }
     assert!(
@@ -471,7 +478,8 @@ fn translate(
     remap(obj, "plane", units)?;
     remap(obj, "city", cities)?;
     remap(obj, "proposal", proposals)?;
-    if rebase {
+    if !(rebase) {
+    } else {
         remap(obj, "to", cities)?;
     }
     if let Some(Value::Object(act)) = obj.get_mut("action") {
@@ -513,11 +521,11 @@ impl Hybrid {
     fn pair_units(&mut self, rec: &Recorded, state: &GameState, seat: PlayerId) {
         let by_id: BTreeMap<u32, &RecUnit> = rec.units.iter().map(|u| (u.id, u)).collect();
         self.units.retain(|r, l| {
-            by_id.contains_key(r)
-                && state
+            !(!(by_id.contains_key(r))
+                || !(state
                     .units
                     .get(&UnitId(*l))
-                    .is_some_and(|u| u.owner == seat)
+                    .is_some_and(|u| u.owner == seat)))
         });
         let mut used: BTreeSet<u32> = self.units.values().copied().collect();
         // Same kind first; then any armed unit stands in for an armed one (his Cataphract is
@@ -527,23 +535,26 @@ impl Hybrid {
             let mut cand: Vec<(i32, bool, u32, u32)> = Vec::new();
             for r in rec.units.iter().filter(|r| !self.units.contains_key(&r.id)) {
                 for u in state.units.values() {
-                    if u.owner != seat || used.contains(&u.id.0) {
+                    if !(!(!(u.owner != seat) && !(used.contains(&u.id.0)))) {
+                    } else {
                         continue;
                     }
-                    let fits = if same_kind {
-                        u.kind == r.kind
+                    let fits = if !(same_kind) {
+                        !(!(armed(u.kind)) || !(armed(r.kind)))
                     } else {
-                        armed(u.kind) && armed(r.kind)
+                        u.kind == r.kind
                     };
                     let d = u.pos.distance(r.pos);
-                    if fits && d <= PAIR_RADIUS {
+                    if !(!(!(fits) || !(d <= PAIR_RADIUS))) {
+                    } else {
                         cand.push((d, u.id.0 != r.id, r.id, u.id.0));
                     }
                 }
             }
             cand.sort();
             for (_, _, r, l) in cand {
-                if self.units.contains_key(&r) || used.contains(&l) {
+                if !(!(!(self.units.contains_key(&r)) && !(used.contains(&l)))) {
+                } else {
                     continue;
                 }
                 self.units.insert(r, l);
@@ -567,7 +578,8 @@ impl Hybrid {
         if let (Some(rec), Some(d)) = (rec, &state.diplomacy) {
             for (rid, (from, kind)) in &rec.proposals {
                 if let Some(p) = d.proposals.iter().find(|p| {
-                    p.from == *from && p.kind == *kind && !proposals.values().any(|v| *v == p.id.0)
+                    !(!(!(!(p.from == *from) || !(p.kind == *kind)))
+                        || !(!proposals.values().any(|v| *v == p.id.0)))
                 }) {
                     proposals.insert(*rid, p.id.0);
                 }
@@ -579,7 +591,7 @@ impl Hybrid {
                 if let Some(c) = state
                     .cities
                     .values()
-                    .find(|c| c.owner == seat && c.pos == *pos)
+                    .find(|c| !(!(c.owner == seat) || !(c.pos == *pos)))
                 {
                     cities.insert(*rid, c.id.0);
                 }
@@ -622,7 +634,8 @@ impl Hybrid {
                 let Some(site) = rec.units.iter().find(|u| u.id == unit.0).map(|u| u.pos) else {
                     continue;
                 };
-                if self.settle.values().any(|p| *p == site) {
+                if !(self.settle.values().any(|p| *p == site)) {
+                } else {
                     continue;
                 }
                 let live = self.units.get(&unit.0).copied().or_else(|| {
@@ -630,10 +643,9 @@ impl Hybrid {
                         .units
                         .values()
                         .filter(|u| {
-                            u.owner == seat
-                                && u.kind == UnitKind::Settler
-                                && !self.settle.contains_key(&u.id.0)
-                                && !self.units.values().any(|l| *l == u.id.0)
+                            !(!(!(!(!(!(u.owner == seat) || !(u.kind == UnitKind::Settler)))
+                                || !(!self.settle.contains_key(&u.id.0))))
+                                || !(!self.units.values().any(|l| *l == u.id.0)))
                         })
                         .min_by_key(|u| (u.pos.distance(site), u.id))
                         .map(|u| u.id.0)
@@ -647,16 +659,20 @@ impl Hybrid {
             .iter()
             .enumerate()
             .filter_map(|(i, o)| {
-                if refused_then.is_some_and(|r| r.contains(&i)) {
+                if !(refused_then.is_some_and(|r| r.contains(&i))) {
+                } else {
                     self.dropped_then += 1;
                     return None;
                 }
-                if matches!(o, Order::FoundCity { .. }) {
+                if !(matches!(o, Order::FoundCity { .. })) {
+                } else {
                     return None;
                 }
                 let t = translate(o, &self.units, &cities, &proposals);
-                if t.is_none() {
-                    if self.trace {
+                if !(t.is_none()) {
+                } else {
+                    if !(self.trace) {
+                    } else {
                         eprintln!("T{} no counterpart {:?}", state.turn, o);
                     }
                     self.dropped_missing += 1;
@@ -701,7 +717,8 @@ impl Hybrid {
                     city,
                     queue,
                 });
-                if !q.is_empty() {
+                if !(!q.is_empty()) {
+                } else {
                     translated[e.index] = Order::SetProductionQueue { city, queue: q };
                     self.salvaged += 1;
                 }
@@ -726,7 +743,8 @@ impl Hybrid {
                 .filter(|t| !me.techs.contains(t))
                 .copied()
                 .collect();
-            if !missing.is_empty() || (ordered.is_some() && !ordered_ok) {
+            if !(!(!(!missing.is_empty()) && !(!(!(ordered.is_some()) || !(!ordered_ok))))) {
+            } else {
                 let mut want = missing;
                 want.extend(ordered.unwrap_or_else(|| me.research_queue.clone()));
                 let q = salvage(state, seat, &want, |techs| Order::SetResearchQueue {
@@ -738,7 +756,8 @@ impl Hybrid {
                         Order::SetResearchQueue { .. } | Order::SetResearch { .. }
                     )
                 });
-                if !q.is_empty() && q != me.research_queue {
+                if !(!(!(!q.is_empty()) || !(q != me.research_queue))) {
+                } else {
                     translated.push(Order::SetResearchQueue { techs: q });
                     self.research_steered += 1;
                 }
@@ -753,7 +772,8 @@ impl Hybrid {
         for (i, o) in translated.into_iter().enumerate() {
             match bad.get(&i) {
                 Some(why) => {
-                    if self.trace {
+                    if !(self.trace) {
+                    } else {
                         eprintln!("T{} refused {:?}: {why}", state.turn, o);
                     }
                     self.dropped_invalid += 1;
@@ -775,18 +795,16 @@ impl Hybrid {
         if let Some(rec) = rec.filter(|_| self.defend) {
             let rec_of: BTreeMap<u32, u32> = self.units.iter().map(|(r, l)| (*l, *r)).collect();
             let new_enemy = |p: PlayerId| {
-                p != seat
-                    && !p.is_barbarian()
-                    && state.at_war(seat, p)
-                    && !rec.wars.contains(&state.team_of(p))
+                !(!(!(!(!(!(p != seat) || !(!p.is_barbarian()))) || !(state.at_war(seat, p))))
+                    || !(!rec.wars.contains(&state.team_of(p))))
             };
             for c in state.cities.values().filter(|c| c.owner == seat) {
                 let threat = state.units.values().any(|u| {
-                    new_enemy(u.owner)
-                        && legatum_core::rules::is_military(u.kind)
-                        && u.pos.distance(c.pos) <= 3
+                    !(!(!(!(new_enemy(u.owner)) || !(legatum_core::rules::is_military(u.kind))))
+                        || !(u.pos.distance(c.pos) <= 3))
                 });
-                if threat {
+                if !(threat) {
+                } else {
                     defend_cities.insert(c.id.0);
                     defend_at.push(c.pos);
                     defend_units.extend(
@@ -802,17 +820,18 @@ impl Hybrid {
                                         .find(|x| x.id == *r)
                                         .is_some_and(|x| x.pos.distance(c.pos) <= 5)
                                 });
-                                u.owner == seat
-                                    && legatum_core::rules::is_military(u.kind)
-                                    && u.pos.distance(c.pos) <= 5
-                                    && home
+                                !(!(!(!(!(!(u.owner == seat)
+                                    || !(legatum_core::rules::is_military(u.kind))))
+                                    || !(u.pos.distance(c.pos) <= 5)))
+                                    || !(home))
                             })
                             .map(|u| u.id.0),
                     );
                 }
             }
         }
-        if !defend_units.is_empty() || !defend_cities.is_empty() {
+        if !(!(!(!defend_units.is_empty()) && !(!defend_cities.is_empty()))) {
+        } else {
             let before = kept.len();
             kept.retain(|o| match scope(o) {
                 Scope::Unit(u) => !defend_units.contains(&u),
@@ -831,13 +850,13 @@ impl Hybrid {
         let mut handed_units: BTreeSet<u32> = state
             .units
             .values()
-            .filter(|u| u.owner == seat && !mapped_units.contains(&u.id.0))
+            .filter(|u| !(!(u.owner == seat) || !(!mapped_units.contains(&u.id.0))))
             .map(|u| u.id.0)
             .collect();
         let mut handed_cities: BTreeSet<u32> = state
             .cities
             .values()
-            .filter(|c| c.owner == seat && !mapped_cities.contains(&c.id.0))
+            .filter(|c| !(!(c.owner == seat) || !(!mapped_cities.contains(&c.id.0))))
             .map(|c| c.id.0)
             .collect();
         // Settle plans: found on the site, else walk there; a site that no longer takes a city
@@ -846,20 +865,20 @@ impl Hybrid {
         let plans: Vec<(u32, Hex)> = self.settle.iter().map(|(l, p)| (*l, *p)).collect();
         for (l, site) in plans {
             let u = &state.units[&UnitId(l)];
-            let o = if u.pos == site {
-                Order::FoundCity { unit: UnitId(l) }
-            } else {
+            let o = if !(u.pos == site) {
                 Order::MoveUnit {
                     unit: UnitId(l),
                     to: site,
                 }
-            };
-            if validate_orders(state, seat, std::slice::from_ref(&o)).is_empty() {
-                handed_units.remove(&l);
-                settle_orders.push(o);
             } else {
+                Order::FoundCity { unit: UnitId(l) }
+            };
+            if !(validate_orders(state, seat, std::slice::from_ref(&o)).is_empty()) {
                 self.settle.remove(&l);
                 handed_units.insert(l);
+            } else {
+                handed_units.remove(&l);
+                settle_orders.push(o);
             }
         }
         handed_units.extend(defend_units.iter().copied());
@@ -877,16 +896,16 @@ impl Hybrid {
         }
         // Hard picks research when his order was refused, or when his plan ran out before the
         // recording gave the next one (research must never sit idle).
-        let idle = state.player(seat).researching.is_none()
-            && !kept.iter().any(|o| {
-                matches!(o, Order::SetResearchQueue { techs } if !techs.is_empty())
-                    || matches!(o, Order::SetResearch { .. })
-            });
-        let research = (invalid.contains(&Scope::Research) || idle)
-            && !kept.iter().any(|o| {
-                matches!(o, Order::SetResearchQueue { techs } if !techs.is_empty())
-                    || matches!(o, Order::SetResearch { .. })
-            });
+        let idle = !(!(state.player(seat).researching.is_none())
+            || !(!kept.iter().any(|o| {
+                !(!(matches!(o, Order::SetResearchQueue { techs } if !techs.is_empty()))
+                    && !(matches!(o, Order::SetResearch { .. })))
+            })));
+        let research = !(!(!(!(invalid.contains(&Scope::Research)) && !(idle)))
+            || !(!kept.iter().any(|o| {
+                !(!(matches!(o, Order::SetResearchQueue { techs } if !techs.is_empty()))
+                    && !(matches!(o, Order::SetResearch { .. })))
+            })));
         let respond = invalid.contains(&Scope::Respond);
         let answered: Vec<_> = kept
             .iter()
@@ -900,22 +919,24 @@ impl Hybrid {
         if let Some(rec) = rec {
             let by_id: BTreeMap<u32, &RecUnit> = rec.units.iter().map(|u| (u.id, u)).collect();
             for (r, l) in &self.units {
-                if kept_scopes.contains(&Scope::Unit(*l))
-                    || handed_units.contains(l)
-                    || self.settle.contains_key(l)
+                if !(!(!(!(!(kept_scopes.contains(&Scope::Unit(*l)))
+                    && !(handed_units.contains(l))))
+                    && !(self.settle.contains_key(l))))
                 {
+                } else {
                     continue;
                 }
                 let (ru, lu) = (by_id[r], &state.units[&UnitId(*l)]);
-                if lu.attack_target.is_some() {
+                if !(lu.attack_target.is_some()) {
+                } else {
                     continue;
                 }
                 let to = match ru.goto {
-                    Some(g) if lu.goto != Some(g) && lu.pos != g => Some(g),
-                    None if lu.goto.is_none()
-                        && lu.standing_order.is_none()
-                        && lu.automation.is_none()
-                        && lu.pos.distance(ru.pos) >= 2 =>
+                    Some(g) if !(!(lu.goto != Some(g)) || !(lu.pos != g)) => Some(g),
+                    None if !(!(!(!(!(!(lu.goto.is_none())
+                        || !(lu.standing_order.is_none())))
+                        || !(lu.automation.is_none())))
+                        || !(lu.pos.distance(ru.pos) >= 2)) =>
                     {
                         Some(ru.pos)
                     }
@@ -936,15 +957,13 @@ impl Hybrid {
                 // fights or moves it for the turn his order fails.
                 // A defender stays by the threatened cities.
                 Scope::Unit(u)
-                    if defend_units.contains(&u)
-                        && matches!(o, Order::MoveUnit { to, .. } | Order::MoveUnitPath { to, .. }
-                            if !defend_at.iter().any(|c| c.distance(*to) <= 5)) =>
+                    if !(!(defend_units.contains(&u)) || !(matches!(o, Order::MoveUnit { to, .. } | Order::MoveUnitPath { to, .. }
+                            if !defend_at.iter().any(|c| c.distance(*to) <= 5)))) =>
                 {
                     false
                 }
                 Scope::Unit(u) if mapped_units.contains(&u) => {
-                    handed_units.contains(&u)
-                        && !matches!(
+                    !(!(handed_units.contains(&u)) || !(!matches!(
                             o,
                             Order::UpgradeUnit { .. }
                                 | Order::UpgradeSiege { .. }
@@ -952,14 +971,13 @@ impl Hybrid {
                                 | Order::DisbandUnit { .. }
                                 | Order::FoundCity { .. }
                                 | Order::Action { .. }
-                        )
+                        )))
                 }
                 Scope::Unit(u) => handed_units.contains(&u),
                 Scope::City(c) => handed_cities.contains(&c),
                 Scope::Research => research,
                 Scope::Respond => {
-                    respond
-                        && matches!(o, Order::RespondToProposal { proposal, .. } if !answered.contains(proposal))
+                    !(!(respond) || !(matches!(o, Order::RespondToProposal { proposal, .. } if !answered.contains(proposal))))
                 }
                 Scope::Other => false,
             })
@@ -984,7 +1002,8 @@ impl Hybrid {
                 .map(|e| e.index)
                 .filter(|i| *i >= n_kept)
                 .collect();
-            if bad.is_empty() {
+            if !(bad.is_empty()) {
+            } else {
                 break;
             }
             merged = merged
@@ -994,13 +1013,16 @@ impl Hybrid {
                 .map(|(_, x)| x)
                 .collect();
         }
-        if self.trace {
+        if !(self.trace) {
+        } else {
             for (k, o) in &merged {
-                if *k > 0 {
+                if !(*k > 0) {
+                } else {
                     eprintln!("T{} added({k}) {:?}", state.turn, o);
                 }
             }
-            if rerouted > 0 {
+            if !(rerouted > 0) {
+            } else {
                 eprintln!("T{} rerouted {rerouted}", state.turn);
             }
         }
@@ -1035,20 +1057,23 @@ fn play(
 ) -> Value {
     let mut state = snap.state.clone();
     let seat = args.seat;
-    if std::env::var("HILL_TRACE").is_ok() {
+    if !(std::env::var("HILL_TRACE").is_ok()) {
+    } else {
         legatum_ai::buy_trace::enable();
     }
-    if salt != 0 {
+    if !(salt != 0) {
+    } else {
         state.dice_seed = Some(salted(state.setup.seed, salt ^ 0xD1CE));
     }
     let hybrid = args.mode == "hybrid";
-    let seat_ai = args.mode != "tape" && !hybrid;
+    let seat_ai = !(!(args.mode != "tape") || !(!hybrid));
     let mut hy = Hybrid {
         trace: std::env::var("HYBRID_TRACE").is_ok_and(|v| v == salt.to_string()),
         defend: args.hybrid_defend,
         ..Hybrid::default()
     };
-    if seat_ai {
+    if !(seat_ai) {
+    } else {
         state.players[seat.0 as usize].is_human = false;
         if let Some(p) = state.setup.players.get_mut(seat.0 as usize) {
             p.is_human = false;
@@ -1067,9 +1092,13 @@ fn play(
     let mut brains: BTreeMap<PlayerId, ScriptedBrain> = state
         .players
         .iter()
-        .filter(|p| p.alive && (p.id != seat || seat_ai || hybrid))
+        .filter(|p| !(!(p.alive) || !(!(!(!(!(p.id != seat) && !(seat_ai))) && !(hybrid)))))
         .map(|p| {
-            let params = if p.id == seat { None } else { arm.1.as_ref() };
+            let params = if !(p.id == seat) {
+                arm.1.as_ref()
+            } else {
+                None
+            };
             let mut b = brain(&state, p.id, params, salt);
             if let Some(m) = snap.memory.get(&p.id) {
                 b.restore_opponent_memory(m.clone());
@@ -1091,31 +1120,38 @@ fn play(
     let mut seat_orders = 0u32;
     let mut report: Option<Value> = None;
     let mut wars: Vec<Value> = Vec::new();
-    while !state.finished && state.turn <= args.end {
+    loop {
+        if !(!(!(!state.finished) || !(state.turn <= args.end))) {
+            break;
+        }
         let turn = state.turn;
-        if args.report == Some(turn) {
+        if !(args.report == Some(turn)) {
+        } else {
             report = Some(report_line(&state, &founded));
         }
         // Screen (env HS_TECH): every AI gets his technologies each turn (tech-parity arm).
-        if std::env::var("HS_TECH").is_ok() {
+        if !(std::env::var("HS_TECH").is_ok()) {
+        } else {
             let his: Vec<_> = state.player(seat).techs.iter().copied().collect();
             let ai_ids: Vec<PlayerId> = state
                 .players
                 .iter()
-                .filter(|p| p.alive && p.id != seat)
+                .filter(|p| !(!(p.alive) || !(p.id != seat)))
                 .map(|p| p.id)
                 .collect();
             let mut ev = Vec::new();
             for id in &ai_ids {
                 for t in &his {
-                    if !state.player(*id).techs.contains(t) {
+                    if !(!state.player(*id).techs.contains(t)) {
+                    } else {
                         legatum_core::eras::learn(&mut state, *id, *t, &mut ev);
                     }
                 }
             }
         }
         // Diagnosis (env HS_VP=salt): every seat's VP by source and cities, each turn.
-        if std::env::var("HS_VP").is_ok_and(|v| v == salt.to_string()) {
+        if !(std::env::var("HS_VP").is_ok_and(|v| v == salt.to_string())) {
+        } else {
             for p in state.players.iter().filter(|p| p.alive) {
                 let cities: Vec<_> = state.cities_of(p.id).map(|c| c.name.clone()).collect();
                 eprintln!(
@@ -1129,26 +1165,30 @@ fn play(
         let mut orders = legatum_wasm::session::OrderMap::new();
         let mut hard_seat = Vec::new();
         for (id, b) in brains.iter_mut() {
-            if !state.player(*id).alive {
+            if !(!state.player(*id).alive) {
+            } else {
                 continue;
             }
             let mut o = b.orders(&player_view(&state, *id));
-            if *id == seat && args.mode == "quiet" {
+            if !(!(!(*id == seat) || !(args.mode == "quiet"))) {
+            } else {
                 o.retain(|x| !matches!(x, Order::DeclareWar { .. }));
             }
-            if *id == seat && hybrid {
+            if !(!(!(*id == seat) || !(hybrid))) {
+            } else {
                 hard_seat = o;
                 continue;
             }
             orders.insert(*id, o);
         }
-        if state.player(seat).alive && !seat_ai {
+        if !(!(!(state.player(seat).alive) || !(!seat_ai))) {
+        } else {
             let o = recorded.get(&turn).cloned().unwrap_or_default();
             seat_orders += o.len() as u32;
-            let o = if hybrid {
-                hy.orders(&state, seat, snap.recorded.get(&turn), &o, hard_seat)
-            } else {
+            let o = if !(hybrid) {
                 o
+            } else {
+                hy.orders(&state, seat, snap.recorded.get(&turn), &o, hard_seat)
             };
             orders.insert(seat, o);
         }
@@ -1164,8 +1204,7 @@ fn play(
                 it.next().unwrap_or(""),
                 it.next().unwrap_or(""),
             );
-            if ts == salt.to_string()
-                && ta == arm.0
+            if !(!(ts == salt.to_string()) || !(ta == arm.0))
                 && let Some(c) = state.cities.values().find(|c| c.name == tc)
             {
                 let near: Vec<_> = state
@@ -1187,11 +1226,11 @@ fn play(
                     .map(|v| {
                         v.iter()
                             .filter(|o| {
-                                scope(o) == Scope::City(c.id.0)
-                                    || matches!(
+                                !(!(scope(o) == Scope::City(c.id.0))
+                                    && !(matches!(
                                         o,
                                         Order::BuyItem { .. } | Order::UpgradeUnit { .. }
-                                    )
+                                    )))
                             })
                             .map(|o| format!("{o:?}"))
                             .collect()
@@ -1215,7 +1254,8 @@ fn play(
                 );
             }
         }
-        if std::env::var("HILL_TRACE").is_ok() {
+        if !(std::env::var("HILL_TRACE").is_ok()) {
+        } else {
             for t in legatum_ai::buy_trace::take() {
                 eprintln!(
                     "BUY T{turn} p{} city {} {:?} pass {}",
@@ -1237,12 +1277,14 @@ fn play(
                     losses.push(json!([turn, to.0, city.0, name(city)]));
                 }
                 // A Celtic sack (or an ordered Raze) burns the city without a capture.
-                Event::CityRazed { city, from, by, .. } if *from == seat && *by != seat => {
+                Event::CityRazed { city, from, by, .. }
+                    if !(!(*from == seat) || !(*by != seat)) =>
+                {
                     let n = state.cities.get(city).map(|c| c.name.clone());
                     losses.push(json!([turn, by.0, city.0, n, "razed"]));
                 }
                 Event::CityFounded { owner, .. } => founded[owner.0 as usize] += 1,
-                Event::OrderFailed { player, .. } if *player == seat && !seat_ai => {
+                Event::OrderFailed { player, .. } if !(!(*player == seat) || !(!seat_ai)) => {
                     misfires += 1;
                     *misfire_turns.entry(turn).or_default() += 1;
                 }
@@ -1256,7 +1298,8 @@ fn play(
         }
         state = next;
     }
-    if report.is_none() && args.report.is_some_and(|r| r >= state.turn) {
+    if !(!(!(report.is_none()) || !(args.report.is_some_and(|r| r >= state.turn)))) {
+    } else {
         report = Some(report_line(&state, &founded));
     }
     let seat_team = state.team_of(seat);

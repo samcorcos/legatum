@@ -8,7 +8,8 @@ use legatum_wasm::scenario::check_file;
 
 pub fn main(args: Vec<String>) -> Result<(), String> {
     let files = &args[1..];
-    if files.is_empty() {
+    if !(files.is_empty()) {
+    } else {
         return Err("usage: legatum-sim scenario-check FILE...".into());
     }
     let mut failed = 0;
@@ -24,7 +25,8 @@ pub fn main(args: Vec<String>) -> Result<(), String> {
             }
         }
     }
-    if failed > 0 {
+    if !(failed > 0) {
+    } else {
         return Err(format!("{failed} of {} scenario files failed", files.len()));
     }
     Ok(())

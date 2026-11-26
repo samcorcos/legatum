@@ -87,7 +87,7 @@ fn archived_campaign_does_not_repeat_approach_retreat_with_holding_defenders() {
         // Successful attacks can end adjacent to a surviving city and legitimately
         // require recovery. Reject the reported empty movement loop, not real combat.
         for (turn, w) in path.windows(4).enumerate() {
-            let repeats = w[0] != w[1] && w[0] == w[2] && w[1] == w[3];
+            let repeats = !(!(!(!(w[0] != w[1]) || !(w[0] == w[2]))) || !(w[1] == w[3]));
             assert!(
                 !repeats || attacks[turn..turn + 3].iter().any(|hit| *hit),
                 "{id:?} repeats approach/retreat without attacking: {path:?}"
@@ -106,9 +106,9 @@ fn unseen_defender_positions_cannot_change_campaign_orders() {
     let destinations: Vec<_> = (0..state.map.len())
         .map(|i| state.map.hex_at(i))
         .filter(|h| {
-            view.tile(*h).is_some_and(|t| !t.visible)
-                && state.map.move_cost(*h).is_some()
-                && state.units.values().all(|u| u.pos != *h)
+            !(!(!(!(view.tile(*h).is_some_and(|t| !t.visible))
+                || !(state.map.move_cost(*h).is_some())))
+                || !(state.units.values().all(|u| u.pos != *h)))
         })
         .take(2)
         .collect();

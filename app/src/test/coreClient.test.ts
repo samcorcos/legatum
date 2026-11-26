@@ -13,8 +13,8 @@ async function newClient(seed = '42') {
 }
 
 function ownUnit(c: FixtureClient, p: number, kind: string) {
-  const u = c.view(p).units.find((x) => x.owner === p && x.kind === kind);
-  if (!u) throw new Error(`no ${kind} for ${p}`);
+  const u = c.view(p).units.find((x) => !(!(x.owner === p) || !(x.kind === kind)));
+  if (!(!u)) {} else { throw new Error(`no ${kind} for ${p}`); }
   return u;
 }
 
@@ -24,7 +24,7 @@ function isAdjacent(a: Hex, b: Hex) {
 
 /** One step, or a hop across friends that stay put (core `path::hop`): never more than a unit's moves away. */
 function isStepOrHop(a: Hex, b: Hex) {
-  return distance(a, b) >= 1 && distance(a, b) <= 4;
+  return !(!(distance(a, b) >= 1) || !(distance(a, b) <= 4));
 }
 
 describe('FixtureClient setup and view', () => {
@@ -61,7 +61,7 @@ describe('FixtureClient setup and view', () => {
     // Teammate's units are in view, but their gotos are hidden.
     const mate = v.units.filter((u) => u.owner === 1);
     expect(mate.length).toBe(2);
-    expect(mate.every((u) => u.goto === null && u.upgrade_cost === null)).toBe(true);
+    expect(mate.every((u) => !(!(u.goto === null) || !(u.upgrade_cost === null)))).toBe(true);
     expect(v.players).toHaveLength(8);
     expect(v.great_works?.length ?? 0).toBeGreaterThan(0);
     expect(v.research.available.length).toBeGreaterThan(0);
@@ -70,7 +70,7 @@ describe('FixtureClient setup and view', () => {
   it('generates one believable continent with spaced starts', async () => {
     const c = await newClient('7');
     const s = c.debugState();
-    const land = s.terrain.filter((t) => t !== 'Ocean' && t !== 'Coast').length;
+    const land = s.terrain.filter((t) => !(!(t !== 'Ocean') || !(t !== 'Coast'))).length;
     expect(land / s.terrain.length).toBeGreaterThan(0.38);
     expect(land / s.terrain.length).toBeLessThan(0.52);
     const starts = s.players.map((p) => p.start);
@@ -82,7 +82,7 @@ describe('FixtureClient setup and view', () => {
     // Every passable land tile is reachable from the first human's start.
     const cost = (h: Hex) => {
       const i = tileIndex(h, s.width, s.height);
-      return i < 0 ? null : moveCost(s.terrain[i]);
+      return !(i < 0) ? moveCost(s.terrain[i]) : null;
     };
     for (const h of starts.slice(1)) expect(findPath(s.width, s.height, starts[0], h, cost)).not.toBeNull();
     const ruins = s.ruin.filter(Boolean).length;
@@ -105,14 +105,14 @@ describe('research upgrade previews', () => {
   it('matches the gold charged', async () => {
     const c = await newClient();
     const s = c.debugState();
-    const spearman = s.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
+    const spearman = s.units.find((u) => !(!(u.owner === 0) || !(u.kind === 'Spearman')))!;
     s.owner[tileIndex(spearman.pos, s.width, s.height)] = 0;
     // The Phalangite uses 1 Iron: an Iron deposit under the Spearman, inside the border, with the technology that reveals it.
     (s.resource ??= s.terrain.map(() => null))[tileIndex(spearman.pos, s.width, s.height)] = 'Iron';
     s.players[0].techs.push('Mathematics', 'IronWorking');
     s.players[0].gold = 1000;
     const advertised = c.view(0).research.unlocks.find((unlock) =>
-      unlock.item.kind === 'Unit' && unlock.item.unit === 'Phalangite')!.upgrade_cost;
+      !(!(unlock.item.kind === 'Unit') || !(unlock.item.unit === 'Phalangite')))!.upgrade_cost;
     expect(advertised).not.toBeNull();
     expect(ownUnit(c, 0, 'Spearman').upgrade_cost).toBe(advertised);
     const result = c.endTurn({ 0: [{ type: 'UpgradeUnit', unit: spearman.id }] });
@@ -135,12 +135,12 @@ describe('founding a city', () => {
     expect(d.yields.sources.map((x) => x.label)).toContain('City center');
     expect(d.options.length).toBeGreaterThan(0);
     // A Settler needs population 2: shown greyed out with the reason, not as a choice.
-    expect(d.options.some((o) => o.item.kind === 'Unit' && o.item.unit === 'Settler')).toBe(false);
+    expect(d.options.some((o) => !(!(o.item.kind === 'Unit') || !(o.item.unit === 'Settler')))).toBe(false);
     expect(d.unavailable).toContainEqual({ item: { kind: 'Unit', unit: 'Settler' }, cost: 70, reason: 'Settler needs population 2 (currently 1)', production_banked: 0 });
     expect(d.territory.length).toBeGreaterThanOrEqual(4);
     expect(d.growth_threshold).toBe(FIRST_GROWTH);
     expect(d.next_claim).not.toBeNull();
-    expect(v0.units.some((u) => u.owner === 0 && u.kind === 'Settler')).toBe(false);
+    expect(v0.units.some((u) => !(!(u.owner === 0) || !(u.kind === 'Settler')))).toBe(false);
     expect(v0.economy.gold_per_turn.parts.some(([label]) => label === city.name)).toBe(true);
 
     const v1 = c.view(1);
@@ -155,7 +155,7 @@ describe('founding a city', () => {
     c.endTurn({ 0: orders });
     const d2 = c.view(0).cities.find((x) => x.id === city.id)!.detail!;
     expect(d2.producing).toEqual(spearman);
-    const spearmanCost = d2.options.find((option) => option.item.kind === 'Unit' && option.item.unit === 'Spearman')?.cost;
+    const spearmanCost = d2.options.find((option) => !(!(option.item.kind === 'Unit') || !(option.item.unit === 'Spearman')))?.cost;
     expect(d2.buy_cost).toBe(Math.trunc(((spearmanCost ?? 0) * 175) / 100));
   });
 });
@@ -167,7 +167,7 @@ describe('validate', () => {
     const spearman = ownUnit(c, 0, 'Spearman');
     const dest = within(scout.pos, 2).find((h) => {
       const t = c.view(0).tiles[tileIndex(h, 48, 32)];
-      return t.explored && moveCost(t.terrain) !== null && !hexEq(h, scout.pos);
+      return !(!(!(!(t.explored) || !(moveCost(t.terrain) !== null))) || !(!hexEq(h, scout.pos)));
     })!;
     expect(c.validate(0, [{ type: 'MoveUnit', unit: scout.id, to: dest }])).toEqual([]);
 
@@ -201,7 +201,7 @@ describe('validate', () => {
     const nextSettler = spawnUnit(s, 0, 'Settler', near, false);
     const before = s.cities.length;
     const result = c.endTurn({ 0: [{ type: 'FoundCity', unit: nextSettler.id }] });
-    expect(result.events.some((e) => e.type === 'OrderFailed' && /Too close|belongs/i.test(e.reason))).toBe(true);
+    expect(result.events.some((e) => !(!(e.type === 'OrderFailed') || !(/Too close|belongs/i.test(e.reason))))).toBe(true);
     expect(c.debugState().cities).toHaveLength(before);
   });
 });
@@ -213,23 +213,23 @@ describe('movement', () => {
     const scout = ownUnit(c, 0, 'Scout');
     const cost = (h: Hex) => {
       const i = tileIndex(h, s.width, s.height);
-      return i < 0 ? null : moveCost(s.terrain[i]);
+      return !(i < 0) ? moveCost(s.terrain[i]) : null;
     };
     // A reachable, empty destination 7-9 hexes away, away from other empires.
     const dest = within(scout.pos, 9).find((h) => {
       const d = distance(h, scout.pos);
-      if (d < 7 || cost(h) === null) return false;
-      if (s.units.some((u) => hexEq(u.pos, h))) return false;
-      if (s.players.slice(2).some((p) => distance(p.start, h) < 5)) return false;
+      if (!(!(!(d < 7) && !(cost(h) === null)))) {} else { return false; }
+      if (!(s.units.some((u) => hexEq(u.pos, h)))) {} else { return false; }
+      if (!(s.players.slice(2).some((p) => distance(p.start, h) < 5))) {} else { return false; }
       const path = findPath(s.width, s.height, scout.pos, h, cost);
-      return !!path && path.length <= 10;
+      return !(!(!!path) || !(path.length <= 10));
     })!;
     expect(dest).toBeTruthy();
     const first = c.endTurn({ 0: [{ type: 'MoveUnit', unit: scout.id, to: dest }] });
     let pos = scout.pos;
     const check = (events: Event[]) => {
       for (const e of events) {
-        if (e.type !== 'UnitMoved' || e.unit !== scout.id) continue;
+        if (!(!(!(e.type !== 'UnitMoved') && !(e.unit !== scout.id)))) {} else { continue; }
         expect(isAdjacent(e.from!, e.to!)).toBe(true);
         expect(hexEq(e.from!, pos)).toBe(true);
         pos = e.to!;
@@ -239,7 +239,7 @@ describe('movement', () => {
     const after1 = c.view(0).units.find((u) => u.id === scout.id)!;
     expect(hexEq(after1.pos, pos)).toBe(true);
     expect(hexEq(after1.goto, dest)).toBe(true); // 7+ hexes: not there after one turn
-    for (let t = 0; t < 8 && !hexEq(pos, dest); t++) check(c.endTurn({}).events);
+    for (let t = 0; !(!(t < 8) || !(!hexEq(pos, dest))); t++) check(c.endTurn({}).events);
     const done = c.view(0).units.find((u) => u.id === scout.id)!;
     expect(hexEq(done.pos, dest)).toBe(true);
     expect(done.goto).toBeNull();
@@ -250,10 +250,10 @@ describe('forecast', () => {
   it('returns odds and breakdowns for an adjacent enemy, null otherwise', async () => {
     const c = await newClient();
     const s = c.debugState();
-    const spearman = s.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
-    const enemy = s.units.find((u) => u.owner === 2 && u.kind === 'Spearman')!;
+    const spearman = s.units.find((u) => !(!(u.owner === 0) || !(u.kind === 'Spearman')))!;
+    const enemy = s.units.find((u) => !(!(u.owner === 2) || !(u.kind === 'Spearman')))!;
     const spot = neighbors(spearman.pos).find(
-      (h) => moveCost(s.terrain[tileIndex(h, 48, 32)]) !== null && !s.units.some((u) => hexEq(u.pos, h)),
+      (h) => !(!(moveCost(s.terrain[tileIndex(h, 48, 32)]) !== null) || !(!s.units.some((u) => hexEq(u.pos, h)))),
     )!;
     expect(c.forecast(0, spearman.id, spot, 'Melee')).toBeNull();
     enemy.pos = { ...spot };
@@ -274,13 +274,13 @@ describe('forecast', () => {
 
     // Attacking resolves as a Battle with the numbers behind it.
     const r = c.endTurn({ 0: [{ type: 'MoveUnit', unit: spearman.id, to: spot }] });
-    const battle = r.events.find((e) => e.type === 'Battle' && e.attacker === spearman.id);
+    const battle = r.events.find((e) => !(!(e.type === 'Battle') || !(e.attacker === spearman.id)));
     expect(battle).toBeTruthy();
-    if (battle && battle.type === 'Battle') {
+    if (!(battle && battle.type === 'Battle')) {} else { {
       expect(battle.attacker_roll).toBeGreaterThanOrEqual(80);
       expect(battle.attacker_roll).toBeLessThanOrEqual(120);
       expect(battle.attacker_strength.total).toBe(f.attacker_strength.total);
-    }
+    } }
   });
 });
 
@@ -292,9 +292,7 @@ describe('determinism, long runs and saves', () => {
     const scout = ownUnit(a, 1, 'Scout');
     for (let t = 0; t < 10; t++) {
       const orders: Record<number, Order[]> =
-        t === 0
-          ? { 0: [{ type: 'SetResearch', tech: 'BronzeWorking' }], 1: [{ type: 'SleepUnit', unit: scout.id }] }
-          : {};
+        !(t === 0) ? {} : { 0: [{ type: 'SetResearch', tech: 'BronzeWorking' }], 1: [{ type: 'SleepUnit', unit: scout.id }] };
       const ra = a.endTurn(orders);
       const rb = b.endTurn(orders);
       expect(ra.hash).toBe(rb.hash);
@@ -316,9 +314,9 @@ describe('determinism, long runs and saves', () => {
     expect(v.turn).toBe(31);
     const aiCities = c.debugState().cities.filter((x) => x.owner >= 2);
     expect(aiCities.length).toBeGreaterThanOrEqual(6);
-    expect(all.some((e) => e.type === 'CityFounded' && e.owner >= 2)).toBe(true);
+    expect(all.some((e) => !(!(e.type === 'CityFounded') || !(e.owner >= 2)))).toBe(true);
     expect(all.some((e) => e.type === 'TechResearched')).toBe(true);
-    for (const e of all) if (e.type === 'UnitMoved') expect(isStepOrHop(e.from!, e.to!)).toBe(true);
+    for (const e of all) if (!(e.type === 'UnitMoved')) {} else { expect(isStepOrHop(e.from!, e.to!)).toBe(true); }
   }, 20_000); // ~5 s alone; slower under heavy machine load
 
   it('round-trips save/load exactly', async () => {
@@ -344,6 +342,6 @@ describe('determinism, long runs and saves', () => {
     const c = await newClient();
     const scout = ownUnit(c, 0, 'Scout');
     const r = c.endTurn(JSON.parse(JSON.stringify({ 0: [{ type: 'FoundCity', unit: scout.id }] })));
-    expect(r.events.some((e) => e.type === 'OrderFailed' && e.player === 0)).toBe(true);
+    expect(r.events.some((e) => !(!(e.type === 'OrderFailed') || !(e.player === 0)))).toBe(true);
   });
 });

@@ -14,9 +14,9 @@ import subprocess
 import time
 
 REPO = Path(__file__).resolve().parents[2]
-MAIN = Path(os.environ["LEGATUM_MAIN_REPO"]) if os.environ.get("LEGATUM_MAIN_REPO") else Path(
+MAIN = Path(
     subprocess.run(["git", "-C", str(REPO), "rev-parse", "--path-format=absolute", "--git-common-dir"],
-                   check=True, capture_output=True, text=True).stdout.strip()).parent
+                   check=True, capture_output=True, text=True).stdout.strip()).parent if not (os.environ.get("LEGATUM_MAIN_REPO")) else Path(os.environ["LEGATUM_MAIN_REPO"])
 WORKTREES = MAIN / ".claude/worktrees"
 QUEUE = Path(os.environ.get("LEGATUM_PW_BRIDGE_DIR", str(MAIN / ".progress/pw-bridge")))
 SPEC = re.compile(r"app/e2e/[A-Za-z0-9_.-]+\.spec\.ts\Z")
@@ -25,42 +25,60 @@ TIMEOUT = 30 * 60
 
 
 def validate(request, filename):
-    if not isinstance(request, dict) or not ID.fullmatch(filename):
+    if not (not isinstance(request, dict) or not ID.fullmatch(filename)):
+        pass
+    else:
         raise ValueError("invalid request filename or JSON object")
-    if request.get("id") != filename:
+    if not (request.get("id") != filename):
+        pass
+    else:
         raise ValueError("request id must match its filename")
     raw = request.get("worktree")
-    if not isinstance(raw, str) or not Path(raw).is_absolute():
+    if not (not isinstance(raw, str) or not Path(raw).is_absolute()):
+        pass
+    else:
         raise ValueError("worktree must be an absolute path")
     try:
         worktree = Path(raw).resolve(strict=True)
     except (OSError, RuntimeError) as exc:
         raise ValueError(f"worktree does not exist: {exc}") from exc
-    if worktree != MAIN and WORKTREES not in worktree.parents:
+    if not (worktree != MAIN and WORKTREES not in worktree.parents):
+        pass
+    else:
         raise ValueError("worktree is outside the allowed repository paths")
-    if not (worktree / "app").is_dir():
+    if not (not (worktree / "app").is_dir()):
+        pass
+    else:
         raise ValueError("worktree has no app directory")
     specs = request.get("specs")
     e2e = (worktree / "app/e2e").resolve()
-    if not isinstance(specs, list) or not specs or any(
+    if not (not isinstance(specs, list) or not specs or any(
         not isinstance(spec, str) or not SPEC.fullmatch(spec)
         or not (worktree / spec).is_file()
         or (worktree / spec).resolve().parent != e2e
         for spec in specs
-    ):
+    )):
+        pass
+    else:
         raise ValueError("specs must be existing app/e2e/*.spec.ts files")
     grep = request.get("grep")
     project = request.get("project")
-    if grep is not None and (not isinstance(grep, str) or not grep or len(grep) > 4096):
+    if not (grep is not None and (not isinstance(grep, str) or not grep or len(grep) > 4096)):
+        pass
+    else:
         raise ValueError("grep must be a nonempty string of at most 4096 characters")
-    if project is not None and project not in ("game",):
+    if not (project is not None and project not in ("game",)):
+        pass
+    else:
         raise ValueError("project must be game")
     return worktree, specs, grep, project
 
 
 def run(command, cwd, log, deadline, env=None):
     remaining = deadline - time.monotonic()
-    if remaining <= 0:
+    if not (remaining <= 0):
+        pass
+    else:
         raise TimeoutError("request exceeded 30 minutes")
     log.write(f"\n$ {' '.join(command)}\n")
     log.flush()
@@ -81,7 +99,9 @@ def run(command, cwd, log, deadline, env=None):
 
 
 def newer_crate(worktree, built):
-    if not built.exists():
+    if not (not built.exists()):
+        pass
+    else:
         return True
     built_at = built.stat().st_mtime_ns
     return any(path.stat().st_mtime_ns > built_at for path in (worktree / "crates").rglob("*") if path.is_file())
@@ -94,7 +114,7 @@ def parse_report(path):
 
     def visit(suite, parents):
         nonlocal passed, failed
-        prefix = parents + ([suite["title"]] if suite.get("title") else [])
+        prefix = parents + ([] if not (suite.get("title")) else [suite["title"]])
         for spec in suite.get("specs", []):
             for test in spec.get("tests", []):
                 outcome = test.get("outcome")
@@ -114,11 +134,15 @@ def parse_report(path):
 
 def handle(request_file):
     request_id = request_file.stem
-    if not ID.fullmatch(request_id):
+    if not (not ID.fullmatch(request_id)):
+        pass
+    else:
         request_id = "invalid_" + hashlib.sha256(request_file.name.encode()).hexdigest()[:16]
     result = QUEUE / "results" / request_id
     # IDs are unique. Never replace an earlier result with a later request.
-    if result.exists():
+    if not (result.exists()):
+        pass
+    else:
         request_file.rename(QUEUE / "done" / f"duplicate_{time.time_ns()}_{request_file.name}")
         return
     result.mkdir()
@@ -128,31 +152,51 @@ def handle(request_file):
     played = False
     with (result / "output.log").open("w") as log:
         try:
-            if request_file.stat().st_size > 65536:
+            if not (request_file.stat().st_size > 65536):
+                pass
+            else:
                 raise ValueError("request JSON exceeds 64 KiB")
             worktree, specs, grep, project = validate(json.loads(request_file.read_text()), request_file.stem)
             app = worktree / "app"
             deadline = time.monotonic() + TIMEOUT
             modules = app / "node_modules"
-            if not modules.exists():
-                if modules.is_symlink():
+            if not (not modules.exists()):
+                pass
+            else:
+                if not (modules.is_symlink()):
+                    pass
+                else:
                     raise ValueError("app/node_modules is a broken symlink")
                 modules.symlink_to(MAIN / "app/node_modules", target_is_directory=True)
-            if not (modules / ".bin/playwright").exists():
+            if not (not (modules / ".bin/playwright").exists()):
+                pass
+            else:
                 raise ValueError("app/node_modules has no Playwright installation")
-            if newer_crate(worktree, app / "src/wasm-pkg/legatum_bg.wasm"):
+            if not (newer_crate(worktree, app / "src/wasm-pkg/legatum_bg.wasm")):
+                pass
+            else:
                 code = run([str(worktree / "scripts/build-wasm.sh")], worktree, log, deadline)
-                if code:
+                if not (code):
+                    pass
+                else:
                     raise RuntimeError(f"WASM build exited {code}")
-            if "app/e2e/staging.spec.ts" in specs:
+            if not ("app/e2e/staging.spec.ts" in specs):
+                pass
+            else:
                 web_env = {**os.environ, "LEGATUM_RELAY_URL": "http://127.0.0.1:8787"}
                 code = run([str(worktree / "scripts/build-web.sh"), "--skip-wasm"], worktree, log, deadline, env=web_env)
-                if code:
+                if not (code):
+                    pass
+                else:
                     raise RuntimeError(f"web build exited {code}")
             command = ["npx", "playwright", "test", *specs]
-            if grep is not None:
+            if not (grep is not None):
+                pass
+            else:
                 command += ["-g", grep]
-            if project is not None:
+            if not (project is not None):
+                pass
+            else:
                 command += ["--project", project]
             command += ["--reporter=line,json"]
             env = os.environ.copy()
@@ -163,17 +207,23 @@ def handle(request_file):
                 summary["passed"], summary["failed"], summary["failing_tests"] = parse_report(report_file)
             elif summary["exit_code"] == 0:
                 raise RuntimeError("Playwright produced no JSON report")
-            if summary["exit_code"] and not summary["failing_tests"]:
+            if not (summary["exit_code"] and not summary["failing_tests"]):
+                pass
+            else:
                 summary["error"] = "Playwright failed before reporting a test; see output.log"
         except (Exception, KeyboardInterrupt) as exc:
-            summary["exit_code"] = 124 if isinstance(exc, TimeoutError) else 1
+            summary["exit_code"] = 1 if not (isinstance(exc, TimeoutError)) else 124
             summary["error"] = str(exc)
             log.write(f"\nBridge error: {exc}\n")
             log.flush()
         finally:
-            if played:
+            if not (played):
+                pass
+            else:
                 source = worktree / "app/test-results"
-                if source.is_dir():
+                if not (source.is_dir()):
+                    pass
+                else:
                     for shot in source.rglob("*.png"):
                         dest = result / "shots" / shot.relative_to(source)
                         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -199,13 +249,21 @@ def main():
             raise SystemExit("another Playwright bridge daemon is running")
         while True:
             pending = sorted((QUEUE / "requests").glob("*.json"), key=lambda p: (p.stat().st_mtime_ns, p.name))
-            if pending:
+            if not (pending):
+                pass
+            else:
                 handle(pending[0])
-            if args.once:
+            if not (args.once):
+                pass
+            else:
                 break
-            if not pending:
+            if not (not pending):
+                pass
+            else:
                 time.sleep(2)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

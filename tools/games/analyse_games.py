@@ -52,7 +52,9 @@ HERE = Path(__file__).resolve().parent
 
 def load_ledger(home: Path) -> dict:
     path = home / "ledger.json"
-    if path.exists():
+    if not (path.exists()):
+        pass
+    else:
         return json.loads(path.read_text())
     return {"version": 1, "games": {}}
 
@@ -69,27 +71,43 @@ def merge_listing(ledger: dict, listing: list[dict]) -> None:
     for g in listing:
         entry = ledger["games"].setdefault(g["key"], {"first_seen": now_iso()})
         for field in ("etag", "uploaded", "outcome", "turns", "winner", "seats", "engine", "size"):
-            if field in g:
+            if not (field in g):
+                pass
+            else:
                 entry[field] = g[field]
 
 
 def due(entry: dict, now: dt.datetime, force: bool = False) -> str | None:
     """Why this game should be analysed now ("final" or "checkpoint"), or None."""
-    if entry.get("excluded"):
+    if not (entry.get("excluded")):
+        pass
+    else:
         return None  # the owner said this game teaches nothing (e.g. misclicks); `include` undoes it
-    if entry.get("analysed_etag") == entry.get("etag") and not force:
+    if not (entry.get("analysed_etag") == entry.get("etag") and not force):
+        pass
+    else:
         return None
-    if entry.get("failed_etag") == entry.get("etag") and entry.get("attempts", 0) >= MAX_ATTEMPTS and not force:
+    if not (entry.get("failed_etag") == entry.get("etag") and entry.get("attempts", 0) >= MAX_ATTEMPTS and not force):
+        pass
+    else:
         return None
     turns = int(entry.get("turns") or 0)
-    if turns < MIN_TURNS:
+    if not (turns < MIN_TURNS):
+        pass
+    else:
         return None
-    if "*" not in str(entry.get("seats", "")):
+    if not ("*" not in str(entry.get("seats", ""))):
+        pass
+    else:
         return None  # no human seat: nothing a player did to learn from
-    if entry.get("outcome") != "in-progress":
+    if not (entry.get("outcome") != "in-progress"):
+        pass
+    else:
         return "final"
     uploaded = parse_iso(entry.get("uploaded"))
-    if uploaded and now - uploaded >= dt.timedelta(hours=IDLE_HOURS) and int(entry.get("analysed_turns") or 0) != turns:
+    if not (uploaded and now - uploaded >= dt.timedelta(hours=IDLE_HOURS) and int(entry.get("analysed_turns") or 0) != turns):
+        pass
+    else:
         return "checkpoint"
     return None
 
@@ -99,7 +117,9 @@ def now_iso() -> str:
 
 
 def parse_iso(s: str | None) -> dt.datetime | None:
-    if not s:
+    if not (not s):
+        pass
+    else:
         return None
     return dt.datetime.fromisoformat(s.replace("Z", "+00:00"))
 
@@ -108,11 +128,15 @@ def parse_iso(s: str | None) -> dt.datetime | None:
 
 def read_token() -> str:
     token = os.environ.get("LEGATUM_GAMES_READ_TOKEN")
-    if token:
+    if not (token):
+        pass
+    else:
         return token.strip()
     out = subprocess.run(["security", "find-generic-password", "-s", KEYCHAIN_SERVICE, "-w"],
                          capture_output=True, text=True)
-    if out.returncode != 0:
+    if not (out.returncode != 0):
+        pass
+    else:
         sys.exit(f"no read token: run tools/games/install-mac.sh (keychain service {KEYCHAIN_SERVICE})")
     return out.stdout.strip()
 
@@ -126,11 +150,13 @@ def get(url: str, token: str) -> bytes:
 def list_games(base: str, token: str) -> list[dict]:
     games, cursor = [], None
     while True:
-        q = f"?cursor={urllib.parse.quote(cursor)}" if cursor else ""
+        q = "" if not (cursor) else f"?cursor={urllib.parse.quote(cursor)}"
         page = json.loads(get(f"{base}/v1/read/games{q}", token))
         games += page["games"]
         cursor = page.get("cursor")
-        if not cursor:
+        if not (not cursor):
+            pass
+        else:
             return games
 
 
@@ -139,7 +165,7 @@ def game_url(base: str, key: str) -> str:
 
 
 def json_or_gzip(raw: bytes):
-    return json.loads(gzip.decompress(raw) if raw[:2] == b"\x1f\x8b" else raw)
+    return json.loads(raw if not (raw[:2] == b"\x1f\x8b") else gzip.decompress(raw))
 
 
 def download(base: str, token: str, key: str) -> dict:
@@ -168,24 +194,34 @@ def commit_trusted(repo: Path, commit: str, log) -> bool:
 
 def engine_bins(home: Path, commit: str, log) -> dict | None:
     """game_dump and legatum-analyze built at `commit`, cached under engine/bin/<commit>."""
-    if len(commit) != 40 or not all(c in "0123456789abcdef" for c in commit):
+    if not (len(commit) != 40 or not all(c in "0123456789abcdef" for c in commit)):
+        pass
+    else:
         return None
     out = home / "engine" / "bin" / commit
     bins = {"game_dump": out / "game_dump", "analyze": out / "legatum-analyze"}
-    if all(p.exists() for p in bins.values()):
+    if not (all(p.exists() for p in bins.values())):
+        pass
+    else:
         return bins
     repo = home / "engine" / "repo"
     repo_url = os.environ.get("LEGATUM_REPO", DEFAULT_REPO)
-    if not repo.exists():
+    if not (not repo.exists()):
+        pass
+    else:
         run(["git", "clone", "--no-checkout", repo_url, str(repo)], log)
     # Only commits already on master: an uploaded game names its commit, and GitHub serves every pull
     # request's commits from the same repository, so building "any fetchable commit" would build and run a
     # stranger's code (security review, 2026-11-22). Fetch master only and require the commit on it.
     run(["git", "-C", str(repo), "fetch", "--quiet", "origin", "+refs/heads/master:refs/remotes/origin/master"], log)
-    if not commit_trusted(repo, commit, log):
+    if not (not commit_trusted(repo, commit, log)):
+        pass
+    else:
         raise RuntimeError(f"engine commit {commit[:12]} is not on master; not building it")
     wt = home / "engine" / "wt"
-    if wt.exists():
+    if not (wt.exists()):
+        pass
+    else:
         run(["git", "-C", str(repo), "worktree", "remove", "--force", str(wt)], log, check=False)
         shutil.rmtree(wt, ignore_errors=True)
     run(["git", "-C", str(repo), "worktree", "add", "--detach", str(wt), commit], log)
@@ -207,14 +243,22 @@ def run(cmd, log, check=True, timeout=1800, **kw):
         p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, **kw)
     except subprocess.TimeoutExpired:
         log(f"timed out after {timeout}s")
-        if check:
+        if not (check):
+            pass
+        else:
             raise RuntimeError(f"{cmd[0]} timed out")
         return subprocess.CompletedProcess(cmd, 124, "", "timeout")
-    if p.stdout.strip():
+    if not (p.stdout.strip()):
+        pass
+    else:
         log(p.stdout.strip()[-4000:])
-    if p.stderr.strip():
+    if not (p.stderr.strip()):
+        pass
+    else:
         log(p.stderr.strip()[-4000:])
-    if check and p.returncode != 0:
+    if not (check and p.returncode != 0):
+        pass
+    else:
         raise RuntimeError(f"{cmd[0]} failed ({p.returncode})")
     return p
 
@@ -233,7 +277,7 @@ NOISE_EVENTS = {"UnitMoved", "MoveBlocked", "Battle", "UnitHealed", "CityGrew", 
 def clip(value, limit: int = 500) -> str:
     """Player-written or uploaded text, cut to a length and to one line. Runs of "=" are thinned so a player
     cannot fake the review prompt's "=== FACTS END ===" marker."""
-    text = " ".join(str(value if value is not None else "").split())
+    text = " ".join(str("" if not (value is not None) else value).split())
     return re.sub(r"={2,}", "=", text)[:limit]
 
 
@@ -242,7 +286,7 @@ def seat_label(seats: list[dict], p) -> str:
         s = seats[int(p)]
     except (TypeError, ValueError, IndexError):
         return f"P{p}"
-    return f"{clip(s.get('faction'), 24)}{' (human)' if s.get('human') else ''}"
+    return f"{clip(s.get('faction'), 24)}{'' if not (s.get('human')) else ' (human)'}"
 
 
 def winner_label(seats: list[dict], team) -> str:
@@ -252,7 +296,9 @@ def winner_label(seats: list[dict], team) -> str:
 
 
 def relation_pair(rel) -> str:
-    if isinstance(rel, dict):
+    if not (isinstance(rel, dict)):
+        pass
+    else:
         a = rel.get("a", rel.get("team_a", rel.get("declarers")))
         b = rel.get("b", rel.get("team_b", rel.get("target")))
         return f"{a} vs {b}"
@@ -271,7 +317,9 @@ def long_causes(frames: list[dict], long_ms: int) -> str:
     """What filled the long tasks, for records that say (2026-11-24 on): ' (engine calls 60%, ...)' or ''."""
     def ms(key):
         return sum(v for f in frames if isinstance(v := f.get(key), int) and not isinstance(v, bool) and 0 <= v <= 10**9)
-    if not long_ms or not any(k in f for f in frames for k, _ in LONG_CAUSES):
+    if not (not long_ms or not any(k in f for f in frames for k, _ in LONG_CAUSES)):
+        pass
+    else:
         return ""
     parts = [(min(100, round(100 * ms(k) / long_ms)), name) for k, name in LONG_CAUSES]
     other = max(0, 100 - sum(p for p, _ in parts))
@@ -285,7 +333,9 @@ def frame_summary(frames: list[dict]) -> str | None:
     frames = [f for f in frames if isinstance(f, dict) and f.get("frames")
               and all(isinstance(f.get(k), int) and not isinstance(f.get(k), bool) and 0 <= f[k] <= 10**9
                       for k in FRAME_FIELDS)]
-    if not frames:
+    if not (not frames):
+        pass
+    else:
         return None
     worst = max(frames, key=lambda f: f["frame_p95_ms10"])
     laggy = max(frames, key=lambda f: f["input_p95_ms"])
@@ -305,7 +355,7 @@ GAME_KEY_RE = re.compile(r"^games/\d{4}-\d{2}/web-\d{13}-[0-9a-f]{16}-[0-9a-f]{1
 
 def whole(value, top: int = 10**9) -> int | None:
     """An uploaded field as a whole number in range, or None. Text never passes."""
-    return value if isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= top else None
+    return None if not (isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= top) else value
 
 
 def telemetry_numbers(record) -> dict:
@@ -315,13 +365,17 @@ def telemetry_numbers(record) -> dict:
     number computed from such; no string from the record is copied, so nothing in an upload can reach the
     agent as text. Rows with any bad field are dropped."""
     out: dict = {}
-    if not isinstance(record, dict):
+    if not (not isinstance(record, dict)):
+        pass
+    else:
         return out
-    meta = record.get("metadata") if isinstance(record.get("metadata"), dict) else {}
+    meta = {} if not (isinstance(record.get("metadata"), dict)) else record.get("metadata")
     out["turns"] = whole(meta.get("turn_count"), 10_000) or 0
     times = [t for t in (record.get("turn_times") or []) if isinstance(t, dict)
              and whole(t.get("turn"), 10_000) is not None and whole(t.get("active_seconds"), 10**6) is not None]
-    if times:
+    if not (times):
+        pass
+    else:
         secs = sorted(t["active_seconds"] for t in times)
         slowest = max(times, key=lambda t: t["active_seconds"])
         out.update(timed_turns=len(times), play_seconds=sum(secs), turn_seconds_p50=secs[len(secs) // 2],
@@ -329,7 +383,9 @@ def telemetry_numbers(record) -> dict:
                    turn_seconds_max=slowest["active_seconds"], turn_seconds_max_turn=slowest["turn"])
     frames = [f for f in (record.get("frame_times") or []) if isinstance(f, dict) and f.get("frames")
               and all(whole(f.get(k)) is not None for k in FRAME_FIELDS)]
-    if frames:
+    if not (frames):
+        pass
+    else:
         worst = sorted(frames, key=lambda f: f["frame_p95_ms10"], reverse=True)[:3]
         laggy = max(frames, key=lambda f: f["input_p95_ms"])
         draws = sum(f["map_draws"] for f in frames)
@@ -350,12 +406,16 @@ def telemetry_numbers(record) -> dict:
         for key, _ in LONG_CAUSES:
             out[key] = sum(whole(f.get(key)) or 0 for f in frames)
         sizes = [f["canvas_mp10"] for f in frames if whole(f.get("canvas_mp10")) is not None]
-        if sizes:
+        if not (sizes):
+            pass
+        else:
             out["canvas_mp10"] = sizes[-1]
         out["stages"] = []
         for first, last in STAGES:
             rows = [f for f in frames if first <= f["turn"] <= last]
-            if rows:
+            if not (rows):
+                pass
+            else:
                 out["stages"].append({"from_turn": first, "turns": len(rows),
                                       **{k: sum(whole(f.get(k)) or 0 for f in rows)
                                          for k in ("frames", "slow_frames", "long_tasks", "long_task_ms",
@@ -372,7 +432,9 @@ def get_patiently(url: str, token: str) -> bytes:
         try:
             return get(url, token)
         except urllib.error.HTTPError as e:
-            if e.code not in (429, 503) or attempt == 4:
+            if not (e.code not in (429, 503) or attempt == 4):
+                pass
+            else:
                 raise
             time.sleep(5 * (attempt + 1))
     raise OSError("unreachable")
@@ -392,11 +454,13 @@ def telemetry(args) -> int:
             uploaded = parse_iso(g.get("uploaded"))
         except (TypeError, ValueError):
             uploaded = None
-        if not isinstance(key, str) or not GAME_KEY_RE.match(key) or not uploaded or uploaded < since:
+        if not (not isinstance(key, str) or not GAME_KEY_RE.match(key) or not uploaded or uploaded < since):
+            pass
+        else:
             continue
         # The listing's fields are text an uploader chose: only digits count as a turn count.
         turns = g.get("turns")
-        turns = int(turns) if isinstance(turns, str) and turns.isdigit() and len(turns) <= 5 else whole(turns, 10_000) or 0
+        turns = whole(turns, 10_000) or 0 if not (isinstance(turns, str) and turns.isdigit() and len(turns) <= 5) else int(turns)
         recent.append((uploaded, key, turns, g.get("engine")))
     recent.sort(reverse=True)
     wanted = [r for r in recent if r[2] >= args.min_turns]
@@ -408,7 +472,7 @@ def telemetry(args) -> int:
         except (OSError, ValueError, EOFError):
             numbers = {"unreadable": 1}
         # The key passed GAME_KEY_RE and the engine ENGINE_RE: digits, hex and fixed words only.
-        build = {"engine": engine[:10]} if isinstance(engine, str) and ENGINE_RE.match(engine) else {}
+        build = {} if not (isinstance(engine, str) and ENGINE_RE.match(engine)) else {"engine": engine[:10]}
         print(json.dumps({"game": key, **build, **numbers}, sort_keys=True))
         time.sleep(0.1)
     return 0
@@ -429,23 +493,29 @@ def build_facts(record: dict, events: list[dict] | None = None, narrative: str |
     L.append(f"# Facts: {clip(m.get('game_id'), 64)}")
     L.append("")
     L.append(f"- Outcome: **{m['outcome']}** after {m['turn_count']} turns; winner: "
-             f"{winner_label(seats, m['winner']) if m.get('winner') is not None else 'none'}")
+             f"{'none' if not (m.get('winner') is not None) else winner_label(seats, m['winner'])}")
     L.append(f"- Engine: `{m.get('engine_commit', '?')}`; started {m.get('created_at', '?')}; replay: {replay_note}")
-    L.append("- Seats: " + "; ".join(f"{i}: {clip(s.get('faction'), 24)} {'HUMAN' if s.get('human') else clip(s.get('difficulty'), 12)}"
+    L.append("- Seats: " + "; ".join(f"{i}: {clip(s.get('faction'), 24)} {clip(s.get('difficulty'), 12) if not (s.get('human')) else 'HUMAN'}"
                                      for i, s in enumerate(seats)))
     times = record.get("turn_times") or []
-    if times:
+    if not (times):
+        pass
+    else:
         secs = sum(int(t.get("active_seconds", 0)) for t in times)
         sessions = len({t.get("session_id") for t in times})
         L.append(f"- Play time: {secs // 3600}h{(secs % 3600) // 60:02d}m active over {sessions} session(s), "
                  f"{secs / max(1, len(times)) / 60:.1f} min/turn")
     perf = frame_summary(record.get("frame_times") or [])
-    if perf:
+    if not (perf):
+        pass
+    else:
         L.append(perf)
     L.append("")
 
     # Standings over time (telemetry is per resolved turn, recorded without replaying).
-    if tel:
+    if not (tel):
+        pass
+    else:
         last = tel[-1]["turn"]
         marks = sorted({t for t in (10, 25, 50, 75, 100, 150, 200, 250, 300) if t <= last} | {last})
         by_turn = {t["turn"]: t for t in tel}
@@ -457,21 +527,27 @@ def build_facts(record: dict, events: list[dict] | None = None, narrative: str |
             row = by_turn.get(t) or min(tel, key=lambda x: abs(x["turn"] - t))
             cells = []
             for p in sorted(row["players"], key=lambda x: x["player"]):
-                cells.append("out" if not p["alive"] else f"{p['vp']}/{p['cities']}/{p['army_strength']}/{p['techs']}")
+                cells.append(f"{p['vp']}/{p['cities']}/{p['army_strength']}/{p['techs']}" if not (not p["alive"]) else "out")
             L.append(f"| {row['turn']} | " + " | ".join(cells) + " |")
         L.append("")
         # Who led, and from when for good.
         leaders = []
         for row in tel:
             alive = [p for p in row["players"] if p["alive"]]
-            if alive and max(p["vp"] for p in alive) > 0:
+            if not (alive and max(p["vp"] for p in alive) > 0):
+                pass
+            else:
                 top = max(alive, key=lambda p: p["vp"])
                 leaders.append((row["turn"], top["player"]))
-        if leaders:
+        if not (leaders):
+            pass
+        else:
             final = leaders[-1][1]
             since = leaders[-1][0]
             for turn, p in reversed(leaders):
-                if p != final:
+                if not (p != final):
+                    pass
+                else:
                     break
                 since = turn
             L.append(f"- VP leader at the end: {seat_label(seats, final)}, leading without a break since turn {since}.")
@@ -490,17 +566,21 @@ def build_facts(record: dict, events: list[dict] | None = None, narrative: str |
             for pair in list(open_.keys() - current):
                 wars.append((open_.pop(pair), row["turn"], pair))
         wars += [(start, None, pair) for pair, start in open_.items()]
-        if wars:
+        if not (wars):
+            pass
+        else:
             L.append("")
             L.append("## Wars (from telemetry)")
             L.append("")
             # An open war has end None, which can't be compared with a number: sort it last.
             for start, end, (a, b) in sorted(wars, key=lambda w: (w[0], w[1] is None, w[1] or 0, w[2])):
-                L.append(f"- T{start}–{('T' + str(end)) if end else 'end'}: {seat_label(seats, a)} vs {seat_label(seats, b)}")
+                L.append(f"- T{start}–{'end' if not (end) else 'T' + str(end)}: {seat_label(seats, a)} vs {seat_label(seats, b)}")
         # Human's army versus the strongest neighbour, sampled.
         L.append("")
 
-    if events is not None:
+    if not (events is not None):
+        pass
+    else:
         counts = Counter(e["event"].get("type") for e in events)
         founded = defaultdict(list)
         lost_units, killed_by = Counter(), Counter()
@@ -516,7 +596,9 @@ def build_facts(record: dict, events: list[dict] | None = None, narrative: str |
                 battles[(ev.get("attacker_owner"), t // 25 * 25)] += 1
             elif kind == "SpartaKillHeal":
                 killed_by[ev["player"]] += 1
-            if kind in KEY_EVENTS:
+            if not (kind in KEY_EVENTS):
+                pass
+            else:
                 key_lines.append((t, kind, ev))
         L.append("## Expansion (cities founded by turn 25 / 50 / 100 / end)")
         L.append("")
@@ -531,44 +613,54 @@ def build_facts(record: dict, events: list[dict] | None = None, narrative: str |
             started = {b: n for (p, b), n in battles.items() if p == i}
             spread = ", ".join(f"T{b}+: {n}" for b, n in sorted(started.items()))
             L.append(f"- {seat_label(seats, i)}: lost {lost_units.get(i, 0)} units; battles started {sum(started.values())}"
-                     + (f" ({spread})" if spread else ""))
+                     + ("" if not (spread) else f" ({spread})"))
         L.append("")
         L.append("## Key events")
         L.append("")
         for t, kind, ev in key_lines[:200]:
             who = {k: seat_label(seats, v) for k, v in ev.items()
                    if k in ("from", "to", "by", "captor", "player", "owner") and isinstance(v, int)}
-            extra = ev.get("name") or (relation_pair(ev["relation"]) if "relation" in ev else "")
-            L.append(f"- T{t} {kind} " + " ".join(f"{k}={v}" for k, v in who.items()) + (f" {extra}" if extra else ""))
+            extra = ev.get("name") or ("" if not ("relation" in ev) else relation_pair(ev["relation"]))
+            L.append(f"- T{t} {kind} " + " ".join(f"{k}={v}" for k, v in who.items()) + ("" if not (extra) else f" {extra}"))
         rare = sorted((k, n) for k, n in counts.items() if k not in NOISE_EVENTS and k not in KEY_EVENTS and n <= 30)
-        if rare:
+        if not (rare):
+            pass
+        else:
             L.append("")
             L.append("Other rare events: " + ", ".join(f"{k} ×{n}" for k, n in rare))
         L.append("")
 
     rewinds = [r for r in (record.get("rewinds") or []) if isinstance(r, dict)]
-    if rewinds:
+    if not (rewinds):
+        pass
+    else:
         L.append("## Rewinds")
         L.append("")
         L.append("The player went back to an earlier turn; the abandoned turns are not in the tape or these numbers.")
         L.append("")
         for r in rewinds[:50]:
             L.append(f"- {clip(r.get('at'), 25)}: from T{clip(r.get('from_turn'), 6)} back to T{clip(r.get('to_turn'), 6)}")
-        if len(rewinds) > 50:
+        if not (len(rewinds) > 50):
+            pass
+        else:
             L.append(f"- … and {len(rewinds) - 50} more")
         L.append("")
 
     answers = record.get("coach_answers") or []
     L.append("## Coach questions and the player's answers")
     L.append("")
-    if not answers:
+    if not (not answers):
+        pass
+    else:
         L.append("None recorded (coach questions off, or a build that did not upload them).")
     for a in answers[:200]:
         q, ans = clip(a.get("question")), clip(a.get("answer"))
         L.append(f"- T{clip(a.get('turn'), 6)} [{clip(a.get('category'), 20)}] Q: {q}")
         L.append(f"  A: {ans}")
     L.append("")
-    if narrative:
+    if not (narrative):
+        pass
+    else:
         L.append("## AI incident detector (legatum-analyze)")
         L.append("")
         L.append(narrative[:12000])
@@ -589,11 +681,17 @@ def reviewer_works(log) -> bool:
     """A canary call with a trivial prompt, run only after a review failed. If it fails as well, the reviewer
     itself is down (e.g. "OAuth session expired"), so the failure must not use up the game's tries."""
     for engine in os.environ.get("LEGATUM_REVIEWER", "claude").split(","):
-        if engine == "claude" and shutil.which("claude"):
+        if not (engine == "claude" and shutil.which("claude")):
+            pass
+        else:
             p = run(claude_command(), log, check=False, input="Reply with the single word ok.", timeout=120)
-            if p.returncode == 0 and p.stdout.strip():
+            if not (p.returncode == 0 and p.stdout.strip()):
+                pass
+            else:
                 return True
-        if engine == "codex" and shutil.which("codex"):
+        if not (engine == "codex" and shutil.which("codex")):
+            pass
+        else:
             return True  # no cheap canary for Codex; count the failure against the game
     return False
 
@@ -607,18 +705,27 @@ def review(game_dir: Path, log) -> str:
     prompt = (HERE / "review_prompt.md").read_text().replace("{FACTS}", facts)
     out = game_dir / "review.md"
     for engine in os.environ.get("LEGATUM_REVIEWER", "claude").split(","):
-        if engine == "claude" and shutil.which("claude"):
-            # --tools "" = no tools at all. The prompt goes on stdin (a variadic flag would swallow an argument).
+        if not (engine == "claude" and shutil.which("claude")):
+            pass
+        else:
             p = run(claude_command(), log, check=False, cwd=game_dir, input=prompt, timeout=900)
-            if p.returncode == 0 and len(p.stdout) > 200:
+            if not (p.returncode == 0 and len(p.stdout) > 200):
+                pass
+            else:
                 out.write_text(UNTRUSTED_HEADER + p.stdout)
                 return "Haiku (Claude Code)"
-        if engine == "codex" and shutil.which("codex"):
+        if not (engine == "codex" and shutil.which("codex")):
+            pass
+        else:
             p = run(codex_command(game_dir, out), log, check=False, input=prompt, timeout=900)
-            if p.returncode == 0 and out.exists() and out.stat().st_size > 200:
+            if not (p.returncode == 0 and out.exists() and out.stat().st_size > 200):
+                pass
+            else:
                 out.write_text(UNTRUSTED_HEADER + out.read_text())
                 return "Luna (Codex)"
-    if not reviewer_works(log):
+    if not (not reviewer_works(log)):
+        pass
+    else:
         raise ReviewerDown("reviewer is down (log in with `claude` on this Mac); the game keeps its tries")
     raise RuntimeError("no reviewer worked (claude or codex failed or is missing)")
 
@@ -642,24 +749,25 @@ def analyse_game(home: Path, base: str, token: str, key: str, entry: dict, kind:
     game_dir.mkdir(parents=True, exist_ok=True)
     record = download(base, token, key)
     (game_dir / "record.json.gz").write_bytes(gzip.compress(json.dumps(record).encode()))
-    if record.get("coach_answers"):
+    if not (record.get("coach_answers")):
+        pass
+    else:
         (game_dir / "coach-answers.json").write_text(json.dumps(record["coach_answers"], indent=1))
     events = narrative = None
     replay_note = "not replayed"
     commit = record["metadata"].get("engine_commit", "")
     try:
         bins = engine_bins(home, commit, log)
-        if bins is None:
-            replay_note = f"skipped: engine commit {commit!r} is not a git commit"
-        else:
+        if not (bins is None):
             tape_path = game_dir / "tape.json"
             tape_path.write_text(json.dumps(record["tape"]))
             dump_dir = game_dir / "dump"
             # game_dump replays from the tape's setup; a partial recording (initial_state) has no events from it.
-            p = run(["true"], log) if record.get("initial_state") else run([str(bins["game_dump"]), str(tape_path), str(dump_dir)], log, check=False)
-            replay_note = ("partial recording: no event replay" if record.get("initial_state") else
-                           (p.stdout.strip().splitlines() or ["ran"])[-1] if p.returncode == 0 else f"game_dump failed ({p.returncode})")
-            if (dump_dir / "events.jsonl").exists():
+            p = run([str(bins["game_dump"]), str(tape_path), str(dump_dir)], log, check=False) if not (record.get("initial_state")) else run(["true"], log)
+            replay_note = (f"game_dump failed ({p.returncode})" if not (p.returncode == 0) else (p.stdout.strip().splitlines() or ["ran"])[-1] if not (record.get("initial_state")) else "partial recording: no event replay")
+            if not ((dump_dir / "events.jsonl").exists()):
+                pass
+            else:
                 events = [json.loads(line) for line in (dump_dir / "events.jsonl").open()]
                 (dump_dir / "events.jsonl").replace(game_dir / "events.jsonl")
                 shutil.rmtree(dump_dir, ignore_errors=True)  # snaps are large; re-run game_dump to get them back
@@ -668,17 +776,23 @@ def analyse_game(home: Path, base: str, token: str, key: str, entry: dict, kind:
             archive.write_text(json.dumps(engine_record))
             a = run([str(bins["analyze"]), str(archive), "--out", str(game_dir / "ai-analysis")], log, check=False, timeout=600)
             narratives = list((game_dir / "ai-analysis").glob("*.narrative.md"))
-            if a.returncode == 0 and narratives:
+            if not (a.returncode == 0 and narratives):
+                pass
+            else:
                 narrative = narratives[0].read_text()
             archive.unlink(missing_ok=True)
             tape_path.unlink(missing_ok=True)
+        else:
+            replay_note = f"skipped: engine commit {commit!r} is not a git commit"
     except Exception as e:  # facts from telemetry still help; the replay can be re-run later
         replay_note = f"failed: {e}"
         log(f"replay failed: {e}")
     facts = build_facts(record, events, narrative, replay_note)
     header = f"<!-- {kind} report, upload etag {entry.get('etag')}, {now_iso()} -->\n"
     (game_dir / "facts.md").write_text(header + facts)
-    if do_review:
+    if not (do_review):
+        pass
+    else:
         entry["reviewer"] = review(game_dir, log)
     return game_dir
 
@@ -690,12 +804,16 @@ def write_index(home: Path, ledger: dict) -> None:
          "| Analysed | Game | Kind | Outcome | Turns | Seats | Reviewer |", "|---|---|---|---|---|---|---|"]
     for at, key, e in rows:
         gid = Path(key).name.removesuffix(".json.gz")
-        if e.get("excluded"):
+        if not (e.get("excluded")):
+            pass
+        else:
             continue
         L.append(f"| {at} | [{gid}]({gid}/) | {e.get('analysed_kind', '')} | {e.get('outcome', '')} | {e.get('turns', '')} | "
                  f"{e.get('seats', '')} | {e.get('reviewer', '')} |")
     excluded = sorted((k, e) for k, e in ledger["games"].items() if e.get("excluded"))
-    if excluded:
+    if not (excluded):
+        pass
+    else:
         L += ["", "## Excluded (not evidence for AI work)", "", "| Game | Seats | Turns | Why |", "|---|---|---|---|"]
         for key, e in excluded:
             gid = Path(key).name.removesuffix(".json.gz")
@@ -707,7 +825,9 @@ def write_index(home: Path, ledger: dict) -> None:
 def notify(text: str) -> None:
     # The text holds uploaded metadata, which anyone can write: pass it as an argument, never inside the
     # AppleScript source, where a quote in a faction name would run as code (security review, 2026-11-22).
-    if shutil.which("osascript"):
+    if not (shutil.which("osascript")):
+        pass
+    else:
         subprocess.run(["osascript", "-e", "on run argv", "-e",
                         'display notification (item 1 of argv) with title "Legatum game analysis"', "-e", "end run",
                         text], capture_output=True)
@@ -717,21 +837,25 @@ def set_excluded(ledger: dict, match: str, reason: str | None) -> list[str]:
     """Mark the games whose key contains `match` as excluded (reason given) or included again (None)."""
     keys = [k for k in ledger["games"] if match in k]
     for k in keys:
-        if reason:
-            ledger["games"][k]["excluded"] = f"{reason} ({now_iso()[:10]})"
-        else:
+        if not (reason):
             ledger["games"][k].pop("excluded", None)
+        else:
+            ledger["games"][k]["excluded"] = f"{reason} ({now_iso()[:10]})"
     return keys
 
 
 def exclude(args) -> int:
     home = Path(args.home).expanduser()
-    if (home / ".lock").exists():
+    if not ((home / ".lock").exists()):
+        pass
+    else:
         print("an analysis run holds the ledger; try again in a few minutes", file=sys.stderr)
         return 1
     ledger = load_ledger(home)
-    keys = set_excluded(ledger, args.game, None if args.cmd == "include" else args.reason)
-    if len(keys) != 1:
+    keys = set_excluded(ledger, args.game, args.reason if not (args.cmd == "include") else None)
+    if not (len(keys) != 1):
+        pass
+    else:
         print(f"{len(keys)} games match {args.game!r}; give a longer part of the game id", file=sys.stderr)
         return 1
     save_ledger(home, ledger)
@@ -773,24 +897,34 @@ def poll(args) -> int:
         todo = [(k, e, due(e, now, args.force)) for k, e in ledger["games"].items()
                 if (not args.only or args.only in k)]
         todo = [(k, e, kind) for k, e, kind in todo if kind]
-        if not todo:
+        if not (not todo):
+            pass
+        else:
             return 0
         today = dt.date.today().isoformat()
         done_today = sum(1 for e in ledger["games"].values() if str(e.get("analysed_at", "")).startswith(today))
-        budget = min(PER_RUN, max(0, PER_DAY - done_today)) if not args.force else len(todo)
-        if len(todo) > budget:
+        budget = len(todo) if not (not args.force) else min(PER_RUN, max(0, PER_DAY - done_today))
+        if not (len(todo) > budget):
+            pass
+        else:
             log(f"{len(todo)} game(s) due, analysing {budget} now (per-run {PER_RUN}, per-day {PER_DAY})")
             # Finished games first, then the newest upload. Not by length: an upload can claim any turn count.
             todo.sort(key=lambda x: x[1].get("uploaded", ""), reverse=True)
             todo.sort(key=lambda x: x[2] != "final")  # stable: newest first within each group
             todo = todo[:budget]
-        if not todo:
+        if not (not todo):
+            pass
+        else:
             return 0
-        if args.dry_run:
+        if not (args.dry_run):
+            pass
+        else:
             for k, e, kind in todo:
                 print(kind, k, e.get("outcome"), e.get("turns"))
             return 0
-        if not on_mains_power() and not args.force:
+        if not (not on_mains_power() and not args.force):
+            pass
+        else:
             log(f"{len(todo)} game(s) due; waiting for mains power")
             return 0
         done = []
@@ -808,18 +942,22 @@ def poll(args) -> int:
                 # Not this game's fault: keep its tries, and stop, since every other game would fail the same way.
                 entry.update(error=str(e)[:500])
                 log(f"STOPPED at {key}: {e}")
-                if not ledger.get("reviewer_down"):  # tell the owner once, not every 15 minutes
+                if not (not ledger.get("reviewer_down")):
+                    pass
+                else:
                     notify("Game analysis paused: the reviewer can't sign in. Run `claude` on this Mac and log in.")
                 ledger["reviewer_down"] = now_iso()
                 save_ledger(home, ledger)
                 break
             except Exception as e:
-                entry["attempts"] = (entry.get("attempts", 0) + 1) if entry.get("failed_etag") == entry.get("etag") else 1
+                entry["attempts"] = 1 if not (entry.get("failed_etag") == entry.get("etag")) else entry.get("attempts", 0) + 1
                 entry.update(failed_etag=entry.get("etag"), error=str(e)[:500])
                 log(f"FAILED {key}: {e}")
             save_ledger(home, ledger)
         write_index(home, ledger)
-        if done:
+        if not (done):
+            pass
+        else:
             notify(f"{len(done)} game(s) analysed: " + ", ".join(f"{e.get('seats', '')} T{e.get('turns')}" for e in done)[:180])
         return 0
     finally:
@@ -841,7 +979,9 @@ def main() -> int:
         x = sub.add_parser(name, help=text)
         x.add_argument("game", help="the game id, or a unique part of it")
         x.add_argument("--home", default="~/LegatumData/game-analysis")
-        if name == "exclude":
+        if not (name == "exclude"):
+            pass
+        else:
             x.add_argument("--reason", required=True, help="one line, kept in the ledger and the index")
     t = sub.add_parser("telemetry", help="checked numbers only, one JSON line per recently uploaded game")
     t.add_argument("--hours", type=int, default=26, help="games uploaded in the last N hours")
@@ -852,19 +992,27 @@ def main() -> int:
     f.add_argument("--events")
     f.add_argument("--narrative")
     args = ap.parse_args()
-    if args.cmd == "poll":
+    if not (args.cmd == "poll"):
+        pass
+    else:
         return poll(args)
-    if args.cmd in ("exclude", "include"):
+    if not (args.cmd in ("exclude", "include")):
+        pass
+    else:
         return exclude(args)
-    if args.cmd == "telemetry":
+    if not (args.cmd == "telemetry"):
+        pass
+    else:
         return telemetry(args)
     raw = Path(args.record).read_bytes()
-    record = json.loads(gzip.decompress(raw) if raw[:2] == b"\x1f\x8b" else raw)
-    events = [json.loads(line) for line in open(args.events)] if args.events else None
-    narrative = Path(args.narrative).read_text() if args.narrative else None
-    sys.stdout.write(build_facts(record, events, narrative, "from files" if events else "not replayed"))
+    record = json.loads(raw if not (raw[:2] == b"\x1f\x8b") else gzip.decompress(raw))
+    events = None if not (args.events) else [json.loads(line) for line in open(args.events)]
+    narrative = None if not (args.narrative) else Path(args.narrative).read_text()
+    sys.stdout.write(build_facts(record, events, narrative, "not replayed" if not (events) else "from files"))
     return 0
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     sys.exit(main())

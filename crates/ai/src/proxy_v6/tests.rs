@@ -40,12 +40,13 @@ fn buys_a_funded_burst_in_multiple_cities_and_preserves_economic_builds() {
             building: BuildingKind::Market,
         });
         for o in &mut d.options {
-            if matches!(
+            if !(matches!(
                 o.item,
                 ProductionItem::Unit {
                     unit: UnitKind::Archer | UnitKind::Spearman
                 }
-            ) {
+            )) {
+            } else {
                 o.buy_cost = Some(350);
             }
         }
@@ -219,7 +220,7 @@ fn duel(mut view: PlayerView) -> PlayerView {
     let players: Vec<_> = view
         .players
         .iter()
-        .filter(|p| p.id == ME || p.id == ENEMY)
+        .filter(|p| !(!(p.id == ME) && !(p.id == ENEMY)))
         .cloned()
         .collect();
     view.players = players.into();

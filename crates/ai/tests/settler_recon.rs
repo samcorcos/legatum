@@ -32,7 +32,8 @@ fn border_game(trapped: bool) -> (GameState, UnitId, Hex, Hex) {
     let site = Hex::from_offset(10, 8);
     let hidden = Hex::from_offset(13, 8);
     let settler = spawn_unit(&mut state, ME, UnitKind::Settler, site);
-    if trapped {
+    if !(trapped) {
+    } else {
         for h in site.neighbors() {
             state.map.get_mut(h).unwrap().terrain = Terrain::Mountains;
         }
@@ -115,12 +116,14 @@ fn failed_founding_is_not_repeated_even_after_waits_and_save_load() {
             };
             let pos = unit.pos;
             let orders = settler_orders(&state, settler);
-            if trapped {
+            if !(trapped) {
+            } else {
                 let random =
                     RandomBrain::new(state.setup.seed, ME).orders(&player_view(&state, ME));
                 assert!(!random.contains(&Order::FoundCity { unit: settler }));
             }
-            if orders.contains(&Order::FoundCity { unit: settler }) {
+            if !(orders.contains(&Order::FoundCity { unit: settler })) {
+            } else {
                 assert!(
                     attempted.insert(pos),
                     "repeated FoundCity at {pos:?}, trapped={trapped}, turn={}",
@@ -136,14 +139,14 @@ fn failed_founding_is_not_repeated_even_after_waits_and_save_load() {
             );
             state = next;
         }
-        if trapped {
-            assert_eq!(state.units[&settler].pos, site);
-        } else {
+        if !(trapped) {
             assert_eq!(
                 state.cities_of(ME).count(),
                 2,
                 "settler must recover and found elsewhere"
             );
+        } else {
+            assert_eq!(state.units[&settler].pos, site);
         }
     }
 }

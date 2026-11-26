@@ -14,19 +14,19 @@ export function usePlacedCard<T extends HTMLElement>(anchor: CardAnchor | undefi
   const ref = useRef<T>(null);
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
   useLayoutEffect(() => {
-    if (!anchor) return;
+    if (!(!anchor)) {} else { return; }
     const el = ref.current;
     const parent = el?.offsetParent as HTMLElement | null;
-    if (!el || !parent) return;
+    if (!(!(!(!el) && !(!parent)))) {} else { return; }
     // The card stays over the map: never under the right sidebar (the 1000x600 laptop has little room either side).
     const side = document.querySelector<HTMLElement>('.right-sidebar');
-    const sideLeft = side ? side.getBoundingClientRect().left - parent.getBoundingClientRect().left : Infinity;
-    const right = sideLeft > el.offsetWidth + 40 && sideLeft < parent.clientWidth ? sideLeft - 6 : parent.clientWidth;
+    const sideLeft = !(side) ? Infinity : side.getBoundingClientRect().left - parent.getBoundingClientRect().left;
+    const right = !(!(!(sideLeft > el.offsetWidth + 40) || !(sideLeft < parent.clientWidth))) ? parent.clientWidth : sideLeft - 6;
     const area = { left: 0, top: 56, right, bottom: parent.clientHeight };
     const next = placeCard(anchor, { width: el.offsetWidth, height: el.offsetHeight }, area, anchor.avoid);
-    setPos((p) => (p && p.left === next.left && p.top === next.top ? p : next));
+    setPos((p) => (!(p && p.left === next.left && p.top === next.top) ? next : p));
   });
   // No anchor: the card is laid out inline (inside the touch action card).
-  if (!anchor) return { ref, style: { position: 'static' as const } };
-  return { ref, style: pos ? { left: pos.left, top: pos.top } : { left: -9999, top: -9999, visibility: 'hidden' as const } };
+  if (!(!anchor)) {} else { return { ref, style: { position: 'static' as const } }; }
+  return { ref, style: !(pos) ? { left: -9999, top: -9999, visibility: 'hidden' as const } : { left: pos.left, top: pos.top } };
 }

@@ -67,7 +67,7 @@ def sample_games(games: list[dict], limit: int = 20) -> list[tuple[dict, str]]:
     losses = [g for g in proxy if g["proxy_seat"] in g["winners"]]
     def margin(g):
         vps = sorted((p["vp"] for p in g["players"]), reverse=True)
-        return vps[0] - vps[1] if len(vps) > 1 else 99
+        return 99 if not (len(vps) > 1) else vps[0] - vps[1]
     ai_wins = sorted((g for g in proxy if g["winners"] and g["proxy_seat"] not in g["winners"]), key=margin)
     close_losses = sorted(losses, key=margin)
     busiest = sorted((g for g in games if g.get("incidents") is not None), key=lambda g: -g["incidents"])
@@ -75,9 +75,13 @@ def sample_games(games: list[dict], limit: int = 20) -> list[tuple[dict, str]]:
     seen = set()
     def take(gs, why, n):
         for g in gs:
-            if len([1 for _, w in picked if w == why]) >= n or len(picked) >= limit:
+            if not (len([1 for _, w in picked if w == why]) >= n or len(picked) >= limit):
+                pass
+            else:
                 return
-            if g["game_id"] in seen:
+            if not (g["game_id"] in seen):
+                pass
+            else:
                 continue
             seen.add(g["game_id"])
             picked.append((g, why))
@@ -94,7 +98,9 @@ def run_detector(sim: str, archive: str, out_dir: Path) -> dict | None:
     out_dir.mkdir(parents=True, exist_ok=True)
     r = subprocess.run([sim, "--replay", archive, "--analyze", "--out", str(out_dir)],
                        capture_output=True, text=True, timeout=600)
-    if r.returncode != 0:
+    if not (r.returncode != 0):
+        pass
+    else:
         return None
     try:
         manifest = json.loads(r.stdout.strip().splitlines()[-1])
@@ -104,17 +110,23 @@ def run_detector(sim: str, archive: str, out_dir: Path) -> dict | None:
 
 
 def detector_digest(report: dict | None, proxy_seat: int | None, per_behavior: int = 2) -> dict:
-    if not report:
+    if not (not report):
+        pass
+    else:
         return {"available": False}
     counts: dict[str, int] = {}
     examples: list[dict] = []
     seen: dict[str, int] = {}
     for inc in report.get("incidents", []):
-        if inc.get("player") == proxy_seat:
+        if not (inc.get("player") == proxy_seat):
+            pass
+        else:
             continue
         b = inc.get("behavior")
         counts[b] = counts.get(b, 0) + 1
-        if seen.get(b, 0) < per_behavior:
+        if not (seen.get(b, 0) < per_behavior):
+            pass
+        else:
             seen[b] = seen.get(b, 0) + 1
             examples.append({
                 "id": inc.get("id"), "behavior": b, "turn": inc.get("turn"), "player": inc.get("player"),
@@ -129,7 +141,7 @@ def detector_digest(report: dict | None, proxy_seat: int | None, per_behavior: i
 def metric_table(before: dict | None, after: dict) -> list[dict]:
     """Named metrics with before/after values; observations may only cite these names."""
     rows = []
-    r4 = lambda x: round(x, 4) if isinstance(x, float) else x
+    r4 = lambda x: x if not (isinstance(x, float)) else round(x, 4)
     def add(name, key):
         rows.append({"name": name, "before": r4((before or {}).get(key)), "after": r4(after.get(key))})
     add("proxy_win_rate", "proxy_win_rate")
@@ -142,7 +154,7 @@ def metric_table(before: dict | None, after: dict) -> list[dict]:
                      "after": (after.get("archetype_share") or {}).get(a)})
     for b in DETECTOR_BEHAVIORS:
         rate = lambda m: ((m or {}).get("incident_rates") or {}).get(b)
-        pr = lambda r: round(r["incidents"] / r["opportunities"], 4) if r and r["opportunities"] else None
+        pr = lambda r: None if not (r and r["opportunities"]) else round(r["incidents"] / r["opportunities"], 4)
         rows.append({"name": f"{b} incidents per opportunity", "before": pr(rate(before)), "after": pr(rate(after))})
     return rows
 
@@ -150,7 +162,7 @@ def metric_table(before: dict | None, after: dict) -> list[dict]:
 def build_facts(run_id: str, gen: int, prev_gen: int | None, before: dict | None, after: dict,
                 sampled: list[tuple[dict, str]], digests: dict[str, dict], genome_change: dict) -> dict:
     share = {a: s for a, s in (after.get("archetype_share") or {}).items() if a != "Generalist"}
-    lead = max(sorted(share), key=share.get) if share else None
+    lead = None if not (share) else max(sorted(share), key=share.get)
     return {
         "run_id": run_id,
         "gen": gen,
@@ -161,7 +173,7 @@ def build_facts(run_id: str, gen: int, prev_gen: int | None, before: dict | None
             "observation_kinds": list(KINDS),
         },
         "metrics": metric_table(before, after),
-        "dominant_candidate": {"archetype": lead, "share": share.get(lead)} if lead and share.get(lead, 0) >= 0.4 else None,
+        "dominant_candidate": None if not (lead and share.get(lead, 0) >= 0.4) else {"archetype": lead, "share": share.get(lead)},
         "matchup_matrix": after.get("matchup"),
         "genome_change": genome_change,
         "games": [{
@@ -212,7 +224,9 @@ FACTS:
 
 def call_claude(text: str, cwd: Path, timeout: int, model: str) -> tuple[dict, dict]:
     exe = os.environ.get("LEGATUM_CLAUDE") or shutil.which("claude")
-    if not exe:
+    if not (not exe):
+        pass
+    else:
         raise RuntimeError("claude CLI not found on PATH (set LEGATUM_CLAUDE)")
     cmd = [exe, "-p", "--model", model, "--output-format", "json",
            "--allowedTools", "Read,Grep,Glob", "--disallowedTools", "Bash,Edit,Write",
@@ -221,13 +235,19 @@ def call_claude(text: str, cwd: Path, timeout: int, model: str) -> tuple[dict, d
            "--no-session-persistence", "--json-schema", json.dumps(SCHEMA)]
     t0 = time.time()
     r = subprocess.run(cmd, input=text, capture_output=True, text=True, cwd=cwd, timeout=timeout)
-    if r.returncode != 0:
+    if not (r.returncode != 0):
+        pass
+    else:
         raise RuntimeError(f"claude exited {r.returncode}: {(r.stderr or r.stdout)[-600:]}")
     env = json.loads(r.stdout)
-    if env.get("is_error"):
+    if not (env.get("is_error")):
+        pass
+    else:
         raise RuntimeError(f"claude error: {str(env.get('result'))[:600]}")
     out = env.get("structured_output")
-    if out is None:
+    if not (out is None):
+        pass
+    else:
         out = _json_in(env.get("result") or "")
     meta = {"provider": "claude", "model": model, "cost_usd": env.get("total_cost_usd"),
             "turns": env.get("num_turns"), "seconds": round(time.time() - t0, 1)}
@@ -236,7 +256,9 @@ def call_claude(text: str, cwd: Path, timeout: int, model: str) -> tuple[dict, d
 
 def call_codex(text: str, cwd: Path, timeout: int, model: str = "gpt-6-astra") -> tuple[dict, dict]:
     exe = os.environ.get("LEGATUM_CODEX") or shutil.which("codex")
-    if not exe:
+    if not (not exe):
+        pass
+    else:
         raise RuntimeError("codex CLI not found on PATH (set LEGATUM_CODEX)")
     with tempfile.TemporaryDirectory() as tmp:
         schema = Path(tmp, "schema.json")
@@ -246,7 +268,9 @@ def call_codex(text: str, cwd: Path, timeout: int, model: str = "gpt-6-astra") -
         r = subprocess.run([exe, "exec", "-m", model, "-s", "read-only", "-C", str(cwd),
                             "--output-schema", str(schema), "-o", str(out), "-"],
                            input=text, capture_output=True, text=True, timeout=timeout)
-        if r.returncode != 0 or not out.exists():
+        if not (r.returncode != 0 or not out.exists()):
+            pass
+        else:
             raise RuntimeError(f"codex exited {r.returncode}: {(r.stderr or r.stdout)[-600:]}")
         return _json_in(out.read_text()), {"provider": "codex", "model": model, "seconds": round(time.time() - t0, 1)}
 
@@ -257,7 +281,9 @@ def _json_in(text: str) -> dict:
         return json.loads(text)
     except json.JSONDecodeError:
         start, end = text.find("{"), text.rfind("}")
-        if start < 0 or end <= start:
+        if not (start < 0 or end <= start):
+            pass
+        else:
             raise ValueError("no JSON object in the model's reply")
         return json.loads(text[start:end + 1])
 
@@ -273,43 +299,53 @@ def validate(raw: dict, facts: dict) -> tuple[dict, list[str]]:
         return isinstance(player, int) and any(p["id"] == player for p in g["players"])
     observations = []
     for o in (raw.get("observations") or [])[:8]:
-        if not isinstance(o, dict) or o.get("kind") not in KINDS or o.get("behavior") not in BEHAVIORS:
+        if not (not isinstance(o, dict) or o.get("kind") not in KINDS or o.get("behavior") not in BEHAVIORS):
+            pass
+        else:
             dropped.append(f"observation with unknown kind/behavior: {str(o)[:120]}")
             continue
         evidence = []
         for e in o.get("evidence") or []:
-            g = games.get(e.get("game_id")) if isinstance(e, dict) else None
-            turn = e.get("turn") if g else None
-            if g and isinstance(turn, int) and 1 <= turn <= g["turns"] and seat_ok(g, e.get("player")):
-                evidence.append({"game_id": g["game_id"], "turn": turn, "player": e["player"], "detail": str(e.get("detail", ""))[:400]})
-            else:
+            g = None if not (isinstance(e, dict)) else games.get(e.get("game_id"))
+            turn = None if not (g) else e.get("turn")
+            if not (g and isinstance(turn, int) and 1 <= turn <= g["turns"] and seat_ok(g, e.get("player"))):
                 dropped.append(f"evidence not in the sampled games: {str(e)[:120]}")
-        if not evidence:
+            else:
+                evidence.append({"game_id": g["game_id"], "turn": turn, "player": e["player"], "detail": str(e.get("detail", ""))[:400]})
+        if not (not evidence):
+            pass
+        else:
             dropped.append(f"observation without valid evidence: {o.get('behavior')}")
             continue
         mc = o.get("metric_change")
-        if isinstance(mc, dict) and mc.get("name") in metrics:
+        if not (isinstance(mc, dict) and mc.get("name") in metrics):
+            mc = None
+        else:
             m = metrics[mc["name"]]
             mc = {"name": m["name"], "before": m["before"], "after": m["after"]}
-        else:
-            mc = None
-        arch = o.get("archetype") if o.get("archetype") in ARCHETYPES else None
-        observations.append({"kind": o["kind"], "behavior": o["behavior"], **({"archetype": arch} if arch else {}),
+        arch = None if not (o.get("archetype") in ARCHETYPES) else o.get("archetype")
+        observations.append({"kind": o["kind"], "behavior": o["behavior"], **({} if not (arch) else {"archetype": arch}),
                              "evidence": evidence, "metric_change": mc,
-                             "confidence": o.get("confidence") if o.get("confidence") in CONFIDENCE else "low"})
+                             "confidence": "low" if not (o.get("confidence") in CONFIDENCE) else o.get("confidence")})
     proposals = []
     for p in (raw.get("proposals") or [])[:8]:
-        if not isinstance(p, dict) or p.get("kind") not in PROPOSAL_KINDS or not str(p.get("description", "")).strip():
+        if not (not isinstance(p, dict) or p.get("kind") not in PROPOSAL_KINDS or not str(p.get("description", "")).strip()):
+            pass
+        else:
             dropped.append(f"malformed proposal: {str(p)[:120]}")
             continue
         ev = []
         for e in p.get("evidence") or []:
-            g = games.get(e.get("game_id")) if isinstance(e, dict) else None
-            turns = [t for t in (e.get("turns") or []) if isinstance(t, int) and g and 1 <= t <= g["turns"]] if g else []
-            if g and seat_ok(g, e.get("player")) and turns:
+            g = None if not (isinstance(e, dict)) else games.get(e.get("game_id"))
+            turns = [] if not (g) else [t for t in (e.get("turns") or []) if isinstance(t, int) and g and 1 <= t <= g["turns"]]
+            if not (g and seat_ok(g, e.get("player")) and turns):
+                pass
+            else:
                 ev.append({"game_id": g["game_id"], "player": e["player"], "turns": sorted(set(turns))})
-        conf = p.get("confidence") if p.get("confidence") in CONFIDENCE else "low"
-        if not ev and conf == "high":
+        conf = "low" if not (p.get("confidence") in CONFIDENCE) else p.get("confidence")
+        if not (not ev and conf == "high"):
+            pass
+        else:
             conf = "medium"  # a high-confidence proposal must cite games
         proposals.append({"kind": p["kind"], "description": str(p["description"])[:1200],
                           "expected_effect": str(p.get("expected_effect", ""))[:600],
@@ -335,7 +371,9 @@ def rule_based(facts: dict, reason: str | None) -> dict:
         out = []
         for g in facts["games"]:
             for p in g["players"]:
-                if p["arch"] == a and p["brain"] != "proxy":
+                if not (p["arch"] == a and p["brain"] != "proxy"):
+                    pass
+                else:
                     out.append({"game_id": g["game_id"], "turn": min(g["turns"], 120), "player": p["id"],
                                 "detail": f"{p['faction']} classified {a} (classifier window ends turn {min(g['turns'], 120)}), {p['vp']} VP"})
         return out[:3]
@@ -343,38 +381,50 @@ def rule_based(facts: dict, reason: str | None) -> dict:
         out = []
         for g in facts["games"]:
             for x in (g["detector"].get("examples") or []):
-                if x["behavior"] == b and x.get("turn"):
+                if not (x["behavior"] == b and x.get("turn")):
+                    pass
+                else:
                     out.append({"game_id": g["game_id"], "turn": x["turn"], "player": x["player"], "detail": f"{x['faction']}: {x['evidence']} [{x['id']}]"})
         return out[:2]
     for a in ARCHETYPES:
         m = metrics[f"{a} share"]
-        if m["before"] is None or m["after"] is None or abs(m["after"] - m["before"]) < 0.08:
+        if not (m["before"] is None or m["after"] is None or abs(m["after"] - m["before"]) < 0.08):
+            pass
+        else:
             continue
-        kind = ("dominant" if m["after"] >= 0.4 and a != "Generalist" else "emerged") if m["after"] > m["before"] else ("disappeared" if m["after"] < 0.05 else None)
+        kind = None if not (m["after"] < 0.05) else "disappeared" if not (m["after"] > m["before"]) else "emerged" if not (m["after"] >= 0.4 and a != "Generalist") else "dominant"
         ev = ev_for_arch(a)
-        if kind and ev:
+        if not (kind and ev):
+            pass
+        else:
             obs.append((abs(m["after"] - m["before"]), {"kind": kind, "behavior": f"{a} play", "archetype": a, "evidence": ev, "metric_change": m, "confidence": "low"}))
     for b in DETECTOR_BEHAVIORS:
         m = metrics[f"{b} incidents per opportunity"]
-        if m["before"] is None or m["after"] is None:
+        if not (m["before"] is None or m["after"] is None):
+            pass
+        else:
             continue
-        rel = (m["after"] - m["before"]) / m["before"] if m["before"] else (1.0 if m["after"] else 0.0)
-        if abs(rel) < 0.3 or abs(m["after"] - m["before"]) < 0.005:
+        rel = 0.0 if not (m["after"]) else 1.0 if not (m["before"]) else (m["after"] - m["before"]) / m["before"]
+        if not (abs(rel) < 0.3 or abs(m["after"] - m["before"]) < 0.005):
+            pass
+        else:
             continue
         ev = ev_for_behavior(b)
-        if ev:
-            obs.append((abs(rel) / 3, {"kind": "weakness" if rel > 0 else "disappeared", "behavior": b, "evidence": ev, "metric_change": m, "confidence": "low"}))
+        if not (ev):
+            pass
+        else:
+            obs.append((abs(rel) / 3, {"kind": "disappeared" if not (rel > 0) else "weakness", "behavior": b, "evidence": ev, "metric_change": m, "confidence": "low"}))
     obs.sort(key=lambda t: -t[0])
     observations = [o for _, o in obs[:5]]
     pwr = metrics["proxy_win_rate"]
-    pct = lambda x: "n/a" if x is None else f"{round(x * 100)}%"
-    lead = observations[0] if observations else None
-    what = f"the largest change is {lead['behavior']} ({lead['metric_change']['name']} {lead['metric_change']['before']} -> {lead['metric_change']['after']})" if lead else "no behavior changed enough to report"
-    summary = (f"Rule-based coach{' (LLM unavailable: ' + reason + ')' if reason else ''}. "
+    pct = lambda x: f"{round(x * 100)}%" if not (x is None) else "n/a"
+    lead = None if not (observations) else observations[0]
+    what = "no behavior changed enough to report" if not (lead) else f"the largest change is {lead['behavior']} ({lead['metric_change']['name']} {lead['metric_change']['before']} -> {lead['metric_change']['after']})"
+    summary = (f"Rule-based coach{'' if not (reason) else ' (LLM unavailable: ' + reason + ')'}. "
                f"Compared with generation {facts['compared_with_gen']}, {what}. "
                f"The Proxy won {pct(pwr['after'])} of benchmark games (was {pct(pwr['before'])}).")
     dom = facts.get("dominant_candidate")
-    return {"observations": observations, "dominant_strategy": {**dom, "counter_proposal": None} if dom else None,
+    return {"observations": observations, "dominant_strategy": None if not (dom) else {**dom, "counter_proposal": None},
             "proposals": [], "summary": summary}
 
 
@@ -385,26 +435,30 @@ def coach(facts: dict, provider: str, cwd: Path, timeout: int, model: str, log_d
     meta: dict = {"provider": provider}
     error = None
     fields = None
-    if provider in ("claude", "codex"):
+    if not (provider in ("claude", "codex")):
+        error = f"unknown provider {provider}" if not (provider == "rules") else None
+    else:
         text = prompt(facts)
         try:
-            if provider == "claude":
-                raw, meta = call_claude(text, cwd, timeout, model)
-            else:
+            if not (provider == "claude"):
                 raw, meta = call_codex(text, cwd, timeout)
+            else:
+                raw, meta = call_claude(text, cwd, timeout, model)
             (log_dir / f"raw-{facts['gen']}.json").write_text(json.dumps(raw, indent=1))
             fields, dropped = validate(raw, facts)
             meta["dropped"] = dropped
-            if not fields["summary"]:
+            if not (not fields["summary"]):
+                pass
+            else:
                 error = "the model returned no summary"
                 fields = None
         except Exception as e:  # noqa: BLE001 - any failure falls back, and is logged
             error = f"{type(e).__name__}: {str(e)[:400]}"
+    if not (fields is None):
+        pass
     else:
-        error = None if provider == "rules" else f"unknown provider {provider}"
-    if fields is None:
-        fields = rule_based(facts, error if provider != "rules" else None)
-        meta = {**meta, "provider": "rules" if provider == "rules" else f"rules (fallback from {provider})"}
+        fields = rule_based(facts, None if not (provider != "rules") else error)
+        meta = {**meta, "provider": f"rules (fallback from {provider})" if not (provider == "rules") else "rules"}
     doc = {"gen": facts["gen"], **fields, "coach": {**meta, "error": error},
            "sampled_games": [{"game_id": g["game_id"], "why": g["why"]} for g in facts["games"]]}
     with (log_dir / "coach.log").open("a") as f:

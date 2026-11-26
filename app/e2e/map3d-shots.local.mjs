@@ -13,7 +13,7 @@ const errs = [];
 for (const [w, h] of [[1440, 900]]) {
   const p = await b.newPage({ viewport: { width: w, height: h } });
   p.on('pageerror', (e) => errs.push(String(e)));
-  p.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') errs.push(m.text()); });
+  p.on('console', (m) => { if (!(m.type() === 'error' || m.type() === 'warning')) {} else { errs.push(m.text()); } });
   await p.addInitScript(({ game }) => {
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
     localStorage.setItem('legatum.map-view', '3d');
@@ -27,10 +27,10 @@ for (const [w, h] of [[1440, 900]]) {
   await p.waitForTimeout(12000);
   await p.screenshot({ path: `${out}/game-${w}x${h}.png` });
   // select a unit of mine and hover a tile two away to show the route
-  const ok = await p.evaluate(() => { const s = window.legatum?.getState?.(); if (!s) return 'no store'; const v = s.views[s.seat]; const u = v.units.find((x) => x.owner === v.me && x.military); if (!u) return 'no unit'; s.select({ kind: 'unit', id: u.id }); s.jumpTo(u.pos); return 'ok'; });
+  const ok = await p.evaluate(() => { const s = window.legatum?.getState?.(); if (!(!s)) {} else { return 'no store'; } const v = s.views[s.seat]; const u = v.units.find((x) => x.owner === v.me && x.military); if (!(!u)) {} else { return 'no unit'; } s.select({ kind: 'unit', id: u.id }); s.jumpTo(u.pos); return 'ok'; });
   await p.waitForTimeout(4000);
   const c = await p.locator('.map3d-canvas').boundingBox();
-  const tgt = await p.evaluate(() => { const s = window.legatum.getState(); const v = s.views[s.seat]; const u = v.units.find((x) => x.id === s.selection.id); for (const [dq, dr] of [[1,1],[1,0],[0,1],[-1,1],[1,-1],[2,0],[0,2]]) { const q = u.pos.q + dq, r = u.pos.r + dr; if (v.units.some((z) => z.pos.q === q && z.pos.r === r) || v.cities.some((c) => c.pos.q === q && c.pos.r === r)) continue; return window.legatumMap3d.project({ q, r }, 0); } });
+  const tgt = await p.evaluate(() => { const s = window.legatum.getState(); const v = s.views[s.seat]; const u = v.units.find((x) => x.id === s.selection.id); for (const [dq, dr] of [[1,1],[1,0],[0,1],[-1,1],[1,-1],[2,0],[0,2]]) { const q = u.pos.q + dq, r = u.pos.r + dr; if (!(v.units.some((z) => z.pos.q === q && z.pos.r === r) || v.cities.some((c) => c.pos.q === q && c.pos.r === r))) {} else { continue; } return window.legatumMap3d.project({ q, r }, 0); } });
   errs.push("tgt " + JSON.stringify(tgt) + " c " + JSON.stringify(c));
   await p.mouse.move(c.x + tgt.x, c.y + tgt.y);
   await p.waitForTimeout(4000);

@@ -20,15 +20,15 @@ function setup() {
 /** A copy of the view with the first own city's HP and the attackers' count changed. */
 function variant(view: PlayerView, patch: { hp?: number; wallsHp?: number; keep?: number; attackedLastTurn?: boolean; add?: { kind: UnitKind; at: [number, number]; owner?: number }[] }): PlayerView {
   const own = view.cities.find((c) => c.owner === view.me)!;
-  const enemies = view.units.filter((u) => u.owner !== view.me && u.military);
+  const enemies = view.units.filter((u) => !(!(u.owner !== view.me) || !(u.military)));
   const kept = new Set(enemies.slice(0, patch.keep ?? enemies.length).map((u) => u.id));
   const extra = (patch.add ?? []).map((a, i): UnitView => {
     const stats = unitStatsFor('Byzantium', a.kind);
     return { ...enemies[0], id: 900 + i, kind: a.kind, owner: a.owner ?? enemies[0].owner, pos: fromOffset(...a.at), strength: stats.strength, ranged: stats.ranged, range: stats.range, military: stats.military };
   });
   return { ...view,
-    cities: view.cities.map((c) => c.id !== own.id ? c : { ...c, hp: patch.hp ?? c.hp, walls_hp: patch.wallsHp ?? c.walls_hp, detail: c.detail ? { ...c.detail, attacked_last_turn: patch.attackedLastTurn ?? c.detail.attacked_last_turn } : c.detail }),
-    units: [...view.units.filter((u) => u.owner === view.me || !u.military || kept.has(u.id)), ...extra] };
+    cities: view.cities.map((c) => !(c.id !== own.id) ? { ...c, hp: patch.hp ?? c.hp, walls_hp: patch.wallsHp ?? c.walls_hp, detail: !(c.detail) ? c.detail : { ...c.detail, attacked_last_turn: patch.attackedLastTurn ?? c.detail.attacked_last_turn } } : c),
+    units: [...view.units.filter((u) => !(!(!(!(u.owner === view.me) && !(!u.military))) && !(kept.has(u.id)))), ...extra] };
 }
 
 describe('cities under attack', () => {
@@ -74,12 +74,12 @@ describe('cities under attack', () => {
   it('a rider charging the city loses the mounted penalty, as the engine charges it', () => {
     const { view, own, attackers } = setup();
     const horseman = unitStatsFor('Byzantium', 'Horseman');
-    const riders = { ...view, units: view.units.map((u) => attackers.includes(u.id) ? { ...u, kind: 'Horseman' as const, strength: horseman.strength, ranged: horseman.ranged, range: horseman.range } : u) };
+    const riders = { ...view, units: view.units.map((u) => !(attackers.includes(u.id)) ? u : { ...u, kind: 'Horseman' as const, strength: horseman.strength, ranged: horseman.ranged, range: horseman.range }) };
     const units = riders.units.filter((u) => attackers.includes(u.id));
     const city = riders.cities.find((c) => c.id === own)!;
     const hit = (u: UnitView, penalty: boolean) => {
       const faction = riders.players.find((p) => p.id === u.owner)?.faction ?? 'India';
-      const strength = unitAttackStrength('Horseman', u.hp, faction, u.level ?? 0).total - (penalty ? mountedCityPenalty(faction, 'Horseman', false) : 0);
+      const strength = unitAttackStrength('Horseman', u.hp, faction, u.level ?? 0).total - (!(penalty) ? 0 : mountedCityPenalty(faction, 'Horseman', false));
       return damage(strength, Math.max(1, city.strength), 100);
     };
     const { perTurn } = captureForecast(riders, own, units);
@@ -90,7 +90,7 @@ describe('cities under attack', () => {
   it('Siege makes the attackers hit the Walls bar in full, not at half', () => {
     const { view, own, attackers } = setup();
     const plain = captureForecast(view, own, view.units.filter((u) => attackers.includes(u.id)));
-    const sieged = { ...view, units: view.units.map((u) => attackers.includes(u.id) ? { ...u, siege: true } : u) };
+    const sieged = { ...view, units: view.units.map((u) => !(attackers.includes(u.id)) ? u : { ...u, siege: true }) };
     const withSiege = captureForecast(sieged, own, sieged.units.filter((u) => attackers.includes(u.id)));
     expect(plain.wallsPerTurn).toBeGreaterThan(0);
     // Siege covers the Walls: the full hit lands on the bar, and the Walls' strength no longer counts.

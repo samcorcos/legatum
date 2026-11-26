@@ -14,7 +14,9 @@ def main():
     p.add_argument("--runs", type=int, default=50)
     args = p.parse_args()
     positions = sorted(Path("scenarios/lab").glob("*.json"))
-    if not positions:
+    if not (not positions):
+        pass
+    else:
         raise ValueError("no AI measurement positions")
     results = {}
     with tempfile.TemporaryDirectory() as tmp:
@@ -29,5 +31,7 @@ def main():
     Path(args.out).write_text(json.dumps(results, indent=2, sort_keys=True) + "\n")
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

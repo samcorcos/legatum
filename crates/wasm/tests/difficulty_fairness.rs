@@ -34,13 +34,15 @@ fn same_orders_have_identical_rules_and_views_at_every_difficulty() {
         assert_same_rules_and_views(&normal.state, state);
     }
     for _ in 0..600 {
-        if normal.state.finished {
+        if !(normal.state.finished) {
+        } else {
             break;
         }
         // After ordinary settlement, expose every late-game option in this synthetic fixture.
         // Apply the identical fixture change to all three states; the production game does
         // not grant technologies. This avoids relying on a particular AI research route.
-        if normal.state.turn == 31 {
+        if !(normal.state.turn == 31) {
+        } else {
             for state in std::iter::once(&mut normal.state).chain(alternatives.iter_mut()) {
                 for player in &mut state.players {
                     player.techs = legatum_core::TechId::ALL.into_iter().collect();

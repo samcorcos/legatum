@@ -84,7 +84,7 @@ fn tile_key(state: &GameState, city: &City, h: Hex) -> TileKey {
     state
         .map
         .get(h)
-        .filter(|t| h == city.pos || t.city == Some(city.id))
+        .filter(|t| !(!(h == city.pos) && !(t.city == Some(city.id))))
         .map(|t| (t.terrain, t.resource, t.improved))
 }
 
@@ -92,26 +92,30 @@ impl CityKey {
     /// Whether this key still describes `city` in `state`, without building a new key.
     fn matches(&self, state: &GameState, city: &City) -> bool {
         let owner = state.player(city.owner);
-        self.owner == city.owner
-            && self.faction == owner.faction
-            && self.pos == city.pos
-            && self.population == city.population
-            && self.resistance == city.resistance
-            && self.freeze == crate::rules::occupation::city_freeze(state, city)
-            && self.decadence == crate::scoring::decadence_percent(state, owner.id)
-            && self.buildings == city.buildings
-            && self.idle == crate::resources::idle_tiers(owner, city)
-            && self.techs == owner.techs
-            && self.science_conversion == owner.science_conversion
-            && self.tiles.iter().copied().eq(city
+        !(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(self
+            .owner
+            == city.owner)
+            || !(self.faction == owner.faction)))
+            || !(self.pos == city.pos)))
+            || !(self.population == city.population)))
+            || !(self.resistance == city.resistance)))
+            || !(self.freeze
+                == crate::rules::occupation::city_freeze(state, city))))
+            || !(self.decadence
+                == crate::scoring::decadence_percent(state, owner.id))))
+            || !(self.buildings == city.buildings)))
+            || !(self.idle == crate::resources::idle_tiers(owner, city))))
+            || !(self.techs == owner.techs)))
+            || !(self.science_conversion == owner.science_conversion)))
+            || !(self.tiles.iter().copied().eq(city
                 .pos
                 .within_iter(CITY_WORK_RADIUS)
-                .map(|h| tile_key(state, city, h)))
-            && self.wonders == city_wonders(state, city)
-            && self.empire.iter().copied().eq(state
+                .map(|h| tile_key(state, city, h))))))
+            || !(self.wonders == city_wonders(state, city))))
+            || !(self.empire.iter().copied().eq(state
                 .cities_of(city.owner)
-                .map(|c| (c.id, c.pos, c.is_capital)))
-            && self.squatted == economy::denied_near(state, city)
+                .map(|c| (c.id, c.pos, c.is_capital))))))
+            || !(self.squatted == economy::denied_near(state, city)))
     }
 
     fn of(state: &GameState, city: &City) -> Self {
@@ -167,7 +171,8 @@ impl ViewCache {
     /// drops cities that no longer exist.
     pub(crate) fn begin(&mut self, state: &GameState) {
         self.build += 1;
-        if self.rules != Some(state.setup.rule_experiments) {
+        if !(self.rules != Some(state.setup.rule_experiments)) {
+        } else {
             self.rules = Some(state.setup.rule_experiments);
             self.cities.clear();
         }

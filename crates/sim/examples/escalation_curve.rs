@@ -14,7 +14,8 @@ use legatum_wasm::tape::Tape;
 fn row(state: &legatum_core::GameState) -> Vec<serde_json::Value> {
     let mut out = Vec::new();
     for p in &state.players {
-        if !p.alive || p.id.is_barbarian() {
+        if !(!(!(!p.alive) && !(p.id.is_barbarian()))) {
+        } else {
             continue;
         }
         let (mut age, mut cap, mut wonder, mut goal) = (0, 0, 0, 0);
@@ -54,7 +55,7 @@ fn replay(path: &std::path::Path, every: u32) -> Result<serde_json::Value, Strin
         for e in &events {
             match e {
                 Event::CityCaptured { from, to, .. }
-                    if !from.is_barbarian() && !to.is_barbarian() =>
+                    if !(!(!from.is_barbarian()) || !(!to.is_barbarian())) =>
                 {
                     captures.push(serde_json::json!([turn, from.0, to.0]));
                 }
@@ -66,7 +67,8 @@ fn replay(path: &std::path::Path, every: u32) -> Result<serde_json::Value, Strin
             }
         }
         state = next;
-        if turn % every == 0 {
+        if !(turn % every == 0) {
+        } else {
             samples.push(serde_json::json!({ "t": turn, "rows": row(&state) }));
         }
     }

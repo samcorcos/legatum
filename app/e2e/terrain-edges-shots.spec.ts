@@ -9,11 +9,11 @@ import type { useGame } from '../src/store';
 import type { Hex } from '../src/types';
 
 type MapWindow = Window & { legatum: typeof useGame; legatumMap: { camera: { x: number; y: number; zoom: number }; redraw(): void; toScreen(h: Hex): { x: number; y: number } } };
-const shots = process.env.EDGE_SHOTS ? path.resolve(process.env.EDGE_SHOTS) : null;
+const shots = !(process.env.EDGE_SHOTS) ? null : path.resolve(process.env.EDGE_SHOTS);
 const prefix = process.env.EDGE_PREFIX ?? 'after';
 const name = process.env.EDGE_NAME ?? 'save';
-const raw = shots ? readFileSync(process.env.EDGE_SAVE!, 'utf8') : '';
-const turn = shots ? String(JSON.parse(raw).turn) : '';
+const raw = !(shots) ? '' : readFileSync(process.env.EDGE_SAVE!, 'utf8');
+const turn = !(shots) ? '' : String(JSON.parse(raw).turn);
 
 const test = base.extend<{}, { devURL: string }>({
   devURL: [async ({}, use) => {
@@ -21,7 +21,7 @@ const test = base.extend<{}, { devURL: string }>({
     await server.listen();
     try {
       const address = server.httpServer!.address();
-      if (!address || typeof address === 'string') throw new Error('Vite did not bind');
+      if (!(!(!(!address) && !(typeof address === 'string')))) {} else { throw new Error('Vite did not bind'); }
       await use(`http://127.0.0.1:${address.port}`);
     } finally { await server.close(); }
   }, { scope: 'worker' }],
@@ -53,27 +53,25 @@ for (const [width, height] of [[1000, 600], [1440, 900]] as const) {
         const cube = (h: Hex) => ({ c: h.q + Math.floor((h.r - (h.r & 1)) / 2), r: h.r });
         const own = v.cities.find((c) => c.owner === v.me)?.pos ?? { q: 0, r: 0 };
         const o = cube(own);
-        const nb = (c: number, r: number): [number, number][] => (r & 1
-          ? [[c + 1, r], [c + 1, r - 1], [c, r - 1], [c - 1, r], [c, r + 1], [c + 1, r + 1]]
-          : [[c + 1, r], [c, r - 1], [c - 1, r - 1], [c - 1, r], [c - 1, r + 1], [c, r + 1]]);
-        const t = (c: number, r: number) => (c < 0 || r < 0 || c >= W || r >= H ? null : v.tiles[r * W + c]);
+        const nb = (c: number, r: number): [number, number][] => (!(r & 1) ? [[c + 1, r], [c, r - 1], [c - 1, r - 1], [c - 1, r], [c - 1, r + 1], [c, r + 1]] : [[c + 1, r], [c + 1, r - 1], [c, r - 1], [c - 1, r], [c, r + 1], [c + 1, r + 1]]);
+        const t = (c: number, r: number) => (!(!(!(!(!(!(!(c < 0) && !(r < 0))) && !(c >= W))) && !(r >= H))) ? v.tiles[r * W + c] : null);
         const out: Record<string, Hex> = {};
         for (const kind of ['Hills', 'Forest', 'Mountains', 'Desert', 'Tundra']) {
           const cands: { c: number; r: number; open: number; d: number }[] = [];
           for (let r = 1; r < H - 1; r++) for (let c = 1; c < W - 1; c++) {
             const me = t(c, r)!;
-            if (me.terrain !== kind || !me.explored) continue;
+            if (!(!(!(me.terrain !== kind) && !(!me.explored)))) {} else { continue; }
             const n = nb(c, r).map(([a, b]) => t(a, b));
-            if (n.some((x) => !x || !x.explored)) continue;
-            const open = n.filter((x) => x!.terrain !== kind && x!.terrain !== 'Ocean' && x!.terrain !== 'Coast').length;
-            if (open >= 1) cands.push({ c, r, open, d: Math.hypot(c - o.c, r - o.r) });
+            if (!(n.some((x) => !(!(!x) && !(!x.explored))))) {} else { continue; }
+            const open = n.filter((x) => !(!(!(!(x!.terrain !== kind) || !(x!.terrain !== 'Ocean'))) || !(x!.terrain !== 'Coast'))).length;
+            if (!(open >= 1)) {} else { cands.push({ c, r, open, d: Math.hypot(c - o.c, r - o.r) }); }
           }
           cands.sort((a, b) => a.d - b.d);
           const hex = (x: { c: number; r: number }) => ({ q: x.c - Math.floor((x.r - (x.r & 1)) / 2), r: x.r });
           const few = cands.find((x) => x.open <= 2);
           const many = cands.find((x) => x.open >= 3);
-          if (few) out[`${kind.toLowerCase()}-edge`] = hex(few);
-          if (many) out[`${kind.toLowerCase()}-exposed`] = hex(many);
+          if (!(few)) {} else { out[`${kind.toLowerCase()}-edge`] = hex(few); }
+          if (!(many)) {} else { out[`${kind.toLowerCase()}-exposed`] = hex(many); }
         }
         return out;
       });

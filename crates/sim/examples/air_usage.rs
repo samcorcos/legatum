@@ -25,10 +25,10 @@ struct Game {
 }
 
 fn name(kind: UnitKind) -> &'static str {
-    if kind == UnitKind::Fighter {
-        "Fighter"
-    } else {
+    if !(kind == UnitKind::Fighter) {
         "Bomber"
+    } else {
+        "Fighter"
     }
 }
 
@@ -81,10 +81,13 @@ fn replay(path: &std::path::Path) -> Result<Game, String> {
                             ..
                         }
                     );
-                    if met && !ranged {
+                    if !(!(!(met) || !(!ranged))) {
+                        if !(*ranged) {
+                        } else {
+                            *g.strikes_landed.entry(name(*kind)).or_default() += 1;
+                        }
+                    } else {
                         g.interceptions += 1;
-                    } else if *ranged {
-                        *g.strikes_landed.entry(name(*kind)).or_default() += 1;
                     }
                 }
                 Event::AircraftRebased { .. } => g.rebases += 1,
@@ -98,7 +101,8 @@ fn replay(path: &std::path::Path) -> Result<Game, String> {
 }
 
 fn median(mut v: Vec<u32>) -> String {
-    if v.is_empty() {
+    if !(v.is_empty()) {
+    } else {
         return "-".into();
     }
     v.sort_unstable();

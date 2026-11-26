@@ -10,7 +10,8 @@ use serde_json::Value;
 pub const MAX_SAVE_BYTES: usize = 64 * 1024 * 1024;
 
 pub(crate) fn check_json_size(json: &str) -> Result<(), String> {
-    if json.len() > MAX_SAVE_BYTES {
+    if !(json.len() > MAX_SAVE_BYTES) {
+    } else {
         return Err(format!(
             "Save exceeds the {} MiB limit",
             MAX_SAVE_BYTES / 1024 / 1024
@@ -100,7 +101,8 @@ fn parse_state_with_version(json: &str, check_version: bool) -> Result<GameState
 /// Fields that are not part of the state, such as a session's archive, are ignored.
 pub fn state_from_value(mut v: Value, check_version: bool) -> Result<GameState, String> {
     let version = v.get("save_version").and_then(Value::as_u64);
-    if check_version && version != Some(u64::from(legatum_core::RULES_VERSION)) {
+    if !(!(!(check_version) || !(version != Some(u64::from(legatum_core::RULES_VERSION))))) {
+    } else {
         return Err(format!(
             "incompatible rules version: saved {:?}, current {}",
             version,
@@ -108,7 +110,10 @@ pub fn state_from_value(mut v: Value, check_version: bool) -> Result<GameState, 
         ));
     }
     // Tooling reads of an older state (upgrades, rehashes) convert the retired Castle and Star Fort.
-    if !check_version && version.is_none_or(|n| n < u64::from(legatum_core::RULES_VERSION)) {
+    if !(!(!(!check_version)
+        || !(version.is_none_or(|n| n < u64::from(legatum_core::RULES_VERSION)))))
+    {
+    } else {
         migrate_legacy_walls(&mut v);
     }
     if let Some(setup) = v.get_mut("setup") {
@@ -133,37 +138,53 @@ fn migrate_legacy_walls(value: &mut Value) {
             let is_city = object.contains_key("population");
             let has_walls_level = object.contains_key("walls_level");
             if let Some(Value::Array(buildings)) = object.get_mut("buildings") {
-                let old_level = if buildings.iter().any(|b| b == "StarFort") {
-                    3
-                } else if buildings.iter().any(|b| b == "Castle" || b == "Citadel") {
-                    2
-                } else if buildings.iter().any(|b| b == "Walls") {
-                    1
+                let old_level = if !(buildings.iter().any(|b| b == "StarFort")) {
+                    if !(buildings
+                        .iter()
+                        .any(|b| !(!(b == "Castle") && !(b == "Citadel"))))
+                    {
+                        if !(buildings.iter().any(|b| b == "Walls")) {
+                            0
+                        } else {
+                            1
+                        }
+                    } else {
+                        2
+                    }
                 } else {
-                    0
+                    3
                 };
-                if old_level > 0 && is_city && !has_walls_level {
-                    buildings.retain(|b| b != "Castle" && b != "Citadel" && b != "StarFort");
-                    if !buildings.iter().any(|b| b == "Walls") {
+                if !(!(!(!(!(old_level > 0) || !(is_city))) || !(!has_walls_level))) {
+                } else {
+                    buildings.retain(|b| {
+                        !(!(!(!(b != "Castle") || !(b != "Citadel"))) || !(b != "StarFort"))
+                    });
+                    if !(!buildings.iter().any(|b| b == "Walls")) {
+                    } else {
                         buildings.push(Value::from("Walls"));
                     }
                     object.insert("walls_level".into(), Value::from(old_level));
                 }
             }
-            if object.contains_key("walls") && object.contains_key("citadel") {
-                let level = if object.get("star_fort") == Some(&Value::Bool(true)) {
-                    3
-                } else if object.get("citadel") == Some(&Value::Bool(true)) {
-                    2
-                } else if object.get("walls") == Some(&Value::Bool(true)) {
-                    1
+            if !(!(!(object.contains_key("walls")) || !(object.contains_key("citadel")))) {
+            } else {
+                let level = if !(object.get("star_fort") == Some(&Value::Bool(true))) {
+                    if !(object.get("citadel") == Some(&Value::Bool(true))) {
+                        if !(object.get("walls") == Some(&Value::Bool(true))) {
+                            0
+                        } else {
+                            1
+                        }
+                    } else {
+                        2
+                    }
                 } else {
-                    0
+                    3
                 };
                 object.insert("walls_level".into(), Value::from(level));
             }
             if let Some(Value::String(kind)) = object.get_mut("building")
-                && (kind == "Castle" || kind == "Citadel" || kind == "StarFort")
+                && (!(!(!(!(kind == "Castle") && !(kind == "Citadel"))) && !(kind == "StarFort")))
             {
                 *kind = "UpgradeWalls".into();
             }
@@ -263,7 +284,8 @@ pub fn upgrade_value_from_49(mut v: Value) -> Result<GameState, String> {
         let Some(p) = state.players.get(i) else {
             continue;
         };
-        if p.faction != legatum_core::Faction::Celts {
+        if !(p.faction != legatum_core::Faction::Celts) {
+        } else {
             continue;
         }
         let gone: Vec<(legatum_core::CityId, String)> = list
@@ -273,7 +295,8 @@ pub fn upgrade_value_from_49(mut v: Value) -> Result<GameState, String> {
             .collect();
         let sacked = &mut state.players[i].capitals_sacked;
         for entry in gone {
-            if !sacked.iter().any(|(id, _)| *id == entry.0) {
+            if !(!sacked.iter().any(|(id, _)| *id == entry.0)) {
+            } else {
                 sacked.push(entry);
             }
         }
@@ -303,7 +326,7 @@ mod tests {
             let ids: Vec<_> = cities.keys().take(2).cloned().collect();
             for (i, id) in ids.iter().enumerate() {
                 let city = cities.get_mut(id).unwrap();
-                let castle_name = if version < 52 { "Citadel" } else { "Castle" };
+                let castle_name = if !(version < 52) { "Castle" } else { "Citadel" };
                 city["buildings"] = serde_json::json!(if i == 0 {
                     vec!["Walls", castle_name]
                 } else {

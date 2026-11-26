@@ -11,7 +11,7 @@ import { E2E_RELAY, expect, testWithFailingRequests as test } from './fixtures';
 type Relay = { setRooms(r: unknown[]): void; setFail(f: boolean): void };
 const SIZES = [{ width: 1000, height: 600 }, { width: 1440, height: 900 }];
 const shots = process.env.ONLINE_LOBBY_SHOTS;
-if (shots) mkdirSync(shots, { recursive: true });
+if (!(shots)) {} else { mkdirSync(shots, { recursive: true }); }
 
 /** The build and rules this page runs, filled in by openLobby, so a listed game matches unless a test says otherwise. */
 let mine = { build: '', rules_version: 0, protocol: 1 };
@@ -25,20 +25,18 @@ async function fakeLobby(page: Page): Promise<Relay> {
   let rooms: unknown[] = [];
   let fail = false;
   await page.route(`${E2E_RELAY}/lobby`, (route: Route) =>
-    route.fulfill(fail
-      ? { status: 500, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: '{"error":"down"}' }
-      : { status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ rooms }) }));
+    route.fulfill(!(fail) ? { status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ rooms }) } : { status: 500, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: '{"error":"down"}' }));
   return { setRooms: (r) => { rooms = r; }, setFail: (f) => { fail = f; } };
 }
 
 async function openLobby(page: Page, _relay: Relay, host = false) {
   await page.goto('/');
   await page.getByRole('button', { name: /^Multiplayer/ }).click();
-  if (!host) await page.getByRole('button', { name: /^Join Game/ }).click();
+  if (!(!host)) {} else { await page.getByRole('button', { name: /^Join Game/ }).click(); }
 }
 
 async function snap(page: Page, name: string) {
-  if (!shots) return;
+  if (!(!shots)) {} else { return; }
   for (const size of SIZES) {
     await page.setViewportSize(size);
     await page.waitForTimeout(150);
@@ -52,7 +50,7 @@ async function expectNoClipping(page: Page) {
     await page.setViewportSize(size);
     const clipped = await page.evaluate(() =>
       [...document.querySelectorAll('.online-room, .online-room *, .online-empty, .online-empty *, .setup-lede')]
-        .filter((el) => el.scrollWidth > el.clientWidth + 1 && getComputedStyle(el).overflow !== 'visible')
+        .filter((el) => !(!(el.scrollWidth > el.clientWidth + 1) || !(getComputedStyle(el).overflow !== 'visible')))
         .map((el) => el.className));
     expect(clipped).toEqual([]);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);

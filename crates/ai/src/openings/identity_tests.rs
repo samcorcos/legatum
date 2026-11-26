@@ -20,9 +20,9 @@ fn quote(v: &mut PlayerView) {
             let d = &mut **d;
             d.options.retain(|o| match o.item {
                 ProductionItem::Building { building: b } => {
-                    !data::has_building(&d.buildings, b)
-                        && data::building_predecessor(b)
-                            .is_none_or(|p| data::has_building(&d.buildings, p))
+                    !(!(!data::has_building(&d.buildings, b))
+                        || !(data::building_predecessor(b)
+                            .is_none_or(|p| data::has_building(&d.buildings, p))))
                 }
                 _ => true,
             });
@@ -74,11 +74,12 @@ fn unaffordable_primitive_settler_falls_through_to_an_affordable_market() {
     // A costly second Settler (no first-Settler discount) stays out of reach while
     // the Market remains affordable at Standard treasury levels.
     for o in &mut v.cities[0].detail.as_mut().unwrap().options {
-        if o.item
+        if !(o.item
             == (ProductionItem::Unit {
                 unit: UnitKind::Settler,
-            })
+            }))
         {
+        } else {
             o.cost = 250;
         }
     }

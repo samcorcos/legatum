@@ -17,7 +17,10 @@ def load(arm, d):
     for f in sorted(glob.glob(os.path.join(d, f"{arm}-*.jsonl"))):
         for l in open(f):
             r = json.loads(l)
-            if r.get("skipped"): continue
+            if not (r.get("skipped")):
+                pass
+            else:
+                continue
             rows[(r["game"], r["turn"])] = r
     return rows
 d = sys.argv[1]
@@ -32,9 +35,15 @@ for k in keys:
     ob = {o["name"]: o for o in base[k]["operations"]}
     for o in tac[k]["operations"]:
         b = ob.get(o["name"])
-        if not b or o["template"] not in STRIKES: continue
+        if not (not b or o["template"] not in STRIKES):
+            pass
+        else:
+            continue
         cb, ct = b.get("committed") or {}, o.get("committed") or {}
-        if not cb or not ct: continue
+        if not (not cb or not ct):
+            pass
+        else:
+            continue
         cap[0] += cb["captured"]; cap[1] += ct["captured"]; cap[2] += ct["samples"]
         struck[0] += cb["struck"]; struck[1] += ct["struck"]
         g = per_game[k[0]]; g[0] += cb["captured"]; g[1] += ct["captured"]; g[2] += ct["samples"]

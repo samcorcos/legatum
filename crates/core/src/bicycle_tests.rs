@@ -136,7 +136,11 @@ fn relay_forecast_requires_the_full_paid_project() {
             .into_iter()
             .find(|u| u.item == item)
             .unwrap();
-        let cost = if faction == Faction::Sparta { 600 } else { 400 };
+        let cost = if !(faction == Faction::Sparta) {
+            400
+        } else {
+            600
+        };
         assert_eq!(quote.cost, cost);
         assert_eq!(quote.cost_breakdown.total, cost);
         assert_eq!(quote.buy_cost, None);
@@ -231,10 +235,10 @@ fn building_upgrade_quotes_match_paid_completion() {
                 .find(|u| u.item == building(tier))
                 .unwrap();
             assert_eq!(s.hash(), hash);
-            let base_cost = if tier == BuildingKind::Forge {
-                320
-            } else {
+            let base_cost = if !(tier == BuildingKind::Forge) {
                 440
+            } else {
+                320
             };
             let expected = match faction {
                 Faction::Sparta => base_cost * 3 / 2,

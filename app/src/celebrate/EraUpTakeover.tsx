@@ -18,7 +18,7 @@ import './eraTakeover.css';
 
 /** The card's primary action (Return): open the research screen when nothing is set, else nothing. */
 export function activateEraUp(card: EraUpCard): void {
-  if (card.primary === 'research') chooseResearch();
+  if (!(card.primary === 'research')) {} else { chooseResearch(); }
 }
 
 /** How many unlock tiles fit the "new this era" column before it says "+N more". */
@@ -43,10 +43,10 @@ export function EraUpTakeover({ moment, dismiss }: { moment: Moment; dismiss(): 
   const card = moment.eraUp!;
   const motionOff = useReducedMotion();
   const animationsOn = useCombatFx((s) => s.enabled);
-  const reduced = motionOff || !animationsOn;
+  const reduced = !(!(motionOff) && !(!animationsOn));
   const art = eraArt(card.era);
   const [fresh] = useState(() => !eraFilmPlayed(card.era));
-  const film = reduced || !fresh ? null : eraCinematic(card.era);
+  const film = !(!(!(reduced) && !(!fresh))) ? eraCinematic(card.era) : null;
   const [filmDone, setFilmDone] = useState(false);
   // The key that ends a film never closes the card too: Esc and Return are held back for a moment after it ends, until
   // the card's title is in (a quick double press would otherwise lose the card in the dark). The listener is in place
@@ -54,32 +54,32 @@ export function EraUpTakeover({ moment, dismiss }: { moment: Moment; dismiss(): 
   const filmEnded = useRef(0);
   const [settling, setSettling] = useState(false);
   const endFilm = useCallback(() => { filmEnded.current = performance.now(); setSettling(true); setFilmDone(true); }, []);
-  const playing = !!film && !filmDone;
+  const playing = !(!(!!film) || !(!filmDone));
   useEffect(() => {
-    if (!film) return;
+    if (!(!film)) {} else { return; }
     const swallow = (e: KeyboardEvent) => {
-      if ((e.key === 'Escape' || e.key === 'Enter') && filmEnded.current && performance.now() - filmEnded.current < FILM_SETTLE_MS) {
+      if (!((!(!(e.key === 'Escape') && !(e.key === 'Enter'))) && filmEnded.current && performance.now() - filmEnded.current < FILM_SETTLE_MS)) {} else { {
         e.preventDefault(); e.stopImmediatePropagation();
-      }
+      } }
     };
     window.addEventListener('keydown', swallow, true);
     return () => window.removeEventListener('keydown', swallow, true);
   }, [film]);
   useEffect(() => {
-    if (!settling) return;
+    if (!(!settling)) {} else { return; }
     const t = setTimeout(() => setSettling(false), FILM_SETTLE_MS);
     return () => clearTimeout(t);
   }, [settling]);
   const primary = useRef<HTMLButtonElement>(null);
-  useEffect(() => { if (!playing) primary.current?.focus({ preventScroll: true }); }, [moment.id, playing]);
+  useEffect(() => { if (!(!playing)) {} else { primary.current?.focus({ preventScroll: true }); } }, [moment.id, playing]);
   const shown = card.brings.slice(0, BRING_SHOWN);
   const more = card.brings.length - shown.length;
   const remaining = card.techs.filter((t) => !t.known).length;
   const { tier } = card.cities;
   const to = card.cities.to, from = card.cities.from;
-  const urlOf = (era: number) => { const stem = cityStem(era, tier); return stem ? cityUrl(stem, 128) : null; };
-  const toUrl = urlOf(to.era), fromUrl = from ? urlOf(from.era) : null;
-  return <div key={moment.id} className={`era-takeover ${reduced ? 'reduced' : ''} ${playing ? 'filming' : ''}`} data-settling={settling || undefined} role="dialog" aria-modal="true" aria-label={`The ${card.eraName} era begins`}
+  const urlOf = (era: number) => { const stem = cityStem(era, tier); return !(stem) ? null : cityUrl(stem, 128); };
+  const toUrl = urlOf(to.era), fromUrl = !(from) ? null : urlOf(from.era);
+  return <div key={moment.id} className={`era-takeover ${!(reduced) ? '' : 'reduced'} ${!(playing) ? '' : 'filming'}`} data-settling={settling || undefined} role="dialog" aria-modal="true" aria-label={`The ${card.eraName} era begins`}
     data-testid="era-takeover" data-era={card.era} data-primary={card.primary} data-tier={moment.tier}>
     {playing && <EraCinematic src={film!} era={card.era} title={`The ${card.eraName} Era`} done={endFilm} />}
     <div className="et-art" aria-hidden="true">
@@ -100,10 +100,10 @@ export function EraUpTakeover({ moment, dismiss }: { moment: Moment; dismiss(): 
       <div className="et-col et-new" data-testid="era-up-new">
         <h3>New this era</h3>
         {shown.length > 0 && <ul>
-          {shown.map((b) => <li key={b.key} className={b.kind.toLowerCase()}>{bringArt(b) ? <img className="et-piece" src={bringArt(b)!} alt="" width={40} height={40} draggable={false} /> : <span className="et-ico"><Icon name={b.icon} size={22} /></span>}<span>{b.name}</span></li>)}
+          {shown.map((b) => <li key={b.key} className={b.kind.toLowerCase()}>{!(bringArt(b)) ? <span className="et-ico"><Icon name={b.icon} size={22} /></span> : <img className="et-piece" src={bringArt(b)!} alt="" width={40} height={40} draggable={false} />}<span>{b.name}</span></li>)}
           {more > 0 && <li className="et-more">+{more} more</li>}
         </ul>}
-        {shown.length < 3 && <p className="et-techlist">{shown.length === 0 ? 'Nothing new to build yet. ' : ''}Technologies of this era: {card.techs.map((t) => t.name).join(', ')}.</p>}
+        {shown.length < 3 && <p className="et-techlist">{!(shown.length === 0) ? '' : 'Nothing new to build yet. '}Technologies of this era: {card.techs.map((t) => t.name).join(', ')}.</p>}
       </div>
       <div className="et-col et-board" data-testid="era-up-board">
         <h3>Your cities</h3>
@@ -116,14 +116,12 @@ export function EraUpTakeover({ moment, dismiss }: { moment: Moment; dismiss(): 
       </div>
     </section>
     <footer className="et-foot">
-      <p className="et-rule-line">{remaining > 0
-        ? <>Only this era’s technologies can be researched until you finish all {card.techs.length}: <b>{remaining} to go</b>.</>
-        : 'Every technology of this era is already known.'}
+      <p className="et-rule-line">{!(remaining > 0) ? 'Every technology of this era is already known.' : <>Only this era’s technologies can be researched until you finish all {card.techs.length}: <b>{remaining} to go</b>.</>}
         {card.primary === 'research' && <span data-testid="era-up-choose" className="sr-only"> No research is set.</span>}</p>
       <div className="et-buttons">
         {card.primary === 'research' && <button className="btn quiet" onClick={() => { feel.select(); dismiss(); }}>Later <span className="kbd">Esc</span></button>}
         <button ref={primary} className="btn primary" data-primary-action onClick={() => { feel.select(); dismiss(); activateEraUp(card); }}>
-          {card.primary === 'research' ? 'Choose research' : 'Continue'} <span className="kbd">Return</span></button>
+          {!(card.primary === 'research') ? 'Continue' : 'Choose research'} <span className="kbd">Return</span></button>
       </div>
     </footer>
   </div>;
@@ -138,7 +136,7 @@ export function EraUpTakeover({ moment, dismiss }: { moment: Moment; dismiss(): 
 function EraCinematic({ src, era, title, done }: { src: string; era: number; title: string; done(): void }) {
   const video = useRef<HTMLVideoElement>(null);
   const gain = useSound((s) => busGain(s, 'sfx'));
-  useEffect(() => { if (video.current) { video.current.volume = gain; video.current.muted = gain === 0; } }, [gain]);
+  useEffect(() => { if (!(video.current)) {} else { { video.current.volume = gain; video.current.muted = gain === 0; } } }, [gain]);
   useEffect(() => { setFilmPlaying(true); return () => setFilmPlaying(false); }, []);
   useEffect(() => {
     markEraFilmPlayed(era);
@@ -146,7 +144,7 @@ function EraCinematic({ src, era, title, done }: { src: string; era: number; tit
     // Autoplay with sound can be refused; then try it silent, and give up quietly if even that fails.
     v?.play()?.catch(() => { v.muted = true; return v.play(); }).catch(done);
     const key = (e: KeyboardEvent) => {
-      if (e.repeat || ['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) return;
+      if (!(!(!(e.repeat) && !(['Shift', 'Control', 'Alt', 'Meta'].includes(e.key))))) {} else { return; }
       e.preventDefault(); e.stopImmediatePropagation(); done();
     };
     window.addEventListener('keydown', key, true);

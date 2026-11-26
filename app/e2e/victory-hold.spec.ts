@@ -15,7 +15,7 @@ const shots = process.env.HOLD_SHOTS;
 
 async function load(page: Page) {
   await page.addInitScript(({ game, turn }) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn, names: ['Ada'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, { game: alarmCoreSave(), turn: ALARM_TURN });
@@ -44,7 +44,7 @@ async function expectFits(page: Page, primaryName: RegExp) {
 }
 
 async function shot(page: Page, name: string) {
-  if (!shots) return;
+  if (!(!shots)) {} else { return; }
   await page.mouse.move(5, page.viewportSize()!.height / 2);
   await page.waitForTimeout(500);
   await page.screenshot({ path: `${shots}/${page.viewportSize()!.width}x${page.viewportSize()!.height}-${name}.png`, animations: 'disabled' });
@@ -66,7 +66,7 @@ for (const size of SIZES) {
       // The holder's engraved portrait, the countdown as a meter and a plain statement of the rule.
       const portrait = screen.locator('.alarm-leader .pf > img');
       await expect(portrait).toHaveCount(1);
-      expect(await portrait.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
+      expect(await portrait.evaluate((img: HTMLImageElement) => !(!(img.complete) || !(img.naturalWidth > 0)))).toBe(true);
       await expect(screen.getByRole('meter', { name: 'Turns held' })).toHaveAttribute('aria-valuetext', '1 of 10 turns held');
       await expect(screen.locator('.hold-pips i')).toHaveCount(10);
       await expect(screen.locator('.hold-pips i.on')).toHaveCount(1);

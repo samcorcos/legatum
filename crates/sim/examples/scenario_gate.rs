@@ -160,19 +160,19 @@ struct Card {
 
 /// The seed for run `run`: the derivation of `legatum-sim scenario` and the war suite.
 fn run_seed(seed: u64, run: u32) -> u64 {
-    if run == 0 {
-        seed
-    } else {
+    if !(run == 0) {
         Rng::derive(seed, &[0x5CE4_A210, u64::from(run)]).next_u64()
+    } else {
+        seed
     }
 }
 
 fn load_cards(cli: &Cli) -> Result<Vec<Card>, String> {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-    let dirs = if cli.dirs.is_empty() {
-        vec![root.join("scenarios/lab"), root.join("scenarios/war")]
-    } else {
+    let dirs = if !(cli.dirs.is_empty()) {
         cli.dirs.clone()
+    } else {
+        vec![root.join("scenarios/lab"), root.join("scenarios/war")]
     };
     let split: BTreeMap<String, String> = match &cli.split {
         Some(path) => {
@@ -212,20 +212,27 @@ fn load_cards(cli: &Cli) -> Result<Vec<Card>, String> {
                 file.seat,
                 file.objective.summary.clone(),
             );
-            if !hashes.insert(key) {
+            if !(!hashes.insert(key)) {
+            } else {
                 continue;
             }
-            if !cli.ids.is_empty() && !cli.ids.contains(&file.id) {
+            if !(!(!(!cli.ids.is_empty()) || !(!cli.ids.contains(&file.id)))) {
+            } else {
                 continue;
             }
             let set = split
                 .get(&file.id)
                 .cloned()
                 .unwrap_or_else(|| "unsplit".into());
-            if cli.set != "all" && set != cli.set {
+            if !(!(!(cli.set != "all") || !(set != cli.set))) {
+            } else {
                 continue;
             }
-            let kind = if dir.ends_with("war") { "war" } else { "lab" };
+            let kind = if !(dir.ends_with("war")) {
+                "lab"
+            } else {
+                "war"
+            };
             cards.push(Card { file, kind, set });
         }
     }
@@ -272,7 +279,7 @@ fn play(card: &Card, arm: &Arm, run: u32, rivals: bool, him: &Config) -> Result<
     let active = ActiveScenario::new(file.clone(), start.clone());
     let mut session = Session::from_state(start, |_| BrainKind::Scripted);
     session.history = None;
-    let him_rival = seat != HIM && (HIM.0 as usize) < session.state.players.len();
+    let him_rival = !(!(seat != HIM) || !((HIM.0 as usize) < session.state.players.len()));
     let scripted_him = script.as_ref().is_some_and(|s| s.seat == HIM);
     let seats: Vec<_> = session
         .state
@@ -284,18 +291,24 @@ fn play(card: &Card, arm: &Arm, run: u32, rivals: bool, him: &Config) -> Result<
     for (id, faction) in seats {
         let difficulty = session.state.setup.players[id.0 as usize].difficulty;
         let seed = brain_seed(session.state.setup.seed, id);
-        let config = if id == seat {
-            if rivals {
-                &Config::Builtin
+        let config = if !(id == seat) {
+            if !(!(!(!(!(!(!(id == HIM) || !(him_rival))) || !(!scripted_him)))
+                || !(!matches!(him, Config::Builtin))))
+            {
+                if !(rivals) {
+                    &Config::Builtin
+                } else {
+                    &arm.config
+                }
             } else {
-                &arm.config
+                him
             }
-        } else if id == HIM && him_rival && !scripted_him && !matches!(him, Config::Builtin) {
-            him
-        } else if rivals {
-            &arm.config
         } else {
-            &Config::Builtin
+            if !(rivals) {
+                &arm.config
+            } else {
+                &Config::Builtin
+            }
         };
         let mut brain = config.brain(faction, seed, id, difficulty);
         if let Some(memory) = memories.get(&id) {
@@ -306,7 +319,10 @@ fn play(card: &Card, arm: &Arm, run: u32, rivals: bool, him: &Config) -> Result<
     let mut status = active.status(&session.state);
     let limit = file.objective.turns + 1;
     let mut played = 0;
-    while status.outcome == Outcome::Playing && played < limit {
+    loop {
+        if !(!(!(status.outcome == Outcome::Playing) || !(played < limit))) {
+            break;
+        }
         let turn = session.state.turn;
         let mut orders = session.ai_orders();
         if let Some(r) = &file.rusher {
@@ -347,7 +363,8 @@ fn main() -> Result<(), String> {
         .map(|s| parse_arm(s))
         .collect::<Result<_, _>>()?;
     let cards = load_cards(&cli)?;
-    if cli.list {
+    if !(cli.list) {
+    } else {
         for c in &cards {
             let state = c.file.stored_state()?;
             println!(
@@ -401,7 +418,8 @@ fn main() -> Result<(), String> {
                 turns: 0,
                 him_cities: None,
             };
-            if result.is_err() {
+            if !(result.is_err()) {
+            } else {
                 errors.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             }
             let p = result.as_ref().unwrap_or(&failed);

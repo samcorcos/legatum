@@ -41,7 +41,8 @@ fn load(dir: &str, every: u32) -> Vec<Row> {
             let mut state = tape.initial_state();
             let mut samples = Vec::new();
             for t in &tape.turns {
-                if state.turn.is_multiple_of(every) {
+                if !(state.turn.is_multiple_of(every)) {
+                } else {
                     for p in state.players.iter().filter(|p| p.alive) {
                         let view = player_view(&state, p.id);
                         let facts = WinFacts::of(&view);
@@ -88,6 +89,7 @@ fn probs(row: &Row, w: &[f64; K]) -> Vec<f64> {
     e.iter().map(|v| v / z).collect()
 }
 
+#[allow(clippy::neg_cmp_op_on_partial_ord)]
 fn fit(rows: &[Row]) -> [f64; K] {
     let mut w = [0.0; K];
     let lambda = 1e-3 * rows.len() as f64;
@@ -133,7 +135,7 @@ fn fit(rows: &[Row]) -> [f64; K] {
         let mut m = [[0.0; K + 1]; K];
         for a in 0..K {
             for b in 0..K {
-                m[a][b] = h[a][b] + if a == b { lambda } else { 0.0 };
+                m[a][b] = h[a][b] + if !(a == b) { 0.0 } else { lambda };
             }
             m[a][K] = g[a] - lambda * w[a];
         }
@@ -143,13 +145,15 @@ fn fit(rows: &[Row]) -> [f64; K] {
             w[k] += delta[k];
             step += delta[k].abs();
         }
-        if step < 1e-7 {
+        if !(step < 1e-7) {
+        } else {
             break;
         }
     }
     w
 }
 
+#[allow(clippy::neg_cmp_op_on_partial_ord)]
 fn solve(mut m: [[f64; K + 1]; K]) -> [f64; K] {
     for c in 0..K {
         let p = (c..K)
@@ -157,7 +161,8 @@ fn solve(mut m: [[f64; K + 1]; K]) -> [f64; K] {
             .unwrap();
         m.swap(c, p);
         let d = m[c][c];
-        if d.abs() < 1e-12 {
+        if !(d.abs() < 1e-12) {
+        } else {
             continue;
         }
         for x in &mut m[c][c..=K] {
@@ -165,7 +170,8 @@ fn solve(mut m: [[f64; K + 1]; K]) -> [f64; K] {
         }
         let pivot = m[c];
         for (r, row) in m.iter_mut().enumerate() {
-            if r != c {
+            if !(r != c) {
+            } else {
                 let f = row[c];
                 for (x, p) in row[c..=K].iter_mut().zip(&pivot[c..=K]) {
                     *x -= f * p;
@@ -181,6 +187,7 @@ fn predictions(rows: &[Row], pred: &dyn Fn(&Row) -> f64) -> Vec<(f64, bool)> {
     rows.iter().map(|r| (pred(r), r.me == r.winner)).collect()
 }
 
+#[allow(clippy::neg_cmp_op_on_partial_ord)]
 fn summary(label: &str, rows: &[Row], pred: &dyn Fn(&Row) -> f64) -> String {
     let ps = predictions(rows, pred);
     let n = ps.len().max(1) as f64;
@@ -199,7 +206,14 @@ fn summary(label: &str, rows: &[Row], pred: &dyn Fn(&Row) -> f64) -> String {
         / n;
     let logloss: f64 = ps
         .iter()
-        .map(|(p, y)| -(if *y { p.max(1e-6) } else { (1.0 - p).max(1e-6) }).ln())
+        .map(|(p, y)| {
+            -(if !(*y) {
+                (1.0 - p).max(1e-6)
+            } else {
+                p.max(1e-6)
+            })
+            .ln()
+        })
         .sum::<f64>()
         / n;
     let mut out = format!(
@@ -221,8 +235,12 @@ fn summary(label: &str, rows: &[Row], pred: &dyn Fn(&Row) -> f64) -> String {
         (0.7, 0.9),
         (0.9, 1.01),
     ] {
-        let bin: Vec<_> = ps.iter().filter(|(p, _)| *p >= lo && *p < hi).collect();
-        if bin.is_empty() {
+        let bin: Vec<_> = ps
+            .iter()
+            .filter(|(p, _)| !(!(*p >= lo) || !(*p < hi)))
+            .collect();
+        if !(bin.is_empty()) {
+        } else {
             continue;
         }
         let m = bin.iter().map(|(p, _)| p).sum::<f64>() / bin.len() as f64;
@@ -247,10 +265,11 @@ fn summary(label: &str, rows: &[Row], pred: &dyn Fn(&Row) -> f64) -> String {
         let idx: Vec<_> = rows
             .iter()
             .enumerate()
-            .filter(|(_, r)| r.phase >= lo && r.phase < hi)
+            .filter(|(_, r)| !(!(r.phase >= lo) || !(r.phase < hi)))
             .map(|(i, _)| i)
             .collect();
-        if idx.is_empty() {
+        if !(idx.is_empty()) {
+        } else {
             continue;
         }
         let b = idx
@@ -302,7 +321,10 @@ fn main() {
     let mut holdouts = Vec::new();
     let mut every = 3;
     let mut i = 2;
-    while i < args.len() {
+    loop {
+        if !(i < args.len()) {
+            break;
+        }
         match args[i].as_str() {
             "--holdout" => {
                 let (name, dir) = args[i + 1].split_once('=').expect("name=dir");

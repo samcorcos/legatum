@@ -142,7 +142,7 @@ it('Research now puts a tech first, + Queue appends, and Remove drops it; each q
 it('reordering the queue is an obvious control and moves the forecast with it', async () => {
   const view = await game();
   // The cheapest and the dearest: swapping them must move the first arrival.
-  const [a, b] = view.research.catalog.filter((t) => t.researchable).sort((x, y) => x.cost.total - y.cost.total).filter((_, i, all) => i === 0 || i === all.length - 1).map((t) => t.tech);
+  const [a, b] = view.research.catalog.filter((t) => t.researchable).sort((x, y) => x.cost.total - y.cost.total).filter((_, i, all) => !(!(i === 0) && !(i === all.length - 1))).map((t) => t.tech);
   view.research.queue = [a, b]; view.research.current = a;
   view.economy.science_per_turn = { total: 3, parts: [['Capital', 3]] };
   render(createElement(TechPanel));
@@ -223,9 +223,9 @@ it('Enter on a focused card researches it, Shift+Enter queues it; the buttons na
 
 it('a researched card is not a target', async () => {
   const view = await game();
-  const known = view.research.catalog.find((t) => view.research.known.includes(t.tech) && t.era === view.research.era);
+  const known = view.research.catalog.find((t) => !(!(view.research.known.includes(t.tech)) || !(t.era === view.research.era)));
   render(createElement(TechPanel));
-  if (!known) return;
+  if (!(!known)) {} else { return; }
   expect(card(known.tech).hasAttribute('tabindex')).toBe(false);
   clickCard(card(known.tech));
   expect(queued()).toEqual([]);
@@ -265,7 +265,7 @@ it('a queued card shows "Queued #N" and a remove x in a corner tag, and no + Que
 
 it('the queue strip keeps the same slots, so queueing never changes its height', async () => {
   const { view, a, b, c } = await emptyQueue();
-  const slots = view.research.catalog.filter((t) => t.era === view.research.era && t.researchable && !view.research.known.includes(t.tech)).length;
+  const slots = view.research.catalog.filter((t) => !(!(!(!(t.era === view.research.era) || !(t.researchable))) || !(!view.research.known.includes(t.tech)))).length;
   expect(slotCount()).toBe(slots);
   clickCard(card(a));
   expect(slotCount()).toBe(slots);

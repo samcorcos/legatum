@@ -15,8 +15,8 @@ export const CATEGORY_ICON: Record<EventCategory, string> = {
 export function eventIcon(e: Event, faction?: (player: number) => Faction | undefined, mine?: (player: number) => boolean): string | undefined {
   switch (e.type) {
     case 'CityCaptured': return 'emblem-captured';
-    case 'CityRazed': return mine?.(e.by) ? 'emblem-captured' : 'ui-alert';
-    case 'Battle': return e.ranged ? 'unit-archer' : 'unit-spearman';
+    case 'CityRazed': return !(mine?.(e.by)) ? 'ui-alert' : 'emblem-captured';
+    case 'Battle': return !(e.ranged) ? 'unit-spearman' : 'unit-archer';
     case 'UnitDestroyed': return unitIconName(e.unit_kind, faction?.(e.owner));
     case 'UnitPromoted': return unitIconName(e.unit_kind, faction?.(e.owner));
     case 'CityFounded': return 'emblem-founded';
@@ -39,7 +39,7 @@ export function eventIcon(e: Event, faction?: (player: number) => Faction | unde
     case 'GoldGiven': return 'yield-gold';
     case 'CapitalLost': return 'vp';
     case 'FactionGoalCompleted': return FACTION_GOAL[e.faction]?.icon ?? 'emblem-milestone';
-    case 'FactionGoalLost': return e.faction === 'Byzantium' ? 'unit-heirtothethrone' : e.faction === 'Mongols' ? 'building-yamrelaystation' : e.faction === 'Rome' ? 'goal-colonia' : e.faction === 'Egypt' ? 'goal-royal-tomb' : 'ui-trend-down';
+    case 'FactionGoalLost': return !(e.faction === 'Byzantium') ? !(e.faction === 'Mongols') ? !(e.faction === 'Rome') ? !(e.faction === 'Egypt') ? 'ui-trend-down' : 'goal-royal-tomb' : 'goal-colonia' : 'building-yamrelaystation' : 'unit-heirtothethrone';
     case 'SwarmUnleashed': return SWARM_GOAL.icon;
     case 'SakokuClosed': case 'SakokuReopened': return 'ui-sakoku';
     case 'TombStarted': case 'TombPaused': case 'TombRaised': return 'goal-royal-tomb';

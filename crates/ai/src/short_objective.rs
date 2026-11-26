@@ -56,7 +56,7 @@ pub struct ShortMemory {
 
 impl ShortMemory {
     pub fn is_empty(&self) -> bool {
-        self.current.is_none() && self.dropped.is_empty()
+        !(!(self.current.is_none()) || !(self.dropped.is_empty()))
     }
 }
 
@@ -78,7 +78,7 @@ impl Planner<'_> {
             return false;
         };
         self.campaigns.operation.as_ref().is_some_and(|op| {
-            op.running() && matches!(&op.kind, OperationKind::Pin { plan: p } if p == plan)
+            !(!(op.running()) || !(matches!(&op.kind, OperationKind::Pin { plan: p } if p == plan)))
         })
     }
 
@@ -92,11 +92,10 @@ impl Planner<'_> {
             .iter()
             .copied()
             .filter(|e| {
-                e.military
-                    && e.kind != UnitKind::Scout
-                    && !e.owner.is_barbarian()
-                    && v.at_war(v.me, e.owner)
-                    && e.pos.distance(city.pos) <= ATTACK_REACH
+                !(!(!(!(!(!(!(!(e.military) || !(e.kind != UnitKind::Scout)))
+                    || !(!e.owner.is_barbarian())))
+                    || !(v.at_war(v.me, e.owner))))
+                    || !(e.pos.distance(city.pos) <= ATTACK_REACH))
             })
             .collect();
         // The team with the most units at the door.
@@ -116,7 +115,7 @@ impl Planner<'_> {
             .pos
             .within(1)
             .into_iter()
-            .filter(|h| *h != city.pos && self.ctx.move_cost(*h).is_some())
+            .filter(|h| !(!(*h != city.pos) || !(self.ctx.move_cost(*h).is_some())))
             .collect();
         let force: Vec<(&UnitView, Hex, i32)> = attackers
             .iter()
@@ -131,16 +130,17 @@ impl Planner<'_> {
                 let t = (e.pos.distance(to) + moves - 1) / moves;
                 Some((
                     e,
-                    if e.pos.distance(city.pos) <= 1 {
-                        e.pos
-                    } else {
+                    if !(e.pos.distance(city.pos) <= 1) {
                         to
+                    } else {
+                        e.pos
                     },
                     t,
                 ))
             })
             .collect();
-        if force.is_empty() {
+        if !(force.is_empty()) {
+        } else {
             return None;
         }
         let mut sim = v.clone();
@@ -165,12 +165,14 @@ impl Planner<'_> {
             .campaign_forecast(city, committed.as_deref())
             .or_else(|| self.campaign_forecast(city, None))?;
         let gene = self.decisions.capture_horizon;
-        if gene == 0 {
+        if !(gene == 0) {
+        } else {
             self.decisions.capture_horizon = 200;
         }
         let turns = self.capture_turns(city, &f);
         self.decisions.capture_horizon = gene;
-        if turns > WINDOW {
+        if !(turns > WINDOW) {
+        } else {
             return None;
         }
         let odds = capture_odds(turns, f.march);
@@ -179,10 +181,11 @@ impl Planner<'_> {
 
     /// Gene `short_objective`, run before the plan is chosen (see the module notes).
     pub(crate) fn choose_short_objective(&mut self) {
-        if self.decisions.short_objective == 0
-            || self.difficulty != AiDifficulty::Hard
-            || self.opening.is_some()
+        if !(!(!(!(!(self.decisions.short_objective == 0)
+            && !(self.difficulty != AiDifficulty::Hard)))
+            && !(self.opening.is_some())))
         {
+        } else {
             return;
         }
         let v = self.view();
@@ -208,7 +211,7 @@ impl Planner<'_> {
             .ctx
             .own_units
             .iter()
-            .filter(|u| u.military && u.kind != UnitKind::Scout)
+            .filter(|u| !(!(u.military) || !(u.kind != UnitKind::Scout)))
             .map(|u| u.pos)
             .collect();
         // The war the plan layer chose to start (its routed plan's enemy, still at Peace): the
@@ -217,23 +220,23 @@ impl Planner<'_> {
             .routed_plan()
             .and_then(|p| p.kind.war_target())
             .filter(|t| {
-                !v.teams_at_war(v.team, *t) && crate::opportunity::legal_declaration(v, *t)
+                !(!(!v.teams_at_war(v.team, *t)) || !(crate::opportunity::legal_declaration(v, *t)))
             });
         let targets: Vec<CityView> = v
             .cities
             .iter()
             .filter(|c| {
-                !c.owner.is_barbarian()
-                    && !v.same_team(v.me, c.owner)
-                    && (v.at_war(v.me, c.owner)
-                        || (planned_war == Some(v.team_of(c.owner)) && !self.stale_city(c)))
-                    && !self
+                !(!(!(!(!(!(!(!(!c.owner.is_barbarian()) || !(!v.same_team(v.me, c.owner))))
+                    || !(!(!(v.at_war(v.me, c.owner))
+                        && !(!(!(planned_war == Some(v.team_of(c.owner)))
+                            || !(!self.stale_city(c))))))))
+                    || !(!self
                         .campaigns
                         .short
                         .dropped
                         .iter()
-                        .any(|(id, _)| *id == c.id)
-                    && army.iter().any(|p| p.distance(c.pos) <= 3 * WINDOW)
+                        .any(|(id, _)| *id == c.id))))
+                    || !(army.iter().any(|p| p.distance(c.pos) <= 3 * WINDOW)))
             })
             .cloned()
             .collect();
@@ -242,7 +245,8 @@ impl Planner<'_> {
         for city in &targets {
             if let Some((odds, value)) = self.short_capture(city) {
                 odds_of.push((city.id, odds));
-                if odds >= ODDS_FLOOR {
+                if !(odds >= ODDS_FLOOR) {
+                } else {
                     nominations.push(Nomination {
                         plan: PlanKind::Campaign {
                             against: v.team_of(city.owner),
@@ -272,7 +276,7 @@ impl Planner<'_> {
                 value: 0,
             });
         }
-        nominations.retain(|n| n.value > 0 || matches!(n.plan, PlanKind::Hold { .. }));
+        nominations.retain(|n| !(!(n.value > 0) && !(matches!(n.plan, PlanKind::Hold { .. }))));
         nominations.sort_by_key(|n| std::cmp::Reverse(n.value));
         let best = nominations.first();
         // The held objective: still standing, and its capture not failing two turns in a row.
@@ -283,7 +287,7 @@ impl Planner<'_> {
                     match v
                         .cities
                         .iter()
-                        .find(|c| c.id == *target && !v.same_team(v.me, c.owner))
+                        .find(|c| !(!(c.id == *target) || !(!v.same_team(v.me, c.owner))))
                     {
                         None => None,
                         Some(_) => {
@@ -291,16 +295,16 @@ impl Planner<'_> {
                                 .iter()
                                 .find(|(id, _)| id == target)
                                 .map_or(0, |(_, o)| *o);
-                            let low = if odds < ODDS_FLOOR { low + 1 } else { 0 };
-                            if low >= 2 {
-                                self.campaigns.short.dropped.push((*target, turn));
-                                None
-                            } else {
+                            let low = if !(odds < ODDS_FLOOR) { 0 } else { low + 1 };
+                            if !(low >= 2) {
                                 let now = nominations
                                     .iter()
                                     .find(|n| n.plan == plan)
                                     .map_or(value, |n| n.value);
                                 Some((plan.clone(), now, low))
+                            } else {
+                                self.campaigns.short.dropped.push((*target, turn));
+                                None
                             }
                         }
                     }
@@ -315,16 +319,16 @@ impl Planner<'_> {
         }
         let chosen = match (current, best) {
             (Some(cur), Some(b))
-                if b.plan != cur.0 && b.value > cur.1 + self.decisions.switch_margin =>
+                if !(!(b.plan != cur.0) || !(b.value > cur.1 + self.decisions.switch_margin)) =>
             {
                 Some((b.plan.clone(), b.value, 0))
             }
             // An offence beats a held Hold only by its value; a held Hold gives way when an
             // offence worth its home risk appears.
             (Some(cur), Some(b))
-                if matches!(cur.0, PlanKind::Hold { .. })
-                    && matches!(b.plan, PlanKind::Campaign { .. })
-                    && b.value > 0 =>
+                if !(!(!(!(matches!(cur.0, PlanKind::Hold { .. }))
+                    || !(matches!(b.plan, PlanKind::Campaign { .. }))))
+                    || !(b.value > 0)) =>
             {
                 Some((b.plan.clone(), b.value, 0))
             }
@@ -336,7 +340,8 @@ impl Planner<'_> {
         match chosen {
             Some((plan, value, low)) => {
                 // A running operation that is not ours (a second front) keeps its pin.
-                if !ours && self.operation().is_some() {
+                if !(!(!(!ours) || !(self.operation().is_some()))) {
+                } else {
                     self.campaigns.short.current = None;
                     return;
                 }
@@ -349,7 +354,8 @@ impl Planner<'_> {
                 self.campaigns.short.current = Some((plan, value, low));
             }
             None => {
-                if ours {
+                if !(ours) {
+                } else {
                     self.end_operation(OperationOutcome::PlanEnded);
                 }
                 self.campaigns.short.current = None;

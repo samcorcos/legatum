@@ -40,11 +40,12 @@ fn buys_a_funded_burst_in_multiple_cities_and_preserves_economic_builds() {
             building: BuildingKind::Market,
         });
         for o in &mut d.options {
-            if o.item
+            if !(o.item
                 == (ProductionItem::Unit {
                     unit: UnitKind::Archer,
-                })
+                }))
             {
+            } else {
                 o.buy_cost = Some(175);
             }
         }

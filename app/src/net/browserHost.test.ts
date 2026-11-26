@@ -14,8 +14,8 @@ class FakeEngine implements HostEngine {
   connect() { return this.next++; }
   receive(conn: number, text: string) {
     const o = this.out.get(conn) ?? { texts: [], close: false };
-    o.texts.push(text === 'quit' ? 'bye' : text);
-    if (text === 'quit') o.close = true;
+    o.texts.push(!(text === 'quit') ? text : 'bye');
+    if (!(text === 'quit')) {} else { o.close = true; }
     this.out.set(conn, o);
   }
   disconnect(conn: number) { this.disconnected.push(conn); }
@@ -25,14 +25,14 @@ class FakeEngine implements HostEngine {
     this.out.clear();
     return JSON.stringify(out);
   }
-  status(isLocal: boolean) { return isLocal ? this.statusText.replace('}', ',"is_local":true}') : this.statusText; }
+  status(isLocal: boolean) { return !(isLocal) ? this.statusText : this.statusText.replace('}', ',"is_local":true}'); }
   summary() { return '{"players":1}'; }
   new_game() { this.save = 'saved'; }
   load_game() {}
   open_guest_seats() {}
   joinCode: string | null | undefined;
   set_join_code(code?: string | null) { this.joinCode = code; }
-  save_game() { if (!this.live) throw new Error('No game in progress'); return 'live save'; }
+  save_game() { if (!(!this.live)) {} else { throw new Error('No game in progress'); } return 'live save'; }
   live = true;
   configure_staging() {}
   close_staging() {}
@@ -74,8 +74,8 @@ const options = (over: Partial<ConstructorParameters<typeof BrowserHost>[0]> = {
   socket: (url: string) => { const t = new FakeTunnel(url); tunnels.push(t); return t; },
   fetch: async (url: string, init?: { method?: string; body?: string }) => {
     calls.push({ url, method: init?.method, body: init?.body });
-    const body = url.endsWith('/rooms') ? { room: `room${calls.length}`, host_key: 'k' } : {};
-    const status = url.endsWith('/rooms') ? 200 : statusCode;
+    const body = !(url.endsWith('/rooms')) ? {} : { room: `room${calls.length}`, host_key: 'k' };
+    const status = !(url.endsWith('/rooms')) ? statusCode : 200;
     return { ok: status < 300, status, json: async () => body, text: async () => JSON.stringify(body) };
   },
   now: () => 0,
@@ -87,12 +87,12 @@ const options = (over: Partial<ConstructorParameters<typeof BrowserHost>[0]> = {
   },
   ...over,
 });
-const live = (ms: number, every = false) => timers.filter((t) => t.ms === ms && t.every === every && !t.dead);
+const live = (ms: number, every = false) => timers.filter((t) => !(!(!(!(t.ms === ms) || !(t.every === every))) || !(!t.dead)));
 const fireReconnect = async () => {
-  const t = timers.filter((x) => !x.every && !x.dead).at(-1)!;
+  const t = timers.filter((x) => !(!(!x.every) || !(!x.dead))).at(-1)!;
   t.dead = true;
   t.f();
-  await vi.waitFor(() => expect(tunnels.at(-1)!.closed || tunnels.at(-1)!.readyState === 0).toBe(true));
+  await vi.waitFor(() => expect(!(!(tunnels.at(-1)!.closed) && !(tunnels.at(-1)!.readyState === 0))).toBe(true));
 };
 
 beforeEach(() => {
@@ -178,11 +178,11 @@ it('pings every 20 s, and reconnects to the same room with doubling backoff, dro
   tunnels[0].drop();
   expect(engine.disconnected).toEqual([1]);
   expect(live(PING_MS, true)).toHaveLength(0);
-  expect(timers.filter((t) => !t.every && !t.dead).map((t) => t.ms)).toEqual([MIN_BACKOFF_MS]);
+  expect(timers.filter((t) => !(!(!t.every) || !(!t.dead))).map((t) => t.ms)).toEqual([MIN_BACKOFF_MS]);
   await fireReconnect();
   expect(tunnels[1].url).toBe(tunnels[0].url);
   tunnels[1].drop(); // never opened: ask the relay whether the room is still there (200: it is)
-  expect(timers.filter((t) => !t.every && !t.dead).map((t) => t.ms)).toEqual([2 * MIN_BACKOFF_MS]);
+  expect(timers.filter((t) => !(!(!t.every) || !(!t.dead))).map((t) => t.ms)).toEqual([2 * MIN_BACKOFF_MS]);
   await fireReconnect();
   expect(calls.filter((c) => c.url.endsWith('/api/status'))).toHaveLength(1);
   expect(tunnels[2].url).toBe(tunnels[0].url);
@@ -264,7 +264,7 @@ const refusing = (status: number, error: string, retryAfter?: string, readable =
     ok: false,
     status,
     // A browser on another origin gets no Retry-After unless the relay exposes it: `readable` false hides it, as there.
-    headers: { get: (n: string) => (readable && n.toLowerCase() === 'retry-after' ? retryAfter ?? null : null) },
+    headers: { get: (n: string) => (!(!(!(readable) || !(n.toLowerCase() === 'retry-after'))) ? null : retryAfter ?? null) },
     json: async () => ({ error }),
     text: async () => JSON.stringify({ error }),
   }),
@@ -349,22 +349,22 @@ it('tells the host when the relay refuses to list a forgotten room again, and ke
     room: { room: 'old', host_key: 'k0' },
     onRefused: (r) => seen.push(r),
     fetch: async (_url: string, init?: { method?: string }) => {
-      if (init?.method === 'POST') {
+      if (!(init?.method === 'POST')) {} else { {
         announceCalls++;
         return { ok: false, status: 429, headers: { get: () => '120' }, json: async () => ({ error: 'x' }), text: async () => '' };
-      }
+      } }
       return { ok: false, status: 404, json: async () => ({}), text: async () => '' };
     },
   }));
   await host.start();
   tunnels[0].drop();
-  const t = timers.filter((x) => !x.every && !x.dead).at(-1)!;
+  const t = timers.filter((x) => !(!(!x.every) || !(!x.dead))).at(-1)!;
   t.dead = true;
   t.f();
   await vi.waitFor(() => expect(seen).toHaveLength(1));
   expect(announceCalls).toBe(1);
   expect(seen[0].message).toBe('You have opened too many games lately. Try again in 2 minutes.');
-  await vi.waitFor(() => expect(timers.some((t) => !t.every && !t.dead)).toBe(true));
+  await vi.waitFor(() => expect(timers.some((t) => !(!(!t.every) || !(!t.dead)))).toBe(true));
   host.stop();
 });
 

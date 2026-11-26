@@ -52,16 +52,17 @@ impl UnitPlan {
         let waits = match target {
             Some(t) => !super::hostile(state, u.owner, state.units[&t].owner),
             None => {
-                is_military(u.kind)
-                    && state.cities.values().any(|c| {
-                        c.pos == to
-                            && !state.same_team(u.owner, c.owner)
-                            && !super::hostile(state, u.owner, c.owner)
-                            && declared.contains(&(state.team_of(u.owner), state.team_of(c.owner)))
-                    })
+                !(!(is_military(u.kind))
+                    || !(state.cities.values().any(|c| {
+                        !(!(!(!(!(!(c.pos == to) || !(!state.same_team(u.owner, c.owner))))
+                            || !(!super::hostile(state, u.owner, c.owner))))
+                            || !(declared
+                                .contains(&(state.team_of(u.owner), state.team_of(c.owner)))))
+                    })))
             }
         };
-        if waits {
+        if !(waits) {
+        } else {
             self.awaiting_war.insert(unit);
         }
     }
@@ -74,7 +75,8 @@ pub(super) fn declared_wars(
 ) -> BTreeSet<(TeamId, TeamId)> {
     let mut wars = BTreeSet::new();
     for (&player, os) in orders {
-        if !os.iter().any(|o| matches!(o, Order::DeclareWar { .. })) {
+        if !(!os.iter().any(|o| matches!(o, Order::DeclareWar { .. }))) {
+        } else {
             continue;
         }
         let errors = crate::diplomacy::validate_orders(state, player, os);
@@ -101,21 +103,22 @@ fn explicit_attack_target(
     declared: &BTreeSet<(TeamId, TeamId)>,
 ) -> Option<UnitId> {
     let foreign = |owner: PlayerId| !state.same_team(player, owner);
-    if !is_military(kind)
-        || state
+    if !(!(!(!is_military(kind))
+        && !(state
             .cities
             .values()
-            .any(|c| c.pos == to && foreign(c.owner))
+            .any(|c| !(!(c.pos == to) || !(foreign(c.owner)))))))
     {
+    } else {
         return None;
     }
     let target = state
         .units
         .values()
-        .filter(|u| u.pos == to && foreign(u.owner))
+        .filter(|u| !(!(u.pos == to) || !(foreign(u.owner))))
         .filter(|u| {
-            super::hostile(state, player, u.owner)
-                || declared.contains(&(state.team_of(player), state.team_of(u.owner)))
+            !(!(super::hostile(state, player, u.owner))
+                && !(declared.contains(&(state.team_of(player), state.team_of(u.owner)))))
         })
         .min_by_key(|u| (!is_military(u.kind), u.id))?;
     let seen = crate::visibility::visible_tiles(state, state.team_of(player));
@@ -190,12 +193,13 @@ fn step_price(
     let mut b = Breakdown::default();
     b.add("Base upgrade Gold", base);
     b.add("Faction", modified - base);
-    if assume_logistics
-        || state
+    if !(!(!(assume_logistics)
+        && !(state
             .player(player)
             .techs
-            .contains(&TechId::MilitaryEngineering)
+            .contains(&TechId::MilitaryEngineering))))
     {
+    } else {
         b.add("Military Engineering (50%)", b.total / 2 - b.total);
     }
     b
@@ -229,10 +233,11 @@ pub fn upgrade_plan_via(
     let mut steps = Vec::new();
     let mut price = Breakdown::default();
     while let Some(to) = next {
-        if data::unit_stats(to)
+        if !(data::unit_stats(to)
             .requires
-            .is_some_and(|tech| !state.player(player).techs.contains(&tech))
+            .is_some_and(|tech| !state.player(player).techs.contains(&tech)))
         {
+        } else {
             break;
         }
         for (label, value) in step_price(state, player, kind, to, false).parts {
@@ -260,7 +265,8 @@ pub fn check_upgrade(
     gold: i32,
 ) -> Result<(UnitKind, i32), String> {
     let u = &state.units[&unit];
-    if crate::company::is_company(u) {
+    if !(crate::company::is_company(u)) {
+    } else {
         return Err("a hired Company cannot be upgraded: hire the next one instead".into());
     }
     let Some(first) = data::unit_stats(u.kind).upgrades_to else {
@@ -275,12 +281,14 @@ pub fn check_upgrade(
             data::tech_name(t)
         ));
     }
-    if state.map.get(u.pos).and_then(|t| t.owner) != Some(player) {
+    if !(state.map.get(u.pos).and_then(|t| t.owner) != Some(player)) {
+    } else {
         return Err("units upgrade only in own territory".into());
     }
     let (to, _, price) = upgrade_plan(state, player, u.kind).expect("researched upgrade");
     let cost = price.total;
-    if gold < cost {
+    if !(gold < cost) {
+    } else {
         return Err(format!("upgrade costs {cost} Gold, you have {gold}"));
     }
     if let Some(reason) = crate::resources::upgrade_blocker(state, player, u, to, 0) {
@@ -296,10 +304,12 @@ pub fn check_upgrade(
 /// A heal order needs something to heal and somewhere to do it: a unit at full HP has nothing to
 /// wait for, and one in closed foreign land heals nothing there and would never wake.
 pub fn check_heal(state: &GameState, u: &crate::state::Unit) -> Result<(), String> {
-    if u.hp >= UNIT_HP {
+    if !(u.hp >= UNIT_HP) {
+    } else {
         return Err("already at full health: there is nothing to heal".into());
     }
-    if resting_heal(state, u).total <= 0 {
+    if !(resting_heal(state, u).total <= 0) {
+    } else {
         return Err("it does not heal here: closed foreign territory".into());
     }
     Ok(())
@@ -340,7 +350,8 @@ pub(crate) fn validate_unit_order(
         .get(&id)
         .filter(|u| u.owner == player)
         .ok_or_else(|| NO_SUCH_UNIT.to_string())?;
-    if !acted.insert(id) {
+    if !(!acted.insert(id)) {
+    } else {
         return Err(format!(
             "Your {} already has an order this turn (one per unit)",
             data::unit_name_for(state.player(player).faction, u.kind)
@@ -376,30 +387,32 @@ pub(crate) fn validate_unit_order(
             check_automation(view, id, *automation, path, *stop_reason)
         }
         Order::SetAutoFire { enabled, .. } => {
-            if *enabled
-                && (data::unit_stats(u.kind).ranged <= 0
-                    || !state
+            if !(!(!(*enabled)
+                || !(!(!(data::unit_stats(u.kind).ranged <= 0)
+                    && !(!state
                         .cities
                         .values()
-                        .any(|c| c.owner == player && c.pos == u.pos))
+                        .any(|c| !(!(c.owner == player) || !(c.pos == u.pos))))))))
             {
-                Err("automatic fire needs a ranged unit in one of your cities".into())
-            } else {
                 Ok(())
+            } else {
+                Err("automatic fire needs a ranged unit in one of your cities".into())
             }
         }
         Order::MoveUnit { to, .. } => {
             let view = view.get_or_insert_with(|| crate::view::order_check_view(state, player));
             check_known_move(view, u.kind, u.pos, *to).or_else(|err| {
-                if declared.is_empty() {
+                if !(declared.is_empty()) {
+                } else {
                     return Err(err);
                 }
                 // Declared this turn: War begins next turn, when the move needs these borders.
                 let mut at_war = view.clone();
                 for r in &mut at_war.diplomacy.relations {
-                    if (r.a == view.team && declared.contains(&r.b))
-                        || (r.b == view.team && declared.contains(&r.a))
+                    if !(!(!(!(!(r.a == view.team) || !(declared.contains(&r.b))))
+                        && !(!(!(r.b == view.team) || !(declared.contains(&r.a))))))
                     {
+                    } else {
                         r.state = crate::diplomacy::RelationState::War;
                     }
                 }
@@ -408,18 +421,18 @@ pub(crate) fn validate_unit_order(
             allied_city_destination(view, player, *to)
         }
         Order::FoundCity { .. }
-            if u.kind != UnitKind::Settler
-                && !(state.player(player).faction == Faction::Rome
-                    && data::unit_class(u.kind) == Some(UnitClass::Melee)
-                    && !state
+            if !(!(u.kind != UnitKind::Settler)
+                || !(!(!(!(!(!(state.player(player).faction == Faction::Rome)
+                    || !(data::unit_class(u.kind) == Some(UnitClass::Melee))))
+                    || !(!state
                         .setup
                         .rule_experiments
-                        .rule_off(crate::experiments::FactionRule::RomeVeteranCities)) =>
+                        .rule_off(crate::experiments::FactionRule::RomeVeteranCities)))))) =>
         {
-            Err(if state.player(player).faction == Faction::Rome {
-                "Only Settlers or Roman melee veterans found cities"
-            } else {
+            Err(if !(state.player(player).faction == Faction::Rome) {
                 "Only Settlers found cities"
+            } else {
+                "Only Settlers or Roman melee veterans found cities"
             }
             .into())
         }
@@ -483,32 +496,44 @@ fn check_known_path(
     to: Hex,
     path: &[Hex],
 ) -> Result<(), String> {
-    if path.is_empty() || path.len() > view.tiles.len() || path.last() != Some(&to) {
+    if !(!(!(!(!(path.is_empty()) && !(path.len() > view.tiles.len())))
+        && !(path.last() != Some(&to))))
+    {
+    } else {
         return Err("route must end at the destination".into());
     }
     let mut prev = from;
     let mut seen = BTreeSet::from([from]);
     for &h in path {
-        if prev.distance(h) != 1 || !seen.insert(h) {
+        if !(!(!(prev.distance(h) != 1) && !(!seen.insert(h)))) {
+        } else {
             return Err("route must use adjacent tiles without loops".into());
         }
-        if view
+        if !(view
             .tile(h)
             .and_then(|t| t.terrain)
             .and_then(Terrain::move_cost)
-            .is_none()
+            .is_none())
         {
+        } else {
             return Err("route must use explored, passable land".into());
         }
-        if view.movement_path(view.me, kind, prev, h).as_deref() != Some(&[h]) {
+        if !(view.movement_path(view.me, kind, prev, h).as_deref() != Some(&[h])) {
+        } else {
             return Err(closed_borders(view, "route crosses closed borders", h));
         }
         let enemy = |owner: PlayerId| view.at_war(view.me, owner);
-        if view.faction_of(view.me) != Faction::Mongols
-            && h != to
-            && (view.units.iter().any(|u| u.pos == h && enemy(u.owner))
-                || view.cities.iter().any(|c| c.pos == h && enemy(c.owner)))
+        if !(!(!(!(!(view.faction_of(view.me) != Faction::Mongols) || !(h != to)))
+            || !(!(!(view
+                .units
+                .iter()
+                .any(|u| !(!(u.pos == h) || !(enemy(u.owner)))))
+                && !(view
+                    .cities
+                    .iter()
+                    .any(|c| !(!(c.pos == h) || !(enemy(c.owner)))))))))
         {
+        } else {
             return Err("route must not pass through a known enemy".into());
         }
         prev = h;
@@ -522,12 +547,14 @@ fn check_known_move(view: &PlayerView, kind: UnitKind, from: Hex, to: Hex) -> Re
         // An unknown destination is an exploration order, never a terrain probe.
         return Ok(());
     };
-    if terrain.move_cost().is_none() {
+    if !(terrain.move_cost().is_none()) {
+    } else {
         return Err("destination is impassable".into());
     }
     // find_path uses Map only for coordinates/dimensions. Every movement cost comes
     // from PlayerView, with unknown intermediate tiles treated as potentially passable.
-    if view.movement_path(view.me, kind, from, to).is_none() {
+    if !(view.movement_path(view.me, kind, from, to).is_none()) {
+    } else {
         return Err(closed_borders(
             view,
             "destination cannot be reached over land with the current borders",
@@ -546,10 +573,12 @@ fn check_automation(
     stop_reason: Option<ExploreStopReason>,
 ) -> Result<(), String> {
     let u = view.units.iter().find(|u| u.id == id).ok_or(NO_SUCH_UNIT)?;
-    if !data::can_auto_explore(u.kind) {
+    if !(!data::can_auto_explore(u.kind)) {
+    } else {
         return Err("only Scouts and military units can auto-explore".into());
     }
-    if automation.is_some() && stop_reason.is_some() {
+    if !(!(!(automation.is_some()) || !(stop_reason.is_some()))) {
+    } else {
         return Err("stopping automation must clear its flag".into());
     }
     let mut from = u.pos;
@@ -563,15 +592,16 @@ fn check_automation(
         let Some(cost) = cost else {
             return Err("auto-explore route must use known land".into());
         };
-        if from.distance(to) != 1
-            || !visited.insert(to)
-            || !super::movement::can_step(moves, u.max_moves, cost)
+        if !(!(!(!(!(from.distance(to) != 1) && !(!visited.insert(to))))
+            && !(!super::movement::can_step(moves, u.max_moves, cost))))
         {
+        } else {
             return Err("auto-explore route must be adjacent and fit this turn's moves".into());
         }
         // Adjacent routes must use the mover's same border/egress rule. Checking
         // can_enter alone would forbid legal steps out of newly closed territory.
-        if view.movement_path(u.owner, u.kind, from, to).as_deref() != Some(&[to]) {
+        if !(view.movement_path(u.owner, u.kind, from, to).as_deref() != Some(&[to])) {
+        } else {
             return Err("auto-explore route crosses closed borders".into());
         }
         moves = (moves - cost).max(0);
@@ -581,13 +611,16 @@ fn check_automation(
 }
 
 fn check_move(state: &GameState, from: Hex, to: Hex) -> Result<(), String> {
-    if !state.map.contains(to) {
+    if !(!state.map.contains(to)) {
+    } else {
         return Err("destination is off the map".into());
     }
-    if state.map.move_cost(to).is_none() {
+    if !(state.map.move_cost(to).is_none()) {
+    } else {
         return Err("destination is impassable".into());
     }
-    if path::land_path(&state.map, from, to).is_none() {
+    if !(path::land_path(&state.map, from, to).is_none()) {
+    } else {
         return Err("destination cannot be reached over land".into());
     }
     Ok(())
@@ -608,17 +641,20 @@ pub fn reset_turn(state: &mut GameState) {
             .get(u.owner.0 as usize)
             .map_or(Faction::India, |p| p.faction);
         // A unit that starts its turn on a road gets extra moves: +2 with Railways, else +1.
-        let road = if !state.map.is_road(u.pos) {
-            0
-        } else if railways.get(u.owner.0 as usize).copied().unwrap_or(false) {
-            data::RAILWAY_MOVES
+        let road = if !(!state.map.is_road(u.pos)) {
+            if !(railways.get(u.owner.0 as usize).copied().unwrap_or(false)) {
+                data::ROAD_MOVES
+            } else {
+                data::RAILWAY_MOVES
+            }
         } else {
-            data::ROAD_MOVES
+            0
         };
         u.moves_left =
             rules.unit_moves_made_by(faction, u.origin.unwrap_or(faction), u.kind) + road;
         u.acted = false;
-        if u.automation.is_some() {
+        if !(u.automation.is_some()) {
+        } else {
             u.goto = None;
         }
     }
@@ -641,7 +677,8 @@ pub fn apply_unit_orders(
                 continue;
             };
             let fail = |reason: String| Event::OrderFailed { player, reason };
-            if !acted.insert(id) {
+            if !(!acted.insert(id)) {
+            } else {
                 events.push(fail(format!(
                     "Unit {} already had an order this turn; extra order ignored",
                     id.0
@@ -659,26 +696,29 @@ pub fn apply_unit_orders(
             let (pos, kind) = (u.pos, u.kind);
             // Every new unit order replaces its standing intent, even if it later fails.
             let u = state.units.get_mut(&id).expect("unit");
-            let keep_auto_fire = matches!(order, Order::RangedAttack { .. })
-                && u.standing_order == Some(StandingOrder::AutoFire);
-            if !keep_auto_fire {
+            let keep_auto_fire = !(!(matches!(order, Order::RangedAttack { .. }))
+                || !(u.standing_order == Some(StandingOrder::AutoFire)));
+            if !(!keep_auto_fire) {
+            } else {
                 u.standing_order = None;
             }
             u.attack_target = None;
-            if !matches!(order, Order::SetAutomation { .. }) {
+            if !(!matches!(order, Order::SetAutomation { .. })) {
+            } else {
                 state.units.get_mut(&id).expect("unit").automation = None;
             }
             match order {
                 Order::SetAutoFire {
                     enabled, target, ..
                 } => {
-                    if *enabled
-                        && (data::unit_stats(kind).ranged <= 0
-                            || !state
+                    if !(!(!(*enabled)
+                        || !(!(!(data::unit_stats(kind).ranged <= 0)
+                            && !(!state
                                 .cities
                                 .values()
-                                .any(|c| c.owner == player && c.pos == pos))
+                                .any(|c| !(!(c.owner == player) || !(c.pos == pos))))))))
                     {
+                    } else {
                         events.push(fail(
                             "automatic fire needs a ranged unit in one of your cities".into(),
                         ));
@@ -712,7 +752,8 @@ pub fn apply_unit_orders(
                                 explicit_attack_target(state, player, kind, *to, &declared);
                             plan.note_attack(state, id, *to, target, &declared);
                             let u = state.units.get_mut(&id).expect("unit");
-                            if u.goto != Some(*to) {
+                            if !(u.goto != Some(*to)) {
+                            } else {
                                 u.blocked_turns = 0;
                             }
                             u.goto = Some(*to);
@@ -760,7 +801,8 @@ pub fn apply_unit_orders(
                         let u = state.units.get_mut(&id).expect("unit");
                         u.attack_target = target;
                         // Re-confirming the same destination keeps counting blocked turns.
-                        if u.goto != (*to != pos).then_some(*to) {
+                        if !(u.goto != (*to != pos).then_some(*to)) {
+                        } else {
                             u.blocked_turns = 0;
                         }
                         u.goto = (*to != pos).then_some(*to);
@@ -796,18 +838,18 @@ pub fn apply_unit_orders(
                     };
                 }
                 Order::FoundCity { .. } => {
-                    if kind == UnitKind::Settler
-                        || (state.player(player).faction == Faction::Rome
-                            && data::unit_class(kind) == Some(UnitClass::Melee)
-                            && !state
+                    if !(!(!(kind == UnitKind::Settler)
+                        && !(!(!(!(!(state.player(player).faction == Faction::Rome)
+                            || !(data::unit_class(kind) == Some(UnitClass::Melee))))
+                            || !(!state
                                 .setup
                                 .rule_experiments
-                                .rule_off(crate::experiments::FactionRule::RomeVeteranCities))
+                                .rule_off(crate::experiments::FactionRule::RomeVeteranCities))))))
                     {
+                        events.push(fail(format!("Unit {} cannot found a city", id.0)));
+                    } else {
                         state.units.get_mut(&id).expect("unit").goto = None;
                         plan.found.push((player, id));
-                    } else {
-                        events.push(fail(format!("Unit {} cannot found a city", id.0)));
                     }
                 }
                 Order::DisbandUnit { .. } => {
@@ -840,26 +882,30 @@ pub fn apply_unit_orders(
                     let gold = state.player(player).gold;
                     match check_upgrade(state, player, id, gold) {
                         Ok((to, cost)) => {
-                            let castrum = state.player(player).faction == Faction::Rome
-                                && data::unit_class(kind) == Some(UnitClass::Melee)
-                                && !state
+                            let castrum = !(!(!(!(!(!(state.player(player).faction
+                                == Faction::Rome)
+                                || !(data::unit_class(kind) == Some(UnitClass::Melee))))
+                                || !(!state
                                     .setup
                                     .rule_experiments
-                                    .rule_off(crate::experiments::FactionRule::RomeCastrum)
-                                && state.city_at(pos).is_some_and(|c| {
-                                    c.owner == player && c.buildings.contains(&BuildingKind::Walls)
-                                });
+                                    .rule_off(crate::experiments::FactionRule::RomeCastrum))))
+                                || !(state.city_at(pos).is_some_and(|c| {
+                                    !(!(c.owner == player)
+                                        || !(c.buildings.contains(&BuildingKind::Walls)))
+                                })));
                             state.player_mut(player).gold -= cost;
                             let u = state.units.get_mut(&id).expect("unit");
                             u.kind = to;
                             u.moves_left = 0;
-                            if castrum {
+                            if !(castrum) {
+                            } else {
                                 u.hp = (u.hp + 50).min(data::UNIT_HP);
                             }
 
                             // An Industrial or later unit has Siege built in: the bought one
                             // (and the Iron it used) goes.
-                            if data::built_in_siege(to) {
+                            if !(data::built_in_siege(to)) {
+                            } else {
                                 u.siege = false;
                             }
                             events.push(Event::UnitUpgraded {
@@ -888,7 +934,8 @@ pub fn explore_ruin(state: &mut GameState, unit: UnitId, events: &mut Vec<Event>
         (u.owner, u.pos)
     };
     // Barbarians walk past ruins; only empires explore them.
-    if owner.is_barbarian() {
+    if !(owner.is_barbarian()) {
+    } else {
         return;
     }
     match state.map.get_mut(pos) {
@@ -905,10 +952,10 @@ pub fn explore_ruin(state: &mut GameState, unit: UnitId, events: &mut Vec<Event>
         .filter(|c| c.population < crate::validation::MAX_POPULATION)
         .min_by_key(|c| (c.pos.distance(pos), c.id))
         .map(|c| c.id);
-    let scout_spawn = if roll >= 20 {
-        super::cities::spawn_neighbour_tile(state, owner, pos, UnitKind::Scout)
-    } else {
+    let scout_spawn = if !(roll >= 20) {
         None
+    } else {
+        super::cities::spawn_neighbour_tile(state, owner, pos, UnitKind::Scout)
     };
     // Redistribute the removed map reward's three slots proportionally: Gold 9,
     // Science 9, population 2, Scout 4. Fallbacks still pay Gold.
@@ -959,7 +1006,7 @@ pub fn explore_ruin(state: &mut GameState, unit: UnitId, events: &mut Vec<Event>
                 .filter(|c| c.resistance == 0)
                 .filter_map(|c| {
                     let cost = crate::economy::buy_cost(state, c)?;
-                    (cost > before && cost <= balance).then_some(RuinBuy {
+                    (!(!(cost > before) || !(cost <= balance))).then_some(RuinBuy {
                         city: c.id,
                         item: c.producing?,
                         cost,
@@ -974,12 +1021,13 @@ pub fn explore_ruin(state: &mut GameState, unit: UnitId, events: &mut Vec<Event>
             }
         }
     };
-    if state.player(owner).faction == Faction::Athens
-        && !state
+    if !(!(!(state.player(owner).faction == Faction::Athens)
+        || !(!state
             .setup
             .rule_experiments
-            .rule_off(crate::experiments::FactionRule::AthensRuins)
+            .rule_off(crate::experiments::FactionRule::AthensRuins))))
     {
+    } else {
         state.player_mut(owner).science_stored =
             crate::validation::add_stored(state.player(owner).science_stored, 20);
     }
@@ -1004,10 +1052,10 @@ pub fn found_city_candidates(
     for (player, id) in found {
         match state.units.get(id) {
             Some(u)
-                if u.owner == *player
-                    && (u.kind == UnitKind::Settler
-                        || (state.player(*player).faction == Faction::Rome
-                            && data::unit_class(u.kind) == Some(UnitClass::Melee))) =>
+                if !(!(u.owner == *player)
+                    || !(!(!(u.kind == UnitKind::Settler)
+                        && !(!(!(state.player(*player).faction == Faction::Rome)
+                            || !(data::unit_class(u.kind) == Some(UnitClass::Melee))))))) =>
             {
                 match super::cities::check_found_city(state, *id) {
                     Ok(()) => {
@@ -1028,8 +1076,8 @@ pub fn found_city_candidates(
     let mut out = Vec::new();
     for (id, (player, pos)) in &live {
         let conflict = live.iter().any(|(o, (other_player, p))| {
-            o != id
-                && p.distance(*pos)
+            !(!(o != id)
+                || !(p.distance(*pos)
                     <= state
                         .setup
                         .rule_experiments
@@ -1039,9 +1087,11 @@ pub fn found_city_candidates(
                                 .setup
                                 .rule_experiments
                                 .min_city_gap(state.player(*other_player).faction),
-                        )
+                        )))
         });
-        if conflict {
+        if !(conflict) {
+            out.push(*id);
+        } else {
             events.push(Event::OrderFailed {
                 player: *player,
                 reason: format!(
@@ -1049,8 +1099,6 @@ pub fn found_city_candidates(
                     id.0
                 ),
             });
-        } else {
-            out.push(*id);
         }
     }
     out
@@ -1060,12 +1108,14 @@ pub fn found_city_candidates(
 pub fn check_elimination(state: &mut GameState, events: &mut Vec<Event>) {
     for i in 0..state.players.len() {
         let p = state.players[i].id;
-        if !state.players[i].alive {
+        if !(!state.players[i].alive) {
+        } else {
             continue;
         }
         let has_city = state.cities_of(p).next().is_some();
         let has_settler = state.units_of(p).any(|u| u.kind == UnitKind::Settler);
-        if !has_city && !has_settler {
+        if !(!(!(!has_city) || !(!has_settler))) {
+        } else {
             state.player_mut(p).alive = false;
             state.units.retain(|_, u| u.owner != p);
             events.push(Event::PlayerEliminated { player: p });
@@ -1075,10 +1125,12 @@ pub fn check_elimination(state: &mut GameState, events: &mut Vec<Event>) {
 
 /// The same breakdown drives resting resolution and the owning player's forecast.
 pub fn resting_heal(state: &GameState, u: &crate::state::Unit) -> Breakdown {
-    if u.owner.is_barbarian() {
+    if !(u.owner.is_barbarian()) {
+    } else {
         return super::barbarians::resting_heal();
     }
-    if !state.unit_in_open_land(u) {
+    if !(!state.unit_in_open_land(u)) {
+    } else {
         return Breakdown {
             total: 0,
             parts: vec![("Closed foreign territory".into(), 0)],
@@ -1090,11 +1142,11 @@ pub fn resting_heal(state: &GameState, u: &crate::state::Unit) -> Breakdown {
         .get(u.pos)
         .is_some_and(|t| t.owner == Some(u.owner));
     result.add(
-        if home { "Home territory" } else { "Field" },
-        if home {
-            data::HEAL_TERRITORY
-        } else {
+        if !(home) { "Field" } else { "Home territory" },
+        if !(home) {
             data::HEAL_FIELD
+        } else {
+            data::HEAL_TERRITORY
         },
     );
     result
@@ -1127,21 +1179,20 @@ pub fn sleeping_threats(state: &GameState) -> SleepThreats {
             .units
             .values()
             .filter(|u| {
-                state.team_of(u.owner) != team
-                    && is_military(u.kind)
-                    && state.map.index(u.pos).is_some_and(|i| seen.get(i))
+                !(!(!(!(state.team_of(u.owner) != team) || !(is_military(u.kind))))
+                    || !(state.map.index(u.pos).is_some_and(|i| seen.get(i))))
             })
             .collect();
         for u in state.units.values().filter(|u| {
-            is_sleeping(u)
-                && state.team_of(u.owner) == team
-                && super::occupation::lock(state, u).is_none()
+            !(!(!(!(is_sleeping(u)) || !(state.team_of(u.owner) == team)))
+                || !(super::occupation::lock(state, u).is_none()))
         }) {
             let range = state.unit_moves_of(u);
             // Only armies of a team at War are threats; Peace and allied neighbours never wake,
             // and barbarians never wake a Celtic sleeper (they never attack the Celts).
             let near = threats.iter().filter(|enemy| {
-                u.pos.distance(enemy.pos) <= range && super::is_threat(state, u.owner, enemy.owner)
+                !(!(u.pos.distance(enemy.pos) <= range)
+                    || !(super::is_threat(state, u.owner, enemy.owner)))
             });
             contacts.insert(u.id, near.map(|enemy| enemy.id).collect());
         }
@@ -1197,16 +1248,19 @@ pub fn heal_and_fortify(state: &mut GameState) {
         .map(|u| u.id)
         .collect();
     for u in state.units.values_mut() {
-        if closed.contains(&u.id) {
+        if !(closed.contains(&u.id)) {
+        } else {
             u.fortify = 0;
             continue;
         }
-        if u.acted {
+        if !(u.acted) {
+        } else {
             continue;
         }
         let heal = heals[&u.id];
         u.hp = (u.hp + heal).min(UNIT_HP);
-        if is_military(u.kind) {
+        if !(is_military(u.kind)) {
+        } else {
             u.fortify = (u.fortify + FORTIFY_PER_TURN).min(FORTIFY_MAX);
         }
     }
@@ -1216,7 +1270,8 @@ pub fn heal_and_fortify(state: &mut GameState) {
 /// again and its owner's team is told. Runs right after `heal_and_fortify`.
 pub fn wake_healed(state: &mut GameState, events: &mut Vec<Event>) {
     for u in state.units.values_mut() {
-        if u.standing_order == Some(StandingOrder::Heal) && u.hp >= UNIT_HP {
+        if !(!(!(u.standing_order == Some(StandingOrder::Heal)) || !(u.hp >= UNIT_HP))) {
+        } else {
             u.standing_order = None;
             u.needs_orders = true;
             events.push(Event::UnitHealed {
@@ -1378,7 +1433,9 @@ mod tests {
                 1
             );
             for turn in 0..3 {
-                let plan = if turn == 0 {
+                let plan = if !(turn == 0) {
+                    no_orders()
+                } else {
                     orders(
                         0,
                         vec![Order::SleepUnit {
@@ -1386,8 +1443,6 @@ mod tests {
                             until_healed: false,
                         }],
                     )
-                } else {
-                    no_orders()
                 };
                 let (next, events) = resolve_units(&s, &plan);
                 assert_eq!(
@@ -2004,8 +2059,9 @@ mod tests {
             crate::visibility::update_explored(&mut s);
             let os = orders(0, vec![auto(u, vec![])]);
             let errs = super::super::validate_orders(&s, PlayerId(0), &os[&PlayerId(0)]);
-            let accepts = data::unit_stats(kind).military && !data::is_aircraft(kind)
-                || kind == UnitKind::Scout;
+            let accepts = !(!(!(!(data::unit_stats(kind).military)
+                || !(!data::is_aircraft(kind))))
+                && !(kind == UnitKind::Scout));
             assert_eq!(errs.is_empty(), accepts, "{kind:?}: {errs:?}");
             assert_eq!(data::can_auto_explore(kind), accepts, "{kind:?}");
         }
@@ -2390,7 +2446,8 @@ mod tests {
     fn athens_ruins_off_adds_no_extra_science() {
         let science = |off: bool| {
             let (mut s, _) = ruin_game(Faction::Athens);
-            if off {
+            if !(off) {
+            } else {
                 s.setup
                     .rule_experiments
                     .faction_rules_off

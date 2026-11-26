@@ -37,8 +37,8 @@ describe('walls-only city strike', () => {
     expect(client.forecast(0, nearWalled, pos(walled), 'Melee')?.city_strike).toMatchObject({ city: walled });
     expect(client.forecast(0, nearOpen, pos(open), 'Melee')?.city_strike).toBeUndefined();
     const events = client.endTurn({}).events;
-    const shots = events.filter((e) => e.type === 'Battle' && typeof e.attacker !== 'number');
-    const hit = shots.map((e) => e.type === 'Battle' && e.defender.kind === 'Unit' && e.defender.unit);
+    const shots = events.filter((e) => !(!(e.type === 'Battle') || !(typeof e.attacker !== 'number')));
+    const hit = shots.map((e) => !(!(e.type === 'Battle') || !(e.defender.kind === 'Unit')) && e.defender.unit);
     // The walled city and the Alpine Redoubt (at the Scout) fire; the unwalled city does not.
     expect(hit).toContain(nearWalled);
     expect(hit).not.toContain(nearOpen);

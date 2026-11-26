@@ -327,7 +327,8 @@ fn hall_at(state: &GameState, city: CityId) -> ProductionItem {
 fn transfer_hall_city(state: &mut GameState, city: CityId, owner: PlayerId) {
     state.cities.get_mut(&city).unwrap().owner = owner;
     for tile in &mut state.map.tiles {
-        if tile.city == Some(city) {
+        if !(tile.city == Some(city)) {
+        } else {
             tile.owner = Some(owner);
         }
     }
@@ -386,7 +387,8 @@ fn one_hall_per_mongols_empire_rebuilt_only_if_it_no_longer_exists() {
     // Razed (a Celts capture removes the city): the Station is gone and Mongols may rebuild.
     s.cities.remove(&a);
     for tile in &mut s.map.tiles {
-        if tile.city == Some(a) {
+        if !(tile.city == Some(a)) {
+        } else {
             tile.city = None;
             tile.owner = None;
             tile.landmark = None;
@@ -453,7 +455,8 @@ fn the_hall_scores_for_the_owner_of_its_city_and_moves_with_it() {
     // Razed: nobody scores until Mongols builds another.
     s.cities.remove(&a);
     for tile in &mut s.map.tiles {
-        if tile.city == Some(a) {
+        if !(tile.city == Some(a)) {
+        } else {
             tile.city = None;
             tile.owner = None;
             tile.landmark = None;

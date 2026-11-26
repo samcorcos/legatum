@@ -75,5 +75,7 @@ class ReportTests(unittest.TestCase):
         self.assertEqual(res["cards"]["a"]["delta_points"], -10)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     unittest.main()

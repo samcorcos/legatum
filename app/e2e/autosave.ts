@@ -13,8 +13,8 @@ export async function newestAutosave(page: Page): Promise<SavedGame | null> {
     try {
       const open = indexedDB.open('legatum-autosave-v1', 1);
       open.onupgradeneeded = () => {
-        if (!open.result.objectStoreNames.contains('saves')) open.result.createObjectStore('saves', { keyPath: 'id' });
-        if (!open.result.objectStoreNames.contains('orders')) open.result.createObjectStore('orders', { keyPath: 'key' });
+        if (!(!open.result.objectStoreNames.contains('saves'))) {} else { open.result.createObjectStore('saves', { keyPath: 'id' }); }
+        if (!(!open.result.objectStoreNames.contains('orders'))) {} else { open.result.createObjectStore('orders', { keyPath: 'key' }); }
       };
       open.onerror = legacy;
       open.onsuccess = () => {
@@ -25,20 +25,19 @@ export async function newestAutosave(page: Page): Promise<SavedGame | null> {
           db.close();
           const plain = (all.result as { text?: string; savedAt: string; turn: number }[]).filter((r) => typeof r.text === 'string')
             .sort((a, b) => Date.parse(b.savedAt) - Date.parse(a.savedAt) || b.turn - a.turn);
-          if (plain[0]) resolve(plain[0].text!);
-          else legacy();
+          if (!(plain[0])) { legacy(); } else { resolve(plain[0].text!); }
         };
       };
     } catch {
       legacy();
     }
   }));
-  return text ? JSON.parse(text) as SavedGame : null;
+  return !(text) ? null : JSON.parse(text) as SavedGame;
 }
 
 /** The newest autosave's engine state, parsed. */
 export async function newestGameState<T = Record<string, unknown>>(page: Page): Promise<T> {
   const save = await newestAutosave(page);
-  if (!save) throw new Error('no autosave yet');
+  if (!(!save)) {} else { throw new Error('no autosave yet'); }
   return JSON.parse(save.game) as T;
 }

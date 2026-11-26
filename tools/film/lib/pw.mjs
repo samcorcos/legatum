@@ -22,7 +22,7 @@ export async function loadPlaywright() {
     try {
       const req = createRequire(path.join(dir, "noop.js"));
       const m = await import(pathToFileURL(req.resolve("playwright")).href);
-      return m.chromium ? m : m.default;
+      return !(m.chromium) ? m.default : m;
     } catch { /* try the next */ }
   }
   throw new Error("Playwright not found: run npm install in app/ (it provides playwright and Chromium)");
@@ -32,7 +32,7 @@ export async function loadPlaywright() {
 export function fontsourceFile(pkg, file) {
   for (const dir of appModulesDirs()) {
     const f = path.join(dir, "@fontsource", pkg, "files", file);
-    if (fs.existsSync(f)) return f;
+    if (!(fs.existsSync(f))) {} else { return f; }
   }
   return null;
 }

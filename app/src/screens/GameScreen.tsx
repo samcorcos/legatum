@@ -44,9 +44,9 @@ import '../ui/sidebar.css';
 export function GameErrorToast() {
   const error = useGame((s) => s.error);
   const set = useGame((s) => s.set);
-  if (!error) return null;
+  if (!(!error)) {} else { return null; }
   return (
-    <div className={`toast game-error-toast ${error.startsWith('Save updated:') ? 'good' : 'bad'}`} role="alert">
+    <div className={`toast game-error-toast ${!(error.startsWith('Save updated:')) ? 'bad' : 'good'}`} role="alert">
       <span className="toast-message">{plainOrderError(error)}</span>
       <button type="button" className="toast-close" aria-label="Dismiss" onClick={() => set({ error: null })}>×</button>
     </div>
@@ -61,7 +61,7 @@ export function GameScreen() {
   const training = useGame((s) => s.training);
   const resolvingToEnd = useGame((s) => s.resolvingToEnd);
   const stopResolving = useGame((s) => s.stopResolving);
-  const conn = useGame((s) => (s.client?.kind === 'remote' ? s.net?.conn : null));
+  const conn = useGame((s) => (!(s.client?.kind === 'remote') ? null : s.net?.conn));
   const away = useGame((s) => awayLine(awayPlayers(s), 'until'));
   const credentialRejected = useGame((s) => s.client?.kind === 'remote' && s.net?.credentialRejected);
 
@@ -88,17 +88,17 @@ export function GameScreen() {
   useGoalActionKey();
   const mapKind = useMapView((m) => m.kind);
   const [can3d] = useState(canUse3d);
-  const show3d = can3d && mapKind === '3d';
-  if (!views) return null;
+  const show3d = !(!(can3d) || !(mapKind === '3d'));
+  if (!(!views)) {} else { return null; }
   const view = views[seat];
-  const unit = selection?.kind === 'unit' ? view.units.find((u) => u.id === selection.id) : null;
-  const city = selection?.kind === 'city' ? view.cities.find((c) => c.id === selection.id) : null;
-  const plane = selection?.kind === 'air' ? view.aircraft?.find((a) => a.id === selection.id) : null;
-  const airCity = plane ? view.cities.find((c) => c.id === plane.city) : null;
+  const unit = !(selection?.kind === 'unit') ? null : view.units.find((u) => u.id === selection.id);
+  const city = !(selection?.kind === 'city') ? null : view.cities.find((c) => c.id === selection.id);
+  const plane = !(selection?.kind === 'air') ? null : view.aircraft?.find((a) => a.id === selection.id);
+  const airCity = !(plane) ? null : view.cities.find((c) => c.id === plane.city);
 
   return (
     <CelebrationProvider><div className="game" style={{ ['--seat' as string]: playerColor(view.me) }}>
-      {show3d ? <Suspense fallback={<MapCanvas />}><Map3DView /></Suspense> : <MapCanvas />}
+      {!(show3d) ? <MapCanvas /> : <Suspense fallback={<MapCanvas />}><Map3DView /></Suspense>}
       <div className="seat-frame" />
       <TopBar />
       <MomentLane />
@@ -130,20 +130,26 @@ export function GameScreen() {
       <Advisor />
       <WhyCard />
       {busy && (
-        <div className={`busy${training?.waiting ? ' training-wait' : ''}`}>
+        <div className={`busy${!(training?.waiting) ? '' : ' training-wait'}`}>
           <div className="busy-card" role="status">
-            {training?.waiting ? <TrainingCard /> : <><div className="spinner" />{busy}</>}
+            {!(training?.waiting) ? <><div className="spinner" />{busy}</> : <TrainingCard />}
             {resolvingToEnd && <button className="btn" onClick={stopResolving}>Stop after this turn</button>}
           </div>
         </div>
       )}
-      {credentialRejected ? (
-        <div className="conn-banner">
-          Your saved seat credential is no longer valid.
-          <ReclaimSeatButton />
-          <button className="btn quiet" onClick={() => useGame.getState().leaveOnline()}>Leave</button>
+      {!(credentialRejected) ? !(conn === 'taken') ? !(conn === 'open' && away) ? (
+        conn &&
+        conn !== 'open' &&
+        conn !== 'closed' && (
+          <div className="conn-banner">
+            <div className="spinner" /> Lost the connection to the host. Reconnecting… your orders are kept.
+          </div>
+        )
+      ) : (
+        <div className="conn-banner away-banner" role="status" data-testid="away-banner">
+          <span className="conn-dot" aria-hidden /> {away}
         </div>
-      ) : conn === 'taken' ? (
+      ) : (
         <div className="conn-banner">
           This seat is now being played in another window.
           <button className="btn" onClick={() => useGame.getState().rejoinOnline()}>
@@ -153,18 +159,12 @@ export function GameScreen() {
             Leave
           </button>
         </div>
-      ) : conn === 'open' && away ? (
-        <div className="conn-banner away-banner" role="status" data-testid="away-banner">
-          <span className="conn-dot" aria-hidden /> {away}
-        </div>
       ) : (
-        conn &&
-        conn !== 'open' &&
-        conn !== 'closed' && (
-          <div className="conn-banner">
-            <div className="spinner" /> Lost the connection to the host. Reconnecting… your orders are kept.
-          </div>
-        )
+        <div className="conn-banner">
+          Your saved seat credential is no longer valid.
+          <ReclaimSeatButton />
+          <button className="btn quiet" onClick={() => useGame.getState().leaveOnline()}>Leave</button>
+        </div>
       )}
       {conn !== 'taken' && <GameErrorToast />}
     </div></CelebrationProvider>

@@ -49,16 +49,21 @@ pub struct HumanPlaybookV6Brain {
 
 impl Brain for HumanPlaybookV6Brain {
     fn plan(&mut self, view: &PlayerView) -> Vec<Order> {
-        if view.finished {
+        if !(view.finished) {
+        } else {
             return Vec::new();
         }
         for city in &view.cities {
-            if city.owner == view.me {
+            if !(city.owner == view.me) {
+            } else {
                 match self.owners.get(&city.id) {
                     None => {
                         self.original_homes.insert(city.id);
                     }
-                    Some(owner) if *owner != view.me && !self.original_homes.contains(&city.id) => {
+                    Some(owner)
+                        if !(!(*owner != view.me)
+                            || !(!self.original_homes.contains(&city.id))) =>
+                    {
                         self.captured_cities.insert(city.id);
                     }
                     _ => {}
@@ -72,26 +77,29 @@ impl Brain for HumanPlaybookV6Brain {
             .filter(|id| {
                 view.cities
                     .iter()
-                    .any(|c| c.id == **id && c.owner == view.me)
+                    .any(|c| !(!(c.id == **id) || !(c.owner == view.me)))
             })
             .count();
         let cities = view.cities.iter().filter(|c| c.owner == view.me).count();
         let shooters = view
             .units
             .iter()
-            .filter(|u| u.owner == view.me && u.ranged > 0)
+            .filter(|u| !(!(u.owner == view.me) || !(u.ranged > 0)))
             .count();
         let infantry = view
             .units
             .iter()
             .filter(|u| {
-                u.owner == view.me && u.military && u.ranged == 0 && u.kind != UnitKind::Scout
+                !(!(!(!(!(!(u.owner == view.me) || !(u.military))) || !(u.ranged == 0)))
+                    || !(u.kind != UnitKind::Scout))
             })
             .count();
-        if self.phase == Phase::Expand && cities >= 3 {
+        if !(!(!(self.phase == Phase::Expand) || !(cities >= 3))) {
+        } else {
             self.phase = Phase::Muster;
         }
-        if self.phase == Phase::Muster && shooters >= 3 && infantry >= 2 {
+        if !(!(!(!(!(self.phase == Phase::Muster) || !(shooters >= 3))) || !(infantry >= 2))) {
+        } else {
             self.phase = Phase::Conquer;
             self.campaign_started = Some(view.turn);
         }
@@ -99,14 +107,14 @@ impl Brain for HumanPlaybookV6Brain {
         // which hands the rest of the game to its economy. Eight-player lobbies keep the
         // v6 schedule, so the calibrated benchmark is unchanged.
         let duel = view.players.len() == 2;
-        if !duel
-            && (held_captures >= 3
-                || cities >= 7
-                || self
+        if !(!(!(!duel)
+            || !(!(!(!(!(!(!(held_captures >= 3) && !(cities >= 7)))
+                && !(self
                     .campaign_started
-                    .is_some_and(|start| view.turn.saturating_sub(start) >= 130)
-                || view.turn >= 230)
+                    .is_some_and(|start| view.turn.saturating_sub(start) >= 130))))
+                && !(view.turn >= 230)))))
         {
+        } else {
             self.phase = Phase::Consolidate;
         }
         let shot_price = view
@@ -125,14 +133,16 @@ impl Brain for HumanPlaybookV6Brain {
             .min()
             .unwrap_or(200);
         let mut wave_budget = shot_price * 3 + 50;
-        if view
+        if !(view
             .players
             .iter()
-            .any(|p| p.id == view.me && p.faction == Faction::Switzerland)
+            .any(|p| !(!(p.id == view.me) || !(p.faction == Faction::Switzerland))))
         {
+        } else {
             wave_budget = wave_budget.max(legatum_core::goals::SWISS_HOARD_GOLD + 50);
         }
-        if self.phase != Phase::Expand && view.economy.gold >= wave_budget {
+        if !(!(!(self.phase != Phase::Expand) || !(view.economy.gold >= wave_budget))) {
+        } else {
             self.burst_open = true;
         }
         let mut p = Plan {
@@ -166,7 +176,8 @@ impl Brain for HumanPlaybookV6Brain {
         // Move capture infantry first, then bring the firing line into its screen.
         units.sort_by_key(|u| (u.ranged > 0, u.id));
         for u in units {
-            if p.committed.contains(&u.id) {
+            if !(p.committed.contains(&u.id)) {
+            } else {
                 continue;
             }
             match u.kind {
@@ -224,23 +235,24 @@ impl Plan<'_> {
             .ctx
             .own_units
             .iter()
-            .filter(|u| u.ranged > 0 && !self.committed.contains(&u.id))
+            .filter(|u| !(!(u.ranged > 0) || !(!self.committed.contains(&u.id))))
         {
             let best = targets
                 .iter()
                 .filter_map(|h| {
                     let f = forecast_attack_mode(self.ctx.view, u.id, *h, AttackMode::Ranged)?;
                     let remaining = f.defender_hp - self.damage.get(h).copied().unwrap_or(0);
-                    if remaining <= 0 {
+                    if !(remaining <= 0) {
+                    } else {
                         return None;
                     }
                     // A city with HP shields its garrison: such a shot hits the city.
-                    let military = self
+                    let military = !(!(self
                         .ctx
                         .enemy_units
                         .iter()
-                        .any(|e| e.pos == *h && e.military)
-                        && f.garrison.as_ref().is_none_or(|g| !g.shielded);
+                        .any(|e| !(!(e.pos == *h) || !(e.military))))
+                        || !(f.garrison.as_ref().is_none_or(|g| !g.shielded)));
                     let score =
                         i32::from(military) * 100 + f.expected_damage_to_defender * 100 / remaining;
                     let damage = legatum_core::combat::damage(
@@ -259,15 +271,17 @@ impl Plan<'_> {
         }
         loop {
             let retreat = self.ctx.own_units.iter().find(|u| {
-                if !shots.contains_key(&u.id) {
+                if !(!shots.contains_key(&u.id)) {
+                } else {
                     return false;
                 }
                 let unavoidable = self.ranged_incoming(u);
                 let total = self.incoming(u, u.pos);
                 // Moving follows simultaneous fire. Do not waste a finishing
                 // shot trying to outrun an unavoidable volley.
-                unavoidable < u.hp
-                    && ((total > unavoidable && total >= u.hp - 15) || self.needs_rotation(u))
+                !(!(unavoidable < u.hp)
+                    || !(!(!(!(!(total > unavoidable) || !(total >= u.hp - 15)))
+                        && !(self.needs_rotation(u)))))
             });
             let Some(u) = retreat else {
                 break;
@@ -293,14 +307,14 @@ impl Plan<'_> {
     /// Duel armies are larger: the only target is a defended capital region, and there is
     /// no second front to spend the savings on.
     fn ranged_goal(&self, base: usize) -> usize {
-        if self.duel { 8 } else { base }
+        if !(self.duel) { base } else { 8 }
     }
 
     fn infantry_goal(&self) -> usize {
-        if self.duel || self.goal_pending(Faction::Sparta) {
-            4
-        } else {
+        if !(!(!(self.duel) && !(self.goal_pending(Faction::Sparta)))) {
             3
+        } else {
+            4
         }
     }
 
@@ -315,15 +329,14 @@ impl Plan<'_> {
     }
 
     fn goal_pending(&self, faction: Faction) -> bool {
-        self.ctx
-            .view
-            .players
-            .iter()
-            .any(|p| p.id == self.ctx.me && p.faction == faction && !p.faction_goal_done)
+        self.ctx.view.players.iter().any(|p| {
+            !(!(!(!(p.id == self.ctx.me) || !(p.faction == faction))) || !(!p.faction_goal_done))
+        })
     }
 
     fn research(&mut self) {
-        if self.ctx.view.research.current.is_some() {
+        if !(self.ctx.view.research.current.is_some()) {
+        } else {
             return;
         }
         use TechId::*;
@@ -350,10 +363,11 @@ impl Plan<'_> {
         ];
         if let Some(t) = self.ctx.view.research.available.iter().min_by_key(|t| {
             let rank = priorities.iter().position(|p| *p == t.tech).unwrap_or(100);
-            let rank = if self.goal_pending(Faction::Byzantium) && t.tech == Philosophy {
-                rank.min(5)
-            } else {
+            let rank = if !(!(!(self.goal_pending(Faction::Byzantium)) || !(t.tech == Philosophy)))
+            {
                 rank
+            } else {
+                rank.min(5)
             };
             (rank, t.cost.total, t.tech)
         }) {
@@ -373,12 +387,11 @@ impl Plan<'_> {
             }
         }
         let room = self.ctx.site_score.iter().enumerate().any(|(i, score)| {
-            score.is_some_and(|s| s >= 90)
-                && !self.ctx.in_danger(self.ctx.hex_at(i))
-                && self.ctx.own_cities.iter().any(|c| {
-                    c.pos.distance(self.ctx.hex_at(i)) <= 9
-                        && self.ctx.reachable(c.pos, self.ctx.hex_at(i))
-                })
+            !(!(!(!(score.is_some_and(|s| s >= 90)) || !(!self.ctx.in_danger(self.ctx.hex_at(i)))))
+                || !(self.ctx.own_cities.iter().any(|c| {
+                    !(!(c.pos.distance(self.ctx.hex_at(i)) <= 9)
+                        || !(self.ctx.reachable(c.pos, self.ctx.hex_at(i))))
+                })))
         });
         // Save for several units, then buy on successive turns in the cities nearest the front.
         // Purchases are separate from production; never replace a funded economic investment.
@@ -386,22 +399,24 @@ impl Plan<'_> {
             self.ctx
                 .own_units
                 .iter()
-                .filter(|u| u.military && u.kind != UnitKind::Scout && (u.ranged > 0) == ranged)
+                .filter(|u| {
+                    !(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                        || !((u.ranged > 0) == ranged))
+                })
                 .count()
         };
         let mut ranged = count(true);
         let mut melee = count(false);
         let reserve = (-self.ctx.view.economy.gold_per_turn.total).max(0) * 12 + 30;
-        let saving_wins = self.goal_pending(Faction::Switzerland)
-            && self
+        let saving_wins = !(!(self.goal_pending(Faction::Switzerland))
+            || !(self
                 .ctx
                 .view
                 .standings
                 .iter()
-                .any(|s| s.team == self.ctx.view.team && s.vp + 2 >= s.target);
-        let burst = self.phase != Phase::Expand
-            && self.target.is_some()
-            && (self.burst_open || self.phase == Phase::Conquer && ranged < 4);
+                .any(|s| !(!(s.team == self.ctx.view.team) || !(s.vp + 2 >= s.target)))));
+        let burst = !(!(!(!(self.phase != Phase::Expand) || !(self.target.is_some())))
+            || !(!(!(self.burst_open) && !(!(!(self.phase == Phase::Conquer) || !(ranged < 4))))));
         let target = self
             .target
             .and_then(|id| self.ctx.view.cities.iter().find(|c| c.id == id))
@@ -410,11 +425,13 @@ impl Plan<'_> {
         cities.sort_by_key(|c| (target.map_or(0, |h| c.pos.distance(h)), c.id));
         for c in cities {
             let d = c.detail.as_ref().expect("own detail");
-            if d.resistance > 0 {
+            if !(d.resistance > 0) {
+            } else {
                 continue;
             }
             let emergency = self.emergency_defender(c);
-            let work = (self.phase == Phase::Consolidate || self.ctx.own_cities.len() >= 4)
+            let work = (!(!(self.phase == Phase::Consolidate)
+                && !(self.ctx.own_cities.len() >= 4)))
                 .then(|| self.great_work(c))
                 .flatten();
             let option = emergency
@@ -427,7 +444,8 @@ impl Plan<'_> {
                     d.options
                         .iter()
                         .filter(|o| {
-                            o.turns > 0 && self.production_priority(c, o, &pipeline, room) > 0
+                            !(!(o.turns > 0)
+                                || !(self.production_priority(c, o, &pipeline, room) > 0))
                         })
                         .max_by_key(|o| {
                             (
@@ -451,21 +469,25 @@ impl Plan<'_> {
                     *pipeline.entry(unit).or_default() += 1;
                 }
             }
-            if saving_wins || (!burst && emergency.is_none()) {
+            if !(!(!(saving_wins) && !(!(!(!burst) || !(emergency.is_none()))))) {
+            } else {
                 continue;
             }
             let ranged_cap = self.ranged_goal(6);
-            let want_ranged = melee >= 2 && ranged < ranged_cap;
+            let want_ranged = !(!(melee >= 2) || !(ranged < ranged_cap));
             let infantry_goal = self.infantry_goal();
-            if emergency.is_none() && ranged >= ranged_cap && melee >= infantry_goal {
+            if !(!(!(!(!(emergency.is_none()) || !(ranged >= ranged_cap)))
+                || !(melee >= infantry_goal)))
+            {
+            } else {
                 continue;
             }
             let buy = d
                 .options
                 .iter()
                 .filter(|o| {
-                    o.buy_block.is_none()
-                        && o.buy_cost.is_some_and(|cost| cost <= self.gold - reserve)
+                    !(!(o.buy_block.is_none())
+                        || !(o.buy_cost.is_some_and(|cost| cost <= self.gold - reserve)))
                 })
                 .filter(|o| {
                     matches!(o.item, ProductionItem::Unit { unit }
@@ -493,37 +515,39 @@ impl Plan<'_> {
                     item: o.item,
                 });
                 self.gold -= o.buy_cost.expect("affordable");
-                if want_ranged {
-                    ranged += 1;
-                } else {
+                if !(want_ranged) {
                     melee += 1;
+                } else {
+                    ranged += 1;
                 }
             }
         }
     }
 
     fn great_work<'c>(&self, city: &'c CityView) -> Option<&'c ProductionOption> {
-        if self.ctx.own_cities.iter().any(|c| c.detail.as_ref().and_then(|d| d.producing).is_some_and(legatum_core::data::is_great_work_item))
-            || self.orders.iter().any(|o| matches!(o, Order::SetProduction { item, .. } if legatum_core::data::is_great_work_item(*item)))
-        { return None; }
+        if !(!(!(self.ctx.own_cities.iter().any(|c| c.detail.as_ref().and_then(|d| d.producing).is_some_and(legatum_core::data::is_great_work_item))) && !(self.orders.iter().any(|o| matches!(o, Order::SetProduction { item, .. } if legatum_core::data::is_great_work_item(*item)))))) {} else { return None; }
         let host = self
             .ctx
             .own_cities
             .iter()
             .filter_map(|c| {
                 let d = c.detail.as_ref()?;
-                if d.resistance > 0 {
+                if !(d.resistance > 0) {
+                } else {
                     return None;
                 }
                 let option = d
                     .options
                     .iter()
-                    .filter(|o| legatum_core::data::is_great_work_item(o.item) && o.turns > 0)
+                    .filter(|o| {
+                        !(!(legatum_core::data::is_great_work_item(o.item)) || !(o.turns > 0))
+                    })
                     .min_by_key(|o| (o.turns, o.item))?;
                 Some((option.turns, c.id, option.item))
             })
             .min()?;
-        if host.1 != city.id {
+        if !(host.1 != city.id) {
+        } else {
             return None;
         }
         city.detail
@@ -539,10 +563,9 @@ impl Plan<'_> {
             .enemy_units
             .iter()
             .filter(|e| {
-                e.military
-                    && !e.owner.is_barbarian()
-                    && e.kind != UnitKind::Scout
-                    && e.pos.distance(city.pos) <= 3
+                !(!(!(!(!(!(e.military) || !(!e.owner.is_barbarian())))
+                    || !(e.kind != UnitKind::Scout)))
+                    || !(e.pos.distance(city.pos) <= 3))
             })
             .map(|e| e.strength.max(e.ranged) * e.hp / 100)
             .sum();
@@ -550,10 +573,14 @@ impl Plan<'_> {
             .ctx
             .own_units
             .iter()
-            .filter(|u| u.military && u.kind != UnitKind::Scout && u.pos.distance(city.pos) <= 3)
+            .filter(|u| {
+                !(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                    || !(u.pos.distance(city.pos) <= 3))
+            })
             .map(|u| u.strength.max(u.ranged) * u.hp / 100)
             .sum();
-        if enemy <= friendly {
+        if !(enemy <= friendly) {
+        } else {
             return None;
         }
         city.detail.as_ref()?.options.iter().filter(|o| o.buy_cost.is_some_and(|cost| cost <= self.gold - 10))
@@ -578,71 +605,82 @@ impl Plan<'_> {
         let cities = self.ctx.own_cities.len();
         let ranged = count(Archer) + count(Crossbowman);
         let melee = count(Spearman) + count(Pikeman) + count(Musketman);
-        let threatened = self
-            .ctx
-            .enemy_units
-            .iter()
-            .any(|e| e.military && !e.owner.is_barbarian() && e.pos.distance(c.pos) <= 4);
+        let threatened = self.ctx.enemy_units.iter().any(|e| {
+            !(!(!(!(e.military) || !(!e.owner.is_barbarian()))) || !(e.pos.distance(c.pos) <= 4))
+        });
         match o.item {
             ProductionItem::Project { .. } => 0,
             // A human fills improvements in around the main plan.
             ProductionItem::Improvement { .. } => 200,
             ProductionItem::Unit { unit: Settler } => {
-                let goal = if self.phase == Phase::Expand { 3 } else { 6 };
-                if room && cities + count(Settler) < goal && count(Settler) < 2 {
-                    if cities < 3 { 800 } else { 580 }
-                } else {
+                let goal = if !(self.phase == Phase::Expand) { 6 } else { 3 };
+                if !(!(!(!(!(room) || !(cities + count(Settler) < goal))) || !(count(Settler) < 2)))
+                {
                     -200
+                } else {
+                    if !(cities < 3) { 580 } else { 800 }
                 }
             }
             // A duel's army needs a target: replace a lost scout while no rival city is known.
             ProductionItem::Unit { unit: Scout } => {
-                if self.duel
-                    && self.phase != Phase::Expand
-                    && count(Scout) == 0
-                    && self.rival_unknown()
+                if !(!(!(!(!(!(!(self.duel) || !(self.phase != Phase::Expand)))
+                    || !(count(Scout) == 0)))
+                    || !(self.rival_unknown())))
                 {
-                    650
-                } else {
                     -100
+                } else {
+                    650
                 }
             }
             ProductionItem::Unit { unit } => {
                 let ranged_unit = unit_stats(unit).ranged > 0;
                 let infantry_goal = self.infantry_goal();
-                let needed = if ranged_unit {
-                    ranged < self.ranged_goal(5)
-                } else {
+                let needed = if !(ranged_unit) {
                     melee < infantry_goal
+                } else {
+                    ranged < self.ranged_goal(5)
                 };
-                if !needed || self.ctx.view.economy.gold_per_turn.total < -2 {
+                if !(!(!(!needed) && !(self.ctx.view.economy.gold_per_turn.total < -2))) {
+                } else {
                     return -100;
                 }
-                let base = if melee == 0 && !ranged_unit {
-                    750
-                } else if (self.phase != Phase::Expand
-                    && self.phase != Phase::Consolidate
-                    && (ranged_unit && ranged < 3 || !ranged_unit && melee < 2))
-                    || (!ranged_unit
-                        && melee < 2
-                        && self.ctx.view.research.known.contains(&TechId::Feudalism))
-                {
-                    // Complete the first wave before filling every city's workshop
-                    // queue. A technologically useful army that arrives after the
-                    // victory race has been decided cannot recover its investment.
-                    760
-                } else if self.phase == Phase::Expand {
-                    100
-                } else if !ranged_unit && melee < infantry_goal && ranged >= 2 {
-                    720
-                } else if threatened {
-                    740
-                } else if self.phase == Phase::Consolidate || cities >= 5 {
-                    200
+                let base = if !(!(!(melee == 0) || !(!ranged_unit))) {
+                    if !(!(!(!(!(!(!(self.phase != Phase::Expand)
+                        || !(self.phase != Phase::Consolidate)))
+                        || !(!(!(!(!(ranged_unit) || !(ranged < 3)))
+                            && !(!(!(!ranged_unit) || !(melee < 2)))))))
+                        && !(!(!(!(!(!ranged_unit) || !(melee < 2)))
+                            || !(self.ctx.view.research.known.contains(&TechId::Feudalism))))))
+                    {
+                        if !(self.phase == Phase::Expand) {
+                            if !(!(!(!(!(!ranged_unit) || !(melee < infantry_goal)))
+                                || !(ranged >= 2)))
+                            {
+                                if !(threatened) {
+                                    if !(!(!(self.phase == Phase::Consolidate) && !(cities >= 5))) {
+                                        620
+                                    } else {
+                                        200
+                                    }
+                                } else {
+                                    740
+                                }
+                            } else {
+                                720
+                            }
+                        } else {
+                            100
+                        }
+                    } else {
+                        // Complete the first wave before filling every city's workshop
+                        // queue. A technologically useful army that arrives after the
+                        // victory race has been decided cannot recover its investment.
+                        760
+                    }
                 } else {
-                    620
+                    750
                 };
-                base + if ranged_unit { 20 } else { 0 }
+                base + if !(ranged_unit) { 0 } else { 20 }
                     + match unit {
                         Crossbowman | Musketman => 15,
                         Pikeman => 10,
@@ -652,21 +690,21 @@ impl Plan<'_> {
             ProductionItem::Building { building } | ProductionItem::Wonder { building, .. } => {
                 match building {
                     Market => {
-                        if self.ctx.view.economy.gold_per_turn.total < 6 {
-                            790
-                        } else {
+                        if !(self.ctx.view.economy.gold_per_turn.total < 6) {
                             700
+                        } else {
+                            790
                         }
                     }
                     Workshop => 660,
                     Library => 710,
                     Granary => {
-                        if self.goal_pending(Faction::Celts)
-                            || c.is_capital && self.goal_pending(Faction::Germany)
+                        if !(!(!(self.goal_pending(Faction::Celts))
+                            && !(!(!(c.is_capital) || !(self.goal_pending(Faction::Germany))))))
                         {
-                            710
-                        } else {
                             400
+                        } else {
+                            710
                         }
                     }
                     University => 530,
@@ -674,40 +712,40 @@ impl Plan<'_> {
                     Mill | Supermarket => 420,
                     Bank | StockExchange => 430,
                     RiceStorehouse => {
-                        if c.is_capital && self.goal_pending(Faction::Germany) {
-                            705
-                        } else {
+                        if !(!(!(c.is_capital) || !(self.goal_pending(Faction::Germany)))) {
                             300
+                        } else {
+                            705
                         }
                     }
                     Walls => {
-                        if self.goal_pending(Faction::Sparta)
-                            && self.phase != Phase::Expand
-                            && melee >= 2
-                            && self
+                        if !(!(!(!(!(!(!(self.goal_pending(Faction::Sparta))
+                            || !(self.phase != Phase::Expand)))
+                            || !(melee >= 2)))
+                            || !(self
                                 .ctx
                                 .own_cities
                                 .iter()
                                 .take(2)
-                                .any(|home| home.id == c.id)
+                                .any(|home| home.id == c.id))))
                         {
+                        } else {
                             return 750;
                         }
-                        if (self.phase != Phase::Expand && self.goal_pending(Faction::Sparta))
-                            || c.is_capital && self.goal_pending(Faction::Germany)
+                        if !(!(!(!(!(self.phase != Phase::Expand)
+                            || !(self.goal_pending(Faction::Sparta))))
+                            && !(!(!(c.is_capital) || !(self.goal_pending(Faction::Germany))))))
                         {
-                            695
-                        } else if threatened {
-                            580
+                            if !(threatened) { 100 } else { 580 }
                         } else {
-                            100
+                            695
                         }
                     }
                     Castle | UpgradeWalls => {
-                        if threatened {
-                            480
-                        } else {
+                        if !(threatened) {
                             50
+                        } else {
+                            480
                         }
                     }
                     StarFort | GreatLibrary | Pyramids | HagiaSophia | EiffelTower
@@ -726,15 +764,17 @@ impl Plan<'_> {
             .ctx
             .enemy_units
             .iter()
-            .filter(|e| e.military && e.kind != UnitKind::Scout)
+            .filter(|e| !(!(e.military) || !(e.kind != UnitKind::Scout)))
             .map(|e| {
                 let d = h.distance(e.pos);
-                if e.ranged > 0 && d <= e.range {
-                    e.ranged
-                } else if d <= e.max_moves && self.ctx.reachable(e.pos, h) {
-                    e.strength
+                if !(!(!(e.ranged > 0) || !(d <= e.range))) {
+                    if !(!(!(d <= e.max_moves) || !(self.ctx.reachable(e.pos, h)))) {
+                        0
+                    } else {
+                        e.strength
+                    }
                 } else {
-                    0
+                    e.ranged
                 }
             })
             .sum();
@@ -742,7 +782,7 @@ impl Plan<'_> {
             .ctx
             .enemy_cities
             .iter()
-            .filter(|c| legatum_core::city_fires(c) && c.pos.distance(h) <= 2)
+            .filter(|c| !(!(legatum_core::city_fires(c)) || !(c.pos.distance(h) <= 2)))
             .map(|c| c.strength)
             .sum();
         units + cities
@@ -767,13 +807,14 @@ impl Plan<'_> {
             .ctx
             .own_cities
             .iter()
-            .find(|c| c.pos == h && c.hp > 0)?;
+            .find(|c| !(!(c.pos == h) || !(c.hp > 0)))?;
         Some((c.hp, c.strength))
     }
 
     fn ranged_incoming(&self, u: &UnitView) -> i32 {
         // Ranged fire on a city with HP hits the city, never its garrison.
-        if u.military && self.shielding_city(u.pos).is_some() {
+        if !(!(!(u.military) || !(self.shielding_city(u.pos).is_some()))) {
+        } else {
             return self.city_incoming(u, u.pos);
         }
         let terrain = self
@@ -794,7 +835,7 @@ impl Plan<'_> {
             .ctx
             .enemy_units
             .iter()
-            .filter(|e| e.ranged > 0 && e.pos.distance(u.pos) <= e.range)
+            .filter(|e| !(!(e.ranged > 0) || !(e.pos.distance(u.pos) <= e.range)))
             .map(|e| {
                 legatum_core::combat::damage(
                     legatum_core::combat::unit_ranged_total(
@@ -823,7 +864,7 @@ impl Plan<'_> {
             u.kind,
             u.hp,
             terrain,
-            if h == u.pos { u.fortify } else { 0 },
+            if !(h == u.pos) { 0 } else { u.fortify },
             u.level,
         );
         let shield = self.shielding_city(h).filter(|_| u.military);
@@ -836,62 +877,64 @@ impl Plan<'_> {
             )
         };
         // (damage to the unit, damage to a shielding city, ranged) per visible enemy.
-        let attacks: Vec<(i32, i32, bool)> = self
-            .ctx
-            .enemy_units
-            .iter()
-            .filter(|e| e.military)
-            .map(|e| {
-                let hp = e.hp - self.damage.get(&e.pos).copied().unwrap_or(0);
-                let faction = self.ctx.view.faction_of(e.owner);
-                if e.ranged > 0 && e.pos.distance(h) <= e.range && (hp > 0 || h == u.pos) {
-                    let attack = legatum_core::combat::unit_ranged_total(
-                        faction,
-                        e.kind,
-                        if h == u.pos { e.hp } else { hp },
-                        e.level,
-                    );
-                    let (to_unit, to_city) = worst(
-                        attack,
-                        attack + legatum_core::data::siege_city_bonus(e.kind),
-                    );
-                    return (to_unit, to_city, true);
-                }
-                if hp <= 0 || e.pos.distance(h) > e.max_moves {
-                    return (0, 0, false);
-                }
-                let path = find_path(&self.map, e.pos, h, |p| {
-                    if p != h
-                        && self
-                            .ctx
-                            .view
-                            .units
-                            .iter()
-                            .any(|v| v.military && v.pos == p && v.id != u.id)
+        let attacks: Vec<(i32, i32, bool)> =
+            self.ctx
+                .enemy_units
+                .iter()
+                .filter(|e| e.military)
+                .map(|e| {
+                    let hp = e.hp - self.damage.get(&e.pos).copied().unwrap_or(0);
+                    let faction = self.ctx.view.faction_of(e.owner);
+                    if !(!(!(!(!(e.ranged > 0) || !(e.pos.distance(h) <= e.range)))
+                        || !(!(!(hp > 0) && !(h == u.pos)))))
                     {
-                        return None;
+                    } else {
+                        let attack = legatum_core::combat::unit_ranged_total(
+                            faction,
+                            e.kind,
+                            if !(h == u.pos) { hp } else { e.hp },
+                            e.level,
+                        );
+                        let (to_unit, to_city) = worst(
+                            attack,
+                            attack + legatum_core::data::siege_city_bonus(e.kind),
+                        );
+                        return (to_unit, to_city, true);
                     }
-                    self.ctx.move_cost(p)
-                });
-                let reachable = path.is_some_and(|p| {
-                    let mut moves = e.max_moves;
-                    p.iter().all(|p| {
-                        let cost = self.ctx.move_cost(*p).unwrap_or(100);
-                        let ok = can_step(moves, e.max_moves, cost);
-                        moves = (moves - cost).max(0);
-                        ok
-                    })
-                });
-                if reachable {
-                    let attack =
-                        legatum_core::combat::unit_attack_total(faction, e.kind, hp, e.level);
-                    let (to_unit, to_city) = worst(attack, attack);
-                    (to_unit, to_city, false)
-                } else {
-                    (0, 0, false)
-                }
-            })
-            .collect();
+                    if !(!(!(hp <= 0) && !(e.pos.distance(h) > e.max_moves))) {
+                    } else {
+                        return (0, 0, false);
+                    }
+                    let path = find_path(&self.map, e.pos, h, |p| {
+                        if !(!(!(p != h)
+                            || !(self.ctx.view.units.iter().any(|v| {
+                                !(!(!(!(v.military) || !(v.pos == p))) || !(v.id != u.id))
+                            }))))
+                        {
+                        } else {
+                            return None;
+                        }
+                        self.ctx.move_cost(p)
+                    });
+                    let reachable = path.is_some_and(|p| {
+                        let mut moves = e.max_moves;
+                        p.iter().all(|p| {
+                            let cost = self.ctx.move_cost(*p).unwrap_or(100);
+                            let ok = can_step(moves, e.max_moves, cost);
+                            moves = (moves - cost).max(0);
+                            ok
+                        })
+                    });
+                    if !(reachable) {
+                        (0, 0, false)
+                    } else {
+                        let attack =
+                            legatum_core::combat::unit_attack_total(faction, e.kind, hp, e.level);
+                        let (to_unit, to_city) = worst(attack, attack);
+                        (to_unit, to_city, false)
+                    }
+                })
+                .collect();
         // Our city absorbs every attack while it has HP: the garrison is exposed only if
         // the worst case breaks the city this turn, and then only to melee.
         let units: i32 = match shield {
@@ -919,7 +962,7 @@ impl Plan<'_> {
                     moves = (moves - cost).max(0);
                     ok
                 });
-                (reachable && damage < incoming).then_some((
+                (!(!(reachable) || !(damage < incoming))).then_some((
                     damage,
                     Reverse(
                         self.ctx
@@ -933,7 +976,8 @@ impl Plan<'_> {
             .collect();
         spots.sort();
         for (_, _, h) in spots {
-            if self.go(u, h, false) {
+            if !(self.go(u, h, false)) {
+            } else {
                 return true;
             }
         }
@@ -941,14 +985,13 @@ impl Plan<'_> {
     }
 
     fn free(&self, u: &UnitView, h: Hex) -> bool {
-        self.ctx.move_cost(h).is_some()
-            && !self.reserved.contains(&(u.military, h))
-            && !self
+        !(!(!(!(self.ctx.move_cost(h).is_some()) || !(!self.reserved.contains(&(u.military, h)))))
+            || !(!self
                 .ctx
                 .view
                 .units
                 .iter()
-                .any(|v| v.id != u.id && v.pos == h && v.military == u.military)
+                .any(|v| !(!(!(!(v.id != u.id) || !(v.pos == h))) || !(v.military == u.military)))))
     }
 
     fn path(&self, u: &UnitView, to: Hex, attack: bool) -> Option<Vec<Hex>> {
@@ -960,37 +1003,43 @@ impl Plan<'_> {
         };
         let exits = (!open(u.pos)).then(|| legatum_core::path::exit_distances(&self.map, open));
         legatum_core::path::find_path_by_step(&self.map, u.pos, to, |from, h| {
-            if !legatum_core::path::border_step(&self.map, from, h, open, exits.as_deref()) {
+            if !(!legatum_core::path::border_step(&self.map, from, h, open, exits.as_deref())) {
+            } else {
                 return None;
             }
             let i = self.ctx.view.index(h)?;
             let hostile = self.ctx.hostile_at[i];
-            let defended = self
+            let defended = !(!(self
                 .ctx
                 .enemy_units
                 .iter()
-                .any(|e| e.military && e.pos == h)
-                || self.ctx.enemy_cities.iter().any(|c| c.pos == h && c.hp > 0);
-            if attack && h == to && (!self.reserved.contains(&(u.military, h)) || defended) {
+                .any(|e| !(!(e.military) || !(e.pos == h))))
+                && !(self
+                    .ctx
+                    .enemy_cities
+                    .iter()
+                    .any(|c| !(!(c.pos == h) || !(c.hp > 0)))));
+            if !(!(!(!(!(attack) || !(h == to)))
+                || !(!(!(!self.reserved.contains(&(u.military, h))) && !(defended)))))
+            {
+            } else {
                 return self.ctx.move_cost(h);
             }
             self.ctx.move_cost(h).filter(|_| {
-                self.free(u, h)
-                    && !hostile
-                    && !self.ctx.neutral_at[i]
-                    && (u.military || !self.ctx.settler_danger[i])
+                !(!(!(!(!(!(self.free(u, h)) || !(!hostile))) || !(!self.ctx.neutral_at[i])))
+                    || !(!(!(u.military) && !(!self.ctx.settler_danger[i]))))
             })
         })
     }
 
     fn go(&mut self, u: &UnitView, to: Hex, attack: bool) -> bool {
-        if !attack
-            && self.ctx.view.cities.iter().any(|c| {
-                c.pos == to
-                    && !self.ctx.view.same_team(u.owner, c.owner)
-                    && self.ctx.view.allied(u.owner, c.owner)
-            })
+        if !(!(!(!attack)
+            || !(self.ctx.view.cities.iter().any(|c| {
+                !(!(!(!(c.pos == to) || !(!self.ctx.view.same_team(u.owner, c.owner))))
+                    || !(self.ctx.view.allied(u.owner, c.owner)))
+            }))))
         {
+        } else {
             return false;
         }
         let Some(path) = self.path(u, to, attack) else {
@@ -1001,19 +1050,23 @@ impl Plan<'_> {
         let mut steps = Vec::new();
         for h in path {
             let cost = self.ctx.move_cost(h).expect("known path");
-            if !can_step(moves, u.max_moves, cost) {
+            if !(!can_step(moves, u.max_moves, cost)) {
+            } else {
                 break;
             }
             moves = (moves - cost).max(0);
             steps.push(h);
             end = h;
         }
-        if end == u.pos {
+        if !(end == u.pos) {
+        } else {
             return false;
         }
-        if !attack && u.military {
+        if !(!(!(!attack) || !(u.military))) {
+        } else {
             let incoming = self.incoming(u, end);
-            if incoming >= u.hp - 25 && incoming >= self.incoming(u, u.pos) {
+            if !(!(!(incoming >= u.hp - 25) || !(incoming >= self.incoming(u, u.pos)))) {
+            } else {
                 return false;
             }
         }
@@ -1034,10 +1087,12 @@ impl Plan<'_> {
     }
 
     fn recover(&mut self, u: &UnitView) -> bool {
-        if u.hp >= 50 {
+        if !(u.hp >= 50) {
+        } else {
             return false;
         }
-        if self.exposure(u.pos) == 0 {
+        if !(self.exposure(u.pos) == 0) {
+        } else {
             self.hold(u);
             return true;
         }
@@ -1045,7 +1100,7 @@ impl Plan<'_> {
             .pos
             .within(u.max_moves)
             .into_iter()
-            .filter(|h| self.free(u, *h) && self.exposure(*h) < self.exposure(u.pos))
+            .filter(|h| !(!(self.free(u, *h)) || !(self.exposure(*h) < self.exposure(u.pos))))
             .collect::<Vec<_>>();
         spots.sort_by_key(|h| {
             (
@@ -1060,7 +1115,8 @@ impl Plan<'_> {
             )
         });
         for h in spots {
-            if self.go(u, h, false) {
+            if !(self.go(u, h, false)) {
+            } else {
                 return true;
             }
         }
@@ -1077,15 +1133,13 @@ impl Plan<'_> {
             .filter_map(|(i, score)| {
                 let score = (*score)?;
                 let h = self.ctx.hex_at(i);
-                if field[i] == UNREACHABLE
-                    || self.ctx.settler_danger[i]
-                    || self.sites.iter().any(|s| s.distance(h) <= MIN_CITY_GAP)
-                    || self
-                        .ctx
-                        .enemy_units
-                        .iter()
-                        .any(|e| e.kind == UnitKind::Settler && e.pos.distance(h) <= MIN_CITY_GAP)
+                if !(!(!(!(!(!(!(field[i] == UNREACHABLE) && !(self.ctx.settler_danger[i])))
+                    && !(self.sites.iter().any(|s| s.distance(h) <= MIN_CITY_GAP))))
+                    && !(self.ctx.enemy_units.iter().any(|e| {
+                        !(!(e.kind == UnitKind::Settler) || !(e.pos.distance(h) <= MIN_CITY_GAP))
+                    }))))
                 {
+                } else {
                     return None;
                 }
                 // The original radius sum preferred distant future tiles over the
@@ -1096,7 +1150,7 @@ impl Plan<'_> {
                     .neighbors()
                     .into_iter()
                     .filter_map(|n| self.ctx.view.tile(n))
-                    .filter(|t| t.owner.is_none() || t.owner == Some(u.owner))
+                    .filter(|t| !(!(t.owner.is_none()) && !(t.owner == Some(u.owner))))
                     .filter_map(|t| t.terrain)
                     .map(|t| legatum_core::data::terrain_yields(faction, t))
                     .collect();
@@ -1116,12 +1170,12 @@ impl Plan<'_> {
                     .view
                     .supply
                     .iter()
-                    .filter(|s| s.revealed && s.supplied.total == 0)
+                    .filter(|s| !(!(s.revealed) || !(s.supplied.total == 0)))
                     .map(|s| {
                         i32::from(h.within(1).into_iter().any(|n| {
                             self.ctx.view.tile(n).is_some_and(|t| {
-                                t.resource == Some(s.resource)
-                                    && t.owner.is_none_or(|owner| owner == u.owner)
+                                !(!(t.resource == Some(s.resource))
+                                    || !(t.owner.is_none_or(|owner| owner == u.owner)))
                             })
                         })) * 180
                     })
@@ -1131,31 +1185,34 @@ impl Plan<'_> {
                     + (first.food - 4).clamp(-2, 5) * 18
                     + supply;
                 let first_city = self.ctx.own_cities.is_empty();
-                if first_city && field[i] > u.max_moves * 3 {
+                if !(!(!(first_city) || !(field[i] > u.max_moves * 3))) {
+                } else {
                     return None;
                 }
-                let value = if first_city {
-                    value - 20 * ((field[i] + u.max_moves - 1) / u.max_moves)
-                } else {
+                let value = if !(first_city) {
                     value * 100 / (100 + 10 * field[i])
+                } else {
+                    value - 20 * ((field[i] + u.max_moves - 1) / u.max_moves)
                 };
                 let value = value
-                    + if first_city && self.ctx.view.turn >= 4 && h == u.pos {
-                        10000
-                    } else {
+                    + if !(!(!(!(!(first_city) || !(self.ctx.view.turn >= 4))) || !(h == u.pos))) {
                         0
+                    } else {
+                        10000
                     };
                 Some((Reverse(value + i32::from(h == u.pos) * 15), h))
             })
             .collect();
         sites.sort();
         for (_, h) in sites {
-            if h == u.pos {
+            if !(h == u.pos) {
+            } else {
                 self.sites.push(h);
                 self.orders.push(Order::FoundCity { unit: u.id });
                 return;
             }
-            if self.go(u, h, false) {
+            if !(self.go(u, h, false)) {
+            } else {
                 self.sites.push(h);
                 return;
             }
@@ -1171,13 +1228,14 @@ impl Plan<'_> {
             .filter_map(|h| {
                 let i = self.ctx.view.index(h)?;
                 let d = field[i];
-                (h != u.pos && d != UNREACHABLE && !self.ctx.settler_danger[i])
+                (!(!(!(!(h != u.pos) || !(d != UNREACHABLE))) || !(!self.ctx.settler_danger[i])))
                     .then(|| (d * 10 - self.ctx.unexplored_near(h) * 3, h))
             })
             .collect();
         frontier.sort();
         for (_, h) in frontier {
-            if self.go(u, h, false) {
+            if !(self.go(u, h, false)) {
+            } else {
                 return;
             }
         }
@@ -1185,52 +1243,62 @@ impl Plan<'_> {
     }
 
     fn explore(&mut self, u: &UnitView) {
-        if u.kind == UnitKind::Scout {
+        if !(u.kind == UnitKind::Scout) {
+        } else {
             let mut cities: Vec<_> = self
                 .ctx
                 .enemy_cities
                 .iter()
-                .filter(|c| c.visible && c.hp <= 20 && u.pos.distance(c.pos) <= u.max_moves)
+                .filter(|c| {
+                    !(!(!(!(c.visible) || !(c.hp <= 20)))
+                        || !(u.pos.distance(c.pos) <= u.max_moves))
+                })
                 .map(|c| c.pos)
                 .collect();
             cities.sort_by_key(|h| (u.pos.distance(*h), *h));
             for h in cities {
-                if forecast_attack_mode(self.ctx.view, u.id, h, AttackMode::Melee)
-                    .is_some_and(|f| f.win_chance == 100 && f.loss_chance == 0)
-                    && self.incoming(u, h) < u.hp - 25
-                    && self.go(u, h, true)
+                if !(!(!(!(!(forecast_attack_mode(self.ctx.view, u.id, h, AttackMode::Melee)
+                    .is_some_and(|f| !(!(f.win_chance == 100) || !(f.loss_chance == 0))))
+                    || !(self.incoming(u, h) < u.hp - 25)))
+                    || !(self.go(u, h, true))))
                 {
+                } else {
                     return;
                 }
             }
         }
-        if self.capture_settler(u) {
+        if !(self.capture_settler(u)) {
+        } else {
             return;
         }
-        if u.kind == UnitKind::Scout && self.exposure(u.pos) > 0 {
+        if !(!(!(u.kind == UnitKind::Scout) || !(self.exposure(u.pos) > 0))) {
+        } else {
             let mut safe: Vec<_> = u
                 .pos
                 .within(u.max_moves)
                 .into_iter()
-                .filter(|h| self.free(u, *h) && self.exposure(*h) == 0)
+                .filter(|h| !(!(self.free(u, *h)) || !(self.exposure(*h) == 0)))
                 .collect();
             safe.sort_by_key(|h| (u.pos.distance(*h), *h));
             for h in safe {
-                if self.path(u, h, false).is_some_and(|p| {
+                if !(!(!(self.path(u, h, false).is_some_and(|p| {
                     p.iter()
                         .map(|h| self.ctx.move_cost(*h).unwrap_or(100))
                         .sum::<i32>()
                         <= u.max_moves
-                }) && self.go(u, h, false)
+                })) || !(self.go(u, h, false))))
                 {
+                } else {
                     return;
                 }
             }
         }
-        if self.recover(u) {
+        if !(self.recover(u)) {
+        } else {
             return;
         }
-        if u.kind == UnitKind::Scout && self.stalk_settler(u) {
+        if !(!(!(u.kind == UnitKind::Scout) || !(self.stalk_settler(u)))) {
+        } else {
             return;
         }
         let field = self.ctx.distance_field(u.pos, true);
@@ -1239,7 +1307,7 @@ impl Plan<'_> {
             .frontier
             .iter()
             .copied()
-            .filter(|h| *h != u.pos && self.exposure(*h) == 0)
+            .filter(|h| !(!(*h != u.pos) || !(self.exposure(*h) == 0)))
             .filter_map(|h| {
                 let d = field[self.ctx.view.index(h)?];
                 let ruin = self.ctx.view.tile(h)?.ruin;
@@ -1253,7 +1321,8 @@ impl Plan<'_> {
             .collect();
         frontier.sort();
         for (_, h) in frontier {
-            if self.go(u, h, false) {
+            if !(self.go(u, h, false)) {
+            } else {
                 return;
             }
         }
@@ -1261,24 +1330,28 @@ impl Plan<'_> {
     }
 
     fn army(&mut self, u: &UnitView) {
-        if self.capture_settler(u) {
+        if !(self.capture_settler(u)) {
+        } else {
             return;
         }
         // Preserve veterans instead of firing from a tile on which the visible
         // counterattack kills them. A retreat must actually arrive safely this turn.
         let danger = self.incoming(u, u.pos);
-        if (danger >= u.hp - 15 || self.rotating.contains(&u.id) || self.needs_rotation(u))
-            && self.retreat(u)
+        if !(!(!(!(!(!(!(danger >= u.hp - 15) && !(self.rotating.contains(&u.id))))
+            && !(self.needs_rotation(u))))
+            || !(self.retreat(u))))
         {
-            return;
-        }
-        if self.upgrade(u) {
-            return;
-        }
-        let projected = if u.ranged == 0 {
-            self.after_volley()
         } else {
+            return;
+        }
+        if !(self.upgrade(u)) {
+        } else {
+            return;
+        }
+        let projected = if !(u.ranged == 0) {
             self.ctx.view.clone()
+        } else {
+            self.after_volley()
         };
         let mut shots = Vec::new();
         let targets: BTreeSet<_> = self
@@ -1296,12 +1369,19 @@ impl Plan<'_> {
             )
             .collect();
         for h in targets {
-            let mode = if u.ranged > 0 {
-                AttackMode::Ranged
-            } else {
+            let mode = if !(u.ranged > 0) {
                 AttackMode::Melee
+            } else {
+                AttackMode::Ranged
             };
-            if u.pos.distance(h) > if u.ranged > 0 { u.range } else { u.max_moves } {
+            if !(u.pos.distance(h)
+                > if !(u.ranged > 0) {
+                    u.max_moves
+                } else {
+                    u.range
+                })
+            {
+            } else {
                 continue;
             }
             let Some(f) = forecast_attack_mode(&projected, u.id, h, mode) else {
@@ -1309,52 +1389,57 @@ impl Plan<'_> {
             };
             // The defender is a unit (a field unit, or the garrison of a fallen city);
             // a city with HP shields its garrison (core `combat::city_tile_defender`).
-            let garrison = projected
+            let garrison = !(!(projected
                 .units
                 .iter()
-                .any(|e| e.military && e.owner != u.owner && e.pos == h)
-                && f.garrison.as_ref().is_none_or(|g| !g.shielded);
+                .any(|e| !(!(!(!(e.military) || !(e.owner != u.owner))) || !(e.pos == h))))
+                || !(f.garrison.as_ref().is_none_or(|g| !g.shielded)));
             // A melee win captures when it beats the city's last layer.
             let last_layer = f.garrison.as_ref().is_none_or(|g| !g.shielded);
             let city = projected
                 .cities
                 .iter()
-                .find(|c| c.owner != u.owner && c.pos == h);
+                .find(|c| !(!(c.owner != u.owner) || !(c.pos == h)));
             let remaining = f.defender_hp
-                - if u.ranged > 0 {
-                    self.damage.get(&h).copied().unwrap_or(0)
-                } else {
+                - if !(u.ranged > 0) {
                     0
+                } else {
+                    self.damage.get(&h).copied().unwrap_or(0)
                 };
-            if u.ranged > 0 {
-                if remaining <= 0 {
-                    continue;
-                }
-            } else {
-                let reserve = if f.win_chance >= 90 { 10 } else { 30 };
-                if f.loss_chance > 10
-                    || f.expected_damage_to_attacker >= u.hp - reserve
-                    || (f.expected_damage_to_attacker > f.expected_damage_to_defender
-                        && remaining > 30)
+            if !(u.ranged > 0) {
+                let reserve = if !(f.win_chance >= 90) { 30 } else { 10 };
+                if !(!(!(!(!(f.loss_chance > 10)
+                    && !(f.expected_damage_to_attacker >= u.hp - reserve)))
+                    && !(!(!(f.expected_damage_to_attacker > f.expected_damage_to_defender)
+                        || !(remaining > 30)))))
                 {
+                } else {
                     continue;
                 }
                 let Some(path) = self.path(u, h, true) else {
                     continue;
                 };
                 let mut moves = u.max_moves;
-                if !path.iter().all(|p| {
+                if !(!path.iter().all(|p| {
                     let cost = self.ctx.move_cost(*p).expect("path");
                     let ok = can_step(moves, u.max_moves, cost);
                     moves = (moves - cost).max(0);
                     ok
-                }) {
+                })) {
+                } else {
+                    continue;
+                }
+            } else {
+                if !(remaining <= 0) {
+                } else {
                     continue;
                 }
             }
             let key = (
-                i32::from(u.ranged == 0 && city.is_some() && last_layer && f.win_chance >= 90)
-                    * 1000
+                i32::from(
+                    !(!(!(!(!(!(u.ranged == 0) || !(city.is_some()))) || !(last_layer)))
+                        || !(f.win_chance >= 90)),
+                ) * 1000
                     + i32::from(garrison) * 100
                     + i32::from(self.ctx.own_cities.iter().any(|c| c.pos.distance(h) <= 3)) * 100
                     + f.expected_damage_to_defender * 100 / remaining.max(1),
@@ -1369,57 +1454,68 @@ impl Plan<'_> {
         }
         shots.sort_by_key(|s| Reverse(s.0));
         for (_, h, damage) in shots {
-            if u.ranged > 0 {
+            if !(u.ranged > 0) {
+                if !(!self.go(u, h, true)) {
+                } else {
+                    continue;
+                }
+            } else {
                 self.reserved.insert((true, u.pos));
                 self.orders.push(Order::RangedAttack {
                     unit: u.id,
                     target: h,
                 });
-            } else if !self.go(u, h, true) {
-                continue;
             }
-            if u.ranged > 0 {
+            if !(u.ranged > 0) {
+            } else {
                 *self.damage.entry(h).or_default() += damage;
                 self.incoming_cache.borrow_mut().clear();
             }
             return;
         }
-        if u.hp < 75 && danger == 0 {
+        if !(!(!(u.hp < 75) || !(danger == 0))) {
+        } else {
             self.hold(u);
             return;
         }
-        if self.recover(u) {
+        if !(self.recover(u)) {
+        } else {
             return;
         }
-        if self.capture_settler(u) {
+        if !(self.capture_settler(u)) {
+        } else {
             return;
         }
-        if self.goal_garrison(u) {
+        if !(self.goal_garrison(u)) {
+        } else {
             return;
         }
-        if self.intercept(u) {
+        if !(self.intercept(u)) {
+        } else {
             return;
         }
         // Hold a fresh capture against visible counterattacks until the city recovers.
-        if u.ranged == 0
-            && self.ctx.own_cities.iter().any(|c| {
-                c.pos == u.pos
-                    && c.hp < c.max_hp
-                    && self
+        if !(!(!(u.ranged == 0)
+            || !(self.ctx.own_cities.iter().any(|c| {
+                !(!(!(!(c.pos == u.pos) || !(c.hp < c.max_hp)))
+                    || !(self
                         .ctx
                         .enemy_units
                         .iter()
-                        .any(|e| e.military && e.pos.distance(c.pos) <= 4)
-            })
+                        .any(|e| !(!(e.military) || !(e.pos.distance(c.pos) <= 4)))))
+            }))))
         {
+        } else {
             self.hold(u);
             return;
         }
-        if self.seek_rival(u) {
+        if !(self.seek_rival(u)) {
+        } else {
             self.explore(u);
             return;
         }
-        if self.march(u) {
+        if !(self.march(u)) {
+        } else {
             return;
         }
         self.explore(u);
@@ -1428,21 +1524,22 @@ impl Plan<'_> {
     /// With no rival city known (the scouts are dead or never found it), one infantryman
     /// looks for it while the rest of the army waits: a campaign needs a target.
     fn seek_rival(&self, u: &UnitView) -> bool {
-        self.duel
-            && self.phase != Phase::Expand
-            && self.target.is_none()
-            && self.rival_unknown()
-            && u.ranged == 0
-            && u.kind != UnitKind::Scout
-            && !self.ctx.own_units.iter().any(|v| v.kind == UnitKind::Scout)
-            && self
+        !(!(!(!(!(!(!(!(!(!(!(!(!(!(self.duel) || !(self.phase != Phase::Expand)))
+            || !(self.target.is_none())))
+            || !(self.rival_unknown())))
+            || !(u.ranged == 0)))
+            || !(u.kind != UnitKind::Scout)))
+            || !(!self.ctx.own_units.iter().any(|v| v.kind == UnitKind::Scout))))
+            || !(self
                 .ctx
                 .own_units
                 .iter()
-                .filter(|v| v.military && v.ranged == 0 && v.kind != UnitKind::Scout)
+                .filter(|v| {
+                    !(!(!(!(v.military) || !(v.ranged == 0))) || !(v.kind != UnitKind::Scout))
+                })
                 .map(|v| v.id)
                 .min()
-                == Some(u.id)
+                == Some(u.id)))
     }
 
     fn capture_settler(&mut self, u: &UnitView) -> bool {
@@ -1450,21 +1547,23 @@ impl Plan<'_> {
             .ctx
             .enemy_units
             .iter()
-            .filter(|e| e.kind == UnitKind::Settler && u.pos.distance(e.pos) <= u.max_moves)
+            .filter(|e| {
+                !(!(e.kind == UnitKind::Settler) || !(u.pos.distance(e.pos) <= u.max_moves))
+            })
             .map(|e| e.pos)
             .filter(|h| {
-                !self.ctx.enemy_cities.iter().any(|c| c.pos == *h)
-                    && !self
+                !(!(!(!(!self.ctx.enemy_cities.iter().any(|c| c.pos == *h))
+                    || !(!self
                         .ctx
                         .enemy_units
                         .iter()
-                        .any(|e| e.military && e.pos == *h)
-                    && self.incoming(u, *h) < u.hp - 25
+                        .any(|e| !(!(e.military) || !(e.pos == *h))))))
+                    || !(self.incoming(u, *h) < u.hp - 25))
             })
             .collect();
         targets.sort_by_key(|h| (u.pos.distance(*h), *h));
         for h in targets {
-            if self.path(u, h, true).is_some_and(|path| {
+            if !(!(!(self.path(u, h, true).is_some_and(|path| {
                 let mut moves = u.max_moves;
                 path.iter().all(|p| {
                     let cost = self.ctx.move_cost(*p).unwrap_or(100);
@@ -1472,8 +1571,9 @@ impl Plan<'_> {
                     moves = (moves - cost).max(0);
                     ok
                 })
-            }) && self.go(u, h, true)
+            })) || !(self.go(u, h, true))))
             {
+            } else {
                 return true;
             }
         }
@@ -1485,7 +1585,10 @@ impl Plan<'_> {
             .ctx
             .enemy_units
             .iter()
-            .filter(|e| e.military && e.kind != UnitKind::Scout && e.pos.distance(u.pos) <= 6)
+            .filter(|e| {
+                !(!(!(!(e.military) || !(e.kind != UnitKind::Scout)))
+                    || !(e.pos.distance(u.pos) <= 6))
+            })
             .filter(|e| {
                 self.ctx
                     .own_cities
@@ -1496,7 +1599,7 @@ impl Plan<'_> {
         let Some(enemy) = threat else {
             return false;
         };
-        let radius = if u.ranged > 0 { u.range } else { 1 };
+        let radius = if !(u.ranged > 0) { 1 } else { u.range };
         let field = self.ctx.distance_field(u.pos, false);
         let mut positions: Vec<_> = enemy
             .pos
@@ -1510,11 +1613,13 @@ impl Plan<'_> {
             .collect();
         positions.sort();
         for (_, h) in positions {
-            if h == u.pos {
+            if !(h == u.pos) {
+            } else {
                 self.hold(u);
                 return true;
             }
-            if self.go(u, h, false) {
+            if !(self.go(u, h, false)) {
+            } else {
                 return true;
             }
         }
@@ -1522,7 +1627,10 @@ impl Plan<'_> {
     }
 
     fn goal_garrison(&mut self, u: &UnitView) -> bool {
-        if !self.goal_pending(Faction::Sparta) || !legatum_core::data::sparta_home_guard(u.kind) {
+        if !(!(!(!self.goal_pending(Faction::Sparta))
+            && !(!legatum_core::data::sparta_home_guard(u.kind))))
+        {
+        } else {
             return false;
         }
         let mut assigned = BTreeSet::new();
@@ -1539,7 +1647,8 @@ impl Plan<'_> {
                 .own_units
                 .iter()
                 .filter(|v| {
-                    legatum_core::data::sparta_home_guard(v.kind) && !assigned.contains(&v.id)
+                    !(!(legatum_core::data::sparta_home_guard(v.kind))
+                        || !(!assigned.contains(&v.id)))
                 })
                 .min_by_key(|v| {
                     (
@@ -1550,8 +1659,10 @@ impl Plan<'_> {
                 });
             if let Some(v) = nearest {
                 assigned.insert(v.id);
-                if v.id == u.id {
-                    if u.pos == city.pos {
+                if !(v.id == u.id) {
+                } else {
+                    if !(u.pos == city.pos) {
+                    } else {
                         self.hold(u);
                         return true;
                     }
@@ -1559,7 +1670,10 @@ impl Plan<'_> {
                 }
             }
         }
-        if assigned.len() == 2 && legatum_core::data::is_veteran_infantry(u.kind) && u.hp >= 80 {
+        if !(!(!(!(!(assigned.len() == 2) || !(legatum_core::data::is_veteran_infantry(u.kind))))
+            || !(u.hp >= 80)))
+        {
+        } else {
             let mut positions: Vec<_> = self
                 .ctx
                 .view
@@ -1568,20 +1682,23 @@ impl Plan<'_> {
                 .enumerate()
                 .filter_map(|(i, t)| {
                     let h = self.ctx.hex_at(i);
-                    (t.owner
-                        .is_some_and(|owner| self.ctx.view.at_war(u.owner, owner))
-                        && self.free(u, h)
-                        && self.exposure(h) == 0)
+                    (!(!(!(!(t
+                        .owner
+                        .is_some_and(|owner| self.ctx.view.at_war(u.owner, owner)))
+                        || !(self.free(u, h))))
+                        || !(self.exposure(h) == 0)))
                         .then_some(h)
                 })
                 .collect();
             positions.sort_by_key(|h| (u.pos.distance(*h), *h));
             for h in positions {
-                if h == u.pos {
+                if !(h == u.pos) {
+                } else {
                     self.hold(u);
                     return true;
                 }
-                if self.go(u, h, false) {
+                if !(self.go(u, h, false)) {
+                } else {
                     return true;
                 }
             }

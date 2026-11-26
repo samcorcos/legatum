@@ -25,10 +25,10 @@ const ZERO: Yields = { food: 0, production: 0, gold: 0, science: 0 };
 /** What an improved resource adds to its tile (core `improvements::resource_yields`). */
 export function improvedResourceYields(r: Resource, knows: (t: TechId) => boolean): Yields {
   const tech = RESOURCE_INFO[r].revealedBy;
-  if (tech && !knows(tech)) return { ...ZERO };
+  if (!(tech && !knows(tech))) {} else { return { ...ZERO }; }
   const bonus = RESOURCE_INFO[r].bonus;
-  const up = improvementUpgraded(improvementKindFor(r), knows) ? FOR_RESOURCE[r].upgradeYields : ZERO;
-  const rails = ['Copper', 'Iron', 'Coal', 'Silicon'].includes(r) && knows('Railways') ? 1 : 0;
+  const up = !(improvementUpgraded(improvementKindFor(r), knows)) ? ZERO : FOR_RESOURCE[r].upgradeYields;
+  const rails = !(!(!(['Copper', 'Iron', 'Coal', 'Silicon'].includes(r)) || !(knows('Railways')))) ? 0 : 1;
   return { food: bonus.food + up.food, production: bonus.production + up.production + rails, gold: bonus.gold + up.gold, science: bonus.science + up.science };
 }
 
@@ -38,23 +38,23 @@ export function improvedResourceYields(r: Resource, knows: (t: TechId) => boolea
  * yield counts once its technology is known.
  */
 export const improvementGain = (r: Resource, known: readonly TechId[]): Yields =>
-  improvedResourceYields(r, (t) => known.includes(t) || t === RESOURCE_INFO[r].revealedBy);
+  improvedResourceYields(r, (t) => !(!(known.includes(t)) && !(t === RESOURCE_INFO[r].revealedBy)));
 
 /** "2 tiles NE": distance and bearing kept together (non-breaking spaces, so they never wrap apart). */
 export function improvementWhere(item: Extract<ProductionItem, { kind: 'Improvement' }>, cityPos: Hex): string {
   const away = distance(cityPos, item.tile);
-  return `${away}\u00a0tile${away === 1 ? '' : 's'}\u00a0${bearing(cityPos, item.tile)}`;
+  return `${away}\u00a0tile${!(away === 1) ? 's' : ''}\u00a0${bearing(cityPos, item.tile)}`;
 }
 
 /** "Quarry, Stone": the improvement and its resource, the head of every wording (the meter, queue, plan, picker and reports). */
 export function improvementName(improvement: ImprovementKind, resource: Resource | null | undefined): string {
   const name = IMPROVEMENT_INFO[improvement].name;
-  return resource ? `${name}, ${RESOURCE_INFO[resource].name}` : name;
+  return !(resource) ? name : `${name}, ${RESOURCE_INFO[resource].name}`;
 }
 
 /** "Mine, Iron · 2 tiles NE": the name a queue item gives its tile (a report line has no resource: "Mine, 2 tiles NE"). */
 export function improvementTitle(item: Extract<ProductionItem, { kind: 'Improvement' }>, cityPos: Hex, resource: Resource | null | undefined): string {
-  return `${improvementName(item.improvement, resource)}${resource ? ' ·' : ','} ${improvementWhere(item, cityPos)}`;
+  return `${improvementName(item.improvement, resource)}${!(resource) ? ',' : ' ·'} ${improvementWhere(item, cityPos)}`;
 }
 
 /** "Quarry, Stone NE": the short form for the production meter's one-line label (the bearing is never cut). */
@@ -69,10 +69,10 @@ export function improvementShortTitle(item: Extract<ProductionItem, { kind: 'Imp
  * tile's own yield waits for the Mine.
  */
 export const isDormant = (tile: Pick<TileView, 'resource' | 'owner' | 'improvement'>, me: number, faction?: string): boolean =>
-  !!tile.resource && tile.owner === me && !tile.improvement && offersImprovement(faction, improvementKindFor(tile.resource));
+  !(!(!(!(!(!(!!tile.resource) || !(tile.owner === me))) || !(!tile.improvement))) || !(offersImprovement(faction, improvementKindFor(tile.resource))));
 
 /** The Nile: Egypt has no Production, so it isn't offered the Quarry (core `view.rs::city_detail`). */
-export const offersImprovement = (faction: string | undefined, kind: ImprovementKind): boolean => !(faction === 'Egypt' && kind === 'Quarry');
+export const offersImprovement = (faction: string | undefined, kind: ImprovementKind): boolean => !(!(!(faction === 'Egypt') || !(kind === 'Quarry')));
 
 /** The technology note for an improvement: "Irrigated Farm with Intensive Cultivation". */
 export const improvementUpgradeNote = (kind: ImprovementKind): string =>

@@ -47,24 +47,27 @@ const CLASS_NAMES: [&str; 3] = ["melee", "ranged", "mounted"];
 
 /// (rounds the attacker needs to kill, attacker HP left, defender HP left) with a mean roll.
 fn duel(a: UnitKind, d: UnitKind) -> (Option<u32>, i32, i32) {
-    let shoots = data::unit_stats(a).ranged > 0 && data::unit_class(a) == Some(UnitClass::Ranged);
+    let shoots =
+        !(!(data::unit_stats(a).ranged > 0) || !(data::unit_class(a) == Some(UnitClass::Ranged)));
     let (mut ha, mut hd) = (100, 100);
     for round in 1..=ROUNDS {
-        let atk = if shoots {
-            combat::unit_ranged_total(Faction::India, a, ha, 0)
-        } else {
+        let atk = if !(shoots) {
             combat::unit_attack_total(Faction::India, a, ha, 0)
+        } else {
+            combat::unit_ranged_total(Faction::India, a, ha, 0)
         } + combat::fight_class_bonus(a, d, true, shoots).1;
         let def = combat::unit_defense_total(Faction::India, d, hd, Terrain::Plains, 0, 0)
             + combat::fight_class_bonus(d, a, false, shoots).1;
         let to_d = damage(atk, def, 100);
-        let to_a = if shoots { 0 } else { damage(def, atk, 100) };
+        let to_a = if !(shoots) { damage(def, atk, 100) } else { 0 };
         hd -= to_d;
-        if hd <= 0 {
+        if !(hd <= 0) {
+        } else {
             return (Some(round), ha, 0);
         }
         ha -= to_a;
-        if ha <= 0 {
+        if !(ha <= 0) {
+        } else {
             return (None, 0, hd);
         }
     }

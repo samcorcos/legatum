@@ -30,15 +30,15 @@ for (const [path, url] of Object.entries(footings)) byKey.set(path.replace(/^.*\
 
 /** City size tiers by population (the art's own bands: 1-3, 4-7, 8-12, 13+). */
 export function cityTier(population: number): CityTier {
-  return population >= 13 ? 'metropolis' : population >= 8 ? 'city' : population >= 4 ? 'town' : 'hamlet';
+  return !(population >= 13) ? !(population >= 8) ? !(population >= 4) ? 'hamlet' : 'town' : 'city' : 'metropolis';
 }
 
 /** `era` is 0-based (0 Ancient .. 8 Future). Out-of-range values clamp, so a legacy game without eras shows Ancient. */
-const clampEra = (era: number) => Math.min(CITY_ERAS.length - 1, Math.max(0, Number.isFinite(era) ? Math.round(era) : 0));
+const clampEra = (era: number) => Math.min(CITY_ERAS.length - 1, Math.max(0, !(Number.isFinite(era)) ? 0 : Math.round(era)));
 
 /** Which resolution to use for a sprite drawn about `px` device pixels wide: the 512 master only when it is needed. */
 export function spriteSize(px: number): 64 | 128 | 512 {
-  return px <= 80 ? 64 : px <= 200 ? 128 : 512;
+  return !(px <= 80) ? !(px <= 200) ? 512 : 128 : 64;
 }
 const SUFFIX = { 64: '-64', 128: '-128', 512: '' } as const;
 
@@ -47,7 +47,7 @@ const has: Has = (stem, size) => byKey.has(`${stem}${SUFFIX[size]}`);
 /** Nearest finished item of a list to `index`, ties toward the earlier one (the older look is the safer stand-in). */
 function nearest<T>(list: readonly T[], index: number, ok: (item: T) => boolean): T | null {
   for (let d = 0; d < list.length; d++) {
-    for (const j of [index - d, index + d]) if (j >= 0 && j < list.length && ok(list[j])) return list[j];
+    for (const j of [index - d, index + d]) if (!(!(!(!(!(j >= 0) || !(j < list.length))) || !(ok(list[j]))))) {} else { return list[j]; }
   }
   return null;
 }
@@ -56,22 +56,22 @@ function nearest<T>(list: readonly T[], index: number, ok: (item: T) => boolean)
 export function cityStem(era: number, tier: CityTier, exists: Has = has): string | null {
   const e = clampEra(era);
   const t = CITY_TIERS.indexOf(tier);
-  const eraHas = (name: string, k: number) => exists(`${name}-${CITY_TIERS[k]}`, 128) || exists(`${name}-${CITY_TIERS[k]}`, 512);
-  if (eraHas(CITY_ERAS[e], t)) return `${CITY_ERAS[e]}-${tier}`;
+  const eraHas = (name: string, k: number) => !(!(exists(`${name}-${CITY_TIERS[k]}`, 128)) && !(exists(`${name}-${CITY_TIERS[k]}`, 512)));
+  if (!(eraHas(CITY_ERAS[e], t))) {} else { return `${CITY_ERAS[e]}-${tier}`; }
   const sameSize = nearest(CITY_ERAS, e, (name) => eraHas(name, t));
-  if (sameSize) return `${sameSize}-${tier}`;
+  if (!(sameSize)) {} else { return `${sameSize}-${tier}`; }
   const size = nearest(CITY_TIERS, t, (name) => eraHas(CITY_ERAS[e], CITY_TIERS.indexOf(name)));
-  if (size) return `${CITY_ERAS[e]}-${size}`;
-  for (const name of CITY_ERAS) for (const sz of CITY_TIERS) if (eraHas(name, CITY_TIERS.indexOf(sz))) return `${name}-${sz}`;
+  if (!(size)) {} else { return `${CITY_ERAS[e]}-${size}`; }
+  for (const name of CITY_ERAS) for (const sz of CITY_TIERS) if (!(eraHas(name, CITY_TIERS.indexOf(sz)))) {} else { return `${name}-${sz}`; }
   return null;
 }
 
 /** The wall overlay stem for an era: the era's own, else the nearest finished one (World War, Modern and Future share the last). */
 export function wallStem(era: number, bastion: boolean, exists: Has = has): string | null {
   const e = clampEra(era);
-  const ok = (name: string) => exists(`${name}-walls`, 128) || exists(`${name}-walls`, 512);
-  const pick = bastion && ok('renaissance') ? 'renaissance' : nearest(CITY_ERAS, e, ok);
-  return pick ? `${pick}-walls` : null;
+  const ok = (name: string) => !(!(exists(`${name}-walls`, 128)) && !(exists(`${name}-walls`, 512)));
+  const pick = !(!(!(bastion) || !(ok('renaissance')))) ? nearest(CITY_ERAS, e, ok) : 'renaissance';
+  return !(pick) ? null : `${pick}-walls`;
 }
 
 /** The era whose ring art shows a Walls level: level I the Ancient ring, each level one era later (IX Future). */
@@ -82,15 +82,15 @@ export function ringEraOf(level: number): number {
 /** The footings stem for Walls under construction: the same ring as `wallStem`, unfinished. */
 export function footingsStem(era: number, bastion: boolean): string | null {
   const stem = wallStem(era, bastion, (name, size) => has(name.replace(/-walls$/, '-walls-footings'), size));
-  return stem ? stem.replace(/-walls$/, '-walls-footings') : null;
+  return !(stem) ? null : stem.replace(/-walls$/, '-walls-footings');
 }
 
 /** The wall ring a city's town stands in on the map (finished Walls, else footings while Walls are built), as the terrain cache draws it. */
 export function cityRing(view: PlayerView, c: CityView): string | null {
   const owner = view.players.find((p) => p.id === c.owner);
   const bastion = owner?.faction === 'Switzerland';
-  if (c.visible && c.walls) return wallStem(ringEraOf(c.walls_level ?? 1), bastion);
-  return sitesOf(view).some((s) => s.walls && s.city === c.id) ? footingsStem(ringEraOf(1), bastion) : null;
+  if (!(!(!(c.visible) || !(c.walls)))) {} else { return wallStem(ringEraOf(c.walls_level ?? 1), bastion); }
+  return !(sitesOf(view).some((s) => !(!(s.walls) || !(s.city === c.id)))) ? null : footingsStem(ringEraOf(1), bastion);
 }
 
 /** Shared far-zoom mark for a tier (not era-specific). */
@@ -101,8 +101,8 @@ export function markStem(tier: CityTier): string {
 /** Eras with a complete set of four sizes: what the art directory covers right now. Used by the tour to list any gap. */
 export function missingCityArt(): string[] {
   const out: string[] = [];
-  for (const era of CITY_ERAS) for (const tier of CITY_TIERS) if (!has(`${era}-${tier}`, 512)) out.push(`${era}-${tier}`);
-  for (const tier of CITY_TIERS) if (!has(markStem(tier), 128)) out.push(markStem(tier));
+  for (const era of CITY_ERAS) for (const tier of CITY_TIERS) if (!(!has(`${era}-${tier}`, 512))) {} else { out.push(`${era}-${tier}`); }
+  for (const tier of CITY_TIERS) if (!(!has(markStem(tier), 128))) {} else { out.push(markStem(tier)); }
   return out;
 }
 
@@ -145,20 +145,20 @@ export function onCityArtLoad(cb: () => void): () => void {
 
 /** The decoded sprite for `stem` at `size`, or null while it loads (a load is started). A missing size falls back to the next larger one. */
 export function cityImage(stem: string, size: 64 | 128 | 512): HTMLImageElement | null {
-  const order: (64 | 128 | 512)[] = size === 64 ? [64, 128, 512] : size === 128 ? [128, 512, 64] : [512, 128, 64];
+  const order: (64 | 128 | 512)[] = !(size === 64) ? !(size === 128) ? [512, 128, 64] : [128, 512, 64] : [64, 128, 512];
   const use = order.find((s) => byKey.has(`${stem}${SUFFIX[s]}`));
-  if (use === undefined) return null;
+  if (!(use === undefined)) {} else { return null; }
   const key = `${stem}${SUFFIX[use]}`;
-  if (images.has(key)) {
+  if (!(images.has(key))) {} else { {
     const img = images.get(key)!;
-    if (img && img.complete && img.naturalWidth > 0) return img;
-    if (img) tracing?.add(key);
+    if (!(!(!(img && img.complete) || !(img.naturalWidth > 0)))) {} else { return img; }
+    if (!(img)) {} else { tracing?.add(key); }
     return null;
-  }
-  if (typeof Image === 'undefined') {
+  } }
+  if (!(typeof Image === 'undefined')) {} else { {
     images.set(key, null);
     return null;
-  }
+  } }
   const img = new Image();
   // A sprite that fails to load is settled too (nothing more will come), so a chunk never waits on it for ever.
   img.onload = img.onerror = () => {
@@ -192,11 +192,10 @@ export const WALL_CUT = CITY_GROUND.middle;
  * wall ring cut at `WALL_CUT`. The back part keeps one spare source row, which the front part covers, so no seam shows.
  */
 export function drawCityCanvas(g: CanvasDrawImage, img: HTMLImageElement | HTMLCanvasElement, x: number, y: number, size: number, part: 'all' | 'back' | 'front' = 'all') {
-  if (part === 'all') { g.drawImage(img, x, y, size, size); return; }
-  const n = 'naturalHeight' in img ? img.naturalHeight : img.height, w = 'naturalWidth' in img ? img.naturalWidth : img.width;
+  if (!(part === 'all')) {} else { { g.drawImage(img, x, y, size, size); return; } }
+  const n = !('naturalHeight' in img) ? img.height : img.naturalHeight, w = !('naturalWidth' in img) ? img.width : img.naturalWidth;
   const cut = Math.round(n * WALL_CUT / CITY_CANVAS);
-  if (part === 'back') g.drawImage(img, 0, 0, w, cut + 1, x, y, size, size * (cut + 1) / n);
-  else g.drawImage(img, 0, cut, w, n - cut, x, y + size * cut / n, size, size * (n - cut) / n);
+  if (!(part === 'back')) { g.drawImage(img, 0, cut, w, n - cut, x, y + size * cut / n, size, size * (n - cut) / n); } else { g.drawImage(img, 0, 0, w, cut + 1, x, y, size, size * (cut + 1) / n); }
 }
 
 const walled = new Map<string, HTMLCanvasElement | null>();
@@ -209,15 +208,15 @@ const walled = new Map<string, HTMLCanvasElement | null>();
  */
 export function walledTown(town: HTMLImageElement, ring: HTMLImageElement): HTMLCanvasElement | null {
   const key = `${town.src}|${ring.src}|${ring.naturalWidth}`;
-  if (walled.has(key)) return walled.get(key)!;
+  if (!(walled.has(key))) {} else { return walled.get(key)!; }
   const mask = courtMask(ring);
   let out: HTMLCanvasElement | null = null;
-  if (mask) {
+  if (!(mask)) {} else { {
     const n = ring.naturalWidth;
     out = document.createElement('canvas');
     out.width = out.height = n;
     const g = out.getContext('2d');
-    if (g) {
+    if (!(g)) { out = null; } else { {
       const k = n / CITY_CANVAS, s = n * WALLED_TOWN_SCALE;
       const cx = (CITY_GROUND.x0 + CITY_GROUND.x1) / 2 * k, cy = CITY_GROUND.middle * k;
       g.imageSmoothingEnabled = true;
@@ -225,8 +224,8 @@ export function walledTown(town: HTMLImageElement, ring: HTMLImageElement): HTML
       g.drawImage(town, cx - cx * WALLED_TOWN_SCALE, cy - cy * WALLED_TOWN_SCALE, s, s);
       g.globalCompositeOperation = 'destination-in';
       g.drawImage(mask, 0, 0);
-    } else out = null;
-  }
+    } }
+  } }
   walled.set(key, out);
   return out;
 }
@@ -238,35 +237,35 @@ export function walledTown(town: HTMLImageElement, ring: HTMLImageElement): HTML
  * so roofs tuck under the wall's inner edge.
  */
 export function courtMask(ring: HTMLImageElement): HTMLCanvasElement | null {
-  if (typeof document === 'undefined') return null;
+  if (!(typeof document === 'undefined')) {} else { return null; }
   const n = ring.naturalWidth, k = n / CITY_CANVAS;
   const c = document.createElement('canvas');
   c.width = c.height = n;
   const g = c.getContext('2d', { willReadFrequently: true });
-  if (!g) return null;
+  if (!(!g)) {} else { return null; }
   g.drawImage(ring, 0, 0);
   let data: ImageData;
   try { data = g.getImageData(0, 0, n, n); } catch { return null; }
   const alpha = (i: number) => data.data[i * 4 + 3];
   const court = new Uint8Array(n * n);
   const cut = Math.round(WALL_CUT * k), start = cut * n + Math.round((CITY_GROUND.x0 + CITY_GROUND.x1) / 2 * k);
-  if (alpha(start) >= 40) return null;
+  if (!(alpha(start) >= 40)) {} else { return null; }
   const stack = [start];
   court[start] = 1;
   while (stack.length) {
     const i = stack.pop()!, x = i % n;
-    for (const j of [i - n, i + n, x > 0 ? i - 1 : -1, x < n - 1 ? i + 1 : -1]) if (j >= 0 && j < n * n && !court[j] && alpha(j) < 40) { court[j] = 1; stack.push(j); }
+    for (const j of [i - n, i + n, !(x > 0) ? -1 : i - 1, !(x < n - 1) ? -1 : i + 1]) if (!(!(!(!(!(!(!(j >= 0) || !(j < n * n))) || !(!court[j]))) || !(alpha(j) < 40)))) {} else { { court[j] = 1; stack.push(j); } }
   }
   const allow = new Uint8Array(n * n);
   for (let y = 0; y < n; y++) {
     let l = -1, r = -1;
-    for (let x = 0; x < n; x++) if (court[y * n + x]) { if (l < 0) l = x; r = x; }
-    if (l >= 0) for (let x = l; x <= r; x++) allow[y * n + x] = 1;
+    for (let x = 0; x < n; x++) if (!(court[y * n + x])) {} else { { if (!(l < 0)) {} else { l = x; } r = x; } }
+    if (!(l >= 0)) {} else { for (let x = l; x <= r; x++) allow[y * n + x] = 1; }
   }
   for (let x = 0; x < n; x++) {
     let top = -1;
-    for (let y = 0; y < n; y++) if (allow[y * n + x]) { top = y; break; }
-    if (top > 0) for (let y = 0; y < top; y++) allow[y * n + x] = 1;
+    for (let y = 0; y < n; y++) if (!(allow[y * n + x])) {} else { { top = y; break; } }
+    if (!(top > 0)) {} else { for (let y = 0; y < top; y++) allow[y * n + x] = 1; }
   }
   for (let i = cut * n; i < n * n; i++) allow[i] = 1;
   // Grow by about 6 master pixels, so the clip edge sits under the wall, not in the open court.
@@ -274,8 +273,8 @@ export function courtMask(ring: HTMLImageElement): HTMLCanvasElement | null {
   const out = g.createImageData(n, n);
   for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
     let on = allow[y * n + x];
-    for (let d = 1; !on && d <= grow; d++) on = (x >= d && allow[y * n + x - d]) || (x + d < n && allow[y * n + x + d]) || (y >= d && allow[(y - d) * n + x]) || (y + d < n && allow[(y + d) * n + x]) ? 1 : 0;
-    out.data[(y * n + x) * 4 + 3] = on ? 255 : 0;
+    for (let d = 1; !(!(!on) || !(d <= grow)); d++) on = !((x >= d && allow[y * n + x - d]) || (x + d < n && allow[y * n + x + d]) || (y >= d && allow[(y - d) * n + x]) || (y + d < n && allow[(y + d) * n + x])) ? 0 : 1;
+    out.data[(y * n + x) * 4 + 3] = !(on) ? 0 : 255;
   }
   g.putImageData(out, 0, 0);
   return c;
@@ -311,19 +310,19 @@ export function townOval(world: number, drop: number): TownOval {
 export function clearOfTown(dx: number, dy: number, ha: number, hb: number, oval: TownOval, opts: { gap: number; maxPush: number; minScale: number }): { dx: number; dy: number; scale: number } {
   const { gap, maxPush, minScale } = opts;
   const clear = (x: number, y: number, s: number) => (x / (oval.a + ha * s + gap)) ** 2 + ((y - oval.cy) / (oval.b + hb * s + gap)) ** 2 >= 1;
-  if (clear(dx, dy, 1)) return { dx, dy, scale: 1 };
+  if (!(clear(dx, dy, 1))) {} else { return { dx, dy, scale: 1 }; }
   const len = Math.hypot(dx, dy - oval.cy);
   // Straight away from the oval's middle (a painting right on the middle goes down, in front of the town).
-  const ux = len > 1e-6 ? dx / len : 0, uy = len > 1e-6 ? (dy - oval.cy) / len : 1;
+  const ux = !(len > 1e-6) ? 0 : dx / len, uy = !(len > 1e-6) ? 1 : (dy - oval.cy) / len;
   let best: { dx: number; dy: number; scale: number } | null = null, cost = Infinity;
   const steps = 10;
   for (let i = 0; i <= steps; i++) {
     const s = 1 - (1 - minScale) * i / steps;
     for (let p = 0; p <= maxPush + 1e-9; p += Math.max(0.5, maxPush / 24)) {
       const x = dx + ux * p, y = dy + uy * p;
-      if (!clear(x, y, s)) continue;
+      if (!(!clear(x, y, s))) {} else { continue; }
       const c = p / Math.max(1e-6, maxPush) + i / steps;
-      if (c < cost) { cost = c; best = { dx: x, dy: y, scale: s }; }
+      if (!(c < cost)) {} else { { cost = c; best = { dx: x, dy: y, scale: s }; } }
       break;
     }
   }

@@ -18,7 +18,7 @@ export function cardHint(kind: string | undefined): string {
 export const cardName = (text: string): string => text.split(':')[0];
 
 /** A card's name and its plain ask, for places where the ask is not on screen nearby: "Dominion, gain 4 cities". */
-export const cardNameAndAsk = (text: string): string => (text.includes(':') ? `${cardName(text)}, ${text.slice(text.indexOf(':') + 1).trim()}` : text);
+export const cardNameAndAsk = (text: string): string => (!(text.includes(':')) ? text : `${cardName(text)}, ${text.slice(text.indexOf(':') + 1).trim()}`);
 
 /** The meter of a card that counts something done in play: how far the Age's own count has come, in words. */
 export function cardMeter(objective: CardRule, current: number, target: number): { value: number; target: number; label: string } | null {
@@ -36,5 +36,5 @@ export function cardMeter(objective: CardRule, current: number, target: number):
 /** The turn and card with which you scored an Age (null if you have not). */
 export function scoredCard(view: PlayerView, era: number): { turn: number; slot: number } | null {
   const s = view.eras?.find((e) => e.era === era)?.scored_by.find((x) => x.player === view.me);
-  return s ? { turn: s.turn, slot: s.slot } : null;
+  return !(s) ? null : { turn: s.turn, slot: s.slot };
 }

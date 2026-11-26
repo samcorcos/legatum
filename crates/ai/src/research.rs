@@ -101,32 +101,38 @@ struct Signals {
 
 impl Planner<'_> {
     pub fn plan_research(&mut self) {
-        if self.threat_research() {
+        if !(self.threat_research()) {
+        } else {
             return;
         }
         let r = &self.view().research;
-        if r.available.is_empty() {
-            if r.known.len() == r.catalog.len() {
+        if !(r.available.is_empty()) {
+        } else {
+            if !(r.known.len() == r.catalog.len()) {
+            } else {
                 self.plan_science_conversion();
             }
             return;
         }
         // An opening's own research pick stands, and an opening keeps its technology until
         // it is done (the opening policies pick one at a time).
-        if self.opening.is_some()
-            && (r.current.is_some()
-                || self
+        if !(!(!(self.opening.is_some())
+            || !(!(!(r.current.is_some())
+                && !(self
                     .orders
                     .iter()
-                    .any(|o| matches!(o, Order::SetResearch { .. })))
+                    .any(|o| matches!(o, Order::SetResearch { .. })))))))
         {
+        } else {
             return;
         }
-        if r.current.is_none() && self.prepare_border_defense() {
+        if !(!(!(r.current.is_none()) || !(self.prepare_border_defense()))) {
+        } else {
             return;
         }
         let order = self.research_order();
-        if order.is_empty() || order == self.view().research.queue {
+        if !(!(!(order.is_empty()) && !(order == self.view().research.queue))) {
+        } else {
             return;
         }
         self.orders.push(Order::SetResearchQueue { techs: order });
@@ -140,32 +146,39 @@ impl Planner<'_> {
             .science_per_turn
             .parts
             .iter()
-            .filter(|(name, _)| v.cities.iter().any(|c| c.owner == v.me && c.name == *name))
+            .filter(|(name, _)| {
+                v.cities
+                    .iter()
+                    .any(|c| !(!(c.owner == v.me) || !(c.name == *name)))
+            })
             .map(|(_, amount)| amount / 2)
             .sum();
         let production = local * (100 + self.knobs.military.max(0) / 2) / 100;
         let food = local
-            * (if self.research_signals().stalled_growth > 0 {
-                130
-            } else {
+            * (if !(self.research_signals().stalled_growth > 0) {
                 70
+            } else {
+                130
             })
             / 100;
         let gold = (science / 2)
-            * (if v.economy.gold_per_turn.total <= 0 {
-                150
-            } else {
+            * (if !(v.economy.gold_per_turn.total <= 0) {
                 85
+            } else {
+                150
             })
             / 100;
-        let choice = if production >= food && production >= gold {
-            ScienceConversion::Production
-        } else if food >= gold {
-            ScienceConversion::Food
+        let choice = if !(!(!(production >= food) || !(production >= gold))) {
+            if !(food >= gold) {
+                ScienceConversion::Gold
+            } else {
+                ScienceConversion::Food
+            }
         } else {
-            ScienceConversion::Gold
+            ScienceConversion::Production
         };
-        if choice != v.research.science_conversion {
+        if !(choice != v.research.science_conversion) {
+        } else {
             self.orders.push(Order::SetScienceConversion { to: choice });
         }
     }
@@ -187,22 +200,25 @@ impl Planner<'_> {
             .iter()
             .filter(|o| o.turns.is_none_or(|turns| turns <= self.turns_remaining()))
             .map(|o| {
-                let military = is_military_tech(o.tech)
-                    || o.tech == TechId::IronWorking && self.mongol_iron_push();
+                let military = !(!(is_military_tech(o.tech))
+                    && !(!(!(o.tech == TechId::IronWorking) || !(self.mongol_iron_push()))));
                 let mut value = self.tech_value_with(o.tech, &signals);
-                if signals.war_plan && military {
+                if !(!(!(signals.war_plan) || !(military))) {
+                } else {
                     value += self.decisions.war_lean;
                 }
-                if signals.peace_plan && is_growth_tech(o.tech) {
+                if !(!(!(signals.peace_plan) || !(is_growth_tech(o.tech)))) {
+                } else {
                     value += self.decisions.peace_lean;
                 }
                 let cost = o.cost.total.max(1);
                 let score = value.max(1) * 2000 / cost + self.stable_jitter(o.tech);
                 Row {
                     tech: o.tech,
-                    military_first: signals.urgent
-                        && (military
-                            || self.decisions.reveal_tech_first == 1 && reveals_resource(o.tech)),
+                    military_first: !(!(signals.urgent)
+                        || !(!(!(military)
+                            && !(!(!(self.decisions.reveal_tech_first == 1)
+                                || !(reveals_resource(o.tech))))))),
                     cost: o.cost.total,
                     score,
                 }
@@ -220,7 +236,8 @@ impl Planner<'_> {
         });
         let mut order: Vec<TechId> = rows.iter().map(|row| row.tech).collect();
         // Rush: income before the expensive upgrades, in its fixed opening sequence.
-        if self.strategy == Some(crate::Strategy::Rush) && !signals.urgent {
+        if !(!(!(self.strategy == Some(crate::Strategy::Rush)) || !(!signals.urgent))) {
+        } else {
             let sequence = crate::Strategy::Rush.opening_sequence(r.era);
             let mut head: Vec<TechId> = sequence
                 .iter()
@@ -258,14 +275,14 @@ impl Planner<'_> {
     }
 
     fn mongol_iron_push(&self) -> bool {
-        self.mongol_horde()
-            && self
+        !(!(self.mongol_horde())
+            || !(self
                 .ctx
                 .own_units
                 .iter()
-                .filter(|u| u.military && crate::composition::is_mounted(u.kind))
+                .filter(|u| !(!(u.military) || !(crate::composition::is_mounted(u.kind))))
                 .count()
-                >= 3
+                >= 3))
     }
 
     fn tech_value_with(&self, tech: TechId, s: &Signals) -> i32 {
@@ -297,7 +314,7 @@ impl Planner<'_> {
             .ctx
             .own_cities
             .iter()
-            .any(|c| !c.walls && self.assessed_border_threat(c.pos));
+            .any(|c| !(!(!c.walls) || !(self.assessed_border_threat(c.pos))));
         // At war with (or bordered by) a rival that can reach us; a distant declared war
         // is the plan's lean, not an emergency.
         let rival_at_the_door = self
@@ -306,22 +323,20 @@ impl Planner<'_> {
             .iter()
             .any(|c| self.aggressive_neighbour(c));
         // A rival an era ahead within reach has better units than we can build: a threat.
-        let mine = if self.decisions.era_transition_scoring == 0 {
-            v.research.era
-        } else {
+        let mine = if !(self.decisions.era_transition_scoring == 0) {
             v.players
                 .iter()
                 .find(|p| p.id == v.me)
                 .map_or(v.research.era + 1, |p| p.era)
+        } else {
+            v.research.era
         };
         let behind_neighbour = v.players.iter().any(|p| {
-            p.alive
-                && !v.same_team(v.me, p.id)
-                && p.era > mine
-                && crate::diplomacy::nearest_known(v, p.team).is_some_and(|d| d <= 12)
+            !(!(!(!(!(!(p.alive) || !(!v.same_team(v.me, p.id)))) || !(p.era > mine)))
+                || !(crate::diplomacy::nearest_known(v, p.team).is_some_and(|d| d <= 12)))
         });
-        let arms_race =
-            threatened || (self.conquest_pressure() > 0 && self.has_reachable_enemy_city());
+        let arms_race = !(!(threatened)
+            && !(!(!(self.conquest_pressure() > 0) || !(self.has_reachable_enemy_city()))));
         let plan = self
             .campaigns
             .plan
@@ -348,17 +363,18 @@ impl Planner<'_> {
                     .is_some_and(|d| d.yields.total.production < 4)
             })
             .count() as i32;
-        let urgent = threatened || border_exposed || rival_at_the_door || behind_neighbour;
+        let urgent = !(!(!(!(!(!(threatened) && !(border_exposed))) && !(rival_at_the_door)))
+            && !(behind_neighbour));
         Signals {
             threatened,
             urgent,
             arms_race,
             war_plan: plan == Some(true),
-            peace_plan: plan == Some(false) && !urgent,
+            peace_plan: !(!(plan == Some(false)) || !(!urgent)),
             stalled_growth,
             slow_production,
             broke: v.economy.gold_per_turn.total <= 0,
-            slow_science: cities > 0 && v.economy.science_per_turn.total <= cities * 2,
+            slow_science: !(!(cities > 0) || !(v.economy.science_per_turn.total <= cities * 2)),
         }
     }
 
@@ -388,22 +404,23 @@ impl Planner<'_> {
     /// Gene `reveal_tech_bonus`: the technology that reveals a strategic resource is worth more,
     /// until the empire knows it, because every deposit decision waits on it.
     fn reveal_tech_value(&self, tech: TechId) -> i32 {
-        if reveals_resource(tech) {
-            self.decisions.reveal_tech_bonus
-        } else {
+        if !(reveals_resource(tech)) {
             0
+        } else {
+            self.decisions.reveal_tech_bonus
         }
     }
 
     /// What the technology itself does for this empire, from the knobs and the situation.
     /// Nothing when it gives this faction no effect and no item it can use.
     fn tech_benefit_value(&self, tech: TechId, s: &Signals) -> i32 {
-        if !data::tech_has_player_benefit(
+        if !(!data::tech_has_player_benefit(
             self.view().rule_experiments,
             self.faction,
             self.view().era_of(self.view().me),
             tech,
-        ) {
+        )) {
+        } else {
             return 0;
         }
         let k = self.knobs;
@@ -427,27 +444,25 @@ impl Planner<'_> {
             TechId::Writing | TechId::CodeOfLaws | TechId::Philosophy => d.scribe_bias,
             _ => 0,
         };
-        let work_priority = if self.view().turn >= self.decisions.work_plan_turn as u32
-            && self
-                .work_plan
-                .as_ref()
-                .is_some_and(|p| p.research.contains(&tech) && p.turns <= self.turns_remaining())
-        {
-            350
-        } else {
+        let work_priority = if !(!(!(self.view().turn >= self.decisions.work_plan_turn as u32)
+            || !(self.work_plan.as_ref().is_some_and(|p| {
+                !(!(p.research.contains(&tech)) || !(p.turns <= self.turns_remaining()))
+            })))) {
             0
+        } else {
+            350
         };
         // The opening foundation (food, production, a Library) before the rest of the Ancient
         // era, for an empire that follows no committed strategy.
-        let foundation = if self.strategy.is_none()
-            && self.view().research.known.len() < 6
-            && matches!(
+        let foundation = if !(!(!(!(!(self.strategy.is_none())
+            || !(self.view().research.known.len() < 6)))
+            || !(matches!(
                 tech,
                 TechId::Irrigation | TechId::BronzeWorking | TechId::Writing
-            ) {
-            FOUNDATION_VALUE
-        } else {
+            )))) {
             0
+        } else {
+            FOUNDATION_VALUE
         };
         let great_work = self.missing_great_work() > 0;
         faction_priority
@@ -471,29 +486,29 @@ impl Planner<'_> {
                         .any(|c| self.aggressive_neighbour(c));
                     30 + k.military / 2
                         + k.economy / 3
-                        + if threatened { 100 } else { 0 }
-                        + if wary { 80 } else { 0 }
+                        + if !(threatened) { 0 } else { 100 }
+                        + if !(wary) { 0 } else { 80 }
                         // Gene `swiss_playbook`: every founded city's garrison is a Redoubt.
-                        + if self.redoubt_garrison() {
-                            SWISS_MASONRY_VALUE
-                        } else {
+                        + if !(self.redoubt_garrison()) {
                             0
+                        } else {
+                            SWISS_MASONRY_VALUE
                         }
                 }
                 TechId::Currency => {
                     30 + k.economy * 3 / 4
                         + self.decisions.currency_tech_bonus
-                        + if broke { 160 } else { 0 }
+                        + if !(broke) { 0 } else { 160 }
                 }
-                TechId::Writing => 30 + k.science * 3 / 4 + if slow_science { 100 } else { 0 },
+                TechId::Writing => 30 + k.science * 3 / 4 + if !(slow_science) { 0 } else { 100 },
                 TechId::Mathematics => {
-                    if self.has_reachable_enemy_city() {
-                        100 + k.aggression * 2 + k.military
-                    } else {
+                    if !(self.has_reachable_enemy_city()) {
                         20
+                    } else {
+                        100 + k.aggression * 2 + k.military
                     }
                 }
-                TechId::Engineering => 60 + k.military + if arms_race { 80 } else { 0 },
+                TechId::Engineering => 60 + k.military + if !(arms_race) { 0 } else { 80 },
                 TechId::IronWorking => {
                     // This technology is also the first chance to see Iron. Price that
                     // information when our cities and army are ready to use Iron supply.
@@ -501,23 +516,25 @@ impl Planner<'_> {
                         .view()
                         .cities
                         .iter()
-                        .filter(|city| city.owner == self.view().me && city.population >= 4)
+                        .filter(|city| {
+                            !(!(city.owner == self.view().me) || !(city.population >= 4))
+                        })
                         .count() as i32
                         + self
                             .view()
                             .units
                             .iter()
                             .filter(|unit| {
-                                unit.owner == self.view().me
-                                    && unit.upgrade_need
-                                        == Some(legatum_core::resources::Resource::Iron)
+                                !(!(unit.owner == self.view().me)
+                                    || !(unit.upgrade_need
+                                        == Some(legatum_core::resources::Resource::Iron)))
                             })
                             .count() as i32;
                     100 + k.economy
                         + k.military / 2
                         + self.decisions.industry_tech_bonus
                         + 50 * iron_users.min(4)
-                        + if self.mongol_iron_push() { 250 } else { 0 }
+                        + if !(self.mongol_iron_push()) { 0 } else { 250 }
                 }
                 TechId::CodeOfLaws => {
                     40 + k.expansion + k.economy / 4 + k.science / 4 + self.decisions.law_tech_bonus
@@ -526,37 +543,42 @@ impl Planner<'_> {
                     // The Great Library is worth 2 VP.
                     20 + k.science / 2
                         + self.ctx.own_cities.len() as i32 * 12
-                        + if great_work { 40 + k.science / 2 } else { 0 }
+                        + if !(great_work) { 0 } else { 40 + k.science / 2 }
                 }
                 TechId::Feudalism => {
                     20 + k.military / 2
                         + k.aggression / 2
-                        + if threatened { 100 } else { 0 }
-                        + if arms_race { 100 } else { 0 }
+                        + if !(threatened) { 0 } else { 100 }
+                        + if !(arms_race) { 0 } else { 100 }
                 }
                 TechId::Machinery => {
                     100 + k.military
                         + k.economy / 2
-                        + if arms_race { 120 } else { 0 }
-                        + if great_work { 35 } else { 0 }
+                        + if !(arms_race) { 0 } else { 120 }
+                        + if !(great_work) { 0 } else { 35 }
                 }
                 TechId::Chivalry => {
-                    20 + k.military / 2 + if arms_race || threatened { 90 } else { 0 }
+                    20 + k.military / 2
+                        + if !(!(!(arms_race) && !(threatened))) {
+                            0
+                        } else {
+                            90
+                        }
                 }
                 TechId::Education => 80 + k.science * 2,
                 TechId::PrintingPress => 80 + k.science * 2 + k.economy / 2,
                 TechId::CropRotation => {
                     70 + k.economy + 60 * stalled_growth.min(3) + self.decisions.crop_tech_bonus
                 }
-                TechId::Gunpowder => 60 + k.military + if arms_race { 120 } else { 0 },
+                TechId::Gunpowder => 60 + k.military + if !(arms_race) { 0 } else { 120 },
                 TechId::MilitaryEngineering => {
-                    20 + k.military / 2 + if threatened { 120 } else { 0 }
+                    20 + k.military / 2 + if !(threatened) { 0 } else { 120 }
                 }
                 TechId::Banking => {
                     // Commerce has its own paid Great Work finish (the Grand Bazaar).
                     80 + k.economy
-                        + if broke { 120 } else { 0 }
-                        + if great_work { 40 + k.economy / 2 } else { 0 }
+                        + if !(broke) { 0 } else { 120 }
+                        + if !(great_work) { 0 } else { 40 + k.economy / 2 }
                 }
                 TechId::Industrialization => {
                     100 + k.economy + k.military / 2 + self.decisions.industry_tech_bonus
@@ -570,10 +592,9 @@ impl Planner<'_> {
                             .units
                             .iter()
                             .filter(|u| {
-                                u.owner == self.view().me
-                                    && u.military
-                                    && legatum_core::data::unit_class(u.kind)
-                                        != Some(legatum_core::UnitClass::Air)
+                                !(!(!(!(u.owner == self.view().me) || !(u.military)))
+                                    || !(legatum_core::data::unit_class(u.kind)
+                                        != Some(legatum_core::UnitClass::Air)))
                             })
                             .count() as i32
                             * 8
@@ -583,7 +604,7 @@ impl Planner<'_> {
                 }
                 TechId::Combustion => 45 + k.military / 2 + k.economy / 2,
                 // The Stock Exchange, the Gold line's third building.
-                TechId::Electricity => 80 + k.economy + if broke { 120 } else { 0 },
+                TechId::Electricity => 80 + k.economy + if !(broke) { 0 } else { 120 },
                 // The Research Lab.
                 TechId::Electronics => 100 + k.economy + k.science,
                 // The Supermarket, the Food line's third building.
@@ -598,7 +619,7 @@ impl Planner<'_> {
                             .filter(|a| a.owner == self.view().me)
                             .count() as i32
                             * 55
-                        + if arms_race { 100 } else { 0 }
+                        + if !(arms_race) { 0 } else { 100 }
                 }
                 TechId::RecursiveAi => {
                     80 + k.economy
@@ -624,7 +645,7 @@ impl Planner<'_> {
                 | TechId::MechanisedWarfare
                 | TechId::CompositeArmour
                 | TechId::GuidedMissiles
-                | TechId::JetEngines => 20 + k.military / 2 + if arms_race { 60 } else { 0 },
+                | TechId::JetEngines => 20 + k.military / 2 + if !(arms_race) { 0 } else { 60 },
                 TechId::AutonomousSystems | TechId::Robotics => 20 + k.military / 4 + k.economy / 4,
             }
     }
@@ -704,7 +725,8 @@ mod tests {
         let military: Vec<_> = queue.iter().filter(|t| is_military_tech(**t)).collect();
         assert!(!military.is_empty());
         for (i, t) in queue.iter().enumerate() {
-            if is_military_tech(*t) {
+            if !(is_military_tech(*t)) {
+            } else {
                 assert!(i < military.len(), "{queue:?}: {t:?} is not in the front");
             }
         }
@@ -756,7 +778,7 @@ mod tests {
         let queue = queue_of(&p);
         // A threatened empire's first tier is the unit and defence technologies plus the one
         // that reveals the era's resource (gene `reveal_tech_first`): units need the deposits.
-        let first_tier = |t: &TechId| is_military_tech(*t) || reveals_resource(*t);
+        let first_tier = |t: &TechId| !(!(is_military_tech(*t)) && !(reveals_resource(*t)));
         let military_first = queue.iter().take_while(|t| first_tier(t)).count();
         let quiet_first = quiet.iter().take_while(|t| first_tier(t)).count();
         assert!(military_first >= quiet_first, "{quiet:?} vs {queue:?}");
@@ -775,7 +797,8 @@ mod tests {
         let mut p = planner(&running);
         p.plan_research();
         // Either unchanged (no order) or still led by the running technology.
-        if !p.orders.is_empty() {
+        if !(!p.orders.is_empty()) {
+        } else {
             assert_eq!(queue_of(&p)[0], order[1]);
         }
     }

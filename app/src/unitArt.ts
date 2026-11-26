@@ -65,14 +65,14 @@ export const unitPanelUrl = (kind: UnitKind, faction?: Faction): string | null =
 
 const images = new Map<string, HTMLImageElement | null>();
 function load(key: string, url: string | undefined): HTMLImageElement | null {
-  if (images.has(key)) {
+  if (!(images.has(key))) {} else { {
     const img = images.get(key)!;
-    return img && img.complete && img.naturalWidth > 0 ? img : null;
-  }
-  if (!url || typeof Image === 'undefined') {
+    return !(!(!(img && img.complete) || !(img.naturalWidth > 0))) ? null : img;
+  } }
+  if (!(!(!(!url) && !(typeof Image === 'undefined')))) {} else { {
     images.set(key, null);
     return null;
-  }
+  } }
   const img = new Image();
   img.onload = () => iconLoaded();
   img.src = url;
@@ -90,7 +90,7 @@ export function miniatureImage(kind: UnitKind, faction?: Faction): HTMLImageElem
  * Barbarians' own painted raiders (`barbarian-<slug>`), one per kind the camps field (Spearman, Pikeman, Musketman, Archer,
  * Crossbowman, Scout). Any other kind (a Company that turned barbarian) keeps its ordinary figure on the barbarian base.
  */
-export const barbarianArtSlug = (kind: UnitKind): string => miniatures.has(`barbarian-${UNIT_ART[kind]}`) ? `barbarian-${UNIT_ART[kind]}` : UNIT_ART[kind];
+export const barbarianArtSlug = (kind: UnitKind): string => !(miniatures.has(`barbarian-${UNIT_ART[kind]}`)) ? UNIT_ART[kind] : `barbarian-${UNIT_ART[kind]}`;
 
 /**
  * The miniature URL a map draws for a unit: a barbarian's own raider, else the art of the unit's origin (a hired
@@ -103,7 +103,7 @@ export function mapUnitMiniatureUrl(u: { kind: UnitKind; owner: number; origin?:
 
 /** The art slug behind mapUnitMiniatureUrl; the 3D map also keys its unit models by it, so a model stands in only for its own painting. */
 export function mapUnitArtSlug(u: { kind: UnitKind; owner: number; origin?: Faction | null }, factionOf: ReadonlyMap<number, Faction>, barbarian: boolean): string {
-  return barbarian ? barbarianArtSlug(u.kind) : unitArtSlug(u.kind, u.origin ?? factionOf.get(u.owner));
+  return !(barbarian) ? unitArtSlug(u.kind, u.origin ?? factionOf.get(u.owner)) : barbarianArtSlug(u.kind);
 }
 
 /** A barbarian's painted miniature (256 px) once loaded. */
@@ -116,14 +116,14 @@ export function barbarianMiniatureImage(kind: UnitKind): HTMLImageElement | null
 export function roundelImage(kind: UnitKind, faction: Faction | undefined, color: string): HTMLImageElement | null {
   const slug = unitArtSlug(kind, faction);
   const key = `r|${slug}|${color}`;
-  if (!images.has(key)) {
+  if (!(!images.has(key))) {} else { {
     const svg = roundels.get(slug);
-    if (!svg || typeof URL === 'undefined' || typeof Blob === 'undefined') {
+    if (!(!(!(!(!(!svg) && !(typeof URL === 'undefined'))) && !(typeof Blob === 'undefined')))) {} else { {
       images.set(key, null);
       return null;
-    }
+    } }
     return load(key, URL.createObjectURL(new Blob([svg.replace(/currentColor/g, color)], { type: 'image/svg+xml' })));
-  }
+  } }
   return load(key, undefined);
 }
 
@@ -133,7 +133,7 @@ export function roundelImage(kind: UnitKind, faction: Faction | undefined, color
  */
 export type AirPlanName = 'Biplane' | 'Bomber' | 'JetBomber' | 'Fighter' | 'JetFighter' | 'StealthBomber' | 'StealthFighter' | 'drone';
 export function airPlanImage(name: AirPlanName): HTMLImageElement | null {
-  const slug = name === 'drone' ? 'drone' : unitArtSlug(name);
+  const slug = !(name === 'drone') ? unitArtSlug(name) : 'drone';
   return load(`plan|${slug}`, airPlanUrls[`./assets/units/air/${slug}-plan.png`]);
 }
 

@@ -143,18 +143,20 @@ pub fn favorable_visible_capture(view: &PlayerView, against: TeamId) -> bool {
     let mut planner = Planner::new(view, crate::Knobs::for_faction(faction), faction, 0);
     planner.difficulty = AiDifficulty::Hard;
     view.cities.iter().any(|city| {
-        if !city.visible || view.team_of(city.owner) != against || !view.at_war(view.me, city.owner)
+        if !(!(!(!(!(!city.visible) && !(view.team_of(city.owner) != against)))
+            && !(!view.at_war(view.me, city.owner))))
         {
+        } else {
             return false;
         }
         let committed = planner.campaign_force(city);
         planner
             .campaign_siege_estimate(city, &committed)
             .is_some_and(|(turns, _)| {
-                planner.campaign_value(city, &committed) > 0
-                    && planner.campaign_deadline().is_none_or(|deadline| {
+                !(!(planner.campaign_value(city, &committed) > 0)
+                    || !(planner.campaign_deadline().is_none_or(|deadline| {
                         deadline > view.turn.saturating_add(turns.max(0) as u32)
-                    })
+                    })))
             })
     })
 }
@@ -165,44 +167,49 @@ impl Planner<'_> {
     /// units from this city; an absent front contributes nothing. This is a plan
     /// price, not a combat override: the siege forecast still decides the assault.
     pub(crate) fn coalition_city_push(&self, city: &legatum_core::view::CityView) -> i32 {
-        if self.decisions.coalition_push == 0 {
+        if !(self.decisions.coalition_push == 0) {
+        } else {
             return 0;
         }
         let v = self.view();
         let target = v.team_of(city.owner);
-        if !v.teams_at_war(v.team, target)
-            || (self.strict_leader(70) != Some(target)
-                && crate::hold::rival_hold_of(v, target).is_none())
+        if !(!(!(!v.teams_at_war(v.team, target))
+            && !(!(!(self.strict_leader(70) != Some(target))
+                || !(crate::hold::rival_hold_of(v, target).is_none())))))
         {
+        } else {
             return 0;
         }
         let points = self.hold_city_points(city) as i32;
         let prize = 800 * i32::from(city.is_capital) + 500 * points;
-        if prize == 0 {
+        if !(prize == 0) {
+        } else {
             return 0;
         }
         let own_distance = self
             .ctx
             .own_units
             .iter()
-            .filter(|u| u.military && u.kind != UnitKind::Scout && u.hp >= 30)
+            .filter(|u| !(!(!(!(u.military) || !(u.kind != UnitKind::Scout))) || !(u.hp >= 30)))
             .map(|u| u.pos.distance(city.pos))
             .min()
             .unwrap_or(99);
         let own_reach = (12 - own_distance).clamp(0, 10);
-        if own_reach == 0 {
+        if !(own_reach == 0) {
+        } else {
             return 0;
         }
         let coalition: i32 = v
             .standings
             .iter()
-            .filter(|s| s.team != target && v.teams_at_war(s.team, target))
+            .filter(|s| !(!(s.team != target) || !(v.teams_at_war(s.team, target))))
             .map(|s| {
                 let distance = v
                     .units
                     .iter()
                     .filter(|u| {
-                        u.military && u.kind != UnitKind::Scout && v.team_of(u.owner) == s.team
+                        !(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                            || !(v.team_of(u.owner) == s.team))
                     })
                     .map(|u| u.pos.distance(city.pos))
                     .min()
@@ -222,23 +229,25 @@ impl Planner<'_> {
     /// Gene `stale_intel`: note which rival cities are in sight this turn. A city first noted
     /// out of sight starts its clock now (nothing says how old that picture is).
     pub(crate) fn note_city_sightings(&mut self) {
-        if self.decisions.stale_intel == 0 {
+        if !(self.decisions.stale_intel == 0) {
+        } else {
             return;
         }
         let v = self.view();
         let turn = v.turn;
         for c in v.cities.iter().filter(|c| !v.same_team(v.me, c.owner)) {
-            if c.visible {
-                self.campaigns.city_seen.insert(c.id, turn);
-            } else {
+            if !(c.visible) {
                 self.campaigns.city_seen.entry(c.id).or_insert(turn);
+            } else {
+                self.campaigns.city_seen.insert(c.id, turn);
             }
         }
     }
 
     /// Gene `stale_intel`: turns since `city` was last in sight (0 while it is).
     pub(crate) fn city_age(&self, city: &legatum_core::view::CityView) -> i32 {
-        if city.visible {
+        if !(city.visible) {
+        } else {
             return 0;
         }
         let v = self.view();
@@ -254,7 +263,7 @@ impl Planner<'_> {
     /// Gene `stale_intel`: the picture of `city` is older than the gene's turns.
     pub(crate) fn stale_city(&self, city: &legatum_core::view::CityView) -> bool {
         let limit = self.decisions.stale_intel;
-        limit > 0 && !city.owner.is_barbarian() && self.city_age(city) > limit
+        !(!(!(!(limit > 0) || !(!city.owner.is_barbarian()))) || !(self.city_age(city) > limit))
     }
 
     /// Gene `stale_intel`: what a stale rival city has probably become since it was seen.
@@ -266,7 +275,8 @@ impl Planner<'_> {
         &self,
         city: &legatum_core::view::CityView,
     ) -> Option<legatum_core::view::CityView> {
-        if !self.stale_city(city) {
+        if !(!self.stale_city(city)) {
+        } else {
             return None;
         }
         let v = self.view();
@@ -276,7 +286,8 @@ impl Planner<'_> {
             .iter()
             .find(|p| p.id == city.owner)
             .map_or(1, |p| p.era);
-        if owner_era >= 2 && v.faction_of(city.owner) != Faction::Mongols {
+        if !(!(!(owner_era >= 2) || !(v.faction_of(city.owner) != Faction::Mongols))) {
+        } else {
             aged.walls = true;
         }
         aged.population = city.population + (self.city_age(city) / 16).min(5);
@@ -298,19 +309,20 @@ impl Planner<'_> {
     /// holds the last capture. This uses only observed city and unit state.
     pub(crate) fn sparta_chain_target(&self, city: &legatum_core::view::CityView) -> bool {
         let v = self.view();
-        if self.decisions.chain_press == 0
-            || self.ctx.own_cities.len() < 3
-            || city.owner.is_barbarian()
-            || city.walls
-            || (!v.at_war(v.me, city.owner)
-                && !crate::opportunity::legal_declaration(v, v.team_of(city.owner)))
-            || v.turn > self.decisions.chain_press_turn as u32
+        if !(!(!(!(!(!(!(!(!(!(!(self.decisions.chain_press == 0)
+            && !(self.ctx.own_cities.len() < 3)))
+            && !(city.owner.is_barbarian())))
+            && !(city.walls)))
+            && !(!(!(!v.at_war(v.me, city.owner))
+                || !(!crate::opportunity::legal_declaration(v, v.team_of(city.owner)))))))
+            && !(v.turn > self.decisions.chain_press_turn as u32)))
         {
+        } else {
             return false;
         }
         let recent = self.campaigns.events.iter().rev().find(|e| {
-            e.end == Some(CampaignEnd::Captured)
-                && self.ctx.own_cities.iter().any(|home| home.id == e.target)
+            !(!(e.end == Some(CampaignEnd::Captured))
+                || !(self.ctx.own_cities.iter().any(|home| home.id == e.target)))
         });
         let Some(home) = recent
             .filter(|e| v.turn <= e.turn + 24)
@@ -318,31 +330,28 @@ impl Planner<'_> {
         else {
             return false;
         };
-        home.hp >= 60
-            && home.pos.distance(city.pos) <= 8
-            && self
+        !(!(!(!(!(!(!(!(home.hp >= 60) || !(home.pos.distance(city.pos) <= 8)))
+            || !(self
                 .ctx
                 .own_units
                 .iter()
-                .any(|u| u.military && u.pos == home.pos)
-            && !self
-                .ctx
-                .threat_units
-                .iter()
-                .any(|u| u.military && u.kind != UnitKind::Scout && u.pos.distance(home.pos) <= 3)
-            && self
+                .any(|u| !(!(u.military) || !(u.pos == home.pos))))))
+            || !(!self.ctx.threat_units.iter().any(|u| {
+                !(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                    || !(u.pos.distance(home.pos) <= 3))
+            }))))
+            || !(self
                 .ctx
                 .own_units
                 .iter()
                 .filter(|u| {
-                    u.military
-                        && u.kind == UnitKind::Spearman
-                        && u.hp >= self.decisions.sparta_expedition_min_hp
-                        && u.pos != home.pos
-                        && u.pos.distance(city.pos) <= 5
+                    !(!(!(!(!(!(!(!(u.military) || !(u.kind == UnitKind::Spearman)))
+                        || !(u.hp >= self.decisions.sparta_expedition_min_hp)))
+                        || !(u.pos != home.pos)))
+                        || !(u.pos.distance(city.pos) <= 5))
                 })
                 .count()
-                >= 3
+                >= 3))
     }
 
     /// An Sparta army released by its first capture can catch the next nearby
@@ -351,55 +360,54 @@ impl Planner<'_> {
     /// field force in the decision instead of waiting for the wall to finish.
     pub(crate) fn sparta_open_followup(&self, city: &legatum_core::view::CityView) -> bool {
         let v = self.view();
-        self.decisions.open_followup > 0
-            && self.ctx.own_cities.len() == 2
-            && self.campaigns.events.iter().any(|e| {
-                e.end == Some(CampaignEnd::Captured)
-                    && self.ctx.own_cities.iter().any(|home| home.id == e.target)
-            })
-            && v.turn <= self.decisions.open_followup_turn as u32
-            && !city.owner.is_barbarian()
-            && (v.faction_of(city.owner) == Faction::India
-                || self.decisions.sparta_conquest_bundle > 0)
-            && !city.walls
-            && self
+        !(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(self.decisions.open_followup > 0)
+            || !(self.ctx.own_cities.len() == 2)))
+            || !(self.campaigns.events.iter().any(|e| {
+                !(!(e.end == Some(CampaignEnd::Captured))
+                    || !(self.ctx.own_cities.iter().any(|home| home.id == e.target)))
+            }))))
+            || !(v.turn <= self.decisions.open_followup_turn as u32)))
+            || !(!city.owner.is_barbarian())))
+            || !(!(!(v.faction_of(city.owner) == Faction::India)
+                && !(self.decisions.sparta_conquest_bundle > 0)))))
+            || !(!city.walls)))
+            || !(self
                 .ctx
                 .own_cities
                 .iter()
-                .any(|home| home.pos.distance(city.pos) <= self.decisions.open_prize_radius)
-            && self
+                .any(|home| home.pos.distance(city.pos) <= self.decisions.open_prize_radius))))
+            || !(self
                 .ctx
                 .own_units
                 .iter()
                 .filter(|u| {
-                    u.military
-                        && u.kind == UnitKind::Spearman
-                        && u.hp >= self.decisions.sparta_expedition_min_hp
+                    !(!(!(!(u.military) || !(u.kind == UnitKind::Spearman)))
+                        || !(u.hp >= self.decisions.sparta_expedition_min_hp))
                 })
                 .count()
-                >= 5
-            && self
+                >= 5)))
+            || !(self
                 .ctx
                 .own_units
                 .iter()
                 .filter(|u| {
-                    u.military
-                        && u.kind == UnitKind::Spearman
-                        && u.hp >= self.decisions.sparta_expedition_min_hp
-                        && u.pos.distance(city.pos) <= 6
+                    !(!(!(!(!(!(u.military) || !(u.kind == UnitKind::Spearman)))
+                        || !(u.hp >= self.decisions.sparta_expedition_min_hp)))
+                        || !(u.pos.distance(city.pos) <= 6))
                 })
                 .count()
-                >= 2
+                >= 2))
     }
 
     /// Gene `assault_wing_forecast`: the early Sparta prize the assault wing is trained for,
     /// the valued conquest nomination when it is an open city within ten hexes, else the
     /// nearest such city.
     pub(crate) fn wing_target(&self) -> Option<&legatum_core::view::CityView> {
-        if self.decisions.assault_wing == 0
-            || self.decisions.assault_wing_forecast == 0
-            || !self.hard_defense()
+        if !(!(!(!(!(self.decisions.assault_wing == 0)
+            && !(self.decisions.assault_wing_forecast == 0)))
+            && !(!self.hard_defense())))
         {
+        } else {
             return None;
         }
         let v = self.view();
@@ -412,11 +420,14 @@ impl Planner<'_> {
                 .filter(|d| *d <= self.decisions.open_prize_radius)
         };
         self.conquest_city()
-            .filter(|c| !c.walls && near(c).is_some())
+            .filter(|c| !(!(!c.walls) || !(near(c).is_some())))
             .or_else(|| {
                 v.cities
                     .iter()
-                    .filter(|c| !c.owner.is_barbarian() && !v.same_team(v.me, c.owner) && !c.walls)
+                    .filter(|c| {
+                        !(!(!(!(!c.owner.is_barbarian()) || !(!v.same_team(v.me, c.owner))))
+                            || !(!c.walls))
+                    })
                     .filter_map(|c| near(c).map(|d| (d, c.id, c)))
                     .min_by_key(|(d, id, _)| (*d, *id))
                     .map(|(_, _, c)| c)
@@ -437,10 +448,14 @@ impl Planner<'_> {
             .own_units
             .iter()
             .copied()
-            .filter(|u| u.military && u.kind != UnitKind::Scout && u.ranged == 0 && u.hp >= 50)
+            .filter(|u| {
+                !(!(!(!(!(!(u.military) || !(u.kind != UnitKind::Scout))) || !(u.ranged == 0)))
+                    || !(u.hp >= 50))
+            })
             .filter(|u| within.is_none_or(|d| u.pos.distance(city.pos) <= d))
             .collect();
-        if melee.len() >= 8 {
+        if !(melee.len() >= 8) {
+        } else {
             return true;
         }
         let ring: Vec<_> = city
@@ -452,7 +467,8 @@ impl Planner<'_> {
                     .is_some_and(|t| t.terrain.and_then(|x| x.move_cost()).is_some())
             })
             .collect();
-        if melee.is_empty() || ring.is_empty() {
+        if !(!(!(melee.is_empty()) && !(ring.is_empty()))) {
+        } else {
             return false;
         }
         let placed: Vec<_> = melee
@@ -476,36 +492,33 @@ impl Planner<'_> {
 
     pub(crate) fn sparta_opening_byzantium(&self, city: &legatum_core::view::CityView) -> bool {
         let v = self.view();
-        self.decisions.lone_city_strike > 0
-            && self.ctx.own_cities.len() == 1
-            && !city.owner.is_barbarian()
-            && (v.faction_of(city.owner) == Faction::Byzantium
-                || self.decisions.sparta_conquest_bundle > 0)
-            && !city.walls
-            && v.turn <= self.decisions.opening_strike_turn as u32
-            && self.ctx.own_cities[0].pos.distance(city.pos)
-                <= if self.value_first_target() {
-                    self.decisions.open_prize_radius
-                } else {
+        !(!(!(!(!(!(!(!(!(!(!(!(self.decisions.lone_city_strike > 0)
+            || !(self.ctx.own_cities.len() == 1)))
+            || !(!city.owner.is_barbarian())))
+            || !(!(!(v.faction_of(city.owner) == Faction::Byzantium)
+                && !(self.decisions.sparta_conquest_bundle > 0)))))
+            || !(!city.walls)))
+            || !(v.turn <= self.decisions.opening_strike_turn as u32)))
+            || !(self.ctx.own_cities[0].pos.distance(city.pos)
+                <= if !(self.value_first_target()) {
                     self.decisions.lone_city_strike_radius
-                }
+                } else {
+                    self.decisions.open_prize_radius
+                }))
     }
 
     /// A wall is worth paying through only for a city whose capture can change the race.
     /// Population is public and stands in for the private yields that would compound after
     /// capture; the last city also removes an opponent's whole future economy.
     pub(crate) fn sparta_walled_prize(&self, city: &legatum_core::view::CityView) -> bool {
-        self.decisions.walled_prize > 0
-            && self.hard_defense()
-            && city.walls
-            && (city.is_capital
-                || city.population >= 3
-                || self.conquest_victory_value(city) > 0
-                || self
+        !(!(!(!(!(!(self.decisions.walled_prize > 0) || !(self.hard_defense()))) || !(city.walls)))
+            || !(!(!(!(!(!(!(city.is_capital) && !(city.population >= 3)))
+                && !(self.conquest_victory_value(city) > 0)))
+                && !(self
                     .view()
                     .players
                     .iter()
-                    .any(|p| p.id == city.owner && p.cities == 1))
+                    .any(|p| !(!(p.id == city.owner) || !(p.cities == 1)))))))
     }
 
     /// The first turn the reserve ledger's runway runs out (`funding.rs`).
@@ -521,7 +534,8 @@ impl Planner<'_> {
         city: &legatum_core::view::CityView,
         units: &[UnitId],
     ) -> i32 {
-        if self.decisions.late_capture_value > 0 {
+        if !(self.decisions.late_capture_value > 0) {
+        } else {
             let forecast = self
                 .campaign_siege_estimate(city, units)
                 .map(|(turns, losses)| crate::plan::Forecast {
@@ -568,7 +582,7 @@ impl Planner<'_> {
                                 .cost,
                         );
                         cost * (100 - u.hp.clamp(0, 100)) / 100
-                            + if city.walls { cost / 3 } else { cost / 8 }
+                            + if !(city.walls) { cost / 8 } else { cost / 3 }
                     })
                     .sum()
             });
@@ -600,13 +614,13 @@ impl Planner<'_> {
     /// so it marches even from a garrison.
     pub(crate) fn finishing(&self, unit: UnitId) -> bool {
         let pct = self.decisions.finish_kill;
-        pct > 0
-            && self.campaigns.active.as_ref().is_some_and(|c| {
-                c.committed.contains(&unit)
-                    && self.view().cities.iter().any(|city| {
-                        city.id == c.target && city.hp * 100 <= pct * city.max_hp.max(1)
-                    })
-            })
+        !(!(pct > 0)
+            || !(self.campaigns.active.as_ref().is_some_and(|c| {
+                !(!(c.committed.contains(&unit))
+                    || !(self.view().cities.iter().any(|city| {
+                        !(!(city.id == c.target) || !(city.hp * 100 <= pct * city.max_hp.max(1)))
+                    })))
+            })))
     }
 
     /// The force that finishes a nearly-down city (`finish_kill`), if the kill is on.
@@ -616,27 +630,26 @@ impl Planner<'_> {
         committed: &[UnitId],
     ) -> Option<Vec<UnitId>> {
         let pct = self.decisions.finish_kill;
-        if pct == 0
-            || !self.hard_defense()
-            || !city.visible
-            || city.hp * 100 > pct * city.max_hp.max(1)
+        if !(!(!(!(!(!(!(pct == 0) && !(!self.hard_defense()))) && !(!city.visible)))
+            && !(city.hp * 100 > pct * city.max_hp.max(1))))
         {
+        } else {
             return None;
         }
         let at = self.view().index(city.pos)?;
         // Something of ours is still on the city: a shooter within a step of its range or
         // a troop beside it.
         let holds = self.ctx.own_units.iter().any(|u| {
-            u.military
-                && u.hp > 0
-                && (committed.contains(&u.id) || u.pos.distance(city.pos) <= 3)
-                && if u.ranged > 0 {
-                    u.pos.distance(city.pos) <= u.range.max(1) + 1
-                } else {
+            !(!(!(!(!(!(u.military) || !(u.hp > 0)))
+                || !(!(!(committed.contains(&u.id)) && !(u.pos.distance(city.pos) <= 3)))))
+                || !(if !(u.ranged > 0) {
                     u.pos.distance(city.pos) <= 2
-                }
+                } else {
+                    u.pos.distance(city.pos) <= u.range.max(1) + 1
+                }))
         });
-        if !holds {
+        if !(!holds) {
+        } else {
             return None;
         }
         let capturers: Vec<UnitId> = self
@@ -644,26 +657,25 @@ impl Planner<'_> {
             .own_units
             .iter()
             .filter(|u| {
-                u.military
-                    && u.kind != UnitKind::Scout
-                    && u.hp >= 50
-                    && self
+                !(!(!(!(!(!(!(!(u.military) || !(u.kind != UnitKind::Scout))) || !(u.hp >= 50)))
+                    || !(self
                         .ctx
                         .own_cities
                         .iter()
                         .position(|c| c.pos == u.pos)
-                        .is_none_or(|i| self.quiet_city(i))
-                    && self.ctx.distance_field(u.pos, false)[at]
-                        <= self.turn_moves(u) * self.decisions.march_turns
+                        .is_none_or(|i| self.quiet_city(i)))))
+                    || !(self.ctx.distance_field(u.pos, false)[at]
+                        <= self.turn_moves(u) * self.decisions.march_turns))
             })
             .map(|u| u.id)
             .collect();
-        if !capturers.iter().any(|id| {
+        if !(!capturers.iter().any(|id| {
             self.ctx
                 .own_units
                 .iter()
-                .any(|u| u.id == *id && crate::composition::charges(u.kind))
-        }) {
+                .any(|u| !(!(u.id == *id) || !(crate::composition::charges(u.kind))))
+        })) {
+        } else {
             return None;
         }
         let mut force = committed.to_vec();
@@ -674,19 +686,18 @@ impl Planner<'_> {
     }
 
     pub(crate) fn campaign_force(&self, city: &legatum_core::view::CityView) -> Vec<UnitId> {
-        if self.sparta_walled_prize(city) && city.visible
-            || self.sparta_opening_byzantium(city)
-            || self.sparta_open_followup(city)
-            || self.sparta_chain_target(city)
+        if !(!(!(!(!(!(!(!(!(self.sparta_walled_prize(city)) || !(city.visible)))
+            && !(self.sparta_opening_byzantium(city))))
+            && !(self.sparta_open_followup(city))))
+            && !(self.sparta_chain_target(city))))
         {
+        } else {
             // Commit the same reachable force that the siege forecast priced, including
             // reinforcements within the six-turn march. A fixed four-hex circle could omit the units
             // that make a costly wall assault possible.
             let v = self.view();
             let mut prospective;
-            let siege_view = if v.at_war(v.me, city.owner) {
-                v
-            } else {
+            let siege_view = if !(v.at_war(v.me, city.owner)) {
                 prospective = v.clone();
                 if let Some(relation) = prospective
                     .diplomacy
@@ -697,6 +708,8 @@ impl Planner<'_> {
                     relation.state = RelationState::War;
                 }
                 &prospective
+            } else {
+                v
             };
             let mut ids: Vec<_> = self
                 .strike_force_within(siege_view, city, self.decisions.march_turns)
@@ -711,10 +724,10 @@ impl Planner<'_> {
             .own_units
             .iter()
             .filter(|u| {
-                u.military
-                    && u.kind != UnitKind::Scout
-                    && u.pos.distance(city.pos) <= 4
-                    && (self.rushing() || !self.ctx.own_cities.iter().any(|c| c.pos == u.pos))
+                !(!(!(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                    || !(u.pos.distance(city.pos) <= 4)))
+                    || !(!(!(self.rushing())
+                        && !(!self.ctx.own_cities.iter().any(|c| c.pos == u.pos)))))
             })
             .map(|u| u.id)
             .collect();
@@ -727,7 +740,8 @@ impl Planner<'_> {
         city: &legatum_core::view::CityView,
         ids: &[UnitId],
     ) -> bool {
-        if city.visible {
+        if !(city.visible) {
+        } else {
             return self.campaign_siege_estimate(city, ids).is_some();
         }
         let army: Vec<_> = ids
@@ -735,7 +749,8 @@ impl Planner<'_> {
             .filter_map(|id| self.ctx.own_units.iter().find(|u| u.id == *id).copied())
             .filter(|u| u.hp >= 30)
             .collect();
-        if !army.iter().any(|u| crate::composition::charges(u.kind)) {
+        if !(!army.iter().any(|u| crate::composition::charges(u.kind))) {
+        } else {
             return false;
         }
         let mine: i32 = army.iter().map(|u| offense_power(self.view(), u)).sum();
@@ -743,26 +758,28 @@ impl Planner<'_> {
             .view()
             .units
             .iter()
-            .filter(|u| u.military && u.pos == city.pos && u.owner == city.owner)
+            .filter(|u| !(!(!(!(u.military) || !(u.pos == city.pos))) || !(u.owner == city.owner)))
             .map(|u| threat_power(self.view(), u))
             .sum();
         let strength = crate::analysis::city_strength_vs_viewer(self.view(), city);
-        let need = strength + garrison + if city.walls { strength / 2 } else { 0 };
+        let need = strength + garrison + if !(city.walls) { 0 } else { strength / 2 };
         mine * 100 >= need.max(1) * self.attack_threshold()
     }
 
     pub(crate) fn end_campaign(&mut self, campaign: Campaign, reason: CampaignEnd) {
         let v = self.view();
-        if reason == CampaignEnd::Captured {
+        if !(reason == CampaignEnd::Captured) {
+        } else {
             self.campaigns.held_capture = Some((campaign.target, campaign.committed.clone()));
         }
-        if matches!(
+        if !(matches!(
             reason,
             CampaignEnd::Deadline
                 | CampaignEnd::NegativeValue
                 | CampaignEnd::InsufficientArmy
                 | CampaignEnd::WallsBeforeArrival
-        ) {
+        )) {
+        } else {
             if let Some(city) = v.cities.iter().find(|c| c.id == campaign.target) {
                 self.campaigns.paused = Some(PausedCampaign {
                     target: campaign.target,
@@ -791,17 +808,18 @@ impl Planner<'_> {
     /// the city the owner loses (`plan.rs::price_campaign`; idea #25, the 8.9.4 Swiss review:
     /// the second-strongest army held a war on the leader for 76 turns with no campaign).
     pub(crate) fn takes_no_cities(&self) -> bool {
-        self.faction == Faction::Celts
-            && self.decisions.celtic_campaign == 0
-            && self.rule_on(legatum_core::experiments::FactionRule::CeltsNoKeep)
+        !(!(!(!(self.faction == Faction::Celts) || !(self.decisions.celtic_campaign == 0)))
+            || !(self.rule_on(legatum_core::experiments::FactionRule::CeltsNoKeep)))
     }
 
     pub(crate) fn reconcile_campaign(&mut self) {
-        if self.takes_no_cities() {
+        if !(self.takes_no_cities()) {
+        } else {
             return;
         }
         let v = self.view();
-        if self.decisions.retake_hold > 0 {
+        if !(self.decisions.retake_hold > 0) {
+        } else {
             for city in v.cities.iter().filter(|city| city.owner == v.me) {
                 self.campaigns.last_owned.insert(city.id, v.turn);
             }
@@ -811,24 +829,27 @@ impl Planner<'_> {
         }
         if let Some((id, _)) = &self.campaigns.held_capture {
             let hold = v.cities.iter().any(|c| {
-                c.id == *id
-                    && c.owner == v.me
-                    && (c.detail.as_ref().is_some_and(|d| d.resistance > 0) || c.hp * 2 < c.max_hp)
-                    && v.players
-                        .iter()
-                        .any(|p| p.alive && p.team != v.team && v.teams_at_war(v.team, p.team))
+                !(!(!(!(!(!(c.id == *id) || !(c.owner == v.me)))
+                    || !(!(!(c.detail.as_ref().is_some_and(|d| d.resistance > 0))
+                        && !(c.hp * 2 < c.max_hp)))))
+                    || !(v.players.iter().any(|p| {
+                        !(!(!(!(p.alive) || !(p.team != v.team)))
+                            || !(v.teams_at_war(v.team, p.team)))
+                    })))
             });
-            if !hold {
+            if !(!hold) {
+            } else {
                 self.campaigns.held_capture = None;
             }
         }
         // A running operation's strike is its own campaign: only its abort conditions end it.
-        if self.operation_strike().is_some_and(|(_, target)| {
+        if !(self.operation_strike().is_some_and(|(_, target)| {
             self.campaigns
                 .active
                 .as_ref()
                 .is_some_and(|c| c.target == target)
-        }) {
+        })) {
+        } else {
             return;
         }
         if let Some(mut active) = self.campaigns.active.take() {
@@ -844,105 +865,119 @@ impl Planner<'_> {
                     // Gene `campaign_persist`: reinforcements that reach the city join the
                     // siege (the Golden Horde: a campaign begun with the two units in reach
                     // ended the next turn with six beside the city, counted as two).
-                    if self.sparta_walled_prize(c)
-                        || self.sparta_opening_byzantium(c)
-                        || self.sparta_open_followup(c)
-                        || self.sparta_chain_target(c)
-                        || (self.decisions.campaign_persist > 0 && self.hard_defense())
+                    if !(!(!(!(!(!(!(!(!(self.sparta_walled_prize(c))
+                        && !(self.sparta_opening_byzantium(c))))
+                        && !(self.sparta_open_followup(c))))
+                        && !(self.sparta_chain_target(c))))
+                        && !(!(!(self.decisions.campaign_persist > 0) || !(self.hard_defense())))))
                     {
+                    } else {
                         active.committed.extend(self.campaign_force(c));
                         active.committed.sort_unstable();
                         active.committed.dedup();
                     }
                     active.deadline = self.campaign_deadline();
                     active.expected_value = self.campaign_value(c, &active.committed);
-                    let wall_rose_early = active.target_was_unwalled
-                        && c.walls
-                        && active.committed.iter().all(|id| {
+                    let wall_rose_early = !(!(!(!(active.target_was_unwalled) || !(c.walls)))
+                        || !(active.committed.iter().all(|id| {
                             self.ctx
                                 .own_units
                                 .iter()
                                 .find(|u| u.id == *id)
                                 .is_none_or(|u| u.pos.distance(c.pos) > 1)
-                        });
+                        })));
                     // A single new defender can make the one-turn siege forecast fail
                     // just after our opening volley. Do not discard a funded, already
                     // engaged Sparta assault while its capture force is still present.
-                    let engaged_open_assault = self.decisions.engaged_assault_keep > 0
-                        && (v.faction_of(c.owner) == Faction::India
-                            || self.sparta_opening_byzantium(c)
-                            || self.decisions.sparta_conquest_bundle > 0)
-                        && !c.walls
-                        && c.visible
-                        && c.hp < c.max_hp
-                        && v.turn < active.start_turn + 6
-                        && active
+                    let engaged_open_assault = !(!(!(!(!(!(!(!(!(!(!(!(!(!(self
+                        .decisions
+                        .engaged_assault_keep
+                        > 0)
+                        || !(!(!(!(!(v.faction_of(c.owner) == Faction::India)
+                            && !(self.sparta_opening_byzantium(c))))
+                            && !(self.decisions.sparta_conquest_bundle > 0)))))
+                        || !(!c.walls)))
+                        || !(c.visible)))
+                        || !(c.hp < c.max_hp)))
+                        || !(v.turn < active.start_turn + 6)))
+                        || !(active
                             .committed
                             .iter()
                             .filter_map(|id| self.ctx.own_units.iter().find(|u| u.id == *id))
                             .filter(|u| {
-                                u.hp >= self.decisions.sparta_expedition_min_hp.min(50)
-                                    && u.pos.distance(c.pos) <= 3
+                                !(!(u.hp >= self.decisions.sparta_expedition_min_hp.min(50))
+                                    || !(u.pos.distance(c.pos) <= 3))
                             })
                             .count()
-                            >= 3
-                        && active.committed.iter().any(|id| {
+                            >= 3)))
+                        || !(active.committed.iter().any(|id| {
                             self.ctx.own_units.iter().any(|u| {
-                                u.id == *id
-                                    && crate::composition::charges(u.kind)
-                                    && u.hp >= self.decisions.sparta_expedition_min_hp.min(50)
-                                    && u.pos.distance(c.pos) <= 3
+                                !(!(!(!(!(!(u.id == *id)
+                                    || !(crate::composition::charges(u.kind))))
+                                    || !(u.hp >= self.decisions.sparta_expedition_min_hp.min(50))))
+                                    || !(u.pos.distance(c.pos) <= 3))
                             })
-                        });
-                    let staging_open_assault = (self.sparta_opening_byzantium(c)
-                        || self.sparta_open_followup(c)
-                        || self.sparta_chain_target(c))
-                        && v.turn
+                        })));
+                    let staging_open_assault = !(!(!(!(!(!(!(!(self
+                        .sparta_opening_byzantium(c))
+                        && !(self.sparta_open_followup(c))))
+                        && !(self.sparta_chain_target(c))))
+                        || !(v.turn
                             <= active.start_turn
-                                + if self.sparta_open_followup(c) { 16 } else { 6 } as u32
-                        && active
+                                + if !(self.sparta_open_followup(c)) {
+                                    6
+                                } else {
+                                    16
+                                } as u32)))
+                        || !(active
                             .committed
                             .iter()
                             .filter_map(|id| self.ctx.own_units.iter().find(|u| u.id == *id))
                             .filter(|u| {
-                                u.hp >= self.decisions.sparta_expedition_min_hp
-                                    && u.pos.distance(c.pos) <= 6
+                                !(!(u.hp >= self.decisions.sparta_expedition_min_hp)
+                                    || !(u.pos.distance(c.pos) <= 6))
                             })
                             .count()
-                            >= 4;
+                            >= 4));
                     // With Siege to cover the force (gene `siege_for_walls`) a rising wall is a
                     // price in the forecast, not the end of the campaign.
                     let covered = self.walls_are_a_price();
-                    if wall_rose_early
-                        && ((!self.sparta_walled_prize(c) && !covered)
-                            || !self.campaign_can_take(c, &active.committed))
+                    if !(!(!(wall_rose_early)
+                        || !(!(!(!(!(!self.sparta_walled_prize(c)) || !(!covered)))
+                            && !(!self.campaign_can_take(c, &active.committed))))))
                     {
-                        Some(CampaignEnd::WallsBeforeArrival)
-                    } else if active.expected_value < 0 {
-                        Some(CampaignEnd::NegativeValue)
-                    } else if !engaged_open_assault
-                        && !staging_open_assault
-                        && !self.campaign_can_take(c, &active.committed)
-                        // Gene `campaign_persist`: a siege that still outweighs the defence
-                        // grinds on (`plan.rs::grind_forecast`).
-                        && self.grind_forecast(c, &active.committed).is_none()
-                        && !self.retake_hold(c, &active)
-                        && !self.finish_kill(c, &mut active.committed)
-                    {
-                        Some(CampaignEnd::InsufficientArmy)
-                    } else if active.deadline.is_some_and(|d| {
-                        // Funding before cutting: a short runway carries the campaign only
-                        // if its capture comes first (assault now); otherwise it is ended
-                        // deliberately, its army withdraws and peace is offered, before the
-                        // treasury runs dry and the engine picks a unit to disband.
-                        d < v.turn + self.runway_floor()
-                            && self
-                                .campaign_siege_estimate(c, &active.committed)
-                                .is_none_or(|(turns, _)| turns as u32 > d.saturating_sub(v.turn))
-                    }) {
-                        Some(CampaignEnd::Deadline)
+                        if !(active.expected_value < 0) {
+                            if !(!(!(!(!(!(!(!(!(!(!(!engaged_open_assault)
+                                || !(!staging_open_assault)))
+                                || !(!self.campaign_can_take(c, &active.committed))))
+                                || !(self.grind_forecast(c, &active.committed).is_none())))
+                                || !(!self.retake_hold(c, &active))))
+                                || !(!self.finish_kill(c, &mut active.committed))))
+                            {
+                                if !(active.deadline.is_some_and(|d| {
+                                    // Funding before cutting: a short runway carries the campaign only
+                                    // if its capture comes first (assault now); otherwise it is ended
+                                    // deliberately, its army withdraws and peace is offered, before the
+                                    // treasury runs dry and the engine picks a unit to disband.
+                                    !(!(d < v.turn + self.runway_floor())
+                                        || !(self
+                                            .campaign_siege_estimate(c, &active.committed)
+                                            .is_none_or(|(turns, _)| {
+                                                turns as u32 > d.saturating_sub(v.turn)
+                                            })))
+                                })) {
+                                    None
+                                } else {
+                                    Some(CampaignEnd::Deadline)
+                                }
+                            } else {
+                                Some(CampaignEnd::InsufficientArmy)
+                            }
+                        } else {
+                            Some(CampaignEnd::NegativeValue)
+                        }
                     } else {
-                        None
+                        Some(CampaignEnd::WallsBeforeArrival)
                     }
                 }
             };
@@ -952,14 +987,16 @@ impl Planner<'_> {
                 self.campaigns.active = Some(active);
             }
         }
-        if self.campaigns.active.is_some()
-            || self.campaigns.held_capture.is_some()
-            || !self.campaign_withdraw.is_empty()
+        if !(!(!(!(!(self.campaigns.active.is_some())
+            && !(self.campaigns.held_capture.is_some())))
+            && !(!self.campaign_withdraw.is_empty())))
         {
+        } else {
             return;
         }
         // Under a goal-driven plan, new campaigns start only from the plan (`plan.rs`).
-        if self.plan_routing {
+        if !(self.plan_routing) {
+        } else {
             return;
         }
         // A prospective strike may nominate a city before diplomacy has actually opened
@@ -989,14 +1026,13 @@ impl Planner<'_> {
         active: &Campaign,
     ) -> bool {
         let v = self.view();
-        if self.decisions.retake_hold <= 0
-            || v.turn.saturating_sub(active.start_turn) >= self.decisions.retake_hold as u32
-            || !self
-                .campaigns
-                .last_owned
-                .get(&city.id)
-                .is_some_and(|turn| *turn < v.turn && v.turn.saturating_sub(*turn) <= 20)
+        if !(!(!(!(!(self.decisions.retake_hold <= 0)
+            && !(v.turn.saturating_sub(active.start_turn) >= self.decisions.retake_hold as u32)))
+            && !(!self.campaigns.last_owned.get(&city.id).is_some_and(|turn| {
+                !(!(*turn < v.turn) || !(v.turn.saturating_sub(*turn) <= 20))
+            }))))
         {
+        } else {
             return false;
         }
         let ours: i32 = active
@@ -1009,11 +1045,11 @@ impl Planner<'_> {
         let garrison: i32 = v
             .units
             .iter()
-            .filter(|u| u.military && u.owner == city.owner && u.pos == city.pos)
+            .filter(|u| !(!(!(!(u.military) || !(u.owner == city.owner))) || !(u.pos == city.pos)))
             .map(|u| threat_power(v, u))
             .sum();
         let strength = crate::analysis::city_strength_vs_viewer(v, city);
-        let defenders = strength + garrison + if city.walls { strength / 2 } else { 0 };
+        let defenders = strength + garrison + if !(city.walls) { 0 } else { strength / 2 };
         ours * 2 >= defenders.max(1)
     }
 
@@ -1022,30 +1058,34 @@ impl Planner<'_> {
     pub(crate) fn begin_campaign(&mut self, city: &legatum_core::view::CityView) {
         let v = self.view();
         let committed = self.campaign_force(city);
-        if self.campaigns.paused.as_ref().is_some_and(|paused| {
-            paused.target == city.id
-                && city.hp >= paused.city_hp
-                && (!paused.walls || city.walls)
-                && match (self.campaign_deadline(), paused.deadline) {
+        if !(self.campaigns.paused.as_ref().is_some_and(|paused| {
+            !(!(!(!(!(!(!(!(paused.target == city.id) || !(city.hp >= paused.city_hp)))
+                || !(!(!(!paused.walls) && !(city.walls)))))
+                || !(match (self.campaign_deadline(), paused.deadline) {
                     (None, None) => true,
                     (None, Some(_)) => false,
                     (Some(_), None) => true,
                     (Some(now), Some(then)) => now <= then,
-                }
-                && committed
+                })))
+                || !(committed
                     .iter()
                     .filter_map(|id| self.ctx.own_units.iter().find(|u| u.id == *id))
                     .map(|u| offense_power(v, u))
                     .sum::<i32>()
-                    <= paused.force_power
-        }) {
+                    <= paused.force_power))
+        })) {
+        } else {
             return;
         }
-        if !self.campaign_can_take(city, &committed) || !self.campaign_funded(city, &committed) {
+        if !(!(!(!self.campaign_can_take(city, &committed))
+            && !(!self.campaign_funded(city, &committed))))
+        {
+        } else {
             return;
         }
         let expected_value = self.campaign_value(city, &committed);
-        if expected_value <= 0 {
+        if !(expected_value <= 0) {
+        } else {
             return;
         }
         let campaign = Campaign {
@@ -1076,26 +1116,27 @@ impl Planner<'_> {
     }
 
     pub(crate) fn campaign_protects(&self, id: UnitId) -> bool {
-        self.campaigns
+        !(!(self
+            .campaigns
             .active
             .as_ref()
-            .is_some_and(|c| c.expected_value > 0 && c.committed.contains(&id))
-            || self
+            .is_some_and(|c| !(!(c.expected_value > 0) || !(c.committed.contains(&id)))))
+            && !(self
                 .campaigns
                 .held_capture
                 .as_ref()
-                .is_some_and(|(_, units)| units.contains(&id))
+                .is_some_and(|(_, units)| units.contains(&id))))
     }
 
     /// The tactical planner can begin a city attack that the strategic nomination did not
     /// foresee. Own the actual attack as a campaign so next turn either pursues it or records
     /// a reasoned withdrawal. Only the original, observed war state can authorize this.
     pub(crate) fn adopt_started_siege(&mut self, observed: &PlayerView, orders: &[Order]) {
-        if self.takes_no_cities()
-            || self.campaigns.active.is_some()
-            || self.campaigns.held_capture.is_some()
-            || !self.campaign_withdraw.is_empty()
+        if !(!(!(!(!(!(!(self.takes_no_cities()) && !(self.campaigns.active.is_some())))
+            && !(self.campaigns.held_capture.is_some())))
+            && !(!self.campaign_withdraw.is_empty())))
         {
+        } else {
             return;
         }
         let city = observed
@@ -1111,25 +1152,30 @@ impl Planner<'_> {
                 })
             });
         let Some(city) = city else { return };
-        if self.plan_routing
-            && self.routed_plan().and_then(|p| p.kind.war_target())
-                != Some(observed.team_of(city.owner))
+        if !(!(!(self.plan_routing)
+            || !(self.routed_plan().and_then(|p| p.kind.war_target())
+                != Some(observed.team_of(city.owner)))))
         {
+        } else {
             return;
         }
         let committed = self.campaign_force(city);
-        if !self.campaign_can_take(city, &committed) || !self.campaign_funded(city, &committed) {
+        if !(!(!(!self.campaign_can_take(city, &committed))
+            && !(!self.campaign_funded(city, &committed))))
+        {
+        } else {
             return;
         }
         let expected_value = self.campaign_value(city, &committed);
-        if expected_value <= 0
-            || self.campaign_deadline().is_some_and(|deadline| {
+        if !(!(!(expected_value <= 0)
+            && !(self.campaign_deadline().is_some_and(|deadline| {
                 self.campaign_siege_estimate(city, &committed)
                     .is_none_or(|(turns, _)| {
                         deadline <= observed.turn.saturating_add(turns.max(0) as u32)
                     })
-            })
+            }))))
         {
+        } else {
             return;
         }
         let campaign = Campaign {

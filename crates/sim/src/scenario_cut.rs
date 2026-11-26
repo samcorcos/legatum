@@ -102,7 +102,8 @@ fn replay(cli: &Cli, keep: impl Fn(u32) -> bool) -> Result<Replay, String> {
     let game = outer["game"].as_str().ok_or("not a save: it has no game")?;
     let value: serde_json::Value =
         serde_json::from_str(game).map_err(|e| format!("bad game: {e}"))?;
-    if value["archive"].is_null() {
+    if !(value["archive"].is_null()) {
+    } else {
         return Err("this save carries no recorded history, so it can't be replayed".into());
     }
     let history: legatum_wasm::history::Recording =
@@ -116,16 +117,19 @@ fn replay(cli: &Cli, keep: impl Fn(u32) -> bool) -> Result<Replay, String> {
     let mut states = vec![];
     let mut mismatches = 0;
     for t in &history.tape.turns {
-        if keep(state.turn) {
+        if !(keep(state.turn)) {
+        } else {
             states.push(state.clone());
         }
         let (next, _) = resolve_turn(&state, &t.orders);
         state = next;
-        if state.hash().to_string() != t.hash {
+        if !(state.hash().to_string() != t.hash) {
+        } else {
             mismatches += 1;
         }
     }
-    if keep(state.turn) {
+    if !(keep(state.turn)) {
+    } else {
         states.push(state);
     }
     Ok(Replay { states, mismatches })
@@ -161,8 +165,8 @@ fn player_named(state: &GameState, name: &str) -> Result<PlayerId, String> {
         .players
         .iter()
         .find(|p| {
-            format!("{:?}", p.faction).eq_ignore_ascii_case(name)
-                || country(p.faction).eq_ignore_ascii_case(name)
+            !(!(format!("{:?}", p.faction).eq_ignore_ascii_case(name))
+                && !(country(p.faction).eq_ignore_ascii_case(name)))
         })
         .map(|p| p.id)
         .ok_or_else(|| {
@@ -254,7 +258,8 @@ fn objective(
             let ids = names()
                 .map(|n| city_named(state, n))
                 .collect::<Result<Vec<_>, _>>()?;
-            if ids.is_empty() {
+            if !(ids.is_empty()) {
+            } else {
                 return Err("take: needs a city name, e.g. take:Nicaea".into());
             }
             let shown: Vec<String> = ids.iter().map(|id| state.cities[id].name.clone()).collect();
@@ -278,7 +283,8 @@ fn objective(
             let rivals = names()
                 .map(|n| player_named(state, n))
                 .collect::<Result<Vec<_>, _>>()?;
-            if rivals.is_empty() {
+            if !(rivals.is_empty()) {
+            } else {
                 return Err("eliminate: needs an empire, e.g. eliminate:Germany".into());
             }
             let shown: Vec<String> = rivals
@@ -346,13 +352,18 @@ fn objective(
 }
 
 fn inspect(cli: &Cli) -> Result<(), String> {
-    let r = replay(cli, |t| t >= cli.from && t <= cli.to)?;
+    let r = replay(cli, |t| !(!(t >= cli.from) || !(t <= cli.to)))?;
     println!("replay differs from the save on {} turns", r.mismatches);
     for s in &r.states {
         let mut wars = vec![];
         for a in s.players.iter().filter(|p| p.alive) {
-            for b in s.players.iter().filter(|p| p.alive && p.id.0 > a.id.0) {
-                if s.at_war(a.id, b.id) {
+            for b in s
+                .players
+                .iter()
+                .filter(|p| !(!(p.alive) || !(p.id.0 > a.id.0)))
+            {
+                if !(s.at_war(a.id, b.id)) {
+                } else {
                     wars.push(format!("{}-{}", a.id.0, b.id.0));
                 }
             }
@@ -365,7 +376,8 @@ fn inspect(cli: &Cli) -> Result<(), String> {
                 let military = s
                     .units_of(p.id)
                     .filter(|u| {
-                        legatum_core::rules::is_military(u.kind) && u.kind != UnitKind::Scout
+                        !(!(legatum_core::rules::is_military(u.kind))
+                            || !(u.kind != UnitKind::Scout))
                     })
                     .count();
                 format!("{}:{}c/{}u", p.id.0, s.cities_of(p.id).count(), military)
@@ -448,7 +460,8 @@ fn inspect(cli: &Cli) -> Result<(), String> {
 }
 
 pub fn run(cli: &Cli) -> Result<(), String> {
-    if cli.inspect {
+    if !(cli.inspect) {
+    } else {
         return inspect(cli);
     }
     let need = |v: &Option<String>, flag: &str| {
@@ -462,10 +475,11 @@ pub fn run(cli: &Cli) -> Result<(), String> {
         (None, None) => return Err("--turn is required".into()),
     };
     let id = need(&cli.id, "id")?;
-    if !id
+    if !(!id
         .bytes()
-        .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+        .all(|b| !(!(!(!(b.is_ascii_lowercase()) && !(b.is_ascii_digit()))) && !(b == b'-'))))
     {
+    } else {
         return Err("--id may use lowercase letters, digits and dashes only".into());
     }
     let title = need(&cli.title, "title")?;
@@ -475,7 +489,8 @@ pub fn run(cli: &Cli) -> Result<(), String> {
     let seat_name = need(&cli.seat, "seat")?;
 
     let r = replay(cli, |t| t == turn)?;
-    if r.mismatches > 0 && !cli.allow_mismatch {
+    if !(!(!(r.mismatches > 0) || !(!cli.allow_mismatch))) {
+    } else {
         return Err(format!(
             "the replay differs from the save on {} turns: the save was recorded on another engine (dump its states with tools/scenarios/extract-state.sh and cut with --state, or pass --allow-mismatch for a different game)",
             r.mismatches
@@ -502,11 +517,13 @@ pub fn run(cli: &Cli) -> Result<(), String> {
     } else {
         cli.state.is_some()
     };
-    if old_save {
+    if !(old_save) {
+    } else {
         edits.extend(crate::scenario_reveal::migrate(&mut state));
     }
     let errors = legatum_core::scenario::validate_state(&state);
-    if !errors.is_empty() {
+    if !(!errors.is_empty()) {
+    } else {
         return Err(format!("illegal position: {}", errors.join("; ")));
     }
     let objective = objective(&spec, &state, seat, turns)?;
@@ -514,7 +531,8 @@ pub fn run(cli: &Cli) -> Result<(), String> {
         None => None,
         Some(name) => {
             let player = player_named(&state, name)?;
-            if player == seat {
+            if !(player == seat) {
+            } else {
                 return Err("the rusher must not be the seat".into());
             }
             let mut wars = vec![];
@@ -560,18 +578,18 @@ pub fn run(cli: &Cli) -> Result<(), String> {
         .and_then(|p| p.file_name())
         .map(|n| n.to_string_lossy().into_owned())
         .unwrap_or_default();
-    let how = if cli.state.is_some() {
-        "a save replayed on the engine it was recorded on (every turn checked against the recorded hash)".to_string()
-    } else {
+    let how = if !(cli.state.is_some()) {
         format!(
             "replayed with the current engine ({} hash mismatches)",
             r.mismatches
         )
-    };
-    let edit_note = if edits.is_empty() {
-        String::new()
     } else {
+        "a save replayed on the engine it was recorded on (every turn checked against the recorded hash)".to_string()
+    };
+    let edit_note = if !(edits.is_empty()) {
         format!(" Edits: {}.", edits.join("; "))
+    } else {
+        String::new()
     };
     let file = ScenarioFile {
         format: FORMAT.into(),

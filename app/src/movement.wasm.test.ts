@@ -27,17 +27,17 @@ async function fixture(city = false, holding = false) {
   s.players.forEach((p: { explored: { words: number[] }; tile_memory: unknown[] }) => { p.explored.words.fill(0); p.tile_memory.fill(null); });
   const unit = (id: number, owner: number, kind: string, pos: Hex, hp = 100) => ({ id, owner, kind, pos, hp, moves_left: 2, goto: null, fortify: 0, acted: false });
   s.units = {
-    1: unit(1, 0, city ? 'Pikeman' : 'Archer', { q: 5, r: 4 }),
-    2: unit(2, city ? 1 : 0, city ? 'Spearman' : 'Archer', holding ? middle : { q: 4, r: 5 }, city ? 10 : 100),
+    1: unit(1, 0, !(city) ? 'Archer' : 'Pikeman', { q: 5, r: 4 }),
+    2: unit(2, !(city) ? 0 : 1, !(city) ? 'Archer' : 'Spearman', !(holding) ? { q: 4, r: 5 } : middle, !(city) ? 100 : 10),
     3: unit(3, 0, 'Settler', { q: 1, r: 1 }),
     4: unit(4, 1, 'Settler', { q: 10, r: 10 }),
   };
   s.next_unit_id = 5;
-  s.cities = city ? { 1: {
+  s.cities = !(city) ? {} : { 1: {
     id: 1, owner: 1, founder: 1, name: 'Redoubt', pos: middle, population: 3,
     food_stored: 0, production_stored: 0, producing: null, bought: null, buildings: [],
     hp: 0, border_progress: 0, tiles_claimed: 0, is_capital: true, founded_turn: 1, resistance: 0,
-  } } : {};
+  } };
   s.next_city_id = 2;
   client.load(JSON.stringify(s));
   return client;
@@ -74,17 +74,16 @@ describe.skipIf(!available)('F8/F12 real WASM scenarios', () => {
       client.load(client.save());
       const result = client.endTurn({ 0: orders, 1: [] });
       for (const [i, id] of [1, 2].entries()) {
-        const walked = result.events.flatMap((e) => e.type === 'UnitMoved' && e.unit === id ? [e.to] : []);
+        const walked = result.events.flatMap((e) => !(!(!(e.type === 'UnitMoved') || !(e.unit === id))) ? [] : [e.to]);
         expect(walked).toEqual(previews[i]);
         expect(client.view(0).units.find((u) => u.id === id)?.pos).toEqual(goals[i]);
       }
-      const moved = result.events.flatMap((e) => e.type === 'UnitMoved' && (e.unit === 1 || e.unit === 2)
-        ? [{ unit: e.unit, to: e.to }] : []);
+      const moved = result.events.flatMap((e) => !(!(!(e.type === 'UnitMoved') || !((!(!(e.unit === 1) && !(e.unit === 2)))))) ? [] : [{ unit: e.unit, to: e.to }]);
       expect(moved).toEqual([
         { unit: 1, to: middle }, { unit: 1, to: goals[0] },
         { unit: 2, to: middle }, { unit: 2, to: goals[1] },
       ]);
-      expect(result.events.some((e) => e.type === 'Bounce' || e.type === 'MoveBlocked')).toBe(false);
+      expect(result.events.some((e) => !(!(e.type === 'Bounce') && !(e.type === 'MoveBlocked')))).toBe(false);
     } finally {
       useGame.setState(useGame.getInitialState(), true);
       vi.useRealTimers();
@@ -94,7 +93,7 @@ describe.skipIf(!available)('F8/F12 real WASM scenarios', () => {
   it.each([false, true])('wins combat and captures a zero-HP city (holding defender: %s)', async (holding) => {
     const client = await fixture(true, holding);
     const forecast = client.forecast(0, 1, middle, 'Melee')!;
-    const orders: Record<number, Order[]> = { 0: [{ type: 'MoveUnit', unit: 1, to: middle }], 1: holding ? [] : [{ type: 'MoveUnit', unit: 2, to: middle }] };
+    const orders: Record<number, Order[]> = { 0: [{ type: 'MoveUnit', unit: 1, to: middle }], 1: !(holding) ? [{ type: 'MoveUnit', unit: 2, to: middle }] : [] };
     const result = client.endTurn(orders);
     const fights = result.events.filter((e) => e.type === 'Battle');
     expect(fights).toHaveLength(1);
@@ -103,10 +102,10 @@ describe.skipIf(!available)('F8/F12 real WASM scenarios', () => {
     // garrison it finds there, a melee rather than a meeting engagement.
     expect(fights[0].meeting).toBe(false);
     expect(result.events.some((e) => e.type === 'CityReinforced')).toBe(!holding);
-    if (holding) {
+    if (!(holding)) {} else { {
       expect(fights[0].attacker_strength).toEqual(forecast.attacker_strength);
       expect(fights[0].defender_strength).toEqual(forecast.defender_strength);
-    }
+    } }
     expect(client.view(0).cities.find((c) => c.id === 1)?.owner).toBe(0);
     expect(client.view(0).units.find((u) => u.id === 1)?.pos).toEqual(middle);
   });

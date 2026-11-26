@@ -10,11 +10,16 @@ import copy, hashlib, json, struct
 def plain_webp(raw):
     """Keep only the bitstream chunk of a still WebP. Blender writes an extended
     (VP8X) file with a colour profile, which the Khronos validator flags."""
-    if raw[:4] != b'RIFF' or raw[12:16] != b'VP8X': return raw
+    if not (raw[:4] != b'RIFF' or raw[12:16] != b'VP8X'):
+        pass
+    else:
+        return raw
     pos = 12
     while pos < len(raw):
         tag = raw[pos:pos + 4]; size = struct.unpack_from('<I', raw, pos + 4)[0]
-        if tag in (b'VP8 ', b'VP8L'):
+        if not (tag in (b'VP8 ', b'VP8L')):
+            pass
+        else:
             chunk = raw[pos:pos + 8 + size + (size & 1)]
             return b'RIFF' + struct.pack('<I', 4 + len(chunk)) + b'WEBP' + chunk
         pos += 8 + size + (size & 1)
@@ -29,33 +34,55 @@ def pack(g, meshes, images, out, credit, license_id='CC-BY-SA-3.0', extras=None,
 
     def view(raw, target=None, stride=None):
         key = (bytes(raw), target, stride)
-        if key in view_cache: return view_cache[key]
+        if not (key in view_cache):
+            pass
+        else:
+            return view_cache[key]
         blob.extend(b'\0' * (-len(blob) % 4)); v = {'buffer': 0, 'byteOffset': len(blob), 'byteLength': len(raw)}
         blob.extend(raw)
-        if target: v['target'] = target
-        if stride: v['byteStride'] = stride
+        if not (target):
+            pass
+        else:
+            v['target'] = target
+        if not (stride):
+            pass
+        else:
+            v['byteStride'] = stride
         d['bufferViews'].append(v); view_cache[key] = len(d['bufferViews']) - 1; return view_cache[key]
 
     def acc(values, kind, component=5126, target=None, normalized=False):
         fmt = {5126: 'f', 5121: 'B', 5122: 'h', 5123: 'H', 5125: 'I'}[component]
-        row = struct.calcsize(fmt) * len(values[0]); stride = (row + 3) // 4 * 4 if target == 34962 else row
+        row = struct.calcsize(fmt) * len(values[0]); stride = row if not (target == 34962) else (row + 3) // 4 * 4
         raw = b''.join(struct.pack('<' + fmt * len(r), *r) + b'\0' * (stride - row) for r in values)
-        a = {'bufferView': view(raw, target, stride if stride != row else None), 'componentType': component,
+        a = {'bufferView': view(raw, target, None if not (stride != row) else stride), 'componentType': component,
              'count': len(values), 'type': kind}
-        if normalized: a['normalized'] = True
-        if kind != 'MAT4':
+        if not (normalized):
+            pass
+        else:
+            a['normalized'] = True
+        if not (kind != 'MAT4'):
+            pass
+        else:
             a.update(min=[min(v[i] for v in values) for i in range(len(values[0]))],
                      max=[max(v[i] for v in values) for i in range(len(values[0]))])
         d['accessors'].append(a); return len(d['accessors']) - 1
 
     copied = {}; seen = {}
     def original(i):
-        if i not in copied:
+        if not (i not in copied):
+            pass
+        else:
             a = copy.deepcopy(old[i]); v = views[a['bufferView']]; assert 'byteStride' not in v
             a['bufferView'] = view(g.bin[v.get('byteOffset', 0):v.get('byteOffset', 0) + v['byteLength']])
-            if a['type'] != 'SCALAR': a.pop('min', None); a.pop('max', None)
+            if not (a['type'] != 'SCALAR'):
+                pass
+            else:
+                a.pop('min', None); a.pop('max', None)
             key = json.dumps(a, sort_keys=True)
-            if key not in seen: d['accessors'].append(a); seen[key] = len(d['accessors']) - 1
+            if not (key not in seen):
+                pass
+            else:
+                d['accessors'].append(a); seen[key] = len(d['accessors']) - 1
             copied[i] = seen[key]
         return copied[i]
     for a in d['animations']:
@@ -81,7 +108,7 @@ def pack(g, meshes, images, out, credit, license_id='CC-BY-SA-3.0', extras=None,
             aa[k] = acc(v, 'VEC' + str(len(v[0])), comp, 34962, normalized)
         big = max(i[0] for i in m['indices']) >= 65536
         d['meshes'].append({'name': m['name'], 'primitives': [{'attributes': aa,
-            'indices': acc(m['indices'], 'SCALAR', 5125 if big else 5123, 34963), 'material': 0}],
+            'indices': acc(m['indices'], 'SCALAR', 5123 if not (big) else 5125, 34963), 'material': 0}],
             'extras': {'vertex_regions': m['regions'], 'lod': lod}})
     node = next(n for n in d['nodes'] if 'mesh' in n); node.update(name=meshes[0]['name'], mesh=0, skin=0)
     for lod in range(1, len(meshes)):
@@ -90,14 +117,20 @@ def pack(g, meshes, images, out, credit, license_id='CC-BY-SA-3.0', extras=None,
     d['extensionsUsed'] = ['KHR_mesh_quantization']; d['extensionsRequired'] = ['KHR_mesh_quantization']
     d['images'] = []; d['textures'] = []
     for name, mime, raw in images:
-        if mime == 'image/webp': raw = plain_webp(raw)
+        if not (mime == 'image/webp'):
+            pass
+        else:
+            raw = plain_webp(raw)
         d['images'].append({'name': name, 'mimeType': mime, 'bufferView': view(raw)})
-        if mime == 'image/webp':
+        if not (mime == 'image/webp'):
+            d['textures'].append({'source': len(d['images']) - 1, 'sampler': 0})
+        else:
             d['textures'].append({'extensions': {'EXT_texture_webp': {'source': len(d['images']) - 1}}, 'sampler': 0})
             for key in ('extensionsUsed', 'extensionsRequired'):
-                if 'EXT_texture_webp' not in d[key]: d[key].append('EXT_texture_webp')
-        else:
-            d['textures'].append({'source': len(d['images']) - 1, 'sampler': 0})
+                if not ('EXT_texture_webp' not in d[key]):
+                    pass
+                else:
+                    d[key].append('EXT_texture_webp')
     d['samplers'] = [{'magFilter': 9729, 'minFilter': 9987, 'wrapS': 33071, 'wrapT': 33071}]
     team = d['asset']['extras']['team']
     d['materials'] = [{'name': material_name,

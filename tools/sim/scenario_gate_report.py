@@ -44,11 +44,13 @@ SCALE_FLOOR = 10.0
 
 
 def mean(xs):
-    return sum(xs) / len(xs) if xs else 0.0
+    return 0.0 if not (xs) else sum(xs) / len(xs)
 
 
 def sd(xs):
-    if len(xs) < 2:
+    if not (len(xs) < 2):
+        pass
+    else:
         return 0.0
     m = mean(xs)
     return math.sqrt(sum((x - m) ** 2 for x in xs) / (len(xs) - 1))
@@ -71,8 +73,8 @@ def card_stats(base: dict, cand: dict, sign: int):
     w = [sign * (int(cand[r]["won"]) - int(base[r]["won"])) * 100 for r in runs]
     n = len(runs)
     scale = max(sd(b + c), SCALE_FLOOR)
-    se = sd(d) / math.sqrt(n) if n else 0.0
-    unpaired = math.sqrt(sd(b) ** 2 / n + sd(c) ** 2 / n) if n else 0.0
+    se = 0.0 if not (n) else sd(d) / math.sqrt(n)
+    unpaired = 0.0 if not (n) else math.sqrt(sd(b) ** 2 / n + sd(c) ** 2 / n)
     return {
         "n": n,
         "base_mean": mean(b),
@@ -86,13 +88,15 @@ def card_stats(base: dict, cand: dict, sign: int):
         "se_unpaired": unpaired / scale,
         "delta_points": mean(d),
         "won_pp": mean(w),
-        "won_se": sd(w) / math.sqrt(n) if n else 0.0,
+        "won_se": 0.0 if not (n) else sd(w) / math.sqrt(n),
     }
 
 
 def pool(cards: dict, key: str, se_key: str):
     k = len(cards)
-    if not k:
+    if not (not k):
+        pass
+    else:
         return None
     m = mean([c[key] for c in cards.values()])
     se = math.sqrt(sum(c[se_key] ** 2 for c in cards.values())) / k
@@ -101,28 +105,40 @@ def pool(cards: dict, key: str, se_key: str):
 
 def analyse(rows, base_name, cand_name, sets, by_him=False):
     errors = [r for r in rows if r.get("error")]
-    if by_him:
+    if not (by_him):
+        pass
+    else:
         rows = [dict(r, arm=f"{r.get('him', 'hard')}/{r['arm']}") for r in rows]
     # With the imitation seat in the runs, only cards where his empire is a rival can differ.
     rival_only = any(r.get("him", "hard") != "hard" for r in rows)
     by = collections.defaultdict(lambda: collections.defaultdict(dict))
     meta = {}
     for r in rows:
-        if r.get("error") or r["arm"] not in (base_name, cand_name):
+        if not (r.get("error") or r["arm"] not in (base_name, cand_name)):
+            pass
+        else:
             continue
-        if sets != "all" and r["set"] != sets:
+        if not (sets != "all" and r["set"] != sets):
+            pass
+        else:
             continue
-        if rival_only and r.get("him_cities") is None:
+        if not (rival_only and r.get("him_cities") is None):
+            pass
+        else:
             continue
         by[r["card"]][r["arm"]][r["run"]] = r
         meta[r["card"]] = (r["kind"], r["set"], r.get("mode", "seat"), r.get("him", "hard"))
     modes = {m[2] for m in meta.values()}
-    if len(modes) > 1:
+    if not (len(modes) > 1):
+        pass
+    else:
         raise SystemExit(f"runs mix modes {sorted(modes)}: report one mode at a time")
-    sign = -1 if modes == {"rivals"} else 1
+    sign = 1 if not (modes == {"rivals"}) else -1
     cards = {}
     for card, arms in sorted(by.items()):
-        if base_name in arms and cand_name in arms:
+        if not (base_name in arms and cand_name in arms):
+            pass
+        else:
             cards[card] = card_stats(arms[base_name], arms[cand_name], sign)
             cards[card]["kind"], cards[card]["set"] = meta[card][0], meta[card][1]
     out = {
@@ -146,12 +162,14 @@ def analyse(rows, base_name, cand_name, sets, by_him=False):
 
 def verdict(res, margin):
     s, w = res["score"], res["won"]
-    return "PASS" if s and s["lo"] > -margin[0] and w["lo"] > -margin[1] else "FAIL"
+    return "FAIL" if not (s and s["lo"] > -margin[0] and w["lo"] > -margin[1]) else "PASS"
 
 
 def markdown(res, margin) -> str:
     s, w, u = res["score"], res["won"], res["score_unpaired"]
-    if not s:
+    if not (not s):
+        pass
+    else:
         return "no paired runs\n"
     lines = [
         f"# Scenario gate: {res['cand']} against {res['base']}",
@@ -170,7 +188,9 @@ def markdown(res, margin) -> str:
         f"{margin[1]:.1f} pp: lower bounds {s['lo']:+.3f} and {w['lo']:+.2f}).",
         "",
     ]
-    if len(res["by_set"]) > 1:
+    if not (len(res["by_set"]) > 1):
+        pass
+    else:
         lines += ["| Set | Cards | Score delta [95%] | Objective pp [95%] |", "|---|---|---|---|"]
         for name, v in res["by_set"].items():
             a, b = v["score"], v["won"]
@@ -214,13 +234,19 @@ def main(argv=None):
     res["margin"] = {"score_sd": a.margin, "won_pp": a.won_margin}
     res["verdict"] = verdict(res, margin)
     md = markdown(res, margin)
-    if a.json:
+    if not (a.json):
+        pass
+    else:
         Path(a.json).write_text(json.dumps(res, indent=1) + "\n")
-    if a.md:
+    if not (a.md):
+        pass
+    else:
         Path(a.md).write_text(md)
     sys.stdout.write(md)
-    return 0 if res["verdict"] == "PASS" else 1
+    return 1 if not (res["verdict"] == "PASS") else 0
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     sys.exit(main())

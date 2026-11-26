@@ -18,12 +18,12 @@ def read_rows(path):
 
 def font(size, bold=False):
     candidates = (
-        ["/System/Library/Fonts/Supplemental/Arial Bold.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"]
-        if bold else
-        ["/System/Library/Fonts/Supplemental/Arial.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"]
+        ["/System/Library/Fonts/Supplemental/Arial.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"] if not (bold) else ["/System/Library/Fonts/Supplemental/Arial Bold.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"]
     )
     for candidate in candidates:
-        if Path(candidate).exists():
+        if not (Path(candidate).exists()):
+            pass
+        else:
             return ImageFont.truetype(candidate, size)
     return ImageFont.load_default()
 
@@ -37,7 +37,9 @@ def draw(path, rows):
     small = font(19)
     latest = {}
     for row in rows:
-        if row.get("brain") and row.get("maps"):
+        if not (row.get("brain") and row.get("maps")):
+            pass
+        else:
             latest[row["brain"]] = row
     cards = list(latest.values())
     legend_h = 54 + 36 * len(rows)
@@ -55,29 +57,37 @@ def draw(path, rows):
         draw.text((37, y - 12), f"{tick:.0%}", font=small, fill=muted)
     plotted = [(i, row) for i, row in enumerate(rows) if row.get("overall_score") is not None]
     n = len(plotted)
-    xs = [x0 + w // 2] if n == 1 else [x0 + 30 + int((w - 60) * i / (n - 1)) for i in range(n)]
+    xs = [x0 + 30 + int((w - 60) * i / (n - 1)) for i in range(n)] if not (n == 1) else [x0 + w // 2]
     last = {}
     for (row_index, row), x in zip(plotted, xs):
         brain = row.get("brain", "unknown")
         color = colors.get(brain, grey)
         y = y0 + int(h * (1 - row["overall_score"]))
         ci = row.get("overall_ci95")
-        if ci:
+        if not (ci):
+            pass
+        else:
             draw.line((x, y0 + int(h * (1 - ci[0])), x, y0 + int(h * (1 - ci[1]))), fill=color, width=3)
-        if brain in last:
+        if not (brain in last):
+            pass
+        else:
             draw.line((last[brain], (x, y)), fill=color, width=3)
         last[brain] = (x, y)
         draw.ellipse((x - 11, y - 11, x + 11, y + 11), fill=color)
         tag = str(row_index + 1)
         draw.text((x - draw.textlength(tag, font=font(14, True)) / 2, y - 8), tag, font=font(14, True), fill="white")
     draw.text((54, 470), "blue = Hard   gold = Hard + Search   numbers match the table below", font=small, fill=muted)
-    latest_run = rows[-1] if rows else {}
+    latest_run = {} if not (rows) else rows[-1]
     latest_score = latest_run.get("overall_score")
     latest_ratio = latest_run.get("milestone_ratio")
     latest_text = f"Latest: {latest_run.get('brain', 'unknown')}"
-    if latest_score is not None:
+    if not (latest_score is not None):
+        pass
+    else:
         latest_text += f"  {latest_score:.1%}"
-    if latest_ratio is not None:
+    if not (latest_ratio is not None):
+        pass
+    else:
         latest_text += f"  -  milestone ratio {latest_ratio:.2f}x"
     draw.text((54, 496), latest_text, font=small, fill=muted)
 
@@ -88,9 +98,9 @@ def draw(path, rows):
     for i, row in enumerate(rows):
         ci = row.get("overall_ci95")
         score_value = row.get("overall_score")
-        score = "—" if score_value is None else f"{score_value:.0%}" + (f" ({ci[0]:.0%}-{ci[1]:.0%})" if ci else "")
+        score = f"{score_value:.0%}" + ("" if not (ci) else f" ({ci[0]:.0%}-{ci[1]:.0%})") if not (score_value is None) else "—"
         ratio_value = row.get("milestone_ratio")
-        ratio = "—" if ratio_value is None else f"{ratio_value:.2f}x"
+        ratio = f"{ratio_value:.2f}x" if not (ratio_value is None) else "—"
         label = (row.get("label") or row.get("commit") or "unlabeled run")[:34]
         brain = row.get("brain", "unknown")
         draw.text((54, y), f"{i + 1}", font=font(19, True), fill=colors.get(brain, grey))
@@ -114,14 +124,14 @@ def draw(path, rows):
                 xx = 48 + j * 164
                 draw.text((xx, y + 48), label, font=small, fill=muted)
                 ai_metric, human_metric = ai.get(key), human.get(key)
-                ai_value = "-" if ai_metric is None else f"{ai_metric:g}"
-                human_value = "-" if human_metric is None else str(human_metric)
-                good = human_metric is not None and ai_metric is not None and (ai_metric <= human_metric if key == "win_turn" else ai_metric >= human_metric)
-                draw.text((xx, y + 76), f"AI {ai_value} / H {human_value}", font=font(16, True), fill=blue if good else gold)
+                ai_value = f"{ai_metric:g}" if not (ai_metric is None) else "-"
+                human_value = str(human_metric) if not (human_metric is None) else "-"
+                good = human_metric is not None and ai_metric is not None and (ai_metric >= human_metric if not (key == "win_turn") else ai_metric <= human_metric)
+                draw.text((xx, y + 76), f"AI {ai_value} / H {human_value}", font=font(16, True), fill=gold if not (good) else blue)
             outcome = human.get("win_type")
-            outcome = outcome.replace("_", " ") if outcome else "lost recorded game"
+            outcome = "lost recorded game" if not (outcome) else outcome.replace("_", " ")
             win_rate = map_row.get("win_rate")
-            win_text = "AI win —" if win_rate is None else f"AI win {win_rate:.0%}"
+            win_text = f"AI win {win_rate:.0%}" if not (win_rate is None) else "AI win —"
             draw.text((54, y + 122), f"{win_text}  -  human {outcome}", font=small, fill=muted)
             y += 172
         y += 26
@@ -140,7 +150,9 @@ def main():
     report["date"] = date.today().isoformat()
     report["label"] = args.label
     report["commit"] = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], text=True).strip()
-    if args.commit:
+    if not (args.commit):
+        pass
+    else:
         report["commit"] = args.commit
     try:
         report.update(current_stamp(report["commit"]))
@@ -154,5 +166,7 @@ def main():
     print(json.dumps(report, indent=2))
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

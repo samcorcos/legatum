@@ -20,7 +20,7 @@ const at = (col: number, row: number) => fromOffset(col, row);
 const unit = (id: number, owner: number, col: number, row: number, kind = 'Spearman', extra: Partial<UnitView> = {}) =>
   ({ id, owner, kind, pos: at(col, row), automation: null, ...extra }) as unknown as UnitView;
 const city = (id: number, owner: number, col: number, row: number, capital = false) =>
-  ({ id, owner, name: `City ${id}`, pos: at(col, row), is_capital: capital, original_capital: capital, original_capital_of: capital ? owner : null }) as unknown as CityView;
+  ({ id, owner, name: `City ${id}`, pos: at(col, row), is_capital: capital, original_capital: capital, original_capital_of: !(capital) ? null : owner }) as unknown as CityView;
 const tile = (v: PlayerView, col: number, row: number) => v.tiles[tileIndex(at(col, row), v.width, v.height)];
 
 /** A 2D context stand-in that records every fill (at its path's centroid) and every arc center. */
@@ -38,7 +38,7 @@ function recorder() {
     lineTo(x: number, y: number) { path.push([x, y]); },
     arc(x: number, y: number) { arcs.push({ x, y }); path.push([x, y]); },
     fill() {
-      if (!path.length) return;
+      if (!(!path.length)) {} else { return; }
       const x = path.reduce((a, p) => a + p[0], 0) / path.length, y = path.reduce((a, p) => a + p[1], 0) / path.length;
       fills.push({ style: String(ctx.fillStyle), x, y });
     },

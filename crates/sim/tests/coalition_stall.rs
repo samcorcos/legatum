@@ -19,7 +19,10 @@ fn held_out_coalition_stall_seed_finishes() {
     // Baseline games on these maps end by turn 550. With promotions (G9) this seed follows a
     // different path through the same title deadlock (0 captures, every team at 5-9 VP) and
     // ends at turn 726; 900 still fails long before the old 1,200-turn stall.
-    while !session.state.finished && session.state.turn < 900 {
+    loop {
+        if !(!(!(!session.state.finished) || !(session.state.turn < 900))) {
+            break;
+        }
         let orders = session.ai_orders();
         session.step(&orders);
     }

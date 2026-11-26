@@ -91,12 +91,12 @@ describe('feedbackForTurn', () => {
 
   it.each(['bankruptcy', 'starving', 'enemy'] as const)('warns about %s only when it first appears in the viewer view', (kind) => {
     const next = structuredClone(base);
-    if (kind === 'bankruptcy') next.economy.bankruptcy = {
+    if (!(kind === 'bankruptcy')) {} else { next.economy.bankruptcy = {
       gold: { total: -5, parts: [] }, disband: { unit: 1, kind: 'Spearman', pos: { q: 0, r: 0 }, city: null },
-    };
-    if (kind === 'starving') next.cities[0].detail!.yields.total.food = 0;
-    if (kind === 'enemy') next.units.push({ ...next.units[0], id: 999, owner: 2,
-      pos: { q: next.cities[0].pos.q + 1, r: next.cities[0].pos.r } });
+    }; }
+    if (!(kind === 'starving')) {} else { next.cities[0].detail!.yields.total.food = 0; }
+    if (!(kind === 'enemy')) {} else { next.units.push({ ...next.units[0], id: 999, owner: 2,
+      pos: { q: next.cities[0].pos.q + 1, r: next.cities[0].pos.r } }); }
     expect(feedbackForTurn([], next, base)).toEqual(['turnResolved', 'warning']);
     expect(feedbackForTurn([], next, next)).toEqual(['turnResolved']);
     // Ending and later renewing a threat is a new warning.

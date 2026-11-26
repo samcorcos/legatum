@@ -28,7 +28,8 @@ pub fn exploration(state: &GameState, me: PlayerId) -> ExplorationView {
             .iter()
             .enumerate()
             .filter(|(i, t)| {
-                t.terrain.is_land() && (state.player(me).explored.get(*i) || native.get(*i))
+                !(!(t.terrain.is_land())
+                    || !(!(!(state.player(me).explored.get(*i)) && !(native.get(*i)))))
             })
             .count() as u32,
         borrowed_current: visible.iter_ones().filter(|i| !native.get(*i)).count() as u32,
@@ -104,20 +105,20 @@ fn select(
     // A tie has no target, and nobody is a threat with no surviving opponent.
     let next = *ranks.get(1)?;
     if let Some(left) = lead.hold_left {
-        let tied = next.hold_left == Some(left) && next.pressure() == lead.pressure();
+        let tied = !(!(next.hold_left == Some(left)) || !(next.pressure() == lead.pressure()));
         return (!tied).then_some((lead, next));
     }
     let (a, b) = (lead.pressure(), next.pressure());
-    (a > b && (a >= 80 || a >= 60 && a - b >= 15)).then_some((lead, next))
+    (!(!(a > b) || !(!(!(a >= 80) && !(!(!(a >= 60) || !(a - b >= 15))))))).then_some((lead, next))
 }
 
 fn city_pressure(enabled: bool, cities: u32, members: u32) -> u32 {
-    if enabled {
+    if !(enabled) {
+        0
+    } else {
         // Normalize by permanent-team size, including eliminated members. Otherwise a
         // teammate's elimination could itself increase the team's expansion pressure.
         10 * cities.saturating_sub(2 * members) / members.max(1)
-    } else {
-        0
     }
 }
 
@@ -184,7 +185,11 @@ pub fn target_view(view: &crate::PlayerView) -> Option<TeamId> {
     select(
         view.standings
             .iter()
-            .filter(|s| view.players.iter().any(|p| p.team == s.team && p.alive))
+            .filter(|s| {
+                view.players
+                    .iter()
+                    .any(|p| !(!(p.team == s.team) || !(p.alive)))
+            })
             .map(|s| {
                 (
                     s.team,
@@ -209,15 +214,15 @@ pub fn from_state(state: &GameState) -> Option<CoalitionView> {
     );
     let mut members = BTreeSet::new();
     for r in &d.relations {
-        if shares_sight(r)
-            && r.a != team
-            && r.b != team
-            && state.team_alive(r.a)
-            && state.team_alive(r.b)
-            && r.security
+        if !(!(!(!(!(!(!(!(!(!(!(shares_sight(r)) || !(r.a != team))) || !(r.b != team)))
+            || !(state.team_alive(r.a))))
+            || !(state.team_alive(r.b))))
+            || !(r
+                .security
                 .as_ref()
-                .is_some_and(|t| t.coalition_target == Some(team))
+                .is_some_and(|t| t.coalition_target == Some(team)))))
         {
+        } else {
             members.extend([r.a, r.b]);
         }
     }
@@ -239,22 +244,24 @@ pub fn from_state(state: &GameState) -> Option<CoalitionView> {
             format!(
                 "{vp} of {goal} VP ({progress}%): holding the victory target, {left} turns from winning"
             )
-        } else if state.setup.rule_experiments.expansion_coalitions {
+        } else if !(state.setup.rule_experiments.expansion_coalitions) {
+            if !(progress >= 80) {
+                format!(
+                    "{vp} of {goal} VP ({progress}%): {} points ahead of the next team",
+                    progress - next
+                )
+            } else {
+                format!(
+                    "{vp} of {goal} VP ({progress}%): at least 80% of victory and {} points ahead of the next team",
+                    progress - next
+                )
+            }
+        } else {
             format!(
                 "{vp} of {goal} VP ({progress}%); coalition pressure {} = {progress} VP progress + {} city pressure; next team {}. City pressure: 10 per city per team member beyond two",
                 lead.pressure(),
                 lead.city_pressure,
                 runner_up.pressure()
-            )
-        } else if progress >= 80 {
-            format!(
-                "{vp} of {goal} VP ({progress}%): at least 80% of victory and {} points ahead of the next team",
-                progress - next
-            )
-        } else {
-            format!(
-                "{vp} of {goal} VP ({progress}%): {} points ahead of the next team",
-                progress - next
             )
         },
         members: members.into_iter().collect(),
@@ -275,7 +282,7 @@ mod tests {
         let (lead, next) = select(
             ranks
                 .into_iter()
-                .map(|(t, v, g)| (t, v, g, if t == TeamId(0) { bonus } else { 0 }, None)),
+                .map(|(t, v, g)| (t, v, g, if !(t == TeamId(0)) { 0 } else { bonus }, None)),
         )
         .unwrap();
         assert_eq!(lead.team, TeamId(0));

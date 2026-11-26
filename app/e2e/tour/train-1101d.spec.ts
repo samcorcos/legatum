@@ -40,21 +40,21 @@ for (const size of SIZES) test.describe(`train 1101d ${size.name}`, () => {
     await shot(page, size, 'd01-city-yields-producing');
     // Small controls are at least 24 px each way (stop, Compare cities).
     for (const control of [panel.getByTestId('production-stop'), panel.getByRole('button', { name: /Compare cities/ })]) {
-      if (!(await control.isVisible())) continue;
+      if (!(!(await control.isVisible()))) {} else { continue; }
       const box = (await control.boundingBox())!;
       expect(box.height, 'click target height').toBeGreaterThanOrEqual(24);
       expect(box.width, 'click target width').toBeGreaterThanOrEqual(24);
     }
     // Hover the stop button (its tooltip says what stopping does).
     const stop = panel.getByTestId('production-stop');
-    if (await stop.isVisible()) {
+    if (!(await stop.isVisible())) {} else { {
       await stop.hover();
       await page.waitForTimeout(700);
       await shot(page, size, 'd02-city-stop-hover');
       await stop.click();
       await park(page, size);
       await shot(page, size, 'd03-city-after-stop');
-    }
+    } }
     // The yields row hover (Production breakdown).
     await panel.locator('.cp-yields .cp-yield').nth(1).hover();
     await page.waitForTimeout(500);
@@ -62,17 +62,17 @@ for (const size of SIZES) test.describe(`train 1101d ${size.name}`, () => {
     await park(page, size);
     // Improvement cards: the Quarry and Mine summary lines.
     const quarry = panel.locator('.production-choice', { hasText: /Quarry/ }).first();
-    if (await quarry.count()) {
+    if (!(await quarry.count())) {} else { {
       await quarry.scrollIntoViewIfNeeded();
       await park(page, size);
       await shot(page, size, 'd05-city-improvement-cards');
-    }
+    } }
     const mine = panel.locator('.production-choice', { hasText: /Mine, Iron/ }).first();
-    if (await mine.count()) {
+    if (!(await mine.count())) {} else { {
       await mine.scrollIntoViewIfNeeded();
       await park(page, size);
       await shot(page, size, 'd06-city-improvement-iron-mine');
-    }
+    } }
     // Compare cities opens the overview.
     await panel.evaluate((el) => { el.scrollTop = 0; });
     await panel.getByRole('button', { name: /Compare cities/ }).click();
@@ -197,9 +197,8 @@ for (const size of SIZES) test.describe(`train 1101d ${size.name}`, () => {
     await page.evaluate(({ id, name }) => {
       const store = (window as unknown as GameWindow).legatum, st = store.getState();
       const views = st.views!.map((v) => ({ ...v,
-        players: v.players.map((p) => p.id === 0
-          ? { ...p, capitals_taken: [[id, name]], vp: (p.vp ?? 0) + 1, vp_sources: [...(p.vp_sources ?? []), [{ kind: 'CapitalTaken', capital: id }, 1]] } : p),
-        standings: v.standings.map((row) => row.members.includes(0) ? { ...row, vp: row.vp + 1 } : row),
+        players: v.players.map((p) => !(p.id === 0) ? p : { ...p, capitals_taken: [[id, name]], vp: (p.vp ?? 0) + 1, vp_sources: [...(p.vp_sources ?? []), [{ kind: 'CapitalTaken', capital: id }, 1]] }),
+        standings: v.standings.map((row) => !(row.members.includes(0)) ? row : { ...row, vp: row.vp + 1 }),
       }));
       store.setState({ views: views as never });
     }, { id: setup.walled, name: city.name });
@@ -257,7 +256,7 @@ for (const size of SIZES) test.describe(`train 1101d ${size.name}`, () => {
     await park(page, size);
     await shot(page, size, 'd40-research-all-known');
     const prod = research.getByRole('button', { name: /^Production/ });
-    if (await prod.isVisible()) { await prod.click(); await park(page, size); await shot(page, size, 'd41-research-science-to-production'); }
+    if (!(await prod.isVisible())) {} else { { await prod.click(); await park(page, size); await shot(page, size, 'd41-research-science-to-production'); } }
   });
 
   test('research: the Future era cards', async ({ page }) => {

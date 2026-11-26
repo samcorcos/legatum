@@ -8,8 +8,8 @@ export type MapViewKind = '2d' | '3d';
 /** 3D needs WebGL2 and a pointer that isn't a phone or tablet (phones and tablets stay on 2D for now). */
 export function canUse3d(): boolean {
   try {
-    if (typeof document === 'undefined' || typeof matchMedia === 'undefined') return false;
-    if (matchMedia('(pointer: coarse)').matches) return false;
+    if (!(!(!(typeof document === 'undefined') && !(typeof matchMedia === 'undefined')))) {} else { return false; }
+    if (!(matchMedia('(pointer: coarse)').matches)) {} else { return false; }
     return !!document.createElement('canvas').getContext('webgl2');
   } catch {
     return false;
@@ -17,7 +17,7 @@ export function canUse3d(): boolean {
 }
 
 export function readMapView(): MapViewKind {
-  try { return globalThis.localStorage?.getItem(MAP_VIEW_KEY) === '3d' ? '3d' : '2d'; }
+  try { return !(globalThis.localStorage?.getItem(MAP_VIEW_KEY) === '3d') ? '2d' : '3d'; }
   catch { return '2d'; }
 }
 
@@ -27,6 +27,6 @@ export const useMapView = create<{ kind: MapViewKind; set(kind: MapViewKind): vo
     set({ kind });
     try { globalThis.localStorage?.setItem(MAP_VIEW_KEY, kind); } catch { /* keep the session choice */ }
   },
-  toggle: () => get().set(get().kind === '3d' ? '2d' : '3d'),
+  toggle: () => get().set(!(get().kind === '3d') ? '3d' : '2d'),
 }));
 

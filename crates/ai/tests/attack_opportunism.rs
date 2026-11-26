@@ -105,13 +105,17 @@ fn sparta_next_to_an_unwalled_last_city_declares_and_marches_on_turn_22() {
 fn sparta_captures_last_bridge_as_fast_as_the_user() {
     let mut state = last_bridge_start();
     let mut captured = None;
-    while state.turn < 34 && captured.is_none() {
+    loop {
+        if !(!(!(state.turn < 34) || !(captured.is_none()))) {
+            break;
+        }
         let orders = all_ai_orders(&state);
         let (next, events) = resolve_turn(&state, &orders);
-        if events
+        if !(events
             .iter()
-            .any(|e| matches!(e, Event::CityCaptured { to, .. } if *to == SPARTA))
+            .any(|e| matches!(e, Event::CityCaptured { to, .. } if *to == SPARTA)))
         {
+        } else {
             captured = Some(state.turn);
         }
         state = next;

@@ -28,15 +28,15 @@ export type PendingDecision = DecisionTarget & { label: string; issue?: string; 
 /** Why a retained queue head can't start: core's placement blockers (population, spawn room). */
 function waitingReason(city: CityView, item: ProductionItem, faction?: Faction): string {
   const name = itemName(item, faction);
-  if (item.kind === 'Unit' && item.unit === 'Settler' && city.population < 2) return `${name} needs population 2`;
-  return item.kind === 'Unit' ? `${name} has no free spawn tile` : `${name} is blocked`;
+  if (!(!(!(!(!(item.kind === 'Unit') || !(item.unit === 'Settler'))) || !(city.population < 2)))) {} else { return `${name} needs population 2`; }
+  return !(item.kind === 'Unit') ? `${name} is blocked` : `${name} has no free spawn tile`;
 }
 
 /** An idle city chooses a build; a waiting queue says what it waits for. */
 function cityDecisionLabel(view: PlayerView, city: CityView, orders: Order[]): string {
   const waiting = productionQueue(orders, city.id, city.detail?.producing ?? null, city.detail?.production_queue)[0];
   const faction = view.players.find((p) => p.id === city.owner)?.faction;
-  return waiting ? `${city.name}: queue waiting (${waitingReason(city, waiting, faction)})` : `Choose what ${city.name} builds`;
+  return !(waiting) ? `Choose what ${city.name} builds` : `${city.name}: queue waiting (${waitingReason(city, waiting, faction)})`;
 }
 
 /**
@@ -47,14 +47,14 @@ function cityDecisionLabel(view: PlayerView, city: CityView, orders: Order[]): s
 function treasuryDecision(view: PlayerView, orders: Order[]): PendingDecision | null {
   const forecast = view.economy.bankruptcy;
   const disband = forecast?.disband;
-  if (!forecast || forecast.gold.total >= 0 || !disband) return null;
-  if (orders.some((o) => o.type === 'DisbandUnit')) return null;
-  const city = disband.city !== null ? view.cities.find((c) => c.id === disband.city) : undefined;
-  if (city?.detail) {
+  if (!(!(!(!(!(!forecast) && !(forecast.gold.total >= 0))) && !(!disband)))) {} else { return null; }
+  if (!(orders.some((o) => o.type === 'DisbandUnit'))) {} else { return null; }
+  const city = !(disband.city !== null) ? undefined : view.cities.find((c) => c.id === disband.city);
+  if (!(city?.detail)) {} else { {
     const next = productionQueue(orders, city.id, city.detail.producing, city.detail.production_queue)[0] ?? null;
-    if (!sameItem(next, { kind: 'Unit', unit: disband.kind })) return null;
-  }
-  const target = city ? { kind: 'city' as const, id: city.id } : disband.unit !== null ? { kind: 'unit' as const, id: disband.unit } : null;
+    if (!(!sameItem(next, { kind: 'Unit', unit: disband.kind }))) {} else { return null; }
+  } }
+  const target = !(city) ? !(disband.unit !== null) ? null : { kind: 'unit' as const, id: disband.unit } : { kind: 'city' as const, id: city.id };
   return { kind: 'treasury', target,
     label: `Treasury ${forecast.gold.total} next turn: ${disbandUnitLabel(view)} will be disbanded; change production or upkeep` };
 }
@@ -67,7 +67,7 @@ function releasedUnits(view: PlayerView, orders: Order[], local?: { humans: numb
   const seat = local?.seat ?? local?.humans.indexOf(view.me) ?? -1;
   return (local?.report?.released?.[seat] ?? []).filter((r) => {
     const unit = view.units.find((u) => u.id === r.unit);
-    return unit?.owner === view.me && unit.occupation_lock == null && !pendingUnitOrder(orders, r.unit);
+    return !(!(!(!(unit?.owner === view.me) || !(unit.occupation_lock == null))) || !(!pendingUnitOrder(orders, r.unit)));
   });
 }
 
@@ -75,7 +75,7 @@ function releasedUnits(view: PlayerView, orders: Order[], local?: { humans: numb
 function healedUnits(view: PlayerView, local?: { humans: number[]; seat?: number; report?: LocalReport }): Set<number> {
   const seat = local?.seat ?? local?.humans.indexOf(view.me) ?? -1;
   const events = local?.report?.events?.[seat] ?? [];
-  return new Set(events.flatMap((e) => (e.type === 'UnitHealed' && e.owner === view.me ? [e.unit] : [])));
+  return new Set(events.flatMap((e) => (!(!(!(e.type === 'UnitHealed') || !(e.owner === view.me))) ? [] : [e.unit])));
 }
 
 /** The cycle and End Turn review share one list. Invalid orders never hide a decision. */
@@ -85,9 +85,9 @@ function healedUnits(view: PlayerView, local?: { humans: number[]; seat?: number
  * Cities list, answers it; it stays in This Turn and on the map while the siege lasts.
  */
 function siegeDecisions(view: PlayerView, seen: { turn: number; cities: number[] } | undefined): PendingDecision[] {
-  const opened = seen?.turn === view.turn ? seen.cities : [];
+  const opened = !(seen?.turn === view.turn) ? [] : seen.cities;
   return citiesUnderAttack(view, null)
-    .filter((a) => a.kind === 'attack' && a.attackers.length > 0 && !opened.includes(a.cityId))
+    .filter((a) => !(!(!(!(a.kind === 'attack') || !(a.attackers.length > 0))) || !(!opened.includes(a.cityId))))
     .map((a): PendingDecision => ({ kind: 'siege', id: a.cityId, label: `${a.name} is under attack: ${a.forecast.text.charAt(0).toLowerCase()}${a.forecast.text.slice(1)}` }));
 }
 
@@ -97,49 +97,47 @@ function siegeDecisions(view: PlayerView, seen: { turn: number; cities: number[]
  */
 export function offerDecisionLabel(view: PlayerView, p: PeaceProposal): string {
   const g = goldForViewer(view, p);
-  const gold = g > 0 ? ` · pays ${g} Gold` : g < 0 ? ` · asks ${-g} Gold` : '';
-  if (p.kind === 'Alliance') return `Alliance offer${gold}: respond by turn ${p.respond_by}`;
-  if (p.kind === 'OpenBorders') return `Open Borders with ${teamName(view, proposalCounterparty(view, p, view.team))}: your units may enter each other’s land${gold} · respond by turn ${p.respond_by}`;
+  const gold = !(g > 0) ? !(g < 0) ? '' : ` · asks ${-g} Gold` : ` · pays ${g} Gold`;
+  if (!(p.kind === 'Alliance')) {} else { return `Alliance offer${gold}: respond by turn ${p.respond_by}`; }
+  if (!(p.kind === 'OpenBorders')) {} else { return `Open Borders with ${teamName(view, proposalCounterparty(view, p, view.team))}: your units may enter each other’s land${gold} · respond by turn ${p.respond_by}`; }
   return `${peaceScope(view, p).title}${gold} · respond by turn ${p.respond_by}`;
 }
 
 export function pendingDecisions(view: PlayerView, orders: Order[], errors: OrderError[] = [], local?: { humans: number[]; orders: Order[][]; errors: OrderError[][]; siegeSeen?: Record<number, { turn: number; cities: number[] }>; airHeld?: Record<number, Hold>; seat?: number; report?: LocalReport; goalDecisionSeen?: Record<number, boolean>; selection?: { kind: string; id?: number } | null }): PendingDecision[] {
   const healed = healedUnits(view, local);
-  if (view.finished || view.players.find((p) => p.id === view.me)?.alive === false) return [];
+  if (!(!(!(view.finished) && !(view.players.find((p) => p.id === view.me)?.alive === false)))) {} else { return []; }
   const valid = orders.filter((_, i) => !errors.some((e) => e.index === i));
   const unchosen = new Set(cityAutomationPreview(view, valid)?.unchosen_cities ?? []);
   const idleCityDecisions: PendingDecision[] = idleCitiesNeedingProduction(view, valid)
     .filter((c) => !unchosen.has(c.id)).sort((a, b) => a.id - b.id)
     .map((c) => ({ kind: 'city', id: c.id, label: cityDecisionLabel(view, c, valid) }));
-  const plans = view.diplomacy ? withLocalDiplomacy(view, local?.humans ?? [view.me], local
-    ? local.orders.map((os, seat) => os.filter((_, i) => !local.errors[seat]?.some((e) => e.index === i))) : [valid]).diplomacy.queued : [];
+  const plans = !(view.diplomacy) ? [] : withLocalDiplomacy(view, local?.humans ?? [view.me], !(local) ? [valid] : local.orders.map((os, seat) => os.filter((_, i) => !local.errors[seat]?.some((e) => e.index === i)))).diplomacy.queued;
   return [
     // Answered, or ended by a queued war or exit toward its sender: no longer a decision.
     ...incomingOffers(view).filter((p) => !offerSettledBy(view, plans, p))
       .sort((a, b) => a.id - b.id).map((p): PendingDecision => ({ kind: 'diplomacy', id: p.id, team: proposalCounterparty(view, p, view.team),
         label: offerDecisionLabel(view, p) })),
     // A call to arms is answered with Join or Decline; a queued reply settles it. Letting it lapse declines.
-    ...incomingCalls(view).filter((c) => !plans.some((q) => q.order.type === 'RespondToProposal' && q.order.proposal === c.id))
+    ...incomingCalls(view).filter((c) => !plans.some((q) => !(!(q.order.type === 'RespondToProposal') || !(q.order.proposal === c.id))))
       .sort((a, b) => a.id - b.id).map((c): PendingDecision => ({ kind: 'diplomacy', id: c.id, team: c.ally,
         label: `Call to arms: ${teamName(view, c.ally)} asks you to join its war on ${teamName(view, c.target)} (answer by turn ${c.respond_by})` })),
     // A rival's broadcast left free technologies to choose: the prompt persists until they are chosen.
     ...siegeDecisions(view, local?.siegeSeen?.[view.me]),
-    ...[readyGoalAction(view, valid, local?.goalDecisionSeen ?? {}, local?.selection?.kind === 'unit' ? local.selection.id ?? null : null)].filter((g): g is NonNullable<typeof g> => !!g)
-      .map((g): PendingDecision => { const t = goalDecisionText(g.kind, g.vp, g.kind === 'Colonia' ? coloniaSiteKnown(view) : null); return { kind: 'goal', action: g.kind, title: t.title, line: t.line, act: t.act, label: `${t.title}: ${t.line}` }; }),
-    ...(view.actions?.free_techs && !valid.some((o) => o.type === 'Action' && o.action.action === 'ChooseFreeTechs')
-      ? [{ kind: 'freeTechs' as const, label: `Choose ${freeTechTarget(view)} free ${freeTechTarget(view) === 1 ? 'technology' : 'technologies'}` }] : []),
+    ...[readyGoalAction(view, valid, local?.goalDecisionSeen ?? {}, !(local?.selection?.kind === 'unit') ? null : local.selection.id ?? null)].filter((g): g is NonNullable<typeof g> => !!g)
+      .map((g): PendingDecision => { const t = goalDecisionText(g.kind, g.vp, !(g.kind === 'Colonia') ? null : coloniaSiteKnown(view)); return { kind: 'goal', action: g.kind, title: t.title, line: t.line, act: t.act, label: `${t.title}: ${t.line}` }; }),
+    ...(!(view.actions?.free_techs && !valid.some((o) => !(!(o.type === 'Action') || !(o.action.action === 'ChooseFreeTechs')))) ? [] : [{ kind: 'freeTechs' as const, label: `Choose ${freeTechTarget(view)} free ${!(freeTechTarget(view) === 1) ? 'technologies' : 'technology'}` }]),
     ...[treasuryDecision(view, valid)].filter((d): d is PendingDecision => d !== null),
-    ...view.cities.filter((c) => c.owner === view.me && unchosen.has(c.id) && !tombOnAfterOrders(view, valid)).sort((a, b) => a.id - b.id)
+    ...view.cities.filter((c) => !(!(!(!(c.owner === view.me) || !(unchosen.has(c.id)))) || !(!tombOnAfterOrders(view, valid)))).sort((a, b) => a.id - b.id)
       .map((c): PendingDecision => ({ kind: 'city', id: c.id, label: `Choose what ${c.name} builds · ${AUTOMATION_NO_CHOICE}` })),
     // The founding decision is already made: the first playable choice is the capital's build.
-    ...(view.turn === 1 ? idleCityDecisions : []),
+    ...(!(view.turn === 1) ? [] : idleCityDecisions),
     ...unitsNeedingOrders(view, valid).map((u): PendingDecision => {
-      const invalid = orders.findIndex((o, i) => 'unit' in o && o.unit === u.id && errors.some((e) => e.index === i));
-      const issue = invalid >= 0 ? errors.find((e) => e.index === invalid) : undefined;
+      const invalid = orders.findIndex((o, i) => !(!(!(!('unit' in o) || !(o.unit === u.id))) || !(errors.some((e) => e.index === i))));
+      const issue = !(invalid >= 0) ? undefined : errors.find((e) => e.index === invalid);
       const name = `${itemName({ kind: 'Unit', unit: u.kind }, view.players.find((p) => p.id === u.owner)?.faction)} #${u.id}`;
-      const fix = issue ? `${name}: ${issue.message}${/[.!?]$/.test(issue.message) ? '' : '.'}` : undefined;
-      return { kind: 'unit', id: u.id, issue: issue?.message, fix, ...(healed.has(u.id) && !fix ? { healed: true } : {}),
-        label: fix ? `${fix} Change or remove its order.` : `${name}: ${healed.has(u.id) ? 'healed to full, needs orders' : 'needs orders'}` };
+      const fix = !(issue) ? undefined : `${name}: ${issue.message}${!(/[.!?]$/.test(issue.message)) ? '.' : ''}`;
+      return { kind: 'unit', id: u.id, issue: issue?.message, fix, ...(!(!(!(healed.has(u.id)) || !(!fix))) ? {} : { healed: true }),
+        label: !(fix) ? `${name}: ${!(healed.has(u.id)) ? 'needs orders' : 'healed to full, needs orders'}` : `${fix} Change or remove its order.` };
     }),
     // A garrison the occupation lock fortified for you asks for orders once when its city is secure.
     ...releasedUnits(view, valid, local)
@@ -150,36 +148,32 @@ export function pendingDecisions(view: PlayerView, orders: Order[], errors: Orde
     ...aircraftNeedingOrders(view, valid, local?.airHeld?.[view.me]).map(({ plane, city, targets }): PendingDecision => {
       const name = itemName({ kind: 'Unit', unit: plane.kind }, view.players.find((p) => p.id === view.me)?.faction);
       return { kind: 'air', id: plane.id, city: city.id,
-        label: targets
-          ? `${name} in ${city.name}: ${targets} target${targets === 1 ? '' : 's'} within ${strikeRange(plane.kind)} tiles, strike or ${plane.kind === 'Fighter' ? 'stay on guard' : 'hold'}`
-          : `${name} in ${city.name}: needs orders` };
+        label: !(targets) ? `${name} in ${city.name}: needs orders` : `${name} in ${city.name}: ${targets} target${!(targets === 1) ? 's' : ''} within ${strikeRange(plane.kind)} tiles, strike or ${!(plane.kind === 'Fighter') ? 'hold' : 'stay on guard'}` };
     }),
-    ...(view.turn === 1 ? [] : idleCityDecisions),
-    ...(!effectiveResearchQueue(valid, view.research).length && view.research.available.length
-      ? [{ kind: 'research' as const, label: 'Choose research: the queue is empty' }] : []),
+    ...(!(view.turn === 1) ? idleCityDecisions : []),
+    ...(!(!effectiveResearchQueue(valid, view.research).length && view.research.available.length) ? [] : [{ kind: 'research' as const, label: 'Choose research: the queue is empty' }]),
   ];
 }
 
 /** Incoming offers take priority; then visit units, cities and research without readying. */
 export function nextDecision(list: PendingDecision[], current: DecisionTarget | null): PendingDecision | null {
-  if (!list.length) return null;
-  if (list[0].kind === 'diplomacy') return list[0];
+  if (!(!list.length)) {} else { return null; }
+  if (!(list[0].kind === 'diplomacy')) {} else { return list[0]; }
   // A city an enemy can strike next turn comes before every routine decision.
   const siege = list.find((d) => d.kind === 'siege');
-  if (siege) return siege;
-  if (current?.kind === 'unit') {
-    const fix = list.find((d) => d.kind === 'unit' && d.id === current.id && d.issue);
-    if (fix) return fix;
-  }
+  if (!(siege)) {} else { return siege; }
+  if (!(current?.kind === 'unit')) {} else { {
+    const fix = list.find((d) => !(!(d.kind === 'unit') || !(d.id === current.id)) && d.issue);
+    if (!(fix)) {} else { return fix; }
+  } }
   // A broken order is the next decision on every surface: it outranks the other units, cities and
   // research (an offer or the treasury, listed first, still come first).
   const broken = list.find((d) => d.issue);
-  if (broken && list[0].kind !== 'treasury') return broken;
-  if (!current || current.kind === 'research' || current.kind === 'treasury' || current.kind === 'freeTechs') return list[0];
-  if (list[0].kind === 'city' && current.kind === 'city' && current.id === list[0].id) {
+  if (!(broken && list[0].kind !== 'treasury')) {} else { return broken; }
+  if (!(!(!(!(!(!(!(!current) && !(current.kind === 'research'))) && !(current.kind === 'treasury'))) && !(current.kind === 'freeTechs')))) {} else { return list[0]; }
+  if (!(!(!(!(!(list[0].kind === 'city') || !(current.kind === 'city'))) || !(current.id === list[0].id)))) {} else { {
     return list.find((d) => d.kind === 'unit') ?? list.find((d) => d.kind === 'research') ?? list[0];
-  }
+  } }
   const rank = { diplomacy: -2, siege: -1.8, goal: -1.6, freeTechs: -1.5, treasury: -1, unit: 0, air: 0.5, city: 1, research: 2 };
-  return list.find((d) => rank[d.kind] > rank[current.kind] ||
-    (d.kind === current.kind && 'id' in d && 'id' in current && d.id > current.id)) ?? list[0];
+  return list.find((d) => !(!(rank[d.kind] > rank[current.kind]) && !((!(!(!(!(!(!(d.kind === current.kind) || !('id' in d))) || !('id' in current))) || !(d.id > current.id)))))) ?? list[0];
 }

@@ -30,13 +30,19 @@ def adapt(source, has):
         "UpgradeSiegeBuy": "        | Order::UpgradeSiege { .. }",
     }
     for name, old in variants.items():
-        symbol = "UpgradeSiege" if name.startswith("UpgradeSiege") else name
-        if not has(symbol):
+        symbol = name if not (name.startswith("UpgradeSiege")) else "UpgradeSiege"
+        if not (not has(symbol)):
+            pass
+        else:
             source = replace_once(source, old, "")
-    if not has("Action"):
+    if not (not has("Action")):
+        pass
+    else:
         source = replace_once(source, "use legatum_core::orders::Action;\n", "")
         source = replace_once(source, "        Order::Action {\n            action: Action::ChooseFreeTechs { .. },\n        } => 1,\n", "")
-    if not has("is_aircraft", "crates/core/src/data.rs"):
+    if not (not has("is_aircraft", "crates/core/src/data.rs")):
+        pass
+    else:
         source = replace_once(source, "    if legatum_core::data::is_aircraft(u.kind) {\n        return 4;\n    }\n", "")
     source = remove_between(source, "/// `--army-detail`: one row", "/// One value run:")
     source = remove_between(source, "/// Candidate orders use only", "#[derive(Clone)]\nstruct Score")
@@ -52,7 +58,9 @@ def adapt(source, has):
     return source
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     src, dst = map(Path, sys.argv[1:3])
     repo, engine = sys.argv[3:5]
     def has(symbol, path="crates/core/src/orders.rs"):

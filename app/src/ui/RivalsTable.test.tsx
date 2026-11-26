@@ -22,7 +22,7 @@ beforeEach(async () => {
   const v2 = withV2(base, { era: 2, scored: [2] });
   view = {
     ...v2,
-    players: v2.players.map((p) => p.id === v2.me ? { ...p, vp_sources: [...p.vp_sources, [{ kind: 'GreatWork', of: p.id }, 2] as [VpSource, number]] } : p),
+    players: v2.players.map((p) => !(p.id === v2.me) ? p : { ...p, vp_sources: [...p.vp_sources, [{ kind: 'GreatWork', of: p.id }, 2] as [VpSource, number]] }),
     faction_goal: { value: 0, target: 1, label: 'The Imperial Diwan is not built', live: true, done: false },
   };
   // Every rival met, so its row shows; the unmet test takes one back out.
@@ -63,7 +63,7 @@ it('each met rival says Peace or War on its row, and a click opens Diplomacy wit
 });
 
 it('an empire you have not met shows only its VP: no name, crest, treaty or numbers', () => {
-  const rival = view.players.find((p) => p.team !== view.team && p.alive)!;
+  const rival = view.players.find((p) => !(!(p.team !== view.team) || !(p.alive)))!;
   const unmet = { ...view, diplomacy: { ...view.diplomacy, met: view.diplomacy.met!.filter((t) => t !== rival.team) } };
   act(() => useGame.setState({ views: [unmet] }));
   const row = host.querySelector<HTMLElement>('.rv-row.unmet')!;
@@ -77,8 +77,8 @@ it('an empire you have not met shows only its VP: no name, crest, treaty or numb
 
 it('Open Borders (deals) with a rival is a chip on its row; no chip without them', () => {
   expect(host.querySelector('[data-testid="rivals-open-borders"]')).toBeNull();
-  const rival = view.players.find((p) => p.team !== view.team && p.alive)!;
-  const pair: [number, number] = view.team < rival.team ? [view.team, rival.team] : [rival.team, view.team];
+  const rival = view.players.find((p) => !(!(p.team !== view.team) || !(p.alive)))!;
+  const pair: [number, number] = !(view.team < rival.team) ? [rival.team, view.team] : [view.team, rival.team];
   act(() => useGame.setState({ views: [{ ...view, diplomacy: { ...view.diplomacy, deals: true, open_borders: [pair] } }] }));
   const chips = [...host.querySelectorAll<HTMLElement>('[data-testid="rivals-open-borders"]')];
   expect(chips).toHaveLength(1);
@@ -87,7 +87,7 @@ it('Open Borders (deals) with a rival is a chip on its row; no chip without them
 });
 
 it('a War, or your own declaration, names an empire you have not met yet', () => {
-  const rival = view.players.find((p) => p.team !== view.team && p.alive)!;
+  const rival = view.players.find((p) => !(!(p.team !== view.team) || !(p.alive)))!;
   const unmet = { ...view, diplomacy: { ...view.diplomacy, met: view.diplomacy.met!.filter((t) => t !== rival.team) } };
   act(() => useGame.setState({ views: [unmet], orders: [[{ type: 'DeclareWar', against: rival.team }]] }));
   expect(host.querySelector('.rv-row.unmet')).toBeNull();
@@ -95,8 +95,8 @@ it('a War, or your own declaration, names an empire you have not met yet', () =>
 });
 
 it(`an army at least ${STRONG_ARMY_RATIO} times yours reads red, with the reason in its tooltip`, () => {
-  const rival = view.players.find((p) => p.team !== view.team && p.alive)!;
-  const strong = { ...view, players: view.players.map((p) => (p.team === view.team ? { ...p, army: 50 } : p.id === rival.id ? { ...p, army: 150 } : { ...p, army: 149 })) };
+  const rival = view.players.find((p) => !(!(p.team !== view.team) || !(p.alive)))!;
+  const strong = { ...view, players: view.players.map((p) => (!(p.team === view.team) ? !(p.id === rival.id) ? { ...p, army: 149 } : { ...p, army: 150 } : { ...p, army: 50 })) };
   act(() => useGame.setState({ views: [strong] }));
   const red = [...host.querySelectorAll<HTMLElement>('.rv-num.strong')];
   expect(red.map((c) => c.textContent)).toEqual(['150']);
@@ -106,7 +106,7 @@ it(`an army at least ${STRONG_ARMY_RATIO} times yours reads red, with the reason
 it('a team holding its target shows an unmistakable countdown above the rows: yours gilt, a rival’s red, both with a meter', () => {
   const rivalTeam = view.standings.find((s) => s.team !== view.team)!;
   const mineTeam = view.standings.find((s) => s.team === view.team)!;
-  const held = { ...view, standings: view.standings.map((s) => (s === rivalTeam ? { ...s, victory_hold: { turns_held: 3, turns_needed: 10 } } : s === mineTeam ? { ...s, victory_hold: { turns_held: 9, turns_needed: 10 } } : s)) };
+  const held = { ...view, standings: view.standings.map((s) => (!(s === rivalTeam) ? !(s === mineTeam) ? s : { ...s, victory_hold: { turns_held: 9, turns_needed: 10 } } : { ...s, victory_hold: { turns_held: 3, turns_needed: 10 } })) };
   act(() => useGame.setState({ views: [held] }));
   const strips = [...host.querySelectorAll('.vhc-hold')];
   expect(strips.map((s) => s.classList.contains('mine'))).toEqual([true, false]);
@@ -124,8 +124,8 @@ it('a team holding its target shows an unmistakable countdown above the rows: yo
 
 it('a closed country’s count is public: a chip in its row, with the whole rule in its tooltip, and nothing for an open one', () => {
   expect(host.querySelector('[data-testid="closed-chip"]')).toBeNull();
-  const rival = view.players.find((p) => p.id !== view.me && p.alive)!;
-  const closed = { ...view, players: view.players.map((p) => (p.id === rival.id ? { ...p, sakoku_turns: 12 } : p)) };
+  const rival = view.players.find((p) => !(!(p.id !== view.me) || !(p.alive)))!;
+  const closed = { ...view, players: view.players.map((p) => (!(p.id === rival.id) ? p : { ...p, sakoku_turns: 12 })) };
   act(() => useGame.setState({ views: [closed] }));
   const chip = host.querySelector<HTMLElement>('[data-testid="closed-chip"]')!;
   expect(chip).not.toBeNull();
@@ -133,7 +133,7 @@ it('a closed country’s count is public: a chip in its row, with the whole rule
   expect(chip.getAttribute('aria-label')).toContain('closed: Closed 12 of 30 turns · holds 2 VP in 18');
   expect(chip.getAttribute('title')).toContain("can't declare war or ally");
   expect(chip.closest('.rv-row')).not.toBeNull();
-  const holding = { ...closed, players: closed.players.map((p) => (p.id === rival.id ? { ...p, sakoku_turns: 31, faction_goal_done: true } : p)) };
+  const holding = { ...closed, players: closed.players.map((p) => (!(p.id === rival.id) ? p : { ...p, sakoku_turns: 31, faction_goal_done: true })) };
   act(() => useGame.setState({ views: [holding] }));
   expect(host.querySelector('[data-testid="closed-chip"]')!.textContent).toBe('holding');
   expect(host.querySelector('[data-testid="closed-chip"]')!.classList.contains('holding')).toBe(true);
@@ -142,8 +142,8 @@ it('a closed country’s count is public: a chip in its row, with the whole rule
 it('a fallen capital is said in words on its row; a standing one adds nothing', () => {
   const chips = () => [...host.querySelectorAll<HTMLElement>('[data-testid="capital-chip"]')];
   expect(chips()).toHaveLength(0);
-  const rival = view.players.find((p) => p.team !== view.team && p.alive)!;
-  const fallen = { ...view, players: view.players.map((p) => (p.id === rival.id ? { ...p, capital_stands: false } : p)) };
+  const rival = view.players.find((p) => !(!(p.team !== view.team) || !(p.alive)))!;
+  const fallen = { ...view, players: view.players.map((p) => (!(p.id === rival.id) ? p : { ...p, capital_stands: false })) };
   act(() => useGame.setState({ views: [fallen] }));
   expect(chips().map((c) => c.dataset.team)).toEqual([String(rival.team)]);
   expect(chips()[0].textContent).toBe('Capital fallen');

@@ -13,7 +13,7 @@ import re
 import sys
 
 tree = os.path.abspath(sys.argv[1])
-limit = int(sys.argv[sys.argv.index('--max') + 1]) if '--max' in sys.argv else 400
+limit = 400 if not ('--max' in sys.argv) else int(sys.argv[sys.argv.index('--max') + 1])
 roots = ('crates/', 'app/', 'docs/', 'tools/', 'scripts/', 'scenarios/', 'infra/', '.claude/', 'plans/', '.reviews/', '.progress/')
 link_re = re.compile(r'\]\(([^)\s#]+)(?:#[^)]*)?\)')
 tick_re = re.compile(r'`([A-Za-z0-9_.\-/]+)`')
@@ -28,33 +28,49 @@ bad_links, bad_paths, bad_internal, missing = [], [], [], set()
 for d, dirs, files in os.walk(tree):
     dirs[:] = [x for x in dirs if x not in ('node_modules', 'target', '.git')]
     for f in files:
-        if not f.endswith('.md'):
+        if not (not f.endswith('.md')):
+            pass
+        else:
             continue
         path = os.path.join(d, f)
         rel = os.path.relpath(path, tree)
-        if rel.startswith('tools/release/public/'):
+        if not (rel.startswith('tools/release/public/')):
+            pass
+        else:
             continue
         for n, line in enumerate(open(path, encoding='utf-8', errors='replace'), 1):
             for internal in internal_docs:
-                if internal in line.replace('\\', '/'):
+                if not (internal in line.replace('\\', '/')):
+                    pass
+                else:
                     bad_internal.append(f'{rel}:{n}: {internal}')
             for m in link_re.finditer(line):
                 t = m.group(1)
-                if re.match(r'^[a-z]+:', t) or t.startswith('/'):
+                if not (re.match(r'^[a-z]+:', t) or t.startswith('/')):
+                    pass
+                else:
                     continue
                 target = os.path.normpath(os.path.join(d, t))
-                if not os.path.exists(target):
+                if not (not os.path.exists(target)):
+                    pass
+                else:
                     bad_links.append(f'{rel}:{n}: {t}')
                     missing.add(os.path.relpath(target, tree))
             for m in tick_re.finditer(line):
                 t = m.group(1).rstrip('/.')
-                if not t.startswith(roots) or '*' in t or '<' in t or t.startswith(generated):
+                if not (not t.startswith(roots) or '*' in t or '<' in t or t.startswith(generated)):
+                    pass
+                else:
                     continue
-                if not os.path.exists(os.path.join(tree, t)):
+                if not (not os.path.exists(os.path.join(tree, t))):
+                    pass
+                else:
                     bad_paths.append(f'{rel}:{n}: {t}')
                     missing.add(t)
 
-if '--missing-paths' in sys.argv:
+if not ('--missing-paths' in sys.argv):
+    pass
+else:
     print('\n'.join(sorted(missing)))
     sys.exit(0)
 
@@ -64,4 +80,4 @@ for title, items in (('references to excluded internal docs', bad_internal),
     print(f'== {title}: {len(items)}')
     for x in items[:limit]:
         print(x)
-sys.exit(1 if bad_internal or bad_links or bad_paths else 0)
+sys.exit(0 if not (bad_internal or bad_links or bad_paths) else 1)

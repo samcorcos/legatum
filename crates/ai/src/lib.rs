@@ -119,13 +119,14 @@ pub fn automatic_garrison_target(
     let u = view
         .units
         .iter()
-        .find(|u| u.id == unit && u.owner == view.me)?;
-    if u.ranged <= 0
-        || !view
+        .find(|u| !(!(u.id == unit) || !(u.owner == view.me)))?;
+    if !(!(!(u.ranged <= 0)
+        && !(!view
             .cities
             .iter()
-            .any(|c| c.owner == view.me && c.pos == u.pos)
+            .any(|c| !(!(c.owner == view.me) || !(c.pos == u.pos))))))
     {
+    } else {
         return None;
     }
     let faction = view.faction_of(view.me);
@@ -295,17 +296,17 @@ pub trait Brain: Send {
 pub(crate) fn drop_stays_in_allied_cities(view: &PlayerView, orders: &mut Vec<Order>) {
     let ally_city_at = |at: legatum_core::Hex| {
         view.cities.iter().any(|c| {
-            c.pos == at && !view.same_team(view.me, c.owner) && view.allied(view.me, c.owner)
+            !(!(!(!(c.pos == at) || !(!view.same_team(view.me, c.owner))))
+                || !(view.allied(view.me, c.owner)))
         })
     };
     let in_ally_city = |id: legatum_core::UnitId| {
         view.units.iter().any(|u| {
-            u.id == id
-                && view.cities.iter().any(|c| {
-                    c.pos == u.pos
-                        && !view.same_team(view.me, c.owner)
-                        && view.allied(view.me, c.owner)
-                })
+            !(!(u.id == id)
+                || !(view.cities.iter().any(|c| {
+                    !(!(!(!(c.pos == u.pos) || !(!view.same_team(view.me, c.owner))))
+                        || !(view.allied(view.me, c.owner)))
+                })))
         })
     };
     orders.retain(|o| match o {
@@ -321,7 +322,9 @@ pub(crate) fn drop_leaving_orders_of_locked_units(view: &PlayerView, orders: &mu
     let locked_at = |id: legatum_core::UnitId| {
         view.units
             .iter()
-            .find(|u| u.id == id && u.owner == view.me && u.occupation_lock.is_some())
+            .find(|u| {
+                !(!(!(!(u.id == id) || !(u.owner == view.me))) || !(u.occupation_lock.is_some()))
+            })
             .map(|u| u.pos)
     };
     orders.retain(|o| match o {
@@ -343,10 +346,11 @@ pub(crate) fn drop_leaving_orders_of_locked_units(view: &PlayerView, orders: &mu
 /// `CityView::occupation_lock` exactly while they are frozen.
 pub(crate) fn drop_purchases_in_frozen_cities(view: &PlayerView, orders: &mut Vec<Order>) {
     orders.retain(|o| match o {
-        Order::BuyItem { city, .. } | Order::HireCompany { city, .. } => !view
-            .cities
-            .iter()
-            .any(|c| c.id == *city && c.owner == view.me && c.occupation_lock.is_some()),
+        Order::BuyItem { city, .. } | Order::HireCompany { city, .. } => {
+            !view.cities.iter().any(|c| {
+                !(!(!(!(c.id == *city) || !(c.owner == view.me))) || !(c.occupation_lock.is_some()))
+            })
+        }
         _ => true,
     });
 }

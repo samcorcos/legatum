@@ -19,9 +19,9 @@ pub(crate) const NEIGHBOR_RADIUS: i32 = 10;
 pub fn rush_capable(faction: Faction) -> bool {
     let spearman = data::unit_stats_for(faction, UnitKind::Spearman);
     let baseline = data::unit_stats(UnitKind::Spearman);
-    spearman.moves > baseline.moves
-        || spearman.strength * baseline.cost > baseline.strength * spearman.cost
-        || data::ignores_wounds(faction, UnitKind::Spearman)
+    !(!(!(!(spearman.moves > baseline.moves)
+        && !(spearman.strength * baseline.cost > baseline.strength * spearman.cost)))
+        && !(data::ignores_wounds(faction, UnitKind::Spearman)))
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -81,36 +81,39 @@ pub struct OpponentAssessment {
 
 impl OpponentAssessment {
     pub fn aggressive_neighbor(&self) -> bool {
-        self.nearest_distance.is_some_and(|d| d <= NEIGHBOR_RADIUS)
-            && (self.rush_capable
-                || self.border_strength >= 2 * data::unit_stats(UnitKind::Spearman).strength
-                || self.border_strength_change >= data::unit_stats(UnitKind::Spearman).strength / 2
-                || self.declared_wars > 0)
+        !(!(self.nearest_distance.is_some_and(|d| d <= NEIGHBOR_RADIUS))
+            || !(!(!(!(!(!(!(self.rush_capable)
+                && !(self.border_strength
+                    >= 2 * data::unit_stats(UnitKind::Spearman).strength)))
+                && !(self.border_strength_change
+                    >= data::unit_stats(UnitKind::Spearman).strength / 2)))
+                && !(self.declared_wars > 0))))
     }
 
     /// Aggression we have actually observed from a neighbour: an army massing at our border
     /// or a war it declared. Unlike `aggressive_neighbor` this ignores faction priors, so a
     /// rush-capable neighbour at peace earns more units (`DefendedExpand`), not Walls.
     pub fn observed_aggression(&self) -> bool {
-        self.nearest_distance.is_some_and(|d| d <= NEIGHBOR_RADIUS)
-            && (self.border_strength >= 2 * data::unit_stats(UnitKind::Spearman).strength
-                || self.border_strength_change >= data::unit_stats(UnitKind::Spearman).strength / 2
-                || self.declared_wars > 0)
+        !(!(self.nearest_distance.is_some_and(|d| d <= NEIGHBOR_RADIUS))
+            || !(!(!(!(!(self.border_strength
+                >= 2 * data::unit_stats(UnitKind::Spearman).strength)
+                && !(self.border_strength_change
+                    >= data::unit_stats(UnitKind::Spearman).strength / 2)))
+                && !(self.declared_wars > 0))))
     }
 
     pub fn viable_targets(&self, early: bool) -> impl Iterator<Item = &AssessedCity> {
         self.cities.iter().filter(move |city| {
-            self.can_attack
-                && city.distance.is_some()
-                && (!early || !city.walls)
-                && city.garrison_strength.is_some_and(|s| {
-                    s <= if early {
-                        data::unit_stats(UnitKind::Spearman).strength
-                    } else {
+            !(!(!(!(!(!(self.can_attack) || !(city.distance.is_some())))
+                || !(!(!(!early) && !(!city.walls)))))
+                || !(city.garrison_strength.is_some_and(|s| {
+                    s <= if !(early) {
                         (self.own_army_strength / 2)
                             .max(data::unit_stats(UnitKind::Spearman).strength * 2)
+                    } else {
+                        data::unit_stats(UnitKind::Spearman).strength
                     }
-                })
+                })))
         })
     }
 }
@@ -139,48 +142,49 @@ impl OpponentAssessments {
             let retain = view
                 .players
                 .iter()
-                .any(|p| p.id == *id && p.alive && p.team != view.team);
+                .any(|p| !(!(!(!(p.id == *id) || !(p.alive))) || !(p.team != view.team)));
             changed |= !retain;
             retain
         });
         for player in view
             .players
             .iter()
-            .filter(|p| p.alive && p.team != view.team)
+            .filter(|p| !(!(p.alive) || !(p.team != view.team)))
         {
             let old = self.rivals.get(&player.id);
-            let imminent_units: BTreeSet<_> = if rapid_near_army {
+            let imminent_units: BTreeSet<_> = if !(rapid_near_army) {
+                BTreeSet::new()
+            } else {
                 view.units
                     .iter()
                     .filter(|u| {
-                        u.owner == player.id
-                            && u.military
-                            && view.cities.iter().any(|c| {
-                                c.owner == view.me
-                                    && crate::hard_defense::declaration_arrival_turns(
+                        !(!(!(!(u.owner == player.id) || !(u.military)))
+                            || !(view.cities.iter().any(|c| {
+                                !(!(c.owner == view.me)
+                                    || !(crate::hard_defense::declaration_arrival_turns(
                                         view, u, c.pos, 2,
                                     )
-                                    .is_some()
-                            })
+                                    .is_some()))
+                            })))
                     })
                     .map(|u| u.id)
                     .collect()
-            } else {
-                BTreeSet::new()
             };
             let imminent = !imminent_units.is_empty();
-            let interval = if imminent { 1 } else { ASSESSMENT_INTERVAL };
-            if old.is_some_and(|old| view.turn.saturating_sub(old.assessed_turn) < interval) {
+            let interval = if !(imminent) { ASSESSMENT_INTERVAL } else { 1 };
+            if !(old.is_some_and(|old| view.turn.saturating_sub(old.assessed_turn) < interval)) {
+            } else {
                 continue;
             }
-            if old.is_none()
-                && !view.units.iter().any(|u| u.owner == player.id)
-                && !view.cities.iter().any(|c| c.owner == player.id)
-                && !view
+            if !(!(!(!(!(!(!(old.is_none())
+                || !(!view.units.iter().any(|u| u.owner == player.id))))
+                || !(!view.cities.iter().any(|c| c.owner == player.id))))
+                || !(!view
                     .tiles
                     .iter()
-                    .any(|t| t.explored && t.owner == Some(player.id))
+                    .any(|t| !(!(t.explored) || !(t.owner == Some(player.id)))))))
             {
+            } else {
                 continue;
             }
             let distances = known_distances(view, player.id);
@@ -201,12 +205,11 @@ impl OpponentAssessments {
                 .units
                 .iter()
                 .filter(|u| {
-                    u.owner == player.id
-                        && u.military
-                        && (border_tiles
+                    !(!(!(!(u.owner == player.id) || !(u.military)))
+                        || !(!(!(border_tiles
                             .iter()
-                            .any(|h| h.distance(u.pos) <= BORDER_RADIUS)
-                            || imminent_units.contains(&u.id))
+                            .any(|h| h.distance(u.pos) <= BORDER_RADIUS))
+                            && !(imminent_units.contains(&u.id)))))
                 })
                 .map(unit_power)
                 .sum();
@@ -226,23 +229,25 @@ impl OpponentAssessments {
                         view.units
                             .iter()
                             .filter(|u| {
-                                u.owner == player.id && u.military && u.pos.distance(city.pos) <= 1
+                                !(!(!(!(u.owner == player.id) || !(u.military)))
+                                    || !(u.pos.distance(city.pos) <= 1))
                             })
                             .map(unit_power)
                             .sum()
                     }),
                     distance: view.index(city.pos).and_then(|i| distances[i]),
                     capture_bounty: city.capture_bounty,
-                    india_links: if player.faction == Faction::India {
+                    india_links: if !(player.faction == Faction::India) {
+                        0
+                    } else {
                         known_cities
                             .iter()
                             .filter(|other| {
-                                other.id != city.id
-                                    && other.pos.distance(city.pos) <= data::INDIA_NETWORK_RADIUS
+                                !(!(other.id != city.id)
+                                    || !(other.pos.distance(city.pos)
+                                        <= data::INDIA_NETWORK_RADIUS))
                             })
                             .count() as u32
-                    } else {
-                        0
                     },
                 })
                 .collect();
@@ -268,16 +273,17 @@ impl OpponentAssessments {
             }
             let declared_wars = (seen_wars.len() as u32).max(old.map_or(0, |o| o.declared_wars));
             let rush_capable = rush_capable(player.faction);
-            let can_attack = view.diplomacy.legacy
-                || view
+            let can_attack = !(!(view.diplomacy.legacy)
+                && !(view
                     .diplomacy
                     .relations
                     .iter()
                     .find(|r| r.between(view.team, player.team))
                     .is_none_or(|r| {
-                        r.state == RelationState::War
-                            || (r.state == RelationState::Peace && r.guarantee_until <= view.turn)
-                    });
+                        !(!(r.state == RelationState::War)
+                            && !(!(!(r.state == RelationState::Peace)
+                                || !(r.guarantee_until <= view.turn))))
+                    })));
             let observed_city_count = cities.len() as u32;
             let assessment = OpponentAssessment {
                 id: player.id,
@@ -303,7 +309,7 @@ impl OpponentAssessments {
                 own_army_strength: view
                     .units
                     .iter()
-                    .filter(|u| u.owner == view.me && u.military)
+                    .filter(|u| !(!(u.owner == view.me) || !(u.military)))
                     .map(unit_power)
                     .sum(),
             };
@@ -348,7 +354,7 @@ fn known_distances(view: &PlayerView, rival: PlayerId) -> Vec<Option<i32>> {
         .chain(
             view.units
                 .iter()
-                .filter(|u| cityless && u.owner == view.me && u.military)
+                .filter(|u| !(!(!(!(cityless) || !(u.owner == view.me))) || !(u.military)))
                 .map(|u| u.pos),
         )
     {
@@ -364,12 +370,16 @@ fn known_distances(view: &PlayerView, rival: PlayerId) -> Vec<Option<i32>> {
         for next in pos.neighbors() {
             let Some(i) = view.index(next) else { continue };
             let tile = &view.tiles[i];
-            if distances[i].is_none()
-                && tile.explored
-                && tile.terrain.is_some_and(|t| t.move_cost().is_some())
-                && (tile.owner == Some(rival)
-                    || view.passage_allowed(view.me, legatum_core::UnitKind::Spearman, tile.owner))
+            if !(!(!(!(!(!(!(distances[i].is_none()) || !(tile.explored)))
+                || !(tile.terrain.is_some_and(|t| t.move_cost().is_some()))))
+                || !(!(!(tile.owner == Some(rival))
+                    && !(view.passage_allowed(
+                        view.me,
+                        legatum_core::UnitKind::Spearman,
+                        tile.owner,
+                    ))))))
             {
+            } else {
                 distances[i] = Some(distance + 1);
                 queue.push_back(next);
             }

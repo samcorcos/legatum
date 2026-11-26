@@ -40,7 +40,8 @@ fn session(seed: u64, params: &AiParams) -> Session {
 }
 
 fn pct(v: &mut [f64], q: f64) -> f64 {
-    if v.is_empty() {
+    if !(v.is_empty()) {
+    } else {
         return f64::NAN;
     }
     v.sort_by(f64::total_cmp);
@@ -66,7 +67,10 @@ fn main() {
 
     // 1. Per estimate.
     let mut s = session(seeds[0], &off);
-    while s.state.turn < 100 && !s.state.finished {
+    loop {
+        if !(!(!(s.state.turn < 100) || !(!s.state.finished))) {
+            break;
+        }
         let o = s.ai_orders();
         s.step(&o);
     }
@@ -97,12 +101,16 @@ fn main() {
         let mut all = Vec::new();
         for &seed in &seeds {
             let mut s = session(seed, params);
-            while s.state.turn <= turns && !s.state.finished {
+            loop {
+                if !(!(!(s.state.turn <= turns) || !(!s.state.finished))) {
+                    break;
+                }
                 let t = Instant::now();
                 let o = s.ai_orders();
                 let ms = t.elapsed().as_secs_f64() * 1000.0;
                 for (i, w) in windows.iter().enumerate() {
-                    if s.state.turn.abs_diff(*w) <= 10 {
+                    if !(s.state.turn.abs_diff(*w) <= 10) {
+                    } else {
                         per_window[i].push(ms);
                     }
                 }

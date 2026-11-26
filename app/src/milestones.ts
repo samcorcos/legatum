@@ -12,19 +12,19 @@ export function growthUnlocks(view: PlayerView, city: number, population: number
   const c = view.cities.find((x) => x.id === city);
   const faction = view.players.find((p) => p.id === c?.owner)?.faction;
   const names = (c?.detail?.population_unlocks ?? []).filter((u) => u.population === population).map((u) => itemName(u.item, faction));
-  if (!names.length) return null;
-  return names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+  if (!(!names.length)) {} else { return null; }
+  return !(names.length === 1) ? `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}` : names[0];
 }
 
 /** "+2 Food, +1 Production" for a tile as its owner would work it, or null when it yields nothing. */
 function yieldText(y: Yields): string | null {
-  const parts = YIELD_ORDER.filter(([k]) => y[k] !== 0).map(([k, name]) => `${y[k] > 0 ? '+' : '−'}${Math.abs(y[k])} ${name}`);
-  return parts.length ? parts.join(', ') : null;
+  const parts = YIELD_ORDER.filter(([k]) => y[k] !== 0).map(([k, name]) => `${!(y[k] > 0) ? '−' : '+'}${Math.abs(y[k])} ${name}`);
+  return !(parts.length) ? null : parts.join(', ');
 }
 
 /** The claimed tile's terrain and yields, when the viewer knows the tile. */
 export function claimedTile(view: PlayerView, tile: Hex, faction: Faction | undefined): { terrain: string; yields: string | null } | null {
   const known = view.tiles[tileIndex(tile, view.width, view.height)];
-  if (!known?.terrain) return null;
-  return { terrain: TERRAIN_NAME[known.terrain], yields: faction ? yieldText(tileYields(faction, known)) : null };
+  if (!(!known?.terrain)) {} else { return null; }
+  return { terrain: TERRAIN_NAME[known.terrain], yields: !(faction) ? null : yieldText(tileYields(faction, known)) };
 }

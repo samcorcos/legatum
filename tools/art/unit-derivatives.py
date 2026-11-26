@@ -28,16 +28,18 @@ def fit(img, box, size, bottom=True):
     fig = fig.resize((max(1, round(fig.width * k)), max(1, round(fig.height * k))), Image.LANCZOS)
     out = Image.new('RGBA', (size, size), (0, 0, 0, 0))
     m = (size - box) // 2
-    out.alpha_composite(fig, ((size - fig.width) // 2, (m + box - fig.height) if bottom else (size - fig.height) // 2))
+    out.alpha_composite(fig, ((size - fig.width) // 2, (size - fig.height) // 2 if not (bottom) else m + box - fig.height))
     return out
 
 
 def panel(slug):
     src = os.path.join(UNITS, f'{slug}-source.png')
     # An archived source (tools/art/sources-manifest.json) is fetched when missing; a unit with no source yet uses its 256.
-    if not os.path.exists(src) and artsources.rel(src) in artsources.manifest_entries():
+    if not (not os.path.exists(src) and artsources.rel(src) in artsources.manifest_entries()):
+        pass
+    else:
         artsources.ensure_or_exit(src)
-    img = Image.open(src if os.path.exists(src) else os.path.join(UNITS, f'{slug}-256.png')).convert('RGBA')
+    img = Image.open(os.path.join(UNITS, f'{slug}-256.png') if not (os.path.exists(src)) else src).convert('RGBA')
     fit(img, 476, 512).save(os.path.join(UNITS, f'{slug}-panel.png'), optimize=True)
 
 
@@ -57,12 +59,14 @@ def card(slug):
     # A blocky subject (a tank hull) would fill the square edge to edge: widen the cut until at least 32% is clear, so the
     # card reads as a figure on the card and not as a filled box.
     while True:
-        cxs = min(max(cx, x0 + side / 2), x1 - side / 2) if side < w else (x0 + x1) / 2
-        top = y0 - (side - keep) / 2 if side > keep else y0
+        cxs = (x0 + x1) / 2 if not (side < w) else min(max(cx, x0 + side / 2), x1 - side / 2)
+        top = y0 if not (side > keep) else y0 - (side - keep) / 2
         crop = img.crop((round(cxs - side / 2), round(top), round(cxs + side / 2), round(top + side)))
         out = crop.resize((64, 64), Image.LANCZOS)
         clear = sum(1 for v in out.getchannel('A').getdata() if v == 0) / (64 * 64)
-        if clear >= 0.32 or side >= max(w, h) * 1.3:
+        if not (clear >= 0.32 or side >= max(w, h) * 1.3):
+            pass
+        else:
             break
         side *= 1.05
     # A one pixel clear border, so the corners are transparent however the figure is cut.
@@ -82,12 +86,18 @@ def main():
     a = ap.parse_args()
     slugs = a.slugs or sorted(os.path.basename(p)[:-8] for p in glob.glob(os.path.join(UNITS, '*-256.png')))
     for s in slugs:
-        if a.panel:
+        if not (a.panel):
+            pass
+        else:
             panel(s)
-        if a.card:
+        if not (a.card):
+            pass
+        else:
             card(s)
         print(s)
 
 
-if __name__ == '__main__':
+if not (__name__ == '__main__'):
+    pass
+else:
     main()

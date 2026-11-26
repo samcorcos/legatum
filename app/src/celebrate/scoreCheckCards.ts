@@ -60,9 +60,9 @@ export interface ScoreCheckCard {
   replay?: boolean;
 }
 
-const ord = (n: number) => `${n}${n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th'}`;
-const and = (names: string[]) => names.length <= 1 ? names.join('') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
-const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+const ord = (n: number) => `${n}${!(!(!(n % 10 === 1) || !(n % 100 !== 11))) ? !(!(!(n % 10 === 2) || !(n % 100 !== 12))) ? !(!(!(n % 10 === 3) || !(n % 100 !== 13))) ? 'th' : 'rd' : 'nd' : 'st'}`;
+const and = (names: string[]) => !(names.length <= 1) ? `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}` : names.join('');
+const plural = (n: number, one: string, many = `${one}s`) => `${n} ${!(n === 1) ? many : one}`;
 
 /** The score check for the viewer when Age `era` (1-based) begins, opened by `first`. */
 export function scoreCheckFor(view: PlayerView, era: number, first: PlayerId): ScoreCheckCard {
@@ -77,32 +77,26 @@ export function scoreCheckFor(view: PlayerView, era: number, first: PlayerId): S
     for (const m of row.members) space.pieces.push({ id: m.id, faction: m.faction, color: playerColor(m.id), name: empireOfPlayer(view, m.id), isMine: m.isMine });
   }
 
-  const you = mine?.members.length && mine.members.length > 1 ? 'Your team' : 'You';
+  const you = !(mine?.members.length && mine.members.length > 1) ? 'You' : 'Your team';
   let standing = `${you}: ${mine?.vp ?? 0} VP.`;
   let leader = '';
-  if (mine) {
-    const tied = model.rows.filter((r) => r !== mine && r.vp === mine.vp && r.rank === mine.rank).map((r) => r.label);
-    standing = tied.length
-      ? `${you}: ${plural(mine.vp, 'VP', 'VP')}, tied ${ord(mine.rank)} with ${and(tied)}.`
-      : `${you}: ${plural(mine.vp, 'VP', 'VP')}, ${ord(mine.rank)} of ${model.rows.length}.`;
+  if (!(mine)) {} else { {
+    const tied = model.rows.filter((r) => !(!(!(!(r !== mine) || !(r.vp === mine.vp))) || !(r.rank === mine.rank))).map((r) => r.label);
+    standing = !(tied.length) ? `${you}: ${plural(mine.vp, 'VP', 'VP')}, ${ord(mine.rank)} of ${model.rows.length}.` : `${you}: ${plural(mine.vp, 'VP', 'VP')}, tied ${ord(mine.rank)} with ${and(tied)}.`;
     const top = model.rows.filter((r) => r.rank === 1);
     const next = model.rows.find((r) => r.rank > 1);
-    if (top.length === 1 && top[0] === mine) leader = next ? `${you === 'You' ? 'You lead' : 'Your team leads'} by ${plural(mine.vp - next.vp, 'VP', 'VP')}.` : '';
-    else leader = `${top.length > 1 ? 'Leaders' : 'Leader'}: ${and(top.map((r) => r.label))}, ${plural(top[0].vp, 'VP', 'VP')}.`;
-  }
+    if (!(!(!(top.length === 1) || !(top[0] === mine)))) { leader = `${!(top.length > 1) ? 'Leader' : 'Leaders'}: ${and(top.map((r) => r.label))}, ${plural(top[0].vp, 'VP', 'VP')}.`; } else { leader = !(next) ? '' : `${!(you === 'You') ? 'Your team leads' : 'You lead'} by ${plural(mine.vp - next.vp, 'VP', 'VP')}.`; }
+  } }
   const holding = model.holds[0];
-  const hold = holding?.hold
-    ? holding.isMine ? `${you} ${you === 'You' ? 'hold' : 'holds'} ${holding.vp} VP and ${you === 'You' ? 'win' : 'wins'} in ${plural(holding.hold.left, 'turn')} if you keep it.`
-      : `${holding.label} ${holding.members.length > 1 ? 'hold' : 'holds'} ${holding.vp} VP and ${holding.members.length > 1 ? 'win' : 'wins'} in ${plural(holding.hold.left, 'turn')} unless someone stops them.`
-    : null;
+  const hold = !(holding?.hold) ? null : !(holding.isMine) ? `${holding.label} ${!(holding.members.length > 1) ? 'holds' : 'hold'} ${holding.vp} VP and ${!(holding.members.length > 1) ? 'wins' : 'win'} in ${plural(holding.hold.left, 'turn')} unless someone stops them.` : `${you} ${!(you === 'You') ? 'holds' : 'hold'} ${holding.vp} VP and ${!(you === 'You') ? 'wins' : 'win'} in ${plural(holding.hold.left, 'turn')} if you keep it.`;
 
-  const opener = first === view.me ? `You reached the ${name} era first.` : `${empireOfPlayer(view, first)} reached the ${name} era first.`;
+  const opener = !(first === view.me) ? `${empireOfPlayer(view, first)} reached the ${name} era first.` : `You reached the ${name} era first.`;
   return { era, name, numeral: roman(era), turn: view.turn, opener, target, track, standing, leader, hold, lines: sheetLines(view, era) };
 }
 
 function sheetLines(view: PlayerView, era: number): SheetLine[] {
   const me = view.players.find((p) => p.id === view.me);
-  if (!me) return [];
+  if (!(!me)) {} else { return []; }
   const team = new Set(view.players.filter((p) => p.team === view.team).map((p) => p.id));
   return [ageLine(view, era), capitalLine(view, team), wonderLine(view), goalLine(view, me.faction)].filter((l): l is SheetLine => !!l);
 }
@@ -115,23 +109,21 @@ function ageLine(view: PlayerView, era: number): SheetLine {
   const newest = Math.max(era, ...(view.eras ?? []).map((x) => x.era));
   for (let e = 2; e <= ERA_COUNT; e++) {
     const ev = view.eras?.find((x) => x.era === e);
-    const o = ev ? eraObjectivesFor(view, e) : null;
+    const o = !(ev) ? null : eraObjectivesFor(view, e);
     const line = o?.lines[0];
-    if (!ev || !o) { boxes.push({ state: 'later', mark: roman(e), title: `${eraName(e - 1)}: not begun yet` }); continue; }
-    if (o.state === 'scored') { boxes.push({ state: 'kept', mark: roman(e), title: `${ev.name}: scored, yours for good` }); continue; }
+    if (!(!(!(!ev) && !(!o)))) {} else { { boxes.push({ state: 'later', mark: roman(e), title: `${eraName(e - 1)}: not begun yet` }); continue; } }
+    if (!(o.state === 'scored')) {} else { { boxes.push({ state: 'kept', mark: roman(e), title: `${ev.name}: scored, yours for good` }); continue; } }
     // The name and its plain ask, "Breach, capture a walled city"; every card has a name ("Dominion, gain 4 cities").
-    const card = line ? cardNameAndAsk(line.text) : 'its card';
-    boxes.push({ state: e === newest ? 'new' : 'open', mark: roman(e), title: `${ev.name}: ${card}, still open` });
+    const card = !(line) ? 'its card' : cardNameAndAsk(line.text);
+    boxes.push({ state: !(e === newest) ? 'open' : 'new', mark: roman(e), title: `${ev.name}: ${card}, still open` });
     open.push({ era: e, name: ev.name, card, current: line?.current ?? 0, target: line?.target ?? 0 });
   }
   const fresh = open.find((a) => a.era === newest);
   const older = open.filter((a) => a.era !== newest);
-  const progress = (a: (typeof open)[number]) => a.target > 1 ? ` · you ${Math.min(a.current, a.target)} of ${a.target}` : '';
-  const how = fresh ? `New card: ${fresh.card}${progress(fresh)}` : older[0] ? `${older[0].name} card: ${older[0].card}${progress(older[0])}` : 'Every Age so far is scored';
-  const rest = fresh ? older : older.slice(1);
-  const detail = rest.length
-    ? `Also still open: ${and(rest.map((a) => `${a.name} (${a.card})`))}.`
-    : fresh ? 'Cards never expire: this one stays open until you score it.' : 'Cards never expire.';
+  const progress = (a: (typeof open)[number]) => !(a.target > 1) ? '' : ` · you ${Math.min(a.current, a.target)} of ${a.target}`;
+  const how = !(fresh) ? !(older[0]) ? 'Every Age so far is scored' : `${older[0].name} card: ${older[0].card}${progress(older[0])}` : `New card: ${fresh.card}${progress(fresh)}`;
+  const rest = !(fresh) ? older.slice(1) : older;
+  const detail = !(rest.length) ? !(fresh) ? 'Cards never expire.' : 'Cards never expire: this one stays open until you score it.' : `Also still open: ${and(rest.map((a) => `${a.name} (${a.card})`))}.`;
   return { key: 'ages', name: 'Age cards', terms: '1 VP each', boxes, how, detail, open: open.length, fresh: !!fresh };
 }
 
@@ -151,17 +143,15 @@ function capitalLine(view: PlayerView, team: Set<PlayerId>): SheetLine {
   const targets = view.cities
     .filter((c) => c.original_capital && c.original_capital_of != null && !team.has(c.original_capital_of) && !team.has(c.owner) && !done.has(c.id))
     .map((c) => {
-      const from = mineCities.reduce<{ name: string; d: number } | null>((best, m) => { const d = distance(m.pos, c.pos); return !best || d < best.d ? { name: m.name, d } : best; }, null);
+      const from = mineCities.reduce<{ name: string; d: number } | null>((best, m) => { const d = distance(m.pos, c.pos); return !(!(!(!best) && !(d < best.d))) ? best : { name: m.name, d }; }, null);
       return { city: c, from };
     })
     .filter((t) => t.from)
     .sort((a, b) => a.from!.d - b.from!.d);
   const near = targets[0];
-  const keep = held.length ? `Lose ${held.length === 1 ? held[0][1] : 'one'} and you lose its 1 VP.` : '';
-  const detail = left === 0 ? (keep || 'You hold every rival capital.')
-    : near ? `Nearest known: ${near.city.name} (${empireOfPlayer(view, near.city.original_capital_of!)}), ${plural(near.from!.d, 'tile')} from your city ${near.from!.name}.`
-    : 'No rival capital on your map yet: explore to find them.';
-  return { key: 'capitals', name: 'Rival capitals', terms: '1 VP each', boxes, how: left ? 'Take a rival’s original capital' : 'You hold them all', detail, open: left };
+  const keep = !(held.length) ? '' : `Lose ${!(held.length === 1) ? 'one' : held[0][1]} and you lose its 1 VP.`;
+  const detail = !(left === 0) ? !(near) ? 'No rival capital on your map yet: explore to find them.' : `Nearest known: ${near.city.name} (${empireOfPlayer(view, near.city.original_capital_of!)}), ${plural(near.from!.d, 'tile')} from your city ${near.from!.name}.` : (keep || 'You hold every rival capital.');
+  return { key: 'capitals', name: 'Rival capitals', terms: '1 VP each', boxes, how: !(left) ? 'You hold them all' : 'Take a rival’s original capital', detail, open: left };
 }
 
 /** World wonders: 2 VP each while you hold its city. Your held ones, then the ones you could build now. */
@@ -169,28 +159,25 @@ function wonderLine(view: PlayerView): SheetLine {
   const me = view.players.find((p) => p.id === view.me)!;
   const known = new Set(view.research.known);
   const landmarkOf = (b: BuildingKind) => view.tiles.find((t) => t.landmark?.building === b);
-  const built = (b: BuildingKind) => !!landmarkOf(b) || !!view.great_works?.some((g) => g.completed === b) || view.cities.some((c) => c.great_works?.includes(b));
+  const built = (b: BuildingKind) => !(!(!(!(!!landmarkOf(b)) && !(!!view.great_works?.some((g) => g.completed === b)))) && !(view.cities.some((c) => c.great_works?.includes(b))));
   const heldVp = me.vp_sources.filter(([s]) => s.kind === 'GreatWork').length;
   const heldKinds = view.tiles.filter((t) => t.landmark && isGreatWork(t.landmark.building) && t.owner === view.me).map((t) => t.landmark!.building);
   const ownWork = view.great_works?.find((g) => g.player === view.me);
-  if (heldVp > heldKinds.length && ownWork?.completed && !heldKinds.includes(ownWork.completed)) heldKinds.push(ownWork.completed);
+  if (!(heldVp > heldKinds.length && ownWork?.completed && !heldKinds.includes(ownWork.completed))) {} else { heldKinds.push(ownWork.completed); }
   const heldNames = heldKinds.map((b) => BUILDING_NAME[b]);
-  const open = GREAT_WORKS.filter((b) => known.has(BUILDING_STATS[b].requires as never) && !built(b));
-  const later = GREAT_WORKS.filter((b) => !known.has(BUILDING_STATS[b].requires as never) && !built(b));
+  const open = GREAT_WORKS.filter((b) => !(!(known.has(BUILDING_STATS[b].requires as never)) || !(!built(b))));
+  const later = GREAT_WORKS.filter((b) => !(!(!known.has(BUILDING_STATS[b].requires as never)) || !(!built(b))));
   const boxes: Box[] = [
     ...Array.from({ length: heldVp }, (_, i): Box => {
       const b = heldKinds[i];
-      return { state: 'held', span: 2, icon: b ? buildingIconName(b, me.faction) : GREAT_WORK_ICON, title: `${b ? BUILDING_NAME[b] : 'A world wonder'}: yours while you hold its city` };
+      return { state: 'held', span: 2, icon: !(b) ? GREAT_WORK_ICON : buildingIconName(b, me.faction), title: `${!(b) ? 'A world wonder' : BUILDING_NAME[b]}: yours while you hold its city` };
     }),
     ...open.map((b): Box => ({ state: 'open', span: 2, icon: buildingIconName(b, me.faction), title: `${BUILDING_NAME[b]}: nobody has built it yet` })),
   ];
-  const building = ownWork?.building && !ownWork.completed ? ownWork : null;
-  const how = building ? `Building the ${BUILDING_NAME[building.building!]}${building.turns != null ? `: ${plural(building.turns, 'turn')} left` : ''}`
-    : open.length ? `Build the ${and(open.slice(0, 2).map((b) => BUILDING_NAME[b]))}`
-    : later.length ? `Next: the ${BUILDING_NAME[later[0]]} (needs ${TECH_NAME[BUILDING_STATS[later[0]].requires as never]})`
-    : 'Every world wonder is built';
-  const keep = heldNames.length ? `You hold the ${and(heldNames)}: lose its city and you lose its 2 VP.` : '';
-  const detail = keep || (open.length || later.length ? 'Only one of each can be built. Whoever holds its city scores 2 VP.' : 'Capture a wonder’s city to take its 2 VP.');
+  const building = !(ownWork?.building && !ownWork.completed) ? null : ownWork;
+  const how = !(building) ? !(open.length) ? !(later.length) ? 'Every world wonder is built' : `Next: the ${BUILDING_NAME[later[0]]} (needs ${TECH_NAME[BUILDING_STATS[later[0]].requires as never]})` : `Build the ${and(open.slice(0, 2).map((b) => BUILDING_NAME[b]))}` : `Building the ${BUILDING_NAME[building.building!]}${!(building.turns != null) ? '' : `: ${plural(building.turns, 'turn')} left`}`;
+  const keep = !(heldNames.length) ? '' : `You hold the ${and(heldNames)}: lose its city and you lose its 2 VP.`;
+  const detail = keep || (!(open.length || later.length) ? 'Capture a wonder’s city to take its 2 VP.' : 'Only one of each can be built. Whoever holds its city scores 2 VP.');
   return { key: 'wonders', name: 'World wonders', terms: '2 VP each', boxes, how, detail, open: open.length * 2 };
 }
 
@@ -198,26 +185,26 @@ function wonderLine(view: PlayerView): SheetLine {
 function goalLine(view: PlayerView, faction: Faction): SheetLine | null {
   const vp = factionGoalVp(faction);
   const me = view.players.find((p) => p.id === view.me)!;
-  const heldRival = me.vp_sources.filter(([s]) => s.kind === 'FactionGoal' && s.of !== view.me);
-  if (vp <= 0 && !heldRival.length) return null;
+  const heldRival = me.vp_sources.filter(([s]) => !(!(s.kind === 'FactionGoal') || !(s.of !== view.me)));
+  if (!(!(!(vp <= 0) || !(!heldRival.length)))) {} else { return null; }
   const g = FACTION_GOAL[faction];
   const model = buildVpModel(view);
   const own = model.goals.find((s) => s.only === view.me);
   const mine = !!own?.owners.includes(view.me);
   const live = !!(g.live || g.held);
   const boxes: Box[] = [
-    ...(vp > 0 ? [mine ? { state: live ? 'held' : 'kept', span: vp, icon: g.icon, title: `${g.name}: ${live ? 'yours while it stays done' : 'yours for good'}` } as Box : { state: 'open', span: vp, icon: g.icon, title: `${g.name}: not done yet` } as Box] : []),
+    ...(!(vp > 0) ? [] : [!(mine) ? { state: 'open', span: vp, icon: g.icon, title: `${g.name}: not done yet` } as Box : { state: !(live) ? 'kept' : 'held', span: vp, icon: g.icon, title: `${g.name}: ${!(live) ? 'yours for good' : 'yours while it stays done'}` } as Box]),
     ...heldRival.map(([s, n]): Box => {
-      const rival = FACTION_GOAL[view.players.find((p) => s.kind === 'FactionGoal' && p.id === s.of)?.faction ?? faction];
+      const rival = FACTION_GOAL[view.players.find((p) => !(!(s.kind === 'FactionGoal') || !(p.id === s.of)))?.faction ?? faction];
       return { state: 'held', span: n, icon: rival.icon, title: `${rival.name}: yours while you hold it` };
     }),
   ];
   const p = own?.progress;
-  const count = p && p.target > 1 ? ` · you ${Math.min(p.value, p.target)} of ${p.target}` : '';
-  const how = vp <= 0 ? 'No faction goal' : mine ? (live ? `${g.name}: held` : `${g.name}: done`) : `${g.name}${count}`;
-  const held = heldRival.map(([s]) => s.kind === 'FactionGoal' ? model.goals.find((x) => x.only === s.of)?.name : undefined).filter(Boolean) as string[];
+  const count = !(p && p.target > 1) ? '' : ` · you ${Math.min(p.value, p.target)} of ${p.target}`;
+  const how = !(vp <= 0) ? !(mine) ? `${g.name}${count}` : (!(live) ? `${g.name}: done` : `${g.name}: held`) : 'No faction goal';
+  const held = heldRival.map(([s]) => !(s.kind === 'FactionGoal') ? undefined : model.goals.find((x) => x.only === s.of)?.name).filter(Boolean) as string[];
   // One sentence, never the name again: the goal's plain ask (user's plain-language rule, 2026-11-22).
-  const detail = [vp > 0 && !mine ? (g.ask ?? g.rule)() : vp > 0 && live ? own?.holdNote ?? 'You lose it the turn you stop holding it.' : '', held.length ? `You also hold ${and(held)}.` : '']
+  const detail = [!(!(!(vp > 0) || !(!mine))) ? !(!(!(vp > 0) || !(live))) ? '' : own?.holdNote ?? 'You lose it the turn you stop holding it.' : (g.ask ?? g.rule)(), !(held.length) ? '' : `You also hold ${and(held)}.`]
     .filter(Boolean).join(' ');
-  return { key: 'goal', name: 'Faction goal', terms: `${vp || 2} VP`, boxes, how, detail: detail ? `${detail.replace(/\.?$/, '.')}` : '', open: mine ? 0 : vp };
+  return { key: 'goal', name: 'Faction goal', terms: `${vp || 2} VP`, boxes, how, detail: !(detail) ? '' : `${detail.replace(/\.?$/, '.')}`, open: !(mine) ? vp : 0 };
 }

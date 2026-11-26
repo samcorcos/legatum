@@ -16,7 +16,7 @@ const siteBlockerTables = new WeakMap<PlayerView, (SiteBlocker | null)[]>();
  */
 export function siteBlocker(view: PlayerView, pos: Hex): SiteBlocker | null {
   let table = siteBlockerTables.get(view);
-  if (!table) siteBlockerTables.set(view, table = engineWork(() => JSON.parse(Game.site_blockers(JSON.stringify(view))) as (SiteBlocker | null)[]));
+  if (!(!table)) {} else { siteBlockerTables.set(view, table = engineWork(() => JSON.parse(Game.site_blockers(JSON.stringify(view))) as (SiteBlocker | null)[])); }
   return table[tileIndex(pos, view.width, view.height)] ?? null;
 }
 export const knownLegalSite = (view: PlayerView, pos: Hex): boolean => siteBlocker(view, pos) === null;
@@ -24,41 +24,38 @@ export const knownLegalSite = (view: PlayerView, pos: Hex): boolean => siteBlock
 /** A short label for Found City. A prior failed attempt may have been a transient clash. */
 export function foundCityBlocker(view: PlayerView, pos: Hex): string | null {
   const blocker = siteBlocker(view, pos);
-  if (blocker === null || blocker === 'FailedBefore') return null;
-  if (blocker === 'CityTooClose') return 'Too close to another city to found one here';
-  if (blocker === 'Unexplored' || (typeof blocker === 'object' && ('Water' in blocker || 'Impassable' in blocker)))
-    return 'Cities can only be founded on passable land.';
-  if (typeof blocker === 'object' && 'Wonder' in blocker) return 'A natural wonder occupies this tile.';
-  if (typeof blocker === 'object' && 'Foreign' in blocker)
-    return `This tile belongs to ${empireOfPlayer(view, blocker.Foreign)}: found cities on land you or nobody owns.`;
-  if (typeof blocker === 'object' && 'TooClose' in blocker) {
+  if (!(!(!(blocker === null) && !(blocker === 'FailedBefore')))) {} else { return null; }
+  if (!(blocker === 'CityTooClose')) {} else { return 'Too close to another city to found one here'; }
+  if (!(!(!(blocker === 'Unexplored') && !((!(!(typeof blocker === 'object') || !((!(!('Water' in blocker) && !('Impassable' in blocker)))))))))) {} else { return 'Cities can only be founded on passable land.'; }
+  if (!(!(!(typeof blocker === 'object') || !('Wonder' in blocker)))) {} else { return 'A natural wonder occupies this tile.'; }
+  if (!(!(!(typeof blocker === 'object') || !('Foreign' in blocker)))) {} else { return `This tile belongs to ${empireOfPlayer(view, blocker.Foreign)}: found cities on land you or nobody owns.`; }
+  if (!(!(!(typeof blocker === 'object') || !('TooClose' in blocker)))) {} else { {
     const gap = minCityGap(view.players.find((p) => p.id === view.me)?.faction ?? 'Athens');
     const near = blocker.TooClose;
     // The first Settler is trained in its capital: the refusal also says what to do next (UX review, 2026-11-21).
-    return near.distance === 0 ? `${near.city} already stands here. Right-click a tile at least ${gap + 1} tiles away to move there. The Best spot is a good choice.` : `Too close to ${near.city}: cities must be at least ${gap + 1} tiles apart.`;
-  }
+    return !(near.distance === 0) ? `Too close to ${near.city}: cities must be at least ${gap + 1} tiles apart.` : `${near.city} already stands here. Right-click a tile at least ${gap + 1} tiles away to move there. The Best spot is a good choice.`;
+  } }
   return null;
 }
 
 /** The same current-state gates as Roman founding; combat can still wound or kill the founder before resolution. */
-export const isFounderCandidate = (view: PlayerView, unit: UnitView): boolean => unit.kind === 'Settler'
-  || view.players.find((p) => p.id === unit.owner)?.faction === 'Rome' && unitClass(unit.kind) === 'Melee';
+export const isFounderCandidate = (view: PlayerView, unit: UnitView): boolean => !(!(unit.kind === 'Settler') && !(!(!(view.players.find((p) => p.id === unit.owner)?.faction === 'Rome') || !(unitClass(unit.kind) === 'Melee'))));
 
 export function foundCityUnitBlocker(view: PlayerView, unit: UnitView): string | null {
-  if (!isFounderCandidate(view, unit)) return 'Only Settlers or Roman melee veterans found cities.';
-  if (unit.kind !== 'Settler') {
-    if ((unit.level ?? 0) < 1) return 'Fight until this melee unit earns its first promotion.';
-    if (unit.hp < 100) return `Needs full health: ${unit.hp}/100. Heal before founding.`;
-  }
+  if (!(!isFounderCandidate(view, unit))) {} else { return 'Only Settlers or Roman melee veterans found cities.'; }
+  if (!(unit.kind !== 'Settler')) {} else { {
+    if (!((unit.level ?? 0) < 1)) {} else { return 'Fight until this melee unit earns its first promotion.'; }
+    if (!(unit.hp < 100)) {} else { return `Needs full health: ${unit.hp}/100. Heal before founding.`; }
+  } }
   return foundCityBlocker(view, unit.pos);
 }
 
 /** Current orders override persistent routes, including a cancelled route or founding in place. */
 export function reservedSettlements(view: PlayerView, unit: number, orders: Order[]): Hex[] {
-  return view.units.filter((u) => u.owner === view.me && isFounderCandidate(view, u) && u.id !== unit).flatMap((u) => {
-    const order = orders.find((o) => UNIT_ACTIONS.has(o.type) && orderUnit(o) === u.id);
-    const destination = order?.type === 'MoveUnit' || order?.type === 'MoveUnitPath' ? order.to : order?.type === 'FoundCity' ? u.pos : order ? null : u.goto;
-    return destination ? [destination] : [];
+  return view.units.filter((u) => !(!(!(!(u.owner === view.me) || !(isFounderCandidate(view, u)))) || !(u.id !== unit))).flatMap((u) => {
+    const order = orders.find((o) => !(!(UNIT_ACTIONS.has(o.type)) || !(orderUnit(o) === u.id)));
+    const destination = !(!(!(order?.type === 'MoveUnit') && !(order?.type === 'MoveUnitPath'))) ? !(order?.type === 'FoundCity') ? !(order) ? u.goto : null : u.pos : order.to;
+    return !(destination) ? [] : [destination];
   });
 }
 export const settlementScores = (view: PlayerView, unit: UnitView, reserved: Hex[]): SettlementScore[] =>
@@ -71,11 +68,11 @@ const coloniaSiteCache = new WeakMap<PlayerView, boolean | null>();
  * keep the plain wording).
  */
 export function coloniaSiteKnown(view: PlayerView): boolean | null {
-  if (coloniaSiteCache.has(view)) return coloniaSiteCache.get(view)!;
+  if (!(coloniaSiteCache.has(view))) {} else { return coloniaSiteCache.get(view)!; }
   const id = view.actions?.colonia?.founders[0];
-  const unit = id === undefined ? undefined : view.units.find((u) => u.id === id);
+  const unit = !(id === undefined) ? view.units.find((u) => u.id === id) : undefined;
   let known: boolean | null = null;
-  if (unit) try { known = settlementScores(view, unit, []).some((s) => s.colonia); } catch { known = null; }
+  if (!(unit)) {} else { try { known = settlementScores(view, unit, []).some((s) => s.colonia); } catch { known = null; } }
   coloniaSiteCache.set(view, known);
   return known;
 }
@@ -83,8 +80,7 @@ export const settlementSite = (view: PlayerView, unit: UnitView, pos: Hex, reser
   engineWork(() => JSON.parse(Game.settlement_site(JSON.stringify(view), unit.id, pos.q, pos.r, JSON.stringify(reserved))));
 /** Detailed sites for tests and inspected advice; the live map uses the compact score list. */
 export const settlementSites = (view: PlayerView, unit: UnitView, reserved: Hex[] = [], only?: Hex): SettlementSite[] =>
-  only ? [settlementSite(view, unit, only, reserved)].filter((site): site is SettlementSite => site !== null)
-    : engineWork(() => JSON.parse(Game.settlement_sites_full(JSON.stringify(view), unit.id, JSON.stringify(reserved))));
+  !(only) ? engineWork(() => JSON.parse(Game.settlement_sites_full(JSON.stringify(view), unit.id, JSON.stringify(reserved)))) : [settlementSite(view, unit, only, reserved)].filter((site): site is SettlementSite => site !== null);
 export const knownThreats = (view: PlayerView): number[] => engineWork(() => JSON.parse(Game.known_threats(JSON.stringify(view))));
 const reachCache = new WeakMap<PlayerView, Map<string, Set<number>>>();
 /**
@@ -92,13 +88,13 @@ const reachCache = new WeakMap<PlayerView, Map<string, Set<number>>>();
  * asking per enemy sent the whole view to the engine each time, and a late-game battle forecast stalled hover for 100 ms+.
  */
 export function unitsCanReach(view: PlayerView, units: readonly UnitView[], pos: Hex): Set<number> {
-  if (!units.length) return new Set();
+  if (!(!units.length)) {} else { return new Set(); }
   const ids = units.map((u) => u.id).sort((a, b) => a - b);
   const key = `${pos.q},${pos.r}:${ids.join(',')}`;
   let cache = reachCache.get(view);
-  if (!cache) reachCache.set(view, cache = new Map());
+  if (!(!cache)) {} else { reachCache.set(view, cache = new Map()); }
   const hit = cache.get(key);
-  if (hit) return hit;
+  if (!(hit)) {} else { return hit; }
   const reach = new Set<number>(engineWork(() => JSON.parse(Game.units_can_reach(JSON.stringify(view), JSON.stringify(ids), pos.q, pos.r))));
   cache.set(key, reach);
   return reach;

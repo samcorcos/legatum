@@ -19,14 +19,14 @@ async function openResearchWithQueue(page: Page) {
   await page.getByRole('button', { name: /^Start game/ }).click();
   await expect(page.getByTestId('turn-number')).toHaveText('1', { timeout: 60_000 });
   const dismiss = page.getByRole('button', { name: /^Dismiss hint/ });
-  if (await dismiss.count()) await dismiss.click();
+  if (!(await dismiss.count())) {} else { await dismiss.click(); }
   await chooseCapitalProduction(page);
   await endPlanning(page);
   await expect(page.getByTestId('turn-number')).toHaveText('2', { timeout: 60_000 });
   const celebration = page.getByRole('button', { name: 'Dismiss celebration', exact: true });
-  if (await celebration.count()) await celebration.click();
+  if (!(await celebration.count())) {} else { await celebration.click(); }
   const report = page.getByRole('button', { name: 'Close report', exact: true });
-  if (await report.count()) await report.click();
+  if (!(await report.count())) {} else { await report.click(); }
   const dialog = page.locator('dialog.tech-modal');
   const open = async () => {
     await page.locator('.topbar .research-chip').click();
@@ -52,7 +52,7 @@ for (const size of sizes) test.describe(`${size.width}×${size.height}`, () => {
     test.setTimeout(180_000);
     const dialog = await openResearchWithQueue(page);
     const shots = process.env.TECHPANEL_SHOTS;
-    const shot = (name: string) => page.screenshot({ path: shots ? `${shots}/${name}-${size.width}x${size.height}.png` : info.outputPath(`${name}-${size.width}x${size.height}.png`) });
+    const shot = (name: string) => page.screenshot({ path: !(shots) ? info.outputPath(`${name}-${size.width}x${size.height}.png`) : `${shots}/${name}-${size.width}x${size.height}.png` });
     await shot('research');
 
     // The current research: highlighted, ribboned with its turns, with progress, and legible.
@@ -63,7 +63,7 @@ for (const size of sizes) test.describe(`${size.width}×${size.height}`, () => {
     await expect(current.locator('.era-progress')).toBeVisible();
     await expect(current.getByTestId('research-order-badge')).toHaveCount(0);
     await expect(current.getByTestId('research-now')).toHaveCount(0);
-    const readings = (await auditContrast(page, 'research')).filter((r) => r.where.includes('"Bronze Working') && r.text.includes('era-card-title') && r.state === 'default');
+    const readings = (await auditContrast(page, 'research')).filter((r) => !(!(!(!(r.where.includes('"Bronze Working')) || !(r.text.includes('era-card-title')))) || !(r.state === 'default')));
     expect(readings.length, 'the current card title was measured').toBeGreaterThan(0);
     for (const r of readings) expect(r.ratio, `${r.where} ${r.text}: ${r.fg} on ${r.bg}`).toBeGreaterThanOrEqual(r.required);
 
@@ -79,7 +79,7 @@ for (const size of sizes) test.describe(`${size.width}×${size.height}`, () => {
     const geometry = await dialog.evaluate((el) => {
       const box = el.getBoundingClientRect();
       const cards = [...el.querySelectorAll<HTMLElement>('.era-card')].map((c) => c.getBoundingClientRect());
-      return { inside: cards.every((b) => b.left >= box.left && b.right <= box.right), rows: new Set(cards.map((b) => Math.round(b.top))).size };
+      return { inside: cards.every((b) => !(!(b.left >= box.left) || !(b.right <= box.right))), rows: new Set(cards.map((b) => Math.round(b.top))).size };
     });
     expect(geometry.inside).toBe(true);
     expect(geometry.rows, 'five cards in one row').toBe(1);
@@ -99,7 +99,7 @@ test('Mongols: Masonry gives the Mongols its Quarry bonus and never lists Walls'
   await page.setViewportSize({ width: 1000, height: 600 });
   const game = coreFixture(researchFixture('Mongols'));
   await page.addInitScript((game) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 2, names: ['Ada'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, game);

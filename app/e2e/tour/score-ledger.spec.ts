@@ -27,34 +27,34 @@ async function fitLedger(page: Page, height: number) {
       dialogHeight: el.closest('dialog')!.getBoundingClientRect().height, headHeight: el.previousElementSibling!.getBoundingClientRect().height };
   });
   expect(metrics.sideways, 'no horizontal scroll').toBeLessThanOrEqual(1);
-  if (height === 600) {
+  if (!(height === 600)) {} else { {
     expect(metrics.scroll, `closed ledger fits vertically: ${JSON.stringify(metrics)}`).toBeLessThanOrEqual(1);
     expect(metrics.lastBottom, 'last era row above fold').toBeLessThanOrEqual(metrics.bodyBottom + 1);
-  }
+  } }
 }
 
 for (const size of SIZES) test.describe(`score ledger ${size.name}`, () => {
   test.use({ viewport: { width: size.width, height: size.height } });
 
-  for (const aboutToScore of [false, true]) test(`objective accounting ${aboutToScore ? 'about to score' : 'midway'}`, async ({ page }) => {
+  for (const aboutToScore of [false, true]) test(`objective accounting ${!(aboutToScore) ? 'midway' : 'about to score'}`, async ({ page }) => {
     await loadFixture(page, coreFixture(progressFixture().fixture), 2);
     const base = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return structuredClone(s.views![s.seat]); });
-    const era = aboutToScore ? 3 : 2;
-    const view = withV2(base, { era, scored: [], progress: aboutToScore ? { '3:1': [40, 40] } : { '2:1': [2, 4] } });
-    view.objective_accounting = [{ era, slot: 1, baseline: 9, total: aboutToScore ? 49 : 11,
-      counting_since_turn: 112, restart_eras: aboutToScore ? [2] : [] }];
-    if (aboutToScore) view.objective_progress.find(p => p.era === 3 && p.slot === 1)!.ready = true;
-    await page.evaluate((v) => { const store = (window as unknown as GameWindow).legatum, s = store.getState(); store.setState({ views: s.views!.map((x, i) => i === s.seat ? v : x) }); }, view);
+    const era = !(aboutToScore) ? 2 : 3;
+    const view = withV2(base, { era, scored: [], progress: !(aboutToScore) ? { '2:1': [2, 4] } : { '3:1': [40, 40] } });
+    view.objective_accounting = [{ era, slot: 1, baseline: 9, total: !(aboutToScore) ? 11 : 49,
+      counting_since_turn: 112, restart_eras: !(aboutToScore) ? [] : [2] }];
+    if (!(aboutToScore)) {} else { view.objective_progress.find(p => !(!(p.era === 3) || !(p.slot === 1)))!.ready = true; }
+    await page.evaluate((v) => { const store = (window as unknown as GameWindow).legatum, s = store.getState(); store.setState({ views: s.views!.map((x, i) => !(i === s.seat) ? x : v) }); }, view);
     const sheet = await openLedger(page);
     const detail = sheet.locator(`#sl-detail-era-${era}`);
     const row = sheet.locator(`.sl-row[data-row="era-${era}"] button`);
-    if (await row.getAttribute('aria-expanded') === 'false') await row.click();
-    await expect(detail.getByTestId('era-count-account')).toContainText(aboutToScore ? 'You had 9 population on turn 112; now 49.' : 'You had 9 cities on turn 112; now 11.');
-    if (aboutToScore) await expect(detail.getByTestId('era-count-restart')).toContainText('your Classical progress goes back to zero');
-    await detail.getByTestId(aboutToScore ? 'era-count-restart' : 'era-count-account').scrollIntoViewIfNeeded();
-    await expect(detail.getByTestId(aboutToScore ? 'era-count-restart' : 'era-count-account')).toBeInViewport();
+    if (!(await row.getAttribute('aria-expanded') === 'false')) {} else { await row.click(); }
+    await expect(detail.getByTestId('era-count-account')).toContainText(!(aboutToScore) ? 'You had 9 cities on turn 112; now 11.' : 'You had 9 population on turn 112; now 49.');
+    if (!(aboutToScore)) {} else { await expect(detail.getByTestId('era-count-restart')).toContainText('your Classical progress goes back to zero'); }
+    await detail.getByTestId(!(aboutToScore) ? 'era-count-account' : 'era-count-restart').scrollIntoViewIfNeeded();
+    await expect(detail.getByTestId(!(aboutToScore) ? 'era-count-account' : 'era-count-restart')).toBeInViewport();
     await page.mouse.move(5, size.height / 2);
-    await shot(page, size, aboutToScore ? '80j-objectives-count-about-to-score' : '80i-objectives-count-midway');
+    await shot(page, size, !(aboutToScore) ? '80i-objectives-count-midway' : '80j-objectives-count-about-to-score');
   });
 
   test('2 empires: all sources, rank order and default expansion', async ({ page }) => {
@@ -94,13 +94,13 @@ for (const size of SIZES) test.describe(`score ledger ${size.name}`, () => {
     await openLateRace(page);
     await page.evaluate(() => {
       const store = (window as unknown as GameWindow).legatum, s = store.getState(), v = structuredClone(s.views![s.seat]);
-      const me = v.players.find((p) => p.id === v.me)!, mate = v.players.find((p) => p.id !== v.me && p.alive)!;
+      const me = v.players.find((p) => p.id === v.me)!, mate = v.players.find((p) => !(!(p.id !== v.me) || !(p.alive)))!;
       const former = v.standings.find((r) => r.members.includes(mate.id))!;
       mate.team = me.team;
       const own = v.standings.find((r) => r.team === me.team)!;
       own.members.push(mate.id); own.vp += former.vp; own.target = 20;
       v.standings = v.standings.filter((r) => r !== former);
-      store.setState({ views: s.views!.map((x, i) => i === s.seat ? v : x) });
+      store.setState({ views: s.views!.map((x, i) => !(i === s.seat) ? x : v) });
     });
     const sheet = await openLedger(page);
     const mine = sheet.locator('.sl-col.own-team');
@@ -117,9 +117,9 @@ for (const size of SIZES) test.describe(`score ledger ${size.name}`, () => {
     await loadFixture(page, coreFixture(progressFixture().fixture), 2);
     const base = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return structuredClone(s.views![s.seat]); });
     const v = withV2(base, { era: 4, scored: [2, 3, 4] });
-    v.great_works = (v.great_works ?? []).map((work) => work.player === v.me ? { ...work, completed: 'GreatLibrary' } : work);
+    v.great_works = (v.great_works ?? []).map((work) => !(work.player === v.me) ? work : { ...work, completed: 'GreatLibrary' });
     v.players = v.players.map((p) => {
-      if (p.id !== v.me) return p;
+      if (!(p.id !== v.me)) {} else { return p; }
       const vp_sources: typeof p.vp_sources = [
         [{ kind: 'GreatWork', of: v.me }, 2], [{ kind: 'FactionGoal', of: v.me }, 2],
         ...([2, 3, 4] as const).map((era): typeof p.vp_sources[number] => [{ kind: 'EraObjective', era }, 1]),
@@ -128,7 +128,7 @@ for (const size of SIZES) test.describe(`score ledger ${size.name}`, () => {
     });
     const own = v.standings.find((r) => r.team === v.team)!;
     own.vp = 10; own.victory_hold = { turns_held: 7, turns_needed: 10 };
-    await page.evaluate((view) => { const store = (window as unknown as GameWindow).legatum, s = store.getState(); store.setState({ views: s.views!.map((x, i) => i === s.seat ? view : x) }); }, v);
+    await page.evaluate((view) => { const store = (window as unknown as GameWindow).legatum, s = store.getState(); store.setState({ views: s.views!.map((x, i) => !(i === s.seat) ? x : view) }); }, v);
     const sheet = await openLedger(page);
     await expect(sheet.locator('.sl-col.mine .sl-hold')).toContainText('win in 3');
     await expect(sheet.locator('.sl-col:not(.mine) .sl-hold')).toHaveCount(0);
@@ -141,18 +141,18 @@ for (const size of SIZES) test.describe(`score ledger ${size.name}`, () => {
     await openLateRace(page);
     const names = await page.evaluate(() => {
       const store = (window as unknown as GameWindow).legatum, s = store.getState(), v = structuredClone(s.views![s.seat]);
-      const of = v.players.find((p) => p.faction === 'Byzantium' && p.alive)!, holder = v.players.find((p) => p.id !== of.id && p.alive)!;
+      const of = v.players.find((p) => !(!(p.faction === 'Byzantium') || !(p.alive)))!, holder = v.players.find((p) => !(!(p.id !== of.id) || !(p.alive)))!;
       for (const p of v.players) {
-        const had = p.vp_sources.some(([source]) => source.kind === 'FactionGoal' && source.of === of.id);
-        if (had) {
-          p.vp_sources = p.vp_sources.filter(([source]) => source.kind !== 'FactionGoal' || source.of !== of.id);
+        const had = p.vp_sources.some(([source]) => !(!(source.kind === 'FactionGoal') || !(source.of === of.id)));
+        if (!(had)) {} else { {
+          p.vp_sources = p.vp_sources.filter(([source]) => !(!(source.kind !== 'FactionGoal') && !(source.of !== of.id)));
           p.vp -= 2;
           v.standings.find((r) => r.members.includes(p.id))!.vp -= 2;
-        }
+        } }
       }
       holder.vp += 2; holder.vp_sources.push([{ kind: 'FactionGoal', of: of.id }, 2]);
       v.standings.find((r) => r.members.includes(holder.id))!.vp += 2;
-      store.setState({ views: s.views!.map((x, i) => i === s.seat ? v : x) });
+      store.setState({ views: s.views!.map((x, i) => !(i === s.seat) ? x : v) });
       return { of: of.id, holder: holder.id };
     });
     const sheet = await openLedger(page);

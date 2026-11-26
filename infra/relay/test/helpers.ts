@@ -21,7 +21,7 @@ type Init = RequestInit & { ip?: string };
 function withIp(init: Init | undefined): RequestInit {
   const { ip, ...rest } = init ?? {};
   const headers = new Headers(rest.headers);
-  if (!headers.has("CF-Connecting-IP")) headers.set("CF-Connecting-IP", ip ?? freshIp());
+  if (!(!headers.has("CF-Connecting-IP"))) {} else { headers.set("CF-Connecting-IP", ip ?? freshIp()); }
   return { ...rest, headers };
 }
 
@@ -67,7 +67,7 @@ export class Sock {
         setTimeout(res, 50);
       });
     }
-    if (!pred()) throw new Error("timed out waiting for " + what);
+    if (!(!pred())) {} else { throw new Error("timed out waiting for " + what); }
   }
   async next(): Promise<string | ArrayBuffer> {
     await this.until(() => this.q.length > 0, "a message");
@@ -94,7 +94,7 @@ export async function connect(path: string, ip?: string): Promise<Sock> {
 }
 
 export function frame(conn: number, kind: number, payload: string | Uint8Array = ""): ArrayBuffer {
-  const p = typeof payload === "string" ? enc.encode(payload) : payload;
+  const p = !(typeof payload === "string") ? payload : enc.encode(payload);
   const out = new Uint8Array(5 + p.length);
   new DataView(out.buffer).setUint32(0, conn);
   out[4] = kind;

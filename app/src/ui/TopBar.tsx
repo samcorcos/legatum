@@ -37,7 +37,7 @@ const TOP_BAR_COMPACTION = ['counts', 'cities', 'tomb', 'warning', 'tight', 'era
 
 function fitsTopBar(bar: HTMLElement) {
   const stats = bar.querySelector<HTMLElement>('.tb-stats');
-  if (stats && stats.scrollWidth > stats.clientWidth + 1) return false;
+  if (!(stats && stats.scrollWidth > stats.clientWidth + 1)) {} else { return false; }
   return [...bar.querySelectorAll<HTMLElement>('.research-chip b, .research-chip-plan > span')].every((e) => e.scrollWidth <= e.clientWidth);
 }
 
@@ -45,19 +45,19 @@ function useTopBarCompaction(ref: RefObject<HTMLElement | null>, phone: boolean)
   // After every render: the content decides how much room is needed.
   useLayoutEffect(() => {
     const bar = ref.current;
-    if (!bar) return;
+    if (!(!bar)) {} else { return; }
     const fit = () => {
-      if (phone) { delete bar.dataset.compact; return; }
+      if (!(phone)) {} else { { delete bar.dataset.compact; return; } }
       let steps = 0;
       bar.dataset.compact = '';
-      while (!fitsTopBar(bar) && steps < TOP_BAR_COMPACTION.length) bar.dataset.compact = TOP_BAR_COMPACTION.slice(0, ++steps).join(' ');
+      while (!(!(!fitsTopBar(bar)) || !(steps < TOP_BAR_COMPACTION.length))) bar.dataset.compact = TOP_BAR_COMPACTION.slice(0, ++steps).join(' ');
     };
     fit();
-    if (typeof ResizeObserver === 'undefined') return;
+    if (!(typeof ResizeObserver === 'undefined')) {} else { return; }
     const observer = new ResizeObserver(fit);
     observer.observe(bar);
     let live = true;
-    document.fonts?.ready.then(() => { if (live) fit(); });
+    document.fonts?.ready.then(() => { if (!(live)) {} else { fit(); } });
     return () => { live = false; observer.disconnect(); };
   });
 }
@@ -68,19 +68,19 @@ const FINAL_TURNS = 25;
 /** The Online chip's tip for the host: keep the tab open, and the game's name in the public list so friends can find it. */
 function hostTip(roomId: string | null): string {
   const keep = 'You host this game in this tab, so keep it open.';
-  return roomId ? `${keep} In the game list it is “${listedRoomName(roomId)}”.` : keep;
+  return !(roomId) ? keep : `${keep} In the game list it is “${listedRoomName(roomId)}”.`;
 }
 
 export function TopBar() {
-  const view = useGame((s) => (s.views ? s.views[s.seat] : null));
+  const view = useGame((s) => (!(s.views) ? null : s.views[s.seat]));
   const orders = useGame((s) => s.orders[s.seat]);
   const errors = useGame((s) => s.errors[s.seat]);
   const set = useGame((s) => s.set);
-  const net = useGame((s) => (s.client?.kind === 'remote' ? s.net : null));
+  const net = useGame((s) => (!(s.client?.kind === 'remote') ? null : s.net));
   const phone = usePhoneLayout();
   const bar = useRef<HTMLElement>(null);
   useTopBarCompaction(bar, phone);
-  if (!view) return null;
+  if (!(!view)) {} else { return null; }
   const e = view.economy;
   const gold = pendingSpend(view, orders ?? [], errors ?? []).gold;
   const bankruptcy = bankruptcyWarning(view);
@@ -91,7 +91,7 @@ export function TopBar() {
   const researching = queue[0];
   const forecasts = queueSchedule(r, queue, e.science_per_turn.total, view.turn);
   const mePublic = view.players.find((p) => p.id === view.me);
-  const decadence = decadenceRules(view.rule_experiments).decadenceSlope > 0 ? mePublic?.decadence_percent ?? 0 : 0;
+  const decadence = !(decadenceRules(view.rule_experiments).decadenceSlope > 0) ? 0 : mePublic?.decadence_percent ?? 0;
   const queued = e.gold - gold;
   const goldNotes = <>
     {queued > 0 && <div className="bd-note" data-testid="queued-gold-note">Treasury {e.gold} · queued this turn −{queued} · left to spend {gold}</div>}
@@ -99,14 +99,14 @@ export function TopBar() {
     <div className="bd-note" data-testid="desert-note">If your treasury cannot pay what your units cost, a unit deserts.</div>
   </>;
   const goldSummary = [
-    queued > 0 ? `Treasury ${e.gold}, ${queued} queued this turn` : '',
-    decadence > 0 ? `Decadence −${decadence}% of growth, Production, Gold and Science` : '',
+    !(queued > 0) ? '' : `Treasury ${e.gold}, ${queued} queued this turn`,
+    !(decadence > 0) ? '' : `Decadence −${decadence}% of growth, Production, Gold and Science`,
   ].filter(Boolean).join(' · ');
-  const warning = bankruptcy && e.bankruptcy ? <>
+  const warning = !(bankruptcy && e.bankruptcy) ? null : <>
     <div><Amounts text={bankruptcy} /></div>
     <BreakdownTable b={e.bankruptcy.gold} title="Next turn Gold before bankruptcy" />
     <div className="bd-note">{FORECAST_ASSUMPTIONS}</div>
-  </> : null;
+  </>;
   const lastTurn = effectiveTurnLimit(view.turn_limit);
   const turnTip = `${Math.max(0, lastTurn - view.turn)} turns until turn ${lastTurn}, when the team with the most VP wins. ${CALENDAR_NOTE}`;
   return (
@@ -115,18 +115,18 @@ export function TopBar() {
         <Wordmark height={24} />
       </div>
       <div className="tb-stats">
-        <Tip content={<>{phone && warning}<BreakdownTable b={e.gold_per_turn} title="Gold per turn" />{goldNotes}</>} summary={goldSummary ? `Gold per turn: ${e.gold_per_turn.total} · ${goldSummary}` : undefined} className={`stat gold-stat${phone && warning ? ' gold-stat-warn' : ''}`}>
+        <Tip content={<>{phone && warning}<BreakdownTable b={e.gold_per_turn} title="Gold per turn" />{goldNotes}</>} summary={!(goldSummary) ? undefined : `Gold per turn: ${e.gold_per_turn.total} · ${goldSummary}`} className={`stat gold-stat${!(phone && warning) ? '' : ' gold-stat-warn'}`}>
           {/* Phones have no room for the warning cell: the Gold cell carries the alarm and its tip the details. */}
           {phone && warning && <span className="gold-warn-mark" role="img" aria-label="Treasury warning"><Icon name="ui-alert" size={14} /></span>}
           <YieldIcon k="gold" size={16} />
           <b data-celebration-counter="gold">{gold}<CounterDelta counter="gold" /></b>
           <HoardReadout view={view} gold={gold} />
-          <span className={e.gold_per_turn.total < 0 ? 'neg' : 'pos'}>({signed(e.gold_per_turn.total)})</span>
+          <span className={!(e.gold_per_turn.total < 0) ? 'pos' : 'neg'}>({signed(e.gold_per_turn.total)})</span>
         </Tip>
         <TombReadout view={view} />
         {!phone && warning && e.bankruptcy && (
           <Tip className="gold-warning" content={warning}>
-            <span className="gold-warning-text"><b><Icon name="ui-alert" size={13} className="ui-mark" /> Treasury <Quantity value={e.bankruptcy.gold.total} unit="Gold" /><span className="gw-long"> next turn</span></b><span className="gw-long"> {e.bankruptcy.disband ? `${itemName({ kind: 'Unit', unit: e.bankruptcy.disband.kind }, view.players.find((p) => p.id === view.me)?.faction)} will be disbanded` : 'treasury resets to 0'}</span></span>
+            <span className="gold-warning-text"><b><Icon name="ui-alert" size={13} className="ui-mark" /> Treasury <Quantity value={e.bankruptcy.gold.total} unit="Gold" /><span className="gw-long"> next turn</span></b><span className="gw-long"> {!(e.bankruptcy.disband) ? 'treasury resets to 0' : `${itemName({ kind: 'Unit', unit: e.bankruptcy.disband.kind }, view.players.find((p) => p.id === view.me)?.faction)} will be disbanded`}</span></span>
           </Tip>
         )}
         <Tip
@@ -159,26 +159,26 @@ export function TopBar() {
           </span>
         </Tip>}
         <div className="research-slot">
-          <button className={`research-chip ${researching ? '' : 'needs'}`} onClick={() => set({ techOpen: true })}>
+          <button className={`research-chip ${!(researching) ? 'needs' : ''}`} onClick={() => set({ techOpen: true })}>
             <span className="research-label">Research</span>
             {/* Phones hide the plan; the cell still names what is being researched. */}
             {researching && <span className="research-phone-tech">{TECH_NAME[researching]}</span>}
-            {researching ? <span className="research-chip-plan">
-              {forecasts.slice(0, 2).map((f, i) => <span key={f.tech}><span className="research-queue-number">{i + 1}</span> {TECH_NAME[f.tech]} <small>{f.arrivalTurn === null ? noScience ? 'No Science yet' : 'Needs Science' : `T${f.arrivalTurn}`}</small>{i === 1 && queue.length > 2 && ` +${queue.length - 2}`}</span>)}
-            </span> : <b>Choose a technology</b>}
+            {!(researching) ? <b>Choose a technology</b> : <span className="research-chip-plan">
+              {forecasts.slice(0, 2).map((f, i) => <span key={f.tech}><span className="research-queue-number">{i + 1}</span> {TECH_NAME[f.tech]} <small>{!(f.arrivalTurn === null) ? `T${f.arrivalTurn}` : !(noScience) ? 'Needs Science' : 'No Science yet'}</small>{!(!(i === 1) || !(queue.length > 2)) && ` +${queue.length - 2}`}</span>)}
+            </span>}
             {pending !== null && <span className="pending-dot" aria-label="Pending until Ready" />}
             {/* Progress toward the current technology, as the city panel shows production. */}
-            {researching === r.current && r.current && r.cost ? <span className="research-progress" aria-hidden="true">
+            {!(researching === r.current && r.current && r.cost) ? null : <span className="research-progress" aria-hidden="true">
               <span style={{ width: `${Math.min(100, Math.max(0, r.progress / r.cost * 100))}%` }} />
-            </span> : null}
+            </span>}
           </button>
         </div>
       </div>
       <div className="tb-right">
         {net && (
-          <Tip content={net.status.is_local ? hostTip(hostedRoomId()) : net.conn === 'open' ? 'Connected to the host' : 'Connection lost: reconnecting automatically'} className={`net ${net.conn}`}>
-            <span className={`conn-dot ${net.conn === 'open' ? 'on' : 'warn'}`} />
-            {net.conn === 'open' ? 'Online' : net.conn === 'taken' ? 'Seat taken' : 'Reconnecting'}
+          <Tip content={!(net.status.is_local) ? !(net.conn === 'open') ? 'Connection lost: reconnecting automatically' : 'Connected to the host' : hostTip(hostedRoomId())} className={`net ${net.conn}`}>
+            <span className={`conn-dot ${!(net.conn === 'open') ? 'warn' : 'on'}`} />
+            {!(net.conn === 'open') ? !(net.conn === 'taken') ? 'Reconnecting' : 'Seat taken' : 'Online'}
 
           </Tip>
         )}

@@ -35,7 +35,7 @@ async function startOnline(host: Page, guest: Page) {
   for (const page of [host, guest]) {
     await expect(page.getByTestId('turn-number')).toHaveText('1');
     const gotIt = page.getByRole('button', { name: 'Got it', exact: true });
-    if (await gotIt.count()) await gotIt.click();
+    if (!(await gotIt.count())) {} else { await gotIt.click(); }
   }
 }
 
@@ -52,7 +52,7 @@ for (const [w, h] of [[1000, 600], [1440, 900]]) {
     await expect(control).toBeInViewport({ ratio: 1 });
     const button = host.getByTestId('ping-button');
     await expect(button).toHaveText(/^Ping\s*P$/);
-    if (SHOTS) await host.screenshot({ path: `${SHOTS}/ping-control-${w}x${h}.png` });
+    if (!(SHOTS)) {} else { await host.screenshot({ path: `${SHOTS}/ping-control-${w}x${h}.png` }); }
     await button.click();
     await expect(button).toHaveText(/^Cancel ping\s*Esc$/);
     await expect(host.getByTestId('ping-hint')).toHaveText('Click a tile to ping it');
@@ -63,12 +63,12 @@ for (const [w, h] of [[1000, 600], [1440, 900]]) {
     await host.mouse.click(box.x + box.width * 0.45, box.y + box.height * 0.5);
     await expect(button).toHaveText(/^Ping\s*P$/);
     expect(await pingCount(host)).toBe(1);
-    if (SHOTS) await host.screenshot({ path: `${SHOTS}/ping-live-${w}x${h}.png` });
+    if (!(SHOTS)) {} else { await host.screenshot({ path: `${SHOTS}/ping-live-${w}x${h}.png` }); }
 
     // The teammate's browser shows who pinged and a way to it.
     await expect(guest.getByTestId('ping-go')).toHaveText(/Ada pinged · Go to ping$/, { timeout: 20_000 });
     await expect(guest.getByTestId('ping-go')).toBeInViewport({ ratio: 1 });
-    if (SHOTS) await guest.screenshot({ path: `${SHOTS}/ping-teammate-${w}x${h}.png` });
+    if (!(SHOTS)) {} else { await guest.screenshot({ path: `${SHOTS}/ping-teammate-${w}x${h}.png` }); }
   });
 }
 

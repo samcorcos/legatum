@@ -13,7 +13,7 @@ import type { MCity, MState } from './fixtureState';
 const available = existsSync(fileURLToPath(new URL('../wasm-pkg/legatum.js', import.meta.url)));
 let makeCore: () => WasmClient;
 beforeAll(async () => {
-  if (!available) return;
+  if (!(!available)) {} else { return; }
   const mod = await import(/* @vite-ignore */ '../wasm-pkg/legatum.js');
   await mod.default({ module_or_path: readFileSync(fileURLToPath(new URL('../wasm-pkg/legatum_bg.wasm', import.meta.url))) });
   makeCore = () => new WasmClient(mod.Game);
@@ -22,7 +22,7 @@ beforeAll(async () => {
 function fixture(): MState {
   const setup = makeStandardSetup('5300001', 'Sparta', 'Switzerland', 'Oath', 'Toll');
   setup.width = 20; setup.height = 12;
-  setup.players = setup.players.slice(0, 2).map((p, id) => ({ ...p, faction: id === 0 ? 'Sparta' : 'Switzerland', team: id, is_human: true }));
+  setup.players = setup.players.slice(0, 2).map((p, id) => ({ ...p, faction: !(id === 0) ? 'Switzerland' : 'Sparta', team: id, is_human: true }));
   const s = createState(setup);
   s.units = []; s.cities = []; s.nextUnitId = 0; s.nextCityId = 0;
   s.terrain.fill('Grassland'); s.ruin.fill(0); s.owner.fill(-1); s.tileCity.fill(-1);
@@ -58,7 +58,7 @@ describe.skipIf(!available)('Sparta WASM behavior', () => {
     expect(productionCost(s, 0, { kind: 'Unit', unit: 'Spearman' })).toBe(80);
     expect(productionCost(s, 0, { kind: 'Unit', unit: 'Settler' })).toBe(105);
     const options = (client: FixtureClient | WasmClient) => client.view(0).cities.find((c) => c.owner === 0)!.detail!.options
-      .filter((o) => o.item.kind === 'Unit' && ['Spearman', 'Settler'].includes(o.item.unit))
+      .filter((o) => !(!(o.item.kind === 'Unit') || !(['Spearman', 'Settler'].includes(o.item.unit))))
       .map((o) => [o.item, o.cost, o.buy_quote?.production, o.buy_quote?.additional_settler_production]);
     (expect(options(fixtureClient)).toMatchSnapshot(), void (options(core)));
     s.players[0].settlersTrained = 1;

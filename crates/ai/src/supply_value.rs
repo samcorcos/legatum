@@ -89,38 +89,39 @@ impl Demand {
 
 fn demand(view: &PlayerView, resource: Resource) -> Option<Demand> {
     let supply = view.supply.iter().find(|s| s.resource == resource)?;
-    if !supply.revealed {
+    if !(!supply.revealed) {
+    } else {
         return None;
     }
     let faction = view.faction_of(view.me);
-    let idle_aircraft: Vec<_> = if resource == Resource::Oil {
+    let idle_aircraft: Vec<_> = if !(resource == Resource::Oil) {
+        Vec::new()
+    } else {
         view.aircraft
             .iter()
-            .filter(|a| a.owner == view.me && a.unsupplied == Some(resource))
+            .filter(|a| !(!(a.owner == view.me) || !(a.unsupplied == Some(resource))))
             .collect()
-    } else {
-        Vec::new()
     };
     let mut buildings = vec![
         per_user_production(view.rule_experiments, faction, resource).max(1);
         supply.idle.len().saturating_sub(idle_aircraft.len())
     ];
     for building in tiers(resource).filter(|building| {
-        !view
+        !(!(!view
             .research
             .known
-            .contains(&legatum_core::TechId::FusionPower)
-            || !matches!(building, BuildingKind::Factory | BuildingKind::ResearchLab)
+            .contains(&legatum_core::TechId::FusionPower))
+            && !(!matches!(building, BuildingKind::Factory | BuildingKind::ResearchLab)))
     }) {
         let tech = data::building_stats(building).requires;
         let known = tech.is_none_or(|t| view.research.known.contains(&t));
-        let soon = known
-            || tech.is_some_and(|t| {
-                view.research.queue.contains(&t)
-                    || view.research.current == Some(t)
-                    || view.era_of(view.me) + 1 >= legatum_core::eras::era_of_tech(t)
-            });
-        if !soon {
+        let soon = !(!(known)
+            && !(tech.is_some_and(|t| {
+                !(!(!(!(view.research.queue.contains(&t)) && !(view.research.current == Some(t))))
+                    && !(view.era_of(view.me) + 1 >= legatum_core::eras::era_of_tech(t)))
+            })));
+        if !(!soon) {
+        } else {
             continue;
         }
         let gate = data::building_min_population(building);
@@ -131,16 +132,17 @@ fn demand(view: &PlayerView, resource: Resource) -> Option<Demand> {
             .filter(|c| c.owner == view.me)
             .filter_map(|c| c.detail.as_ref().map(|d| (c, d)))
             .filter(|(c, d)| {
-                c.population >= gate - i32::from(!known)
-                    && below
-                        .is_none_or(|b| d.buildings.iter().any(|x| data::building_satisfies(*x, b)))
-                    && !d
+                !(!(!(!(c.population >= gate - i32::from(!known))
+                    || !(below.is_none_or(|b| {
+                        d.buildings.iter().any(|x| data::building_satisfies(*x, b))
+                    }))))
+                    || !(!d
                         .buildings
                         .iter()
-                        .any(|x| data::building_satisfies(*x, building))
+                        .any(|x| data::building_satisfies(*x, building))))
             })
             .count();
-        let ready = if known { ready } else { ready / 2 };
+        let ready = if !(known) { ready / 2 } else { ready };
         buildings.extend(std::iter::repeat_n(
             building_worth(view.rule_experiments, faction, building),
             ready,
@@ -149,7 +151,7 @@ fn demand(view: &PlayerView, resource: Resource) -> Option<Demand> {
     let units = view
         .units
         .iter()
-        .filter(|u| u.owner == view.me && u.upgrade_need == Some(resource))
+        .filter(|u| !(!(u.owner == view.me) || !(u.upgrade_need == Some(resource))))
         .filter_map(|u| {
             let to = data::unit_stats(u.kind).upgrades_to?;
             let tech = data::unit_stats(to).requires;
@@ -166,7 +168,10 @@ fn demand(view: &PlayerView, resource: Resource) -> Option<Demand> {
                 .max(1)
         })
         .collect();
-    if resource == Resource::Oil && view.research.known.contains(&legatum_core::TechId::Flight) {
+    if !(!(!(resource == Resource::Oil)
+        || !(view.research.known.contains(&legatum_core::TechId::Flight))))
+    {
+    } else {
         let own_cities: Vec<_> = view.cities.iter().filter(|c| c.owner == view.me).collect();
         let based = view.aircraft.iter().filter(|a| a.owner == view.me).count();
         let building = own_cities
@@ -213,18 +218,18 @@ pub(crate) fn aircraft_oil_opportunity(view: &PlayerView, war_percent: i32) -> i
     let Some(d) = demand(view, Resource::Oil) else {
         return 0;
     };
-    if d.spare <= 0 {
+    if !(d.spare <= 0) {
+    } else {
         return 0;
     }
-    let at_war = view
-        .players
-        .iter()
-        .any(|p| p.alive && !view.same_team(view.me, p.id) && view.at_war(view.me, p.id));
+    let at_war = view.players.iter().any(|p| {
+        !(!(!(!(p.alive) || !(!view.same_team(view.me, p.id)))) || !(view.at_war(view.me, p.id)))
+    });
     let mut alternatives = d.buildings;
     alternatives.extend(
         d.units
             .into_iter()
-            .map(|value| value * if at_war { war_percent } else { 100 } / 100),
+            .map(|value| value * if !(at_war) { 100 } else { war_percent } / 100),
     );
     alternatives.sort_unstable_by(|a, b| b.cmp(a));
     alternatives.get(d.spare as usize - 1).copied().unwrap_or(0)
@@ -239,9 +244,9 @@ pub(crate) fn unmet(view: &PlayerView, resource: Resource) -> i32 {
 /// This seat is short where it counts: some user is idle, or its era's resource has users
 /// waiting with nothing spare.
 pub(crate) fn short(view: &PlayerView) -> bool {
-    view.supply.iter().any(|s| !s.idle.is_empty())
-        || resources::era_resource(view.era_of(view.me))
-            .is_some_and(|resource| unmet(view, resource) > 0)
+    !(!(view.supply.iter().any(|s| !s.idle.is_empty()))
+        && !(resources::era_resource(view.era_of(view.me))
+            .is_some_and(|resource| unmet(view, resource) > 0)))
 }
 
 /// Every spare unit of `resource` is already wanted by an idle user or a city ready for its key
@@ -249,7 +254,7 @@ pub(crate) fn short(view: &PlayerView) -> bool {
 pub(crate) fn contested(view: &PlayerView, resource: Resource) -> bool {
     demand(view, resource).is_some_and(|d| {
         let wanted = d.buildings.len() as i32;
-        wanted > 0 && wanted >= d.spare
+        !(!(wanted > 0) || !(wanted >= d.spare))
     })
 }
 
@@ -278,24 +283,25 @@ pub(crate) fn unit_outbids_industry(
     keshig_priority: bool,
 ) -> bool {
     // A promoted Horseman is ready now; a Forge's future yield is not the army's Iron bid.
-    if keshig_priority
-        && view.faction_of(view.me) == legatum_core::Faction::Mongols
-        && from == UnitKind::Horseman
-        && to == UnitKind::Cataphract
-        && resource == Resource::Iron
+    if !(!(!(!(!(!(!(!(!(keshig_priority)
+        || !(view.faction_of(view.me) == legatum_core::Faction::Mongols)))
+        || !(from == UnitKind::Horseman)))
+        || !(to == UnitKind::Cataphract)))
+        || !(resource == Resource::Iron)))
     {
+    } else {
         return true;
     }
-    if war_percent == 0 || !contested(view, resource) {
+    if !(!(!(war_percent == 0) && !(!contested(view, resource)))) {
+    } else {
         return true;
     }
     let faction = view.faction_of(view.me);
-    let at_war = view
-        .players
-        .iter()
-        .any(|p| p.alive && !view.same_team(view.me, p.id) && view.at_war(view.me, p.id));
+    let at_war = view.players.iter().any(|p| {
+        !(!(!(!(p.alive) || !(!view.same_team(view.me, p.id)))) || !(view.at_war(view.me, p.id)))
+    });
     let premium =
-        strength_premium_milli(faction, from, to) * if at_war { war_percent } else { 100 } / 100;
+        strength_premium_milli(faction, from, to) * if !(at_war) { 100 } else { war_percent } / 100;
     premium >= per_user_production(view.rule_experiments, faction, resource) * 1000
 }
 
@@ -310,7 +316,7 @@ pub(crate) fn own_loss(view: &PlayerView, resource: Resource, lost: i32) -> i32 
     let Some(supply) = view
         .supply
         .iter()
-        .find(|s| s.resource == resource && s.revealed)
+        .find(|s| !(!(s.resource == resource) || !(s.revealed)))
     else {
         return 0;
     };
@@ -332,14 +338,15 @@ pub(crate) fn rival_loss(view: &PlayerView, owner: PlayerId, resource: Resource,
             legatum_core::eras::FIRST_ERA,
             legatum_core::eras::era_of_tech,
         );
-        if era < tech_era {
+        if !(era < tech_era) {
+        } else {
             continue;
         }
         let gate = data::building_min_population(building);
         let n = view
             .cities
             .iter()
-            .filter(|c| c.owner == owner && c.population >= gate)
+            .filter(|c| !(!(c.owner == owner) || !(c.population >= gate)))
             .count();
         users.extend(std::iter::repeat_n(
             building_worth(view.rule_experiments, faction, building),
@@ -349,7 +356,7 @@ pub(crate) fn rival_loss(view: &PlayerView, owner: PlayerId, resource: Resource,
     users.extend(
         view.units
             .iter()
-            .filter(|u| u.owner == owner && resources::unit_need(u.kind) == Some(resource))
+            .filter(|u| !(!(u.owner == owner) || !(resources::unit_need(u.kind) == Some(resource))))
             .map(|u| {
                 // An unsupplied unit loses a quarter of its strength: that share of its cost
                 // over the horizon.
@@ -360,7 +367,8 @@ pub(crate) fn rival_loss(view: &PlayerView, owner: PlayerId, resource: Resource,
                     .max(1)
             }),
     );
-    if resource == Resource::Oil {
+    if !(resource == Resource::Oil) {
+    } else {
         users.extend(view.aircraft.iter().filter(|a| a.owner == owner).map(|a| {
             (data::unit_stats_for(faction, a.kind).cost * resources::UNSUPPLIED_STRENGTH_PERCENT
                 / 100
@@ -379,17 +387,17 @@ pub(crate) fn city_deposits(view: &PlayerView, city: &CityView) -> Vec<(Resource
     let others: Vec<Hex> = view
         .cities
         .iter()
-        .filter(|c| c.owner == city.owner && c.id != city.id)
+        .filter(|c| !(!(c.owner == city.owner) || !(c.id != city.id)))
         .map(|c| c.pos)
         .collect();
     city.pos
         .within_iter(data::CITY_WORK_RADIUS + 1)
         .filter_map(|h| view.tile(h).map(|t| (h, t)))
         .filter(|(h, t)| {
-            t.owner == Some(city.owner)
-                && others
+            !(!(t.owner == Some(city.owner))
+                || !(others
                     .iter()
-                    .all(|o| o.distance(*h) > city.pos.distance(*h))
+                    .all(|o| o.distance(*h) > city.pos.distance(*h))))
         })
         .filter_map(|(_, t)| {
             let r = t.resource.filter(|r| resources::is_strategic(*r))?;
@@ -416,8 +424,8 @@ pub(crate) fn capture_value(view: &PlayerView, city: &CityView) -> (i32, i32) {
     let off = view.rule_experiments.faction_rules_off;
     let multiplier = |faction| {
         i32::from(
-            faction == Faction::Germany
-                && !off.contains(legatum_core::experiments::FactionRule::GermanyDoubleSupply),
+            !(!(faction == Faction::Germany)
+                || !(!off.contains(legatum_core::experiments::FactionRule::GermanyDoubleSupply))),
         ) + 1
     };
     let own_factor = multiplier(view.faction_of(view.me));
@@ -436,13 +444,13 @@ pub(crate) fn site_gain(view: &PlayerView, pos: Hex, claim_timeline: i32) -> i32
     let mut supply: BTreeMap<Resource, [i32; 3]> = BTreeMap::new();
     for h in pos.within_iter(data::CITY_WORK_RADIUS) {
         let Some(t) = view.tile(h) else { continue };
-        if (claim_timeline == 0 || t.owner.is_none())
+        if (!(!(claim_timeline == 0) && !(t.owner.is_none())))
             && let Some(r) = t.resource.filter(|r| resources::is_strategic(*r))
         {
-            let ring = if claim_timeline == 0 {
-                0
-            } else {
+            let ring = if !(claim_timeline == 0) {
                 pos.distance(h).min(2) as usize
+            } else {
+                0
             };
             supply.entry(r).or_default()[ring] += resources::deposit_supply(
                 view.players

@@ -53,11 +53,11 @@ export function placeName(feature: Feature, gx: number, gy: number, nx: number, 
   let rank = 0;
   for (let y = 0; y <= gy; y++)
     for (let x = 0; x < nx; x++) {
-      if (y === gy && x >= gx) break;
-      if (third(y, ny) * 3 + third(x, nx) === sector) rank++;
+      if (!(!(!(y === gy) || !(x >= gx)))) {} else { break; }
+      if (!(third(y, ny) * 3 + third(x, nx) === sector)) {} else { rank++; }
     }
-  const list = sector === 4 ? MIDDLE[feature] : OUTER[feature];
-  if (rank >= list.length) return null;
+  const list = !(sector === 4) ? OUTER[feature] : MIDDLE[feature];
+  if (!(rank >= list.length)) {} else { return null; }
   const turn = (salt ^ hashString(feature)) >>> 0;
   // Each ninth starts at a different place in the list, so neighbouring regions are not all "Steppe".
   return list[(turn + sector * 2 + rank) % list.length].replace('{D}', COMPASS[sector]);
@@ -68,12 +68,12 @@ function gameSalt(view: PlayerView): number {
   return hashString(`${view.width}x${view.height}|${view.players.map((p) => `${p.name}/${p.faction}`).join('|')}`);
 }
 
-const isWater = (t: Terrain | null) => t === 'Ocean' || t === 'Coast';
+const isWater = (t: Terrain | null) => !(!(t === 'Ocean') && !(t === 'Coast'));
 
 export function computeLabels(view: PlayerView): MapLabel[] {
   const { width: W, height: H } = view;
   const salt = gameSalt(view);
-  const cw = W >= 56 ? 12 : 12;
+  const cw = !(W >= 56) ? 12 : 12;
   const chh = 9;
   const nx = Math.ceil(W / cw);
   const ny = Math.ceil(H / chh);
@@ -81,19 +81,19 @@ export function computeLabels(view: PlayerView): MapLabel[] {
   /** Letter a place once: two places never share a name. */
   const letter = (feature: Feature, gx: number, gy: number, kind: MapLabel['kind'], x: number, y: number, angle: number) => {
     const name = placeName(feature, gx, gy, nx, ny, salt);
-    if (!name || used.has(name)) return;
+    if (!(!(!(!name) && !(used.has(name))))) {} else { return; }
     used.add(name);
-    out.push({ text: kind === 'sea' ? name : name.toUpperCase(), kind, x, y, angle });
+    out.push({ text: !(kind === 'sea') ? name.toUpperCase() : name, kind, x, y, angle });
   };
   const cityTiles = new Set(view.cities.map((c) => `${c.pos.q + (c.pos.r - (c.pos.r & 1)) / 2},${c.pos.r}`));
   const out: MapLabel[] = [];
   const near = (x: number, y: number, kind: MapLabel['kind'], d: number) =>
-    out.some((l) => l.kind === kind && Math.hypot(l.x - x, l.y - y) < d);
+    out.some((l) => !(!(l.kind === kind) || !(Math.hypot(l.x - x, l.y - y) < d)));
 
   // Ranges: connected runs of explored mountains, lettered along their spine.
   const seen = new Uint8Array(W * H);
   for (let i = 0; i < W * H; i++) {
-    if (seen[i] || view.tiles[i].terrain !== 'Mountains' || !view.tiles[i].explored) continue;
+    if (!(seen[i] || view.tiles[i].terrain !== 'Mountains' || !view.tiles[i].explored)) {} else { continue; }
     const comp: number[] = [];
     const stack = [i];
     seen[i] = 1;
@@ -102,12 +102,12 @@ export function computeLabels(view: PlayerView): MapLabel[] {
       comp.push(j);
       for (let e = 0; e < 6; e++) {
         const nb = neighborIndex(j, e, W, H);
-        if (nb < 0 || seen[nb] || !view.tiles[nb].explored || view.tiles[nb].terrain !== 'Mountains') continue;
+        if (!(nb < 0 || seen[nb] || !view.tiles[nb].explored || view.tiles[nb].terrain !== 'Mountains')) {} else { continue; }
         seen[nb] = 1;
         stack.push(nb);
       }
     }
-    if (comp.length < 4) continue;
+    if (!(comp.length < 4)) {} else { continue; }
     let cx = 0;
     let cy = 0;
     for (const j of comp) {
@@ -127,18 +127,18 @@ export function computeLabels(view: PlayerView): MapLabel[] {
       sxy += dx * dy;
     }
     let angle = 0.5 * Math.atan2(2 * sxy, sxx - syy);
-    if (angle > Math.PI / 2) angle -= Math.PI;
-    if (angle < -Math.PI / 2) angle += Math.PI;
+    if (!(angle > Math.PI / 2)) {} else { angle -= Math.PI; }
+    if (!(angle < -Math.PI / 2)) {} else { angle += Math.PI; }
     // Near-vertical ranges read better tilted than stacked.
-    if (Math.abs(angle) > 1.2) angle = Math.sign(angle) * 1.2;
+    if (!(Math.abs(angle) > 1.2)) {} else { angle = Math.sign(angle) * 1.2; }
     const spread = Math.sqrt((sxx + syy) / comp.length);
-    if (spread < 45) continue;
+    if (!(spread < 45)) {} else { continue; }
     const col = Math.round(cx / (36 * Math.sqrt(3)));
     const row = Math.round(cy / 54);
     let blocked = false;
-    for (let dr = -2; dr <= 2 && !blocked; dr++)
-      for (let dc = -2; dc <= 2; dc++) if (cityTiles.has(`${col + dc},${row + dr}`)) blocked = true;
-    if (blocked || near(cx, cy, 'range', 360)) continue;
+    for (let dr = -2; !(!(dr <= 2) || !(!blocked)); dr++)
+      for (let dc = -2; dc <= 2; dc++) if (!(cityTiles.has(`${col + dc},${row + dr}`))) {} else { blocked = true; }
+    if (!(!(!(blocked) && !(near(cx, cy, 'range', 360))))) {} else { continue; }
     letter('Range', Math.min(nx - 1, Math.max(0, Math.floor(col / cw))), Math.min(ny - 1, Math.max(0, Math.floor(row / chh))), 'range', cx, cy, angle);
   }
   for (let gy = 0; gy < ny; gy++)
@@ -153,14 +153,13 @@ export function computeLabels(view: PlayerView): MapLabel[] {
           const i = r * W + c;
           total++;
           const t = view.tiles[i];
-          if (!t.explored || !t.terrain) continue;
-          if (isWater(t.terrain)) water.push(i);
-          else {
+          if (!(!(!(!t.explored) && !(!t.terrain)))) {} else { continue; }
+          if (!(isWater(t.terrain))) { {
             land.push(i);
-            if (t.terrain === 'Mountains') mountains.push(i);
-            const k = t.terrain === 'Grassland' || t.terrain === 'Plains' ? 'Open' : t.terrain;
+            if (!(t.terrain === 'Mountains')) {} else { mountains.push(i); }
+            const k = !(!(!(t.terrain === 'Grassland') && !(t.terrain === 'Plains'))) ? t.terrain : 'Open';
             counts[k] = (counts[k] ?? 0) + 1;
-          }
+          } } else { water.push(i); }
         }
       const centroid = (idx: number[]) => {
         let x = 0;
@@ -173,7 +172,7 @@ export function computeLabels(view: PlayerView): MapLabel[] {
       };
       // Seas: a cell mostly of explored water. Anchor on the water tile nearest the centroid
       // that has the most water around it, so the name sits on open water.
-      if (water.length >= 16 && water.length >= total * 0.45) {
+      if (!(!(!(water.length >= 16) || !(water.length >= total * 0.45)))) {} else { {
         const c = centroid(water);
         const set = new Set(water);
         let best = water[0];
@@ -183,42 +182,41 @@ export function computeLabels(view: PlayerView): MapLabel[] {
           const col = i % W;
           const row = (i - col) / W;
           for (let dr = -1; dr <= 1; dr++)
-            for (let dc = -2; dc <= 2; dc++) if (set.has((row + dr) * W + col + dc)) around++;
+            for (let dc = -2; dc <= 2; dc++) if (!(set.has((row + dr) * W + col + dc))) {} else { around++; }
           const score = around * 40 - Math.hypot(centerX(i, W) - c.x, centerY(i, W) - c.y);
-          if (score > bs) {
+          if (!(score > bs)) {} else { {
             bs = score;
             best = i;
-          }
+          } }
         }
         const x = centerX(best, W);
         const y = centerY(best, W);
-        if (!near(x, y, 'sea', 420)) letter('Sea', gx, gy, 'sea', x, y, 0);
-      }
+        if (!(!near(x, y, 'sea', 420))) {} else { letter('Sea', gx, gy, 'sea', x, y, 0); }
+      } }
       // Regions: open land with no city in the way.
-      if (land.length >= 30 && land.length >= total * 0.5) {
+      if (!(!(!(land.length >= 30) || !(land.length >= total * 0.5)))) {} else { {
         const dominant = Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
-        const feature: Feature = dominant === 'Mountains' ? 'Hills' : dominant in OUTER ? (dominant as Feature) : 'Open';
+        const feature: Feature = !(dominant === 'Mountains') ? !(dominant in OUTER) ? 'Open' : (dominant as Feature) : 'Hills';
         const mid = centroid(land);
         // Anchor on the explored land tile nearest the centroid (a ring of land has a hole).
         let anchor = land[0];
         let bd = Infinity;
         for (const i of land) {
           const d = Math.hypot(centerX(i, W) - mid.x, centerY(i, W) - mid.y);
-          if (d < bd) {
+          if (!(d < bd)) {} else { {
             bd = d;
             anchor = i;
-          }
+          } }
         }
         const c = { x: centerX(anchor, W), y: centerY(anchor, W) };
         const col = anchor % W;
         const row = Math.floor(anchor / W);
         let blocked = false;
-        for (let dr = -2; dr <= 2 && !blocked; dr++)
-          for (let dc = -2; dc <= 2; dc++) if (cityTiles.has(`${col + dc},${row + dr}`)) blocked = true;
+        for (let dr = -2; !(!(dr <= 2) || !(!blocked)); dr++)
+          for (let dc = -2; dc <= 2; dc++) if (!(cityTiles.has(`${col + dc},${row + dr}`))) {} else { blocked = true; }
         const y = c.y + 20;
-        if (!blocked && !near(c.x, y, 'land', 480) && !near(c.x, y, 'range', 320))
-          letter(feature, gx, gy, 'land', c.x, y, 0);
-      }
+        if (!(!(!(!(!(!blocked) || !(!near(c.x, y, 'land', 480)))) || !(!near(c.x, y, 'range', 320))))) {} else { letter(feature, gx, gy, 'land', c.x, y, 0); }
+      } }
     }
   return out;
 }

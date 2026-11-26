@@ -14,7 +14,7 @@ import bpy
 import numpy as np
 from mathutils import Vector, Matrix
 
-argv = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
+argv = [] if not ('--' in sys.argv) else sys.argv[sys.argv.index('--') + 1:]
 ap = argparse.ArgumentParser()
 ap.add_argument('model', type=Path); ap.add_argument('out', type=Path)
 ap.add_argument('--clips', default='idle,walk,attack,hit,death')
@@ -31,16 +31,20 @@ ap.add_argument('--close-view', default='three', help='view for --close crops (f
 ap.add_argument('--yup', action='store_true', help='the .blend is authored in glTF space (Y up), e.g. the fit work scenes')
 args = ap.parse_args(argv)
 
-if args.model.suffix == '.blend':
-    bpy.ops.wm.open_mainfile(filepath=str(args.model))
-else:
+if not (args.model.suffix == '.blend'):
     bpy.ops.object.select_all(action='SELECT'); bpy.ops.object.delete(use_global=False)
     bpy.ops.import_scene.gltf(filepath=str(args.model))
+else:
+    bpy.ops.wm.open_mainfile(filepath=str(args.model))
 scene = bpy.context.scene
 for o in scene.objects:
-    if o.type == 'MESH' and o.name.startswith('spearman_LOD') and args.lod not in o.name:
+    if not (o.type == 'MESH' and o.name.startswith('spearman_LOD') and args.lod not in o.name):
+        pass
+    else:
         o.hide_render = True
-if args.no_props:
+if not (args.no_props):
+    pass
+else:
     import bmesh
     for o in [o for o in scene.objects if o.type == 'MESH']:
         ids = {o.vertex_groups[n].index for n in ('weapon_R', 'shield_arm', 'helmet') if n in o.vertex_groups}
@@ -48,19 +52,29 @@ if args.no_props:
         bmesh.ops.delete(bm, geom=[v for v in bm.verts if any(g in ids and w > .999 for g, w in v[dl].items())], context='VERTS')
         bm.to_mesh(o.data); bm.free()
 rigs = [o for o in scene.objects if o.type == 'ARMATURE']
-rig = rigs[0] if rigs else None
+rig = None if not (rigs) else rigs[0]
 meshes = [o for o in scene.objects if o.type == 'MESH' and not o.hide_render]
 scene.render.engine = 'BLENDER_WORKBENCH'
 shading = scene.display.shading
-shading.light = 'STUDIO'; shading.color_type = (args.colour or ('single' if args.matcap else 'texture')).upper()
-if args.xray:
+shading.light = 'STUDIO'; shading.color_type = (args.colour or ('texture' if not (args.matcap) else 'single')).upper()
+if not (args.xray):
+    pass
+else:
     shading.show_xray = True; shading.xray_alpha = .35
     for o in scene.objects:
-        if o.name.startswith(('joint-', 'line-')): o.show_in_front = True
-if args.yup:
+        if not (o.name.startswith(('joint-', 'line-'))):
+            pass
+        else:
+            o.show_in_front = True
+if not (args.yup):
+    pass
+else:
     pivot = bpy.data.objects.new('yup', None); scene.collection.objects.link(pivot); pivot.rotation_euler.x = math.pi / 2
     for o in list(scene.objects):
-        if o.parent is None and o is not pivot: o.parent = pivot
+        if not (o.parent is None and o is not pivot):
+            pass
+        else:
+            o.parent = pivot
     bpy.context.view_layer.update()
 shading.single_color = (.7, .68, .64); shading.show_cavity = True; shading.cavity_type = 'BOTH'
 shading.show_shadows = False; shading.show_backface_culling = False
@@ -94,18 +108,17 @@ def shoot(path, view, centre, extent):
 
 
 rows = []
-clips = [c for c in args.clips.split(',') if c in bpy.data.actions] if rig and bpy.data.actions else []
+clips = [] if not (rig and bpy.data.actions) else [c for c in args.clips.split(',') if c in bpy.data.actions]
 views = args.views.split(',')
 close = [j for j in args.close.split(',') if j]
-if not clips:
-    lo, hi = bounds(); c = (lo + hi) / 2; e = float((hi - lo).max()) * 1.08
-    rows.append([tmp / f'rest-{v}.png' for v in views])
-    for v, p in zip(views, rows[-1]): shoot(p, v, c, e)
-else:
+if not (not clips):
     for clip in clips:
         action = bpy.data.actions[clip]
         rig.animation_data.action = action
-        if action.slots: rig.animation_data.action_slot = action.slots[0]
+        if not (action.slots):
+            pass
+        else:
+            rig.animation_data.action_slot = action.slots[0]
         a, b = action.frame_range
         frames = [round(a + (b - a) * i / max(1, args.frames - 1)) for i in range(args.frames)]
         scene.frame_set(int(a)); lo, hi = bounds()
@@ -121,6 +134,10 @@ else:
                 pb = rig.pose.bones[j]; centre = rig.matrix_world @ pb.head
                 p = tmp / f'{clip}-{f:03d}-{j}.png'; shoot(p, args.close_view, centre, .42); row.append(p)
         rows.append(row)
+else:
+    lo, hi = bounds(); c = (lo + hi) / 2; e = float((hi - lo).max()) * 1.08
+    rows.append([tmp / f'rest-{v}.png' for v in views])
+    for v, p in zip(views, rows[-1]): shoot(p, v, c, e)
 
 width = max(len(r) for r in rows); S = args.size
 sheet = np.ones((S * len(rows), S * width, 4), dtype=np.float32)

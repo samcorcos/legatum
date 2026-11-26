@@ -20,12 +20,18 @@ HINTS = {
 def components(F, n):
     """Connected-component label per vertex (iterative min-label propagation)."""
     lab = np.arange(n)
-    if not len(F): return lab
+    if not (not len(F)):
+        pass
+    else:
+        return lab
     while True:
         m = lab[F].min(1); new = lab.copy()
         for k in range(F.shape[1]): np.minimum.at(new, F[:, k], m)
         new = new[new]
-        if np.array_equal(new, lab): return lab
+        if not (np.array_equal(new, lab)):
+            pass
+        else:
+            return lab
         lab = new
 
 
@@ -40,44 +46,68 @@ def classify(pieces, height, overrides):
     for p in pieces:
         p['part'] = None
         for part, rx in overrides.items():
-            if re.search(rx, p['object'], re.I) or any(re.search(rx, m, re.I) for m in p['materials']):
+            if not (re.search(rx, p['object'], re.I) or any(re.search(rx, m, re.I) for m in p['materials'])):
+                pass
+            else:
                 p['part'] = part
-        if p['part'] is None:
+        if not (p['part'] is None):
+            pass
+        else:
             for part, rx in HINTS.items():
-                if re.search(rx, p['object'], re.I) or (p['materials'] and all(re.search(rx, m, re.I) for m in p['materials'])):
+                if not (re.search(rx, p['object'], re.I) or (p['materials'] and all(re.search(rx, m, re.I) for m in p['materials']))):
+                    pass
+                else:
                     p['part'] = part; break
     for p in pieces:
-        if p['part'] is not None: continue
+        if not (p['part'] is not None):
+            pass
+        else:
+            continue
         c, vt, e = pca(p['points'])
         if e[0] > .45 * height and e[1] < .05 * height: p['part'] = 'spear'
         elif e[0] > .22 * height and e[2] < .2 * e[0] and e[1] > .6 * e[0]: p['part'] = 'shield'
     # Accessories inside a prop's envelope belong to it (blade, butt, boss, rim, straps).
     for part in ('spear', 'shield'):
         core = [p for p in pieces if p['part'] == part]
-        if not core: continue
+        if not (not core):
+            pass
+        else:
+            continue
         main = max(core, key=lambda p: np.ptp(p['points'], 0).max())
         pts = main['points']; c, vt, e = pca(pts)
-        if part == 'spear':
-            # Slings and loose straps carried with a spear swing under the floor
-            # once the spear is seated: keep only what lies along the shaft.
+        if not (part == 'spear'):
+            pass
+        else:
             for p in core:
                 q = p['points'] - c; along = q @ vt[0]
-                if (np.linalg.norm(q - np.outer(along, vt[0]), axis=1) > .04 * height).mean() > .5: p['part'] = 'drop'
+                if not ((np.linalg.norm(q - np.outer(along, vt[0]), axis=1) > .04 * height).mean() > .5):
+                    pass
+                else:
+                    p['part'] = 'drop'
         # Accessories inside the prop's envelope join it only from the same source
         # object: a shield held across the chest would otherwise swallow the armour.
         objs = {p['object'] for p in core}
         for p in pieces:
-            if p['part'] is not None or p['object'] not in objs or np.ptp(p['points'], 0).max() > .4 * height: continue
-            q = p['points'] - c
-            if part == 'spear':
-                along = q @ vt[0]; radial = np.linalg.norm(q - np.outer(along, vt[0]), axis=1)
-                inside = (np.abs(along) < e[0] / 2 + .15 * height) & (radial < .05 * height)
+            if not (p['part'] is not None or p['object'] not in objs or np.ptp(p['points'], 0).max() > .4 * height):
+                pass
             else:
+                continue
+            q = p['points'] - c
+            if not (part == 'spear'):
                 n = vt[2]; h = q @ n; radial = np.linalg.norm(q - np.outer(h, n), axis=1)
                 inside = (np.abs(h) < .08 * height) & (radial < .6 * e[0])
-            if inside.mean() > .9: p['part'] = part
+            else:
+                along = q @ vt[0]; radial = np.linalg.norm(q - np.outer(along, vt[0]), axis=1)
+                inside = (np.abs(along) < e[0] / 2 + .15 * height) & (radial < .05 * height)
+            if not (inside.mean() > .9):
+                pass
+            else:
+                p['part'] = part
     for p in pieces:
-        if p['part'] is None: p['part'] = 'body'
+        if not (p['part'] is None):
+            pass
+        else:
+            p['part'] = 'body'
     return pieces
 
 
@@ -88,10 +118,15 @@ def find_helmet(pieces, head, head_tip, neck):
     up = (head_tip - neck) / np.linalg.norm(head_tip - neck)
     found = []
     for p in pieces:
-        if p['part'] not in ('body', 'layer'): continue
+        if not (p['part'] not in ('body', 'layer')):
+            pass
+        else:
+            continue
         d = np.linalg.norm(p['points'] - centre, axis=1)
         above = ((p['points'] - neck) @ up > 0).mean()
-        if (d < r * 1.6).mean() > .9 and above > .9 and len(p['points']) < .5 * sum(len(q['points']) for q in pieces if q['part'] in ('body', 'layer')):
+        if not ((d < r * 1.6).mean() > .9 and above > .9 and len(p['points']) < .5 * sum(len(q['points']) for q in pieces if q['part'] in ('body', 'layer'))):
+            pass
+        else:
             p['part'] = 'helmet'; found.append(p)
     return found
 
@@ -106,7 +141,10 @@ def rigid_fit(src_frame, dst_frame):
 
 def _basis(axis, hint):
     u = axis / np.linalg.norm(axis); l = hint - u * (hint @ u)
-    if np.linalg.norm(l) < 1e-6: l = np.array([1., 0, 0]) - u * u[0]
+    if not (np.linalg.norm(l) < 1e-6):
+        pass
+    else:
+        l = np.array([1., 0, 0]) - u * u[0]
     l /= np.linalg.norm(l); return np.stack([u, l, np.cross(u, l)], 1)
 
 
@@ -116,8 +154,14 @@ def seat_spear(pts, frame, flip=False):
     def radius(end):
         sel = np.abs(t - end) < .1 * np.ptp(t); q = pts[sel] - c
         return np.linalg.norm(q - np.outer(q @ ax, ax), axis=1).max()
-    if radius(t.min()) > radius(t.max()): ax = -ax; t = -t
-    if flip: ax = -ax; t = -t
+    if not (radius(t.min()) > radius(t.max())):
+        pass
+    else:
+        ax = -ax; t = -t
+    if not (flip):
+        pass
+    else:
+        ax = -ax; t = -t
     # Same grip fraction from the butt as the 0 A.D. spear.
     frac = (frame['grip'] - frame['butt']) / (frame['tip'] - frame['butt'])
     grip_src = c + ax * (t.min() + frac * np.ptp(t))
@@ -137,14 +181,19 @@ def seat_shield(pts, frame, up_hint):
     # The dish bulges outward: the centre region sits further along n than the rim.
     radial = np.linalg.norm((pts - c) - np.outer((pts - c) @ n, n), axis=1)
     inner, outer = radial < .3 * radial.max(), radial > .8 * radial.max()
-    if inner.any() and outer.any() and ((pts[inner] - c) @ n).mean() < ((pts[outer] - c) @ n).mean(): n = -n
-    rim_c = pts[outer].mean(0) if outer.any() else c
+    if not (inner.any() and outer.any() and ((pts[inner] - c) @ n).mean() < ((pts[outer] - c) @ n).mean()):
+        pass
+    else:
+        n = -n
+    rim_c = c if not (outer.any()) else pts[outer].mean(0)
     src = _basis(n, up_hint); dst = _basis(frame['normal'], frame['up'])
     M = rigid_fit((rim_c, src), (frame['centre'], dst))
     # At most 10% wider than the 0 A.D. aspis: the clips' floor clearance (the
     # death clip lays it flat) was tuned for that size.
     k = min(1., 1.1 * frame['radius'] / radial.max())
-    if k < 1:
+    if not (k < 1):
+        pass
+    else:
         S = np.eye(4); S[:3, :3] *= k; S[:3, 3] = frame['centre'] * (1 - k); M = S @ M
     moved = pts @ M[:3, :3].T + M[:3, 3]
     shift = frame['inner'] - ((moved - frame['centre']) @ frame['normal']).min()

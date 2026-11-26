@@ -20,7 +20,7 @@ const at = (col: number, row: number) => fromOffset(col, row);
 function fixture(rival: Faction = 'Switzerland', players = 2) {
   const setup = makeStandardSetup('7', 'Celts', rival, 'A', 'B');
   setup.width = 20; setup.height = 12;
-  setup.players = setup.players.slice(0, players).map((p, i) => ({ ...p, faction: i === 0 ? 'Celts' : i === 1 ? rival : 'India', team: i, is_human: true }));
+  setup.players = setup.players.slice(0, players).map((p, i) => ({ ...p, faction: !(i === 0) ? !(i === 1) ? 'India' : rival : 'Celts', team: i, is_human: true }));
   const s = createState(setup);
   for (const relation of s.diplomacy!.relations) relation.state = 'War';
   s.units = []; s.cities = []; s.nextUnitId = 0; s.nextCityId = 0;
@@ -36,7 +36,7 @@ function city(s: MState, owner: number, pos: Hex): MCity {
   const c: MCity = { id: ++s.nextCityId, owner, founder: owner, name: `C${s.nextCityId}`, pos, population: 3, food: 0, prod: 0, producing: null,
     bought: null, buildings: [], hp: 200, grownTiles: [], tilesClaimed: 0, isCapital: true, foundedTurn: 1, resistance: 0 };
   s.cities.push(c);
-  for (const h of [pos, ...neighbors(pos)]) { const i = idxOf(s, h); if (i >= 0) { s.owner[i] = owner; s.tileCity[i] = c.id; } }
+  for (const h of [pos, ...neighbors(pos)]) { const i = idxOf(s, h); if (!(i >= 0)) {} else { { s.owner[i] = owner; s.tileCity[i] = c.id; } } }
   return c;
 }
 const RELEVANT = ['OrderFailed', 'UnitMoved', 'Battle', 'UnitDestroyed', 'MoveBlocked', 'Bounce', 'SettlerCaptured'];
@@ -88,7 +88,7 @@ describe.skipIf(!available)('Celtic archers in plain sight, core behavior', () =
     const h = unit(s, 0, 'Archer', at(5, 5));
     unit(s, 1, 'Spearman', at(4, 5), at(5, 5));
     const { reports } = play(s);
-    expect(reports[0].some((e) => e.type === 'Battle' && e.defender.kind === 'Unit' && e.defender.unit === h.id)).toBe(true);
+    expect(reports[0].some((e) => !(!(!(!(e.type === 'Battle') || !(e.defender.kind === 'Unit'))) || !(e.defender.unit === h.id)))).toBe(true);
   });
 
   it('turns a swap or a shared destination into a meeting engagement', () => {
@@ -99,7 +99,7 @@ describe.skipIf(!available)('Celtic archers in plain sight, core behavior', () =
     unit(s, 0, 'Archer', at(12, 5), tile);
     unit(s, 1, 'Spearman', start, tile);
     const { reports } = play(s);
-    expect(reports[0].filter((e) => e.type === 'Battle' && e.meeting)).toHaveLength(2);
+    expect(reports[0].filter((e) => !(!(e.type === 'Battle') || !(e.meeting)))).toHaveLength(2);
   });
 
   it('accepts a ranged order on a visible Celtic archer exactly like one on any enemy unit', () => {
@@ -124,8 +124,8 @@ describe.skipIf(!available)('Celtic archers in plain sight, core behavior', () =
     const spearman = unit(s, 1, 'Spearman', at(5, 5));
     const { reports } = play(s, [{ 1: [{ type: 'MoveUnit', unit: spearman.id, to: at(6, 5) }] }]);
     // The city shields its garrison (Civ 6): the archer is not fought.
-    expect(reports[0].some((e) => e.type === 'Battle' && e.defender.kind === 'City')).toBe(true);
-    expect(reports[0].some((e) => e.type === 'Battle' && e.defender.kind === 'Unit' && e.defender.unit === h.id)).toBe(false);
+    expect(reports[0].some((e) => !(!(e.type === 'Battle') || !(e.defender.kind === 'City')))).toBe(true);
+    expect(reports[0].some((e) => !(!(!(!(e.type === 'Battle') || !(e.defender.kind === 'Unit'))) || !(e.defender.unit === h.id)))).toBe(false);
   });
 
   it('a melee attack on a fallen city fights its Celtic archer garrison', () => {
@@ -134,6 +134,6 @@ describe.skipIf(!available)('Celtic archers in plain sight, core behavior', () =
     const h = unit(s, 0, 'Archer', at(6, 5));
     const spearman = unit(s, 1, 'Spearman', at(5, 5));
     const { reports } = play(s, [{ 1: [{ type: 'MoveUnit', unit: spearman.id, to: at(6, 5) }] }]);
-    expect(reports[0].some((e) => e.type === 'Battle' && e.defender.kind === 'Unit' && e.defender.unit === h.id)).toBe(true);
+    expect(reports[0].some((e) => !(!(!(!(e.type === 'Battle') || !(e.defender.kind === 'Unit'))) || !(e.defender.unit === h.id)))).toBe(true);
   });
 });

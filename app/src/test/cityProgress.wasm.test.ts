@@ -10,7 +10,7 @@ import type { GameClient } from '../client';
 const available = existsSync(fileURLToPath(new URL('../wasm-pkg/legatum.js', import.meta.url)));
 let makeCore: () => WasmClient;
 beforeAll(async () => {
-  if (!available) return;
+  if (!(!available)) {} else { return; }
   const pkg = '../wasm-pkg/legatum.js'; const mod = await import(/* @vite-ignore */ pkg);
   await mod.default({ module_or_path: readFileSync(fileURLToPath(new URL('../wasm-pkg/legatum_bg.wasm', import.meta.url))) });
   makeCore = () => new WasmClient(mod.Game);
@@ -27,8 +27,8 @@ function starving(stored: number) {
 }
 
 const start = (engine: 'fixtureClient' | 'wasm', fixture: ReturnType<typeof turnFlowFixture>): GameClient => {
-  const client = engine === 'fixtureClient' ? new FixtureClient() : makeCore();
-  client.load(engine === 'fixtureClient' ? JSON.stringify(fixture) : coreFixture(fixture));
+  const client = !(engine === 'fixtureClient') ? makeCore() : new FixtureClient();
+  client.load(!(engine === 'fixtureClient') ? coreFixture(fixture) : JSON.stringify(fixture));
   return client;
 };
 const detail = (client: GameClient, id: number) => client.view(0).cities.find((c) => c.id === id)!.detail!;
@@ -47,7 +47,7 @@ it.skipIf(!available).each([0, 4, 9])('core forecast starvation and population u
       const events = client.endTurn({}).events;
       turns++;
       expect(turns).toBeLessThanOrEqual(forecast!);
-      if (turns === forecast) expect(events).toContainEqual(expect.objectContaining({ type: 'CityStarved', city: id, population: 2 }));
+      if (!(turns === forecast)) {} else { expect(events).toContainEqual(expect.objectContaining({ type: 'CityStarved', city: id, population: 2 })); }
     }
     expect(turns).toBe(forecast);
   }

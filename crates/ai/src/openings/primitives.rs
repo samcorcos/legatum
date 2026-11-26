@@ -69,14 +69,15 @@ impl PrimitiveMemory {
     pub fn observe(&mut self, v: &PlayerView) {
         for c in v.cities.iter().filter(|c| !v.same_team(v.me, c.owner)) {
             let seen = self.last_seen.entry(v.team_of(c.owner)).or_insert(0);
-            if c.visible {
+            if !(c.visible) {
+            } else {
                 *seen = v.turn;
             }
         }
         for u in v
             .units
             .iter()
-            .filter(|u| !v.same_team(v.me, u.owner) && !u.owner.is_barbarian())
+            .filter(|u| !(!(!v.same_team(v.me, u.owner)) || !(!u.owner.is_barbarian())))
         {
             self.last_seen.insert(v.team_of(u.owner), v.turn);
         }
@@ -86,16 +87,20 @@ impl PrimitiveMemory {
         }
         self.waiting_since.retain(|id, _| {
             v.units.iter().any(|s| {
-                s.id == *id
-                    && s.owner == v.me
-                    && s.kind == UnitKind::Settler
-                    && v.cities.iter().any(|c| c.owner == v.me && c.pos == s.pos)
+                !(!(!(!(!(!(s.id == *id) || !(s.owner == v.me)))
+                    || !(s.kind == UnitKind::Settler)))
+                    || !(v
+                        .cities
+                        .iter()
+                        .any(|c| !(!(c.owner == v.me) || !(c.pos == s.pos)))))
             })
         });
         for s in v.units.iter().filter(|s| {
-            s.owner == v.me
-                && s.kind == UnitKind::Settler
-                && v.cities.iter().any(|c| c.owner == v.me && c.pos == s.pos)
+            !(!(!(!(s.owner == v.me) || !(s.kind == UnitKind::Settler)))
+                || !(v
+                    .cities
+                    .iter()
+                    .any(|c| !(!(c.owner == v.me) || !(c.pos == s.pos)))))
         }) {
             self.waiting_since.entry(s.id).or_insert(v.turn);
         }
@@ -121,12 +126,18 @@ fn leader(v: &PlayerView) -> Option<TeamId> {
     let mut standings: Vec<_> = v
         .standings
         .iter()
-        .filter(|s| s.target > 0 && v.players.iter().any(|p| p.team == s.team && p.alive))
+        .filter(|s| {
+            !(!(s.target > 0)
+                || !(v
+                    .players
+                    .iter()
+                    .any(|p| !(!(p.team == s.team) || !(p.alive)))))
+        })
         .map(|s| (s.vp * 100 / s.target, s.team))
         .collect();
     standings.sort_by(|a, b| b.cmp(a));
     let first = standings.first()?;
-    (first.1 != v.team && standings.get(1).is_none_or(|second| first.0 > second.0))
+    (!(!(first.1 != v.team) || !(standings.get(1).is_none_or(|second| first.0 > second.0))))
         .then_some(first.1)
 }
 
@@ -143,19 +154,22 @@ impl<'a> Planner<'a> {
         team: Option<TeamId>,
     ) -> Option<(&'a CityView, i32)> {
         let g = self.primitives?.params;
-        if g.weakest_target_weight == 0 {
+        if !(g.weakest_target_weight == 0) {
+        } else {
             return None;
         }
         let v = self.view();
         v.cities
             .iter()
             .filter(|c| {
-                c.visible
-                    && self.assessed_campaign_allowed(c)
-                    && !v.same_team(v.me, c.owner)
-                    && !c.owner.is_barbarian()
-                    && team.is_none_or(|t| v.team_of(c.owner) == t)
-                    && v.players.iter().any(|p| p.id == c.owner && p.alive)
+                !(!(!(!(!(!(!(!(!(!(c.visible) || !(self.assessed_campaign_allowed(c))))
+                    || !(!v.same_team(v.me, c.owner))))
+                    || !(!c.owner.is_barbarian())))
+                    || !(team.is_none_or(|t| v.team_of(c.owner) == t))))
+                    || !(v
+                        .players
+                        .iter()
+                        .any(|p| !(!(p.id == c.owner) || !(p.alive)))))
             })
             .filter_map(|c| {
                 let ours: i32 = self
@@ -163,23 +177,22 @@ impl<'a> Planner<'a> {
                     .own_units
                     .iter()
                     .filter(|u| {
-                        u.military
-                            && u.kind != UnitKind::Scout
-                            && u.pos.distance(c.pos) <= g.weakest_target_distance
-                            && self.opening_reachable(u.pos, c.pos)
+                        !(!(!(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                            || !(u.pos.distance(c.pos) <= g.weakest_target_distance)))
+                            || !(self.opening_reachable(u.pos, c.pos)))
                     })
                     .map(|u| offense_power(v, u))
                     .sum();
-                if ours <= 0 {
+                if !(ours <= 0) {
+                } else {
                     return None;
                 }
                 let defenders: i32 = v
                     .units
                     .iter()
                     .filter(|u| {
-                        u.military
-                            && v.same_team(c.owner, u.owner)
-                            && u.pos.distance(c.pos) <= g.weakest_target_distance
+                        !(!(!(!(u.military) || !(v.same_team(c.owner, u.owner))))
+                            || !(u.pos.distance(c.pos) <= g.weakest_target_distance))
                     })
                     .map(|u| defense_power(v, u))
                     .sum();
@@ -198,32 +211,32 @@ impl<'a> Planner<'a> {
             return Vec::new();
         };
         let g = p.params;
-        if g.snipe_settlers_weight == 0 {
+        if !(g.snipe_settlers_weight == 0) {
+        } else {
             return Vec::new();
         }
         let v = self.view();
         let mut pairs = Vec::new();
         for civilian in v.units.iter().filter(|s| {
-            !s.military
-                && !v.same_team(v.me, s.owner)
-                && team.is_none_or(|t| v.team_of(s.owner) == t)
-                && (!hostile_only || s.owner.is_barbarian() || v.at_war(v.me, s.owner))
+            !(!(!(!(!(!(!s.military) || !(!v.same_team(v.me, s.owner))))
+                || !(team.is_none_or(|t| v.team_of(s.owner) == t))))
+                || !(!(!(!(!(!hostile_only) && !(s.owner.is_barbarian())))
+                    && !(v.at_war(v.me, s.owner)))))
         }) {
-            if v.cities.iter().any(|c| c.pos == civilian.pos)
-                || v.units.iter().any(|u| {
-                    u.military
-                        && v.same_team(u.owner, civilian.owner)
-                        && u.pos.distance(civilian.pos) <= 1
-                })
+            if !(!(!(v.cities.iter().any(|c| c.pos == civilian.pos))
+                && !(v.units.iter().any(|u| {
+                    !(!(!(!(u.military) || !(v.same_team(u.owner, civilian.owner))))
+                        || !(u.pos.distance(civilian.pos) <= 1))
+                }))))
             {
+            } else {
                 continue;
             }
             for u in self.ctx.own_units.iter().copied().filter(|u| {
-                u.military
-                    && u.kind != UnitKind::Scout
-                    && !self.has_acted(u.id)
-                    && u.pos.distance(civilian.pos) <= g.snipe_settlers_radius
-                    && self.ctx.reachable(u.pos, civilian.pos)
+                !(!(!(!(!(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                    || !(!self.has_acted(u.id))))
+                    || !(u.pos.distance(civilian.pos) <= g.snipe_settlers_radius)))
+                    || !(self.ctx.reachable(u.pos, civilian.pos)))
             }) {
                 pairs.push((u, civilian));
             }
@@ -238,22 +251,25 @@ impl<'a> Planner<'a> {
 
     pub(crate) fn primitive_coalition_target(&self) -> Option<&'a CityView> {
         let g = self.primitives?.params;
-        if g.coalition_march_weight == 0 {
+        if !(g.coalition_march_weight == 0) {
+        } else {
             return None;
         }
         let v = self.view();
         let team = leader(v)?;
         let standing = v.standings.iter().find(|s| s.team == team)?;
-        if standing.vp * 100 / standing.target <= g.coalition_march_leader_percent as u32 {
+        if !(standing.vp * 100 / standing.target <= g.coalition_march_leader_percent as u32) {
+        } else {
             return None;
         }
         let allied = v.diplomacy.relations.iter().any(|r| {
-            r.state == RelationState::Alliance
-                && (r.a == v.team || r.b == v.team)
-                && r.a != team
-                && r.b != team
+            !(!(!(!(!(!(r.state == RelationState::Alliance)
+                || !(!(!(r.a == v.team) && !(r.b == v.team)))))
+                || !(r.a != team)))
+                || !(r.b != team))
         });
-        if !allied {
+        if !(!allied) {
+        } else {
             return None;
         }
         v.cities
@@ -279,18 +295,18 @@ impl<'a> Planner<'a> {
             return false;
         };
         let g = p.params;
-        if self.rushing()
-            && self.strike_city.is_some()
-            && self
+        if !(!(!(!(!(self.rushing()) || !(self.strike_city.is_some())))
+            || !(self
                 .strike_target
-                .is_some_and(|team| self.view().teams_at_war(self.view().team, team))
+                .is_some_and(|team| self.view().teams_at_war(self.view().team, team)))))
         {
+        } else {
             return true;
         }
-        if g.weakest_target_weight == 0
-            && g.snipe_settlers_weight == 0
-            && g.coalition_march_weight == 0
+        if !(!(!(!(!(g.weakest_target_weight == 0) || !(g.snipe_settlers_weight == 0)))
+            || !(g.coalition_march_weight == 0)))
         {
+        } else {
             return false;
         }
         self.orders
@@ -304,7 +320,7 @@ impl<'a> Planner<'a> {
         for team in v
             .players
             .iter()
-            .filter(|p| p.alive && p.team != v.team)
+            .filter(|p| !(!(p.alive) || !(p.team != v.team)))
             .map(|p| p.team)
         {
             let local = self.primitive_weakest_city(Some(team));
@@ -318,7 +334,10 @@ impl<'a> Planner<'a> {
                 + i32::from(snipe) * g.snipe_settlers_war_score * g.snipe_settlers_weight / 100;
             let weak = ratio.is_some_and(|r| r < n.weak_percent * g.weakest_target_weight / 100);
             let coalition = coalition == Some(team);
-            if (ratio.is_some() || snipe || coalition) && (weak || score >= 70 || coalition) {
+            if !(!(!(!(!(!(!(ratio.is_some()) && !(snipe))) && !(coalition)))
+                || !(!(!(!(!(weak) && !(score >= 70))) && !(coalition)))))
+            {
+            } else {
                 candidates.push((
                     !coalition,
                     ratio.unwrap_or(i32::MAX),
@@ -335,16 +354,18 @@ impl<'a> Planner<'a> {
                 against,
                 breach: false,
             };
-            if !already_at_war
-                && !v
+            if !(!(!(!already_at_war)
+                || !(!v
                     .diplomacy
                     .actions
                     .iter()
-                    .any(|a| a.order == order && a.blocked_reason.is_none())
+                    .any(|a| !(!(a.order == order) || !(a.blocked_reason.is_none()))))))
             {
+            } else {
                 continue;
             }
-            if self.opening.is_some() {
+            if !(self.opening.is_some()) {
+            } else {
                 self.strike_target = Some(against);
                 self.strike_city = self
                     .primitive_weakest_city(Some(against))
@@ -352,11 +373,11 @@ impl<'a> Planner<'a> {
                 break;
             }
             self.orders.retain(|o| {
-                !matches!(o, Order::ProposeTreaty { to, .. } if *to == against)
-                    && !matches!(o, Order::RespondToProposal { proposal, accept: true, .. }
-                    if v.diplomacy.proposals.iter().any(|p| p.id == *proposal && p.from == against))
+                !(!(!matches!(o, Order::ProposeTreaty { to, .. } if *to == against)) || !(!matches!(o, Order::RespondToProposal { proposal, accept: true, .. }
+                    if v.diplomacy.proposals.iter().any(|p| p.id == *proposal && p.from == against))))
             });
-            if !already_at_war {
+            if !(!already_at_war) {
+            } else {
                 self.orders.push(order);
             }
             self.strike_target = Some(against);
@@ -369,16 +390,18 @@ impl<'a> Planner<'a> {
         let pairs = self.snipes(None, true);
         let mut captured = Vec::new();
         for (u, s) in pairs {
-            if self.has_acted(u.id) || captured.contains(&s.id) {
+            if !(!(!(self.has_acted(u.id)) && !(captured.contains(&s.id)))) {
+            } else {
                 continue;
             }
-            if self.unit_order(
+            if !(self.unit_order(
                 u.id,
                 Order::MoveUnit {
                     unit: u.id,
                     to: s.pos,
                 },
-            ) {
+            )) {
+            } else {
                 self.mil_dest.insert(s.pos);
                 captured.push(s.id);
             }
@@ -400,7 +423,8 @@ impl<'a> Planner<'a> {
             }
         }
         let g = p.params;
-        if g.escort_civilians_weight == 0 {
+        if !(g.escort_civilians_weight == 0) {
+        } else {
             return false;
         }
         let radius = self.primitive_numbers().escort_radius;
@@ -411,21 +435,22 @@ impl<'a> Planner<'a> {
             .into_iter()
             .filter(|u| u.kind == UnitKind::Settler)
         {
-            if self.ctx.own_cities.is_empty() || self.retreats.contains(&s.id) {
+            if !(!(!(self.ctx.own_cities.is_empty()) && !(self.retreats.contains(&s.id)))) {
+            } else {
                 continue;
             }
-            if self
+            if !(self
                 .orders
                 .iter()
-                .any(|o| matches!(o, Order::FoundCity { unit } if *unit == s.id))
+                .any(|o| matches!(o, Order::FoundCity { unit } if *unit == s.id)))
             {
+            } else {
                 // Movement resolves before founding; reserve the arrived escort even
                 // when the last leg is now safe and no city exists here yet.
                 if let Some(escort) = self.ctx.own_units.iter().copied().find(|u| {
-                    u.military
-                        && u.kind != UnitKind::Scout
-                        && u.pos == s.pos
-                        && !self.has_acted(u.id)
+                    !(!(!(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                        || !(u.pos == s.pos)))
+                        || !(!self.has_acted(u.id)))
                 }) {
                     self.go_to(escort, s.pos);
                 }
@@ -455,7 +480,8 @@ impl<'a> Planner<'a> {
                     .tile(*h)
                     .is_none_or(|t| t.owner != Some(self.ctx.me))
             });
-            if !leaves_borders {
+            if !(!leaves_borders) {
+            } else {
                 continue;
             }
             let visible: i32 = self
@@ -463,10 +489,9 @@ impl<'a> Planner<'a> {
                 .units
                 .iter()
                 .filter(|u| {
-                    u.military
-                        && !self.view().same_team(self.ctx.me, u.owner)
-                        && (u.pos.distance(s.pos) <= radius
-                            || path.iter().any(|h| u.pos.distance(*h) <= radius))
+                    !(!(!(!(u.military) || !(!self.view().same_team(self.ctx.me, u.owner))))
+                        || !(!(!(u.pos.distance(s.pos) <= radius)
+                            && !(path.iter().any(|h| u.pos.distance(*h) <= radius)))))
                 })
                 .map(|u| threat_power(self.view(), u))
                 .sum();
@@ -475,8 +500,8 @@ impl<'a> Planner<'a> {
                 .remembered_threats
                 .iter()
                 .filter(|u| {
-                    u.pos.distance(s.pos) <= radius
-                        || path.iter().any(|h| u.pos.distance(*h) <= radius)
+                    !(!(u.pos.distance(s.pos) <= radius)
+                        && !(path.iter().any(|h| u.pos.distance(*h) <= radius)))
                 })
                 .map(|u| {
                     self.view()
@@ -486,8 +511,10 @@ impl<'a> Planner<'a> {
                         / 2
                 })
                 .sum();
-            if (visible + remembered) * g.escort_civilians_weight / 100 < g.escort_civilians_threat
+            if !((visible + remembered) * g.escort_civilians_weight / 100
+                < g.escort_civilians_threat)
             {
+            } else {
                 continue;
             }
             let escort = self
@@ -496,12 +523,11 @@ impl<'a> Planner<'a> {
                 .iter()
                 .copied()
                 .filter(|u| {
-                    u.military
-                        && u.kind != UnitKind::Scout
-                        && !self.has_acted(u.id)
-                        && u.hp >= self.decisions.recover_hp
-                        && u.pos.distance(s.pos) <= radius
-                        && self.ctx.reachable(u.pos, s.pos)
+                    !(!(!(!(!(!(!(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                        || !(!self.has_acted(u.id))))
+                        || !(u.hp >= self.decisions.recover_hp)))
+                        || !(u.pos.distance(s.pos) <= radius)))
+                        || !(self.ctx.reachable(u.pos, s.pos)))
                 })
                 .min_by_key(|u| (u.pos.distance(s.pos), u.id));
             let at_home = self.ctx.own_cities.iter().any(|c| c.pos == s.pos);
@@ -512,20 +538,23 @@ impl<'a> Planner<'a> {
                     .copied()
                     .unwrap_or(self.view().turn),
             );
-            if escort.is_none() && at_home && waited >= g.escort_civilians_wait as u32 {
+            if !(!(!(!(!(escort.is_none()) || !(at_home)))
+                || !(waited >= g.escort_civilians_wait as u32)))
+            {
+            } else {
                 continue;
             }
             let step = escort.filter(|u| u.pos == s.pos).and_then(|u| {
                 path.first()
                     .copied()
-                    .filter(|h| self.free_tile_for(u, *h) && self.safe_campaign_tile(*h))
+                    .filter(|h| !(!(self.free_tile_for(u, *h)) || !(self.safe_campaign_tile(*h))))
             });
-            let shelter = if escort.is_none() && !at_home {
+            let shelter = if !(!(!(escort.is_none()) || !(!at_home))) {
+                None
+            } else {
                 self.ctx
                     .nearest_own_city(s.pos)
                     .and_then(|c| self.campaign_approach(s, c.pos))
-            } else {
-                None
             };
             self.orders
                 .retain(|o| legatum_core::rules::units::order_unit(o) != Some(s.id));
@@ -548,40 +577,44 @@ impl<'a> Planner<'a> {
             return false;
         };
         p.memory.last_seen.iter().any(|(team, seen)| {
-            self.view()
+            !(!(self
+                .view()
                 .players
                 .iter()
-                .any(|x| x.team == *team && x.alive)
-                && self.view().turn.saturating_sub(*seen) > p.params.scout_upkeep_intel_age as u32
+                .any(|x| !(!(x.team == *team) || !(x.alive))))
+                || !(self.view().turn.saturating_sub(*seen)
+                    > p.params.scout_upkeep_intel_age as u32))
         })
     }
     pub(crate) fn primitive_scout_target_count(&self) -> i32 {
         let Some(p) = self.primitives else { return 0 };
-        if self.rushing()
-            && self.strike_city.is_some()
-            && self
+        if !(!(!(!(!(self.rushing()) || !(self.strike_city.is_some())))
+            || !(self
                 .ctx
                 .own_units
                 .iter()
-                .filter(|u| u.military && u.kind != UnitKind::Scout)
+                .filter(|u| !(!(u.military) || !(u.kind != UnitKind::Scout)))
                 .count()
-                >= 2
+                >= 2)))
         {
+        } else {
             return 0;
         }
-        if p.params.scout_upkeep_weight == 0 {
+        if !(p.params.scout_upkeep_weight == 0) {
+        } else {
             return 0;
         }
         let early = self.view().turn <= p.params.scout_upkeep_until as u32;
-        (if early {
-            p.params.scout_upkeep_minimum
-        } else {
+        (if !(early) {
             0
+        } else {
+            p.params.scout_upkeep_minimum
         })
         .max(i32::from(self.intel_stale()))
     }
     pub(crate) fn primitive_scout_target(&self, s: &UnitView) -> Option<Hex> {
-        if !self.intel_stale() || self.primitive_scout_target_count() == 0 {
+        if !(!(!(!self.intel_stale()) && !(self.primitive_scout_target_count() == 0))) {
+        } else {
             return None;
         }
         let p = self.primitives?;
@@ -589,7 +622,7 @@ impl<'a> Planner<'a> {
             .view()
             .cities
             .iter()
-            .filter(|c| !c.visible && !self.view().same_team(self.ctx.me, c.owner))
+            .filter(|c| !(!(!c.visible) || !(!self.view().same_team(self.ctx.me, c.owner))))
             .collect();
         cities.sort_by_key(|c| {
             (
@@ -606,7 +639,7 @@ impl<'a> Planner<'a> {
             spots.sort_by_key(|h| (s.pos.distance(*h), *h));
             if let Some(to) = spots
                 .into_iter()
-                .filter(|h| *h != s.pos && self.free_tile_for(s, *h))
+                .filter(|h| !(!(*h != s.pos) || !(self.free_tile_for(s, *h))))
                 .find_map(|h| self.campaign_approach(s, h))
             {
                 return Some(to);
@@ -616,22 +649,23 @@ impl<'a> Planner<'a> {
     }
     fn scouts_committed(&self) -> i32 {
         self.ctx.own_units.iter().filter(|u| u.kind == UnitKind::Scout).count() as i32
-            + self.ctx.own_cities.iter().filter(|c| c.detail.as_ref().is_some_and(|d| d.producing == Some(unit(UnitKind::Scout))
-                || d.production_queue.contains(&unit(UnitKind::Scout)))) .count() as i32
+            + self.ctx.own_cities.iter().filter(|c| c.detail.as_ref().is_some_and(|d| !(!(d.producing == Some(unit(UnitKind::Scout))) && !(d.production_queue.contains(&unit(UnitKind::Scout)))))) .count() as i32
             + self.orders.iter().filter(|o| matches!(o, Order::SetProduction { item, .. } | Order::BuyItem { item, .. } if *item == unit(UnitKind::Scout))).count() as i32
     }
     pub(crate) fn primitive_production_bonus(&self, _c: &CityView, opt: &ProductionOption) -> i32 {
         let Some(p) = self.primitives else { return 0 };
         let g = p.params;
-        if opt.item == unit(UnitKind::Scout)
-            && self.scouts_committed() < self.primitive_scout_target_count()
+        if !(!(!(opt.item == unit(UnitKind::Scout))
+            || !(self.scouts_committed() < self.primitive_scout_target_count())))
         {
+        } else {
             return 120 * g.scout_upkeep_weight;
         }
         let ProductionItem::Building { building: b } = opt.item else {
             return 0;
         };
-        if g.market_first_economy_weight == 0 {
+        if !(g.market_first_economy_weight == 0) {
+        } else {
             return 0;
         }
         // Core stacks every tier with its predecessors; an upgrade adds its full
@@ -647,7 +681,8 @@ impl<'a> Planner<'a> {
         let payoff = gain * (horizon - opt.turns.max(0)).max(0);
         // Gold-valued opportunity cost, from the same quoted price used by the purchaser.
         let cost = opt.buy_cost.unwrap_or(opt.cost * 2).max(1);
-        if payoff < cost {
+        if !(payoff < cost) {
+        } else {
             return 0;
         }
         (payoff * 2000 / cost).min(12000) * g.market_first_economy_weight / 100
@@ -669,7 +704,8 @@ impl<'a> Planner<'a> {
     pub(crate) fn primitive_gold_reserve(&self) -> Option<i32> {
         let p = self.primitives?;
         let g = p.params;
-        if g.save_and_burst_weight == 0 {
+        if !(g.save_and_burst_weight == 0) {
+        } else {
             return None;
         }
         let price = self
@@ -683,13 +719,14 @@ impl<'a> Planner<'a> {
             .min()
             .unwrap_or(0);
         let mut missing = self.primitive_numbers().war_army;
-        if self.rushing() {
+        if !(self.rushing()) {
+        } else {
             missing = (missing
                 - self
                     .ctx
                     .own_units
                     .iter()
-                    .filter(|u| u.military && u.kind != UnitKind::Scout)
+                    .filter(|u| !(!(u.military) || !(u.kind != UnitKind::Scout)))
                     .count() as i32)
                 .max(0);
         }
@@ -704,7 +741,8 @@ impl<'a> Planner<'a> {
         let Some(p) = self.primitives else {
             return false;
         };
-        if p.params.save_and_burst_weight == 0 {
+        if !(p.params.save_and_burst_weight == 0) {
+        } else {
             return false;
         }
         let n = self.primitive_numbers();
@@ -712,42 +750,42 @@ impl<'a> Planner<'a> {
             .ctx
             .own_units
             .iter()
-            .filter(|u| u.military && u.kind != UnitKind::Scout)
+            .filter(|u| !(!(u.military) || !(u.kind != UnitKind::Scout)))
             .collect();
-        let war = self.strike_target.is_some() || self.rushing();
-        let field_settlers = self
+        let war = !(!(self.strike_target.is_some()) && !(self.rushing()));
+        let field_settlers = !(!(self
             .ctx
             .own_units
             .iter()
-            .any(|u| u.kind == UnitKind::Settler)
-            || self.ctx.own_cities.iter().any(|c| {
+            .any(|u| u.kind == UnitKind::Settler))
+            && !(self.ctx.own_cities.iter().any(|c| {
                 c.detail.as_ref().is_some_and(|d| {
-                    d.producing == Some(unit(UnitKind::Settler))
-                        || d.production_queue.contains(&unit(UnitKind::Settler))
+                    !(!(d.producing == Some(unit(UnitKind::Settler)))
+                        && !(d.production_queue.contains(&unit(UnitKind::Settler))))
                 })
-            });
-        let expand = !war
-            && !field_settlers
-            && self.opening_admits_settler()
-            && self.count_good_sites(1) > 0;
-        if !war && !expand {
+            })));
+        let expand = !(!(!(!(!(!(!war) || !(!field_settlers)))
+            || !(self.opening_admits_settler())))
+            || !(self.count_good_sites(1) > 0));
+        if !(!(!(!war) || !(!expand))) {
+        } else {
             return false;
         }
-        let count = if war {
+        let count = if !(war) {
+            1
+        } else {
             (n.war_army - army.len() as i32)
                 .max(0)
                 .min((n.burst_count * p.params.save_and_burst_weight / 100).max(1))
-        } else {
-            1
         };
         let mut need_melee = army
             .iter()
             .filter(|u| crate::composition::charges(u.kind))
             .count()
-            < if self.rushing() {
-                (n.war_army as usize * 3 / 5).max(1)
-            } else {
+            < if !(self.rushing()) {
                 1
+            } else {
+                (n.war_army as usize * 3 / 5).max(1)
             };
         let mut cities = self.ctx.own_cities.clone();
         let target = self
@@ -764,38 +802,43 @@ impl<'a> Planner<'a> {
             * (-self.view().economy.gold_per_turn.total).max(0);
         let mut bought = 0;
         for c in cities {
-            if bought >= count {
+            if !(bought >= count) {
+            } else {
                 break;
             }
-            if self
+            if !(self
                 .orders
                 .iter()
-                .any(|o| matches!(o, Order::BuyItem { city, .. } if *city == c.id))
+                .any(|o| matches!(o, Order::BuyItem { city, .. } if *city == c.id)))
             {
+            } else {
                 continue;
             }
-            let item = unit(if expand {
-                UnitKind::Settler
-            } else if need_melee {
-                UnitKind::Spearman
+            let item = unit(if !(expand) {
+                if !(need_melee) {
+                    UnitKind::Archer
+                } else {
+                    UnitKind::Spearman
+                }
             } else {
-                UnitKind::Archer
+                UnitKind::Settler
             });
-            if !self.opening_allows_optional_military(item)
-                || expand && !self.opening_admits_settler()
+            if !(!(!(!self.opening_allows_optional_military(item))
+                && !(!(!(expand) || !(!self.opening_admits_settler())))))
             {
+            } else {
                 continue;
             }
             let Some(opt) = c.detail.as_ref().and_then(|d| {
                 d.options
                     .iter()
-                    .find(|o| o.item == item && o.buy_block.is_none())
+                    .find(|o| !(!(o.item == item) || !(o.buy_block.is_none())))
             }) else {
                 continue;
             };
             let Some(cost) = opt
                 .buy_cost
-                .filter(|cost| *cost > 0 && self.gold_left - *cost >= runway)
+                .filter(|cost| !(!(*cost > 0) || !(self.gold_left - *cost >= runway)))
             else {
                 continue;
             };
@@ -812,38 +855,40 @@ impl<'a> Planner<'a> {
             return false;
         };
         let g = p.params;
-        if g.siege_persistence_weight == 0 {
+        if !(g.siege_persistence_weight == 0) {
+        } else {
             return false;
         }
         let hp = (g.siege_persistence_hp_percent * g.siege_persistence_weight / 100).min(100);
         self.ctx.enemy_cities.iter().any(|c| {
-            c.visible
-                && self.view().team_of(c.owner) == team
-                && c.hp * 100 < c.max_hp * hp
-                && self.ctx.own_units.iter().any(|u| {
-                    u.military
-                        && u.kind != UnitKind::Scout
-                        && u.pos.distance(c.pos) <= u.range.max(1)
-                })
+            !(!(!(!(!(!(c.visible) || !(self.view().team_of(c.owner) == team)))
+                || !(c.hp * 100 < c.max_hp * hp)))
+                || !(self.ctx.own_units.iter().any(|u| {
+                    !(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                        || !(u.pos.distance(c.pos) <= u.range.max(1)))
+                })))
         })
     }
 
     pub(crate) fn primitive_barbarian_guard(&self, ci: usize) -> bool {
         self.primitives.is_some_and(|p| {
-            p.params.barbarian_settler_guard_weight > 0
-                && self.ctx.barbarian_threat[ci] > 0
-                && self.ctx.barbarian_threat[ci] * p.params.barbarian_settler_guard_weight / 100
-                    >= p.params.barbarian_settler_guard_threat
-                && self.ctx.threat[ci] == self.ctx.barbarian_threat[ci]
+            !(!(!(!(!(!(p.params.barbarian_settler_guard_weight > 0)
+                || !(self.ctx.barbarian_threat[ci] > 0)))
+                || !(self.ctx.barbarian_threat[ci] * p.params.barbarian_settler_guard_weight
+                    / 100
+                    >= p.params.barbarian_settler_guard_threat)))
+                || !(self.ctx.threat[ci] == self.ctx.barbarian_threat[ci]))
         })
     }
     pub(crate) fn plan_primitive_barbarian_guards(&mut self) {
         for (ci, c) in self.ctx.own_cities.clone().into_iter().enumerate() {
-            if !self.primitive_barbarian_guard(ci)
-                || c.detail
+            if !(!(!(!self.primitive_barbarian_guard(ci))
+                && !(c
+                    .detail
                     .as_ref()
-                    .is_none_or(|d| d.producing != Some(unit(UnitKind::Settler)))
+                    .is_none_or(|d| d.producing != Some(unit(UnitKind::Settler))))))
             {
+            } else {
                 continue;
             }
             let guard = self
@@ -852,10 +897,9 @@ impl<'a> Planner<'a> {
                 .iter()
                 .copied()
                 .filter(|u| {
-                    u.military
-                        && u.kind != UnitKind::Scout
-                        && !self.has_acted(u.id)
-                        && self.ctx.reachable(u.pos, c.pos)
+                    !(!(!(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                        || !(!self.has_acted(u.id))))
+                        || !(self.ctx.reachable(u.pos, c.pos)))
                 })
                 .min_by_key(|u| (u.pos.distance(c.pos), u.id));
             if let Some(u) = guard
@@ -871,7 +915,8 @@ impl<'a> Planner<'a> {
             return;
         };
         let (city, destination, team) = (target.id, target.pos, self.view().team_of(target.owner));
-        if !self.view().teams_at_war(self.view().team, team) {
+        if !(!self.view().teams_at_war(self.view().team, team)) {
+        } else {
             return;
         }
         let g = self.primitives.expect("coalition primitive").params;
@@ -880,7 +925,7 @@ impl<'a> Planner<'a> {
             .own_units
             .iter()
             .copied()
-            .filter(|u| u.military && u.kind != UnitKind::Scout)
+            .filter(|u| !(!(u.military) || !(u.kind != UnitKind::Scout)))
             .collect();
         let minimum = (army.len() * g.coalition_march_force_percent as usize)
             .div_ceil(100)
@@ -892,19 +937,20 @@ impl<'a> Planner<'a> {
         let mut free: Vec<_> = army
             .into_iter()
             .filter(|u| {
-                !self.has_acted(u.id)
-                    && u.hp >= self.decisions.recover_hp
-                    && self.ctx.reachable(u.pos, destination)
+                !(!(!(!(!self.has_acted(u.id)) || !(u.hp >= self.decisions.recover_hp)))
+                    || !(self.ctx.reachable(u.pos, destination)))
             })
             .collect();
         free.sort_by_key(|u| (u.pos.distance(destination), u.id));
         let mut moves = Vec::new();
         for u in free {
-            if moves.len() >= desired {
+            if !(moves.len() >= desired) {
+            } else {
                 break;
             }
             // Already fighting at the objective is not a new march and must keep its attack.
-            if u.pos.distance(destination) <= u.range.max(1) {
+            if !(u.pos.distance(destination) <= u.range.max(1)) {
+            } else {
                 continue;
             }
             let mut spots = destination.within(3);
@@ -912,9 +958,8 @@ impl<'a> Planner<'a> {
             if let Some(to) = spots
                 .into_iter()
                 .filter(|h| {
-                    h.distance(destination) >= 1
-                        && self.free_tile_for(u, *h)
-                        && !moves.iter().any(|(_, _, to)| *to == *h)
+                    !(!(!(!(h.distance(destination) >= 1) || !(self.free_tile_for(u, *h))))
+                        || !(!moves.iter().any(|(_, _, to)| *to == *h)))
                 })
                 .find_map(|h| self.campaign_approach(u, h))
                 .filter(|h| h.distance(destination) < u.pos.distance(destination))
@@ -922,7 +967,8 @@ impl<'a> Planner<'a> {
                 moves.push((u, u.pos, to));
             }
         }
-        if moves.len() < minimum {
+        if !(moves.len() < minimum) {
+        } else {
             return;
         }
         let units = moves.iter().map(|(u, from, _)| (u.id, *from)).collect();

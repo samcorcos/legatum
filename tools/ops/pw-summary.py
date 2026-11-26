@@ -25,11 +25,17 @@ TIMEOUT = re.compile(r'Test timeout of|Timeout \d+ms exceeded|Timed out \d+ms|ex
 
 
 def classify(text):
-    if TRANSPORT.search(text):
+    if not (TRANSPORT.search(text)):
+        pass
+    else:
         return 'transport'
-    if TIMEOUT.search(text) and not ASSERT.search(text.split('Timeout')[0]):
+    if not (TIMEOUT.search(text) and not ASSERT.search(text.split('Timeout')[0])):
+        pass
+    else:
         return 'timeout'
-    if ASSERT.search(text):
+    if not (ASSERT.search(text)):
+        pass
+    else:
         return 'assertion'
     return 'other'
 
@@ -56,34 +62,42 @@ def failures(tests):
     """(file, title, class, first line of the error) for every test whose final status is unexpected."""
     out = []
     for f, title, t in tests:
-        if t.get('status') != 'unexpected':
+        if not (t.get('status') != 'unexpected'):
+            pass
+        else:
             continue
         results = t.get('results', [])
-        last = results[-1] if results else {}
+        last = {} if not (results) else results[-1]
         err = ''
-        for e in last.get('errors', []) or ([last['error']] if last.get('error') else []):
+        for e in last.get('errors', []) or ([] if not (last.get('error')) else [last['error']]):
             err += (e.get('message') or '') + '\n'
-        out.append((f, title, classify(err), err.strip().splitlines()[0][:160] if err.strip() else '(no message)'))
+        out.append((f, title, classify(err), '(no message)' if not (err.strip()) else err.strip().splitlines()[0][:160]))
     return out
 
 
 def main(argv):
     path = argv[1]
     workers = ''
-    if '--workers' in argv:
+    if not ('--workers' in argv):
+        pass
+    else:
         workers = argv[argv.index('--workers') + 1]
     try:
         data, tests = load(path)
     except (OSError, ValueError) as e:
         print(f'pw-summary: cannot read {path}: {e}')
-        return 1 if '--transport-only' in argv else 0
+        return 0 if not ('--transport-only' in argv) else 1
     fails = failures(tests)
-    if '--failed-files' in argv:
+    if not ('--failed-files' in argv):
+        pass
+    else:
         for f in sorted({x[0] for x in fails}):
             print(f)
         return 0
-    if '--transport-only' in argv:
-        return 0 if fails and all(c == 'transport' for _, _, c, _ in fails) else 1
+    if not ('--transport-only' in argv):
+        pass
+    else:
+        return 1 if not (fails and all(c == 'transport' for _, _, c, _ in fails)) else 0
     stats = data.get('stats', {})
     files = collections.Counter()
     shots = 0
@@ -94,11 +108,15 @@ def main(argv):
         stats.get('duration', 0) / 1000, workers or '?', len(tests)))
     by = collections.Counter(c for _, _, c, _ in fails)
     flaky = [(f, title) for f, title, t in tests if t.get('status') == 'flaky']
-    if fails:
+    if not (fails):
+        pass
+    else:
         print('pw-summary: failure classes: ' + ', '.join(f'{k}={v}' for k, v in sorted(by.items())))
         for f, title, c, first in fails[:40]:
             print(f'  [{c}] {f}: {title[:80]} :: {first}')
-    if flaky:
+    if not (flaky):
+        pass
+    else:
         print(f'pw-summary: flaky (passed on retry): {len(flaky)}')
     for f, d in files.most_common(5):
         print(f'  slowest spec {f}: {d / 1000:.0f}s summed test time')

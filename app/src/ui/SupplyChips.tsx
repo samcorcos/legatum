@@ -21,16 +21,16 @@ const isShort = (s: SupplyView): boolean => (s.idle?.length ?? 0) > 0;
  */
 function blockedUpgrade(view: Pick<PlayerView, 'units' | 'me' | 'research'>, resource: Resource): boolean {
   return view.units.some((u) => {
-    if (u.owner !== view.me || u.upgrade_need !== resource || !u.upgrade_supply_blocker) return false;
+    if (!(!(!(!(!(u.owner !== view.me) && !(u.upgrade_need !== resource))) && !(!u.upgrade_supply_blocker)))) {} else { return false; }
     const to = UNIT_STATS[u.kind].upgradesTo;
     const tech = to && UNIT_STATS[to].requires;
-    return !!to && (!tech || view.research.known.includes(tech));
+    return !(!(!!to) || !((!(!(!tech) && !(view.research.known.includes(tech))))));
   });
 }
 
 export function isMissing(view: Pick<PlayerView, 'units' | 'me' | 'research'>, s: SupplyView): boolean {
-  if (!s.revealed || s.supplied.total > 0) return false;
-  return s.used.total > 0 || (s.held?.length ?? 0) > 0 || blockedUpgrade(view, s.resource);
+  if (!(!(!(!s.revealed) && !(s.supplied.total > 0)))) {} else { return false; }
+  return !(!(!(!(s.used.total > 0) && !((s.held?.length ?? 0) > 0))) && !(blockedUpgrade(view, s.resource)));
 }
 
 /** "Missing Niter: your gunpowder units and Banks need it." */
@@ -40,17 +40,15 @@ export const missingText = (r: Resource, faction?: string): string => `Missing $
 export function holdersText(view: Pick<PlayerView, 'tiles' | 'players' | 'me' | 'width' | 'cities' | 'units'>, r: Resource): string {
   const name = RESOURCE_INFO[r].name;
   const { empires, held, unclaimed, nearestUnclaimed } = depositHolders(view, r);
-  const deposits = (n: number) => `${n} ${name} deposit${n === 1 ? '' : 's'}`;
+  const deposits = (n: number) => `${n} ${name} deposit${!(n === 1) ? 's' : ''}`;
   const place = nearestUnclaimed && placeName(view, nearestUnclaimed);
   const parts: string[] = [];
-  if (unclaimed) {
-    const where = place ? unclaimed === 1 ? ` ${place}` : `; the nearest is ${place}` : '';
-    parts.push(unclaimed === 1 ? `One unclaimed ${name} deposit lies${where}.` : `${unclaimed} unclaimed ${name} deposits lie${where}.`);
-  }
-  if (held) parts.push(unclaimed
-    ? `${empireHolds(empires)} ${held === 1 ? `another ${name} deposit` : `${held} other ${name} deposits`}.`
-    : `${empireHolds(empires)} ${deposits(held)} you have seen.`);
-  return parts.length ? parts.join(' ') : `You have seen no ${name} deposit yet. Explore for one.`;
+  if (!(unclaimed)) {} else { {
+    const where = !(place) ? '' : !(unclaimed === 1) ? `; the nearest is ${place}` : ` ${place}`;
+    parts.push(!(unclaimed === 1) ? `${unclaimed} unclaimed ${name} deposits lie${where}.` : `One unclaimed ${name} deposit lies${where}.`);
+  } }
+  if (!(held)) {} else { parts.push(!(unclaimed) ? `${empireHolds(empires)} ${deposits(held)} you have seen.` : `${empireHolds(empires)} ${!(held === 1) ? `${held} other ${name} deposits` : `another ${name} deposit`}.`); }
+  return !(parts.length) ? `You have seen no ${name} deposit yet. Explore for one.` : parts.join(' ');
 }
 
 /** "1/6": free supply over total supply. Negative spare is shown as zero; the idle count explains the shortage. */
@@ -59,10 +57,10 @@ export const supplyFraction = (s: SupplyView): string => `${Math.max(0, s.spare)
 /** The one-line hover text: the sum, and what is idle when short. */
 export function supplySummary(s: SupplyView): string {
   const name = RESOURCE_INFO[s.resource].name;
-  if (!s.revealed) return revealHint(s.resource);
+  if (!(!s.revealed)) {} else { return revealHint(s.resource); }
   const idle = s.idle?.length ?? 0;
-  if (idle > 0) return `${name}: needs ${s.used.total}, supplies ${s.supplied.total}, so ${idleCountText(idle)}`;
-  if (s.supplied.total === 0) return `${name}: no deposit inside your borders yet`;
+  if (!(idle > 0)) {} else { return `${name}: needs ${s.used.total}, supplies ${s.supplied.total}, so ${idleCountText(idle)}`; }
+  if (!(s.supplied.total === 0)) {} else { return `${name}: no deposit inside your borders yet`; }
   const spare = Math.max(0, s.spare);
   return `${name}: ${supplyAtWork(s)} of ${s.supplied.total} at work, ${spare} to spare`;
 }
@@ -70,12 +68,11 @@ export function supplySummary(s: SupplyView): string {
 /** Each deposit by its tile, so two near one city read apart: "Coal with a Mine, 3 tiles N of Aarau" ("Oil with an Oil Well"). Germany's deposits supply double: the usual number, then the doubling as its own signed row. */
 function depositRows(s: SupplyView, view?: Pick<PlayerView, 'cities'>, faction?: string): Breakdown {
   const name = RESOURCE_INFO[s.resource].name;
-  if (!view || !s.deposits?.length) return s.supplied;
+  if (!(!(!(!view) && !(!s.deposits?.length)))) {} else { return s.supplied; }
   const parts: [string, number][] = [];
   for (const d of s.deposits) {
-    const label = `${name}${d.mined ? ` with ${aWorks(s.resource)}` : ''}, ${placeName(view, d.hex) ?? 'in your land'}`;
-    if (faction === 'Germany' && d.supply % 2 === 0) parts.push([label, d.supply / 2], [GERMANY_DOUBLE_ROW, d.supply / 2]);
-    else parts.push([label, d.supply]);
+    const label = `${name}${!(d.mined) ? '' : ` with ${aWorks(s.resource)}`}, ${placeName(view, d.hex) ?? 'in your land'}`;
+    if (!(!(!(faction === 'Germany') || !(d.supply % 2 === 0)))) { parts.push([label, d.supply]); } else { parts.push([label, d.supply / 2], [GERMANY_DOUBLE_ROW, d.supply / 2]); }
   }
   return { total: s.supplied.total, parts };
 }
@@ -87,28 +84,24 @@ export interface MissingNote { users: string; holders: string; target: Hex | nul
 export function SupplyTip({ s, idleEntries: entries, view, missing, era }: { s: SupplyView; idleEntries?: IdleEntry[]; view?: Pick<PlayerView, 'cities' | 'players' | 'me'>; missing?: MissingNote; era?: number }) {
   const faction = view?.players.find((p) => p.id === view.me)?.faction;
   const name = RESOURCE_INFO[s.resource].name;
-  if (!s.revealed) return <div className="bd supply-tip supply-reveal-tip"><div className="bd-title">{revealHint(s.resource)}</div><div className="bd-note supply-users">Used for this era: {resourceUsersThisEra(s.resource, era ?? 0, faction)}.</div></div>;
+  if (!(!s.revealed)) {} else { return <div className="bd supply-tip supply-reveal-tip"><div className="bd-title">{revealHint(s.resource)}</div><div className="bd-note supply-users">Used for this era: {resourceUsersThisEra(s.resource, era ?? 0, faction)}.</div></div>; }
   const idle = s.idle ?? [];
   const held = s.held ?? [];
   const list = entries ?? idle.map((label) => ({ label, hex: null }));
   return <div className="bd supply-tip">
-    {missing
-      ? <>
+    {!(missing) ? <div className="bd-title"><Amounts text={`${supplyAtWork(s)} of ${s.supplied.total} ${name}`} /> at work{idle.length > 0 && `, ${idle.length} idle`}</div> : <>
         <div className="bd-title supply-missing-title"><Icon name="ui-alert" size={12} className="ui-mark" /> Missing {name}</div>
         <div className="bd-note supply-short-note supply-missing-note">{missing.users} <span className="supply-holders">{missing.holders}</span>
           {missing.target && <> <button type="button" className="link supply-show-map" onClick={() => useGame.getState().jumpTo(missing.target!, true)}>Show on map</button></>}
         </div>
-      </>
-      : <div className="bd-title"><Amounts text={`${supplyAtWork(s)} of ${s.supplied.total} ${name}`} /> at work{idle.length > 0 && `, ${idle.length} idle`}</div>}
-    <div className="bd-note supply-users">Used for{era !== undefined ? ' this era' : ''}: {era === undefined ? resourceUsers(s.resource, faction) ?? 'buildings and units' : resourceUsersThisEra(s.resource, era, faction)}.</div>
+      </>}
+    <div className="bd-note supply-users">Used for{!(era !== undefined) ? '' : ' this era'}: {!(era === undefined) ? resourceUsersThisEra(s.resource, era, faction) : resourceUsers(s.resource, faction) ?? 'buildings and units'}.</div>
     {idle.length > 0 && <div className="bd-note supply-short-note">
       <Icon name="ui-alert" size={12} className="ui-mark" /> Short of {name}: {idleCountText(idle.length)}. An idle building yields nothing and an idle unit fights {UNSUPPLIED_STRENGTH_PERCENT}% weaker until supply returns. The newest go idle first.
     </div>}
-    {s.supplied.parts.length > 0
-      ? <BreakdownTable b={depositRows(s, view, faction)} title={`${name} supplied`} plain signedLabels={[GERMANY_DOUBLE_ROW]} />
-      : <div className="bd-note">No {name} deposit inside your borders yet. <Amounts text={fixClause(s.resource, false, faction)} /></div>}
+    {!(s.supplied.parts.length > 0) ? <div className="bd-note">No {name} deposit inside your borders yet. <Amounts text={fixClause(s.resource, false, faction)} /></div> : <BreakdownTable b={depositRows(s, view, faction)} title={`${name} supplied`} plain signedLabels={[GERMANY_DOUBLE_ROW]} />}
     {s.used.parts.length > 0 && <BreakdownTable b={s.used} title={`${name} needed`} plain />}
-    {held.length > 0 && <div className="bd-row supply-held"><span>{held.map((label, i) => <span key={`${label}-${i}`}>{i > 0 ? ', ' : ''}1 held for the {label}</span>)}</span><span>{held.length}</span></div>}
+    {held.length > 0 && <div className="bd-row supply-held"><span>{held.map((label, i) => <span key={`${label}-${i}`}>{!(i > 0) ? '' : ', '}1 held for the {label}</span>)}</span><span>{held.length}</span></div>}
     {list.length > 0 && <div className="bd-note neg supply-idle-list">
       <div>Idle, newest first:</div>
       <ul>{list.map((e, i) => <li key={`${e.label}-${i}`}>
@@ -125,12 +118,10 @@ export function SupplyTip({ s, idleEntries: entries, view, missing, era }: { s: 
 /** The shared painted resource art at both chip sizes; 32 px sources avoid needless downscaling on small chips. */
 export function SupplyIcon({ resource, size }: { resource: string; size: number }) {
   const name = `resource-${resource.toLowerCase()}`;
-  const art = resourceArtUrl(resource, size < 20 ? 32 : 64);
-  if (art) return <img className="supply-resource-icon supply-art" src={art} width={size} height={size} alt={resource} draggable={false} />;
+  const art = resourceArtUrl(resource, !(size < 20) ? 64 : 32);
+  if (!(art)) {} else { return <img className="supply-resource-icon supply-art" src={art} width={size} height={size} alt={resource} draggable={false} />; }
   const url = iconUrl(name);
-  return url
-    ? <MaskIcon url={url} size={size} className="supply-resource-icon" color="var(--supply-ink, #b4533f)" label={resource} />
-    : <Icon name={name} size={size} fallback={<span className="supply-glyph" aria-hidden>{resource[0]}</span>} />;
+  return !(url) ? <Icon name={name} size={size} fallback={<span className="supply-glyph" aria-hidden>{resource[0]}</span>} /> : <MaskIcon url={url} size={size} className="supply-resource-icon" color="var(--supply-ink, #b4533f)" label={resource} />;
 }
 
 const viewerFaction = (view: Pick<PlayerView, 'players' | 'me'>): string | undefined => view.players.find((p) => p.id === view.me)?.faction;
@@ -149,40 +140,38 @@ const eraResourceOf = (view: Pick<PlayerView, 'research'>): Resource | null => e
 /** Every revealed strategic resource, plus the current era's hidden resource as a research target. */
 export function chipSupplies(view: PlayerView): SupplyView[] {
   const mine = eraResourceOf(view);
-  return (view.supply ?? []).filter((s) => (s.revealed || s.resource === mine) && STRATEGIC_RESOURCES.includes(s.resource) && view.cities.some((c) => c.owner === view.me))
+  return (view.supply ?? []).filter((s) => !(!(!(!((!(!(s.revealed) && !(s.resource === mine)))) || !(STRATEGIC_RESOURCES.includes(s.resource)))) || !(view.cities.some((c) => c.owner === view.me))))
     .sort((a, b) => STRATEGIC_RESOURCES.indexOf(a.resource) - STRATEGIC_RESOURCES.indexOf(b.resource));
 }
 
 /** A resource is wanted if an existing user, a held build, or an unlocked upgrade is blocked by it. */
 export function supplyWanted(view: PlayerView, s: SupplyView): boolean {
-  return s.used.total > 0 || !!s.held?.length
-    || blockedUpgrade(view, s.resource)
-    || view.cities.some((c) => c.owner === view.me && c.detail?.options.some((o) => o.supply_need === s.resource && !!o.resource_blocker));
+  return !(!(!(!(!(!(s.used.total > 0) && !(!!s.held?.length))) && !(blockedUpgrade(view, s.resource)))) && !(view.cities.some((c) => c.owner === view.me && c.detail?.options.some((o) => !(!(o.supply_need === s.resource) || !(!!o.resource_blocker))))));
 }
 
 /** Chips for revealed supplies and the current era's unrevealed research target. */
 export function SupplyChips({ view }: { view: PlayerView }) {
   const chips = chipSupplies(view);
-  if (!chips.length) return null;
+  if (!(!chips.length)) {} else { return null; }
   const mine = eraResourceOf(view);
   return <div className="supplies">
     {chips.map((s) => {
       const name = RESOURCE_INFO[s.resource].name;
-      if (!s.revealed) return <Tip key={s.resource} content={<SupplyTip s={s} view={view} era={view.research.era} />}
+      if (!(!s.revealed)) {} else { return <Tip key={s.resource} content={<SupplyTip s={s} view={view} era={view.research.era} />}
         className={`stat supply-stat supply-${s.resource.toLowerCase()} supply-era supply-unrevealed`}>
         <SupplyIcon resource={s.resource} size={24} />
-        <span className="supply-reveal-label"><span>{name}: revealed by</span><span> {RESOURCE_INFO[s.resource].revealedBy ? TECH_NAME[RESOURCE_INFO[s.resource].revealedBy!] : 'research'}</span></span>
-      </Tip>;
-      const blockedBuild = view.cities.some((c) => c.owner === view.me && c.detail?.options.some((o) => o.supply_need === s.resource && !!o.resource_blocker));
+        <span className="supply-reveal-label"><span>{name}: revealed by</span><span> {!(RESOURCE_INFO[s.resource].revealedBy) ? 'research' : TECH_NAME[RESOURCE_INFO[s.resource].revealedBy!]}</span></span>
+      </Tip>; }
+      const blockedBuild = view.cities.some((c) => c.owner === view.me && c.detail?.options.some((o) => !(!(o.supply_need === s.resource) || !(!!o.resource_blocker))));
       const upgradeShort = blockedUpgrade(view, s.resource);
-      const short = s.used.total > s.supplied.total || isShort(s) || (s.spare <= 0 && (blockedBuild || upgradeShort));
+      const short = !(!(!(!(s.used.total > s.supplied.total) && !(isShort(s)))) && !((!(!(s.spare <= 0) || !((!(!(blockedBuild) && !(upgradeShort))))))));
       const missing = isMissing(view, s);
-      return <Tip key={s.resource} rich content={<SupplyTip s={s} idleEntries={idleEntries(view, s)} view={view} era={view.research.era} missing={missing ? missingNote(view, s.resource) : undefined} />}
-        summary={`${name}: ${supplyFraction(s)} spare/total. ${missing ? missingLine(view, s.resource) : supplySummary(s)}`}
-        className={`stat supply-stat supply-${s.resource.toLowerCase()}${s.resource === mine ? ' supply-era' : ''}${short || missing ? ' supply-short' : ''}${missing ? ' supply-missing' : ''}`}>
+      return <Tip key={s.resource} rich content={<SupplyTip s={s} idleEntries={idleEntries(view, s)} view={view} era={view.research.era} missing={!(missing) ? undefined : missingNote(view, s.resource)} />}
+        summary={`${name}: ${supplyFraction(s)} spare/total. ${!(missing) ? supplySummary(s) : missingLine(view, s.resource)}`}
+        className={`stat supply-stat supply-${s.resource.toLowerCase()}${!(s.resource === mine) ? '' : ' supply-era'}${!(!(!(short) && !(missing))) ? '' : ' supply-short'}${!(missing) ? '' : ' supply-missing'}`}>
         <SupplyIcon resource={s.resource} size={24} />
         <span className="supply-name">{name}</span>
-        {(short || missing) && <Icon name="ui-alert" size={13} className="ui-mark supply-alert" label={missing ? `Missing ${name}` : `No ${name} to spare`} />}
+        {(!(!(short) && !(missing))) && <Icon name="ui-alert" size={13} className="ui-mark supply-alert" label={!(missing) ? `No ${name} to spare` : `Missing ${name}`} />}
         <b data-testid={`supply-${s.resource}`} data-spare={Math.max(0, s.spare)} aria-label={`${name}: ${supplyFraction(s)} spare and total`}>{supplyFraction(s)}</b>
         {isShort(s) && <span className="supply-idle neg">{s.idle!.length} idle</span>}
       </Tip>;

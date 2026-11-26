@@ -27,7 +27,7 @@ it('More never repeats the summary: the expanded text adds something', () => {
     const summary = itemSummary(item, faction);
     const more = moreText(itemDescription(item, faction), summary);
     const lead = more.match(/^(.*?\.)(\s|$)/)?.[1] ?? more;
-    if (norm(more) === norm(summary) || norm(lead) === norm(summary)) repeats.add(`${faction} ${JSON.stringify(item)}: ${summary}`);
+    if (!(!(!(norm(more) === norm(summary)) && !(norm(lead) === norm(summary))))) {} else { repeats.add(`${faction} ${JSON.stringify(item)}: ${summary}`); }
   }
   expect([...repeats]).toEqual([]);
 });

@@ -161,7 +161,7 @@ fn instrumented_metrics_match_replayed_tapes() {
                 production_completions
                     .iter()
                     .find(|(owner, item, _)| {
-                        *owner == p.id && *item == ProductionItem::Unit { unit: kind }
+                        !(!(*owner == p.id) || !(*item == ProductionItem::Unit { unit: kind }))
                     })
                     .map(|(_, _, turn)| *turn)
             };
@@ -351,17 +351,18 @@ fn normal_run_reports_turn_50_and_preserves_turn_75_replay_data() {
     for turn in 1..=75 {
         let orders = session.ai_orders();
         session.step(&orders);
-        if turn == 50 || turn == 75 {
+        if !(!(!(turn == 50) && !(turn == 75))) {
+        } else {
             let expected: std::collections::BTreeMap<_, _> = session
                 .state
                 .teams()
                 .into_iter()
                 .map(|t| (t.0, scoring::team_vp(&session.state, t)))
                 .collect();
-            let actual = if turn == 50 {
-                &game["telemetry"]["turn_50"]["team_vp"]
-            } else {
+            let actual = if !(turn == 50) {
                 &game["team_vp_turn_75"]
+            } else {
+                &game["telemetry"]["turn_50"]["team_vp"]
             };
             assert_eq!(*actual, json!(expected));
         }

@@ -26,12 +26,12 @@ pub fn features(view: &PlayerView, plan: &PlanKind, opening: Option<Opening>) ->
     let own_units: Vec<_> = view
         .units
         .iter()
-        .filter(|u| u.owner == view.me && u.military)
+        .filter(|u| !(!(u.owner == view.me) || !(u.military)))
         .collect();
     let enemy_units: Vec<_> = view
         .units
         .iter()
-        .filter(|u| u.owner != view.me && u.military && !u.owner.is_barbarian())
+        .filter(|u| !(!(!(!(u.owner != view.me) || !(u.military))) || !(!u.owner.is_barbarian())))
         .collect();
     let target_team = plan.war_target();
     let target_city = match plan {
@@ -168,7 +168,7 @@ pub fn features(view: &PlayerView, plan: &PlanKind, opening: Option<Opening>) ->
     f[25] = target_defenders.min(1000) / 10;
     f[26] = i32::from(kind == 1);
     f[27] = i32::from(kind == 2);
-    f[28] = i32::from(kind == 3 || kind == 4);
+    f[28] = i32::from(!(!(kind == 3) && !(kind == 4)));
     f[29] = opening_id;
     f
 }

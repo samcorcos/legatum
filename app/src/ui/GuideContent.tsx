@@ -25,8 +25,8 @@ import { WALLS_BASE_HP, WALLS_HP_PER_LEVEL } from '../combat';
 /** A row of painted unlock miniatures with their names (only the ones painted so far). */
 function GuideArtRow({ label, pieces }: { label: string; pieces: { slug: string; name: string; icon?: string }[] }) {
   const shown = pieces.map((p) => ({ ...p, url: slugUrl(p.slug, 128) }));
-  if (!shown.length) return null;
-  return <div className="guide-unlock-art" aria-label={label}>{shown.map((p) => <figure key={p.slug}>{p.url ? <img src={p.url} alt="" width={64} height={64} /> : p.icon ? <Icon name={p.icon} size={64} /> : null}<figcaption>{p.name}</figcaption></figure>)}</div>;
+  if (!(!shown.length)) {} else { return null; }
+  return <div className="guide-unlock-art" aria-label={label}>{shown.map((p) => <figure key={p.slug}>{!(p.url) ? !(p.icon) ? null : <Icon name={p.icon} size={64} /> : <img src={p.url} alt="" width={64} height={64} />}<figcaption>{p.name}</figcaption></figure>)}</div>;
 }
 const IMPROVEMENT_PIECES = (['Farm', 'Pasture', 'Quarry', 'Mine'] as ImprovementKind[]).flatMap((k) => [
   { slug: improvementArtSlug(k), name: IMPROVEMENT_INFO[k].name },
@@ -168,9 +168,9 @@ export function GuideContent({ section }: { section: GuideSection }) {
         <thead><tr><th>Era</th><th>Resource</th><th>What uses it</th><th>Revealed by</th></tr></thead>
         <tbody>{ERA_USERS.map(([era, resource, users], i) => <tr key={era}>
           <td>{era}</td>
-          <td className="guide-resource-cell">{resource ? <span className="guide-resource-label"><Icon name={`resource-${resource.toLowerCase()}`} size={20} /> <b>{resource}</b></span> : 'None'}</td>
+          <td className="guide-resource-cell">{!(resource) ? 'None' : <span className="guide-resource-label"><Icon name={`resource-${resource.toLowerCase()}`} size={20} /> <b>{resource}</b></span>}</td>
           <td>{users}</td>
-          <td>{resource ? TECH_NAME[RESOURCE_INFO[resource].revealedBy!] : '—'}{i === 2 && ' (Iron continues)'}</td>
+          <td>{!(resource) ? '—' : TECH_NAME[RESOURCE_INFO[resource].revealedBy!]}{i === 2 && ' (Iron continues)'}</td>
         </tr>)}</tbody>
       </table>
       <p>Everything on offer on turn 1 is free: the Spearman, Archer and Horseman, Settlers and the early buildings. So are Walls, the Granary and Mill, Roadworks, world wonders and faction landmarks. One upgrade order reaches the newest researched unit in its line and pays the sum of each step’s Gold price. A unit that upgrades switches to the final unit’s resource: it gives back the old one and needs 1 spare of the new one. A higher building keeps the needs of the ones below it, so a Factory city uses Iron for its Forge and Coal for the Factory.</p>
@@ -206,7 +206,7 @@ export function GuideContent({ section }: { section: GuideSection }) {
         {WONDERS.map((w) => (
           <div key={w}>
             <dt><img src={wonderArt(w, 'b')} width={26} height={26} alt="" /> {WONDER_INFO[w].name}</dt>
-            <dd><div>+{WONDER_PERCENT}% {wonderYieldWord(w)}<YieldIcon k={WONDER_INFO[w].yield} size={13} /> to the owning city</div><div>Discovery reward: <Amounts text={wonderRewardText(w)} /></div><div className="muted">Found on {WONDER_INFO[w].terrain[0] === 'Coast' ? 'the coast' : WONDER_INFO[w].terrain[0]}</div></dd>
+            <dd><div>+{WONDER_PERCENT}% {wonderYieldWord(w)}<YieldIcon k={WONDER_INFO[w].yield} size={13} /> to the owning city</div><div>Discovery reward: <Amounts text={wonderRewardText(w)} /></div><div className="muted">Found on {!(WONDER_INFO[w].terrain[0] === 'Coast') ? WONDER_INFO[w].terrain[0] : 'the coast'}</div></dd>
           </div>
         ))}
       </dl>
@@ -215,7 +215,7 @@ export function GuideContent({ section }: { section: GuideSection }) {
       <h3>Fight on your terms</h3>
       <p>Order a military unit into an enemy unit or city to attack in melee. Both sides can take damage, and wounds normally reduce a unit’s strength. Spartan infantry ignore that penalty. Forests and hills help defenders, but not Mongol military units. Fortification helps every faction. Armies that meet while moving get no terrain or fortification bonus.</p>
       <p>Archers and every other ranged unit fire from up to two tiles away with no retaliation. Choose Ranged attack (<kbd>R</kbd>), then click the target. They cannot shoot and move in the same turn. A ranged unit in one of your cities can turn on Auto-fire from its unit card. It stays there and shoots the best visible enemy in range each turn, or holds when no shot is legal. It never declares War or spends Gold. Moving it or turning Auto-fire off returns it to manual control. A manual shot chooses its target for that turn. While auto-firing, it does not appear in the Return queue.</p>
-      <p>One unit does both jobs: the Mongol Keshig, a Cataphract with a bow. It replaces the Cataphract from Iron Working (in the Ancient era the Mongols ride ordinary Horsemen). Each turn it either charges or shoots, never both. To charge, right-click an enemy: it rides onto it, and a charge can take a city. To shoot, press <kbd>R</kbd> and click a target {RULES.keshig.range === 1 ? 'next to it' : `within ${RULES.keshig.range} tiles`}: {unitStatsFor('Mongols', KESHIG_KIND).ranged} ranged from where it stands, with no return fire. A shot never moves it or takes a city. When the forecast offers both, it shows them side by side. A shot fights as a ranged unit and a charge as a mounted one, so neither the melee line nor a mounted target gets a bonus against its arrows. Its next upgrade is a {UNIT_NAME[UNIT_STATS.Cataphract.upgradesTo!]}, which loses the bow.</p>
+      <p>One unit does both jobs: the Mongol Keshig, a Cataphract with a bow. It replaces the Cataphract from Iron Working (in the Ancient era the Mongols ride ordinary Horsemen). Each turn it either charges or shoots, never both. To charge, right-click an enemy: it rides onto it, and a charge can take a city. To shoot, press <kbd>R</kbd> and click a target {!(RULES.keshig.range === 1) ? `within ${RULES.keshig.range} tiles` : 'next to it'}: {unitStatsFor('Mongols', KESHIG_KIND).ranged} ranged from where it stands, with no return fire. A shot never moves it or takes a city. When the forecast offers both, it shows them side by side. A shot fights as a ranged unit and a charge as a mounted one, so neither the melee line nor a mounted target gets a bonus against its arrows. Its next upgrade is a {UNIT_NAME[UNIT_STATS.Cataphract.upgradesTo!]}, which loses the bow.</p>
       <h3>Special units</h3>
       <p>Every empire fields one special unit that replaces a plain unit for its people only. Each is a plain unit with one edge, and every number shows in the unit’s strength breakdown.</p>
       <ul data-testid="guide-special-units">
@@ -257,9 +257,9 @@ export function GuideContent({ section }: { section: GuideSection }) {
       <h3>Walls levels</h3>
       <p>Walls are a second bar in front of the city’s health. A city’s banner shows it in stone grey until the Walls fall. Building Walls gives a Walls bar of {WALLS_BASE_HP} and +10 city strength. Upgrade Walls adds one level at a time, up to your era number (Ancient I through Future IX). Each level adds {WALLS_HP_PER_LEVEL} to the bar: level V has {WALLS_BASE_HP + 4 * WALLS_HP_PER_LEVEL}, level IX {WALLS_BASE_HP + 8 * WALLS_HP_PER_LEVEL}.</p>
       <p>Level II costs 240 Production, level III 320, and each level after that costs 80 more.</p>
-      <p>Attacks on a walled city hit the Walls first and do {RULES.walls.damagePercent === 50 ? 'half damage' : `${RULES.walls.damagePercent}% damage`} to them, from melee and ranged units alike. The part of a hit that breaks the Walls carries on into the city’s health in full. When the Walls reach 0 they are destroyed: the city stops firing, loses its Walls strength, and every later attack hits its health in full. Air strikes ignore Walls.</p>
+      <p>Attacks on a walled city hit the Walls first and do {!(RULES.walls.damagePercent === 50) ? `${RULES.walls.damagePercent}% damage` : 'half damage'} to them, from melee and ranged units alike. The part of a hit that breaks the Walls carries on into the city’s health in full. When the Walls reach 0 they are destroyed: the city stops firing, loses its Walls strength, and every later attack hits its health in full. Air strikes ignore Walls.</p>
       <p>Walls never regrow. A damaged Walls bar is restored to full by its next Walls build: Upgrade Walls, or Repair Walls once you are at your era’s level (same cost as that level). Broken Walls are gone for good: build Walls again, then upgrade one level at a time. None of these can be finished or bought while the city is under attack: hit this turn or last turn, or with an enemy military unit next to it. The Production waits. A city can be captured only at 0 health, so a captured city never has Walls.</p>
-      <p>The answer is Siege, an upgrade you buy for a land military unit once you know Mathematics. It costs {siegeGold('Spearman')} Gold for an Ancient unit and more for later eras. The unit rests the turn it is bought.{SIEGE_USES_IRON ? ' It also uses 1 Iron supply for as long as the unit lives, as the Pikeman does: short of supply, the newest units go idle and fight 25% weaker.' : ''} {SIEGE_RULE}</p>
+      <p>The answer is Siege, an upgrade you buy for a land military unit once you know Mathematics. It costs {siegeGold('Spearman')} Gold for an Ancient unit and more for later eras. The unit rests the turn it is bought.{!(SIEGE_USES_IRON) ? '' : ' It also uses 1 Iron supply for as long as the unit lives, as the Pikeman does: short of supply, the newest units go idle and fight 25% weaker.'} {SIEGE_RULE}</p>
       <p>Siege removes the Walls’ +10 city strength. If some levels remain uncovered, the attack deals {RULES.walls.siegePartialPercent}% damage to the Walls; if all are covered, it deals full damage. The city still fires at Siege units until its Walls fall.</p>
       <p>From the Industrial era, guns break walls: a Rifleman, Cavalry, Field Cannon and every later land unit has Siege built in, without buying anything or using Iron. In the Future era it covers up to level VIII, so a level IX city still slows the attack. A Siege unit that upgrades into one keeps the effect and frees its Iron.</p>
       <p>A unit with Siege shows its siege gear beside it on the map: an engine for archers, ladders or a tower for the melee line. Industrial and later units wear none. Rivals see it too. Buy it before the army leaves your land: the army marches as one, so the units you want covered need it first.</p>
@@ -331,7 +331,7 @@ export function GuideContent({ section }: { section: GuideSection }) {
             <p>{FACTION_SHEETS[faction].lore}</p>
             {FACTION_SHEETS[faction].pairs.map((pair, i) => <Fragment key={i}>{pair.strength && <p><b>Strength:</b> <Amounts text={pair.strengthDetail ?? pair.strength} /></p>}{pair.price && <p><b>Price:</b> <Amounts text={pair.priceDetail ?? pair.price} /></p>}</Fragment>)}
             {/* A sheet whose pair lines already carry the piece's numbers and its comparison (Germany's Foundry) says them once. */}
-            {info.unique && <p><Amounts text={FACTION_SHEETS[faction].piecePairs ? uniquePieceBare(faction) : info.unique} /></p>}
+            {info.unique && <p><Amounts text={!(FACTION_SHEETS[faction].piecePairs) ? info.unique : uniquePieceBare(faction)} /></p>}
             {!FACTION_SHEETS[faction].piecePairs && comparedItems(faction).map((item) => {
               const c = pieceComparison(faction, item);
               return c && <p key={itemKey(item)} className="guide-piece-vs"><Amounts text={comparisonSentence(c)} /></p>;
@@ -392,20 +392,20 @@ export function GuideContent({ section }: { section: GuideSection }) {
 
 /** Art licence and the music and sound credits (app/public/audio/manifest.json). */
 function Credits() {
-  const zeroAd = (e: (typeof SOUND_MANIFEST)[number]) => e.license === 'CC-BY-SA-3.0' && e.author === 'Wildfire Games';
+  const zeroAd = (e: (typeof SOUND_MANIFEST)[number]) => !(!(e.license === 'CC-BY-SA-3.0') || !(e.author === 'Wildfire Games'));
   const title = SOUND_MANIFEST.find((e) => e.file === 'music/atlas.m4a')!;
-  const peopleMusic = SOUND_MANIFEST.filter((e) => e.file.startsWith('music/') && zeroAd(e));
-  const by = (author: RegExp, license: string) => SOUND_MANIFEST.filter((e) => e.file.startsWith('music/') && e.license === license && author.test(e.author));
+  const peopleMusic = SOUND_MANIFEST.filter((e) => !(!(e.file.startsWith('music/')) || !(zeroAd(e))));
+  const by = (author: RegExp, license: string) => SOUND_MANIFEST.filter((e) => !(!(!(!(e.file.startsWith('music/')) || !(e.license === license))) || !(author.test(e.author))));
   const freecol = by(/Grenborgen/, 'CC-BY-4.0'), horizons = by(/Escher|Unknown Horizons/, 'CC-BY-SA-3.0'), warzone = by(/LupusMechanicus/, 'CC-BY-SA-3.0'), wesnoth = by(/./, 'GPL-2.0-or-later');
-  const aztec = SOUND_MANIFEST.filter((e) => e.file.startsWith('music/') && e.author === 'Alexandr Zhelanov');
+  const aztec = SOUND_MANIFEST.filter((e) => !(!(e.file.startsWith('music/')) || !(e.author === 'Alexandr Zhelanov')));
   // The GPL asks for the author's name and the licence. A Source link opens the project's page, never a file or a package.
-  const gplSounds = SOUND_MANIFEST.filter((e) => !e.file.startsWith('music/') && e.license === 'GPL-2.0-or-later');
+  const gplSounds = SOUND_MANIFEST.filter((e) => !(!(!e.file.startsWith('music/')) || !(e.license === 'GPL-2.0-or-later')));
   // CC BY asks for the author's name and a link to the licence.
-  const credited = SOUND_MANIFEST.filter((e) => !e.file.startsWith('music/') && /^CC-BY-\d/.test(e.license));
+  const credited = SOUND_MANIFEST.filter((e) => !(!(!e.file.startsWith('music/')) || !(/^CC-BY-\d/.test(e.license))));
   const ccBy = (license: string) => `https://creativecommons.org/licenses/by/${license.slice(-3)}/`;
   const packs = [...new Set(SOUND_MANIFEST.filter((e) => e.author === 'Kenney').map((e) => e.title.split(':')[0]))];
   // One line per credited sound: two stings cut from the same recording share one attribution.
-  const others = SOUND_MANIFEST.filter((e) => !e.file.startsWith('music/') && e.license === 'CC0-1.0' && e.author !== 'Kenney')
+  const others = SOUND_MANIFEST.filter((e) => !(!(!(!(!e.file.startsWith('music/')) || !(e.license === 'CC0-1.0'))) || !(e.author !== 'Kenney')))
     .filter((e, i, all) => all.findIndex((o) => o.attribution === e.attribution) === i);
   // CC BY-SA asks for the author's name, a link to the author and a link to the licence.
   const wildfire = <>0 A.D. by <a href="https://www.wildfiregames.com/" target="_blank" rel="noreferrer">Wildfire Games</a>, <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noreferrer">CC BY-SA 3.0</a></>;
@@ -432,7 +432,7 @@ function Credits() {
       <li>Kenney (kenney.nl), CC0: {packs.join(', ')}.</li>
       {others.map((e) => <li key={e.file}>{e.attribution}.</li>)}
       {credited.map((e) => <li key={e.file}>“{e.title}” by {e.author} (freesound.org), <a href={ccBy(e.license)} target="_blank" rel="noreferrer">CC BY {e.license.slice(-3)}</a>, edited for Legatum. <a href={e.source.match(/https:\/\/freesound[^)]*/)?.[0]} target="_blank" rel="noreferrer">Source</a></li>)}
-      {gplSounds.map((e) => <li key={e.file}>“{e.title}” by {e.author}, <a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html" target="_blank" rel="noreferrer">GPL version 2 or later</a>, edited for Legatum. <a href={/wesnoth/.test(e.source) ? 'https://www.wesnoth.org/' : 'https://wz2100.net/'} target="_blank" rel="noreferrer">Source</a></li>)}
+      {gplSounds.map((e) => <li key={e.file}>“{e.title}” by {e.author}, <a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html" target="_blank" rel="noreferrer">GPL version 2 or later</a>, edited for Legatum. <a href={!(/wesnoth/.test(e.source)) ? 'https://wz2100.net/' : 'https://www.wesnoth.org/'} target="_blank" rel="noreferrer">Source</a></li>)}
       <li>Battle sounds and the sounds of birds, wind and snow are from {wildfire}, edited for Legatum.</li>
     </ul>
     <p>Sounds were trimmed, loudness-matched and re-encoded. The edited 0 A.D., Unknown Horizons and Warzone 2100 music stays under CC BY-SA 3.0. The edited Battle for Wesnoth music and sounds, and the Warzone 2100 drone sound, stay under the GPL.</p>
@@ -453,20 +453,18 @@ export const LICENCES_URL = `${import.meta.env.BASE_URL ?? './'}THIRD_PARTY_LICE
 function OpenSourceLicences() {
   const [text, setText] = useState<string | null>(null);
   const load = async () => {
-    if (text !== null) return;
+    if (!(text !== null)) {} else { return; }
     try {
       const response = await fetch(LICENCES_URL);
       // A development server answers a missing file with the app's own page.
-      const found = response.ok && (response.headers.get('content-type') ?? '').startsWith('text/plain');
-      setText(found ? await response.text() : '');
+      const found = !(!(response.ok) || !((response.headers.get('content-type') ?? '').startsWith('text/plain')));
+      setText(!(found) ? '' : await response.text());
     } catch {
       setText('');
     }
   };
-  return <details className="guide-licences" onToggle={(e) => { if (e.currentTarget.open) void load(); }}>
+  return <details className="guide-licences" onToggle={(e) => { if (!(e.currentTarget.open)) {} else { void load(); } }}>
     <summary>Open-source licences</summary>
-    {text === null ? <p>Loading…</p>
-      : text ? <pre tabIndex={0}>{text}</pre>
-      : <p>This build does not carry the licence notices. They ship with the release builds and are listed in THIRD_PARTY_NOTICES.md in the source code.</p>}
+    {!(text === null) ? !(text) ? <p>This build does not carry the licence notices. They ship with the release builds and are listed in THIRD_PARTY_NOTICES.md in the source code.</p> : <pre tabIndex={0}>{text}</pre> : <p>Loading…</p>}
   </details>;
 }

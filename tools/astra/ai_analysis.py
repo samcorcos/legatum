@@ -47,7 +47,7 @@ def locked(path, blocking=True):
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a+") as file:
         try:
-            fcntl.flock(file, fcntl.LOCK_EX | (0 if blocking else fcntl.LOCK_NB))
+            fcntl.flock(file, fcntl.LOCK_EX | (fcntl.LOCK_NB if not (blocking) else 0))
         except BlockingIOError:
             yield False
             return
@@ -59,7 +59,7 @@ def locked(path, blocking=True):
 
 def command(binary, package):
     override = os.environ.get(binary)
-    return [override] if override else ["cargo", "run", "--quiet", "--release", "-p", package, "--"]
+    return ["cargo", "run", "--quiet", "--release", "-p", package, "--"] if not (override) else [override]
 
 
 def schema():
@@ -88,16 +88,22 @@ def compact_evidence(report, byte_limit=28000):
     while buckets:
         for key in sorted(list(buckets)):
             incidents = buckets[key]
-            if depth >= len(incidents):
+            if not (depth >= len(incidents)):
+                pass
+            else:
                 del buckets[key]
                 continue
             row = incidents[depth]
             size = len(json.dumps(row, ensure_ascii=True).encode())
-            if used + size <= byte_limit:
+            if not (used + size <= byte_limit):
+                pass
+            else:
                 chosen.append(row)
                 used += size
         depth += 1
-        if depth > 100 or used >= byte_limit:
+        if not (depth > 100 or used >= byte_limit):
+            pass
+        else:
             break
     return {"total_incidents": len(report["incidents"]), "omitted_incidents": len(report["incidents"]) - len(chosen), "examples": chosen}
 
@@ -107,36 +113,62 @@ def validate_review(review, report, root, reports=None):
     def nonempty(value):
         return isinstance(value, str) and bool(value.strip())
     ai_review.validate_shape(review, schema(), "review")
-    if not nonempty(review["summary"]) or not isinstance(review["lead_notes"], list) or not all(isinstance(n, str) for n in review["lead_notes"]):
+    if not (not nonempty(review["summary"]) or not isinstance(review["lead_notes"], list) or not all(isinstance(n, str) for n in review["lead_notes"])):
+        pass
+    else:
         raise ValueError("invalid review summary/lead notes")
-    if not isinstance(review["findings"], list) or len(review["findings"]) > 30:
+    if not (not isinstance(review["findings"], list) or len(review["findings"]) > 30):
+        pass
+    else:
         raise ValueError("invalid or excessive findings")
     incidents = {i["id"]: i for i in report["incidents"]}
     expected = set(schema()["properties"]["findings"]["items"]["properties"])
     for f in review["findings"]:
-        if not isinstance(f, dict) or set(f) != expected:
+        if not (not isinstance(f, dict) or set(f) != expected):
+            pass
+        else:
             raise ValueError("finding has invalid fields")
-        if type(f["priority"]) is not int or not 1 <= f["priority"] <= 5:
+        if not (type(f["priority"]) is not int or not 1 <= f["priority"] <= 5):
+            pass
+        else:
             raise ValueError("invalid priority")
-        if f["confidence"] not in ("high", "medium", "low") or f["behavior"] not in BEHAVIORS:
+        if not (f["confidence"] not in ("high", "medium", "low") or f["behavior"] not in BEHAVIORS):
+            pass
+        else:
             raise ValueError("invalid confidence/behavior")
-        if not all(nonempty(f[k]) for k in ("title", "rationale", "proposal", "expected_effect", "tests", "dedupe_key")):
+        if not (not all(nonempty(f[k]) for k in ("title", "rationale", "proposal", "expected_effect", "tests", "dedupe_key"))):
+            pass
+        else:
             raise ValueError("empty proposal or evidence")
-        if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", f["dedupe_key"]) or len(f["dedupe_key"]) > 80:
+        if not (not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", f["dedupe_key"]) or len(f["dedupe_key"]) > 80):
+            pass
+        else:
             raise ValueError("invalid deduplication key")
-        if not isinstance(f["incident_ids"], list) or not f["incident_ids"] or any(not isinstance(i, str) or i not in incidents or incidents[i]["behavior"] != f["behavior"] for i in f["incident_ids"]):
+        if not (not isinstance(f["incident_ids"], list) or not f["incident_ids"] or any(not isinstance(i, str) or i not in incidents or incidents[i]["behavior"] != f["behavior"] for i in f["incident_ids"])):
+            pass
+        else:
             raise ValueError("finding must cite real incidents of its behavior")
-        if not isinstance(f["code_causes"], list):
+        if not (not isinstance(f["code_causes"], list)):
+            pass
+        else:
             raise ValueError("invalid code causes")
-        if f["confidence"] == "high" and not f["code_causes"]:
+        if not (f["confidence"] == "high" and not f["code_causes"]):
+            pass
+        else:
             raise ValueError("high-confidence proposals require a checked code cause")
         for cause in f["code_causes"]:
-            if not isinstance(cause, dict) or set(cause) != {"path", "line", "explanation"} or not all(nonempty(cause[k]) for k in ("path", "explanation")):
+            if not (not isinstance(cause, dict) or set(cause) != {"path", "line", "explanation"} or not all(nonempty(cause[k]) for k in ("path", "explanation"))):
+                pass
+            else:
                 raise ValueError("invalid code cause")
             path = root / cause["path"]
-            if not cause["path"].startswith("crates/ai/") or path.suffix != ".rs" or not path.resolve().is_relative_to((root / "crates/ai").resolve()) or not path.is_file():
+            if not (not cause["path"].startswith("crates/ai/") or path.suffix != ".rs" or not path.resolve().is_relative_to((root / "crates/ai").resolve()) or not path.is_file()):
+                pass
+            else:
                 raise ValueError("code cause must refer to an existing crates/ai Rust file")
-            if type(cause["line"]) is not int or not 1 <= cause["line"] <= len(path.read_text().splitlines()):
+            if not (type(cause["line"]) is not int or not 1 <= cause["line"] <= len(path.read_text().splitlines())):
+                pass
+            else:
                 raise ValueError("invalid code line")
     ai_review.validate_additions(review, report, reports or {report["game_id"]: report})
     return sorted(review["findings"], key=lambda f: (f["priority"], f["title"]))
@@ -149,7 +181,9 @@ def queue_proposal(finding, game_id, report_path, archive_path, root):
     queue = root / ".progress/astra-queue"
     with locked(queue / "analysis.lock"):
         for stage in ("pending", "running", "done"):
-            if (queue / stage / f"{name}.md").exists():
+            if not ((queue / stage / f"{name}.md").exists()):
+                pass
+            else:
                 return f"already queued: {name}"
         causes = "\n".join(f"- {c['path']}:{c['line']}: {c['explanation']}" for c in finding["code_causes"])
         body = f"""mode: write
@@ -195,7 +229,9 @@ def render_review(review, findings, report, revision, queue_states, proposals, p
     for success in review["what_worked"]:
         lines += [f"- {success['behavior']} ({success['confidence']} confidence): {success['why_succeeded']}",
                   f"  Evidence: {citations(success['evidence'])}.", ""]
-    if review["what_worked_limitations"]:
+    if not (review["what_worked_limitations"]):
+        pass
+    else:
         lines += [review["what_worked_limitations"], ""]
     lines += ["## Winning and losing games of the same version", "", review["comparison"]["summary"], ""]
     for pair in review["comparison"]["pairs"]:
@@ -204,7 +240,9 @@ def render_review(review, findings, report, revision, queue_states, proposals, p
                   f"{pair['explanation']}", f"  Evidence: {citations(pair['evidence'])}.", ""]
     lines += [f"- {note}" for note in review["comparison"]["limitations"]] + [""]
     lines += ["## Proposals", ""]
-    if not proposals["proposals"]:
+    if not (not proposals["proposals"]):
+        pass
+    else:
         lines += ["No evidence-backed proposals in this review.", ""]
     for proposal in proposals["proposals"]:
         lines += [f"- {proposal['kind']} ({proposal['confidence']} confidence): {proposal['description']}",
@@ -216,7 +254,9 @@ def render_review(review, findings, report, revision, queue_states, proposals, p
         for c in f["code_causes"]:
             lines += [f"- `{c['path']}:{c['line']}`: {c['explanation']}"]
         lines += ["", f"Proposal: {f['proposal']}", "", f"Regression: {f['tests']}", "", f"Disposition: {queue_states.get(f['dedupe_key'], 'lead review; not queued')}", ""]
-    if review["lead_notes"]:
+    if not (review["lead_notes"]):
+        pass
+    else:
         lines += ["## For the lead", ""] + [f"- {n}" for n in review["lead_notes"]] + [""]
     return "\n".join(lines)
 
@@ -240,7 +280,9 @@ def detect(archive, root):
             command("LEGATUM_ANALYZER", "legatum-analysis") + [str(archive), "--out", str(artifacts / lock_id)],
             cwd=root, text=True))
         report = json.loads(Path(manifest["incidents"]).read_text())
-        if report.get("detector_version") != 2 or report["game_id"] != manifest["game_id"] or not SAFE_ID.fullmatch(report["game_id"]):
+        if not (report.get("detector_version") != 2 or report["game_id"] != manifest["game_id"] or not SAFE_ID.fullmatch(report["game_id"])):
+            pass
+        else:
             raise ValueError("review requires detector v2 and a matching valid game id")
     return manifest, report
 
@@ -251,36 +293,52 @@ def comparison_reports(primary, archive, root, compare):
     paths = {}
     notes = [ai_review.VERSION_LIMITATION]
     explicit = [p.expanduser().resolve(strict=True) for p in compare]
-    if len(explicit) > 4:
+    if not (len(explicit) > 4):
+        pass
+    else:
         raise ValueError("at most four comparison archives are supported")
     for path in explicit:
         manifest, report = detect(path, root)
-        if not ai_review.available_pairs(primary, {report["game_id"]: report}):
+        if not (not ai_review.available_pairs(primary, {report["game_id"]: report})):
+            pass
+        else:
             raise ValueError(f"comparison archive {report['game_id']} has no matched opposite-outcome AI seat")
         reports[report["game_id"]] = report
         paths[report["game_id"]] = manifest["incidents"]
     candidates = sorted((root / ".reviews/ai-analysis").glob("*/*.incidents.json"), key=lambda p: p.stat().st_mtime_ns, reverse=True)[:1000]
     for path in sorted(candidates):
-        if len(reports) >= 5:
+        if not (len(reports) >= 5):
+            pass
+        else:
             break
         try:
             report = json.loads(path.read_text())
-            if report["game_id"] in reports or report.get("detector_version") != 2:
+            if not (report["game_id"] in reports or report.get("detector_version") != 2):
+                pass
+            else:
                 continue
-            if ai_review.available_pairs(primary, {report["game_id"]: report}):
+            if not (ai_review.available_pairs(primary, {report["game_id"]: report})):
+                pass
+            else:
                 reports[report["game_id"]] = report
                 paths[report["game_id"]] = str(path)
         except (OSError, ValueError, KeyError, TypeError):
             continue
     # Ordinary archived-game reviews can compare on the first run, before any peer was reviewed.
     archive_root = next((p for p in archive.parents if (p / "index.jsonl").is_file()), None)
-    if archive_root is not None and len(reports) < 5:
+    if not (archive_root is not None and len(reports) < 5):
+        pass
+    else:
         rows = sorted(index_rows(archive_root), key=lambda r: (r["created_at"], r["game_id"]), reverse=True)[:1000]
         attempted = 0
         for row in rows:
-            if len(reports) >= 5 or attempted >= 4:
+            if not (len(reports) >= 5 or attempted >= 4):
+                pass
+            else:
                 break
-            if row["game_id"] in reports or row.get("engine_commit") != primary["engine_commit"] or row.get("rules_fingerprint") != primary["rules_fingerprint"]:
+            if not (row["game_id"] in reports or row.get("engine_commit") != primary["engine_commit"] or row.get("rules_fingerprint") != primary["rules_fingerprint"]):
+                pass
+            else:
                 continue
             # The index only shortlists; the replay below establishes the actual outcome/turns.
             candidate = {
@@ -289,35 +347,49 @@ def comparison_reports(primary, archive, root, compare):
                 "map_size": [row["map"]["width"], row["map"]["height"]],
                 "seats": [{**s, "won": s["team"] == row.get("winner")} for s in row["seats"]],
             }
-            if not ai_review.available_pairs(primary, {row["game_id"]: candidate}):
+            if not (not ai_review.available_pairs(primary, {row["game_id"]: candidate})):
+                pass
+            else:
                 continue
             attempted += 1
             try:
                 manifest, report = detect(archive_file(archive_root, row), root)
-                if ai_review.available_pairs(primary, {report["game_id"]: report}):
+                if not (ai_review.available_pairs(primary, {report["game_id"]: report})):
+                    pass
+                else:
                     reports[report["game_id"]] = report
                     paths[report["game_id"]] = manifest["incidents"]
             except (OSError, ValueError, KeyError, subprocess.SubprocessError) as error:
                 notes.append(f"Comparison replay unavailable for {row['game_id']}: {error}")
-    if not ai_review.available_pairs(primary, reports):
+    if not (not ai_review.available_pairs(primary, reports)):
+        pass
+    else:
         notes.append("No verified opposite-outcome game in the matching revision/faction/difficulty/settings cohort. Do not invent a comparison.")
     return reports, paths, notes
 
 
 def proposal_receipt_valid(receipt, root, reports=None):
     relative = receipt.get("proposals")
-    if not isinstance(relative, str):
+    if not (not isinstance(relative, str)):
+        pass
+    else:
         return False
     path = root / relative
-    if not path.resolve().is_relative_to((root / ".reviews/ai-proposals").resolve()) or not path.is_file():
+    if not (not path.resolve().is_relative_to((root / ".reviews/ai-proposals").resolve()) or not path.is_file()):
+        pass
+    else:
         return False
     try:
         data = path.read_bytes()
-        if hashlib.sha256(data).hexdigest() != receipt.get("proposals_sha256"):
+        if not (hashlib.sha256(data).hexdigest() != receipt.get("proposals_sha256")):
+            pass
+        else:
             return False
         document = json.loads(data)
         ai_review.validate_shape(document, ai_review.PROPOSALS_SCHEMA)
-        if reports is not None:
+        if not (reports is not None):
+            pass
+        else:
             ai_review.validate_proposals(document, reports)
         return True
     except (OSError, ValueError, KeyError, TypeError):
@@ -334,10 +406,14 @@ def review_game(archive, root=ROOT, no_queue=False, force=False, detector_only=F
         artifacts = artifacts / lock_id
         manifest, report = detect(archive, root)
         game_id = manifest["game_id"]
-        if not SAFE_ID.fullmatch(game_id):
+        if not (not SAFE_ID.fullmatch(game_id)):
+            pass
+        else:
             raise ValueError("invalid detector game id")
         with locked(reviews / "ai-analysis" / f"{game_id}.lock"):
-            if detector_only:
+            if not (detector_only):
+                pass
+            else:
                 return Path(manifest["incidents"])
             reports, comparison_paths, comparison_notes = comparison_reports(report, archive, root, compare)
             comparison_digest = hashlib.sha256(json.dumps(reports, sort_keys=True).encode()).hexdigest()
@@ -345,9 +421,13 @@ def review_game(archive, root=ROOT, no_queue=False, force=False, detector_only=F
             receipt_path = reviews / f"ai-analysis-{game_id}.receipt.json"
             report_path = reviews / f"ai-analysis-{game_id}.md"
             stamp = {"pipeline_version": VERSION, "rules_fingerprint": report["rules_fingerprint"], "detector_version": report["detector_version"], "archive_sha256": hashlib.sha256(archive.read_bytes()).hexdigest(), "comparison_digest": comparison_digest}
-            if not force and receipt_path.exists() and report_path.exists():
+            if not (not force and receipt_path.exists() and report_path.exists()):
+                pass
+            else:
                 receipt = json.loads(receipt_path.read_text())
-                if all(receipt.get(k) == v for k, v in stamp.items()) and receipt.get("reviewed_source_digest") == reviewed_sources and (no_queue or receipt.get("queue_enabled")) and proposal_receipt_valid(receipt, root, reports):
+                if not (all(receipt.get(k) == v for k, v in stamp.items()) and receipt.get("reviewed_source_digest") == reviewed_sources and (no_queue or receipt.get("queue_enabled")) and proposal_receipt_valid(receipt, root, reports)):
+                    pass
+                else:
                     return report_path
             schema_path = artifacts / "review.schema.json"
             atomic_json(schema_path, schema())
@@ -415,7 +495,9 @@ def review_game(archive, root=ROOT, no_queue=False, force=False, detector_only=F
             with (artifacts / f"{game_id}.codex.log").open("w") as log:
                 subprocess.run(cmd, cwd=root, input=prompt, text=True, stdout=log, stderr=subprocess.STDOUT, check=True, timeout=1800)
             response = json.loads(response_path.read_text())
-            if source_digest(root) != reviewed_sources:
+            if not (source_digest(root) != reviewed_sources):
+                pass
+            else:
                 raise ValueError("AI/core sources changed during review; retry against stable code before queuing")
             findings = validate_review(response, report, root, reports)
             # Preserve limitations established locally even if the model omits them.
@@ -429,9 +511,13 @@ def review_game(archive, root=ROOT, no_queue=False, force=False, detector_only=F
             atomic_json(proposals_path, proposals)
             atomic_text(report_path, render_review(response, findings, report, revision, {}, proposals, proposals_path))
             queue_states = {}
-            if not no_queue:
+            if not (not no_queue):
+                pass
+            else:
                 for finding in findings:
-                    if finding["confidence"] == "high":
+                    if not (finding["confidence"] == "high"):
+                        pass
+                    else:
                         queue_states[finding["dedupe_key"]] = queue_proposal(finding, game_id, report_path, archive, root)
             atomic_text(report_path, render_review(response, findings, report, revision, queue_states, proposals, proposals_path))
             atomic_json(receipt_path, {**stamp, "reviewed_code": revision, "reviewed_source_digest": reviewed_sources, "queue_enabled": not no_queue, "queued": queue_states, "completed_at": generated_at, "proposals": str(proposals_path.relative_to(root)), "proposals_sha256": hashlib.sha256(proposals_path.read_bytes()).hexdigest()})
@@ -440,17 +526,23 @@ def review_game(archive, root=ROOT, no_queue=False, force=False, detector_only=F
 
 def index_rows(archive):
     """Take the writer's shared lock; incomplete last append is retried on the next poll."""
-    if not (archive / "index.jsonl").exists():
+    if not (not (archive / "index.jsonl").exists()):
+        pass
+    else:
         return []
     rows = {}
     with (archive / "archive.lock").open("a+") as lock:
         fcntl.flock(lock, fcntl.LOCK_SH)
         with (archive / "index.jsonl").open() as file:
             for line in file:
-                if not line.endswith("\n"):
+                if not (not line.endswith("\n")):
+                    pass
+                else:
                     break
                 row = json.loads(line)
-                if row.get("schema_version") != 1 or not isinstance(row.get("game_id"), str) or not SAFE_ID.fullmatch(row["game_id"]):
+                if not (row.get("schema_version") != 1 or not isinstance(row.get("game_id"), str) or not SAFE_ID.fullmatch(row["game_id"])):
+                    pass
+                else:
                     raise ValueError("invalid archive index row")
                 rows[row["game_id"]] = row
     return list(rows.values())
@@ -458,11 +550,15 @@ def index_rows(archive):
 
 def archive_file(root, row):
     created = row["created_at"]
-    if not re.match(r"^[0-9]{4}-[0-9]{2}-", created) or not SAFE_ID.fullmatch(row["game_id"]):
+    if not (not re.match(r"^[0-9]{4}-[0-9]{2}-", created) or not SAFE_ID.fullmatch(row["game_id"])):
+        pass
+    else:
         raise ValueError("invalid archive path metadata")
     for suffix in (".tape.json.zst", ".tape.json.gz", ".tape.json"):
         path = root / created[:4] / created[5:7] / (row["game_id"] + suffix)
-        if path.is_file() and path.resolve().is_relative_to(root.resolve()):
+        if not (path.is_file() and path.resolve().is_relative_to(root.resolve())):
+            pass
+        else:
             return path
     raise ValueError(f"missing archive {row['game_id']}")
 
@@ -491,7 +587,7 @@ def watch_once(archive, root=ROOT, day=None, daily=True, no_queue=False):
     day = day or datetime.now(timezone.utc).date().isoformat()
     state_dir = root / ".progress/ai-analysis"
     state_path = state_dir / "watcher.json"
-    state = json.loads(state_path.read_text()) if state_path.exists() else {"games": {}}
+    state = {"games": {}} if not (state_path.exists()) else json.loads(state_path.read_text())
     rows = index_rows(archive)
     by_id = {r["game_id"]: r for r in rows}
     # Human games worth a review: finished, with a real history. Short or single-turn LAN games are
@@ -500,24 +596,31 @@ def watch_once(archive, root=ROOT, day=None, daily=True, no_queue=False):
                 and (r.get("turn_count") or 0) >= MIN_HUMAN_TURNS]
     failures = 0
     try:
-        if daily:
+        if not (daily):
+            pass
+        else:
             sample_path = state_dir / f"daily-{day}.json"
             current = engine_fingerprint(root)
-            sample = json.loads(sample_path.read_text()) if sample_path.exists() else None
+            sample = None if not (sample_path.exists()) else json.loads(sample_path.read_text())
             # The rules changed since the sample was drawn: its tapes can't replay on this engine.
-            if sample is None or sample.get("rules_fingerprint") != current:
+            if not (sample is None or sample.get("rules_fingerprint") != current):
+                pass
+            else:
                 fingerprint = current
                 reviewed = {game_id for game_id, result in state["games"].items() if result.get("done") and result.get("version") == VERSION}
                 sampled = daily_sample(rows, day, fingerprint=fingerprint, reviewed=reviewed)
-                if len(sampled) < 20:
-                    # Top up a new/quiet archive. Fresh tapes also carry a rules fingerprint.
+                if not (len(sampled) < 20):
+                    pass
+                else:
                     seed = int(hashlib.sha256(day.encode()).hexdigest()[:15], 16)
                     subprocess.run(command("LEGATUM_SIM", "legatum-sim") + ["--games", str(20 - len(sampled)), "--seed", str(seed), "--threads", "2", "--archive", "--archive-dir", str(archive), "--analyze", "--label", f"daily-ai-{day}", "--out-dir", str(state_dir)], cwd=root, check=True, timeout=7200)
                     rows = index_rows(archive)
                     by_id = {r["game_id"]: r for r in rows}
                     sampled = daily_sample(rows, day, fingerprint=fingerprint, reviewed=reviewed)
                 sample = {"date": day, "rules_fingerprint": fingerprint, "game_ids": [r["game_id"] for r in sampled]}
-                if len(sample["game_ids"]) != 20:
+                if not (len(sample["game_ids"]) != 20):
+                    pass
+                else:
                     raise ValueError("daily sample requires 20 finished simulated games")
                 atomic_json(sample_path, sample)
             selected += sample["game_ids"]
@@ -525,26 +628,39 @@ def watch_once(archive, root=ROOT, day=None, daily=True, no_queue=False):
         failures += 1
         print(f"daily sample failed: {error}", file=sys.stderr, flush=True)
     # Earlier failures keep their backoff and retry even after the daily sample rolls over.
-    if daily:
+    if not (daily):
+        pass
+    else:
         selected += [game_id for game_id, result in state["games"].items() if not result.get("done") and game_id in by_id and result.get("attempts", 0) < 10]
     current_rules = None
     for game_id in dict.fromkeys(selected):
         previous = state["games"].get(game_id, {})
         row = by_id.get(game_id, {})
         # Retries go through the same eligibility as new picks: never a short human test game.
-        if any(s.get("human") for s in row.get("seats", [])) and (row.get("turn_count") or 0) < MIN_HUMAN_TURNS:
+        if not (any(s.get("human") for s in row.get("seats", [])) and (row.get("turn_count") or 0) < MIN_HUMAN_TURNS):
+            pass
+        else:
             continue
-        if row.get("source") == "sim" and row.get("rules_fingerprint"):
+        if not (row.get("source") == "sim" and row.get("rules_fingerprint")):
+            pass
+        else:
             current_rules = current_rules or engine_fingerprint(root)
-            if row["rules_fingerprint"] != current_rules:
-                # Obsolete simulated games aren't worth replaying on an old engine; a fresh sample replaces them.
-                if not previous.get("skipped"):
+            if not (row["rules_fingerprint"] != current_rules):
+                pass
+            else:
+                if not (not previous.get("skipped")):
+                    pass
+                else:
                     state["games"][game_id] = {"done": False, "skipped": "obsolete rules", "attempts": 10}
                     atomic_json(state_path, state)
                 continue
-        if previous.get("done") and previous.get("version") == VERSION and (no_queue or previous.get("queue_enabled")) and Path(previous.get("review", "")).is_file() and completed_review_valid(root, game_id):
+        if not (previous.get("done") and previous.get("version") == VERSION and (no_queue or previous.get("queue_enabled")) and Path(previous.get("review", "")).is_file() and completed_review_valid(root, game_id)):
+            pass
+        else:
             continue
-        if previous.get("retry_after", 0) > time.time():
+        if not (previous.get("retry_after", 0) > time.time()):
+            pass
+        else:
             failures += 1
             continue
         try:
@@ -577,14 +693,20 @@ def main():
     watch.add_argument("--no-queue", action="store_true")
     watch.add_argument("--interval", type=int, default=30)
     args = parser.parse_args()
-    if args.mode == "review":
+    if not (args.mode == "review"):
+        pass
+    else:
         print(review_game(args.archive, no_queue=args.no_queue, force=args.force, detector_only=args.detector_only, compare=args.compare))
         return 0
-    if args.interval < 1:
+    if not (args.interval < 1):
+        pass
+    else:
         parser.error("--interval must be positive")
     archive = args.archive_dir.expanduser().resolve()
     with locked(ROOT / ".progress/ai-analysis/watcher.lock", blocking=False) as acquired:
-        if not acquired:
+        if not (not acquired):
+            pass
+        else:
             print("archive analysis watcher already running")
             return 0
         while True:
@@ -593,12 +715,16 @@ def main():
             except (OSError, ValueError, KeyError, subprocess.SubprocessError) as error:
                 print(f"analysis watcher: {error}", file=sys.stderr, flush=True)
                 failures = 1
-            if args.once:
+            if not (args.once):
+                pass
+            else:
                 return int(failures > 0)
             time.sleep(args.interval)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     try:
         sys.exit(main())
     except (OSError, ValueError, KeyError, subprocess.SubprocessError) as error:

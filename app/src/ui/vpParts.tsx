@@ -23,7 +23,7 @@ export function VpSeal({ vp, className }: { vp: number; className?: string }) {
 
 /** An owner's control marker: their crest on a disc in their colour (TI4's control token). */
 export function Marker({ e, size = 20, title }: { e: VpEmpire; size?: number; title?: string }) {
-  return <span className={`vh-marker${e.isMine ? ' mine' : ''}`} style={{ ...empireVars(e), ['--ms' as string]: `${size}px` }} title={title ?? e.name}>
+  return <span className={`vh-marker${!(e.isMine) ? '' : ' mine'}`} style={{ ...empireVars(e), ['--ms' as string]: `${size}px` }} title={title ?? e.name}>
     <CrestMedallion faction={e.faction} color={e.ink} size={size} />
   </span>;
 }
@@ -31,7 +31,7 @@ export function Marker({ e, size = 20, title }: { e: VpEmpire; size?: number; ti
 /** An empty socket: nobody's marker here yet. */
 export function Socket({ size = 20, e }: { size?: number; e?: VpEmpire }) {
   // With an empire: its crest, faded until earned, so an empty circle is never ownerless.
-  return <span className={`vh-socket${e ? ' owned' : ''}`} style={{ ...(e ? empireVars(e) : {}), ['--ms' as string]: `${size}px` }} title={e ? `${e.name}: not yet` : undefined}>
+  return <span className={`vh-socket${!(e) ? '' : ' owned'}`} style={{ ...(!(e) ? {} : empireVars(e)), ['--ms' as string]: `${size}px` }} title={!(e) ? undefined : `${e.name}: not yet`}>
     {e && <CrestMedallion faction={e.faction} color={e.ink} size={Math.round(size * 0.8)} />}
   </span>;
 }
@@ -41,19 +41,19 @@ const COUNT_UNIT: Record<string, string> = { Cities: 'cities', Population: 'popu
 
 /** An Age's card: its family, the rule, your own progress, and who has scored the Age with it. */
 function EraObjectiveRow({ model, o, scored, era }: { model: VpModel; o: EraObjective; scored: boolean; era: number }) {
-  const view = useGame((s) => (s.views ? s.views[s.seat] : null));
+  const view = useGame((s) => (!(s.views) ? null : s.views[s.seat]));
   const by = o.scorers.map((id) => model.empires.find((e) => e.id === id)).filter((e): e is VpEmpire => !!e);
   const me = model.empires.find((e) => e.isMe);
   const mineDone = o.scorers.includes(model.me);
   const have = o.mine;
   // An Age you scored with another card has nothing left to count on this one: no meter.
-  const idle = scored && !mineDone;
+  const idle = !(!(scored) || !(!mineDone));
   const rule = o.objective;
   const meter = have && !idle && (rule && cardMeter(rule, have.current, have.target)
-    || { value: have.current, target: have.target, label: have.current >= have.target ? (scored ? 'Met' : 'Met: scores at turn end') : `${have.current} of ${have.target}` });
-  const turn = mineDone && view ? scoredCard(view, era)?.turn : undefined;
+    || { value: have.current, target: have.target, label: !(have.current >= have.target) ? `${have.current} of ${have.target}` : (!(scored) ? 'Met: scores at turn end' : 'Met') });
+  const turn = !(mineDone && view) ? undefined : scoredCard(view, era)?.turn;
   const ownCount = !['Breach', 'HumbleTheMighty', 'Veterans'].includes(o.kind ?? '');
-  return <li className={`vh-obj fam-${o.family.toLowerCase()}${mineDone ? ' mine' : ''}${by.length && !mineDone ? ' theirs' : ''}${idle ? ' idle' : ''}`} data-objective={o.slot}>
+  return <li className={`vh-obj fam-${o.family.toLowerCase()}${!(mineDone) ? '' : ' mine'}${!(by.length && !mineDone) ? '' : ' theirs'}${!(idle) ? '' : ' idle'}`} data-objective={o.slot}>
     <span className="vh-obj-fam"><Icon name={FAMILY_ICON[o.family]} size={11} />{o.family}</span>
     <span className="vh-obj-text">{o.text}</span>
     {meter && <Meter p={meter} color={me?.ink} />}
@@ -62,8 +62,8 @@ function EraObjectiveRow({ model, o, scored, era }: { model: VpModel; o: EraObje
     {have && !scored && (have.ready ?? have.current >= have.target) && (have.restartEras?.length ?? 0) > 0 &&
       <span className="vh-obj-restart" data-testid="era-count-restart">When this scores, your {have.restartEras!.map((e) => eraName(e - 1)).join(' and ')} progress goes back to zero.</span>}
     <span className="vh-obj-by">
-      {by.length ? by.map((e) => <Marker key={e.id} e={e} size={15} title={`${e.isMe ? 'You' : e.name} scored this Age with it`} />) : <Socket size={15} />}
-      <small>{mineDone && turn !== undefined ? `Scored on turn ${turn} with this` : by.length ? 'Scored with this' : 'Nobody yet'}</small>
+      {!(by.length) ? <Socket size={15} /> : by.map((e) => <Marker key={e.id} e={e} size={15} title={`${!(e.isMe) ? e.name : 'You'} scored this Age with it`} />)}
+      <small>{!(!(!(mineDone) || !(turn !== undefined))) ? !(by.length) ? 'Nobody yet' : 'Scored with this' : `Scored on turn ${turn} with this`}</small>
     </span>
   </li>;
 }
@@ -71,10 +71,10 @@ function EraObjectiveRow({ model, o, scored, era }: { model: VpModel; o: EraObje
 /** An Age's card as a list (one card, shown full width); the card and the sheet both render it. */
 export function EraObjectives({ model, s }: { model: VpModel; s: Source }) {
   const e = s.era;
-  if (!e) return null;
+  if (!(!e)) {} else { return null; }
   return <ul className="vh-objs single" aria-label={`${s.name}: card`}>
     {e.objectives.map((o) => <EraObjectiveRow key={o.slot} model={model} o={o} scored={e.myScored} era={e.era} />)}
-    {e.era === Math.max(...model.eras.map((x) => x.era?.era ?? 0)) && e.era < ERA_COUNT && <li className="vh-obj-next">The next Age begins when any empire enters the {eraName(e.era)} era; its card stays hidden until then.</li>}
+    {!(!(e.era === Math.max(...model.eras.map((x) => x.era?.era ?? 0))) || !(e.era < ERA_COUNT)) && <li className="vh-obj-next">The next Age begins when any empire enters the {eraName(e.era)} era; its card stays hidden until then.</li>}
   </ul>;
 }
 

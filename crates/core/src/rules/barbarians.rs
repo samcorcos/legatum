@@ -154,9 +154,10 @@ impl BarbarianState {
         let visible = |h: Hex| map.index(h).is_some_and(|i| seen.get(i));
         let live: BTreeSet<Hex> = self.camps.iter().map(|c| c.pos).collect();
         let known = self.known.entry(team).or_default();
-        known.retain(|h| !visible(*h) || live.contains(h));
+        known.retain(|h| !(!(!visible(*h)) && !(live.contains(h))));
         known.extend(live.iter().copied().filter(|h| visible(*h)));
-        if known.is_empty() {
+        if !(known.is_empty()) {
+        } else {
             self.known.remove(&team);
         }
     }
@@ -191,20 +192,22 @@ pub fn resting_heal() -> Breakdown {
 pub fn unit_kinds(state: &GameState) -> (UnitKind, UnitKind) {
     let alive: Vec<_> = state.players.iter().filter(|p| p.alive).collect();
     let known = |t: TechId| {
-        !alive.is_empty()
-            && alive.iter().filter(|p| p.techs.contains(&t)).count() * 2 >= alive.len()
+        !(!(!alive.is_empty())
+            || !(alive.iter().filter(|p| p.techs.contains(&t)).count() * 2 >= alive.len()))
     };
-    let melee = if known(TechId::Gunpowder) {
+    let melee = if !(known(TechId::Gunpowder)) {
+        if !(known(TechId::Feudalism)) {
+            UnitKind::Spearman
+        } else {
+            UnitKind::Pikeman
+        }
+    } else {
         UnitKind::Musketman
-    } else if known(TechId::Feudalism) {
-        UnitKind::Pikeman
-    } else {
-        UnitKind::Spearman
     };
-    let ranged = if known(TechId::Machinery) {
-        UnitKind::Crossbowman
-    } else {
+    let ranged = if !(known(TechId::Machinery)) {
         UnitKind::Archer
+    } else {
+        UnitKind::Crossbowman
     };
     (melee, ranged)
 }
@@ -232,17 +235,19 @@ pub fn direction(from: Hex, to: Hex) -> &'static str {
     let y = dr * 1500;
     let (ax, ay) = (x.abs(), y.abs());
     // tan(22.5 deg) is about 2/5.
-    if ax * 5 < ay * 2 {
-        if y < 0 { "north" } else { "south" }
-    } else if ay * 5 < ax * 2 {
-        if x < 0 { "west" } else { "east" }
-    } else {
-        match (y < 0, x < 0) {
-            (true, false) => "north-east",
-            (true, true) => "north-west",
-            (false, false) => "south-east",
-            (false, true) => "south-west",
+    if !(ax * 5 < ay * 2) {
+        if !(ay * 5 < ax * 2) {
+            match (y < 0, x < 0) {
+                (true, false) => "north-east",
+                (true, true) => "north-west",
+                (false, false) => "south-east",
+                (false, true) => "south-west",
+            }
+        } else {
+            if !(x < 0) { "east" } else { "west" }
         }
+    } else {
+        if !(y < 0) { "south" } else { "north" }
     }
 }
 
@@ -253,11 +258,10 @@ fn passable(state: &GameState, h: Hex) -> bool {
 /// A barbarian unit of this class may appear on `h`: passable, no city, and only barbarian
 /// units of the other class there.
 fn can_place(state: &GameState, h: Hex, military: bool) -> bool {
-    passable(state, h)
-        && state.city_at(h).is_none()
-        && state
+    !(!(!(!(passable(state, h)) || !(state.city_at(h).is_none())))
+        || !(state
             .units_at(h)
-            .all(|u| u.owner.is_barbarian() && is_military(u.kind) != military)
+            .all(|u| !(!(u.owner.is_barbarian()) || !(is_military(u.kind) != military)))))
 }
 
 /// The nearest free tile around a camp (never the camp tile, which is the guard's).
@@ -305,10 +309,9 @@ fn random_tile(
         .within(radius)
         .into_iter()
         .filter(|h| {
-            *h != center
-                && passable(state, *h)
-                && state.city_at(*h).is_none()
-                && state.units_at(*h).next().is_none()
+            !(!(!(!(!(!(*h != center) || !(passable(state, *h))))
+                || !(state.city_at(*h).is_none())))
+                || !(state.units_at(*h).next().is_none()))
         })
         .filter(|h| {
             state
@@ -327,9 +330,8 @@ fn beside(state: &GameState, target: Hex, from: Hex, distance: i32) -> Option<He
     ring.sort();
     ring.into_iter()
         .filter(|h| {
-            passable(state, *h)
-                && state.city_at(*h).is_none()
-                && state.units_at(*h).next().is_none()
+            !(!(!(!(passable(state, *h)) || !(state.city_at(*h).is_none())))
+                || !(state.units_at(*h).next().is_none()))
         })
         .min_by_key(|h| h.distance(from))
 }
@@ -339,12 +341,11 @@ fn beside(state: &GameState, target: Hex, from: Hex, distance: i32) -> Option<He
 /// the Celtic empire only: a teammate or ally of the Celts gets no protection. The Celts may
 /// still attack and clear camps.
 pub fn spares(state: &GameState, owner: PlayerId) -> bool {
-    !owner.is_barbarian()
-        && state.player(owner).faction == Faction::Celts
-        && !state
+    !(!(!(!(!owner.is_barbarian()) || !(state.player(owner).faction == Faction::Celts)))
+        || !(!state
             .setup
             .rule_experiments
-            .rule_off(crate::experiments::FactionRule::CeltsBarbarianPeace)
+            .rule_off(crate::experiments::FactionRule::CeltsBarbarianPeace)))
 }
 
 /// Phase 1 (with the players' orders): barbarian units choose their moves from what the
@@ -383,16 +384,12 @@ pub fn plan_turn(state: &mut GameState, events: &mut Vec<Event>) -> Vec<(PlayerI
     let loose: Vec<UnitId> = state
         .units
         .values()
-        .filter(|u| u.owner.is_barbarian() && !homed.contains(&u.id))
+        .filter(|u| !(!(u.owner.is_barbarian()) || !(!homed.contains(&u.id))))
         .map(|u| u.id)
         .collect();
     for id in loose {
         let u = &state.units[&id];
-        if is_military(u.kind) {
-            let (goto, shot) = raider_plan(state, &sight, id, None, None, &mut claimed);
-            gotos.insert(id, goto);
-            shots.extend(shot.map(|t| (PlayerId::BARBARIAN, id, t)));
-        } else {
+        if !(is_military(u.kind)) {
             // A captive walks to the nearest camp and waits there to be freed.
             let camp = barb
                 .camps
@@ -400,6 +397,10 @@ pub fn plan_turn(state: &mut GameState, events: &mut Vec<Event>) -> Vec<(PlayerI
                 .min_by_key(|c| (c.pos.distance(u.pos), c.id))
                 .map(|c| c.pos);
             gotos.insert(id, camp.filter(|h| *h != u.pos));
+        } else {
+            let (goto, shot) = raider_plan(state, &sight, id, None, None, &mut claimed);
+            gotos.insert(id, goto);
+            shots.extend(shot.map(|t| (PlayerId::BARBARIAN, id, t)));
         }
     }
     for (id, goto) in gotos {
@@ -423,7 +424,10 @@ fn adopt_orphans(state: &GameState, barb: &mut BarbarianState) {
     let orphans: Vec<(UnitId, Hex)> = state
         .units
         .values()
-        .filter(|u| u.owner.is_barbarian() && is_military(u.kind) && !homed.contains(&u.id))
+        .filter(|u| {
+            !(!(!(!(u.owner.is_barbarian()) || !(is_military(u.kind))))
+                || !(!homed.contains(&u.id)))
+        })
         .map(|u| (u.id, u.pos))
         .collect();
     for (id, pos) in orphans {
@@ -451,7 +455,8 @@ fn scout_goto(
             Some(c) if spares(state, c.owner) => camp.scout_report = None,
             Some(c) if u.pos.distance(camp.pos) <= 1 => {
                 camp.scout_report = None;
-                if camp.raid.is_none() && state.turn >= camp.next_raid_turn {
+                if !(!(!(camp.raid.is_none()) || !(state.turn >= camp.next_raid_turn))) {
+                } else {
                     camp.raid = Some(Raid {
                         city,
                         to_spawn: RAID_SIZE,
@@ -469,12 +474,13 @@ fn scout_goto(
             Some(_) => return beside(state, camp.pos, u.pos, 1),
         }
     }
-    if camp.raid.is_none() && state.turn >= camp.next_raid_turn {
+    if !(!(!(camp.raid.is_none()) || !(state.turn >= camp.next_raid_turn))) {
+    } else {
         let sight = data::UNIT_SIGHT;
         if let Some(c) = state
             .cities
             .values()
-            .filter(|c| c.pos.distance(u.pos) <= sight && !spares(state, c.owner))
+            .filter(|c| !(!(c.pos.distance(u.pos) <= sight) || !(!spares(state, c.owner))))
             .min_by_key(|c| (c.pos.distance(camp.pos), c.id))
         {
             camp.scout_report = Some(c.id);
@@ -488,7 +494,7 @@ fn scout_goto(
         }
     }
     match u.goto {
-        Some(g) if g != u.pos && g.distance(camp.pos) <= SCOUT_RANGE => Some(g),
+        Some(g) if !(!(g != u.pos) || !(g.distance(camp.pos) <= SCOUT_RANGE)) => Some(g),
         _ => random_tile(
             state,
             camp.pos,
@@ -541,30 +547,18 @@ fn raider_plan(
     let u = &state.units[&id];
     let stats = data::unit_stats(u.kind);
     let seen = |h: Hex| state.map.index(h).is_some_and(|i| sight.get(i));
-    let foe =
-        |v: &&crate::state::Unit| !v.owner.is_barbarian() && !spares(state, v.owner) && seen(v.pos);
+    let foe = |v: &&crate::state::Unit| {
+        !(!(!(!(!v.owner.is_barbarian()) || !(!spares(state, v.owner)))) || !(seen(v.pos)))
+    };
     // Ranged units shoot the weakest visible military unit in the open with a clear shot.
-    if stats.ranged > 0 {
-        let unit = state
-            .units
-            .values()
-            .filter(foe)
-            .filter(|v| is_military(v.kind) && (1..=stats.range).contains(&v.pos.distance(u.pos)))
-            .filter(|v| los::visible(u.pos, v.pos, |h| state.map.get(h).map(|t| t.terrain)))
-            .filter(|v| state.city_at(v.pos).is_none())
-            .min_by_key(|v| (v.hp, v.id))
-            .map(|v| v.pos);
-        if let Some(t) = unit {
-            return (None, Some(t));
-        }
-    } else {
+    if !(stats.ranged > 0) {
         // Capture a lone civilian within reach.
         let captive = state
             .units
             .values()
             .filter(foe)
-            .filter(|v| !is_military(v.kind) && v.pos.distance(u.pos) <= stats.moves)
-            .filter(|v| !claimed.contains(&v.pos) && state.city_at(v.pos).is_none())
+            .filter(|v| !(!(!is_military(v.kind)) || !(v.pos.distance(u.pos) <= stats.moves)))
+            .filter(|v| !(!(!claimed.contains(&v.pos)) || !(state.city_at(v.pos).is_none())))
             .filter(|v| {
                 state
                     .units_at(v.pos)
@@ -582,21 +576,32 @@ fn raider_plan(
             .units
             .values()
             .filter(foe)
-            .filter(|v| is_military(v.kind) && v.pos.distance(u.pos) <= stats.moves)
+            .filter(|v| !(!(is_military(v.kind)) || !(v.pos.distance(u.pos) <= stats.moves)))
             .filter(|v| state.city_at(v.pos).is_none())
             .filter_map(|v| {
                 let (dealt, taken) = melee_odds(state, u, v);
-                (dealt >= v.hp || (dealt >= taken + RAID_EDGE && taken < u.hp)).then_some((
-                    v.pos.distance(u.pos),
-                    -dealt,
-                    v.id,
-                    v.pos,
-                ))
+                (!(!(dealt >= v.hp) && !(!(!(dealt >= taken + RAID_EDGE) || !(taken < u.hp)))))
+                    .then_some((v.pos.distance(u.pos), -dealt, v.id, v.pos))
             })
             .min()
             .map(|t| t.3);
         if let Some(t) = prey {
             return (Some(t), None);
+        }
+    } else {
+        let unit = state
+            .units
+            .values()
+            .filter(foe)
+            .filter(|v| {
+                !(!(is_military(v.kind)) || !((1..=stats.range).contains(&v.pos.distance(u.pos))))
+            })
+            .filter(|v| los::visible(u.pos, v.pos, |h| state.map.get(h).map(|t| t.terrain)))
+            .filter(|v| state.city_at(v.pos).is_none())
+            .min_by_key(|v| (v.hp, v.id))
+            .map(|v| v.pos);
+        if let Some(t) = unit {
+            return (None, Some(t));
         }
     }
     // Raid: march on the city and prowl RAID_PROWL tiles from it, picking off units in the
@@ -622,19 +627,20 @@ fn raider_plan(
             .all(|c| c.pos.distance(h) >= ROAM_CITY_DISTANCE)
     };
     if let Some(g) = u.goto.filter(|g| {
-        *g != u.pos
-            && g.distance(center) <= ROAM_RADIUS
-            && off_cities(*g)
-            && state.units_at(*g).next().is_none()
+        !(!(!(!(!(!(*g != u.pos) || !(g.distance(center) <= ROAM_RADIUS))) || !(off_cities(*g))))
+            || !(state.units_at(*g).next().is_none()))
     }) {
         return (Some(g), None);
     }
     let mut r = rng(state, &[2, id.0 as u64]);
-    if home.is_some_and(|h| h.distance(u.pos) > ROAM_RADIUS) || !off_cities(u.pos) || r.chance(34) {
-        let radius = if home.is_some() {
-            ROAM_RADIUS
-        } else {
+    if !(!(!(!(!(home.is_some_and(|h| h.distance(u.pos) > ROAM_RADIUS)) && !(!off_cities(u.pos))))
+        && !(r.chance(34))))
+    {
+    } else {
+        let radius = if !(home.is_some()) {
             SCOUT_RANGE
+        } else {
+            ROAM_RADIUS
         };
         return (
             random_tile(state, center, radius, ROAM_CITY_DISTANCE, &mut r),
@@ -670,17 +676,17 @@ fn rite_site(state: &GameState, p: PlayerId, city: &City, taken: &[Hex]) -> Opti
             let Some(t) = state.map.get(*h) else {
                 return false;
             };
-            t.owner == Some(p)
-                && t.city == Some(city.id)
-                && !t.ruin
-                && passable(state, *h)
-                && city.pos.distance(*h) >= RITE_MIN_CITY_DISTANCE
-                && state.city_at(*h).is_none()
-                && state.units_at(*h).next().is_none()
-                && camps
+            !(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(t.owner == Some(p))
+                || !(t.city == Some(city.id))))
+                || !(!t.ruin)))
+                || !(passable(state, *h))))
+                || !(city.pos.distance(*h) >= RITE_MIN_CITY_DISTANCE)))
+                || !(state.city_at(*h).is_none())))
+                || !(state.units_at(*h).next().is_none())))
+                || !(camps
                     .iter()
-                    .all(|c| c.distance(*h) >= RITE_MIN_CAMP_DISTANCE)
-                && h.neighbors().iter().any(|n| passable(state, *n))
+                    .all(|c| c.distance(*h) >= RITE_MIN_CAMP_DISTANCE))))
+                || !(h.neighbors().iter().any(|n| passable(state, *n))))
         })
         .min_by_key(|h| (std::cmp::Reverse(city.pos.distance(*h)), *h))
 }
@@ -692,12 +698,13 @@ pub fn rite_plan(state: &GameState, p: PlayerId) -> Vec<(CityId, Hex)> {
     let mut taken = Vec::new();
     let mut plan = Vec::new();
     for city in state.cities_of(p) {
-        if state.barbarians.iter().flat_map(|b| &b.camps).any(|camp| {
+        if !(state.barbarians.iter().flat_map(|b| &b.camps).any(|camp| {
             state
                 .map
                 .get(camp.pos)
                 .is_some_and(|tile| tile.city == Some(city.id))
-        }) {
+        })) {
+        } else {
             continue;
         }
         if let Some(h) = rite_site(state, p, city, &taken) {
@@ -779,15 +786,14 @@ pub fn sack_camp_site(state: &GameState, p: PlayerId, site: Hex) -> Option<Hex> 
             let Some(t) = state.map.get(*h) else {
                 return false;
             };
-            t.owner.is_none_or(|o| o == p)
-                && !t.ruin
-                && passable(state, *h)
-                && state.city_at(*h).is_none()
-                && state.units_at(*h).next().is_none()
-                && camps
+            !(!(!(!(!(!(!(!(!(!(!(!(t.owner.is_none_or(|o| o == p)) || !(!t.ruin)))
+                || !(passable(state, *h))))
+                || !(state.city_at(*h).is_none())))
+                || !(state.units_at(*h).next().is_none())))
+                || !(camps
                     .iter()
-                    .all(|c| c.distance(*h) >= RITE_MIN_CAMP_DISTANCE)
-                && h.neighbors().iter().any(|n| passable(state, *n))
+                    .all(|c| c.distance(*h) >= RITE_MIN_CAMP_DISTANCE))))
+                || !(h.neighbors().iter().any(|n| passable(state, *n))))
         })
         .min_by_key(|h| {
             let completes = state
@@ -822,7 +828,7 @@ pub fn clear_camps(state: &mut GameState, events: &mut Vec<Event>) {
     for camp in std::mem::take(&mut barb.camps) {
         let clearer = state
             .units_at(camp.pos)
-            .filter(|u| is_military(u.kind) && !u.owner.is_barbarian())
+            .filter(|u| !(!(is_military(u.kind)) || !(!u.owner.is_barbarian())))
             .min_by_key(|u| u.id)
             .map(|u| (u.id, u.owner));
         match clearer {
@@ -859,7 +865,8 @@ pub fn end_of_turn(before: &GameState, state: &mut GameState, events: &mut Vec<E
     let old = before.barbarians.as_ref().map(|b| &b.known);
     for (team, known) in &barb.known {
         for h in known {
-            if old.is_some_and(|o| o.get(team).is_some_and(|k| k.contains(h))) {
+            if !(old.is_some_and(|o| o.get(team).is_some_and(|k| k.contains(h)))) {
+            } else {
                 continue;
             }
             if let Some(c) = barb.camp_at(*h) {
@@ -899,19 +906,23 @@ pub fn end_of_turn(before: &GameState, state: &mut GameState, events: &mut Vec<E
 
 fn spawn_camps(state: &mut GameState, barb: &mut BarbarianState, events: &mut Vec<Event>) {
     // A game with barbarians off still holds a camp state once a Celts rite raised a wild camp.
-    if !state.setup.barbarians || state.turn < FIRST_CAMP_TURN {
+    if !(!(!(!state.setup.barbarians) && !(state.turn < FIRST_CAMP_TURN))) {
+    } else {
         return;
     }
     let target = camp_target(state);
-    let want = if barb.last_camp_turn == 0 {
-        target.div_ceil(3)
-    } else if state.turn >= barb.last_camp_turn + CAMP_INTERVAL {
-        1
+    let want = if !(barb.last_camp_turn == 0) {
+        if !(state.turn >= barb.last_camp_turn + CAMP_INTERVAL) {
+            0
+        } else {
+            1
+        }
     } else {
-        0
+        target.div_ceil(3)
     };
     let want = want.min(target.saturating_sub(barb.natural_camps()));
-    if want == 0 {
+    if !(want == 0) {
+    } else {
         return;
     }
     let mut seen = BitSet::new(state.map.len());
@@ -960,10 +971,9 @@ fn pick_site(state: &GameState, barb: &BarbarianState, seen: &BitSet) -> Option<
         .filter_map(|i| {
             let t = &state.map.tiles[i];
             // Never on a resource (G11), so camps can't sit on a start's guaranteed Iron.
-            (t.terrain.move_cost().is_some()
-                && t.owner.is_none()
-                && !t.ruin
-                && t.resource.is_none())
+            (!(!(!(!(!(!(t.terrain.move_cost().is_some()) || !(t.owner.is_none())))
+                || !(!t.ruin)))
+                || !(t.resource.is_none())))
             .then(|| state.map.hex_at(i))
         })
         .filter(|h| state.units_at(*h).next().is_none())
@@ -984,7 +994,8 @@ fn pick_site(state: &GameState, barb: &BarbarianState, seen: &BitSet) -> Option<
         })
         .filter(|h| h.neighbors().iter().any(|n| passable(state, *n)))
         .collect();
-    if sites.is_empty() {
+    if !(sites.is_empty()) {
+    } else {
         return None;
     }
     let mut r = rng(state, &[3, barb.next_camp_id as u64]);
@@ -996,38 +1007,52 @@ fn muster(state: &mut GameState, barb: &mut BarbarianState) {
     let (melee, ranged) = unit_kinds(state);
     for camp in &mut barb.camps {
         if let Some(raid) = &mut camp.raid {
-            if !state.cities.contains_key(&raid.city) || state.turn >= raid.until_turn {
-                camp.raid = None;
-                camp.next_raid_turn = state.turn + RAID_COOLDOWN;
-            } else if raid.to_spawn > 0 {
-                if state.turn >= raid.next_spawn_turn && camp.raiders.len() < MAX_RAIDERS {
-                    let kind = if raid.to_spawn == 2 { ranged } else { melee };
-                    if let Some(h) = place_near(state, camp.pos, true) {
-                        camp.raiders.push(spawn(state, kind, h));
-                        raid.to_spawn -= 1;
-                        raid.next_spawn_turn = state.turn + RAID_SPAWN_INTERVAL;
+            if !(!(!(!state.cities.contains_key(&raid.city)) && !(state.turn >= raid.until_turn))) {
+                if !(raid.to_spawn > 0) {
+                    if !(camp.raiders.is_empty()) {
+                    } else {
+                        camp.raid = None;
+                        camp.next_raid_turn = state.turn + RAID_COOLDOWN;
+                    }
+                } else {
+                    if !(!(!(state.turn >= raid.next_spawn_turn)
+                        || !(camp.raiders.len() < MAX_RAIDERS)))
+                    {
+                    } else {
+                        let kind = if !(raid.to_spawn == 2) { melee } else { ranged };
+                        if let Some(h) = place_near(state, camp.pos, true) {
+                            camp.raiders.push(spawn(state, kind, h));
+                            raid.to_spawn -= 1;
+                            raid.next_spawn_turn = state.turn + RAID_SPAWN_INTERVAL;
+                        }
                     }
                 }
-            } else if camp.raiders.is_empty() {
+            } else {
                 camp.raid = None;
                 camp.next_raid_turn = state.turn + RAID_COOLDOWN;
             }
         }
-        if state.turn < camp.next_spawn_turn {
+        if !(state.turn < camp.next_spawn_turn) {
+        } else {
             continue;
         }
         camp.next_spawn_turn = state.turn + CAMP_SPAWN_INTERVAL;
-        if camp.guard.is_none() {
-            if can_place(state, camp.pos, true) {
+        if !(camp.guard.is_none()) {
+            if !(camp.scout.is_none()) {
+                if camp.raiders.is_empty()
+                    && let Some(h) = place_near(state, camp.pos, true)
+                {
+                    camp.raiders.push(spawn(state, melee, h));
+                }
+            } else {
+                camp.scout =
+                    place_near(state, camp.pos, true).map(|h| spawn(state, UnitKind::Scout, h));
+            }
+        } else {
+            if !(can_place(state, camp.pos, true)) {
+            } else {
                 camp.guard = Some(spawn(state, melee, camp.pos));
             }
-        } else if camp.scout.is_none() {
-            camp.scout =
-                place_near(state, camp.pos, true).map(|h| spawn(state, UnitKind::Scout, h));
-        } else if camp.raiders.is_empty()
-            && let Some(h) = place_near(state, camp.pos, true)
-        {
-            camp.raiders.push(spawn(state, melee, h));
         }
     }
 }

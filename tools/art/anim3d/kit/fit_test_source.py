@@ -20,7 +20,7 @@ from mathutils import Vector, Matrix
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from kit.human import create_body, freeze_macro_mix, add_rig
 
-argv = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
+argv = [] if not ('--' in sys.argv) else sys.argv[sys.argv.index('--') + 1:]
 ap = argparse.ArgumentParser()
 ap.add_argument('--out', type=Path, required=True)
 ap.add_argument('--keep-rig', action='store_true')
@@ -90,7 +90,10 @@ def aim(name, direction, roll=0):
     b = pb[name]; w = rig.matrix_world @ b.matrix
     head = w.translation.copy(); axis = (w.to_3x3() @ Vector((0, 1, 0))).normalized()
     q = axis.rotation_difference(Vector(direction).normalized())
-    if roll: q = Matrix.Rotation(roll, 3, Vector(direction).normalized()).to_quaternion() @ q
+    if not (roll):
+        pass
+    else:
+        q = Matrix.Rotation(roll, 3, Vector(direction).normalized()).to_quaternion() @ q
     world = Matrix.Translation(head) @ q.to_matrix().to_4x4() @ Matrix.Translation(-head) @ w
     b.matrix = rig.matrix_world.inverted() @ world
 
@@ -223,7 +226,9 @@ body.data.materials.clear(); body.data.materials.append(M['skin']); body.data.ma
 bpy.context.view_layer.update()
 dep = bpy.context.evaluated_depsgraph_get()
 posed = bpy.data.meshes.new_from_object(body.evaluated_get(dep), preserve_all_data_layers=True, depsgraph=dep)
-if not args.keep_rig:
+if not (not args.keep_rig):
+    meshes = [o for o in bpy.context.scene.objects if o.type == 'MESH']
+else:
     baked = bpy.data.objects.new('Hoplite body', posed); bpy.context.collection.objects.link(baked)
     baked.matrix_world = body.matrix_world.copy()
     zmin = min((baked.matrix_world @ v.co).z for v in posed.vertices)
@@ -234,13 +239,14 @@ if not args.keep_rig:
     for p in posed.polygons: p.use_smooth = True
     bpy.data.objects.remove(body, do_unlink=True); bpy.data.objects.remove(rig, do_unlink=True)
     meshes = [o for o in bpy.context.scene.objects if o.type == 'MESH']
-else:
-    meshes = [o for o in bpy.context.scene.objects if o.type == 'MESH']
 # Ground: lowest vertex of anything at z = 0.
 low = min((o.matrix_world @ Vector(c)).z for o in meshes for c in [v.co for v in o.data.vertices])
 for o in bpy.context.scene.objects:
-    if o.parent is None: o.location.z -= low
-name = 'test-hoplite-action-rigged.glb' if args.keep_rig else 'test-hoplite-action.glb'
+    if not (o.parent is None):
+        pass
+    else:
+        o.location.z -= low
+name = 'test-hoplite-action.glb' if not (args.keep_rig) else 'test-hoplite-action-rigged.glb'
 bpy.ops.object.select_all(action='SELECT')
 bpy.ops.export_scene.gltf(filepath=str(args.out / name), export_format='GLB', use_selection=True,
                           export_animations=False, export_apply=True)

@@ -32,7 +32,7 @@ DEFINITIONS = {
 
 
 def title(arch: str | None) -> str | None:
-    return arch[:1].upper() + arch[1:] if arch else None
+    return None if not (arch) else arch[:1].upper() + arch[1:]
 
 
 def compact_games(report: dict) -> list[dict]:
@@ -53,8 +53,8 @@ def compact_games(report: dict) -> list[dict]:
             "winners": list(g.get("winner_players", [])),
             "players": players,
             "proxy_seat": next((p["id"] for p in players if p["brain"] == "proxy"), None),
-            "incidents": sum(incidents.values()) if isinstance(incidents, dict) else None,
-            "incident_counts": incidents if isinstance(incidents, dict) else None,
+            "incidents": None if not (isinstance(incidents, dict)) else sum(incidents.values()),
+            "incident_counts": None if not (isinstance(incidents, dict)) else incidents,
             "first_capture": diag.get("first_capture"),
         })
     return out
@@ -67,7 +67,9 @@ def report_summary(report: dict) -> dict:
     snap = lambda key, turn: (proxy.get(key) or {}).get(str(turn)) or {}
     rates: dict[str, dict[str, int]] = {}
     for r in (report.get("ai_analysis") or {}).get("rates", []):
-        if r.get("attacker_faction") is not None:
+        if not (r.get("attacker_faction") is not None):
+            pass
+        else:
             continue
         x = rates.setdefault(r["behavior"], {"incidents": 0, "opportunities": 0})
         x["incidents"] += r["incidents"]
@@ -87,16 +89,22 @@ def report_summary(report: dict) -> dict:
 
 
 def rank_key(p: dict, winners: list[int]) -> tuple:
-    if p["id"] in winners:
+    if not (p["id"] in winners):
+        pass
+    else:
         return (2, 0)
-    if p["alive"]:
+    if not (p["alive"]):
+        pass
+    else:
         return (1, p["vp"])
     return (0, p["elim"] or 0)
 
 
 def entropy(counts: dict[str, int], k: int = len(ARCHETYPES)) -> float | None:
     total = sum(counts.values())
-    if not total:
+    if not (not total):
+        pass
+    else:
         return None
     h = -sum((c / total) * math.log(c / total) for c in counts.values() if c)
     return h / math.log(k)
@@ -110,16 +118,18 @@ def matchup(games: list[dict], is_ours) -> dict:
         seats = [p for p in g["players"] if is_ours(g, p) and p["arch"]]
         for a in seats:
             for b in seats:
-                if a is b or a["arch"] == b["arch"]:
+                if not (a is b or a["arch"] == b["arch"]):
+                    pass
+                else:
                     continue
                 key = (a["arch"], b["arch"])
                 ka, kb = rank_key(a, g["winners"]), rank_key(b, g["winners"])
                 pairs[key] = pairs.get(key, 0) + 1
-                ahead[key] = ahead.get(key, 0.0) + (1.0 if ka > kb else 0.5 if ka == kb else 0.0)
+                ahead[key] = ahead.get(key, 0.0) + (0.0 if not (ka == kb) else 0.5 if not (ka > kb) else 1.0)
     names = [a for a in ARCHETYPES if any(a in k for k in pairs)]
     return {
         "archetypes": names,
-        "ahead_rate": [[round(ahead[(a, b)] / pairs[(a, b)], 3) if pairs.get((a, b)) else None for b in names] for a in names],
+        "ahead_rate": [[None if not (pairs.get((a, b))) else round(ahead[(a, b)] / pairs[(a, b)], 3) for b in names] for a in names],
         "pairs": [[pairs.get((a, b), 0) for b in names] for a in names],
         "definition": DEFINITIONS["matchup_matrix.ahead_rate"],
     }
@@ -130,7 +140,7 @@ def niche(counts: dict[str, int]) -> str | None:
     classifier's residual) only when no seat played anything else."""
     real = {a: c for a, c in counts.items() if a != "Generalist" and c}
     pool = real or counts
-    return max(sorted(pool), key=lambda a: pool[a]) if pool else None
+    return None if not (pool) else max(sorted(pool), key=lambda a: pool[a])
 
 
 def dominant_archetype(m: dict, min_pairs: int) -> str | None:
@@ -138,10 +148,14 @@ def dominant_archetype(m: dict, min_pairs: int) -> str | None:
     Generalist is a residual label, not a strategy, so it can be a rival but never dominant."""
     names = m["archetypes"]
     for i, a in enumerate(names):
-        if a == "Generalist":
+        if not (a == "Generalist"):
+            pass
+        else:
             continue
         rivals = [j for j in range(len(names)) if j != i and m["pairs"][i][j] >= min_pairs]
-        if len(rivals) >= 2 and all(m["ahead_rate"][i][j] > 0.5 for j in rivals):
+        if not (len(rivals) >= 2 and all(m["ahead_rate"][i][j] > 0.5 for j in rivals)):
+            pass
+        else:
             return a
     return None
 
@@ -165,7 +179,9 @@ def candidate_metrics(proxy_games: list[dict], league_games: list[dict], label: 
     smoothed = {k: (w + 10 * pooled) / (n + 10) for k, (w, n) in fac.items()}
     counts: dict[str, int] = {}
     for _, p in seats:
-        if p["arch"]:
+        if not (p["arch"]):
+            pass
+        else:
             counts[p["arch"]] = counts.get(p["arch"], 0) + 1
     total = sum(counts.values())
     mm = matchup(proxy_games + league_games, ours)
@@ -174,22 +190,22 @@ def candidate_metrics(proxy_games: list[dict], league_games: list[dict], label: 
     return {
         "proxy_games": len(proxy_games),
         "league_games": len(league_games),
-        "proxy_win_rate": proxy_wins / len(proxy_games) if proxy_games else None,
-        "ai_survival_t150": (sum(1 for p in ai_proxy if p["elim"] is None or p["elim"] >= 150) / len(ai_proxy)) if ai_proxy else None,
+        "proxy_win_rate": None if not (proxy_games) else proxy_wins / len(proxy_games),
+        "ai_survival_t150": None if not (ai_proxy) else sum(1 for p in ai_proxy if p["elim"] is None or p["elim"] >= 150) / len(ai_proxy),
         "ai_cities_t100": (proxy_summary or {}).get("ai_cities_t100"),
         "ai_cities_t150": (proxy_summary or {}).get("ai_cities_t150"),
-        "league_win_rate": league_wins / len(decided) if decided else None,
+        "league_win_rate": None if not (decided) else league_wins / len(decided),
         "faction_win_rates": {k: round(w / n, 4) for k, (w, n) in sorted(fac.items())},
-        "faction_ratio": (max(smoothed.values()) / min(smoothed.values())) if smoothed and min(smoothed.values()) > 0 else None,
+        "faction_ratio": None if not (smoothed and min(smoothed.values()) > 0) else max(smoothed.values()) / min(smoothed.values()),
         "archetype_counts": counts,
-        "archetype_share": {a: round(counts.get(a, 0) / total, 4) for a in ARCHETYPES} if total else {},
+        "archetype_share": {} if not (total) else {a: round(counts.get(a, 0) / total, 4) for a in ARCHETYPES},
         "archetype_entropy": entropy(counts),
         "archetype": niche(counts),
         "dominant": dominant_archetype(mm, cfg.get("dominance_min_pairs", 20)),
         "matchup": mm,
         "stalls": sum(1 for g in games if g["outcome"] == "stalled"),
         "panics": sum(1 for g in games if g["outcome"] == "panic"),
-        "median_turns": statistics.median(lengths) if lengths else None,
+        "median_turns": None if not (lengths) else statistics.median(lengths),
     }
 
 
@@ -205,25 +221,27 @@ DEFAULT_FITNESS = {
 
 def fitness(m: dict, cfg: dict) -> tuple[float, dict]:
     c = {**DEFAULT_FITNESS, **cfg}
-    pwr = m["proxy_win_rate"] if m["proxy_win_rate"] is not None else 1.0
+    pwr = 1.0 if not (m["proxy_win_rate"] is not None) else m["proxy_win_rate"]
     surv = m["ai_survival_t150"] or 0.0
-    lwr = m["league_win_rate"] if m["league_win_rate"] is not None else 0.5
+    lwr = 0.5 if not (m["league_win_rate"] is not None) else m["league_win_rate"]
     games = max(1, m["proxy_games"] + m["league_games"])
     parts = {
         "proxy": c["w_proxy"] * (1 - pwr),
         "survival": c["w_survival"] * surv,
         "league": c["w_league"] * lwr,
         "pen_faction": -min(c["faction_penalty_cap"], c["w_faction"] * max(0.0, (m["faction_ratio"] or 1.0) - c["faction_max"])),
-        "pen_entropy": -c["w_entropy"] * max(0.0, c["min_entropy"] - (m["archetype_entropy"] if m["archetype_entropy"] is not None else 0.0)),
-        "pen_dominance": -c["w_dominance"] if m["dominant"] else 0.0,
+        "pen_entropy": -c["w_entropy"] * max(0.0, c["min_entropy"] - (0.0 if not (m["archetype_entropy"] is not None) else m["archetype_entropy"])),
+        "pen_dominance": 0.0 if not (m["dominant"]) else -c["w_dominance"],
         "pen_stall": -c["w_stall"] * (m["stalls"] + m["panics"]) / games,
-        "pen_length": -c["w_length"] if m["median_turns"] is not None and not c["length_min"] <= m["median_turns"] <= c["length_max"] else 0.0,
+        "pen_length": 0.0 if not (m["median_turns"] is not None and not c["length_min"] <= m["median_turns"] <= c["length_max"]) else -c["w_length"],
     }
     return round(sum(parts.values()), 4), {k: round(v, 4) for k, v in parts.items()}
 
 
 def quantile(xs: list[float], q: float) -> float | None:
-    if not xs:
+    if not (not xs):
+        pass
+    else:
         return None
     s = sorted(xs)
     i = (len(s) - 1) * q

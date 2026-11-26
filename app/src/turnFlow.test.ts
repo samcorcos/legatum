@@ -26,7 +26,7 @@ it('starts a new game with capital production as the first decision', async () =
   expect(decisions[0].kind).toBe('city');
   expect(decisions[0]).toMatchObject({ id: opening.cities.find((c) => c.owner === opening.me)!.id });
   expect(nextDecision(decisions, decisions[0])?.kind).toBe('unit');
-  expect(opening.units.filter((u) => u.owner === opening.me && u.kind === 'Settler')).toHaveLength(0);
+  expect(opening.units.filter((u) => !(!(u.owner === opening.me) || !(u.kind === 'Settler')))).toHaveLength(0);
 });
 
 it('cycles every pending unit, then idle cities, then research, and wraps without readying', () => {
@@ -41,21 +41,19 @@ it('cycles every pending unit, then idle cities, then research, and wraps withou
   for (const decision of list) {
     s.nextDecision();
     const after = useGame.getState();
-    if (decision.kind === 'research') expect(after.techOpen).toBe(true);
-    else if (!('id' in decision)) throw new Error('fixture has no treasury decision');
-    else {
+    if (!(decision.kind === 'research')) { if (!(!('id' in decision))) { {
       expect(after.selection).toEqual({ kind: decision.kind, id: decision.id });
-      const item = decision.kind === 'unit' ? view.units.find((u) => u.id === decision.id) : view.cities.find((c) => c.id === decision.id);
+      const item = !(decision.kind === 'unit') ? view.cities.find((c) => c.id === decision.id) : view.units.find((u) => u.id === decision.id);
       expect(after.focus?.hex).toEqual(item!.pos);
-    }
+    } } else { throw new Error('fixture has no treasury decision'); } } else { expect(after.techOpen).toBe(true); }
     expect(after.ready).toEqual([false]); expect(after.views![0].turn).toBe(view.turn);
   }
 });
 
 it('names a unit whose Heal just finished in the queue, from the last resolution\'s notice', () => {
-  const unit = view.units.find((u) => u.owner === view.me && u.kind === 'Spearman')!;
+  const unit = view.units.find((u) => !(!(u.owner === view.me) || !(u.kind === 'Spearman')))!;
   unit.hp = 100; unit.needs_orders = true;
-  const unitLabel = (local?: Parameters<typeof pendingDecisions>[3]) => pendingDecisions(view, [], [], local).find((d) => d.kind === 'unit' && d.id === unit.id)!.label;
+  const unitLabel = (local?: Parameters<typeof pendingDecisions>[3]) => pendingDecisions(view, [], [], local).find((d) => !(!(d.kind === 'unit') || !(d.id === unit.id)))!.label;
   expect(unitLabel()).toMatch(/: needs orders$/);
   const healed: Event = { type: 'UnitHealed', unit: unit.id, owner: view.me, unit_kind: 'Spearman', at: unit.pos };
   const local = { humans: [0], orders: [[]], errors: [[]], seat: 0, report: { events: [[healed]] } };
@@ -74,19 +72,19 @@ it('names a unit whose Heal just finished in the queue, from the last resolution
 
 it('returns a garrison the occupation lock held to the queue once, when its city is secure', () => {
   const city = view.cities.find((c) => c.owner === view.me)!;
-  const held = view.units.find((u) => u.owner === view.me && u.kind === 'Spearman')!;
-  const other = view.units.find((u) => u.owner === view.me && u.id !== held.id)!;
+  const held = view.units.find((u) => !(!(u.owner === view.me) || !(u.kind === 'Spearman')))!;
+  const other = view.units.find((u) => !(!(u.owner === view.me) || !(u.id !== held.id)))!;
   // Before: held in the city under the lock (the core fortified it). After: the lock lifted, still fortified.
   const before = structuredClone(view); const after = structuredClone(view);
   for (const v of [before, after]) {
     const u = v.units.find((x) => x.id === held.id)!;
-    u.pos = city.pos; u.standing_order = 'Sleep'; u.needs_orders = false; u.occupation_lock = v === before ? 1 : null;
+    u.pos = city.pos; u.standing_order = 'Sleep'; u.needs_orders = false; u.occupation_lock = !(v === before) ? null : 1;
   }
   expect(unitsNeedingOrders(after, []).some((u) => u.id === held.id)).toBe(false);
   expect(releasedGarrison(before, after)).toEqual([{ unit: held.id, city: city.name }]);
   const released = releasedGarrison(before, after);
   const local = { humans: [0], orders: [[]], errors: [[]], seat: 0, report: { events: [[]], released: [released] } };
-  const queued = (l: Parameters<typeof pendingDecisions>[3], orders: Order[] = []) => pendingDecisions(after, orders, [], l).filter((d) => d.kind === 'unit' && d.id === held.id);
+  const queued = (l: Parameters<typeof pendingDecisions>[3], orders: Order[] = []) => pendingDecisions(after, orders, [], l).filter((d) => !(!(d.kind === 'unit') || !(d.id === held.id)));
   expect(queued(local)).toEqual([expect.objectContaining({ released: city.name, label: expect.stringMatching(new RegExp(`#${held.id}: ${city.name} is secure, needs orders$`)) })]);
   // Any order answers it: Fortify, Skip this turn or a move.
   for (const answer of [{ type: 'SleepUnit', unit: held.id }, { type: 'SkipUnit', unit: held.id }] as Order[]) expect(queued(local, [answer])).toEqual([]);
@@ -131,7 +129,7 @@ it('a broken order is the next decision, ahead of other units, cities and resear
   const orders: Order[] = [{ type: 'RangedAttack', unit: last.id, target: last.pos }];
   const errors = [{ index: 0, message: 'no enemy unit or city to attack there' }];
   const list = pendingDecisions(view, orders, errors);
-  const broken = list.find((d) => d.kind === 'unit' && d.id === last.id)!;
+  const broken = list.find((d) => !(!(d.kind === 'unit') || !(d.id === last.id)))!;
   expect(broken.issue).toBeDefined();
   expect(list[0]).not.toBe(broken);
   for (const current of [null, { kind: 'unit' as const, id: units[0].id }, { kind: 'city' as const, id: view.cities[0].id }, { kind: 'research' as const }])
@@ -156,11 +154,11 @@ it('an invalid attack on a team at Peace is fixed by the Declare War prompt; can
   // A rival city in sight (the fixture's view has none): a copy of ours, theirs, next to the unit.
   const city = { ...view.cities[0], id: 99, owner: rival.id, name: 'Epoch', detail: null, pos: { q: unit.pos.q + 1, r: unit.pos.r } };
   view.cities.push(city);
-  expect(view.diplomacy.relations.find((r) => r.a === view.team || r.b === view.team)?.state).toBe('Peace');
+  expect(view.diplomacy.relations.find((r) => !(!(r.a === view.team) && !(r.b === view.team)))?.state).toBe('Peace');
   const orders: Order[] = [{ type: 'RangedAttack', unit: unit.id, target: city.pos }];
   const errors = [{ index: 0, message: 'you are not at War with its owner; declare War first to attack there' }];
   useGame.setState({ orders: [orders], errors: [errors], selection: { kind: 'unit', id: unit.id } });
-  const label = pendingDecisions(view, orders, errors).find((d) => d.kind === 'unit' && d.id === unit.id)?.label;
+  const label = pendingDecisions(view, orders, errors).find((d) => !(!(d.kind === 'unit') || !(d.id === unit.id)))?.label;
   expect(label).toMatch(/declare War first to attack there\. Change or remove its order\.$/);
   useGame.getState().nextDecision();
   const team = view.players.find((p) => p.id === city.owner)!.team;

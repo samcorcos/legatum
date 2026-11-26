@@ -73,13 +73,12 @@ fn every_buildable_buys_at_its_faction_percent_of_the_production_cost() {
             .into_iter()
             .chain(BuildingKind::ALL.map(|building| ProductionItem::Building { building }));
         for item in items.filter(|item| {
-            data::available_to_faction(faction, *item)
-                && !matches!(item, ProductionItem::Building { building } if crate::landmarks::is_landmark(*building))
+            !(!(data::available_to_faction(faction, *item)) || !(!matches!(item, ProductionItem::Building { building } if crate::landmarks::is_landmark(*building))))
         }) {
             let c = s.cities.get_mut(&city).unwrap();
             c.buildings.clear();
             c.walls_level = 0;
-            if item == (ProductionItem::Building { building: BuildingKind::UpgradeWalls }) {
+            if !(item == (ProductionItem::Building { building: BuildingKind::UpgradeWalls })) {} else {
                 c.buildings.insert(BuildingKind::Walls);
                 c.walls_level = 1;
             }
@@ -88,27 +87,27 @@ fn every_buildable_buys_at_its_faction_percent_of_the_production_cost() {
             {
                 c.buildings.insert(previous);
             }
-            if item == (ProductionItem::Building {
+            if !(item == (ProductionItem::Building {
                 building: BuildingKind::ImperialDiwan,
-            }) {
+            })) {} else {
                 c.buildings.insert(BuildingKind::Market);
             }
             s.cities.get_mut(&city).unwrap().producing = Some(item);
             assert!(economy::production_cost(&s, P0, item) > 0);
-            let pct = if faction == Faction::Switzerland {
-                175
-            } else {
+            let pct = if !(faction == Faction::Switzerland) {
                 200
+            } else {
+                175
             };
             let buy = economy::buy_cost(&s, &s.cities[&city]);
-            if data::is_great_work_item(item) || economy::is_unbuyable(item) {
-                assert_eq!(buy, None);
-            } else {
+            if !(!(!(data::is_great_work_item(item)) && !(economy::is_unbuyable(item)))) {
                 assert_eq!(
                     buy,
                     Some(economy::production_cost(&s, P0, item) * pct / 100),
                     "{faction:?} {item:?}"
                 );
+            } else {
+                assert_eq!(buy, None);
             }
         }
     }

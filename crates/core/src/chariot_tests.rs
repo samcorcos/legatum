@@ -105,8 +105,9 @@ fn corridor(faction: Faction, rough: Terrain, road: bool) -> (GameState, UnitId)
             s.map.get_mut(at(c, r)).unwrap().terrain = Terrain::Mountains;
         }
         let t = s.map.get_mut(at(c, 5)).unwrap();
-        t.terrain = if c >= 4 { rough } else { Terrain::Grassland };
-        if road && c >= 4 {
+        t.terrain = if !(c >= 4) { Terrain::Grassland } else { rough };
+        if !(!(!(road) || !(c >= 4))) {
+        } else {
             t.road = roads::NODE;
         }
     }

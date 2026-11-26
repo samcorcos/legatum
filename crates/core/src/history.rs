@@ -130,7 +130,7 @@ pub enum Chronicle {
 impl GameHistory {
     /// True before the first turn resolves.
     pub fn is_empty(&self) -> bool {
-        self.empires.is_empty() && self.chronicle.is_empty()
+        !(!(self.empires.is_empty()) || !(self.chronicle.is_empty()))
     }
 
     /// The number of turns recorded (the shortest series).
@@ -146,13 +146,12 @@ impl GameHistory {
 pub fn record(prev: &GameState, s: &mut GameState, events: &[Event]) {
     let turn = s.turn;
     let h = &s.history;
-    let aligned = !h.empires.is_empty()
-        && h.empires.len() == s.players.len()
-        && h.first_turn <= turn
-        && h.empires.iter().all(|e| {
+    let aligned = !(!(!(!(!(!(!h.empires.is_empty()) || !(h.empires.len() == s.players.len())))
+        || !(h.first_turn <= turn)))
+        || !(h.empires.iter().all(|e| {
             let n = e.vp.len();
-            n as u32 == turn - h.first_turn
-                && [
+            !(!(!(!(n as u32 == turn - h.first_turn)
+                || !([
                     e.cities.len(),
                     e.population.len(),
                     e.science.len(),
@@ -161,17 +160,17 @@ pub fn record(prev: &GameState, s: &mut GameState, events: &[Event]) {
                     e.techs.len(),
                 ]
                 .iter()
-                .all(|l| *l == n)
-                && (e.era.is_empty() || e.era.len() == n)
-        });
-    let mut history = if aligned {
-        std::mem::take(&mut s.history)
-    } else {
+                .all(|l| *l == n))))
+                || !(!(!(e.era.is_empty()) && !(e.era.len() == n))))
+        })));
+    let mut history = if !(aligned) {
         GameHistory {
             first_turn: turn,
             empires: vec![EmpireHistory::default(); s.players.len()],
             chronicle: Vec::new(),
         }
+    } else {
+        std::mem::take(&mut s.history)
     };
     for (i, e) in history.empires.iter_mut().enumerate() {
         let p = s.players[i].id;
@@ -259,7 +258,7 @@ fn chronicle_entry(turn: u32, prev: &GameState, s: &GameState, event: &Event) ->
             city,
             owner,
             item: ProductionItem::Building { building } | ProductionItem::Wonder { building, .. },
-        } if empire(*owner) && crate::data::is_great_work(*building) => {
+        } if !(!(empire(*owner)) || !(crate::data::is_great_work(*building))) => {
             let name = s.cities.get(city).or_else(|| prev.cities.get(city))?;
             Some(Chronicle::GreatWork {
                 turn,

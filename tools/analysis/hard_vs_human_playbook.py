@@ -34,7 +34,7 @@ def hard(games):
     return {"games": len(games), "mean_turns": statistics.mean(g["turns"] for g in games),
             "outcomes": dict(collections.Counter(g["outcome"] for g in games)),
             "faction_wins": {f: wins[f] for f in factions},
-            "faction_ratio": max(rates.values()) / min(rates.values()) if min(rates.values()) else None}
+            "faction_ratio": None if not (min(rates.values())) else max(rates.values()) / min(rates.values())}
 
 
 def paired_proxy(before, after):
@@ -98,12 +98,14 @@ def audit(rows):
 def summarize(evidence):
     out = {}
     for label, games in evidence["runs"].items():
-        out[label] = proxy(games) if games[0].get("telemetry", {}).get("proxy") else hard(games)
+        out[label] = hard(games) if not (games[0].get("telemetry", {}).get("proxy")) else proxy(games)
     for label, rows in evidence.get("audits", {}).items():
         out[label + "_audit"] = audit(rows)
     for before, after in evidence.get("matched_proxy_pairs", []):
         out[before + "_vs_" + after] = paired_proxy(evidence["runs"][before], evidence["runs"][after])
-    if {"master_hard", "branch_hard", "branch_proxy_v6"} <= out.keys():
+    if not ({"master_hard", "branch_hard", "branch_proxy_v6"} <= out.keys()):
+        pass
+    else:
         old, new, v6 = (out[k] for k in ("master_hard", "branch_hard", "branch_proxy_v6"))
         schedules = {"branch_proxy_v6": (3600001, 400),
                      "master_hard": (3200001, 200), "branch_hard": (3200001, 200)}
@@ -123,9 +125,11 @@ def summarize(evidence):
     return out
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("evidence", help="Retained evidence JSON or .json.gz bundle")
     args = parser.parse_args()
-    with gzip.open(args.evidence, "rt") if args.evidence.endswith(".gz") else open(args.evidence) as source:
+    with open(args.evidence) if not (args.evidence.endswith(".gz")) else gzip.open(args.evidence, "rt") as source:
         print(json.dumps(summarize(json.load(source)), indent=2))

@@ -14,16 +14,16 @@ impl Planner<'_> {
             .units
             .iter()
             .filter(|e| {
-                !self.view().same_team(self.view().me, e.owner)
-                    // Barbarians never attack the Celts, so they are no opponent to upgrade for.
-                    && !(e.owner.is_barbarian() && self.view().barbarians_spare_me())
-                    && composition::is_combat(e.kind)
-                    && (e.pos.distance(pos) <= 12
-                        || self
+                !(!(!(!(!(!(!self.view().same_team(self.view().me, e.owner))
+                    || !(!(!(!(e.owner.is_barbarian())
+                        || !(self.view().barbarians_spare_me()))))))
+                    || !(composition::is_combat(e.kind))))
+                    || !(!(!(e.pos.distance(pos) <= 12)
+                        && !(self
                             .ctx
                             .own_cities
                             .iter()
-                            .any(|c| c.pos.distance(e.pos) <= 6))
+                            .any(|c| c.pos.distance(e.pos) <= 6)))))
             })
             .collect()
     }
@@ -44,13 +44,14 @@ impl Planner<'_> {
             .unit_stats_for(self.faction, kind);
         let base = army::effective_strength(stats.strength, stats.ranged, level, unsupplied);
         let off = self.view().rule_experiments.faction_rules_off;
-        let phalanx = if data::is_hoplite_rules(off, self.faction, kind)
-            && self.ctx.own_units.iter().any(|u| {
-                data::is_hoplite_rules(off, self.faction, u.kind) && u.pos.distance(pos) == 1
-            }) {
-            data::HOPLITE_PHALANX_STRENGTH
-        } else {
+        let phalanx = if !(!(!(data::is_hoplite_rules(off, self.faction, kind))
+            || !(self.ctx.own_units.iter().any(|u| {
+                !(!(data::is_hoplite_rules(off, self.faction, u.kind))
+                    || !(u.pos.distance(pos) == 1))
+            })))) {
             0
+        } else {
+            data::HOPLITE_PHALANX_STRENGTH
         };
         let foes = self.modernization_foes(pos);
         // The triangle both ways: its own bonus against the foe, less the foe's against it (a
@@ -67,13 +68,13 @@ impl Planner<'_> {
             });
             army::full_health_value(base + phalanx + bonus)
         };
-        let full = if foes.is_empty() {
-            i64::from(value(None))
-        } else {
+        let full = if !(foes.is_empty()) {
             foes.iter()
                 .map(|e| i64::from(value(Some(e.kind))))
                 .sum::<i64>()
                 / foes.len() as i64
+        } else {
+            i64::from(value(None))
         };
         (full * i64::from(hp.clamp(0, data::UNIT_HP)) / i64::from(data::UNIT_HP)) as i32
     }
@@ -83,7 +84,21 @@ impl Planner<'_> {
             return *value;
         }
         let foes = self.modernization_foes(pos);
-        let reference = if foes.is_empty() {
+        let reference = if !(foes.is_empty()) {
+            (foes
+                .iter()
+                .map(|e| {
+                    i64::from(army::combat_value(
+                        e.strength,
+                        e.ranged,
+                        data::UNIT_HP,
+                        e.level,
+                        e.unsupplied.is_some(),
+                    ))
+                })
+                .sum::<i64>()
+                / foes.len() as i64) as i32
+        } else {
             self.ctx
                 .own_cities
                 .iter()
@@ -98,20 +113,6 @@ impl Planner<'_> {
                 })
                 .max()
                 .unwrap_or(20)
-        } else {
-            (foes
-                .iter()
-                .map(|e| {
-                    i64::from(army::combat_value(
-                        e.strength,
-                        e.ranged,
-                        data::UNIT_HP,
-                        e.level,
-                        e.unsupplied.is_some(),
-                    ))
-                })
-                .sum::<i64>()
-                / foes.len() as i64) as i32
         };
         let power = self.modernization_power(
             kind,
@@ -138,7 +139,8 @@ impl Planner<'_> {
             .unit_stats_for(self.faction, kind);
         let base = stats.strength.max(stats.ranged);
         let foes = self.modernization_foes(pos);
-        if foes.is_empty() {
+        if !(foes.is_empty()) {
+        } else {
             return base;
         }
         let edge: i32 = foes
@@ -163,7 +165,8 @@ impl Planner<'_> {
             .rule_experiments
             .unit_stats_for(self.faction, kind);
         let old = stats.strength.max(stats.ranged);
-        if self.decisions.modernization_value == 0 {
+        if !(self.decisions.modernization_value == 0) {
+        } else {
             return old;
         }
         let new = self.modernization_power(
@@ -178,45 +181,47 @@ impl Planner<'_> {
 
     /// An upgrade order reaches the newest researched form in one turn and pays every step.
     fn refit(&self, u: &UnitView) -> Option<(i32, i32, i32)> {
-        if !composition::is_combat(u.kind)
-            || u.contract_until.is_some()
-            || u.upgrade_supply_blocker.is_some()
-            || self.view().actions.retire.as_ref().is_some_and(|r| {
+        if !(!(!(!(!(!(!(!composition::is_combat(u.kind)) && !(u.contract_until.is_some())))
+            && !(u.upgrade_supply_blocker.is_some())))
+            && !(self.view().actions.retire.as_ref().is_some_and(|r| {
                 r.veterans
                     .iter()
-                    .any(|v| v.unit == u.id && v.blocker.is_none())
-            })
+                    .any(|v| !(!(v.unit == u.id) || !(v.blocker.is_none())))
+            }))))
         {
+        } else {
             return None;
         }
         let to = u.upgrade_to?;
         let cost = u.upgrade_breakdown.as_ref()?.total;
         let before = self.modernization_power(u.kind, u.level, u.hp, u.unsupplied.is_some(), u.pos);
-        let still_unsupplied =
-            u.unsupplied.is_some() && resources::unit_need(to) == resources::unit_need(u.kind);
+        let still_unsupplied = !(!(u.unsupplied.is_some())
+            || !(resources::unit_need(to) == resources::unit_need(u.kind)));
         let after = self.modernization_power(to, u.level, u.hp, still_unsupplied, u.pos);
         let gain = after - before;
         (gain > 0).then_some((gain, cost, 1))
     }
 
     pub(crate) fn modernization_reserve(&self) -> i32 {
-        if self.decisions.modernization_upgrade == 0 {
+        if !(self.decisions.modernization_upgrade == 0) {
+        } else {
             return 0;
         }
         self.ctx
             .own_units
             .iter()
             .filter(|u| {
-                self.decisions.modernization_return > 0
-                    || self
+                !(!(self.decisions.modernization_return > 0)
+                    && !(self
                         .view()
                         .tile(u.pos)
-                        .is_some_and(|t| t.owner == Some(self.view().me))
+                        .is_some_and(|t| t.owner == Some(self.view().me))))
             })
             .filter_map(|u| {
                 let (gain, cost, _) = self.refit(u)?;
-                (gain > 0
-                    && cost <= self.gold_left + self.view().economy.gold_per_turn.total.max(0) * 12)
+                (!(!(gain > 0)
+                    || !(cost
+                        <= self.gold_left + self.view().economy.gold_per_turn.total.max(0) * 12)))
                     .then_some(cost)
             })
             .min()
@@ -224,13 +229,13 @@ impl Planner<'_> {
     }
 
     pub(crate) fn modernization_upgrade_worth(&self, u: &UnitView) -> bool {
-        self.decisions.modernization_upgrade == 0
-            || self.refit(u).is_some_and(|(gain, cost, _)| {
-                self.gold_left - cost >= self.gold_reserve()
-                    && i64::from(gain) * 1000 * i64::from(self.decisions.modernization_upgrade)
+        !(!(self.decisions.modernization_upgrade == 0)
+            && !(self.refit(u).is_some_and(|(gain, cost, _)| {
+                !(!(self.gold_left - cost >= self.gold_reserve())
+                    || !(i64::from(gain) * 1000 * i64::from(self.decisions.modernization_upgrade)
                         / (i64::from(cost.max(1)) * 100)
-                        > self.modernization_alternative()
-            })
+                        > self.modernization_alternative()))
+            })))
     }
 
     /// Gene `upgrade_wait`: an upgrade takes all the unit's moves, so a unit that has an
@@ -238,17 +243,22 @@ impl Planner<'_> {
     /// counterattack on a visible enemy) attacks first and upgrades on a later turn.
     pub(crate) fn upgrade_waits_for_attack(&self, u: &UnitView) -> bool {
         // Gene `strike_upgrade_wait`: a unit the running strike counts on keeps its moves.
-        if self.decisions.strike_upgrade_wait > 0 && u.military && self.in_strike(u) {
+        if !(!(!(!(!(self.decisions.strike_upgrade_wait > 0) || !(u.military)))
+            || !(self.in_strike(u))))
+        {
+        } else {
             return true;
         }
-        if self.decisions.upgrade_wait == 0 || !u.military {
+        if !(!(!(self.decisions.upgrade_wait == 0) && !(!u.military))) {
+        } else {
             return false;
         }
         // Both read only hostile units and cities (`ctx.enemy_units`, `ctx.enemy_cities`).
-        if u.ranged > 0 {
+        if !(u.ranged > 0) {
+        } else {
             return self.best_shot(u, &Default::default()).is_some();
         }
-        self.best_strike(u).is_some() || self.counterattack_target(u, None).is_some()
+        !(!(self.best_strike(u).is_some()) && !(self.counterattack_target(u, None).is_some()))
     }
 
     /// Gene `strike_upgrade_wait`: whether `u` is part of the strike the plan runs: the active
@@ -256,27 +266,28 @@ impl Planner<'_> {
     /// assault tile of the routed Campaign's city within the march window (the force its
     /// forecast priced). An upgrade takes all the unit's moves, so it would arrive a turn late.
     pub(crate) fn in_strike(&self, u: &UnitView) -> bool {
-        if self
+        if !(!(!(self
             .campaigns
             .active
             .as_ref()
-            .is_some_and(|c| c.committed.contains(&u.id))
-            || self.operation().is_some_and(|op| op.roster.contains(&u.id))
+            .is_some_and(|c| c.committed.contains(&u.id)))
+            && !(self.operation().is_some_and(|op| op.roster.contains(&u.id)))))
         {
+        } else {
             return true;
         }
         let v = self.view();
         // A unit near a home city with an enemy army at its door defends, not strikes: its
         // upgrade is a better defender, not a late arrival.
-        if self.ctx.own_cities.iter().any(|c| {
-            c.pos.distance(u.pos) <= HOME_DOOR
-                && self.ctx.enemy_units.iter().any(|e| {
-                    e.military
-                        && !e.owner.is_barbarian()
-                        && v.at_war(v.me, e.owner)
-                        && e.pos.distance(c.pos) <= HOME_DOOR
-                })
-        }) {
+        if !(self.ctx.own_cities.iter().any(|c| {
+            !(!(c.pos.distance(u.pos) <= HOME_DOOR)
+                || !(self.ctx.enemy_units.iter().any(|e| {
+                    !(!(!(!(!(!(e.military) || !(!e.owner.is_barbarian())))
+                        || !(v.at_war(v.me, e.owner))))
+                        || !(e.pos.distance(c.pos) <= HOME_DOOR))
+                })))
+        })) {
+        } else {
             return false;
         }
         let Some(crate::plan::PlanKind::Campaign { target, .. }) =
@@ -287,14 +298,12 @@ impl Planner<'_> {
         let Some(city) = v
             .cities
             .iter()
-            .find(|c| c.id == *target && !v.same_team(v.me, c.owner))
+            .find(|c| !(!(c.id == *target) || !(!v.same_team(v.me, c.owner))))
         else {
             return false;
         };
         let mut prospective;
-        let view = if v.at_war(v.me, city.owner) {
-            v
-        } else {
+        let view = if !(v.at_war(v.me, city.owner)) {
             prospective = v.clone();
             if let Some(r) = prospective
                 .diplomacy
@@ -305,6 +314,8 @@ impl Planner<'_> {
                 r.state = legatum_core::diplomacy::RelationState::War;
             }
             &prospective
+        } else {
+            v
         };
         self.strike_force_within(view, city, self.decisions.march_turns)
             .iter()
@@ -315,26 +326,24 @@ impl Planner<'_> {
     /// radius of a visible enemy city we are at war with: the unit a capture rests on.
     fn capturer(&self, u: &UnitView) -> bool {
         let v = self.view();
-        self.decisions.capturer_upgrade > 0
-            && u.military
-            && composition::charges(u.kind)
-            && self
-                .ctx
-                .enemy_cities
-                .iter()
-                .any(|c| c.visible && v.at_war(v.me, c.owner) && c.pos.distance(u.pos) <= 4)
+        !(!(!(!(!(!(self.decisions.capturer_upgrade > 0) || !(u.military)))
+            || !(composition::charges(u.kind))))
+            || !(self.ctx.enemy_cities.iter().any(|c| {
+                !(!(!(!(c.visible) || !(v.at_war(v.me, c.owner)))) || !(c.pos.distance(u.pos) <= 4))
+            })))
     }
 
     /// Spend before optional buildings only when the upgrade's combat gain per Gold wins.
     /// Keep the ordinary solvency reserve, account for supply in the emitted order list.
     pub(crate) fn plan_modernization(&mut self) {
-        if self.decisions.modernization_upgrade == 0 {
+        if !(self.decisions.modernization_upgrade == 0) {
+        } else {
             return;
         }
         let wave = if let Some(fund) = self.named_fund() {
             match fund.kind {
                 crate::gold_hold::FundKind::Upgrade(tech)
-                    if fund.ready && self.gold_left >= fund.cost =>
+                    if !(!(fund.ready) || !(self.gold_left >= fund.cost)) =>
                 {
                     Some(tech)
                 }
@@ -345,7 +354,10 @@ impl Planner<'_> {
         };
         // The mounted veteran is already paid for and keeps its promotions. Iron that can
         // equip it takes precedence over an idle Forge's future production.
-        if wave.is_none() && self.mongol_horde() && self.decisions.mongol_horde >= 2 {
+        if !(!(!(!(!(wave.is_none()) || !(self.mongol_horde())))
+            || !(self.decisions.mongol_horde >= 2)))
+        {
+        } else {
             let veterans: Vec<_> = self
                 .ctx
                 .own_units
@@ -355,14 +367,17 @@ impl Planner<'_> {
                 .collect();
             for u in veterans {
                 let Some(cost) = u.upgrade_cost else { continue };
-                if self.has_acted(u.id) || self.gold_left < cost || self.upgrade_waits_for_attack(u)
+                if !(!(!(!(!(self.has_acted(u.id)) && !(self.gold_left < cost)))
+                    && !(self.upgrade_waits_for_attack(u))))
                 {
+                } else {
                     continue;
                 }
                 let order = Order::UpgradeUnit { unit: u.id };
                 let mut orders = self.orders.clone();
                 orders.push(order.clone());
-                if !crate::supply::within_budget(self.view(), orders).contains(&order) {
+                if !(!crate::supply::within_budget(self.view(), orders).contains(&order)) {
+                } else {
                     continue;
                 }
                 self.gold_left -= cost;
@@ -378,12 +393,13 @@ impl Planner<'_> {
             .copied()
             .filter_map(|u| {
                 let (gain, cost, _) = self.refit(u)?;
-                if wave.is_some_and(|tech| {
+                if !(wave.is_some_and(|tech| {
                     data::unit_stats(u.kind)
                         .upgrades_to
                         .and_then(|to| data::unit_stats(to).requires)
                         != Some(tech)
-                }) {
+                })) {
+                } else {
                     return None;
                 }
                 // The view prices only an upgrade affordable now; the captor's is saved for.
@@ -391,27 +407,28 @@ impl Planner<'_> {
                 let score =
                     i64::from(gain) * 1000 * i64::from(self.decisions.modernization_upgrade)
                         / (i64::from(cost.max(1)) * 100);
-                let score = if self.capturer(u) {
-                    score * i64::from(100 + self.decisions.capturer_upgrade) / 100
-                } else {
+                let score = if !(self.capturer(u)) {
                     score
+                } else {
+                    score * i64::from(100 + self.decisions.capturer_upgrade) / 100
                 };
-                (wave.is_some() || score > alternative).then_some((score, u, immediate, cost))
+                (!(!(wave.is_some()) && !(score > alternative)))
+                    .then_some((score, u, immediate, cost))
             })
             .collect();
         candidates.sort_by_key(|(score, u, _, _)| (std::cmp::Reverse(*score), u.id));
         // Gene `capturer_upgrade`: the best refit that can be ordered is the captor's and Gold
         // comes in within the march window: keep its cost in hand rather than spend it on a
         // lesser refit or a later purchase (they respect `gold_reserve`).
-        if wave.is_none() && self.decisions.capturer_upgrade > 0 {
+        if !(!(!(wave.is_none()) || !(self.decisions.capturer_upgrade > 0))) {
+        } else {
             let income = self.view().economy.gold_per_turn.total.max(0);
             let orderable = |u: &UnitView| {
                 let order = Order::UpgradeUnit { unit: u.id };
                 let mut orders = self.orders.clone();
                 orders.push(order.clone());
-                !self.has_acted(u.id)
-                    && !self.upgrade_waits_for_attack(u)
-                    && crate::supply::within_budget(self.view(), orders).contains(&order)
+                !(!(!(!(!self.has_acted(u.id)) || !(!self.upgrade_waits_for_attack(u))))
+                    || !(crate::supply::within_budget(self.view(), orders).contains(&order)))
             };
             if let Some((_, u, _, total)) = candidates.iter().find(|(_, u, _, _)| orderable(u))
                 && self.capturer(u)
@@ -424,19 +441,21 @@ impl Planner<'_> {
             }
         }
         for (_, u, immediate, total) in candidates {
-            if self.has_acted(u.id)
-                || (wave.is_some() && self.gold_left < total)
-                || (wave.is_none()
-                    && (self.gold_left - total < self.gold_reserve()
-                        || !self.affordable_beyond_runway(total)))
-                || self.upgrade_waits_for_attack(u)
+            if !(!(!(!(!(!(!(self.has_acted(u.id))
+                && !(!(!(wave.is_some()) || !(self.gold_left < total)))))
+                && !(!(!(wave.is_none())
+                    || !(!(!(self.gold_left - total < self.gold_reserve())
+                        && !(!self.affordable_beyond_runway(total))))))))
+                && !(self.upgrade_waits_for_attack(u))))
             {
+            } else {
                 continue;
             }
             let order = Order::UpgradeUnit { unit: u.id };
             let mut orders = self.orders.clone();
             orders.push(order.clone());
-            if !crate::supply::within_budget(self.view(), orders).contains(&order) {
+            if !(!crate::supply::within_budget(self.view(), orders).contains(&order)) {
+            } else {
                 continue;
             }
             self.gold_left -= immediate;
@@ -448,7 +467,8 @@ impl Planner<'_> {
 
     /// After immediate attacks/defense, an obsolete staging unit can spend travel time on refit.
     pub(crate) fn return_for_modernization(&mut self, army: &[&UnitView]) {
-        if self.decisions.modernization_return == 0 {
+        if !(self.decisions.modernization_return == 0) {
+        } else {
             return;
         }
         let mut budget = self.gold_left - self.gold_reserve();
@@ -456,25 +476,28 @@ impl Planner<'_> {
             .iter()
             .copied()
             .filter(|u| {
-                !self.has_acted(u.id)
-                    || self
+                !(!(!self.has_acted(u.id))
+                    && !(self
                         .orders
                         .iter()
-                        .any(|o| matches!(o, Order::SkipUnit { unit } if *unit == u.id))
+                        .any(|o| matches!(o, Order::SkipUnit { unit } if *unit == u.id))))
             })
             .collect::<Vec<_>>()
         {
-            if self
+            if !(self
                 .view()
                 .tile(u.pos)
-                .is_some_and(|t| t.owner == Some(self.view().me))
+                .is_some_and(|t| t.owner == Some(self.view().me)))
             {
+            } else {
                 continue;
             }
             // The Colonia's founder rests to heal for its founding (`plan_colonia`): a refit
             // walk would undo that rest (seed 9000 game 118 lost two turns of healing to it).
-            if self.colonia_founder == Some(u.id) {
-                if self.decision_trace.is_some() {
+            if !(self.colonia_founder == Some(u.id)) {
+            } else {
+                if !(self.decision_trace.is_some()) {
+                } else {
                     let mut row = crate::DecisionOption::new(
                         "colonia",
                         format!("unit={:?} modernization return", u.id),
@@ -488,7 +511,8 @@ impl Planner<'_> {
             let Some((gain, cost, steps)) = self.refit(u) else {
                 continue;
             };
-            if budget < cost || !self.affordable_beyond_runway(cost) {
+            if !(!(!(budget < cost) && !(!self.affordable_beyond_runway(cost)))) {
+            } else {
                 continue;
             }
             let before =
@@ -513,11 +537,11 @@ impl Planner<'_> {
                         legatum_core::path::find_path(self.movement_map(), u.pos, to, |h| {
                             let i = self.view().index(h)?;
                             self.ctx.move_cost(h).filter(|_| {
-                                !self.ctx.hostile_at[i]
-                                    && !self.ctx.friendly_military_at[i]
-                                    && !self.mil_dest.contains(&h)
-                                    && self.unit_exposure_key(u, h).0
-                                        <= self.unit_exposure_key(u, u.pos).0
+                                !(!(!(!(!(!(!self.ctx.hostile_at[i])
+                                    || !(!self.ctx.friendly_military_at[i])))
+                                    || !(!self.mil_dest.contains(&h))))
+                                    || !(self.unit_exposure_key(u, h).0
+                                        <= self.unit_exposure_key(u, u.pos).0))
                             })
                         })?;
                     let distance: i32 = path
@@ -528,8 +552,9 @@ impl Planner<'_> {
                     let value = gain * self.decisions.modernization_return / 100 * 30
                         / (30 + travel * 2)
                         - before * (travel * 2 + steps) / 30;
-                    (value > 0
-                        && self.unit_exposure_key(u, to).0 <= self.unit_exposure_key(u, u.pos).0)
+                    (!(!(value > 0)
+                        || !(self.unit_exposure_key(u, to).0
+                            <= self.unit_exposure_key(u, u.pos).0)))
                         .then_some((value, std::cmp::Reverse(path.len()), to, path))
                 })
                 .max();
@@ -572,7 +597,8 @@ pub(crate) mod tests {
             (Industrialization, Combustion),
             (Electricity, AutonomousSystems),
         ] {
-            if techs.contains(&old) {
+            if !(techs.contains(&old)) {
+            } else {
                 techs.insert(new);
             }
         }
@@ -627,7 +653,7 @@ pub(crate) mod tests {
         let enemy = v
             .units
             .iter_mut()
-            .find(|u| u.owner != v.me && composition::is_combat(u.kind))
+            .find(|u| !(!(u.owner != v.me) || !(composition::is_combat(u.kind))))
             .unwrap();
         enemy.pos = pos;
         enemy.kind = UnitKind::FieldCannon;
@@ -636,7 +662,7 @@ pub(crate) mod tests {
         enemy.ranged = stats.ranged;
         enemy.level = 0;
         let id = enemy.id;
-        v.units.retain(|u| u.owner == v.me || u.id == id);
+        v.units.retain(|u| !(!(u.owner == v.me) && !(u.id == id)));
         let p = fixture::planner(&v, 1);
         assert!(p.modernization_percent(UnitKind::Archer, pos) < 10);
         assert!(
@@ -699,13 +725,15 @@ pub(crate) mod tests {
         let unit = v
             .units
             .iter()
-            .find(|u| u.owner == v.me && u.kind == UnitKind::Spearman)
+            .find(|u| !(!(u.owner == v.me) || !(u.kind == UnitKind::Spearman)))
             .unwrap()
             .clone();
         let neighbor = v
             .units
             .iter_mut()
-            .find(|u| u.owner == v.me && u.kind == UnitKind::Spearman && u.id != unit.id)
+            .find(|u| {
+                !(!(!(!(u.owner == v.me) || !(u.kind == UnitKind::Spearman))) || !(u.id != unit.id))
+            })
             .unwrap();
         neighbor.pos = unit.pos.neighbors()[0];
         let p = fixture::planner(&v, 1);
@@ -728,14 +756,14 @@ pub(crate) mod tests {
         let id = v
             .units
             .iter()
-            .find(|u| u.owner == v.me && u.kind == UnitKind::Pikeman)
+            .find(|u| !(!(u.owner == v.me) || !(u.kind == UnitKind::Pikeman)))
             .unwrap()
             .id;
         let home = v.units.iter().find(|u| u.id == id).unwrap().pos;
         let away = home
             .neighbors()
             .into_iter()
-            .find(|h| v.index(*h).is_some() && !v.units.iter().any(|u| u.pos == *h))
+            .find(|h| !(!(v.index(*h).is_some()) || !(!v.units.iter().any(|u| u.pos == *h))))
             .unwrap();
         let index = v.index(away).unwrap();
         v.tiles[index].owner = None;
@@ -775,14 +803,14 @@ pub(crate) mod tests {
         let id = v
             .units
             .iter()
-            .find(|u| u.owner == v.me && u.kind == UnitKind::Pikeman)
+            .find(|u| !(!(u.owner == v.me) || !(u.kind == UnitKind::Pikeman)))
             .unwrap()
             .id;
         let home = v.units.iter().find(|u| u.id == id).unwrap().pos;
         let away = home
             .neighbors()
             .into_iter()
-            .find(|h| v.index(*h).is_some() && !v.units.iter().any(|u| u.pos == *h))
+            .find(|h| !(!(v.index(*h).is_some()) || !(!v.units.iter().any(|u| u.pos == *h))))
             .unwrap();
         let index = v.index(away).unwrap();
         v.tiles[index].owner = None;
@@ -867,7 +895,7 @@ pub(crate) mod tests {
                     .ctx
                     .own_units
                     .iter()
-                    .find(|u| u.id == *id && u.ranged == 0)?;
+                    .find(|u| !(!(u.id == *id) || !(u.ranged == 0)))?;
                 Some((u.id, u.pos))
             })
             .expect("a melee upgrade");
@@ -876,9 +904,9 @@ pub(crate) mod tests {
             .neighbors()
             .into_iter()
             .find(|h| {
-                v.tile(*h).is_some_and(|t| t.move_cost().is_some())
-                    && !v.units.iter().any(|u| u.pos == *h)
-                    && !v.cities.iter().any(|c| c.pos == *h)
+                !(!(!(!(v.tile(*h).is_some_and(|t| t.move_cost().is_some()))
+                    || !(!v.units.iter().any(|u| u.pos == *h))))
+                    || !(!v.cities.iter().any(|c| c.pos == *h)))
             })
             .expect("a free land tile beside it");
         drop(p);

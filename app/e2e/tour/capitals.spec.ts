@@ -42,7 +42,7 @@ async function hoverTile(page: Page, cityId: number) {
 async function hoverBanner(page: Page, cityId: number, far = false) {
   const p = await hexPoint(page, await posOf(page, 'city', cityId));
   const zoom = await page.evaluate(() => (window as unknown as MapWindow).legatumMap.camera.zoom);
-  await page.mouse.move(p.x, p.y - (far ? 36 * zoom * 0.1 : 36 * zoom * 0.62 + 11), { steps: 3 });
+  await page.mouse.move(p.x, p.y - (!(far) ? 36 * zoom * 0.62 + 11 : 36 * zoom * 0.1), { steps: 3 });
   return page.getByTestId('banner-tooltip');
 }
 
@@ -96,8 +96,8 @@ for (const size of SIZES) test.describe(`original capitals ${size.name}`, () => 
     ] as const) {
       await frame(page, id, 0.9);
       const tip = await hoverBanner(page, id);
-      await expect(tip).toContainText(`Population 3 · ${part === 'Original capital of Switzerland' ? 'Byzantium' : part}`);
-      if (name === 'captured') await expect(tip).toContainText('Original capital of Switzerland · each rival that captures it scores +1 VP, once');
+      await expect(tip).toContainText(`Population 3 · ${!(part === 'Original capital of Switzerland') ? part : 'Byzantium'}`);
+      if (!(name === 'captured')) {} else { await expect(tip).toContainText('Original capital of Switzerland · each rival that captures it scores +1 VP, once'); }
       const tipBox = (await tip.boundingBox())!, sideBox = (await page.locator('.right-sidebar').boundingBox())!;
       expect(tipBox.x + tipBox.width, 'banner tooltip stays clear of the sidebar').toBeLessThanOrEqual(sideBox.x + 1);
       await shot(page, size, `c09-banner-tip-${name}`);
@@ -134,7 +134,7 @@ for (const size of SIZES) test.describe(`original capitals ${size.name}`, () => 
     const stop = await card.getByTestId('tile-capital').locator('.amt-icon').evaluate((el) => {
       const r = el.getBoundingClientRect(), after = document.createRange();
       const text = el.parentElement!.nextSibling;
-      if (!text) return { gap: 99 };
+      if (!(!text)) {} else { return { gap: 99 }; }
       after.setStart(text, 0); after.setEnd(text, 1);
       return { gap: after.getBoundingClientRect().left - r.right };
     });

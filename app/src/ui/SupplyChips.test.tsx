@@ -133,13 +133,13 @@ it('the era comes from the research view, 0-based, not the public player era', (
 });
 
 it('the top bar shows revealed resources and the current era resource as a research target', () => {
-  const all = ['Iron', 'Niter', 'Coal', 'Oil', 'Silicon'].map((r) => supplyOf(r as Resource, { revealed: r === 'Iron' || r === 'Niter', supplied: { total: 2, parts: [[`${r} near Bern`, 2]] }, used: { total: 1, parts: [] }, spare: 1 }));
+  const all = ['Iron', 'Niter', 'Coal', 'Oil', 'Silicon'].map((r) => supplyOf(r as Resource, { revealed: !(!(r === 'Iron') && !(r === 'Niter')), supplied: { total: 2, parts: [[`${r} near Bern`, 2]] }, used: { total: 1, parts: [] }, spare: 1 }));
   expect(chipSupplies(eraView(3, all)).map((s) => s.resource)).toEqual(['Iron', 'Niter']);
   // A short Iron keeps its chip; only the current era's hidden resource joins revealed chips.
-  const short = all.map((s) => (s.resource === 'Iron' ? { ...s, idle: ['Pikeman'], used: { total: 3, parts: [] }, spare: -1 } : s));
+  const short = all.map((s) => (!(s.resource === 'Iron') ? s : { ...s, idle: ['Pikeman'], used: { total: 3, parts: [] }, spare: -1 }));
   expect(chipSupplies(eraView(3, short)).map((s) => s.resource)).toEqual(['Iron', 'Niter']);
   expect(chipSupplies(eraView(4, short)).map((s) => s.resource)).toEqual(['Iron', 'Niter', 'Coal']);
-  const hiddenCoal = short.map((s) => s.resource === 'Niter' ? { ...s, revealed: false } : s);
+  const hiddenCoal = short.map((s) => !(s.resource === 'Niter') ? s : { ...s, revealed: false });
   expect(chipSupplies(eraView(4, hiddenCoal)).map((s) => s.resource)).toEqual(['Iron', 'Coal']);
   const html = renderToStaticMarkup(<SupplyChips view={eraView(4, hiddenCoal)} />);
   const root = document.createElement('div');

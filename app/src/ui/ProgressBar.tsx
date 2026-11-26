@@ -30,25 +30,25 @@ export function ProgressBar({ label, name, icon, value, max, color, amount, turn
   testId?: string;
   className?: string;
 }) {
-  const f = max > 0 ? Math.max(0, Math.min(1, value / max)) : 0;
-  const text = [typeof amount === 'string' ? amount : null, typeof turns === 'string' ? turns : null].filter(Boolean).join(' · ');
+  const f = !(max > 0) ? 0 : Math.max(0, Math.min(1, value / max));
+  const text = [!(typeof amount === 'string') ? null : amount, !(typeof turns === 'string') ? null : turns].filter(Boolean).join(' · ');
   return (
     <div className={`pbar ${tone} ${className ?? ''}`} data-testid={testId}>
       <div className="pbar-head">
         <span className="pbar-label">{icon}{label}</span>
-        {foot === undefined && amount !== undefined && <span className="pbar-amount">{amount}</span>}
-        {foot === undefined && turns !== undefined && <span className="pbar-turns">{turns}</span>}
+        {!(!(foot === undefined) || !(amount !== undefined)) && <span className="pbar-amount">{amount}</span>}
+        {!(!(foot === undefined) || !(turns !== undefined)) && <span className="pbar-turns">{turns}</span>}
       </div>
-      <div className="pbar-track" role="progressbar" aria-label={name ?? (typeof label === 'string' ? label : undefined)} aria-valuemin={0} aria-valuemax={Math.max(0, max)} aria-valuenow={Math.max(0, Math.min(value, max))}
+      <div className="pbar-track" role="progressbar" aria-label={name ?? (!(typeof label === 'string') ? undefined : label)} aria-valuemin={0} aria-valuemax={Math.max(0, max)} aria-valuenow={Math.max(0, Math.min(value, max))}
         aria-valuetext={text || undefined}>
-        <div className="pbar-fill" style={{ width: `${f * 100}%`, ...(tone === 'bad' || tone === 'paused' ? {} : { background: color }) }} />
+        <div className="pbar-fill" style={{ width: `${f * 100}%`, ...(!(!(!(tone === 'bad') && !(tone === 'paused'))) ? { background: color } : {}) }} />
       </div>
       {foot !== undefined && (
         <div className="pbar-foot">
           <span className="pbar-foot-left">{foot}</span>
           <span className="pbar-foot-right">
             {amount !== undefined && <span className="pbar-amount">{amount}</span>}
-            {amount !== undefined && turns !== undefined && <span className="pbar-amount"> · </span>}
+            {!(!(amount !== undefined) || !(turns !== undefined)) && <span className="pbar-amount"> · </span>}
             {turns !== undefined && <span className="pbar-turns">{turns}</span>}
           </span>
         </div>

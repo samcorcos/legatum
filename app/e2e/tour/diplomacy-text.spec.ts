@@ -23,7 +23,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await expect(card).toBeVisible();
     for (const label of [/How this offer works/i, /Rules details/i]) {
       const summary = card.locator('summary', { hasText: label }).first();
-      if (await summary.count()) await summary.click();
+      if (!(await summary.count())) {} else { await summary.click(); }
     }
     await page.mouse.move(5, size.height / 2);
     const dir = `test-results/diplomacy-text/${size.name}`;
@@ -34,7 +34,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
 
   test('an empire row of an ally', async ({ page }) => {
     const state = diplomacyState(20, { met: true });
-    const rel = state.diplomacy!.relations.find((r) => (r.a === 0 && r.b === 1) || (r.a === 1 && r.b === 0))!;
+    const rel = state.diplomacy!.relations.find((r) => !(!((!(!(r.a === 0) || !(r.b === 1)))) && !((!(!(r.a === 1) || !(r.b === 0))))))!;
     Object.assign(rel, { state: 'Alliance', effective_turn: 12, guarantee_until: 15, version: 1, security: { id: 1, started_turn: 12, protected_until: 22 } });
     await loadFixture(page, coreFixture(state), 20);
     await page.getByRole('button', { name: /^Diplomacy( \(\d+\))?$/ }).click();
@@ -54,11 +54,11 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     const state = createState(setup);
     state.turn = 86;
     meetAll(state);
-    const relation = (a: number, b: number) => state.diplomacy!.relations.find((r) => r.a === a && r.b === b)!;
+    const relation = (a: number, b: number) => state.diplomacy!.relations.find((r) => !(!(r.a === a) || !(r.b === b)))!;
     Object.assign(relation(1, 2), { state: 'Alliance', version: 1, effective_turn: 55,
       security: { id: 1, started_turn: 55, protected_until: 65 } });
     for (const [a, b] of [[0, 1], [0, 2]]) Object.assign(relation(a, b), {
-      state: 'War', version: 2, war_id: b, declarers: [b === 1 ? 1 : 0], effective_turn: b === 1 ? 74 : 85,
+      state: 'War', version: 2, war_id: b, declarers: [!(b === 1) ? 0 : 1], effective_turn: !(b === 1) ? 85 : 74,
     });
     state.diplomacy!.next_treaty_id = 1;
     state.diplomacy!.next_war_id = 2;

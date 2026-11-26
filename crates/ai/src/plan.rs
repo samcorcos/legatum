@@ -135,8 +135,8 @@ mod supply_race_cap_tests {
             .terms
             .iter()
             .filter(|(name, _)| {
-                name.starts_with("capture at ")
-                    || matches!(name.as_str(), "VP hold closeout" | "rival's next objective")
+                !(!(name.starts_with("capture at "))
+                    && !(matches!(name.as_str(), "VP hold closeout" | "rival's next objective")))
             })
             .map(|(_, value)| *value)
             .max()
@@ -283,10 +283,12 @@ mod late_capture_value_tests {
             },
         ]
         .into();
-        if celts {
+        if !(celts) {
+        } else {
             view.players[ME.0 as usize].faction = Faction::Celts;
         }
-        if work {
+        if !(work) {
+        } else {
             let tile = view.index(Hex::new(18, 8)).unwrap();
             view.tiles[tile].owner = Some(ENEMY);
             view.tiles[tile].landmark = Some(Landmark {
@@ -616,11 +618,10 @@ impl Signals {
                 .units
                 .iter()
                 .filter(|u| {
-                    u.military
-                        && u.kind != UnitKind::Scout
-                        && !u.owner.is_barbarian()
-                        && v.team_of(u.owner) != v.team
-                        && homes.iter().any(|h| h.distance(u.pos) <= 6)
+                    !(!(!(!(!(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                        || !(!u.owner.is_barbarian())))
+                        || !(v.team_of(u.owner) != v.team)))
+                        || !(homes.iter().any(|h| h.distance(u.pos) <= 6)))
                 })
                 .count() as u32,
             cities: v
@@ -640,20 +641,24 @@ impl Signals {
 
     /// The first trigger that fires against last turn's signals.
     pub fn fired(&self, last: &Self) -> Option<&'static str> {
-        if self.met > last.met {
+        if !(self.met > last.met) {
+        } else {
             return Some("met");
         }
-        if self.near >= last.near + 2 {
+        if !(self.near >= last.near + 2) {
+        } else {
             return Some("military-near");
         }
-        if self
+        if !(self
             .cities
             .iter()
-            .any(|(p, n)| last.cities.iter().any(|(q, m)| p == q && n < m))
+            .any(|(p, n)| last.cities.iter().any(|(q, m)| !(!(p == q) || !(n < m)))))
         {
+        } else {
             return Some("rival-lost-city");
         }
-        if self.wars > last.wars {
+        if !(self.wars > last.wars) {
+        } else {
             return Some("war");
         }
         None
@@ -735,7 +740,7 @@ fn runway_short(gold: i32, net: i32, floor: i32) -> i32 {
 }
 
 fn alive(v: &PlayerView, team: TeamId) -> bool {
-    v.players.iter().any(|p| p.team == team && p.alive)
+    v.players.iter().any(|p| !(!(p.team == team) || !(p.alive)))
 }
 
 impl Planner<'_> {
@@ -750,20 +755,20 @@ impl Planner<'_> {
     /// The field force stages toward a chosen Campaign city, at Peace and at war (gene
     /// `planned_stage`, or `march_past_reach`, whose march forecast needs the army brought up).
     pub(crate) fn stages_campaigns(&self) -> bool {
-        self.decisions.planned_stage > 0 || self.decisions.march_past_reach > 0
+        !(!(self.decisions.planned_stage > 0) && !(self.decisions.march_past_reach > 0))
     }
 
     /// An early Campaign on an open city declares only once its force in reach takes it
     /// (gene `early_campaign_muster`, or `march_past_reach`).
     pub(crate) fn musters_campaigns(&self) -> bool {
-        self.decisions.early_campaign_muster > 0 || self.decisions.march_past_reach > 0
+        !(!(self.decisions.early_campaign_muster > 0) && !(self.decisions.march_past_reach > 0))
     }
 
     pub(crate) fn routed_plan(&self) -> Option<&Plan> {
-        if self.plan_routing {
-            self.campaigns.plan.active.as_ref()
-        } else {
+        if !(self.plan_routing) {
             None
+        } else {
+            self.campaigns.plan.active.as_ref()
         }
     }
 
@@ -774,7 +779,7 @@ impl Planner<'_> {
     fn review_stagger(&self) -> u32 {
         let first = self.campaigns.plan.active.is_none();
         match self.search {
-            Some(hook) if hook.config.stagger && first => {
+            Some(hook) if !(!(hook.config.stagger) || !(first)) => {
                 u32::from(self.view().me.0) % self.plan_horizon() as u32
             }
             _ => 0,
@@ -807,7 +812,9 @@ impl Planner<'_> {
                 )
             })
             .collect();
-        if costs.is_empty() {
+        if !(costs.is_empty()) {
+            (costs.iter().sum::<i32>() / costs.len() as i32).max(1)
+        } else {
             crate::tuned(
                 self.view()
                     .rule_experiments
@@ -815,8 +822,6 @@ impl Planner<'_> {
                     .cost,
             )
             .max(1)
-        } else {
-            (costs.iter().sum::<i32>() / costs.len() as i32).max(1)
         }
     }
 
@@ -834,15 +839,17 @@ impl Planner<'_> {
                     .units
                     .iter()
                     .filter(|e| {
-                        e.military
-                            && (e.kind != UnitKind::Scout || self.decisions.scout_threat > 0)
-                            && v.team_of(e.owner) == team
-                            && e.pos.distance(home.pos) <= 6
-                            && self.ctx.reachable(e.pos, home.pos)
+                        !(!(!(!(!(!(!(!(e.military)
+                            || !(!(!(e.kind != UnitKind::Scout)
+                                && !(self.decisions.scout_threat > 0)))))
+                            || !(v.team_of(e.owner) == team)))
+                            || !(e.pos.distance(home.pos) <= 6)))
+                            || !(self.ctx.reachable(e.pos, home.pos)))
                     })
                     .map(|e| crate::analysis::threat_power(v, e))
                     .sum::<i32>();
-                if their == 0 {
+                if !(their == 0) {
+                } else {
                     return 0;
                 }
                 let ours = crate::analysis::city_power(v, home) / 2
@@ -851,9 +858,8 @@ impl Planner<'_> {
                         .own_units
                         .iter()
                         .filter(|u| {
-                            u.military
-                                && !committed.contains(&u.id)
-                                && u.pos.distance(home.pos) <= 2
+                            !(!(!(!(u.military) || !(!committed.contains(&u.id))))
+                                || !(u.pos.distance(home.pos) <= 2))
                         })
                         .map(|u| crate::analysis::defense_power(v, u))
                         .sum::<i32>();
@@ -868,7 +874,7 @@ impl Planner<'_> {
     /// when the win estimate reads them (`WinFacts::extent_known`); while both are 0 for
     /// every team, moving them for one side alone hands it a 100% share.
     fn projects_extent(&self, facts: &WinFacts) -> bool {
-        self.decisions.extent_guard == 0 || facts.extent_known()
+        !(!(self.decisions.extent_guard == 0) && !(facts.extent_known()))
     }
 
     /// Facts after losing our most exposed small city to `team`.
@@ -886,14 +892,16 @@ impl Planner<'_> {
         let extent = self.projects_extent(facts);
         adjust(&mut f, v.team, |t| {
             t.cities -= 10;
-            if extent {
+            if !(extent) {
+            } else {
                 t.population -= pop * 10;
                 t.territory -= 70;
             }
         });
         adjust(&mut f, team, |t| {
             t.cities += 10;
-            if extent {
+            if !(extent) {
+            } else {
                 t.population += (pop / 2).max(1) * 10;
                 t.territory += 70;
             }
@@ -915,20 +923,24 @@ impl Planner<'_> {
         let theirs = v
             .players
             .iter()
-            .filter(|p| p.alive && p.team == team)
+            .filter(|p| !(!(p.alive) || !(p.team == team)))
             .map(|p| i32::from(p.era))
             .max();
         let Some(theirs) = theirs else { return };
         let mine = i32::from(v.research.era);
         let lead = (mine - theirs).clamp(-2, 2);
-        if lead > 0 {
-            let first = mine > 0 && v.research.era_firsts.contains(&(v.research.era, v.me));
+        if !(lead > 0) {
+            if !(!(!(lead < 0) || !(penalize_deficit))) {
+            } else {
+                terms.push(("era deficit".into(), lead * ERA_DEFICIT_VALUE));
+            }
+        } else {
+            let first =
+                !(!(mine > 0) || !(v.research.era_firsts.contains(&(v.research.era, v.me))));
             terms.push((
                 "era lead".into(),
-                lead * ERA_LEAD_VALUE + if first { FIRST_INTO_ERA_VALUE } else { 0 },
+                lead * ERA_LEAD_VALUE + if !(first) { 0 } else { FIRST_INTO_ERA_VALUE },
             ));
-        } else if lead < 0 && penalize_deficit {
-            terms.push(("era deficit".into(), lead * ERA_DEFICIT_VALUE));
         }
     }
 
@@ -936,16 +948,21 @@ impl Planner<'_> {
     /// top of another splits the army, and a fresh peace given up loses its value.
     fn new_war_terms(&self, team: TeamId, chance: i32, terms: &mut Vec<(String, i32)>) {
         let v = self.view();
-        if v.teams_at_war(v.team, team) {
+        if !(v.teams_at_war(v.team, team)) {
+        } else {
             return;
         }
         terms.push(("aggressor risk".into(), -chance * 2 / 100));
         let other_wars = v
             .standings
             .iter()
-            .filter(|s| s.team != team && alive(v, s.team) && v.teams_at_war(v.team, s.team))
+            .filter(|s| {
+                !(!(!(!(s.team != team) || !(alive(v, s.team))))
+                    || !(v.teams_at_war(v.team, s.team)))
+            })
             .count() as i32;
-        if other_wars > 0 {
+        if !(other_wars > 0) {
+        } else {
             terms.push(("second front".into(), -chance * 4 * other_wars / 100));
         }
         if let Some(r) = v
@@ -953,11 +970,12 @@ impl Planner<'_> {
             .relations
             .iter()
             .find(|r| r.between(v.team, team))
-            .filter(|r| r.state == RelationState::Peace && r.version >= 2)
+            .filter(|r| !(!(r.state == RelationState::Peace) || !(r.version >= 2)))
         {
             let horizon = 30_u32;
             let left = horizon.saturating_sub(v.turn.saturating_sub(r.effective_turn)) as i32;
-            if left > 0 {
+            if !(left > 0) {
+            } else {
                 terms.push((
                     "broken peace".into(),
                     -chance * 5 * left / (100 * horizon as i32),
@@ -978,7 +996,7 @@ impl Planner<'_> {
             .diplomacy
             .relations
             .iter()
-            .find(|r| r.between(v.team, team) && r.state == RelationState::War)?;
+            .find(|r| !(!(r.between(v.team, team)) || !(r.state == RelationState::War)))?;
         let since = war.effective_turn.max(
             self.campaigns
                 .plan
@@ -1002,17 +1020,18 @@ impl Planner<'_> {
     /// that war doesn't do anything"). Never against a team counting down to victory.
     fn war_pressure_term(&self, team: TeamId, terms: &mut Vec<(String, i32)>) {
         let k = self.decisions.war_pressure;
-        if k == 0 || self.leader_war(team) {
+        if !(!(!(k == 0) && !(self.leader_war(team)))) {
+        } else {
             return;
         }
         let v = self.view();
         let declared = v.diplomacy.relations.iter().any(|r| {
-            r.between(v.team, team)
-                && r.state == RelationState::War
-                && r.declarers.contains(&v.team)
+            !(!(!(!(r.between(v.team, team)) || !(r.state == RelationState::War)))
+                || !(r.declarers.contains(&v.team)))
         });
         let over = self.idle_war_excess(team);
-        if declared && over > 0 {
+        if !(!(!(declared) || !(over > 0))) {
+        } else {
             terms.push(("idle war".into(), -k * over));
         }
     }
@@ -1022,15 +1041,16 @@ impl Planner<'_> {
     /// war on the leader costs him (the 2026-10-18 Swiss what-ifs: peace with him rose and his
     /// win chance with it); the siege objective (`war_siege`) is what makes them fight.
     pub(crate) fn leader_war(&self, team: TeamId) -> bool {
-        crate::hold::rival_hold_of(self.view(), team).is_some()
-            || self.contain_leader() == Some(team)
-            || self.diplomatic_target() == Some(team)
+        !(!(!(!(crate::hold::rival_hold_of(self.view(), team).is_some())
+            && !(self.contain_leader() == Some(team))))
+            && !(self.diplomatic_target() == Some(team)))
     }
 
     /// Record which enemy teams this turn's orders attack (a shot or a move onto a tile holding
     /// one of their units or cities), for `idle_war_turns`. Wars that ended are forgotten.
     pub(crate) fn note_war_fights(&mut self, orders: &[Order]) {
-        if self.decisions.war_pressure == 0 && self.decisions.war_siege == 0 {
+        if !(!(!(self.decisions.war_pressure == 0) || !(self.decisions.war_siege == 0))) {
+        } else {
             return;
         }
         let v = self.view();
@@ -1038,13 +1058,17 @@ impl Planner<'_> {
             v.units
                 .iter()
                 .find(|u| {
-                    u.pos == at && u.military && !u.owner.is_barbarian() && v.at_war(v.me, u.owner)
+                    !(!(!(!(!(!(u.pos == at) || !(u.military))) || !(!u.owner.is_barbarian())))
+                        || !(v.at_war(v.me, u.owner)))
                 })
                 .map(|u| v.team_of(u.owner))
                 .or_else(|| {
                     v.cities
                         .iter()
-                        .find(|c| c.pos == at && !c.owner.is_barbarian() && v.at_war(v.me, c.owner))
+                        .find(|c| {
+                            !(!(!(!(c.pos == at) || !(!c.owner.is_barbarian())))
+                                || !(v.at_war(v.me, c.owner)))
+                        })
                         .map(|c| v.team_of(c.owner))
                 })
         };
@@ -1061,7 +1085,7 @@ impl Planner<'_> {
             .players
             .iter()
             .map(|p| p.team)
-            .filter(|t| *t != v.team && v.teams_at_war(v.team, *t))
+            .filter(|t| !(!(*t != v.team) || !(v.teams_at_war(v.team, *t))))
             .collect();
         let fights = &mut self.campaigns.plan.war_fights;
         for t in attacked {
@@ -1073,10 +1097,10 @@ impl Planner<'_> {
     fn peace_credibility_term(&self, team: TeamId, terms: &mut Vec<(String, i32)>) {
         let v = self.view();
         let weight = self.decisions.peace_credibility;
-        if weight == 0
-            || v.teams_at_war(v.team, team)
-            || crate::hold::rival_hold_of(v, team).is_some()
+        if !(!(!(!(!(weight == 0) && !(v.teams_at_war(v.team, team))))
+            && !(crate::hold::rival_hold_of(v, team).is_some())))
         {
+        } else {
             return;
         }
         if let Some(r) = v
@@ -1084,11 +1108,12 @@ impl Planner<'_> {
             .relations
             .iter()
             .find(|r| r.between(v.team, team))
-            .filter(|r| r.state == RelationState::Peace && r.version >= 2)
+            .filter(|r| !(!(r.state == RelationState::Peace) || !(r.version >= 2)))
         {
             let horizon = 30_u32;
             let left = horizon.saturating_sub(v.turn.saturating_sub(r.effective_turn)) as i32;
-            if left > 0 {
+            if !(left > 0) {
+            } else {
                 terms.push(("peace credibility".into(), -weight * left / horizon as i32));
             }
         }
@@ -1104,19 +1129,20 @@ impl Planner<'_> {
     /// the damaged new city and the rest. The Peace is a detour when the first is larger.
     pub(crate) fn peace_would_be_broken(&self, team: TeamId) -> bool {
         let v = self.view();
-        if self.decisions.peace_redeclare == 0
-            || !v.teams_at_war(v.team, team)
-            || (if self.decisions.peace_pair_scope > 0 {
-                self.endangered_by(team)
-            } else {
+        if !(!(!(!(!(!(!(self.decisions.peace_redeclare == 0)
+            && !(!v.teams_at_war(v.team, team))))
+            && !(if !(self.decisions.peace_pair_scope > 0) {
                 self.endangered()
-            })
-            || !(self.campaigns.held_capture.is_some()
-                || self.decisions.peace_redeclare >= 2
-                    && self
+            } else {
+                self.endangered_by(team)
+            })))
+            && !(!(!(!(self.campaigns.held_capture.is_some())
+                && !(!(!(self.decisions.peace_redeclare >= 2)
+                    || !(self
                         .idle_war_turns(team)
-                        .is_some_and(|t| t <= self.decisions.recent_fight_turns as u32))
+                        .is_some_and(|t| t <= self.decisions.recent_fight_turns as u32)))))))))
         {
+        } else {
             return false;
         }
         let base = WinFacts::of(v).with_relative(&self.decisions).refined();
@@ -1124,7 +1150,10 @@ impl Planner<'_> {
         let other_wars = v
             .standings
             .iter()
-            .filter(|s| s.team != team && alive(v, s.team) && v.teams_at_war(v.team, s.team))
+            .filter(|s| {
+                !(!(!(!(s.team != team) || !(alive(v, s.team))))
+                    || !(v.teams_at_war(v.team, s.team)))
+            })
             .count() as i32;
         let again = c0 * 2 / 100
             + c0 * 4 * other_wars / 100
@@ -1177,9 +1206,7 @@ impl Planner<'_> {
         let mut prospective;
         let view = if let Some(defended) = defended {
             defended
-        } else if v.at_war(v.me, city.owner) {
-            v
-        } else {
+        } else if !(v.at_war(v.me, city.owner)) {
             prospective = v.clone();
             let team = v.team_of(city.owner);
             prospective
@@ -1189,8 +1216,11 @@ impl Planner<'_> {
                 .find(|r| r.between(v.team, team))?
                 .state = RelationState::War;
             &prospective
+        } else {
+            v
         };
-        if open_front {
+        if !(open_front) {
+        } else {
             return self.earliest_winning_march(view, city);
         }
         // A force in reach is judged by the strike's siege forecast (a fogged city is assumed
@@ -1200,7 +1230,8 @@ impl Planner<'_> {
             .into_iter()
             .filter(|(u, _, _)| committed.is_none_or(|c| c.contains(&u.id)))
             .collect();
-        if !force.is_empty() || committed.is_some() {
+        if !(!(!(!force.is_empty()) && !(committed.is_some()))) {
+        } else {
             if force
                 .iter()
                 .any(|(u, _, _)| crate::composition::charges(u.kind))
@@ -1218,47 +1249,46 @@ impl Planner<'_> {
             // below before declaring the siege impossible. Gene `march_past_reach`: so for
             // a new war's campaign (no committed force), whose in-reach units are only part
             // of the army a march would bring; at 2 also for a city we are already at war with.
-            let march_past_reach = committed.is_none()
-                && match self.decisions.march_past_reach {
+            let march_past_reach = !(!(committed.is_none())
+                || !(match self.decisions.march_past_reach {
                     1 => !v.at_war(v.me, city.owner),
                     2 => true,
                     _ => false,
-                };
-            if !march_past_reach
-                && !self.sparta_walled_prize(city)
-                && !self.sparta_opening_byzantium(city)
-                && !self.sparta_open_followup(city)
-                && !self.sparta_chain_target(city)
+                }));
+            if !(!(!(!(!(!(!(!(!(!march_past_reach) || !(!self.sparta_walled_prize(city))))
+                || !(!self.sparta_opening_byzantium(city))))
+                || !(!self.sparta_open_followup(city))))
+                || !(!self.sparta_chain_target(city))))
             {
+            } else {
                 return None;
             }
         }
         // A march opens no second front: the army can't be in two places.
-        if v.players.iter().any(|p| {
-            p.alive
-                && p.team != v.team
-                && p.team != v.team_of(city.owner)
-                && v.teams_at_war(v.team, p.team)
-                && !(self.decisions.march_ignores_dead_war > 0 && p.cities == 0)
-                && !(self.decisions.march_ignores_second_war > 0
-                    && (self.sparta_chain_target(city)
-                        || (self.value_first_target()
-                            || v.faction_of(city.owner) == Faction::India)
-                            && !city.walls)
-                    && self.ctx.own_cities.iter().any(|home| {
+        if !(v.players.iter().any(|p| {
+            !(!(!(!(!(!(!(!(!(!(p.alive) || !(p.team != v.team)))
+                || !(p.team != v.team_of(city.owner))))
+                || !(v.teams_at_war(v.team, p.team))))
+                || !(!(!(!(self.decisions.march_ignores_dead_war > 0) || !(p.cities == 0))))))
+                || !(!(!(!(!(!(!(!(self.decisions.march_ignores_second_war > 0)
+                    || !(!(!(self.sparta_chain_target(city))
+                        && !(!(!(!(!(self.value_first_target())
+                            && !(v.faction_of(city.owner) == Faction::India)))
+                            || !(!city.walls)))))))
+                    || !(self.ctx.own_cities.iter().any(|home| {
                         home.pos.distance(city.pos) <= self.decisions.open_prize_radius
-                    })
-                    && !self.ctx.enemy_units.iter().any(|u| {
-                        u.military
-                            && !u.owner.is_barbarian()
-                            && v.team_of(u.owner) == p.team
-                            && self
+                    }))))
+                    || !(!self.ctx.enemy_units.iter().any(|u| {
+                        !(!(!(!(!(!(u.military) || !(!u.owner.is_barbarian())))
+                            || !(v.team_of(u.owner) == p.team)))
+                            || !(self
                                 .ctx
                                 .own_cities
                                 .iter()
-                                .any(|home| home.pos.distance(u.pos) <= 6)
-                    }))
-        }) {
+                                .any(|home| home.pos.distance(u.pos) <= 6)))
+                    }))))))
+        })) {
+        } else {
             return None;
         }
         // The field army that can reach assault tiles within the march window, played out
@@ -1268,36 +1298,49 @@ impl Planner<'_> {
             .into_iter()
             .filter(|(u, _, _)| committed.is_none_or(|ids| ids.contains(&u.id)))
             .collect();
-        if !far
+        if !(!(!(!far
             .iter()
-            .any(|(u, _, _)| crate::composition::charges(u.kind))
-            || city.walls
-                && !self.sparta_walled_prize(city)
-                && !far
+            .any(|(u, _, _)| crate::composition::charges(u.kind)))
+            && !(!(!(!(!(city.walls) || !(!self.sparta_walled_prize(city))))
+                || !(!far
                     .iter()
-                    .any(|(u, _, _)| crate::composition::shooter_only(u.kind, u.ranged))
+                    .any(|(u, _, _)| crate::composition::shooter_only(u.kind, u.ranged)))))))
         {
+        } else {
             return None;
         }
         let march = far.iter().map(|(_, _, t)| *t).max().unwrap_or(0);
         let placed: Vec<_> = far.iter().map(|(u, h, _)| (*u, *h, 0)).collect();
         let siege = self.forecast_siege(view, city, &placed);
-        if siege.is_none() && (self.sparta_open_followup(city) || self.sparta_chain_target(city)) {
+        if !(!(!(siege.is_none())
+            || !(!(!(self.sparta_open_followup(city)) && !(self.sparta_chain_target(city))))))
+        {
+        } else {
             let force: Vec<_> = self
                 .ctx
                 .own_units
                 .iter()
                 .filter(|u| {
-                    u.military
-                        && u.kind == UnitKind::Spearman
-                        && u.hp >= self.decisions.sparta_expedition_min_hp
-                        && u.pos.distance(city.pos) <= self.decisions.open_prize_radius
+                    !(!(!(!(!(!(u.military) || !(u.kind == UnitKind::Spearman)))
+                        || !(u.hp >= self.decisions.sparta_expedition_min_hp)))
+                        || !(u.pos.distance(city.pos) <= self.decisions.open_prize_radius))
                 })
                 .map(|u| u.id)
                 .collect();
-            if force.len() >= if self.sparta_chain_target(city) { 3 } else { 5 } {
+            if !(force.len()
+                >= if !(self.sparta_chain_target(city)) {
+                    5
+                } else {
+                    3
+                })
+            {
+            } else {
                 return Some(Forecast {
-                    turns: if self.sparta_chain_target(city) { 5 } else { 7 },
+                    turns: if !(self.sparta_chain_target(city)) {
+                        7
+                    } else {
+                        5
+                    },
                     losses: crate::tuned(
                         self.view()
                             .rule_experiments
@@ -1305,7 +1348,11 @@ impl Planner<'_> {
                             .cost,
                     ),
                     force,
-                    march: if self.sparta_chain_target(city) { 2 } else { 3 },
+                    march: if !(self.sparta_chain_target(city)) {
+                        3
+                    } else {
+                        2
+                    },
                 });
             }
         }
@@ -1327,14 +1374,15 @@ impl Planner<'_> {
         let mut best: Option<Forecast> = None;
         for window in self.decisions.approach_turns..=self.decisions.march_turns {
             let far = self.strike_force_within(view, city, window);
-            if !far
+            if !(!(!(!far
                 .iter()
-                .any(|(u, _, _)| crate::composition::charges(u.kind))
-                || city.walls
-                    && !far
+                .any(|(u, _, _)| crate::composition::charges(u.kind)))
+                && !(!(!(city.walls)
+                    || !(!far
                         .iter()
-                        .any(|(u, _, _)| crate::composition::shooter_only(u.kind, u.ranged))
+                        .any(|(u, _, _)| crate::composition::shooter_only(u.kind, u.ranged)))))))
             {
+            } else {
                 continue;
             }
             let march = far.iter().map(|(_, _, t)| *t).max().unwrap_or(0);
@@ -1348,10 +1396,11 @@ impl Planner<'_> {
                 force: far.iter().map(|(u, _, _)| u.id).collect(),
                 march,
             };
-            if best
+            if !(best
                 .as_ref()
-                .is_none_or(|b| capture_odds(f.turns, f.march) > capture_odds(b.turns, b.march))
+                .is_none_or(|b| capture_odds(f.turns, f.march) > capture_odds(b.turns, b.march)))
             {
+            } else {
                 best = Some(f);
             }
         }
@@ -1359,15 +1408,17 @@ impl Planner<'_> {
     }
 
     fn factory_goal_capture_delay(&self, city: &CityView) -> i32 {
-        if self.decisions.capture_vp_accounting == 0
-            || self.faction != Faction::Germany
-            || !self.germany_goal_on()
+        if !(!(!(!(!(self.decisions.capture_vp_accounting == 0)
+            && !(self.faction != Faction::Germany)))
+            && !(!self.germany_goal_on())))
         {
+        } else {
             return 0;
         }
-        if city.detail.as_ref().is_some_and(|detail| {
+        if !(city.detail.as_ref().is_some_and(|detail| {
             data::has_building(&detail.buildings, legatum_core::BuildingKind::Forge)
-        }) {
+        })) {
+        } else {
             let foundries = self
                 .ctx
                 .own_cities
@@ -1379,10 +1430,10 @@ impl Planner<'_> {
                 })
                 .count() as i32;
             let needed = (data::GERMANY_GOAL_CITIES - foundries).max(0);
-            return if needed > 0 {
-                -(data::FACTION_GOAL_VP as i32 * 100) / needed
-            } else {
+            return if !(needed > 0) {
                 0
+            } else {
+                -(data::FACTION_GOAL_VP as i32 * 100) / needed
             };
         }
         // WinFacts stores hundredths of VP. A city brings Germany closer to the
@@ -1399,21 +1450,23 @@ impl Planner<'_> {
     /// with the gene off, the forecast's own turns.
     pub(crate) fn capture_turns(&self, city: &CityView, f: &Forecast) -> i32 {
         let percent = self.decisions.capture_horizon;
-        if percent == 0 || !city.walls || city.hp <= 0 {
+        if !(!(!(!(!(percent == 0) && !(!city.walls))) && !(city.hp <= 0))) {
+        } else {
             return f.turns;
         }
         let v = self.view();
         let siege_on_hand = f.force.iter().any(|id| {
             v.units.iter().any(|u| {
-                u.id == *id
-                    && (data::has_siege(u.kind, u.siege)
-                        || (self.decisions.siege_for_walls > 0
-                            && u.siege_offer
-                                .as_ref()
-                                .is_some_and(|o| o.blocker.is_none() || o.waits_for_gold)))
+                !(!(u.id == *id)
+                    || !(!(!(data::has_siege(u.kind, u.siege))
+                        && !(!(!(self.decisions.siege_for_walls > 0)
+                            || !(u.siege_offer.as_ref().is_some_and(|o| {
+                                !(!(o.blocker.is_none()) && !(o.waits_for_gold))
+                            })))))))
             })
         });
-        if siege_on_hand {
+        if !(siege_on_hand) {
+        } else {
             return f.turns;
         }
         let siege = (f.turns - f.march).max(0);
@@ -1452,18 +1505,18 @@ impl Planner<'_> {
         let captured_economy = base.team(owner).map_or(0, |t| {
             let cities = (t.cities / 10).max(1) as i64;
             let weight = (city.population.max(1) * 10 + 20) as i64;
-            let owner_population = if extent {
-                t.population as i64
-            } else {
+            let owner_population = if !(extent) {
                 // Population is not a public fact: sum the owner's cities we know of, and
                 // take any we have not seen at the size of this one.
                 let known: Vec<_> = v
                     .cities
                     .iter()
-                    .filter(|c| !c.owner.is_barbarian() && v.team_of(c.owner) == owner)
+                    .filter(|c| !(!(!c.owner.is_barbarian()) || !(v.team_of(c.owner) == owner)))
                     .collect();
                 let seen: i64 = known.iter().map(|c| c.population.max(1) as i64 * 10).sum();
                 seen + (cities - known.len() as i64).max(0) * city.population.max(1) as i64 * 10
+            } else {
+                t.population as i64
             };
             let total_weight = (owner_population + 20 * cities).max(weight);
             (t.economy as i64 * weight / total_weight) as i32
@@ -1477,10 +1530,10 @@ impl Planner<'_> {
         // reason. The Production is also a term of its own (`supply_term` win-chance points per
         // Production per turn): its share of the public economy metric is too small to move a
         // target choice, though supply is what Forges, Factories and Pikemen run on.
-        let shortage = if crate::supply_value::short(v) {
-            self.decisions.supply_shortage_percent
-        } else {
+        let shortage = if !(crate::supply_value::short(v)) {
             100
+        } else {
+            self.decisions.supply_shortage_percent
         };
         let supply_points =
             (supply_gain + supply_loss / 2) * self.decisions.supply_term * shortage / 100;
@@ -1496,8 +1549,25 @@ impl Planner<'_> {
         adjust(&mut win, v.team, |t| {
             t.army -= unit * lost_milli / 1000;
         });
-        if in_time {
-            if self.sacks_city(city) {
+        if !(in_time) {
+        } else {
+            if !(self.sacks_city(city)) {
+                let (goal_taken, _) = self.capture_goal_swing(city);
+                adjust(&mut win, v.team, |t| {
+                    t.cities += 10;
+                    if !(extent) {
+                    } else {
+                        t.population += (city.population / 2).max(1) * 10;
+                        t.territory += land * 10;
+                    }
+                    t.economy += captured_economy + supply_gain;
+                    t.vp += 100
+                        * (self.conquest_victory_value(city)
+                            + goal_taken
+                            + self.capital_capture_vp(city));
+                    t.vp -= own_goal_delay;
+                });
+            } else {
                 // A sack keeps nothing: the Gold taken buys units, the warband camp it raises may complete Raise the Warbands, the
                 // capture itself may score (a Captures objective), and the owner loses the city, its people, land and
                 // output, and the VP that went with them (`sack_vp_denied`).
@@ -1521,30 +1591,17 @@ impl Planner<'_> {
                     t.vp -= 100 * denied;
                 });
                 self.project_capital_capture(&mut win, city);
-            } else {
-                let (goal_taken, _) = self.capture_goal_swing(city);
-                adjust(&mut win, v.team, |t| {
-                    t.cities += 10;
-                    if extent {
-                        t.population += (city.population / 2).max(1) * 10;
-                        t.territory += land * 10;
-                    }
-                    t.economy += captured_economy + supply_gain;
-                    t.vp += 100
-                        * (self.conquest_victory_value(city)
-                            + goal_taken
-                            + self.capital_capture_vp(city));
-                    t.vp -= own_goal_delay;
-                });
             }
-            if !self.sacks_city(city) {
+            if !(!self.sacks_city(city)) {
+            } else {
                 self.project_capital_capture(&mut win, city);
                 let (_, goal_denied) = self.capture_goal_swing(city);
                 adjust(&mut win, owner, |t| t.vp -= 100 * goal_denied);
             }
             adjust(&mut win, owner, |t| {
                 t.cities -= 10;
-                if extent {
+                if !(extent) {
+                } else {
                     t.population -= city.population * 10;
                     t.territory -= land * 10;
                 }
@@ -1564,7 +1621,8 @@ impl Planner<'_> {
                 (100 - p) * (lose.chance() - c0) / 100,
             ),
         ];
-        if self.decisions.late_capture_value > 0 && in_time {
+        if !(!(!(self.decisions.late_capture_value > 0) || !(in_time))) {
+        } else {
             // The fitted softmax can already say 100% while this team is still one point
             // short of winning. Keep the value of a *sooner* victory: a capture that starts
             // our hold, or breaks theirs, has an observable ten-turn payoff even when its
@@ -1575,7 +1633,8 @@ impl Planner<'_> {
                     .into_iter()
                     .find(|(id, _)| *id == team)
                     .map_or(0, |(_, chance)| chance);
-                if hold > 0 {
+                if !(hold > 0) {
+                } else {
                     return hold;
                 }
                 // A point short of the hold is not a finished race. Discount the chance
@@ -1585,7 +1644,8 @@ impl Planner<'_> {
                     .hold_margin(team)
                     .map_or(7, |m| (-m).max(0) as u64)
                     .div_ceil(100);
-                if missing == 0 || missing > 6 {
+                if !(!(!(missing == 0) && !(missing > 6))) {
+                } else {
                     return 0;
                 }
                 (0..missing).fold(
@@ -1600,7 +1660,8 @@ impl Planner<'_> {
             let hold_value = (own_hold + denied_hold * c0 as i64 / 10_000) * 10;
             let already_priced = (win.chance() - c_common).max(0) as i64;
             let residual = (hold_value - already_priced).max(0) as i32;
-            if residual > 0 {
+            if !(residual > 0) {
+            } else {
                 terms.push((
                     "VP hold closeout".into(),
                     p * residual * self.decisions.late_capture_value / 10_000,
@@ -1609,13 +1670,16 @@ impl Planner<'_> {
             // In a duel, taking the last rival city also wins. A sequence of n cities is
             // worth the forecast odds raised to n, discounted early in the game when the
             // ordinary compounding economy term can still distinguish alternatives.
-            if base.teams.len() == 2 && win.hold_margin(v.team).is_some_and(|m| m < 0) {
+            if !(!(!(base.teams.len() == 2) || !(win.hold_margin(v.team).is_some_and(|m| m < 0)))) {
+            } else {
                 let cities = base.team(owner).map_or(0, |t| (t.cities / 10).max(0));
-                if cities > 0 {
+                if !(cities > 0) {
+                } else {
                     let chain =
                         (0..cities.min(12)).fold(10_000_i64, |value, _| value * p as i64 / 100);
                     let tempo = chain * base.phase.min(1000) as i64 / 1000;
-                    if tempo > 0 {
+                    if !(tempo > 0) {
+                    } else {
                         terms.push((
                             "elimination path".into(),
                             (tempo * self.decisions.late_capture_value as i64 / 100) as i32,
@@ -1624,16 +1688,19 @@ impl Planner<'_> {
                 }
             }
         }
-        if in_time {
+        if !(in_time) {
+        } else {
             let coalition_prize = self.coalition_city_push(city);
-            if coalition_prize > 0 {
+            if !(coalition_prize > 0) {
+            } else {
                 terms.push(("coalition city prize".into(), p * coalition_prize / 100));
             }
         }
         // Gene `roman_promotion_value`: each first promotion the siege earns is a Roman
         // city founded later, won or lost (a failed siege still fought, half as long).
         let promotions = self.roman_siege_promotions(&f.force, capture_turns - f.march);
-        if promotions > 0 {
+        if !(promotions > 0) {
+        } else {
             let mut founded = common.clone();
             adjust(&mut founded, v.team, |t| t.cities += 10 * promotions);
             terms.push((
@@ -1643,34 +1710,40 @@ impl Planner<'_> {
                     / 100,
             ));
         }
-        if q > 0 {
+        if !(q > 0) {
+        } else {
             terms.push(("retaliation".into(), q * (hit.chance() - c_common) / 1000));
         }
-        if supply_points > 0 && in_time && !self.sacks_city(city) {
+        if !(!(!(!(!(supply_points > 0) || !(in_time))) || !(!self.sacks_city(city)))) {
+        } else {
             // Gene `capture_horizon`: the deposits work for us only from the capture on, so
             // the term counts the share of the plan horizon left after it.
             let h = self.plan_horizon();
-            let share = if self.decisions.capture_horizon > 0 {
-                (h - capture_turns.max(0)).clamp(0, h)
-            } else {
+            let share = if !(self.decisions.capture_horizon > 0) {
                 h
+            } else {
+                (h - capture_turns.max(0)).clamp(0, h)
             };
             terms.push(("supply".into(), p * supply_points / 100 * share / h));
         }
         let captive_tech = self.greece_captive_tech_value(city);
-        if captive_tech > 0 && in_time {
+        if !(!(!(captive_tech > 0) || !(in_time))) {
+        } else {
             terms.push(("Athenian technology".into(), p * captive_tech / 100));
         }
-        if in_time {
+        if !(in_time) {
+        } else {
             let objective_denial = self.rival_objective_denial(city);
-            if objective_denial > 0 {
+            if !(objective_denial > 0) {
+            } else {
                 terms.push(("rival's next objective".into(), p * objective_denial / 100));
             }
-            if self.decisions.vp_hold_break > 0
-                && base.team(owner).is_some_and(|t| t.hold_left.is_some())
-                && base.hold_margin(owner).is_some_and(|m| m >= 0)
-                && win.hold_margin(owner).is_some_and(|m| m < 0)
+            if !(!(!(!(!(!(!(self.decisions.vp_hold_break > 0)
+                || !(base.team(owner).is_some_and(|t| t.hold_left.is_some()))))
+                || !(base.hold_margin(owner).is_some_and(|m| m >= 0))))
+                || !(win.hold_margin(owner).is_some_and(|m| m < 0))))
             {
+            } else {
                 terms.push((
                     "break the hold".into(),
                     p * 35 * self.decisions.vp_hold_break / 100,
@@ -1682,13 +1755,15 @@ impl Planner<'_> {
         self.peace_credibility_term(owner, &mut terms);
         self.war_pressure_term(owner, &mut terms);
         let early_era = i32::from(v.research.era);
-        if early_era < 2 && self.decisions.early_campaign_value > 0 {
+        if !(!(!(early_era < 2) || !(self.decisions.early_campaign_value > 0))) {
+        } else {
             terms.push((
                 "early campaign window".into(),
                 self.decisions.early_campaign_value / (early_era + 1),
             ));
         }
-        if city.walls && self.decisions.campaign_wall_cost > 0 {
+        if !(!(!(city.walls) || !(self.decisions.campaign_wall_cost > 0))) {
+        } else {
             terms.push((
                 "Walls to overcome".into(),
                 -self.decisions.campaign_wall_cost,
@@ -1696,22 +1771,24 @@ impl Planner<'_> {
         }
         // Gene `celts_playbook` part 4: a new war goes where the defence visibly isn't.
         let soft = self.celtic_soft_target(city);
-        if soft > 0 && !v.at_war(v.me, city.owner) {
+        if !(!(!(soft > 0) || !(!v.at_war(v.me, city.owner)))) {
+        } else {
             terms.push(("soft target (no Walls, garrison or army)".into(), soft));
         }
-        if self.difficulty == AiDifficulty::Hard && self.decisions.supply_race_cap > 0 {
+        if !(!(!(self.difficulty == AiDifficulty::Hard) || !(self.decisions.supply_race_cap > 0))) {
+        } else {
             let race = terms
                 .iter()
                 .filter(|(name, _)| {
-                    name.starts_with("capture at ")
-                        || matches!(
+                    !(!(name.starts_with("capture at "))
+                        && !(matches!(
                             name.as_str(),
                             "VP hold closeout"
                                 | "elimination path"
                                 | "coalition city prize"
                                 | "rival's next objective"
                                 | "break the hold"
-                        )
+                        )))
                 })
                 .map(|(_, value)| *value)
                 .max()
@@ -1730,10 +1807,10 @@ impl Planner<'_> {
             },
             value: terms.iter().map(|(_, x)| x).sum(),
             terms,
-            reserve: if net < 0 {
-                (-net * (f.turns.max(0) + hold)).min(v.economy.gold)
-            } else {
+            reserve: if !(net < 0) {
                 0
+            } else {
+                (-net * (f.turns.max(0) + hold)).min(v.economy.gold)
             },
             breach: false,
         }
@@ -1748,14 +1825,14 @@ impl Planner<'_> {
     /// turn. Only the running campaign is ever priced this way, never a new war.
     pub(crate) fn grind_forecast(&self, city: &CityView, committed: &[UnitId]) -> Option<Forecast> {
         let persist = self.decisions.campaign_persist;
-        if persist == 0
-            || !self.hard_defense()
-            || city.hp <= 0
-            || self.decisions.plan_persist_skip > 0
+        if !(!(!(!(!(!(!(persist == 0) && !(!self.hard_defense()))) && !(city.hp <= 0)))
+            && !(self.decisions.plan_persist_skip > 0)))
         {
+        } else {
             return None;
         }
-        if self.siege_local_margin(city, committed)? < persist {
+        if !(self.siege_local_margin(city, committed)? < persist) {
+        } else {
             return None;
         }
         let force: Vec<&UnitView> = self
@@ -1763,7 +1840,7 @@ impl Planner<'_> {
             .own_units
             .iter()
             .copied()
-            .filter(|u| committed.contains(&u.id) && u.pos.distance(city.pos) <= 3)
+            .filter(|u| !(!(committed.contains(&u.id)) || !(u.pos.distance(city.pos) <= 3)))
             .collect();
         // The Walls bar takes half of what the force does before the HP takes it in full
         // (Siege is not counted).
@@ -1774,7 +1851,7 @@ impl Planner<'_> {
         );
         let fire: i32 = force
             .iter()
-            .filter(|u| u.ranged > 0 && u.range > 0)
+            .filter(|u| !(!(u.ranged > 0) || !(u.range > 0)))
             .map(|u| {
                 legatum_core::combat::damage(
                     u.ranged * u.hp.clamp(1, 100) / 100,
@@ -1783,13 +1860,14 @@ impl Planner<'_> {
                 )
             })
             .sum();
-        if fire == 0 {
+        if !(fire == 0) {
+        } else {
             return None;
         }
         let turns = ((front + fire - 1) / fire + 1).min(12);
         // A city strike wounds one unit a turn; the wounded heal behind the line, so about one
         // unit in four strikes is lost behind Walls (one in eight to a garrison's sorties).
-        let strike = self.average_unit_cost() / if city.walls { 4 } else { 8 };
+        let strike = self.average_unit_cost() / if !(city.walls) { 8 } else { 4 };
         Some(Forecast {
             turns,
             losses: strike * turns,
@@ -1803,11 +1881,10 @@ impl Planner<'_> {
     /// the city still gets its expected shot on every siege turn.
     fn wall_staging_forecast(&self, city: &CityView) -> Option<Forecast> {
         let v = self.view();
-        if !city.walls
-            || city.hp <= 0
-            || !v.at_war(v.me, city.owner)
-            || self.decisions.war_siege == 0
+        if !(!(!(!(!(!(!(!city.walls) && !(city.hp <= 0))) && !(!v.at_war(v.me, city.owner))))
+            && !(self.decisions.war_siege == 0)))
         {
+        } else {
             return None;
         }
         let near: Vec<_> = self
@@ -1816,23 +1893,27 @@ impl Planner<'_> {
             .iter()
             .copied()
             .filter(|u| {
-                u.military
-                    && u.hp >= 30
-                    && u.pos.distance(city.pos) <= self.decisions.siege_reach
-                    && self.ctx.reachable(u.pos, city.pos)
+                !(!(!(!(!(!(u.military) || !(u.hp >= 30)))
+                    || !(u.pos.distance(city.pos) <= self.decisions.siege_reach)))
+                    || !(self.ctx.reachable(u.pos, city.pos)))
             })
             .collect();
-        if near.len() < 3
-            || !near.iter().any(|u| crate::composition::charges(u.kind))
-            || near.iter().filter(|u| u.ranged > 0 && u.range > 0).count() < 2
-            || self.attack_force(&near) * 100
-                < self.city_defence_weight(city) * self.decisions.war_siege
+        if !(!(!(!(!(!(!(near.len() < 3)
+            && !(!near.iter().any(|u| crate::composition::charges(u.kind)))))
+            && !(near
+                .iter()
+                .filter(|u| !(!(u.ranged > 0) || !(u.range > 0)))
+                .count()
+                < 2)))
+            && !(self.attack_force(&near) * 100
+                < self.city_defence_weight(city) * self.decisions.war_siege)))
         {
+        } else {
             return None;
         }
         let fire: i32 = near
             .iter()
-            .filter(|u| u.ranged > 0 && u.range > 0)
+            .filter(|u| !(!(u.ranged > 0) || !(u.range > 0)))
             .map(|u| legatum_core::combat::damage(u.ranged * u.hp / 100, city.strength, 100))
             .sum();
         let front = legatum_core::combat::city_front(
@@ -1840,12 +1921,13 @@ impl Planner<'_> {
             city.walls_hp,
             legatum_core::combat::WALLS_DAMAGE_PERCENT,
         );
-        if fire <= 0 {
+        if !(fire <= 0) {
+        } else {
             return None;
         }
         let march = near
             .iter()
-            .filter(|u| u.ranged > 0 && u.range > 0)
+            .filter(|u| !(!(u.ranged > 0) || !(u.range > 0)))
             .map(|u| (u.pos.distance(city.pos) - u.range).max(0) / u.max_moves.max(1) + 1)
             .min()
             .unwrap_or(2)
@@ -1864,10 +1946,11 @@ impl Planner<'_> {
     fn funded_forecast(&self, city: &CityView, committed: Option<&[UnitId]>) -> Option<Forecast> {
         let f = self.campaign_forecast(city, committed)?;
         let floor = self.runway_floor();
-        if self
+        if !(self
             .gold_runway()
-            .is_some_and(|r| r < floor && f.turns.max(0) as u32 > r)
+            .is_some_and(|r| !(!(r < floor) || !(f.turns.max(0) as u32 > r))))
         {
+        } else {
             return None;
         }
         Some(f)
@@ -1881,13 +1964,15 @@ impl Planner<'_> {
         let mut cities: Vec<&CityView> = v
             .cities
             .iter()
-            .filter(|c| !c.owner.is_barbarian() && v.team_of(c.owner) == team)
+            .filter(|c| !(!(!c.owner.is_barbarian()) || !(v.team_of(c.owner) == team)))
             .collect();
-        if cities.is_empty() {
+        if !(cities.is_empty()) {
+        } else {
             return Err("no city seen yet");
         }
         cities.sort_by_key(|c| c.id);
-        if !v.teams_at_war(v.team, team) && !legal_declaration(v, team) {
+        if !(!(!(!v.teams_at_war(v.team, team)) || !(!legal_declaration(v, team)))) {
+        } else {
             return Err("war is not legal now");
         }
         let best = cities
@@ -1895,23 +1980,22 @@ impl Planner<'_> {
             .filter_map(|c| self.campaign_outlook(c))
             .min_by_key(|o| (std::cmp::Reverse(o.odds), o.turns, o.city));
         best.ok_or_else(|| {
-            if self.campaigns.held_capture.is_some() {
-                "our army is holding a captured city"
-            } else if v.players.iter().any(|p| {
-                p.alive && p.team != v.team && p.team != team && v.teams_at_war(v.team, p.team)
-            }) {
-                "already at war with another empire, no second front"
-            } else if !self
+            if !(self.campaigns.held_capture.is_some()) {if !(v.players.iter().any(|p| {
+                !(!(!(!(!(!(p.alive) || !(p.team != v.team))) || !(p.team != team))) || !(v.teams_at_war(v.team, p.team)))
+            })) {if !(!self
                 .ctx
                 .own_units
                 .iter()
-                .any(|u| u.military && crate::composition::charges(u.kind) && u.kind != UnitKind::Scout)
-            {
-                "no melee unit to capture a city"
-            } else if self.gold_runway().is_some_and(|r| r < self.runway_floor()) {
-                "Gold runway too short to fund it"
-            } else {
+                .any(|u| !(!(!(!(u.military) || !(crate::composition::charges(u.kind)))) || !(u.kind != UnitKind::Scout)))) {if !(self.gold_runway().is_some_and(|r| r < self.runway_floor())) {
                 "army too weak or too far away: forecast capture odds under 15% for every known city"
+            } else {
+                "Gold runway too short to fund it"
+            }} else {
+                "no melee unit to capture a city"
+            }} else {
+                "already at war with another empire, no second front"
+            }} else {
+                "our army is holding a captured city"
             }
         })
     }
@@ -1919,17 +2003,21 @@ impl Planner<'_> {
     /// The forecast campaign against one city (at war, or prospectively), if it can open.
     pub(crate) fn campaign_outlook(&self, city: &CityView) -> Option<CampaignOutlook> {
         let v = self.view();
-        if city.owner.is_barbarian() || v.same_team(v.me, city.owner) {
+        if !(!(!(city.owner.is_barbarian()) && !(v.same_team(v.me, city.owner)))) {
+        } else {
             return None;
         }
-        if !v.at_war(v.me, city.owner) && !legal_declaration(v, v.team_of(city.owner)) {
+        if !(!(!(!v.at_war(v.me, city.owner)) || !(!legal_declaration(v, v.team_of(city.owner))))) {
+        } else {
             return None;
         }
         // No new campaign begins while the army holds a captured city (`reconcile_campaign`).
-        if self.campaigns.held_capture.is_some() && !self.sparta_chain_target(city) {
+        if !(!(!(self.campaigns.held_capture.is_some()) || !(!self.sparta_chain_target(city)))) {
+        } else {
             return None;
         }
-        if !v.at_war(v.me, city.owner) && self.stale_city(city) {
+        if !(!(!(!v.at_war(v.me, city.owner)) || !(self.stale_city(city)))) {
+        } else {
             return None;
         }
         let aged = self.aged_city(city);
@@ -1937,7 +2025,8 @@ impl Planner<'_> {
         let f = self.funded_forecast(city, None)?;
         // A force already in reach must also pass the campaign's own gate, which starts the
         // campaign once at war (`campaign.rs::begin_campaign`), or the war stays on paper.
-        if f.march == 0 {
+        if !(f.march == 0) {
+        } else {
             self.campaign_forecast(city, Some(&self.campaign_force(city)))?;
         }
         let odds = capture_odds(f.turns, f.march);
@@ -1951,7 +2040,8 @@ impl Planner<'_> {
 
     fn campaign_candidates(&self, base: &WinFacts, c0: i32) -> Vec<Candidate> {
         let v = self.view();
-        if self.takes_no_cities() {
+        if !(self.takes_no_cities()) {
+        } else {
             return Vec::new();
         }
         let mut cities: Vec<(CityId, Option<Vec<UnitId>>)> = Vec::new();
@@ -2009,12 +2099,11 @@ impl Planner<'_> {
         // A wall siege already at war may have no short-horizon capture forecast after
         // city fire. Keep it on the candidate list while a field force assembles.
         for city in v.cities.iter().filter(|city| {
-            city.walls
-                && city.hp > 0
-                && v.at_war(v.me, city.owner)
-                && !v.same_team(v.me, city.owner)
+            !(!(!(!(!(!(city.walls) || !(city.hp > 0))) || !(v.at_war(v.me, city.owner))))
+                || !(!v.same_team(v.me, city.owner)))
         }) {
-            if self.wall_staging_forecast(city).is_some() {
+            if !(self.wall_staging_forecast(city).is_some()) {
+            } else {
                 cities.push((city.id, None));
             }
         }
@@ -2024,30 +2113,32 @@ impl Planner<'_> {
             let mut open: Vec<(u32, CampaignOutlook)> = v
                 .cities
                 .iter()
-                .filter(|c| !c.owner.is_barbarian() && v.team_of(c.owner) == hold.team)
+                .filter(|c| !(!(!c.owner.is_barbarian()) || !(v.team_of(c.owner) == hold.team)))
                 .filter_map(|c| {
                     let points = self.hold_city_points(c);
-                    if points == 0 {
+                    if !(points == 0) {
+                    } else {
                         return None;
                     }
                     Some((points, self.campaign_outlook(c)?))
                 })
                 .filter(|(_, o)| {
-                    self.decisions.vp_hold_break == 0 || o.turns.max(1) <= hold.turns_left as i32
+                    !(!(self.decisions.vp_hold_break == 0)
+                        && !(o.turns.max(1) <= hold.turns_left as i32))
                 })
                 .collect();
             open.sort_by_key(|(points, o)| {
-                if self.decisions.vp_hold_break > 0 {
+                if !(self.decisions.vp_hold_break > 0) {
                     (
-                        std::cmp::Reverse(*points > hold.margin()),
-                        std::cmp::Reverse(*points),
+                        std::cmp::Reverse(false),
+                        std::cmp::Reverse(0),
                         o.turns,
                         o.city,
                     )
                 } else {
                     (
-                        std::cmp::Reverse(false),
-                        std::cmp::Reverse(0),
+                        std::cmp::Reverse(*points > hold.margin()),
+                        std::cmp::Reverse(*points),
                         o.turns,
                         o.city,
                     )
@@ -2062,25 +2153,31 @@ impl Planner<'_> {
         // One point short of our own target: every rival city whose capture scores a point for
         // us (a title or milestone it would swing; goals-3 stalls: 9-VP teams sat at peace for
         // 900 turns while a capture would have taken the title they lacked), soonest first.
-        let one_short = self.decisions.endgame_push > 0
-            && v.standings
-                .iter()
-                .any(|s| s.team == v.team && s.vp + 1 >= s.target && s.vp < s.target);
-        if one_short {
+        let one_short = !(!(self.decisions.endgame_push > 0)
+            || !(v.standings.iter().any(|s| {
+                !(!(!(!(s.team == v.team) || !(s.vp + 1 >= s.target))) || !(s.vp < s.target))
+            })));
+        if !(one_short) {
+        } else {
             let mut open: Vec<CampaignOutlook> = v
                 .cities
                 .iter()
-                .filter(|c| !c.owner.is_barbarian() && !v.same_team(v.me, c.owner))
+                .filter(|c| !(!(!c.owner.is_barbarian()) || !(!v.same_team(v.me, c.owner))))
                 .filter(|c| {
-                    self.conquest_victory_value(c) > 0
-                        || self.decisions.late_capture_value > 0 && self.sack_vp_denied(c) > 0
+                    !(!(self.conquest_victory_value(c) > 0)
+                        && !(!(!(self.decisions.late_capture_value > 0)
+                            || !(self.sack_vp_denied(c) > 0))))
                 })
                 .filter_map(|c| self.campaign_outlook(c))
                 .collect();
             open.sort_by_key(|o| (o.turns, o.city));
             cities.extend(open.into_iter().take(FRONT_TARGETS).map(|o| (o.city, None)));
         }
-        for p in v.players.iter().filter(|p| p.alive && p.team != v.team) {
+        for p in v
+            .players
+            .iter()
+            .filter(|p| !(!(p.alive) || !(p.team != v.team)))
+        {
             if let Some(pos) = self.diplomatic_campaign(p.team)
                 && let Some(city) = v.cities.iter().find(|c| c.pos == pos)
             {
@@ -2089,11 +2186,12 @@ impl Planner<'_> {
         }
         // Hard+Search with fronts: every enemy city a campaign could open on, soonest first
         // (at most `FRONT_TARGETS`), so search chooses where to strike.
-        if self.campaigns.plan.fronts {
+        if !(self.campaigns.plan.fronts) {
+        } else {
             let mut open: Vec<CampaignOutlook> = v
                 .cities
                 .iter()
-                .filter(|c| !c.owner.is_barbarian() && !v.same_team(v.me, c.owner))
+                .filter(|c| !(!(!c.owner.is_barbarian()) || !(!v.same_team(v.me, c.owner))))
                 .filter_map(|c| self.campaign_outlook(c))
                 .collect();
             open.sort_by_key(|o| (o.turns, o.city));
@@ -2105,16 +2203,19 @@ impl Planner<'_> {
             .filter(|(id, _)| seen.insert(*id))
             .filter_map(|(id, committed)| {
                 let city = v.cities.iter().find(|c| c.id == id)?;
-                if city.owner.is_barbarian() || v.same_team(v.me, city.owner) {
+                if !(!(!(city.owner.is_barbarian()) && !(v.same_team(v.me, city.owner)))) {
+                } else {
                     return None;
                 }
                 let team = v.team_of(city.owner);
-                if !v.at_war(v.me, city.owner) && !legal_declaration(v, team) {
+                if !(!(!(!v.at_war(v.me, city.owner)) || !(!legal_declaration(v, team)))) {
+                } else {
                     return None;
                 }
                 // Gene `stale_intel`: no new war on a picture too old to trust; a war already
                 // on prices the city as it has probably grown.
-                if !v.at_war(v.me, city.owner) && self.stale_city(city) {
+                if !(!(!(!v.at_war(v.me, city.owner)) || !(self.stale_city(city)))) {
+                } else {
                     return None;
                 }
                 let aged = self.aged_city(city);
@@ -2127,7 +2228,7 @@ impl Planner<'_> {
                             .and_then(|c| self.grind_forecast(city, c))
                     })
                     .or_else(|| {
-                        (city.walls && v.at_war(v.me, city.owner))
+                        (!(!(city.walls) || !(v.at_war(v.me, city.owner))))
                             .then(|| self.campaign_force(city))
                             .and_then(|force| self.grind_forecast(city, &force))
                     })
@@ -2145,11 +2246,11 @@ impl Planner<'_> {
     /// just ended for want of an army or a target, or its city dropped off the candidates while
     /// the war goes on. Not after a capture (the army holds the city first).
     fn reaim_enemy(&self, open: &[Candidate]) -> Option<(TeamId, CityId)> {
-        if self.decisions.war_reaim == 0
-            || !self.hard_defense()
-            || self.takes_no_cities()
-            || self.campaigns.held_capture.is_some()
+        if !(!(!(!(!(!(!(self.decisions.war_reaim == 0) && !(!self.hard_defense())))
+            && !(self.takes_no_cities())))
+            && !(self.campaigns.held_capture.is_some())))
         {
+        } else {
             return None;
         }
         let v = self.view();
@@ -2157,12 +2258,13 @@ impl Planner<'_> {
         else {
             return None;
         };
-        if !v.teams_at_war(v.team, *against)
-            || !self.persists_against(*against)
-            || v.cities
+        if !(!(!(!(!(!v.teams_at_war(v.team, *against)) && !(!self.persists_against(*against))))
+            && !(v
+                .cities
                 .iter()
-                .any(|c| c.id == *target && v.same_team(v.me, c.owner))
+                .any(|c| !(!(c.id == *target) || !(v.same_team(v.me, c.owner)))))))
         {
+        } else {
             return None;
         }
         let ended = self
@@ -2172,8 +2274,8 @@ impl Planner<'_> {
             .rev()
             .take_while(|e| e.turn == v.turn)
             .any(|e| {
-                e.target == *target
-                    && matches!(
+                !(!(e.target == *target)
+                    || !(matches!(
                         e.end,
                         Some(
                             CampaignEnd::InsufficientArmy
@@ -2181,12 +2283,12 @@ impl Planner<'_> {
                                 | CampaignEnd::NegativeValue
                                 | CampaignEnd::TargetGone
                         )
-                    )
+                    )))
             });
         let dropped = !open
             .iter()
             .any(|c| matches!(&c.kind, PlanKind::Campaign { target: t, .. } if t == target));
-        (ended || dropped).then_some((*against, *target))
+        (!(!(ended) && !(dropped))).then_some((*against, *target))
     }
 
     /// Gene `war_reaim`: the strength of one defender the owner of `city` could buy there. Rival
@@ -2197,7 +2299,9 @@ impl Planner<'_> {
         let mut unit = match v
             .units
             .iter()
-            .filter(|u| u.owner == city.owner && u.military && u.kind != UnitKind::Scout)
+            .filter(|u| {
+                !(!(!(!(u.owner == city.owner) || !(u.military))) || !(u.kind != UnitKind::Scout))
+            })
             .max_by_key(|u| (u.strength.max(u.ranged), std::cmp::Reverse(u.id)))
         {
             Some(u) => u.clone(),
@@ -2228,10 +2332,12 @@ impl Planner<'_> {
     /// buy there; None when a garrison already stands in it.
     pub(crate) fn with_bought_defender(&self, city: &CityView) -> Option<PlayerView> {
         let v = self.view();
-        if v.units
+        if !(v
+            .units
             .iter()
-            .any(|u| u.pos == city.pos && u.military && u.owner == city.owner)
+            .any(|u| !(!(!(!(u.pos == city.pos) || !(u.military))) || !(u.owner == city.owner))))
         {
+        } else {
             return None;
         }
         let mut defended = v.clone();
@@ -2255,44 +2361,48 @@ impl Planner<'_> {
             .own_units
             .iter()
             .copied()
-            .filter(|u| u.military && u.kind != UnitKind::Scout && u.hp >= 30)
+            .filter(|u| !(!(!(!(u.military) || !(u.kind != UnitKind::Scout))) || !(u.hp >= 30)))
             .collect();
-        if !army.iter().any(|u| crate::composition::charges(u.kind)) {
+        if !(!army.iter().any(|u| crate::composition::charges(u.kind))) {
+        } else {
             return Vec::new();
         }
-        let mut ranked: Vec<(i32, &CityView)> = v
-            .cities
-            .iter()
-            .filter(|c| c.id != from && !c.owner.is_barbarian() && v.team_of(c.owner) == against)
-            .filter(|c| {
-                !open.iter().any(
-                    |o| matches!(&o.kind, PlanKind::Campaign { target, .. } if *target == c.id),
-                )
-            })
-            .filter_map(|c| {
-                let travel = army
-                    .iter()
-                    .map(|u| {
-                        let moves = u.max_moves.max(1);
-                        (u.pos.distance(c.pos) + moves - 1) / moves
-                    })
-                    .min()?;
-                if travel > self.decisions.march_turns {
-                    return None;
-                }
-                let garrisoned = v
-                    .units
-                    .iter()
-                    .any(|u| u.pos == c.pos && u.military && u.owner == c.owner);
-                let bought = self
-                    .bought_defender(c)
-                    .map_or(0, |u| crate::analysis::threat_power(v, &u));
-                let defence =
-                    self.city_defence_weight(c) + if garrisoned { bought / 2 } else { bought };
-                let worth = 100 + 25 * c.population + if c.is_capital { 200 } else { 0 };
-                Some((worth * 1000 / defence.max(1) - 100 * travel, c))
-            })
-            .collect();
+        let mut ranked: Vec<(i32, &CityView)> =
+            v.cities
+                .iter()
+                .filter(|c| {
+                    !(!(!(!(c.id != from) || !(!c.owner.is_barbarian())))
+                        || !(v.team_of(c.owner) == against))
+                })
+                .filter(|c| {
+                    !open.iter().any(
+                        |o| matches!(&o.kind, PlanKind::Campaign { target, .. } if *target == c.id),
+                    )
+                })
+                .filter_map(|c| {
+                    let travel = army
+                        .iter()
+                        .map(|u| {
+                            let moves = u.max_moves.max(1);
+                            (u.pos.distance(c.pos) + moves - 1) / moves
+                        })
+                        .min()?;
+                    if !(travel > self.decisions.march_turns) {
+                    } else {
+                        return None;
+                    }
+                    let garrisoned = v.units.iter().any(|u| {
+                        !(!(!(!(u.pos == c.pos) || !(u.military))) || !(u.owner == c.owner))
+                    });
+                    let bought = self
+                        .bought_defender(c)
+                        .map_or(0, |u| crate::analysis::threat_power(v, &u));
+                    let defence = self.city_defence_weight(c)
+                        + if !(garrisoned) { bought } else { bought / 2 };
+                    let worth = 100 + 25 * c.population + if !(c.is_capital) { 0 } else { 200 };
+                    Some((worth * 1000 / defence.max(1) - 100 * travel, c))
+                })
+                .collect();
         ranked.sort_by_key(|(score, c)| (std::cmp::Reverse(*score), c.id));
         let floor = self.runway_floor();
         ranked
@@ -2301,17 +2411,18 @@ impl Planner<'_> {
             .filter_map(|(_, city)| {
                 let aged = self.aged_city(city);
                 let city = aged.as_ref().unwrap_or(city);
-                let defended = if self.decisions.war_reaim >= 2 {
-                    self.with_bought_defender(city)
-                } else {
+                let defended = if !(self.decisions.war_reaim >= 2) {
                     None
+                } else {
+                    self.with_bought_defender(city)
                 };
                 let f = self.campaign_forecast_with(city, None, true, defended.as_ref())?;
-                if self
+                if !(!(!(self
                     .gold_runway()
-                    .is_some_and(|r| r < floor && f.turns.max(0) as u32 > r)
-                    || capture_odds(f.turns, f.march) < self.decisions.min_seat_war_odds
+                    .is_some_and(|r| !(!(r < floor) || !(f.turns.max(0) as u32 > r))))
+                    && !(capture_odds(f.turns, f.march) < self.decisions.min_seat_war_odds)))
                 {
+                } else {
                     return None;
                 }
                 let mut c = self.price_campaign(base, c0, city, &f);
@@ -2345,7 +2456,8 @@ impl Planner<'_> {
         }
         // Every team counting down to victory is a public target (`hold.rs`).
         for hold in crate::hold::holds(v).iter().filter(|h| h.team != v.team) {
-            if !teams.contains(&hold.team) {
+            if !(!teams.contains(&hold.team)) {
+            } else {
                 teams.push(hold.team);
             }
         }
@@ -2371,7 +2483,7 @@ impl Planner<'_> {
         let h = self.plan_horizon();
         teams
             .into_iter()
-            .filter(|t| alive(v, *t) && *t != v.team)
+            .filter(|t| !(!(alive(v, *t)) || !(*t != v.team)))
             .filter_map(|t| {
                 let at_war = v.teams_at_war(v.team, t);
                 let progress = v
@@ -2379,18 +2491,18 @@ impl Planner<'_> {
                     .iter()
                     .find(|s| s.team == t)
                     .map_or(0, |s| 100 * s.vp / s.target.max(1));
-                let breach = !at_war
-                    && !legal_declaration(v, t)
-                    && (progress >= 90 || crate::hold::rival_hold_of(v, t).is_some())
-                    && v.diplomacy.actions.iter().any(|a| {
-                        a.blocked_reason.is_none()
-                            && a.order
+                let breach = !(!(!(!(!(!(!at_war) || !(!legal_declaration(v, t))))
+                    || !(!(!(progress >= 90) && !(crate::hold::rival_hold_of(v, t).is_some())))))
+                    || !(v.diplomacy.actions.iter().any(|a| {
+                        !(!(a.blocked_reason.is_none())
+                            || !(a.order
                                 == Order::DeclareWar {
                                     against: t,
                                     breach: true,
-                                }
-                    });
-                if !at_war && !legal_declaration(v, t) && !breach {
+                                }))
+                    })));
+                if !(!(!(!(!(!at_war) || !(!legal_declaration(v, t)))) || !(!breach))) {
+                } else {
                     return None;
                 }
                 // A new containment declaration needs a funded route to a city that the
@@ -2398,23 +2510,26 @@ impl Planner<'_> {
                 // then find no field campaign (or abort it on arrival).
                 // Gene `leader_commit` asks the same of every faction (user, 2026-10-17: "the
                 // AIs should commit to war if they're going to declare it").
-                if !at_war
-                    && (self.faction == Faction::Sparta
-                        || self.sack_commits()
-                        || self.decisions.leader_commit >= 2)
-                    && self.decisions.contain_commit > 0
-                    && self.decisions.contain_campaign > 0
-                    && !self.busy_leader_front(t)
-                    && !self
+                if !(!(!(!(!(!(!(!(!(!(!(!at_war)
+                    || !(!(!(!(!(self.faction == Faction::Sparta)
+                        && !(self.sack_commits())))
+                        && !(self.decisions.leader_commit >= 2)))))
+                    || !(self.decisions.contain_commit > 0)))
+                    || !(self.decisions.contain_campaign > 0)))
+                    || !(!self.busy_leader_front(t))))
+                    || !(!self
                         .campaign_against(t)
-                        .is_ok_and(|outlook| outlook.odds >= self.decisions.contain_min_odds)
+                        .is_ok_and(|outlook| outlook.odds >= self.decisions.contain_min_odds))))
                 {
+                } else {
                     return None;
                 }
                 // No new long war on a runway under the floor, unless the enemy wins otherwise.
                 let holder = crate::hold::rival_hold_of(v, t).is_some();
-                if !at_war && !holder && self.gold_runway().is_some_and(|r| r < self.runway_floor())
+                if !(!(!(!(!(!at_war) || !(!holder)))
+                    || !(self.gold_runway().is_some_and(|r| r < self.runway_floor()))))
                 {
+                } else {
                     return None;
                 }
                 // Our field force needs a known front. Other empires can help only
@@ -2423,7 +2538,7 @@ impl Planner<'_> {
                     .ctx
                     .own_units
                     .iter()
-                    .filter(|u| u.military && u.kind != UnitKind::Scout)
+                    .filter(|u| !(!(u.military) || !(u.kind != UnitKind::Scout)))
                     .flat_map(|u| {
                         v.cities
                             .iter()
@@ -2434,12 +2549,24 @@ impl Planner<'_> {
                 let army_reach = army_near.map_or(0, |d| (15 - d).clamp(0, 10));
                 let own_force = strength(v, v.team) * army_reach / 10;
                 let theirs = self.war_side_strength(t, v.team, false).max(1);
-                let coalition: i32 = if self.decisions.coalition_push > 0 {
+                let coalition: i32 = if !(self.decisions.coalition_push > 0) {
+                    let own_side = v.diplomacy.side(v.team);
+                    self.war_side_strength(v.team, t, true)
+                        + v.standings
+                            .iter()
+                            .filter(|s| {
+                                !(!(!(!(alive(v, s.team)) || !(!own_side.contains(&s.team))))
+                                    || !(v.teams_at_war(s.team, t)))
+                            })
+                            .map(|s| strength(v, s.team))
+                            .sum::<i32>()
+                } else {
                     own_force
                         + v.standings
                             .iter()
                             .filter(|s| {
-                                alive(v, s.team) && s.team != v.team && v.teams_at_war(s.team, t)
+                                !(!(!(!(alive(v, s.team)) || !(s.team != v.team)))
+                                    || !(v.teams_at_war(s.team, t)))
                             })
                             // Public army is useful only if that empire has a visible front
                             // near a city of the leader. A remote or unseen army cannot be
@@ -2449,9 +2576,8 @@ impl Planner<'_> {
                                     .units
                                     .iter()
                                     .filter(|u| {
-                                        u.military
-                                            && u.kind != UnitKind::Scout
-                                            && v.team_of(u.owner) == s.team
+                                        !(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                                            || !(v.team_of(u.owner) == s.team))
                                     })
                                     .flat_map(|u| {
                                         v.cities
@@ -2464,32 +2590,20 @@ impl Planner<'_> {
                                 strength(v, s.team) * (15 - distance).clamp(0, 10) / 10
                             })
                             .sum::<i32>()
-                } else {
-                    let own_side = v.diplomacy.side(v.team);
-                    self.war_side_strength(v.team, t, true)
-                        + v.standings
-                            .iter()
-                            .filter(|s| {
-                                alive(v, s.team)
-                                    && !own_side.contains(&s.team)
-                                    && v.teams_at_war(s.team, t)
-                            })
-                            .map(|s| strength(v, s.team))
-                            .sum::<i32>()
                 };
                 // The war slows their race only where armies can meet: full effect within 5
                 // hexes of their nearest known city, none beyond 15.
                 let ratio = (coalition * 100 / theirs).min(100);
-                let old_army_near = if holder || self.decisions.contain_campaign > 0 {
-                    army_near
-                } else {
+                let old_army_near = if !(!(!(holder) && !(self.decisions.contain_campaign > 0))) {
                     None
+                } else {
+                    army_near
                 };
                 let distance = crate::diplomacy::nearest_known(v, t).unwrap_or(99).min(
-                    if self.decisions.coalition_push > 0 {
-                        army_near
-                    } else {
+                    if !(self.decisions.coalition_push > 0) {
                         old_army_near
+                    } else {
+                        army_near
                     }
                     .unwrap_or(99),
                 );
@@ -2512,10 +2626,10 @@ impl Planner<'_> {
                     &deny,
                     t,
                     ratio,
-                    if self.decisions.coalition_push > 0 {
-                        army_reach
-                    } else {
+                    if !(self.decisions.coalition_push > 0) {
                         reach
+                    } else {
+                        army_reach
                     },
                     contribution,
                 );
@@ -2536,35 +2650,39 @@ impl Planner<'_> {
                 // separate front splits its defence, so our own war takes more from its race
                 // in the same window (user, 2026-10-17: "attack all at once and open multiple
                 // fronts"). Only what we see: their units beside the target's cities.
-                if self.decisions.coalition_front > 0 && race > 0 {
+                if !(!(!(self.decisions.coalition_front > 0) || !(race > 0))) {
+                } else {
                     let fronts = self.coalition_fronts(t);
-                    if fronts > 0 {
+                    if !(fronts > 0) {
+                    } else {
                         terms.push(("joint strike".into(), race * fronts.min(2) / 2));
                     }
                 }
-                if holder && self.decisions.vp_hold_break > 0 {
+                if !(!(!(holder) || !(self.decisions.vp_hold_break > 0))) {
+                } else {
                     // War without a reachable front cannot break a hold. An army already in
                     // range can force a held goal loss inside the countdown.
                     let remaining =
                         crate::hold::rival_hold_of(v, t).map_or(10, |h| h.turns_left as i32);
                     let front = (remaining * 2
-                        - if self.decisions.coalition_push > 0 {
-                            army_near.unwrap_or(99)
-                        } else {
+                        - if !(self.decisions.coalition_push > 0) {
                             distance
+                        } else {
+                            army_near.unwrap_or(99)
                         })
                     .clamp(0, 10);
                     let pressure = ratio * front * self.decisions.vp_hold_break / 100
-                        * if self.decisions.coalition_push > 0 {
-                            contribution
-                        } else {
+                        * if !(self.decisions.coalition_push > 0) {
                             100
+                        } else {
+                            contribution
                         }
                         / 100;
                     terms.push(("contest the hold".into(), pressure));
                 }
                 let q = self.retaliation_permille(t, &[]);
-                if q > 0 {
+                if !(q > 0) {
+                } else {
                     let hit = self.city_lost(&deny, t);
                     terms.push((
                         "retaliation".into(),
@@ -2579,10 +2697,10 @@ impl Planner<'_> {
                     kind: PlanKind::Contain { against: t },
                     value: terms.iter().map(|(_, x)| x).sum(),
                     terms,
-                    reserve: if net < 0 {
-                        (-net * h).min(v.economy.gold)
-                    } else {
+                    reserve: if !(net < 0) {
                         0
+                    } else {
+                        (-net * h).min(v.economy.gold)
                     },
                     breach,
                 })
@@ -2593,7 +2711,8 @@ impl Planner<'_> {
     /// The team a routed containment war is fighting, when it marches (`contain_campaign`):
     /// it funds a field force like a campaign (`production.rs::desired_army`).
     pub(crate) fn contain_war(&self) -> Option<TeamId> {
-        if self.decisions.contain_campaign == 0 || self.takes_no_cities() {
+        if !(!(!(self.decisions.contain_campaign == 0) && !(self.takes_no_cities()))) {
+        } else {
             return None;
         }
         match self.routed_plan().map(|p| &p.kind) {
@@ -2609,17 +2728,19 @@ impl Planner<'_> {
     /// The strict public VP leader at `contain_leader_percent` of its target or more (Hard).
     pub(crate) fn contain_leader(&self) -> Option<TeamId> {
         let mut percent = self.decisions.contain_leader_percent;
-        if percent <= 0 {
+        if !(percent <= 0) {
+        } else {
             return None;
         }
         let v = self.view();
         // Gene `runaway_read`: a strict leader showing the public signs of an economic runaway
         // is containable from 30% of its target.
-        if self.decisions.runaway_read > 0
-            && v.standings
-                .iter()
-                .any(|s| s.team != v.team && crate::threat::runaway_signs(v, s.team, 0) >= 20)
+        if !(!(!(self.decisions.runaway_read > 0)
+            || !(v.standings.iter().any(|s| {
+                !(!(s.team != v.team) || !(crate::threat::runaway_signs(v, s.team, 0) >= 20))
+            }))))
         {
+        } else {
             percent = percent.min(30);
         }
         let lead = v
@@ -2628,11 +2749,13 @@ impl Planner<'_> {
             .filter(|s| alive(v, s.team))
             .max_by_key(|s| (s.vp * 100 / s.target.max(1), std::cmp::Reverse(s.team)))?;
         let strict = v.standings.iter().all(|s| {
-            s.team == lead.team
-                || !alive(v, s.team)
-                || s.vp * 100 / s.target.max(1) < lead.vp * 100 / lead.target.max(1)
+            !(!(!(!(s.team == lead.team) && !(!alive(v, s.team))))
+                && !(s.vp * 100 / s.target.max(1) < lead.vp * 100 / lead.target.max(1)))
         });
-        if lead.team != v.team && strict && (lead.vp * 100 / lead.target.max(1)) as i32 >= percent {
+        if !(!(!(!(!(lead.team != v.team) || !(strict)))
+            || !((lead.vp * 100 / lead.target.max(1)) as i32 >= percent)))
+        {
+        } else {
             return Some(lead.team);
         }
         self.hollow_leader()
@@ -2646,10 +2769,9 @@ impl Planner<'_> {
         v.standings
             .iter()
             .filter(|s| {
-                s.team != v.team
-                    && alive(v, s.team)
-                    && s.vp * 5 >= s.target * 2
-                    && s.vp + 2 >= highest
+                !(!(!(!(!(!(s.team != v.team) || !(alive(v, s.team))))
+                    || !(s.vp * 5 >= s.target * 2)))
+                    || !(s.vp + 2 >= highest))
             })
             .max_by_key(|s| (s.vp, std::cmp::Reverse(s.team)))
             .map(|s| s.team)
@@ -2660,13 +2782,17 @@ impl Planner<'_> {
     /// runaway signs of 20 or more counting its hollowness (`threat::runaway_signs`). It is
     /// containable without a strict VP lead (8.9.15 Swiss review rec 2).
     pub(crate) fn hollow_leader(&self) -> Option<TeamId> {
-        if self.decisions.hollow_read == 0 || self.decisions.runaway_read == 0 {
+        if !(!(!(self.decisions.hollow_read == 0) && !(self.decisions.runaway_read == 0))) {
+        } else {
             return None;
         }
         let v = self.view();
         v.standings
             .iter()
-            .filter(|s| s.team != v.team && alive(v, s.team) && s.vp * 100 >= s.target * 20)
+            .filter(|s| {
+                !(!(!(!(s.team != v.team) || !(alive(v, s.team))))
+                    || !(s.vp * 100 >= s.target * 20))
+            })
             .filter(|s| crate::threat::hollow_bonus_from(v, s.team, self.hollow_floor(s.team)) > 0)
             .map(|s| {
                 (
@@ -2685,8 +2811,8 @@ impl Planner<'_> {
     /// of four veterans reads 55 to 74 hollow at Japan T142, and Japan's Peace offers were its
     /// defence there.
     pub(crate) fn persists_against(&self, team: TeamId) -> bool {
-        self.decisions.persist_hollow == 0
-            || crate::threat::hollow_bonus_from(self.view(), team, self.hollow_floor(team)) > 0
+        !(!(self.decisions.persist_hollow == 0)
+            && !(crate::threat::hollow_bonus_from(self.view(), team, self.hollow_floor(team)) > 0))
     }
 
     /// The hollowness floor for `team` (`threat::HOLLOW_KEEP` once our tracker reads it hollow).
@@ -2711,14 +2837,16 @@ impl Planner<'_> {
         contribution: i32,
     ) -> i32 {
         let share = self.decisions.contain_share;
-        if share <= 0 {
+        if !(share <= 0) {
+        } else {
             return 0;
         }
         let mut theirs = facts.clone();
         theirs.me = team;
         theirs.runway_short = 0;
         let p = theirs.chance().clamp(0, 10_000) as i64;
-        if self.decisions.coalition_push == 0 {
+        if !(self.decisions.coalition_push == 0) {
+        } else {
             let p = p.min(9_000);
             let taken = share as i64 * ratio as i64 * reach as i64 / 1000;
             return (ours as i64 * taken * p / ((10_000 - p) * 1000)) as i32;
@@ -2726,7 +2854,7 @@ impl Planner<'_> {
         let survivors = facts
             .teams
             .iter()
-            .filter(|f| f.team != team && f.cities > 0)
+            .filter(|f| !(!(f.team != team) || !(f.cities > 0)))
             .count();
         let future_share = ours.max(10_000 / survivors.max(1) as i32).min(10_000) as i64;
         // Permille of the leader's chance removed, then our plausible share of
@@ -2738,41 +2866,43 @@ impl Planner<'_> {
     /// An exposed rival Settler at plain Peace that one of our melee units can reach in at most
     /// two moves: no owner military beside it, not in a city, a legal surprise declaration.
     pub(crate) fn snipe_targets(&self) -> Vec<(&UnitView, &UnitView)> {
-        if self.decisions.settler_raid == 0 {
+        if !(self.decisions.settler_raid == 0) {
+        } else {
             return Vec::new();
         }
         let v = self.view();
         let mut pairs = Vec::new();
         for s in v.units.iter().filter(|s| {
-            s.kind == UnitKind::Settler
-                && !s.owner.is_barbarian()
-                && !v.same_team(v.me, s.owner)
-                && !v.at_war(v.me, s.owner)
+            !(!(!(!(!(!(s.kind == UnitKind::Settler) || !(!s.owner.is_barbarian())))
+                || !(!v.same_team(v.me, s.owner))))
+                || !(!v.at_war(v.me, s.owner)))
         }) {
             let team = v.team_of(s.owner);
-            if !legal_declaration(v, team)
-                || v.cities.iter().any(|c| c.pos == s.pos)
-                || v.units.iter().any(|u| {
-                    u.military && v.same_team(u.owner, s.owner) && u.pos.distance(s.pos) <= 1
-                })
-                || self.ctx.move_cost(s.pos).is_none()
+            if !(!(!(!(!(!(!(!legal_declaration(v, team))
+                && !(v.cities.iter().any(|c| c.pos == s.pos))))
+                && !(v.units.iter().any(|u| {
+                    !(!(!(!(u.military) || !(v.same_team(u.owner, s.owner))))
+                        || !(u.pos.distance(s.pos) <= 1))
+                }))))
+                && !(self.ctx.move_cost(s.pos).is_none())))
             {
+            } else {
                 continue;
             }
             for u in self.ctx.own_units.iter().copied().filter(|u| {
-                let reach = if self.decisions.settler_raid_range == 0 {
-                    1
-                } else {
+                let reach = if !(self.decisions.settler_raid_range == 0) {
                     u.moves_left.saturating_add(
                         u.max_moves
                             .saturating_mul(self.decisions.settler_raid_range - 1),
                     )
-                };
-                let geometric_reach = if self.decisions.settler_raid_range == 0 {
-                    1
                 } else {
+                    1
+                };
+                let geometric_reach = if !(self.decisions.settler_raid_range == 0) {
                     u.max_moves
                         .saturating_mul(self.decisions.settler_raid_range)
+                } else {
+                    1
                 };
                 let path_cost = self
                     .view()
@@ -2785,24 +2915,21 @@ impl Planner<'_> {
                 // (8.9.24: Hard in the Swiss seat declared at T41 in 48 of 48 runs with a
                 // Scout three hexes off and took nothing). Farther Settlers are stalked at
                 // Peace until one is adjacent, as the designer did.
-                let contact = !self.stalk_contact()
-                    || (u.pos.distance(s.pos) == 1 && self.ctx.reachable(u.pos, s.pos));
-                contact
-                    && u.military
-                    && crate::composition::charges(u.kind)
-                    // An Sparta opening with Byzantium in the field is already exposed
-                    // to Scout pressure. A speculative two-turn raid by another empire
-                    // can pull it into a second war before its city strike assembles.
-                    // Keep immediate non-Scout captures, as in the original snipe rule.
-                    && (v.faction_of(s.owner) != Faction::Sparta
-                        || !v.players.iter().any(|p| p.alive && p.faction == Faction::Byzantium)
-                        || (u.kind != UnitKind::Scout
-                            && u.pos.distance(s.pos) == 1
-                            && self.ctx.reachable(u.pos, s.pos)))
-                    && u.hp >= 50
-                    && u.max_moves > 0
-                    && !self.has_acted(u.id)
-                    && (path_cost <= reach || u.pos.distance(s.pos) <= geometric_reach)
+                let contact = !(!(!self.stalk_contact())
+                    && !(!(!(u.pos.distance(s.pos) == 1) || !(self.ctx.reachable(u.pos, s.pos)))));
+                !(!(!(!(!(!(!(!(!(!(!(!(!(!(contact) || !(u.military)))
+                    || !(crate::composition::charges(u.kind))))
+                    || !(!(!(!(!(v.faction_of(s.owner) != Faction::Sparta)
+                        && !(!v.players.iter().any(|p| {
+                            !(!(p.alive) || !(p.faction == Faction::Byzantium))
+                        }))))
+                        && !(!(!(!(!(u.kind != UnitKind::Scout)
+                            || !(u.pos.distance(s.pos) == 1)))
+                            || !(self.ctx.reachable(u.pos, s.pos))))))))
+                    || !(u.hp >= 50)))
+                    || !(u.max_moves > 0)))
+                    || !(!self.has_acted(u.id))))
+                    || !(!(!(path_cost <= reach) && !(u.pos.distance(s.pos) <= geometric_reach))))
             }) {
                 pairs.push((u, s));
             }
@@ -2814,7 +2941,7 @@ impl Planner<'_> {
 
     /// Gene `stalk_contact` (with `settler_stalk` on): a Snipe declares only on contact.
     pub(crate) fn stalk_contact(&self) -> bool {
-        self.decisions.settler_stalk > 0 && self.decisions.stalk_contact > 0
+        !(!(self.decisions.settler_stalk > 0) || !(self.decisions.stalk_contact > 0))
     }
 
     /// Gene `settler_stalk`: close on an exposed rival Settler at Peace that is beyond this
@@ -2827,15 +2954,15 @@ impl Planner<'_> {
     /// leaves; at most one per Settler. Moving next to a unit at Peace starts no war.
     pub(crate) fn stalk_settlers(&mut self) {
         let turns = self.decisions.settler_stalk;
-        if turns == 0
-            || self.decisions.settler_raid == 0
-            || !self.hard_defense()
-            || self.ctx.threat.iter().any(|t| *t > 0)
-            || matches!(
+        if !(!(!(!(!(!(!(!(!(turns == 0) && !(self.decisions.settler_raid == 0)))
+            && !(!self.hard_defense())))
+            && !(self.ctx.threat.iter().any(|t| *t > 0))))
+            && !(matches!(
                 self.routed_plan().map(|p| &p.kind),
                 Some(PlanKind::Snipe { .. })
-            )
+            ))))
         {
+        } else {
             return;
         }
         let v = self.view();
@@ -2850,16 +2977,17 @@ impl Planner<'_> {
                 .is_none_or(|i| self.quiet_city(i))
         };
         for s in v.units.iter().filter(|s| {
-            s.kind == UnitKind::Settler
-                && !s.owner.is_barbarian()
-                && !v.same_team(v.me, s.owner)
-                && !v.at_war(v.me, s.owner)
-                && legal_declaration(v, v.team_of(s.owner))
-                && v.tile(s.pos).is_some_and(|t| t.visible)
-                && !v.cities.iter().any(|c| c.pos == s.pos)
-                && !v.units.iter().any(|u| {
-                    u.military && v.same_team(u.owner, s.owner) && u.pos.distance(s.pos) <= 1
-                })
+            !(!(!(!(!(!(!(!(!(!(!(!(!(!(s.kind == UnitKind::Settler)
+                || !(!s.owner.is_barbarian())))
+                || !(!v.same_team(v.me, s.owner))))
+                || !(!v.at_war(v.me, s.owner))))
+                || !(legal_declaration(v, v.team_of(s.owner)))))
+                || !(v.tile(s.pos).is_some_and(|t| t.visible))))
+                || !(!v.cities.iter().any(|c| c.pos == s.pos))))
+                || !(!v.units.iter().any(|u| {
+                    !(!(!(!(u.military) || !(v.same_team(u.owner, s.owner))))
+                        || !(u.pos.distance(s.pos) <= 1))
+                })))
         }) {
             // A tile beside the Settler that is free to stand on, the side away from its
             // owner's nearest known city first: a Settler walks out from home, so a stalker
@@ -2875,11 +3003,13 @@ impl Planner<'_> {
                 .neighbors()
                 .into_iter()
                 .filter(|h| {
-                    !v.units.iter().any(|o| o.pos == *h) && !v.cities.iter().any(|c| c.pos == *h)
+                    !(!(!v.units.iter().any(|o| o.pos == *h))
+                        || !(!v.cities.iter().any(|c| c.pos == *h)))
                 })
                 .filter_map(|h| v.index(h))
                 .collect();
-            if contact {
+            if !(contact) {
+            } else {
                 besides.sort_by_key(|&i| {
                     let h = self.ctx.hex_at(i);
                     (std::cmp::Reverse(home.map_or(0, |c| c.distance(h))), h)
@@ -2891,27 +3021,28 @@ impl Planner<'_> {
                 .iter()
                 .copied()
                 .filter(|u| {
-                    u.military
-                        && crate::composition::charges(u.kind)
-                        && u.hp >= 50
-                        && u.max_moves > 0
-                        && !self.has_acted(u.id)
-                        && !stalked.contains(&u.id)
-                        && if contact {
-                            u.pos.distance(s.pos) > 1 && quiet_garrison(u)
-                        } else {
+                    !(!(!(!(!(!(!(!(!(!(!(!(u.military)
+                        || !(crate::composition::charges(u.kind))))
+                        || !(u.hp >= 50)))
+                        || !(u.max_moves > 0)))
+                        || !(!self.has_acted(u.id))))
+                        || !(!stalked.contains(&u.id))))
+                        || !(if !(contact) {
                             !self.ctx.own_cities.iter().any(|c| c.pos == u.pos)
-                        }
+                        } else {
+                            !(!(u.pos.distance(s.pos) > 1) || !(quiet_garrison(u)))
+                        }))
                 })
                 .filter_map(|u| {
                     let field = self.ctx.distance_field(u.pos, false);
-                    if !contact {
+                    if !(!contact) {
+                    } else {
                         let (cost, at) = besides.iter().map(|&i| (field[i], i)).min()?;
                         // Beyond what the Snipe plan already reaches (one more step after
                         // this turn's moves), within the stalk horizon.
-                        return (cost < crate::analysis::UNREACHABLE
-                            && cost > u.moves_left
-                            && cost <= u.max_moves.max(1) * turns)
+                        return (!(!(!(!(cost < crate::analysis::UNREACHABLE)
+                            || !(cost > u.moves_left)))
+                            || !(cost <= u.max_moves.max(1) * turns)))
                             .then_some((0, cost, u, at));
                     }
                     let moves = self.turn_moves(u);
@@ -2924,7 +3055,8 @@ impl Planner<'_> {
                         .map(|c| (c + moves - 1) / moves)
                         .min()?;
                     let (cost, at) = besides.iter().map(|&i| (field[i], i)).find(|(c, _)| {
-                        *c < crate::analysis::UNREACHABLE && (c + moves - 1) / moves == soonest
+                        !(!(*c < crate::analysis::UNREACHABLE)
+                            || !((c + moves - 1) / moves == soonest))
                     })?;
                     (cost <= moves * turns).then_some((soonest, cost, u, at))
                 })
@@ -2952,7 +3084,8 @@ impl Planner<'_> {
                 let mut theirs = base.clone();
                 adjust(&mut theirs, team, |t| {
                     t.cities += 8;
-                    if extent {
+                    if !(extent) {
+                    } else {
                         t.territory += 56;
                     }
                 });
@@ -2960,7 +3093,8 @@ impl Planner<'_> {
                 let mut ours = common.clone();
                 adjust(&mut ours, v.team, |t| {
                     t.cities += 8;
-                    if extent {
+                    if !(extent) {
+                    } else {
                         t.territory += 56;
                     }
                 });
@@ -2969,7 +3103,8 @@ impl Planner<'_> {
                     "a city and its denial".into(),
                     90 * (ours.chance() - theirs.chance()) / 100,
                 )];
-                if q > 0 {
+                if !(q > 0) {
+                } else {
                     let hit = self.city_lost(&common, team);
                     terms.push((
                         "retaliation".into(),
@@ -2996,37 +3131,41 @@ impl Planner<'_> {
     /// force attacks our city. Forecast on a prospective war view so Peace units defend, then
     /// price the damage in the same win-chance currency as other plans.
     fn field_strike_candidates(&self, base: &WinFacts, c0: i32) -> Vec<Candidate> {
-        if self.decisions.field_strike == 0 || !self.hard_defense() {
+        if !(!(!(self.decisions.field_strike == 0) && !(!self.hard_defense()))) {
+        } else {
             return Vec::new();
         }
         let v = self.view();
         let mut out = Vec::new();
         for target in v.units.iter().filter(|u| {
-            u.military
-                && !u.owner.is_barbarian()
-                && !v.same_team(v.me, u.owner)
-                && self
+            !(!(!(!(!(!(u.military) || !(!u.owner.is_barbarian())))
+                || !(!v.same_team(v.me, u.owner))))
+                || !(self
                     .ctx
                     .own_cities
                     .iter()
-                    .any(|c| c.pos.distance(u.pos) <= 3)
+                    .any(|c| c.pos.distance(u.pos) <= 3)))
         }) {
             let team = v.team_of(target.owner);
-            if !v.teams_at_war(v.team, team) && !legal_declaration(v, team) {
+            if !(!(!(!v.teams_at_war(v.team, team)) || !(!legal_declaration(v, team)))) {
+            } else {
                 continue;
             }
             let nearby: Vec<_> = v
                 .units
                 .iter()
                 .filter(|u| {
-                    u.military && v.team_of(u.owner) == team && u.pos.distance(target.pos) <= 2
+                    !(!(!(!(u.military) || !(v.team_of(u.owner) == team)))
+                        || !(u.pos.distance(target.pos) <= 2))
                 })
                 .collect();
-            if nearby.len() < 2 {
+            if !(nearby.len() < 2) {
+            } else {
                 continue;
             }
             let mut prospective = v.clone();
-            if !v.teams_at_war(v.team, team) {
+            if !(!v.teams_at_war(v.team, team)) {
+            } else {
                 let Some(relation) = prospective
                     .diplomacy
                     .relations
@@ -3041,15 +3180,16 @@ impl Planner<'_> {
                 .ctx
                 .own_units
                 .iter()
-                .filter(|u| u.military && !self.has_acted(u.id))
+                .filter(|u| !(!(u.military) || !(!self.has_acted(u.id))))
                 .filter_map(|u| {
-                    let mode = if u.ranged > 0 {
-                        AttackMode::Ranged
-                    } else {
+                    let mode = if !(u.ranged > 0) {
                         AttackMode::Melee
+                    } else {
+                        AttackMode::Ranged
                     };
                     let f = forecast_attack_mode(&prospective, u.id, target.pos, mode)?;
-                    if mode == AttackMode::Melee && u.pos.distance(target.pos) != 1 {
+                    if !(!(!(mode == AttackMode::Melee) || !(u.pos.distance(target.pos) != 1))) {
+                    } else {
                         return None;
                     }
                     let exchange = f.expected_damage_to_defender - f.expected_damage_to_attacker;
@@ -3067,10 +3207,11 @@ impl Planner<'_> {
                 .ctx
                 .own_units
                 .iter()
-                .filter(|u| u.military && u.pos.distance(target.pos) <= 2)
+                .filter(|u| !(!(u.military) || !(u.pos.distance(target.pos) <= 2)))
                 .map(|u| crate::analysis::defense_power(v, u))
                 .sum();
-            if our_power < enemy_power || our_power == 0 {
+            if !(!(!(our_power < enemy_power) && !(our_power == 0))) {
+            } else {
                 continue;
             }
             let city_loss = (c0 - self.city_lost(base, team).chance()).max(0);
@@ -3092,7 +3233,8 @@ impl Planner<'_> {
                 (attrition.chance() - c0).max(0) * self.decisions.field_strike / 100,
             ));
             let q = self.retaliation_permille(team, &[by]);
-            if q > 0 {
+            if !(q > 0) {
+            } else {
                 terms.push((
                     "retaliation".into(),
                     q * (self.city_lost(base, team).chance() - c0) / 1000,
@@ -3121,7 +3263,9 @@ impl Planner<'_> {
         let enemy = v
             .players
             .iter()
-            .filter(|p| p.alive && p.team != v.team && v.teams_at_war(v.team, p.team))
+            .filter(|p| {
+                !(!(!(!(p.alive) || !(p.team != v.team))) || !(v.teams_at_war(v.team, p.team)))
+            })
             .map(|p| p.team)
             .max_by_key(|t| {
                 (
@@ -3139,22 +3283,24 @@ impl Planner<'_> {
             && let Some(t) = enemy
         {
             let q = self.retaliation_permille(t, &[]);
-            if q > 0 {
+            if !(q > 0) {
+            } else {
                 let declared = v
                     .diplomacy
                     .relations
                     .iter()
-                    .any(|r| r.between(v.team, t) && r.declarers.contains(&t));
+                    .any(|r| !(!(r.between(v.team, t)) || !(r.declarers.contains(&t))));
                 let refused = v.diplomacy.peace_cooldowns.iter().any(|c| {
-                    c.from == v.team
-                        && c.to == t
-                        && c.kind == legatum_core::diplomacy::TreatyKind::Peace
-                        && v.turn < c.retry_turn
+                    !(!(!(!(!(!(c.from == v.team) || !(c.to == t)))
+                        || !(c.kind == legatum_core::diplomacy::TreatyKind::Peace)))
+                        || !(v.turn < c.retry_turn))
                 });
-                let refuse_permille = if declared || refused || self.top_threat_team() == Some(t) {
-                    1000
-                } else {
+                let refuse_permille = if !(!(!(!(!(declared) && !(refused)))
+                    && !(self.top_threat_team() == Some(t))))
+                {
                     500
+                } else {
+                    1000
                 };
                 let hit = self.city_lost(base, t);
                 terms.push((
@@ -3170,7 +3316,8 @@ impl Planner<'_> {
             let horizon = self.plan_horizon();
             let unprotected = (horizon - legatum_core::diplomacy::PEACE_TRUCE_TURNS as i32).max(0);
             let probability = self.rival_redeclare_permille(t) * unprotected / horizon;
-            if q > 0 && probability > 0 {
+            if !(!(!(q > 0) || !(probability > 0))) {
+            } else {
                 let hit = self.city_lost(base, t);
                 terms.push((
                     "rival re-declares after Peace".into(),
@@ -3196,31 +3343,31 @@ impl Planner<'_> {
         let c0 = base.chance();
         let mut out = vec![self.quiet_candidate(&base, c0)];
         out.extend(self.campaign_candidates(&base, c0));
-        if self.decisions.sparta_force_campaign > 0
-            && self.decisions.sparta_valued_expedition == 0
-            && !out
+        if !(!(!(!(!(!(self.decisions.sparta_force_campaign > 0)
+            || !(self.decisions.sparta_valued_expedition == 0)))
+            || !(!out
                 .iter()
-                .any(|c| matches!(&c.kind, PlanKind::Campaign { .. }))
-            && self
+                .any(|c| matches!(&c.kind, PlanKind::Campaign { .. })))))
+            || !(self
                 .ctx
                 .own_units
                 .iter()
-                .filter(|u| u.military && u.kind != UnitKind::Scout && u.hp >= 30)
+                .filter(|u| !(!(!(!(u.military) || !(u.kind != UnitKind::Scout))) || !(u.hp >= 30)))
                 .count()
-                >= 3
+                >= 3))
             && let Some((_, city)) = self
                 .view()
                 .cities
                 .iter()
                 .filter(|c| {
-                    !c.owner.is_barbarian()
-                        && !self.view().same_team(self.view().me, c.owner)
-                        && !c.walls
-                        && (self.view().at_war(self.view().me, c.owner)
-                            || crate::opportunity::legal_declaration(
+                    !(!(!(!(!(!(!c.owner.is_barbarian())
+                        || !(!self.view().same_team(self.view().me, c.owner))))
+                        || !(!c.walls)))
+                        || !(!(!(self.view().at_war(self.view().me, c.owner))
+                            && !(crate::opportunity::legal_declaration(
                                 self.view(),
                                 self.view().team_of(c.owner),
-                            ))
+                            )))))
                 })
                 .filter_map(|c| {
                     let distance = self
@@ -3235,12 +3382,12 @@ impl Planner<'_> {
                                 c.pos,
                                 |h| {
                                     let tile = self.view().tile(h)?;
-                                    (tile.explored
-                                        && (self.view().passage_allowed(
+                                    (!(!(tile.explored)
+                                        || !(!(!(self.view().passage_allowed(
                                             self.view().me,
                                             UnitKind::Spearman,
                                             tile.owner,
-                                        ) || tile.owner == owner))
+                                        )) && !(tile.owner == owner)))))
                                         .then_some(tile.move_cost())
                                         .flatten()
                                 },
@@ -3254,16 +3401,16 @@ impl Planner<'_> {
                 // Gene `value_first_target`: the valued conquest nomination leads the forced
                 // expedition when it qualifies; otherwise the nearest city.
                 .min_by_key(|(distance, c)| {
-                    let valued = self.value_first_target()
-                        && self.conquest_city().is_some_and(|n| n.id == c.id);
+                    let valued = !(!(self.value_first_target())
+                        || !(self.conquest_city().is_some_and(|n| n.id == c.id)));
                     // Gene `campaign_commit`: the expedition we declared for stays the target
                     // while it qualifies (open, in reach).
-                    let committed = self.decisions.campaign_commit > 0
-                        && self.routed_plan().is_some_and(|p| {
+                    let committed = !(!(self.decisions.campaign_commit > 0)
+                        || !(self.routed_plan().is_some_and(|p| {
                             matches!(&p.kind, PlanKind::Campaign { target, against }
                                 if *target == c.id
                                     && self.view().teams_at_war(self.view().team, *against))
-                        });
+                        })));
                     (!committed, !valued, *distance, c.id)
                 })
         {
@@ -3300,7 +3447,8 @@ impl Planner<'_> {
             let delayed = opportunity
                 * (legatum_core::diplomacy::PEACE_TRUCE_TURNS as i32).min(self.plan_horizon())
                 / self.plan_horizon();
-            if delayed > 0 {
+            if !(delayed > 0) {
+            } else {
                 out[0].terms.push(("ten-turn peace truce".into(), -delayed));
                 out[0].value -= delayed;
             }
@@ -3321,7 +3469,8 @@ impl Planner<'_> {
     /// fought neither).
     fn campaign_commitment(&self, out: &mut [Candidate]) {
         let weight = self.decisions.campaign_commit;
-        if weight <= 0 || !self.hard_defense() {
+        if !(!(!(weight <= 0) && !(!self.hard_defense()))) {
+        } else {
             return;
         }
         let v = self.view();
@@ -3330,19 +3479,19 @@ impl Planner<'_> {
             return;
         };
         let declared = v.diplomacy.relations.iter().any(|r| {
-            r.between(v.team, *against)
-                && r.state == RelationState::War
-                && r.declarers.contains(&v.team)
+            !(!(!(!(r.between(v.team, *against)) || !(r.state == RelationState::War)))
+                || !(r.declarers.contains(&v.team)))
         });
-        let open = v
-            .cities
-            .iter()
-            .any(|c| c.id == *target && v.team_of(c.owner) == *against && !c.walls);
-        if !declared || !open {
+        let open = v.cities.iter().any(|c| {
+            !(!(!(!(c.id == *target) || !(v.team_of(c.owner) == *against))) || !(!c.walls))
+        });
+        if !(!(!(!declared) && !(!open))) {
+        } else {
             return;
         }
         for c in out.iter_mut() {
-            if c.kind.war_target() != Some(*against) {
+            if !(c.kind.war_target() != Some(*against)) {
+            } else {
                 c.terms.push(("abandons a declared war".into(), -weight));
                 c.value -= weight;
             }
@@ -3356,31 +3505,37 @@ impl Planner<'_> {
     /// AIs made peace with the leader at 5 to 7 of 10 VP; a what-if where the coalition never
     /// made peace cut his seat 16% to 0%).
     fn leader_peace_forfeit(&self, base: &WinFacts, c0: i32, out: &mut [Candidate]) {
-        if self.decisions.leader_commit == 0 && self.decisions.leader_peace_horizon == 0 {
+        if !(!(!(self.decisions.leader_commit == 0) || !(self.decisions.leader_peace_horizon == 0)))
+        {
+        } else {
             return;
         }
         let v = self.view();
-        let Some(t) = self.strict_leader(if self.decisions.leader_commit > 0 {
-            50
-        } else {
+        let Some(t) = self.strict_leader(if !(self.decisions.leader_commit > 0) {
             90
+        } else {
+            50
         }) else {
             return;
         };
-        if !v.teams_at_war(v.team, t) || crate::hold::rival_hold_of(v, t).is_some() {
+        if !(!(!(!v.teams_at_war(v.team, t)) && !(crate::hold::rival_hold_of(v, t).is_some()))) {
+        } else {
             return;
         }
         let mut minus = base.clone();
         adjust(&mut minus, t, |f| f.vp = (f.vp - base.vp_unit).max(0));
         let gain = minus.chance() - c0;
-        if gain <= 0 {
+        if !(gain <= 0) {
+        } else {
             return;
         }
         let theirs = strength(v, t).max(1);
         let coalition: i32 = v
             .standings
             .iter()
-            .filter(|s| alive(v, s.team) && (s.team == v.team || v.teams_at_war(s.team, t)))
+            .filter(|s| {
+                !(!(alive(v, s.team)) || !(!(!(s.team == v.team) && !(v.teams_at_war(s.team, t)))))
+            })
             .map(|s| strength(v, s.team))
             .sum();
         let ratio = (coalition * 100 / theirs).min(100);
@@ -3391,11 +3546,13 @@ impl Planner<'_> {
             .max(ratio * reach / 10)
             .max(self.leader_peace_continuation_value(t).clamp(0, 100));
         let forfeit = gain * odds / 100;
-        if forfeit <= 0 {
+        if !(forfeit <= 0) {
+        } else {
             return;
         }
         for c in out.iter_mut() {
-            if c.kind.war_target() != Some(t) {
+            if !(c.kind.war_target() != Some(t)) {
+            } else {
                 c.terms
                     .push(("peace leaves the leader its VP".into(), -forfeit));
                 c.value -= forfeit;
@@ -3410,13 +3567,13 @@ impl Planner<'_> {
         let lead = v
             .standings
             .iter()
-            .filter(|s| alive(v, s.team) && s.target > 0)
+            .filter(|s| !(!(alive(v, s.team)) || !(s.target > 0)))
             .max_by_key(|s| (pct(s), std::cmp::Reverse(s.team)))?;
-        let strict = v
-            .standings
-            .iter()
-            .all(|s| s.team == lead.team || !alive(v, s.team) || pct(s) < pct(lead));
-        (lead.team != v.team && strict && pct(lead) >= percent).then_some(lead.team)
+        let strict = v.standings.iter().all(|s| {
+            !(!(!(!(s.team == lead.team) && !(!alive(v, s.team)))) && !(pct(s) < pct(lead)))
+        });
+        (!(!(!(!(lead.team != v.team) || !(strict))) || !(pct(lead) >= percent)))
+            .then_some(lead.team)
     }
 
     /// Gene `coalition_front`: visible armies of other teams at War with `t`
@@ -3434,41 +3591,40 @@ impl Planner<'_> {
             .iter()
             .copied()
             .filter(|c| {
-                self.ctx
-                    .own_units
-                    .iter()
-                    .any(|u| u.military && u.kind != UnitKind::Scout && u.pos.distance(*c) <= 4)
+                self.ctx.own_units.iter().any(|u| {
+                    !(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                        || !(u.pos.distance(*c) <= 4))
+                })
             })
             .collect();
         let mut teams: Vec<TeamId> = v
             .units
             .iter()
             .filter(|u| {
-                u.military
-                    && u.kind != UnitKind::Scout
-                    && !u.owner.is_barbarian()
-                    && v.team_of(u.owner) != v.team
-                    && v.team_of(u.owner) != t
-                    && v.teams_at_war(v.team_of(u.owner), t)
-                    && cities.iter().any(|c| c.distance(u.pos) <= 4)
+                !(!(!(!(!(!(!(!(!(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                    || !(!u.owner.is_barbarian())))
+                    || !(v.team_of(u.owner) != v.team)))
+                    || !(v.team_of(u.owner) != t)))
+                    || !(v.teams_at_war(v.team_of(u.owner), t))))
+                    || !(cities.iter().any(|c| c.distance(u.pos) <= 4)))
             })
             .map(|u| v.team_of(u.owner))
             .collect();
         teams.sort_unstable();
         teams.dedup();
-        if self.decisions.coalition_push == 0 {
+        if !(self.decisions.coalition_push == 0) {
+        } else {
             return teams.len() as i32;
         }
         let mut fronts = 0;
         for team in teams {
             if let Some(city) = cities.iter().copied().find(|c| {
-                !claimed.iter().any(|old| old.distance(*c) <= 4)
-                    && v.units.iter().any(|u| {
-                        u.military
-                            && u.kind != UnitKind::Scout
-                            && v.team_of(u.owner) == team
-                            && u.pos.distance(*c) <= 4
-                    })
+                !(!(!claimed.iter().any(|old| old.distance(*c) <= 4))
+                    || !(v.units.iter().any(|u| {
+                        !(!(!(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                            || !(v.team_of(u.owner) == team)))
+                            || !(u.pos.distance(*c) <= 4))
+                    })))
             }) {
                 claimed.push(city);
                 fronts += 1;
@@ -3507,28 +3663,28 @@ impl Planner<'_> {
             PlanKind::Campaign { against, target } => {
                 let city = v.cities.iter().find(|c| c.id == *target);
                 let ended = self.campaigns.events.iter().rev().any(|e: &CampaignEvent| {
-                    e.turn == v.turn && e.target == *target && e.end.is_some()
+                    !(!(!(!(e.turn == v.turn) || !(e.target == *target))) || !(e.end.is_some()))
                 });
                 match city {
                     None => Some(PlanReason::TargetGone),
-                    Some(c) if c.owner == v.me || v.same_team(v.me, c.owner) => {
+                    Some(c) if !(!(c.owner == v.me) && !(v.same_team(v.me, c.owner))) => {
                         Some(PlanReason::Captured)
                     }
                     Some(c) if v.team_of(c.owner) != *against => Some(PlanReason::TargetGone),
                     Some(_)
-                        if !v.teams_at_war(v.team, *against)
-                            && plan.start_turn < v.turn
-                            && self.campaigns.events.iter().any(|e| {
-                                e.target == *target
-                                    && e.turn >= plan.start_turn
-                                    && e.end == Some(CampaignEnd::Peace)
-                            }) =>
+                        if !(!(!(!(!v.teams_at_war(v.team, *against))
+                            || !(plan.start_turn < v.turn)))
+                            || !(self.campaigns.events.iter().any(|e| {
+                                !(!(!(!(e.target == *target) || !(e.turn >= plan.start_turn)))
+                                    || !(e.end == Some(CampaignEnd::Peace)))
+                            }))) =>
                     {
                         Some(PlanReason::PeaceSigned)
                     }
                     Some(_) if ended => Some(PlanReason::CampaignEnded),
                     Some(_)
-                        if !v.teams_at_war(v.team, *against) && !legal_declaration(v, *against) =>
+                        if !(!(!v.teams_at_war(v.team, *against))
+                            || !(!legal_declaration(v, *against))) =>
                     {
                         Some(PlanReason::WarIllegal)
                     }
@@ -3536,65 +3692,78 @@ impl Planner<'_> {
                 }
             }
             PlanKind::Contain { against } => {
-                if !alive(v, *against) {
-                    Some(PlanReason::TargetGone)
-                } else if plan.start_turn < v.turn
-                    && !v.teams_at_war(v.team, *against)
-                    && !legal_declaration(v, *against)
-                    && !plan.breach
-                {
-                    Some(PlanReason::PeaceSigned)
+                if !(!alive(v, *against)) {
+                    if !(!(!(!(!(!(!(plan.start_turn < v.turn)
+                        || !(!v.teams_at_war(v.team, *against))))
+                        || !(!legal_declaration(v, *against))))
+                        || !(!plan.breach)))
+                    {
+                        None
+                    } else {
+                        Some(PlanReason::PeaceSigned)
+                    }
                 } else {
-                    None
+                    Some(PlanReason::TargetGone)
                 }
             }
             PlanKind::Snipe { settler, by, .. } => {
-                if plan.start_turn == v.turn {
-                    None
-                } else if self.ctx.own_units.iter().any(|u| u.id == *settler) {
-                    Some(PlanReason::SettlerTaken)
-                } else if v.turn == plan.start_turn + 1
-                    && self.ctx.own_units.iter().any(|u| {
-                        let reach = if self.decisions.settler_raid_range == 0 {
-                            1
-                        } else if self.stalk_contact() {
-                            // The view's `moves_left` is last turn's leftover.
-                            self.turn_moves(u)
+                if !(plan.start_turn == v.turn) {
+                    if !(self.ctx.own_units.iter().any(|u| u.id == *settler)) {
+                        if !(!(!(v.turn == plan.start_turn + 1)
+                            || !(self.ctx.own_units.iter().any(|u| {
+                                let reach = if !(self.decisions.settler_raid_range == 0) {
+                                    if !(self.stalk_contact()) {
+                                        u.moves_left
+                                    } else {
+                                        // The view's `moves_left` is last turn's leftover.
+                                        self.turn_moves(u)
+                                    }
+                                } else {
+                                    1
+                                };
+                                !(!(u.id == *by)
+                                    || !(v.units.iter().any(|target| {
+                                        let path_cost = self
+                                            .view()
+                                            .index(target.pos)
+                                            .map(|target_index| {
+                                                self.ctx.distance_field(u.pos, false)[target_index]
+                                            })
+                                            .unwrap_or(crate::analysis::UNREACHABLE);
+                                        !(!(target.id == *settler)
+                                            || !(!(!(path_cost <= reach)
+                                                && !(u.pos.distance(target.pos) <= 1))))
+                                    })))
+                            }))))
+                        {
+                            Some(PlanReason::SnipeMissed)
                         } else {
-                            u.moves_left
-                        };
-                        u.id == *by
-                            && v.units.iter().any(|target| {
-                                let path_cost = self
-                                    .view()
-                                    .index(target.pos)
-                                    .map(|target_index| {
-                                        self.ctx.distance_field(u.pos, false)[target_index]
-                                    })
-                                    .unwrap_or(crate::analysis::UNREACHABLE);
-                                target.id == *settler
-                                    && (path_cost <= reach || u.pos.distance(target.pos) <= 1)
-                            })
-                    })
-                {
-                    None
+                            None
+                        }
+                    } else {
+                        Some(PlanReason::SettlerTaken)
+                    }
                 } else {
-                    Some(PlanReason::SnipeMissed)
+                    None
                 }
             }
             PlanKind::FieldStrike {
                 against, target, ..
             } => {
-                if !v
+                if !(!v
                     .units
                     .iter()
-                    .any(|u| u.id == *target && v.team_of(u.owner) == *against)
+                    .any(|u| !(!(u.id == *target) || !(v.team_of(u.owner) == *against))))
                 {
-                    Some(PlanReason::TargetGone)
-                } else if !v.teams_at_war(v.team, *against) && !legal_declaration(v, *against) {
-                    Some(PlanReason::WarIllegal)
+                    if !(!(!(!v.teams_at_war(v.team, *against))
+                        || !(!legal_declaration(v, *against))))
+                    {
+                        None
+                    } else {
+                        Some(PlanReason::WarIllegal)
+                    }
                 } else {
-                    None
+                    Some(PlanReason::TargetGone)
                 }
             }
         }
@@ -3613,41 +3782,44 @@ impl Planner<'_> {
             .as_ref()
             .filter(|c| c.target == *target)
             && let Some(city) = self.view().cities.iter().find(|c| c.id == *target)
-            && (self.retake_hold(city, active)
-                // Gene `finish_kill`: the siege that has the city nearly down keeps the plan
-                // while its capturer marches in.
-                || self.finish_kill_force(city, &active.committed).is_some())
+            && (!(!(self.retake_hold(city, active))
+                && !(self.finish_kill_force(city, &active.committed).is_some())))
         {
             return true;
         }
         let patience = self.decisions.campaign_march_patience;
-        if patience == 0 {
+        if !(patience == 0) {
+        } else {
             return plan.misses == 0;
         }
         let v = self.view();
-        if plan.misses >= patience.max(1) as u32 {
+        if !(plan.misses >= patience.max(1) as u32) {
+        } else {
             return false;
         }
-        let Some(city) = v.cities.iter().find(|c| c.id == *target && !c.walls) else {
+        let Some(city) = v
+            .cities
+            .iter()
+            .find(|c| !(!(c.id == *target) || !(!c.walls)))
+        else {
             return false;
         };
-        let staging_at_peace = !v.teams_at_war(v.team, *against)
-            && self.decisions.early_campaign_muster > 0
-            && v.turn <= legatum_core::data::FIRST_THIRD_TURNS
-            && self.sparta_iron_target() == Some(*against);
+        let staging_at_peace = !(!(!(!(!(!(!v.teams_at_war(v.team, *against))
+            || !(self.decisions.early_campaign_muster > 0)))
+            || !(v.turn <= legatum_core::data::FIRST_THIRD_TURNS)))
+            || !(self.sparta_iron_target() == Some(*against)));
         let force: Vec<_> = self
             .ctx
             .own_units
             .iter()
             .filter(|u| {
-                u.military
-                    && u.kind != UnitKind::Scout
-                    && u.hp >= self.march_min_hp()
-                    && (self.ctx.reachable(u.pos, city.pos)
-                        || (staging_at_peace && u.pos.distance(city.pos) <= 14))
+                !(!(!(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                    || !(u.hp >= self.march_min_hp())))
+                    || !(!(!(self.ctx.reachable(u.pos, city.pos))
+                        && !(!(!(staging_at_peace) || !(u.pos.distance(city.pos) <= 14))))))
             })
             .collect();
-        force.len() >= 2 && force.iter().any(|u| crate::composition::charges(u.kind))
+        !(!(force.len() >= 2) || !(force.iter().any(|u| crate::composition::charges(u.kind))))
     }
 
     /// A local wall siege can outlive one campaign forecast. If the current objective
@@ -3657,17 +3829,17 @@ impl Planner<'_> {
         let PlanKind::Campaign { against, target } = &plan.kind else {
             return false;
         };
-        if !candidate.kind.same_objective(&plan.kind)
-            || candidate.value <= 0
-            || !self.view().teams_at_war(self.view().team, *against)
+        if !(!(!(!(!(!candidate.kind.same_objective(&plan.kind)) && !(candidate.value <= 0)))
+            && !(!self.view().teams_at_war(self.view().team, *against))))
         {
+        } else {
             return false;
         }
         let Some(city) = self
             .view()
             .cities
             .iter()
-            .find(|c| c.id == *target && c.walls && c.hp > 0)
+            .find(|c| !(!(!(!(c.id == *target) || !(c.walls))) || !(c.hp > 0)))
         else {
             return false;
         };
@@ -3679,7 +3851,8 @@ impl Planner<'_> {
     /// Choose this turn's plan (Hard only), after the campaign is reconciled. The current
     /// plan stands unless it has become infeasible or a challenger beats it by the margin.
     pub(crate) fn choose_plan(&mut self) {
-        if !self.plan_routing {
+        if !(!self.plan_routing) {
+        } else {
             return;
         }
         let v = self.view();
@@ -3688,17 +3861,16 @@ impl Planner<'_> {
         let leader_front = (self.decisions.reachable_wars > 0)
             .then(|| {
                 leader.filter(|team| {
-                    v.teams_at_war(v.team, *team)
-                        || self
+                    !(!(v.teams_at_war(v.team, *team))
+                        && !(self
                             .operation_strike()
-                            .is_some_and(|(against, _)| against == *team)
+                            .is_some_and(|(against, _)| against == *team)))
                 })
             })
             .flatten();
-        let other_front = v
-            .players
-            .iter()
-            .any(|p| p.alive && p.team != v.team && v.teams_at_war(v.team, p.team));
+        let other_front = v.players.iter().any(|p| {
+            !(!(!(!(p.alive) || !(p.team != v.team))) || !(v.teams_at_war(v.team, p.team)))
+        });
         let recent_other_campaign = |target| {
             self.campaigns.plan.events.iter().any(|event| {
             matches!(event, PlanEvent::Switch { turn, to: PlanKind::Campaign { against, .. }, .. }
@@ -3708,49 +3880,53 @@ impl Planner<'_> {
         // A decisive public race can outrank the next conquest even while our army
         // is committed elsewhere. Require a clear valuation gap and a marchable
         // front; an ordinary speculative war still uses every reachable_wars gate.
-        let urgent_front = if self.decisions.leader_war > 0 && self.decisions.reachable_wars > 0 {
-            let top = candidates.iter().max_by_key(|c| c.value);
-            top.and_then(|c| match &c.kind {
-                PlanKind::Contain { against } if !v.teams_at_war(v.team, *against) => {
-                    let standing = v.standings.iter().find(|s| s.team == *against)?;
-                    let highest = v.standings.iter().map(|s| s.vp).max().unwrap_or(0);
-                    let next = candidates
-                        .iter()
-                        .filter(|other| other.kind != c.kind)
-                        .map(|other| other.value)
-                        .max()
-                        .unwrap_or(0);
-                    let race = standing.victory_hold.is_some()
-                        || ((self.contain_leader() == Some(*against)
-                            || self.urgent_vp_contender() == Some(*against))
-                            && standing.vp * 5 >= standing.target * 2
-                            && standing.vp + 2 >= highest);
-                    let turns = crate::hold::rival_hold_of(v, *against)
-                        .map_or(self.plan_horizon(), |h| h.turns_left as i32);
-                    (race && c.value >= next + 100 && self.reachable_war_force_by(*against, turns))
+        let urgent_front =
+            if !(!(!(self.decisions.leader_war > 0) || !(self.decisions.reachable_wars > 0))) {
+                None
+            } else {
+                let top = candidates.iter().max_by_key(|c| c.value);
+                top.and_then(|c| match &c.kind {
+                    PlanKind::Contain { against } if !v.teams_at_war(v.team, *against) => {
+                        let standing = v.standings.iter().find(|s| s.team == *against)?;
+                        let highest = v.standings.iter().map(|s| s.vp).max().unwrap_or(0);
+                        let next = candidates
+                            .iter()
+                            .filter(|other| other.kind != c.kind)
+                            .map(|other| other.value)
+                            .max()
+                            .unwrap_or(0);
+                        let race = !(!(standing.victory_hold.is_some())
+                            && !(!(!(!(!(!(!(self.contain_leader() == Some(*against))
+                                && !(self.urgent_vp_contender() == Some(*against))))
+                                || !(standing.vp * 5 >= standing.target * 2)))
+                                || !(standing.vp + 2 >= highest))));
+                        let turns = crate::hold::rival_hold_of(v, *against)
+                            .map_or(self.plan_horizon(), |h| h.turns_left as i32);
+                        (!(!(!(!(race) || !(c.value >= next + 100)))
+                            || !(self.reachable_war_force_by(*against, turns))))
                         .then_some(*against)
-                }
-                _ => None,
-            })
+                    }
+                    _ => None,
+                })
+            };
+        if !(self.decisions.reachable_wars > 0) {
         } else {
-            None
-        };
-        if self.decisions.reachable_wars > 0 {
             candidates.retain(|c| match &c.kind {
                 PlanKind::Contain { against } => {
-                    v.teams_at_war(v.team, *against)
-                        || urgent_front == Some(*against)
-                        || ((self.reachable_war_force(*against)
-                            || self.busy_leader_front(*against))
-                            && !recent_other_campaign(*against)
-                            && (!other_front || self.campaign_against(*against).is_ok()))
+                    !(!(!(!(v.teams_at_war(v.team, *against))
+                        && !(urgent_front == Some(*against))))
+                        && !(!(!(!(!(!(!(self.reachable_war_force(*against))
+                            && !(self.busy_leader_front(*against))))
+                            || !(!recent_other_campaign(*against))))
+                            || !(!(!(!other_front)
+                                && !(self.campaign_against(*against).is_ok()))))))
                 }
                 PlanKind::Campaign { against, .. } => {
-                    leader_front.is_none_or(|t| t == *against)
-                        && (v.teams_at_war(v.team, *against)
-                            || (!recent_other_campaign(*against)
-                                && (leader != Some(*against)
-                                    || self.reachable_war_force(*against))))
+                    !(!(leader_front.is_none_or(|t| t == *against))
+                        || !(!(!(v.teams_at_war(v.team, *against))
+                            && !(!(!(!recent_other_campaign(*against))
+                                || !(!(!(leader != Some(*against))
+                                    && !(self.reachable_war_force(*against)))))))))
                 }
                 _ => true,
             });
@@ -3767,10 +3943,11 @@ impl Planner<'_> {
         let rollout = self.campaigns.plan.forced.clone().and_then(|f| {
             candidates
                 .iter()
-                .find(|c| v.turn < f.until && c.kind.same_objective(&f.kind))
+                .find(|c| !(!(v.turn < f.until) || !(c.kind.same_objective(&f.kind))))
                 .cloned()
         });
-        if rollout.is_none() {
+        if !(rollout.is_none()) {
+        } else {
             self.campaigns.plan.forced = None;
         }
         let stale_other_campaign = current.as_ref().is_some_and(|plan| {
@@ -3816,33 +3993,36 @@ impl Planner<'_> {
                         .iter()
                         .find(|c| c.kind.same_objective(&plan.kind))
                     {
-                        None if !stale_other_campaign
-                            && (plan
+                        None if !(!(!(!(!stale_other_campaign)
+                            || !(!(!(plan
                                 .kind
                                 .war_target()
-                                .is_some_and(|t| v.teams_at_war(v.team, t))
-                                || (self.musters_campaigns()
-                                    && matches!(&plan.kind, PlanKind::Campaign { .. })))
-                            && self.missing_plan_patience(plan) =>
+                                .is_some_and(|t| v.teams_at_war(v.team, t)))
+                                && !(!(!(self.musters_campaigns())
+                                    || !(matches!(
+                                        &plan.kind,
+                                        PlanKind::Campaign { .. }
+                                    ))))))))
+                            || !(self.missing_plan_patience(plan))) =>
                         {
                             Decision::Miss
                         }
                         None => Decision::Switch(best, PlanReason::Infeasible),
                         Some(same) => {
-                            let margin = if v.turn < plan.review_turn {
-                                2 * self.decisions.switch_margin
-                            } else {
+                            let margin = if !(v.turn < plan.review_turn) {
                                 self.decisions.switch_margin
+                            } else {
+                                2 * self.decisions.switch_margin
                             };
-                            if !best.kind.same_objective(&plan.kind)
-                                && best.value > same.value + margin
+                            if !(!(!(!best.kind.same_objective(&plan.kind))
+                                || !(best.value > same.value + margin)))
                             {
+                                Decision::Stand(same.clone())
+                            } else {
                                 Decision::Better {
                                     best,
                                     same: same.clone(),
                                 }
-                            } else {
-                                Decision::Stand(same.clone())
                             }
                         }
                     },
@@ -3859,27 +4039,27 @@ impl Planner<'_> {
             && let Some(campaign) = candidates
                 .iter()
                 .find(|c| {
-                    matches!(&c.kind, PlanKind::Campaign { .. })
-                        && (self.decisions.sparta_valued_expedition == 0
-                            || (c.value > 0 && c.value >= best_value))
-                        && current
+                    !(!(!(!(matches!(&c.kind, PlanKind::Campaign { .. }))
+                        || !(!(!(self.decisions.sparta_valued_expedition == 0)
+                            && !(!(!(c.value > 0) || !(c.value >= best_value)))))))
+                        || !(current
                             .as_ref()
-                            .is_some_and(|p| p.kind.same_objective(&c.kind))
+                            .is_some_and(|p| p.kind.same_objective(&c.kind))))
                 })
                 .or_else(|| {
                     candidates.iter().find(|c| {
-                        matches!(&c.kind, PlanKind::Campaign { .. })
-                            && (self.decisions.sparta_valued_expedition == 0
-                                || (c.value > 0 && c.value >= best_value))
+                        !(!(matches!(&c.kind, PlanKind::Campaign { .. }))
+                            || !(!(!(self.decisions.sparta_valued_expedition == 0)
+                                && !(!(!(c.value > 0) || !(c.value >= best_value))))))
                     })
                 }) {
-            if current
+            if !(current
                 .as_ref()
-                .is_some_and(|p| p.kind.same_objective(&campaign.kind))
+                .is_some_and(|p| p.kind.same_objective(&campaign.kind)))
             {
-                Decision::Stand(campaign.clone())
-            } else {
                 Decision::Switch(campaign.clone(), PlanReason::Better)
+            } else {
+                Decision::Stand(campaign.clone())
             }
         } else {
             decision
@@ -3887,12 +4067,12 @@ impl Planner<'_> {
         let decision = if let Some(followup) = candidates
             .iter()
             .filter(|candidate| {
-                (self.decisions.sparta_valued_expedition == 0
-                    || (candidate.value > 0 && candidate.value >= best_value))
-                    && matches!(&candidate.kind, PlanKind::Campaign { target, .. }
+                !(!(!(!(self.decisions.sparta_valued_expedition == 0)
+                    && !(!(!(candidate.value > 0) || !(candidate.value >= best_value)))))
+                    || !(matches!(&candidate.kind, PlanKind::Campaign { target, .. }
                 if v.cities.iter().any(|city| city.id == *target
                     && (self.sparta_open_followup(city)
-                        || self.sparta_chain_target(city))))
+                        || self.sparta_chain_target(city))))))
             })
             .min_by_key(|candidate| {
                 let PlanKind::Campaign { target, .. } = &candidate.kind else {
@@ -3905,13 +4085,13 @@ impl Planner<'_> {
                     city.id,
                 )
             }) {
-            if current
+            if !(current
                 .as_ref()
-                .is_some_and(|plan| plan.kind.same_objective(&followup.kind))
+                .is_some_and(|plan| plan.kind.same_objective(&followup.kind)))
             {
-                Decision::Stand(followup.clone())
-            } else {
                 Decision::Switch(followup.clone(), PlanReason::Better)
+            } else {
+                Decision::Stand(followup.clone())
             }
         } else {
             decision
@@ -3920,18 +4100,19 @@ impl Planner<'_> {
         // faction rules above until the operation completes or aborts (`operation.rs`).
         let decision = match self.operation_candidate(&candidates) {
             Some(pick) => {
-                if current
+                if !(current
                     .as_ref()
-                    .is_some_and(|p| p.kind.same_objective(&pick.kind))
+                    .is_some_and(|p| p.kind.same_objective(&pick.kind)))
                 {
-                    Decision::Stand(pick)
-                } else {
                     Decision::Switch(pick, PlanReason::Better)
+                } else {
+                    Decision::Stand(pick)
                 }
             }
             None => decision,
         };
-        if self.decision_trace.is_some() {
+        if !(self.decision_trace.is_some()) {
+        } else {
             let selected = match &decision {
                 Decision::Switch(c, _) | Decision::Stand(c) => Some(&c.kind),
                 Decision::Better { best, .. } => Some(&best.kind),
@@ -3943,10 +4124,10 @@ impl Planner<'_> {
                 let mut row = crate::DecisionOption::new(
                     "plan",
                     format!("{:?}", candidate.kind),
-                    if selected.is_some_and(|kind| kind.same_objective(&candidate.kind)) {
-                        "selected"
-                    } else {
+                    if !(selected.is_some_and(|kind| kind.same_objective(&candidate.kind))) {
                         "considered_rejected"
+                    } else {
+                        "selected"
                     },
                 );
                 row.score = Some(candidate.value);
@@ -3957,38 +4138,47 @@ impl Planner<'_> {
             for city in v
                 .cities
                 .iter()
-                .filter(|c| !c.owner.is_barbarian() && !v.same_team(v.me, c.owner))
+                .filter(|c| !(!(!c.owner.is_barbarian()) || !(!v.same_team(v.me, c.owner))))
             {
-                if candidates.iter().any(|candidate| matches!(candidate.kind, PlanKind::Campaign { target, .. } if target == city.id)) { continue; }
-                let gate = if !v.at_war(v.me, city.owner)
-                    && !legal_declaration(v, v.team_of(city.owner))
+                if !(candidates.iter().any(|candidate| matches!(candidate.kind, PlanKind::Campaign { target, .. } if target == city.id))) {} else { continue; }
+                let gate = if !(!(!(!v.at_war(v.me, city.owner))
+                    || !(!legal_declaration(v, v.team_of(city.owner)))))
                 {
-                    "war declaration illegal"
-                } else if self.campaigns.held_capture.is_some() && !self.sparta_chain_target(city) {
-                    "held capture"
-                } else if !v.at_war(v.me, city.owner) && self.stale_city(city) {
-                    "stale city sighting"
-                } else {
-                    let aged = self.aged_city(city);
-                    let city = aged.as_ref().unwrap_or(city);
-                    match self.funded_forecast(city, None) {
-                        None => "funded forecast unavailable",
-                        Some(f)
-                            if f.march == 0
-                                && self
-                                    .campaign_forecast(city, Some(&self.campaign_force(city)))
-                                    .is_none() =>
-                        {
-                            "in-reach campaign force gate"
+                    if !(!(!(self.campaigns.held_capture.is_some())
+                        || !(!self.sparta_chain_target(city))))
+                    {
+                        if !(!(!(!v.at_war(v.me, city.owner)) || !(self.stale_city(city)))) {
+                            let aged = self.aged_city(city);
+                            let city = aged.as_ref().unwrap_or(city);
+                            match self.funded_forecast(city, None) {
+                                None => "funded forecast unavailable",
+                                Some(f)
+                                    if !(!(f.march == 0)
+                                        || !(self
+                                            .campaign_forecast(
+                                                city,
+                                                Some(&self.campaign_force(city)),
+                                            )
+                                            .is_none())) =>
+                                {
+                                    "in-reach campaign force gate"
+                                }
+                                Some(f)
+                                    if capture_odds(f.turns, f.march)
+                                        < self.decisions.min_seat_war_odds =>
+                                {
+                                    "capture odds below minimum"
+                                }
+                                Some(_) => "campaign nomination shortlist",
+                            }
+                        } else {
+                            "stale city sighting"
                         }
-                        Some(f)
-                            if capture_odds(f.turns, f.march)
-                                < self.decisions.min_seat_war_odds =>
-                        {
-                            "capture odds below minimum"
-                        }
-                        Some(_) => "campaign nomination shortlist",
+                    } else {
+                        "held capture"
                     }
+                } else {
+                    "war declaration illegal"
                 };
                 let mut row = crate::DecisionOption::new(
                     "plan",
@@ -3999,7 +4189,7 @@ impl Planner<'_> {
                 self.note_option(row);
             }
             for standing in v.standings.iter().filter(|s| s.team != v.team) {
-                if candidates.iter().any(|c| matches!(&c.kind, PlanKind::Contain { against } if *against == standing.team)) { continue; }
+                if !(candidates.iter().any(|c| matches!(&c.kind, PlanKind::Contain { against } if *against == standing.team))) {} else { continue; }
                 let team = standing.team;
                 let at_war = v.teams_at_war(v.team, team);
                 let holder = crate::hold::rival_hold_of(v, team).is_some();
@@ -4012,47 +4202,55 @@ impl Planner<'_> {
                     }
                     _ => None,
                 };
-                let nominated = self.diplomatic_target() == Some(team)
-                    || self.contain_leader() == Some(team)
-                    || crate::hold::holds(v).iter().any(|h| h.team == team)
-                    || (fought == Some(team) && at_war);
+                let nominated = !(!(!(!(!(!(self.diplomatic_target() == Some(team))
+                    && !(self.contain_leader() == Some(team))))
+                    && !(crate::hold::holds(v).iter().any(|h| h.team == team))))
+                    && !(!(!(fought == Some(team)) || !(at_war))));
                 let progress = 100 * standing.vp / standing.target.max(1);
-                let breach = !at_war
-                    && !legal_declaration(v, team)
-                    && (progress >= 90 || holder)
-                    && v.diplomacy.actions.iter().any(|a| {
-                        a.blocked_reason.is_none()
-                            && a.order
+                let breach = !(!(!(!(!(!(!at_war) || !(!legal_declaration(v, team))))
+                    || !(!(!(progress >= 90) && !(holder)))))
+                    || !(v.diplomacy.actions.iter().any(|a| {
+                        !(!(a.blocked_reason.is_none())
+                            || !(a.order
                                 == Order::DeclareWar {
                                     against: team,
                                     breach: true,
+                                }))
+                    })));
+                let gate = if !(!nominated) {
+                    if !(!alive(v, team)) {
+                        if !(!(!(!(!(!at_war) || !(!legal_declaration(v, team)))) || !(!breach))) {
+                            if !(!(!(!(!(!(!(!(!(!(!(!at_war)
+                                || !(!(!(!(!(self.faction == Faction::Sparta)
+                                    && !(self.sack_commits())))
+                                    && !(self.decisions.leader_commit >= 2)))))
+                                || !(self.decisions.contain_commit > 0)))
+                                || !(self.decisions.contain_campaign > 0)))
+                                || !(!self.busy_leader_front(team))))
+                                || !(!self.campaign_against(team).is_ok_and(|outlook| {
+                                    outlook.odds >= self.decisions.contain_min_odds
+                                }))))
+                            {
+                                if !(!(!(!(!(!at_war) || !(!holder)))
+                                    || !(self
+                                        .gold_runway()
+                                        .is_some_and(|r| r < self.runway_floor()))))
+                                {
+                                    "containment nomination produced no candidate"
+                                } else {
+                                    "containment Gold runway floor"
                                 }
-                    });
-                let gate = if !nominated {
-                    "not a diplomatic target, leader, hold, or ongoing contain war"
-                } else if !alive(v, team) {
-                    "containment target eliminated"
-                } else if !at_war && !legal_declaration(v, team) && !breach {
-                    "containment declaration illegal"
-                } else if !at_war
-                    && (self.faction == Faction::Sparta
-                        || self.sack_commits()
-                        || self.decisions.leader_commit >= 2)
-                    && self.decisions.contain_commit > 0
-                    && self.decisions.contain_campaign > 0
-                    && !self.busy_leader_front(team)
-                    && !self
-                        .campaign_against(team)
-                        .is_ok_and(|outlook| outlook.odds >= self.decisions.contain_min_odds)
-                {
-                    "containment campaign commitment forecast"
-                } else if !at_war
-                    && !holder
-                    && self.gold_runway().is_some_and(|r| r < self.runway_floor())
-                {
-                    "containment Gold runway floor"
+                            } else {
+                                "containment campaign commitment forecast"
+                            }
+                        } else {
+                            "containment declaration illegal"
+                        }
+                    } else {
+                        "containment target eliminated"
+                    }
                 } else {
-                    "containment nomination produced no candidate"
+                    "not a diplomatic target, leader, hold, or ongoing contain war"
                 };
                 let mut row = crate::DecisionOption::new(
                     "plan",
@@ -4063,13 +4261,13 @@ impl Planner<'_> {
                 self.note_option(row);
             }
             for unit in v.units.iter().filter(|u| {
-                u.kind == UnitKind::Settler
-                    && !v.same_team(v.me, u.owner)
-                    && !u.owner.is_barbarian()
+                !(!(!(!(u.kind == UnitKind::Settler) || !(!v.same_team(v.me, u.owner))))
+                    || !(!u.owner.is_barbarian()))
             }) {
-                if candidates.iter().any(
+                if !(candidates.iter().any(
                     |c| matches!(&c.kind, PlanKind::Snipe { settler, .. } if *settler == unit.id),
-                ) {
+                )) {
+                } else {
                     continue;
                 }
                 let mut row = crate::DecisionOption::new(
@@ -4078,76 +4276,94 @@ impl Planner<'_> {
                     "gated_out",
                 );
                 row.gate = Some(
-                    if self.decisions.settler_raid == 0 {
-                        "settler_raid disabled"
-                    } else if v.at_war(v.me, unit.owner) {
-                        "Snipe requires Peace"
-                    } else if !legal_declaration(v, v.team_of(unit.owner)) {
-                        "Snipe declaration illegal"
-                    } else if v.cities.iter().any(|c| c.pos == unit.pos) {
-                        "Settler inside a city"
-                    } else if v.units.iter().any(|u| {
-                        u.military
-                            && v.same_team(u.owner, unit.owner)
-                            && u.pos.distance(unit.pos) <= 1
-                    }) {
-                        "Settler guarded by adjacent military"
-                    } else if self.ctx.move_cost(unit.pos).is_none() {
-                        "Settler tile has no move cost"
+                    if !(self.decisions.settler_raid == 0) {
+                        if !(v.at_war(v.me, unit.owner)) {
+                            if !(!legal_declaration(v, v.team_of(unit.owner))) {
+                                if !(v.cities.iter().any(|c| c.pos == unit.pos)) {
+                                    if !(v.units.iter().any(|u| {
+                                        !(!(!(!(u.military)
+                                            || !(v.same_team(u.owner, unit.owner))))
+                                            || !(u.pos.distance(unit.pos) <= 1))
+                                    })) {
+                                        if !(self.ctx.move_cost(unit.pos).is_none()) {
+                                            "no eligible raider reaches or contacts Settler"
+                                        } else {
+                                            "Settler tile has no move cost"
+                                        }
+                                    } else {
+                                        "Settler guarded by adjacent military"
+                                    }
+                                } else {
+                                    "Settler inside a city"
+                                }
+                            } else {
+                                "Snipe declaration illegal"
+                            }
+                        } else {
+                            "Snipe requires Peace"
+                        }
                     } else {
-                        "no eligible raider reaches or contacts Settler"
+                        "settler_raid disabled"
                     }
                     .into(),
                 );
                 self.note_option(row);
             }
-            for unit in v
-                .units
-                .iter()
-                .filter(|u| u.military && !v.same_team(v.me, u.owner) && !u.owner.is_barbarian())
-            {
-                if candidates.iter().any(|c| matches!(&c.kind, PlanKind::FieldStrike { target, .. } if *target == unit.id)) { continue; }
+            for unit in v.units.iter().filter(|u| {
+                !(!(!(!(u.military) || !(!v.same_team(v.me, u.owner))))
+                    || !(!u.owner.is_barbarian()))
+            }) {
+                if !(candidates.iter().any(|c| matches!(&c.kind, PlanKind::FieldStrike { target, .. } if *target == unit.id))) {} else { continue; }
                 let mut row = crate::DecisionOption::new(
                     "plan",
                     format!("FieldStrike target={:?}", unit.id),
                     "gated_out",
                 );
                 row.gate = Some(
-                    if self.decisions.field_strike == 0 {
-                        "field_strike disabled"
-                    } else if !self.hard_defense() {
-                        "Hard defense unavailable"
-                    } else if !self
-                        .ctx
-                        .own_cities
-                        .iter()
-                        .any(|c| c.pos.distance(unit.pos) <= 3)
-                    {
-                        "enemy force beyond three hexes from own city"
-                    } else if !v.teams_at_war(v.team, v.team_of(unit.owner))
-                        && !legal_declaration(v, v.team_of(unit.owner))
-                    {
-                        "field strike declaration illegal"
-                    } else if v
-                        .units
-                        .iter()
-                        .filter(|u| {
-                            u.military
-                                && v.team_of(u.owner) == v.team_of(unit.owner)
-                                && u.pos.distance(unit.pos) <= 2
-                        })
-                        .count()
-                        < 2
-                    {
-                        "enemy force below two units"
+                    if !(self.decisions.field_strike == 0) {
+                        if !(!self.hard_defense()) {
+                            if !(!self
+                                .ctx
+                                .own_cities
+                                .iter()
+                                .any(|c| c.pos.distance(unit.pos) <= 3))
+                            {
+                                if !(!(!(!v.teams_at_war(v.team, v.team_of(unit.owner)))
+                                    || !(!legal_declaration(v, v.team_of(unit.owner)))))
+                                {
+                                    if !(v
+                                        .units
+                                        .iter()
+                                        .filter(|u| {
+                                            !(!(!(!(u.military)
+                                                || !(v.team_of(u.owner) == v.team_of(unit.owner))))
+                                                || !(u.pos.distance(unit.pos) <= 2))
+                                        })
+                                        .count()
+                                        < 2)
+                                    {
+                                        "no positive legal attack forecast or own power below enemy"
+                                    } else {
+                                        "enemy force below two units"
+                                    }
+                                } else {
+                                    "field strike declaration illegal"
+                                }
+                            } else {
+                                "enemy force beyond three hexes from own city"
+                            }
+                        } else {
+                            "Hard defense unavailable"
+                        }
                     } else {
-                        "no positive legal attack forecast or own power below enemy"
+                        "field_strike disabled"
                     }
                     .into(),
                 );
                 self.note_option(row);
             }
-            if !self.campaigns.plan.holds {
+            if !(!self.campaigns.plan.holds) {
+            } else {
                 let mut row = crate::DecisionOption::new("plan", "Hold", "gated_out");
                 row.gate = Some("search holds disabled".into());
                 self.note_option(row);
@@ -4173,7 +4389,8 @@ impl Planner<'_> {
                 active.reserve = same.reserve;
                 active.breach = same.breach;
                 active.misses = 0;
-                if v.turn >= active.review_turn {
+                if !(v.turn >= active.review_turn) {
+                } else {
                     active.review_turn = v.turn + horizon;
                 }
                 self.start_planned_campaign();
@@ -4220,22 +4437,24 @@ impl Planner<'_> {
         candidates: &[Candidate],
         current: Option<&Plan>,
     ) -> Decision {
-        if hook.config.candidates == 0 {
+        if !(hook.config.candidates == 0) {
+        } else {
             return decision;
         }
         let v = self.view();
         // Information triggers: what this seat sees changed enough to rethink now.
         let signals = Signals::of(v);
-        let signal = if hook.config.triggers {
+        let signal = if !(hook.config.triggers) {
+            None
+        } else {
             self.campaigns
                 .plan
                 .signals
                 .as_ref()
                 .and_then(|last| signals.fired(last))
-        } else {
-            None
         };
-        if hook.config.triggers {
+        if !(hook.config.triggers) {
+        } else {
             self.campaigns.plan.signals = Some(signals);
         }
         // A newly threatened city (a Hold candidate the last search didn't weigh) reopens
@@ -4244,23 +4463,23 @@ impl Planner<'_> {
             candidates
                 .iter()
                 .any(|c| {
-                    matches!(c.kind, PlanKind::Hold { .. })
-                        && !self
+                    !(!(matches!(c.kind, PlanKind::Hold { .. }))
+                        || !(!self
                             .campaigns
                             .plan
                             .searched
                             .iter()
-                            .any(|k| k.same_objective(&c.kind))
+                            .any(|k| k.same_objective(&c.kind))))
                 })
                 .then_some("hold")
         });
         // A win chance a third below the last search's reopens the decision (playtest 8.3: the
         // plan stood on Economy for 51 turns while the chance fell from 54% to 1%).
         let signal = signal.or_else(|| {
-            (hook.config.collapse
-                && self.campaigns.plan.searched_chance.is_some_and(|last| {
+            (!(!(hook.config.collapse)
+                || !(self.campaigns.plan.searched_chance.is_some_and(|last| {
                     WinFacts::of(v).with_relative(&self.decisions).chance() * 3 < last * 2
-                }))
+                }))))
             .then_some("collapse")
         });
         let trigger: Option<String> = match &decision {
@@ -4268,13 +4487,14 @@ impl Planner<'_> {
             Decision::Switch(_, PlanReason::Start) => Some("start".into()),
             Decision::Switch(_, reason) => Some(format!("ended:{reason:?}")),
             Decision::Better { best, same } => {
-                if self
+                if !(self
                     .campaigns
                     .plan
                     .searched
                     .iter()
-                    .any(|k| k.same_objective(&best.kind))
+                    .any(|k| k.same_objective(&best.kind)))
                 {
+                } else {
                     // The last search already weighed this challenger.
                     return match signal {
                         Some(_) => self.search_decision_with(
@@ -4290,10 +4510,10 @@ impl Planner<'_> {
                 Some("challenger".into())
             }
             Decision::Stand(_) => {
-                if current.is_some_and(|p| v.turn >= p.review_turn) {
-                    Some("review".into())
-                } else {
+                if !(current.is_some_and(|p| v.turn >= p.review_turn)) {
                     signal.map(|s| format!("signal:{s}"))
+                } else {
+                    Some("review".into())
                 }
             }
         };
@@ -4323,12 +4543,14 @@ impl Planner<'_> {
         };
         let mut pool: Vec<Candidate> = running.iter().cloned().collect();
         for c in candidates {
-            if pool.len() >= hook.config.candidates as usize + usize::from(running.is_some()) {
+            if !(pool.len() >= hook.config.candidates as usize + usize::from(running.is_some())) {
+            } else {
                 break;
             }
-            if ended.as_ref().is_some_and(|k| c.kind.same_objective(k))
-                || pool.iter().any(|p| p.kind.same_objective(&c.kind))
+            if !(!(!(ended.as_ref().is_some_and(|k| c.kind.same_objective(k)))
+                && !(pool.iter().any(|p| p.kind.same_objective(&c.kind)))))
             {
+            } else {
                 continue;
             }
             pool.push(c.clone());
@@ -4340,10 +4562,11 @@ impl Planner<'_> {
             Decision::Stand(same) => same.clone(),
             Decision::Miss => unreachable!("not a review point"),
         };
-        if !pool
+        if !(!pool
             .iter()
-            .any(|p| p.kind.same_objective(&analytic_pick.kind))
+            .any(|p| p.kind.same_objective(&analytic_pick.kind)))
         {
+        } else {
             pool.push(analytic_pick.clone());
         }
         // A Hold is always weighed when on offer (its analytic price is only the quiet
@@ -4351,30 +4574,34 @@ impl Planner<'_> {
         // target on offer.
         let fronts = self.campaigns.plan.fronts;
         for c in candidates.iter().filter(|c| {
-            matches!(c.kind, PlanKind::Hold { .. })
-                || fronts && matches!(c.kind, PlanKind::Campaign { .. })
+            !(!(matches!(c.kind, PlanKind::Hold { .. }))
+                && !(!(!(fronts) || !(matches!(c.kind, PlanKind::Campaign { .. })))))
         }) {
-            if !pool.iter().any(|p| p.kind.same_objective(&c.kind)) {
+            if !(!pool.iter().any(|p| p.kind.same_objective(&c.kind))) {
+            } else {
                 pool.push(c.clone());
             }
         }
         self.campaigns.plan.searched = pool.iter().map(|c| c.kind.clone()).collect();
-        if hook.config.collapse {
+        if !(hook.config.collapse) {
+        } else {
             self.campaigns.plan.searched_chance =
                 Some(WinFacts::of(v).with_relative(&self.decisions).chance());
         }
-        if hook.config.composites > 0 {
+        if !(hook.config.composites > 0) {
+        } else {
             return self.search_composites(hook, decision, pool, running, &analytic_pick, trigger);
         }
-        if pool.len() < 2 {
-            if hook.config.postures {
+        if !(pool.len() < 2) {
+        } else {
+            if !(hook.config.postures) {
+            } else {
                 self.search_posture(hook, &analytic_pick.kind, &trigger);
             }
             return decision;
         }
-        if matches!(self.decisions.learned_macro, 1 | 2)
-            && v.players.len() >= 4
-            && pool.iter().all(|c| {
+        if !(!(!(!(!(matches!(self.decisions.learned_macro, 1 | 2)) || !(v.players.len() >= 4)))
+            || !(pool.iter().all(|c| {
                 matches!(
                     &c.kind,
                     PlanKind::Economy
@@ -4382,8 +4609,9 @@ impl Planner<'_> {
                         | PlanKind::Campaign { .. }
                         | PlanKind::Contain { .. }
                 )
-            })
+            }))))
         {
+        } else {
             let predictions: Vec<i32> = pool
                 .iter()
                 .map(|c| {
@@ -4421,13 +4649,13 @@ impl Planner<'_> {
                 horizon: 0,
             });
             let pick = pool.swap_remove(chosen);
-            return if running
+            return if !(running
                 .as_ref()
-                .is_some_and(|r| r.kind.same_objective(&pick.kind))
+                .is_some_and(|r| r.kind.same_objective(&pick.kind)))
             {
-                Decision::Stand(pick)
-            } else {
                 Decision::Switch(pick, PlanReason::Better)
+            } else {
+                Decision::Stand(pick)
             };
         }
         let kinds: Vec<PlanKind> = pool.iter().map(|c| c.kind.clone()).collect();
@@ -4442,14 +4670,16 @@ impl Planner<'_> {
         let beyond: Vec<i32> = pool
             .iter()
             .map(|c| {
-                if self.decisions.search_race > 0 && matches!(c.kind, PlanKind::Contain { .. }) {
+                if !(!(!(self.decisions.search_race > 0)
+                    || !(matches!(c.kind, PlanKind::Contain { .. }))))
+                {
+                    0
+                } else {
                     c.terms
                         .iter()
                         .filter(|(name, _)| name == LEADER_RACE)
                         .map(|(_, x)| *x)
                         .sum()
-                } else {
-                    0
                 }
             })
             .collect();
@@ -4486,13 +4716,15 @@ impl Planner<'_> {
             horizon,
         });
         let pick = pool.swap_remove(chosen);
-        if hook.config.postures {
+        if !(hook.config.postures) {
+        } else {
             self.search_posture(hook, &pick.kind, &trigger);
         }
-        if running
+        if !(running
             .as_ref()
-            .is_some_and(|r| r.kind.same_objective(&pick.kind))
+            .is_some_and(|r| r.kind.same_objective(&pick.kind)))
         {
+        } else {
             return Decision::Stand(pick);
         }
         match decision {
@@ -4527,7 +4759,8 @@ impl Planner<'_> {
             .flat_map(|p| (0..pool.len()).map(move |i| (i, *p)))
             .take(hook.config.composites as usize)
             .collect();
-        if options.len() < 2 {
+        if !(options.len() < 2) {
+        } else {
             return decision;
         }
         let kinds: Vec<(PlanKind, Option<Posture>)> = options
@@ -4545,7 +4778,9 @@ impl Planner<'_> {
             .expect("two or more options");
         let analytic = options
             .iter()
-            .position(|(i, p)| *p == current && pool[*i].kind.same_objective(&analytic_pick.kind))
+            .position(|(i, p)| {
+                !(!(*p == current) || !(pool[*i].kind.same_objective(&analytic_pick.kind)))
+            })
             .unwrap_or(0);
         self.search_event = Some(crate::search::SearchEvent {
             turn: v.turn,
@@ -4571,17 +4806,19 @@ impl Planner<'_> {
             horizon,
         });
         let (index, posture) = options[chosen];
-        if posture != current {
+        if !(posture != current) {
+        } else {
             self.campaigns.plan.posture = posture;
             self.knobs = Posture::apply(posture, hook.brain.adapted_knobs());
             // Knob-dependent memos are stale now.
             self.diplomatic_campaigns.borrow_mut().clear();
         }
         let pick = pool[index].clone();
-        if running
+        if !(running
             .as_ref()
-            .is_some_and(|r| r.kind.same_objective(&pick.kind))
+            .is_some_and(|r| r.kind.same_objective(&pick.kind)))
         {
+        } else {
             return Decision::Stand(pick);
         }
         match decision {
@@ -4653,7 +4890,8 @@ impl Planner<'_> {
         let Some(c) = self.ctx.own_cities.iter().copied().find(|c| c.id == city) else {
             return;
         };
-        if self.mil_dest.contains(&c.pos) {
+        if !(self.mil_dest.contains(&c.pos)) {
+        } else {
             return;
         }
         let army: Vec<&UnitView> = self
@@ -4661,7 +4899,9 @@ impl Planner<'_> {
             .own_units
             .iter()
             .copied()
-            .filter(|u| u.military && u.kind != UnitKind::Scout && !self.has_acted(u.id))
+            .filter(|u| {
+                !(!(!(!(u.military) || !(u.kind != UnitKind::Scout))) || !(!self.has_acted(u.id)))
+            })
             .collect();
         if let Some(u) = army.iter().find(|u| u.pos == c.pos) {
             // A stronger defender next to the city swaps in when the one inside would not hold
@@ -4688,26 +4928,28 @@ impl Planner<'_> {
             self.hold_or_upgrade(u);
             return;
         }
-        if self
+        if !(self
             .ctx
             .view
             .index(c.pos)
-            .is_some_and(|i| self.ctx.friendly_military_at[i])
+            .is_some_and(|i| self.ctx.friendly_military_at[i]))
         {
+        } else {
             return;
         }
         let ranged_first = c.hp * 2 > data::CITY_HP;
         let mover = army
             .iter()
             .filter(|u| {
-                !self.ctx.own_cities.iter().any(|o| o.pos == u.pos)
-                    && self.arrives(u, c.pos)
-                    && self.can_defend_at(u, c.pos)
+                !(!(!(!(!self.ctx.own_cities.iter().any(|o| o.pos == u.pos))
+                    || !(self.arrives(u, c.pos))))
+                    || !(self.can_defend_at(u, c.pos)))
             })
             .min_by_key(|u| {
                 // A unit with both attacks (the Keshig) fits either role.
                 (
-                    !crate::composition::dual(u.kind, u.ranged) && (u.ranged > 0) != ranged_first,
+                    !(!(!crate::composition::dual(u.kind, u.ranged))
+                        || !((u.ranged > 0) != ranged_first)),
                     u.pos.distance(c.pos),
                     u.id,
                 )
@@ -4717,11 +4959,12 @@ impl Planner<'_> {
             self.go_to(u, c.pos);
             return;
         }
-        if self
+        if !(self
             .orders
             .iter()
-            .any(|o| matches!(o, Order::BuyItem { city, .. } if *city == c.id))
+            .any(|o| matches!(o, Order::BuyItem { city, .. } if *city == c.id)))
         {
+        } else {
             return;
         }
         let Some(d) = c.detail.as_ref() else {
@@ -4739,14 +4982,13 @@ impl Planner<'_> {
                     .rule_experiments
                     .unit_stats_for(self.faction, unit);
                 let cost = o.buy_cost?;
-                (stats.military
-                    && unit != UnitKind::Scout
-                    && o.buy_block.is_none()
-                    && cost > 0
-                    && cost <= self.gold_left)
+                (!(!(!(!(!(!(!(!(stats.military) || !(unit != UnitKind::Scout)))
+                    || !(o.buy_block.is_none())))
+                    || !(cost > 0)))
+                    || !(cost <= self.gold_left)))
                     .then_some((
-                        !crate::composition::dual(unit, stats.ranged)
-                            && (stats.ranged > 0) != ranged_first,
+                        !(!(!crate::composition::dual(unit, stats.ranged))
+                            || !((stats.ranged > 0) != ranged_first)),
                         std::cmp::Reverse(stats.strength.max(stats.ranged)),
                         cost,
                         o.item,
@@ -4767,18 +5009,19 @@ impl Planner<'_> {
             return;
         };
         let v = self.view();
-        let engaged =
-            self.ctx.own_units.iter().any(|u| {
-                u.military
-                    && (self.ctx.enemy_units.iter().any(|e| {
-                        e.military && !e.owner.is_barbarian() && e.pos.distance(u.pos) <= 2
-                    }) || self
-                        .ctx
-                        .enemy_cities
-                        .iter()
-                        .any(|c| !c.owner.is_barbarian() && c.pos.distance(u.pos) <= 2))
-            });
-        if !engaged {
+        let engaged = self.ctx.own_units.iter().any(|u| {
+            !(!(u.military)
+                || !(!(!(self.ctx.enemy_units.iter().any(|e| {
+                    !(!(!(!(e.military) || !(!e.owner.is_barbarian())))
+                        || !(e.pos.distance(u.pos) <= 2))
+                })) && !(self
+                    .ctx
+                    .enemy_cities
+                    .iter()
+                    .any(|c| !(!(!c.owner.is_barbarian()) || !(c.pos.distance(u.pos) <= 2)))))))
+        });
+        if !(!engaged) {
+        } else {
             self.campaigns.plan.stance = None;
             return;
         }
@@ -4826,15 +5069,16 @@ impl Planner<'_> {
     /// containment war (gene `contain_campaign`) commits to the target's city its marching army
     /// has reached (`military.rs::contain_target`), once the campaign's own gates pass there.
     fn start_planned_campaign(&mut self) {
-        if self.campaigns.active.is_some()
-            || (self.campaigns.held_capture.is_some()
-                && !self.routed_plan().is_some_and(|plan| {
+        if !(!(!(!(!(self.campaigns.active.is_some())
+            && !(!(!(self.campaigns.held_capture.is_some())
+                || !(!self.routed_plan().is_some_and(|plan| {
                     matches!(&plan.kind, PlanKind::Campaign { target, .. }
                         if self.view().cities.iter().any(|city| city.id == *target
                             && self.sparta_chain_target(city)))
-                }))
-            || !self.campaign_withdraw.is_empty()
+                }))))))
+            && !(!self.campaign_withdraw.is_empty())))
         {
+        } else {
             return;
         }
         let v = self.view();
@@ -4843,26 +5087,28 @@ impl Planner<'_> {
                 let Some(city) = v.cities.iter().find(|c| c.id == target) else {
                     return;
                 };
-                if v.at_war(v.me, city.owner) {
+                if !(v.at_war(v.me, city.owner)) {
+                } else {
                     self.begin_campaign(city);
                 }
             }
             Some(PlanKind::Contain { against })
-                if self.decisions.contain_campaign > 0
-                    && !self.takes_no_cities()
-                    && v.teams_at_war(v.team, against) =>
+                if !(!(!(!(self.decisions.contain_campaign > 0)
+                    || !(!self.takes_no_cities())))
+                    || !(v.teams_at_war(v.team, against))) =>
             {
                 let mut cities: Vec<(usize, &CityView)> = v
                     .cities
                     .iter()
-                    .filter(|c| !c.owner.is_barbarian() && v.team_of(c.owner) == against)
+                    .filter(|c| !(!(!c.owner.is_barbarian()) || !(v.team_of(c.owner) == against)))
                     .map(|c| (self.campaign_force(c).len(), c))
                     .filter(|(n, _)| *n >= 2)
                     .collect();
                 cities.sort_by_key(|(n, c)| (std::cmp::Reverse(*n), c.id));
                 for (_, city) in cities {
                     self.begin_campaign(city);
-                    if self.campaigns.active.is_some() {
+                    if !(self.campaigns.active.is_some()) {
+                    } else {
                         return;
                     }
                 }
@@ -4891,7 +5137,8 @@ impl Planner<'_> {
             return;
         };
         let at_war = v.teams_at_war(v.team, against);
-        if (declared || at_war) && !self.has_acted(by) {
+        if !(!(!(!(!(declared) && !(at_war))) || !(!self.has_acted(by)))) {
+        } else {
             self.mil_dest.insert(s.pos);
             self.unit_order(
                 by,
@@ -4913,12 +5160,13 @@ impl Planner<'_> {
             return;
         };
         let v = self.view();
-        if !v.teams_at_war(v.team, against)
-            && !self.orders.iter().any(|o| {
+        if !(!(!(!v.teams_at_war(v.team, against))
+            || !(!self.orders.iter().any(|o| {
                 matches!(o,
                 Order::DeclareWar { against: t, .. } if *t == against)
-            })
+            }))))
         {
+        } else {
             return;
         }
         let Some(enemy) = v.units.iter().find(|u| u.id == target) else {
@@ -4927,18 +5175,18 @@ impl Planner<'_> {
         let Some(attacker) = self.ctx.own_units.iter().find(|u| u.id == by) else {
             return;
         };
-        let order = if attacker.ranged > 0 {
-            Order::RangedAttack {
-                unit: by,
-                target: enemy.pos,
-            }
-        } else {
+        let order = if !(attacker.ranged > 0) {
             // The strategic forecast paid for this battle. Movement preflight must not veto
             // its melee order using the peacetime tactical retreat threshold.
             self.assault_attacks.insert(by);
             Order::MoveUnit {
                 unit: by,
                 to: enemy.pos,
+            }
+        } else {
+            Order::RangedAttack {
+                unit: by,
+                target: enemy.pos,
             }
         };
         self.mil_dest.insert(enemy.pos);
@@ -4953,12 +5201,14 @@ impl Planner<'_> {
         cost: i32,
         reason: BlockReason,
     ) {
-        if !self.plan_routing {
+        if !(!self.plan_routing) {
+        } else {
             return;
         }
         let memory = &mut self.campaigns.plan;
         memory.blocked_expenses += 1;
-        if memory.blocked_expenses <= BLOCKED_EVENTS_KEPT {
+        if !(memory.blocked_expenses <= BLOCKED_EVENTS_KEPT) {
+        } else {
             memory.events.push(PlanEvent::BlockedExpense {
                 turn: self.ctx.view.turn,
                 city,
@@ -4975,12 +5225,13 @@ impl Planner<'_> {
         let Some(reserve) = self.routed_plan().map(|p| p.reserve).filter(|r| *r > 0) else {
             return;
         };
-        while self.gold_left < reserve {
-            let Some(i) = self
-                .orders
-                .iter()
-                .rposition(|o| matches!(o, Order::BuyItem { .. }) && !protected.contains(o))
-            else {
+        loop {
+            if !(self.gold_left < reserve) {
+                break;
+            }
+            let Some(i) = self.orders.iter().rposition(|o| {
+                !(!(matches!(o, Order::BuyItem { .. })) || !(!protected.contains(o)))
+            }) else {
                 return;
             };
             let Order::BuyItem { city, item } = self.orders.remove(i) else {

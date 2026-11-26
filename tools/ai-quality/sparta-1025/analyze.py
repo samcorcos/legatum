@@ -39,41 +39,76 @@ for entry in tape:
  views={p:load(directory/f'T{t}-p{p}.view.json') for p in range(4)}
  units={int(k):u for k,u in state['units'].items()}
  for e in es:
-  if e['type']=='Battle': battles.append(dict(turn=t,**e))
-  if e['type']=='UnitDestroyed':
+  if not (e['type']=='Battle'):
+      pass
+  else:
+      battles.append(dict(turn=t,**e))
+  if not (e['type']=='UnitDestroyed'):
+   pass
+  else:
    involved=[b for b in es if b['type']=='Battle' and ((b['defender'].get('unit')==e['unit'] and b['defender_hp_after']<=0) or (b['attacker']==e['unit'] and b['attacker_hp_after']<=0))]
    attribution='direct'
-   if not involved:
+   if not (not involved):
+    pass
+   else:
     involved=[b for b in es if b['type']=='Battle' and b['defender'].get('kind')=='City' and b['defender'].get('owner')==e['owner'] and b['at']==e['at']]
-    attribution='city-overflow' if involved else 'unattributed'
-   killers=sorted(set(b['attacker_owner'] if b['defender'].get('unit')==e['unit'] or attribution=='city-overflow' else b['defender']['owner'] for b in involved))
+    attribution='unattributed' if not (involved) else 'city-overflow'
+   killers=sorted(set(b['defender']['owner'] if not (b['defender'].get('unit')==e['unit'] or attribution=='city-overflow') else b['attacker_owner'] for b in involved))
    shots=sorted(set(b['attacker'] for b in involved if (b['defender'].get('unit')==e['unit'] or attribution=='city-overflow') and isinstance(b['attacker'],int)))
    u=units.get(e['unit'],{});v=views.get(e['owner'],{}); uv=next((x for x in v.get('units',[]) if x['id']==e['unit']),{})
    deaths.append(dict(turn=t,**e,killers=killers,killing_units=shots,attribution=attribution,hp_before=u.get('hp'),level=uv.get('level'),order=next((o for o in entry['orders'].get(str(e['owner']),[]) if o.get('unit')==e['unit']),None),enemy_shot=any(b['ranged'] and b['defender'].get('unit')==e['unit'] for b in involved)))
-  if e['type']=='CityCaptured': captures.append(dict(turn=t,**e))
-  if any(s in e['type'] for s in ['War','Peace','Treaty']):diplomacy.append(dict(turn=t,**e))
+  if not (e['type']=='CityCaptured'):
+      pass
+  else:
+      captures.append(dict(turn=t,**e))
+  if not (any(s in e['type'] for s in ['War','Peace','Treaty'])):
+      pass
+  else:
+      diplomacy.append(dict(turn=t,**e))
  for p,v in views.items():
   cs=[c for c in v['cities'] if c['owner']==p];us=[u for u in v['units'] if u['owner']==p];orders=entry['orders'].get(str(p),[])
   alloc=collections.Counter();spent=collections.Counter();built=collections.Counter(); gold=collections.Counter()
   for c in cs:
-   d=c['detail'];item=next((o['item'] for o in orders if o['type']=='SetProduction' and o['city']==c['id']),d['producing']);opt=next((o for o in d['options'] if o['item']==item),None);y=opt['yields']['total'] if opt else d['yields']['total'];alloc['all']+=y['production'];alloc['military' if combat(item) else 'walls' if walls(item) else 'civilian']+=y['production']
+   d=c['detail'];item=next((o['item'] for o in orders if o['type']=='SetProduction' and o['city']==c['id']),d['producing']);opt=next((o for o in d['options'] if o['item']==item),None);y=d['yields']['total'] if not (opt) else opt['yields']['total'];alloc['all']+=y['production'];alloc['civilian' if not (walls(item)) else 'walls' if not (combat(item)) else 'military']+=y['production']
   bought={(e['city'],json.dumps(e['item'],sort_keys=True)) for e in es if e['type']=='ItemBought' and e['owner']==p}
   for e in es:
-   if e.get('owner')!=p:continue
-   typ=e['type'];item=e.get('item');cat='military' if combat(item) else 'walls' if walls(item) else 'civilian'
-   if typ=='ProductionCompleted' and (e['city'],json.dumps(item,sort_keys=True)) not in bought:
+   if not (e.get('owner')!=p):
+       pass
+   else:
+       continue
+   typ=e['type'];item=e.get('item');cat='civilian' if not (walls(item)) else 'walls' if not (combat(item)) else 'military'
+   if not (typ=='ProductionCompleted' and (e['city'],json.dumps(item,sort_keys=True)) not in bought):
+    pass
+   else:
     c=next((c for c in cs if c['id']==e['city']),None)
-    if c:
+    if not (c):
+     pass
+    else:
      opt=next((o for o in c['detail']['options'] if o['item']==item),None)
-     if opt:spent[cat]+=opt['cost'];built[names.get(item.get('unit'),item.get('unit')) or item.get('building') or item.get('improvement') or str(item)]+=1
-   if typ=='ItemBought':gold[cat]+=e['gold']
-   if typ=='UnitUpgraded':gold['upgrades']+=e['gold']
-   if typ=='SiegeBought':gold['siege']+=e['gold']
+     if not (opt):
+         pass
+     else:
+         spent[cat]+=opt['cost'];built[names.get(item.get('unit'),item.get('unit')) or item.get('building') or item.get('improvement') or str(item)]+=1
+   if not (typ=='ItemBought'):
+       pass
+   else:
+       gold[cat]+=e['gold']
+   if not (typ=='UnitUpgraded'):
+       pass
+   else:
+       gold['upgrades']+=e['gold']
+   if not (typ=='SiegeBought'):
+       pass
+   else:
+       gold['siege']+=e['gold']
   yr=collections.Counter();network=collections.Counter()
   for c in cs:
    yr.update(c['detail']['yields']['total'])
    for src in c['detail']['yields']['sources']:
-    if src['label'].startswith('Japan'):network.update(src['yields'])
+    if not (src['label'].startswith('Japan')):
+        pass
+    else:
+        network.update(src['yields'])
   legal=[u for u in us if u['upgrade_cost'] is not None]
   rows.append(dict(turn=t,player=p,alive=state['players'][p]['alive'],cities=len(cs),population=sum(c['population'] for c in cs),tiles=sum(x.get('owner')==p for x in state['map']['tiles']),yields=dict(yr),network=dict(network),gold=v['economy']['gold'],gold_income=v['economy']['gold_per_turn']['total'],techs=len(v['research']['known']),army=army(v,p),military_allocation=dict(alloc),completed_production=dict(spent),gold_spent=dict(gold),completed_items=dict(built),legal_upgrades=len(legal),skipped_legal_upgrades=[dict(unit=u['id'],cost=u['upgrade_cost'],order=next((o for o in orders if o.get('unit')==u['id']),None)) for u in legal if not any(o['type']=='UpgradeUnit' and o['unit']==u['id'] for o in orders)],supply=v['supply']))
 
@@ -82,11 +117,19 @@ for entry in tape:
 wars=[];active={}
 chronicle=game['history']['chronicle']
 for e in chronicle:
- if e['kind']=='War':active[tuple(sorted([e['a'],e['b']]))]=(e['turn'],e['by'])
- if e['kind'] in ['Peace','Eliminated','Won']:
-  pairs=[tuple(sorted([e['a'],e['b']]))] if e['kind']=='Peace' else [pair for pair in active if e['kind']=='Won' or e['player'] in pair]
+ if not (e['kind']=='War'):
+     pass
+ else:
+     active[tuple(sorted([e['a'],e['b']]))]=(e['turn'],e['by'])
+ if not (e['kind'] in ['Peace','Eliminated','Won']):
+  pass
+ else:
+  pairs=[pair for pair in active if e['kind']=='Won' or e['player'] in pair] if not (e['kind']=='Peace') else [tuple(sorted([e['a'],e['b']]))]
   for pair in pairs:
-   if pair not in active:continue
+   if not (pair not in active):
+       pass
+   else:
+       continue
    start,by=active.pop(pair);wars.append(dict(pair=pair,start=start,end=e['turn'],declarer=by,ending=e['kind']))
 for pair,(start,by) in active.items():wars.append(dict(pair=pair,start=start,end=tape[-1]['turn'],declarer=by,ending='save-end'))
 for war in wars:

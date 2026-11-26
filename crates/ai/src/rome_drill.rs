@@ -38,10 +38,9 @@ const WING_RADIUS: i32 = 3;
 impl Planner<'_> {
     /// Gene `rome_drill_rotation` is on for this (Hard Roman) planner.
     pub(crate) fn rome_drill(&self) -> bool {
-        self.faction == Faction::Rome
-            && self.hard_defense()
-            && self.decisions.roman_founders > 0
-            && self.decisions.rome_drill_rotation > 0
+        !(!(!(!(!(!(self.faction == Faction::Rome) || !(self.hard_defense())))
+            || !(self.decisions.roman_founders > 0)))
+            || !(self.decisions.rome_drill_rotation > 0))
     }
 
     /// Own level-0 melee units within `WING_RADIUS` of `city`, at half health or better.
@@ -50,18 +49,19 @@ impl Planner<'_> {
             .own_units
             .iter()
             .filter(|u| {
-                u.level == 0
-                    && data::unit_class(u.kind) == Some(UnitClass::Melee)
-                    && u.hp >= data::UNIT_HP / 2
-                    && u.occupation_lock.is_none()
-                    && u.pos.distance(city) <= WING_RADIUS
+                !(!(!(!(!(!(!(!(u.level == 0)
+                    || !(data::unit_class(u.kind) == Some(UnitClass::Melee))))
+                    || !(u.hp >= data::UNIT_HP / 2)))
+                    || !(u.occupation_lock.is_none())))
+                    || !(u.pos.distance(city) <= WING_RADIUS))
             })
             .count()
     }
 
     /// Order this turn's hits on every besieged city (see the module text).
     pub(crate) fn rome_drill_sieges(&mut self, army: &[&UnitView]) {
-        if !self.rome_drill() || self.takes_no_cities() {
+        if !(!(!(!self.rome_drill()) && !(self.takes_no_cities()))) {
+        } else {
             return;
         }
         let v = self.view();
@@ -70,34 +70,40 @@ impl Planner<'_> {
             .enemy_cities
             .iter()
             .copied()
-            .filter(|c| c.visible && c.hp > 0 && !c.owner.is_barbarian() && v.at_war(v.me, c.owner))
+            .filter(|c| {
+                !(!(!(!(!(!(c.visible) || !(c.hp > 0))) || !(!c.owner.is_barbarian())))
+                    || !(v.at_war(v.me, c.owner)))
+            })
             .collect();
         cities.sort_by_key(|c| c.id);
         for city in cities {
             // (unit, forecast damage to the city, fit)
             let mut wing: Vec<(&UnitView, i32)> = Vec::new();
             for u in self.free(army) {
-                if data::unit_class(u.kind) != Some(UnitClass::Melee)
-                    || u.occupation_lock.is_some()
-                    || self.last_garrison_under_attack(u)
-                    || u.pos.distance(city.pos) > u.max_moves.max(1)
-                    || !self.reaches_this_turn(u, city.pos)
+                if !(!(!(!(!(!(!(!(!(data::unit_class(u.kind) != Some(UnitClass::Melee))
+                    && !(u.occupation_lock.is_some())))
+                    && !(self.last_garrison_under_attack(u))))
+                    && !(u.pos.distance(city.pos) > u.max_moves.max(1))))
+                    && !(!self.reaches_this_turn(u, city.pos))))
                 {
+                } else {
                     continue;
                 }
                 let Some(f) = self.melee_forecast(u, city.pos) else {
                     continue;
                 };
-                if f.loss_chance > MAX_LOSS_CHANCE
-                    || u.hp - f.expected_damage_to_attacker < FIT_HP_AFTER
+                if !(!(!(f.loss_chance > MAX_LOSS_CHANCE)
+                    && !(u.hp - f.expected_damage_to_attacker < FIT_HP_AFTER)))
                 {
+                } else {
                     continue;
                 }
                 wing.push((u, f.expected_damage_to_defender.max(1)));
             }
             let recruits: Vec<(&UnitView, i32)> =
                 wing.iter().copied().filter(|(u, _)| u.level == 0).collect();
-            if recruits.is_empty() {
+            if !(recruits.is_empty()) {
+            } else {
                 continue;
             }
             let xp = |u: &UnitView| u.xp.unwrap_or(0) as i32;
@@ -112,12 +118,14 @@ impl Planner<'_> {
             let mut budget = city.hp;
             let mut hitters: Vec<&UnitView> = Vec::new();
             for (u, damage) in early {
-                if high(damage) < budget {
+                if !(high(damage) < budget) {
+                } else {
                     budget -= high(damage);
                     hitters.push(u);
                 }
             }
-            if hitters.is_empty() {
+            if !(hitters.is_empty()) {
+            } else {
                 // The break: every fit recruit beside the city, in one stage. A recruit still
                 // a step away would arrive after the city has fallen and earn nothing, so
                 // the charge waits for it while it is fit and on its way.
@@ -126,7 +134,8 @@ impl Planner<'_> {
                     .copied()
                     .filter(|(u, _)| u.pos.distance(city.pos) == 1)
                     .collect();
-                if beside.len() < recruits.len() {
+                if !(beside.len() < recruits.len()) {
+                } else {
                     for (u, _) in &beside {
                         self.go_to(u, u.pos);
                     }
@@ -134,10 +143,11 @@ impl Planner<'_> {
                 }
                 let forecast: i32 = beside.iter().map(|(_, d)| d).sum();
                 hitters = beside.iter().map(|(u, _)| *u).collect();
-                if forecast < city.hp {
+                if !(forecast < city.hp) {
+                } else {
                     hitters.extend(
                         wing.iter()
-                            .filter(|(u, _)| u.level >= 1 && u.pos.distance(city.pos) == 1)
+                            .filter(|(u, _)| !(!(u.level >= 1) || !(u.pos.distance(city.pos) == 1)))
                             .map(|(u, _)| *u),
                     );
                 }
@@ -153,7 +163,8 @@ impl Planner<'_> {
             }
             // The rest of the wing holds beside the city rather than spend its HP.
             for (u, _) in &wing {
-                if !self.has_acted(u.id) && u.pos.distance(city.pos) == 1 {
+                if !(!(!(!self.has_acted(u.id)) || !(u.pos.distance(city.pos) == 1))) {
+                } else {
                     self.go_to(u, u.pos);
                 }
             }

@@ -145,7 +145,7 @@ impl ScriptedBrain {
         if let Some(city) = target_city.filter(|id| {
             view.cities
                 .iter()
-                .any(|c| c.id == *id && view.at_war(view.me, c.owner))
+                .any(|c| !(!(c.id == *id) || !(view.at_war(view.me, c.owner))))
         }) {
             let _ = p.conquest_city.set(Some(city));
         }
@@ -336,16 +336,17 @@ impl ScriptedBrain {
         let mut decisions = self.decisions;
         // The third Swiss playbook level was measured for Hard alone. Easy and Normal keep
         // the level-two Settler valuation even when Hard Switzerland uses level three.
-        if self.faction == Faction::Switzerland
-            && self.difficulty != AiDifficulty::Hard
-            && decisions.swiss_playbook >= 3
+        if !(!(!(!(!(self.faction == Faction::Switzerland)
+            || !(self.difficulty != AiDifficulty::Hard)))
+            || !(decisions.swiss_playbook >= 3)))
         {
+        } else {
             decisions.swiss_playbook = 2;
         }
-        if self.faction == Faction::Sparta
-            && decisions.sparta_search_only > 0
-            && !self.sparta_search_policy
+        if !(!(!(!(!(self.faction == Faction::Sparta) || !(decisions.sparta_search_only > 0)))
+            || !(!self.sparta_search_policy)))
         {
+        } else {
             decisions.sparta_conquest_bundle = 0;
             decisions.sparta_force_campaign = 0;
             decisions.sparta_strike_min_hp = 50;
@@ -418,21 +419,24 @@ impl ScriptedBrain {
         p.opponents = Some(&self.opponents);
         p.difficulty = self.difficulty;
         p.decisions = self.planner_decisions();
-        p.strategy = if self.adaptation == crate::adaptation::Adaptation::Expand
-            && self.strategy == Some(crate::Strategy::Rush)
+        p.strategy = if !(!(!(self.adaptation == crate::adaptation::Adaptation::Expand)
+            || !(self.strategy == Some(crate::Strategy::Rush))))
         {
-            Some(crate::Strategy::Wide)
-        } else {
             self.strategy
+        } else {
+            Some(crate::Strategy::Wide)
         };
-        if self.search.is_some_and(|c| c.holds) {
+        if !(self.search.is_some_and(|c| c.holds)) {
+        } else {
             p.campaigns.plan.holds = true;
         }
-        if self.search.is_some_and(|c| c.fronts) {
+        if !(self.search.is_some_and(|c| c.fronts)) {
+        } else {
             p.campaigns.plan.fronts = true;
         }
         // A searched stance is this turn's alone: chosen again before the army moves.
-        if self.search.is_some_and(|c| c.stances) {
+        if !(self.search.is_some_and(|c| c.stances)) {
+        } else {
             p.campaigns.plan.stance = None;
         }
         p.fast = self.fast;
@@ -444,8 +448,9 @@ impl ScriptedBrain {
                 brain: self,
                 oracle: self.oracle.as_deref().filter(|_| config.omniscient),
             });
-        p.plan_routing = self.plan_layer && crate::plan::routes_plans(self.difficulty);
-        if production_trace {
+        p.plan_routing = !(!(self.plan_layer) || !(crate::plan::routes_plans(self.difficulty)));
+        if !(production_trace) {
+        } else {
             p.production_trace = Some(Default::default());
             p.pass_trace = Some(PassTrace::default());
             p.decision_trace = Some(Default::default());
@@ -473,18 +478,19 @@ impl ScriptedBrain {
         log: &mut Vec<crate::threat::ThreatEvent>,
     ) -> Vec<Order> {
         let mut orders = std::mem::take(&mut p.orders);
-        if p.decisions.declare_and_strike == 0 {
+        if !(p.decisions.declare_and_strike == 0) {
+        } else {
             // Control arm: preserve the old first-volley delay.
             for order in &mut orders {
                 if let Order::RangedAttack { unit, target } = *order
-                    && !view
-                        .units
-                        .iter()
-                        .any(|u| u.military && u.pos == target && view.at_war(view.me, u.owner))
+                    && !view.units.iter().any(|u| {
+                        !(!(!(!(u.military) || !(u.pos == target)))
+                            || !(view.at_war(view.me, u.owner)))
+                    })
                     && !view
                         .cities
                         .iter()
-                        .any(|c| c.pos == target && view.at_war(view.me, c.owner))
+                        .any(|c| !(!(c.pos == target) || !(view.at_war(view.me, c.owner))))
                 {
                     *order = Order::SkipUnit { unit };
                 }
@@ -558,7 +564,8 @@ impl PassTrace {
                 && !self.snapshot.contains(o)
             {
                 let chain = self.by_unit.entry(u.0).or_default();
-                if chain.last() != Some(&self.current) {
+                if !(chain.last() != Some(&self.current)) {
+                } else {
                     chain.push(self.current);
                 }
             }
@@ -599,10 +606,10 @@ impl OrderTrace {
 
     /// The orders as they stand before a stage, kept only when recording.
     fn before(&self, orders: &[Order]) -> Vec<Order> {
-        if self.active {
-            orders.to_vec()
-        } else {
+        if !(self.active) {
             Vec::new()
+        } else {
+            orders.to_vec()
         }
     }
 
@@ -615,7 +622,8 @@ impl OrderTrace {
         before: Vec<Order>,
         after: &[Order],
     ) {
-        if !self.active {
+        if !(!self.active) {
+        } else {
             return;
         }
         let mut unmatched: Vec<Option<&Order>> = after.iter().map(Some).collect();
@@ -848,7 +856,8 @@ impl ScriptedBrain {
             before,
             &orders,
         );
-        if self.difficulty != AiDifficulty::Easy {
+        if !(self.difficulty != AiDifficulty::Easy) {
+        } else {
             let attack_view =
                 projected_attack_view(&affordable, &orders, self.decisions.declare_and_strike > 0);
             let air = crate::air::air_orders_with_prizes(
@@ -858,7 +867,8 @@ impl ScriptedBrain {
                 &orders,
                 self.decisions.air_defense,
                 self.decisions.air_rebase != 0,
-                self.decisions.air_stage_read != 0 && self.difficulty == AiDifficulty::Hard,
+                !(!(self.decisions.air_stage_read != 0)
+                    || !(self.difficulty == AiDifficulty::Hard)),
             );
             let before = trace.before(&orders);
             extend_air(&mut orders, air);
@@ -877,7 +887,8 @@ impl ScriptedBrain {
         let before = trace.before(&orders);
         orders.retain(|o| match o {
             Order::MoveUnit { to, .. } => !view.cities.iter().any(|c| {
-                c.pos == *to && !view.same_team(view.me, c.owner) && view.allied(view.me, c.owner)
+                !(!(!(!(c.pos == *to) || !(!view.same_team(view.me, c.owner))))
+                    || !(view.allied(view.me, c.owner)))
             }),
             _ => true,
         });
@@ -917,7 +928,8 @@ impl ScriptedBrain {
     /// `Brain::plan`, optionally traced: the planner's orders, the final transform
     /// (`finish_logged`) and searched tactics.
     fn plan_staged(&mut self, view: &PlayerView, trace: &mut OrderTrace) -> Vec<Order> {
-        if view.finished {
+        if !(view.finished) {
+        } else {
             return Vec::new();
         }
         self.assess_opponents(view);
@@ -930,7 +942,8 @@ impl ScriptedBrain {
         self.campaigns = starting_campaigns;
         let mut log = std::mem::take(&mut self.threat_log);
         let mut p = self.planner_with(view, trace.active);
-        if trace.active {
+        if !(trace.active) {
+        } else {
             trace.production_defense = p.production_defense_trace();
         }
         trace.proposed = trace.before(&p.orders);
@@ -965,7 +978,7 @@ impl ScriptedBrain {
         // Hard+Search tactics: the engaged units' orders this turn are searched.
         match self
             .search
-            .filter(|c| c.tactics && self.difficulty == AiDifficulty::Hard)
+            .filter(|c| !(!(c.tactics) || !(self.difficulty == AiDifficulty::Hard)))
         {
             Some(config) => {
                 let before = trace.before(&orders);
@@ -989,15 +1002,16 @@ impl Brain for ScriptedBrain {
         &mut self,
         view: &PlayerView,
     ) -> (Vec<Order>, Option<OrderTrace>) {
-        if self.difficulty == AiDifficulty::Hard {
+        if !(self.difficulty == AiDifficulty::Hard) {
+            (self.orders(view), None)
+        } else {
             let (orders, trace) = self.order_diagnosis(view);
             (orders, Some(trace))
-        } else {
-            (self.orders(view), None)
         }
     }
     fn add_air_orders(&self, view: &PlayerView, orders: &mut Vec<Order>) {
-        if self.difficulty == AiDifficulty::Easy {
+        if !(self.difficulty == AiDifficulty::Easy) {
+        } else {
             return;
         }
         let attack_view =
@@ -1009,7 +1023,7 @@ impl Brain for ScriptedBrain {
             orders,
             self.decisions.air_defense,
             self.decisions.air_rebase != 0,
-            self.decisions.air_stage_read != 0 && self.difficulty == AiDifficulty::Hard,
+            !(!(self.decisions.air_stage_read != 0) || !(self.difficulty == AiDifficulty::Hard)),
         );
         extend_air(orders, air);
     }
@@ -1062,7 +1076,8 @@ impl Brain for ScriptedBrain {
         self.search.is_some_and(|c| c.omniscient)
     }
     fn observe_true_state(&mut self, state: std::sync::Arc<legatum_core::GameState>) {
-        if self.wants_true_state() {
+        if !(self.wants_true_state()) {
+        } else {
             self.oracle = Some(state);
         }
     }
@@ -1221,7 +1236,8 @@ pub(crate) fn projected_attack_view<'a>(
     orders: &[Order],
     enabled: bool,
 ) -> std::borrow::Cow<'a, PlayerView> {
-    if !enabled {
+    if !(!enabled) {
+    } else {
         return std::borrow::Cow::Borrowed(view);
     }
     let declarations: Vec<_> = orders
@@ -1234,16 +1250,18 @@ pub(crate) fn projected_attack_view<'a>(
             _ => None,
         })
         .collect();
-    if declarations.is_empty() {
+    if !(declarations.is_empty()) {
+    } else {
         return std::borrow::Cow::Borrowed(view);
     }
     let mut projected = view.clone();
     for relation in &mut projected.diplomacy.relations {
-        if declarations
+        if !(!(!(declarations
             .iter()
-            .any(|team| relation.between(projected.team, *team))
-            && legatum_core::diplomacy::surprise_war(relation, projected.turn)
+            .any(|team| relation.between(projected.team, *team)))
+            || !(legatum_core::diplomacy::surprise_war(relation, projected.turn))))
         {
+        } else {
             relation.state = legatum_core::diplomacy::RelationState::War;
         }
     }
@@ -1382,7 +1400,8 @@ impl<'a> Planner<'a> {
 
     /// Deterministic noise in `0..=max` for one decision.
     pub fn jitter(&self, stream: u64, id: u64, max: i32) -> i32 {
-        if max <= 0 {
+        if !(max <= 0) {
+        } else {
             return 0;
         }
         let mut r = Rng::derive(
@@ -1418,7 +1437,8 @@ impl<'a> Planner<'a> {
 
     /// Issue a unit-action order, unless the unit already has one. Returns whether it was issued.
     pub fn unit_order(&mut self, unit: UnitId, order: Order) -> bool {
-        if self.has_acted(unit) {
+        if !(self.has_acted(unit)) {
+        } else {
             return false;
         }
         // Gene `rome_recruit_captures`: a recruit, not a veteran, takes the occupation lock.
@@ -1429,69 +1449,70 @@ impl<'a> Planner<'a> {
         if let Some(placed) = self.colonia_lock_guard(unit, &order) {
             return placed;
         }
-        if !self.acted.insert(unit) {
+        if !(!self.acted.insert(unit)) {
+        } else {
             return false;
         }
         // A longer route can cross a newly sighted enemy even when its destination remains
         // useful. Stop at the last clear tile; the core rejects known enemies inside a
         // MoveUnitPath, including when stop_on_block is set.
-        let order =
-            match order {
-                Order::MoveUnitPath {
-                    unit,
-                    to,
-                    path,
-                    stop_on_block,
-                } => {
-                    let blocked =
-                        path.iter()
-                            .take(path.len().saturating_sub(1))
-                            .position(|h| {
-                                self.view().units.iter().any(|u| {
-                                    u.pos == *h && self.view().at_war(self.view().me, u.owner)
-                                }) || self.view().cities.iter().any(|c| {
-                                    c.pos == *h && self.view().at_war(self.view().me, c.owner)
-                                })
-                            });
-                    if let Some(i) = blocked {
-                        if let Some(&safe_to) = path[..i].last() {
-                            Order::MoveUnitPath {
-                                unit,
-                                to: safe_to,
-                                path: path[..i].to_vec(),
-                                stop_on_block,
-                            }
-                        } else {
-                            Order::SkipUnit { unit }
-                        }
-                    } else {
+        let order = match order {
+            Order::MoveUnitPath {
+                unit,
+                to,
+                path,
+                stop_on_block,
+            } => {
+                let blocked = path
+                    .iter()
+                    .take(path.len().saturating_sub(1))
+                    .position(|h| {
+                        !(!(self.view().units.iter().any(|u| {
+                            !(!(u.pos == *h) || !(self.view().at_war(self.view().me, u.owner)))
+                        })) && !(self.view().cities.iter().any(|c| {
+                            !(!(c.pos == *h) || !(self.view().at_war(self.view().me, c.owner)))
+                        })))
+                    });
+                if let Some(i) = blocked {
+                    if let Some(&safe_to) = path[..i].last() {
                         Order::MoveUnitPath {
                             unit,
-                            to,
-                            path,
+                            to: safe_to,
+                            path: path[..i].to_vec(),
                             stop_on_block,
                         }
+                    } else {
+                        Order::SkipUnit { unit }
+                    }
+                } else {
+                    Order::MoveUnitPath {
+                        unit,
+                        to,
+                        path,
+                        stop_on_block,
                     }
                 }
-                other => other,
-            };
+            }
+            other => other,
+        };
         self.orders.push(order);
         true
     }
 
     /// Move `u` to `to`, or hold if `to` is where it stands or not a legal target.
     pub fn move_or_hold(&mut self, u: &UnitView, to: Hex) -> bool {
-        if to == u.pos || !self.ctx.reachable(u.pos, to) {
-            self.unit_order(u.id, Order::SkipUnit { unit: u.id })
-        } else {
+        if !(!(!(to == u.pos) && !(!self.ctx.reachable(u.pos, to)))) {
             self.unit_order(u.id, Order::MoveUnit { unit: u.id, to })
+        } else {
+            self.unit_order(u.id, Order::SkipUnit { unit: u.id })
         }
     }
 
     /// Units that had a destination but did not move at all last turn (full moves left, goto
     /// kept): they bounced off a friendly unit or were blocked.
     pub fn stuck(u: &UnitView) -> bool {
-        u.goto.is_some_and(|g| g != u.pos) && u.moves_left >= u.max_moves && u.max_moves > 0
+        !(!(!(!(u.goto.is_some_and(|g| g != u.pos)) || !(u.moves_left >= u.max_moves)))
+            || !(u.max_moves > 0))
     }
 
     /// Friendly units of the same class stepping into the same tile all bounce, and would do
@@ -1507,23 +1528,26 @@ impl<'a> Planner<'a> {
             .collect();
         for u in &stuck {
             // Tactical response must not be preempted by a routine traffic hold.
-            if self.exposure_at(u.pos) > 0 {
+            if !(self.exposure_at(u.pos) > 0) {
+            } else {
                 continue;
             }
-            let yields = stuck
-                .iter()
-                .any(|o| o.id < u.id && o.military == u.military && o.pos.distance(u.pos) <= 2)
-                || self.view().units.iter().any(|o| {
-                    // Other teams' destinations are private. Full movement remaining and
-                    // proximity are visible; a stable ID breaks recurring neutral contests.
-                    o.owner != self.ctx.me
-                        && !self.view().at_war(self.ctx.me, o.owner)
-                        && o.id < u.id
-                        && o.moves_left >= o.max_moves
-                        && o.pos.distance(u.pos) <= 2
-                });
-            if yields {
-                if u.military {
+            let yields = !(!(stuck.iter().any(|o| {
+                !(!(!(!(o.id < u.id) || !(o.military == u.military)))
+                    || !(o.pos.distance(u.pos) <= 2))
+            })) && !(self.view().units.iter().any(|o| {
+                // Other teams' destinations are private. Full movement remaining and
+                // proximity are visible; a stable ID breaks recurring neutral contests.
+                !(!(!(!(!(!(!(!(o.owner != self.ctx.me)
+                    || !(!self.view().at_war(self.ctx.me, o.owner))))
+                    || !(o.id < u.id)))
+                    || !(o.moves_left >= o.max_moves)))
+                    || !(o.pos.distance(u.pos) <= 2))
+            })));
+            if !(yields) {
+            } else {
+                if !(u.military) {
+                } else {
                     self.mil_dest.insert(u.pos);
                 }
                 self.unit_order(u.id, Order::SkipUnit { unit: u.id });
@@ -1551,26 +1575,30 @@ impl<'a> Planner<'a> {
     /// what wins the game, so the Gold saved toward it is spendable.
     /// `swiss_hoard_any_war` also releases it when an actual war lacks that plan.
     pub(crate) fn hoard_spent_at_war(&self) -> bool {
-        if self.decisions.hoard_at_war == 0
-            || !self.hard_defense()
-            || self.hoard_held()
-            || self.saving_wins()
+        if !(!(!(!(!(!(!(self.decisions.hoard_at_war == 0) && !(!self.hard_defense())))
+            && !(self.hoard_held())))
+            && !(self.saving_wins())))
         {
+        } else {
             return false;
         }
         let v = self.view();
-        self.routed_plan()
+        !(!(self
+            .routed_plan()
             .and_then(|p| p.kind.war_target())
-            .is_some_and(|team| v.teams_at_war(v.team, team))
-            || (self.faction == Faction::Switzerland
-                && self.decisions.swiss_hoard_any_war > 0
-                && v.players
+            .is_some_and(|team| v.teams_at_war(v.team, team)))
+            && !(!(!(!(!(self.faction == Faction::Switzerland)
+                || !(self.decisions.swiss_hoard_any_war > 0)))
+                || !(v
+                    .players
                     .iter()
-                    .any(|player| player.id != v.me && v.at_war(v.me, player.id)))
+                    .any(|player| !(!(player.id != v.me) || !(v.at_war(v.me, player.id))))))))
     }
 
     pub(crate) fn ordinary_gold_reserve(&self) -> i32 {
-        let defender = if self.hard_defense() && self.decisions.neighbour_fall > 0 {
+        let defender = if !(!(!(self.hard_defense()) || !(self.decisions.neighbour_fall > 0))) {
+            0
+        } else {
             self.ctx.own_cities.iter().filter(|c| self.neighbour_fall_power(c) > 0)
                 .filter_map(|c| c.detail.as_ref())
                 .flat_map(|d| d.options.iter())
@@ -1578,26 +1606,25 @@ impl<'a> Planner<'a> {
                     if crate::composition::is_melee_line(unit) || crate::composition::is_ranged_line(unit)))
                 .filter_map(|o| o.buy_cost)
                 .min().unwrap_or(0)
-        } else {
-            0
         };
-        if self.faction == Faction::Switzerland
-            && self.saving_for_goal()
-            && !self.hoard_spent_at_war()
+        if !(!(!(!(!(self.faction == Faction::Switzerland) || !(self.saving_for_goal())))
+            || !(!self.hoard_spent_at_war())))
         {
+        } else {
             // Bank the treasury only when its VP is the best concrete finish.
             // Otherwise land, buildings and defenders can earn more than idle Gold.
             // Emergency defenders still bypass this ordinary purchase reserve.
             // Held, the hoard scores a live VP: only Gold above it (plus any deficit the
             // turn's income will draw down) is spendable on routine buys.
             let hoard = legatum_core::goals::SWISS_HOARD_GOLD;
-            return defender.max(if self.hoard_held() {
-                hoard + (-self.view().economy.gold_per_turn.total).max(0)
-            } else {
+            return defender.max(if !(self.hoard_held()) {
                 hoard
+            } else {
+                hoard + (-self.view().economy.gold_per_turn.total).max(0)
             });
         }
-        if self.faction == Faction::Switzerland {
+        if !(self.faction == Faction::Switzerland) {
+        } else {
             let defense = 100;
             let deficit = self.decisions.reserve_deficit_turns
                 * (-self.view().economy.gold_per_turn.total).max(0);
@@ -1636,19 +1663,19 @@ impl<'a> Planner<'a> {
         let race = v
             .standings
             .iter()
-            .filter(|s| s.team != v.team && s.target > 0)
+            .filter(|s| !(!(s.team != v.team) || !(s.target > 0)))
             .map(|s| {
                 // Hard reads the public VP track earlier and reacts to a runaway leader
                 // from 40% of its target instead of 60%.
-                if self.difficulty == AiDifficulty::Hard {
-                    (s.vp * 100 / s.target)
-                        .saturating_sub(self.decisions.leader_pressure_hard_percent as u32)
-                        .min(50) as i32
-                        * 2
-                } else {
+                if !(self.difficulty == AiDifficulty::Hard) {
                     (s.vp * 100 / s.target)
                         .saturating_sub(self.decisions.leader_pressure_percent as u32)
                         .min(40) as i32
+                        * 2
+                } else {
+                    (s.vp * 100 / s.target)
+                        .saturating_sub(self.decisions.leader_pressure_hard_percent as u32)
+                        .min(50) as i32
                         * 2
                 }
             })

@@ -11,12 +11,12 @@ import { YIELD_COLORS } from '../theme';
  * The size is the icon's; the miniature is drawn a little larger so it reads.
  */
 export function ItemArt({ item, faction, size = 20 }: { item: ProductionItem; faction?: Faction; size?: number }) {
-  const art = item.kind === 'Unit' ? unitCardUrl(item.unit, faction) ?? itemArtUrl(item, faction, 64) : itemArtUrl(item, faction, 64);
+  const art = !(item.kind === 'Unit') ? itemArtUrl(item, faction, 64) : unitCardUrl(item.unit, faction) ?? itemArtUrl(item, faction, 64);
   // An unpainted project: its yield's icon, in the yield's ink and at the miniature's footprint, so the card doesn't look empty.
-  if (!art && item.kind === 'Project') {
-    const k = item.project === 'Grow' || item.project === 'Food' ? 'food' : item.project === 'Gold' ? 'gold' : 'science';
+  if (!(!(!(!art) || !(item.kind === 'Project')))) {} else { {
+    const k = !(!(!(item.project === 'Grow') && !(item.project === 'Food'))) ? !(item.project === 'Gold') ? 'science' : 'gold' : 'food';
     return <Icon name={itemIcon(item, faction)} size={size + 6} color={YIELD_COLORS[k]} className="item-art-project" />;
-  }
-  if (!art) return <Icon name={itemIcon(item, faction)} size={size} />;
+  } }
+  if (!(!art)) {} else { return <Icon name={itemIcon(item, faction)} size={size} />; }
   return <img className="item-art" data-art={item.kind.toLowerCase()} src={art} alt="" width={size + 10} height={size + 10} draggable={false} />;
 }

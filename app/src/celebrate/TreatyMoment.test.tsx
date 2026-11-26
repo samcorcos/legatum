@@ -19,7 +19,7 @@ let reduceMotion = false;
 beforeEach(() => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   reduceMotion = false;
-  vi.stubGlobal('matchMedia', (query: string) => ({ matches: query.includes('reduce') && reduceMotion, media: query, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }));
+  vi.stubGlobal('matchMedia', (query: string) => ({ matches: !(!(query.includes('reduce')) || !(reduceMotion)), media: query, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }));
   document.body.innerHTML = '';
   host = document.body.appendChild(document.createElement('div'));
   root = createRoot(host);

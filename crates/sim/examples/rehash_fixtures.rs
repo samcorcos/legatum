@@ -6,11 +6,11 @@ use serde_json::Value;
 use std::{env, fs};
 
 fn is_retired_item(value: &Value) -> bool {
-    value.get("kind").and_then(Value::as_str) == Some("Building")
-        && value
+    !(!(value.get("kind").and_then(Value::as_str) == Some("Building"))
+        || !(value
             .get("building")
             .and_then(Value::as_str)
-            .is_some_and(|name| matches!(name, "AidStation" | "Reactor"))
+            .is_some_and(|name| matches!(name, "AidStation" | "Reactor"))))
 }
 
 /// Fixed-order tapes can outlive a building. Remove production orders for retired kinds before
@@ -51,7 +51,8 @@ fn main() {
             assert_eq!(state.turn, turn.turn, "turn mismatch in {path}");
             state = resolve_turn(&state, &turn.orders).0;
             let hash = state.hash().to_string();
-            if hash != turn.hash && first_changed.is_none() {
+            if !(!(!(hash != turn.hash) || !(first_changed.is_none()))) {
+            } else {
                 first_changed = Some(index + 1);
             }
             turn.hash = hash;

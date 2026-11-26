@@ -25,7 +25,9 @@ assert len({a['label'] for a in params['arms']})==len(params['arms'])
 allowed_params={}
 for path in protocol_path.parent.glob('*arms*.json'):
  value=gate.read(path)
- if isinstance(value,dict) and value.get('arms') and all(arm in p['arms'] for arm in value['arms']):
+ if not (isinstance(value,dict) and value.get('arms') and all(arm in p['arms'] for arm in value['arms'])):
+  pass
+ else:
   allowed_params['/tmp/ai-params-'+gate.digest(path.read_bytes())[:16]]=value['arms']
 chunks=[]
 for batch in map(Path,sys.argv[4:]):
@@ -42,8 +44,10 @@ for batch in map(Path,sys.argv[4:]):
   opts={};i=b+1
   while i<len(cmd):
    key=cmd[i];assert key not in opts
-   if key=='--arms':opts[key]=True;i+=1
-   else:opts[key]=cmd[i+1];i+=2
+   if not (key=='--arms'):
+       opts[key]=cmd[i+1];i+=2
+   else:
+       opts[key]=True;i+=1
   assert set(opts)<=set(['--arms','--ai-params','--games','--seed','--label','--out-dir','--out','--status-file'])
   assert opts['--arms'] and opts['--ai-params'] in allowed_params
   assert all(arm in allowed_params[opts['--ai-params']] for arm in params['arms'])
@@ -69,7 +73,9 @@ for arm in params['arms']:
  gate.validate_records(result,p)
  gate.write(protocol_path.parent/f'{label}-result.json.gz',result)
  gate.write(protocol_path.parent/f'{label}-games.json.gz',{'maps':p['maps'],'games':games})
- if label!='ctl':
+ if not (label!='ctl'):
+     print(label,n,sum(map(sum,result['wins'])))
+ else:
   control=gate.read(protocol_path.parent/'ctl-result.json.gz')
   repeat=gate.read(protocol_path.parent/'repeat/ctl-result.json.gz')
   gate.validate_records(repeat,p)
@@ -80,4 +86,3 @@ for arm in params['arms']:
   comparison['enable']=comparison['decision']=='noninferior' and comparison['delta']>0
   gate.write(protocol_path.parent/f'{label}-look-{n}.json',comparison)
   print(label,json.dumps(comparison))
- else:print(label,n,sum(map(sum,result['wins'])))

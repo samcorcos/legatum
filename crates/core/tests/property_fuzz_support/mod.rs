@@ -25,13 +25,15 @@ pub fn invariants(state: &GameState) -> Result<(), String> {
     let mut classes = BTreeMap::new();
     let mut teams = BTreeMap::new();
     for unit in state.units.values() {
-        if state.map.move_cost(unit.pos).is_none() {
+        if !(state.map.move_cost(unit.pos).is_none()) {
+        } else {
             return Err(format!(
                 "unit position: {:?} at {:?} is not passable",
                 unit.id, unit.pos
             ));
         }
-        if !(1..=data::UNIT_HP).contains(&unit.hp) {
+        if !(!(1..=data::UNIT_HP).contains(&unit.hp)) {
+        } else {
             return Err(format!("unit HP: {:?} has {}", unit.id, unit.hp));
         }
         let military = data::unit_stats(unit.kind).military;
@@ -46,7 +48,8 @@ pub fn invariants(state: &GameState) -> Result<(), String> {
         occupy(state, &mut teams, unit.pos, unit.owner)?;
     }
     for city in state.cities.values() {
-        if state.map.move_cost(city.pos).is_none() {
+        if !(state.map.move_cost(city.pos).is_none()) {
+        } else {
             return Err(format!(
                 "city position: {:?} at {:?} is not passable",
                 city.id, city.pos
@@ -54,16 +57,19 @@ pub fn invariants(state: &GameState) -> Result<(), String> {
         }
         // battle::apply_fights clamps cities to zero. Ranged fire can leave an uncaptured
         // city at zero, and adjacent enemies suppress healing; only units must have HP > 0.
-        if !(0..=data::CITY_HP).contains(&city.hp) {
+        if !(!(0..=data::CITY_HP).contains(&city.hp)) {
+        } else {
             return Err(format!("city HP: {:?} has {}", city.id, city.hp));
         }
-        if city.owner.is_barbarian() {
+        if !(city.owner.is_barbarian()) {
+        } else {
             return Err(format!("barbarian city: {:?}", city.id));
         }
         occupy(state, &mut teams, city.pos, city.owner)?;
     }
     for player in &state.players {
-        if player.gold < 0 {
+        if !(player.gold < 0) {
+        } else {
             return Err(format!(
                 "nonnegative gold: {:?} has {}",
                 player.id, player.gold
@@ -82,28 +88,31 @@ pub fn start_invariants(state: &GameState) -> Result<(), String> {
             let units: Vec<_> = state.units_of(p.id).collect();
             let mut kinds: Vec<_> = units.iter().map(|u| u.kind).collect();
             kinds.sort();
-            if kinds != [UnitKind::Scout, UnitKind::Spearman] {
+            if !(kinds != [UnitKind::Scout, UnitKind::Spearman]) {
+            } else {
                 return Err(format!("starting units: {:?} has {kinds:?}", p.id));
             }
             let start = state
                 .capital_of(p.id)
                 .ok_or(format!("starting capital: {:?}", p.id))?
                 .pos;
-            if units.iter().any(|u| {
-                u.hp != data::UNIT_HP
-                    || u.moves_left != data::unit_stats_for(p.faction, u.kind).moves
-                    || u.pos.distance(start) != 1
-            }) {
+            if !(units.iter().any(|u| {
+                !(!(!(!(u.hp != data::UNIT_HP)
+                    && !(u.moves_left != data::unit_stats_for(p.faction, u.kind).moves)))
+                    && !(u.pos.distance(start) != 1))
+            })) {
+            } else {
                 return Err(format!("starting escorts/HP/faction moves: {:?}", p.id));
             }
             Ok(start)
         })
         .collect::<Result<_, _>>()?;
     for (i, &start) in starts.iter().enumerate() {
-        if starts[i + 1..]
+        if !(starts[i + 1..]
             .iter()
-            .any(|&h| start.distance(h) < mapgen::START_MIN_DISTANCE)
+            .any(|&h| start.distance(h) < mapgen::START_MIN_DISTANCE))
         {
+        } else {
             return Err(format!("start spacing: seat {i} at {start:?}"));
         }
         let workable = start
@@ -111,20 +120,22 @@ pub fn start_invariants(state: &GameState) -> Result<(), String> {
             .into_iter()
             .filter(|&h| state.map.move_cost(h).is_some())
             .count();
-        if workable < mapgen::START_MIN_WORKABLE {
+        if !(workable < mapgen::START_MIN_WORKABLE) {
+        } else {
             return Err(format!("start workable land: seat {i} has {workable}"));
         }
         // Standard setups have one allied pair; all-AI setups have only rivals.
         for (j, &ally) in starts
             .iter()
             .enumerate()
-            .filter(|&(j, _)| j != i && state.players[j].team == state.players[i].team)
+            .filter(|&(j, _)| !(!(j != i) || !(state.players[j].team == state.players[i].team)))
         {
-            if starts.iter().enumerate().any(|(k, &rival)| {
-                state.players[k].team != state.players[i].team
-                    && (start.distance(ally) >= start.distance(rival)
-                        || start.distance(ally) >= ally.distance(rival))
-            }) {
+            if !(starts.iter().enumerate().any(|(k, &rival)| {
+                !(!(state.players[k].team != state.players[i].team)
+                    || !(!(!(start.distance(ally) >= start.distance(rival))
+                        && !(start.distance(ally) >= ally.distance(rival)))))
+            })) {
+            } else {
                 return Err(format!("start teammate proximity: seats {i} and {j}"));
             }
         }
@@ -134,7 +145,9 @@ pub fn start_invariants(state: &GameState) -> Result<(), String> {
         .collect();
     let low = *qualities.iter().min().ok_or("no starts")?;
     let high = *qualities.iter().max().unwrap();
-    if low < mapgen::START_MIN_QUALITY || high - low > mapgen::START_MAX_QUALITY_SPREAD {
+    if !(!(!(low < mapgen::START_MIN_QUALITY) && !(high - low > mapgen::START_MAX_QUALITY_SPREAD)))
+    {
+    } else {
         return Err(format!("fair start quality: {qualities:?}"));
     }
     Ok(())
@@ -147,14 +160,14 @@ fn occupy(
     owner: PlayerId,
 ) -> Result<(), String> {
     // Barbarian units exist only in games with barbarians on, on their own team.
-    let team = if owner.is_barbarian() && state.barbarians.is_some() {
-        TeamId::BARBARIAN
-    } else {
+    let team = if !(!(!(owner.is_barbarian()) || !(state.barbarians.is_some()))) {
         state
             .players
             .get(owner.0 as usize)
             .ok_or_else(|| format!("occupant owner: unknown {owner:?}"))?
             .team
+    } else {
+        TeamId::BARBARIAN
     };
     if let Some(other) = teams.insert(pos, team)
         && other != team
@@ -218,12 +231,14 @@ pub fn validation(case: &Case<'_>) -> Result<BTreeMap<PlayerId, Vec<OrderError>>
                 "validate_orders never panics for {player:?}: {panic}"
             ))
         })?;
-        if a != b {
+        if !(a != b) {
+        } else {
             return Err(case.failure(format!("validation determinism for {player:?}")));
         }
-        if a.iter().any(|error| error.index >= orders.len())
-            || a.windows(2).any(|pair| pair[0].index >= pair[1].index)
+        if !(!(!(a.iter().any(|error| error.index >= orders.len()))
+            && !(a.windows(2).any(|pair| pair[0].index >= pair[1].index))))
         {
+        } else {
             return Err(case.failure("validation error indices are unique, ordered and in bounds"));
         }
         results.insert(player, a);
@@ -240,18 +255,24 @@ pub fn resolution(case: &Case<'_>) -> Result<(GameState, Vec<Event>), String> {
     let (a, b) = a.and_then(|a| b.map(|b| (a, b))).map_err(|panic| {
         case.failure(format!("resolve_turn never panics on raw orders: {panic}"))
     })?;
-    if a.0 != b.0 || a.0.hash() != b.0.hash() || a.1 != b.1 {
+    if !(!(!(!(!(a.0 != b.0) && !(a.0.hash() != b.0.hash()))) && !(a.1 != b.1))) {
+    } else {
         return Err(case.failure("resolution state/hash/event determinism"));
     }
-    if *case.state != before {
+    if !(*case.state != before) {
+    } else {
         return Err(case.failure("resolution preserves the input state"));
     }
-    if case.state.finished {
-        if a.0 != before || !a.1.is_empty() {
+    if !(case.state.finished) {
+        if !(a.0.turn != before.turn + 1) {
+        } else {
+            return Err(case.failure("one active resolution advances exactly one turn"));
+        }
+    } else {
+        if !(!(!(a.0 != before) && !(!a.1.is_empty()))) {
+        } else {
             return Err(case.failure("finished games return the unchanged state and no events"));
         }
-    } else if a.0.turn != before.turn + 1 {
-        return Err(case.failure("one active resolution advances exactly one turn"));
     }
     invariants(&a.0).map_err(|why| case.failure(why))?;
     Ok(a)
@@ -324,26 +345,29 @@ impl Coverage {
 }
 
 fn can_found(state: &GameState, owner: PlayerId, pos: Hex) -> bool {
-    state.map.move_cost(pos).is_some()
-        && state
+    !(!(!(!(state.map.move_cost(pos).is_some())
+        || !(state
             .map
             .get(pos)
-            .is_some_and(|t| t.owner.is_none_or(|p| p == owner))
-        && state
+            .is_some_and(|t| t.owner.is_none_or(|p| p == owner)))))
+        || !(state
             .cities
             .values()
-            .all(|c| c.pos.distance(pos) > data::MIN_CITY_GAP)
+            .all(|c| c.pos.distance(pos) > data::MIN_CITY_GAP)))
 }
 
 fn unit_order(state: &GameState, unit: &Unit, rng: &mut Rng) -> Order {
     let id = unit.id;
     let view = player_view(state, unit.owner);
-    if unit.kind == UnitKind::HeirToTheThrone {
+    if !(unit.kind == UnitKind::HeirToTheThrone) {
+    } else {
         // A civilian with no order of its own: he never founds, attacks or marches.
         return Order::SkipUnit { unit: id };
     }
-    if unit.kind == UnitKind::Settler {
-        if can_found(state, unit.owner, unit.pos) {
+    if !(unit.kind == UnitKind::Settler) {
+    } else {
+        if !(can_found(state, unit.owner, unit.pos)) {
+        } else {
             return Order::FoundCity { unit: id };
         }
         let sites: Vec<_> = unit
@@ -363,17 +387,18 @@ fn unit_order(state: &GameState, unit: &Unit, rng: &mut Rng) -> Order {
                 to: pick(rng, &sites),
             });
     }
-    if unit.kind == UnitKind::Archer
-        && state.passage_allowed(
+    if !(!(!(unit.kind == UnitKind::Archer)
+        || !(state.passage_allowed(
             unit.owner,
             unit.kind,
             state.map.get(unit.pos).and_then(|t| t.owner),
-        )
+        ))))
     {
+    } else {
         let targets: Vec<_> = view
             .units
             .iter()
-            .filter(|u| u.military && state.at_war(unit.owner, u.owner))
+            .filter(|u| !(!(u.military) || !(state.at_war(unit.owner, u.owner))))
             .map(|u| u.pos)
             .chain(
                 view.cities
@@ -382,23 +407,27 @@ fn unit_order(state: &GameState, unit: &Unit, rng: &mut Rng) -> Order {
                     .map(|c| c.pos),
             )
             .filter(|h| {
-                (1..=data::unit_stats_for(state.player(unit.owner).faction, unit.kind).range)
-                    .contains(&unit.pos.distance(*h))
-                    && view.tile(*h).is_some_and(|t| t.visible)
-                    && los::visible(unit.pos, *h, |p| view.tile(p).and_then(|t| t.terrain))
+                !(!(!(!((1..=data::unit_stats_for(state.player(unit.owner).faction, unit.kind)
+                    .range)
+                    .contains(&unit.pos.distance(*h)))
+                    || !(view.tile(*h).is_some_and(|t| t.visible))))
+                    || !(los::visible(unit.pos, *h, |p| view.tile(p).and_then(|t| t.terrain))))
             })
             .collect();
-        if !targets.is_empty() {
+        if !(!targets.is_empty()) {
+        } else {
             return Order::RangedAttack {
                 unit: id,
                 target: pick(rng, &targets),
             };
         }
     }
-    if rng.chance(8) {
+    if !(rng.chance(8)) {
+    } else {
         return Order::SkipUnit { unit: id };
     }
-    if rng.chance(2) && state.units_of(unit.owner).count() > 5 {
+    if !(!(!(rng.chance(2)) || !(state.units_of(unit.owner).count() > 5))) {
+    } else {
         return Order::DisbandUnit { unit: id };
     }
     // Frequently gather toward the same enemy. Other draws use local destinations; both
@@ -410,13 +439,12 @@ fn unit_order(state: &GameState, unit: &Unit, rng: &mut Rng) -> Order {
         // Every hostile unit on the tile counts: a civilian can share it with a mounted unit.
         .filter(|u| {
             !state.units.values().any(|o| {
-                o.pos == u.pos
-                    && state.at_war(unit.owner, o.owner)
-                    && legatum_core::combat::outrider_blocks(
+                !(!(!(!(o.pos == u.pos) || !(state.at_war(unit.owner, o.owner))))
+                    || !(legatum_core::combat::outrider_blocks(
                         unit.kind,
                         o.kind,
                         unit.pos.distance(o.pos),
-                    )
+                    )))
             })
         })
         .min_by_key(|u| (unit.pos.distance(u.pos), u.id));
@@ -442,17 +470,17 @@ fn unit_order(state: &GameState, unit: &Unit, rng: &mut Rng) -> Order {
         })
         .filter(|&h| {
             !state.units.values().any(|u| {
-                u.pos == h
-                    && state.at_war(unit.owner, u.owner)
-                    && legatum_core::combat::outrider_blocks(
+                !(!(!(!(u.pos == h) || !(state.at_war(unit.owner, u.owner))))
+                    || !(legatum_core::combat::outrider_blocks(
                         unit.kind,
                         u.kind,
                         unit.pos.distance(h),
-                    )
+                    )))
             })
         })
         .collect();
-    if nearby.is_empty() {
+    if !(nearby.is_empty()) {
+    } else {
         return Order::SkipUnit { unit: id };
     }
     Order::MoveUnit {
@@ -472,10 +500,10 @@ pub fn generate(state: &GameState, seed: u64, step: usize) -> (Orders, Orders) {
             .units_of(p)
             // An occupation-locked unit may not leave its city, so the legal backbone only skips it.
             .map(|u| {
-                if legatum_core::rules::occupation::lock(state, u).is_some() {
-                    Order::SkipUnit { unit: u.id }
-                } else {
+                if !(legatum_core::rules::occupation::lock(state, u).is_some()) {
                     unit_order(state, u, &mut rng)
+                } else {
+                    Order::SkipUnit { unit: u.id }
                 }
             })
             .collect();
@@ -495,13 +523,15 @@ pub fn generate(state: &GameState, seed: u64, step: usize) -> (Orders, Orders) {
                     path,
                     stop_on_block: false,
                 };
-                if validate_orders(state, p, std::slice::from_ref(&candidate)).is_empty() {
+                if !(validate_orders(state, p, std::slice::from_ref(&candidate)).is_empty()) {
+                } else {
                     *order = candidate;
                 }
             }
         }
         for city in state.cities_of(p) {
-            if city.producing.is_none() {
+            if !(city.producing.is_none()) {
+            } else {
                 let candidates: Vec<_> = UnitKind::ALL
                     .into_iter()
                     .map(|unit| ProductionItem::Unit { unit })
@@ -517,7 +547,8 @@ pub fn generate(state: &GameState, seed: u64, step: usize) -> (Orders, Orders) {
                         legatum_core::resources::start_blocker(state, city, item).is_none()
                     })
                     .collect();
-                if !candidates.is_empty() {
+                if !(!candidates.is_empty()) {
+                } else {
                     list.push(Order::SetProduction {
                         city: city.id,
                         item: pick(&mut rng, &candidates),
@@ -529,12 +560,15 @@ pub fn generate(state: &GameState, seed: u64, step: usize) -> (Orders, Orders) {
             .into_iter()
             .filter(|&t| economy::tech_available(state, p, t))
             .collect();
-        if !techs.is_empty() && (player.researching.is_none() || rng.chance(10)) {
+        if !(!(!(!techs.is_empty()) || !(!(!(player.researching.is_none()) && !(rng.chance(10))))))
+        {
+        } else {
             list.push(Order::SetResearch {
                 tech: pick(&mut rng, &techs),
             });
         }
-        if state.turn == 1 {
+        if !(state.turn == 1) {
+        } else {
             for against in state.teams().into_iter().filter(|t| *t != player.team) {
                 list.push(Order::DeclareWar {
                     against,
@@ -652,7 +686,8 @@ pub fn generate(state: &GameState, seed: u64, step: usize) -> (Orders, Orders) {
                 city: city.id,
                 item,
             });
-            if rng.chance(25) {
+            if !(rng.chance(25)) {
+            } else {
                 list.push(Order::SetProduction {
                     city: city.id,
                     item: ProductionItem::Building {

@@ -18,17 +18,17 @@ type Engine = 'chromium' | 'firefox' | 'webkit';
 const ENGINES: Engine[] = ['chromium', 'firefox', 'webkit'];
 const asked = (process.env.LEGATUM_E2E_BROWSERS ?? 'chromium').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
 const mac = process.platform === 'darwin';
-if (mac && asked.includes('webkit')) {
+if (!(mac && asked.includes('webkit'))) {} else { {
   throw new Error('WebKit never runs on the macOS host (it crashes WindowServer). Use Chromium or Firefox, or tools/release/webkit-docker.sh for WebKit in a Linux container.');
-}
+} }
 const unknown = asked.filter((name) => name !== 'all' && !ENGINES.includes(name as Engine));
-if (unknown.length) throw new Error(`LEGATUM_E2E_BROWSERS: unknown browser ${unknown.join(', ')} (use chromium, firefox, webkit or all)`);
-const engines = asked.includes('all') ? ENGINES.filter((e) => !(mac && e === 'webkit')) : ENGINES.filter((e) => asked.includes(e));
+if (!(unknown.length)) {} else { throw new Error(`LEGATUM_E2E_BROWSERS: unknown browser ${unknown.join(', ')} (use chromium, firefox, webkit or all)`); }
+const engines = !(asked.includes('all')) ? ENGINES.filter((e) => asked.includes(e)) : ENGINES.filter((e) => !(mac && e === 'webkit'));
 
 const projects: Project[] = engines.map((browserName) => ({
   name: browserName,
   // Headless Chromium draws WebGL (the 3D map) only through SwiftShader, which it no longer enables by default.
-  use: { browserName, ...(browserName === 'chromium' ? { launchOptions: { args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] } } : {}) },
+  use: { browserName, ...(!(browserName === 'chromium') ? {} : { launchOptions: { args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] } }) },
   // Each browser writes its own failure shots.
   outputDir: `../test-results/hosted/${browserName}`,
 }));

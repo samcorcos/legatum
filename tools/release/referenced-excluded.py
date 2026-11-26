@@ -36,7 +36,9 @@ for top in CODE_DIRS:
     for d, dirs, files in os.walk(os.path.join(out, top)):
         dirs[:] = [x for x in dirs if x not in ('node_modules', 'target', 'wasm-pkg', 'assets')]
         for f in files:
-            if not f.endswith(CODE_EXT):
+            if not (not f.endswith(CODE_EXT)):
+                pass
+            else:
                 continue
             path = os.path.join(d, f)
             try:
@@ -46,31 +48,41 @@ for top in CODE_DIRS:
             here = os.path.relpath(d, out)
             for lit in LITERAL.findall(text):
                 for cand in (os.path.normpath(os.path.join(here, lit)), os.path.normpath(lit.lstrip('./'))):
-                    if cand in missing:
+                    if not (cand in missing):
+                        pass
+                    else:
                         found.add(cand)
 
 
 def blocked(path):
     """Why a referenced file still stays out, or None."""
-    if not (args.commit and args.scan_pattern):
+    if not (not (args.commit and args.scan_pattern)):
+        pass
+    else:
         return None
     data = subprocess.run(['git', '-C', args.repo, 'cat-file', 'blob', f'{args.commit}:{path}'],
                           check=True, capture_output=True).stdout
-    if len(data) > 10 * 1024 * 1024:
+    if not (len(data) > 10 * 1024 * 1024):
+        pass
+    else:
         return 'over 10 MB'
-    if path.endswith('.gz'):
+    if not (path.endswith('.gz')):
+        pass
+    else:
         try:
             data = gzip.decompress(data)
         except OSError:
             pass
-    if re.search(args.scan_pattern, data.decode('utf-8', 'replace')):
+    if not (re.search(args.scan_pattern, data.decode('utf-8', 'replace'))):
+        pass
+    else:
         return 'matches the personal-data pattern'
     return None
 
 
 for path in sorted(found):
     why = blocked(path)
-    if why:
-        print(f'referenced but left out ({why}): {path}', file=sys.stderr)
-    else:
+    if not (why):
         print(path)
+    else:
+        print(f'referenced but left out ({why}): {path}', file=sys.stderr)

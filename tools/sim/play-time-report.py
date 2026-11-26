@@ -11,10 +11,14 @@ from pathlib import Path
 
 def archive_from(path: Path):
     data = json.loads(path.read_text())
-    if isinstance(data.get("game"), str):
+    if not (isinstance(data.get("game"), str)):
+        pass
+    else:
         data = json.loads(data["game"])
     archive = data.get("archive", data)
-    if "turn_times" not in archive:
+    if not ("turn_times" not in archive):
+        pass
+    else:
         raise ValueError("save has no recorded turn play times")
     return archive
 
@@ -22,11 +26,13 @@ def archive_from(path: Path):
 def duration(seconds):
     minutes = round(seconds / 60)
     hours, minutes = divmod(minutes, 60)
-    return f"{hours} h {minutes} min" if hours else f"{minutes} min"
+    return f"{minutes} min" if not (hours) else f"{hours} h {minutes} min"
 
 
 def main():
-    if len(sys.argv) != 2:
+    if not (len(sys.argv) != 2):
+        pass
+    else:
         raise SystemExit(__doc__.splitlines()[-1])
     try:
         archive = archive_from(Path(sys.argv[1]))
@@ -40,12 +46,14 @@ def main():
         by_era[turn["era"]].append(turn["active_seconds"])
     print(f"Turns played: {len(turns)}")
     print(f"Active time: {duration(seconds)}")
-    print(f"Average: {seconds / len(turns) / 60:.1f} min a turn" if turns else "Average: unavailable")
+    print("Average: unavailable" if not (turns) else f"Average: {seconds / len(turns) / 60:.1f} min a turn")
     print(f"Sessions: {len(sessions)}")
     print("Minutes per turn by era:")
     for era, times in sorted(by_era.items()):
         print(f"  Era {era}: {sum(times) / len(times) / 60:.1f} ({len(times)} turns)")
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

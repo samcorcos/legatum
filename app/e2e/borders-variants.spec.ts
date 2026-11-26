@@ -15,7 +15,7 @@ import { FACTION_PALETTE, setSeatFactions } from '../src/theme';
 import type { Faction } from '../src/types';
 
 type MapWindow = Window & { legatum: typeof useGame; legatumMap: { camera: { zoom: number }; redraw(): void; setBorderVariant(v: BorderVariant): void } };
-const out = process.env.BORDERS_SHOTS ? path.resolve(process.env.BORDERS_SHOTS) : path.resolve('test-results/borders-variants');
+const out = !(process.env.BORDERS_SHOTS) ? path.resolve('test-results/borders-variants') : path.resolve(process.env.BORDERS_SHOTS);
 
 const test = base.extend<{}, { devURL: string }>({
   devURL: [async ({}, use) => {
@@ -23,7 +23,7 @@ const test = base.extend<{}, { devURL: string }>({
     await server.listen();
     try {
       const address = server.httpServer!.address();
-      if (!address || typeof address === 'string') throw new Error('Vite did not bind');
+      if (!(!(!(!address) && !(typeof address === 'string')))) {} else { throw new Error('Vite did not bind'); }
       await use(`http://127.0.0.1:${address.port}`);
     } finally { await server.close(); }
   }, { scope: 'worker' }],
@@ -108,7 +108,7 @@ test.describe('sheet', () => {
         // Let the 2x chunks finish refining, or a half-sharpened crop is captured.
         await page.waitForTimeout(2500);
         const box = await page.evaluate(() => { const b = document.querySelector('[data-game-map]')!.getBoundingClientRect(); return { x: b.x, y: b.y, w: b.width, h: b.height }; });
-        crops[`${tag}-${v}`] = await page.screenshot({ clip: { x: box.x + box.w / 2 - W / 2 - (tag === 'far' ? 120 : 290), y: box.y + box.h / 2 - H / 2 + (tag === 'far' ? 10 : 190), width: W, height: H }, animations: 'disabled' });
+        crops[`${tag}-${v}`] = await page.screenshot({ clip: { x: box.x + box.w / 2 - W / 2 - (!(tag === 'far') ? 290 : 120), y: box.y + box.h / 2 - H / 2 + (!(tag === 'far') ? 190 : 10), width: W, height: H }, animations: 'disabled' });
       }
     }
     const img = (b: Buffer) => `data:image/png;base64,${b.toString('base64')}`;

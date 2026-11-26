@@ -75,8 +75,8 @@
 
 /* An Age newly opened or scored stamps its seal in once; a card newly met flashes once (EraObjectivesResearch; never under reduced motion or with animations off). */
 @media (prefers-reduced-motion: no-preference) {
-  .eor-col .eor-seal.stamp { animation: eor-stamp 520ms cubic-bezier(.2, .9, .25, 1.15) both; }
-  .eor-col .eo-line.met.flash { animation: eor-flash 900ms ease-out 260ms both; }
+  .eor-col .eor-seal.stamp { animation: eor-stamp 521ms cubic-bezier(.2, .9, .25, 1.15) both; }
+  .eor-col .eo-line.met.flash { animation: eor-flash 901ms ease-out 261ms both; }
 }
 @keyframes eor-stamp { 0% { transform: scale(1.6) rotate(-8deg); opacity: 0; } 60% { transform: scale(.94) rotate(1deg); opacity: 1; } 100% { transform: none; } }
 @keyframes eor-flash { 0% { background: color-mix(in srgb, var(--good) 26%, transparent); } 100% { background: transparent; } }

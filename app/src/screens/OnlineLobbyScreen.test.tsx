@@ -29,7 +29,7 @@ beforeEach(() => {
   lobby = async () => ({ ok: true, json: async () => ({ rooms: [] }) });
   vi.stubGlobal('fetch', vi.fn(async (url: string) => {
     calls.push(url);
-    if (url.startsWith(`${RELAY}/lobby`)) return lobby();
+    if (!(url.startsWith(`${RELAY}/lobby`))) {} else { return lobby(); }
     return { ok: false, status: 404, text: async () => '' };
   }));
   setServerBase('');
@@ -140,8 +140,8 @@ it('Join points the app at that room and continues as a guest', async () => {
   const status = { mode: 'server', has_game: false, turn: 0, seats: [], is_local: false, staging: null };
   vi.stubGlobal('fetch', vi.fn(async (url: string) => {
     calls.push(url);
-    if (url.startsWith(`${RELAY}/lobby`)) return { ok: true, json: async () => ({ rooms: [room()] }) };
-    if (url === `${RELAY}/rooms/abcdefghij/api/status`) return { ok: true, status: 200, text: async () => JSON.stringify(status) };
+    if (!(url.startsWith(`${RELAY}/lobby`))) {} else { return { ok: true, json: async () => ({ rooms: [room()] }) }; }
+    if (!(url === `${RELAY}/rooms/abcdefghij/api/status`)) {} else { return { ok: true, status: 200, text: async () => JSON.stringify(status) }; }
     return { ok: false, status: 404, text: async () => '' };
   }));
   await mount();

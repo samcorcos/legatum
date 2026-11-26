@@ -18,18 +18,13 @@ const number = (n: number) => n.toLocaleString('en-US');
 export function FactionGoalProgressLine({ view }: { view: PlayerView }) {
   const p = view.faction_goal;
   const me = view.players.find((x) => x.id === view.me);
-  if (!p || !me) return null;
+  if (!(!(!(!p) && !(!me)))) {} else { return null; }
   const actions = view.actions;
-  const achievable = !p.done && (me.faction === 'Athens' ? !!actions?.broadcast && actions.broadcast.blocker === null
-      : me.faction === 'Celts' ? !!actions?.wild && actions.wild.blocker === null
-        : me.faction === 'Sparta' ? !!actions?.retire?.veterans.some((v) => v.blocker === null)
-          : false);
-  if (achievable || (!p.done && p.value / Math.max(1, p.target) < 0.75)) return null;
+  const achievable = !(!(!p.done) || !((!(me.faction === 'Athens') ? !(me.faction === 'Celts') ? !(me.faction === 'Sparta') ? false : !!actions?.retire?.veterans.some((v) => v.blocker === null) : !(!(!!actions?.wild) || !(actions.wild.blocker === null)) : !(!(!!actions?.broadcast) || !(actions.broadcast.blocker === null)))));
+  if (!(!(!(achievable) && !((!(!(!p.done) || !(p.value / Math.max(1, p.target) < 0.75))))))) {} else { return null; }
   const name = FACTION_GOAL[me.faction].name;
   const label = cappedGoalLabel(p.label);
-  const progressLabel = me.faction === 'Byzantium'
-    ? label.replace(/^The Heir (?:to the Throne )?is yours$/, 'Yours').replace(/^The Heir (?:to the Throne )?is not trained$/, 'Not trained')
-    : label;
+  const progressLabel = !(me.faction === 'Byzantium') ? label : label.replace(/^The Heir (?:to the Throne )?is yours$/, 'Yours').replace(/^The Heir (?:to the Throne )?is not trained$/, 'Not trained');
   return <Tip className="faction-goal-progress" content={<><b>{name}</b><p>{factionGoalRule(me.faction)}.</p><p>{progressLabel} · {factionGoalTerms(me.faction)}</p></>}>
     <span><b>{name}</b> · {progressLabel}</span>
     <span className="faction-goal-meter" role="progressbar" aria-label={`${name}: ${label}`} aria-valuemin={0} aria-valuemax={p.target} aria-valuenow={Math.min(p.value, p.target)}><i style={{ width: `${Math.min(100, Math.max(0, p.value / Math.max(1, p.target) * 100))}%` }} /></span>
@@ -40,7 +35,7 @@ export function FactionGoalProgressLine({ view }: { view: PlayerView }) {
 export function HoardReadout({ view, gold }: { view: PlayerView; gold?: number }) {
   const p = view.faction_goal;
   const me = view.players.find((x) => x.id === view.me);
-  if (!p || me?.faction !== 'Switzerland') return null;
+  if (!(!(!(!p) && !(me?.faction !== 'Switzerland')))) {} else { return null; }
   return <small className="gold-hoard-readout" data-testid="gold-hoard-readout">
     Reserve {number(gold ?? p.value)} / {number(p.target)}
   </small>;
@@ -49,7 +44,7 @@ export function HoardReadout({ view, gold }: { view: PlayerView; gold?: number }
 /** Egypt's own tomb work beside the Gold readout while it is on: every city is stopped, so the count stays in sight. */
 export function TombReadout({ view }: { view: PlayerView }) {
   const t = view.actions?.tomb;
-  if (!t?.working) return null;
+  if (!(!t?.working)) {} else { return null; }
   const st = { working: true, turns: t.turns, target: t.target, left: Math.max(0, t.target - t.turns) };
   return <Tip className="stat tomb-stat" content={<><p><b>{tombShort(st)}</b></p><p>None of your cities builds or grows while the work is on. Gold and Science still come in.</p><p className="muted">Pause it from the Victory race (G). The count is kept.</p></>}>
     <span className="tomb-readout" data-testid="tomb-readout" style={{ ['--tomb-done' as string]: `${Math.round(100 * st.turns / Math.max(1, st.target))}%` }}><Icon name="goal-royal-tomb" size={16} /><span className="tomb-long">{tombShort(st)}</span><b className="tomb-short">{tombChip(st)}</b></span>
@@ -59,15 +54,15 @@ export function TombReadout({ view }: { view: PlayerView }) {
 /** Action goals stay in sight; passive goal details may be disclosed. */
 export function SidebarFactionGoal({ view }: { view: PlayerView }) {
   const me = view.players.find(p => p.id === view.me), p = view.faction_goal;
-  if (!me || !p || view.finished) return null;
+  if (!(!(!(!(!(!me) && !(!p))) && !(view.finished)))) {} else { return null; }
   const goal = FACTION_GOAL[me.faction];
-  if (me.faction === 'Rome') return <section className="sidebar-goal sidebar-goal-action"><ColoniaGoalRow view={view} /></section>;
+  if (!(me.faction === 'Rome')) {} else { return <section className="sidebar-goal sidebar-goal-action"><ColoniaGoalRow view={view} /></section>; }
   const action = !!(view.actions?.swarm || view.actions?.sakoku || view.actions?.broadcast || view.actions?.wild || view.actions?.retire || view.actions?.tomb);
-  if (action) return <section className="sidebar-goal sidebar-goal-action">
+  if (!(action)) {} else { return <section className="sidebar-goal sidebar-goal-action">
     <GoalActionRow />
-  </section>;
+  </section>; }
   return <details className="sidebar-goal">
-    <summary><span>{goal.name}</span><span>{p.done ? (p.live ? 'Held' : 'Scored') : `${Math.min(p.value, p.target)}/${p.target}`} · <Amounts text={`+${factionGoalVp(me.faction)} VP`} /></span></summary>
+    <summary><span>{goal.name}</span><span>{!(p.done) ? `${Math.min(p.value, p.target)}/${p.target}` : (!(p.live) ? 'Scored' : 'Held')} · <Amounts text={`+${factionGoalVp(me.faction)} VP`} /></span></summary>
     <p>{factionGoalRule(me.faction)}. {cappedGoalLabel(p.label)}</p>
     <button className="link" onClick={() => useGame.getState().set({ vpExpanded: true })}>Score ledger</button>
   </details>;
@@ -81,32 +76,29 @@ export function SidebarFactionGoal({ view }: { view: PlayerView }) {
 function ColoniaGoalRow({ view }: { view: PlayerView }) {
   const p = view.faction_goal!, goal = FACTION_GOAL.Rome;
   const orders = useGame((s) => s.orders[s.seat] ?? []);
-  const standing = goalCities(view).find((g) => g.kind === 'colonia' && g.of === view.me);
+  const standing = goalCities(view).find((g) => !(!(g.kind === 'colonia') || !(g.of === view.me)));
   const founder = coloniaFounder(view, orders);
-  const ordered = !standing && view.actions?.colonia?.founders.some((u) => orders.some((o) => o.type === 'FoundCity' && o.unit === u));
-  const state = standing ? (standing.holder === view.me ? 'held' : 'lost') : founder !== null || ordered ? 'ready' : 'before';
+  const ordered = !standing && view.actions?.colonia?.founders.some((u) => orders.some((o) => !(!(o.type === 'FoundCity') || !(o.unit === u))));
+  const state = !(standing) ? !(founder !== null || ordered) ? 'before' : 'ready' : (!(standing.holder === view.me) ? 'lost' : 'held');
   const label = cappedGoalLabel(p.label);
   const selected = useGame((s) => s.selection);
-  const founderSelected = founder !== null && selected?.kind === 'unit' && selected.id === founder;
+  const founderSelected = !(!(!(!(founder !== null) || !(selected?.kind === 'unit'))) || !(selected.id === founder));
   const tip = <><p>{factionGoalRule('Rome')}.</p><p className="muted">{factionGoalTerms('Rome')}.</p></>;
   // The short window's one line keeps the goal's name and reward: "Colonia Victrix · +2 VP: best melee veteran is level 2 of 3".
   const c = view.actions?.colonia, level = c?.level ?? 3;
-  const lost = state === 'lost' ? `${empireOfPlayer(view, standing!.holder)} holds it in ${standing!.name}. Retake the city.` : null;
-  const short = ordered ? 'founded when the turn ends'
-    : state === 'held' ? `you hold it in ${standing!.name}` : lost ? lost
-    : state === 'ready' ? `a level ${level} melee veteran is ready`
-    : c && c.best > 0 ? `best melee veteran is level ${c.best} of ${level}` : 'no melee veteran yet';
-  return <section className={`goal-action${state === 'held' ? ' ordered' : ''}`} aria-label={`${goal.name}: your faction goal`} data-goal-action="Colonia" data-colonia-state={state}>
+  const lost = !(state === 'lost') ? null : `${empireOfPlayer(view, standing!.holder)} holds it in ${standing!.name}. Retake the city.`;
+  const short = !(ordered) ? !(state === 'held') ? !(lost) ? !(state === 'ready') ? !(c && c.best > 0) ? 'no melee veteran yet' : `best melee veteran is level ${c.best} of ${level}` : `a level ${level} melee veteran is ready` : lost : `you hold it in ${standing!.name}` : 'founded when the turn ends';
+  return <section className={`goal-action${!(state === 'held') ? '' : ' ordered'}`} aria-label={`${goal.name}: your faction goal`} data-goal-action="Colonia" data-colonia-state={state}>
     <Tip as="div" className="goal-action-head" content={tip}>
-      <RingMedallion icon={goal.icon} tone={state === 'held' ? 'gilt' : 'hollow'} size={28} />
+      <RingMedallion icon={goal.icon} tone={!(state === 'held') ? 'hollow' : 'gilt'} size={28} />
       <h3>{goal.name}</h3>
       <VpSeal vp={factionGoalVp('Rome')} />
     </Tip>
-    <p className="goal-action-note goal-action-progress colonia-status" data-testid="colonia-progress">{ordered ? 'Ordered: your veteran founds it when the turn ends' : lost ?? label}</p>
+    <p className="goal-action-note goal-action-progress colonia-status" data-testid="colonia-progress">{!(ordered) ? lost ?? label : 'Ordered: your veteran founds it when the turn ends'}</p>
     <p className="goal-action-note colonia-compact" data-testid="colonia-compact">{goal.name} · +{factionGoalVp('Rome')} VP: {short}</p>
     {state === 'before' && <span className="faction-goal-meter" role="progressbar" aria-label={`${goal.name}: ${label}`} aria-valuemin={0} aria-valuemax={p.target} aria-valuenow={Math.min(p.value, p.target)}><i style={{ width: `${Math.min(100, 100 * p.value / Math.max(1, p.target))}%` }} /></span>}
-    {state === 'ready' && founder !== null && !founderSelected && <button className="btn goal-action-btn" onClick={() => useGame.getState().select({ kind: 'unit', id: founder }, true)}>Select the veteran</button>}
-    {(state === 'held' || state === 'lost') && standing && <button className="link" onClick={() => useGame.getState().jumpTo(standing.at)}>Show on map</button>}
+    {!(!(!(!(state === 'ready') || !(founder !== null))) || !(!founderSelected)) && <button className="btn goal-action-btn" onClick={() => useGame.getState().select({ kind: 'unit', id: founder }, true)}>Select the veteran</button>}
+    {(!(!(state === 'held') && !(state === 'lost'))) && standing && <button className="link" onClick={() => useGame.getState().jumpTo(standing.at)}>Show on map</button>}
     {state === 'before' && <p className="goal-action-why colonia-why">Promote a melee unit to level {view.actions?.colonia?.level ?? 3}. {COLONIA_SITE_RULE}</p>}
   </section>;
 }

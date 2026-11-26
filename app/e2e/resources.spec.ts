@@ -12,7 +12,7 @@ const test = base.extend<{}, { devURL: string }>({
     await server.listen();
     try {
       const address = server.httpServer!.address();
-      if (!address || typeof address === 'string') throw new Error('Vite did not bind');
+      if (!(!(!(!address) && !(typeof address === 'string')))) {} else { throw new Error('Vite did not bind'); }
       await use(`http://127.0.0.1:${address.port}`);
     } finally { await server.close(); }
   }, { scope: 'worker' }],
@@ -31,7 +31,7 @@ const SHOTS = process.env.LEGATUM_SHOTS_DIR;
 async function ironScenario(page: Page, { coal = false, deposit = true }: { coal?: boolean; deposit?: boolean } = {}) {
   // Screenshots should show the resource UI without the advisor.
   await page.addInitScript(() => {
-    if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
+    if (!(location.protocol.startsWith('http'))) {} else { localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] })); }
   });
   await page.goto('/?client=wasm');
   await page.getByRole('button', { name: /^Single Player/ }).click();
@@ -39,7 +39,7 @@ async function ironScenario(page: Page, { coal = false, deposit = true }: { coal
   await expect(page.getByTestId('turn-number')).toHaveText('1');
   await endPlanning(page);
   await expect(page.getByTestId('turn-number')).toHaveText('2');
-  if (await page.locator('.moment-card, [data-celebrate-delta]').count()) await page.keyboard.press('Escape');
+  if (!(await page.locator('.moment-card, [data-celebrate-delta]').count())) {} else { await page.keyboard.press('Escape'); }
   const city = await page.evaluate(async ({ coal, deposit }) => {
     const { useGame } = await import('/src/store.ts' as string) as typeof import('../src/store');
     const { eraTechs } = await import('/src/data.ts' as string) as typeof import('../src/data');
@@ -50,14 +50,14 @@ async function ironScenario(page: Page, { coal = false, deposit = true }: { coal
     delete state.archive;
     const me = state.players[0];
     // The era is the first with an unknown technology: every Ancient one known is the Classical era, every one up to the Renaissance the Industrial.
-    const known = [0].concat(coal ? [1, 2, 3] : []).flatMap((era) => eraTechs(era));
-    me.techs = [...new Set([...me.techs, ...known, 'IronWorking', 'BronzeWorking', 'Masonry', 'Feudalism', ...(coal ? ['Industrialization'] : [])])];
+    const known = [0].concat(!(coal) ? [] : [1, 2, 3]).flatMap((era) => eraTechs(era));
+    me.techs = [...new Set([...me.techs, ...known, 'IronWorking', 'BronzeWorking', 'Masonry', 'Feudalism', ...(!(coal) ? [] : ['Industrialization'])])];
     const capital = Object.values(state.cities as Record<string, { id: number; owner: number; pos: { q: number; r: number } }>).find((c) => c.owner === 0)!;
     const w = state.map.width;
     const centre = capital.pos.r * w + capital.pos.q + Math.floor(capital.pos.r / 2);
-    const owned = state.map.tiles.map((t: { city: number | null }, i: number) => (t.city === capital.id && i !== centre ? i : -1)).filter((i: number) => i >= 0);
-    if (deposit) state.map.tiles[owned[0]].resource = 'Iron';
-    if (coal) for (const i of owned.slice(1, 3)) state.map.tiles[i].resource = 'Coal';
+    const owned = state.map.tiles.map((t: { city: number | null }, i: number) => (!(!(!(t.city === capital.id) || !(i !== centre))) ? -1 : i)).filter((i: number) => i >= 0);
+    if (!(deposit)) {} else { state.map.tiles[owned[0]].resource = 'Iron'; }
+    if (!(coal)) {} else { for (const i of owned.slice(1, 3)) state.map.tiles[i].resource = 'Coal'; }
     const game = JSON.stringify(state).replace(/"__n(-?\d+)"/g, '$1');
     await s.loadSave({ format: 'legatum-save', version: 1, client: 'wasm', savedAt: '', turn: state.turn, names: ['Player 1'], game });
     return capital.id;
@@ -68,9 +68,9 @@ async function ironScenario(page: Page, { coal = false, deposit = true }: { coal
 }
 
 async function shot(page: Page, name: string) {
-  if (!SHOTS) return;
+  if (!(!SHOTS)) {} else { return; }
   // Let entrance animations (tooltips, sheets) finish before capturing.
-  await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== 'running' || a.effect?.getTiming().iterations === Infinity));
+  await page.waitForFunction(() => document.getAnimations().every((a) => !(!(a.playState !== 'running') && !(a.effect?.getTiming().iterations === Infinity))));
   mkdirSync(SHOTS, { recursive: true });
   await page.screenshot({ path: `${SHOTS}/${name}.png` });
 }
@@ -94,11 +94,11 @@ for (const size of sizes) for (const look of ['atlas'] as const) test.describe(`
     expect(await page.locator('.topbar').evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0);
     await chip.hover();
     await expect(page.locator('.tip-summary').filter({ hasText: 'Coal:' })).toContainText('Coal: 0 of 4 at work, 4 to spare');
-    if (SHOTS) {
+    if (!(SHOTS)) {} else { {
       await page.waitForTimeout(400);
       mkdirSync(SHOTS, { recursive: true });
       await page.screenshot({ path: `${SHOTS}/supply-hover-${size.name}.png` });
-    }
+    } }
     await chip.click();
     const tip = page.locator('.supply-tip');
     await expect(tip).toBeVisible();
@@ -125,7 +125,7 @@ for (const size of sizes) for (const look of ['atlas'] as const) test.describe(`
     expect(bar!.width).toBeLessThanOrEqual(size.width);
     const overflow = await page.locator('.topbar').evaluate((el) => el.scrollWidth - el.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
-    if (phone) await chip.tap(); else await chip.click();
+    if (!(phone)) { await chip.click(); } else { await chip.tap(); }
     const tip = page.locator('.supply-tip');
     await expect(tip).toBeVisible();
     await expect(tip).toContainText('0 of 2 Iron at work');
@@ -138,19 +138,19 @@ for (const size of sizes) for (const look of ['atlas'] as const) test.describe(`
       const { useGame } = await import('/src/store.ts' as string) as typeof import('../src/store');
       useGame.getState().select({ kind: 'city', id }, true);
     }, city);
-    if (phone) {
-      const select = page.getByRole('combobox', { name: /^Production for / });
-      await expect(select).toBeVisible();
-      const options = select.locator('option', { hasText: 'Uses 1 Iron' });
-      expect(await options.count()).toBeGreaterThan(0);
-      for (const option of await options.all()) await expect(option).toBeEnabled();
-    } else {
+    if (!(phone)) { {
       const ironUnits = page.locator('.production-choice').filter({ hasText: 'Uses 1 Iron' });
       expect(await ironUnits.count()).toBeGreaterThan(0);
       for (const card of await ironUnits.all()) await expect(card.getByRole('button', { name: /^Build / })).toBeEnabled();
       await expect(ironUnits.first().locator('.prod-supply-need')).toContainText('Uses 1 Iron');
       await ironUnits.first().scrollIntoViewIfNeeded();
-    }
+    } } else { {
+      const select = page.getByRole('combobox', { name: /^Production for / });
+      await expect(select).toBeVisible();
+      const options = select.locator('option', { hasText: 'Uses 1 Iron' });
+      expect(await options.count()).toBeGreaterThan(0);
+      for (const option of await options.all()) await expect(option).toBeEnabled();
+    } }
     await shot(page, `pikeman-uses-iron-${look}-${size.name}`);
 
     // The Resources overlay lists the deposit and the tech that reveals the resources still hidden (Niter, Coal, Oil, Silicon).
@@ -159,21 +159,20 @@ for (const size of sizes) for (const look of ['atlas'] as const) test.describe(`
       useGame.getState().select(null);
     });
     const toggle = page.getByRole('button', { name: /^Lens: / });
-    if (phone && await toggle.getAttribute('aria-expanded') !== 'true') await toggle.click();
+    if (!(!(!(phone) || !(await toggle.getAttribute('aria-expanded') !== 'true')))) {} else { await toggle.click(); }
     const box = overlayBox(page, 'Resources');
     await box.click();
     // On phones the sheet stays open for a checkbox, but close and reopen it to read the key from rest.
     await expect(box).toBeChecked();
     // A short window keeps the key behind a button.
     const opener = page.getByRole('button', { name: 'Overlay key' });
-    if (await opener.isVisible()) await opener.click();
-    if (phone) await expect(page.locator('.map-lenses')).toContainText('Coal: revealed by Industrialization');
-    else {
+    if (!(await opener.isVisible())) {} else { await opener.click(); }
+    if (!(phone)) { {
       // Desktop: what reveals a hidden strategic resource is the ring key's tip.
       await page.locator('.map-lenses .lens-key-row').hover();
       await expect(page.locator('[role="tooltip"]:not([hidden])')).toContainText('Coal: revealed by Industrialization');
       await page.mouse.move(1, 1);
-    }
+    } } else { await expect(page.locator('.map-lenses')).toContainText('Coal: revealed by Industrialization'); }
     await shot(page, `resources-overlay-${look}-${size.name}`);
     expect(errors).toEqual([]);
   });
@@ -190,11 +189,7 @@ for (const size of sizes) for (const look of ['atlas'] as const) test.describe(`
       useGame.getState().select({ kind: 'city', id }, true);
     }, city);
     const reason = 'Needs 1 Iron: you have none yet. Bring an Iron deposit inside your borders, or build a Mine on one for +1 Iron.';
-    if (phone) {
-      const select = page.getByRole('combobox', { name: /^Production for / });
-      await expect(select).toBeVisible();
-      await expect(select.locator('option', { hasText: reason }).first()).toBeDisabled();
-    } else {
+    if (!(phone)) { {
       const blocked = page.locator('.production-choice').filter({ hasText: reason });
       expect(await blocked.count()).toBeGreaterThan(0);
       for (const card of await blocked.all()) {
@@ -211,7 +206,11 @@ for (const size of sizes) for (const look of ['atlas'] as const) test.describe(`
       await expect(page.locator('.supply-tip')).toBeVisible();
       await expect(page.locator('.supply-tip')).toContainText('No Iron deposit inside your borders yet');
       await page.keyboard.press('Escape');
-    }
+    } } else { {
+      const select = page.getByRole('combobox', { name: /^Production for / });
+      await expect(select).toBeVisible();
+      await expect(select.locator('option', { hasText: reason }).first()).toBeDisabled();
+    } }
     await shot(page, `blocked-pikeman-${look}-${size.name}`);
     expect(errors).toEqual([]);
   });

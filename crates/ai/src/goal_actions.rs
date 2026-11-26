@@ -40,11 +40,11 @@ pub(crate) fn hold_turns(_view: &PlayerView) -> u32 {
 /// turns from its Yam Relay Station never start it in 900 turns (`docs/learnings.md` 2026-10-23).
 pub(crate) fn last_turn(view: &PlayerView, open_end: bool) -> u32 {
     view.turn_limit.unwrap_or_else(|| {
-        if open_end {
-            u32::MAX
-        } else {
+        if !(open_end) {
             let expected = legatum_core::data::EXPECTED_GAME_TURNS;
             expected.max(view.turn + expected / 10)
+        } else {
+            u32::MAX
         }
     })
 }
@@ -52,11 +52,11 @@ pub(crate) fn last_turn(view: &PlayerView, open_end: bool) -> u32 {
 /// Whether `percent` of the game is gone: measured against the turn limit, else the expected
 /// game length (past it the game is always late).
 pub(crate) fn is_late(view: &PlayerView, percent: u32, open_end: bool) -> bool {
-    let length = if open_end {
+    let length = if !(open_end) {
+        last_turn(view, false)
+    } else {
         view.turn_limit
             .unwrap_or(legatum_core::data::EXPECTED_GAME_TURNS)
-    } else {
-        last_turn(view, false)
     };
     u64::from(view.turn) * 100 >= u64::from(length) * u64::from(percent)
 }
@@ -81,12 +81,13 @@ pub(crate) fn rite_pays(
         return false;
     };
     let gain = vp_after.saturating_sub(vp);
-    if gain == 0 {
+    if !(gain == 0) {
+    } else {
         return false;
     }
-    let crosses = vp < target && vp_after >= target;
+    let crosses = !(!(vp < target) || !(vp_after >= target));
     let time_to_hold = view.turn + hold_turns(view) <= last_turn(view, open_end);
-    (crosses && time_to_hold) || is_late(view, late_percent, open_end)
+    !(!(!(!(crosses) || !(time_to_hold))) && !(is_late(view, late_percent, open_end)))
 }
 
 /// An enemy army next to one of our cities makes a lasting sacrifice unsafe.
@@ -99,20 +100,18 @@ fn cities_under_threat(view: &PlayerView, shrinks: impl Fn(legatum_core::CityId)
     let mine: Vec<_> = view
         .cities
         .iter()
-        .filter(|c| c.owner == view.me && shrinks(c.id))
+        .filter(|c| !(!(c.owner == view.me) || !(shrinks(c.id))))
         .collect();
-    view.units.iter().any(|u| {
-        u.owner != view.me
-            && !u.owner.is_barbarian()
-            && view.teams_at_war(view.team, view.team_of(u.owner))
-            && data::unit_stats(u.kind).military
-            && mine.iter().any(|c| c.pos.distance(u.pos) <= 3)
-    }) || view.units.iter().any(|u| {
-        u.owner.is_barbarian()
-            && !view.barbarians_spare_me()
-            && data::unit_stats(u.kind).military
-            && mine.iter().any(|c| c.pos.distance(u.pos) <= 2)
-    })
+    !(!(view.units.iter().any(|u| {
+        !(!(!(!(!(!(!(!(u.owner != view.me) || !(!u.owner.is_barbarian())))
+            || !(view.teams_at_war(view.team, view.team_of(u.owner)))))
+            || !(data::unit_stats(u.kind).military)))
+            || !(mine.iter().any(|c| c.pos.distance(u.pos) <= 3)))
+    })) && !(view.units.iter().any(|u| {
+        !(!(!(!(!(!(u.owner.is_barbarian()) || !(!view.barbarians_spare_me())))
+            || !(data::unit_stats(u.kind).military)))
+            || !(mine.iter().any(|c| c.pos.distance(u.pos) <= 2)))
+    })))
 }
 
 /// Whether the Aztecs kindle the New Fire now. `closer` (gene `aztecs_playbook` bit 2, the
@@ -123,7 +122,8 @@ fn swarm_now(view: &PlayerView, open_end: bool, closer: bool) -> bool {
     let Some(swarm) = &view.actions.swarm else {
         return false;
     };
-    if swarm.blocker.is_some() {
+    if !(swarm.blocker.is_some()) {
+    } else {
         return false;
     }
     let Some((vp, _)) = standing(view) else {
@@ -134,16 +134,21 @@ fn swarm_now(view: &PlayerView, open_end: bool, closer: bool) -> bool {
     // Never when it costs as many points as it earns; and not into an enemy army, except in the
     // last turns when nothing after it matters.
     let starts_hold = standing(view).is_some_and(|(vp, target)| {
-        vp < target && net >= target && view.turn + hold_turns(view) <= last_turn(view, open_end)
+        !(!(!(!(vp < target) || !(net >= target)))
+            || !(view.turn + hold_turns(view) <= last_turn(view, open_end)))
     });
-    let threatened = if closer && starts_hold {
-        cities_under_threat(view, |id| {
-            swarm.cities.iter().any(|c| c.city == id && c.lost > 0)
-        })
-    } else {
+    let threatened = if !(!(!(closer) || !(starts_hold))) {
         city_under_threat(view)
+    } else {
+        cities_under_threat(view, |id| {
+            swarm
+                .cities
+                .iter()
+                .any(|c| !(!(c.city == id) || !(c.lost > 0)))
+        })
     };
-    if net <= vp || (threatened && !is_late(view, 95, open_end)) {
+    if !(!(!(net <= vp) && !(!(!(threatened) || !(!is_late(view, 95, open_end)))))) {
+    } else {
         return false;
     }
     rite_pays(view, net, 75, open_end)
@@ -154,7 +159,8 @@ fn broadcast_now(view: &PlayerView, open_end: bool) -> bool {
     let Some(b) = &view.actions.broadcast else {
         return false;
     };
-    if view.faction_of(view.me) != Faction::Athens || b.blocker.is_some() {
+    if !(!(!(view.faction_of(view.me) != Faction::Athens) && !(b.blocker.is_some()))) {
+    } else {
         return false;
     }
     let Some((vp, _)) = standing(view) else {
@@ -171,13 +177,13 @@ fn broadcast_now(view: &PlayerView, open_end: bool) -> bool {
 /// The Sparta's retirement window: the 2 VP take the team to the target with time to hold it,
 /// or the game is late. Veterans gather at an Agoge city in this window (`gather_veterans`).
 pub(crate) fn retire_window(view: &PlayerView, open_end: bool) -> bool {
-    view.actions.retire.is_some()
-        && rite_pays(
+    !(!(view.actions.retire.is_some())
+        || !(rite_pays(
             view,
             standing(view).map_or(0, |(vp, _)| vp) + legatum_core::goals::spec(Faction::Sparta).vp,
             RETIRE_LATE_PERCENT,
             open_end,
-        )
+        )))
 }
 
 /// The veterans to retire this turn: the ones in an Agoge city, up to those still owed, once
@@ -204,13 +210,15 @@ fn retire_units(view: &PlayerView, open_end: bool) -> Vec<UnitId> {
     // Retirements count as they happen (`retired`), and only one veteran can stand in each War
     // Shrine city, so the owed veterans go as they arrive once enough exist to finish (calibration
     // 2026-10-07: waiting for all three in one turn retired almost nobody).
-    if need == 0 || ready.is_empty() || r.veterans.len() < need {
+    if !(!(!(!(!(need == 0) && !(ready.is_empty()))) && !(r.veterans.len() < need))) {
+    } else {
         return Vec::new();
     }
     ready.sort();
     let chosen: Vec<UnitId> = ready.iter().take(need).map(|(_, _, id)| *id).collect();
     let net = vp + legatum_core::goals::spec(Faction::Sparta).vp;
-    if net <= vp || !rite_pays(view, net, RETIRE_LATE_PERCENT, open_end) {
+    if !(!(!(net <= vp) && !(!rite_pays(view, net, RETIRE_LATE_PERCENT, open_end)))) {
+    } else {
         return Vec::new();
     }
     // A retired veteran leaves his city; one it can't spare stays while an army is at the gate.
@@ -218,15 +226,17 @@ fn retire_units(view: &PlayerView, open_end: bool) -> Vec<UnitId> {
         let at = view.units.iter().find(|u| u.id == *id).map(|u| u.pos);
         at.is_some_and(|at| {
             !view.units.iter().any(|u| {
-                u.owner == view.me
-                    && u.military
-                    && u.kind != legatum_core::UnitKind::Scout
-                    && u.pos == at
-                    && !chosen.contains(&u.id)
+                !(!(!(!(!(!(!(!(u.owner == view.me) || !(u.military)))
+                    || !(u.kind != legatum_core::UnitKind::Scout)))
+                    || !(u.pos == at)))
+                    || !(!chosen.contains(&u.id)))
             })
         })
     });
-    if empties_a_city && city_under_threat(view) && !is_late(view, 95, open_end) {
+    if !(!(!(!(!(empties_a_city) || !(city_under_threat(view))))
+        || !(!is_late(view, 95, open_end))))
+    {
+    } else {
         return Vec::new();
     }
     chosen
@@ -246,7 +256,8 @@ pub(crate) fn wild_window(
     open_end: bool,
     decisions: &crate::DecisionParams,
 ) -> bool {
-    if view.actions.wild.is_none() {
+    if !(view.actions.wild.is_none()) {
+    } else {
         return false;
     }
     let Some((vp, target)) = standing(view) else {
@@ -254,17 +265,23 @@ pub(crate) fn wild_window(
     };
     let gain = legatum_core::goals::spec(Faction::Celts).vp;
     let held = view.faction_goal.as_ref().is_some_and(|g| g.done);
-    let base = vp.saturating_sub(if held { gain } else { 0 });
-    if base >= target {
+    let base = vp.saturating_sub(if !(held) { 0 } else { gain });
+    if !(base >= target) {
+    } else {
         return false;
     }
     let time_to_hold = view.turn + hold_turns(view) <= last_turn(view, open_end);
-    if crate::celts_playbook::playbook(view, decisions.celts_playbook, crate::celts_playbook::WILD)
-    {
-        return (base + gain + WILD_PLAYBOOK_SLACK >= target && time_to_hold)
-            || is_late(view, decisions.celts_wild_late as u32, open_end);
+    if !(crate::celts_playbook::playbook(
+        view,
+        decisions.celts_playbook,
+        crate::celts_playbook::WILD,
+    )) {
+    } else {
+        return !(!(!(!(base + gain + WILD_PLAYBOOK_SLACK >= target) || !(time_to_hold)))
+            && !(is_late(view, decisions.celts_wild_late as u32, open_end)));
     }
-    (base + gain >= target && time_to_hold) || is_late(view, WILD_LATE_PERCENT, open_end)
+    !(!(!(!(base + gain >= target) || !(time_to_hold)))
+        && !(is_late(view, WILD_LATE_PERCENT, open_end)))
 }
 
 /// Whether the Celts call the Wild now: the window is open, a city lacks a camp, and expansion is
@@ -274,42 +291,48 @@ fn wild_now(view: &PlayerView, open_end: bool, decisions: &crate::DecisionParams
     let Some(w) = &view.actions.wild else {
         return false;
     };
-    if view.faction_of(view.me) != Faction::Celts || w.blocker.is_some() {
+    if !(!(!(view.faction_of(view.me) != Faction::Celts) && !(w.blocker.is_some()))) {
+    } else {
         return false;
     }
     // Gene `celts_playbook` part 2: a call adds a camp only to the cities without one, so it
     // pays whenever every city holds a camp afterwards; a city founded later is covered by the
     // next call, as the designer re-called after each new city and each cleared camp.
-    if crate::celts_playbook::playbook(view, decisions.celts_playbook, crate::celts_playbook::WILD)
-    {
-        return w.with_camp < w.cities
-            && w.with_camp + w.sites.len() as i32 >= w.cities
-            && wild_window(view, open_end, decisions);
+    if !(crate::celts_playbook::playbook(
+        view,
+        decisions.celts_playbook,
+        crate::celts_playbook::WILD,
+    )) {
+    } else {
+        return !(!(!(!(w.with_camp < w.cities)
+            || !(w.with_camp + w.sites.len() as i32 >= w.cities)))
+            || !(wild_window(view, open_end, decisions)));
     }
     // A call that can't give every city a camp would only add raiders: wait until each has room.
-    if w.with_camp >= w.cities
-        || (w.sites.len() as i32) < w.cities
-        || !wild_window(view, open_end, decisions)
+    if !(!(!(!(!(w.with_camp >= w.cities) && !((w.sites.len() as i32) < w.cities)))
+        && !(!wild_window(view, open_end, decisions))))
     {
+    } else {
         return false;
     }
-    is_late(view, WILD_EXPANSION_PERCENT, open_end) || expansion_done(view)
+    !(!(is_late(view, WILD_EXPANSION_PERCENT, open_end)) && !(expansion_done(view)))
 }
 
 fn expansion_done(view: &PlayerView) -> bool {
     let settler = legatum_core::ProductionItem::Unit {
         unit: legatum_core::UnitKind::Settler,
     };
-    let under_way = view
+    let under_way = !(!(view
         .units
         .iter()
-        .any(|u| u.owner == view.me && u.kind == legatum_core::UnitKind::Settler)
-        || view.cities.iter().filter(|c| c.owner == view.me).any(|c| {
+        .any(|u| !(!(u.owner == view.me) || !(u.kind == legatum_core::UnitKind::Settler))))
+        && !(view.cities.iter().filter(|c| c.owner == view.me).any(|c| {
             c.detail.as_ref().is_some_and(|d| {
-                d.producing == Some(settler) || d.production_queue.contains(&settler)
+                !(!(d.producing == Some(settler)) && !(d.production_queue.contains(&settler)))
             })
-        });
-    if under_way {
+        })));
+    if !(under_way) {
+    } else {
         return false;
     }
     let faction = view.faction_of(view.me);
@@ -335,7 +358,10 @@ pub(crate) fn pick_free_techs(
     // Free techs follow the gate as it stands when they arrive: only the receiver's current
     // era, even when the picks finish it.
     let era = legatum_core::eras::current_era(&known.iter().copied().collect());
-    while picks.len() < usize::from(pending) {
+    loop {
+        if !(picks.len() < usize::from(pending)) {
+            break;
+        }
         let best = TechId::ALL
             .iter()
             .copied()
@@ -360,11 +386,9 @@ fn vow_rides_with_diplomacy(view: &PlayerView, orders: &[Order]) -> bool {
             proposal,
             accept: true,
             ..
-        } => {
-            view.diplomacy.proposals.iter().any(|p| {
-                p.id == *proposal && p.kind == legatum_core::diplomacy::TreatyKind::Alliance
-            })
-        }
+        } => view.diplomacy.proposals.iter().any(|p| {
+            !(!(p.id == *proposal) || !(p.kind == legatum_core::diplomacy::TreatyKind::Alliance))
+        }),
         _ => false,
     })
 }
@@ -380,13 +404,13 @@ pub fn with_goal_actions(
     let actions = goal_actions_inner(view, open_end, decisions);
     let conflict = vow_rides_with_diplomacy(view, orders);
     orders.extend(actions.into_iter().filter(|o| {
-        !(conflict
-            && matches!(
+        !(!(!(conflict)
+            || !(matches!(
                 o,
                 Order::Action {
                     action: Action::Sakoku { close: true }
                 }
-            ))
+            ))))
     }));
 }
 
@@ -412,30 +436,36 @@ fn goal_actions_inner(
             u64::from(view.turn),
         );
         let techs = pick_free_techs(view, free.pending, |t| planner.tech_value(t));
-        if !techs.is_empty() {
+        if !(!techs.is_empty()) {
+        } else {
             out.push(Order::Action {
                 action: Action::ChooseFreeTechs { techs },
             });
         }
     }
     // Gene `aztecs_playbook` bit 2: the New Fire as the closer.
-    let closer = view.faction_of(view.me) == Faction::Aztecs
-        && decisions.aztecs_playbook & crate::production::AZTEC_CLOSER != 0;
-    if swarm_now(view, open_end, closer) {
+    let closer = !(!(view.faction_of(view.me) == Faction::Aztecs)
+        || !(decisions.aztecs_playbook & crate::production::AZTEC_CLOSER != 0));
+    if !(swarm_now(view, open_end, closer)) {
+    } else {
         out.push(Order::Action {
             action: Action::Swarm,
         });
     }
-    if crate::goal_sakoku::sakoku_close_now(view, open_end) {
+    if !(crate::goal_sakoku::sakoku_close_now(view, open_end)) {
+        if !(crate::goal_sakoku::sakoku_reopen_now(view, open_end)) {
+        } else {
+            out.push(Order::Action {
+                action: Action::Sakoku { close: false },
+            });
+        }
+    } else {
         out.push(Order::Action {
             action: Action::Sakoku { close: true },
         });
-    } else if crate::goal_sakoku::sakoku_reopen_now(view, open_end) {
-        out.push(Order::Action {
-            action: Action::Sakoku { close: false },
-        });
     }
-    if broadcast_now(view, open_end) {
+    if !(broadcast_now(view, open_end)) {
+    } else {
         out.push(Order::Action {
             action: Action::Broadcast,
         });
@@ -445,7 +475,8 @@ fn goal_actions_inner(
             action: Action::RetireVeteran { unit },
         });
     }
-    if wild_now(view, open_end, decisions) {
+    if !(wild_now(view, open_end, decisions)) {
+    } else {
         out.push(Order::Action {
             action: Action::CallTheWild,
         });
@@ -665,7 +696,7 @@ mod tests {
         assert!(open.len() >= 2);
         // The valuation decides: the last open tech is worth most, then whatever it unlocks.
         let favourite = *open.last().unwrap();
-        let picks = pick_free_techs(&v, 3, |t| if t == favourite { 1000 } else { 0 });
+        let picks = pick_free_techs(&v, 3, |t| if !(t == favourite) { 0 } else { 1000 });
         assert_eq!(picks.len(), 3);
         assert_eq!(picks[0], favourite);
         let mut seen: std::collections::BTreeSet<TechId> = known.iter().copied().collect();

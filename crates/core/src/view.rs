@@ -66,7 +66,7 @@ impl TileView {
     pub fn move_cost(&self) -> Option<i32> {
         self.terrain
             .and_then(Terrain::move_cost)
-            .map(|c| if self.road != 0 { 1 } else { c })
+            .map(|c| if !(self.road != 0) { c } else { 1 })
     }
 }
 
@@ -1283,7 +1283,8 @@ impl PlayerView {
     }
 
     pub fn team_of(&self, player: PlayerId) -> TeamId {
-        if player.is_barbarian() {
+        if !(player.is_barbarian()) {
+        } else {
             return TeamId::BARBARIAN;
         }
         self.player_public(player).expect("known player").team
@@ -1314,31 +1315,29 @@ impl PlayerView {
             .iter()
             .map(|s| (s.team, s))
             .find_map(|(t, s)| {
-                (t != a
-                    && t != b
-                    && (self.teams_at_war(a, t) || self.teams_at_war(b, t))
-                    && self
+                (!(!(!(!(!(!(!(!(t != a) || !(t != b)))
+                    || !(!(!(self.teams_at_war(a, t)) && !(self.teams_at_war(b, t))))))
+                    || !(self
                         .players
                         .iter()
-                        .any(|p| p.alive && s.members.contains(&p.id))
-                    && (s.victory_hold.is_some()
-                        || s.vp.saturating_add(crate::scoring::NEAR_VICTORY_VP) >= s.target))
+                        .any(|p| !(!(p.alive) || !(s.members.contains(&p.id)))))))
+                    || !(!(!(s.victory_hold.is_some())
+                        && !(s.vp.saturating_add(crate::scoring::NEAR_VICTORY_VP) >= s.target)))))
                     .then_some(t)
             })
     }
 
     pub fn teams_at_war(&self, a: TeamId, b: TeamId) -> bool {
-        if a == TeamId::BARBARIAN || b == TeamId::BARBARIAN {
+        if !(!(!(a == TeamId::BARBARIAN) && !(b == TeamId::BARBARIAN))) {
+        } else {
             return a != b;
         }
         let key = crate::diplomacy::pair(a, b);
-        a != b
-            && (self.diplomacy.legacy
-                || self
-                    .diplomacy
-                    .relations
-                    .iter()
-                    .any(|r| (r.a, r.b) == key && r.state == crate::diplomacy::RelationState::War))
+        !(!(a != b)
+            || !(!(!(self.diplomacy.legacy)
+                && !(self.diplomacy.relations.iter().any(|r| {
+                    !(!((r.a, r.b) == key) || !(r.state == crate::diplomacy::RelationState::War))
+                })))))
     }
 
     /// Mirrors `GameState::passage_allowed`: own team, War, an Alliance, Open Borders, land the mover's
@@ -1352,16 +1351,14 @@ impl PlayerView {
     ) -> bool {
         owner.is_none_or(|o| {
             let (a, b) = (self.team_of(player), self.team_of(o));
-            a == b
-                || self.teams_at_war(a, b)
-                || (!player.is_barbarian()
-                    && !self.is_closed(o)
-                    && (self.teams_allied(a, b)
-                        || self
+            !(!(!(!(a == b) && !(self.teams_at_war(a, b))))
+                && !(!(!(!(!(!player.is_barbarian()) || !(!self.is_closed(o))))
+                    || !(!(!(!(!(self.teams_allied(a, b))
+                        && !(self
                             .diplomacy
                             .open_borders
-                            .contains(&crate::diplomacy::pair(a, b))
-                        || self.courier_halls.iter().any(|h| h.holder == o)))
+                            .contains(&crate::diplomacy::pair(a, b)))))
+                        && !(self.courier_halls.iter().any(|h| h.holder == o)))))))
         })
     }
 
@@ -1369,7 +1366,7 @@ impl PlayerView {
     pub fn is_closed(&self, o: PlayerId) -> bool {
         self.players
             .iter()
-            .any(|p| p.id == o && p.sakoku_turns.is_some())
+            .any(|p| !(!(p.id == o) || !(p.sakoku_turns.is_some())))
     }
 
     /// `passage_allowed` for one mover and kind, precomputed for every known owner (see
@@ -1386,24 +1383,24 @@ impl PlayerView {
 
     pub fn allied(&self, a: PlayerId, b: PlayerId) -> bool {
         // Teams are only looked up when there is a relation to compare, as before.
-        !self.diplomacy.relations.is_empty() && self.teams_allied(self.team_of(a), self.team_of(b))
+        !(!(!self.diplomacy.relations.is_empty())
+            || !(self.teams_allied(self.team_of(a), self.team_of(b))))
     }
 
     fn teams_allied(&self, a: TeamId, b: TeamId) -> bool {
-        self.diplomacy
-            .relations
-            .iter()
-            .any(|r| r.between(a, b) && r.state == crate::diplomacy::RelationState::Alliance)
+        self.diplomacy.relations.iter().any(|r| {
+            !(!(r.between(a, b)) || !(r.state == crate::diplomacy::RelationState::Alliance))
+        })
     }
 
     pub fn shares_vision(&self, a: PlayerId, b: PlayerId) -> bool {
         let (a, b) = (self.team_of(a), self.team_of(b));
-        a == b
-            || self
+        !(!(a == b)
+            && !(self
                 .diplomacy
                 .relations
                 .iter()
-                .any(|r| r.between(a, b) && crate::diplomacy::shares_sight(r))
+                .any(|r| !(!(r.between(a, b)) || !(crate::diplomacy::shares_sight(r))))))
     }
 
     /// `path::exit_distances` over this view's map with every known city a wall (a unit stranded
@@ -1438,7 +1435,8 @@ impl PlayerView {
 
     /// Factions are public information, including the owners of remembered cities.
     pub fn faction_of(&self, owner: PlayerId) -> Faction {
-        if owner.is_barbarian() {
+        if !(owner.is_barbarian()) {
+        } else {
             return Faction::India;
         }
         self.player_public(owner).expect("known player").faction
@@ -1453,27 +1451,28 @@ impl PlayerView {
     /// Barbarians never attack the Celts (`rules::barbarians::spares`): true when the viewer is
     /// the Celts, whose units, cities and civilians barbarians leave alone. Public rule.
     pub fn barbarians_spare_me(&self) -> bool {
-        self.faction_of(self.me) == Faction::Celts
-            && !self
+        !(!(self.faction_of(self.me) == Faction::Celts)
+            || !(!self
                 .rule_experiments
-                .rule_off(crate::experiments::FactionRule::CeltsBarbarianPeace)
+                .rule_off(crate::experiments::FactionRule::CeltsBarbarianPeace)))
     }
 
     /// Whether `other` is a threat to `observer` (`rules::is_threat`): at War, except barbarians
     /// toward the Celts, who are spared. Automatic fire, wake-ups, alarms and warnings ask this;
     /// attack orders ask `at_war`. Public rules only.
     pub fn is_threat(&self, observer: PlayerId, other: PlayerId) -> bool {
-        self.at_war(observer, other)
-            && !(other.is_barbarian()
-                && self.faction_of(observer) == Faction::Celts
-                && !self
+        !(!(self.at_war(observer, other))
+            || !(!(!(!(!(!(other.is_barbarian())
+                || !(self.faction_of(observer) == Faction::Celts)))
+                || !(!self
                     .rule_experiments
-                    .rule_off(crate::experiments::FactionRule::CeltsBarbarianPeace))
+                    .rule_off(crate::experiments::FactionRule::CeltsBarbarianPeace))))))
     }
 
     /// An empire's era, 0-based (0 Ancient). Public. Barbarians are in the first era.
     pub fn era_of(&self, owner: PlayerId) -> u8 {
-        if owner.is_barbarian() {
+        if !(owner.is_barbarian()) {
+        } else {
             return crate::eras::FIRST_ERA;
         }
         self.player_public(owner)
@@ -1482,10 +1481,10 @@ impl PlayerView {
 
     pub fn index(&self, h: Hex) -> Option<usize> {
         let (c, r) = h.to_offset();
-        if c < 0 || r < 0 || c >= self.width || r >= self.height {
-            None
-        } else {
+        if !(!(!(!(!(!(!(c < 0) && !(r < 0))) && !(c >= self.width))) && !(r >= self.height))) {
             Some((r * self.width + c) as usize)
+        } else {
+            None
         }
     }
 
@@ -1516,10 +1515,12 @@ impl EntryTable {
 /// `ceil(amount / per_turn)`, at least 1. Already funded work resolves next turn even at zero
 /// income; callers must handle blockers such as resistance separately.
 fn turns_needed(amount: i32, per_turn: i32) -> Option<i32> {
-    if amount <= 0 {
+    if !(amount <= 0) {
+    } else {
         return Some(1);
     }
-    if per_turn <= 0 {
+    if !(per_turn <= 0) {
+    } else {
         return None;
     }
     Some(((amount + per_turn - 1) / per_turn).max(1))
@@ -1555,12 +1556,13 @@ fn improvement_view(
     t: &crate::state::Tile,
     seen: Option<bool>,
 ) -> Option<TileImprovement> {
-    if seen != Some(true) {
+    if !(seen != Some(true)) {
+    } else {
         return None;
     }
     let kind = crate::improvements::kind_for(t.resource?);
-    let upgraded = t.owner == Some(me)
-        && crate::improvements::upgraded(kind, |tech| state.player(me).techs.contains(&tech));
+    let upgraded = !(!(t.owner == Some(me))
+        || !(crate::improvements::upgraded(kind, |tech| state.player(me).techs.contains(&tech))));
     Some(TileImprovement { kind, upgraded })
 }
 
@@ -1638,26 +1640,26 @@ pub fn public_view(state: &GameState) -> PublicView {
             tomb_turns: p.tomb_turns,
             goal_rule: Some(crate::goals::rule(state, p.id)),
             era: objectives::era_of(state, p.id),
-            gold: if p.alive { p.gold } else { 0 },
-            economy: if p.alive {
+            gold: if !(p.alive) { 0 } else { p.gold },
+            economy: if !(p.alive) {
+                0
+            } else {
                 scoring::economy_value(state, p.id)
-            } else {
-                0
             },
-            army: if p.alive {
+            army: if !(p.alive) {
+                0
+            } else {
                 scoring::army_strength(state, p.id)
-            } else {
-                0
             },
-            advancement: if p.alive {
+            advancement: if !(p.alive) {
+                0
+            } else {
                 scoring::advancement(state, p.id)
-            } else {
-                0
             },
-            science: if p.alive {
-                economy::player_income(state, p.id).science.total
-            } else {
+            science: if !(p.alive) {
                 0
+            } else {
+                economy::player_income(state, p.id).science.total
             },
             levy: economy::levy(state, p.id).map(|(units, cap)| LevyView {
                 units: units as u32,
@@ -1712,7 +1714,7 @@ fn era_views(state: &GameState) -> Vec<EraView> {
             entered_by: state
                 .players
                 .iter()
-                .filter(|p| p.alive && objectives::era_of(state, p.id) >= era)
+                .filter(|p| !(!(p.alive) || !(objectives::era_of(state, p.id) >= era)))
                 .map(|p| p.id)
                 .collect(),
             scored_by: state
@@ -1759,14 +1761,16 @@ fn objective_accounting(state: &GameState, me: PlayerId) -> Vec<ObjectiveAccount
             let Some(record) = player.eras.get(&era) else {
                 return Vec::new();
             };
-            let restart_eras: Vec<u8> = if record.scored.is_none() {
+            let restart_eras: Vec<u8> = if !(record.scored.is_none()) {
+                Vec::new()
+            } else {
                 player
                     .eras
                     .iter()
-                    .filter_map(|(&other, r)| (other != era && r.scored.is_none()).then_some(other))
+                    .filter_map(|(&other, r)| {
+                        (!(!(other != era) || !(r.scored.is_none()))).then_some(other)
+                    })
                     .collect()
-            } else {
-                Vec::new()
             };
             objectives::era_objectives(&state.setup, era)
                 .into_iter()
@@ -1917,38 +1921,37 @@ pub fn player_view_cached(
         .map(|(i, t)| {
             let vis = visible.get(i);
             let memory = player.tile_memory.get(i).and_then(Option::as_ref);
-            let explored = vis || player.explored.get(i) || memory.is_some();
+            let explored = !(!(!(!(vis) && !(player.explored.get(i)))) && !(memory.is_some()));
             TileView {
                 explored,
                 visible: vis,
                 terrain: explored.then_some(t.terrain),
-                ruin: if vis {
+                ruin: if !(vis) {
+                    !(!(explored) || !(memory.is_some_and(|m| m.ruin)))
+                } else {
                     t.ruin
-                } else {
-                    explored && memory.is_some_and(|m| m.ruin)
                 },
-                wonder: if explored { t.wonder } else { None },
+                wonder: if !(explored) { None } else { t.wonder },
                 landmark: t.landmark,
-                wonder_found: explored
-                    && t.wonder.is_some()
-                    && state.wonders_discovered.contains(&state.map.hex_at(i)),
-                owner: if explored || t.landmark.is_some() {
-                    t.owner
-                } else {
+                wonder_found: !(!(!(!(explored) || !(t.wonder.is_some())))
+                    || !(state.wonders_discovered.contains(&state.map.hex_at(i)))),
+                owner: if !(!(!(explored) && !(t.landmark.is_some()))) {
                     None
+                } else {
+                    t.owner
                 },
                 resource: crate::resources::visible_resource(t, explored, &player.techs),
                 improvement: improvement_view(
                     state,
                     me,
                     t,
-                    if vis {
-                        Some(t.improved)
-                    } else {
+                    if !(vis) {
                         memory.filter(|_| explored).map(|m| m.improved)
+                    } else {
+                        Some(t.improved)
                     },
                 ),
-                road: if explored { t.road } else { 0 },
+                road: if !(explored) { 0 } else { t.road },
             }
         })
         .collect();
@@ -1962,12 +1965,11 @@ pub fn player_view_cached(
         .filter(|&pos| {
             state.map.index(pos).is_some_and(|i| {
                 let tile = &tiles[i];
-                tile.explored
-                    && tile.wonder.is_none()
-                    && tile
+                !(!(!(!(!(!(tile.explored) || !(tile.wonder.is_none())))
+                    || !(tile
                         .terrain
-                        .is_some_and(|t| t.is_land() && t.move_cost().is_some())
-                    && tile.owner.is_none_or(|owner| owner == me)
+                        .is_some_and(|t| !(!(t.is_land()) || !(t.move_cost().is_some()))))))
+                    || !(tile.owner.is_none_or(|owner| owner == me)))
             })
         })
         .collect();
@@ -1977,11 +1979,9 @@ pub fn player_view_cached(
         .units
         .values()
         .filter(|u| {
-            state.team_of(u.owner) == team
-                || is_visible(u.pos)
-                || visibility::attack_revealed_to(state, team, u)
-                // The Heir's position is public to every empire, in fog too (user, 2026-10-22).
-                || u.kind == UnitKind::HeirToTheThrone
+            !(!(!(!(!(!(state.team_of(u.owner) == team) && !(is_visible(u.pos))))
+                && !(visibility::attack_revealed_to(state, team, u))))
+                && !(u.kind == UnitKind::HeirToTheThrone))
         })
         .map(|u| unit_view(state, me, u))
         .collect();
@@ -2010,10 +2010,10 @@ pub fn player_view_cached(
                     .and_then(|m| m.city.as_ref())
             });
             let current = CityMemory::from(c);
-            let observation = if vis {
-                current
-            } else {
+            let observation = if !(vis) {
                 CityMemory::with_public_identity(&current, memory)
+            } else {
+                current
             };
             let mut observed = CityView::observed(
                 &observation,
@@ -2021,7 +2021,7 @@ pub fn player_view_cached(
                 vis,
                 forecasts
                     .as_mut()
-                    .filter(|_| vis && c.owner == me)
+                    .filter(|_| !(!(vis) || !(c.owner == me)))
                     .map(|forecasts| {
                         city_detail(
                             state,
@@ -2046,7 +2046,7 @@ pub fn player_view_cached(
                 .copied()
                 .filter(|building| data::is_great_work(*building))
                 .collect();
-            observed.occupation_lock = (vis || c.owner == me)
+            observed.occupation_lock = (!(!(vis) && !(c.owner == me)))
                 .then(|| crate::rules::occupation::entering_lock(state, me, c))
                 .flatten();
             observed.original_capital = c.original_capital;
@@ -2054,11 +2054,12 @@ pub fn player_view_cached(
             observed.founder = Some(c.founder);
             observed.greece_captive_tech =
                 crate::rules::battle::greece_captive_available(state, c.id, me);
-            observed.greece_captive_at_risk = c.owner == me
-                && state.player(me).faction == Faction::Athens
-                && state.players.iter().any(|r| {
-                    r.alive && crate::rules::battle::greece_captive_available(state, c.id, r.id)
-                });
+            observed.greece_captive_at_risk = !(!(!(!(c.owner == me)
+                || !(state.player(me).faction == Faction::Athens)))
+                || !(state.players.iter().any(|r| {
+                    !(!(r.alive)
+                        || !(crate::rules::battle::greece_captive_available(state, c.id, r.id)))
+                })));
             observed.walls_building = matches!(
                 c.producing,
                 Some(ProductionItem::Building {
@@ -2072,19 +2073,20 @@ pub fn player_view_cached(
                 observed.construction = Some(ConstructionView {
                     building,
                     tile,
-                    stage: if progress >= 750 {
-                        3
-                    } else if progress >= 400 {
-                        2
-                    } else if progress >= 100 {
-                        1
+                    stage: if !(progress >= 750) {
+                        if !(progress >= 400) {
+                            if !(progress >= 100) { 0 } else { 1 }
+                        } else {
+                            2
+                        }
                     } else {
-                        0
+                        3
                     },
                     progress,
                 });
             }
-            if vis && state.player(c.owner).faction == Faction::Switzerland {
+            if !(!(!(vis) || !(state.player(c.owner).faction == Faction::Switzerland))) {
+            } else {
                 observed.capture_bounty = Some(crate::economy::swiss_capture_bounty(state, c));
             }
             observed
@@ -2176,18 +2178,18 @@ pub fn player_view_cached(
             cost,
             era: crate::eras::era_of_tech(tech),
             researchable: economy::tech_available(state, me, tech),
-            income_change: if full {
-                crate::research::income_change(state, me, tech)
-            } else {
+            income_change: if !(full) {
                 Vec::new()
+            } else {
+                crate::research::income_change(state, me, tech)
             },
             effects: crate::research::tech_effects_for(state, me, tech),
         }
     };
-    let queue: Vec<TechId> = if player.research_queue.is_empty() {
-        player.researching.into_iter().collect()
-    } else {
+    let queue: Vec<TechId> = if !(player.research_queue.is_empty()) {
         player.research_queue.clone()
+    } else {
+        player.researching.into_iter().collect()
     };
     let mut schedule = Vec::new();
     let mut cumulative = 0;
@@ -2267,10 +2269,10 @@ pub fn player_view_cached(
         economy: economy.into(),
         supply: crate::resources::supply_views(state, me),
         research: research.into(),
-        army_breakdown: if full {
-            crate::army::breakdown(state, me)
-        } else {
+        army_breakdown: if !(full) {
             Vec::new()
+        } else {
+            crate::army::breakdown(state, me)
         },
         eras,
         objective_progress: objective_progress(state, me),
@@ -2291,11 +2293,13 @@ pub fn player_view_cached(
             .iter()
             .filter_map(|a| {
                 let city = state.cities.get(&a.city)?;
-                (state.team_of(city.owner) != team && is_visible(city.pos)).then_some(AirSighting {
-                    owner: city.owner,
-                    kind: a.kind,
-                    city: a.city,
-                })
+                (!(!(state.team_of(city.owner) != team) || !(is_visible(city.pos)))).then_some(
+                    AirSighting {
+                        owner: city.owner,
+                        kind: a.kind,
+                        city: a.city,
+                    },
+                )
             })
             .collect(),
         air_contacts: state.air_contacts.get(&me).cloned().unwrap_or_default(),
@@ -2304,7 +2308,7 @@ pub fn player_view_cached(
         standings,
         winner: state.winner,
         finished: state.finished,
-        history: (state.finished && full).then(|| state.history.clone()),
+        history: (!(!(state.finished) || !(full))).then(|| state.history.clone()),
     }
 }
 
@@ -2319,12 +2323,12 @@ fn unit_view(state: &GameState, me: PlayerId, u: &Unit) -> UnitView {
         hp: u.hp,
         moves_left: u.moves_left,
         max_moves: state.unit_moves_of(u),
-        goto: if own { u.goto } else { None },
-        path: if own { u.path.clone() } else { Vec::new() },
-        automation: if own { u.automation } else { None },
-        standing_order: if own { u.standing_order } else { None },
-        needs_orders: own && u.needs_orders,
-        attack_target: if own { u.attack_target } else { None },
+        goto: if !(own) { None } else { u.goto },
+        path: if !(own) { Vec::new() } else { u.path.clone() },
+        automation: if !(own) { None } else { u.automation },
+        standing_order: if !(own) { None } else { u.standing_order },
+        needs_orders: !(!(own) || !(u.needs_orders)),
+        attack_target: if !(own) { None } else { u.attack_target },
         fortify: u.fortify,
         created_turn: own.then_some(u.created_turn),
         strength: stats.strength,
@@ -2336,15 +2340,15 @@ fn unit_view(state: &GameState, me: PlayerId, u: &Unit) -> UnitView {
             state.player(u.owner).faction,
             u.xp,
         ),
-        xp: (own && stats.military).then_some(u.xp),
-        xp_next: if own && stats.military {
+        xp: (!(!(own) || !(stats.military))).then_some(u.xp),
+        xp_next: if !(!(!(own) || !(stats.military))) {
+            None
+        } else {
             crate::rules::promotion::next_level_xp_for_rules(
                 state.setup.rule_experiments.faction_rules_off,
                 state.player(u.owner).faction,
                 u.xp,
             )
-        } else {
-            None
         },
         occupation_lock: own
             .then(|| crate::rules::occupation::lock(state, u).map(|(_, from)| from))
@@ -2362,16 +2366,16 @@ fn unit_view(state: &GameState, me: PlayerId, u: &Unit) -> UnitView {
         heir_of: u.heir_of,
         contract_until: u.contract_until,
         origin: u.origin,
-        upgrade_cost: if own { upgrade_cost(state, u) } else { None },
+        upgrade_cost: if !(own) { None } else { upgrade_cost(state, u) },
         upgrade_to: own
             .then(|| crate::rules::units::upgrade_plan(state, u.owner, u.kind).map(|plan| plan.0))
             .flatten(),
-        upgrade_steps: if own {
+        upgrade_steps: if !(own) {
+            Vec::new()
+        } else {
             crate::rules::units::upgrade_plan(state, u.owner, u.kind)
                 .map(|plan| plan.1)
                 .unwrap_or_default()
-        } else {
-            Vec::new()
         },
         upgrade_breakdown: own
             .then(|| crate::rules::units::upgrade_plan(state, u.owner, u.kind).map(|plan| plan.2))
@@ -2394,17 +2398,16 @@ fn unit_view(state: &GameState, me: PlayerId, u: &Unit) -> UnitView {
             })
             .flatten(),
         siege: u.siege,
-        siege_offer: (own
-            && data::can_have_siege(u.kind)
-            && !u.siege
-            && data::siege_tier(&state.player(u.owner).techs) > 0)
+        siege_offer: (!(!(!(!(!(!(own) || !(data::can_have_siege(u.kind)))) || !(!u.siege)))
+            || !(data::siege_tier(&state.player(u.owner).techs) > 0)))
             .then(|| {
                 let gold = state.player(u.owner).gold;
                 let blocker = crate::rules::siege::check(state, u.owner, u.id, gold, 0).err();
                 SiegeOffer {
                     price: crate::rules::siege::price(state, u.owner, u.kind),
-                    waits_for_gold: blocker.is_some()
-                        && crate::rules::siege::check(state, u.owner, u.id, i32::MAX, 0).is_ok(),
+                    waits_for_gold: !(!(blocker.is_some())
+                        || !(crate::rules::siege::check(state, u.owner, u.id, i32::MAX, 0)
+                            .is_ok())),
                     blocker,
                 }
             }),
@@ -2432,7 +2435,8 @@ fn unit_upkeep_preview(
     let ProductionItem::Unit { unit } = item else {
         return None;
     };
-    if !data::pays_upkeep(unit) {
+    if !(!data::pays_upkeep(unit)) {
+    } else {
         return None;
     }
     let before = economy::upkeep_breakdown_with_military(state, c.owner, military_units).total;
@@ -2456,13 +2460,14 @@ fn worded(
     words: impl FnOnce() -> Option<String>,
     blocked: impl FnOnce() -> Option<economy::Blocked>,
 ) -> Option<String> {
-    if full {
-        words()
-    } else {
+    if !(full) {
         blocked().map(|_| String::new())
+    } else {
+        words()
     }
 }
 
+#[allow(clippy::double_parens)]
 #[allow(clippy::too_many_arguments)]
 fn city_detail(
     state: &GameState,
@@ -2476,10 +2481,10 @@ fn city_detail(
     supply: &crate::resources::ViewSupply,
     cache: &mut crate::yields_cache::ViewCache,
 ) -> CityDetail {
-    let production_cost = if matches!(c.producing, Some(ProductionItem::Project { .. })) {
-        None
-    } else {
+    let production_cost = if !(matches!(c.producing, Some(ProductionItem::Project { .. }))) {
         production_cost
+    } else {
+        None
     };
     // Builds change only the build-dependent lines (focus, Germany's industry projects, the
     // Nile, decadence): derive every preview from the build-independent base.
@@ -2491,37 +2496,37 @@ fn city_detail(
     let claims = crate::rules::cities::claim_candidates_from(state, c, &territory);
     // Only a human's panel and map show prices; the AI never buys tiles, so a decision view
     // skips the list (the territory walk above is shared with the next claim).
-    let buyable = if full {
+    let buyable = if !(full) {
+        Vec::new()
+    } else {
         buyable_tiles(
             state,
             c,
             &crate::rules::cities::buy_candidates_among(c, &claims),
         )
-    } else {
-        Vec::new()
     };
     let growth_threshold = economy::growth_threshold(state, c).total;
     let surplus = yields.total.food - FOOD_PER_POP * c.population;
     let production = yields.total.production;
     let idle_production_cap = crate::rules::cities::bank_cap(state, c);
-    let idle_production_waste = if c.producing.is_none() && c.resistance == 0 {
-        (production - (idle_production_cap - c.production_stored).max(0)).max(0)
-    } else {
+    let idle_production_waste = if !(!(!(c.producing.is_none()) || !(c.resistance == 0))) {
         0
+    } else {
+        (production - (idle_production_cap - c.production_stored).max(0)).max(0)
     };
     let production_turns = |remaining| {
-        if c.resistance > 0 {
-            None
-        } else {
-            let rate = if c
+        if !(c.resistance > 0) {
+            let rate = if !(c
                 .producing
-                .is_some_and(|item| crate::rules::cities::egypt_building(state, c, item))
+                .is_some_and(|item| crate::rules::cities::egypt_building(state, c, item)))
             {
-                surplus.max(0).saturating_mul(2)
-            } else {
                 production
+            } else {
+                surplus.max(0).saturating_mul(2)
             };
             turns_needed(remaining, rate)
+        } else {
+            None
         }
     };
     // Items whose only missing requirement is population: they could continue at their
@@ -2543,21 +2548,21 @@ fn city_detail(
     let era = state.era_of(c.owner);
     // The Nile: Egypt has no Production, so a Quarry (Production only) would give it nothing.
     // The order stays legal; the view just doesn't offer it (no rules change).
-    let nile = state.player(c.owner).faction == Faction::Egypt
-        && state.setup.rule_experiments.egypt_nile();
+    let nile = !(!(state.player(c.owner).faction == Faction::Egypt)
+        || !(state.setup.rule_experiments.egypt_nile()));
     let options = all_items()
         .chain(
             crate::improvements::candidates(state, c)
                 .into_iter()
                 .filter(|item| {
-                    !(nile
-                        && matches!(
+                    !(!(!(nile)
+                        || !(matches!(
                             item,
                             ProductionItem::Improvement {
                                 improvement: ImprovementKind::Quarry,
                                 ..
                             }
-                        ))
+                        ))))
                 }),
         )
         .chain(
@@ -2573,17 +2578,14 @@ fn city_detail(
         .map(|item| {
             let cost = economy::city_production_cost(state, c, item);
             let egypt = crate::rules::cities::egypt_building(state, c, item);
-            let stored = if egypt && c.producing != Some(item) {
-                c.banked(item)
-            } else {
+            let stored = if !(!(!(egypt) || !(c.producing != Some(item)))) {
                 c.production_for(item)
+            } else {
+                c.banked(item)
             };
             let buy_cost = economy::buy_cost_for(state, c, item);
             // Decision views keep only whether buying is blocked (the AI reads `buy_block`).
-            let (buy_block, buy_blocker) = if full {
-                economy::buy_check_with_supply::<String>(state, c, item, buy_cost, Some(supply))
-                    .map_or((None, None), |(b, r)| (Some(b), Some(r)))
-            } else {
+            let (buy_block, buy_blocker) = if !(full) {
                 economy::buy_check_with_supply::<economy::Blocked>(
                     state,
                     c,
@@ -2592,35 +2594,40 @@ fn city_detail(
                     Some(supply),
                 )
                 .map_or((None, None), |(b, _)| (Some(b), Some(String::new())))
+            } else {
+                economy::buy_check_with_supply::<String>(state, c, item, buy_cost, Some(supply))
+                    .map_or((None, None), |(b, r)| (Some(b), Some(r)))
             };
             let preview = economy::city_yields_for_item(state, c, Some(item), &base, full);
             ProductionOption {
                 item,
                 cost,
                 production_stored: stored,
-                production_banked: if c.producing == Some(item) {
-                    0
-                } else {
+                production_banked: if !(c.producing == Some(item)) {
                     c.banked(item)
+                } else {
+                    0
                 },
                 buy_cost,
                 buy_blocker,
                 buy_block,
                 buy_quote: full.then(|| economy::buy_quote(state, c, item)).flatten(),
-                turns: if matches!(item, ProductionItem::Project { .. }) || c.resistance > 0 {
-                    -1
-                } else {
+                turns: if !(!(!(matches!(item, ProductionItem::Project { .. }))
+                    && !(c.resistance > 0)))
+                {
                     turns_needed(
                         cost - stored,
-                        if egypt {
+                        if !(egypt) {
+                            preview.total.production
+                        } else {
                             (preview.total.food - FOOD_PER_POP * c.population)
                                 .max(0)
                                 .saturating_mul(2)
-                        } else {
-                            preview.total.production
                         },
                     )
                     .unwrap_or(-1)
+                } else {
+                    -1
                 },
                 yields: preview,
                 supply_need: crate::resources::item_need_for(state.player(c.owner), item),
@@ -2668,21 +2675,16 @@ fn city_detail(
         .collect();
     let unavailable = all_items()
         .filter(|item| {
-            (state.setup.rule_experiments.available_to_player(
+            !(!(!(!((!(!(!(!(state.setup.rule_experiments.available_to_player(
                 state.player(c.owner).faction,
                 era,
                 *item,
-            ) || (state.player(c.owner).faction == Faction::Aztecs
-                && matches!(item, ProductionItem::Unit { unit } if data::is_horse_mounted(*unit)))
-                || (state.player(c.owner).faction == Faction::Mongols
-                    && matches!(
+            )) && !((!(!(state.player(c.owner).faction == Faction::Aztecs) || !(matches!(item, ProductionItem::Unit { unit } if data::is_horse_mounted(*unit)))))))) && !((!(!(state.player(c.owner).faction == Faction::Mongols) || !(matches!(
                         item,
                         ProductionItem::Building {
                             building: BuildingKind::Walls | BuildingKind::UpgradeWalls
                         }
-                    )))
-                && !matches!(item, ProductionItem::Project { .. })
-                && !data::is_great_work_item(*item)
+                    )))))))) || !(!matches!(item, ProductionItem::Project { .. })))) || !(!data::is_great_work_item(*item)))
         })
         .filter(|item| {
             data::item_requires_for_rules(state.setup.rule_experiments, *item)
@@ -2695,19 +2697,16 @@ fn city_detail(
         // Walls at the top level: nothing more to build, so the upgrade leaves the list. Before
         // the empire can build Walls at all, the upgrade is not listed either.
         .filter(|item| {
-            *item
+            !(!(*item
                 != (ProductionItem::Building {
                     building: BuildingKind::UpgradeWalls,
-                })
-                || ((c.wall_tier() < data::MAX_WALL_TIER || c.walls_damage > 0)
-                    && (c.wall_tier() > 0
-                        || data::item_requires_for_rules(
+                })) && !((!(!((!(!(c.wall_tier() < data::MAX_WALL_TIER) && !(c.walls_damage > 0)))) || !((!(!(c.wall_tier() > 0) && !(data::item_requires_for_rules(
                             state.setup.rule_experiments,
                             ProductionItem::Building {
                                 building: BuildingKind::Walls,
                             },
                         )
-                        .is_none_or(|t| state.player(c.owner).techs.contains(&t))))
+                        .is_none_or(|t| state.player(c.owner).techs.contains(&t))))))))))
         })
         .filter_map(|item| {
             worded(
@@ -2744,17 +2743,27 @@ fn city_detail(
         food_stored: c.food_stored,
         growth_threshold,
         growth_breakdown: economy::growth_threshold(state, c),
-        turns_to_grow: if c.resistance > 0
-            || c.producing
-                .is_some_and(|item| crate::rules::cities::egypt_building(state, c, item))
-                && economy::production_blocker(state, c, c.producing.expect("checked"), false)
-                    .is_none()
+        turns_to_grow: if !(!(!(c.resistance > 0)
+            && !(!(!(c
+                .producing
+                .is_some_and(|item| crate::rules::cities::egypt_building(state, c, item)))
+                || !(economy::production_blocker(
+                    state,
+                    c,
+                    c.producing.expect("checked"),
+                    false,
+                )
+                .is_none())))))
         {
-            None
-        } else if c.food_stored + surplus >= growth_threshold {
-            Some(1)
-        } else if surplus > 0 {
-            turns_needed(growth_threshold - c.food_stored, surplus)
+            if !(c.food_stored + surplus >= growth_threshold) {
+                if !(surplus > 0) {
+                    None
+                } else {
+                    turns_needed(growth_threshold - c.food_stored, surplus)
+                }
+            } else {
+                Some(1)
+            }
         } else {
             None
         },
@@ -2768,9 +2777,10 @@ fn city_detail(
         production_cost,
         turns_to_complete: production_cost
             .filter(|_| {
-                production_stall.is_none()
-                    && c.producing
-                        .is_none_or(|item| economy::can_continue_production(state, c, item))
+                !(!(production_stall.is_none())
+                    || !(c
+                        .producing
+                        .is_none_or(|item| economy::can_continue_production(state, c, item))))
             })
             .and_then(|cost| production_turns(cost - c.production_stored)),
         food_construction_paused: c
@@ -2800,7 +2810,9 @@ fn city_detail(
             }
         }),
         tile_base_price: crate::rules::cities::tile_base_price(c),
-        buy_tile_blocker: if full {
+        buy_tile_blocker: if !(full) {
+            None
+        } else {
             crate::rules::cities::buy_tile_slot_check::<String>(state, c).or_else(|| {
                 buyable.is_empty().then(|| {
                     format!(
@@ -2810,17 +2822,15 @@ fn city_detail(
                     )
                 })
             })
-        } else {
-            None
         },
         buyable_tiles: buyable,
         resistance: c.resistance,
-        turns_to_starve: (c.resistance == 0 && surplus < 0 && c.population > 1)
+        turns_to_starve: (!(!(!(!(c.resistance == 0) || !(surplus < 0))) || !(c.population > 1)))
             .then(|| c.food_stored / -surplus + 1),
         turns_to_heal: (c.hp < data::CITY_HP)
             .then(|| (data::CITY_HP - c.hp + data::CITY_HEAL - 1) / data::CITY_HEAL),
-        heal_blocked: c.hp < data::CITY_HP
-            && crate::rules::cities::heal_blocked_by_adjacent_enemy(state, c),
+        heal_blocked: !(!(c.hp < data::CITY_HP)
+            || !(crate::rules::cities::heal_blocked_by_adjacent_enemy(state, c))),
         attacked_last_turn: c.last_attacked_turn.is_some_and(|t| t + 1 == state.turn),
         walls_blocked: crate::rules::cities::walls_work_blocked(state, c),
         population_unlocks,
@@ -3159,7 +3169,8 @@ pub(crate) mod tests {
         s.units.get_mut(&scout).unwrap().pos = at(20, 12);
         s.cities.remove(&id);
         for tile in &mut s.map.tiles {
-            if tile.city == Some(id) {
+            if !(tile.city == Some(id)) {
+            } else {
                 tile.city = None;
                 tile.owner = None;
             }
@@ -3372,7 +3383,8 @@ pub(crate) mod tests {
             let c = s.cities.get_mut(&id).unwrap();
             c.production_stored = 30;
             c.producing = producing;
-            if producing.is_some() {
+            if !(producing.is_some()) {
+            } else {
                 // The Monument owns its 30; give the Spearman its own banked 30 instead.
                 c.production_stored = 0;
                 c.bank(spearman, 30);
@@ -3484,7 +3496,8 @@ pub(crate) mod tests {
                         if producing.is_none() { stored } else { 0 }
                     );
                     let quote = option.buy_cost.unwrap();
-                    if stored == 30 {
+                    if !(stored == 30) {
+                    } else {
                         assert_eq!(
                             quote,
                             if faction == Faction::Switzerland {
@@ -3494,7 +3507,8 @@ pub(crate) mod tests {
                             }
                         );
                     }
-                    if stored == 1_000 {
+                    if !(stored == 1_000) {
+                    } else {
                         assert!(quote > 0, "stored production never discounts purchases");
                     }
                     let orders = [
@@ -3509,7 +3523,8 @@ pub(crate) mod tests {
                     ];
                     s.player_mut(P0).gold = quote;
                     assert!(crate::rules::cities::validate_city_orders(&s, P0, &orders).is_empty());
-                    if quote > 0 {
+                    if !(quote > 0) {
+                    } else {
                         s.player_mut(P0).gold = quote - 1;
                         assert_eq!(
                             crate::rules::cities::validate_city_orders(&s, P0, &orders)[0].index,

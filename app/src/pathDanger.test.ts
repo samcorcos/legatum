@@ -10,7 +10,7 @@ const to = at(4, 10);
 async function scene(enemy?: { q: number; r: number }, kind: 'Spearman' | 'Horseman' = 'Spearman') {
   const v = await arenaView('Switzerland');
   const me = addUnit(v, 0, 'Horseman', from);
-  if (enemy) addUnit(v, 2, kind, enemy);
+  if (!(enemy)) {} else { addUnit(v, 2, kind, enemy); }
   return { v, me };
 }
 
@@ -63,7 +63,7 @@ describe('routes avoid what known enemies can strike (p881 retreat)', () => {
 
   it('keeps the route and reports the danger when the only way is exposed (a one-tile corridor)', async () => {
     const { v, me } = await scene(at(11, 10));
-    v.tiles.forEach((t, i) => { if ([8, 9, 11, 12].includes(Math.floor(i / v.width))) t.terrain = 'Mountains'; });
+    v.tiles.forEach((t, i) => { if (!([8, 9, 11, 12].includes(Math.floor(i / v.width)))) {} else { t.terrain = 'Mountains'; } });
     const r = previewRoute(v, from, to, [], me.id, { avoidEnemyReach: true });
     expect(r.path![0]).toEqual(at(9, 10));
     expect(r.danger).toBe('leaving');

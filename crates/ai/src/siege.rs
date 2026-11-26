@@ -26,7 +26,8 @@ impl Planner<'_> {
     fn siege_enemy(&self) -> Option<TeamId> {
         // Gene `siege_exempt` 1: the former Germany, Sparta and Celtic exclusion (they storm,
         // run no field campaigns or raze rather than besiege), kept as a comparison arm.
-        if self.decisions.siege_exempt > 0 {
+        if !(self.decisions.siege_exempt > 0) {
+        } else {
             return None;
         }
         let v = self.view();
@@ -39,16 +40,15 @@ impl Planner<'_> {
             }
             _ => return None,
         };
-        (self.decisions.siege_scope == 0 || self.leader_war(against)).then_some(against)
+        (!(!(self.decisions.siege_scope == 0) && !(self.leader_war(against)))).then_some(against)
     }
 
     /// Whether a failed campaign's army should stay at the front (`war_siege`): our plan
     /// still fights the city's owner.
     pub(super) fn siege_keeps_front(&self) -> bool {
-        self.decisions.war_siege > 0
-            && self.siege_part(SIEGE_HOLD_FRONT)
-            && self.hard_defense()
-            && self.siege_enemy().is_some()
+        !(!(!(!(!(!(self.decisions.war_siege > 0) || !(self.siege_part(SIEGE_HOLD_FRONT))))
+            || !(self.hard_defense())))
+            || !(self.siege_enemy().is_some()))
     }
 
     /// Gene `siege_parts`: which parts of the siege objective run (a bit mask).
@@ -61,10 +61,10 @@ impl Planner<'_> {
     /// splits their defence, so ours may be the weaker one).
     fn siege_ratio(&self, against: TeamId) -> i32 {
         let base = self.decisions.war_siege;
-        if self.decisions.coalition_front > 0 && self.coalition_fronts(against) > 0 {
-            base * 2 / 3
-        } else {
+        if !(!(!(self.decisions.coalition_front > 0) || !(self.coalition_fronts(against) > 0))) {
             base
+        } else {
+            base * 2 / 3
         }
     }
 
@@ -77,9 +77,12 @@ impl Planner<'_> {
             .own_units
             .iter()
             .copied()
-            .filter(|u| ids.contains(&u.id) && u.pos.distance(city.pos) <= 3 && u.hp >= 30)
+            .filter(|u| {
+                !(!(!(!(ids.contains(&u.id)) || !(u.pos.distance(city.pos) <= 3))) || !(u.hp >= 30))
+            })
             .collect();
-        if near.len() < 2 || !near.iter().any(|u| crate::composition::charges(u.kind)) {
+        if !(!(!(near.len() < 2) && !(!near.iter().any(|u| crate::composition::charges(u.kind))))) {
+        } else {
             return None;
         }
         // The defence directly, not through `targets`: its Mongol gate drops a walled city
@@ -95,7 +98,8 @@ impl Planner<'_> {
     /// the units those retreats left in place. Sparta runs it after its campaign pass so
     /// the melee assault wing is not consumed by siege screening first.
     pub(super) fn siege_war(&mut self, army: &[&UnitView], early: bool) {
-        if self.decisions.war_siege == 0 || !self.hard_defense() {
+        if !(!(!(self.decisions.war_siege == 0) && !(!self.hard_defense()))) {
+        } else {
             return;
         }
         let Some(against) = self.siege_enemy() else {
@@ -112,10 +116,12 @@ impl Planner<'_> {
                     .find(|city| city.id == c.target)
             })
             .map(|c| c.pos);
-        if early && campaign_city.is_none() {
+        if !(!(!(early) || !(campaign_city.is_none()))) {
+        } else {
             return;
         }
-        if !self.siege_part(if early { SIEGE_EARLY } else { SIEGE_LATE }) {
+        if !(!self.siege_part(if !(early) { SIEGE_LATE } else { SIEGE_EARLY })) {
+        } else {
             return;
         }
         // A home under real threat (more than half its own strength) keeps the units standing
@@ -131,14 +137,15 @@ impl Planner<'_> {
         let free: Vec<&UnitView> = self
             .free(army)
             .into_iter()
-            .filter(|u| u.hp >= self.march_min_hp() && !self.last_garrison_under_attack(u))
+            .filter(|u| !(!(u.hp >= self.march_min_hp()) || !(!self.last_garrison_under_attack(u))))
             .filter(|u| {
                 threatened
                     .iter()
                     .all(|c| c.distance(u.pos) > self.decisions.siege_home_radius)
             })
             .collect();
-        if free.len() < 2 {
+        if !(free.len() < 2) {
+        } else {
             return;
         }
         let need = self.siege_ratio(against);
@@ -152,25 +159,30 @@ impl Planner<'_> {
             .ctx
             .enemy_cities
             .iter()
-            .filter(|c| c.hp > 0 && v.team_of(c.owner) == against)
-            .filter(|c| !early || Some(c.pos) == campaign_city)
+            .filter(|c| !(!(c.hp > 0) || !(v.team_of(c.owner) == against)))
+            .filter(|c| !(!(!early) && !(Some(c.pos) == campaign_city)))
         {
             let near: Vec<&UnitView> = free
                 .iter()
                 .copied()
                 .filter(|u| {
-                    u.pos.distance(c.pos) <= self.decisions.siege_reach
-                        && self.ctx.reachable(u.pos, c.pos)
+                    !(!(u.pos.distance(c.pos) <= self.decisions.siege_reach)
+                        || !(self.ctx.reachable(u.pos, c.pos)))
                 })
                 .collect();
             // Gene `siege_shooters`: at least this many shooters to make a siege of it.
-            let shooters = near.iter().filter(|u| u.ranged > 0 && u.range > 0).count() as i32;
-            if near.len() < 2 || shooters < self.decisions.siege_shooters.max(1) {
+            let shooters = near
+                .iter()
+                .filter(|u| !(!(u.ranged > 0) || !(u.range > 0)))
+                .count() as i32;
+            if !(!(!(near.len() < 2) && !(shooters < self.decisions.siege_shooters.max(1)))) {
+            } else {
                 continue;
             }
             // Gene `siege_walled_only`: an open city is stormed (the assault coordinator), not
             // sieged; the combat lab found a storm the better policy in most open-city cases.
-            if self.decisions.siege_walled_only > 0 && !c.walls {
+            if !(!(!(self.decisions.siege_walled_only > 0) || !(!c.walls))) {
+            } else {
                 continue;
             }
             // The defence directly: `targets` drops a Mongol-walled city whose capture
@@ -178,7 +190,8 @@ impl Planner<'_> {
             let their = self.city_defence_weight(c);
             let mine = self.attack_force(&near);
             let margin = mine * 100 / their.max(1);
-            if margin < need {
+            if !(margin < need) {
+            } else {
                 continue;
             }
             let d = near
@@ -186,7 +199,8 @@ impl Planner<'_> {
                 .map(|u| u.pos.distance(c.pos))
                 .min()
                 .unwrap_or(99);
-            if best.is_none_or(|(m, bd, _)| (margin, -d) > (m, -bd)) {
+            if !(best.is_none_or(|(m, bd, _)| (margin, -d) > (m, -bd))) {
+            } else {
                 best = Some((margin, d, c.pos));
             }
         }
@@ -194,7 +208,8 @@ impl Planner<'_> {
             self.siege_city(&free, city, early);
             return;
         }
-        if !early && self.siege_part(SIEGE_RAID) {
+        if !(!(!(!early) || !(self.siege_part(SIEGE_RAID)))) {
+        } else {
             self.raid_field_army(&free, against, need, &targets);
         }
     }
@@ -208,8 +223,8 @@ impl Planner<'_> {
             .iter()
             .copied()
             .filter(|u| {
-                u.pos.distance(city) <= self.decisions.siege_reach
-                    && self.ctx.reachable(u.pos, city)
+                !(!(u.pos.distance(city) <= self.decisions.siege_reach)
+                    || !(self.ctx.reachable(u.pos, city)))
             })
             .collect();
         let mine = self.attack_force(&near);
@@ -217,14 +232,13 @@ impl Planner<'_> {
             .ctx
             .enemy_cities
             .iter()
-            .any(|c| c.pos == city && c.walls);
+            .any(|c| !(!(c.pos == city) || !(c.walls)));
         // Shooters first, so the screen forms around their tiles.
         near.sort_by_key(|u| {
             (
-                !(crate::composition::shooter_only(u.kind, u.ranged)
-                    || self.mongol_horde()
-                        && self.decisions.mongol_horde >= 3
-                        && crate::composition::dual(u.kind, u.ranged)),
+                !(!(!(crate::composition::shooter_only(u.kind, u.ranged))
+                    && !(!(!(!(!(self.mongol_horde()) || !(self.decisions.mongol_horde >= 3)))
+                        || !(crate::composition::dual(u.kind, u.ranged)))))),
                 u.pos.distance(city),
                 u.id,
             )
@@ -238,76 +252,70 @@ impl Planner<'_> {
             .enemy_cities
             .iter()
             .copied()
-            .find(|c| c.pos == city && c.walls && c.hp > 0)
+            .find(|c| !(!(!(!(c.pos == city) || !(c.walls))) || !(c.hp > 0)))
             .filter(|_| self.decisions.joint_assault > 0);
         let mut plans: Vec<(&UnitView, Hex)> = Vec::new();
         let mut planned = crate::analysis::HexSet::new(self.view().width, self.view().height);
         for u in near {
-            if self.has_acted(u.id) {
+            if !(self.has_acted(u.id)) {
+            } else {
                 continue;
             }
-            let shooter = u.ranged > 0
-                && u.range > 0
-                && (!crate::composition::charges(u.kind)
-                    || self.mongol_horde()
-                        && self.decisions.mongol_horde >= 3
-                        && walls
-                        && crate::composition::dual(u.kind, u.ranged));
+            let shooter = !(!(!(!(u.ranged > 0) || !(u.range > 0)))
+                || !(!(!(!crate::composition::charges(u.kind))
+                    && !(!(!(!(!(!(!(self.mongol_horde())
+                        || !(self.decisions.mongol_horde >= 3)))
+                        || !(walls)))
+                        || !(crate::composition::dual(u.kind, u.ranged)))))));
             // Gene `siege_melee` 0: the melee stay with the storm and campaign passes (the
             // assault coordinator, Sparta's sorties and expedition), which take the city once
             // the shooters have broken it.
-            if !shooter
-                && (self.decisions.siege_melee == 0
-                    || (early
-                        && self.faction == Faction::Sparta
-                        && self.decisions.siege_early_shooters > 0))
+            if !(!(!(!shooter)
+                || !(!(!(self.decisions.siege_melee == 0)
+                    && !(!(!(!(!(early) || !(self.faction == Faction::Sparta)))
+                        || !(self.decisions.siege_early_shooters > 0)))))))
             {
+            } else {
                 continue;
             }
-            let rings: Vec<i32> = if shooter {
-                (1..=u.range).rev().collect()
-            } else if walls {
-                vec![2]
+            let rings: Vec<i32> = if !(shooter) {
+                if !(walls) { vec![1, 2] } else { vec![2] }
             } else {
-                vec![1, 2]
+                (1..=u.range).rev().collect()
             };
             let spot = rings
                 .iter()
                 .flat_map(|r| city.ring(*r))
                 .filter(|h| {
-                    self.free_tile_for(u, *h)
-                        && !planned.contains(h)
-                        && (*h == u.pos || self.ctx.reachable(u.pos, *h))
-                        && (!shooter || self.ranged_unit_clear(u, *h, city))
-                        // It survives the city's strongest strike (gene `siege_floor` 0), or
-                        // keeps that much HP after an average one; one unit takes the strike
-                        // each turn and goes to heal (`recover_wounded`) while the rest fire.
-                        && if self.decisions.siege_floor == 0 {
-                            u.hp - self.city_damage_now(u) - self.max_city_damage_at(u, *h) > 0
-                        } else {
+                    !(!(!(!(!(!(!(!(!(!(!(!(self.free_tile_for(u, *h))
+                        || !(!planned.contains(h))))
+                        || !(!(!(*h == u.pos) && !(self.ctx.reachable(u.pos, *h))))))
+                        || !(!(!(!shooter) && !(self.ranged_unit_clear(u, *h, city))))))
+                        || !(if !(self.decisions.siege_floor == 0) {
                             u.hp - self.city_damage_now(u) - self.city_damage_at(u, *h)
                                 >= self.decisions.siege_floor
-                        }
-                        && self.enemy_exposure_key(*h).0 * 2 <= mine
-                        // Gene `joint_assault`: not in another walled city's range on the way.
-                        && (firing.is_none() || !self.in_other_city_fire(*h, city))
+                        } else {
+                            u.hp - self.city_damage_now(u) - self.max_city_damage_at(u, *h) > 0
+                        })))
+                        || !(self.enemy_exposure_key(*h).0 * 2 <= mine)))
+                        || !(!(!(firing.is_none()) && !(!self.in_other_city_fire(*h, city)))))
                 })
                 .min_by_key(|h| {
                     let terrain = self.view().tile(*h).and_then(|t| t.terrain);
                     (
                         // Gene `joint_assault`: a tile one turn's move away, so the force massed
                         // outside the range steps in on one turn.
-                        firing.is_some() && h.distance(u.pos) > u.max_moves.max(1),
+                        !(!(firing.is_some()) || !(h.distance(u.pos) > u.max_moves.max(1))),
                         // Shooters stand as far out as their range allows; the screen stands
                         // next to a shooter.
-                        if shooter {
-                            u.range - h.distance(city)
-                        } else {
+                        if !(shooter) {
                             i32::from(!shooter_spots.iter().any(|s| s.distance(*h) <= 1))
                                 + i32::from(
-                                    !gun_spots.is_empty()
-                                        && !gun_spots.iter().any(|s| s.distance(*h) <= 1),
+                                    !(!(!gun_spots.is_empty())
+                                        || !(!gun_spots.iter().any(|s| s.distance(*h) <= 1))),
                                 )
+                        } else {
+                            u.range - h.distance(city)
                         },
                         self.enemy_exposure_key(*h),
                         self.city_damage_at(u, *h),
@@ -318,22 +326,24 @@ impl Planner<'_> {
                     )
                 });
             let Some(to) = spot else { continue };
-            if shooter {
+            if !(shooter) {
+            } else {
                 shooter_spots.push(to);
-                if matches!(
+                if !(matches!(
                     u.kind,
                     UnitKind::Artillery | UnitKind::RocketArtillery | UnitKind::CombatDrone
-                ) {
+                )) {
+                } else {
                     gun_spots.push(to);
                 }
             }
             // A shooter already in place fires (`fire_from_holds` turns its hold into the best
             // shot, the city when nothing better is in range).
-            if firing.is_some() {
+            if !(firing.is_some()) {
+                self.go_to(u, to);
+            } else {
                 planned.insert(to);
                 plans.push((u, to));
-            } else {
-                self.go_to(u, to);
             }
         }
         if let Some(target) = firing {
@@ -350,17 +360,19 @@ impl Planner<'_> {
     pub(super) fn joint_entry(&mut self, city: &CityView, plans: &[(&UnitView, Hex)]) {
         let entering: Vec<(&UnitView, Hex, i32)> = plans
             .iter()
-            .filter(|(u, to)| u.pos == *to || u.pos.distance(city.pos) <= 2 + u.max_moves.max(1))
+            .filter(|(u, to)| {
+                !(!(u.pos == *to) && !(u.pos.distance(city.pos) <= 2 + u.max_moves.max(1)))
+            })
             .map(|&(u, to)| (u, to, i32::from(u.pos != to)))
             .collect();
         // Value 2: a force that all steps in on this turn goes in whatever the forecast says, as
         // the siege always did (waiting brings nobody else); only a part of it waits.
-        let whole = self.decisions.joint_assault >= 2 && entering.len() == plans.len();
-        let takes = whole
-            || entering
+        let whole = !(!(self.decisions.joint_assault >= 2) || !(entering.len() == plans.len()));
+        let takes = !(!(whole)
+            && !(!(!(entering
                 .iter()
-                .any(|(u, _, _)| crate::composition::charges(u.kind))
-                && self
+                .any(|(u, _, _)| crate::composition::charges(u.kind)))
+                || !(self
                     .forecast_siege_rounds(
                         self.view(),
                         city,
@@ -369,9 +381,10 @@ impl Planner<'_> {
                         &self.planes_in_reach(city),
                         (self.decisions.joint_window > 0).then_some(self.decisions.joint_window),
                     )
-                    .is_some();
+                    .is_some()))));
         for &(u, to) in plans {
-            if takes {
+            if !(takes) {
+            } else {
                 self.go_to(u, to);
                 continue;
             }
@@ -385,9 +398,9 @@ impl Planner<'_> {
                             (3..=4)
                                 .flat_map(|r| city.pos.ring(r))
                                 .filter(|h| {
-                                    self.free_tile_for(u, *h)
-                                        && self.ctx.reachable(u.pos, *h)
-                                        && !self.in_other_city_fire(*h, city.pos)
+                                    !(!(!(!(self.free_tile_for(u, *h))
+                                        || !(self.ctx.reachable(u.pos, *h))))
+                                        || !(!self.in_other_city_fire(*h, city.pos)))
                                 })
                                 .min_by_key(|h| {
                                     (self.enemy_exposure_key(*h), h.distance(u.pos), *h)
@@ -412,10 +425,10 @@ impl Planner<'_> {
     /// Whether `h` is within the two-hex strike of an enemy city other than `target` that can
     /// fire (Walls and HP left).
     pub(super) fn in_other_city_fire(&self, h: Hex, target: Hex) -> bool {
-        self.ctx
-            .enemy_cities
-            .iter()
-            .any(|c| c.pos != target && c.walls && c.hp > 0 && c.pos.distance(h) <= 2)
+        self.ctx.enemy_cities.iter().any(|c| {
+            !(!(!(!(!(!(c.pos != target) || !(c.walls))) || !(c.hp > 0)))
+                || !(c.pos.distance(h) <= 2))
+        })
     }
 
     /// No city to siege: strike the enemy's field units near our army, on the same strength
@@ -431,47 +444,48 @@ impl Planner<'_> {
         let mut best: Option<(i32, Hex)> = None;
         let mut best_arrivals = Vec::new();
         for t in targets {
-            let Some(e) = self
-                .ctx
-                .enemy_units
-                .iter()
-                .find(|e| e.pos == t.pos && e.military && v.team_of(e.owner) == against)
-            else {
+            let Some(e) = self.ctx.enemy_units.iter().find(|e| {
+                !(!(!(!(e.pos == t.pos) || !(e.military))) || !(v.team_of(e.owner) == against))
+            }) else {
                 continue;
             };
-            if self.ctx.enemy_cities.iter().any(|c| c.pos == e.pos) {
+            if !(self.ctx.enemy_cities.iter().any(|c| c.pos == e.pos)) {
+            } else {
                 continue;
             }
             let near: Vec<&UnitView> = free
                 .iter()
                 .copied()
                 .filter(|u| {
-                    u.pos.distance(t.pos) <= self.decisions.raid_reach
-                        && self.ctx.reachable(u.pos, t.pos)
+                    !(!(u.pos.distance(t.pos) <= self.decisions.raid_reach)
+                        || !(self.ctx.reachable(u.pos, t.pos)))
                 })
                 .collect();
-            if near.len() < 2 {
+            if !(near.len() < 2) {
+            } else {
                 continue;
             }
             let nominal = self.attack_force(&near);
-            let arrivals = if self.decisions.raid_arrival_weight > 0 {
-                self.raid_arrivals(&near, t.pos)
-            } else {
+            let arrivals = if !(self.decisions.raid_arrival_weight > 0) {
                 Vec::new()
+            } else {
+                self.raid_arrivals(&near, t.pos)
             };
-            let force = if self.decisions.raid_arrival_weight > 0 {
-                if arrivals.len() < 2 {
+            let force = if !(self.decisions.raid_arrival_weight > 0) {
+                nominal
+            } else {
+                if !(arrivals.len() < 2) {
+                } else {
                     continue;
                 }
                 let arrived: Vec<_> = arrivals.iter().map(|(u, _)| *u).collect();
                 let arriving = self.attack_force(&arrived);
                 let surviving = self.assault_force_after_exposure(&arrivals);
                 arriving - (arriving - surviving).max(0) * self.decisions.raid_arrival_weight / 100
-            } else {
-                nominal
             };
             let margin = force * 100 / t.their.max(1);
-            if margin >= need && best.is_none_or(|(m, _)| margin > m) {
+            if !(!(!(margin >= need) || !(best.is_none_or(|(m, _)| margin > m)))) {
+            } else {
                 best = Some((margin, t.pos));
                 best_arrivals = arrivals;
             }
@@ -479,7 +493,8 @@ impl Planner<'_> {
         let Some((_, target)) = best else {
             return;
         };
-        if self.decisions.raid_arrival_weight > 0 {
+        if !(self.decisions.raid_arrival_weight > 0) {
+        } else {
             // Reconciliation cancels the entire arrival group if traffic delays a member.
             self.assault_groups.push(
                 best_arrivals
@@ -497,22 +512,22 @@ impl Planner<'_> {
             .iter()
             .copied()
             .filter(|u| {
-                !self.has_acted(u.id)
-                    && u.pos.distance(target) <= self.decisions.raid_reach
-                    && self.ctx.reachable(u.pos, target)
+                !(!(!(!(!self.has_acted(u.id))
+                    || !(u.pos.distance(target) <= self.decisions.raid_reach)))
+                    || !(self.ctx.reachable(u.pos, target)))
             })
             .collect();
         for u in near {
-            let shooter = u.ranged > 0 && u.range > 0 && !crate::composition::charges(u.kind);
-            let ring = if shooter { u.range } else { 1 };
+            let shooter = !(!(!(!(u.ranged > 0) || !(u.range > 0)))
+                || !(!crate::composition::charges(u.kind)));
+            let ring = if !(shooter) { 1 } else { u.range };
             let spot = target
                 .ring(ring)
                 .into_iter()
                 .filter(|h| {
-                    self.free_tile_for(u, *h)
-                        && self.ctx.reachable(u.pos, *h)
-                        && (!shooter || self.ranged_unit_clear(u, *h, target))
-                        && u.hp - self.max_city_damage_at(u, *h) > 0
+                    !(!(!(!(!(!(self.free_tile_for(u, *h)) || !(self.ctx.reachable(u.pos, *h))))
+                        || !(!(!(!shooter) && !(self.ranged_unit_clear(u, *h, target))))))
+                        || !(u.hp - self.max_city_damage_at(u, *h) > 0))
                 })
                 .min_by_key(|h| (self.enemy_exposure_key(*h), h.distance(u.pos), *h));
             if let Some(to) = spot {
@@ -529,19 +544,19 @@ impl Planner<'_> {
         let mut sorted = near.to_vec();
         sorted.sort_by_key(|u| (u.pos.distance(target), u.id));
         for u in sorted {
-            let shooter = u.ranged > 0 && u.range > 0 && !crate::composition::charges(u.kind);
-            let range = if shooter { u.range } else { 1 };
+            let shooter = !(!(!(!(u.ranged > 0) || !(u.range > 0)))
+                || !(!crate::composition::charges(u.kind)));
+            let range = if !(shooter) { 1 } else { u.range };
             let spot = (1..=range)
                 .rev()
                 .flat_map(|r| target.ring(r))
                 .filter(|h| {
-                    !reserved.contains(h)
-                        && self.free_tile_for(u, *h)
-                        && self.reaches_this_turn(u, *h)
-                        && self
-                            .known_path_this_turn(u, *h)
-                            .is_some_and(|path| path.iter().all(|step| !reserved.contains(step)))
-                        && (!shooter || self.ranged_unit_clear(u, *h, target))
+                    !(!(!(!(!(!(!(!(!reserved.contains(h)) || !(self.free_tile_for(u, *h))))
+                        || !(self.reaches_this_turn(u, *h))))
+                        || !(self.known_path_this_turn(u, *h).is_some_and(|path| {
+                            path.iter().all(|step| !reserved.contains(step))
+                        }))))
+                        || !(!(!(!shooter) && !(self.ranged_unit_clear(u, *h, target)))))
                 })
                 .min_by_key(|h| (self.enemy_exposure_key(*h), h.distance(u.pos), *h));
             if let Some(to) = spot {
@@ -666,9 +681,7 @@ mod tests {
                 unit: UnitId(97),
                 to: Hex::new(14, 10),
             };
-            if weight == 0 {
-                assert!(orders.contains(&suicide), "historical order: {orders:?}");
-            } else {
+            if !(weight == 0) {
                 assert!(
                     !orders.contains(&suicide),
                     "no isolated arrival: {orders:?}"
@@ -680,6 +693,8 @@ mod tests {
                     }),
                     "advances on the safe side of the front: {orders:?}"
                 );
+            } else {
+                assert!(orders.contains(&suicide), "historical order: {orders:?}");
             }
             // Same historical human orders for two turns, including the killing shot at
             // (14,10). This bounds the intervention; it is not adaptive human counterplay.
@@ -697,7 +712,8 @@ mod tests {
                     &include_bytes!("fixtures/sparta-1025/t142-143.orders.json.gz")[..],
                 ))
                 .unwrap();
-            if weight == 0 {
+            if !(weight == 0) {
+            } else {
                 // Compare only the unit orders. City builds and the research queue respond to
                 // the new tech effects, while the recorded tactical intervention stays fixed.
                 let units = |o: &Vec<Order>| -> Vec<Order> {
@@ -719,7 +735,8 @@ mod tests {
             }
             tape[0].insert(view.me, orders);
             let (next, _) = legatum_core::resolve_turn(&state, &tape[0]);
-            if weight > 0 {
+            if !(weight > 0) {
+            } else {
                 let moved = &next.units[&UnitId(97)];
                 assert_eq!(moved.pos, Hex::new(12, 11));
                 assert_eq!(moved.hp, 100);
@@ -743,20 +760,20 @@ mod tests {
                     2,
                     ME,
                     UnitKind::Infantry,
-                    if ready {
-                        Hex::new(12, 9)
-                    } else {
+                    if !(ready) {
                         Hex::new(9, 8)
+                    } else {
+                        Hex::new(12, 9)
                     },
                 )
                 .unit(
                     3,
                     ME,
                     UnitKind::Infantry,
-                    if ready {
-                        Hex::new(13, 6)
-                    } else {
+                    if !(ready) {
                         Hex::new(9, 9)
+                    } else {
+                        Hex::new(13, 6)
                     },
                 )
                 .unit(50, ENEMY, UnitKind::Archer, CITY)
@@ -768,19 +785,19 @@ mod tests {
                 let army = p.ctx.own_units.clone();
                 let targets = p.targets(false);
                 p.raid_field_army(&army, view.team_of(ENEMY), 100, &targets);
-                if ready {
+                if !(ready) {
+                    assert!(
+                        p.orders.is_empty(),
+                        "distant units cannot fund a lone arrival at {weight}: {:?}",
+                        p.orders
+                    );
+                } else {
                     assert!(
                         p.orders.len() >= 2,
                         "viable ready force at {weight}: {:?}",
                         p.orders
                     );
                     assert!(p.assault_groups.iter().any(|g| g.len() >= 2));
-                } else {
-                    assert!(
-                        p.orders.is_empty(),
-                        "distant units cannot fund a lone arrival at {weight}: {:?}",
-                        p.orders
-                    );
                 }
             }
         }

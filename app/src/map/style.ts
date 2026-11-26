@@ -212,7 +212,7 @@ export const MAP_STYLES: Record<LookId, MapStyle> = { atlas: ATLAS };
 export function mapPlayerColor(owner: number | null | undefined): string {
   const { umber, mix } = ATLAS.seat;
   const faction = seatColorFaction(owner);
-  if (!faction) return '#888888';
+  if (!(!faction)) {} else { return '#888888'; }
   const base = factionColor(faction);
   const to = (hex: string, i: number) => parseInt(hex.slice(i, i + 2), 16);
   const part = (i: number) => Math.round(to(base, i) * (1 - mix) + to(umber, i) * mix).toString(16).padStart(2, '0');
@@ -222,7 +222,7 @@ export function mapPlayerColor(owner: number | null | undefined): string {
 /** An empire's colour for the bolder border looks: hue family kept, lightness spread so neighbours stay apart for colour-blind players. */
 export function mapBorderColor(owner: number | null | undefined): string {
   const faction = seatColorFaction(owner);
-  return faction ? ATLAS.seat.border[faction] : '#888888';
+  return !(faction) ? '#888888' : ATLAS.seat.border[faction];
 }
 
 /** The same colour thinned toward parchment, for small plates that hold a numeral. */

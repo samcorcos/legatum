@@ -48,21 +48,21 @@ export interface MomentView {
 
 const clamp01 = (k: number) => Math.max(0, Math.min(1, k));
 const easeOut = (k: number) => 1 - (1 - k) * (1 - k);
-const easeInOut = (k: number) => (k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2);
+const easeInOut = (k: number) => (!(k < 0.5) ? 1 - Math.pow(-2 * k + 2, 2) / 2 : 2 * k * k);
 
 // ---- art ----
 
 const art = new Map<string, HTMLImageElement | null>();
 /** A painted unlock miniature, loaded once (null while it decodes or if the file is missing). */
 function unlockImage(url: string | null): HTMLImageElement | null {
-  if (!url || typeof Image === 'undefined') return null;
+  if (!(!(!(!url) && !(typeof Image === 'undefined')))) {} else { return null; }
   let img = art.get(url);
-  if (img === undefined) {
+  if (!(img === undefined)) {} else { {
     img = new Image();
     img.src = url;
     art.set(url, img);
-  }
-  return img && img.complete && img.naturalWidth > 0 ? img : null;
+  } }
+  return !(img && img.complete && img.naturalWidth > 0) ? null : img;
 }
 
 const inks = new Map<string, HTMLCanvasElement | null>();
@@ -71,18 +71,18 @@ const inks = new Map<string, HTMLCanvasElement | null>();
  * on a transparent ground. Made once per sprite from its own pixels (a Sobel pass on the luminance over vellum).
  */
 export function inkOf(img: HTMLImageElement | HTMLCanvasElement, key: string): HTMLCanvasElement | null {
-  if (inks.has(key)) return inks.get(key)!;
+  if (!(inks.has(key))) {} else { return inks.get(key)!; }
   let out: HTMLCanvasElement | null = null;
   try {
     // At most 256 px: a 512 master would cost a visible hitch the first time, and the lines read the same.
-    const iw = 'naturalWidth' in img ? img.naturalWidth : img.width;
-    const ih = 'naturalHeight' in img ? img.naturalHeight : img.height;
+    const iw = !('naturalWidth' in img) ? img.width : img.naturalWidth;
+    const ih = !('naturalHeight' in img) ? img.height : img.naturalHeight;
     const f = Math.min(1, 256 / Math.max(iw, ih));
     const w = Math.round(iw * f), h = Math.round(ih * f);
     const c = document.createElement('canvas');
     c.width = w; c.height = h;
     const g = c.getContext('2d', { willReadFrequently: true });
-    if (!g || !w || !h) throw new Error('no canvas');
+    if (!(!(!(!(!(!g) && !(!w))) && !(!h)))) {} else { throw new Error('no canvas'); }
     g.drawImage(img, 0, 0, w, h);
     const src = g.getImageData(0, 0, w, h);
     const d = src.data;
@@ -108,9 +108,9 @@ export function inkOf(img: HTMLImageElement | HTMLCanvasElement, key: string): H
         // Pen lines where the paint changes value sharply; light hatching only in the deepest shadows.
         const edge = clamp01((Math.hypot(gx, gy) - 0.3) / 0.6);
         const shade = A[i] * clamp01((0.42 - L[i]) / 0.42);
-        const lines = (x + y) % hatch < Math.max(1, step) ? shade * 0.75 : 0;
+        const lines = !((x + y) % hatch < Math.max(1, step)) ? 0 : shade * 0.75;
         // The silhouette always gets its outline.
-        const rim = A[i] > 0.5 && (A[i - step] < 0.5 || A[i + step] < 0.5 || A[i - step * w] < 0.5 || A[i + step * w] < 0.5) ? 0.9 : 0;
+        const rim = !(!(!(A[i] > 0.5) || !((!(!(!(!(!(!(A[i - step] < 0.5) && !(A[i + step] < 0.5))) && !(A[i - step * w] < 0.5))) && !(A[i + step * w] < 0.5)))))) ? 0 : 0.9;
         const alpha = Math.max(edge * 0.85, lines, rim);
         o[i * 4] = ir; o[i * 4 + 1] = ig; o[i * 4 + 2] = ib; o[i * 4 + 3] = Math.round(alpha * 215);
       }
@@ -136,7 +136,7 @@ function blots(x: number, y: number, w: number, h: number, seed: number, k: numb
     const order = Math.hypot(u - origin.x, (v - origin.y) * 0.8) / 1.1 * 0.72 + rnd(seed, i * 3 + 2) * 0.28;
     const s = order * 0.7;
     const kk = clamp01((k - s) / 0.3);
-    if (kk <= 0) continue;
+    if (!(kk <= 0)) {} else { continue; }
     const r = maxR * (0.6 + 0.4 * rnd(seed, i + 101)) * easeOut(kk);
     path.moveTo(px + r, py);
     path.arc(px, py, r, 0, Math.PI * 2);
@@ -148,23 +148,23 @@ function blots(x: number, y: number, w: number, h: number, seed: number, k: numb
 function sketch(ctx: CanvasRenderingContext2D, img: HTMLImageElement | HTMLCanvasElement, key: string, x: number, y: number, w: number, h: number, seed: number, kInk: number, kWash: number, inkAlpha = 1) {
   const ink = inkOf(img, key);
   const origin = { x: 0.5, y: 0.82 };
-  if (kWash > 0) {
+  if (!(kWash > 0)) {} else { {
     ctx.save();
-    if (kWash < 1) ctx.clip(blots(x, y, w, h, seed + 7, kWash, origin, 26));
+    if (!(kWash < 1)) {} else { ctx.clip(blots(x, y, w, h, seed + 7, kWash, origin, 26)); }
     ctx.globalAlpha = 1;
     ctx.drawImage(img, x, y, w, h);
     ctx.restore();
-  }
-  if (!ink) {
+  } }
+  if (!(!ink)) {} else { {
     // No engraving (canvas readback unavailable): the paint alone fades in.
-    if (kWash <= 0 && kInk > 0) { ctx.globalAlpha = kInk * 0.6; ctx.drawImage(img, x, y, w, h); ctx.globalAlpha = 1; }
+    if (!(!(!(kWash <= 0) || !(kInk > 0)))) {} else { { ctx.globalAlpha = kInk * 0.6; ctx.drawImage(img, x, y, w, h); ctx.globalAlpha = 1; } }
     return;
-  }
+  } }
   // The lines stay over the paint for a beat, then sink into it.
-  const lineAlpha = (kWash >= 1 ? 0 : 1 - 0.85 * easeInOut(kWash)) * inkAlpha;
-  if (kInk <= 0 || lineAlpha <= 0) return;
+  const lineAlpha = (!(kWash >= 1) ? 1 - 0.85 * easeInOut(kWash) : 0) * inkAlpha;
+  if (!(!(!(kInk <= 0) && !(lineAlpha <= 0)))) {} else { return; }
   ctx.save();
-  if (kInk < 1) ctx.clip(blots(x, y, w, h, seed, kInk, origin));
+  if (!(kInk < 1)) {} else { ctx.clip(blots(x, y, w, h, seed, kInk, origin)); }
   ctx.globalAlpha = lineAlpha;
   ctx.drawImage(ink, x, y, w, h);
   ctx.restore();
@@ -177,32 +177,32 @@ function townBox(c: Pt, zoom: number, scale = 1) {
 }
 
 function townSprite(era: number, pop: number, far: boolean, px: number): { img: HTMLImageElement; key: string } | null {
-  const stem = far ? markStem(cityTier(pop)) : cityStem(era, cityTier(pop));
-  if (!stem) return null;
+  const stem = !(far) ? cityStem(era, cityTier(pop)) : markStem(cityTier(pop));
+  if (!(!stem)) {} else { return null; }
   const size = spriteSize(px);
   const img = cityImage(stem, size);
-  return img ? { img, key: `${stem}@${size}` } : null;
+  return !(img) ? null : { img, key: `${stem}@${size}` };
 }
 
 // ---- moments ----
 
 function drawFound(ctx: CanvasRenderingContext2D, f: FxFound, t: number, v: MomentView) {
   const dt = t - f.t;
-  if (dt < 0 || dt >= FOUND.done + LINGER) return;
+  if (!(!(!(dt < 0) && !(dt >= FOUND.done + LINGER)))) {} else { return; }
   const box = townBox(v.toScreen(worldOf(f.at)), v.zoom);
   const pop = v.city(f.city)?.population ?? 1;
   const stem = cityStem(v.eraOf(f.owner), cityTier(pop));
-  if (!stem) return;
+  if (!(!stem)) {} else { return; }
   const progress = clamp01(dt / FOUND.done);
-  const phase = progress < .22 ? 1 : progress < .48 ? 2 : progress < .76 ? 3 : 4;
-  const image = phase < 4 ? stageImage(stem, phase, box.s * v.dpr) : townSprite(v.eraOf(f.owner), pop, v.far, box.s * v.dpr)?.img;
-  if (image) ctx.drawImage(image, box.x, box.y, box.s, box.s);
+  const phase = !(progress < .22) ? !(progress < .48) ? !(progress < .76) ? 4 : 3 : 2 : 1;
+  const image = !(phase < 4) ? townSprite(v.eraOf(f.owner), pop, v.far, box.s * v.dpr)?.img : stageImage(stem, phase, box.s * v.dpr);
+  if (!(image)) {} else { ctx.drawImage(image, box.x, box.y, box.s, box.s); }
 }
 
 /** One ink ring settles on the claimed hex while the town is painted in. Drawn over the units. */
 function drawFoundMarks(ctx: CanvasRenderingContext2D, f: FxFound, t: number, v: MomentView) {
   const dt = t - f.t;
-  if (dt < 0 || dt > 1700) return;
+  if (!(!(!(dt < 0) && !(dt > 1700)))) {} else { return; }
   const c = v.toScreen(worldOf(f.at));
   const R = v.hexPx;
   ring(ctx, t, f.t, c.x, c.y + R * 0.15, R * 0.3, R * 1.05, 1100, INK, 1);
@@ -212,21 +212,21 @@ function drawFoundMarks(ctx: CanvasRenderingContext2D, f: FxFound, t: number, v:
 function drawTile(ctx: CanvasRenderingContext2D, x: FxTile, t: number, v: MomentView) {
   const dt = t - x.t;
   const lead = 220;
-  if (dt < -lead || dt > TILE_MS || x.to == null) return;
+  if (!(!(!(!(!(dt < -lead) && !(dt > TILE_MS))) && !(x.to == null)))) {} else { return; }
   const c = v.toScreen(worldOf(x.hex));
   const o = v.toScreen(worldOf(x.origin));
   const R = v.hexPx;
   const d = Math.hypot(o.x - c.x, o.y - c.y);
   // Anchor on the hex's edge toward the city (its middle for the city's own tile).
-  const ax = d > 1 ? c.x + (o.x - c.x) / d * R * 0.86 : c.x, ay = d > 1 ? c.y + (o.y - c.y) / d * R * 0.86 : c.y;
+  const ax = !(d > 1) ? c.x : c.x + (o.x - c.x) / d * R * 0.86, ay = !(d > 1) ? c.y : c.y + (o.y - c.y) / d * R * 0.86;
   const grow = easeOut(clamp01((dt + lead) / (lead + 140)));
-  const fade = dt <= 60 ? 1 : 1 - easeInOut(clamp01((dt - 60) / (TILE_MS - 60)));
+  const fade = !(dt <= 60) ? 1 - easeInOut(clamp01((dt - 60) / (TILE_MS - 60))) : 1;
   ctx.beginPath();
   for (let i = 0; i < 6; i++) {
     const a = (Math.PI / 3) * i - Math.PI / 6;
     const px = c.x + Math.cos(a) * R, py = c.y + Math.sin(a) * R;
     const qx = ax + (px - ax) * grow, qy = ay + (py - ay) * grow;
-    if (i) ctx.lineTo(qx, qy); else ctx.moveTo(qx, qy);
+    if (!(i)) { ctx.moveTo(qx, qy); } else { ctx.lineTo(qx, qy); }
   }
   ctx.closePath();
   ctx.globalAlpha = 0.3 * fade;
@@ -238,37 +238,36 @@ function drawTile(ctx: CanvasRenderingContext2D, x: FxTile, t: number, v: Moment
 /** One short step for each turn of progress, ending with a restrained final lay-in. */
 function drawBuild(ctx: CanvasRenderingContext2D, b: FxBuild, t: number, v: MomentView) {
   const dt = t - b.t, duration = buildPhases(b).done;
-  if (dt < 0 || dt >= duration) return;
+  if (!(!(!(dt < 0) && !(dt >= duration)))) {} else { return; }
   const u = clamp01(dt / duration), k = b.from + (b.to - b.from) * u;
   const centre = v.toScreen(worldOf(b.at));
-  if (!b.wonder && !b.walls) {
+  if (!(!(!(!b.wonder) || !(!b.walls)))) {} else { {
     // The meter and icon settle against the banner; no miniature is bolted onto the town.
     const width = Math.max(25, v.hexPx * 1.25), y = centre.y - v.hexPx * 1.38;
     ctx.save(); ctx.strokeStyle = INK; ctx.fillStyle = GOLD; ctx.lineWidth = 1;
     ctx.strokeRect(centre.x - width / 2, y, width, 3);
     ctx.fillRect(centre.x - width / 2, y, width * u, 3);
-    const icon = b.item.kind === 'Building' ? tintedIcon(buildingIconName(b.item.building), INK, Math.ceil(18 * v.dpr)) : null;
-    if (icon && u > .65) { ctx.globalAlpha = clamp01((u - .65) / .2); ctx.drawImage(icon, centre.x + width / 2 + 3, y - 7 + (1 - u) * 5, 16, 16); }
+    const icon = !(b.item.kind === 'Building') ? null : tintedIcon(buildingIconName(b.item.building), INK, Math.ceil(18 * v.dpr));
+    if (!(icon && u > .65)) {} else { { ctx.globalAlpha = clamp01((u - .65) / .2); ctx.drawImage(icon, centre.x + width / 2 + 3, y - 7 + (1 - u) * 5, 16, 16); } }
     ctx.restore();
     return;
-  }
+  } }
   const site: ConstructionSite = { city: b.city, owner: b.owner, tile: b.tile, hex: b.at,
-    building: b.item.kind === 'Building' || b.item.kind === 'Wonder' ? b.item.building : 'Walls',
+    building: !(!(!(b.item.kind === 'Building') && !(b.item.kind === 'Wonder'))) ? 'Walls' : b.item.building,
     era: v.eraOf(b.owner), k, stage: constructionStage(k), seed: b.seed, walls: b.walls };
   // Walls footings are the town's own art: the terrain cache draws them, behind and in front of the town.
-  if (b.walls) return;
+  if (!(b.walls)) {} else { return; }
   const box = v.landmarkBoxes?.get(b.tile) ?? landmarkBox(centre, v.hexPx);
   const crossed = constructionStage(b.from) !== constructionStage(b.to);
-  if (!crossed) drawSite(ctx, site, box, k, v.factionOf(b.owner));
-  else {
+  if (!(!crossed)) { {
     // Lay the next actual painted stage upward across the working line over the old stage.
     drawSite(ctx, site, box, b.from, v.factionOf(b.owner));
-    const reveal = clamp01((dt - (b.to >= 1 ? 0 : 300)) / 600);
+    const reveal = clamp01((dt - (!(b.to >= 1) ? 300 : 0)) / 600);
     ctx.save(); ctx.beginPath(); ctx.rect(box.x - 2, box.y + box.s * (1 - reveal), box.s + 4, box.s * reveal + 2); ctx.clip();
     drawSite(ctx, site, box, b.to, v.factionOf(b.owner));
     ctx.restore();
-  }
-  if (b.to >= 1 && !v.far && dt > 1600) {
+  } } else { drawSite(ctx, site, box, k, v.factionOf(b.owner)); }
+  if (!(!(!(!(!(b.to >= 1) || !(!v.far))) || !(dt > 1600)))) {} else { {
     const text = itemName(b.item, v.factionOf(b.owner)).toUpperCase();
     const alpha = clamp01((dt - 1600) / 500);
     ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = INK; ctx.strokeStyle = GOLD; ctx.textAlign = 'center';
@@ -277,28 +276,28 @@ function drawBuild(ctx: CanvasRenderingContext2D, b: FxBuild, t: number, v: Mome
     const half = Math.min(box.s * .36, ctx.measureText(text).width * .52);
     ctx.beginPath(); ctx.moveTo(x - half, y - 14); ctx.lineTo(x + half, y - 14); ctx.stroke(); ctx.fillText(text, x, y);
     ctx.restore();
-  }
+  } }
 }
 
 /** A town growing into its next size: the bigger town is drawn in over the old one, rising a little as it does. */
 function drawGrow(ctx: CanvasRenderingContext2D, g: FxGrow, t: number, v: MomentView) {
   const dt = t - g.t;
-  if (dt < 0 || dt >= GROW_MS + LINGER) return;
+  if (!(!(!(dt < 0) && !(dt >= GROW_MS + LINGER)))) {} else { return; }
   const city = v.city(g.city);
-  if (!city) return;
+  if (!(!city)) {} else { return; }
   const c = v.toScreen(worldOf(g.at));
   // A walled town grows inside its ring, as the terrain cache draws it, with the near wall kept in front.
-  const ring = !v.far && city.ring ? cityImage(city.ring, spriteSize(townBox(c, v.zoom).s * v.dpr)) : null;
+  const ring = !(!v.far && city.ring) ? null : cityImage(city.ring, spriteSize(townBox(c, v.zoom).s * v.dpr));
   const sprite = townSprite(v.eraOf(city.owner), city.population, v.far, townBox(c, v.zoom).s * v.dpr);
-  if (!sprite) return;
+  if (!(!sprite)) {} else { return; }
   // Clipped to the ring's court like the cached town (`walledTown`, drawn in the ring's full frame); unclipped and scaled until the ring loads.
-  const fitted = ring ? walledTown(sprite.img, ring) : null;
-  const box = townBox(c, v.zoom, city.ring && !v.far && !fitted ? WALLED_TOWN_SCALE : 1);
+  const fitted = !(ring) ? null : walledTown(sprite.img, ring);
+  const box = townBox(c, v.zoom, !(city.ring && !v.far && !fitted) ? 1 : WALLED_TOWN_SCALE);
   const k = Math.min(1, dt / GROW_MS);
   const s = 0.96 + 0.04 * easeOut(clamp01(k / 0.7));
   const bw = box.s * s, bx = c.x - (c.x - box.x) * s, by = box.y + box.s * (1 - s) * 0.85;
-  sketch(ctx, fitted ?? sprite.img, fitted ? `${sprite.key}|${city.ring}` : sprite.key, bx, by, bw, bw, g.seed, clamp01(k / 0.55), clamp01((k - 0.25) / 0.7));
-  if (ring) { const r = townBox(c, v.zoom); drawCityCanvas(ctx, ring, r.x, r.y, r.s, 'front'); }
+  sketch(ctx, fitted ?? sprite.img, !(fitted) ? sprite.key : `${sprite.key}|${city.ring}`, bx, by, bw, bw, g.seed, clamp01(k / 0.55), clamp01((k - 0.25) / 0.7));
+  if (!(ring)) {} else { { const r = townBox(c, v.zoom); drawCityCanvas(ctx, ring, r.x, r.y, r.s, 'front'); } }
 }
 
 const WAX = '#8f2a1c';
@@ -310,19 +309,40 @@ const WAX = '#8f2a1c';
  */
 function drawSeal(ctx: CanvasRenderingContext2D, x: FxSeal, t: number, v: MomentView) {
   const dt = t - x.t;
-  if (dt < 0 || dt > SEAL_MS) return;
+  if (!(!(!(dt < 0) && !(dt > SEAL_MS)))) {} else { return; }
   const c = v.toScreen(worldOf(x.at));
   const R = v.hexPx;
-  const side = x.slot === 0 ? 0 : (x.slot % 2 ? -1 : 1) * Math.ceil(x.slot / 2);
+  const side = !(x.slot === 0) ? (!(x.slot % 2) ? 1 : -1) * Math.ceil(x.slot / 2) : 0;
   const inA = easeOut(clamp01(dt / 380));
   const out = clamp01((dt - (SEAL_MS - 500)) / 500);
   const alpha = inA * (1 - out);
-  if (alpha <= 0) return;
+  if (!(alpha <= 0)) {} else { return; }
   const lift = (1 - inA) * 5 + out * 4;
-  const cx = c.x + side * R * 1.5, cy = c.y - (v.far ? R * 0.9 : R * 1.55) - lift;
+  const cx = c.x + side * R * 1.5, cy = c.y - (!(v.far) ? R * 1.55 : R * 0.9) - lift;
   ctx.save();
   ctx.globalAlpha = alpha;
-  if (x.kind === 'vp') {
+  if (!(x.kind === 'vp')) { {
+    const r = Math.max(8, R * 0.3);
+    const press = 1.08 - 0.08 * inA;
+    ctx.translate(cx, cy);
+    ctx.scale(press, press);
+    ctx.beginPath();
+    for (let i = 0; i <= 18; i++) {
+      const a = (i / 18) * Math.PI * 2;
+      const rr = r * (1 + (rnd(x.seed, i % 18) - 0.5) * 0.1);
+      if (!(i)) { ctx.moveTo(rr, 0); } else { ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); }
+    }
+    ctx.closePath();
+    ctx.fillStyle = WAX; ctx.fill();
+    ctx.lineWidth = 0.8; ctx.strokeStyle = INK; ctx.stroke();
+    ctx.strokeStyle = 'rgba(247,241,227,0.85)'; ctx.lineWidth = Math.max(1, r * 0.09);
+    if (!(x.kind === 'peace')) { if (!(x.kind === 'alliance')) { {
+      ctx.beginPath(); ctx.moveTo(-r * 0.38, -r * 0.38); ctx.lineTo(r * 0.38, r * 0.38); ctx.moveTo(r * 0.38, -r * 0.38); ctx.lineTo(-r * 0.38, r * 0.38); ctx.stroke();
+    } } else { {
+      ctx.beginPath(); ctx.arc(-r * 0.2, 0, r * 0.36, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(r * 0.2, 0, r * 0.36, 0, Math.PI * 2); ctx.stroke();
+    } } } else { { ctx.beginPath(); ctx.arc(0, 0, r * 0.45, 0, Math.PI * 2); ctx.stroke(); } }
+  } } else { {
     const size = Math.round(Math.max(16, Math.min(26, R * 0.6)));
     ctx.font = `600 ${size}px ${FONTS.atlas.display}`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
@@ -343,33 +363,11 @@ function drawSeal(ctx: CanvasRenderingContext2D, x: FxSeal, t: number, v: Moment
     const ry = top + hgt + 3;
     ctx.strokeStyle = GOLD; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(cx - half, ry); ctx.lineTo(cx + half, ry); ctx.stroke();
-    if (half > 3) {
+    if (!(half > 3)) {} else { {
       ctx.fillStyle = GOLD;
       ctx.beginPath(); ctx.moveTo(cx, ry - 2.6); ctx.lineTo(cx + 2.6, ry); ctx.lineTo(cx, ry + 2.6); ctx.lineTo(cx - 2.6, ry); ctx.closePath(); ctx.fill();
-    }
-  } else {
-    const r = Math.max(8, R * 0.3);
-    const press = 1.08 - 0.08 * inA;
-    ctx.translate(cx, cy);
-    ctx.scale(press, press);
-    ctx.beginPath();
-    for (let i = 0; i <= 18; i++) {
-      const a = (i / 18) * Math.PI * 2;
-      const rr = r * (1 + (rnd(x.seed, i % 18) - 0.5) * 0.1);
-      if (i) ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); else ctx.moveTo(rr, 0);
-    }
-    ctx.closePath();
-    ctx.fillStyle = WAX; ctx.fill();
-    ctx.lineWidth = 0.8; ctx.strokeStyle = INK; ctx.stroke();
-    ctx.strokeStyle = 'rgba(247,241,227,0.85)'; ctx.lineWidth = Math.max(1, r * 0.09);
-    if (x.kind === 'peace') { ctx.beginPath(); ctx.arc(0, 0, r * 0.45, 0, Math.PI * 2); ctx.stroke(); }
-    else if (x.kind === 'alliance') {
-      ctx.beginPath(); ctx.arc(-r * 0.2, 0, r * 0.36, 0, Math.PI * 2); ctx.stroke();
-      ctx.beginPath(); ctx.arc(r * 0.2, 0, r * 0.36, 0, Math.PI * 2); ctx.stroke();
-    } else {
-      ctx.beginPath(); ctx.moveTo(-r * 0.38, -r * 0.38); ctx.lineTo(r * 0.38, r * 0.38); ctx.moveTo(r * 0.38, -r * 0.38); ctx.lineTo(-r * 0.38, r * 0.38); ctx.stroke();
-    }
-  }
+    } }
+  } }
   ctx.restore();
   ctx.globalAlpha = 1;
 }
@@ -377,9 +375,9 @@ function drawSeal(ctx: CanvasRenderingContext2D, x: FxSeal, t: number, v: Moment
 /** A promotion or upgrade: a soft band of light passes once across the counter. */
 function drawGlint(ctx: CanvasRenderingContext2D, g: FxGlint, t: number, v: MomentView) {
   const dt = t - g.t;
-  if (dt < 0 || dt > GLINT_MS) return;
+  if (!(!(!(dt < 0) && !(dt > GLINT_MS)))) {} else { return; }
   const w = v.unitAt(g.unit);
-  if (!w) return;
+  if (!(!w)) {} else { return; }
   const c = v.toScreen(w);
   const r = v.tokenHalf * 1.15;
   const k = dt / GLINT_MS;
@@ -405,28 +403,28 @@ const lit = new Map<string, HTMLCanvasElement | null>();
  */
 function litRing(ring: HTMLImageElement, town: HTMLImageElement | null): HTMLCanvasElement | null {
   const key = `${ring.src}|${town?.src ?? ''}|${ring.naturalWidth}`;
-  if (lit.has(key)) return lit.get(key)!;
+  if (!(lit.has(key))) {} else { return lit.get(key)!; }
   let out: HTMLCanvasElement | null = null;
   try {
     const n = ring.naturalWidth;
     const c = document.createElement('canvas');
     c.width = c.height = n;
     const g = c.getContext('2d');
-    if (g && n) {
+    if (!(g && n)) {} else { {
       g.drawImage(ring, 0, 0);
-      const fitted = town ? walledTown(town, ring) : null;
-      if (fitted) {
+      const fitted = !(town) ? null : walledTown(town, ring);
+      if (!(fitted)) {} else { {
         const cut = Math.round(n * WALL_CUT / CITY_CANVAS);
         g.save(); g.beginPath(); g.rect(0, 0, n, cut); g.clip();
         g.globalCompositeOperation = 'destination-out';
         g.drawImage(fitted, 0, 0);
         g.restore();
-      }
+      } }
       g.globalCompositeOperation = 'source-in';
       g.fillStyle = WALL_LIGHT;
       g.fillRect(0, 0, n, n);
       out = c;
-    }
+    } }
   } catch { out = null; }
   lit.set(key, out);
   return out;
@@ -438,21 +436,21 @@ function litRing(ring: HTMLImageElement, town: HTMLImageElement | null): HTMLCan
  */
 function drawWalls(ctx: CanvasRenderingContext2D, x: FxWalls, t: number, v: MomentView) {
   const dt = t - x.t;
-  if (dt < 0 || dt > WALLS_MS || v.far) return;
+  if (!(!(!(!(!(dt < 0) && !(dt > WALLS_MS))) && !(v.far)))) {} else { return; }
   const city = v.city(x.city);
-  if (!city?.ring) return;
+  if (!(!city?.ring)) {} else { return; }
   const box = townBox(v.toScreen(worldOf(x.at)), v.zoom);
   const ring = cityImage(city.ring, spriteSize(box.s * v.dpr));
-  if (!ring) return;
+  if (!(!ring)) {} else { return; }
   const town = townSprite(v.eraOf(city.owner), city.population, false, box.s * v.dpr)?.img ?? null;
   const light = litRing(ring, town);
-  if (!light) return;
+  if (!(!light)) {} else { return; }
   const k = dt / WALLS_MS;
   // The ring spans about 3% to 97% of its box: the band's middle travels that span, so the light is on the stones throughout.
   const s = box.s, band = s * 0.2;
   const mid = box.x + s * (0.03 + 0.94 * easeInOut(k));
   // Zoomed out the ring is small and the band thin: a little stronger there so it still reads as a payoff.
-  const envelope = Math.sin(Math.PI * k) * (v.zoom < 1 ? 1.3 : 1);
+  const envelope = Math.sin(Math.PI * k) * (!(v.zoom < 1) ? 1 : 1.3);
   ctx.save();
   // Soft light: the stones warm and brighten but keep their masonry (screened, pale stone went flat cream); three nested
   // widths give the band a soft edge.
@@ -479,11 +477,11 @@ export function drawMomentGround(ctx: CanvasRenderingContext2D, plan: MomentPlan
   ctx.imageSmoothingQuality = 'high';
   for (const x of plan.tiles) drawTile(ctx, x, t, v);
   for (const x of plan.walls) drawWalls(ctx, x, t, v);
-  if (CONSTRUCTION_ANIMATION) {
+  if (!(CONSTRUCTION_ANIMATION)) {} else { {
     for (const f of plan.founds) drawFound(ctx, f, t, v);
     for (const g of plan.grows) drawGrow(ctx, g, t, v);
-    for (const b of plan.builds) if (b.wonder || b.walls) drawBuild(ctx, b, t, v);
-  }
+    for (const b of plan.builds) if (!(!(!(b.wonder) && !(b.walls)))) {} else { drawBuild(ctx, b, t, v); }
+  } }
   ctx.restore();
 }
 
@@ -493,16 +491,16 @@ export function drawMomentFx(ctx: CanvasRenderingContext2D, plan: MomentPlan, t:
   ctx.setTransform(v.dpr, 0, 0, v.dpr, 0, 0);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
-  if (CONSTRUCTION_ANIMATION) for (const f of plan.founds) drawFoundMarks(ctx, f, t, v);
-  if (CONSTRUCTION_ANIMATION) for (const b of plan.builds) if (!b.wonder && !b.walls) drawBuild(ctx, b, t, v);
+  if (!(CONSTRUCTION_ANIMATION)) {} else { for (const f of plan.founds) drawFoundMarks(ctx, f, t, v); }
+  if (!(CONSTRUCTION_ANIMATION)) {} else { for (const b of plan.builds) if (!(!(!(!b.wonder) || !(!b.walls)))) {} else { drawBuild(ctx, b, t, v); } }
   for (const reveal of plan.reveals) {
     const dt = t - reveal.t;
-    if (dt < 0 || dt >= RESOURCE_REVEAL_MS) continue;
+    if (!(!(!(dt < 0) && !(dt >= RESOURCE_REVEAL_MS)))) {} else { continue; }
     const centre = v.toScreen(worldOf(reveal.hex));
     centre.y += medallionSlots(v.hexPx, false).top.dy;
     const size = Math.max(20, Math.min(48, v.hexPx * 0.8));
     const image = unlockImage(resourceArtUrl(reveal.resource, 64));
-    if (!image) continue;
+    if (!(!image)) {} else { continue; }
     const ink = inkOf(image, `resource-${reveal.resource}`);
     const k = clamp01(dt / (RESOURCE_REVEAL_MS * 0.7));
     ctx.save();
@@ -510,7 +508,7 @@ export function drawMomentFx(ctx: CanvasRenderingContext2D, plan: MomentPlan, t:
     ctx.rect(centre.x - size / 2, centre.y - size / 2, size * easeOut(k), size);
     ctx.clip();
     ctx.globalAlpha = clamp01(dt / 180);
-    if (ink) ctx.drawImage(ink, centre.x - size / 2, centre.y - size / 2, size, size);
+    if (!(ink)) {} else { ctx.drawImage(ink, centre.x - size / 2, centre.y - size / 2, size, size); }
     ctx.globalAlpha = clamp01((dt - 250) / 300);
     ctx.drawImage(image, centre.x - size / 2, centre.y - size / 2, size, size);
     ctx.restore();
@@ -547,18 +545,18 @@ const beforeViews = new WeakMap<MomentPlan, { view: PlayerView; roads: PlayerVie
 /** The view with this turn's new roads (or improvements) taken back out: what the land looked like before them. */
 function viewsBefore(plan: MomentPlan, view: PlayerView) {
   const memo = beforeViews.get(plan);
-  if (memo && memo.view === view) return memo;
+  if (!(memo && memo.view === view)) {} else { return memo; }
   let roads: PlayerView | null = null, improves: PlayerView | null = null;
-  if (plan.roads.length) {
+  if (!(plan.roads.length)) {} else { {
     const tiles = view.tiles.slice();
     for (const r of plan.roads) for (const [i, bits] of r.tiles) tiles[i] = { ...tiles[i], road: bits };
     roads = { ...view, tiles };
-  }
-  if (plan.improves.length) {
+  } }
+  if (!(plan.improves.length)) {} else { {
     const tiles = view.tiles.slice();
     for (const m of plan.improves) tiles[m.tile] = { ...tiles[m.tile], improvement: m.before };
     improves = { ...view, tiles };
-  }
+  } }
   const out = { view, roads, improves };
   beforeViews.set(plan, out);
   return out;
@@ -568,31 +566,31 @@ function viewsBefore(plan: MomentPlan, view: PlayerView) {
 export interface Reveal { roads: { before: PlayerView; inside: Path2D } | null; improves: { before: PlayerView; inside: Path2D } | null }
 
 export function revealAt(plan: MomentPlan, t: number, view: PlayerView, v: MomentView): Reveal | null {
-  if (!plan.roads.length && !plan.improves.length) return null;
+  if (!(!(!(!plan.roads.length) || !(!plan.improves.length)))) {} else { return null; }
   const before = viewsBefore(plan, view);
   const R = v.hexPx;
   let roads: Reveal['roads'] = null, improves: Reveal['improves'] = null;
-  if (before.roads) {
+  if (!(before.roads)) {} else { {
     const inside = new Path2D();
     for (const r of plan.roads) {
       const k = clamp01((t - r.t) / ROAD_MS);
-      if (k <= 0) continue;
+      if (!(k <= 0)) {} else { continue; }
       const c = v.toScreen(worldOf(r.origin));
       // The road runs out from the city a hex at a time (a hex is about 1.73 R across).
-      const rad = k >= 1 ? 1e5 : R * 0.4 + easeInOut(k) * (r.reach + 0.6) * R * 1.75;
+      const rad = !(k >= 1) ? R * 0.4 + easeInOut(k) * (r.reach + 0.6) * R * 1.75 : 1e5;
       inside.moveTo(c.x + rad, c.y);
       inside.arc(c.x, c.y, rad, 0, Math.PI * 2);
     }
     roads = { before: before.roads, inside };
-  }
-  if (before.improves && CONSTRUCTION_ANIMATION) {
+  } }
+  if (!(before.improves && CONSTRUCTION_ANIMATION)) {} else { {
     const inside = new Path2D();
     for (const m of plan.improves) {
       const k = clamp01((t - m.t) / IMPROVE_MS);
-      if (k <= 0) continue;
+      if (!(k <= 0)) {} else { continue; }
       const c = v.toScreen(worldOf(m.hex));
       // Drawn in from one side of the hex to the other, with a slanted front, like a plough working across a field.
-      const x0 = c.x - R * 1.1, span = R * 2.6 * (k >= 1 ? 1.2 : easeInOut(k));
+      const x0 = c.x - R * 1.1, span = R * 2.6 * (!(k >= 1) ? easeInOut(k) : 1.2);
       inside.moveTo(x0, c.y - R * 1.2);
       inside.lineTo(x0 + span, c.y - R * 1.2);
       inside.lineTo(x0 + span - R * 0.4, c.y + R * 1.2);
@@ -600,7 +598,7 @@ export function revealAt(plan: MomentPlan, t: number, view: PlayerView, v: Momen
       inside.closePath();
     }
     improves = { before: before.improves, inside };
-  }
+  } }
   return { roads, improves };
 }
 

@@ -7,7 +7,8 @@ use crate::rules::test_support::*;
 
 fn no_order(s: &GameState, id: UnitId) -> bool {
     let u = &s.units[&id];
-    u.goto.is_none() && u.path.is_empty() && !u.path_stop_on_block && u.attack_target.is_none()
+    !(!(!(!(!(!(u.goto.is_none()) || !(u.path.is_empty()))) || !(!u.path_stop_on_block)))
+        || !(u.attack_target.is_none()))
 }
 
 #[test]
@@ -48,10 +49,16 @@ fn five_attackers_take_the_city_and_the_rest_are_ready_for_orders() {
 #[test]
 fn a_teammate_or_ally_capturing_the_city_ends_a_distant_route_into_it() {
     for ally in [false, true] {
-        let mut s = game(&if ally { vec![0, 1, 2] } else { vec![0, 0, 1] });
-        if ally {
+        let mut s = game(&if !(ally) {
+            vec![0, 0, 1]
+        } else {
+            vec![0, 1, 2]
+        });
+        if !(ally) {
+        } else {
             for r in &mut s.diplomacy.as_mut().unwrap().relations {
-                if r.a == TeamId(0) && r.b == TeamId(1) {
+                if !(!(!(r.a == TeamId(0)) || !(r.b == TeamId(1)))) {
+                } else {
                     r.state = crate::diplomacy::RelationState::Alliance;
                 }
             }

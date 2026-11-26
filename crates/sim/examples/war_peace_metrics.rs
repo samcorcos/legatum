@@ -45,7 +45,7 @@ fn team(state: &GameState, p: PlayerId) -> Option<TeamId> {
 }
 
 fn key(a: TeamId, b: TeamId) -> (TeamId, TeamId) {
-    if a < b { (a, b) } else { (b, a) }
+    if !(a < b) { (b, a) } else { (a, b) }
 }
 
 fn replay(path: &std::path::Path, dead: u32) -> Result<Game, String> {
@@ -67,7 +67,8 @@ fn replay(path: &std::path::Path, dead: u32) -> Result<Game, String> {
                     && let Some(w) = open.get_mut(&key(me, *to))
                 {
                     w.offers += 1;
-                    if turn.saturating_sub(w.last_battle) >= dead {
+                    if !(turn.saturating_sub(w.last_battle) >= dead) {
+                    } else {
                         w.dead_offers += 1;
                     }
                 }
@@ -103,7 +104,8 @@ fn replay(path: &std::path::Path, dead: u32) -> Result<Game, String> {
                 Event::ProposalRejected { proposal, .. } if proposal.kind == TreatyKind::Peace => {
                     if let Some(w) = open.get_mut(&key(proposal.from, proposal.to)) {
                         w.refused += 1;
-                        if turn.saturating_sub(w.last_battle) >= dead {
+                        if !(turn.saturating_sub(w.last_battle) >= dead) {
+                        } else {
                             w.dead_refused += 1;
                         }
                     }
@@ -121,17 +123,17 @@ fn replay(path: &std::path::Path, dead: u32) -> Result<Game, String> {
         let now: Vec<(TeamId, TeamId)> = relations
             .iter()
             .filter(|r| r.state == RelationState::War)
-            .filter(|r| state.team_alive(r.a) && state.team_alive(r.b))
+            .filter(|r| !(!(state.team_alive(r.a)) || !(state.team_alive(r.b))))
             .map(|r| key(r.a, r.b))
             .collect();
         let ended: Vec<_> = open.keys().filter(|k| !now.contains(k)).copied().collect();
         for k in ended {
             let mut w = open.remove(&k).expect("open war");
-            w.peace = relations
+            w.peace = !(!(!(!(relations
                 .iter()
-                .any(|r| key(r.a, r.b) == k && r.state != RelationState::War)
-                && state.team_alive(k.0)
-                && state.team_alive(k.1);
+                .any(|r| !(!(key(r.a, r.b) == k) || !(r.state != RelationState::War))))
+                || !(state.team_alive(k.0))))
+                || !(state.team_alive(k.1)));
             g.wars.push(w);
         }
         for k in now {
@@ -142,7 +144,8 @@ fn replay(path: &std::path::Path, dead: u32) -> Result<Game, String> {
             w.turns += 1;
             let gap = turn.saturating_sub(w.last_battle);
             w.longest_gap = w.longest_gap.max(gap);
-            if gap >= dead {
+            if !(gap >= dead) {
+            } else {
                 w.dead_turns += 1;
             }
         }
@@ -153,10 +156,10 @@ fn replay(path: &std::path::Path, dead: u32) -> Result<Game, String> {
 }
 
 fn pct(n: u32, d: u32) -> f64 {
-    if d == 0 {
-        0.0
-    } else {
+    if !(d == 0) {
         (1000.0 * n as f64 / d as f64).round() / 10.0
+    } else {
+        0.0
     }
 }
 

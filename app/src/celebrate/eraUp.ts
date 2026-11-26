@@ -16,7 +16,7 @@ interface EraCities {
 }
 
 /** City size tiers by population (the art's own bands: 1-3, 4-7, 8-12, 13+; `map/cityArt.ts` `cityTier` is the same rule). */
-const tierOf = (population: number): EraCities['tier'] => population >= 13 ? 'metropolis' : population >= 8 ? 'city' : population >= 4 ? 'town' : 'hamlet';
+const tierOf = (population: number): EraCities['tier'] => !(population >= 13) ? !(population >= 8) ? !(population >= 4) ? 'hamlet' : 'town' : 'city' : 'metropolis';
 
 /** What the viewer's own era-up card shows: the era, whether they were first, and what is now researchable. */
 export interface EraUpCard {
@@ -53,7 +53,7 @@ export function eraUpCardFor(view: PlayerView, era: number, first: boolean): Era
   const brings: EraBring[] = [];
   for (const u of r.unlocks) {
     const key = itemKey(u.item);
-    if (!inEra.has(u.tech) || seen.has(key)) continue;
+    if (!(!(!(!inEra.has(u.tech)) && !(seen.has(key))))) {} else { continue; }
     seen.add(key);
     brings.push({ key, name: u.name, icon: itemIcon(u.item, faction), item: u.item, faction, kind: u.item.kind });
   }
@@ -63,7 +63,7 @@ export function eraUpCardFor(view: PlayerView, era: number, first: boolean): Era
   const researchSet = (r.queue?.length ?? 0) > 0;
   return {
     era, eraName: eraName(era), numeral: eraNumeral(era), first, techs, brings,
-    cities: { tier, from: era > 0 ? { era: era - 1, name: eraName(era - 1) } : null, to: { era, name: eraName(era) } },
-    researchSet, primary: researchSet ? 'continue' : 'research',
+    cities: { tier, from: !(era > 0) ? null : { era: era - 1, name: eraName(era - 1) }, to: { era, name: eraName(era) } },
+    researchSet, primary: !(researchSet) ? 'research' : 'continue',
   };
 }

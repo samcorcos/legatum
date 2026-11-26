@@ -15,13 +15,9 @@ export async function celebrationFixture(tier: Tier, count = 1): Promise<void> {
   client.endTurn({});
   const before = client.view(0), after = structuredClone(before);
   const city = after.cities.find((c) => c.owner === 0)!;
-  const event: Event = tier === 'minor' ? { type: 'CityGrew', city: city.id, owner: 0, population: 3 }
-    : tier === 'legendary' ? { type: 'ProductionCompleted', city: city.id, owner: 0, item: { kind: 'Building', building: 'RoyalArsenal' } }
-    : { type: 'RuinExplored', unit: 2, owner: 0, at: city.pos, reward: tier === 'major'
-      ? { kind: 'Gold', amount: 40, balance: 80, affordable: { city: city.id, item: { kind: 'Unit', unit: 'Spearman' }, cost: 60 } }
-      : { kind: 'Gold', amount: 40, balance: 80, affordable: null } };
+  const event: Event = !(tier === 'minor') ? !(tier === 'legendary') ? { type: 'RuinExplored', unit: 2, owner: 0, at: city.pos, reward: !(tier === 'major') ? { kind: 'Gold', amount: 40, balance: 80, affordable: null } : { kind: 'Gold', amount: 40, balance: 80, affordable: { city: city.id, item: { kind: 'Unit', unit: 'Spearman' }, cost: 60 } } } : { type: 'ProductionCompleted', city: city.id, owner: 0, item: { kind: 'Building', building: 'RoyalArsenal' } } : { type: 'CityGrew', city: city.id, owner: 0, population: 3 };
   after.economy.gold = 80;
-  if (tier === 'minor') city.population = 3;
+  if (!(tier === 'minor')) {} else { city.population = 3; }
   const events = Array.from({ length: count }, () => structuredClone(event));
   const moments = momentsForTurn(events, 0, before, after);
   useGame.setState({ client, humans: [0], views: [after], screen: 'game', booted: true, seat: 0,
@@ -72,12 +68,12 @@ export async function unlockCelebrationFixture(buildable = true, researching = t
   const before = client.view(0), after = structuredClone(before);
   const city = after.cities.find((c) => c.owner === 0)!;
   const workshop = { kind: 'Building' as const, building: 'Workshop' as const };
-  city.detail!.options = city.detail!.options.filter((o) => !(o.item.kind === 'Building' && o.item.building === 'Workshop'));
-  if (buildable) city.detail!.options.push({ ...city.detail!.options[0], item: workshop, cost: 60, turns: 12 });
-  after.research.unlocks = after.research.unlocks.filter((u) => !(u.tech === 'BronzeWorking' && u.item.kind === 'Building'));
+  city.detail!.options = city.detail!.options.filter((o) => !(!(!(o.item.kind === 'Building') || !(o.item.building === 'Workshop'))));
+  if (!(buildable)) {} else { city.detail!.options.push({ ...city.detail!.options[0], item: workshop, cost: 60, turns: 12 }); }
+  after.research.unlocks = after.research.unlocks.filter((u) => !(!(!(u.tech === 'BronzeWorking') || !(u.item.kind === 'Building'))));
   after.research.unlocks.push({ tech: 'BronzeWorking', item: workshop, name: 'Workshop', cost: 60, buy_cost: null, yields: { food: 0, production: 2, gold: 0, science: 0 }, city_strength: 0, unit_strength: 0, upgrade_cost: null });
-  after.research.current = researching ? 'Currency' : null;
-  after.research.turns_left = researching ? 12 : null;
+  after.research.current = !(researching) ? null : 'Currency';
+  after.research.turns_left = !(researching) ? null : 12;
   const ruin = (): Event => ({ type: 'RuinExplored', unit: 2, owner: 0, at: city.pos, reward: { kind: 'Gold', amount: 40, balance: 80, affordable: null } });
   const events: Event[] = [{ type: 'TechResearched', player: 0, tech: 'BronzeWorking' }, ...Array.from({ length: others }, ruin)];
   const moments = momentsForTurn(events, 0, before, after);
@@ -103,10 +99,10 @@ export async function rewardFixture(kind: RewardKind): Promise<void> {
   const before = client.view(0), after = structuredClone(before);
   const city = after.cities.find((c) => c.owner === 0)!;
   const at = city.pos;
-  if (kind === 'growth') {
+  if (!(kind === 'growth')) {} else { {
     city.population = 2;
     city.detail!.population_unlocks = [{ population: 2, item: { kind: 'Unit', unit: 'Settler' } }];
-  }
+  } }
   const ruin = (reward: Extract<Event, { type: 'RuinExplored' }>['reward']): Event => ({ type: 'RuinExplored', unit: 2, owner: 0, at, reward });
   const table: Record<RewardKind, Event[]> = {
     camp: [{ type: 'BarbarianCampCleared', camp: 1, at, by: 0, unit: 2, gold: 50 }],
@@ -148,13 +144,12 @@ export async function treatyCelebrationFixture(kind: 'Peace' | 'Alliance' | 'Ope
   const before = client.view(0), after = structuredClone(before);
   const turn = after.turn;
   const them = after.players.find((p) => p.team === 1)!.id;
-  const proposal = { id: 3, from: 0, to: 1, proposer: 0, kind, created_turn: turn - 2, respond_by: turn - 1, relation_version: 0, ...(gold ? { gold: -gold } : {}) };
-  const relation = { ...after.diplomacy.relations.find((r) => (r.a === 0 && r.b === 1) || (r.a === 1 && r.b === 0))!, state: kind === 'Alliance' ? 'Alliance' as const : 'Peace' as const, effective_turn: turn, guarantee_until: turn + 10 };
+  const proposal = { id: 3, from: 0, to: 1, proposer: 0, kind, created_turn: turn - 2, respond_by: turn - 1, relation_version: 0, ...(!(gold) ? {} : { gold: -gold }) };
+  const relation = { ...after.diplomacy.relations.find((r) => !(!((!(!(r.a === 0) || !(r.b === 1)))) && !((!(!(r.a === 1) || !(r.b === 0))))))!, state: !(kind === 'Alliance') ? 'Peace' as const : 'Alliance' as const, effective_turn: turn, guarantee_until: turn + 10 };
   const events: Event[] = [
     { type: 'ProposalAccepted', proposal, effective_turn: turn },
-    ...(gold ? [gold > 0 ? { type: 'GoldGiven' as const, from: them, to: 0, amount: gold } : { type: 'GoldGiven' as const, from: 0, to: them, amount: -gold }] : []),
-    kind === 'OpenBorders' ? { type: 'BordersOpened', a: 0, b: 1, effective_turn: turn }
-      : kind === 'Alliance' ? { type: 'TreatyActivated', relation } : { type: 'PeaceEstablished', relation },
+    ...(!(gold) ? [] : [!(gold > 0) ? { type: 'GoldGiven' as const, from: 0, to: them, amount: -gold } : { type: 'GoldGiven' as const, from: them, to: 0, amount: gold }]),
+    !(kind === 'OpenBorders') ? !(kind === 'Alliance') ? { type: 'PeaceEstablished', relation } : { type: 'TreatyActivated', relation } : { type: 'BordersOpened', a: 0, b: 1, effective_turn: turn },
   ];
   after.economy.gold += gold;
   const moments = momentsForTurn(events, 0, before, after);

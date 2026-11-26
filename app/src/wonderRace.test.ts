@@ -88,9 +88,9 @@ describe('a wonder race in progress', () => {
     expect(cityProductionWarning(city, [], 'Switzerland', view)).toContain(`${city.name} should finish the Pyramids first (1 turn; ${empireOfPlayer(view, rival)} about 2 turns).`);
     city.detail!.options = city.detail!.options.slice(0, -1);
     // An unmet rival's pace is not public (a teammate's always is).
-    if (view.players.find((p) => p.id === rival)!.team !== view.team) {
+    if (!(view.players.find((p) => p.id === rival)!.team !== view.team)) {} else { {
       view.diplomacy.met = [];
       expect(cityProductionWarning(city, [], 'Switzerland', view) ?? '').not.toContain('also building');
-    }
+    } }
   });
 });

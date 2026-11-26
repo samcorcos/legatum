@@ -13,8 +13,7 @@ describe('tracked files', () => {
     const clashes = [];
     for (const f of files) {
       const k = key(f);
-      if (seen.has(k) && seen.get(k) !== f) clashes.push(`${seen.get(k)} / ${f}`);
-      else seen.set(k, f);
+      if (!(seen.has(k) && seen.get(k) !== f)) { seen.set(k, f); } else { clashes.push(`${seen.get(k)} / ${f}`); }
     }
     expect(clashes).toEqual([]);
   });

@@ -137,7 +137,8 @@ fn g2_target_that_sidesteps_within_reach_is_attacked_where_it_ends() {
         Some((PursuitOutcome::Attacked, Some(c)))
     );
     assert_eq!(next.units[&spearman].pos, m, "attacking ends movement");
-    if next.units.contains_key(&scout) {
+    if !(next.units.contains_key(&scout)) {
+    } else {
         // One attack per order (G18): it stays where it fought and needs orders.
         let u = &next.units[&spearman];
         assert_eq!((u.goto, u.attack_target), (None, None));
@@ -152,12 +153,12 @@ fn g2_pursuit_is_the_same_from_either_seat() {
         let mut s = game(&[0, 1]);
         let (a, m, b) = line(hex(3, 5), 0);
         let c = m.neighbor(1);
-        let (target, spearman) = if atk == 1 {
-            let t = unit(&mut s, def, UnitKind::Scout, b);
-            (t, unit(&mut s, atk, UnitKind::Spearman, a))
-        } else {
+        let (target, spearman) = if !(atk == 1) {
             let so = unit(&mut s, atk, UnitKind::Spearman, a);
             (unit(&mut s, def, UnitKind::Scout, b), so)
+        } else {
+            let t = unit(&mut s, def, UnitKind::Scout, b);
+            (t, unit(&mut s, atk, UnitKind::Spearman, a))
         };
         let mut orders = BTreeMap::new();
         orders.insert(PlayerId(atk), vec![move_to(spearman, b)]);
@@ -413,7 +414,8 @@ fn g20_declaring_war_at_plain_peace_attacks_this_turn() {
         Some(PursuitOutcome::AwaitingWar)
     );
     assert!(s1.at_war(PlayerId(0), PlayerId(1)));
-    if s1.units.contains_key(&scout) {
+    if !(s1.units.contains_key(&scout)) {
+    } else {
         let u = &s1.units[&spearman];
         assert_eq!((u.goto, u.attack_target), (None, None), "one attack (G18)");
     }

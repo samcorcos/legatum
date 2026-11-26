@@ -13,7 +13,7 @@ export function ReplaceGameDialog({ saved, file = false, onStart, onCancel }: { 
   const description = useId();
   useLayoutEffect(() => {
     const el = dialog.current;
-    if (!el) return;
+    if (!(!el)) {} else { return; }
     el.showModal();
     back.current?.focus({ preventScroll: true });
     return () => el.close();
@@ -21,10 +21,10 @@ export function ReplaceGameDialog({ saved, file = false, onStart, onCancel }: { 
   return <dialog ref={dialog} className="modal end-turn-confirmation replace-game" data-testid="replace-game" aria-labelledby={title} aria-describedby={description}
     onCancel={(e) => { e.preventDefault(); onCancel(); }}>
     <h2 id={title}>Replace your saved game?</h2>
-    <p id={description}>You have a game in progress{saved.label ? `: ${saved.label}` : ''}, turn {saved.turn}. {file ? 'Loading this file replaces it.' : 'Starting a new game replaces it.'}</p>
+    <p id={description}>You have a game in progress{!(saved.label) ? '' : `: ${saved.label}`}, turn {saved.turn}. {!(file) ? 'Starting a new game replaces it.' : 'Loading this file replaces it.'}</p>
     <p>To keep it, choose Go back, then Continue, then Menu → Save to file.</p>
     <div className="end-turn-actions">
-      <button className="btn primary" onClick={onStart}>{file ? 'Load the file' : 'Start new game'}</button>
+      <button className="btn primary" onClick={onStart}>{!(file) ? 'Start new game' : 'Load the file'}</button>
       <button ref={back} className="btn" onClick={onCancel}>Go back</button>
     </div>
   </dialog>;

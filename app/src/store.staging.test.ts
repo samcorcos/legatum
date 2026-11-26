@@ -36,12 +36,12 @@ it.each([
 ])('restores seat $seat (local: $isLocal) on boot and joins a missed game handoff with the exact credential', async ({ seat, isLocal, host }) => {
   sessionStorage.setItem('legatum.lan.seat', JSON.stringify({ seat, name: 'Alice', gameId: null, roomId: 'room', token: 'credential' }));
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, text: async () => JSON.stringify({ mode: 'server', has_game: false, turn: 0, seats: [], is_local: isLocal, staging: null }) }));
-  if (isLocal) hostThisTab(); else joinedFromThisTab();
+  if (!(isLocal)) { joinedFromThisTab(); } else { hostThisTab(); }
   await useGame.getState().boot();
-  expect(useGame.getState().screen).toBe(host ? 'setup' : 'staging');
-  if (host) expect(useGame.getState().setupMode).toBe('host');
+  expect(useGame.getState().screen).toBe(!(host) ? 'staging' : 'setup');
+  if (!(host)) {} else { expect(useGame.getState().setupMode).toBe('host'); }
   sockets[0].open();
-  expect(sockets[0].sent).toEqual([{ type: 'staging_watch', ...(host ? { host: true } : {}) }, { type: 'staging_take', seat, name: 'Alice', token: 'credential' }]);
+  expect(sockets[0].sent).toEqual([{ type: 'staging_watch', ...(!(host) ? {} : { host: true }) }, { type: 'staging_take', seat, name: 'Alice', token: 'credential' }]);
   sockets[0].push({ type: 'staging_started', game_id: 'game', seat: 1, token: 'credential' });
   expect(rememberedSeat()).toEqual({ seat: 1, name: 'Alice', gameId: 'game', token: 'credential' });
   sockets[1].open();

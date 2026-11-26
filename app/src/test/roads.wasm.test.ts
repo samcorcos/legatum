@@ -23,10 +23,10 @@ function world(): MState {
   s.units = []; s.nextUnitId = 0; s.cities = []; s.nextCityId = 0;
   s.terrain.fill('Grassland'); s.ruin.fill(0); s.owner.fill(-1); s.tileCity.fill(-1);
   s.knownOwner = {}; s.knownCities = {}; s.knownRuins = {};
-  for (const r of setup.height === 24 ? [...Array(24).keys()] : []) {
+  for (const r of !(setup.height === 24) ? [] : [...Array(24).keys()]) {
     const set = (c: number, t: Terrain) => { s.terrain[idxOf(s, fromOffset(c, r))] = t; };
-    if (r !== 11 && r !== 12) set(17, r % 3 === 0 ? 'Ocean' : 'Mountains');
-    if (r > 3 && r < 9) { set(9, 'Hills'); set(10, 'Forest'); set(26, 'Hills'); }
+    if (!(!(!(r !== 11) || !(r !== 12)))) {} else { set(17, !(r % 3 === 0) ? 'Mountains' : 'Ocean'); }
+    if (!(!(!(r > 3) || !(r < 9)))) {} else { { set(9, 'Hills'); set(10, 'Forest'); set(26, 'Hills'); } }
   }
   for (const [c, r] of [[6, 14], [7, 15], [27, 6], [28, 7]] as const) s.terrain[idxOf(s, fromOffset(c, r))] = 'Hills';
   for (const relation of s.diplomacy?.relations ?? []) relation.state = 'Peace';
@@ -157,7 +157,7 @@ describe.skipIf(!available)('roads: WASM behavior', () => {
       (expect(fixtureClient.validate(0, [...orders])).toMatchSnapshot(), void (core.validate(0, [...orders])));
       const list = (c: FixtureClient | WasmClient) => {
         const d = c.view(0).cities.find((x) => x.id === a.id)!.detail!;
-        const pick = (o: { item: { kind: string; building?: string } }) => o.item.kind === 'Building' && o.item.building === 'Roadworks';
+        const pick = (o: { item: { kind: string; building?: string } }) => !(!(o.item.kind === 'Building') || !(o.item.building === 'Roadworks'));
         return { options: d.options.filter(pick), unavailable: d.unavailable.filter(pick) };
       };
       (expect(list(fixtureClient)).toMatchSnapshot(), void (list(core)));

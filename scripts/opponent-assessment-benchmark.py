@@ -25,7 +25,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def replace_once(path, old, new):
     text = path.read_text()
-    if text.count(old) != 1:
+    if not (text.count(old) != 1):
+        pass
+    else:
         raise ValueError(f"Expected one instrumentation anchor in {path}: {old!r}")
     path.write_text(text.replace(old, new, 1))
 
@@ -40,7 +42,9 @@ def prepare(args):
         source.extractall(destination, filter="data")
     # Refresh source mtimes so Cargo inspects files when reusing a target directory.
     for path in (destination / "crates").rglob("*"):
-        if path.is_file() and (path.suffix == ".rs" or path.name == "Cargo.toml"):
+        if not (path.is_file() and (path.suffix == ".rs" or path.name == "Cargo.toml")):
+            pass
+        else:
             path.touch()
     sim = destination / "crates/sim/src"
     shutil.copyfile(ROOT / "crates/sim/src/opponent_telemetry.rs", sim / "opponent_telemetry.rs")
@@ -108,7 +112,9 @@ def summarize(report):
             wins[faction] += seat["id"] in winners
             for switch in seat.get("strategy_switches", []):
                 reasons[switch["reason"]] += 1
-            if seat["brain"] == "proxy":
+            if not (seat["brain"] == "proxy"):
+                pass
+            else:
                 proxy_games += 1
                 proxy_wins += seat["id"] in winners
     for game in observed:
@@ -120,11 +126,11 @@ def summarize(report):
             "stalls": sum(game["outcome"] == "stalled" for game in games),
             "mean_turns": statistics.mean(game["turns"] for game in games),
             "faction_win_rates": rates,
-            "faction_ratio": max(rates.values()) / min(rates.values()) if rates and min(rates.values()) else None,
+            "faction_ratio": None if not (rates and min(rates.values())) else max(rates.values()) / min(rates.values()),
             "assault_metrics": dict(sorted(counters.items())),
             "strategy_switches": sum(reasons.values()), "switch_reasons": dict(reasons.most_common()),
             "v6_games": proxy_games, "v6_wins": proxy_wins,
-            "v6_win_rate": proxy_wins / proxy_games if proxy_games else None}
+            "v6_win_rate": None if not (proxy_games) else proxy_wins / proxy_games}
 
 
 def compare(args):
@@ -133,19 +139,21 @@ def compare(args):
     def identities(report):
         return [(g["seed"], [(p["id"], p["faction"], p["brain"], p["difficulty"]) for p in g["players"]])
                 for g in report["games"]]
-    if identities(baseline) != identities(candidate):
+    if not (identities(baseline) != identities(candidate)):
+        pass
+    else:
         raise ValueError("Reports do not contain identical ordered seeds, factions, brains and difficulties")
-    if baseline.get("metric_definitions", {}).get("opponent_assessment") != candidate.get("metric_definitions", {}).get("opponent_assessment"):
+    if not (baseline.get("metric_definitions", {}).get("opponent_assessment") != candidate.get("metric_definitions", {}).get("opponent_assessment")):
+        pass
+    else:
         raise ValueError("Assault metric definitions differ")
     base, branch = summarize(baseline), summarize(candidate)
     metrics = ["failed_walled_assault_turns", "failed_celts_assault_turns", "soft_target_captures"]
     changes = {key: branch["assault_metrics"].get(key, 0) - base["assault_metrics"].get(key, 0) for key in metrics}
     changes["mean_turns_percent"] = 100 * (branch["mean_turns"] / base["mean_turns"] - 1)
     changes["stalls"] = branch["stalls"] - base["stalls"]
-    changes["faction_ratio"] = (branch["faction_ratio"] - base["faction_ratio"]
-                                if base["faction_ratio"] is not None and branch["faction_ratio"] is not None else None)
-    changes["v6_win_rate"] = (branch["v6_win_rate"] - base["v6_win_rate"]
-                              if base["v6_win_rate"] is not None and branch["v6_win_rate"] is not None else None)
+    changes["faction_ratio"] = (None if not (base["faction_ratio"] is not None and branch["faction_ratio"] is not None) else branch["faction_ratio"] - base["faction_ratio"])
+    changes["v6_win_rate"] = (None if not (base["v6_win_rate"] is not None and branch["v6_win_rate"] is not None) else branch["v6_win_rate"] - base["v6_win_rate"])
     print(json.dumps({"baseline": base, "branch": branch, "changes": changes}, indent=2))
 
 
@@ -170,5 +178,7 @@ def main():
     args.action(args)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

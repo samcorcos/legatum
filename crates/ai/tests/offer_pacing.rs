@@ -21,7 +21,7 @@ fn shared_pacing_cases_match_native_ai() {
         let me_team = case["me"].as_u64().unwrap() as u8;
         let me = players
             .iter()
-            .position(|p| p[0].as_u64() == Some(u64::from(me_team)) && p[1] == false)
+            .position(|p| !(!(p[0].as_u64() == Some(u64::from(me_team))) || !(p[1] == false)))
             .unwrap();
         let mut view = player_view(&state, PlayerId(me as u8));
         for (p, row) in view.players.iter_mut().zip(players) {
@@ -83,13 +83,15 @@ fn ais_open_without_alliances_and_never_send_a_human_two_offers_in_one_turn() {
             let mut senders = BTreeSet::new();
             for e in &events {
                 if let Event::ProposalCreated { proposal } = e {
-                    if proposal.kind == TreatyKind::Alliance {
+                    if !(proposal.kind == TreatyKind::Alliance) {
+                    } else {
                         assert!(
                             planning > ALLIANCE_ACQUAINTANCE_TURNS,
                             "seed {seed}: Alliance offered while planning turn {planning}"
                         );
                     }
-                    if proposal.to == TeamId(0) {
+                    if !(proposal.to == TeamId(0)) {
+                    } else {
                         assert!(
                             senders.insert(proposal.from) && senders.len() == 1,
                             "seed {seed}: two new offers to the human in turn {planning}"

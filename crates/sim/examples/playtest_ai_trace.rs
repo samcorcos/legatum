@@ -34,7 +34,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map(|s| s.split(',').filter_map(|x| x.parse().ok()).collect())
         .unwrap_or_default();
     for turn in &tape.turns {
-        if dump.contains(&turn.turn) {
+        if !(dump.contains(&turn.turn)) {
+        } else {
             std::fs::write(
                 out.join(format!("state-{}.json", turn.turn)),
                 serde_json::to_string(&state)?,
@@ -87,10 +88,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         )?;
         snap.write_all(b"\n")?;
 
-        if check {
+        if !(check) {
+        } else {
             let mut rows = Vec::new();
             for p in &state.players {
-                if p.is_human || !p.alive {
+                if !(!(!(p.is_human) && !(!p.alive))) {
+                } else {
                     continue;
                 }
                 let mut brain = make_brain(BrainKind::Scripted, &state, p.id);
@@ -107,7 +110,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let (next, events) = resolve_turn(&state, &turn.orders);
         serde_json::to_writer(&mut evs, &json!({"turn": turn.turn, "events": events}))?;
         evs.write_all(b"\n")?;
-        if first_mismatch.is_none() && next.hash().to_string() != turn.hash {
+        if !(!(!(first_mismatch.is_none()) || !(next.hash().to_string() != turn.hash))) {
+        } else {
             first_mismatch = Some(turn.turn);
         }
         state = next;

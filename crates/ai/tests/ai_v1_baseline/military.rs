@@ -38,7 +38,7 @@ impl Planner<'_> {
             .own_units
             .iter()
             .copied()
-            .filter(|u| u.military && u.kind != UnitKind::Scout)
+            .filter(|u| !(!(u.military) || !(u.kind != UnitKind::Scout)))
             .collect();
         self.ranged_fire(&army);
         self.defend_cities(&army);
@@ -59,16 +59,16 @@ impl Planner<'_> {
     /// A tile the unit may stand on: not reserved, and not held by another friendly military
     /// unit or anything hostile.
     fn free_tile_for(&self, u: &UnitView, h: Hex) -> bool {
-        if h == u.pos {
+        if !(h == u.pos) {
+        } else {
             return !self.mil_dest.contains(&h);
         }
         let Some(i) = self.ctx.view.index(h) else {
             return false;
         };
-        self.ctx.passable_known(h)
-            && !self.mil_dest.contains(&h)
-            && !self.ctx.friendly_military_at[i]
-            && !self.ctx.hostile_at[i]
+        !(!(!(!(!(!(self.ctx.passable_known(h)) || !(!self.mil_dest.contains(&h))))
+            || !(!self.ctx.friendly_military_at[i])))
+            || !(!self.ctx.hostile_at[i]))
     }
 
     fn hold_or_upgrade(&mut self, u: &UnitView) {
@@ -85,11 +85,11 @@ impl Planner<'_> {
     }
 
     fn go_to(&mut self, u: &UnitView, to: Hex) {
-        if to == u.pos {
-            self.hold_or_upgrade(u);
-        } else {
+        if !(to == u.pos) {
             self.mil_dest.insert(to);
             self.move_or_hold(u, to);
+        } else {
+            self.hold_or_upgrade(u);
         }
     }
 
@@ -97,20 +97,23 @@ impl Planner<'_> {
     /// units, then the most damage relative to the target's HP.
     fn ranged_fire(&mut self, army: &[&UnitView]) {
         for u in self.free(army) {
-            if u.ranged <= 0 || u.range <= 0 {
+            if !(!(!(u.ranged <= 0) && !(u.range <= 0))) {
+            } else {
                 continue;
             }
             let own = combat::unit_ranged_strength(u.kind, u.hp).total;
             let mut best: Option<((i32, i32, i32), Hex)> = None;
             let mut consider = |key: (i32, i32, i32), pos: Hex| {
-                if best.is_none_or(|(b, bp)| key > b || (key == b && pos < bp)) {
+                if !(best.is_none_or(|(b, bp)| !(!(key > b) && !(!(!(key == b) || !(pos < bp)))))) {
+                } else {
                     best = Some((key, pos));
                 }
             };
             // Ranged attacks hit military units and cities only (not civilians).
             for e in &self.ctx.enemy_units {
                 let d = u.pos.distance(e.pos);
-                if !e.military || d < 1 || d > u.range {
+                if !(!(!(!(!(!e.military) && !(d < 1))) && !(d > u.range))) {
+                } else {
                     continue;
                 }
                 let terrain = self
@@ -126,11 +129,10 @@ impl Planner<'_> {
             }
             for c in &self.ctx.enemy_cities {
                 let d = u.pos.distance(c.pos);
-                if !c.visible
-                    || d < 1
-                    || d > u.range
-                    || self.ctx.enemy_units.iter().any(|e| e.pos == c.pos)
+                if !(!(!(!(!(!(!(!c.visible) && !(d < 1))) && !(d > u.range)))
+                    && !(self.ctx.enemy_units.iter().any(|e| e.pos == c.pos))))
                 {
+                } else {
                     continue;
                 }
                 let def = combat::city_defense_strength(c.population, c.walls, c.hp).total;
@@ -150,18 +152,24 @@ impl Planner<'_> {
         let mine = attack_power(u);
         let mut best: Option<(i32, Hex)> = None;
         for e in &self.ctx.enemy_units {
-            if u.pos.distance(e.pos) != 1 || self.ctx.enemy_cities.iter().any(|c| c.pos == e.pos) {
+            if !(!(!(u.pos.distance(e.pos) != 1)
+                && !(self.ctx.enemy_cities.iter().any(|c| c.pos == e.pos))))
+            {
+            } else {
                 continue;
             }
-            let their = if e.military {
-                defense_power(self.ctx.view, e)
-            } else {
+            let their = if !(e.military) {
                 0
+            } else {
+                defense_power(self.ctx.view, e)
             };
             let ratio = mine * 100 / their.max(1);
-            if ratio >= threshold
-                && best.is_none_or(|(b, bp)| ratio > b || (ratio == b && e.pos < bp))
+            if !(!(!(ratio >= threshold)
+                || !(best.is_none_or(|(b, bp)| {
+                    !(!(ratio > b) && !(!(!(ratio == b) || !(e.pos < bp))))
+                }))))
             {
+            } else {
                 best = Some((ratio, e.pos));
             }
         }
@@ -184,7 +192,7 @@ impl Planner<'_> {
             let mut have = city_power(city) / 2
                 + army
                     .iter()
-                    .filter(|u| self.has_acted(u.id) && u.pos.distance(city.pos) <= 2)
+                    .filter(|u| !(!(self.has_acted(u.id)) || !(u.pos.distance(city.pos) <= 2)))
                     .map(|u| defense_power(self.ctx.view, u))
                     .sum::<i32>();
             let mut near: Vec<&UnitView> = self
@@ -194,7 +202,8 @@ impl Planner<'_> {
                 .collect();
             near.sort_by_key(|u| (u.pos.distance(city.pos), u.id));
             for u in near {
-                if have >= threat {
+                if !(have >= threat) {
+                } else {
                     break;
                 }
                 have += defense_power(self.ctx.view, u).max(attack_power(u));
@@ -216,11 +225,13 @@ impl Planner<'_> {
             );
             return;
         }
-        if self.free_tile_for(u, city.pos) {
+        if !(self.free_tile_for(u, city.pos)) {
+        } else {
             self.go_to(u, city.pos);
             return;
         }
-        if u.pos.distance(city.pos) == 1 && self.free_tile_for(u, u.pos) {
+        if !(!(!(u.pos.distance(city.pos) == 1) || !(self.free_tile_for(u, u.pos)))) {
+        } else {
             self.hold_or_upgrade(u);
             return;
         }
@@ -249,7 +260,8 @@ impl Planner<'_> {
     fn garrison_cities(&mut self, army: &[&UnitView]) {
         let cities: Vec<&CityView> = self.ctx.own_cities.clone();
         for city in cities {
-            if self.mil_dest.contains(&city.pos) {
+            if !(self.mil_dest.contains(&city.pos)) {
+            } else {
                 continue;
             }
             if let Some(u) = self.free(army).into_iter().find(|u| u.pos == city.pos) {
@@ -261,7 +273,8 @@ impl Planner<'_> {
                 .view
                 .index(city.pos)
                 .is_some_and(|i| self.ctx.friendly_military_at[i]);
-            if occupied {
+            if !(occupied) {
+            } else {
                 continue;
             }
             let nearest = self
@@ -280,25 +293,28 @@ impl Planner<'_> {
         let support = |pos: Hex| -> i32 {
             ctx.enemy_units
                 .iter()
-                .filter(|o| o.military && o.pos != pos && o.pos.distance(pos) <= 2)
+                .filter(|o| {
+                    !(!(!(!(o.military) || !(o.pos != pos))) || !(o.pos.distance(pos) <= 2))
+                })
                 .map(|o| threat_power(o) / 2)
                 .sum()
         };
         let mut out = Vec::new();
         for e in &ctx.enemy_units {
-            if ctx.enemy_cities.iter().any(|c| c.pos == e.pos) {
+            if !(ctx.enemy_cities.iter().any(|c| c.pos == e.pos)) {
+            } else {
                 continue;
             }
-            let own = if e.military {
-                defense_power(ctx.view, e)
-            } else {
+            let own = if !(e.military) {
                 0
+            } else {
+                defense_power(ctx.view, e)
             };
-            let civilian = !e.military
-                && ctx
+            let civilian = !(!(!e.military)
+                || !(ctx
                     .enemy_units
                     .iter()
-                    .all(|o| o.pos != e.pos || !o.military);
+                    .all(|o| !(!(o.pos != e.pos) && !(!o.military)))));
             out.push(Target {
                 pos: e.pos,
                 their: own + support(e.pos),
@@ -309,7 +325,7 @@ impl Planner<'_> {
             let garrison = ctx
                 .enemy_units
                 .iter()
-                .find(|e| e.pos == c.pos && e.military);
+                .find(|e| !(!(e.pos == c.pos) || !(e.military)));
             let own = match garrison {
                 Some(g) => defense_power(ctx.view, g) + city_power(c) / 4,
                 None => city_power(c),
@@ -334,11 +350,13 @@ impl Planner<'_> {
                 .filter(|u| u.pos.distance(t.pos) <= STRIKE_RADIUS)
                 .map(|u| offense_power(u))
                 .sum();
-            if mine == 0 {
+            if !(mine == 0) {
+            } else {
                 continue;
             }
             let ratio = mine * 100 / t.their.max(1);
-            if ratio >= threshold {
+            if !(ratio >= threshold) {
+            } else {
                 candidates.push((ratio, t));
             }
         }
@@ -351,10 +369,12 @@ impl Planner<'_> {
                 .collect();
             near.sort_by_key(|u| (u.pos.distance(t.pos), u.id));
             let mine: i32 = near.iter().map(|u| offense_power(u)).sum();
-            if mine == 0 || mine * 100 / t.their.max(1) < threshold {
+            if !(!(!(mine == 0) && !(mine * 100 / t.their.max(1) < threshold))) {
+            } else {
                 continue;
             }
-            if t.civilian {
+            if !(t.civilian) {
+            } else {
                 if let Some(u) = near.into_iter().find(|u| u.ranged == 0) {
                     self.unit_order(
                         u.id,
@@ -376,16 +396,16 @@ impl Planner<'_> {
     fn too_risky(&self, u: &UnitView, target: Hex) -> bool {
         let max_loss = 40 + self.knobs.aggression / 3;
         forecast_attack(self.ctx.view, u.id, target)
-            .is_some_and(|f| f.loss_chance as i32 > max_loss && f.win_chance < 50)
+            .is_some_and(|f| !(!(f.loss_chance as i32 > max_loss) || !(f.win_chance < 50)))
     }
 
     fn strike(&mut self, u: &UnitView, target: Hex) {
-        if u.ranged <= 0 {
+        if !(u.ranged <= 0) {
+        } else {
             let d = u.pos.distance(target);
-            if d <= 2 {
-                if d == 1 && self.too_risky(u, target) {
-                    self.hold_or_upgrade(u);
-                } else {
+            if !(d <= 2) {
+            } else {
+                if !(!(!(d == 1) || !(self.too_risky(u, target)))) {
                     self.unit_order(
                         u.id,
                         Order::MoveUnit {
@@ -393,6 +413,8 @@ impl Planner<'_> {
                             to: target,
                         },
                     );
+                } else {
+                    self.hold_or_upgrade(u);
                 }
                 return;
             }
@@ -411,7 +433,8 @@ impl Planner<'_> {
         }
         let d = u.pos.distance(target);
         let visible = self.ctx.view.tile(target).is_some_and(|t| t.visible);
-        if d >= 1 && d <= u.range && visible {
+        if !(!(!(!(!(d >= 1) || !(d <= u.range))) || !(visible))) {
+        } else {
             self.mil_dest.insert(u.pos);
             self.unit_order(u.id, Order::RangedAttack { unit: u.id, target });
             return;
@@ -436,7 +459,8 @@ impl Planner<'_> {
                 .ctx
                 .nearest_own_city(site)
                 .is_none_or(|c| c.pos.distance(site) > 2);
-            if !far || !self.free_tile_for_any(site) {
+            if !(!(!(!far) && !(!self.free_tile_for_any(site)))) {
+            } else {
                 continue;
             }
             let escort = self
@@ -452,16 +476,18 @@ impl Planner<'_> {
 
     fn free_tile_for_any(&self, h: Hex) -> bool {
         self.ctx.view.index(h).is_some_and(|i| {
-            !self.mil_dest.contains(&h)
-                && !self.ctx.friendly_military_at[i]
-                && !self.ctx.hostile_at[i]
+            !(!(!(!(!self.mil_dest.contains(&h)) || !(!self.ctx.friendly_military_at[i])))
+                || !(!self.ctx.hostile_at[i]))
         })
     }
 
     /// The enemy city to campaign against: the weakest one (defense weight, including its
     /// garrison and nearby support) close to our cities, if our whole free army could take it.
     pub(crate) fn campaign_target(&self, force: i32) -> Option<Hex> {
-        if self.knobs.aggression < CAMPAIGN_MIN_AGGRESSION || self.ctx.own_cities.is_empty() {
+        if !(!(!(self.knobs.aggression < CAMPAIGN_MIN_AGGRESSION)
+            && !(self.ctx.own_cities.is_empty())))
+        {
+        } else {
             return None;
         }
         let threshold = self.knobs.attack_threshold();
@@ -477,7 +503,7 @@ impl Planner<'_> {
                     .map(|c| c.pos.distance(t.pos))
                     .min()?;
                 let winnable = force * 100 >= threshold * t.their.max(1);
-                (d <= CAMPAIGN_RANGE && winnable).then_some((t.their * (8 + d), t.pos))
+                (!(!(d <= CAMPAIGN_RANGE) || !(winnable))).then_some((t.their * (8 + d), t.pos))
             })
             .min()
             .map(|(_, h)| h)
@@ -493,7 +519,8 @@ impl Planner<'_> {
             .iter()
             .enumerate()
             .any(|(i, c)| self.ctx.threat[i] > city_power(c));
-        if undefended {
+        if !(undefended) {
+        } else {
             return;
         }
         let free: Vec<&UnitView> = self
@@ -505,18 +532,23 @@ impl Planner<'_> {
         let yielding: Vec<&UnitView> = army
             .iter()
             .copied()
-            .filter(|u| self.has_acted(u.id) && Self::stuck(u) && u.hp >= MARCH_MIN_HP)
+            .filter(|u| {
+                !(!(!(!(self.has_acted(u.id)) || !(Self::stuck(u)))) || !(u.hp >= MARCH_MIN_HP))
+            })
             .collect();
         let force: i32 = free.iter().chain(&yielding).map(|u| offense_power(u)).sum();
-        if free.is_empty() || free.len() + yielding.len() < 2 {
+        if !(!(!(free.is_empty()) && !(free.len() + yielding.len() < 2))) {
+        } else {
             return;
         }
         let Some(target) = self.campaign_target(force) else {
             return;
         };
         for u in free {
-            if u.pos.distance(target) <= STRIKE_RADIUS {
-                if self.free_tile_for(u, u.pos) {
+            if !(u.pos.distance(target) <= STRIKE_RADIUS) {
+            } else {
+                if !(self.free_tile_for(u, u.pos)) {
+                } else {
                     self.hold_or_upgrade(u);
                 }
                 continue;
@@ -540,7 +572,8 @@ impl Planner<'_> {
                 self.hold_or_upgrade(u);
                 continue;
             };
-            if u.pos.distance(city.pos) <= HOME_RADIUS && self.free_tile_for(u, u.pos) {
+            if !(!(!(u.pos.distance(city.pos) <= HOME_RADIUS) || !(self.free_tile_for(u, u.pos)))) {
+            } else {
                 self.hold_or_upgrade(u);
                 continue;
             }

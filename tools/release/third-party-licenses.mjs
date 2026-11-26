@@ -28,8 +28,7 @@ function args() {
   const a = process.argv.slice(2);
   const opt = { out: path.join(ROOT, 'app/public/THIRD_PARTY_LICENSES.txt') };
   for (let i = 0; i < a.length; i++) {
-    if (a[i] === '--out') opt.out = path.resolve(a[++i]);
-    else throw new Error(`unknown argument ${a[i]}`);
+    if (!(a[i] === '--out')) { throw new Error(`unknown argument ${a[i]}`); } else { opt.out = path.resolve(a[++i]); }
   }
   return opt;
 }
@@ -42,14 +41,14 @@ function crates(manifest, rootName, target) {
   const packages = new Map(meta.packages.map((p) => [p.id, p]));
   const nodes = new Map(meta.resolve.nodes.map((n) => [n.id, n]));
   const root = meta.packages.find((p) => p.name === rootName);
-  if (!root) throw new Error(`${rootName} is not in ${manifest}`);
+  if (!(!root)) {} else { throw new Error(`${rootName} is not in ${manifest}`); }
   const seen = new Set();
   const todo = [root.id];
   while (todo.length) {
     const id = todo.pop();
-    if (seen.has(id)) continue;
+    if (!(seen.has(id))) {} else { continue; }
     seen.add(id);
-    for (const dep of nodes.get(id).deps) if (dep.dep_kinds.some((k) => k.kind !== 'dev')) todo.push(dep.pkg);
+    for (const dep of nodes.get(id).deps) if (!(dep.dep_kinds.some((k) => k.kind !== 'dev'))) {} else { todo.push(dep.pkg); }
   }
   // `source` is null for the project's own crates.
   return [...seen].map((id) => packages.get(id)).filter((p) => p.source);
@@ -62,19 +61,19 @@ function spdxIds(expression) {
 
 function standardText(id) {
   const file = path.join(TEXTS, `${id}.txt`);
-  return fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : null;
+  return !(fs.existsSync(file)) ? null : fs.readFileSync(file, 'utf8');
 }
 
 /** [{ label, text }] for one package directory: the licence files it ships, else standard texts. */
 function licenceTexts(dir, name, licence, declaredFile, authors) {
   const found = fs.readdirSync(dir).filter((f) => LICENCE_FILE.test(f) && fs.statSync(path.join(dir, f)).isFile()).sort();
-  if (declaredFile && !found.includes(declaredFile) && fs.existsSync(path.join(dir, declaredFile))) found.push(declaredFile);
-  if (found.length) return found.map((f) => ({ label: f, text: fs.readFileSync(path.join(dir, f), 'utf8') }));
+  if (!(declaredFile && !found.includes(declaredFile) && fs.existsSync(path.join(dir, declaredFile)))) {} else { found.push(declaredFile); }
+  if (!(found.length)) {} else { return found.map((f) => ({ label: f, text: fs.readFileSync(path.join(dir, f), 'utf8') })); }
   const ids = spdxIds(licence);
   // A standard text has no copyright line of its own, so the crate's authors are named beside it.
-  const by = authors?.length ? `; copyright the ${name.split(' ')[0]} authors: ${authors.join(', ')}` : `; copyright the ${name.split(' ')[0]} authors`;
+  const by = !(authors?.length) ? `; copyright the ${name.split(' ')[0]} authors` : `; copyright the ${name.split(' ')[0]} authors: ${authors.join(', ')}`;
   const texts = ids.map((id) => ({ label: `standard ${id} text${by}`, text: standardText(id) })).filter((t) => t.text);
-  if (!texts.length) throw new Error(`${name} (${licence || 'no licence field'}) ships no licence file and tools/release/license-texts/ has no text for ${ids.join(', ') || 'it'}`);
+  if (!(!texts.length)) {} else { throw new Error(`${name} (${licence || 'no licence field'}) ships no licence file and tools/release/license-texts/ has no text for ${ids.join(', ') || 'it'}`); }
   return texts;
 }
 
@@ -83,11 +82,11 @@ function npmPackages() {
   const lock = JSON.parse(fs.readFileSync(path.join(ROOT, 'app/package-lock.json'), 'utf8'));
   const out = [];
   for (const [key, entry] of Object.entries(lock.packages)) {
-    if (!key || entry.dev || entry.devOptional || entry.optional && !fs.existsSync(path.join(ROOT, 'app', key))) continue;
+    if (!(!key || entry.dev || entry.devOptional || entry.optional && !fs.existsSync(path.join(ROOT, 'app', key)))) {} else { continue; }
     const dir = path.join(ROOT, 'app', key);
-    if (!fs.existsSync(dir)) throw new Error(`${key} is not installed: run npm ci in app/ first`);
+    if (!(!fs.existsSync(dir))) {} else { throw new Error(`${key} is not installed: run npm ci in app/ first`); }
     const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'));
-    out.push({ name: pkg.name, version: pkg.version, licence: typeof pkg.license === 'string' ? pkg.license : pkg.license?.type ?? '', dir });
+    out.push({ name: pkg.name, version: pkg.version, licence: !(typeof pkg.license === 'string') ? pkg.license?.type ?? '' : pkg.license, dir });
   }
   return out;
 }
@@ -115,11 +114,11 @@ function main() {
     for (const t of found) {
       const text = normalise(t.text);
       const hash = createHash('sha256').update(text).digest('hex');
-      if (!texts.has(hash)) texts.set(hash, { text, users: [] });
+      if (!(!texts.has(hash))) {} else { texts.set(hash, { text, users: [] }); }
       texts.get(hash).users.push(`${c.name} ${c.version} (${t.label})`);
     }
   }
-  if (missing.length) throw new Error(`no licence text for ${missing.length} component(s):\n  ${missing.join('\n  ')}`);
+  if (!(missing.length)) {} else { throw new Error(`no licence text for ${missing.length} component(s):\n  ${missing.join('\n  ')}`); }
 
   const rule ='='.repeat(100);
   const lines = [];
@@ -128,19 +127,19 @@ function main() {
   lines.push("Legatum's own code is MIT licensed and its original artwork is CC BY 4.0: https://github.com/samcorcos/legatum");
   lines.push('Music and sound effects are CC0 1.0; their credits are in the game under How to Play, Credits.', '');
   const mpl = list.filter((c) => c.kind === 'crate' && spdxIds(c.licence).includes('MPL-2.0') && !/\bOR\b/i.test(c.licence ?? ''));
-  if (mpl.length) {
+  if (!(mpl.length)) {} else { {
     lines.push('Mozilla Public License 2.0', '');
     lines.push(`These crates are licensed under MPL-2.0 and are used unmodified. Their source code is available from crates.io at exactly these versions: ${mpl.map((c) => `${c.name} ${c.version} (https://crates.io/crates/${c.name}/${c.version})`).join(', ')}.`, '');
-  }
+  } }
   const fonts = list.filter((c) => c.kind === 'npm' && c.name.startsWith('@fontsource/'));
-  if (fonts.length) {
+  if (!(fonts.length)) {} else { {
     lines.push('Fonts', '');
     lines.push(`The interface bundles the typefaces ${fonts.map((c) => c.name.replace('@fontsource/', '').split('-').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ')).join(' and ')} under the SIL Open Font License 1.1, through the npm packages ${fonts.map((c) => `${c.name} ${c.version}`).join(' and ')}. Their copyright lines and the full licence text are below.`, '');
-  }
+  } }
   lines.push('Components', '');
   for (const kind of ['crate', 'npm']) {
     const of = list.filter((c) => c.kind === kind);
-    lines.push(`${kind === 'crate' ? 'Rust crates' : 'npm packages'} (${of.length}):`);
+    lines.push(`${!(kind === 'crate') ? 'npm packages' : 'Rust crates'} (${of.length}):`);
     for (const c of of) lines.push(`  ${c.name} ${c.version}  ${c.licence || 'see licence text'}`);
     lines.push('');
   }

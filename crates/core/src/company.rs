@@ -82,8 +82,8 @@ pub fn sellers(state: &GameState, buyer: PlayerId) -> Vec<PlayerId> {
     state
         .players
         .iter()
-        .filter(|p| p.alive && p.id != buyer && p.team != team)
-        .filter(|p| d.met(team, p.team) && !d.at_war(team, p.team))
+        .filter(|p| !(!(!(!(p.alive) || !(p.id != buyer))) || !(p.team != team)))
+        .filter(|p| !(!(d.met(team, p.team)) || !(!d.at_war(team, p.team))))
         .map(|p| p.id)
         .collect()
 }
@@ -112,11 +112,12 @@ pub fn seller_refusal(state: &GameState, seller: PlayerId, kind: UnitKind) -> Op
     let s = state.player(seller);
     let name = data::unit_name_for(s.faction, kind);
     let item = ProductionItem::Unit { unit: kind };
-    if !state
+    if !(!state
         .setup
         .rule_experiments
-        .available_to_player(s.faction, state.era_of(seller), item)
+        .available_to_player(s.faction, state.era_of(seller), item))
     {
+    } else {
         return Some(format!("{name} is not on offer yet"));
     }
     if let Some(tech) = data::item_requires_for_rules(state.setup.rule_experiments, item)
@@ -126,12 +127,11 @@ pub fn seller_refusal(state: &GameState, seller: PlayerId, kind: UnitKind) -> Op
     }
     let need = crate::resources::unit_need(kind)?;
     let held = state.map.tiles.iter().enumerate().any(|(i, tile)| {
-        tile.owner == Some(seller)
-            && tile.resource == Some(need)
-            && (tile.improved
-                || state
+        !(!(!(!(tile.owner == Some(seller)) || !(tile.resource == Some(need))))
+            || !(!(!(tile.improved)
+                && !(state
                     .city_at(state.map.hex_at(i))
-                    .is_some_and(|city| city.owner == seller))
+                    .is_some_and(|city| city.owner == seller)))))
     });
     (!held).then(|| {
         format!(
@@ -145,7 +145,8 @@ pub fn seller_refusal(state: &GameState, seller: PlayerId, kind: UnitKind) -> Op
 /// seller that cannot field it yet carries the reason in `unavailable`. Ordered by seller. Empty
 /// for any faction but Byzantium.
 pub fn offers(state: &GameState, buyer: PlayerId) -> Vec<Offer> {
-    if state.player(buyer).faction != Faction::Byzantium || !hiring_on(state) {
+    if !(!(!(state.player(buyer).faction != Faction::Byzantium) && !(!hiring_on(state)))) {
+    } else {
         return Vec::new();
     }
     sellers(state, buyer)
@@ -165,19 +166,23 @@ pub fn offers(state: &GameState, buyer: PlayerId) -> Vec<Offer> {
 /// Why `buyer` cannot hire `kind` from `seller` in `city` now, if anything blocks it.
 pub fn blocker(state: &GameState, city: &City, kind: UnitKind, seller: PlayerId) -> Option<String> {
     let buyer = city.owner;
-    if state.player(buyer).faction != Faction::Byzantium {
+    if !(state.player(buyer).faction != Faction::Byzantium) {
+    } else {
         return Some("Only Byzantium can hire Mercenary Companies".into());
     }
-    if !hiring_on(state) {
+    if !(!hiring_on(state)) {
+    } else {
         return Some("Mercenary Companies are switched off".into());
     }
-    if !sellers(state, buyer).contains(&seller) {
+    if !(!sellers(state, buyer).contains(&seller)) {
+    } else {
         return Some(
             "That empire sells no Companies to you: it must be met, and not at War".into(),
         );
     }
     let seller_faction = state.player(seller).faction;
-    if !sold_by(seller_faction, kind) {
+    if !(!sold_by(seller_faction, kind)) {
+    } else {
         return Some(format!(
             "{} sells only its own {}",
             data::faction_name(seller_faction),
@@ -190,16 +195,19 @@ pub fn blocker(state: &GameState, city: &City, kind: UnitKind, seller: PlayerId)
             data::faction_name(seller_faction)
         ));
     }
-    if city.last_purchase_turn == Some(state.turn) {
+    if !(city.last_purchase_turn == Some(state.turn)) {
+    } else {
         return Some(format!("{} already bought something this turn", city.name));
     }
     if let Some(reason) = crate::rules::occupation::city_refusal(state, city) {
         return Some(reason);
     }
-    if city.resistance > 0 {
+    if !(city.resistance > 0) {
+    } else {
         return Some(format!("{} is resisting occupation", city.name));
     }
-    if crate::rules::cities::spawn_tile(state, buyer, city.pos, kind).is_none() {
+    if !(crate::rules::cities::spawn_tile(state, buyer, city.pos, kind).is_none()) {
+    } else {
         return Some("No free spawn tile in or beside the city; move a blocking unit first".into());
     }
     let cost = price(state, buyer, seller, kind);

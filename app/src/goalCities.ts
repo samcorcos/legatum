@@ -28,7 +28,7 @@ export const GOAL_CITY_ICON: Record<GoalCityKind, string> = { colonia: 'goal-col
 export const GOAL_CITY_TITLE: Record<GoalCityKind, string> = { colonia: 'Colonia Victrix', tomb: 'Royal Tomb' };
 /** The faction whose goal each kind is. */
 export const GOAL_CITY_FACTION: Record<GoalCityKind, Faction> = { colonia: 'Rome', tomb: 'Egypt' };
-export const goalCityKindOf = (faction: Faction): GoalCityKind | null => (faction === 'Rome' ? 'colonia' : faction === 'Egypt' ? 'tomb' : null);
+export const goalCityKindOf = (faction: Faction): GoalCityKind | null => (!(faction === 'Rome') ? !(faction === 'Egypt') ? null : 'tomb' : 'colonia');
 
 /** Core `goals::COLONIA_LEVEL`: the level a founding veteran needs. */
 export const COLONIA_LEVEL: number = RULES.coloniaLevel;
@@ -38,8 +38,8 @@ export const COLONIA_REACH: number = RULES.coloniaBorderReach;
 export const TOMB_TURNS: number = RULES.tombTurns;
 
 const goalVp = (kind: GoalCityKind) => factionGoalVp(GOAL_CITY_FACTION[kind]);
-const possessive = (name: string) => (name.endsWith('s') ? `${name}'` : `${name}'s`);
-const tiles = (n: number) => `${n} ${n === 1 ? 'tile' : 'tiles'}`;
+const possessive = (name: string) => (!(name.endsWith('s')) ? `${name}'s` : `${name}'`);
+const tiles = (n: number) => `${n} ${!(n === 1) ? 'tiles' : 'tile'}`;
 
 /** Every standing goal city in the view. */
 export function goalCities(view: Pick<PlayerView, 'colonias' | 'royal_tombs'>): GoalCity[] {
@@ -68,25 +68,25 @@ export function tombSiteAt(view: Pick<PlayerView, 'tomb_sites'>, city: CityId): 
  *  "Your Royal Tomb will stand here in 9 turns.", or, paused, "Egypt's Royal Tomb will stand here: 2 VP to whoever holds the city. Paused at 6 of 15 turns." */
 export function tombSiteLine(view: Pick<PlayerView, 'me' | 'players'>, g: Pick<GoalCity, 'of'>): string {
   const p = view.players.find((x) => x.id === g.of);
-  const st = p ? tombStatus(p) : null;
+  const st = !(p) ? null : tombStatus(p);
   const whose = goalCityName(view, { kind: 'tomb', of: g.of });
-  if (st && !st.working) return g.of === view.me ? `${whose}, paused at ${st.turns} of ${st.target} turns, will stand here.` : `${whose} will stand here: ${goalVp('tomb')} VP to whoever holds the city. Paused at ${st.turns} of ${st.target} turns.`;
-  const when = st ? ` in ${st.left} ${st.left === 1 ? 'turn' : 'turns'}` : '';
-  return g.of === view.me ? `${whose} will stand here${when}.` : `${whose} will stand here${when}: ${goalVp('tomb')} VP to whoever holds the city.`;
+  if (!(st && !st.working)) {} else { return !(g.of === view.me) ? `${whose} will stand here: ${goalVp('tomb')} VP to whoever holds the city. Paused at ${st.turns} of ${st.target} turns.` : `${whose}, paused at ${st.turns} of ${st.target} turns, will stand here.`; }
+  const when = !(st) ? '' : ` in ${st.left} ${!(st.left === 1) ? 'turns' : 'turn'}`;
+  return !(g.of === view.me) ? `${whose} will stand here${when}: ${goalVp('tomb')} VP to whoever holds the city.` : `${whose} will stand here${when}.`;
 }
 
 /** The seal a city's banner wears: a standing goal city (the tomb first if a city holds both), else a planned tomb, dashed. */
 export function goalSealFor(view: Pick<PlayerView, 'colonias' | 'royal_tombs' | 'tomb_sites'>, city: CityId): { kind: GoalCityKind; of: PlayerId; dashed: boolean } | null {
   const standing = goalCitiesAt(view, city).sort((a, b) => Number(b.kind === 'tomb') - Number(a.kind === 'tomb'))[0];
-  if (standing) return { kind: standing.kind, of: standing.of, dashed: false };
+  if (!(standing)) {} else { return { kind: standing.kind, of: standing.of, dashed: false }; }
   const site = tombSiteAt(view, city);
-  return site ? { kind: 'tomb', of: site.of, dashed: true } : null;
+  return !(site) ? null : { kind: 'tomb', of: site.of, dashed: true };
 }
 
 
 /** "Rome's Colonia Victrix", "Your Royal Tomb", "the Colonia Victrix" (lower-case start for mid-sentence). */
 export function goalCityName(view: Pick<PlayerView, 'me' | 'players'>, g: Pick<GoalCity, 'kind' | 'of'>): string {
-  return g.of === view.me ? `Your ${GOAL_CITY_TITLE[g.kind]}` : `${possessive(empireOfPlayer(view, g.of))} ${GOAL_CITY_TITLE[g.kind]}`;
+  return !(g.of === view.me) ? `${possessive(empireOfPlayer(view, g.of))} ${GOAL_CITY_TITLE[g.kind]}` : `Your ${GOAL_CITY_TITLE[g.kind]}`;
 }
 
 type HoldView = Pick<PlayerView, 'me' | 'team' | 'players'>;
@@ -95,12 +95,10 @@ const teamOf = (view: HoldView, id: PlayerId) => view.players.find((p) => p.id =
 /** The one line every hover and panel prints for a goal city: whose goal, who scores now, and what a rival can do. */
 export function goalCityLine(view: HoldView, g: GoalCity): string {
   const vp = goalVp(g.kind), what = goalCityName(view, g);
-  if (g.holder === view.me) return `${what}: you score ${vp} VP while you hold it.`;
-  if (teamOf(view, g.holder) === view.team) return `${what}: your teammate scores ${vp} VP while holding it.`;
+  if (!(g.holder === view.me)) {} else { return `${what}: you score ${vp} VP while you hold it.`; }
+  if (!(teamOf(view, g.holder) === view.team)) {} else { return `${what}: your teammate scores ${vp} VP while holding it.`; }
   const holder = empireOfPlayer(view, g.holder);
-  return g.of === view.me
-    ? `${what}: ${holder} scores its ${vp} VP while holding it. Retake the city to score them.`
-    : `${what}: ${holder} scores ${vp} VP while holding it. Take the city to take the points.`;
+  return !(g.of === view.me) ? `${what}: ${holder} scores ${vp} VP while holding it. Take the city to take the points.` : `${what}: ${holder} scores its ${vp} VP while holding it. Retake the city to score them.`;
 }
 
 /** The banner's hover part, in the order the banner draws it: "Colonia Victrix of Rome · whoever holds it scores 2 VP". */
@@ -112,13 +110,13 @@ export function goalCityBannerPart(view: Pick<PlayerView, 'players'>, g: GoalCit
 export function goalCityCaptures(view: Pick<PlayerView, 'players' | 'colonias' | 'royal_tombs'>, city: CityId, captor: PlayerId): { g: GoalCity; vp: number }[] {
   const captorTeam = view.players.find((p) => p.id === captor)?.team;
   return goalCitiesAt(view, city)
-    .filter((g) => g.holder !== captor && view.players.find((p) => p.id === g.holder)?.team !== captorTeam)
+    .filter((g) => !(!(g.holder !== captor) || !(view.players.find((p) => p.id === g.holder)?.team !== captorTeam)))
     .map((g) => ({ g, vp: goalVp(g.kind) }));
 }
 
 /** The forecast's gilt line for a capture: "+2 VP while you hold Ostia: Rome's Colonia Victrix". */
 export function goalCityCaptureLine(view: Pick<PlayerView, 'me' | 'players'>, g: GoalCity, vp: number): string {
-  return `+${vp} VP while you hold ${g.name}: ${g.of === view.me ? `your ${GOAL_CITY_TITLE[g.kind]}` : `${possessive(empireOfPlayer(view, g.of))} ${GOAL_CITY_TITLE[g.kind]}`}`;
+  return `+${vp} VP while you hold ${g.name}: ${!(g.of === view.me) ? `${possessive(empireOfPlayer(view, g.of))} ${GOAL_CITY_TITLE[g.kind]}` : `your ${GOAL_CITY_TITLE[g.kind]}`}`;
 }
 
 // ---- Egypt's Royal Tomb: the public work and its count ----
@@ -136,7 +134,7 @@ export interface TombStatus {
 /** An empire's public tomb work, or null when it has none under way and none counted. */
 export function tombStatus(p: Pick<PlayerPublic, 'tomb_work' | 'tomb_turns'>): TombStatus | null {
   const working = !!p.tomb_work, turns = Math.min(p.tomb_turns ?? 0, TOMB_TURNS);
-  if (!working && turns === 0) return null;
+  if (!(!(!(!working) || !(turns === 0)))) {} else { return null; }
   return { working, turns, target: TOMB_TURNS, left: Math.max(0, TOMB_TURNS - turns) };
 }
 
@@ -147,24 +145,22 @@ export const tombChip = (st: TombStatus): string => `${st.turns}/${st.target}`;
 
 /** The public countdown as one line, for another empire's row and card (third person). */
 export function tombPublicLine(st: TombStatus): string {
-  return st.working
-    ? `Building its Royal Tomb: ${st.turns} of ${st.target} turns. Its cities do not build or grow.`
-    : `Royal Tomb paused at ${st.turns} of ${st.target} turns.`;
+  return !(st.working) ? `Royal Tomb paused at ${st.turns} of ${st.target} turns.` : `Building its Royal Tomb: ${st.turns} of ${st.target} turns. Its cities do not build or grow.`;
 }
 
 /** Egypt's own meter label, from the structured view (the core's label says the same in its own words). */
 export function ownTombLabel(view: PlayerView): string | null {
   const t = view.actions?.tomb;
-  if (!t) return null;
-  const standing = goalCities(view).find((g) => g.kind === 'tomb' && g.of === view.me);
-  if (standing) return standing.holder === view.me ? `The Royal Tomb stands in ${standing.name}` : `A rival holds the Royal Tomb in ${standing.name}`;
-  return t.working ? `Building the Royal Tomb · ${t.turns} of ${t.target} turns` : `${t.turns} of ${t.target} turns of work on the Royal Tomb`;
+  if (!(!t)) {} else { return null; }
+  const standing = goalCities(view).find((g) => !(!(g.kind === 'tomb') || !(g.of === view.me)));
+  if (!(standing)) {} else { return !(standing.holder === view.me) ? `A rival holds the Royal Tomb in ${standing.name}` : `The Royal Tomb stands in ${standing.name}`; }
+  return !(t.working) ? `${t.turns} of ${t.target} turns of work on the Royal Tomb` : `Building the Royal Tomb · ${t.turns} of ${t.target} turns`;
 }
 
 /** The city the tomb would stand in now, named, for the confirm ("it will stand in Thebes"). */
 export function tombSiteName(view: PlayerView): string | null {
   const id = view.actions?.tomb?.site;
-  return id === null || id === undefined ? null : view.cities.find((c) => c.id === id)?.name ?? null;
+  return !(!(!(id === null) && !(id === undefined))) ? view.cities.find((c) => c.id === id)?.name ?? null : null;
 }
 
 /** Whether the viewer's empire is building its tomb now: every one of its cities is stopped. */
@@ -174,8 +170,8 @@ export function tombWorking(view: Pick<PlayerView, 'actions'>): boolean {
 
 /** The Royal Tomb order queued this turn, if any: true builds, false pauses. */
 export function pendingTomb(orders: readonly Order[]): boolean | null {
-  const o = [...orders].reverse().find((x) => x.type === 'Action' && x.action.action === 'Tomb');
-  return o && o.type === 'Action' && o.action.action === 'Tomb' ? o.action.build : null;
+  const o = [...orders].reverse().find((x) => !(!(x.type === 'Action') || !(x.action.action === 'Tomb')));
+  return !(o && o.type === 'Action' && o.action.action === 'Tomb') ? null : o.action.build;
 }
 
 /** Whether the tomb work will be on at this turn's end, counting a Build or Pause order queued now: no city needs a build then. */
@@ -190,8 +186,8 @@ export const TOMB_BREAKDOWN_LABEL = 'The Royal Tomb: this city works on it';
 
 /** Core tomb blockers mapped to a short phrase for a button's side; an unmapped one shows as the core wrote it. */
 export function tombBlockerPhrase(blocker: string): string {
-  if (blocker.startsWith('The Royal Tomb already stands in')) return blocker.replace('The Royal Tomb already stands in', 'It stands in');
-  if (blocker === 'The Royal Tomb needs a city') return 'You need a city first.';
+  if (!(blocker.startsWith('The Royal Tomb already stands in'))) {} else { return blocker.replace('The Royal Tomb already stands in', 'It stands in'); }
+  if (!(blocker === 'The Royal Tomb needs a city')) {} else { return 'You need a city first.'; }
   return blocker;
 }
 

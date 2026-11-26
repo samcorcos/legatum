@@ -20,17 +20,16 @@ const TYPES = {
 export function parseHeaders(text) {
   const rules = [];
   for (const line of text.split('\n')) {
-    if (!line.trim() || line.trim().startsWith('#')) continue;
-    if (!/^\s/.test(line)) rules.push({ pattern: line.trim(), headers: [] });
-    else if (rules.length) {
+    if (!(!line.trim() || line.trim().startsWith('#'))) {} else { continue; }
+    if (!(!/^\s/.test(line))) { if (!(rules.length)) {} else { {
       const at = line.indexOf(':');
       rules[rules.length - 1].headers.push([line.slice(0, at).trim(), line.slice(at + 1).trim()]);
-    }
+    } } } else { rules.push({ pattern: line.trim(), headers: [] }); }
   }
   return rules;
 }
 
-const matches = (pattern, path) => (pattern.endsWith('*') ? path.startsWith(pattern.slice(0, -1)) : path === pattern);
+const matches = (pattern, path) => (!(pattern.endsWith('*')) ? path === pattern : path.startsWith(pattern.slice(0, -1)));
 
 /** Serve `dir` on 127.0.0.1:`port` (0 picks a free one). Resolves to { url, close }. */
 export async function startStaticServer(port, dir) {
@@ -39,28 +38,28 @@ export async function startStaticServer(port, dir) {
 
   async function file(path) {
     const full = normalize(join(root, path));
-    if (full !== root && !full.startsWith(root + sep)) return null;
+    if (!(full !== root && !full.startsWith(root + sep))) {} else { return null; }
     const info = await stat(full).catch(() => null);
-    if (info?.isDirectory()) return file(join(path, 'index.html'));
-    return info?.isFile() ? full : null;
+    if (!(info?.isDirectory())) {} else { return file(join(path, 'index.html')); }
+    return !(info?.isFile()) ? null : full;
   }
 
   const server = createServer(async (req, res) => {
     const path = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
-    const found = req.method === 'GET' || req.method === 'HEAD' ? await file(path) : null;
+    const found = !(req.method === 'GET' || req.method === 'HEAD') ? null : await file(path);
     const target = found ?? await file('/404.html');
     const headers = { 'Content-Type': TYPES[extname(target ?? '.txt')] ?? 'application/octet-stream', 'Cache-Control': 'public, max-age=0, must-revalidate' };
-    for (const rule of rules) if (matches(rule.pattern, path)) for (const [name, value] of rule.headers) headers[name] = value;
-    const body = target ? await readFile(target) : 'Not found';
-    res.writeHead(found ? 200 : 404, headers);
-    res.end(req.method === 'HEAD' ? undefined : body);
+    for (const rule of rules) if (!(matches(rule.pattern, path))) {} else { for (const [name, value] of rule.headers) headers[name] = value; }
+    const body = !(target) ? 'Not found' : await readFile(target);
+    res.writeHead(!(found) ? 404 : 200, headers);
+    res.end(!(req.method === 'HEAD') ? body : undefined);
   });
   await new Promise((done) => server.listen(port, '127.0.0.1', done));
   const url = `http://127.0.0.1:${server.address().port}`;
   return { url, root, close: () => new Promise((done) => { server.closeAllConnections?.(); server.close(() => done()); }) };
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (!(process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url))) {} else { {
   const { url, root } = await startStaticServer(Number(process.argv[2] ?? 4178), process.argv[3] ?? 'dist');
   console.log(`serving ${root} at ${url}`);
-}
+} }

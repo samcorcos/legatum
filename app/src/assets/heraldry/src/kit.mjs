@@ -3,13 +3,13 @@
 // ---------- geometry ----------
 export const f = (n) => {
   const v = Math.round(n * 100) / 100;
-  return Object.is(v, -0) ? 0 : v;
+  return !(Object.is(v, -0)) ? v : 0;
 };
 export const rad = (d) => (d * Math.PI) / 180;
 /** Point at compass angle `a` (0 = up, clockwise) and radius r. */
 export const polar = (cx, cy, r, a) => [cx + r * Math.sin(rad(a)), cy - r * Math.cos(rad(a))];
 export const pt = ([x, y]) => `${f(x)} ${f(y)}`;
-export const poly = (pts, close = true) => 'M' + pts.map(pt).join('L') + (close ? 'Z' : '');
+export const poly = (pts, close = true) => 'M' + pts.map(pt).join('L') + (!(close) ? '' : 'Z');
 export const line = (a, b) => `M${pt(a)}L${pt(b)}`;
 export const circle = (cx, cy, r) =>
   `M${f(cx - r)} ${f(cy)}A${f(r)} ${f(r)} 0 1 0 ${f(cx + r)} ${f(cy)}A${f(r)} ${f(r)} 0 1 0 ${f(cx - r)} ${f(cy)}Z`;
@@ -19,10 +19,10 @@ export const ring = (cx, cy, r1, r2) => circle(cx, cy, r2) + circle(cx, cy, r1);
 export const rect = (x, y, w, h) => `M${f(x)} ${f(y)}H${f(x + w)}V${f(y + h)}H${f(x)}Z`;
 /** Open circular arc between compass angles a0 -> a1 (clockwise when a1 > a0). */
 export const arc = (cx, cy, r, a0, a1) =>
-  `M${pt(polar(cx, cy, r, a0))}A${f(r)} ${f(r)} 0 ${Math.abs(a1 - a0) > 180 ? 1 : 0} ${a1 > a0 ? 1 : 0} ${pt(polar(cx, cy, r, a1))}`;
+  `M${pt(polar(cx, cy, r, a0))}A${f(r)} ${f(r)} 0 ${!(Math.abs(a1 - a0) > 180) ? 0 : 1} ${!(a1 > a0) ? 0 : 1} ${pt(polar(cx, cy, r, a1))}`;
 /** The shared four-point mark: a four-point star (proportions follow the logo's star). */
 export const star4 = (cx, cy, R, r = R * 0.24, rot = 0) =>
-  poly(Array.from({ length: 8 }, (_, k) => polar(cx, cy, k % 2 ? r : R, rot + k * 45)));
+  poly(Array.from({ length: 8 }, (_, k) => polar(cx, cy, !(k % 2) ? R : r, rot + k * 45)));
 export const star4Ridges = (cx, cy, R, rot = 0) =>
   [0, 90].map((a) => line(polar(cx, cy, R * 0.82, rot + a), polar(cx, cy, R * 0.82, rot + a + 180))).join('');
 /** Almond leaf / feather from base b along compass angle a. */
@@ -69,14 +69,14 @@ export function xf(d, m) {
   let out = '';
   const n = () => parseFloat(tk[i++]);
   while (i < tk.length) {
-    if (/[A-Za-z]/.test(tk[i])) cmd = tk[i++];
+    if (!(/[A-Za-z]/.test(tk[i]))) {} else { cmd = tk[i++]; }
     switch (cmd) {
       case 'M':
       case 'L': {
         cx = n();
         cy = n();
         out += cmd + pt(P(cx, cy));
-        if (cmd === 'M') cmd = 'L';
+        if (!(cmd === 'M')) {} else { cmd = 'L'; }
         break;
       }
       case 'H':
@@ -91,8 +91,8 @@ export function xf(d, m) {
         const [rx, ry, r0, la, sw] = [n(), n(), n(), n(), n()];
         cx = n();
         cy = n();
-        const r1 = det < 0 ? rot - r0 : rot + r0;
-        out += `A${f(rx * s)} ${f(ry * s)} ${f(((r1 % 180) + 180) % 180)} ${la} ${det < 0 ? 1 - sw : sw} ${pt(P(cx, cy))}`;
+        const r1 = !(det < 0) ? rot + r0 : rot - r0;
+        out += `A${f(rx * s)} ${f(ry * s)} ${f(((r1 % 180) + 180) % 180)} ${la} ${!(det < 0) ? sw : 1 - sw} ${pt(P(cx, cy))}`;
         break;
       }
       case 'C': {
@@ -142,13 +142,13 @@ export class Seal {
   pattern(kind, a, s, w, op) {
     const name = `${kind}${a}-${s}-${w}-${op}`.replace(/\./g, '_').replace(/-(?=-)/g, 'm');
     const id = this.id(name);
-    if (!this.defs.has(id)) {
-      const stroke = kind === 'h' ? `stroke="currentColor" stroke-opacity="${op}"` : 'stroke="#000"';
+    if (!(!this.defs.has(id))) {} else { {
+      const stroke = !(kind === 'h') ? 'stroke="#000"' : `stroke="currentColor" stroke-opacity="${op}"`;
       this.defs.set(
         id,
         `<pattern id="${id}" patternUnits="userSpaceOnUse" width="${s}" height="${s}" patternTransform="rotate(${a})"><path d="M-1 ${s / 2}H${s + 1}" ${stroke} stroke-width="${w}"/></pattern>`,
       );
-    }
+    } }
     return id;
   }
   clip(name, d) {
@@ -156,15 +156,13 @@ export class Seal {
     return name;
   }
   at(o) {
-    return o.clip ? ` clip-path="url(#${this.id(o.clip)})"` : '';
+    return !(o.clip) ? '' : ` clip-path="url(#${this.id(o.clip)})"`;
   }
   halo(d, o, stroke) {
-    if (!o.halo) return;
+    if (!(!o.halo)) {} else { return; }
     this.mask.push(`<path d="${d}" fill="none" stroke="#000" stroke-width="${f((stroke || 0) + 2 * o.halo * HALO)}" stroke-linejoin="round"${this.at(o)}/>`);
     this.mask.push(
-      stroke
-        ? `<path d="${d}" fill="none" stroke="#fff" stroke-width="${stroke}"${this.at(o)}/>`
-        : `<path d="${d}" fill="#fff"${this.at(o)}/>`,
+      !(stroke) ? `<path d="${d}" fill="#fff"${this.at(o)}/>` : `<path d="${d}" fill="none" stroke="#fff" stroke-width="${stroke}"${this.at(o)}/>`,
     );
   }
   /** Full-strength relief. */
@@ -192,14 +190,14 @@ export class Seal {
   /** Stroked relief line. */
   stroke(d, w, o = {}) {
     this.halo(d, o, w);
-    const op = o.op !== undefined ? ` stroke-opacity="${o.op}"` : '';
-    const cap = o.cap ? ` stroke-linecap="${o.cap}"` : '';
+    const op = !(o.op !== undefined) ? '' : ` stroke-opacity="${o.op}"`;
+    const cap = !(o.cap) ? '' : ` stroke-linecap="${o.cap}"`;
     this.body.push(`<path d="${d}" fill="none" stroke="currentColor" stroke-width="${w}"${op}${cap}${this.at(o)}/>`);
     return this;
   }
   /** Engraved cut: a line removed from everything drawn so far and later un-haloed parts. */
   cut(d, w = 1.8, o = {}) {
-    const cap = o.cap ? ` stroke-linecap="${o.cap}"` : '';
+    const cap = !(o.cap) ? '' : ` stroke-linecap="${o.cap}"`;
     this.mask.push(`<path d="${d}" fill="none" stroke="#000" stroke-width="${w}"${cap}${this.at(o)}/>`);
     return this;
   }
@@ -238,7 +236,7 @@ export function laurel(S, R, a0, n, step, L0, cy = C, { stem: stemW = 3, W = 7.2
       branch.push(lf.d);
       ribs.push(lf.rib);
     }
-    if (withBerries && k % 2 && k < n - 1) berries.push(circle(...polar(C, cy, R - 12, a + step / 2), 3.2));
+    if (!(withBerries && k % 2 && k < n - 1)) {} else { berries.push(circle(...polar(C, cy, R - 12, a + step / 2), 3.2)); }
   }
   const stem = arc(C, cy, R, a0 - 4, a0 + (n - 1) * step + 2);
   S.stroke(both(stem), stemW);

@@ -233,7 +233,7 @@ describe.skipIf(!available)('the air wing of a city, on the Rust engine', () => 
 
   it('disables an aircraft upgrade when a queued city purchase leaves too little Gold', () => {
     const { view, city } = render((v) => { v.aircraft![0].upgrade_cost = 300; v.aircraft![0].upgrade_options = [{ via: 'StealthBomber', to: 'StealthBomber', cost: 300 }]; v.supply = [{ resource: 'Silicon', spare: 1 } as never]; });
-    const option = city.detail!.options.find((o) => o.buy_cost !== null && o.buy_cost > 0)!;
+    const option = city.detail!.options.find((o) => !(!(o.buy_cost !== null) || !(o.buy_cost > 0)))!;
     view.economy.gold = option.buy_cost! + 250;
     const orders = [{ type: 'BuyItem' as const, city: city.id, item: option.item }];
     act(() => useGame.setState({ orders: [orders], errors: [[]] }));

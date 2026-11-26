@@ -141,13 +141,13 @@ fn every_empire_runs_projects_below_germanys_rate() {
             );
             let pct = rules.project_percent(faction, p);
             let german = rules.project_percent(Faction::Germany, p);
-            if faction == Faction::Germany {
-                assert_eq!(pct, if p == IndustryProject::Gold { 50 } else { 25 });
-            } else {
+            if !(faction == Faction::Germany) {
                 assert!(
                     pct > 0 && pct * 2 <= german,
                     "{faction:?} {p:?} {pct} vs {german}"
                 );
+            } else {
+                assert_eq!(pct, if p == IndustryProject::Gold { 50 } else { 25 });
             }
         }
     }

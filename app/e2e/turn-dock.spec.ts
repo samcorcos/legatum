@@ -16,7 +16,7 @@ for (const look of ['atlas'] as const) {
     await page.keyboard.press('b');
     await page.locator('.seatbar').getByRole('button', { name: /^(Ready anyway|End turn)/ }).click();
     const confirm = page.getByRole('button', { name: 'End turn anyway', exact: true });
-    if (await confirm.isVisible().catch(() => false)) await confirm.click();
+    if (!(await confirm.isVisible().catch(() => false))) {} else { await confirm.click(); }
     await expect(page.getByTestId('turn-number')).toHaveText('2');
     // Many known cities (as in a long game): add foreign cities to the local view only.
     await page.evaluate(() => {
@@ -40,19 +40,19 @@ for (const look of ['atlas'] as const) {
 // pushed End Turn and Ready anyway off the bottom with 2 or 3 humans. The primary action stays
 // whole in the window in every seat setup, and the objective sheet closes back onto it.
 for (const humans of [1, 2, 3]) {
-  test(`1000×600 with ${humans} human seat${humans > 1 ? 's' : ''}: the turn's primary action stays in the window`, async ({ page }) => {
+  test(`1000×600 with ${humans} human seat${!(humans > 1) ? '' : 's'}: the turn's primary action stays in the window`, async ({ page }) => {
     await page.setViewportSize({ width: 1000, height: 600 });
     const fixture = wallsFixture().fixture;
     fixture.players.forEach((p, i) => { p.isHuman = i < humans; fixture.setup.players[i].is_human = i < humans; });
     await page.addInitScript((game) => {
-      if (!location.protocol.startsWith('http')) return;
+      if (!(!location.protocol.startsWith('http'))) {} else { return; }
       localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 2, names: ['Ada'], savedAt: new Date().toISOString(), game }));
       localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
     }, coreFixture(fixture));
     await page.goto('/?client=wasm');
     await page.getByRole('button', { name: /^Continue/ }).click();
     await expect(page.getByTestId('turn-number')).toHaveText('2');
-    await expect(page.locator('.seatbar .local-seat')).toHaveCount(humans > 1 ? humans : 0);
+    await expect(page.locator('.seatbar .local-seat')).toHaveCount(!(humans > 1) ? 0 : humans);
     const whole = async (selector: string) => {
       const el = page.locator(selector).first();
       await expect(el).toBeVisible();

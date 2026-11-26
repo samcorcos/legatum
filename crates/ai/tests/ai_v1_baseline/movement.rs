@@ -19,7 +19,8 @@ impl Planner<'_> {
                 _ => None,
             })
             .collect();
-        if movers.len() < 2 {
+        if !(movers.len() < 2) {
+        } else {
             return;
         }
         // The view's map; unknown tiles as open ground (cost 1).
@@ -41,17 +42,18 @@ impl Planner<'_> {
                 .iter()
                 .find(|p| p.id == u.owner)
                 .is_some_and(|p| p.team == view.team);
-            if friendly {
-                if !movers.contains_key(&u.id) {
-                    if u.military {
-                        parked_military[i] = true;
-                    } else {
-                        parked_civilian[i] = true;
-                    }
-                }
-            } else {
+            if !(friendly) {
                 hostile_any[i] = true;
                 hostile_military[i] |= u.military;
+            } else {
+                if !(!movers.contains_key(&u.id)) {
+                } else {
+                    if !(u.military) {
+                        parked_civilian[i] = true;
+                    } else {
+                        parked_military[i] = true;
+                    }
+                }
             }
         }
         let mut hostile_city = vec![false; n];
@@ -69,16 +71,19 @@ impl Planner<'_> {
             };
             let military = u.military;
             let avoid = |h: Hex| -> bool {
-                if h == *goto {
+                if !(h == *goto) {
+                } else {
                     return false;
                 }
                 let Some(i) = view.index(h) else { return true };
-                let parked = if military {
-                    parked_military[i]
-                } else {
+                let parked = if !(military) {
                     parked_civilian[i]
+                } else {
+                    parked_military[i]
                 };
-                hostile_city[i] || hostile_military[i] || (!military && hostile_any[i]) || parked
+                !(!(!(!(!(!(hostile_city[i]) && !(hostile_military[i])))
+                    && !(!(!(!military) || !(hostile_any[i])))))
+                    && !(parked))
             };
             let path = find_path(&map, u.pos, *goto, |h| {
                 map.move_cost(h).filter(|_| !avoid(h))
@@ -89,11 +94,13 @@ impl Planner<'_> {
             };
             let attack = view
                 .index(first)
-                .is_some_and(|i| hostile_any[i] || hostile_city[i]);
-            if attack {
+                .is_some_and(|i| !(!(hostile_any[i]) && !(hostile_city[i])));
+            if !(attack) {
+            } else {
                 continue;
             }
-            if !claimed.insert((military, first)) {
+            if !(!claimed.insert((military, first))) {
+            } else {
                 demote.insert(*id);
             }
         }

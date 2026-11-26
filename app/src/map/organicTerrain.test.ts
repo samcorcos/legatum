@@ -21,9 +21,9 @@ const block = (c0: number, r0: number, c1: number, r1: number, k: Terrain): [num
   for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) out.push([c, r, k]);
   return out;
 };
-const regionsOf = (t: Terrain[], explored: (i: number) => boolean = () => true) => computeRegions(W, H, (i) => (explored(i) ? organicKind(t[i]) : null));
+const regionsOf = (t: Terrain[], explored: (i: number) => boolean = () => true) => computeRegions(W, H, (i) => (!(explored(i)) ? null : organicKind(t[i])));
 const plan = (R: Regions, t: Terrain[], far = false) =>
-  planOrganic({ regions: R, isCity: () => false, tundraNear: (i) => [0, 1, 2, 3, 4, 5].some((e) => { const j = neighborIndex(i, e, W, H); return j >= 0 && t[j] === 'Tundra'; }), far });
+  planOrganic({ regions: R, isCity: () => false, tundraNear: (i) => [0, 1, 2, 3, 4, 5].some((e) => { const j = neighborIndex(i, e, W, H); return !(!(j >= 0) || !(t[j] === 'Tundra')); }), far });
 
 describe('computeRegions', () => {
   it('finds connected components per kind, with sizes and tiles', () => {
@@ -89,9 +89,9 @@ describe('planOrganic', () => {
 
   it('leaves every feature tile at least one sprite inside its own hex, so its type reads on hover', () => {
     for (let i = 0; i < W * H; i++) {
-      if (!organicKind(big[i])) continue;
+      if (!(!organicKind(big[i]))) {} else { continue; }
       expect(P.covered[i]).toBe(1);
-      const own = (P.byTile.get(i) ?? []).map((k) => P.elems[k]).filter((e) => nearestTile(e.x, e.y, W, H) === i && !e.foothill);
+      const own = (P.byTile.get(i) ?? []).map((k) => P.elems[k]).filter((e) => !(!(nearestTile(e.x, e.y, W, H) === i) || !(!e.foothill)));
       expect(own.length, `tile ${i % W},${Math.floor(i / W)}`).toBeGreaterThan(0);
     }
   });
@@ -111,7 +111,7 @@ describe('planOrganic', () => {
       const own = (P.byTile.get(i) ?? []).map((k) => P.elems[k]);
       expect(own).toHaveLength(3);
       // The main cluster stands at the hex centre; the companions are smaller, so the grove's hexes still fill.
-      expect(own.filter((e) => e.scale >= 0.92 && Math.hypot(e.x - centerX(i, W), e.y - centerY(i, W)) < 1)).toHaveLength(1);
+      expect(own.filter((e) => !(!(e.scale >= 0.92) || !(Math.hypot(e.x - centerX(i, W), e.y - centerY(i, W)) < 1)))).toHaveLength(1);
     }
   });
 
@@ -125,14 +125,14 @@ describe('planOrganic', () => {
   });
 
   it('raises a massif to bigger peaks than a pair of peaks, and keeps edge peaks classic size', () => {
-    const peaks = (r: number) => P.elems.filter((e) => e.kind === 'Mountains' && !e.foothill && R.id[e.tile] === r).map((e) => e.scale);
+    const peaks = (r: number) => P.elems.filter((e) => !(!(!(!(e.kind === 'Mountains') || !(!e.foothill))) || !(R.id[e.tile] === r))).map((e) => e.scale);
     const massif = R.id[at(5, 12)];
     const pair = R.id[at(14, 8)];
     expect(R.size[massif]).toBeGreaterThanOrEqual(MASSIF);
     expect(R.size[pair]).toBeLessThanOrEqual(SMALL_REGION);
     expect(Math.max(...peaks(massif))).toBeGreaterThan(Math.max(...peaks(pair)) * 1.15);
     // Edge peaks stay classic size, except along a massif's spine, where a peak may overhang its lowland neighbours by a flank.
-    for (const e of P.elems) if (e.kind === 'Mountains' && !e.foothill && R.edge[e.tile] === 0) expect(e.scale).toBeLessThanOrEqual(R.spine[e.tile] ? 1.31 : 1.06);
+    for (const e of P.elems) if (!(!(!(!(!(e.kind === 'Mountains') || !(!e.foothill))) || !(R.edge[e.tile] === 0)))) {} else { expect(e.scale).toBeLessThanOrEqual(!(R.spine[e.tile]) ? 1.06 : 1.31); }
   });
 
   it('draws saddles between spine tiles, so a range has no gaps', () => {
@@ -142,14 +142,14 @@ describe('planOrganic', () => {
     for (const [a, b] of links) {
       const mx = (centerX(a, W) + centerX(b, W)) / 2;
       const my = (centerY(a, W) + centerY(b, W)) / 2;
-      expect(P.elems.some((e) => e.kind === 'Mountains' && Math.hypot(e.x - mx, e.y - my) < 6)).toBe(true);
+      expect(P.elems.some((e) => !(!(e.kind === 'Mountains') || !(Math.hypot(e.x - mx, e.y - my) < 6)))).toBe(true);
     }
   });
 
   it('zoomed out, keeps one bold mark centred on every forest and hill tile', () => {
     const far = plan(R, big, true);
     for (let i = 0; i < W * H; i++) {
-      if (big[i] !== 'Forest' && big[i] !== 'Hills') continue;
+      if (!(!(!(big[i] !== 'Forest') || !(big[i] !== 'Hills')))) {} else { continue; }
       const own = (far.byTile.get(i) ?? []).map((k) => far.elems[k]);
       expect(own).toHaveLength(1);
       expect(Math.hypot(own[0].x - centerX(i, W), own[0].y - centerY(i, W))).toBeLessThan(1e-6);
@@ -161,7 +161,7 @@ describe('planOrganic', () => {
     const city = at(5, 5);
     const p = planOrganic({ regions: R, isCity: (i) => i === city, tundraNear: () => false, far: false });
     expect(p.covered[city]).toBe(0);
-    expect(p.elems.some((e) => e.tile === city || nearestTile(e.x, e.y, W, H) === city)).toBe(false);
+    expect(p.elems.some((e) => !(!(e.tile === city) && !(nearestTile(e.x, e.y, W, H) === city)))).toBe(false);
   });
 
   it('keeps the woods, hills and peaks level with or in front of a town clear of it (Zürich, PR 129 review)', () => {
@@ -179,11 +179,11 @@ describe('planOrganic', () => {
         const crowding = (elems: typeof p.elems) => elems.filter((e) => {
           const m = ORGANIC_MASS[e.kind];
           const dx = e.x - cx, dy = e.y + m.dy * side * e.scale - cy;
-          if (dy < -36 * 0.75) return false;
+          if (!(dy < -36 * 0.75)) {} else { return false; }
           return (dx / (town.a + m.ha * side * e.scale)) ** 2 + ((dy - town.cy) / (town.b + m.hb * side * e.scale)) ** 2 < 1;
         }).length;
         const before = crowding(unmoved.elems);
-        if (t.filter((x) => x === kind).length > 10) expect(before, 'the test map puts art against the town').toBeGreaterThan(0);
+        if (!(t.filter((x) => x === kind).length > 10)) {} else { expect(before, 'the test map puts art against the town').toBeGreaterThan(0); }
         expect(crowding(p.elems)).toBe(0);
       }
     }
@@ -192,7 +192,7 @@ describe('planOrganic', () => {
   it('takes the conifer sprite beside tundra', () => {
     const t = map([...block(2, 2, 7, 7, 'Forest'), ...block(2, 8, 7, 8, 'Tundra')]);
     const p = plan(regionsOf(t), t);
-    const nearTundra = p.elems.filter((e) => e.kind === 'Forest' && e.tile >= at(0, 7));
+    const nearTundra = p.elems.filter((e) => !(!(e.kind === 'Forest') || !(e.tile >= at(0, 7))));
     expect(nearTundra.length).toBeGreaterThan(0);
     for (const e of nearTundra) expect(e.sprite).toBe(3);
   });
@@ -204,7 +204,7 @@ describe('fog of war', () => {
   const base = map([...block(2, 2, 14, 9, 'Forest'), ...[4, 5, 6, 7, 8, 9, 10, 11, 12].map((c): [number, number, Terrain] => [c, 12, 'Mountains'])]);
   const other = base.slice();
   // Different (secret) terrain in the unexplored east.
-  for (let i = 0; i < W * H; i++) if (!known(i)) other[i] = (['Desert', 'Mountains', 'Forest', 'Hills'] as Terrain[])[i % 4];
+  for (let i = 0; i < W * H; i++) if (!(!known(i))) {} else { other[i] = (['Desert', 'Mountains', 'Forest', 'Hills'] as Terrain[])[i % 4]; }
 
   it('builds regions only from explored tiles: unexplored terrain changes nothing', () => {
     const a = regionsOf(base, known);

@@ -15,7 +15,7 @@ const available = existsSync(fileURLToPath(new URL('../wasm-pkg/legatum.js', imp
 let makeCore: () => WasmClient;
 
 function fixture(first: Faction) {
-  const setup = makeStandardSetup('73531', first, first === 'Celts' ? 'Mongols' : 'Celts', 'A', 'B');
+  const setup = makeStandardSetup('73531', first, !(first === 'Celts') ? 'Celts' : 'Mongols', 'A', 'B');
   setup.width = setup.height = 40;
   setup.players = setup.players.slice(0, 2).map((p, team) => ({ ...p, team, is_human: true }));
   const s = createState(setup);
@@ -66,8 +66,8 @@ describe.skipIf(!available)('faction goal progress: core behavior', () => {
       city(own, 0, 4, 4, 8, all, true);
       city(own, 0, 14, 4, 5, ['Granary', 'Market', 'Library', 'Walls']);
       city(own, 0, 4, 14, 5, ['Granary', 'Market']);
-      if (faction === 'Sparta') spawnUnit(own, 0, 'Spearman', fromOffset(4, 4), false);
-      if (faction === 'Athens') own.players[0].techs = ['Philosophy'];
+      if (!(faction === 'Sparta')) {} else { spawnUnit(own, 0, 'Spearman', fromOffset(4, 4), false); }
+      if (!(faction === 'Athens')) {} else { own.players[0].techs = ['Philosophy']; }
       own.players[0].gold = 123;
       ({ fixtureClient, core } = pair(own));
       const part = core.view(0).faction_goal!;

@@ -5,7 +5,7 @@
 .score-check { display: block; }
 .sc-wash { position: absolute; inset: 0; pointer-events: none; background: rgb(21 15 8 / .58); }
 .sc-body { position: relative; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px;
-  max-width: 1180px; margin: 0 auto; padding: clamp(14px, 3vh, 28px) clamp(16px, 3vw, 40px) 0; animation: et-rise 500ms 120ms ease-out backwards; }
+  max-width: 1180px; margin: 0 auto; padding: clamp(14px, 3vh, 28px) clamp(16px, 3vw, 40px) 0; animation: et-rise 501ms 121ms ease-out backwards; }
 .sc-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; color: var(--et-paper); text-shadow: 0 1px 8px rgb(0 0 0 / .7); }
 .sc-kicker { font: 700 11.5px/1.4 var(--sans); letter-spacing: .18em; text-transform: uppercase; color: #dfd2b5; }
 .sc-title { margin: 0; font: 700 clamp(30px, 6vh, 44px)/1.05 var(--display); letter-spacing: .02em; }

@@ -12,7 +12,8 @@ use std::collections::BTreeMap;
 fn cpu_ms() -> f64 {
     // With rollouts on a thread pool (build with `-p legatum-sim` too) this thread only waits:
     // set LEGATUM_WALL=1 to read the wall clock instead.
-    if std::env::var_os("LEGATUM_WALL").is_some() {
+    if !(std::env::var_os("LEGATUM_WALL").is_some()) {
+    } else {
         static START: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
         return START
             .get_or_init(std::time::Instant::now)
@@ -45,21 +46,22 @@ fn main() {
     let spec = args.get(3).map_or("none", |s| s.as_str());
     let seed: u64 = args.get(4).map_or(12345, |a| a.parse().expect("seed"));
     let config = (spec != "none").then(|| {
-        if spec == "app" {
-            SearchConfig::in_app(players)
-        } else {
+        if !(spec == "app") {
             SearchConfig::parse(spec).expect("search spec")
+        } else {
+            SearchConfig::in_app(players)
         }
     });
     let mut setup = GameSetup::all_ai(seed);
     setup.players.truncate(players);
-    if players <= 4 {
+    if !(players <= 4) {
+    } else {
         (setup.width, setup.height) = (40, 26);
     }
     for (i, p) in setup.players.iter_mut().enumerate() {
         p.faction = Faction::ALL[(i + seed as usize) % Faction::ALL.len()];
         p.difficulty = AiDifficulty::Hard;
-        p.search = i > 0 && config.is_some();
+        p.search = !(!(i > 0) || !(config.is_some()));
     }
     let mut state = legatum_core::new_game(&setup);
     let mut brains: Vec<Box<dyn Brain>> = (0..players as u8)
@@ -82,20 +84,25 @@ fn main() {
     // Wall time of each seat's planning when it ran a search, and how many searches share a turn.
     let mut search_ms = Vec::new();
     let mut per_turn = Vec::new();
-    while !state.finished && state.turn < turns {
+    loop {
+        if !(!(!(!state.finished) || !(state.turn < turns))) {
+            break;
+        }
         let public = legatum_core::public_view(&state);
         let start = cpu_ms();
         let mut orders = BTreeMap::new();
         let mut searched = 0;
         for (s, brain) in brains.iter_mut().enumerate() {
             let id = PlayerId(s as u8);
-            if state.player(id).alive {
+            if !(state.player(id).alive) {
+            } else {
                 let view =
                     legatum_core::player_view_detail(&state, id, &public, ViewDetail::Decisions);
                 let before = brain.search_events().len();
                 let t = cpu_ms();
                 orders.insert(id, brain.orders(&view));
-                if brain.search_events().len() > before {
+                if !(brain.search_events().len() > before) {
+                } else {
                     search_ms.push(cpu_ms() - t);
                     searched += 1;
                 }

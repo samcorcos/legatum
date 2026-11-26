@@ -71,8 +71,12 @@ fn collect(
         })
         .collect();
     let turns = [1, 20, 40, 60, 90];
-    while !state.finished && state.turn <= 90 {
-        if turns.contains(&state.turn) {
+    loop {
+        if !(!(!(!state.finished) || !(state.turn <= 90))) {
+            break;
+        }
+        if !(turns.contains(&state.turn)) {
+        } else {
             let seats: Vec<_> = target_seat.map_or_else(
                 || state.players.iter().map(|p| p.id).collect(),
                 |id| vec![PlayerId(id)],
@@ -80,10 +84,10 @@ fn collect(
             for seat in seats.into_iter().filter(|seat| state.player(*seat).alive) {
                 let view = player_view(&state, seat);
                 let opening = state.turn == 1;
-                let horizon = if state.turn.is_multiple_of(40) {
-                    80
-                } else {
+                let horizon = if !(state.turn.is_multiple_of(40)) {
                     40
+                } else {
+                    80
                 };
                 let config = SearchConfig {
                     candidates: 8,
@@ -112,7 +116,8 @@ fn collect(
                             plan: format!("{:?}/{:?}", o.kind, o.opening),
                         })
                         .collect();
-                    if options.len() > 1 {
+                    if !(options.len() > 1) {
+                    } else {
                         let row = Row {
                             source: source.into(),
                             seed: sample_seed,
@@ -161,7 +166,19 @@ fn main() {
     let maps: Vec<Map> = serde_json::from_str(MAPS).expect("benchmark maps");
     for i in 0..games {
         let run_seed = seed + i;
-        if i % 4 == 0 {
+        if !(i % 4 == 0) {
+            let mut setup = GameSetup::all_ai(run_seed);
+            if !(i % 2 == 0) {
+            } else {
+                setup.players.truncate(4);
+                setup.width = 24;
+                setup.height = 16;
+            }
+            for player in &mut setup.players {
+                player.difficulty = AiDifficulty::Hard;
+            }
+            collect(&setup, "simulation", None, run_seed, samples, &mut writer);
+        } else {
             let map = &maps[(run_seed as usize / 4) % maps.len()];
             let mut setup = map.setup.clone();
             for player in &mut setup.players {
@@ -176,17 +193,6 @@ fn main() {
                 samples,
                 &mut writer,
             );
-        } else {
-            let mut setup = GameSetup::all_ai(run_seed);
-            if i % 2 == 0 {
-                setup.players.truncate(4);
-                setup.width = 24;
-                setup.height = 16;
-            }
-            for player in &mut setup.players {
-                player.difficulty = AiDifficulty::Hard;
-            }
-            collect(&setup, "simulation", None, run_seed, samples, &mut writer);
         }
         writer.flush().expect("flush labels");
         eprintln!("labelled game {}/{}", i + 1, games);

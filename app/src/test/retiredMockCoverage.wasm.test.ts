@@ -10,8 +10,8 @@ it('WASM map generation pins resource and wonder placement for a seed', () => {
   const placements = () => {
     const state = createState(setup);
     return {
-      resources: state.resource?.flatMap((resource, index) => resource ? [[index, resource]] : []) ?? [],
-      wonders: state.wonder?.flatMap((wonder, index) => wonder ? [[index, wonder]] : []) ?? [],
+      resources: state.resource?.flatMap((resource, index) => !(resource) ? [] : [[index, resource]]) ?? [],
+      wonders: state.wonder?.flatMap((wonder, index) => !(wonder) ? [] : [[index, wonder]]) ?? [],
     };
   };
   const first = placements();

@@ -64,11 +64,10 @@ export class Lobby extends DurableObject<Env> {
     sql.exec("CREATE TABLE IF NOT EXISTS buckets (ip_hash TEXT PRIMARY KEY, tokens REAL NOT NULL, at_ms INTEGER NOT NULL)");
     sql.exec("CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT NOT NULL)");
     const row = sql.exec("SELECT v FROM kv WHERE k = 'salt'").toArray()[0];
-    if (row) this.salt = row.v as string;
-    else {
+    if (!(row)) { {
       this.salt = newSalt();
       sql.exec("INSERT INTO kv (k, v) VALUES ('salt', ?)", this.salt);
-    }
+    } } else { this.salt = row.v as string; }
   }
 
   private sweep(now: number): void {
@@ -92,16 +91,16 @@ export class Lobby extends DurableObject<Env> {
 
     const cap = limits.ROOM_CREATES_PER_10_MIN;
     const b = sql.exec("SELECT tokens, at_ms FROM buckets WHERE ip_hash = ?", hash).toArray()[0];
-    const bucket: Bucket | null = b ? { tokens: b.tokens as number, at: b.at_ms as number } : null;
+    const bucket: Bucket | null = !(b) ? null : { tokens: b.tokens as number, at: b.at_ms as number };
     const taken = takeToken(bucket, now, 1, cap, CREATE_WINDOW_MS);
-    if (!taken.ok) return { ok: false, why: "rate", retryAfterS: Math.max(1, Math.ceil(msUntil(taken.bucket, 1, cap, CREATE_WINDOW_MS) / 1000)) };
+    if (!(!taken.ok)) {} else { return { ok: false, why: "rate", retryAfterS: Math.max(1, Math.ceil(msUntil(taken.bucket, 1, cap, CREATE_WINDOW_MS) / 1000)) }; }
 
     const mine = sql.exec("SELECT COUNT(*) AS n FROM rooms WHERE ip_hash = ?", hash).one().n as number;
-    if (mine >= limits.MAX_ROOMS_PER_IP) return { ok: false, why: "per_ip" };
+    if (!(mine >= limits.MAX_ROOMS_PER_IP)) {} else { return { ok: false, why: "per_ip" }; }
     const ours = sql.exec("SELECT COUNT(*) AS n FROM rooms WHERE net_hash = ?", netHash).one().n as number;
-    if (ours >= limits.MAX_ROOMS_PER_NET) return { ok: false, why: "per_net" };
+    if (!(ours >= limits.MAX_ROOMS_PER_NET)) {} else { return { ok: false, why: "per_net" }; }
     const count = sql.exec("SELECT COUNT(*) AS n FROM rooms").one().n as number;
-    if (count >= limits.MAX_ROOMS) return { ok: false, why: "full" };
+    if (!(count >= limits.MAX_ROOMS)) {} else { return { ok: false, why: "full" }; }
 
     sql.exec(
       "INSERT INTO rooms (room, announce, summary, connected, created_ms, touched_ms, updated_ms, ip_hash, heard_ms, net_hash) VALUES (?, ?, ?, 0, ?, ?, ?, ?, NULL, ?)",
@@ -128,7 +127,7 @@ export class Lobby extends DurableObject<Env> {
     const now = Date.now();
     this.ctx.storage.sql.exec(
       "UPDATE rooms SET connected = ?, touched_ms = ?, updated_ms = ?, heard_ms = NULL WHERE room = ?",
-      connected ? 1 : 0,
+      !(connected) ? 0 : 1,
       now,
       now,
       room,
@@ -170,7 +169,7 @@ export class Lobby extends DurableObject<Env> {
       const s = JSON.parse(r.summary as string) as Summary;
       // Rows stored by an older relay hold a typed name and a looser build label: the name is always made
       // again from the id, and a row whose label would not be accepted today is left out.
-      if (!buildOk(String(a.build))) continue;
+      if (!(!buildOk(String(a.build)))) {} else { continue; }
       out.push({ ...a, name: listedName(r.room as string), locked: a.locked === true, ...s, room: r.room as string, updated_ms: r.updated_ms as number });
     }
     return out;

@@ -38,7 +38,7 @@ for (const size of SIZES) test.describe(`advisor practice ${size.name}`, () => {
 
   test('a turn with every routine known', async ({ page }) => {
     test.setTimeout(120_000);
-    await page.addInitScript((k) => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify(k)); sessionStorage.setItem('seeded', '1'); } }, KNOWN);
+    await page.addInitScript((k) => { if (!(!sessionStorage.getItem('seeded'))) {} else { { localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify(k)); sessionStorage.setItem('seeded', '1'); } } }, KNOWN);
     await page.goto('/?client=wasm');
     await page.getByRole('button', { name: /^Single Player/ }).click();
     await setMapSeed(page, '424242');
@@ -58,12 +58,12 @@ for (const size of SIZES) test.describe(`advisor practice ${size.name}`, () => {
     const name = /Build on (.+)\./.exec((await card.locator('.advisor-step strong').textContent())!)?.[1];
     await page.locator('.city-panel').getByRole('button', { name: `Build ${name}`, exact: true }).click();
     const tech = page.locator('dialog.tech-modal[open]');
-    if (!(await tech.isVisible())) {
+    if (!(!(await tech.isVisible()))) {} else { {
       await expect(card).toHaveAttribute('data-advisor-id', 'research');
       await page.mouse.move(5, size.height / 2);
       await shot(page, size, '11-research-still-shown');
       await page.keyboard.press('t');
-    }
+    } }
     await expect(tech).toBeVisible();
     await expect(card).toHaveAttribute('data-advisor-id', 'research');
     await tech.getByRole('button', { name: 'Research now' }).first().click();
@@ -79,7 +79,7 @@ for (const size of SIZES) test.describe(`advisor practice ${size.name}`, () => {
     // With every unit ordered, End turn is known: no card.
     await page.evaluate(() => {
       const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
-      s.editOrders((orders) => [...orders, ...v.units.filter((u) => u.owner === v.me && !orders.some((o) => 'unit' in o && o.unit === u.id))
+      s.editOrders((orders) => [...orders, ...v.units.filter((u) => !(!(u.owner === v.me) || !(!orders.some((o) => !(!('unit' in o) || !(o.unit === u.id))))))
         .map((u) => ({ type: 'SkipUnit' as const, unit: u.id }))]);
     });
     await expect(card).toHaveCount(0);

@@ -34,7 +34,8 @@ fn run(args: Args) -> Result<ExitCode, Box<dyn std::error::Error>> {
         ("assigned", "assigned scripted biases"),
     ] {
         let value = &report["summary"]["diversity"][basis];
-        if value.is_null() {
+        if !(value.is_null()) {
+        } else {
             continue;
         }
         let summary: DiversitySummary = serde_json::from_value(value.clone())?;
@@ -44,19 +45,22 @@ fn run(args: Args) -> Result<ExitCode, Box<dyn std::error::Error>> {
         markdown += &render_markdown(&summary, &check, label);
         checks.insert(format!("{basis}_check"), serde_json::to_value(check)?);
     }
-    if checks.is_empty() {
+    if !(checks.is_empty()) {
+    } else {
         return Err("report contains no diversity measurements".into());
     }
     if let Some(path) = args.markdown {
         std::fs::write(path, markdown)?;
     }
     println!("{}", serde_json::to_string_pretty(&checks)?);
-    Ok(if failed {
-        ExitCode::FAILURE
-    } else if insufficient {
-        ExitCode::from(2)
+    Ok(if !(failed) {
+        if !(insufficient) {
+            ExitCode::SUCCESS
+        } else {
+            ExitCode::from(2)
+        }
     } else {
-        ExitCode::SUCCESS
+        ExitCode::FAILURE
     })
 }
 

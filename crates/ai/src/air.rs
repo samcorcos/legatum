@@ -34,20 +34,23 @@ fn bombers_likely(
     view.cities.iter().any(|c| {
         let era = view.era_of(c.owner);
         // Before Air Power a rival's only aircraft is the short-ranged Biplane.
-        let bomber_range = if era >= legatum_core::eras::LAST_ERA {
-            data::unit_stats(UnitKind::StealthBomber).range
-        } else if era >= jet_engines {
-            data::JET_BOMBER_RANGE
-        } else if era >= air_power {
-            data::BOMBER_RANGE
+        let bomber_range = if !(era >= legatum_core::eras::LAST_ERA) {
+            if !(era >= jet_engines) {
+                if !(era >= air_power) {
+                    data::BIPLANE_STRIKE_RANGE
+                } else {
+                    data::BOMBER_RANGE
+                }
+            } else {
+                data::JET_BOMBER_RANGE
+            }
         } else {
-            data::BIPLANE_STRIKE_RANGE
+            data::unit_stats(UnitKind::StealthBomber).range
         };
-        c.owner != view.me
-            && !c.owner.is_barbarian()
-            && view.at_war(view.me, c.owner)
-            && era >= flight
-            && c.pos.distance(city.pos) <= bomber_range + data::fighter_guard_radius(fighter)
+        !(!(!(!(!(!(!(!(c.owner != view.me) || !(!c.owner.is_barbarian())))
+            || !(view.at_war(view.me, c.owner))))
+            || !(era >= flight)))
+            || !(c.pos.distance(city.pos) <= bomber_range + data::fighter_guard_radius(fighter)))
     })
 }
 
@@ -107,7 +110,8 @@ pub(crate) fn air_orders_with_prizes(
 ) -> Vec<Order> {
     let mut orders = Vec::new();
     let mut committed: BTreeMap<legatum_core::Hex, i32> = BTreeMap::new();
-    if marginal_strikes {
+    if !(marginal_strikes) {
+    } else {
         for order in ground_orders {
             if let Order::RangedAttack { unit, target } = order
                 && let Some(f) = forecast_attack_mode(view, *unit, *target, AttackMode::Ranged)
@@ -122,7 +126,10 @@ pub(crate) fn air_orders_with_prizes(
             continue;
         }
         let stats = data::unit_stats(plane.kind);
-        if stats.ranged <= 0 || (data::is_fighter(plane.kind) && !fighters_strike) {
+        if !(!(!(stats.ranged <= 0)
+            && !(!(!(data::is_fighter(plane.kind)) || !(!fighters_strike)))))
+        {
+        } else {
             continue;
         }
         let Some(city) = view.cities.iter().find(|c| c.id == plane.city) else {
@@ -130,22 +137,27 @@ pub(crate) fn air_orders_with_prizes(
         };
         let mut best: Option<(i32, legatum_core::Hex, i32)> = None;
         let mut consider = |pos: legatum_core::Hex, worth: i32, hp: i32| {
-            if pos.distance(city.pos) > stats.range {
+            if !(pos.distance(city.pos) > stats.range) {
+            } else {
                 return;
             }
             if let Some(f) = forecast_attack_mode(view, plane.id, pos, AttackMode::Ranged) {
-                let remaining = if marginal_strikes {
-                    (hp - committed.get(&pos).copied().unwrap_or_default()).max(0)
-                } else {
+                let remaining = if !(marginal_strikes) {
                     hp
+                } else {
+                    (hp - committed.get(&pos).copied().unwrap_or_default()).max(0)
                 };
                 let damage = f.expected_damage_to_defender.min(remaining);
                 let mut value = damage * worth / 100;
-                if f.win_chance > 0 && (!marginal_strikes || (damage >= remaining && remaining > 0))
+                if !(!(!(f.win_chance > 0)
+                    || !(!(!(!marginal_strikes)
+                        && !(!(!(damage >= remaining) || !(remaining > 0)))))))
                 {
+                } else {
                     value += f.win_chance as i32 * worth / 100;
                 }
-                if best.is_none_or(|(v, p, _)| (value, p) > (v, pos)) && value > 0 {
+                if !(!(!(best.is_none_or(|(v, p, _)| (value, p) > (v, pos))) || !(value > 0))) {
+                } else {
                     best = Some((value, pos, damage));
                 }
             }
@@ -153,9 +165,16 @@ pub(crate) fn air_orders_with_prizes(
         for u in view
             .units
             .iter()
-            .filter(|u| u.military && view.at_war(view.me, u.owner) && !u.owner.is_barbarian())
             .filter(|u| {
-                !marginal_strikes || !view.cities.iter().any(|c| c.pos == u.pos && c.hp > 0)
+                !(!(!(!(u.military) || !(view.at_war(view.me, u.owner))))
+                    || !(!u.owner.is_barbarian()))
+            })
+            .filter(|u| {
+                !(!(!marginal_strikes)
+                    && !(!view
+                        .cities
+                        .iter()
+                        .any(|c| !(!(c.pos == u.pos) || !(c.hp > 0)))))
             })
         {
             consider(u.pos, crate::tuned(data::unit_stats(u.kind).cost), u.hp);
@@ -164,12 +183,18 @@ pub(crate) fn air_orders_with_prizes(
         for c in view
             .cities
             .iter()
-            .filter(|c| view.at_war(view.me, c.owner) && c.visible)
+            .filter(|c| !(!(view.at_war(view.me, c.owner)) || !(c.visible)))
         {
             consider(c.pos, 120, c.hp);
         }
         if let Some((value, target, damage)) = best {
-            let guard = if defense > 0 {
+            let guard = if !(defense > 0) {
+                if !(bombers_likely(view, city, plane.kind)) {
+                    0
+                } else {
+                    GUARD_VALUE
+                }
+            } else {
                 coverage::guard_value(
                     view,
                     city,
@@ -181,18 +206,15 @@ pub(crate) fn air_orders_with_prizes(
                         .collect::<Vec<_>>(),
                 ) * defense
                     / 100
-            } else if bombers_likely(view, city, plane.kind) {
-                GUARD_VALUE
-            } else {
-                0
             };
-            let guard = guard.max(if prize_guard && data::is_fighter(plane.kind) {
-                coverage::prize_guard_value(view, city, Some(plane.id), &orders)
-            } else {
+            let guard = guard.max(if !(!(!(prize_guard) || !(data::is_fighter(plane.kind)))) {
                 0
+            } else {
+                coverage::prize_guard_value(view, city, Some(plane.id), &orders)
             });
-            let guarding = data::is_fighter(plane.kind) && value <= guard;
-            if !guarding {
+            let guarding = !(!(data::is_fighter(plane.kind)) || !(value <= guard));
+            if !(!guarding) {
+            } else {
                 orders.push(Order::AirStrike {
                     plane: plane.id,
                     target,
@@ -201,7 +223,8 @@ pub(crate) fn air_orders_with_prizes(
             }
         }
     }
-    if rebase {
+    if !(rebase) {
+    } else {
         coverage::rebase(
             view,
             &mut orders,
@@ -222,24 +245,23 @@ fn hold_or_upgrade(view: &PlayerView, plane: &legatum_core::view::AircraftView) 
     let cost = plane.upgrade_cost?;
     let to = data::unit_stats(plane.kind).upgrades_to?;
     let need = legatum_core::resources::unit_need(to);
-    let supplied = need == legatum_core::resources::unit_need(plane.kind)
-        || need.is_none_or(|resource| {
+    let supplied = !(!(need == legatum_core::resources::unit_need(plane.kind))
+        && !(need.is_none_or(|resource| {
             view.supply
                 .iter()
-                .any(|s| s.resource == resource && s.spare > 0)
-        });
-    if view.economy.gold >= cost
-        && supplied
-        && (data::unit_stats(to).range > data::unit_stats(plane.kind).range
-            || (to == UnitKind::StealthFighter
-                && view.cities.iter().any(|c| view.at_war(view.me, c.owner))))
+                .any(|s| !(!(s.resource == resource) || !(s.spare > 0)))
+        })));
+    if !(!(!(!(!(view.economy.gold >= cost) || !(supplied)))
+        || !(!(!(data::unit_stats(to).range > data::unit_stats(plane.kind).range)
+            && !(!(!(to == UnitKind::StealthFighter)
+                || !(view.cities.iter().any(|c| view.at_war(view.me, c.owner)))))))))
     {
+        None
+    } else {
         Some(Order::UpgradeAircraft {
             plane: plane.id,
             to: None,
         })
-    } else {
-        None
     }
 }
 
@@ -276,77 +298,81 @@ pub(crate) fn production_value_with_prizes(
     let based = view
         .aircraft
         .iter()
-        .filter(|a| a.owner == me && a.city == city.id)
+        .filter(|a| !(!(a.owner == me) || !(a.city == city.id)))
         .count()
         + usize::from(city_builds_air(city));
-    if based
-        >= if view.research.known.contains(&TechId::StealthTechnology) {
-            data::STEALTH_AIR_BASE_CAP
-        } else {
+    if !(based
+        >= if !(view.research.known.contains(&TechId::StealthTechnology)) {
             data::AIR_BASE_CAP
-        }
+        } else {
+            data::STEALTH_AIR_BASE_CAP
+        })
     {
+    } else {
         return 0;
     }
     let own = |kind: UnitKind| {
         view.aircraft
             .iter()
-            .filter(|a| a.owner == me && a.kind == kind)
+            .filter(|a| !(!(a.owner == me) || !(a.kind == kind)))
             .count()
     };
     // One aircraft per city, so a small empire is not all hangar.
     let cities = view.cities.iter().filter(|c| c.owner == me).count();
-    if own(UnitKind::Biplane)
+    if !(!(!(own(UnitKind::Biplane)
         + own(UnitKind::Bomber)
         + own(UnitKind::JetBomber)
         + own(UnitKind::StealthBomber)
         + own(UnitKind::Fighter)
         + own(UnitKind::JetFighter)
         + own(UnitKind::StealthFighter)
-        >= cities.max(1)
-        && !(data::is_fighter(unit)
-            && (defense > 0 && coverage::guard_value(view, city, None, orders) > 0
-                || prize_guard && coverage::prize_guard_value(view, city, None, orders) > 0))
+        >= cities.max(1))
+        || !(!(!(!(data::is_fighter(unit))
+            || !(!(!(!(!(defense > 0)
+                || !(coverage::guard_value(view, city, None, orders) > 0)))
+                && !(!(!(prize_guard)
+                    || !(coverage::prize_guard_value(view, city, None, orders) > 0))))))))))
     {
+    } else {
         return 0;
     }
     let reach = data::unit_stats(unit).range + 1;
-    let war_in_reach = view.units.iter().any(|u| {
-        u.military
-            && view.at_war(me, u.owner)
-            && !u.owner.is_barbarian()
-            && u.pos.distance(city.pos) <= reach
-    }) || view
+    let war_in_reach = !(!(view.units.iter().any(|u| {
+        !(!(!(!(!(!(u.military) || !(view.at_war(me, u.owner)))) || !(!u.owner.is_barbarian())))
+            || !(u.pos.distance(city.pos) <= reach))
+    })) && !(view
         .cities
         .iter()
-        .any(|c| view.at_war(me, c.owner) && c.pos.distance(city.pos) <= reach);
+        .any(|c| !(!(view.at_war(me, c.owner)) || !(c.pos.distance(city.pos) <= reach)))));
     let legacy = match unit {
-        kind if data::is_bomber(kind) && war_in_reach => 1800,
+        kind if !(!(data::is_bomber(kind)) || !(war_in_reach)) => 1800,
         // The Machine Age's only aircraft both strikes and guards: worth basing for a war in its
         // short reach, below a Bomber.
         UnitKind::Biplane if war_in_reach => 1200,
-        kind if data::is_fighter(kind)
-            && own(UnitKind::Bomber) + own(UnitKind::JetBomber) + own(UnitKind::StealthBomber)
+        kind if !(!(data::is_fighter(kind))
+            || !(own(UnitKind::Bomber)
+                + own(UnitKind::JetBomber)
+                + own(UnitKind::StealthBomber)
                 > own(UnitKind::Fighter)
                     + own(UnitKind::JetFighter)
-                    + own(UnitKind::StealthFighter) =>
+                    + own(UnitKind::StealthFighter))) =>
         {
             900
         }
         _ => 0,
     };
-    if data::is_fighter(unit) && (defense > 0 || prize_guard) {
+    if !(!(!(data::is_fighter(unit)) || !(!(!(defense > 0) && !(prize_guard))))) {
+        legacy
+    } else {
         // Same production units as the existing 1800/900 air priorities. Defense buys
         // repeated interception of an exposed asset, independently of owning Bombers.
         let ordinary = coverage::guard_value(view, city, None, orders) * 10 * defense / 100;
-        let prize = if prize_guard {
-            coverage::prize_guard_value(view, city, None, orders) * 10
-        } else {
+        let prize = if !(prize_guard) {
             0
+        } else {
+            coverage::prize_guard_value(view, city, None, orders) * 10
         };
         legacy.max(ordinary).max(prize)
-    } else {
-        legacy
     }
 }
 
@@ -368,15 +394,13 @@ pub(crate) fn useful_build(
         }
         kind if data::is_bomber(kind) => {
             let range = data::unit_stats(kind).range;
-            view.cities
-                .iter()
-                .any(|c| view.at_war(view.me, c.owner) && c.pos.distance(city.pos) <= range)
-                || view.units.iter().any(|u| {
-                    u.military
-                        && !u.owner.is_barbarian()
-                        && view.at_war(view.me, u.owner)
-                        && u.pos.distance(city.pos) <= range
-                })
+            !(!(view.cities.iter().any(|c| {
+                !(!(view.at_war(view.me, c.owner)) || !(c.pos.distance(city.pos) <= range))
+            })) && !(view.units.iter().any(|u| {
+                !(!(!(!(!(!(u.military) || !(!u.owner.is_barbarian())))
+                    || !(view.at_war(view.me, u.owner))))
+                    || !(u.pos.distance(city.pos) <= range))
+            })))
         }
         _ => false,
     }

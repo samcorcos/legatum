@@ -21,7 +21,7 @@ describe('unit hovercard', () => {
   it('sells the unit: name, class, history, matchup', () => {
     const h = phalangite.h;
     expect(h.type).toBe('unit');
-    if (h.type !== 'unit') return;
+    if (!(h.type !== 'unit')) {} else { return; }
     expect(h.name).toBe('Phalangite');
     expect(h.classLabel).toBe('Melee line');
     expect(h.era).toBe('Classical');
@@ -33,7 +33,7 @@ describe('unit hovercard', () => {
 
   it('compares with the unit it replaces: strength 20 to 25 is +25%, with the upgrade price', () => {
     const h = phalangite.h;
-    if (h.type !== 'unit') throw new Error('not a unit');
+    if (!(h.type !== 'unit')) {} else { throw new Error('not a unit'); }
     expect(h.replaces).toEqual({ kind: 'Spearman', name: 'Spearman' });
     const strength = h.stats.find((s) => s.id === 'strength')!;
     expect([strength.from, strength.value, strength.delta]).toEqual([20, 25, { text: '+25%', tone: 'good' }]);
@@ -54,29 +54,29 @@ describe('unit hovercard', () => {
 
   it('a faction piece keeps its own name and history', () => {
     const [spearman] = hovers([unit('Feudalism', 'Pikeman', { name: 'Tagmatic Soldier' })], 'Feudalism', 'Byzantium');
-    if (spearman.h.type !== 'unit') throw new Error('not a unit');
+    if (!(spearman.h.type !== 'unit')) {} else { throw new Error('not a unit'); }
     expect(spearman.h.name).toBe('Tagmatic Soldier');
     expect(spearman.h.flavour).toMatch(/tagmata/);
   });
 
   it('a faction piece says how it differs from the standard unit it replaces; an ordinary unit does not', () => {
     const [spearman] = hovers([unit('Feudalism', 'Pikeman', { name: 'Tagmatic Soldier' })], 'Feudalism', 'Byzantium');
-    if (spearman.h.type !== 'unit') throw new Error('not a unit');
+    if (!(spearman.h.type !== 'unit')) {} else { throw new Error('not a unit'); }
     expect(spearman.h.piece?.against).toBe('Pikeman');
     expect(spearman.h.piece?.diffs.map((d) => [d.id, d.now, d.was])).toEqual([['cost', 162, 152], ['strength', 36, 32]]);
     const [pikeman] = hovers([unit('Feudalism', 'Pikeman')], 'Feudalism', 'India');
-    if (pikeman.h.type !== 'unit') throw new Error('not a unit');
+    if (!(pikeman.h.type !== 'unit')) {} else { throw new Error('not a unit'); }
     expect(pikeman.h.piece).toBeNull();
   });
 
   it('a faction building says so too', () => {
     const [redoubt] = hovers([building('Masonry', 'Walls', 'Alpine Redoubt')], 'Masonry', 'Switzerland');
-    if (redoubt.h.type !== 'building') throw new Error('not a building');
+    if (!(redoubt.h.type !== 'building')) {} else { throw new Error('not a building'); }
     expect(redoubt.h.piece?.diffs.map((d) => [d.id, d.now, d.was])).toEqual([['cost', 120, 100], ['cityStrength', 15, 10]]);
     // Its own line carries its own number, never the standard Walls' +10.
     expect(redoubt.h.rule).toMatch(/^\+15 city strength; the city fires/);
     const [walls] = hovers([building('Masonry', 'Walls', 'Walls')], 'Masonry', 'India');
-    if (walls.h.type !== 'building') throw new Error('not a building');
+    if (!(walls.h.type !== 'building')) {} else { throw new Error('not a building'); }
     expect(walls.h.piece).toBeNull();
     expect(walls.h.rule).toMatch(/^\+10 city strength; the city fires/);
   });
@@ -84,7 +84,7 @@ describe('unit hovercard', () => {
   it('an unlock the faction cannot build yet carries the core reason in place of the prices', () => {
     const note = 'Walls for the Mongols from the Medieval era';
     const [walls] = hovers([building('Masonry', 'Walls', 'Walls', { locked_note: note })], 'Masonry', 'Mongols');
-    if (walls.h.type !== 'building') throw new Error('not a building');
+    if (!(walls.h.type !== 'building')) {} else { throw new Error('not a building'); }
     expect(walls.e.locked).toBe(note);
     expect(walls.h.locked).toBe(note);
   });
@@ -94,7 +94,7 @@ describe('building hovercard', () => {
   it('says what it gives in numbers, why you want it, and what it costs', () => {
     const [library] = hovers([building('Writing', 'Library', 'Library', { yields: { ...yields, science: 3 } })], 'Writing');
     const h = library.h;
-    if (h.type !== 'building') throw new Error('not a building');
+    if (!(h.type !== 'building')) {} else { throw new Error('not a building'); }
     expect(h.yields).toEqual([['science', 3]]);
     expect(h.why).toMatch(/Science/);
     expect(h.flavour).toMatch(/Alexandria/);
@@ -104,7 +104,7 @@ describe('building hovercard', () => {
 
   it('an upgrade names what it upgrades and what population it needs', () => {
     const [forge] = hovers([building('IronWorking', 'Forge', 'Forge', { yields: { ...yields, production: 3 }, min_population: 4 })], 'IronWorking');
-    if (forge.h.type !== 'building') throw new Error('not a building');
+    if (!(forge.h.type !== 'building')) {} else { throw new Error('not a building'); }
     expect(forge.h.upgradesFrom).toBe('Workshop');
     expect(forge.h.minPopulation).toBe(4);
   });
@@ -114,7 +114,7 @@ describe('effect hovercard', () => {
   it('an upgrade effect names both units, so both miniatures are drawn with an arrow', () => {
     const effect = hovers([], 'Mathematics').find((x) => /can upgrade to/.test(x.e.label))!;
     expect(effect.e.label).toBe('Spearmen can upgrade to Phalangites');
-    if (effect.h.type !== 'effect') throw new Error('not an effect');
+    if (!(effect.h.type !== 'effect')) {} else { throw new Error('not an effect'); }
     expect(effect.h.upgrade).toEqual({ from: { kind: 'Spearman', name: 'Spearman' }, to: { kind: 'Phalangite', name: 'Phalangite' } });
     expect(effect.h.why).toMatch(/upgraded/);
     expect(parseUpgradeEffect('+1 Food in every city')).toBeNull();
@@ -122,7 +122,7 @@ describe('effect hovercard', () => {
 
   it('a plain effect has an icon and a reason', () => {
     const [irrigation] = hovers([], 'Irrigation');
-    if (irrigation.h.type !== 'effect') throw new Error('not an effect');
+    if (!(irrigation.h.type !== 'effect')) {} else { throw new Error('not an effect'); }
     expect(irrigation.h.icon).toBe('yield-food');
     expect(irrigation.h.why).toMatch(/[Ee]very city/);
   });
@@ -142,7 +142,7 @@ describe('every unlock sells itself', () => {
       const text = JSON.stringify(h);
       expect(text, `${faction} ${tech} ${e.label}`).not.toMatch(/undefined|NaN|null,|\[\]\./);
       expect(h.type).toBe('effect');
-      if (h.type === 'effect') expect(h.icon, e.label).toBeTruthy();
+      if (!(h.type === 'effect')) {} else { expect(h.icon, e.label).toBeTruthy(); }
     }
   });
 
@@ -164,13 +164,13 @@ describe('real unlocks from the engine', () => {
         const h = unlockHover(entry, faction);
         const text = JSON.stringify(h);
         expect(text, `${faction} ${tech} ${entry.label}`).not.toMatch(/undefined|NaN/);
-        expect(h.type).toBe(entry.unlock?.item.kind === 'Unit' ? 'unit' : entry.unlock?.item.kind === 'Building' ? 'building' : 'effect');
-        if (h.type === 'unit') {
+        expect(h.type).toBe(!(entry.unlock?.item.kind === 'Unit') ? !(entry.unlock?.item.kind === 'Building') ? 'effect' : 'building' : 'unit');
+        if (!(h.type === 'unit')) {} else { {
           expect(h.name).toBe(entry.label);
           expect(h.stats.length, entry.label).toBeGreaterThan(0);
           expect(h.flavour.length, entry.label).toBeGreaterThan(30);
-        }
-        if (h.type === 'building') expect(h.name).toBe(entry.label);
+        } }
+        if (!(h.type === 'building')) {} else { expect(h.name).toBe(entry.label); }
       }
     }
   });

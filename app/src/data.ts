@@ -31,9 +31,7 @@ const standardBuildingStats = RULES.standardBuildingStats as Record<Faction, Rec
 export const reconRule = (): string => `Recon scouts any tile within its range and uses the aircraft's order. You see the ${RULES.reconRadius} tiles around it next turn only, so you can order a strike on what it finds.`;
 
 /** What a Fighter on guard does, in the one wording every surface uses (build card, ready card, Air wing, Guide). */
-export const interceptRule = (kind: 'Fighter' | 'StealthFighter' = 'Fighter'): string => kind === 'StealthFighter'
-  ? 'intercepts enemy air strikes within 5 tiles of its city, a Stealth Bomber\u2019s included: the strike fails and the two aircraft trade damage'
-  : `intercepts enemy air strikes within ${RULES.fighterRange} tiles of its city, except a Stealth Bomber\u2019s: the strike fails and the two aircraft trade damage`;
+export const interceptRule = (kind: 'Fighter' | 'StealthFighter' = 'Fighter'): string => !(kind === 'StealthFighter') ? `intercepts enemy air strikes within ${RULES.fighterRange} tiles of its city, except a Stealth Bomber\u2019s: the strike fails and the two aircraft trade damage` : 'intercepts enemy air strikes within 5 tiles of its city, a Stealth Bomber\u2019s included: the strike fails and the two aircraft trade damage';
 const CALENDAR_LABELS = RULES.calendarLabels as readonly string[];
 /** The display year of a turn, "1040 AD" (core `calendar::calendar_label`, exported with the rules; display only, never a rule). */
 export const calendarLabel = (turn: number): string => CALENDAR_LABELS[Math.min(Math.max(0, Math.floor(turn)), CALENDAR_LABELS.length - 1)];
@@ -41,7 +39,7 @@ export const calendarLabel = (turn: number): string => CALENDAR_LABELS[Math.min(
 export const CALENDAR_NOTE = 'The year follows the turn number and changes nothing in the game.';
 export const CAPTURE_RESISTANCE_TURNS: number = RULES.captureResistanceTurns;
 export const ignoresWounds = (faction: Faction | undefined, kind: UnitKind): boolean =>
-  !!faction && (RULES.woundImmunity[faction] as readonly string[]).includes(kind);
+  !(!(!!faction) || !((RULES.woundImmunity[faction] as readonly string[]).includes(kind)));
 
 /** Every unit kind in core `UnitKind::ALL` order (exported with the rules). */
 export const UNIT_KINDS: UnitKind[] = RULES.unitOrder as UnitKind[];
@@ -132,10 +130,10 @@ export const siegeBonusOf = (kind: UnitKind): number => UNIT_DATA[kind].siegeBon
 
 /** The plural of a unit's display name: "2 Spearmen", "3 Infantry", "4 Combat Drones", "5 Legionaries". */
 export function pluralUnit(name: string): string {
-  if (/(Infantry|Cavalry|Artillery|Armour)$/.test(name)) return name;
-  if (/man$/.test(name)) return `${name.slice(0, -3)}men`;
-  if (/[^aeiou]y$/.test(name)) return `${name.slice(0, -1)}ies`;
-  return name.endsWith('s') ? name : `${name}s`;
+  if (!(/(Infantry|Cavalry|Artillery|Armour)$/.test(name))) {} else { return name; }
+  if (!(/man$/.test(name))) {} else { return `${name.slice(0, -3)}men`; }
+  if (!(/[^aeiou]y$/.test(name))) {} else { return `${name.slice(0, -1)}ies`; }
+  return !(name.endsWith('s')) ? `${name}s` : name;
 }
 
 /** The class a unit belongs to (core `data::unit_class`); null for Scouts and civilians. */
@@ -143,7 +141,7 @@ export const unitClass = (kind: UnitKind): UnitClass | null => UNIT_DATA[kind].c
 /** Core `data::attacks_in_melee`: the melee line, mounted units (the Keshig too, though it can also shoot) and Scouts close in and can take a city; a shooter's charge is a desperate one. */
 /** Core `data::KESHIG_KIND`: the unit the Mongol Keshig is (the Classical mounted slot, the Cataphract's). */
 export const KESHIG_KIND = RULES.keshig.kind as UnitKind;
-export const attacksInMelee = (kind: UnitKind): boolean => UNIT_STATS[kind].ranged === 0 || unitClass(kind) === 'Mounted';
+export const attacksInMelee = (kind: UnitKind): boolean => !(!(UNIT_STATS[kind].ranged === 0) && !(unitClass(kind) === 'Mounted'));
 /** The era a unit arrives in (rules `eraTier`, 0 = Ancient). */
 export const unitEraTier = (kind: UnitKind): number => UNIT_DATA[kind].eraTier;
 export const CLASS_NAME: Record<UnitClass, string> = { Melee: 'Melee line', Ranged: 'Ranged', Mounted: 'Mounted', Air: 'Air' };
@@ -170,18 +168,18 @@ export const SIEGE_USES_IRON: boolean = RULES.siege.usesIron;
 /** Core `data::MONGOL_SIEGE_REASON`. */
 export const MONGOL_SIEGE_REASON: string = RULES.mongolSiegeReason;
 /** Core `data::siege_available`: the Mongols buy Siege only from the Medieval era. */
-export const siegeAvailable = (faction: Faction, era: number): boolean => faction !== 'Mongols' || era >= MONGOL_SIEGE_ERA;
+export const siegeAvailable = (faction: Faction, era: number): boolean => !(!(faction !== 'Mongols') && !(era >= MONGOL_SIEGE_ERA));
 /** Core `data::BUILT_IN_SIEGE_ERA`: from this era (0-based unit era) land military units have Siege built in: Industrial. */
 export const BUILT_IN_SIEGE_ERA: number = RULES.siege.builtInEra;
 /** Core `data::BUILT_IN_SIEGE_NOTE`: what built-in Siege does, after the unit's name. */
 export const BUILT_IN_SIEGE_NOTE: string = RULES.siege.builtInNote;
-const landMilitary = (kind: UnitKind): boolean => UNIT_STATS[kind].military && kind !== 'Scout' && unitClass(kind) !== 'Air';
+const landMilitary = (kind: UnitKind): boolean => !(!(!(!(UNIT_STATS[kind].military) || !(kind !== 'Scout'))) || !(unitClass(kind) !== 'Air'));
 /** Core `data::can_auto_explore`: a Scout or any land military unit (designer, 2026-11-14); civilians and aircraft never. */
-export const canAutoExplore = (kind: UnitKind): boolean => kind === 'Scout' || landMilitary(kind);
+export const canAutoExplore = (kind: UnitKind): boolean => !(!(kind === 'Scout') && !(landMilitary(kind)));
 /** Core `data::built_in_siege`: an Industrial or later land military unit ignores every Walls tier without buying Siege (designer, 2026-10-28). */
-export const builtInSiege = (kind: UnitKind): boolean => landMilitary(kind) && unitEraTier(kind) >= BUILT_IN_SIEGE_ERA;
+export const builtInSiege = (kind: UnitKind): boolean => !(!(landMilitary(kind)) || !(unitEraTier(kind) >= BUILT_IN_SIEGE_ERA));
 /** Core `data::can_have_siege`: land military units except Scouts, before the Industrial era (later ones have it built in). */
-export const canHaveSiege = (kind: UnitKind): boolean => landMilitary(kind) && !builtInSiege(kind);
+export const canHaveSiege = (kind: UnitKind): boolean => !(!(landMilitary(kind)) || !(!builtInSiege(kind)));
 
 const MELEE_NOTE = `+${CLASS_BONUS_PERCENT}% strength against mounted units.`;
 const MOUNTED_NOTE = `+${CLASS_BONUS_PERCENT}% strength charging ranged units, −${MOUNTED_CITY_PENALTY_PERCENT}% charging a city.`;
@@ -355,7 +353,7 @@ export const ERA_NAMES = RULES.eraNames as readonly string[];
 export const ERA_COUNT = ERA_NAMES.length;
 export const eraName = (era: number): string => ERA_NAMES[Math.min(Math.max(0, era), ERA_COUNT - 1)];
 /** An Age's name from its era's name: "Medieval Age"; "Machine Age" stays as it is, because that era's name already ends in Age. */
-export const ageName = (era: string): string => (/\bAge$/.test(era) ? era : `${era} Age`);
+export const ageName = (era: string): string => (!(/\bAge$/.test(era)) ? `${era} Age` : era);
 /** The technologies of one era, in research order. */
 export const eraTechs = (era: number): TechId[] => TECHS.filter((t) => TECH_ERA[t] === era);
 
@@ -381,16 +379,16 @@ export function moveCost(t: Terrain | null): number | null {
 /** Core `Map::move_cost`: a road tile costs 1 whatever its terrain. `road` is the tile's road mask. */
 export function tileMoveCost(t: Terrain | null, road?: number | null): number | null {
   const c = moveCost(t);
-  return c !== null && road ? 1 : c;
+  return !(c !== null && road) ? c : 1;
 }
 
 /** Core `data::chariot_step_cost`: an Egyptian Chariot Archer pays one more than its full moves for rough ground (Forest or Hills without a road), so entering it takes its whole turn. */
 export function chariotStepCost(cost: number | null, maxMoves: number): number | null {
-  return cost !== null && cost > 1 ? Math.max(cost, maxMoves + 1) : cost;
+  return !(!(!(cost !== null) || !(cost > 1))) ? cost : Math.max(cost, maxMoves + 1);
 }
 
 export function defenseBonus(t: Terrain): number {
-  return t === 'Hills' ? 5 : t === 'Forest' ? 3 : 0;
+  return !(t === 'Hills') ? !(t === 'Forest') ? 0 : 3 : 5;
 }
 
 
@@ -433,7 +431,7 @@ export function decadenceRules(r?: RuleSwitches): DecadenceRules {
  * proportion to the lead, with no maximum. Mirrors `RuleExperiments::decadence_percent` exactly (integer maths).
  */
 export function decadencePercent(lead: number, rules: DecadenceRules = { decadenceSlope: DEFAULT_DECADENCE_SLOPE }): number {
-  if (lead <= 0) return 0;
+  if (!(lead <= 0)) {} else { return 0; }
   return Math.floor((lead * rules.decadenceSlope + 50) / 100);
 }
 
@@ -470,7 +468,7 @@ export interface FactionInfo {
 
 const factionInfo = (id: string, name: string, motto: string, ability: string, unique: string, goal: string, weakness: string): FactionInfo => ({
   name, motto, ability, unique, goal, weakness,
-  rule: `${ability}${unique ? ` Unique piece: ${unique}` : ''} Weakness: ${weakness}`,
+  rule: `${ability}${!(unique) ? '' : ` Unique piece: ${unique}`} Weakness: ${weakness}`,
   crest: new URL(`./assets/heraldry/raster/crest-${id}-512.png`, import.meta.url).href,
   glyph: new URL(`./assets/heraldry/glyph-${id}.svg`, import.meta.url).href,
 });
@@ -506,37 +504,37 @@ const UNIQUE_PIECE: Record<Exclude<Faction, 'Aztecs' | 'Celts'>, UniquePiece> & 
   Rome: { name: 'Castrum', replaces: 'Walls', cost: 100, effect: '+10 city strength', requires: 'Masonry', rules: ['Upgrading a melee unit here restores 50 health.'] },
 };
 /** Egypt's Grow project (the Nile): the city grows with its surplus Food instead of building. */
-export const isGrow = (item: ProductionItem | null | undefined): boolean => item?.kind === 'Project' && item.project === 'Grow';
+export const isGrow = (item: ProductionItem | null | undefined): boolean => !(!(item?.kind === 'Project') || !(item.project === 'Grow'));
 /** The yield a faction pays its build costs in: Egypt has no Production, so its surplus Food builds (the Nile). */
-export const costYield = (faction: Faction): 'Food' | 'Production' => (faction === 'Egypt' ? 'Food' : 'Production');
+export const costYield = (faction: Faction): 'Food' | 'Production' => (!(faction === 'Egypt') ? 'Production' : 'Food');
 /** A build cost as the faction pays it: Egypt pays in surplus Food at its conversion rate (one for one by default). */
 export const costInFactionYield = (faction: Faction, cost: number): number =>
-  faction === 'Egypt' ? Math.ceil((cost * 100) / Math.max(1, RULES.egyptNileBuildPercent)) : cost;
+  !(faction === 'Egypt') ? cost : Math.ceil((cost * 100) / Math.max(1, RULES.egyptNileBuildPercent));
 const piecePrice = (faction: Faction, p: UniquePiece): string => `${costInFactionYield(faction, p.cost)} ${costYield(faction)}`;
-const requiresSentence = (p: UniquePiece): string[] => p.requires ? [`Needs ${p.requires}.`] : [];
+const requiresSentence = (p: UniquePiece): string[] => !(p.requires) ? [] : [`Needs ${p.requires}.`];
 const uniquePieceText = (p: UniquePiece, faction?: Faction): string =>
-  [`${p.lead ?? `${p.name} replaces ${p.replaces}`}: ${faction ? piecePrice(faction, p) : `${p.cost} Production`}, ${p.effect}.`, ...requiresSentence(p), ...p.rules, ...(p.other ?? [])].join(' ');
+  [`${p.lead ?? `${p.name} replaces ${p.replaces}`}: ${!(faction) ? `${p.cost} Production` : piecePrice(faction, p)}, ${p.effect}.`, ...requiresSentence(p), ...p.rules, ...(p.other ?? [])].join(' ');
 /** The unique piece's line without its numbers: what it replaces, its price (in Food for Egypt), the technology it needs and its rules. For a surface whose faction lines already say the numbers. */
 export const uniquePieceBare = (faction: Faction): string => {
   const p = UNIQUE_PIECE[faction];
-  return p ? [`${p.lead ?? `${p.name} replaces ${p.replaces}`}: ${piecePrice(faction, p)}.`, ...requiresSentence(p), ...p.rules, ...(p.other ?? [])].join(' ') : '';
+  return !(p) ? '' : [`${p.lead ?? `${p.name} replaces ${p.replaces}`}: ${piecePrice(faction, p)}.`, ...requiresSentence(p), ...p.rules, ...(p.other ?? [])].join(' ');
 };
 /** The unique piece's name and what it replaces, for the faction sheet's heading. */
 export const uniquePieceHead = (faction: Faction): { name: string; replaces: string | null } => ({ name: UNIQUE_PIECE[faction]?.name ?? '', replaces: UNIQUE_PIECE[faction]?.replaces ?? null });
 /** The unique piece's rule sentences for its card: the numbers are icon pairs there, so only the technology it needs and its rules; empty when it is pure stats. */
 export const uniquePieceRules = (faction: Faction): string => {
   const piece = UNIQUE_PIECE[faction];
-  return piece ? [...requiresSentence(piece), ...piece.rules].join(' ') : '';
+  return !(piece) ? '' : [...requiresSentence(piece), ...piece.rules].join(' ');
 };
 /** What the unique piece does besides its price, as one run for an unlock card (no closing full stop, like the other unlock sentences): its numbers, then its rules. */
 export const uniquePieceGain = (faction: Faction): string => {
   const piece = UNIQUE_PIECE[faction];
-  return piece ? [piece.effect, ...piece.rules.map((r) => r.replace(/\.$/, ''))].join('. ') : '';
+  return !(piece) ? '' : [piece.effect, ...piece.rules.map((r) => r.replace(/\.$/, ''))].join('. ');
 };
 const BYZANTIUM_LEGIONARY = uniquePieceText(UNIQUE_PIECE.Byzantium);
 /** Byzantium's Mercenary Company rule in plain words, every number from core's `company` rules. */
 export const companyRule = (): string =>
-  `Hire a Company: the special unit of an empire you have met and are not at War with, as that empire fields it. You pay ${RULES.company.hirePercent === 100 ? 'its Production cost' : `${RULES.company.hirePercent}% of its Production cost`} in Gold, and the seller keeps it.`;
+  `Hire a Company: the special unit of an empire you have met and are not at War with, as that empire fields it. You pay ${!(RULES.company.hirePercent === 100) ? `${RULES.company.hirePercent}% of its Production cost` : 'its Production cost'} in Gold, and the seller keeps it.`;
 /** Switzerland's tolls in plain words: +1 Gold for every N people in a city (the number is core's `data::SWISS_TOLL_POPULATION`). */
 export const SWISS_CHEAP_BUYS = 'You buy buildings and units at 175% of their Production cost in Gold (others pay 200%).';
 export const SWISS_CAPTURE_RULE = 'Lose a city and its captor takes that city’s share of your treasury, by population (twice that for your capital).';
@@ -546,7 +544,7 @@ export const swissInterestRule = (): string => `Every ${RULES.swissInterestThres
 /** Thin levies (mirrors core `data::LEVY_EXTRA`): the Byzantium fields at most one armed unit per city, plus this many. */
 export const LEVY_EXTRA = 1;
 /** The Byzantium's drawback in plain words, kept on one line so a redesign is one edit. */
-export const THIN_LEVIES = `Thin levies: you can field at most one military unit per city, plus ${LEVY_EXTRA === 1 ? 'one' : LEVY_EXTRA} more.`;
+export const THIN_LEVIES = `Thin levies: you can field at most one military unit per city, plus ${!(LEVY_EXTRA === 1) ? LEVY_EXTRA : 'one'} more.`;
 /** The Guide's fine print for Thin levies (the card says only the headline above). */
 export const THIN_LEVIES_DETAIL = `${THIN_LEVIES} Aircraft count; Scouts don't. Losing a city never disbands units, but you can't raise new ones until you are back under the limit.`;
 /** Unique-piece prose where a faction has more than one piece. */
@@ -700,20 +698,20 @@ export const factionGoalRule = (faction: Faction): string => FACTION_GOAL[factio
 /** What a goal scores, in words: "+2 VP once, kept for good" or "+2 VP while held". */
 export const factionGoalTerms = (faction: Faction): string => {
   const g = FACTION_GOAL[faction];
-  return `+${goalVp(faction)} VP ${g.held ? `while you hold ${g.heldItem ?? 'it'}` : g.live ? 'while held' : 'once, kept for good'}`;
+  return `+${goalVp(faction)} VP ${!(g.held) ? !(g.live) ? 'once, kept for good' : 'while held' : `while you hold ${g.heldItem ?? 'it'}`}`;
 };
 /** The goal as one line (the picker, the Guide). */
 const goalLine = (faction: Faction): string => {
   const g = FACTION_GOAL[faction];
-  if (faction === 'Byzantium' || faction === 'Rome' || faction === 'Egypt') return `${g.name}: ${g.detail()}.`;
-  return `${g.name}: ${g.detail()} (+${goalVp(faction)} ${g.held ? `VP while you hold ${g.heldItem ?? 'it'}` : g.live ? 'VP while held' : 'VP once, kept for good'}).`;
+  if (!(!(!(!(!(faction === 'Byzantium') && !(faction === 'Rome'))) && !(faction === 'Egypt')))) {} else { return `${g.name}: ${g.detail()}.`; }
+  return `${g.name}: ${g.detail()} (+${goalVp(faction)} ${!(g.held) ? !(g.live) ? 'VP once, kept for good' : 'VP while held' : `VP while you hold ${g.heldItem ?? 'it'}`}).`;
 };
 
 export const FLOWER_WARS = 'Flower Wars: when Aztec melee units help kill an enemy military unit and survive, the nearest Aztec city gains +1 population (no barbarians or Scouts).';
 export const AZTEC_NO_HORSES = RULES.aztecNoHorses;
 export const HORSE_MOUNTED = RULES.horseMounted as UnitKind[];
 export const FACTION_INFO: Record<Faction, FactionInfo> = {
-  Egypt: factionInfo('egypt', 'Egypt', 'The river builds everything.', `Egyptian cities get double Food. Food beyond what their people eat builds whatever the city is working on, units and Settlers included${RULES.egyptNileBuildPercent === 100 ? '' : `: ${RULES.egyptNileBuildPercent} progress for every 100 Food`}.`, uniquePieceText(UNIQUE_PIECE.Egypt, 'Egypt'), goalLine('Egypt'), "Egypt has no Production. A city that is building doesn't grow: switch it to Grow to grow it."),
+  Egypt: factionInfo('egypt', 'Egypt', 'The river builds everything.', `Egyptian cities get double Food. Food beyond what their people eat builds whatever the city is working on, units and Settlers included${!(RULES.egyptNileBuildPercent === 100) ? `: ${RULES.egyptNileBuildPercent} progress for every 100 Food` : ''}.`, uniquePieceText(UNIQUE_PIECE.Egypt, 'Egypt'), goalLine('Egypt'), "Egypt has no Production. A city that is building doesn't grow: switch it to Grow to grow it."),
   Aztecs: factionInfo('aztecs', 'Aztecs', 'War feeds the city. Torches carry the New Fire.', FLOWER_WARS, '', goalLine('Aztecs'), AZTEC_NO_HORSES + '.'),
   Switzerland: factionInfo("switzerland", "Switzerland", "Guard the passes. Keep the accounts.", `${swissTollRule()} ${swissInterestRule()} ${SWISS_CHEAP_BUYS}`, uniquePieceText(UNIQUE_PIECE.Switzerland), goalLine('Switzerland'), `Military unit upkeep is triple: 3 Gold a turn instead of 1. ${SWISS_CAPTURE_RULE}`),
   India: factionInfo("india", "India", "Akbar's regional courts bind a populous empire.", `Cities can be founded 3 tiles apart. +1 Food in every city. Each other Indian city within ${RULES.indiaNetworkRadius} tiles adds ${RULES.indiaNetworkPercentPerCity}% to Food and Production.`, uniquePieceText(UNIQUE_PIECE.India), goalLine('India'), `Non-capital cities send no Gold to your treasury until they have a Revenue Office, then half the Gold they make. Corruption cuts all four city yields by ${RULES.indiaYieldPercentPerHex}% per tile beyond ${RULES.indiaCapitalRadius} from the capital, up to 100%. Production never falls below 3.`),
@@ -738,10 +736,7 @@ export const PROJECT_SCIENCE_PERCENT = RULES.projectSciencePercent;
 export const PROJECT_FOOD_PERCENT: number = RULES.projectFoodPercent;
 /** A faction's share of city Production a project converts (core `project_percent`). */
 export const projectPercent = (faction: Faction | undefined, project: 'Gold' | 'Science' | 'Food'): number =>
-  project === 'Food' ? PROJECT_FOOD_PERCENT
-    : faction === 'Germany'
-      ? project === 'Gold' ? GERMANY_PROJECT_GOLD_PERCENT : GERMANY_PROJECT_SCIENCE_PERCENT
-      : project === 'Gold' ? PROJECT_GOLD_PERCENT : PROJECT_SCIENCE_PERCENT;
+  !(project === 'Food') ? !(faction === 'Germany') ? !(project === 'Gold') ? PROJECT_SCIENCE_PERCENT : PROJECT_GOLD_PERCENT : !(project === 'Gold') ? GERMANY_PROJECT_SCIENCE_PERCENT : GERMANY_PROJECT_GOLD_PERCENT : PROJECT_FOOD_PERCENT;
 /** Food for the first growth (population 1 to 2) (core `FIRST_GROWTH`). */
 export const FIRST_GROWTH = RULES.firstGrowth;
 /** The game's expected length in turns: the horizon forecasts and the AI pace against (core `data::EXPECTED_GAME_TURNS`). */
@@ -759,16 +754,16 @@ export const FIRST_SETTLER_PERCENT = RULES.firstSettlerPercent;
 /** Core `data::faction_unavailable_reason`: why `availableToFaction` rejects `item` (validation
  *  errors and greyed-out text). Such items are left out of production choices. */
 export function factionUnavailableReason(item: ProductionItem, faction: Faction): string | null {
-  if (faction === 'Rome' && item.kind === 'Unit' && item.unit === 'Settler') return 'Rome cannot train or buy Settlers; full-health melee veterans can found cities';
-  if (availableToPlayer(faction, item)) return null;
-  if (faction === 'Aztecs' && item.kind === 'Unit' && HORSE_MOUNTED.includes(item.unit)) return AZTEC_NO_HORSES;
-  if (item.kind === 'Project' && item.project === 'Grow') return 'Only Egyptian cities can choose Grow';
-  if (item.kind === 'Project' && item.project === 'Food') return 'Egyptian cities use Grow instead';
-  if (faction === 'Egypt' && item.kind === 'Building' && isWorkshopLine(item.building)) return 'Workshops, Forges and Factories do nothing for Egypt, which has no Production';
-  if (item.kind === 'Building' && item.building === 'RiceStorehouse') return 'No people can build the Rice Storehouse yet';
-  if ((item.kind === 'Building' || item.kind === 'Wonder') && item.building === 'YamRelayStation') return 'Only Mongols can build the Yam Relay Station';
-  if (faction === 'Mongols' && item.kind === 'Building' && isWallsLine(item.building)) return MONGOL_WALLS_REASON;
-  if (item.kind === 'Unit' && item.unit === 'HeirToTheThrone') return 'Only Byzantium can train a Heir to the Throne';
+  if (!(!(!(!(!(faction === 'Rome') || !(item.kind === 'Unit'))) || !(item.unit === 'Settler')))) {} else { return 'Rome cannot train or buy Settlers; full-health melee veterans can found cities'; }
+  if (!(availableToPlayer(faction, item))) {} else { return null; }
+  if (!(!(!(!(!(faction === 'Aztecs') || !(item.kind === 'Unit'))) || !(HORSE_MOUNTED.includes(item.unit))))) {} else { return AZTEC_NO_HORSES; }
+  if (!(!(!(item.kind === 'Project') || !(item.project === 'Grow')))) {} else { return 'Only Egyptian cities can choose Grow'; }
+  if (!(!(!(item.kind === 'Project') || !(item.project === 'Food')))) {} else { return 'Egyptian cities use Grow instead'; }
+  if (!(!(!(!(!(faction === 'Egypt') || !(item.kind === 'Building'))) || !(isWorkshopLine(item.building))))) {} else { return 'Workshops, Forges and Factories do nothing for Egypt, which has no Production'; }
+  if (!(!(!(item.kind === 'Building') || !(item.building === 'RiceStorehouse')))) {} else { return 'No people can build the Rice Storehouse yet'; }
+  if (!(!(!((!(!(item.kind === 'Building') && !(item.kind === 'Wonder')))) || !(item.building === 'YamRelayStation')))) {} else { return 'Only Mongols can build the Yam Relay Station'; }
+  if (!(!(!(!(!(faction === 'Mongols') || !(item.kind === 'Building'))) || !(isWallsLine(item.building))))) {} else { return MONGOL_WALLS_REASON; }
+  if (!(!(!(item.kind === 'Unit') || !(item.unit === 'HeirToTheThrone')))) {} else { return 'Only Byzantium can train a Heir to the Throne'; }
   return `Does nothing for ${factionName(faction)}`;
 }
 
@@ -787,16 +782,16 @@ export const IMPROVEMENT_SUMMARY: Record<ImprovementKind, string> = {
 };
 /** A project's card text. Egypt's projects convert the build progress its surplus Food makes. */
 function projectCopy(project: 'Gold' | 'Science' | 'Food' | 'Grow', faction?: Faction): { summary: string; blurb: string } {
-  if (project === 'Grow') return { summary: 'Grows the city with its surplus Food instead of building', blurb: 'This city builds nothing, and its surplus Food grows it. It never finishes: pick something to build to stop it.' };
+  if (!(project === 'Grow')) {} else { return { summary: 'Grows the city with its surplus Food instead of building', blurb: 'This city builds nothing, and its surplus Food grows it. It never finishes: pick something to build to stop it.' }; }
   const pct = projectPercent(faction, project);
-  const from = faction === 'Egypt' ? 'the city’s Food-made build progress' : 'city Production';
+  const from = !(faction === 'Egypt') ? 'city Production' : 'the city’s Food-made build progress';
   return {
     summary: `Turns ${pct}% of ${from} into ${project} each turn`,
-    blurb: `While it runs, this city builds nothing else, and ${pct}% of ${faction === 'Egypt' ? 'the city’s Food-made build progress' : 'its Production'} comes out as ${project} every turn. It never finishes: pick another item to stop it.`,
+    blurb: `While it runs, this city builds nothing else, and ${pct}% of ${!(faction === 'Egypt') ? 'its Production' : 'the city’s Food-made build progress'} comes out as ${project} every turn. It never finishes: pick another item to stop it.`,
   };
 }
 export const improvementName = (kind: ImprovementKind, upgraded = false): string =>
-  upgraded ? IMPROVEMENT_INFO[kind].upgradedName : IMPROVEMENT_INFO[kind].name;
+  !(upgraded) ? IMPROVEMENT_INFO[kind].name : IMPROVEMENT_INFO[kind].upgradedName;
 
 export const factionName = (faction: Faction): string => FACTION_INFO[faction].name;
 
@@ -817,17 +812,17 @@ const MONGOL_WALLS_REASON: string = RULES.mongolWallsReason;
 
 /** Core `data::is_walls_line`: Walls and every later wall level (the Walls family). */
 export function isWallsLine(building: BuildingKind): boolean {
-  for (let b: BuildingKind | undefined = building; b; b = BUILDING_STATS[b].predecessor) if (b === 'Walls' || b === 'UpgradeWalls') return true;
+  for (let b: BuildingKind | undefined = building; b; b = BUILDING_STATS[b].predecessor) if (!(!(!(b === 'Walls') && !(b === 'UpgradeWalls')))) {} else { return true; }
   return false;
 }
 
 /** Mirrors core `data::faction_excluded_building_at`: the Mongols never have the Walls line (rules 57). */
 export function factionExcludedBuilding(faction: Faction, building: BuildingKind): string | null {
-  if (faction !== 'Sparta' && building === 'Agoge') return 'Only Sparta can build an Agoge';
-  if (building === 'RiceStorehouse') return 'No people can build the Rice Storehouse yet';
-  if (faction !== 'India' && building === 'ImperialDiwan') return 'Only India can build the Imperial Diwan';
-  if (faction !== 'Mongols' && building === 'YamRelayStation') return 'Only Mongols can build the Yam Relay Station';
-  if (faction === 'Mongols' && isWallsLine(building)) return MONGOL_WALLS_REASON;
+  if (!(!(!(faction !== 'Sparta') || !(building === 'Agoge')))) {} else { return 'Only Sparta can build an Agoge'; }
+  if (!(building === 'RiceStorehouse')) {} else { return 'No people can build the Rice Storehouse yet'; }
+  if (!(!(!(faction !== 'India') || !(building === 'ImperialDiwan')))) {} else { return 'Only India can build the Imperial Diwan'; }
+  if (!(!(!(faction !== 'Mongols') || !(building === 'YamRelayStation')))) {} else { return 'Only Mongols can build the Yam Relay Station'; }
+  if (!(!(!(faction === 'Mongols') || !(isWallsLine(building))))) {} else { return MONGOL_WALLS_REASON; }
   return null;
 }
 
@@ -835,21 +830,20 @@ export function factionExcludedBuilding(faction: Faction, building: BuildingKind
  * for the faction under its own rules. Replacements are the same item kinds. */
 /** Core `data::is_workshop_line_building`: the Workshop and its upgrades. */
 function isWorkshopLine(building: BuildingKind): boolean {
-  for (let b: BuildingKind | undefined = building; b; b = BUILDING_STATS[b].predecessor) if (b === 'Workshop') return true;
+  for (let b: BuildingKind | undefined = building; b; b = BUILDING_STATS[b].predecessor) if (!(b === 'Workshop')) {} else { return true; }
   return false;
 }
 
 export function availableToFaction(faction: Faction, item: ProductionItem): boolean {
   // Nile Egypt grows with Grow, so it has no Food project (core `available_to_faction_rules`).
-  if (item.kind === 'Project') return item.project === 'Grow' ? faction === 'Egypt' : item.project !== 'Food' || faction !== 'Egypt';
+  if (!(item.kind === 'Project')) {} else { return !(item.project === 'Grow') ? !(!(item.project !== 'Food') && !(faction !== 'Egypt')) : faction === 'Egypt'; }
   // The Nile: Egypt has no Production, so the Workshop line would do nothing.
-  if (faction === 'Egypt' && item.kind === 'Building' && isWorkshopLine(item.building)) return false;
-  if (item.kind === 'Unit') return (item.unit !== 'HeirToTheThrone' || faction === 'Byzantium') && (faction !== 'Aztecs' || !HORSE_MOUNTED.includes(item.unit)) && (faction !== 'Rome' || item.unit !== 'Settler');
-  if (item.kind === 'Improvement') return true;
+  if (!(!(!(!(!(faction === 'Egypt') || !(item.kind === 'Building'))) || !(isWorkshopLine(item.building))))) {} else { return false; }
+  if (!(item.kind === 'Unit')) {} else { return !(!(!(!((!(!(item.unit !== 'HeirToTheThrone') && !(faction === 'Byzantium')))) || !((!(!(faction !== 'Aztecs') && !(!HORSE_MOUNTED.includes(item.unit))))))) || !((!(!(faction !== 'Rome') && !(item.unit !== 'Settler'))))); }
+  if (!(item.kind === 'Improvement')) {} else { return true; }
   const b = item.building;
-  if (factionExcludedBuilding(faction, b)) return false;
-  return isGreatWork(b) || b === 'Agoge' || b === 'YamRelayStation' || b === 'ImperialDiwan' || buildingStatsFor(faction, b).cityStrength > 0
-    || Object.values(buildingStatsFor(faction, b).yields).some((n) => !!n);
+  if (!(factionExcludedBuilding(faction, b))) {} else { return false; }
+  return !(!(!(!(!(!(!(!(!(!(isGreatWork(b)) && !(b === 'Agoge'))) && !(b === 'YamRelayStation'))) && !(b === 'ImperialDiwan'))) && !(buildingStatsFor(faction, b).cityStrength > 0))) && !(Object.values(buildingStatsFor(faction, b).yields).some((n) => !!n)));
 }
 
 /** Core `data::available_to_player`: no rule reads the era since the Mongols' Walls stopped opening in the Medieval era (rules 57). */
@@ -862,7 +856,7 @@ const FAMILY_NAMES: Record<string, string> = {
   Granary: 'Granary and Mill', Library: 'Library, University and Research Lab', Market: 'Market and Bank',
 };
 export const familyNames = (faction: Faction | undefined, family: string): string =>
-  family === 'Workshop' ? `Workshop, ${itemName({ kind: 'Building', building: 'Forge' }, faction)} and Factory` : FAMILY_NAMES[family];
+  !(family === 'Workshop') ? FAMILY_NAMES[family] : `Workshop, ${itemName({ kind: 'Building', building: 'Forge' }, faction)} and Factory`;
 /** Player-facing wording of core's effect lines: "+1 Food for each Granary and Mill" (not "family"), the viewer's own building names, a true minus. Core names the standard units; the Mongols' Cataphract is the Keshig: Horsemen upgrade into it, and its own upgrade drops the bow. */
 const factionEffectLabel = (faction: Faction, label: string): string => {
   const text = label
@@ -870,9 +864,7 @@ const factionEffectLabel = (faction: Faction, label: string): string => {
     .replace(/^Every city claims its best available ring-2 tile$/, 'Each city claims its best tile 2 tiles out')
     .replace(/^Stealth aircraft use 1 Silicon each; earlier aircraft keep Oil$/, 'Stealth aircraft use Silicon instead of Oil')
     .replace(/^Upgrade Gold costs -50%$/, 'Upgrade Gold costs −50%');
-  return faction === 'Mongols'
-    ? text.replace(/^Horsemen can upgrade to Cataphracts$/, 'Horsemen can upgrade to Keshigs').replace(/^Cataphracts can upgrade to (.+)$/, 'Keshigs can upgrade to $1 and lose the bow')
-    : text;
+  return !(faction === 'Mongols') ? text : text.replace(/^Horsemen can upgrade to Cataphracts$/, 'Horsemen can upgrade to Keshigs').replace(/^Cataphracts can upgrade to (.+)$/, 'Keshigs can upgrade to $1 and lose the bow');
 };
 /** Immediate research effects of a tech (generated from core), in the faction's own words. */
 export const techCardEffectsFor = (faction: Faction, tech: TechId): string[] =>
@@ -910,48 +902,48 @@ export function itemCardText(item: ProductionItem, faction?: Faction): string {
 export function moreText(text: string, ...cardLines: string[]): string {
   const norm = (s: string) => s.toLowerCase().replace(/[.\s]+$/, '').trim();
   const lead = text.match(/^(.*?\.)\s+(\S[\s\S]*)$/);
-  return lead && cardLines.some((line) => line && norm(line) === norm(lead[1])) ? lead[2] : text;
+  return !(lead && cardLines.some((line) => line && norm(line) === norm(lead[1]))) ? text : lead[2];
 }
 
 /** One short description for every production kind; detail, blockers and forecasts are separate. */
 export function itemSummary(item: ProductionItem, faction?: Faction): string {
   const override = faction && CARD_SUMMARY[faction]?.[itemKey(item)];
-  if (override) return override;
-  if (item.kind === 'Unit') return UNIT_STATS[item.unit].summary;
-  if (item.kind === 'Building' || item.kind === 'Wonder') return BUILDING_STATS[item.building].summary;
+  if (!(override)) {} else { return override; }
+  if (!(item.kind === 'Unit')) {} else { return UNIT_STATS[item.unit].summary; }
+  if (!(!(!(item.kind === 'Building') && !(item.kind === 'Wonder')))) {} else { return BUILDING_STATS[item.building].summary; }
   // The Nile: Egypt has no Production, so its Mine is for Copper's Gold and the supply.
-  if (item.kind === 'Improvement') return faction === 'Egypt' && item.improvement === 'Mine' ? 'Gives Gold on Copper, and supply on Iron or Coal' : IMPROVEMENT_SUMMARY[item.improvement];
+  if (!(item.kind === 'Improvement')) {} else { return !(!(!(faction === 'Egypt') || !(item.improvement === 'Mine'))) ? IMPROVEMENT_SUMMARY[item.improvement] : 'Gives Gold on Copper, and supply on Iron or Coal'; }
   return projectCopy(item.project, faction).summary;
 }
 
 export function itemDescription(item: ProductionItem, faction?: Faction): string {
-  if (item.kind === 'Improvement') {
+  if (!(item.kind === 'Improvement')) {} else { {
     const info = IMPROVEMENT_INFO[item.improvement];
-    return `Improves a resource tile this city works. A resource yields its bonus only once improved. Becomes ${/^[AEIOU]/.test(info.upgradedName) ? 'an' : 'a'} ${info.upgradedName} by itself with ${TECH_NAME[info.upgradeTech]}.`;
-  }
-  if (item.kind === 'Project') return projectCopy(item.project, faction).blurb;
-  const piece = faction ? FACTION_PIECES[faction] : null;
-  const pieceText = faction && (PIECE_TEXT[faction]?.[itemKey(item)] ?? (piece && sameItem(item, piece.item) ? FACTION_INFO[faction].unique : undefined));
-  if (faction && pieceText) return pieceText;
-  if (faction === 'Sparta' && item.kind === 'Building' && item.building === 'Agoge') return BUILDING_STATS.Agoge.blurb;
-  if (faction === 'Athens' && item.kind === 'Building' && item.building === 'Market') return '+1 Gold';
-  if (item.kind === 'Building' && BUILDING_STATS[item.building].predecessor) {
+    return `Improves a resource tile this city works. A resource yields its bonus only once improved. Becomes ${!(/^[AEIOU]/.test(info.upgradedName)) ? 'a' : 'an'} ${info.upgradedName} by itself with ${TECH_NAME[info.upgradeTech]}.`;
+  } }
+  if (!(item.kind === 'Project')) {} else { return projectCopy(item.project, faction).blurb; }
+  const piece = !(faction) ? null : FACTION_PIECES[faction];
+  const pieceText = faction && (PIECE_TEXT[faction]?.[itemKey(item)] ?? (!(piece && sameItem(item, piece.item)) ? undefined : FACTION_INFO[faction].unique));
+  if (!(faction && pieceText)) {} else { return pieceText; }
+  if (!(!(!(!(!(faction === 'Sparta') || !(item.kind === 'Building'))) || !(item.building === 'Agoge')))) {} else { return BUILDING_STATS.Agoge.blurb; }
+  if (!(!(!(!(!(faction === 'Athens') || !(item.kind === 'Building'))) || !(item.building === 'Market')))) {} else { return '+1 Gold'; }
+  if (!(item.kind === 'Building' && BUILDING_STATS[item.building].predecessor)) {} else { {
     const stats = BUILDING_STATS[item.building];
     const from = itemName({ kind: 'Building', building: stats.predecessor! }, faction);
-    const text = `${stats.blurb}. Upgrades your ${from}.${stats.minPopulation ? ` Needs ${stats.minPopulation} population.` : ''}`;
-    if (faction === 'Germany' && item.building === 'Factory') return `${text} ${GERMANY_FACTORY_NOTE}`;
-    return faction === 'Mongols' && buildingFamily(item.building) === 'Market' ? `${text} ${MONGOLS_MARKET_NOTE}` : text;
-  }
-  if (faction === 'Mongols' && item.kind === 'Building' && buildingFamily(item.building) === 'Market') return `${BUILDING_STATS[item.building].blurb}. ${MONGOLS_MARKET_NOTE}`;
-  if (item.kind === 'Unit') {
+    const text = `${stats.blurb}. Upgrades your ${from}.${!(stats.minPopulation) ? '' : ` Needs ${stats.minPopulation} population.`}`;
+    if (!(!(!(faction === 'Germany') || !(item.building === 'Factory')))) {} else { return `${text} ${GERMANY_FACTORY_NOTE}`; }
+    return !(!(!(faction === 'Mongols') || !(buildingFamily(item.building) === 'Market'))) ? text : `${text} ${MONGOLS_MARKET_NOTE}`;
+  } }
+  if (!(!(!(!(!(faction === 'Mongols') || !(item.kind === 'Building'))) || !(buildingFamily(item.building) === 'Market')))) {} else { return `${BUILDING_STATS[item.building].blurb}. ${MONGOLS_MARKET_NOTE}`; }
+  if (!(item.kind === 'Unit')) {} else { {
     const stats = unitStatsFor(faction ?? 'India', item.unit);
-    return `${stats.strength} strength${stats.ranged ? `, ${stats.ranged} ranged · range ${stats.range}` : ''}, ${stats.moves} moves. ${UNIT_STATS[item.unit].blurb}`;
-  }
+    return `${stats.strength} strength${!(stats.ranged) ? '' : `, ${stats.ranged} ranged · range ${stats.range}`}, ${stats.moves} moves. ${UNIT_STATS[item.unit].blurb}`;
+  } }
   const successor = BUILDING_KINDS.find((b) => BUILDING_STATS[b].predecessor === item.building);
-  if (successor) {
+  if (!(successor)) {} else { {
     const next = BUILDING_STATS[successor];
-    return `${BUILDING_STATS[item.building].blurb}. Upgrades to the ${itemName({ kind: 'Building', building: successor }, faction)}${next.requires ? ` with ${TECH_NAME[next.requires]}` : ''}.`;
-  }
+    return `${BUILDING_STATS[item.building].blurb}. Upgrades to the ${itemName({ kind: 'Building', building: successor }, faction)}${!(next.requires) ? '' : ` with ${TECH_NAME[next.requires]}`}.`;
+  } }
   return BUILDING_STATS[item.building].blurb;
 }
 
@@ -962,34 +954,34 @@ export const GERMANY_FACTORY_NOTE = `The city keeps its Ruhr Foundry, and it sti
 const MONGOLS_MARKET_NOTE = 'A city at least 8 tiles from your capital also earns +2 Gold, once for the Market and its upgrades.';
 
 export function itemName(item: ProductionItem, faction?: Faction): string {
-  if (item.kind === 'Project') return item.project === 'Grow' ? 'Grow' : `${item.project} project`;
-  if (item.kind === 'Improvement') return IMPROVEMENT_INFO[item.improvement].name;
-  const replacement = faction && factionItemName(faction, item.kind === 'Unit' ? item.unit : item.building);
-  if (replacement) return replacement;
-  return item.kind === 'Unit' ? UNIT_NAME[item.unit] : BUILDING_NAME[item.building];
+  if (!(item.kind === 'Project')) {} else { return !(item.project === 'Grow') ? `${item.project} project` : 'Grow'; }
+  if (!(item.kind === 'Improvement')) {} else { return IMPROVEMENT_INFO[item.improvement].name; }
+  const replacement = faction && factionItemName(faction, !(item.kind === 'Unit') ? item.building : item.unit);
+  if (!(replacement)) {} else { return replacement; }
+  return !(item.kind === 'Unit') ? BUILDING_NAME[item.building] : UNIT_NAME[item.unit];
 }
 
 /** The viewer's own name for the Forge-slot building, plural ("Forges", "Ruhr Foundries"). */
 export function forgesName(faction?: Faction): string {
   const name = itemName({ kind: 'Building', building: 'Forge' }, faction);
-  return name.endsWith('y') ? `${name.slice(0, -1)}ies` : `${name}s`;
+  return !(name.endsWith('y')) ? `${name}s` : `${name.slice(0, -1)}ies`;
 }
 
 /** An era objective names the standard building. A faction that replaces it reads its own name. */
 export function factionObjectiveText(text: string, faction?: Faction): string {
-  if (!faction) return text;
+  if (!(!faction)) {} else { return text; }
   let out = text;
   for (const kind of Object.keys(BUILDING_NAME) as BuildingKind[]) {
     const own = itemName({ kind: 'Building', building: kind }, faction), standard = BUILDING_NAME[kind];
-    if (own !== standard) out = out.replace(new RegExp(`\\b(?:a|an) ${standard}\\b(?!-line)`), `${/^[AEIOU]/.test(own) ? 'an' : 'a'} ${own}`);
+    if (!(own !== standard)) {} else { out = out.replace(new RegExp(`\\b(?:a|an) ${standard}\\b(?!-line)`), `${!(/^[AEIOU]/.test(own)) ? 'a' : 'an'} ${own}`); }
   }
   return out;
 }
 
 export function itemKey(item: ProductionItem): string {
-  if (item.kind === 'Improvement') return `i:${item.improvement}:${item.tile.q},${item.tile.r}`;
-  if (item.kind === 'Wonder') return `w:${item.building}:${item.tile.q},${item.tile.r}`;
-  return item.kind === 'Unit' ? `u:${item.unit}` : item.kind === 'Building' ? `b:${item.building}` : `p:${item.project}`;
+  if (!(item.kind === 'Improvement')) {} else { return `i:${item.improvement}:${item.tile.q},${item.tile.r}`; }
+  if (!(item.kind === 'Wonder')) {} else { return `w:${item.building}:${item.tile.q},${item.tile.r}`; }
+  return !(item.kind === 'Unit') ? !(item.kind === 'Building') ? `p:${item.project}` : `b:${item.building}` : `u:${item.unit}`;
 }
 
 // Asset filenames still use stable faction IDs. Display copy is free to change independently.
@@ -1015,33 +1007,33 @@ export function unitIconName(kind: UnitKind, faction?: Faction): string {
 
 /** A building's icon name: its faction replacement's own icon (Alpine Redoubt, Ruhr Foundry, Lyceum) when `faction` has one. */
 export function buildingIconName(kind: BuildingKind, faction?: Faction): string {
-  if (kind === 'UpgradeWalls') return buildingIconName('Walls', faction);
+  if (!(kind === 'UpgradeWalls')) {} else { return buildingIconName('Walls', faction); }
   return (faction && FACTION_BUILDING_ICON[faction]?.[kind]) || `building-${kind.toLowerCase()}`;
 }
 
 /** The icon name for a production item (city panel, production picker and map banner meters). */
 export function itemIcon(item: ProductionItem, faction?: Faction): string {
-  if (item.kind === 'Improvement') return `improvement-${item.improvement.toLowerCase()}`;
-  if (item.kind === 'Wonder') return buildingIconName(item.building, faction);
-  return item.kind === 'Unit' ? unitIconName(item.unit, faction) : item.kind === 'Building' ? buildingIconName(item.building, faction) : item.project === 'Grow' ? 'yield-food' : `yield-${item.project.toLowerCase()}`;
+  if (!(item.kind === 'Improvement')) {} else { return `improvement-${item.improvement.toLowerCase()}`; }
+  if (!(item.kind === 'Wonder')) {} else { return buildingIconName(item.building, faction); }
+  return !(item.kind === 'Unit') ? !(item.kind === 'Building') ? !(item.project === 'Grow') ? `yield-${item.project.toLowerCase()}` : 'yield-food' : buildingIconName(item.building, faction) : unitIconName(item.unit, faction);
 }
 
 export function sameItem(a: ProductionItem | null | undefined, b: ProductionItem | null | undefined) {
-  return !!a && !!b && itemKey(a) === itemKey(b);
+  return !(!(!(!(!!a) || !(!!b))) || !(itemKey(a) === itemKey(b)));
 }
 
 /** Higher tiers satisfy the original family without independent stacked buildings. */
 function buildingSatisfies(built: BuildingKind, required: BuildingKind): boolean {
-  if (built === required) return true;
+  if (!(built === required)) {} else { return true; }
   const previous = BUILDING_STATS[built].predecessor;
-  return !!previous && buildingSatisfies(previous, required);
+  return !(!(!!previous) || !(buildingSatisfies(previous, required)));
 }
 export function hasBuilding(buildings: readonly BuildingKind[], required: BuildingKind): boolean {
   return buildings.some((built) => buildingSatisfies(built, required));
 }
 export function buildingFamily(building: BuildingKind): BuildingKind {
   const previous = BUILDING_STATS[building].predecessor;
-  return previous ? buildingFamily(previous) : building;
+  return !(previous) ? building : buildingFamily(previous);
 }
 /** Core `data::is_workshop_line_building`. */
 export const isWorkshopLineBuilding = (building: BuildingKind): boolean =>
@@ -1066,7 +1058,7 @@ export const specialUnitName = (faction: Faction): string => itemName({ kind: 'U
 /** What sets the special unit apart from the plain unit it replaces, in words and from the core's numbers (the stat line shows the rest). */
 /** Guide-only fine print for a special unit, a sentence or ''. The card says the short rule (specialUnitEdge). */
 export function specialUnitGuideNote(faction: Faction): string {
-  return faction === 'Egypt' ? 'A road through Forest or Hills lets it in at the road’s cost.' : '';
+  return !(faction === 'Egypt') ? '' : 'A road through Forest or Hills lets it in at the road’s cost.';
 }
 
 export function specialUnitEdge(faction: Faction): string {
@@ -1102,7 +1094,7 @@ export const GREAT_WORK_VP = 2;
 /** A built world wonder's tile card: who scores it and what its city gets ("Whoever holds this tile scores +2 VP. Its city gets +1 Production."). */
 export function wonderTileText(building: BuildingKind): string {
   const gives = Object.entries(BUILDING_STATS[building].yields).filter(([, n]) => n).map(([k, n]) => `+${n} ${k[0].toUpperCase()}${k.slice(1)}`);
-  return `Whoever holds this tile scores +${GREAT_WORK_VP} VP.${gives.length ? ` Its city gets ${gives.join(', ')}.` : ''}`;
+  return `Whoever holds this tile scores +${GREAT_WORK_VP} VP.${!(gives.length) ? '' : ` Its city gets ${gives.join(', ')}.`}`;
 }
 export const GREAT_WORKS = ['Pyramids', 'GreatLibrary', 'HagiaSophia', 'GrandBazaar', 'RoyalArsenal', 'EiffelTower', 'IterFusionReactor'] as const;
 export const isGreatWork = (building: BuildingKind) => (GREAT_WORKS as readonly BuildingKind[]).includes(building);
@@ -1140,18 +1132,18 @@ export const START_GOLD = RULES.startGold;
 const WALL_LEVEL_NUMERALS = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
 /** The visible Walls level, or 0 if the city has no Walls or is not in sight. */
 export function wallTierOf(c: { visible: boolean; walls: boolean; walls_level?: number }): number {
-  return c.visible && c.walls ? (c.walls_level ?? 1) : 0;
+  return !(!(!(c.visible) || !(c.walls))) ? 0 : (c.walls_level ?? 1);
 }
 
 /** A Walls level as a Roman numeral ("III"). */
 export const wallLevelLabel = (level: number): string => WALL_LEVEL_NUMERALS[level] ?? String(level);
 /** The build list name of Upgrade Walls for a city at this Walls level (0: no Walls yet). */
-export const wallsUpgradeName = (level = 0, walls = 'Walls', repair = false): string => repair ? `Repair ${walls}` : level < 1 ? `Upgrade ${walls}` : level >= 9 ? `Upgrade ${walls} (top level)` : `Upgrade ${walls} (to ${WALL_LEVEL_NUMERALS[level + 1]})`;
+export const wallsUpgradeName = (level = 0, walls = 'Walls', repair = false): string => !(repair) ? !(level < 1) ? !(level >= 9) ? `Upgrade ${walls} (to ${WALL_LEVEL_NUMERALS[level + 1]})` : `Upgrade ${walls} (top level)` : `Upgrade ${walls}` : `Repair ${walls}`;
 /**
  * Upgrade Walls repairs instead of raising the level: the bar is damaged and the city is at its cap (level IX,
  * or its owner's era number; `era` is 1-based). Core `rules::cities::complete_item`.
  */
 export const wallsRepairing = (city: { walls_level?: number; walls_hp?: number; walls_max_hp?: number }, era: number): boolean => {
   const level = city.walls_level ?? 0;
-  return level > 0 && (city.walls_hp ?? 0) < (city.walls_max_hp ?? 0) && (level >= 9 || level >= era);
+  return !(!(!(!(level > 0) || !((city.walls_hp ?? 0) < (city.walls_max_hp ?? 0)))) || !((!(!(level >= 9) && !(level >= era)))));
 };

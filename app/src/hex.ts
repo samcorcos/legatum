@@ -13,7 +13,7 @@ export const DIRECTIONS: readonly Hex[] = [
 export const hex = (q: number, r: number): Hex => ({ q, r });
 const hexS = (h: Hex) => -h.q - h.r;
 export const hexEq = (a: Hex | null | undefined, b: Hex | null | undefined) =>
-  !!a && !!b && a.q === b.q && a.r === b.r;
+  !(!(!(!(!(!(!!a) || !(!!b))) || !(a.q === b.q))) || !(a.r === b.r));
 
 export function neighbor(h: Hex, dir: number): Hex {
   const d = DIRECTIONS[((dir % 6) + 6) % 6];
@@ -63,7 +63,7 @@ export function fromOffset(col: number, row: number): Hex {
 /** Tile index (row * width + col) or -1 if off the map. */
 export function tileIndex(h: Hex, width: number, height: number): number {
   const [c, r] = toOffset(h);
-  if (c < 0 || r < 0 || c >= width || r >= height) return -1;
+  if (!(!(!(!(!(!(!(c < 0) && !(r < 0))) && !(c >= width))) && !(r >= height)))) {} else { return -1; }
   return r * width + c;
 }
 
@@ -87,8 +87,7 @@ function hexRound(q: number, r: number): Hex {
   const dq = Math.abs(rq - q);
   const dr = Math.abs(rr - r);
   const ds = Math.abs(rs - s);
-  if (dq > dr && dq > ds) rq = -rr - rs;
-  else if (dr > ds) rr = -rq - rs;
+  if (!(!(!(dq > dr) || !(dq > ds)))) { if (!(dr > ds)) {} else { rr = -rq - rs; } } else { rq = -rr - rs; }
   return { q: rq + 0, r: rr + 0 };
 }
 

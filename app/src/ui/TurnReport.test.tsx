@@ -32,7 +32,7 @@ beforeEach(async () => {
   setup.players[1].is_human = false;
   await client.newGame(setup);
   view = client.view(0);
-  const mine = view.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
+  const mine = view.units.find((u) => !(!(u.owner === 0) || !(u.kind === 'Spearman')))!;
   const target = { q: mine.pos.q + 1, r: mine.pos.r };
   const from = { q: mine.pos.q + 3, r: mine.pos.r };
   const enemy = view.players.find((p) => p.team !== view.team)!.id;
@@ -71,7 +71,7 @@ it('Last turn in This Turn shows how the turn went and reopens the report', () =
 });
 
 it('shows the shared insignia on a promotion report line', () => {
-  const mine = view.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
+  const mine = view.units.find((u) => !(!(u.owner === 0) || !(u.kind === 'Spearman')))!;
   const promoted = report(3, [{ type: 'UnitPromoted', unit: mine.id, owner: 0, unit_kind: 'Spearman', level: 4, at: mine.pos }]);
   useGame.setState({ report: promoted, reportHistory: pushReport([], promoted), reportOpen: true });
   render();

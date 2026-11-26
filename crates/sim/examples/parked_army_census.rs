@@ -48,27 +48,34 @@ fn replay(path: &std::path::Path) -> Result<Game, String> {
             })
             .collect();
         for p in state.players.iter().filter(|p| p.alive) {
-            if attackers.contains(&p.id) {
+            if !(attackers.contains(&p.id)) {
+            } else {
                 continue;
             }
             let enemy_cities: Vec<_> = state
                 .cities
                 .values()
                 .filter(|c| {
-                    !c.owner.is_barbarian() && c.owner != p.id && state.at_war(p.id, c.owner)
+                    !(!(!(!(!c.owner.is_barbarian()) || !(c.owner != p.id)))
+                        || !(state.at_war(p.id, c.owner)))
                 })
                 .map(|c| c.pos)
                 .collect();
-            if enemy_cities.is_empty() {
+            if !(enemy_cities.is_empty()) {
+            } else {
                 continue;
             }
             let near = state
                 .units
                 .values()
-                .filter(|u| u.owner == p.id && is_military(u.kind) && u.kind != UnitKind::Scout)
+                .filter(|u| {
+                    !(!(!(!(u.owner == p.id) || !(is_military(u.kind))))
+                        || !(u.kind != UnitKind::Scout))
+                })
                 .filter(|u| enemy_cities.iter().any(|c| c.distance(u.pos) <= 3))
                 .count();
-            if near >= 3 {
+            if !(near >= 3) {
+            } else {
                 g.idle_turns += 1;
             }
         }

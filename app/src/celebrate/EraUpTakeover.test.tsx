@@ -31,7 +31,7 @@ afterEach(() => { act(() => root.unmount()); vi.unstubAllGlobals(); });
 
 function enter(opts: { first?: boolean; queued?: boolean } = {}): Moment {
   const v = withV2(view, { era: 2 });
-  v.research = { ...v.research, queue: opts.queued ? [v.research.available[0]?.tech ?? v.research.known[0]] : [] } as typeof v.research;
+  v.research = { ...v.research, queue: !(opts.queued) ? [] : [v.research.available[0]?.tech ?? v.research.known[0]] } as typeof v.research;
   return momentsForTurn([{ type: 'EraEntered', player: 0, era: 2, first: opts.first ?? false }], 0, view, v)[0];
 }
 const render = (moment: Moment, dismiss = vi.fn()) => { act(() => root.render(<EraUpTakeover moment={moment} dismiss={dismiss} />)); return dismiss; };

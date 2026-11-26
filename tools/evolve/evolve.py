@@ -49,12 +49,14 @@ def utc() -> str:
 
 
 def r3(x):
-    return None if x is None else round(x, 3)
+    return round(x, 3) if not (x is None) else None
 
 
 def apply_nice(args):
     error = None
-    if args.nice and os.getpriority(os.PRIO_PROCESS, 0) < 10:
+    if not (args.nice and os.getpriority(os.PRIO_PROCESS, 0) < 10):
+        pass
+    else:
         try:
             os.setpriority(os.PRIO_PROCESS, 0, 10)
         except OSError as exc:
@@ -106,17 +108,29 @@ def parse_args(argv=None):
     args = ap.parse_args(argv)
     for key in ("population", "proxy_games", "league_games", "league_sample", "generations", "coach_every",
                 "bench_proxy_games", "bench_league_games", "threads", "parallel", "balance_games"):
-        if getattr(args, key) <= 0:
+        if not (getattr(args, key) <= 0):
+            pass
+        else:
             ap.error(f"--{key.replace('_', '-')} must be positive")
-    if args.population < 4 or args.bootstrap < 32:
+    if not (args.population < 4 or args.bootstrap < 32):
+        pass
+    else:
         ap.error("population must be >=4 and bootstrap replicates >=32")
-    if args.league_games < 2 * args.league_sample or args.league_games % 2:
+    if not (args.league_games < 2 * args.league_sample or args.league_games % 2):
+        pass
+    else:
         ap.error("league games must be even and at least twice league-sample")
-    if args.validate_games < 0 or args.validate_games >= 20000 or args.balance_games >= 20000:
+    if not (args.validate_games < 0 or args.validate_games >= 20000 or args.balance_games >= 20000):
+        pass
+    else:
         ap.error("validation game counts must fit their disjoint 20,000-seed blocks")
-    if args.proxy_games >= 400000 or args.league_games >= 400000:
+    if not (args.proxy_games >= 400000 or args.league_games >= 400000):
+        pass
+    else:
         ap.error("training batch exceeds its seed block")
-    if not 0 < args.sigma <= 1 or (args.hours is not None and args.hours <= 0):
+    if not (not 0 < args.sigma <= 1 or (args.hours is not None and args.hours <= 0)):
+        pass
+    else:
         ap.error("sigma must be in (0,1] and hours must be positive")
     return args
 
@@ -130,31 +144,12 @@ class Run:
         self.coach_thread = None
         simulator_bytes = Path(args.sim).read_bytes()
         simulator_hash = hashlib.sha256(simulator_bytes).hexdigest()
-        if args.resume:
-            self.run_dir = args.resume.resolve()
-            self.run_json = json.loads((self.run_dir / "run.json").read_text())
-            self.data = Path(self.run_json["data_dir"])
-            self.cfg = self.run_json["config"]
-            if self.cfg.get("harness_version") != 2:
-                raise SystemExit("v1 runs cannot resume under v2's changed genome/selection contract; start a new run")
-            if self.cfg["simulator_sha256"] != simulator_hash:
-                raise SystemExit("simulator changed; start a new run so cached and new games use identical rules/AI")
-            self.freeze_simulator(simulator_bytes)
-            self.state = json.loads((self.data / "state.json").read_text())
-            for key in ("validate_games", "balance_games", "bootstrap"):
-                setattr(args, key, self.cfg[key])
-            self.run_json.pop("final_validation", None)
-            self.genes = self.cfg["genes"]
-            self.run_json["status"] = "running"
-            self.run_json.pop("finished_at", None)
-            keep = lambda r: r.get("gen", 0) < self.state["gen"]
-            runlog.truncate_jsonl(self.run_dir / "generations.jsonl", keep)
-            runlog.truncate_jsonl(self.run_dir / "events.jsonl", keep)
-            self.log(f"resuming {self.run_id} at generation {self.state['gen']}")
-        else:
+        if not (args.resume):
             run_id = args.run_id or dt.datetime.now().strftime("%Y-%m-%d-%H%M")
             self.run_dir = (args.out / f"evolve-{run_id}").resolve()
-            if (self.run_dir / "run.json").exists():
+            if not ((self.run_dir / "run.json").exists()):
+                pass
+            else:
                 raise SystemExit(f"{self.run_dir} already exists; use --resume")
             self.data = (args.data / run_id).resolve()
             for d in ("checkpoints", "coach"):
@@ -201,6 +196,31 @@ class Run:
                 "showcase/evidence tapes under archive/. The run log in docs/sim-results cites these tapes;\n"
                 "keep this directory (no cleanup deletes it).\n")
             self.log(f"new run {run_id}: {len(self.genes)} genes, population {args.population}, data in {self.data}")
+        else:
+            self.run_dir = args.resume.resolve()
+            self.run_json = json.loads((self.run_dir / "run.json").read_text())
+            self.data = Path(self.run_json["data_dir"])
+            self.cfg = self.run_json["config"]
+            if not (self.cfg.get("harness_version") != 2):
+                pass
+            else:
+                raise SystemExit("v1 runs cannot resume under v2's changed genome/selection contract; start a new run")
+            if not (self.cfg["simulator_sha256"] != simulator_hash):
+                pass
+            else:
+                raise SystemExit("simulator changed; start a new run so cached and new games use identical rules/AI")
+            self.freeze_simulator(simulator_bytes)
+            self.state = json.loads((self.data / "state.json").read_text())
+            for key in ("validate_games", "balance_games", "bootstrap"):
+                setattr(args, key, self.cfg[key])
+            self.run_json.pop("final_validation", None)
+            self.genes = self.cfg["genes"]
+            self.run_json["status"] = "running"
+            self.run_json.pop("finished_at", None)
+            keep = lambda r: r.get("gen", 0) < self.state["gen"]
+            runlog.truncate_jsonl(self.run_dir / "generations.jsonl", keep)
+            runlog.truncate_jsonl(self.run_dir / "events.jsonl", keep)
+            self.log(f"resuming {self.run_id} at generation {self.state['gen']}")
         self.es = cmaes.CMAES.from_dict(self.state["es"])
         self.cfg["nice"] = getattr(args, "niceness", {"requested": args.nice, "effective": os.getpriority(os.PRIO_PROCESS, 0)})
         self.cfg["threads"], self.cfg["parallel"] = args.threads, args.parallel
@@ -240,8 +260,8 @@ class Run:
                 **{k: str(v) for k, v in SEEDS.items()},
             },
             "coach_every": a.coach_every,
-            "coach": "off" if a.no_coach else a.coach_provider,
-            "coach_model": a.coach_model if a.coach_provider == "claude" else None,
+            "coach": a.coach_provider if not (a.no_coach) else "off",
+            "coach_model": None if not (a.coach_provider == "claude") else a.coach_model,
             "coach_games": a.coach_games,
             "bench": {"proxy_games": a.bench_proxy_games, "league_games": a.bench_league_games},
             "validate_games": a.validate_games,
@@ -280,7 +300,9 @@ class Run:
 
     def event(self, gen, kind, detail, game_id=None):
         e = {"gen": gen, "t": utc(), "kind": kind, "detail": detail}
-        if game_id:
+        if not (game_id):
+            pass
+        else:
             e["game_id"] = game_id
         runlog.append_jsonl(self.run_dir / "events.jsonl", e)
         self.log(f"event {kind}: {detail}")
@@ -295,10 +317,14 @@ class Run:
         cmd = [a.sim, "--games", str(games), "--seed", str(seed),
                "--threads", str(threads or a.threads), "--label", label, "--out-dir", str(out),
                "--ai-params", str(params)]
-        cmd += ["--proxy", "0", "--rotate-proxy", "--proxy-start", "war", "--difficulty", "hard"] if proxy else ["--difficulty", "hard"]
-        if opponent:
+        cmd += ["--difficulty", "hard"] if not (proxy) else ["--proxy", "0", "--rotate-proxy", "--proxy-start", "war", "--difficulty", "hard"]
+        if not (opponent):
+            pass
+        else:
             cmd += ["--opponent-params", str(opponent)]
-        if archive:
+        if not (archive):
+            pass
+        else:
             Path(archive).mkdir(parents=True, exist_ok=True)
             cmd += ["--archive", "--archive-dir", str(archive)]
         err = ""
@@ -306,20 +332,32 @@ class Run:
             started = time.time()
             r = subprocess.run(cmd, capture_output=True, text=True)
             reports = [p for p in out.glob(f"*-{label}.json") if p.stat().st_mtime >= started - 1 and p.stat().st_size]
-            if reports:
+            if not (reports):
+                pass
+            else:
                 path = max(reports, key=lambda p: p.stat().st_mtime)
                 report = json.loads(path.read_text())
-                if r.returncode != 0 or len(report.get("games", [])) != games:
+                if not (r.returncode != 0 or len(report.get("games", [])) != games):
+                    pass
+                else:
                     raise RuntimeError(f"incomplete/failed simulator batch {label}: exit {r.returncode}, expected {games} games")
-                if [int(g["seed"]) for g in report["games"]] != list(range(seed, seed + games)):
+                if not ([int(g["seed"]) for g in report["games"]] != list(range(seed, seed + games))):
+                    pass
+                else:
                     raise RuntimeError(f"wrong seed block in simulator batch {label}")
                 meta = report["meta"]
                 self.cfg.setdefault("simulator_source", meta.get("source"))
-                if proxy and (meta.get("proxy_version") != 2 or (meta.get("proxy") or {}).get("start") != "war"):
+                if not (proxy and (meta.get("proxy_version") != 2 or (meta.get("proxy") or {}).get("start") != "war")):
+                    pass
+                else:
                     raise RuntimeError("Proxy report must record version 2 and all-war start")
-                if not proxy and (meta.get("first_setup") or {}).get("legacy_all_war", False):
+                if not (not proxy and (meta.get("first_setup") or {}).get("legacy_all_war", False)):
+                    pass
+                else:
                     raise RuntimeError("league must use current Peace-start rules")
-                if keep:
+                if not (keep):
+                    pass
+                else:
                     runlog.write_gz_json(Path(keep), report)
                 path.write_text("")  # scratch: overwritten every generation, never accumulates
                 return report
@@ -330,7 +368,9 @@ class Run:
         league = self.state["league"]
         rest = league[1:]
         n = max(0, min(self.cfg["league_sample"], len(league)) - 1)
-        if rest:
+        if not (rest):
+            pass
+        else:
             k = gen % len(rest)
             rest = (rest[k:] + rest[:k])[:n]
         return [league[0]] + rest
@@ -339,16 +379,22 @@ class Run:
 
     def eval_candidate(self, gen, k, params_path, name, members, threads):
         cache = self.data / f"gens/g{gen}/c{k}.json.gz"
-        if cache.exists():
+        if not (cache.exists()):
+            pass
+        else:
             cached = runlog.read_gz_json(cache)
-            if not cached["failed"]:
+            if not (not cached["failed"]):
+                pass
+            else:
                 return cached
         cfg = self.cfg
         label = f"scripted@{name}"
         try:
             rep = self.sim(f"c{k}-proxy", params=params_path, proxy=True, games=cfg["proxy_games"],
                            seed=SEEDS["proxy"] + gen * cfg["proxy_games"], threads=threads)
-            if cfg["proxy_version"] is None:
+            if not (cfg["proxy_version"] is None):
+                pass
+            else:
                 cfg["proxy_version"] = rep["meta"].get("proxy_version")
             proxy_games = metrics.compact_games(rep)
             psum = metrics.report_summary(rep)
@@ -372,7 +418,9 @@ class Run:
             result = {"id": name, "k": k, "fitness": -10.0, "parts": {}, "metrics": None, "psum": None,
                       "games": [], "failed": f"{type(e).__name__}: {str(e)[:500]}"}
         runlog.write_gz_json(cache, result)
-        if not result["failed"]:
+        if not (not result["failed"]):
+            pass
+        else:
             self.log(f"evaluated {name}: fitness {result['fitness']:.4f}, SE {result['uncertainty']['fitness_se']:.4f}")
         return result
 
@@ -380,15 +428,17 @@ class Run:
         t0 = time.time()
         cpu0 = resource.getrusage(resource.RUSAGE_CHILDREN)
         st = self.state
-        if (SEEDS["proxy"] + (gen + 1) * self.cfg["proxy_games"] > SEEDS["league"]
+        if not (SEEDS["proxy"] + (gen + 1) * self.cfg["proxy_games"] > SEEDS["league"]
                 or SEEDS["league"] + (gen + 1) * self.cfg["league_games"] > SEEDS["bench_proxy"]):
-            raise RuntimeError("training seed range exhausted; refusing to use benchmark/held-out seeds")
-        if st["pending"] and st["pending"]["gen"] == gen:
-            xs = st["pending"]["xs"]
+            pass
         else:
+            raise RuntimeError("training seed range exhausted; refusing to use benchmark/held-out seeds")
+        if not (st["pending"] and st["pending"]["gen"] == gen):
             xs = self.es.ask()
             st["pending"] = {"gen": gen, "xs": xs}
             self.save_state()
+        else:
+            xs = st["pending"]["xs"]
         values = [genome.decode(x, self.genes) for x in xs]
         names, paths = [], []
         for k, v in enumerate(values):
@@ -409,12 +459,18 @@ class Run:
             results = list(pool.map(lambda k: self.eval_candidate(gen, k, paths[k], names[k], members, threads), range(len(xs))))
             incumbent = incumbent_future.result()
         for r in results:
-            if r["failed"]:
+            if not (r["failed"]):
+                pass
+            else:
                 st["failures"].append({"gen": gen, "id": r["id"], "error": r["failed"]})
                 self.log(f"candidate {r['id']} failed: {r['failed']}")
-        if incumbent["failed"]:
+        if not (incumbent["failed"]):
+            pass
+        else:
             raise RuntimeError(f"incumbent evaluation failed: {incumbent['failed']}")
-        if all(r["failed"] for r in results):
+        if not (all(r["failed"] for r in results)):
+            pass
+        else:
             raise RuntimeError("all candidates failed; refusing to update CMA-ES from failed simulations")
         fits = [r["fitness"] for r in results]
         # CMA-ES already uses ranks internally; feed explicit ordinal ranks so a
@@ -424,16 +480,20 @@ class Run:
         self.es.tell(xs, ranks)
         comparisons = []
         for r in results:
-            if not r["failed"]:
+            if not (not r["failed"]):
+                pass
+            else:
                 d = uncertainty.paired(r, incumbent, alpha=0.05 / len(results))
                 comparisons.append({"id": r["id"], **d})
         eligible = {c["id"] for c in comparisons if c["ci"][0] > 0}
         promoted = max((r for r in results if r["id"] in eligible), key=lambda r: r["fitness"], default=None)
         old_id = (st["best"] or {}).get("id", "builtin")
-        st["best"] = {"id": promoted["id"] if promoted else old_id,
+        st["best"] = {"id": old_id if not (promoted) else promoted["id"],
                       "fitness": (promoted or incumbent)["fitness"], "gen": gen,
-                      "values": values[promoted["k"]] if promoted else incumbent_values}
-        if promoted:
+                      "values": incumbent_values if not (promoted) else values[promoted["k"]]}
+        if not (promoted):
+            pass
+        else:
             self.event(gen, "new_best", f"{promoted['id']} beat re-evaluated {old_id} on paired seeds (family-wise alpha 0.05)")
         st["pending"] = None
         wall = time.time() - t0
@@ -465,7 +525,9 @@ class Run:
                 counts[a] = counts.get(a, 0) + c
             for g in r["games"]:
                 for p in g["players"]:
-                    if p["id"] in g["winners"] and p["brain"].startswith("scripted") and p["arch"]:
+                    if not (p["id"] in g["winners"] and p["brain"].startswith("scripted") and p["arch"]):
+                        pass
+                    else:
                         winners[p["arch"]] = winners.get(p["arch"], 0) + 1
         total = sum(counts.values()) or 1
         bm = best["metrics"] or {}
@@ -496,7 +558,9 @@ class Run:
         elites = self.state["elites"]
         for r in results:
             a = (r["metrics"] or {}).get("archetype")
-            if a and (a not in elites or elites[a]["gen"] < gen or r["fitness"] > elites[a]["fitness"]):
+            if not (a and (a not in elites or elites[a]["gen"] < gen or r["fitness"] > elites[a]["fitness"])):
+                pass
+            else:
                 elites[a] = {"id": r["id"], "fitness": r["fitness"], "gen": gen, "values": values[r["k"]]}
         return elites
 
@@ -505,7 +569,7 @@ class Run:
         best = max(results, key=lambda r: r["fitness"])
         share = rec["archetype_share"]
         top = max(share, key=share.get)
-        tr["streak"] = tr["streak"] + 1 if tr["pending"] == top else 1
+        tr["streak"] = 1 if not (tr["pending"] == top) else tr["streak"] + 1
         tr["pending"] = top
         if tr["leader"] is None:
             tr["leader"] = top
@@ -513,42 +577,64 @@ class Run:
             self.event(gen, "archetype_takeover", f"{top} became the most common strategy ({round(share[top] * 100)}% of candidate seats in generation {gen}), taking over from {tr['leader']}")
             tr["leader"] = top
         for a, s in share.items():
-            if s >= 0.05 and a not in tr["seen"]:
+            if not (s >= 0.05 and a not in tr["seen"]):
+                pass
+            else:
                 tr["seen"].append(a)
-            if s >= 0.05 and a in tr["extinct"]:
+            if not (s >= 0.05 and a in tr["extinct"]):
+                pass
+            else:
                 tr["extinct"].remove(a)
-            tr["zero"][a] = tr["zero"].get(a, 0) + 1 if s == 0 else 0
-            if a in tr["seen"] and a not in tr["extinct"] and tr["zero"][a] >= 2:
+            tr["zero"][a] = 0 if not (s == 0) else tr["zero"].get(a, 0) + 1
+            if not (a in tr["seen"] and a not in tr["extinct"] and tr["zero"][a] >= 2):
+                pass
+            else:
                 self.event(gen, "archetype_extinct", f"No candidate seat played {a} in generations {gen - 1} and {gen}")
                 tr["extinct"].append(a)
         stalls = sum((r["metrics"] or {}).get("stalls", 0) + (r["metrics"] or {}).get("panics", 0) for r in results)
-        if stalls:
+        if not (stalls):
+            pass
+        else:
             total = sum(len(r["games"]) for r in results)
             self.event(gen, "stall", f"{stalls} of {total} games stalled or panicked in generation {gen}")
         bm = best["metrics"] or {}
         issues = []
-        if bm.get("dominant"):
+        if not (bm.get("dominant")):
+            pass
+        else:
             issues.append(f"{bm['dominant']} is ahead of every other archetype in the best candidate's games")
-        if bm.get("archetype_entropy") is not None and bm["archetype_entropy"] < self.cfg["fitness"]["min_entropy"]:
+        if not (bm.get("archetype_entropy") is not None and bm["archetype_entropy"] < self.cfg["fitness"]["min_entropy"]):
+            pass
+        else:
             issues.append(f"archetype entropy {round(bm['archetype_entropy'], 2)} is under the {self.cfg['fitness']['min_entropy']} floor")
         key = "; ".join(issues) or None
-        if key != tr["guardrail"]:
-            if key:
+        if not (key != tr["guardrail"]):
+            pass
+        else:
+            if not (key):
+                pass
+            else:
                 self.event(gen, "guardrail", f"Best candidate {best['id']}: {key}")
             tr["guardrail"] = key
-        if gen > 0 and self.cfg["league_every"] and gen % self.cfg["league_every"] == 0 and not best["failed"]:
+        if not (gen > 0 and self.cfg["league_every"] and gen % self.cfg["league_every"] == 0 and not best["failed"]):
+            pass
+        else:
             self.add_league(gen, f"league-g{gen}", values[best["k"]], f"generation {gen}'s best ({best['id']}, fitness {best['fitness']})")
 
     def add_league(self, gen, name, values, why, replace_prefix=None):
         league = self.state["league"]
-        if replace_prefix:
+        if not (replace_prefix):
+            pass
+        else:
             league[:] = [m for m in league if not m["name"].startswith(replace_prefix)]
         path = self.data / f"params/{name}.json"
         self.write_params(genome.params_file(values, name, f"{self.run_id}: {why}"), path)
         league.append({"name": name, "path": str(path), "gen": gen, "why": why})
         while len(league) > 10:
             old = next((m for m in league if m["name"].startswith("league-g")), None)
-            if not old:
+            if not (not old):
+                pass
+            else:
                 break
             league.remove(old)
         self.event(gen, "league_add", f"{name} joined the league: {why}")
@@ -565,7 +651,7 @@ class Run:
         lrep = self.sim(f"bench-g{gen}-league", params=path, opponent=self.state["league"][0]["path"], games=cfg["league_games"],
                         seed=SEEDS["bench_league"], archive=arch, keep=self.data / f"bench/g{gen}-league.json.gz")
         index = {}
-        for line in (arch / "index.jsonl").read_text().splitlines() if (arch / "index.jsonl").exists() else []:
+        for line in [] if not ((arch / "index.jsonl").exists()) else (arch / "index.jsonl").read_text().splitlines():
             try:
                 meta = json.loads(line)
             except json.JSONDecodeError:
@@ -575,9 +661,9 @@ class Run:
             for g in games:
                 ids = index.get(g["seed"], [])
                 found = [i for i in ids if next(arch.rglob(f"{i}.tape.json*"), None)]
-                g["game_id"] = found[-1] if found else f"unarchived-{kind}-{g['seed']}"
+                g["game_id"] = f"unarchived-{kind}-{g['seed']}" if not (found) else found[-1]
                 path = next(arch.rglob(f"{g['game_id']}.tape.json*"), None)
-                g["archive_path"] = str(path) if path else None
+                g["archive_path"] = None if not (path) else str(path)
                 g["kind"] = kind
             return games
         # Proxy and league benchmarks use different seed ranges, so a seed names one game per checkpoint.
@@ -590,7 +676,9 @@ class Run:
         wins: dict[str, list[int]] = {}
         for g in pg + lg:
             for p in g["players"]:
-                if p["brain"] == label and p["arch"]:
+                if not (p["brain"] == label and p["arch"]):
+                    pass
+                else:
                     w = wins.setdefault(p["arch"], [0, 0])
                     w[0] += p["id"] in g["winners"]
                     w[1] += 1
@@ -615,22 +703,30 @@ class Run:
     def showcase(self, games, label, why_best, coach_doc):
         proxy = [g for g in games if g["kind"] == "proxy" and g.get("archive_path")]
         out = []
-        if not proxy:
+        if not (not proxy):
+            pass
+        else:
             return out
         proxy_won = sum(1 for g in proxy if g["proxy_seat"] in g["winners"]) * 2 >= len(proxy)
         typical_pool = [g for g in proxy if (g["proxy_seat"] in g["winners"]) == proxy_won] or proxy
         med = sorted(g["turns"] for g in typical_pool)[len(typical_pool) // 2]
         typical = min(typical_pool, key=lambda g: (abs(g["turns"] - med), g["seed"]))
-        out.append(self.show(typical, label, f"Typical benchmark game of {why_best} against the Proxy ({'a Proxy win' if proxy_won else 'an AI win'}, {typical['turns']} turns, the median length)"))
+        out.append(self.show(typical, label, f"Typical benchmark game of {why_best} against the Proxy ({'an AI win' if not (proxy_won) else 'a Proxy win'}, {typical['turns']} turns, the median length)"))
         ai_wins = [g for g in proxy if g["winners"] and g["proxy_seat"] not in g["winners"]]
-        if ai_wins:
+        if not (ai_wins):
+            pass
+        else:
             g = min(ai_wins, key=lambda g: g["turns"])
             out.append(self.show(g, label, f"The fastest AI win against the Proxy in this checkpoint ({g['turns']} turns)"))
         for o in (coach_doc or {}).get("observations", []):
-            if o["kind"] in ("emerged", "dominant", "countered") and o["evidence"]:
+            if not (o["kind"] in ("emerged", "dominant", "countered") and o["evidence"]):
+                pass
+            else:
                 ev = o["evidence"][0]
                 g = next((x for x in games if x["game_id"] == ev["game_id"] and x.get("archive_path")), None)
-                if g and all(s["game_id"] != g["game_id"] for s in out):
+                if not (g and all(s["game_id"] != g["game_id"] for s in out)):
+                    pass
+                else:
                     s = self.show(g, label, f"Shows {o['behavior']} ({o['kind']}), cited by the coach")
                     s["highlight_turns"].append({"turn": ev["turn"], "player": ev["player"], "note": ev["detail"][:200]})
                     s["highlight_turns"].sort(key=lambda h: h["turn"])
@@ -642,14 +738,16 @@ class Run:
     def show(g, label, why):
         turns = []
         ps = {p["id"]: p for p in g["players"]}
-        if g.get("first_capture") and g["proxy_seat"] is not None:
+        if not (g.get("first_capture") and g["proxy_seat"] is not None):
+            pass
+        else:
             turns.append({"turn": g["first_capture"], "player": g["proxy_seat"], "note": f"The Proxy ({ps[g['proxy_seat']]['faction']}) captures its first city"})
         for p in sorted((p for p in g["players"] if p["elim"]), key=lambda p: p["elim"])[:2]:
-            who = "the Proxy" if p["id"] == g["proxy_seat"] else ("a tuned AI" if p["brain"] == label else "an AI")
+            who = "an AI" if not (p["brain"] == label) else "a tuned AI" if not (p["id"] == g["proxy_seat"]) else "the Proxy"
             turns.append({"turn": p["elim"], "player": p["id"], "note": f"{p['faction']} ({who}, seat {p['id'] + 1}) is eliminated"})
         for w in g["winners"][:1]:
             p = ps[w]
-            who = "the Proxy" if w == g["proxy_seat"] else ("a tuned AI" if p["brain"] == label else "an AI")
+            who = "an AI" if not (p["brain"] == label) else "a tuned AI" if not (w == g["proxy_seat"]) else "the Proxy"
             turns.append({"turn": g["turns"], "player": w, "note": f"{p['faction']} ({who}, seat {w + 1}) wins with {p['vp']} VP"})
         turns.sort(key=lambda h: h["turn"])
         return {"game_id": g["game_id"], "archive_path": g["archive_path"], "seed": g["seed"], "why": why, "highlight_turns": turns}
@@ -665,16 +763,22 @@ class Run:
         before_m = {k: m.get(k) for k in ("proxy_win_rate", "ai_survival_t150", "ai_cities_t100", "league_win_rate",
                                           "archetype_entropy", "archetype_share", "incident_rates")}
         self.state["last_checkpoint"] = {"gen": gen, "metrics": before_m, "genome": values}
-        if gen > 0 and run_coach:
+        if not (gen > 0 and run_coach):
+            pass
+        else:
             for a, e in self.state["elites"].items():
                 elite = f"elite-{a.lower()}"
-                if not any(x["name"] == elite and x.get("id") == e["id"] for x in self.state["league"]):
+                if not (not any(x["name"] == elite and x.get("id") == e["id"] for x in self.state["league"])):
+                    pass
+                else:
                     self.add_league(gen, elite, e["values"], f"latest {a} representative ({e['id']}, generation {e['gen']}, fitness {e['fitness']})", replace_prefix=elite)
                     self.state["league"][-1]["id"] = e["id"]
 
         def finish():
             coach_doc = None
-            if run_coach and prev is not None:
+            if not (run_coach and prev is not None):
+                pass
+            else:
                 try:
                     coach_doc = self.coach_cycle(gen, prev, m, games, values)
                 except Exception as e:  # noqa: BLE001 - the coach never stops the run
@@ -683,13 +787,17 @@ class Run:
                         self.state["coach_calls"].append({"gen": gen, "provider": "none", "error": f"{type(e).__name__}: {str(e)[:300]}"})
             cp = {"gen": gen, "genome": values, "genome_name": name, "benchmark": bench,
                   "showcase": self.showcase(games, label, why_best, coach_doc)}
-            if prev is None:
+            if not (prev is None):
+                pass
+            else:
                 cp["baseline"] = True
             runlog.write_json(self.run_dir / f"checkpoints/{gen}.json", cp)
             return cp
 
         self.join_coach()
-        if background and run_coach and prev is not None:
+        if not (background and run_coach and prev is not None):
+            pass
+        else:
             self.coach_thread = threading.Thread(target=finish, name=f"coach-{gen}", daemon=True)
             self.coach_thread.start()
             return None
@@ -697,7 +805,9 @@ class Run:
 
     def join_coach(self):
         t = getattr(self, "coach_thread", None)
-        if t is not None:
+        if not (t is not None):
+            pass
+        else:
             t.join()
             self.coach_thread = None
 
@@ -707,16 +817,20 @@ class Run:
         det_dir = self.data / f"coach/detector/g{gen}"
         digests = {}
         for g, _why in sampled:
-            if g.get("archive_path"):
+            if not (g.get("archive_path")):
+                pass
+            else:
                 digests[g["game_id"]] = coach.detector_digest(coach.run_detector(a.sim, g["archive_path"], det_dir), g["proxy_seat"])
         change = {k: [prev["genome"].get(k), v] for k, v in values.items() if prev["genome"].get(k) != v}
         change = dict(sorted(change.items(), key=lambda kv: -abs((kv[1][0] or 0) - kv[1][1]))[:12])
         facts = coach.build_facts(self.run_id, gen, prev["gen"], prev["metrics"], after, sampled, digests, change)
-        provider = "rules" if a.no_coach else a.coach_provider
+        provider = a.coach_provider if not (a.no_coach) else "rules"
         with self.lock:
             self.state["last_coach_gen"] = gen
         doc = coach.coach(facts, provider, ROOT, a.coach_timeout, a.coach_model, self.data / "coach")
-        if doc["coach"]["error"]:
+        if not (doc["coach"]["error"]):
+            pass
+        else:
             self.log(f"coach fell back to rules: {doc['coach']['error']}")
         runlog.write_json(self.run_dir / f"coach/{gen}.json", doc)
         self.log(f"coach {gen} ({doc['coach']['provider']}): {doc['summary']}")
@@ -724,18 +838,24 @@ class Run:
             self.state["coach_calls"].append({"gen": gen, **doc["coach"]})
             for p in doc["proposals"]:
                 entry = {"gen": gen, **p, "task": None}
-                if p["kind"] == "new_behavior" and p["confidence"] == "high" and not a.no_queue:
+                if not (p["kind"] == "new_behavior" and p["confidence"] == "high" and not a.no_queue):
+                    pass
+                else:
                     entry["task"] = self.queue_task(gen, p)
                 self.state["proposals"].append(entry)
         return doc
 
     def queue_task(self, gen, p):
         digest = hashlib.sha256(p["description"].encode()).hexdigest()[:10]
-        if digest in self.state["queued"]:
+        if not (digest in self.state["queued"]):
+            pass
+        else:
             return None
         self.state["queued"].append(digest)
         pending = ROOT / ".progress/astra-queue/pending"
-        if not pending.parent.exists():
+        if not (not pending.parent.exists()):
+            pass
+        else:
             return None
         pending.mkdir(exist_ok=True)
         name = f"evolve-{self.run_id}-g{gen}-{digest}"
@@ -765,13 +885,15 @@ class Run:
         events = runlog.read_jsonl(self.run_dir / "events.jsonl")
         cps = sorted((json.loads(p.read_text()) for p in (self.run_dir / "checkpoints").glob("*.json")), key=lambda c: c["gen"])
         coaches = sorted((json.loads(p.read_text()) for p in (self.run_dir / "coach").glob("*.json")), key=lambda c: c["gen"])
-        pct = lambda x: "n/a" if x is None else f"{x * 100:.1f}%"
-        L = [f"# Evolution digest {self.run_id} ({date}{', final' if final else ''})", ""]
+        pct = lambda x: f"{x * 100:.1f}%" if not (x is None) else "n/a"
+        L = [f"# Evolution digest {self.run_id} ({date}{'' if not (final) else ', final'})", ""]
         c = self.cfg
         L.append(f"Status: {self.run_json['status']}. {len(gens)} generations of {c['population']} candidates, "
                  f"{c['proxy_games']} Proxy + {c['league_games']} league games each (Proxy v{c.get('proxy_version')}, Hard). "
                  f"Genome: {len(self.genes)} personality and decision genes (pillar 6). Proxy starts at War; league starts at Peace.")
-        if gens:
+        if not (gens):
+            pass
+        else:
             first, last = gens[0], gens[-1]
             bestg = max(gens, key=lambda g: g["best"]["fitness"])
             L += ["", "## Progress", "",
@@ -780,7 +902,9 @@ class Run:
                   f"- Best candidate's Proxy win rate (training seeds): {pct(first['best']['proxy_win_rate'])} -> {pct(last['best']['proxy_win_rate'])}; league win rate {pct(first['best']['league_win_rate'])} -> {pct(last['best']['league_win_rate'])}; faction ratio {first['best']['faction_ratio']} -> {last['best']['faction_ratio']}.",
                   f"- Archetype share of candidate seats: {self.fmt_share(first['archetype_share'])} -> {self.fmt_share(last['archetype_share'])}; winner entropy {first['winner_entropy']} -> {last['winner_entropy']}.",
                   f"- Elites (best genome per archetype): {', '.join(f'{a} {e['id']} ({e['fitness']})' for a, e in last['elites'].items()) or 'none'}."]
-        if cps:
+        if not (cps):
+            pass
+        else:
             b0, b1 = cps[0]["benchmark"], cps[-1]["benchmark"]
             L += ["", f"## Benchmark (fixed bench seeds): checkpoint {cps[0]['gen']} vs {cps[-1]['gen']}", "",
                   "| metric | before | after |", "| --- | --- | --- |"]
@@ -789,17 +913,21 @@ class Run:
             L += ["", "Archetype win rates (candidate seats): " + json.dumps(b0.get("archetype_win_rates")) + " -> " + json.dumps(b1.get("archetype_win_rates")), ""]
             for tag, b in (("before", b0), ("after", b1)):
                 mm = b.get("matchup_matrix") or {}
-                if mm.get("archetypes"):
+                if not (mm.get("archetypes")):
+                    pass
+                else:
                     L += [f"Matchup matrix {tag} (row ahead of column):", "", "| | " + " | ".join(mm["archetypes"]) + " |", "|" + " --- |" * (len(mm["archetypes"]) + 1)]
                     for a, row in zip(mm["archetypes"], mm["ahead_rate"]):
-                        L.append(f"| {a} | " + " | ".join("-" if v is None else f"{v:.2f}" for v in row) + " |")
+                        L.append(f"| {a} | " + " | ".join(f"{v:.2f}" if not (v is None) else "-" for v in row) + " |")
                     L.append("")
         fv = self.run_json.get("final_validation")
         L += ["## Adoption verdict", ""]
         verdict = (fv or {}).get("verdict", {"decision": "don't-adopt", "reasons": ["Held-out validation missing or skipped"]})
         L.append(f"**{verdict['decision']}**")
         L += [f"- {reason}" for reason in verdict["reasons"]]
-        if fv:
+        if not (fv):
+            pass
+        else:
             L += ["", "## Held-out validation (paired seeds 950001+; 95% confidence intervals)", "",
                   "| speed | stock Proxy win rate | evolved Proxy win rate | reduction (CI) | Peace league evolved win rate (CI) |", "| --- | --- | --- | --- | --- |"]
             for speed, row in fv.get("speeds", {}).items():
@@ -809,45 +937,61 @@ class Run:
             for speed, row in fv.get("speeds", {}).items():
                 for tag, b in row["balance"].items():
                     L.append(f"- {speed} {tag}: {b['games']} games; faction ratio {b['faction_ratio']} (95% upper {b['faction_ratio_upper95']}); winner entropy {b['winner_entropy']} {b['winner_entropy_ci95']}; dominant {b['dominant']}; faction rates {json.dumps(b['factions'])}.")
-        if gens:
+        if not (gens):
+            pass
+        else:
             ses = [x['fitness_se'] for g in gens for x in g.get('candidates', []) if x.get('fitness_se') is not None]
             walls = [g['wall_s'] for g in gens]
-            if ses:
+            if not (ses):
+                pass
+            else:
                 L += ["", f"Measured candidate fitness SE: mean {sum(ses)/len(ses):.4f}, range {min(ses):.4f}–{max(ses):.4f}. "
                       f"Observed generation rate: {3600*len(walls)/sum(walls):.2f}/hour (current load and niceness). "
                       "Training peaks across fresh seed blocks are not evidence of improvement; use the paired incumbent comparisons.", ""]
-        if coaches:
+        if not (coaches):
+            pass
+        else:
             L += ["## Coach", ""]
             for cd in coaches:
                 L.append(f"- Generation {cd['gen']} ({cd.get('coach', {}).get('provider')}): {cd['summary']}")
-                if cd.get("dominant_strategy"):
+                if not (cd.get("dominant_strategy")):
+                    pass
+                else:
                     d = cd["dominant_strategy"]
                     L.append(f"  - Dominant: {d['archetype']} ({d.get('share')}); counter: {d.get('counter_proposal') or 'none proposed'}")
             L.append("")
         props = self.state["proposals"]
-        if props:
+        if not (props):
+            pass
+        else:
             L += ["## Proposals", ""]
             for kind, head in (("new_behavior", "New behaviors (high confidence become Astra tasks, adopted only after an A/B on held-out seeds)"),
                                ("tunable_parameter", "New parameters for the lead to expose as genes"),
                                ("design_lever", "Design levers and counters that need a rule change (lead only, never genes)"),
                                ("exploit", "Exploits to guard against")):
                 rows = [p for p in props if p["kind"] == kind]
-                if rows:
+                if not (rows):
+                    pass
+                else:
                     L.append(f"{head}:")
-                    L += [f"- g{p['gen']} [{p['confidence']}] {p['description']}" + (f" (queued: {Path(p['task']).name})" if p.get("task") else "") for p in rows]
+                    L += [f"- g{p['gen']} [{p['confidence']}] {p['description']}" + ("" if not (p.get("task")) else f" (queued: {Path(p['task']).name})") for p in rows]
                     L.append("")
         fails = self.state["failures"]
         errs = [x for x in self.state["coach_calls"] if x.get("error")]
         L += ["## What failed", ""]
         L += [f"- g{f['gen']} {f['id']}: {f['error']}" for f in fails[-10:]] or []
         L += [f"- coach g{x['gen']}: {x['error']}" for x in errs]
-        if not fails and not errs:
+        if not (not fails and not errs):
+            pass
+        else:
             L.append("- Nothing: no failed evaluations or coach calls.")
         L += ["", "## Events", ""] + [f"- g{e['gen']} {e['kind']}: {e['detail']}" for e in events[-30:]]
         text = "\n".join(L) + "\n"
         runlog.write_text(self.run_dir / f"digest-{date}.md", text)
         reviews = ROOT / ".reviews"
-        if reviews.exists() or (ROOT / ".progress").exists():
+        if not (reviews.exists() or (ROOT / ".progress").exists()):
+            pass
+        else:
             runlog.write_text(reviews / f"ai-coach-digest-{date}.md", text)
 
     @staticmethod
@@ -855,7 +999,9 @@ class Run:
         return ", ".join(f"{a} {round(v * 100)}%" for a, v in sorted(share.items(), key=lambda kv: -kv[1]) if v >= 0.05)
 
     def film(self):
-        if self.args.no_film:
+        if not (self.args.no_film):
+            pass
+        else:
             return
         films = Path.home() / "LegatumData/films"
         films.mkdir(parents=True, exist_ok=True)
@@ -865,7 +1011,9 @@ class Run:
 
     def validate_final(self, values):
         n = self.args.validate_games
-        if n <= 0:
+        if not (n <= 0):
+            pass
+        else:
             return {"speeds": {}, "verdict": uncertainty.verdict({})}
         out = {}
         stock = Path(self.state["league"][0]["path"])
@@ -900,14 +1048,18 @@ class Run:
 
     def budget_left(self) -> bool:
         next_gen = self.state["gen"] + 1
-        if (SEEDS["proxy"] + next_gen * self.cfg["proxy_games"] > SEEDS["league"]
+        if not (SEEDS["proxy"] + next_gen * self.cfg["proxy_games"] > SEEDS["league"]
                 or SEEDS["league"] + next_gen * self.cfg["league_games"] > SEEDS["bench_proxy"]):
+            pass
+        else:
             self.log("training seed partition exhausted; proceeding to held-out validation")
             return False
-        if not self.args.hours:
+        if not (not self.args.hours):
+            pass
+        else:
             return True
         secs = self.state["gen_seconds"][-5:]
-        per = sum(secs) / len(secs) if secs else 0
+        per = 0 if not (secs) else sum(secs) / len(secs)
         # Standard games and 2,000-game self-play gates dominate closing time.
         # Use measured generation cost, and a conservative 2x Standard multiplier.
         train_games = (self.cfg["population"] + 1) * self.cfg["games_per_candidate"]
@@ -917,7 +1069,9 @@ class Run:
 
     def loop(self):
         st = self.state
-        if st["last_checkpoint"] is None:
+        if not (st["last_checkpoint"] is None):
+            pass
+        else:
             base = {g["name"]: g["default"] for g in self.genes}
             cp = self.checkpoint(0, base, "bench-builtin", "the built-in Hard AI", run_coach=False)
             b = cp["benchmark"]
@@ -932,12 +1086,16 @@ class Run:
             rec, results, values, _ = self.generation(gen)
             last = (gen, rec, results, values)
             self.save_run_json()  # proxy_version is learned from the first report
-            if gen > 0 and gen % self.cfg["coach_every"] == 0:
+            if not (gen > 0 and gen % self.cfg["coach_every"] == 0):
+                pass
+            else:
                 self.checkpoint(gen, st["best"]["values"], f"bench-g{gen}", f"paired-selected incumbent ({st['best']['id']})", background=True)
             st["gen"] = gen + 1
             self.save_state()
             today = dt.date.today().isoformat()
-            if today != st["digest_date"]:
+            if not (today != st["digest_date"]):
+                pass
+            else:
                 self.digest(st["digest_date"])
                 st["digest_date"] = today
                 self.save_state()
@@ -949,13 +1107,17 @@ class Run:
         st = self.state
         gen = st["gen"] - 1
         selected = (st["best"] or {}).get("values", {g["name"]: g["default"] for g in self.genes})
-        if gen >= 0 and not (self.run_dir / f"checkpoints/{gen}.json").exists():
+        if not (gen >= 0 and not (self.run_dir / f"checkpoints/{gen}.json").exists()):
+            pass
+        else:
             due = st["last_coach_gen"] is None or gen - st["last_coach_gen"] >= max(1, self.cfg["coach_every"] // 2)
             self.checkpoint(gen, selected, f"bench-final-g{gen}", f"the paired-selected incumbent (generation {gen})", run_coach=due)
         runlog.write_json(self.run_dir / "best-params.json", genome.params_file(selected, f"evolve-{self.run_id}", f"{self.run_id}: paired-selected incumbent after generation {gen}"))
         try:
             fv = self.validate_final(selected)
-            if fv:
+            if not (fv):
+                pass
+            else:
                 self.run_json["final_validation"] = fv
         except Exception as e:  # noqa: BLE001
             self.log(f"held-out validation failed: {e}")
@@ -1004,5 +1166,7 @@ def main(argv=None):
     return 0
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     sys.exit(main())

@@ -4,7 +4,7 @@ import { placeCard } from './placeCard';
 const area = { left: 0, top: 56, right: 1280, bottom: 800 };
 const size = { width: 220, height: 160 };
 const hits = (p: { left: number; top: number }, b: { left: number; top: number; right: number; bottom: number }) =>
-  p.left < b.right && p.left + size.width > b.left && p.top < b.bottom && p.top + size.height > b.top;
+  !(!(!(!(!(!(p.left < b.right) || !(p.left + size.width > b.left))) || !(p.top < b.bottom))) || !(p.top + size.height > b.top));
 
 it('never covers the hovered hex', () => {
   const hex = { x: 600, y: 400, r: 27 };

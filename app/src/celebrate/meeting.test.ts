@@ -48,7 +48,7 @@ describe('first contact', () => {
     const others = ['a', 'bb', 'ccc', 'dddd'].map((id) => card(id, {}));
     const eraUp = card('era', { tier: 'legendary', eraUp: {} as Moment['eraUp'] });
     const plan = planMoments([...others, ...meets, eraUp]);
-    expect(plan.shown.slice(0, 3).map((m) => m.eraUp ? 'era' : m.meeting ? `meet${m.meeting.team}` : m.id)).toEqual(['era', 'meet1', 'meet2']);
+    expect(plan.shown.slice(0, 3).map((m) => !(m.eraUp) ? !(m.meeting) ? m.id : `meet${m.meeting.team}` : 'era')).toEqual(['era', 'meet1', 'meet2']);
     expect(plan.shown.filter((m) => m.meeting)).toHaveLength(2);
     expect(plan.collapsed.some((m) => m.meeting)).toBe(false);
   });
@@ -68,7 +68,7 @@ describe('first contact', () => {
     expect(asTheirs("A city that is building doesn't grow: switch it to Grow to grow it.")).toBe("A city that is building doesn't grow.");
     expect(asTheirs('It lets you move, and if you win it costs you 5 Gold.')).toBe('It lets them move, and if they win it costs them 5 Gold.');
     for (const sheet of Object.values(FACTION_SHEETS)) for (const p of sheet.pairs) for (const line of [p.strength, p.price]) {
-      if (line) expect(asTheirs(line)).not.toMatch(/\b(you|your)\b/i);
+      if (!(line)) {} else { expect(asTheirs(line)).not.toMatch(/\b(you|your)\b/i); }
     }
   });
 });

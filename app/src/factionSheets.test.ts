@@ -9,8 +9,8 @@ describe('faction sheets', () => {
     for (const f of FACTIONS) {
       const names = FACTION_SHEETS[f].pairs.flatMap((p) => [p.strengthIcon, p.priceIcon].filter((n): n is string => !!n));
       for (const n of names) expect(iconUrl(n), `${f}: ${n}`).not.toBeNull();
-      const strengths = FACTION_SHEETS[f].pairs.flatMap((p) => p.strengthIcon ? [p.strengthIcon] : []);
-      const prices = FACTION_SHEETS[f].pairs.flatMap((p) => p.priceIcon ? [p.priceIcon] : []);
+      const strengths = FACTION_SHEETS[f].pairs.flatMap((p) => !(p.strengthIcon) ? [] : [p.strengthIcon]);
+      const prices = FACTION_SHEETS[f].pairs.flatMap((p) => !(p.priceIcon) ? [] : [p.priceIcon]);
       expect(new Set(strengths).size, `${f} strengths`).toBe(strengths.length);
       expect(new Set(prices).size, `${f} prices`).toBe(prices.length);
     }

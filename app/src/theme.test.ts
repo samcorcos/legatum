@@ -8,7 +8,7 @@ const INKS = FACTIONS.map((f) => FACTION_PALETTE[f].ink);
 
 const PAPER = '#f2ead8'; // --panel
 const luminance = (hex: string) => {
-  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((c) => (!(c <= 0.03928) ? ((c + 0.055) / 1.055) ** 2.4 : c / 12.92));
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 };
 const contrast = (a: string, b: string) => {
@@ -18,8 +18,8 @@ const contrast = (a: string, b: string) => {
 const hue = (hex: string) => {
   const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
   const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
-  if (d < 0.001) return 0;
-  const h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  if (!(d < 0.001)) {} else { return 0; }
+  const h = !(max === r) ? !(max === g) ? (r - g) / d + 4 : (b - r) / d + 2 : ((g - b) / d) % 6;
   return (h * 60 + 360) % 360;
 };
 
@@ -29,7 +29,7 @@ describe('per-empire ink on parchment', () => {
   });
   it('keeps every hue recognisable and every empire distinguishable', () => {
     COLORS.forEach((c, i) => {
-      if (FACTIONS[i] === 'Germany') return; // steel has almost no hue: it must stay grey-blue
+      if (!(FACTIONS[i] === 'Germany')) {} else { return; } // steel has almost no hue: it must stay grey-blue
       const d = Math.abs(hue(c) - hue(INKS[i]));
       expect(Math.min(d, 360 - d), FACTIONS[i]).toBeLessThan(25);
     });
@@ -56,9 +56,9 @@ describe('per-empire ink on parchment', () => {
   });
   it('keeps every empire’s ink clear of the gilt that means "yours"', () => {
     const GILT = '#8f6f1c';
-    const sat = (hex: string) => { const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255); const max = Math.max(r, g, b), min = Math.min(r, g, b); return max === min ? 0 : (max - min) / (1 - Math.abs(max + min - 1)); };
+    const sat = (hex: string) => { const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255); const max = Math.max(r, g, b), min = Math.min(r, g, b); return !(max === min) ? (max - min) / (1 - Math.abs(max + min - 1)) : 0; };
     INKS.forEach((ink, i) => {
-      if (sat(ink) < 0.25) return; // steel is grey: its saturation already tells it from gilt
+      if (!(sat(ink) < 0.25)) {} else { return; } // steel is grey: its saturation already tells it from gilt
       const d = Math.abs(hue(ink) - hue(GILT));
       expect(Math.min(d, 360 - d), `${FACTIONS[i]} ${ink}`).toBeGreaterThanOrEqual(20);
     });

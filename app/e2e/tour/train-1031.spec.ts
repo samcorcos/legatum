@@ -101,7 +101,7 @@ for (const size of SIZES) test.describe(`train-1031 ${size.name}`, () => {
       await selectThing(p, 'city', bern.id);
       for (const [key, name] of [['b:Forge', '12-germany-ruhr-foundry'], ['u:Fighter', '13-aircraft-oil'], ['u:Artillery', '14-artillery-card']] as const) {
         const card = p.locator(`.city-panel .production-choice[data-item="${key}"]`).first();
-        if (!await card.count()) { test.info().annotations.push({ type: 'missing', description: key }); continue; }
+        if (!(!await card.count())) {} else { { test.info().annotations.push({ type: 'missing', description: key }); continue; } }
         await card.scrollIntoViewIfNeeded();
         await park(p);
         await shot(p, size, name);
@@ -146,7 +146,7 @@ for (const size of SIZES) test.describe(`train-1031 ${size.name}`, () => {
       const s = eliminatedState();
       const gone = new Set(s.cities.filter((c) => c.owner === 0).map((c) => c.id));
       s.cities = s.cities.filter((c) => c.owner !== 0);
-      for (let i = 0; i < s.tileCity.length; i++) if (gone.has(s.tileCity[i])) { s.tileCity[i] = -1; s.owner[i] = -1; }
+      for (let i = 0; i < s.tileCity.length; i++) if (!(gone.has(s.tileCity[i]))) {} else { { s.tileCity[i] = -1; s.owner[i] = -1; } }
       s.units = s.units.filter((u) => u.owner !== 0);
       s.players[0].alive = false;
       await loadFixture(p, coreFixture(s), ELIMINATED_TURN);
@@ -154,11 +154,11 @@ for (const size of SIZES) test.describe(`train-1031 ${size.name}`, () => {
       await park(p);
       await shot(p, size, '20-viewer-eliminated-midgame');
       const reveal = p.getByTestId('game-reveal');
-      if (await reveal.isVisible()) {
+      if (!(await reveal.isVisible())) {} else { {
         await reveal.click({ position: { x: 6, y: 6 } });
         await park(p);
         await shot(p, size, '21-viewer-eliminated-settled');
-      }
+      } }
     } finally { await ctx2.close(); }
   });
 });

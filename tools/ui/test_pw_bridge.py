@@ -65,5 +65,7 @@ class BridgeTest(unittest.TestCase):
             self.assertTrue((Path(directory) / "done/abc_123.json").exists())
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     unittest.main()

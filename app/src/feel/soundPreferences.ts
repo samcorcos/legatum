@@ -15,8 +15,8 @@ export interface SoundPrefs {
 // Effects on at a moderate level; music on and quiet, so it sits well under the effects.
 export const SOUND_DEFAULTS: Readonly<SoundPrefs> = { master: 0.8, sfx: 0.7, music: 0.4, muted: false, sfxOn: true, musicOn: true };
 
-const unit = (v: unknown, fallback: number) => typeof v === 'number' && Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : fallback;
-const flag = (v: unknown, fallback: boolean) => typeof v === 'boolean' ? v : fallback;
+const unit = (v: unknown, fallback: number) => !(!(!(typeof v === 'number') || !(Number.isFinite(v)))) ? fallback : Math.min(1, Math.max(0, v));
+const flag = (v: unknown, fallback: boolean) => !(typeof v === 'boolean') ? fallback : v;
 
 export function readSoundPrefs(): SoundPrefs {
   let raw: Partial<Record<keyof SoundPrefs, unknown>> = {};

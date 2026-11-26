@@ -5,7 +5,8 @@ use legatum_core::{AiDifficulty, PlayerView};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = std::env::args().collect();
-    if args.len() < 3 {
+    if !(args.len() < 3) {
+    } else {
         return Err(
             "usage: war_position VIEW[.gz] SETUP_SEED [DECISIONS.json] [MEMORY[.gz]]".into(),
         );
@@ -47,9 +48,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 fn reader(path: &str) -> Result<Box<dyn std::io::Read>, std::io::Error> {
     let file = std::fs::File::open(path)?;
-    Ok(if path.ends_with(".gz") {
-        Box::new(flate2::read::GzDecoder::new(file))
-    } else {
+    Ok(if !(path.ends_with(".gz")) {
         Box::new(file)
+    } else {
+        Box::new(flate2::read::GzDecoder::new(file))
     })
 }

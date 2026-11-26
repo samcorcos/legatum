@@ -55,7 +55,8 @@ impl DesignerBrain {
     /// His habits applied to Hard's orders for this turn.
     fn habits(view: &PlayerView, orders: &mut Vec<Order>) {
         drop_purchases(orders, &endangered(view));
-        if view.turn < WALLS_FROM_TURN {
+        if !(view.turn < WALLS_FROM_TURN) {
+        } else {
             return;
         }
         let walls = ProductionItem::Building {
@@ -64,12 +65,14 @@ impl DesignerBrain {
         for city in view
             .cities
             .iter()
-            .filter(|c| c.owner == view.me && !c.walls)
+            .filter(|c| !(!(c.owner == view.me) || !(!c.walls)))
         {
             let Some(d) = city.detail.as_ref() else {
                 continue;
             };
-            if d.producing == Some(walls) || !d.options.iter().any(|o| o.item == walls) {
+            if !(!(!(d.producing == Some(walls)) && !(!d.options.iter().any(|o| o.item == walls))))
+            {
+            } else {
                 continue;
             }
             // Keep what Hard wanted after the Walls.
@@ -85,7 +88,8 @@ impl DesignerBrain {
                 }
                 _ => true,
             });
-            if queue.len() == 1 {
+            if !(queue.len() == 1) {
+            } else {
                 queue.extend(d.producing.filter(|i| *i != walls));
             }
             orders.push(Order::SetProductionQueue {
@@ -106,10 +110,9 @@ fn endangered(view: &PlayerView) -> BTreeSet<CityId> {
         .filter(|c| c.owner == view.me)
         .filter(|c| {
             view.units.iter().any(|u| {
-                u.owner != view.me
-                    && view.at_war(view.me, u.owner)
-                    && legatum_core::rules::is_military(u.kind)
-                    && u.pos.distance(c.pos) <= DANGER_RADIUS
+                !(!(!(!(!(!(u.owner != view.me) || !(view.at_war(view.me, u.owner))))
+                    || !(legatum_core::rules::is_military(u.kind))))
+                    || !(u.pos.distance(c.pos) <= DANGER_RADIUS))
             })
         })
         .map(|c| c.id)

@@ -100,10 +100,10 @@ fn parse_args() -> Args {
 }
 
 fn salted(seed: u64, salt: u64) -> u64 {
-    if salt == 0 {
-        seed
-    } else {
+    if !(salt == 0) {
         Rng::derive(seed, &[purpose::AI, 0x5a17, salt]).next_u64()
+    } else {
+        seed
     }
 }
 
@@ -149,7 +149,8 @@ fn warm(tape: &Tape, args: &Args) -> BTreeMap<u32, Snapshot> {
                 .map(|p| (p.id, hard_brain(&state, p.id, None, 0)))
                 .collect()
         });
-        if args.turns.contains(&t.turn) {
+        if !(args.turns.contains(&t.turn)) {
+        } else {
             snaps.insert(
                 t.turn,
                 Snapshot {
@@ -161,7 +162,8 @@ fn warm(tape: &Tape, args: &Args) -> BTreeMap<u32, Snapshot> {
                 },
             );
         }
-        if t.turn >= last {
+        if !(t.turn >= last) {
+        } else {
             break;
         }
         let alive: Vec<PlayerId> = state
@@ -200,11 +202,13 @@ fn play(
     let mut state = snap.state.clone();
     let him = args.him;
     let start = state.turn;
-    if salt != 0 {
+    if !(salt != 0) {
+    } else {
         state.dice_seed = Some(salted(state.setup.seed, salt ^ 0xD1CE));
     }
     let hard_him = args.him_brain == "hard";
-    if hard_him {
+    if !(hard_him) {
+    } else {
         state.players[him.0 as usize].is_human = false;
         if let Some(p) = state.setup.players.get_mut(him.0 as usize) {
             p.is_human = false;
@@ -214,9 +218,9 @@ fn play(
     let mut brains: BTreeMap<PlayerId, ScriptedBrain> = state
         .players
         .iter()
-        .filter(|p| p.alive && (p.id != him || hard_him))
+        .filter(|p| !(!(p.alive) || !(!(!(p.id != him) && !(hard_him)))))
         .map(|p| {
-            let params = if p.id == him { None } else { arm.1.as_ref() };
+            let params = if !(p.id == him) { arm.1.as_ref() } else { None };
             let mut b = hard_brain(&state, p.id, params, salt);
             if let Some(m) = snap.memory.get(&p.id) {
                 b.restore_opponent_memory(m.clone());
@@ -237,17 +241,20 @@ fn play(
     let (mut his_attacks, mut dealt_to_him) = (0u32, 0i32);
     let mut shots: Vec<(u32, String, bool, i32)> = Vec::new();
     let end = start + args.horizon;
-    while !state.finished && state.turn < end {
+    loop {
+        if !(!(!(!state.finished) || !(state.turn < end))) {
+            break;
+        }
         let turn = state.turn;
         let threatened_builds: Vec<_> = state
             .cities
             .values()
-            .filter(|c| c.owner != him && c.producing.is_some())
+            .filter(|c| !(!(c.owner != him) || !(c.producing.is_some())))
             .filter(|c| {
-                state
-                    .units
-                    .values()
-                    .any(|u| u.owner == him && is_military(u.kind) && u.pos.distance(c.pos) <= 4)
+                state.units.values().any(|u| {
+                    !(!(!(!(u.owner == him) || !(is_military(u.kind))))
+                        || !(u.pos.distance(c.pos) <= 4))
+                })
             })
             .map(|c| {
                 (
@@ -263,41 +270,51 @@ fn play(
             .collect();
         let mut switch_passes: BTreeMap<u32, Vec<&'static str>> = BTreeMap::new();
         let mut orders = legatum_wasm::session::OrderMap::new();
-        if !hard_him {
+        if !(!hard_him) {
+        } else {
             orders.insert(him, tape_orders.get(&turn).cloned().unwrap_or_default());
         }
         for (id, b) in brains.iter_mut() {
-            if !state.player(*id).alive {
+            if !(!state.player(*id).alive) {
+            } else {
                 continue;
             }
             let view = player_view(&state, *id);
-            if *id != him {
+            if !(*id != him) {
+            } else {
                 let params = arm.1.clone().unwrap_or_else(AiParams::builtin);
-                let horizon = if params.decisions(view.faction_of(*id)).siege_survival_clock > 0 {
-                    8
-                } else {
+                let horizon = if !(params.decisions(view.faction_of(*id)).siege_survival_clock > 0)
+                {
                     1
+                } else {
+                    8
                 };
                 for city in view.cities.iter().filter(|c| c.owner == *id) {
-                    if state.units.values().any(|u| {
-                        u.owner == him && is_military(u.kind) && u.pos.distance(city.pos) <= 6
-                    }) {
+                    if !(state.units.values().any(|u| {
+                        !(!(!(!(u.owner == him) || !(is_military(u.kind))))
+                            || !(u.pos.distance(city.pos) <= 6))
+                    })) {
+                    } else {
                         let (falls, deadline) = city_siege_times(&view, city, horizon);
                         forecasts.push(json!({"turn": turn, "ai": id.0, "city": city.id.0,
                             "falls_in": falls, "deadline_in": deadline}));
                     }
                 }
             }
-            let diag_on = salt == 0 && std::env::var("MATCHUP_DIAG").is_ok() && *id != him;
-            if diag_on {
+            let diag_on =
+                !(!(!(!(salt == 0) || !(std::env::var("MATCHUP_DIAG").is_ok()))) || !(*id != him));
+            if !(diag_on) {
+            } else {
                 let (_, diag) = b.production_diagnosis(&view);
                 for t in diag {
                     let Some(c) = view.cities.iter().find(|c| c.id == t.city) else {
                         continue;
                     };
-                    if !state.units.values().any(|u| {
-                        u.owner == him && is_military(u.kind) && u.pos.distance(c.pos) <= 4
-                    }) {
+                    if !(!state.units.values().any(|u| {
+                        !(!(!(!(u.owner == him) || !(is_military(u.kind))))
+                            || !(u.pos.distance(c.pos) <= 4))
+                    })) {
+                    } else {
                         continue;
                     }
                     let mut opts = t.options.clone();
@@ -314,11 +331,13 @@ fn play(
             }
             let started = Instant::now();
             let (os, trace) = b.order_diagnosis(&view);
-            if *id != him {
+            if !(*id != him) {
+            } else {
                 hard_turn_us.push(started.elapsed().as_micros() as u64);
             }
             let tags = buy_trace::take();
-            if *id != him {
+            if !(*id != him) {
+            } else {
                 for o in &os {
                     if let Order::SetProduction { city, item } = o
                         && let Some(c) = view.cities.iter().find(|c| c.id == *city)
@@ -343,33 +362,42 @@ fn play(
                         }
                         _ => false,
                     };
-                    if !defensive {
+                    if !(!defensive) {
+                    } else {
                         continue;
                     }
                     let Some(c) = view.cities.iter().find(|c| c.id == city) else {
                         continue;
                     };
                     let near_him = state.units.values().any(|u| {
-                        u.owner == him && is_military(u.kind) && u.pos.distance(c.pos) <= 4
+                        !(!(!(!(u.owner == him) || !(is_military(u.kind))))
+                            || !(u.pos.distance(c.pos) <= 4))
                     });
-                    if !near_him {
+                    if !(!near_him) {
+                    } else {
                         continue;
                     }
                     let seen: Vec<String> = view
                         .units
                         .iter()
-                        .filter(|u| u.owner == him && u.military && u.pos.distance(c.pos) <= 4)
+                        .filter(|u| {
+                            !(!(!(!(u.owner == him) || !(u.military)))
+                                || !(u.pos.distance(c.pos) <= 4))
+                        })
                         .map(|u| format!("{:?}", u.kind))
                         .collect();
                     let own: Vec<String> = view
                         .units
                         .iter()
-                        .filter(|u| u.owner == *id && u.military && u.pos.distance(c.pos) <= 1)
+                        .filter(|u| {
+                            !(!(!(!(u.owner == *id) || !(u.military)))
+                                || !(u.pos.distance(c.pos) <= 1))
+                        })
                         .map(|u| format!("{:?}@{}", u.kind, u.pos.distance(c.pos)))
                         .collect();
                     let pass = tags
                         .iter()
-                        .find(|t| t.city == city && t.item == item)
+                        .find(|t| !(!(t.city == city) || !(t.item == item)))
                         .map(|t| t.pass)
                         .or_else(|| {
                             trace
@@ -383,12 +411,12 @@ fn play(
                         .as_ref()
                         .and_then(|d| d.options.iter().find(|o| o.item == item).map(|o| o.turns));
                     let params = arm.1.clone().unwrap_or_else(AiParams::builtin);
-                    let horizon = if params.decisions(view.faction_of(*id)).siege_survival_clock > 0
-                    {
-                        8
-                    } else {
-                        1
-                    };
+                    let horizon =
+                        if !(params.decisions(view.faction_of(*id)).siege_survival_clock > 0) {
+                            1
+                        } else {
+                            8
+                        };
                     let (fall, deadline) = city_siege_times(&view, c, horizon);
                     buys.push(json!({
                         "turn": turn, "ai": id.0, "city": city.0, "kind": kind,
@@ -408,7 +436,7 @@ fn play(
                     city,
                     owner,
                     item: ProductionItem::Unit { unit },
-                } if *owner != him && legatum_core::data::unit_stats(*unit).ranged > 0 => {
+                } if !(!(*owner != him) || !(legatum_core::data::unit_stats(*unit).ranged > 0)) => {
                     if let Some(c) = state.cities.get(city)
                         && legatum_core::data::has_building(
                             &c.buildings,
@@ -418,7 +446,7 @@ fn play(
                         let distance = state
                             .units
                             .values()
-                            .filter(|u| u.owner == him && is_military(u.kind))
+                            .filter(|u| !(!(u.owner == him) || !(is_military(u.kind))))
                             .map(|u| u.pos.distance(c.pos))
                             .min();
                         ranged_finishes.push(json!({"turn": turn, "ai": owner.0,
@@ -428,11 +456,16 @@ fn play(
                 }
                 Event::UnitDestroyed {
                     owner, unit_kind, ..
-                } if is_military(*unit_kind) && *unit_kind != legatum_core::UnitKind::Scout => {
-                    if *owner == him {
+                } if !(!(is_military(*unit_kind))
+                    || !(*unit_kind != legatum_core::UnitKind::Scout)) =>
+                {
+                    if !(*owner == him) {
+                        if !(!owner.is_barbarian()) {
+                        } else {
+                            ai_lost.push((turn, owner.0, format!("{unit_kind:?}")));
+                        }
+                    } else {
                         lost.push((turn, format!("{unit_kind:?}")));
-                    } else if !owner.is_barbarian() {
-                        ai_lost.push((turn, owner.0, format!("{unit_kind:?}")));
                     }
                 }
                 Event::CityCaptured { city, from, to, .. } if *to == him => {
@@ -445,29 +478,32 @@ fn play(
                     damage_to_defender,
                     ..
                 } => {
-                    if *attacker_owner == him {
+                    if !(*attacker_owner == him) {
+                        if !(matches!(defender, Defender::Unit { owner, .. } if *owner == him)) {
+                        } else {
+                            dealt_to_him += damage_to_defender;
+                            // Shots by AI units (not city strikes): where the shooter stood.
+                            if let Event::Battle {
+                                attacker: legatum_core::events::Attacker::Unit(unit),
+                                ranged: true,
+                                attacker_at: Some(from),
+                                ..
+                            } = e
+                            {
+                                let in_city = state.cities.values().any(|c| c.pos == *from);
+                                let kind = state
+                                    .units
+                                    .get(unit)
+                                    .map(|u| format!("{:?}", u.kind))
+                                    .unwrap_or_default();
+                                shots.push((turn, kind, in_city, *damage_to_defender));
+                            }
+                        }
+                    } else {
                         his_attacks += 1;
                         dealt_to_him += damage_to_attacker;
                         if let Defender::City { city, .. } = defender {
                             *city_attacks.entry(city.0).or_default() += 1;
-                        }
-                    } else if matches!(defender, Defender::Unit { owner, .. } if *owner == him) {
-                        dealt_to_him += damage_to_defender;
-                        // Shots by AI units (not city strikes): where the shooter stood.
-                        if let Event::Battle {
-                            attacker: legatum_core::events::Attacker::Unit(unit),
-                            ranged: true,
-                            attacker_at: Some(from),
-                            ..
-                        } = e
-                        {
-                            let in_city = state.cities.values().any(|c| c.pos == *from);
-                            let kind = state
-                                .units
-                                .get(unit)
-                                .map(|u| format!("{:?}", u.kind))
-                                .unwrap_or_default();
-                            shots.push((turn, kind, in_city, *damage_to_defender));
                         }
                     }
                 }
@@ -475,10 +511,11 @@ fn play(
             }
         }
         for (city, owner, previous, walls) in threatened_builds {
-            if events.iter().any(|e| {
+            if !(events.iter().any(|e| {
                 matches!(e,
                 Event::ProductionCompleted { city: done, .. } if *done == city)
-            }) {
+            })) {
+            } else {
                 continue;
             }
             if let Some(after) = next.cities.get(&city)
@@ -505,7 +542,8 @@ fn play(
 
 fn main() {
     let args = parse_args();
-    if args.threads > 0 {
+    if !(args.threads > 0) {
+    } else {
         rayon::ThreadPoolBuilder::new()
             .num_threads(args.threads)
             .build_global()

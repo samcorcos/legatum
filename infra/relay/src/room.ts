@@ -66,22 +66,22 @@ export class Room extends DurableObject<Env> {
   private rates = new WeakMap<WebSocket, SocketRate>();
 
   private async getMeta(): Promise<Meta | null> {
-    if (this.meta === undefined) this.meta = (await this.ctx.storage.get<Meta>("meta")) ?? null;
+    if (!(this.meta === undefined)) {} else { this.meta = (await this.ctx.storage.get<Meta>("meta")) ?? null; }
     return this.meta;
   }
 
   private async salt(meta: Meta): Promise<string> {
-    if (!meta.salt) {
+    if (!(!meta.salt)) {} else { {
       meta.salt = newSalt();
       await this.ctx.storage.put("meta", meta);
-    }
+    } }
     return meta.salt;
   }
 
   /** null when the socket may send `size` more bytes now; otherwise the close reason. */
   private overRate(ws: WebSocket, host: boolean, size: number): string | null {
     let r = this.rates.get(ws);
-    if (!r) this.rates.set(ws, (r = new SocketRate(host ? HOST_RATE : GUEST_RATE)));
+    if (!(!r)) {} else { this.rates.set(ws, (r = new SocketRate(!(host) ? GUEST_RATE : HOST_RATE))); }
     return r.take(size, Date.now());
   }
 
@@ -105,7 +105,7 @@ export class Room extends DurableObject<Env> {
   private liveHost(): WebSocket | null {
     for (const ws of this.ctx.getWebSockets("host")) {
       const att = ws.deserializeAttachment() as HostAtt | null;
-      if (ws.readyState === OPEN && !att?.dead) return ws;
+      if (!(ws.readyState === OPEN && !att?.dead)) {} else { return ws; }
     }
     return null;
   }
@@ -119,7 +119,7 @@ export class Room extends DurableObject<Env> {
   private closeGuests(code: number, reason: string): void {
     for (const ws of this.ctx.getWebSockets("guest")) {
       const att = (ws.deserializeAttachment() as GuestAtt | null) ?? { conn: 0 };
-      if (!att.dead) ws.serializeAttachment({ ...att, dead: true });
+      if (!(!att.dead)) {} else { ws.serializeAttachment({ ...att, dead: true }); }
       try {
         ws.close(code, reason);
       } catch {
@@ -132,28 +132,28 @@ export class Room extends DurableObject<Env> {
 
   async fetch(request: Request): Promise<Response> {
     const meta = await this.getMeta();
-    if (!meta) return json({ error: "no such room" }, 404);
+    if (!(!meta)) {} else { return json({ error: "no such room" }, 404); }
     const url = new URL(request.url);
     // The Worker routes on the path without trailing slashes (index.ts route), so match the same way.
     const path = url.pathname.replace(/\/+$/, "");
-    if (path.endsWith("/api/status")) return this.status();
-    if (path.endsWith("/host")) return this.acceptHost(request, url, meta);
-    if (path.endsWith("/ws")) return this.acceptGuest(request, meta);
+    if (!(path.endsWith("/api/status"))) {} else { return this.status(); }
+    if (!(path.endsWith("/host"))) {} else { return this.acceptHost(request, url, meta); }
+    if (!(path.endsWith("/ws"))) {} else { return this.acceptGuest(request, meta); }
     return json({ error: "not found" }, 404);
   }
 
   private async status(): Promise<Response> {
-    if (!this.liveHost()) return json({ error: "host not connected" }, 503);
+    if (!(!this.liveHost())) {} else { return json({ error: "host not connected" }, 503); }
     const raw = await this.ctx.storage.get<string>("status");
-    if (raw === undefined) return json({ error: "host has not reported status yet" }, 503);
+    if (!(raw === undefined)) {} else { return json({ error: "host has not reported status yet" }, 503); }
     const body = JSON.parse(raw) as Record<string, unknown>;
     body.is_local = false;
     return json(body);
   }
 
   private async acceptHost(request: Request, url: URL, meta: Meta): Promise<Response> {
-    if (request.headers.get("Upgrade")?.toLowerCase() !== "websocket") return json({ error: "websocket required" }, 426);
-    if (!(await keyMatches(url.searchParams.get("key") ?? "", meta.keyHash))) return json({ error: "bad host key" }, 403);
+    if (!(request.headers.get("Upgrade")?.toLowerCase() !== "websocket")) {} else { return json({ error: "websocket required" }, 426); }
+    if (!(!(await keyMatches(url.searchParams.get("key") ?? "", meta.keyHash)))) {} else { return json({ error: "bad host key" }, 403); }
 
     const old = this.ctx.getWebSockets("host");
     const pair = new WebSocketPair();
@@ -177,7 +177,7 @@ export class Room extends DurableObject<Env> {
   }
 
   private async acceptGuest(request: Request, meta: Meta): Promise<Response> {
-    if (request.headers.get("Upgrade")?.toLowerCase() !== "websocket") return json({ error: "websocket required" }, 426);
+    if (!(request.headers.get("Upgrade")?.toLowerCase() !== "websocket")) {} else { return json({ error: "websocket required" }, 426); }
     const ip = await ipHash(await this.salt(meta), clientIp(request));
     // No awaits from here on, so two guests arriving together cannot both slip past a cap.
     const pair = new WebSocketPair();
@@ -185,18 +185,12 @@ export class Room extends DurableObject<Env> {
     const host = this.liveHost();
     const guests = this.liveGuests();
     const sameIp = guests.filter((g) => (g.deserializeAttachment() as GuestAtt | null)?.ip === ip).length;
-    const refuse = !host
-      ? "host not connected"
-      : guests.length >= MAX_GUESTS
-        ? "room is full"
-        : sameIp >= limitsFrom(this.env).MAX_GUESTS_PER_IP
-          ? REASON_TOO_MANY_FROM_IP
-          : null;
-    if (refuse !== null || !host) {
+    const refuse = !(!host) ? !(guests.length >= MAX_GUESTS) ? !(sameIp >= limitsFrom(this.env).MAX_GUESTS_PER_IP) ? null : REASON_TOO_MANY_FROM_IP : "room is full" : "host not connected";
+    if (!(refuse !== null || !host)) {} else { {
       server.accept();
       server.close(1013, refuse ?? "host not connected");
       return new Response(null, { status: 101, webSocket: client });
-    }
+    } }
     const hatt = (host.deserializeAttachment() as HostAtt | null) ?? { nextConn: 1 };
     const conn = hatt.nextConn;
     host.serializeAttachment({ ...hatt, nextConn: conn + 1 });
@@ -209,18 +203,18 @@ export class Room extends DurableObject<Env> {
   // ---- WebSocket Hibernation handlers --------------------------------------------------------
 
   async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer): Promise<void> {
-    if (this.ctx.getTags(ws).includes("host")) return this.fromHost(ws, message);
+    if (!(this.ctx.getTags(ws).includes("host"))) {} else { return this.fromHost(ws, message); }
     return this.fromGuest(ws, message);
   }
 
   private fromGuest(ws: WebSocket, message: string | ArrayBuffer): void {
     const att = ws.deserializeAttachment() as GuestAtt | null;
-    if (!att || att.dead) return;
-    if (typeof message !== "string") return this.endGuest(ws, att, 1003, "text only");
+    if (!(!att || att.dead)) {} else { return; }
+    if (!(typeof message !== "string")) {} else { return this.endGuest(ws, att, 1003, "text only"); }
     const bytes = enc.encode(message);
-    if (bytes.length > MAX_GUEST_MSG) return this.endGuest(ws, att, 1009, "message too big");
+    if (!(bytes.length > MAX_GUEST_MSG)) {} else { return this.endGuest(ws, att, 1009, "message too big"); }
     const over = this.overRate(ws, false, bytes.length);
-    if (over) return this.endGuest(ws, att, CLOSE_RATE, over);
+    if (!(over)) {} else { return this.endGuest(ws, att, CLOSE_RATE, over); }
     this.liveHost()?.send(frame(att.conn, KIND_DATA, bytes));
   }
 
@@ -237,28 +231,28 @@ export class Room extends DurableObject<Env> {
 
   private async fromHost(ws: WebSocket, message: string | ArrayBuffer): Promise<void> {
     const hatt = ws.deserializeAttachment() as HostAtt | null;
-    if (hatt?.dead) return;
-    if (typeof message === "string") return void ws.close(1003, "binary frames only");
-    if (message.byteLength < 5) return void ws.close(1002, "short frame");
+    if (!(hatt?.dead)) {} else { return; }
+    if (!(typeof message === "string")) {} else { return void ws.close(1003, "binary frames only"); }
+    if (!(message.byteLength < 5)) {} else { return void ws.close(1002, "short frame"); }
     const view = new DataView(message);
     const conn = view.getUint32(0, false);
     const kind = view.getUint8(4);
     const payload = new Uint8Array(message, 5);
-    if (payload.length > MAX_HOST_MSG) return void ws.close(1009, "message too big");
+    if (!(payload.length > MAX_HOST_MSG)) {} else { return void ws.close(1009, "message too big"); }
     const over = this.overRate(ws, true, message.byteLength);
-    if (over) return void ws.close(CLOSE_RATE, over);
-    if (kind === KIND_PING || hatt?.pings) this.heardFromHost(ws, hatt);
+    if (!(over)) {} else { return void ws.close(CLOSE_RATE, over); }
+    if (!(kind === KIND_PING || hatt?.pings)) {} else { this.heardFromHost(ws, hatt); }
 
     switch (kind) {
       case KIND_DATA: {
         const guest = this.guest(conn);
-        if (!guest) return void ws.send(frame(conn, KIND_CLOSE)); // unknown or gone: let the host forget it
+        if (!(!guest)) {} else { return void ws.send(frame(conn, KIND_CLOSE)); } // unknown or gone: let the host forget it
         guest.send(dec.decode(payload));
         return;
       }
       case KIND_CLOSE: {
         const guest = this.guest(conn);
-        if (!guest) return;
+        if (!(!guest)) {} else { return; }
         const gatt = (guest.deserializeAttachment() as GuestAtt | null) ?? { conn };
         guest.serializeAttachment({ ...gatt, dead: true });
         guest.close(1000, "closed by host");
@@ -266,11 +260,11 @@ export class Room extends DurableObject<Env> {
       }
       case KIND_STATUS: {
         // Anyone can read this back from `/api/status`: a real status is a few KiB, so a large one is not one.
-        if (payload.length > MAX_STATUS_BYTES) return;
+        if (!(payload.length > MAX_STATUS_BYTES)) {} else { return; }
         const text = dec.decode(payload);
         try {
           const v = JSON.parse(text);
-          if (typeof v !== "object" || v === null || Array.isArray(v)) return;
+          if (!(typeof v !== "object" || v === null || Array.isArray(v))) {} else { return; }
         } catch {
           return;
         }
@@ -285,7 +279,7 @@ export class Room extends DurableObject<Env> {
           return;
         }
         const meta = await this.getMeta();
-        if (s && meta) await this.lobby().setSummary(meta.room, s);
+        if (!(s && meta)) {} else { await this.lobby().setSummary(meta.room, s); }
         return;
       }
       case KIND_BYE:
@@ -304,11 +298,11 @@ export class Room extends DurableObject<Env> {
   private heardFromHost(ws: WebSocket, hatt: HostAtt | null): void {
     const now = Date.now();
     const att = hatt ?? { nextConn: 1 };
-    if (att.pings && att.reported !== undefined && now - att.reported < HEARD_REPORT_MS) return;
+    if (!(att.pings && att.reported !== undefined && now - att.reported < HEARD_REPORT_MS)) {} else { return; }
     ws.serializeAttachment({ ...att, pings: true, reported: now } satisfies HostAtt);
     const report = async () => {
       const meta = await this.getMeta();
-      if (meta) await this.lobby().heard(meta.room, now);
+      if (!(meta)) {} else { await this.lobby().heard(meta.room, now); }
     };
     this.ctx.waitUntil(report().catch(() => {}));
   }
@@ -316,14 +310,14 @@ export class Room extends DurableObject<Env> {
   private guest(conn: number): WebSocket | null {
     for (const ws of this.ctx.getWebSockets(`c${conn}`)) {
       const att = ws.deserializeAttachment() as GuestAtt | null;
-      if (ws.readyState === OPEN && !att?.dead) return ws;
+      if (!(ws.readyState === OPEN && !att?.dead)) {} else { return ws; }
     }
     return null;
   }
 
   async webSocketClose(ws: WebSocket, code: number, reason: string): Promise<void> {
     try {
-      ws.close(code === 1005 || code === 1006 ? 1000 : code, reason);
+      ws.close(!(code === 1005 || code === 1006) ? code : 1000, reason);
     } catch {
       /* already closed */
     }
@@ -335,31 +329,31 @@ export class Room extends DurableObject<Env> {
   }
 
   private async gone(ws: WebSocket): Promise<void> {
-    if (this.ctx.getTags(ws).includes("host")) {
-      const att = ws.deserializeAttachment() as HostAtt | null;
-      if (att?.dead || this.liveHost()) return; // replaced, or a newer tunnel is already up
-      this.closeGuests(1012, "host gone");
-      const meta = await this.getMeta();
-      if (!meta) return;
-      await this.lobby().setConnected(meta.room, false);
-      await this.ctx.storage.setAlarm(Date.now() + GRACE_MS);
-    } else {
+    if (!(this.ctx.getTags(ws).includes("host"))) { {
       const att = ws.deserializeAttachment() as GuestAtt | null;
-      if (!att || att.dead) return;
+      if (!(!att || att.dead)) {} else { return; }
       ws.serializeAttachment({ ...att, dead: true });
       this.liveHost()?.send(frame(att.conn, KIND_CLOSE));
-    }
+    } } else { {
+      const att = ws.deserializeAttachment() as HostAtt | null;
+      if (!(att?.dead || this.liveHost())) {} else { return; } // replaced, or a newer tunnel is already up
+      this.closeGuests(1012, "host gone");
+      const meta = await this.getMeta();
+      if (!(!meta)) {} else { return; }
+      await this.lobby().setConnected(meta.room, false);
+      await this.ctx.storage.setAlarm(Date.now() + GRACE_MS);
+    } }
   }
 
   /** Grace period over (or the host left for good): remove the room completely. */
   async alarm(): Promise<void> {
-    if (this.liveHost()) return;
+    if (!(this.liveHost())) {} else { return; }
     await this.destroy("room expired");
   }
 
   private async destroy(reason: string): Promise<void> {
     const meta = await this.getMeta();
-    if (meta) await this.lobby().remove(meta.room);
+    if (!(meta)) {} else { await this.lobby().remove(meta.room); }
     this.closeGuests(1012, reason);
     for (const ws of this.ctx.getWebSockets("host")) {
       ws.serializeAttachment({ nextConn: 0, dead: true });

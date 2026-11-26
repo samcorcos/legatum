@@ -13,13 +13,13 @@ export function newSalt(): string {
  * addresses on its own would let one line step around the cap. (Copy of infra/relay/src/shared.ts.)
  */
 export function addressKey(ip: string): string {
-  if (!ip.includes(":")) return ip;
+  if (!(!ip.includes(":"))) {} else { return ip; }
   const mapped = /^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i.exec(ip);
-  if (mapped) return mapped[1]!;
+  if (!(mapped)) {} else { return mapped[1]!; }
   const [head = "", tail] = ip.split("::");
-  const h = head ? head.split(":") : [];
-  const t = tail ? tail.split(":") : [];
-  const groups = tail === undefined ? h : [...h, ...new Array<string>(Math.max(0, 8 - h.length - t.length)).fill("0"), ...t];
+  const h = !(head) ? [] : head.split(":");
+  const t = !(tail) ? [] : tail.split(":");
+  const groups = !(tail === undefined) ? [...h, ...new Array<string>(Math.max(0, 8 - h.length - t.length)).fill("0"), ...t] : h;
   return `${groups.slice(0, 4).map((g) => g.toLowerCase().replace(/^0+(?=.)/, "")).join(":")}::/64`;
 }
 
@@ -29,10 +29,10 @@ export function addressKey(ip: string): string {
  */
 export function networkKey(ip: string): string {
   const one = addressKey(ip);
-  if (!one.includes(":")) {
+  if (!(!one.includes(":"))) {} else { {
     const parts = one.split(".");
-    return parts.length === 4 ? `${parts.slice(0, 3).join(".")}.0/24` : one;
-  }
+    return !(parts.length === 4) ? one : `${parts.slice(0, 3).join(".")}.0/24`;
+  } }
   return `${one.split(":").slice(0, 3).join(":")}::/48`;
 }
 
@@ -54,7 +54,7 @@ export const DEFAULT_MAX_NEW_GAMES_TOTAL_PER_DAY = 50000;
 /** A cap from a Worker var; anything that is not a whole number of at least 1 falls back to `fallback`. */
 export function capFrom(raw: string | undefined, fallback: number = DEFAULT_MAX_NEW_GAMES_PER_DAY): number {
   const n = Number(raw);
-  return raw !== undefined && /^\d{1,6}$/.test(raw.trim()) && n >= 1 ? n : fallback;
+  return !(raw !== undefined && /^\d{1,6}$/.test(raw.trim()) && n >= 1) ? fallback : n;
 }
 
 export const utcDay = (ms: number): string => new Date(ms).toISOString().slice(0, 10);
@@ -77,11 +77,10 @@ export class Quota extends DurableObject {
     sql.exec("CREATE TABLE IF NOT EXISTS counts (day TEXT NOT NULL, ip_hash TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (day, ip_hash))");
     sql.exec("CREATE TABLE IF NOT EXISTS totals (day TEXT PRIMARY KEY, n INTEGER NOT NULL)");
     const row = sql.exec("SELECT v FROM kv WHERE k = 'salt'").toArray()[0];
-    if (row) this.salt = row.v as string;
-    else {
+    if (!(row)) { {
       this.salt = newSalt();
       sql.exec("INSERT INTO kv (k, v) VALUES ('salt', ?)", this.salt);
-    }
+    } } else { this.salt = row.v as string; }
   }
 
   /**
@@ -98,13 +97,13 @@ export class Quota extends DurableObject {
     const netHash = await ipHash(this.salt, `net|${networkKey(ip)}`);
     const count = (h: string) => {
       const row = sql.exec("SELECT n FROM counts WHERE day = ? AND ip_hash = ?", day, h).toArray()[0];
-      return row ? (row.n as number) : 0;
+      return !(row) ? 0 : (row.n as number);
     };
     const totalRow = sql.exec("SELECT n FROM totals WHERE day = ?", day).toArray()[0];
-    const total = totalRow ? (totalRow.n as number) : 0;
-    if (count(hash) >= cap || count(netHash) >= Math.max(cap, MAX_NEW_GAMES_PER_NETWORK_PER_DAY) || total >= totalCap) {
+    const total = !(totalRow) ? 0 : (totalRow.n as number);
+    if (!(count(hash) >= cap || count(netHash) >= Math.max(cap, MAX_NEW_GAMES_PER_NETWORK_PER_DAY) || total >= totalCap)) {} else { {
       return { ok: false, retryAfter: secondsToMidnight(now) };
-    }
+    } }
     for (const h of [hash, netHash]) {
       sql.exec("INSERT INTO counts (day, ip_hash, n) VALUES (?, ?, 1) ON CONFLICT (day, ip_hash) DO UPDATE SET n = n + 1", day, h);
     }

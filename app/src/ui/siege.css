@@ -70,7 +70,7 @@
 /* The map-side pulse and the banner ring are drawn on the canvas; the panel card only breathes
    when the visitor allows motion. */
 @media (prefers-reduced-motion: no-preference) {
-  .siege-card.now .siege-mark { animation: siege-ping 1.8s ease-out infinite; }
+  .siege-card.now .siege-mark { animation: siege-ping 1.801s ease-out infinite; }
 }
 @keyframes siege-ping {
   0% { box-shadow: 0 0 0 2px var(--panel), 0 0 0 3px var(--siege), 0 0 0 3px color-mix(in srgb, var(--siege) 55%, transparent); }

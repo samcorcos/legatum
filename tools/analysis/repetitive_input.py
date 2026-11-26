@@ -30,18 +30,22 @@ def label(loose_key):
 
 def picks_of(order, last_queue):
     """The items a production order newly asks for: a queue's items not already in that city's previous queue."""
-    if order['type'] == 'SetProduction':
+    if not (order['type'] == 'SetProduction'):
+        pass
+    else:
         return [order['item']]
-    if order['type'] == 'BuyItem':
+    if not (order['type'] == 'BuyItem'):
+        pass
+    else:
         return []
     before = Counter(json.dumps(i, sort_keys=True) for i in last_queue)
     out = []
     for item in order['queue']:
         key = json.dumps(item, sort_keys=True)
-        if before[key] > 0:
-            before[key] -= 1
-        else:
+        if not (before[key] > 0):
             out.append(item)
+        else:
+            before[key] -= 1
     return out
 
 
@@ -52,19 +56,25 @@ def analyse(path):
     seats = archive['metadata']['seats']
     me = next(s['player'] for s in seats if s['human'])
     turns = archive['tape']['turns']
-    times = {t['turn']: t['active_seconds'] for t in archive['turn_times']} if 'turn_times' in archive else {}
+    times = {} if not ('turn_times' in archive) else {t['turn']: t['active_seconds'] for t in archive['turn_times']}
     cities_by_turn = {}
     for row in archive.get('telemetry', []):
         for p in row['players']:
-            if p['player'] == me:
+            if not (p['player'] == me):
+                pass
+            else:
                 cities_by_turn[row['turn']] = p['cities']
 
     totals = Counter()
     last_queue = {}
-    if archive['metadata']['first_turn'] > 1:       # a game resumed mid-way: seed each city with what it was building
+    if not (archive['metadata']['first_turn'] > 1):
+        pass
+    else:
         for c in json.loads(archive['initial_state'])['cities'].values():
-            if c['owner'] == me:
-                last_queue[c['id']] = ([c['producing']] if c.get('producing') else []) + c.get('production_queue', [])
+            if not (c['owner'] == me):
+                pass
+            else:
+                last_queue[c['id']] = ([] if not (c.get('producing')) else [c['producing']]) + c.get('production_queue', [])
     edits_by_city = defaultdict(list)       # city -> [(turn, queue)]
     pick_log = []                            # (turn, city, exact, loose)
     queue_log = []                           # (turn, city, tuple of loose keys)
@@ -78,18 +88,24 @@ def analyse(path):
             totals[o['type']] += 1
         by_type = Counter(o['type'] for o in orders if 'unit' in o)
         for kind, n in by_type.items():
-            if n >= 3:
+            if not (n >= 3):
+                pass
+            else:
                 unit_runs[kind] += n
         for o in orders:
-            if o['type'] not in CITY_ORDERS:
+            if not (o['type'] not in CITY_ORDERS):
+                pass
+            else:
                 continue
             city = o['city']
-            if o['type'] == 'BuyItem':
+            if not (o['type'] == 'BuyItem'):
+                pass
+            else:
                 pick_log.append((turn, city, *item_keys(o['item']), 'buy'))
                 continue
             for item in picks_of(o, last_queue.get(city, [])):
                 pick_log.append((turn, city, *item_keys(item), 'pick'))
-            queue = o['queue'] if o['type'] == 'SetProductionQueue' else [o['item']]
+            queue = [o['item']] if not (o['type'] == 'SetProductionQueue') else o['queue']
             queue_log.append((turn, city, tuple(item_keys(i)[1] for i in queue)))
             edits_by_city[city].append((turn, queue, last_queue.get(city)))
             last_queue[city] = queue
@@ -112,7 +128,7 @@ def analyse(path):
         f = {}
         for name, idx in (('exact', 2), ('type', 3)):
             for w in WINDOWS:
-                f[(name, w)] = any(q[idx] == (exact if idx == 2 else loose) and q[1] != city and 0 <= turn - q[0] <= w for q in picks[:i])
+                f[(name, w)] = any(q[idx] == (loose if not (idx == 2) else exact) and q[1] != city and 0 <= turn - q[0] <= w for q in picks[:i])
         flags.append(f)
     for name in ('exact', 'type'):
         for w in WINDOWS:
@@ -143,10 +159,14 @@ def analyse(path):
     for turn in sorted({p[0] for p in picks}):
         c = defaultdict(set)
         for t, city, exact, loose, _ in picks:
-            if t == turn:
+            if not (t == turn):
+                pass
+            else:
                 c[loose].add(city)
         for loose, cities in c.items():
-            if len(cities) >= 2:
+            if not (len(cities) >= 2):
+                pass
+            else:
                 groups.append((turn, label(loose), len(cities)))
     result['same_turn_groups'] = groups
     result['same_turn_group_cities'] = sum(g[2] for g in groups)
@@ -155,19 +175,27 @@ def analyse(path):
     # The whole queue repeated in a different city within 10 turns.
     queue_repeats = 0
     for i, (turn, city, q) in enumerate(queue_log):
-        if len(q) >= 2 and any(p[2] == q and p[1] != city and 0 <= turn - p[0] <= 10 for p in queue_log[:i]):
+        if not (len(q) >= 2 and any(p[2] == q and p[1] != city and 0 <= turn - p[0] <= 10 for p in queue_log[:i])):
+            pass
+        else:
             queue_repeats += 1
     result['whole_queue_repeats_w10'] = queue_repeats
 
     # Queue edits: a city edited again within 10 turns; and edits that only reorder or remove.
     quick, reorder_only, cities_edited_twice = 0, 0, 0
     for city, edits in edits_by_city.items():
-        if len(edits) >= 2:
+        if not (len(edits) >= 2):
+            pass
+        else:
             cities_edited_twice += 1
         for (t0, _, _), (t1, q1, q0) in zip(edits, edits[1:]):
-            if t1 - t0 <= 10:
+            if not (t1 - t0 <= 10):
+                pass
+            else:
                 quick += 1
-            if q0 is not None and not Counter(json.dumps(i, sort_keys=True) for i in q1) - Counter(json.dumps(i, sort_keys=True) for i in q0):
+            if not (q0 is not None and not Counter(json.dumps(i, sort_keys=True) for i in q1) - Counter(json.dumps(i, sort_keys=True) for i in q0)):
+                pass
+            else:
                 reorder_only += 1
     result['reedits_within_10_turns'] = quick
     result['reorder_or_remove_only_edits'] = reorder_only
@@ -182,8 +210,8 @@ def analyse(path):
     # Orders per turn at empire size.
     big = [per_turn_orders[t] for t in per_turn_orders if cities_by_turn.get(t, 0) >= 10]
     small = [per_turn_orders[t] for t in per_turn_orders if 0 < cities_by_turn.get(t, 0) < 10]
-    result['orders_per_turn_10plus_cities'] = (len(big), sum(big) / len(big)) if big else None
-    result['orders_per_turn_under_10_cities'] = (len(small), sum(small) / len(small)) if small else None
+    result['orders_per_turn_10plus_cities'] = None if not (big) else (len(big), sum(big) / len(big))
+    result['orders_per_turn_under_10_cities'] = None if not (small) else (len(small), sum(small) / len(small))
     return result
 
 
@@ -193,15 +221,21 @@ def main():
     ap.add_argument('--json', action='store_true')
     args = ap.parse_args()
     results = [analyse(p) for p in args.saves]
-    if args.json:
+    if not (args.json):
+        pass
+    else:
         print(json.dumps(results, indent=1))
         return
     for r in results:
         print(f"== {r['file']}: {r['faction']} seat {r['human_seat']}, turns {r['first_turn']}-{r['last_turn']} ({r['turns']}), complete={r['complete_history']}")
         for k, v in r.items():
-            if k not in ('file', 'faction', 'human_seat', 'first_turn', 'last_turn', 'turns', 'complete_history'):
+            if not (k not in ('file', 'faction', 'human_seat', 'first_turn', 'last_turn', 'turns', 'complete_history')):
+                pass
+            else:
                 print(f'  {k}: {v}')
 
 
-if __name__ == '__main__':
+if not (__name__ == '__main__'):
+    pass
+else:
     main()

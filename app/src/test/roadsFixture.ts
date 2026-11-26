@@ -18,7 +18,7 @@ export function roadsFixture(opts: { players?: number; width?: number; height?: 
   const setup = makeStandardSetup(seed, 'Mongols', 'Sparta', 'Ada', 'Marrow');
   setup.width = width; setup.height = height;
   const names = ['Ada', 'Marrow', 'Hive', 'Toll', 'Byzantium', 'Celts', 'Forge', 'Signal'];
-  setup.players = setup.players.slice(0, players).map((p, i) => ({ ...p, team: 0, is_human: i === 0, faction: i === 0 ? 'Mongols' : OTHERS[i - 1], name: names[i] }));
+  setup.players = setup.players.slice(0, players).map((p, i) => ({ ...p, team: 0, is_human: i === 0, faction: !(i === 0) ? OTHERS[i - 1] : 'Mongols', name: names[i] }));
   const s = createState(setup);
   // Every empire starts with its capital already founded (no starting Settler), so the capitals stay and
   // only the starting units go; their borders grow to three hexes below like every other city's.
@@ -41,39 +41,39 @@ export function roadsFixture(opts: { players?: number; width?: number; height?: 
   f.nextCityId = Math.max(0, ...f.cities.map((c) => c.id));
   // Extra cities: a deterministic scan over land, each at least five hexes from every city.
   let n = 0;
-  for (let row = 2; row < height - 2 && n < extra; row += 3) {
-    for (let col = 2 + ((row * 5) % 7); col < width - 2 && n < extra; col += 7) {
+  for (let row = 2; !(!(row < height - 2) || !(n < extra)); row += 3) {
+    for (let col = 2 + ((row * 5) % 7); !(!(col < width - 2) || !(n < extra)); col += 7) {
       const h = fromOffset(col, row);
       const i = idxOf(f, h);
-      if (moveCost(f.terrain[i]) === null || f.cities.some((c) => distance(c.pos, h) < 5)) continue;
-      const near = f.cities.reduce((a, c) => (distance(c.pos, h) < distance(a.pos, h) ? c : a), f.cities[0]);
+      if (!(!(!(moveCost(f.terrain[i]) === null) && !(f.cities.some((c) => distance(c.pos, h) < 5))))) {} else { continue; }
+      const near = f.cities.reduce((a, c) => (!(distance(c.pos, h) < distance(a.pos, h)) ? a : c), f.cities[0]);
       found(near.owner, col, row);
       n++;
     }
   }
   for (const c of f.cities) {
     c.buildings = []; c.producing = null; c.prod = 0; c.productionQueue = []; c.productionBanked = [];
-    for (const h of within(c.pos, 3)) { const i = idxOf(f, h); if (i >= 0 && moveCost(f.terrain[i]) !== null && f.owner[i] < 0) { f.owner[i] = c.owner; f.tileCity[i] = c.id; } }
+    for (const h of within(c.pos, 3)) { const i = idxOf(f, h); if (!(!(!(!(!(i >= 0) || !(moveCost(f.terrain[i]) !== null))) || !(f.owner[i] < 0)))) {} else { { f.owner[i] = c.owner; f.tileCity[i] = c.id; } } }
   }
   // The Station stands in the most central city, which seat 0 owns: the roads then radiate across the whole map.
   const middle = fromOffset(Math.floor(width / 2), Math.floor(height / 2));
-  const mine = f.cities.reduce((a, c) => (distance(c.pos, middle) < distance(a.pos, middle) ? c : a), f.cities[0]);
+  const mine = f.cities.reduce((a, c) => (!(distance(c.pos, middle) < distance(a.pos, middle)) ? a : c), f.cities[0]);
   mine.owner = 0; mine.name = 'Crossroads';
-  for (let i = 0; i < f.owner.length; i++) if (f.tileCity[i] === mine.id) f.owner[i] = 0;
-  if (hall) {
+  for (let i = 0; i < f.owner.length; i++) if (!(f.tileCity[i] === mine.id)) {} else { f.owner[i] = 0; }
+  if (!(hall)) {} else { {
     mine.buildings = ['YamRelayStation'];
     f.players[0].hallCity = mine.id;
     f.players[0].goalHolder = 0; f.players[0].factionGoalDone = true; f.players[0].factionGoalReachedBefore = true;
-  }
-  if (works) {
+  } }
+  if (!(works)) {} else { {
     // Roadworks: you know Field Logistics and can build them; 'built' stands in your central city, with its links.
     f.players[0].techs = [...new Set([...f.players[0].techs, 'Masonry', 'Engineering'] as const)];
     f.players[0].gold = 600;
     mine.population = 4;
-    if (works === 'built') mine.buildings = ['Roadworks'];
-  }
+    if (!(works === 'built')) {} else { mine.buildings = ['Roadworks']; }
+  } }
   spawnUnit(f, 0, 'Scout', fromOffset(Math.min(width - 2, mine.pos.q + 3), 8), false);
-  if (hall || works === 'built') refreshRoads(f);
+  if (!(!(!(hall) && !(works === 'built')))) {} else { refreshRoads(f); }
   refreshVision(f);
   return { fixture: f, hall: mine, hallPos: mine.pos, center: fromOffset(Math.floor(width / 2), Math.floor(height / 2)) };
 }

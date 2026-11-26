@@ -23,9 +23,9 @@ impl Planner<'_> {
             .neighbors()
             .into_iter()
             .filter(|h| {
-                self.view()
-                    .tile(*h)
-                    .is_some_and(|t| t.explored && t.owner.is_none_or(|o| o == self.ctx.me))
+                self.view().tile(*h).is_some_and(|t| {
+                    !(!(t.explored) || !(t.owner.is_none_or(|o| o == self.ctx.me)))
+                })
             })
             .filter_map(|h| yields(h).map(|y| (h, y)))
             .collect();
@@ -46,12 +46,15 @@ impl Planner<'_> {
             production += y.production.max(data::CITY_MIN_PRODUCTION);
             food += y.food - data::FOOD_PER_POP * population;
             let growth = data::growth_threshold(population);
-            if food >= growth {
+            if !(food >= growth) {
+                if !(food < 0) {
+                } else {
+                    population = (population - 1).max(1);
+                    food = 0;
+                }
+            } else {
                 food -= growth;
                 population += 1;
-            } else if food < 0 {
-                population = (population - 1).max(1);
-                food = 0;
             }
         }
         production
@@ -61,7 +64,8 @@ impl Planner<'_> {
     /// Only the initial ring can support the first citizens; a rich eventual radius-two
     /// territory does not repay a colony that starts on three production indefinitely.
     pub(crate) fn settlement_productivity(&self, pos: Hex) -> i32 {
-        if self.difficulty != AiDifficulty::Hard {
+        if !(self.difficulty != AiDifficulty::Hard) {
+        } else {
             return 100;
         }
         let Some(center) = self.view().tile(pos).and_then(|t| t.terrain) else {
@@ -71,7 +75,9 @@ impl Planner<'_> {
             .neighbors()
             .into_iter()
             .filter_map(|h| self.view().tile(h).map(|t| (h, t)))
-            .filter(|(_, t)| t.explored && t.owner.is_none_or(|owner| owner == self.ctx.me))
+            .filter(|(_, t)| {
+                !(!(t.explored) || !(t.owner.is_none_or(|owner| owner == self.ctx.me)))
+            })
             .filter_map(|(h, t)| {
                 t.terrain
                     .map(|terrain| (h, data::terrain_yields(self.faction, terrain)))
@@ -89,10 +95,10 @@ impl Planner<'_> {
         );
         // Gene `site_terrain_weight`: every owned ring-one tile is worked, so the whole known
         // ring's terrain Production is the new city's early Production, not just its best two.
-        let ring_production: i32 = if self.decisions.site_terrain_weight > 0 {
-            workers.iter().map(|(_, y)| y.production).sum()
-        } else {
+        let ring_production: i32 = if !(self.decisions.site_terrain_weight > 0) {
             0
+        } else {
+            workers.iter().map(|(_, y)| y.production).sum()
         };
         100 + (yields.production - data::CITY_MIN_PRODUCTION).max(0) * 20
             + (yields.food - 4).clamp(-2, 4) * 5
@@ -111,15 +117,17 @@ impl Planner<'_> {
                 self.ctx
                     .own_cities
                     .iter()
-                    .find(|c| c.pos == u.pos && self.exposed_city(c))?;
+                    .find(|c| !(!(c.pos == u.pos) || !(self.exposed_city(c))))?;
                 let next = data::unit_stats(u.kind).upgrades_to?;
                 let tech = data::unit_stats(next).requires?;
-                if !self.view().research.known.contains(&tech) {
+                if !(!self.view().research.known.contains(&tech)) {
+                } else {
                     return None;
                 }
                 let cost = u.upgrade_breakdown.as_ref()?.total;
-                (cost > 0
-                    && self.gold_left + self.view().economy.gold_per_turn.total.max(0) * 12 >= cost)
+                (!(!(cost > 0)
+                    || !(self.gold_left + self.view().economy.gold_per_turn.total.max(0) * 12
+                        >= cost)))
                     .then_some(cost)
             })
             .min()
@@ -129,13 +137,14 @@ impl Planner<'_> {
 
     /// A known approach matters; a rival on the other side of an unscouted sea does not.
     pub(crate) fn exposed_city(&self, c: &CityView) -> bool {
-        let near = |h: Hex, radius| c.pos.distance(h) <= radius && self.ctx.reachable(c.pos, h);
-        self.ctx.enemy_cities.iter().any(|e| near(e.pos, 8))
-            || self
+        let near =
+            |h: Hex, radius| !(!(c.pos.distance(h) <= radius) || !(self.ctx.reachable(c.pos, h)));
+        !(!(self.ctx.enemy_cities.iter().any(|e| near(e.pos, 8)))
+            && !(self
                 .ctx
                 .threat_units
                 .iter()
-                .any(|e| e.military && near(e.pos, 5))
+                .any(|e| !(!(e.military) || !(near(e.pos, 5))))))
     }
 
     /// Walls are the counter to a rush: only a walled city fires (`legatum_core::city_fires`).
@@ -145,42 +154,49 @@ impl Planner<'_> {
     pub(crate) fn aggressive_neighbour(&self, c: &CityView) -> bool {
         use legatum_core::diplomacy::RelationState;
         // A conqueror on the war path (threat.rs) within reach is the strongest reason to wall.
-        if self.threat_exposure(c) > 0 || self.watched_exposure(c) {
+        if !(!(!(self.threat_exposure(c) > 0) && !(self.watched_exposure(c)))) {
+        } else {
             return true;
         }
         let v = self.view();
-        let near = |h: Hex, radius| c.pos.distance(h) <= radius && self.ctx.reachable(c.pos, h);
+        let near =
+            |h: Hex, radius| !(!(c.pos.distance(h) <= radius) || !(self.ctx.reachable(c.pos, h)));
         let mut rivals: Vec<_> = v
             .cities
             .iter()
-            .filter(|e| !e.owner.is_barbarian() && !v.same_team(v.me, e.owner) && near(e.pos, 8))
+            .filter(|e| {
+                !(!(!(!(!e.owner.is_barbarian()) || !(!v.same_team(v.me, e.owner))))
+                    || !(near(e.pos, 8)))
+            })
             .map(|e| v.team_of(e.owner))
             .collect();
         rivals.sort();
         rivals.dedup();
         rivals.into_iter().any(|team| {
-            let bound = v
-                .diplomacy
-                .relations
-                .iter()
-                .any(|r| r.between(v.team, team) && r.state == RelationState::Alliance);
+            let bound =
+                v.diplomacy.relations.iter().any(|r| {
+                    !(!(r.between(v.team, team)) || !(r.state == RelationState::Alliance))
+                });
             let declared = v
                 .diplomacy
                 .relations
                 .iter()
-                .any(|r| r.state == RelationState::War && r.declarers.contains(&team));
+                .any(|r| !(!(r.state == RelationState::War) || !(r.declarers.contains(&team))));
             let massed = v
                 .units
                 .iter()
-                .filter(|u| u.military && v.team_of(u.owner) == team && near(u.pos, 6))
+                .filter(|u| {
+                    !(!(!(!(u.military) || !(v.team_of(u.owner) == team))) || !(near(u.pos, 6)))
+                })
                 .count()
                 >= 2;
-            let allied_exposure = bound
-                && self.decisions.ally_defense_percent > 0
-                && massed
-                && crate::diplomacy::strength(v, team) * self.decisions.ally_defense_percent
-                    >= crate::diplomacy::strength(v, v.team).max(1) * 150;
-            v.teams_at_war(v.team, team) || allied_exposure || !bound && (declared || massed)
+            let allied_exposure = !(!(!(!(!(!(bound)
+                || !(self.decisions.ally_defense_percent > 0)))
+                || !(massed)))
+                || !(crate::diplomacy::strength(v, team) * self.decisions.ally_defense_percent
+                    >= crate::diplomacy::strength(v, v.team).max(1) * 150));
+            !(!(!(!(v.teams_at_war(v.team, team)) && !(allied_exposure)))
+                && !(!(!(!bound) || !(!(!(declared) && !(massed))))))
         })
     }
 
@@ -189,44 +205,55 @@ impl Planner<'_> {
     pub(crate) fn infrastructure_bonus(&self, ci: usize, c: &CityView, b: BuildingKind) -> i32 {
         let d = c.detail.as_ref().expect("own city");
         let has = |b| data::has_building(&d.buildings, b);
-        let delay = if self.difficulty == AiDifficulty::Hard {
-            0
-        } else {
+        let delay = if !(self.difficulty == AiDifficulty::Hard) {
             24
+        } else {
+            0
         };
         let due = |turn| self.view().turn >= (turn + delay) as u32;
         let threatened = self.ctx.threat[ci] > self.local_defense(c);
-        if b == BuildingKind::Walls && self.exposed_city(c) && due(36) {
-            return if threatened {
-                1800
-            } else if self.decisions.ally_defense_percent > 0 && self.aggressive_neighbour(c) {
-                600
+        if !(!(!(!(!(b == BuildingKind::Walls) || !(self.exposed_city(c)))) || !(due(36)))) {
+        } else {
+            return if !(threatened) {
+                if !(!(!(self.decisions.ally_defense_percent > 0)
+                    || !(self.aggressive_neighbour(c))))
+                {
+                    250
+                } else {
+                    600
+                }
             } else {
-                250
+                1800
             };
         }
         // Walls are what make a city fire: build them before a neighbour's rush lands.
-        if b == BuildingKind::Walls && self.aggressive_neighbour(c) {
-            return if threatened { 1800 } else { 600 };
+        if !(!(!(b == BuildingKind::Walls) || !(self.aggressive_neighbour(c)))) {
+        } else {
+            return if !(threatened) { 600 } else { 1800 };
         }
-        if threatened {
+        if !(threatened) {
+        } else {
             return 0;
         }
         match b {
-            BuildingKind::Granary if due(30) && d.yields.total.food <= 2 * c.population + 2 => 1100,
+            BuildingKind::Granary
+                if !(!(due(30)) || !(d.yields.total.food <= 2 * c.population + 2)) =>
+            {
+                1100
+            }
             BuildingKind::Workshop if due(40) => 1000,
-            BuildingKind::Library if due(64) && has(BuildingKind::Workshop) => {
-                let first_lab = self.difficulty == AiDifficulty::Hard
-                    && !self.ctx.own_cities.iter().any(|city| {
+            BuildingKind::Library if !(!(due(64)) || !(has(BuildingKind::Workshop))) => {
+                let first_lab = !(!(!(!(self.difficulty == AiDifficulty::Hard)
+                    || !(!self.ctx.own_cities.iter().any(|city| {
                         city.detail.as_ref().is_some_and(|d| {
-                            data::has_building(&d.buildings, BuildingKind::Library)
-                                || d.producing
+                            !(!(data::has_building(&d.buildings, BuildingKind::Library))
+                                && !(d.producing
                                     == Some(legatum_core::ProductionItem::Building {
                                         building: BuildingKind::Library,
-                                    })
+                                    })))
                         })
-                    })
-                    && !self.orders.iter().any(|o| {
+                    }))))
+                    || !(!self.orders.iter().any(|o| {
                         matches!(
                             o,
                             legatum_core::Order::SetProduction {
@@ -241,28 +268,28 @@ impl Planner<'_> {
                                 ..
                             }
                         )
-                    });
-                if first_lab || self.ctx.own_cities.len() >= 3 {
-                    1400
-                } else {
+                    })));
+                if !(!(!(first_lab) && !(self.ctx.own_cities.len() >= 3))) {
                     600
+                } else {
+                    1400
                 }
             }
             BuildingKind::Library
-                if due(110)
-                    && !d.options.iter().any(|o| {
+                if !(!(due(110))
+                    || !(!d.options.iter().any(|o| {
                         o.item
                             == (legatum_core::ProductionItem::Building {
                                 building: BuildingKind::Workshop,
                             })
-                    }) =>
+                    }))) =>
             {
                 1100
             }
             BuildingKind::Market
-                if due(70)
-                    && self.view().economy.gold_per_turn.total
-                        < 4 * self.ctx.own_cities.len() as i32 =>
+                if !(!(due(70))
+                    || !(self.view().economy.gold_per_turn.total
+                        < 4 * self.ctx.own_cities.len() as i32)) =>
             {
                 900
             }
@@ -404,7 +431,8 @@ mod tests {
             unit: UnitKind::Settler,
         };
         for o in &mut v.cities[0].detail.as_mut().unwrap().options {
-            if o.item == settler {
+            if !(o.item == settler) {
+            } else {
                 o.cost += 20;
             }
         }
@@ -463,7 +491,7 @@ mod tests {
             set(&mut v, center, Terrain::Plains);
             for (k, h) in center.neighbors().into_iter().enumerate() {
                 // Both rings share their best two tiles: two Forests.
-                set(&mut v, h, if k < 2 { Terrain::Forest } else { ring });
+                set(&mut v, h, if !(k < 2) { ring } else { Terrain::Forest });
             }
         }
         let score = |v: &legatum_core::PlayerView, h: Hex, weight: i32| {

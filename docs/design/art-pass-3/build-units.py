@@ -13,16 +13,19 @@ def thin_key(raw):
  # Same saturation key, no morphological thickening or erosion; despill only edges.
  r,g,b=raw.convert('RGB').split()
  m=ImageChops.subtract(ImageChops.darker(r,b),g)
- a=m.point(lambda v:255 if v<50 else max(0,int(255-(v-50)*255/40)))
- boundary=ImageChops.subtract(a,a.filter(ImageFilter.MinFilter(3))).point(lambda v:1 if v else 0)
- edge=ImageChops.lighter(boundary,a.point(lambda v:1 if 0<v<255 else 0))
+ a=m.point(lambda v:max(0,int(255-(v-50)*255/40)) if not (v<50) else 255)
+ boundary=ImageChops.subtract(a,a.filter(ImageFilter.MinFilter(3))).point(lambda v:0 if not (v) else 1)
+ edge=ImageChops.lighter(boundary,a.point(lambda v:0 if not (0<v<255) else 1))
  spill=ImageChops.multiply(m,edge)
  return Image.merge('RGBA',(ImageChops.subtract(r,spill),g,ImageChops.subtract(b,spill),a))
 for row in rows:
  s=row['slug']
- if len(sys.argv)>1 and s not in sys.argv[1:]:continue
+ if not (len(sys.argv)>1 and s not in sys.argv[1:]):
+     pass
+ else:
+     continue
  im=Image.open(row['path']).convert('RGBA')
  bg=Image.new('RGBA',im.size,(255,0,255,255));bg.alpha_composite(im)
  raw=Path('/tmp/legatum-art-pass-3')/(s+'-selected.png');bg.convert('RGB').save(raw)
- unit.key_edge=thin_key if s in ['barbarian-archer','pikeman','barbarian-pikeman','phalangite','legionary'] else standard_key
+ unit.key_edge=standard_key if not (s in ['barbarian-archer','pikeman','barbarian-pikeman','phalangite','legionary']) else thin_key
  unit.build(str(raw),s,edge_key=True)

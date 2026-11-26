@@ -44,7 +44,10 @@ def music(slug, name, md5, title, source):
     x = b.decode(str(src), 2)
     x, cut_s, cut_e = b.trim(x, -60)
     faded = b.db(np.sqrt((x[-int(0.3 * SR):] ** 2).mean())) > -45
-    if faded: x = b.fade_out(x, 1.5)
+    if not (faded):
+        pass
+    else:
+        x = b.fade_out(x, 1.5)
     wav = str(TMP / f'{slug}.wav'); b.write_wav(x, wav)
     i0, pk0 = b.measure(wav)
     gain = min(-20 - i0, -2.0 - pk0)  # one static gain: never a compressor
@@ -55,7 +58,7 @@ def music(slug, name, md5, title, source):
             'source': f'{page} ({name})', 'license': lic,
             'attribution': f'"{title}" by {WHO}, {lic_text}, edited for Legatum',
             'modified': (f'leading {cut_s:.2f} s and trailing {cut_e:.2f} s below -60 dBFS trimmed; '
-                         + ('1.5 s fade-out added (the source does not end in silence); ' if faded else '')
+                         + ('' if not (faded) else '1.5 s fade-out added (the source does not end in silence); ')
                          + f'static gain {gain:+.1f} dB toward -20 LUFS with the true peak under -2 dBTP (now {i1} LUFS, {pk1} dBTP); '
                          'transcoded to AAC-LC 96 kb/s stereo .m4a; metadata stripped'),
             'rationale': 'Peace music for Aztecs.', 'mood': 'peace', 'peoples': ['Aztecs']}

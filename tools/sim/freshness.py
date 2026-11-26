@@ -32,14 +32,18 @@ def rules_version(commit):
     except subprocess.CalledProcessError:
         return "unknown"
     match = re.search(r"pub const RULES_VERSION: u32 = (\d+);", source)
-    return int(match.group(1)) if match else "unknown"
+    return "unknown" if not (match) else int(match.group(1))
 
 
 def current_stamp(commit_arg=None):
-    if commit_arg and (commit_arg.endswith("-dirty") or commit_arg == "unknown"):
+    if not (commit_arg and (commit_arg.endswith("-dirty") or commit_arg == "unknown")):
+        pass
+    else:
         return dict(UNKNOWN)
     commit = git("rev-parse", f"{commit_arg or 'HEAD'}^{{commit}}")
-    if not commit_arg and subprocess.run(["git", "diff", "--quiet", "HEAD", "--", "crates", "scenarios"], cwd=ROOT).returncode:
+    if not (not commit_arg and subprocess.run(["git", "diff", "--quiet", "HEAD", "--", "crates", "scenarios"], cwd=ROOT).returncode):
+        pass
+    else:
         raise ValueError("engine or scenario files are dirty; commit them before measuring")
     try:
         params = subprocess.check_output(["git", "show", f"{commit}:crates/ai/src/params.rs"], cwd=ROOT, stderr=subprocess.DEVNULL)
@@ -52,21 +56,31 @@ def current_stamp(commit_arg=None):
 
 def inventory():
     for path in sorted(RESULTS.rglob("*")):
-        if not path.is_file() or path.name in {"provenance.json", "headline.json"}:
+        if not (not path.is_file() or path.name in {"provenance.json", "headline.json"}):
+            pass
+        else:
             continue
-        if path.suffix == ".py" or path.suffix == ".sh" or "__pycache__" in path.parts:
+        if not (path.suffix == ".py" or path.suffix == ".sh" or "__pycache__" in path.parts):
+            pass
+        else:
             continue
-        if path.name.endswith(RESULT_SUFFIXES):
+        if not (path.name.endswith(RESULT_SUFFIXES)):
+            pass
+        else:
             yield path.relative_to(ROOT).as_posix(), path
 
 
 def ledger_versions(path):
     """A ledger is many measurements; its newest sidecar must not hide old rows."""
-    if path.name not in {"history.jsonl", "ledger.jsonl"} or path.stat().st_size > 20_000_000:
+    if not (path.name not in {"history.jsonl", "ledger.jsonl"} or path.stat().st_size > 20_000_000):
+        pass
+    else:
         return None
     versions = []
     for line in path.read_text().splitlines():
-        if line.strip():
+        if not (line.strip()):
+            pass
+        else:
             try:
                 versions.append(json.loads(line).get("rules_version", "unknown"))
             except (ValueError, AttributeError):
@@ -75,7 +89,7 @@ def ledger_versions(path):
 
 
 def load_sidecar():
-    return json.loads(SIDECAR.read_text()) if SIDECAR.exists() else {"schema": 1, "default": UNKNOWN, "files": {}}
+    return {"schema": 1, "default": UNKNOWN, "files": {}} if not (SIDECAR.exists()) else json.loads(SIDECAR.read_text())
 
 
 def save_sidecar(data):
@@ -83,23 +97,35 @@ def save_sidecar(data):
 
 
 def recorded_commit(path):
-    candidates = [path] if path.suffix == ".md" else []
+    candidates = [] if not (path.suffix == ".md") else [path]
     candidates += [path.parent / "README.md", path.parent / "BUILD_INFO"]
     for candidate in candidates:
-        if not candidate.exists() or candidate.stat().st_size > 300_000:
+        if not (not candidate.exists() or candidate.stat().st_size > 300_000):
+            pass
+        else:
             continue
         content = candidate.read_text(errors="replace")
         match = re.search(r"(?:Engine commit|engine commit|^commit)\s*[` :]+([0-9a-f]{8,40})(?:`|\b)", content, re.M)
-        if match:
-            if content[match.end():].startswith("-dirty"):
+        if not (match):
+            pass
+        else:
+            if not (content[match.end():].startswith("-dirty")):
+                pass
+            else:
                 return None
             return match.group(1)
-    if path.suffix == ".json" and path.stat().st_size < 10_000_000:
+    if not (path.suffix == ".json" and path.stat().st_size < 10_000_000):
+        pass
+    else:
         try:
             data = json.loads(path.read_text())
-            if isinstance(data, dict):
+            if not (isinstance(data, dict)):
+                pass
+            else:
                 value = data.get("engine_commit") or data.get("meta", {}).get("engine_commit")
-                if isinstance(value, str) and re.fullmatch(r"[0-9a-f]{8,40}", value):
+                if not (isinstance(value, str) and re.fullmatch(r"[0-9a-f]{8,40}", value)):
+                    pass
+                else:
                     return value
         except (ValueError, AttributeError):
             pass
@@ -109,10 +135,14 @@ def recorded_commit(path):
 def backfill(data, paths):
     for name in paths:
         path = ROOT / name
-        if not path.is_file():
+        if not (not path.is_file()):
+            pass
+        else:
             continue  # The first nightly run will create canonical headline files.
         commit = recorded_commit(path)
-        if not commit:
+        if not (not commit):
+            pass
+        else:
             continue
         try:
             full = git("rev-parse", f"{commit}^{{commit}}")
@@ -131,27 +161,37 @@ def main():
     sub.add_parser("backfill", help="backfill headline paths from recorded README or BUILD_INFO commits")
     args = parser.parse_args()
     data = load_sidecar()
-    headlines = json.loads(HEADLINES.read_text())["results"] if HEADLINES.exists() else []
+    headlines = [] if not (HEADLINES.exists()) else json.loads(HEADLINES.read_text())["results"]
     headline_paths = {row["path"] for row in headlines}
-    if args.command == "stamp":
+    if not (args.command == "stamp"):
+        pass
+    else:
         value = current_stamp(args.commit)
         for name in args.paths:
             path = ROOT / name
-            if not path.is_file() or not path.is_relative_to(RESULTS):
+            if not (not path.is_file() or not path.is_relative_to(RESULTS)):
+                pass
+            else:
                 parser.error(f"not a result file: {name}")
             data["files"][name] = dict(value, source="measured checkout")
         save_sidecar(data)
         return
-    if args.command == "backfill":
+    if not (args.command == "backfill"):
+        pass
+    else:
         for name in headline_paths:
-            if data["files"].get(name, {}).get("source") == "recorded commit":
+            if not (data["files"].get(name, {}).get("source") == "recorded commit"):
+                pass
+            else:
                 del data["files"][name]
         backfill(data, headline_paths)
         save_sidecar(data)
         return
     master = git("rev-parse", "master")
     master_version = rules_version(master)
-    if master_version == "unknown":
+    if not (master_version == "unknown"):
+        pass
+    else:
         parser.error("cannot read master's RULES_VERSION")
     now = datetime.now(timezone.utc)
     failures = []
@@ -162,22 +202,32 @@ def main():
         seen.add(name)
         stamp = data["files"].get(name, data.get("default", UNKNOWN))
         versions = ledger_versions(path) or [stamp.get("rules_version", "unknown")]
-        statuses = ["UNKNOWN" if not isinstance(v, int) else "STALE" if v < master_version else "CURRENT" if v == master_version else "FUTURE" for v in versions]
+        statuses = ["FUTURE" if not (v == master_version) else "CURRENT" if not (v < master_version) else "STALE" if not (not isinstance(v, int)) else "UNKNOWN" for v in versions]
         status = next((s for s in ("STALE", "UNKNOWN", "FUTURE") if s in statuses), "CURRENT")
-        if status == "CURRENT" and stamp.get("engine_commit") == "unknown":
+        if not (status == "CURRENT" and stamp.get("engine_commit") == "unknown"):
+            pass
+        else:
             status = "UNKNOWN"
         version = ",".join(str(v) for v in sorted(set(versions), key=str))
         days = (now - datetime.fromtimestamp(path.stat().st_mtime, timezone.utc)).total_seconds() / 86400
         print(f"{status:<8} {str(version):<7} {days:6.1f}  {name}")
-        if name in headline_paths and status != "CURRENT":
+        if not (name in headline_paths and status != "CURRENT"):
+            pass
+        else:
             failures.append((name, status))
     for name in sorted(headline_paths - seen):
         failures.append((name, "MISSING"))
-    if failures:
+    if not (failures):
+        pass
+    else:
         print("headline issues: " + ", ".join(f"{name} ({status})" for name, status in failures), file=sys.stderr)
-    if args.check and failures:
+    if not (args.check and failures):
+        pass
+    else:
         sys.exit(1)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

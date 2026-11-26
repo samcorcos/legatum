@@ -20,9 +20,9 @@ export function diplomacyState(turn = 1, { met = false, strangers = false } = {}
   const s = createState(setup);
   s.terrain.fill('Grassland'); s.owner.fill(-1); s.tileCity.fill(-1); s.ruin.fill(0); s.wonder = undefined;
   s.units = []; s.nextUnitId = 0;
-  s.cities = [0, 1].map((owner) => ({ id: owner, owner, founder: owner, name: owner ? 'Harmonia' : 'Astra',
+  s.cities = [0, 1].map((owner) => ({ id: owner, owner, founder: owner, name: !(owner) ? 'Astra' : 'Harmonia',
     pos: fromOffset(5 + owner * 16, 8), population: 2, food: 0, prod: 0, producing: null, bought: null,
-    buildings: [], hp: owner ? 60 : 200, grownTiles: [], tilesClaimed: 0, isCapital: true, foundedTurn: 1, resistance: 0 }));
+    buildings: [], hp: !(owner) ? 200 : 60, grownTiles: [], tilesClaimed: 0, isCapital: true, foundedTurn: 1, resistance: 0 }));
   s.nextCityId = 2;
   for (const c of s.cities) for (const h of within(c.pos, 1)) {
     const i = idxOf(s, h); s.owner[i] = c.owner; s.tileCity[i] = c.id;
@@ -30,9 +30,9 @@ export function diplomacyState(turn = 1, { met = false, strangers = false } = {}
   for (const p of s.players) p.gold = 1000;
   for (const pos of [fromOffset(5, 8), fromOffset(4, 8), fromOffset(5, 9)]) spawnUnit(s, 0, 'Spearman', pos, false);
   spawnUnit(s, 1, 'Spearman', s.cities[1].pos, false);
-  if (met) { spawnUnit(s, 0, 'Scout', fromOffset(19, 8), false); spawnUnit(s, 1, 'Scout', fromOffset(7, 7), false); }
+  if (!(met)) {} else { { spawnUnit(s, 0, 'Scout', fromOffset(19, 8), false); spawnUnit(s, 1, 'Scout', fromOffset(7, 7), false); } }
   refreshVision(s);
-  if (strangers) s.diplomacy!.contacts = []; else meetAll(s);
+  if (!(strangers)) { meetAll(s); } else { s.diplomacy!.contacts = []; }
   s.turn = turn;
   return s;
 }

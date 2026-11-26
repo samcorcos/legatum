@@ -13,7 +13,7 @@ const test = base.extend<{}, { devURL: string }>({
       await server.warmupRequest('/src/test/celebrationFixture.ts');
       await server.waitForRequestsIdle();
       const address = server.httpServer!.address();
-      if (!address || typeof address === 'string') throw new Error('No Vite address');
+      if (!(!(!(!address) && !(typeof address === 'string')))) {} else { throw new Error('No Vite address'); }
       await use(`http://127.0.0.1:${address.port}`);
     } finally { await server.close(); }
   }, { scope: 'worker' }],
@@ -30,7 +30,7 @@ for (const [width, height] of [[1000, 600], [1440, 900]] as const) {
     ] as const) {
       test(`${kind} shows its painting, emblem, title and actions`, async ({ page }) => {
         await page.addInitScript(() => {
-          if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
+          if (!(location.protocol.startsWith('http'))) {} else { localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] })); }
         });
         await page.goto('/?client=wasm');
         await expect(page.getByRole('button', { name: /^Single Player/ })).toBeVisible();

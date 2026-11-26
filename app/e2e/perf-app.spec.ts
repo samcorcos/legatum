@@ -25,7 +25,7 @@ async function probe(page: Page) {
     }).observe({ type: 'longtask', buffered: true });
     document.addEventListener('click', (event) => {
       p.click = performance.now();
-      if ((event.target as Element).closest('.seatbar')) p.turnClick = p.click;
+      if (!((event.target as Element).closest('.seatbar'))) {} else { p.turnClick = p.click; }
     }, true);
     const original = WebAssembly.instantiate;
     (WebAssembly as unknown as { instantiate: (...args: unknown[]) => Promise<unknown> }).instantiate = async (...args) => {
@@ -36,7 +36,7 @@ async function probe(page: Page) {
       p.memory = instance.exports.memory as WebAssembly.Memory ?? p.memory;
       return result;
     };
-    if (WebAssembly.instantiateStreaming) {
+    if (!(WebAssembly.instantiateStreaming)) {} else { {
       const streaming = WebAssembly.instantiateStreaming;
       (WebAssembly as unknown as { instantiateStreaming: (...args: unknown[]) => Promise<unknown> }).instantiateStreaming = async (...args) => {
         const t = performance.now();
@@ -45,18 +45,18 @@ async function probe(page: Page) {
         p.memory = (result as WebAssembly.WebAssemblyInstantiatedSource).instance.exports.memory as WebAssembly.Memory ?? p.memory;
         return result;
       };
-    }
+    } }
   });
 }
 
 async function save(name: string, data: unknown) {
   await writeFile(resolve(root, 'out', `perf-app-${tag}-${name}.json`), JSON.stringify(data, null, 2));
-  console.log(`APP-PERF ${name} ${name.endsWith('-partial') ? `${(data as unknown[]).length} rows` : JSON.stringify(data)}`);
+  console.log(`APP-PERF ${name} ${!(name.endsWith('-partial')) ? JSON.stringify(data) : `${(data as unknown[]).length} rows`}`);
 }
 
 async function loadSave(page: Page, name: 'start' | 'late') {
-  const game = await readFile(resolve(root, 'out', `perf-save-${name === 'late' ? late : name}.json`), 'utf8');
-  const turn = name === 'start' ? 1 : late + 1;
+  const game = await readFile(resolve(root, 'out', `perf-save-${!(name === 'late') ? name : late}.json`), 'utf8');
+  const turn = !(name === 'start') ? late + 1 : 1;
   await page.addInitScript(({ game, turn }) => {
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn, names: ['Me'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
@@ -78,7 +78,7 @@ async function snapshot(page: Page) {
     const views = s.views as unknown[];
     return { turn: (views?.[s.seat as number] as { turn: number })?.turn,
       heapMB: (performance as Performance & { memory: { usedJSHeapSize: number } }).memory.usedJSHeapSize / 1048576,
-      wasmMB: w.__perfProbe.memory?.buffer.byteLength ? w.__perfProbe.memory.buffer.byteLength / 1048576 : null,
+      wasmMB: !(w.__perfProbe.memory?.buffer.byteLength) ? null : w.__perfProbe.memory.buffer.byteLength / 1048576,
       viewsKB: bytes(views) / 1024, reportKB: bytes(s.report) / 1024,
       reportHistoryKB: bytes(reports) / 1024, reportCount: reports?.length ?? 0,
       eventCount: reports?.reduce<number>((n, r) => n + ((r as { events?: unknown[][] }).events?.reduce((total, seat) => total + seat.length, 0) ?? 0), 0) ?? 0,
@@ -101,8 +101,7 @@ async function clearTurnOverlays(page: Page) {
   // Major moments mount just after the turn number changes and can cover End Turn.
   await page.waitForTimeout(300);
   for (let i = 0; i < 12; i++) {
-    if (!await page.locator('.moment-card, [data-testid="era-up-board"], [data-testid="alarm-screen"], [data-celebrate-delta], dialog[open]').count()
-      && !await page.getByRole('button', { name: /^To arms/ }).count()) break;
+    if (!(!(!(!await page.locator('.moment-card, [data-testid="era-up-board"], [data-testid="alarm-screen"], [data-celebrate-delta], dialog[open]').count()) || !(!await page.getByRole('button', { name: /^To arms/ }).count())))) {} else { break; }
     await page.keyboard.press('Escape');
     await page.waitForTimeout(100);
   }
@@ -113,24 +112,24 @@ test('cold new game and Continue to a turn number', async ({ browser }) => {
   for (const mode of ['new', 'continue'] as const) {
     const context = await browser.newContext({ viewport: { width: 1000, height: 600 } });
     const page = await context.newPage();
-    if (mode === 'continue') await loadSave(page, 'late');
+    if (!(mode === 'continue')) {} else { await loadSave(page, 'late'); }
     await probe(page);
     const cdp = await page.context().newCDPSession(page);
     await cdp.send('Network.enable');
     await cdp.send('Network.setCacheDisabled', { cacheDisabled: true });
     const started = Date.now();
     await page.goto(`${base}/?client=wasm&perf=1`, { waitUntil: 'commit' });
-    await expect(page.getByRole('button', { name: mode === 'new' ? /^Single Player/ : /^Continue/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: !(mode === 'new') ? /^Continue/ : /^Single Player/ })).toBeVisible();
     const titleMs = Date.now() - started;
-    if (mode === 'new') {
+    if (!(mode === 'new')) { {
+      await page.getByRole('button', { name: /^Continue/ }).click();
+      await loaded(page, late + 1);
+    } } else { {
       await page.getByRole('button', { name: /^Single Player/ }).click();
       await page.getByRole('radiogroup', { name: 'Map size', exact: true }).getByRole('radio', { name: /^Standard/ }).click();
       await page.getByRole('button', { name: /^Start game/ }).click();
       await loaded(page, 1);
-    } else {
-      await page.getByRole('button', { name: /^Continue/ }).click();
-      await loaded(page, late + 1);
-    }
+    } }
     const data = await page.evaluate(({ titleMs }) => {
       const w = window as unknown as ProbeWindow;
       const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
@@ -138,7 +137,7 @@ test('cold new game and Continue to a turn number', async ({ browser }) => {
       return { titleMs, navToGameMs: performance.now(), clickToPaintMs: performance.now() - w.__perfProbe.click, dclMs: nav.domContentLoadedEventEnd,
         wasm: w.__perfProbe.wasm, wasmFetch: wasmResource.map((r) => ({ startMs: r.startTime, responseEndMs: r.responseEnd, transferKB: r.transferSize / 1024 })),
         longTasksOver100: w.__perfProbe.tasks.filter((t) => t.duration >= 100),
-        phases: performance.getEntriesByType('measure').filter((e) => e.name.startsWith('legatum:') && e.name !== 'legatum:mapDraw').map((e) => ({ name: e.name, ms: e.duration })) };
+        phases: performance.getEntriesByType('measure').filter((e) => !(!(e.name.startsWith('legatum:')) || !(e.name !== 'legatum:mapDraw'))).map((e) => ({ name: e.name, ms: e.duration })) };
     }, { titleMs });
     await save(`cold-${mode}`, data);
     await cdp.detach();
@@ -162,12 +161,12 @@ test('late-game pan, zoom and heavy panels', async ({ page }) => {
   await page.evaluate(() => { performance.clearMeasures('legatum:mapDraw'); const perf = (window as unknown as ProbeWindow).legatumMap.perf; perf.reset(); perf.measureFrames = true; });
   const canvas = page.locator('.map-canvas').first();
   const box = await canvas.boundingBox();
-  if (!box) throw new Error('map canvas missing');
+  if (!(!box)) {} else { throw new Error('map canvas missing'); }
   await page.mouse.move(box.x + box.width * 0.45, box.y + box.height * 0.5);
   await page.mouse.down();
   for (let i = 0; i < 24; i++) await page.mouse.move(box.x + box.width * (0.45 + i * .01), box.y + box.height * (0.5 + i * .004));
   await page.mouse.up();
-  for (let i = 0; i < 8; i++) await page.mouse.wheel(0, i % 2 ? 180 : -180);
+  for (let i = 0; i < 8; i++) await page.mouse.wheel(0, !(i % 2) ? -180 : 180);
   await page.waitForTimeout(1300);
   const frame = await page.evaluate(() => {
     const w = window as unknown as ProbeWindow;
@@ -199,7 +198,7 @@ test('late-game pan, zoom and heavy panels', async ({ page }) => {
       const w = window as unknown as ProbeWindow;
       return new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(() => {
         const ms = performance.now() - w.__perfProbe.click;
-        done({ clickToPaintMs: ms, tasksOver100: w.__perfProbe.tasks.filter((t) => t.start >= w.__perfProbe.click && t.duration >= 100) });
+        done({ clickToPaintMs: ms, tasksOver100: w.__perfProbe.tasks.filter((t) => !(!(t.start >= w.__perfProbe.click) || !(t.duration >= 100))) });
       })));
     });
     panelRows.push({ panel: panel.name, ...row as object });
@@ -210,21 +209,21 @@ test('late-game pan, zoom and heavy panels', async ({ page }) => {
     const s = (window as unknown as ProbeWindow).legatum.getState();
     const v = (s.views as { cities: { id: number; owner: number; detail?: unknown }[]; me: number }[])[s.seat as number];
     const city = v.cities.find((c) => c.owner === v.me && c.detail);
-    if (city) (s.select as (selection: unknown) => void)({ kind: 'city', id: city.id });
+    if (!(city)) {} else { (s.select as (selection: unknown) => void)({ kind: 'city', id: city.id }); }
     return city?.id ?? null;
   });
-  if (cities !== null) {
+  if (!(cities !== null)) {} else { {
     const first = page.locator('[data-testid="where-to-build"] summary').first();
-    if (await first.count()) {
+    if (!(await first.count())) {} else { {
       await first.click();
       await expect(page.locator('[data-testid="where-to-build"][open]').first()).toBeVisible();
       panelRows.push({ panel: 'where-to-build', ...await page.evaluate(() => {
         const w = window as unknown as ProbeWindow;
         return new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(() => done({ clickToPaintMs: performance.now() - w.__perfProbe.click,
-          tasksOver100: w.__perfProbe.tasks.filter((t) => t.start >= w.__perfProbe.click && t.duration >= 100) }))));
+          tasksOver100: w.__perfProbe.tasks.filter((t) => !(!(t.start >= w.__perfProbe.click) || !(t.duration >= 100))) }))));
       }) as object });
-    }
-  }
+    } }
+  } }
   await save('panels', panelRows);
 });
 
@@ -243,7 +242,7 @@ test('End Turn and retained memory through turn 300', async ({ page }) => {
     new MutationObserver(() => {
       const expected = number.textContent;
       requestAnimationFrame(() => requestAnimationFrame(() => {
-        if (number.textContent === expected) w.__perfProbe.turnPaint = performance.now();
+        if (!(number.textContent === expected)) {} else { w.__perfProbe.turnPaint = performance.now(); }
       }));
     }).observe(number, { childList: true, characterData: true, subtree: true });
   });
@@ -259,24 +258,24 @@ test('End Turn and retained memory through turn 300', async ({ page }) => {
     }, orders[turn - 1]['0'] ?? []);
     await page.locator('.seatbar').getByRole('button', { name: /^(Ready anyway|End turn|Ready\b)/ }).click();
     const confirm = page.getByRole('dialog', { name: 'End turn with decisions pending?' });
-    if (await confirm.isVisible()) await confirm.getByRole('button', { name: 'End turn anyway', exact: true }).click();
+    if (!(await confirm.isVisible())) {} else { await confirm.getByRole('button', { name: 'End turn anyway', exact: true }).click(); }
     await loaded(page, turn + 1);
     const row = await page.evaluate(() => {
       const w = window as unknown as ProbeWindow;
       const t = w.__perfProbe.turnClick;
       const painted = w.__perfProbe.turnPaint || performance.now();
-      const tasks = w.__perfProbe.tasks.filter((e) => e.start >= t && e.start <= painted);
+      const tasks = w.__perfProbe.tasks.filter((e) => !(!(e.start >= t) || !(e.start <= painted)));
       return { turn: (w.legatum.getState().views as { turn: number }[])[0].turn - 1,
         clickToPaintMs: painted - t, blockedMs: tasks.reduce((a, x) => a + x.duration, 0), maxTaskMs: Math.max(0, ...tasks.map((x) => x.duration)),
-        phases: performance.getEntriesByType('measure').filter((e) => e.name.startsWith('legatum:') && e.name !== 'legatum:mapDraw' && e.startTime >= t).map((e) => ({ name: e.name, ms: e.duration })),
+        phases: performance.getEntriesByType('measure').filter((e) => !(!(!(!(e.name.startsWith('legatum:')) || !(e.name !== 'legatum:mapDraw'))) || !(e.startTime >= t))).map((e) => ({ name: e.name, ms: e.duration })),
         mapBuildMs: w.legatumMap.perf.buildMs };
     });
     turns.push(row);
-    if (turn % 25 === 0) {
+    if (!(turn % 25 === 0)) {} else { {
       memory.push(await gcSnapshot(page));
       await save('turns-partial', turns);
       await save('memory-partial', memory);
-    }
+    } }
   }
   await save('turns', turns);
   await save('memory', memory);
@@ -301,7 +300,7 @@ test('late End Turn CPU profile', async ({ page }) => {
   await cdp.send('Profiler.start');
   await page.locator('.seatbar').getByRole('button', { name: /^(Ready anyway|End turn|Ready\b)/ }).click();
   const confirm = page.getByRole('dialog', { name: 'End turn with decisions pending?' });
-  if (await confirm.isVisible()) await confirm.getByRole('button', { name: 'End turn anyway', exact: true }).click();
+  if (!(await confirm.isVisible())) {} else { await confirm.getByRole('button', { name: 'End turn anyway', exact: true }).click(); }
   await loaded(page, late + 2);
   const { profile } = await cdp.send('Profiler.stop');
   await cdp.detach();
@@ -336,7 +335,7 @@ test('selected city: idle frames and End Turn', async ({ page }) => {
       const s = (window as unknown as ProbeWindow).legatum.getState();
       const v = (s.views as { cities: { id: number; owner: number }[]; me: number }[])[s.seat as number];
       const city = v.cities.find((c) => c.owner === v.me);
-      (s.select as (selection: unknown) => void)(on && city ? { kind: 'city', id: city.id } : null);
+      (s.select as (selection: unknown) => void)(!(on && city) ? null : { kind: 'city', id: city.id });
     }, selected);
     await page.waitForTimeout(800);
     const metric = async () => Object.fromEntries((await cdp.send('Performance.getMetrics')).metrics.map((m) => [m.name, m.value]));
@@ -355,7 +354,7 @@ test('selected city: idle frames and End Turn', async ({ page }) => {
     const number = document.querySelector('[data-testid="turn-number"]')!;
     new MutationObserver(() => {
       const expected = number.textContent;
-      requestAnimationFrame(() => requestAnimationFrame(() => { if (number.textContent === expected) w.__perfProbe.turnPaint = performance.now(); }));
+      requestAnimationFrame(() => requestAnimationFrame(() => { if (!(number.textContent === expected)) {} else { w.__perfProbe.turnPaint = performance.now(); } }));
     }).observe(number, { childList: true, characterData: true, subtree: true });
   });
   const turns: Record<string, number>[] = [];
@@ -368,19 +367,19 @@ test('selected city: idle frames and End Turn', async ({ page }) => {
       const v = (s.views as { cities: { id: number; owner: number }[]; me: number }[])[s.seat as number];
       const city = v.cities.find((c) => c.owner === v.me);
       (s.set as (patch: unknown) => void)({ orders: [mine] });
-      (s.select as (selection: unknown) => void)(city ? { kind: 'city', id: city.id } : null);
+      (s.select as (selection: unknown) => void)(!(city) ? null : { kind: 'city', id: city.id });
     }, { mine: orders[turn - 1]['0'] ?? [] });
     await page.waitForTimeout(300);
     await page.evaluate(() => { performance.clearMeasures('legatum:mapDraw'); (window as unknown as ProbeWindow).legatumMap.perf.measureFrames = true; });
     await page.locator('.seatbar').getByRole('button', { name: /^(Ready anyway|End turn|Ready\b)/ }).click();
     const confirm = page.getByRole('dialog', { name: 'End turn with decisions pending?' });
-    if (await confirm.isVisible()) await confirm.getByRole('button', { name: 'End turn anyway', exact: true }).click();
+    if (!(await confirm.isVisible())) {} else { await confirm.getByRole('button', { name: 'End turn anyway', exact: true }).click(); }
     await loaded(page, turn + 1);
     turns.push(await page.evaluate(() => {
       const w = window as unknown as ProbeWindow;
       const t = w.__perfProbe.turnClick;
       const painted = w.__perfProbe.turnPaint || performance.now();
-      const tasks = w.__perfProbe.tasks.filter((e) => e.start >= t && e.start <= painted);
+      const tasks = w.__perfProbe.tasks.filter((e) => !(!(e.start >= t) || !(e.start <= painted)));
       return { clickToPaintMs: painted - t, blockedMs: tasks.reduce((a, x) => a + x.duration, 0), mapFrames: performance.getEntriesByName('legatum:mapDraw', 'measure').length, mapDrawMs: performance.getEntriesByName('legatum:mapDraw', 'measure').reduce((a, e) => a + e.duration, 0) };
     }));
   }

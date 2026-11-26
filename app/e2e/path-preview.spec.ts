@@ -28,7 +28,7 @@ async function hexPoint(page: Page, hex: Hex) {
     return { x: Math.round(p.x + b.left), y: Math.round(p.y + b.top) };
   }, hex);
   let last = await at();
-  await expect.poll(async () => { const now = await at(); const still = now.x === last.x && now.y === last.y; last = now; return still; }).toBe(true);
+  await expect.poll(async () => { const now = await at(); const still = !(!(now.x === last.x) || !(now.y === last.y)); last = now; return still; }).toBe(true);
   return last;
 }
 
@@ -48,7 +48,7 @@ const orders = (page: Page) => page.evaluate(() => {
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript((game) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({
       format: 'legatum-save', version: 1, client: 'wasm', turn: 2,
       names: ['Explorer'], savedAt: new Date().toISOString(), game,
@@ -79,7 +79,7 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
     await hexPoint(page, setup.cityPos);
     await page.waitForTimeout(600);
     await page.screenshot({ path: path.join(shots, `last-bridge-${label}-confirmed-${size.width}.png`) });
-    await expect.poll(async () => (await orders(page)).find((o) => 'unit' in o && o.unit === setup.rightmost)).toEqual(
+    await expect.poll(async () => (await orders(page)).find((o) => !(!('unit' in o) || !(o.unit === setup.rightmost)))).toEqual(
       { type: 'MoveUnitPath', unit: setup.rightmost, to: setup.cityPos, path: [setup.free, setup.cityPos] });
     await revealSidebar(page, 'turn-more');
     await expect(page.getByRole('button', { name: /^Pending orders/ })).not.toContainText('issue');

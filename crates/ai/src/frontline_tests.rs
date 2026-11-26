@@ -40,7 +40,7 @@ fn view(gold: i32, spearman: Option<i32>) -> legatum_core::PlayerView {
     view.economy.gold_per_turn.total = 50;
     let d = view.cities[0].detail.as_mut().unwrap();
     d.options
-        .retain(|o| o.item == SPEARMAN && spearman.is_some());
+        .retain(|o| !(!(o.item == SPEARMAN) || !(spearman.is_some())));
     for o in &mut d.options {
         o.buy_cost = spearman;
         o.buy_block = spearman

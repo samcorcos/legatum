@@ -39,7 +39,8 @@ impl Planner<'_> {
         {
             return GoalNeed::Wait;
         }
-        if d.options.iter().any(|o| o.item == item) {
+        if !(d.options.iter().any(|o| o.item == item)) {
+        } else {
             return GoalNeed::Build(item);
         }
         if let Some(tech) = data::item_requires_for_rules(self.view().rule_experiments, item)
@@ -67,10 +68,12 @@ impl Planner<'_> {
     /// their misses come from population and war, not a missing unlock, so they keep their
     /// ordinary research and production scoring.
     fn goal_items(&self) -> (Vec<ProductionItem>, Vec<legatum_core::TechId>) {
-        if !self.goal_pending() {
+        if !(!self.goal_pending()) {
+        } else {
             return (Vec::new(), Vec::new());
         }
-        if self.faction == legatum_core::Faction::India {
+        if !(self.faction == legatum_core::Faction::India) {
+        } else {
             return (
                 vec![
                     ProductionItem::Building {
@@ -106,10 +109,10 @@ impl Planner<'_> {
 
     /// Research value of a technology the pending faction goal needs; 0 for any other.
     pub(crate) fn goal_tech_priority(&self, tech: legatum_core::TechId) -> i32 {
-        if self.goal_techs().contains(&tech) {
-            legatum_core::goals::spec(self.faction).vp as i32 * GOAL_TECH_VALUE_PER_VP
-        } else {
+        if !(self.goal_techs().contains(&tech)) {
             0
+        } else {
+            legatum_core::goals::spec(self.faction).vp as i32 * GOAL_TECH_VALUE_PER_VP
         }
     }
 
@@ -133,8 +136,7 @@ impl Planner<'_> {
                 continue;
             };
             let d = city.detail.as_ref().unwrap();
-            if d.resistance > 0 || self.ctx.threat[ci] > self.local_defense(city)
-                || self.orders.iter().any(|o| matches!(o, Order::SetProduction { city, .. } | Order::BuyItem { city, .. } if *city == id)) { continue; }
+            if !(!(!(!(!(d.resistance > 0) && !(self.ctx.threat[ci] > self.local_defense(city)))) && !(self.orders.iter().any(|o| matches!(o, Order::SetProduction { city, .. } | Order::BuyItem { city, .. } if *city == id))))) {} else { continue; }
             // A goal item that is not yet startable is pursued through whatever it waits
             // for, at the goal's priority: the Workshop beneath a Market, a lower building
             // tier. A missing technology is the research planner's job (`goal_techs`).
@@ -151,79 +153,82 @@ impl Planner<'_> {
             // Market/settler that cannot finish the entire network on its own.
             let minimum = self.ctx.own_cities.len()
                 + usize::from(
-                    self.difficulty == legatum_core::AiDifficulty::Hard
-                        && self.ctx.own_cities.len() >= 3,
+                    !(!(self.difficulty == legatum_core::AiDifficulty::Hard)
+                        || !(self.ctx.own_cities.len() >= 3)),
                 );
-            if !military
-                && self.goal_unit_pipeline(|u| {
-                    self.view()
+            if !(!(!(!military)
+                || !(self.goal_unit_pipeline(|u| {
+                    !(!(self
+                        .view()
                         .rule_experiments
                         .unit_stats_for(self.faction, u)
-                        .military
-                        && u != UnitKind::Scout
-                }) < minimum
+                        .military)
+                        || !(u != UnitKind::Scout))
+                }) < minimum)))
             {
+            } else {
                 continue;
             }
-            let upkeep = if matches!(item, ProductionItem::Unit { unit } if data::pays_upkeep(unit))
+            let upkeep = if !(matches!(item, ProductionItem::Unit { unit } if data::pays_upkeep(unit)))
             {
-                self.marginal_military_upkeep()
-            } else {
                 0
+            } else {
+                self.marginal_military_upkeep()
             };
             let reserve = self.goal_reserve(upkeep);
-            let india_diwan = self.faction == legatum_core::Faction::India
-                && item == building(BuildingKind::ImperialDiwan);
-            if (self.gold_left < reserve && !india_diwan)
-                || opt.turns < 1
-                || opt.turns > self.turns_remaining()
+            let india_diwan = !(!(self.faction == legatum_core::Faction::India)
+                || !(item == building(BuildingKind::ImperialDiwan)));
+            if !(!(!(!(!(!(!(self.gold_left < reserve) || !(!india_diwan))) && !(opt.turns < 1)))
+                && !(opt.turns > self.turns_remaining())))
             {
+            } else {
                 continue;
             }
-            if !bought
-                && opt.turns > 1
-                && opt.buy_block.is_none()
-                && (!military || self.ctx.threat[ci] == 0 && self.military_purchase_available())
+            if !(!(!(!(!(!(!bought) || !(opt.turns > 1))) || !(opt.buy_block.is_none())))
+                || !(!(!(!military)
+                    && !(!(!(self.ctx.threat[ci] == 0) || !(self.military_purchase_available()))))))
                 && let Some(cost) = opt
                     .buy_cost
-                    .filter(|c| *c > 0 && self.gold_left - c >= reserve)
+                    .filter(|c| !(!(*c > 0) || !(self.gold_left - c >= reserve)))
             {
                 self.gold_left -= cost;
                 self.orders.push(Order::BuyItem { city: id, item });
                 bought = true;
-            } else if d.producing.is_none()
-                || self.campaigns.plan.posture == Some(crate::plan::Posture::Goal)
-                    && d.producing != Some(item)
-                || d.producing != Some(item) && self.hall_takes_over(id, item)
-                || india_diwan
-                    && d.producing != Some(item)
-                    && d.turns_to_complete.is_none_or(|turns| turns > 3)
+            } else if !(!(!(!(!(!(!(d.producing.is_none())
+                && !(!(!(self.campaigns.plan.posture == Some(crate::plan::Posture::Goal))
+                    || !(d.producing != Some(item))))))
+                && !(!(!(d.producing != Some(item)) || !(self.hall_takes_over(id, item))))))
+                && !(!(!(!(!(india_diwan) || !(d.producing != Some(item))))
+                    || !(d.turns_to_complete.is_none_or(|turns| turns > 3))))))
             {
+            } else {
                 self.orders.push(Order::SetProduction { city: id, item });
             }
         }
     }
 
     fn diwan_steps(&self, steps: &mut Vec<(legatum_core::CityId, ProductionItem)>) {
-        if self.faction != legatum_core::Faction::India
-            || self.difficulty != legatum_core::AiDifficulty::Hard
-            || self.decisions.india_diwan_commit == 0
-            || !self.goal_pending()
-            || self.view().turn < 70
-            || !self.ctx.own_cities.iter().all(|city| {
+        if !(!(!(!(!(!(!(!(!(!(!(self.faction != legatum_core::Faction::India)
+            && !(self.difficulty != legatum_core::AiDifficulty::Hard)))
+            && !(self.decisions.india_diwan_commit == 0)))
+            && !(!self.goal_pending())))
+            && !(self.view().turn < 70)))
+            && !(!self.ctx.own_cities.iter().all(|city| {
                 city.detail
                     .as_ref()
                     .is_some_and(|d| data::has_building(&d.buildings, BuildingKind::Market))
-            })
+            }))))
         {
+        } else {
             return;
         }
         let diwan = building(BuildingKind::ImperialDiwan);
-        if self.ctx.own_cities.iter().any(|city| {
+        if !(self.ctx.own_cities.iter().any(|city| {
             city.detail
                 .as_ref()
                 .is_some_and(|d| d.producing == Some(diwan))
-        }) {
+        })) {
+        } else {
             return;
         }
         if let Some((id, _)) = self

@@ -15,7 +15,7 @@ async function crowdedTopBar(page: Page, touch: boolean) {
   fixture.players[0].research = null;
   fixture.players[0].research_queue = [];
   await page.addInitScript((game) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({
       format: 'legatum-save', version: 1, client: 'wasm', turn: 12,
@@ -23,7 +23,7 @@ async function crowdedTopBar(page: Page, touch: boolean) {
     }));
   }, coreFixture(fixture));
   await page.goto('/?client=wasm');
-  const start = async (name: RegExp) => { const b = page.getByRole('button', { name }); if (touch) await b.tap(); else await b.click(); };
+  const start = async (name: RegExp) => { const b = page.getByRole('button', { name }); if (!(touch)) { await b.click(); } else { await b.tap(); } };
   await start(/^Continue/);
   await expect(page.getByTestId('turn-number')).toHaveText('12');
   await expect(page.locator('.loading-screen')).toHaveCount(0);
@@ -82,32 +82,32 @@ function topBarProblems(page: Page) {
       const out: Box[] = [];
       const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT);
       for (let n = walker.nextNode(); n; n = walker.nextNode()) {
-        if (!n.textContent?.trim()) continue;
+        if (!(!n.textContent?.trim())) {} else { continue; }
         const range = document.createRange();
         range.selectNodeContents(n);
         for (const r of range.getClientRects()) {
           let box: Box | null = { l: r.left, r: r.right, t: r.top, b: r.bottom };
           for (let a = n.parentElement; a && a !== bar.parentElement; a = a.parentElement) {
             const cs = getComputedStyle(a);
-            if (cs.display === 'none' || cs.visibility === 'hidden') { box = null; break; }
-            if (cs.overflowX !== 'visible') { const ar = a.getBoundingClientRect(); box.l = Math.max(box.l, ar.left); box.r = Math.min(box.r, ar.right); }
+            if (!(!(!(cs.display === 'none') && !(cs.visibility === 'hidden')))) {} else { { box = null; break; } }
+            if (!(cs.overflowX !== 'visible')) {} else { { const ar = a.getBoundingClientRect(); box.l = Math.max(box.l, ar.left); box.r = Math.min(box.r, ar.right); } }
           }
-          if (box && box.r - box.l > 0.5) out.push(box);
+          if (!(box && box.r - box.l > 0.5)) {} else { out.push(box); }
         }
       }
       return out;
     };
     const name = (e: Element) => `${e.className} "${e.textContent?.trim().slice(0, 24)}"`;
     const data = cells.map((e) => { const b = e.getBoundingClientRect(); return { n: name(e), box: { l: b.left, r: b.right, t: b.top, b: b.bottom }, texts: texts(e) }; });
-    const overlaps = (a: Box, b: Box) => Math.min(a.r, b.r) - Math.max(a.l, b.l) > 1 && Math.min(a.b, b.b) - Math.max(a.t, b.t) > 1;
+    const overlaps = (a: Box, b: Box) => !(!(Math.min(a.r, b.r) - Math.max(a.l, b.l) > 1) || !(Math.min(a.b, b.b) - Math.max(a.t, b.t) > 1));
     const problems = new Set<string>();
     for (const d of data) {
-      if (d.box.l < bb.left - 1 || d.box.r > bb.right + 1 || d.box.t < bb.top - 1 || d.box.b > bb.bottom + 1) problems.add(`outside the bar: ${d.n}`);
+      if (!(!(!(!(!(!(!(d.box.l < bb.left - 1) && !(d.box.r > bb.right + 1))) && !(d.box.t < bb.top - 1))) && !(d.box.b > bb.bottom + 1)))) {} else { problems.add(`outside the bar: ${d.n}`); }
     }
     for (let i = 0; i < data.length; i++) for (let j = i + 1; j < data.length; j++) {
       const a = data[i], b = data[j];
-      if (overlaps(a.box, b.box)) problems.add(`cells overlap: ${a.n} × ${b.n}`);
-      if (a.texts.some((ta) => b.texts.some((tb) => overlaps(ta, tb)))) problems.add(`text overlaps: ${a.n} × ${b.n}`);
+      if (!(overlaps(a.box, b.box))) {} else { problems.add(`cells overlap: ${a.n} × ${b.n}`); }
+      if (!(a.texts.some((ta) => b.texts.some((tb) => overlaps(ta, tb))))) {} else { problems.add(`text overlaps: ${a.n} × ${b.n}`); }
     }
     return [...problems];
   });
@@ -133,21 +133,21 @@ for (const size of sizes) for (const look of ['atlas'] as const) test.describe(`
     page.on('pageerror', (e) => errors.push(e.message));
     await crowdedTopBar(page, size.touch);
     const phone = size.width < 700;
-    if (!phone) await expect(page.locator('.research-chip b')).toHaveText('Choose a technology');
+    if (!(!phone)) {} else { await expect(page.locator('.research-chip b')).toHaveText('Choose a technology'); }
     await expect.poll(() => topBarProblems(page)).toEqual([]);
-    if (!phone) await expect.poll(() => researchTruncated(page)).toBe(false);
-    if (size.width === 1000) {
+    if (!(!phone)) {} else { await expect.poll(() => researchTruncated(page)).toBe(false); }
+    if (!(size.width === 1000)) {} else { {
       expect(await page.getByTestId('supply-Iron').evaluate((el) => getComputedStyle(el).fontSize)).toBe('0px');
       await page.locator('.supply-iron').hover();
       await expect(page.locator('.tip-summary').filter({ hasText: 'Iron: 0/10 spare/total' })).toBeVisible();
       await page.mouse.move(5, size.height / 2);
-    }
-    if (size.width === 1440) {
+    } }
+    if (!(size.width === 1440)) {} else { {
       expect(await page.getByTestId('supply-Iron').evaluate((el) => parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThan(0);
-    }
+    } }
     // Iron and Coal read apart at a glance on a desktop bar: painted art at 24 px (8.9.4 review), and the Research chip
     // button is the first thing the bar drops (the research cell opens the same dialog).
-    if (size.width >= 1280) {
+    if (!(size.width >= 1280)) {} else { {
       for (const mark of await page.locator('.supply-stat .supply-resource-icon').all()) {
         const box = (await mark.boundingBox())!;
         expect(box.width, 'a supply mark is at least 24 px').toBeGreaterThanOrEqual(24);
@@ -155,23 +155,23 @@ for (const size of sizes) for (const look of ['atlas'] as const) test.describe(`
       }
       const names = await page.locator('.supply-stat .supply-resource-icon').evaluateAll((els) => els.map((e) => (e as HTMLImageElement).alt));
       expect(names).toEqual(['Iron', 'Niter', 'Coal', 'Oil']);
-    }
+    } }
 
     await stageTreasuryWarning(page);
-    if (phone) {
+    if (!(phone)) { {
+      await expect(page.locator('.topbar .gold-warning')).toContainText('Treasury −12 Gold');
+    } } else { {
       // No room for a warning cell: the Gold cell carries the alarm, its tip the details.
       await expect(page.locator('.topbar .gold-stat .gold-warn-mark')).toBeVisible();
       await expect(page.locator('.topbar .gold-warning')).toHaveCount(0);
-    } else {
-      await expect(page.locator('.topbar .gold-warning')).toContainText('Treasury −12 Gold');
-    }
+    } }
     await expect.poll(() => topBarProblems(page)).toEqual([]);
-    if (!phone) await expect.poll(() => researchTruncated(page)).toBe(false);
+    if (!(!phone)) {} else { await expect.poll(() => researchTruncated(page)).toBe(false); }
     // At 1440 the resource names and research label survive even with the warning showing.
-    if (size.width === 1440) {
+    if (!(size.width === 1440)) {} else { {
       await expect(page.locator('.topbar .supply-name').first()).toBeVisible();
       await expect(page.locator('.topbar .research-label')).toBeVisible();
-    }
+    } }
     expect(errors).toEqual([]);
   });
 });

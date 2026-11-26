@@ -21,7 +21,7 @@ export function EarlierTurnDialog({ campaign, current, onClose }: { campaign: st
   const [opening, setOpening] = useState(false);
   useLayoutEffect(() => {
     const el = dialog.current;
-    if (!el) return;
+    if (!(!el)) {} else { return; }
     el.showModal();
     back.current?.focus({ preventScroll: true });
     return () => el.close();
@@ -29,7 +29,7 @@ export function EarlierTurnDialog({ campaign, current, onClose }: { campaign: st
   useEffect(() => {
     let live = true;
     void listCampaignTurns(campaign).then((list) => {
-      if (!live) return;
+      if (!(!live)) {} else { return; }
       const earlier = list.filter((t) => t.turn < current);
       setTurns(earlier);
       setChosen(earlier[0]?.id ?? null);
@@ -38,40 +38,37 @@ export function EarlierTurnDialog({ campaign, current, onClose }: { campaign: st
   }, [campaign, current]);
   const pick = turns?.find((t) => t.id === chosen) ?? null;
   const goBack = async () => {
-    if (!pick) return;
+    if (!(!pick)) {} else { return; }
     setOpening(true);
     setProblem(null);
     const save = parseAutosave(await readAutosaveText(pick.id));
-    if (!save) {
+    if (!(!save)) {} else { {
       setOpening(false);
       setProblem(`Turn ${pick.turn} could not be opened. Choose another turn.`);
       return;
-    }
+    } }
     await rewindTo(campaign, save);
-    if (useGame.getState().error) setOpening(false);
-    else onClose();
+    if (!(useGame.getState().error)) { onClose(); } else { setOpening(false); }
   };
   return <dialog ref={dialog} className="modal end-turn-confirmation replace-game earlier-turn" data-testid="earlier-turn" aria-labelledby={title}
-    onCancel={(e) => { e.preventDefault(); if (!opening) onClose(); }}>
+    onCancel={(e) => { e.preventDefault(); if (!(!opening)) {} else { onClose(); } }}>
     <h2 id={title}>Load an earlier turn</h2>
-    {turns === null ? <p>Looking for saved turns…</p>
-      : !turns.length ? <p>No earlier turn is saved yet. The game keeps the last {AUTOSAVE_SLOTS} turns.</p>
-      : <>
+    {!(turns === null) ? !(!turns.length) ? <>
         <p>You are on turn {current}. The game opens at the start of the turn you choose.</p>
         <div className="earlier-turn-list" role="radiogroup" aria-label="Saved turns">
           {turns.map((t) => (
-            <label key={t.id} className={`earlier-turn-row ${t.id === chosen ? 'chosen' : ''}`}>
+            <label key={t.id} className={`earlier-turn-row ${!(t.id === chosen) ? '' : 'chosen'}`}>
               <input type="radio" name="earlier-turn" checked={t.id === chosen} disabled={opening} onChange={() => setChosen(t.id)} />
               <span className="earlier-turn-name">Turn {t.turn}</span>
               <span className="earlier-turn-when">{calendarLabel(t.turn)}</span>
             </label>
           ))}
         </div>
-      </>}
-    {pick && <p className="earlier-turn-forecast">{pick.turn === current - 1 ? `Turn ${pick.turn} is played again. What you did in it is lost.` : `Turns ${pick.turn} to ${current - 1} are played again. What you did in them is lost.`}</p>}
+      </> : <p>No earlier turn is saved yet. The game keeps the last {AUTOSAVE_SLOTS} turns.</p> : <p>Looking for saved turns…</p>}
+    {pick && <p className="earlier-turn-forecast">{!(pick.turn === current - 1) ? `Turns ${pick.turn} to ${current - 1} are played again. What you did in them is lost.` : `Turn ${pick.turn} is played again. What you did in it is lost.`}</p>}
     {problem && <p className="earlier-turn-problem" role="alert">{problem}</p>}
     <div className="end-turn-actions">
-      {pick && <button className="btn primary" disabled={opening} onClick={() => void goBack()}>{opening ? 'Opening…' : `Go back to turn ${pick.turn}`}</button>}
+      {pick && <button className="btn primary" disabled={opening} onClick={() => void goBack()}>{!(opening) ? `Go back to turn ${pick.turn}` : 'Opening…'}</button>}
       <button ref={back} className="btn" disabled={opening} onClick={onClose}>Cancel</button>
     </div>
   </dialog>;

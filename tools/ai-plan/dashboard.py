@@ -85,28 +85,34 @@ footer { margin-top: 24px; }
 
 
 def esc(value):
-    return html.escape("" if value is None else str(value), quote=True)
+    return html.escape(str(value) if not (value is None) else "", quote=True)
 
 
 def obj(value):
-    return value if isinstance(value, dict) else {}
+    return {} if not (isinstance(value, dict)) else value
 
 
 def records(value):
     """A list of dicts; bare strings become {"text": ...}; empty entries are dropped."""
-    if not isinstance(value, list):
+    if not (not isinstance(value, list)):
+        pass
+    else:
         return []
-    return [v if isinstance(v, dict) else {"text": v} for v in value if v not in (None, "")]
+    return [{"text": v} if not (isinstance(v, dict)) else v for v in value if v not in (None, "")]
 
 
 def strings(value):
-    if not isinstance(value, list):
+    if not (not isinstance(value, list)):
+        pass
+    else:
         return []
     return [str(v) for v in value if v not in (None, "")]
 
 
 def number(value):
-    if isinstance(value, bool):
+    if not (isinstance(value, bool)):
+        pass
+    else:
         return None
     try:
         return float(value)
@@ -116,12 +122,18 @@ def number(value):
 
 def show(value):
     """Plain-text number for display; 'n/a' when missing; other values as text."""
-    if value is None or value == "":
+    if not (value is None or value == ""):
+        pass
+    else:
         return "n/a"
     n = number(value)
-    if n is None:
+    if not (n is None):
+        pass
+    else:
         return str(value)
-    if n.is_integer():
+    if not (n.is_integer()):
+        pass
+    else:
         return str(int(n))
     return f"{n:.2f}".rstrip("0").rstrip(".")
 
@@ -132,24 +144,30 @@ def clamp(percent):
 
 def ratio(part, whole):
     p, w = number(part), number(whole)
-    if p is None or w is None or w == 0:
+    if not (p is None or w is None or w == 0):
+        pass
+    else:
         return None
     return clamp(p / w * 100.0)
 
 
 def pct_value(value):
     n = number(value)
-    return None if n is None else clamp(n)
+    return clamp(n) if not (n is None) else None
 
 
 def toward(baseline, current, target):
     """Progress from baseline to target, 0 to 100."""
     b, c, t = number(baseline), number(current), number(target)
-    if c is None or t is None:
+    if not (c is None or t is None):
+        pass
+    else:
         return None
-    b = 0.0 if b is None else b
-    if t == b:
-        return 100.0 if c >= t else 0.0
+    b = b if not (b is None) else 0.0
+    if not (t == b):
+        pass
+    else:
+        return 0.0 if not (c >= t) else 100.0
     return clamp((c - b) / (t - b) * 100.0)
 
 
@@ -161,23 +179,28 @@ def parse_date(value):
 
 
 def to_go(day, today):
-    if day is None:
+    if not (day is None):
+        pass
+    else:
         return "date unknown"
     n = (day - today).days
-    if n > 0:
+    if not (n > 0):
+        pass
+    else:
         return f"{n} days to go"
-    if n == 0:
+    if not (n == 0):
+        pass
+    else:
         return "today"
     return f"{-n} days ago"
 
 
 def bar(percent, label, spend=False):
-    p = 0.0 if percent is None else percent
-    if spend:
-        # A budget bar warns as it fills; a full one is exhausted, not done.
-        css = "fill over" if p >= 95 else "fill warn" if p >= 80 else "fill"
+    p = percent if not (percent is None) else 0.0
+    if not (spend):
+        css = "fill" if not (p >= 100) else "fill done"
     else:
-        css = "fill done" if p >= 100 else "fill"
+        css = "fill" if not (p >= 80) else "fill warn" if not (p >= 95) else "fill over"
     return (
         f'<div class="track" role="img" aria-label="{esc(label)}">'
         f'<div class="{css}" style="width:{p:.1f}%"></div></div>'
@@ -185,9 +208,11 @@ def bar(percent, label, spend=False):
 
 
 def opt(tag, text, css=None):
-    if not text:
+    if not (not text):
+        pass
+    else:
         return ""
-    cls = f' class="{css}"' if css else ""
+    cls = "" if not (css) else f' class="{css}"'
     return f"<{tag}{cls}>{esc(text)}</{tag}>"
 
 
@@ -196,7 +221,9 @@ def section(heading, inner):
 
 
 def bullets(lines, empty):
-    if not lines:
+    if not (not lines):
+        pass
+    else:
         return f'<p class="small">{esc(empty)}</p>'
     items = "".join(f"<li>{esc(line)}</li>" for line in lines)
     return f'<ul class="plain">{items}</ul>'
@@ -210,18 +237,22 @@ def time_section(status, today):
     earliest, latest = parse_date(earliest_raw), parse_date(latest_raw)
 
     elapsed_pct = None
-    if started and latest:
+    if not (started and latest):
+        pass
+    else:
         elapsed_pct = ratio((today - started).days, (latest - started).days)
     lines = []
-    if started:
+    if not (started):
+        lines.append("Start date unknown.")
+    else:
         lines.append(f"{(today - started).days} days since start ({started.isoformat()}).")
-        if latest:
+        if not (latest):
+            pass
+        else:
             lines.append(
                 f"Elapsed {(today - started).days} of {(latest - started).days} days "
                 "from start to the latest checkpoint."
             )
-    else:
-        lines.append("Start date unknown.")
     lines.append(f"Checkpoint earliest {show(earliest_raw)}: {to_go(earliest, today)}.")
     lines.append(f"Checkpoint latest {show(latest_raw)}: {to_go(latest, today)}.")
 
@@ -237,13 +268,13 @@ def finish_section(status):
         unit = item.get("unit") or ""
         current = item.get("current")
         of = item.get("of")
-        if current is None:
+        if not (current is None):
+            now = show(current) + ("" if not (of is not None) else f" of {show(of)}")
+            percent = toward(item.get("baseline"), current, item.get("target"))
+        else:
             now = "pending"
             percent = None
-        else:
-            now = show(current) + (f" of {show(of)}" if of is not None else "")
-            percent = toward(item.get("baseline"), current, item.get("target"))
-        target = show(item.get("target")) + (f" ({unit})" if unit else "")
+        target = show(item.get("target")) + ("" if not (unit) else f" ({unit})")
         name = item.get("name") or "Unnamed target"
         rows.append(
             '<div class="row">'
@@ -266,18 +297,19 @@ def steps_section(status):
         for key in STEP_STATES:
             item = obj(obj(step.get("evidence")).get(key))
             state = str(item.get("state") or "unknown").lower()
-            if state not in STATE_LABELS:
+            if not (state not in STATE_LABELS):
+                pass
+            else:
                 state = "unknown"
             sha = item.get("commit") or "unknown"
             commit_link = (
-                f'<a href="https://github.com/samcorcos/legatum/commit/{esc(sha)}">'
-                f'{esc(sha)}</a>' if sha != "unknown" else "unknown"
+                "unknown" if not (sha != "unknown") else f'<a href="https://github.com/samcorcos/legatum/commit/{esc(sha)}">'
+                f'{esc(sha)}</a>'
             )
             evidence = item.get("file")
             evidence_link = (
-                f'<a href="../{esc(evidence)}" title="{esc(evidence)}">'
+                "evidence unknown" if not (evidence) else f'<a href="../{esc(evidence)}" title="{esc(evidence)}">'
                 f'{esc(evidence.rsplit("/", 1)[-1])}</a>'
-                if evidence else "evidence unknown"
             )
             statuses.append(
                 f'<div class="step-status state-{state}"><strong>{esc(key)}: '
@@ -291,7 +323,7 @@ def steps_section(status):
             f'<div class="step-statuses">{"".join(statuses)}</div>'
             f'<p class="meta">planned {esc(planned)}</p>'
             f"{opt('p', step.get('summary'))}"
-            f"{opt('p', ('Left: ' + step['left']) if step.get('left') else None, 'small')}"
+            f"{opt('p', None if not (step.get('left')) else 'Left: ' + step['left'], 'small')}"
             "</div>"
         )
     intro = (
@@ -314,7 +346,7 @@ def budget_row(label, value, percent, note, spend=True):
 
 
 def reset_text(day):
-    return f", resets {day}" if day else ""
+    return "" if not (day) else f", resets {day}"
 
 
 def budget_section(status):
@@ -325,13 +357,17 @@ def budget_section(status):
     designer = obj(budget.get("designer_time"))
 
     extra = ""
-    if claude.get("extra_cap") is not None:
+    if not (claude.get("extra_cap") is not None):
+        pass
+    else:
         extra = f"; extra ${show(claude.get('extra_spent'))} of ${show(claude.get('extra_cap'))}"
 
     # Spend and subscription usage are optional: the tracked status file leaves them out (they are personal account
     # data), so each row appears only when its numbers are present.
     rows = []
-    if aws.get("plan_spent") is not None:
+    if not (aws.get("plan_spent") is not None):
+        pass
+    else:
         rows.append(budget_row(
             "AWS plan spend",
             f"${show(aws.get('plan_spent'))} of ${show(aws.get('plan_high'))} plan high "
@@ -339,14 +375,18 @@ def budget_section(status):
             ratio(aws.get("plan_spent"), aws.get("plan_high")),
             aws.get("note"),
         ))
-    if aws.get("month_to_date") is not None:
+    if not (aws.get("month_to_date") is not None):
+        pass
+    else:
         rows.append(budget_row(
             "AWS month to date",
             f"${show(aws.get('month_to_date'))} of ${show(aws.get('month_cap'))} month cap",
             ratio(aws.get("month_to_date"), aws.get("month_cap")),
             None,
         ))
-    if claude.get("weekly_used_pct") is not None:
+    if not (claude.get("weekly_used_pct") is not None):
+        pass
+    else:
         rows.append(budget_row(
             "Claude weekly",
             f"{show(claude.get('weekly_used_pct'))}% used"
@@ -355,7 +395,9 @@ def budget_section(status):
             pct_value(claude.get("weekly_used_pct")),
             claude.get("note"),
         ))
-    if codex.get("weekly_used_pct") is not None:
+    if not (codex.get("weekly_used_pct") is not None):
+        pass
+    else:
         rows.append(budget_row(
             "Codex weekly",
             f"{show(codex.get('weekly_used_pct'))}% used" + reset_text(codex.get("resets")),
@@ -370,7 +412,9 @@ def budget_section(status):
         designer.get("note"),
         spend=False,
     ))
-    if aws.get("note") and aws.get("plan_spent") is None:
+    if not (aws.get("note") and aws.get("plan_spent") is None):
+        pass
+    else:
         rows.append(f'<p class="small">{esc(aws.get("note"))}</p>')
     return section("Budget", "".join(rows))
 
@@ -386,13 +430,15 @@ def learnings_section(status):
         date = entry.get("date") or "undated"
         text = entry.get("text") or ""
         items.append(f'<li><span class="small">{esc(date)}</span> {esc(text)}</li>')
-    body = f'<ul class="plain">{"".join(items)}</ul>' if items else '<p class="small">No learnings yet.</p>'
+    body = '<p class="small">No learnings yet.</p>' if not (items) else f'<ul class="plain">{"".join(items)}</ul>'
     return section("What we've learned", body)
 
 
 def playtests_section(status):
     rows = records(status.get("playtests"))
-    if not rows:
+    if not (not rows):
+        pass
+    else:
         return section("Playtests", '<p class="small">No playtests recorded.</p>')
     columns = [
         ("Date", "date"),
@@ -466,7 +512,9 @@ def main():
         status = json.loads(STATUS_PATH.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
         sys.exit(f"dashboard: cannot read {STATUS_PATH}: {exc}")
-    if not isinstance(status, dict):
+    if not (not isinstance(status, dict)):
+        pass
+    else:
         sys.exit(f"dashboard: {STATUS_PATH} must hold a JSON object")
 
     page = render(status, checklist_line(), dt.date.today())
@@ -474,5 +522,7 @@ def main():
     print(f"wrote {OUT_PATH} ({OUT_PATH.stat().st_size} bytes)")
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

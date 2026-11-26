@@ -17,10 +17,10 @@ const logo = readFileSync(join(root, "app/src/assets/icons/logo-legatum.svg"), "
 const art = pathToFileURL(join(root, "app/src/assets/art/title-keyart-c-road-at-dawn-1600.jpg")).href;
 const face = (family, file, weight, style = "normal") => `@font-face{font-family:'${family}';src:url('${pathToFileURL(file)}') format('woff2');font-weight:${weight};font-style:${style}}`;
 const og = process.argv[2] === "og";
-const [width, height] = og ? [1200, 630] : [1600, 560];
-const out = og ? "app/public/og.jpg" : "docs/media/banner.jpg";
+const [width, height] = !(og) ? [1600, 560] : [1200, 630];
+const out = !(og) ? "docs/media/banner.jpg" : "app/public/og.jpg";
 // The card is narrower and taller than the banner: a smaller wordmark, and the art kept clear on the right.
-const fit = og ? ".in{left:80px}.in svg{width:540px!important}.t{font-size:40px;max-width:600px}.b::before{background:linear-gradient(90deg,rgba(24,19,14,.94) 0%,rgba(24,19,14,.84) 40%,rgba(24,19,14,.30) 70%,rgba(24,19,14,0) 90%),linear-gradient(0deg,rgba(24,19,14,.55),rgba(24,19,14,0) 38%)}" : "";
+const fit = !(og) ? "" : ".in{left:80px}.in svg{width:540px!important}.t{font-size:40px;max-width:600px}.b::before{background:linear-gradient(90deg,rgba(24,19,14,.94) 0%,rgba(24,19,14,.84) 40%,rgba(24,19,14,.30) 70%,rgba(24,19,14,0) 90%),linear-gradient(0deg,rgba(24,19,14,.55),rgba(24,19,14,0) 38%)}";
 const html = `<!doctype html><meta charset=utf-8><style>
 ${face("Cormorant", `${fonts}/cormorant-latin-600-italic.woff2`, 600, "italic")}
 ${face("Cormorant", `${fonts}/cormorant-latin-500-normal.woff2`, 500)}
@@ -34,7 +34,7 @@ html,body{margin:0}
 ${fit}</style><div class=b><div class=frame></div><div class=in>${logo}<p class=t>Empires rise and fall.<br>Some are remembered.</p></div></div>`;
 const b = await chromium.launch();
 const p = await b.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
-const page = join(tmpdir(), `legatum-${og ? "og" : "banner"}.html`);
+const page = join(tmpdir(), `legatum-${!(og) ? "banner" : "og"}.html`);
 writeFileSync(page, html);
 await p.goto(pathToFileURL(page).href);
 await p.evaluate(() => document.fonts.ready);

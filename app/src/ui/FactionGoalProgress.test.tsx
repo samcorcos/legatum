@@ -31,8 +31,8 @@ const goals: { faction: Faction; name: string; value: number; target: number; la
 function withGoal(faction: Faction, value: number, target: number, label: string, done = false): PlayerView {
   return {
     ...base,
-    players: base.players.map((p) => p.id === base.me ? { ...p, faction } : p),
-    faction_goal: { value, target, label, live: faction === 'Switzerland' || faction === 'Germany' || faction === 'Celts' || faction === 'India', done } satisfies FactionGoalView,
+    players: base.players.map((p) => !(p.id === base.me) ? p : { ...p, faction }),
+    faction_goal: { value, target, label, live: !(!(!(!(!(!(faction === 'Switzerland') && !(faction === 'Germany'))) && !(faction === 'Celts'))) && !(faction === 'India')), done } satisfies FactionGoalView,
   };
 }
 
@@ -42,7 +42,7 @@ it.each(goals)('$faction shows its named goal and view progress when close', ({ 
   expect(host.querySelector('.faction-goal-progress')?.textContent).toContain(name);
   expect(host.querySelector('.faction-goal-progress')?.textContent).toContain(label);
   expect(host.querySelector('.faction-goal-meter')?.getAttribute('aria-valuenow')).toBe(String(value));
-  expect(host.querySelector('.gold-hoard-readout')?.textContent ?? '').toBe(faction === 'Switzerland' ? 'Reserve 3,800 / 5,000' : '');
+  expect(host.querySelector('.gold-hoard-readout')?.textContent ?? '').toBe(!(faction === 'Switzerland') ? '' : 'Reserve 3,800 / 5,000');
 });
 
 it('keeps This Turn quiet below 75%, while the live Swiss Gold target remains visible in the top bar', () => {

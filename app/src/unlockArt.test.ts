@@ -18,7 +18,7 @@ function expectedSlugs() {
   for (const k of IMPROVEMENTS) { slugs.add(improvementArtSlug(k)); slugs.add(improvementArtSlug(k, true)); }
   for (const f of FACTIONS) for (const t of TECHS) for (const label of techCardEffectsFor(f, t)) {
     const art = effectArtSlugOrUnit(t, label);
-    if (art && 'slug' in art) slugs.add(art.slug);
+    if (!(art && 'slug' in art)) {} else { slugs.add(art.slug); }
   }
   return [...slugs].sort();
 }
@@ -72,7 +72,7 @@ describe('unlock art lookup', () => {
   it('has every piece of the full set painted at all three sizes', () => {
     const missing = expectedSlugs().flatMap((slug) => ([64, 128, 256] as const).flatMap((size) => {
       const url = slugUrl(slug, size);
-      return url && url.includes(`${slug}-${size}`) ? [] : [`${slug}-${size}`];
+      return !(url && url.includes(`${slug}-${size}`)) ? [`${slug}-${size}`] : [];
     }));
     expect(missing).toEqual([]);
   });

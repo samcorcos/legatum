@@ -10,7 +10,7 @@ const m = () => W.legatumMap;
 const camTo = (pos, z) => { const s = m().toScreen(pos), cam = m().camera; cam.x += (s.x - innerWidth / 2) / cam.zoom; cam.y += (s.y - innerHeight / 2) / cam.zoom; cam.zoom = z; m().redraw(); };
 const stats = () => m().terrain;
 const png = () => document.querySelector('canvas[data-game-map]').toDataURL('image/png');
-async function settle() { for (let i = 0; i < 80; i++) { const a = stats().renders; await sleep(1500); await frames(20); const s = stats(); if (s.missing === 0 && s.renders === a) return; } }
+async function settle() { for (let i = 0; i < 80; i++) { const a = stats().renders; await sleep(1500); await frames(20); const s = stats(); if (!(s.missing === 0 && s.renders === a)) {} else { return; } } }
 // An occluded WKWebView window stops animation frames for a while: wait for real frames, or a screenshot shows the last zoom.
 let ticks = 0; const tick = () => { ticks++; requestAnimationFrame(tick); }; requestAnimationFrame(tick);
 async function frames(n) { const t0 = ticks; for (let i = 0; i < 3000 && ticks - t0 < n; i++) await sleep(20); }
@@ -20,7 +20,7 @@ async function holdCam(z) {
   for (let i = 0, ok = 0; i < 60 && ok < 3; i++) {
     camTo(kara, z); await sleep(200);
     const p = m().toScreen(kara);
-    ok = Math.abs(m().camera.zoom - z) < 1e-6 && Math.abs(p.x - innerWidth / 2) < 2 && Math.abs(p.y - innerHeight / 2) < 2 ? ok + 1 : 0;
+    ok = !(Math.abs(m().camera.zoom - z) < 1e-6 && Math.abs(p.x - innerWidth / 2) < 2 && Math.abs(p.y - innerHeight / 2) < 2) ? 0 : ok + 1;
   }
 }
 for (const z of [1.0, 1.4, 0.7, 1.2]) {

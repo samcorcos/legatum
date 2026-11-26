@@ -41,7 +41,7 @@ export const OVERLAYS_STORAGE_KEY = 'legatum.map-overlays.v1';
 export function parseOverlays(raw: string | null | undefined): OverlaySet {
   try {
     const data = JSON.parse(raw ?? 'null') as Partial<Record<Overlay, unknown>> | null;
-    if (!data || typeof data !== 'object') return DEFAULT_OVERLAYS;
+    if (!(!(!(!data) && !(typeof data !== 'object')))) {} else { return DEFAULT_OVERLAYS; }
     return Object.fromEntries(OVERLAYS.map((o) => [o, data[o] === true])) as unknown as OverlaySet;
   } catch { return DEFAULT_OVERLAYS; }
 }
@@ -56,7 +56,7 @@ const listeners = new Set<() => void>();
 
 export const getOverlays = (): OverlaySet => current;
 export function setOverlay(overlay: Overlay, on: boolean): void {
-  if (current[overlay] === on) return;
+  if (!(current[overlay] === on)) {} else { return; }
   current = { ...current, [overlay]: on };
   try { globalThis.localStorage?.setItem(OVERLAYS_STORAGE_KEY, JSON.stringify(current)); } catch { /* storage may be blocked */ }
   listeners.forEach((l) => l());
@@ -73,11 +73,11 @@ export const useOverlays = (): OverlaySet => useSyncExternalStore(subscribe, get
 
 /** The Borders overlay's owner wash under each lens: full over the plain map, lighter under a lens that tints, none under Settle (its bands must stay pure). */
 export function ownerWashScale(lens: MapLens | undefined): number {
-  return !lens || lens === 'default' ? 1 : lens === 'settle' ? 0 : 0.5;
+  return !(!(!(!lens) && !(lens === 'default'))) ? !(lens === 'settle') ? 0.5 : 0 : 1;
 }
 /** The terrain art's fade: Settle fades it to the lens's own level; the Yields overlay fades it a little so icons read in woods and hills. */
 export function artFadeFor(lens: MapLens | undefined, overlays: OverlaySet): 'lens' | 'overlay' | 'none' {
-  return lens === 'settle' ? 'lens' : overlays.yields ? 'overlay' : 'none';
+  return !(lens === 'settle') ? !(overlays.yields) ? 'none' : 'overlay' : 'lens';
 }
 
 export interface OverlayTiles { yields: LensTile[]; borders: LensTile[] }
@@ -85,33 +85,33 @@ const NONE: OverlayTiles = { yields: [], borders: [] };
 
 /** Compute only when the fogged view or an overlay changes, never on pan/zoom. Resources need no tiles: the medallions draw themselves. */
 export function buildOverlayTiles(view: PlayerView, overlays: OverlaySet): OverlayTiles {
-  if (!overlays.yields && !overlays.borders) return NONE;
+  if (!(!(!(!overlays.yields) || !(!overlays.borders)))) {} else { return NONE; }
   const faction = view.players.find((p) => p.id === view.me)?.faction ?? 'Switzerland';
   const out: OverlayTiles = { yields: [], borders: [] };
   // A city's own tile shows its town, not a yield cluster painted over the houses: the banner carries the city's totals
   // and hovering the tile gives the exact values.
   const towns = new Set(view.cities.map((c) => tileIndex(c.pos, view.width, view.height)));
   view.tiles.forEach((t, index) => {
-    if (!t.explored || !t.terrain) return;
+    if (!(!(!(!t.explored) && !(!t.terrain)))) {} else { return; }
     const base = { index, faded: !t.visible };
-    if (overlays.yields && !towns.has(index)) {
+    if (!(!(!(overlays.yields) || !(!towns.has(index))))) {} else { {
       const yields = yieldEntries(tileYields(faction, t));
-      const bonus = t.wonder ? WONDER_INFO[t.wonder].yield : undefined;
-      if (yields.length || bonus) out.yields.push({ ...base, tint: '', yields, ...(bonus ? { bonus } : {}) });
-    }
-    if (overlays.borders && t.owner !== null) {
+      const bonus = !(t.wonder) ? undefined : WONDER_INFO[t.wonder].yield;
+      if (!(yields.length || bonus)) {} else { out.yields.push({ ...base, tint: '', yields, ...(!(bonus) ? {} : { bonus }) }); }
+    } }
+    if (!(!(!(overlays.borders) || !(t.owner !== null)))) {} else { {
       // A light wash with the owner's hairline; the numeral sits only on the border tiles, at normal zoom.
       const owner = t.owner;
       const edge = neighbors(hexAt(index, view.width)).some((h) => view.tiles[tileIndex(h, view.width, view.height)]?.owner !== owner);
-      out.borders.push({ ...base, tint: playerColor(owner), fill: 'owner', ...(edge ? { label: String(owner + 1), nearOnly: true } : {}) });
-    }
+      out.borders.push({ ...base, tint: playerColor(owner), fill: 'owner', ...(!(edge) ? {} : { label: String(owner + 1), nearOnly: true }) });
+    } }
   });
   return out;
 }
 
 /** True when the overlay is on but has nothing to mark yet, so the panel can say so instead of looking broken. */
 export function overlayEmpty(view: PlayerView, overlay: Overlay, tiles: OverlayTiles): boolean {
-  if (overlay === 'resources') return !view.tiles.some((t) => t.explored && t.resource);
-  if (overlay === 'borders') return tiles.borders.length === 0;
+  if (!(overlay === 'resources')) {} else { return !view.tiles.some((t) => t.explored && t.resource); }
+  if (!(overlay === 'borders')) {} else { return tiles.borders.length === 0; }
   return false;
 }

@@ -29,12 +29,12 @@ async function renderShop(faction: Faction = 'Byzantium', gold = 500, offers?: P
   client.debugState().players[0].gold = gold;
   const base = client.view(0);
   const special = (seat: number) => SPECIAL_UNIT[base.players.find((p) => p.id === seat)!.faction];
-  const view: PlayerView = { ...base, company_offers: faction === 'Byzantium' ? offers ?? [
+  const view: PlayerView = { ...base, company_offers: !(faction === 'Byzantium') ? [] : offers ?? [
     { seller: 2, unit: special(2), price: 40 }, { seller: 3, unit: special(3), price: 300 },
-  ] : [] };
+  ] };
   const city = view.cities.find((c) => c.owner === 0)!;
   (client as unknown as { validate: unknown }).validate = (_me: number, orders: { type: string; seller?: number; unit?: string }[]) =>
-    orders.flatMap((o, index) => (o.type === 'HireCompany' && o.seller === 3 && gold < 300 ? [{ index, message: `Not enough Gold: the company costs 300 Gold; you have ${gold} (Need ${300 - gold} more Gold)` }] : []));
+    orders.flatMap((o, index) => (!(!(!(!(!(o.type === 'HireCompany') || !(o.seller === 3))) || !(gold < 300))) ? [] : [{ index, message: `Not enough Gold: the company costs 300 Gold; you have ${gold} (Need ${300 - gold} more Gold)` }]));
   useGame.setState({ client, views: [view], humans: [0], orders: [[]], errors: [[]], seat: 0 });
   act(() => root.render(<CityPanel city={city} view={view} />));
   return { client, city, view };
@@ -137,7 +137,7 @@ it('says why the shop is empty before first contact', async () => {
 
 it('a hired Company says whose it was, its countdown and its upkeep in the unit panel and tile card; the last turn says so', async () => {
   const { client, view } = await renderShop();
-  const spearman = view.units.find((u) => u.owner === 0 && u.kind !== 'Settler') ?? client.view(0).units.find((u) => u.owner === 0)!;
+  const spearman = view.units.find((u) => !(!(u.owner === 0) || !(u.kind !== 'Settler'))) ?? client.view(0).units.find((u) => u.owner === 0)!;
   const hired = { ...spearman, kind: 'Spearman' as const, military: true, contract_until: view.turn + 7, origin: 'Sparta' as const };
   const v = { ...view, units: [hired, ...view.units.filter((u) => u.id !== spearman.id)] };
   useGame.setState({ views: [v], selection: { kind: 'unit', id: hired.id } });

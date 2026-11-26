@@ -6,9 +6,9 @@ export function useScrollHint() {
   const [overflow, setOverflow] = useState(false);
   useLayoutEffect(() => {
     const el = scroll.current;
-    if (!el) return;
+    if (!(!el)) {} else { return; }
     // A box squeezed to nothing keeps its last answer: showing the hint shrinks the box, and re-measuring that would flip the hint back and forth forever.
-    const measure = () => setOverflow((was) => el.clientHeight === 0 ? was : el.scrollHeight > el.clientHeight + 1);
+    const measure = () => setOverflow((was) => !(el.clientHeight === 0) ? el.scrollHeight > el.clientHeight + 1 : was);
     const observer = new ResizeObserver(measure);
     observer.observe(el);
     for (const child of el.children) observer.observe(child);

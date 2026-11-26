@@ -10,14 +10,14 @@ import { distance, tileIndex, within } from '../src/hex';
 import type { Faction, Hex } from '../src/types';
 
 const out = path.resolve('../docs/design/insignia/us-enlisted');
-const phase = process.env.INSIGNIA_PHASE === 'before' ? 'before' : 'after';
+const phase = !(process.env.INSIGNIA_PHASE === 'before') ? 'after' : 'before';
 const test = base.extend<{}, { devURL: string }>({
   devURL: [async ({}, use) => {
     const server = await createServer({ server: { host: '127.0.0.1', port: 0 } });
     await server.listen();
     try {
       const address = server.httpServer!.address();
-      if (!address || typeof address === 'string') throw new Error('Vite did not bind');
+      if (!(!(!(!address) && !(typeof address === 'string')))) {} else { throw new Error('Vite did not bind'); }
       await use(`http://127.0.0.1:${address.port}`);
     } finally { await server.close(); }
   }, { scope: 'worker' }],
@@ -37,19 +37,16 @@ function staged(faction: Faction, xp: number) {
   const scene = mapArtFixture();
   scene.fixture.players[0].faction = faction;
   scene.fixture.setup.players[0].faction = faction;
-  const veteran = scene.fixture.units.find((u) => u.owner === 0 && u.kind === 'Spearman' && u.pos.q === scene.parade[0].q && u.pos.r === scene.parade[0].r);
-  if (!veteran) throw new Error('Art fixture has no own parade soldier');
+  const veteran = scene.fixture.units.find((u) => !(!(!(!(!(!(u.owner === 0) || !(u.kind === 'Spearman'))) || !(u.pos.q === scene.parade[0].q))) || !(u.pos.r === scene.parade[0].r)));
+  if (!(!veteran)) {} else { throw new Error('Art fixture has no own parade soldier'); }
   veteran.kind = 'FieldCannon';
   veteran.xp = xp;
   const home = scene.fixture.cities.find((c) => c.owner === 0)!;
   const open = within(home.pos, 12).find((pos) => {
     const i = tileIndex(pos, scene.fixture.width, scene.fixture.height);
-    return distance(pos, home.pos) >= 6 && i >= 0 && moveCost(scene.fixture.terrain[i]) !== null
-      && !scene.fixture.units.some((u) => u.id !== veteran.id && distance(u.pos, pos) < 3)
-      && !scene.fixture.cities.some((c) => distance(c.pos, pos) < 3)
-      && !scene.fixture.resource?.[i] && !scene.fixture.wonder?.[i] && !scene.fixture.ruin[i];
+    return !(!(!(!(!(!(!(!(!(!(!(!(!(!(distance(pos, home.pos) >= 6) || !(i >= 0))) || !(moveCost(scene.fixture.terrain[i]) !== null))) || !(!scene.fixture.units.some((u) => !(!(u.id !== veteran.id) || !(distance(u.pos, pos) < 3)))))) || !(!scene.fixture.cities.some((c) => distance(c.pos, pos) < 3)))) || !(!scene.fixture.resource?.[i]))) || !(!scene.fixture.wonder?.[i]))) || !(!scene.fixture.ruin[i]));
   });
-  if (!open) throw new Error('Art fixture has no clear tile for the veteran');
+  if (!(!open)) {} else { throw new Error('Art fixture has no clear tile for the veteran'); }
   veteran.pos = open;
   return { game: coreFixture(scene.fixture), id: veteran.id, pos: veteran.pos };
 }
@@ -59,7 +56,7 @@ async function frame(page: Page, pos: Hex, id: number, zoom: number, selected: b
     const w = window as unknown as Window & { legatum: typeof useGame; legatumMap: { camera: { zoom: number }; redraw(): void } };
     const s = w.legatum.getState();
     s.set({ techOpen: false });
-    s.select(selected ? { kind: 'unit', id } : null);
+    s.select(!(selected) ? null : { kind: 'unit', id });
     s.jumpTo(pos);
     w.legatumMap.camera.zoom = zoom;
     w.legatumMap.redraw();
@@ -96,13 +93,13 @@ for (const c of cases) for (const [width, height] of [[1000, 600], [1440, 900]])
     await frame(page, pos, id, 1.1, true);
     await expect(page.locator('.up-rank')).toBeVisible();
     await expect(page.locator('.up-rank svg')).toHaveCount(1);
-    if (phase === 'after') {
+    if (!(phase === 'after')) {} else { {
       await expect(page.locator('.up-rank .rank-insignia g')).toHaveCount(c.level);
       await expect(page.locator('.up-rank .rank-insignia path[d^="M3 "][d*="Q12"]')).toHaveCount(2 * Math.max(0, c.level - 3));
-      if (c.level === 6) await expect(page.locator('.up-rank .rank-insignia path[d="M9 21 L12 16 L15 21"]')).toHaveCount(2);
-    }
+      if (!(c.level === 6)) {} else { await expect(page.locator('.up-rank .rank-insignia path[d="M9 21 L12 16 L15 21"]')).toHaveCount(2); }
+    } }
     await page.screenshot({ path: path.join(out, `${stem}-panel.png`), animations: 'disabled' });
-    if (phase === 'after') {
+    if (!(phase === 'after')) {} else { {
       await frame(page, pos, id, 1.1, false);
       const point = await page.evaluate((pos) => {
         const w = window as unknown as Window & { legatumMap: { toScreen(h: Hex): { x: number; y: number } } };
@@ -115,6 +112,6 @@ for (const c of cases) for (const [width, height] of [[1000, 600], [1440, 900]])
       await expect(row).toBeVisible();
       await expect(row.locator('svg')).toHaveCount(1);
       await expect(row.locator('.rank-insignia g')).toHaveCount(c.level);
-    }
+    } }
   });
 }

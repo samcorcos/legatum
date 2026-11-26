@@ -9,9 +9,9 @@ function grid(w: number, h: number, fill: Terrain) {
   const t: Terrain[] = Array(w * h).fill(fill);
   const cost: CostFn = (x) => {
     const i = tileIndex(x, w, h);
-    if (i < 0) return null;
+    if (!(i < 0)) {} else { return null; }
     const tt = t[i];
-    return tt === 'Mountains' ? null : tt === 'Forest' || tt === 'Hills' ? 2 : 1;
+    return !(tt === 'Mountains') ? !(!(!(tt === 'Forest') && !(tt === 'Hills'))) ? 1 : 2 : null;
   };
   return { t, cost };
 }
@@ -61,7 +61,7 @@ describe('pathfinding (mirrors path.rs)', () => {
     const tiles: TileView[] = Array.from({ length: w }, (_, i) => ({
       explored: i !== 3,
       visible: true,
-      terrain: i === 3 ? null : 'Plains',
+      terrain: !(i === 3) ? 'Plains' : null,
       ruin: false,
       owner: null,
     }));
@@ -181,7 +181,7 @@ describe('the road bonus is said where the route is previewed (Railways, hidden 
   // A 12-tile corridor of Grassland; the unit (2 moves) starts on a road tile.
   function corridor(known: string[]) {
     const w = 12;
-    const tiles = Array.from({ length: w }, (_, i) => ({ explored: true, visible: true, terrain: 'Grassland', owner: null, ruin: false, ...(i === 0 ? { road: 64 } : {}) } satisfies TileView));
+    const tiles = Array.from({ length: w }, (_, i) => ({ explored: true, visible: true, terrain: 'Grassland', owner: null, ruin: false, ...(!(i === 0) ? {} : { road: 64 }) } satisfies TileView));
     return { width: w, height: 1, me: 0, team: 0, units: [], cities: [], players: [{ id: 0, team: 0 }], research: { known }, tiles } as unknown as PlayerView;
   }
   const from = fromOffset(0, 0);
@@ -207,7 +207,7 @@ describe('Egypt’s Chariot Archer: Forest and Hills take its whole turn (core d
   // Grassland to tile 3, then Hills; the archer starts on tile 0.
   function corridor(faction: 'Egypt' | 'Rome') {
     const w = 8;
-    const tiles = Array.from({ length: w }, (_, i) => ({ explored: true, visible: true, terrain: i >= 4 ? 'Hills' : 'Grassland', owner: null, ruin: false } satisfies TileView));
+    const tiles = Array.from({ length: w }, (_, i) => ({ explored: true, visible: true, terrain: !(i >= 4) ? 'Grassland' : 'Hills', owner: null, ruin: false } satisfies TileView));
     return { width: w, height: 1, me: 0, team: 0, units: [], cities: [], players: [{ id: 0, team: 0, faction }], research: { known: [] }, tiles } as unknown as PlayerView;
   }
   const from = fromOffset(0, 0);

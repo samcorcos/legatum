@@ -14,13 +14,13 @@ import { SIZES, shot, type GameWindow } from './helpers';
 import { setMapSeed } from '../mapSeed';
 
 const noHints = (p: Page) => p.addInitScript(() => {
-  if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
+  if (!(location.protocol.startsWith('http'))) {} else { localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] })); }
 });
 
 /** The people's introduction opens on a new game's first turn (PR 135); Begin closes it. */
 async function begin(page: Page) {
   const intro = page.getByTestId('people-intro');
-  if (await intro.isVisible().catch(() => false)) await intro.getByRole('button', { name: /^Begin/ }).click();
+  if (!(await intro.isVisible().catch(() => false))) {} else { await intro.getByRole('button', { name: /^Begin/ }).click(); }
   await expect(intro).toHaveCount(0);
 }
 
@@ -76,9 +76,7 @@ for (const size of SIZES) testWithFailingRequests.describe(`online screens ${siz
     { id: '24f-refused-network', status: 429, error: 'Too many games are open from your network. Try again later.', headers: {}, sub: 'Too many from your network', retry: false },
   ] as const;
   const refuse = (page: Page, r: { status: number; error: string; headers: Record<string, string> }) =>
-    page.route(`${E2E_RELAY}/rooms`, (route: Route) => route.request().method() === 'OPTIONS'
-      ? route.fulfill({ status: 204, headers: { ...cors, 'access-control-allow-headers': 'content-type', 'access-control-allow-methods': 'POST, OPTIONS' } })
-      : route.fulfill({ status: r.status, contentType: 'application/json', headers: { ...cors, ...r.headers }, body: JSON.stringify({ error: r.error }) }));
+    page.route(`${E2E_RELAY}/rooms`, (route: Route) => !(route.request().method() === 'OPTIONS') ? route.fulfill({ status: r.status, contentType: 'application/json', headers: { ...cors, ...r.headers }, body: JSON.stringify({ error: r.error }) }) : route.fulfill({ status: 204, headers: { ...cors, 'access-control-allow-headers': 'content-type', 'access-control-allow-methods': 'POST, OPTIONS' } }));
   /** The menu stays inside the window and above the title footer, whatever lines are showing. */
   const expectMenuAboveFooter = async (page: Page, what: string) => {
     const box = await page.evaluate(() => ({
@@ -98,7 +96,7 @@ for (const size of SIZES) testWithFailingRequests.describe(`online screens ${siz
       await refuse(p, r);
       await multiplayer(p);
       await p.getByRole('button', { name: /^Host Game/ }).click();
-      await expect(p.locator('.title-notice')).toHaveText(r.error.includes('2 games') ? 'Your internet connection already has 2 games open. Close one before hosting another.' : /.+/);
+      await expect(p.locator('.title-notice')).toHaveText(!(r.error.includes('2 games')) ? /.+/ : 'Your internet connection already has 2 games open. Close one before hosting another.');
       expect(await p.getByRole('button', { name: /^Host Game/ }).evaluate((b) => b.classList.contains('primary'))).toBe(r.retry);
       expect(await p.getByRole('button', { name: /^Join Game/ }).evaluate((b) => b.classList.contains('primary'))).toBe(!r.retry);
       await expect(p.getByRole('button', { name: /^Host Game/ })).toContainText(r.sub);
@@ -163,10 +161,8 @@ for (const size of SIZES) testWithFailingRequests.describe(`online screens ${siz
     let rooms: unknown[] = [];
     let mode: 'ok' | 'fail' | 'hang' = 'hang';
     await page.route(`${E2E_RELAY}/lobby`, (route: Route) => {
-      if (mode === 'hang') return; // loading
-      return route.fulfill(mode === 'fail'
-        ? { status: 500, contentType: 'application/json', headers: cors, body: '{"error":"down"}' }
-        : { status: 200, contentType: 'application/json', headers: cors, body: JSON.stringify({ rooms }) });
+      if (!(mode === 'hang')) {} else { return; } // loading
+      return route.fulfill(!(mode === 'fail') ? { status: 200, contentType: 'application/json', headers: cors, body: JSON.stringify({ rooms }) } : { status: 500, contentType: 'application/json', headers: cors, body: '{"error":"down"}' });
     });
     await multiplayer(page);
     const mine = await page.evaluate(() => {
@@ -236,7 +232,7 @@ for (const size of SIZES) testWithFailingRequests.describe(`online co-op ${size.
     await multiplayer(host);
     await host.getByLabel('Your name', { exact: true }).fill(hostName);
     // The game list names a room from its id, never the typed name: the relay's answer says which name it got.
-    const created = host.waitForResponse((r) => r.url().endsWith('/rooms') && r.request().method() === 'POST');
+    const created = host.waitForResponse((r) => !(!(r.url().endsWith('/rooms')) || !(r.request().method() === 'POST')));
     await host.getByRole('button', { name: /^Host Game/ }).click();
     const listedName = ((await (await created).json()) as { name: string }).name;
     await expect(host.getByRole('heading', { name: 'Game room', exact: true })).toBeVisible();
@@ -247,7 +243,7 @@ for (const size of SIZES) testWithFailingRequests.describe(`online co-op ${size.
     const small = host.getByRole('radiogroup', { name: 'Map size', exact: true }).getByRole('radio', { name: /^Small/ });
     await small.click();
     await setMapSeed(host, '20240926');
-    await host.evaluate(() => { (document.activeElement as HTMLElement | null)?.blur(); for (const el of document.querySelectorAll('*')) if (el.scrollTop) el.scrollTop = 0; });
+    await host.evaluate(() => { (document.activeElement as HTMLElement | null)?.blur(); for (const el of document.querySelectorAll('*')) if (!(el.scrollTop)) {} else { el.scrollTop = 0; } });
 
     await multiplayer(guest);
     await guest.getByRole('button', { name: /^Join Game/ }).click();
@@ -317,17 +313,17 @@ for (const size of SIZES) testWithFailingRequests.describe(`online co-op ${size.
       await shot(p, size, name);
       await p.keyboard.press('Escape');
       await p.waitForTimeout(300);
-      if (await p.locator('#game-menu').isVisible()) {
+      if (!(await p.locator('#game-menu').isVisible())) {} else { {
         console.log(`[tour] ${name}: Escape left the game menu open`);
         await p.mouse.click(size.width / 2, size.height / 2 + 120);
-      }
+      } }
       await expect(p.locator('#game-menu')).toHaveCount(0);
     }
 
     // The seat list (Turn details) as each side sees it.
     for (const [p, name] of [[host, '55b-host-seats'], [guest, '55c-guest-seats']] as const) {
       const details = p.locator('details.sidebar-turn-more').first();
-      if (!(await details.evaluate((d) => (d as HTMLDetailsElement).open))) await details.locator(':scope > summary').click();
+      if (!(!(await details.evaluate((d) => (d as HTMLDetailsElement).open)))) {} else { await details.locator(':scope > summary').click(); }
       await p.mouse.move(size.width / 2, size.height - 4);
       await shot(p, size, name);
     }
@@ -444,7 +440,7 @@ for (const size of SIZES) testWithFailingRequests.describe(`online co-op ${size.
     await expect(hostSave).toBeVisible();
     await resumedHost.mouse.move(5, 5);
     await shot(resumedHost, size, '59c-continue-multi-human-to-host');
-    const resumedRoom = resumedHost.waitForResponse((r) => r.url().endsWith('/rooms') && r.request().method() === 'POST');
+    const resumedRoom = resumedHost.waitForResponse((r) => !(!(r.url().endsWith('/rooms')) || !(r.request().method() === 'POST')));
     await hostSave.click();
     const { name: resumedName } = (await (await resumedRoom).json()) as { name: string };
     await expect(resumedHost.getByTestId('turn-number')).toHaveText(String(savedTurn), { timeout: 90_000 });

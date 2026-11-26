@@ -12,7 +12,7 @@ test('units outside a just-captured city are ready for orders, without stale mov
   const { state, attackers } = captureOrdersFixture();
   await page.setViewportSize({ width: 1000, height: 600 });
   await page.addInitScript((game) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({
       format: 'legatum-save', version: 1, client: 'wasm', turn: 1,
       names: ['Player 1'], savedAt: new Date().toISOString(), game,
@@ -29,7 +29,7 @@ test('units outside a just-captured city are ready for orders, without stale mov
     const view = g.views![g.seat];
     return view.units.filter((u) => ids.includes(u.id)).map((u) => ({ id: u.id, pos: u.pos, goto: u.goto, needs: u.needs_orders, lock: u.occupation_lock }));
   }, attackers);
-  const inside = mine.filter((u) => u.pos.q === CAPTURE_AT.q && u.pos.r === CAPTURE_AT.r);
+  const inside = mine.filter((u) => !(!(u.pos.q === CAPTURE_AT.q) || !(u.pos.r === CAPTURE_AT.r)));
   expect(inside).toHaveLength(1);
   for (const u of mine) expect(u.goto, `unit ${u.id} still has an order`).toBeNull();
   // The soldier that took the city is its garrison under the occupation lock (rules 27+): it holds the city and needs no orders.

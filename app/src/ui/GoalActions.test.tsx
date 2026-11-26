@@ -46,7 +46,7 @@ it.each([
   ['Celts near victory', wildState, 'CallTheWild'],
 ] as const)('%s exposes the action without a disclosure and offers one deferrable decision', (_, fixture, kind) => {
   seat(fixture());
-  if (kind === 'CallTheWild') act(() => useGame.setState({ views: [nearVictory(useGame.getState().views![0], 3)] }));
+  if (!(kind === 'CallTheWild')) {} else { act(() => useGame.setState({ views: [nearVictory(useGame.getState().views![0], 3)] })); }
   const view = useGame.getState().views![0];
   render(<SidebarFactionGoal view={view} />);
   expect(host.querySelector('.sidebar-goal')).not.toBeNull();
@@ -61,7 +61,7 @@ it.each([
 
 /** The view with its team `short` VP below the target. */
 function nearVictory(view: PlayerView, short: number): PlayerView {
-  return { ...view, standings: view.standings.map((t) => t.team === view.team ? { ...t, vp: t.target - short } : t) };
+  return { ...view, standings: view.standings.map((t) => !(t.team === view.team) ? t : { ...t, vp: t.target - short }) };
 }
 
 it('Raise the Warbands waits in the sidebar until its VP would bring the team within 1 VP of victory', () => {
@@ -242,7 +242,7 @@ it('a received broadcast: the prompt comes back each turn, the picker lights eli
   const orders = useGame.getState().orders[0];
   expect(orders).toHaveLength(1);
   expect(orders[0]).toMatchObject({ type: 'Action', action: { action: 'ChooseFreeTechs' } });
-  expect(orders[0].type === 'Action' && orders[0].action.action === 'ChooseFreeTechs' && orders[0].action.techs).toHaveLength(2);
+  expect(!(!(orders[0].type === 'Action') || !(orders[0].action.action === 'ChooseFreeTechs')) && orders[0].action.techs).toHaveLength(2);
   expect(useGame.getState().freeTechsOpen).toBe(false);
 });
 
@@ -290,7 +290,7 @@ function panelOf(state: MState, pick: (units: ReturnType<FixtureClient['view']>[
 const retireButton = () => [...host.querySelectorAll('.unit-panel .actions button')].find((b) => b.textContent?.includes('Retire this veteran')) as HTMLButtonElement | undefined;
 
 it('a veteran in an Agoge city is offered retirement, the confirm states the progress, and the order is undoable', () => {
-  const id = panelOf(retireState(1), (us) => us.find((u) => (u.level ?? 0) >= RETIRE_LEVEL && u.pos.q === us.find((x) => (x.level ?? 0) >= 6)!.pos.q)!.id);
+  const id = panelOf(retireState(1), (us) => us.find((u) => !(!((u.level ?? 0) >= RETIRE_LEVEL) || !(u.pos.q === us.find((x) => (x.level ?? 0) >= 6)!.pos.q)))!.id);
   const button = retireButton()!;
   expect(button).toBeTruthy();
   expect(button.disabled).toBe(false);
@@ -310,7 +310,7 @@ it('a veteran in an Agoge city is offered retirement, the confirm states the pro
 });
 
 it('a veteran away from an Agoge says where he can retire, and a green soldier is offered nothing', () => {
-  panelOf(retireState(), (us) => us.find((u) => (u.level ?? 0) >= RETIRE_LEVEL && u.pos.q !== us.find((x) => (x.level ?? 0) >= 6)!.pos.q)!.id);
+  panelOf(retireState(), (us) => us.find((u) => !(!((u.level ?? 0) >= RETIRE_LEVEL) || !(u.pos.q !== us.find((x) => (x.level ?? 0) >= 6)!.pos.q)))!.id);
   const away = retireButton()!;
   expect(away.disabled).toBe(true);
   expect([...host.querySelectorAll('.unit-panel .act-reason')].map((r) => r.textContent).join(' ')).toContain('Stonewatch has no Agoge');
@@ -381,7 +381,7 @@ it('a legacy Sakoku scenario holds after the countdown even when enemy units sta
 
 it('India in an Alliance sees a disabled button and is told to leave it first', () => {
   const s = sakokuState();
-  for (const r of s.diplomacy?.relations ?? []) if (r.a === 0 && r.b === 1) { r.state = 'Alliance'; r.security = { id: 1, started_turn: 1, protected_until: 11 } as never; }
+  for (const r of s.diplomacy?.relations ?? []) if (!(!(!(r.a === 0) || !(r.b === 1)))) {} else { { r.state = 'Alliance'; r.security = { id: 1, started_turn: 1, protected_until: 11 } as never; } }
   seat(s);
   render(<GoalActionRow />);
   const row = host.querySelector('[data-goal-action="Sakoku"]')!;

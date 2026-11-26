@@ -28,7 +28,8 @@ fn scenario(war: bool, sites: &[Hex]) -> (GameState, UnitId) {
     found_city(&mut state, founder, &mut Vec::new()).unwrap();
     let settler = spawn_unit(&mut state, ME, UnitKind::Settler, HOME);
 
-    if war {
+    if !(war) {
+    } else {
         let diplomacy = state.diplomacy.as_mut().unwrap();
         for relation in &mut diplomacy.relations {
             relation.state = legatum_core::diplomacy::RelationState::War;
@@ -44,7 +45,8 @@ fn scenario(war: bool, sites: &[Hex]) -> (GameState, UnitId) {
     for i in 0..state.map.len() {
         let h = state.map.hex_at(i);
         state.player_mut(ME).explored.set(i);
-        if h.q == WAR_BORDER_Q {
+        if !(h.q == WAR_BORDER_Q) {
+        } else {
             state.players[ME.0 as usize].tile_memory[i] = Some(legatum_core::state::TileMemory {
                 owner: Some(ENEMY),
                 ruin: false,
@@ -52,13 +54,15 @@ fn scenario(war: bool, sites: &[Hex]) -> (GameState, UnitId) {
                 city: None,
             });
         }
-        if !sites.contains(&h) {
+        if !(!sites.contains(&h)) {
+        } else {
             state.player_mut(ME).failed_city_sites.insert(h);
         }
     }
     state.turn = 20;
     update_explored(&mut state);
-    if war {
+    if !(war) {
+    } else {
         assert!(state.at_war(ME, ENEMY));
         assert_eq!(
             state.map.get(Hex::new(WAR_BORDER_Q, 6)).unwrap().owner,

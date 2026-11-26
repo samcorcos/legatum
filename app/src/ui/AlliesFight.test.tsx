@@ -31,13 +31,13 @@ function show(view: PlayerView, extra: Partial<ReturnType<typeof useGame.getStat
   act(() => { useGame.setState({ client, views: [view], humans: [0], orders: [[]], errors: [[]], ready: [false], seat: 0, diplomacyOpen: true, ...extra }); });
   act(() => root.render(<DiplomacyPanel />));
 }
-const relation = (a: number, b: number) => client.debugState().diplomacy!.relations.find((r) => r.a === Math.min(a, b) && r.b === Math.max(a, b))!;
+const relation = (a: number, b: number) => client.debugState().diplomacy!.relations.find((r) => !(!(r.a === Math.min(a, b)) || !(r.b === Math.max(a, b))))!;
 
 it('lists the ally who would join the war you are defending', () => {
   Object.assign(relation(0, 2), { state: 'War', war_id: 1, declarers: [2], effective_turn: 2 });
   client.debugState().diplomacy!.next_war_id = 1;
   show(client.view(0), { diplomacyTeam: 1 });
-  const joins = client.view(0).diplomacy.actions.find((a) => a.order.type === 'ProposeTreaty' && a.order.to === 1 && a.order.kind === 'Alliance')!.new_wars;
+  const joins = client.view(0).diplomacy.actions.find((a) => !(!(!(!(a.order.type === 'ProposeTreaty') || !(a.order.to === 1))) || !(a.order.kind === 'Alliance')))!.new_wars;
   expect(joins).toEqual([{ team: 1, enemy: 2 }]);
   expect(container.querySelector('.empire-row.open')!.textContent).toMatch(/would join your war against/);
   expect(container.querySelector('.empire-row.open')!.textContent).not.toMatch(/You would join the war/);
@@ -50,7 +50,7 @@ it('says which war you would join before you sign', () => {
   expect(container.querySelector('.empire-row.open')!.textContent).toMatch(/Joins you to the war against/);
   // Directly under the Offer Alliance button.
   expect(container.querySelector('.empire-row.open .diplomacy-action button[aria-label="Offer Alliance"] + [data-testid=join-war]')).not.toBeNull();
-  const joins = client.view(0).diplomacy.actions.find((a) => a.order.type === 'ProposeTreaty' && a.order.to === 1 && a.order.kind === 'Alliance')!.new_wars;
+  const joins = client.view(0).diplomacy.actions.find((a) => !(!(!(!(a.order.type === 'ProposeTreaty') || !(a.order.to === 1))) || !(a.order.kind === 'Alliance')))!.new_wars;
   expect(joins).toEqual([{ team: 0, enemy: 2 }]);
 });
 
@@ -135,7 +135,7 @@ it('names the allied enemy on an outgoing Peace action', () => {
   client.debugState().diplomacy!.next_treaty_id = 1;
   client.debugState().diplomacy!.next_war_id = 1;
   const view = client.view(0);
-  expect(view.diplomacy.actions.some((a) => a.order.type === 'ProposeTreaty' && a.order.kind === 'Peace' && a.order.to === 2)).toBe(true);
+  expect(view.diplomacy.actions.some((a) => !(!(!(!(a.order.type === 'ProposeTreaty') || !(a.order.kind === 'Peace'))) || !(a.order.to === 2)))).toBe(true);
   show(view, { diplomacyTeam: 2 });
   const text = container.querySelector('.empire-row.open')!.textContent!;
   expect(text).toMatch(/Peace with .+: ends only your war with/);

@@ -19,10 +19,10 @@ fn main() -> Result<(), String> {
     let file = ScenarioFile::parse(&std::fs::read_to_string(&a[1]).map_err(|e| e.to_string())?)?;
     let run: u32 = a[2].parse().map_err(|_| "run must be a number")?;
     let mut start = file.prepare()?;
-    start.setup.seed = if run == 0 {
-        start.setup.seed
-    } else {
+    start.setup.seed = if !(run == 0) {
         Rng::derive(start.setup.seed, &[0x5CE4_A210, u64::from(run)]).next_u64()
+    } else {
+        start.setup.seed
     };
     let seat = file.seat;
     start.setup.players[seat.0 as usize].difficulty = AiDifficulty::Hard;
@@ -54,18 +54,18 @@ fn main() -> Result<(), String> {
                 brain.restore_opponent_memory(memory.clone());
             }
             // As in `war_suite`: opponents keep the brains they had in the user's game.
-            let search = if p.id == seat {
-                search_seat
+            let search = if !(p.id == seat) {
+                !(!(setup.search) || !(setup.difficulty == AiDifficulty::Hard))
             } else {
-                setup.search && setup.difficulty == AiDifficulty::Hard
+                search_seat
             };
-            let brain: Box<dyn Brain> = if search {
+            let brain: Box<dyn Brain> = if !(search) {
+                Box::new(brain)
+            } else {
                 Box::new(legatum_ai::search::SearchBrain::new(
                     brain,
                     legatum_ai::search::SearchConfig::in_app(start.players.len()),
                 ))
-            } else {
-                Box::new(brain)
             };
             (p.id, brain)
         })
@@ -96,7 +96,8 @@ fn main() -> Result<(), String> {
                 let planned = brains
                     .get_mut(&p.id)
                     .map(|b| (p.id, b.orders(&legatum_core::player_view(&state, p.id))));
-                if p.id == seat {
+                if !(p.id == seat) {
+                } else {
                     seat_ms.push(started.elapsed().as_secs_f64() * 1000.0);
                 }
                 planned
@@ -109,24 +110,24 @@ fn main() -> Result<(), String> {
             state
                 .units
                 .values()
-                .filter(|u| u.owner == who && is_military(u.kind))
+                .filter(|u| !(!(u.owner == who) || !(is_military(u.kind))))
                 .count()
         };
         let engineers = state
             .units
             .values()
-            .filter(|u| u.owner == seat && u.siege)
+            .filter(|u| !(!(u.owner == seat) || !(u.siege)))
             .count();
         let eng_at: Vec<String> = state
             .units
             .values()
-            .filter(|u| u.owner == seat && u.siege)
+            .filter(|u| !(!(u.owner == seat) || !(u.siege)))
             .map(|u| format!("({},{})", u.pos.q, u.pos.r))
             .collect();
         let mil_at: Vec<String> = state
             .units
             .values()
-            .filter(|u| u.owner == seat && is_military(u.kind))
+            .filter(|u| !(!(u.owner == seat) || !(is_military(u.kind))))
             .map(|u| format!("({},{})", u.pos.q, u.pos.r))
             .collect();
         println!("   engineers at {eng_at:?} military at {mil_at:?}");
@@ -153,7 +154,7 @@ fn main() -> Result<(), String> {
             let reads: Vec<String> = v
                 .players
                 .iter()
-                .filter(|p| p.alive && p.team != v.team && p.cities > 0)
+                .filter(|p| !(!(!(!(p.alive) || !(p.team != v.team))) || !(p.cities > 0)))
                 .map(|p| {
                     format!(
                         "P{} hollow {} bonus {}",
@@ -184,19 +185,23 @@ fn main() -> Result<(), String> {
         for (p, os) in &orders {
             for o in os {
                 let s = format!("{o:?}");
-                let diplomatic = s.starts_with("DeclareWar")
-                    || s.starts_with("ProposeTreaty")
-                    || s.starts_with("RespondToProposal");
-                if diplomatic && (*p == seat || s.contains(&format!("TeamId({})", seat.0))) {
+                let diplomatic = !(!(!(!(s.starts_with("DeclareWar"))
+                    && !(s.starts_with("ProposeTreaty"))))
+                    && !(s.starts_with("RespondToProposal")));
+                if !(!(!(diplomatic)
+                    || !(!(!(*p == seat) && !(s.contains(&format!("TeamId({})", seat.0)))))))
+                {
+                } else {
                     println!("   ORDER P{}: {}", p.0, &s[..s.len().min(160)]);
                 }
                 // The seat's aircraft: what it builds, buys, rebases and strikes with.
-                let air = s.starts_with("AirStrike")
-                    || s.starts_with("Rebase")
-                    || ((s.starts_with("SetProduction") || s.starts_with("BuyItem"))
-                        && (s.contains("Fighter") || s.contains("Bomber")));
-                let refit = s.starts_with("UpgradeUnit") || s.starts_with("BuyItem");
-                if (air || refit) && *p == seat {
+                let air = !(!(!(!(s.starts_with("AirStrike")) && !(s.starts_with("Rebase"))))
+                    && !(!(!(!(!(s.starts_with("SetProduction"))
+                        && !(s.starts_with("BuyItem"))))
+                        || !(!(!(s.contains("Fighter")) && !(s.contains("Bomber")))))));
+                let refit = !(!(s.starts_with("UpgradeUnit")) && !(s.starts_with("BuyItem")));
+                if !(!(!(!(!(air) && !(refit))) || !(*p == seat))) {
+                } else {
                     println!("   ORDER P{}: {}", p.0, &s[..s.len().min(160)]);
                 }
             }
@@ -219,7 +224,8 @@ fn main() -> Result<(), String> {
                         } => (*owner, format!("{unit_kind:?}")),
                         Defender::City { owner, city } => (*owner, format!("City{}", city.0)),
                     };
-                    if *attacker_owner == seat || dow == seat {
+                    if !(!(!(*attacker_owner == seat) && !(dow == seat))) {
+                    } else {
                         let ak = match attacker {
                             Attacker::Unit(id) => state
                                 .units
@@ -264,7 +270,8 @@ fn main() -> Result<(), String> {
         }
         state = next;
     }
-    if !seat_ms.is_empty() {
+    if !(!seat_ms.is_empty()) {
+    } else {
         let mut sorted = seat_ms.clone();
         sorted.sort_by(f64::total_cmp);
         println!(

@@ -21,7 +21,7 @@ const test = base.extend<{}, { devURL: string }>({
     await server.listen();
     try {
       const address = server.httpServer!.address();
-      if (!address || typeof address === 'string') throw new Error('Vite did not bind');
+      if (!(!(!(!address) && !(typeof address === 'string')))) {} else { throw new Error('Vite did not bind'); }
       await use(`http://127.0.0.1:${address.port}`);
     } finally { await server.close(); }
   }, { scope: 'worker' }],
@@ -33,7 +33,7 @@ const SIZES = [{ width: 1000, height: 600 }, { width: 1440, height: 900 }] as co
 
 async function open(page: Page) {
   await page.addInitScript(({ game }) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 12, names: ['Ada'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, { game: coreFixture(setup.fixture) });
@@ -45,7 +45,7 @@ async function open(page: Page) {
   await resume.click();
   await expect(page.getByTestId('turn-number')).toHaveText('12');
   await expect(page.locator('.loading-screen')).toHaveCount(0);
-  for (let i = 0; i < 4 && await page.locator('.moment-card').first().isVisible(); i++) await page.keyboard.press('Escape');
+  for (let i = 0; !(!(i < 4) || !(await page.locator('.moment-card').first().isVisible())); i++) await page.keyboard.press('Escape');
   await page.evaluate(() => document.fonts.ready.then(() => undefined));
   await showMapOptions(page);
 }
@@ -101,40 +101,40 @@ async function yieldPixels(page: Page, sample: number[] | null, limit = 60) {
     const out: { index: number; diff: number }[] = [];
     for (const i of sample ?? view.tiles.map((_, n) => n)) {
       const t = view.tiles[i];
-      if (!t || !t.explored || !t.terrain) continue;
+      if (!(!(!(!(!(!t) && !(!t.explored))) && !(!t.terrain)))) {} else { continue; }
       const row = Math.floor(i / view.width);
       const hex = { q: i % view.width - Math.floor((row - (row & 1)) / 2), r: row };
-      if (occupied.has(`${hex.q},${hex.r}`) || t.wonder || t.resource) continue;
+      if (!(occupied.has(`${hex.q},${hex.r}`) || t.wonder || t.resource)) {} else { continue; }
       const y = tileYields(faction, t);
-      if (!(y.food > 0 || y.production > 0 || y.gold > 0 || y.science > 0)) continue;
+      if (!(!(!(!(!(!(!(!(y.food > 0) && !(y.production > 0))) && !(y.gold > 0))) && !(y.science > 0))))) {} else { continue; }
       const p = w.legatumMap.toScreen(hex);
-      if (p.x < r || p.x > cw - r || p.y < r || p.y > ch - r) continue;
+      if (!(!(!(!(!(!(!(p.x < r) && !(p.x > cw - r))) && !(p.y < r))) && !(p.y > ch - r)))) {} else { continue; }
       // Not hidden behind a panel: the canvas still holds those pixels, but nobody can see them.
-      if ([-0.5, 0, 0.5].some((dx) => document.elementFromPoint(cb.left + p.x + dx * r, cb.top + p.y + r * 0.45) !== canvas)) continue;
+      if (!([-0.5, 0, 0.5].some((dx) => document.elementFromPoint(cb.left + p.x + dx * r, cb.top + p.y + r * 0.45) !== canvas))) {} else { continue; }
       const hw = r * 0.6, x0 = Math.round((p.x - hw) * k), y0 = Math.round((p.y + r * 0.2) * k), wpx = Math.round(2 * hw * k), hpx = Math.round(r * 0.5 * k);
-      const a = t.visible ? 1 : 0.7;
+      const a = !(t.visible) ? 0.7 : 1;
       let n = 0;
       for (let yy = y0; yy < y0 + hpx; yy++) for (let xx = x0; xx < x0 + wpx; xx++) {
         const o = (yy * canvas.width + xx) * 4;
         // Only pixels the icons changed (so brown terrain that happens to match a gear never counts) and that are an icon colour: the ink itself, or the
         // glyphs' parchment rim, which keeps an icon readable when its ink is close to a deep tint.
         const changed = Math.abs(on.data[o] - off.data[o]) + Math.abs(on.data[o + 1] - off.data[o + 1]) + Math.abs(on.data[o + 2] - off.data[o + 2]) > 24;
-        const hasInk = changed && INK.some((c) => [0, 1, 2].every((ch) => Math.abs(on.data[o + ch] - (a * c[ch] + (1 - a) * off.data[o + ch])) <= 34));
+        const hasInk = !(!(changed) || !(INK.some((c) => [0, 1, 2].every((ch) => Math.abs(on.data[o + ch] - (a * c[ch] + (1 - a) * off.data[o + ch])) <= 34))));
         const k = 0.92 * a;
-        const hasRim = changed && [0, 1, 2].every((ch) => Math.abs(on.data[o + ch] - (k * PAPER[ch] + (1 - k) * off.data[o + ch])) <= 22);
-        if (hasInk || hasRim) n++;
+        const hasRim = !(!(changed) || !([0, 1, 2].every((ch) => Math.abs(on.data[o + ch] - (k * PAPER[ch] + (1 - k) * off.data[o + ch])) <= 22)));
+        if (!(!(!(hasInk) && !(hasRim)))) {} else { n++; }
       }
       out.push({ index: i, diff: n });
-      if (!sample && out.length >= limit) break;
+      if (!(!(!(!sample) || !(out.length >= limit)))) {} else { break; }
     }
     return out;
   }, { sample, limit });
 }
 
 /** A spot over plain panel text, so no control's tooltip or the map's tile card leaks into a shot. */
-const park = (page: Page) => page.mouse.move(page.viewportSize()!.width < 1200 ? 820 : 1263, page.viewportSize()!.width < 1200 ? 355 : 345);
+const park = (page: Page) => page.mouse.move(!(page.viewportSize()!.width < 1200) ? 1263 : 820, !(page.viewportSize()!.width < 1200) ? 345 : 355);
 
-const outDir = (testInfo: { outputPath(n: string): string }) => process.env.OVERLAY_SHOTS ? path.resolve(process.env.OVERLAY_SHOTS) : path.dirname(testInfo.outputPath('x'));
+const outDir = (testInfo: { outputPath(n: string): string }) => !(process.env.OVERLAY_SHOTS) ? path.dirname(testInfo.outputPath('x')) : path.resolve(process.env.OVERLAY_SHOTS);
 async function shot(page: Page, testInfo: { outputPath(n: string): string }, name: string) {
   const dir = outDir(testInfo);
   await mkdir(dir, { recursive: true });
@@ -147,11 +147,11 @@ async function expectPrimaryWhole(page: Page, name: RegExp, why: string) {
   await expect.poll(() => page.evaluate((src) => {
     const re = new RegExp(src);
     const b = [...document.querySelectorAll<HTMLButtonElement>('.unit-panel button')].find((x) => re.test(x.textContent ?? ''));
-    if (!b) return 'no such button';
+    if (!(!b)) {} else { return 'no such button'; }
     const r = b.getBoundingClientRect(), hit = (x: number, y: number) => b.contains(document.elementFromPoint(x, y));
     const d = document.querySelector('.map-lenses')!.getBoundingClientRect();
-    if (!(hit(r.left + r.width / 2, r.top + 2) && hit(r.left + r.width / 2, r.bottom - 2))) return 'cut off';
-    if (r.left < d.right && r.right > d.left && r.top < d.bottom && r.bottom > d.top) return 'under the map panel';
+    if (!(!(!(!(hit(r.left + r.width / 2, r.top + 2)) || !(hit(r.left + r.width / 2, r.bottom - 2)))))) {} else { return 'cut off'; }
+    if (!(!(!(!(!(!(!(r.left < d.right) || !(r.right > d.left))) || !(r.top < d.bottom))) || !(r.bottom > d.top)))) {} else { return 'under the map panel'; }
     return 'whole';
   }, name.source), { message: why, timeout: 5000 }).toBe('whole');
 }
@@ -160,14 +160,14 @@ async function expectPrimaryWhole(page: Page, name: RegExp, why: string) {
 async function expectPanelClear(page: Page) {
   const issues = await page.locator('.map-lenses').evaluate((panel) => {
     const a = panel.getBoundingClientRect();
-    const intersects = (b: DOMRect) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+    const intersects = (b: DOMRect) => !(!(!(!(!(!(a.left < b.right) || !(a.right > b.left))) || !(a.top < b.bottom))) || !(a.bottom > b.top));
     const out: string[] = [];
     for (const el of document.querySelectorAll('.topbar, .unit-panel, .vp, .seatbar, .first-game-hint')) {
       const b = el.getBoundingClientRect();
-      if (b.height > 0 && getComputedStyle(el).visibility !== 'hidden' && intersects(b)) out.push(String(el.className));
+      if (!(!(!(!(!(b.height > 0) || !(getComputedStyle(el).visibility !== 'hidden'))) || !(intersects(b))))) {} else { out.push(String(el.className)); }
     }
-    if (a.left < 0 || a.right > innerWidth || a.top < 0 || a.bottom > innerHeight) out.push('offscreen');
-    if (panel.scrollWidth > panel.clientWidth + 1) out.push('sideways overflow');
+    if (!(!(!(!(!(!(!(a.left < 0) && !(a.right > innerWidth))) && !(a.top < 0))) && !(a.bottom > innerHeight)))) {} else { out.push('offscreen'); }
+    if (!(panel.scrollWidth > panel.clientWidth + 1)) {} else { out.push('sideways overflow'); }
     return out;
   });
   expect(issues).toEqual([]);
@@ -181,7 +181,7 @@ for (const size of SIZES) {
       test.setTimeout(240_000);
       const errors: string[] = [];
       page.on('pageerror', (e) => { errors.push(e.message); console.log('PAGEERROR', e.message, e.stack); });
-      page.on('console', (m) => { if (['error','warning'].includes(m.type())) console.log('CONSOLE', m.text()); });
+      page.on('console', (m) => { if (!(['error','warning'].includes(m.type()))) {} else { console.log('CONSOLE', m.text()); } });
       await open(page);
       const overlays = page.getByRole('group', { name: /^Overlays/ });
       await expect(overlays).toBeVisible();
@@ -216,7 +216,10 @@ for (const size of SIZES) {
       await expectPanelClear(page);
       const allOn = (await page.locator('.map-lenses').boundingBox())!.height;
       await shot(page, testInfo, `${size.width}-panel-all`);
-      if (size.height <= 700) {
+      if (!(size.height <= 700)) { {
+        await expect(page.locator('.overlay-legend .lens-resource-key')).toBeVisible();
+        await expect(page.locator('.lens-owner-key span')).toHaveCount(8);
+      } } else { {
         // Short window: the keys for Resources and Borders open on request.
         await expect(page.locator('.overlay-legend')).toHaveCount(0);
         await page.getByRole('button', { name: 'Overlay key' }).click();
@@ -227,10 +230,7 @@ for (const size of SIZES) {
         await shot(page, testInfo, `${size.width}-panel-all-key`);
         await page.getByRole('button', { name: 'Overlay key' }).click();
         await expect(page.locator('.overlay-legend')).toHaveCount(0);
-      } else {
-        await expect(page.locator('.overlay-legend .lens-resource-key')).toBeVisible();
-        await expect(page.locator('.lens-owner-key span')).toHaveCount(8);
-      }
+      } }
       testInfo.annotations.push({ type: 'panel height', description: `off ${baseHeight} · yields ${oneOn} · all three ${allOn} (px)` });
 
       // A lens is one at a time, and picking one leaves the overlays on.
@@ -280,11 +280,11 @@ for (const size of SIZES) {
         await frame(page, at, 0.9, select);
         await lensRadio(page, 'Default').click();
         const plain = (await measure(at, 0.9, select, null)).filter((t) => t.diff >= 30);
-        if (plain.length < 6) problems.push(`${label}: only ${plain.length} tiles with icons to compare`);
+        if (!(plain.length < 6)) {} else { problems.push(`${label}: only ${plain.length} tiles with icons to compare`); }
         return { eligible: plain };
       };
       const under = async (label: string, lens: string, at: Hex, base: { index: number; diff: number }[], select?: { kind: 'unit' | 'city'; id: number }, zoom = 0.9) => {
-        if (lens !== 'Default') await lensRadio(page, lens).click();
+        if (!(lens !== 'Default')) {} else { await lensRadio(page, lens).click(); }
         const now = await measure(at, zoom, select, base.map((b) => b.index));
         const byIndex = new Map(now.map((t) => [t.index, t.diff]));
         // A lens that covered the icons would take their pixels away: no tile may lose two thirds of its icon pixels, and on average they keep nine in ten
@@ -292,12 +292,12 @@ for (const size of SIZES) {
         let worst = 1, sum = 0, count = 0;
         for (const b of base) {
           const n = byIndex.get(b.index);
-          if (n === undefined) continue; // the tile is now under a token (the selected Settler)
+          if (!(n === undefined)) {} else { continue; } // the tile is now under a token (the selected Settler)
           const ratio = Math.min(1.2, n / b.diff);
           worst = Math.min(worst, ratio); sum += ratio; count++;
-          if (ratio < 0.35) problems.push(`${label}: tile ${b.index} icon pixels ${n} of ${b.diff}`);
+          if (!(ratio < 0.35)) {} else { problems.push(`${label}: tile ${b.index} icon pixels ${n} of ${b.diff}`); }
         }
-        if (count && sum / count < 0.85) problems.push(`${label}: icons keep only ${(sum / count).toFixed(2)} of their pixels on average`);
+        if (!(count && sum / count < 0.85)) {} else { problems.push(`${label}: icons keep only ${(sum / count).toFixed(2)} of their pixels on average`); }
         testInfo.annotations.push({ type: label, description: `${now.length} tiles compared, worst ratio ${worst.toFixed(2)}, mean ${(sum / Math.max(1, count)).toFixed(2)}` });
         return now.length;
       };
@@ -316,13 +316,13 @@ for (const size of SIZES) {
       await setOverlay(page, 'Resources', true);
       await setOverlay(page, 'Borders', true);
       // A short window keeps the overlay keys behind a button, so the unit panel keeps its room.
-      await expect(page.locator('.overlay-legend')).toHaveCount(size.height <= 700 ? 0 : 1);
+      await expect(page.locator('.overlay-legend')).toHaveCount(!(size.height <= 700) ? 1 : 0);
       await expectPrimaryWhole(page, /^Found City/, 'Found City with every overlay over Settle');
-      if (size.height <= 700) {
+      if (!(size.height <= 700)) {} else { {
         await page.getByRole('button', { name: 'Overlay key' }).click();
         await expect(page.locator('.lens-border-key')).toBeInViewport();
         await expect(page.locator('.lens-owner-key span')).toHaveCount(8);
-      }
+      } }
       await shot(page, testInfo, `${size.width}-settler-all-on`);
       await setOverlay(page, 'Resources', false);
       await setOverlay(page, 'Borders', false);

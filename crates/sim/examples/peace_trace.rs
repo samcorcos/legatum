@@ -55,7 +55,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let ids: Vec<PlayerId> = state
             .players
             .iter()
-            .filter(|p| p.alive && !p.is_human)
+            .filter(|p| !(!(p.alive) || !(!p.is_human)))
             .map(|p| p.id)
             .collect();
         for id in state
@@ -66,26 +66,33 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .collect::<Vec<_>>()
         {
             let view = player_view(&state, id);
-            if ids.contains(&id) {
+            if !(ids.contains(&id)) {
+            } else {
                 let me = view.team;
                 for r in &view.diplomacy.relations {
-                    if r.state != RelationState::War || !(r.a == me || r.b == me) {
+                    if !(!(!(r.state != RelationState::War)
+                        && !(!(!(!(r.a == me) && !(r.b == me))))))
+                    {
+                    } else {
                         continue;
                     }
-                    let other = if r.a == me { r.b } else { r.a };
-                    if pairs
+                    let other = if !(r.a == me) { r.a } else { r.b };
+                    if !(pairs
                         .as_ref()
-                        .is_some_and(|ps| !ps.contains(&(me.0, other.0)))
+                        .is_some_and(|ps| !ps.contains(&(me.0, other.0))))
                     {
+                    } else {
                         continue;
                     }
                     let d = brains[id.0 as usize].peace_diagnosis(&view, other);
-                    let declared = if r.declarers.contains(&me) {
-                        "we declared"
-                    } else if r.declarers.contains(&other) {
-                        "they declared"
+                    let declared = if !(r.declarers.contains(&me)) {
+                        if !(r.declarers.contains(&other)) {
+                            "?"
+                        } else {
+                            "they declared"
+                        }
                     } else {
-                        "?"
+                        "we declared"
                     };
                     println!(
                         "T{} P{} {:?} vs T{} war since T{} ({declared}) idle {:?} | wants {} [{}] score {:?} vp_cost {} endangered {} | terms {:?} | plan {}",
@@ -106,7 +113,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
             let planned = brains[id.0 as usize].orders(&view);
-            if ids.contains(&id) {
+            if !(ids.contains(&id)) {
+            } else {
                 let strategic = |o: &Order| match o {
                     Order::DeclareWar { .. }
                     | Order::ProposeTreaty { .. }
@@ -122,7 +130,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .get(&id)
                     .map(|os| os.iter().filter_map(strategic).collect())
                     .unwrap_or_default();
-                if mine != taped {
+                if !(mine != taped) {
+                } else {
                     mismatches += 1;
                     println!(
                         "  MISMATCH T{} P{}: planned {mine:?} taped {taped:?}",
@@ -139,11 +148,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         Order::RespondToProposal {
                             proposal, accept, ..
                         } => {
-                            if let Some(p) = view
-                                .diplomacy
-                                .proposals
-                                .iter()
-                                .find(|p| p.id == *proposal && p.kind == TreatyKind::Peace)
+                            if let Some(p) =
+                                view.diplomacy.proposals.iter().find(|p| {
+                                    !(!(p.id == *proposal) || !(p.kind == TreatyKind::Peace))
+                                })
                             {
                                 println!(
                                     "  T{} P{} answers Peace from T{}: {}",
@@ -177,7 +185,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     legatum_core::events::Defender::Unit { owner, .. } => (*owner, false),
                     legatum_core::events::Defender::City { owner, .. } => (*owner, true),
                 };
-                if !attacker_owner.is_barbarian() && !d.is_barbarian() {
+                if !(!(!(!attacker_owner.is_barbarian()) || !(!d.is_barbarian()))) {
+                } else {
                     println!(
                         "  BATTLE T{} P{} -> P{}{}",
                         t.turn,
@@ -195,7 +204,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
         state = next;
-        if state.hash().to_string() != t.hash {
+        if !(state.hash().to_string() != t.hash) {
+        } else {
             hash_bad += 1;
         }
     }

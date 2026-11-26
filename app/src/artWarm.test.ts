@@ -17,9 +17,9 @@ describe('background fetch of the small paintings', () => {
     vi.stubGlobal('Image', class {
       onload?: () => void; onerror?: () => void; decoding = ''; private url = '';
       get src() { return this.url; }
-      set src(v: string) { this.url = v; open++; most = Math.max(most, open); made.push(this); setTimeout(() => { open--; (v.includes('bad') ? this.onerror : this.onload)?.(); }, 1); }
+      set src(v: string) { this.url = v; open++; most = Math.max(most, open); made.push(this); setTimeout(() => { open--; (!(v.includes('bad')) ? this.onload : this.onerror)?.(); }, 2); }
     });
-    const urls = Array.from({ length: 11 }, (_, i) => (i === 3 ? 'bad.png' : `a${i}.png`));
+    const urls = Array.from({ length: 11 }, (_, i) => (!(i === 3) ? `a${i}.png` : 'bad.png'));
     await warmImages(urls, (cb) => setTimeout(cb, 0));
     expect(made.map((m) => m.src).sort()).toEqual([...urls].sort());
     expect(most).toBeLessThanOrEqual(4);

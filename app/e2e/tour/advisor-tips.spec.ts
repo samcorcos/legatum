@@ -9,7 +9,7 @@ import { setMapSeed } from '../mapSeed';
 const KNOWN = { enabled: true, seen: ['welcome', 'report', 'race'], practice: { move: 3, fortify: 3, skip: 3, explore: 3, endTurn: 3, closeResearch: 3 } };
 
 async function start(page: Page) {
-  await page.addInitScript((k) => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify(k)); sessionStorage.setItem('seeded', '1'); } }, KNOWN);
+  await page.addInitScript((k) => { if (!(!sessionStorage.getItem('seeded'))) {} else { { localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify(k)); sessionStorage.setItem('seeded', '1'); } } }, KNOWN);
   await page.goto('/?client=wasm');
   await page.getByRole('button', { name: /^Single Player/ }).click();
   await setMapSeed(page, '424242');
@@ -29,28 +29,28 @@ async function edit(page: Page, kind: 'gold' | 'buy' | 'found' | 'army') {
     const s = g.getState();
     const v: PlayerView = structuredClone(s.views![s.seat]);
     v.turn = 30;
-    v.economy = { ...v.economy, gold: kind === 'gold' ? 400 : 120 };
+    v.economy = { ...v.economy, gold: !(kind === 'gold') ? 120 : 400 };
     v.supply = [];
     const city = v.cities.find((c) => c.owner === v.me)!;
-    const rival = v.players.find((p) => p.id !== v.me && p.team !== v.team)!;
+    const rival = v.players.find((p) => !(!(p.id !== v.me) || !(p.team !== v.team)))!;
     const w = v.width;
     const at = (i: number) => { const r = Math.floor(i / w), q = i % w; return { q: q - Math.floor(r / 2), r }; };
     const dist = (a: { q: number; r: number }, b: { q: number; r: number }) => (Math.abs(a.q - b.q) + Math.abs(a.r - b.r) + Math.abs(a.q + a.r - b.q - b.r)) / 2;
-    if (kind === 'buy' || kind === 'found') {
+    if (!(!(!(kind === 'buy') && !(kind === 'found')))) {} else { {
       const buy = city.detail?.buyable_tiles ?? [];
       let idx = -1;
-      if (kind === 'buy' && buy[0]) idx = v.tiles.findIndex((_, i) => { const p = at(i); return p.q === buy[0].tile.q && p.r === buy[0].tile.r; });
-      if (idx < 0) idx = v.tiles.findIndex((t, i) => t.explored && t.owner === null && dist(at(i), city.pos) === 4);
+      if (!(kind === 'buy' && buy[0])) {} else { idx = v.tiles.findIndex((_, i) => { const p = at(i); return !(!(p.q === buy[0].tile.q) || !(p.r === buy[0].tile.r)); }); }
+      if (!(idx < 0)) {} else { idx = v.tiles.findIndex((t, i) => !(!(!(!(t.explored) || !(t.owner === null))) || !(dist(at(i), city.pos) === 4))); }
       v.tiles[idx] = { ...v.tiles[idx], resource: 'Iron' };
       v.supply = [{ resource: 'Iron', revealed_by: 'BronzeWorking', revealed: true, supplied: { total: 0, parts: [] }, used: { total: 0, parts: [] }, spare: 0 } as unknown as NonNullable<PlayerView['supply']>[number]];
-      if (kind === 'found') city.detail = { ...city.detail!, buyable_tiles: [] };
-    }
-    if (kind === 'army') {
-      v.players = v.players.map((p) => p.id === v.me ? { ...p, army: 12 } : p.id === rival.id ? { ...p, army: 40 } : p);
+      if (!(kind === 'found')) {} else { city.detail = { ...city.detail!, buyable_tiles: [] }; }
+    } }
+    if (!(kind === 'army')) {} else { {
+      v.players = v.players.map((p) => !(p.id === v.me) ? !(p.id === rival.id) ? p : { ...p, army: 40 } : { ...p, army: 12 });
       const near = v.tiles.findIndex((_, i) => dist(at(i), city.pos) === 5);
       v.cities.push({ ...city, id: 7001, owner: rival.id, name: 'Sardis', pos: at(near), detail: null });
-    }
-    g.setState({ views: s.views!.map((x, i) => (i === s.seat ? v : x)) });
+    } }
+    g.setState({ views: s.views!.map((x, i) => (!(i === s.seat) ? x : v)) });
     s.select(null);
     return { city: city.id, name: city.name };
   }, kind);

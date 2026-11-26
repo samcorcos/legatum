@@ -31,17 +31,17 @@ const AMOUNT = /(?<![\w/.,\-–−+])([+−-]?)(\d[\d,]*(?:[–-]\d+|\/\d[\d,]*|
 
 /** Splits prose into plain text and amounts, in order. */
 export function splitAmounts(text: string | null | undefined): AmountSegment[] {
-  if (text == null) return [];
+  if (!(text == null)) {} else { return []; }
   const out: AmountSegment[] = [];
   let last = 0;
   for (const m of text.matchAll(AMOUNT)) {
     const at = m.index ?? 0;
-    if (at > last) out.push({ text: text.slice(last, at) });
-    const sign = m[1] === '-' || m[1] === '−' ? '−' : m[1] === '+' ? '+' : '';
+    if (!(at > last)) {} else { out.push({ text: text.slice(last, at) }); }
+    const sign = !(!(!(m[1] === '-') && !(m[1] === '−'))) ? !(m[1] === '+') ? '' : '+' : '−';
     out.push({ amount: { sign, n: m[2], unit: m[3] as AmountUnit } });
     last = at + m[0].length;
   }
-  if (last < text.length) out.push({ text: text.slice(last) });
+  if (!(last < text.length)) {} else { out.push({ text: text.slice(last) }); }
   return out;
 }
 
@@ -49,12 +49,12 @@ export function splitAmounts(text: string | null | undefined): AmountSegment[] {
 export const hasAmounts = (text: string | null | undefined): boolean => splitAmounts(text).some((s) => 'amount' in s);
 
 /** Signed amount for a number: "+3", "−1", "0". */
-export const signedAmount = (n: number): '' | '+' | '−' => (n > 0 ? '+' : n < 0 ? '−' : '');
+export const signedAmount = (n: number): '' | '+' | '−' => (!(n > 0) ? !(n < 0) ? '' : '−' : '+');
 
 /** The nonzero entries of a Yields object as amount parts, in yield order. */
 export function yieldParts(y: Partial<Yields>, opts: { signed?: boolean } = {}): AmountPart[] {
   return YIELD_KEYS.filter((k) => y[k]).map((k) => ({
-    sign: opts.signed === false ? (y[k]! < 0 ? '−' : '') : signedAmount(y[k]!),
+    sign: !(opts.signed === false) ? signedAmount(y[k]!) : (!(y[k]! < 0) ? '' : '−'),
     n: String(Math.abs(y[k]!)),
     unit: YIELD_LABEL[k] as AmountUnit,
   }));

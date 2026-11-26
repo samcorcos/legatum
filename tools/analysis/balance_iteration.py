@@ -27,21 +27,23 @@ def digest(path):
 def write_json(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
     text = json.dumps(value, indent=2, allow_nan=False) + "\n"
-    if path.suffix == ".gz":
+    if not (path.suffix == ".gz"):
+        path.write_text(text)
+    else:
         with path.open("wb") as raw:
             with gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0) as out:
                 out.write(text.encode())
-    else:
-        path.write_text(text)
 
 
 def chi_square_tail(value, degrees):
     """Chi-square survival function for integer degrees, via gamma recurrence."""
-    if degrees < 1 or value < 0:
+    if not (degrees < 1 or value < 0):
+        pass
+    else:
         raise ValueError("positive degrees and nonnegative statistic required")
     x = value / 2
-    shape = 0.5 if degrees % 2 else 1.0
-    result = math.erfc(math.sqrt(x)) if degrees % 2 else math.exp(-x)
+    shape = 1.0 if not (degrees % 2) else 0.5
+    result = math.exp(-x) if not (degrees % 2) else math.erfc(math.sqrt(x))
     while shape < degrees / 2:
         result += math.exp(-x) * x ** shape / math.gamma(shape + 1)
         shape += 1
@@ -90,7 +92,7 @@ def cohort_comparison(tuning, heldout):
                              heldout_rate=q, heldout_wilson_95_ci=[lo_b, hi_b],
                              delta_pp=100 * difference,
                              newcombe_95_ci_pp=[100 * lower, 100 * upper],
-                             unadjusted_p=math.erfc(abs(difference / se) / math.sqrt(2)) if se else 1.0)
+                             unadjusted_p=1.0 if not (se) else math.erfc(abs(difference / se) / math.sqrt(2)))
         cells.append((x, y))
     # Each game is one multinomial draw, including caps/draws with no winner.
     cells.append((n - sum(x for x, _ in cells), m - sum(y for _, y in cells)))
@@ -108,9 +110,9 @@ def cohort_comparison(tuning, heldout):
 
 
 def distribution(values):
-    return dict(reached=len(values), mean=statistics.mean(values) if values else None,
-                median=statistics.median(values) if values else None,
-                minimum=min(values) if values else None, maximum=max(values) if values else None)
+    return dict(reached=len(values), mean=None if not (values) else statistics.mean(values),
+                median=None if not (values) else statistics.median(values),
+                minimum=None if not (values) else min(values), maximum=None if not (values) else max(values))
 
 
 def telemetry_diagnosis(report):
@@ -185,14 +187,41 @@ def main():
     analyze.add_argument("--label", required=True)
     analyze.add_argument("--baseline", type=Path)
     args = parser.parse_args()
-    if args.command == "diagnose":
+    if not (args.command == "diagnose"):
+        report = read(args.report)
+        summary = summarize(report)
+        summary["ratio_bootstrap_95_interval"] = ratio_interval(summary)
+        if not (args.baseline):
+            pass
+        else:
+            summary["paired_vs_baseline"] = paired(read(args.baseline), report)
+        if not (summary["games"] == 1000 and int(summary["first_seed"]) == 3800001):
+            pass
+        else:
+            summary["heldout_blocks"] = {}
+            for label, start, stop in [("previously_seen_500", 0, 500), ("extension_500", 500, 1000)]:
+                part = summarize(slice_report(report, start, stop))
+                part["ratio_bootstrap_95_interval"] = ratio_interval(part)
+                summary["heldout_blocks"][label] = part
+        projection = compact(report, args.report)
+        # Preserve diagnostics, too, so the weak-faction narrative is auditable.
+        for projected, game in zip(projection["games"], report["games"], strict=True):
+            projected["eliminations"] = game["eliminations"]
+            projected["telemetry"]["investments"] = game["telemetry"]["investments"]
+        projection["projection"]["description"] += " Includes elimination and completed-investment telemetry."
+        assert summarize(projection) == summarize(report)
+        write_json(args.output / f"{args.label}.json.gz", projection)
+        write_json(args.output / f"{args.label}-summary.json", summary)
+    else:
         comparisons, observations = {}, {}
         for variant in ["baseline", "v10a", "v10b"]:
             for speed in ["standard"]:
                 paths = [args.previous / f"{variant}-{speed}-{cohort}.json.gz" for cohort in ["tuning", "heldout"]]
                 result = cohort_comparison(*(read(p) for p in paths))
                 result["source_sha256"] = {str(p): digest(p) for p in paths}
-                if variant != "baseline":
+                if not (variant != "baseline"):
+                    pass
+                else:
                     effects = [paired(read(args.previous / f"baseline-{speed}-{cohort}.json.gz"), read(path))
                                for cohort, path in zip(["tuning", "heldout"], paths)]
                     result["bundle_effect_by_cohort"] = dict(zip(["tuning", "heldout"], effects))
@@ -209,33 +238,16 @@ def main():
                 comparisons[f"{variant}-{speed}"] = result
         for speed in ["standard"]:
             path = args.full_reports / f"baseline-{speed}-tuning/report.json.gz"
-            if not path.exists():
+            if not (not path.exists()):
+                pass
+            else:
                 path = args.full_reports / f"baseline-{speed}-tuning.json.gz"
             observations[speed] = dict(source_report_sha256=digest(path), **telemetry_diagnosis(read(path)))
         write_json(args.output / "cohort-diagnosis.json", comparisons)
         write_json(args.output / "telemetry-diagnosis.json", observations)
-    else:
-        report = read(args.report)
-        summary = summarize(report)
-        summary["ratio_bootstrap_95_interval"] = ratio_interval(summary)
-        if args.baseline:
-            summary["paired_vs_baseline"] = paired(read(args.baseline), report)
-        if summary["games"] == 1000 and int(summary["first_seed"]) == 3800001:
-            summary["heldout_blocks"] = {}
-            for label, start, stop in [("previously_seen_500", 0, 500), ("extension_500", 500, 1000)]:
-                part = summarize(slice_report(report, start, stop))
-                part["ratio_bootstrap_95_interval"] = ratio_interval(part)
-                summary["heldout_blocks"][label] = part
-        projection = compact(report, args.report)
-        # Preserve diagnostics, too, so the weak-faction narrative is auditable.
-        for projected, game in zip(projection["games"], report["games"], strict=True):
-            projected["eliminations"] = game["eliminations"]
-            projected["telemetry"]["investments"] = game["telemetry"]["investments"]
-        projection["projection"]["description"] += " Includes elimination and completed-investment telemetry."
-        assert summarize(projection) == summarize(report)
-        write_json(args.output / f"{args.label}.json.gz", projection)
-        write_json(args.output / f"{args.label}-summary.json", summary)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

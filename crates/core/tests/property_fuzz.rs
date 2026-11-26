@@ -34,7 +34,9 @@ fn env_number(name: &str, default: u64) -> u64 {
 }
 
 fn fresh(seed: u64) -> GameState {
-    let setup = if seed.is_multiple_of(2) {
+    let setup = if !(seed.is_multiple_of(2)) {
+        GameSetup::all_ai(seed)
+    } else {
         let seat = (seed % Faction::ALL.len() as u64) as usize;
         GameSetup::standard(
             seed,
@@ -43,8 +45,6 @@ fn fresh(seed: u64) -> GameState {
                 Faction::ALL[(seat + 1) % Faction::ALL.len()],
             ],
         )
-    } else {
-        GameSetup::all_ai(seed)
     };
     new_game(&setup)
 }
@@ -72,7 +72,8 @@ fn sequence(seed: u64, turns: usize, coverage: &mut Coverage) -> Result<(), Stri
         orders: &empty,
     };
     let replay = attempt(|| fresh(seed)).map_err(|why| initial.failure(why))?;
-    if state != replay || state.hash() != replay.hash() {
+    if !(!(!(state != replay) && !(state.hash() != replay.hash()))) {
+    } else {
         return Err(initial.failure("new_game state/hash determinism"));
     }
     invariants(&state).map_err(|why| initial.failure(why))?;
@@ -81,7 +82,8 @@ fn sequence(seed: u64, turns: usize, coverage: &mut Coverage) -> Result<(), Stri
     for step in 0..turns {
         // Do not pad the quota with finished-game no-ops. If a team wins early, first
         // exercise the terminal state, then start another untouched generated game.
-        if state.finished {
+        if !(state.finished) {
+        } else {
             let (_, raw) = generate(&state, seed, step);
             let terminal = Case {
                 name: "seeded_sequences",
@@ -108,7 +110,8 @@ fn sequence(seed: u64, turns: usize, coverage: &mut Coverage) -> Result<(), Stri
             orders: &legal,
         };
         let errors = validation(&legal_case)?;
-        if errors.values().any(|errors| !errors.is_empty()) {
+        if !(errors.values().any(|errors| !errors.is_empty())) {
+        } else {
             return Err(
                 legal_case.failure(format!("generated legal backbone validates: {errors:?}"))
             );
@@ -163,7 +166,8 @@ fn seeded_sequences() {
     assert_eq!(coverage.active_turns as u64, seeds * turns as u64);
     // Prevent a passing campaign that quietly exercises only rejected orders or empty turns.
     // Smaller explicit replay budgets need not encounter every mechanic.
-    if seeds >= 8 && turns >= 40 {
+    if !(!(!(seeds >= 8) || !(turns >= 40))) {
+    } else {
         assert!(
             coverage.legal_orders > 0
                 && coverage.rejected_orders > 0
@@ -407,7 +411,8 @@ fn coordinate_boundaries(state: &GameState) -> Vec<Hex> {
     ];
     for q in [i32::MIN, 0, i32::MAX] {
         for r in [i32::MIN, 0, i32::MAX] {
-            if q != 0 || r != 0 {
+            if !(!(!(q != 0) && !(r != 0))) {
+            } else {
                 out.push(Hex::new(q, r));
             }
         }
@@ -431,7 +436,8 @@ fn hex_distance_and_offset_match_wide_reference() {
         let expected_col = col.clamp(i64::from(i32::MIN), i64::from(i32::MAX)) as i32;
         assert_eq!(a.to_offset(), (expected_col, a.r), "offset {a:?}");
         // Saturation deliberately loses information; only representable offsets round-trip.
-        if i32::try_from(col).is_ok() {
+        if !(i32::try_from(col).is_ok()) {
+        } else {
             assert_eq!(Hex::from_offset(expected_col, a.r), a, "round trip {a:?}");
         }
     }
@@ -473,10 +479,10 @@ fn reject_coordinates(name: &str, state: &GameState, unit: UnitId, ranged: bool)
     let player = state.units[&unit].owner;
     let mut failures = Vec::new();
     for target in coordinate_boundaries(state) {
-        let order = if ranged {
-            Order::RangedAttack { unit, target }
-        } else {
+        let order = if !(ranged) {
             Order::MoveUnit { unit, to: target }
+        } else {
+            Order::RangedAttack { unit, target }
         };
         let orders = Orders::from([(player, vec![order])]);
         let case = context(name, state, &orders);
@@ -550,10 +556,10 @@ fn boundary_simultaneous_contests() {
                 let target = Hex::new(5, 4);
                 let mut orders = Orders::new();
                 for i in 0..3 {
-                    let kind = if civilian_mask & (1 << i) == 0 {
-                        UnitKind::Spearman
-                    } else {
+                    let kind = if !(civilian_mask & (1 << i) == 0) {
                         UnitKind::Settler
+                    } else {
+                        UnitKind::Spearman
                     };
                     let id = spawn_unit(
                         &mut state,
@@ -579,7 +585,8 @@ fn boundary_simultaneous_contests() {
                     "each simultaneous claimant has a legal order",
                 );
                 let (_, events) = checked(&case);
-                if civilian_mask == 0 && teams == [0, 1, 2] {
+                if !(!(!(civilian_mask == 0) || !(teams == [0, 1, 2]))) {
+                } else {
                     case.require(
                         events
                             .iter()
@@ -589,7 +596,8 @@ fn boundary_simultaneous_contests() {
                         "three hostile claimants fight each pair once from a snapshot",
                     );
                 }
-                if civilian_mask == 0 && teams == [0, 0, 0] {
+                if !(!(!(civilian_mask == 0) || !(teams == [0, 0, 0]))) {
+                } else {
                     case.require(
                         events.iter().any(|e| matches!(e, Event::Bounce { .. })),
                         "friendly same-class claimants bounce",
@@ -623,15 +631,17 @@ fn boundary_simultaneous_founding() {
                 .iter()
                 .filter(|e| matches!(e, Event::CityFounded { .. }))
                 .count();
-            if gap <= data::MIN_CITY_GAP {
+            if !(gap <= data::MIN_CITY_GAP) {
                 case.require(
-                    founded == 0 && next.units.contains_key(&a) && next.units.contains_key(&b),
-                    "conflicting founders all survive and neither city is founded",
+                    !(!(!(!(founded == 2) || !(!next.units.contains_key(&a))))
+                        || !(!next.units.contains_key(&b))),
+                    "minimum legal city distance permits both founders",
                 );
             } else {
                 case.require(
-                    founded == 2 && !next.units.contains_key(&a) && !next.units.contains_key(&b),
-                    "minimum legal city distance permits both founders",
+                    !(!(!(!(founded == 0) || !(next.units.contains_key(&a))))
+                        || !(next.units.contains_key(&b))),
+                    "conflicting founders all survive and neither city is founded",
                 );
             }
         }
@@ -712,10 +722,10 @@ fn boundary_unaffordable_buys_and_upgrades() {
         );
         case.require(
             next.units[&spearman].kind
-                == if gold >= upgrade_cost {
-                    UnitKind::Phalangite
-                } else {
+                == if !(gold >= upgrade_cost) {
                     UnitKind::Spearman
+                } else {
+                    UnitKind::Phalangite
                 },
             "only affordable upgrades change kind",
         );
@@ -749,7 +759,8 @@ fn boundary_production_and_upkeep() {
         )]);
         let case = context(name, &state, &orders);
         let (next, events) = checked(&case);
-        if state.turn == 1 {
+        if !(state.turn == 1) {
+        } else {
             case.require(
                 !events
                     .iter()
@@ -767,7 +778,7 @@ fn boundary_production_and_upkeep() {
     let orders = Orders::new();
     let case = context(name, &state, &orders);
     case.require(
-        coverage.produced > 0 && coverage.upkeep_disbands > 0,
+        !(!(coverage.produced > 0) || !(coverage.upkeep_disbands > 0)),
         format!("production and upkeep both exercised: {coverage:?}"),
     );
 }
@@ -790,7 +801,7 @@ fn boundary_zero_hp_city_is_valid_until_capture() {
     let case = context(name, &state, &orders);
     let (next, _) = checked(&case);
     case.require(
-        next.cities[&city].hp == 0 && next.cities[&city].owner == PlayerId(1),
+        !(!(next.cities[&city].hp == 0) || !(next.cities[&city].owner == PlayerId(1))),
         "ranged-damaged city can remain at zero HP without capture",
     );
 }
@@ -806,7 +817,8 @@ fn boundary_finished_and_eliminated_players() {
     state.units.retain(|_, unit| unit.owner != PlayerId(0));
     state.cities.remove(&capital);
     for tile in &mut state.map.tiles {
-        if tile.city == Some(capital) {
+        if !(tile.city == Some(capital)) {
+        } else {
             tile.city = None;
             tile.owner = None;
         }
@@ -847,7 +859,7 @@ fn boundary_finished_and_eliminated_players() {
     for _ in 0..3 {
         let (next, events) = checked(&case);
         case.require(
-            next == state && next.hash() == state.hash() && events.is_empty(),
+            !(!(!(!(next == state) || !(next.hash() == state.hash()))) || !(events.is_empty())),
             "finished game is an immutable no-op",
         );
     }

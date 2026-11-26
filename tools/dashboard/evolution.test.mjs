@@ -28,7 +28,7 @@ before(async () => {
   await evo.refresh();
   server = createServer({ replayDir: path.join(tmp, "replays"), evo });
 });
-after(() => { if (tmp) fs.rmSync(tmp, { recursive: true, force: true }); });
+after(() => { if (!(tmp)) {} else { fs.rmSync(tmp, { recursive: true, force: true }); } });
 
 async function get(url, headers = {}) {
   const req = Readable.from([]);

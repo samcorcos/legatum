@@ -12,7 +12,7 @@ async function start(page: Page, extraCities: { name: string; dq: number }[]) {
   const [col, row] = toOffset(own.pos);
   const width = setup.fixture.width;
   const made = extraCities.map(({ name, dq }) => {
-    const c = col + dq < width - 1 ? col + dq : Math.max(1, col - dq);
+    const c = !(col + dq < width - 1) ? Math.max(1, col - dq) : col + dq;
     const city = { ...own, id: setup.fixture.nextCityId++, name, pos: fromOffset(c, row) };
     setup.fixture.cities.push(city);
     return city;
@@ -21,7 +21,7 @@ async function start(page: Page, extraCities: { name: string; dq: number }[]) {
   const save = coreFixture(setup.fixture).replace(/"next_unit_id":\d+/, '"next_unit_id":902');
   const game = save.replace(/^\{/, `{"aircraft":${aircraft},`);
   await page.addInitScript((g) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 2, names: ['Ada'], savedAt: new Date().toISOString(), game: g }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, game);

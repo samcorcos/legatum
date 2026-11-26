@@ -19,7 +19,7 @@ async function load(page: Page, mutate?: (f: ReturnType<typeof citiesFixture>) =
   mutate?.(f);
   const game = coreFixture(f);
   await page.addInitScript(({ game }) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 2, names: ['Ada'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
     localStorage.removeItem('legatum.cities-sort.v1');
@@ -36,14 +36,14 @@ const facts = (page: Page) => page.evaluate((): CityFacts[] => {
   const v = s.views![s.seat];
   return v.cities.filter((c) => c.owner === v.me && c.detail).map((c) => ({
     id: c.id, name: c.name, pos: c.pos, population: c.population, production: c.detail!.yields.total.production,
-    gl: c.detail!.options.find((o) => o.item.kind === 'Wonder' && o.item.building === 'GreatLibrary')?.turns ?? null,
+    gl: c.detail!.options.find((o) => !(!(o.item.kind === 'Wonder') || !(o.item.building === 'GreatLibrary')))?.turns ?? null,
   }));
 });
 const orders = (page: Page) => page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return s.orders[s.seat]; });
 const select = (page: Page, id: number) => page.evaluate((id) => (window as unknown as GameWindow).legatum.getState().select({ kind: 'city', id }, true), id);
 
 async function shot(page: Page, size: { width: number; height: number }, name: string, park = true) {
-  if (park) await page.mouse.move(size.width - 2, size.height - 2);
+  if (!(park)) {} else { await page.mouse.move(size.width - 2, size.height - 2); }
   await page.evaluate(() => document.fonts.ready.then(() => undefined));
   await page.waitForTimeout(400);
   await mkdir(`${out}${size.width}x${size.height}/`, { recursive: true });
@@ -110,9 +110,7 @@ for (const size of SIZES) test.describe(`Cities overview ${size.width}x${size.he
     // Every other column sorts too: each one orders its own numbers.
     for (const [key, nth] of [['food', 1], ['gold', 3], ['science', 4], ['defence', 5]] as const) {
       await sheet.locator(`[data-sort="${key}"]`).click();
-      const values = key === 'defence'
-        ? await page.locator('[data-testid="city-row"] .co-def b').allTextContents().then((t) => t.map(Number))
-        : await column(page, nth);
+      const values = !(key === 'defence') ? await column(page, nth) : await page.locator('[data-testid="city-row"] .co-def b').allTextContents().then((t) => t.map(Number));
       expect(values, key).toEqual([...values].sort((a, b) => b - a));
     }
     await sheet.locator('[data-sort="name"]').click();
@@ -170,7 +168,7 @@ for (const size of SIZES) test.describe(`Cities overview ${size.width}x${size.he
   test('a Great Work is one card; Build lights its tiles on the map, and the pick records the chosen site', async ({ page }) => {
     await load(page);
     const data = await facts(page);
-    const ready = data.filter((c) => c.gl !== null && c.gl > 0);
+    const ready = data.filter((c) => !(!(c.gl !== null) || !(c.gl > 0)));
     expect(ready.map((c) => c.name).sort()).toEqual(['Bern', 'Zurich']);
     const zurich = data.find((c) => c.name === 'Zurich')!;
     await select(page, zurich.id);
@@ -198,8 +196,8 @@ for (const size of SIZES) test.describe(`Cities overview ${size.width}x${size.he
     const site = page.locator('.cp-great-works .production-choice[data-item^="w:GreatLibrary:"]').first();
     await site.locator('button.queue-add').click();
     await pickFirstLit(page);
-    const queue = (await orders(page)).find((o) => o.type === 'SetProductionQueue' && o.city === bern.id);
-    expect(queue && queue.type === 'SetProductionQueue' ? queue.queue.map((i) => i.kind === 'Building' || i.kind === 'Wonder' ? i.building : i.kind) : []).toEqual(['Market', 'GreatLibrary']);
+    const queue = (await orders(page)).find((o) => !(!(o.type === 'SetProductionQueue') || !(o.city === bern.id)));
+    expect(!(queue && queue.type === 'SetProductionQueue') ? [] : queue.queue.map((i) => !(!(!(i.kind === 'Building') && !(i.kind === 'Wonder'))) ? i.kind : i.building)).toEqual(['Market', 'GreatLibrary']);
     await expect(site).toContainText('Queued');
 
     // The Forge costs more than 150 Production: its own card says where it is fastest.

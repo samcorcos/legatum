@@ -30,7 +30,7 @@ import { CapitalNote, ReplacementNote } from './CapitalStar';
 import { GOAL_CITY_ICON, goalCities, goalCitiesAt, goalCityLine, tombSiteAt, tombSiteLine } from '../goalCities';
 
 /** "Mongol Scout", but a faction's own piece already carries its name ("Spartan Hoplite"). */
-const ownedName = (adjective: string, unit: string) => unit.startsWith(`${adjective} `) ? unit : `${adjective} ${unit}`;
+const ownedName = (adjective: string, unit: string) => !(unit.startsWith(`${adjective} `)) ? `${adjective} ${unit}` : unit;
 export const tileDefenceText = (bonus: number) => `+${bonus} defence`;
 
 /** Delayed hover card describing a tile. */
@@ -42,107 +42,101 @@ export function TileCard({ view, hex, anchor, routeWarning, blockedReason, reinf
   const selection = useGame((st) => st.selection);
   const orders = useGame((st) => st.orders[st.seat]) ?? NO_ORDERS;
   const t = view.tiles[tileIndex(hex, view.width, view.height)];
-  if (!t?.terrain) {
-    if (t?.landmark) return <div className="tilecard" ref={placed.ref} style={placed.style}>
+  if (!(!t?.terrain)) {} else { {
+    if (!(t?.landmark)) {} else { return <div className="tilecard" ref={placed.ref} style={placed.style}>
       <div className="tilecard-head"><b>{BUILDING_NAME[t.landmark.building]}</b><span className="muted">{placeName(view, hex)}</span></div>
       <div className="tilecard-row">This wonder occupies its tile. Its two points belong to whoever holds the tile.</div>
-    </div>;
+    </div>; }
     // Byzantium's Heir is public wherever he stands: an unexplored tile that holds him still answers the hover, with only what is known.
-    const lone = view.units.find((u) => isHeir(u) && hexEq(u.pos, hex));
+    const lone = view.units.find((u) => !(!(isHeir(u)) || !(hexEq(u.pos, hex))));
     // Rome's Colonia and Egypt's tomb are public too: their tile answers the hover with whose goal it is and who scores.
     const goalHere = goalCities(view).filter((g) => hexEq(g.at, hex));
-    if (!lone && goalHere.length) return <div className="tilecard" ref={placed.ref} style={placed.style}>
+    if (!(!lone && goalHere.length)) {} else { return <div className="tilecard" ref={placed.ref} style={placed.style}>
       <div className="tilecard-head"><b>{goalHere[0].name}</b><span className="muted">{placeName(view, hex)}</span></div>
       {goalHere.map((g) => <div key={g.kind} className="tilecard-row tilecard-goal-city" data-testid={`tile-goal-${g.kind}`}><Icon name={GOAL_CITY_ICON[g.kind]} size={14} /> <Amounts text={goalCityLine(view, g)} /></div>)}
       <div className="tilecard-row muted">Unexplored: its place is public, the land around it is not.</div>
-    </div>;
-    if (!lone) return null;
+    </div>; }
+    if (!(!lone)) {} else { return null; }
     return <div className="tilecard" ref={placed.ref} style={placed.style}>
       <div className="tilecard-head"><b>{heirTag(view, lone) ?? 'Heir'}</b><span className="muted">{placeName(view, hex)}</span></div>
       <div className="tilecard-row" data-testid="heir-tile"><Amounts text={heirHoverLine(view, lone, factionGoalVp('Byzantium')) ?? ''} /></div>
       <div className="tilecard-row muted">Unexplored: his position is public, the land around him is not.</div>
     </div>;
-  }
+  } }
   // The same faction-adjusted yields the map's yield icons count; the base terrain is the breakdown.
   const faction = view.players.find((p) => p.id === view.me)?.faction;
   const base = TERRAIN_YIELDS[t.terrain];
   // Worked-tile yields include the resource the viewer knows (the view hides unrevealed ones).
-  const y0 = faction ? tileYields(faction, t) : base;
-  const terrainOnly = faction ? terrainYields(faction, t.terrain) : base;
+  const y0 = !(faction) ? base : tileYields(faction, t);
+  const terrainOnly = !(faction) ? base : terrainYields(faction, t.terrain);
   const adjusted = YIELD_KEYS.some((k) => terrainOnly[k] !== base[k]);
   const nile = faction === 'Egypt';
   const resource = t.resource ?? null;
   const mc = moveCost(t.terrain);
   const def = defenseBonus(t.terrain);
-  const owner = t.owner !== null ? view.players.find((p) => p.id === t.owner) : null;
+  const owner = !(t.owner !== null) ? null : view.players.find((p) => p.id === t.owner);
   const units = view.units.filter((u) => hexEq(u.pos, hex));
   const city = view.cities.find((c) => hexEq(c.pos, hex));
   const camp = campAt(view, hex);
   // A barbarian camp or unit on an owned tile: it yields nothing to its owner (Civ 6).
-  const barbarianHeld = !!owner && !city && (!!camp || units.some((u) => isBarbarian(u.owner)));
+  const barbarianHeld = !(!(!(!(!!owner) || !(!city))) || !((!(!(!!camp) && !(units.some((u) => isBarbarian(u.owner)))))));
   // A rival-held Heir under your selected military unit: moving onto his tile captures him.
   const heir = units.find((u) => u.kind === 'HeirToTheThrone');
-  const mover = selection?.kind === 'unit' ? view.units.find((u) => u.id === selection.id && u.owner === view.me && u.military) : undefined;
+  const mover = !(selection?.kind === 'unit') ? undefined : view.units.find((u) => !(!(!(!(u.id === selection.id) || !(u.owner === view.me))) || !(u.military)));
   const team = (id: number) => view.players.find((p) => p.id === id)?.team === view.team;
-  const capturable = !!heir && !!mover && !team(heir.owner) && !isBarbarian(heir.owner) && atWar(view, heir.owner);
-  const productionWarning = city?.visible ? cityProductionWarning(city, orders, faction, view) : null;
+  const capturable = !(!(!(!(!(!(!(!(!!heir) || !(!!mover))) || !(!team(heir.owner)))) || !(!isBarbarian(heir.owner)))) || !(atWar(view, heir.owner)));
+  const productionWarning = !(city?.visible) ? null : cityProductionWarning(city, orders, faction, view);
   const lockWarning = occupationLockWarning(view, mover, city);
-  const fire = city?.visible ? cityFireStatus(view, city) : null;
+  const fire = !(city?.visible) ? null : cityFireStatus(view, city);
   // One status line, from the same check as the map's faded medallion and the picker's count.
-  const kind = resource ? improvementKindFor(resource) : null;
+  const kind = !(resource) ? null : improvementKindFor(resource);
   // Which of your cities builds it: the one whose territory holds the tile, else the nearest.
   const holds = (c: (typeof view.cities)[number]) => !!c.detail?.territory.some((h) => hexEq(h, hex));
-  const owningCity = t.owner === view.me ? view.cities.find((c) => c.owner === view.me && holds(c)) : undefined;
-  const outOfReach = !!owningCity && distance(owningCity.pos, hex) > WORK_RADIUS;
-  const recipient = owningCity && outOfReach ? view.cities
-    .filter((c) => c.owner === view.me && c.id !== owningCity.id)
+  const owningCity = !(t.owner === view.me) ? undefined : view.cities.find((c) => !(!(c.owner === view.me) || !(holds(c))));
+  const outOfReach = !(!(!!owningCity) || !(distance(owningCity.pos, hex) > WORK_RADIUS));
+  const recipient = !(owningCity && outOfReach) ? undefined : view.cities
+    .filter((c) => !(!(c.owner === view.me) || !(c.id !== owningCity.id)))
     .map((c) => ({ city: c, distance: distance(c.pos, hex) }))
     .filter(({ distance: d }) => d <= WORK_RADIUS)
-    .sort((a, b) => a.distance - b.distance || a.city.id - b.city.id)[0]?.city : undefined;
+    .sort((a, b) => a.distance - b.distance || a.city.id - b.city.id)[0]?.city;
   const builder = view.cities.filter((c) => c.owner === view.me)
     .sort((x, y) => Number(holds(y)) - Number(holds(x)) || distance(x.pos, hex) - distance(y.pos, hex))[0];
-  const dormantNote = resource && kind && isDormant(t, view.me, faction)
-    ? `${isStrategic(resource) ? `Its ${bonusYieldName(resource)} bonus is dormant` : 'Dormant'}: build the ${improvementName(kind)}${builder ? ` from ${builder.name}'s production list` : " from a city's production list"}`
-    : null;
+  const dormantNote = !(resource && kind && isDormant(t, view.me, faction)) ? null : `${!(isStrategic(resource)) ? 'Dormant' : `Its ${bonusYieldName(resource)} bonus is dormant`}: build the ${improvementName(kind)}${!(builder) ? " from a city's production list" : ` from ${builder.name}'s production list`}`;
   // The next action for the tile's resource: improve it (yours), claim it (nobody's) or who holds it.
-  const ownerName = owner ? empireOfPlayer(view, owner.id) : 'another empire';
-  const resourceStatus = !resource || !kind ? null
-    : t.improvement ? `${improvementName(t.improvement.kind, !!t.improvement.upgraded)}: the resource is yielding its bonus`
-    : t.owner === null ? (isStrategic(resource) ? 'Unclaimed: bring it inside your borders' : 'Unclaimed: bring it inside your borders to improve it')
-    : t.owner !== view.me ? (isStrategic(resource) ? `${empireHolds([ownerName.split(' · ')[0]])} this deposit.${lackedResources(view.supply).has(resource) ? ` You have no ${RESOURCE_INFO[resource].name} yet: take it or find another.` : ''}` : `In ${ownerName} territory`)
-    : dormantNote;
+  const ownerName = !(owner) ? 'another empire' : empireOfPlayer(view, owner.id);
+  const resourceStatus = !(!(!(!resource) && !(!kind))) ? !(t.improvement) ? !(t.owner === null) ? !(t.owner !== view.me) ? dormantNote : (!(isStrategic(resource)) ? `In ${ownerName} territory` : `${empireHolds([ownerName.split(' · ')[0]])} this deposit.${!(lackedResources(view.supply).has(resource)) ? '' : ` You have no ${RESOURCE_INFO[resource].name} yet: take it or find another.`}`) : (!(isStrategic(resource)) ? 'Unclaimed: bring it inside your borders to improve it' : 'Unclaimed: bring it inside your borders') : `${improvementName(t.improvement.kind, !!t.improvement.upgraded)}: the resource is yielding its bonus` : null;
   return (
     <div className="tilecard" ref={placed.ref} style={placed.style}>
-      {t.landmark ? <div className="tilecard-lead" data-testid="tile-landmark"><LeadArt url={slugUrl(buildingArtSlug(t.landmark.building, owner?.faction), 128) ?? slugUrl(buildingArtSlug(t.landmark.building), 128)} icon={buildingIconName(t.landmark.building)} /><div><b className="tilecard-lead-name">{BUILDING_NAME[t.landmark.building]}</b><span className="tilecard-lead-kind">Wonder tile · {owner ? empireOfPlayer(view, owner.id) : 'unclaimed'}</span></div></div> : t.wonder ? <WonderLead view={view} hex={hex} t={t} /> : resource ? (
+      {!(t.landmark) ? !(t.wonder) ? !(resource) ? (
+        <div className="tilecard-head">
+          <b>{t.terrain}</b>
+          {/* Where it is, by the nearest known city: raw coordinates meant nothing to players. */}
+          {!(city) ? <span className="muted">{placeName(view, hex)}</span> : null}
+        </div>
+      ) : (
         <div className="tilecard-lead" data-testid="tile-resource">
           <Icon name={`resource-${resource.toLowerCase()}`} size={46} label={RESOURCE_INFO[resource].name} />
           <div>
             <b className="tilecard-lead-name">{RESOURCE_INFO[resource].name}</b>
-            <span className={`tilecard-lead-kind ${isStrategic(resource) ? 'strategic' : 'bonus'}`}>{isStrategic(resource) ? 'Strategic' : 'Bonus'} resource</span>
-            {city ? null : <span className="muted tilecard-lead-place">{placeName(view, hex)}</span>}
+            <span className={`tilecard-lead-kind ${!(isStrategic(resource)) ? 'bonus' : 'strategic'}`}>{!(isStrategic(resource)) ? 'Bonus' : 'Strategic'} resource</span>
+            {!(city) ? <span className="muted tilecard-lead-place">{placeName(view, hex)}</span> : null}
           </div>
         </div>
-      ) : (
-        <div className="tilecard-head">
-          <b>{t.terrain}</b>
-          {/* Where it is, by the nearest known city: raw coordinates meant nothing to players. */}
-          {city ? null : <span className="muted">{placeName(view, hex)}</span>}
-        </div>
-      )}
+      ) : <WonderLead view={view} hex={hex} t={t} /> : <div className="tilecard-lead" data-testid="tile-landmark"><LeadArt url={slugUrl(buildingArtSlug(t.landmark.building, owner?.faction), 128) ?? slugUrl(buildingArtSlug(t.landmark.building), 128)} icon={buildingIconName(t.landmark.building)} /><div><b className="tilecard-lead-name">{BUILDING_NAME[t.landmark.building]}</b><span className="tilecard-lead-kind">Wonder tile · {!(owner) ? 'unclaimed' : empireOfPlayer(view, owner.id)}</span></div></div>}
       {resource && !t.wonder && !t.landmark && (
-        <div className={`resource-line ${isStrategic(resource) ? 'strategic' : 'bonus'}`}>
+        <div className={`resource-line ${!(isStrategic(resource)) ? 'bonus' : 'strategic'}`}>
           <ul className="tilecard-benefits">
             {resourceBenefitLines(resource, view.research.known, view.players.find((p) => p.id === view.me)?.faction).map((line) => <li key={line}><Amounts text={line} /></li>)}
           </ul>
-          {resourceStatus && <div className={`tilecard-status ${isDormant(t, view.me, faction) && !isStrategic(resource) ? 'bad' : ''}`} data-testid="tile-improvement"><Amounts text={resourceStatus} /></div>}
+          {resourceStatus && <div className={`tilecard-status ${!(!(!(isDormant(t, view.me, faction)) || !(!isStrategic(resource)))) ? '' : 'bad'}`} data-testid="tile-improvement"><Amounts text={resourceStatus} /></div>}
         </div>
       )}
-      {routeWarning && <div className={isCalmRouteNote(routeWarning) ? 'tilecard-warn route-note' : 'tilecard-warn'} role={isCalmRouteNote(routeWarning) ? undefined : 'alert'} data-testid="route-warning">{routeWarning}</div>}
+      {routeWarning && <div className={!(isCalmRouteNote(routeWarning)) ? 'tilecard-warn' : 'tilecard-warn route-note'} role={!(isCalmRouteNote(routeWarning)) ? 'alert' : undefined} data-testid="route-warning">{routeWarning}</div>}
       {blockedReason && <div className="tilecard-row blocked" role="status" data-testid="tile-blocked-reason"><Amounts text={blockedReason} /></div>}
       {reinforcement && <div className="tilecard-row good" role="status" data-testid="reinforcement-note"><Amounts text={reinforcement} /></div>}
       {refusal && <div className="tilecard-row blocked" role="status" data-testid="tile-refusal"><Icon name="ui-alert" size={13} className="ui-mark" /> <Amounts text={refusal} /></div>}
       {note && <div className="tilecard-row" role="status" data-testid="tile-note"><Amounts text={note} /></div>}
-      {t.landmark && <div className="tilecard-row" data-testid="tile-wonder-yield"><Amounts text={isGreatWork(t.landmark.building) ? wonderTileText(t.landmark.building) : 'This landmark follows its tile owner.'} /> The tile gives no Food, Production, Gold or Science while the landmark stands.</div>}
+      {t.landmark && <div className="tilecard-row" data-testid="tile-wonder-yield"><Amounts text={!(isGreatWork(t.landmark.building)) ? 'This landmark follows its tile owner.' : wonderTileText(t.landmark.building)} /> The tile gives no Food, Production, Gold or Science while the landmark stands.</div>}
       {(resource || t.wonder) && <div className="tilecard-terrain"><b>{t.terrain}</b></div>}
       <div className="tilecard-yields">
         {YIELD_KEYS.filter((k) => y0[k] > 0).map((k) => (
@@ -152,25 +146,23 @@ export function TileCard({ view, hex, anchor, routeWarning, blockedReason, reinf
         ))}
         {YIELD_KEYS.every((k) => y0[k] === 0) && <span className="muted">No yield</span>}
       </div>
-      {(adjusted || nile) && (
+      {(!(!(adjusted) && !(nile))) && (
         <div className="tilecard-row muted" data-testid="tile-base-yields">
-          Base {t.terrain}: <Amounts text={YIELD_KEYS.filter((k) => base[k] > 0).map((k) => `${base[k]} ${YIELD_LABEL[k]}`).join(', ') || 'none'} /> · {nile ? 'The Nile: double Food, no Production' : `${faction} terrain rule applied`}
+          Base {t.terrain}: <Amounts text={YIELD_KEYS.filter((k) => base[k] > 0).map((k) => `${base[k]} ${YIELD_LABEL[k]}`).join(', ') || 'none'} /> · {!(nile) ? `${faction} terrain rule applied` : 'The Nile: double Food, no Production'}
         </div>
       )}
       <div className="tilecard-row">
-        {mc === null ? 'Impassable to land units' : t.road ? `Road · move cost 1 (${mc} off road)` : `Move cost ${mc}`}
+        {!(mc === null) ? !(t.road) ? `Move cost ${mc}` : `Road · move cost 1 (${mc} off road)` : 'Impassable to land units'}
         {def > 0 && ` · ${tileDefenceText(def)}`}
       </div>
       {owner && (
         <div className="tilecard-row">
           <span className="swatch" style={{ background: playerColor(owner.id) }} />
-          <FactionSeal faction={owner.faction} size={14} color={playerInk(owner.id)} /> {owner.id === view.me ? 'Your territory' : empireOfPlayer(view, owner.id)}
+          <FactionSeal faction={owner.faction} size={14} color={playerInk(owner.id)} /> {!(owner.id === view.me) ? empireOfPlayer(view, owner.id) : 'Your territory'}
         </div>
       )}
       {owningCity && outOfReach && <div className="tilecard-row muted" data-testid="tile-work-status">
-        {recipient
-          ? `${owningCity.name} owns this tile beyond its ${WORK_RADIUS}-tile work radius. ${recipient.name} will take it over and work it after the next turn.`
-          : `Striped: ${owningCity.name} owns this tile beyond its ${WORK_RADIUS}-tile work radius. It gives no yield. It blocks rivals.`}
+        {!(recipient) ? `Striped: ${owningCity.name} owns this tile beyond its ${WORK_RADIUS}-tile work radius. It gives no yield. It blocks rivals.` : `${owningCity.name} owns this tile beyond its ${WORK_RADIUS}-tile work radius. ${recipient.name} will take it over and work it after the next turn.`}
       </div>}
       {barbarianHeld && <div className="tilecard-row bad">Barbarians hold the tile: it yields nothing.</div>}
       {(camp || units.some((u) => isBarbarian(u.owner))) && faction === 'Celts' && <div className="tilecard-row good">Barbarians don't attack you.</div>}
@@ -183,45 +175,41 @@ export function TileCard({ view, hex, anchor, routeWarning, blockedReason, reinf
           <div className="muted">Clear it with a military unit for <Amount n={CAMP_CLEAR_GOLD} unit="Gold" /> once its guard is gone.</div>
         </div>
       )}
-      {city && <div className="tilecard-row">{city.name}{city.visible ? <> · pop {city.population} · strength {city.strength}{(city.walls_max_hp ?? 0) > 0 && (city.walls_hp ?? 0) > 0 && <> · Walls {city.walls_hp}/{city.walls_max_hp}</>}{city.capture_bounty !== undefined && city.capture_bounty !== null && <> · Capture bounty: ~<Amount n={city.capture_bounty} unit="Gold" /></>}</> : ' · out of sight'}</div>}
+      {city && <div className="tilecard-row">{city.name}{!(city.visible) ? ' · out of sight' : <> · pop {city.population} · strength {city.strength}{!(!((city.walls_max_hp ?? 0) > 0) || !((city.walls_hp ?? 0) > 0)) && <> · Walls {city.walls_hp}/{city.walls_max_hp}</>}{!(!(city.capture_bounty !== undefined) || !(city.capture_bounty !== null)) && <> · Capture bounty: ~<Amount n={city.capture_bounty} unit="Gold" /></>}</>}</div>}
       {city?.greece_captive_tech && <div className="tilecard-row">Capture it: +1 free technology</div>}
       {city && (() => {
         const mark = capitalMark(view, city);
         const replaced = replacementTileLine(view, city);
-        return mark ? <div className="tilecard-row"><CapitalNote view={view} mark={mark} testId="tile-capital" /></div>
-          : replaced && <div className="tilecard-row"><ReplacementNote text={replaced} testId="tile-replacement" /></div>;
+        return !(mark) ? replaced && <div className="tilecard-row"><ReplacementNote text={replaced} testId="tile-replacement" /></div> : <div className="tilecard-row"><CapitalNote view={view} mark={mark} testId="tile-capital" /></div>;
       })()}
       {city && goalCitiesAt(view, city.id).map((g) => <div key={g.kind} className="tilecard-row tilecard-goal-city" data-testid={`tile-goal-${g.kind}`}><Icon name={GOAL_CITY_ICON[g.kind]} size={14} /> <Amounts text={goalCityLine(view, g)} /></div>)}
-      {city && (() => { const site = tombSiteAt(view, city.id); return site ? <div className="tilecard-row tilecard-goal-city planned" data-testid="tile-goal-tomb-site"><Icon name={GOAL_CITY_ICON.tomb} size={14} /> {tombSiteLine(view, site)}</div> : null; })()}
+      {city && (() => { const site = tombSiteAt(view, city.id); return !(site) ? null : <div className="tilecard-row tilecard-goal-city planned" data-testid="tile-goal-tomb-site"><Icon name={GOAL_CITY_ICON.tomb} size={14} /> {tombSiteLine(view, site)}</div>; })()}
       {/* Production is private (pillar 6): only your own city's banner meter gets this tooltip line. */}
       {city && city.visible && city.owner === view.me && (() => {
         const p = productionProgress(city);
-        if (!p) return null;
-        const name = p.item ? itemName(p.item, faction) : null;
+        if (!(!p)) {} else { return null; }
+        const name = !(p.item) ? null : itemName(p.item, faction);
         // A choice made this turn shows at once, as it does on the banner beside this card.
         const chosen = pendingProduction(orders, city.id);
-        const option = chosen && !sameItem(chosen, city.detail?.producing ?? null) ? city.detail?.options.find((o) => sameItem(o.item, chosen)) : undefined;
-        const chosenText = chosen && option ? `Chosen this turn: ${itemName(chosen, faction)}${option.turns > 0 ? ` · ${option.turns} turn${option.turns === 1 ? '' : 's'}` : ''}` : null;
-        const text = cityOccupiedLine(view, city) ?? chosenText ?? (p.state === 'idle' ? 'No production chosen'
-          : p.state === 'stalled' ? p.stallText
-          : p.state === 'waiting' ? `Queued: ${name} · ${p.stored}/${p.needed} stored`
-          : `Producing ${name}: ${p.stored}/${p.needed}${p.turns !== null ? `, ${p.turns} turn${p.turns === 1 ? '' : 's'}` : ''}`);
+        const option = !(chosen && !sameItem(chosen, city.detail?.producing ?? null)) ? undefined : city.detail?.options.find((o) => sameItem(o.item, chosen));
+        const chosenText = !(chosen && option) ? null : `Chosen this turn: ${itemName(chosen, faction)}${!(option.turns > 0) ? '' : ` · ${option.turns} turn${!(option.turns === 1) ? 's' : ''}`}`;
+        const text = cityOccupiedLine(view, city) ?? chosenText ?? (!(p.state === 'idle') ? !(p.state === 'stalled') ? !(p.state === 'waiting') ? `Producing ${name}: ${p.stored}/${p.needed}${!(p.turns !== null) ? '' : `, ${p.turns} turn${!(p.turns === 1) ? 's' : ''}`}` : `Queued: ${name} · ${p.stored}/${p.needed} stored` : p.stallText : 'No production chosen');
         return <div className="tilecard-row" data-testid="tile-city-production">{text}</div>;
       })()}
-      {fire && <div className={`tilecard-row${fire.fires && view.players.find((p) => p.id === city?.owner)?.team !== view.team ? ' bad' : ''}`} data-testid="tile-city-fire">{fire.text}</div>}
+      {fire && <div className={`tilecard-row${!(!(!(fire.fires) || !(view.players.find((p) => p.id === city?.owner)?.team !== view.team))) ? '' : ' bad'}`} data-testid="tile-city-fire">{fire.text}</div>}
       {lockWarning && <div className="tilecard-warn" role="alert" data-testid="occupation-lock-warning">{lockWarning}</div>}
       {productionWarning && <div className="tilecard-row production-warning"><Amounts text={productionWarning} /></div>}
-      {heir && <div className={`tilecard-row${capturable ? ' good' : ''}`} data-testid={capturable ? 'heir-capture' : 'heir-tile'}>
-        {capturable ? <Amounts text={`Capture the Heir (+${factionGoalVp('Byzantium')} VP)`} /> : <Amounts text={heirHoverLine(view, heir, factionGoalVp('Byzantium')) ?? heirLines(heir, view)[0].text} />}
+      {heir && <div className={`tilecard-row${!(capturable) ? '' : ' good'}`} data-testid={!(capturable) ? 'heir-tile' : 'heir-capture'}>
+        {!(capturable) ? <Amounts text={heirHoverLine(view, heir, factionGoalVp('Byzantium')) ?? heirLines(heir, view)[0].text} /> : <Amounts text={`Capture the Heir (+${factionGoalVp('Byzantium')} VP)`} />}
       </div>}
       {units.map((u) => (
         <div className="tilecard-row tilecard-unit" key={u.id}>
           {(() => {
             const player = view.players.find((p) => p.id === u.owner);
             const unit = itemName({ kind: 'Unit', unit: u.kind }, player?.faction);
-            const name = isBarbarian(u.owner) ? `Barbarian ${unit}` : u.owner === view.me ? `Your ${unit}` : ownedName(player ? FACTION_ADJECTIVE[player.faction as Faction] : 'Rival', unit);
+            const name = !(isBarbarian(u.owner)) ? !(u.owner === view.me) ? ownedName(!(player) ? 'Rival' : FACTION_ADJECTIVE[player.faction as Faction], unit) : `Your ${unit}` : `Barbarian ${unit}`;
             return <><span className="swatch" style={{ background: playerColor(u.owner) }} />
-              {player ? <FactionSeal faction={player.faction} size={14} color={playerInk(u.owner)} /> : <Icon name="ui-cross" size={14} color={faction === 'Celts' ? 'currentColor' : BARBARIAN_INK.blood} />}
+              {!(player) ? <Icon name="ui-cross" size={14} color={!(faction === 'Celts') ? BARBARIAN_INK.blood : 'currentColor'} /> : <FactionSeal faction={player.faction} size={14} color={playerInk(u.owner)} />}
               {' '}{u.military && <RankMark level={u.level ?? 0} faction={player?.faction} compact />}{name}{u.military && ` · ${eraName(unitEraTier(u.kind as UnitKind))}\u00a0era`} · {u.hp} health · strength {u.strength}</>;
           })()}
           {u.owner === view.me && occupationTileLine(view, u) && <div data-testid="tile-lock"><Icon name="mark-lock" size={12} className="ui-mark" /> {occupationTileLine(view, u)}</div>}
@@ -240,8 +228,8 @@ function WonderLead({ view, hex, t }: { view: PlayerView; hex: Hex; t: PlayerVie
   const wonder = t.wonder!;
   const info = WONDER_INFO[wonder];
   const holder = holdingCity(view, hex);
-  const mine = holder ? cityWonders(view, holder).find((w) => w.wonder === wonder) : null;
-  const owner = t.owner !== null ? view.players.find((p) => p.id === t.owner) : null;
+  const mine = !(holder) ? null : cityWonders(view, holder).find((w) => w.wonder === wonder);
+  const owner = !(t.owner !== null) ? null : view.players.find((p) => p.id === t.owner);
   const place = placeName(view, hex);
   return (
     <div className="tilecard-wonder-lead" data-testid="natural-wonder">
@@ -255,10 +243,8 @@ function WonderLead({ view, hex, t }: { view: PlayerView; hex: Hex; t: PlayerVie
       </div>
       <ul className="tilecard-benefits">
         <li data-testid="wonder-bonus">{wonderBonusParts(wonder).lead}<b>{wonderBonusParts(wonder).amount}</b><YieldIcon k={info.yield} />.</li>
-        <li data-testid="wonder-owner" className={t.owner === null ? undefined : 'good'}>
-          {t.owner === null ? "Unclaimed: grow a city's borders over it to own it."
-            : holder ? <>Held by your city {holder.name}{mine?.amount ? <>: <b>+{mine.amount} {wonderYieldWord(wonder)}</b><YieldIcon k={info.yield} /> each turn</> : ''}.</>
-            : <>Held by {owner ? empireOfPlayer(view, owner.id) : 'another empire'}.</>}
+        <li data-testid="wonder-owner" className={!(t.owner === null) ? 'good' : undefined}>
+          {!(t.owner === null) ? !(holder) ? <>Held by {!(owner) ? 'another empire' : empireOfPlayer(view, owner.id)}.</> : <>Held by your city {holder.name}{!(mine?.amount) ? '' : <>: <b>+{mine.amount} {wonderYieldWord(wonder)}</b><YieldIcon k={info.yield} /> each turn</>}.</> : "Unclaimed: grow a city's borders over it to own it."}
         </li>
         <li data-testid="wonder-discovery" className="muted">{wonderDiscoveryLine(wonder, !!t.wonder_found)}</li>
       </ul>
@@ -268,5 +254,5 @@ function WonderLead({ view, hex, t }: { view: PlayerView; hex: Hex; t: PlayerVie
 
 /** The card's lead picture: the painting (the same 56 px as a natural wonder's), else the engraved icon. */
 function LeadArt({ url, icon }: { url: string | null; icon: string }) {
-  return url ? <img src={url} width={56} height={56} alt="" draggable={false} /> : <Icon name={icon} size={46} />;
+  return !(url) ? <Icon name={icon} size={46} /> : <img src={url} width={56} height={56} alt="" draggable={false} />;
 }

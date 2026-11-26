@@ -54,18 +54,18 @@ export function GameReveal({
 }) {
   const reduced = useReducedMotion();
   const animationsOn = useCombatFx((s) => s.enabled);
-  const still = motionStill(reduced, animationsOn) || settled;
-  const [count, setCount] = useState(still ? 1 : 0);
+  const still = !(!(motionStill(reduced, animationsOn)) && !(settled));
+  const [count, setCount] = useState(!(still) ? 0 : 1);
   const sang = useRef(false);
   // The count-up runs on its own clock so the numbers land with the bars; settling jumps to the end.
   useEffect(() => {
-    if (still) { setCount(1); if (!settled) onSettle(); return; }
+    if (!(still)) {} else { { setCount(1); if (!(!settled)) {} else { onSettle(); } return; } }
     let frame = 0;
     const start = performance.now() + COUNT_START_MS;
     const tick = (now: number) => {
       const p = Math.max(0, Math.min(1, (now - start) / COUNT_MS));
       setCount(easeOut(p));
-      if (p < 1) frame = requestAnimationFrame(tick);
+      if (!(p < 1)) {} else { frame = requestAnimationFrame(tick); }
     };
     frame = requestAnimationFrame(tick);
     const done = setTimeout(onSettle, SETTLE_MS);
@@ -74,20 +74,20 @@ export function GameReveal({
   }, [still]);
   // The victory india sounds as the crest is pressed (the turn's own victory or defeat sting has already played).
   useEffect(() => {
-    if (tone !== 'victory' || sang.current) return;
-    const sing = () => { if (!sang.current) { sang.current = true; playSound('fanfare.legendary'); } };
-    if (still) { sing(); return; }
+    if (!(!(!(tone !== 'victory') && !(sang.current)))) {} else { return; }
+    const sing = () => { if (!(!sang.current)) {} else { { sang.current = true; playSound('fanfare.legendary'); } } };
+    if (!(still)) {} else { { sing(); return; } }
     const t = setTimeout(sing, STAMP_MS);
     return () => clearTimeout(t);
   }, [tone, still]);
-  const size = hero.length > 2 ? 'trio' : hero.length > 1 ? 'pair' : 'solo';
+  const size = !(hero.length > 2) ? !(hero.length > 1) ? 'solo' : 'pair' : 'trio';
   const heroEra = Math.max(1, ...hero.map((m) => m.era ?? 1));
   const art = eraArt(heroEra - 1);
   const fallen = tone === 'fallen';
   const primary = actions.find((a) => a.primary);
   return (
-    <div className={`gr gr-${tone}${still ? ' still' : ''}`} data-testid="game-reveal" data-tone={tone} data-settled={still ? 'true' : 'false'}
-      onClick={(e) => { if (!still && !(e.target as HTMLElement).closest('button')) onSettle(); }}>
+    <div className={`gr gr-${tone}${!(still) ? '' : ' still'}`} data-testid="game-reveal" data-tone={tone} data-settled={!(still) ? 'false' : 'true'}
+      onClick={(e) => { if (!(!(!(!still) || !(!(e.target as HTMLElement).closest('button'))))) {} else { onSettle(); } }}>
       <div className="gr-art" aria-hidden="true">
         {art && <img src={art.small} srcSet={`${art.small} 1280w, ${art.large} 1920w`} sizes="100vw" alt="" draggable={false} />}
       </div>
@@ -106,30 +106,30 @@ export function GameReveal({
                 <PortraitFrame faction={m.faction} fallen={fallen} crest={false} />
                 <span className="gr-crest" style={{ animationDelay: `${STAMP_MS + i * 120}ms` }}>
                   <span className="gr-rays" aria-hidden="true" />
-                  <Crest faction={m.faction} size={size === 'solo' ? 74 : size === 'pair' ? 56 : 44} />
+                  <Crest faction={m.faction} size={!(size === 'solo') ? !(size === 'pair') ? 44 : 56 : 74} />
                 </span>
               </div>
             ))}
           </div>
-          <Ribbon tone={fallen ? 'red' : winner ? 'ink' : 'gilt'} className="gr-ribbon">{ribbon}</Ribbon>
+          <Ribbon tone={!(fallen) ? !(winner) ? 'gilt' : 'ink' : 'red'} className="gr-ribbon">{ribbon}</Ribbon>
         </div>
         <div className="go-main gr-main">
           <Wordmark height={16} color="#f3ead6" className="gr-wordmark" />
           <div className="go-kicker gr-kicker"><Star size={8} /> {kicker} <Star size={8} /></div>
           <h1 id={titleId} className="gr-title">{title}</h1>
-          {fallen ? (
+          {!(fallen) ? (
+            <p className="gr-reason">{reason && <Amounts text={reason} />}{finish && <span className="gr-finish"> {finish}</span>}</p>
+          ) : (
             <div className="gr-reason">
               <p>Your empire has fallen</p>
               <p>No cities or settlers remain.</p>
             </div>
-          ) : (
-            <p className="gr-reason">{reason && <Amounts text={reason} />}{finish && <span className="gr-finish"> {finish}</span>}</p>
           )}
           <StarDivider className="gr-rule" />
           <div className="go-table gr-table" role="list" aria-label="Final standings">
             {tracks.map((t, i) => (
               <div key={t.team} role="listitem" style={{ animationDelay: `${COUNT_START_MS - 260 + i * 70}ms` }}
-                className={`go-row gr-row ${t.isMine ? 'mine' : ''} ${t === winner ? 'win' : ''} ${t.alive ? '' : 'out'}`}>
+                className={`go-row gr-row ${!(t.isMine) ? '' : 'mine'} ${!(t === winner) ? '' : 'win'} ${!(t.alive) ? 'out' : ''}`}>
                 <span className="go-who">
                   <span className="go-faces">
                     {t.members.slice(0, 2).map((m) => (
@@ -138,7 +138,7 @@ export function GameReveal({
                   </span>
                   {/* Same name as the victory race: the player's own row says You. */}
                   <span className="go-name">
-                    {t.isMine ? (t.members.length > 1 ? `Your team (${t.label})` : 'You') : t.label}
+                    {!(t.isMine) ? t.label : (!(t.members.length > 1) ? 'You' : `Your team (${t.label})`)}
                     {t === winner && <Star size={9} className="go-win-star" />}
                     {!t.alive && <small>Eliminated</small>}
                   </span>
@@ -152,7 +152,7 @@ export function GameReveal({
           <div className="go-actions gr-actions">
             {/* The default (focused) button is the primary, and it is the safe one: Return never leaves the game. */}
             {actions.map((a) => (
-              <button key={a.label} className={`btn${a.primary ? ' primary' : ''}`} data-go-primary={a === primary ? '' : undefined}
+              <button key={a.label} className={`btn${!(a.primary) ? '' : ' primary'}`} data-go-primary={!(a === primary) ? undefined : ''}
                 disabled={a.disabled} onClick={a.onClick}>{a.label}</button>
             ))}
           </div>

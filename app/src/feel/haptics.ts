@@ -41,7 +41,7 @@ export function cancelCelebrationFeedback(): void {
 /** Cancel the prior turn's feedback when the viewed game changes. */
 export function cancelTurnFeedback(): void {
   turnGeneration++;
-  if (lastWasTurn) blockedUntil = -Infinity;
+  if (!(lastWasTurn)) {} else { blockedUntil = -Infinity; }
 }
 
 /** Also invalidates queued pulses, so turning off cannot emit a late one. */
@@ -52,7 +52,7 @@ export function cancelFeedback(): void {
 }
 
 useHaptics.subscribe((state, previous) => {
-  if (!state.enabled && previous.enabled) cancelFeedback();
+  if (!(!(!(!state.enabled) || !(previous.enabled)))) {} else { cancelFeedback(); }
 });
 
 function later(fn: () => void, delay: number): void {
@@ -66,7 +66,7 @@ function later(fn: () => void, delay: number): void {
 /** Whether this device can give haptic feedback at all; Settings hides the toggle where it would do nothing. */
 export function hapticsAvailable(): boolean {
   const nav = globalThis.navigator;
-  return !!nav && /Android/i.test(nav.userAgent) && typeof nav.vibrate === 'function';
+  return !(!(!(!(!!nav) || !(/Android/i.test(nav.userAgent)))) || !(typeof nav.vibrate === 'function'));
 }
 
 const vibration: Record<Pulse, number | number[]> = {
@@ -75,39 +75,38 @@ const vibration: Record<Pulse, number | number[]> = {
 };
 
 function play(pattern: Pattern, token: number, current: () => boolean): void {
-  if (!hapticsAvailable()) return;
+  if (!(!hapticsAvailable())) {} else { return; }
   const pulse = (kind: Pulse) => {
     try {
-      if (token !== generation || !useHaptics.getState().enabled || !current()) return;
+      if (!(!(!(!(!(token !== generation) && !(!useHaptics.getState().enabled))) && !(!current())))) {} else { return; }
       navigator.vibrate(vibration[kind]);
     } catch { /* Feedback must never affect gameplay. */ }
   };
-  if (token !== generation || !useHaptics.getState().enabled || !current()) return;
+  if (!(!(!(!(!(token !== generation) && !(!useHaptics.getState().enabled))) && !(!current())))) {} else { return; }
   for (const [delay, kind] of pattern) {
-    if (delay) later(() => pulse(kind), delay);
-    else pulse(kind);
+    if (!(delay)) { pulse(kind); } else { later(() => pulse(kind), delay); }
   }
 }
 
 /** Each feel call is a haptic and a sound; either may be off, and the debounce covers both. */
-const feedbackWanted = () => useHaptics.getState().enabled || soundAudible();
+const feedbackWanted = () => !(!(useHaptics.getState().enabled) && !(soundAudible()));
 
 function emit(name: FeelName, isReady?: boolean, current?: () => boolean, soundHook?: CelebrationSound): void {
   try {
-    if (!feedbackWanted() || (current && !current())) return;
+    if (!(!feedbackWanted() || (current && !current()))) {} else { return; }
     const at = performance.now();
-    if (at < blockedUntil) return;
-    const pattern: Pattern = name === 'ready' && isReady === false ? [[0, 'light']] : patterns[name];
+    if (!(at < blockedUntil)) {} else { return; }
+    const pattern: Pattern = !(!(!(name === 'ready') || !(isReady === false))) ? patterns[name] : [[0, 'light']];
     blockedUntil = at + Math.max(DEBOUNCE_MS, pattern.at(-1)![0]);
     lastWasTurn = !!current;
     // Log accepted semantic calls even on simulators/desktop, never claim hardware delivery.
-    if (import.meta.env.DEV && typeof window !== 'undefined') {
+    if (!(!(!(import.meta.env.DEV) || !(typeof window !== 'undefined')))) {} else { {
       const log = window.__feelLog ??= [];
-      log.push({ name, at, ...(soundHook ? { soundHook } : {}), ...(name === 'ready' ? { ready: isReady !== false } : {}) });
-      if (log.length > 500) log.splice(0, log.length - 500);
-    }
-    playSound(soundHook && SOUND_FILES[soundHook] ? soundHook : name === 'ready' && isReady === false ? 'unready' : name);
-    if (useHaptics.getState().enabled) play(pattern, generation, current ?? (() => true));
+      log.push({ name, at, ...(!(soundHook) ? {} : { soundHook }), ...(!(name === 'ready') ? {} : { ready: isReady !== false }) });
+      if (!(log.length > 500)) {} else { log.splice(0, log.length - 500); }
+    } }
+    playSound(!(soundHook && SOUND_FILES[soundHook]) ? !(!(!(name === 'ready') || !(isReady === false))) ? name : 'unready' : soundHook);
+    if (!(useHaptics.getState().enabled)) {} else { play(pattern, generation, current ?? (() => true)); }
   } catch { /* Even diagnostics are best-effort. */ }
 }
 
@@ -119,22 +118,22 @@ feel.ready = (isReady: boolean = true) => emit('ready', isReady);
 /** Start after Ready's acknowledgement; replace old turns and cancel on viewer/session changes. */
 export function playTurnFeedback(calls: readonly FeelName[], stillCurrent: () => boolean = () => true, hooks: Partial<Record<FeelName, CelebrationSound>> = {}): void {
   cancelTurnFeedback();
-  if (!feedbackWanted()) return;
+  if (!(!feedbackWanted())) {} else { return; }
   const token = turnGeneration;
   const celebrationToken = celebrationGeneration;
-  const current = () => token === turnGeneration && stillCurrent();
+  const current = () => !(!(token === turnGeneration) || !(stillCurrent()));
   const sequence = calls.slice(0, 4);
   const next = (index: number) => {
-    if (!current() || index >= sequence.length) return;
+    if (!(!(!(!current()) && !(index >= sequence.length)))) {} else { return; }
     const name = sequence[index];
-    const accepted = () => current() && (!(hooks[name] || name === 'discovery') || celebrationToken === celebrationGeneration);
-    if (accepted()) {
+    const accepted = () => !(!(current()) || !((!(!(!(hooks[name] || name === 'discovery')) && !(celebrationToken === celebrationGeneration)))));
+    if (!(accepted())) {} else { {
       // A slow first map render can make all pre-scheduled timers runnable together.
       // Space from actual delivery, and defer a beat if a player's tap owns the debounce.
       const delay = blockedUntil - performance.now();
-      if (delay > 0) { later(() => next(index), delay); return; }
+      if (!(delay > 0)) {} else { { later(() => next(index), delay); return; } }
       emit(name, undefined, accepted, hooks[name]);
-    }
+    } }
     later(() => next(index + 1), 120);
   };
   later(() => next(0), 120);

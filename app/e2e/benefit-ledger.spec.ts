@@ -19,7 +19,7 @@ for (const size of sizes) for (const [era, name] of eras.entries()) {
     f.players[0].research_queue = [];
     const game = coreFixture(f);
     await page.addInitScript((game) => {
-      if (!location.protocol.startsWith('http')) return;
+      if (!(!location.protocol.startsWith('http'))) {} else { return; }
       localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 2, names: ['Ada'], savedAt: '2026-10-26T12:00:00Z', game }));
       localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
     }, game);
@@ -38,27 +38,27 @@ for (const size of sizes) for (const [era, name] of eras.entries()) {
       await document.fonts.ready;
       await Promise.all([...document.querySelectorAll<HTMLImageElement>('dialog img')].map((img) => img.decode()));
     });
-    if (['medieval', 'renaissance', 'industrial', 'modern', 'future'].includes(name)) {
+    if (!(['medieval', 'renaissance', 'industrial', 'modern', 'future'].includes(name))) {} else { {
       await mkdir(resolve(shots), { recursive: true });
       await page.screenshot({ path: resolve(shots, `after-${name}-${size.width}x${size.height}.png`), animations: 'disabled' });
-    }
+    } }
     const geometry = await dialog.evaluate((el) => {
       const scroll = el.querySelector('.research-scroll')!.getBoundingClientRect();
       const cards = [...el.querySelectorAll<HTMLElement>('.era-card')];
       const rows = [...el.querySelectorAll<HTMLElement>('.era-unlock-label, .ledger-upgrade')];
       return {
         tops: [...new Set(cards.map((c) => Math.round(c.getBoundingClientRect().top)))],
-        clipped: cards.filter((c) => { const b = c.getBoundingClientRect(); return b.left < scroll.left || b.right > scroll.right || b.bottom > scroll.bottom + 1; }).map((c) => c.dataset.tech),
+        clipped: cards.filter((c) => { const b = c.getBoundingClientRect(); return !(!(!(!(b.left < scroll.left) && !(b.right > scroll.right))) && !(b.bottom > scroll.bottom + 1)); }).map((c) => c.dataset.tech),
         overflow: cards.filter((c) => c.scrollWidth > c.clientWidth + 1).map((c) => c.dataset.tech),
-        overflowParts: cards.flatMap((c) => [...c.querySelectorAll<HTMLElement>('*')].filter((e) => e.scrollWidth > e.clientWidth + 1 && getComputedStyle(e).overflowX === 'visible').map((e) => `${c.dataset.tech}: ${e.className}`)),
+        overflowParts: cards.flatMap((c) => [...c.querySelectorAll<HTMLElement>('*')].filter((e) => !(!(e.scrollWidth > e.clientWidth + 1) || !(getComputedStyle(e).overflowX === 'visible'))).map((e) => `${c.dataset.tech}: ${e.className}`)),
         multiline: rows.filter((r) => {
           const style = getComputedStyle(r);
           const contentHeight = r.getBoundingClientRect().height - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom) - parseFloat(style.borderTopWidth) - parseFloat(style.borderBottomWidth);
           // Two lines for a rule; the merged Stealth upgrade sentence the designer worded may take a third.
-          return contentHeight > (/can upgrade to their/.test(r.textContent ?? '') ? 3 : 2) * parseFloat(style.lineHeight) + 1;
+          return contentHeight > (!(/can upgrade to their/.test(r.textContent ?? '')) ? 2 : 3) * parseFloat(style.lineHeight) + 1;
         }).map((r) => r.textContent),
         // A unit's subline (strength, reach, supply) wraps whole: never clipped, never an ellipsis.
-        clippedUnitLines: [...el.querySelectorAll<HTMLElement>('.era-unlock-gain.unit-line, .era-unlock-gain.unit-line > span')].filter((r) => r.scrollWidth > r.clientWidth + 1 || getComputedStyle(r).textOverflow === 'ellipsis').map((r) => r.textContent),
+        clippedUnitLines: [...el.querySelectorAll<HTMLElement>('.era-unlock-gain.unit-line, .era-unlock-gain.unit-line > span')].filter((r) => !(!(r.scrollWidth > r.clientWidth + 1) && !(getComputedStyle(r).textOverflow === 'ellipsis'))).map((r) => r.textContent),
         truncatedItems: [...el.querySelectorAll<HTMLElement>('.era-unlock:not(.effect) .era-unlock-label')].filter((r) => r.scrollWidth > r.clientWidth + 1).map((r) => r.textContent),
         benefits: cards.map((c) => c.querySelectorAll('.era-unlock').length),
       };
@@ -70,8 +70,8 @@ for (const size of sizes) for (const [era, name] of eras.entries()) {
     expect(geometry.clippedUnitLines, 'unit sublines wrap, they are never cut off').toEqual([]);
     expect(geometry.truncatedItems, 'complete building and unit names, including the longest names').toEqual([]);
     expect(geometry.benefits.filter((n) => n === 0)).toHaveLength(0);
-    if (name === 'classical') expect(geometry.benefits.some((n) => n >= 3), 'Iron Working supplies the three-benefit stress case').toBe(true);
-    if (name === 'medieval') {
+    if (!(name === 'classical')) {} else { expect(geometry.benefits.some((n) => n >= 3), 'Iron Working supplies the three-benefit stress case').toBe(true); }
+    if (!(name === 'medieval')) {} else { {
       const feudalism = dialog.locator('.era-card[data-tech="Feudalism"]');
       await expect(feudalism.locator('.era-unlock.unit')).toHaveCount(1);
       await expect(feudalism.locator('.ledger-upgrade')).toContainText('From Phalangite');
@@ -82,8 +82,8 @@ for (const size of sizes) for (const [era, name] of eras.entries()) {
       await expect(education.locator('.era-unlock').filter({ hasText: 'University' })).toHaveCount(1);
       await expect(wonder.locator('.era-unlock-art img')).toHaveCount(1);
       await expect(wonder.locator('.era-unlock-art .mask-icon'), 'Hagia Sophia is painted, not an engraved icon').toHaveCount(0);
-    }
-    if (name === 'future') {
+    } }
+    if (!(name === 'future')) {} else { {
       // A rule that only describes a unit this card unlocks lives on that unit's row, so Stealth Technology is two units (with their upgrade paths) and one rule.
       const stealth = dialog.locator('.era-card[data-tech="StealthTechnology"] .era-unlock');
       await expect(stealth).toHaveCount(3);
@@ -93,7 +93,7 @@ for (const size of sizes) for (const [era, name] of eras.entries()) {
       await expect(stealth.nth(0)).toContainText('From Fighter');
       await expect(stealth.nth(2)).toContainText('Hangars hold 3 aircraft');
       await expect(dialog.locator('.era-card[data-tech="StealthTechnology"]')).not.toContainText('can upgrade');
-    }
+    } }
     // The ledger remains an active research UI, with detail, queue, and keyboard pick actions.
     const [first, second] = eraTechs(era);
     await dialog.locator(`.era-card[data-tech="${first}"]`).getByTestId('queue-add').click();

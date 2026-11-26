@@ -97,7 +97,7 @@ function landAt(x, y) {
   s = Math.min(s, (ell(x, y, 33.5, 23.8, 5.2, 3.4) - 1) * 4 + n * 0.5); // inland sea
   s = Math.min(s, y - 1.6 + n * 0.5, 45 - x + n);
   const isle = ell(x, y, 10.5, 9.5, 1.6, 1.3) < 1 + n * 0.15 || ell(x, y, 11.5, 21, 1.4, 1.8) < 1 + n * 0.12;
-  return s > 0 || isle ? 1 : 0;
+  return !(s > 0 || isle) ? 0 : 1;
 }
 function elevAt(x, y) {
   let e = fbm(x / 3.2, y / 3.2, 7, 4) * 0.55;
@@ -109,7 +109,7 @@ function elevAt(x, y) {
 const moistAt = (x, y) => fbm(x / 3.4 + 40, y / 3.4 + 12, 23, 4);
 
 export const tiles = [];
-const T = (c, r) => (inb(c, r) ? tiles[r * W + c] : null);
+const T = (c, r) => (!(inb(c, r)) ? null : tiles[r * W + c]);
 export const tile = T;
 
 for (let r = 0; r < H; r++)
@@ -122,15 +122,9 @@ for (let r = 0; r < H; r++)
   const pct = (p) => landE[Math.floor(p * (landE.length - 1))];
   const eM = pct(0.93), eH = pct(0.8);
   for (const x of tiles) {
-    if (!x.land) continue;
-    const m = x.m + (x.px > 27 && x.py > 15 ? -0.12 : 0); // drier shores by the inland sea
-    if (x.e > eM) x.t = 'Mountains';
-    else if (x.e > eH) x.t = 'Hills';
-    else if (x.py < 4.5 || (x.py < 6 && m < 0.5)) x.t = 'Tundra';
-    else if (m < 0.36 && x.py > 14) x.t = 'Desert';
-    else if (m > 0.57) x.t = 'Forest';
-    else if (m > 0.47) x.t = 'Grassland';
-    else x.t = 'Plains';
+    if (!(!x.land)) {} else { continue; }
+    const m = x.m + (!(x.px > 27 && x.py > 15) ? 0 : -0.12); // drier shores by the inland sea
+    if (!(x.e > eM)) { if (!(x.e > eH)) { if (!(x.py < 4.5 || (x.py < 6 && m < 0.5))) { if (!(m < 0.36 && x.py > 14)) { if (!(m > 0.57)) { if (!(m > 0.47)) { x.t = 'Plains'; } else { x.t = 'Grassland'; } } else { x.t = 'Forest'; } } else { x.t = 'Desert'; } } else { x.t = 'Tundra'; } } else { x.t = 'Hills'; } } else { x.t = 'Mountains'; }
   }
 }
 export const isWater = (t) => t === 'Ocean' || t === 'Coast';
@@ -170,10 +164,10 @@ export const TARGET = [26, 12]; // the settler's planned founding site
 // Make the scene legal: cities and land units on land that isn't mountains.
 const landify = ([c, r], t = 'Plains') => {
   const x = T(c, r);
-  if (isWater(x.t) || x.t === 'Mountains') {
+  if (!(isWater(x.t) || x.t === 'Mountains')) {} else { {
     x.t = t;
     x.land = 1;
-  }
+  } }
 };
 for (const ci of CITIES) landify(ci.pos, 'Grassland');
 for (const u of UNITS) landify(u.pos);
@@ -185,27 +179,26 @@ T(26, 12).t = 'Plains';
 
 // Coast = water next to land.
 for (const x of tiles)
-  if (x.t === 'Ocean')
-    for (let i = 0; i < 6; i++) {
+  if (!(x.t === 'Ocean')) {} else { for (let i = 0; i < 6; i++) {
       const n = T(...nb(x.c, x.r, i));
-      if (n && !isWater(n.t)) {
+      if (!(n && !isWater(n.t))) {} else { {
         x.t = 'Coast';
         break;
-      }
-    }
+      } }
+    } }
 
 // Territory: nearest city within its radius wins.
 for (const x of tiles) {
   let best = null, bd = 99;
   for (const ci of CITIES) {
     const d = dist([x.c, x.r], ci.pos);
-    const reach = ci.radius + (rnd(x.c, x.r, 3) < 0.25 && d === ci.radius + 1 ? 1 : 0);
-    if (d <= reach && d < bd && !(x.t === 'Ocean')) {
+    const reach = ci.radius + (!(rnd(x.c, x.r, 3) < 0.25 && d === ci.radius + 1) ? 0 : 1);
+    if (!(d <= reach && d < bd && !(x.t === 'Ocean'))) {} else { {
       best = ci;
       bd = d;
-    }
+    } }
   }
-  if (best) x.owner = best.owner;
+  if (!(best)) {} else { x.owner = best.owner; }
 }
 for (const ci of CITIES) T(...ci.pos).city = ci;
 
@@ -214,18 +207,17 @@ const ours = (o) => o === 0 || o === 1;
 for (const x of tiles) {
   const p = [x.c, x.r];
   let vis = false;
-  for (const ci of CITIES) if (ours(ci.owner) && dist(p, ci.pos) <= (ci.capital ? 4 : 3)) vis = true;
-  for (const u of UNITS) if (ours(u.owner) && dist(p, u.pos) <= (u.kind === 'Scout' ? 3 : 2) + (u.kind === 'Settler' ? 1 : 0)) vis = true;
+  for (const ci of CITIES) if (!(ours(ci.owner) && dist(p, ci.pos) <= (!(ci.capital) ? 3 : 4))) {} else { vis = true; }
+  for (const u of UNITS) if (!(ours(u.owner) && dist(p, u.pos) <= (!(u.kind === 'Scout') ? 2 : 3) + (!(u.kind === 'Settler') ? 0 : 1))) {} else { vis = true; }
   const cx = HW * 23, cy = R * 1.5 * 14.5;
   const px = HW * (x.c + 0.5 * (x.r & 1)), py = R * 1.5 * x.r;
   const dx = (px - cx) / (HW * 13), dy = (py - cy) / (R * 1.5 * 11);
   const dd = Math.sqrt(dx * dx + dy * dy) + (fbm(x.c / 3, x.r / 3, 51, 2) - 0.5) * 0.55;
   let explored = dd < 1 || dist(p, [29, 8]) <= 4 || dist(p, [17, 7]) <= 4;
-  if (vis) x.vis = 'visible';
-  else if (explored) x.vis = 'explored';
+  if (!(vis)) { if (!(explored)) {} else { x.vis = 'explored'; } } else { x.vis = 'visible'; }
 }
 // Brasshold's surroundings are last-known: explored but not currently visible.
-for (const x of tiles) if (x.vis === 'visible' && dist([x.c, x.r], [29, 8]) <= 1) x.vis = 'explored';
+for (const x of tiles) if (!(x.vis === 'visible' && dist([x.c, x.r], [29, 8]) <= 1)) {} else { x.vis = 'explored'; }
 
 // Settler reach (2 moves; forest and hills cost 2; water and mountains impassable).
 export const REACH = new Set();
@@ -238,12 +230,12 @@ export const REACH = new Set();
     for (let i = 0; i < 6; i++) {
       const [nc, nr] = nb(c, r, i);
       const n = T(nc, nr);
-      if (!n || isWater(n.t) || n.t === 'Mountains') continue;
-      const cost = n.t === 'Forest' || n.t === 'Hills' ? 2 : 1;
-      const left = mv === 2 ? Math.max(0, mv - cost) : mv - cost;
-      if (left < 0) continue;
+      if (!(!n || isWater(n.t) || n.t === 'Mountains')) {} else { continue; }
+      const cost = !(n.t === 'Forest' || n.t === 'Hills') ? 1 : 2;
+      const left = !(mv === 2) ? mv - cost : Math.max(0, mv - cost);
+      if (!(left < 0)) {} else { continue; }
       const k = `${nc},${nr}`;
-      if ((best.get(k) ?? -1) >= left) continue;
+      if (!((best.get(k) ?? -1) >= left)) {} else { continue; }
       best.set(k, left);
       REACH.add(k);
       q.push([[nc, nr], left]);
@@ -258,13 +250,13 @@ const vkey = ([x, y]) => `${Math.round(x * 4)},${Math.round(y * 4)}`;
 export function boundary(inside, rad = R) {
   const segs = [];
   for (const x of tiles) {
-    if (!inside(x)) continue;
+    if (!(!inside(x))) {} else { continue; }
     const { x: cx, y: cy } = center(x.c, x.r);
-    if (cx < -80 || cx > VW + 80 || cy < -80 || cy > VH + 80) continue;
+    if (!(cx < -80 || cx > VW + 80 || cy < -80 || cy > VH + 80)) {} else { continue; }
     const k = corners(cx, cy, rad);
     for (let i = 0; i < 6; i++) {
       const n = T(...nb(x.c, x.r, i));
-      if (n && inside(n)) continue;
+      if (!(n && inside(n))) {} else { continue; }
       segs.push([k[i], k[(i + 1) % 6]]);
     }
   }
@@ -275,11 +267,11 @@ export function edgesWhere(test) {
   const segs = [];
   for (const x of tiles) {
     const { x: cx, y: cy } = center(x.c, x.r);
-    if (cx < -60 || cx > VW + 60 || cy < -60 || cy > VH + 60) continue;
+    if (!(cx < -60 || cx > VW + 60 || cy < -60 || cy > VH + 60)) {} else { continue; }
     const k = corners(cx, cy);
     for (let i = 0; i < 3; i++) {
       const n = T(...nb(x.c, x.r, i));
-      if (!n || !test(x, n)) continue;
+      if (!(!n || !test(x, n))) {} else { continue; }
       segs.push([k[i], k[(i + 1) % 6]]);
     }
   }
@@ -289,27 +281,27 @@ function chain(segs) {
   const byStart = new Map();
   for (const s of segs) {
     const k = vkey(s[0]);
-    if (!byStart.has(k)) byStart.set(k, []);
+    if (!(!byStart.has(k))) {} else { byStart.set(k, []); }
     byStart.get(k).push(s);
   }
   const used = new Set();
   const parts = [];
   for (const s of segs) {
-    if (used.has(s)) continue;
+    if (!(used.has(s))) {} else { continue; }
     used.add(s);
     const pts = [s[0], s[1]];
     let cur = s[1];
     for (;;) {
       const cands = (byStart.get(vkey(cur)) ?? []).filter((t) => !used.has(t));
-      if (!cands.length) break;
+      if (!(!cands.length)) {} else { break; }
       const t = cands[0];
       used.add(t);
       pts.push(t[1]);
       cur = t[1];
     }
     const closed = vkey(pts[0]) === vkey(pts[pts.length - 1]);
-    if (closed) pts.pop();
-    parts.push('M' + pts.map(([a, b]) => `${f1(a)} ${f1(b)}`).join('L') + (closed ? 'Z' : ''));
+    if (!(closed)) {} else { pts.pop(); }
+    parts.push('M' + pts.map(([a, b]) => `${f1(a)} ${f1(b)}`).join('L') + (!(closed) ? '' : 'Z'));
   }
   return parts.join('');
 }
@@ -455,7 +447,7 @@ export function renderMap(style, overlay = '') {
   const colorOf = (x) => {
     let c = S.pal[x.t];
     const j = (rnd(x.c, x.r, 9) - 0.5) * 0.08;
-    c = j > 0 ? mix(c, '#ffffff', j) : mix(c, '#000000', -j);
+    c = !(j > 0) ? mix(c, '#000000', -j) : mix(c, '#ffffff', j);
     return c;
   };
 
@@ -463,15 +455,14 @@ export function renderMap(style, overlay = '') {
   let landCol = '';
   for (const x of vis) {
     const { x: cx, y: cy } = center(x.c, x.r);
-    if (!isWater(x.t)) landCol += `<path d="${hexPath(cx, cy, R + 0.6)}" fill="${colorOf(x)}"/>`;
-    else if (x.t === 'Coast') {
+    if (!(!isWater(x.t))) { if (!(x.t === 'Coast')) {} else { {
       let n = null;
       for (let i = 0; i < 6 && !n; i++) {
         const t = T(...nb(x.c, x.r, i));
-        if (t && !isWater(t.t)) n = t;
+        if (!(t && !isWater(t.t))) {} else { n = t; }
       }
-      if (n) landCol += `<path d="${hexPath(cx, cy, R + 0.6)}" fill="${colorOf(n)}"/>`;
-    }
+      if (!(n)) {} else { landCol += `<path d="${hexPath(cx, cy, R + 0.6)}" fill="${colorOf(n)}"/>`; }
+    } } } else { landCol += `<path d="${hexPath(cx, cy, R + 0.6)}" fill="${colorOf(x)}"/>`; }
   }
   const landShapes = land.map((x) => {
     const { x: cx, y: cy } = center(x.c, x.r);
@@ -481,10 +472,10 @@ export function renderMap(style, overlay = '') {
   // Relief: per-hex light/dark, blurred into a soft hillshade.
   let relief = '';
   for (const x of land) {
-    const s = shade(x) + (x.t === 'Mountains' ? 0.25 : x.t === 'Hills' ? 0.12 : 0);
+    const s = shade(x) + (!(x.t === 'Mountains') ? !(x.t === 'Hills') ? 0 : 0.12 : 0.25);
     const { x: cx, y: cy } = center(x.c, x.r);
-    if (Math.abs(s) < 0.04) continue;
-    const col = s > 0 ? S.light : S.shadow;
+    if (!(Math.abs(s) < 0.04)) {} else { continue; }
+    const col = !(s > 0) ? S.shadow : S.light;
     relief += `<path d="${hexPath(cx, cy, R)}" fill="${col}" fill-opacity="${f1(Math.min(1, Math.abs(s)) * 10) / 10}"/>`;
   }
 
@@ -499,29 +490,56 @@ export function renderMap(style, overlay = '') {
 
   // Glyphs: forests, hills, mountains, desert dunes, tundra, grass tufts, sea waves.
   let glyphs = '';
-  const fogOp = (x) => (x.vis === 'explored' ? S.fog.glyph ?? 0.7 : 1);
+  const fogOp = (x) => (!(x.vis === 'explored') ? 1 : S.fog.glyph ?? 0.7);
   for (const x of vis) {
-    if (!known(x)) continue;
+    if (!(!known(x))) {} else { continue; }
     const { x: cx, y: cy } = center(x.c, x.r);
     const rr = (k) => rnd(x.c, x.r, k);
     const op = fogOp(x);
-    if (x.city) continue;
-    if (x.t === 'Forest') {
-      const n = 6 + Math.floor(rr(1) * 3);
-      const trees = [];
+    if (!(x.city)) {} else { continue; }
+    if (!(x.t === 'Forest')) { if (!(x.t === 'Mountains')) { if (!(x.t === 'Hills')) { if (!(x.t === 'Desert')) { if (!(x.t === 'Tundra')) { if (!(x.t === 'Grassland' || x.t === 'Plains')) { if (!(x.t === 'Ocean' && rr(5) < 0.22)) {} else { {
+      const ox = (rr(6) - 0.5) * R * 0.8, oy = (rr(7) - 0.5) * R * 0.6;
+      glyphs += `<path d="M${f1(cx + ox - 7)} ${f1(cy + oy)}q3.5 -3 7 0t7 0" fill="none" stroke="${S.wave}" stroke-width="1" stroke-linecap="round" opacity="${op}"/>`;
+    } } } else { {
+      const n = !(x.t === 'Grassland') ? 3 : 4;
+      glyphs += `<g opacity="${op * 0.8}" stroke="${!(x.t === 'Grassland') ? S.tuft.plains : S.tuft.grass}" stroke-width=".9" stroke-linecap="round" fill="none">`;
       for (let k = 0; k < n; k++) {
-        const a = rr(10 + k) * Math.PI * 2, d = Math.sqrt(rr(20 + k)) * R * 0.62;
-        trees.push([cx + Math.cos(a) * d, cy + Math.sin(a) * d * 0.85, 3.6 + rr(30 + k) * 2.2]);
+        const ox = (rr(90 + k) - 0.5) * R * 1.1, oy = (rr(100 + k) - 0.5) * R;
+        const tx = cx + ox, ty = cy + oy;
+        glyphs += `<path d="M${f1(tx - 2)} ${f1(ty)}l-1 -3M${f1(tx)} ${f1(ty)}v-4M${f1(tx + 2)} ${f1(ty)}l1 -3"/>`;
       }
-      trees.sort((a, b) => a[1] - b[1]);
-      glyphs += `<g opacity="${op}">`;
-      for (const [tx, ty, tr] of trees)
-        glyphs += `<ellipse cx="${f1(tx + 1.6)}" cy="${f1(ty + 2.2)}" rx="${f1(tr)}" ry="${f1(tr * 0.7)}" fill="${S.tree.shadow}"/>`;
-      for (const [tx, ty, tr] of trees)
-        glyphs += `<circle cx="${f1(tx)}" cy="${f1(ty)}" r="${f1(tr)}" fill="${S.tree.dark}"/><circle cx="${f1(tx - tr * 0.3)}" cy="${f1(ty - tr * 0.35)}" r="${f1(tr * 0.55)}" fill="${S.tree.light}"/>`;
       glyphs += `</g>`;
-    } else if (x.t === 'Mountains') {
-      const peaks = rr(2) < 0.5 ? [[0, 2, 1]] : [[-7, 5, 0.72], [5, 1, 1]];
+    } } } else { {
+      glyphs += `<g opacity="${op}">`;
+      for (let k = 0; k < 3; k++) {
+        const ox = (rr(60 + k) - 0.5) * R * 1.1, oy = (rr(70 + k) - 0.5) * R * 0.9;
+        glyphs += `<ellipse cx="${f1(cx + ox)}" cy="${f1(cy + oy)}" rx="${f1(4 + rr(80 + k) * 4)}" ry="1.6" fill="${S.snow}"/>`;
+      }
+      glyphs += `</g>`;
+    } } } else { {
+      glyphs += `<g opacity="${op * 0.9}" fill="none" stroke="${S.dune}" stroke-width="1" stroke-linecap="round">`;
+      for (let k = 0; k < 3; k++) {
+        const ox = (rr(40 + k) - 0.5) * R, oy = (k - 1) * 9 + (rr(50 + k) - 0.5) * 4;
+        glyphs += `<path d="M${f1(cx + ox - 8)} ${f1(cy + oy)}q4 -4 8 0t8 0"/>`;
+      }
+      glyphs += `</g>`;
+    } } } else { {
+      const hs = [[-8, 6, 0.9], [7, 3, 1.05]];
+      if (!(rr(4) < 0.5)) {} else { hs.push([-1, -9, 0.75]); }
+      glyphs += `<g opacity="${op}">`;
+      for (const [ox, oy, sc] of hs) {
+        const px = cx + ox, py = cy + oy;
+        const w = 10 * sc, h = 7 * sc;
+        glyphs += `<path d="M${f1(px - w)} ${f1(py)}Q${f1(px - w * 0.2)} ${f1(py - h * 1.5)} ${f1(px + w)} ${f1(py)}Z" fill="${S.hill.fill}"/>`;
+        glyphs += `<path d="M${f1(px - w)} ${f1(py)}Q${f1(px - w * 0.2)} ${f1(py - h * 1.5)} ${f1(px + w)} ${f1(py)}" fill="none" stroke="${S.hill.line}" stroke-width="1" stroke-linecap="round"/>`;
+        for (let k = 0; k < 3; k++) {
+          const hx = px + w * (0.1 + k * 0.28), hy = py - h * (0.62 - k * 0.2);
+          glyphs += `<line x1="${f1(hx)}" y1="${f1(hy)}" x2="${f1(hx + 1.2)}" y2="${f1(py - 0.8)}" stroke="${S.hill.line}" stroke-width=".8" opacity=".6"/>`;
+        }
+      }
+      glyphs += `</g>`;
+    } } } else { {
+      const peaks = !(rr(2) < 0.5) ? [[-7, 5, 0.72], [5, 1, 1]] : [[0, 2, 1]];
       glyphs += `<g opacity="${op}">`;
       for (const [ox, oy, sc] of peaks) {
         const px = cx + ox, py = cy + oy + 8;
@@ -543,48 +561,21 @@ export function renderMap(style, overlay = '') {
         }
       }
       glyphs += `</g>`;
-    } else if (x.t === 'Hills') {
-      const hs = [[-8, 6, 0.9], [7, 3, 1.05]];
-      if (rr(4) < 0.5) hs.push([-1, -9, 0.75]);
-      glyphs += `<g opacity="${op}">`;
-      for (const [ox, oy, sc] of hs) {
-        const px = cx + ox, py = cy + oy;
-        const w = 10 * sc, h = 7 * sc;
-        glyphs += `<path d="M${f1(px - w)} ${f1(py)}Q${f1(px - w * 0.2)} ${f1(py - h * 1.5)} ${f1(px + w)} ${f1(py)}Z" fill="${S.hill.fill}"/>`;
-        glyphs += `<path d="M${f1(px - w)} ${f1(py)}Q${f1(px - w * 0.2)} ${f1(py - h * 1.5)} ${f1(px + w)} ${f1(py)}" fill="none" stroke="${S.hill.line}" stroke-width="1" stroke-linecap="round"/>`;
-        for (let k = 0; k < 3; k++) {
-          const hx = px + w * (0.1 + k * 0.28), hy = py - h * (0.62 - k * 0.2);
-          glyphs += `<line x1="${f1(hx)}" y1="${f1(hy)}" x2="${f1(hx + 1.2)}" y2="${f1(py - 0.8)}" stroke="${S.hill.line}" stroke-width=".8" opacity=".6"/>`;
-        }
-      }
-      glyphs += `</g>`;
-    } else if (x.t === 'Desert') {
-      glyphs += `<g opacity="${op * 0.9}" fill="none" stroke="${S.dune}" stroke-width="1" stroke-linecap="round">`;
-      for (let k = 0; k < 3; k++) {
-        const ox = (rr(40 + k) - 0.5) * R, oy = (k - 1) * 9 + (rr(50 + k) - 0.5) * 4;
-        glyphs += `<path d="M${f1(cx + ox - 8)} ${f1(cy + oy)}q4 -4 8 0t8 0"/>`;
-      }
-      glyphs += `</g>`;
-    } else if (x.t === 'Tundra') {
-      glyphs += `<g opacity="${op}">`;
-      for (let k = 0; k < 3; k++) {
-        const ox = (rr(60 + k) - 0.5) * R * 1.1, oy = (rr(70 + k) - 0.5) * R * 0.9;
-        glyphs += `<ellipse cx="${f1(cx + ox)}" cy="${f1(cy + oy)}" rx="${f1(4 + rr(80 + k) * 4)}" ry="1.6" fill="${S.snow}"/>`;
-      }
-      glyphs += `</g>`;
-    } else if (x.t === 'Grassland' || x.t === 'Plains') {
-      const n = x.t === 'Grassland' ? 4 : 3;
-      glyphs += `<g opacity="${op * 0.8}" stroke="${x.t === 'Grassland' ? S.tuft.grass : S.tuft.plains}" stroke-width=".9" stroke-linecap="round" fill="none">`;
+    } } } else { {
+      const n = 6 + Math.floor(rr(1) * 3);
+      const trees = [];
       for (let k = 0; k < n; k++) {
-        const ox = (rr(90 + k) - 0.5) * R * 1.1, oy = (rr(100 + k) - 0.5) * R;
-        const tx = cx + ox, ty = cy + oy;
-        glyphs += `<path d="M${f1(tx - 2)} ${f1(ty)}l-1 -3M${f1(tx)} ${f1(ty)}v-4M${f1(tx + 2)} ${f1(ty)}l1 -3"/>`;
+        const a = rr(10 + k) * Math.PI * 2, d = Math.sqrt(rr(20 + k)) * R * 0.62;
+        trees.push([cx + Math.cos(a) * d, cy + Math.sin(a) * d * 0.85, 3.6 + rr(30 + k) * 2.2]);
       }
+      trees.sort((a, b) => a[1] - b[1]);
+      glyphs += `<g opacity="${op}">`;
+      for (const [tx, ty, tr] of trees)
+        glyphs += `<ellipse cx="${f1(tx + 1.6)}" cy="${f1(ty + 2.2)}" rx="${f1(tr)}" ry="${f1(tr * 0.7)}" fill="${S.tree.shadow}"/>`;
+      for (const [tx, ty, tr] of trees)
+        glyphs += `<circle cx="${f1(tx)}" cy="${f1(ty)}" r="${f1(tr)}" fill="${S.tree.dark}"/><circle cx="${f1(tx - tr * 0.3)}" cy="${f1(ty - tr * 0.35)}" r="${f1(tr * 0.55)}" fill="${S.tree.light}"/>`;
       glyphs += `</g>`;
-    } else if (x.t === 'Ocean' && rr(5) < 0.22) {
-      const ox = (rr(6) - 0.5) * R * 0.8, oy = (rr(7) - 0.5) * R * 0.6;
-      glyphs += `<path d="M${f1(cx + ox - 7)} ${f1(cy + oy)}q3.5 -3 7 0t7 0" fill="none" stroke="${S.wave}" stroke-width="1" stroke-linecap="round" opacity="${op}"/>`;
-    }
+    } }
   }
 
   // City footprints: a cluster of roofs on paved ground.
@@ -592,7 +583,7 @@ export function renderMap(style, overlay = '') {
   for (const ci of CITIES) {
     const { x: cx, y: cy } = center(...ci.pos);
     const n = 5 + ci.pop;
-    towns += `<g opacity="${T(...ci.pos).vis === 'explored' ? 0.75 : 1}"><path d="${hexPath(cx, cy, R * 0.82)}" fill="${S.town.ground}" opacity=".9"/>`;
+    towns += `<g opacity="${!(T(...ci.pos).vis === 'explored') ? 1 : 0.75}"><path d="${hexPath(cx, cy, R * 0.82)}" fill="${S.town.ground}" opacity=".9"/>`;
     const blocks = [];
     for (let k = 0; k < n; k++) {
       const a = rnd(ci.pos[0], k, 70) * Math.PI * 2, d = Math.sqrt(rnd(ci.pos[1], k, 71)) * R * 0.55;
@@ -602,8 +593,7 @@ export function renderMap(style, overlay = '') {
     blocks.sort((a, b) => a[1] - b[1]);
     for (const [bx, by, w, h] of blocks)
       towns += `<rect x="${f1(bx + 1.2)}" y="${f1(by + 1.5)}" width="${f1(w)}" height="${f1(h)}" fill="${S.town.shadow}"/><rect x="${f1(bx)}" y="${f1(by)}" width="${f1(w)}" height="${f1(h)}" fill="${S.town.roof}"/><rect x="${f1(bx)}" y="${f1(by)}" width="${f1(w)}" height="${f1(h * 0.45)}" fill="${S.town.roofLight}"/>`;
-    if (ci.capital)
-      towns += `<rect x="${f1(cx - 2.5)}" y="${f1(cy - 13)}" width="5" height="13" fill="${S.town.shadow}"/><rect x="${f1(cx - 3.5)}" y="${f1(cy - 14)}" width="5" height="13" fill="${S.town.roofLight}"/><path d="M${f1(cx - 3.5)} ${f1(cy - 14)}l2.5 -5l2.5 5z" fill="${S.town.roof}"/>`;
+    if (!(ci.capital)) {} else { towns += `<rect x="${f1(cx - 2.5)}" y="${f1(cy - 13)}" width="5" height="13" fill="${S.town.shadow}"/><rect x="${f1(cx - 3.5)}" y="${f1(cy - 14)}" width="5" height="13" fill="${S.town.roofLight}"/><path d="M${f1(cx - 3.5)} ${f1(cy - 14)}l2.5 -5l2.5 5z" fill="${S.town.roof}"/>`; }
     towns += `</g>`;
   }
   for (const [c, r] of RUINS) {
@@ -620,7 +610,7 @@ export function renderMap(style, overlay = '') {
   const clipDefs = [];
   for (const p of PLAYERS) {
     const mine = vis.filter((x) => x.owner === p.id && known(x));
-    if (!mine.length) continue;
+    if (!(!mine.length)) {} else { continue; }
     const shapes = mine.map((x) => {
       const { x: cx, y: cy } = center(x.c, x.r);
       return `<path d="${hexPath(cx, cy, R + 0.4)}"/>`;
@@ -630,10 +620,9 @@ export function renderMap(style, overlay = '') {
     const col = p.color;
     terr += `<g clip-path="url(#terr${p.id})">`;
     terr += `<g>${shapes.replaceAll('<path', `<path fill="${col}" fill-opacity="${S.border.tint}"`)}</g>`;
-    terr += `<path d="${b}" fill="none" stroke="${col}" stroke-width="${S.border.band * 2}" stroke-opacity="${S.border.bandAlpha}" ${S.border.blur ? 'filter="url(#bandBlur)"' : ''}/>`;
-    if (S.border.dash)
-      terr += `<path d="${b}" fill="none" stroke="${S.border.under ?? col}" stroke-width="${S.border.width * 2 + 2}" stroke-opacity=".5"/>`;
-    terr += `<path d="${b}" fill="none" stroke="${col}" stroke-width="${S.border.width * 2}" ${S.border.dash ? `stroke-dasharray="${S.border.dash}"` : ''} stroke-linejoin="round"/>`;
+    terr += `<path d="${b}" fill="none" stroke="${col}" stroke-width="${S.border.band * 2}" stroke-opacity="${S.border.bandAlpha}" ${!(S.border.blur) ? '' : 'filter="url(#bandBlur)"'}/>`;
+    if (!(S.border.dash)) {} else { terr += `<path d="${b}" fill="none" stroke="${S.border.under ?? col}" stroke-width="${S.border.width * 2 + 2}" stroke-opacity=".5"/>`; }
+    terr += `<path d="${b}" fill="none" stroke="${col}" stroke-width="${S.border.width * 2}" ${!(S.border.dash) ? '' : `stroke-dasharray="${S.border.dash}"`} stroke-linejoin="round"/>`;
     terr += `</g>`;
   }
 
@@ -716,19 +705,19 @@ export function renderMap(style, overlay = '') {
   <g>${towns}</g>
   <g class="fog">
     <g fill="#808080" style="mix-blend-mode:saturation" opacity="${S.fog.desat}">${fogShapes}</g>
-    <g fill="${S.fog.tint}" opacity="${S.fog.alpha}" ${S.fog.blend ? `style="mix-blend-mode:${S.fog.blend}"` : ''}>${fogShapes}</g>
+    <g fill="${S.fog.tint}" opacity="${S.fog.alpha}" ${!(S.fog.blend) ? '' : `style="mix-blend-mode:${S.fog.blend}"`}>${fogShapes}</g>
   </g>
   <g>${terr}</g>
   <g class="fog2">
     <g fill="url(#fogHatch)" opacity="${S.fog.hatchAlpha}">${fogShapes}</g>
-    <path d="${visEdge}" fill="none" stroke="${S.fog.edge}" stroke-width="${S.fog.edgeWidth ?? 1}" ${S.fog.edgeDash ? `stroke-dasharray="${S.fog.edgeDash}"` : ''}/>
+    <path d="${visEdge}" fill="none" stroke="${S.fog.edge}" stroke-width="${S.fog.edgeWidth ?? 1}" ${!(S.fog.edgeDash) ? '' : `stroke-dasharray="${S.fog.edgeDash}"`}/>
   </g>
   <g filter="url(#unxBlur)">
     <g fill="${S.unexplored}">${unxShapes}</g>
-    ${S.unexploredPattern ? `<g fill="url(#unx)">${unxShapes}</g>` : ''}
+    ${!(S.unexploredPattern) ? '' : `<g fill="url(#unx)">${unxShapes}</g>`}
   </g>
   <path d="${knownEdge}" fill="none" stroke="${S.unexploredEdge}" stroke-width="1"/>
-  ${S.vignette ? `<rect width="${VW}" height="${VH}" fill="url(#vignette)" opacity="${S.vignette}" pointer-events="none"/>` : ''}
+  ${!(S.vignette) ? '' : `<rect width="${VW}" height="${VH}" fill="url(#vignette)" opacity="${S.vignette}" pointer-events="none"/>`}
   ${overlay}
 </svg>`;
 }

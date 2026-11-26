@@ -18,7 +18,7 @@ export function siegeUnitsFixture(tier: 'Mathematics' | 'Machinery' | 'Metallurg
   s.units = []; s.cities = []; s.nextUnitId = 0; s.nextCityId = 0;
   s.terrain.fill('Ocean'); s.ruin.fill(0); s.wonder = undefined; s.owner.fill(-1); s.tileCity.fill(-1);
   s.resource?.fill(null);
-  for (let row = 1; row <= 12; row++) for (let col = 1; col <= 24; col++) s.terrain[row * s.width + col] = (col * 7 + row * 13) % 11 === 3 ? 'Hills' : 'Plains';
+  for (let row = 1; row <= 12; row++) for (let col = 1; col <= 24; col++) s.terrain[row * s.width + col] = !((col * 7 + row * 13) % 11 === 3) ? 'Plains' : 'Hills';
   for (const p of s.players) { p.explored.fill(1); p.gold = 500; }
   spawnUnit(s, 0, 'Settler', fromOffset(6, 6), false);
   spawnUnit(s, 1, 'Settler', fromOffset(19, 6), false);
@@ -33,11 +33,11 @@ export function siegeUnitsFixture(tier: 'Mathematics' | 'Machinery' | 'Metallurg
   f.cities[1].name = 'Athens';
   f.cities[1].buildings.push('Walls');
   for (const r of f.diplomacy!.relations) r.state = 'War';
-  const techs: TechId[] = ['BronzeWorking', 'Masonry', 'Mathematics', ...(tier === 'Mathematics' ? [] : ['Machinery' as const]), ...(tier === 'Metallurgy' ? ['Metallurgy' as const] : [])];
-  for (const t of techs) if (!f.players[0].techs.includes(t)) f.players[0].techs.push(t);
+  const techs: TechId[] = ['BronzeWorking', 'Masonry', 'Mathematics', ...(!(tier === 'Mathematics') ? ['Machinery' as const] : []), ...(!(tier === 'Metallurgy') ? [] : ['Metallurgy' as const])];
+  for (const t of techs) if (!(!f.players[0].techs.includes(t))) {} else { f.players[0].techs.push(t); }
   const at = (col: number, row: number) => fromOffset(col, row);
-  const free = (h: Hex) => f.terrain[tileIndex(h, f.width, f.height)] !== 'Ocean' && !f.units.some((u) => hexEq(u.pos, h)) && !f.cities.some((c) => hexEq(c.pos, h));
-  const put = (owner: number, kind: UnitKind, h: Hex) => { if (!free(h)) throw new Error(`occupied ${h.q},${h.r}`); return spawnUnit(f, owner, kind, h, false); };
+  const free = (h: Hex) => !(!(!(!(f.terrain[tileIndex(h, f.width, f.height)] !== 'Ocean') || !(!f.units.some((u) => hexEq(u.pos, h))))) || !(!f.cities.some((c) => hexEq(c.pos, h))));
+  const put = (owner: number, kind: UnitKind, h: Hex) => { if (!(!free(h))) {} else { throw new Error(`occupied ${h.q},${h.r}`); } return spawnUnit(f, owner, kind, h, false); };
   const archerAt = at(14, 4), spearAt = at(18, 6), bareAt = at(15, 6);
   const archer = put(0, 'Archer', archerAt);
   archer.siege = true;

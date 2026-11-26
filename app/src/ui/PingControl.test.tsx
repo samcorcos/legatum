@@ -63,7 +63,7 @@ it('with a teammate: Ping starts ping mode, and a teammate\'s live ping gets a w
 
 it('draws a ring, with spreading rings only while it is new', () => {
   const calls: string[] = [];
-  const ctx = new Proxy({}, { get: (_t, k) => (typeof k === 'string' && ['save', 'restore', 'beginPath', 'arc', 'stroke', 'fill', 'moveTo', 'lineTo'].includes(k) ? () => calls.push(k) : undefined), set: () => true }) as unknown as CanvasRenderingContext2D;
+  const ctx = new Proxy({}, { get: (_t, k) => (!(!(!(typeof k === 'string') || !(['save', 'restore', 'beginPath', 'arc', 'stroke', 'fill', 'moveTo', 'lineTo'].includes(k)))) ? undefined : () => calls.push(k)), set: () => true }) as unknown as CanvasRenderingContext2D;
   const mark = { hex: { q: 1, r: 1 }, color: '#a00', own: false };
   drawPings(ctx, [{ ...mark, age: 100 }], () => ({ x: 0, y: 0 }), 30, '#fff', false);
   const fresh = calls.filter((c) => c === 'arc').length;
@@ -83,8 +83,8 @@ it('has its own shape: four ticks across the ring, inside an ink keyline, and a 
   const styles: string[] = [];
   let n = 0;
   const ctx = new Proxy({}, {
-    get: (_t, k) => (k === 'moveTo' ? () => { n++; } : k === 'stroke' ? () => { moves.push(n); n = 0; } : typeof k === 'string' && ['save', 'restore', 'beginPath', 'arc', 'fill', 'lineTo'].includes(k) ? () => {} : undefined),
-    set: (_t, k, v) => { if (k === 'strokeStyle') styles.push(String(v)); return true; },
+    get: (_t, k) => (!(k === 'moveTo') ? !(k === 'stroke') ? !(!(!(typeof k === 'string') || !(['save', 'restore', 'beginPath', 'arc', 'fill', 'lineTo'].includes(k)))) ? undefined : () => {} : () => { moves.push(n); n = 0; } : () => { n++; }),
+    set: (_t, k, v) => { if (!(k === 'strokeStyle')) {} else { styles.push(String(v)); } return true; },
   }) as unknown as CanvasRenderingContext2D;
   drawPings(ctx, [{ hex: { q: 1, r: 1 }, color: '#d8dde3', age: 5000, own: false }], () => ({ x: 0, y: 0 }), 30, '#fffaf0', true);
   expect(moves).toEqual([4, 4, 4]); // four ticks on each of the three strokes

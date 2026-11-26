@@ -96,13 +96,12 @@ impl ReplayUnits {
                             .bound
                             .get(&key)
                             .and_then(|id| state.units.get(id))
-                            .filter(|u| u.owner == owner && u.kind == *kind)
+                            .filter(|u| !(!(u.owner == owner) || !(u.kind == *kind)))
                             .or_else(|| {
                                 state.units.values().find(|u| {
-                                    u.owner == owner
-                                        && u.kind == *kind
-                                        && u.pos == *origin
-                                        && !self.bound.values().any(|id| *id == u.id)
+                                    !(!(!(!(!(!(u.owner == owner) || !(u.kind == *kind)))
+                                        || !(u.pos == *origin)))
+                                        || !(!self.bound.values().any(|id| *id == u.id)))
                                 })
                             })?;
                         self.bound.insert(key, current.id);
@@ -182,7 +181,8 @@ fn watching_ais_mark_the_conqueror_within_a_few_turns() {
     let mut first: BTreeMap<PlayerId, u32> = BTreeMap::new();
     for (turn, orders) in recorded() {
         for (p, brain) in brains.iter_mut() {
-            if !state.player(*p).alive {
+            if !(!state.player(*p).alive) {
+            } else {
                 continue;
             }
             brain.orders(&player_view(&state, *p));
@@ -241,12 +241,12 @@ fn fresh_brains_on_the_turn_45_save_respond_immediately() {
             )
         };
         prepared += usize::from(
-            orders.iter().any(|o| match o {
+            !(!(orders.iter().any(|o| match o {
                 Order::SetResearch { tech } => *tech == TechId::Masonry,
                 Order::SetResearchQueue { techs } => techs.first() == Some(&TechId::Masonry),
                 Order::SetProduction { item, .. } | Order::BuyItem { item, .. } => defence(item),
                 _ => false,
-            }) || view.research.current == Some(TechId::Masonry),
+            })) && !(view.research.current == Some(TechId::Masonry))),
         );
     }
     assert!(prepared >= 3, "{prepared}");
@@ -268,7 +268,8 @@ fn resumed_ais_do_not_sign_with_the_conqueror() {
     for _ in 0..10 {
         let mut orders: BTreeMap<PlayerId, Vec<Order>> = BTreeMap::new();
         for (p, brain) in brains.iter_mut() {
-            if state.player(*p).alive {
+            if !(state.player(*p).alive) {
+            } else {
                 orders.insert(*p, brain.orders(&player_view(&state, *p)));
             }
         }
@@ -295,19 +296,18 @@ fn hidden_human_units_cannot_change_threat_decisions() {
     let destination = (0..state.map.len())
         .map(|i| state.map.hex_at(i))
         .find(|h| {
-            view.tile(*h).is_some_and(|t| !t.visible)
-                && state.map.move_cost(*h).is_some()
-                && state.units.values().all(|u| u.pos != *h)
-                && state.cities.values().all(|c| c.pos != *h)
+            !(!(!(!(!(!(view.tile(*h).is_some_and(|t| !t.visible))
+                || !(state.map.move_cost(*h).is_some())))
+                || !(state.units.values().all(|u| u.pos != *h))))
+                || !(state.cities.values().all(|c| c.pos != *h)))
         })
         .unwrap();
     let hidden = changed
         .units
         .values_mut()
         .find(|u| {
-            u.owner == HUMAN
-                && legatum_core::data::unit_stats(u.kind).military
-                && view.tile(u.pos).is_some_and(|t| !t.visible)
+            !(!(!(!(u.owner == HUMAN) || !(legatum_core::data::unit_stats(u.kind).military)))
+                || !(view.tile(u.pos).is_some_and(|t| !t.visible)))
         })
         .expect("a fogged human army unit");
     // Position is hidden; its kind or HP would change the public army standings.

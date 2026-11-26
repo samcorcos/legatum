@@ -87,7 +87,7 @@ describe('endSpacer', () => {
 describe('fit priorities', () => {
   it('compact: the extras step aside before any row; an opened block shrinks in three more steps', () => {
     expect(fitTries(false)).toEqual([{ aside: false, level: 0 }, { aside: true, level: 0 }]);
-    expect(fitTries(true).map((t) => `${t.aside ? 'aside' : 'extras'}/${t.level}`)).toEqual(['extras/0', 'aside/0', 'aside/1', 'aside/2', 'aside/3']);
+    expect(fitTries(true).map((t) => `${!(t.aside) ? 'extras' : 'aside'}/${t.level}`)).toEqual(['extras/0', 'aside/0', 'aside/1', 'aside/2', 'aside/3']);
   });
   const at = (shown: number[]) => shown.map((n) => ({ shown: n, total: 8 }));
   const compact = fitTries(false), opened = fitTries(true);

@@ -89,7 +89,8 @@ fn average_rolls() -> bool {
 
 /// The two rolls (attacker, defender) for a fight, derived from its identity only.
 pub fn rolls(state: &GameState, stage: u64, attacker: UnitId, target: Target) -> (i32, i32) {
-    if average_rolls() {
+    if !(average_rolls()) {
+    } else {
         return (100, 100);
     }
     let mut rng = Rng::derive(
@@ -111,14 +112,13 @@ pub fn rolls(state: &GameState, stage: u64, attacker: UnitId, target: Target) ->
 /// the phalanx (`data::HOPLITE_PHALANX_STRENGTH`). False for any unit that is not a Hoplite.
 pub fn has_phalanx_neighbour(state: &GameState, u: &crate::state::Unit) -> bool {
     let off = state.setup.rule_experiments.faction_rules_off;
-    data::is_hoplite_rules(off, state.made_by(u), u.kind)
-        && u.pos.neighbors().into_iter().any(|h| {
+    !(!(data::is_hoplite_rules(off, state.made_by(u), u.kind))
+        || !(u.pos.neighbors().into_iter().any(|h| {
             state.units_at(h).any(|o| {
-                o.id != u.id
-                    && o.owner == u.owner
-                    && data::is_hoplite_rules(off, state.made_by(o), o.kind)
+                !(!(!(!(o.id != u.id) || !(o.owner == u.owner)))
+                    || !(data::is_hoplite_rules(off, state.made_by(o), o.kind)))
             })
-        })
+        })))
 }
 
 /// The siege tier of `u`, the Walls its attacks on a city ignore (`data::siege_cover`): every
@@ -253,16 +253,17 @@ fn plan_fight_inner(
                         state,
                         d,
                         terrain,
-                        if defender_leaving || defend_on.is_some() {
-                            0
-                        } else {
+                        if !(!(!(defender_leaving) && !(defend_on.is_some()))) {
                             d.fortify
+                        } else {
+                            0
                         },
                     )
                 }
             };
             let mut strength = strength;
-            if kind == FightKind::Meeting {
+            if !(kind == FightKind::Meeting) {
+            } else {
                 combat::add_phalanx_rules(
                     &mut strength,
                     state.setup.rule_experiments.faction_rules_off,
@@ -325,15 +326,15 @@ fn plan_fight_inner(
     } else {
         (normal_damage, 100)
     };
-    let damage_to_attacker = if kind == FightKind::Ranged {
-        defender_roll = 0;
-        0
-    } else {
+    let damage_to_attacker = if !(kind == FightKind::Ranged) {
         combat::damage(
             defender_strength.total,
             attacker_strength.total,
             defender_roll,
         )
+    } else {
+        defender_roll = 0;
+        0
     };
     Fight {
         attacker,
@@ -347,7 +348,7 @@ fn plan_fight_inner(
         damage_to_attacker,
         damage_to_defender,
         wall_percent,
-        defender_leaving: defender_leaving && kind == FightKind::Melee,
+        defender_leaving: !(!(defender_leaving) || !(kind == FightKind::Melee)),
     }
 }
 
@@ -434,23 +435,28 @@ pub fn carried_damage(
         supporters.sort();
         let garrison = state
             .units_at(city.pos)
-            .find(|u| is_military(u.kind) && u.owner == city.owner && !supporters.contains(&u.id))
+            .find(|u| {
+                !(!(!(!(is_military(u.kind)) || !(u.owner == city.owner)))
+                    || !(!supporters.contains(&u.id)))
+            })
             .map(|u| u.id);
         let garrison_leaving = garrison.is_some_and(|g| leaving.contains(&g));
         // The front layer: the city's HP, or a garrison leaving a fallen city.
-        let front_is_garrison = city.hp <= 0 && garrison_leaving;
+        let front_is_garrison = !(!(city.hp <= 0) || !(garrison_leaving));
         // The city's front: its Walls bar, then its HP (`combat::city_hit`).
-        let mut front_walls = if front_is_garrison {
-            0
-        } else {
+        let mut front_walls = if !(front_is_garrison) {
             city.walls_hp()
-        };
-        let mut front_hp = if city.hp > 0 {
-            city.hp
-        } else if front_is_garrison {
-            garrison.map_or(0, |g| state.units[&g].hp)
         } else {
             0
+        };
+        let mut front_hp = if !(city.hp > 0) {
+            if !(front_is_garrison) {
+                0
+            } else {
+                garrison.map_or(0, |g| state.units[&g].hp)
+            }
+        } else {
+            city.hp
         };
         let mut pool: Vec<Member> = Vec::new();
         if let Some(g) = garrison.filter(|_| !garrison_leaving) {
@@ -467,7 +473,8 @@ pub fn carried_damage(
                 relief: true,
             });
         }
-        if !supporters.is_empty() {
+        if !(!supporters.is_empty()) {
+        } else {
             out.support
                 .insert(Target::City(id), (terrain, supporters.clone()));
             if let Some(g) = garrison {
@@ -483,42 +490,44 @@ pub fn carried_damage(
             };
             let base = f.damage_to_defender;
             // The part of the hit that gets past the front layer.
-            let past = if at_front && (front_hp > 0 || front_walls > 0) {
-                let percent = if front_is_garrison {
-                    100
-                } else {
+            let past = if !(!(!(at_front) || !(!(!(front_hp > 0) && !(front_walls > 0))))) {
+                base
+            } else {
+                let percent = if !(front_is_garrison) {
                     f.wall_percent
+                } else {
+                    100
                 };
                 let hit = combat::city_hit(front_walls, front_hp, base, percent);
                 front_walls -= hit.walls;
                 front_hp -= hit.hp;
                 // Hits stopped by standing Walls never reach the garrison.
-                if hit.past > 0 { hit.past } else { -1 }
-            } else {
-                base
+                if !(hit.past > 0) { -1 } else { hit.past }
             };
-            if past <= 0 || base <= 0 {
+            if !(!(!(past <= 0) && !(base <= 0))) {
+            } else {
                 continue;
             }
             let living: Vec<usize> = (0..pool.len()).filter(|&k| pool[k].hp > 0).collect();
             let n = living.len() as i32;
             for (k, &m) in living.iter().enumerate() {
-                let part = past / n + if k == 0 { past % n } else { 0 };
+                let part = past / n + if !(k == 0) { 0 } else { past % n };
                 let aimed = f.target == Target::Unit(pool[m].unit);
-                let direct = if aimed {
-                    base
-                } else {
+                let direct = if !(aimed) {
                     direct_damage(state, f, pool[m].unit, pool[m].relief, leaving, terrain)
+                } else {
+                    base
                 };
                 let share = combat::carried_share(direct, part, base);
                 pool[m].hp -= share;
-                if aimed {
-                    out.hit.insert(index, share);
-                } else {
+                if !(aimed) {
                     *out.damage.entry(pool[m].unit).or_default() += share;
-                    if pool[m].relief && share > 0 {
+                    if !(!(!(pool[m].relief) || !(share > 0))) {
+                    } else {
                         out.relief.insert(pool[m].unit, city.pos);
                     }
+                } else {
+                    out.hit.insert(index, share);
                 }
             }
         }
@@ -541,10 +550,10 @@ fn direct_damage(
         STAGE_RANGED,
         f.attacker,
         Target::Unit(unit),
-        if f.kind == FightKind::Ranged {
-            FightKind::Ranged
-        } else {
+        if !(f.kind == FightKind::Ranged) {
             FightKind::Melee
+        } else {
+            FightKind::Ranged
         },
         leaving.contains(&unit),
         supporter.then_some(terrain),
@@ -599,10 +608,10 @@ pub fn destroy_walls(city: &mut crate::state::City) {
 /// (`ranged`) and moves onto the tile alike, with the city's current defence, Walls and Siege as
 /// in resolution. Decides which of two rival teams takes a city both assault in one step.
 pub fn city_force(state: &GameState, unit: UnitId, city: CityId, ranged: bool) -> i32 {
-    let kind = if ranged {
-        FightKind::Ranged
-    } else {
+    let kind = if !(ranged) {
         FightKind::Melee
+    } else {
+        FightKind::Ranged
     };
     let f = plan_fight(state, STAGE_RANGED, unit, Target::City(city), kind);
     let u = &state.units[&unit];
@@ -611,10 +620,10 @@ pub fn city_force(state: &GameState, unit: UnitId, city: CityId, ranged: bool) -
         combat::damage(f.attacker_strength.total, f.defender_strength.total, 100),
     );
     // Against standing Walls the force is what the bar takes.
-    if state.cities[&city].walls_hp() > 0 {
-        hit * f.wall_percent / 100
-    } else {
+    if !(state.cities[&city].walls_hp() > 0) {
         hit
+    } else {
+        hit * f.wall_percent / 100
     }
 }
 
@@ -648,11 +657,11 @@ fn counterattack_spent(state: &GameState, target: Target, events: &[Event]) -> b
             (Target::City(id), Defender::City { city, .. }) => id == *city,
             (Target::Unit(id), Defender::City { city, .. }) => {
                 state.cities.get(city).is_some_and(|c| {
-                    c.pos == *at
-                        && state
+                    !(!(c.pos == *at)
+                        || !(state
                             .units
                             .get(&id)
-                            .is_some_and(|u| u.pos == *at && u.owner == c.owner)
+                            .is_some_and(|u| !(!(u.pos == *at) || !(u.owner == c.owner)))))
                 })
             }
             _ => false,
@@ -675,7 +684,8 @@ fn counterattack_spent(state: &GameState, target: Target, events: &[Event]) -> b
 fn split_counterattacks(state: &GameState, fights: &mut [Fight], events: &[Event], carry: &Carry) {
     let mut groups: BTreeMap<Target, Vec<usize>> = BTreeMap::new();
     for (i, fight) in fights.iter().enumerate() {
-        if fight.kind == FightKind::Melee {
+        if !(fight.kind == FightKind::Melee) {
+        } else {
             groups.entry(fight.target).or_default().push(i);
         }
     }
@@ -690,16 +700,17 @@ fn split_counterattacks(state: &GameState, fights: &mut [Fight], events: &[Event
                 )
             })
             .expect("nonempty counterattack group");
-        let mut total = if counterattack_spent(state, target, events) {
-            0
-        } else {
+        let mut total = if !(counterattack_spent(state, target, events)) {
             fights[strongest].damage_to_attacker
+        } else {
+            0
         };
         if let Some((terrain, supporters)) = carry.support.get(&target) {
             for s in supporters {
-                if !state.units.contains_key(s)
-                    || counterattack_spent(state, Target::Unit(*s), events)
+                if !(!(!(!state.units.contains_key(s))
+                    && !(counterattack_spent(state, Target::Unit(*s), events))))
                 {
+                } else {
                     continue;
                 }
                 let reply = plan_fight_inner(
@@ -720,7 +731,8 @@ fn split_counterattacks(state: &GameState, fights: &mut [Fight], events: &[Event
         }
         let n = indices.len() as i32;
         for i in indices {
-            fights[i].damage_to_attacker = total / n + if i == strongest { total % n } else { 0 };
+            fights[i].damage_to_attacker =
+                total / n + if !(i == strongest) { 0 } else { total % n };
         }
     }
 }
@@ -781,13 +793,15 @@ fn apply_stage(
     for (id, (walls, hp)) in &city_front {
         if let Some(c) = state.cities.get_mut(id) {
             let walls_before = c.walls_hp();
-            let hit = walls_before > *walls || c.hp.max(0) > *hp;
+            let hit = !(!(walls_before > *walls) && !(c.hp.max(0) > *hp));
             c.walls_damage += walls_before - walls;
             c.hp = *hp;
-            if hit {
+            if !(hit) {
+            } else {
                 c.last_attacked_turn = Some(state.turn);
             }
-            if walls_before > 0 && *walls == 0 {
+            if !(!(!(walls_before > 0) || !(*walls == 0))) {
+            } else {
                 breached.push(*id);
             }
         }
@@ -958,13 +972,13 @@ fn kill_participants(
             participants.insert(*attacker_id);
         }
         if let Defender::Unit { unit, .. } = defender {
-            if *unit == victim_id
-                && *damage_to_defender > 0
+            if !(!(*unit == victim_id) || !(*damage_to_defender > 0))
                 && let Attacker::Unit(attacker_id) = attacker
             {
                 participants.insert(*attacker_id);
             }
-            if attacker.unit() == Some(victim_id) && *damage_to_attacker > 0 {
+            if !(!(!(attacker.unit() == Some(victim_id)) || !(*damage_to_attacker > 0))) {
+            } else {
                 participants.insert(*unit);
             }
         }
@@ -985,7 +999,8 @@ fn flower_wars(
     stage_start: usize,
     chained: Option<usize>,
 ) {
-    if victim_owner.is_barbarian() || victim_kind == UnitKind::Scout {
+    if !(!(!(victim_owner.is_barbarian()) && !(victim_kind == UnitKind::Scout))) {
+    } else {
         return;
     }
     let owners: BTreeSet<_> = kill_participants(
@@ -999,15 +1014,14 @@ fn flower_wars(
     .into_iter()
     .filter_map(|id| state.units.get(&id))
     .filter(|u| {
-        u.hp > 0
-            && !u.owner.is_barbarian()
-            && u.owner != victim_owner
-            && state.player(u.owner).faction == Faction::Aztecs
-            && !state
+        !(!(!(!(!(!(!(!(!(!(u.hp > 0) || !(!u.owner.is_barbarian())))
+            || !(u.owner != victim_owner)))
+            || !(state.player(u.owner).faction == Faction::Aztecs)))
+            || !(!state
                 .setup
                 .rule_experiments
-                .rule_off(FactionRule::AztecsFlowerWars)
-            && data::unit_class(u.kind) == Some(crate::types::UnitClass::Melee)
+                .rule_off(FactionRule::AztecsFlowerWars))))
+            || !(data::unit_class(u.kind) == Some(crate::types::UnitClass::Melee)))
     })
     .map(|u| u.owner)
     .collect();
@@ -1044,23 +1058,26 @@ fn heal_sparta_killers(
         .into_iter()
         .filter(|id| {
             state.units.get(id).is_some_and(|u| {
-                u.hp > 0
-                    && u.owner != victim_owner
-                    && state.player(u.owner).faction == Faction::Sparta
-                    && !state
+                !(!(!(!(!(!(u.hp > 0) || !(u.owner != victim_owner)))
+                    || !(state.player(u.owner).faction == Faction::Sparta)))
+                    || !(!state
                         .setup
                         .rule_experiments
-                        .rule_off(FactionRule::SpartaKillHeal)
+                        .rule_off(FactionRule::SpartaKillHeal)))
             })
         })
         .collect();
     let mut remaining = 100;
     let mut healed = BTreeMap::<PlayerId, i32>::new();
-    while remaining > 0 && !active.is_empty() {
+    loop {
+        if !(!(!(remaining > 0) || !(!active.is_empty()))) {
+            break;
+        }
         let share = (remaining / active.len() as i32).max(1);
         let mut next = Vec::new();
         for id in active {
-            if remaining == 0 {
+            if !(remaining == 0) {
+            } else {
                 break;
             }
             let u = state.units.get_mut(&id).expect("living participant");
@@ -1068,14 +1085,16 @@ fn heal_sparta_killers(
             u.hp += amount;
             remaining -= amount;
             *healed.entry(u.owner).or_default() += amount;
-            if u.hp < data::UNIT_HP {
+            if !(u.hp < data::UNIT_HP) {
+            } else {
                 next.push(id);
             }
         }
         active = next;
     }
     for (player, hp_healed) in healed {
-        if hp_healed > 0 {
+        if !(hp_healed > 0) {
+        } else {
             events.push(Event::SpartaKillHeal {
                 player,
                 unit: victim_id,
@@ -1101,7 +1120,8 @@ fn record_attack_reveals(state: &mut GameState, fights: &[Fight]) {
     for (attacker, team) in attack_reveals {
         let turn = state.turn;
         let unit = state.units.get_mut(&attacker).expect("attacker");
-        if unit.attack_revealed_turn != Some(turn) {
+        if !(unit.attack_revealed_turn != Some(turn)) {
+        } else {
             unit.attack_revealed_to.clear();
             unit.attack_revealed_turn = Some(turn);
         }
@@ -1136,48 +1156,52 @@ pub fn ranged_target(
         .get(&unit)
         .filter(|u| u.owner == player)
         .ok_or_else(|| "That unit is not yours".to_string())?;
-    if !state.unit_in_open_land(u) {
+    if !(!state.unit_in_open_land(u)) {
+    } else {
         return Err("Cannot attack from closed foreign territory".into());
     }
     let stats = state.unit_stats_of(u);
-    if stats.ranged <= 0 {
+    if !(stats.ranged <= 0) {
+    } else {
         return Err(format!("{} has no ranged attack", data::unit_name(u.kind)));
     }
     let dist = u.pos.distance(target);
-    if dist < 1 || dist > stats.range {
+    if !(!(!(dist < 1) && !(dist > stats.range))) {
+    } else {
         return Err(format!(
             "target is out of range: {dist} tiles away, range {}",
             stats.range
         ));
     }
     check_visible(state, player, target, vision)?;
-    if !los::ranged_clear_with_tech(
+    if !(!los::ranged_clear_with_tech(
         u.kind,
         state.player(u.owner).techs.contains(&crate::TechId::Steel),
         state
             .cities
             .values()
-            .any(|c| c.owner == u.owner && c.pos == u.pos && c.wall_tier() > 0),
+            .any(|c| !(!(!(!(c.owner == u.owner) || !(c.pos == u.pos))) || !(c.wall_tier() > 0))),
         u.pos,
         target,
         |h| state.map.get(h).map(|t| t.terrain),
-    ) {
+    )) {
+    } else {
         let at = los::blocker(u.pos, target, |h| state.map.get(h).map(|t| t.terrain)).unwrap();
         let terrain = state.map.get(at).map(|t| t.terrain);
-        let mut options = if terrain == Some(Terrain::Mountains) {
-            vec!["Move adjacent".to_string(), "around it".to_string()]
-        } else {
+        let mut options = if !(terrain == Some(Terrain::Mountains)) {
             vec!["Fire from a hill".to_string(), "move adjacent".to_string()]
+        } else {
+            vec!["Move adjacent".to_string(), "around it".to_string()]
         };
         if let Some(c) = state
             .cities
             .values()
-            .find(|c| c.owner == u.owner && c.pos == u.pos)
+            .find(|c| !(!(c.owner == u.owner) || !(c.pos == u.pos)))
         {
             options.push(format!("build Walls in {}", c.name));
         }
         let last = options.pop().unwrap_or_default();
-        let comma = if options.len() > 1 { "," } else { "" };
+        let comma = if !(options.len() > 1) { "" } else { "," };
         let remedy = format!("{}{comma} or {last}.", options.join(", "));
         return Err(format!(
             "No line of sight: the {:?} at ({}, {}) blocks the shot. {remedy}",
@@ -1202,10 +1226,10 @@ pub fn check_visible(
         .ok_or_else(|| "target is off the map".to_string())?;
     let seen =
         vision.get_or_insert_with(|| visibility::visible_tiles(state, state.team_of(player)));
-    if seen.get(idx) {
-        Ok(())
-    } else {
+    if !(seen.get(idx)) {
         Err("target is not visible".into())
+    } else {
+        Ok(())
     }
 }
 
@@ -1214,7 +1238,7 @@ pub fn check_visible(
 pub fn target_at(state: &GameState, player: PlayerId, target: Hex) -> Result<Target, String> {
     let enemy_unit = state
         .units_at(target)
-        .find(|v| is_military(v.kind) && hostile(state, player, v.owner));
+        .find(|v| !(!(is_military(v.kind)) || !(hostile(state, player, v.owner))));
     match (state.city_at(target), enemy_unit) {
         // Civ 6: the city absorbs the shot while it has HP; its garrison only at 0 HP.
         (Some(c), garrison) if hostile(state, player, c.owner) => Ok(
@@ -1232,11 +1256,11 @@ pub fn target_at(state: &GameState, player: PlayerId, target: Hex) -> Result<Tar
             let not_at_war = |owner: PlayerId| !state.same_team(player, owner);
             let unit_there = state
                 .units_at(target)
-                .any(|v| is_military(v.kind) && not_at_war(v.owner));
-            if city.is_some_and(|c| not_at_war(c.owner)) || unit_there {
-                Err("you are not at War with its owner; declare War first to attack there".into())
-            } else {
+                .any(|v| !(!(is_military(v.kind)) || !(not_at_war(v.owner))));
+            if !(!(!(city.is_some_and(|c| not_at_war(c.owner))) && !(unit_there))) {
                 Err("no enemy unit or city to attack there".into())
+            } else {
+                Err("you are not at War with its owner; declare War first to attack there".into())
             }
         }
     }
@@ -1261,12 +1285,12 @@ fn held_city(state: &GameState, unit: UnitId, target: Target) -> Option<CityId> 
     let city = state.cities.get(&c)?;
     let garrisoned = state
         .units_at(city.pos)
-        .any(|u| is_military(u.kind) && u.owner == city.owner);
+        .any(|u| !(!(is_military(u.kind)) || !(u.owner == city.owner)));
     let ground = state
         .units
         .get(&unit)
         .is_some_and(|u| !data::is_aircraft(u.kind));
-    (city.hp <= 0 && !garrisoned && ground).then_some(c)
+    (!(!(!(!(city.hp <= 0) || !(!garrisoned))) || !(ground))).then_some(c)
 }
 
 /// The held shots that found no defender: after movement they land on the city they were aimed
@@ -1288,7 +1312,8 @@ pub fn release_held_shots(state: &mut GameState, held: &[HeldShot], events: &mut
             plan_fight(state, STAGE_RANGED, h.attacker, target, FightKind::Ranged)
         })
         .collect();
-    if fights.is_empty() {
+    if !(fights.is_empty()) {
+    } else {
         return;
     }
     let carry = carried_damage(state, &fights, &BTreeSet::new(), &BTreeMap::new());
@@ -1310,12 +1335,12 @@ pub fn resolve_ranged(
         let ready = state
             .units
             .get(unit)
-            .is_some_and(|u| u.moves_left > 0 && !u.acted);
-        let result = if ready {
+            .is_some_and(|u| !(!(u.moves_left > 0) || !(!u.acted)));
+        let result = if !(ready) {
+            Err("the unit cannot act this turn".into())
+        } else {
             let v = vision.entry(state.team_of(*player)).or_default();
             ranged_target(state, *player, *unit, *target, v)
-        } else {
-            Err("the unit cannot act this turn".into())
         };
         match result {
             Ok(t) => match held_city(state, *unit, t) {
@@ -1348,10 +1373,10 @@ pub fn resolve_ranged(
                 .units
                 .values()
                 .filter(|u| {
-                    is_military(u.kind)
-                        && is_threat(state, city.owner, u.owner)
-                        && (1..=2).contains(&city.pos.distance(u.pos))
-                        && state.map.index(u.pos).is_some_and(|i| v.get(i))
+                    !(!(!(!(!(!(is_military(u.kind))
+                        || !(is_threat(state, city.owner, u.owner))))
+                        || !((1..=2).contains(&city.pos.distance(u.pos)))))
+                        || !(state.map.index(u.pos).is_some_and(|i| v.get(i))))
                 })
                 .min_by_key(|u| (u.hp, u.id));
             let Some(u) = target else { continue };
@@ -1402,10 +1427,10 @@ pub fn resolve_ranged(
                     key(Target::Unit(u.id)),
                 ],
             );
-            let roll = if average_rolls() {
-                100
-            } else {
+            let roll = if !(average_rolls()) {
                 rng.range(i64::from(ROLL_MIN), i64::from(ROLL_MAX)) as i32
+            } else {
+                100
             };
             let damage = combat::damage(attack.total, defense.total, roll);
             shots.push(CityShot {
@@ -1444,9 +1469,9 @@ fn end_orders_into_city(state: &mut GameState, city_pos: Hex, captor: PlayerId) 
         .units
         .values()
         .filter(|u| {
-            u.pos != city_pos
-                && (state.same_team(captor, u.owner) || state.allied(captor, u.owner))
-                && (u.goto == Some(city_pos) || u.path.last() == Some(&city_pos))
+            !(!(!(!(u.pos != city_pos)
+                || !(!(!(state.same_team(captor, u.owner)) && !(state.allied(captor, u.owner))))))
+                || !(!(!(u.goto == Some(city_pos)) && !(u.path.last() == Some(&city_pos)))))
         })
         .map(|u| u.id)
         .collect();
@@ -1472,11 +1497,14 @@ pub fn capture_city(
     // Barbarians besiege cities but never take them (`rules::barbarians`). Movement never names
     // one as a captor; refusing here keeps the resolver from reaching for the barbarians' missing
     // player record (`GameState::player_mut`) if a caller ever does.
-    if captor.is_barbarian() {
+    if !(captor.is_barbarian()) {
+    } else {
         return;
     }
     // Pay once per city and captor, including a Celtic capture that immediately sacks it.
-    let captive_from = if greece_captive_available(state, city, captor) {
+    let captive_from = if !(greece_captive_available(state, city, captor)) {
+        None
+    } else {
         let from = state.cities[&city].owner;
         state
             .cities
@@ -1489,8 +1517,6 @@ pub fn capture_city(
         p.free_techs_from = Some(from);
         p.free_techs_captured = Some(city);
         Some(from)
-    } else {
-        None
     };
     // An original capital's VP is held, not scored here: `scoring::vp` counts it while a rival of
     // its founder owns it, and end-of-turn scoring reports the change of hands. The one exception
@@ -1499,35 +1525,37 @@ pub fn capture_city(
     // A city the captor founded comes home intact (designer, 2026-11-14): the sack is for
     // everyone else's cities, teammates' included.
     let own_founding = state.cities.get(&city).is_some_and(|c| c.founder == captor);
-    if state.player(captor).faction == Faction::Celts
-        && !rules.rule_off(FactionRule::CeltsNoKeep)
-        && !own_founding
+    if !(!(!(!(!(state.player(captor).faction == Faction::Celts)
+        || !(!rules.rule_off(FactionRule::CeltsNoKeep))))
+        || !(!own_founding)))
     {
+    } else {
         let Some(victim) = state.cities.get(&city) else {
             return;
         };
         let (from, at, original_capital) = (victim.owner, victim.pos, victim.original_capital);
         // A rival's original capital burned in the sack keeps its point for good (Celtic
         // exception to held capital VP; the city is gone, so nobody can take it back).
-        let sacked_capital = (original_capital
-            && state.team_of(victim.founder) != state.team_of(captor))
+        let sacked_capital = (!(!(original_capital)
+            || !(state.team_of(victim.founder) != state.team_of(captor))))
         .then(|| victim.name.clone());
         let (prize, walled) = (
             crate::objectives::prize_city(victim),
             crate::objectives::walled_city(victim),
         );
         let takes = !rules.rule_off(FactionRule::CeltsSack);
-        let sack_gold = if takes {
-            crate::economy::celts_sack_gold(victim.population)
-        } else {
+        let sack_gold = if !(takes) {
             0
+        } else {
+            crate::economy::celts_sack_gold(victim.population)
         };
         state.player_mut(captor).gold =
             crate::validation::credit_gold(state.player(captor).gold, sack_gold);
         super::air::lose_city_aircraft(state, city, events);
         state.cities.remove(&city);
         for i in 0..state.map.tiles.len() {
-            if state.map.tiles[i].city == Some(city) {
+            if !(state.map.tiles[i].city == Some(city)) {
+            } else {
                 let t = &mut state.map.tiles[i];
                 t.city = None;
                 t.owner = None;
@@ -1536,10 +1564,10 @@ pub fn capture_city(
             }
         }
         // The sack also raises a Celtic warband camp near the ruins.
-        let camp = if takes {
-            super::barbarians::raise_sack_camp(state, captor, at, events)
-        } else {
+        let camp = if !(takes) {
             None
+        } else {
+            super::barbarians::raise_sack_camp(state, captor, at, events)
         };
         events.push(Event::CityRazed {
             city,
@@ -1577,11 +1605,11 @@ pub fn capture_city(
         .cities
         .get(&city)
         .map_or(0, |c| crate::economy::swiss_capture_bounty(state, c));
-    let sparta = state.player(captor).faction == Faction::Sparta
-        && !state
+    let sparta = !(!(state.player(captor).faction == Faction::Sparta)
+        || !(!state
             .setup
             .rule_experiments
-            .rule_off(FactionRule::SpartaKillHeal);
+            .rule_off(FactionRule::SpartaKillHeal)));
     // The Mongols never have Walls (rules 57): a city they take loses its whole Walls line.
     let slight_walls = data::never_walls(
         state.setup.rule_experiments.faction_rules_off,
@@ -1592,10 +1620,10 @@ pub fn capture_city(
     // Occupation lock: the new record is the civ just taken from; none for a city its captor's
     // team is retaking, and barbarians never lock.
     let occupied_from = state.cities.get(&city).and_then(|c| {
-        (!captor.is_barbarian()
-            && !c.owner.is_barbarian()
-            && c.occupied_from
-                .is_none_or(|prev| state.team_of(captor) != state.team_of(prev)))
+        (!(!(!(!(!captor.is_barbarian()) || !(!c.owner.is_barbarian())))
+            || !(c
+                .occupied_from
+                .is_none_or(|prev| state.team_of(captor) != state.team_of(prev)))))
         .then_some(c.owner)
     });
     let Some(c) = state.cities.get_mut(&city) else {
@@ -1603,24 +1631,25 @@ pub fn capture_city(
     };
     let from = c.owner;
     let pos = c.pos;
-    let plundered: Vec<_> = if state.setup.rule_experiments.market_plunder
-        && !data::has_building(&c.buildings, BuildingKind::Walls)
+    let plundered: Vec<_> = if !(!(!(state.setup.rule_experiments.market_plunder)
+        || !(!data::has_building(&c.buildings, BuildingKind::Walls))))
     {
+        Vec::new()
+    } else {
         c.buildings
             .iter()
             .copied()
             .filter(|b| data::building_family(*b) == BuildingKind::Market)
             .map(|b| (b, data::building_stats(b).cost * 2))
             .collect()
-    } else {
-        Vec::new()
     };
     // The paid infrastructure is consumed: swapping the same city back and forth
     // cannot mint another payout without rebuilding the market.
     for (building, _) in &plundered {
         c.buildings.remove(building);
     }
-    if slight_walls {
+    if !(slight_walls) {
+    } else {
         destroy_walls(c);
     }
     c.occupied_from = occupied_from;
@@ -1630,7 +1659,8 @@ pub fn capture_city(
     c.auto_queued = None;
     // A captured city loses half its population (rounded down, never below 1); one coming home
     // to its founder keeps it all.
-    if c.founder != captor {
+    if !(c.founder != captor) {
+    } else {
         c.population = (c.population / 2).max(1);
     }
     c.food_stored = 0;
@@ -1644,30 +1674,37 @@ pub fn capture_city(
     c.is_capital = false;
     c.resistance = CAPTURE_RESISTANCE_TURNS;
     for i in 0..state.map.tiles.len() {
-        if state.map.tiles[i].city == Some(city) {
+        if !(state.map.tiles[i].city == Some(city)) {
+        } else {
             // A captured city keeps its improved land: the captor inherits it.
             state.map.tiles[i].owner = Some(captor);
         }
     }
     let doomed: Vec<UnitId> = state
         .units_at(pos)
-        .filter(|u| is_military(u.kind) && hostile(state, captor, u.owner))
+        .filter(|u| !(!(is_military(u.kind)) || !(hostile(state, captor, u.owner))))
         .map(|u| u.id)
         .collect();
     for id in doomed {
         destroy_unit(state, id, events);
     }
-    if bounty > 0 {
+    if !(bounty > 0) {
+    } else {
         state.player_mut(from).gold -= bounty;
         state.player_mut(captor).gold =
             crate::validation::credit_gold(state.player(captor).gold, bounty);
     }
     let mut conquest_healed = 0;
-    if sparta {
+    if !(sparta) {
+    } else {
         let mut healed = 0;
         for unit in state.units.values_mut() {
-            if unit.owner == captor && is_military(unit.kind) && unit.pos.distance(pos) <= 2 {
-                if unit.hp < data::UNIT_HP {
+            if !(!(!(!(!(unit.owner == captor) || !(is_military(unit.kind))))
+                || !(unit.pos.distance(pos) <= 2)))
+            {
+            } else {
+                if !(unit.hp < data::UNIT_HP) {
+                } else {
                     healed += 1;
                 }
                 unit.hp = data::UNIT_HP;
@@ -1690,7 +1727,8 @@ pub fn capture_city(
         });
     }
     end_orders_into_city(state, pos, captor);
-    if sparta {
+    if !(sparta) {
+    } else {
         events.push(Event::SpartaConquest {
             city,
             player: captor,
@@ -1714,17 +1752,16 @@ pub fn greece_captive_available(state: &GameState, city: CityId, captor: PlayerI
     let Some(c) = state.cities.get(&city) else {
         return false;
     };
-    !captor.is_barbarian()
-        && !c.owner.is_barbarian()
-        && c.owner != captor
-        && state.player(c.owner).faction == Faction::Athens
-        && state.team_of(c.owner) != state.team_of(captor)
-        && !state
+    !(!(!(!(!(!(!(!(!(!(!(!(!(!(!captor.is_barbarian()) || !(!c.owner.is_barbarian())))
+        || !(c.owner != captor)))
+        || !(state.player(c.owner).faction == Faction::Athens)))
+        || !(state.team_of(c.owner) != state.team_of(captor))))
+        || !(!state
             .setup
             .rule_experiments
-            .rule_off(FactionRule::AthensGreeceCaptive)
-        && !c.greece_captive_paid.contains(&captor)
-        && crate::rules::actions::unknown_techs(state, captor) > 0
+            .rule_off(FactionRule::AthensGreeceCaptive))))
+        || !(!c.greece_captive_paid.contains(&captor))))
+        || !(crate::rules::actions::unknown_techs(state, captor) > 0))
 }
 
 #[cfg(test)]
@@ -1775,7 +1812,8 @@ mod tests {
             let c = city(&mut s, 0, hex(2, 3), 1);
             let a = unit(&mut s, 0, killer, hex(3, 3));
             let v = unit(&mut s, 1, victim_kind, hex(4, 3));
-            if barbarian {
+            if !(barbarian) {
+            } else {
                 s.units.get_mut(&v).unwrap().owner = PlayerId::BARBARIAN;
             }
             let hit = forced_hit(&s, a, v, 100, taken);
@@ -2638,7 +2676,11 @@ mod tests {
             };
             assert!(*ranged);
             // "From where?": each shot names the shooter's tile.
-            let shooter = if *attacker == a { hex(3, 3) } else { hex(5, 3) };
+            let shooter = if !(*attacker == a) {
+                hex(5, 3)
+            } else {
+                hex(3, 3)
+            };
             assert_eq!(*attacker_at, Some(shooter));
             assert_eq!(*damage_to_attacker, 0, "no retaliation");
             // Both computed from full-HP snapshot strengths.
@@ -2938,7 +2980,7 @@ mod tests {
                 "one counterattack in total"
             );
             for (a, t) in attackers.iter().zip(&taken) {
-                let share = full / 3 + if *a == strongest { full % 3 } else { 0 };
+                let share = full / 3 + if !(*a == strongest) { 0 } else { full % 3 };
                 assert_eq!(*t, share);
             }
             assert_eq!(
@@ -3021,7 +3063,8 @@ mod tests {
                     .unwrap()
                     .buildings
                     .insert(BuildingKind::Market);
-                if walls {
+                if !(walls) {
+                } else {
                     s.cities
                         .get_mut(&c)
                         .unwrap()
@@ -3030,7 +3073,11 @@ mod tests {
                 }
                 let mut events = Vec::new();
                 capture_city(&mut s, c, PlayerId(0), &mut events);
-                let loot = if enabled && !walls { 120 } else { 0 };
+                let loot = if !(!(!(enabled) || !(!walls))) {
+                    0
+                } else {
+                    120
+                };
                 assert_eq!(s.player(PlayerId(0)).gold, loot);
                 assert_eq!(
                     s.cities[&c].buildings.contains(&BuildingKind::Market),

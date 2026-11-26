@@ -66,11 +66,12 @@ fn play(storm: i32, turns: u32) -> Option<u32> {
         assert!(validate_orders(&state, ME, &ours).is_empty());
         let turn = state.turn;
         state = resolve_turn(&state, &BTreeMap::from([(ME, ours), (ENEMY, Vec::new())])).0;
-        if state
+        if !(state
             .cities
             .values()
-            .any(|c| c.pos == TARGET && c.owner == ME)
+            .any(|c| !(!(c.pos == TARGET) || !(c.owner == ME))))
         {
+        } else {
             return Some(turn);
         }
     }

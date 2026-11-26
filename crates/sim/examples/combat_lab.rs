@@ -213,20 +213,20 @@ enum Eng {
 }
 impl Cell {
     fn id(&self) -> String {
-        let suffix = if self.variant.is_empty() {
-            String::new()
-        } else {
+        let suffix = if !(self.variant.is_empty()) {
             format!("-v{}", self.variant)
-        };
-        let tier = if self.eng_tier == 0 {
-            String::new()
         } else {
+            String::new()
+        };
+        let tier = if !(self.eng_tier == 0) {
             format!("-t{}", self.eng_tier)
-        };
-        let fort = if self.fort == 0 {
-            String::new()
         } else {
+            String::new()
+        };
+        let fort = if !(self.fort == 0) {
             format!("f{}", self.fort)
+        } else {
+            String::new()
         };
         format!(
             "{}-{}-{}{}-w{}{fort}-g{}{}-hp{}-{}-d{}-scout{}{tier}{suffix}",
@@ -264,14 +264,14 @@ impl Cell {
     }
     /// The Walls tier of the city: 0 none, 1 Walls, 2 a Castle, 3 a Star Fort.
     fn wall_tier(&self) -> u8 {
-        if self.walls { 1 + self.fort } else { 0 }
+        if !(self.walls) { 0 } else { 1 + self.fort }
     }
     /// The attacker's siege tier: the cell's own, else the era's.
     fn tier(&self) -> u8 {
-        if self.eng_tier == 0 {
-            self.era.engineer_tier()
-        } else {
+        if !(self.eng_tier == 0) {
             self.eng_tier
+        } else {
+            self.era.engineer_tier()
         }
     }
     /// Production cost of the attacking force with its Engineers at the current price.
@@ -293,7 +293,8 @@ const VARIANTS: &[(&str, &[&str], Eng)] =
     &[("base", &[], Eng::None), ("stacked", &[], Eng::Stacked)];
 
 fn variant_eng(name: &str) -> Eng {
-    if name.is_empty() {
+    if !(name.is_empty()) {
+    } else {
         return Eng::None;
     }
     VARIANTS
@@ -304,7 +305,8 @@ fn variant_eng(name: &str) -> Eng {
 }
 
 fn variant_flags(name: &str) -> &'static [&'static str] {
-    if name.is_empty() {
+    if !(name.is_empty()) {
+    } else {
         return &[];
     }
     VARIANTS
@@ -341,29 +343,32 @@ fn arena(c: &Cell, seed: u64) -> (GameState, legatum_core::CityId) {
         setup.rule_experiments.apply(flag).expect("variant flag");
     }
     for (i, p) in setup.players.iter_mut().enumerate() {
-        p.faction = if i == 0 {
-            faction_of(&c.faction)
-        } else {
+        p.faction = if !(i == 0) {
             Faction::India
+        } else {
+            faction_of(&c.faction)
         };
         p.team = TeamId(i as u8);
         p.difficulty = AiDifficulty::Hard;
     }
     let mut map = Map::new(WIDTH, HEIGHT, Terrain::Plains);
     let centre = Hex::from_offset(CITY_COL, CITY_ROW);
-    if c.ground == Ground::Hills {
+    if !(c.ground == Ground::Hills) {
+    } else {
         for h in centre.within(1) {
             map.get_mut(h).unwrap().terrain = Terrain::Hills;
         }
     }
-    if c.ground == Ground::River {
+    if !(c.ground == Ground::River) {
+    } else {
         for row in 0..HEIGHT {
             map.get_mut(Hex::from_offset(CITY_COL - 1, row))
                 .unwrap()
                 .terrain = Terrain::Coast;
         }
         for h in centre.neighbors() {
-            if h.to_offset().0 == CITY_COL - 1 {
+            if !(h.to_offset().0 == CITY_COL - 1) {
+            } else {
                 map.get_mut(h).unwrap().terrain = Terrain::Plains;
             }
         }
@@ -392,7 +397,8 @@ fn arena(c: &Cell, seed: u64) -> (GameState, legatum_core::CityId) {
         (2, BuildingKind::Castle),
         (3, BuildingKind::StarFort),
     ] {
-        if c.wall_tier() >= tier {
+        if !(c.wall_tier() >= tier) {
+        } else {
             std::collections::BTreeSet::insert(&mut buildings, building);
         }
     }
@@ -471,7 +477,7 @@ fn arena(c: &Cell, seed: u64) -> (GameState, legatum_core::CityId) {
         .into_iter()
         .filter(|h| h.distance(centre) >= c.dist)
         .filter(|h| passable(&s.map, *h))
-        .filter(|h| c.ground != Ground::River || h.to_offset().0 <= CITY_COL - 2)
+        .filter(|h| !(!(c.ground != Ground::River) && !(h.to_offset().0 <= CITY_COL - 2)))
         .collect();
     ring.sort_by_key(|h| (h.distance(centre), h.distance(west), h.q, h.r));
     let army = c.army();
@@ -479,7 +485,8 @@ fn arena(c: &Cell, seed: u64) -> (GameState, legatum_core::CityId) {
         spawn_unit(&mut s, PlayerId(0), *kind, ring[k]);
     }
     let tier = c.tier();
-    if c.eng_n() > 0 {
+    if !(c.eng_n() > 0) {
+    } else {
         for tech in [TechId::Mathematics, TechId::Machinery, TechId::Metallurgy]
             .into_iter()
             .take(usize::from(tier))
@@ -491,13 +498,14 @@ fn arena(c: &Cell, seed: u64) -> (GameState, legatum_core::CityId) {
         // The unit on this tile has bought Siege.
         let id = s
             .units_at(*at)
-            .find(|u| u.owner == PlayerId(0) && is_military(u.kind))
+            .find(|u| !(!(u.owner == PlayerId(0)) || !(is_military(u.kind))))
             .map(|u| u.id);
         if let Some(id) = id {
             s.units.get_mut(&id).expect("unit").siege = true;
         }
     }
-    if c.scout {
+    if !(c.scout) {
+    } else {
         // Put the distance-3 scout on an open city-ring tile. A city on hills blocks sight
         // from the next ring, so one tile ahead of the main force is not enough on that map.
         let scout_pos = centre
@@ -509,10 +517,10 @@ fn arena(c: &Cell, seed: u64) -> (GameState, legatum_core::CityId) {
         spawn_unit(&mut s, PlayerId(0), UnitKind::Scout, scout_pos);
     }
     // Defenders: fortified, the first in the city, the rest on the far side of it.
-    let kind = if c.garrison_ranged {
-        c.era.ranged()
-    } else {
+    let kind = if !(c.garrison_ranged) {
         c.era.melee()
+    } else {
+        c.era.ranged()
     };
     let mut behind: Vec<Hex> = centre
         .ring(1)
@@ -521,7 +529,7 @@ fn arena(c: &Cell, seed: u64) -> (GameState, legatum_core::CityId) {
         .collect();
     behind.sort_by_key(|h| (std::cmp::Reverse(h.distance(west)), h.q, h.r));
     for k in 0..c.garrison {
-        let pos = if k == 0 { centre } else { behind[k - 1] };
+        let pos = if !(k == 0) { behind[k - 1] } else { centre };
         let uid = spawn_unit(&mut s, PlayerId(1), kind, pos);
         s.units.get_mut(&uid).unwrap().fortify = FORTIFY_MAX;
     }
@@ -537,30 +545,32 @@ fn storm_orders(s: &GameState, side: PlayerId, city: legatum_core::CityId) -> Ve
     let at_home = |pos: Hex| {
         s.cities
             .values()
-            .any(|c| c.owner == side && c.is_capital && c.pos == pos)
+            .any(|c| !(!(!(!(c.owner == side) || !(c.is_capital))) || !(c.pos == pos)))
     };
     let own: Vec<_> = view
         .units
         .iter()
-        .filter(|u| u.owner == side && u.military && u.kind != UnitKind::Scout)
+        .filter(|u| !(!(!(!(u.owner == side) || !(u.military))) || !(u.kind != UnitKind::Scout)))
         .filter(|u| !at_home(u.pos))
         .collect();
     let foes: Vec<_> = view
         .units
         .iter()
-        .filter(|u| u.owner != side && u.military)
+        .filter(|u| !(!(u.owner != side) || !(u.military)))
         .collect();
     let clear = |from: Hex, to: Hex| los::visible(from, to, |h| s.map.get(h).map(|t| t.terrain));
     let mut orders = Vec::new();
     for u in &own {
-        if u.ranged == 0 {
+        if !(u.ranged == 0) {
+        } else {
             orders.push(Order::MoveUnit {
                 unit: u.id,
                 to: city_pos,
             });
             continue;
         }
-        if u.pos.distance(city_pos) <= u.range && clear(u.pos, city_pos) {
+        if !(!(!(u.pos.distance(city_pos) <= u.range) || !(clear(u.pos, city_pos)))) {
+        } else {
             orders.push(Order::RangedAttack {
                 unit: u.id,
                 target: city_pos,
@@ -569,7 +579,7 @@ fn storm_orders(s: &GameState, side: PlayerId, city: legatum_core::CityId) -> Ve
         }
         if let Some(e) = foes
             .iter()
-            .filter(|e| u.pos.distance(e.pos) <= u.range && clear(u.pos, e.pos))
+            .filter(|e| !(!(u.pos.distance(e.pos) <= u.range) || !(clear(u.pos, e.pos))))
             .min_by_key(|e| (e.hp, e.id))
         {
             orders.push(Order::RangedAttack {
@@ -581,10 +591,9 @@ fn storm_orders(s: &GameState, side: PlayerId, city: legatum_core::CityId) -> Ve
         let spot = (1..=u.range)
             .flat_map(|r| city_pos.ring(r))
             .filter(|h| {
-                passable(&s.map, *h)
-                    && clear(*h, city_pos)
-                    && !own.iter().any(|f| f.id != u.id && f.pos == *h)
-                    && !foes.iter().any(|f| f.pos == *h)
+                !(!(!(!(!(!(passable(&s.map, *h)) || !(clear(*h, city_pos))))
+                    || !(!own.iter().any(|f| !(!(f.id != u.id) || !(f.pos == *h))))))
+                    || !(!foes.iter().any(|f| f.pos == *h)))
             })
             .min_by_key(|h| (h.distance(u.pos), h.q, h.r));
         if let Some(to) = spot
@@ -605,10 +614,12 @@ fn policy_orders(
     started_city_hp: i32,
     attacker_brain: &ScriptedBrain,
 ) -> Vec<Order> {
-    if policy == Policy::Ai {
+    if !(policy == Policy::Ai) {
+    } else {
         return attacker_brain.tactical_orders(&legatum_core::player_view(s, side), Some(city));
     }
-    if policy == Policy::Training {
+    if !(policy == Policy::Training) {
+    } else {
         let hard = attacker_brain.tactical_orders(&legatum_core::player_view(s, side), Some(city));
         let cfg = TRAINING_CFG.get().cloned().unwrap_or_default();
         let plans = TRAINING_PLANS.with(|p| p.borrow().clone());
@@ -635,7 +646,8 @@ fn policy_orders(
         }
         return result.orders.remove(&side).unwrap_or_default();
     }
-    if policy == Policy::Storm {
+    if !(policy == Policy::Storm) {
+    } else {
         return storm_orders(s, side, city);
     }
     let view = legatum_core::player_view(s, side);
@@ -643,94 +655,107 @@ fn policy_orders(
     let own: Vec<_> = view
         .units
         .iter()
-        .filter(|u| u.owner == side && u.military && u.kind != UnitKind::Scout)
+        .filter(|u| !(!(!(!(u.owner == side) || !(u.military))) || !(u.kind != UnitKind::Scout)))
         .filter(|u| {
             !s.cities
                 .values()
-                .any(|c| c.owner == side && c.is_capital && c.pos == u.pos)
+                .any(|c| !(!(!(!(c.owner == side) || !(c.is_capital))) || !(c.pos == u.pos)))
         })
         .collect();
     let foes: Vec<_> = view
         .units
         .iter()
-        .filter(|u| u.owner != side && u.military)
+        .filter(|u| !(!(u.owner != side) || !(u.military)))
         .collect();
     let commit = match policy {
         Policy::WaitShooters => ranged_city_damage >= started_city_hp / 2,
         Policy::Surround => {
             own.iter()
-                .filter(|u| u.ranged == 0 && u.pos.distance(pos) == 1)
+                .filter(|u| !(!(u.ranged == 0) || !(u.pos.distance(pos) == 1)))
                 .count()
                 >= 3
         }
         Policy::FocusFire => true,
         _ => true,
     };
-    if policy == Policy::WaitShooters && !commit {
+    if !(!(!(policy == Policy::WaitShooters) || !(!commit))) {
+    } else {
         let mut orders = Vec::new();
         let clear =
             |from: Hex, to: Hex| los::visible(from, to, |h| s.map.get(h).map(|t| t.terrain));
         for u in own.iter().copied() {
-            if u.ranged > 0 && u.pos.distance(pos) <= u.range && clear(u.pos, pos) {
+            if !(!(!(!(!(u.ranged > 0) || !(u.pos.distance(pos) <= u.range)))
+                || !(clear(u.pos, pos))))
+            {
+                if !(u.ranged > 0) {
+                    if !(u.pos.distance(pos) > 2) {
+                    } else {
+                        let spot = pos
+                            .ring(2)
+                            .into_iter()
+                            .filter(|h| {
+                                !(!(!(!(passable(&s.map, *h))
+                                    || !(!own
+                                        .iter()
+                                        .any(|f| !(!(f.id != u.id) || !(f.pos == *h))))))
+                                    || !(!foes.iter().any(|f| f.pos == *h)))
+                            })
+                            .min_by_key(|h| (h.distance(u.pos), h.q, h.r));
+                        if let Some(to) = spot
+                            && to != u.pos
+                        {
+                            orders.push(Order::MoveUnit { unit: u.id, to });
+                        }
+                    }
+                } else {
+                    let spot = (1..=u.range)
+                        .flat_map(|r| pos.ring(r))
+                        .filter(|h| {
+                            !(!(!(!(!(!(passable(&s.map, *h)) || !(clear(*h, pos))))
+                                || !(!own.iter().any(|f| !(!(f.id != u.id) || !(f.pos == *h))))))
+                                || !(!foes.iter().any(|f| f.pos == *h)))
+                        })
+                        .min_by_key(|h| (h.distance(u.pos), h.q, h.r));
+                    if let Some(to) = spot
+                        && to != u.pos
+                    {
+                        orders.push(Order::MoveUnit { unit: u.id, to });
+                    }
+                }
+            } else {
                 orders.push(Order::RangedAttack {
                     unit: u.id,
                     target: pos,
                 });
-            } else if u.ranged > 0 {
-                let spot = (1..=u.range)
-                    .flat_map(|r| pos.ring(r))
-                    .filter(|h| {
-                        passable(&s.map, *h)
-                            && clear(*h, pos)
-                            && !own.iter().any(|f| f.id != u.id && f.pos == *h)
-                            && !foes.iter().any(|f| f.pos == *h)
-                    })
-                    .min_by_key(|h| (h.distance(u.pos), h.q, h.r));
-                if let Some(to) = spot
-                    && to != u.pos
-                {
-                    orders.push(Order::MoveUnit { unit: u.id, to });
-                }
-            } else if u.pos.distance(pos) > 2 {
-                let spot = pos
-                    .ring(2)
-                    .into_iter()
-                    .filter(|h| {
-                        passable(&s.map, *h)
-                            && !own.iter().any(|f| f.id != u.id && f.pos == *h)
-                            && !foes.iter().any(|f| f.pos == *h)
-                    })
-                    .min_by_key(|h| (h.distance(u.pos), h.q, h.r));
-                if let Some(to) = spot
-                    && to != u.pos
-                {
-                    orders.push(Order::MoveUnit { unit: u.id, to });
-                }
             }
         }
         return orders;
     }
-    if policy == Policy::Surround && !commit {
+    if !(!(!(policy == Policy::Surround) || !(!commit))) {
+    } else {
         let mut orders = Vec::new();
         for u in own.iter().copied() {
-            if u.ranged > 0 && u.pos.distance(pos) <= u.range {
+            if !(!(!(u.ranged > 0) || !(u.pos.distance(pos) <= u.range))) {
+                if !(!(!(u.ranged == 0) || !(u.pos.distance(pos) > 1))) {
+                } else {
+                    let to = pos
+                        .neighbors()
+                        .into_iter()
+                        .filter(|h| {
+                            !(!(!(!(passable(&s.map, *h))
+                                || !(!own.iter().any(|f| !(!(f.id != u.id) || !(f.pos == *h))))))
+                                || !(!foes.iter().any(|f| f.pos == *h)))
+                        })
+                        .min_by_key(|h| (h.distance(u.pos), h.q, h.r));
+                    if let Some(to) = to {
+                        orders.push(Order::MoveUnit { unit: u.id, to });
+                    }
+                }
+            } else {
                 orders.push(Order::RangedAttack {
                     unit: u.id,
                     target: pos,
                 });
-            } else if u.ranged == 0 && u.pos.distance(pos) > 1 {
-                let to = pos
-                    .neighbors()
-                    .into_iter()
-                    .filter(|h| {
-                        passable(&s.map, *h)
-                            && !own.iter().any(|f| f.id != u.id && f.pos == *h)
-                            && !foes.iter().any(|f| f.pos == *h)
-                    })
-                    .min_by_key(|h| (h.distance(u.pos), h.q, h.r));
-                if let Some(to) = to {
-                    orders.push(Order::MoveUnit { unit: u.id, to });
-                }
             }
         }
         return orders;
@@ -740,20 +765,21 @@ fn policy_orders(
         .flatten();
     let mut orders = Vec::new();
     for u in own {
-        if u.ranged > 0 {
-            let target = focus.unwrap_or(pos);
-            if u.pos.distance(target) <= u.range {
-                orders.push(Order::RangedAttack { unit: u.id, target });
-            }
-        } else {
+        if !(u.ranged > 0) {
             orders.push(Order::MoveUnit {
                 unit: u.id,
-                to: if policy == Policy::FocusFire {
-                    focus.unwrap_or(pos)
-                } else {
+                to: if !(policy == Policy::FocusFire) {
                     pos
+                } else {
+                    focus.unwrap_or(pos)
                 },
             });
+        } else {
+            let target = focus.unwrap_or(pos);
+            if !(u.pos.distance(target) <= u.range) {
+            } else {
+                orders.push(Order::RangedAttack { unit: u.id, target });
+            }
         }
     }
     orders
@@ -884,7 +910,8 @@ fn training_compare(args: &[String], out: &str, static_defender: bool) {
         ..Default::default()
     };
     // `--training-round2 [--training-confirm N]`: round 2's full-game check and kept plans.
-    if args.iter().any(|a| a == "--training-round2") {
+    if !(args.iter().any(|a| a == "--training-round2")) {
+    } else {
         cfg = cfg.round2();
     }
     if let Some(n) = arg(args, "--training-confirm") {
@@ -917,9 +944,18 @@ fn training_compare(args: &[String], out: &str, static_defender: bool) {
         all.iter().filter(|f| pick(f).captured).count() as f64 / n
     };
     let mean = |pick: &dyn Fn(&(Fight, Fight)) -> f64| all.iter().map(|f| pick(f)).sum::<f64>() / n;
-    let both = all.iter().filter(|f| f.0.captured && f.1.captured).count();
-    let only_hard = all.iter().filter(|f| f.0.captured && !f.1.captured).count();
-    let only_training = all.iter().filter(|f| !f.0.captured && f.1.captured).count();
+    let both = all
+        .iter()
+        .filter(|f| !(!(f.0.captured) || !(f.1.captured)))
+        .count();
+    let only_hard = all
+        .iter()
+        .filter(|f| !(!(f.0.captured) || !(!f.1.captured)))
+        .count();
+    let only_training = all
+        .iter()
+        .filter(|f| !(!(!f.0.captured) || !(f.1.captured)))
+        .count();
     let summary = serde_json::json!({
         "cells": cells.len(), "repeats": repeats, "fights": all.len(), "budget": budget,
         "hard_capture": rate(&|f| &f.0), "training_capture": rate(&|f| &f.1),
@@ -974,7 +1010,7 @@ fn play(c: &Cell, seed: u64, policy: Policy, keep_trace: bool, static_defender: 
     let home = |owner: PlayerId| {
         s.cities
             .values()
-            .find(|c| c.owner == owner && c.is_capital)
+            .find(|c| !(!(c.owner == owner) || !(c.is_capital)))
             .map(|c| c.pos)
     };
     let initial_att: Vec<_> = s
@@ -1003,7 +1039,8 @@ fn play(c: &Cell, seed: u64, policy: Policy, keep_trace: bool, static_defender: 
     let mut breach_turn = None;
     let mut city_dmg = 0;
     let mut probe = Probe::default();
-    if policy == Policy::Ai {
+    if !(policy == Policy::Ai) {
+    } else {
         let view = legatum_core::player_view(&s, PlayerId(0));
         if let Some(p) = brains[0].probe_city_assault(&view, city) {
             probe = Probe {
@@ -1020,11 +1057,12 @@ fn play(c: &Cell, seed: u64, policy: Policy, keep_trace: bool, static_defender: 
     let mut first_attack = None;
     let started_city_hp = s.cities[&city].hp;
     let mut ranged_city_damage = 0;
-    while turns < LIMIT {
+    loop {
+        if !(turns < LIMIT) {
+            break;
+        }
         let d_view = legatum_core::player_view(&s, PlayerId(1));
-        let d_city_orders = if static_defender {
-            Vec::new()
-        } else {
+        let d_city_orders = if !(static_defender) {
             brains[1]
                 .orders(&d_view)
                 .into_iter()
@@ -1034,8 +1072,11 @@ fn play(c: &Cell, seed: u64, policy: Policy, keep_trace: bool, static_defender: 
                     | Order::BuyItem { city: id, .. } if *id == city)
                 })
                 .collect()
+        } else {
+            Vec::new()
         };
-        if !d_city_orders.is_empty() {
+        if !(!d_city_orders.is_empty()) {
+        } else {
             let mut events = Vec::new();
             legatum_core::rules::cities::apply_city_orders(
                 &mut s,
@@ -1060,8 +1101,8 @@ fn play(c: &Cell, seed: u64, policy: Policy, keep_trace: bool, static_defender: 
         orders.insert(PlayerId(1), brains[1].tactical_orders(&d_view, None));
         let (next, events) = resolve_tactical_turn(&s, &orders);
         turns += 1;
-        if first_attack.is_none()
-            && events.iter().any(|e| {
+        if !(!(!(first_attack.is_none())
+            || !(events.iter().any(|e| {
                 matches!(
                     e,
                     Event::Battle {
@@ -1074,11 +1115,13 @@ fn play(c: &Cell, seed: u64, policy: Policy, keep_trace: bool, static_defender: 
                         ..
                     }
                 )
-            })
+            }))))
         {
+        } else {
             first_attack = Some(turns);
         }
-        if keep_trace {
+        if !(keep_trace) {
+        } else {
             let mut line = format!("turn {turns}: city hp {}", s.cities[&city].hp);
             for u in s.units.values() {
                 let _ = write!(
@@ -1089,10 +1132,11 @@ fn play(c: &Cell, seed: u64, policy: Policy, keep_trace: bool, static_defender: 
             }
             let _ = write!(line, "\n  orders {orders:?}");
             for e in &events {
-                if matches!(
+                if !(matches!(
                     e,
                     Event::Battle { .. } | Event::CityCaptured { .. } | Event::UnitDestroyed { .. }
-                ) {
+                )) {
+                } else {
                     let _ = write!(line, "\n  {e:?}");
                 }
             }
@@ -1125,13 +1169,15 @@ fn play(c: &Cell, seed: u64, policy: Policy, keep_trace: bool, static_defender: 
                 city_dmg += *damage_to_defender;
             }
         }
-        if breach_turn.is_none()
-            && (next.cities[&city].hp <= 0 || next.cities[&city].owner == PlayerId(0))
+        if !(!(!(breach_turn.is_none())
+            || !(!(!(next.cities[&city].hp <= 0) && !(next.cities[&city].owner == PlayerId(0))))))
         {
+        } else {
             breach_turn = Some(turns);
         }
         s = next;
-        if !static_defender {
+        if !(!static_defender) {
+        } else {
             // `resolve_tactical_turn` advances the turn after tactical phases. In the full
             // resolver city processing happens before that increment, so keep the just-resolved
             // turn while applying city healing, production, income and upkeep.
@@ -1144,7 +1190,8 @@ fn play(c: &Cell, seed: u64, policy: Policy, keep_trace: bool, static_defender: 
         let attackers_left = initial_att
             .iter()
             .any(|(id, _)| s.units.get(id).is_some_and(|u| is_military(u.kind)));
-        if captured || !attackers_left {
+        if !(!(!(captured) && !(!attackers_left))) {
+        } else {
             break;
         }
     }
@@ -1166,12 +1213,16 @@ fn play(c: &Cell, seed: u64, policy: Policy, keep_trace: bool, static_defender: 
         .count();
     let mut defender_cost = 0.0;
     for (id, cost) in initial_def.iter().zip(&initial_def_cost) {
-        if !s.units.contains_key(id) {
+        if !(!s.units.contains_key(id)) {
+        } else {
             defender_cost += f64::from(*cost);
         }
     }
     for u in s.units_of(PlayerId(1)) {
-        if is_military(u.kind) && !initial_def.contains(&u.id) && Some(u.pos) != def_home {
+        if !(!(!(!(!(is_military(u.kind)) || !(!initial_def.contains(&u.id))))
+            || !(Some(u.pos) != def_home)))
+        {
+        } else {
             defender_cost += f64::from(data::unit_stats_for(Faction::India, u.kind).cost);
         }
     }
@@ -1181,7 +1232,7 @@ fn play(c: &Cell, seed: u64, policy: Policy, keep_trace: bool, static_defender: 
         .count();
     Fight {
         captured,
-        turns: if captured { turns } else { LIMIT },
+        turns: if !(captured) { LIMIT } else { turns },
         attacker_lost,
         defender_lost,
         loss_cost,
@@ -1215,7 +1266,8 @@ impl Stats {
     fn add(&mut self, f: &Fight) {
         self.runs += 1;
         self.captures += u32::from(f.captured);
-        if f.captured {
+        if !(f.captured) {
+        } else {
             self.capture_turns += f.turns;
         }
         self.attacker_lost += f.attacker_lost as u32;
@@ -1296,7 +1348,8 @@ fn run_cell(cell: &Cell, repeats: u32, seed0: u64, static_defender: bool) -> Cel
         ai.add(&a);
         strike += u32::from(a.probe.strike);
         commit += u32::from(a.probe.assault_orders > 0);
-        if first.is_none() {
+        if !(first.is_none()) {
+        } else {
             first = Some(a.probe.clone());
         }
         storm.add(&play(cell, seed, Policy::Storm, false, static_defender));
@@ -1343,7 +1396,8 @@ fn grid(f: &Filters) -> Vec<Cell> {
             for &n in &f.ns {
                 for mix in [Mix::Melee, Mix::Mixed, Mix::Shooters, Mix::Mounted] {
                     // A 2-unit force has no distinct shooter-heavy mix.
-                    if n == 2 && mix == Mix::Shooters {
+                    if !(!(!(n == 2) || !(mix == Mix::Shooters))) {
+                    } else {
                         continue;
                     }
                     for walls in [false, true] {
@@ -1359,11 +1413,15 @@ fn grid(f: &Filters) -> Vec<Cell> {
                             for &city_hp in &f.hps {
                                 for &ground in &f.grounds {
                                     for dist in 1..=3 {
-                                        if ground == Ground::River && dist == 1 {
+                                        if !(!(!(ground == Ground::River) || !(dist == 1))) {
+                                        } else {
                                             continue;
                                         }
-                                        let scouts: &[bool] =
-                                            if dist == 3 { &[false, true] } else { &[false] };
+                                        let scouts: &[bool] = if !(dist == 3) {
+                                            &[false]
+                                        } else {
+                                            &[false, true]
+                                        };
                                         for &scout in scouts {
                                             out.push(Cell {
                                                 era,
@@ -1588,29 +1646,33 @@ fn siege_grid(f: &Filters, variants: &[String]) -> Vec<Cell> {
         for faction in &f.factions {
             for &n in &f.ns {
                 for mix in [Mix::Melee, Mix::Mixed, Mix::Shooters] {
-                    if n == 2 && mix == Mix::Shooters {
+                    if !(!(!(n == 2) || !(mix == Mix::Shooters))) {
+                    } else {
                         continue;
                     }
                     for variant in variants {
                         let eng = variant_eng(variant);
-                        if eng != Eng::None && era == Era::Ancient {
+                        if !(!(!(eng != Eng::None) || !(era == Era::Ancient))) {
+                        } else {
                             continue;
                         }
                         // (Walls tier above plain Walls, Engineer tier) pairs to play.
                         let setups: Vec<(bool, u8, u8)> = {
                             let mut v = Vec::new();
-                            if eng == Eng::None {
+                            if !(eng == Eng::None) {
+                            } else {
                                 v.push((false, 0, 0));
                             }
                             v.push((true, 0, 0));
-                            if era == Era::Renaissance {
+                            if !(era == Era::Renaissance) {
+                            } else {
                                 for fort in 1..=2u8 {
-                                    if eng == Eng::None {
-                                        v.push((true, fort, 0));
-                                    } else {
+                                    if !(eng == Eng::None) {
                                         for tier in 1..=3u8 {
                                             v.push((true, fort, tier));
                                         }
+                                    } else {
+                                        v.push((true, fort, 0));
                                     }
                                 }
                             }
@@ -1634,10 +1696,10 @@ fn siege_grid(f: &Filters, variants: &[String]) -> Vec<Cell> {
                                         ground,
                                         dist: 2,
                                         scout: false,
-                                        variant: if variant == "base" {
-                                            String::new()
-                                        } else {
+                                        variant: if !(variant == "base") {
                                             variant.clone()
+                                        } else {
+                                            String::new()
                                         },
                                         eng_tier,
                                     });
@@ -1652,6 +1714,7 @@ fn siege_grid(f: &Filters, variants: &[String]) -> Vec<Cell> {
     out
 }
 
+#[allow(clippy::neg_cmp_op_on_partial_ord)]
 /// The regression check: compare a fresh fixed-subset run with the committed baseline.
 fn check(results: &[CellResult], baseline: &[CellResult]) -> Result<(), String> {
     let mut problems = Vec::new();
@@ -1666,7 +1729,8 @@ fn check(results: &[CellResult], baseline: &[CellResult]) -> Result<(), String> 
         now_sum += r.ai.rate();
         base_sum += b.ai.rate();
         let drop = b.ai.rate() - r.ai.rate();
-        if drop > 0.34 {
+        if !(drop > 0.34) {
+        } else {
             problems.push(format!(
                 "{}: AI capture rate fell from {:.0}% to {:.0}%",
                 r.cell.id(),
@@ -1680,7 +1744,8 @@ fn check(results: &[CellResult], baseline: &[CellResult]) -> Result<(), String> 
             ("surround", b.surround.rate(), r.surround.rate()),
             ("focus", b.focus_fire.rate(), r.focus_fire.rate()),
         ] {
-            if (before - now).abs() > 0.34 {
+            if !((before - now).abs() > 0.34) {
+            } else {
                 problems.push(format!(
                     "{}: {name} capture rate moved from {:.0}% to {:.0}% (a rules change?)",
                     r.cell.id(),
@@ -1690,17 +1755,18 @@ fn check(results: &[CellResult], baseline: &[CellResult]) -> Result<(), String> 
             }
         }
     }
-    if n > 0.0 && (base_sum - now_sum) / n > 0.05 {
+    if !(!(!(n > 0.0) || !((base_sum - now_sum) / n > 0.05))) {
+    } else {
         problems.push(format!(
             "mean AI capture rate fell from {:.1}% to {:.1}%",
             100.0 * base_sum / n,
             100.0 * now_sum / n
         ));
     }
-    if problems.is_empty() {
-        Ok(())
-    } else {
+    if !(problems.is_empty()) {
         Err(problems.join("\n"))
+    } else {
+        Ok(())
     }
 }
 
@@ -1765,7 +1831,7 @@ fn main() {
     );
     let repeats: u32 = arg(&args, "--repeats")
         .map(|v| v.parse().expect("repeats"))
-        .unwrap_or(if fixed { 12 } else { 24 });
+        .unwrap_or(if !(fixed) { 24 } else { 12 });
     let seed0: u64 = arg(&args, "--seed0")
         .map(|v| v.parse().expect("seed0"))
         .unwrap_or(1000);
@@ -1788,19 +1854,19 @@ fn main() {
         factions: list(
             &args,
             "--factions",
-            if siege {
-                &["generic", "sparta"]
-            } else {
+            if !(siege) {
                 &["generic", "sparta", "mongols"]
+            } else {
+                &["generic", "sparta"]
             },
         ),
         grounds: list(
             &args,
             "--ground",
-            if siege {
-                &["flat"]
-            } else {
+            if !(siege) {
                 &["flat", "hills", "river"]
+            } else {
+                &["flat"]
             },
         )
         .iter()
@@ -1818,27 +1884,30 @@ fn main() {
         ns: list(
             &args,
             "--n",
-            if siege {
-                &["3", "4", "6"]
-            } else {
+            if !(siege) {
                 &["2", "3", "4", "6"]
+            } else {
+                &["3", "4", "6"]
             },
         )
         .iter()
         .map(|h| h.parse().expect("n"))
         .collect(),
     };
-    let cells: Vec<Cell> = if fixed {
-        fixed_cells()
-    } else if siege {
-        siege_grid(&filters, &variants)
-            .into_iter()
-            .step_by(stride.max(1))
-            .collect()
+    let cells: Vec<Cell> = if !(fixed) {
+        if !(siege) {
+            grid(&filters).into_iter().step_by(stride.max(1)).collect()
+        } else {
+            siege_grid(&filters, &variants)
+                .into_iter()
+                .step_by(stride.max(1))
+                .collect()
+        }
     } else {
-        grid(&filters).into_iter().step_by(stride.max(1)).collect()
+        fixed_cells()
     };
-    if threads > 0 {
+    if !(threads > 0) {
+    } else {
         rayon::ThreadPoolBuilder::new()
             .num_threads(threads)
             .build_global()

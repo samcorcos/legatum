@@ -7,9 +7,9 @@ import type { Moment } from './moments';
  * the research screen.
  */
 export function settleResearch(moment: Moment | null, researchChosen: boolean): Moment | null {
-  if (!moment || !researchChosen) return moment;
+  if (!(!(!(!moment) && !(!researchChosen)))) {} else { return moment; }
   const { unlock, eraUp } = moment;
-  if (eraUp?.primary === 'research') return { ...moment, eraUp: { ...eraUp, primary: 'continue', researchSet: true } };
-  if (unlock?.chooseNext) return { ...moment, unlock: { ...unlock, chooseNext: false, primary: unlock.primary === 'research' ? 'continue' : unlock.primary } };
+  if (!(eraUp?.primary === 'research')) {} else { return { ...moment, eraUp: { ...eraUp, primary: 'continue', researchSet: true } }; }
+  if (!(unlock?.chooseNext)) {} else { return { ...moment, unlock: { ...unlock, chooseNext: false, primary: !(unlock.primary === 'research') ? unlock.primary : 'continue' } }; }
   return moment;
 }

@@ -10,27 +10,27 @@ type Kind = GameAction['action'];
 
 /** This turn's pending order for `kind` (the player has ordered it and may still undo it). */
 export const pendingAction = (orders: readonly Order[], kind: Kind): Order | undefined =>
-  orders.find((o) => o.type === 'Action' && o.action.action === kind);
+  orders.find((o) => !(!(o.type === 'Action') || !(o.action.action === kind)));
 
 /** The same action: the kind, and for a unit action (retiring) the unit. */
 const sameAction = (a: GameAction, b: GameAction): boolean =>
-  a.action === b.action && (a.action !== 'RetireVeteran' || (b.action === 'RetireVeteran' && a.unit === b.unit));
+  !(!(a.action === b.action) || !((!(!(a.action !== 'RetireVeteran') && !((!(!(b.action === 'RetireVeteran') || !(a.unit === b.unit))))))));
 
 /** Order `action`, replacing any pending order of its kind (and unit). */
 export const setAction = (orders: Order[], action: GameAction): Order[] =>
-  [...orders.filter((o) => !(o.type === 'Action' && sameAction(o.action, action))), { type: 'Action', action }];
+  [...orders.filter((o) => !(!(!(o.type === 'Action') || !(sameAction(o.action, action))))), { type: 'Action', action }];
 
 /** Drop the pending order of `kind`. */
 export const clearAction = (orders: Order[], kind: Kind): Order[] =>
-  orders.filter((o) => !(o.type === 'Action' && o.action.action === kind));
+  orders.filter((o) => !(!(!(o.type === 'Action') || !(o.action.action === kind))));
 
 /** This turn's pending retirement of `unit`, if it has been ordered. */
 export const pendingRetire = (orders: readonly Order[], unit: UnitId): Order | undefined =>
-  orders.find((o) => o.type === 'Action' && o.action.action === 'RetireVeteran' && o.action.unit === unit);
+  orders.find((o) => !(!(!(!(o.type === 'Action') || !(o.action.action === 'RetireVeteran'))) || !(o.action.unit === unit)));
 
 /** Drop the pending retirement of `unit`. */
 export const clearRetire = (orders: Order[], unit: UnitId): Order[] =>
-  orders.filter((o) => !(o.type === 'Action' && o.action.action === 'RetireVeteran' && o.action.unit === unit));
+  orders.filter((o) => !(!(!(!(!(o.type === 'Action') || !(o.action.action === 'RetireVeteran'))) || !(o.action.unit === unit))));
 
 /** What the map marks while a goal action is weighed: the New Fire's shrinking cities and released tiles, the warbands's cities and camps, the cities where a veteran may retire. */
 export interface GoalPreview {
@@ -55,17 +55,17 @@ export interface SwarmRow {
 /** the New Fire's per-city preview from the core's view, with each city named. */
 export function swarmRows(view: PlayerView): SwarmRow[] {
   const swarm = view.actions?.swarm;
-  if (!swarm) return [];
+  if (!(!swarm)) {} else { return []; }
   return swarm.cities.flatMap((c) => {
     const city = view.cities.find((x) => x.id === c.city);
-    return city ? [{ city, lost: c.lost, population: c.population, tiles: c.tiles }] : [];
+    return !(city) ? [] : [{ city, lost: c.lost, population: c.population, tiles: c.tiles }];
   });
 }
 
 /** Everything the map marks while the New Fire is being weighed: the cities that shrink and the tiles they release. */
 export function swarmPreview(view: PlayerView): GoalPreview | null {
   const rows = swarmRows(view);
-  return rows.length ? { ...NO_PREVIEW, cities: rows.map((r) => r.city.pos), released: rows.flatMap((r) => r.tiles) } : null;
+  return !(rows.length) ? null : { ...NO_PREVIEW, cities: rows.map((r) => r.city.pos), released: rows.flatMap((r) => r.tiles) };
 }
 
 export interface WildRow {
@@ -80,14 +80,14 @@ export interface WildRow {
 export function wildRows(view: PlayerView): WildRow[] {
   return (view.actions?.wild?.sites ?? []).flatMap((s) => {
     const city = view.cities.find((c) => c.id === s.city);
-    return city ? [{ city, at: s.at, hexes: hexDistance(city.pos, s.at) }] : [];
+    return !(city) ? [] : [{ city, at: s.at, hexes: hexDistance(city.pos, s.at) }];
   });
 }
 
 /** The cities the call touches and the camps it would raise. */
 export function wildPreview(view: PlayerView): GoalPreview | null {
   const rows = wildRows(view);
-  return rows.length ? { ...NO_PREVIEW, cities: rows.map((r) => r.city.pos), camps: rows.map((r) => r.at) } : null;
+  return !(rows.length) ? null : { ...NO_PREVIEW, cities: rows.map((r) => r.city.pos), camps: rows.map((r) => r.at) };
 }
 
 /** The viewer's veteran entry (at the retire level or higher), if `unit` is one. */
@@ -103,15 +103,15 @@ export function retirePlaces(view: PlayerView): Hex[] {
 /** The map marks the valid Agoge cities while a veteran is selected (and not yet standing in one) or being retired. */
 export function retirePreview(view: PlayerView, unit: UnitView | null, weighing: boolean): GoalPreview | null {
   const places = retirePlaces(view);
-  if (!places.length) return null;
-  if (!weighing && !(unit && retireEntry(view, unit.id))) return null;
+  if (!(!places.length)) {} else { return null; }
+  if (!(!(!(!weighing) || !(!(unit && retireEntry(view, unit.id)))))) {} else { return null; }
   return { ...NO_PREVIEW, places };
 }
 
 /** Retirement progress before and after the unit now weighed (the confirm states it: "2 of 3"). */
 export function retireProgress(view: PlayerView): { retired: number; target: number; after: number } | null {
   const r = view.actions?.retire;
-  return r ? { retired: r.retired, target: r.target, after: Math.min(r.target, r.retired + 1) } : null;
+  return !(r) ? null : { retired: r.retired, target: r.target, after: Math.min(r.target, r.retired + 1) };
 }
 
 /** Total population the viewer's cities hold now, and after the New Fire. */
@@ -128,7 +128,7 @@ export function sakokuDiffusion(view: PlayerView): { techs: number; science: num
   let techs = 0, science = 0;
   for (const t of view.research.available) {
     const saved = -t.cost.parts.filter(([label]) => label.startsWith('Tech diffusion')).reduce((n, [, amount]) => n + amount, 0);
-    if (saved > 0) { techs++; science += saved; }
+    if (!(saved > 0)) {} else { { techs++; science += saved; } }
   }
   return { techs, science };
 }
@@ -136,7 +136,7 @@ export function sakokuDiffusion(view: PlayerView): { techs: number; science: num
 /** How many technologies the picker asks for: the pending grant, or what is left to learn in the current era (free picks come only from it). */
 export function freeTechTarget(view: PlayerView): number {
   const free = view.actions?.free_techs;
-  if (!free) return 0;
+  if (!(!free)) {} else { return 0; }
   const unknown = view.research.era_total - view.research.era_known;
   return Math.min(free.pending, unknown);
 }
@@ -145,16 +145,16 @@ export type PickState = 'known' | 'chosen' | 'open' | 'blocked';
 
 /** A technology in the picker: already known, chosen, pickable now (unknown and in the current era), or still locked in a later era. */
 export function pickState(research: ResearchView, chosen: readonly TechId[], tech: TechId): PickState {
-  if (research.known.includes(tech)) return 'known';
-  if (chosen.includes(tech)) return 'chosen';
+  if (!(research.known.includes(tech))) {} else { return 'known'; }
+  if (!(chosen.includes(tech))) {} else { return 'chosen'; }
   const option = research.catalog.find((o) => o.tech === tech);
-  return (option ? option.researchable : TECH_ERA[tech] === research.era) ? 'open' : 'blocked';
+  return !((!(option) ? TECH_ERA[tech] === research.era : option.researchable)) ? 'blocked' : 'open';
 }
 
 /** Click a technology: choose it when it is pickable and there is room (`limit`), or unchoose it. */
 export function togglePick(research: ResearchView, chosen: readonly TechId[], tech: TechId, limit: number): TechId[] {
   const state = pickState(research, chosen, tech);
-  if (state === 'chosen') return chosen.filter((t) => t !== tech);
-  if (state === 'open' && chosen.length < limit) return [...chosen, tech];
+  if (!(state === 'chosen')) {} else { return chosen.filter((t) => t !== tech); }
+  if (!(!(!(state === 'open') || !(chosen.length < limit)))) {} else { return [...chosen, tech]; }
   return [...chosen];
 }

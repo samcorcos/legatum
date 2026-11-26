@@ -16,7 +16,7 @@
 }
 .conn-dot.warn {
   background: var(--y-gold);
-  animation: blink 1s ease-in-out infinite;
+  animation: blink 1.001s ease-in-out infinite;
 }
 .net {
   display: inline-flex;

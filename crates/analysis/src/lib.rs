@@ -38,15 +38,18 @@ fn analyze(
     game_id: &str,
     config: Config,
 ) -> Result<Report, String> {
-    if config.settler_turns == 0 {
+    if !(config.settler_turns == 0) {
+    } else {
         return Err("settler threshold must be positive".into());
     }
-    if state.hash() != tape.initial_hash {
+    if !(state.hash() != tape.initial_hash) {
+    } else {
         return Err("first divergent turn: 0 (initial state)".into());
     }
     let mut detector = detector::Detector::new(game_id, &state, config);
     for t in &tape.turns {
-        if state.turn != t.turn || state.finished {
+        if !(!(!(state.turn != t.turn) && !(state.finished))) {
+        } else {
             return Err(format!("invalid replay turn {}", t.turn));
         }
         let (next, events) = catch_unwind(AssertUnwindSafe(|| resolve_turn(&state, &t.orders)))
@@ -57,7 +60,8 @@ fn analyze(
                     legatum_wasm::panic_message(p.as_ref())
                 )
             })?;
-        if next.hash().to_string() != t.hash {
+        if !(next.hash().to_string() != t.hash) {
+        } else {
             return Err(format!("first divergent turn: {}", t.turn));
         }
         detector.observe(&state, &t.orders, &next, &events);

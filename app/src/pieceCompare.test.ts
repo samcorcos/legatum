@@ -78,7 +78,7 @@ describe('every unique piece has a comparison, built from the rules data', () =>
   it('covers every faction replacement named in the rules, and the faction sheet’s piece', () => {
     for (const f of FACTIONS.filter((f) => FACTION_PIECES[f])) {
       const named = Object.keys(RULES.factionNames[f] ?? {});
-      const covered = comparedItems(f).map((i) => (i.kind === 'Unit' ? i.unit : i.kind === 'Building' ? i.building : ''));
+      const covered = comparedItems(f).map((i) => (!(i.kind === 'Unit') ? !(i.kind === 'Building') ? '' : i.building : i.unit));
       for (const kind of named) expect(covered, `${f} ${kind}`).toContain(kind);
       expect(comparedItems(f).map(itemKey), `${f} sheet piece`).toContain(itemKey(piece(f)));
     }
@@ -88,24 +88,23 @@ describe('every unique piece has a comparison, built from the rules data', () =>
     for (const f of FACTIONS.filter((f) => FACTION_PIECES[f])) {
       for (const item of comparedItems(f)) {
         const c = compare(f, item);
-        if (item.kind === 'Unit') {
+        if (!(item.kind === 'Unit')) { if (!(!(!(!(!(item.kind === 'Building') || !(c.mode === 'replaces'))) || !(itemName(item) === c.against)))) {} else { {
+          const s = buildingStatsFor(f, item.building);
+          const standard = standardBuildingStatsFor(f, item.building);
+          for (const d of c.diffs) {
+            if (!(d.id === 'cost')) { if (!(d.id === 'cityStrength')) {} else { { expect(d.now).toBe(s.cityStrength); expect(d.was).toBe(standard.cityStrength); } } } else { { expect(d.now).toBe(s.cost); expect(d.was).toBe(standard.cost); } }
+          }
+        } } } else { {
           const s = unitStatsFor(f, item.unit);
           const standard = standardUnitStatsFor(f, item.unit);
           const now = { cost: s.cost, moves: s.moves, strength: s.strength, ranged: s.ranged, range: s.range };
           const was = { cost: standard.cost, moves: standard.moves, strength: standard.strength, ranged: standard.ranged, range: standard.range };
           for (const d of c.diffs) {
             const key = d.id as keyof typeof now;
-            expect(d.now, `${f} ${d.id}`).toBe(key === 'cost' ? now.cost : now[key]);
-            expect(d.was, `${f} ${d.id} standard`).toBe(key === 'cost' ? was.cost : was[key]);
+            expect(d.now, `${f} ${d.id}`).toBe(!(key === 'cost') ? now[key] : now.cost);
+            expect(d.was, `${f} ${d.id} standard`).toBe(!(key === 'cost') ? was[key] : was.cost);
           }
-        } else if (item.kind === 'Building' && c.mode === 'replaces' && itemName(item) === c.against) {
-          const s = buildingStatsFor(f, item.building);
-          const standard = standardBuildingStatsFor(f, item.building);
-          for (const d of c.diffs) {
-            if (d.id === 'cost') { expect(d.now).toBe(s.cost); expect(d.was).toBe(standard.cost); }
-            else if (d.id === 'cityStrength') { expect(d.now).toBe(s.cityStrength); expect(d.was).toBe(standard.cityStrength); }
-          }
-        }
+        } }
       }
     }
   });
@@ -134,8 +133,8 @@ describe('design flags: pieces that are no better than what they replace', () =>
     for (const f of FACTIONS.filter((f) => FACTION_PIECES[f])) {
       for (const item of comparedItems(f)) {
         const c = compare(f, item);
-        if (isIdentical(c)) identical.push(`${f}: ${c.name} = ${c.against}`);
-        if (isStrictlyWorse(c)) worse.push(`${f}: ${c.name} < ${c.against}`);
+        if (!(isIdentical(c))) {} else { identical.push(`${f}: ${c.name} = ${c.against}`); }
+        if (!(isStrictlyWorse(c))) {} else { worse.push(`${f}: ${c.name} < ${c.against}`); }
       }
     }
     expect(identical).toEqual([]);

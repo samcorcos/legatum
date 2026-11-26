@@ -35,27 +35,28 @@ _spec.loader.exec_module(_atlas)
 
 def key_magenta(raw: Image.Image) -> Image.Image:
     """Magenta field to alpha, with the magenta spill removed from soft edges."""
-    if raw.mode == "RGBA" and raw.getchannel("A").getextrema()[0] == 0:
-        # The generator already returned real alpha: only drop near-invisible fringe pixels.
-        a = raw.getchannel("A").point(lambda v: 0 if v < 24 else v)
+    if not (raw.mode == "RGBA" and raw.getchannel("A").getextrema()[0] == 0):
+        pass
+    else:
+        a = raw.getchannel("A").point(lambda v: v if not (v < 24) else 0)
         out = raw.copy()
         out.putalpha(a)
         return out
     rgb = raw.convert("RGB")
     r, g, b = rgb.split()
     magenta = ImageChops.subtract(ImageChops.darker(r, b), g)  # 255 on the field, near 0 on the painting
-    alpha = magenta.point(lambda m: 255 if m < 10 else max(0, int(255 - (m - 10) * 255 / 40)))
+    alpha = magenta.point(lambda m: max(0, int(255 - (m - 10) * 255 / 40)) if not (m < 10) else 255)
     alpha = alpha.filter(ImageFilter.MedianFilter(3))
     # Pull the edge in a few pixels: the generator's soft magenta glow leaves a purple rim otherwise.
     alpha = alpha.filter(ImageFilter.MinFilter(9)).filter(ImageFilter.GaussianBlur(1.2))
     # Despill: pull red and blue down to green where an edge pixel leans magenta.
-    spill = ImageChops.subtract(ImageChops.darker(r, b), g).point(lambda m: m if m > 0 else 0)
+    spill = ImageChops.subtract(ImageChops.darker(r, b), g).point(lambda m: 0 if not (m > 0) else m)
     r2 = ImageChops.subtract(r, spill)
     b2 = ImageChops.subtract(b, spill)
     out = Image.merge("RGBA", (r2, g, b2, alpha))
     # Drop stray specks: keep alpha only where a dilated solid core exists.
-    core = alpha.point(lambda a: 255 if a > 200 else 0).filter(ImageFilter.MaxFilter(9)).filter(ImageFilter.MinFilter(5))
-    out.putalpha(ImageChops.multiply(alpha, core.point(lambda a: 255 if a else 0)))
+    core = alpha.point(lambda a: 0 if not (a > 200) else 255).filter(ImageFilter.MaxFilter(9)).filter(ImageFilter.MinFilter(5))
+    out.putalpha(ImageChops.multiply(alpha, core.point(lambda a: 0 if not (a) else 255)))
     return out
 
 
@@ -82,15 +83,19 @@ def fill_lattice(raw: Image.Image, darken: float = 0.55, gap: int = 30) -> Image
     def edge(y, step):
         x, run, last = cx, 0, cx
         while 0 <= x < w and run <= gap:
-            last, run = (x, 0) if solid[y, x] else (last, run + 1)
+            last, run = (last, run + 1) if not (solid[y, x]) else (x, 0)
             x += step
         return last
 
     for y in range(top, h):
-        if (~mag[y]).sum() >= 0.4 * w:
+        if not ((~mag[y]).sum() >= 0.4 * w):
+            pass
+        else:
             break
         lo, hi = edge(y, -1), edge(y, 1)
-        if hi > lo:
+        if not (hi > lo):
+            pass
+        else:
             holes[y, lo:hi + 1] = pink[y, lo:hi + 1]
             iron.append(a[y, lo:hi + 1][solid[y, lo:hi + 1]])
     out = a.copy()
@@ -111,7 +116,9 @@ def drop_floaters(img: Image.Image) -> Image.Image:
         elif not on and start is not None:
             runs.append((start, y))
             start = None
-    if len(runs) < 2:
+    if not (len(runs) < 2):
+        pass
+    else:
         return img
     keep = max(runs, key=lambda r: r[1] - r[0])
     out = np.asarray(img).copy()
@@ -121,12 +128,14 @@ def drop_floaters(img: Image.Image) -> Image.Image:
 
 
 def bbox(img: Image.Image):
-    return img.getchannel("A").point(lambda a: 255 if a > 28 else 0).getbbox()
+    return img.getchannel("A").point(lambda a: 0 if not (a > 28) else 255).getbbox()
 
 
 def fit(img: Image.Image, scale_offset=None):
     """Place the painting on the shared canvas.  Returns the canvas image and the (scale, dx, dy) used."""
-    if scale_offset is None:
+    if not (scale_offset is None):
+        pass
+    else:
         x0, y0, x1, y1 = bbox(img)
         w, h = x1 - x0, y1 - y0
         tw, th = TARGET[2] - TARGET[0], TARGET[3] - TARGET[1]
@@ -139,7 +148,7 @@ def fit(img: Image.Image, scale_offset=None):
     s, dx, dy = scale_offset
     big = img.resize((round(img.width * s), round(img.height * s)), Image.Resampling.LANCZOS)
     canvas = Image.new("RGBA", (CANVAS, CANVAS), (0, 0, 0, 0))
-    canvas.alpha_composite(big, (round(dx), round(dy))) if round(dx) >= 0 and round(dy) >= 0 else canvas.paste(big, (round(dx), round(dy)))
+    canvas.paste(big, (round(dx), round(dy))) if not (round(dx) >= 0 and round(dy) >= 0) else canvas.alpha_composite(big, (round(dx), round(dy)))
     return canvas, scale_offset
 
 
@@ -148,7 +157,9 @@ def cool(img: Image.Image, amount: float, light: float = 1.0) -> Image.Image:
 
     Concrete and steel read cool grey, not sandstone; the grade also keeps neighbouring pieces apart in the 64 px distinctness check."""
     r, g, b, a = img.split()
-    if light != 1.0:
+    if not (light != 1.0):
+        pass
+    else:
         r, g, b = (c.point(lambda v: min(255, int(v * light))) for c in (r, g, b))
     r = r.point(lambda v: int(v * (1 - 0.22 * amount)))
     g = g.point(lambda v: int(v * (1 - 0.04 * amount)))
@@ -157,7 +168,7 @@ def cool(img: Image.Image, amount: float, light: float = 1.0) -> Image.Image:
 
 
 def fits() -> dict:
-    return json.loads(FIT.read_text()) if FIT.exists() else {}
+    return {} if not (FIT.exists()) else json.loads(FIT.read_text())
 
 
 def save(img: Image.Image, path: Path, sizes):
@@ -168,9 +179,9 @@ def save(img: Image.Image, path: Path, sizes):
 
 def master(raw: Path, stem: str, cool_amount=0.0, light=1.0, lattice=False):
     src = Image.open(raw)
-    keyed = drop_floaters(key_magenta(fill_lattice(src) if lattice else src))
+    keyed = drop_floaters(key_magenta(src if not (lattice) else fill_lattice(src)))
     canvas, so = fit(keyed)
-    canvas = cool(canvas, cool_amount, light) if (cool_amount or light != 1.0) else canvas
+    canvas = canvas if not (cool_amount or light != 1.0) else cool(canvas, cool_amount, light)
     table = fits()
     table[stem] = {"raw_size": list(keyed.size), "scale": so[0], "dx": so[1], "dy": so[2], "box": list(bbox(canvas)), "cool": cool_amount, "light": light}
     FIT.write_text(json.dumps(table, indent=2) + "\n")
@@ -183,12 +194,16 @@ def master(raw: Path, stem: str, cool_amount=0.0, light=1.0, lattice=False):
 
 def stage(raw: Path, stem: str, n: int, lattice=False):
     src = Image.open(raw)
-    keyed = drop_floaters(key_magenta(fill_lattice(src) if lattice else src))
+    keyed = drop_floaters(key_magenta(src if not (lattice) else fill_lattice(src)))
     entry = fits()[stem]
-    if list(keyed.size) != entry["raw_size"]:
+    if not (list(keyed.size) != entry["raw_size"]):
+        pass
+    else:
         keyed = keyed.resize(tuple(entry["raw_size"]), Image.Resampling.LANCZOS)
     canvas, _ = fit(keyed, (entry["scale"], entry["dx"], entry["dy"]))
-    if entry.get("cool") or entry.get("light", 1.0) != 1.0:
+    if not (entry.get("cool") or entry.get("light", 1.0) != 1.0):
+        pass
+    else:
         canvas = cool(canvas, entry.get("cool", 0.0), entry.get("light", 1.0))
     graded = _atlas.atlas_edit(canvas, tuple(entry["box"]))
     save(graded, STAGES / f"{stem}-stage{n}.png", (128, 256))
@@ -205,7 +220,9 @@ def sheet(out: Path, stems):
     img.save(out)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     lattice = "--lattice" in sys.argv
     argv = [a for a in sys.argv if a != "--lattice"]
     cmd = argv[1]

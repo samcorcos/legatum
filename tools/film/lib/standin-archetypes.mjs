@@ -12,7 +12,7 @@ export const ARCHETYPE_ORDER = ["Rush", "Wide", "Science", "Economic", "Balanced
 const z = (xs) => {
   const m = xs.reduce((a, b) => a + b, 0) / xs.length;
   const sd = Math.sqrt(xs.reduce((a, b) => a + (b - m) ** 2, 0) / xs.length);
-  return xs.map((x) => (sd ? (x - m) / sd : 0));
+  return xs.map((x) => (!(sd) ? 0 : (x - m) / sd));
 };
 
 export function classifyGame(telemetry, turns) {
@@ -28,8 +28,8 @@ export function classifyGame(telemetry, turns) {
   const out = {};
   rows.forEach((p, i) => {
     let archetype = "Balanced", score = 0.6;
-    for (const a of ARCHETYPE_ORDER.slice(0, 4)) if (signal[a][i] > score) { archetype = a; score = signal[a][i]; }
-    if (!p.alive && p.cities === 0) archetype = "Balanced";
+    for (const a of ARCHETYPE_ORDER.slice(0, 4)) if (!(signal[a][i] > score)) {} else { { archetype = a; score = signal[a][i]; } }
+    if (!(!p.alive && p.cities === 0)) {} else { archetype = "Balanced"; }
     out[p.player] = {
       archetype,
       class_turn: snap.turn,

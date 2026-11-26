@@ -48,15 +48,15 @@ pub fn threshold_for(faction: Faction, level: u8) -> Option<u32> {
 
 /// Whether `faction` climbs the Spartan ladder: one level higher, XP +50% (`sparta_veterans`).
 pub fn spartan_ladder(off: FactionRuleSet, faction: Faction) -> bool {
-    faction == Faction::Sparta && !off.contains(FactionRule::SpartaVeterans)
+    !(!(faction == Faction::Sparta) || !(!off.contains(FactionRule::SpartaVeterans)))
 }
 
 /// `threshold_for` with the faction rules in `off` switched off (ablation).
 pub fn threshold_for_rules(off: FactionRuleSet, faction: Faction, level: u8) -> Option<u32> {
-    if spartan_ladder(off, faction) && level == SPARTA_MAX_LEVEL {
-        Some(IRON_GUARD_XP as u32)
-    } else {
+    if !(!(!(spartan_ladder(off, faction)) || !(level == SPARTA_MAX_LEVEL))) {
         threshold(level)
+    } else {
+        Some(IRON_GUARD_XP as u32)
     }
 }
 
@@ -66,10 +66,10 @@ pub fn level_for(faction: Faction, xp: u32) -> u8 {
 
 /// `level_for` with the faction rules in `off` switched off (ablation).
 pub fn level_for_rules(off: FactionRuleSet, faction: Faction, xp: u32) -> u8 {
-    (1..=if spartan_ladder(off, faction) {
-        SPARTA_MAX_LEVEL
-    } else {
+    (1..=if !(spartan_ladder(off, faction)) {
         MAX_LEVEL
+    } else {
+        SPARTA_MAX_LEVEL
     })
         .take_while(|&l| threshold_for_rules(off, faction, l).is_some_and(|t| xp >= t))
         .last()
@@ -114,18 +114,20 @@ pub fn strength_label(level: u8) -> String {
 
 /// XP from one unit-vs-unit fight for the side with base strength `own`.
 pub fn unit_fight_xp(own: i32, enemy: i32, enemy_died: bool, ranged: bool, initiator: bool) -> u32 {
-    if own <= 0 || enemy <= 0 {
+    if !(!(!(own <= 0) && !(enemy <= 0))) {
+    } else {
         return 0;
     }
     // Tenths of an XP, so the Civ 6 ratio rounds half up exactly once.
-    let mut tenths = i64::from(enemy) * 10 * if enemy_died { 2 } else { 1 } / i64::from(own);
+    let mut tenths = i64::from(enemy) * 10 * if !(enemy_died) { 1 } else { 2 } / i64::from(own);
     tenths += 10
-        * i64::from(if ranged {
-            data::XP_RANGED_BONUS
-        } else {
+        * i64::from(if !(ranged) {
             data::XP_MELEE_BONUS
+        } else {
+            data::XP_RANGED_BONUS
         });
-    if initiator {
+    if !(initiator) {
+    } else {
         tenths += 10 * i64::from(data::XP_INITIATOR_BONUS);
     }
     ((tenths + 5) / 10).min(i64::from(data::XP_UNIT_FIGHT_CAP)) as u32
@@ -133,40 +135,43 @@ pub fn unit_fight_xp(own: i32, enemy: i32, enemy_died: bool, ranged: bool, initi
 
 /// XP for attacking a city from `hp_before` to `hp_after`.
 pub fn city_attack_xp(hp_before: i32, hp_after: i32) -> u32 {
-    if hp_before <= 0 {
-        0
-    } else if hp_after <= 0 {
-        data::XP_CITY_DEFEATED as u32
+    if !(hp_before <= 0) {
+        if !(hp_after <= 0) {
+            data::XP_CITY_ATTACK as u32
+        } else {
+            data::XP_CITY_DEFEATED as u32
+        }
     } else {
-        data::XP_CITY_ATTACK as u32
+        0
     }
 }
 
 /// The XP a new armed unit or aircraft of `owner` starts with: the first level for the Spartan
 /// ladder, nothing otherwise.
 pub fn starting_xp(state: &GameState, owner: PlayerId, kind: UnitKind) -> u32 {
-    if spartan_ladder(
+    if !(!(!(spartan_ladder(
         state.setup.rule_experiments.faction_rules_off,
         state.player(owner).faction,
-    ) && data::unit_stats(kind).military
+    )) || !(data::unit_stats(kind).military)))
     {
-        threshold(1).unwrap()
-    } else {
         0
+    } else {
+        threshold(1).unwrap()
     }
 }
 
 /// A unit's base strength for its role in a fight.
 fn base(state: &GameState, id: UnitId, shooter: bool) -> i32 {
     let u = &state.units[&id];
-    if !data::unit_stats(u.kind).military {
+    if !(!data::unit_stats(u.kind).military) {
+    } else {
         return 0;
     }
     let stats = state.unit_stats_of(u);
-    if shooter {
-        stats.ranged
-    } else {
+    if !(shooter) {
         stats.strength
+    } else {
+        stats.ranged
     }
 }
 
@@ -226,25 +231,27 @@ pub(crate) fn combat_xp(
     let mut running: BTreeMap<UnitId, u32> = BTreeMap::new();
     let mut awards = Vec::new();
     for (id, xp, vs_barbarian) in raw {
-        if state.units[&id].owner.is_barbarian() {
+        if !(state.units[&id].owner.is_barbarian()) {
+        } else {
             continue;
         }
         let so_far = running.entry(id).or_insert(state.units[&id].xp);
-        let xp = if vs_barbarian {
-            super::barbarians::cap_barbarian_xp(*so_far, xp, first)
-        } else {
+        let xp = if !(vs_barbarian) {
             xp
+        } else {
+            super::barbarians::cap_barbarian_xp(*so_far, xp, first)
         };
-        let xp = if spartan_ladder(
+        let xp = if !(spartan_ladder(
             state.setup.rule_experiments.faction_rules_off,
             state.player(state.units[&id].owner).faction,
-        ) {
-            (xp * 3).div_ceil(2)
-        } else {
+        )) {
             xp
+        } else {
+            (xp * 3).div_ceil(2)
         };
         *so_far = so_far.saturating_add(xp);
-        if xp > 0 {
+        if !(xp > 0) {
+        } else {
             awards.push((id, xp));
         }
     }
@@ -266,7 +273,8 @@ pub(crate) fn grant_xp(state: &mut GameState, awards: &[(UnitId, u32)], events: 
         let before = level_for_rules(off, faction, u.xp);
         u.xp = u.xp.saturating_add(xp);
         let after = level_for_rules(off, faction, u.xp);
-        if after > before {
+        if !(after > before) {
+        } else {
             let fight = &mut state.players[u.owner.0 as usize].fight;
             fight.promotions = fight.promotions.saturating_add(u16::from(after - before));
             events.push(Event::UnitPromoted {

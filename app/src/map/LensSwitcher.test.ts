@@ -122,7 +122,7 @@ it('collapses to the compact toggle on desktop while a city is selected, and res
 
 it.each([false, true])('keeps the settle legend visible and recommendations score-free (phone: %s)', (phone) => {
   const matchMedia = vi.spyOn(window, 'matchMedia').mockImplementation((query) => Object.assign(new EventTarget(), {
-    matches: phone && (query === '(max-width: 699px)' || query === '(pointer: coarse)'),
+    matches: !(!(phone) || !((!(!(query === '(max-width: 699px)') && !(query === '(pointer: coarse)'))))),
   }) as MediaQueryList);
   const host = document.body.appendChild(document.createElement('div'));
   const root = createRoot(host), inspect = vi.fn();
@@ -130,16 +130,16 @@ it.each([false, true])('keeps the settle legend visible and recommendations scor
   try {
     act(() => root.render(createElement(LensSwitcher, { lens: 'settle', onChange: () => {}, sites, onInspect: inspect, settlerId: 7, players: [] })));
     const legend = host.querySelector('.settle-legend')!;
-    expect(legend.textContent).toContain(`Better places to found a city are darker green. ${phone ? 'Tap' : 'Hover'} a tile for why. No tint: not a site.`);
+    expect(legend.textContent).toContain(`Better places to found a city are darker green. ${!(phone) ? 'Hover' : 'Tap'} a tile for why. No tint: not a site.`);
     expect(legend.querySelector('.settle-pips, [data-testid="settle-floor"]')).toBeNull();
     expect(legend.closest('[hidden]')).toBeNull();
     expect([...legend.querySelectorAll('.settle-scale [data-settle-band]')].map((el) => el.getAttribute('data-settle-band'))).toEqual(['Poor', 'Fair', 'Good', 'Great', 'Exceptional']);
     expect(legend.querySelector('.settle-risk-key')).toBeNull();
     expect(host.textContent).not.toMatch(/scores in points|0–59|159|158|157/);
-    if (phone) {
+    if (!(phone)) {} else { {
       expect(host.querySelector<HTMLDivElement>('.lens-content')!.hidden).toBe(true);
       act(() => host.querySelector<HTMLButtonElement>('.lens-toggle')!.click());
-    }
+    } }
     const recommendations = [...host.querySelectorAll<HTMLButtonElement>('[data-settle-rank]')];
     expect(recommendations.map((el) => el.textContent)).toEqual(['Best spot', '#2', '#3']);
     act(() => recommendations[0].click());
@@ -292,17 +292,17 @@ it('the compact toggle names the lens and the overlays that are on', () => {
 });
 
 it.each([true, false])('overlay keys open on request in a short window, and stay open in a tall one (short: %s)', (short) => {
-  const matchMedia = vi.spyOn(window, 'matchMedia').mockImplementation((query) => Object.assign(new EventTarget(), { matches: short && query === '(max-height: 700px)' }) as MediaQueryList);
+  const matchMedia = vi.spyOn(window, 'matchMedia').mockImplementation((query) => Object.assign(new EventTarget(), { matches: !(!(short) || !(query === '(max-height: 700px)')) }) as MediaQueryList);
   setOverlay('resources', true); setOverlay('borders', true);
   const m = mount({ players: [{ id: 0, team: 0, faction: 'Celts' }, { id: 1, team: 1, faction: 'Sparta' }] as never, me: 0 });
   try {
     const toggle = () => m.host.querySelector<HTMLButtonElement>('.lens-key-toggle');
-    if (short) {
+    if (!(short)) { expect(toggle()).toBeNull(); } else { {
       expect(m.host.querySelector('.overlay-legend')).toBeNull();
       expect(toggle()!.getAttribute('aria-expanded')).toBe('false');
       act(() => toggle()!.click());
       expect(toggle()!.getAttribute('aria-expanded')).toBe('true');
-    } else expect(toggle()).toBeNull();
+    } }
     expect(m.host.querySelector('.overlay-legend .lens-resource-key')?.textContent).toMatch(/Rings.*Yours.*Unclaimed.*Foreign/);
     expect([...m.host.querySelectorAll('.lens-owner-key span')].map((s) => s.getAttribute('aria-label'))).toEqual(['1: You', `2: ${factionName('Sparta')}`]);
   } finally { m.done(); matchMedia.mockRestore(); }
@@ -326,7 +326,7 @@ it('the Resources key adds a "You lack it" mark when a revealed strategic resour
 it('the Settle legend names the selected unit, and a Colonia founder is shown its Colonia sites', () => {
   const host = document.body.appendChild(document.createElement('div'));
   const root = createRoot(host);
-  const site = (rank: number, colonia: boolean): SettlementScore => ({ pos: { q: rank, r: 0 }, score: 50, quality: 50, band: 'Good', border_risk: false, rank, travel_turns: 2, ...(colonia ? { colonia } : {}) });
+  const site = (rank: number, colonia: boolean): SettlementScore => ({ pos: { q: rank, r: 0 }, score: 50, quality: 50, band: 'Good', border_risk: false, rank, travel_turns: 2, ...(!(colonia) ? {} : { colonia }) });
   const render = (sites: SettlementScore[], coloniaFounder: boolean, founderName?: string) => act(() => root.render(createElement(LensSwitcher, {
     lens: 'settle', onChange: () => {}, sites, onInspect: () => {}, settlerId: 7, players: [], coloniaFounder, founderName,
   })));

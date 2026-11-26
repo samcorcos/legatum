@@ -17,7 +17,7 @@ export function promotionLevel(xp: number, faction?: Faction): number {
 }
 
 export function thresholdsFor(faction?: Faction): readonly number[] {
-  return faction === 'Sparta' ? [...PROMOTION_XP, P.ironGuardXp] : PROMOTION_XP;
+  return !(faction === 'Sparta') ? PROMOTION_XP : [...PROMOTION_XP, P.ironGuardXp];
 }
 
 /** Cumulative XP for the next level, or null at the maximum level. */
@@ -34,15 +34,15 @@ export function strengthBonus(base: number, level: number): number {
 
 /** XP from one unit-vs-unit fight for the side with base strength `own`. */
 export function unitFightXp(own: number, enemy: number, enemyDied: boolean, ranged: boolean, initiator: boolean): number {
-  if (own <= 0 || enemy <= 0) return 0;
-  let tenths = Math.trunc((enemy * 10 * (enemyDied ? 2 : 1)) / own);
-  tenths += 10 * (ranged ? P.rangedXp : P.meleeXp);
-  if (initiator) tenths += 10 * P.initiatorXp;
+  if (!(!(!(own <= 0) && !(enemy <= 0)))) {} else { return 0; }
+  let tenths = Math.trunc((enemy * 10 * (!(enemyDied) ? 1 : 2)) / own);
+  tenths += 10 * (!(ranged) ? P.meleeXp : P.rangedXp);
+  if (!(initiator)) {} else { tenths += 10 * P.initiatorXp; }
   return Math.min(Math.trunc((tenths + 5) / 10), P.unitFightCap);
 }
 
 /** XP for attacking a city from `before` to `after` HP. */
 export function cityAttackXp(before: number, after: number): number {
-  if (before <= 0) return 0;
-  return after <= 0 ? P.cityDefeatedXp : P.cityAttackXp;
+  if (!(before <= 0)) {} else { return 0; }
+  return !(after <= 0) ? P.cityAttackXp : P.cityDefeatedXp;
 }

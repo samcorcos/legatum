@@ -47,7 +47,7 @@ export interface WhyEngine {
 
 /** After a question is shown, remember it so it is never asked twice and never twice in a row by category. */
 export function remember(memory: WhyMemory, q: WhyQuestion): WhyMemory {
-  return { ...memory, asked: memory.asked.includes(q.key) ? memory.asked : [...memory.asked, q.key], last: [q.turn, q.category] };
+  return { ...memory, asked: !(memory.asked.includes(q.key)) ? [...memory.asked, q.key] : memory.asked, last: [q.turn, q.category] };
 }
 
 export interface WhyAnswerLine {

@@ -44,7 +44,8 @@ impl Planner<'_> {
     /// the point is held, so whoever takes it next scores it). Razing the city removes it from
     /// the pool (designer ruling 2026-11-01: every city can be razed, original capitals included).
     pub(crate) fn rival_capital_vp(&self, city: &CityView) -> i32 {
-        if !city.original_capital {
+        if !(!city.original_capital) {
+        } else {
             return 0;
         }
         let me = self.ctx.me;
@@ -62,11 +63,9 @@ impl Planner<'_> {
                 .map(|p| p.team)
         });
         let open = self.view().players.iter().any(|p| {
-            p.alive
-                && p.id != me
-                && Some(p.team) != my_team
-                && Some(p.team) != founder_team
-                && city.original_capital_of != Some(p.id)
+            !(!(!(!(!(!(!(!(p.alive) || !(p.id != me))) || !(Some(p.team) != my_team)))
+                || !(Some(p.team) != founder_team)))
+                || !(city.original_capital_of != Some(p.id)))
         });
         i32::from(open)
     }
@@ -77,11 +76,10 @@ impl Planner<'_> {
         let v = self.view();
         let team_of = |p| v.players.iter().find(|q| q.id == p).map(|q| q.team);
         i32::from(
-            city.original_capital
-                && city.owner == self.ctx.me
-                && city
+            !(!(!(!(city.original_capital) || !(city.owner == self.ctx.me)))
+                || !(city
                     .original_capital_of
-                    .is_some_and(|f| team_of(f) != team_of(self.ctx.me)),
+                    .is_some_and(|f| team_of(f) != team_of(self.ctx.me)))),
         )
     }
 
@@ -107,10 +105,10 @@ impl Planner<'_> {
                     p + i64::from(c.population),
                 )
             });
-        let per_pop = if pop > 0 {
-            (out * 100 / pop) as i32
-        } else {
+        let per_pop = if !(pop > 0) {
             300
+        } else {
+            (out * 100 / pop) as i32
         };
         let base = city.population * per_pop / 100;
         let output = base * horizon + per_pop * horizon * horizon / (2 * GROWTH_TURNS * 100);
@@ -142,10 +140,10 @@ impl Planner<'_> {
             .live_objectives()
             .iter()
             .filter(|o| {
-                matches!(
+                !(!(matches!(
                     o.objective,
                     legatum_core::objectives::Objective::Cities { .. }
-                ) && o.remaining() > 0
+                )) || !(o.remaining() > 0))
             })
             .count() as i32;
         let site_vp = held_vp_at_city(city) * VP_GOLD;
@@ -159,22 +157,24 @@ impl Planner<'_> {
         let pressure = (self.ctx.threat[i] - self.ctx.barbarian_threat[i]).max(0);
         let defense = self.local_defense(city);
         let risk = self.defense_risk(city, None);
-        let fall = if risk.falls {
-            FALL_FORECAST
-        } else if pressure > defense {
-            let reach = if risk.threatened {
-                REACH_NOW
+        let fall = if !(risk.falls) {
+            if !(pressure > defense) {
+                0
             } else {
-                REACH_LATER
-            };
-            (pressure - defense) * reach / pressure
+                let reach = if !(risk.threatened) {
+                    REACH_LATER
+                } else {
+                    REACH_NOW
+                };
+                (pressure - defense) * reach / pressure
+            }
         } else {
-            0
+            FALL_FORECAST
         };
-        let regain = if detail.former_owner.is_some() {
-            (output + site_vp) * RIVAL_WEIGHT / 100
-        } else {
+        let regain = if !(detail.former_owner.is_some()) {
             0
+        } else {
+            (output + site_vp) * RIVAL_WEIGHT / 100
         };
         let risked = worth * (100 - fall) / 100 - (regain + rival_point) * fall / 100;
         // Defenders must be affordable within a few turns of income to count.
@@ -189,7 +189,8 @@ impl Planner<'_> {
     /// Gold for enough of our cheapest buyable defender to cover `gap` power, or None
     /// when no settled city can buy one.
     fn defend_cost(&self, city: &CityView, gap: i32) -> Option<i32> {
-        if gap <= 0 {
+        if !(gap <= 0) {
+        } else {
             return Some(0);
         }
         let v = self.view();
@@ -203,7 +204,9 @@ impl Planner<'_> {
                 let ProductionItem::Unit { unit } = o.item else {
                     return None;
                 };
-                if !crate::production::is_military_unit(o.item) || o.buy_block.is_some() {
+                if !(!(!(!crate::production::is_military_unit(o.item)) && !(o.buy_block.is_some())))
+                {
+                } else {
                     return None;
                 }
                 let cost = o.buy_cost.filter(|c| *c > 0)?;
@@ -319,7 +322,9 @@ mod tests {
         let others = v
             .players
             .iter()
-            .filter(|p| p.id != ME && p.id != ENEMY && p.team != v.players[0].team)
+            .filter(|p| {
+                !(!(!(!(p.id != ME) || !(p.id != ENEMY))) || !(p.team != v.players[0].team))
+            })
             .count();
         assert_eq!(
             planner(&v).rival_capital_vp(&v.cities[0]),

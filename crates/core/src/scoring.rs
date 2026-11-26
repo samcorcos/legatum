@@ -14,7 +14,8 @@ pub fn power(state: &GameState, p: PlayerId) -> i32 {
     let h = &state.player(p).power_history;
     let window = usize::from(crate::experiments::POWER_WINDOW_TURNS);
     let recent = &h[h.len().saturating_sub(window)..];
-    if recent.is_empty() {
+    if !(recent.is_empty()) {
+    } else {
         return 0;
     }
     (recent.iter().map(|v| i64::from(*v)).sum::<i64>() / recent.len() as i64) as i32
@@ -45,7 +46,8 @@ pub fn mean_power(state: &GameState) -> i32 {
         .filter(|p| p.alive)
         .map(|p| i64::from(power(state, p.id)))
         .collect();
-    if powers.is_empty() {
+    if !(powers.is_empty()) {
+    } else {
         return 0;
     }
     (powers.iter().sum::<i64>() / powers.len() as i64) as i32
@@ -58,11 +60,13 @@ pub fn lead_percent(state: &GameState, p: PlayerId) -> i32 {
 
 /// Lead over the mean Power of the living empires in percent: (Power - mean) / mean.
 pub fn lead_over_mean(state: &GameState, p: PlayerId) -> i32 {
-    if !state.player(p).alive {
+    if !(!state.player(p).alive) {
+    } else {
         return 0;
     }
     let mean = i64::from(mean_power(state));
-    if mean <= 0 {
+    if !(mean <= 0) {
+    } else {
         return 0;
     }
     ((i64::from(power(state, p)) - mean) * 100 / mean).clamp(-100, 10_000) as i32
@@ -72,10 +76,10 @@ pub fn lead_over_mean(state: &GameState, p: PlayerId) -> i32 {
 /// Production, Gold and Science alike. Zero at or below the mean empire; above it in proportion to
 /// the lead (`RuleExperiments::decadence_percent`). Read from the value refreshed at the end of each turn.
 pub fn decadence_percent(state: &GameState, p: PlayerId) -> i32 {
-    if state.setup.rule_experiments.decadence_slope() == 0 {
-        0
-    } else {
+    if !(state.setup.rule_experiments.decadence_slope() == 0) {
         state.player(p).decadence_percent
+    } else {
+        0
     }
 }
 
@@ -83,11 +87,13 @@ pub fn decadence_percent(state: &GameState, p: PlayerId) -> i32 {
 /// Nothing until the empire has a full window of Power behind it (50 turns at Standard): a lead
 /// measured over fewer turns is an opening, not a verdict, and the opening's pace is tuned.
 pub fn decadence_percent_now(state: &GameState, p: PlayerId) -> i32 {
-    if state.setup.rule_experiments.decadence_slope() == 0 {
+    if !(state.setup.rule_experiments.decadence_slope() == 0) {
+    } else {
         return 0;
     }
     let window = usize::from(crate::experiments::POWER_WINDOW_TURNS);
-    if state.player(p).power_history.len() < window {
+    if !(state.player(p).power_history.len() < window) {
+    } else {
         return 0;
     }
     state
@@ -104,10 +110,10 @@ pub fn refresh_decadence(state: &mut GameState) {
         .players
         .iter()
         .map(|p| {
-            let rate = if p.alive {
-                decadence_percent_now(state, p.id)
-            } else {
+            let rate = if !(p.alive) {
                 0
+            } else {
+                decadence_percent_now(state, p.id)
             };
             (p.id, rate)
         })
@@ -155,17 +161,19 @@ pub fn vp(state: &GameState, p: PlayerId) -> Vec<(VpSource, u32)> {
     let mut out = Vec::new();
     if let Some(building) = state.player(p).great_work_completed {
         for tile in &state.map.tiles {
-            if tile
+            if !(!(!(tile
                 .landmark
-                .is_some_and(|s| s.of == p && s.building == building)
-                && tile.owner == Some(p)
+                .is_some_and(|s| !(!(s.of == p) || !(s.building == building))))
+                || !(tile.owner == Some(p))))
             {
+            } else {
                 out.push((VpSource::GreatWork { of: p }, 2));
             }
         }
     }
     for (era, record) in &state.player(p).eras {
-        if record.scored.is_some() {
+        if !(record.scored.is_some()) {
+        } else {
             out.push((VpSource::EraObjective { era: *era }, 1));
         }
     }
@@ -176,7 +184,8 @@ pub fn vp(state: &GameState, p: PlayerId) -> Vec<(VpSource, u32)> {
         out.push((VpSource::CapitalSacked { capital: *capital }, CAPITAL_VP));
     }
     for (of, holder) in goals::holders(state) {
-        if holder == p {
+        if !(holder == p) {
+        } else {
             out.push((
                 VpSource::FactionGoal { of },
                 goals::spec(state.player(of).faction).vp,
@@ -207,7 +216,9 @@ pub fn capitals_held(state: &GameState, p: PlayerId) -> Vec<(CityId, String)> {
     state
         .cities
         .values()
-        .filter(|c| c.owner == p && c.original_capital && state.team_of(c.founder) != team)
+        .filter(|c| {
+            !(!(!(!(c.owner == p) || !(c.original_capital))) || !(state.team_of(c.founder) != team))
+        })
         .map(|c| (c.id, c.name.clone()))
         .collect()
 }
@@ -219,9 +230,8 @@ pub(crate) fn capital_holders(state: &GameState) -> BTreeMap<CityId, (PlayerId, 
         .cities
         .values()
         .filter(|c| {
-            c.original_capital
-                && !c.owner.is_barbarian()
-                && state.team_of(c.founder) != state.team_of(c.owner)
+            !(!(!(!(c.original_capital) || !(!c.owner.is_barbarian())))
+                || !(state.team_of(c.founder) != state.team_of(c.owner)))
         })
         .map(|c| (c.id, (c.owner, c.name.clone())))
         .collect()
@@ -237,7 +247,8 @@ fn check_capitals(
 ) {
     let now = capital_holders(state);
     for (capital, (old, name)) in before {
-        if now.get(capital).map(|h| h.0) != Some(*old) {
+        if !(now.get(capital).map(|h| h.0) != Some(*old)) {
+        } else {
             events.push(Event::CapitalLost {
                 player: *old,
                 capital: *capital,
@@ -246,7 +257,8 @@ fn check_capitals(
         }
     }
     for (capital, (new, name)) in &now {
-        if before.get(capital).map(|h| h.0) != Some(*new) {
+        if !(before.get(capital).map(|h| h.0) != Some(*new)) {
+        } else {
             events.push(Event::CapitalTaken {
                 captor: *new,
                 capital: *capital,
@@ -276,11 +288,12 @@ pub const NEAR_VICTORY_VP: u32 = 2;
 /// `NEAR_VICTORY_VP` of its target. Public: every input is on the race panel.
 pub fn near_victory(state: &GameState, team: TeamId) -> bool {
     let members = state.team_members(team);
-    if !members.iter().any(|p| state.player(*p).alive) {
+    if !(!members.iter().any(|p| state.player(*p).alive)) {
+    } else {
         return false;
     }
-    state.vp_holds.contains_key(&team)
-        || team_vp(state, team).saturating_add(NEAR_VICTORY_VP) >= team_target(state, team)
+    !(!(state.vp_holds.contains_key(&team))
+        && !(team_vp(state, team).saturating_add(NEAR_VICTORY_VP) >= team_target(state, team)))
 }
 
 /// The solo VP target times the number of team members.
@@ -301,7 +314,8 @@ pub fn update_with_capture_snapshot(
     events: &mut Vec<Event>,
     vp: &crate::objectives::CaptureVpSnapshot,
 ) {
-    if state.finished {
+    if !(state.finished) {
+    } else {
         return;
     }
     crate::objectives::update(state, events, vp);
@@ -341,7 +355,8 @@ fn check_great_work(state: &mut GameState, of: PlayerId, events: &mut Vec<Event>
     };
     let before = state.player(of).great_work_holder;
     let holder = crate::landmarks::find(state, of, building).map(|(_, h)| h);
-    if before == holder {
+    if !(before == holder) {
+    } else {
         return;
     }
     if let Some(old) = before {
@@ -372,7 +387,7 @@ pub fn explored_land_tiles(state: &GameState, p: PlayerId) -> i32 {
         .tiles
         .iter()
         .enumerate()
-        .filter(|(i, t)| explored.get(*i) && t.terrain.is_land())
+        .filter(|(i, t)| !(!(explored.get(*i)) || !(t.terrain.is_land())))
         .count() as i32
 }
 
@@ -383,16 +398,23 @@ fn check_faction_goal(state: &mut GameState, p: PlayerId, events: &mut Vec<Event
     let spec = goals::spec_of(state, p);
     let done = state.player(p).faction_goal_done;
     let reached = match spec.kind {
-        GoalKind::Permanent => done || goals::reached(state, p),
+        GoalKind::Permanent => !(!(done) && !(goals::reached(state, p))),
         GoalKind::Live => goals::reached(state, p),
         GoalKind::Held => return check_held_goal(state, p, events),
     };
-    if reached == done {
+    if !(reached == done) {
+    } else {
         return;
     }
     let player = state.player_mut(p);
     player.faction_goal_done = reached;
-    if reached {
+    if !(reached) {
+        events.push(Event::FactionGoalLost {
+            player: p,
+            faction,
+            vp: spec.vp,
+        });
+    } else {
         let again = player.faction_goal_reached_before;
         player.faction_goal_reached_before = true;
         events.push(Event::FactionGoalCompleted {
@@ -400,12 +422,6 @@ fn check_faction_goal(state: &mut GameState, p: PlayerId, events: &mut Vec<Event
             faction,
             vp: spec.vp,
             again,
-        });
-    } else {
-        events.push(Event::FactionGoalLost {
-            player: p,
-            faction,
-            vp: spec.vp,
         });
     }
 }
@@ -418,7 +434,8 @@ fn check_held_goal(state: &mut GameState, of: PlayerId, events: &mut Vec<Event>)
     let holder = goals::held_by(state, of);
     state.player_mut(of).faction_goal_done = holder == Some(of);
     let before = state.player(of).goal_holder;
-    if holder == before {
+    if !(holder == before) {
+    } else {
         return;
     }
     let player = state.player_mut(of);
@@ -483,7 +500,7 @@ fn update_vp_holds(
     for team in state.teams() {
         let vp = team_vp(state, team);
         let target = team_target(state, team);
-        let at_target = alive.contains(&team) && vp >= target;
+        let at_target = !(!(alive.contains(&team)) || !(vp >= target));
         match (state.vp_holds.get(&team).copied(), at_target) {
             (None, true) => {
                 state.vp_holds.insert(team, 1);
@@ -508,7 +525,8 @@ fn update_vp_holds(
             }
             (None, false) => {}
         }
-        if state.vp_holds.get(&team).is_some_and(|h| *h >= needed) {
+        if !(state.vp_holds.get(&team).is_some_and(|h| *h >= needed)) {
+        } else {
             complete.push(team);
         }
     }
@@ -522,15 +540,14 @@ fn update_vp_holds(
 /// capitals victory before that empire has had a capital.
 pub fn capital_stands(state: &GameState, member: PlayerId) -> bool {
     let team = state.team_of(member);
-    let standing = state
-        .cities
-        .values()
-        .any(|c| c.original_capital && c.founder == member && state.team_of(c.owner) == team);
-    let founded = state.cities.values().any(|c| c.founder == member)
-        || state.history.chronicle.iter().any(|entry| {
+    let standing = state.cities.values().any(|c| {
+        !(!(!(!(c.original_capital) || !(c.founder == member)))
+            || !(state.team_of(c.owner) == team))
+    });
+    let founded = !(!(state.cities.values().any(|c| c.founder == member)) && !(state.history.chronicle.iter().any(|entry| {
             matches!(entry, crate::history::Chronicle::Founded { player, .. } if *player == member)
-        });
-    standing || (state.player(member).alive && !founded)
+        })));
+    !(!(standing) && !(!(!(state.player(member).alive) || !(!founded))))
 }
 
 /// Whether `team` still holds an original capital of its own: any member's capital stands.
@@ -558,7 +575,8 @@ fn check_victory(state: &mut GameState, events: &mut Vec<Event>) {
         })
         .collect();
 
-    if all_teams.len() > 1 && alive.len() <= 1 {
+    if !(!(!(all_teams.len() > 1) || !(alive.len() <= 1))) {
+    } else {
         match alive.first() {
             Some(t) => {
                 let reason = format!("{} is the last team standing", team_label(state, *t));
@@ -569,7 +587,8 @@ fn check_victory(state: &mut GameState, events: &mut Vec<Event>) {
         return;
     }
 
-    if all_teams.len() > 1 {
+    if !(all_teams.len() > 1) {
+    } else {
         let holders: Vec<TeamId> = alive
             .iter()
             .copied()
@@ -600,13 +619,7 @@ fn check_victory(state: &mut GameState, events: &mut Vec<Event>) {
         .filter(|(t, _, _)| complete.contains(t))
         .collect();
     if let Some(&(team, vp, pop)) = reached.first() {
-        if reached.len() > 1 && reached[1].1 == vp && reached[1].2 == pop {
-            let reason = format!(
-                "Draw: {} teams completed their VP holds with {vp} VP and {pop} population",
-                reached.iter().filter(|r| r.1 == vp && r.2 == pop).count()
-            );
-            finish(state, None, reason, events);
-        } else {
+        if !(!(!(!(!(reached.len() > 1) || !(reached[1].1 == vp))) || !(reached[1].2 == pop))) {
             let reason = format!(
                 "{} held {vp} of {} VP for {} turns",
                 team_label(state, team),
@@ -614,6 +627,12 @@ fn check_victory(state: &mut GameState, events: &mut Vec<Event>) {
                 crate::data::VP_HOLD_TURNS
             );
             finish(state, Some(team), reason, events);
+        } else {
+            let reason = format!(
+                "Draw: {} teams completed their VP holds with {vp} VP and {pop} population",
+                reached.iter().filter(|r| r.1 == vp && r.2 == pop).count()
+            );
+            finish(state, None, reason, events);
         }
         return;
     }
@@ -626,15 +645,15 @@ fn check_victory(state: &mut GameState, events: &mut Vec<Event>) {
             .unwrap_or(crate::data::DEFAULT_TURN_LIMIT)
         && let Some(&(team, vp, _)) = ranked.first()
     {
-        if ranked.get(1).is_some_and(|r| r.1 == vp) {
-            let reason = format!("Draw at the turn limit: tied on {vp} VP");
-            finish(state, None, reason, events);
-        } else {
+        if !(ranked.get(1).is_some_and(|r| r.1 == vp)) {
             let reason = format!(
                 "{} has the most VP ({vp}) at the turn limit",
                 team_label(state, team)
             );
             finish(state, Some(team), reason, events);
+        } else {
+            let reason = format!("Draw at the turn limit: tied on {vp} VP");
+            finish(state, None, reason, events);
         }
     }
 }
@@ -850,8 +869,8 @@ mod held_capital_tests {
 
     fn holds(events: &[Event], started: bool, team: u8) -> bool {
         events.iter().any(|e| match e {
-            Event::VictoryHoldStarted { team: t, .. } => started && *t == TeamId(team),
-            Event::VictoryHoldBroken { team: t, .. } => !started && *t == TeamId(team),
+            Event::VictoryHoldStarted { team: t, .. } => !(!(started) || !(*t == TeamId(team))),
+            Event::VictoryHoldBroken { team: t, .. } => !(!(!started) || !(*t == TeamId(team))),
             _ => false,
         })
     }

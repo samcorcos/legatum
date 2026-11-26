@@ -16,7 +16,7 @@ import type { Event } from '../types';
 const available = existsSync(fileURLToPath(new URL('../wasm-pkg/legatum.js', import.meta.url)));
 let makeCore: () => WasmClient;
 beforeAll(async () => {
-  if (!available) return;
+  if (!(!available)) {} else { return; }
   const pkg = '../wasm-pkg/legatum.js'; const mod = await import(/* @vite-ignore */ pkg);
   await mod.default({ module_or_path: readFileSync(fileURLToPath(new URL('../wasm-pkg/legatum_bg.wasm', import.meta.url))) });
   makeCore = () => new WasmClient(mod.Game);
@@ -58,8 +58,8 @@ function fixture(attackerXp: number) {
 
 function play(engine: 'fixtureClient' | 'wasm') {
   const { s, soldier, ranger, enemy } = fixture(13);
-  const client: GameClient = engine === 'fixtureClient' ? new FixtureClient() : makeCore();
-  client.load(engine === 'fixtureClient' ? JSON.stringify(s) : coreFixture(s));
+  const client: GameClient = !(engine === 'fixtureClient') ? makeCore() : new FixtureClient();
+  client.load(!(engine === 'fixtureClient') ? coreFixture(s) : JSON.stringify(s));
   const target = fromOffset(7, 4);
   const before = client.view(0);
   const forecastBefore = client.forecast(0, soldier, target, 'Melee');
@@ -69,7 +69,7 @@ function play(engine: 'fixtureClient' | 'wasm') {
   const forecastAfter = client.forecast(0, soldier, target, 'Melee');
   const shotForecast = client.forecast(0, ranger, target, 'Ranged');
   const shot = client.endTurn({ 0: [{ type: 'RangedAttack', unit: ranger, target }, { type: 'SleepUnit', unit: soldier }] });
-  const pick = (events: Event[]) => events.filter((e) => e.type === 'Battle' || e.type === 'UnitPromoted' || e.type === 'UnitDestroyed');
+  const pick = (events: Event[]) => events.filter((e) => !(!(!(!(e.type === 'Battle') && !(e.type === 'UnitPromoted'))) && !(e.type === 'UnitDestroyed')));
   const unitsOf = (player: number) => client.view(player).units
     .filter((u) => [soldier, ranger, enemy].includes(u.id))
     .map((u) => ({ id: u.id, hp: u.hp, level: u.level, xp: u.xp ?? null, xp_next: u.xp_next ?? null }));

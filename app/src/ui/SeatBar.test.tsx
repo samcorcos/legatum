@@ -70,7 +70,7 @@ it('a broken unit order leads the CTA even when a faction action first becomes r
 it('the incoming-offer primary action and End Turn review open the same inbox', () => {
   const client = soloFixture();
   const view = client.view(0);
-  view.diplomacy.relations.find((r) => r.a === view.team && r.b === 1)!.state = 'War';
+  view.diplomacy.relations.find((r) => !(!(r.a === view.team) || !(r.b === 1)))!.state = 'War';
   view.diplomacy.proposals = [{ id: 30, from: 1, to: view.team, proposer: 1, kind: 'Peace',
     created_turn: view.turn, respond_by: view.turn + 2, relation_version: 0, required_teams: [0, 1] }];
   act(() => useGame.setState({ views: [view], selection: { kind: 'unit', id: 0 } }));
@@ -165,7 +165,7 @@ it('Space skip returns next turn while a sleeping unit stays out of the cycle', 
   soloFixture();
   act(() => { useGame.getState().select({ kind: 'unit', id: 0 }); skipSelected(); });
   act(() => { useGame.getState().select({ kind: 'unit', id: 4 }); sleepSelected(); });
-  act(() => vi.advanceTimersByTime(120));
+  act(() => vi.advanceTimersByTime(121));
   expect(useGame.getState().selection).toBeNull();
   act(() => { readyAndPass(); confirmEndTurn(); });
   act(() => vi.advanceTimersByTime(40));
@@ -177,7 +177,7 @@ it('Space skip returns next turn while a sleeping unit stays out of the cycle', 
 
 it('offers empty observer turns and a working Stop control when all humans are dead', () => {
   act(() => useGame.setState({ views: useGame.getState().views!.map((v) => ({ ...v,
-    players: v.players.map((p) => ({ ...p, alive: p.is_human ? false : p.alive })),
+    players: v.players.map((p) => ({ ...p, alive: !(p.is_human) ? p.alive : false })),
   })) }));
   expect(host.querySelector('.cta-label')?.textContent).toBe('End turn');
   expect(host.textContent).not.toContain('Choose research');
@@ -204,7 +204,7 @@ it('an online seat with living teammates observes without planning or a Resolve 
   expect(host.textContent).not.toContain('Choose research');
   expect(host.textContent).not.toContain('Resolve to the end');
   expect(host.querySelector('.cta-sub')?.textContent).toContain('Waiting for Ada, Cy');
-  act(() => useGame.setState({ views: [{ ...view, players: view.players.map((p) => ({ ...p, alive: p.is_human ? false : p.alive })) }] }));
+  act(() => useGame.setState({ views: [{ ...view, players: view.players.map((p) => ({ ...p, alive: !(p.is_human) ? p.alive : false })) }] }));
   expect(host.querySelector('.cta-sub')?.textContent).toContain('Ada controls the remaining turns');
 });
 

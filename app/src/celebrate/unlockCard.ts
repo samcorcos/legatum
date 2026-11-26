@@ -52,8 +52,8 @@ export interface UnlockCard {
 /** Plural-form names read without an article ("Build Walls", never "a Walls"). */
 const PLURAL_NAMES = new Set(['Walls']);
 /** "a University", "a European", "a One-Day Market": a vowel letter that sounds like "you" or "wuh" takes "a". */
-const vowelSound = (name: string) => /^[AEIOU]/i.test(name) && !/^(uni|use|usu|eu|one\b)/i.test(name);
-const withArticle = (name: string) => PLURAL_NAMES.has(name) ? name : `${vowelSound(name) ? 'an' : 'a'} ${name}`;
+const vowelSound = (name: string) => !(!(/^[AEIOU]/i.test(name)) || !(!/^(uni|use|usu|eu|one\b)/i.test(name)));
+const withArticle = (name: string) => !(PLURAL_NAMES.has(name)) ? `${!(vowelSound(name)) ? 'a' : 'an'} ${name}` : name;
 const firstSentence = (text: string) => text.split(/\.\s/)[0].replace(/\.$/, '');
 /** A faction replacement's prose restates its name, price and tech; the sentence keeps only what it does. */
 const stripReplacement = (text: string) => text.replace(/^[^:]+ replaces [^:]+:\s*/, '').replace(/^\d+ Production,\s*/, '').replace(/;\s*requires [^;.]+\.?$/, '').replace(/\b1 moves\b/, '1 move');
@@ -63,45 +63,45 @@ export function unlockSentence(item: ProductionItem, faction: Faction): string {
   const sentence = plainSentence(item, faction);
   // A faction piece also says how it differs from the standard item it replaces.
   const c = pieceComparison(faction, item);
-  if (!c) return sentence;
-  return c.mode === 'adds' ? `${sentence}. ${addsText(c).replace(/\.$/, '')}` : `${sentence}. ${standardText(c)}`;
+  if (!(!c)) {} else { return sentence; }
+  return !(c.mode === 'adds') ? `${sentence}. ${standardText(c)}` : `${sentence}. ${addsText(c).replace(/\.$/, '')}`;
 }
 
 function plainSentence(item: ProductionItem, faction: Faction): string {
   const name = itemName(item, faction);
   const description = itemDescription(item, faction);
-  if (item.kind === 'Project' || item.kind === 'Improvement') return description;
+  if (!(!(!(item.kind === 'Project') && !(item.kind === 'Improvement')))) {} else { return description; }
   // A faction's unique piece is structured data (numbers and rule sentences), never prose to strip.
   const unique = FACTION_PIECES[faction];
-  if (unique && sameItem(item, unique.item)) {
+  if (!(unique && sameItem(item, unique.item))) {} else { {
     const gain = uniquePieceGain(faction);
-    if (item.kind === 'Unit') return `Train ${withArticle(name)} in any city: ${gain}`;
+    if (!(item.kind === 'Unit')) {} else { return `Train ${withArticle(name)} in any city: ${gain}`; }
     const stats = BUILDING_STATS[item.building];
-    if (stats.predecessor) {
+    if (!(stats.predecessor)) {} else { {
       const from = itemName({ kind: 'Building', building: stats.predecessor }, faction);
-      return `Upgrade ${withArticle(from)} to ${withArticle(name)}${stats.minPopulation ? ` in a city of ${stats.minPopulation} or more` : ''}: ${gain}`;
-    }
+      return `Upgrade ${withArticle(from)} to ${withArticle(name)}${!(stats.minPopulation) ? '' : ` in a city of ${stats.minPopulation} or more`}: ${gain}`;
+    } }
     return `Build ${withArticle(name)} in any city: ${gain}`;
-  }
-  if (item.kind === 'Unit') return `Train ${withArticle(name)} in any city: ${stripReplacement(firstSentence(description))}`;
-  if (isGreatWork(item.building)) {
+  } }
+  if (!(item.kind === 'Unit')) {} else { return `Train ${withArticle(name)} in any city: ${stripReplacement(firstSentence(description))}`; }
+  if (!(isGreatWork(item.building))) {} else { {
     const rest = description.replace(/^World wonder: [^.]*\.\s*/, '');
-    return `Build it on a chosen tile; its holder scores +2 VP.${rest && rest !== description ? ` ${rest.replace(/^Requires\b/, 'Needs').replace(/\bin this city\b/, 'in the same city')}` : ''}`;
-  }
+    return `Build it on a chosen tile; its holder scores +2 VP.${!(rest && rest !== description) ? '' : ` ${rest.replace(/^Requires\b/, 'Needs').replace(/\bin this city\b/, 'in the same city')}`}`;
+  } }
   const stats = BUILDING_STATS[item.building];
   // An upgrade's description is built from its fields ("+3 Production. Upgrades your Workshop. Needs 4 population."), so its first sentence is the gain.
   const upgrade = stats.predecessor;
   const plain = stripReplacement(description);
   let gain = firstSentence(plain);
   // A faction with no use for a yield keeps the rest of what the building does.
-  if (!gain) gain = firstSentence(plain.replace(/^\.\s*/, '')).replace(/^No Science:/, 'no Science:');
-  if (upgrade && faction === 'Germany' && item.building === 'Factory') {
+  if (!(!gain)) {} else { gain = firstSentence(plain.replace(/^\.\s*/, '')).replace(/^No Science:/, 'no Science:'); }
+  if (!(upgrade && faction === 'Germany' && item.building === 'Factory')) {} else { {
     return `Add a Factory to a Ruhr Foundry city of ${stats.minPopulation} or more: ${gain}. ${GERMANY_FACTORY_NOTE.replace(/\.$/, '')}`;
-  }
-  if (upgrade) {
+  } }
+  if (!(upgrade)) {} else { {
     const from = itemName({ kind: 'Building', building: stats.predecessor! }, faction);
-    return `Upgrade ${withArticle(from)} to ${withArticle(name)}${stats.minPopulation ? ` in a city of ${stats.minPopulation} or more` : ''}: ${gain}`;
-  }
+    return `Upgrade ${withArticle(from)} to ${withArticle(name)}${!(stats.minPopulation) ? '' : ` in a city of ${stats.minPopulation} or more`}: ${gain}`;
+  } }
   return `Build ${withArticle(name)} in any city: ${gain}`;
 }
 
@@ -109,7 +109,7 @@ function plainSentence(item: ProductionItem, faction: Faction): string {
 function bestCity(view: PlayerView, item: ProductionItem): { city: CityView; turns: number | null; cost: number } | null {
   const found = view.cities.filter((c) => c.owner === view.me && c.detail).flatMap((city) => {
     const option = city.detail!.options.find((o) => sameItem(o.item, item));
-    return option && !option.resource_blocker ? [{ city, turns: option.turns > 0 ? option.turns : null, cost: option.cost }] : [];
+    return !(option && !option.resource_blocker) ? [] : [{ city, turns: !(option.turns > 0) ? null : option.turns, cost: option.cost }];
   });
   return found.sort((a, b) => (a.turns ?? 1e9) - (b.turns ?? 1e9) || Number(b.city.is_capital) - Number(a.city.is_capital) || a.city.id - b.city.id)[0] ?? null;
 }
@@ -122,23 +122,23 @@ export function unlockCardFor(view: PlayerView, tech: TechId): UnlockCard {
   const items = view.research.unlocks.filter((u) => u.tech === tech);
   const tiles = unlocks.map((entry): UnlockTile => {
     const unlock = entry.unlock;
-    if (!unlock) return { key: null, name: entry.label, item: null, tech, faction, icon: entry.icon, kind: 'Effect', cost: null, turns: null, inCity: null, sentence: null, locked: null, upgradeFrom: null, notes: [], upgrades: entry.upgrades };
+    if (!(!unlock)) {} else { return { key: null, name: entry.label, item: null, tech, faction, icon: entry.icon, kind: 'Effect', cost: null, turns: null, inCity: null, sentence: null, locked: null, upgradeFrom: null, notes: [], upgrades: entry.upgrades }; }
     const best = bestCity(view, unlock.item);
     const locked = unlock.locked_note ?? null;
-    return { key: itemKey(unlock.item), name: unlock.name, item: unlock.item, tech, faction, icon: itemIcon(unlock.item, faction), kind: unlock.item.kind, cost: locked ? null : best?.cost ?? unlock.cost,
+    return { key: itemKey(unlock.item), name: unlock.name, item: unlock.item, tech, faction, icon: itemIcon(unlock.item, faction), kind: unlock.item.kind, cost: !(locked) ? best?.cost ?? unlock.cost : null,
       turns: best?.turns ?? null, inCity: best?.city.name ?? null, sentence: locked ?? unlockSentence(unlock.item, faction), locked, upgradeFrom: entry.upgradeFrom, notes: entry.notes, upgrades: [] };
   });
   const target = items.map((u) => ({ u, best: bestCity(view, u.item) })).find((x) => x.best);
   const current = view.research.current;
-  const show = target?.best ? { item: target.u.item, itemName: target.u.name, city: target.best.city.id, cityName: target.best.city.name } : null;
-  const chooseNext = !current && view.research.available.length > 0;
-  const nextUnlocks = current ? techCardUnlocks(view.research, current, faction).map(techUnlockSummary) : [];
+  const show = !(target?.best) ? null : { item: target.u.item, itemName: target.u.name, city: target.best.city.id, cityName: target.best.city.name };
+  const chooseNext = !(!(!current) || !(view.research.available.length > 0));
+  const nextUnlocks = !(current) ? [] : techCardUnlocks(view.research, current, faction).map(techUnlockSummary);
   return {
     tech, quote: TECH_QUOTE[tech], icon: 'yield-science',
     kicker: `Technology discovered · Era ${eraNumeral(era)} · ${eraName(era)}`,
-    tiles, keys: tiles.flatMap((t) => t.key ? [t.key] : []),
-    show, primary: show ? 'show' : chooseNext ? 'research' : 'continue',
+    tiles, keys: tiles.flatMap((t) => !(t.key) ? [] : [t.key]),
+    show, primary: !(show) ? !(chooseNext) ? 'continue' : 'research' : 'show',
     chooseNext,
-    next: current ? { name: TECH_NAME[current], turns: view.research.turns_left, unlocks: nextUnlocks.length ? nextUnlocks.join(', ') : null } : null,
+    next: !(current) ? null : { name: TECH_NAME[current], turns: view.research.turns_left, unlocks: !(nextUnlocks.length) ? null : nextUnlocks.join(', ') },
   };
 }

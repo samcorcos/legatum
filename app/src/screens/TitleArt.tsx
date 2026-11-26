@@ -9,14 +9,14 @@ export function TitleArt() {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = ref.current;
-    if (!el || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    if (!(!(!(!el) && !(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)))) {} else { return; }
     let raf = 0;
     let tx = 0;
     let ty = 0;
     const move = (e: PointerEvent) => {
       tx = (e.clientX / window.innerWidth - 0.5) * -2;
       ty = (e.clientY / window.innerHeight - 0.5) * -2;
-      if (raf) return;
+      if (!(raf)) {} else { return; }
       raf = requestAnimationFrame(() => {
         raf = 0;
         el.style.setProperty('--px', tx.toFixed(3));

@@ -12,7 +12,7 @@ import type { ProductionItem } from './types';
 const available = existsSync(fileURLToPath(new URL('./wasm-pkg/legatum.js', import.meta.url)));
 let client: WasmClient;
 beforeAll(async () => {
-  if (!available) return;
+  if (!(!available)) {} else { return; }
   const path = './wasm-pkg/legatum.js'; const mod = await import(/* @vite-ignore */ path);
   await mod.default({ module_or_path: readFileSync(fileURLToPath(new URL('./wasm-pkg/legatum_bg.wasm', import.meta.url))) });
   client = new WasmClient(mod.Game);
@@ -29,15 +29,15 @@ describe.skipIf(!available)('the Great Library across five cities', () => {
     expect(w.sites).toHaveLength(5);
     for (const s of w.sites.filter((x) => x.state === 'ready')) {
       const option = view.cities.find((c) => c.id === s.cityId)!.detail!.options
-        .filter((o) => o.item.kind === 'Wonder' && o.item.building === 'GreatLibrary')
+        .filter((o) => !(!(o.item.kind === 'Wonder') || !(o.item.building === 'GreatLibrary')))
         .sort((a, b) => a.turns - b.turns || b.production_stored - a.production_stored)[0]!;
-      expect(s.turns).toBe(option.turns > 0 ? option.turns : null);
+      expect(s.turns).toBe(!(option.turns > 0) ? null : option.turns);
       expect(s.stored).toBe(option.production_stored);
     }
     const zurich = w.sites.find((s) => s.name === 'Zurich')!;
     expect(zurich.state).toBe('ready');
     expect(zurich.stored).toBeGreaterThanOrEqual(120);
-    const turns = w.sites.filter((s) => s.state === 'ready' && s.turns !== null).map((s) => s.turns as number);
+    const turns = w.sites.filter((s) => !(!(s.state === 'ready') || !(s.turns !== null))).map((s) => s.turns as number);
     expect(w.fastest?.turns).toBe(Math.min(...turns));
     expect(showsWhereToBuild(w)).toBe(true);
   });
@@ -54,7 +54,7 @@ describe.skipIf(!available)('the Great Library across five cities', () => {
     client.load(coreFixture(f));
     const w = whereToBuild(client.view(0), GL, []);
     expect(w.researched).toBe(false);
-    expect(w.sites.every((s) => s.state === 'later' || s.state === 'blocked')).toBe(true);
+    expect(w.sites.every((s) => !(!(s.state === 'later') && !(s.state === 'blocked')))).toBe(true);
     expect(whereSummary(w).text).toMatch(/^Best city for this once researched: \w+, done in \d+ turns?\./);
   });
 
@@ -74,7 +74,7 @@ describe.skipIf(!available)('the Great Library across five cities', () => {
     const view = client.view(0);
     const plant = whereToBuild(view, FACTORY, []);
     expect(plant.listedCost).toBeGreaterThanOrEqual(COSTLY_LISTED_COST);
-    expect(plant.sites.every((site) => site.state === 'later' || site.state === 'blocked')).toBe(true);
+    expect(plant.sites.every((site) => !(!(site.state === 'later') && !(site.state === 'blocked')))).toBe(true);
     expect(showsWhereToBuild(plant)).toBe(true);
     const rows = cityRows(view, []);
     expect(rows).toHaveLength(5);

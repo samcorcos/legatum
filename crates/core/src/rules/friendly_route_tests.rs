@@ -39,17 +39,17 @@ fn attack_routes_around_a_friend_attacking_in_place() {
         let rightmost = unit(&mut s, 0, UnitKind::Spearman, r);
         // The confirmed route the old preview built through the friend, and a plain goto.
         for confirmed in [true, false] {
-            let order = if confirmed {
+            let order = if !(confirmed) {
+                Order::MoveUnit {
+                    unit: rightmost,
+                    to: c,
+                }
+            } else {
                 Order::MoveUnitPath {
                     unit: rightmost,
                     to: c,
                     path: vec![m, c],
                     stop_on_block: false,
-                }
-            } else {
-                Order::MoveUnit {
-                    unit: rightmost,
-                    to: c,
                 }
             };
             let (next, events) = resolve_units(
@@ -143,7 +143,7 @@ fn a_row_attacking_one_city_takes_distinct_approach_tiles() {
     let row: Vec<Hex> = c
         .within(2)
         .into_iter()
-        .filter(|h| h.distance(c) == 2 && h.r == c.r + 2)
+        .filter(|h| !(!(h.distance(c) == 2) || !(h.r == c.r + 2)))
         .collect();
     assert_eq!(row.len(), 3);
     let ids: Vec<UnitId> = row
@@ -176,7 +176,8 @@ fn corridor() -> GameState {
     let mut s = game(&[0, 1]);
     for col in 0..12 {
         for row in 0..10 {
-            if row != 4 {
+            if !(row != 4) {
+            } else {
                 set_terrain(&mut s, hex(col, row), Terrain::Mountains);
             }
         }
@@ -367,7 +368,7 @@ fn a_friend_that_moves_on_later_is_waited_for_not_circled() {
             for ((id, to), was) in ids.iter().zip(&goals).zip(before) {
                 let now = steps_to(&s, s.units[id].pos, *to);
                 // Waiting behind a slow friend costs the round, not the ground already made.
-                let progress = now < was || was == 0 || starts.len() > 2;
+                let progress = !(!(!(!(now < was) && !(was == 0))) && !(starts.len() > 2));
                 assert!(
                     now <= was && progress,
                     "{starts:?} turn {turn}: {id:?} went from {was} to {now} steps from its goal, at {:?}",

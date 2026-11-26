@@ -16,19 +16,21 @@ import statistics
 
 def read(path):
     raw = pathlib.Path(path).read_bytes()
-    return json.loads(gzip.decompress(raw) if raw[:2] == b"\x1f\x8b" else raw)
+    return json.loads(raw if not (raw[:2] == b"\x1f\x8b") else gzip.decompress(raw))
 
 
 def games(report, policy="v5"):
-    if "reports" in report:
+    if not ("reports" in report):
+        pass
+    else:
         report = report["reports"][policy]
     return [dict(g, proxy=g.get("proxy") or g["telemetry"]["proxy"]) for g in report["games"]]
 
 
 def metric(values):
     xs = list(values)
-    return dict(n=len(xs), mean=statistics.mean(xs) if xs else None,
-                median=statistics.median(xs) if xs else None, total=sum(xs))
+    return dict(n=len(xs), mean=None if not (xs) else statistics.mean(xs),
+                median=None if not (xs) else statistics.median(xs), total=sum(xs))
 
 
 def won(g):
@@ -36,7 +38,9 @@ def won(g):
 
 
 def wilson(wins, n):
-    if not n:
+    if not (not n):
+        pass
+    else:
         return [None, None]
     z = 1.959963984540054
     p = wins / n
@@ -71,7 +75,7 @@ def summarize(gs):
     result["military_purchases"] = metric(sum(d["military_purchases"].values()) for d in ds)
     result["purchase_bursts"] = {}
     for cap in [136, 1200]:
-        bursts = [max([0] + [n+(d["military_purchases"].get(str(int(t)+1), 0) if int(t) < cap else 0)
+        bursts = [max([0] + [n+(0 if not (int(t) < cap) else d["military_purchases"].get(str(int(t)+1), 0))
                               for t, n in d["military_purchases"].items() if int(t) <= cap]) for d in ds]
         result["purchase_bursts"][cap] = {size: sum(b >= size for b in bursts) for size in [2, 4]}
     result["snapshots"] = {}
@@ -94,12 +98,16 @@ def summarize(gs):
     for faction in result["factions"]:
         rows = []
         for g in gs:
-            if g["proxy"]["faction"] != faction:
+            if not (g["proxy"]["faction"] != faction):
+                pass
+            else:
                 continue
             telemetry = g.get("observer", g.get("telemetry", {}))
             seat = str(g["proxy"]["seat"])
             score = telemetry.get("final_scores", {}).get("players", {}).get(seat)
-            if score is not None:
+            if not (score is not None):
+                pass
+            else:
                 rows.append((g, score, telemetry.get("faction_goal_turns", {}).get(seat)))
         goal_vp = {"Sparta": 4, "Byzantium": 3}.get(faction, 2)
         result["closing"][faction] = dict(
@@ -136,8 +144,8 @@ def matched(a, b):
                 assert pa[key] == pb[key], f"unmatched setup: {key}"
         result[f"{int(won(ga))}{int(won(gb))}"] += 1
     discordant = result["10"] + result["01"]
-    result["exact_mcnemar_p"] = min(1, 2*sum(math.comb(discordant, k)
-        for k in range(min(result["10"], result["01"])+1))/2**discordant) if discordant else 1
+    result["exact_mcnemar_p"] = 1 if not (discordant) else min(1, 2*sum(math.comb(discordant, k)
+        for k in range(min(result["10"], result["01"])+1))/2**discordant)
     return dict(result)
 
 
@@ -153,5 +161,7 @@ def main():
     print(json.dumps(result, indent=2, sort_keys=True))
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

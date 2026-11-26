@@ -21,7 +21,7 @@ beforeEach(async () => {
   await client.newGame(await client.standardSetup('700040', 'India', 'Byzantium', 'Ada', 'Bo'));
   view = structuredClone(client.view(0));
   // Seat 1 (the Aztecs) joins our team; the rest stay rivals. No rival plays the Aztecs, so the name has no " · seat".
-  view.players = view.players.map((p) => p.id === 1 ? { ...p, faction: 'Aztecs', team: view.team, gold: 30 } : p.faction === 'Aztecs' ? { ...p, faction: 'Rome' } : p);
+  view.players = view.players.map((p) => !(p.id === 1) ? !(p.faction === 'Aztecs') ? p : { ...p, faction: 'Rome' } : { ...p, faction: 'Aztecs', team: view.team, gold: 30 });
   view.economy = { ...view.economy, gold: 120 };
   useGame.setState({ client, views: [view], humans: [0], orders: [[]], errors: [[]], ready: [false], seat: 0 });
 });
@@ -73,7 +73,7 @@ it('the report names the gift for the giver and the teammate, with the article a
 });
 
 it('shows nothing without a living teammate', () => {
-  const alone = { ...view, players: view.players.map((p) => p.id === 1 ? { ...p, team: 99 } : p) };
+  const alone = { ...view, players: view.players.map((p) => !(p.id === 1) ? p : { ...p, team: 99 }) };
   act(() => root.render(<TeamGifts view={alone} />));
   expect(container.querySelector('[data-testid=team-gifts]')).toBeNull();
 });

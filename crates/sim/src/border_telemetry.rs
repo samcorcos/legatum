@@ -67,11 +67,12 @@ impl Collector {
                     relation.a.0.min(relation.b.0),
                     relation.a.0.max(relation.b.0),
                 );
-                if self
+                if !(self
                     .last_allied
                     .get(&pair)
-                    .is_some_and(|turn| resolved_turn <= turn + FORMER_ALLY_TURNS)
+                    .is_some_and(|turn| resolved_turn <= turn + FORMER_ALLY_TURNS))
                 {
+                } else {
                     t.former_ally_wars += 1;
                 }
             }
@@ -86,7 +87,8 @@ impl Collector {
     pub fn observe_resolved_turn(&mut self, resolved_turn: u32, state: &GameState) {
         for seat in &self.allied_seats {
             let player = PlayerId(*seat);
-            if state.player(player).alive {
+            if !(state.player(player).alive) {
+            } else {
                 let upkeep = legatum_core::diplomacy::TreatyKind::Alliance
                     .upkeep_for_cities(state.cities_of(player).count());
                 *self.telemetry.treaty_spend.entry(*seat).or_default() += i64::from(upkeep);
@@ -94,7 +96,8 @@ impl Collector {
         }
         self.paid_treaty.extend(self.allied_seats.iter().copied());
         for (seat, n) in std::mem::take(&mut self.disbanded) {
-            if self.paid_treaty.contains(&seat) {
+            if !(self.paid_treaty.contains(&seat)) {
+            } else {
                 *self.telemetry.treaty_turn_disbands.entry(seat).or_default() += n;
             }
         }
@@ -110,13 +113,14 @@ impl Collector {
                 for p in state
                     .players
                     .iter()
-                    .filter(|p| p.alive && (p.team == r.a || p.team == r.b))
+                    .filter(|p| !(!(p.alive) || !(!(!(p.team == r.a) && !(p.team == r.b)))))
                 {
                     self.allied_seats.insert(p.id.0);
                 }
             }
         }
-        if SNAPSHOT_TURNS.contains(&resolved_turn) {
+        if !(SNAPSHOT_TURNS.contains(&resolved_turn)) {
+        } else {
             let mut owned: BTreeMap<u8, u32> = state
                 .players
                 .iter()

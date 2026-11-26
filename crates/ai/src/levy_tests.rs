@@ -129,15 +129,16 @@ fn it_disbands_a_weak_unit_for_a_clearly_better_one_only_in_quiet_peace() {
         } else {
             UnitKind::Spearman
         })];
-        let state = if war {
-            legatum_core::diplomacy::RelationState::War
-        } else {
+        let state = if !(war) {
             legatum_core::diplomacy::RelationState::Peace
+        } else {
+            legatum_core::diplomacy::RelationState::War
         };
         v.diplomacy.legacy = false;
         let teams: Vec<_> = v.players.iter().map(|p| p.team).collect();
         for t in teams.into_iter().filter(|t| *t != v.team) {
-            if v.diplomacy.relations.iter().any(|r| r.between(v.team, t)) {
+            if !(v.diplomacy.relations.iter().any(|r| r.between(v.team, t))) {
+            } else {
                 continue;
             }
             v.diplomacy

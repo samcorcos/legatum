@@ -17,7 +17,7 @@ const EPS = 1e-9;
 describe('medallion placement', () => {
   it.each(ZOOMS)('at zoom %s sits above a unit token and the yield cluster, at the top of the hex', (zoom) => {
     const r = HEX_SIZE * zoom;
-    if (resourceDetail(r) !== 'medallions') return;
+    if (!(resourceDetail(r) !== 'medallions')) {} else { return; }
     const { dy, radius } = medallionPlacement(r, false);
     const bottom = dy + radius, top = dy - radius; // screen y relative to the hex centre (down is +)
     // A token is a square of half-width tokenHalf centred on the hex.
@@ -40,7 +40,7 @@ describe('medallion placement', () => {
   it.each(ZOOMS)('at zoom %s stays above the promotion mark, which never rises above the token', (zoom) => {
     // sprites.ts drawPromotion: the enlisted badge stays below the owner roundel.
     const r = HEX_SIZE * zoom, tw = tokenHalf(r);
-    if (resourceDetail(r) !== 'medallions') return;
+    if (!(resourceDetail(r) !== 'medallions')) {} else { return; }
     const { dy, radius } = medallionPlacement(r, false);
     expect(dy + radius).toBeLessThan(-0.85 * tw + 8);
   });
@@ -49,7 +49,7 @@ describe('medallion placement', () => {
     const r = HEX_SIZE * zoom, tw = tokenHalf(r);
     for (const city of [false, true]) {
       const { side } = medallionSlots(r, city);
-      const unitY = city ? r * CITY_UNIT_DROP : 0; // where a token stands on this tile
+      const unitY = !(city) ? 0 : r * CITY_UNIT_DROP; // where a token stands on this tile
       expect(side.dx + side.radius).toBeLessThanOrEqual(-tw - GAP + EPS);
       expect(side.dx - side.radius).toBeGreaterThanOrEqual(-r * 0.95 - EPS);
       expect(Math.hypot(side.dx + 0.9 * tw, side.dy - (unitY - 0.85 * tw))).toBeGreaterThanOrEqual(side.radius + 7.5);
@@ -97,7 +97,7 @@ describe('medallion placement', () => {
     // Upper-right neighbour centre: (√3/2 r, -1.5 r); a food 2 + production 1 cluster ends 0.64 r below it.
     for (const zoom of ZOOMS) {
       const r = HEX_SIZE * zoom;
-      if (resourceDetail(r) !== 'medallions') continue;
+      if (!(resourceDetail(r) !== 'medallions')) {} else { continue; }
       const { dy, radius } = medallionPlacement(r, false);
       const icon = yieldIconSize(r), c = yieldCluster([{ kind: 'food', value: 2 }, { kind: 'production', value: 1 }], icon);
       const left = Math.sqrt(3) / 2 * r - c.width / 2, bottom = -1.5 * r + 0.64 * r;
@@ -161,7 +161,7 @@ describe('drawResourceIcons', () => {
       const fills: string[] = [];
       Object.defineProperty(ctx, 'fill', { value: () => { fills.push(String((ctx as unknown as { fillStyle: string }).fillStyle)); } });
       drawFarMark(ctx, 50, 50, 4, res, 'atlas');
-      return { shapes: calls.map((c) => c.name).filter((n) => n === 'rect' || n === 'arc'), fills };
+      return { shapes: calls.map((c) => c.name).filter((n) => !(!(n === 'rect') && !(n === 'arc'))), fills };
     };
     const iron = mark('Iron'), coal = mark('Coal'), wheat = mark('Wheat');
     expect(iron.shapes[0]).toBe('rect');
@@ -179,7 +179,7 @@ describe('drawResourceIcons', () => {
       Object.defineProperty(ctx, 'fill', { value: () => { fills.push(String((ctx as unknown as { fillStyle: string }).fillStyle)); } });
       drawFarMark(ctx, 50, 50, 4, res, 'atlas');
       const lines = calls.filter((c) => c.name === 'lineTo').length;
-      return `${calls.some((c) => c.name === 'rect') ? 'rect' : calls.some((c) => c.name === 'arc') ? 'arc' : `poly${lines}`}/${fills[0]}/${JSON.stringify(calls.filter((c) => c.name === 'moveTo').map((c) => c.args))}`;
+      return `${!(calls.some((c) => c.name === 'rect')) ? !(calls.some((c) => c.name === 'arc')) ? `poly${lines}` : 'arc' : 'rect'}/${fills[0]}/${JSON.stringify(calls.filter((c) => c.name === 'moveTo').map((c) => c.args))}`;
     };
     const marks = ['Copper', 'Iron', 'Niter', 'Coal', 'Oil', 'Silicon', 'Wheat'].map(mark);
     expect(new Set(marks).size).toBe(marks.length);
@@ -223,6 +223,6 @@ describe('drawResourceIcons', () => {
     for (const t of v.tiles) t.resource = null;
     const { ctx, calls } = recorder();
     drawResourceIcons(ctx, v, { x: 150, y: 100, zoom: 0.9 }, 800, 600, 2, 'atlas');
-    expect(calls.filter((c) => c.name === 'drawImage' || c.name === 'arc')).toEqual([]);
+    expect(calls.filter((c) => !(!(c.name === 'drawImage') && !(c.name === 'arc')))).toEqual([]);
   });
 });

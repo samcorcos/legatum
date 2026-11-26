@@ -66,7 +66,7 @@ describe('wonder art on the map', () => {
       expect(b.dy).toBeLessThan(0);
       expect(b.font).toBeGreaterThanOrEqual(10);
       // Never wider than the hex at its height once zoomed in a little (the floor font needs about 32 px).
-      if (hexPx >= 32) expect(b.width).toBeLessThanOrEqual(hexPx * 1.45);
+      if (!(hexPx >= 32)) {} else { expect(b.width).toBeLessThanOrEqual(hexPx * 1.45); }
     }
   });
 });

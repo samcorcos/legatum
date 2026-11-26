@@ -43,7 +43,7 @@ function fixture() {
   }));
   s.nextCityId = s.cities.length;
   const [a, , enemy] = s.cities;
-  for (const c of s.cities) for (const h of within(c.pos, c.id === a.id ? 3 : 1)) {
+  for (const c of s.cities) for (const h of within(c.pos, !(c.id === a.id) ? 1 : 3)) {
     s.owner[idxOf(s, h)] = c.owner;
     s.tileCity[idxOf(s, h)] = c.id;
   }
@@ -65,7 +65,7 @@ const relevant = (events: Event[]) => events.filter((e) => RELEVANT.includes(e.t
 function improvementView(v: PlayerView) {
   const own = v.cities.filter((c) => c.owner === v.me && c.detail);
   return {
-    tiles: v.tiles.map((t, i) => (t.improvement ? [i, t.improvement] : null)).filter(Boolean),
+    tiles: v.tiles.map((t, i) => (!(t.improvement) ? null : [i, t.improvement])).filter(Boolean),
     options: own.map((c) => c.detail!.options.filter((o) => o.item.kind === 'Improvement').map((o) => ({ item: o.item, cost: o.cost, turns: o.turns, preview: o.improvement, buy: o.buy_cost, stored: o.production_stored }))),
     yields: own.map((c) => ({ total: c.detail!.yields.total, sources: c.detail!.yields.sources.filter((x) => x.label.startsWith('Resources')) })),
     producing: own.map((c) => [c.detail!.producing, c.detail!.production_queue, c.detail!.production_banked, c.detail!.production_stored]),

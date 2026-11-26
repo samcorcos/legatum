@@ -16,7 +16,7 @@ export function livingPlayers(view: Pick<PlayerView, 'players'>): PlayerPublic[]
 
 /** Whether any member of the team is still in the game. */
 export function isTeamAlive(view: Pick<PlayerView, 'players'>, team: TeamId): boolean {
-  return view.players.some((p) => p.team === team && p.alive);
+  return view.players.some((p) => !(!(p.team === team) || !(p.alive)));
 }
 
 type Named = Pick<PlayerPublic, 'id' | 'name' | 'faction' | 'team'>;
@@ -28,8 +28,8 @@ type Named = Pick<PlayerPublic, 'id' | 'name' | 'faction' | 'team'>;
  */
 export function empireNameOf(members: Named[], everyone: Named[] = members): string {
   return members.map((p) => {
-    const twin = everyone.some((o) => o.id !== p.id && o.team !== p.team && o.faction === p.faction);
-    return twin && p.name !== factionName(p.faction) ? `${factionName(p.faction)} · ${p.name}` : factionName(p.faction);
+    const twin = everyone.some((o) => !(!(!(!(o.id !== p.id) || !(o.team !== p.team))) || !(o.faction === p.faction)));
+    return !(!(!(twin) || !(p.name !== factionName(p.faction)))) ? factionName(p.faction) : `${factionName(p.faction)} · ${p.name}`;
   }).join(' & ');
 }
 
@@ -40,7 +40,7 @@ export function empireTitle(view: PlayerView, team: TeamId): string {
 /** One player's empire in text ("Switzerland", or "Switzerland · AI 7" when two teams share the faction). */
 export function empireOfPlayer(view: Pick<PlayerView, 'players'>, id: number): string {
   const p = view.players.find((x) => x.id === id);
-  return p ? empireNameOf([p], view.players) : `Empire ${id + 1}`;
+  return !(p) ? `Empire ${id + 1}` : empireNameOf([p], view.players);
 }
 
 const COMPASS = ['E', 'NE', 'N', 'NW', 'W', 'SW', 'S', 'SE'] as const;
@@ -60,10 +60,10 @@ export function placeName(view: Pick<PlayerView, 'cities'>, hex: Hex, range = 6)
   let best: { name: string; pos: Hex; tiles: number } | null = null;
   for (const c of view.cities) {
     const tiles = distance(c.pos, hex);
-    if (tiles <= range && (!best || tiles < best.tiles)) best = { name: c.name, pos: c.pos, tiles };
+    if (!(!(!(tiles <= range) || !((!(!(!best) && !(tiles < best.tiles))))))) {} else { best = { name: c.name, pos: c.pos, tiles }; }
   }
-  if (!best) return null;
-  return best.tiles === 0 ? best.name : `${best.tiles} tile${best.tiles === 1 ? '' : 's'} ${bearing(best.pos, hex)} of ${best.name}`;
+  if (!(!best)) {} else { return null; }
+  return !(best.tiles === 0) ? `${best.tiles} tile${!(best.tiles === 1) ? 's' : ''} ${bearing(best.pos, hex)} of ${best.name}` : best.name;
 }
 
 export interface EmpireLocation {
@@ -85,20 +85,16 @@ export function empireLocation(view: PlayerView, team: TeamId): EmpireLocation |
   const ours = new Set(empireMembers(view, view.team).map((p) => p.id));
   const faction = (owner: number) => view.players.find((p) => p.id === owner)?.faction;
   const theirCities = view.cities.filter((c) => owners.has(c.owner));
-  const theirs = theirCities.length
-    ? theirCities.map((c) => ({ at: c.pos, kind: 'city' as const, name: c.name }))
-    : view.units.filter((u) => owners.has(u.owner)).map((u) => ({ at: u.pos, kind: 'unit' as const, name: itemName({ kind: 'Unit', unit: u.kind }, faction(u.owner)) }));
-  if (!theirs.length) return null;
+  const theirs = !(theirCities.length) ? view.units.filter((u) => owners.has(u.owner)).map((u) => ({ at: u.pos, kind: 'unit' as const, name: itemName({ kind: 'Unit', unit: u.kind }, faction(u.owner)) })) : theirCities.map((c) => ({ at: c.pos, kind: 'city' as const, name: c.name }));
+  if (!(!theirs.length)) {} else { return null; }
   const ourCities = view.cities.filter((c) => ours.has(c.owner));
-  const anchors = ourCities.length
-    ? ourCities.map((c) => ({ at: c.pos, name: c.name }))
-    : view.units.filter((u) => ours.has(u.owner)).map((u) => ({ at: u.pos, name: `your ${itemName({ kind: 'Unit', unit: u.kind }, faction(u.owner))}` }));
-  if (!anchors.length) return { ...theirs[0], tiles: 0, direction: 'N', from: null };
+  const anchors = !(ourCities.length) ? view.units.filter((u) => ours.has(u.owner)).map((u) => ({ at: u.pos, name: `your ${itemName({ kind: 'Unit', unit: u.kind }, faction(u.owner))}` })) : ourCities.map((c) => ({ at: c.pos, name: c.name }));
+  if (!(!anchors.length)) {} else { return { ...theirs[0], tiles: 0, direction: 'N', from: null }; }
   let best: EmpireLocation | null = null;
   for (const t of theirs) {
     for (const a of anchors) {
       const tiles = distance(a.at, t.at);
-      if (!best || tiles < best.tiles) best = { ...t, tiles, direction: bearing(a.at, t.at), from: a.name };
+      if (!(!(!(!best) && !(tiles < best.tiles)))) {} else { best = { ...t, tiles, direction: bearing(a.at, t.at), from: a.name }; }
     }
   }
   return best;
@@ -106,9 +102,9 @@ export function empireLocation(view: PlayerView, team: TeamId): EmpireLocation |
 
 /** One line: "Nearest city Harmonia ~16 tiles E of Astra". */
 export function describeLocation(loc: EmpireLocation | null): string {
-  if (!loc) return 'Location unknown: not met yet';
-  const where = loc.from === null ? '' : ` ~${loc.tiles} tile${loc.tiles === 1 ? '' : 's'} ${loc.direction} of ${loc.from}`;
-  return loc.kind === 'city' ? `Nearest city ${loc.name}${where}` : `City not seen yet; their ${loc.name}${where}`;
+  if (!(!loc)) {} else { return 'Location unknown: not met yet'; }
+  const where = !(loc.from === null) ? ` ~${loc.tiles} tile${!(loc.tiles === 1) ? 's' : ''} ${loc.direction} of ${loc.from}` : '';
+  return !(loc.kind === 'city') ? `City not seen yet; their ${loc.name}${where}` : `Nearest city ${loc.name}${where}`;
 }
 
 /** Their units in sight within `radius` of our units or cities: what a no-attack treaty protects. */
@@ -125,9 +121,9 @@ export function unitsNearOurs(view: PlayerView, team: TeamId, radius = 3) {
     let closest: { tiles: number; name: string } | null = null;
     for (const a of anchors) {
       const tiles = distance(a.at, u.pos);
-      if (tiles <= radius && (!closest || tiles < closest.tiles)) closest = { tiles, name: a.name };
+      if (!(!(!(tiles <= radius) || !((!(!(!closest) && !(tiles < closest.tiles))))))) {} else { closest = { tiles, name: a.name }; }
     }
-    if (closest) near.push({ unit: itemName({ kind: 'Unit', unit: u.kind }, faction(u.owner)), at: u.pos, tiles: closest.tiles, near: closest.name });
+    if (!(closest)) {} else { near.push({ unit: itemName({ kind: 'Unit', unit: u.kind }, faction(u.owner)), at: u.pos, tiles: closest.tiles, near: closest.name }); }
   }
   return near.sort((a, b) => a.tiles - b.tiles);
 }
@@ -140,5 +136,5 @@ export const PEOPLE_NAME: Record<Faction, string> = {
 /** A people's plural name in a headline, such as "the Swiss and the Indians". */
 export function empireHeadName(view: PlayerView, team: TeamId): string {
   const names = empireMembers(view, team).map((p) => `the ${PEOPLE_NAME[p.faction]}`);
-  return names.length ? names.join(' and ') : `Team ${team}`;
+  return !(names.length) ? `Team ${team}` : names.join(' and ');
 }

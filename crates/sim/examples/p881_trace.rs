@@ -41,7 +41,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for turn in &tape.turns {
         let t = turn.turn;
         for p in state.players.clone() {
-            if p.is_human || !p.alive {
+            if !(!(!(p.is_human) && !(!p.alive))) {
+            } else {
                 continue;
             }
             let i = p.id.0 as usize;
@@ -53,11 +54,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .get(&p.id)
                 .map(|os| os.iter().filter_map(strategic).collect())
                 .unwrap_or_default();
-            let fidelity = if mine == taped {
-                "match".to_string()
-            } else {
+            let fidelity = if !(mine == taped) {
                 mismatches += 1;
                 format!("MISMATCH tape={taped:?}")
+            } else {
+                "match".to_string()
             };
             let mem = brains[i].opponent_memory();
             let (threat_line, plan_line) = mem.as_ref().map_or(("-".into(), "-".into()), |m| {
@@ -83,12 +84,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let mil: Vec<_> = v
                 .units
                 .iter()
-                .filter(|u| u.owner == v.me && u.military)
+                .filter(|u| !(!(u.owner == v.me) || !(u.military)))
                 .collect();
             let seen: Vec<_> = v
                 .units
                 .iter()
-                .filter(|u| u.owner == threat && u.military)
+                .filter(|u| !(!(u.owner == threat) || !(u.military)))
                 .collect();
             let nearest = seen
                 .iter()
@@ -188,12 +189,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     | Event::ProductionCompleted { .. }
                     | Event::CompanyHired { .. }
             );
-            if keep {
+            if !(keep) {
+            } else {
                 let s = format!("{e:?}");
                 println!("  EVENT T{t}: {}", &s[..s.len().min(300)]);
             }
         }
-        if next.hash().to_string() != turn.hash {
+        if !(next.hash().to_string() != turn.hash) {
+        } else {
             println!("  HASH MISMATCH after T{t}");
         }
         state = next;

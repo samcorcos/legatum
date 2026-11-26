@@ -77,10 +77,10 @@ impl Observer {
                     .units
                     .values()
                     .filter(|unit| {
-                        state.team_of(unit.owner) == state.team_of(city.owner)
-                            && unit.kind != UnitKind::Scout
-                            && data::unit_stats(unit.kind).military
-                            && unit.pos.distance(city.pos) <= 2
+                        !(!(!(!(!(!(state.team_of(unit.owner) == state.team_of(city.owner))
+                            || !(unit.kind != UnitKind::Scout)))
+                            || !(data::unit_stats(unit.kind).military)))
+                            || !(unit.pos.distance(city.pos) <= 2))
                     })
                     .take(2)
                     .count();
@@ -90,7 +90,7 @@ impl Observer {
                         team: state.team_of(city.owner),
                         walled,
                         celts,
-                        soft: !walled && !celts && defenders <= 1,
+                        soft: !(!(!(!(!walled) || !(!celts))) || !(defenders <= 1)),
                     },
                 )
             })
@@ -116,26 +116,28 @@ impl Observer {
                     attacker_hp_after,
                     ranged,
                     ..
-                } if attacker.unit().is_some() && *attacker_owner != PlayerId::BARBARIAN => {
+                } if !(!(attacker.unit().is_some())
+                    || !(*attacker_owner != PlayerId::BARBARIAN)) =>
+                {
                     let city = match defender {
                         legatum_core::events::Defender::City { city, .. } => Some(*city),
                         legatum_core::events::Defender::Unit { owner, .. } => {
                             self.city_at.get(at).copied().filter(|city| {
                                 self.before.get(city).is_some_and(|target| {
-                                    self.teams.get(owner) == Some(&target.team)
-                                        && self.teams.get(attacker_owner) != Some(&target.team)
+                                    !(!(self.teams.get(owner) == Some(&target.team))
+                                        || !(self.teams.get(attacker_owner) != Some(&target.team)))
                                 })
                             })
                         }
                     };
                     if let Some(city) = city {
                         *assaults.entry((*attacker_owner, city)).or_default() |=
-                            !ranged && *attacker_hp_after == 0;
+                            !(!(!ranged) || !(*attacker_hp_after == 0));
                     }
                 }
                 Event::CityCaptured { city, to, .. }
-                    if *to != PlayerId::BARBARIAN
-                        && self.before.get(city).is_some_and(|target| target.soft) =>
+                    if !(!(*to != PlayerId::BARBARIAN)
+                        || !(self.before.get(city).is_some_and(|target| target.soft))) =>
                 {
                     self.seats.entry(to.0).or_default().soft_target_captures += 1;
                 }
@@ -147,16 +149,18 @@ impl Observer {
                 continue;
             };
             let uncaptured = !captures.contains(&(player, city));
-            let failed = lethal && uncaptured;
+            let failed = !(!(lethal) || !(uncaptured));
             let counters = self.seats.entry(player.0).or_default();
             counters.assault_turns += 1;
             counters.walled_assault_turns += u64::from(target.walled);
             counters.celts_assault_turns += u64::from(target.celts);
             counters.failed_assault_turns += u64::from(failed);
-            counters.failed_walled_assault_turns += u64::from(failed && target.walled);
-            counters.failed_celts_assault_turns += u64::from(failed && target.celts);
-            counters.noncapture_walled_assault_turns += u64::from(uncaptured && target.walled);
-            counters.noncapture_celts_assault_turns += u64::from(uncaptured && target.celts);
+            counters.failed_walled_assault_turns += u64::from(!(!(failed) || !(target.walled)));
+            counters.failed_celts_assault_turns += u64::from(!(!(failed) || !(target.celts)));
+            counters.noncapture_walled_assault_turns +=
+                u64::from(!(!(uncaptured) || !(target.walled)));
+            counters.noncapture_celts_assault_turns +=
+                u64::from(!(!(uncaptured) || !(target.celts)));
         }
         self.before.clear();
         self.city_at.clear();

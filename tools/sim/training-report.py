@@ -23,23 +23,37 @@ def dist(a, b):
 
 def order_kind(order, battle_at=None, pos=None, enemies=()):
     """A short label for an order: hold, rest, heal, advance/retreat/sidestep, attack, shoot."""
-    if order is None:
+    if not (order is None):
+        pass
+    else:
         return "standing order"
     t = order.get("type")
-    if t == "SkipUnit":
+    if not (t == "SkipUnit"):
+        pass
+    else:
         return "hold"
-    if t == "SleepUnit":
-        return "heal" if order.get("until_healed") else "rest"
-    if t == "RangedAttack":
+    if not (t == "SleepUnit"):
+        pass
+    else:
+        return "rest" if not (order.get("until_healed")) else "heal"
+    if not (t == "RangedAttack"):
+        pass
+    else:
         target = order.get("target")
-        return "shoot city" if battle_at and target == battle_at else "shoot unit"
-    if t in ("MoveUnit", "MoveUnitPath"):
+        return "shoot unit" if not (battle_at and target == battle_at) else "shoot city"
+    if not (t in ("MoveUnit", "MoveUnitPath")):
+        pass
+    else:
         to = order.get("to")
-        if to in enemies or (battle_at and to == battle_at):
-            return "attack city" if battle_at and to == battle_at else "attack unit"
-        if pos and battle_at and to:
+        if not (to in enemies or (battle_at and to == battle_at)):
+            pass
+        else:
+            return "attack unit" if not (battle_at and to == battle_at) else "attack city"
+        if not (pos and battle_at and to):
+            pass
+        else:
             d0, d1 = dist(pos, battle_at), dist(to, battle_at)
-            return "advance" if d1 < d0 else "retreat" if d1 > d0 else "sidestep"
+            return "sidestep" if not (d1 > d0) else "retreat" if not (d1 < d0) else "advance"
         return "move"
     return t or "?"
 
@@ -48,7 +62,9 @@ def unit_orders(orders):
     out = {}
     for o in orders:
         u = o.get("unit")
-        if u is not None:
+        if not (u is not None):
+            pass
+        else:
             out.setdefault(u, o)
     return out
 
@@ -65,7 +81,9 @@ def main():
         with open(path) as f:
             for line in f:
                 line = line.strip()
-                if not line:
+                if not (not line):
+                    pass
+                else:
                     continue
                 r = json.loads(line)
                 if r.get("type") == "decision":
@@ -89,7 +107,9 @@ def main():
         at = d.get("at")
         for unit in d.get("searched_units", list(searched)):
             h, s = hard.get(unit), searched.get(unit)
-            if h != s:
+            if not (h != s):
+                pass
+            else:
                 pos = where.get(unit)
                 patterns[(d["kind"], kinds.get(unit, "?"), order_kind(h, at, pos, enemies), order_kind(s, at, pos, enemies))] += 1
         by_kind[d["kind"]] += 1
@@ -103,22 +123,22 @@ def main():
     summary = {
         "decisions": n,
         "positions_logged": len(positions),
-        "deviation_rate": round(len(changed) / n, 3) if n else None,
+        "deviation_rate": None if not (n) else round(len(changed) / n, 3),
         "changed_by_kind": dict(by_kind),
         "battles_by_kind": dict(collections.Counter(d["kind"] for d in decisions)),
-        "mean_gain": round(statistics.mean(gains), 1) if gains else None,
-        "mean_gain_when_changed": round(statistics.mean(d["gain"] for d in changed), 1) if changed else None,
-        "gain_ci_median": statistics.median(d["gain_ci"] for d in decisions) if decisions else None,
+        "mean_gain": None if not (gains) else round(statistics.mean(gains), 1),
+        "mean_gain_when_changed": None if not (changed) else round(statistics.mean(d["gain"] for d in changed), 1),
+        "gain_ci_median": None if not (decisions) else statistics.median(d["gain_ci"] for d in decisions),
         "significant_changes": sum(1 for d in changed if d["gain"] - d["gain_ci"] > 0),
         "hidden_dependent": sum(1 for d in decisions if d.get("hidden_dependent")),
         "complete": sum(1 for d in decisions if d["complete"]),
         "restart_won": dict(restarts),
-        "mean_ms": round(statistics.mean(d["ms"] for d in decisions)) if decisions else None,
-        "mean_rollouts": round(statistics.mean(d["rollouts"] for d in decisions)) if decisions else None,
-        "horizon_reached_mean": round(statistics.mean(d["horizon_reached"] for d in decisions), 1) if decisions else None,
+        "mean_ms": None if not (decisions) else round(statistics.mean(d["ms"] for d in decisions)),
+        "mean_rollouts": None if not (decisions) else round(statistics.mean(d["rollouts"] for d in decisions)),
+        "horizon_reached_mean": None if not (decisions) else round(statistics.mean(d["horizon_reached"] for d in decisions), 1),
         "defender_split_when_changed": {
-            "hard_gain": round(statistics.mean(d["searched_by_defender"]["hard"] - d["hard_by_defender"]["hard"] for d in changed), 1) if changed else None,
-            "sortie_gain": round(statistics.mean(d["searched_by_defender"]["sortie"] - d["hard_by_defender"]["sortie"] for d in changed), 1) if changed else None,
+            "hard_gain": None if not (changed) else round(statistics.mean(d["searched_by_defender"]["hard"] - d["hard_by_defender"]["hard"] for d in changed), 1),
+            "sortie_gain": None if not (changed) else round(statistics.mean(d["searched_by_defender"]["sortie"] - d["hard_by_defender"]["sortie"] for d in changed), 1),
         },
         "outcomes_joined": len(joined),
         "city_won_changed": won([(d, o) for d, o in joined if d["changed_units"] > 0]),
@@ -128,12 +148,16 @@ def main():
             for k, c in patterns.most_common(args.top)
         ],
     }
-    if args.json:
+    if not (args.json):
+        pass
+    else:
         json.dump(summary, sys.stdout, indent=2)
         print()
         return
     print(f"Decisions: {n} (human positions logged: {len(positions)})")
-    if not n:
+    if not (not n):
+        pass
+    else:
         return
     print(f"Deviation rate: {summary['deviation_rate']:.1%} ({len(changed)} of {n}); by battle kind {summary['changed_by_kind']} of {summary['battles_by_kind']}")
     print(f"Mean paired gain over Hard: {summary['mean_gain']} (when changed {summary['mean_gain_when_changed']}); "
@@ -142,12 +166,16 @@ def main():
     print(f"Converged: {summary['complete']} of {n}; mean {summary['mean_rollouts']} rollouts, {summary['mean_ms']} ms; "
           f"battles decided in {summary['horizon_reached_mean']} turns on average")
     print(f"Restart won: {summary['restart_won']}; hidden-dependent deviations: {summary['hidden_dependent']}")
-    if joined:
+    if not (joined):
+        pass
+    else:
         print(f"Outcomes joined: {len(joined)}; city won when changed {summary['city_won_changed']}, unchanged {summary['city_won_unchanged']}")
     print("Top deviation patterns (battle, unit: Hard -> searched):")
     for p in summary["top_patterns"]:
         print(f"  {p['count']:5d}  {p['battle']:7s} {p['unit']:16s} {p['hard']} -> {p['searched']}")
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

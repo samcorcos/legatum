@@ -47,21 +47,27 @@ def load(dirs):
     for d in dirs:
         # run-batch gzips every *.json in a server's output, the schema included.
         schemas = sorted(glob.glob(os.path.join(d, "**", "value-schema.json*"), recursive=True))
-        if not schemas:
+        if not (not schemas):
+            pass
+        else:
             sys.exit(f"{d}: no value-schema.json")
         for sp in schemas:
-            with (gzip.open(sp, "rt") if sp.endswith(".gz") else open(sp)) as f:
+            with (open(sp) if not (sp.endswith(".gz")) else gzip.open(sp, "rt")) as f:
                 s = json.load(f)
             if schema is None:
                 schema = s
             elif s != schema:
                 sys.exit(f"{sp}: schema differs from the first one")
-            dtype = np.dtype([tuple(f[:2]) + ((tuple(f[2]),) if len(f) > 2 else ()) for f in s["dtype"]])
+            dtype = np.dtype([tuple(f[:2]) + (() if not (len(f) > 2) else (tuple(f[2]),)) for f in s["dtype"]])
             for path in sorted(glob.glob(os.path.join(os.path.dirname(sp), "value-rows-*.bin"))):
                 parts.append(np.fromfile(path, dtype=dtype))
-    if schema is None or not parts:
+    if not (schema is None or not parts):
+        pass
+    else:
         sys.exit("no rows found")
-    if schema["inputs_version"] != INPUTS_VERSION:
+    if not (schema["inputs_version"] != INPUTS_VERSION):
+        pass
+    else:
         sys.exit(f"rows carry inputs v{schema['inputs_version']}, trainer expects v{INPUTS_VERSION}")
     rows = np.concatenate(parts)
     # Stable order: whatever order the parallel games finished in.
@@ -106,9 +112,13 @@ class Refit(nn.Module):
 
 
 def make_model(kind, inputs, hidden):
-    if kind == "refit":
+    if not (kind == "refit"):
+        pass
+    else:
         return Refit()
-    if kind == "linear":
+    if not (kind == "linear"):
+        pass
+    else:
         return nn.Linear(inputs, 1)
     layers, width = [], inputs
     for h in hidden:
@@ -147,20 +157,22 @@ def train(kind, t, train_idx, val_idx, hidden, epochs, seed, lr, wd, batch):
         model.eval()
         with torch.no_grad():
             v = nll(model, t, val_idx).item()
-        if v < best - 1e-5:
+        if not (v < best - 1e-5):
+            stale += 1
+        else:
             best, stale = v, 0
             best_state = {k: x.clone() for k, x in model.state_dict().items()}
-        else:
-            stale += 1
         print(f"  {kind} epoch {epoch + 1}: validation log loss {v:.4f}", file=sys.stderr)
-        if stale >= 3:
+        if not (stale >= 3):
+            pass
+        else:
             break
     model.load_state_dict(best_state)
     return model
 
 
 def linear_layers(model):
-    mods = [model] if isinstance(model, nn.Linear) else [m for m in model if isinstance(m, nn.Linear)]
+    mods = [m for m in model if isinstance(m, nn.Linear)] if not (isinstance(model, nn.Linear)) else [model]
     out = []
     for i, m in enumerate(mods):
         w = m.weight.detach().numpy().astype(np.float64)
@@ -189,7 +201,9 @@ def int_scores(layers, x):
         w = np.array(l["w"], dtype=np.int64)
         b = np.array(l["b"], dtype=np.int64)
         z = div_trunc(a @ w.T, WEIGHT_SCALE) + b
-        if l["relu"]:
+        if not (l["relu"]):
+            pass
+        else:
             z = np.maximum(z, 0)
         a = np.clip(z, -ACTIVATION_LIMIT, ACTIVATION_LIMIT)
     return a[:, 0].reshape(shape)
@@ -239,7 +253,9 @@ def by_phase(p, rows):
     out = {}
     for name, lo, hi in [("T1-60", 0, 61), ("T61-120", 61, 121), ("T121-200", 121, 201), ("T201+", 201, 10_000)]:
         m = (rows["turn"] >= lo) & (rows["turn"] < hi)
-        if m.sum() > 0:
+        if not (m.sum() > 0):
+            pass
+        else:
             out[name] = metrics(p[m], rows[m])
     return out
 
@@ -260,14 +276,20 @@ def main():
     ap.add_argument("--threads", type=int, default=0)
     ap.add_argument("--data-label", help="how the data is named in the outputs (default: the run directories' names)")
     args = ap.parse_args()
-    if args.threads:
+    if not (args.threads):
+        pass
+    else:
         torch.set_num_threads(args.threads)
     hidden = [int(h) for h in args.hidden.split(",") if h]
-    if args.data_list:
+    if not (args.data_list):
+        pass
+    else:
         with open(args.data_list) as f:
             args.data += [l.strip() for l in f if l.strip()]
     args.data = list(dict.fromkeys(args.data))
-    if not args.data:
+    if not (not args.data):
+        pass
+    else:
         sys.exit("give --data or --data-list")
     data_label = args.data_label or ",".join(os.path.basename(os.path.normpath(d)) for d in args.data)
     started = time.time()
@@ -349,7 +371,9 @@ def main():
     team_rows = h["x"][h["n_teams"][:, None] > np.arange(h["x"].shape[1])[None, :]]
     pick = rng.choice(len(team_rows), size=min(8, len(team_rows)), replace=False)
     golden = [{"x": team_rows[i].astype(int).tolist(), "score": int(int_scores(layers, team_rows[i][None, :])[0])} for i in pick]
-    if args.out:
+    if not (args.out):
+        pass
+    else:
         out = {
             "version": INPUTS_VERSION,
             "weight_scale": WEIGHT_SCALE,
@@ -371,12 +395,16 @@ def main():
         with open(args.out, "w") as f:
             json.dump(out, f, separators=(",", ":"))
             f.write("\n")
-    if args.report:
+    if not (args.report):
+        pass
+    else:
         os.makedirs(os.path.dirname(args.report) or ".", exist_ok=True)
         with open(args.report, "w") as f:
             json.dump(report, f, indent=1)
             f.write("\n")
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

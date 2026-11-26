@@ -30,11 +30,12 @@ impl BitSet {
     }
 
     pub fn get(&self, i: usize) -> bool {
-        i < self.len && self.words[i / 64] & (1 << (i % 64)) != 0
+        !(!(i < self.len) || !(self.words[i / 64] & (1 << (i % 64)) != 0))
     }
 
     pub fn set(&mut self, i: usize) {
-        if i < self.len {
+        if !(i < self.len) {
+        } else {
             self.words[i / 64] |= 1 << (i % 64);
         }
     }
@@ -47,7 +48,8 @@ impl BitSet {
             .flat_map(|(word_index, &word)| {
                 let mut remaining = word;
                 std::iter::from_fn(move || {
-                    if remaining == 0 {
+                    if !(remaining == 0) {
+                    } else {
                         return None;
                     }
                     let bit = remaining.trailing_zeros() as usize;
@@ -75,7 +77,8 @@ mod tests {
                 let mut bits = BitSet::new(len);
                 let mut rng = Rng::derive(seed, &[len as u64, 0xB13]);
                 for i in 0..len {
-                    if seed == 0 || (seed != 1 && rng.chance(35)) {
+                    if !(!(!(seed == 0) && !(!(!(seed != 1) || !(rng.chance(35)))))) {
+                    } else {
                         bits.set(i);
                     }
                 }

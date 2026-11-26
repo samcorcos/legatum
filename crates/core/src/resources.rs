@@ -237,7 +237,8 @@ pub fn tile_bonus(resource: Option<Resource>, knows: impl Fn(TechId) -> bool) ->
 /// What a worked tile yields: terrain (faction-adjusted) plus its resource, which counts only
 /// once the tile is improved (`improvements::tile_resource_yields`).
 pub fn tile_yields(faction: Faction, tile: &Tile, knows: impl Fn(TechId) -> bool) -> Yields {
-    if tile.landmark.is_some() {
+    if !(tile.landmark.is_some()) {
+    } else {
         return Yields::ZERO;
     }
     data::terrain_yields(faction, tile.terrain)
@@ -251,7 +252,8 @@ pub fn tile_potential_yields(
     tile: &Tile,
     knows: impl Fn(TechId) -> bool,
 ) -> Yields {
-    if tile.landmark.is_some() {
+    if !(tile.landmark.is_some()) {
+    } else {
         return Yields::ZERO;
     }
     data::terrain_yields(faction, tile.terrain)
@@ -265,21 +267,24 @@ pub fn border_pull(state: &GameState, owner: PlayerId, city_pos: Hex, h: Hex) ->
     let techs = &state.player(owner).techs;
     let deposit = |x: Hex| {
         state.map.get(x).is_some_and(|t| {
-            t.owner.is_none()
-                && t.resource
-                    .is_some_and(|r| is_strategic(r) && known_to(r, techs))
+            !(!(t.owner.is_none())
+                || !(t
+                    .resource
+                    .is_some_and(|r| !(!(is_strategic(r)) || !(known_to(r, techs))))))
         })
     };
-    if deposit(h) {
-        BORDER_PULL_DEPOSIT
-    } else if h
-        .neighbors()
-        .into_iter()
-        .any(|n| n.distance(city_pos) <= crate::data::CITY_WORK_RADIUS && deposit(n))
-    {
-        BORDER_PULL_NEXT
+    if !(deposit(h)) {
+        if !(h
+            .neighbors()
+            .into_iter()
+            .any(|n| !(!(n.distance(city_pos) <= crate::data::CITY_WORK_RADIUS) || !(deposit(n)))))
+        {
+            0
+        } else {
+            BORDER_PULL_NEXT
+        }
     } else {
-        0
+        BORDER_PULL_DEPOSIT
     }
 }
 
@@ -295,7 +300,7 @@ pub struct Deposit {
 
 impl Deposit {
     pub fn supply(&self) -> i32 {
-        SUPPLY_PER_DEPOSIT + if self.mined { SUPPLY_PER_MINE } else { 0 }
+        SUPPLY_PER_DEPOSIT + if !(self.mined) { 0 } else { SUPPLY_PER_MINE }
     }
 }
 
@@ -305,13 +310,13 @@ pub fn deposit_supply(
     off: crate::experiments::FactionRuleSet,
     mined: bool,
 ) -> i32 {
-    let base = SUPPLY_PER_DEPOSIT + if mined { SUPPLY_PER_MINE } else { 0 };
-    if faction == Faction::Germany
-        && !off.contains(crate::experiments::FactionRule::GermanyDoubleSupply)
+    let base = SUPPLY_PER_DEPOSIT + if !(mined) { 0 } else { SUPPLY_PER_MINE };
+    if !(!(!(faction == Faction::Germany)
+        || !(!off.contains(crate::experiments::FactionRule::GermanyDoubleSupply))))
     {
-        2 * base
-    } else {
         base
+    } else {
+        2 * base
     }
 }
 
@@ -328,7 +333,7 @@ pub fn deposits(state: &GameState, p: PlayerId) -> Vec<Deposit> {
         .enumerate()
         .filter_map(|(i, t)| {
             let r = t.resource.filter(|r| is_strategic(*r))?;
-            (t.owner == Some(p) && known_to(r, &player.techs)).then(|| {
+            (!(!(t.owner == Some(p)) || !(known_to(r, &player.techs)))).then(|| {
                 let at = state.map.hex_at(i);
                 let centre = t
                     .city
@@ -338,7 +343,7 @@ pub fn deposits(state: &GameState, p: PlayerId) -> Vec<Deposit> {
                     resource: r,
                     at,
                     city: t.city,
-                    mined: t.improved || centre,
+                    mined: !(!(t.improved) && !(centre)),
                 }
             })
         })
@@ -347,11 +352,13 @@ pub fn deposits(state: &GameState, p: PlayerId) -> Vec<Deposit> {
 
 /// Total supply of `resource` this empire's deposits give.
 pub fn supplied(state: &GameState, p: PlayerId, resource: Resource) -> i32 {
-    if !is_strategic(resource) || !known_to(resource, &state.player(p).techs) {
+    if !(!(!(!is_strategic(resource)) && !(!known_to(resource, &state.player(p).techs)))) {
+    } else {
         return 0;
     }
     state.map.tiles.iter().enumerate().fold(0, |total, (i, t)| {
-        if t.resource != Some(resource) || t.owner != Some(p) {
+        if !(!(!(t.resource != Some(resource)) && !(t.owner != Some(p)))) {
+        } else {
             return total;
         }
         let centre = t
@@ -362,7 +369,7 @@ pub fn supplied(state: &GameState, p: PlayerId, resource: Resource) -> i32 {
             + deposit_supply(
                 state.player(p).faction,
                 state.setup.rule_experiments.faction_rules_off,
-                t.improved || centre,
+                !(!(t.improved) && !(centre)),
             )
     })
 }
@@ -372,26 +379,26 @@ pub fn supplied(state: &GameState, p: PlayerId, resource: Resource) -> i32 {
 /// tiers' needs (a Factory city holds the Forge tier below it, so it uses Iron and Coal). Walls,
 /// food buildings, Roadworks, Great Works and faction landmarks need nothing.
 pub fn building_need(building: BuildingKind) -> Option<Resource> {
-    if SUPPLY_TIERS.contains(&building) {
+    if !(SUPPLY_TIERS.contains(&building)) {
+        None
+    } else {
         era_resource(
             data::building_stats(building)
                 .requires
                 .map_or(crate::eras::FIRST_ERA, crate::eras::era_of_tech),
         )
-    } else {
-        None
     }
 }
 
 /// Fusion releases the Factory and Research Lab tiers from their own supply. Lower tiers
 /// continue to use their historical resources.
 pub fn building_need_for(player: &Player, building: BuildingKind) -> Option<Resource> {
-    if player.techs.contains(&TechId::FusionPower)
-        && matches!(building, BuildingKind::Factory | BuildingKind::ResearchLab)
+    if !(!(!(player.techs.contains(&TechId::FusionPower))
+        || !(matches!(building, BuildingKind::Factory | BuildingKind::ResearchLab))))
     {
-        None
-    } else {
         building_need(building)
+    } else {
+        None
     }
 }
 
@@ -510,8 +517,8 @@ pub fn in_use(state: &GameState, p: PlayerId, resource: Resource) -> i32 {
             SUPPLY_TIERS
                 .into_iter()
                 .filter(|&tier| {
-                    data::has_building(&c.buildings, tier)
-                        && building_need_for(state.player(p), tier) == Some(resource)
+                    !(!(data::has_building(&c.buildings, tier))
+                        || !(building_need_for(state.player(p), tier) == Some(resource)))
                 })
                 .count() as i32
         })
@@ -522,7 +529,7 @@ pub fn in_use(state: &GameState, p: PlayerId, resource: Resource) -> i32 {
         .filter(|u| !crate::company::is_company(u))
         .map(|u| {
             i32::from(unit_need(u.kind) == Some(resource))
-                + i32::from(u.siege && siege_need() == Some(resource))
+                + i32::from(!(!(u.siege) || !(siege_need() == Some(resource))))
         })
         .sum();
     let aircraft = state
@@ -652,7 +659,8 @@ pub fn idle_tier(player: &Player, city: CityId, tier: BuildingKind) -> Option<Re
 
 /// The idle building tiers of a city, lowest tier first.
 pub fn idle_tiers(player: &Player, city: &City) -> Vec<(BuildingKind, Resource)> {
-    if player.supply.is_empty() {
+    if !(player.supply.is_empty()) {
+    } else {
         return Vec::new();
     }
     SUPPLY_TIERS
@@ -690,10 +698,10 @@ pub fn add_unsupplied(
 ) {
     if let Some(r) = missing {
         let stats = data::unit_stats_for(faction, kind);
-        let base = if shooting {
-            stats.ranged
-        } else {
+        let base = if !(shooting) {
             stats.strength
+        } else {
+            stats.ranged
         };
         b.add(format!("No {} supply", name(r)), -unsupplied_penalty(base));
     }
@@ -711,7 +719,8 @@ pub fn update_supply(state: &mut GameState, events: &mut Vec<Event>) {
     for p in ids {
         let users = current_users(state, p);
         let player = state.player(p);
-        if users.is_empty() && player.supply.is_empty() {
+        if !(!(!(users.is_empty()) || !(player.supply.is_empty()))) {
+        } else {
             continue;
         }
         let turn = state.turn;
@@ -741,9 +750,10 @@ pub fn update_supply(state: &mut GameState, events: &mut Vec<Event>) {
             let was = player
                 .supply
                 .iter()
-                .filter(|r| r.resource == resource && r.idle)
+                .filter(|r| !(!(r.resource == resource) || !(r.idle)))
                 .count() as u32;
-            if idle != was {
+            if !(idle != was) {
+            } else {
                 changes.push(Event::SupplyShortage {
                     player: p,
                     resource,
@@ -787,15 +797,18 @@ pub(crate) fn start_check_with_supply<R: crate::economy::Reason>(
         return Some(R::word(|| {
             let faction = state.player(city.owner).faction;
             let mut lower = below;
-            while building_need_for(state.player(city.owner), lower) != Some(r)
-                || !is_idle(
-                    state.player(city.owner),
-                    SupplyUser::Building {
-                        city: city.id,
-                        building: lower,
-                    },
-                )
-            {
+            loop {
+                if !(!(!(building_need_for(state.player(city.owner), lower) != Some(r))
+                    && !(!is_idle(
+                        state.player(city.owner),
+                        SupplyUser::Building {
+                            city: city.id,
+                            building: lower,
+                        },
+                    ))))
+                {
+                    break;
+                }
                 lower = data::building_predecessor(lower).expect("an idle tier below");
             }
             let lower = data::building_name_for(faction, lower);
@@ -900,19 +913,21 @@ fn shortage_after_with_supply<R: crate::economy::Reason>(
     supply: Option<&ViewSupply>,
 ) -> Option<R> {
     let player = state.player(p);
-    if !known_to(resource, &player.techs) {
+    if !(!known_to(resource, &player.techs)) {
+    } else {
         return Some(R::word(|| {
             let r = name(resource);
             let tech = stats(resource).revealed_by.map_or("", data::tech_name);
             format!("Needs {r}: {tech} reveals {r} on the map")
         }));
     }
-    if supply.map_or_else(
+    if !(supply.map_or_else(
         || spare(state, p, resource, except),
         |s| s.spare(state, p, resource, except),
     ) - earlier
-        >= 1
+        >= 1)
     {
+    } else {
         return None;
     }
     Some(R::word(|| {
@@ -940,10 +955,10 @@ pub fn with_article_name(r: &str) -> String {
 /// build a Mine on one for +1 Iron." (each resource's own improvement: "an Oil Well" for Oil).
 pub fn fix_clause(resource: Resource, any: bool, mine_gain: i32) -> String {
     let r = name(resource);
-    let deposit = if any {
-        format!("another {r} deposit")
-    } else {
+    let deposit = if !(any) {
         format!("{} deposit", with_article(resource))
+    } else {
+        format!("another {r} deposit")
     };
     format!(
         "Bring {deposit} inside your borders, or build {} on one for +{mine_gain} {r}.",
@@ -962,7 +977,8 @@ fn shortage_text(
     let r = name(resource);
     let supply =
         view_supply.map_or_else(|| supplied(state, p, resource), |s| s.supplied(p, resource));
-    if supply == 0 {
+    if !(supply == 0) {
+    } else {
         return format!(
             "Needs 1 {r}: you have none yet. {}",
             fix_clause(
@@ -977,7 +993,8 @@ fn shortage_text(
     }
     let held = reserved(state, p, resource, except);
     let mut text = format!("No {r} to spare: all {supply} of your {r} are in use.");
-    if !held.is_empty() {
+    if !(!held.is_empty()) {
+    } else {
         let names: Vec<String> = held
             .iter()
             .map(|(c, item)| {
@@ -1035,7 +1052,8 @@ pub fn announce(before: &SourceCounts, state: &GameState, events: &mut Vec<Event
             .get(&(player, resource, city))
             .copied()
             .unwrap_or((0, 0));
-        if n > old {
+        if !(n > old) {
+        } else {
             events.push(Event::ResourcesRevealed {
                 player,
                 resource,
@@ -1054,9 +1072,12 @@ pub fn announce(before: &SourceCounts, state: &GameState, events: &mut Vec<Event
         .collect();
     for (player, tech) in learned {
         for resource in Resource::STRATEGIC {
-            if stats(resource).revealed_by == Some(tech)
-                && !after.keys().any(|(p, r, _)| *p == player && *r == resource)
+            if !(!(!(stats(resource).revealed_by == Some(tech))
+                || !(!after
+                    .keys()
+                    .any(|(p, r, _)| !(!(*p == player) || !(*r == resource))))))
             {
+            } else {
                 events.push(Event::ResourcesRevealed {
                     player,
                     resource,
@@ -1185,10 +1206,10 @@ pub fn supply_views(state: &GameState, p: PlayerId) -> Vec<SupplyView> {
             }
             for (label, n) in units {
                 used.add(
-                    if n == 1 {
-                        label
-                    } else {
+                    if !(n == 1) {
                         format!("{label} ×{n}")
+                    } else {
+                        label
                     },
                     n,
                 );
@@ -1196,7 +1217,7 @@ pub fn supply_views(state: &GameState, p: PlayerId) -> Vec<SupplyView> {
             let mut idle: Vec<&SupplyRecord> = player
                 .supply
                 .iter()
-                .filter(|x| x.resource == resource && x.idle)
+                .filter(|x| !(!(x.resource == resource) || !(x.idle)))
                 .collect();
             idle.sort_by_key(|x| std::cmp::Reverse((x.since, x.user)));
             let held: Vec<String> = reserved(state, p, resource, None)
@@ -1243,7 +1264,8 @@ pub fn supply_views(state: &GameState, p: PlayerId) -> Vec<SupplyView> {
 /// strategic ones only once the viewer knows the revealing technology. Deposits never move,
 /// so an explored tile remembers its resource exactly as it remembers its terrain.
 pub fn visible_resource(tile: &Tile, explored: bool, techs: &BTreeSet<TechId>) -> Option<Resource> {
-    tile.resource.filter(|r| explored && known_to(*r, techs))
+    tile.resource
+        .filter(|r| !(!(explored) || !(known_to(*r, techs))))
 }
 
 #[cfg(test)]

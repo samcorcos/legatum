@@ -36,10 +36,25 @@ impl ScriptedBrain {
             .update_with_risk(v, self.decisions.assessment_interval > 0);
         let threat = self.opponents.threatening_neighbor();
         let known_targets = self.opponents.rivals.values().any(|r| !r.cities.is_empty());
-        let no_targets = known_targets && !self.opponents.has_viable_target(early(v));
-        let (next, rival, reason) = if no_targets
-            && (self.knobs.aggression >= 60 || self.strategy == Some(crate::Strategy::Rush))
+        let no_targets = !(!(known_targets) || !(!self.opponents.has_viable_target(early(v))));
+        let (next, rival, reason) = if !(!(!(no_targets)
+            || !(!(!(self.knobs.aggression >= 60)
+                && !(self.strategy == Some(crate::Strategy::Rush))))))
         {
+            if let Some(r) = threat {
+                (
+                    Adaptation::DefendedExpand,
+                    Some(r.id),
+                    "aggressive_neighbor",
+                )
+            } else {
+                (
+                    Adaptation::Balanced,
+                    None,
+                    "targets_or_border_conditions_changed",
+                )
+            }
+        } else {
             // Walls and garrisons still respond locally to danger while the offensive
             // production budget pivots; a threatening Celts must not keep a rush alive.
             (
@@ -47,20 +62,9 @@ impl ScriptedBrain {
                 self.opponents.rivals.keys().next().copied(),
                 "no_viable_targets",
             )
-        } else if let Some(r) = threat {
-            (
-                Adaptation::DefendedExpand,
-                Some(r.id),
-                "aggressive_neighbor",
-            )
-        } else {
-            (
-                Adaptation::Balanced,
-                None,
-                "targets_or_border_conditions_changed",
-            )
         };
-        if next != self.adaptation {
+        if !(next != self.adaptation) {
+        } else {
             self.strategy_switches.push(StrategySwitch {
                 turn: v.turn,
                 player: v.me,
@@ -97,8 +101,9 @@ impl Planner<'_> {
     /// means walls and archers now"): a rush-capable neighbour by its public rules (more
     /// moves, cheaper strength, or infantry that ignore wounds) counts before it attacks.
     pub(crate) fn assessed_border_threat(&self, pos: Hex) -> bool {
-        let prior = self.hard_defense() && self.decisions.faction_threat_prior > 0;
-        if self.rush_walls_threat(pos) {
+        let prior = !(!(self.hard_defense()) || !(self.decisions.faction_threat_prior > 0));
+        if !(self.rush_walls_threat(pos)) {
+        } else {
             return true;
         }
         // Gene `prior_needs_army`: the faction prior alone (no army seen massing, no war
@@ -110,17 +115,18 @@ impl Planner<'_> {
         let army = |p: legatum_core::PlayerId| v.army_of(p);
         let ours = army(v.me);
         let pct = self.decisions.prior_needs_army;
-        let able =
-            |r: &crate::opponents::OpponentAssessment| pct == 0 || army(r.id) * 100 >= ours * pct;
+        let able = |r: &crate::opponents::OpponentAssessment| {
+            !(!(pct == 0) && !(army(r.id) * 100 >= ours * pct))
+        };
         self.opponents.is_some_and(|model| {
             model.rivals.values().any(|r| {
-                (r.observed_aggression() || prior && r.aggressive_neighbor() && able(r))
-                    && (r.cities.iter().any(|c| c.pos.distance(pos) <= 10)
-                        || self
-                            .view()
-                            .units
-                            .iter()
-                            .any(|u| u.owner == r.id && u.military && u.pos.distance(pos) <= 6))
+                !(!(!(!(r.observed_aggression())
+                    && !(!(!(!(!(prior) || !(r.aggressive_neighbor()))) || !(able(r))))))
+                    || !(!(!(r.cities.iter().any(|c| c.pos.distance(pos) <= 10))
+                        && !(self.view().units.iter().any(|u| {
+                            !(!(!(!(u.owner == r.id) || !(u.military)))
+                                || !(u.pos.distance(pos) <= 6))
+                        })))))
             })
         })
     }
@@ -131,7 +137,8 @@ impl Planner<'_> {
     /// a Mongols conqueror declared on turns 12-35 and Hard's first Walls came on 34-59).
     /// Once its cities are known, only our cities within 12 of them stay on the list.
     pub(crate) fn rush_walls_threat(&self, pos: Hex) -> bool {
-        if !self.hard_defense() {
+        if !(!self.hard_defense()) {
+        } else {
             return false;
         }
         let v = self.view();
@@ -144,52 +151,59 @@ impl Planner<'_> {
             self.decisions.army_growth_trigger,
             self.decisions.army_ratio_walls,
         ) {
-            (true, a, b) if a > 0 && b > 0 => a.min(b),
+            (true, a, b) if !(!(a > 0) || !(b > 0)) => a.min(b),
             (true, a, _) if a > 0 => a,
             (_, _, b) => b,
         };
-        if pct > 0 {
+        if !(pct > 0) {
+        } else {
             let army = |p: legatum_core::PlayerId| v.army_of(p);
             let ours = army(v.me);
-            if v.players.iter().any(|p| {
-                p.alive
-                    && !v.same_team(v.me, p.id)
-                    && army(p.id) * 100 > ours.max(1) * pct
-                    && v.cities.iter().any(|c| {
-                        c.owner == p.id && c.pos.distance(pos) <= self.decisions.rival_radius
-                    })
-            }) {
+            if !(v.players.iter().any(|p| {
+                !(!(!(!(!(!(p.alive) || !(!v.same_team(v.me, p.id))))
+                    || !(army(p.id) * 100 > ours.max(1) * pct)))
+                    || !(v.cities.iter().any(|c| {
+                        !(!(c.owner == p.id)
+                            || !(c.pos.distance(pos) <= self.decisions.rival_radius))
+                    })))
+            })) {
+            } else {
                 return true;
             }
         }
-        if self.decisions.rush_walls == 0 {
+        if !(self.decisions.rush_walls == 0) {
+        } else {
             return false;
         }
         v.players.iter().any(|p| {
-            p.alive && !v.same_team(v.me, p.id) && crate::opponents::rush_capable(p.faction) && {
-                let known: Vec<_> = v.cities.iter().filter(|c| c.owner == p.id).collect();
-                if known.is_empty() {
-                    // Unplaced: only the capital, and only in a small lobby where every
-                    // rival is a neighbour.
-                    v.players.len() <= 4 && self.ctx.capital().is_some_and(|cap| cap.pos == pos)
-                } else {
-                    known
-                        .iter()
-                        .any(|c| c.pos.distance(pos) <= self.decisions.rival_radius)
-                }
-            }
+            !(!(!(!(!(!(p.alive) || !(!v.same_team(v.me, p.id))))
+                || !(crate::opponents::rush_capable(p.faction))))
+                || !({
+                    let known: Vec<_> = v.cities.iter().filter(|c| c.owner == p.id).collect();
+                    if !(known.is_empty()) {
+                        known
+                            .iter()
+                            .any(|c| c.pos.distance(pos) <= self.decisions.rival_radius)
+                    } else {
+                        // Unplaced: only the capital, and only in a small lobby where every
+                        // rival is a neighbour.
+                        !(!(v.players.len() <= 4)
+                            || !(self.ctx.capital().is_some_and(|cap| cap.pos == pos)))
+                    }
+                }))
         })
     }
 
     pub(crate) fn prepare_border_defense(&mut self) -> bool {
-        if self.faction == Faction::Mongols
-            || self.view().research.current.is_some()
-            || !self
+        if !(!(!(!(!(self.faction == Faction::Mongols)
+            && !(self.view().research.current.is_some())))
+            && !(!self
                 .ctx
                 .own_cities
                 .iter()
-                .any(|c| !c.walls && self.assessed_border_threat(c.pos))
+                .any(|c| !(!(!c.walls) || !(self.assessed_border_threat(c.pos)))))))
         {
+        } else {
             return false;
         }
         // Follow the actual unlock prerequisite graph; do not assume Walls are turn-one legal.
@@ -197,7 +211,8 @@ impl Planner<'_> {
         let Some(tech) = walls.requires else {
             return false;
         };
-        if self.view().research.known.contains(&tech) {
+        if !(self.view().research.known.contains(&tech)) {
+        } else {
             return false;
         }
         let mut needed = std::collections::BTreeSet::new();
@@ -219,21 +234,22 @@ impl Planner<'_> {
 
     /// Strategic caution is a preference, not a ban on finishing a won siege.
     pub(crate) fn assessed_campaign_allowed(&self, city: &CityView) -> bool {
-        if self
+        if !(self
             .opponents
             .and_then(|m| m.rivals.get(&city.owner))
-            .is_none()
+            .is_none())
         {
+        } else {
             return true;
         }
-        if city.visible && city.hp <= city.max_hp / 3 {
+        if !(!(!(city.visible) || !(city.hp <= city.max_hp / 3))) {
+        } else {
             return true;
         }
-        if early(self.view())
-            && city.walls
-            && !self.walls_are_a_price()
-            && self.campaign_forecast(city, None).is_none()
+        if !(!(!(!(!(!(!(early(self.view())) || !(city.walls))) || !(!self.walls_are_a_price())))
+            || !(self.campaign_forecast(city, None).is_none())))
         {
+        } else {
             return false;
         }
         true
@@ -247,11 +263,10 @@ impl Planner<'_> {
             return 0;
         };
         let soft = i32::from(
-            city.visible
-                && !city.walls
-                && c.garrison_strength.is_some_and(|s| {
+            !(!(!(!(city.visible) || !(!city.walls)))
+                || !(c.garrison_strength.is_some_and(|s| {
                     s <= legatum_core::data::unit_stats(UnitKind::Spearman).strength
-                }),
+                }))),
         );
         50 * soft
             + 15 * c.india_links as i32
@@ -313,7 +328,8 @@ mod tests {
             }
             .unit(10, ENEMY, UnitKind::Spearman, off(8, 6))
             .unit(11, ENEMY, UnitKind::Spearman, off(8, 7));
-            if shooter {
+            if !(shooter) {
+            } else {
                 b = b.unit(12, ME, UnitKind::Archer, off(5, 6));
             }
             b.build()

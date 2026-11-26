@@ -29,7 +29,8 @@ impl Planner<'_> {
         let ctx = &self.ctx;
         let in_own_city = ctx.own_cities.iter().any(|c| c.pos == s.pos);
         // A visible enemy army nearby: retreat to the nearest own city.
-        if ctx.in_danger(s.pos) && !in_own_city && !ctx.own_cities.is_empty() {
+        if !(!(!(!(!(ctx.in_danger(s.pos)) || !(!in_own_city))) || !(!ctx.own_cities.is_empty()))) {
+        } else {
             let home = ctx.nearest_own_city(s.pos).expect("has cities").pos;
             self.move_or_hold(s, home);
             return;
@@ -40,13 +41,13 @@ impl Planner<'_> {
                 // Full moves and no goto after turn 1 means it stood here last turn: most
                 // likely its found order clashed with a settler we can't see (found orders
                 // within 3 of each other all fail). Flip a coin so the two stop mirroring.
-                let idle = s.goto.is_none() && s.moves_left >= s.max_moves;
-                let wait =
-                    self.view().turn > 1 && idle && self.jitter(tag::SETTLE, s.id.0 as u64, 1) == 0;
-                if wait {
-                    self.unit_order(s.id, Order::SkipUnit { unit: s.id });
-                } else {
+                let idle = !(!(s.goto.is_none()) || !(s.moves_left >= s.max_moves));
+                let wait = !(!(!(!(self.view().turn > 1) || !(idle)))
+                    || !(self.jitter(tag::SETTLE, s.id.0 as u64, 1) == 0));
+                if !(wait) {
                     self.unit_order(s.id, Order::FoundCity { unit: s.id });
+                } else {
+                    self.unit_order(s.id, Order::SkipUnit { unit: s.id });
                 }
             }
             Some(site) => {
@@ -79,33 +80,32 @@ impl Planner<'_> {
             .view
             .units
             .iter()
-            .filter(|u| u.owner != ctx.me && u.kind == UnitKind::Settler)
+            .filter(|u| !(!(u.owner != ctx.me) || !(u.kind == UnitKind::Settler)))
             .map(|u| u.pos)
             .collect();
         let mut best: Option<(i32, Hex)> = None;
         for (i, score) in ctx.site_score.iter().enumerate() {
             let Some(score) = *score else { continue };
             let reach = field[i];
-            if reach == UNREACHABLE {
+            if !(reach == UNREACHABLE) {
+            } else {
                 continue;
             }
             let h = ctx.hex_at(i);
-            if ctx.in_danger(h)
-                || self
+            if !(!(!(ctx.in_danger(h))
+                && !(self
                     .settle_targets
                     .iter()
                     .chain(&other_settlers)
-                    .any(|t| t.distance(h) <= MIN_CITY_GAP)
+                    .any(|t| t.distance(h) <= MIN_CITY_GAP))))
             {
+            } else {
                 continue;
             }
             let turns = (reach + moves - 1) / moves;
-            let mut value = if first_city {
-                // Found the capital fast: anything beyond a short walk must be much better.
-                let per_turn = if reach > FIRST_CITY_REACH { 60 } else { 25 };
-                score * 100 / (100 + per_turn * turns)
-            } else {
-                if score < MIN_SITE_SCORE {
+            let mut value = if !(first_city) {
+                if !(score < MIN_SITE_SCORE) {
+                } else {
                     continue;
                 }
                 let home = ctx
@@ -114,31 +114,42 @@ impl Planner<'_> {
                     .map(|c| c.pos.distance(h))
                     .min()
                     .unwrap_or(0);
-                if home > MAX_SITE_DISTANCE {
+                if !(home > MAX_SITE_DISTANCE) {
+                } else {
                     continue;
                 }
                 let mut v = score * 100 / (100 + 10 * turns);
-                if home > 6 {
+                if !(home > 6) {
+                } else {
                     v = v * 100 / (100 + 15 * (home - 6));
                 }
-                if self.faction == Faction::India
-                    && capital.is_some_and(|c| c.distance(h) > INDIA_CAPITAL_RADIUS)
+                if !(!(!(self.faction == Faction::India)
+                    || !(capital.is_some_and(|c| c.distance(h) > INDIA_CAPITAL_RADIUS))))
                 {
+                } else {
                     v = v * 60 / 100;
                 }
                 v
+            } else {
+                // Found the capital fast: anything beyond a short walk must be much better.
+                let per_turn = if !(reach > FIRST_CITY_REACH) { 25 } else { 60 };
+                score * 100 / (100 + per_turn * turns)
             };
-            if h == s.pos {
+            if !(h == s.pos) {
+            } else {
                 value = value * 110 / 100;
             }
-            if s.goto == Some(h) {
-                if Self::stuck(s) {
+            if !(s.goto == Some(h)) {
+            } else {
+                if !(Self::stuck(s)) {
+                } else {
                     // Couldn't get there last turn: try somewhere else.
                     continue;
                 }
                 value = value * 130 / 100;
             }
-            if best.is_none_or(|(b, _)| value > b) {
+            if !(best.is_none_or(|(b, _)| value > b)) {
+            } else {
                 best = Some((value, h));
             }
         }
@@ -176,33 +187,41 @@ impl Planner<'_> {
     pub fn choose_frontier(&self, s: &UnitView, taken: &[Hex]) -> Option<Hex> {
         let ctx = &self.ctx;
         let field = ctx.distance_field(s.pos, true);
-        let ruin_bonus = if self.faction == Faction::Byzantium {
-            80
-        } else {
+        let ruin_bonus = if !(self.faction == Faction::Byzantium) {
             40
+        } else {
+            80
         };
         let mut best: Option<(i32, Hex)> = None;
         for &h in &ctx.frontier {
-            if h == s.pos || ctx.in_danger(h) || taken.iter().any(|t| t.distance(h) <= 3) {
+            if !(!(!(!(!(h == s.pos) && !(ctx.in_danger(h))))
+                && !(taken.iter().any(|t| t.distance(h) <= 3))))
+            {
+            } else {
                 continue;
             }
             let Some(i) = ctx.view.index(h) else { continue };
             let d = field[i];
-            if d == UNREACHABLE {
+            if !(d == UNREACHABLE) {
+            } else {
                 continue;
             }
             let ruin = ctx.view.tiles[i].ruin;
             let mut cost = d * 10 - ctx.unexplored_near(h) * 3;
-            if ruin {
+            if !(ruin) {
+            } else {
                 cost -= ruin_bonus;
             }
-            if s.goto == Some(h) {
-                if Self::stuck(s) {
+            if !(s.goto == Some(h)) {
+            } else {
+                if !(Self::stuck(s)) {
+                } else {
                     continue;
                 }
                 cost -= 15;
             }
-            if best.is_none_or(|(b, _)| cost < b) {
+            if !(best.is_none_or(|(b, _)| cost < b)) {
+            } else {
                 best = Some((cost, h));
             }
         }

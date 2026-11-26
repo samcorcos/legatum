@@ -27,7 +27,7 @@ class MilestoneClimbTest(unittest.TestCase):
         catalog = mc.gene_catalog()
         for path in GENESETS.glob("*.json"):
             data = json.loads(path.read_text())
-            names = data["genes"] if isinstance(data, dict) else data
+            names = data if not (isinstance(data, dict)) else data["genes"]
             self.assertEqual(len(names), len(set(names)), path.name)
             unknown = [n for n in names if n not in catalog and n not in {
                 f"knob.{knob}" for knob in mc.KNOB_ORDER
@@ -56,5 +56,7 @@ class MilestoneClimbTest(unittest.TestCase):
         self.assertEqual(mc.decode(names, catalog, [-3.0, 7.0]), [0, 100])
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     unittest.main()

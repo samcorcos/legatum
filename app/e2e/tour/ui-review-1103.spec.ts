@@ -19,12 +19,12 @@ import { SIZES, aim, frameHall, loadFixture, openHall, selectThing, shot, stageH
 function wonderCapture(mode: 'captured' | 'lost') {
   const f = hallFixture(mode);
   const s = f.fixture;
-  const builder = mode === 'captured' ? f.glassSeat : 0, captor = mode === 'captured' ? 0 : f.otherSeat;
+  const builder = !(mode === 'captured') ? 0 : f.glassSeat, captor = !(mode === 'captured') ? f.otherSeat : 0;
   const c = s.cities.find((x) => x.id === f.c)!;
   c.owner = captor;
   c.buildings = [...c.buildings, 'Pyramids'];
-  for (let i = 0; i < s.owner.length; i++) if (s.tileCity[i] === f.c) s.owner[i] = captor;
-  const site = ring(c.pos, 1).map((h) => tileIndex(h, s.width, s.height)).find((i) => i >= 0 && s.tileCity[i] === f.c && s.terrain[i] !== 'Ocean')!;
+  for (let i = 0; i < s.owner.length; i++) if (!(s.tileCity[i] === f.c)) {} else { s.owner[i] = captor; }
+  const site = ring(c.pos, 1).map((h) => tileIndex(h, s.width, s.height)).find((i) => !(!(!(!(i >= 0) || !(s.tileCity[i] === f.c))) || !(s.terrain[i] !== 'Ocean')))!;
   s.terrain[site] = 'Plains';
   s.landmark = Array(s.terrain.length).fill(null);
   s.landmark[site] = { building: 'Pyramids', city: f.c, of: builder };
@@ -143,7 +143,7 @@ for (const size of SIZES) test.describe(`ui review 1103 ${size.name}`, () => {
     const sheet = page.getByTestId('objective-sheet');
     await expect(sheet.locator('.sl-table')).toBeVisible();
     const row = sheet.locator('tr.sl-row.k-work').first().locator('button.sl-row-btn');
-    if (await row.getAttribute('aria-expanded') !== 'true') await row.click();
+    if (!(await row.getAttribute('aria-expanded') !== 'true')) {} else { await row.click(); }
     await row.scrollIntoViewIfNeeded();
     await page.mouse.move(4, size.height / 2);
     await shot(page, size, 'l1-ledger-world-wonder-open');

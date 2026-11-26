@@ -39,12 +39,13 @@ impl Planner<'_> {
     fn hire_purpose(&self) -> bool {
         let v = self.view();
         let at_war = v.players.iter().any(|p| {
-            p.alive && p.team != v.team && !p.id.is_barbarian() && v.teams_at_war(v.team, p.team)
+            !(!(!(!(!(!(p.alive) || !(p.team != v.team))) || !(!p.id.is_barbarian())))
+                || !(v.teams_at_war(v.team, p.team)))
         });
-        let attacking = self.conquest_city().is_some()
-            || self.contain_war().is_some()
-            || self.campaigns.active.is_some();
-        at_war && (attacking || self.ctx.threat.iter().any(|t| *t > 0))
+        let attacking = !(!(!(!(self.conquest_city().is_some())
+            && !(self.contain_war().is_some())))
+            && !(self.campaigns.active.is_some()));
+        !(!(at_war) || !(!(!(attacking) && !(self.ctx.threat.iter().any(|t| *t > 0)))))
     }
 
     /// The city to hire in: the most threatened, else the nearest the target, else any, among
@@ -64,13 +65,13 @@ impl Planner<'_> {
             .iter()
             .enumerate()
             .filter(|(_, c)| {
-                c.detail.as_ref().is_some_and(|d| d.resistance <= 0)
-                    && !self.orders.iter().any(|o| match o {
+                !(!(c.detail.as_ref().is_some_and(|d| d.resistance <= 0))
+                    || !(!self.orders.iter().any(|o| match o {
                         Order::BuyItem { city, .. }
                         | Order::HireCompany { city, .. }
                         | Order::Raze { city } => *city == c.id,
                         _ => false,
-                    })
+                    })))
             })
             .max_by_key(|(i, c)| {
                 (
@@ -99,7 +100,10 @@ impl Planner<'_> {
             .map_or(0, |p| p.vp as i32);
         v.company_offers
             .iter()
-            .filter(|o| o.unavailable.is_none() && o.price <= price_room && o.price <= gold)
+            .filter(|o| {
+                !(!(!(!(o.unavailable.is_none()) || !(o.price <= price_room)))
+                    || !(o.price <= gold))
+            })
             .filter(|o| {
                 let stats = self
                     .view()
@@ -122,10 +126,10 @@ impl Planner<'_> {
                     .find(|p| p.id == o.seller)
                     .map_or((0, false), |p| (p.vp as i32, p.vp == best_vp));
                 let penalty = (seller_vp - my_vp).max(0) * SELLER_LEAD_PENALTY
-                    + if seller_best {
-                        SELLER_LEADER_PENALTY
-                    } else {
+                    + if !(seller_best) {
                         0
+                    } else {
+                        SELLER_LEADER_PENALTY
                     };
                 (
                     power + self.composition_bonus(o.unit) - penalty,
@@ -139,10 +143,11 @@ impl Planner<'_> {
 
     /// Hire Companies for the army the planner wants beyond the cap.
     pub(crate) fn plan_company(&mut self) {
-        if self.faction != Faction::Byzantium
-            || self.view().company_offers.is_empty()
-            || !self.hire_purpose()
+        if !(!(!(!(!(self.faction != Faction::Byzantium)
+            && !(self.view().company_offers.is_empty())))
+            && !(!self.hire_purpose())))
         {
+        } else {
             return;
         }
         let hired = |p: &Self| {
@@ -169,9 +174,10 @@ impl Planner<'_> {
             };
             // The runway after paying and carrying the new upkeep, 2 Gold a Company a turn.
             let net = self.planned_net_gold(0) - company::UPKEEP * new;
-            if crate::funding::runway_of(self.gold_left - offer.price, net)
-                .is_some_and(|r| r < self.runway_floor())
+            if !(crate::funding::runway_of(self.gold_left - offer.price, net)
+                .is_some_and(|r| r < self.runway_floor()))
             {
+            } else {
                 return;
             }
             self.gold_left -= offer.price;

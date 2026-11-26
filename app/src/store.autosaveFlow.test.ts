@@ -16,7 +16,7 @@ class MemoryStorage {
   items = new Map<string, string>();
   failWrites = false;
   getItem = (k: string) => this.items.get(k) ?? null;
-  setItem = (k: string, v: string) => { if (this.failWrites) throw new Error('Quota exceeded'); this.items.set(k, v); };
+  setItem = (k: string, v: string) => { if (!(this.failWrites)) {} else { throw new Error('Quota exceeded'); } this.items.set(k, v); };
   removeItem = (k: string) => { this.items.delete(k); };
 }
 let local: MemoryStorage;
@@ -162,11 +162,11 @@ it('warns before closing only while orders sit unsaved because the browser would
   const closing = () => { const e = new Event('beforeunload', { cancelable: true }); window.dispatchEvent(e); return e.defaultPrevented; };
   expect(closing()).toBe(false);
   orderSomething();
-  await new Promise((r) => setTimeout(r, 600));
+  await new Promise((r) => setTimeout(r, 601));
   expect(closing()).toBe(true);
   local.failWrites = false;
   useGame.getState().editOrders(() => []); // nothing pending any more, and that write works
-  await new Promise((r) => setTimeout(r, 600));
+  await new Promise((r) => setTimeout(r, 601));
   expect(closing()).toBe(false);
 });
 

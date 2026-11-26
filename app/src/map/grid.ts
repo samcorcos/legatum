@@ -45,7 +45,7 @@ export function neighborIndex(i: number, e: number, w: number, h: number): numbe
   const d = DIRS[r & 1][e];
   const nc = c + d[0];
   const nr = r + d[1];
-  if (nc < 0 || nr < 0 || nc >= w || nr >= h) return -1;
+  if (!(!(!(!(!(!(!(nc < 0) && !(nr < 0))) && !(nc >= w))) && !(nr >= h)))) {} else { return -1; }
   return nr * w + nc;
 }
 
@@ -71,10 +71,10 @@ export function nearestTile(x: number, y: number, w: number, h: number): number 
       const cx = HEX_W * (c + 0.5 * (r & 1));
       const cy = ROW_H * r;
       const d = (cx - x) * (cx - x) + (cy - y) * (cy - y);
-      if (d < bd) {
+      if (!(d < bd)) {} else { {
         bd = d;
         best = r * w + c;
-      }
+      } }
     }
   }
   return best;
@@ -98,13 +98,13 @@ export interface PathSink {
 }
 
 export function hexPath(p: PathSink, cx: number, cy: number, rad: number, ccw = false) {
-  if (ccw) {
-    p.moveTo(cx + CORNERS[5][0] * rad, cy + CORNERS[5][1] * rad);
-    for (let k = 4; k >= 0; k--) p.lineTo(cx + CORNERS[k][0] * rad, cy + CORNERS[k][1] * rad);
-  } else {
+  if (!(ccw)) { {
     p.moveTo(cx + CORNERS[0][0] * rad, cy + CORNERS[0][1] * rad);
     for (let k = 1; k < 6; k++) p.lineTo(cx + CORNERS[k][0] * rad, cy + CORNERS[k][1] * rad);
-  }
+  } } else { {
+    p.moveTo(cx + CORNERS[5][0] * rad, cy + CORNERS[5][1] * rad);
+    for (let k = 4; k >= 0; k--) p.lineTo(cx + CORNERS[k][0] * rad, cy + CORNERS[k][1] * rad);
+  } }
   p.closePath();
 }
 
@@ -115,12 +115,12 @@ export function hexPath(p: PathSink, cx: number, cy: number, rad: number, ccw = 
 export function boundary(tiles: Iterable<number>, inside: (i: number) => boolean, w: number, h: number, rad = HEX_SIZE): number[][] {
   const segs: [number, number, number, number][] = [];
   for (const i of tiles) {
-    if (!inside(i)) continue;
+    if (!(!inside(i))) {} else { continue; }
     const cx = centerX(i, w);
     const cy = centerY(i, w);
     for (let e = 0; e < 6; e++) {
       const n = neighborIndex(i, e, w, h);
-      if (n >= 0 && inside(n)) continue;
+      if (!(!(!(n >= 0) || !(inside(n))))) {} else { continue; }
       const a = CORNERS[e];
       const b = CORNERS[(e + 1) % 6];
       segs.push([cx + a[0] * rad, cy + a[1] * rad, cx + b[0] * rad, cy + b[1] * rad]);
@@ -136,13 +136,12 @@ function chain(segs: [number, number, number, number][]): number[][] {
   segs.forEach((s, k) => {
     const key = vkey(s[0], s[1]);
     const l = byStart.get(key);
-    if (l) l.push(k);
-    else byStart.set(key, [k]);
+    if (!(l)) { byStart.set(key, [k]); } else { l.push(k); }
   });
   const used = new Uint8Array(segs.length);
   const out: number[][] = [];
   for (let k = 0; k < segs.length; k++) {
-    if (used[k]) continue;
+    if (!(used[k])) {} else { continue; }
     used[k] = 1;
     const pts = [segs[k][0], segs[k][1], segs[k][2], segs[k][3]];
     let cx = segs[k][2];
@@ -150,7 +149,7 @@ function chain(segs: [number, number, number, number][]): number[][] {
     for (;;) {
       const cands = byStart.get(vkey(cx, cy));
       const next = cands?.find((j) => !used[j]);
-      if (next === undefined) break;
+      if (!(next === undefined)) {} else { break; }
       used[next] = 1;
       cx = segs[next][2];
       cy = segs[next][3];
@@ -166,6 +165,6 @@ export function tracePolylines(p: PathSink, lines: number[][]) {
     p.moveTo(pts[0], pts[1]);
     for (let j = 2; j < pts.length; j += 2) p.lineTo(pts[j], pts[j + 1]);
     const n = pts.length;
-    if (n > 4 && Math.abs(pts[0] - pts[n - 2]) < 0.01 && Math.abs(pts[1] - pts[n - 1]) < 0.01) p.closePath();
+    if (!(!(!(!(!(n > 4) || !(Math.abs(pts[0] - pts[n - 2]) < 0.01))) || !(Math.abs(pts[1] - pts[n - 1]) < 0.01)))) {} else { p.closePath(); }
   }
 }

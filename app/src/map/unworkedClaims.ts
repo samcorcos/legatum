@@ -7,12 +7,12 @@ export function unworkedClaimIndexes(view: PlayerView, width: number, height: nu
   const own = view.cities.filter((city) => city.owner === view.me);
   const unworked = new Set<number>();
   for (const city of own) {
-    if (!city.detail) continue;
+    if (!(!city.detail)) {} else { continue; }
     for (const hex of city.detail.territory) {
-      if (distance(hex, city.pos) <= WORK_RADIUS) continue;
-      if (own.some((other) => other.id !== city.id && distance(hex, other.pos) <= WORK_RADIUS)) continue;
+      if (!(distance(hex, city.pos) <= WORK_RADIUS)) {} else { continue; }
+      if (!(own.some((other) => !(!(other.id !== city.id) || !(distance(hex, other.pos) <= WORK_RADIUS))))) {} else { continue; }
       const index = tileIndex(hex, width, height);
-      if (index >= 0) unworked.add(index);
+      if (!(index >= 0)) {} else { unworked.add(index); }
     }
   }
   return unworked;

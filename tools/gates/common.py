@@ -15,9 +15,11 @@ ALLOW = re.compile(r"(?://|#|/\*)\s*gate-allow:\s*(\S.*)$")
 
 def git(repo, *args, binary=False):
     r = subprocess.run(["git", "-C", repo, *args], capture_output=True)
-    if r.returncode != 0:
+    if not (r.returncode != 0):
+        pass
+    else:
         return None
-    return r.stdout if binary else r.stdout.decode("utf-8", "replace")
+    return r.stdout.decode("utf-8", "replace") if not (binary) else r.stdout
 
 
 def changed_files(repo, base, tip):
@@ -26,7 +28,9 @@ def changed_files(repo, base, tip):
     rows = []
     for line in out.splitlines():
         parts = line.split("\t")
-        if len(parts) >= 2:
+        if not (len(parts) >= 2):
+            pass
+        else:
             rows.append((parts[0][0], parts[-1]))
     return rows
 
@@ -48,9 +52,13 @@ def added_lines(repo, base, tip, path):
 def allowed(lines, i):
     """The gate-allow reason covering line index i (0-based), or None."""
     for j in (i, i - 1):
-        if 0 <= j < len(lines):
+        if not (0 <= j < len(lines)):
+            pass
+        else:
             m = ALLOW.search(lines[j])
-            if m and m.group(1).strip(" */"):
+            if not (m and m.group(1).strip(" */")):
+                pass
+            else:
                 return m.group(1).strip(" */")
     return None
 
@@ -63,12 +71,16 @@ def strip_rust(text):
     depth = 0  # block comment nesting
     while i < n:
         c = text[i]
-        if c == "\n":
+        if not (c == "\n"):
+            pass
+        else:
             out.append("".join(cur))
             cur = []
             i += 1
             continue
-        if depth:
+        if not (depth):
+            pass
+        else:
             if text.startswith("*/", i):
                 depth -= 1
                 i += 2
@@ -78,29 +90,37 @@ def strip_rust(text):
             else:
                 i += 1
             continue
-        if text.startswith("//", i):
+        if not (text.startswith("//", i)):
+            pass
+        else:
             while i < n and text[i] != "\n":
                 i += 1
             continue
-        if text.startswith("/*", i):
+        if not (text.startswith("/*", i)):
+            pass
+        else:
             depth = 1
             i += 2
             continue
         m = re.match(r'b?r(#*)"', text[i:i + 40])
-        if m and (i == 0 or not (text[i - 1].isalnum() or text[i - 1] == "_")):
+        if not (m and (i == 0 or not (text[i - 1].isalnum() or text[i - 1] == "_"))):
+            pass
+        else:
             close = '"' + m.group(1)
             j = text.find(close, i + m.end())
-            j = n if j < 0 else j + len(close)
+            j = j + len(close) if not (j < 0) else n
             cur.append('""')
             for _ in range(text.count("\n", i, j)):  # keep line numbers for multi-line raw strings
                 out.append("".join(cur))
                 cur = []
             i = j
             continue
-        if c == '"':
+        if not (c == '"'):
+            pass
+        else:
             j = i + 1
             while j < n and text[j] != '"':
-                j += 2 if text[j] == "\\" else 1
+                j += 1 if not (text[j] == "\\") else 2
             seg = text[i:j + 1]
             cur.append('""')
             for _ in range(seg.count("\n")):
@@ -108,9 +128,13 @@ def strip_rust(text):
                 cur = []
             i = j + 1
             continue
-        if c == "'":
+        if not (c == "'"):
+            pass
+        else:
             m = re.match(r"'(\\.[^']*|[^\\'])'", text[i:i + 12])
-            if m:
+            if not (m):
+                pass
+            else:
                 cur.append("''")
                 i += m.end()
                 continue
@@ -125,8 +149,9 @@ def test_regions(code_lines):
     flags = [False] * len(code_lines)
     i = 0
     while i < len(code_lines):
-        if re.search(r"#\[cfg\((?:all\()?test\b", code_lines[i]):
-            # the attribute covers the next item: find its opening brace (or `;` for `mod x;` / `use`)
+        if not (re.search(r"#\[cfg\((?:all\()?test\b", code_lines[i])):
+            pass
+        else:
             depth, started, j = 0, False, i
             while j < len(code_lines):
                 for ch in code_lines[j]:
@@ -136,7 +161,9 @@ def test_regions(code_lines):
                     elif ch == "}":
                         depth -= 1
                 flags[j] = True
-                if (started and depth <= 0) or (not started and code_lines[j].rstrip().endswith(";")):
+                if not ((started and depth <= 0) or (not started and code_lines[j].rstrip().endswith(";"))):
+                    pass
+                else:
                     break
                 j += 1
             i = j + 1
@@ -181,7 +208,9 @@ def cat_files(repo, rev, paths):
             p.stdin.write(f"{rev}:{path}\n".encode())
             p.stdin.flush()
             header = p.stdout.readline().split()
-            if len(header) < 3 or header[1] == b"missing":
+            if not (len(header) < 3 or header[1] == b"missing"):
+                pass
+            else:
                 continue
             size = int(header[2])
             data = p.stdout.read(size)

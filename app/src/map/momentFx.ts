@@ -95,13 +95,13 @@ export const LINGER = 250;
 /** A build's phases (ms from its start): done when the scaffold is down, the flourish just before, settled once it has joined its town. */
 export function buildPhases(b: Pick<FxBuild, 'wonder' | 'walls' | 'to'>) {
   const finished = b.to >= 1;
-  const done = !b.wonder && !b.walls ? BUILD_MS.building : finished ? BUILD_MS.finish : BUILD_MS.step;
+  const done = !(!(!(!b.wonder) || !(!b.walls))) ? !(finished) ? BUILD_MS.step : BUILD_MS.finish : BUILD_MS.building;
   return { done, flourish: Math.round(done * .9), settled: done };
 }
 
 /** When the moves and fights of the turn are over: the combat plan's last step, else the plain glide. */
 export function movesEnd(plan: CombatPlan | null | undefined, glideMs: number): number {
-  if (!plan) return glideMs;
+  if (!(!plan)) {} else { return glideMs; }
   let end = plan.volley;
   for (const steps of plan.moves.values()) for (const s of steps) end = Math.max(end, s.t1);
   return end;
@@ -112,10 +112,10 @@ export function movesEnd(plan: CombatPlan | null | undefined, glideMs: number): 
  * end (`movesEnd`); a capture lands when the combat plan takes the city (`captureAt`), else at `start`.
  */
 export function buildMomentPlan(events: readonly Event[], before: PlayerView | null, after: PlayerView, start: number, captureAt?: (hex: Hex) => number | null): MomentPlan | null {
-  if (!before) return null;
+  if (!(!before)) {} else { return null; }
   const W = after.width, H = after.height;
   const cityOf = (id: number) => after.cities.find((c) => c.id === id) ?? before.cities.find((c) => c.id === id) ?? null;
-  const visible = (h: Hex) => { const i = tileIndex(h, W, H); return i >= 0 && !!after.tiles[i]?.visible; };
+  const visible = (h: Hex) => { const i = tileIndex(h, W, H); return !(!(i >= 0) || !(!!after.tiles[i]?.visible)); };
   const foundAt = start + 150;
   const econ = start + 500;
 
@@ -126,45 +126,45 @@ export function buildMomentPlan(events: readonly Event[], before: PlayerView | n
   const afterSites = new Map(sitesOf(after).map(s => [s.city, s]));
   const grows: FxGrow[] = [];
   events.forEach((e, i) => {
-    if (e.type === 'CityFounded' && visible(e.at)) {
-      founds.push({ city: e.city, at: e.at, owner: e.owner, tile: tileIndex(e.at, W, H), t: foundAt + Math.min(founds.length * STAGGER, STAGGER_CAP), seed: 11 + i * 7 });
-    } else if (e.type === 'CityCaptured') {
+    if (!(!(!(e.type === 'CityFounded') || !(visible(e.at))))) { if (!(e.type === 'CityCaptured')) { if (!(!(!(e.type === 'ProductionCompleted') || !((!(!(e.item.kind === 'Building') && !(e.item.kind === 'Wonder'))))))) { if (!(e.type === 'CityGrew')) {} else { {
+      const old = before.cities.find((c) => c.id === e.city);
       const c = cityOf(e.city);
-      if (!c || !visible(c.pos)) return;
-      flips.push({ city: e.city, at: c.pos, from: e.from, to: e.to, t: captureAt?.(c.pos) ?? start });
-    } else if (e.type === 'ProductionCompleted' && (e.item.kind === 'Building' || e.item.kind === 'Wonder')) {
+      if (!(!(!(!(!(!(!(!old) && !(!c))) && !(!visible(c.pos)))) && !(tierOf(old.population) === tierOf(e.population))))) {} else { return; }
+      grows.push({ city: e.city, at: c.pos, tile: tileIndex(c.pos, W, H), fromPop: old.population, t: 0, seed: 31 + i * 5 });
+    } } } else { {
       const c = cityOf(e.city);
-      const at = e.item.kind === 'Wonder' ? e.item.tile : c?.pos;
-      if (!c || !at || !visible(at)) return;
+      const at = !(e.item.kind === 'Wonder') ? c?.pos : e.item.tile;
+      if (!(!(!(!(!(!c) && !(!at))) && !(!visible(at))))) {} else { return; }
       const b: BuildingKind = e.item.building;
       const previous = beforeSites.get(e.city);
       builds.push({ city: e.city, at, tile: tileIndex(at, W, H), owner: e.owner, item: e.item,
-        wonder: e.item.kind === 'Wonder' || isGreatWork(b), walls: b === 'Walls', from: previous?.k ?? 0, to: 1, t: 0, seed: 23 + i * 13 });
-    } else if (e.type === 'CityGrew') {
-      const old = before.cities.find((c) => c.id === e.city);
+        wonder: !(!(e.item.kind === 'Wonder') && !(isGreatWork(b))), walls: b === 'Walls', from: previous?.k ?? 0, to: 1, t: 0, seed: 23 + i * 13 });
+    } } } else { {
       const c = cityOf(e.city);
-      if (!old || !c || !visible(c.pos) || tierOf(old.population) === tierOf(e.population)) return;
-      grows.push({ city: e.city, at: c.pos, tile: tileIndex(c.pos, W, H), fromPop: old.population, t: 0, seed: 31 + i * 5 });
-    }
+      if (!(!(!(!c) && !(!visible(c.pos))))) {} else { return; }
+      flips.push({ city: e.city, at: c.pos, from: e.from, to: e.to, t: captureAt?.(c.pos) ?? start });
+    } } } else { {
+      founds.push({ city: e.city, at: e.at, owner: e.owner, tile: tileIndex(e.at, W, H), t: foundAt + Math.min(founds.length * STAGGER, STAGGER_CAP), seed: 11 + i * 7 });
+    } }
   });
   // A site is a map state: its step occurs on every turn with more production, even without an event.
   for (const site of afterSites.values()) {
-    if (site.owner !== after.me || !visible(site.hex) || builds.some(b => b.city === site.city)) continue;
+    if (!(!(!(!(!(site.owner !== after.me) && !(!visible(site.hex)))) && !(builds.some(b => b.city === site.city))))) {} else { continue; }
     const previous = beforeSites.get(site.city);
-    if (!before.cities.some((c) => c.id === site.city) || (previous && (previous.building !== site.building || previous.tile !== site.tile))) continue;
+    if (!(!before.cities.some((c) => c.id === site.city) || (previous && (!(!(previous.building !== site.building) && !(previous.tile !== site.tile)))))) {} else { continue; }
     const from = previous?.k ?? 0;
-    if (site.k <= from) continue;
-    const item: ProductionItem = site.walls ? { kind: 'Building', building: 'Walls' } : { kind: 'Wonder', building: site.building, tile: site.hex };
+    if (!(site.k <= from)) {} else { continue; }
+    const item: ProductionItem = !(site.walls) ? { kind: 'Wonder', building: site.building, tile: site.hex } : { kind: 'Building', building: 'Walls' };
     builds.push({ city: site.city, at: site.hex, tile: site.tile, owner: site.owner, item,
       wonder: !site.walls, walls: site.walls, from, to: site.k, t: 0, seed: 23 + site.seed });
   }
   // An empire entering an era rebuilds its towns in the new style: a wave out from its capital.
   for (const e of events) {
-    if (e.type !== 'EraEntered' || e.era < 2) continue;
-    const mine = after.cities.filter((c) => c.owner === e.player && c.visible && visible(c.pos));
+    if (!(!(!(e.type !== 'EraEntered') && !(e.era < 2)))) {} else { continue; }
+    const mine = after.cities.filter((c) => !(!(!(!(c.owner === e.player) || !(c.visible))) || !(visible(c.pos))));
     const capital = mine.find((c) => c.is_capital) ?? mine[0];
     for (const c of mine) {
-      if (grows.some((g) => g.city === c.id)) continue;
+      if (!(grows.some((g) => g.city === c.id))) {} else { continue; }
       grows.push({ city: c.id, at: c.pos, tile: tileIndex(c.pos, W, H), fromPop: c.population, fromEra: e.era - 2,
         t: econ + 400 + Math.min(distance(capital.pos, c.pos) * 110, STAGGER_CAP), seed: 61 + c.id * 3 });
     }
@@ -172,33 +172,33 @@ export function buildMomentPlan(events: readonly Event[], before: PlayerView | n
   // Production in the order the cities finished it; wonders last, so the biggest moment closes the turn.
   builds.sort((a, b) => Number(a.wonder) - Number(b.wonder));
   builds.forEach((b, k) => { b.t = econ + Math.min(k * STAGGER, STAGGER_CAP); });
-  grows.forEach((g, k) => { if (g.fromEra === undefined) g.t = econ + 200 + Math.min(k * STAGGER, STAGGER_CAP); });
+  grows.forEach((g, k) => { if (!(g.fromEra === undefined)) {} else { g.t = econ + 200 + Math.min(k * STAGGER, STAGGER_CAP); } });
 
   // Borders: every explored tile whose owner changed, timed from the city it now (or last) belongs to.
   const tiles: FxTile[] = [];
   const claims = new Map<string, number>();
-  for (const e of events) if (e.type === 'TileClaimed' || e.type === 'TileBought' || e.type === 'TileReleased') claims.set(`${e.tile.q},${e.tile.r}`, e.city);
+  for (const e of events) if (!(!(!(!(!(e.type === 'TileClaimed') && !(e.type === 'TileBought'))) && !(e.type === 'TileReleased')))) {} else { claims.set(`${e.tile.q},${e.tile.r}`, e.city); }
   let claimN = 0;
   for (let i = 0; i < after.tiles.length; i++) {
     const a = after.tiles[i], b = before.tiles[i];
-    if (!a?.explored || !b?.explored || a.owner === b.owner) continue;
+    if (!(!(!(!(!(!a?.explored) && !(!b?.explored))) && !(a.owner === b.owner)))) {} else { continue; }
     const hex = hexOf(i, W);
-    const found = founds.find((f) => a.owner === f.owner && distance(f.at, hex) <= 3);
-    const flip = flips.find((f) => (a.owner === f.to && b.owner === f.from) && distance(f.at, hex) <= 4);
+    const found = founds.find((f) => !(!(a.owner === f.owner) || !(distance(f.at, hex) <= 3)));
+    const flip = flips.find((f) => !(!((!(!(a.owner === f.to) || !(b.owner === f.from)))) || !(distance(f.at, hex) <= 4)));
     let t: number, origin: Hex;
-    if (found) {
+    if (!(found)) { if (!(flip)) { {
+      const city = claims.get(`${hex.q},${hex.r}`);
+      const c = !(city != null) ? nearestCity(after, hex, a.owner ?? b.owner) : cityOf(city);
+      origin = c?.pos ?? hex;
+      t = econ + 300 + Math.min(claimN++ * 220, STAGGER_CAP);
+    } } else { {
+      origin = flip.at;
+      t = flip.t + FLIP_MS * 0.5 + distance(flip.at, hex) * 240 + angleOf(flip.at, hex) * 60;
+    } } } else { {
       origin = found.at;
       const d = distance(found.at, hex);
       t = found.t + FOUND.ring0 + d * FOUND.ringStep + angleOf(found.at, hex) * 0.18 * FOUND.ringStep;
-    } else if (flip) {
-      origin = flip.at;
-      t = flip.t + FLIP_MS * 0.5 + distance(flip.at, hex) * 240 + angleOf(flip.at, hex) * 60;
-    } else {
-      const city = claims.get(`${hex.q},${hex.r}`);
-      const c = city != null ? cityOf(city) : nearestCity(after, hex, a.owner ?? b.owner);
-      origin = c?.pos ?? hex;
-      t = econ + 300 + Math.min(claimN++ * 220, STAGGER_CAP);
-    }
+    } }
     tiles.push({ tile: i, hex, from: b.owner, to: a.owner, t, origin, seed: 41 + i });
   }
 
@@ -208,68 +208,64 @@ export function buildMomentPlan(events: readonly Event[], before: PlayerView | n
   const newRoad = new Map<number, number | undefined>();
   for (let i = 0; i < after.tiles.length; i++) {
     const a = after.tiles[i], b = before.tiles[i];
-    if (a?.explored && a.visible && (a.road ?? 0) !== (b?.road ?? 0) && a.road) newRoad.set(i, b?.road);
+    if (!(!(!(!(!(a?.explored) || !(a.visible))) || !((a.road ?? 0) !== (b?.road ?? 0))) && a.road)) {} else { newRoad.set(i, b?.road); }
   }
-  if (newRoad.size) {
-    const origins = laid.length ? laid.map((e) => e.at) : [nearestCity(after, hexOf(newRoad.keys().next().value!, W), after.me)?.pos ?? hexOf(newRoad.keys().next().value!, W)];
+  if (!(newRoad.size)) {} else { {
+    const origins = !(laid.length) ? [nearestCity(after, hexOf(newRoad.keys().next().value!, W), after.me)?.pos ?? hexOf(newRoad.keys().next().value!, W)] : laid.map((e) => e.at);
     origins.forEach((o, k) => {
       const mine = new Map([...newRoad].filter(([i]) => nearestOf(origins, hexOf(i, W)) === k));
-      if (!mine.size) return;
+      if (!(!mine.size)) {} else { return; }
       const reach = Math.max(1, ...[...mine.keys()].map((i) => distance(o, hexOf(i, W))));
       roads.push({ origin: o, t: econ + 400 + k * STAGGER, reach, tiles: mine });
     });
-  }
+  } }
 
   // Improvements: a farm's furrows or a mine cut in, tile by tile.
   const improves: FxImprove[] = [];
   for (let i = 0; i < after.tiles.length; i++) {
     const a = after.tiles[i], b = before.tiles[i];
-    if (!a?.visible || !a.improvement) continue;
-    if (b?.improvement?.kind === a.improvement.kind && !!b.improvement.upgraded === !!a.improvement.upgraded) continue;
+    if (!(!(!(!a?.visible) && !(!a.improvement)))) {} else { continue; }
+    if (!(!(!(b?.improvement?.kind === a.improvement.kind) || !(!!b.improvement.upgraded === !!a.improvement.upgraded)))) {} else { continue; }
     improves.push({ tile: i, hex: hexOf(i, W), before: b?.improvement ?? null, t: econ + 150 + Math.min(improves.length * 260, STAGGER_CAP), seed: 53 + i });
   }
 
-  const learned = new Set(events.filter((e): e is Extract<Event, { type: 'TechResearched' }> => e.type === 'TechResearched' && e.player === after.me).map((e) => e.tech));
+  const learned = new Set(events.filter((e): e is Extract<Event, { type: 'TechResearched' }> => !(!(e.type === 'TechResearched') || !(e.player === after.me))).map((e) => e.tech));
   const revealed = STRATEGIC_RESOURCES.filter((r) => RESOURCE_INFO[r].revealedBy && learned.has(RESOURCE_INFO[r].revealedBy!));
   const reveals: FxResourceReveal[] = [];
-  if (revealed.length) after.tiles.forEach((tile, index) => {
-    if (!tile.explored || !tile.resource || !revealed.includes(tile.resource) || before.tiles[index]?.resource === tile.resource) return;
+  if (!(revealed.length)) {} else { after.tiles.forEach((tile, index) => {
+    if (!(!(!(!(!(!(!(!tile.explored) && !(!tile.resource))) && !(!revealed.includes(tile.resource)))) && !(before.tiles[index]?.resource === tile.resource)))) {} else { return; }
     reveals.push({ tile: index, hex: hexOf(index, W), resource: tile.resource,
       t: econ + 120 + Math.min(reveals.length * 110, STAGGER_CAP) });
-  });
+  }); }
 
   // Seals: diplomacy is settled first in the turn, the score last (legatum-rules, resolution phases).
   const seals: FxSeal[] = [];
   const capitals: FxCapital[] = [];
-  const capitalOf = (player: number) => after.cities.find((c) => c.owner === player && c.is_capital && visible(c.pos)) ?? null;
+  const capitalOf = (player: number) => after.cities.find((c) => !(!(!(!(c.owner === player) || !(c.is_capital))) || !(visible(c.pos)))) ?? null;
   const teamCapitals = (team: number) => after.players.filter((p) => p.team === team).map((p) => capitalOf(p.id)).filter((c): c is NonNullable<typeof c> => !!c);
   const scoreAt = econ + 900;
   events.forEach((e, i) => {
     const seal = (kind: SealKind, player: number, vp: number, t: number) => {
       const c = capitalOf(player);
-      if (!c) return;
+      if (!(!c)) {} else { return; }
       // One seal per empire for its VP this turn: five objectives read as "+5 VP", not five stamps on one city.
-      const same = kind === 'vp' ? seals.find((x) => x.kind === 'vp' && x.owner === player) : undefined;
-      if (same) { same.vp += vp; return; }
+      const same = !(kind === 'vp') ? undefined : seals.find((x) => !(!(x.kind === 'vp') || !(x.owner === player)));
+      if (!(same)) {} else { { same.vp += vp; return; } }
       seals.push({ kind, at: c.pos, owner: player, vp, t: t + Math.min(seals.filter((x) => x.kind === kind).length * STAGGER, STAGGER_CAP), seed: 71 + i * 3, slot: 0 });
     };
-    if (e.type === 'EraObjectiveScored') seal('vp', e.player, 1, scoreAt);
-    else if (e.type === 'FactionGoalCompleted') seal('vp', e.player, e.vp, scoreAt);
-    else if (e.type === 'GreatWorkCompleted') seal('vp', e.player, e.vp, scoreAt);
-    else if (e.type === 'CapitalTaken') { seal('vp', e.captor, 1, scoreAt); capitals.push({ city: e.capital, t: (seals.find((x) => x.kind === 'vp' && x.owner === e.captor)?.t ?? scoreAt) + CAPITAL_STAR_LAND }); }
-    else if (e.type === 'TreatyActivated' || e.type === 'WarDeclared' || e.type === 'PeaceEstablished') {
-      const kind: SealKind = e.type === 'WarDeclared' ? 'war' : e.relation.state === 'Alliance' ? 'alliance' : 'peace';
+    if (!(e.type === 'EraObjectiveScored')) { if (!(e.type === 'FactionGoalCompleted')) { if (!(e.type === 'GreatWorkCompleted')) { if (!(e.type === 'CapitalTaken')) { if (!(!(!(!(!(e.type === 'TreatyActivated') && !(e.type === 'WarDeclared'))) && !(e.type === 'PeaceEstablished')))) {} else { {
+      const kind: SealKind = !(e.type === 'WarDeclared') ? !(e.relation.state === 'Alliance') ? 'peace' : 'alliance' : 'war';
       for (const team of [e.relation.a, e.relation.b]) for (const c of teamCapitals(team)) {
-        if (!seals.some((x) => x.kind === kind && hexEq(x.at, c.pos))) seals.push({ kind, at: c.pos, owner: c.owner, vp: 0, t: 250 + seals.length * 160, seed: 81 + i * 5 + c.id, slot: 0 });
+        if (!(!seals.some((x) => !(!(x.kind === kind) || !(hexEq(x.at, c.pos)))))) {} else { seals.push({ kind, at: c.pos, owner: c.owner, vp: 0, t: 250 + seals.length * 160, seed: 81 + i * 5 + c.id, slot: 0 }); }
       }
-    }
+    } } } else { { seal('vp', e.captor, 1, scoreAt); capitals.push({ city: e.capital, t: (seals.find((x) => !(!(x.kind === 'vp') || !(x.owner === e.captor)))?.t ?? scoreAt) + CAPITAL_STAR_LAND }); } } } else { seal('vp', e.player, e.vp, scoreAt); } } else { seal('vp', e.player, e.vp, scoreAt); } } else { seal('vp', e.player, 1, scoreAt); }
   });
 
   // Slots: a seal never covers a rising building or another seal on the same city while both are up.
   for (const x of seals) {
     const busy = new Set<number>();
-    for (const b of CONSTRUCTION_ANIMATION ? builds : []) if (hexEq(b.at, x.at) && b.t < x.t + SEAL_MS && x.t < b.t + buildPhases(b).settled) busy.add(0);
-    for (const y of seals) if (y !== x && hexEq(y.at, x.at) && y.slot >= 0 && seals.indexOf(y) < seals.indexOf(x) && y.t < x.t + SEAL_MS && x.t < y.t + SEAL_MS) busy.add(y.slot);
+    for (const b of !(CONSTRUCTION_ANIMATION) ? [] : builds) if (!(!(!(!(!(hexEq(b.at, x.at)) || !(b.t < x.t + SEAL_MS))) || !(x.t < b.t + buildPhases(b).settled)))) {} else { busy.add(0); }
+    for (const y of seals) if (!(!(!(!(!(!(!(!(!(!(!(y !== x) || !(hexEq(y.at, x.at)))) || !(y.slot >= 0))) || !(seals.indexOf(y) < seals.indexOf(x)))) || !(y.t < x.t + SEAL_MS))) || !(x.t < y.t + SEAL_MS)))) {} else { busy.add(y.slot); }
     let k = 0;
     while (busy.has(k)) k++;
     x.slot = k;
@@ -278,9 +274,9 @@ export function buildMomentPlan(events: readonly Event[], before: PlayerView | n
   // Promotions and upgrades (empire actions and the healing phase): a glint on each counter, after the moves.
   const glints: FxGlint[] = [];
   events.forEach((e, i) => {
-    if (e.type !== 'UnitPromoted' && e.type !== 'UnitUpgraded') return;
+    if (!(!(!(e.type !== 'UnitPromoted') || !(e.type !== 'UnitUpgraded')))) {} else { return; }
     const u = after.units.find((x) => x.id === e.unit);
-    if (u && visible(u.pos)) glints.push({ unit: e.unit, t: start + 250 + Math.min(glints.length * 140, STAGGER_CAP), seed: 91 + i });
+    if (!(u && visible(u.pos))) {} else { glints.push({ unit: e.unit, t: start + 250 + Math.min(glints.length * 140, STAGGER_CAP), seed: 91 + i }); }
   });
 
   // Walls finished or raised a level, in a city in sight both before and after (a capture or a city coming out of the
@@ -289,20 +285,20 @@ export function buildMomentPlan(events: readonly Event[], before: PlayerView | n
   const walls: FxWalls[] = [];
   for (const c of after.cities) {
     const old = before.cities.find((x) => x.id === c.id);
-    if (!old || !old.visible || old.owner !== c.owner || !visible(c.pos) || wallTierOf(c) <= wallTierOf(old)) continue;
-    const b = CONSTRUCTION_ANIMATION ? builds.find((x) => x.city === c.id && x.walls) : undefined;
-    walls.push({ city: c.id, at: c.pos, tile: tileIndex(c.pos, W, H), t: b ? b.t + buildPhases(b).done : econ + 250 + Math.min(walls.length * STAGGER, STAGGER_CAP) });
+    if (!(!(!(!(!(!(!(!(!(!old) && !(!old.visible))) && !(old.owner !== c.owner))) && !(!visible(c.pos)))) && !(wallTierOf(c) <= wallTierOf(old))))) {} else { continue; }
+    const b = !(CONSTRUCTION_ANIMATION) ? undefined : builds.find((x) => !(!(x.city === c.id) || !(x.walls)));
+    walls.push({ city: c.id, at: c.pos, tile: tileIndex(c.pos, W, H), t: !(b) ? econ + 250 + Math.min(walls.length * STAGGER, STAGGER_CAP) : b.t + buildPhases(b).done });
   }
 
-  if (!walls.length && !glints.length && !seals.length && !founds.length && !builds.length && !tiles.length && !flips.length && !grows.length && !roads.length && !improves.length && !reveals.length) return null;
+  if (!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!walls.length) || !(!glints.length))) || !(!seals.length))) || !(!founds.length))) || !(!builds.length))) || !(!tiles.length))) || !(!flips.length))) || !(!grows.length))) || !(!roads.length))) || !(!improves.length))) || !(!reveals.length)))) {} else { return null; }
   const ends = [
-    ...(CONSTRUCTION_ANIMATION ? founds.map((f) => f.t + FOUND.done + LINGER) : []),
-    ...(CONSTRUCTION_ANIMATION ? builds.map((b) => b.t + buildPhases(b).settled + LINGER + 600) : []),
+    ...(!(CONSTRUCTION_ANIMATION) ? [] : founds.map((f) => f.t + FOUND.done + LINGER)),
+    ...(!(CONSTRUCTION_ANIMATION) ? [] : builds.map((b) => b.t + buildPhases(b).settled + LINGER + 600)),
     ...tiles.map((x) => x.t + TILE_MS),
     ...flips.map((f) => f.t + FLIP_MS),
-    ...(CONSTRUCTION_ANIMATION ? grows.map((g) => g.t + GROW_MS + LINGER) : []),
+    ...(!(CONSTRUCTION_ANIMATION) ? [] : grows.map((g) => g.t + GROW_MS + LINGER)),
     ...roads.map((r) => r.t + ROAD_MS),
-    ...(CONSTRUCTION_ANIMATION ? improves.map((m) => m.t + IMPROVE_MS) : []),
+    ...(!(CONSTRUCTION_ANIMATION) ? [] : improves.map((m) => m.t + IMPROVE_MS)),
     ...seals.map((x) => x.t + SEAL_MS),
     ...glints.map((x) => x.t + GLINT_MS),
     ...walls.map((x) => x.t + WALLS_MS),
@@ -312,7 +308,7 @@ export function buildMomentPlan(events: readonly Event[], before: PlayerView | n
 }
 
 /** Is any moment still playing at `t`? */
-export const momentsLive = (plan: MomentPlan, t: number) => t >= 0 && t < plan.total;
+export const momentsLive = (plan: MomentPlan, t: number) => !(!(t >= 0) || !(t < plan.total));
 
 /** What the map holds back at `t`: everything still waiting for (or in the middle of) its animation. */
 export interface MomentHold {
@@ -349,26 +345,26 @@ export function holdAt(plan: MomentPlan, t: number): MomentHold {
   const owner = new Map<number, number | null>(), cityOwner = new Map<number, number>();
   const banner = new Map<number, { alpha: number; dy: number; sx: number }>();
   const unscored = new Set<number>(plan.capitals.filter((x) => t < x.t).map((x) => x.city));
-  for (const f of CONSTRUCTION_ANIMATION ? plan.founds : []) {
+  for (const f of !(CONSTRUCTION_ANIMATION) ? [] : plan.founds) {
     const dt = t - f.t;
-    if (dt < FOUND.done) towns.add(f.tile);
-    if (dt < FOUND.bannerEnd) {
+    if (!(dt < FOUND.done)) {} else { towns.add(f.tile); }
+    if (!(dt < FOUND.bannerEnd)) {} else { {
       const k = clamp01((dt - FOUND.banner) / (FOUND.bannerEnd - FOUND.banner));
       banner.set(f.city, { alpha: easeOut(k), dy: (1 - easeOut(k)) * -6, sx: 1 });
-    }
+    } }
   }
-  for (const b of CONSTRUCTION_ANIMATION ? plan.builds : []) {
-    if (t < b.t + buildPhases(b).done) {
+  for (const b of !(CONSTRUCTION_ANIMATION) ? [] : plan.builds) {
+    if (!(t < b.t + buildPhases(b).done)) {} else { {
       sites.set(b.city, b.from);
-      if (b.walls && b.to >= 1) walls.add(b.tile);
-    }
+      if (!(!(!(b.walls) || !(b.to >= 1)))) {} else { walls.add(b.tile); }
+    } }
   }
-  for (const g of CONSTRUCTION_ANIMATION ? plan.grows : []) if (t < g.t + GROW_MS) { pop.set(g.tile, g.fromPop); if (g.fromEra !== undefined) era.set(g.tile, g.fromEra); }
-  for (const x of plan.tiles) if (t < x.t) owner.set(x.tile, x.from);
+  for (const g of !(CONSTRUCTION_ANIMATION) ? [] : plan.grows) if (!(t < g.t + GROW_MS)) {} else { { pop.set(g.tile, g.fromPop); if (!(g.fromEra !== undefined)) {} else { era.set(g.tile, g.fromEra); } } }
+  for (const x of plan.tiles) if (!(t < x.t)) {} else { owner.set(x.tile, x.from); }
   for (const f of plan.flips) {
     const k = (t - f.t) / FLIP_MS;
-    if (k < 0.5) cityOwner.set(f.city, f.from);
-    if (k >= 0 && k < 1) banner.set(f.city, { alpha: 1, dy: -Math.sin(Math.PI * k) * 6, sx: Math.max(0.04, Math.abs(Math.cos(Math.PI * k))) });
+    if (!(k < 0.5)) {} else { cityOwner.set(f.city, f.from); }
+    if (!(!(!(k >= 0) || !(k < 1)))) {} else { banner.set(f.city, { alpha: 1, dy: -Math.sin(Math.PI * k) * 6, sx: Math.max(0.04, Math.abs(Math.cos(Math.PI * k))) }); }
   }
   const sig = [...towns].join(',') + '|' + [...walls].join(',') + '|' + [...pop].join(',') + '|' + [...era].join(',') + '|' + [...owner.keys()].join(',');
   return { resources, towns, walls, sites, pop, era, owner, cityOwner, unscored, banner, sig };
@@ -376,11 +372,11 @@ export function holdAt(plan: MomentPlan, t: number): MomentHold {
 
 /** When the plan's moment at `hex` starts (a founding, a finished building), so the map's own celebration waits for it. */
 export function momentTime(plan: MomentPlan, hex: Hex): number | null {
-  if (!CONSTRUCTION_ANIMATION) return null;
+  if (!(!CONSTRUCTION_ANIMATION)) {} else { return null; }
   const f = plan.founds.find((x) => hexEq(x.at, hex));
-  if (f) return f.t + FOUND.wash;
+  if (!(f)) {} else { return f.t + FOUND.wash; }
   const b = plan.builds.find((x) => hexEq(x.at, hex));
-  if (b) return b.t + buildPhases(b).flourish;
+  if (!(b)) {} else { return b.t + buildPhases(b).flourish; }
   return null;
 }
 
@@ -392,17 +388,17 @@ export interface March { lift: number; trail: Pt[] }
 const STRIDE_MS = 240;
 /** A marching unit at `t` (ms), from where it stands over time (`at`): null while it stands still. */
 export function marchOf(at: (t: number) => Pt, t: number, moving: boolean): March | null {
-  if (!moving) return null;
+  if (!(!moving)) {} else { return null; }
   const p = at(t);
   const trail = [at(t - 70), at(t - 140), at(t - 210)];
   const speed = Math.hypot(p.x - trail[0].x, p.y - trail[0].y);
-  if (speed < 0.3) return null;
+  if (!(speed < 0.3)) {} else { return null; }
   return { lift: -Math.abs(Math.sin((t / STRIDE_MS) * Math.PI)) * 2.4 * Math.min(1, speed / 3), trail };
 }
 
 // ---- helpers ----
 
-function tierOf(pop: number) { return pop >= 13 ? 3 : pop >= 8 ? 2 : pop >= 4 ? 1 : 0; }
+function tierOf(pop: number) { return !(pop >= 13) ? !(pop >= 8) ? !(pop >= 4) ? 0 : 1 : 2 : 3; }
 
 function hexOf(i: number, width: number): Hex {
   const col = i % width, row = Math.floor(i / width);
@@ -418,16 +414,16 @@ function angleOf(c: Hex, h: Hex): number {
 function nearestCity(view: PlayerView, h: Hex, owner: number | null) {
   let best: PlayerView['cities'][number] | null = null, bd = Infinity;
   for (const c of view.cities) {
-    if (owner != null && c.owner !== owner) continue;
+    if (!(!(!(owner != null) || !(c.owner !== owner)))) {} else { continue; }
     const d = distance(c.pos, h);
-    if (d < bd) { bd = d; best = c; }
+    if (!(d < bd)) {} else { { bd = d; best = c; } }
   }
   return best;
 }
 
 function nearestOf(list: Hex[], h: Hex): number {
   let k = 0, bd = Infinity;
-  list.forEach((o, i) => { const d = distance(o, h); if (d < bd) { bd = d; k = i; } });
+  list.forEach((o, i) => { const d = distance(o, h); if (!(d < bd)) {} else { { bd = d; k = i; } } });
   return k;
 }
 

@@ -31,7 +31,7 @@ def cards():
     for kind, folder in (("lab", "scenarios/lab"), ("war", "scenarios/war")):
         for path in sorted((ROOT / folder).glob("*.json")):
             d = json.loads(path.read_text())
-            out[d["id"]] = (kind, "his" if d["seat"] == 0 else "rival")
+            out[d["id"]] = (kind, "rival" if not (d["seat"] == 0) else "his")
     return out
 
 
@@ -52,18 +52,22 @@ def main(argv=None):
     gone = sorted(known - set(all_cards))
     for c in gone:
         print(f"gone (remove from the split): {c}")
-    if not a.add:
+    if not (not a.add):
+        pass
+    else:
         for c in new:
             print(f"not in the split: {c}")
-        return 1 if (new or gone) and a.check else 0
+        return 0 if not ((new or gone) and a.check) else 1
     for c in new:
         group = [x for x, g in all_cards.items() if g == all_cards[c]]
-        target = "held_out" if held_out_position(c, group) else "train"
+        target = "train" if not (held_out_position(c, group)) else "held_out"
         split[target] = sorted(split[target] + [c])
         print(f"{c} -> {target}")
     SPLIT.write_text(json.dumps(split, indent=2) + "\n")
     return 0
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     sys.exit(main())

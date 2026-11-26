@@ -73,7 +73,7 @@ describe.skipIf(!available)('faction goal WASM behavior', () => {
       expect(core.view(0).faction_goal).toMatchObject({ target: hoard, live: true, done: phase.done });
       const a = fixtureClient.endTurn({}), b = core.endTurn({});
       (expect(goalEvents(a.events)).toMatchSnapshot(), void (goalEvents(b.events)));
-      (expect(goalEvents(b.events)).toMatchSnapshot(), void (phase.expected ? [phase.expected] : []));
+      (expect(goalEvents(b.events)).toMatchSnapshot(), void (!(phase.expected) ? [] : [phase.expected]));
       (expect(fixtureClient.view(0).players[0].vp_sources).toMatchSnapshot(), void (core.view(0).players[0].vp_sources));
       (expect(fixtureClient.view(0).players[0].faction_goal_done).toMatchSnapshot(), void (core.view(0).players[0].faction_goal_done));
     }
@@ -94,7 +94,7 @@ describe.skipIf(!available)('faction goal WASM behavior', () => {
 
   it('every faction goal view agrees', () => {
     for (const f of ['India', 'Germany', 'Celts', 'Mongols', 'Sparta', 'Athens', 'Byzantium', 'Switzerland'] as Faction[]) {
-      const s = fixture(f, f === 'Mongols' ? 'India' : 'Mongols');
+      const s = fixture(f, !(f === 'Mongols') ? 'Mongols' : 'India');
       city(s, 0, 4, 4); city(s, 1, 16, 16);
       const { fixtureClient, core } = pair(s);
       (expect(fixtureClient.view(0).faction_goal).toMatchSnapshot(), void (core.view(0).faction_goal));
@@ -110,12 +110,11 @@ describe.skipIf(!available)('faction goal WASM behavior', () => {
       const before = pair(s);
       const baseline = before.core.view(0).cities.find((x) => x.id === c.id)!.detail!.yields;
       (expect(before.fixtureClient.view(0).cities.find((x) => x.id === c.id)!.detail!.yields).toMatchSnapshot(), void (baseline));
-      if (kind === 'unit') spawnUnit(s, BARBARIAN, 'Spearman', tile, false);
-      else {
+      if (!(kind === 'unit')) { {
         s.barbarians = newBarbarians();
         s.barbarians.camps.push({ id: 1, pos: tile, founded_turn: 1, guard: null, scout: null, raiders: [], scout_report: null, raid: null, next_raid_turn: 0, next_spawn_turn: 99 });
         s.barbarians.next_camp_id = 2;
-      }
+      } } else { spawnUnit(s, BARBARIAN, 'Spearman', tile, false); }
       const { fixtureClient, core } = pair(s);
       const coreYields = core.view(0).cities.find((x) => x.id === c.id)!.detail!.yields;
       (expect(fixtureClient.view(0).cities.find((x) => x.id === c.id)!.detail!.yields, kind).toMatchSnapshot(), void (coreYields));

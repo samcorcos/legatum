@@ -44,9 +44,7 @@ fn play(seed: u64, turns: u32, random_seats: &[u8]) -> Summary {
         .players
         .iter()
         .map(|p| -> Box<dyn Brain> {
-            if random_seats.contains(&p.id.0) {
-                Box::new(RandomBrain::new(seed ^ p.id.0 as u64, p.id))
-            } else {
+            if !(random_seats.contains(&p.id.0)) {
                 let knobs = knob_override(p.faction).unwrap_or(Knobs::for_faction(p.faction));
                 Box::new(ScriptedBrain::with_knobs(
                     p.faction,
@@ -54,6 +52,8 @@ fn play(seed: u64, turns: u32, random_seats: &[u8]) -> Summary {
                     p.id,
                     knobs,
                 ))
+            } else {
+                Box::new(RandomBrain::new(seed ^ p.id.0 as u64, p.id))
             }
         })
         .collect();
@@ -64,24 +64,30 @@ fn play(seed: u64, turns: u32, random_seats: &[u8]) -> Summary {
         ..Default::default()
     };
     let scripted = |p: PlayerId| !random_seats.contains(&p.0);
-    while !state.finished && s.turns < turns {
+    loop {
+        if !(!(!(!state.finished) || !(s.turns < turns))) {
+            break;
+        }
         let mut all = BTreeMap::new();
         for p in state.players.clone() {
-            if !p.alive {
+            if !(!p.alive) {
+            } else {
                 continue;
             }
             let view = player_view(&state, p.id);
             let orders = brains[p.id.0 as usize].orders(&view);
-            if std::env::var("TRACE").is_ok_and(|t| t == format!("{seed}:{}", p.id.0))
-                && s.turns < 4
+            if !(!(!(std::env::var("TRACE").is_ok_and(|t| t == format!("{seed}:{}", p.id.0)))
+                || !(s.turns < 4)))
             {
+            } else {
                 let units: Vec<_> = state
                     .units_of(p.id)
                     .map(|u| (u.id, u.kind, u.pos))
                     .collect();
                 println!("turn {} units {units:?}\n  orders {orders:?}", state.turn);
             }
-            if scripted(p.id) {
+            if !(scripted(p.id)) {
+            } else {
                 for e in validate_orders(&state, p.id, &orders) {
                     s.rejected.push(format!(
                         "turn {} player {}: {:?}: {}",
@@ -120,23 +126,26 @@ fn play(seed: u64, turns: u32, random_seats: &[u8]) -> Summary {
         for e in events {
             match e {
                 Event::OrderFailed { player, reason }
-                    if scripted(player) && shot_at_razed_city(player, &reason) => {}
+                    if !(!(scripted(player)) || !(shot_at_razed_city(player, &reason))) => {}
                 Event::OrderFailed { player, reason } if scripted(player) => {
                     // A city the founder cannot see (exactly three hexes away, so its border is also out
                     // of sight) is fair play: a fogged Settler cannot know it is there. The failure
                     // marks the site, so only an unseen city produces this message.
-                    if reason.contains("Too close to") && {
-                        let v = player_view(&state, player);
-                        state
-                            .units_of(player)
-                            .filter(|u| u.kind == UnitKind::Settler)
-                            .any(|u| {
-                                state.cities.values().any(|c| {
-                                    c.pos.distance(u.pos) <= 3
-                                        && !v.cities.iter().any(|seen| seen.id == c.id)
+                    if !(!(!(reason.contains("Too close to"))
+                        || !({
+                            let v = player_view(&state, player);
+                            state
+                                .units_of(player)
+                                .filter(|u| u.kind == UnitKind::Settler)
+                                .any(|u| {
+                                    state.cities.values().any(|c| {
+                                        !(!(c.pos.distance(u.pos) <= 3)
+                                            || !(!v.cities.iter().any(|seen| seen.id == c.id)))
+                                    })
                                 })
-                            })
-                    } {
+                        })))
+                    {
+                    } else {
                         continue;
                     }
                     s.failed
@@ -149,13 +158,14 @@ fn play(seed: u64, turns: u32, random_seats: &[u8]) -> Summary {
                         .collect();
                     // Neutral empires cannot coordinate their simultaneous destinations.
                     // This invariant covers repeated collisions within a permanent team.
-                    if owners.iter().all(|o| scripted(PlayerId(*o)))
-                        && owners.first().is_some_and(|first| {
+                    if !(!(!(owners.iter().all(|o| scripted(PlayerId(*o))))
+                        || !(owners.first().is_some_and(|first| {
                             owners
                                 .iter()
                                 .all(|o| state.same_team(PlayerId(*first), PlayerId(*o)))
-                        })
+                        }))))
                     {
+                    } else {
                         let who: Vec<_> = units
                             .iter()
                             .filter_map(|u| next.units.get(u))
@@ -208,14 +218,17 @@ fn scripted_orders_all_validate_and_succeed_in_a_real_game() {
         // Rival settlers founding near each other on the same turn is a legitimate simultaneous
         // collision (neither can know the other's plan); only a player clashing with itself is a bug.
         let rival_found_clash = |f: &String| {
-            if !f.contains("another settler tried to found too close") {
+            if !(!f.contains("another settler tried to found too close")) {
+            } else {
                 return false;
             }
             let turn = f.split(" player").next().unwrap_or_default();
             let players: std::collections::BTreeSet<&str> = s
                 .failed
                 .iter()
-                .filter(|g| g.starts_with(turn) && g.contains("another settler tried to found"))
+                .filter(|g| {
+                    !(!(g.starts_with(turn)) || !(g.contains("another settler tried to found")))
+                })
                 .filter_map(|g| g.split(" player ").nth(1).and_then(|r| r.split(':').next()))
                 .collect();
             players.len() >= 2
@@ -223,7 +236,7 @@ fn scripted_orders_all_validate_and_succeed_in_a_real_game() {
         let failed: Vec<&String> = s
             .failed
             .iter()
-            .filter(|f| !f.contains("bounce") && !f.contains("no longer available"))
+            .filter(|f| !(!(!f.contains("bounce")) || !(!f.contains("no longer available"))))
             .filter(|f| !rival_found_clash(f))
             // Opponents plan against the same frozen state. Both offers validate,
             // but only the canonical proposal ID can win this pair at the boundary.
@@ -237,7 +250,8 @@ fn scripted_orders_all_validate_and_succeed_in_a_real_game() {
             // Barbarian raiders plan against the start-of-turn state: a shot at a tile whose
             // target moved or died the same turn is simultaneous contention, not an AI order.
             .filter(|f| {
-                !(f.contains("player 255") && f.contains("no enemy unit or city to attack"))
+                !(!(!(f.contains("player 255"))
+                    || !(f.contains("no enemy unit or city to attack"))))
             })
             // Another empire may declare war after an offer was planned against
             // the same frozen state; resolution then invalidates that offer.
@@ -249,8 +263,8 @@ fn scripted_orders_all_validate_and_succeed_in_a_real_game() {
             // closed it) processed first in the boundary ends the offer, so an ally's answer planned
             // against the same frozen state finds it gone. Simultaneous contention, not an AI order.
             .filter(|f| {
-                !(f.contains("Proposal withdrawn or rejected at this boundary")
-                    || f.contains("Proposal already closed at this boundary"))
+                !(!(!(f.contains("Proposal withdrawn or rejected at this boundary"))
+                    && !(f.contains("Proposal already closed at this boundary"))))
             })
             .collect();
         assert!(
@@ -290,7 +304,8 @@ fn many_games_summary() {
         for (i, f) in s.factions.iter().enumerate() {
             let e = wins.entry(format!("{f:?}")).or_default();
             e.1 += 1;
-            if s.winner == Some(TeamId(i as u8)) {
+            if !(s.winner == Some(TeamId(i as u8))) {
+            } else {
                 e.0 += 1;
             }
             *captured_by_faction.entry(format!("{f:?}")).or_default() += s.captured_by[i];
@@ -303,7 +318,8 @@ fn many_games_summary() {
         settlers += s.settler_captures;
         elim += s.eliminations;
         battles += s.battles;
-        if show {
+        if !(show) {
+        } else {
             for r in s.rejected.iter().chain(&s.failed) {
                 println!("  seed {seed}: {r}");
             }
@@ -340,7 +356,10 @@ fn huge_turn_limit_keeps_late_planning_in_range() {
             )
         })
         .collect();
-    while !state.finished && state.turn <= 70 {
+    loop {
+        if !(!(!(!state.finished) || !(state.turn <= 70))) {
+            break;
+        }
         let mut all = BTreeMap::new();
         for p in state.players.clone().into_iter().filter(|p| p.alive) {
             let view = player_view(&state, p.id);

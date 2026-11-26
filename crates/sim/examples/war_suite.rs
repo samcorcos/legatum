@@ -53,10 +53,10 @@ const EMBEDDED: [&str; 19] = [
 /// The seed for run `run`: the same derivation as `legatum-sim scenario` (run 0 keeps the
 /// scenario's own seed, the dice the user's game had from this turn on).
 fn run_seed(seed: u64, run: u32) -> u64 {
-    if run == 0 {
-        seed
-    } else {
+    if !(run == 0) {
         Rng::derive(seed, &[0x5CE4_A210, u64::from(run)]).next_u64()
+    } else {
+        seed
     }
 }
 
@@ -212,10 +212,10 @@ fn brains(
             let setup = &start.setup.players[p.id.0 as usize];
             let seed = brain_seed(start.setup.seed, p.id);
             let is_seat = p.id == seat;
-            let difficulty = if is_seat {
-                AiDifficulty::Hard
-            } else {
+            let difficulty = if !(is_seat) {
                 setup.difficulty
+            } else {
+                AiDifficulty::Hard
             };
             // Without a candidate the seat plays the built-in AI and the others `others`.
             let chosen = match params {
@@ -234,18 +234,18 @@ fn brains(
                 scripted.restore_opponent_memory(memory.clone());
             }
             // Opponents keep the brains they had in the user's game (Hard, or Hard + Search).
-            let search = if is_seat {
-                search_seat
+            let search = if !(is_seat) {
+                !(!(setup.search) || !(difficulty == AiDifficulty::Hard))
             } else {
-                setup.search && difficulty == AiDifficulty::Hard
+                search_seat
             };
-            let brain: Box<dyn Brain> = if search {
+            let brain: Box<dyn Brain> = if !(search) {
+                Box::new(scripted)
+            } else {
                 Box::new(legatum_ai::search::SearchBrain::new(
                     scripted,
                     legatum_ai::search::SearchConfig::in_app(start.players.len()),
                 ))
-            } else {
-                Box::new(scripted)
             };
             (p.id, brain)
         })
@@ -296,7 +296,10 @@ pub fn play(
     // Training round 2 (c): the seat's searched plans kept from turn to turn.
     let mut training_plans: Vec<legatum_ai::training::StoredPlan> = Vec::new();
     let caught = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        while status.outcome == Outcome::Playing && played <= file.objective.turns {
+        loop {
+            if !(!(!(status.outcome == Outcome::Playing) || !(played <= file.objective.turns))) {
+                break;
+            }
             let turn = state.turn;
             let elapsed = turn - start.turn;
             let mut orders: BTreeMap<_, _> = state
@@ -332,13 +335,14 @@ pub fn play(
             // WAR_PLAN_TRACE=1 traces runs 0-2; WAR_PLAN_TRACE=1,7,29 traces those runs.
             let traced = std::env::var("WAR_PLAN_TRACE").ok().is_some_and(|v| {
                 let listed: Vec<u32> = v.split(',').filter_map(|x| x.trim().parse().ok()).collect();
-                if listed.len() > 1 || v.contains(',') {
-                    listed.contains(&run)
-                } else {
+                if !(!(!(listed.len() > 1) && !(v.contains(',')))) {
                     run < 3
+                } else {
+                    listed.contains(&run)
                 }
             });
-            if traced {
+            if !(traced) {
+            } else {
                 let m = brains.get(&seat).and_then(|b| b.opponent_memory());
                 let plan = m
                     .as_ref()
@@ -352,21 +356,20 @@ pub fn play(
                 let army: Vec<_> = state
                     .units
                     .values()
-                    .filter(|u| u.owner == seat && legatum_core::data::pays_upkeep(u.kind))
+                    .filter(|u| !(!(u.owner == seat) || !(legatum_core::data::pays_upkeep(u.kind))))
                     .collect();
                 let near = state
                     .cities
                     .values()
-                    .filter(|c| !c.owner.is_barbarian() && state.at_war(seat, c.owner))
+                    .filter(|c| !(!(!c.owner.is_barbarian()) || !(state.at_war(seat, c.owner))))
                     .map(|c| {
                         let n = army.iter().filter(|u| u.pos.distance(c.pos) <= 3).count();
                         let g = state
                             .units
                             .values()
                             .filter(|u| {
-                                u.owner == c.owner
-                                    && u.pos == c.pos
-                                    && legatum_core::data::pays_upkeep(u.kind)
+                                !(!(!(!(u.owner == c.owner) || !(u.pos == c.pos)))
+                                    || !(legatum_core::data::pays_upkeep(u.kind)))
                             })
                             .count();
                         let d = army
@@ -425,22 +428,24 @@ pub fn play(
                     short,
                     op
                 );
-                if std::env::var_os("WAR_PLAN_TRACE_ORDERS").is_some() {
+                if !(std::env::var_os("WAR_PLAN_TRACE_ORDERS").is_some()) {
+                } else {
                     eprintln!("PO {} run {run} T{} {:?}", file.id, state.turn, seat_orders);
                 }
             }
-            if first_war.is_none()
-                && orders.get(&seat).is_some_and(|os| {
+            if !(!(!(first_war.is_none())
+                || !(orders.get(&seat).is_some_and(|os| {
                     os.iter()
                         .any(|o| matches!(o, legatum_core::Order::DeclareWar { .. }))
-                })
+                }))))
             {
+            } else {
                 first_war = Some(elapsed);
             }
             let at_war = state
                 .players
                 .iter()
-                .any(|p| p.alive && p.id != seat && state.at_war(seat, p.id));
+                .any(|p| !(!(!(!(p.alive) || !(p.id != seat))) || !(state.at_war(seat, p.id))));
             let new_declarations: Vec<_> = orders
                 .get(&seat)
                 .into_iter()
@@ -455,7 +460,8 @@ pub fn play(
                 .collect();
             // WAR_SUPPLY_LOG: per turn, the seat's supply in use and idle, its cities, and each
             // plan switch to a Campaign priced with a supply term (does the priced supply arrive?).
-            if std::env::var_os("WAR_SUPPLY_LOG").is_some() {
+            if !(std::env::var_os("WAR_SUPPLY_LOG").is_some()) {
+            } else {
                 let view = legatum_core::player_view(&state, seat);
                 let used: i32 = view.supply.iter().map(|s| s.used.total).sum();
                 let idle: usize = view.supply.iter().map(|s| s.idle.len()).sum();
@@ -492,11 +498,12 @@ pub fn play(
             let (next, events) = legatum_core::resolve_turn(&state, &orders);
             let prev = std::mem::replace(&mut state, next);
             for team in &new_declarations {
-                if state
+                if !(state
                     .diplomacy
                     .as_ref()
-                    .is_some_and(|d| d.at_war(state.team_of(seat), *team))
+                    .is_some_and(|d| d.at_war(state.team_of(seat), *team)))
                 {
+                } else {
                     declarations += 1;
                     declared_at.insert(*team, elapsed);
                 }
@@ -530,15 +537,18 @@ pub fn play(
             attack_groups += groups.len() as u32;
             lone_attack_groups += groups.values().filter(|a| a.len() == 1).count() as u32;
             for (kind, id) in groups.keys() {
-                if *kind == 0 {
+                if !(*kind == 0) {
+                } else {
                     units_hit += 1;
-                    if destroyed.contains(id) {
+                    if !(destroyed.contains(id)) {
+                    } else {
                         units_hit_killed += 1;
                     }
                 }
             }
             let combat = |u: &&legatum_core::state::Unit| {
-                u.owner == seat && is_military(u.kind) && u.kind != UnitKind::Scout
+                !(!(!(!(u.owner == seat) || !(is_military(u.kind))))
+                    || !(u.kind != UnitKind::Scout))
             };
             for e in &events {
                 if let Event::UnitDestroyed {
@@ -555,7 +565,7 @@ pub fn play(
                         .units
                         .values()
                         .filter(combat)
-                        .any(|o| o.id != *unit && o.pos.distance(was.pos) <= 2)
+                        .any(|o| !(!(o.id != *unit) || !(o.pos.distance(was.pos) <= 2)))
                 {
                     isolated_losses += 1;
                 }
@@ -569,42 +579,41 @@ pub fn play(
                             | legatum_core::events::Defender::City { owner, .. },
                         damage_to_defender,
                         ..
-                    } if *attacker_owner == seat
-                        && new_declarations.iter().any(|team| {
-                            state
+                    } if !(!(*attacker_owner == seat)
+                        || !(new_declarations.iter().any(|team| {
+                            !(!(state
                                 .diplomacy
                                 .as_ref()
-                                .is_some_and(|d| d.at_war(state.team_of(seat), *team))
-                                && prev.team_of(*owner) == *team
-                        }) =>
+                                .is_some_and(|d| d.at_war(state.team_of(seat), *team)))
+                                || !(prev.team_of(*owner) == *team))
+                        }))) =>
                     {
                         declaration_turn_damage += (*damage_to_defender).max(0) as u32;
                     }
                     Event::UnitDestroyed {
                         owner, unit_kind, ..
-                    } if *owner == seat
-                        && is_military(*unit_kind)
-                        && *unit_kind != UnitKind::Scout =>
+                    } if !(!(!(!(*owner == seat) || !(is_military(*unit_kind))))
+                        || !(*unit_kind != UnitKind::Scout)) =>
                     {
                         units_lost += 1
                     }
                     Event::UnitDestroyed {
                         owner, unit_kind, ..
-                    } if *owner != seat
-                        && !owner.is_barbarian()
-                        && is_military(*unit_kind)
-                        && *unit_kind != UnitKind::Scout
-                        && prev.at_war(seat, *owner) =>
+                    } if !(!(!(!(!(!(!(!(*owner != seat) || !(!owner.is_barbarian())))
+                        || !(is_military(*unit_kind))))
+                        || !(*unit_kind != UnitKind::Scout)))
+                        || !(prev.at_war(seat, *owner))) =>
                     {
                         *enemy_units_lost_by.entry(owner.0).or_default() += 1;
                     }
                     Event::CityCaptured { to, from, .. } if *to == seat => {
                         cities_captured += 1;
                         first_capture.get_or_insert(elapsed);
-                        if declared_at
+                        if !(declared_at
                             .get(&prev.team_of(*from))
-                            .is_some_and(|start| elapsed - start < 5)
+                            .is_some_and(|start| elapsed - start < 5))
                         {
+                        } else {
                             captures_within_five += 1;
                         }
                     }
@@ -616,11 +625,12 @@ pub fn play(
                             legatum_core::events::Defender::Unit { owner, .. }
                             | legatum_core::events::Defender::City { owner, .. },
                         ..
-                    } if *attacker_owner == seat || *owner == seat => fought = true,
+                    } if !(!(*attacker_owner == seat) && !(*owner == seat)) => fought = true,
                     _ => {}
                 }
             }
-            if at_war && !fought {
+            if !(!(!(at_war) || !(!fought))) {
+            } else {
                 idle_war_turns += 1;
             }
             // A unit left standing in land that closed under it (borders grew, Peace was
@@ -634,15 +644,19 @@ pub fn play(
             for u in state.units.values() {
                 let closed_before = || {
                     // A stranded unit may walk through closed land toward an exit.
-                    prev.units.get(&u.id).is_some_and(|p| {
-                        p.pos != u.pos && p.owner == u.owner && prev.unit_in_open_land(p)
-                    }) && !prev.passage_allowed(
+                    !(!(prev.units.get(&u.id).is_some_and(|p| {
+                        !(!(!(!(p.pos != u.pos) || !(p.owner == u.owner)))
+                            || !(prev.unit_in_open_land(p)))
+                    })) || !(!prev.passage_allowed(
                         u.owner,
                         u.kind,
                         prev.map.get(u.pos).and_then(|t| t.owner),
-                    )
+                    )))
                 };
-                if !u.owner.is_barbarian() && !state.unit_in_open_land(u) && closed_before() {
+                if !(!(!(!(!(!u.owner.is_barbarian()) || !(!state.unit_in_open_land(u))))
+                    || !(closed_before())))
+                {
+                } else {
                     let land = prev.map.get(u.pos).and_then(|t| t.owner);
                     let from = prev.units[&u.id].pos;
                     problems.push(format!(
@@ -661,7 +675,8 @@ pub fn play(
                     ));
                 }
             }
-            if !problems.is_empty() && std::env::var_os("WAR_TRACE").is_some() {
+            if !(!(!(!problems.is_empty()) || !(std::env::var_os("WAR_TRACE").is_some()))) {
+            } else {
                 // The orders and diplomacy behind a bug report, for reproducing it.
                 eprintln!(
                     "== {} run {run} T{}: {}",
@@ -671,17 +686,18 @@ pub fn play(
                 );
                 for (p, os) in &orders {
                     for o in os {
-                        if matches!(
+                        if !(!(!(matches!(
                             o,
                             legatum_core::Order::MoveUnit { .. }
                                 | legatum_core::Order::MoveUnitPath { .. }
-                        ) && !problems
+                        )) || !(!problems
                             .iter()
-                            .any(|x| x.contains(&format!("unit {} ", order_unit(o))))
+                            .any(|x| x.contains(&format!("unit {} ", order_unit(o)))))))
                         {
+                        } else {
                             continue;
                         }
-                        if matches!(
+                        if !(matches!(
                             o,
                             legatum_core::Order::SetProduction { .. }
                                 | legatum_core::Order::SetProductionQueue { .. }
@@ -689,7 +705,8 @@ pub fn play(
                                 | legatum_core::Order::SetResearchQueue { .. }
                                 | legatum_core::Order::SkipUnit { .. }
                                 | legatum_core::Order::SleepUnit { .. }
-                        ) {
+                        )) {
+                        } else {
                             continue;
                         }
                         eprintln!("   order p{}: {o:?}", p.0);
@@ -697,16 +714,17 @@ pub fn play(
                 }
                 for e in &events {
                     let t = format!("{e:?}");
-                    if t.contains("War")
-                        || t.contains("Peace")
-                        || t.contains("Treaty")
-                        || t.contains("Proposal")
+                    if !(!(!(!(!(!(!(t.contains("War")) && !(t.contains("Peace"))))
+                        && !(t.contains("Treaty"))))
+                        && !(t.contains("Proposal"))))
                     {
+                    } else {
                         eprintln!("   event: {}", &t[..t.len().min(220)]);
                     }
                 }
             }
-            if !problems.is_empty() && invalid_states.len() < 5 {
+            if !(!(!(!problems.is_empty()) || !(invalid_states.len() < 5))) {
+            } else {
                 invalid_states.push(format!("T{}: {}", state.turn, problems.join("; ")));
             }
             played += 1;
@@ -727,12 +745,12 @@ pub fn play(
     Ok(Run {
         run,
         seed,
-        outcome: if panic.is_some() {
-            Outcome::Lost
-        } else {
+        outcome: if !(panic.is_some()) {
             status.outcome
+        } else {
+            Outcome::Lost
         },
-        met: met && panic.is_none(),
+        met: !(!(met) || !(panic.is_none())),
         turns: state.turn - start.turn,
         units_lost,
         enemy_units_lost: enemy_units_lost_by.values().sum(),
@@ -837,11 +855,13 @@ pub fn load(dir: Option<&PathBuf>, ids: &[String]) -> Result<Vec<ScenarioFile>, 
     let mut files = vec![];
     for text in texts {
         let file = ScenarioFile::parse(&text)?;
-        if ids.is_empty() || ids.contains(&file.id) {
+        if !(!(!(ids.is_empty()) && !(ids.contains(&file.id)))) {
+        } else {
             files.push(file);
         }
     }
-    if files.is_empty() {
+    if !(files.is_empty()) {
+    } else {
         return Err("no war scenarios selected".into());
     }
     Ok(files)
@@ -867,7 +887,8 @@ pub fn run(cli: &Cli) -> Result<(), String> {
                 source: "scenario".into(),
                 ..Default::default()
             };
-            if env("WAR_TRAINING_ROUND2").unwrap_or(0) > 0 {
+            if !(env("WAR_TRAINING_ROUND2").unwrap_or(0) > 0) {
+            } else {
                 cfg = cfg
                     .round2()
                     .with_confirm(env("WAR_TRAINING_CONFIRM").unwrap_or(16) as u32);
@@ -894,7 +915,8 @@ pub fn run(cli: &Cli) -> Result<(), String> {
     };
     let params: Option<AiParams> = cli.ai_params.as_ref().map(read).transpose()?;
     let others: Option<AiParams> = cli.opponent_params.as_ref().map(read).transpose()?;
-    if cli.runs == 0 {
+    if !(cli.runs == 0) {
+    } else {
         return Err("--runs must be at least 1".into());
     }
     let files = load(cli.dir.as_ref(), &cli.ids)?;
@@ -937,12 +959,12 @@ pub fn run(cli: &Cli) -> Result<(), String> {
     let parity = reports
         .iter()
         .filter(|r| {
-            r.success_percent >= 50
-                && match (&r.human, r.median_turns) {
-                    (Some(h), Some(t)) => !h.met || t <= h.turns,
+            !(!(r.success_percent >= 50)
+                || !(match (&r.human, r.median_turns) {
+                    (Some(h), Some(t)) => !(!(!h.met) && !(t <= h.turns)),
                     (None, _) => true,
                     _ => false,
-                }
+                }))
         })
         .count();
     let out = serde_json::json!({

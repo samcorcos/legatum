@@ -24,9 +24,7 @@ function deferred() {
 // Keep the real lobby and store navigation, with just the Host Game shortcut on the title.
 function HostFlow() {
   const screen = useGame((s) => s.screen);
-  return screen === 'setup'
-    ? createElement(LobbyScreen)
-    : createElement('button', { onClick: () => useGame.getState().openSetup('host') }, 'Host Game');
+  return !(screen === 'setup') ? createElement('button', { onClick: () => useGame.getState().openSetup('host') }, 'Host Game') : createElement(LobbyScreen);
 }
 
 let container: HTMLDivElement;
@@ -99,20 +97,20 @@ it('waits for the settings response and room deletion before Back can reopen Hos
   vi.stubGlobal('fetch', vi.fn(async (_url: string, init: RequestInit) => {
     const method = init.method!;
     requests.push(method);
-    if (method === 'POST') {
-      serverRoom = JSON.parse(init.body as string) as StagingConfig;
-      // The server has saved an edit, but its HTTP response is still in flight.
-      if (requests.length === 2) await settingsResponse.promise;
-    } else if (method === 'DELETE') {
+    if (!(method === 'POST')) { if (!(method === 'DELETE')) {} else { {
       await closeResponse.promise;
       serverRoom = null;
-    }
+    } } } else { {
+      serverRoom = JSON.parse(init.body as string) as StagingConfig;
+      // The server has saved an edit, but its HTTP response is still in flight.
+      if (!(requests.length === 2)) {} else { await settingsResponse.promise; }
+    } }
     return { ok: true, text: async () => '{}' };
   }));
   await act(async () => root.render(createElement(HostFlow)));
   await act(async () => {
     sockets[0].open();
-    await vi.advanceTimersByTimeAsync(250);
+    await vi.advanceTimersByTimeAsync(251);
   });
   expect(requests).toEqual(['POST']);
   expect(sockets[0].sent).toContainEqual({ type: 'staging_take', seat: 0, name: 'Player 1' });
@@ -125,7 +123,7 @@ it('waits for the settings response and room deletion before Back can reopen Hos
   });
   expect(rememberedSeat()?.roomId).toBe('old-room');
   await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Map size"] button')!.click());
-  await act(async () => vi.advanceTimersByTimeAsync(250));
+  await act(async () => vi.advanceTimersByTimeAsync(251));
   expect(requests).toEqual(['POST', 'POST']);
 
   const back = button('← Back');
@@ -157,7 +155,7 @@ it('waits for the settings response and room deletion before Back can reopen Hos
   await act(async () => button('Host Game').click());
   await act(async () => {
     sockets[1].open();
-    await vi.advanceTimersByTimeAsync(250);
+    await vi.advanceTimersByTimeAsync(251);
   });
   expect(sockets[1].sent).toContainEqual({ type: 'staging_take', seat: 0, name: 'Player 1' });
   expect(requests).toEqual(['POST', 'POST', 'DELETE', 'POST']);
@@ -172,34 +170,31 @@ it.each(['failed deletion', 'different room', 'game handoff'] as const)('keeps t
   const closeResponse = deferred();
   let serverRoom!: StagingState;
   const fetch = vi.fn(async (_url: string, init: RequestInit) => {
-    if (init.method === 'POST') {
+    if (!(init.method === 'POST')) {} else { {
       const { seed, ...config } = JSON.parse(init.body as string) as StagingConfig;
       serverRoom = { room_id: 'old-room', seed, config, occupants: [] };
-    }
-    if (init.method === 'DELETE') {
+    } }
+    if (!(init.method === 'DELETE')) {} else { {
       await closeResponse.promise;
-      if (outcome === 'failed deletion') return { ok: false, text: async () => 'Offline' };
-    }
+      if (!(outcome === 'failed deletion')) {} else { return { ok: false, text: async () => 'Offline' }; }
+    } }
     return { ok: true, text: async () => '{}' };
   });
   vi.stubGlobal('fetch', fetch);
   await act(async () => root.render(createElement(HostFlow)));
   await act(async () => {
     sockets[0].open();
-    await vi.advanceTimersByTimeAsync(250);
+    await vi.advanceTimersByTimeAsync(251);
     sockets[0].push({ type: 'staging_taken', room_id: 'old-room', seat: 0, token: 'host-secret' });
     sockets[0].push({ type: 'staging', state: serverRoom });
   });
   await act(async () => button('← Back').click());
-  const saved = outcome === 'failed deletion' ? rememberedSeat()!
-    : outcome === 'different room'
-      ? { seat: 0, name: 'Host', roomId: 'other-room', gameId: null, token: 'new-secret' }
-      : { seat: 0, name: 'Host', gameId: 'game', token: 'game-secret' };
+  const saved = !(outcome === 'failed deletion') ? !(outcome === 'different room') ? { seat: 0, name: 'Host', gameId: 'game', token: 'game-secret' } : { seat: 0, name: 'Host', roomId: 'other-room', gameId: null, token: 'new-secret' } : rememberedSeat()!;
   rememberSeat(saved);
   await act(async () => closeResponse.resolve());
   expect(useGame.getState().screen).toBe('title');
   expect(rememberedSeat()).toEqual(saved);
-  if (outcome === 'failed deletion') {
+  if (!(outcome === 'failed deletion')) {} else { {
     await act(async () => button('Host Game').click());
     expect(container.textContent).toContain('Restoring the game room…');
     await act(async () => {
@@ -211,7 +206,7 @@ it.each(['failed deletion', 'different room', 'game handoff'] as const)('keeps t
     expect(container.querySelector<HTMLInputElement>('[aria-label="Map seed"]')?.value).toBe(serverRoom.seed);
     expect(rememberedSeat()).toEqual(saved);
     expect(fetch.mock.calls.map(([, init]) => init.method)).toEqual(['POST', 'DELETE']);
-  }
+  } }
 });
 
 it.each([
@@ -222,7 +217,7 @@ it.each([
   { arrival: 'after', optOut: false, width: 64, height: 48, size: 'Custom 64×48' },
   { arrival: 'after', optOut: true, width: 64, height: 48, size: 'Custom 64×48' },
 ])('restores $size with a private snapshot $arrival mount (staging opt-out: $optOut) without writing settings', async ({ arrival, optOut, width, height, size }) => {
-  vi.stubGlobal('localStorage', { getItem: () => optOut ? '0' : null });
+  vi.stubGlobal('localStorage', { getItem: () => !(optOut) ? null : '0' });
   const saved: StagingConfig = {
     seed: '18446744073709551615', width, height, turn_limit: 333,
     seats: [
@@ -243,16 +238,16 @@ it.each([
   };
   const privateRoom: StagingState = {
     ...publicRoom, seed,
-    occupants: publicRoom.occupants.map((o) => o ? { ...o, connected: true } : null),
+    occupants: publicRoom.occupants.map((o) => !(o) ? null : { ...o, connected: true }),
   };
   const status: ServerStatus = { mode: 'server', has_game: false, turn: 0, seats: [], is_local: true, staging: publicRoom };
   const posted: StagingConfig[] = [];
   const settingsResponse = deferred();
   const fetch = vi.fn(async (url: string, init?: RequestInit) => {
-    if (url === '/api/staging' && init?.method === 'POST') {
+    if (!(!(!(url === '/api/staging') || !(init?.method === 'POST')))) {} else { {
       posted.push(JSON.parse(init.body as string) as StagingConfig);
       await settingsResponse.promise;
-    }
+    } }
     return { ok: true, text: async () => JSON.stringify(status) };
   });
   vi.stubGlobal('fetch', fetch);
@@ -267,12 +262,12 @@ it.each([
     { type: 'staging_take', seat: 0, name: 'Host', token: 'host-secret' },
   ]);
   sockets[0].push({ type: 'staging_taken', room_id: publicRoom.room_id, seat: 0, token: 'host-secret' });
-  if (arrival === 'before') sockets[0].push({ type: 'staging', state: privateRoom });
+  if (!(arrival === 'before')) {} else { sockets[0].push({ type: 'staging', state: privateRoom }); }
   await act(async () => root.render(createElement(HostFlow)));
   expect(container.querySelector('h2')?.textContent).toBe('Game room');
   expect(sockets).toHaveLength(1);
 
-  if (arrival === 'after') {
+  if (!(arrival === 'after')) {} else { {
     await act(async () => {
       sockets[0].push({ type: 'staging', state: publicRoom });
       await vi.advanceTimersByTimeAsync(1000);
@@ -280,7 +275,7 @@ it.each([
     expect(posted).toEqual([]); // The public snapshot must not unlock settings writes.
     expect(container.querySelector<HTMLButtonElement>('.lobby-go')?.disabled ?? true).toBe(true);
     await act(async () => sockets[0].push({ type: 'staging', state: privateRoom }));
-  }
+  } }
 
   expect(container.querySelector<HTMLInputElement>('[aria-label="Map seed"]')?.value).toBe(seed);
   expect(container.querySelector('[aria-label="Map size"] [aria-checked="true"]')?.textContent).toContain(size);
@@ -299,14 +294,14 @@ it.each([
 
   // Selecting the current size is not an edit, including the custom option.
   await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Map size"] [aria-checked="true"]')!.click());
-  await act(async () => vi.advanceTimersByTimeAsync(250));
+  await act(async () => vi.advanceTimersByTimeAsync(251));
   expect(posted).toEqual([]);
 
-  if (size.startsWith('Custom')) {
+  if (!(size.startsWith('Custom'))) {} else { {
     const standard = [...container.querySelectorAll<HTMLButtonElement>('[aria-label="Map size"] button')]
       .find((b) => b.textContent?.startsWith('Standard'))!;
     await act(async () => standard.click());
-    await act(async () => vi.advanceTimersByTimeAsync(250));
+    await act(async () => vi.advanceTimersByTimeAsync(251));
     await act(async () => settingsResponse.resolve());
     // Standard suits 5-8 empires and the room has 3, so it is raised to Standard's default of 6.
     // New seats inherit the restored Hard level.
@@ -319,7 +314,7 @@ it.each([
       ...privateRoom, config: { ...config, turn_limit: null, width: 48, height: 32, seats },
     } }));
     expect(start.disabled).toBe(false);
-  }
+  } }
   await act(async () => start.click());
   expect(fetch).toHaveBeenCalledWith('/api/staging/start', expect.objectContaining({ method: 'POST' }));
 });
@@ -373,36 +368,34 @@ it.each([
 
 it.each(['status', 'staging_closed', 'no_room'] as const)('opens a fresh lobby when %s confirms the saved room no longer exists', async (missing) => {
   rememberSeat({ seat: 0, name: 'Host', roomId: 'deleted-room', gameId: null, token: 'expired-secret' });
-  if (missing === 'staging_closed') {
+  if (!(missing === 'staging_closed')) { if (!(missing === 'no_room')) {} else { {
+    const net = useGame.getState().net!;
+    useGame.setState({ net: { ...net, status: { ...net.status, has_game: true } } });
+  } } } else { {
     const net = useGame.getState().net!;
     useGame.setState({ net: { ...net, status: { ...net.status, staging: {
       room_id: 'deleted-room', config: { width: 64, height: 48, turn_limit: null, seats: [] }, occupants: [],
     } } } });
-  } else if (missing === 'no_room') {
-    const net = useGame.getState().net!;
-    useGame.setState({ net: { ...net, status: { ...net.status, has_game: true } } });
-  }
+  } }
   const posted: StagingConfig[] = [];
   vi.stubGlobal('fetch', vi.fn(async (_url: string, init: RequestInit) => {
-    if (init.method === 'POST') posted.push(JSON.parse(init.body as string));
+    if (!(init.method === 'POST')) {} else { posted.push(JSON.parse(init.body as string)); }
     return { ok: true, text: async () => '{}' };
   }));
   await act(async () => root.render(createElement(HostFlow)));
-  if (missing !== 'status') {
+  if (!(missing !== 'status')) {} else { {
     expect(container.textContent).toContain('Restoring the game room…');
     await act(async () => {
       sockets[0].open();
-      sockets[0].push(missing === 'staging_closed'
-        ? { type: 'staging_closed' }
-        : { type: 'error', code: 'no_room', message: 'No game room is open.' });
+      sockets[0].push(!(missing === 'staging_closed') ? { type: 'error', code: 'no_room', message: 'No game room is open.' } : { type: 'staging_closed' });
     });
-  }
+  } }
   expect(rememberedSeat()).toBeNull();
   expect(container.textContent).not.toContain('Restoring the game room…');
   expect(container.querySelector('[aria-label="Map seed"]')).not.toBeNull();
   await act(async () => {
     sockets.at(-1)!.open();
-    await vi.advanceTimersByTimeAsync(250);
+    await vi.advanceTimersByTimeAsync(251);
   });
   expect(posted).toHaveLength(1);
   expect(sockets.at(-1)!.sent).toContainEqual(expect.objectContaining({ type: 'staging_take', seat: 0 }));

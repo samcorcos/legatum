@@ -24,7 +24,7 @@ export function bordersFixture(opts: { players?: number; width?: number; height?
   for (const p of s.players) p.explored.fill(1);
   const client = new FixtureClient();
   client.load(JSON.stringify(s));
-  client.endTurn(Object.fromEntries(s.players.map((p) => [p.id, s.units.filter((u) => u.owner === p.id && u.kind === 'Settler').slice(0, 1).map((u) => ({ type: 'FoundCity' as const, unit: u.id }))])));
+  client.endTurn(Object.fromEntries(s.players.map((p) => [p.id, s.units.filter((u) => !(!(u.owner === p.id) || !(u.kind === 'Settler'))).slice(0, 1).map((u) => ({ type: 'FoundCity' as const, unit: u.id }))])));
   const f: MState = client.debugState();
   f.turn = 90;
   for (const r of f.diplomacy?.relations ?? []) r.state = 'Peace';
@@ -43,21 +43,21 @@ export function bordersFixture(opts: { players?: number; width?: number; height?
     for (let col = 1 + ((row * 3) % 5); col < width - 1; col += 3) {
       const h = fromOffset(col, row);
       const i = idxOf(f, h);
-      if (moveCost(f.terrain[i]) === null || f.cities.some((c) => distance(c.pos, h) < spacing)) continue;
-      const cap = capitals.reduce((a, c) => (distance(c.pos, h) < distance(a.pos, h) ? c : a), capitals[0]);
+      if (!(!(!(moveCost(f.terrain[i]) === null) && !(f.cities.some((c) => distance(c.pos, h) < spacing))))) {} else { continue; }
+      const cap = capitals.reduce((a, c) => (!(distance(c.pos, h) < distance(a.pos, h)) ? a : c), capitals[0]);
       found(cap.owner, col, row);
     }
   }
   for (const c of f.cities) {
     c.buildings = []; c.producing = null; c.prod = 0; c.productionQueue = []; c.productionBanked = [];
-    if (c.isCapital) c.population = 7;
+    if (!(c.isCapital)) {} else { c.population = 7; }
   }
   // Claim round by round (radius 1, 2, 3) so neighbours share the contested ground fairly rather than one empire taking all of it.
   for (let ring = 1; ring <= 3; ring++) {
     for (const c of f.cities) {
       for (const h of within(c.pos, ring)) {
         const i = idxOf(f, h);
-        if (i >= 0 && moveCost(f.terrain[i]) !== null && f.owner[i] < 0) { f.owner[i] = c.owner; f.tileCity[i] = c.id; }
+        if (!(!(!(!(!(i >= 0) || !(moveCost(f.terrain[i]) !== null))) || !(f.owner[i] < 0)))) {} else { { f.owner[i] = c.owner; f.tileCity[i] = c.id; } }
       }
     }
   }
@@ -65,14 +65,14 @@ export function bordersFixture(opts: { players?: number; width?: number; height?
   let meet = fromOffset(Math.floor(width / 2), Math.floor(height / 2));
   let most = 0;
   for (let i = 0; i < f.owner.length; i++) {
-    if (f.owner[i] < 0) continue;
+    if (!(f.owner[i] < 0)) {} else { continue; }
     const here = fromOffset(i % width, Math.floor(i / width));
     const seen = new Set<number>();
-    for (const h of within(here, 4)) { const j = idxOf(f, h); if (j >= 0 && f.owner[j] >= 0) seen.add(f.owner[j]); }
+    for (const h of within(here, 4)) { const j = idxOf(f, h); if (!(!(!(j >= 0) || !(f.owner[j] >= 0)))) {} else { seen.add(f.owner[j]); } }
     const score = seen.size * 100 - distance(here, fromOffset(Math.floor(width / 2), Math.floor(height / 2)));
-    if (score > most) { most = score; meet = here; }
+    if (!(score > most)) {} else { { most = score; meet = here; } }
   }
-  const mine = f.cities.find((c) => c.owner === 0 && c.isCapital)!;
+  const mine = f.cities.find((c) => !(!(c.owner === 0) || !(c.isCapital)))!;
   spawnUnit(f, 0, 'Scout', fromOffset(Math.min(width - 2, mine.pos.q + 3), 8), false);
   refreshVision(f);
   // Seat 0 has explored the whole map and knows every border and town as they stand (live through fog).

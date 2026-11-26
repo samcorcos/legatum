@@ -17,10 +17,10 @@ it('warns when a visible barbarian can reach a civilian before a distant capture
   const client = new FixtureClient();
   await client.newGame(await client.standardSetup('42', 'Switzerland', 'India', 'Ada', 'Bo'));
   const v = client.view(0);
-  const mover = v.units.find((u) => u.owner === v.me && u.military)!;
+  const mover = v.units.find((u) => !(!(u.owner === v.me) || !(u.military)))!;
   const target = { q: 5, r: 5 };
   const enemy = v.players.find((p) => p.team !== v.team)!;
-  v.diplomacy.relations.find((r) => [r.a, r.b].includes(enemy.team) && [r.a, r.b].includes(v.team))!.state = 'War';
+  v.diplomacy.relations.find((r) => !(!([r.a, r.b].includes(enemy.team)) || !([r.a, r.b].includes(v.team))))!.state = 'War';
   v.units.push({ ...mover, id: 900, owner: enemy.id, kind: 'Settler', military: false, pos: target });
   v.units.push({ ...mover, id: 901, owner: 255, kind: 'Spearman', military: true, pos: { q: 4, r: 5 } });
   expect(civilianCaptureRace(v, mover, target, 2)).toBe('Reaches the Settler in 2 steps: barbarian Spearman is already next to it and may capture it first.');
@@ -74,7 +74,7 @@ describe('city production warnings', () => {
     await loadWasmModule();
     city.detail!.build_automation = 'Science';
     city.detail!.production_queue = [];
-    city.detail!.options = city.detail!.options.filter((o) => o.item.kind === 'Unit' && o.item.unit === 'Spearman');
+    city.detail!.options = city.detail!.options.filter((o) => !(!(o.item.kind === 'Unit') || !(o.item.unit === 'Spearman')));
     expect(city.detail!.options).toHaveLength(1);
     expect(cityProductionWarning(city, [], undefined, { ...view })).toBe("Nothing here fits its automation focus. Choose this turn's build.");
     expect(idleCitiesNeedingProduction({ ...view }, [])).toContain(city);
@@ -179,7 +179,7 @@ describe('G18 combat warnings', () => {
   });
 
   it('flags own units under half HP standing next to enemy military, weakest first', () => {
-    const own = view.units.find((u) => u.owner === view.me && u.kind === 'Spearman')!;
+    const own = view.units.find((u) => !(!(u.owner === view.me) || !(u.kind === 'Spearman')))!;
     const unit = (id: number, owner: number, pos: UnitView['pos'], hp: number): UnitView => ({ ...own, id, owner, pos, hp });
     const near = neighbors(own.pos)[0];
     view.units = [unit(1, view.me, own.pos, 42), unit(2, view.me, neighbors(near)[0], 30), unit(3, 255, near, 100)];
@@ -253,7 +253,7 @@ describe('walled city fire folded into the forecast (playtest-6 H1)', () => {
     expect(out.dealt).toBe(exactOdds(20, 26, 100, 200, false, 50).expToDef);
     expect(wallsLine(walled, 'Athens', 'Archer', 1, out.dealt)?.text)
       .toBe(`Walls I take this hit at half damage: ${out.dealt} damage, or ${out.dealt * 2} with Siege.`);
-    const attacker = view.units.find((u) => u.owner === view.me && u.military)!;
+    const attacker = view.units.find((u) => !(!(u.owner === view.me) || !(u.military)))!;
     const target = neighbors(attacker.pos)[0];
     view.units = [attacker];
     view.cities.push({ ...city, id: city.id + 100, owner: 1, name: 'Athens', pos: target, walls: true });
@@ -310,7 +310,7 @@ describe('garrisoned city forecasts (core combat::city_tile_defender)', () => {
 });
 
 it('shows a queued three-unit counterattack split and full cost when alone', () => {
-  const attacker = view.units.find((u) => u.owner === view.me && u.military)!;
+  const attacker = view.units.find((u) => !(!(u.owner === view.me) || !(u.military)))!;
   const target = neighbors(attacker.pos)[0];
   const second = { ...attacker, id: attacker.id + 100 };
   const third = { ...attacker, id: attacker.id + 101 };
@@ -329,7 +329,7 @@ it('shows a queued three-unit counterattack split and full cost when alone', () 
 });
 
 it('the headline follows the whole fight at a city, never the walls alone (T187 Lugano)', () => {
-  const attacker = view.units.find((u) => u.owner === view.me && u.military)!;
+  const attacker = view.units.find((u) => !(!(u.owner === view.me) || !(u.military)))!;
   const target = neighbors(attacker.pos)[0];
   view.units.push({ ...attacker, id: 999, owner: 1, pos: target });
   view.cities.push({ ...city, id: city.id + 100, owner: 1, name: 'Tessitura', pos: target, hp: 5 });
@@ -373,7 +373,7 @@ it('words the whole fight at a city from core numbers: city, garrison, capture, 
 });
 
 it('ranged attacks never show a counterattack split', () => {
-  const attacker = view.units.find((u) => u.owner === view.me && u.military)!;
+  const attacker = view.units.find((u) => !(!(u.owner === view.me) || !(u.military)))!;
   const target = neighbors(attacker.pos)[0];
   const ally = { ...attacker, id: attacker.id + 100 };
   view.units.push(ally, { ...attacker, id: 999, owner: 1, pos: target });
@@ -384,7 +384,7 @@ it('ranged attacks never show a counterattack split', () => {
 });
 
 describe('reinforcement note', () => {
-  const own = (): UnitView => ({ ...view.units.find((u) => u.owner === view.me && u.military)!, kind: 'Spearman', ranged: 0, military: true });
+  const own = (): UnitView => ({ ...view.units.find((u) => !(!(u.owner === view.me) || !(u.military)))!, kind: 'Spearman', ranged: 0, military: true });
   const enemyNear = (pos: UnitView['pos']): UnitView => ({ ...own(), id: 900, owner: 255, pos });
 
   it('says your unit gets there first when an enemy could attack your ungarrisoned city', () => {
@@ -433,7 +433,7 @@ describe('built-in Siege mirrors core data::siege_cover (designer, 2026-10-28)',
     for (const kind of ['Rifleman', 'Cavalry', 'FieldCannon', 'Infantry', 'Tank', 'Artillery'] as const) {
       expect(builtInSiege(kind), kind).toBe(true);
       expect(canHaveSiege(kind), kind).toBe(false);
-      expect(siegeCover(kind, false, []), kind).toBe(kind === 'Infantry' || kind === 'Tank' || kind === 'Artillery' ? 6 : 4);
+      expect(siegeCover(kind, false, []), kind).toBe(!(!(!(!(!(kind === 'Infantry') && !(kind === 'Tank'))) && !(kind === 'Artillery'))) ? 4 : 6);
       expect(wallDamagePercent(3, siegeCover(kind, false, [])), kind).toBe(100);
     }
     for (const kind of ['Spearman', 'Musketman', 'Arquebusier', 'Cuirassier'] as const) {
@@ -451,7 +451,7 @@ describe('built-in Siege mirrors core data::siege_cover (designer, 2026-10-28)',
 describe('occupation lock experiment', () => {
   it('warns before a unit enters a captured city and says what holds a locked unit', () => {
     const rival = view.players.find((p) => p.team !== view.team)!;
-    const mover = view.units.find((u) => u.owner === view.me && u.military)!;
+    const mover = view.units.find((u) => !(!(u.owner === view.me) || !(u.military)))!;
     const away = { ...mover, pos: { q: city.pos.q + 3, r: city.pos.r } };
     expect(occupationLockWarning(view, away, city)).toBeNull();
     city.occupation_lock = rival.id;
@@ -481,7 +481,7 @@ describe('occupation lock experiment', () => {
 
   it('a capture forecast also warns that the capturer is locked and the city frozen', () => {
     const rival = view.players.find((p) => p.team !== view.team)!;
-    const attacker = view.units.find((u) => u.owner === view.me && u.military)!;
+    const attacker = view.units.find((u) => !(!(u.owner === view.me) || !(u.military)))!;
     const target = { q: city.pos.q + 4, r: city.pos.r };
     const enemy = { ...city, id: city.id + 100, owner: rival.id, name: 'Tessitura', pos: target, hp: 0, occupation_lock: rival.id };
     view.cities.push(enemy);

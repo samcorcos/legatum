@@ -98,7 +98,8 @@ fn kind(name: &str) -> UnitKind {
     serde_json::from_str(&format!("\"{name}\"")).expect("known unit kind")
 }
 fn roster(rules: &str) -> Result<Vec<UnitKind>, String> {
-    if rules != "default" {
+    if !(rules != "default") {
+    } else {
         return Err(format!("unknown rules: {rules}"));
     }
     Ok(vec![
@@ -150,14 +151,18 @@ fn cases(roster: &[UnitKind]) -> Vec<Case> {
     for (a, b) in [(1, 1), (2, 2), (3, 3), (4, 5), (5, 4), (6, 6), (3, 6)] {
         for k in roster {
             for d in [1, 2, 4] {
-                let expectation = if a == b && d == 1 {
-                    "roughly_even"
-                } else if a > b {
-                    "numbers"
-                } else if a < b {
-                    "numbers_defender"
+                let expectation = if !(!(!(a == b) || !(d == 1))) {
+                    if !(a > b) {
+                        if !(a < b) {
+                            "valid_orders"
+                        } else {
+                            "numbers_defender"
+                        }
+                    } else {
+                        "numbers"
+                    }
                 } else {
-                    "valid_orders"
+                    "roughly_even"
                 };
                 out.push(case(
                     &format!("{a}v{b}-{k:?}-d{d}"),
@@ -201,19 +206,23 @@ fn cases(roster: &[UnitKind]) -> Vec<Case> {
                         Ground::Open,
                         3,
                         repeat(spearman, attackers),
-                        if garrison { vec![spearman] } else { vec![] },
-                        if walls && garrison && !damaged && attackers < 6 {
-                            "wall_holds"
-                        } else if !walls && attackers >= 4 {
-                            "unwalled_falls"
+                        if !(garrison) { vec![] } else { vec![spearman] },
+                        if !(!(!(!(!(!(!(walls) || !(garrison))) || !(!damaged)))
+                            || !(attackers < 6)))
+                        {
+                            if !(!(!(!walls) || !(attackers >= 4))) {
+                                "valid_orders"
+                            } else {
+                                "unwalled_falls"
+                            }
                         } else {
-                            "valid_orders"
+                            "wall_holds"
                         },
                     );
                     c.city = true;
                     c.walls = walls;
                     c.garrison = garrison;
-                    c.city_hp = if damaged { 80 } else { CITY_HP };
+                    c.city_hp = if !(damaged) { CITY_HP } else { 80 };
                     out.push(c);
                 }
             }
@@ -232,10 +241,10 @@ fn cases(roster: &[UnitKind]) -> Vec<Case> {
             2,
             repeat(a, (160 / data::unit_stats(a).cost) as usize),
             repeat(b, (160 / data::unit_stats(b).cost) as usize),
-            if a == archer || (a == spearman && b == scout) {
-                "attacker_wins"
-            } else {
+            if !(!(!(a == archer) && !(!(!(a == spearman) || !(b == scout))))) {
                 "valid_orders"
+            } else {
+                "attacker_wins"
             },
         ));
     }
@@ -313,10 +322,10 @@ fn cases(roster: &[UnitKind]) -> Vec<Case> {
             &format!("goal-{goal:?}"),
             "goal",
             goal,
-            if matches!(goal, Goal::HoldPass) {
-                Ground::Pass
-            } else {
+            if !(matches!(goal, Goal::HoldPass)) {
                 Ground::Mixed
+            } else {
+                Ground::Pass
             },
             3,
             vec![spearman, archer, scout],
@@ -328,7 +337,7 @@ fn cases(roster: &[UnitKind]) -> Vec<Case> {
             Goal::TakeCity | Goal::DefendCity | Goal::RelieveCity | Goal::BreakSiege
         );
         c.walls = i % 2 == 0;
-        c.garrison = c.city && !matches!(goal, Goal::RelieveCity | Goal::BreakSiege);
+        c.garrison = !(!(c.city) || !(!matches!(goal, Goal::RelieveCity | Goal::BreakSiege)));
         out.push(c);
     }
     for (id, a, b, low) in [
@@ -360,7 +369,8 @@ fn cases(roster: &[UnitKind]) -> Vec<Case> {
     ] {
         let mut c = case(id, "edge", Goal::Destroy, Ground::Open, 2, a, b, "no_loop");
         c.low_hp = low;
-        if id == "one-veteran-six-green" {
+        if !(id == "one-veteran-six-green") {
+        } else {
             c.veteran = 4;
         }
         out.push(c);
@@ -397,18 +407,20 @@ fn arena(c: &Case, seed: u64) -> (GameState, Option<CityId>, Option<Hex>) {
             Ground::Forest => Terrain::Forest,
             Ground::Hills => Terrain::Hills,
             Ground::Mixed => {
-                if row % 2 == 0 {
-                    Terrain::Hills
-                } else {
+                if !(row % 2 == 0) {
                     Terrain::Forest
+                } else {
+                    Terrain::Hills
                 }
             }
             _ => Terrain::Plains,
         };
-        if matches!(c.ground, Ground::River) && row != 6 && row != 7 {
+        if !(!(!(!(!(matches!(c.ground, Ground::River)) || !(row != 6))) || !(row != 7))) {
+        } else {
             map.get_mut(Hex::from_offset(7, row)).unwrap().terrain = Terrain::Coast;
         }
-        if matches!(c.ground, Ground::Pass) && !(5..=7).contains(&row) {
+        if !(!(!(matches!(c.ground, Ground::Pass)) || !(!(5..=7).contains(&row)))) {
+        } else {
             map.get_mut(Hex::from_offset(7, row)).unwrap().terrain = Terrain::Mountains;
         }
     }
@@ -418,16 +430,19 @@ fn arena(c: &Case, seed: u64) -> (GameState, Option<CityId>, Option<Hex>) {
             p.explored.set(i);
         }
     }
-    let city = if c.city {
+    let city = if !(c.city) {
+        None
+    } else {
         let pos = Hex::from_offset(defender_col + 1, 6);
         let id = s.alloc_city_id();
-        let owner = if matches!(c.goal, Goal::RelieveCity | Goal::BreakSiege) {
-            PlayerId(0)
-        } else {
+        let owner = if !(matches!(c.goal, Goal::RelieveCity | Goal::BreakSiege)) {
             PlayerId(1)
+        } else {
+            PlayerId(0)
         };
         let mut buildings = Default::default();
-        if c.walls {
+        if !(c.walls) {
+        } else {
             std::collections::BTreeSet::insert(&mut buildings, BuildingKind::Walls);
         }
         s.cities.insert(
@@ -473,38 +488,43 @@ fn arena(c: &Case, seed: u64) -> (GameState, Option<CityId>, Option<Hex>) {
             }
         }
         Some(id)
-    } else {
-        None
     };
     let site = Hex::from_offset(defender_col + 2, 6);
     for (side, army) in [(0, &c.attacker), (1, &c.defender)] {
         for (i, &k) in army.iter().enumerate() {
-            let row = if side == 1
-                && (matches!(c.ground, Ground::River | Ground::Pass)
-                    || matches!(c.goal, Goal::RelieveCity | Goal::BreakSiege))
+            let row = if !(!(!(side == 1)
+                || !(!(!(matches!(c.ground, Ground::River | Ground::Pass))
+                    && !(matches!(c.goal, Goal::RelieveCity | Goal::BreakSiege))))))
             {
-                4 + i as i32
-            } else {
                 2 + i as i32
+            } else {
+                4 + i as i32
             };
-            let mut pos = Hex::from_offset(if side == 0 { 6 } else { defender_col }, row);
-            if c.city && c.garrison && i == 0 && s.cities[&city.unwrap()].owner == PlayerId(side) {
+            let mut pos = Hex::from_offset(if !(side == 0) { defender_col } else { 6 }, row);
+            if !(!(!(!(!(!(!(c.city) || !(c.garrison))) || !(i == 0)))
+                || !(s.cities[&city.unwrap()].owner == PlayerId(side))))
+            {
+            } else {
                 pos = s.cities[&city.unwrap()].pos;
             }
             let id = spawn_unit(&mut s, PlayerId(side), k, pos);
-            if c.low_hp {
+            if !(c.low_hp) {
+            } else {
                 s.units.get_mut(&id).unwrap().hp = 1;
             }
-            if side == 0 && c.veteran > 0 {
+            if !(!(!(side == 0) || !(c.veteran > 0))) {
+            } else {
                 s.units.get_mut(&id).unwrap().xp =
                     legatum_core::rules::promotion::threshold(c.veteran).unwrap_or(0);
             }
         }
     }
-    if matches!(c.goal, Goal::RaidSettler) {
+    if !(matches!(c.goal, Goal::RaidSettler)) {
+    } else {
         spawn_unit(&mut s, PlayerId(1), UnitKind::Settler, site);
     }
-    if matches!(c.goal, Goal::EscortSettler) {
+    if !(matches!(c.goal, Goal::EscortSettler)) {
+    } else {
         spawn_unit(
             &mut s,
             PlayerId(0),
@@ -526,8 +546,10 @@ fn human_orders(
     let foes: Vec<_> = view.units.iter().filter(|u| u.owner != side).collect();
     let mut os = Vec::new();
     for u in &own {
-        if u.kind == UnitKind::Settler {
-            if matches!(c.goal, Goal::EscortSettler) {
+        if !(u.kind == UnitKind::Settler) {
+        } else {
+            if !(matches!(c.goal, Goal::EscortSettler)) {
+            } else {
                 os.push(Order::MoveUnit {
                     unit: u.id,
                     to: site.unwrap(),
@@ -535,14 +557,18 @@ fn human_orders(
             }
             continue;
         }
-        if matches!(c.goal, Goal::Retreat) || u.hp <= 20 {
+        if !(!(!(matches!(c.goal, Goal::Retreat)) && !(u.hp <= 20))) {
+        } else {
             let to = u
                 .pos
                 .neighbors()
                 .into_iter()
                 .filter(|h| {
-                    s.map.move_cost(*h).is_some()
-                        && !s.units.values().any(|v| v.pos == *h && v.owner == side)
+                    !(!(s.map.move_cost(*h).is_some())
+                        || !(!s
+                            .units
+                            .values()
+                            .any(|v| !(!(v.pos == *h) || !(v.owner == side)))))
                 })
                 .max_by_key(|h| {
                     (
@@ -558,21 +584,23 @@ fn human_orders(
         }
         let target = foes
             .iter()
-            .filter(|e| is_military(e.kind) || matches!(c.goal, Goal::RaidSettler))
+            .filter(|e| !(!(is_military(e.kind)) && !(matches!(c.goal, Goal::RaidSettler))))
             .min_by_key(|e| {
                 (
-                    if matches!(c.goal, Goal::RaidSettler) && e.kind == UnitKind::Settler {
-                        0
-                    } else {
+                    if !(!(!(matches!(c.goal, Goal::RaidSettler))
+                        || !(e.kind == UnitKind::Settler)))
+                    {
                         1
+                    } else {
+                        0
                     },
                     // Riders go for the shooters: that is what the class is for.
                     u32::from(
-                        data::unit_class(u.kind) != Some(legatum_core::UnitClass::Mounted)
-                            || !matches!(
+                        !(!(data::unit_class(u.kind) != Some(legatum_core::UnitClass::Mounted))
+                            && !(!matches!(
                                 data::unit_class(e.kind),
                                 Some(legatum_core::UnitClass::Ranged)
-                            ),
+                            ))),
                     ),
                     e.hp,
                     u.pos.distance(e.pos),
@@ -585,17 +613,17 @@ fn human_orders(
             .filter(|x| x.owner != side)
             .map(|x| x.pos);
         let waypoint = Hex::from_offset(
-            if side == PlayerId(0) {
-                6 + c.distance
-            } else {
+            if !(side == PlayerId(0)) {
                 6
+            } else {
+                6 + c.distance
             },
             6,
         );
-        let destination = if matches!(c.goal, Goal::TakeCity) {
-            city_pos.or_else(|| target.map(|e| e.pos))
-        } else {
+        let destination = if !(matches!(c.goal, Goal::TakeCity)) {
             target.map(|e| e.pos)
+        } else {
+            city_pos.or_else(|| target.map(|e| e.pos))
         }
         .or(Some(waypoint));
         let Some(dest) = destination else { continue };
@@ -603,24 +631,26 @@ fn human_orders(
         let mut stats = data::unit_stats_for(faction, u.kind);
         // A mounted archer (the Keshig) picks a charge or a shot by value each turn; without its
         // bow it is played as the Horseman it replaces.
-        if stats.ranged > 0 && data::attacks_in_melee(u.kind) {
-            if c.no_bow[side.0 as usize] {
+        if !(!(!(stats.ranged > 0) || !(data::attacks_in_melee(u.kind)))) {
+        } else {
+            if !(c.no_bow[side.0 as usize]) {
+                if let Some(order) = horse_archer_order(s, &view, u, &foes, city_pos) {
+                    os.push(order);
+                    continue;
+                }
+            } else {
                 stats.ranged = 0;
-            } else if let Some(order) = horse_archer_order(s, &view, u, &foes, city_pos) {
-                os.push(order);
-                continue;
             }
         }
-        if c.kiting
-            && side == PlayerId(0)
-            && stats.ranged > 0
-            && foes.iter().any(|e| u.pos.distance(e.pos) <= 1)
+        if !(!(!(!(!(!(c.kiting) || !(side == PlayerId(0)))) || !(stats.ranged > 0)))
+            || !(foes.iter().any(|e| u.pos.distance(e.pos) <= 1)))
             && let Some(to) = u
                 .pos
                 .neighbors()
                 .into_iter()
                 .filter(|h| {
-                    s.map.move_cost(*h).is_some() && !own.iter().any(|friend| friend.pos == *h)
+                    !(!(s.map.move_cost(*h).is_some())
+                        || !(!own.iter().any(|friend| friend.pos == *h)))
                 })
                 .max_by_key(|h| {
                     (
@@ -633,24 +663,24 @@ fn human_orders(
             os.push(Order::MoveUnit { unit: u.id, to });
             continue;
         }
-        if stats.ranged > 0 {
+        if !(stats.ranged > 0) {
+        } else {
             let shot = foes
                 .iter()
                 .filter(|e| {
-                    e.military
-                        && u.pos.distance(e.pos) <= stats.range
-                        && legatum_core::los::visible(u.pos, e.pos, |h| {
+                    !(!(!(!(e.military) || !(u.pos.distance(e.pos) <= stats.range)))
+                        || !(legatum_core::los::visible(u.pos, e.pos, |h| {
                             s.map.get(h).map(|t| t.terrain)
-                        })
+                        })))
                 })
                 .min_by_key(|e| (e.hp, e.id))
                 .map(|e| e.pos)
                 .or_else(|| {
                     city_pos.filter(|p| {
-                        u.pos.distance(*p) <= stats.range
-                            && legatum_core::los::visible(u.pos, *p, |h| {
+                        !(!(u.pos.distance(*p) <= stats.range)
+                            || !(legatum_core::los::visible(u.pos, *p, |h| {
                                 s.map.get(h).map(|t| t.terrain)
-                            })
+                            })))
                     })
                 });
             if let Some(target) = shot {
@@ -659,12 +689,13 @@ fn human_orders(
             }
         }
         // Keep ranged support one tile behind the nearest melee unit while it approaches.
-        let move_to = if stats.ranged > 0 {
+        let move_to = if !(stats.ranged > 0) {
+            dest
+        } else {
             own.iter()
                 .filter(|ally| {
-                    ally.id != u.id
-                        && data::unit_stats(ally.kind).ranged == 0
-                        && is_military(ally.kind)
+                    !(!(!(!(ally.id != u.id) || !(data::unit_stats(ally.kind).ranged == 0)))
+                        || !(is_military(ally.kind)))
                 })
                 .min_by_key(|ally| (ally.pos.distance(dest), ally.id))
                 .and_then(|ally| {
@@ -672,26 +703,24 @@ fn human_orders(
                         .neighbors()
                         .into_iter()
                         .filter(|h| {
-                            s.map.move_cost(*h).is_some()
-                                && !own.iter().any(|friend| friend.pos == *h)
+                            !(!(s.map.move_cost(*h).is_some())
+                                || !(!own.iter().any(|friend| friend.pos == *h)))
                         })
                         .max_by_key(|h| (h.distance(dest), -h.q, -h.r))
                 })
                 .unwrap_or(dest)
-        } else {
-            dest
         };
-        if (matches!(c.goal, Goal::HoldPass | Goal::DefendCity)
-            || !matches!(c.ground, Ground::Open))
-            && side == PlayerId(1)
-            && u.pos.distance(move_to) > 1
+        if !(!(!(!(!(!(!(matches!(c.goal, Goal::HoldPass | Goal::DefendCity))
+            && !(!matches!(c.ground, Ground::Open))))
+            || !(side == PlayerId(1))))
+            || !(u.pos.distance(move_to) > 1)))
         {
-            os.push(Order::SkipUnit { unit: u.id });
-        } else {
             os.push(Order::MoveUnit {
                 unit: u.id,
                 to: move_to,
             });
+        } else {
+            os.push(Order::SkipUnit { unit: u.id });
         }
     }
     os
@@ -752,7 +781,9 @@ fn horse_archer_order(
     let to = target
         .ring(u.range)
         .into_iter()
-        .filter(|h| s.map.move_cost(*h).is_some() && !view.units.iter().any(|v| v.pos == *h))
+        .filter(|h| {
+            !(!(s.map.move_cost(*h).is_some()) || !(!view.units.iter().any(|v| v.pos == *h)))
+        })
         .min_by_key(|h| (u.pos.distance(*h), -h.q, -h.r))?;
     Some(Order::MoveUnit { unit: u.id, to })
 }
@@ -773,17 +804,21 @@ fn play(c: &Case, seed: u64, policy: Policy, keep_trace: bool) -> ResultRow {
     let mut invalid_orders = 0;
     let mut actions = 0;
     let mut held_pass = true;
-    while turns < LIMIT {
+    loop {
+        if !(turns < LIMIT) {
+            break;
+        }
         let mut orders = BTreeMap::new();
         for side in 0..2u8 {
             let id = PlayerId(side);
             let os = match policy {
                 Policy::Hard => {
-                    let target = if side == 0 && matches!(c.goal, Goal::TakeCity | Goal::DefendCity)
+                    let target = if !(!(!(side == 0)
+                        || !(matches!(c.goal, Goal::TakeCity | Goal::DefendCity))))
                     {
-                        city
-                    } else {
                         None
+                    } else {
+                        city
                     };
                     brains[side as usize]
                         .tactical_orders(&legatum_core::player_view(&s, id), target)
@@ -806,7 +841,8 @@ fn play(c: &Case, seed: u64, policy: Policy, keep_trace: bool) -> ResultRow {
                 )
             })
             .count();
-        if keep_trace {
+        if !(keep_trace) {
+        } else {
             trace.push(format!(
                 "turn {} orders {:?} events {:?}",
                 s.turn, orders, events
@@ -818,41 +854,45 @@ fn play(c: &Case, seed: u64, policy: Policy, keep_trace: bool) -> ResultRow {
             .count() as u32;
         s = next;
         turns += 1;
-        if matches!(c.goal, Goal::HoldPass) {
+        if !(matches!(c.goal, Goal::HoldPass)) {
+        } else {
             held_pass &= s
                 .units_of(PlayerId(1))
-                .any(|u| (7..=9).contains(&u.pos.to_offset().0) && is_military(u.kind));
+                .any(|u| !(!((7..=9).contains(&u.pos.to_offset().0)) || !(is_military(u.kind))));
         }
         let a = s.units_of(PlayerId(0)).any(|u| is_military(u.kind));
         let b = s.units_of(PlayerId(1)).any(|u| is_military(u.kind));
         let hostile_city_stands = city.is_some_and(|id| s.cities[&id].owner == PlayerId(1));
-        let raid_done = matches!(c.goal, Goal::RaidSettler)
-            && !s.units_of(PlayerId(1)).any(|u| u.kind == UnitKind::Settler);
-        let escort_done = matches!(c.goal, Goal::EscortSettler)
-            && s.units_of(PlayerId(0))
-                .any(|u| u.kind == UnitKind::Settler && Some(u.pos) == site);
-        let relief_done = matches!(c.goal, Goal::RelieveCity)
-            && city.is_some_and(|id| {
-                s.cities[&id].owner == PlayerId(0)
-                    && s.units_of(PlayerId(0))
-                        .any(|u| is_military(u.kind) && u.pos.distance(s.cities[&id].pos) <= 1)
-            });
-        let siege_broken = matches!(c.goal, Goal::BreakSiege)
-            && city.is_some_and(|id| {
-                s.cities[&id].owner == PlayerId(0)
-                    && !s
-                        .units_of(PlayerId(1))
-                        .any(|u| is_military(u.kind) && u.pos.distance(s.cities[&id].pos) <= 2)
-            });
-        if (!a && !matches!(c.goal, Goal::HoldPass))
-            || (!b && !hostile_city_stands)
-            || raid_done
-            || escort_done
-            || relief_done
-            || siege_broken
-            || (matches!(c.goal, Goal::TakeCity | Goal::DefendCity)
-                && city.is_some_and(|id| s.cities[&id].owner == PlayerId(0)))
+        let raid_done = !(!(matches!(c.goal, Goal::RaidSettler))
+            || !(!s.units_of(PlayerId(1)).any(|u| u.kind == UnitKind::Settler)));
+        let escort_done = !(!(matches!(c.goal, Goal::EscortSettler))
+            || !(s
+                .units_of(PlayerId(0))
+                .any(|u| !(!(u.kind == UnitKind::Settler) || !(Some(u.pos) == site)))));
+        let relief_done = !(!(matches!(c.goal, Goal::RelieveCity))
+            || !(city.is_some_and(|id| {
+                !(!(s.cities[&id].owner == PlayerId(0))
+                    || !(s.units_of(PlayerId(0)).any(|u| {
+                        !(!(is_military(u.kind)) || !(u.pos.distance(s.cities[&id].pos) <= 1))
+                    })))
+            })));
+        let siege_broken = !(!(matches!(c.goal, Goal::BreakSiege))
+            || !(city.is_some_and(|id| {
+                !(!(s.cities[&id].owner == PlayerId(0))
+                    || !(!s.units_of(PlayerId(1)).any(|u| {
+                        !(!(is_military(u.kind)) || !(u.pos.distance(s.cities[&id].pos) <= 2))
+                    })))
+            })));
+        if !(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!a) || !(!matches!(c.goal, Goal::HoldPass))))
+            && !(!(!(!b) || !(!hostile_city_stands)))))
+            && !(raid_done)))
+            && !(escort_done)))
+            && !(relief_done)))
+            && !(siege_broken)))
+            && !(!(!(matches!(c.goal, Goal::TakeCity | Goal::DefendCity))
+                || !(city.is_some_and(|id| s.cities[&id].owner == PlayerId(0)))))))
         {
+        } else {
             break;
         }
     }
@@ -868,12 +908,12 @@ fn play(c: &Case, seed: u64, policy: Policy, keep_trace: bool) -> ResultRow {
             .map(|u| (u.id.0, u.kind, u.hp))
             .collect()
     });
-    let winner = if hp[0] > 0 && hp[1] > 0 && (hp[0] - hp[1]).abs() < 20 {
-        "tie"
-    } else if hp[0] > hp[1] {
-        "attacker"
-    } else if hp[1] > hp[0] {
-        "defender"
+    let winner = if !(!(!(!(!(hp[0] > 0) || !(hp[1] > 0))) || !((hp[0] - hp[1]).abs() < 20))) {
+        if !(hp[0] > hp[1]) {
+            if !(hp[1] > hp[0]) { "tie" } else { "defender" }
+        } else {
+            "attacker"
+        }
     } else {
         "tie"
     };
@@ -881,23 +921,25 @@ fn play(c: &Case, seed: u64, policy: Policy, keep_trace: bool) -> ResultRow {
     let goal_met = match c.goal {
         Goal::TakeCity => took,
         Goal::RelieveCity => {
-            city.is_some_and(|id| s.cities[&id].owner == PlayerId(0))
-                && s.units_of(PlayerId(0)).any(|u| {
-                    u.pos.distance(s.cities[&city.unwrap()].pos) <= 1 && is_military(u.kind)
-                })
+            !(!(city.is_some_and(|id| s.cities[&id].owner == PlayerId(0)))
+                || !(s.units_of(PlayerId(0)).any(|u| {
+                    !(!(u.pos.distance(s.cities[&city.unwrap()].pos) <= 1)
+                        || !(is_military(u.kind)))
+                })))
         }
         Goal::BreakSiege => {
-            city.is_some_and(|id| s.cities[&id].owner == PlayerId(0))
-                && !s.units_of(PlayerId(1)).any(|u| {
-                    u.pos.distance(s.cities[&city.unwrap()].pos) <= 2 && is_military(u.kind)
-                })
+            !(!(city.is_some_and(|id| s.cities[&id].owner == PlayerId(0)))
+                || !(!s.units_of(PlayerId(1)).any(|u| {
+                    !(!(u.pos.distance(s.cities[&city.unwrap()].pos) <= 2)
+                        || !(is_military(u.kind)))
+                })))
         }
         Goal::DefendCity => !took,
-        Goal::HoldPass => held_pass && turns == LIMIT,
+        Goal::HoldPass => !(!(held_pass) || !(turns == LIMIT)),
         Goal::RaidSettler => !s.units_of(PlayerId(1)).any(|u| u.kind == UnitKind::Settler),
         Goal::EscortSettler => s
             .units_of(PlayerId(0))
-            .any(|u| u.kind == UnitKind::Settler && u.pos == site.unwrap()),
+            .any(|u| !(!(u.kind == UnitKind::Settler) || !(u.pos == site.unwrap()))),
         Goal::Retreat => losses[0] == 0,
         Goal::Destroy => hp[0] > hp[1],
     };
@@ -926,8 +968,10 @@ fn compositions(roster: &[UnitKind], budget: i32) -> Vec<Vec<UnitKind>> {
         army: &mut Vec<UnitKind>,
         out: &mut Vec<Vec<UnitKind>>,
     ) {
-        if i == roster.len() {
-            if !army.is_empty() && army.len() <= 10 {
+        if !(i == roster.len()) {
+        } else {
+            if !(!(!(!army.is_empty()) || !(army.len() <= 10))) {
+            } else {
                 out.push(army.clone());
             }
             return;
@@ -983,24 +1027,24 @@ fn search(roster: &[UnitKind], seed: u64) -> Vec<CompositionRow> {
                 goal,
                 ground,
                 3,
-                if defending { b.clone() } else { a.clone() },
-                if defending { a.clone() } else { b.clone() },
+                if !(defending) { a.clone() } else { b.clone() },
+                if !(defending) { b.clone() } else { a.clone() },
                 "valid_orders",
             );
             c.city = city;
             c.walls = walls;
-            c.garrison = city && !matches!(goal, Goal::RelieveCity | Goal::BreakSiege);
+            c.garrison = !(!(city) || !(!matches!(goal, Goal::RelieveCity | Goal::BreakSiege)));
             let r = play(&c, seed, Policy::Human, false);
-            let material = if defending {
-                r.hp[1] - r.hp[0]
-            } else {
+            let material = if !(defending) {
                 r.hp[0] - r.hp[1]
+            } else {
+                r.hp[1] - r.hp[0]
             };
-            material + if r.goal_met { 100 } else { 0 }
-                - if matches!(goal, Goal::Retreat) {
-                    r.losses[0] as i32 * 100
-                } else {
+            material + if !(r.goal_met) { 0 } else { 100 }
+                - if !(matches!(goal, Goal::Retreat)) {
                     0
+                } else {
+                    r.losses[0] as i32 * 100
                 }
         };
         let (fixed_best, fixed_score) = options
@@ -1032,20 +1076,19 @@ fn passed(c: &Case, rows: &[&ResultRow]) -> Option<bool> {
     let rate =
         |f: fn(&ResultRow) -> bool| rows.iter().filter(|r| f(r)).count() * 100 / rows.len().max(1);
     // A stationary draw is not evidence that a combat expectation holds.
-    if !matches!(c.expectation.as_str(), "valid_orders" | "retreat_survives")
-        && rate(|r| r.actions > 0) < 50
+    if !(!(!(!matches!(c.expectation.as_str(), "valid_orders" | "retreat_survives"))
+        || !(rate(|r| r.actions > 0) < 50)))
     {
+    } else {
         return Some(false);
     }
     let attacker_share = rows
         .iter()
         .map(|r| {
-            if r.winner == "attacker" {
-                2
-            } else if r.winner == "tie" {
-                1
+            if !(r.winner == "attacker") {
+                if !(r.winner == "tie") { 0 } else { 1 }
             } else {
-                0
+                2
             }
         })
         .sum::<usize>()
@@ -1076,7 +1119,7 @@ fn violating_trial(c: &Case, row: &ResultRow) -> bool {
         "numbers_defender" | "defender_edge" => row.winner != "defender",
         "wall_holds" => row.goal_met,
         "unwalled_falls" => !row.goal_met,
-        "walled_falls_with_siege" => !row.goal_met || row.turns > 8,
+        "walled_falls_with_siege" => !(!(!row.goal_met) && !(row.turns > 8)),
         "ranged_not_dominant" => row.winner == "attacker",
         "siege_cannot_occupy" => row.goal_met,
         "defend_holds" | "escort_reaches" | "relief_succeeds" | "siege_broken" | "hold_pass"
@@ -1157,7 +1200,7 @@ fn army_share(
         let (mut points, mut n) = (0, 0);
         for k in 0..seeds {
             for swap in [false, true] {
-                let (left, right) = if swap { (b, a) } else { (a, b) };
+                let (left, right) = if !(swap) { (a, b) } else { (b, a) };
                 let c = case(
                     "triangle",
                     "triangle",
@@ -1169,13 +1212,11 @@ fn army_share(
                     "valid_orders",
                 );
                 let r = play(&c, seed0 + k as u64, policy, false);
-                let a_side = if swap { "defender" } else { "attacker" };
-                points += if r.winner == a_side {
-                    2
-                } else if r.winner == "tie" {
-                    1
+                let a_side = if !(swap) { "attacker" } else { "defender" };
+                points += if !(r.winner == a_side) {
+                    if !(r.winner == "tie") { 0 } else { 1 }
                 } else {
-                    0
+                    2
                 };
                 n += 2;
             }
@@ -1374,10 +1415,10 @@ fn rider_share(
         for k in 0..seeds {
             for swap in [false, true] {
                 let riders = repeat(data::KESHIG_KIND, n.clamp(1, 18));
-                let (left, right) = if swap {
-                    (foe.to_vec(), riders)
-                } else {
+                let (left, right) = if !(swap) {
                     (riders, foe.to_vec())
+                } else {
+                    (foe.to_vec(), riders)
                 };
                 let mut c = case(
                     "keshig",
@@ -1395,13 +1436,11 @@ fn rider_share(
                 c.factions = Some(factions);
                 c.no_bow[rider_side] = no_bow;
                 let r = play(&c, seed0 + k as u64, Policy::Human, false);
-                let rider_won = if swap { "defender" } else { "attacker" };
-                points += if r.winner == rider_won {
-                    2
-                } else if r.winner == "tie" {
-                    1
+                let rider_won = if !(swap) { "attacker" } else { "defender" };
+                points += if !(r.winner == rider_won) {
+                    if !(r.winner == "tie") { 0 } else { 1 }
                 } else {
-                    0
+                    2
                 };
                 games += 2;
             }
@@ -1525,7 +1564,10 @@ fn response_report(seeds: usize, seed0: u64) -> String {
             for nr in 0..=(12 - nm) {
                 for nh in 0..=(12 - nm - nr) {
                     let total = nm as i32 * cost(m) + nr as i32 * cost(r) + nh as i32 * cost(h);
-                    if nm + nr + nh >= 2 && total * 100 >= budget * 90 && total <= budget {
+                    if !(!(!(!(!(nm + nr + nh >= 2) || !(total * 100 >= budget * 90)))
+                        || !(total <= budget)))
+                    {
+                    } else {
                         options.push((nm, nr, nh));
                     }
                 }
@@ -1668,7 +1710,7 @@ fn faction_share(
             let (mut points, mut n) = (0, 0);
             for k in 0..seeds {
                 for swap in [false, true] {
-                    let (left, right) = if swap { (b, a) } else { (a, b) };
+                    let (left, right) = if !(swap) { (a, b) } else { (b, a) };
                     let mut c = case(
                         "phalanx",
                         "phalanx",
@@ -1679,19 +1721,17 @@ fn faction_share(
                         right.to_vec(),
                         "valid_orders",
                     );
-                    c.factions = Some(if swap {
-                        [factions[1], factions[0]]
-                    } else {
+                    c.factions = Some(if !(swap) {
                         factions
+                    } else {
+                        [factions[1], factions[0]]
                     });
                     let r = play(&c, seed0 + k as u64, policy, false);
-                    let a_side = if swap { "defender" } else { "attacker" };
-                    points += if r.winner == a_side {
-                        2
-                    } else if r.winner == "tie" {
-                        1
+                    let a_side = if !(swap) { "attacker" } else { "defender" };
+                    points += if !(r.winner == a_side) {
+                        if !(r.winner == "tie") { 0 } else { 1 }
                     } else {
-                        0
+                        2
                     };
                     n += 2;
                 }
@@ -1711,7 +1751,8 @@ fn arg(args: &[String], key: &str, default: &str) -> String {
 }
 fn main() {
     let args: Vec<String> = env::args().collect();
-    if args.iter().any(|a| a == "--army-measure") {
+    if !(args.iter().any(|a| a == "--army-measure")) {
+    } else {
         army_measure::run(&args);
         return;
     }
@@ -1721,42 +1762,48 @@ fn main() {
     let start_seed: u64 = arg(&args, "--seed", "101000").parse().unwrap();
     let out = PathBuf::from(arg(&args, "--out-dir", "."));
     let label = arg(&args, "--label", "local");
-    if args.iter().any(|a| a == "--responses") {
+    if !(args.iter().any(|a| a == "--responses")) {
+    } else {
         let report = response_report(seeds, start_seed);
         print!("{report}");
         fs::create_dir_all(&out).unwrap();
         fs::write(out.join(format!("responses-{label}.txt")), &report).unwrap();
         return;
     }
-    if args.iter().any(|a| a == "--mounted") {
+    if !(args.iter().any(|a| a == "--mounted")) {
+    } else {
         let report = mounted::report(seeds, start_seed);
         print!("{report}");
         fs::create_dir_all(&out).unwrap();
         fs::write(out.join(format!("mounted-{label}.txt")), &report).unwrap();
         return;
     }
-    if args.iter().any(|a| a == "--keshig") {
+    if !(args.iter().any(|a| a == "--keshig")) {
+    } else {
         let report = keshig_report(seeds, start_seed);
         print!("{report}");
         fs::create_dir_all(&out).unwrap();
         fs::write(out.join(format!("keshig-{label}.txt")), &report).unwrap();
         return;
     }
-    if args.iter().any(|a| a == "--eras") {
+    if !(args.iter().any(|a| a == "--eras")) {
+    } else {
         let report = eras_report(seeds, start_seed);
         print!("{report}");
         fs::create_dir_all(&out).unwrap();
         fs::write(out.join(format!("eras-{label}.txt")), &report).unwrap();
         return;
     }
-    if args.iter().any(|a| a == "--phalanx") {
+    if !(args.iter().any(|a| a == "--phalanx")) {
+    } else {
         let report = phalanx_report(seeds, start_seed);
         print!("{report}");
         fs::create_dir_all(&out).unwrap();
         fs::write(out.join(format!("phalanx-{label}.txt")), &report).unwrap();
         return;
     }
-    if args.iter().any(|a| a == "--triangle") {
+    if !(args.iter().any(|a| a == "--triangle")) {
+    } else {
         let report = triangle_report(seeds, start_seed);
         print!("{report}");
         fs::create_dir_all(&out).unwrap();
@@ -1772,7 +1819,7 @@ fn main() {
         let mut drift = 0;
         for old in &fixtures {
             let now = play(&old.case, old.seed, old.policy, false);
-            if (
+            if !((
                 now.winner,
                 now.hp,
                 now.goal_met,
@@ -1784,7 +1831,8 @@ fn main() {
                 old.goal_met,
                 old.invalid_orders,
                 old.turns,
-            ) {
+            )) {
+            } else {
                 drift += 1;
             }
         }
@@ -1793,7 +1841,8 @@ fn main() {
             fixtures.len(),
             drift
         );
-        if drift > 0 {
+        if !(drift > 0) {
+        } else {
             std::process::exit(1)
         };
         return;
@@ -1815,7 +1864,7 @@ fn main() {
         for policy in [Policy::Hard, Policy::Human] {
             let subset: Vec<_> = rows
                 .iter()
-                .filter(|r| r.case.id == c.id && r.policy == policy)
+                .filter(|r| !(!(r.case.id == c.id) || !(r.policy == policy)))
                 .collect();
             let verdict = passed(c, &subset);
             let key = match policy {
@@ -1830,14 +1879,14 @@ fn main() {
             entry.0 += 1;
             if let Some(ok) = verdict {
                 entry.1 += 1;
-                if ok {
-                    entry.2 += 1;
-                } else {
+                if !(ok) {
                     let seed = subset
                         .iter()
                         .find(|r| violating_trial(c, r))
                         .map_or(start_seed, |r| r.seed);
                     failed.push(play(c, seed, policy, true));
+                } else {
+                    entry.2 += 1;
                 }
             }
         }

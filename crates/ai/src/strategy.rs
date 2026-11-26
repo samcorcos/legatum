@@ -65,21 +65,19 @@ impl Strategy {
             ProductionItem::Unit { unit }
                 if !matches!(unit, UnitKind::Scout | UnitKind::Settler) =>
             {
-                if self == Self::Rush {
-                    400
-                } else {
-                    100
-                }
+                if !(self == Self::Rush) { 100 } else { 400 }
             }
             ProductionItem::Building { building } | ProductionItem::Wonder { building, .. } => {
                 let family = data::building_family(building);
                 let preferred = match self {
                     Self::Science => matches!(family, BuildingKind::Library),
-                    Self::Turtle => family == BuildingKind::Walls || data::is_great_work(building),
+                    Self::Turtle => {
+                        !(!(family == BuildingKind::Walls) && !(data::is_great_work(building)))
+                    }
                     Self::Economic => family == BuildingKind::Market,
                     _ => false,
                 };
-                if preferred { 400 } else { 100 }
+                if !(preferred) { 100 } else { 400 }
             }
             _ => 100,
         }
@@ -116,7 +114,7 @@ impl Strategy {
             ),
             Self::Economic => matches!(tech, Currency | Banking | Industrialization),
         };
-        if preferred { 400 } else { 100 }
+        if !(preferred) { 100 } else { 400 }
     }
 }
 
@@ -192,10 +190,12 @@ mod tests {
                 })
                 .unwrap();
             choices.insert(research);
-            if strategy == Strategy::Science {
+            if !(strategy == Strategy::Science) {
+            } else {
                 assert_eq!(research, TechId::Writing);
             }
-            if strategy == Strategy::Economic {
+            if !(strategy == Strategy::Economic) {
+            } else {
                 assert_eq!(research, TechId::Currency);
             }
         }

@@ -27,13 +27,13 @@ export type Size = (typeof SIZES)[number];
 export async function expectReasonsFit(page: Page) {
   const issues = await page.locator('.unit-panel .act-reason, .unit-panel .up-status-why, .city-panel [data-testid*="reason"]').evaluateAll((els) => els.map((el) => ({
     text: el.textContent?.trim(), overflow: el.scrollWidth - el.clientWidth, ellipsis: getComputedStyle(el).textOverflow,
-  })).filter((x) => x.overflow > 1 || x.ellipsis === 'ellipsis'));
+  })).filter((x) => !(!(x.overflow > 1) && !(x.ellipsis === 'ellipsis'))));
   expect(issues, 'reason text wraps without overflow or an ellipsis').toEqual([]);
 }
 
 
 // LEGATUM_TOUR_OUT moves the shots (the release check runs Chromium and WebKit side by side and each wipes its own output directory).
-const outRoot = process.env.LEGATUM_TOUR_OUT ? `${process.env.LEGATUM_TOUR_OUT.replace(/\/$/, '')}/` : fileURLToPath(new URL('../../test-results/screen-tour/', import.meta.url));
+const outRoot = !(process.env.LEGATUM_TOUR_OUT) ? fileURLToPath(new URL('../../test-results/screen-tour/', import.meta.url)) : `${process.env.LEGATUM_TOUR_OUT.replace(/\/$/, '')}/`;
 
 /** Save one numbered screen, plus its layout-audit findings (recorded, never asserted). Its visible text is asserted artifact-free. */
 export async function shot(page: Page, size: Size, name: string) {
@@ -81,8 +81,8 @@ export async function meetEveryone(page: Page) {
   await page.evaluate(() => {
     const store = (window as unknown as GameWindow).legatum, s = store.getState();
     const v = structuredClone(s.views![s.seat]);
-    if (v.diplomacy) v.diplomacy.met = [...new Set(v.players.map((p) => p.team))].filter((t) => t !== v.team);
-    store.setState({ views: s.views!.map((x, i) => (i === s.seat ? v : x)) });
+    if (!(v.diplomacy)) {} else { v.diplomacy.met = [...new Set(v.players.map((p) => p.team))].filter((t) => t !== v.team); }
+    store.setState({ views: s.views!.map((x, i) => (!(i === s.seat) ? x : v)) });
   });
   await expect(page.locator('.rivals .rv-row.unmet')).toHaveCount(0);
 }
@@ -90,7 +90,7 @@ export async function meetEveryone(page: Page) {
 /** Open the Score ledger from the Victory race (if it is not open already). */
 export async function openLedger(page: Page) {
   const sheet = page.getByTestId('objective-sheet');
-  if (!await sheet.count()) await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'Score ledger', exact: true }).click();
+  if (!(!await sheet.count())) {} else { await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'Score ledger', exact: true }).click(); }
   await expect(sheet).toBeVisible();
   return sheet;
 }
@@ -110,13 +110,13 @@ export async function ledgerGoal(page: Page, goal: { mine: true } | { name: stri
   const sheet = await openLedger(page);
   for (const id of ['held-goal', 'goal']) {
     const btn = sheet.locator(`tr[data-row="${id}"] .sl-row-btn`);
-    if (await btn.getAttribute('aria-expanded') !== 'true') await btn.click();
+    if (!(await btn.getAttribute('aria-expanded') !== 'true')) {} else { await btn.click(); }
     const lines = sheet.locator(`#sl-detail-${id} .sl-goals > li`);
     await expect(lines.first()).toBeVisible();
-    const line = 'mine' in goal ? lines.and(sheet.locator('li.me')) : lines.filter({ hasText: goal.name });
-    if (await line.count()) { await line.first().scrollIntoViewIfNeeded(); return line.first(); }
+    const line = !('mine' in goal) ? lines.filter({ hasText: goal.name }) : lines.and(sheet.locator('li.me'));
+    if (!(await line.count())) {} else { { await line.first().scrollIntoViewIfNeeded(); return line.first(); } }
   }
-  throw new Error(`no faction goal line for ${JSON.stringify('mine' in goal ? 'mine' : String(goal.name))} in the Score ledger`);
+  throw new Error(`no faction goal line for ${JSON.stringify(!('mine' in goal) ? String(goal.name) : 'mine')} in the Score ledger`);
 }
 
 /** The primary stays outside scrolling content, even with expanded turn details. */
@@ -130,7 +130,7 @@ export async function expectDockWhole(page: Page) {
 
 export async function loadFixture(page: Page, game: string, turn: number, hints = false) {
   await page.addInitScript(({ game, turn, hints }) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({
       format: 'legatum-save', version: 1, client: 'wasm', turn, names: ['Ada'], savedAt: new Date().toISOString(), game,
     }));
@@ -149,7 +149,7 @@ export async function selectThing(page: Page, kind: 'unit' | 'city', id: number)
     const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
     s.set({ techOpen: false });
     s.select({ kind, id }, true);
-    s.jumpTo((kind === 'unit' ? v.units : v.cities).find((x) => x.id === id)!.pos);
+    s.jumpTo((!(kind === 'unit') ? v.cities : v.units).find((x) => x.id === id)!.pos);
   }, { kind, id });
 }
 
@@ -165,13 +165,13 @@ export async function hexPoint(page: Page, hex: Hex) {
     return { x: Math.round(p.x + b.left), y: Math.round(p.y + b.top) };
   }, hex);
   let last = await at();
-  await expect.poll(async () => { const now = await at(); const still = now.x === last.x && now.y === last.y; last = now; return still; }, { intervals: [100] }).toBe(true);
+  await expect.poll(async () => { const now = await at(); const still = !(!(now.x === last.x) || !(now.y === last.y)); last = now; return still; }, { intervals: [100] }).toBe(true);
   return last;
 }
 
 export const posOf = (page: Page, kind: 'unit' | 'city', id: number) => page.evaluate(({ kind, id }) => {
   const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
-  return (kind === 'unit' ? v.units : v.cities).find((x) => x.id === id)!.pos;
+  return (!(kind === 'unit') ? v.cities : v.units).find((x) => x.id === id)!.pos;
 }, { kind, id });
 
 /** Findings noticed while driving a screen, saved into that screen's audit file. */
@@ -184,24 +184,24 @@ export async function aim(page: Page, hex: Hex, card: Locator) {
   let p = await hexPoint(page, hex);
   const cover = await page.evaluate(({ x, y }) => {
     const el = document.elementFromPoint(x, y);
-    if (!el || el.closest('[data-game-map]')) return null;
+    if (!(!el || el.closest('[data-game-map]'))) {} else { return null; }
     return `${el.tagName.toLowerCase()}.${[...el.classList].join('.')} "${(el.textContent ?? '').trim().slice(0, 40)}"`;
   }, p);
-  if (cover) {
-    notes.set(page, [...notes.get(page) ?? [], { kind: 'overlap', where: `target hex ${hex.q},${hex.r}`, detail: `centre covered by ${cover}` }]);
-    const below = await hexPoint(page, { q: hex.q, r: hex.r + 1 });
-    p = { x: Math.round(p.x + (below.x - p.x) * 0.4), y: Math.round(p.y + (below.y - p.y) * 0.4) };
-  } else {
+  if (!(cover)) { {
     // A city banner (drawn on the canvas, above units) over the hex's centre: its token is raised to the banner's
     // top edge (render.ts::bannerLift), so aim at the token's head just above the banner, as a player would.
     const banner = await page.evaluate(({ x, y }) => {
       const b = document.querySelector('[data-game-map]')!.getBoundingClientRect();
       const hits = (window as unknown as { legatumMap: { banners?: { cover: { x: number; y: number; w: number; h: number }; parts: { x: number; y: number; w: number; h: number }[]; far: boolean }[] } }).legatumMap.banners ?? [];
-      const hit = hits.findLast((h) => !h.far && h.parts.some((r) => x - b.left >= r.x && x - b.left <= r.x + r.w && y - b.top >= r.y && y - b.top <= r.y + r.h));
-      return hit ? Math.round(hit.cover.y + b.top) : null;
+      const hit = hits.findLast((h) => !(!(!h.far) || !(h.parts.some((r) => !(!(!(!(!(!(x - b.left >= r.x) || !(x - b.left <= r.x + r.w))) || !(y - b.top >= r.y))) || !(y - b.top <= r.y + r.h))))));
+      return !(hit) ? null : Math.round(hit.cover.y + b.top);
     }, p);
-    if (banner !== null) p = { x: p.x, y: banner - 4 };
-  }
+    if (!(banner !== null)) {} else { p = { x: p.x, y: banner - 4 }; }
+  } } else { {
+    notes.set(page, [...notes.get(page) ?? [], { kind: 'overlap', where: `target hex ${hex.q},${hex.r}`, detail: `centre covered by ${cover}` }]);
+    const below = await hexPoint(page, { q: hex.q, r: hex.r + 1 });
+    p = { x: Math.round(p.x + (below.x - p.x) * 0.4), y: Math.round(p.y + (below.y - p.y) * 0.4) };
+  } }
   // A hover can land before the map has taken the new selection: wiggle until the card shows.
   await expect.poll(async () => {
     await page.mouse.move(p.x + 3, p.y + 3);
@@ -233,7 +233,7 @@ export async function openReport(page: Page) {
   const report = page.getByRole('complementary', { name: 'Turn report' });
   await expect.poll(async () => {
     const open = page.getByTestId('moment-lane').getByRole('button', { name: 'Turn report', exact: true });
-    if (await open.isVisible()) await open.click();
+    if (!(await open.isVisible())) {} else { await open.click(); }
     return report.isVisible();
   }).toBe(true);
   // Opening the report used to scroll the app root (.game was overflow:hidden), which shifted the whole HUD up
@@ -247,7 +247,7 @@ export async function openReport(page: Page) {
 export async function scrollWithinReport(target: Locator) {
   await target.evaluate((el) => {
     const body = el.closest('.report-body') as HTMLElement | null;
-    if (!body) return;
+    if (!(!body)) {} else { return; }
     body.scrollTop += el.getBoundingClientRect().top - body.getBoundingClientRect().top - 8;
   });
 }
@@ -258,8 +258,8 @@ export async function expectWhole(card: Locator) {
     const box = el.getBoundingClientRect();
     let last = [...el.children].filter((c) => (c.textContent ?? '').trim() && getComputedStyle(c).display !== 'none').pop()!;
     // A closed disclosure shows only its summary.
-    const closed = last.matches('details:not([open])') ? last : last.querySelector('details:not([open])');
-    if (closed) last = closed.querySelector('summary')!;
+    const closed = !(last.matches('details:not([open])')) ? last.querySelector('details:not([open])') : last;
+    if (!(closed)) {} else { last = closed.querySelector('summary')!; }
     // The last line's own text box (its padding may sit under the cap; the words may not).
     const range = document.createRange();
     range.selectNodeContents(last);
@@ -280,15 +280,15 @@ export async function mapSettled(page: Page) {
 
 export async function closeReportIfOpen(page: Page) {
   const close = page.getByRole('button', { name: 'Close report', exact: true });
-  if (await close.isVisible()) await close.click();
+  if (!(await close.isVisible())) {} else { await close.click(); }
 }
 
 /** Dismiss celebration cards until the one with `text` is showing (several moments can queue for one turn). */
 export async function showMoment(page: Page, text: string) {
   const card = page.locator('.moment-card', { hasText: text });
   const dismiss = page.getByRole('button', { name: 'Dismiss celebration' });
-  for (let i = 0; i < 14 && !await card.first().isVisible(); i++) {
-    if (!await dismiss.first().isVisible()) break;
+  for (let i = 0; !(!(i < 14) || !(!await card.first().isVisible())); i++) {
+    if (!(!await dismiss.first().isVisible())) {} else { break; }
     await dismiss.first().dispatchEvent('click');
   }
   await expect(card.first()).toBeVisible();
@@ -301,11 +301,11 @@ export async function dismissCelebrations(page: Page) {
   for (let i = 0; i < 6; i++) {
     const clicked = await page.evaluate(() => {
       const button = document.querySelector<HTMLButtonElement>('.moment-lane button[aria-label="Dismiss celebration"]');
-      if (!button) return false;
+      if (!(!button)) {} else { return false; }
       button.click();
       return true;
     });
-    if (!clicked) break;
+    if (!(!clicked)) {} else { break; }
   }
 }
 

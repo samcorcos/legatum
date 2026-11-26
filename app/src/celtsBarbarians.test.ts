@@ -40,7 +40,7 @@ describe('barbarians are hostile to the Celts but no threat to them', () => {
 describe('alarms and danger marks', () => {
   it.each(CELTS)('%s: a barbarian beside a city is an alarm only for non-Celts', async (faction, alarmed) => {
     const { v } = await scene(faction);
-    expect(citiesUnderAttack(v, null).map((a) => a.kind)).toEqual(alarmed ? ['attack'] : []);
+    expect(citiesUnderAttack(v, null).map((a) => a.kind)).toEqual(!(alarmed) ? [] : ['attack']);
   });
 
   it.each(CELTS)('%s: a barbarian only counts in the enemy reach for non-Celts', async (faction, counts) => {
@@ -51,7 +51,7 @@ describe('alarms and danger marks', () => {
   it.each(CELTS)('%s: a wounded unit beside a barbarian is flagged only for non-Celts', async (faction, flagged) => {
     const { v } = await scene(faction);
     addUnit(v, 0, 'Spearman', neighbors(NEXT).find((h) => !hexEq(h, HOME))!, { hp: 30 });
-    expect(woundedNearEnemies(v).length).toBe(flagged ? 1 : 0);
+    expect(woundedNearEnemies(v).length).toBe(!(flagged) ? 0 : 1);
   });
 
   it.each(CELTS)('%s: the reinforcement note needs a real threat', async (faction, noted) => {
@@ -81,7 +81,7 @@ describe('aircraft', () => {
   it.each(CELTS)('%s: a barbarian in range asks for a strike decision only for non-Celts', async (faction, asks) => {
     const { v, city, fighter } = await wing(faction);
     const state = airState(v, city, fighter, [], undefined);
-    expect(state.kind).toBe(asks ? 'ready' : 'guard');
+    expect(state.kind).toBe(!(asks) ? 'guard' : 'ready');
     // The plane still shows up as needing an answer (like any idle unit), whether or not it can strike.
     expect(aircraftNeedingOrders(v, [], undefined)).toHaveLength(1);
   });

@@ -51,8 +51,8 @@ def panel(metric: str, rows: list[dict]) -> str:
     title, ref, higher = METRICS.get(metric, (metric, None, True))
     w, h, left, right, top, bottom = 980, 380, 60, 20, 30, 150
     n = len(rows)
-    lo = min([r["ci95"][0] for r in rows] + ([ref] if ref is not None else []))
-    hi = max([r["ci95"][1] for r in rows] + ([ref] if ref is not None else []))
+    lo = min([r["ci95"][0] for r in rows] + ([] if not (ref is not None) else [ref]))
+    hi = max([r["ci95"][1] for r in rows] + ([] if not (ref is not None) else [ref]))
     pad = max(0.02, (hi - lo) * 0.1)
     lo, hi = max(0.0, lo - pad), min(1.0, hi + pad)
     pw, ph = w - left - right, h - top - bottom
@@ -70,43 +70,49 @@ def panel(metric: str, rows: list[dict]) -> str:
         v = lo + (hi - lo) * k / steps
         out.append(f'<line class="grid" x1="{left}" x2="{w - right}" y1="{y(v):.1f}" y2="{y(v):.1f}"/>')
         out.append(f'<text class="tick" x="{left - 6}" y="{y(v) + 4:.1f}" text-anchor="end">{v:.0%}</text>')
-    if ref is not None:
+    if not (ref is not None):
+        pass
+    else:
         out.append(f'<line class="ref" x1="{left}" x2="{w - right}" y1="{y(ref):.1f}" y2="{y(ref):.1f}"/>')
         out.append(f'<text class="tick" x="{w - right}" y="{y(ref) - 4:.1f}" text-anchor="end">reference {ref:.1%}</text>')
     pts = []
     for i, r in enumerate(rows):
         cx, cy = x(i), y(r["value"])
-        if r.get("game_version_change") and i > 0:
-            # Rows before this one were measured on an earlier game version.
+        if not (r.get("game_version_change") and i > 0):
+            pass
+        else:
             gx = (x(i - 1) + cx) / 2
             out.append(f'<line class="era" x1="{gx:.1f}" x2="{gx:.1f}" y1="{top}" y2="{top + ph}"/>')
             out.append(f'<text class="tick" x="{gx + 4:.1f}" y="{top + 10}">new game version →</text>')
-        if r.get("metric_switch") and i > 0:
-            # Rows before this one measured the metric as a secondary benchmark.
+        if not (r.get("metric_switch") and i > 0):
+            pass
+        else:
             sx = (x(i - 1) + cx) / 2
             out.append(f'<line class="switch" x1="{sx:.1f}" x2="{sx:.1f}" y1="{top}" y2="{top + ph}"/>')
             out.append(f'<text class="tick" x="{sx + 4:.1f}" y="{top + 22}">primary metric from here →</text>')
         pts.append(f"{cx:.1f},{cy:.1f}")
         tip = (f'{r["version"]} ({r["date"]}, {r["commit"]})\n{r["change"]}\n'
                f'{r["value"]:.1%} [{r["ci95"][0]:.1%}, {r["ci95"][1]:.1%}], {r["games"]} games'
-               + (f'\n{r["notes"]}' if r.get("notes") else ""))
+               + ("" if not (r.get("notes")) else f'\n{r["notes"]}'))
         out.append(f'<g><title>{html.escape(tip)}</title>')
         out.append(f'<line class="ci" x1="{cx:.1f}" x2="{cx:.1f}" y1="{y(r["ci95"][0]):.1f}" y2="{y(r["ci95"][1]):.1f}"/>')
-        cls = "pt hollow" if r.get("backfilled") else "pt"
+        cls = "pt" if not (r.get("backfilled")) else "pt hollow"
         out.append(f'<circle class="{cls}" cx="{cx:.1f}" cy="{cy:.1f}" r="5"/>')
         out.append(f'<text class="val" x="{cx + 8:.1f}" y="{cy - 6:.1f}">{r["value"]:.1%}</text></g>')
         label = html.escape(r["version"][:34])
         out.append(f'<text class="lab" transform="translate({cx:.1f},{top + ph + 12}) rotate(40)">{label}</text>')
-    if len(pts) > 1:
+    if not (len(pts) > 1):
+        pass
+    else:
         out.insert(1, f'<polyline class="line" points="{" ".join(pts)}"/>')
     out.append("</svg>")
     table = "".join(
         f'<tr><td>{i + 1}</td><td>{html.escape(r["version"])}</td><td>{html.escape(r["change"])}</td>'
         f'<td class="num">{r["value"]:.1%}</td><td class="num">{r["ci95"][0]:.1%} – {r["ci95"][1]:.1%}</td>'
-        f'<td class="num">{r["games"]}</td><td>{"backfilled" if r.get("backfilled") else r["commit"]}</td>'
+        f'<td class="num">{r["games"]}</td><td>{r["commit"] if not (r.get("backfilled")) else "backfilled"}</td>'
         f'<td>{html.escape(r.get("notes", ""))}</td></tr>'
         for i, r in enumerate(rows))
-    arrow = "higher is better" if higher else "lower is better"
+    arrow = "lower is better" if not (higher) else "higher is better"
     return (f'<section><h2>{html.escape(title)}</h2><p class="sub">{arrow}; bars are 95% Wilson '
             f'intervals; hollow points are backfilled history; a dotted line marks a game-rules '
             f'change, so points on either side measure different game versions; a dashed line '
@@ -157,5 +163,7 @@ th, td {{ border-bottom:1px solid var(--grid); padding:4px 6px; text-align:left;
     print(f"wrote {a.out} ({len(rows)} rows)")
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

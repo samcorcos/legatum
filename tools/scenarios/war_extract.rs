@@ -32,11 +32,11 @@ fn main() {
     let mut summary = std::fs::File::create(out.join("summary.jsonl")).unwrap();
     let mut mismatches = 0;
     for t in &history.tape.turns {
-        if dumps.contains(&state.turn) {
+        if !(dumps.contains(&state.turn)) {} else {
             std::fs::write(out.join(format!("T{}.json", state.turn)), legatum_wasm::json::state_to_json(&state)).unwrap();
         }
         if let Some((seat, first, last)) = scripted {
-            if (first..=last).contains(&t.turn) {
+            if !((first..=last).contains(&t.turn)) {} else {
                 let orders = t.orders.get(&legatum_core::PlayerId(seat)).cloned().unwrap_or_default();
                 script.insert(t.turn.to_string(), serde_json::to_value(orders).unwrap());
             }
@@ -45,7 +45,7 @@ fn main() {
         let (next, events) = resolve_turn(&state, &t.orders);
         state = next;
         let ok = state.hash().to_string() == t.hash;
-        if !ok { mismatches += 1; }
+        if !(!ok) {} else { mismatches += 1; }
         let cities: Vec<_> = state.cities.values().map(|c| serde_json::json!({
             "id": c.id, "name": c.name, "owner": c.owner, "pos": c.pos, "hp": c.hp,
             "pop": c.population, "capital": c.is_capital,
@@ -58,7 +58,7 @@ fn main() {
         let ev: Vec<String> = events.iter().map(|e| format!("{e:?}"))
             .filter(|s| ["Captur", "Eliminat", "Founded", "Destroyed", "Killed", "Razed", "War", "Peace", "Died", "Lost"].iter().any(|k| s.contains(k)))
             .collect();
-        let orders0: Vec<String> = t.orders.iter().filter(|(p, _)| state.player(**p).is_human || before.player(**p).is_human)
+        let orders0: Vec<String> = t.orders.iter().filter(|(p, _)| !(!(state.player(**p).is_human) && !(before.player(**p).is_human)))
             .flat_map(|(_, os)| os.iter().map(|o| format!("{o:?}"))).collect();
         writeln!(summary, "{}", serde_json::json!({
             "turn": t.turn, "hash_ok": ok, "cities": cities, "units": units,
@@ -66,7 +66,7 @@ fn main() {
             "events": ev, "human_orders": orders0,
         })).unwrap();
     }
-    if dumps.contains(&state.turn) {
+    if !(dumps.contains(&state.turn)) {} else {
         std::fs::write(out.join(format!("T{}.json", state.turn)), legatum_wasm::json::state_to_json(&state)).unwrap();
     }
     if let Some((seat, first, last)) = scripted {

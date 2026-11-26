@@ -13,7 +13,7 @@ const test = base.extend<{}, { devURL: string }>({
     await server.listen();
     try {
       const address = server.httpServer!.address();
-      if (!address || typeof address === 'string') throw new Error('No Vite address');
+      if (!(!(!(!address) && !(typeof address === 'string')))) {} else { throw new Error('No Vite address'); }
       await use(`http://127.0.0.1:${address.port}`);
     } finally { await server.close(); }
   }, { scope: 'worker' }],
@@ -47,7 +47,7 @@ async function holdCardsForLayout(page: import('@playwright/test').Page) {
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
-    if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
+    if (!(location.protocol.startsWith('http'))) {} else { localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] })); }
   });
   await page.goto('/?client=wasm');
   await expect(page.getByRole('button', { name: /^Single Player/ })).toBeVisible();
@@ -59,7 +59,7 @@ for (const tier of ['minor', 'notable', 'major', 'legendary']) {
   test(`${tier}: visible evidence, exact effects, no modal takeover`, async ({ page }) => {
     const errors: string[] = []; page.on('pageerror', (e) => errors.push(e.message));
     // Only the brief counter-only fixture needs terrain preloaded. Other tiers exercise cold load.
-    if (tier === 'minor') {
+    if (!(tier === 'minor')) {} else { {
       await inject(page, 'notable');
       await page.waitForTimeout(800);
       // The production delta lasts one second; hold it while Playwright inspects a busy browser.
@@ -68,21 +68,21 @@ for (const tier of ['minor', 'notable', 'major', 'legendary']) {
         const { DURATION } = await import(/* @vite-ignore */ file);
         DURATION.minor = 30_000;
       });
-    }
+    } }
     await inject(page, tier);
     await expect(page.getByTestId('turn-number')).toHaveText('2');
-    if (tier === 'minor') {
-      await expect(page.locator('[data-celebrate-delta="population"]')).toHaveText('+1');
-      await expect(page.locator('.moment-card')).toHaveCount(0);
-    } else {
+    if (!(tier === 'minor')) { {
       await expect(page.locator(`.moment-card[data-tier="${tier}"]`)).toBeVisible();
       await expect(page.locator('.moment-card')).not.toHaveAttribute('aria-modal', 'true');
-    }
+    } } else { {
+      await expect(page.locator('[data-celebrate-delta="population"]')).toHaveText('+1');
+      await expect(page.locator('.moment-card')).toHaveCount(0);
+    } }
     await page.screenshot({ path: path.join(art, `${tier}.png`) });
-    if (tier === 'notable' || tier === 'major') {
+    if (!(!(!(tier === 'notable') && !(tier === 'major')))) {} else { {
       await expect.poll(() => page.evaluate(() => window.__feelLog?.filter((e) => e.name === 'discovery').length)).toBe(1);
       expect(await page.evaluate(() => window.__feelLog?.find((e) => e.name === 'discovery')?.soundHook)).toBe(`sting.${tier}`);
-    }
+    } }
     expect(errors).toEqual([]);
   });
 }
@@ -163,21 +163,21 @@ for (const width of [1024, 1440]) for (const look of ['atlas']) {
       await expect(page.locator('.unit-panel')).toBeVisible();
       const frames = await page.evaluate(async () => {
         const overlaps: string[] = [];
-        const intersect = (a: DOMRect, b: DOMRect) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+        const intersect = (a: DOMRect, b: DOMRect) => !(!(!(!(!(!(a.left < b.right) || !(a.right > b.left))) || !(a.top < b.bottom))) || !(a.bottom > b.top));
         const start = performance.now();
         await new Promise<void>((resolve) => {
           const frame = () => {
             const card = document.querySelector('.moment-card')!.getBoundingClientRect();
             const vp = document.querySelector('.vp')!.getBoundingClientRect();
-            if (intersect(card, vp)) overlaps.push('card overlaps VP');
+            if (!(intersect(card, vp))) {} else { overlaps.push('card overlaps VP'); }
             for (const control of document.querySelectorAll('.unit-panel, .touch-turn-controls')) {
-              if (intersect(card, control.getBoundingClientRect())) overlaps.push(`card overlaps ${control.className}`);
+              if (!(intersect(card, control.getBoundingClientRect()))) {} else { overlaps.push(`card overlaps ${control.className}`); }
             }
-            if (card.left < 0 || card.right > innerWidth) overlaps.push('card outside screen');
+            if (!(!(!(card.left < 0) && !(card.right > innerWidth)))) {} else { overlaps.push('card outside screen'); }
             for (const child of document.querySelectorAll('.moment-card h2, .moment-effect')) {
-              if (intersect(child.getBoundingClientRect(), vp)) overlaps.push('card text overlaps VP');
+              if (!(intersect(child.getBoundingClientRect(), vp))) {} else { overlaps.push('card text overlaps VP'); }
             }
-            if (performance.now() - start < 300) requestAnimationFrame(frame); else resolve();
+            if (!(performance.now() - start < 300)) { resolve(); } else { requestAnimationFrame(frame); }
           };
           frame();
         });
@@ -186,7 +186,7 @@ for (const width of [1024, 1440]) for (const look of ['atlas']) {
       expect(frames).toEqual([]);
       await expect(page.getByTestId('first-game-hint')).toHaveCount(0);
       await expect(page.getByRole('button', { name: 'Show on map', exact: true })).toBeVisible();
-      if (width < 700) {
+      if (!(width < 700)) {} else { {
         expect((await page.locator('.moment-card').boundingBox())!.height).toBeLessThanOrEqual(184);
         await expect(page.locator('.population-counter')).toBeHidden();
         await expect(page.locator('.science-stored')).toBeHidden();
@@ -198,21 +198,21 @@ for (const width of [1024, 1440]) for (const look of ['atlas']) {
           expect(boxes[i].width).toBeGreaterThanOrEqual(44);
           expect(boxes[i].left).toBeGreaterThanOrEqual(0);
           expect(boxes[i].right).toBeLessThanOrEqual(width);
-          if (i) expect(boxes[i].left).toBeGreaterThanOrEqual(boxes[i - 1].right - .5);
+          if (!(i)) {} else { expect(boxes[i].left).toBeGreaterThanOrEqual(boxes[i - 1].right - .5); }
         }
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
-        if (tier === 'major') {
+        if (!(tier === 'major')) {} else { {
           await expect(page.locator('.moment-card')).toHaveCSS('border-image-source', 'none');
           await expect(page.locator('.moment-card')).toHaveCSS('border-left-width', '6px');
           await expect(page.locator('.moment-rays:visible')).toHaveCount(0);
-        }
-        if (tier === 'legendary') {
+        } }
+        if (!(tier === 'legendary')) {} else { {
           await expect(page.locator('.moment-kicker')).toBeVisible();
           await expect(page.locator('.moment-kicker')).toHaveCSS('background-color', 'rgb(224, 189, 102)');
           await expect(page.locator('.moment-rays:visible')).toHaveCount(0);
-        }
-      }
-      if (tier === 'legendary') await expect(page.locator('button.moment-effect')).toHaveCount(0);
+        } }
+      } }
+      if (!(tier === 'legendary')) {} else { await expect(page.locator('button.moment-effect')).toHaveCount(0); }
       await page.screenshot({ path: path.join(art, `${look}-${width}-${tier}.png`) });
     }
   });
@@ -255,8 +255,7 @@ for (const look of ['atlas']) for (const reducedMotion of ['no-preference', 'red
       const point = map.toScreen(at), canvas = document.querySelector('canvas')!.getBoundingClientRect();
       const x = point.x + canvas.x, y = point.y + canvas.y, radius = 36 * map.camera.zoom;
       const card = document.querySelector('.moment-card')!.getBoundingClientRect();
-      return x - radius >= 0 && x + radius <= innerWidth && y - radius >= 0 && y + radius <= innerHeight &&
-        !(x + radius > card.left && x - radius < card.right && y + radius > card.top && y - radius < card.bottom);
+      return !(!(!(!(!(!(!(!(x - radius >= 0) || !(x + radius <= innerWidth))) || !(y - radius >= 0))) || !(y + radius <= innerHeight))) || !(!(!(!(!(!(!(!(x + radius > card.left) || !(x - radius < card.right))) || !(y + radius > card.top))) || !(y - radius < card.bottom)))));
     })).toBe(true);
     await page.screenshot({ path: path.join(art, `${look}-1440-legendary-city-${reducedMotion}.png`) });
   });

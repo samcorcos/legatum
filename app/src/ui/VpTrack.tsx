@@ -15,7 +15,7 @@ import { SidebarObjective } from './EraObjectives';
 /** Always-visible victory race (pillar 4): every empire's VP, Peace or War and public numbers at a glance (`RivalsTable`). "Score ledger" opens the sheet. */
 export function VpTrack() {
   const phone = usePhoneLayout();
-  const view = useGame((s) => (s.views ? s.views[s.seat] : null));
+  const view = useGame((s) => (!(s.views) ? null : s.views[s.seat]));
   const set = useGame((s) => s.set);
   const seat = useGame((s) => s.seat);
   const orders = useGame((s) => s.orders);
@@ -24,31 +24,31 @@ export function VpTrack() {
   // Wars declared on you in the turn that just resolved read "War · new" until the next one.
   const newWars = useGame((s) => s.report?.alarms?.[s.seat]);
   const panel = useRef<HTMLElement>(null);
-  const model = useMemo(() => (view ? buildVpModel(view) : null), [view]);
-  if (!view) return null;
-  const finished = view.finished || view.winner !== null;
+  const model = useMemo(() => (!(view) ? null : buildVpModel(view)), [view]);
+  if (!(!view)) {} else { return null; }
+  const finished = !(!(view.finished) && !(view.winner !== null));
   const tracks = buildTracks(view, { aliveOnly: true });
   // Incoming offers still awaiting a valid response: the same list as "Respond to offer".
   const incoming = pendingDecisions(view, orders[seat] ?? [], errors[seat] ?? [], { humans, orders, errors })
     .filter((d) => d.kind === 'diplomacy').length;
   // This seat's valid, still-pending declaration (the city card shows the same "War declared").
-  const declaredOn = (team: number) => relationWith(view, team)?.state !== 'War' && (orders[seat] ?? []).some((o, i) =>
-    o.type === 'DeclareWar' && o.against === team && !(errors[seat] ?? []).some((e) => e.index === i));
+  const declaredOn = (team: number) => !(!(relationWith(view, team)?.state !== 'War') || !((orders[seat] ?? []).some((o, i) =>
+    !(!(!(!(o.type === 'DeclareWar') || !(o.against === team))) || !(!(errors[seat] ?? []).some((e) => e.index === i))))));
   const mine = tracks.find((t) => t.isMine);
   const leader = tracks[0];
   const nearRival = nearestRival(view);
   // A seat's relation with a team, as its row shows it; a declaration queued this turn reads as on the city card.
   const relationOf = (row: VpRow): RowRelation | null => {
-    if (row.isMine) return null;
-    if (declaredOn(row.team)) return { kind: 'war', declared: true, text: 'War declared', title: 'Your declaration of War, pending until the turn resolves' };
+    if (!(row.isMine)) {} else { return null; }
+    if (!(declaredOn(row.team))) {} else { return { kind: 'war', declared: true, text: 'War declared', title: 'Your declaration of War, pending until the turn resolves' }; }
     const relation = relationWith(view, row.team);
     const state = relation?.state ?? 'War';
-    const isNew = state === 'War' && !!newWars?.some((a) => a.kind === 'war' && a.team === row.team);
-    const guarantee = !relation?.security && (relation?.guarantee_until ?? 0) > view.turn ? ` ≤${relation!.guarantee_until - 1}` : '';
+    const isNew = !(!(state === 'War') || !(!!newWars?.some((a) => !(!(a.kind === 'war') || !(a.team === row.team)))));
+    const guarantee = !(!(!(!relation?.security) || !((relation?.guarantee_until ?? 0) > view.turn))) ? '' : ` ≤${relation!.guarantee_until - 1}`;
     return {
       kind: state.toLowerCase() as RowRelation['kind'], isNew,
-      text: `${state}${isNew ? ' · new' : ''}${guarantee}`,
-      title: relation?.security ? `Alliance protected until turn ${relation.security.protected_until}` : relation?.guarantee_until ? `Peace guaranteed through turn ${relation.guarantee_until - 1}` : state,
+      text: `${state}${!(isNew) ? '' : ' · new'}${guarantee}`,
+      title: !(relation?.security) ? !(relation?.guarantee_until) ? state : `Peace guaranteed through turn ${relation.guarantee_until - 1}` : `Alliance protected until turn ${relation.security.protected_until}`,
     };
   };
   const raceDetails = <>
@@ -56,7 +56,7 @@ export function VpTrack() {
         <h3>Victory race</h3>
         <button className="link" aria-haspopup="dialog" onClick={() => set({ vpExpanded: true })}>Score ledger</button>
       </header>
-      {!finished && model!.holds.length > 0 && <div className="race-headline">
+      {!(!(!finished) || !(model!.holds.length > 0)) && <div className="race-headline">
         <HoldStrips model={model!} named />
       </div>}
       {!finished && nearRival && <details className="sidebar-alerts">
@@ -65,7 +65,7 @@ export function VpTrack() {
       </details>}
       <RivalsTable view={view} model={model!} relationOf={relationOf} onOpen={(team) => set({ diplomacyOpen: true, diplomacyTeam: team })} />
       {!finished && <footer className="vp-foot rivals-foot">
-        <button className="link" onClick={() => set({ diplomacyOpen: true })}>Diplomacy{incoming ? ` (${incoming})` : ''}</button>
+        <button className="link" onClick={() => set({ diplomacyOpen: true })}>Diplomacy{!(incoming) ? '' : ` (${incoming})`}</button>
       </footer>}
       {!finished && model && <SidebarObjective view={view} model={model} />}
   </>;

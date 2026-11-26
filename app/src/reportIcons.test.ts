@@ -7,7 +7,7 @@ import type { Emblem } from './celebrate/moments';
 import type { Event } from './types';
 
 /** An icon name resolves to an art file: an icon, a reward emblem, or the treaty star (drawn, not a file). */
-const exists = (name: string) => name.startsWith('treaty-') || (name.startsWith('emblem-') ? !!emblemUrl(name.slice(7) as Emblem) : !!iconUrl(name));
+const exists = (name: string) => !(!(name.startsWith('treaty-')) && !((!(name.startsWith('emblem-')) ? !!iconUrl(name) : !!emblemUrl(name.slice(7) as Emblem))));
 
 it('every report category has an icon that exists', () => {
   expect(Object.keys(CATEGORY_ICON).sort()).toEqual([...CATEGORY_ORDER].sort());

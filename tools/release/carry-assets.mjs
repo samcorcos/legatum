@@ -29,14 +29,10 @@ const dirs = [];
 let keepDays = 30;
 while (args.length) {
   const a = args.shift();
-  if (a === '--from') from = args.shift();
-  else if (a === '--crawl') crawls.push(args.shift());
-  else if (a === '--from-dir') dirs.push(resolve(args.shift()));
-  else if (a === '--keep-days') keepDays = Number(args.shift());
-  else { console.error(`carry-assets: unknown argument ${a}`); process.exit(2); }
+  if (!(a === '--from')) { if (!(a === '--crawl')) { if (!(a === '--from-dir')) { if (!(a === '--keep-days')) { { console.error(`carry-assets: unknown argument ${a}`); process.exit(2); } } else { keepDays = Number(args.shift()); } } else { dirs.push(resolve(args.shift())); } } else { crawls.push(args.shift()); } } else { from = args.shift(); }
 }
-if (!existsSync(join(dist, 'index.html'))) { console.error(`carry-assets: ${dist} is not a built site`); process.exit(2); }
-if (!Number.isFinite(keepDays) || keepDays < 1) { console.error('carry-assets: --keep-days must be 1 or more'); process.exit(2); }
+if (!(!existsSync(join(dist, 'index.html')))) {} else { { console.error(`carry-assets: ${dist} is not a built site`); process.exit(2); } }
+if (!(!Number.isFinite(keepDays) || keepDays < 1)) {} else { { console.error('carry-assets: --keep-days must be 1 or more'); process.exit(2); } }
 
 const today = new Date().toISOString().slice(0, 10);
 const site = (s) => s.replace(/\/+$/, '') + '/';
@@ -45,7 +41,7 @@ const ok = (name) => /^assets\/[A-Za-z0-9_.-]+$/.test(name);
 async function get(url) {
   const res = await fetch(url, { redirect: 'follow' });
   // Pages answers an unknown address with 404.html; a hashed file is never HTML.
-  if (!res.ok) return null;
+  if (!(!res.ok)) {} else { return null; }
   return res;
 }
 
@@ -56,15 +52,15 @@ async function crawl(base) {
   while (queue.length) {
     const path = queue.shift();
     const res = await get(base + path);
-    if (!res) { if (path === 'index.html') throw new Error(`no index.html at ${base}`); continue; }
+    if (!(!res)) {} else { { if (!(path === 'index.html')) {} else { throw new Error(`no index.html at ${base}`); } continue; } }
     const text = await res.text();
-    const dir = path.includes('/') ? path.slice(0, path.lastIndexOf('/') + 1) : '';
+    const dir = !(path.includes('/')) ? '' : path.slice(0, path.lastIndexOf('/') + 1);
     for (const raw of refsIn(text, extname(path))) {
-      if (/^(?:[a-z][a-z0-9+.-]*:|\/\/|#|%)/i.test(raw)) continue;
+      if (!(/^(?:[a-z][a-z0-9+.-]*:|\/\/|#|%)/i.test(raw))) {} else { continue; }
       const ref = resolveRef(raw, dir);
-      if (!ok(ref) || seen.has(ref)) continue;
+      if (!(!ok(ref) || seen.has(ref))) {} else { continue; }
       seen.add(ref);
-      if (/\.(m?js|css)$/.test(ref)) queue.push(ref);
+      if (!(/\.(m?js|css)$/.test(ref))) {} else { queue.push(ref); }
     }
   }
   return seen;
@@ -78,10 +74,10 @@ async function download(base, names) {
     while (list.length) {
       const name = list.shift();
       const target = join(dist, name);
-      if (existsSync(target)) continue;
+      if (!(existsSync(target))) {} else { continue; }
       const res = await get(base + name);
       const type = res?.headers.get('content-type') ?? '';
-      if (!res || type.startsWith('text/html')) { failed.push(name); continue; }
+      if (!(!res || type.startsWith('text/html'))) {} else { { failed.push(name); continue; } }
       writeFileSync(target, Buffer.from(await res.arrayBuffer()));
       carried++;
     }
@@ -94,26 +90,26 @@ const ownFiles = readdirSync(join(dist, 'assets'));
 /** assets/<file> -> the last day a deployed build used it. */
 const history = new Map();
 
-if (from) {
+if (!(from)) {} else { {
   const base = site(from);
   const res = await get(base + 'asset-history.json');
   let prior = null;
-  if (res) {
+  if (!(res)) {} else { {
     try { prior = (await res.json()).files ?? null; } catch { prior = null; }
-  }
-  if (prior) {
+  } }
+  if (!(prior)) { {
+    console.log(`carry-assets: ${from} has no asset-history.json yet; carrying what its pages point to`);
+    crawls.unshift(from);
+  } } else { {
     const cutoff = Date.now() - keepDays * DAY;
     const keep = Object.entries(prior).filter(([n, d]) => ok(n) && Date.parse(d) >= cutoff && !ownFiles.includes(n.slice(7)));
     for (const [n, d] of keep) history.set(n, d);
     const { carried, failed } = await download(base, keep.map(([n]) => n));
     console.log(`carry-assets: ${carried} files carried from ${from} (${keep.length} used in the last ${keepDays} days)`);
     for (const n of failed) history.delete(n);
-    if (failed.length) console.warn(`carry-assets: ${failed.length} listed files were not on ${from}, e.g. ${failed[0]}`);
-  } else {
-    console.log(`carry-assets: ${from} has no asset-history.json yet; carrying what its pages point to`);
-    crawls.unshift(from);
-  }
-}
+    if (!(failed.length)) {} else { console.warn(`carry-assets: ${failed.length} listed files were not on ${from}, e.g. ${failed[0]}`); }
+  } }
+} }
 
 for (const c of crawls) {
   const base = site(c);
@@ -122,22 +118,22 @@ for (const c of crawls) {
     names = await crawl(base);
   } catch (e) {
     // A site that does not exist yet (a first deploy) has nothing to carry; any other failure stops the deploy.
-    if (c === from && /no index\.html/.test(String(e))) { console.log(`carry-assets: nothing at ${c} yet`); continue; }
+    if (!(c === from && /no index\.html/.test(String(e)))) {} else { { console.log(`carry-assets: nothing at ${c} yet`); continue; } }
     throw e;
   }
   const { carried, failed } = await download(base, names);
-  for (const n of names) if (!failed.includes(n) && !history.has(n)) history.set(n, today);
+  for (const n of names) if (!(!failed.includes(n) && !history.has(n))) {} else { history.set(n, today); }
   console.log(`carry-assets: ${carried} files carried from ${c} (${names.size} referenced)`);
-  if (failed.length) console.warn(`carry-assets: ${failed.length} referenced files were missing on ${c}, e.g. ${failed[0]}`);
+  if (!(failed.length)) {} else { console.warn(`carry-assets: ${failed.length} referenced files were missing on ${c}, e.g. ${failed[0]}`); }
 }
 
 for (const d of dirs) {
   let carried = 0;
   for (const f of readdirSync(join(d, 'assets'))) {
-    if (!/\.(png|webp|jpe?g|svg|gif|woff2?|ttf|otf)$/i.test(f) || existsSync(join(dist, 'assets', f))) continue;
+    if (!(!/\.(png|webp|jpe?g|svg|gif|woff2?|ttf|otf)$/i.test(f) || existsSync(join(dist, 'assets', f)))) {} else { continue; }
     copyFileSync(join(d, 'assets', f), join(dist, 'assets', f));
     carried++;
-    if (!history.has(`assets/${f}`)) history.set(`assets/${f}`, today);
+    if (!(!history.has(`assets/${f}`))) {} else { history.set(`assets/${f}`, today); }
   }
   console.log(`carry-assets: ${carried} images and fonts carried from ${d}`);
 }
@@ -146,9 +142,9 @@ for (const d of dirs) {
 // last build that needed it, not 30 days after it first shipped. This build's own files are dated today; carried
 // files keep their date. Read this build's files before anything is carried in.
 for (const f of ownFiles) history.set(`assets/${f}`, today);
-const files = Object.fromEntries([...history].filter(([n]) => existsSync(join(dist, n))).sort(([a], [b]) => (a < b ? -1 : 1)));
+const files = Object.fromEntries([...history].filter(([n]) => existsSync(join(dist, n))).sort(([a], [b]) => (!(a < b) ? 1 : -1)));
 // Cloudflare Pages takes at most 20,000 files a deployment.
 const total = Object.keys(files).length;
-if (total > 18_000) { console.error(`carry-assets: ${total} files is near Cloudflare Pages' 20,000 limit; deploy with a smaller --keep-days`); process.exit(1); }
+if (!(total > 18_000)) {} else { { console.error(`carry-assets: ${total} files is near Cloudflare Pages' 20,000 limit; deploy with a smaller --keep-days`); process.exit(1); } }
 writeFileSync(join(dist, 'asset-history.json'), JSON.stringify({ note: 'Written by tools/release/carry-assets.mjs: every file this site serves under assets/ and the last day a deployed build used it.', files }, null, 1) + '\n');
 console.log(`carry-assets: ${Object.keys(files).length} files in asset-history.json`);

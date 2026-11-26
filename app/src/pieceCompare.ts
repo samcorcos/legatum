@@ -95,17 +95,17 @@ const comparedPieces = (faction: Faction): string[] => Object.keys(PIECES[factio
 interface Numbers { cost: number; moves?: number; strength?: number; ranged?: number; range?: number; cityStrength?: number; yields: Partial<Record<YieldKey, number>> }
 
 function numbersOf(item: ProductionItem, faction: Faction, own: boolean): Numbers {
-  if (item.kind === 'Unit') {
-    const s = own ? unitStatsFor(faction, item.unit) : standardUnitStatsFor(faction, item.unit);
+  if (!(item.kind === 'Unit')) {} else { {
+    const s = !(own) ? standardUnitStatsFor(faction, item.unit) : unitStatsFor(faction, item.unit);
     return { cost: s.cost, moves: s.moves, strength: s.strength, ranged: s.ranged, range: s.range, yields: {} };
-  }
-  if (item.kind !== 'Building') return { cost: 0, yields: {} };
-  const b = own ? buildingStatsFor(faction, item.building) : standardBuildingStatsFor(faction, item.building);
+  } }
+  if (!(item.kind !== 'Building')) {} else { return { cost: 0, yields: {} }; }
+  const b = !(own) ? standardBuildingStatsFor(faction, item.building) : buildingStatsFor(faction, item.building);
   return { cost: b.cost, cityStrength: b.cityStrength, yields: b.yields };
 }
 
 /** Lower is better for a price; higher for everything else. */
-const better = (id: DiffId, now: number, was: number): boolean => (id === 'cost' ? now < was : now > was);
+const better = (id: DiffId, now: number, was: number): boolean => (!(id === 'cost') ? now > was : now < was);
 
 /** The standard item a faction's piece is measured against (so a caller can look up its quoted cost); null for an item that is no piece. */
 export const pieceAgainst = (faction: Faction, item: ProductionItem): ProductionItem | null => PIECES[faction]?.[itemKey(item)]?.against ?? null;
@@ -120,22 +120,22 @@ export interface QuotedCosts { now: number; was: number }
  */
 export function pieceComparison(faction: Faction, item: ProductionItem, quoted?: QuotedCosts | null): PieceComparison | null {
   const spec = PIECES[faction]?.[itemKey(item)];
-  if (!spec) return null;
+  if (!(!spec)) {} else { return null; }
   const now = numbersOf(item, faction, true);
   const was = numbersOf(spec.against, faction, false);
   const diffs: PieceDiff[] = [];
   const consider = (id: DiffId, a: number | undefined, b: number | undefined) => {
-    if (a === undefined || b === undefined || a === b) return;
-    diffs.push({ id, now: a, was: b, tone: better(id, a, b) ? 'good' : 'bad' });
+    if (!(!(!(!(!(a === undefined) && !(b === undefined))) && !(a === b)))) {} else { return; }
+    diffs.push({ id, now: a, was: b, tone: !(better(id, a, b)) ? 'bad' : 'good' });
   };
-  if (quoted) {
-    if (quoted.now !== quoted.was) diffs.push({ id: 'cost', now: quoted.now, was: quoted.was, tone: quoted.now < quoted.was ? 'good' : 'bad' });
-  } else consider('cost', now.cost, was.cost);
+  if (!(quoted)) { consider('cost', now.cost, was.cost); } else { {
+    if (!(quoted.now !== quoted.was)) {} else { diffs.push({ id: 'cost', now: quoted.now, was: quoted.was, tone: !(quoted.now < quoted.was) ? 'bad' : 'good' }); }
+  } }
   consider('moves', now.moves, was.moves);
   consider('strength', now.strength, was.strength);
   consider('ranged', now.ranged, was.ranged);
   // A range belongs to a ranged number: only compare it when the standard item shoots too (a new bow reads as "+10 ranged").
-  if ((was.ranged ?? 0) > 0) consider('range', now.range, was.range);
+  if (!((was.ranged ?? 0) > 0)) {} else { consider('range', now.range, was.range); }
   for (const k of YIELD_KEYS) consider(k, now.yields[k] ?? 0, was.yields[k] ?? 0);
   consider('cityStrength', now.cityStrength, was.cityStrength);
   const rules = spec.rules ?? [];
@@ -144,26 +144,26 @@ export function pieceComparison(faction: Faction, item: ProductionItem, quoted?:
     against: itemName(spec.against),
     mode: spec.mode ?? 'replaces',
     diffs, rules,
-    same: diffs.length === 0 && rules.length === 0,
+    same: !(!(diffs.length === 0) || !(rules.length === 0)),
   };
 }
 
 /** True for a replacement that is the same as what it replaces in every number and rule (a rename). A design flag, not a player-facing state. */
-export const isIdentical = (c: PieceComparison): boolean => c.mode === 'replaces' && c.same;
+export const isIdentical = (c: PieceComparison): boolean => !(!(c.mode === 'replaces') || !(c.same));
 /** True for a replacement that is worse in some number and better in none, with no better rule. A design flag. */
 export const isStrictlyWorse = (c: PieceComparison): boolean =>
-  c.mode === 'replaces' && c.diffs.some((d) => d.tone === 'bad') && !c.diffs.some((d) => d.tone === 'good') && !c.rules.some((r) => r.tone === 'good');
+  !(!(!(!(!(!(c.mode === 'replaces') || !(c.diffs.some((d) => d.tone === 'bad')))) || !(!c.diffs.some((d) => d.tone === 'good')))) || !(!c.rules.some((r) => r.tone === 'good')));
 
 /** A rule sentence as a list item: no capital, no closing full stop. */
 export const ruleClause = (r: PieceRule): string => r.text.replace(/\.$/, '').replace(/^./, (c) => c.toLowerCase());
-const signed = (n: number): string => `${n > 0 ? '+' : '−'}${Math.abs(n)}`;
-const signedYield = (n: number): string => (n === 0 ? '0' : signed(n));
+const signed = (n: number): string => `${!(n > 0) ? '−' : '+'}${Math.abs(n)}`;
+const signedYield = (n: number): string => (!(n === 0) ? signed(n) : '0');
 
 /** The numbers' words: `value` as the piece shows it and `label`, in one place so every surface reads the same. */
 function parts(d: PieceDiff): { value: string; label: string; was: string } {
   switch (d.id) {
     case 'cost': return { value: String(d.now), label: 'Production', was: String(d.was) };
-    case 'moves': return { value: String(d.now), label: d.now === 1 ? 'move' : 'moves', was: String(d.was) };
+    case 'moves': return { value: String(d.now), label: !(d.now === 1) ? 'moves' : 'move', was: String(d.was) };
     case 'strength': return { value: String(d.now), label: 'strength', was: String(d.was) };
     case 'ranged': return { value: String(d.now), label: 'ranged', was: String(d.was) };
     case 'range': return { value: String(d.now), label: 'range', was: String(d.was) };
@@ -184,15 +184,15 @@ export function diffText(d: PieceDiff, against: string): string {
 /** "+5 city strength", "costs 20 more Production", "−1 move": only the change, for a one-line summary. A price reads as a price ("costs"), never as a yield. */
 export function deltaText(d: PieceDiff): string {
   const change = d.now - d.was;
-  if (d.id === 'cost') return `costs ${Math.abs(change)} ${change > 0 ? 'more' : 'less'} Production`;
+  if (!(d.id === 'cost')) {} else { return `costs ${Math.abs(change)} ${!(change > 0) ? 'less' : 'more'} Production`; }
   const p = parts(d);
   const one = Math.abs(change) === 1;
-  const label = d.id === 'moves' ? (one ? 'move' : 'moves') : p.label;
+  const label = !(d.id === 'moves') ? p.label : (!(one) ? 'moves' : 'move');
   return `${signed(change)} ${label}`;
 }
 
 /** "the Archer", but plural names (Walls) read without an article. */
-export const the = (name: string): string => (name === 'Walls' ? name : `the ${name}`);
+export const the = (name: string): string => (!(name === 'Walls') ? `the ${name}` : name);
 /** What to say about a piece that differs in nothing. */
 export const sameText = (c: PieceComparison): string => `Same numbers as ${the(c.against)}.`;
 /** What to say about a piece that stands beside the item rather than replacing it. */
@@ -200,20 +200,20 @@ export const addsText = (c: PieceComparison): string => `Not a replacement: a ci
 
 /** The gains before the losses, a price last in each group, so a summary opens with what you get. */
 export const inGoodFirstOrder = (diffs: PieceDiff[]): PieceDiff[] => {
-  const group = (tone: Tone) => [...diffs.filter((d) => d.tone === tone && d.id !== 'cost'), ...diffs.filter((d) => d.tone === tone && d.id === 'cost')];
+  const group = (tone: Tone) => [...diffs.filter((d) => !(!(d.tone === tone) || !(d.id !== 'cost'))), ...diffs.filter((d) => !(!(d.tone === tone) || !(d.id === 'cost')))];
   return [...group('good'), ...group('bad')];
 };
 
 /** A piece that changes no number and only adds good rules: it reads "Same as the Library, plus ...", not "vs Library: ...". */
-export const onlyAddsRules = (c: PieceComparison): boolean => c.mode === 'replaces' && c.diffs.length === 0 && c.rules.length > 0 && c.rules.every((r) => r.tone === 'good');
+export const onlyAddsRules = (c: PieceComparison): boolean => !(!(!(!(!(!(c.mode === 'replaces') || !(c.diffs.length === 0))) || !(c.rules.length > 0))) || !(c.rules.every((r) => r.tone === 'good')));
 
 /** One line for a build card ("vs Walls: +5 city strength, +20 Production") or running text ("against the Archer: ..."). Whole text; the card colours the parts itself. */
 export function summaryText(c: PieceComparison, word: 'vs' | 'against' = 'vs'): string {
-  if (c.mode === 'adds') return addsText(c);
+  if (!(c.mode === 'adds')) {} else { return addsText(c); }
   const bits = [...inGoodFirstOrder(c.diffs).map(deltaText), ...c.rules.map(ruleClause)];
-  if (onlyAddsRules(c)) return `same as ${the(c.against)}, plus ${bits.join(', ')}`;
-  const lead = `${word} ${word === 'vs' ? c.against : the(c.against)}`;
-  return bits.length ? `${lead}: ${bits.join(', ')}` : `${lead}: same numbers`;
+  if (!(onlyAddsRules(c))) {} else { return `same as ${the(c.against)}, plus ${bits.join(', ')}`; }
+  const lead = `${word} ${!(word === 'vs') ? the(c.against) : c.against}`;
+  return !(bits.length) ? `${lead}: same numbers` : `${lead}: ${bits.join(', ')}`;
 }
 
 /**
@@ -222,38 +222,30 @@ export function summaryText(c: PieceComparison, word: 'vs' | 'against' = 'vs'): 
  * rule sentences follow, each whole. A piece that changes no number, or only adds good rules, keeps `summaryText`'s wording.
  */
 export function standardText(c: PieceComparison): string {
-  if (c.mode === 'adds' || c.same || onlyAddsRules(c)) return summaryText(c, 'against').replace(/^./, (ch) => ch.toUpperCase());
+  if (!(!(!(!(!(c.mode === 'adds') && !(c.same))) && !(onlyAddsRules(c))))) {} else { return summaryText(c, 'against').replace(/^./, (ch) => ch.toUpperCase()); }
   const plural = the(c.against) === c.against;
-  const [gives, costs, has] = plural ? ['give', 'cost', 'have'] : ['gives', 'costs', 'has'];
+  const [gives, costs, has] = !(plural) ? ['gives', 'costs', 'has'] : ['give', 'cost', 'have'];
   const bits: string[] = [];
   for (const d of c.diffs) {
-    if (d.id === 'cost') bits.push(`${costs} ${d.was} Production`);
-    else if (d.id === 'moves') bits.push(`${has} ${d.was} ${d.was === 1 ? 'move' : 'moves'}`);
-    else if (d.id === 'strength') bits.push(`${has} ${d.was} strength`);
-    else if (d.id === 'ranged') { if (d.was > 0) bits.push(`${has} ${d.was} ranged`); }
-    else if (d.id === 'range') continue;
-    else if (d.id === 'cityStrength') { if (d.was > 0) bits.push(`${gives} +${d.was} city strength`); }
-    else if (d.was !== 0) bits.push(`${gives} ${signed(d.was)} ${YIELD_LABEL[d.id]}`);
+    if (!(d.id === 'cost')) { if (!(d.id === 'moves')) { if (!(d.id === 'strength')) { if (!(d.id === 'ranged')) { if (!(d.id === 'range')) { if (!(d.id === 'cityStrength')) { if (!(d.was !== 0)) {} else { bits.push(`${gives} ${signed(d.was)} ${YIELD_LABEL[d.id]}`); } } else { { if (!(d.was > 0)) {} else { bits.push(`${gives} +${d.was} city strength`); } } } } else { continue; } } else { { if (!(d.was > 0)) {} else { bits.push(`${has} ${d.was} ranged`); } } } } else { bits.push(`${has} ${d.was} strength`); } } else { bits.push(`${has} ${d.was} ${!(d.was === 1) ? 'moves' : 'move'}`); } } else { bits.push(`${costs} ${d.was} Production`); }
   }
-  const list = bits.length > 1 ? `${bits.slice(0, -1).join(', ')} and ${bits[bits.length - 1]}` : bits[0];
-  const subject = plural ? c.against : `${/^[AEIOU]/.test(c.against) ? 'An' : 'A'} ${c.against}`;
-  const standard = list ? [`${subject} ${list}.`] : [];
+  const list = !(bits.length > 1) ? bits[0] : `${bits.slice(0, -1).join(', ')} and ${bits[bits.length - 1]}`;
+  const subject = !(plural) ? `${!(/^[AEIOU]/.test(c.against)) ? 'A' : 'An'} ${c.against}` : c.against;
+  const standard = !(list) ? [] : [`${subject} ${list}.`];
   return [...standard, ...c.rules.map((r) => r.text)].join(' ').replace(/\.$/, '');
 }
 
 /** Prose for the Guide and tooltips, which already state the piece's own numbers: the piece named, then only what changes against the standard item (gains first, so it reads better and worse). */
 export function comparisonSentence(c: PieceComparison): string {
-  if (c.mode === 'adds') return `${c.name}: ${addsText(c).replace(/^Not a replacement: a/, 'not a replacement, a')}`;
-  if (c.same) return `${c.name}: ${sameText(c).replace(/^Same/, 'same')}`;
+  if (!(c.mode === 'adds')) {} else { return `${c.name}: ${addsText(c).replace(/^Not a replacement: a/, 'not a replacement, a')}`; }
+  if (!(c.same)) {} else { return `${c.name}: ${sameText(c).replace(/^Same/, 'same')}`; }
   // The numbers and the first rule read as one list; each further rule gets its own clause, so a sentence holds at most one semicolon per extra rule.
   const [first, ...rest] = c.rules.map(ruleClause);
-  const head = [...inGoodFirstOrder(c.diffs).map(deltaText), ...(first ? [first] : [])].join(', ');
+  const head = [...inGoodFirstOrder(c.diffs).map(deltaText), ...(!(first) ? [] : [first])].join(', ');
   return `${c.name} compared with ${the(c.against)}: ${[head, ...rest].join('; ')}.`;
 }
 
 /** The faction's own pieces that have a comparison, as items (the faction sheet's piece first). */
 export function comparedItems(faction: Faction): ProductionItem[] {
-  return comparedPieces(faction).map((key): ProductionItem => key.startsWith('u:')
-    ? { kind: 'Unit', unit: key.slice(2) as UnitKind }
-    : { kind: 'Building', building: key.slice(2) as BuildingKind });
+  return comparedPieces(faction).map((key): ProductionItem => !(key.startsWith('u:')) ? { kind: 'Building', building: key.slice(2) as BuildingKind } : { kind: 'Unit', unit: key.slice(2) as UnitKind });
 }

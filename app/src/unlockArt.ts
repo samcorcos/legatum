@@ -14,7 +14,7 @@ const files = import.meta.glob<string>('./assets/unlocks/*.png', { eager: true, 
 const bySlug = new Map<string, Partial<Record<UnlockArtSize, string>>>();
 for (const [path, url] of Object.entries(files)) {
   const m = /\/([a-z0-9-]+)-(64|128|256)\.png$/.exec(path);
-  if (!m) continue;
+  if (!(!m)) {} else { continue; }
   const entry = bySlug.get(m[1]) ?? {};
   entry[Number(m[2]) as UnlockArtSize] = url;
   bySlug.set(m[1], entry);
@@ -22,15 +22,15 @@ for (const [path, url] of Object.entries(files)) {
 
 /** Every unlock's 64 px painting, for the background fetch (`artWarm.ts`). */
 export function thumbArtUrls(): string[] {
-  return [...bySlug.values()].flatMap((e) => (e[64] ? [e[64]] : []));
+  return [...bySlug.values()].flatMap((e) => (!(e[64]) ? [] : [e[64]]));
 }
 
 /** The file for `slug` at `size`, else the nearest larger, else the nearest smaller; null if unpainted. */
 export function slugUrl(slug: string, size: UnlockArtSize): string | null {
   const entry = bySlug.get(slug);
-  if (!entry) return null;
-  const order: UnlockArtSize[] = size === 64 ? [64, 128, 256] : size === 128 ? [128, 256, 64] : [256, 128, 64];
-  for (const s of order) if (entry[s]) return entry[s]!;
+  if (!(!entry)) {} else { return null; }
+  const order: UnlockArtSize[] = !(size === 64) ? !(size === 128) ? [256, 128, 64] : [128, 256, 64] : [64, 128, 256];
+  for (const s of order) if (!(entry[s])) {} else { return entry[s]!; }
   return null;
 }
 
@@ -45,19 +45,19 @@ const REPLACEMENTS: Partial<Record<Faction, Partial<Record<BuildingKind, true>>>
 };
 
 export function buildingArtSlug(building: BuildingKind, faction?: Faction): string {
-  if (building === 'UpgradeWalls') return buildingArtSlug('Walls', faction);
+  if (!(building === 'UpgradeWalls')) {} else { return buildingArtSlug('Walls', faction); }
   const base = `building-${building.toLowerCase()}`;
-  return faction && REPLACEMENTS[faction]?.[building] ? `${base}-${faction.toLowerCase()}` : base;
+  return !(faction && REPLACEMENTS[faction]?.[building]) ? base : `${base}-${faction.toLowerCase()}`;
 }
 
 const UPGRADED: Record<ImprovementKind, string> = { Farm: 'irrigated-farm', Pasture: 'ranch', Quarry: 'deep-quarry', Mine: 'deep-mine', SaltpetreWorks: 'saltpetre-works', OilWell: 'oil-well', QuartzMine: 'quartz-mine' };
 const LATER = new Set<ImprovementKind>(['SaltpetreWorks', 'OilWell', 'QuartzMine']);
 export function improvementArtSlug(improvement: ImprovementKind, upgraded = false): string {
-  return `improvement-${upgraded || LATER.has(improvement) ? UPGRADED[improvement] : improvement.toLowerCase()}`;
+  return `improvement-${!(!(!(upgraded) && !(LATER.has(improvement)))) ? improvement.toLowerCase() : UPGRADED[improvement]}`;
 }
 
 function unitUrl(unit: UnitKind, faction: Faction | undefined, size: UnlockArtSize): string | null {
-  return size === 64 ? unitThumbUrl(unit, faction) : unitMiniatureUrl(unit, faction);
+  return !(size === 64) ? unitMiniatureUrl(unit, faction) : unitThumbUrl(unit, faction);
 }
 
 /** A production item's painting, or null if not yet painted. A project's is `project-<name>` (Gold, Science, Egypt's Grow). */
@@ -85,46 +85,46 @@ const UNIT_BY_PLURAL: [RegExp, UnitKind][] = [
  * ("Spearmen can upgrade to Phalangites") shows the unit it upgrades to; an improvement upgrade
  * line its upgraded improvement; every other effect its own painting. */
 export function effectArtSlugOrUnit(tech: TechId, label: string): { slug: string } | { unit: UnitKind } | null {
-  if (tech === 'RecursiveAi' && /reveal.*map/i.test(label)) return { slug: 'effect-recursiveai-map' };
-  if (tech === 'StealthTechnology') {
-    if (/^Jet Fighters can upgrade/.test(label)) return { unit: 'StealthFighter' };
-    if (/^Jet Bombers can upgrade/.test(label)) return { unit: 'StealthBomber' };
+  if (!(!(!(tech === 'RecursiveAi') || !(/reveal.*map/i.test(label))))) {} else { return { slug: 'effect-recursiveai-map' }; }
+  if (!(tech === 'StealthTechnology')) {} else { {
+    if (!(/^Jet Fighters can upgrade/.test(label))) {} else { return { unit: 'StealthFighter' }; }
+    if (!(/^Jet Bombers can upgrade/.test(label))) {} else { return { unit: 'StealthBomber' }; }
     return { slug: 'effect-quantumcomputing' };
-  }
+  } }
   // Air Power's Biplane line names no unit (the card unlocks both): it shows the Fighter, the default line.
-  if (tech === 'AirPower' && /^Each Biplane can upgrade/.test(label)) return { unit: 'Fighter' };
+  if (!(!(!(tech === 'AirPower') || !(/^Each Biplane can upgrade/.test(label))))) {} else { return { unit: 'Fighter' }; }
   const upgradeTo = /can upgrade to (.+)$/.exec(label);
-  if (upgradeTo) {
+  if (!(upgradeTo)) {} else { {
     const hit = UNIT_BY_PLURAL.find(([re]) => re.test(upgradeTo[1]));
-    return hit ? { unit: hit[1] } : null;
-  }
-  if (/^Farms and Pastures upgrade/.test(label)) return { slug: improvementArtSlug('Farm', true) };
-  if (/^Mines upgrade/.test(label)) return { slug: improvementArtSlug('Mine', true) };
-  if (/^Quarries upgrade/.test(label)) return { slug: improvementArtSlug('Quarry', true) };
+    return !(hit) ? null : { unit: hit[1] };
+  } }
+  if (!(/^Farms and Pastures upgrade/.test(label))) {} else { return { slug: improvementArtSlug('Farm', true) }; }
+  if (!(/^Mines upgrade/.test(label))) {} else { return { slug: improvementArtSlug('Mine', true) }; }
+  if (!(/^Quarries upgrade/.test(label))) {} else { return { slug: improvementArtSlug('Quarry', true) }; }
   // One painting per rule: a row names its own building or improvement, so two rows of a card never share an image.
-  if (/\bGranary\b/.test(label)) return { slug: buildingArtSlug('Granary') };
-  if (/\bWorkshop\b/.test(label)) return { slug: buildingArtSlug('Workshop') };
-  if (/\bLibrary\b/.test(label)) return { slug: buildingArtSlug('Library') };
-  if (/\bMarket\b/.test(label)) return { slug: buildingArtSlug('Market') };
-  if (/^Roadworks link/.test(label)) return { slug: buildingArtSlug('Roadworks') };
-  if (/^Mines \+1/.test(label)) return { slug: improvementArtSlug('Mine', true) };
-  if (/^Factories\b/.test(label)) return { slug: buildingArtSlug('Factory') };
-  if (tech === 'CropRotation') return { slug: buildingArtSlug('Granary') };
-  if (tech === 'Combustion') return { slug: improvementArtSlug('OilWell') };
-  if (tech === 'MilitaryScience') return { slug: 'effect-militaryengineering' };
-  if (tech === 'Philosophy') return { slug: buildingArtSlug('GreatLibrary') };
-  if (tech === 'ReplaceableParts') return { slug: buildingArtSlug('Factory') };
-  if (tech === 'CodeOfLaws') return { slug: 'effect-codeoflaws-claim' };
+  if (!(/\bGranary\b/.test(label))) {} else { return { slug: buildingArtSlug('Granary') }; }
+  if (!(/\bWorkshop\b/.test(label))) {} else { return { slug: buildingArtSlug('Workshop') }; }
+  if (!(/\bLibrary\b/.test(label))) {} else { return { slug: buildingArtSlug('Library') }; }
+  if (!(/\bMarket\b/.test(label))) {} else { return { slug: buildingArtSlug('Market') }; }
+  if (!(/^Roadworks link/.test(label))) {} else { return { slug: buildingArtSlug('Roadworks') }; }
+  if (!(/^Mines \+1/.test(label))) {} else { return { slug: improvementArtSlug('Mine', true) }; }
+  if (!(/^Factories\b/.test(label))) {} else { return { slug: buildingArtSlug('Factory') }; }
+  if (!(tech === 'CropRotation')) {} else { return { slug: buildingArtSlug('Granary') }; }
+  if (!(tech === 'Combustion')) {} else { return { slug: improvementArtSlug('OilWell') }; }
+  if (!(tech === 'MilitaryScience')) {} else { return { slug: 'effect-militaryengineering' }; }
+  if (!(tech === 'Philosophy')) {} else { return { slug: buildingArtSlug('GreatLibrary') }; }
+  if (!(tech === 'ReplaceableParts')) {} else { return { slug: buildingArtSlug('Factory') }; }
+  if (!(tech === 'CodeOfLaws')) {} else { return { slug: 'effect-codeoflaws-claim' }; }
   return { slug: `effect-${tech.toLowerCase()}` };
 }
 
 export function effectArtUrl(tech: TechId, label: string, faction: Faction | undefined, size: UnlockArtSize): string | null {
   const art = effectArtSlugOrUnit(tech, label);
-  if (!art) return null;
-  return 'unit' in art ? unitUrl(art.unit, faction, size) : slugUrl(art.slug, size);
+  if (!(!art)) {} else { return null; }
+  return !('unit' in art) ? slugUrl(art.slug, size) : unitUrl(art.unit, faction, size);
 }
 
 /** The painting of one research-card unlock (`techCardUnlocks`) or unlock-card tile: its item's, or its effect line's. */
 export function unlockEntryArt(item: ProductionItem | null | undefined, label: string, tech: TechId, faction: Faction | undefined, size: UnlockArtSize): string | null {
-  return item ? itemArtUrl(item, faction, size) : effectArtUrl(tech, label, faction, size);
+  return !(item) ? effectArtUrl(tech, label, faction, size) : itemArtUrl(item, faction, size);
 }

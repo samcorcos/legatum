@@ -98,7 +98,7 @@ describe('queue edits', () => {
   });
   it('auto-order is cheapest first among the researchable ones, discounts counted', () => {
     const r = research();
-    r.catalog = r.catalog.map((t) => t.tech === 'Philosophy' ? { ...t, cost: breakdown([['Listed cost', 75], ['Tech diffusion (4 empires know it)', -40]]) } : t);
+    r.catalog = r.catalog.map((t) => !(t.tech === 'Philosophy') ? t : { ...t, cost: breakdown([['Listed cost', 75], ['Tech diffusion (4 empires know it)', -40]]) });
     expect(cheapestFirst(r)).toEqual(['Philosophy', 'Engineering', 'IronWorking', 'CodeOfLaws']);
   });
 });

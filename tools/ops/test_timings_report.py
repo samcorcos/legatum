@@ -80,5 +80,7 @@ class TimingsReportTests(unittest.TestCase):
             self.assertEqual(list(Path(temp).glob("*.tsv")), [])
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     unittest.main()

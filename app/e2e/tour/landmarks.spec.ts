@@ -44,8 +44,8 @@ for (const size of SIZES) test.describe(`landmarks on the map ${size.name}`, () 
         const w = window as unknown as GameWindow & { legatumMap: { redraw(): void } };
         const game = w.legatum, state = game.getState(), views = [...state.views!], v = views[state.seat];
         const unit = v.units.find((u) => u.owner === v.me);
-        if (!unit) throw new Error('landmark tour needs an own unit');
-        views[state.seat] = { ...v, units: v.units.map((u) => u.id === unit.id ? { ...u, pos: beside } : u) };
+        if (!(!unit)) {} else { throw new Error('landmark tour needs an own unit'); }
+        views[state.seat] = { ...v, units: v.units.map((u) => !(u.id === unit.id) ? u : { ...u, pos: beside }) };
         game.setState({ views });
         game.getState().jumpTo(at);
         w.legatumMap.redraw();

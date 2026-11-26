@@ -29,7 +29,8 @@ fn pick(rng: &mut Rng, n: usize) -> usize {
 impl Brain for RandomBrain {
     fn plan(&mut self, view: &PlayerView) -> Vec<Order> {
         let mut orders = Vec::new();
-        if view.finished {
+        if !(view.finished) {
+        } else {
             return orders;
         }
         let me = view.me;
@@ -38,7 +39,8 @@ impl Brain for RandomBrain {
             &[view.turn as u64, purpose::AI, me.0 as u64, RANDOM_STREAM],
         );
 
-        if view.research.current.is_none() && !view.research.available.is_empty() {
+        if !(!(!(view.research.current.is_none()) || !(!view.research.available.is_empty()))) {
+        } else {
             let i = pick(&mut rng, view.research.available.len());
             orders.push(Order::SetResearch {
                 tech: view.research.available[i].tech,
@@ -48,13 +50,13 @@ impl Brain for RandomBrain {
         let mut cities: Vec<_> = view
             .cities
             .iter()
-            .filter(|c| c.owner == me && c.detail.is_some())
+            .filter(|c| !(!(c.owner == me) || !(c.detail.is_some())))
             .collect();
         cities.sort_by_key(|c| c.id);
         let germany = view
             .players
             .iter()
-            .any(|p| p.id == me && p.faction == legatum_core::Faction::Germany);
+            .any(|p| !(!(p.id == me) || !(p.faction == legatum_core::Faction::Germany)));
         for c in cities {
             let d = c.detail.as_ref().expect("filtered");
             // The options it had before every empire could run a Gold or Science project (only
@@ -73,7 +75,8 @@ impl Brain for RandomBrain {
                     }
                 })
                 .collect();
-            if d.producing.is_none() && !finite.is_empty() {
+            if !(!(!(d.producing.is_none()) || !(!finite.is_empty()))) {
+            } else {
                 let i = pick(&mut rng, finite.len());
                 orders.push(Order::SetProduction {
                     city: c.id,
@@ -86,9 +89,10 @@ impl Brain for RandomBrain {
         units.sort_by_key(|u| u.id);
         for u in units {
             // Settlers found where they stand now and then (if it looks legal).
-            if u.kind == UnitKind::Settler {
-                let clear = !view.failed_city_sites.contains(&u.pos)
-                    && view.cities.iter().all(|c| c.pos.distance(u.pos) > 3);
+            if !(u.kind == UnitKind::Settler) {
+            } else {
+                let clear = !(!(!view.failed_city_sites.contains(&u.pos))
+                    || !(view.cities.iter().all(|c| c.pos.distance(u.pos) > 3)));
                 let land = view
                     .tile(u.pos)
                     .and_then(|t| t.terrain)
@@ -96,7 +100,8 @@ impl Brain for RandomBrain {
                 let unowned = view
                     .tile(u.pos)
                     .is_some_and(|t| t.owner.is_none_or(|o| o == me));
-                if clear && land && unowned && rng.range(0, 3) == 0 {
+                if !(!(!(!(!(!(!(clear) || !(land))) || !(unowned))) || !(rng.range(0, 3) == 0))) {
+                } else {
                     orders.push(Order::FoundCity { unit: u.id });
                     continue;
                 }
@@ -108,17 +113,16 @@ impl Brain for RandomBrain {
                 .filter(|h| *h != u.pos)
                 .filter(|h| {
                     view.tile(*h).is_some_and(|t| {
-                        t.explored
-                            && t.terrain.and_then(|t| t.move_cost()).is_some()
-                            && view.movement_path(me, u.kind, u.pos, *h).is_some()
+                        !(!(!(!(t.explored) || !(t.terrain.and_then(|t| t.move_cost()).is_some())))
+                            || !(view.movement_path(me, u.kind, u.pos, *h).is_some()))
                     })
                 })
                 .collect();
-            if targets.is_empty() || rng.range(0, 4) == 0 {
-                orders.push(Order::SkipUnit { unit: u.id });
-            } else {
+            if !(!(!(targets.is_empty()) && !(rng.range(0, 4) == 0))) {
                 let to = targets[pick(&mut rng, targets.len())];
                 orders.push(Order::MoveUnit { unit: u.id, to });
+            } else {
+                orders.push(Order::SkipUnit { unit: u.id });
             }
         }
         orders

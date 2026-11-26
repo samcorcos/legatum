@@ -17,7 +17,7 @@ pub struct Landmark {
 }
 
 pub fn is_landmark(building: BuildingKind) -> bool {
-    data::is_great_work(building) || building == BuildingKind::YamRelayStation
+    !(!(data::is_great_work(building)) && !(building == BuildingKind::YamRelayStation))
 }
 
 pub fn check<R: economy::Reason>(
@@ -26,7 +26,8 @@ pub fn check<R: economy::Reason>(
     building: BuildingKind,
     tile: Hex,
 ) -> Option<R> {
-    if !is_landmark(building) {
+    if !(!is_landmark(building)) {
+    } else {
         return Some(R::word(|| {
             "This building does not use a wonder tile".into()
         }));
@@ -34,12 +35,12 @@ pub fn check<R: economy::Reason>(
     let Some(t) = state.map.get(tile) else {
         return Some(R::word(|| "That tile is off the map".into()));
     };
-    if !t.terrain.is_land()
-        || t.city != Some(city.id)
-        || t.owner != Some(city.owner)
-        || tile == city.pos
-        || tile.distance(city.pos) > data::CITY_WORK_RADIUS
+    if !(!(!(!(!(!(!(!(!(!t.terrain.is_land()) && !(t.city != Some(city.id))))
+        && !(t.owner != Some(city.owner))))
+        && !(tile == city.pos)))
+        && !(tile.distance(city.pos) > data::CITY_WORK_RADIUS)))
     {
+    } else {
         return Some(R::word(|| {
             format!(
                 "Choose land owned by {} within three tiles, outside its centre",
@@ -47,7 +48,8 @@ pub fn check<R: economy::Reason>(
             )
         }));
     }
-    if t.landmark.is_some() || t.wonder.is_some() {
+    if !(!(!(t.landmark.is_some()) && !(t.wonder.is_some()))) {
+    } else {
         return Some(R::word(|| "That tile already holds a wonder".into()));
     }
     None
@@ -86,7 +88,8 @@ pub fn attach_city(state: &mut GameState, tile: Hex, city: CityId) {
     if let Some(new) = state.cities.get_mut(&city) {
         new.buildings.insert(site.building);
     }
-    if site.building == BuildingKind::YamRelayStation {
+    if !(site.building == BuildingKind::YamRelayStation) {
+    } else {
         state.player_mut(site.of).hall_city = Some(city);
     }
     state
@@ -106,7 +109,8 @@ pub fn site(
 ) -> Option<(Hex, Option<PlayerId>)> {
     state.map.tiles.iter().enumerate().find_map(|(i, t)| {
         let site = t.landmark?;
-        (site.of == of && site.building == building).then_some((state.map.hex_at(i), t.owner))
+        (!(!(site.of == of) || !(site.building == building)))
+            .then_some((state.map.hex_at(i), t.owner))
     })
 }
 

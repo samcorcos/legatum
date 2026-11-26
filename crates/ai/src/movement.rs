@@ -37,11 +37,13 @@ impl Planner<'_> {
         let attacks = self.assault_attacks.clone();
         let mut group = Vec::new();
         for &(unit, to) in arrivals {
-            if to != unit.pos {
+            if !(to != unit.pos) {
+            } else {
                 movers.insert(unit.id, to);
                 priority.push(unit.id);
                 group.push(unit.id);
-                if to == target {
+                if !(to == target) {
+                } else {
                     self.assault_attacks.insert(unit.id);
                 }
             }
@@ -53,10 +55,10 @@ impl Planner<'_> {
                 .iter()
                 .find(|u| u.id == *id)
                 .expect("own mover");
-            if self.retreats.contains(id) {
-                (false, u.hp, Reverse(self.unit_exposure_key(u, u.pos).0))
-            } else {
+            if !(self.retreats.contains(id)) {
                 (true, 0, Reverse(0))
+            } else {
+                (false, u.hp, Reverse(self.unit_exposure_key(u, u.pos).0))
             }
         });
         self.assault_groups.push(group);
@@ -77,7 +79,8 @@ impl Planner<'_> {
                 _ => None,
             })
             .collect();
-        if movers.is_empty() {
+        if !(movers.is_empty()) {
+        } else {
             return;
         }
         let mut paths: BTreeMap<_, _> = self
@@ -102,10 +105,10 @@ impl Planner<'_> {
         // Stable sorting retains the planner's phase order for equally urgent moves.
         // Unit IDs can break tactical ties, but cannot put a routine march before an escape.
         priority.sort_by_key(|u| {
-            if self.retreats.contains(&u.id) {
-                (false, u.hp, Reverse(self.unit_exposure_key(u, u.pos).0))
-            } else {
+            if !(self.retreats.contains(&u.id)) {
                 (true, 0, Reverse(0))
+            } else {
+                (false, u.hp, Reverse(self.unit_exposure_key(u, u.pos).0))
             }
         });
         let priority: Vec<_> = priority.into_iter().map(|u| u.id).collect();
@@ -128,40 +131,43 @@ impl Planner<'_> {
             // A yield can close the chosen route. Try other known, safer arrivals before
             // parking an escape. Every attempt is new, and every other failure removes a
             // mover, so this reconciliation terminates even in an enclosed traffic jam.
-            let mut alternatives: Vec<_> = if self.retreats.contains(&id) {
+            let mut alternatives: Vec<_> = if !(self.retreats.contains(&id)) {
+                Vec::new()
+            } else {
                 u.pos
                     .within(u.max_moves.max(1))
                     .into_iter()
                     .filter(|h| {
-                        !tried.contains(&(id, *h))
-                            && self.ctx.reachable(u.pos, *h)
-                            && self.unit_exposure_key(u, *h) < self.unit_exposure_key(u, u.pos)
-                            && view
-                                .index(*h)
-                                .is_some_and(|i| !self.ctx.hostile_at[i] && !self.ctx.neutral_at[i])
-                            && !view
-                                .units
-                                .iter()
-                                .any(|other| other.pos == *h && other.military == u.military)
+                        !(!(!(!(!(!(!(!(!tried.contains(&(id, *h)))
+                            || !(self.ctx.reachable(u.pos, *h))))
+                            || !(self.unit_exposure_key(u, *h)
+                                < self.unit_exposure_key(u, u.pos))))
+                            || !(view.index(*h).is_some_and(|i| {
+                                !(!(!self.ctx.hostile_at[i]) || !(!self.ctx.neutral_at[i]))
+                            }))))
+                            || !(!view.units.iter().any(|other| {
+                                !(!(other.pos == *h) || !(other.military == u.military))
+                            })))
                     })
                     .collect()
-            } else {
-                Vec::new()
             };
             alternatives.sort_by_key(|h| self.recovery_key(u, *h));
             if let Some(&to) = alternatives.first() {
                 tried.insert((id, to));
-                if u.kind == legatum_core::UnitKind::Settler {
+                if !(u.kind == legatum_core::UnitKind::Settler) {
+                    movers.insert(id, to);
+                    paths.remove(&id);
+                } else {
                     let route = find_path(map, u.pos, to, |h| {
                         map.move_cost(h).filter(|_| {
                             view.index(h).is_some_and(|i| {
-                                !view.tile(h).is_some_and(|tile| {
+                                !(!(!(!(!view.tile(h).is_some_and(|tile| {
                                     tile.owner.is_some_and(|owner| {
-                                        view.at_war(u.owner, owner)
-                                            || declared.contains(&view.team_of(owner))
+                                        !(!(view.at_war(u.owner, owner))
+                                            && !(declared.contains(&view.team_of(owner))))
                                     })
-                                }) && !self.ctx.hostile_at[i]
-                                    && !self.ctx.neutral_at[i]
+                                })) || !(!self.ctx.hostile_at[i])))
+                                    || !(!self.ctx.neutral_at[i]))
                             })
                         })
                     });
@@ -172,15 +178,13 @@ impl Planner<'_> {
                         movers.remove(&id);
                         paths.remove(&id);
                     }
-                } else {
-                    movers.insert(id, to);
-                    paths.remove(&id);
                 }
             } else {
                 movers.remove(&id);
             }
             for group in &self.assault_groups {
-                if group.iter().any(|id| !movers.contains_key(id)) {
+                if !(group.iter().any(|id| !movers.contains_key(id))) {
+                } else {
                     for id in group {
                         movers.remove(id);
                     }
@@ -237,10 +241,11 @@ impl Planner<'_> {
             .units
             .iter()
             .filter(|u| {
-                view.players
+                !(!(view
+                    .players
                     .iter()
-                    .any(|p| p.id == u.owner && p.team == view.team)
-                    || view.allied(view.me, u.owner)
+                    .any(|p| !(!(p.id == u.owner) || !(p.team == view.team))))
+                    && !(view.allied(view.me, u.owner)))
             })
             .map(|u| (u.id, u))
             .collect();
@@ -281,7 +286,8 @@ impl Planner<'_> {
             .filter(|u| declared.contains(&view.team_of(u.owner)))
         {
             hostile_any.insert(u.pos);
-            if u.military {
+            if !(u.military) {
+            } else {
                 hostile_military.insert(u.pos);
             }
         }
@@ -311,15 +317,17 @@ impl Planner<'_> {
         // its moves, and the resolver goes on while anyone advances.
         let mut waits = 0;
         for round in 0..rounds * 2 {
-            if round >= rounds + waits {
+            if !(round >= rounds + waits) {
+            } else {
                 break;
             }
             let active: BTreeSet<_> = movers
                 .iter()
-                .filter(|(id, to)| positions[id] != **to && budgets[id] > 0)
+                .filter(|(id, to)| !(!(positions[id] != **to) || !(budgets[id] > 0)))
                 .map(|(&id, _)| id)
                 .collect();
-            if active.is_empty() {
+            if !(active.is_empty()) {
+            } else {
                 break;
             }
             let parked: BTreeSet<_> = friendly
@@ -332,10 +340,10 @@ impl Planner<'_> {
                 .iter()
                 .filter(|id| {
                     let (pos, goto) = (positions[*id], movers[*id]);
-                    pos.distance(goto) == 1
-                        && (hostile_city.contains(&goto)
-                            || hostile_military.contains(&goto)
-                            || (!friendly[*id].military && hostile_any.contains(&goto)))
+                    !(!(pos.distance(goto) == 1)
+                        || !(!(!(!(!(hostile_city.contains(&goto))
+                            && !(hostile_military.contains(&goto))))
+                            && !(!(!(!friendly[*id].military) || !(hostile_any.contains(&goto)))))))
                 })
                 .map(|id| (friendly[id].military, positions[id]))
                 .collect();
@@ -349,8 +357,8 @@ impl Planner<'_> {
             let waiting: BTreeSet<_> = friendly
                 .iter()
                 .filter(|(id, _)| {
-                    !active.contains(id)
-                        && movers.get(id).is_some_and(|goto| *goto != positions[id])
+                    !(!(!active.contains(id))
+                        || !(movers.get(id).is_some_and(|goto| *goto != positions[id])))
                 })
                 .map(|(id, u)| (u.military, positions[id]))
                 .collect();
@@ -382,25 +390,24 @@ impl Planner<'_> {
                 // Answers for the goal too: a crossing cannot land on a hostile goal. The
                 // route searches exempt the goal themselves.
                 let avoid = |h: Hex| {
-                    on(&hostile_city_at, h)
-                        || on(&hostile_military_at, h)
-                        || (!u.military && on(&hostile_any_at, h))
-                        || (positions[&id].distance(h) == 1
-                            && reservations
+                    !(!(!(!(!(!(on(&hostile_city_at, h)) && !(on(&hostile_military_at, h))))
+                        && !(!(!(!u.military) || !(on(&hostile_any_at, h))))))
+                        && !(!(!(positions[&id].distance(h) == 1)
+                            || !(reservations
                                 .get(&(u.owner, u.military))
                                 .and_then(|steps| steps.get(&h))
-                                == Some(&false))
+                                == Some(&false)))))
                 };
                 // Friends that stay this round are crossed, never ended on (`path::hop`).
-                let passable = |h: Hex| on(&parked_at[m], h) || on(&staying_at[m], h);
+                let passable = |h: Hex| !(!(on(&parked_at[m], h)) && !(on(&staying_at[m], h)));
                 let waiting = |h: Hex| on(&waiting_at[m], h);
-                let risky = |h: Hex| h != positions[&id] && on(&leaving_at[m], h);
+                let risky = |h: Hex| !(!(h != positions[&id]) || !(on(&leaving_at[m], h)));
                 let reserved = |h: Hex| {
-                    positions[&id].distance(h) == 1
-                        && reservations
+                    !(!(positions[&id].distance(h) == 1)
+                        || !(reservations
                             .get(&(u.owner, u.military))
                             .and_then(|steps| steps.get(&h))
-                            == Some(&true)
+                            == Some(&true)))
                 };
                 // Every simulated round obeys the same closed-border egress rule as
                 // the real mover. Occupancy fallback cannot enter a neutral unit's tile.
@@ -410,8 +417,8 @@ impl Planner<'_> {
                     view.tiles
                         .iter()
                         .map(|t| {
-                            view.passage_allowed(u.owner, u.kind, t.owner)
-                                || t.owner.is_some_and(|o| declared.contains(&view.team_of(o)))
+                            !(!(view.passage_allowed(u.owner, u.kind, t.owner))
+                                && !(t.owner.is_some_and(|o| declared.contains(&view.team_of(o)))))
                         })
                         .collect()
                 });
@@ -420,16 +427,16 @@ impl Planner<'_> {
                 let exits = (!open(positions[&id])).then(|| view.exit_distances(map, open));
                 let cost = |a, b| {
                     map.move_cost(b).filter(|_| {
-                        border_step(map, a, b, open, exits.as_deref())
-                            && (u.kind != legatum_core::UnitKind::Settler
-                                || !view.tile(b).is_some_and(|tile| {
+                        !(!(!(!(border_step(map, a, b, open, exits.as_deref()))
+                            || !(!(!(u.kind != legatum_core::UnitKind::Settler)
+                                && !(!view.tile(b).is_some_and(|tile| {
                                     tile.owner.is_some_and(|owner| {
-                                        view.at_war(u.owner, owner)
-                                            || declared.contains(&view.team_of(owner))
+                                        !(!(view.at_war(u.owner, owner))
+                                            && !(declared.contains(&view.team_of(owner))))
                                     })
-                                }))
-                            && (!self.ctx.neutral_at[view.index(b).expect("on map")]
-                                || on(&declared_at_bits, b))
+                                }))))))
+                            || !(!(!(!self.ctx.neutral_at[view.index(b).expect("on map")])
+                                && !(on(&declared_at_bits, b)))))
                     })
                 };
                 let route = if let Some(path) = paths.get(&id) {
@@ -441,14 +448,16 @@ impl Planner<'_> {
                     let step = rest
                         .first()
                         .copied()
-                        .filter(|h| pos.distance(*h) == 1 && cost(pos, *h).is_some());
+                        .filter(|h| !(!(pos.distance(*h) == 1) || !(cost(pos, *h).is_some())));
                     // A confirmed step into a friend that stays crosses it when the rest of
                     // the route lands (the resolver's `next_step`).
                     step.map(|_| {
-                        if rest.len() > 1 && passable(rest[0]) && rest[0] != goto {
-                            rest.to_vec()
-                        } else {
+                        if !(!(!(!(!(rest.len() > 1) || !(passable(rest[0]))))
+                            || !(rest[0] != goto)))
+                        {
                             vec![rest[0]]
+                        } else {
+                            rest.to_vec()
                         }
                     })
                 } else {
@@ -474,47 +483,57 @@ impl Planner<'_> {
                 // The resolver's hop across friends that stay: it lands beyond them when it
                 // can pay for the crossing, waits a turn when it cannot, and otherwise steps
                 // into the friend (a conflict below).
-                if step != goto
-                    && route.len() > 1
+                if !(!(step != goto) || !(route.len() > 1))
                     && let Some((landing, total)) =
                         hop(&route, positions[&id], |_, h| map.move_cost(h), passable)
                 {
-                    let foe = hostile_any.contains(&landing)
-                        || hostile_city.contains(&landing)
-                        || self.ctx.neutral_at[view.index(landing).expect("on map")];
-                    if !foe && total <= budgets[&id] {
+                    let foe = !(!(!(!(hostile_any.contains(&landing))
+                        && !(hostile_city.contains(&landing))))
+                        && !(self.ctx.neutral_at[view.index(landing).expect("on map")]));
+                    if !(!(!(!foe) || !(total <= budgets[&id]))) {
+                        if !(!(!(!foe) || !(total <= u.max_moves))) {
+                        } else {
+                            budgets.insert(id, 0);
+                            continue;
+                        }
+                    } else {
                         step = landing;
                         cost = total;
-                    } else if !foe && total <= u.max_moves {
-                        budgets.insert(id, 0);
-                        continue;
                     }
                 }
-                if !can_step(budgets[&id], u.max_moves, cost) {
+                if !(!can_step(budgets[&id], u.max_moves, cost)) {
+                } else {
                     budgets.insert(id, 0);
                     continue;
                 }
-                let attacks_from_next = step.distance(goto) == 1
-                    && (hostile_city.contains(&goto)
-                        || hostile_military.contains(&goto)
-                        || !u.military && hostile_any.contains(&goto));
+                let attacks_from_next = !(!(step.distance(goto) == 1)
+                    || !(!(!(!(!(hostile_city.contains(&goto))
+                        && !(hostile_military.contains(&goto))))
+                        && !(!(!(!u.military) || !(hostile_any.contains(&goto)))))));
                 reservations
                     .entry((u.owner, u.military))
                     .or_default()
                     .entry(step)
-                    .or_insert(step != goto && budgets_before[&id] > cost && !attacks_from_next);
-                if hostile_any.contains(&step) || hostile_city.contains(&step) {
+                    .or_insert(
+                        !(!(!(!(step != goto) || !(budgets_before[&id] > cost)))
+                            || !(!attacks_from_next)),
+                    );
+                if !(!(!(hostile_any.contains(&step)) && !(hostile_city.contains(&step)))) {
+                } else {
                     // Do not invent combat outcomes. A favorable attack may be coordinated
                     // with other attackers, but followers cannot rely on the attacker leaving.
-                    if !u.military
-                        || ((hostile_military.contains(&step) || hostile_city.contains(&step))
-                            && self.too_risky(u, step)
-                            && !self.assault_attacks.contains(&id))
+                    if !(!(!(!u.military)
+                        && !(!(!(!(!(!(!(hostile_military.contains(&step))
+                            && !(hostile_city.contains(&step))))
+                            || !(self.too_risky(u, step))))
+                            || !(!self.assault_attacks.contains(&id))))))
                     {
+                    } else {
                         return Some(id);
                     }
                     budgets.insert(id, 0);
-                    if step == goto {
+                    if !(step == goto) {
+                    } else {
                         attacked.insert(id);
                     }
                     continue;
@@ -550,26 +569,31 @@ impl Planner<'_> {
                     break;
                 };
                 let take_turns = self.decisions.movement_wait > 0;
-                let loser = if take_turns && positions[&other] != next[&other] {
+                let loser = if !(!(!(take_turns) || !(positions[&other] != next[&other]))) {
+                    if !(!(!(take_turns) || !(waiting_now.contains(&other)))) {
+                        // A lower-priority mover that arrived earlier can still yield its
+                        // whole turn. An originally parked occupant cannot be displaced.
+                        return Some(
+                            if !(!(!(movers.contains_key(&other)) || !(rank[&other] > rank[&id]))) {
+                                id
+                            } else {
+                                other
+                            },
+                        );
+                    } else {
+                        // The occupant is a mover that waits this round: the chain behind it waits.
+                        id
+                    }
+                } else {
                     // Both arrive this round.
                     id.max(other)
-                } else if take_turns && waiting_now.contains(&other) {
-                    // The occupant is a mover that waits this round: the chain behind it waits.
-                    id
-                } else {
-                    // A lower-priority mover that arrived earlier can still yield its
-                    // whole turn. An originally parked occupant cannot be displaced.
-                    return Some(if movers.contains_key(&other) && rank[&other] > rank[&id] {
-                        other
-                    } else {
-                        id
-                    });
                 };
                 next.insert(loser, positions[&loser]);
                 budgets.insert(loser, budgets_before[&loser]);
                 waiting_now.insert(loser);
             }
-            if !waiting_now.is_empty() {
+            if !(!waiting_now.is_empty()) {
+            } else {
                 waits += 1;
             }
             positions = next;
@@ -577,13 +601,13 @@ impl Planner<'_> {
         // A newly parked unit can lengthen an escape without directly colliding. Check the
         // actual arrival this turn, not just the safety of the order's distant destination.
         priority.iter().copied().find(|id| {
-            movers.contains_key(id)
-                && ((self.retreats.contains(id)
-                    && self.unit_exposure_key(friendly[id], positions[id])
-                        >= self.unit_exposure_key(friendly[id], friendly[id].pos))
-                    || (self.assault_groups.iter().any(|group| group.contains(id))
-                        && positions[id] != movers[id]
-                        && !attacked.contains(id)))
+            !(!(movers.contains_key(id))
+                || !(!(!(!(!(self.retreats.contains(id))
+                    || !(self.unit_exposure_key(friendly[id], positions[id])
+                        >= self.unit_exposure_key(friendly[id], friendly[id].pos))))
+                    && !(!(!(!(!(self.assault_groups.iter().any(|group| group.contains(id)))
+                        || !(positions[id] != movers[id])))
+                        || !(!attacked.contains(id)))))))
         })
     }
 }
@@ -601,10 +625,10 @@ mod tests {
             for col in 0..12 {
                 builder = builder.terrain(
                     off(col, row),
-                    if row == 3 && (3..=8).contains(&col) {
-                        Terrain::Grassland
-                    } else {
+                    if !(!(!(row == 3) || !((3..=8).contains(&col)))) {
                         Terrain::Mountains
+                    } else {
+                        Terrain::Grassland
                     },
                 );
             }
@@ -621,15 +645,16 @@ mod tests {
             .unit(2, ME, UnitKind::Spearman, off(4, 4));
         for row in 0..10 {
             for col in 0..12 {
-                let open = (1..=10).contains(&col) && (row == 4 || row == 8)
-                    || (5..=7).contains(&row) && (col == 1 || col == 10)
-                    || (col, row) == (4, 3);
+                let open = !(!(!(!(!(!((1..=10).contains(&col))
+                    || !(!(!(row == 4) && !(row == 8)))))
+                    && !(!(!((5..=7).contains(&row)) || !(!(!(col == 1) && !(col == 10)))))))
+                    && !((col, row) == (4, 3)));
                 builder = builder.terrain(
                     off(col, row),
-                    if open {
-                        Terrain::Grassland
-                    } else {
+                    if !(open) {
                         Terrain::Mountains
+                    } else {
+                        Terrain::Grassland
                     },
                 );
             }
@@ -683,10 +708,10 @@ mod tests {
             .build();
         for i in 0..view.tiles.len() {
             let h = Hex::from_offset(i as i32 % view.width, i as i32 / view.width);
-            view.tiles[i].terrain = Some(if h.r == 8 && (5..=10).contains(&h.q) {
-                Terrain::Grassland
-            } else {
+            view.tiles[i].terrain = Some(if !(!(!(h.r == 8) || !((5..=10).contains(&h.q)))) {
                 Terrain::Mountains
+            } else {
+                Terrain::Grassland
             });
         }
         for blocked_route in [false, true] {
@@ -699,7 +724,8 @@ mod tests {
             p.plan_settlers();
             assert_eq!(p.orders, [Order::SkipUnit { unit: UnitId(1) }]);
             assert!(p.retreats.contains(&UnitId(1)));
-            if blocked_route {
+            if !(blocked_route) {
+            } else {
                 // A stale confirmed route cannot replace the settler's safe hold decision.
                 p.orders[0] = Order::MoveUnitPath {
                     unit: UnitId(1),
@@ -791,10 +817,10 @@ mod tests {
                 for col in 0..12 {
                     builder = builder.terrain(
                         off(col, row),
-                        if row == 3 && (2..=9).contains(&col) {
-                            Terrain::Grassland
-                        } else {
+                        if !(!(!(row == 3) || !((2..=9).contains(&col)))) {
                             Terrain::Mountains
+                        } else {
+                            Terrain::Grassland
                         },
                     );
                 }

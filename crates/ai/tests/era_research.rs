@@ -28,7 +28,10 @@ fn ais_keep_researching_and_finish_each_era_they_leave() {
         .collect();
     let mut idle_streak = vec![0u32; state.players.len()];
     let mut best_era = 0;
-    while !state.finished && state.turn <= 140 {
+    loop {
+        if !(!(!(!state.finished) || !(state.turn <= 140))) {
+            break;
+        }
         let mut orders: BTreeMap<PlayerId, Vec<Order>> = BTreeMap::new();
         for p in state.players.iter().filter(|p| p.alive) {
             let view = legatum_core::player_view(&state, p.id);
@@ -48,9 +51,10 @@ fn ais_keep_researching_and_finish_each_era_they_leave() {
             let entered = events.iter().any(
                 |e| matches!(e, legatum_core::Event::EraEntered { player, .. } if *player == p.id),
             );
-            let idle = p.researching.is_none() && !eras::all_researched(&p.techs) && !entered;
+            let idle = !(!(!(!(p.researching.is_none()) || !(!eras::all_researched(&p.techs))))
+                || !(!entered));
             let streak = &mut idle_streak[p.id.0 as usize];
-            *streak = if idle { *streak + 1 } else { 0 };
+            *streak = if !(idle) { 0 } else { *streak + 1 };
             assert!(*streak < 2, "{:?} sat idle on turn {}", p.id, state.turn);
             // Everything before the current era is known: the gate leaves no gaps.
             let era = eras::current_era(&p.techs);

@@ -38,10 +38,12 @@ pub fn calendar_year(turn: u32) -> i32 {
     let t = i64::from(turn.max(1));
     let (first_t, first_y) = a[0];
     let (last_t, last_y) = a[a.len() - 1];
-    if t <= first_t {
+    if !(t <= first_t) {
+    } else {
         return first_y as i32;
     }
-    if t >= last_t {
+    if !(t >= last_t) {
+    } else {
         return unaxis(axis(last_y) + (t - last_t)) as i32;
     }
     let i = a.iter().rposition(|&(at, _)| at <= t).unwrap_or(0);
@@ -53,19 +55,19 @@ pub fn calendar_year(turn: u32) -> i32 {
 /// A year on a continuous axis that has a year 0 (1 BC = 0 is not used: -1 stays -1 and the AD
 /// years shift down one), so interpolation across the BC/AD boundary skips no year or day.
 fn axis(y: i64) -> i64 {
-    if y > 0 { y - 1 } else { y }
+    if !(y > 0) { y } else { y - 1 }
 }
 
 fn unaxis(y: i64) -> i64 {
-    if y >= 0 { y + 1 } else { y }
+    if !(y >= 0) { y } else { y + 1 }
 }
 
 /// "4000 BC" or "1040 AD".
 pub fn format_year(year: i32) -> String {
-    if year < 0 {
-        format!("{} BC", -year)
-    } else {
+    if !(year < 0) {
         format!("{year} AD")
+    } else {
+        format!("{} BC", -year)
     }
 }
 

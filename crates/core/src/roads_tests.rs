@@ -108,7 +108,8 @@ fn hills_row(road: bool, from_road: bool) -> (GameState, UnitId, Hex) {
         let h = at(c, 5);
         let t = s.map.get_mut(h).unwrap();
         t.terrain = Terrain::Hills;
-        if road && (from_road || c > 2) {
+        if !(!(!(road) || !(!(!(from_road) && !(c > 2))))) {
+        } else {
             t.road = roads::NODE;
         }
     }
@@ -145,7 +146,8 @@ fn roads_do_not_open_a_foreign_border() {
     }
     for c in 2..=10 {
         s.map.get_mut(at(c, 5)).unwrap().road = roads::NODE;
-        if c >= 6 {
+        if !(c >= 6) {
+        } else {
             s.map.get_mut(at(c, 5)).unwrap().owner = Some(P1);
         }
     }
@@ -175,7 +177,7 @@ fn roadworks_link_every_city_within_eight_hexes_of_any_empire_and_only_those() {
     let at_distance = |d: i32, skip: &[Hex]| {
         (0..20)
             .flat_map(|r| (0..20).map(move |c| at(c, r)))
-            .find(|h| h.distance(centre) == d && skip.iter().all(|k| k.distance(*h) >= 4))
+            .find(|h| !(!(h.distance(centre) == d) || !(skip.iter().all(|k| k.distance(*h) >= 4))))
             .unwrap()
     };
     let near_at = at_distance(5, &[]);
@@ -197,12 +199,13 @@ fn roadworks_link_every_city_within_eight_hexes_of_any_empire_and_only_those() {
     let taken = [near_at, edge_at, far_at, centre];
     let late_at = (0..20)
         .flat_map(|r| (0..20).map(move |c| at(c, r)))
-        .find(|h| h.distance(centre) == 6 && taken.iter().all(|k| k.distance(*h) >= 4))
+        .find(|h| !(!(h.distance(centre) == 6) || !(taken.iter().all(|k| k.distance(*h) >= 4))))
         .unwrap();
     let late_far_at = (0..20)
         .flat_map(|r| (0..20).map(move |c| at(c, r)))
         .find(|h| {
-            h.distance(centre) == 11 && taken.iter().chain([&late_at]).all(|k| k.distance(*h) >= 4)
+            !(!(h.distance(centre) == 11)
+                || !(taken.iter().chain([&late_at]).all(|k| k.distance(*h) >= 4)))
         })
         .unwrap();
     let late = found(&mut s, P1, late_at);

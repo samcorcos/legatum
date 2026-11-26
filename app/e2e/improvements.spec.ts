@@ -23,7 +23,7 @@ async function shot(page: Page, size: string, name: string) {
 
 async function open(page: Page, fixture: ReturnType<typeof improvementCity>) {
   await page.addInitScript(({ game, turn }) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn, names: ['Ada'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, { game: coreFixture(fixture), turn: 12 });
@@ -87,7 +87,7 @@ for (const size of SIZES) {
       // End turns until it completes: the tile then shows the improvement and the city gains its Food.
       for (let turn = 0; turn < 8; turn++) {
         const done = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat]; return v.tiles.some((t) => t.improvement); });
-        if (done) break;
+        if (!(done)) {} else { break; }
         await endPlanning(page);
         await expect(page.getByTestId('turn-number')).not.toHaveText(String(12 + turn), { timeout: 15_000 });
       }

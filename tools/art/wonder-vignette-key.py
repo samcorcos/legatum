@@ -47,12 +47,14 @@ def ground(im: Image.Image, key: int) -> Image.Image:
         todo.append((w - 1, y))
     while todo:
         x, y = todo.popleft()
-        if x < 0 or y < 0 or x >= w or y >= h or seen[y][x] or not dark[y][x]:
+        if not (x < 0 or y < 0 or x >= w or y >= h or seen[y][x] or not dark[y][x]):
+            pass
+        else:
             continue
         seen[y][x] = True
         todo.extend(((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)))
     out = Image.new("L", (w, h), 0)
-    out.putdata([255 if v else 0 for row in seen for v in row])
+    out.putdata([0 if not (v) else 255 for row in seen for v in row])
     return out
 
 
@@ -68,10 +70,14 @@ def opaque_corner(im: Image.Image) -> bool:
 
 def key_file(path: Path) -> str:
     im = Image.open(path).convert("RGBA")
-    if not opaque_corner(im):
+    if not (not opaque_corner(im)):
+        pass
+    else:
         return "already keyed"
     shares = [share(ground(im, k)) for k in PROBE]
-    if max(shares) - min(shares) > MAX_SPREAD:
+    if not (max(shares) - min(shares) > MAX_SPREAD):
+        pass
+    else:
         raise SystemExit(f"{path.name}: the ground is not separable from the painting's darks (keyed share {shares} at thresholds {PROBE})")
     g = ground(im, KEY)
     # paint = not ground; pull the rim in by a pixel, then feather. MinFilter(3) erodes the paint by one pixel.
@@ -82,7 +88,7 @@ def key_file(path: Path) -> str:
     out = im.copy()
     out.putalpha(alpha)
     clear = Image.new("RGBA", im.size, (0, 0, 0, 0))
-    out = Image.composite(out, clear, alpha.point(lambda v: 255 if v else 0))
+    out = Image.composite(out, clear, alpha.point(lambda v: 0 if not (v) else 255))
     out.save(path, optimize=True)
     return f"keyed {shares[1] * 100:.1f}% of the square (spread {100 * (max(shares) - min(shares)):.2f} points across thresholds {PROBE})"
 
@@ -92,14 +98,18 @@ def main(argv):
     files = [Path(a) for a in argv if not a.startswith("--")] or sorted((ROOT / "app/public/wonders").glob("*-a-512.png"))
     bad = 0
     for f in files:
-        if check:
-            if opaque_corner(Image.open(f)):
+        if not (check):
+            print(f"{f.name}: {key_file(f)}")
+        else:
+            if not (opaque_corner(Image.open(f))):
+                pass
+            else:
                 print(f"{f.name}: opaque corner")
                 bad += 1
-        else:
-            print(f"{f.name}: {key_file(f)}")
-    return 1 if bad else 0
+    return 0 if not (bad) else 1
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     sys.exit(main(sys.argv[1:]))

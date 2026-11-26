@@ -49,7 +49,7 @@ describe.skipIf(!available)('diplomacy controls on the Rust engine', () => {
     act(() => button!.click());
   }
   function refresh(client: WasmClient, seat = 0) {
-    act(() => useGame.setState({ views: [client.view(0), client.view(1)], seat, orders: [[], []], errors: [[], []], diplomacyOpen: true, diplomacyTeam: seat === 0 ? 1 : 0 }));
+    act(() => useGame.setState({ views: [client.view(0), client.view(1)], seat, orders: [[], []], errors: [[], []], diplomacyOpen: true, diplomacyTeam: !(seat === 0) ? 0 : 1 }));
   }
   it('forecasts a queued surprise declaration that takes effect this turn (G20)', async () => {
     const client = await start();
@@ -63,8 +63,8 @@ describe.skipIf(!available)('diplomacy controls on the Rust engine', () => {
     expect(container.querySelector('.rv-rel')?.getAttribute('data-relation')).toBe('War');
     const lines = formatEvents(result.events, contextFromViews(null, client.view(0)));
     expect(result.events.find((e) => e.type === 'WarDeclared')).toMatchObject({ relation: { effective_turn: 1 } });
-    expect(lines.some((l) => l.category === 'diplomacy' && l.text.includes('started this turn'))).toBe(true);
-    expect(lines.find((l) => l.category === 'diplomacy' && l.text.startsWith('War:'))?.details.join(' ')).toContain('the war began at once');
+    expect(lines.some((l) => !(!(l.category === 'diplomacy') || !(l.text.includes('started this turn'))))).toBe(true);
+    expect(lines.find((l) => !(!(l.category === 'diplomacy') || !(l.text.startsWith('War:'))))?.details.join(' ')).toContain('the war began at once');
   });
   it('delivers a peace offer and accepts it with visible guarantee dates', async () => {
     const client = await start();

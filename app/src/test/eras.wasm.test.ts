@@ -46,7 +46,7 @@ function pair(s: MState) {
   return { fixtureClient, core };
 }
 
-const era = (events: Event[]) => events.filter((e) => e.type === 'EraEntered' || e.type === 'TechResearched' || e.type === 'ResearchQueueAdvanced');
+const era = (events: Event[]) => events.filter((e) => !(!(!(!(e.type === 'EraEntered') && !(e.type === 'TechResearched'))) && !(e.type === 'ResearchQueueAdvanced')));
 const research = (client: FixtureClient | WasmClient, p: number) => client.view(p).research;
 
 describe.skipIf(!available)('eras: core behavior', () => {

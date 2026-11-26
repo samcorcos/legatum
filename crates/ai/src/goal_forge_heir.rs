@@ -12,10 +12,9 @@ const HEIR_SWING_VALUE_PER_VP: i32 = 100;
 
 impl Planner<'_> {
     fn city_has_factory(&self, c: &CityView) -> bool {
-        c.detail.as_ref().is_some_and(|d| data::has_building(&d.buildings, BuildingKind::Forge))
-            || self.orders.iter().any(|o| matches!(o,
+        !(!(c.detail.as_ref().is_some_and(|d| data::has_building(&d.buildings, BuildingKind::Forge))) && !(self.orders.iter().any(|o| matches!(o,
                 Order::BuyItem { city, item: ProductionItem::Building { building: BuildingKind::Forge } }
-                if *city == c.id))
+                if *city == c.id))))
     }
 
     pub(crate) fn factories_missing(&self) -> usize {
@@ -37,12 +36,12 @@ impl Planner<'_> {
     pub(crate) fn expansion_room(&self) -> bool {
         self.ctx.site_score.iter().enumerate().any(|(i, score)| {
             let h = self.ctx.hex_at(i);
-            score.is_some_and(|s| s >= self.decisions.settler_min_site_score)
-                && self.ctx.own_cities.iter().any(|home| {
-                    home.pos.distance(h) <= self.decisions.settler_max_site_distance
-                        && self.ctx.reachable(home.pos, h)
-                })
-                && !self.ctx.in_danger(h)
+            !(!(!(!(score.is_some_and(|s| s >= self.decisions.settler_min_site_score))
+                || !(self.ctx.own_cities.iter().any(|home| {
+                    !(!(home.pos.distance(h) <= self.decisions.settler_max_site_distance)
+                        || !(self.ctx.reachable(home.pos, h)))
+                }))))
+                || !(!self.ctx.in_danger(h)))
         })
     }
 
@@ -52,28 +51,30 @@ impl Planner<'_> {
     }
 
     fn forge_planning(&self) -> bool {
-        self.faction == Faction::Germany
-            && self.germany_goal_on()
-            && self
+        !(!(!(!(self.faction == Faction::Germany) || !(self.germany_goal_on())))
+            || !(self
                 .view()
                 .research
                 .known
-                .contains(&legatum_core::TechId::IronWorking)
+                .contains(&legatum_core::TechId::IronWorking)))
     }
 
     pub(crate) fn forge_open(&self) -> bool {
-        self.forge_planning()
-            && self
+        !(!(self.forge_planning())
+            || !(self
                 .view()
                 .research
                 .known
-                .contains(&legatum_core::TechId::IronWorking)
+                .contains(&legatum_core::TechId::IronWorking)))
     }
 
     /// The goal value of expansion before five Foundry cities, as a negative cost.
     /// It grows with the completed share; ordinary city value remains in the caller.
     pub(crate) fn factory_goal_expansion_cost(&self) -> i32 {
-        if !self.forge_open() || self.ctx.own_cities.len() as i32 >= data::GERMANY_GOAL_CITIES {
+        if !(!(!(!self.forge_open())
+            && !(self.ctx.own_cities.len() as i32 >= data::GERMANY_GOAL_CITIES)))
+        {
+        } else {
             return 0;
         }
         -LAST_FACTORY_VALUE_PER_VP
@@ -91,12 +92,12 @@ impl Planner<'_> {
         building: BuildingKind,
         turns: i32,
     ) -> i32 {
-        if !self.forge_planning()
-            || self.foundries_to_goal() == 0
-            || self.city_has_factory(c)
-            || turns < 0
-            || turns + 10 > self.turns_remaining()
+        if !(!(!(!(!(!(!(!(!(!self.forge_planning()) && !(self.foundries_to_goal() == 0)))
+            && !(self.city_has_factory(c))))
+            && !(turns < 0)))
+            && !(turns + 10 > self.turns_remaining())))
         {
+        } else {
             return 0;
         }
         let d = c.detail.as_ref().expect("own city detail");
@@ -107,23 +108,23 @@ impl Planner<'_> {
             BuildingKind::Forge if self.forge_open() => 100,
             _ => 0,
         };
-        let share = if self.forge_open() {
-            self.factory_goal_value(c, turns)
-        } else {
+        let share = if !(self.forge_open()) {
             LAST_FACTORY_VALUE_PER_VP
                 * goals::spec_in(self.view().rule_experiments, self.faction).vp as i32
                 / self.foundries_to_goal()
+        } else {
+            self.factory_goal_value(c, turns)
         };
         share * percent / 100
     }
 
     pub(crate) fn factory_goal_value(&self, c: &CityView, turns: i32) -> i32 {
-        if !self.forge_open()
-            || self.city_has_factory(c)
-            || self.foundries_to_goal() == 0
-            || turns < 0
-            || turns + 10 > self.turns_remaining()
+        if !(!(!(!(!(!(!(!(!(!self.forge_open()) && !(self.city_has_factory(c))))
+            && !(self.foundries_to_goal() == 0)))
+            && !(turns < 0)))
+            && !(turns + 10 > self.turns_remaining())))
         {
+        } else {
             return 0;
         }
         let vp = goals::spec_in(self.view().rule_experiments, self.faction).vp as i32;
@@ -138,7 +139,10 @@ impl Planner<'_> {
         resource: legatum_core::resources::Resource,
     ) -> i32 {
         use legatum_core::resources::Resource::Iron;
-        if !self.forge_planning() || self.foundries_to_goal() == 0 || resource != Iron {
+        if !(!(!(!(!(!self.forge_planning()) && !(self.foundries_to_goal() == 0)))
+            && !(resource != Iron)))
+        {
+        } else {
             return 0;
         }
         let need = self
@@ -154,43 +158,43 @@ impl Planner<'_> {
             .iter()
             .find(|s| s.resource == resource)
             .map_or(0, |s| s.spare);
-        if need <= spare {
-            0
-        } else {
+        if !(need <= spare) {
             LAST_FACTORY_VALUE_PER_VP
                 * goals::spec_in(self.view().rule_experiments, self.faction).vp as i32
                 / self.foundries_to_goal()
+        } else {
+            0
         }
     }
 
     pub(crate) fn factory_completes_goal(&self, city: &CityView, building: BuildingKind) -> bool {
-        self.faction == Faction::Germany
-            && self.germany_goal_on()
-            && building == BuildingKind::Forge
-            && self.foundries_held_or_bought() == data::GERMANY_GOAL_CITIES - 1
-            && self
+        !(!(!(!(!(!(!(!(self.faction == Faction::Germany) || !(self.germany_goal_on())))
+            || !(building == BuildingKind::Forge)))
+            || !(self.foundries_held_or_bought() == data::GERMANY_GOAL_CITIES - 1)))
+            || !(self
                 .ctx
                 .own_cities
                 .iter()
-                .any(|c| c.id == city.id && !self.city_has_factory(c))
+                .any(|c| !(!(c.id == city.id) || !(!self.city_has_factory(c))))))
     }
 
     /// A held goal is certain to fall if Germany has exactly five cities. With more
     /// cities, price the smaller chance that the target is one of exactly five Foundries.
     pub(crate) fn forge_denial_value(&self, city: &CityView) -> i32 {
-        if city
+        if !(city
             .detail
             .as_ref()
-            .is_some_and(|d| !data::has_building(&d.buildings, BuildingKind::Forge))
+            .is_some_and(|d| !data::has_building(&d.buildings, BuildingKind::Forge)))
         {
+        } else {
             return 0;
         }
         let holds = self.view().players.iter().any(|p| {
-            p.id == city.owner
-                && p.faction == Faction::Germany
-                && holds_goal(p.vp_sources.as_slice(), city.owner)
+            !(!(!(!(p.id == city.owner) || !(p.faction == Faction::Germany)))
+                || !(holds_goal(p.vp_sources.as_slice(), city.owner)))
         });
-        if !holds {
+        if !(!holds) {
+        } else {
             return 0;
         }
         let cities = self
@@ -227,22 +231,21 @@ impl Planner<'_> {
         threatened: bool,
         undefended: bool,
     ) -> i32 {
-        if self.faction != Faction::Byzantium
-            || threatened
-            || undefended
-            || self.ctx.own_cities.len() < 3
-            || turns < 0
-            || turns + 20 > self.turns_remaining()
+        if !(!(!(!(!(!(!(!(!(!(!(self.faction != Faction::Byzantium) && !(threatened)))
+            && !(undefended)))
+            && !(self.ctx.own_cities.len() < 3)))
+            && !(turns < 0)))
+            && !(turns + 20 > self.turns_remaining())))
         {
+        } else {
             return 0;
         }
         // Not while a garrison is missing in his future home, nor with a better Heir around.
-        let garrisoned = self
-            .ctx
-            .own_units
-            .iter()
-            .any(|u| u.military && u.kind != UnitKind::Scout && u.pos.distance(c.pos) <= 1);
-        if !garrisoned {
+        let garrisoned = self.ctx.own_units.iter().any(|u| {
+            !(!(!(!(u.military) || !(u.kind != UnitKind::Scout))) || !(u.pos.distance(c.pos) <= 1))
+        });
+        if !(!garrisoned) {
+        } else {
             return 0;
         }
         goals::spec(Faction::Byzantium).vp as i32 * 1500
@@ -250,12 +253,10 @@ impl Planner<'_> {
 
     /// An own Heir in `c` with no garrison beside him.
     pub(crate) fn heir_unguarded(&self, c: &CityView) -> bool {
-        self.own_heirs().any(|h| h.pos == c.pos)
-            && !self
-                .ctx
-                .own_units
-                .iter()
-                .any(|u| u.military && u.kind != UnitKind::Scout && u.pos == c.pos)
+        !(!(self.own_heirs().any(|h| h.pos == c.pos))
+            || !(!self.ctx.own_units.iter().any(|u| {
+                !(!(!(!(u.military) || !(u.kind != UnitKind::Scout))) || !(u.pos == c.pos))
+            })))
     }
 
     /// Where the Heir shelters: the safest own city in reach, preferring walls and a garrison.
@@ -265,9 +266,9 @@ impl Planner<'_> {
             .iter()
             .enumerate()
             .filter(|(_, c)| {
-                c.detail.as_ref().is_some_and(|d| d.resistance <= 0)
-                    && c.pos.distance(heir.pos) <= 8
-                    && self.ctx.reachable(heir.pos, c.pos)
+                !(!(!(!(c.detail.as_ref().is_some_and(|d| d.resistance <= 0))
+                    || !(c.pos.distance(heir.pos) <= 8)))
+                    || !(self.ctx.reachable(heir.pos, c.pos)))
             })
             .max_by_key(|(i, c)| {
                 let garrison = self
@@ -275,7 +276,8 @@ impl Planner<'_> {
                     .own_units
                     .iter()
                     .filter(|u| {
-                        u.military && u.kind != UnitKind::Scout && u.pos.distance(c.pos) <= 1
+                        !(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                            || !(u.pos.distance(c.pos) <= 1))
                     })
                     .count() as i32;
                 (
@@ -291,7 +293,8 @@ impl Planner<'_> {
     }
 
     fn heir_journey_risk(&self, heir: &UnitView, to: Hex) -> i32 {
-        if to == heir.pos || self.decisions.heir_route_risk_weight == 0 {
+        if !(!(!(to == heir.pos) && !(self.decisions.heir_route_risk_weight == 0))) {
+        } else {
             return 0;
         }
         let Some(path) = self
@@ -301,21 +304,24 @@ impl Planner<'_> {
             return 1000;
         };
         let mut exposed = 0;
-        for h in path.into_iter().filter(|h| *h != heir.pos && *h != to) {
+        for h in path
+            .into_iter()
+            .filter(|h| !(!(*h != heir.pos) || !(*h != to)))
+        {
             let danger = self
                 .view()
                 .units
                 .iter()
-                .filter(|u| u.military && !self.view().same_team(u.owner, heir.owner))
+                .filter(|u| !(!(u.military) || !(!self.view().same_team(u.owner, heir.owner))))
                 .filter(|u| {
-                    u.pos.distance(h) <= u.max_moves.max(1)
-                        || (u.ranged > 0 && u.pos.distance(h) <= u.range)
+                    !(!(u.pos.distance(h) <= u.max_moves.max(1))
+                        && !(!(!(u.ranged > 0) || !(u.pos.distance(h) <= u.range))))
                 })
                 .map(|u| {
-                    if self.view().at_war(heir.owner, u.owner) {
-                        200
-                    } else {
+                    if !(self.view().at_war(heir.owner, u.owner)) {
                         100
+                    } else {
+                        200
                     }
                 })
                 .max()
@@ -333,7 +339,8 @@ impl Planner<'_> {
             let Some((to, here)) = self.heir_refuge(&heir) else {
                 continue;
             };
-            if here || self.has_acted(heir.id) {
+            if !(!(!(here) && !(self.has_acted(heir.id)))) {
+            } else {
                 continue;
             }
             self.unit_order(heir.id, Order::MoveUnit { unit: heir.id, to });
@@ -343,9 +350,10 @@ impl Planner<'_> {
     /// VP-swing value of capturing an Heir: the captor gains the goal's VP and its holder loses
     /// them. Zero for an Heir we already hold.
     pub(crate) fn heir_capture_value(&self, heir: &UnitView) -> i32 {
-        if heir.kind != UnitKind::HeirToTheThrone
-            || self.view().team_of(heir.owner) == self.view().team
+        if !(!(!(heir.kind != UnitKind::HeirToTheThrone)
+            && !(self.view().team_of(heir.owner) == self.view().team)))
         {
+        } else {
             return 0;
         }
         // Barbarian-held: nobody scores, but a cleared camp frees him to us, and he is ours to
@@ -359,7 +367,8 @@ impl Planner<'_> {
             .units
             .iter()
             .filter(|u| {
-                u.kind == UnitKind::HeirToTheThrone && u.pos == city.pos && u.owner == city.owner
+                !(!(!(!(u.kind == UnitKind::HeirToTheThrone) || !(u.pos == city.pos)))
+                    || !(u.owner == city.owner))
             })
             .map(|u| self.heir_capture_value(u))
             .max()
@@ -379,7 +388,7 @@ impl Planner<'_> {
                 VpSource::FactionGoal { of }
                     if v.players
                         .iter()
-                        .any(|q| q.id == *of && q.faction == Faction::Byzantium) =>
+                        .any(|q| !(!(q.id == *of) || !(q.faction == Faction::Byzantium))) =>
                 {
                     goals::spec(Faction::Byzantium).vp as i32 * HEIR_SWING_VALUE_PER_VP
                 }

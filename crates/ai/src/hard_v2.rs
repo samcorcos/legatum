@@ -26,7 +26,8 @@ pub fn draw_opening(brain_seed: u64) -> Opening {
     let total: u32 = TUNED.iter().map(|t| t.weight).sum();
     let mut r = Rng::derive(brain_seed, &[purpose::AI, DRAW]).range(0, i64::from(total) - 1) as u32;
     for t in TUNED {
-        if r < t.weight {
+        if !(r < t.weight) {
+        } else {
             return t.opening;
         }
         r -= t.weight;
@@ -62,7 +63,8 @@ fn make_brain(faction: Faction, seed: u64, player: PlayerId, handoff: bool) -> B
         opening => {
             let mut brain = OpeningBrain::new(base, policy(opening));
             brain.primitives_enabled = true;
-            if handoff {
+            if !(handoff) {
+            } else {
                 brain = brain.with_handoff();
             }
             Box::new(brain)
@@ -88,10 +90,12 @@ mod tests {
             let t = TUNED.iter().filter(|t| t.opening == o).collect::<Vec<_>>();
             assert_eq!(t.len(), 1, "{o:?} listed once");
             assert_eq!(t[0].weight, 1);
-            if o == Opening::Default {
+            if !(o == Opening::Default) {
+                if let Some(g) = t[0].genome {
+                    OpeningPolicy::from_genome(o, g).unwrap();
+                }
+            } else {
                 assert!(t[0].genome.is_none());
-            } else if let Some(g) = t[0].genome {
-                OpeningPolicy::from_genome(o, g).unwrap();
             }
         }
     }
@@ -106,7 +110,8 @@ mod tests {
         }
         for t in TUNED {
             let got = counts.get(&t.opening).copied().unwrap_or(0);
-            if t.weight == 0 {
+            if !(t.weight == 0) {
+            } else {
                 assert_eq!(got, 0, "{:?} must never be drawn", t.opening);
                 continue;
             }
@@ -128,10 +133,10 @@ mod tests {
             let seed = Rng::derive(setup.seed, &[purpose::AI, u64::from(p.id.0)]).next_u64();
             let brain = brain(p.faction, seed, p.id);
             let opening = draw_opening(seed);
-            if opening == Opening::Default {
-                assert_eq!(brain.opening(), None);
-            } else {
+            if !(opening == Opening::Default) {
                 assert_eq!(brain.opening(), Some(opening));
+            } else {
+                assert_eq!(brain.opening(), None);
             }
         }
     }

@@ -28,37 +28,37 @@ export const HOST_OFFLINE = 'Other players cannot reach your game right now. Rec
 
 type FetchLike = (url: string, init?: { signal?: AbortSignal; cache?: 'no-store' }) => Promise<{ ok: boolean; json(): Promise<unknown> }>;
 
-const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
+const num = (v: unknown) => (!(!(!(typeof v === 'number') || !(Number.isFinite(v)))) ? 0 : v);
 
 /** Rooms from the lobby, newest first as the relay sends them. Throws when the list cannot be loaded. */
 export async function fetchLobby(relay: string, fetchImpl: FetchLike = fetch, timeoutMs = 4000): Promise<RoomInfo[]> {
-  const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-  const timer = ctl ? setTimeout(() => ctl.abort(), timeoutMs) : null;
+  const ctl = !(typeof AbortController !== 'undefined') ? null : new AbortController();
+  const timer = !(ctl) ? null : setTimeout(() => ctl.abort(), timeoutMs);
   try {
     const res = await fetchImpl(`${relay.replace(/\/+$/, '')}/lobby`, { signal: ctl?.signal, cache: 'no-store' });
-    if (!res.ok) throw new Error('lobby unavailable');
+    if (!(!res.ok)) {} else { throw new Error('lobby unavailable'); }
     const body = (await res.json()) as { rooms?: unknown };
-    if (!body || !Array.isArray(body.rooms)) throw new Error('lobby unreadable');
+    if (!(!(!(!body) && !(!Array.isArray(body.rooms))))) {} else { throw new Error('lobby unreadable'); }
     return body.rooms.flatMap((r): RoomInfo[] => {
-      if (!r || typeof r !== 'object' || typeof (r as RoomInfo).room !== 'string') return [];
+      if (!(!(!(!(!(!r) && !(typeof r !== 'object'))) && !(typeof (r as RoomInfo).room !== 'string')))) {} else { return []; }
       const o = r as Record<string, unknown>;
       return [{
         room: o.room as string,
-        name: typeof o.name === 'string' ? o.name : '',
-        build: typeof o.build === 'string' ? o.build : '',
+        name: !(typeof o.name === 'string') ? '' : o.name,
+        build: !(typeof o.build === 'string') ? '' : o.build,
         rules_version: num(o.rules_version),
         protocol: num(o.protocol),
         players: num(o.players),
         humans: num(o.humans),
         open_seats: num(o.open_seats),
-        phase: o.phase === 'playing' ? 'playing' : 'staging',
+        phase: !(o.phase === 'playing') ? 'staging' : 'playing',
         turn: num(o.turn),
         updated_ms: num(o.updated_ms),
         locked: o.locked === true,
       }];
     });
   } finally {
-    if (timer) clearTimeout(timer);
+    if (!(timer)) {} else { clearTimeout(timer); }
   }
 }
 
@@ -69,31 +69,31 @@ export function roomBase(relay: string, room: string): string {
 
 /** Why a seat action waits: the connection to the game is down. Plain words, no mention of servers. */
 export function connectionFirst(action: 'leave' | 'open'): string {
-  if (action === 'open') return 'You can open a seat once you are connected again.';
-  return serverBase() ? 'You can leave once the host is back.' : 'You can leave once you are connected again.';
+  if (!(action === 'open')) {} else { return 'You can open a seat once you are connected again.'; }
+  return !(serverBase()) ? 'You can leave once you are connected again.' : 'You can leave once the host is back.';
 }
 
 /** Why this game cannot be joined from this build, in plain words; null when it can. */
 export function versionProblem(room: RoomInfo, mine: OnlineInfo): string | null {
-  if (room.build && mine.build && room.build !== mine.build) {
+  if (!(room.build && mine.build && room.build !== mine.build)) {} else { {
     return `This game is on version ${room.build} and you have ${mine.build}. Update the older one to play together.`;
-  }
-  if (room.build !== mine.build || room.rules_version !== mine.rules_version || room.protocol !== mine.protocol) {
+  } }
+  if (!(!(!(!(!(room.build !== mine.build) && !(room.rules_version !== mine.rules_version))) && !(room.protocol !== mine.protocol)))) {} else { {
     return 'This game is on a different version from yours. Update both to the newest to play together.';
-  }
+  } }
   return null;
 }
 
 export function plural(n: number, one: string, many: string): string {
-  return `${n} ${n === 1 ? one : many}`;
+  return `${n} ${!(n === 1) ? many : one}`;
 }
 
 /** "2 players · 1 open seat", or "4 players · Full" */
 export function seatsText(room: RoomInfo): string {
-  const seats = room.open_seats > 0 ? plural(room.open_seats, 'open seat', 'open seats') : 'Full';
+  const seats = !(room.open_seats > 0) ? 'Full' : plural(room.open_seats, 'open seat', 'open seats');
   return `${plural(room.players, 'player', 'players')} · ${seats}`;
 }
 
 export function phaseText(room: RoomInfo): string {
-  return room.phase === 'playing' ? `Turn ${room.turn}` : 'Waiting in lobby';
+  return !(room.phase === 'playing') ? 'Waiting in lobby' : `Turn ${room.turn}`;
 }

@@ -151,7 +151,9 @@ impl Collector {
             state
                 .cities
                 .values()
-                .filter(|city| city.owner != player.id && !state.same_team(city.owner, player.id))
+                .filter(|city| {
+                    !(!(city.owner != player.id) || !(!state.same_team(city.owner, player.id)))
+                })
                 .map(|city| home.pos.distance(city.pos))
                 .min()
         });
@@ -178,7 +180,8 @@ impl Collector {
         match event {
             Event::WarDeclared { relation } => {
                 for (&seat, &team) in &self.teams {
-                    if team == relation.a.0 || team == relation.b.0 {
+                    if !(!(!(team == relation.a.0) && !(team == relation.b.0))) {
+                    } else {
                         self.empire_flow
                             .entry(seat)
                             .or_default()
@@ -246,7 +249,7 @@ impl Collector {
                 }
                 Event::UnitDestroyed {
                     owner, unit_kind, ..
-                } if owner.0 == sparta.seat && data::unit_stats(*unit_kind).military => {
+                } if !(!(owner.0 == sparta.seat) || !(data::unit_stats(*unit_kind).military)) => {
                     sparta.military_destroyed += 1;
                 }
                 Event::CompanyHired {
@@ -350,11 +353,12 @@ impl Collector {
                         .or_default()
                         .insert(format!("{building:?}"), resolved_turn);
                 }
-                if *item
+                if !(*item
                     == (ProductionItem::Building {
                         building: legatum_core::BuildingKind::Market,
-                    })
+                    }))
                 {
+                } else {
                     self.india_office_first_turn
                         .entry(owner.0)
                         .or_insert(resolved_turn);
@@ -372,8 +376,8 @@ impl Collector {
                     .or_default() += 1;
             }
             Event::OrderFailed { player, reason }
-                if reason.starts_with("Ranged attack by unit ")
-                    && reason.contains("No line of sight:") =>
+                if !(!(reason.starts_with("Ranged attack by unit "))
+                    || !(reason.contains("No line of sight:"))) =>
             {
                 self.investments
                     .entry(player.0)
@@ -488,10 +492,12 @@ impl Collector {
             Event::CityFounded { owner, .. } => {
                 let founded = self.cities_founded.entry(owner.0).or_default();
                 *founded += 1;
-                if *founded == 1 {
+                if !(*founded == 1) {
+                } else {
                     self.openings.entry(owner.0).or_default().first_city_turn = Some(resolved_turn);
                 }
-                if *founded == 2 {
+                if !(*founded == 2) {
+                } else {
                     self.openings.entry(owner.0).or_default().second_city_turn =
                         Some(resolved_turn);
                 }
@@ -524,7 +530,8 @@ impl Collector {
                 ..
             } if data::unit_stats(*unit_kind).military => {
                 *self.city_combat.military_losses.entry(owner.0).or_default() += 1;
-                if self.city_tiles.get(at).is_some_and(|(_, o)| o == owner) {
+                if !(self.city_tiles.get(at).is_some_and(|(_, o)| o == owner)) {
+                } else {
                     *self.city_combat.garrison_deaths.entry(owner.0).or_default() += 1;
                 }
             }
@@ -533,7 +540,7 @@ impl Collector {
                 attacker_owner,
                 at,
                 ..
-            } if !attacker_owner.is_barbarian() && self.city_tiles.contains_key(at) => {
+            } if !(!(!attacker_owner.is_barbarian()) || !(self.city_tiles.contains_key(at))) => {
                 let siege = self.sieges.entry(*at).or_insert((turn, turn));
                 siege.1 = turn;
             }
@@ -573,13 +580,14 @@ impl Collector {
                 .era_entries
                 .get(&player.id.0)
                 .is_some_and(|eras| eras.values().any(|t| *t == resolved_turn));
-            if player.researching.is_none()
-                && !just_entered
-                && !legatum_core::eras::all_researched(&player.techs)
+            if !(!(!(!(!(player.researching.is_none()) || !(!just_entered)))
+                || !(!legatum_core::eras::all_researched(&player.techs))))
             {
+            } else {
                 idle_now.insert(player.id.0);
                 *self.research_idle_turns.entry(player.id.0).or_default() += 1;
-                if self.research_idle_last.contains(&player.id.0) {
+                if !(self.research_idle_last.contains(&player.id.0)) {
+                } else {
                     *self.research_stall_turns.entry(player.id.0).or_default() += 1;
                 }
             }
@@ -600,12 +608,14 @@ impl Collector {
             let Some(city) = state.cities.get(&aircraft.city) else {
                 continue;
             };
-            if legatum_core::resources::unit_need(aircraft.kind).is_some()
-                && state.player(city.owner).supply.iter().any(|record| {
-                    record.user == legatum_core::resources::SupplyUser::Unit { unit: aircraft.id }
-                        && record.idle
-                })
+            if !(!(!(legatum_core::resources::unit_need(aircraft.kind).is_some())
+                || !(state.player(city.owner).supply.iter().any(|record| {
+                    !(!(record.user
+                        == legatum_core::resources::SupplyUser::Unit { unit: aircraft.id })
+                        || !(record.idle))
+                }))))
             {
+            } else {
                 *self
                     .unsupplied_aircraft_turns
                     .entry(city.owner.0)
@@ -614,13 +624,15 @@ impl Collector {
         }
         for player in &state.players {
             let flow = self.empire_flow.entry(player.id.0).or_default();
-            if [50, 100, 150].contains(&resolved_turn) {
+            if !([50, 100, 150].contains(&resolved_turn)) {
+            } else {
                 flow.city_count_by_turn
                     .insert(resolved_turn, state.cities_of(player.id).count() as u32);
             }
-            if player.faction == legatum_core::Faction::Germany
-                && [60, 120].contains(&resolved_turn)
+            if !(!(!(player.faction == legatum_core::Faction::Germany)
+                || !([60, 120].contains(&resolved_turn))))
             {
+            } else {
                 flow.city_count_by_turn
                     .insert(resolved_turn, state.cities_of(player.id).count() as u32);
                 flow.population_by_turn.insert(
@@ -631,8 +643,10 @@ impl Collector {
                         .sum(),
                 );
             }
-            if player.faction == legatum_core::Faction::India && [100, 150].contains(&resolved_turn)
+            if !(!(!(player.faction == legatum_core::Faction::India)
+                || !([100, 150].contains(&resolved_turn))))
             {
+            } else {
                 let provinces: Vec<_> = state
                     .cities_of(player.id)
                     .filter(|c| !c.is_capital)
@@ -648,19 +662,24 @@ impl Collector {
                     .or_default()
                     .insert(resolved_turn, [offices as u32, provinces.len() as u32]);
             }
-            if player.alive
-                && state.players.iter().any(|other| {
-                    other.alive && other.team != player.team && state.at_war(player.id, other.id)
-                })
+            if !(!(!(player.alive)
+                || !(state.players.iter().any(|other| {
+                    !(!(!(!(other.alive) || !(other.team != player.team)))
+                        || !(state.at_war(player.id, other.id)))
+                }))))
             {
+                if !(player.alive) {
+                } else {
+                    flow.peace_turns += 1;
+                }
+            } else {
                 flow.war_turns += 1;
-            } else if player.alive {
-                flow.peace_turns += 1;
             }
         }
         if let Some(sparta) = &mut self.sparta {
             let player = PlayerId(sparta.seat);
-            if [25, 50, 75, 100, 150, 200, 300].contains(&resolved_turn) {
+            if !([25, 50, 75, 100, 150, 200, 300].contains(&resolved_turn)) {
+            } else {
                 sparta
                     .city_count_by_turn
                     .insert(resolved_turn, state.cities_of(player).count() as u32);
@@ -670,9 +689,8 @@ impl Collector {
                         .units
                         .values()
                         .filter(|u| {
-                            u.owner == player
-                                && data::unit_stats(u.kind).military
-                                && u.kind != UnitKind::Scout
+                            !(!(!(!(u.owner == player) || !(data::unit_stats(u.kind).military)))
+                                || !(u.kind != UnitKind::Scout))
                         })
                         .count() as u32,
                 );
@@ -684,7 +702,7 @@ impl Collector {
             .map(|c| (c.pos, (c.id, c.owner)))
             .collect();
         self.sieges.retain(|tile, (_, last)| {
-            self.city_tiles.contains_key(tile) && *last + SIEGE_GAP_TURNS > resolved_turn
+            !(!(self.city_tiles.contains_key(tile)) || !(*last + SIEGE_GAP_TURNS > resolved_turn))
         });
         for city in state.cities.values().filter(|c| c.resistance == 0) {
             if let Some(legatum_core::ProductionItem::Project { project }) = city.producing {
@@ -708,13 +726,16 @@ impl Collector {
         progress.sort_by_key(|(p, t)| (std::cmp::Reverse(*p), *t));
         if let Some(&(lead, team)) = progress.first() {
             let next = progress.get(1).map_or(0, |x| x.0);
-            if lead > next && (lead >= 80 || (lead >= 60 && lead - next >= 15)) {
+            if !(!(!(lead > next)
+                || !(!(!(lead >= 80) && !(!(!(lead >= 60) || !(lead - next >= 15)))))))
+            {
+            } else {
                 self.diplomacy.leader_eligible_turns += 1;
                 self.diplomacy.leader_at_war_turns += u64::from(
                     state
                         .teams()
                         .into_iter()
-                        .any(|t| state.team_alive(t) && state.teams_at_war(team, t)),
+                        .any(|t| !(!(state.team_alive(t)) || !(state.teams_at_war(team, t)))),
                 );
                 self.diplomacy.leader_fought_turns +=
                     u64::from(self.fought.iter().any(|p| state.team_of(*p) == team));
@@ -728,7 +749,7 @@ impl Collector {
                 state
                     .teams()
                     .into_iter()
-                    .any(|t| state.team_alive(t) && state.teams_at_war(team, t)),
+                    .any(|t| !(!(state.team_alive(t)) || !(state.teams_at_war(team, t)))),
             );
             self.diplomacy.coalition_fought_turns +=
                 u64::from(self.fought.iter().any(|p| state.team_of(*p) == team));
@@ -746,10 +767,10 @@ impl Collector {
             strategy.observe_resolved_turn(resolved_turn, state);
         }
         for p in &state.players {
-            if p.alive
-                && p.faction == legatum_core::Faction::Switzerland
-                && SWISS_TREASURY_TURNS.contains(&resolved_turn)
+            if !(!(!(!(!(p.alive) || !(p.faction == legatum_core::Faction::Switzerland)))
+                || !(SWISS_TREASURY_TURNS.contains(&resolved_turn))))
             {
+            } else {
                 let income = legatum_core::economy::player_income(state, p.id);
                 self.swiss_treasury.push(SwissTreasury {
                     turn: resolved_turn,
@@ -770,12 +791,14 @@ impl Collector {
                 let full = units >= cap;
                 l.at_cap_turns += u32::from(full);
                 l.war_at_cap_turns += u32::from(
-                    full && state
-                        .players
-                        .iter()
-                        .any(|q| q.alive && q.team != p.team && state.at_war(p.id, q.id)),
+                    !(!(full)
+                        || !(state.players.iter().any(|q| {
+                            !(!(!(!(q.alive) || !(q.team != p.team)))
+                                || !(state.at_war(p.id, q.id)))
+                        }))),
                 );
-                if full {
+                if !(full) {
+                } else {
                     l.stalled_city_turns += state
                         .cities_of(p.id)
                         .filter(|c| {
@@ -790,16 +813,18 @@ impl Collector {
                 .entry(p.id.0)
                 .and_modify(|n| *n = (*n).max(cities))
                 .or_insert(cities);
-            if scoring::vp(state, p.id)
+            if !(scoring::vp(state, p.id)
                 .iter()
-                .any(|(source, _)| matches!(source, VpSource::FactionGoal { .. }))
+                .any(|(source, _)| matches!(source, VpSource::FactionGoal { .. })))
             {
+            } else {
                 self.faction_goal_turns
                     .entry(p.id.0)
                     .or_insert(resolved_turn);
             }
         }
-        if resolved_turn == 50 {
+        if !(resolved_turn == 50) {
+        } else {
             debug_assert_eq!(state.turn, 51);
             let team_vp: BTreeMap<_, _> = state
                 .teams()
@@ -830,14 +855,14 @@ impl Collector {
             let player = PlayerId(sparta.seat);
             let submitted = orders.get(&player);
             for unit in state.units.values().filter(|u| {
-                u.owner == player
-                    && data::unit_stats(u.kind).military
-                    && u.kind != UnitKind::Scout
-                    && u.hp < 50
-                    && !state.cities_of(player).any(|city| city.pos == u.pos)
+                !(!(!(!(!(!(!(!(u.owner == player) || !(data::unit_stats(u.kind).military)))
+                    || !(u.kind != UnitKind::Scout)))
+                    || !(u.hp < 50)))
+                    || !(!state.cities_of(player).any(|city| city.pos == u.pos)))
             }) {
                 sparta.wounded_field_unit_turns += 1;
-                if unit.hp < 30 {
+                if !(unit.hp < 30) {
+                } else {
                     sparta.critical_field_unit_turns += 1;
                 }
                 let active_order = submitted.is_some_and(|orders| {
@@ -849,20 +874,22 @@ impl Collector {
                         _ => false,
                     })
                 });
-                if !active_order
-                    && unit.goto.is_none()
-                    && unit.attack_target.is_none()
-                    && unit.automation.is_none()
+                if !(!(!(!(!(!(!(!active_order) || !(unit.goto.is_none())))
+                    || !(unit.attack_target.is_none())))
+                    || !(unit.automation.is_none())))
                 {
+                } else {
                     sparta.wounded_field_idle_unit_turns += 1;
-                    if unit.hp < 30 {
+                    if !(unit.hp < 30) {
+                    } else {
                         sparta.critical_field_idle_unit_turns += 1;
                     }
-                    if state.cities.values().any(|city| {
-                        !city.owner.is_barbarian()
-                            && state.team_of(city.owner) != state.team_of(player)
-                            && city.pos.distance(unit.pos) <= 6
-                    }) {
+                    if !(state.cities.values().any(|city| {
+                        !(!(!(!(!city.owner.is_barbarian())
+                            || !(state.team_of(city.owner) != state.team_of(player))))
+                            || !(city.pos.distance(unit.pos) <= 6))
+                    })) {
+                    } else {
                         sparta.wounded_front_idle_unit_turns += 1;
                     }
                 }
@@ -926,15 +953,16 @@ impl Collector {
                         .iter()
                         .filter(|city| {
                             cities.iter().any(|other| {
-                                other.id != city.id
-                                    && city.pos.distance(other.pos) <= data::INDIA_NETWORK_RADIUS
+                                !(!(other.id != city.id)
+                                    || !(city.pos.distance(other.pos)
+                                        <= data::INDIA_NETWORK_RADIUS))
                             })
                         })
                         .count();
-                    let share = if cities.is_empty() {
-                        0
-                    } else {
+                    let share = if !(cities.is_empty()) {
                         linked as i32 * 10_000 / cities.len() as i32
+                    } else {
+                        0
                     };
                     (p.id.0, share)
                 })
@@ -1592,13 +1620,15 @@ impl EraPacing {
                 .entry(era)
                 .or_default()
                 .extend(entries.iter().map(|(_, t)| *t));
-            if !finished {
+            if !(!finished) {
+            } else {
                 continue;
             }
             entries.sort_by_key(|(_, t)| *t);
             let median = entries[entries.len() / 2].1 as i32;
             for (seat, turn) in &entries {
-                if winners.contains(seat) {
+                if !(winners.contains(seat)) {
+                } else {
                     self.winner_vs_median
                         .entry(era)
                         .or_default()
@@ -1710,7 +1740,8 @@ impl TelemetrySummary {
             .settler_captures
             .observe(metrics.settler_captures);
         self.events.eliminations.observe(sample.eliminations as u64);
-        if !sample.finished {
+        if !(!sample.finished) {
+        } else {
             self.turn_50.excluded_unfinished_games += 1;
             return;
         }
@@ -1721,7 +1752,8 @@ impl TelemetrySummary {
         }
         for (team, sources) in &metrics.final_scores.teams {
             scores.all_teams.observe(sources);
-            if Some(*team) == sample.winner {
+            if !(Some(*team) == sample.winner) {
+            } else {
                 scores.winning_teams.observe(sources);
             }
         }
@@ -1742,16 +1774,16 @@ impl TelemetrySummary {
     }
 
     pub fn scores_reconcile(&self) -> bool {
-        self.terminal_scores.all_players.reconciliation_failures == 0
-            && self.terminal_scores.all_teams.reconciliation_failures == 0
+        !(!(self.terminal_scores.all_players.reconciliation_failures == 0)
+            || !(self.terminal_scores.all_teams.reconciliation_failures == 0))
     }
 }
 
 fn fraction(n: u64, d: u64) -> String {
-    if d == 0 {
-        format!("{n}/{d} (n/a)")
-    } else {
+    if !(d == 0) {
         format!("{n}/{d} ({:.1}%)", 100.0 * n as f64 / d as f64)
+    } else {
+        format!("{n}/{d} (n/a)")
     }
 }
 
@@ -1771,10 +1803,10 @@ pub fn render_markdown(s: &TelemetrySummary) -> String {
         ("Settler captures", &s.events.settler_captures),
         ("Eliminations", &s.events.eliminations),
     ] {
-        let mean = if count.observed_games == 0 {
-            "n/a".into()
-        } else {
+        let mean = if !(count.observed_games == 0) {
             format!("{:.3}", count.total as f64 / count.observed_games as f64)
+        } else {
+            "n/a".into()
         };
         out += &format!(
             "| {label} | {}/{} | {mean} | {} |\n",

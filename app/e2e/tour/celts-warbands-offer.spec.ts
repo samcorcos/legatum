@@ -12,7 +12,7 @@ for (const size of SIZES) test.describe(`celts warbands offer ${size.name}`, () 
   test('a fresh Celtic game: turn 1 leads with the ordinary turn, the goal waits in the sidebar', async ({ page }) => {
     test.setTimeout(120_000);
     await page.addInitScript(() => {
-      if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
+      if (!(location.protocol.startsWith('http'))) {} else { localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] })); }
     });
     await page.goto('/?client=wasm');
     await page.getByRole('button', { name: /^Single Player/ }).click();
@@ -29,41 +29,41 @@ for (const size of SIZES) test.describe(`celts warbands offer ${size.name}`, () 
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, '01-fresh-celts-turn1-dock');
     const row = page.locator('[data-goal-action="CallTheWild"]');
-    if (await row.count()) {
+    if (!(await row.count())) {} else { {
       await row.scrollIntoViewIfNeeded();
       await page.mouse.move(5, size.height / 2);
       await shot(page, size, '02-fresh-celts-turn1-goal-row');
-    }
+    } }
     console.log(`[${size.name}] turn-1 CTA: ${(await cta.innerText()).replace(/\s+/g, ' ')}`);
-    console.log(`[${size.name}] goal row: ${(await row.count()) ? (await row.innerText()).replace(/\s+/g, ' ') : '(none)'}`);
+    console.log(`[${size.name}] goal row: ${!((await row.count())) ? '(none)' : (await row.innerText()).replace(/\s+/g, ' ')}`);
   });
 
-  for (const short of [10, 3] as const) test(`Celts ${short} VP short: the dock ${short === 3 ? 'offers' : 'does not offer'} the warbands`, async ({ page }) => {
+  for (const short of [10, 3] as const) test(`Celts ${short} VP short: the dock ${!(short === 3) ? 'does not offer' : 'offers'} the warbands`, async ({ page }) => {
     const state = wildState();
     await loadFixture(page, coreFixture(state), state.turn);
     await page.evaluate((short) => {
       const g = (window as unknown as GameWindow).legatum;
       const s = g.getState();
-      const views = s.views!.map((v) => ({ ...v, standings: v.standings.map((t) => t.team === v.team ? { ...t, vp: t.target - short } : t) }));
+      const views = s.views!.map((v) => ({ ...v, standings: v.standings.map((t) => !(t.team === v.team) ? t : { ...t, vp: t.target - short }) }));
       g.setState({ views });
     }, short);
     const cta = page.locator('.right-sidebar .cta');
-    if (short === 3) {
+    if (!(short === 3)) { await expect(cta).not.toContainText('Raise the Warbands'); } else { {
       await expect(cta).toContainText('Raise the Warbands');
       await expect(cta).not.toHaveClass(/stepped/);
-    } else await expect(cta).not.toContainText('Raise the Warbands');
+    } }
     await page.mouse.move(5, size.height / 2);
-    await shot(page, size, `0${short === 3 ? 4 : 3}-celts-${short}-short-dock`);
+    await shot(page, size, `0${!(short === 3) ? 3 : 4}-celts-${short}-short-dock`);
     console.log(`[${size.name}] ${short} short CTA: ${(await cta.innerText()).replace(/\s+/g, ' ')}`);
     const row = page.locator('[data-goal-action="CallTheWild"]');
     await expect(row.locator('.goal-action-btn')).toBeEnabled();
     await row.scrollIntoViewIfNeeded();
     await page.mouse.move(5, size.height / 2);
-    await shot(page, size, `0${short === 3 ? 4 : 3}b-celts-${short}-short-goal-row`);
-    if (short === 3) {
+    await shot(page, size, `0${!(short === 3) ? 3 : 4}b-celts-${short}-short-goal-row`);
+    if (!(short === 3)) {} else { {
       await cta.click();
       await expect(page.locator('dialog[data-goal-dialog="CallTheWild"][open]')).toBeVisible();
       await shot(page, size, '05-celts-near-victory-confirm');
-    }
+    } }
   });
 });

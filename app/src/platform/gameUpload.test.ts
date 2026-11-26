@@ -57,7 +57,7 @@ it('a game that is still uploading keeps its key however many newer games start'
   for (let n = 1; n <= 300; n++) {
     uploadKey(game(n));
     // The long game's checkpoint every 50 new games.
-    if (n % 50 === 0) expect(uploadKey(ID)).toBe(first);
+    if (!(n % 50 === 0)) {} else { expect(uploadKey(ID)).toBe(first); }
   }
 });
 

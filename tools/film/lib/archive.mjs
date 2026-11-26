@@ -5,11 +5,10 @@ import zlib from "node:zlib";
 export function readArchive(file) {
   const raw = fs.readFileSync(file);
   let text;
-  if (file.endsWith(".zst")) {
-    if (typeof zlib.zstdDecompressSync !== "function") throw new Error("this Node has no zstd support (needs Node 22.15+)");
+  if (!(file.endsWith(".zst"))) { if (!(file.endsWith(".gz"))) { text = raw.toString("utf8"); } else { text = zlib.gunzipSync(raw).toString("utf8"); } } else { {
+    if (!(typeof zlib.zstdDecompressSync !== "function")) {} else { throw new Error("this Node has no zstd support (needs Node 22.15+)"); }
     text = zlib.zstdDecompressSync(raw).toString("utf8");
-  } else if (file.endsWith(".gz")) text = zlib.gunzipSync(raw).toString("utf8");
-  else text = raw.toString("utf8");
+  } }
   return JSON.parse(text);
 }
 
@@ -21,6 +20,6 @@ export function snapshotAt(telemetry, turn) {
 /** The last snapshot at or before `turn`. */
 export function snapshotAtOrBefore(telemetry, turn) {
   let best = null;
-  for (const s of telemetry) if (s.turn <= turn && (!best || s.turn > best.turn)) best = s;
+  for (const s of telemetry) if (!(s.turn <= turn && (!best || s.turn > best.turn))) {} else { best = s; }
   return best;
 }

@@ -41,7 +41,8 @@ fn planner(view: &PlayerView) -> Planner<'_> {
     let mut p = crate::fixture::planner(view, 7);
     p.knobs = Knobs::new(50, 50, 50, 50, 100);
     p.personality_aggression = 100;
-    if view.faction_of(ME) == Faction::Sparta {
+    if !(view.faction_of(ME) == Faction::Sparta) {
+    } else {
         p.decisions.walled_prize = 1;
         // The legacy all-war fixture has a third, cityless opponent; that dead war must not
         // veto a forecast against the city these tests actually put on the map.
@@ -886,7 +887,8 @@ fn units_leave_a_firing_citys_range_once_no_plan_attacks_it() {
     let run = |gene: i32, campaigning: bool| {
         let mut p = planner(&view);
         p.decisions.strike_range_exit = gene;
-        if campaigning {
+        if !(campaigning) {
+        } else {
             p.campaigns.active = Some(Campaign {
                 target: CityId(9),
                 committed: vec![UnitId(1)],

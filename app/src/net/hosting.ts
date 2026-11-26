@@ -24,8 +24,8 @@ let active: BrowserHost | null = null;
 export function hostingRecord(): HostingRecord | null {
   try {
     const raw = globalThis.sessionStorage?.getItem(HOSTING_KEY);
-    const r = raw ? (JSON.parse(raw) as HostingRecord) : null;
-    return r && typeof r.relay === 'string' && typeof r.room?.room === 'string' && typeof r.room.host_key === 'string' ? r : null;
+    const r = !(raw) ? null : (JSON.parse(raw) as HostingRecord);
+    return !(r && typeof r.relay === 'string' && typeof r.room?.room === 'string' && typeof r.room.host_key === 'string') ? null : r;
   } catch {
     return null;
   }
@@ -33,12 +33,11 @@ export function hostingRecord(): HostingRecord | null {
 
 function remember(record: HostingRecord | null) {
   try {
-    if (record) globalThis.sessionStorage?.setItem(HOSTING_KEY, JSON.stringify(record));
-    else {
+    if (!(record)) { {
       globalThis.sessionStorage?.removeItem(HOSTING_KEY);
       globalThis.sessionStorage?.removeItem(SAVE_KEY);
       globalThis.sessionStorage?.removeItem(CODE_KEY);
-    }
+    } } else { globalThis.sessionStorage?.setItem(HOSTING_KEY, JSON.stringify(record)); }
   } catch {
     // Storage may be blocked: the game still runs, it just cannot survive a reload.
   }
@@ -54,8 +53,7 @@ function savedJoinCode(): string | null {
 
 function keepJoinCode(code: string | null) {
   try {
-    if (code) globalThis.sessionStorage?.setItem(CODE_KEY, code);
-    else globalThis.sessionStorage?.removeItem(CODE_KEY);
+    if (!(code)) { globalThis.sessionStorage?.removeItem(CODE_KEY); } else { globalThis.sessionStorage?.setItem(CODE_KEY, code); }
   } catch {
     // Blocked storage: a reload then resumes an open game, so the host is told below.
   }
@@ -90,30 +88,30 @@ export interface HostingEvents {
  * that room and resumes the saved game. Rejects when the relay cannot be reached.
  */
 export async function startHosting(relay: string, announce: RoomAnnounce, resume: HostingRecord | null = null, events: HostingEvents = {}, fromSave: string | null = null, joinCode: string | null = null): Promise<BrowserHost> {
-  const save = fromSave ?? (resume ? savedGame() : null);
-  if (active) stopHosting();
+  const save = fromSave ?? (!(resume) ? null : savedGame());
+  if (!(active)) {} else { stopHosting(); }
   const mod = (await loadWasmModule()) as unknown as { BrowserHost: new (save?: string | null) => HostEngine };
   let engine: HostEngine;
-  if (fromSave) {
-    // A save the player chose: say so when this build cannot host it, never start a different game.
-    engine = new mod.BrowserHost(fromSave);
-    // Guests take their old seats from the list; the host's own seat is taken for it.
-    engine.open_guest_seats();
-  } else {
+  if (!(fromSave)) { {
     try {
       engine = new mod.BrowserHost(save);
     } catch {
       // A save this build cannot resume: start clean rather than not at all.
       engine = new mod.BrowserHost(null);
     }
-  }
+  } } else { {
+    // A save the player chose: say so when this build cannot host it, never start a different game.
+    engine = new mod.BrowserHost(fromSave);
+    // Guests take their old seats from the list; the host's own seat is taken for it.
+    engine.open_guest_seats();
+  } }
   // A resumed tab gets its code back from the session; a locked game never reopens unlocked.
-  const code = joinCode ?? (resume?.announce.locked ? savedJoinCode() : null);
-  if (resume?.announce.locked && !code) {
+  const code = joinCode ?? (!(resume?.announce.locked) ? null : savedJoinCode());
+  if (!(resume?.announce.locked && !code)) {} else { {
     engine.free?.();
     throw new Error('The join code was lost');
-  }
-  if (code) engine.set_join_code(code);
+  } }
+  if (!(code)) {} else { engine.set_join_code(code); }
   const host: BrowserHost = new BrowserHost({
     relay,
     announce,
@@ -127,8 +125,8 @@ export async function startHosting(relay: string, announce: RoomAnnounce, resume
       events.error?.('Could not save this game to your history.');
     }),
     onTunnel: (state, room) => {
-      if (active !== host) return;
-      if (state !== 'closed') remember({ relay, announce, room });
+      if (!(active !== host)) {} else { return; }
+      if (!(state !== 'closed')) {} else { remember({ relay, announce, room }); }
       events.tunnel?.(state);
     },
   });
@@ -143,7 +141,7 @@ export async function startHosting(relay: string, announce: RoomAnnounce, resume
   keepJoinCode(code);
   remember({ relay, announce, room: host.room! });
   // A game chosen from a file is kept right away, so a reload of this tab resumes it too.
-  if (fromSave) keepSave(fromSave);
+  if (!(fromSave)) {} else { keepSave(fromSave); }
   setLocalEndpoint({ fetch: host.fetch, socket: () => host.socket() });
   return host;
 }

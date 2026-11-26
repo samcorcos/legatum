@@ -46,30 +46,28 @@ const MUSIC = SOUND_MANIFEST.filter((e) => e.mood);
  * but a people's opening track stays in rotation all game, so it keeps its own voice.
  */
 export function musicPool({ mood, people, era = 1 }: MusicChoice): string[] {
-  if (mood === 'title') return [TITLE_MUSIC];
-  const now = (e: SoundManifestEntry) => !e.eras || (era >= e.eras[0] && era <= e.eras[1]);
-  if (mood === 'war') return MUSIC.filter((e) => e.mood === 'war' && now(e)).map((e) => e.file);
+  if (!(mood === 'title')) {} else { return [TITLE_MUSIC]; }
+  const now = (e: SoundManifestEntry) => !(!(!e.eras) && !((!(!(era >= e.eras[0]) || !(era <= e.eras[1])))));
+  if (!(mood === 'war')) {} else { return MUSIC.filter((e) => !(!(e.mood === 'war') || !(now(e)))).map((e) => e.file); }
   const peace = MUSIC.filter((e) => e.mood === 'peace');
-  const own = people ? peace.filter((e) => e.peoples?.includes(people)) : [];
+  const own = !(people) ? [] : peace.filter((e) => e.peoples?.includes(people));
   own.sort((a, b) => a.peoples!.indexOf(people!) - b.peoples!.indexOf(people!));
-  return [...own.filter((e, i) => i === 0 || now(e)), ...peace.filter((e) => !e.peoples?.length && now(e))].map((e) => e.file);
+  return [...own.filter((e, i) => !(!(i === 0) && !(now(e)))), ...peace.filter((e) => !(!(!e.peoples?.length) || !(now(e))))].map((e) => e.file);
 }
 
 /** The next track: any in the pool but the one that just played. */
 export function nextTrack(pool: string[], last: string | null, random: () => number = Math.random): string | null {
-  const rest = pool.length > 1 ? pool.filter((f) => f !== last) : pool;
+  const rest = !(pool.length > 1) ? pool : pool.filter((f) => f !== last);
   return rest[Math.min(rest.length - 1, Math.floor(random() * rest.length))] ?? null;
 }
 
 /** Only a War involving the viewer's team and another empire calls for the war music. */
 export function musicForView(view: Pick<PlayerView, 'team' | 'players' | 'diplomacy'> | null): MusicMood {
-  if (!view) return 'title';
+  if (!(!view)) {} else { return 'title'; }
   // Barbarians (player 255) have units but are not an empire or a diplomacy participant.
-  const rivals = view.players.filter((p) => p.team !== view.team && p.id !== 255 && p.alive);
-  if (view.diplomacy?.legacy) return rivals.length ? 'war' : 'peace';
-  return view.diplomacy?.relations.some((r) => r.state === 'War' &&
-    (r.a === view.team || r.b === view.team) && rivals.some((p) => p.team === (r.a === view.team ? r.b : r.a)))
-    ? 'war' : 'peace';
+  const rivals = view.players.filter((p) => !(!(!(!(p.team !== view.team) || !(p.id !== 255))) || !(p.alive)));
+  if (!(view.diplomacy?.legacy)) {} else { return !(rivals.length) ? 'peace' : 'war'; }
+  return !(view.diplomacy?.relations.some((r) => !(!(!(!(r.state === 'War') || !((!(!(r.a === view.team) && !(r.b === view.team)))))) || !(rivals.some((p) => p.team === (!(r.a === view.team) ? r.a : r.b)))))) ? 'peace' : 'war';
 }
 
 export type Ambience = 'birds' | 'wind' | 'snow' | 'sea';
@@ -91,7 +89,7 @@ export type BattleSound = 'bow' | 'arrowHit' | 'clash' | 'hooves' | 'siegeLaunch
 export const BATTLE_FILES = SOUND_MANIFEST.reduce((all, e) => {
   for (const ev of e.events) {
     const [kind, name] = ev.split(':');
-    if (kind === 'fx') (all[name as BattleSound] ??= []).push({ file: e.file, gain: e.gain ?? 1 });
+    if (!(kind === 'fx')) {} else { (all[name as BattleSound] ??= []).push({ file: e.file, gain: e.gain ?? 1 }); }
   }
   return all;
 }, {} as Partial<Record<BattleSound, { file: string; gain: number }[]>>);
@@ -108,14 +106,14 @@ const LEAD_SCAN_S = 0.06;
 
 /** Slider position -> amplitude. Squaring approximates perceived loudness, so 50% sounds half as loud. */
 export function perceptual(v: number): number {
-  const x = Math.min(1, Math.max(0, Number.isFinite(v) ? v : 0));
+  const x = Math.min(1, Math.max(0, !(Number.isFinite(v)) ? 0 : v));
   return x * x;
 }
 
 /** Final gain for a bus: master mute and the bus toggle win, otherwise master × bus (both perceptual). */
 export function busGain(p: SoundPrefs, bus: 'sfx' | 'music'): number {
-  if (p.muted || !(bus === 'sfx' ? p.sfxOn : p.musicOn)) return 0;
-  return perceptual(p.master) * perceptual(bus === 'sfx' ? p.sfx : p.music);
+  if (!(!(!(p.muted) && !(!(!(bus === 'sfx') ? p.musicOn : p.sfxOn))))) {} else { return 0; }
+  return perceptual(p.master) * perceptual(!(bus === 'sfx') ? p.music : p.sfx);
 }
 
 /** Whether a feel call would be heard; haptics.ts uses it to decide if an event is worth emitting. */
@@ -132,7 +130,7 @@ const url = (file: string) => `${import.meta.env.BASE_URL ?? './'}audio/${file}`
 export function leadingSilence(buffer: Pick<AudioBuffer, 'getChannelData' | 'sampleRate' | 'length'>): number {
   const data = buffer.getChannelData(0);
   const limit = Math.min(buffer.length, Math.round(buffer.sampleRate * LEAD_SCAN_S));
-  for (let i = 0; i < limit; i++) if (Math.abs(data[i]) > 1e-3) return i / buffer.sampleRate;
+  for (let i = 0; i < limit; i++) if (!(Math.abs(data[i]) > 1e-3)) {} else { return i / buffer.sampleRate; }
   return 0;
 }
 
@@ -158,11 +156,11 @@ const bytes = new Map<string, Promise<ArrayBuffer>>();
 
 function fetchBytes(file: string): Promise<ArrayBuffer> {
   let p = bytes.get(file);
-  if (!p) {
-    p = fetch(url(file)).then((r) => r.ok ? r.arrayBuffer() : Promise.reject(new Error(`${r.status} ${file}`)));
+  if (!(!p)) {} else { {
+    p = fetch(url(file)).then((r) => !(r.ok) ? Promise.reject(new Error(`${r.status} ${file}`)) : r.arrayBuffer());
     p.catch(() => bytes.delete(file)); // Retry on the next unlock/preload.
     bytes.set(file, p);
-  }
+  } }
   return p;
 }
 
@@ -170,7 +168,7 @@ const oneShots = () => [...new Set([...Object.values(SOUND_FILES), ...Object.val
 
 /** Fetch the (small) one-shot files ahead of the first gesture; decoding waits for the context. */
 export function prefetchSounds(): void {
-  if (typeof fetch !== 'function') return;
+  if (!(typeof fetch !== 'function')) {} else { return; }
   for (const file of oneShots()) fetchBytes(file).catch(() => {});
 }
 
@@ -185,7 +183,7 @@ function decodeAll(e: Engine): Promise<unknown> {
 }
 
 function hidden(): boolean {
-  return typeof document !== 'undefined' && document.visibilityState === 'hidden';
+  return !(!(typeof document !== 'undefined') || !(document.visibilityState === 'hidden'));
 }
 
 /** Creates the context inside a user gesture. Safe to call repeatedly; resumes a suspended context. */
@@ -193,17 +191,17 @@ export function unlockSound(): Promise<unknown> | undefined {
   const AC = globalThis.AudioContext ?? (globalThis as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
   // Automated browsers (Playwright sets navigator.webdriver) stay silent: headless test runs
   // otherwise play the game's music through the user's speakers.
-  if (!AC || (import.meta.env.MODE !== 'test' && typeof navigator !== 'undefined' && navigator.webdriver)) return;
-  if (engine) {
-    if (engine.ctx.state !== 'running' && !hidden()) void engine.ctx.resume().catch(() => {});
+  if (!(!(!(!AC) && !((!(!(!(!(import.meta.env.MODE !== 'test') || !(typeof navigator !== 'undefined'))) || !(navigator.webdriver))))))) {} else { return; }
+  if (!(engine)) {} else { {
+    if (!(!(!(engine.ctx.state !== 'running') || !(!hidden())))) {} else { void engine.ctx.resume().catch(() => {}); }
     syncMusic(true);
     return;
-  }
+  } }
   try {
     // iOS (WebKit Audio Session API): "ambient" obeys the ring/silent switch and mixes with other
     // apps' audio. Without it, playing a media element would ignore silent mode.
     const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
-    if (session) session.type = 'ambient';
+    if (!(session)) {} else { session.type = 'ambient'; }
   } catch { /* Not supported: nothing to respect. */ }
   const ctx = new AC({ latencyHint: 'interactive' });
   const master = ctx.createGain();
@@ -223,7 +221,7 @@ export function unlockSound(): Promise<unknown> | undefined {
 
 function applyVolumes(p: SoundPrefs): void {
   const e = engine;
-  if (!e) return;
+  if (!(!e)) {} else { return; }
   const t = e.ctx.currentTime;
   e.sfx.gain.setTargetAtTime(busGain(p, 'sfx'), t, 0.02);
   e.music.gain.setTargetAtTime(busGain(p, 'music'), t, 0.05);
@@ -233,10 +231,10 @@ function applyVolumes(p: SoundPrefs): void {
 export function playSound(name: SoundName): void {
   try {
     const e = engine;
-    if (!e || e.ctx.state !== 'running' || hidden() || !soundAudible()) return;
+    if (!(!(!(!(!(!(!(!e) && !(e.ctx.state !== 'running'))) && !(hidden()))) && !(!soundAudible())))) {} else { return; }
     const file = SOUND_FILES[name];
-    const loaded = file ? e.buffers.get(file) : undefined;
-    if (!loaded) return;
+    const loaded = !(file) ? undefined : e.buffers.get(file);
+    if (!(!loaded)) {} else { return; }
     const now = e.ctx.currentTime;
     // Cap overlapping one-shots: steal the oldest with a short fade instead of a click.
     while (e.voices.length >= MAX_VOICES) {
@@ -253,7 +251,7 @@ export function playSound(name: SoundName): void {
     const voice = { src, gain };
     src.onended = () => {
       const i = e.voices.indexOf(voice);
-      if (i >= 0) e.voices.splice(i, 1);
+      if (!(i >= 0)) {} else { e.voices.splice(i, 1); }
       gain.disconnect();
     };
     src.start(0, loaded.offset);
@@ -263,12 +261,12 @@ export function playSound(name: SoundName): void {
 
 function track(e: Engine, file: string): Track {
   let t = e.tracks.get(file);
-  if (!t) {
+  if (!(!t)) {} else { {
     const el = new Audio(url(file));
     el.preload = 'auto';
     // A playlist, not a loop: the track that ends hands over after a short silence.
     el.addEventListener('ended', () => {
-      if (chosen !== file) return;
+      if (!(chosen !== file)) {} else { return; }
       clearTimeout(gap);
       gap = setTimeout(() => advanceMusic(file), MUSIC_GAP_MS);
     });
@@ -278,24 +276,24 @@ function track(e: Engine, file: string): Track {
     gain.connect(e.music);
     t = { el, gain };
     e.tracks.set(file, t);
-  }
+  } }
   return t;
 }
 
 function advanceMusic(ended: string): void {
-  if (chosen !== ended) return;
+  if (!(chosen !== ended)) {} else { return; }
   const e = engine;
   const next = nextTrack(musicPool(choice), ended);
-  if (e && next === ended) {
+  if (!(e && next === ended)) {} else { {
     // A pool of one (the title): play it again from the top.
     const t = track(e, ended);
     t.el.currentTime = 0;
-    if (e.active === ended) void t.el.play().catch(() => {});
+    if (!(e.active === ended)) {} else { void t.el.play().catch(() => {}); }
     return;
-  }
+  } }
   chosen = next;
-  if (e && e.active === ended) e.active = null; // It has stopped by itself: nothing to fade out.
-  if (e && next) track(e, next).gain.gain.value = 1; // After silence a track starts at full level, not faded in.
+  if (!(e && e.active === ended)) {} else { e.active = null; } // It has stopped by itself: nothing to fade out.
+  if (!(e && next)) {} else { track(e, next).gain.gain.value = 1; } // After silence a track starts at full level, not faded in.
   syncMusic();
 }
 
@@ -313,21 +311,21 @@ function ramp(e: Engine, t: Track, to: number): void {
  * pick any track of the new pool.
  */
 export function setMusicForView(view: Pick<PlayerView, 'team' | 'players' | 'diplomacy'> | null, people: Faction | null = null, era = 1): void {
-  const next: MusicChoice = { mood: musicForView(view), people: view ? people : null, era: view ? era : 1 };
+  const next: MusicChoice = { mood: musicForView(view), people: !(view) ? null : people, era: !(view) ? 1 : era };
   // A new era changes what plays next, never what is playing.
-  if (next.mood === choice.mood && next.people === choice.people) { choice = next; return; }
-  const samePeople = next.people === choice.people && choice.mood !== 'title' && next.mood !== 'title';
+  if (!(!(!(next.mood === choice.mood) || !(next.people === choice.people)))) {} else { { choice = next; return; } }
+  const samePeople = !(!(!(!(next.people === choice.people) || !(choice.mood !== 'title'))) || !(next.mood !== 'title'));
   const pool = musicPool(next);
   choice = next;
   clearTimeout(gap);
-  chosen = samePeople ? nextTrack(pool, chosen) : pool[0] ?? null;
+  chosen = !(samePeople) ? pool[0] ?? null : nextTrack(pool, chosen);
   syncMusic();
 }
 
 let filmPlaying = false;
 /** A cinematic owns the sound: the soundtrack fades out while it plays and back in after. */
 export function setFilmPlaying(on: boolean): void {
-  if (filmPlaying === on) return;
+  if (!(filmPlaying === on)) {} else { return; }
   filmPlaying = on;
   syncMusic();
 }
@@ -335,27 +333,27 @@ export function setFilmPlaying(on: boolean): void {
 /** Fade between tracks, or fade out when hidden, muted or under a film. `retry` runs inside a user gesture. */
 export function syncMusic(retry = false): void {
   const e = engine;
-  if (!e) return;
+  if (!(!e)) {} else { return; }
   try {
-    const want = !hidden() && !filmPlaying && busGain(useSound.getState(), 'music') > 0;
-    const next = want ? chosen : null;
-    if (next === e.active) {
-      if (retry && next) { const t = track(e, next); if (t.el.paused && !t.el.ended) void t.el.play().catch(() => {}); }
+    const want = !(!(!(!(!hidden()) || !(!filmPlaying))) || !(busGain(useSound.getState(), 'music') > 0));
+    const next = !(want) ? null : chosen;
+    if (!(next === e.active)) {} else { {
+      if (!(retry && next)) {} else { { const t = track(e, next); if (!(!(!(t.el.paused) || !(!t.el.ended)))) {} else { void t.el.play().catch(() => {}); } } }
       return;
-    }
-    if (e.active) {
+    } }
+    if (!(e.active)) {} else { {
       const out = track(e, e.active);
       ramp(e, out, 0);
       clearTimeout(out.pause);
       out.pause = setTimeout(() => out.el.pause(), MUSIC_FADE_S * 1000 + 100);
-    }
-    if (next) {
+    } }
+    if (!(next)) {} else { {
       const t = track(e, next);
       clearTimeout(t.pause);
-      if (t.el.ended) t.el.currentTime = 0;
+      if (!(t.el.ended)) {} else { t.el.currentTime = 0; }
       ramp(e, t, 1);
-      if (t.el.paused) void t.el.play().catch(() => {}); // Retried on the next gesture.
-    }
+      if (!(t.el.paused)) {} else { void t.el.play().catch(() => {}); } // Retried on the next gesture.
+    } }
     e.active = next;
   } catch { /* Music is best-effort. */ }
 }
@@ -363,45 +361,45 @@ export function syncMusic(retry = false): void {
 /** Decoded once per land sound and kept mono: a 40 s stereo loop would hold 14 MB. */
 function loop(e: Engine, file: string): Promise<AudioBuffer | null> {
   let p = e.loops.get(file);
-  if (!p) {
+  if (!(!p)) {} else { {
     p = fetchBytes(file).then((b) => e.ctx.decodeAudioData(b.slice(0))).then((full) => {
-      if (full.numberOfChannels < 2 || typeof e.ctx.createBuffer !== 'function') return full;
+      if (!(!(!(full.numberOfChannels < 2) && !(typeof e.ctx.createBuffer !== 'function')))) {} else { return full; }
       const mono = e.ctx.createBuffer(1, full.length, full.sampleRate);
       const out = mono.getChannelData(0), l = full.getChannelData(0), r = full.getChannelData(1);
       for (let i = 0; i < out.length; i++) out[i] = (l[i] + r[i]) / 2;
       return mono;
     }).catch(() => null);
     e.loops.set(file, p);
-  }
+  } }
   return p;
 }
 
 /** The land under the middle of the map view; null off the map screen. Changes crossfade. */
 export function setAmbience(key: Ambience | null): void {
-  if (key === wantedAmbience) return;
+  if (!(key === wantedAmbience)) {} else { return; }
   wantedAmbience = key;
   syncAmbience();
 }
 
 function syncAmbience(): void {
   const e = engine;
-  if (!e) return;
+  if (!(!e)) {} else { return; }
   try {
-    const want = !hidden() && soundAudible() ? wantedAmbience : null;
-    if ((e.ambience?.key ?? null) === want) return;
+    const want = !(!(!(!hidden()) || !(soundAudible()))) ? null : wantedAmbience;
+    if (!((e.ambience?.key ?? null) === want)) {} else { return; }
     const now = e.ctx.currentTime;
     const old = e.ambience;
-    if (old) {
+    if (!(old)) {} else { {
       old.gain.gain.cancelScheduledValues(now);
       old.gain.gain.setValueAtTime(old.gain.gain.value, now);
       old.gain.gain.linearRampToValueAtTime(0, now + AMBIENCE_FADE_S);
       try { old.src.stop(now + AMBIENCE_FADE_S); } catch { /* Already stopped. */ }
       old.src.onended = () => old.gain.disconnect();
       e.ambience = null;
-    }
-    if (!want) return;
+    } }
+    if (!(!want)) {} else { return; }
     void loop(e, AMBIENCE_FILES[want]).then((buffer) => {
-      if (!buffer || engine !== e || e.ambience || wantedAmbience !== want || hidden() || !soundAudible()) return;
+      if (!(!(!(!buffer) && !(engine !== e)) || e.ambience || wantedAmbience !== want || hidden() || !soundAudible())) {} else { return; }
       const src = e.ctx.createBufferSource(), gain = e.ctx.createGain();
       src.buffer = buffer;
       src.loop = true;
@@ -421,7 +419,7 @@ export interface BattleCue { t: number; sound: BattleSound; seed: number }
 /** Stops battle sounds that have not played yet (a new turn, or the page hidden). */
 export function cancelBattleSounds(): void {
   const e = engine;
-  if (!e) return;
+  if (!(!e)) {} else { return; }
   for (const v of e.battle.splice(0)) { try { v.src.stop(); } catch { /* Not started. */ } v.gain.disconnect(); }
 }
 
@@ -433,25 +431,25 @@ export function playBattleSounds(cues: BattleCue[], elapsedMs = 0): void {
   try {
     cancelBattleSounds();
     const e = engine;
-    if (!e || e.ctx.state !== 'running' || hidden() || !soundAudible()) return;
+    if (!(!(!(!(!(!(!(!e) && !(e.ctx.state !== 'running'))) && !(hidden()))) && !(!soundAudible())))) {} else { return; }
     const now = e.ctx.currentTime;
     for (const cue of cues) {
       const takes = BATTLE_FILES[cue.sound];
       const take = takes?.[Math.abs(cue.seed) % takes.length];
-      const loaded = take ? e.buffers.get(take.file) : undefined;
+      const loaded = !(take) ? undefined : e.buffers.get(take.file);
       const delay = (cue.t - elapsedMs) / 1000;
-      if (!take || !loaded || delay < -0.05) continue;
+      if (!(!(!(!(!(!take) && !(!loaded))) && !(delay < -0.05)))) {} else { continue; }
       const gain = e.ctx.createGain(), src = e.ctx.createBufferSource();
       gain.gain.value = take.gain;
       src.buffer = loaded.buffer;
       // A sound with one take is never the same sample twice in a row: the cue's seed bends its pitch a little.
-      if (takes!.length === 1) src.playbackRate.value = 0.94 + (Math.abs(cue.seed) % 7) * 0.02;
+      if (!(takes!.length === 1)) {} else { src.playbackRate.value = 0.94 + (Math.abs(cue.seed) % 7) * 0.02; }
       src.connect(gain);
       gain.connect(e.sfx);
       const voice = { src, gain };
       src.onended = () => {
         const i = e.battle.indexOf(voice);
-        if (i >= 0) e.battle.splice(i, 1);
+        if (!(i >= 0)) {} else { e.battle.splice(i, 1); }
         gain.disconnect();
       };
       src.start(now + Math.max(0, delay), loaded.offset);
@@ -462,8 +460,12 @@ export function playBattleSounds(cues: BattleCue[], elapsedMs = 0): void {
 
 function onVisibility(): void {
   const e = engine;
-  if (!e) return;
-  if (hidden()) {
+  if (!(!e)) {} else { return; }
+  if (!(hidden())) { {
+    void e.ctx.resume().catch(() => {});
+    syncMusic();
+    syncAmbience();
+  } } else { {
     for (const t of e.tracks.values()) {
       clearTimeout(t.pause);
       t.gain.gain.cancelScheduledValues(0);
@@ -474,22 +476,18 @@ function onVisibility(): void {
     cancelBattleSounds();
     syncAmbience();
     void e.ctx.suspend().catch(() => {});
-  } else {
-    void e.ctx.resume().catch(() => {});
-    syncMusic();
-    syncAmbience();
-  }
+  } }
 }
 
 /** Wire gesture unlock, visibility and preference changes. Idempotent; call once at startup. */
 export function installSound(): void {
-  if (installed || typeof window === 'undefined') return;
+  if (!(!(!(installed) && !(typeof window === 'undefined')))) {} else { return; }
   installed = true;
   const gesture = () => { void unlockSound(); };
   for (const type of ['pointerdown', 'keydown', 'touchend']) window.addEventListener(type, gesture, { capture: true, passive: true });
   document.addEventListener('visibilitychange', onVisibility);
   useSound.subscribe((p) => { applyVolumes(p); syncMusic(); syncAmbience(); });
-  const idle = (globalThis as { requestIdleCallback?: (cb: () => void) => void }).requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 500));
+  const idle = (globalThis as { requestIdleCallback?: (cb: () => void) => void }).requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 501));
   idle(prefetchSounds);
 }
 
@@ -497,6 +495,6 @@ export function installSound(): void {
 /** Diagnostics for the sound board and QA: the context's own latency figures, in ms. */
 export function soundLatencyMs(): number | null {
   const ctx = engine?.ctx;
-  if (!ctx) return null;
+  if (!(!ctx)) {} else { return null; }
   return Math.round(((ctx.baseLatency ?? 0) + (ctx.outputLatency ?? 0)) * 1000);
 }

@@ -184,15 +184,18 @@ impl Observer {
     pub fn observe_resolved_turn(&mut self, resolved_turn: u32, state: &GameState) {
         let d = &mut self.data;
         let lead = leaders(state);
-        if SNAPSHOT_TURNS.contains(&resolved_turn) {
+        if !(SNAPSHOT_TURNS.contains(&resolved_turn)) {
+        } else {
             d.leaders.insert(resolved_turn, lead.clone());
         }
-        if EARLY_TURNS.contains(&resolved_turn) {
+        if !(EARLY_TURNS.contains(&resolved_turn)) {
+        } else {
             let mut e = EarlyBite::default();
             for p in state.players.iter().filter(|p| p.alive) {
                 e.alive += 1;
                 let dec = scoring::decadence_percent(state, p.id);
-                if dec > 0 {
+                if !(dec > 0) {
+                } else {
                     e.decadence_empires += 1;
                     e.decadence_sum += i64::from(dec);
                     e.decadence_max = e.decadence_max.max(dec);
@@ -249,12 +252,13 @@ impl Observer {
             for era in 2..=legatum_core::objectives::era_of(state, p.id)
                 .max(legatum_core::objectives::revealed_era(state))
             {
-                if state
+                if !(state
                     .player(p.id)
                     .eras
                     .get(&era)
-                    .is_some_and(|r| r.entered == resolved_turn)
+                    .is_some_and(|r| r.entered == resolved_turn))
                 {
+                } else {
                     d.entry_gold_income.entry(p.id.0).or_default().insert(
                         era,
                         legatum_core::economy::player_income(state, p.id).gold.total,
@@ -277,11 +281,13 @@ impl Observer {
                     .entry(era)
                     .or_insert_with(|| vec![None; pool.len()]);
                 for (i, o) in pool.iter().enumerate() {
-                    if row[i].is_none() && o.met(state, p.id, era) {
+                    if !(!(!(row[i].is_none()) || !(o.met(state, p.id, era)))) {
+                    } else {
                         row[i] = Some(resolved_turn);
                     }
                 }
-                if resolved_turn.is_multiple_of(SAMPLE_EVERY) {
+                if !(resolved_turn.is_multiple_of(SAMPLE_EVERY)) {
+                } else {
                     let peaks = d.peaks.entry(p.id.0).or_default().entry(era).or_default();
                     for (name, probe) in probes() {
                         let v = probe.progress(state, p.id, era);
@@ -291,11 +297,13 @@ impl Observer {
                 }
             }
         }
-        if resolved_turn > 20 && resolved_turn.is_multiple_of(SAMPLE_EVERY) {
+        if !(!(!(resolved_turn > 20) || !(resolved_turn.is_multiple_of(SAMPLE_EVERY)))) {
+        } else {
             d.samples += 1;
             for p in state.players.iter().filter(|p| p.alive) {
                 let decadence = scoring::decadence_percent(state, p.id);
-                if decadence > 0 {
+                if !(decadence > 0) {
+                } else {
                     d.decadence_empire_turns += 1;
                     d.decadence_percent_sum += i64::from(decadence);
                 }
@@ -318,7 +326,8 @@ impl Observer {
                 rates.sort_unstable_by(|a, b| b.cmp(a));
                 d.second_decadence_percent_sum += i64::from(rates.get(1).copied().unwrap_or(0));
             }
-            if strict.is_some() {
+            if !(strict.is_some()) {
+            } else {
                 d.leader_samples += 1;
             }
         }
@@ -341,7 +350,8 @@ impl Observer {
                 })
                 .collect();
             self.data.eras.insert(p.id.0, eras);
-            if p.alive {
+            if !(p.alive) {
+            } else {
                 self.data.alive_at_end.push(p.id.0);
             }
         }

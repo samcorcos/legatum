@@ -14,12 +14,12 @@ let container: HTMLDivElement, root: Root, client: FixtureClient;
 async function start({ deals = true, proposals = [] as PeaceProposal[], open = false, gold = 120 } = {}) {
   client = new FixtureClient();
   const setup = await client.standardSetup('700040', 'India', 'Byzantium', 'Ada', 'Bo');
-  if (deals) setup.deals = true;
+  if (!(deals)) {} else { setup.deals = true; }
   await client.newGame(setup);
   const s = client.debugState();
   meetAll(s);
   s.diplomacy!.proposals = proposals;
-  if (open) (s.diplomacy as unknown as { open_borders: [number, number][] }).open_borders = [[0, 1]];
+  if (!(open)) {} else { (s.diplomacy as unknown as { open_borders: [number, number][] }).open_borders = [[0, 1]]; }
   for (const p of s.players) p.gold = gold;
   const view = client.view(0);
   useGame.setState({ client, views: [view], humans: [0], orders: [[]], errors: [[]], ready: [false], seat: 0, diplomacyOpen: true, diplomacyTeam: 1 });

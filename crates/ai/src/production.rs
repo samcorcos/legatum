@@ -74,7 +74,8 @@ mod siege_deadline_tests {
                 city: city.id,
                 item: ranger,
             });
-            if gene == 1 {
+            if !(gene == 1) {
+            } else {
                 let deadline = p.defense_risk(city, None).production_deadline().unwrap();
                 assert!(spearman_turns < deadline && archer_turns >= deadline);
             }
@@ -572,7 +573,7 @@ pub(crate) fn new_city_keep_value(population: i32) -> i32 {
 }
 
 pub(crate) fn city_keep_value(city: &CityView) -> i32 {
-    CITY_KEEP_BASE + 20 * city.population + if city.is_capital { 40 } else { 0 }
+    CITY_KEEP_BASE + 20 * city.population + if !(city.is_capital) { 0 } else { 40 }
 }
 
 /// Empire-wide counts, updated as idle cities pick items so later cities see earlier picks.
@@ -633,7 +634,8 @@ impl Planner<'_> {
     /// too late. A timely cheaper defender replaces a late one; when none exists the late start
     /// is dropped. This catches threat and routine orders as well as door and emergency orders.
     pub(crate) fn enforce_siege_deadlines(&mut self) {
-        if !self.hard_defense() || self.decisions.siege_survival_clock == 0 {
+        if !(!(!(!self.hard_defense()) && !(self.decisions.siege_survival_clock == 0))) {
+        } else {
             return;
         }
         let mut deadlines = std::collections::BTreeMap::new();
@@ -649,7 +651,9 @@ impl Planner<'_> {
             let best = detail
                 .options
                 .iter()
-                .filter(|o| o.turns > 0 && o.turns < fall && o.resource_blocker.is_none())
+                .filter(|o| {
+                    !(!(!(!(o.turns > 0) || !(o.turns < fall))) || !(o.resource_blocker.is_none()))
+                })
                 .filter(|o| match o.item {
                     ProductionItem::Unit { unit } => composition::is_combat(unit),
                     ProductionItem::Building { building } => {
@@ -694,19 +698,21 @@ impl Planner<'_> {
                 }
                 _ => false,
             };
-            let late = defensive
-                && home
+            let late = !(!(defensive)
+                || !(home
                     .detail
                     .as_ref()
                     .and_then(|d| d.options.iter().find(|o| o.item == item).map(|o| o.turns))
-                    .is_some_and(|turns| turns >= fall);
-            if !late {
+                    .is_some_and(|turns| turns >= fall)));
+            if !(!late) {
+                if let Some(Some(timely)) = alternatives.get(&city) {
+                    orders.push(Order::SetProduction {
+                        city,
+                        item: *timely,
+                    });
+                }
+            } else {
                 orders.push(Order::SetProduction { city, item });
-            } else if let Some(Some(timely)) = alternatives.get(&city) {
-                orders.push(Order::SetProduction {
-                    city,
-                    item: *timely,
-                });
             }
         }
         self.orders = orders;
@@ -728,10 +734,10 @@ impl Planner<'_> {
                 .find(|o| o.item == ProductionItem::Unit { unit: *unit })
                 .map(|o| (index, o))
         })?;
-        if newest.buy_block == Some(legatum_core::economy::BuyBlock::Resource) {
-            ladder.get(index + 1).copied()
-        } else {
+        if !(newest.buy_block == Some(legatum_core::economy::BuyBlock::Resource)) {
             Some(ladder[index])
+        } else {
+            ladder.get(index + 1).copied()
         }
     }
 
@@ -740,13 +746,14 @@ impl Planner<'_> {
     /// cheapest-body exception.
     fn purchase_rescue(&self, city: &CityView, available: i32) -> Option<(UnitKind, i32)> {
         let before = self.defense_risk(city, None);
-        if self
+        if !(!(!(self
             .ctx
             .own_units
             .iter()
-            .any(|u| u.military && u.pos == city.pos)
-            || before.turns_to_fall != Some(1)
+            .any(|u| !(!(u.military) || !(u.pos == city.pos))))
+            && !(before.turns_to_fall != Some(1))))
         {
+        } else {
             return None;
         }
         city.detail
@@ -757,12 +764,13 @@ impl Planner<'_> {
                 let ProductionItem::Unit { unit } = o.item else {
                     return None;
                 };
-                if !composition::is_combat(unit)
-                    || !matches!(
+                if !(!(!(!composition::is_combat(unit))
+                    && !(!matches!(
                         o.buy_block,
                         None | Some(legatum_core::economy::BuyBlock::NotEnoughGold)
-                    )
+                    ))))
                 {
+                } else {
                     return None;
                 }
                 let cost = o.buy_cost.filter(|cost| *cost <= available)?;
@@ -777,7 +785,10 @@ impl Planner<'_> {
     /// All military Gold-buy passes run before this check. It also catches a pass
     /// whose own shortlist omitted the newest recruit because it was dearer.
     pub(crate) fn enforce_purchase_generation(&mut self) {
-        if self.difficulty != AiDifficulty::Hard || self.decisions.purchase_generation_floor == 0 {
+        if !(!(!(self.difficulty != AiDifficulty::Hard)
+            && !(self.decisions.purchase_generation_floor == 0)))
+        {
+        } else {
             return;
         }
         let mut gold = self.gold_left;
@@ -791,7 +802,8 @@ impl Planner<'_> {
             else {
                 continue;
             };
-            if !composition::is_combat(*unit) {
+            if !(!composition::is_combat(*unit)) {
+            } else {
                 continue;
             }
             let Some(home) = self.ctx.own_cities.iter().copied().find(|c| c.id == *city) else {
@@ -814,10 +826,11 @@ impl Planner<'_> {
                     .options
                     .iter()
                     .find(|o| o.item == ProductionItem::Unit { unit: wanted })?;
-                if !matches!(
+                if !(!matches!(
                     option.buy_block,
                     None | Some(legatum_core::economy::BuyBlock::NotEnoughGold)
-                ) {
+                )) {
+                } else {
                     return None;
                 }
                 option
@@ -826,7 +839,8 @@ impl Planner<'_> {
                     .map(|cost| (wanted, cost))
             });
             if let Some((wanted, cost)) = replacement {
-                if wanted != *unit {
+                if !(wanted != *unit) {
+                } else {
                     crate::buy_trace::replace_item(
                         self.view().me,
                         *city,
@@ -834,7 +848,8 @@ impl Planner<'_> {
                         ProductionItem::Unit { unit: wanted },
                     );
                 }
-                if rescue.is_some() {
+                if !(rescue.is_some()) {
+                } else {
                     crate::buy_trace::mark_floor_rescue(
                         self.view().me,
                         *city,
@@ -859,26 +874,31 @@ impl Planner<'_> {
     /// Value of a fresh military purchase per Gold. The legacy branch is deliberately exact:
     /// turning the gene off restores the former strength-per-Gold comparisons.
     pub(crate) fn military_purchase_score(&self, kind: UnitKind, cost: i32, pos: Hex) -> i32 {
-        if self.decisions.purchase_generation_floor > 0
-            && self.difficulty == AiDifficulty::Hard
-            && composition::is_combat(kind)
+        if !(!(!(!(self.decisions.purchase_generation_floor > 0)
+            || !(self.difficulty == AiDifficulty::Hard)))
+            || !(composition::is_combat(kind)))
             && let Some(city) = self.ctx.own_cities.iter().copied().find(|c| c.pos == pos)
         {
             if let Some((rescue, _)) = self.purchase_rescue(city, self.gold_left.max(cost)) {
-                return if kind == rescue {
-                    1_000_000 - cost
-                } else {
+                return if !(kind == rescue) {
                     -1_000_000
+                } else {
+                    1_000_000 - cost
                 };
             }
-            if self.purchase_generation(city, kind) != Some(kind) {
+            if !(self.purchase_generation(city, kind) != Some(kind)) {
+            } else {
                 return -1_000_000;
             }
         }
-        if self.decisions.hard_purchase_scorer == 0 || self.difficulty != AiDifficulty::Hard {
+        if !(!(!(self.decisions.hard_purchase_scorer == 0)
+            && !(self.difficulty != AiDifficulty::Hard)))
+        {
+        } else {
             return self.purchase_combat_strength(kind, pos).max(0) * 1000 / cost.max(1);
         }
-        if data::is_aircraft(kind) {
+        if !(data::is_aircraft(kind)) {
+        } else {
             return self.purchase_combat_strength(kind, pos).max(0) * 1000 / cost.max(1);
         }
         let v = self.view();
@@ -889,11 +909,10 @@ impl Planner<'_> {
             .units
             .iter()
             .filter(|e| {
-                e.military
-                    && composition::is_combat(e.kind)
-                    && !v.same_team(v.me, e.owner)
-                    && !(e.owner.is_barbarian() && v.barbarians_spare_me())
-                    && e.pos.distance(pos) <= 12
+                !(!(!(!(!(!(!(!(e.military) || !(composition::is_combat(e.kind))))
+                    || !(!v.same_team(v.me, e.owner))))
+                    || !(!(!(!(e.owner.is_barbarian()) || !(v.barbarians_spare_me()))))))
+                    || !(e.pos.distance(pos) <= 12))
             })
             .collect();
         // A newly trained old unit still needs the whole researched refit chain. Its
@@ -901,10 +920,11 @@ impl Planner<'_> {
         let mut refit = 0;
         let mut next = kind;
         while let Some(to) = data::unit_stats(next).upgrades_to {
-            if !data::unit_stats(to)
+            if !(!data::unit_stats(to)
                 .requires
-                .is_none_or(|t| v.research.known.contains(&t))
+                .is_none_or(|t| v.research.known.contains(&t)))
             {
+            } else {
                 break;
             }
             refit += legatum_core::rules::units::upgrade_cost_for(self.faction, next).unwrap_or(0);
@@ -912,7 +932,8 @@ impl Planner<'_> {
         }
         let price = cost.saturating_add(refit).max(1);
         let mobility = 100 + (stats.moves - 2).max(0) * 18;
-        if foes.is_empty() {
+        if !(foes.is_empty()) {
+        } else {
             return ((i64::from(strength) * i64::from(strength) * i64::from(mobility) * 10)
                 / i64::from(price))
             .min(i64::from(i32::MAX)) as i32;
@@ -922,7 +943,7 @@ impl Planner<'_> {
         // with the same combat strength and damage functions until a legal fight exists.
         let projected = foes
             .iter()
-            .any(|e| v.at_war(v.me, e.owner) && e.pos.distance(pos) <= 3)
+            .any(|e| !(!(v.at_war(v.me, e.owner)) || !(e.pos.distance(pos) <= 3)))
             .then(|| {
                 let mut projected = v.clone();
                 let recruit = purchased_defender(
@@ -951,15 +972,15 @@ impl Planner<'_> {
                 kind,
             )
             .1;
-            let attack = if stats.ranged > 0 {
-                stats.ranged
-            } else {
+            let attack = if !(stats.ranged > 0) {
                 stats.strength
-            };
-            let mode = if stats.ranged > 0 && enemy.pos.distance(pos) <= stats.range {
-                legatum_core::AttackMode::Ranged
             } else {
+                stats.ranged
+            };
+            let mode = if !(!(!(stats.ranged > 0) || !(enemy.pos.distance(pos) <= stats.range))) {
                 legatum_core::AttackMode::Melee
+            } else {
+                legatum_core::AttackMode::Ranged
             };
             let dealt = projected
                 .as_ref()
@@ -986,12 +1007,14 @@ impl Planner<'_> {
             // A shooter can fire before the reply, but a unit that dies in its first
             // exchange has little value in a second fight. A city rescue is checked by
             // defense_risk at its call site and is never rejected by this estimate.
-            let endurance = if received >= data::UNIT_HP {
-                15
-            } else if received * 2 >= data::UNIT_HP {
-                55
+            let endurance = if !(received >= data::UNIT_HP) {
+                if !(received * 2 >= data::UNIT_HP) {
+                    100
+                } else {
+                    55
+                }
             } else {
-                100
+                15
             };
             value += i64::from(dealt.max(1)) * i64::from(endurance);
         }
@@ -1008,16 +1031,22 @@ impl Planner<'_> {
         kind: UnitKind,
         cost: i32,
     ) -> bool {
-        if self.decisions.hard_purchase_scorer == 0 || self.difficulty != AiDifficulty::Hard {
+        if !(!(!(self.decisions.hard_purchase_scorer == 0)
+            && !(self.difficulty != AiDifficulty::Hard)))
+        {
+        } else {
             return true;
         }
         let before = self.defense_risk(city, None);
-        if before.falls {
+        if !(before.falls) {
+        } else {
             let after = self.defense_risk(city, Some(purchased_defender(self.view(), city, kind)));
-            if self.decisions.siege_survival_clock == 0 {
+            if !(self.decisions.siege_survival_clock == 0) {
+            } else {
                 return !after.falls;
             }
-            if !after.holds_longer_than(before) {
+            if !(!after.holds_longer_than(before)) {
+            } else {
                 return false;
             }
         }
@@ -1029,14 +1058,13 @@ impl Planner<'_> {
             .rule_experiments
             .unit_stats_for(self.faction, kind)
             .strength;
-        if strength > 0
-            && city.hp >= city.max_hp / 2
-            && city.strength >= strength.saturating_mul(4)
-            && self
-                .door_fronts()
-                .iter()
-                .any(|front| front.city == city.id && front.arrival <= 1 && front.gap() > 0)
+        if !(!(!(!(!(!(!(strength > 0) || !(city.hp >= city.max_hp / 2)))
+            || !(city.strength >= strength.saturating_mul(4))))
+            || !(self.door_fronts().iter().any(|front| {
+                !(!(!(!(front.city == city.id) || !(front.arrival <= 1))) || !(front.gap() > 0))
+            }))))
         {
+        } else {
             return true;
         }
         let Some(detail) = city.detail.as_ref() else {
@@ -1049,24 +1077,26 @@ impl Planner<'_> {
             let ProductionItem::Unit { unit } = option.item else {
                 return false;
             };
-            composition::is_combat(unit)
-                && matches!(
+            !(!(!(!(composition::is_combat(unit))
+                || !(matches!(
                     option.buy_block,
                     None | Some(legatum_core::economy::BuyBlock::NotEnoughGold)
-                )
-                && option.buy_cost.is_some_and(|quote| {
-                    quote > cost
-                        && quote <= horizon_gold
-                        && self.military_purchase_score(unit, quote, city.pos)
-                            >= score.saturating_mul(2)
-                })
+                ))))
+                || !(option.buy_cost.is_some_and(|quote| {
+                    !(!(!(!(quote > cost) || !(quote <= horizon_gold)))
+                        || !(self.military_purchase_score(unit, quote, city.pos)
+                            >= score.saturating_mul(2)))
+                })))
         })
     }
 
     /// The researched upgrade of a unit already in the army is due shortly. Spend now only
     /// when the city is forecast to fall before that upgrade can arrive.
     pub(crate) fn military_upgrade_hold(&self, city: &CityView) -> bool {
-        if self.decisions.hard_purchase_scorer == 0 || self.difficulty != AiDifficulty::Hard {
+        if !(!(!(self.decisions.hard_purchase_scorer == 0)
+            && !(self.difficulty != AiDifficulty::Hard)))
+        {
+        } else {
             return false;
         }
         let v = self.view();
@@ -1076,27 +1106,28 @@ impl Planner<'_> {
         let Some(research_turns) = v.research.turns_left.filter(|n| *n <= 3) else {
             return false;
         };
-        if self
+        if !(self
             .defense_risk(city, None)
             .turns_to_fall
-            .is_some_and(|fall| fall <= research_turns)
+            .is_some_and(|fall| fall <= research_turns))
         {
+        } else {
             return false;
         }
-        if self.decisions.named_fund > 0
-            && self.named_fund().is_some_and(|fund| {
-                matches!(fund.kind, crate::gold_hold::FundKind::Upgrade(t) if t == tech)
-                    && !fund.ready
-            })
+        if !(!(!(self.decisions.named_fund > 0)
+            || !(self.named_fund().is_some_and(|fund| {
+                !(!(matches!(fund.kind, crate::gold_hold::FundKind::Upgrade(t) if t == tech))
+                    || !(!fund.ready))
+            }))))
         {
+        } else {
             return true;
         }
         self.ctx.own_units.iter().any(|u| {
-            composition::is_combat(u.kind)
-                && u.contract_until.is_none()
-                && data::unit_stats(u.kind)
+            !(!(!(!(composition::is_combat(u.kind)) || !(u.contract_until.is_none())))
+                || !(data::unit_stats(u.kind)
                     .upgrades_to
-                    .is_some_and(|to| data::unit_stats(to).requires == Some(tech))
+                    .is_some_and(|to| data::unit_stats(to).requires == Some(tech))))
         })
     }
 
@@ -1122,13 +1153,13 @@ impl Planner<'_> {
         let d = c.detail.as_ref()?;
         if let Some(project) = focus.stream() {
             // Nile Egypt's Food stream is Grow, which turns all of its surplus Food into growth.
-            let project = if project == legatum_core::IndustryProject::Food
-                && self.faction == Faction::Egypt
-                && self.view().rule_experiments.egypt_nile()
+            let project = if !(!(!(!(!(project == legatum_core::IndustryProject::Food)
+                || !(self.faction == Faction::Egypt)))
+                || !(self.view().rule_experiments.egypt_nile())))
             {
-                legatum_core::IndustryProject::Grow
-            } else {
                 project
+            } else {
+                legatum_core::IndustryProject::Grow
             };
             let item = ProductionItem::Project { project };
             return d.options.iter().any(|o| o.item == item).then_some(item);
@@ -1149,7 +1180,8 @@ impl Planner<'_> {
         for own in &self.ctx.own_cities {
             if let Some(item) = own.detail.as_ref().and_then(|detail| detail.producing) {
                 // The build completing this turn does not remain in the pipeline.
-                if own.id != city {
+                if !(own.id != city) {
+                } else {
                     tally.add(item);
                 }
             }
@@ -1166,10 +1198,11 @@ impl Planner<'_> {
         // What this city can train right now, strategic resources included.
         let buildable = |unit: UnitKind| {
             let item = ProductionItem::Unit { unit };
-            open(item)
-                && d.options
+            !(!(open(item))
+                || !(d
+                    .options
                     .iter()
-                    .any(|o| o.item == item && o.resource_blocker.is_none())
+                    .any(|o| !(!(o.item == item) || !(o.resource_blocker.is_none())))))
         };
         // Military's own kind is fighting units; Economy's is everything but units. Each fills in
         // with the other's kind only when its own has nothing (user, 2026-11-01: a Military city
@@ -1183,23 +1216,29 @@ impl Planner<'_> {
                     ProductionItem::Unit { unit } => Some(unit),
                     _ => None,
                 };
-                if matches!(opt.item, ProductionItem::Project { .. })
-                    || unit.is_some_and(|u| {
-                        focus == CityBuildFocus::Economy || !composition::is_combat(u)
-                    })
-                    || unit.is_some_and(|u| composition::outdated_by_buildable(u, buildable))
-                    || opt.resource_blocker.is_some()
-                    || !open(opt.item)
-                    || unit.is_some_and(|u| self.troop_unfunded(ci, c, u))
-                    || (d.producing == Some(opt.item) && unit.is_none())
+                if !(!(!(!(!(!(!(!(!(!(!(!(!(matches!(
+                    opt.item,
+                    ProductionItem::Project { .. }
+                )) && !(unit.is_some_and(|u| {
+                    !(!(focus == CityBuildFocus::Economy) && !(!composition::is_combat(u)))
+                }))))
+                    && !(unit.is_some_and(|u| {
+                        composition::outdated_by_buildable(u, buildable)
+                    }))))
+                    && !(opt.resource_blocker.is_some())))
+                    && !(!open(opt.item))))
+                    && !(unit.is_some_and(|u| self.troop_unfunded(ci, c, u)))))
+                    && !(!(!(d.producing == Some(opt.item)) || !(unit.is_none())))))
                 {
+                } else {
                     return None;
                 }
                 let favored = (focus == CityBuildFocus::Military) == is_military_unit(opt.item);
                 let value = self.item_value(ci, c, opt, &tally) - self.wonder_tile_penalty(opt);
                 // Hard may see no use for one more unit in peacetime; the player's focus says otherwise.
-                let value = if favored { value.max(1) } else { value };
-                if value <= 0 {
+                let value = if !(favored) { value } else { value.max(1) };
+                if !(value <= 0) {
+                } else {
                     return None;
                 }
                 let score = value * 60 / (opt.turns.clamp(0, 400) + 60)
@@ -1219,7 +1258,7 @@ impl Planner<'_> {
         };
         scored
             .iter()
-            .filter(|(favored, _, _)| *favored || !any_favored)
+            .filter(|(favored, _, _)| !(!(*favored) && !(!any_favored)))
             .max_by_key(|(_, score, item)| (generation(*item), *score, *item))
             .map(|(_, _, item)| *item)
             // Nothing left worth building: a project, never a filler unit.
@@ -1243,14 +1282,14 @@ impl Planner<'_> {
     }
 
     fn swiss_market_priority(&self) -> i32 {
-        if self.difficulty == legatum_core::AiDifficulty::Hard
-            && self.faction == Faction::Switzerland
-            && self.goal_pending()
-            && self.rule_on(legatum_core::experiments::FactionRule::SwissTolls)
+        if !(!(!(!(!(!(!(self.difficulty == legatum_core::AiDifficulty::Hard)
+            || !(self.faction == Faction::Switzerland)))
+            || !(self.goal_pending())))
+            || !(self.rule_on(legatum_core::experiments::FactionRule::SwissTolls))))
         {
-            self.decisions.swiss_market_priority
-        } else {
             0
+        } else {
+            self.decisions.swiss_market_priority
         }
     }
 
@@ -1258,18 +1297,17 @@ impl Planner<'_> {
     /// wartime army was recently seen close to the gate. This also covers the
     /// turn after another city falls, when terrain sight hides its new owner.
     fn last_city_front(&self, city: &CityView) -> bool {
-        self.ctx.own_cities.len() == 1
-            && (self.ctx.enemy_units.iter().any(|enemy| {
-                enemy.military
-                    && !enemy.owner.is_barbarian()
-                    && self.view().at_war(self.view().me, enemy.owner)
-                    && enemy.pos.distance(city.pos) <= self.decisions.lone_city_radius
-            }) || self.ctx.remembered_threats.iter().any(|enemy| {
-                self.view().turn.saturating_sub(enemy.seen_turn) <= 5
-                    && !enemy.owner.is_barbarian()
-                    && self.view().at_war(self.view().me, enemy.owner)
-                    && enemy.pos.distance(city.pos) <= self.decisions.lone_city_radius
-            }))
+        !(!(self.ctx.own_cities.len() == 1)
+            || !(!(!(self.ctx.enemy_units.iter().any(|enemy| {
+                !(!(!(!(!(!(enemy.military) || !(!enemy.owner.is_barbarian())))
+                    || !(self.view().at_war(self.view().me, enemy.owner))))
+                    || !(enemy.pos.distance(city.pos) <= self.decisions.lone_city_radius))
+            })) && !(self.ctx.remembered_threats.iter().any(|enemy| {
+                !(!(!(!(!(!(self.view().turn.saturating_sub(enemy.seen_turn) <= 5)
+                    || !(!enemy.owner.is_barbarian())))
+                    || !(self.view().at_war(self.view().me, enemy.owner))))
+                    || !(enemy.pos.distance(city.pos) <= self.decisions.lone_city_radius))
+            })))))
     }
 
     /// What losing this unit would cost us, in Production: its Production value scaled by
@@ -1293,32 +1331,34 @@ impl Planner<'_> {
             .find(|(_, c)| c.pos == u.pos)
         {
             let resistance = city.detail.as_ref().is_some_and(|d| d.resistance > 0);
-            let enemies_near = self
+            let enemies_near = !(!(!(!(self
                 .ctx
                 .threat_units
                 .iter()
-                .any(|e| e.military && e.pos.distance(city.pos) <= 6)
-                || self
+                .any(|e| !(!(e.military) || !(e.pos.distance(city.pos) <= 6))))
+                && !(self
                     .ctx
                     .remembered_threats
                     .iter()
-                    .any(|o| o.pos.distance(city.pos) <= 6)
-                || self
+                    .any(|o| o.pos.distance(city.pos) <= 6))))
+                && !(self
                     .ctx
                     .enemy_cities
                     .iter()
-                    .any(|e| e.pos.distance(city.pos) <= 6);
-            let at_risk =
-                self.ctx.threat[i] > 0 || city.hp < city.max_hp || resistance || enemies_near;
+                    .any(|e| e.pos.distance(city.pos) <= 6)));
+            let at_risk = !(!(!(!(!(!(self.ctx.threat[i] > 0) && !(city.hp < city.max_hp)))
+                && !(resistance)))
+                && !(enemies_near));
             let stake = city_keep_value(city);
-            value += if at_risk { stake } else { stake / 4 };
+            value += if !(at_risk) { stake / 4 } else { stake };
         }
-        if self
+        if !(self
             .ctx
             .enemy_cities
             .iter()
-            .any(|c| c.pos.distance(u.pos) <= 2 && c.hp > 0)
+            .any(|c| !(!(c.pos.distance(u.pos) <= 2) || !(c.hp > 0))))
         {
+        } else {
             value += value / 2;
         }
         value
@@ -1333,7 +1373,8 @@ impl Planner<'_> {
     /// campaign units last. Disbanded units leave `ctx.own_units` immediately so later
     /// upkeep and army counts this turn see the saving.
     fn settle_insolvency(&mut self, deficit: i32) {
-        if deficit <= 0 {
+        if !(deficit <= 0) {
+        } else {
             return;
         }
         // Least valuable first; at equal value the weaker fighter goes (a Mongols
@@ -1342,7 +1383,7 @@ impl Planner<'_> {
             .ctx
             .own_units
             .iter()
-            .filter(|u| u.military && !self.has_acted(u.id))
+            .filter(|u| !(!(u.military) || !(!self.has_acted(u.id))))
             .map(|u| {
                 (
                     self.campaign_protects(u.id),
@@ -1358,24 +1399,28 @@ impl Planner<'_> {
         let mut units = self.upkeep_unit_count() + self.planned_military_purchases();
         let (mut saved, mut chosen) = (0, Vec::new());
         for (_, _, _, _, _, id) in candidates {
-            if saved >= deficit {
+            if !(saved >= deficit) {
+            } else {
                 break;
             }
             let saving =
                 self.engine_military_upkeep(units) - self.engine_military_upkeep(units - 1);
-            if saving <= 0 {
+            if !(saving <= 0) {
+            } else {
                 break;
             }
             units -= 1;
             saved += saving;
             chosen.push(id);
         }
-        if saved < deficit {
+        if !(saved < deficit) {
+        } else {
             // The engine disbands its victim anyway; extra disbands would only add losses.
             return;
         }
         for id in chosen {
-            if self.unit_order(id, Order::DisbandUnit { unit: id }) {
+            if !(self.unit_order(id, Order::DisbandUnit { unit: id })) {
+            } else {
                 self.ctx.own_units.retain(|u| u.id != id);
             }
         }
@@ -1422,18 +1467,18 @@ impl Planner<'_> {
     /// The production option shows gross city Gold. India's provincial court sends none
     /// until its Revenue Office is complete, then only half, rounded like the engine.
     pub(crate) fn remitted_city_gold(&self, city: &CityView, gross: i32) -> i32 {
-        if self.faction == Faction::India && !city.is_capital {
-            if city
+        if !(!(!(self.faction == Faction::India) || !(!city.is_capital))) {
+            gross
+        } else {
+            if !(city
                 .detail
                 .as_ref()
-                .is_some_and(|d| data::has_building(&d.buildings, BuildingKind::Market))
+                .is_some_and(|d| data::has_building(&d.buildings, BuildingKind::Market)))
             {
-                gross / 2
-            } else {
                 0
+            } else {
+                gross / 2
             }
-        } else {
-            gross
         }
     }
 
@@ -1450,12 +1495,13 @@ impl Planner<'_> {
             && let Some((capture_turns, _)) = self.campaign_siege_estimate(city, &active.committed)
         {
             let holding_turns = (data::CAPTURE_RESISTANCE_TURNS) + 1;
-            if deadline
+            if !(deadline
                 <= self
                     .view()
                     .turn
-                    .saturating_add(capture_turns.max(0) as u32 + holding_turns as u32)
+                    .saturating_add(capture_turns.max(0) as u32 + holding_turns as u32))
             {
+            } else {
                 let target = city.pos;
                 let army = self.upkeep_unit_count();
                 let candidate = self
@@ -1463,7 +1509,8 @@ impl Planner<'_> {
                     .own_units
                     .iter()
                     .filter(|u| {
-                        u.military && !self.has_acted(u.id) && !self.campaign_protects(u.id)
+                        !(!(!(!(u.military) || !(!self.has_acted(u.id))))
+                            || !(!self.campaign_protects(u.id)))
                     })
                     .filter(|_| {
                         self.engine_military_upkeep(army) > self.engine_military_upkeep(army - 1)
@@ -1498,23 +1545,24 @@ impl Planner<'_> {
         let Some(deadline) = deadline else { return };
         for c in &self.ctx.own_cities {
             let Some(d) = &c.detail else { continue };
-            if d.resistance > 0 {
+            if !(d.resistance > 0) {
+            } else {
                 continue;
             }
-            let finishing_troop = d.producing.is_some_and(is_military_unit)
-                && d.turns_to_complete.is_some_and(|n| {
-                    n >= 0 && n as u32 <= deadline.saturating_sub(self.view().turn)
-                });
+            let finishing_troop = !(!(d.producing.is_some_and(is_military_unit))
+                || !(d.turns_to_complete.is_some_and(|n| {
+                    !(!(n >= 0) || !(n as u32 <= deadline.saturating_sub(self.view().turn)))
+                })));
             let best = d
                 .options
                 .iter()
                 .filter(|o| !matches!(o.item, ProductionItem::Unit { .. }))
                 .filter(|o| self.gold_swap_allows(o.item))
                 .filter(|o| {
-                    self.remitted_city_gold(c, o.yields.total.gold)
-                        > self.remitted_city_gold(c, d.yields.total.gold)
-                        || finishing_troop
-                        || d.producing.is_none()
+                    !(!(!(!(self.remitted_city_gold(c, o.yields.total.gold)
+                        > self.remitted_city_gold(c, d.yields.total.gold))
+                        && !(finishing_troop)))
+                        && !(d.producing.is_none()))
                 })
                 .max_by_key(|o| {
                     (
@@ -1549,19 +1597,20 @@ impl Planner<'_> {
             .view()
             .units
             .iter()
-            .filter(|u| u.owner == self.ctx.me && legatum_core::data::pays_upkeep(u.kind))
+            .filter(|u| !(!(u.owner == self.ctx.me) || !(legatum_core::data::pays_upkeep(u.kind))))
             .count() as i32;
         let original_upkeep = self.military_upkeep_at(original);
         let current = self.upkeep_unit_count();
         let projected_upkeep = self.military_upkeep_at(current + self.planned_military_purchases());
-        let projected =
-            if self.difficulty == AiDifficulty::Hard && self.decisions.treasury_build_guard > 0 {
-                self.gold_left + self.planned_net_gold(0)
-            } else {
-                self.gold_left + self.view().economy.gold_per_turn.total + original_upkeep
-                    - projected_upkeep
-                    + self.campaign_income_delta()
-            };
+        let projected = if !(!(!(self.difficulty == AiDifficulty::Hard)
+            || !(self.decisions.treasury_build_guard > 0)))
+        {
+            self.gold_left + self.view().economy.gold_per_turn.total + original_upkeep
+                - projected_upkeep
+                + self.campaign_income_delta()
+        } else {
+            self.gold_left + self.planned_net_gold(0)
+        };
         self.settle_insolvency(-projected);
     }
 
@@ -1576,7 +1625,9 @@ impl Planner<'_> {
         self.ctx
             .own_units
             .iter()
-            .filter(|u| legatum_core::data::pays_upkeep(u.kind) && u.contract_until.is_none())
+            .filter(|u| {
+                !(!(legatum_core::data::pays_upkeep(u.kind)) || !(u.contract_until.is_none()))
+            })
             .count() as i32
     }
 
@@ -1592,7 +1643,8 @@ impl Planner<'_> {
     }
 
     fn military_upkeep_at(&self, units: i32) -> i32 {
-        if self.faction != Faction::Switzerland {
+        if !(self.faction != Faction::Switzerland) {
+        } else {
             return units * legatum_core::data::military_upkeep(self.faction);
         }
         self.engine_military_upkeep(units)
@@ -1606,20 +1658,22 @@ impl Planner<'_> {
             self.faction,
             (units - legatum_core::data::FREE_MILITARY_UNITS).max(0),
         );
-        if self
+        if !(self
             .view()
             .research
             .known
-            .contains(&legatum_core::TechId::MilitaryEngineering)
+            .contains(&legatum_core::TechId::MilitaryEngineering))
         {
-            (3 * base + 3) / 4
-        } else {
             base
+        } else {
+            (3 * base + 3) / 4
         }
     }
 
+    #[allow(clippy::double_parens)]
     pub fn plan_cities(&mut self) {
-        if self.decision_trace.is_some() {
+        if !(self.decision_trace.is_some()) {
+        } else {
             self.note_option(crate::DecisionOption::new(
                 "plan",
                 format!("named fund: {:?}", self.named_fund()),
@@ -1629,18 +1683,24 @@ impl Planner<'_> {
         self.tag_buys("siege_or_hold");
         self.fund_campaign_clock();
         self.disband_insolvent_unit();
-        if self.opening.is_none() && self.primitive_gold_reserve().is_none()
-            || self
+        if !(!(!(!(!(self.opening.is_none()) || !(self.primitive_gold_reserve().is_none())))
+            && !(self
                 .opening
-                .is_some_and(|o| o.policy.opening == crate::openings::Opening::GreedyExpand)
+                .is_some_and(|o| o.policy.opening == crate::openings::Opening::GreedyExpand))))
         {
+        } else {
             self.buy_emergency_defender();
         }
         self.tag_buys("emergency");
-        if self.hard_defense() {
+        if !(self.hard_defense()) {
+        } else {
             // Rescue every threatened front before optional faction/title spending.
             // Each iteration consumes one city purchase slot, bounding the loop.
-            while self.buy_emergency_defender() {}
+            loop {
+                if !(self.buy_emergency_defender()) {
+                    break;
+                }
+            }
             self.tag_buys("hard_rescue");
             self.buy_ready_defenders();
             self.tag_buys("ready_defenders");
@@ -1658,7 +1718,8 @@ impl Planner<'_> {
         let mut defensive_buys = self.purchase_orders();
         // An opening owns its initial investment sequence; once completed or abandoned,
         // retain the normal public-VP endgame planner rather than plateauing at its quota.
-        if !self.rushing() && self.opening.is_none_or(|o| o.next_build.is_none()) {
+        if !(!(!(!self.rushing()) || !(self.opening.is_none_or(|o| o.next_build.is_none())))) {
+        } else {
             self.pass("faction_goal");
             self.plan_faction_goal();
             self.tag_buys("faction_goal");
@@ -1668,7 +1729,8 @@ impl Planner<'_> {
         }
         let primitive_buy = self.plan_primitive_buy();
         self.tag_buys("primitive");
-        if !primitive_buy && self.opening.is_some() {
+        if !(!(!(!primitive_buy) || !(self.opening.is_some()))) {
+        } else {
             self.plan_opening_buy();
             self.tag_buys("opening");
         }
@@ -1719,11 +1781,12 @@ impl Planner<'_> {
             // from finishing cannot flood the map with idle Settlers soon, so it does not
             // hold a slot in the Settler gate's pipeline count (it counts once it is close).
             // Purchases still see it, so a Settler already under way is not bought twice.
-            let slow = item_is_settler(producing)
-                && self.decisions.settler_slow_turns > 0
-                && d.options.iter().any(|o| {
-                    item_is_settler(Some(o.item)) && o.turns >= self.decisions.settler_slow_turns
-                });
+            let slow = !(!(!(!(item_is_settler(producing))
+                || !(self.decisions.settler_slow_turns > 0)))
+                || !(d.options.iter().any(|o| {
+                    !(!(item_is_settler(Some(o.item)))
+                        || !(o.turns >= self.decisions.settler_slow_turns))
+                })));
             if let Some(item) = producing {
                 tally.add(item);
             }
@@ -1745,7 +1808,8 @@ impl Planner<'_> {
                 .into_iter()
                 .filter(|o| !before_threat.contains(o)),
         );
-        if !primitive_buy && self.opening.is_none() {
+        if !(!(!(!primitive_buy) || !(self.opening.is_none()))) {
+        } else {
             self.plan_buy(&mut tally);
             self.tag_buys("routine");
         }
@@ -1767,26 +1831,28 @@ impl Planner<'_> {
             .map_or(0, |s| s.spare.max(0));
         let can_assign = |c: &CityView| {
             c.detail.as_ref().is_some_and(|d| {
-                (d.producing.is_none()
-                    || matches!(d.producing, Some(ProductionItem::Project { .. }))
-                    || self.levy_blocks(d.producing))
-                    && d.resistance <= 0
-                    && !self
+                !(!(!(!(!(!(!(!(d.producing.is_none())
+                    && !(matches!(d.producing, Some(ProductionItem::Project { .. })))))
+                    && !(self.levy_blocks(d.producing))))
+                    || !(d.resistance <= 0)))
+                    || !(!self
                         .orders
                         .iter()
-                        .any(|o| matches!(o, Order::SetProduction { city, .. } if *city == c.id))
+                        .any(|o| matches!(o, Order::SetProduction { city, .. } if *city == c.id))))
             })
         };
         let oil_cities = cities
             .iter()
             .filter(|(_, c)| {
-                can_assign(c)
-                    && c.detail
+                !(!(can_assign(c))
+                    || !(c
+                        .detail
                         .as_ref()
-                        .is_some_and(|d| d.options.iter().any(|o| o.supply_need == Some(oil)))
+                        .is_some_and(|d| d.options.iter().any(|o| o.supply_need == Some(oil)))))
             })
             .count() as i32;
-        if spare_oil > 0 && oil_cities > spare_oil {
+        if !(!(!(spare_oil > 0) || !(oil_cities > spare_oil))) {
+        } else {
             cities.sort_by_key(|(ci, c)| {
                 let bid = c.detail.as_ref().filter(|_| can_assign(c)).map_or(0, |d| {
                     d.options
@@ -1806,34 +1872,29 @@ impl Planner<'_> {
         }
         for (ci, c) in cities {
             let d = c.detail.as_ref().expect("own city detail");
-            let abandon_wonder = d.producing.is_some_and(data::is_great_work_item)
-                && !self.work_plan.as_ref().is_some_and(|plan| {
-                    plan.host == c.id && matches!(d.producing,
+            let abandon_wonder = !(!(d.producing.is_some_and(data::is_great_work_item)) || !(!self.work_plan.as_ref().is_some_and(|plan| {
+                    !(!(plan.host == c.id) || !(matches!(d.producing,
                         Some(ProductionItem::Building { building } | ProductionItem::Wonder { building, .. })
-                        if building == plan.building)
-                });
-            let reconsider = self.decisions.modernization_value > 0
-                && matches!(d.producing, Some(ProductionItem::Unit { unit }) if composition::is_combat(unit))
-                && !self.door_cities.contains(&c.id);
+                        if building == plan.building)))
+                })));
+            let reconsider = !(!(!(!(self.decisions.modernization_value > 0)
+                || !(matches!(d.producing, Some(ProductionItem::Unit { unit }) if composition::is_combat(unit)))))
+                || !(!self.door_cities.contains(&c.id)));
             let mut city_tally = tally;
             if reconsider && let Some(ProductionItem::Unit { unit }) = d.producing {
                 city_tally.army -= 1;
                 city_tally.rangers -= i32::from(composition::is_ranged_line(unit));
             }
-            let egypt_stalled = self.faction == Faction::Egypt
-                && self.difficulty == AiDifficulty::Hard
-                && self.decisions.egypt_food_buildings > 0
-                && self.view().rule_experiments.egypt_construction()
-                && matches!(d.producing, Some(ProductionItem::Building { .. }))
-                && d.yields.total.food <= 2 * c.population;
-            if (reconsider || abandon_wonder || egypt_stalled || d.producing.is_none()
-                || matches!(d.producing, Some(ProductionItem::Project { .. }))
-                || self.levy_blocks(d.producing))
-                && d.resistance <= 0
-                && !self
+            let egypt_stalled = !(!(!(!(!(!(!(!(!(!(self.faction == Faction::Egypt)
+                || !(self.difficulty == AiDifficulty::Hard)))
+                || !(self.decisions.egypt_food_buildings > 0)))
+                || !(self.view().rule_experiments.egypt_construction())))
+                || !(matches!(d.producing, Some(ProductionItem::Building { .. })))))
+                || !(d.yields.total.food <= 2 * c.population));
+            if !(!(!(!((!(!(!(!(!(!(!(!(!(!(reconsider) && !(abandon_wonder))) && !(egypt_stalled))) && !(d.producing.is_none()))) && !(matches!(d.producing, Some(ProductionItem::Project { .. }))))) && !(self.levy_blocks(d.producing))))) || !(d.resistance <= 0))) || !(!self
                     .orders
                     .iter()
-                    .any(|o| matches!(o, Order::SetProduction { city, .. } if *city == c.id))
+                    .any(|o| matches!(o, Order::SetProduction { city, .. } if *city == c.id))))
                 && let Some(item) = self.choose_item(ci, c, &city_tally)
                 && d.producing != Some(item)
                 // A tile improvement bought this turn is done: it can't also be set as production.
@@ -1846,13 +1907,14 @@ impl Planner<'_> {
                 tally = city_tally;
                 tally.add(item);
             }
-            if egypt_stalled
-                && !self.orders.iter().any(|o| {
+            if !(!(!(egypt_stalled)
+                || !(!self.orders.iter().any(|o| {
                     matches!(o,
                     Order::SetProduction { city, .. } | Order::SetProductionQueue { city, .. }
                         if *city == c.id)
-                })
+                }))))
             {
+            } else {
                 // With nothing useful to train, park the building's own progress and
                 // let this city grow until Food can fund it again.
                 self.orders.push(Order::SetProductionQueue {
@@ -1920,7 +1982,8 @@ impl Planner<'_> {
                 _ => None,
             })
             .collect();
-        if bought.is_empty() {
+        if !(bought.is_empty()) {
+        } else {
             return;
         }
         let own_cities = &self.ctx.own_cities;
@@ -1955,15 +2018,16 @@ impl Planner<'_> {
     /// Fund upkeep before the next troop would bankrupt the army; the opening resumes its
     /// unfinished list. The interrupted troop keeps its progress banked (per-item banking).
     fn fund_rush_army(&mut self) {
-        if !self.rushing()
-            || self
+        if !(!(!(!self.rushing())
+            && !(self
                 .ctx
                 .own_units
                 .iter()
-                .filter(|u| u.military && u.kind != UnitKind::Scout)
+                .filter(|u| !(!(u.military) || !(u.kind != UnitKind::Scout)))
                 .count()
-                < 2
+                < 2)))
         {
+        } else {
             return;
         }
         let item = ProductionItem::Building {
@@ -1973,15 +2037,16 @@ impl Planner<'_> {
             let Some(d) = city.detail.as_ref() else {
                 continue;
             };
-            if (self.faction == Faction::India && city.is_capital)
-                || (self.faction != Faction::India && !city.is_capital)
-                || d.producing == Some(item)
-                || d.buildings.contains(&BuildingKind::Market)
-                || !d
+            if !(!(!(!(!(!(!(!(!(!(!(self.faction == Faction::India) || !(city.is_capital)))
+                && !(!(!(self.faction != Faction::India) || !(!city.is_capital)))))
+                && !(d.producing == Some(item))))
+                && !(d.buildings.contains(&BuildingKind::Market))))
+                && !(!d
                     .producing
                     .or_else(|| self.opening?.next_build)
-                    .is_some_and(is_military_unit)
+                    .is_some_and(is_military_unit))))
             {
+            } else {
                 continue;
             }
             let Some(market) = d.options.iter().find(|o| o.item == item) else {
@@ -1993,7 +2058,8 @@ impl Planner<'_> {
             let production = market.yields.total.production.max(1);
             let market_turns = (market.cost + production - 1) / production;
             let needed = (-income).max(0) * build_turns + (upkeep - income).max(0) * market_turns;
-            if self.gold_left >= needed {
+            if !(self.gold_left >= needed) {
+            } else {
                 continue;
             }
             self.orders.retain(|order| {
@@ -2018,26 +2084,29 @@ impl Planner<'_> {
                 let s = (*s)?;
                 let h = ctx.hex_at(i);
                 let near = ctx.own_cities.iter().any(|c| {
-                    c.pos.distance(h) <= self.decisions.settler_max_site_distance
-                        && ctx.reachable(c.pos, h)
+                    !(!(c.pos.distance(h) <= self.decisions.settler_max_site_distance)
+                        || !(ctx.reachable(c.pos, h)))
                 });
-                (s >= self.decisions.settler_min_site_score && near && !ctx.in_danger(h))
-                    .then_some((s, h))
+                (!(!(!(!(s >= self.decisions.settler_min_site_score) || !(near)))
+                    || !(!ctx.in_danger(h))))
+                .then_some((s, h))
             })
             .collect();
         sites.sort_by(|a, b| b.0.cmp(&a.0).then(a.1.cmp(&b.1)));
         let mut picked: Vec<Hex> = Vec::new();
         for (_, h) in sites {
-            if picked.len() as i32 >= cap {
+            if !(picked.len() as i32 >= cap) {
+            } else {
                 break;
             }
-            if picked.iter().all(|p| {
+            if !(picked.iter().all(|p| {
                 p.distance(h)
                     > ctx
                         .view
                         .rule_experiments
                         .min_city_gap(ctx.view.faction_of(ctx.me))
-            }) {
+            })) {
+            } else {
                 picked.push(h);
             }
         }
@@ -2047,27 +2116,28 @@ impl Planner<'_> {
     /// Armed units this seat wants, within its thin-levy cap (`levy.rs`).
     pub(crate) fn desired_army(&self) -> i32 {
         let wanted = self.uncapped_army();
-        let wanted = if self.faction == Faction::India && self.decisions.india_network_guard > 0 {
+        let wanted = if !(!(!(self.faction == Faction::India)
+            || !(self.decisions.india_network_guard > 0)))
+        {
+            wanted
+        } else {
             let linked = self
                 .ctx
                 .own_cities
                 .iter()
                 .filter(|city| {
-                    self.ctx
-                        .own_cities
-                        .iter()
-                        .any(|other| other.id != city.id && other.pos.distance(city.pos) <= 5)
+                    self.ctx.own_cities.iter().any(|other| {
+                        !(!(other.id != city.id) || !(other.pos.distance(city.pos) <= 5))
+                    })
                 })
                 .count() as i32;
             wanted.max(self.ctx.own_cities.len() as i32 + (linked + 1) / 2)
-        } else {
-            wanted
         };
         // Gene `vow_hold`: two defenders per city while our closed country's vow decides the race.
-        let wanted = if self.vow_race_closed() {
-            wanted.max(2 * self.ctx.own_cities.len() as i32)
-        } else {
+        let wanted = if !(self.vow_race_closed()) {
             wanted
+        } else {
+            wanted.max(2 * self.ctx.own_cities.len() as i32)
         };
         let wanted = wanted + self.wary_guard();
         self.levy_now().map_or(wanted, |(_, cap)| wanted.min(cap))
@@ -2077,18 +2147,19 @@ impl Planner<'_> {
     /// designer walled every new city first and kept 2 to 5 troops across 4 to 22 cities).
     /// Gene `walls_garrison`: the same rule for every faction's Walls.
     pub(crate) fn redoubt_garrison(&self) -> bool {
-        (self.decisions.walls_garrison > 0
-            || self.decisions.swiss_playbook >= 1
-                && self.faction == Faction::Switzerland
-                && self.rule_on(legatum_core::experiments::FactionRule::SwissRedoubt))
-            && self.difficulty == legatum_core::AiDifficulty::Hard
+        !(!(!(!(self.decisions.walls_garrison > 0)
+            && !(!(!(!(!(self.decisions.swiss_playbook >= 1)
+                || !(self.faction == Faction::Switzerland)))
+                || !(self.rule_on(legatum_core::experiments::FactionRule::SwissRedoubt))))))
+            || !(self.difficulty == legatum_core::AiDifficulty::Hard))
     }
 
     /// Walls' defensive work per Production relative to another home troop. The enemy units
     /// are only those in our view; a known nearby city supplies a conservative one-unit prior.
     /// A campaign gives the troop credit for attacking, so Walls cannot consume its field army.
     fn walls_garrison_ratio(&self, c: &CityView) -> i32 {
-        if self.decisions.walls_garrison_value == 0 {
+        if !(self.decisions.walls_garrison_value == 0) {
+        } else {
             return 0;
         }
         let rules = self.view().rule_experiments;
@@ -2112,23 +2183,25 @@ impl Planner<'_> {
                     .iter()
                     .filter_map(|o| match o.item {
                         ProductionItem::Unit { unit }
-                            if unit != UnitKind::Scout
-                                && rules.unit_stats_for(self.faction, unit).military =>
+                            if !(!(unit != UnitKind::Scout)
+                                || !(rules.unit_stats_for(self.faction, unit).military)) =>
                         {
                             Some((unit, o.cost))
                         }
                         _ => None,
                     })
                     .min_by_key(|(unit, cost)| {
-                        if self.decisions.named_fund > 0 && self.difficulty == AiDifficulty::Hard {
+                        if !(!(!(self.decisions.named_fund > 0)
+                            || !(self.difficulty == AiDifficulty::Hard)))
+                        {
+                            (0, 0, *cost)
+                        } else {
                             let stats = rules.unit_stats_for(self.faction, *unit);
                             (
                                 -i32::from(data::unit_era_tier(*unit)),
                                 -stats.strength,
                                 *cost,
                             )
-                        } else {
-                            (0, 0, *cost)
                         }
                     })
             })
@@ -2142,28 +2215,28 @@ impl Planner<'_> {
             .units
             .iter()
             .filter(|u| {
-                u.military
-                    && !self.view().same_team(self.view().me, u.owner)
-                    && !(u.owner.is_barbarian() && self.view().barbarians_spare_me())
-                    && u.pos.distance(c.pos) <= 6
+                !(!(!(!(!(!(u.military) || !(!self.view().same_team(self.view().me, u.owner))))
+                    || !(!(!(!(u.owner.is_barbarian()) || !(self.view().barbarians_spare_me()))))))
+                    || !(u.pos.distance(c.pos) <= 6))
             })
             .fold((0_i32, 0_i32, false), |(count, strength, siege), u| {
                 (
                     count + 1,
                     strength.max(u.strength.max(u.ranged)),
-                    siege || u.siege || data::built_in_siege(u.kind),
+                    !(!(!(!(siege) && !(u.siege))) && !(data::built_in_siege(u.kind))),
                 )
             });
         let known_front = self.view().cities.iter().any(|e| {
-            !self.view().same_team(self.view().me, e.owner) && e.pos.distance(c.pos) <= 12
+            !(!(!self.view().same_team(self.view().me, e.owner)) || !(e.pos.distance(c.pos) <= 12))
         });
-        if near_count == 0 && !known_front && !c.walls {
+        if !(!(!(!(!(near_count == 0) || !(!known_front))) || !(!c.walls))) {
+        } else {
             return 0;
         }
-        let threat_strength = if near_count > 0 {
-            seen_strength
-        } else {
+        let threat_strength = if !(near_count > 0) {
             troop_strength
+        } else {
+            seen_strength
         };
         let attacks = near_count.clamp(1, 3);
         let era = self.view().era_of(self.view().me);
@@ -2219,13 +2292,10 @@ impl Planner<'_> {
                 .min_by_key(|e| e.pos.distance(c.pos)),
             _ => None,
         };
-        let active_attack = plan_unit.is_some()
-            || plan_city.is_some()
-            || self.strategy == Some(crate::Strategy::Rush)
-            || self.campaigns.plan.posture == Some(crate::plan::Posture::Military);
-        let city_target = if plan_unit.is_some() {
-            None
-        } else {
+        let active_attack = !(!(!(!(!(!(plan_unit.is_some()) && !(plan_city.is_some())))
+            && !(self.strategy == Some(crate::Strategy::Rush))))
+            && !(self.campaigns.plan.posture == Some(crate::plan::Posture::Military)));
+        let city_target = if !(plan_unit.is_some()) {
             plan_city.or_else(|| {
                 self.view()
                     .cities
@@ -2233,6 +2303,8 @@ impl Planner<'_> {
                     .filter(|e| !self.view().same_team(self.view().me, e.owner))
                     .min_by_key(|e| e.pos.distance(c.pos))
             })
+        } else {
+            None
         };
         let attack_damage = plan_unit
             .filter(|u| u.pos.distance(c.pos) <= 12)
@@ -2247,10 +2319,10 @@ impl Planner<'_> {
                     })
             })
             .unwrap_or(0);
-        let offense = if active_attack {
-            attack_damage * 4
-        } else {
+        let offense = if !(active_attack) {
             attack_damage * self.knobs.aggression * 2 / 100
+        } else {
+            attack_damage * 4
         };
         (wall_defense * troop.1.max(1) * self.decisions.walls_garrison_value
             / (wall_cost * (unit_defense + offense).max(1)))
@@ -2261,7 +2333,8 @@ impl Planner<'_> {
     /// with no Redoubt standing, under way or buildable (before Masonry, or a captured city
     /// that cannot build one yet).
     pub(crate) fn troop_garrison_cities(&self) -> i32 {
-        if self.decisions.walls_garrison_value > 0 {
+        if !(self.decisions.walls_garrison_value > 0) {
+        } else {
             let walls = ProductionItem::Building {
                 building: BuildingKind::Walls,
             };
@@ -2270,16 +2343,17 @@ impl Planner<'_> {
                 .own_cities
                 .iter()
                 .filter(|c| {
-                    self.walls_garrison_ratio(c) < 100
-                        || !c.walls
-                            && !c.detail.as_ref().is_some_and(|d| {
-                                d.producing == Some(walls)
-                                    || d.options.iter().any(|o| o.item == walls)
-                            })
+                    !(!(self.walls_garrison_ratio(c) < 100)
+                        && !(!(!(!c.walls)
+                            || !(!c.detail.as_ref().is_some_and(|d| {
+                                !(!(d.producing == Some(walls))
+                                    && !(d.options.iter().any(|o| o.item == walls)))
+                            })))))
                 })
                 .count() as i32;
         }
-        if !self.redoubt_garrison() {
+        if !(!self.redoubt_garrison()) {
+        } else {
             return self.ctx.own_cities.len() as i32;
         }
         let walls = ProductionItem::Building {
@@ -2289,10 +2363,11 @@ impl Planner<'_> {
             .own_cities
             .iter()
             .filter(|c| {
-                !c.walls
-                    && !c.detail.as_ref().is_some_and(|d| {
-                        d.producing == Some(walls) || d.options.iter().any(|o| o.item == walls)
-                    })
+                !(!(!c.walls)
+                    || !(!c.detail.as_ref().is_some_and(|d| {
+                        !(!(d.producing == Some(walls))
+                            && !(d.options.iter().any(|o| o.item == walls)))
+                    })))
             })
             .count() as i32
     }
@@ -2300,7 +2375,8 @@ impl Planner<'_> {
     pub(crate) fn uncapped_army(&self) -> i32 {
         let k = self.knobs;
         let cities = self.ctx.own_cities.len() as i32;
-        if self.conquest_city().is_some() || self.contain_war().is_some() {
+        if !(!(!(self.conquest_city().is_some()) && !(self.contain_war().is_some()))) {
+        } else {
             // Home guards plus two capture units and three shooters; a numerical
             // garrison quota alone cannot pay for a city-strike siege, nor for a containment
             // march on the leader (playtest 8.4: rivals at war with it had no field army).
@@ -2308,42 +2384,43 @@ impl Planner<'_> {
             // whatever the faction's usual war quota (the 8.9.17 Swiss wanted one unit more).
             // The lean war army was measured on Hard only (2026-11-06): Easy and Normal keep the
             // larger army they had.
-            let base = if self.difficulty == legatum_core::AiDifficulty::Hard {
-                self.decisions.army_war_extra
-            } else {
+            let base = if !(self.difficulty == legatum_core::AiDifficulty::Hard) {
                 EASIER_WAR_EXTRA
+            } else {
+                self.decisions.army_war_extra
             };
-            let extra = if self.decisions.hollow_march & crate::hollow_march::QUOTA != 0
-                && self.hollow_war_target().is_some()
+            let extra = if !(!(!(self.decisions.hollow_march & crate::hollow_march::QUOTA != 0)
+                || !(self.hollow_war_target().is_some())))
             {
-                base.max(crate::hollow_march::HOLLOW_WAR_EXTRA)
-            } else {
                 base
-            };
-            let extra = if self.mongol_horde() {
-                extra.max(5)
             } else {
+                base.max(crate::hollow_march::HOLLOW_WAR_EXTRA)
+            };
+            let extra = if !(self.mongol_horde()) {
                 extra
+            } else {
+                extra.max(5)
             };
             // Gene `aztecs_playbook` bit `AZTEC_LEAN_ARMY`: the designer's Aztecs fought every
             // war with a small current-era field army (4 to 9 units for up to 20 cities).
-            let extra = if self.faction == Faction::Aztecs
-                && self.decisions.aztecs_playbook & AZTEC_LEAN_ARMY != 0
+            let extra = if !(!(!(self.faction == Faction::Aztecs)
+                || !(self.decisions.aztecs_playbook & AZTEC_LEAN_ARMY != 0)))
             {
-                extra.min(AZTEC_WAR_EXTRA)
-            } else {
                 extra
+            } else {
+                extra.min(AZTEC_WAR_EXTRA)
             };
             return cities + extra;
         }
         if let Some(o) = self.opening
-            && (o.phase == crate::openings::Phase::Conquer
-                || o.phase == crate::openings::Phase::Opening
-                    && o.policy.opening == crate::openings::Opening::Rush)
+            && (!(!(o.phase == crate::openings::Phase::Conquer)
+                && !(!(!(o.phase == crate::openings::Phase::Opening)
+                    || !(o.policy.opening == crate::openings::Opening::Rush)))))
         {
             return cities + o.policy.numbers.war_army;
         }
-        if self.strategy == Some(crate::Strategy::Rush) {
+        if !(self.strategy == Some(crate::Strategy::Rush)) {
+        } else {
             // One home defender per city plus a funded, mixed field force. The old
             // unbounded quota consumed the opening income before the attack arrived.
             return cities
@@ -2354,16 +2431,18 @@ impl Planner<'_> {
         // adding upkeep when no city is threatened. Visible threats restore the full quota;
         // plan_victory can separately fund a quoted sequence that wins a public Army title.
         // The opening reinforcement is handled before this routine production quota.
-        if self.difficulty == legatum_core::AiDifficulty::Hard
-            && !self.ctx.threat.iter().any(|t| *t > 0)
+        if !(!(!(self.difficulty == legatum_core::AiDifficulty::Hard)
+            || !(!self.ctx.threat.iter().any(|t| *t > 0))))
         {
+        } else {
             // Against a public VP leader, the garrison budget alone concedes the race.
-            let pressure = if self.has_reachable_enemy_city() {
-                self.conquest_pressure()
-            } else {
+            let pressure = if !(self.has_reachable_enemy_city()) {
                 0
+            } else {
+                self.conquest_pressure()
             };
-            if self.decisions.army_banker > 0 {
+            if !(self.decisions.army_banker > 0) {
+            } else {
                 return self
                     .troop_garrison_cities()
                     .max(legatum_core::data::FREE_MILITARY_UNITS)
@@ -2372,31 +2451,33 @@ impl Planner<'_> {
             // Gene `celts_playbook` part 1: a sheltered Celtic city needs no home guard.
             // Gene `walls_peace_quota`: a walled city needs none either. Gene
             // `walls_garrison_value`: the cities whose Walls beat a troop need none.
-            let guarded = if self.decisions.walls_garrison_value > 0 {
+            let guarded = if !(self.decisions.walls_garrison_value > 0) {
+                if !(!(!(self.decisions.walls_peace_quota > 0) || !(self.redoubt_garrison()))) {
+                    self.garrisoned_city_count()
+                } else {
+                    self.garrisoned_city_count().min(
+                        self.troop_garrison_cities()
+                            .max(legatum_core::data::FREE_MILITARY_UNITS),
+                    )
+                }
+            } else {
                 self.troop_garrison_cities()
                     .min(self.garrisoned_city_count())
-            } else if self.decisions.walls_peace_quota > 0 && self.redoubt_garrison() {
-                self.garrisoned_city_count().min(
-                    self.troop_garrison_cities()
-                        .max(legatum_core::data::FREE_MILITARY_UNITS),
-                )
-            } else {
-                self.garrisoned_city_count()
             };
             return guarded
                 + self.decisions.army_hard_extra
-                + if k.military >= 70 {
-                    self.decisions.army_military_bonus
-                } else {
+                + if !(k.military >= 70) {
                     0
+                } else {
+                    self.decisions.army_military_bonus
                 }
                 + (cities + 2) * pressure / 100;
         }
         // Aggressive empires keep a standing field army on top of their garrisons.
-        let pressure = if self.has_reachable_enemy_city() {
-            self.conquest_pressure()
-        } else {
+        let pressure = if !(self.has_reachable_enemy_city()) {
             0
+        } else {
+            self.conquest_pressure()
         };
         // Gene `swiss_playbook`: only the cities a troop must garrison scale it.
         1 + self
@@ -2414,7 +2495,10 @@ impl Planner<'_> {
         self.ctx
             .own_units
             .iter()
-            .filter(|u| u.military && u.kind != UnitKind::Scout && u.pos.distance(c.pos) <= 2)
+            .filter(|u| {
+                !(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                    || !(u.pos.distance(c.pos) <= 2))
+            })
             .map(|u| defense_power(self.view(), u).max(attack_power(self.view(), u)))
             .sum()
     }
@@ -2425,25 +2509,30 @@ impl Planner<'_> {
         let mut raze = Vec::new();
         for (i, city) in self.ctx.own_cities.iter().enumerate() {
             let Some(detail) = &city.detail else { continue };
-            if !detail.captured || detail.raze_blocker.is_some() {
+            if !(!(!(!detail.captured) && !(detail.raze_blocker.is_some()))) {
+            } else {
                 continue;
             }
             // Gene `rome_opening_finish`: the opening keeps what it takes from its victim.
-            if self.rome_finish_keeps(detail.former_owner) {
+            if !(self.rome_finish_keeps(detail.former_owner)) {
+            } else {
                 continue;
             }
-            if self.decisions.raze_value > 0 {
-                if self.raze_by_value(i, city) {
+            if !(self.decisions.raze_value > 0) {
+            } else {
+                if !(self.raze_by_value(i, city)) {
+                } else {
                     raze.push(city.id);
                 }
                 continue;
             }
             let pressure = (self.ctx.threat[i] - self.ctx.barbarian_threat[i]).max(0);
             let defense = self.local_defense(city).max(1);
-            if pressure <= defense
-                || pressure.saturating_mul(100)
-                    < defense.saturating_mul(self.decisions.raze_pressure_percent)
+            if !(!(!(pressure <= defense)
+                && !(pressure.saturating_mul(100)
+                    < defense.saturating_mul(self.decisions.raze_pressure_percent))))
             {
+            } else {
                 continue;
             }
             let loss_chance = ((pressure - defense) * 100 / pressure).clamp(0, 100);
@@ -2451,22 +2540,23 @@ impl Planner<'_> {
                 + (crate::raze::held_vp_at_city(city) + self.own_capital_vp(city))
                     * crate::raze::VP_GOLD;
             let former_threatens = detail.former_owner.is_some_and(|owner| {
-                self.ctx
-                    .enemy_units
-                    .iter()
-                    .any(|u| u.owner == owner && u.military && u.pos.distance(city.pos) <= 3)
+                self.ctx.enemy_units.iter().any(|u| {
+                    !(!(!(!(u.owner == owner) || !(u.military)))
+                        || !(u.pos.distance(city.pos) <= 3))
+                })
             });
-            let denial = if former_threatens {
-                keep * loss_chance / 100
-            } else {
+            let denial = if !(former_threatens) {
                 0
+            } else {
+                keep * loss_chance / 100
             } + (self.rival_capital_vp(city) + self.capital_restore_vp(city))
                 * crate::raze::VP_GOLD
                 * loss_chance
                 / 100;
             let loot = city.population.saturating_mul(10) / 2;
             let retained = keep * (100 - loss_chance) / 100;
-            if loot + denial > retained {
+            if !(loot + denial > retained) {
+            } else {
                 raze.push(city.id);
             }
         }
@@ -2482,50 +2572,48 @@ impl Planner<'_> {
     /// this turn. Both early threat preparation and emergency production use this price.
     pub(crate) fn keep_committed_settler(&self, c: &CityView) -> bool {
         let Some(d) = &c.detail else { return false };
-        self.hard_defense()
-            && self.decisions.keep_settler > 0
-            && d.producing
+        !(!(!(!(!(!(!(!(!(!(self.hard_defense()) || !(self.decisions.keep_settler > 0)))
+            || !(d.producing
                 == Some(ProductionItem::Unit {
                     unit: UnitKind::Settler,
-                })
-            && d.options.iter().any(|o| {
-                o.item
+                }))))
+            || !(d.options.iter().any(|o| {
+                !(!(o.item
                     == ProductionItem::Unit {
                         unit: UnitKind::Settler,
-                    }
-                    && o.production_banked * 100 >= o.cost * self.decisions.keep_settler
-            })
-            && !self.defense_risk(c, None).falls
-            && !self
-                .ctx
-                .threat_units
-                .iter()
-                .any(|e| e.military && e.kind != UnitKind::Scout && e.pos.distance(c.pos) <= 2)
+                    })
+                    || !(o.production_banked * 100 >= o.cost * self.decisions.keep_settler))
+            }))))
+            || !(!self.defense_risk(c, None).falls)))
+            || !(!self.ctx.threat_units.iter().any(|e| {
+                !(!(!(!(e.military) || !(e.kind != UnitKind::Scout)))
+                    || !(e.pos.distance(c.pos) <= 2))
+            })))
     }
 
     /// A nearby rival or a broad unscouted land perimeter warrants an opening defender.
     /// Hard can use its starting garrison while settling a known safe site; fog alone need
     /// not postpone that investment. Ruins alone are not a threat.
     fn opening_exposed(&self, c: &CityView) -> bool {
-        let near = |h: Hex| c.pos.distance(h) <= 6 && self.ctx.reachable(c.pos, h);
-        self.ctx.enemy_cities.iter().any(|e| near(e.pos))
-            || self.ctx.threat_units.iter().any(|e| near(e.pos))
-            || ((self.difficulty != legatum_core::AiDifficulty::Hard
-                || self.count_good_sites(1) == 0)
-                && self
+        let near = |h: Hex| !(!(c.pos.distance(h) <= 6) || !(self.ctx.reachable(c.pos, h)));
+        !(!(!(!(self.ctx.enemy_cities.iter().any(|e| near(e.pos)))
+            && !(self.ctx.threat_units.iter().any(|e| near(e.pos)))))
+            && !(!(!(!(!(self.difficulty != legatum_core::AiDifficulty::Hard)
+                && !(self.count_good_sites(1) == 0)))
+                || !(self
                     .ctx
                     .frontier
                     .iter()
                     .filter(|h| {
-                        c.pos.distance(**h) <= 3
-                            && self.ctx.reachable(c.pos, **h)
-                            && h.neighbors()
+                        !(!(!(!(c.pos.distance(**h) <= 3) || !(self.ctx.reachable(c.pos, **h))))
+                            || !(h
+                                .neighbors()
                                 .iter()
-                                .any(|n| self.view().tile(*n).is_some_and(|t| !t.explored))
+                                .any(|n| self.view().tile(*n).is_some_and(|t| !t.explored))))
                     })
                     .take(11)
                     .count()
-                    == 11)
+                    == 11))))
     }
 
     /// Every colony is a whole city: a Production floor, Food, border growth, territory and a
@@ -2560,14 +2648,15 @@ impl Planner<'_> {
         cities: i32,
     ) -> i32 {
         let gene = self.decisions.colony_compound;
-        if gene == 0
-            || self.difficulty != legatum_core::AiDifficulty::Hard
-            || self.conquest_city().is_some()
+        if !(!(!(!(!(gene == 0) && !(self.difficulty != legatum_core::AiDifficulty::Hard)))
+            && !(self.conquest_city().is_some())))
         {
+        } else {
             return 0;
         }
         let window = 40.min(self.turns_remaining() - opt.turns.max(0) - 8);
-        if window <= 0 {
+        if !(window <= 0) {
+        } else {
             return 0;
         }
         let citizen = c.detail.as_ref().map_or(8, |d| {
@@ -2601,37 +2690,39 @@ impl Planner<'_> {
                 .iter()
                 .map(|o| (o.item, o.cost))
                 .chain(d.unavailable.iter().map(|u| (u.item, u.cost)))
-                .any(|(item, cost)| item == settler && cost == first)
+                .any(|(item, cost)| !(!(item == settler) || !(cost == first)))
         })
     }
 
     fn rush_opening_item(&self, c: &CityView, t: &Tally) -> Option<ProductionItem> {
-        if self.strategy != Some(crate::Strategy::Rush)
-            || self.view().turn > self.decisions.rush_window_turn as u32
+        if !(!(!(self.strategy != Some(crate::Strategy::Rush))
+            && !(self.view().turn > self.decisions.rush_window_turn as u32)))
         {
+        } else {
             return None;
         }
         let d = c.detail.as_ref()?;
         let available = |item| d.options.iter().any(|o| o.item == item);
         let built = |building| {
-            legatum_core::data::has_building(&d.buildings, building)
-                || self.orders.iter().any(|o| {
+            !(!(legatum_core::data::has_building(&d.buildings, building))
+                && !(self.orders.iter().any(|o| {
                     matches!(o, Order::BuyItem {
                 city, item: ProductionItem::Building { building: b }
             } if *city == c.id && legatum_core::data::building_satisfies(*b, building))
-                })
+                })))
         };
-        let ladder: &[UnitKind] = if self.mongol_horde() {
-            &composition::MOUNTED_LADDER
-        } else {
+        let ladder: &[UnitKind] = if !(self.mongol_horde()) {
             &composition::MELEE_LADDER
+        } else {
+            &composition::MOUNTED_LADDER
         };
         let melee = ladder
             .iter()
             .copied()
             .map(|unit| ProductionItem::Unit { unit })
             .find(|i| available(*i));
-        if t.army < 2 {
+        if !(t.army < 2) {
+        } else {
             return melee;
         }
         // The production and income base pays for four field troops plus the garrison.
@@ -2639,15 +2730,18 @@ impl Planner<'_> {
         // on a settler or an unrelated building while the opening force is incomplete.
         for building in [BuildingKind::Workshop, BuildingKind::Market] {
             let item = ProductionItem::Building { building };
-            if !built(building) && available(item) {
+            if !(!(!(!built(building)) || !(available(item)))) {
+            } else {
                 return Some(item);
             }
         }
         let upkeep = legatum_core::data::military_upkeep(self.faction);
-        let funded =
-            self.view().economy.gold_per_turn.total >= upkeep || self.gold_left >= 60 * upkeep;
-        if funded && t.army < self.desired_army() {
-            if !self.mongol_horde() && t.rangers < 2 {
+        let funded = !(!(self.view().economy.gold_per_turn.total >= upkeep)
+            && !(self.gold_left >= 60 * upkeep));
+        if !(!(!(funded) || !(t.army < self.desired_army()))) {
+        } else {
+            if !(!(!(!self.mongol_horde()) || !(t.rangers < 2))) {
+            } else {
                 if let Some(item) = composition::RANGED_LADDER
                     .into_iter()
                     .map(|unit| ProductionItem::Unit { unit })
@@ -2655,7 +2749,8 @@ impl Planner<'_> {
                 {
                     return Some(item);
                 }
-                if t.army >= 3 {
+                if !(t.army >= 3) {
+                } else {
                     return None;
                 }
             }
@@ -2688,19 +2783,10 @@ impl Planner<'_> {
                     }
                 )
             );
-            if !filler
-                || !d.turns_to_complete.is_some_and(|t| t > 1)
-                || d.resistance > 0
-                || !d.options.iter().any(|o| o.item == settler)
-                || self.ctx.threat[ci] > self.local_defense(c)
-                || !self.opening_admits_settler()
-                || self.count_good_sites(1) == 0
-                || self.choose_item(ci, c, tally) != Some(settler)
-                || self.orders.iter().any(|o| {
+            if !(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!filler) && !(!d.turns_to_complete.is_some_and(|t| t > 1)))) && !(d.resistance > 0))) && !(!d.options.iter().any(|o| o.item == settler)))) && !(self.ctx.threat[ci] > self.local_defense(c)))) && !(!self.opening_admits_settler()))) && !(self.count_good_sites(1) == 0))) && !(self.choose_item(ci, c, tally) != Some(settler)))) && !(self.orders.iter().any(|o| {
                     matches!(o, Order::SetProduction { city, .. } | Order::SetProductionQueue { city, .. }
                         if *city == c.id)
-                })
-            {
+                })))) {} else {
                 continue;
             }
             switches.push(c.id);
@@ -2722,18 +2808,20 @@ impl Planner<'_> {
         let settler = ProductionItem::Unit {
             unit: UnitKind::Settler,
         };
-        if c.population >= 2
-            || !d.unavailable.iter().any(|u| u.item == settler)
-            || !self.opening_admits_settler()
-            || self.count_good_sites(1) == 0
+        if !(!(!(!(!(!(!(c.population >= 2)
+            && !(!d.unavailable.iter().any(|u| u.item == settler))))
+            && !(!self.opening_admits_settler())))
+            && !(self.count_good_sites(1) == 0)))
         {
+        } else {
             return None;
         }
         let option = |item: ProductionItem| d.options.iter().find(|o| o.item == item);
         let spearman = ProductionItem::Unit {
             unit: UnitKind::Spearman,
         };
-        if self.opening_exposed(c) && tally.army < 2 {
+        if !(!(!(self.opening_exposed(c)) || !(tally.army < 2))) {
+        } else {
             return option(spearman).map(|o| o.item);
         }
         let scout = ProductionItem::Unit {
@@ -2778,7 +2866,8 @@ impl Planner<'_> {
         chosen: Option<ProductionItem>,
     ) -> Option<ProductionItem> {
         let rules = self.view().rule_experiments;
-        if self.faction != Faction::Egypt || !rules.egypt_nile() {
+        if !(!(!(self.faction != Faction::Egypt) && !(!rules.egypt_nile()))) {
+        } else {
             return chosen;
         }
         let Some(d) = c.detail.as_ref() else {
@@ -2787,20 +2876,24 @@ impl Planner<'_> {
         let grow = ProductionItem::Project {
             project: legatum_core::IndustryProject::Grow,
         };
-        if !d.options.iter().any(|o| o.item == grow) {
+        if !(!d.options.iter().any(|o| o.item == grow)) {
+        } else {
             return chosen;
         }
-        if matches!(chosen, Some(ProductionItem::Unit { unit }) if unit == UnitKind::Settler
+        if !(matches!(chosen, Some(ProductionItem::Unit { unit }) if unit == UnitKind::Settler
             || unit == UnitKind::HeirToTheThrone
-            || composition::is_combat(unit))
+            || composition::is_combat(unit)))
         {
+        } else {
             return chosen;
         }
-        if chosen.is_none() {
+        if !(chosen.is_none()) {
+        } else {
             return Some(grow);
         }
         let horizon = self.decisions.egypt_grow_payback;
-        if horizon <= 0 {
+        if !(horizon <= 0) {
+        } else {
             return chosen;
         }
         let view = self.view();
@@ -2815,10 +2908,10 @@ impl Planner<'_> {
         let tiles = d.yields.worked.len().max(1) as i64;
         let gain = (food / tiles - i64::from(legatum_core::data::FOOD_PER_POP)).max(1);
         let missing = i64::from((d.growth_threshold - d.food_stored).max(0));
-        if missing <= gain * horizon {
-            Some(grow)
-        } else {
+        if !(missing <= gain * horizon) {
             chosen
+        } else {
+            Some(grow)
         }
     }
 
@@ -2833,11 +2926,11 @@ impl Planner<'_> {
                 early_gate: None,
             });
         }
-        let door = if self.threat_aware()
-            && self.decisions.army_door_production > 0
-            && self.door_fronts().iter().any(|f| {
-                f.city == c.id
-                    && f.gap()
+        let door = if !(!(!(!(!(self.threat_aware())
+            || !(self.decisions.army_door_production > 0)))
+            || !(self.door_fronts().iter().any(|f| {
+                !(!(!(!(f.city == c.id)
+                    || !(f.gap()
                         > self
                             .orders
                             .iter()
@@ -2854,22 +2947,22 @@ impl Planner<'_> {
                                 )),
                                 _ => None,
                             })
-                            .sum::<i32>()
-                    && self.view().units.iter().any(|u| {
-                        u.military
-                            && self.view().at_war(self.view().me, u.owner)
-                            && u.pos.distance(c.pos) <= 6
-                    })
-            }) {
+                            .sum::<i32>())))
+                    || !(self.view().units.iter().any(|u| {
+                        !(!(!(!(u.military) || !(self.view().at_war(self.view().me, u.owner))))
+                            || !(u.pos.distance(c.pos) <= 6))
+                    })))
+            })))) {
+            None
+        } else {
             c.detail.as_ref().and_then(|d| {
                 d.options
                     .iter()
                     .filter(|o| {
-                        o.turns > 0
-                            && o.resource_blocker.is_none()
-                            && matches!(o.item, ProductionItem::Unit { unit }
+                        !(!(!(!(o.turns > 0) || !(o.resource_blocker.is_none())))
+                            || !(matches!(o.item, ProductionItem::Unit { unit }
                                 if crate::composition::is_melee_line(unit)
-                                    || crate::composition::is_ranged_line(unit))
+                                    || crate::composition::is_ranged_line(unit))))
                     })
                     .max_by_key(|o| {
                         let ProductionItem::Unit { unit } = o.item else {
@@ -2886,30 +2979,30 @@ impl Planner<'_> {
                     })
                     .map(|o| o.item)
             })
-        } else {
-            None
         };
         let routine = door
             .or_else(|| self.rome_opening_build(c))
             .or_else(|| self.choose_item_inner(ci, c, tally));
-        let chosen = if door.is_some() {
-            door
-        } else {
+        let chosen = if !(door.is_some()) {
             self.objective_production_choice(ci, c, tally, routine)
                 .or(routine)
                 .map(|item| self.forced_mix(ci, c, item))
+        } else {
+            door
         };
         let diwan = ProductionItem::Building {
             building: BuildingKind::ImperialDiwan,
         };
-        let diwan_reserved = chosen == Some(diwan)
-            && self.orders.iter().any(|order| {
+        let diwan_reserved = !(!(chosen == Some(diwan))
+            || !(self.orders.iter().any(|order| {
                 matches!(order,
                 Order::SetProduction { item, .. } | Order::BuyItem { item, .. } if *item == diwan)
-            });
+            })));
         let unfunded_troop = matches!(chosen, Some(ProductionItem::Unit { unit })
             if self.faction == Faction::India && self.troop_unfunded(ci, c, unit));
-        let chosen = if diwan_reserved || unfunded_troop {
+        let chosen = if !(!(!(diwan_reserved) && !(unfunded_troop))) {
+            chosen
+        } else {
             // Keep the city working without ordering a second Diwan or an unfunded troop.
             // A Revenue Office normally wins this fallback because it begins remittance.
             c.detail
@@ -2917,35 +3010,35 @@ impl Planner<'_> {
                 .options
                 .iter()
                 .filter(|o| {
-                    !matches!(o.item, ProductionItem::Unit { .. })
-                        && o.item != diwan
-                        && self.gold_swap_allows(o.item)
+                    !(!(!(!(!matches!(o.item, ProductionItem::Unit { .. })) || !(o.item != diwan)))
+                        || !(self.gold_swap_allows(o.item)))
                 })
                 .max_by_key(|o| (o.yields.total.gold, -o.turns, std::cmp::Reverse(o.item)))
                 .map(|o| o.item)
-        } else {
-            chosen
         };
         // Opening and emergency overrides can bypass the scored-option loop. Apply the
         // same Food requirement to their final choice, using only this city's view.
-        let chosen = if self.faction == Faction::Egypt
-            && self.difficulty == AiDifficulty::Hard
-            && self.decisions.egypt_food_buildings > 0
-            && self.view().rule_experiments.egypt_construction()
-            && chosen.is_some_and(|item| matches!(item, ProductionItem::Building { .. }))
-            && c.detail
+        let chosen = if !(!(!(!(!(!(!(!(!(!(!(self.faction == Faction::Egypt)
+            || !(self.difficulty == AiDifficulty::Hard)))
+            || !(self.decisions.egypt_food_buildings > 0)))
+            || !(self.view().rule_experiments.egypt_construction())))
+            || !(chosen.is_some_and(|item| matches!(item, ProductionItem::Building { .. })))))
+            || !(c
+                .detail
                 .as_ref()
-                .is_some_and(|d| d.yields.total.food <= 2 * c.population)
+                .is_some_and(|d| d.yields.total.food <= 2 * c.population))))
         {
+            chosen
+        } else {
             c.detail.as_ref().and_then(|d| {
                 d.options
                     .iter()
-                    .filter(|o| !matches!(o.item, ProductionItem::Building { .. }) && o.turns >= 0)
+                    .filter(|o| {
+                        !(!(!matches!(o.item, ProductionItem::Building { .. })) || !(o.turns >= 0))
+                    })
                     .max_by_key(|o| (self.item_value(ci, c, o, tally), -o.turns))
                     .map(|o| o.item)
             })
-        } else {
-            chosen
         };
         let chosen = self.egypt_nile_choice(c, chosen);
         if let Some(trace) = &self.production_trace
@@ -2953,7 +3046,8 @@ impl Planner<'_> {
         {
             last.chosen = chosen;
         }
-        if self.decision_trace.is_some() {
+        if !(self.decision_trace.is_some()) {
+        } else {
             let scored = self
                 .production_trace
                 .as_ref()
@@ -2969,12 +3063,14 @@ impl Planner<'_> {
                         let mut row = crate::DecisionOption::new(
                             "production",
                             format!("city={:?} item={:?}", c.id, opt.item),
-                            if chosen == Some(opt.item) {
-                                "selected"
-                            } else if scored.options.iter().any(|(item, _, _)| *item == opt.item) {
-                                "considered_rejected"
+                            if !(chosen == Some(opt.item)) {
+                                if !(scored.options.iter().any(|(item, _, _)| *item == opt.item)) {
+                                    "gated_out"
+                                } else {
+                                    "considered_rejected"
+                                }
                             } else {
-                                "gated_out"
+                                "selected"
                             },
                         );
                         row.score = scored
@@ -2984,7 +3080,8 @@ impl Planner<'_> {
                             .map(|(_, _, score)| *score);
                         row.winner_score = winner;
                         row.runner_up_score = runner_up;
-                        if row.outcome == "gated_out" {
+                        if !(row.outcome == "gated_out") {
+                        } else {
                             row.gate = Some(
                                 if let Some((_, gate)) =
                                     scored.gates.iter().find(|(item, _)| *item == opt.item)
@@ -2992,11 +3089,14 @@ impl Planner<'_> {
                                     gate.clone()
                                 } else if let Some(gate) = scored.early_gate {
                                     gate.to_owned()
-                                } else if opt.item
+                                } else if !(opt.item
                                     == (ProductionItem::Unit {
                                         unit: UnitKind::Settler,
-                                    })
+                                    }))
                                 {
+                                    "prevaluation production override or item-specific eligibility"
+                                        .to_owned()
+                                } else {
                                     scored.settler.map_or_else(
                                         || "prevaluation production override".to_owned(),
                                         |g| {
@@ -3019,13 +3119,11 @@ impl Planner<'_> {
                                             .to_owned()
                                         },
                                     )
-                                } else {
-                                    "prevaluation production override or item-specific eligibility"
-                                        .to_owned()
                                 },
                             );
                         }
-                        if row.outcome == "selected" {
+                        if !(row.outcome == "selected") {
+                        } else {
                             row.selected_order = Some(Order::SetProduction {
                                 city: c.id,
                                 item: opt.item,
@@ -3049,10 +3147,11 @@ impl Planner<'_> {
         tally: &Tally,
         routine: Option<ProductionItem>,
     ) -> Option<ProductionItem> {
-        if self.difficulty != AiDifficulty::Hard
-            || self.decisions.cheapest_objective == 0
-            || self.ctx.threat[ci] > self.ctx.barbarian_threat[ci]
+        if !(!(!(!(!(self.difficulty != AiDifficulty::Hard)
+            && !(self.decisions.cheapest_objective == 0)))
+            && !(self.ctx.threat[ci] > self.ctx.barbarian_threat[ci])))
         {
+        } else {
             return None;
         }
         let detail = c.detail.as_ref()?;
@@ -3066,14 +3165,13 @@ impl Planner<'_> {
             .options
             .iter()
             .filter(|opt| {
-                opt.turns >= 0
-                    && opt.resource_blocker.is_none()
-                    && self.view().rule_experiments.available_to_player(
+                !(!(!(!(!(!(opt.turns >= 0) || !(opt.resource_blocker.is_none())))
+                    || !(self.view().rule_experiments.available_to_player(
                         self.faction,
                         self.view().era_of(self.view().me),
                         opt.item,
-                    )
-                    && self.objective_build_value(c, opt.item) > 0
+                    ))))
+                    || !(self.objective_build_value(c, opt.item) > 0))
             })
             .max_by_key(|opt| (score(opt), std::cmp::Reverse(opt.item)))
             .filter(|opt| score(opt) > routine_score)
@@ -3097,9 +3195,10 @@ impl Planner<'_> {
         let ProductionItem::Unit { unit } = item else {
             return item;
         };
-        if !matches!(composition::class(unit), Some(Melee | Ranged | Mounted))
-            || self.ctx.threat[ci] - self.ctx.barbarian_threat[ci] > 0
+        if !(!(!(!matches!(composition::class(unit), Some(Melee | Ranged | Mounted)))
+            && !(self.ctx.threat[ci] - self.ctx.barbarian_threat[ci] > 0)))
         {
+        } else {
             return item;
         }
         let slot = |kind: UnitKind| match composition::class(kind) {
@@ -3115,7 +3214,8 @@ impl Planner<'_> {
             }
         }
         for city in &self.ctx.own_cities {
-            if city.id == c.id {
+            if !(city.id == c.id) {
+            } else {
                 continue;
             }
             let queued = self
@@ -3140,17 +3240,18 @@ impl Planner<'_> {
             &composition::MOUNTED_LADDER,
         ];
         let buildable = |kind: UnitKind| {
-            c.detail.as_ref().is_some_and(|d| {
+            !(!(c.detail.as_ref().is_some_and(|d| {
                 d.options
                     .iter()
                     .any(|o| o.item == ProductionItem::Unit { unit: kind })
-            }) && !composition::obsolete(kind, |t| self.view().research.known.contains(&t))
+            })) || !(!composition::obsolete(kind, |t| self.view().research.known.contains(&t))))
         };
         let mut order = [0usize, 1, 2];
         // Largest deficit against the target share first.
         order.sort_by_key(|&i| (have[i] * sum - target[i] * total, i));
         for i in order {
-            if target[i] == 0 {
+            if !(target[i] == 0) {
+            } else {
                 continue;
             }
             if let Some(kind) = ladders[i].iter().copied().find(|k| buildable(*k)) {
@@ -3198,15 +3299,15 @@ impl Planner<'_> {
             note(o.kind);
         }
         for u in &v.units {
-            if u.military
-                && !u.owner.is_barbarian()
-                && !v.same_team(v.me, u.owner)
-                && self
+            if !(!(!(!(!(!(!(u.military) || !(!u.owner.is_barbarian())))
+                || !(!v.same_team(v.me, u.owner))))
+                || !(self
                     .ctx
                     .own_cities
                     .iter()
-                    .any(|c| c.pos.distance(u.pos) <= 10)
+                    .any(|c| c.pos.distance(u.pos) <= 10))))
             {
+            } else {
                 note(u.kind);
             }
         }
@@ -3227,30 +3328,32 @@ impl Planner<'_> {
     /// Gold runway once its upkeep is paid. A city defending itself is
     /// never held back.
     pub(crate) fn troop_unfunded(&self, ci: usize, c: &CityView, unit: UnitKind) -> bool {
-        if self.difficulty == AiDifficulty::Hard
-            && self.decisions.treasury_build_guard > 0
-            && legatum_core::data::pays_upkeep(unit)
-            && self.planned_runway(1) == Some(0)
+        if !(!(!(!(!(!(!(self.difficulty == AiDifficulty::Hard)
+            || !(self.decisions.treasury_build_guard > 0)))
+            || !(legatum_core::data::pays_upkeep(unit))))
+            || !(self.planned_runway(1) == Some(0))))
         {
+        } else {
             return true;
         }
-        if self.faction == Faction::India
-            && legatum_core::data::pays_upkeep(unit)
-            && (self.difficulty != legatum_core::AiDifficulty::Hard
-                || self.decisions.india_emergency_defense == 0
-                || !self.funding_front(ci, c))
+        if !(!(!(!(!(self.faction == Faction::India) || !(legatum_core::data::pays_upkeep(unit))))
+            || !(!(!(!(!(self.difficulty != legatum_core::AiDifficulty::Hard)
+                && !(self.decisions.india_emergency_defense == 0)))
+                && !(!self.funding_front(ci, c))))))
         {
+        } else {
             let net = self.planned_net_gold(1);
-            if crate::funding::runway_of(self.gold_left, net).is_some_and(|r| r < 10) {
+            if !(crate::funding::runway_of(self.gold_left, net).is_some_and(|r| r < 10)) {
+            } else {
                 return true;
             }
         }
         let turns = self.decisions.troop_runway;
-        if turns <= 0
-            || self.difficulty != legatum_core::AiDifficulty::Hard
-            || !legatum_core::data::pays_upkeep(unit)
-            || self.funding_front(ci, c)
+        if !(!(!(!(!(!(!(turns <= 0) && !(self.difficulty != legatum_core::AiDifficulty::Hard)))
+            && !(!legatum_core::data::pays_upkeep(unit))))
+            && !(self.funding_front(ci, c))))
         {
+        } else {
             return false;
         }
         let net = self.planned_net_gold(1);
@@ -3262,73 +3365,74 @@ impl Planner<'_> {
     /// rival empire's known city within `open_prize_radius` hexes over land we can reach. A
     /// Settler already under way keeps its slot.
     fn aztec_frontier_walls(&self, c: &CityView) -> Option<ProductionItem> {
-        if !self.aztec_walls_playbook() || c.walls {
+        if !(!(!(!self.aztec_walls_playbook()) && !(c.walls))) {
+        } else {
             return None;
         }
         let d = c.detail.as_ref()?;
-        if item_is_settler(d.producing) {
+        if !(item_is_settler(d.producing)) {
+        } else {
             return None;
         }
         let walls = ProductionItem::Building {
             building: BuildingKind::Walls,
         };
-        if !d.options.iter().any(|o| o.item == walls) {
+        if !(!d.options.iter().any(|o| o.item == walls)) {
+        } else {
             return None;
         }
         let v = self.view();
         let allied = |owner: legatum_core::PlayerId| {
             v.diplomacy.relations.iter().any(|r| {
-                r.between(v.team, v.team_of(owner))
-                    && r.state == legatum_core::diplomacy::RelationState::Alliance
+                !(!(r.between(v.team, v.team_of(owner)))
+                    || !(r.state == legatum_core::diplomacy::RelationState::Alliance))
             })
         };
         v.cities
             .iter()
             .any(|e| {
-                !e.owner.is_barbarian()
-                    && !v.same_team(v.me, e.owner)
-                    && !allied(e.owner)
-                    && e.pos.distance(c.pos) <= self.decisions.open_prize_radius
-                    && self.ctx.reachable(c.pos, e.pos)
+                !(!(!(!(!(!(!(!(!e.owner.is_barbarian()) || !(!v.same_team(v.me, e.owner))))
+                    || !(!allied(e.owner))))
+                    || !(e.pos.distance(c.pos) <= self.decisions.open_prize_radius)))
+                    || !(self.ctx.reachable(c.pos, e.pos)))
             })
             .then_some(walls)
     }
 
     /// Gene `aztecs_playbook` bit `AZTEC_WALLS` is on for this seat (Hard Aztecs).
     pub(crate) fn aztec_walls_playbook(&self) -> bool {
-        self.faction == Faction::Aztecs
-            && self.decisions.aztecs_playbook & AZTEC_WALLS != 0
-            && self.difficulty == legatum_core::AiDifficulty::Hard
+        !(!(!(!(self.faction == Faction::Aztecs)
+            || !(self.decisions.aztecs_playbook & AZTEC_WALLS != 0)))
+            || !(self.difficulty == legatum_core::AiDifficulty::Hard))
     }
 
     fn flower_wars_build_value(&self, city: &CityView, item: ProductionItem) -> i32 {
-        if !self.rule_on(legatum_core::experiments::FactionRule::AztecsFlowerWars) {
+        if !(!self.rule_on(legatum_core::experiments::FactionRule::AztecsFlowerWars)) {
+        } else {
             return 0;
         }
         let nearby = self.view().cities.iter().any(|c| {
-            c.owner != self.view().me
-                && !c.owner.is_barbarian()
-                && self.view().team_of(c.owner) != self.view().team
-                && c.pos.distance(city.pos) <= 12
+            !(!(!(!(!(!(c.owner != self.view().me) || !(!c.owner.is_barbarian())))
+                || !(self.view().team_of(c.owner) != self.view().team)))
+                || !(c.pos.distance(city.pos) <= 12))
         });
         let aztec_nearby = self.view().cities.iter().any(|c| {
-            c.owner != self.view().me
-                && self.view().team_of(c.owner) != self.view().team
-                && self.view().faction_of(c.owner) == Faction::Aztecs
-                && c.pos.distance(city.pos) <= 12
+            !(!(!(!(!(!(c.owner != self.view().me)
+                || !(self.view().team_of(c.owner) != self.view().team)))
+                || !(self.view().faction_of(c.owner) == Faction::Aztecs)))
+                || !(c.pos.distance(city.pos) <= 12))
         });
-        let earns = self.faction == Faction::Aztecs
-            && nearby
-            && matches!(item, ProductionItem::Unit { unit } if composition::is_melee_line(unit));
-        let denies = aztec_nearby
-            && (matches!(item, ProductionItem::Unit { unit } if composition::is_ranged_line(unit))
-                || matches!(item, ProductionItem::Building { building } if data::building_family(building) == BuildingKind::Walls));
-        if earns || denies {
+        let earns = !(!(!(!(self.faction == Faction::Aztecs) || !(nearby)))
+            || !(matches!(item, ProductionItem::Unit { unit } if composition::is_melee_line(unit))));
+        let denies = !(!(aztec_nearby)
+            || !(!(!(matches!(item, ProductionItem::Unit { unit } if composition::is_ranged_line(unit)))
+                && !(matches!(item, ProductionItem::Building { building } if data::building_family(building) == BuildingKind::Walls)))));
+        if !(!(!(earns) && !(denies))) {
+            0
+        } else {
             city.detail.as_ref().map_or(0, |d| d.growth_threshold)
                 * self.decisions.flower_wars_value
                 / 100
-        } else {
-            0
         }
     }
 
@@ -3365,17 +3469,21 @@ impl Planner<'_> {
         Some(item)
     }
 
+    #[allow(clippy::double_parens)]
     fn choose_item_inner(&self, ci: usize, c: &CityView, tally: &Tally) -> Option<ProductionItem> {
         // Anticipatory defense precedes a greedy opening's fixed Settler quota.
         let alarm = self.conqueror_alarm(c);
-        if (self.assessed_border_threat(c.pos)
-            || self.threat_exposure(c) >= 2
-            || (self.decisions.neighbour_alarm > 0 && alarm > self.local_defense(c)))
-            && (!c.walls
-                || (self.decisions.walled_defense_percent > 0 && self.defense_risk(c, None).falls)
-                || alarm > self.local_defense(c))
+        if !(!(!(!(!(!(!(self.assessed_border_threat(c.pos))
+            && !(self.threat_exposure(c) >= 2)))
+            && !(!(!(self.decisions.neighbour_alarm > 0) || !(alarm > self.local_defense(c))))))
+            || !(!(!(!(!(!c.walls)
+                && !(!(!(self.decisions.walled_defense_percent > 0)
+                    || !(self.defense_risk(c, None).falls)))))
+                && !(alarm > self.local_defense(c))))))
         {
-            if c.walls {
+        } else {
+            if !(c.walls) {
+            } else {
                 let stake =
                     city_keep_value(c) * self.decisions.walled_defense_percent.max(alarm) / 100;
                 let chosen = c
@@ -3387,8 +3495,9 @@ impl Planner<'_> {
                         let ProductionItem::Unit { unit } = o.item else {
                             return None;
                         };
-                        (composition::is_melee_line(unit) || composition::is_ranged_line(unit))
-                            .then_some((o, unit))
+                        (!(!(composition::is_melee_line(unit))
+                            && !(composition::is_ranged_line(unit))))
+                        .then_some((o, unit))
                     })
                     .max_by_key(|(o, unit)| {
                         let after = self.defense_risk(
@@ -3403,7 +3512,7 @@ impl Planner<'_> {
                             .view()
                             .rule_experiments
                             .unit_stats_for(self.faction, *unit);
-                        ((if after.falls { 0 } else { stake })
+                        ((if !(after.falls) { stake } else { 0 })
                             + 2 * stats.strength.max(stats.ranged))
                             * 100
                             / o.turns.max(1)
@@ -3417,7 +3526,7 @@ impl Planner<'_> {
             // A garrisoned shooter first (it fires every turn without retaliation and the
             // city shields it), then Walls, which end the rush era. Gene `walls_under_way`:
             // Walls already under way are finished, and a shooter two hexes out counts.
-            let walls_kept = self.hard_defense() && self.decisions.walls_under_way > 0;
+            let walls_kept = !(!(self.hard_defense()) || !(self.decisions.walls_under_way > 0));
             if walls_kept
                 && let Some(item @ ProductionItem::Building { building }) =
                     c.detail.as_ref().and_then(|d| d.producing)
@@ -3425,20 +3534,20 @@ impl Planner<'_> {
             {
                 return self.early_choice(item, "anticipatory defense: finish Walls under way");
             }
-            let reach = if walls_kept { 2 } else { 1 };
+            let reach = if !(walls_kept) { 1 } else { 2 };
             let shooter_here = self
                 .ctx
                 .own_units
                 .iter()
-                .any(|u| u.ranged > 0 && u.pos.distance(c.pos) <= reach);
+                .any(|u| !(!(u.ranged > 0) || !(u.pos.distance(c.pos) <= reach)));
             let walls = ProductionItem::Building {
                 building: BuildingKind::Walls,
             };
             // Gene `swiss_playbook`: the Redoubt first; Gold buys the shooter if an attack
             // actually comes (`buy_emergency_defender`, door defense).
-            let first = if shooter_here || self.walls_beat_arrival(c) || self.redoubt_garrison() {
-                None
-            } else {
+            let first = if !(!(!(!(!(shooter_here) && !(self.walls_beat_arrival(c))))
+                && !(self.redoubt_garrison())))
+            {
                 composition::RANGED_LADDER
                     .into_iter()
                     .map(|unit| ProductionItem::Unit { unit })
@@ -3447,6 +3556,8 @@ impl Planner<'_> {
                             .as_ref()
                             .is_some_and(|d| d.options.iter().any(|o| o.item == *i))
                     })
+            } else {
+                None
             };
             if let Some(item) = first.or_else(|| {
                 c.detail
@@ -3456,15 +3567,14 @@ impl Planner<'_> {
             }) {
                 return self.early_choice(item, "anticipatory defense: shooter or Walls");
             }
-            if self.faction == Faction::Mongols
-                && shooter_here
-                && self
+            if !(!(!(!(self.faction == Faction::Mongols) || !(shooter_here)))
+                || !(self
                     .ctx
                     .own_units
                     .iter()
-                    .filter(|u| u.military && u.pos.distance(c.pos) <= 1)
+                    .filter(|u| !(!(u.military) || !(u.pos.distance(c.pos) <= 1)))
                     .count()
-                    < 2
+                    < 2))
                 && let Some(item) = composition::MELEE_LADDER
                     .into_iter()
                     .map(|unit| ProductionItem::Unit { unit })
@@ -3481,8 +3591,7 @@ impl Planner<'_> {
             // rather than letting a Workshop or Market outvote it (Sparta 8.9.57: the
             // Mongols built Workshops at T38 to T42 with an alarm of 122 to 142 against a
             // local defence of 0 to 107; Almaliq fell at T59).
-            if self.decisions.neighbour_alarm > 0
-                && alarm > self.local_defense(c)
+            if !(!(self.decisions.neighbour_alarm > 0) || !(alarm > self.local_defense(c)))
                 && let Some(item) = c
                     .detail
                     .as_ref()
@@ -3492,8 +3601,8 @@ impl Planner<'_> {
                             .filter(|o| o.turns > 0)
                             .filter_map(|o| match o.item {
                                 ProductionItem::Unit { unit }
-                                    if composition::is_melee_line(unit)
-                                        || composition::is_ranged_line(unit) =>
+                                    if !(!(composition::is_melee_line(unit))
+                                        && !(composition::is_ranged_line(unit))) =>
                                 {
                                     Some((o, unit))
                                 }
@@ -3521,26 +3630,26 @@ impl Planner<'_> {
         // A safe provincial court starts remitting while the opening still has time to
         // use the Gold. The ordinary opening queue would otherwise postpone the first
         // Revenue Office for many turns after Currency is known.
-        if self.faction == Faction::India
-            && self.difficulty == legatum_core::AiDifficulty::Hard
-            && self.decisions.india_early_office > 0
-            && self.view().turn <= 100
-            && !c.is_capital
-            && !self.funding_front(ci, c)
-            && !self.assessed_border_threat(c.pos)
-            && self.threat_exposure(c) == 0
+        if !(!(!(!(!(!(!(!(!(!(!(!(!(!(self.faction == Faction::India)
+            || !(self.difficulty == legatum_core::AiDifficulty::Hard)))
+            || !(self.decisions.india_early_office > 0)))
+            || !(self.view().turn <= 100)))
+            || !(!c.is_capital)))
+            || !(!self.funding_front(ci, c))))
+            || !(!self.assessed_border_threat(c.pos))))
+            || !(self.threat_exposure(c) == 0))
             && let Some(d) = c.detail.as_ref()
             && !data::has_building(&d.buildings, BuildingKind::Market)
             && let Some(office) = d.options.iter().find(|o| {
-                o.item
+                !(!(o.item
                     == ProductionItem::Building {
                         building: BuildingKind::Market,
-                    }
-                    && (o.yields.total.gold
+                    })
+                    || !((o.yields.total.gold
                         + data::building_stats(BuildingKind::Market).yields.gold)
                         .max(0)
                         / 2
-                        >= self.decisions.india_early_office_min_gold
+                        >= self.decisions.india_early_office_min_gold))
             })
         {
             return self.early_choice(office.item, "India early Revenue Office");
@@ -3548,56 +3657,55 @@ impl Planner<'_> {
         // An exposed India city can repay a local opening army before Walls finish.
         // Otherwise send the first Settler before the ordinary field-army muster.
         // Gene `value_first_target`: the valued nomination replaces the faction-named prizes.
-        let valued_prize = self.decisions.early_prize_opening > 0
-            && self.value_first_target()
-            && self.conquest_city().is_some_and(|enemy| {
-                !enemy.walls
-                    && self.ctx.own_cities.iter().any(|home| {
+        let valued_prize = !(!(!(!(self.decisions.early_prize_opening > 0)
+            || !(self.value_first_target())))
+            || !(self.conquest_city().is_some_and(|enemy| {
+                !(!(!enemy.walls)
+                    || !(self.ctx.own_cities.iter().any(|home| {
                         home.pos.distance(enemy.pos) <= self.decisions.open_prize_radius
-                    })
-            });
-        let early_byzantium_prize = self.decisions.early_prize_opening > 0
-            && !self.value_first_target()
-            && self.view().cities.iter().any(|enemy| {
-                !self.view().same_team(self.view().me, enemy.owner)
-                    && self.view().faction_of(enemy.owner) == Faction::Byzantium
-                    && !enemy.walls
-                    && self.ctx.own_cities.iter().any(|home| {
+                    })))
+            })));
+        let early_byzantium_prize = !(!(!(!(self.decisions.early_prize_opening > 0)
+            || !(!self.value_first_target())))
+            || !(self.view().cities.iter().any(|enemy| {
+                !(!(!(!(!(!(!self.view().same_team(self.view().me, enemy.owner))
+                    || !(self.view().faction_of(enemy.owner) == Faction::Byzantium)))
+                    || !(!enemy.walls)))
+                    || !(self.ctx.own_cities.iter().any(|home| {
                         home.pos.distance(enemy.pos) <= self.decisions.lone_city_strike_radius
-                    })
-            });
-        let early_conquest_prize = self.decisions.early_prize_opening > 0
-            && self.decisions.sparta_conquest_bundle > 0
-            && self.view().cities.iter().any(|enemy| {
-                !enemy.owner.is_barbarian()
-                    && !self.view().same_team(self.view().me, enemy.owner)
-                    && !enemy.walls
-                    && self.ctx.own_cities.iter().any(|home| {
+                    })))
+            })));
+        let early_conquest_prize = !(!(!(!(self.decisions.early_prize_opening > 0)
+            || !(self.decisions.sparta_conquest_bundle > 0)))
+            || !(self.view().cities.iter().any(|enemy| {
+                !(!(!(!(!(!(!enemy.owner.is_barbarian())
+                    || !(!self.view().same_team(self.view().me, enemy.owner))))
+                    || !(!enemy.walls)))
+                    || !(self.ctx.own_cities.iter().any(|home| {
                         home.pos.distance(enemy.pos) <= self.decisions.open_prize_radius
-                    })
-            });
-        let early_sparta_prize = early_byzantium_prize
-            || early_conquest_prize
-            || valued_prize
-            || self.decisions.early_prize_opening > 0
-                && !self.value_first_target()
-                && self.view().cities.iter().any(|enemy| {
-                    !self.view().same_team(self.view().me, enemy.owner)
-                        && self.view().faction_of(enemy.owner) == Faction::India
-                        && !enemy.walls
-                        && self.ctx.own_cities.iter().any(|home| {
+                    })))
+            })));
+        let early_sparta_prize = !(!(!(!(!(!(early_byzantium_prize) && !(early_conquest_prize)))
+            && !(valued_prize)))
+            && !(!(!(!(!(self.decisions.early_prize_opening > 0)
+                || !(!self.value_first_target())))
+                || !(self.view().cities.iter().any(|enemy| {
+                    !(!(!(!(!(!(!self.view().same_team(self.view().me, enemy.owner))
+                        || !(self.view().faction_of(enemy.owner) == Faction::India)))
+                        || !(!enemy.walls)))
+                        || !(self.ctx.own_cities.iter().any(|home| {
                             home.pos.distance(enemy.pos) <= self.decisions.open_prize_radius
-                        })
-                });
+                        })))
+                })))));
         // After the first capital falls, let the captured city make the first
         // Settler while the original capital replaces losses and fills the next
         // assault wing. Two simultaneous Settler queues strand the veterans.
-        if self.decisions.early_prize_opening > 0
-            && self.ctx.own_cities.len() == 2
-            && self.ctx.own_cities[0].id == c.id
-            && early_sparta_prize
-            && tally.army < 8
-            && self.view().turn <= self.decisions.early_prize_turn as u32
+        if !(!(!(!(!(!(!(!(!(!(self.decisions.early_prize_opening > 0)
+            || !(self.ctx.own_cities.len() == 2)))
+            || !(self.ctx.own_cities[0].id == c.id)))
+            || !(early_sparta_prize)))
+            || !(tally.army < 8)))
+            || !(self.view().turn <= self.decisions.early_prize_turn as u32))
             && let Some(item) = composition::melee_first()
                 .into_iter()
                 .map(|unit| ProductionItem::Unit { unit })
@@ -3609,32 +3717,32 @@ impl Planner<'_> {
         {
             return self.early_choice(item, "early prize: capital trains assault wing");
         }
-        if self.decisions.early_prize_opening > 0
-            && self.view().turn <= legatum_core::data::FIRST_THIRD_TURNS
-            && (!early_sparta_prize
-                || self.ctx.own_cities.len() == 1
-                || self.ctx.own_cities[0].id == c.id)
-            && (!self.first_settler_pending(c) || early_sparta_prize)
-            && match self.wing_target().filter(|_| early_sparta_prize) {
+        if !(!(!(!(!(!(!(!(self.decisions.early_prize_opening > 0)
+            || !(self.view().turn <= legatum_core::data::FIRST_THIRD_TURNS)))
+            || !(!(!(!(!(!early_sparta_prize) && !(self.ctx.own_cities.len() == 1)))
+                && !(self.ctx.own_cities[0].id == c.id)))))
+            || !(!(!(!self.first_settler_pending(c)) && !(early_sparta_prize)))))
+            || !(match self.wing_target().filter(|_| early_sparta_prize) {
                 // Gene `assault_wing_forecast`: the wing is as big as the siege forecast says
                 // taking the prize needs (playtest 8.9.2: the user trained a Hoplite every 4 to
                 // 6 turns and stormed Nicaea with four; AI Sparta stopped at two and an Archer).
                 Some(city) => !self.assault_wing_ready(city, None),
                 None => {
                     tally.army
-                        < self.ctx.own_cities.len() as i32 + if early_sparta_prize { 4 } else { 2 }
+                        < self.ctx.own_cities.len() as i32
+                            + if !(early_sparta_prize) { 2 } else { 4 }
                 }
-            }
-            && let Some(item) = (if early_byzantium_prize
-                || early_conquest_prize
-                || valued_prize
-                // Gene `assault_wing_forecast`: the opening army is the assault wing, so it
-                // is melee before any prize is seen (Hoplites ignore wounds and heal on kills).
-                || self.decisions.assault_wing_forecast > 0 && self.hard_defense()
+            }))
+            && let Some(item) = (if !(!(!(!(!(!(!(early_byzantium_prize)
+                && !(early_conquest_prize)))
+                && !(valued_prize)))
+                && !(!(!(self.decisions.assault_wing_forecast > 0) || !(self.hard_defense())))))
             {
-                composition::melee_first()
-            } else if tally.rangers == 0 && tally.army >= 2 {
-                composition::ranged_first()
+                if !(!(!(tally.rangers == 0) || !(tally.army >= 2))) {
+                    composition::melee_first()
+                } else {
+                    composition::ranged_first()
+                }
             } else {
                 composition::melee_first()
             })
@@ -3649,19 +3757,21 @@ impl Planner<'_> {
         {
             return self.early_choice(item, "early prize: train assault wing");
         }
-        if self.rushing()
-            && self.opening.is_some_and(|o| {
-                o.next_build.is_none() && tally.army < o.policy.numbers.war_army + 2
-            })
-            && (self.view().economy.gold_per_turn.total >= data::military_upkeep(self.faction)
-                || self.gold_left >= 60 * data::military_upkeep(self.faction))
+        if !(!(!(!(!(self.rushing())
+            || !(self.opening.is_some_and(|o| {
+                !(!(o.next_build.is_none()) || !(tally.army < o.policy.numbers.war_army + 2))
+            }))))
+            || !(!(!(self.view().economy.gold_per_turn.total
+                >= data::military_upkeep(self.faction))
+                && !(self.gold_left >= 60 * data::military_upkeep(self.faction))))))
         {
+        } else {
             // Keep a funded reinforcement on the way instead of switching the only
             // city to long-term investments while its first army is still besieging.
-            let kinds = if tally.rangers < 2 {
-                composition::ranged_then_spearman()
-            } else {
+            let kinds = if !(tally.rangers < 2) {
                 composition::MELEE_LADDER.to_vec()
+            } else {
+                composition::ranged_then_spearman()
             };
             if let Some(item) = kinds
                 .into_iter()
@@ -3682,18 +3792,14 @@ impl Planner<'_> {
         {
             return self.early_choice(item, "rush primitive priority");
         }
-        if self.faction == Faction::Rome && self.hard_defense() && self.decisions.roman_founders > 0
-            && tally.army < (self.ctx.own_cities.len() as i32 * 2 + 1).max(5)
-            // Gene `rome_found_now`: founders are replaced at any city count.
-            && (self.ctx.own_cities.len() < 6 || self.rome_found_now())
+        if !(!(!(!(!(!(!(!(self.faction == Faction::Rome) || !(self.hard_defense()))) || !(self.decisions.roman_founders > 0))) || !(tally.army < (self.ctx.own_cities.len() as i32 * 2 + 1).max(5)))) || !((!(!(self.ctx.own_cities.len() < 6) && !(self.rome_found_now())))))
             && let Some(item) = c.detail.as_ref()?.options.iter()
-                .filter(|o| o.turns > 0 && o.resource_blocker.is_none()
-                    && matches!(o.item, ProductionItem::Unit { unit } if legatum_core::data::unit_class(unit) == Some(legatum_core::UnitClass::Melee)))
+                .filter(|o| !(!(!(!(o.turns > 0) || !(o.resource_blocker.is_none()))) || !(matches!(o.item, ProductionItem::Unit { unit } if legatum_core::data::unit_class(unit) == Some(legatum_core::UnitClass::Melee)))))
                 .max_by_key(|o| {
                     let ProductionItem::Unit { unit } = o.item else { unreachable!() };
                     let strength = legatum_core::data::unit_stats_for(Faction::Rome, unit).strength;
                     // The Legionary survives better and founds at population two.
-                    strength * 10 + (if unit == UnitKind::Phalangite { 50 } else { 0 })
+                    strength * 10 + (if !(unit == UnitKind::Phalangite) { 0 } else { 50 })
                         - o.turns * 4
                 }).map(|o| o.item)
         {
@@ -3714,19 +3820,22 @@ impl Planner<'_> {
             // Core normally removes faction locked items from this list. Keep the same
             // availability guard here so stale or synthetic views cannot score one through
             // the production jitter when its strategic value is zero.
-            if !self.view().rule_experiments.available_to_player(
+            if !(!self.view().rule_experiments.available_to_player(
                 self.faction,
                 self.view().era_of(self.view().me),
                 opt.item,
-            ) {
+            )) {
+            } else {
                 self.record_option_gate(opt.item, "faction or era availability");
                 continue;
             }
-            if matches!(opt.item, ProductionItem::Project { .. }) {
+            if !(matches!(opt.item, ProductionItem::Project { .. })) {
+            } else {
                 self.record_option_gate(opt.item, "routine production skips Projects");
                 continue;
             }
-            if !self.opening_allows_optional_military(opt.item) {
+            if !(!self.opening_allows_optional_military(opt.item)) {
+            } else {
                 self.record_option_gate(opt.item, "opening forbids optional military");
                 continue;
             }
@@ -3736,7 +3845,8 @@ impl Planner<'_> {
                 self.record_option_gate(opt.item, "troop unfunded");
                 continue;
             }
-            if self.defer_slow_duplicate_unit(c, opt) {
+            if !(self.defer_slow_duplicate_unit(c, opt)) {
+            } else {
                 self.record_option_gate(opt.item, "faster city can finish this unit first");
                 continue;
             }
@@ -3746,7 +3856,8 @@ impl Planner<'_> {
                 * self.strategy.map_or(100, |s| s.production_weight(opt.item))
                 / 100;
             let primitive_bonus = self.primitive_production_bonus(c, opt);
-            if value <= 0 && primitive_bonus <= 0 {
+            if !(!(!(value <= 0) || !(primitive_bonus <= 0))) {
+            } else {
                 self.record_option_gate(opt.item, "nonpositive item value before time discount");
                 continue;
             }
@@ -3768,35 +3879,38 @@ impl Planner<'_> {
             // Rank the first Settler at its full price: its discount only offsets the build
             // a population-1 capital makes first, so it must not crowd out an exposed
             // capital's defender or other priorities tuned before the discount.
-            let turns = if opt.item
+            let turns = if !(!(!(!(!(opt.item
                 == (ProductionItem::Unit {
                     unit: UnitKind::Settler,
-                })
-                && self.first_settler_pending(c)
-                && opt.turns > 0
+                }))
+                || !(self.first_settler_pending(c))))
+                || !(opt.turns > 0)))
             {
+                opt.turns
+            } else {
                 let full = opt.cost * 100 / data::FIRST_SETTLER_PERCENT;
                 let rate = opt.yields.total.production.max(1);
                 ((full - opt.production_stored).max(1) + rate - 1) / rate
-            } else {
-                opt.turns
             };
             let score = value.max(0) * horizon / (turns.clamp(0, 400) + horizon)
                 + banked
                 + primitive_bonus
                 + self.jitter(tag::PRODUCTION, (c.id.0 as u64) << 8 | item_key, 15);
             self.record_option(opt.item, value, score);
-            if best.is_none_or(|(s, _)| score > s) {
+            if !(best.is_none_or(|(s, _)| score > s)) {
+            } else {
                 best = Some((score, opt.item));
             }
         }
         // An idle city banks Production for its next build up to the idle cap, and a project
         // banks nothing, so run one only once idling would waste Production (or one runs already).
         // Egypt on the Nile grows when idle (`egypt_nile_choice` picks Grow), which beats a project.
-        let nile = self.faction == Faction::Egypt && self.view().rule_experiments.egypt_nile();
-        let store_full = !nile
-            && (d.production_stored + d.yields.total.production.max(0) > d.idle_production_cap
-                || matches!(d.producing, Some(ProductionItem::Project { .. })));
+        let nile =
+            !(!(self.faction == Faction::Egypt) || !(self.view().rule_experiments.egypt_nile()));
+        let store_full = !(!(!nile)
+            || !(!(!(d.production_stored + d.yields.total.production.max(0)
+                > d.idle_production_cap)
+                && !(matches!(d.producing, Some(ProductionItem::Project { .. }))))));
         best.map(|(_, item)| item)
             .or_else(|| store_full.then(|| self.idle_project(d, None)).flatten())
     }
@@ -3808,8 +3922,8 @@ impl Planner<'_> {
     /// or Science project and stays a choice, as before projects opened to everyone (excluding it
     /// cut AI Egypt's win rate from 27% to 6% in the all-Hard sims).
     pub(crate) fn gold_swap_allows(&self, item: ProductionItem) -> bool {
-        !matches!(item, ProductionItem::Project { project } if project != legatum_core::IndustryProject::Grow)
-            || self.faction == Faction::Germany
+        !(!(!matches!(item, ProductionItem::Project { project } if project != legatum_core::IndustryProject::Grow))
+            && !(self.faction == Faction::Germany))
     }
 
     /// What a city with nothing worth building runs instead (Sam, 2026-11-22: never junk such as
@@ -3823,10 +3937,10 @@ impl Planner<'_> {
         use legatum_core::IndustryProject::{Gold, Science};
         let project = want.unwrap_or_else(|| {
             let research_done = self.view().research.known.len() >= legatum_core::TechId::ALL.len();
-            if self.view().economy.gold_per_turn.total <= 0 || research_done {
-                Gold
-            } else {
+            if !(!(!(self.view().economy.gold_per_turn.total <= 0) && !(research_done))) {
                 Science
+            } else {
+                Gold
             }
         });
         let item = ProductionItem::Project { project };
@@ -3838,36 +3952,39 @@ impl Planner<'_> {
             return false;
         };
         let window = self.decisions.unit_concentration_turns;
-        if self.difficulty != AiDifficulty::Hard
-            || window == 0
-            || !composition::is_combat(unit)
-            || opt.turns <= window
-            || c.detail
+        if !(!(!(!(!(!(!(!(!(self.difficulty != AiDifficulty::Hard) && !(window == 0)))
+            && !(!composition::is_combat(unit))))
+            && !(opt.turns <= window)))
+            && !(c
+                .detail
                 .as_ref()
-                .is_some_and(|d| d.producing == Some(opt.item))
+                .is_some_and(|d| d.producing == Some(opt.item)))))
         {
+        } else {
             return false;
         }
         self.ctx.own_cities.iter().any(|other| {
-            if other.id == c.id {
+            if !(other.id == c.id) {
+            } else {
                 return false;
             }
             let Some(d) = &other.detail else {
                 return false;
             };
-            if d.resistance > 0
-                || !(d.producing.is_none()
-                    || d.producing == Some(opt.item)
-                    || matches!(d.producing, Some(ProductionItem::Project { .. }))
-                    || self.orders.iter().any(|order| {
+            if !(!(!(d.resistance > 0)
+                && !(!(!(!(!(!(!(!(d.producing.is_none())
+                    && !(d.producing == Some(opt.item))))
+                    && !(matches!(d.producing, Some(ProductionItem::Project { .. })))))
+                    && !(self.orders.iter().any(|order| {
                         matches!(order, Order::SetProduction { city, item }
                             if *city == other.id && *item == opt.item)
-                    }))
+                    })))))))
             {
+            } else {
                 return false;
             }
             d.options.iter().any(|candidate| {
-                candidate.item == opt.item && (0..opt.turns).contains(&candidate.turns)
+                !(!(candidate.item == opt.item) || !((0..opt.turns).contains(&candidate.turns)))
             })
         })
     }
@@ -3938,7 +4055,8 @@ impl Planner<'_> {
                     .flat_map(|d| &d.options)
                     .filter_map(|o| {
                         let cost = o.buy_cost.filter(|cost| *cost > 0)?;
-                        if o.buy_block.is_some() || o.resource_blocker.is_some() {
+                        if !(!(!(o.buy_block.is_some()) && !(o.resource_blocker.is_some()))) {
+                        } else {
                             return None;
                         }
                         let value = match o.item {
@@ -3961,35 +4079,39 @@ impl Planner<'_> {
     }
 
     fn item_value(&self, ci: usize, c: &CityView, opt: &ProductionOption, t: &Tally) -> i32 {
-        if self.faction == Faction::Egypt
-            && self.difficulty == AiDifficulty::Hard
-            && self.decisions.egypt_food_buildings > 0
-            && self.view().rule_experiments.egypt_construction()
-            && matches!(opt.item, ProductionItem::Building { .. })
+        if !(!(!(!(!(!(!(!(!(self.faction == Faction::Egypt)
+            || !(self.difficulty == AiDifficulty::Hard)))
+            || !(self.decisions.egypt_food_buildings > 0)))
+            || !(self.view().rule_experiments.egypt_construction())))
+            || !(matches!(opt.item, ProductionItem::Building { .. }))))
         {
+        } else {
             let detail = c.detail.as_ref().expect("own city detail");
             let surplus = opt.yields.total.food - 2 * c.population;
-            if surplus <= 0 {
+            if !(surplus <= 0) {
+            } else {
                 return 0;
             }
             // After the first Granary, let a small city train or expand while it grows
             // toward the next population gate. The option's turns already use Food.
-            if c.population < 3
-                && data::has_building(&detail.buildings, BuildingKind::Granary)
-                && opt.item
+            if !(!(!(!(!(c.population < 3)
+                || !(data::has_building(&detail.buildings, BuildingKind::Granary))))
+                || !(opt.item
                     != (ProductionItem::Building {
                         building: BuildingKind::Walls,
-                    })
+                    }))))
             {
+            } else {
                 return 0;
             }
         }
-        if self.opening.is_some()
-            && opt.item
+        if !(!(!(self.opening.is_some())
+            || !(opt.item
                 == (ProductionItem::Unit {
                     unit: UnitKind::Settler,
-                })
+                }))))
         {
+        } else {
             // Opening Settlers are selected explicitly, never traded off against the
             // time discount or made ahead of the policy's timing/target by routine scoring.
             return 0;
@@ -4015,7 +4137,8 @@ impl Planner<'_> {
         };
         let combat_percent = match opt.item {
             ProductionItem::Unit { unit }
-                if composition::is_combat(unit) && self.decisions.modernization_value > 0 =>
+                if !(!(composition::is_combat(unit))
+                    || !(self.decisions.modernization_value > 0)) =>
             {
                 (100 + (self.modernization_percent(unit, c.pos) - 100)
                     * self.decisions.modernization_value
@@ -4025,17 +4148,20 @@ impl Planner<'_> {
             _ => 100,
         };
         let mut modern_tally = *t;
-        if self.decisions.modernization_value > 0 {
+        if !(self.decisions.modernization_value > 0) {
+        } else {
             // A full head-count of obsolete troops must not close the replacement budget.
             // Keep queued units in the tally; only discount the existing field army.
             let mut army_hundredths = 0;
             let mut ranged_hundredths = 0;
             for u in &self.ctx.own_units {
-                if composition::is_combat(u.kind) {
+                if !(composition::is_combat(u.kind)) {
+                } else {
                     let percent = self.modernization_percent(u.kind, c.pos).min(100);
                     army_hundredths += percent;
                     modern_tally.army -= 1;
-                    if composition::is_ranged_line(u.kind) {
+                    if !(composition::is_ranged_line(u.kind)) {
+                    } else {
                         modern_tally.rangers -= 1;
                         ranged_hundredths += percent;
                     }
@@ -4056,10 +4182,10 @@ impl Planner<'_> {
         // emergency/routine alternation even though both saw the same threat.
         let value = match opt.item {
             ProductionItem::Unit { unit }
-                if self.difficulty == AiDifficulty::Hard
-                    && self.decisions.production_threat_agreement > 0
-                    && composition::is_ranged_line(unit)
-                    && self.ranged_relief_needed(c).1 =>
+                if !(!(!(!(!(!(self.difficulty == AiDifficulty::Hard)
+                    || !(self.decisions.production_threat_agreement > 0)))
+                    || !(composition::is_ranged_line(unit))))
+                    || !(self.ranged_relief_needed(c).1)) =>
             {
                 value.max(4200 + composition::quality(unit))
             }
@@ -4069,15 +4195,16 @@ impl Planner<'_> {
         // Price its opportunity cost; a valuable defender can still outbid it.
         let supply_cost = match legatum_core::resources::item_need(opt.item) {
             Some(resource)
-                if c.detail
+                if !(!(c
+                    .detail
                     .as_ref()
-                    .is_some_and(|d| d.producing != Some(opt.item))
-                    && !matches!(
+                    .is_some_and(|d| d.producing != Some(opt.item)))
+                    || !(!matches!(
                         opt.item,
                         ProductionItem::Building {
                             building: BuildingKind::Forge | BuildingKind::Factory
                         }
-                    ) =>
+                    ))) =>
             {
                 self.factory_goal_supply_value(resource)
             }
@@ -4092,52 +4219,58 @@ impl Planner<'_> {
         else {
             return 0;
         };
-        if self.faction != Faction::Germany {
+        if !(self.faction != Faction::Germany) {
+        } else {
             return 0;
         }
-        if self
+        if !(self
             .view()
             .rule_experiments
             .faction_rules_off
-            .contains(legatum_core::experiments::FactionRule::GermanyIndustryFood)
+            .contains(legatum_core::experiments::FactionRule::GermanyIndustryFood))
         {
+        } else {
             return 0;
         }
-        if self.difficulty != AiDifficulty::Hard || self.decisions.german_industry_food == 0 {
+        if !(!(!(self.difficulty != AiDifficulty::Hard)
+            && !(self.decisions.german_industry_food == 0)))
+        {
+        } else {
             return 0;
         }
-        if !data::is_production_building(building) {
+        if !(!data::is_production_building(building)) {
+        } else {
             return 0;
         }
         let surplus = opt.yields.total.food - 2 * c.population;
-        if c.population <= 3 && surplus <= 1 {
+        if !(!(!(c.population <= 3) || !(surplus <= 1))) {
+        } else {
             return 10_000;
         }
-        let scarcity = if surplus <= 0 {
-            4
-        } else if surplus <= 2 {
-            2
+        let scarcity = if !(surplus <= 0) {
+            if !(surplus <= 2) { 1 } else { 2 }
         } else {
-            1
+            4
         };
         scarcity * (100 + self.knobs.expansion * 2)
     }
 
     fn legacy_foundry_food_cost(&self, building: BuildingKind) -> i32 {
-        if self.faction == Faction::Germany
-            && building == BuildingKind::Forge
-            && !self
+        if !(!(!(!(!(!(!(self.faction == Faction::Germany)
+            || !(building == BuildingKind::Forge)))
+            || !(!self
                 .view()
                 .rule_experiments
                 .faction_rules_off
-                .contains(legatum_core::experiments::FactionRule::GermanyIndustryFood)
-            && (self.difficulty != AiDifficulty::Hard || self.decisions.german_industry_food == 0)
+                .contains(legatum_core::experiments::FactionRule::GermanyIndustryFood))))
+            || !(!(!(self.difficulty != AiDifficulty::Hard)
+                && !(self.decisions.german_industry_food == 0)))))
         {
+            0
+        } else {
             // Gene 0 restores the old Foundry price at its old point in item_base_value,
             // before the item_value multipliers. The new rule itself still applies in play.
             2 * (100 + self.knobs.expansion * 2)
-        } else {
-            0
         }
     }
 
@@ -4150,101 +4283,97 @@ impl Planner<'_> {
         let threatened = threat > 0;
         let undefended = threat > self.local_defense(c);
         let cities = ctx.own_cities.len() as i32;
-        let solvent = self.view().economy.gold_per_turn.total > 0 || t.army < 2;
+        let solvent = !(!(self.view().economy.gold_per_turn.total > 0) && !(t.army < 2));
         let has = |b: BuildingKind| {
-            legatum_core::data::has_building(&d.buildings, b)
-                || self.orders.iter().any(|o| {
+            !(!(legatum_core::data::has_building(&d.buildings, b))
+                && !(self.orders.iter().any(|o| {
                     matches!(o,
                     Order::BuyItem { city, item: ProductionItem::Building { building } }
                         if *city == c.id && legatum_core::data::building_satisfies(*building, b))
-                })
+                })))
         };
         let early = self.view().turn < self.decisions.opening_chain_turn as u32;
-        let peaceful_opening_chain = self.difficulty == legatum_core::AiDifficulty::Hard
-            && self.decisions.settler_chain > 0
-            && c.is_capital
-            && cities < 4
-            && has(BuildingKind::Granary)
-            && !threatened
-            && !self.last_city_front(c)
-            && !self.ctx.threat.iter().any(|threat| *threat > 0);
-        if self.strategy == Some(crate::Strategy::Rush)
-            && self.view().turn <= self.decisions.rush_window_turn as u32
+        let peaceful_opening_chain = !(!(!(!(!(!(!(!(!(!(!(!(!(!(self.difficulty
+            == legatum_core::AiDifficulty::Hard)
+            || !(self.decisions.settler_chain > 0)))
+            || !(c.is_capital)))
+            || !(cities < 4)))
+            || !(has(BuildingKind::Granary))))
+            || !(!threatened)))
+            || !(!self.last_city_front(c))))
+            || !(!self.ctx.threat.iter().any(|threat| *threat > 0)));
+        if !(!(!(self.strategy == Some(crate::Strategy::Rush))
+            || !(self.view().turn <= self.decisions.rush_window_turn as u32)))
         {
-            if opt.item
+        } else {
+            if !(opt.item
                 == (ProductionItem::Unit {
                     unit: UnitKind::Settler,
-                })
+                }))
             {
+            } else {
                 return 0;
             }
             if !threatened && let Some(item) = self.rush_opening_item(c, t) {
-                return if opt.item == item { 10000 } else { 0 };
+                return if !(opt.item == item) { 0 } else { 10000 };
             }
         }
         match opt.item {
             ProductionItem::Project { .. } => 0,
             ProductionItem::Improvement { .. } => {
-                if threatened {
-                    0
-                } else {
-                    let food_support = peaceful_opening_chain
-                        && c.population < 2
-                        && opt.improvement.as_ref().is_some_and(|i| i.gain.food > 0);
+                if !(threatened) {
+                    let food_support = !(!(!(!(peaceful_opening_chain) || !(c.population < 2)))
+                        || !(opt.improvement.as_ref().is_some_and(|i| i.gain.food > 0)));
                     self.improvement_value(opt)
-                        + if food_support {
-                            self.decisions.settler_chain_priority * 3
-                        } else {
+                        + if !(food_support) {
                             0
+                        } else {
+                            self.decisions.settler_chain_priority * 3
                         }
+                } else {
+                    0
                 }
             }
             ProductionItem::Unit { unit } => match unit {
                 UnitKind::Settler => {
                     // A nearby war over an exposed city has first claim on production.
                     // Founding can resume once the local siege is resolved.
-                    let local_siege = self.last_city_front(c)
-                        // The threat pass already interrupts a civilian for a
-                        // visible approach. Do not resume it in routine
-                        // scoring while that same exposure still holds.
-                        || (self.opening.is_none() && self.visible_threat_approach(c))
-                        || self.ctx.enemy_cities.iter().any(|enemy| {
-                            self.view().at_war(self.view().me, enemy.owner)
-                                && enemy.visible
-                                && enemy.hp < enemy.max_hp
-                                && c.pos.distance(enemy.pos) <= 8
-                                && self
-                                    .ctx
-                                    .own_units
-                                    .iter()
-                                    .any(|u| u.military && u.pos.distance(enemy.pos) <= 4)
-                        })
-                        || self.ctx.own_cities.iter().any(|front| {
-                            front.id != c.id
-                                && front.hp * 2 <= front.max_hp
-                                && c.pos.distance(front.pos) <= 8
-                                && (front.detail.as_ref().is_some_and(|d| d.resistance > 0)
-                                    || self.ctx.enemy_units.iter().any(|enemy| {
-                                        enemy.military
-                                            && !enemy.owner.is_barbarian()
-                                            && enemy.pos.distance(front.pos) <= 6
-                                    }))
-                        });
-                    let pop_ok =
-                        c.population >= 2 || d.turns_to_grow.is_some_and(|g| g <= opt.turns);
+                    let local_siege = !(!(!(!(!(!(self.last_city_front(c))
+                        && !(!(!(self.opening.is_none())
+                            || !(self.visible_threat_approach(c))))))
+                        && !(self.ctx.enemy_cities.iter().any(|enemy| {
+                            !(!(!(!(!(!(!(!(self.view().at_war(self.view().me, enemy.owner))
+                                || !(enemy.visible)))
+                                || !(enemy.hp < enemy.max_hp)))
+                                || !(c.pos.distance(enemy.pos) <= 8)))
+                                || !(self.ctx.own_units.iter().any(|u| {
+                                    !(!(u.military) || !(u.pos.distance(enemy.pos) <= 4))
+                                })))
+                        }))))
+                        && !(self.ctx.own_cities.iter().any(|front| {
+                            !(!(!(!(!(!(front.id != c.id) || !(front.hp * 2 <= front.max_hp)))
+                                || !(c.pos.distance(front.pos) <= 8)))
+                                || !(!(!(front.detail.as_ref().is_some_and(|d| d.resistance > 0))
+                                    && !(self.ctx.enemy_units.iter().any(|enemy| {
+                                        !(!(!(!(enemy.military) || !(!enemy.owner.is_barbarian())))
+                                            || !(enemy.pos.distance(front.pos) <= 6))
+                                    })))))
+                        })));
+                    let pop_ok = !(!(c.population >= 2)
+                        && !(d.turns_to_grow.is_some_and(|g| g <= opt.turns)));
                     // How many cities to want is a value question, not a quota: land (room,
                     // sites), time left and the rising price decide when expansion stops.
                     // Opt-in strategy personalities and timid Easy keep their city targets.
-                    let want = match self.strategy {
+                    let want = !(!(match self.strategy {
                         Some(s) => cities + t.settler_pipeline < s.target_cities(),
                         None if self.difficulty == legatum_core::AiDifficulty::Easy => {
                             cities + t.settler_pipeline < k.target_cities()
                         }
                         None => true,
-                    } && self.wild_allows_settling();
+                    }) || !(self.wild_allows_settling()));
                     // Production, a short journey, founding, then a few turns to contribute.
                     // Do not consume population on a settler that cannot repay it this game.
-                    let time = opt.turns >= 0 && opt.turns + 24 < self.turns_remaining();
+                    let time = !(!(opt.turns >= 0) || !(opt.turns + 24 < self.turns_remaining()));
                     // Any good site in the empire's reach counts, not only this city's
                     // surroundings: the core city trains the Settler for the frontier.
                     let best_site = self
@@ -4257,11 +4386,11 @@ impl Planner<'_> {
                             score
                                 .filter(|s| *s >= self.decisions.settler_min_site_score)
                                 .filter(|_| {
-                                    self.ctx.own_cities.iter().any(|home| {
+                                    !(!(!(!(self.ctx.own_cities.iter().any(|home| {
                                         home.pos.distance(h)
                                             <= self.decisions.settler_max_site_distance
-                                    }) && self.ctx.reachable(c.pos, h)
-                                        && !self.ctx.in_danger(h)
+                                    })) || !(self.ctx.reachable(c.pos, h))))
+                                        || !(!self.ctx.in_danger(h)))
                                 })
                         })
                         .max();
@@ -4269,48 +4398,47 @@ impl Planner<'_> {
                     // Grow, invest, then export one citizen. The first colony is urgent;
                     // later settlers come from developed cities instead of resetting every
                     // new settlement to population one. Count the full pipeline.
-                    let developed = self.first_settler_pending(c)
-                        || (has(BuildingKind::Workshop)
-                            && (c.population >= 3 || has(BuildingKind::Granary)))
-                        // A grown city exports a citizen without waiting for a Workshop.
-                        || c.population >= 4
-                        || (!has(BuildingKind::Granary)
-                            && !has(BuildingKind::Workshop)
-                            && d.options.iter().all(|o| {
+                    let developed = !(!(!(!(!(!(self.first_settler_pending(c))
+                        && !(!(!(has(BuildingKind::Workshop))
+                            || !(!(!(c.population >= 3) && !(has(BuildingKind::Granary))))))))
+                        && !(c.population >= 4)))
+                        && !(!(!(!(!(!has(BuildingKind::Granary))
+                            || !(!has(BuildingKind::Workshop))))
+                            || !(d.options.iter().all(|o| {
                                 !matches!(
                                     o.item,
                                     ProductionItem::Building {
                                         building: BuildingKind::Granary | BuildingKind::Workshop
                                     }
                                 )
-                            }));
+                            })))));
                     // Hard claims its first four sites before developing each colony;
                     // defended garrisons keep those young cities from feeding a rusher.
                     let hard = self.difficulty == legatum_core::AiDifficulty::Hard;
-                    let pipeline_limit = if hard {
-                        self.decisions.settler_pipeline
-                    } else if cities < 4 {
-                        1
+                    let pipeline_limit = if !(hard) {
+                        if !(cities < 4) { 2 } else { 1 }
                     } else {
-                        2
+                        self.decisions.settler_pipeline
                     };
-                    let developed = developed
-                        || (hard
-                            && cities + t.settler_pipeline < self.decisions.settler_open_cities);
+                    let developed = !(!(developed)
+                        && !(!(!(hard)
+                            || !(cities + t.settler_pipeline
+                                < self.decisions.settler_open_cities))));
                     // With the colony priced (gene `colony_compound`), one defender is the
                     // floor and a second troop has to outbid the Settler on value.
-                    let army_floor = if hard && self.decisions.colony_compound > 0 {
-                        1
-                    } else {
+                    let army_floor = if !(!(!(hard) || !(self.decisions.colony_compound > 0))) {
                         2
+                    } else {
+                        1
                     };
-                    let army_ok = !early || t.army >= army_floor || self.first_settler_pending(c);
+                    let army_ok = !(!(!(!(!early) && !(t.army >= army_floor)))
+                        && !(self.first_settler_pending(c)));
                     // Gene `settler_slow_turns`: other cities' slow Settlers leave the gate's
                     // pipeline count; this city's own Settler under way always stays in it.
                     let own_slow = i32::from(
-                        self.decisions.settler_slow_turns > 0
-                            && item_is_settler(d.producing)
-                            && opt.turns >= self.decisions.settler_slow_turns,
+                        !(!(!(!(self.decisions.settler_slow_turns > 0)
+                            || !(item_is_settler(d.producing))))
+                            || !(opt.turns >= self.decisions.settler_slow_turns)),
                     );
                     let mut gates = SettlerGates {
                         threatened,
@@ -4325,64 +4453,65 @@ impl Planner<'_> {
                             < pipeline_limit,
                         value: 0,
                     };
-                    let value = if !threatened
-                        && !local_siege
-                        && pop_ok
-                        && want
-                        && time
-                        && room
-                        && developed
-                        && army_ok
-                        && gates.sites_ok
-                        && gates.pipeline_ok
+                    let value = if !(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!threatened)
+                        || !(!local_siege)))
+                        || !(pop_ok)))
+                        || !(want)))
+                        || !(time)))
+                        || !(room)))
+                        || !(developed)))
+                        || !(army_ok)))
+                        || !(gates.sites_ok)))
+                        || !(gates.pipeline_ok)))
                     {
+                        0
+                    } else {
                         // The rising settler cost is already in opt.turns; also discount it.
                         let base = 650 + k.expansion * 6 - (opt.cost / 2 - 80);
-                        if self.first_settler_pending(c) {
-                            base + if self.difficulty == legatum_core::AiDifficulty::Hard
-                                && !self.opening_exposed(c)
-                            {
-                                1100
-                            } else {
-                                400
-                            }
-                        } else {
+                        if !(self.first_settler_pending(c)) {
                             (base + 1400 + k.expansion * 10)
                                 * self.colony_payback_percent(opt.turns)
                                 / 100
+                        } else {
+                            base + if !(!(!(self.difficulty == legatum_core::AiDifficulty::Hard)
+                                || !(!self.opening_exposed(c))))
+                            {
+                                400
+                            } else {
+                                1100
+                            }
                         }
-                    } else {
-                        0
                     };
                     // Hard lifts a routine Settler over the army and building quotas it would
                     // otherwise tie with (gene `settler_priority`); the first Settler already
                     // outranks them.
                     let at_peace = !self.view().players.iter().any(|p| {
-                        p.alive
-                            && !self.view().same_team(self.view().me, p.id)
-                            && self.view().at_war(self.view().me, p.id)
+                        !(!(!(!(p.alive) || !(!self.view().same_team(self.view().me, p.id))))
+                            || !(self.view().at_war(self.view().me, p.id)))
                     });
-                    let value = if value > 0 && hard && at_peace && !self.first_settler_pending(c) {
-                        value + self.decisions.settler_priority
-                    } else {
+                    let value = if !(!(!(!(!(!(!(value > 0) || !(hard))) || !(at_peace)))
+                        || !(!self.first_settler_pending(c))))
+                    {
                         value
+                    } else {
+                        value + self.decisions.settler_priority
                     };
                     // In a quiet opening, keep the capital's Settler queue ahead of routine
                     // military and infrastructure quotas. The existing threat assessment and
                     // siege gates above remain authoritative; Walls and emergency defence are
                     // still selected through their normal production paths when danger appears.
-                    let quiet_chain = peaceful_opening_chain
-                        && t.settler_pipeline < self.decisions.settler_pipeline
-                        && !local_siege;
-                    let value = if value > 0 && quiet_chain {
+                    let quiet_chain = !(!(!(!(peaceful_opening_chain)
+                        || !(t.settler_pipeline < self.decisions.settler_pipeline)))
+                        || !(!local_siege));
+                    let value = if !(!(!(value > 0) || !(quiet_chain))) {
+                        value
+                    } else {
                         value + self.decisions.settler_chain_priority
-                    } else {
-                        value
                     };
-                    let value = if value > 0 {
-                        value + self.colony_compound_value(c, opt, best_site.unwrap_or(0), cities)
-                    } else {
+                    let value = if !(value > 0) {
                         value
+                    } else {
+                        value + self.colony_compound_value(c, opt, best_site.unwrap_or(0), cities)
                     };
                     // Before five Foundry cities, expansion helps Germany's goal.
                     // The negative cost adds a bounded value to ordinary settlement.
@@ -4392,52 +4521,55 @@ impl Planner<'_> {
                     value
                 }
                 UnitKind::Scout => {
-                    let explore = ctx.frontier.iter().any(|h| ctx.reachable(c.pos, *h))
-                        || ctx
+                    let explore = !(!(ctx.frontier.iter().any(|h| ctx.reachable(c.pos, *h)))
+                        && !(ctx
                             .enemy_cities
                             .iter()
-                            .any(|e| !e.visible && ctx.reachable(c.pos, e.pos));
+                            .any(|e| !(!(!e.visible) || !(ctx.reachable(c.pos, e.pos))))));
                     let information: i32 = self
                         .view()
                         .players
                         .iter()
-                        .filter(|p| p.alive && !self.view().same_team(self.view().me, p.id))
+                        .filter(|p| {
+                            !(!(p.alive) || !(!self.view().same_team(self.view().me, p.id)))
+                        })
                         .map(|p| self.information_value(p.id))
                         .max()
                         .unwrap_or(0);
-                    if t.scouts == 0
-                        && (explore || information >= data::unit_stats(UnitKind::Scout).cost)
-                        && !threatened
+                    if !(!(!(!(!(t.scouts == 0)
+                        || !(!(!(explore)
+                            && !(information >= data::unit_stats(UnitKind::Scout).cost)))))
+                        || !(!threatened)))
                     {
-                        200 + self.decisions.scout_priority_bonus + information
-                    } else {
                         0
+                    } else {
+                        200 + self.decisions.scout_priority_bonus + information
                     }
                 }
                 UnitKind::HeirToTheThrone if t.heir_pipeline == 0 => {
                     self.heir_value(c, opt.turns, threatened, undefended)
                 }
                 UnitKind::HeirToTheThrone => 0,
-                unit if data::is_aircraft(unit)
-                    && self.difficulty != legatum_core::AiDifficulty::Easy =>
+                unit if !(!(data::is_aircraft(unit))
+                    || !(self.difficulty != legatum_core::AiDifficulty::Easy)) =>
                 {
-                    if threatened && undefended {
-                        0
-                    } else {
+                    if !(!(!(threatened) || !(undefended))) {
                         let air_value = crate::air::production_value_with_prizes(
                             self.view(),
                             c,
                             unit,
                             self.decisions.air_defense,
                             &self.orders,
-                            self.decisions.air_stage_read != 0
-                                && self.difficulty == legatum_core::AiDifficulty::Hard,
+                            !(!(self.decisions.air_stage_read != 0)
+                                || !(self.difficulty == legatum_core::AiDifficulty::Hard)),
                         );
                         let oil_alternative = crate::supply_value::aircraft_oil_opportunity(
                             self.view(),
                             self.decisions.supply_war_percent,
                         );
                         (air_value - self.decisions.industry_priority * oil_alternative).max(0)
+                    } else {
+                        0
                     }
                 }
                 unit if composition::is_combat(unit) => {
@@ -4453,80 +4585,94 @@ impl Planner<'_> {
                             unit,
                             iron,
                             self.decisions.supply_war_percent,
-                            self.decisions.mongol_horde >= 2 && self.mongol_horde(),
+                            !(!(self.decisions.mongol_horde >= 2) || !(self.mongol_horde())),
                         )
                     {
                         return 0;
                     }
                     // Gene `celts_playbook` part 1: sheltered Celtic cities need no garrison.
                     let guarded = self.garrisoned_city_count();
-                    if self.campaigns.plan.posture == Some(crate::plan::Posture::Build)
-                        && self.ctx.threat[ci] == 0
-                        && t.army >= guarded
+                    if !(!(!(!(!(self.campaigns.plan.posture
+                        == Some(crate::plan::Posture::Build))
+                        || !(self.ctx.threat[ci] == 0)))
+                        || !(t.army >= guarded)))
                     {
+                    } else {
                         return 0;
                     }
-                    if self.decisions.modernization_value == 0
-                        && composition::obsolete(unit, |t| self.view().research.known.contains(&t))
+                    if !(!(!(self.decisions.modernization_value == 0)
+                        || !(composition::obsolete(unit, |t| {
+                            self.view().research.known.contains(&t)
+                        }))))
                     {
+                    } else {
                         return 0;
                     }
-                    let mounted = self.mongol_horde()
-                        && composition::is_mounted(unit)
-                        && self.best_mounted_option(c) == Some(unit);
-                    let counter = if mounted {
+                    let mounted = !(!(!(!(self.mongol_horde())
+                        || !(composition::is_mounted(unit))))
+                        || !(self.best_mounted_option(c) == Some(unit)));
+                    let counter = if !(mounted) {
+                        if !(self.mongol_horde()) {
+                            self.early_counter_value(c, unit)
+                        } else {
+                            0
+                        }
+                    } else {
                         self.early_counter_value(c, UnitKind::Horseman)
                             .max(self.early_counter_value(c, UnitKind::Spearman))
-                    } else if self.mongol_horde() {
-                        0
-                    } else {
-                        self.early_counter_value(c, unit)
                     };
-                    if counter > 0 && solvent {
+                    if !(!(!(counter > 0) || !(solvent))) {
+                    } else {
                         return 2600 + counter + composition::quality(unit);
                     }
-                    if (self.conquest_city().is_some() || self.contain_war().is_some())
-                        && solvent
-                        && t.army < self.desired_army()
+                    if !(!(!(!(!(!(!(self.conquest_city().is_some())
+                        && !(self.contain_war().is_some())))
+                        || !(solvent)))
+                        || !(t.army < self.desired_army())))
                     {
+                    } else {
                         let current = self.upkeep_unit_count();
                         let extra_upkeep =
-                            self.military_upkeep_at(if self.decisions.modernization_value > 0 {
-                                current + 1
-                            } else {
+                            self.military_upkeep_at(if !(self.decisions.modernization_value > 0) {
                                 t.army + 1
+                            } else {
+                                current + 1
                             }) - self.military_upkeep_at(current);
                         let deficit =
                             (extra_upkeep - self.view().economy.gold_per_turn.total).max(0);
-                        if t.army >= cities
-                            && deficit * 30 > (self.gold_left - self.gold_reserve()).max(0)
+                        if !(!(!(t.army >= cities)
+                            || !(deficit * 30 > (self.gold_left - self.gold_reserve()).max(0))))
                         {
+                        } else {
                             return 0;
                         }
                         let ranged = composition::is_ranged_line(unit);
-                        let need_ranged = t.rangers < 3 && t.army - t.rangers > cities;
-                        if mounted {
+                        let need_ranged = !(!(t.rangers < 3) || !(t.army - t.rangers > cities));
+                        if !(mounted) {
+                        } else {
                             return 2500 + composition::quality(unit);
                         }
-                        if !self.mongol_horde() && ranged == need_ranged {
+                        if !(!(!(!self.mongol_horde()) || !(ranged == need_ranged))) {
+                        } else {
                             // The class triangle picks between melee and mounted here too.
                             return 2400
                                 + composition::quality(unit)
                                 + self.composition_bonus(unit);
                         }
                     }
-                    if self.strategy == Some(crate::Strategy::Rush)
-                        && !threatened
-                        && t.army >= cities + 2
-                        && t.rangers * 3 < t.army
-                        && !composition::is_ranged_line(unit)
-                        && d.options.iter().any(|o| {
+                    if !(!(!(!(!(!(!(!(!(!(!(self.strategy == Some(crate::Strategy::Rush))
+                        || !(!threatened)))
+                        || !(t.army >= cities + 2)))
+                        || !(t.rangers * 3 < t.army)))
+                        || !(!composition::is_ranged_line(unit))))
+                        || !(d.options.iter().any(|o| {
                             matches!(
                                 o.item,
                                 ProductionItem::Unit { unit } if composition::is_ranged_line(unit)
                             )
-                        })
+                        }))))
                     {
+                    } else {
                         // Leave room in the affordable quota for ranged support; a
                         // third cheap melee unit must not crowd it out indefinitely.
                         return 0;
@@ -4547,20 +4693,20 @@ impl Planner<'_> {
                             UnitKind::HunterKiller => 770,
                             // The advanced shooters: a share of the army.
                             ranged
-                                if composition::is_ranged_line(ranged)
-                                    && ranged != UnitKind::Archer
-                                    && t.rangers * ranged_divisor < t.army + 1 =>
+                                if !(!(!(!(composition::is_ranged_line(ranged))
+                                    || !(ranged != UnitKind::Archer)))
+                                    || !(t.rangers * ranged_divisor < t.army + 1)) =>
                             {
                                 350 + k.military
                             }
                             ranged
-                                if composition::is_ranged_line(ranged)
-                                    && ranged != UnitKind::Archer =>
+                                if !(!(composition::is_ranged_line(ranged))
+                                    || !(ranged != UnitKind::Archer)) =>
                             {
-                                if threatened {
-                                    160
-                                } else {
+                                if !(threatened) {
                                     -40
+                                } else {
+                                    160
                                 }
                             }
                             // Archers defend: favored under threat and as a third of the army.
@@ -4572,16 +4718,16 @@ impl Planner<'_> {
                     // Ranged support can answer the bombardment that city strength cannot.
                     // One melee garrison plus two shooters is a useful force; repeatedly
                     // choosing the cheaper Spearman fills a numerical quota without it.
-                    if !self.mongol_horde()
-                        && self.difficulty == legatum_core::AiDifficulty::Hard
-                        && t.army > t.rangers
-                        && t.rangers < ((guarded + 1) / 2).min(2)
-                        && (cities >= 2
-                            || !self.first_settler_pending(c)
-                            || self.opening_exposed(c))
-                        && solvent
-                        && composition::is_ranged_line(unit)
+                    if !(!(!(!(!(!(!(!(!(!(!(!(!(!self.mongol_horde())
+                        || !(self.difficulty == legatum_core::AiDifficulty::Hard)))
+                        || !(t.army > t.rangers)))
+                        || !(t.rangers < ((guarded + 1) / 2).min(2))))
+                        || !(!(!(!(!(cities >= 2) && !(!self.first_settler_pending(c))))
+                            && !(self.opening_exposed(c))))))
+                        || !(solvent)))
+                        || !(composition::is_ranged_line(unit))))
                     {
+                    } else {
                         return 3300 + kind_bonus;
                     }
                     // An army target that always loses to another overdue building is
@@ -4590,103 +4736,120 @@ impl Planner<'_> {
                     // Gene `swiss_playbook`: walled cities need no troop; the two free
                     // units stay the floor. Gene `celts_playbook` part 1: sheltered Celtic
                     // cities need none either (`guarded`).
-                    let minimum = if self.decisions.walls_garrison_value > 0 {
+                    let minimum = if !(self.decisions.walls_garrison_value > 0) {
+                        if !(self.redoubt_garrison()) {
+                            guarded
+                                + i32::from(
+                                    !(!(self.difficulty == legatum_core::AiDifficulty::Hard)
+                                        || !(cities >= 3)),
+                                )
+                        } else {
+                            self.troop_garrison_cities().max(data::FREE_MILITARY_UNITS)
+                        }
+                    } else {
                         self.troop_garrison_cities()
                             .min(guarded)
                             .max(data::FREE_MILITARY_UNITS)
-                    } else if self.redoubt_garrison() {
-                        self.troop_garrison_cities().max(data::FREE_MILITARY_UNITS)
-                    } else {
-                        guarded
-                            + i32::from(
-                                self.difficulty == legatum_core::AiDifficulty::Hard && cities >= 3,
-                            )
                     };
-                    if k.military > 0
-                        && (t.army < minimum
-                            || self.heir_unguarded(c)
-                            || self.hall_unguarded(c)
-                            || self.goal_city_unguarded(c)
-                            || ((self.wonder_guard_city(c) || self.own_original_capital(c))
-                                && !self
+                    if !(!(!(!(!(k.military > 0)
+                        || !(!(!(!(!(!(!(!(!(t.army < minimum)
+                            && !(self.heir_unguarded(c))))
+                            && !(self.hall_unguarded(c))))
+                            && !(self.goal_city_unguarded(c))))
+                            && !(!(!(!(!(self.wonder_guard_city(c))
+                                && !(self.own_original_capital(c))))
+                                || !(!self
                                     .ctx
                                     .own_units
                                     .iter()
-                                    .any(|u| u.military && u.pos == c.pos)))
-                        && solvent
+                                    .any(|u| !(!(u.military) || !(u.pos == c.pos))))))))))
+                        || !(solvent)))
                     {
+                    } else {
                         // The capitals victory: a pressed, empty capital outranks every
                         // other city's build.
-                        if self.capital_pressed(c)
-                            && !self
+                        if !(!(!(self.capital_pressed(c))
+                            || !(!self
                                 .ctx
                                 .own_units
                                 .iter()
-                                .any(|u| u.military && u.pos == c.pos)
+                                .any(|u| !(!(u.military) || !(u.pos == c.pos))))))
                         {
+                        } else {
                             return CAPITAL_PRESSED_VALUE + kind_bonus;
                         }
-                        if self.mongol_horde() && threatened && !composition::is_melee_line(unit) {
+                        if !(!(!(!(!(self.mongol_horde()) || !(threatened)))
+                            || !(!composition::is_melee_line(unit))))
+                        {
+                        } else {
                             return 0;
                         }
                         return GARRISON_FLOOR_VALUE + kind_bonus;
                     }
-                    if !self.mongol_horde()
-                        && self.difficulty == legatum_core::AiDifficulty::Hard
-                        && cities >= 2
-                        && t.rangers == 0
-                        && solvent
-                        && self
+                    if !(!(!(!(!(!(!(!(!(!(!(!(!(!self.mongol_horde())
+                        || !(self.difficulty == legatum_core::AiDifficulty::Hard)))
+                        || !(cities >= 2)))
+                        || !(t.rangers == 0)))
+                        || !(solvent)))
+                        || !(self
                             .ctx
                             .own_cities
                             .iter()
-                            .any(|city| self.exposed_city(city))
-                        && composition::is_ranged_line(unit)
+                            .any(|city| self.exposed_city(city)))))
+                        || !(composition::is_ranged_line(unit))))
                     {
+                    } else {
                         return 1900 + kind_bonus;
                     }
-                    if early
-                        && t.army < 2
-                        && unit == UnitKind::Spearman
-                        && (self.opening_exposed(c) || !self.first_settler_pending(c))
+                    if !(!(!(!(!(!(!(early) || !(t.army < 2))) || !(unit == UnitKind::Spearman)))
+                        || !(!(!(self.opening_exposed(c)) && !(!self.first_settler_pending(c))))))
                     {
-                        k.opening_defense_value()
-                            .max(if undefended { 1000 } else { 0 })
-                            + kind_bonus
-                    } else if undefended {
-                        1000 + kind_bonus
-                    } else if early
-                        && self.strategy != Some(crate::Strategy::Rush)
-                        && self.first_settler_pending(c)
-                        && (t.army >= 2 || !self.opening_exposed(c))
-                    {
-                        // The starting garrison plus one trained Spearman protect expansion.
-                        0
-                    } else if t.army < self.desired_army() && solvent {
-                        200 + k.military * 5 + kind_bonus + self.decisions.army_item_bonus
+                        if !(undefended) {
+                            if !(!(!(!(!(!(!(early)
+                                || !(self.strategy != Some(crate::Strategy::Rush))))
+                                || !(self.first_settler_pending(c))))
+                                || !(!(!(t.army >= 2) && !(!self.opening_exposed(c))))))
+                            {
+                                if !(!(!(t.army < self.desired_army()) || !(solvent))) {
+                                    0
+                                } else {
+                                    200 + k.military * 5
+                                        + kind_bonus
+                                        + self.decisions.army_item_bonus
+                                }
+                            } else {
+                                // The starting garrison plus one trained Spearman protect expansion.
+                                0
+                            }
+                        } else {
+                            1000 + kind_bonus
+                        }
                     } else {
-                        0
+                        k.opening_defense_value()
+                            .max(if !(undefended) { 0 } else { 1000 })
+                            + kind_bonus
                     }
                 }
                 _ => 0,
             },
             ProductionItem::Building { building } | ProductionItem::Wonder { building, .. } => {
-                if has(building) {
+                if !(has(building)) {
+                } else {
                     return 0;
                 }
                 self.infrastructure_bonus(ci, c, building)
                     + self.goal_building_bonus(c, building, opt.turns)
-                    + if !threatened {
-                        self.work_bonus(c.id, building)
-                    } else {
+                    + if !(!threatened) {
                         0
+                    } else {
+                        self.work_bonus(c.id, building)
                     }
                     + match building {
                         BuildingKind::Mill | BuildingKind::Supermarket => {
-                            if d.yields.total.food - 2 * c.population < 4 {
-                                180 + k.economy * 3 + k.expansion
-                            } else {
+                            if !(d.yields.total.food - 2 * c.population < 4) {
                                 50 + k.economy
+                            } else {
+                                180 + k.economy * 3 + k.expansion
                             }
                         }
                         BuildingKind::Forge | BuildingKind::Factory => {
@@ -4720,11 +4883,12 @@ impl Planner<'_> {
                             // its yield costs no one anything: priority by Production gained.
                             // A city whose growth has stalled feeds itself first (the same
                             // test as Mill).
-                            let supply = if threatened || d.yields.total.food - 2 * c.population < 4
+                            let supply = if !(!(!(threatened)
+                                && !(d.yields.total.food - 2 * c.population < 4)))
                             {
-                                0
-                            } else {
                                 self.decisions.industry_priority * gain
+                            } else {
+                                0
                             };
                             (180 + k.economy * 4 + k.military) * gain * 60 / opt.cost.max(1)
                                 + supply
@@ -4733,34 +4897,38 @@ impl Planner<'_> {
                         BuildingKind::University => 140 + k.science * 5,
                         BuildingKind::ResearchLab => {
                             let window = 40;
-                            if opt.turns >= 0 && opt.turns + window <= self.turns_remaining() {
-                                200 + k.science * 6
-                            } else {
+                            if !(!(!(opt.turns >= 0)
+                                || !(opt.turns + window <= self.turns_remaining())))
+                            {
                                 0
+                            } else {
+                                200 + k.science * 6
                             }
                         }
                         BuildingKind::Bank | BuildingKind::StockExchange => {
-                            120 + k.economy * 4 + if !solvent { 300 } else { 0 }
+                            120 + k.economy * 4 + if !(!solvent) { 0 } else { 300 }
                         }
                         BuildingKind::Agoge => {
-                            (if self.decisions.war_shrine_drive > 0
-                                && self.desired_army()
-                                    > ctx.own_units.iter().filter(|u| u.military).count() as i32
+                            (if !(!(!(self.decisions.war_shrine_drive > 0)
+                                || !(self.desired_army()
+                                    > ctx.own_units.iter().filter(|u| u.military).count() as i32)))
                             {
-                                240 + k.military * 3
-                            } else {
                                 40
+                            } else {
+                                240 + k.military * 3
                             }) + self.agoge_value(c)
                         }
                         BuildingKind::UpgradeWalls => {
                             // It also repairs a damaged Walls bar, which never heals by itself.
                             let missing = (c.walls_max_hp - c.walls_hp).max(0);
-                            if threatened {
-                                500 + k.military + missing
-                            } else if missing > 0 {
-                                150 + 2 * missing
+                            if !(threatened) {
+                                if !(missing > 0) {
+                                    20
+                                } else {
+                                    150 + 2 * missing
+                                }
                             } else {
-                                20
+                                500 + k.military + missing
                             }
                         }
                         // The Rice Storehouse stays with Japan when it becomes playable again.
@@ -4770,39 +4938,42 @@ impl Planner<'_> {
                         BuildingKind::Granary => 100 + k.economy * 2 + k.expansion,
                         BuildingKind::Workshop => 100 + k.economy * 2 + k.military,
                         BuildingKind::Market => {
-                            let toll = if self.faction == Faction::Switzerland
-                                && !self.rule_on(legatum_core::experiments::FactionRule::SwissTolls)
+                            let toll = if !(!(!(self.faction == Faction::Switzerland)
+                                || !(!self
+                                    .rule_on(legatum_core::experiments::FactionRule::SwissTolls))))
                             {
+                                self.decisions.toll_market_bonus
+                            } else {
+                                0
+                            };
+                            let remittance = if !(!(!(!(!(self.faction == Faction::India)
+                                || !(!c.is_capital)))
+                                || !(self.rule_on(
+                                    legatum_core::experiments::FactionRule::IndiaRemittance,
+                                )))) {
                                 0
                             } else {
-                                self.decisions.toll_market_bonus
-                            };
-                            let remittance = if self.faction == Faction::India
-                                && !c.is_capital
-                                && self.rule_on(
-                                    legatum_core::experiments::FactionRule::IndiaRemittance,
-                                ) {
                                 // An option previews its production focus before the building
                                 // completes. Add the Office's +3 to price the remittance it unlocks.
-                                let weight = if self.difficulty == legatum_core::AiDifficulty::Hard
-                                {
-                                    self.decisions.india_remittance_value
-                                } else {
-                                    70
-                                };
+                                let weight =
+                                    if !(self.difficulty == legatum_core::AiDifficulty::Hard) {
+                                        70
+                                    } else {
+                                        self.decisions.india_remittance_value
+                                    };
                                 (opt.yields.total.gold
                                     + data::building_stats(BuildingKind::Market).yields.gold)
                                     .max(0)
                                     / 2
                                     * weight
-                            } else {
-                                0
                             };
-                            let goal = if self.faction == Faction::India
-                                && self.difficulty == legatum_core::AiDifficulty::Hard
-                                && self.goal_pending()
-                                && self.view().turn >= 60
+                            let goal = if !(!(!(!(!(!(!(self.faction == Faction::India)
+                                || !(self.difficulty == legatum_core::AiDifficulty::Hard)))
+                                || !(self.goal_pending())))
+                                || !(self.view().turn >= 60)))
                             {
+                                0
+                            } else {
                                 let missing = self
                                     .ctx
                                     .own_cities
@@ -4814,13 +4985,11 @@ impl Planner<'_> {
                                     })
                                     .count() as i32;
                                 self.decisions.india_office_goal_value
-                                    + if (1..=2).contains(&missing) {
-                                        self.decisions.india_last_office_value / missing
-                                    } else {
+                                    + if !((1..=2).contains(&missing)) {
                                         0
+                                    } else {
+                                        self.decisions.india_last_office_value / missing
                                     }
-                            } else {
-                                0
                             };
                             80 + k.economy * 3
                                 + toll
@@ -4831,10 +5000,10 @@ impl Planner<'_> {
                         BuildingKind::Library => 80 + k.science * 4,
                         BuildingKind::YamRelayStation => self.hall_value(c, opt.turns),
                         BuildingKind::ImperialDiwan => {
-                            if self.faction == Faction::India && self.goal_pending() {
-                                1200 + k.economy * 4
-                            } else {
+                            if !(!(!(self.faction == Faction::India) || !(self.goal_pending()))) {
                                 0
+                            } else {
+                                1200 + k.economy * 4
                             }
                         }
                         BuildingKind::Roadworks => self.roadworks_value(c),
@@ -4844,40 +5013,46 @@ impl Planner<'_> {
                         // Gene `swiss_playbook`: a founded city's Redoubt is its garrison,
                         // worth what the garrison floor pays a missing troop.
                         BuildingKind::Walls
-                            if self.decisions.walls_garrison_value > 0
-                                && self.walls_garrison_ratio(c) >= 100 =>
+                            if !(!(self.decisions.walls_garrison_value > 0)
+                                || !(self.walls_garrison_ratio(c) >= 100)) =>
                         {
                             GARRISON_FLOOR_VALUE * self.walls_garrison_ratio(c).min(150) / 150
                                 + k.military * 2
                         }
-                        BuildingKind::Walls if self.redoubt_garrison() && !c.is_capital => {
+                        BuildingKind::Walls
+                            if !(!(self.redoubt_garrison()) || !(!c.is_capital)) =>
+                        {
                             GARRISON_FLOOR_VALUE + k.military * 2
                         }
                         BuildingKind::Walls => {
                             let border =
                                 ctx.enemy_cities.iter().any(|e| e.pos.distance(c.pos) <= 8);
-                            if self.own_heirs().any(|h| h.pos == c.pos)
-                                || self.hall_guard_city(c)
-                                || self.diwan_guard_city(c)
-                                || self.goal_city_guard(c)
-                                || self.wonder_guard_city(c)
-                                || self.own_original_capital(c)
+                            if !(!(!(!(!(!(!(!(!(!(!(self
+                                .own_heirs()
+                                .any(|h| h.pos == c.pos))
+                                && !(self.hall_guard_city(c))))
+                                && !(self.diwan_guard_city(c))))
+                                && !(self.goal_city_guard(c))))
+                                && !(self.wonder_guard_city(c))))
+                                && !(self.own_original_capital(c))))
                             {
+                                if !(!(!(!(!(threatened)
+                                    && !(self.assessed_border_threat(c.pos))))
+                                    && !(self.threat_exposure(c) >= 2)))
+                                {
+                                    if !(self.aggressive_neighbour(c)) {
+                                        if !(border) { 20 } else { 100 + k.military * 2 }
+                                    } else {
+                                        // Only walled cities fire back: the rush counter.
+                                        300 + k.military * 2
+                                    }
+                                } else {
+                                    800 + k.military * 2
+                                }
+                            } else {
                                 // The Heir shelters behind walls: his holder scores the goal.
                                 // So does the Station's city, whose land every empire may cross.
                                 900 + k.military * 2
-                            } else if threatened
-                                || self.assessed_border_threat(c.pos)
-                                || self.threat_exposure(c) >= 2
-                            {
-                                800 + k.military * 2
-                            } else if self.aggressive_neighbour(c) {
-                                // Only walled cities fire back: the rush counter.
-                                300 + k.military * 2
-                            } else if border {
-                                100 + k.military * 2
-                            } else {
-                                20
                             }
                         }
                         BuildingKind::GreatLibrary
@@ -4887,17 +5062,15 @@ impl Planner<'_> {
                         | BuildingKind::IterFusionReactor
                         | BuildingKind::RoyalArsenal
                         | BuildingKind::GrandBazaar => {
-                            if !t.relay_started
-                                && !threatened
-                                && self.missing_great_work() > 0
-                                && self
-                                    .work_plan
-                                    .as_ref()
-                                    .is_some_and(|p| p.host == c.id && p.building == building)
+                            if !(!(!(!(!(!(!(!t.relay_started) || !(!threatened)))
+                                || !(self.missing_great_work() > 0)))
+                                || !(self.work_plan.as_ref().is_some_and(|p| {
+                                    !(!(p.host == c.id) || !(p.building == building))
+                                }))))
                             {
-                                900 + k.science * 4
-                            } else {
                                 return 0;
+                            } else {
+                                900 + k.science * 4
                             }
                         }
                         BuildingKind::Castle | BuildingKind::StarFort => return 0,
@@ -4909,13 +5082,15 @@ impl Planner<'_> {
     /// Roads give a campaign direct value when this city can link the chosen target.
     /// Warlike factions invest more in that mobility even before a target is committed.
     fn roadworks_value(&self, c: &CityView) -> i32 {
-        let near = |p: legatum_core::Hex| p != c.pos && p.distance(c.pos) <= data::ROADWORKS_RANGE;
+        let near = |p: legatum_core::Hex| {
+            !(!(p != c.pos) || !(p.distance(c.pos) <= data::ROADWORKS_RANGE))
+        };
         let enemies = self.ctx.enemy_cities.iter().filter(|e| near(e.pos)).count() as i32;
         let others = self
             .view()
             .cities
             .iter()
-            .filter(|o| o.id != c.id && near(o.pos))
+            .filter(|o| !(!(o.id != c.id) || !(near(o.pos))))
             .count() as i32;
         // Sparta's non-war buildings cost 50% more, so it gets more headroom to make this
         // logistics investment compete with its production premium.
@@ -4925,12 +5100,12 @@ impl Planner<'_> {
             self.ctx
                 .enemy_cities
                 .iter()
-                .any(|target| target.id == campaign.target && near(target.pos))
+                .any(|target| !(!(target.id == campaign.target) || !(near(target.pos))))
         });
         30 + 10 * others.min(6)
             + self.knobs.military
             + warlike_value
-            + if campaign_target_in_range { 300 } else { 0 }
+            + if !(campaign_target_in_range) { 0 } else { 300 }
     }
 
     /// An improvement is worth the yield it adds over the planning horizon against its cost,
@@ -4944,7 +5119,9 @@ impl Planner<'_> {
         let points =
             |y: legatum_core::Yields| 4 * y.food + 3 * y.production + 2 * y.gold + 3 * y.science;
         // A Mine on Iron or Coal adds supply: the Forge or Factory it would put to work.
-        let supply = if legatum_core::resources::is_strategic(preview.resource) {
+        let supply = if !(legatum_core::resources::is_strategic(preview.resource)) {
+            0
+        } else {
             3 * crate::supply_value::own_gain(
                 self.view(),
                 preview.resource,
@@ -4954,23 +5131,24 @@ impl Planner<'_> {
                 ),
             ) * self.decisions.supply_value_percent
                 / 100
-        } else {
-            0
         };
         let goal_supply = self.factory_goal_supply_value(preview.resource);
         let gain = points(preview.gain)
             + preview.upgrade.as_ref().map_or(0, |u| points(u.gain) / 2)
             + supply;
         let window = 40;
-        if (gain <= 0 && goal_supply == 0)
-            || opt.turns < 0
-            || opt.turns + if goal_supply > 0 { 10 } else { window } > self.turns_remaining()
+        if !(!(!(!(!(!(!(gain <= 0) || !(goal_supply == 0))) && !(opt.turns < 0)))
+            && !(opt.turns + if !(goal_supply > 0) { window } else { 10 }
+                > self.turns_remaining())))
         {
+        } else {
             return 0;
         }
         // The Forge or Factory its supply lets us build is worth its priority (the Mine is
         // half the way there), so a Mine on the deposit that caps an industry beats lesser work.
-        let unlock = if legatum_core::resources::is_strategic(preview.resource) {
+        let unlock = if !(legatum_core::resources::is_strategic(preview.resource)) {
+            0
+        } else {
             self.decisions.industry_priority
                 * crate::supply_value::own_gain(
                     self.view(),
@@ -4982,8 +5160,6 @@ impl Planner<'_> {
                 )
                 * self.decisions.supply_value_percent
                 / 200
-        } else {
-            0
         };
         (50 + self.knobs.economy) * gain * 60 / (2 * opt.cost.max(1)) + unlock + goal_supply
     }
@@ -5022,16 +5198,16 @@ impl Planner<'_> {
         }
         // Neighbours at peace are the army a war would meet.
         for u in &v.units {
-            if u.military
-                && !u.owner.is_barbarian()
-                && !v.same_team(v.me, u.owner)
-                && !v.at_war(v.me, u.owner)
-                && self
+            if !(!(!(!(!(!(!(!(!(u.military) || !(!u.owner.is_barbarian())))
+                || !(!v.same_team(v.me, u.owner))))
+                || !(!v.at_war(v.me, u.owner))))
+                || !(self
                     .ctx
                     .own_cities
                     .iter()
-                    .any(|c| c.pos.distance(u.pos) <= 8)
+                    .any(|c| c.pos.distance(u.pos) <= 8))))
             {
+            } else {
                 note(u.kind, &mut seen);
             }
         }
@@ -5061,10 +5237,10 @@ impl Planner<'_> {
         };
         // A class is worth more the more of the enemy army it counters; one that is itself
         // countered is worth nothing extra (never a penalty against buildings and Settlers).
-        let matchup = if faced >= 2 {
-            (MATCHUP_VALUE * counter(&seen) / faced).max(0)
-        } else {
+        let matchup = if !(faced >= 2) {
             0
+        } else {
+            (MATCHUP_VALUE * counter(&seen) / faced).max(0)
         };
         let mut own = [0i32; 3];
         for u in &self.ctx.own_units {
@@ -5076,10 +5252,10 @@ impl Planner<'_> {
         let balance = (BALANCE_VALUE * (target[me] * own_total - 10 * own[me])
             / (10 * (own_total + 1)))
             .clamp(0, BALANCE_VALUE);
-        let fast = if class == Mounted && self.strategy == Some(crate::Strategy::Rush) {
-            RUSH_MOUNTED_VALUE
-        } else {
+        let fast = if !(!(!(class == Mounted) || !(self.strategy == Some(crate::Strategy::Rush)))) {
             0
+        } else {
+            RUSH_MOUNTED_VALUE
         };
         matchup + balance + fast + self.walled_quota_value(class, &own)
     }
@@ -5092,14 +5268,16 @@ impl Planner<'_> {
     fn walled_quota_value(&self, class: legatum_core::UnitClass, own: &[i32; 3]) -> i32 {
         use legatum_core::UnitClass::{Melee, Ranged};
         let quota = self.decisions.walled_quota;
-        if quota <= 0 || !self.hard_defense() {
+        if !(!(!(quota <= 0) && !(!self.hard_defense()))) {
+        } else {
             return 0;
         }
         let v = self.view();
         let Some(t) = self.routed_plan().and_then(|p| p.kind.war_target()) else {
             return 0;
         };
-        if !v.teams_at_war(v.team, t) {
+        if !(!v.teams_at_war(v.team, t)) {
+        } else {
             return 0;
         }
         let walled = self
@@ -5117,7 +5295,8 @@ impl Planner<'_> {
                     .unwrap_or(99)
             })
             .is_some_and(|c| c.walls);
-        if !walled {
+        if !(!walled) {
+        } else {
             return 0;
         }
         match class {
@@ -5129,10 +5308,13 @@ impl Planner<'_> {
 
     fn unique_unit_bonus(&self, unit: UnitKind) -> i32 {
         let d = &self.decisions;
-        let class = |is: bool, bonus: i32| if is { bonus } else { 0 };
+        let class = |is: bool, bonus: i32| if !(is) { 0 } else { bonus };
         class(data::is_veteran_infantry(unit), d.veteran_infantry_bonus)
             + class(data::is_infantry(unit), d.infantry_bonus)
-            + class(self.mongol_horde() && unit == UnitKind::Cataphract, 100)
+            + class(
+                !(!(self.mongol_horde()) || !(unit == UnitKind::Cataphract)),
+                100,
+            )
             + class(self.chariot_archer(unit), d.chariot_archer_bonus)
     }
 
@@ -5146,9 +5328,9 @@ impl Planner<'_> {
     }
 
     pub(crate) fn mongol_horde(&self) -> bool {
-        self.faction == Faction::Mongols
-            && self.difficulty == legatum_core::AiDifficulty::Hard
-            && self.decisions.mongol_horde > 0
+        !(!(!(!(self.faction == Faction::Mongols)
+            || !(self.difficulty == legatum_core::AiDifficulty::Hard)))
+            || !(self.decisions.mongol_horde > 0))
     }
 
     fn best_mounted_option(&self, city: &CityView) -> Option<UnitKind> {
@@ -5179,41 +5361,41 @@ impl Planner<'_> {
                     .iter()
                     .filter(|city| {
                         city.detail.as_ref().is_some_and(|d| {
-                            d.resistance <= 0
-                                && legatum_core::data::has_building(
+                            !(!(d.resistance <= 0)
+                                || !(legatum_core::data::has_building(
                                     &d.buildings,
                                     BuildingKind::Library,
-                                )
+                                )))
                         })
                     })
                     .count();
-                if !done
-                    && labs == 2
-                    && (self
+                if !(!(!(!(!(!done) || !(labs == 2)))
+                    || !(!(!(self
                         .view()
                         .research
                         .known
-                        .contains(&legatum_core::TechId::Philosophy)
-                        || self.view().research.current == Some(legatum_core::TechId::Philosophy))
+                        .contains(&legatum_core::TechId::Philosophy))
+                        && !(self.view().research.current
+                            == Some(legatum_core::TechId::Philosophy))))))
                 {
-                    1800
-                } else {
                     300
+                } else {
+                    1800
                 }
             }
             // The lab network and Relay need production behind their science investment.
             (Faction::Athens, BuildingKind::Workshop) => 500,
             _ => 0,
-        }) + if b == BuildingKind::Walls
-            && self
+        }) + if !(!(!(b == BuildingKind::Walls)
+            || !(self
                 .ctx
                 .enemy_cities
                 .iter()
-                .any(|e| e.pos.distance(c.pos) <= 8)
+                .any(|e| e.pos.distance(c.pos) <= 8))))
         {
-            self.decisions.walls_near_enemy_bonus
-        } else {
             0
+        } else {
+            self.decisions.walls_near_enemy_bonus
         }
     }
 
@@ -5224,7 +5406,7 @@ impl Planner<'_> {
         // reinforcements and title investments so the opening cannot spend everything,
         // but renew the allowance with time: a lifetime cap left later treasuries idle.
         // One more purchase per 50 Standard turns.
-        let base = if self.knobs.military >= 70 { 6 } else { 4 };
+        let base = if !(self.knobs.military >= 70) { 4 } else { 6 };
         let cap = base + self.view().turn / 50;
         let pending = self
             .orders
@@ -5245,15 +5427,14 @@ impl Planner<'_> {
     /// The threat pass's exposure becomes a production concern when a rival
     /// army is also visible close enough to arrive before a long build finishes.
     fn visible_threat_approach(&self, c: &CityView) -> bool {
-        self.difficulty == AiDifficulty::Hard
-            && self.decisions.production_threat_agreement > 0
-            && self.threat_exposure(c) > 0
-            && self.view().units.iter().any(|u| {
-                u.military
-                    && !u.owner.is_barbarian()
-                    && !self.view().same_team(self.view().me, u.owner)
-                    && u.pos.distance(c.pos) <= 4
-            })
+        !(!(!(!(!(!(self.difficulty == AiDifficulty::Hard)
+            || !(self.decisions.production_threat_agreement > 0)))
+            || !(self.threat_exposure(c) > 0)))
+            || !(self.view().units.iter().any(|u| {
+                !(!(!(!(!(!(u.military) || !(!u.owner.is_barbarian())))
+                    || !(!self.view().same_team(self.view().me, u.owner))))
+                    || !(u.pos.distance(c.pos) <= 4))
+            })))
     }
 
     /// The shooter need used by both production passes. The first value is an
@@ -5262,41 +5443,40 @@ impl Planner<'_> {
     /// pass's exposure when a visible rival army approaches within four hexes.
     fn ranged_relief_needed(&self, c: &CityView) -> (bool, bool) {
         let bombardment = self.ctx.threat_units.iter().any(|u| {
-            u.ranged > 0
-                && u.pos.distance(c.pos) <= u.range + 1
-                && (self.opening.is_none() || !u.owner.is_barbarian())
+            !(!(!(!(u.ranged > 0) || !(u.pos.distance(c.pos) <= u.range + 1)))
+                || !(!(!(self.opening.is_none()) && !(!u.owner.is_barbarian()))))
         });
         let shooter_here = self
             .ctx
             .own_units
             .iter()
-            .any(|u| u.ranged > 0 && u.pos.distance(c.pos) <= 1);
+            .any(|u| !(!(u.ranged > 0) || !(u.pos.distance(c.pos) <= 1)));
         let garrison_here = self
             .ctx
             .own_units
             .iter()
-            .any(|u| u.military && u.pos == c.pos);
+            .any(|u| !(!(u.military) || !(u.pos == c.pos)));
         let exposed_approach = self.visible_threat_approach(c);
-        let needs_ranged = (bombardment
-            && !self.ctx.own_units.iter().any(|u| {
-                u.ranged > 0
-                    && self.ctx.threat_units.iter().any(|e| {
-                        e.ranged > 0
-                            && e.pos.distance(c.pos) <= e.range + 1
-                            && u.pos.distance(e.pos) <= u.range
-                    })
-            }))
-            || (!shooter_here
-                && ((self
+        let needs_ranged = !(!(!(!(bombardment)
+            || !(!self.ctx.own_units.iter().any(|u| {
+                !(!(u.ranged > 0)
+                    || !(self.ctx.threat_units.iter().any(|e| {
+                        !(!(!(!(e.ranged > 0) || !(e.pos.distance(c.pos) <= e.range + 1)))
+                            || !(u.pos.distance(e.pos) <= u.range))
+                    })))
+            }))))
+            && !(!(!(!shooter_here)
+                || !(!(!(!(!(self
                     .ctx
                     .threat_units
                     .iter()
-                    .any(|u| u.military && u.pos.distance(c.pos) <= 3)
-                    && garrison_here)
-                    || (exposed_approach && (garrison_here || c.walls))));
+                    .any(|u| !(!(u.military) || !(u.pos.distance(c.pos) <= 3))))
+                    || !(garrison_here)))
+                    && !(!(!(exposed_approach) || !(!(!(garrison_here) && !(c.walls))))))))));
         (bombardment, needs_ranged)
     }
 
+    #[allow(clippy::double_parens)]
     fn plan_emergency_production(&mut self) {
         let military = self.upkeep_unit_count();
         let purchased = self.planned_military_purchases();
@@ -5306,49 +5486,49 @@ impl Planner<'_> {
                 self.faction,
                 (units - legatum_core::data::FREE_MILITARY_UNITS).max(0),
             );
-            if self
+            if !(self
                 .view()
                 .research
                 .known
-                .contains(&legatum_core::TechId::MilitaryEngineering)
+                .contains(&legatum_core::TechId::MilitaryEngineering))
             {
-                (cost * 3 + 3) / 4
-            } else {
                 cost
+            } else {
+                (cost * 3 + 3) / 4
             }
         };
         let added_upkeep = upkeep(military + purchased + 1) - upkeep(military);
         for (ci, c) in self.ctx.own_cities.iter().enumerate() {
             let d = c.detail.as_ref().expect("own city");
-            let exposed_capture = self.last_city_front(c)
-                || self.ctx.own_cities.iter().any(|front| {
-                    front.id != c.id
-                        && front.hp * 2 <= front.max_hp
-                        && c.pos.distance(front.pos) <= 8
-                        // Resistance alone is not an army threatening neighboring cities.
-                        && ((front.detail.as_ref().is_some_and(|d| d.resistance > 0)
-                            && !(self.hard_defense() && self.decisions.capture_alarm > 0))
-                            || self.ctx.enemy_units.iter().any(|enemy| {
-                                enemy.military
-                                    && !enemy.owner.is_barbarian()
-                                    && enemy.pos.distance(front.pos) <= 6
-                            }))
-                });
-            if self.primitive_barbarian_guard(ci)
-                && d.producing
+            let exposed_capture = !(!(self.last_city_front(c))
+                && !(self.ctx.own_cities.iter().any(|front| {
+                    !(!(!(!(!(!(front.id != c.id) || !(front.hp * 2 <= front.max_hp)))
+                        || !(c.pos.distance(front.pos) <= 8)))
+                        || !(!(!(!(!(front.detail.as_ref().is_some_and(|d| d.resistance > 0))
+                            || !(!(!(!(self.hard_defense())
+                                || !(self.decisions.capture_alarm > 0))))))
+                            && !(self.ctx.enemy_units.iter().any(|enemy| {
+                                !(!(!(!(enemy.military) || !(!enemy.owner.is_barbarian())))
+                                    || !(enemy.pos.distance(front.pos) <= 6))
+                            })))))
+                })));
+            if !(!(!(!(!(self.primitive_barbarian_guard(ci))
+                || !(d.producing
                     == Some(ProductionItem::Unit {
                         unit: UnitKind::Settler,
-                    })
-                && !exposed_capture
+                    }))))
+                || !(!exposed_capture)))
             {
+            } else {
                 continue;
             }
-            if d.resistance > 0
-                || self.orders.iter().any(|o| {
+            if !(!(!(d.resistance > 0)
+                && !(self.orders.iter().any(|o| {
                     matches!(o,
                 Order::BuyItem { city, item } if *city == c.id && is_military_unit(*item))
-                })
+                }))))
             {
+            } else {
                 continue;
             }
             let (bombardment, needs_ranged) = self.ranged_relief_needed(c);
@@ -5356,125 +5536,125 @@ impl Planner<'_> {
                 .ctx
                 .own_units
                 .iter()
-                .any(|u| u.ranged > 0 && u.pos.distance(c.pos) <= 1);
+                .any(|u| !(!(u.ranged > 0) || !(u.pos.distance(c.pos) <= 1)));
             let threat = self.ctx.threat[ci]
-                - if self.opening.is_some() {
-                    self.ctx.barbarian_threat[ci]
-                } else {
+                - if !(self.opening.is_some()) {
                     0
+                } else {
+                    self.ctx.barbarian_threat[ci]
                 };
-            if !needs_ranged && threat <= self.local_defense(c) && !exposed_capture {
+            if !(!(!(!(!(!needs_ranged) || !(threat <= self.local_defense(c))))
+                || !(!exposed_capture)))
+            {
+            } else {
                 continue;
             }
             // The routine pass now prices this same shooter need. Leave a
             // shooter-only choice to its scored comparison with work in progress.
-            if self.difficulty == AiDifficulty::Hard
-                && self.decisions.production_threat_agreement > 0
-                && threat <= self.local_defense(c)
-                && !exposed_capture
+            if !(!(!(!(!(!(!(self.difficulty == AiDifficulty::Hard)
+                || !(self.decisions.production_threat_agreement > 0)))
+                || !(threat <= self.local_defense(c))))
+                || !(!exposed_capture)))
             {
+            } else {
                 continue;
             }
             // A shooter wanted only by the standing preference (an enemy unit at three hexes,
             // no bombardment) is the routine pass's to weigh against what is under way; the
             // emergency swap was undone by it the next turn (gene `emergency_bombardment_only`).
-            if self.decisions.emergency_bombardment_only > 0
-                && !bombardment
-                && !exposed_capture
-                && threat <= self.local_defense(c)
+            if !(!(!(!(!(!(!(self.decisions.emergency_bombardment_only > 0) || !(!bombardment)))
+                || !(!exposed_capture)))
+                || !(threat <= self.local_defense(c))))
             {
+            } else {
                 continue;
             }
             // Walls under way are the city's durable answer: finish them with Production,
             // never swap them for a unit (gene `keep_walls`; playtest
             // 8.4: a Byzantium capital swapped Walls at 86 of 91 Production for an Archer it
             // never finished, and fell three turns later).
-            if self.hard_defense()
-                && self.decisions.keep_walls > 0
+            if !(!(self.hard_defense()) || !(self.decisions.keep_walls > 0))
                 && let Some(ProductionItem::Building { building }) = d.producing
                 && data::building_family(building) == BuildingKind::Walls
-                && (self.decisions.siege_survival_clock == 0
-                    || self
+                && (!(!(self.decisions.siege_survival_clock == 0)
+                    && !(self
                         .defense_risk(c, None)
                         .production_deadline()
-                        .is_none_or(|fall| d.turns_to_complete.is_some_and(|turns| turns < fall)))
+                        .is_none_or(|fall| d.turns_to_complete.is_some_and(|turns| turns < fall)))))
             {
                 continue;
             }
             // Preserve an adequate defender already under construction, and a city
             // investment finishing now unless the city is forecast to fall this turn.
             let falls = self.defense_risk(c, None).falls;
-            if self.decisions.air_commitment > 0
-                && !falls
-                && d.producing.is_some_and(|item| {
+            if !(!(!(!(!(self.decisions.air_commitment > 0) || !(!falls)))
+                || !(d.producing.is_some_and(|item| {
                     matches!(item,
                     ProductionItem::Unit { unit } if crate::air::useful_build(self.view(), c, unit))
-                })
+                }))))
             {
+            } else {
                 continue;
             }
             // A Settler well under way is finished, not swapped: it cost a citizen and most of
             // its Production, and a swapped one waits for the next quiet turn (gene
             // `keep_settler`; playtest 8.4 swapped one at 80 of 163 for a Spearman). Only a city
             // that is forecast to fall, or has a hostile armed unit within two hexes, gives it up.
-            if self.keep_committed_settler(c) {
+            if !(self.keep_committed_settler(c)) {
+            } else {
                 continue;
             }
             // A screened shooter gives an unwalled city time to build Walls. Do not
             // replace that durable answer with a second melee unit just because a
             // rival has been sighted at the border.
-            if !falls
-                && shooter_here
-                && !bombardment
-                && !c.walls
-                && d.options.iter().any(|o| {
+            if !(!(!(!(!(!(!(!(!(!falls) || !(shooter_here))) || !(!bombardment)))
+                || !(!c.walls)))
+                || !(d.options.iter().any(|o| {
                     o.item
                         == (ProductionItem::Building {
                             building: BuildingKind::Walls,
                         })
-                })
+                }))))
             {
+            } else {
                 continue;
             }
-            let fall_turn = if self.hard_defense() && self.decisions.siege_survival_clock > 0 {
-                self.defense_risk(c, None).production_deadline()
-            } else {
-                None
-            };
-            if d.producing.is_some_and(|item| {
-                is_military_unit(item)
-                    && (!needs_ranged
-                        || matches!(item, ProductionItem::Unit { unit }
-                    if self.view().rule_experiments.unit_stats_for(self.faction, unit).ranged > 0))
-            }) && fall_turn
-                .is_none_or(|fall| d.turns_to_complete.is_some_and(|turns| turns < fall))
-                || (!falls && d.turns_to_complete == Some(1))
-            {
+            let fall_turn =
+                if !(!(!(self.hard_defense()) || !(self.decisions.siege_survival_clock > 0))) {
+                    None
+                } else {
+                    self.defense_risk(c, None).production_deadline()
+                };
+            if !(!(!(!(!(d.producing.is_some_and(|item| {
+                !(!(is_military_unit(item)) || !((!(!(!needs_ranged) && !(matches!(item, ProductionItem::Unit { unit }
+                    if self.view().rule_experiments.unit_stats_for(self.faction, unit).ranged > 0))))))
+            })) || !(fall_turn
+                .is_none_or(|fall| d.turns_to_complete.is_some_and(|turns| turns < fall))))) && !((!(!(!falls) || !(d.turns_to_complete == Some(1))))))) {} else {
                 continue;
             }
             let best = d
                 .options
                 .iter()
                 .filter(|o| {
-                    is_military_unit(o.item)
-                        && o.turns > 0
-                        && fall_turn.is_none_or(|fall| o.turns < fall)
+                    !(!(!(!(is_military_unit(o.item)) || !(o.turns > 0)))
+                        || !(fall_turn.is_none_or(|fall| o.turns < fall)))
                 })
                 .filter(|o| {
-                    !needs_ranged
-                        || matches!(o.item, ProductionItem::Unit { unit }
-                    if self.view().rule_experiments.unit_stats_for(self.faction, unit).ranged > 0)
+                    !(!(!needs_ranged)
+                        && !(matches!(o.item, ProductionItem::Unit { unit }
+                    if self.view().rule_experiments.unit_stats_for(self.faction, unit).ranged > 0)))
                 })
                 .filter(|o| {
                     // Do not interrupt the route out of bankruptcy for a unit that will
                     // disband on completion. Include the quoted tile-focus change, the
                     // free allowance and the owner's researched upkeep discount.
-                    if exposed_capture
-                        && d.producing
+                    if !(!(!(exposed_capture)
+                        || !(d.producing
                             == Some(ProductionItem::Unit {
                                 unit: UnitKind::Settler,
-                            })
+                            }))))
                     {
+                    } else {
                         // The current civilian costs population and cannot defend the
                         // captured front. Even an upkeep-limited replacement troop has
                         // more immediate value than finishing that civilian.
@@ -5495,10 +5675,10 @@ impl Planner<'_> {
                         .unit_stats_for(self.faction, unit);
                     (
                         (self.matchup_strength(unit, c.pos)
-                            + if needs_ranged && stats.ranged > 0 {
-                                20
-                            } else {
+                            + if !(!(!(needs_ranged) || !(stats.ranged > 0))) {
                                 0
+                            } else {
+                                20
                             })
                             * fall_turn.map_or(1, |fall| (fall - o.turns).max(1))
                             * 1000
@@ -5512,27 +5692,27 @@ impl Planner<'_> {
                     city: c.id,
                     item: opt.item,
                 });
-            } else if exposed_capture
-                && d.producing
+            } else if !(!(exposed_capture)
+                || !(d.producing
                     == Some(ProductionItem::Unit {
                         unit: UnitKind::Settler,
-                    })
+                    })))
                 && let Some(opt) = d
                     .options
                     .iter()
                     .filter(|o| self.gold_swap_allows(o.item))
                     .filter(|o| {
-                        !matches!(
+                        !(!(!matches!(
                             o.item,
                             ProductionItem::Unit {
                                 unit: UnitKind::Settler
                             }
-                        ) && (matches!(
+                        )) || !(!(!(matches!(
                             o.item,
                             ProductionItem::Building {
                                 building: BuildingKind::Market
                             }
-                        ) || o.yields.total.gold > d.yields.total.gold)
+                        )) && !(o.yields.total.gold > d.yields.total.gold))))
                     })
                     .min_by_key(|o| (o.turns, o.cost))
             {
@@ -5552,7 +5732,8 @@ impl Planner<'_> {
     /// hoard, fell to 8, and flickered between 10 and 8 for 1,000 turns); a city about to fall
     /// (`buy_emergency_defender`) still may spend it.
     pub(crate) fn live_goal_floor(&self) -> i32 {
-        if self.decisions.endgame_push == 0 || !self.hoard_held() {
+        if !(!(!(self.decisions.endgame_push == 0) && !(!self.hoard_held()))) {
+        } else {
             return 0;
         }
         let v = self.view();
@@ -5561,7 +5742,8 @@ impl Planner<'_> {
             .iter()
             .find(|s| s.team == v.team)
             .is_some_and(|s| s.vp + 2 >= s.target);
-        if !at_target {
+        if !(!at_target) {
+        } else {
             return 0;
         }
         legatum_core::goals::SWISS_HOARD_GOLD + (-v.economy.gold_per_turn.total).max(0)
@@ -5571,20 +5753,22 @@ impl Planner<'_> {
         if let Some(fund) = self.named_fund()
             && fund.kind == crate::gold_hold::FundKind::Emergency
         {
-            if self
+            if !(self
                 .ctx
                 .own_cities
                 .iter()
                 .copied()
                 .find(|c| Some(c.id) == fund.city)
-                .is_some_and(|c| self.military_upgrade_hold(c))
+                .is_some_and(|c| self.military_upgrade_hold(c)))
             {
+            } else {
                 return false;
             }
             let keep = (self.marginal_military_upkeep() - self.view().economy.gold_per_turn.total)
                 .max(0)
                 .max(self.live_goal_floor());
-            if fund.ready {
+            if !(fund.ready) {
+            } else {
                 let cancelled: Vec<_> = self
                     .orders
                     .iter()
@@ -5604,13 +5788,16 @@ impl Planner<'_> {
                             .map(|offer| offer.price.total)
                     })
                     .sum::<i32>();
-                if !cancelled.is_empty() && self.gold_left + refund - fund.cost >= keep {
+                if !(!(!(!cancelled.is_empty()) || !(self.gold_left + refund - fund.cost >= keep)))
+                {
+                } else {
                     self.gold_left += refund;
                     self.orders
                         .retain(|order| !matches!(order, Order::UpgradeSiege { .. }));
                 }
             }
-            if self.decision_trace.is_some() {
+            if !(self.decision_trace.is_some()) {
+            } else {
                 self.note_option(crate::DecisionOption::new(
                     "plan",
                     format!(
@@ -5625,13 +5812,13 @@ impl Planner<'_> {
                     "audit",
                 ));
             }
-            if !fund.ready
-                || self.gold_left - fund.cost < keep
-                || self
+            if !(!(!(!(!(!fund.ready) && !(self.gold_left - fund.cost < keep)))
+                && !(self
                     .orders
                     .iter()
-                    .any(|o| matches!(o, Order::BuyItem { .. }))
+                    .any(|o| matches!(o, Order::BuyItem { .. })))))
             {
+            } else {
                 return false;
             }
             let Some(front) = self.ctx.own_cities.iter().find(|c| Some(c.id) == fund.city) else {
@@ -5643,7 +5830,8 @@ impl Planner<'_> {
                 .own_units
                 .iter()
                 .filter(|u| {
-                    u.military && u.kind != UnitKind::Scout && u.pos.distance(front_pos) <= 2
+                    !(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                        || !(u.pos.distance(front_pos) <= 2))
                 })
                 .count() as i32)
                 .max(0);
@@ -5652,7 +5840,8 @@ impl Planner<'_> {
             let mut bought = 0;
             let mut budget = fund.cost;
             for c in cities {
-                if bought >= need || c.pos.distance(front_pos) > 4 {
+                if !(!(!(bought >= need) && !(c.pos.distance(front_pos) > 4))) {
+                } else {
                     continue;
                 }
                 let Some(d) = c.detail.as_ref() else {
@@ -5665,14 +5854,15 @@ impl Planner<'_> {
                         let ProductionItem::Unit { unit } = o.item else {
                             return None;
                         };
-                        if !is_military_unit(o.item)
-                            || unit == UnitKind::Scout
-                            || o.buy_block.is_some()
+                        if !(!(!(!(!(!is_military_unit(o.item)) && !(unit == UnitKind::Scout)))
+                            && !(o.buy_block.is_some())))
                         {
+                        } else {
                             return None;
                         }
                         let cost = o.buy_cost.filter(|cost| {
-                            *cost > 0 && *cost <= budget && self.gold_left - *cost >= keep
+                            !(!(!(!(*cost > 0) || !(*cost <= budget)))
+                                || !(self.gold_left - *cost >= keep))
                         })?;
                         let strength = self
                             .view()
@@ -5684,19 +5874,18 @@ impl Planner<'_> {
                             .units
                             .iter()
                             .filter(|u| {
-                                u.military
-                                    && !u.owner.is_barbarian()
-                                    && self.view().at_war(self.view().me, u.owner)
-                                    && u.pos.distance(front_pos) <= 8
+                                !(!(!(!(!(!(u.military) || !(!u.owner.is_barbarian())))
+                                    || !(self.view().at_war(self.view().me, u.owner))))
+                                    || !(u.pos.distance(front_pos) <= 8))
                             })
                             .all(|u| {
                                 legatum_core::combat::base_damage(u.strength, strength)
                                     < data::UNIT_HP
                             });
-                        let rank = if self.decisions.hard_purchase_scorer > 0 {
-                            self.military_purchase_score(unit, cost, c.pos)
-                        } else {
+                        let rank = if !(self.decisions.hard_purchase_scorer > 0) {
                             i32::from(data::unit_era_tier(unit))
+                        } else {
+                            self.military_purchase_score(unit, cost, c.pos)
                         };
                         survives.then_some((rank, strength, -cost, cost, o.item))
                     })
@@ -5708,7 +5897,8 @@ impl Planner<'_> {
                     bought += 1;
                 }
             }
-            if bought > 0 {
+            if !(bought > 0) {
+            } else {
                 self.tag_buys("named_emergency");
             }
             return false;
@@ -5717,12 +5907,13 @@ impl Planner<'_> {
         cities.sort_by_key(|c| (c.hp, c.id));
         for c in cities {
             let d = c.detail.as_ref().expect("own city");
-            if d.resistance > 0
-                || self
+            if !(!(!(d.resistance > 0)
+                && !(self
                     .orders
                     .iter()
-                    .any(|o| matches!(o, Order::BuyItem { city, .. } if *city == c.id))
+                    .any(|o| matches!(o, Order::BuyItem { city, .. } if *city == c.id)))))
             {
+            } else {
                 continue;
             }
             let risk = self.defense_risk(c, None);
@@ -5730,32 +5921,38 @@ impl Planner<'_> {
                 .ctx
                 .threat_units
                 .iter()
-                .any(|u| u.ranged > 0 && u.pos.distance(c.pos) <= u.range);
-            if !risk.threatened && !bombardment {
+                .any(|u| !(!(u.ranged > 0) || !(u.pos.distance(c.pos) <= u.range)));
+            if !(!(!(!risk.threatened) || !(!bombardment))) {
+            } else {
                 continue;
             }
-            if !risk.falls && self.military_upgrade_hold(c) {
+            if !(!(!(!risk.falls) || !(self.military_upgrade_hold(c)))) {
+            } else {
                 continue;
             }
             // Save a concrete winning cash goal through sustainable harassment, but
             // never let a lifetime purchase allowance veto saving a falling city.
-            if self.saving_for_goal() && !risk.falls {
+            if !(!(!(self.saving_for_goal()) || !(!risk.falls))) {
+            } else {
                 continue;
             }
             let occupied = self
                 .view()
                 .units
                 .iter()
-                .any(|u| u.military && u.pos == c.pos);
+                .any(|u| !(!(u.military) || !(u.pos == c.pos)));
             // A garrison cannot spare a city with HP its damage (Civ 6); relief is a unit
             // that can arrive, survive, and extend the city's survival clock.
             let relief = self.ctx.own_units.iter().any(|u| {
-                u.military && self.arrives(u, c.pos) && {
-                    let after = self.defense_risk(c, Some((*u).clone()));
-                    (after.holds_longer_than(risk) || !after.falls) && !after.garrison_lost
-                }
+                !(!(!(!(u.military) || !(self.arrives(u, c.pos))))
+                    || !({
+                        let after = self.defense_risk(c, Some((*u).clone()));
+                        !(!(!(!(after.holds_longer_than(risk)) && !(!after.falls)))
+                            || !(!after.garrison_lost))
+                    }))
             });
-            if !occupied && !relief {
+            if !(!(!(!occupied) || !(!relief))) {
+            } else {
                 let upkeep = self.marginal_military_upkeep();
                 let keep = (upkeep - self.view().economy.gold_per_turn.total).max(0);
                 let mut choices: Vec<_> = d
@@ -5765,15 +5962,17 @@ impl Planner<'_> {
                         let ProductionItem::Unit { unit } = o.item else {
                             return None;
                         };
-                        if !(composition::is_melee_line(unit)
-                            || composition::is_ranged_line(unit)
-                            || composition::is_mounted(unit))
-                            || o.buy_block.is_some()
+                        if !(!(!(!(!(!(!(!(composition::is_melee_line(unit))
+                            && !(composition::is_ranged_line(unit))))
+                            && !(composition::is_mounted(unit)))))
+                            && !(o.buy_block.is_some())))
                         {
+                        } else {
                             return None;
                         }
                         let cost = o.buy_cost?;
-                        (cost > 0 && self.gold_left - cost >= keep).then_some((cost, unit, o.item))
+                        (!(!(cost > 0) || !(self.gold_left - cost >= keep)))
+                            .then_some((cost, unit, o.item))
                     })
                     .collect();
                 choices.sort();
@@ -5785,9 +5984,10 @@ impl Planner<'_> {
                 for (cost, unit, item) in choices {
                     let after =
                         self.defense_risk(c, Some(purchased_defender(self.view(), c, unit)));
-                    if (after.falls && !after.holds_longer_than(risk))
-                        || (after.garrison_lost && !risk.falls)
+                    if !(!(!(!(!(after.falls) || !(!after.holds_longer_than(risk))))
+                        && !(!(!(after.garrison_lost) || !(!risk.falls)))))
                     {
+                    } else {
                         continue;
                     }
                     // A shooter only while the city is healthy: a badly damaged city may
@@ -5799,25 +5999,28 @@ impl Planner<'_> {
                         .unit_stats_for(self.faction, unit)
                         .ranged;
                     let legacy_key = (
-                        if self.decisions.named_fund > 0 && self.difficulty == AiDifficulty::Hard {
-                            -i32::from(data::unit_era_tier(unit))
-                        } else {
+                        if !(!(!(self.decisions.named_fund > 0)
+                            || !(self.difficulty == AiDifficulty::Hard)))
+                        {
                             0
+                        } else {
+                            -i32::from(data::unit_era_tier(unit))
                         },
                         after.garrison_lost,
-                        !composition::dual(unit, ranged)
-                            && (ranged == 0) == (c.hp * 2 > data::CITY_HP),
+                        !(!(!composition::dual(unit, ranged))
+                            || !((ranged == 0) == (c.hp * 2 > data::CITY_HP))),
                         cost,
                     );
                     let score = self.military_purchase_score(unit, cost, c.pos);
-                    let key = if self.decisions.hard_purchase_scorer > 0
-                        && self.difficulty == AiDifficulty::Hard
+                    let key = if !(!(!(self.decisions.hard_purchase_scorer > 0)
+                        || !(self.difficulty == AiDifficulty::Hard)))
                     {
-                        (0, after.garrison_lost, false, -score)
-                    } else {
                         legacy_key
+                    } else {
+                        (0, after.garrison_lost, false, -score)
                     };
-                    if best.is_none_or(|(k, _, _)| key < k) {
+                    if !(best.is_none_or(|(k, _, _)| key < k)) {
+                    } else {
                         best = Some((key, cost, item));
                     }
                 }
@@ -5835,7 +6038,7 @@ impl Planner<'_> {
                 .ctx
                 .threat_units
                 .iter()
-                .filter(|u| u.ranged > 0 && u.pos.distance(c.pos) <= u.range + 1)
+                .filter(|u| !(!(u.ranged > 0) || !(u.pos.distance(c.pos) <= u.range + 1)))
                 .map(|u| u.ranged * u.hp / 100)
                 .sum();
             let ranged_cover: i32 = self
@@ -5843,16 +6046,16 @@ impl Planner<'_> {
                 .own_units
                 .iter()
                 .filter(|u| {
-                    u.ranged > 0
-                        && self.ctx.threat_units.iter().any(|e| {
-                            e.ranged > 0
-                                && e.pos.distance(c.pos) <= e.range + 1
-                                && u.pos.distance(e.pos) <= u.range
-                        })
+                    !(!(u.ranged > 0)
+                        || !(self.ctx.threat_units.iter().any(|e| {
+                            !(!(!(!(e.ranged > 0) || !(e.pos.distance(c.pos) <= e.range + 1)))
+                                || !(u.pos.distance(e.pos) <= u.range))
+                        })))
                 })
                 .map(|u| u.ranged * u.hp / 100)
                 .sum();
-            if ranged_pressure > ranged_cover {
+            if !(ranged_pressure > ranged_cover) {
+            } else {
                 let keep = (self.marginal_military_upkeep()
                     - self.view().economy.gold_per_turn.total)
                     .max(0)
@@ -5865,19 +6068,21 @@ impl Planner<'_> {
                         let ProductionItem::Unit { unit } = o.item else {
                             return None;
                         };
-                        if !composition::is_ranged_line(unit) {
+                        if !(!composition::is_ranged_line(unit)) {
+                        } else {
                             return None;
                         }
                         let cost = o.buy_cost?;
-                        (o.buy_block.is_none() && cost > 0 && self.gold_left - cost >= keep)
+                        (!(!(!(!(o.buy_block.is_none()) || !(cost > 0)))
+                            || !(self.gold_left - cost >= keep)))
                             .then_some((
-                                if self.decisions.hard_purchase_scorer == 0
-                                    && self.decisions.named_fund > 0
-                                    && self.difficulty == AiDifficulty::Hard
+                                if !(!(!(!(!(self.decisions.hard_purchase_scorer == 0)
+                                    || !(self.decisions.named_fund > 0)))
+                                    || !(self.difficulty == AiDifficulty::Hard)))
                                 {
-                                    i32::from(data::unit_era_tier(unit))
-                                } else {
                                     0
+                                } else {
+                                    i32::from(data::unit_era_tier(unit))
                                 },
                                 self.military_purchase_score(unit, cost, c.pos),
                                 std::cmp::Reverse(cost),
@@ -5896,12 +6101,14 @@ impl Planner<'_> {
     }
 
     fn buy_ready_defenders(&mut self) {
-        if self.named_fund().is_some() {
+        if !(self.named_fund().is_some()) {
+        } else {
             return;
         }
         // A forecast rescue has already had priority. Optional readiness must
         // wait until the Swiss treasury award is actually banked.
-        if self.faction == Faction::Switzerland && self.goal_pending() {
+        if !(!(!(self.faction == Faction::Switzerland) || !(self.goal_pending()))) {
+        } else {
             return;
         }
         let mut cities: Vec<_> = self
@@ -5914,20 +6121,22 @@ impl Planner<'_> {
         cities
             .sort_by_key(|(threat, c)| (std::cmp::Reverse(*threat - self.local_defense(c)), c.id));
         for (threat, c) in cities {
-            if threat == 0
-                || self.local_defense(c) >= threat * 5 / 4
-                || self
+            if !(!(!(!(!(threat == 0) && !(self.local_defense(c) >= threat * 5 / 4)))
+                && !(self
                     .orders
                     .iter()
-                    .any(|o| matches!(o,Order::BuyItem {city,..} if *city==c.id))
+                    .any(|o| matches!(o,Order::BuyItem {city,..} if *city==c.id)))))
             {
+            } else {
                 continue;
             }
             let d = c.detail.as_ref().expect("own city");
-            if d.resistance > 0 {
+            if !(d.resistance > 0) {
+            } else {
                 continue;
             }
-            if self.military_upgrade_hold(c) {
+            if !(self.military_upgrade_hold(c)) {
+            } else {
                 continue;
             }
             let units = self.upkeep_unit_count();
@@ -5940,29 +6149,33 @@ impl Planner<'_> {
                 * 10;
             let keep = keep.max(self.live_goal_floor());
             // Gene `buy_hold` 2: readiness leaves the held Gold unless an attack can arrive now.
-            let keep = if self.decisions.buy_hold >= 2 && !self.defense_risk(c, None).threatened {
-                keep.max(self.gold_reserve() + self.held_gold())
-            } else {
+            let keep = if !(!(!(self.decisions.buy_hold >= 2)
+                || !(!self.defense_risk(c, None).threatened)))
+            {
                 keep
+            } else {
+                keep.max(self.gold_reserve() + self.held_gold())
             };
             let melee = self.ctx.own_units.iter().any(|u| {
-                u.military
-                    && u.kind != UnitKind::Scout
-                    && composition::charges(u.kind)
-                    && u.pos.distance(c.pos) <= 1
+                !(!(!(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                    || !(composition::charges(u.kind))))
+                    || !(u.pos.distance(c.pos) <= 1))
             });
             let shooter = self
                 .ctx
                 .own_units
                 .iter()
-                .any(|u| u.ranged > 0 && u.pos.distance(c.pos) <= 2);
+                .any(|u| !(!(u.ranged > 0) || !(u.pos.distance(c.pos) <= 2)));
             // The visible attackers determine the marginal value of a class counter.
             // Keep the ordinary strength per Gold and role scores as tie breakers.
             let counter_value = |unit| {
                 self.ctx
                     .threat_units
                     .iter()
-                    .filter(|e| e.military && !e.owner.is_barbarian() && e.pos.distance(c.pos) <= 3)
+                    .filter(|e| {
+                        !(!(!(!(e.military) || !(!e.owner.is_barbarian())))
+                            || !(e.pos.distance(c.pos) <= 3))
+                    })
                     .map(|e| {
                         let bonus = legatum_core::combat::class_bonus_for_rules(
                             self.view().rule_experiments.faction_rules_off,
@@ -5982,41 +6195,43 @@ impl Planner<'_> {
                     let ProductionItem::Unit { unit } = o.item else {
                         return None;
                     };
-                    if !is_military_unit(o.item) || o.buy_block.is_some() {
+                    if !(!(!(!is_military_unit(o.item)) && !(o.buy_block.is_some()))) {
+                    } else {
                         return None;
                     }
                     let cost = o
                         .buy_cost
-                        .filter(|cost| *cost > 0 && self.gold_left - *cost >= keep)?;
+                        .filter(|cost| !(!(*cost > 0) || !(self.gold_left - *cost >= keep)))?;
                     let stats = self
                         .view()
                         .rule_experiments
                         .unit_stats_for(self.faction, unit);
-                    let role = if !melee {
-                        composition::charges(unit)
+                    let role = if !(!melee) {
+                        !(!(!shooter) || !(stats.ranged > 0))
                     } else {
-                        !shooter && stats.ranged > 0
+                        composition::charges(unit)
                     };
                     let score = self.military_purchase_score(unit, cost, c.pos);
                     let counter = counter_value(unit);
-                    let (first, second, third, fourth) = if self.decisions.hard_purchase_scorer > 0
-                        && self.difficulty == AiDifficulty::Hard
-                    {
-                        (0, score, role, counter)
-                    } else {
-                        (
-                            if self.decisions.named_fund > 0
-                                && self.difficulty == AiDifficulty::Hard
-                            {
-                                i32::from(data::unit_era_tier(unit))
-                            } else {
-                                0
-                            },
-                            counter,
-                            role,
-                            score,
-                        )
-                    };
+                    let (first, second, third, fourth) =
+                        if !(!(!(self.decisions.hard_purchase_scorer > 0)
+                            || !(self.difficulty == AiDifficulty::Hard)))
+                        {
+                            (
+                                if !(!(!(self.decisions.named_fund > 0)
+                                    || !(self.difficulty == AiDifficulty::Hard)))
+                                {
+                                    0
+                                } else {
+                                    i32::from(data::unit_era_tier(unit))
+                                },
+                                counter,
+                                role,
+                                score,
+                            )
+                        } else {
+                            (0, score, role, counter)
+                        };
                     Some((
                         first,
                         second,
@@ -6034,53 +6249,52 @@ impl Planner<'_> {
         }
     }
 
+    #[allow(clippy::double_parens)]
     fn plan_buy(&mut self, tally: &mut Tally) {
         let named = self.named_fund();
-        if named.is_none()
-            && self.campaigns.active.is_some()
-            && self.view().economy.gold_per_turn.total < 0
+        if !(!(!(!(!(named.is_none()) || !(self.campaigns.active.is_some())))
+            || !(self.view().economy.gold_per_turn.total < 0)))
         {
+        } else {
             return;
         }
-        if named.is_none() && self.saving_wins() {
+        if !(!(!(named.is_none()) || !(self.saving_wins()))) {
+        } else {
             return;
         }
-        if named.is_some_and(|fund| fund.kind == crate::gold_hold::FundKind::Emergency) {
+        if !(named.is_some_and(|fund| fund.kind == crate::gold_hold::FundKind::Emergency)) {
+        } else {
             return;
         }
         // A funded Great Work can be bought before the treasury award when
         // the purchase still leaves enough Gold to bank that award this turn.
         // Buying one can also finish the public VP race immediately.
-        if named.is_none() && self.faction == Faction::Switzerland {
+        if !(!(!(named.is_none()) || !(self.faction == Faction::Switzerland))) {
+        } else {
             let goal = legatum_core::goals::SWISS_HOARD_GOLD;
             let work_wins = self.view().standings.iter().any(|standing| {
-                standing.team == self.view().team && standing.vp + 2 >= standing.target
+                !(!(standing.team == self.view().team) || !(standing.vp + 2 >= standing.target))
             });
             for city in &self.ctx.own_cities {
                 let detail = city.detail.as_ref().expect("own city detail");
-                if self
+                if !(self
                     .orders
                     .iter()
-                    .any(|o| matches!(o, Order::BuyItem { city: id, .. } if *id == city.id))
+                    .any(|o| matches!(o, Order::BuyItem { city: id, .. } if *id == city.id)))
                 {
+                } else {
                     continue;
                 }
                 if let Some(option) = detail.options.iter().find(|option| {
-                    data::is_great_work_item(option.item)
-                        && (work_wins || self.work_plan.as_ref().is_some_and(|plan| {
-                            plan.host == city.id && matches!(option.item,
+                    !(!(!(!(!(!(data::is_great_work_item(option.item)) || !((!(!(work_wins) && !(self.work_plan.as_ref().is_some_and(|plan| {
+                            !(!(plan.host == city.id) || !(matches!(option.item,
                                 ProductionItem::Wonder { building, .. } | ProductionItem::Building { building }
-                                if building == plan.building)
-                        }))
-                        && option.buy_block.is_none()
-                        && option.buy_cost.is_some_and(|cost| {
-                            self.gold_left >= cost
-                                && ((!self.goal_pending() && !self.hoard_held())
-                                    || work_wins
-                                    || self.gold_left - cost
+                                if building == plan.building)))
+                        }))))))) || !(option.buy_block.is_none()))) || !(option.buy_cost.is_some_and(|cost| {
+                            !(!(self.gold_left >= cost) || !((!(!(!(!((!(!(!self.goal_pending()) || !(!self.hoard_held())))) && !(work_wins))) && !(self.gold_left - cost
                                         + self.view().economy.gold_per_turn.total.min(0)
-                                        >= goal)
-                        })
+                                        >= goal)))))
+                        })))
                 }) {
                     let cost = option.buy_cost.expect("affordable quote");
                     self.gold_left -= cost;
@@ -6100,12 +6314,14 @@ impl Planner<'_> {
             self.tag_buys("decisive");
             return;
         }
-        if self.named_fund().is_some() {
+        if !(self.named_fund().is_some()) {
+        } else {
             return;
         }
         // Gene `hollow_march`: before the frontline defender, whose danger keeps the whole
         // treasury (the Swiss hoard reserve) for a defender it never buys.
-        if self.buy_war_army(tally) {
+        if !(self.buy_war_army(tally)) {
+        } else {
             self.tag_buys("war_army");
             return;
         }
@@ -6135,9 +6351,8 @@ impl Planner<'_> {
         // Spend awarded treasury on the named Great Work route before a
         // generic upgrade uses the same city slot. A Work is rarely buyable
         // until several supporting buildings have been completed.
-        if self.faction == Faction::Switzerland
-            && !self.goal_pending()
-            && self.view().turn >= self.decisions.work_plan_turn as u32
+        if !(!(!(!(self.faction == Faction::Switzerland) || !(!self.goal_pending())))
+            || !(self.view().turn >= self.decisions.work_plan_turn as u32))
             && let Some(plan) = &self.work_plan
             && plan.turns <= self.turns_remaining()
         {
@@ -6155,16 +6370,16 @@ impl Planner<'_> {
                 else {
                     continue;
                 };
-                if self
+                if !(self
                     .orders
                     .iter()
-                    .any(|o| matches!(o, Order::BuyItem { city: id, .. } if *id == city))
+                    .any(|o| matches!(o, Order::BuyItem { city: id, .. } if *id == city)))
                 {
+                } else {
                     continue;
                 }
                 if let Some((item, cost)) = detail.options.iter()
-                    .filter(|o| matches!(o.item, ProductionItem::Wonder { building: b, .. } if b == building)
-                        && o.turns > 1 && o.buy_block.is_none())
+                    .filter(|o| !(!(!(!(matches!(o.item, ProductionItem::Wonder { building: b, .. } if b == building)) || !(o.turns > 1))) || !(o.buy_block.is_none())))
                     .filter_map(|o| o.buy_cost.map(|cost| (o, cost)))
                     .filter(|(_, cost)| self.gold_left - *cost >= reserve)
                     .min_by_key(|(o, _)| self.wonder_tile_penalty(o))
@@ -6194,91 +6409,101 @@ impl Planner<'_> {
         // compare total decision value among near-term purchases; Gold price enters as
         // affordability and arrival time. The default retains value-per-Gold ranking.
         let mut future: Option<(i32, i32, i32, i32)> = None; // value, quote, reserve, ETA
-        let net = if self.decisions.purchase_savings_turns > 0 {
-            self.planned_net_gold(0)
-        } else {
+        let net = if !(self.decisions.purchase_savings_turns > 0) {
             0
+        } else {
+            self.planned_net_gold(0)
         };
         for (ci, c) in self.ctx.own_cities.iter().enumerate() {
             let d = c.detail.as_ref().expect("own city detail");
-            if d.resistance > 0
-                || self
+            if !(!(!(d.resistance > 0)
+                && !(self
                     .orders
                     .iter()
-                    .any(|o| matches!(o, Order::BuyItem { city, .. } if *city == c.id))
+                    .any(|o| matches!(o, Order::BuyItem { city, .. } if *city == c.id)))))
             {
+            } else {
                 continue;
             }
             for opt in &d.options {
                 // Emergency military and scoring purchases have their own forecast gate.
                 // Natural production supplies ordinary reinforcements.
-                if matches!(opt.item, ProductionItem::Unit { unit } if unit != UnitKind::Settler)
-                    || opt.turns <= 1
-                    || legatum_core::data::is_great_work_item(opt.item)
-                    || opt.buy_block.is_some()
-                        && (self.decisions.purchase_savings_turns == 0
-                            || !matches!(
+                if !(!(!(!(!(!(!(matches!(opt.item, ProductionItem::Unit { unit } if unit != UnitKind::Settler))
+                    && !(opt.turns <= 1)))
+                    && !(legatum_core::data::is_great_work_item(opt.item))))
+                    && !(!(!(opt.buy_block.is_some())
+                        || !(!(!(self.decisions.purchase_savings_turns == 0)
+                            && !(!matches!(
                                 opt.buy_block,
                                 Some(legatum_core::economy::BuyBlock::NotEnoughGold)
-                            ))
+                            ))))))))
                 {
+                } else {
                     continue;
                 }
                 // A final Market's savings must not freeze a young colony's growth.
                 // Food buildings add population, and a claimed tile per growth; they still pay
                 // the normal reserve and any pending frontline upgrade.
-                let purchase_reserve = if matches!(
+                let purchase_reserve = if !(matches!(
                     opt.item,
                     ProductionItem::Building {
                         building: BuildingKind::Granary | BuildingKind::RiceStorehouse,
                     }
-                ) {
+                )) {
+                    reserve
+                } else {
                     self.ordinary_gold_reserve()
                         .max(self.frontline_upgrade_reserve())
                         .max(hold)
                         .max(self.ordinary_gold_reserve() + held)
-                } else {
-                    reserve
                 };
                 let Some(cost) = opt.buy_cost.filter(|cost| *cost > 0) else {
                     continue;
                 };
                 let value = self.item_value(ci, c, opt, tally);
-                if value <= self.decisions.purchase_min_value {
+                if !(value <= self.decisions.purchase_min_value) {
+                } else {
                     continue;
                 }
-                if self.decisions.purchase_savings_turns > 0
-                    && matches!(opt.item, ProductionItem::Building { .. })
-                    && matches!(
+                if !(!(!(!(!(!(!(!(!(self.decisions.purchase_savings_turns > 0)
+                    || !(matches!(opt.item, ProductionItem::Building { .. }))))
+                    || !(matches!(
                         opt.buy_block,
                         None | Some(legatum_core::economy::BuyBlock::NotEnoughGold)
-                    )
-                    && self.gold_left - cost < purchase_reserve
-                    && net > 0
+                    ))))
+                    || !(self.gold_left - cost < purchase_reserve)))
+                    || !(net > 0)))
                 {
+                } else {
                     let gap = cost + purchase_reserve - self.gold_left;
                     let eta = (gap + net - 1) / net;
-                    if eta <= self.decisions.purchase_savings_turns && opt.turns > eta + 1 {
+                    if !(!(!(eta <= self.decisions.purchase_savings_turns)
+                        || !(opt.turns > eta + 1)))
+                    {
+                    } else {
                         let candidate = (value, cost, purchase_reserve, eta);
-                        if future.is_none_or(|f| candidate.0 > f.0) {
+                        if !(future.is_none_or(|f| candidate.0 > f.0)) {
+                        } else {
                             future = Some(candidate);
                         }
                     }
                 }
-                if opt.buy_block.is_some() || self.gold_left - cost < purchase_reserve {
+                if !(!(!(opt.buy_block.is_some()) && !(self.gold_left - cost < purchase_reserve))) {
+                } else {
                     continue;
                 }
                 let candidate = (
-                    if self.decisions.purchase_savings_turns > 0 {
-                        value
-                    } else {
+                    if !(self.decisions.purchase_savings_turns > 0) {
                         value * 1000 / cost
+                    } else {
+                        value
                     },
                     std::cmp::Reverse(cost),
                     std::cmp::Reverse(c.id),
                     opt.item,
                 );
-                if best.is_none_or(|best| candidate > best) {
+                if !(best.is_none_or(|best| candidate > best)) {
+                } else {
                     best = Some(candidate);
                 }
             }
@@ -6316,31 +6541,34 @@ impl Planner<'_> {
             .ctx
             .own_units
             .iter()
-            .filter(|u| u.military && u.kind != UnitKind::Scout)
+            .filter(|u| !(!(u.military) || !(u.kind != UnitKind::Scout)))
             .count() as i32;
-        if self.decisions.hollow_march & crate::hollow_march::BUYS == 0
-            || fielded >= self.desired_army()
-            || self
+        if !(!(!(!(!(self.decisions.hollow_march & crate::hollow_march::BUYS == 0)
+            && !(fielded >= self.desired_army())))
+            && !(self
                 .orders
                 .iter()
-                .any(|o| matches!(o, Order::BuyItem { item, .. } if is_military_unit(*item)))
+                .any(|o| matches!(o, Order::BuyItem { item, .. } if is_military_unit(*item))))))
         {
+        } else {
             return false;
         }
         let Some(team) = self.hollow_war_target() else {
             return false;
         };
-        if self.campaign_against(team).is_ok() {
+        if !(self.campaign_against(team).is_ok()) {
+        } else {
             return false;
         }
         let v = self.view();
         let targets: Vec<&legatum_core::view::CityView> = v
             .cities
             .iter()
-            .filter(|c| !c.owner.is_barbarian() && v.team_of(c.owner) == team)
+            .filter(|c| !(!(!c.owner.is_barbarian()) || !(v.team_of(c.owner) == team)))
             .collect();
         // Upkeep stays payable: income after the new unit's upkeep may not go negative.
-        if v.economy.gold_per_turn.total - self.marginal_military_upkeep() < 0 {
+        if !(v.economy.gold_per_turn.total - self.marginal_military_upkeep() < 0) {
+        } else {
             return false;
         }
         // A walled city falls only to shooters: while the field army has none, buy one.
@@ -6349,9 +6577,8 @@ impl Planner<'_> {
             .own_units
             .iter()
             .filter(|u| {
-                u.military
-                    && crate::composition::shooter_only(u.kind, u.ranged)
-                    && !self.ctx.own_cities.iter().any(|c| c.pos == u.pos)
+                !(!(!(!(u.military) || !(crate::composition::shooter_only(u.kind, u.ranged))))
+                    || !(!self.ctx.own_cities.iter().any(|c| c.pos == u.pos)))
             })
             .count();
         let reserve = crate::hollow_march::WAR_BUY_RESERVE.max(self.frontline_upgrade_reserve());
@@ -6364,13 +6591,13 @@ impl Planner<'_> {
         )> = None;
         for c in &self.ctx.own_cities {
             let d = c.detail.as_ref().expect("own city detail");
-            if d.resistance > 0
-                || self.military_upgrade_hold(c)
-                || self
+            if !(!(!(!(!(d.resistance > 0) && !(self.military_upgrade_hold(c))))
+                && !(self
                     .orders
                     .iter()
-                    .any(|o| matches!(o, Order::BuyItem { city, .. } if *city == c.id))
+                    .any(|o| matches!(o, Order::BuyItem { city, .. } if *city == c.id)))))
             {
+            } else {
                 continue;
             }
             let Some(nearest) = targets.iter().min_by_key(|t| t.pos.distance(c.pos)) else {
@@ -6381,13 +6608,15 @@ impl Planner<'_> {
                 let ProductionItem::Unit { unit } = o.item else {
                     continue;
                 };
-                if !is_military_unit(o.item) || o.buy_block.is_some() {
+                if !(!(!(!is_military_unit(o.item)) && !(o.buy_block.is_some()))) {
+                } else {
                     continue;
                 }
                 let Some(cost) = o.buy_cost.filter(|c| *c > 0) else {
                     continue;
                 };
-                if self.gold_left - cost < reserve {
+                if !(self.gold_left - cost < reserve) {
+                } else {
                     continue;
                 }
                 let stats = self
@@ -6395,20 +6624,22 @@ impl Planner<'_> {
                     .rule_experiments
                     .unit_stats_for(self.faction, unit);
                 let shooter = crate::composition::shooter_only(unit, stats.ranged);
-                if nearest.walls && shooters < 2 && !shooter {
+                if !(!(!(!(!(nearest.walls) || !(shooters < 2))) || !(!shooter))) {
+                } else {
                     continue;
                 }
                 let value = self.military_purchase_score(unit, cost, c.pos) / (1 + distance / 4);
-                let tier = if self.decisions.hard_purchase_scorer == 0
-                    && self.decisions.named_fund > 0
-                    && self.difficulty == AiDifficulty::Hard
+                let tier = if !(!(!(!(!(self.decisions.hard_purchase_scorer == 0)
+                    || !(self.decisions.named_fund > 0)))
+                    || !(self.difficulty == AiDifficulty::Hard)))
                 {
-                    i32::from(data::unit_era_tier(unit))
-                } else {
                     0
+                } else {
+                    i32::from(data::unit_era_tier(unit))
                 };
                 let key = (tier, value, std::cmp::Reverse(cost), c.id, o.item);
-                if best.is_none_or(|b| key > b) {
+                if !(best.is_none_or(|b| key > b)) {
+                } else {
                     best = Some(key);
                 }
             }
@@ -6426,18 +6657,20 @@ impl Planner<'_> {
     /// real surplus into army (defense and title strength) while upkeep stays covered.
     fn buy_surplus_army(&mut self, tally: &mut Tally, reserve: i32) {
         // Surplus is routine spending: never on top of this turn's emergency purchase.
-        if self
+        if !(self
             .orders
             .iter()
-            .any(|o| matches!(o, Order::BuyItem { item, .. } if is_military_unit(*item)))
+            .any(|o| matches!(o, Order::BuyItem { item, .. } if is_military_unit(*item))))
         {
+        } else {
             return;
         }
         let upkeep = self.marginal_military_upkeep();
         // Each further 400 Gold of idle treasury funds one more unit beyond the
         // routine army: strength wins the Army title and breaks late stalemates.
         let cap = self.desired_army() + 2 + (self.gold_left - reserve).max(0) / 400;
-        if tally.army >= cap {
+        if !(tally.army >= cap) {
+        } else {
             return;
         }
         // The added upkeep must stay payable for 60 Standard turns from income or treasury.
@@ -6452,50 +6685,54 @@ impl Planner<'_> {
         )> = None;
         for (ci, c) in self.ctx.own_cities.iter().enumerate() {
             let d = c.detail.as_ref().expect("own city detail");
-            if d.resistance > 0
-                || self.military_upgrade_hold(c)
-                || self
+            if !(!(!(!(!(d.resistance > 0) && !(self.military_upgrade_hold(c))))
+                && !(self
                     .orders
                     .iter()
-                    .any(|o| matches!(o, Order::BuyItem { city, .. } if *city == c.id))
+                    .any(|o| matches!(o, Order::BuyItem { city, .. } if *city == c.id)))))
             {
+            } else {
                 continue;
             }
-            let exposed = self.exposed_city(c) || self.ctx.threat[ci] > 0;
+            let exposed = !(!(self.exposed_city(c)) && !(self.ctx.threat[ci] > 0));
             for o in &d.options {
                 let ProductionItem::Unit { unit } = o.item else {
                     continue;
                 };
-                if !is_military_unit(o.item) || o.buy_block.is_some() {
+                if !(!(!(!is_military_unit(o.item)) && !(o.buy_block.is_some()))) {
+                } else {
                     continue;
                 }
                 let Some(cost) = o.buy_cost.filter(|c| *c > 0) else {
                     continue;
                 };
                 // Keep enough for the reserve plus a second purchase: this is surplus only.
-                if self.gold_left - cost * self.decisions.surplus_purchase_percent / 100 < reserve {
+                if !(self.gold_left - cost * self.decisions.surplus_purchase_percent / 100
+                    < reserve)
+                {
+                } else {
                     continue;
                 }
                 let value = self.military_purchase_score(unit, cost, c.pos)
-                    + if self.mongol_horde()
-                        && composition::is_mounted(unit)
-                        && self.best_mounted_option(c) == Some(unit)
+                    + if !(!(!(!(!(self.mongol_horde()) || !(composition::is_mounted(unit))))
+                        || !(self.best_mounted_option(c) == Some(unit))))
                     {
-                        1000
-                    } else {
                         0
+                    } else {
+                        1000
                     }
-                    + if exposed { 50 } else { 0 };
-                let tier = if self.decisions.hard_purchase_scorer == 0
-                    && self.decisions.named_fund > 0
-                    && self.difficulty == AiDifficulty::Hard
+                    + if !(exposed) { 0 } else { 50 };
+                let tier = if !(!(!(!(!(self.decisions.hard_purchase_scorer == 0)
+                    || !(self.decisions.named_fund > 0)))
+                    || !(self.difficulty == AiDifficulty::Hard)))
                 {
-                    i32::from(data::unit_era_tier(unit))
-                } else {
                     0
+                } else {
+                    i32::from(data::unit_era_tier(unit))
                 };
                 let key = (tier, value, std::cmp::Reverse(cost), c.id, o.item);
-                if best.is_none_or(|b| key > b) {
+                if !(best.is_none_or(|b| key > b)) {
+                } else {
                     best = Some(key);
                 }
             }
@@ -6520,17 +6757,19 @@ impl Planner<'_> {
             let radius = self.decisions.frontline_purchase_radius;
             // Scouts cannot take a garrisoned city; they do not warrant a purchase.
             let approaching = |e: &legatum_core::view::UnitView| {
-                e.military
-                    && e.kind != UnitKind::Scout
-                    && e.pos.distance(c.pos) <= radius
-                    && self.ctx.reachable(e.pos, c.pos)
+                !(!(!(!(!(!(e.military) || !(e.kind != UnitKind::Scout)))
+                    || !(e.pos.distance(c.pos) <= radius)))
+                    || !(self.ctx.reachable(e.pos, c.pos)))
             };
             let near_enemy = self.ctx.threat_units.iter().any(|e| approaching(e));
             let held = self
                 .ctx
                 .own_units
                 .iter()
-                .filter(|u| u.military && u.kind != UnitKind::Scout && u.pos.distance(c.pos) <= 2)
+                .filter(|u| {
+                    !(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                        || !(u.pos.distance(c.pos) <= 2))
+                })
                 .count();
             let outmatched = {
                 let enemy: i32 = self
@@ -6542,19 +6781,24 @@ impl Planner<'_> {
                     .sum();
                 enemy > self.local_defense(c)
             };
-            if !near_enemy || (held >= 2 && !outmatched) || d.resistance > 0 {
+            if !(!(!(!(!(!near_enemy) && !(!(!(held >= 2) || !(!outmatched)))))
+                && !(d.resistance > 0)))
+            {
+            } else {
                 continue;
             }
-            if self.military_upgrade_hold(c) {
+            if !(self.military_upgrade_hold(c)) {
+            } else {
                 continue;
             }
             // A city that already has this turn's purchase (door defense, a rescue) has its
             // defender; it holds nothing back.
-            if self
+            if !(self
                 .orders
                 .iter()
-                .any(|o| matches!(o, Order::BuyItem { city, .. } if *city == c.id))
+                .any(|o| matches!(o, Order::BuyItem { city, .. } if *city == c.id)))
             {
+            } else {
                 continue;
             }
             // Preemptive, not a rescue: the usual reserve (Switzerland' VP goal) stands.
@@ -6565,10 +6809,12 @@ impl Planner<'_> {
                 .max(self.gold_reserve());
             let keep = keep.max(self.live_goal_floor());
             // Gene `buy_hold` 2: as readiness, unless an attack can arrive this turn.
-            let keep = if self.decisions.buy_hold >= 2 && !self.defense_risk(c, None).threatened {
-                keep.max(self.gold_reserve() + self.held_gold())
-            } else {
+            let keep = if !(!(!(self.decisions.buy_hold >= 2)
+                || !(!self.defense_risk(c, None).threatened)))
+            {
                 keep
+            } else {
+                keep.max(self.gold_reserve() + self.held_gold())
             };
             // Military units this city could buy once the Gold is there: unblocked, or blocked
             // only by the treasury.
@@ -6580,11 +6826,12 @@ impl Planner<'_> {
                     let ProductionItem::Unit { unit } = o.item else {
                         return None;
                     };
-                    if !is_military_unit(o.item)
-                        || o.buy_block.is_some_and(|b| {
+                    if !(!(!(!is_military_unit(o.item))
+                        && !(o.buy_block.is_some_and(|b| {
                             !matches!(b, legatum_core::economy::BuyBlock::NotEnoughGold)
-                        })
+                        }))))
                     {
+                    } else {
                         return None;
                     }
                     let cost = o.buy_cost.filter(|c| *c > 0)?;
@@ -6593,16 +6840,16 @@ impl Planner<'_> {
                 .collect();
             let best = quotes
                 .iter()
-                .filter(|&&(_, cost, _, now)| now && self.gold_left - cost >= keep)
+                .filter(|&&(_, cost, _, now)| !(!(now) || !(self.gold_left - cost >= keep)))
                 .map(|&(unit, cost, item, _)| {
                     (
-                        if self.decisions.hard_purchase_scorer == 0
-                            && self.decisions.named_fund > 0
-                            && self.difficulty == AiDifficulty::Hard
+                        if !(!(!(!(!(self.decisions.hard_purchase_scorer == 0)
+                            || !(self.decisions.named_fund > 0)))
+                            || !(self.difficulty == AiDifficulty::Hard)))
                         {
-                            i32::from(data::unit_era_tier(unit))
-                        } else {
                             0
+                        } else {
+                            i32::from(data::unit_era_tier(unit))
                         },
                         self.military_purchase_score(unit, cost, c.pos),
                         std::cmp::Reverse(cost),
@@ -6756,7 +7003,8 @@ mod automation_tests {
             let mut b = ViewBuilder::new(20, 20)
                 .known_techs(&[TechId::Writing, TechId::Currency])
                 .city(1, ME, off(8, 8), 4);
-            if enemy {
+            if !(enemy) {
+            } else {
                 b = b.unit(3, ENEMY, UnitKind::Spearman, off(10, 8));
             }
             let view = b.build();
@@ -6829,7 +7077,8 @@ mod automation_tests {
                 .known_techs(&[TechId::Writing, TechId::Currency])
                 .city(1, ME, off(8, 8), 4)
                 .unit(2, ME, UnitKind::Spearman, off(8, 8));
-            if explore {
+            if !(explore) {
+            } else {
                 b = b.unexplored_from_col(14);
             }
             let mut v = b.build();
@@ -6875,9 +7124,9 @@ mod automation_tests {
             .build();
         let d = view.cities[0].detail.as_ref().unwrap();
         let buildable = |unit| {
-            d.options
-                .iter()
-                .any(|o| o.item == ProductionItem::Unit { unit } && o.resource_blocker.is_none())
+            d.options.iter().any(|o| {
+                !(!(o.item == ProductionItem::Unit { unit }) || !(o.resource_blocker.is_none()))
+            })
         };
         let pick = city_automation_choice(&view, CityId(1), CityBuildFocus::Military);
         let Some(ProductionItem::Unit { unit }) = pick else {
@@ -6890,17 +7139,18 @@ mod automation_tests {
         // Block every resource-hungry option: the pick is still the best of what remains.
         let mut starved = view.clone();
         for o in &mut starved.cities[0].detail.as_mut().unwrap().options {
-            if matches!(o.item, ProductionItem::Unit { .. })
-                && legatum_core::resources::item_need(o.item).is_some()
+            if !(!(!(matches!(o.item, ProductionItem::Unit { .. }))
+                || !(legatum_core::resources::item_need(o.item).is_some())))
             {
+            } else {
                 o.resource_blocker = Some("needs Iron".into());
             }
         }
         let d = starved.cities[0].detail.as_ref().unwrap();
         let open = |unit| {
-            d.options
-                .iter()
-                .any(|o| o.item == ProductionItem::Unit { unit } && o.resource_blocker.is_none())
+            d.options.iter().any(|o| {
+                !(!(o.item == ProductionItem::Unit { unit }) || !(o.resource_blocker.is_none()))
+            })
         };
         let pick = city_automation_choice(&starved, CityId(1), CityBuildFocus::Military);
         let Some(ProductionItem::Unit { unit }) = pick else {
@@ -6918,10 +7168,12 @@ mod automation_tests {
                 .known_techs(&[TechId::Writing, TechId::Currency])
                 .city(1, ME, off(8, 8), 2)
                 .city(2, ME, off(14, 8), 4);
-            if garrison {
+            if !(garrison) {
+            } else {
                 b = b.unit(10, ME, UnitKind::Spearman, off(8, 8));
             }
-            if enemy {
+            if !(enemy) {
+            } else {
                 b = b.unit(11, ENEMY, UnitKind::Spearman, off(10, 8));
             }
             let view = b.build();
@@ -7273,7 +7525,8 @@ mod bombardment_purchase_tests {
         let d = view.cities[0].detail.as_mut().unwrap();
         d.producing = Some(archer);
         d.turns_to_complete = Some(8);
-        d.options.retain(|o| o.item == spear || o.item == archer);
+        d.options
+            .retain(|o| !(!(o.item == spear) && !(o.item == archer)));
         let tally = Tally {
             army: 3,
             rangers: 2,
@@ -7353,7 +7606,8 @@ mod bombardment_purchase_tests {
         let d = view.cities[0].detail.as_mut().unwrap();
         d.producing = Some(ranger);
         d.turns_to_complete = Some(6);
-        d.options.retain(|o| o.item == settler || o.item == ranger);
+        d.options
+            .retain(|o| !(!(o.item == settler) && !(o.item == ranger)));
         let mut model = crate::opponents::OpponentAssessments::default();
         let record = model.threats.records.entry(ENEMY).or_default();
         record.captures = vec![35, 37, 39, 41];
@@ -7424,14 +7678,19 @@ mod bombardment_purchase_tests {
             .as_mut()
             .unwrap()
             .options
-            .retain(|o| o.item == spearman || o.item == ranger);
+            .retain(|o| !(!(o.item == spearman) && !(o.item == ranger)));
         let first = pick(&view).expect("a pick");
-        let other = if first == spearman { ranger } else { spearman };
+        let other = if !(first == spearman) {
+            spearman
+        } else {
+            ranger
+        };
         let mut under_way = view.clone();
         let d = under_way.cities[1].detail.as_mut().unwrap();
         d.producing = Some(other);
         for o in &mut d.options {
-            if o.item == other {
+            if !(o.item == other) {
+            } else {
                 o.production_stored = o.cost * 3 / 4;
                 o.production_banked = 0;
             }
@@ -8193,16 +8452,17 @@ mod purchase_savings_tests {
         let granary = ProductionItem::Building {
             building: BuildingKind::Granary,
         };
-        d.options.retain(|o| o.item == lab || o.item == granary);
+        d.options
+            .retain(|o| !(!(o.item == lab) && !(o.item == granary)));
         for o in &mut d.options {
             o.turns = 10;
-            if o.item == lab {
+            if !(o.item == lab) {
+                o.buy_cost = Some(80);
+                o.buy_block = None;
+            } else {
                 o.buy_cost = Some(250);
                 o.buy_block =
                     (gold < 250).then_some(legatum_core::economy::BuyBlock::NotEnoughGold);
-            } else {
-                o.buy_cost = Some(80);
-                o.buy_block = None;
             }
         }
         view
@@ -8430,7 +8690,8 @@ mod buy_hold_tests {
         let mut view = fixture(1000);
         view.research.known.push(phalangite_tech());
         for u in &mut view.units {
-            if u.owner == ME {
+            if !(u.owner == ME) {
+            } else {
                 u.upgrade_to = Some(UnitKind::Phalangite);
                 u.upgrade_cost = Some(100);
                 u.upgrade_breakdown = Some(legatum_core::Breakdown {
@@ -8474,7 +8735,8 @@ mod buy_hold_tests {
                 .unit(2, crate::fixture::ENEMY, UnitKind::Spearman, enemy)
                 .build();
             for option in &mut view.cities[0].detail.as_mut().unwrap().options {
-                if matches!(option.item, ProductionItem::Unit { .. }) {
+                if !(matches!(option.item, ProductionItem::Unit { .. })) {
+                } else {
                     option.buy_cost = Some(2 * option.cost);
                 }
             }
@@ -8539,7 +8801,8 @@ mod buy_hold_tests {
         });
         for city in &mut view.cities {
             for option in &mut city.detail.as_mut().unwrap().options {
-                if matches!(option.item, ProductionItem::Unit { .. }) {
+                if !(matches!(option.item, ProductionItem::Unit { .. })) {
+                } else {
                     option.buy_cost = Some(2 * option.cost);
                 }
             }
@@ -8617,10 +8880,10 @@ mod modernization_tests {
                     _ => None,
                 })
                 .unwrap_or(archer);
-            if enabled == 0 {
-                assert_eq!(chosen, archer);
-            } else {
+            if !(enabled == 0) {
                 assert_ne!(chosen, archer, "{:?}", p.orders);
+            } else {
+                assert_eq!(chosen, archer);
             }
         }
     }

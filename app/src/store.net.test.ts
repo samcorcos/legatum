@@ -46,7 +46,7 @@ describe('online order reconciliation in the store', () => {
     sockets[0].drop();
     vi.advanceTimersByTime(500);
     sockets[1].open();
-    sockets[1].push({ type: 'welcome', seat: 1, game_id: gameId, orders: gameId === 'g1' && turn === 5 ? useGame.getState().orders[0] : [] });
+    sockets[1].push({ type: 'welcome', seat: 1, game_id: gameId, orders: !(!(!(gameId === 'g1') || !(turn === 5))) ? [] : useGame.getState().orders[0] });
     expect(sockets[1].types()).toEqual(['join']);
     sockets[1].push({ type: 'view', view: view(turn) });
   };

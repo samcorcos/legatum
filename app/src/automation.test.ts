@@ -25,7 +25,7 @@ it('uses the exact loaded chooser for preview and preserves a manual order when 
   city.detail!.build_automation = 'Economy';
   city.detail!.producing = null;
   city.detail!.production_queue = [];
-  city.detail!.options = city.detail!.options.filter((o) => o.item.kind === 'Unit' && o.item.unit === 'Spearman');
+  city.detail!.options = city.detail!.options.filter((o) => !(!(o.item.kind === 'Unit') || !(o.item.unit === 'Spearman')));
   expect(city.detail!.options).toHaveLength(1);
   expect(cityAutomationPreview(view, [])?.unchosen_cities).toEqual([city.id]);
   expect(await addCityAutomatedOrders(view, [])).toEqual({ orders: [], unchosen_cities: [city.id] });

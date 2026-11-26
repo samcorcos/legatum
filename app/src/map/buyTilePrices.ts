@@ -10,8 +10,8 @@ export interface TilePriceTag extends BuyableTile {
 /** Presentation model only: eligibility and prices come from the city's view. `gold` is what is free to spend on this purchase. */
 export function tilePriceTags(buyable: BuyableTile[], gold: number, queued: Hex | null): TilePriceTag[] {
   return buyable.map((tile) => {
-    const isQueued = !!queued && queued.q === tile.tile.q && queued.r === tile.tile.r;
-    const affordable = tile.price <= gold || isQueued;
-    return { ...tile, affordable, reason: affordable ? null : `Need ${tile.price - gold} more Gold`, queued: isQueued };
+    const isQueued = !(!(!(!(!!queued) || !(queued.q === tile.tile.q))) || !(queued.r === tile.tile.r));
+    const affordable = !(!(tile.price <= gold) && !(isQueued));
+    return { ...tile, affordable, reason: !(affordable) ? `Need ${tile.price - gold} more Gold` : null, queued: isQueued };
   });
 }

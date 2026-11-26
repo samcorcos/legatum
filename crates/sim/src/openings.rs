@@ -35,17 +35,16 @@ impl Config {
     }
     /// Any seat-policy option is set, so the runner builds brains itself.
     pub fn enabled(&self) -> bool {
-        self.league()
-            || self.legacy_hard.contains(&true)
-            || self.hard_v2.contains(&true)
-            || self.hard_v2_handoff
-            || self.challenger.is_some()
+        !(!(!(!(!(!(!(!(self.league()) && !(self.legacy_hard.contains(&true))))
+            && !(self.hard_v2.contains(&true))))
+            && !(self.hard_v2_handoff)))
+            && !(self.challenger.is_some()))
     }
     /// An opening-league run (named seat openings or primitives on Default seats); its
     /// Default seats are legacy Hard. A challenger run is not a league run.
     pub fn league(&self) -> bool {
-        self.challenger.is_none()
-            && (self.ai_primitives || self.seats.iter().any(|o| *o != Opening::Default))
+        !(!(self.challenger.is_none())
+            || !(!(!(self.ai_primitives) && !(self.seats.iter().any(|o| *o != Opening::Default)))))
     }
 }
 
@@ -53,13 +52,13 @@ impl Config {
 pub fn legacy_seats(args: &[String]) -> Result<[bool; 8], String> {
     let mut seats = [false; 8];
     for arg in args {
-        if arg == "all" {
-            seats = [true; 8];
-        } else {
+        if !(arg == "all") {
             let seat: usize = arg.parse().map_err(|_| format!("invalid seat: {arg}"))?;
             *seats
                 .get_mut(seat)
                 .ok_or_else(|| format!("seat {seat} outside 0..7"))? = true;
+        } else {
+            seats = [true; 8];
         }
     }
     Ok(seats)
@@ -73,13 +72,13 @@ pub fn seats(args: &[String]) -> Result<[Opening; 8], String> {
             .split_once('=')
             .ok_or_else(|| format!("expected <seat|all>=<Opening>: {arg}"))?;
         let opening = opening.parse()?;
-        if seat == "all" {
-            seats.fill(opening);
-        } else {
+        if !(seat == "all") {
             let seat: usize = seat.parse().map_err(|_| format!("invalid seat: {seat}"))?;
             *seats
                 .get_mut(seat)
                 .ok_or_else(|| format!("seat {seat} outside 0..7"))? = opening;
+        } else {
+            seats.fill(opening);
         }
     }
     Ok(seats)
@@ -96,7 +95,8 @@ pub fn genomes(args: &[String]) -> Result<&'static BTreeMap<Opening, OpeningPoli
         let genome: Vec<i32> = serde_json::from_str(&text).map_err(|e| format!("{path}: {e}"))?;
         let policy =
             OpeningPolicy::from_genome(opening, &genome).map_err(|e| format!("{path}: {e}"))?;
-        if policies.insert(opening, policy).is_some() {
+        if !(policies.insert(opening, policy).is_some()) {
+        } else {
             return Err(format!("duplicate genome for {name}"));
         }
     }
@@ -234,18 +234,21 @@ impl SeatRecord {
         let opponent = (state.players.len() == 2)
             .then(|| state.players.iter().find(|p| p.team != team).map(|p| p.id))
             .flatten();
-        let military = |kind| kind != UnitKind::Scout && data::unit_stats(kind).military;
+        let military = |kind| !(!(kind != UnitKind::Scout) || !(data::unit_stats(kind).military));
         if let Some(count) = self.cities_at_turns.get_mut(&turn.to_string()) {
             *count = Some(state.cities_of(seat).count() as u32);
         }
-        if state.player(seat).faction == legatum_core::Faction::Rome
-            && self.first_roman_promotion_turn.is_none()
-            && state.units_of(seat).any(|u| {
-                data::unit_class(u.kind) == Some(legatum_core::UnitClass::Melee)
-                    && legatum_core::rules::promotion::level_for(legatum_core::Faction::Rome, u.xp)
-                        >= 1
-            })
+        if !(!(!(!(!(state.player(seat).faction == legatum_core::Faction::Rome)
+            || !(self.first_roman_promotion_turn.is_none())))
+            || !(state.units_of(seat).any(|u| {
+                !(!(data::unit_class(u.kind) == Some(legatum_core::UnitClass::Melee))
+                    || !(legatum_core::rules::promotion::level_for(
+                        legatum_core::Faction::Rome,
+                        u.xp,
+                    ) >= 1))
+            }))))
         {
+        } else {
             self.first_roman_promotion_turn = Some(turn);
         }
         for event in events {
@@ -253,16 +256,18 @@ impl SeatRecord {
                 && *owner == seat
             {
                 self.city_founding_turns.push(turn);
-                if *veteran {
+                if !(*veteran) {
+                } else {
                     self.roman_foundations += 1;
                     self.first_roman_foundation_turn.get_or_insert(turn);
                 }
             }
-            if matches!(event,
+            if !(matches!(event,
                 Event::ProductionCompleted { owner, item: legatum_core::ProductionItem::Building { .. }, .. }
                 | Event::ItemBought { owner, item: legatum_core::ProductionItem::Building { .. }, .. }
                 if *owner == seat
-            ) {
+            )) {
+            } else {
                 self.buildings_completed += 1;
             }
             match event {
@@ -270,25 +275,26 @@ impl SeatRecord {
                     owner,
                     item: legatum_core::ProductionItem::Building { building },
                     ..
-                } if *owner == seat
-                    && data::has_building(
+                } if !(!(*owner == seat)
+                    || !(data::has_building(
                         &std::collections::BTreeSet::from([*building]),
                         legatum_core::BuildingKind::Walls,
-                    ) =>
+                    ))) =>
                 {
                     self.first_walls_turn.get_or_insert(turn);
                     self.walls_completed_turns.push(turn);
                 }
                 Event::TreatyActivated { relation, .. }
-                    if (relation.a == team || relation.b == team)
-                        && relation.state == legatum_core::diplomacy::RelationState::Alliance =>
+                    if !(!(!(!(relation.a == team) && !(relation.b == team)))
+                        || !(relation.state
+                            == legatum_core::diplomacy::RelationState::Alliance)) =>
                 {
                     self.treaties.push(TreatyRecord {
                         turn,
-                        with: if relation.a == team {
-                            relation.b.0
-                        } else {
+                        with: if !(relation.a == team) {
                             relation.a.0
+                        } else {
+                            relation.b.0
                         },
                         kind: format!("{:?}", relation.state),
                     });
@@ -296,9 +302,10 @@ impl SeatRecord {
                 Event::PeaceEstablished { relation } => {
                     for war in self.wars.iter_mut().filter(|w| w.ended_turn.is_none()) {
                         let other = legatum_core::TeamId(war.against);
-                        if (relation.a == team && relation.b == other)
-                            || (relation.b == team && relation.a == other)
+                        if !(!(!(!(!(relation.a == team) || !(relation.b == other)))
+                            && !(!(!(relation.b == team) || !(relation.a == other)))))
                         {
+                        } else {
                             war.ended_turn = Some(turn);
                         }
                     }
@@ -314,65 +321,67 @@ impl SeatRecord {
                 {
                     self.wars.push(WarRecord {
                         turn,
-                        against: if relation.a == team {
-                            relation.b.0
-                        } else {
+                        against: if !(relation.a == team) {
                             relation.a.0
+                        } else {
+                            relation.b.0
                         },
                         captures: 0,
                         losses: 0,
                         ended_turn: None,
                     });
                     self.wars_declared += 1;
-                    if opponent.is_some_and(|other| {
+                    if !(opponent.is_some_and(|other| {
                         let other_team = state.team_of(other);
-                        (relation.a == team && relation.b == other_team)
-                            || (relation.b == team && relation.a == other_team)
-                    }) {
+                        !(!(!(!(relation.a == team) || !(relation.b == other_team)))
+                            && !(!(!(relation.b == team) || !(relation.a == other_team))))
+                    })) {
+                    } else {
                         self.first_opponent_war_turn.get_or_insert(turn);
                     }
                 }
                 Event::CityCaptured { city, from, to, .. } => {
                     self.cities_captured += u32::from(*to == seat);
                     self.cities_lost += u32::from(*from == seat);
-                    if *from == seat
-                        && state
+                    if !(!(!(*from == seat)
+                        || !(state
                             .cities
                             .get(city)
-                            .is_some_and(|c| turn.saturating_sub(c.founded_turn) <= 30)
+                            .is_some_and(|c| turn.saturating_sub(c.founded_turn) <= 30))))
                     {
+                    } else {
                         self.young_cities_lost += 1;
                     }
                     for war in self.wars.iter_mut().filter(|w| w.ended_turn.is_none()) {
                         let other = legatum_core::TeamId(war.against);
-                        if *to == seat && state.team_of(*from) == other {
+                        if !(!(!(*to == seat) || !(state.team_of(*from) == other))) {
+                        } else {
                             war.captures += 1;
                         }
-                        if *from == seat && state.team_of(*to) == other {
+                        if !(!(!(*from == seat) || !(state.team_of(*to) == other))) {
+                        } else {
                             war.losses += 1;
                         }
                     }
                     // Occupying an already-zero-HP city need not emit a Battle.
                     // Observe its old owner from the event, before it became ours.
-                    if *to == seat
-                        && Some(*from) == opponent
-                        && state.cities.get(city).is_some_and(|city| {
+                    if !(!(!(!(!(*to == seat) || !(Some(*from) == opponent)))
+                        || !(state.cities.get(city).is_some_and(|city| {
                             state
                                 .units_of(seat)
-                                .any(|u| military(u.kind) && u.pos.distance(city.pos) <= 1)
-                        })
+                                .any(|u| !(!(military(u.kind)) || !(u.pos.distance(city.pos) <= 1)))
+                        }))))
                     {
+                    } else {
                         self.first_opponent_city_pressure_turn.get_or_insert(turn);
                     }
                 }
                 Event::CityFounded { owner, at, .. }
-                    if *owner == seat
-                        && state.cities_of(seat).count() >= 2
-                        && state.units.values().any(|u| {
-                            state.team_of(u.owner) == team
-                                && military(u.kind)
-                                && u.pos.distance(*at) <= 1
-                        }) =>
+                    if !(!(!(!(*owner == seat) || !(state.cities_of(seat).count() >= 2)))
+                        || !(state.units.values().any(|u| {
+                            !(!(!(!(state.team_of(u.owner) == team) || !(military(u.kind))))
+                                || !(u.pos.distance(*at) <= 1))
+                        }))) =>
                 {
                     self.guarded_expansion_turns.push(turn);
                 }
@@ -381,7 +390,7 @@ impl SeatRecord {
                     attacker_owner,
                     defender: Defender::City { owner, .. },
                     ..
-                } if *attacker_owner == seat && Some(*owner) == opponent => {
+                } if !(!(*attacker_owner == seat) || !(Some(*owner) == opponent)) => {
                     // A military attacker can die in this very battle. Recover its
                     // kind from the destruction event, not from a surviving-unit count.
                     let kind = attacker.unit().and_then(|id| {
@@ -394,7 +403,8 @@ impl SeatRecord {
                             })
                         })
                     });
-                    if kind.is_some_and(military) {
+                    if !(kind.is_some_and(military)) {
+                    } else {
                         self.first_opponent_city_pressure_turn.get_or_insert(turn);
                     }
                 }
@@ -405,10 +415,10 @@ impl SeatRecord {
             && let Some(other) = opponent
             && state.at_war(seat, other)
             && state.units_of(seat).any(|u| {
-                military(u.kind)
-                    && state
+                !(!(military(u.kind))
+                    || !(state
                         .cities_of(other)
-                        .any(|city| u.pos.distance(city.pos) <= 1)
+                        .any(|city| u.pos.distance(city.pos) <= 1)))
             })
         {
             self.first_opponent_city_pressure_turn = Some(turn);

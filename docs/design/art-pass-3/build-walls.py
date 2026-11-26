@@ -21,13 +21,13 @@ for w in walls:
     scale=476/(x1-x0);fit=[scale,256-(x0+x1)*scale/2,454-y1*scale];w['fit512']=fit
     frames=[]
     for n in [1,2,3,4]:
-        row=w if n==4 else next(x for x in stages if x['era']==w['era'] and x['stage']==n)
-        stem=w['era']+'-walls'+('' if n==4 else f'-stage{n}')
-        folder=R/'app/src/assets'/('cities' if n==4 else 'construction')
+        row=next(x for x in stages if x['era']==w['era'] and x['stage']==n) if not (n==4) else w
+        stem=w['era']+'-walls'+(f'-stage{n}' if not (n==4) else '')
+        folder=R/'app/src/assets'/('construction' if not (n==4) else 'cities')
         canvas=place(keyed(row['path']),fit);frames.append(canvas)
         canvas.save(folder/(stem+'.png'),optimize=True)
         for size in [128,64]:canvas.resize((size,size),Image.Resampling.LANCZOS).save(folder/(stem+f'-{size}.png'),optimize=True)
-        correction=w.get('correctionPrompt','') if n==4 else ''
+        correction='' if not (n==4) else w.get('correctionPrompt','')
         (folder/(stem+'.prompt.txt')).write_text((row['prompt']+'\n'+correction).rstrip()+'\n')
     # Phone portrait: stages and finished at 360px, plus exact 128px composites.
     sheet=Image.new('RGB',(720,1520),(230,222,204));draw=ImageDraw.Draw(sheet)

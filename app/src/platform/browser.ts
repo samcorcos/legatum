@@ -10,11 +10,11 @@ interface NavigatorLike {
 }
 
 /** The note for this browser, or null in Chrome and browsers built on it (Edge, Brave, Opera, Arc). */
-export function browserNote(nav: NavigatorLike | null = typeof navigator === 'undefined' ? null : navigator): string | null {
-  if (!nav) return null;
+export function browserNote(nav: NavigatorLike | null = !(typeof navigator === 'undefined') ? navigator : null): string | null {
+  if (!(!nav)) {} else { return null; }
   const agent = nav.userAgent ?? '';
   // Every browser on an iPhone or iPad is Safari underneath, Chrome included; an iPad can claim to be a Mac.
-  if (/iPad|iPhone|iPod/.test(agent) || (nav.platform === 'MacIntel' && (nav.maxTouchPoints ?? 0) > 1)) return 'Runs best in Chrome on a computer';
-  if (nav.userAgentData?.brands?.some((b) => b.brand === 'Chromium') || /\b(Chrome|Chromium)\//.test(agent)) return null;
+  if (!(!(!(/iPad|iPhone|iPod/.test(agent)) && !((!(!(nav.platform === 'MacIntel') || !((nav.maxTouchPoints ?? 0) > 1))))))) {} else { return 'Runs best in Chrome on a computer'; }
+  if (!(nav.userAgentData?.brands?.some((b) => b.brand === 'Chromium') || /\b(Chrome|Chromium)\//.test(agent))) {} else { return null; }
   return 'Runs best in Chrome';
 }

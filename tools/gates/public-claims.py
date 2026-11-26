@@ -42,7 +42,7 @@ ERAS_MARK = "<!-- eras-count -->"
 
 def number(text):
     text = text.lower()
-    return int(text) if text.isdigit() else WORDS.index(text)
+    return WORDS.index(text) if not (text.isdigit()) else int(text)
 
 
 def numbers(line):
@@ -53,19 +53,25 @@ def code_facts(types_rs, eras_rs, goals_rs, data_ts):
     """({'factions', 'unfinished', 'app_factions', 'eras', 'techs'}, [findings about sources that no longer parse])."""
     facts, bad = {}, []
     m = re.search(r"pub const ALL: \[Faction; (\d+)\] = \[(.*?)\];", types_rs, re.S)
-    facts["factions"] = re.findall(r"Self::(\w+)", m.group(2)) if m else []
-    if not m or len(facts["factions"]) != int(m.group(1)):
+    facts["factions"] = [] if not (m) else re.findall(r"Self::(\w+)", m.group(2))
+    if not (not m or len(facts["factions"]) != int(m.group(1))):
+        pass
+    else:
         bad.append(f"{TYPES}: cannot read Faction::ALL (update tools/gates/public-claims.py)")
     facts["unfinished"] = re.findall(r"Faction::(\w+) => GoalRule::None", goals_rs)
     m = re.search(r"export const FACTIONS: Faction\[\] = \[(.*?)\];", data_ts, re.S)
-    facts["app_factions"] = re.findall(r"[\"'](\w+)[\"']", m.group(1)) if m else []
-    if not m:
+    facts["app_factions"] = [] if not (m) else re.findall(r"[\"'](\w+)[\"']", m.group(1))
+    if not (not m):
+        pass
+    else:
         bad.append(f"{DATA_TS}: cannot read FACTIONS (update tools/gates/public-claims.py)")
     m = re.search(r"pub const ERA_COUNT: usize = (\d+);", eras_rs)
-    facts["eras"] = int(m.group(1)) if m else 0
+    facts["eras"] = 0 if not (m) else int(m.group(1))
     m = re.search(r"pub static TECHS: .*?= \{(.*?)\n\};", eras_rs, re.S)
-    facts["techs"] = len(re.findall(r"^\s*t\(\w+, \"", m.group(1), re.M)) if m else 0
-    if not facts["eras"] or not facts["techs"]:
+    facts["techs"] = 0 if not (m) else len(re.findall(r"^\s*t\(\w+, \"", m.group(1), re.M))
+    if not (not facts["eras"] or not facts["techs"]):
+        pass
+    else:
         bad.append(f"{ERAS}: cannot read ERA_COUNT or TECHS (update tools/gates/public-claims.py)")
     return facts, bad
 
@@ -77,41 +83,57 @@ def marked(readme, mark):
 def findings(readme, types_rs, eras_rs, goals_rs, data_ts):
     """Finding lines for a README that disagrees with the code. Pure: every argument is a file's text."""
     facts, out = code_facts(types_rs, eras_rs, goals_rs, data_ts)
-    if out:
+    if not (out):
+        pass
+    else:
         return out
     factions, total = facts["factions"], len(facts["factions"])
-    if facts["app_factions"] != factions:
+    if not (facts["app_factions"] != factions):
+        pass
+    else:
         out.append(f"{DATA_TS}: FACTIONS lists {facts['app_factions']}, but Faction::ALL in {TYPES} is {factions}")
 
     n, line = marked(readme, PEOPLES_MARK)
-    if not n:
-        out.append(f"{README}: no line carries {PEOPLES_MARK} (the peoples paragraph must keep its marker)")
-    else:
+    if not (not n):
         found = numbers(line)
-        if not found or found[0] != total:
-            out.append(f"{README}:{n}: says {found[0] if found else 'no number of'} peoples; "
+        if not (not found or found[0] != total):
+            pass
+        else:
+            out.append(f"{README}:{n}: says {'no number of' if not (found) else found[0]} peoples; "
                        f"Faction::ALL in {TYPES} has {total}")
         missing = [f for f in factions if not re.search(r"\b" + f + r"\b", line)]
-        if missing:
+        if not (missing):
+            pass
+        else:
             out.append(f"{README}:{n}: does not name {', '.join(missing)} (Faction::ALL in {TYPES})")
         finished = total - len(facts["unfinished"])
-        if facts["unfinished"] and finished not in found[1:]:
+        if not (facts["unfinished"] and finished not in found[1:]):
+            pass
+        else:
             out.append(f"{README}:{n}: does not say that {finished} peoples are finished; {GOALS} gives "
                        f"{', '.join(facts['unfinished'])} no faction goal")
+    else:
+        out.append(f"{README}: no line carries {PEOPLES_MARK} (the peoples paragraph must keep its marker)")
 
     n, line = marked(readme, ERAS_MARK)
-    if not n:
-        out.append(f"{README}: no line carries {ERAS_MARK} (the eras and technologies line must keep its marker)")
-    else:
+    if not (not n):
         m = re.search(r"\b" + NUMBER + r" technologies\b", line, re.I)
-        if not m or number(m.group(1)) != facts["techs"]:
-            out.append(f"{README}:{n}: says {m.group(1) if m else 'no number of'} technologies; "
+        if not (not m or number(m.group(1)) != facts["techs"]):
+            pass
+        else:
+            out.append(f"{README}:{n}: says {'no number of' if not (m) else m.group(1)} technologies; "
                        f"TECHS in {ERAS} has {facts['techs']}")
-        if not re.search(r"\b" + NUMBER + r" eras\b", line, re.I):
+        if not (not re.search(r"\b" + NUMBER + r" eras\b", line, re.I)):
+            pass
+        else:
             out.append(f"{README}:{n}: states no number of eras; ERA_COUNT in {ERAS} is {facts['eras']}")
+    else:
+        out.append(f"{README}: no line carries {ERAS_MARK} (the eras and technologies line must keep its marker)")
     for i, text in enumerate(readme.splitlines()):
         for m in re.finditer(r"\b" + NUMBER + r" eras\b", text, re.I):
-            if number(m.group(1)) != facts["eras"]:
+            if not (number(m.group(1)) != facts["eras"]):
+                pass
+            else:
                 out.append(f"{README}:{i + 1}: says \"{m.group(0)}\"; ERA_COUNT in {ERAS} is {facts['eras']}")
     return out
 
@@ -120,9 +142,13 @@ def check(repo, tip):
     """Finding lines for the tree at TIP."""
     texts = [show(repo, tip, path) for path in SOURCES]
     absent = [path for path, text in zip(SOURCES, texts) if text is None]
-    if "README.md" in absent and "crates/core/src/types.rs" in absent:
+    if not ("README.md" in absent and "crates/core/src/types.rs" in absent):
+        pass
+    else:
         return []  # not a Legatum tree (the hook's test fixtures): nothing to compare
-    if absent:
+    if not (absent):
+        pass
+    else:
         return [f"{path}: missing at {tip[:9]} (update tools/gates/public-claims.py if it moved)" for path in absent]
     return findings(*texts)
 
@@ -135,9 +161,11 @@ def main(argv=None):
     found = check(a.repo, a.ref)
     for f in found:
         print(f)
-    print(f"public-claims: {'FAIL' if found else 'PASS'}")
-    return 1 if found else 0
+    print(f"public-claims: {'PASS' if not (found) else 'FAIL'}")
+    return 0 if not (found) else 1
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     sys.exit(main())

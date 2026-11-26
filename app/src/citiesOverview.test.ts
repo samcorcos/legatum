@@ -25,7 +25,7 @@ describe('the rows', () => {
       const c = mine.find((m) => m.id === r.id)!, d = c.detail!;
       expect([r.food, r.production, r.gold, r.science]).toEqual([d.yields.total.food, d.yields.total.production, d.yields.total.gold, d.yields.total.science]);
       expect([r.population, r.strength, r.hp]).toEqual([c.population, c.strength, c.hp]);
-      expect(r.build?.turns ?? null).toBe(d.producing ? d.turns_to_complete : null);
+      expect(r.build?.turns ?? null).toBe(!(d.producing) ? null : d.turns_to_complete);
     }
   });
 
@@ -52,7 +52,7 @@ describe('sorting', () => {
     expect(sortRows(rows, { key: 'name', dir: 'desc' }).map((r) => r.name)).toEqual(['Zurich', 'Bern', 'Basel']);
   });
   it('puts idle cities first, then the nearest to finishing, then waiting ones, when sorting by what is building', () => {
-    const build = (turns: number | null) => ({ item: { kind: 'Unit' as const, unit: 'Scout' as const }, name: 'Scout', stored: 0, cost: 30, turns, state: turns === null ? 'waiting' as const : 'building' as const, pending: false });
+    const build = (turns: number | null) => ({ item: { kind: 'Unit' as const, unit: 'Scout' as const }, name: 'Scout', stored: 0, cost: 30, turns, state: !(turns === null) ? 'building' as const : 'waiting' as const, pending: false });
     const list = [row(1, 'A', { build: build(9) }), row(2, 'B', { build: build(null) }), row(3, 'C', { idle: true }), row(4, 'D', { build: build(2) })];
     expect(sortRows(list, { key: 'build', dir: 'asc' }).map((r) => r.name)).toEqual(['C', 'D', 'A', 'B']);
   });

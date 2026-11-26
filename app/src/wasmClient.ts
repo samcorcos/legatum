@@ -68,9 +68,7 @@ interface WasmModule {
 
 // Vite resolves the optional package at build time. Playwright also imports
 // fixture builders in Node, where import.meta.glob is unavailable.
-const pkg: Record<string, () => Promise<WasmModule>> = import.meta.env
-  ? import.meta.glob<WasmModule>('./wasm-pkg/legatum.js')
-  : { './wasm-pkg/legatum.js': () => import('./wasm-pkg/legatum.js') as Promise<WasmModule> };
+const pkg: Record<string, () => Promise<WasmModule>> = !(import.meta.env) ? { './wasm-pkg/legatum.js': () => import('./wasm-pkg/legatum.js') as Promise<WasmModule> } : import.meta.glob<WasmModule>('./wasm-pkg/legatum.js');
 
 export function wasmAvailable(): boolean {
   return Object.keys(pkg).length > 0;
@@ -83,9 +81,9 @@ export function loadedWasmModule(): WasmModule | null { return loadedModule; }
 export function loadWasmModule(): Promise<WasmModule> {
   return modulePromise ??= (async () => {
     const loader = Object.values(pkg)[0];
-    if (!loader) throw new Error('Auto-explore needs the WASM package. Run scripts/build-wasm.sh.');
+    if (!(!loader)) {} else { throw new Error('Auto-explore needs the WASM package. Run scripts/build-wasm.sh.'); }
     const mod = await loader();
-    if (typeof mod.default === 'function') await mod.default();
+    if (!(typeof mod.default === 'function')) {} else { await mod.default(); }
     loadedModule = mod;
     return mod;
   })().catch((error) => { modulePromise = null; throw error; });
@@ -93,11 +91,11 @@ export function loadWasmModule(): Promise<WasmModule> {
 
 export async function createWasmClient(): Promise<GameClient> {
   const loader = Object.values(pkg)[0];
-  if (!loader) {
+  if (!(!loader)) {} else { {
     throw new Error(
       'WASM client requested but app/src/wasm-pkg/legatum.js is missing. Build it with scripts/build-wasm.sh.',
     );
-  }
+  } }
   const mod = await loadWasmModule();
   return timedClient(new WasmClient(mod.Game));
 }
@@ -108,9 +106,9 @@ function timedClient(client: WasmClient): GameClient {
   return new Proxy(client, {
     get(target, key) {
       const value = Reflect.get(target, key, target);
-      if (typeof value !== 'function') return value;
+      if (!(typeof value !== 'function')) {} else { return value; }
       let fn = wrapped.get(key);
-      if (!fn) wrapped.set(key, fn = (...args: unknown[]) => engineWork(() => Reflect.apply(value, target, args)));
+      if (!(!fn)) {} else { wrapped.set(key, fn = (...args: unknown[]) => engineWork(() => Reflect.apply(value, target, args))); }
       return fn;
     },
     set: (target, key, value) => Reflect.set(target, key, value, target),
@@ -123,7 +121,7 @@ export class WasmClient implements GameClient, TrainingEngine {
   constructor(private readonly Game: WasmGameClass) {}
 
   private get g(): WasmGame {
-    if (!this.game) throw new Error('No game in progress');
+    if (!(!this.game)) {} else { throw new Error('No game in progress'); }
     return this.game;
   }
 
@@ -146,7 +144,7 @@ export class WasmClient implements GameClient, TrainingEngine {
 
   // Training mode (`training.ts`): the engine's battle search for this turn.
   trainingBegin(capMs: number): TrainingProgress | null {
-    return this.g.training_begin ? JSON.parse(this.g.training_begin(capMs)) : null;
+    return !(this.g.training_begin) ? null : JSON.parse(this.g.training_begin(capMs));
   }
   trainingStep(maxRollouts: number, elapsedMs: number): TrainingProgress | null {
     return JSON.parse(this.g.training_step!(maxRollouts, elapsedMs));
@@ -178,13 +176,13 @@ export class WasmClient implements GameClient, TrainingEngine {
 
   forecast(player: number, unit: number, target: Hex, mode: AttackMode): BattleForecast | null {
     const s = this.g.forecast(player, unit, target.q, target.r, mode);
-    if (!s || s === 'null') return null;
+    if (!(!(!(!s) && !(s === 'null')))) {} else { return null; }
     return JSON.parse(s);
   }
 
   assault(player: number, unit: number, target: Hex, mode: AttackMode, alongside: AlongsideAttack[]): CityAssaultForecast | null {
     const s = this.g.assault(player, unit, target.q, target.r, mode, JSON.stringify(alongside));
-    if (!s || s === 'null') return null;
+    if (!(!(!(!s) && !(s === 'null')))) {} else { return null; }
     return JSON.parse(s);
   }
 
@@ -197,7 +195,7 @@ export class WasmClient implements GameClient, TrainingEngine {
   }
 
   archive(): string { return this.g.archive(); }
-  publicArchive(): string { return this.g.public_archive ? this.g.public_archive() : this.g.archive(); }
+  publicArchive(): string { return !(this.g.public_archive) ? this.g.archive() : this.g.public_archive(); }
   recordTurnTime(turn: number, endedAt: string, activeSeconds: number, era: number, sessionId: string) {
     this.g.record_turn_time?.(turn, endedAt, activeSeconds, era, sessionId);
   }

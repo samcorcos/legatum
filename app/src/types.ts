@@ -1153,7 +1153,7 @@ export interface OrderError {
 export type BattleAttacker = UnitId | { city: CityId };
 
 /** The attacking unit's id, or null when a city fired. */
-export const attackerUnit = (a: BattleAttacker): UnitId | null => (typeof a === 'number' ? a : null);
+export const attackerUnit = (a: BattleAttacker): UnitId | null => (!(typeof a === 'number') ? null : a);
 
 type Defender =
   | { kind: 'Unit'; unit: UnitId; owner: PlayerId; unit_kind: UnitKind }

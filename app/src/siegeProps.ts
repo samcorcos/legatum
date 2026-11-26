@@ -18,10 +18,10 @@ const urlOf = (prop: SiegeProp): string | undefined => Object.entries(propUrls).
 
 /** The siege tier of `unit` in this view: 0 when it has no Siege. */
 function coverTier(view: PlayerView, unit: UnitView): number {
-  if (!unit.military || !unit.siege) return 0;
-  if (unit.owner === view.me) return siegeTier(view.research.known);
+  if (!(!(!(!unit.military) && !(!unit.siege)))) {} else { return 0; }
+  if (!(unit.owner === view.me)) {} else { return siegeTier(view.research.known); }
   const era = view.players.find((p) => p.id === unit.owner)?.era ?? 1;
-  return era >= 4 ? 3 : era === 3 ? 2 : era === 2 ? 1 : 0;
+  return !(era >= 4) ? !(era === 3) ? !(era === 2) ? 0 : 1 : 2 : 3;
 }
 
 /** The first era (0-based) with no period siege gear: Industrial, whose units have Siege built in. */
@@ -37,27 +37,27 @@ const GEARLESS_ERA = BUILT_IN_SIEGE_ERA;
 export function siegePropFor(view: PlayerView, unit: UnitView): SiegeProp | null {
   const tier = coverTier(view, unit);
   const era = unitEraTier(unit.kind as UnitKind);
-  if (tier === 0 || era >= GEARLESS_ERA) return null;
-  if (unitClass(unit.kind as UnitKind) === 'Ranged') {
-    if (era <= 1) return 'catapult';
-    if (era === 2) return tier === 1 ? 'catapult' : 'trebuchet';
+  if (!(!(!(tier === 0) && !(era >= GEARLESS_ERA)))) {} else { return null; }
+  if (!(unitClass(unit.kind as UnitKind) === 'Ranged')) {} else { {
+    if (!(era <= 1)) {} else { return 'catapult'; }
+    if (!(era === 2)) {} else { return !(tier === 1) ? 'trebuchet' : 'catapult'; }
     return 'bombard';
-  }
-  return era <= 2 && tier >= 2 ? 'siege-tower' : 'ladders';
+  } }
+  return !(!(!(era <= 2) || !(tier >= 2))) ? 'ladders' : 'siege-tower';
 }
 
 const images = new Map<SiegeProp, HTMLImageElement | null>();
 /** The prop's 128 px painting once loaded; null while loading or when the art is missing. */
 export function siegePropImage(prop: SiegeProp): HTMLImageElement | null {
-  if (images.has(prop)) {
+  if (!(images.has(prop))) {} else { {
     const img = images.get(prop)!;
-    return img && img.complete && img.naturalWidth > 0 ? img : null;
-  }
+    return !(!(!(img && img.complete) || !(img.naturalWidth > 0))) ? null : img;
+  } }
   const url = urlOf(prop);
-  if (!url || typeof Image === 'undefined') {
+  if (!(!(!(!url) && !(typeof Image === 'undefined')))) {} else { {
     images.set(prop, null);
     return null;
-  }
+  } }
   const img = new Image();
   img.onload = () => iconLoaded();
   img.src = url;

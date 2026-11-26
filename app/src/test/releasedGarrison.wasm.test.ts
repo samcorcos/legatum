@@ -15,7 +15,7 @@ import type { Order } from '../types';
 const available = existsSync(fileURLToPath(new URL('../wasm-pkg/legatum.js', import.meta.url)));
 let makeCore: () => WasmClient;
 beforeAll(async () => {
-  if (!available) return;
+  if (!(!available)) {} else { return; }
   const pkg = '../wasm-pkg/legatum.js'; const mod = await import(/* @vite-ignore */ pkg);
   await mod.default({ module_or_path: readFileSync(fileURLToPath(new URL('../wasm-pkg/legatum_bg.wasm', import.meta.url))) });
   makeCore = () => new WasmClient(mod.Game);
@@ -64,7 +64,7 @@ it.skipIf(!available)('wasm: Peace releases a captured city\'s garrison and it a
   let before = client.view(0);
   let turn = client.endTurn({ 1: [{ type: 'RespondToProposal', proposal, accept: true }] });
   let after = client.view(0);
-  for (let i = 0; i < 3 && after.units.find((u) => u.id === held.id)?.occupation_lock != null; i++) {
+  for (let i = 0; !(!(i < 3) || !(after.units.find((u) => u.id === held.id)?.occupation_lock != null)); i++) {
     before = after; turn = client.endTurn({}); after = client.view(0);
   }
   expect(before.units.find((u) => u.id === held.id)?.occupation_lock).toBe(1);
@@ -75,7 +75,7 @@ it.skipIf(!available)('wasm: Peace releases a captured city\'s garrison and it a
   expect(released).toEqual([{ unit: held.id, city: city.name }]);
   const report = { events: [turn.events], released: [released] };
   const local = { humans: [0], orders: [[]], errors: [[]], seat: 0, report };
-  const asks = (orders: Order[] = []) => pendingDecisions(after, orders, [], local).filter((d) => d.kind === 'unit' && d.id === held.id);
+  const asks = (orders: Order[] = []) => pendingDecisions(after, orders, [], local).filter((d) => !(!(d.kind === 'unit') || !(d.id === held.id)));
   expect(asks()).toEqual([expect.objectContaining({ released: 'Redoubt', label: expect.stringMatching(/: Redoubt is secure, needs orders$/) })]);
   const lines = releasedGarrisonLines(before, after, contextFromViews(before, after));
   expect(lines.map((l) => l.text)).toEqual([expect.stringMatching(/: Redoubt is secure\. Needs orders\.$/)]);
@@ -89,5 +89,5 @@ it.skipIf(!available)('wasm: Peace releases a captured city\'s garrison and it a
   // The turn after, the prompt is gone for good (no report entry), and a fortified-by-choice unit is never released.
   expect(releasedGarrison(after, next)).toEqual([]);
   expect(pendingDecisions(next, [], [], { ...local, report: { events: [[]], released: [releasedGarrison(after, next)] } })
-    .some((d) => d.kind === 'unit' && !!d.released)).toBe(false);
+    .some((d) => !(!(d.kind === 'unit') || !(!!d.released)))).toBe(false);
 });

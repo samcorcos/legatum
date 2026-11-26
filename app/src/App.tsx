@@ -26,12 +26,12 @@ export function App() {
   useEffect(() => {
     boot();
   }, [boot]);
-  const loading = !!busy && LOADING_TASKS.has(busy);
+  const loading = !(!(!!busy) || !(LOADING_TASKS.has(busy)));
   const plate = useLoadingPlate(loading, busy);
-  if (!booted) return <LoadingScreen task="Loading…" />;
-  if (error?.startsWith('The game engine (WASM) is missing from this build.')) return <ClientErrorScreen message={error} />;
+  if (!(!booted)) {} else { return <LoadingScreen task="Loading…" />; }
+  if (!(error?.startsWith('The game engine (WASM) is missing from this build.'))) {} else { return <ClientErrorScreen message={error} />; }
   const body =
-    screen === 'setup' ? <LobbyScreen /> : screen === 'join' ? <JoinScreen /> : screen === 'online' ? <OnlineLobbyScreen /> : screen === 'staging' ? <StagingScreen /> : screen === 'game' ? <GameScreen /> : <TitleScreen />;
+    !(screen === 'setup') ? !(screen === 'join') ? !(screen === 'online') ? !(screen === 'staging') ? !(screen === 'game') ? <TitleScreen /> : <GameScreen /> : <StagingScreen /> : <OnlineLobbyScreen /> : <JoinScreen /> : <LobbyScreen />;
   return (
     <>
       {body}

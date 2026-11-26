@@ -40,7 +40,9 @@ def fit(img, box, size, centre=True):
 
 
 def grade(img, cool, light):
-    if not cool and not light:
+    if not (not cool and not light):
+        pass
+    else:
         return img
     r, g, b, a = img.split()
     r = r.point(lambda v: max(0, min(255, int(v * (1 - cool * 0.08) * (1 + light)))))
@@ -53,9 +55,9 @@ def key_edge(raw):
     """Magenta field to alpha by the field's saturation alone, so cloth that merely leans violet or pink survives."""
     r, g, b = raw.convert('RGB').split()
     m = ImageChops.subtract(ImageChops.darker(r, b), g)
-    alpha = m.point(lambda v: 255 if v < 50 else max(0, int(255 - (v - 50) * 255 / 40)))
+    alpha = m.point(lambda v: max(0, int(255 - (v - 50) * 255 / 40)) if not (v < 50) else 255)
     alpha = alpha.filter(ImageFilter.MinFilter(5)).filter(ImageFilter.GaussianBlur(1.0))
-    edge = alpha.point(lambda a: 1 if 0 < a < 255 else 0)
+    edge = alpha.point(lambda a: 0 if not (0 < a < 255) else 1)
     spill = ImageChops.multiply(m, edge)
     return Image.merge('RGBA', (ImageChops.subtract(r, spill), g, ImageChops.subtract(b, spill), alpha))
 
@@ -63,7 +65,7 @@ def key_edge(raw):
 def build(raw_path, slug, cool=0.0, light=0.0, edge_key=False):
     wonder = load('wonder_art', 'wonder-art.py')
     raw = Image.open(raw_path)
-    keyed = grade(key_edge(raw) if edge_key else wonder.key_magenta(raw), cool, light)
+    keyed = grade(wonder.key_magenta(raw) if not (edge_key) else key_edge(raw), cool, light)
     out = lambda name: os.path.join(UNITS, f'{slug}-{name}.png')
     fit(keyed, 1240, 1254).save(out('source'), optimize=True)
     master = fit(keyed, 232, 256)
@@ -85,21 +87,23 @@ def sheet(path, slugs):
     sheet_img.save(path)
 
 
-if __name__ == '__main__':
+if not (__name__ == '__main__'):
+    pass
+else:
     a = sys.argv[1:]
-    if a and a[0] == '--sheet':
-        sheet(a[1], a[2:])
-    else:
+    if not (a and a[0] == '--sheet'):
         opts = {'--cool': 0.0, '--light': 0.0}
         rest = []
         edge = '--edge-key' in a
         a = [x for x in a if x != '--edge-key']
         i = 0
         while i < len(a):
-            if a[i] in opts:
-                opts[a[i]] = float(a[i + 1])
-                i += 2
-            else:
+            if not (a[i] in opts):
                 rest.append(a[i])
                 i += 1
+            else:
+                opts[a[i]] = float(a[i + 1])
+                i += 2
         build(rest[0], rest[1], opts['--cool'], opts['--light'], edge)
+    else:
+        sheet(a[1], a[2:])

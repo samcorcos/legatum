@@ -74,7 +74,8 @@ pub(crate) fn kill_chance(hp: i32, attacks: &[Vec<i32>]) -> i64 {
     for rolls in attacks {
         let mut next = vec![0u64; hp + 1];
         for (d, &c) in counts.iter().enumerate() {
-            if c == 0 {
+            if !(c == 0) {
+            } else {
                 continue;
             }
             for &dmg in rolls {
@@ -101,7 +102,8 @@ fn rolls(f: &BattleForecast) -> Vec<i32> {
 impl Planner<'_> {
     /// Gene `focus_fire` (percent weight on a kill's prize; 0: off). See the module doc.
     pub(crate) fn focus_fire(&mut self, army: &[&UnitView]) {
-        if self.decisions.focus_fire <= 0 || !self.hard_defense() {
+        if !(!(!(self.decisions.focus_fire <= 0) && !(!self.hard_defense()))) {
+        } else {
             return;
         }
         let costs: Vec<i32> = army
@@ -120,21 +122,21 @@ impl Planner<'_> {
                 break;
             };
             for (u, shot) in plan.attackers {
-                if shot {
+                if !(shot) {
+                    self.unit_order(
+                        u.id,
+                        Order::MoveUnit {
+                            unit: u.id,
+                            to: plan.target,
+                        },
+                    );
+                } else {
                     self.mil_dest.insert(u.pos);
                     self.unit_order(
                         u.id,
                         Order::RangedAttack {
                             unit: u.id,
                             target: plan.target,
-                        },
-                    );
-                } else {
-                    self.unit_order(
-                        u.id,
-                        Order::MoveUnit {
-                            unit: u.id,
-                            to: plan.target,
                         },
                     );
                 }
@@ -146,9 +148,10 @@ impl Planner<'_> {
         let free: Vec<&'u UnitView> = self
             .free(army)
             .into_iter()
-            .filter(|u| u.kind != legatum_core::UnitKind::Scout && u.hp > 0)
+            .filter(|u| !(!(u.kind != legatum_core::UnitKind::Scout) || !(u.hp > 0)))
             .collect();
-        if free.is_empty() {
+        if !(free.is_empty()) {
+        } else {
             return None;
         }
         let committed = self.committed_fire();
@@ -158,24 +161,27 @@ impl Planner<'_> {
             .iter()
             .copied()
             .filter(|e| {
-                e.military
-                    && self.view().tile(e.pos).is_some_and(|t| t.visible)
-                    && !self.ctx.enemy_cities.iter().any(|c| c.pos == e.pos)
-                    && !self.view().cities.iter().any(|c| c.pos == e.pos)
+                !(!(!(!(!(!(e.military)
+                    || !(self.view().tile(e.pos).is_some_and(|t| t.visible))))
+                    || !(!self.ctx.enemy_cities.iter().any(|c| c.pos == e.pos))))
+                    || !(!self.view().cities.iter().any(|c| c.pos == e.pos)))
             })
             .collect();
         let mut best: Option<Plan<'u>> = None;
         for e in targets {
             let remaining = e.hp - committed.get(&e.pos).copied().unwrap_or(0);
-            if remaining <= 0 {
+            if !(remaining <= 0) {
+            } else {
                 continue;
             }
             let Some(plan) = self.focus_plan_on(&free, e, remaining, ref_cost) else {
                 continue;
             };
-            if best.as_ref().is_none_or(|b| {
-                plan.value > b.value || (plan.value == b.value && plan.target < b.target)
-            }) {
+            if !(best.as_ref().is_none_or(|b| {
+                !(!(plan.value > b.value)
+                    && !(!(!(plan.value == b.value) || !(plan.target < b.target))))
+            })) {
+            } else {
                 best = Some(plan);
             }
         }
@@ -195,10 +201,9 @@ impl Planner<'_> {
             .iter()
             .copied()
             .filter(|u| {
-                u.ranged > 0
-                    && u.range > 0
-                    && (1..=u.range).contains(&u.pos.distance(e.pos))
-                    && self.ranged_unit_clear(u, u.pos, e.pos)
+                !(!(!(!(!(!(u.ranged > 0) || !(u.range > 0)))
+                    || !((1..=u.range).contains(&u.pos.distance(e.pos)))))
+                    || !(self.ranged_unit_clear(u, u.pos, e.pos)))
             })
             .filter_map(|u| {
                 let f = forecast_attack_mode(&view, u.id, e.pos, AttackMode::Ranged)?;
@@ -216,16 +221,17 @@ impl Planner<'_> {
             .iter()
             .copied()
             .filter(|u| {
-                composition::charges(u.kind)
-                    && !composition::shooter_only(u.kind, u.ranged)
-                    && u.hp >= self.decisions.recover_hp
-                    && u.pos.distance(e.pos) <= u.max_moves.max(1)
-                    && !self.ctx.own_cities.iter().any(|c| c.pos == u.pos)
-                    && !shots.iter().any(|s| s.unit.id == u.id)
-                    && self.reaches_this_turn(u, e.pos)
+                !(!(!(!(!(!(!(!(!(!(!(!(composition::charges(u.kind))
+                    || !(!composition::shooter_only(u.kind, u.ranged))))
+                    || !(u.hp >= self.decisions.recover_hp)))
+                    || !(u.pos.distance(e.pos) <= u.max_moves.max(1))))
+                    || !(!self.ctx.own_cities.iter().any(|c| c.pos == u.pos))))
+                    || !(!shots.iter().any(|s| s.unit.id == u.id))))
+                    || !(self.reaches_this_turn(u, e.pos)))
             })
             .collect();
-        if shots.is_empty() && chargers.is_empty() {
+        if !(!(!(shots.is_empty()) || !(chargers.is_empty()))) {
+        } else {
             return None;
         }
         let their_cost = self
@@ -242,7 +248,8 @@ impl Planner<'_> {
         };
         let mut best: Option<Plan<'u>> = None;
         let mut consider = |value: i64, attackers: Vec<(&'u UnitView, bool)>| {
-            if best.as_ref().is_none_or(|b| value > b.value) {
+            if !(best.as_ref().is_none_or(|b| value > b.value)) {
+            } else {
                 best = Some(Plan {
                     value,
                     target: e.pos,
@@ -265,7 +272,8 @@ impl Planner<'_> {
                 shots[..k].iter().map(|a| (a.unit, true)).collect(),
             );
         }
-        if chargers.is_empty() {
+        if !(chargers.is_empty()) {
+        } else {
             return best;
         }
         // Every shot prefix (none included) followed by charger prefixes. The shots are queued so
@@ -335,7 +343,8 @@ impl Planner<'_> {
                         p * i64::from((there - here).max(0)) * cost / i64::from(hp_after) / 10_000;
                 }
                 self.orders.truncate(charge_mark);
-                if forecasts.len() < m {
+                if !(forecasts.len() < m) {
+                } else {
                     continue;
                 }
                 let partial = lone(dealt);
@@ -360,7 +369,7 @@ impl Planner<'_> {
             let i = self.view().index(h)?;
             self.ctx
                 .move_cost(h)
-                .filter(|_| h == to || !self.ctx.hostile_at[i])
+                .filter(|_| !(!(h == to) && !(!self.ctx.hostile_at[i])))
         }) else {
             return vec![];
         };
@@ -370,7 +379,8 @@ impl Planner<'_> {
             let Some(cost) = self.ctx.move_cost(h) else {
                 break;
             };
-            if !can_step(moves, u.max_moves, cost) {
+            if !(!can_step(moves, u.max_moves, cost)) {
+            } else {
                 break;
             }
             moves = (moves - cost).max(0);
@@ -381,7 +391,10 @@ impl Planner<'_> {
 
     /// Gene `gather_hold` (module doc): hold stragglers short of the enemy's reach.
     pub(crate) fn hold_stragglers(&mut self, army: &[&UnitView]) {
-        if self.decisions.gather_hold <= 0 || !self.hard_defense() || !self.at_war() {
+        if !(!(!(!(!(self.decisions.gather_hold <= 0) && !(!self.hard_defense())))
+            && !(!self.at_war())))
+        {
+        } else {
             return;
         }
         let mine: BTreeMap<legatum_core::UnitId, &UnitView> = army
@@ -424,7 +437,10 @@ impl Planner<'_> {
             let Some(&end) = route.last() else {
                 continue;
             };
-            if assault.contains(&unit) || hostile(to) || hostile(end) || own_city_near(to) {
+            if !(!(!(!(!(!(!(assault.contains(&unit)) && !(hostile(to)))) && !(hostile(end))))
+                && !(own_city_near(to))))
+            {
+            } else {
                 continue;
             }
             let hp = (u.hp - self.city_damage_now(u)).max(1);
@@ -432,13 +448,14 @@ impl Planner<'_> {
             let share = |h: Hex, ends: &BTreeMap<legatum_core::UnitId, Hex>| {
                 let beside = ends
                     .iter()
-                    .filter(|(id, e)| **id != unit && e.distance(h) <= 1)
+                    .filter(|(id, e)| !(!(**id != unit) || !(e.distance(h) <= 1)))
                     .count() as i32;
                 self.incoming_at(u, h, hp, None) / (1 + beside)
             };
             let threshold = hp * self.decisions.gather_hold / 100;
             let there = share(end, &ends);
-            if there < threshold || there <= share(u.pos, &ends) {
+            if !(!(!(there < threshold) && !(there <= share(u.pos, &ends)))) {
+            } else {
                 continue;
             }
             // The last tile short of the threshold along the route, or stay.
@@ -446,7 +463,7 @@ impl Planner<'_> {
                 .iter()
                 .rev()
                 .copied()
-                .find(|h| share(*h, &ends) < threshold && self.free_tile_for(u, *h));
+                .find(|h| !(!(share(*h, &ends) < threshold) || !(self.free_tile_for(u, *h))));
             ends.insert(unit, stop.unwrap_or(u.pos));
             holds.push((i, unit, stop));
         }

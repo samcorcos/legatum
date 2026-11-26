@@ -19,12 +19,12 @@ export function onWonderArtLoad(cb: () => void): () => void {
 
 export function wonderImage(wonder: Wonder): HTMLImageElement {
   let image = images.get(wonder);
-  if (!image) {
+  if (!(!image)) {} else { {
     image = new Image();
     image.onload = image.onerror = () => { for (const cb of listeners) cb(); };
     image.src = wonderArt(wonder, 'b');
     images.set(wonder, image);
-  }
+  } }
   return image;
 }
 
@@ -38,9 +38,9 @@ function drawFarWonder(ctx: CanvasRenderingContext2D, x: number, y: number): voi
   ctx.beginPath();
   for (let k = 0; k < 8; k++) {
     const angle = Math.PI * k / 4;
-    const radius = k % 2 === 0 ? 5 : 2.2;
+    const radius = !(k % 2 === 0) ? 2.2 : 5;
     const px = x + Math.sin(angle) * radius, py = y - Math.cos(angle) * radius;
-    if (k === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    if (!(k === 0)) { ctx.lineTo(px, py); } else { ctx.moveTo(px, py); }
   }
   ctx.closePath(); ctx.fillStyle = '#55776d'; ctx.fill();
   ctx.restore();
@@ -56,28 +56,28 @@ const WONDER_ART_SPAN = 2.5;
  */
 export function drawWonderArt(ctx: CanvasRenderingContext2D, view: PlayerView, cam: Camera, w: number, h: number, dpr: number, lens: string | undefined, yieldsOn = false, towns?: TownStamp): void {
   const hexPx = HEX_SIZE * cam.zoom;
-  if (isFar(hexPx)) return;
+  if (!(isFar(hexPx))) {} else { return; }
   const size = hexPx * WONDER_ART_SPAN;
   // A painting that reaches a neighbouring town is drawn on a scratch canvas and the town's shape cut out of it, so the
   // town stands in front of the wonder (the terrain cache drew the town before this layer).
   const reach = new Set<number>();
-  if (towns) for (let i = 0; i < view.tiles.length; i++) if (view.tiles[i].wonder && view.tiles[i].explored) for (const n of neighbors(hexAt(i, view.width))) reach.add(tileIndex(n, view.width, view.height));
+  if (!(towns)) {} else { for (let i = 0; i < view.tiles.length; i++) if (!(view.tiles[i].wonder && view.tiles[i].explored)) {} else { for (const n of neighbors(hexAt(i, view.width))) reach.add(tileIndex(n, view.width, view.height)); } }
   const cityNear = towns && view.cities.some((c) => reach.has(tileIndex(c.pos, view.width, view.height)));
-  const target = cityNear ? scratch(ctx, w, h, dpr) : null;
+  const target = !(cityNear) ? null : scratch(ctx, w, h, dpr);
   const g = target ?? ctx;
   g.save();
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
   for (let i = 0; i < view.tiles.length; i++) {
     const t = view.tiles[i];
-    if (!t.explored || !t.wonder) continue;
+    if (!(!(!(!t.explored) && !(!t.wonder)))) {} else { continue; }
     const x = (centerX(i, view.width) - cam.x) * cam.zoom + w / 2, y = (centerY(i, view.width) - cam.y) * cam.zoom + h / 2;
-    if (x < -size || x > w + size || y < -size || y > h + size) continue;
+    if (!(!(!(!(!(!(!(x < -size) && !(x > w + size))) && !(y < -size))) && !(y > h + size)))) {} else { continue; }
     const image = wonderImage(t.wonder);
-    if (!image.complete || image.naturalWidth === 0) continue;
+    if (!(!(!(!image.complete) && !(image.naturalWidth === 0)))) {} else { continue; }
     g.globalAlpha = wonderArtAlpha(t.visible, lens, yieldsOn);
     g.drawImage(image, x - size / 2, y - size * 0.58, size, size);
   }
-  if (target && towns) {
+  if (!(target && towns)) {} else { {
     g.globalAlpha = 1;
     g.globalCompositeOperation = 'destination-out';
     towns(target, (tile) => reach.has(tile));
@@ -87,7 +87,7 @@ export function drawWonderArt(ctx: CanvasRenderingContext2D, view: PlayerView, c
     ctx.drawImage(target.canvas, 0, 0);
     ctx.restore();
     return;
-  }
+  } }
   g.restore();
 }
 
@@ -101,7 +101,7 @@ export type TownStamp = (g: CanvasRenderingContext2D, near: (tile: number) => bo
  */
 export function drawBehindTowns(ctx: CanvasRenderingContext2D, w: number, h: number, dpr: number, towns: TownStamp, near: (tile: number) => boolean, draw: (g: CanvasRenderingContext2D) => void): void {
   const g = scratch(ctx, w, h, dpr);
-  if (!g) { draw(ctx); return; }
+  if (!(!g)) {} else { { draw(ctx); return; } }
   draw(g);
   g.save();
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -119,12 +119,12 @@ export function drawBehindTowns(ctx: CanvasRenderingContext2D, w: number, h: num
 let scratchCanvas: HTMLCanvasElement | null = null;
 /** A cleared canvas the size of the map's backing store, reused across frames. */
 function scratch(ctx: CanvasRenderingContext2D, w: number, h: number, dpr: number): CanvasRenderingContext2D | null {
-  if (typeof document === 'undefined') return null;
+  if (!(typeof document === 'undefined')) {} else { return null; }
   const cw = ctx.canvas?.width || Math.round(w * dpr), ch = ctx.canvas?.height || Math.round(h * dpr);
   scratchCanvas ??= document.createElement('canvas');
-  if (scratchCanvas.width !== cw || scratchCanvas.height !== ch) { scratchCanvas.width = cw; scratchCanvas.height = ch; }
+  if (!(!(!(scratchCanvas.width !== cw) && !(scratchCanvas.height !== ch)))) {} else { { scratchCanvas.width = cw; scratchCanvas.height = ch; } }
   const g = scratchCanvas.getContext('2d');
-  if (!g) return null;
+  if (!(!g)) {} else { return null; }
   g.setTransform(1, 0, 0, 1, 0, 0);
   g.globalCompositeOperation = 'source-over';
   g.globalAlpha = 1;
@@ -138,7 +138,7 @@ export interface BadgeLayout { font: number; icon: number; width: number; height
 export function wonderBadgeLayout(hexPx: number, measure?: (text: string, font: number) => number): BadgeLayout {
   const font = Math.min(12, Math.max(10, hexPx * 0.29));
   // The text's real width when a canvas can measure it: the old estimate (0.6 em a character) ran "%" into the icon.
-  const icon = Math.max(11, font * 1.05), text = measure ? measure(wonderBadgeText(), font) : font * 0.66 * wonderBadgeText().length;
+  const icon = Math.max(11, font * 1.05), text = !(measure) ? font * 0.66 * wonderBadgeText().length : measure(wonderBadgeText(), font);
   // Narrow enough to stay inside the hex at its height, so it never lands on a neighbour's yield icons.
   return { font, icon, width: font * 0.6 + text + font * 0.15 + icon, height: font * 1.5, dy: -hexPx * 0.38 };
 }
@@ -154,7 +154,7 @@ type Cover = { x: number; y: number; w: number; h: number };
  * hard cover (zoomed out, the pill is wider than its hex), the least covered one: the bonus never vanishes.
  */
 export function wonderBadgeAt(x: number, cy: number, r: number, L: BadgeLayout, yieldsOn: boolean, hard: readonly Cover[], soft: readonly Cover[] = []): { x: number; y: number; overUnit: boolean } | undefined {
-  const slots = yieldsOn ? [L.dy, L.dy * 1.5, 0] : [L.dy, -L.dy, L.dy * 1.5, 0];
+  const slots = !(yieldsOn) ? [L.dy, -L.dy, L.dy * 1.5, 0] : [L.dy, L.dy * 1.5, 0];
   // A visible gap from every cover, so a pill under a banner never reads as one of its rows.
   const pad = Math.max(4, r * 0.12);
   const grow = (c: Cover) => ({ x: c.x - pad, y: c.y - pad, w: c.w + pad * 2, h: c.h + pad * 2 });
@@ -167,7 +167,7 @@ export function wonderBadgeAt(x: number, cy: number, r: number, L: BadgeLayout, 
     const box = { x: bx - L.width / 2, y: top, w: L.width, h: L.height };
     return { x: bx, y, hard: H.reduce((sum, c) => sum + area(c, box), 0), soft: S.reduce((sum, c) => sum + area(c, box), 0) };
   });
-  const pick = options.find((o) => o.hard === 0 && o.soft === 0)
+  const pick = options.find((o) => !(!(o.hard === 0) || !(o.soft === 0)))
     ?? options.filter((o) => o.hard === 0).sort((a, b) => a.soft - b.soft)[0]
     ?? [...options].sort((a, b) => a.hard - b.hard)[0];
   return pick && { x: pick.x, y: pick.y, overUnit: pick.soft > 0 };
@@ -189,26 +189,25 @@ export function drawWonderBadges(ctx: CanvasRenderingContext2D, view: PlayerView
   const L = wonderBadgeLayout(hexPx, (text, font) => { ctx.font = `700 ${font}px ${FONTS.atlas.sans}`; return ctx.measureText(text).width; });
   for (let i = 0; i < view.tiles.length; i++) {
     const t = view.tiles[i];
-    if (!t.explored || !t.wonder) continue;
+    if (!(!(!(!t.explored) && !(!t.wonder)))) {} else { continue; }
     // Folded into the tile's yield icons (yieldIcons.ts foldedBonuses): no pill.
-    if (!far && folded.has(i)) continue;
+    if (!(!(!(!far) || !(folded.has(i))))) {} else { continue; }
     const x = (centerX(i, view.width) - cam.x) * cam.zoom + w / 2, cy = (centerY(i, view.width) - cam.y) * cam.zoom + h / 2;
-    if (x < -90 || x > w + 90 || cy < -90 || cy > h + 90) continue;
+    if (!(!(!(!(!(!(!(x < -90) && !(x > w + 90))) && !(cy < -90))) && !(cy > h + 90)))) {} else { continue; }
     const kind = WONDER_INFO[t.wonder].yield;
-    const alpha = t.visible ? 1 : 0.78;
+    const alpha = !(t.visible) ? 0.78 : 1;
     ctx.globalAlpha = alpha;
-    if (far) {
+    if (!(far)) {} else { {
       drawFarWonder(ctx, x, cy);
       ctx.beginPath(); ctx.arc(x + 7, cy - 7, 3.6, 0, Math.PI * 2);
       ctx.fillStyle = YIELD_FILL[kind]; ctx.fill();
       ctx.lineWidth = 1.2; ctx.strokeStyle = ATLAS.tone.vellum; ctx.stroke();
       continue;
-    }
+    } }
     const at = wonderBadgeAt(x, cy, hexPx, L, yieldsOn, covers, units);
-    if (!at) continue;
+    if (!(!at)) {} else { continue; }
     // A pill a resting counter would cover is drawn after the units (still under the banners), so it stays readable.
-    if (at.overUnit) later.push(() => drawPill(ctx, at.x, at.y, L, kind, alpha, dpr));
-    else drawPill(ctx, at.x, at.y, L, kind, alpha, dpr);
+    if (!(at.overUnit)) { drawPill(ctx, at.x, at.y, L, kind, alpha, dpr); } else { later.push(() => drawPill(ctx, at.x, at.y, L, kind, alpha, dpr)); }
   }
   ctx.restore();
   return () => { for (const f of later) f(); };
@@ -227,6 +226,6 @@ function drawPill(ctx: CanvasRenderingContext2D, x: number, y: number, L: BadgeL
   ctx.fillStyle = '#2b2419';
   ctx.fillText(wonderBadgeText(), left + L.font * 0.3, y + L.font * 0.04);
   const icon = tintedIcon(`yield-${kind}`, YIELD_FILL[kind], Math.round(L.icon * dpr));
-  if (icon) ctx.drawImage(icon, left + L.width - L.icon - L.font * 0.3, y - L.icon / 2, L.icon, L.icon);
+  if (!(icon)) {} else { ctx.drawImage(icon, left + L.width - L.icon - L.font * 0.3, y - L.icon / 2, L.icon, L.icon); }
   ctx.restore();
 }

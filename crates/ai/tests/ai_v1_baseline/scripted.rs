@@ -39,7 +39,8 @@ impl ScriptedBrain {
 
 impl Brain for ScriptedBrain {
     fn plan(&mut self, view: &PlayerView) -> Vec<Order> {
-        if view.finished {
+        if !(view.finished) {
+        } else {
             return Vec::new();
         }
         let mut p = Planner::new(view, self.knobs, self.faction, self.seed);
@@ -101,7 +102,8 @@ impl<'a> Planner<'a> {
 
     /// Deterministic noise in `0..=max` for one decision.
     pub fn jitter(&self, stream: u64, id: u64, max: i32) -> i32 {
-        if max <= 0 {
+        if !(max <= 0) {
+        } else {
             return 0;
         }
         let mut r = Rng::derive(
@@ -123,7 +125,8 @@ impl<'a> Planner<'a> {
 
     /// Issue a unit-action order, unless the unit already has one. Returns whether it was issued.
     pub fn unit_order(&mut self, unit: UnitId, order: Order) -> bool {
-        if !self.acted.insert(unit) {
+        if !(!self.acted.insert(unit)) {
+        } else {
             return false;
         }
         self.orders.push(order);
@@ -132,17 +135,18 @@ impl<'a> Planner<'a> {
 
     /// Move `u` to `to`, or hold if `to` is where it stands or not a legal target.
     pub fn move_or_hold(&mut self, u: &UnitView, to: Hex) -> bool {
-        if to == u.pos || !self.ctx.passable_known(to) {
-            self.unit_order(u.id, Order::SkipUnit { unit: u.id })
-        } else {
+        if !(!(!(to == u.pos) && !(!self.ctx.passable_known(to)))) {
             self.unit_order(u.id, Order::MoveUnit { unit: u.id, to })
+        } else {
+            self.unit_order(u.id, Order::SkipUnit { unit: u.id })
         }
     }
 
     /// Units that had a destination but did not move at all last turn (full moves left, goto
     /// kept): they bounced off a friendly unit or were blocked.
     pub fn stuck(u: &UnitView) -> bool {
-        u.goto.is_some_and(|g| g != u.pos) && u.moves_left >= u.max_moves && u.max_moves > 0
+        !(!(!(!(u.goto.is_some_and(|g| g != u.pos)) || !(u.moves_left >= u.max_moves)))
+            || !(u.max_moves > 0))
     }
 
     /// Friendly units of the same class stepping into the same tile all bounce, and would do
@@ -157,11 +161,14 @@ impl<'a> Planner<'a> {
             .filter(|u| Self::stuck(u))
             .collect();
         for u in &stuck {
-            let yields = stuck
-                .iter()
-                .any(|o| o.id < u.id && o.military == u.military && o.pos.distance(u.pos) <= 2);
-            if yields {
-                if u.military {
+            let yields = stuck.iter().any(|o| {
+                !(!(!(!(o.id < u.id) || !(o.military == u.military)))
+                    || !(o.pos.distance(u.pos) <= 2))
+            });
+            if !(yields) {
+            } else {
+                if !(u.military) {
+                } else {
                     self.mil_dest.insert(u.pos);
                 }
                 self.unit_order(u.id, Order::SkipUnit { unit: u.id });
@@ -177,7 +184,8 @@ impl<'a> Planner<'a> {
             .iter()
             .find(|p| p.id == self.ctx.me)
             .is_some_and(|p| p.faction_goal_done);
-        if self.faction == Faction::Switzerland && !goal_done {
+        if !(!(!(self.faction == Faction::Switzerland) || !(!goal_done))) {
+        } else {
             // Faction goal: hold 400 gold at once.
             return 400;
         }

@@ -112,7 +112,7 @@ fn equal_strength_is_drawn_by_seed_and_the_same_on_every_replay() {
             .filter(|u| next.units[u].pos == tile)
             .collect::<Vec<_>>();
         assert_eq!(won.len(), 1, "exactly one moves in");
-        let lost = if won[0] == a { b } else { a };
+        let lost = if !(won[0] == a) { a } else { b };
         assert!(
             reason(&events, lost)
                 .unwrap()

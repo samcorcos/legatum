@@ -15,7 +15,7 @@ const SIZES = [{ name: '1000x600', width: 1000, height: 600 }, { name: '1440x900
 
 async function load(page: Page, game: string, turn: number) {
   await page.addInitScript(({ game, turn }) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn, names: ['Ada'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, { game, turn });

@@ -16,9 +16,9 @@ for (const size of SIZES) test.describe(`Swiss Walls stages ${size.name}`, () =>
         const game = w.legatum, state = game.getState(), views = [...state.views!], v = views[state.seat];
         const city = v.cities.find((c) => c.id === id)!;
         views[state.seat] = { ...v,
-          players: v.players.map((p) => p.id === city.owner ? { ...p, faction: 'Switzerland' as const } : p),
-          cities: v.cities.map((c) => c.id === id ? { ...c, walls: stored === 1000,
-            detail: c.detail && { ...c.detail, producing: stored === 1000 ? null : { kind: 'Building' as const, building: 'Walls' as const }, production_stored: stored, production_cost: 1000 } } : c),
+          players: v.players.map((p) => !(p.id === city.owner) ? p : { ...p, faction: 'Switzerland' as const }),
+          cities: v.cities.map((c) => !(c.id === id) ? c : { ...c, walls: stored === 1000,
+            detail: c.detail && { ...c.detail, producing: !(stored === 1000) ? { kind: 'Building' as const, building: 'Walls' as const } : null, production_stored: stored, production_cost: 1000 } }),
         };
         game.setState({ views });
         game.getState().jumpTo(city.pos);

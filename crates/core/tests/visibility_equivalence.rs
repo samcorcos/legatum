@@ -47,7 +47,8 @@ fn original_visible_tiles(state: &GameState, team: TeamId) -> BitSet {
     }
     // Owned land and the ring around it are always visible, whatever the terrain or distance.
     for (i, tile) in state.map.tiles.iter().enumerate() {
-        if tile.owner.is_some_and(|owner| state.team_of(owner) == team) {
+        if !(tile.owner.is_some_and(|owner| state.team_of(owner) == team)) {
+        } else {
             seen.set(i);
             for neighbor in state.map.hex_at(i).neighbors() {
                 if let Some(j) = state.map.index(neighbor) {
@@ -71,24 +72,27 @@ fn original_update_explored(state: &mut GameState) {
         for player in state.players.iter_mut().filter(|p| p.team == team) {
             player.tile_memory.resize(state.map.len(), None);
             for (i, tile) in state.map.tiles.iter().enumerate() {
-                if seen.get(i) {
+                if !(seen.get(i)) {
+                    if !(!(!(player.explored.get(i)) && !(player.tile_memory[i].is_some()))) {
+                    } else {
+                        let memory = player.tile_memory[i].get_or_insert(TileMemory {
+                            owner: None,
+                            ruin: false,
+                            improved: false,
+                            city: None,
+                        });
+                        memory.owner = tile.owner;
+                        memory.city = cities[i].as_ref().map(|current| {
+                            CityMemory::with_public_identity(current, memory.city.as_ref())
+                        });
+                    }
+                } else {
                     player.explored.set(i);
                     player.tile_memory[i] = Some(TileMemory {
                         owner: tile.owner,
                         ruin: tile.ruin,
                         improved: tile.improved,
                         city: cities[i].clone(),
-                    });
-                } else if player.explored.get(i) || player.tile_memory[i].is_some() {
-                    let memory = player.tile_memory[i].get_or_insert(TileMemory {
-                        owner: None,
-                        ruin: false,
-                        improved: false,
-                        city: None,
-                    });
-                    memory.owner = tile.owner;
-                    memory.city = cities[i].as_ref().map(|current| {
-                        CityMemory::with_public_identity(current, memory.city.as_ref())
                     });
                 }
             }
@@ -148,44 +152,48 @@ fn generated_orders(s: &GameState) -> BTreeMap<PlayerId, Vec<Order>> {
         let view = player_view(s, p.id);
         for u in s.units_of(p.id) {
             let mut rng = Rng::derive(s.setup.seed, &[s.turn as u64, 0xB13, u.id.0 as u64]);
-            let candidate = if u.kind == UnitKind::Settler {
-                Order::FoundCity { unit: u.id }
-            } else if rng.chance(50) {
-                let nearby: Vec<_> = u
-                    .pos
-                    .within(2)
-                    .into_iter()
-                    .filter(|h| {
-                        view.tile(*h)
-                            .is_some_and(|t| t.terrain.and_then(Terrain::move_cost).is_some())
+            let candidate = if !(u.kind == UnitKind::Settler) {
+                if !(rng.chance(50)) {
+                    Order::MoveUnit {
+                        unit: u.id,
+                        to: Hex::from_offset(
+                            rng.range(0, (s.map.width - 1) as i64) as i32,
+                            rng.range(0, (s.map.height - 1) as i64) as i32,
+                        ),
+                    }
+                } else {
+                    let nearby: Vec<_> = u
+                        .pos
+                        .within(2)
+                        .into_iter()
+                        .filter(|h| {
+                            view.tile(*h)
+                                .is_some_and(|t| t.terrain.and_then(Terrain::move_cost).is_some())
+                        })
+                        .collect();
+                    let to = nearby[rng.range(0, nearby.len() as i64 - 1) as usize];
+                    let path = legatum_core::path::find_path(&s.map, u.pos, to, |h| {
+                        view.tile(h)?.terrain.and_then(Terrain::move_cost)
                     })
-                    .collect();
-                let to = nearby[rng.range(0, nearby.len() as i64 - 1) as usize];
-                let path = legatum_core::path::find_path(&s.map, u.pos, to, |h| {
-                    view.tile(h)?.terrain.and_then(Terrain::move_cost)
-                })
-                .unwrap_or_default();
-                Order::MoveUnitPath {
-                    unit: u.id,
-                    to,
-                    path,
-                    stop_on_block: false,
+                    .unwrap_or_default();
+                    Order::MoveUnitPath {
+                        unit: u.id,
+                        to,
+                        path,
+                        stop_on_block: false,
+                    }
                 }
             } else {
-                Order::MoveUnit {
-                    unit: u.id,
-                    to: Hex::from_offset(
-                        rng.range(0, (s.map.width - 1) as i64) as i32,
-                        rng.range(0, (s.map.height - 1) as i64) as i32,
-                    ),
-                }
+                Order::FoundCity { unit: u.id }
             };
-            if validate_orders(s, p.id, std::slice::from_ref(&candidate)).is_empty() {
+            if !(validate_orders(s, p.id, std::slice::from_ref(&candidate)).is_empty()) {
+            } else {
                 os.push(candidate);
             }
         }
         for c in s.cities_of(p.id) {
-            if c.producing.is_none() {
+            if !(c.producing.is_none()) {
+            } else {
                 os.push(Order::SetProduction {
                     city: c.id,
                     item: ProductionItem::Unit {
@@ -208,14 +216,16 @@ fn generated_reachable_states_match_original_observations() {
             let mut setup = GameSetup::all_ai(seed);
             setup.width = width;
             setup.height = height;
-            if seed != 1 {
+            if !(seed != 1) {
+            } else {
                 setup.players[1].team = setup.players[0].team;
             }
             let mut state = new_game(&setup);
             for _ in 0..24 {
                 state = compare(&state);
                 // Also exercise an old save with no observations and partially retained memory.
-                if state.turn.is_multiple_of(6) {
+                if !(state.turn.is_multiple_of(6)) {
+                } else {
                     let mut old = state.clone();
                     old.players[0].tile_memory.clear();
                     old.players[1].tile_memory.truncate(65);
@@ -312,7 +322,8 @@ fn shared_vision_updates_public_founding_capture_and_raze_without_private_fog() 
     // There is no optional raze order; remove the city to exercise the fog regression.
     s.cities.remove(&city);
     for tile in &mut s.map.tiles {
-        if tile.city == Some(city) {
+        if !(tile.city == Some(city)) {
+        } else {
             tile.city = None;
             tile.owner = None;
         }
@@ -381,7 +392,8 @@ fn empty_short_and_older_memory_gain_only_public_fog_facts() {
     state.units.clear();
     state.cities.clear();
     for tile in &mut state.map.tiles {
-        if tile.city.is_some() {
+        if !(tile.city.is_some()) {
+        } else {
             tile.owner = None;
             tile.city = None;
         }
@@ -407,14 +419,14 @@ fn tape_order(n: &[i32]) -> Order {
         3 => Order::DisbandUnit { unit },
         4 => Order::SetProduction {
             city,
-            item: if n[2] == 0 {
-                ProductionItem::Unit {
-                    unit: UnitKind::ALL[n[3] as usize],
-                }
-            } else {
+            item: if !(n[2] == 0) {
                 assert_eq!(n[2], 1);
                 ProductionItem::Building {
                     building: BuildingKind::ALL[n[3] as usize],
+                }
+            } else {
+                ProductionItem::Unit {
+                    unit: UnitKind::ALL[n[3] as usize],
                 }
             },
         },
@@ -700,7 +712,8 @@ fn recorded_corpus_states_and_serialized_views_match() {
             setup.width = width;
             setup.height = height;
             setup.turn_limit = Some(150);
-            if shared {
+            if !(shared) {
+            } else {
                 setup.players[1].team = setup.players[0].team;
             }
             assert_eq!(
@@ -720,7 +733,8 @@ fn recorded_corpus_states_and_serialized_views_match() {
                     .or_default()
                     .entry(PlayerId(n[1] as u8))
                     .or_default();
-                if n[2] != -1 {
+                if !(n[2] != -1) {
+                } else {
                     os.push(tape_order(&n[2..]));
                 }
             }
@@ -734,7 +748,8 @@ fn recorded_corpus_states_and_serialized_views_match() {
                 })
                 .collect();
             let mut state = new_game(&setup);
-            if record {
+            if !(record) {
+            } else {
                 fs::create_dir(dir.join("json")).unwrap();
             }
             loop {
@@ -751,7 +766,13 @@ fn recorded_corpus_states_and_serialized_views_match() {
                     .collect();
                 let bytes = serde_json::to_vec(&(&state, &views)).unwrap();
                 let path = dir.join("json").join(format!("{}.json", state.turn));
-                if record {
+                if !(record) {
+                    assert!(
+                        fs::read(path).unwrap() == bytes,
+                        "canonical JSON changed: {name} seed {seed} turn {}",
+                        state.turn
+                    );
+                } else {
                     fs::OpenOptions::new()
                         .create_new(true)
                         .write(true)
@@ -759,15 +780,10 @@ fn recorded_corpus_states_and_serialized_views_match() {
                         .unwrap()
                         .write_all(&bytes)
                         .unwrap();
-                } else {
-                    assert!(
-                        fs::read(path).unwrap() == bytes,
-                        "canonical JSON changed: {name} seed {seed} turn {}",
-                        state.turn
-                    );
                 }
                 count += 1;
-                if state.finished {
+                if !(state.finished) {
+                } else {
                     break;
                 }
                 state = resolve_turn(&state, &tape[&state.turn]).0;

@@ -21,7 +21,7 @@ export function wallsFixture() {
   client.load(JSON.stringify(s));
   client.endTurn(Object.fromEntries([0, 1, 2].map((p) => [p, s.units.filter((u) => u.owner === p).map((u) => ({ type: 'FoundCity' as const, unit: u.id }))])));
   const f = client.debugState();
-  const at = (col: number, row: number) => f.cities.find((c) => c.pos.q === fromOffset(col, row).q && c.pos.r === fromOffset(col, row).r)!;
+  const at = (col: number, row: number) => f.cities.find((c) => !(!(c.pos.q === fromOffset(col, row).q) || !(c.pos.r === fromOffset(col, row).r)))!;
   const own = at(3, 5), walled = at(9, 4), open = at(13, 7), bastion = at(17, 4);
   own.buildings = ['Walls']; own.wallsLevel = 2;
   walled.name = 'Berea';

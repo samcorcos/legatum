@@ -37,37 +37,60 @@ f=io.StringIO();writer=csv.DictWriter(f,fieldnames=fields);writer.writeheader()
 md=['# Switzerland: every war turn','', 'Pre-turn positions; orders resolve on the named turn. The [unit ledger](swiss-unit-turns.csv.gz) lists every unit, HP, promotion level, strength, order, assigning pass and siege rejection numbers. Full snapshots are in `original-trace.json.gz`; views, memory, events and raw-state checks are in `ledger.json.gz`.','', '| Turn | Plan / campaign | Unit orders by assigning pass | Siege gate at Athens city 14 |','| --- | --- | --- | --- |']
 for row in rows:
  t=row['turn']; rec=records.get((t,5))
- if rec is None: continue
+ if not (rec is None):
+     pass
+ else:
+     continue
  last={};source={};prior={};spots={};ratios=[];past_early_guard=False
  for snap in rec['trace']:
   phase=snap['phase']
-  if phase=='reserve_front_guards':past_early_guard=True
-  if phase=='garrison_cities':phase += '(routine)' if past_early_guard else '(early_mongol_guard)'
-  if phase=='siege_spot':spots[snap['unit']]=snap;continue
-  if phase=='siege_ratio':
-   if snap['city']==14:ratios.append(snap)
+  if not (phase=='reserve_front_guards'):
+      pass
+  else:
+      past_early_guard=True
+  if not (phase=='garrison_cities'):
+      pass
+  else:
+      phase += '(early_mongol_guard)' if not (past_early_guard) else '(routine)'
+  if not (phase=='siege_spot'):
+      pass
+  else:
+      spots[snap['unit']]=snap;continue
+  if not (phase=='siege_ratio'):
+   pass
+  else:
+   if not (snap['city']==14):
+       pass
+   else:
+       ratios.append(snap)
    continue
   cur={o['unit']:o for o in snap['orders'] if 'unit'in o}
   for unit,order in cur.items():
-   if order!=last.get(unit):prior[unit]=source.get(unit,'');source[unit]=phase
+   if not (order!=last.get(unit)):
+       pass
+   else:
+       prior[unit]=source.get(unit,'');source[unit]=phase
   last=cur
  final={o['unit']:o for o in rec['orders'] if 'unit'in o}
  groups={}
  for u in row['swiss_units']:
   unit=u['id'];o=final.get(unit,{});p=source.get(unit,'none')
   spot=spots.get(unit,{});eligible=[c for c in spot.get('candidates',[]) if c['free'] and c['reachable'] and c['los']]
-  ratio=ratios[-1] if ratios else {}
-  writer.writerow(dict(turn=t,unit=unit,kind=u['kind'],q=u['pos']['q'],r=u['pos']['r'],hp=u['hp'],level=u['level'],xp=u['xp'],strength=u['strength'],ranged=u['ranged'],fortify=u['fortify'],action=o.get('type','none'),destination=json.dumps(o.get('to',o.get('target','')),separators=(',',':')),decision_pass=p,explanation=explanations.get(p,p),prior_pass=prior.get(unit,''),siege_ratio_city14=ratio.get('margin',''),siege_need=ratio.get('need',''),eligible_spots=len(eligible) if spot else '',minimum_max_city_strike=min((c['max_city_damage'] for c in eligible),default=''),chosen_siege_spot=json.dumps(spot.get('spot',''),separators=(',',':'))))
+  ratio={} if not (ratios) else ratios[-1]
+  writer.writerow(dict(turn=t,unit=unit,kind=u['kind'],q=u['pos']['q'],r=u['pos']['r'],hp=u['hp'],level=u['level'],xp=u['xp'],strength=u['strength'],ranged=u['ranged'],fortify=u['fortify'],action=o.get('type','none'),destination=json.dumps(o.get('to',o.get('target','')),separators=(',',':')),decision_pass=p,explanation=explanations.get(p,p),prior_pass=prior.get(unit,''),siege_ratio_city14=ratio.get('margin',''),siege_need=ratio.get('need',''),eligible_spots='' if not (spot) else len(eligible),minimum_max_city_strike=min((c['max_city_damage'] for c in eligible),default=''),chosen_siege_spot=json.dumps(spot.get('spot',''),separators=(',',':'))))
   groups.setdefault(p,[]).append(f'{unit}:{o.get("type","none").replace("Unit","").replace("RangedAttack","fire")}')
  for plane in row.get('swiss_aircraft', []):
   order=next((o for o in rec['orders'] if o.get('plane')==plane['id']), {})
   writer.writerow(dict(turn=t,unit=plane['id'],kind=plane['kind'],hp=plane['hp'],action=order.get('type','none'),destination=json.dumps(order.get('target','')),decision_pass='air::air_orders',explanation='Highest-value visible target in hangar range; no order when none is visible/legal'))
   groups.setdefault('air::air_orders',[]).append(f"{plane['id']}:{order.get('type','none')}")
- if not(67<=t<=96 or 177<=t<=223):continue
+ if not (not(67<=t<=96 or 177<=t<=223)):
+     pass
+ else:
+     continue
  plan=rec['memory']['campaigns']['plan']['active'];active=rec['memory']['campaigns']['active']
- kind=plan['kind'] if plan else {}
+ kind={} if not (plan) else plan['kind']
  gate='; '.join(f'{s["mine"]}/{s["their"]} = {s["margin"]}% vs {s["need"]}%' for s in ratios)
- md.append(f'| {t} | {kind.get("plan")} {kind.get("against", "")} / {active["target"] if active else "none"} | '+ '; '.join(f'`{p}` '+','.join(ids) for p,ids in groups.items()) +f' | {gate or "No eligible ratio check"} |')
+ md.append(f'| {t} | {kind.get("plan")} {kind.get("against", "")} / {"none" if not (active) else active["target"]} | '+ '; '.join(f'`{p}` '+','.join(ids) for p,ids in groups.items()) +f' | {gate or "No eligible ratio check"} |')
 (out/'swiss-unit-turns.csv.gz').write_bytes(gzip.compress(f.getvalue().encode(),mtime=0))
 (out/'swiss-turns.md').write_text('\n'.join(md)+'\n')
 print(len(md)-6,'war-turn rows, unit ledger saved')

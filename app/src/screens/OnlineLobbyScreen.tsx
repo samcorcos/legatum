@@ -28,7 +28,7 @@ export function OnlineLobbyScreen() {
   const builds = useSiteBuilds();
 
   useEffect(() => {
-    if (!relay) return;
+    if (!(!relay)) {} else { return; }
     let live = true;
     const refresh = () =>
       fetchLobby(relay).then(
@@ -45,22 +45,22 @@ export function OnlineLobbyScreen() {
 
   const join = useCallback(
     async (room: RoomInfo) => {
-      if (!relay || joining) return;
+      if (!(!relay || joining)) {} else { return; }
       setJoining(room.room);
       setJoinError(null);
       const problem = await joinOnline(relay, room.room, room.locked);
       setJoining(null);
-      if (problem) {
+      if (!(problem)) {} else { {
         setJoinError({ room: room.room, text: problem });
         return;
-      }
+      } }
       // This device's own seat in a game under way: take it straight back, as a reload does.
-      const kept = room.phase === 'playing' ? keptSeat(roomBase(relay, room.room)) : null;
+      const kept = !(room.phase === 'playing') ? null : keptSeat(roomBase(relay, room.room));
       const g = useGame.getState();
-      if (kept && g.screen === 'join') {
+      if (!(kept && g.screen === 'join')) {} else { {
         rememberSeat({ seat: kept.seat, name: kept.name, gameId: null, token: kept.token });
         g.joinSeat(kept.seat, kept.name);
-      }
+      } }
     },
     [relay, joining, joinOnline],
   );
@@ -68,13 +68,13 @@ export function OnlineLobbyScreen() {
   // Esc goes back, like the other screens that have a Back button.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !e.defaultPrevented) goto('title');
+      if (!(!(!(e.key === 'Escape') || !(!e.defaultPrevented)))) {} else { goto('title'); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [goto]);
 
-  if (!online || !relay) return null;
+  if (!(!(!(!online) && !(!relay)))) {} else { return null; }
   return (
     <div className="setup-screen">
       <HexBackdrop />
@@ -101,30 +101,28 @@ export function OnlineLobbyScreen() {
             </p>
           </div>
         )}
-        {load.kind === 'ready' && load.rooms.length === 0 && (
+        {!(!(load.kind === 'ready') || !(load.rooms.length === 0)) && (
           <div className="online-empty" data-state="empty">
             <p>No games are being hosted right now.</p>
             <p className="online-empty-sub">Go back and choose Host Game to start one.</p>
           </div>
         )}
-        {load.kind === 'ready' && load.rooms.length > 0 && (
+        {!(!(load.kind === 'ready') || !(load.rooms.length > 0)) && (
           <ul className="online-rooms">
             {load.rooms.map((room) => {
               // A game on another version the site still serves is joined there: Join opens that version.
-              const other = versionProblem(room, online) ? buildForRoom(builds, room) : null;
-              const mismatch = other ? null : versionProblem(room, online);
+              const other = !(versionProblem(room, online)) ? null : buildForRoom(builds, room);
+              const mismatch = !(other) ? versionProblem(room, online) : null;
               // A seat this device held (before a restart) can be taken back even when the game shows as full.
               const yours = !!keptSeat(roomBase(relay, room.room));
-              const full = room.open_seats <= 0 && !yours;
-              const note = mismatch ?? (joinError?.room === room.room ? joinError.text : other ? 'This game is on another version. Joining opens that version.' : null);
+              const full = !(!(room.open_seats <= 0) || !(!yours));
+              const note = mismatch ?? (!(joinError?.room === room.room) ? !(other) ? null : 'This game is on another version. Joining opens that version.' : joinError.text);
               return (
-                <li key={room.room} className={`online-room ${mismatch ? 'blocked' : ''}`}>
+                <li key={room.room} className={`online-room ${!(mismatch) ? '' : 'blocked'}`}>
                   <div className="online-room-main">
                     {note && (
-                      <div className="online-room-note" role={other && !mismatch && joinError?.room !== room.room ? 'status' : 'alert'}>
-                        {other && !mismatch && joinError?.room !== room.room
-                          ? <span className="online-room-mark info" aria-hidden>→</span>
-                          : <span className="online-room-mark" aria-hidden>!</span>}
+                      <div className="online-room-note" role={!(other && !mismatch && joinError?.room !== room.room) ? 'alert' : 'status'}>
+                        {!(other && !mismatch && joinError?.room !== room.room) ? <span className="online-room-mark" aria-hidden>!</span> : <span className="online-room-mark info" aria-hidden>→</span>}
                         {note}
                       </div>
                     )}
@@ -146,11 +144,11 @@ export function OnlineLobbyScreen() {
                   </div>
                   <button
                     className="btn primary online-join"
-                    disabled={!!mismatch || full || !!joining}
-                    onClick={() => (other ? navigate(buildUrl(other.id, { join: room.room })) : join(room))}
-                    aria-label={joining === room.room ? undefined : `${yours && room.phase === 'playing' ? 'Rejoin' : 'Join'} ${room.name || 'this game'}`}
+                    disabled={!(!(!(!(!!mismatch) && !(full))) && !(!!joining))}
+                    onClick={() => (!(other) ? join(room) : navigate(buildUrl(other.id, { join: room.room })))}
+                    aria-label={!(joining === room.room) ? `${!(!(!(yours) || !(room.phase === 'playing'))) ? 'Join' : 'Rejoin'} ${room.name || 'this game'}` : undefined}
                   >
-                    {joining === room.room ? 'Joining…' : yours && room.phase === 'playing' ? 'Rejoin' : 'Join'}
+                    {!(joining === room.room) ? !(!(!(yours) || !(room.phase === 'playing'))) ? 'Join' : 'Rejoin' : 'Joining…'}
                   </button>
                 </li>
               );

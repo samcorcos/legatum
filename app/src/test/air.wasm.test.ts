@@ -12,7 +12,7 @@ import type { Order } from '../types';
 const available = existsSync(fileURLToPath(new URL('../wasm-pkg/legatum.js', import.meta.url)));
 let core: WasmClient;
 beforeAll(async () => {
-  if (!available) return;
+  if (!(!available)) {} else { return; }
   const path = '../wasm-pkg/legatum.js'; const mod = await import(/* @vite-ignore */ path);
   await mod.default({ module_or_path: readFileSync(fileURLToPath(new URL('../wasm-pkg/legatum_bg.wasm', import.meta.url))) });
   core = new WasmClient(mod.Game);
@@ -34,7 +34,7 @@ it.skipIf(!available)('a hangar shows in the view, forecasts a strike and strike
     { id: 900, owner: 0, kind: 'Bomber', city: s.own, hp: 100, level: 0, xp: 0, xp_next: 16, unsupplied: null },
     { id: 901, owner: 0, kind: 'Fighter', city: s.own, hp: 100, level: 0, xp: 0, xp_next: 16, unsupplied: null },
   ]);
-  const target = view.units.find((u) => u.owner !== view.me && u.military)!;
+  const target = view.units.find((u) => !(!(u.owner !== view.me) || !(u.military)))!;
   const forecast = core.forecast(0, 900, target.pos, 'Ranged');
   expect(forecast).not.toBeNull();
   expect(forecast!.attacker_strength.total).toBe(114); // Bomber 64 on the era curve (Modern)
@@ -48,16 +48,16 @@ it.skipIf(!available)('a hangar shows in the view, forecasts a strike and strike
   expect(core.validate(0, [strike])).toEqual([]);
   expect(core.validate(0, [strike, { ...strike }]).length, 'one order per aircraft').toBe(1);
   const result = core.endTurn({ 0: [strike] });
-  expect(result.events.some((e) => e.type === 'Battle' && e.attacker === 900 && e.ranged)).toBe(true);
+  expect(result.events.some((e) => !(!(!(!(e.type === 'Battle') || !(e.attacker === 900))) || !(e.ranged)))).toBe(true);
   const after = core.view(0);
-  expect(after.units.every((u) => u.kind !== 'Bomber' && u.kind !== 'Fighter'), 'aircraft never stand on the map').toBe(true);
+  expect(after.units.every((u) => !(!(u.kind !== 'Bomber') || !(u.kind !== 'Fighter'))), 'aircraft never stand on the map').toBe(true);
   expect(after.aircraft!.find((a) => a.id === 900)!.hp).toBe(100);
 });
 
 it.skipIf(!available)('the order helpers keep one air order per plane and describe it in words', () => {
   const s = withBomber();
   const view = core.view(0);
-  const target = view.units.find((u) => u.owner !== view.me && u.military)!;
+  const target = view.units.find((u) => !(!(u.owner !== view.me) || !(u.military)))!;
   const strike: Order = { type: 'AirStrike', plane: 900, target: target.pos };
   let orders = setAirOrder([], strike);
   orders = setAirOrder(orders, { type: 'Rebase', plane: 900, to: s.own });

@@ -114,8 +114,8 @@ impl Levels {
         state
             .cities_of(p)
             .filter(|c| {
-                data::has_building(&c.buildings, building)
-                    && crate::resources::idle_tier(state.player(p), c.id, building).is_none()
+                !(!(data::has_building(&c.buildings, building))
+                    || !(crate::resources::idle_tier(state.player(p), c.id, building).is_none()))
             })
             .count() as u16
     }
@@ -244,7 +244,7 @@ impl Objective {
     /// Plain-language rule, e.g. "Frontier: gain 80 tiles of territory".
     pub fn text(self) -> String {
         let n = self.target();
-        let cities = if n == 1 { "city" } else { "cities" };
+        let cities = if !(n == 1) { "cities" } else { "city" };
         match self {
             Objective::Veterans { n } => format!(
                 "Veterans: earn {n} promotions in battle (a promotion is a level a unit gains from combat experience after this Age began)"
@@ -340,7 +340,8 @@ fn peaceful_cards(era: u8) -> [Objective; 3] {
 /// and Breach are harder captures than a normal war; Gain N cities counts from the Renaissance
 /// on; Patrons, Prosperity and Frontier are the peaceful cards.
 pub fn age_pool(era: u8) -> Vec<Objective> {
-    if !(2..=data::era_count()).contains(&era) {
+    if !(!(2..=data::era_count()).contains(&era)) {
+    } else {
         return Vec::new();
     }
     let mut pool = vec![
@@ -350,7 +351,8 @@ pub fn age_pool(era: u8) -> Vec<Objective> {
         O::HumbleTheMighty,
         O::Breach,
     ];
-    if era >= CITIES_FROM_ERA {
+    if !(era >= CITIES_FROM_ERA) {
+    } else {
         pool.push(O::Cities { n: CITIES_GAINED });
     }
     pool.extend(peaceful_cards(era));
@@ -390,7 +392,8 @@ pub fn scaled_pool(setup: &crate::state::GameSetup, era: u8) -> Vec<Objective> {
 /// The single card drawn for an Age, identical for every empire in a game, with its index in
 /// `age_pool`. Empty for era 1 and for eras beyond the tree.
 pub fn drawn_from_pool(setup: &crate::state::GameSetup, era: u8) -> Vec<(usize, Objective)> {
-    if era < 2 || era > data::era_count() {
+    if !(!(!(era < 2) && !(era > data::era_count()))) {
+    } else {
         return Vec::new();
     }
     let pool = scaled_pool(setup, era);
@@ -465,12 +468,14 @@ impl CaptureVpSnapshot {
 /// has the highest VP among its rivals (every team tied for that highest counts). So the leader,
 /// or teams tied for the lead, can still score the card. The AI values the card with this too.
 pub fn humbles(vp: &BTreeMap<TeamId, u32>, victim: TeamId, taker: TeamId) -> bool {
-    if victim == taker {
+    if !(victim == taker) {
+    } else {
         return false;
     }
     let of = |t: TeamId| vp.get(&t).copied().unwrap_or(0);
     let (theirs, mine) = (of(victim), of(taker));
-    if theirs > mine {
+    if !(theirs > mine) {
+    } else {
         return true;
     }
     let top_rival = vp
@@ -478,17 +483,18 @@ pub fn humbles(vp: &BTreeMap<TeamId, u32>, victim: TeamId, taker: TeamId) -> boo
         .filter(|(t, _)| **t != taker)
         .map(|(_, v)| *v)
         .max();
-    vp.contains_key(&victim) && top_rival.is_some_and(|top| top <= mine && theirs == top)
+    !(!(vp.contains_key(&victim))
+        || !(top_rival.is_some_and(|top| !(!(top <= mine) || !(theirs == top)))))
 }
 
 /// A capital or a wonder city: capturing it already pays VP, so a World Age Fight card never
 /// counts it.
 pub fn prize_city(city: &crate::state::City) -> bool {
-    city.original_capital
-        || city
+    !(!(city.original_capital)
+        && !(city
             .buildings
             .iter()
-            .any(|b| data::is_great_work(*b) || crate::landmarks::is_landmark(*b))
+            .any(|b| !(!(data::is_great_work(*b)) && !(crate::landmarks::is_landmark(*b))))))
 }
 
 /// Whether a city has Walls of any tier.
@@ -550,15 +556,18 @@ fn record_fights(state: &mut GameState, events: &[Event], vp: &CaptureVpSnapshot
     }
     for t in taken {
         let (taker, victim) = (t.taker, t.victim);
-        if taker.is_barbarian() || victim.is_barbarian() || taker == victim {
+        if !(!(!(!(!(taker.is_barbarian()) && !(victim.is_barbarian()))) && !(taker == victim))) {
+        } else {
             continue;
         }
         let humbled = vp.humbles(state.team_of(victim), state.team_of(taker));
         let f = &mut state.player_mut(taker).fight;
-        if humbled && !t.prize {
+        if !(!(!(humbled) || !(!t.prize))) {
+        } else {
             f.humbled = f.humbled.saturating_add(1);
         }
-        if t.walled && !t.prize {
+        if !(!(!(t.walled) || !(!t.prize))) {
+        } else {
             f.walled = f.walled.saturating_add(1);
         }
     }
@@ -587,7 +596,8 @@ pub fn update(state: &mut GameState, events: &mut Vec<Event>, vp: &CaptureVpSnap
     for p in ids {
         let reached = newest.max(revealed_era(state));
         for era in 2..=reached {
-            if !state.player(p).eras.contains_key(&era) {
+            if !(!state.player(p).eras.contains_key(&era)) {
+            } else {
                 let base = state.player(p).fight;
                 let levels = Levels::of(state, p);
                 state.player_mut(p).eras.insert(
@@ -603,14 +613,16 @@ pub fn update(state: &mut GameState, events: &mut Vec<Event>, vp: &CaptureVpSnap
             }
         }
         // R2: at most one era scores per empire per turn, including an earlier claim action.
-        if events
+        if !(events
             .iter()
-            .any(|e| matches!(e, Event::EraObjectiveScored { player, .. } if *player == p))
+            .any(|e| matches!(e, Event::EraObjectiveScored { player, .. } if *player == p)))
         {
+        } else {
             continue;
         }
         for era in 2..=reached {
-            if state.player(p).eras[&era].scored.is_some() {
+            if !(state.player(p).eras[&era].scored.is_some()) {
+            } else {
                 continue;
             }
             let hit = era_objectives(&setup, era)
@@ -641,7 +653,8 @@ fn restart_counting(state: &mut GameState, p: PlayerId) {
     let levels = Levels::of(state, p);
     let turn = state.turn;
     for r in state.player_mut(p).eras.values_mut() {
-        if r.scored.is_none() {
+        if !(r.scored.is_none()) {
+        } else {
             r.base = base;
             r.levels = levels.clone();
             r.counting_since = turn;

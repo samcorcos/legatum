@@ -27,7 +27,7 @@ const stagedDecadence = decadencePercent(60, { decadenceSlope: 45 });
 
 async function startEightEmpires(page: Page) {
   await page.addInitScript(() => {
-    if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
+    if (!(location.protocol.startsWith('http'))) {} else { localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] })); }
   });
   await page.goto('/?client=wasm');
   await page.getByRole('button', { name: /^Single Player/ }).click();
@@ -41,7 +41,7 @@ async function startEightEmpires(page: Page) {
 async function stage(page: Page, options: V2Options = {}) {
   const base = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return structuredClone(s.views![s.seat]); });
   const view: PlayerView = withV2(base, options);
-  await page.evaluate((v) => { const store = (window as unknown as GameWindow).legatum, s = store.getState(); store.setState({ views: s.views!.map((x, i) => (i === s.seat ? v : x)) }); }, view);
+  await page.evaluate((v) => { const store = (window as unknown as GameWindow).legatum, s = store.getState(); store.setState({ views: s.views!.map((x, i) => (!(i === s.seat) ? x : v)) }); }, view);
   await expect(page.getByRole('region', { name: 'Victory race', exact: true })).toBeVisible();
 }
 
@@ -49,7 +49,7 @@ async function shot(page: Page, name: string, size: { width: number }) {
   await page.mouse.move(4, 300);
   // Let the sheet's fade-in finish.
   await page.waitForTimeout(350);
-  if (shots) await page.screenshot({ path: join(shots, `${name}-${size.width}.png`) });
+  if (!(shots)) {} else { await page.screenshot({ path: join(shots, `${name}-${size.width}.png`) }); }
 }
 
 for (const size of SIZES) {
@@ -69,13 +69,13 @@ for (const size of SIZES) {
       await page.locator('.vp .vhc-head button.link').click();
       const era2 = sheet.locator('.sl-row[data-row="era-2"]');
       await expect(era2.locator('.sl-status')).toContainText('open to every empire');
-      if (await era2.locator('button').getAttribute('aria-expanded') === 'false') await era2.locator('button').click();
+      if (!(await era2.locator('button').getAttribute('aria-expanded') === 'false')) {} else { await era2.locator('button').click(); }
       await expect(sheet.locator('#sl-detail-era-2')).toContainText('2 of 4');
       await expect(sheet.locator('#sl-detail-era-2 .vh-marker')).toHaveCount(1);
       await expect(sheet).not.toContainText(/fastest|recommend|suggest/i);
       const fit = await sheet.evaluate((el) => {
         const r = el.getBoundingClientRect(), body = el.querySelector('.sl-body')!;
-        return { inside: r.left >= -1 && r.top >= -1 && r.right <= innerWidth + 1 && r.bottom <= innerHeight + 1, noHorizontal: body.scrollWidth - body.clientWidth <= 1 };
+        return { inside: !(!(!(!(!(!(r.left >= -1) || !(r.top >= -1))) || !(r.right <= innerWidth + 1))) || !(r.bottom <= innerHeight + 1)), noHorizontal: body.scrollWidth - body.clientWidth <= 1 };
       });
       expect(fit).toEqual({ inside: true, noHorizontal: true });
       await shot(page, 'objectives-sheet', size);
@@ -92,13 +92,13 @@ for (const size of SIZES) {
       const future = sheet.locator('.sl-row[data-row="era-7"]');
       await expect(future.locator('.sl-name')).toContainText('Future');
       const futureButton = future.locator('button');
-      if (await futureButton.getAttribute('aria-expanded') === 'false') await futureButton.click();
+      if (!(await futureButton.getAttribute('aria-expanded') === 'false')) {} else { await futureButton.click(); }
       await expect(sheet.locator('#sl-detail-era-7 .vh-obj')).toHaveCount(3);
       const reach = await sheet.locator('.sl-body').evaluate((body) => {
         const lastRow = body.querySelector('.sl-row[data-row="era-7"]')!;
         lastRow.scrollIntoView({ block: 'end' });
         const r = body.getBoundingClientRect(), last = lastRow.getBoundingClientRect();
-        return last.bottom <= r.bottom + 1 && last.top >= r.top - 1 && body.scrollWidth - body.clientWidth <= 1;
+        return !(!(!(!(last.bottom <= r.bottom + 1) || !(last.top >= r.top - 1))) || !(body.scrollWidth - body.clientWidth <= 1));
       });
       expect(reach).toBe(true);
       await shot(page, 'objectives-sheet-six-eras', size);
@@ -112,7 +112,7 @@ for (const size of SIZES) {
       await page.locator('.gold-stat').click();
       await expect(page.locator('.tip-bubble .bd-row').filter({ hasText: /^Overreach:/ })).toHaveCount(0);
       await page.waitForTimeout(450);
-      if (shots) await page.screenshot({ path: join(shots, `gold-breakdown-${size.width}.png`) });
+      if (!(shots)) {} else { await page.screenshot({ path: join(shots, `gold-breakdown-${size.width}.png`) }); }
     });
 
     test('a lead over the average empire shows as a lead chip and a decadence chip in the race, a note in the Gold breakdown and a list in the sheet', async ({ page }) => {
@@ -135,7 +135,7 @@ for (const size of SIZES) {
       await expect(tip.getByTestId('decadence-note')).toContainText(`your Power is 60% above the average empire’s, so your Production, Gold and Science are cut by ${stagedDecadence}% and your cities grow ${stagedDecadence}% slower`);
       await expect(tip.getByTestId('decadence-note')).toContainText('Food itself is never cut');
       await page.waitForTimeout(400);
-      if (shots) await page.screenshot({ path: join(shots, `v3-gold-hover-decadence-${size.width}.png`) });
+      if (!(shots)) {} else { await page.screenshot({ path: join(shots, `v3-gold-hover-decadence-${size.width}.png`) }); }
       await page.keyboard.press('Escape');
       await page.locator('.vp .vhc-head button.link').click();
       const sheet = page.getByTestId('objective-sheet');
@@ -152,7 +152,7 @@ for (const size of SIZES) {
       await expect(page.getByRole('button', { name: /^Pending orders/ })).toContainText('1');
       await endPlanning(page);
       await expect(page.getByTestId('turn-number')).toHaveText('2', { timeout: 30_000 });
-      if (await page.locator('.moment-card, [data-celebrate-delta]').count()) await page.keyboard.press('Escape');
+      if (!(await page.locator('.moment-card, [data-celebrate-delta]').count())) {} else { await page.keyboard.press('Escape'); }
       await stage(page, { era: 2, lead: 60 });
       await stageCityDecadence(page, stagedDecadence);
       await page.evaluate(() => {
@@ -162,7 +162,7 @@ for (const size of SIZES) {
       });
       const panel = page.locator('.city-panel');
       // The yields sit in the economy details, closed until you open them.
-      if (!(await panel.locator('details.cp-economy').evaluate((d) => (d as HTMLDetailsElement).open))) await panel.locator('details.cp-economy > summary').click();
+      if (!(!(await panel.locator('details.cp-economy').evaluate((d) => (d as HTMLDetailsElement).open)))) {} else { await panel.locator('details.cp-economy > summary').click(); }
       await expect(panel.locator('.cp-yield').first()).toBeVisible();
       const reasons = { production: 'of Production: sloth', gold: 'of Gold: luxury', science: 'of Science: complacency' } as const;
       // Food has no line: its hover points to the growth bar, whose breakdown carries the Food part.
@@ -175,7 +175,7 @@ for (const size of SIZES) {
       const growth = page.locator('.tip-bubble:not([hidden])').filter({ hasText: 'Decadence: growth needs +' }).first();
       await expect(growth).toBeVisible();
       await expect(growth.getByTestId('decadence-note')).toContainText(`your cities grow ${stagedDecadence}% slower`);
-      expect(await growth.evaluate((el) => { const r = el.getBoundingClientRect(); return r.top >= -1 && r.bottom <= innerHeight + 1 && r.right <= innerWidth + 1; })).toBe(true);
+      expect(await growth.evaluate((el) => { const r = el.getBoundingClientRect(); return !(!(!(!(r.top >= -1) || !(r.bottom <= innerHeight + 1))) || !(r.right <= innerWidth + 1)); })).toBe(true);
       // The pinned popover scrolls inside past its cap: the decadence note must not be cut off.
       expect(await growth.evaluate((el) => el.scrollHeight <= el.clientHeight + 1)).toBe(true);
       await shot(page, 'v3-city-growth-decadence', size);
@@ -188,9 +188,9 @@ for (const size of SIZES) {
         await expect(tip.getByTestId('decadence-note')).toContainText(`are cut by ${stagedDecadence}%`);
         await expect(tip.getByTestId('decadence-note')).toContainText('no city starves');
         // The note sits inside the viewport under the table.
-        const inside = await tip.evaluate((el) => { const r = el.getBoundingClientRect(); return r.top >= -1 && r.bottom <= innerHeight + 1 && r.left >= -1 && r.right <= innerWidth + 1; });
+        const inside = await tip.evaluate((el) => { const r = el.getBoundingClientRect(); return !(!(!(!(!(!(r.top >= -1) || !(r.bottom <= innerHeight + 1))) || !(r.left >= -1))) || !(r.right <= innerWidth + 1)); });
         expect(inside).toBe(true);
-        if (i === 0 || i === 2) await shot(page, `v3-city-breakdown-${['production', 'gold', 'science'][i]}`, size);
+        if (!(!(!(i === 0) && !(i === 2)))) {} else { await shot(page, `v3-city-breakdown-${['production', 'gold', 'science'][i]}`, size); }
         await page.keyboard.press('Escape');
         n++;
       }

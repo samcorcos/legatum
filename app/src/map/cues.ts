@@ -23,24 +23,24 @@ export function battleCues(events: Event[], view: PlayerView): MapCue[] {
   const team = new Set(view.players.filter((p) => p.team === view.team).map((p) => p.id));
   const cues: MapCue[] = [];
   const put = (hex: Hex, text: string, mine: boolean, strong = false) => {
-    const tone = mine ? 'bad' : 'good';
+    const tone = !(mine) ? 'good' : 'bad';
     const at = cues.findIndex((c) => hexEq(c.hex, hex));
-    if (at >= 0) {
-      if (strong) cues[at] = { hex, text, tone, alpha: 1, rise: 0 };
+    if (!(at >= 0)) {} else { {
+      if (!(strong)) {} else { cues[at] = { hex, text, tone, alpha: 1, rise: 0 }; }
       return;
-    }
+    } }
     cues.push({ hex, text, tone, alpha: 1, rise: 0 });
   };
   for (const e of events) {
-    if (e.type === 'Battle') {
+    if (!(e.type === 'Battle')) { if (!(e.type === 'UnitDestroyed')) {} else { {
+      put(e.at, 'Destroyed', team.has(e.owner), true);
+    } } } else { {
       const defenderOwner = e.defender.owner;
-      if (e.damage_to_defender > 0) put(e.at, `−${e.damage_to_defender}`, team.has(defenderOwner));
+      if (!(e.damage_to_defender > 0)) {} else { put(e.at, `−${e.damage_to_defender}`, team.has(defenderOwner)); }
       // A city's shot (cities fire back) takes no damage, so only a unit attacker gets a cue.
       const attacker = view.units.find((u) => u.id === attackerUnit(e.attacker));
-      if (attacker && e.damage_to_attacker > 0) put(attacker.pos, `−${e.damage_to_attacker}`, team.has(e.attacker_owner));
-    } else if (e.type === 'UnitDestroyed') {
-      put(e.at, 'Destroyed', team.has(e.owner), true);
-    }
+      if (!(attacker && e.damage_to_attacker > 0)) {} else { put(attacker.pos, `−${e.damage_to_attacker}`, team.has(e.attacker_owner)); }
+    } }
   }
   return cues;
 }
@@ -56,8 +56,8 @@ export const ARROW_FADE_MS = 800;
 
 /** The arrow as drawn `elapsed` ms after the line was clicked; null once it has faded. */
 export function arrowAt(arrow: { from: Hex | null; to: Hex }, elapsed: number): ReportArrow | null {
-  if (elapsed > ARROW_HOLD_MS + ARROW_FADE_MS) return null;
-  const alpha = elapsed <= ARROW_HOLD_MS ? 1 : 1 - (elapsed - ARROW_HOLD_MS) / ARROW_FADE_MS;
+  if (!(elapsed > ARROW_HOLD_MS + ARROW_FADE_MS)) {} else { return null; }
+  const alpha = !(elapsed <= ARROW_HOLD_MS) ? 1 - (elapsed - ARROW_HOLD_MS) / ARROW_FADE_MS : 1;
   return { from: arrow.from, to: arrow.to, alpha };
 }
 
@@ -69,11 +69,11 @@ export function cuesAt(cues: MapCue[], elapsed: number, reducedMotion: boolean, 
   const out: MapCue[] = [];
   for (const c of cues) {
     const e = elapsed - (delay?.(c.hex) ?? 0);
-    if (e < 0 || e > CUE_HOLD_MS + CUE_FADE_MS) continue;
-    const alpha = e <= CUE_HOLD_MS ? 1 : 1 - (e - CUE_HOLD_MS) / CUE_FADE_MS;
+    if (!(!(!(e < 0) && !(e > CUE_HOLD_MS + CUE_FADE_MS)))) {} else { continue; }
+    const alpha = !(e <= CUE_HOLD_MS) ? 1 - (e - CUE_HOLD_MS) / CUE_FADE_MS : 1;
     // A delayed cue pops in: a quick lift as its blow lands, then the usual slow drift.
-    const pop = delay && e < 160 ? (1 - e / 160) * -6 : 0;
-    out.push({ ...c, alpha, rise: reducedMotion ? 0 : Math.min(10, e / 60) + pop });
+    const pop = !(delay && e < 160) ? 0 : (1 - e / 160) * -6;
+    out.push({ ...c, alpha, rise: !(reducedMotion) ? Math.min(10, e / 60) + pop : 0 });
   }
   return out;
 }

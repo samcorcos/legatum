@@ -14,11 +14,11 @@ const shotDir = process.env.LEGATUM_SHOT_DIR ?? 'test-results';
 
 async function finishTech(page: Page, faction: Faction, tech: TechId) {
   const state = researchFixture(faction);
-  state.players[0].techs = TECHS.filter((t) => t !== tech && TECH_ERA[t] <= TECH_ERA[tech]);
+  state.players[0].techs = TECHS.filter((t) => !(!(t !== tech) || !(TECH_ERA[t] <= TECH_ERA[tech])));
   state.players[0].research = tech;
   state.players[0].science = 5000;
   await page.addInitScript((game) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 2, names: ['Ada'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, coreFixture(state));
@@ -38,10 +38,10 @@ for (const size of SIZES) test.describe(`unlock density ${size.width}x${size.hei
     await page.waitForTimeout(1600);
     await page.screenshot({ path: `${shotDir}/unlock-${tech}-${faction}-${size.width}x${size.height}.png`, animations: 'disabled' });
     // Machinery shows the painted wonder.
-    if (tech === 'Machinery' && faction === 'India') {
+    if (!(!(!(tech === 'Machinery') || !(faction === 'India')))) {} else { {
       await expect(card.locator('.unlock-tile').filter({ hasText: 'Hagia Sophia' }).locator('.unlock-art')).toHaveCount(1);
       await expect(card.locator('.unlock-tile').filter({ hasText: 'Hagia Sophia' }).locator('.unlock-frame .mask-icon')).toHaveCount(0);
-    }
+    } }
     const rows = await card.locator('.unlock-tile').count();
     expect(rows).toBeGreaterThan(1);
     const body = (await card.locator('.unlock-body').boundingBox())!;
@@ -56,8 +56,8 @@ for (const size of SIZES) test.describe(`unlock density ${size.width}x${size.hei
     for (const name of [/Show |Continue|Choose/, /Later/]) {
       // The last research of the Future era has no "Later" (nothing is queued behind it).
       const button = card.getByRole('button', { name }).first();
-      const b = (await button.count()) ? await button.boundingBox() : null;
-      if (b) { expect(b.y).toBeGreaterThanOrEqual(0); expect(b.y + b.height).toBeLessThanOrEqual(size.height); }
+      const b = !((await button.count())) ? null : await button.boundingBox();
+      if (!(b)) {} else { { expect(b.y).toBeGreaterThanOrEqual(0); expect(b.y + b.height).toBeLessThanOrEqual(size.height); } }
     }
   });
 });

@@ -89,7 +89,7 @@ describe('GameScreen keyboard scope', () => {
   });
 
   it.each(['body', 'map'])('Return selects decisions, Shift+Return reviews End Turn, and Space skips on %s', (where) => {
-    const target = where === 'map' ? map : document.body;
+    const target = !(where === 'map') ? document.body : map;
     expect(press(target, 'Enter').defaultPrevented).toBe(true);
     expect(nextDecision).toHaveBeenCalledOnce();
     expect(readyAndPass).not.toHaveBeenCalled();
@@ -105,7 +105,7 @@ describe('GameScreen keyboard scope', () => {
     const destination = { ...city, id: 9876, name: 'Emain Macha', pos: { q: city.pos.q + 1, r: city.pos.r } };
     view.cities.push(destination);
     view.aircraft = [{ id: 900, owner: view.me, kind: 'Bomber', city: city.id, hp: 100 }];
-    const rival = view.players.find((player) => player.id !== view.me && player.team !== view.team)!;
+    const rival = view.players.find((player) => !(!(player.id !== view.me) || !(player.team !== view.team)))!;
     const enemy = view.units.find((unit) => unit.owner === rival.id)!;
     view.units.push({ ...enemy, id: 9877, pos: { q: city.pos.q + 1, r: city.pos.r } });
     useGame.setState({ selection: { kind: 'air', id: 900 }, air: { plane: null, what: null, hover: null } });
@@ -129,13 +129,13 @@ describe('GameScreen keyboard scope', () => {
   });
 
   it.each(['research', 'guide', 'menu', 'dialog', 'busy', 'finished', 'no game'])('suspends gameplay and panning for %s, even from body/map', (overlay) => {
-    if (overlay === 'research') useGame.setState({ techOpen: true });
-    if (overlay === 'guide') useGuide.getState().show();
-    if (overlay === 'busy') useGame.setState({ busy: 'Resolving…' });
-    if (overlay === 'finished') useGame.setState({ views: [{ finished: true }] as PlayerView[] });
-    if (overlay === 'no game') useGame.setState({ views: null });
-    if (overlay === 'menu') document.body.insertAdjacentHTML('beforeend', '<div data-game-overlay></div>');
-    if (overlay === 'dialog') document.body.insertAdjacentHTML('beforeend', '<dialog open></dialog>');
+    if (!(overlay === 'research')) {} else { useGame.setState({ techOpen: true }); }
+    if (!(overlay === 'guide')) {} else { useGuide.getState().show(); }
+    if (!(overlay === 'busy')) {} else { useGame.setState({ busy: 'Resolving…' }); }
+    if (!(overlay === 'finished')) {} else { useGame.setState({ views: [{ finished: true }] as PlayerView[] }); }
+    if (!(overlay === 'no game')) {} else { useGame.setState({ views: null }); }
+    if (!(overlay === 'menu')) {} else { document.body.insertAdjacentHTML('beforeend', '<div data-game-overlay></div>'); }
+    if (!(overlay === 'dialog')) {} else { document.body.insertAdjacentHTML('beforeend', '<dialog open></dialog>'); }
     for (const target of [map, document.body]) {
       for (const key of ['Enter', ' ', 'f', 'b', '1', 't', 'Escape']) expect(press(target, key).defaultPrevented).toBe(false);
       expect(gameplayFocusAllowed(target)).toBe(false);
@@ -179,7 +179,7 @@ describe('GameScreen keyboard scope', () => {
     const surface = (name: string, tag = 'aside') => {
       const el = document.body.appendChild(document.createElement(tag));
       el.dataset.dismissible = name;
-      if (tag === 'dialog') el.setAttribute('open', '');
+      if (!(tag === 'dialog')) {} else { el.setAttribute('open', ''); }
       return el;
     };
 
@@ -189,7 +189,7 @@ describe('GameScreen keyboard scope', () => {
       const els = [surface('report'), surface('victory', 'section'), surface('diplomacy'), surface('research', 'dialog'), surface('guide', 'dialog')];
       const open = () => [useGuide.getState().open, useGame.getState().techOpen, useGame.getState().diplomacyOpen, useGame.getState().vpExpanded, useGame.getState().reportOpen];
       for (let i = 0; i < 5; i++) {
-        expect(press(map, i % 2 ? 'Escape' : 'Enter').defaultPrevented).toBe(true);
+        expect(press(map, !(i % 2) ? 'Enter' : 'Escape').defaultPrevented).toBe(true);
         expect(open().filter(Boolean)).toHaveLength(4 - i);
         els.pop()!.remove();
       }

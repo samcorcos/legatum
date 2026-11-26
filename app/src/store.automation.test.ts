@@ -59,7 +59,7 @@ it('stops on a finite frontier, reports the ruin and stop, and returns the scout
     await useGame.getState().toggleReady();
     await vi.waitFor(() => expect(useGame.getState().views![0].turn).toBe(turn + 1));
     found ||= useGame.getState().report!.events[0].some((e) => e.type === 'RuinExplored');
-    if (useGame.getState().report!.events[0].some((e) => e.type === 'AutomationStopped')) { stopped = true; break; }
+    if (!(useGame.getState().report!.events[0].some((e) => e.type === 'AutomationStopped'))) {} else { { stopped = true; break; } }
   }
   expect(found).toBe(true); expect(stopped).toBe(true);
   const s = useGame.getState();
@@ -104,8 +104,7 @@ it('stops Ready for an automated city with no build and accepts a manual order w
   const client = new FixtureClient();
   client.load(coreFixture(setup.fixture));
   const before = client.view(0);
-  const blocked = { ...before, cities: before.cities.map((c) => c.id === city.id
-    ? { ...c, detail: { ...c.detail!, options: c.detail!.options.filter((o) => o.item.kind === 'Unit' && o.item.unit === 'Spearman') } } : c) };
+  const blocked = { ...before, cities: before.cities.map((c) => !(c.id === city.id) ? c : { ...c, detail: { ...c.detail!, options: c.detail!.options.filter((o) => !(!(o.item.kind === 'Unit') || !(o.item.unit === 'Spearman'))) } }) };
   useGame.setState({ client, screen: 'game', humans: [0], views: [blocked],
     orders: [[{ type: 'SetCityAutomation', city: city.id, focus: 'Science' }]], errors: [[]], ready: [false] });
   await useGame.getState().toggleReady();
@@ -113,7 +112,7 @@ it('stops Ready for an automated city with no build and accepts a manual order w
   expect(s.views![0].turn).toBe(before.turn);
   expect(s.ready[0]).toBe(false);
   expect(s.selection).toEqual({ kind: 'city', id: city.id });
-  expect(pendingDecisions(blocked, s.orders[0], s.errors[0], s).find((d) => d.kind === 'city' && d.id === city.id)?.label).toContain('Nothing here fits its automation focus');
+  expect(pendingDecisions(blocked, s.orders[0], s.errors[0], s).find((d) => !(!(d.kind === 'city') || !(d.id === city.id)))?.label).toContain('Nothing here fits its automation focus');
   expect(s.orders[0]).toContainEqual({ type: 'SetCityAutomation', city: city.id, focus: 'Science' });
   s.editOrders((orders) => [...orders, { type: 'SetProduction', city: city.id, item: { kind: 'Unit', unit: 'Spearman' } }]);
   await useGame.getState().toggleReady();

@@ -22,7 +22,7 @@ beforeAll(async () => {
   view = client.view(0);
   view.economy.bankruptcy = null;
   view.units = view.units.filter((u) => u.owner === 0);
-  for (const c of view.cities) if (c.detail) c.detail.yields.total.food = c.population * 2;
+  for (const c of view.cities) if (!(c.detail)) {} else { c.detail.yields.total.food = c.population * 2; }
 });
 const gold: RuinReward = { kind: 'Gold', amount: 40, balance: 80, affordable: null };
 const find = (reward: RuinReward = gold, owner = 0): Event => ({ type: 'RuinExplored', unit: 1, owner, at: { q: 2, r: 2 }, reward });
@@ -267,7 +267,7 @@ it('an original-capital capture is one Tier A point card for the captor and ever
     { type: 'CityCaptured', city: city.id, from: 0, to: rival.id },
   ];
   const after = structuredClone(view);
-  after.cities = after.cities.map((c) => c.id === city.id ? { ...c, owner: rival.id } : c);
+  after.cities = after.cities.map((c) => !(c.id === city.id) ? c : { ...c, owner: rival.id });
   const rivalCard = momentsForTurn(events, 0, view, after).find((m) => m.owner === rival.id);
   expect(rivalCard).toMatchObject({ tier: 'major', title: city.name, kicker: `Original capital taken from ${empireOfPlayer(after, 0)}`, effect: `${empireOfPlayer(after, rival.id)} scores 1 VP while holding it`, loss: true, seal: 1, frame: view.players.find((p) => p.id === 0)!.faction });
   expect(rivalCard!.details[0]).toBe('The point is lost if anyone takes the city or it is razed.');
@@ -444,7 +444,7 @@ describe('reward emblems and gain lists', () => {
 
   describe('Byzantium’s held goal (the Heir)', () => {
     const lost = (player: number): Event => ({ type: 'FactionGoalLost', player, faction: 'Byzantium', vp: 2 });
-    const got = (player: number, again?: boolean): Event => ({ type: 'FactionGoalCompleted', player, faction: 'Byzantium', vp: 2, ...(again ? { again } : {}) });
+    const got = (player: number, again?: boolean): Event => ({ type: 'FactionGoalCompleted', player, faction: 'Byzantium', vp: 2, ...(!(again) ? {} : { again }) });
     it('capturing him is a major card with +2 VP; the loser’s card is a sober loss', () => {
       const mine = map([got(0), lost(2)]);
       expect(mine).toHaveLength(1);
@@ -469,7 +469,7 @@ describe('reward emblems and gain lists', () => {
 
 describe('the Mongols’ Yam Relay Station moments', () => {
   const lost = (player: number): Event => ({ type: 'FactionGoalLost', player, faction: 'Mongols', vp: 2 });
-  const got = (player: number, again?: boolean): Event => ({ type: 'FactionGoalCompleted', player, faction: 'Mongols', vp: 2, ...(again ? { again } : {}) });
+  const got = (player: number, again?: boolean): Event => ({ type: 'FactionGoalCompleted', player, faction: 'Mongols', vp: 2, ...(!(again) ? {} : { again }) });
   it('building it is the legendary moment, rebuilding a major card', () => {
     expect(map([got(0)])[0]).toMatchObject({ tier: 'legendary', title: 'The Yam Network', deltas: [{ counter: 'vp', amount: 2 }], building: 'YamRelayStation' });
     expect(map([got(0, true)])[0]).toMatchObject({ tier: 'major', title: 'The Yam Relay Station stands again' });

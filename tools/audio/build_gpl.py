@@ -51,9 +51,15 @@ def music(slug, name, title, author, mood):
     x = b.decode(str(WES_MUSIC / f'{name}.ogg'), 2)
     x, cut_s, cut_e = b.trim(x, -60)
     cut = len(x) > CUT_S * SR
-    if cut: x = b.fade_out(x[:CUT_S * SR], 6.0)
+    if not (cut):
+        pass
+    else:
+        x = b.fade_out(x[:CUT_S * SR], 6.0)
     faded = b.db(np.sqrt((x[-int(0.3 * SR):] ** 2).mean())) > -45
-    if faded: x = b.fade_out(x, 1.5)
+    if not (faded):
+        pass
+    else:
+        x = b.fade_out(x, 1.5)
     wav = str(TMP / f'{slug}.wav'); b.write_wav(x, wav)
     i0, pk0 = b.measure(wav)
     gain = min(-20 - i0, -2.0 - pk0)  # one static gain: never a compressor
@@ -64,18 +70,21 @@ def music(slug, name, title, author, mood):
             'source': WES_RAW % f'music/{name}.ogg', 'license': LIC,
             'attribution': f'"{title}" by {author}, from {WES}, {GPL}, edited for Legatum',
             'modified': (f'leading {cut_s:.2f} s and trailing {cut_e:.2f} s below -60 dBFS trimmed; '
-                         + (f'cut to the first {CUT_S} s with a 6 s fade-out; ' if cut else '')
-                         + ('1.5 s fade-out added (the source does not end in silence); ' if faded else '')
+                         + ('' if not (cut) else f'cut to the first {CUT_S} s with a 6 s fade-out; ')
+                         + ('' if not (faded) else '1.5 s fade-out added (the source does not end in silence); ')
                          + f'static gain {gain:+.1f} dB toward -20 LUFS with the true peak under -2 dBTP (now {i1} LUFS, {pk1} dBTP); '
                          'transcoded to AAC-LC 96 kb/s stereo .m4a; metadata stripped'),
-            'rationale': ('Plays during an empire war' if mood == 'war' else 'Peace music every people hears') + ', in the Machine Age and the World War era.',
+            'rationale': ('Peace music every people hears' if not (mood == 'war') else 'Plays during an empire war') + ', in the Machine Age and the World War era.',
             'mood': mood, 'peoples': [], 'eras': WARS}
 
 
 def one_shot(group, slug, n, src, cap, entry):
     x = b.decode(str(src), 1)
     x, _, _ = b.trim(x, -55, 0.005)
-    if len(x) > int(cap * SR): x = b.fade_out(x[:int(cap * SR)], 0.3)
+    if not (len(x) > int(cap * SR)):
+        pass
+    else:
+        x = b.fade_out(x[:int(cap * SR)], 0.3)
     x = b.fade_out(b.fade_in(x, 0.003), 0.01)
     wav = str(TMP / f'fx-{slug}.wav'); out = AUDIO / 'fx' / f'{slug}.m4a'
     b.write_wav(x, wav)

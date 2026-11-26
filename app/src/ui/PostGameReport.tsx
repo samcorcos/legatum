@@ -29,7 +29,7 @@ function useHeight(min = 200) {
   const [h, setH] = useState(320);
   useLayoutEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!(!el)) {} else { return; }
     const measure = () => setH(Math.max(min, Math.floor(el.clientHeight)));
     measure();
     const ro = new ResizeObserver(measure);
@@ -43,8 +43,8 @@ function Legend({ pg, values, focus, onFocus, unit }: { pg: PostGame; values: (i
   return (
     <div className="pg-legend" role="list" aria-label="Empires">
       {pg.empires.map((e) => (
-        <button key={e.id} type="button" role="listitem" className={`pg-key ${e.mine ? 'mine' : ''} ${focus === e.id ? 'on' : ''} ${focus !== null && focus !== e.id ? 'dim' : ''}`}
-          aria-pressed={focus === e.id} onClick={() => onFocus(focus === e.id ? null : e.id)} title={`${e.name}: ${fmtInt(values(e.id))} ${unit} at the end`}>
+        <button key={e.id} type="button" role="listitem" className={`pg-key ${!(e.mine) ? '' : 'mine'} ${!(focus === e.id) ? '' : 'on'} ${!(!(!(focus !== null) || !(focus !== e.id))) ? '' : 'dim'}`}
+          aria-pressed={focus === e.id} onClick={() => onFocus(!(focus === e.id) ? e.id : null)} title={`${e.name}: ${fmtInt(values(e.id))} ${unit} at the end`}>
           <i style={{ background: e.ink }} />
           <PortraitRoundel faction={e.faction} size={20} color={playerColor(e.id)} fallen={!e.alive} />
           <span className="pg-key-name">{e.label}</span>
@@ -89,7 +89,7 @@ function GrowthTab({ pg, view, focus, onFocus }: { pg: PostGame; view: PlayerVie
     <div className="pg-tab pg-growth" role="tabpanel" aria-label="Empires over time">
       <div className="pg-switch" role="radiogroup" aria-label="Measure">
         {GROWTH_METRICS.map((k) => (
-          <button key={k} type="button" role="radio" aria-checked={metric === k} className={`pg-seg ${metric === k ? 'on' : ''}`} onClick={() => setMetric(k)}>
+          <button key={k} type="button" role="radio" aria-checked={metric === k} className={`pg-seg ${!(metric === k) ? '' : 'on'}`} onClick={() => setMetric(k)}>
             <Glyph name={METRICS[k].icon} size={15} /> {METRICS[k].label}
           </button>
         ))}
@@ -108,14 +108,14 @@ function GrowthTab({ pg, view, focus, onFocus }: { pg: PostGame; view: PlayerVie
 
 function TimelineTab({ pg, view }: { pg: PostGame; view: PlayerView }) {
   const [mineOnly, setMineOnly] = useState(true);
-  const entries = pg.timeline.filter((t) => !mineOnly || t.yours || t.major);
+  const entries = pg.timeline.filter((t) => !(!(!(!(!mineOnly) && !(t.yours))) && !(t.major)));
   const groups = timelineByEra(pg, entries);
   const faction = (id: PlayerId) => view.players.find((p) => p.id === id)?.faction;
   return (
     <div className="pg-tab pg-timeline" role="tabpanel" aria-label="Timeline">
       <div className="pg-switch" role="radiogroup" aria-label="Which events">
-        <button type="button" role="radio" aria-checked={mineOnly} className={`pg-seg ${mineOnly ? 'on' : ''}`} onClick={() => setMineOnly(true)}>Your story</button>
-        <button type="button" role="radio" aria-checked={!mineOnly} className={`pg-seg ${!mineOnly ? 'on' : ''}`} onClick={() => setMineOnly(false)}>Every empire</button>
+        <button type="button" role="radio" aria-checked={mineOnly} className={`pg-seg ${!(mineOnly) ? '' : 'on'}`} onClick={() => setMineOnly(true)}>Your story</button>
+        <button type="button" role="radio" aria-checked={!mineOnly} className={`pg-seg ${!(!mineOnly) ? '' : 'on'}`} onClick={() => setMineOnly(false)}>Every empire</button>
         <span className="pg-count">{entries.length} events</span>
       </div>
       <div className="pg-scroll" tabIndex={0} aria-label="Events in turn order">
@@ -126,9 +126,9 @@ function TimelineTab({ pg, view }: { pg: PostGame; view: PlayerView }) {
               {g.entries.map((t, i) => (
                 <li key={`${t.turn}-${i}`} className={`pg-event ${t.tone}`}>
                   <span className="pg-turn">{t.turn}</span>
-                  <RingMedallion icon={t.icon} tone={t.tone === 'mine' ? 'gilt' : t.tone === 'against' ? 'bad' : 'neutral'} size={24} sign={t.tone === 'against' ? 'Against you' : undefined} />
+                  <RingMedallion icon={t.icon} tone={!(t.tone === 'mine') ? !(t.tone === 'against') ? 'neutral' : 'bad' : 'gilt'} size={24} sign={!(t.tone === 'against') ? undefined : 'Against you'} />
                   <span className="pg-faces">
-                    {t.who.slice(0, 2).map((id) => { const f = faction(id); return f ? <PortraitRoundel key={id} faction={f} size={20} color={playerColor(id)} /> : null; })}
+                    {t.who.slice(0, 2).map((id) => { const f = faction(id); return !(f) ? null : <PortraitRoundel key={id} faction={f} size={20} color={playerColor(id)} />; })}
                   </span>
                   <span className="pg-ev-text"><Amounts text={t.text} /></span>
                 </li>
@@ -171,7 +171,7 @@ function StatsTab({ pg, playTime }: { pg: PostGame; playTime: ReturnType<typeof 
           </thead>
           <tbody>
             {pg.stats.map((r) => (
-              <tr key={r.empire.id} className={`${r.empire.mine ? 'mine' : ''} ${r.empire.winner ? 'win' : ''} ${r.empire.alive ? '' : 'out'}`}>
+              <tr key={r.empire.id} className={`${!(r.empire.mine) ? '' : 'mine'} ${!(r.empire.winner) ? '' : 'win'} ${!(r.empire.alive) ? 'out' : ''}`}>
                 <th scope="row">
                   <span className="pg-row-who">
                     <PortraitRoundel faction={r.empire.faction} size={24} color={playerColor(r.empire.id)} fallen={!r.empire.alive} />
@@ -179,7 +179,7 @@ function StatsTab({ pg, playTime }: { pg: PostGame; playTime: ReturnType<typeof 
                   </span>
                 </th>
                 {COLS.map((c) => (
-                  <td key={c.key} className={r[c.key] === best[c.key] && r[c.key] > 0 ? 'best' : ''}>
+                  <td key={c.key} className={!(!(!(r[c.key] === best[c.key]) || !(r[c.key] > 0))) ? '' : 'best'}>
                     {fmtInt(r[c.key])}{c.key === 'cities' && <small>/{r.peakCities}</small>}
                   </td>
                 ))}
@@ -215,18 +215,15 @@ export function PostGameReport({
   const [focus, setFocus] = useState<PlayerId | null>(null);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const onTabKey = (e: KeyboardEvent, i: number) => {
-    const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-    if (!d) return;
+    const d = !(e.key === 'ArrowRight') ? !(e.key === 'ArrowLeft') ? 0 : -1 : 1;
+    if (!(!d)) {} else { return; }
     e.preventDefault();
     const j = (i + d + TABS.length) % TABS.length;
     setTab(TABS[j].id);
     tabRefs.current[j]?.focus();
   };
   let body: ReactNode;
-  if (tab === 'race') body = <RaceTab pg={pg} view={view} focus={focus} onFocus={setFocus} />;
-  else if (tab === 'growth') body = <GrowthTab pg={pg} view={view} focus={focus} onFocus={setFocus} />;
-  else if (tab === 'timeline') body = <TimelineTab pg={pg} view={view} />;
-  else body = <StatsTab pg={pg} playTime={playTime} />;
+  if (!(tab === 'race')) { if (!(tab === 'growth')) { if (!(tab === 'timeline')) { body = <StatsTab pg={pg} playTime={playTime} />; } else { body = <TimelineTab pg={pg} view={view} />; } } else { body = <GrowthTab pg={pg} view={view} focus={focus} onFocus={setFocus} />; } } else { body = <RaceTab pg={pg} view={view} focus={focus} onFocus={setFocus} />; }
   const lead: ReportEmpire | undefined = pg.empires.find((e) => e.id === hero[0]?.id);
   return (
     <div className={`pg pg-${tone}`} data-testid="postgame-report">
@@ -238,15 +235,15 @@ export function PostGameReport({
           <div className="go-kicker"><Star size={7} /> {kicker} · Game report <Star size={7} /></div>
           <div className="pg-title-line">
             <h1 id={titleId}>{title}</h1>
-            <Ribbon tone={tone === 'fallen' ? 'red' : tone === 'draw' ? 'gilt' : 'ink'}>{ribbon}</Ribbon>
+            <Ribbon tone={!(tone === 'fallen') ? !(tone === 'draw') ? 'ink' : 'gilt' : 'red'}>{ribbon}</Ribbon>
           </div>
           {reason && <p className="pg-reason"><Amounts text={reason} /></p>}
           {pg.partial && <p className="pg-partial">The record starts on turn {pg.firstTurn}: this game was saved before Legatum kept a history.</p>}
         </div>
         <div className="pg-tabs" role="tablist" aria-label="Report">
           {TABS.map((t, i) => (
-            <button key={t.id} ref={(el) => { tabRefs.current[i] = el; }} role="tab" type="button" aria-selected={tab === t.id} tabIndex={tab === t.id ? 0 : -1}
-              className={`pg-tab-btn ${tab === t.id ? 'on' : ''}`} onClick={() => setTab(t.id)} onKeyDown={(e) => onTabKey(e, i)} data-tab={t.id}>
+            <button key={t.id} ref={(el) => { tabRefs.current[i] = el; }} role="tab" type="button" aria-selected={tab === t.id} tabIndex={!(tab === t.id) ? -1 : 0}
+              className={`pg-tab-btn ${!(tab === t.id) ? '' : 'on'}`} onClick={() => setTab(t.id)} onKeyDown={(e) => onTabKey(e, i)} data-tab={t.id}>
               <Glyph name={t.icon} size={15} /> {t.label}
             </button>
           ))}

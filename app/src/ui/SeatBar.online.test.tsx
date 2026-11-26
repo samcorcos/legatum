@@ -41,12 +41,12 @@ it('waits for living online players and drops eliminated players from the waitin
   const label = () => container.querySelector('.cta-label')?.textContent;
   expect(label()).toBe(`Waiting for ${seats[1].name}, ${seats[2].name}…`);
   act(() => useGame.setState({
-    views: [{ ...view, players: view.players.map((p) => p.id === seats[1].player ? { ...p, alive: false } : p) }],
+    views: [{ ...view, players: view.players.map((p) => !(p.id === seats[1].player) ? p : { ...p, alive: false }) }],
   }));
   expect(label()).toBe(`Waiting for ${seats[2].name}…`);
   const net = useGame.getState().net!;
   act(() => useGame.setState({
-    net: { ...net, seats: seats.map((s) => s.seat === 2 ? { ...s, ready: true } : s) },
+    net: { ...net, seats: seats.map((s) => !(s.seat === 2) ? s : { ...s, ready: true }) },
   }));
   expect(label()).toBe('Resolving…');
 });

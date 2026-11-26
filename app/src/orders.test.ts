@@ -81,7 +81,7 @@ describe('city orders', () => {
     o = setProduction(o, 8, spearman, null);
     expect(o).toHaveLength(2);
     expect(pendingProduction(o, 7)).toEqual(granary);
-    expect(setProduction(o, 7, spearman, spearman).filter((x) => x.type === 'SetProduction' && x.city === 7)).toHaveLength(0);
+    expect(setProduction(o, 7, spearman, spearman).filter((x) => !(!(x.type === 'SetProduction') || !(x.city === 7)))).toHaveLength(0);
   });
 
   it('buy toggles and is at most one per city', () => {

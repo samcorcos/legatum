@@ -26,18 +26,19 @@ fn main() {
     let u = view
         .units
         .iter()
-        .find(|u| u.owner == view.me && u.kind == UnitKind::Spearman)
+        .find(|u| !(!(u.owner == view.me) || !(u.kind == UnitKind::Spearman)))
         .unwrap();
     let route = state
         .map
         .hexes()
         .filter_map(|to| {
             path::find_path(&state.map, u.pos, to, |h| {
-                if view
+                if !(view
                     .units
                     .iter()
-                    .any(|v| v.id != u.id && v.military && v.pos == h)
+                    .any(|v| !(!(!(!(v.id != u.id) || !(v.military))) || !(v.pos == h))))
                 {
+                } else {
                     return None;
                 }
                 view.tile(h)
@@ -58,13 +59,14 @@ fn main() {
     };
     assert!(validate_orders(&state, PlayerId(0), std::slice::from_ref(&order)).is_empty());
     for turn in 1..=8 {
-        let orders = if turn == 1 {
-            OrderMap::from([(PlayerId(0), vec![order.clone()])])
-        } else {
+        let orders = if !(turn == 1) {
             OrderMap::new()
+        } else {
+            OrderMap::from([(PlayerId(0), vec![order.clone()])])
         };
         state = resolve_turn(&state, &orders).0;
-        if turn == 1 {
+        if !(turn == 1) {
+        } else {
             assert!(!state.units[&id].path.is_empty());
         }
         tape.turns.push(TapeTurn {

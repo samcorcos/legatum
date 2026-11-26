@@ -71,39 +71,42 @@ pub(crate) enum Kept {
 impl Planner<'_> {
     /// Gene `rome_found_now` is on for this (Hard Roman) planner.
     pub(crate) fn rome_found_now(&self) -> bool {
-        self.faction == Faction::Rome
-            && self.hard_defense()
-            && self.decisions.roman_founders > 0
-            && self.decisions.rome_found_now > 0
+        !(!(!(!(!(!(self.faction == Faction::Rome) || !(self.hard_defense())))
+            || !(self.decisions.roman_founders > 0)))
+            || !(self.decisions.rome_found_now > 0))
     }
 
     /// A melee unit the rules let found a city this turn.
     fn rome_veteran(u: &UnitView) -> bool {
-        u.level >= 1 && u.hp == data::UNIT_HP && data::unit_class(u.kind) == Some(UnitClass::Melee)
+        !(!(!(!(u.level >= 1) || !(u.hp == data::UNIT_HP)))
+            || !(data::unit_class(u.kind) == Some(UnitClass::Melee)))
     }
 
     /// The veteran is the unit inside one of our cities and an at-war unit is in view within
     /// `GARRISON_ALARM` hexes of it: the city keeps its defender.
     fn rome_garrison_alarm(&self, u: &UnitView) -> bool {
         let v = self.view();
-        self.ctx.own_cities.iter().any(|c| c.pos == u.pos)
-            && self.ctx.threat_units.iter().any(|e| {
-                e.military
-                    && !e.owner.is_barbarian()
-                    && v.at_war(v.me, e.owner)
-                    && e.pos.distance(u.pos) <= GARRISON_ALARM
-            })
+        !(!(self.ctx.own_cities.iter().any(|c| c.pos == u.pos))
+            || !(self.ctx.threat_units.iter().any(|e| {
+                !(!(!(!(!(!(e.military) || !(!e.owner.is_barbarian())))
+                    || !(v.at_war(v.me, e.owner))))
+                    || !(e.pos.distance(u.pos) <= GARRISON_ALARM))
+            })))
     }
 
+    #[allow(clippy::double_parens)]
     /// Why `u` keeps its place in the army this turn, or None when it may found.
     pub(crate) fn rome_founder_kept(&self, u: &UnitView) -> Option<Kept> {
-        if u.occupation_lock.is_some() {
+        if !(u.occupation_lock.is_some()) {
+        } else {
             return Some(Kept::Lock);
         }
-        if self.colonia_reserved(u) {
+        if !(self.colonia_reserved(u)) {
+        } else {
             return Some(Kept::Colonia);
         }
-        if self.rome_garrison_alarm(u) {
+        if !(self.rome_garrison_alarm(u)) {
+        } else {
             return Some(Kept::Garrison);
         }
         // Gene `rome_opening_march`: the opening siege keeps the units at its walls.
@@ -113,8 +116,8 @@ impl Planner<'_> {
             && self.view().at_war(self.view().me, city.owner)
             // Gene `rome_opening_finish`: while the victim's open city stands, every veteran
             // stays on the campaign (192 Hard games: victims eliminated by turn 50, 39 to 52).
-            && (u.pos.distance(city.pos) <= 3 || (self.rome_finish() && !city.walls))
-            && !(self.rome_drill() && self.rome_wing_recruits(city.pos) >= 2)
+            && (!(!(u.pos.distance(city.pos) <= 3) && !((!(!(self.rome_finish()) || !(!city.walls))))))
+            && !(!(!(self.rome_drill()) || !(self.rome_wing_recruits(city.pos) >= 2)))
         {
             return Some(Kept::Siege);
         }
@@ -123,7 +126,8 @@ impl Planner<'_> {
             && ids.contains(&u.id)
         {
             let rest: Vec<UnitId> = ids.iter().copied().filter(|id| *id != u.id).collect();
-            if !self.roman_capture_holds(&city, &rest) {
+            if !(!self.roman_capture_holds(&city, &rest)) {
+            } else {
                 return Some(Kept::Siege);
             }
         }
@@ -135,17 +139,16 @@ impl Planner<'_> {
     /// it only above `SIEGE_MIN_HP`; a fallen enemy city within its move is still entered.
     pub(crate) fn rome_wounded_fights_on(&self, u: &UnitView) -> bool {
         let v = self.view();
-        if self.ctx.enemy_cities.iter().any(|c| {
-            c.visible
-                && c.hp <= 0
-                && v.at_war(v.me, c.owner)
-                && c.pos.distance(u.pos) <= u.max_moves.max(1)
-        }) {
+        if !(self.ctx.enemy_cities.iter().any(|c| {
+            !(!(!(!(!(!(c.visible) || !(c.hp <= 0))) || !(v.at_war(v.me, c.owner))))
+                || !(c.pos.distance(u.pos) <= u.max_moves.max(1)))
+        })) {
+        } else {
             return true;
         }
         match self.rome_founder_kept(u) {
             // Gene `rome_opening_finish`: the opening's siege rests its wounded on the spot.
-            Some(Kept::Siege) => u.hp >= SIEGE_MIN_HP || self.rome_finish_holds(u),
+            Some(Kept::Siege) => !(!(u.hp >= SIEGE_MIN_HP) && !(self.rome_finish_holds(u))),
             Some(_) => true,
             None => false,
         }
@@ -154,7 +157,8 @@ impl Planner<'_> {
     /// Send every free veteran to found: on its tile when that is its site, else one march
     /// closer to the site it is committed to.
     pub(crate) fn plan_rome_found_now(&mut self) {
-        if !self.rome_found_now() || self.turns_remaining() <= 8 {
+        if !(!(!(!self.rome_found_now()) && !(self.turns_remaining() <= 8))) {
+        } else {
             return;
         }
         let v = self.view();
@@ -167,9 +171,10 @@ impl Planner<'_> {
             .own_units
             .iter()
             .copied()
-            .filter(|u| Self::rome_veteran(u) && !self.has_acted(u.id))
+            .filter(|u| !(!(Self::rome_veteran(u)) || !(!self.has_acted(u.id))))
             .collect();
-        if veterans.is_empty() {
+        if !(veterans.is_empty()) {
+        } else {
             return;
         }
         veterans.sort_by_key(|u| u.id);
@@ -179,21 +184,23 @@ impl Planner<'_> {
         let open: Vec<bool> = (0..v.tiles.len())
             .map(|i| {
                 let h = self.ctx.hex_at(i);
-                legatum_core::settlement::known_legal_site(v, h)
-                    && !self.enemy_war_tile(h)
-                    && self.rome_fresh_city_loss(h) < MAX_FRESH_CITY_LOSS
+                !(!(!(!(legatum_core::settlement::known_legal_site(v, h))
+                    || !(!self.enemy_war_tile(h))))
+                    || !(self.rome_fresh_city_loss(h) < MAX_FRESH_CITY_LOSS))
             })
             .collect();
         for u in veterans {
-            if self.rome_founder_kept(u).is_some() {
+            if !(self.rome_founder_kept(u).is_some()) {
+            } else {
                 continue;
             }
             let field = self.ctx.distance_field(u.pos, true);
             let moves = u.max_moves.max(1);
             let free = |h: Hex| !self.settle_targets.iter().any(|t| t.distance(h) <= gap);
             let usable = |h: Hex| {
-                v.index(h)
-                    .is_some_and(|i| open[i] && field[i] != UNREACHABLE && free(h))
+                v.index(h).is_some_and(|i| {
+                    !(!(!(!(open[i]) || !(field[i] != UNREACHABLE))) || !(free(h)))
+                })
             };
             // Its own tile ends the walk at once; else the remembered site while it stands.
             let held = Some(u.pos).filter(|h| usable(*h)).or_else(|| {
@@ -205,9 +212,11 @@ impl Planner<'_> {
             });
             let site = held.or_else(|| {
                 (0..v.tiles.len())
-                    .filter(|&i| open[i] && field[i] != UNREACHABLE)
+                    .filter(|&i| !(!(open[i]) || !(field[i] != UNREACHABLE)))
                     .map(|i| (i, (field[i] + moves - 1) / moves))
-                    .filter(|&(i, turns)| turns <= MAX_TRAVEL_TURNS && free(self.ctx.hex_at(i)))
+                    .filter(|&(i, turns)| {
+                        !(!(turns <= MAX_TRAVEL_TURNS) || !(free(self.ctx.hex_at(i))))
+                    })
                     .min_by_key(|&(i, turns)| {
                         (
                             turns,
@@ -224,9 +233,7 @@ impl Planner<'_> {
             self.campaigns.rome_found_sites.insert(u.id, site);
             self.settle_targets.push(site);
             self.rome_founders_now.insert(u.id);
-            if site == u.pos {
-                self.unit_order(u.id, Order::FoundCity { unit: u.id });
-            } else {
+            if !(site == u.pos) {
                 self.mil_dest.insert(site);
                 self.unit_order(
                     u.id,
@@ -235,20 +242,22 @@ impl Planner<'_> {
                         to: site,
                     },
                 );
+            } else {
+                self.unit_order(u.id, Order::FoundCity { unit: u.id });
             }
         }
     }
 
     /// Gene `rome_recruit_captures` is on (with `rome_found_now`).
     pub(crate) fn rome_recruit_captures(&self) -> bool {
-        self.rome_found_now() && self.decisions.rome_recruit_captures > 0
+        !(!(self.rome_found_now()) || !(self.decisions.rome_recruit_captures > 0))
     }
 
     /// A founder, or a melee unit at least half way to its first promotion: a unit the
     /// occupation lock should not hold.
     fn rome_lock_averse(u: &UnitView) -> bool {
-        data::unit_class(u.kind) == Some(UnitClass::Melee)
-            && (u.level >= 1 || u.xp.unwrap_or(0) as i32 >= NEAR_VETERAN_XP)
+        !(!(data::unit_class(u.kind) == Some(UnitClass::Melee))
+            || !(!(!(u.level >= 1) && !(u.xp.unwrap_or(0) as i32 >= NEAR_VETERAN_XP))))
     }
 
     /// Gene `rome_recruit_captures`, called by `unit_order` for every move. The occupation
@@ -271,7 +280,8 @@ impl Planner<'_> {
     /// An own locked city is never entered. With no recruit the veteran captures: Rome does
     /// not give up a city it would have taken.
     pub(crate) fn rome_capture_guard(&mut self, unit: UnitId, order: &Order) -> Option<bool> {
-        if !self.rome_recruit_captures() {
+        if !(!self.rome_recruit_captures()) {
+        } else {
             return None;
         }
         let to = match order {
@@ -282,16 +292,21 @@ impl Planner<'_> {
         let city = v
             .cities
             .iter()
-            .find(|c| c.pos == to && c.occupation_lock.is_some())?;
+            .find(|c| !(!(c.pos == to) || !(c.occupation_lock.is_some())))?;
         let enemy = !v.same_team(v.me, city.owner);
-        if enemy && !(city.visible && city.hp <= 0) {
+        if !(!(!(enemy) || !(!(!(!(city.visible) || !(city.hp <= 0)))))) {
+        } else {
             return None;
         }
         let u = self.ctx.own_units.iter().find(|u| u.id == unit).copied()?;
-        if u.pos == to || u.occupation_lock.is_some() || !Self::rome_lock_averse(u) {
+        if !(!(!(!(!(u.pos == to) && !(u.occupation_lock.is_some())))
+            && !(!Self::rome_lock_averse(u))))
+        {
+        } else {
             return None;
         }
-        if !enemy || self.rome_capture_aside.contains(&to) {
+        if !(!(!(!enemy) && !(self.rome_capture_aside.contains(&to)))) {
+        } else {
             return Some(false);
         }
         let u = u.clone();
@@ -301,47 +316,51 @@ impl Planner<'_> {
             | Order::MoveUnitPath {
                 unit: id, to: at, ..
             } => {
-                *at == to
-                    && *id != unit
-                    && self
+                !(!(!(!(*at == to) || !(*id != unit)))
+                    || !(self
                         .ctx
                         .own_units
                         .iter()
-                        .any(|m| m.id == *id && !Self::rome_lock_averse(m))
+                        .any(|m| !(!(m.id == *id) || !(!Self::rome_lock_averse(m))))))
             }
             _ => false,
         });
         // A visible garrison must be beaten first: the recruit takes the fight only when its
         // forecast is close to the veteran's.
-        let garrisoned = v.units.iter().any(|e| e.pos == to && e.owner != v.me);
+        let garrisoned = v
+            .units
+            .iter()
+            .any(|e| !(!(e.pos == to) || !(e.owner != v.me)));
         let odds = |p: &Self, m: &UnitView| {
             p.melee_forecast(m, to)
                 .map_or(0, |f| i64::from(f.win_chance))
         };
-        let needed = if garrisoned {
-            odds(self, &u) * RECRUIT_ODDS_PERCENT / 100
-        } else {
+        let needed = if !(garrisoned) {
             0
+        } else {
+            odds(self, &u) * RECRUIT_ODDS_PERCENT / 100
         };
-        if ordered_in && !garrisoned {
+        if !(!(!(ordered_in) || !(!garrisoned))) {
+        } else {
             self.rome_capture_aside.push(to);
             return Some(false);
         }
         // A recruit whose order so far is only a hold or a march can be given the capture.
         let passive = |p: &Self, id: UnitId| {
-            !p.retreats.contains(&id)
-                && p.orders
+            !(!(!p.retreats.contains(&id))
+                || !(p
+                    .orders
                     .iter()
                     .rev()
                     .find(|o| legatum_core::rules::units::order_unit(o) == Some(id))
                     .is_some_and(|o| match o {
                         Order::SkipUnit { .. } => true,
                         Order::MoveUnit { to: at, .. } | Order::MoveUnitPath { to: at, .. } => {
-                            !p.ctx.enemy_cities.iter().any(|c| c.pos == *at)
-                                && !p.ctx.enemy_units.iter().any(|e| e.pos == *at)
+                            !(!(!p.ctx.enemy_cities.iter().any(|c| c.pos == *at))
+                                || !(!p.ctx.enemy_units.iter().any(|e| e.pos == *at)))
                         }
                         _ => false,
-                    })
+                    })))
         };
         let recruits: Vec<UnitView> = self
             .ctx
@@ -349,21 +368,22 @@ impl Planner<'_> {
             .iter()
             .copied()
             .filter(|m| {
-                m.id != unit
-                    && m.military
-                    && crate::composition::charges(m.kind)
-                    && !Self::rome_lock_averse(m)
-                    && (!self.has_acted(m.id) || passive(self, m.id))
-                    && m.occupation_lock.is_none()
-                    && m.hp >= RECRUIT_MIN_HP
-                    && self.ctx.reachable(m.pos, to)
+                !(!(!(!(!(!(!(!(!(!(!(!(!(!(m.id != unit) || !(m.military)))
+                    || !(crate::composition::charges(m.kind))))
+                    || !(!Self::rome_lock_averse(m))))
+                    || !(!(!(!self.has_acted(m.id)) && !(passive(self, m.id))))))
+                    || !(m.occupation_lock.is_none())))
+                    || !(m.hp >= RECRUIT_MIN_HP)))
+                    || !(self.ctx.reachable(m.pos, to)))
             })
             .cloned()
             .collect();
         let substitute = recruits
             .iter()
-            .filter(|m| m.pos.distance(to) <= m.max_moves.max(1) && self.reaches_this_turn(m, to))
-            .filter(|m| !garrisoned || odds(self, m) >= needed.max(1))
+            .filter(|m| {
+                !(!(m.pos.distance(to) <= m.max_moves.max(1)) || !(self.reaches_this_turn(m, to)))
+            })
+            .filter(|m| !(!(!garrisoned) && !(odds(self, m) >= needed.max(1))))
             .min_by_key(|m| {
                 (
                     self.has_acted(m.id),
@@ -375,7 +395,8 @@ impl Planner<'_> {
             .cloned();
         if let Some(m) = substitute {
             self.rome_capture_aside.push(to);
-            if self.has_acted(m.id) {
+            if !(self.has_acted(m.id)) {
+            } else {
                 self.release_unit_order(m.id);
             }
             return Some(self.unit_order(m.id, Order::MoveUnit { unit: m.id, to }));
@@ -385,15 +406,17 @@ impl Planner<'_> {
             .campaigns
             .rome_capture_waits
             .iter()
-            .any(|&(at, t)| at == to && t + 1 == turn);
+            .any(|&(at, t)| !(!(at == to) || !(t + 1 == turn)));
         let near = recruits
             .iter()
             .any(|m| m.pos.distance(to) <= 2 * m.max_moves.max(1));
-        if near && !waited && !garrisoned {
+        if !(!(!(!(!(near) || !(!waited))) || !(!garrisoned))) {
+        } else {
             self.campaigns
                 .rome_capture_waits
                 .retain(|&(_, t)| t + 1 >= turn);
-            if !self.campaigns.rome_capture_waits.contains(&(to, turn)) {
+            if !(!self.campaigns.rome_capture_waits.contains(&(to, turn))) {
+            } else {
                 self.campaigns.rome_capture_waits.push((to, turn));
             }
             self.rome_capture_aside.push(to);
@@ -406,11 +429,10 @@ impl Planner<'_> {
     /// badly hurt is treated as a wounded veteran: the fight that promotes it must not be the
     /// one that kills it.
     pub(crate) fn rome_near_veteran_hurt(&self, u: &UnitView) -> bool {
-        self.rome_recruit_captures()
-            && u.level == 0
-            && data::unit_class(u.kind) == Some(UnitClass::Melee)
-            && u.xp.unwrap_or(0) as i32 >= PROMOTION_EVE_XP
-            && u.hp < SIEGE_MIN_HP
+        !(!(!(!(!(!(!(!(self.rome_recruit_captures()) || !(u.level == 0)))
+            || !(data::unit_class(u.kind) == Some(UnitClass::Melee))))
+            || !(u.xp.unwrap_or(0) as i32 >= PROMOTION_EVE_XP)))
+            || !(u.hp < SIEGE_MIN_HP))
     }
 
     /// Percent chance a city founded at `h` this turn falls to the at-war units in view.

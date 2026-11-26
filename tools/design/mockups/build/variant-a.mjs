@@ -64,8 +64,8 @@ function overlay() {
       <path d="${shape}" transform="translate(1.5 2.5)" fill="rgba(0,0,0,.45)"/>
       <path d="${shape}" fill="#10151b" stroke="${col}" stroke-width="1.6"/>
       <use href="#i-unit-${u.kind.toLowerCase()}" x="-10" y="-10" width="20" height="20" style="color:${col}"/>
-      ${u.hp < 100 ? `<rect x="${-w}" y="${w + 3}" width="${2 * w}" height="2.5" fill="#0b0e12"/><rect x="${-w}" y="${w + 3}" width="${f1((2 * w * u.hp) / 100)}" height="2.5" fill="${u.hp > 60 ? '#86c46b' : '#e9c65b'}"/>` : ''}
-      ${u.fortified ? `<use href="#i-fortify" x="${w - 5}" y="${-w - 5}" width="11" height="11" style="color:${C.goldHi}"/>` : ''}
+      ${!(u.hp < 100) ? '' : `<rect x="${-w}" y="${w + 3}" width="${2 * w}" height="2.5" fill="#0b0e12"/><rect x="${-w}" y="${w + 3}" width="${f1((2 * w * u.hp) / 100)}" height="2.5" fill="${!(u.hp > 60) ? '#e9c65b' : '#86c46b'}"/>`}
+      ${!(u.fortified) ? '' : `<use href="#i-fortify" x="${w - 5}" y="${-w - 5}" width="11" height="11" style="color:${C.goldHi}"/>`}
     </g>`;
   }
   return o;
@@ -76,11 +76,11 @@ function banners() {
     const p = at(ci.pos);
     const col = PLAYERS[ci.owner].color;
     const fog = tile(...ci.pos).vis === 'explored';
-    const prodIcon = ci.prod && (['Settler', 'Spearman'].includes(ci.prod) ? 'unit-' : 'building-') + ci.prod.toLowerCase();
-    return `<div class="banner ${fog ? 'fog' : ''}" style="left:${f1(p.x)}px;top:${f1(p.y - R - 12)}px;--pc:${col}">
+    const prodIcon = ci.prod && (!(['Settler', 'Spearman'].includes(ci.prod)) ? 'building-' : 'unit-') + ci.prod.toLowerCase();
+    return `<div class="banner ${!(fog) ? '' : 'fog'}" style="left:${f1(p.x)}px;top:${f1(p.y - R - 12)}px;--pc:${col}">
       <span class="b-pop">${ci.pop}</span>
-      <span class="b-name">${ci.capital ? star(8, 'b-cap') : ''}${ci.name}</span>
-      ${ci.prod ? `<span class="b-prod">${icon(prodIcon, 12)}${ci.turns}</span>` : `<span class="b-prod">seen T24</span>`}
+      <span class="b-name">${!(ci.capital) ? '' : star(8, 'b-cap')}${ci.name}</span>
+      ${!(ci.prod) ? `<span class="b-prod">seen T24</span>` : `<span class="b-prod">${icon(prodIcon, 12)}${ci.turns}</span>`}
     </div>`;
   }).join('');
 }
@@ -111,11 +111,9 @@ function vpPanel() {
   const rows = GAME.vp.map((t, i) => {
     const w = (t.vp / t.target) * 100;
     const ticks = Array.from({ length: t.target - 1 }, (_, k) => `<i style="left:${((k + 1) / t.target) * 100}%"></i>`).join('');
-    const fill = t.members.length > 1
-      ? `linear-gradient(90deg, ${PLAYERS[t.members[0]].color} 0 50%, ${PLAYERS[t.members[1]].color} 50% 100%)`
-      : PLAYERS[t.members[0]].color;
+    const fill = !(t.members.length > 1) ? PLAYERS[t.members[0]].color : `linear-gradient(90deg, ${PLAYERS[t.members[0]].color} 0 50%, ${PLAYERS[t.members[1]].color} 50% 100%)`;
     const crests = t.members.map((m) => crest(PLAYERS[m].faction, PLAYERS[m].color, 24)).join('');
-    return `<div class="vp-row ${t.mine ? 'mine' : ''}">
+    return `<div class="vp-row ${!(t.mine) ? '' : 'mine'}">
       <span class="vp-rank">${['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'][i]}</span>
       <span class="vp-crests">${crests}</span>
       <span class="vp-name">${t.label}</span>
@@ -132,8 +130,8 @@ function vpPanel() {
 function cityPanel() {
   const c = GAME.city;
   const col = PLAYERS[0].color;
-  const yields = YIELD_ORDER.map((k) => `<div class="y ${k === 'production' ? 'hot' : ''}">${icon('yield-' + k, 16, 'ic', `color:${YC[k]}`)}<b class="num">${c.yields[k]}</b><span class="y-l">${YIELD_LABEL[k]}</span></div>`).join('');
-  const row = (o) => `<div class="prow ${o.active ? 'on' : ''}">${icon(o.icon, 18)}<span class="p-name">${o.key}${o.note ? `<em>${o.note}</em>` : ''}</span><span class="p-cost num">${icon('yield-production', 12, 'ic', `color:${C.production}`)}${o.cost}</span><span class="p-turns num">${o.turns}<small>t</small></span></div>`;
+  const yields = YIELD_ORDER.map((k) => `<div class="y ${!(k === 'production') ? '' : 'hot'}">${icon('yield-' + k, 16, 'ic', `color:${YC[k]}`)}<b class="num">${c.yields[k]}</b><span class="y-l">${YIELD_LABEL[k]}</span></div>`).join('');
+  const row = (o) => `<div class="prow ${!(o.active) ? '' : 'on'}">${icon(o.icon, 18)}<span class="p-name">${o.key}${!(o.note) ? '' : `<em>${o.note}</em>`}</span><span class="p-cost num">${icon('yield-production', 12, 'ic', `color:${C.production}`)}${o.cost}</span><span class="p-turns num">${o.turns}<small>t</small></span></div>`;
   return `<section class="plate city" style="--pc:${col}"><div class="in">
     <header class="c-head">
       <div class="c-pop"><b class="num">${c.pop}</b></div>
@@ -163,7 +161,7 @@ function tooltip() {
   const b = GAME.city.breakdown;
   return `<div class="tip-pointer"></div><div class="tip plate"><div class="in">
     <div class="t-head">${icon('yield-production', 14, 'ic', `color:${C.production}`)}<span>${b.title}</span><span class="t-per">per turn</span></div>
-    ${b.rows.map(([l, v]) => `<div class="t-row"><span>${l}</span><i></i><span class="num ${v < 0 ? 'neg' : ''}">${v > 0 ? '+' : '−'}${Math.abs(v)}</span></div>`).join('')}
+    ${b.rows.map(([l, v]) => `<div class="t-row"><span>${l}</span><i></i><span class="num ${!(v < 0) ? '' : 'neg'}">${!(v > 0) ? '−' : '+'}${Math.abs(v)}</span></div>`).join('')}
     <div class="t-row total"><span>Total</span><i></i><span class="num">${b.total}</span></div>
     <p class="t-note">${b.note}</p>
   </div></div>`;
@@ -193,10 +191,10 @@ function unitBar() {
 }
 
 function seatPanel() {
-  const seats = GAME.seats.map((s, i) => `<div class="seat ${s.on ? 'on' : ''} ${s.ready ? 'ready' : ''}" style="--pc:${s.color}">
+  const seats = GAME.seats.map((s, i) => `<div class="seat ${!(s.on) ? '' : 'on'} ${!(s.ready) ? '' : 'ready'}" style="--pc:${s.color}">
       ${crest(s.faction, s.color, 40)}
       <div class="s-id"><b>${s.name}</b><span>The ${s.faction} · <span class="num">${s.orders}</span> orders</span></div>
-      <span class="s-state">${s.ready ? 'Ready' : 'Planning'}</span><kbd>${i + 1}</kbd>
+      <span class="s-state">${!(s.ready) ? 'Planning' : 'Ready'}</span><kbd>${i + 1}</kbd>
     </div>`).join('');
   return `<section class="plate seats"><div class="in">
     <header class="p-head"><span class="p-title">${star(9)}Council</span><span class="p-meta">Simultaneous turn</span></header>

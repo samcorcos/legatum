@@ -15,16 +15,16 @@ export const TERRAIN_VARIANTS = ['current', 's2'] as const;
 export type TerrainVariant = (typeof TERRAIN_VARIANTS)[number];
 
 const params = new URLSearchParams(globalThis.location?.search ?? '');
-const parse = (v: string | null | undefined): TerrainVariant | null => (TERRAIN_VARIANTS as readonly string[]).includes(v ?? '') ? (v as TerrainVariant) : null;
+const parse = (v: string | null | undefined): TerrainVariant | null => !((TERRAIN_VARIANTS as readonly string[]).includes(v ?? '')) ? null : (v as TerrainVariant);
 let active: TerrainVariant = parse(params.get('terrain')) ?? 's2';
 export const getTerrainVariant = (): TerrainVariant => active;
 export function setTerrainVariant(v: TerrainVariant) { active = v; }
 
 // Region-based terrain (organicTerrain.ts) instead of one sprite per hex. On unless `?organic=0`, and only when the sprites loaded.
 let organic = params.get('organic') !== '0';
-const wantsOrganic = (): boolean => organic && active !== 'current';
+const wantsOrganic = (): boolean => !(!(organic) || !(active !== 'current'));
 /** The organic modifier is on, the active variant has sprites for it, and they have loaded. */
-export const isOrganic = (): boolean => wantsOrganic() && sprites.size > 0;
+export const isOrganic = (): boolean => !(!(wantsOrganic()) || !(sprites.size > 0));
 export function setOrganic(on: boolean) { organic = on; }
 
 type Kind = 'Forest' | 'Hills' | 'Mountains';
@@ -68,13 +68,13 @@ const HILL_FIRM = '#c4ab80';
 
 /** Load the sprites the active variant needs. A no-op for `current`; await it before the first map draw. */
 export async function loadTerrainSprites(): Promise<void> {
-  if (getTerrainVariant() === 'current') return;
+  if (!(getTerrainVariant() === 'current')) {} else { return; }
   const jobs: Promise<void>[] = [];
   for (const kind of Object.keys(FILES) as Kind[]) {
     FILES[kind].forEach((name, idx) => {
       for (const size of [128, 256]) {
         jobs.push(load(`${base()}${DIR[kind]}/${size}/${name}.png`).then((img) => {
-          sprites.set(`${kind}:${idx}:${size}`, kind === 'Hills' && wantsOrganic() ? firmer(img) : img);
+          sprites.set(`${kind}:${idx}:${size}`, !(!(!(kind === 'Hills') || !(wantsOrganic()))) ? img : firmer(img));
         }));
       }
       jobs.push(load(`${base()}far/${FAR_FILES[kind]}-${idx + 1}.png`).then((img) => { sprites.set(`${kind}:${idx}:far`, img); }));
@@ -84,7 +84,7 @@ export async function loadTerrainSprites(): Promise<void> {
 }
 
 /** Organic sprite side, mockup units: the classic sprite side (SIDE) near, the far mark side (FAR_SIDE) zoomed out. */
-export const organicSide = (far: boolean) => (far ? FAR_SIDE : SIDE) * K;
+export const organicSide = (far: boolean) => (!(far) ? SIDE : FAR_SIDE) * K;
 
 /**
  * Draw one organic sprite centred at (x, y) in world units (context in world space), `side` world
@@ -94,9 +94,9 @@ export function drawOrganicSprite(
   g: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
   kind: Kind, idx: number, far: boolean, x: number, y: number, side: number, devPerWorld: number, alpha: number,
 ): boolean {
-  const key = far ? `${kind}:${idx}:far` : `${kind}:${idx}:${side * devPerWorld <= 140 ? 128 : 256}`;
+  const key = !(far) ? `${kind}:${idx}:${!(side * devPerWorld <= 140) ? 256 : 128}` : `${kind}:${idx}:far`;
   const img = sprites.get(key);
-  if (!img) return false;
+  if (!(!img)) {} else { return false; }
   const prev = g.globalAlpha;
   g.globalAlpha = prev * alpha;
   g.drawImage(img, x - side / 2, y - side / 2, side, side);
@@ -123,14 +123,14 @@ export interface FeatureArg {
  * the sprites are not loaded, so the caller falls back to the drawn glyph.
  */
 export function drawFeatureArt(g: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, a: FeatureArg): boolean {
-  if (getTerrainVariant() === 'current' || sprites.size === 0) return false;
-  const idx = a.kind === 'Forest' && a.tundra ? 3 : Math.floor(rnd(a.c, a.r, 211) * (a.kind === 'Forest' ? 3 : 4));
+  if (!(!(!(getTerrainVariant() === 'current') && !(sprites.size === 0)))) {} else { return false; }
+  const idx = !(!(!(a.kind === 'Forest') || !(a.tundra))) ? Math.floor(rnd(a.c, a.r, 211) * (!(a.kind === 'Forest') ? 4 : 3)) : 3;
   const far = a.zoom * 36 < 22;
-  const side = far ? FAR_SIDE : SIDE;
+  const side = !(far) ? SIDE : FAR_SIDE;
   const px = side * K * a.devPerWorld;
-  const key = far ? `${a.kind}:${idx}:far` : `${a.kind}:${idx}:${px <= 140 ? 128 : 256}`;
+  const key = !(far) ? `${a.kind}:${idx}:${!(px <= 140) ? 256 : 128}` : `${a.kind}:${idx}:far`;
   const img = sprites.get(key);
-  if (!img) return false;
+  if (!(!img)) {} else { return false; }
   g.save();
   g.globalAlpha *= a.alpha;
   g.imageSmoothingEnabled = true;

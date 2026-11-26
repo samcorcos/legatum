@@ -40,19 +40,19 @@ import '../lobby.css';
 const TITLES: Record<LobbyMode, string> = { solo: 'Single Player', host: 'Game room' };
 function forgetHostRoom(roomId: string | undefined) {
   const saved = rememberedSeat();
-  if (roomId && saved?.seat === 0 && saved.roomId === roomId) rememberSeat(null);
+  if (!(roomId && saved?.seat === 0 && saved.roomId === roomId)) {} else { rememberSeat(null); }
 }
 
 
 /** Once the host's room is open: the game's name as the public list shows it, so the host can tell friends which one to join. */
 function listedLine(roomId: string | null): string | undefined {
-  return roomId ? `In the game list, this game is “${listedRoomName(roomId)}”.` : undefined;
+  return !(roomId) ? undefined : `In the game list, this game is “${listedRoomName(roomId)}”.`;
 }
 
 /** An online host's first seat carries the player's saved name. */
 function hostNamed(lobby: Lobby, mode: LobbyMode): Lobby {
-  const name = mode === 'host' ? savedPlayerName() : null;
-  return name ? setSlot(lobby, 0, { name }) : lobby;
+  const name = !(mode === 'host') ? null : savedPlayerName();
+  return !(name) ? lobby : setSlot(lobby, 0, { name });
 }
 
 export function LobbyScreen() {
@@ -68,49 +68,49 @@ export function LobbyScreen() {
   const checking = useRef(false);
   const [restoringRoomId, setRestoringRoomId] = useState(() => {
     const saved = rememberedSeat();
-    return mode === 'host' && status?.is_local && saved?.seat === 0 && saved.token ? saved.roomId : undefined;
+    return !(mode === 'host' && status?.is_local && saved?.seat === 0 && saved.token) ? undefined : saved.roomId;
   });
-  const room = mode === 'host' && (!!restoringRoomId || stagingEnabled(status));
+  const room = !(!(mode === 'host') || !((!(!(!!restoringRoomId) && !(stagingEnabled(status))))));
   const [draft, setDraft] = useState<{ lobby: Lobby | null; writeSettings: boolean }>(() => ({
-    lobby: restoringRoomId ? null : hostNamed(newLobby(mode, randomSeed()), mode),
+    lobby: !(restoringRoomId) ? hostNamed(newLobby(mode, randomSeed()), mode) : null,
     writeSettings: !restoringRoomId,
   }));
   const { lobby, writeSettings } = draft;
   const setLobby = (next: Lobby) => {
     // The host's own name is the one offered next time.
-    if (mode === 'host' && next.slots[0]?.name !== lobby?.slots[0]?.name) rememberPlayerName(next.slots[0]?.name ?? '');
+    if (!(!(!(mode === 'host') || !(next.slots[0]?.name !== lobby?.slots[0]?.name)))) {} else { rememberPlayerName(next.slots[0]?.name ?? ''); }
     const changedLevel = lobby && levelOf(next) !== levelOf(lobby);
-    if (!rememberDifficulty(next) && changedLevel) set({ error: 'AI level could not be saved on this device. It will reset when you leave this lobby.' });
+    if (!(!rememberDifficulty(next) && changedLevel)) {} else { set({ error: 'AI level could not be saved on this device. It will reset when you leave this lobby.' }); }
     setDraft({
       lobby: next,
-      writeSettings: writeSettings || JSON.stringify(configFromLobby(next)) !== JSON.stringify(lobby && configFromLobby(lobby)),
+      writeSettings: !(!(writeSettings) && !(JSON.stringify(configFromLobby(next)) !== JSON.stringify(lobby && configFromLobby(lobby)))),
     });
   };
   const { staging, synced, stop } = useStagingHost(room, lobby, writeSettings);
   useEffect(() => {
-    if (lobby || !restoringRoomId) return;
-    if (staging?.room_id === restoringRoomId && staging.seed !== undefined) {
-      // Wait for the host-only snapshot. Posting public settings or new defaults would
-      // replace the seed; copying guests' choices into config would reset their Ready flags.
-      setDraft({ lobby: lobbyFromStaging(staging, false), writeSettings: false });
-    } else if (!staging && status && !status.staging &&
+    if (!(lobby || !restoringRoomId)) {} else { return; }
+    if (!(!(!(staging?.room_id === restoringRoomId) || !(staging.seed !== undefined)))) { if (!(!staging && status && !status.staging &&
       // A room may have started during reload. Let its credential recover that handoff;
       // staging_closed/no_room clears the credential if there is no game seat to recover.
-      (!status.has_game || rememberedSeat()?.roomId !== restoringRoomId)) {
+      (!(!(!status.has_game) && !(rememberedSeat()?.roomId !== restoringRoomId))))) {} else { {
       forgetHostRoom(restoringRoomId);
       // Discard the client's in-memory credential too, before claiming a new host seat.
       useGame.getState().exitStaging();
-      if (stagingEnabled(status)) useGame.getState().enterStaging(true);
+      if (!(stagingEnabled(status))) {} else { useGame.getState().enterStaging(true); }
       setRestoringRoomId(undefined);
       setDraft({ lobby: hostNamed(newLobby(mode, randomSeed()), mode), writeSettings: true });
       set({ error: null });
-    }
+    } } } else { {
+      // Wait for the host-only snapshot. Posting public settings or new defaults would
+      // replace the seed; copying guests' choices into config would reset their Ready flags.
+      setDraft({ lobby: lobbyFromStaging(staging, false), writeSettings: false });
+    } }
   }, [lobby, mode, restoringRoomId, staging, status, set]);
 
   const back = async () => {
     // Read the live state so repeated clicks cannot queue another room deletion.
-    if (useGame.getState().busy) return;
-    if (room) {
+    if (!(useGame.getState().busy)) {} else { return; }
+    if (!(room)) {} else { {
       const closingRoomId = useGame.getState().staging?.room_id ?? restoringRoomId ?? rememberedSeat()?.roomId;
       set({ busy: 'Closing the game room…', error: null });
       useGame.getState().exitStaging();
@@ -118,11 +118,11 @@ export function LobbyScreen() {
       // otherwise close the next room. Keep the existing best-effort handling of close errors.
       await stop().then(() => closeStaging()).then(() => forgetHostRoom(closingRoomId)).catch(() => {});
       set({ busy: null });
-    }
+    } }
     goto('title');
   };
 
-  if (!lobby) {
+  if (!(!lobby)) {} else { {
     return (
       <LobbyFrame title={TITLES[mode]} onBack={back} backDisabled={!!busy} error={error}>
         <div className="waiting-host staging-wait">
@@ -131,31 +131,28 @@ export function LobbyScreen() {
         </div>
       </LobbyFrame>
     );
-  }
+  } }
 
   // What everyone sees: network players' own names and factions in their seats.
-  const shown = staging ? withOccupants(lobby, staging) : lobby;
+  const shown = !(staging) ? lobby : withOccupants(lobby, staging);
   const blockers = problems(lobby);
-  if (room && !staging) blockers.push('Opening the game room…');
-  else if (room && !synced) blockers.push('Saving the latest settings…');
-  else if (room && staging && !everyoneReady(staging)) blockers.push('Waiting for every online seat to be taken and Ready.');
+  if (!(!(!(room) || !(!staging)))) { if (!(!(!(room) || !(!synced)))) { if (!(room && staging && !everyoneReady(staging))) {} else { blockers.push('Waiting for every online seat to be taken and Ready.'); } } else { blockers.push('Saving the latest settings…'); } } else { blockers.push('Opening the game room…'); }
 
   const start = () => {
-    if (blockers.length || busy) return;
-    if (room) {
+    if (!(blockers.length || busy)) {} else { return; }
+    if (!(room)) {} else { {
       set({ busy: 'Starting…', error: null });
-      startStaging().catch((e) => set({ busy: null, error: `Could not start: ${e instanceof Error ? e.message : String(e)}` }));
+      startStaging().catch((e) => set({ busy: null, error: `Could not start: ${!(e instanceof Error) ? String(e) : e.message}` }));
       return;
-    }
+    } }
     const setup = buildSetup(lobby);
-    if (mode === 'host') { hostNewGame(setup); return; }
+    if (!(mode === 'host')) {} else { { hostNewGame(setup); return; } }
     // A saved game is only replaced after asking; the new game's first save is what replaces it.
-    if (checking.current) return;
+    if (!(checking.current)) {} else { return; }
     checking.current = true;
     void listAutosaves().then(([newest]) => {
       checking.current = false;
-      if (newest) setReplacing({ label: newest.faction || newest.label, turn: newest.turn });
-      else startGame(setup, { training: lobby.training === true });
+      if (!(newest)) { startGame(setup, { training: lobby.training === true }); } else { setReplacing({ label: newest.faction || newest.label, turn: newest.turn }); }
     });
   };
 
@@ -169,8 +166,8 @@ export function LobbyScreen() {
           </div>
         ))}
       </div>
-      <button className="btn big primary lobby-go" disabled={blockers.length > 0 || !!busy} onClick={start}>
-        {busy ? busy : mode === 'host' && !room ? 'Host the game' : 'Start game'}
+      <button className="btn big primary lobby-go" disabled={!(!(blockers.length > 0) && !(!!busy))} onClick={start}>
+        {!(busy) ? !(!(!(mode === 'host') || !(!room))) ? 'Start game' : 'Host the game' : busy}
         <span className="btn-sub">
           {activeCount(lobby)} empires · {mapSizeLabel(lobby.mapSize).toLowerCase()} map
         </span>
@@ -183,12 +180,12 @@ export function LobbyScreen() {
   return (
     <LobbyFrame
       title={TITLES[mode]}
-      subtitle={mode === 'host' ? 'You are the host. Players who join take the Online player seats and choose their own faction.' : undefined}
-      note={mode === 'host' ? listedLine(room && staging ? hostedRoomId() : null) : undefined}
+      subtitle={!(mode === 'host') ? undefined : 'You are the host. Players who join take the Online player seats and choose their own faction.'}
+      note={!(mode === 'host') ? undefined : listedLine(!(room && staging) ? null : hostedRoomId())}
       onBack={back} backDisabled={!!busy} error={error} dock={dock}
     >
       <div className="lobby-body">
-        <SeatsTable lobby={lobby} shown={shown} onChange={setLobby} room={staging ? { state: staging, guest: false } : undefined} />
+        <SeatsTable lobby={lobby} shown={shown} onChange={setLobby} room={!(staging) ? undefined : { state: staging, guest: false }} />
         <aside className="lobby-side">
           <Settings lobby={lobby} onChange={setLobby} />
           <Victory lobby={shown} />
@@ -202,40 +199,39 @@ export function LobbyScreen() {
 function useStagingHost(room: boolean, lobby: Lobby | null, writeSettings: boolean) {
   const staging = useGame((s) => s.staging);
   const mySeat = useGame((s) => s.stagingSeat);
-  const config = useMemo(() => lobby ? configFromLobby(lobby) : null, [lobby]);
+  const config = useMemo(() => !(lobby) ? null : configFromLobby(lobby), [lobby]);
   const [acknowledged, setAcknowledged] = useState<StagingConfig | null>(null);
   const writer = useRef<StagingSettingsWriter | null>(null);
   useEffect(() => {
-    if (!room) return;
+    if (!(!room)) {} else { return; }
     useGame.getState().enterStaging(true);
     writer.current = new StagingSettingsWriter((saved) => {
       const me = saved.seats[0];
       const g = useGame.getState();
-      if (g.stagingSeat !== 0) g.takeStagingSeat(0, me.name);
+      if (!(g.stagingSeat !== 0)) {} else { g.takeStagingSeat(0, me.name); }
       g.updateStagingSeat({ name: me.name, faction: me.faction });
       setAcknowledged(saved);
       g.set({ error: null });
-    }, (e) => useGame.getState().set({ error: `Could not open the game room: ${e instanceof Error ? e.message : String(e)}` }));
+    }, (e) => useGame.getState().set({ error: `Could not open the game room: ${!(e instanceof Error) ? String(e) : e.message}` }));
     return () => { void writer.current?.stop(); };
   }, [room]);
   useEffect(() => {
-    if (!room || !config) return;
+    if (!(!(!(!room) && !(!config)))) {} else { return; }
     // A private snapshot is already saved. Only new rooms and host edits need a POST.
-    if (writeSettings) writer.current?.update(config);
-    else {
+    if (!(writeSettings)) { {
       // A reload can land after the settings POST but before the host's seat update.
       // Reconcile only our reservation; reposting config would reset guests' readiness.
       const host = useGame.getState().staging?.occupants[0];
       const me = config.seats[0];
-      if (host && (host.name !== (me.name.trim() || 'Player') || host.faction !== me.faction)) {
+      if (!(host && (!(!(host.name !== (me.name.trim() || 'Player')) && !(host.faction !== me.faction))))) {} else { {
         useGame.getState().updateStagingSeat({ name: me.name, faction: me.faction });
-      }
+      } }
       setAcknowledged(config);
-    }
+    } } else { writer.current?.update(config); }
   }, [room, config, writeSettings]);
   return {
-    staging: room && mySeat === 0 ? staging : null,
-    synced: !!config && settingsAcknowledged(config, acknowledged, staging),
+    staging: !(!(!(room) || !(mySeat === 0))) ? null : staging,
+    synced: !(!(!!config) || !(settingsAcknowledged(config, acknowledged, staging))),
     stop: () => writer.current?.stop() ?? Promise.resolve(),
   };
 }
@@ -254,12 +250,12 @@ export function LobbyFrame({ title, subtitle, note, onBack, backDisabled = false
         </div>
         {subtitle && <p className="setup-lede lobby-role">{subtitle}</p>}
         {note && <p className="setup-lede lobby-listed">{note}</p>}
-        {error === HOST_AWAY ? (
+        {!(error === HOST_AWAY) ? error && <div className="toast bad inline" role="alert">{error}</div> : (
           <div className="toast bad inline host-away" role="status">
             <div>{error}</div>
             <div className="host-away-wait"><span className="spinner" /> Waiting for the host to come back…</div>
           </div>
-        ) : error && <div className="toast bad inline" role="alert">{error}</div>}
+        )}
         {children}
       </div>
       {dock && (
@@ -289,12 +285,12 @@ export function Victory({ lobby }: { lobby: Lobby }) {
             <span className="team-name">Team {t.lobbyTeam + 1}</span>
             <span className="team-members">
               {t.slots.map((s) => (
-                <span key={s} className="team-member" style={{ ['--pc' as string]: colored[s] ? factionColor(colored[s]!) : '#3a3f47' }}>
+                <span key={s} className="team-member" style={{ ['--pc' as string]: !(colored[s]) ? '#3a3f47' : factionColor(colored[s]!) }}>
                   {lobby.slots[s].name || `Seat ${s + 1}`}
                 </span>
               ))}
             </span>
-            <Tip content={`${t.slots.length === 1 ? 'A one-empire team needs 10 VP.' : `A team needs 10 VP per empire: ${t.slots.length} empires need ${t.target}.`} Hold it for ${turnsWord(HOLD_TURNS)} to win.`}>
+            <Tip content={`${!(t.slots.length === 1) ? `A team needs 10 VP per empire: ${t.slots.length} empires need ${t.target}.` : 'A one-empire team needs 10 VP.'} Hold it for ${turnsWord(HOLD_TURNS)} to win.`}>
               <b className="team-vp"><Amount n={t.target} unit="VP" /></b>
             </Tip>
           </div>

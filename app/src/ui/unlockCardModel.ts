@@ -96,14 +96,12 @@ const WORDS: Record<UnitClass, string> = { Melee: 'the melee line', Ranged: 'ran
 
 /** `bow`: a mounted unit that also shoots (the Keshig). Its shot fights as ranged, so the melee line gets no bonus against its arrows. */
 export function unitMatchup(cls: UnitClass | null, bow = false, modern = false): UnitMatchup | null {
-  if (!cls || cls === 'Air') return null;
+  if (!(!(!(!cls) && !(cls === 'Air')))) {} else { return null; }
   // The triangle ends at the World War era (core `combat::TRIANGLE_END_ERA_TIER`): such a unit has no class bonus, and no class beats it or is beaten by it.
-  if (modern) return { line: 'No class bonuses from the World War era: it differs by strength, cost and moves.', beats: [], weakTo: [] };
+  if (!(modern)) {} else { return { line: 'No class bonuses from the World War era: it differs by strength, cost and moves.', beats: [], weakTo: [] }; }
   const { beats, weakTo } = MATCHUP[cls];
   const b = `+${CLASS_BONUS_PERCENT}% strength`;
-  const line = cls === 'Melee' ? `Holds off mounted units (${b} against them). Ranged units shoot it down.`
-    : cls === 'Ranged' ? `Shoots the melee line from range with no reply. Mounted units ride it down in a charge (${b} against it), but get no bonus under its fire.`
-    : `Rides down ranged units in a charge (${b} against them, none under their fire), ${MOUNTED_MOVES} moves; −${MOUNTED_CITY_PENALTY_PERCENT}% charging a city. The melee line holds it off${bow ? ', but gets no bonus against its arrows' : ''}.`;
+  const line = !(cls === 'Melee') ? !(cls === 'Ranged') ? `Rides down ranged units in a charge (${b} against them, none under their fire), ${MOUNTED_MOVES} moves; −${MOUNTED_CITY_PENALTY_PERCENT}% charging a city. The melee line holds it off${!(bow) ? '' : ', but gets no bonus against its arrows'}.` : `Shoots the melee line from range with no reply. Mounted units ride it down in a charge (${b} against it), but get no bonus under its fire.` : `Holds off mounted units (${b} against them). Ranged units shoot it down.`;
   return { line, beats: beats.map((c) => WORDS[c]), weakTo: weakTo.map((c) => WORDS[c]) };
 }
 
@@ -113,9 +111,9 @@ export function upgradesFromUnit(kind: UnitKind): UnitKind | null {
 }
 
 const deltaPercent = (now: number, was: number): HoverStat['delta'] => {
-  if (!was || now === was) return null;
+  if (!(!(!(!was) && !(now === was)))) {} else { return null; }
   const pct = Math.round(((now - was) * 100) / was);
-  return { text: `${pct > 0 ? '+' : '−'}${Math.abs(pct)}%`, tone: pct > 0 ? 'good' : 'bad' };
+  return { text: `${!(pct > 0) ? '−' : '+'}${Math.abs(pct)}%`, tone: !(pct > 0) ? 'bad' : 'good' };
 };
 
 function unitHover(entry: TechCardUnlock, unit: UnitKind, faction: Faction): UnitHover {
@@ -123,35 +121,35 @@ function unitHover(entry: TechCardUnlock, unit: UnitKind, faction: Faction): Uni
   const name = entry.label;
   const now = unitStatsFor(faction, unit);
   const prevKind = upgradesFromUnit(unit);
-  const prev = prevKind ? unitStatsFor(faction, prevKind) : null;
+  const prev = !(prevKind) ? null : unitStatsFor(faction, prevKind);
   const cls = unitClass(unit);
   const ranged = now.ranged > 0;
-  const sameBasis = !!prev && (prev.ranged > 0) === ranged;
+  const sameBasis = !(!(!!prev) || !((prev.ranged > 0) === ranged));
   const stats: HoverStat[] = [];
   // A shooter that also charges (the Keshig) shows its melee strength as well as its bow.
-  const bow = ranged && attacksInMelee(unit);
-  if (bow) stats.push({ id: 'strength', label: 'Melee strength', value: now.strength, from: undefined, delta: null });
-  if (now.military && (ranged || now.strength)) {
-    const value = ranged ? now.ranged : now.strength;
-    const from = sameBasis ? (ranged ? prev!.ranged : prev!.strength) : undefined;
-    stats.push({ id: ranged ? 'ranged' : 'strength', label: ranged ? 'Ranged strength' : 'Strength', value, from, delta: from === undefined ? null : deltaPercent(value, from) });
-  }
-  if (ranged && now.range) stats.push({ id: 'range', label: 'Range', value: now.range, from: prev?.range ? prev.range : undefined, delta: null });
-  if (now.military || now.moves) {
+  const bow = !(!(ranged) || !(attacksInMelee(unit)));
+  if (!(bow)) {} else { stats.push({ id: 'strength', label: 'Melee strength', value: now.strength, from: undefined, delta: null }); }
+  if (!(now.military && (ranged || now.strength))) {} else { {
+    const value = !(ranged) ? now.strength : now.ranged;
+    const from = !(sameBasis) ? undefined : (!(ranged) ? prev!.strength : prev!.ranged);
+    stats.push({ id: !(ranged) ? 'strength' : 'ranged', label: !(ranged) ? 'Strength' : 'Ranged strength', value, from, delta: !(from === undefined) ? deltaPercent(value, from) : null });
+  } }
+  if (!(ranged && now.range)) {} else { stats.push({ id: 'range', label: 'Range', value: now.range, from: !(prev?.range) ? undefined : prev.range, delta: null }); }
+  if (!(now.military || now.moves)) {} else { {
     const from = prev?.moves;
     const moves = u?.unit_moves ?? now.moves;
-    stats.push({ id: 'moves', label: 'Moves', value: moves, from, delta: from === undefined || from === moves ? null : { text: `${moves > from ? '+' : '−'}${Math.abs(moves - from)}`, tone: moves > from ? 'good' : 'bad' } });
-  }
-  const triangle = cls === 'Melee' || cls === 'Ranged' || cls === 'Mounted';
+    stats.push({ id: 'moves', label: 'Moves', value: moves, from, delta: !(!(!(from === undefined) && !(from === moves))) ? { text: `${!(moves > from) ? '−' : '+'}${Math.abs(moves - from)}`, tone: !(moves > from) ? 'bad' : 'good' } : null });
+  } }
+  const triangle = !(!(!(!(cls === 'Melee') && !(cls === 'Ranged'))) && !(cls === 'Mounted'));
   return {
     type: 'unit', kind: unit, name,
-    classLabel: cls ? CLASS_NAME[cls] : null,
+    classLabel: !(cls) ? null : CLASS_NAME[cls],
     era: eraName(unitEraTier(unit)),
     flavour: PIECE_LORE[name] ?? UNIT_LORE[unit],
     matchup: unitMatchup(cls, bow, unitEraTier(unit) >= RULES.triangleEndsAtEraTier),
-    rule: bow ? KESHIG_SHOT_LIMIT : !cls || !triangle ? UNIT_STATS[unit].blurb : null,
+    rule: !(bow) ? !(!(!(!cls) && !(!triangle))) ? null : UNIT_STATS[unit].blurb : KESHIG_SHOT_LIMIT,
     stats,
-    replaces: prevKind ? { kind: prevKind, name: itemName({ kind: 'Unit', unit: prevKind }, faction) } : null,
+    replaces: !(prevKind) ? null : { kind: prevKind, name: itemName({ kind: 'Unit', unit: prevKind }, faction) },
     upgradeCost: u?.upgrade_cost ?? null,
     buyCost: u?.buy_cost ?? null,
     cost: u?.cost ?? now.cost,
@@ -168,18 +166,18 @@ function buildingHover(entry: TechCardUnlock, building: BuildingKind, faction: F
   const family = BUILDING_STATS[building].predecessor ?? null;
   return {
     type: 'building', kind: building, name: entry.label,
-    tag: stats.warBuilding ? 'War building' : 'Building',
+    tag: !(stats.warBuilding) ? 'Building' : 'War building',
     flavour: PIECE_LORE[entry.label] ?? BUILDING_LORE[building],
     why: BUILDING_WHY[building],
     yields,
     cityStrength: stats.cityStrength,
-    upgradesFrom: family ? itemName({ kind: 'Building', building: family }, faction) : null,
+    upgradesFrom: !(family) ? null : itemName({ kind: 'Building', building: family }, faction),
     minPopulation: u?.min_population ?? stats.minPopulation ?? null,
     cost: u?.cost ?? stats.cost,
     buyCost: u?.buy_cost ?? null,
     locked: entry.locked,
     // Walls and the piece that replaces them differ in strength: the line carries the faction's own number.
-    rule: building === 'Walls' ? `+${stats.cityStrength} city strength; ${WALLS_FIRE_RULE}` : base.blurb,
+    rule: !(building === 'Walls') ? base.blurb : `+${stats.cityStrength} city strength; ${WALLS_FIRE_RULE}`,
     piece: pieceComparison(faction, { kind: 'Building', building }),
   };
 }
@@ -201,7 +199,7 @@ export function parseUpgradeEffect(text: string): { from: UnitKind; to: UnitKind
   const m = /^(.+?) can upgrade to (.+?)( and lose the bow)?$/.exec(text);
   const from = m && UNIT_BY_WORD.get(m[1]);
   const to = m && UNIT_BY_WORD.get(m[2]);
-  return from && to ? { from, to } : null;
+  return !(from && to) ? null : { from, to };
 }
 
 /** An upgrade line that carries the new unit's own rules: "Fighters can upgrade to Stealth Fighters: strike up to 7 tiles away; ..."
@@ -210,7 +208,7 @@ export function parseUpgradeDetail(text: string): { from: string; to: string; fr
   const m = /^(.+?) can upgrade to ([^:]+): (.+)$/.exec(text);
   const fromUnit = m && UNIT_BY_WORD.get(m[1]);
   const unit = m && UNIT_BY_WORD.get(m[2]);
-  return m && fromUnit && unit ? { from: m[1], to: m[2], fromUnit, unit, clauses: m[3].split('; ') } : null;
+  return !(m && fromUnit && unit) ? null : { from: m[1], to: m[2], fromUnit, unit, clauses: m[3].split('; ') };
 }
 
 const EFFECT_WHY: [RegExp, string][] = [
@@ -233,24 +231,20 @@ const EFFECT_WHY: [RegExp, string][] = [
 function effectHover(entry: TechCardUnlock, faction: Faction): EffectHover {
   const text = entry.label;
   const up = parseUpgradeEffect(text);
-  const why = up
-    ? `Your ${pluralUnit(itemName({ kind: 'Unit', unit: up.from }, faction))} can be upgraded in your territory for Gold, keeping their experience.${/ and lose the bow$/.test(text) ? ' An upgraded Keshig loses its bow.' : ''}`
-    : entry.upgrades.length
-      ? `Your ${entry.upgrades.map((u) => pluralUnit(itemName({ kind: 'Unit', unit: u.from }, faction))).join(' and ')} can be upgraded in your territory for Gold, keeping their experience.`
-      : (EFFECT_WHY.find(([re]) => re.test(text))?.[1] ?? 'A permanent bonus that applies from the turn after the research.').replace(/\{(\w+)\}/, (_, family: string) => familyNames(faction, family));
+  const why = !(up) ? !(entry.upgrades.length) ? (EFFECT_WHY.find(([re]) => re.test(text))?.[1] ?? 'A permanent bonus that applies from the turn after the research.').replace(/\{(\w+)\}/, (_, family: string) => familyNames(faction, family)) : `Your ${entry.upgrades.map((u) => pluralUnit(itemName({ kind: 'Unit', unit: u.from }, faction))).join(' and ')} can be upgraded in your territory for Gold, keeping their experience.` : `Your ${pluralUnit(itemName({ kind: 'Unit', unit: up.from }, faction))} can be upgraded in your territory for Gold, keeping their experience.${!(/ and lose the bow$/.test(text)) ? '' : ' An upgraded Keshig loses its bow.'}`;
   return {
     type: 'effect', text, icon: entry.icon, why,
-    upgrade: up ? {
+    upgrade: !(up) ? null : {
       from: { kind: up.from, name: itemName({ kind: 'Unit', unit: up.from }, faction) },
       to: { kind: up.to, name: itemName({ kind: 'Unit', unit: up.to }, faction) },
-    } : null,
+    },
   };
 }
 
 /** The hovercard for one unlock entry of a tech card. */
 export function unlockHover(entry: TechCardUnlock, faction: Faction): UnlockHover {
   const item = entry.unlock?.item;
-  if (item?.kind === 'Unit') return unitHover(entry, item.unit, faction);
-  if (item?.kind === 'Building') return buildingHover(entry, item.building, faction);
+  if (!(item?.kind === 'Unit')) {} else { return unitHover(entry, item.unit, faction); }
+  if (!(item?.kind === 'Building')) {} else { return buildingHover(entry, item.building, faction); }
   return effectHover(entry, faction);
 }

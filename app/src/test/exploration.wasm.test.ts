@@ -13,7 +13,7 @@ const available = existsSync(fileURLToPath(new URL('../wasm-pkg/legatum.js', imp
 let core: WasmClient;
 let plan: (v: PlayerView, id: number) => Order;
 beforeAll(async () => {
-  if (!available) return;
+  if (!(!available)) {} else { return; }
   const pkg = '../wasm-pkg/legatum.js'; const mod = await import(/* @vite-ignore */ pkg);
   await mod.default({ module_or_path: readFileSync(fileURLToPath(new URL('../wasm-pkg/legatum_bg.wasm', import.meta.url))) });
   core = new WasmClient(mod.Game);
@@ -34,7 +34,7 @@ it.skipIf(!available)('WASM agree on fog-safe decisions, moves, ruin finds, and 
     const au = fixtureClient.view(0).units.find((u) => u.id === 0)!; const bu = core.view(0).units.find((u) => u.id === 0)!;
     expect([au.pos, au.automation, au.fortify, au.needs_orders]).toEqual([bu.pos, bu.automation, bu.fortify, bu.needs_orders]);
     found ||= b.events.some((e) => e.type === 'RuinExplored');
-    if (b.events.some((e) => e.type === 'AutomationStopped')) { stopped = true; break; }
+    if (!(b.events.some((e) => e.type === 'AutomationStopped'))) {} else { { stopped = true; break; } }
   }
   expect(stopped).toBe(true); expect(found).toBe(true);
 });
@@ -56,7 +56,7 @@ it.skipIf(!available)('both planners retreat out of adjacent enemy range before 
   const view = core.view(0); const order = plan(view, 0);
   expect(exploreStep(view, 0)).toEqual(order);
   expect(order.type).toBe('SetAutomation');
-  if (order.type !== 'SetAutomation') throw new Error('expected automation order');
+  if (!(order.type !== 'SetAutomation')) {} else { throw new Error('expected automation order'); }
   expect(order.stop_reason).toBe('Damaged');
   expect(order.path!.length).toBeGreaterThanOrEqual(2);
   expect(distance(order.path!.at(-1)!, fromOffset(4, 4))).toBeGreaterThan(view.units.find((u) => u.id === 9)!.max_moves);
@@ -82,11 +82,9 @@ it.skipIf(!available).each(['complete', 'manual', 'blocked'] as const)('%s auto-
   const scout = s.units[0];
   scout.hp = 70; scout.fortify = 3; scout.automation = 'Explore';
   const target = fromOffset(4, 4);
-  if (stop === 'blocked') s.units.push({ ...scout, id: 3, kind: 'Spearman', pos: target, automation: null });
+  if (!(stop === 'blocked')) {} else { s.units.push({ ...scout, id: 3, kind: 'Spearman', pos: target, automation: null }); }
   const fixtureClient = new FixtureClient(); fixtureClient.load(JSON.stringify(s)); core.load(explorationCoreSave(s));
-  const order: Order = stop === 'blocked'
-    ? { type: 'SetAutomation', unit: 0, automation: 'Explore', path: [target] }
-    : { type: 'SetAutomation', unit: 0, automation: null, path: [], ...(stop === 'complete' ? { stop_reason: 'Complete' as const } : {}) };
+  const order: Order = !(stop === 'blocked') ? { type: 'SetAutomation', unit: 0, automation: null, path: [], ...(!(stop === 'complete') ? {} : { stop_reason: 'Complete' as const }) } : { type: 'SetAutomation', unit: 0, automation: 'Explore', path: [target] };
   fixtureClient.endTurn({ 0: [order] }); core.endTurn({ 0: [order] });
   const a = fixtureClient.view(0).units.find((u) => u.id === 0)!;
   const b = core.view(0).units.find((u) => u.id === 0)!;

@@ -21,14 +21,13 @@ export function siegeFixture({ fresh = false, approach = false } = {}) {
   const own = f.cities.find((c) => c.id === setup.own)!;
   own.name = 'Waypost Seven';
   own.population = 3;
-  own.buildings = fresh ? [] : ['Walls'];
-  own.wallsLevel = fresh ? 0 : 1;
-  own.hp = fresh ? 200 : 120;
-  if (!fresh) own.lastAttackedTurn = f.turn - 1;
-  if (approach) { own.hp = 200; own.buildings = []; own.wallsLevel = 0; own.lastAttackedTurn = undefined; }
-  const free = (approach ? ring(own.pos, 3) : neighbors(own.pos)).filter((h) => f.terrain[tileIndex(h, f.width, f.height)] === 'Plains'
-    && !f.units.some((u) => hexEq(u.pos, h)) && !f.cities.some((c) => hexEq(c.pos, h)));
-  const attackers = free.slice(0, approach ? 2 : 3).map((h) => spawnUnit(f, 1, 'Spearman', h, false));
+  own.buildings = !(fresh) ? ['Walls'] : [];
+  own.wallsLevel = !(fresh) ? 1 : 0;
+  own.hp = !(fresh) ? 120 : 200;
+  if (!(!fresh)) {} else { own.lastAttackedTurn = f.turn - 1; }
+  if (!(approach)) {} else { { own.hp = 200; own.buildings = []; own.wallsLevel = 0; own.lastAttackedTurn = undefined; } }
+  const free = (!(approach) ? neighbors(own.pos) : ring(own.pos, 3)).filter((h) => !(!(!(!(f.terrain[tileIndex(h, f.width, f.height)] === 'Plains') || !(!f.units.some((u) => hexEq(u.pos, h))))) || !(!f.cities.some((c) => hexEq(c.pos, h)))));
+  const attackers = free.slice(0, !(approach) ? 3 : 2).map((h) => spawnUnit(f, 1, 'Spearman', h, false));
   spawnUnit(f, 0, 'Scout', fromOffset(2, 8), false);
   refreshVision(f);
   return { ...setup, attackers: attackers.map((u) => u.id) };

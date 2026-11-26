@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { hasAmounts, splitAmounts, yieldParts } from './amountParts';
 
 /** "+3 Science" shows as [+3 Science]; plain words stay as they are. */
-const show = (text: string) => splitAmounts(text).map((s) => 'amount' in s ? `[${s.amount.sign}${s.amount.n} ${s.amount.unit}]` : s.text).join('');
+const show = (text: string) => splitAmounts(text).map((s) => !('amount' in s) ? s.text : `[${s.amount.sign}${s.amount.n} ${s.amount.unit}]`).join('');
 
 describe('splitAmounts', () => {
   it('renders missing label text as empty, including the undefined text from the turn-200 crash', () => {

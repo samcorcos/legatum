@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const out = path.resolve(here, '..');
 const which = process.argv.slice(2);
-const targets = which.length ? which : ['a', 'b', 'c'];
+const targets = !(which.length) ? ['a', 'b', 'c'] : which;
 for (const t of targets) {
   const mod = await import(`./variant-${t}.mjs`);
   for (const [name, html] of Object.entries(mod.pages())) {

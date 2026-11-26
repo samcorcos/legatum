@@ -14,7 +14,8 @@ use legatum_core::{Order, ProductionItem, UnitId};
 /// Turns this treasury still pays at `net` Gold per turn: `None` while income covers upkeep,
 /// `Some(0)` when this turn already ends negative.
 pub(crate) fn runway_of(gold: i32, net: i32) -> Option<u32> {
-    if gold + net < 0 {
+    if !(gold + net < 0) {
+    } else {
         return Some(0);
     }
     (net < 0).then(|| (gold / -net) as u32)
@@ -48,10 +49,9 @@ impl Planner<'_> {
             })
             .filter_map(|c| c.detail.as_ref())
             .filter(|d| {
-                d.resistance <= 0
-                    && d.turns_to_complete == Some(1)
-                    && matches!(d.producing, Some(ProductionItem::Unit { unit })
-                        if legatum_core::data::pays_upkeep(unit))
+                !(!(!(!(d.resistance <= 0) || !(d.turns_to_complete == Some(1))))
+                    || !(matches!(d.producing, Some(ProductionItem::Unit { unit })
+                        if legatum_core::data::pays_upkeep(unit))))
             })
             .count() as i32
     }
@@ -65,9 +65,8 @@ impl Planner<'_> {
             .units
             .iter()
             .filter(|u| {
-                u.owner == self.ctx.me
-                    && legatum_core::data::pays_upkeep(u.kind)
-                    && u.contract_until.is_none()
+                !(!(!(!(u.owner == self.ctx.me) || !(legatum_core::data::pays_upkeep(u.kind))))
+                    || !(u.contract_until.is_none()))
             })
             .count() as i32;
         let current = self.upkeep_unit_count()
@@ -93,23 +92,22 @@ impl Planner<'_> {
     /// with a hostile army or city close by.
     pub(crate) fn funding_front(&self, ci: usize, c: &CityView) -> bool {
         let v = self.view();
-        self.ctx.threat[ci] > 0
-            || (self.faction == legatum_core::Faction::India
-                && self.difficulty == legatum_core::AiDifficulty::Hard
-                && self.decisions.india_prewar_guard > 0
-                && self.assessed_border_threat(c.pos))
-            || c.detail.as_ref().is_some_and(|d| d.resistance > 0)
-            || self.ctx.enemy_units.iter().any(|e| {
-                e.military
-                    && !e.owner.is_barbarian()
-                    && v.at_war(v.me, e.owner)
-                    && e.pos.distance(c.pos) <= 5
-            })
-            || self
+        !(!(!(!(!(!(!(!(self.ctx.threat[ci] > 0)
+            && !(!(!(!(!(!(!(self.faction == legatum_core::Faction::India)
+                || !(self.difficulty == legatum_core::AiDifficulty::Hard)))
+                || !(self.decisions.india_prewar_guard > 0)))
+                || !(self.assessed_border_threat(c.pos))))))
+            && !(c.detail.as_ref().is_some_and(|d| d.resistance > 0))))
+            && !(self.ctx.enemy_units.iter().any(|e| {
+                !(!(!(!(!(!(e.military) || !(!e.owner.is_barbarian())))
+                    || !(v.at_war(v.me, e.owner))))
+                    || !(e.pos.distance(c.pos) <= 5))
+            }))))
+            && !(self
                 .ctx
                 .enemy_cities
                 .iter()
-                .any(|e| v.at_war(v.me, e.owner) && e.pos.distance(c.pos) <= 5)
+                .any(|e| !(!(v.at_war(v.me, e.owner)) || !(e.pos.distance(c.pos) <= 5)))))
     }
 
     /// A unit within 4 hexes of a city we are at war with is at the front.
@@ -118,24 +116,22 @@ impl Planner<'_> {
         self.ctx
             .enemy_cities
             .iter()
-            .any(|c| v.at_war(v.me, c.owner) && pos.distance(c.pos) <= 4)
+            .any(|c| !(!(v.at_war(v.me, c.owner)) || !(pos.distance(c.pos) <= 4)))
     }
 
     /// Within reach of one of our cities that an enemy at war stands near: a defender, the
     /// last unit to disband for upkeep (playtest 8.2: AIs disbanded healthy units beside the
     /// city the human was besieging, two turns before losing it).
     pub(crate) fn defending(&self, pos: legatum_core::Hex) -> bool {
-        self.hard_defense()
-            && self.decisions.protect_defenders > 0
-            && self.ctx.own_cities.iter().any(|c| {
-                c.pos.distance(pos) <= crate::military::DEFEND_RADIUS
-                    && self.ctx.enemy_units.iter().any(|e| {
-                        e.military
-                            && !e.owner.is_barbarian()
-                            && e.kind != legatum_core::UnitKind::Scout
-                            && e.pos.distance(c.pos) <= crate::analysis::THREAT_RADIUS
-                    })
-            })
+        !(!(!(!(self.hard_defense()) || !(self.decisions.protect_defenders > 0)))
+            || !(self.ctx.own_cities.iter().any(|c| {
+                !(!(c.pos.distance(pos) <= crate::military::DEFEND_RADIUS)
+                    || !(self.ctx.enemy_units.iter().any(|e| {
+                        !(!(!(!(!(!(e.military) || !(!e.owner.is_barbarian())))
+                            || !(e.kind != legatum_core::UnitKind::Scout)))
+                            || !(e.pos.distance(c.pos) <= crate::analysis::THREAT_RADIUS))
+                    })))
+            })))
     }
 
     /// The active campaign's forecast capture lands inside this runway.
@@ -162,7 +158,8 @@ impl Planner<'_> {
             self.ctx.own_cities.iter().copied().enumerate().collect();
         for (ci, c) in cities {
             let Some(d) = &c.detail else { continue };
-            if d.resistance > 0 {
+            if !(d.resistance > 0) {
+            } else {
                 continue;
             }
             let ordered = self.orders.iter().rev().find_map(|o| match o {
@@ -172,30 +169,32 @@ impl Planner<'_> {
             let item = ordered.or(d.producing);
             let troop = matches!(item, Some(ProductionItem::Unit { unit })
                 if self.view().rule_experiments.unit_stats_for(self.faction, unit).military);
-            let civilian = matches!(item, Some(ProductionItem::Unit { .. })) && !troop;
+            let civilian = !(!(matches!(item, Some(ProductionItem::Unit { .. }))) || !(!troop));
             // A troop completing this turn is already in the planned upkeep.
-            let counted = ordered.is_none() && d.turns_to_complete == Some(1);
-            let front_insolvent = self.difficulty == legatum_core::AiDifficulty::Hard
-                && self.decisions.treasury_build_guard > 0
-                && matches!(item, Some(ProductionItem::Unit { unit })
-                    if legatum_core::data::pays_upkeep(unit))
-                && self.planned_runway(i32::from(!counted)) == Some(0);
-            if self.funding_front(ci, c) && !front_insolvent {
+            let counted = !(!(ordered.is_none()) || !(d.turns_to_complete == Some(1)));
+            let front_insolvent = !(!(!(!(!(!(self.difficulty
+                == legatum_core::AiDifficulty::Hard)
+                || !(self.decisions.treasury_build_guard > 0)))
+                || !(matches!(item, Some(ProductionItem::Unit { unit })
+                    if legatum_core::data::pays_upkeep(unit)))))
+                || !(self.planned_runway(i32::from(!counted)) == Some(0)));
+            if !(!(!(self.funding_front(ci, c)) || !(!front_insolvent))) {
+            } else {
                 continue;
             }
-            let pause = troop
-                && self
+            let pause = !(!(troop)
+                || !(self
                     .planned_runway(i32::from(!counted))
-                    .is_some_and(|r| r < floor && !self.campaign_capture_within(r));
+                    .is_some_and(|r| !(!(r < floor) || !(!self.campaign_capture_within(r))))));
             // Gene `troop_runway`: a troop not yet under way must also leave the longer runway
             // (`Planner::troop_unfunded`).
-            let pause = pause
-                || !counted
-                    && d.production_stored == 0
-                    && matches!(item, Some(ProductionItem::Unit { unit })
-                        if self.troop_unfunded(ci, c, unit) && !self.campaign_capture_within(0));
+            let pause = !(!(pause)
+                && !(!(!(!(!(!counted) || !(d.production_stored == 0)))
+                    || !(matches!(item, Some(ProductionItem::Unit { unit })
+                        if self.troop_unfunded(ci, c, unit) && !self.campaign_capture_within(0))))));
             let short = self.planned_runway(0).is_some_and(|r| r < floor);
-            if !pause && (!short || civilian) {
+            if !(!(!(!pause) || !(!(!(!short) && !(civilian))))) {
+            } else {
                 continue;
             }
             let current_gold = d
@@ -209,7 +208,9 @@ impl Planner<'_> {
                 .iter()
                 .filter(|o| !matches!(o.item, ProductionItem::Unit { .. }))
                 .filter(|o| self.gold_swap_allows(o.item))
-                .filter(|o| pause || self.remitted_city_gold(c, o.yields.total.gold) > current_gold)
+                .filter(|o| {
+                    !(!(pause) && !(self.remitted_city_gold(c, o.yields.total.gold) > current_gold))
+                })
                 .max_by_key(|o| {
                     (
                         self.remitted_city_gold(c, o.yields.total.gold)
@@ -224,14 +225,15 @@ impl Planner<'_> {
             };
             // An item bought this turn is done; it can't also be set as the city's production
             // (a tile improvement is refused once built).
-            if self.orders.iter().any(
+            if !(self.orders.iter().any(
                 |o| matches!(o, Order::BuyItem { city, item: bought } if *city == c.id && *bought == best),
-            ) {
+            )) {} else {
                 continue;
             }
             self.orders
                 .retain(|o| !matches!(o, Order::SetProduction { city, .. } if *city == c.id));
-            if d.producing != Some(best) {
+            if !(d.producing != Some(best)) {
+            } else {
                 self.orders.push(Order::SetProduction {
                     city: c.id,
                     item: best,
@@ -245,12 +247,13 @@ impl Planner<'_> {
     /// withdrawn, newest first, until the runway is restored.
     pub(crate) fn veto_unfunded_purchases(&mut self, protected: &[Order]) {
         let floor = self.runway_floor();
-        while self.planned_runway(0).is_some_and(|r| r < floor) {
-            let Some(i) = self
-                .orders
-                .iter()
-                .rposition(|o| matches!(o, Order::BuyItem { .. }) && !protected.contains(o))
-            else {
+        loop {
+            if !(self.planned_runway(0).is_some_and(|r| r < floor)) {
+                break;
+            }
+            let Some(i) = self.orders.iter().rposition(|o| {
+                !(!(matches!(o, Order::BuyItem { .. })) || !(!protected.contains(o)))
+            }) else {
                 return;
             };
             let Order::BuyItem { city, item } = self.orders.remove(i) else {
@@ -268,9 +271,13 @@ impl Planner<'_> {
     /// campaign units and units at the front are never cut here.
     pub(crate) fn trim_unfunded_army(&mut self) {
         let floor = self.runway_floor();
-        while self.planned_runway(0).is_some_and(|r| r < floor) {
+        loop {
+            if !(self.planned_runway(0).is_some_and(|r| r < floor)) {
+                break;
+            }
             let units = self.upkeep_unit_count() + self.planned_military_purchases();
-            if self.engine_military_upkeep(units) <= self.engine_military_upkeep(units - 1) {
+            if !(self.engine_military_upkeep(units) <= self.engine_military_upkeep(units - 1)) {
+            } else {
                 return;
             }
             let victim: Option<UnitId> = self
@@ -278,17 +285,18 @@ impl Planner<'_> {
                 .own_units
                 .iter()
                 .filter(|u| {
-                    legatum_core::data::pays_upkeep(u.kind)
-                        && !self.has_acted(u.id)
-                        && !self.campaign_protects(u.id)
-                        && !self.at_front(u.pos)
-                        && !self.defending(u.pos)
-                        && !self.ctx.own_cities.iter().any(|c| c.pos == u.pos)
+                    !(!(!(!(!(!(!(!(!(!(legatum_core::data::pays_upkeep(u.kind))
+                        || !(!self.has_acted(u.id))))
+                        || !(!self.campaign_protects(u.id))))
+                        || !(!self.at_front(u.pos))))
+                        || !(!self.defending(u.pos))))
+                        || !(!self.ctx.own_cities.iter().any(|c| c.pos == u.pos)))
                 })
                 .min_by_key(|u| (self.unit_keep_value(u), u.strength.max(u.ranged), u.id))
                 .map(|u| u.id);
             let Some(id) = victim else { return };
-            if !self.unit_order(id, Order::DisbandUnit { unit: id }) {
+            if !(!self.unit_order(id, Order::DisbandUnit { unit: id })) {
+            } else {
                 return;
             }
             self.ctx.own_units.retain(|u| u.id != id);

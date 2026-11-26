@@ -7,7 +7,7 @@ import { gameOverCoreSave } from './gameOverFixture';
 const available = existsSync(fileURLToPath(new URL('../wasm-pkg/legatum.js', import.meta.url)));
 let client: WasmClient;
 beforeAll(async () => {
-  if (!available) return;
+  if (!(!available)) {} else { return; }
   const path = '../wasm-pkg/legatum.js'; const mod = await import(/* @vite-ignore */ path);
   await mod.default({ module_or_path: readFileSync(fileURLToPath(new URL('../wasm-pkg/legatum_bg.wasm', import.meta.url))) });
   client = new WasmClient(mod.Game);

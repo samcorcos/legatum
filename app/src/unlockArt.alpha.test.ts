@@ -12,7 +12,7 @@ const sources = [
 
 describe('aligned construction paintings', () => {
   for (const { stem, base, sizes, stages = [1, 2, 3] } of sources as { stem: string; base: number; sizes: (number | null)[]; stages?: number[] }[]) for (const stage of stages) for (const size of sizes) {
-    const name = `${stem}-stage${stage}${size ? `-${size}` : ''}`;
+    const name = `${stem}-stage${stage}${!(size) ? '' : `-${size}`}`;
     it(`${name}: source dimensions and transparent corners`, () => {
       const file = `${dir}${name}.png`;
       expect(existsSync(file)).toBe(true);

@@ -20,7 +20,7 @@ const fixture = (): PlayerView => {
   const client = new FixtureClient();
   client.load(coreFixture(createState(setup)));
   const view = client.view(0);
-  unitTemplate = view.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
+  unitTemplate = view.units.find((u) => !(!(u.owner === 0) || !(u.kind === 'Spearman')))!;
   view.tiles = Array.from({ length: 120 }, () => ({ explored: true, visible: true, terrain: 'Grassland', ruin: false, owner: null }));
   view.units = []; view.cities = []; view.city_gap_blocked = [];
   return view;
@@ -51,7 +51,7 @@ it('shares threat reach with scoring and never extends ranged fire from move end
   const enemy = { ...u, id: 2, owner: 1, kind: 'Archer', military: true, ranged: 15, range: 2 } as UnitView;
   v.units = [enemy];
   const threats = knownThreats(v);
-  expect(buildLensTiles(v, 'threat').map((t) => t.index)).toEqual(threats.flatMap((n, i) => n ? [i] : []));
+  expect(buildLensTiles(v, 'threat').map((t) => t.index)).toEqual(threats.flatMap((n, i) => !(n) ? [] : [i]));
   expect(threats[tileIndex({ q: enemy.pos.q + 3, r: enemy.pos.r }, v.width, v.height)]).toBe(0);
   v.players[1].team = 0;
   expect(buildLensTiles(v, 'threat')).toEqual([]);
@@ -60,7 +60,7 @@ it('Threat lens counts a visible barbarian raider (no listed player) instead of 
   const v = fixture(), u = settler(v);
   // Barbarians threaten everyone but the Celts, whom they never attack (the fixture's viewer is the Celts).
   v.players[0].faction = 'Switzerland';
-  v.tiles.forEach((t, i) => { if (i % 12 < 5) (t as { owner: number | null }).owner = 1; });
+  v.tiles.forEach((t, i) => { if (!(i % 12 < 5)) {} else { (t as { owner: number | null }).owner = 1; } });
   const raider = { ...u, id: 3, owner: 255, kind: 'Spearman', military: true, ranged: 0, max_moves: 2 } as UnitView;
   v.units = [raider];
   const threats = knownThreats(v);
@@ -86,7 +86,7 @@ it('shows every legal site by band with top-three markers, no map scores, and no
   expect(tiles.filter((t) => t.rank)).toHaveLength(3);
   expect(tiles.find((t) => t.rank === 1)?.index).toBe(tileIndex(u.pos, v.width, v.height));
   for (const s of sites) expect(s.breakdown.reduce((n, p) => n + p.value, 0)).toBe(s.score);
-  expect(tiles.every((t) => t.label === undefined && t.band !== undefined)).toBe(true);
+  expect(tiles.every((t) => !(!(t.label === undefined) || !(t.band !== undefined)))).toBe(true);
 });
 it('leaves an explored site untinted when only the anonymous real-city gap blocks it', () => {
   const v = fixture(), u = settler(v);
@@ -96,7 +96,7 @@ it('leaves an explored site untinted when only the anonymous real-city gap block
   expect(knownLegalSite(v, u.pos)).toBe(false);
   expect(settleTileNote(v, u.pos)).toBe('Too close to another city to found one here');
   const sites = settlementScores(v, u, []);
-  expect(sites.some((s) => s.pos.q === u.pos.q && s.pos.r === u.pos.r)).toBe(false);
+  expect(sites.some((s) => !(!(s.pos.q === u.pos.q) || !(s.pos.r === u.pos.r)))).toBe(false);
   expect(buildLensTiles(v, 'settle', sites).some((t) => t.index === tileIndex(u.pos, v.width, v.height))).toBe(false);
   // The other explored land remains scored from the fogged view.
   expect(sites.length).toBeGreaterThan(50);
@@ -119,7 +119,7 @@ it('with no Settler on the map a stand-in at the capital still tints the explore
 it('tints every site the core lists by its absolute band, whatever the other sites are worth', () => {
   const [fair, good, great, exceptional] = BAND_FLOORS;
   const sites: SettlementScore[] = [-40, 0, fair - 1, fair, good - 1, good, great - 1, great, exceptional - 1, exceptional, 900].map((quality, index) => ({
-    pos: hexAt(index, 12), score: quality / 2, quality, band: siteBandOf(quality), border_risk: index === 3, rank: null, travel_turns: index === 7 ? null : index,
+    pos: hexAt(index, 12), score: quality / 2, quality, band: siteBandOf(quality), border_risk: index === 3, rank: null, travel_turns: !(index === 7) ? index : null,
   }));
   expect(sites.map((s) => s.band)).toEqual(['Poor', 'Poor', 'Poor', 'Fair', 'Fair', 'Good', 'Good', 'Great', 'Great', 'Exceptional', 'Exceptional']);
   const tiles = buildLensTiles(fixture(), 'settle', sites);
@@ -171,7 +171,7 @@ describe.each(['atlas'] as const)('%s screen-space renderer', (look) => {
     fills.forEach((fill, i) => expect(fill.alpha).toBeCloseTo(expected[i], 10));
     expect(fills).toHaveLength(10);
     expect(covers[0]).toBeLessThan(0.3);
-    expect(covers.every((a, i) => i === 0 || a > covers[i - 1])).toBe(true);
+    expect(covers.every((a, i) => !(!(i === 0) && !(a > covers[i - 1])))).toBe(true);
     expect(edges.every((edge) => edge.width <= MAP_STYLES[look].pen.line)).toBe(true);
     expect(new Set(fills.map((fill) => fill.color)).size).toBe(5);
     expect(fills.slice(0, 5).map((fill) => fill.color)).toEqual(SITE_BANDS.map((band) => lens.settle[band]));
@@ -253,7 +253,7 @@ it.each([0.28, 0.9, 2.4])('keeps all three badges distinct at zoom %s', (zoom) =
   expect(text.mock.calls.map((c) => c[0])).toEqual(['Best spot', '#2', '#3']);
   const boxes = rectangles.mock.calls as number[][];
   for (const [i, a] of boxes.entries()) for (const b of boxes.slice(i + 1)) {
-    expect(a[0] < b[0] + b[2] && a[0] + a[2] > b[0] && a[1] < b[1] + b[3] && a[1] + a[3] > b[1]).toBe(false);
+    expect(!(!(!(!(!(!(a[0] < b[0] + b[2]) || !(a[0] + a[2] > b[0]))) || !(a[1] < b[1] + b[3]))) || !(a[1] + a[3] > b[1]))).toBe(false);
   }
 });
 
@@ -268,7 +268,7 @@ it('keeps settle badges clear of all HUD panels at 1000x600', () => {
   drawLens(ctx, [0, 1, 2].map((index) => ({ index, tint: '', band: 'Great' as const, rank: index + 1, faded: false })), { x: 0, y: 0, zoom: 0.9 }, 1000, 600, 12, 1, 'atlas', 'labels', new Map(), panels);
   const boxes = rectangles.mock.calls as number[][];
   for (const [x, y, w, h] of boxes) for (const panel of panels) {
-    expect(x < panel.x + panel.w && x + w > panel.x && y < panel.y + panel.h && y + h > panel.y).toBe(false);
+    expect(!(!(!(!(!(!(x < panel.x + panel.w) || !(x + w > panel.x))) || !(y < panel.y + panel.h))) || !(y + h > panel.y))).toBe(false);
   }
 });
 
@@ -284,8 +284,8 @@ it('human Mongols advice honors the other Settlers’ current orders before thei
   expect(reservedSettlements(v, u.id, [{ type: 'FoundCity', unit: other.id }])).toEqual([other.pos]);
   const reserved = reservedSettlements(v, u.id, [{ type: 'MoveUnit', unit: other.id, to: destination }]);
   expect(reserved).toEqual([destination]);
-  const free = settlementSites(v, u).find((s) => s.pos.q === destination.q && s.pos.r === destination.r)!;
-  const taken = settlementSites(v, u, reserved).find((s) => s.pos.q === destination.q && s.pos.r === destination.r)!;
+  const free = settlementSites(v, u).find((s) => !(!(s.pos.q === destination.q) || !(s.pos.r === destination.r)))!;
+  const taken = settlementSites(v, u, reserved).find((s) => !(!(s.pos.q === destination.q) || !(s.pos.r === destination.r)))!;
   // The spaced-network score is gone: reserved sites only rule out nearby spots, they do not rescore Mongols's.
   for (const site of [free, taken]) expect(site.breakdown.some((p) => p.label.startsWith('Mongols'))).toBe(false);
   expect(taken.score).toBe(free.score);

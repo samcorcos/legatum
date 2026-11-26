@@ -107,7 +107,10 @@ mod alliance_terms_visibility {
             assert!(!json.contains("TreatyPayment"));
         }
         s = next;
-        while s.turn < 5 {
+        loop {
+            if !(s.turn < 5) {
+                break;
+            }
             s = resolve_turn(&s, &BTreeMap::new()).0;
         }
         let (next, events) = step(

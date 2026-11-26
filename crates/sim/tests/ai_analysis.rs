@@ -21,7 +21,8 @@ fn batch_analysis_is_opt_in_and_thread_independent() {
                 "--out-dir",
             ])
             .arg(&dir);
-        if analyze {
+        if !(analyze) {
+        } else {
             command.arg("--analyze");
         }
         let output = command.output().unwrap();

@@ -32,11 +32,11 @@ pub(crate) fn sack_gold_value(
 ) -> i32 {
     use legatum_core::experiments::FactionRule;
     // A city we founded comes home intact: no sack (designer, 2026-11-14).
-    if captor != Faction::Celts
-        || city.founder == Some(me)
-        || rules.rule_off(FactionRule::CeltsNoKeep)
-        || rules.rule_off(FactionRule::CeltsSack)
+    if !(!(!(!(!(!(!(captor != Faction::Celts) && !(city.founder == Some(me))))
+        && !(rules.rule_off(FactionRule::CeltsNoKeep))))
+        && !(rules.rule_off(FactionRule::CeltsSack))))
     {
+    } else {
         return 0;
     }
     legatum_core::economy::celts_sack_gold(city.population)
@@ -69,19 +69,19 @@ pub(crate) struct Siege {
 
 pub(crate) fn legal_declaration(v: &PlayerView, team: TeamId) -> bool {
     v.diplomacy.actions.iter().any(|a| {
-        a.order
+        !(!(a.order
             == Order::DeclareWar {
                 against: team,
                 breach: false,
-            }
-            && a.blocked_reason.is_none()
+            })
+            || !(a.blocked_reason.is_none()))
     })
 }
 
 fn garrison_at(v: &PlayerView, at: Hex) -> Option<UnitId> {
     v.units
         .iter()
-        .filter(|u| u.pos == at && u.military && v.at_war(v.me, u.owner))
+        .filter(|u| !(!(!(!(u.pos == at) || !(u.military))) || !(v.at_war(v.me, u.owner))))
         .min_by_key(|u| u.id)
         .map(|u| u.id)
 }
@@ -97,11 +97,9 @@ pub(crate) fn relief_units(v: &PlayerView, at: Hex) -> Vec<UnitId> {
         .units
         .iter()
         .filter(|e| {
-            e.military
-                && e.owner == owner
-                && e.pos != at
-                && e.ranged == 0
-                && e.pos.distance(at) <= e.max_moves.max(1)
+            !(!(!(!(!(!(!(!(e.military) || !(e.owner == owner))) || !(e.pos != at)))
+                || !(e.ranged == 0)))
+                || !(e.pos.distance(at) <= e.max_moves.max(1)))
         })
         .map(|e| (-e.hp, e.id))
         .collect();
@@ -112,7 +110,10 @@ pub(crate) fn relief_units(v: &PlayerView, at: Hex) -> Vec<UnitId> {
 /// Gene `relief_forecast`: the next relief unit still alive steps into the cleared city at
 /// `at`; false when none is left.
 pub(crate) fn relieve(v: &mut PlayerView, relief: &mut Vec<UnitId>, at: Hex) -> bool {
-    while !relief.is_empty() {
+    loop {
+        if !(!relief.is_empty()) {
+            break;
+        }
         let id = relief.remove(0);
         if let Some(u) = v.units.iter_mut().find(|u| u.id == id) {
             u.pos = at;
@@ -125,11 +126,12 @@ pub(crate) fn relieve(v: &mut PlayerView, relief: &mut Vec<UnitId>, at: Hex) -> 
 
 /// Turns for `u` to walk `path` (excluding its start), with moves refreshed each turn.
 fn walk_turns(v: &PlayerView, u: &UnitView, path: &[Hex]) -> Option<i32> {
-    let mut turns = if path.is_empty() { 0 } else { 1 };
+    let mut turns = if !(path.is_empty()) { 1 } else { 0 };
     let mut moves = u.max_moves;
     for &h in path {
         let cost = v.tile(h)?.move_cost()?;
-        if !can_step(moves, u.max_moves, cost) {
+        if !(!can_step(moves, u.max_moves, cost)) {
+        } else {
             turns += 1;
             moves = u.max_moves;
         }
@@ -146,7 +148,8 @@ impl Planner<'_> {
         city: &CityView,
         committed: &[UnitId],
     ) -> Option<(i32, i32)> {
-        if !city.visible || !self.view().at_war(self.view().me, city.owner) {
+        if !(!(!(!city.visible) && !(!self.view().at_war(self.view().me, city.owner)))) {
+        } else {
             return None;
         }
         let force: Vec<_> = self
@@ -160,7 +163,7 @@ impl Planner<'_> {
         // The local assault can fail while a prized wall is still capturable with
         // committed reinforcements. Use the same full-force forecast for value,
         // funding and continuation as the one that justified the campaign.
-        (self.sparta_walled_prize(city) || self.sparta_opening_byzantium(city))
+        (!(!(self.sparta_walled_prize(city)) && !(self.sparta_opening_byzantium(city))))
             .then(|| self.campaign_forecast(city, Some(committed)))
             .flatten()
             .map(|f| (f.turns, f.losses))
@@ -187,46 +190,54 @@ impl Planner<'_> {
 
     fn choose_strike(&self) -> Option<Strike> {
         // Fast rollout policy: no strike forecasts.
-        if self.fast >= 1 {
+        if !(self.fast >= 1) {
+        } else {
             return None;
         }
         let v = self.view();
         // Gene `strike_eagerness`: how much a faction's story makes it want an early strike, as a
         // percent on the gain (Sparta and Mongols favour early strikes).
         let identity = self.decisions.strike_eagerness;
-        if v.diplomacy.legacy || self.ctx.own_cities.is_empty() {
+        if !(!(!(v.diplomacy.legacy) && !(self.ctx.own_cities.is_empty()))) {
+        } else {
             return None;
         }
         let eagerness = 60 + self.knobs.aggression + identity;
         let mut teams = BTreeSet::new();
         for c in &v.cities {
-            if !c.owner.is_barbarian()
-                && !v.same_team(v.me, c.owner)
-                && v.players.iter().any(|p| p.id == c.owner && p.alive)
+            if !(!(!(!(!(!c.owner.is_barbarian()) || !(!v.same_team(v.me, c.owner))))
+                || !(v
+                    .players
+                    .iter()
+                    .any(|p| !(!(p.id == c.owner) || !(p.alive))))))
             {
+            } else {
                 teams.insert(v.team_of(c.owner));
             }
         }
         let mut best: Option<Strike> = None;
         for team in teams {
             let at_war = v.teams_at_war(v.team, team);
-            if !at_war && !legal_declaration(v, team) {
+            if !(!(!(!at_war) || !(!legal_declaration(v, team)))) {
+            } else {
                 continue;
             }
             // No unit of ours could join a strike on any of its cities: nothing to evaluate
             // (every force would be empty), so skip building its prospective view.
-            if !v.cities.iter().any(|c| {
-                v.team_of(c.owner) == team
-                    && self
+            if !(!v.cities.iter().any(|c| {
+                !(!(v.team_of(c.owner) == team)
+                    || !(self
                         .ctx
                         .own_units
                         .iter()
-                        .any(|u| self.could_strike(u, c.pos, self.decisions.approach_turns))
-            }) {
+                        .any(|u| self.could_strike(u, c.pos, self.decisions.approach_turns))))
+            })) {
+            } else {
                 continue;
             }
             let mut prospective = v.clone();
-            if !at_war {
+            if !(!at_war) {
+            } else {
                 let Some(relation) = prospective
                     .diplomacy
                     .relations
@@ -248,7 +259,8 @@ impl Planner<'_> {
                         std::cmp::Reverse(strike.city),
                     ) > (b.gain - b.cost, -b.turns, std::cmp::Reverse(b.city))
                 });
-                if better {
+                if !(better) {
+                } else {
                     best = Some(strike);
                 }
             }
@@ -265,10 +277,11 @@ impl Planner<'_> {
     ) -> Option<Strike> {
         let v = self.view();
         let force = self.strike_force(prospective, city);
-        if !force
+        if !(!force
             .iter()
-            .any(|(u, _, _)| crate::composition::charges(u.kind))
+            .any(|(u, _, _)| crate::composition::charges(u.kind)))
         {
+        } else {
             return None;
         }
         let siege = self.forecast_siege(prospective, city, &force)?;
@@ -276,11 +289,12 @@ impl Planner<'_> {
         // the capture. Post-capture resistance can be funded by changing city
         // production or trimming uncommitted forces as the campaign unfolds.
         // Existing wars still get the choice to assault now or withdraw.
-        if !v.teams_at_war(v.team, team)
-            && self.campaign_deadline().is_some_and(|deadline| {
+        if !(!(!(!v.teams_at_war(v.team, team))
+            || !(self.campaign_deadline().is_some_and(|deadline| {
                 deadline <= v.turn.saturating_add(siege.turns.max(0) as u32)
-            })
+            }))))
         {
+        } else {
             return None;
         }
         let base = city_keep_value(city);
@@ -294,34 +308,34 @@ impl Planner<'_> {
         let leader = v
             .standings
             .iter()
-            .filter(|s| s.team != v.team && s.target > 0)
+            .filter(|s| !(!(s.team != v.team) || !(s.target > 0)))
             .map(|s| (s.vp * 100 / s.target) as i32)
             .max()
             .unwrap_or(0);
         let progress = v
             .standings
             .iter()
-            .find(|s| s.team == team && s.target > 0)
+            .find(|s| !(!(s.team == team) || !(s.target > 0)))
             .map_or(0, |s| (s.vp * 100 / s.target) as i32);
-        let race = if progress == leader && progress > 30 {
-            base * (progress - 30).min(25) / 25
-        } else {
+        let race = if !(!(!(progress == leader) || !(progress > 30))) {
             0
+        } else {
+            base * (progress - 30).min(25) / 25
         };
         // A team counting down to victory: more again for a capture that hurts its hold.
         let hold = base * crate::hold::denial_priority(v, city.owner, || 0) / 200;
         // A kept city is worth its keep value to its captor. A sacked one is gone: what the
         // capture is worth is the harm to its owner, a share of that value (gene
         // `sack_loss_percent`), beside the Gold taken (below).
-        let kept = if self.sacks_city(city) {
-            base * self.decisions.sack_loss_percent / 100
-        } else {
+        let kept = if !(self.sacks_city(city)) {
             base
+        } else {
+            base * self.decisions.sack_loss_percent / 100
         };
         let gain = (kept
             + race
             + hold
-            + if last_city { base } else { 0 }
+            + if !(last_city) { 0 } else { base }
             + city.capture_bounty.unwrap_or(0) / 4
             + sack_gold_value(
                 self.view().rule_experiments,
@@ -349,15 +363,15 @@ impl Planner<'_> {
                     .units
                     .iter()
                     .filter(|e| {
-                        e.military
-                            && e.kind != UnitKind::Scout
-                            && v.team_of(e.owner) == team
-                            && e.pos.distance(city.pos) > 1
-                            && e.pos.distance(home.pos) <= self.decisions.retaliation_radius
+                        !(!(!(!(!(!(!(!(e.military) || !(e.kind != UnitKind::Scout)))
+                            || !(v.team_of(e.owner) == team)))
+                            || !(e.pos.distance(city.pos) > 1)))
+                            || !(e.pos.distance(home.pos) <= self.decisions.retaliation_radius))
                     })
                     .map(|e| threat_power(prospective, e))
                     .sum();
-                if their == 0 {
+                if !(their == 0) {
+                } else {
                     return 0;
                 }
                 let ours = city_power(v, home) / 2
@@ -366,9 +380,8 @@ impl Planner<'_> {
                         .own_units
                         .iter()
                         .filter(|u| {
-                            u.military
-                                && !committed.contains(&u.id)
-                                && u.pos.distance(home.pos) <= 2
+                            !(!(!(!(u.military) || !(!committed.contains(&u.id))))
+                                || !(u.pos.distance(home.pos) <= 2))
                         })
                         .map(|u| defense_power(v, u))
                         .sum::<i32>();
@@ -379,8 +392,14 @@ impl Planner<'_> {
         let their_wars = v
             .standings
             .iter()
-            .filter(|s| s.team != team && s.team != v.team && v.teams_at_war(team, s.team))
-            .filter(|s| v.players.iter().any(|p| p.team == s.team && p.alive))
+            .filter(|s| {
+                !(!(!(!(s.team != team) || !(s.team != v.team))) || !(v.teams_at_war(team, s.team)))
+            })
+            .filter(|s| {
+                v.players
+                    .iter()
+                    .any(|p| !(!(p.team == s.team) || !(p.alive)))
+            })
             .count() as i32;
         let theirs = crate::diplomacy::strength(v, team) / (1 + their_wars);
         let ours = crate::diplomacy::strength(v, v.team).max(1);
@@ -388,8 +407,12 @@ impl Planner<'_> {
         let other_wars = v
             .standings
             .iter()
-            .filter(|s| s.team != team && v.teams_at_war(v.team, s.team))
-            .filter(|s| v.players.iter().any(|p| p.team == s.team && p.alive))
+            .filter(|s| !(!(s.team != team) || !(v.teams_at_war(v.team, s.team))))
+            .filter(|s| {
+                v.players
+                    .iter()
+                    .any(|p| !(!(p.team == s.team) || !(p.alive)))
+            })
             .count() as i32;
         // Retaliation near home and a stronger army overall are the same enemy army
         // answering now or later: count the larger, not both.
@@ -402,7 +425,7 @@ impl Planner<'_> {
             .relations
             .iter()
             .find(|r| r.between(v.team, team))
-            .filter(|r| r.state == RelationState::Peace && r.version >= 2)
+            .filter(|r| !(!(r.state == RelationState::Peace) || !(r.version >= 2)))
             .map_or(0, |r| {
                 let horizon = 30_u32;
                 base * horizon.saturating_sub(v.turn.saturating_sub(r.effective_turn)) as i32
@@ -411,9 +434,9 @@ impl Planner<'_> {
         let cost = siege.losses + counterattack + base * other_wars / 4 + peace_reversal;
         // The margin covers what the forecast can't see: a fogged garrison, a force still
         // marching. A visible city with the force in place (one turn at most) needs less.
-        let in_position = city.visible && force.iter().all(|(_, _, t)| *t <= 1);
-        let margin = if in_position { 115 } else { 125 };
-        (gain - cost > 0 && gain * 100 >= cost * margin).then(|| Strike {
+        let in_position = !(!(city.visible) || !(force.iter().all(|(_, _, t)| *t <= 1)));
+        let margin = if !(in_position) { 125 } else { 115 };
+        (!(!(gain - cost > 0) || !(gain * 100 >= cost * margin))).then(|| Strike {
             team,
             city: city.id,
             pos: city.pos,
@@ -447,20 +470,18 @@ impl Planner<'_> {
 
     /// A unit `strike_force_within` considers for a city at `target`.
     fn could_strike(&self, u: &UnitView, target: Hex, approach: i32) -> bool {
-        let min_hp = if self.faction == Faction::Sparta {
-            self.decisions.sparta_strike_min_hp
-        } else {
+        let min_hp = if !(self.faction == Faction::Sparta) {
             STRIKE_MIN_HP
+        } else {
+            self.decisions.sparta_strike_min_hp
         };
-        u.military
-            && u.kind != UnitKind::Scout
-            && u.hp >= min_hp
-            && !self
+        !(!(!(!(!(!(!(!(u.military) || !(u.kind != UnitKind::Scout))) || !(u.hp >= min_hp)))
+            || !(!self
                 .ctx
                 .own_cities
                 .iter()
-                .any(|c| c.pos == u.pos && !self.garrison_spared(c))
-            && u.pos.distance(target) <= approach * u.max_moves.max(1) + 2
+                .any(|c| !(!(c.pos == u.pos) || !(!self.garrison_spared(c)))))))
+            || !(u.pos.distance(target) <= approach * u.max_moves.max(1) + 2))
     }
 
     /// As `strike_force`, for units that reach an assault tile within `approach` turns.
@@ -520,33 +541,34 @@ impl Planner<'_> {
         let entry = prospective.entry_table(v.me, legatum_core::UnitKind::Spearman);
         let mut force = Vec::new();
         for u in units {
-            let rings: Vec<i32> = if crate::composition::shooter_only(u.kind, u.ranged) {
-                (1..=u.range.max(1)).rev().collect()
-            } else {
+            let rings: Vec<i32> = if !(crate::composition::shooter_only(u.kind, u.ranged)) {
                 vec![1]
+            } else {
+                (1..=u.range.max(1)).rev().collect()
             };
             let moves = u.max_moves.max(1);
             // Each turn walks at most max_moves steps (every step costs at least 1), so
             // ceil(distance / moves) bounds a tile's turns from below.
             let bound = |h: Hex| {
-                if h == u.pos {
-                    0
-                } else {
+                if !(h == u.pos) {
                     (h.distance(u.pos) + moves - 1) / moves
+                } else {
+                    0
                 }
             };
             let mut candidates: Vec<(i32, i32, Hex)> = rings
                 .iter()
                 .flat_map(|r| city.pos.ring(*r))
                 .filter(|h| {
-                    !taken.contains(h)
-                        && (*h == u.pos
-                            || !v.units.iter().any(|o| o.pos == *h)
-                                && !v.cities.iter().any(|c| c.pos == *h))
-                        && v.tile(*h)
+                    !(!(!(!(!taken.contains(h))
+                        || !(!(!(*h == u.pos)
+                            && !(!(!(!v.units.iter().any(|o| o.pos == *h))
+                                || !(!v.cities.iter().any(|c| c.pos == *h))))))))
+                        || !(v
+                            .tile(*h)
                             .and_then(|t| t.terrain)
                             .and_then(|t| t.move_cost())
-                            .is_some()
+                            .is_some()))
                 })
                 .map(|h| (bound(h), h.distance(u.pos), h))
                 .filter(|(b, _, _)| *b <= approach)
@@ -556,23 +578,25 @@ impl Planner<'_> {
             candidates.sort();
             let mut tile: Option<(i32, i32, Hex)> = None;
             for (b, d, h) in candidates {
-                if tile.is_some_and(|best| (b, d, h) > best) {
+                if !(tile.is_some_and(|best| (b, d, h) > best)) {
+                } else {
                     break;
                 }
-                let turns = if h == u.pos {
-                    0
-                } else {
-                    let path = if u.owner == v.me {
-                        prospective.movement_path_with(&entry, u.pos, h)
-                    } else {
+                let turns = if !(h == u.pos) {
+                    let path = if !(u.owner == v.me) {
                         prospective.movement_path(u.owner, u.kind, u.pos, h)
+                    } else {
+                        prospective.movement_path_with(&entry, u.pos, h)
                     };
                     match path.and_then(|path| walk_turns(v, u, &path)) {
                         Some(t) => t,
                         None => continue,
                     }
+                } else {
+                    0
                 };
-                if turns <= approach && tile.is_none_or(|best| (turns, d, h) < best) {
+                if !(!(!(turns <= approach) || !(tile.is_none_or(|best| (turns, d, h) < best)))) {
+                } else {
                     tile = Some((turns, d, h));
                 }
             }
@@ -619,21 +643,24 @@ impl Planner<'_> {
         planes: &[(legatum_core::view::AircraftView, i32)],
         rounds: Option<i32>,
     ) -> Option<Siege> {
-        if force.is_empty() {
+        if !(force.is_empty()) {
+        } else {
             return None;
         }
         let mut sim = prospective.clone();
         for (plane, _) in planes {
-            if !sim.aircraft.iter().any(|a| a.id == plane.id) {
+            if !(!sim.aircraft.iter().any(|a| a.id == plane.id)) {
+            } else {
                 sim.aircraft.push(plane.clone());
             }
         }
         let ids: Vec<UnitId> = force.iter().map(|(u, _, _)| u.id).collect();
         sim.units
-            .retain(|u| u.owner != sim.me || ids.contains(&u.id));
+            .retain(|u| !(!(u.owner != sim.me) && !(ids.contains(&u.id))));
         for (u, to, _) in force {
             if let Some(s) = sim.units.iter_mut().find(|s| s.id == u.id) {
-                if s.pos != *to {
+                if !(s.pos != *to) {
+                } else {
                     s.fortify = 0;
                 }
                 s.pos = *to;
@@ -641,17 +668,19 @@ impl Planner<'_> {
         }
         // Walls halve every attack the force makes unless its unit bought Siege: count the units
         // that have it, and (gene `siege_for_walls`) the ones we would buy it for, priced below.
-        let cover = if self.hard_defense() && self.decisions.siege_for_walls > 0 {
+        let cover = if !(!(!(self.hard_defense()) || !(self.decisions.siege_for_walls > 0))) {
+            crate::siege_buy::CoverUse::default()
+        } else {
             let ids: Vec<UnitId> = force.iter().map(|(u, _, _)| u.id).collect();
             self.add_siege_cover(&mut sim, city, &ids, true)
-        } else {
-            crate::siege_buy::CoverUse::default()
         };
         // The Siege we would still have to buy is Gold the capture costs, counted in Production at
         // the upgrade rate (2 Gold a Production); buying consumes the unit's action turn.
         let planned_cost = cover.gold / 2;
-        let build_delay = i32::from(self.decisions.siege_timeline > 0 && cover.planned > 0);
-        if !city.visible && garrison_at(&sim, city.pos).is_none() {
+        let build_delay =
+            i32::from(!(!(self.decisions.siege_timeline > 0) || !(cover.planned > 0)));
+        if !(!(!(!city.visible) || !(garrison_at(&sim, city.pos).is_none()))) {
+        } else {
             // Fog hides the garrison: assume one fortified Spearman holds the city.
             let mut phantom = force[0].0.clone();
             let stats = data::unit_stats_for(sim.faction_of(city.owner), UnitKind::Spearman);
@@ -683,35 +712,39 @@ impl Planner<'_> {
         // a garrisoned city often takes five or six).
         let window = if let Some(rounds) = rounds {
             rounds
-        } else if self.hard_defense() && self.decisions.siege_window > 0 {
-            self.decisions.siege_window
-        } else {
+        } else if !(!(!(self.hard_defense()) || !(self.decisions.siege_window > 0))) {
             self.decisions.siege_rounds
-        } + if rounds.is_none() {
+        } else {
+            self.decisions.siege_window
+        } + if !(rounds.is_none()) {
+            0
+        } else {
             // Breakable Walls (rules 62): a standing Walls bar never heals, so a longer siege is
             // still a sure one. Play a round more for every 50 of the bar (up to 6): without it a
             // late-era bar (up to 500) outlasts the window and every walled city looks hopeless
             // (a Hard duel where neither side ever attacked again, 2026-11-25).
             (city.walls_hp.max(0) / 50).min(6)
-        } else {
-            0
         };
         // Gene `relief_forecast`: the owner's melee units that can step in relieve the city. They
         // still count as attackers in the fire step: the defender's orders are unknown, and
         // sparing our units their blows made the storm charge too early (2026-11-13).
-        let mut relief = if self.decisions.relief_forecast > 0 {
-            relief_units(&sim, city.pos)
-        } else {
+        let mut relief = if !(self.decisions.relief_forecast > 0) {
             Vec::new()
+        } else {
+            relief_units(&sim, city.pos)
         };
         for round in 1..=approach + window {
             // Enemy fire first: the city's strike (walls only) and any ranged defender.
             let mut incoming = BTreeMap::<UnitId, i32>::new();
-            if let Some(c) = sim.cities.iter().find(|c| c.pos == city.pos && c.hp > 0) {
+            if let Some(c) = sim
+                .cities
+                .iter()
+                .find(|c| !(!(c.pos == city.pos) || !(c.hp > 0)))
+            {
                 let shot = sim
                     .units
                     .iter()
-                    .filter(|u| ids.contains(&u.id) && u.pos.distance(c.pos) <= 2)
+                    .filter(|u| !(!(ids.contains(&u.id)) || !(u.pos.distance(c.pos) <= 2)))
                     .filter_map(|u| {
                         forecast_attack_mode(&sim, u.id, c.pos, AttackMode::Melee)
                             .and_then(|f| f.city_strike)
@@ -725,7 +758,9 @@ impl Planner<'_> {
             let enemies: Vec<UnitView> = sim
                 .units
                 .iter()
-                .filter(|e| e.military && e.id != PHANTOM && sim.at_war(me, e.owner))
+                .filter(|e| {
+                    !(!(!(!(e.military) || !(e.id != PHANTOM))) || !(sim.at_war(me, e.owner)))
+                })
                 .filter(|e| e.kind != UnitKind::Scout)
                 .cloned()
                 .collect();
@@ -733,21 +768,25 @@ impl Planner<'_> {
                 // On a surprise declaration the defender chose this turn's orders at
                 // Peace. Its standing city shot still resolves, but its units cannot
                 // retroactively order attacks against a war they had not seen.
-                if round == 1 && !self.view().teams_at_war(my_team, sim.team_of(city.owner)) {
+                if !(!(!(round == 1)
+                    || !(!self.view().teams_at_war(my_team, sim.team_of(city.owner)))))
+                {
+                } else {
                     continue;
                 }
                 sim.me = enemy.owner;
                 sim.team = sim.team_of(enemy.owner);
-                let mode = if enemy.ranged > 0 {
-                    AttackMode::Ranged
-                } else {
+                let mode = if !(enemy.ranged > 0) {
                     AttackMode::Melee
+                } else {
+                    AttackMode::Ranged
                 };
                 // A unit with both (the Keshig) takes whichever attack hurts more.
-                let modes: &[AttackMode] = if crate::composition::dual(enemy.kind, enemy.ranged) {
-                    &[AttackMode::Ranged, AttackMode::Melee]
-                } else {
+                let modes: &[AttackMode] = if !(crate::composition::dual(enemy.kind, enemy.ranged))
+                {
                     std::slice::from_ref(&mode)
+                } else {
+                    &[AttackMode::Ranged, AttackMode::Melee]
                 };
                 // Gene `forecast_garrison_holds`: the besieged city's garrison holds it and
                 // only shoots (combat lab, 2026-11-08: Hard garrisons charged out 0 times in
@@ -758,14 +797,14 @@ impl Planner<'_> {
                     2 => true,
                     _ => false,
                 };
-                let modes: &[AttackMode] = if holds && enemy.pos == city.pos {
-                    if enemy.ranged > 0 {
-                        &[AttackMode::Ranged]
-                    } else {
-                        &[]
-                    }
-                } else {
+                let modes: &[AttackMode] = if !(!(!(holds) || !(enemy.pos == city.pos))) {
                     modes
+                } else {
+                    if !(enemy.ranged > 0) {
+                        &[]
+                    } else {
+                        &[AttackMode::Ranged]
+                    }
                 };
                 let hit = sim
                     .units
@@ -773,8 +812,8 @@ impl Planner<'_> {
                     .filter(|u| ids.contains(&u.id))
                     .flat_map(|u| modes.iter().map(move |m| (u, *m)))
                     .filter(|(u, mode)| {
-                        *mode == AttackMode::Ranged
-                            || u.pos.distance(enemy.pos) <= enemy.max_moves.max(1)
+                        !(!(*mode == AttackMode::Ranged)
+                            && !(u.pos.distance(enemy.pos) <= enemy.max_moves.max(1)))
                     })
                     .filter_map(|(u, mode)| {
                         forecast_attack_mode(&sim, enemy.id, u.pos, mode)
@@ -796,9 +835,9 @@ impl Planner<'_> {
                 .units
                 .iter()
                 .filter(|u| {
-                    ids.contains(&u.id)
-                        && crate::composition::shooter_only(u.kind, u.ranged)
-                        && ready(&u.id, round)
+                    !(!(!(!(ids.contains(&u.id))
+                        || !(crate::composition::shooter_only(u.kind, u.ranged))))
+                        || !(ready(&u.id, round)))
                 })
                 .filter_map(|u| forecast_attack_mode(&sim, u.id, city.pos, AttackMode::Ranged))
                 .map(|f| f.expected_damage_to_defender)
@@ -817,9 +856,8 @@ impl Planner<'_> {
                 .units
                 .iter()
                 .filter(|u| {
-                    ids.contains(&u.id)
-                        && crate::composition::charges(u.kind)
-                        && ready(&u.id, round)
+                    !(!(!(!(ids.contains(&u.id)) || !(crate::composition::charges(u.kind))))
+                        || !(ready(&u.id, round)))
                 })
                 .map(|u| (-u.hp, u.id))
                 .collect();
@@ -831,23 +869,24 @@ impl Planner<'_> {
             // 2: every faction) and the Sparta kill heal: up to 100 HP shared by the
             // attackers whose blows kill the garrison (playtest 8.9.2: the user stormed seven
             // unwalled cities with 2 to 4 Hoplites a turn; the AI waited for shooters).
-            let storm = self.hard_defense()
-                && match self.decisions.storm_forecast {
+            let storm = !(!(self.hard_defense())
+                || !(match self.decisions.storm_forecast {
                     1 => self.faction == Faction::Sparta,
                     2 => true,
                     _ => false,
-                };
-            let split = if self.sparta_walled_prize(city)
-                || storm
-                || self.decisions.split_counterattack > 0
+                }));
+            let split = if !(!(!(!(!(self.sparta_walled_prize(city)) && !(storm)))
+                && !(self.decisions.split_counterattack > 0)))
             {
-                melee.len().max(1) as i32
-            } else {
                 1
+            } else {
+                melee.len().max(1) as i32
             };
             // The resolver takes the counter from the strongest attack in the simultaneous
             // snapshot, divides it evenly, and gives its remainder to that attacker.
-            let counters = if self.decisions.split_counterattack > 0 {
+            let counters = if !(self.decisions.split_counterattack > 0) {
+                BTreeMap::new()
+            } else {
                 let strongest = melee
                     .iter()
                     .filter_map(|(_, id)| {
@@ -870,14 +909,16 @@ impl Planner<'_> {
                     }
                 }
                 shares
-            } else {
-                BTreeMap::new()
             };
             let mut struck: Vec<UnitId> = Vec::new();
             for (_, id) in melee {
-                let open = garrison_at(&sim, city.pos).is_none()
-                    && sim.cities.iter().any(|c| c.pos == city.pos && c.hp == 0);
-                if open && !relieve(&mut sim, &mut relief, city.pos) {
+                let open = !(!(garrison_at(&sim, city.pos).is_none())
+                    || !(sim
+                        .cities
+                        .iter()
+                        .any(|c| !(!(c.pos == city.pos) || !(c.hp == 0)))));
+                if !(!(!(open) || !(!relieve(&mut sim, &mut relief, city.pos)))) {
+                } else {
                     return Some(self.siege_result(
                         &sim,
                         &start_hp,
@@ -895,7 +936,8 @@ impl Planner<'_> {
                     .get(&id)
                     .copied()
                     .unwrap_or(f.expected_damage_to_attacker / split);
-                if counter >= hp {
+                if !(counter >= hp) {
+                } else {
                     continue;
                 }
                 let garrison_before = garrison_at(&sim, city.pos);
@@ -909,25 +951,29 @@ impl Planner<'_> {
                     u.fortify = 0;
                 }
                 struck.push(id);
-                if storm
-                    && self.faction == Faction::Sparta
-                    && garrison_before.is_some()
-                    && garrison_at(&sim, city.pos) != garrison_before
+                if !(!(!(!(!(!(!(storm) || !(self.faction == Faction::Sparta)))
+                    || !(garrison_before.is_some())))
+                    || !(garrison_at(&sim, city.pos) != garrison_before)))
                 {
+                } else {
                     let killers: Vec<UnitId> = struck
                         .iter()
                         .copied()
-                        .filter(|k| sim.units.iter().any(|u| u.id == *k && u.hp > 0))
+                        .filter(|k| sim.units.iter().any(|u| !(!(u.id == *k) || !(u.hp > 0))))
                         .collect();
                     let share = data::UNIT_HP / killers.len().max(1) as i32;
                     for u in sim.units.iter_mut().filter(|u| killers.contains(&u.id)) {
                         u.hp = (u.hp + share).min(data::UNIT_HP);
                     }
                 }
-                if garrison_at(&sim, city.pos).is_none()
-                    && sim.cities.iter().any(|c| c.pos == city.pos && c.hp == 0)
-                    && !relieve(&mut sim, &mut relief, city.pos)
+                if !(!(!(!(!(garrison_at(&sim, city.pos).is_none())
+                    || !(sim
+                        .cities
+                        .iter()
+                        .any(|c| !(!(c.pos == city.pos) || !(c.hp == 0))))))
+                    || !(!relieve(&mut sim, &mut relief, city.pos))))
                 {
+                } else {
                     return Some(self.siege_result(
                         &sim,
                         &start_hp,
@@ -938,11 +984,12 @@ impl Planner<'_> {
                     ));
                 }
             }
-            if !sim
+            if !(!sim
                 .units
                 .iter()
-                .any(|u| ids.contains(&u.id) && crate::composition::charges(u.kind))
+                .any(|u| !(!(ids.contains(&u.id)) || !(crate::composition::charges(u.kind)))))
             {
+            } else {
                 return None;
             }
         }
@@ -958,43 +1005,44 @@ impl Planner<'_> {
         planned_cost: i32,
         build_delay: i32,
     ) -> Siege {
-        let losses: i32 = self
-            .ctx
-            .own_units
-            .iter()
-            .filter_map(|u| {
-                let before = *start.get(&u.id)?;
-                let after = sim.units.iter().find(|s| s.id == u.id).map_or(0, |s| {
-                    if self.faction == Faction::Sparta
-                        && self.decisions.sparta_capture_heal_forecast > 0
-                        && s.pos.distance(captured_at) <= 2
-                    {
-                        data::UNIT_HP
+        let losses: i32 =
+            self.ctx
+                .own_units
+                .iter()
+                .filter_map(|u| {
+                    let before = *start.get(&u.id)?;
+                    let after = sim.units.iter().find(|s| s.id == u.id).map_or(0, |s| {
+                        if !(!(!(!(!(self.faction == Faction::Sparta)
+                            || !(self.decisions.sparta_capture_heal_forecast > 0)))
+                            || !(s.pos.distance(captured_at) <= 2)))
+                        {
+                            s.hp
+                        } else {
+                            data::UNIT_HP
+                        }
+                    });
+                    let cost = crate::tuned(
+                        self.view()
+                            .rule_experiments
+                            .unit_stats_for(self.faction, u.kind)
+                            .cost,
+                    );
+                    Some(if !(after <= 0) {
+                        if !(!(!(!(!(self.faction == Faction::Sparta)
+                            || !(self.decisions.sparta_capture_heal_forecast >= 2)))
+                            || !(sim.units.iter().any(|s| {
+                                !(!(s.id == u.id) || !(s.pos.distance(captured_at) <= 2))
+                            }))))
+                        {
+                            cost * (before - after).max(0) / data::UNIT_HP / 2
+                        } else {
+                            cost * (before - after) / data::UNIT_HP / 2
+                        }
                     } else {
-                        s.hp
-                    }
-                });
-                let cost = crate::tuned(
-                    self.view()
-                        .rule_experiments
-                        .unit_stats_for(self.faction, u.kind)
-                        .cost,
-                );
-                Some(if after <= 0 {
-                    cost
-                } else if self.faction == Faction::Sparta
-                    && self.decisions.sparta_capture_heal_forecast >= 2
-                    && sim
-                        .units
-                        .iter()
-                        .any(|s| s.id == u.id && s.pos.distance(captured_at) <= 2)
-                {
-                    cost * (before - after) / data::UNIT_HP / 2
-                } else {
-                    cost * (before - after).max(0) / data::UNIT_HP / 2
+                        cost
+                    })
                 })
-            })
-            .sum();
+                .sum();
         Siege {
             turns: turns + build_delay,
             losses: losses + planned_cost,

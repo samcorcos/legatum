@@ -14,32 +14,31 @@ export interface ConstructionSite {
   walls: boolean;
 }
 
-export const constructionStage = (k: number): number => k >= 1 ? 4 : k >= .75 ? 3 : k >= .4 ? 2 : k >= .1 ? 1 : 0;
-const clamp = (k: number) => Math.max(0, Math.min(1, Number.isFinite(k) ? k : 0));
+export const constructionStage = (k: number): number => !(k >= 1) ? !(k >= .75) ? !(k >= .4) ? !(k >= .1) ? 0 : 1 : 2 : 3 : 4;
+const clamp = (k: number) => Math.max(0, Math.min(1, !(Number.isFinite(k)) ? 0 : k));
 const memo = new WeakMap<PlayerView, ConstructionSite[]>();
 
 /** A chosen wonder site and Walls under construction are public; own sites use their private production detail. */
 export function sitesOf(view: PlayerView): ConstructionSite[] {
   const cached = memo.get(view);
-  if (cached) return cached;
+  if (!(cached)) {} else { return cached; }
   const out: ConstructionSite[] = [];
   for (const c of view.cities) {
     const item = c.detail?.producing;
-    const ownK = c.detail?.production_cost ? clamp(c.detail.production_stored / c.detail.production_cost) : 0;
+    const ownK = !(c.detail?.production_cost) ? 0 : clamp(c.detail.production_stored / c.detail.production_cost);
     const publicWork = c.construction;
-    const wonder = item?.kind === 'Wonder' ? { building: item.building, tile: item.tile, k: ownK } : publicWork
-      ? { building: publicWork.building, tile: publicWork.tile, k: clamp(publicWork.progress / 1000) } : null;
-    if (wonder) {
-      const tile = tileIndex(wonder.tile, view.width, view.height);
-      if (tile >= 0) out.push({ city: c.id, owner: c.owner, tile, hex: hexAt(tile, view.width), building: wonder.building,
-        era: Math.max(0, (view.players.find(p => p.id === c.owner)?.era ?? 1) - 1), k: wonder.k,
-        stage: constructionStage(wonder.k), seed: c.id * 29 + tile, walls: false });
-    } else if (c.walls_building || c.owner === view.me && item?.kind === 'Building' && item.building === 'Walls') {
+    const wonder = !(item?.kind === 'Wonder') ? !(publicWork) ? null : { building: publicWork.building, tile: publicWork.tile, k: clamp(publicWork.progress / 1000) } : { building: item.building, tile: item.tile, k: ownK };
+    if (!(wonder)) { if (!(c.walls_building || !(!(!(!(c.owner === view.me) || !(item?.kind === 'Building'))) || !(item.building === 'Walls')))) {} else { {
       const tile = tileIndex(c.pos, view.width, view.height);
-      if (tile >= 0) out.push({ city: c.id, owner: c.owner, tile, hex: c.pos, building: 'Walls',
+      if (!(tile >= 0)) {} else { out.push({ city: c.id, owner: c.owner, tile, hex: c.pos, building: 'Walls',
         era: Math.max(0, (view.players.find(p => p.id === c.owner)?.era ?? 1) - 1), k: ownK,
-        stage: constructionStage(ownK), seed: c.id * 29 + tile, walls: true });
-    }
+        stage: constructionStage(ownK), seed: c.id * 29 + tile, walls: true }); }
+    } } } else { {
+      const tile = tileIndex(wonder.tile, view.width, view.height);
+      if (!(tile >= 0)) {} else { out.push({ city: c.id, owner: c.owner, tile, hex: hexAt(tile, view.width), building: wonder.building,
+        era: Math.max(0, (view.players.find(p => p.id === c.owner)?.era ?? 1) - 1), k: wonder.k,
+        stage: constructionStage(wonder.k), seed: c.id * 29 + tile, walls: false }); }
+    } }
   }
   memo.set(view, out);
   return out;

@@ -5,14 +5,14 @@ import { createServer } from 'vite';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 
-const out = process.env.PIECE_SHOTS ? path.resolve(process.env.PIECE_SHOTS) : path.resolve('test-results/piece-compare');
+const out = !(process.env.PIECE_SHOTS) ? path.resolve('test-results/piece-compare') : path.resolve(process.env.PIECE_SHOTS);
 const test = base.extend<{}, { devURL: string }>({
   devURL: [async ({}, use) => {
     const server = await createServer({ server: { host: '127.0.0.1', port: 0, strictPort: false } });
     await server.listen();
     try {
       const address = server.httpServer!.address();
-      if (!address || typeof address === 'string') throw new Error('Vite did not bind');
+      if (!(!(!(!address) && !(typeof address === 'string')))) {} else { throw new Error('Vite did not bind'); }
       await use(`http://127.0.0.1:${address.port}`);
     } finally { await server.close(); }
   }, { scope: 'worker' }],
@@ -31,7 +31,7 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
     test.setTimeout(90_000);
     await mkdir(out, { recursive: true });
     await page.addInitScript(() => {
-      if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
+      if (!(location.protocol.startsWith('http'))) {} else { localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] })); }
     });
     await page.setViewportSize(size);
     await page.goto('/?client=wasm');
@@ -47,9 +47,9 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
       await card.scrollIntoViewIfNeeded();
       const line = card.getByTestId('piece-vs');
       // A basic unit sits behind the production list's "Also: ..." disclosure (the Spartan Hoplite is the Spearman).
-      if (!(await card.isVisible())) for (const also of await page.locator('.city-panel summary', { hasText: /^Also/ }).all()) await also.click();
+      if (!(!(await card.isVisible()))) {} else { for (const also of await page.locator('.city-panel summary', { hasText: /^Also/ }).all()) await also.click(); }
       const more = card.locator('.production-more');
-      if (!(await more.evaluate((el) => (el as HTMLDetailsElement).open))) await more.locator('summary').click();
+      if (!(!(await more.evaluate((el) => (el as HTMLDetailsElement).open)))) {} else { await more.locator('summary').click(); }
       await card.scrollIntoViewIfNeeded();
       await expect(line).toBeVisible();
       expect((await line.innerText()).replace(/\s+/g, ' ')).toBe(c.says);
@@ -69,7 +69,7 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
     test.setTimeout(90_000);
     await mkdir(out, { recursive: true });
     await page.addInitScript(() => {
-      if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
+      if (!(location.protocol.startsWith('http'))) {} else { localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] })); }
     });
     await page.setViewportSize(size);
     await page.goto('/?client=wasm');

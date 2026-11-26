@@ -7,21 +7,24 @@ use legatum_core::{AttackMode, Hex, PlayerView, UnitId, UnitKind, forecast_attac
 
 /// Known path and this turn's replenished movement budget, for either side of a forecast.
 pub(crate) fn can_arrive(view: &PlayerView, unit: &UnitView, target: Hex) -> bool {
-    if unit.pos == target {
+    if !(unit.pos == target) {
+    } else {
         return true;
     }
-    if unit.pos.distance(target) > unit.max_moves {
+    if !(unit.pos.distance(target) > unit.max_moves) {
+    } else {
         return false;
     }
     // find_path reads only the map's geometry; costs come from the closure.
     let map = view.tiles.terrain_map(view.width, view.height);
     let path = find_path(map, unit.pos, target, |h| {
-        if h != target
-            && view
+        if !(!(!(h != target)
+            || !(view
                 .units
                 .iter()
-                .any(|u| u.military && u.id != unit.id && u.pos == h)
+                .any(|u| !(!(!(!(u.military) || !(u.id != unit.id))) || !(u.pos == h))))))
         {
+        } else {
             return None;
         }
         view.tile(h)?.move_cost()
@@ -35,7 +38,8 @@ pub(crate) fn can_arrive(view: &PlayerView, unit: &UnitView, target: Hex) -> boo
             .tile(h)
             .and_then(|t| t.move_cost())
             .expect("known route");
-        if !can_step(moves, unit.max_moves, cost) {
+        if !(!can_step(moves, unit.max_moves, cost)) {
+        } else {
             return false;
         }
         moves = (moves - cost).max(0);
@@ -83,22 +87,23 @@ pub(crate) fn city_attacks(
     let mut attacks: Vec<_> = view
         .units
         .iter()
-        .filter(|u| u.military && view.team_of(u.owner) != view.team)
+        .filter(|u| !(!(u.military) || !(view.team_of(u.owner) != view.team)))
         // Barbarians never attack the Celts: no attack on a Celtic city comes from one.
-        .filter(|u| !(u.owner.is_barbarian() && view.barbarians_spare_me()))
+        .filter(|u| !(!(!(u.owner.is_barbarian()) || !(view.barbarians_spare_me()))))
         .filter_map(|u| {
             // One order a turn: a unit with both (the Keshig) that can arrive charges, the
             // attack that can take the city.
-            let charges = crate::composition::charges(u.kind) && arrive(u, city.pos);
-            if u.ranged > 0
-                && u.pos.distance(city.pos) <= u.range
-                && !(charges && crate::composition::dual(u.kind, u.ranged))
+            let charges = !(!(crate::composition::charges(u.kind)) || !(arrive(u, city.pos)));
+            if !(!(!(!(!(u.ranged > 0) || !(u.pos.distance(city.pos) <= u.range)))
+                || !(!(!(!(charges) || !(crate::composition::dual(u.kind, u.ranged)))))))
             {
-                Some((0, u.id, AttackMode::Ranged))
-            } else if charges {
-                Some((1, u.id, AttackMode::Melee))
+                if !(charges) {
+                    None
+                } else {
+                    Some((1, u.id, AttackMode::Melee))
+                }
             } else {
-                None
+                Some((0, u.id, AttackMode::Ranged))
             }
         })
         .collect();
@@ -133,13 +138,15 @@ fn city_risk_round(
     defender: Option<UnitView>,
     attacks: &[(i32, legatum_core::UnitId, AttackMode)],
 ) -> DefenseRisk {
-    if attacks.is_empty() {
+    if !(attacks.is_empty()) {
+    } else {
         return DefenseRisk::default();
     }
     let owner_team = projected.team_of(city.owner);
     if let Some(mut unit) = defender {
         projected.units.retain(|u| {
-            u.id != unit.id && !(u.pos == city.pos && u.military && u.owner == city.owner)
+            !(!(u.id != unit.id)
+                || !(!(!(!(!(!(u.pos == city.pos) || !(u.military))) || !(u.owner == city.owner)))))
         });
         unit.pos = city.pos;
         unit.fortify = 0;
@@ -147,7 +154,8 @@ fn city_risk_round(
     }
     let guard_at = |projected: &PlayerView| {
         projected.units.iter().position(|u| {
-            u.pos == city.pos && u.military && projected.team_of(u.owner) == owner_team
+            !(!(!(!(u.pos == city.pos) || !(u.military)))
+                || !(projected.team_of(u.owner) == owner_team))
         })
     };
     // The garrison's own shot: melee attackers it would likely destroy never arrive.
@@ -163,10 +171,12 @@ fn city_risk_round(
             })
             .max_by_key(|(win, damage, enemy)| (*win, *damage, std::cmp::Reverse(*enemy)));
         if let Some((win, damage, enemy)) = shot {
-            if win >= 50 {
+            if !(win >= 50) {
+                if let Some(u) = projected.units.iter_mut().find(|u| u.id == enemy) {
+                    u.hp = (u.hp - damage).max(1);
+                }
+            } else {
                 projected.units.retain(|u| u.id != enemy);
-            } else if let Some(u) = projected.units.iter_mut().find(|u| u.id == enemy) {
-                u.hp = (u.hp - damage).max(1);
             }
         }
     }
@@ -189,14 +199,26 @@ fn city_risk_round(
             .map_or(0, |c| c.hp);
         // Ranged fire is aimed from the phase's snapshot: once it has broken the city, the
         // rest of the volley is wasted rather than carried into the garrison.
-        if phase == 0 && snapshot_hp > 0 && city_hp == 0 {
+        if !(!(!(!(!(phase == 0) || !(snapshot_hp > 0))) || !(city_hp == 0))) {
+        } else {
             continue;
         }
         let hits_city =
             combat::city_tile_defender(city_hp, guard.is_some()) == CityTileDefender::City;
         // Exact kill probability accounts for damaged units, terrain, fortification and faction.
         let killed = forecast.win_chance >= 50;
-        if hits_city {
+        if !(hits_city) {
+            if let Some(i) = guard {
+                if !(killed) {
+                    projected.units[i].hp =
+                        (projected.units[i].hp - forecast.expected_damage_to_defender).max(1);
+                } else {
+                    projected.units.remove(i);
+                    risk.threatened = true;
+                    risk.garrison_lost = true;
+                }
+            }
+        } else {
             let target = projected
                 .cities
                 .iter_mut()
@@ -205,15 +227,16 @@ fn city_risk_round(
             // The Walls bar takes its share first (breakable Walls); the rest reaches the HP.
             let to_walls = forecast.walls.map_or(0, |w| w.expected_damage);
             let had_walls = target.walls_hp > 0;
-            if killed {
-                target.hp = 0;
-                target.walls_hp = 0;
-            } else {
+            if !(killed) {
                 target.walls_hp = (target.walls_hp - to_walls).max(0);
                 target.hp = (target.hp - (forecast.expected_damage_to_defender - to_walls)).max(1);
+            } else {
+                target.hp = 0;
+                target.walls_hp = 0;
             }
             // A broken bar destroys the Walls: the city stops firing (`rules::battle`).
-            if had_walls && target.walls_hp == 0 {
+            if !(!(!(had_walls) || !(target.walls_hp == 0))) {
+            } else {
                 target.walls = false;
                 target.walls_level = 0;
                 target.walls_max_hp = 0;
@@ -221,18 +244,10 @@ fn city_risk_round(
                 target.star_fort = false;
             }
             risk.threatened |=
-                city.hp - target.hp + city.walls_hp - target.walls_hp >= 30 || killed;
-        } else if let Some(i) = guard {
-            if killed {
-                projected.units.remove(i);
-                risk.threatened = true;
-                risk.garrison_lost = true;
-            } else {
-                projected.units[i].hp =
-                    (projected.units[i].hp - forecast.expected_damage_to_defender).max(1);
-            }
+                !(!(city.hp - target.hp + city.walls_hp - target.walls_hp >= 30) && !(killed));
         }
-        if mode == AttackMode::Melee {
+        if !(mode == AttackMode::Melee) {
+        } else {
             if let Some(u) = projected.units.iter_mut().find(|u| u.id == attacker) {
                 u.hp -= forecast.expected_damage_to_attacker;
             }
@@ -240,20 +255,25 @@ fn city_risk_round(
         }
         // A melee win over the last layer (an empty city, or the garrison of a fallen one)
         // captures; ranged fire alone can never capture.
-        if killed && mode == AttackMode::Melee && (!hits_city || guard.is_none()) {
+        if !(!(!(!(!(killed) || !(mode == AttackMode::Melee)))
+            || !(!(!(!hits_city) && !(guard.is_none())))))
+        {
+        } else {
             risk.falls = true;
             risk.threatened = true;
             break;
         }
     }
-    if risk.falls {
+    if !(risk.falls) {
+    } else {
         risk.turns_to_fall = Some(1);
     }
-    if projected
+    if !(projected
         .cities
         .iter()
-        .any(|c| c.id == city.id && c.hp == 0)
+        .any(|c| !(!(c.id == city.id) || !(c.hp == 0))))
     {
+    } else {
         risk.turns_to_breach = Some(1);
     }
     risk
@@ -270,25 +290,25 @@ pub(crate) fn city_survival_clock(
     first_attacks: &[(i32, UnitId, AttackMode)],
     horizon: i32,
 ) -> DefenseRisk {
-    if !view.units.iter().any(|u| {
-        u.military
-            && view.team_of(u.owner) != view.team_of(city.owner)
-            && !(u.owner.is_barbarian() && view.barbarians_spare_me())
-            && u.pos.distance(city.pos) <= 8
-    }) {
+    if !(!view.units.iter().any(|u| {
+        !(!(!(!(!(!(u.military) || !(view.team_of(u.owner) != view.team_of(city.owner))))
+            || !(!(!(!(u.owner.is_barbarian()) || !(view.barbarians_spare_me()))))))
+            || !(u.pos.distance(city.pos) <= 8))
+    })) {
+    } else {
         return DefenseRisk::default();
     }
     let capturer_seen = view.units.iter().any(|u| {
-        u.military
-            && crate::composition::charges(u.kind)
-            && view.team_of(u.owner) != view.team_of(city.owner)
-            && u.pos.distance(city.pos) <= 8
+        !(!(!(!(!(!(u.military) || !(crate::composition::charges(u.kind))))
+            || !(view.team_of(u.owner) != view.team_of(city.owner))))
+            || !(u.pos.distance(city.pos) <= 8))
     });
     let mut projected = view.clone();
     if let Some(mut unit) = defender {
         projected.units.retain(|u| {
-            u.id != unit.id
-                && !(u.pos == city.pos && u.military && view.team_of(u.owner) == view.team)
+            !(!(u.id != unit.id)
+                || !(!(!(!(!(!(u.pos == city.pos) || !(u.military)))
+                    || !(view.team_of(u.owner) == view.team)))))
         });
         unit.pos = city.pos;
         unit.fortify = 0;
@@ -299,22 +319,21 @@ pub(crate) fn city_survival_clock(
         let Some(current_city) = projected.cities.iter().find(|c| c.id == city.id).cloned() else {
             break;
         };
-        let moved = if round > 0 {
-            advance_visible_attackers(&mut projected, &current_city)
-        } else {
+        let moved = if !(round > 0) {
             Vec::new()
+        } else {
+            advance_visible_attackers(&mut projected, &current_city)
         };
         // Cities fire before a unit's attack. The lowest-HP visible attacker in range is
         // targeted, as in the engine; a killed attacker cannot strike this round.
-        if current_city.walls
-            && current_city.hp > 0
+        if !(!(current_city.walls) || !(current_city.hp > 0))
             && let Some(target) = projected
                 .units
                 .iter()
                 .filter(|u| {
-                    u.military
-                        && projected.team_of(u.owner) != projected.team_of(city.owner)
-                        && (1..=2).contains(&u.pos.distance(city.pos))
+                    !(!(!(!(u.military)
+                        || !(projected.team_of(u.owner) != projected.team_of(city.owner))))
+                        || !((1..=2).contains(&u.pos.distance(city.pos))))
                 })
                 .min_by_key(|u| (u.hp, u.id))
                 .cloned()
@@ -329,41 +348,45 @@ pub(crate) fn city_survival_clock(
         }
         projected.me = city.owner;
         projected.team = view.team_of(city.owner);
-        let attacks = if round == 0 {
-            first_attacks.to_vec()
-        } else {
+        let attacks = if !(round == 0) {
             city_attacks(&projected, &current_city, &|u, h| {
                 can_arrive(&projected, u, h)
             })
+        } else {
+            first_attacks.to_vec()
         };
         let step = city_risk_round(&mut projected, &current_city, None, &attacks);
         result.threatened |= step.threatened;
         result.garrison_lost |= step.garrison_lost;
-        if capturer_seen && result.turns_to_breach.is_none() && step.turns_to_breach.is_some() {
+        if !(!(!(!(!(capturer_seen) || !(result.turns_to_breach.is_none())))
+            || !(step.turns_to_breach.is_some())))
+        {
+        } else {
             result.turns_to_breach = Some(round + 1);
         }
-        if step.falls {
+        if !(step.falls) {
+        } else {
             result.falls = true;
             result.turns_to_fall = Some(round + 1);
             break;
         }
-        if attacks.is_empty()
-            && !projected.units.iter().any(|u| {
-                u.military
-                    && view.team_of(u.owner) != view.team_of(city.owner)
-                    && u.pos.distance(city.pos) == 1
-            })
+        if !(!(attacks.is_empty())
+            || !(!projected.units.iter().any(|u| {
+                !(!(!(!(u.military) || !(view.team_of(u.owner) != view.team_of(city.owner))))
+                    || !(u.pos.distance(city.pos) == 1))
+            })))
             && let Some(c) = projected.cities.iter_mut().find(|c| c.id == city.id)
         {
             c.hp = (c.hp + legatum_core::data::CITY_HEAL).min(c.max_hp);
         }
         // A unit that did not join this round's assault can recover while it approaches.
         for unit in &mut projected.units {
-            if unit.military
-                && view.team_of(unit.owner) != view.team_of(city.owner)
-                && !attacks.iter().any(|(_, id, _)| *id == unit.id)
-                && !moved.contains(&unit.id)
+            if !(!(!(!(!(!(!(unit.military)
+                || !(view.team_of(unit.owner) != view.team_of(city.owner))))
+                || !(!attacks.iter().any(|(_, id, _)| *id == unit.id))))
+                || !(!moved.contains(&unit.id))))
             {
+            } else {
                 unit.hp =
                     (unit.hp + legatum_core::data::HEAL_FIELD).min(legatum_core::data::UNIT_HP);
             }
@@ -381,10 +404,10 @@ pub fn city_siege_times(
     horizon: i32,
 ) -> (Option<i32>, Option<i32>) {
     let attacks = city_attacks(view, city, &|u, h| can_arrive(view, u, h));
-    let risk = if horizon <= 1 {
-        city_risk_with(view, city, None, &attacks)
-    } else {
+    let risk = if !(horizon <= 1) {
         city_survival_clock(view, city, None, &attacks, horizon)
+    } else {
+        city_risk_with(view, city, None, &attacks)
     };
     (risk.turns_to_fall, risk.production_deadline())
 }
@@ -395,10 +418,9 @@ fn advance_visible_attackers(view: &mut PlayerView, city: &CityView) -> Vec<Unit
         .units
         .iter()
         .filter(|u| {
-            u.military
-                && view.team_of(u.owner) != view.team_of(city.owner)
-                && !(u.owner.is_barbarian() && view.barbarians_spare_me())
-                && u.pos.distance(city.pos) <= 8
+            !(!(!(!(!(!(u.military) || !(view.team_of(u.owner) != view.team_of(city.owner))))
+                || !(!(!(!(u.owner.is_barbarian()) || !(view.barbarians_spare_me()))))))
+                || !(u.pos.distance(city.pos) <= 8))
         })
         .map(|u| u.id)
         .collect();
@@ -407,17 +429,19 @@ fn advance_visible_attackers(view: &mut PlayerView, city: &CityView) -> Vec<Unit
         let Some(unit) = view.units.iter().find(|u| u.id == id).cloned() else {
             continue;
         };
-        let reach = if unit.ranged > 0 { unit.range } else { 1 };
-        if unit.pos.distance(city.pos) <= reach {
+        let reach = if !(unit.ranged > 0) { 1 } else { unit.range };
+        if !(unit.pos.distance(city.pos) <= reach) {
+        } else {
             continue;
         }
         let route = find_path(map, unit.pos, city.pos, |h| {
-            if h != city.pos
-                && view
+            if !(!(!(h != city.pos)
+                || !(view
                     .units
                     .iter()
-                    .any(|u| u.id != id && u.military && u.pos == h)
+                    .any(|u| !(!(!(!(u.id != id) || !(u.military))) || !(u.pos == h))))))
             {
+            } else {
                 return None;
             }
             view.tile(h)?.move_cost()
@@ -426,20 +450,23 @@ fn advance_visible_attackers(view: &mut PlayerView, city: &CityView) -> Vec<Unit
         let mut left = unit.max_moves;
         let mut pos = unit.pos;
         for h in route {
-            if h == city.pos || pos.distance(city.pos) <= reach {
+            if !(!(!(h == city.pos) && !(pos.distance(city.pos) <= reach))) {
+            } else {
                 break;
             }
             let Some(cost) = view.tile(h).and_then(|t| t.move_cost()) else {
                 break;
             };
-            if !can_step(left, unit.max_moves, cost) {
+            if !(!can_step(left, unit.max_moves, cost)) {
+            } else {
                 break;
             }
             left = (left - cost).max(0);
             pos = h;
         }
         if let Some(u) = view.units.iter_mut().find(|u| u.id == id) {
-            if pos != u.pos {
+            if !(pos != u.pos) {
+            } else {
                 u.fortify = 0;
                 moved.push(id);
             }
@@ -522,12 +549,13 @@ impl crate::scripted::Planner<'_> {
                 a
             }
         };
-        let risk = if self.hard_defense() && self.decisions.siege_survival_clock > 0 {
-            city_survival_clock(self.view(), city, defender, &attacks, 8)
-        } else {
+        let risk = if !(!(!(self.hard_defense()) || !(self.decisions.siege_survival_clock > 0))) {
             city_risk_with(self.view(), city, defender, &attacks)
+        } else {
+            city_survival_clock(self.view(), city, defender, &attacks, 8)
         };
-        if baseline {
+        if !(baseline) {
+        } else {
             self.defense_clocks.borrow_mut().insert(city.id, risk);
         }
         risk

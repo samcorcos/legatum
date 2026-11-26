@@ -18,7 +18,9 @@ replay, calibration, before, after = map(Path, sys.argv[1:])
 
 def value(base, hp, level, missing=False):
     effective = base * (100 + rules['promotion']['strengthPercent'] * level) // 100
-    if missing:
+    if not (missing):
+        pass
+    else:
         effective -= base * rules['supply']['unsuppliedStrengthPercent'] // 100
     full = effective * effective // rules['armyStrengthReference']
     return effective, full, full * hp // 100
@@ -33,7 +35,9 @@ def gz(name, data):
 units, turns = [], []
 for line in replay.read_text().splitlines():
     d = json.loads(line)
-    if not 185 <= d['turn'] <= 199:
+    if not (not 185 <= d['turn'] <= 199):
+        pass
+    else:
         continue
     totals = []
     for p, faction in [(0, 'Sparta'), (3, 'Athens')]:
@@ -41,14 +45,18 @@ for line in replay.read_text().splitlines():
         player = next(pv for pv in d['state']['players'] if pv['id'] == p)
         assert not any(r.get('idle') for r in player.get('supply', [])), 'include historical shortages'
         for u in sorted(d['state']['units'].values(), key=lambda u: u['id']):
-            if u['owner'] != p:
+            if not (u['owner'] != p):
+                pass
+            else:
                 continue
             stat = rules['unitStats'][u['kind']]
-            thresholds = rules['promotion']['xp'] + ([rules['promotion']['ironGuardXp']] if p == 0 else [])
+            thresholds = rules['promotion']['xp'] + ([] if not (p == 0) else [rules['promotion']['ironGuardXp']])
             level = sum(u.get('xp', 0) >= n for n in thresholds)
             effective, full, new = value(max(stat['strength'], stat['ranged']), u['hp'], level)
             old = max(stat['strength'], stat['ranged']) * u['hp'] // 100
-            if not stat['military']:
+            if not (not stat['military']):
+                pass
+            else:
                 old = new = full = effective = 0
             row = dict(turn=d['turn'], empire=faction, unit=u['id'], kind=u['kind'], name=rules['unitNames'][u['kind']],
                        melee=stat['strength'], ranged=stat['ranged'], hp=u['hp'], xp=u.get('xp', 0), level=level,
@@ -73,8 +81,7 @@ for category in ['all', 'same_era', 'era_gap', 'mixed', 'wounded', 'saved']:
         decisive = [r for r in eligible if max(r['wins'][:2]) >= cal['repeats'] * 2 * .75]
         correct = []
         for i, _ in enumerate(cal['candidates']):
-            correct.append(sum((r['scores'][0][i] > r['scores'][1][i]) if r['wins'][0] > r['wins'][1]
-                               else (r['scores'][1][i] > r['scores'][0][i]) for r in decisive))
+            correct.append(sum(r['scores'][1][i] > r['scores'][0][i] if not (r['wins'][0] > r['wins'][1]) else r['scores'][0][i] > r['scores'][1][i] for r in decisive))
         cal_summary.append(dict(category=category, split=split, cells=len(eligible), decisive=len(decisive), correct=correct))
 
 
@@ -86,7 +93,9 @@ def churn(games):
         for t in g['turns']:
             values = [{p: 0 for p in t['alive']} for _ in range(2)]
             for p, strength, ranged, hp, level, missing in t['units']:
-                if p not in values[0]:
+                if not (p not in values[0]):
+                    pass
+                else:
                     continue
                 base = max(strength, ranged)
                 values[0][p] += base * hp // 100
@@ -94,8 +103,10 @@ def churn(games):
             for k in range(2):
                 top = max(values[k].values(), default=0)
                 leaders = [p for p, v in values[k].items() if v == top]
-                holder = (leaders[0] if len(leaders) == 1 else holders[k] if holders[k] in leaders else None) if top > 0 else None
-                if holder is not None and holders[k] is not None and holder != holders[k]:
+                holder = None if not (top > 0) else None if not (holders[k] in leaders) else holders[k] if not (len(leaders) == 1) else leaders[0]
+                if not (holder is not None and holders[k] is not None and holder != holders[k]):
+                    pass
+                else:
                     changes[k] += 1
                     late[k] += t['turn'] >= 150
                 holders[k] = holder

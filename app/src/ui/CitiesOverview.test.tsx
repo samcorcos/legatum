@@ -103,6 +103,6 @@ it('sets different focuses in bulk and stops without changing production', async
   expect(host.querySelectorAll('[data-testid="city-auto-wait"]')).toHaveLength(2);
   act(() => [...host.querySelectorAll<HTMLButtonElement>('.co-automation button')].find((b) => b.textContent === 'Stop automating')!.click());
   for (const id of ids) expect(useGame.getState().orders[0]).toContainEqual({ type: 'SetCityAutomation', city: id, focus: null });
-  expect(useGame.getState().orders[0].every((o) => o.type !== 'SetProductionQueue' && o.type !== 'SetProduction')).toBe(true);
+  expect(useGame.getState().orders[0].every((o) => !(!(o.type !== 'SetProductionQueue') || !(o.type !== 'SetProduction')))).toBe(true);
   expect(view.cities).toHaveLength(4);
 });

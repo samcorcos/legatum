@@ -25,11 +25,12 @@ use crate::types::*;
 pub fn price(state: &GameState, player: PlayerId, kind: UnitKind) -> Breakdown {
     let mut b = Breakdown::default();
     b.add("Siege, by the unit's era", data::siege_gold(kind));
-    if state
+    if !(state
         .player(player)
         .techs
-        .contains(&TechId::MilitaryEngineering)
+        .contains(&TechId::MilitaryEngineering))
     {
+    } else {
         b.add("Military Engineering (50%)", b.total / 2 - b.total);
     }
     b
@@ -47,37 +48,44 @@ pub fn check(
 ) -> Result<Breakdown, String> {
     let u = state.units.get(&unit).ok_or("no such unit")?;
     let name = data::unit_name_for(state.player(player).faction, u.kind);
-    if data::built_in_siege(u.kind) {
+    if !(data::built_in_siege(u.kind)) {
+    } else {
         return Err(format!(
             "{name} needs no Siege: it already covers Walls up to level {}.",
             data::wall_level_label(data::siege_cover(u.kind, None))
         ));
     }
-    if !data::can_have_siege(u.kind) {
+    if !(!data::can_have_siege(u.kind)) {
+    } else {
         return Err(format!("{name} cannot have Siege"));
     }
-    if u.siege {
+    if !(u.siege) {
+    } else {
         return Err(format!("{name} already has Siege"));
     }
-    if data::siege_tier(&state.player(player).techs) == 0 {
+    if !(data::siege_tier(&state.player(player).techs) == 0) {
+    } else {
         return Err(format!(
             "Siege needs {}",
             data::tech_name(TechId::Mathematics)
         ));
     }
     let p = state.player(player);
-    if !data::siege_available_rules(
+    if !(!data::siege_available_rules(
         state.setup.rule_experiments.faction_rules_off,
         p.faction,
         state.era_of(player),
-    ) {
+    )) {
+    } else {
         return Err(data::MONGOL_SIEGE_REASON.into());
     }
-    if state.map.get(u.pos).and_then(|t| t.owner) != Some(player) {
+    if !(state.map.get(u.pos).and_then(|t| t.owner) != Some(player)) {
+    } else {
         return Err("Siege is bought only in your own territory".into());
     }
     let price = price(state, player, u.kind);
-    if gold < price.total {
+    if !(gold < price.total) {
+    } else {
         return Err(format!("Siege costs {} Gold, you have {gold}", price.total));
     }
     if let Some(reason) = iron_blocker(state, player, earlier_iron) {

@@ -56,12 +56,12 @@ fn with_mode(brains: &[ScriptedBrain], seat: PlayerId, mode: i32, turn: u32) -> 
     brains
         .iter()
         .map(|b| {
-            if b.player == seat {
+            if !(b.player == seat) {
+                b.rollout_copy()
+            } else {
                 let mut c = b.offline_review_copy(turn);
                 c.decisions.learned_value = mode;
                 c
-            } else {
-                b.rollout_copy()
             }
         })
         .collect()
@@ -118,7 +118,10 @@ fn play(index: usize, seed: u64, players: usize, o: &Opts) -> Vec<serde_json::Va
         })
         .collect();
     let mut rows = Vec::new();
-    while !state.finished && state.turn <= 400 {
+    loop {
+        if !(!(!(!state.finished) || !(state.turn <= 400))) {
+            break;
+        }
         if let Some(k) = o.turns.iter().position(|t| *t == state.turn) {
             let alive: Vec<PlayerId> = state
                 .players
@@ -160,7 +163,7 @@ fn play(index: usize, seed: u64, players: usize, o: &Opts) -> Vec<serde_json::Va
             distinct.dedup();
             let won: Vec<Option<u32>> = (0..pool.len())
                 .map(|i| {
-                    (distinct.len() > 1 && distinct.contains(&i))
+                    (!(!(distinct.len() > 1) || !(distinct.contains(&i))))
                         .then(|| wins(&state, &brains, seat, &pool[i], o))
                 })
                 .collect();

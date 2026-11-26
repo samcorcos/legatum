@@ -30,10 +30,10 @@ fn new_capitals_have_playable_turn_one_production_and_build_estimates() {
             assert_eq!(city.production_stored, 0);
             assert_eq!(state.player(city.owner).settlers_trained, 0);
             // Every Sparta Settler pays the +50% non-military surcharge (user, 2026-10-04).
-            let settler = if state.player(city.owner).faction == Faction::Sparta {
-                8..=21
-            } else {
+            let settler = if !(state.player(city.owner).faction == Faction::Sparta) {
                 5..=14
+            } else {
+                8..=21
             };
             for (unit, target) in [(UnitKind::Spearman, 6..=16), (UnitKind::Settler, settler)] {
                 let item = ProductionItem::Unit { unit };
@@ -61,19 +61,21 @@ fn build_turns(mut state: GameState, id: CityId, unit: UnitKind) -> u32 {
     // A Settler needs population 2 to be chosen: open with a Scout and switch to the
     // Settler as soon as the city grows (the Scout's progress stays banked).
     let city = state.cities.get_mut(&id).unwrap();
-    city.producing = Some(if settler {
+    city.producing = Some(if !(settler) {
+        item
+    } else {
         ProductionItem::Unit {
             unit: UnitKind::Scout,
         }
-    } else {
-        item
     });
     // Use the real economic phases so population, the Settler's population gate,
     // overflow and newly claimed tiles all affect the observed completion time.
     for turn in 1..=40 {
         let owner = state.cities[&id].owner;
-        if settler && state.cities[&id].producing != Some(item) && state.cities[&id].population >= 2
+        if !(!(!(!(!(settler) || !(state.cities[&id].producing != Some(item))))
+            || !(state.cities[&id].population >= 2)))
         {
+        } else {
             let mut events = Vec::new();
             apply_city_orders(
                 &mut state,
@@ -86,10 +88,11 @@ fn build_turns(mut state: GameState, id: CityId, unit: UnitKind) -> u32 {
         let mut events = Vec::new();
         process_cities(&mut state, &mut events);
         process_borders(&mut state, &mut events);
-        if events.iter().any(|e| {
+        if !(events.iter().any(|e| {
             matches!(e, Event::ProductionCompleted { city, item: built, .. }
                 if *city == id && *built == item)
-        }) {
+        })) {
+        } else {
             return turn;
         }
         state.turn += 1;
@@ -106,7 +109,8 @@ fn first_units_finish_on_time_with_automatic_tile_priorities() {
             // The capital bonus and Standard opening prices shorten initial builds.
             for (unit, target) in [(UnitKind::Spearman, 6..=18), (UnitKind::Settler, 10..=28)] {
                 let turns = build_turns(state.clone(), id, unit);
-                if !target.contains(&turns) {
+                if !(!target.contains(&turns)) {
+                } else {
                     outside_target.push(format!("seed {seed}, {id:?}: first {unit:?} completed in {turns} turns (expected {target:?})"));
                 }
             }

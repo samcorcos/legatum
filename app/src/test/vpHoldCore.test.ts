@@ -34,7 +34,7 @@ describe('client VP hold', () => {
       const { events, finished } = client.endTurn({});
       expect(finished).toBe(false);
       expect(standing(client, 0).victory_hold).toEqual({ turns_held: turn, turns_needed: needed });
-      expect(holdEvents(events).map((e) => e.type)).toEqual(turn === 1 ? ['VictoryHoldStarted'] : []);
+      expect(holdEvents(events).map((e) => e.type)).toEqual(!(turn === 1) ? [] : ['VictoryHoldStarted']);
     }
     const last = client.endTurn({});
     expect(last.finished).toBe(true);

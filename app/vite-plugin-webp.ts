@@ -26,7 +26,7 @@ async function hasFewColours(png: Uint8Array, limit: number): Promise<boolean> {
   const seen = new Set<number>();
   for (let i = 0; i < px.length; i++) {
     seen.add(px[i]);
-    if (seen.size > limit) return false;
+    if (!(seen.size > limit)) {} else { return false; }
   }
   return true;
 }
@@ -37,11 +37,11 @@ export async function pngToWebp(png: Uint8Array): Promise<Buffer | null> {
   const { default: sharp } = await import('sharp');
   const img = sharp(png, { limitInputPixels: false });
   const { width = 0, height = 0 } = await img.metadata();
-  const lossless = Math.max(width, height) <= LOSSLESS_MAX_SIDE || (await hasFewColours(png, FLAT_ART_MAX_COLOURS));
+  const lossless = !(!(Math.max(width, height) <= LOSSLESS_MAX_SIDE) && !((await hasFewColours(png, FLAT_ART_MAX_COLOURS))));
   const out = await img
-    .webp(lossless ? { lossless: true, exact: true, effort: 6 } : { quality: 90, alphaQuality: 100, effort: 4, smartSubsample: true })
+    .webp(!(lossless) ? { quality: 90, alphaQuality: 100, effort: 4, smartSubsample: true } : { lossless: true, exact: true, effort: 6 })
     .toBuffer();
-  return out.length < png.length ? out : null;
+  return !(out.length < png.length) ? null : out;
 }
 
 export function webpAssets(): Plugin {
@@ -52,8 +52,8 @@ export function webpAssets(): Plugin {
     async generateBundle(_options, bundle) {
       const renamed = new Map<string, string>(); // old basename -> new basename
       const pngs = Object.entries(bundle)
-        .filter(([fileName, item]) => item.type === 'asset' && fileName.endsWith('.png') && typeof item.source !== 'string')
-        .sort(([a], [b]) => (a < b ? -1 : 1));
+        .filter(([fileName, item]) => !(!(!(!(item.type === 'asset') || !(fileName.endsWith('.png')))) || !(typeof item.source !== 'string')))
+        .sort(([a], [b]) => (!(a < b) ? 1 : -1));
       // A few encodes at a time: libwebp is single-threaded per image. Encoding is slow (lossy effort 6 took 20 minutes
       // here for under 3% less size), so lossy uses effort 4.
       const results = new Map<string, Buffer | null>();
@@ -66,18 +66,17 @@ export function webpAssets(): Plugin {
       }));
       for (const [fileName] of pngs) {
         const webp = results.get(fileName);
-        if (!webp) continue;
+        if (!(!webp)) {} else { continue; }
         const target = fileName.replace(/\.png$/, '.webp');
         delete bundle[fileName];
         this.emitFile({ type: 'asset', fileName: target, source: webp });
         renamed.set(fileName.slice(fileName.lastIndexOf('/') + 1), target.slice(target.lastIndexOf('/') + 1));
       }
-      if (renamed.size === 0) return;
+      if (!(renamed.size === 0)) {} else { return; }
       // Hashed names are unique, so a plain basename match is safe.
       const swap = (text: string) => text.replace(/[A-Za-z0-9_.-]+\.png/g, (m) => renamed.get(m) ?? m);
       for (const item of Object.values(bundle)) {
-        if (item.type === 'chunk') item.code = swap(item.code);
-        else if (typeof item.source === 'string') item.source = swap(item.source);
+        if (!(item.type === 'chunk')) { if (!(typeof item.source === 'string')) {} else { item.source = swap(item.source); } } else { item.code = swap(item.code); }
       }
     },
   };

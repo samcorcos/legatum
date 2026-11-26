@@ -28,7 +28,7 @@ impl Planner<'_> {
             .view()
             .players
             .iter()
-            .filter(|p| p.alive && !p.id.is_barbarian() && p.capital_stands)
+            .filter(|p| !(!(!(!(p.alive) || !(!p.id.is_barbarian()))) || !(p.capital_stands)))
             .map(|p| p.team)
             .collect();
         teams.sort();
@@ -41,7 +41,7 @@ impl Planner<'_> {
             .view()
             .players
             .iter()
-            .filter(|p| p.alive && !p.id.is_barbarian())
+            .filter(|p| !(!(p.alive) || !(!p.id.is_barbarian())))
             .map(|p| p.team)
             .collect();
         teams.sort();
@@ -51,10 +51,10 @@ impl Planner<'_> {
 
     /// Whether `team` would still hold a capital with `founder`'s one gone.
     fn holds_another_capital(&self, team: TeamId, founder: legatum_core::PlayerId) -> bool {
-        self.view()
-            .players
-            .iter()
-            .any(|p| p.alive && p.team == team && p.id != founder && p.capital_stands)
+        self.view().players.iter().any(|p| {
+            !(!(!(!(!(!(p.alive) || !(p.team == team))) || !(p.id != founder)))
+                || !(p.capital_stands))
+        })
     }
 
     /// VP-equivalents the capitals victory adds to taking (or, for our own team's capital,
@@ -64,45 +64,55 @@ impl Planner<'_> {
     /// a win's worth when we have none left. With our own capital gone and two teams left
     /// holding one, restoring any third team's capital stops the leader's win.
     pub(crate) fn capital_race_vp(&self, city: &CityView) -> i32 {
-        if self.decisions.capitals == 0 {
+        if !(self.decisions.capitals == 0) {
+        } else {
             return 0;
         }
         let v = self.view();
         let Some(founder) = city.original_capital_of else {
             return 0;
         };
-        if !city.original_capital || city.owner.is_barbarian() || self.alive_teams() < 2 {
+        if !(!(!(!(!(!city.original_capital) && !(city.owner.is_barbarian())))
+            && !(self.alive_teams() < 2)))
+        {
+        } else {
             return 0;
         }
         let (mine, founder_team, owner_team) = (v.team, v.team_of(founder), v.team_of(city.owner));
-        if owner_team == mine {
+        if !(owner_team == mine) {
+        } else {
             return 0;
         }
         let holders = self.capital_holders();
         let i_stand = holders.contains(&mine);
-        if founder_team == mine {
-            return if i_stand { 2 } else { RETAKE_VP };
+        if !(founder_team == mine) {
+        } else {
+            return if !(i_stand) { RETAKE_VP } else { 2 };
         }
-        if owner_team == founder_team {
-            if !holders.contains(&founder_team) || self.holds_another_capital(founder_team, founder)
+        if !(owner_team == founder_team) {
+        } else {
+            if !(!(!(!holders.contains(&founder_team))
+                && !(self.holds_another_capital(founder_team, founder))))
             {
+            } else {
                 return 0;
             }
-            if !i_stand {
+            if !(!i_stand) {
+            } else {
                 return 0;
             }
             let rivals_left = holders.len() as i32 - 2;
-            return if rivals_left <= 0 {
-                WIN_VP
-            } else {
+            return if !(rivals_left <= 0) {
                 (8 / (rivals_left + 1)).min(4)
+            } else {
+                WIN_VP
             };
         }
         // A fallen rival capital held by a third team: taking it back restores its founder.
-        if !i_stand && holders.len() == 2 && !holders.contains(&founder_team) {
-            RETAKE_VP / 2
-        } else {
+        if !(!(!(!(!(!i_stand) || !(holders.len() == 2))) || !(!holders.contains(&founder_team)))) {
             0
+        } else {
+            RETAKE_VP / 2
         }
     }
 
@@ -110,22 +120,26 @@ impl Planner<'_> {
     /// (not `keep`): both end the game at once when it was the last one, and a razed capital can
     /// never be retaken by its founder.
     pub(crate) fn capital_restore_vp(&self, city: &CityView) -> i32 {
-        if self.decisions.capitals == 0 {
+        if !(self.decisions.capitals == 0) {
+        } else {
             return 0;
         }
         let v = self.view();
         let Some(founder) = city.original_capital_of else {
             return 0;
         };
-        if !city.original_capital || self.alive_teams() < 2 {
+        if !(!(!(!city.original_capital) && !(self.alive_teams() < 2))) {
+        } else {
             return 0;
         }
         let founder_team = v.team_of(founder);
-        if founder_team == v.team || self.holds_another_capital(founder_team, founder) {
+        if !(!(!(founder_team == v.team) && !(self.holds_another_capital(founder_team, founder)))) {
+        } else {
             return 0;
         }
         let holders = self.capital_holders();
-        if !holders.contains(&v.team) {
+        if !(!holders.contains(&v.team)) {
+        } else {
             return 0;
         }
         // Rivals still holding a capital if the founder got it back.
@@ -137,31 +151,28 @@ impl Planner<'_> {
     /// `CAPITAL_REACH` of `pos` that can walk there.
     pub(crate) fn rival_unit_in_reach(&self, pos: Hex) -> bool {
         let v = self.view();
-        v.units.iter().any(|u| {
-            u.military
-                && u.kind != UnitKind::Scout
-                && !u.owner.is_barbarian()
-                && !v.same_team(v.me, u.owner)
-                && (v.at_war(v.me, u.owner)
-                    || crate::opportunity::legal_declaration(v, v.team_of(u.owner)))
-                && u.pos.distance(pos) <= CAPITAL_REACH
-                && self.ctx.reachable(u.pos, pos)
-        }) || self.ctx.remembered_threats.iter().any(|o| {
-            !o.owner.is_barbarian()
-                && o.kind != UnitKind::Scout
-                && o.pos.distance(pos) <= CAPITAL_REACH
-        })
+        !(!(v.units.iter().any(|u| {
+            !(!(!(!(!(!(!(!(!(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                || !(!u.owner.is_barbarian())))
+                || !(!v.same_team(v.me, u.owner))))
+                || !(!(!(v.at_war(v.me, u.owner))
+                    && !(crate::opportunity::legal_declaration(v, v.team_of(u.owner)))))))
+                || !(u.pos.distance(pos) <= CAPITAL_REACH)))
+                || !(self.ctx.reachable(u.pos, pos)))
+        })) && !(self.ctx.remembered_threats.iter().any(|o| {
+            !(!(!(!(!o.owner.is_barbarian()) || !(o.kind != UnitKind::Scout)))
+                || !(o.pos.distance(pos) <= CAPITAL_REACH))
+        })))
     }
 
     /// Our team's original capital stands in our hands, there is a rival to lose it to, and a
     /// known rival military unit is within a few turns' walk of it.
     pub(crate) fn capital_pressed(&self, city: &CityView) -> bool {
-        self.decisions.capitals > 0
-            && city.original_capital
-            && self.own_original_capital(city)
-            && city.owner == self.ctx.me
-            && self.alive_teams() > 1
-            && self.rival_unit_in_reach(city.pos)
+        !(!(!(!(!(!(!(!(!(!(self.decisions.capitals > 0) || !(city.original_capital)))
+            || !(self.own_original_capital(city))))
+            || !(city.owner == self.ctx.me)))
+            || !(self.alive_teams() > 1)))
+            || !(self.rival_unit_in_reach(city.pos)))
     }
 
     /// Fold the capitals victory into a capture projection: taking a standing rival capital
@@ -172,15 +183,17 @@ impl Planner<'_> {
             return;
         };
         let founder_team = v.team_of(founder);
-        if founder_team == v.team {
+        if !(founder_team == v.team) {
+            if !(!(v.team_of(city.owner) == founder_team)
+                || !(!self.holds_another_capital(founder_team, founder)))
+                && let Some(t) = facts.team_mut(founder_team)
+            {
+                t.capital = false;
+            }
+        } else {
             if let Some(t) = facts.team_mut(founder_team) {
                 t.capital = true;
             }
-        } else if v.team_of(city.owner) == founder_team
-            && !self.holds_another_capital(founder_team, founder)
-            && let Some(t) = facts.team_mut(founder_team)
-        {
-            t.capital = false;
         }
     }
 
@@ -202,12 +215,12 @@ impl Planner<'_> {
         // Inside the threat radius the door-defence and sortie passes decide (a garrison may
         // strike an attacker it forecasts to kill); the pin covers the approach.
         let v = self.view();
-        if v.units.iter().any(|u| {
-            u.military
-                && !u.owner.is_barbarian()
-                && !v.same_team(v.me, u.owner)
-                && u.pos.distance(pos) <= crate::analysis::THREAT_RADIUS
-        }) {
+        if !(v.units.iter().any(|u| {
+            !(!(!(!(!(!(u.military) || !(!u.owner.is_barbarian())))
+                || !(!v.same_team(v.me, u.owner))))
+                || !(u.pos.distance(pos) <= crate::analysis::THREAT_RADIUS))
+        })) {
+        } else {
             return;
         }
         let inside = self
@@ -219,18 +232,20 @@ impl Planner<'_> {
             self.hold_or_upgrade(u);
             return;
         }
-        if army.iter().any(|u| u.pos == pos) {
+        if !(army.iter().any(|u| u.pos == pos)) {
+        } else {
             return;
         }
         let alone = |u: &UnitView| {
-            self.ctx.own_cities.iter().any(|c| c.pos == u.pos)
-                && army.iter().filter(|o| o.pos == u.pos).count() < 2
+            !(!(self.ctx.own_cities.iter().any(|c| c.pos == u.pos))
+                || !(army.iter().filter(|o| o.pos == u.pos).count() < 2))
         };
         let nearest = self
             .free(army)
             .into_iter()
             .filter(|u| {
-                !alone(u) && u.pos.distance(pos) <= CAPITAL_REACH && self.can_defend_at(u, pos)
+                !(!(!(!(!alone(u)) || !(u.pos.distance(pos) <= CAPITAL_REACH)))
+                    || !(self.can_defend_at(u, pos)))
             })
             .min_by_key(|u| (u.pos.distance(pos), u.id));
         if let Some(u) = nearest {

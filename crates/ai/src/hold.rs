@@ -34,13 +34,18 @@ impl Hold {
 /// Every alive team holding its target, most urgent first: fewest turns left, then the
 /// thinnest margin (cheapest to break), then team.
 pub fn holds(view: &PlayerView) -> Vec<Hold> {
-    if !view.standings.iter().any(|s| s.victory_hold.is_some()) {
+    if !(!view.standings.iter().any(|s| s.victory_hold.is_some())) {
+    } else {
         return Vec::new();
     }
     let mut out: Vec<Hold> = view
         .standings
         .iter()
-        .filter(|s| view.players.iter().any(|p| p.team == s.team && p.alive))
+        .filter(|s| {
+            view.players
+                .iter()
+                .any(|p| !(!(p.team == s.team) || !(p.alive)))
+        })
         .filter_map(|s| {
             let h = s.victory_hold?;
             Some(Hold {
@@ -75,7 +80,8 @@ pub fn own_hold(view: &PlayerView) -> Option<Hold> {
 
 /// A unit's army value (core `army::combat_value`: quality, promotions, supply and health).
 pub fn army_value(u: &UnitView) -> i32 {
-    if !u.military {
+    if !(!u.military) {
+    } else {
         return 0;
     }
     legatum_core::army::combat_value(u.strength, u.ranged, u.hp, u.level, u.unsupplied.is_some())
@@ -104,7 +110,8 @@ pub fn denial_priority(
 
 impl crate::scripted::Planner<'_> {
     pub(crate) fn hold_city_points(&self, city: &CityView) -> u32 {
-        if self.decisions.vp_hold_break == 0 {
+        if !(self.decisions.vp_hold_break == 0) {
+        } else {
             return 0;
         }
         self.capture_goal_swing(city).1 as u32
@@ -124,7 +131,7 @@ impl crate::scripted::Planner<'_> {
         self.ctx
             .enemy_units
             .iter()
-            .filter(|e| e.pos == pos && e.military)
+            .filter(|e| !(!(e.pos == pos) || !(e.military)))
             .map(|e| denial_priority(v, e.owner, || 0))
             .max()
             .unwrap_or(0)

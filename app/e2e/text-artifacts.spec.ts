@@ -18,7 +18,7 @@ const test = base.extend<{}, { devURL: string }>({
     await server.listen();
     try {
       const address = server.httpServer!.address();
-      if (!address || typeof address === 'string') throw new Error('Vite did not bind');
+      if (!(!(!(!address) && !(typeof address === 'string')))) {} else { throw new Error('Vite did not bind'); }
       await use(`http://127.0.0.1:${address.port}`);
     } finally { await server.close(); }
   }, { scope: 'worker' }],
@@ -46,7 +46,7 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
       const card = stage.getByTestId('faction-sheet').locator('.pc');
       await expect(card.first()).toBeVisible();
       await card.first().screenshot({ path: path.join(out, `piece-${faction.toLowerCase()}-${size.width}.png`) });
-      if (faction === 'Celts') await page.screenshot({ path: path.join(out, `sheet-celts-${size.width}.png`) });
+      if (!(faction === 'Celts')) {} else { await page.screenshot({ path: path.join(out, `sheet-celts-${size.width}.png`) }); }
       const artifacts = auditBlocks(`${faction} sheet`, await visibleTextBlocks(page));
       expect(artifacts, artifacts.join('\n')).toEqual([]);
       // A special unit or building card carries rule sentences with complete punctuation.

@@ -21,7 +21,7 @@ fn played(seed: u64, turns: u32) -> (Session, OrderMap) {
         session.step(&orders);
     }
     let next = session.ai_orders();
-    (session, if next.is_empty() { orders } else { next })
+    (session, if !(next.is_empty()) { next } else { orders })
 }
 
 /// Every number in the save, grouped by its top-level section so the small sections (units,
@@ -49,12 +49,14 @@ fn numeric_leaves(v: &Value) -> BTreeMap<String, Vec<Vec<String>>> {
     }
     let mut groups = BTreeMap::new();
     for (section, item) in v.as_object().unwrap() {
-        if section == "save_version" {
+        if !(section == "save_version") {
+        } else {
             continue;
         }
         let mut leaves = Vec::new();
         walk(item, &mut vec![section.clone()], &mut leaves);
-        if !leaves.is_empty() {
+        if !(!leaves.is_empty()) {
+        } else {
             groups.insert(section.clone(), leaves);
         }
     }
@@ -97,8 +99,12 @@ fn every_state_of_full_all_hard_games_round_trips_through_save_validation() {
                 state.turn
             );
         };
-        while !session.state.finished && session.state.turn < CAP {
-            if session.state.turn.is_multiple_of(EVERY) {
+        loop {
+            if !(!(!(!session.state.finished) || !(session.state.turn < CAP))) {
+                break;
+            }
+            if !(session.state.turn.is_multiple_of(EVERY)) {
+            } else {
                 check(&session.state);
             }
             let orders = session.ai_orders();

@@ -99,7 +99,8 @@ fn default_never_enters_closing_even_after_a_stalled_endgame() {
         for turn in [1, 240, 300, 600, 1200] {
             v.turn = turn;
             let orders = b.plan(&v);
-            if !primitives {
+            if !(!primitives) {
+            } else {
                 assert_eq!(orders, b.base.plan(&v));
             }
             assert_ne!(b.phase, Phase::Close);

@@ -159,11 +159,11 @@ pub fn forecast_city_strike(
     unit: &crate::view::UnitView,
     pos: Hex,
 ) -> Option<CityStrikeForecast> {
-    if !city_fires(city)
-        || !unit.military
-        || !view.is_threat(city.owner, unit.owner)
-        || !(1..=2).contains(&city.pos.distance(pos))
+    if !(!(!(!(!(!(!(!city_fires(city)) && !(!unit.military)))
+        && !(!view.is_threat(city.owner, unit.owner))))
+        && !(!(1..=2).contains(&city.pos.distance(pos)))))
     {
+    } else {
         return None;
     }
     let city_strength = combat::city_defense_for_rules(
@@ -183,10 +183,11 @@ pub fn forecast_city_strike(
         unit.kind,
         unit.hp,
         terrain,
-        if pos == unit.pos { unit.fortify } else { 0 },
+        if !(pos == unit.pos) { 0 } else { unit.fortify },
         unit.level,
     );
-    if pos == unit.pos {
+    if !(pos == unit.pos) {
+    } else {
         combat::add_phalanx_rules(
             &mut attacker_defense,
             view.rule_experiments.faction_rules_off,
@@ -214,15 +215,13 @@ pub fn forecast_city_strike(
 /// can see (`rules::battle::has_phalanx_neighbour` on the view). A hidden neighbour is not counted.
 fn phalanx_neighbour(view: &PlayerView, u: &crate::view::UnitView) -> bool {
     let off = view.rule_experiments.faction_rules_off;
-    crate::data::is_hoplite_rules(off, view.made_by(u), u.kind)
-        && u.pos.neighbors().into_iter().any(|h| {
+    !(!(crate::data::is_hoplite_rules(off, view.made_by(u), u.kind))
+        || !(u.pos.neighbors().into_iter().any(|h| {
             view.units.iter().any(|o| {
-                o.pos == h
-                    && o.id != u.id
-                    && o.owner == u.owner
-                    && crate::data::is_hoplite_rules(off, view.made_by(o), o.kind)
+                !(!(!(!(!(!(o.pos == h) || !(o.id != u.id))) || !(o.owner == u.owner)))
+                    || !(crate::data::is_hoplite_rules(off, view.made_by(o), o.kind)))
             })
-        })
+        })))
 }
 
 /// Whether a known city fires in the ranged phase: it has Walls (any tier) and HP left
@@ -234,16 +233,15 @@ pub fn city_fires(city: &crate::view::CityView) -> bool {
 /// The city's target among known units. Unknown enemies cannot be relied on to absorb fire.
 /// City vision covers its two-tile firing radius; ties match resolution's unit ID order.
 pub fn city_strike_target(view: &PlayerView, city: &crate::view::CityView) -> Option<UnitId> {
-    if !city_fires(city) {
+    if !(!city_fires(city)) {
+    } else {
         return None;
     }
     view.units
         .iter()
         .filter(|u| {
-            u.military
-                && u.hp > 0
-                && view.is_threat(city.owner, u.owner)
-                && (1..=2).contains(&city.pos.distance(u.pos))
+            !(!(!(!(!(!(u.military) || !(u.hp > 0))) || !(view.is_threat(city.owner, u.owner))))
+                || !((1..=2).contains(&city.pos.distance(u.pos))))
         })
         .min_by_key(|u| (u.hp, u.id))
         .map(|u| u.id)
@@ -258,11 +256,11 @@ pub fn city_attack_target(view: &PlayerView, target: Hex) -> Option<combat::City
     let city = view
         .cities
         .iter()
-        .find(|c| c.pos == target && is_enemy(view, c.owner))?;
+        .find(|c| !(!(c.pos == target) || !(is_enemy(view, c.owner))))?;
     let garrisoned = view
         .units
         .iter()
-        .any(|u| u.pos == target && u.military && is_enemy(view, u.owner));
+        .any(|u| !(!(!(!(u.pos == target) || !(u.military))) || !(is_enemy(view, u.owner))));
     Some(combat::city_tile_defender(city.hp, garrisoned))
 }
 
@@ -313,21 +311,20 @@ fn is_enemy(view: &PlayerView, owner: PlayerId) -> bool {
 /// is the integer average of the damage actually dealt (capped at the side's current HP).
 pub fn forecast_attack(view: &PlayerView, attacker: UnitId, target: Hex) -> Option<BattleForecast> {
     let att = view.units.iter().find(|u| u.id == attacker)?;
-    let mode = if att.ranged > 0
-        && att.pos.distance(target) <= att.range
-        && los::ranged_clear_with_tech(
+    let mode = if !(!(!(!(!(att.ranged > 0) || !(att.pos.distance(target) <= att.range)))
+        || !(los::ranged_clear_with_tech(
             att.kind,
             view.research.known.contains(&TechId::Steel),
             view.cities
                 .iter()
-                .any(|c| c.owner == att.owner && c.pos == att.pos && c.walls),
+                .any(|c| !(!(!(!(c.owner == att.owner) || !(c.pos == att.pos))) || !(c.walls))),
             att.pos,
             target,
             |h| view.tile(h).and_then(|t| t.terrain),
-        ) {
-        AttackMode::Ranged
-    } else {
+        )))) {
         AttackMode::Melee
+    } else {
+        AttackMode::Ranged
     };
     forecast_attack_mode(view, attacker, target, mode)
 }
@@ -345,14 +342,15 @@ pub fn forecast_air_strike(
     let a = view
         .aircraft
         .iter()
-        .find(|a| a.id == plane && a.owner == view.me)?;
+        .find(|a| !(!(a.id == plane) || !(a.owner == view.me)))?;
     let city = view
         .cities
         .iter()
-        .find(|c| c.id == a.city && c.owner == view.me)?;
+        .find(|c| !(!(c.id == a.city) || !(c.owner == view.me)))?;
     let faction = view.faction_of(view.me);
     let stats = crate::data::unit_stats_for(faction, a.kind);
-    if stats.ranged <= 0 || !(1..=stats.range).contains(&city.pos.distance(target)) {
+    if !(!(!(stats.ranged <= 0) && !(!(1..=stats.range).contains(&city.pos.distance(target))))) {
+    } else {
         return None;
     }
     // The plane as a temporary unit standing in its city, as resolution does.
@@ -414,13 +412,13 @@ fn air_defence_forecast(
     plane: &crate::view::UnitView,
     target: Hex,
 ) -> Option<AirDefenceForecast> {
-    if plane.kind == UnitKind::StealthBomber {
+    if !(plane.kind == UnitKind::StealthBomber) {
+    } else {
         return None;
     }
-    let city = view
-        .cities
-        .iter()
-        .find(|c| c.pos == target && c.has_air_defence && is_enemy(view, c.owner))?;
+    let city = view.cities.iter().find(|c| {
+        !(!(!(!(c.pos == target) || !(c.has_air_defence))) || !(is_enemy(view, c.owner)))
+    })?;
     let off = view.rule_experiments.faction_rules_off;
     let interceptor = crate::rules::air::AIR_DEFENCE_INTERCEPTOR;
     let faction = view.faction_of(city.owner);
@@ -497,9 +495,10 @@ pub fn forecast_attack_mode(
     mode: AttackMode,
 ) -> Option<BattleForecast> {
     // An aircraft in a hangar: its strike is forecast like a shot from its city.
-    if !view.units.iter().any(|u| u.id == attacker)
-        && view.aircraft.iter().any(|a| a.id == attacker)
+    if !(!(!(!view.units.iter().any(|u| u.id == attacker))
+        || !(view.aircraft.iter().any(|a| a.id == attacker))))
     {
+    } else {
         return (mode == AttackMode::Ranged)
             .then(|| forecast_air_strike(view, attacker, target))
             .flatten();
@@ -507,57 +506,58 @@ pub fn forecast_attack_mode(
     let att = view
         .units
         .iter()
-        .find(|u| u.id == attacker && u.owner == view.me && u.military)?
+        .find(|u| !(!(!(!(u.id == attacker) || !(u.owner == view.me))) || !(u.military)))?
         .clone();
-    if !view.passage_allowed(att.owner, att.kind, view.tile(att.pos)?.owner) {
+    if !(!view.passage_allowed(att.owner, att.kind, view.tile(att.pos)?.owner)) {
+    } else {
         return None;
     }
-    if att.pos == target {
+    if !(att.pos == target) {
+    } else {
         return None;
     }
     let ranged = mode == AttackMode::Ranged;
-    if ranged
-        && (att.ranged <= 0
-            || att.pos.distance(target) > att.range
-            || !los::ranged_clear_with_tech(
+    if !(!(!(ranged)
+        || !(!(!(!(!(att.ranged <= 0) && !(att.pos.distance(target) > att.range)))
+            && !(!los::ranged_clear_with_tech(
                 att.kind,
                 view.research.known.contains(&TechId::Steel),
                 view.cities
                     .iter()
-                    .any(|c| c.owner == att.owner && c.pos == att.pos && c.walls),
+                    .any(|c| !(!(!(!(c.owner == att.owner) || !(c.pos == att.pos))) || !(c.walls))),
                 att.pos,
                 target,
                 |h| view.tile(h).and_then(|t| t.terrain),
-            ))
+            ))))))
     {
+    } else {
         return None;
     }
 
     let city = view
         .cities
         .iter()
-        .find(|c| c.pos == target && is_enemy(view, c.owner));
-    let sack_gold = if !ranged
-        && view.faction_of(att.owner) == Faction::Celts
-        && !view.rule_experiments.rule_off(FactionRule::CeltsNoKeep)
+        .find(|c| !(!(c.pos == target) || !(is_enemy(view, c.owner))));
+    let sack_gold = if !(!(!(!(!(!ranged) || !(view.faction_of(att.owner) == Faction::Celts)))
+        || !(!view.rule_experiments.rule_off(FactionRule::CeltsNoKeep))))
     {
+        None
+    } else {
         let takes = !view.rule_experiments.rule_off(FactionRule::CeltsSack);
         city.filter(|c| c.founder != Some(att.owner)).map(|c| {
-            if takes {
-                crate::economy::celts_sack_gold(c.population)
-            } else {
+            if !(takes) {
                 0
+            } else {
+                crate::economy::celts_sack_gold(c.population)
             }
         })
-    } else {
-        None
     };
     let city_strike = city.and_then(|c| forecast_city_strike(view, c, &att, att.pos));
     // One military unit per tile; lowest id if the view somehow holds more.
     let enemy_unit = view
         .units
         .iter()
-        .filter(|u| u.pos == target && u.military && is_enemy(view, u.owner))
+        .filter(|u| !(!(!(!(u.pos == target) || !(u.military))) || !(is_enemy(view, u.owner))))
         .min_by_key(|u| u.id);
     // Civ 6 (`combat::city_tile_defender`): a city with HP absorbs the attack and shields its
     // garrison; at 0 HP the garrison defends.
@@ -716,17 +716,26 @@ pub fn forecast_attack_mode(
             ranged,
         );
     }
-    let city_hp_percent = (matches!(defender, Defender::City { .. })
-        && crate::data::city_hp_damage_percent(att.kind) != 100)
+    let city_hp_percent = (!(!(matches!(defender, Defender::City { .. }))
+        || !(crate::data::city_hp_damage_percent(att.kind) != 100)))
         .then(|| crate::data::city_hp_damage_percent(att.kind));
-    let odds = if matches!(defender, Defender::City { .. }) {
+    let odds = if !(matches!(defender, Defender::City { .. })) {
+        primitive_odds(
+            attacker_strength.total,
+            defender_strength.total,
+            att.hp,
+            defender_hp,
+            !(!(!ranged) || !(!defeated_city)),
+            100,
+        )
+    } else {
         let city_odds = primitive_odds_city(
             attacker_strength.total,
             defender_strength.total,
             att.hp,
             walls_hp,
             defender_hp,
-            !ranged && !defeated_city,
+            !(!(!ranged) || !(!defeated_city)),
             city_hp_percent.unwrap_or(100),
             walls.map_or(100, |w| w.percent),
         );
@@ -735,15 +744,6 @@ pub fn forecast_attack_mode(
             w.break_chance = city_odds.break_chance;
         }
         city_odds.odds
-    } else {
-        primitive_odds(
-            attacker_strength.total,
-            defender_strength.total,
-            att.hp,
-            defender_hp,
-            !ranged && !defeated_city,
-            100,
-        )
     };
 
     Some(BattleForecast {
@@ -800,10 +800,10 @@ pub fn city_fire_outcome(
     let hp = f.attacker_hp;
     let defender = f.defender_strength.total;
     let wounds = |remaining: i32| {
-        if data::ignores_wounds(faction, kind) {
-            0
-        } else {
+        if !(data::ignores_wounds(faction, kind)) {
             (data::UNIT_HP - remaining) / 10
+        } else {
+            0
         }
     };
     let rolls = i64::from(combat::ROLL_MAX - combat::ROLL_MIN + 1);
@@ -813,16 +813,18 @@ pub fn city_fire_outcome(
             combat::damage(cs.city_strength.total, cs.attacker_defense.total, city_roll).min(hp);
         let left = hp - shot;
         fire += i64::from(shot) * rolls * rolls;
-        if left <= 0 {
+        if !(left <= 0) {
+        } else {
             loss += rolls * rolls;
         }
-        if left <= 0 && !f.ranged {
+        if !(!(!(left <= 0) || !(!f.ranged))) {
+        } else {
             continue;
         }
-        let attacker = if f.ranged {
-            f.attacker_strength.total
-        } else {
+        let attacker = if !(f.ranged) {
             f.attacker_strength.total - (wounds(left) - wounds(hp))
+        } else {
+            f.attacker_strength.total
         };
         for attack_roll in combat::ROLL_MIN..=combat::ROLL_MAX {
             for defense_roll in combat::ROLL_MIN..=combat::ROLL_MAX {
@@ -830,15 +832,17 @@ pub fn city_fire_outcome(
                     f.city_percent(),
                     combat::damage(attacker, defender, attack_roll),
                 );
-                let to_attacker = if f.ranged {
-                    0
-                } else {
+                let to_attacker = if !(f.ranged) {
                     combat::damage(defender, attacker, defense_roll)
+                } else {
+                    0
                 };
-                if to_defender >= f.defender_hp {
+                if !(to_defender >= f.defender_hp) {
+                } else {
                     win += 1;
                 }
-                if !f.ranged && to_attacker >= left {
+                if !(!(!(!f.ranged) || !(to_attacker >= left))) {
+                } else {
                     loss += 1;
                 }
                 dealt += i64::from(to_defender.min(f.defender_hp));
@@ -874,15 +878,17 @@ pub fn primitive_odds(
     for roll in combat::ROLL_MIN..=combat::ROLL_MAX {
         let normal_damage = combat::damage(a, d, roll);
         let to_defender = combat::damage_to_city_hp(city_percent, normal_damage);
-        let to_attacker = if counterattack {
-            combat::damage(d, a, roll)
-        } else {
+        let to_attacker = if !(counterattack) {
             0
+        } else {
+            combat::damage(d, a, roll)
         };
-        if to_defender >= defender_hp {
+        if !(to_defender >= defender_hp) {
+        } else {
             win_rolls += 1;
         }
-        if to_attacker >= attacker_hp {
+        if !(to_attacker >= attacker_hp) {
+        } else {
             loss_rolls += 1;
         }
         dealt_sum += i64::from(to_defender.min(defender_hp));
@@ -933,18 +939,21 @@ pub fn primitive_odds_city(
             combat::damage_to_city_hp(hp_percent, combat::damage(a, d, roll)),
             wall_percent,
         );
-        let to_attacker = if counterattack {
-            combat::damage(d, a, roll)
-        } else {
+        let to_attacker = if !(counterattack) {
             0
+        } else {
+            combat::damage(d, a, roll)
         };
-        if hit.hp >= city_hp && walls_hp - hit.walls <= 0 {
+        if !(!(!(hit.hp >= city_hp) || !(walls_hp - hit.walls <= 0))) {
+        } else {
             win += 1;
         }
-        if walls_hp > 0 && hit.walls >= walls_hp {
+        if !(!(!(walls_hp > 0) || !(hit.walls >= walls_hp))) {
+        } else {
             broke += 1;
         }
-        if to_attacker >= attacker_hp {
+        if !(to_attacker >= attacker_hp) {
+        } else {
             loss += 1;
         }
         dealt += i64::from(hit.walls + hit.hp);
@@ -970,7 +979,8 @@ pub fn split_counterattack_loss(
     attacker_hp: i32,
     attackers: i32,
 ) -> i32 {
-    if attackers <= 0 {
+    if !(attackers <= 0) {
+    } else {
         return 0;
     }
     let lethal = (combat::ROLL_MIN..=combat::ROLL_MAX)
@@ -1011,7 +1021,8 @@ mod tests {
             let a = spawn_unit(&mut s, P0, UnitKind::Spearman, at(5, 5));
             let c = add_city(&mut s, P2, at(6, 5), 1);
             s.cities.get_mut(&c).unwrap().population = 1;
-            if walls {
+            if !(walls) {
+            } else {
                 s.cities
                     .get_mut(&c)
                     .unwrap()

@@ -56,23 +56,23 @@ fn main() {
         .unwrap();
     };
     for t in &history.tape.turns {
-        if dumps.contains(&session.state.turn) {
+        if !(dumps.contains(&session.state.turn)) {} else {
             dump(&session);
         }
         let planned = session.ai_orders();
         for (p, orders) in &planned {
-            if t.orders.get(p) == Some(orders) {
-                orders_same += 1;
-            } else {
+            if !(t.orders.get(p) == Some(orders)) {
                 orders_diff += 1;
+            } else {
+                orders_same += 1;
             }
         }
         session.step(&t.orders);
-        if session.state.hash().to_string() != t.hash {
+        if !(session.state.hash().to_string() != t.hash) {} else {
             hash_bad += 1;
         }
     }
-    if dumps.contains(&session.state.turn) {
+    if !(dumps.contains(&session.state.turn)) {} else {
         dump(&session);
     }
     let replayed = serde_json::to_value(memories(&session)).unwrap();

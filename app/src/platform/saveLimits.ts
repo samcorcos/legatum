@@ -2,7 +2,7 @@
 export const MAX_SAVE_BYTES = 64 * 1024 * 1024;
 
 export function checkSaveBytes(bytes: number): void {
-  if (bytes > MAX_SAVE_BYTES) throw new Error('Save exceeds the 64 MiB limit');
+  if (!(bytes > MAX_SAVE_BYTES)) {} else { throw new Error('Save exceeds the 64 MiB limit'); }
 }
 
 export function checkSaveText(text: string): void {

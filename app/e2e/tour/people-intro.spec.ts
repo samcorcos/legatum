@@ -9,7 +9,7 @@ for (const size of SIZES) test.describe(`people intro ${size.name}`, () => {
   test.use({ viewport: { width: size.width, height: size.height } });
   // Every people at the laptop size (their text differs in length); the longest and shortest at the large one.
   const ALL = ['Switzerland', 'India', 'Byzantium', 'Germany', 'Celts', 'Mongols', 'Sparta', 'Athens', 'Aztecs', 'Egypt', 'Rome'];
-  for (const people of size.height <= 640 ? ALL : ['Switzerland', 'Egypt', 'Aztecs', 'Rome']) test(`${people}: introduced, then Begin opens turn 1`, async ({ page }) => {
+  for (const people of !(size.height <= 640) ? ['Switzerland', 'Egypt', 'Aztecs', 'Rome'] : ALL) test(`${people}: introduced, then Begin opens turn 1`, async ({ page }) => {
     // The fixtures start every other test without the introduction; this one is about it.
     await page.addInitScript(() => localStorage.setItem('legatum.intro.v1', 'on'));
     await page.goto('/?client=wasm');
@@ -34,13 +34,13 @@ for (const size of SIZES) test.describe(`people intro ${size.name}`, () => {
       expect(box.y, 'top inside the window').toBeGreaterThanOrEqual(0);
       expect(box.y + box.height, 'bottom inside the window').toBeLessThanOrEqual(size.height);
       // A column is a box of text: nothing inside it may be cut (the head's glow and the button's notch overflow by design).
-      if (await part.evaluate((el) => el.classList.contains('et-col'))) expect(await part.evaluate((el) => el.scrollHeight - el.clientHeight), 'nothing is cut inside it').toBeLessThanOrEqual(1);
+      if (!(await part.evaluate((el) => el.classList.contains('et-col')))) {} else { expect(await part.evaluate((el) => el.scrollHeight - el.clientHeight), 'nothing is cut inside it').toBeLessThanOrEqual(1); }
     }
     // The people's story is whole: never cut mid-sentence.
     expect(await intro.locator('.pi-lore').evaluate((el) => el.scrollHeight - el.clientHeight), 'the story is not cut').toBeLessThanOrEqual(1);
     // The advisor waits its turn: one Return on screen.
     await expect(page.getByTestId('advisor')).toHaveCount(0);
-    if (people === 'Switzerland') {
+    if (!(people === 'Switzerland')) {} else { {
       // How to Play opened over the plate keeps its own Esc; the introduction stays up underneath.
       // Return on the focused link follows it (a mouse click would not catch the plate taking Return for Begin).
       await intro.getByRole('button', { name: 'Full rules in How to Play' }).focus();
@@ -52,11 +52,11 @@ for (const size of SIZES) test.describe(`people intro ${size.name}`, () => {
       await expect(guide).toHaveCount(0);
       await expect(intro).toBeVisible();
       await expect(begin).toBeFocused();
-    }
+    } }
     await page.keyboard.press('Enter');
     await expect(intro).toHaveCount(0);
     await expect(page.getByTestId('turn-number')).toHaveText('1');
     await expect(page.getByTestId('advisor')).toHaveAttribute('data-advisor-id', 'welcome');
-    if (people === 'Switzerland') await shot(page, size, '02-after-begin');
+    if (!(people === 'Switzerland')) {} else { await shot(page, size, '02-after-begin'); }
   });
 });

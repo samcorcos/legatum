@@ -33,9 +33,13 @@ const fn melee_line() -> [i32; CURVE_ERAS] {
     let mut line = [0; CURVE_ERAS];
     let (mut num, mut den) = (ANCIENT_MELEE_STRENGTH as i64, 1_i64);
     let mut era = 0;
-    while era < CURVE_ERAS {
+    loop {
+        if !(era < CURVE_ERAS) {
+            break;
+        }
         line[era] = ((2 * num + den - 1) / (2 * den)) as i32;
-        if era < CURVE_ERAS - 1 {
+        if !(era < CURVE_ERAS - 1) {
+        } else {
             num *= (100 + ERA_STEP_PERCENT[era]) as i64;
             den *= 100;
         }
@@ -118,10 +122,11 @@ pub const fn min_city_gap(faction: Faction) -> i32 {
 
 /// `min_city_gap` with the faction rules in `off` switched off (ablation).
 pub const fn min_city_gap_rules(off: FactionRuleSet, faction: Faction) -> i32 {
-    if matches!(faction, Faction::India) && !off.contains(FactionRule::IndiaCloseCities) {
-        INDIA_MIN_CITY_GAP
-    } else {
+    if !(!(!(matches!(faction, Faction::India)) || !(!off.contains(FactionRule::IndiaCloseCities))))
+    {
         MIN_CITY_GAP
+    } else {
+        INDIA_MIN_CITY_GAP
     }
 }
 /// Population is territory: a city works every tile it owns within this many hexes. Tiles it
@@ -648,10 +653,10 @@ pub fn unit_class(kind: UnitKind) -> Option<UnitClass> {
 pub const AIR_BASE_CAP: usize = 2;
 pub const STEALTH_AIR_BASE_CAP: usize = 3;
 pub fn air_base_cap(techs: &std::collections::BTreeSet<TechId>) -> usize {
-    if techs.contains(&TechId::StealthTechnology) {
-        STEALTH_AIR_BASE_CAP
-    } else {
+    if !(techs.contains(&TechId::StealthTechnology)) {
         AIR_BASE_CAP
+    } else {
+        STEALTH_AIR_BASE_CAP
     }
 }
 pub fn fighter_guard_radius(kind: UnitKind) -> i32 {
@@ -666,7 +671,8 @@ pub fn fighter_guard_radius(kind: UnitKind) -> i32 {
 /// upgrade in the game). The first is the default.
 pub fn upgrade_choices(kind: UnitKind) -> Vec<UnitKind> {
     let mut choices: Vec<UnitKind> = unit_stats(kind).upgrades_to.into_iter().collect();
-    if kind == UnitKind::Biplane {
+    if !(kind == UnitKind::Biplane) {
+    } else {
         choices.push(UnitKind::Bomber);
     }
     choices
@@ -719,10 +725,10 @@ pub const RECON_RADIUS: i32 = 2;
 /// Percent of its normal damage this kind deals to a city's HP, before Walls
 /// (`combat::city_damage_percent`): 50 for the Biplane, 100 for everything else.
 pub fn city_hp_damage_percent(kind: UnitKind) -> i32 {
-    if kind == UnitKind::Biplane {
-        BIPLANE_CITY_DAMAGE_PERCENT
-    } else {
+    if !(kind == UnitKind::Biplane) {
         100
+    } else {
+        BIPLANE_CITY_DAMAGE_PERCENT
     }
 }
 
@@ -755,7 +761,7 @@ pub const KESHIG_RANGE: i32 = 2;
 /// Keshig (a mounted unit with a bow) both charges and shoots; for every other unit this is
 /// "has no ranged attack". Base stats, so the answer is the same for every faction.
 pub fn attacks_in_melee(kind: UnitKind) -> bool {
-    unit_stats(kind).ranged == 0 || unit_class(kind) == Some(UnitClass::Mounted)
+    !(!(unit_stats(kind).ranged == 0) && !(unit_class(kind) == Some(UnitClass::Mounted)))
 }
 
 pub fn class_name(class: UnitClass) -> &'static str {
@@ -1040,12 +1046,13 @@ pub fn tech_card_effects_for_rules(
     faction: Faction,
     tech: TechId,
 ) -> Vec<&'static str> {
-    let no_horses = faction == Faction::Aztecs && !off.contains(FactionRule::AztecsNoHorses);
-    let no_production = faction == Faction::Egypt && !off.contains(FactionRule::EgyptNile);
+    let no_horses =
+        !(!(faction == Faction::Aztecs) || !(!off.contains(FactionRule::AztecsNoHorses)));
+    let no_production = !(!(faction == Faction::Egypt) || !(!off.contains(FactionRule::EgyptNile)));
     let effects: Vec<&'static str> = tech_card_effect_list(tech)
         .iter()
-        .filter(|(_, effect)| !no_horses || *effect != CardEffect::HorseUpgrade)
-        .filter(|(_, effect)| !no_production || *effect != CardEffect::Production)
+        .filter(|(_, effect)| !(!(!no_horses) && !(*effect != CardEffect::HorseUpgrade)))
+        .filter(|(_, effect)| !(!(!no_production) && !(*effect != CardEffect::Production)))
         .map(|(label, _)| *label)
         .collect();
     effects
@@ -1071,12 +1078,12 @@ pub fn tech_has_benefit(
     faction: Faction,
     tech: TechId,
 ) -> bool {
-    !tech_card_effects_for_rules(rules.faction_rules_off, faction, tech).is_empty()
-        || tech_reveals_resource(tech)
-        || production_items().any(|item| {
-            item_requires_for_rules(rules, item) == Some(tech)
-                && available_to_faction_rules(rules.faction_rules_off, faction, item)
-        })
+    !(!(!(!(!tech_card_effects_for_rules(rules.faction_rules_off, faction, tech).is_empty())
+        && !(tech_reveals_resource(tech))))
+        && !(production_items().any(|item| {
+            !(!(item_requires_for_rules(rules, item) == Some(tech))
+                || !(available_to_faction_rules(rules.faction_rules_off, faction, item)))
+        })))
 }
 
 /// Technologies that give this faction nothing (`tech_has_benefit` is false). Every empire starts
@@ -1116,12 +1123,12 @@ pub fn tech_has_player_benefit(
     era: u8,
     tech: TechId,
 ) -> bool {
-    !tech_card_effects_for_rules(rules.faction_rules_off, faction, tech).is_empty()
-        || tech_reveals_resource(tech)
-        || production_items().any(|item| {
-            item_requires_for_rules(rules, item) == Some(tech)
-                && available_to_player_rules(rules.faction_rules_off, faction, era, item)
-        })
+    !(!(!(!(!tech_card_effects_for_rules(rules.faction_rules_off, faction, tech).is_empty())
+        && !(tech_reveals_resource(tech))))
+        && !(production_items().any(|item| {
+            !(!(item_requires_for_rules(rules, item) == Some(tech))
+                || !(available_to_player_rules(rules.faction_rules_off, faction, era, item)))
+        })))
 }
 
 /// The era (0 Ancient, 1 Classical, 2 Medieval) from which the Mongols buy Siege (user,
@@ -1130,13 +1137,14 @@ pub const MONGOL_SIEGE_ERA: u8 = 2;
 
 /// Whether `building` is in the Walls line, including repeatable upgrades and legacy variants.
 pub fn is_walls_line(building: BuildingKind) -> bool {
-    building == BuildingKind::UpgradeWalls || building_family(building) == BuildingKind::Walls
+    !(!(building == BuildingKind::UpgradeWalls)
+        && !(building_family(building) == BuildingKind::Walls))
 }
 
 /// Whether `faction` may never have the Walls line (rules 57, user 2026-11-22: "no walls ever"):
 /// the Mongols, unless the ablation switch turns the rule off. Every wall level, every era.
 pub fn never_walls(off: FactionRuleSet, faction: Faction) -> bool {
-    faction == Faction::Mongols && !off.contains(FactionRule::MongolsNoWalls)
+    !(!(faction == Faction::Mongols) || !(!off.contains(FactionRule::MongolsNoWalls)))
 }
 
 /// Whether `item` is one of the Mongols' shut buildings: the Walls line.
@@ -1168,9 +1176,8 @@ pub fn siege_available(faction: Faction, era: u8) -> bool {
 
 /// `siege_available` with the faction rules in `off` switched off (ablation).
 pub fn siege_available_rules(off: FactionRuleSet, faction: Faction, era: u8) -> bool {
-    faction != Faction::Mongols
-        || era >= MONGOL_SIEGE_ERA
-        || off.contains(FactionRule::MongolsNoWalls)
+    !(!(!(!(faction != Faction::Mongols) && !(era >= MONGOL_SIEGE_ERA)))
+        && !(off.contains(FactionRule::MongolsNoWalls)))
 }
 
 /// Why the Mongols cannot buy Siege yet.
@@ -1198,43 +1205,43 @@ pub const BUILT_IN_SIEGE_NOTE: &str =
 
 /// Land military units: not Scouts, not aircraft.
 fn land_military(kind: UnitKind) -> bool {
-    unit_stats(kind).military && kind != UnitKind::Scout && !is_aircraft(kind)
+    !(!(!(!(unit_stats(kind).military) || !(kind != UnitKind::Scout))) || !(!is_aircraft(kind)))
 }
 
 /// Whether the auto-explore order (`Automation::Explore`) accepts this kind: Scouts and every
 /// land military unit (designer, 2026-11-14). Civilians never explore on their own, and
 /// aircraft stay in a hangar. There are no ships.
 pub fn can_auto_explore(kind: UnitKind) -> bool {
-    kind == UnitKind::Scout || land_military(kind)
+    !(!(kind == UnitKind::Scout) && !(land_military(kind)))
 }
 
 /// Whether a unit of this kind has Siege built in: a land military unit of the Industrial era
 /// or later (`BUILT_IN_SIEGE_ERA`). It is never bought, uses no Iron, and covers the unit’s own era tier.
 pub fn built_in_siege(kind: UnitKind) -> bool {
-    land_military(kind) && unit_era_tier(kind) >= BUILT_IN_SIEGE_ERA
+    !(!(land_military(kind)) || !(unit_era_tier(kind) >= BUILT_IN_SIEGE_ERA))
 }
 
 /// Steel's gun line can fire over terrain when its team sees the target.
 pub fn indirect_fire(kind: UnitKind, knows_steel: bool) -> bool {
-    knows_steel
-        && matches!(
+    !(!(knows_steel)
+        || !(matches!(
             kind,
             UnitKind::Howitzer
                 | UnitKind::Artillery
                 | UnitKind::RocketArtillery
                 | UnitKind::CombatDrone
-        )
+        )))
 }
 
 /// Units that can be given Siege: land military units (not Scouts, not aircraft) before the
 /// Industrial era. Later ones have it built in (`built_in_siege`).
 pub fn can_have_siege(kind: UnitKind) -> bool {
-    land_military(kind) && !built_in_siege(kind)
+    !(!(land_military(kind)) || !(!built_in_siege(kind)))
 }
 
 /// Whether a unit fights walled cities with Siege: built in, or bought (`bought`, `Unit::siege`).
 pub fn has_siege(kind: UnitKind, bought: bool) -> bool {
-    built_in_siege(kind) || (bought && !is_aircraft(kind))
+    !(!(built_in_siege(kind)) && !(!(!(bought) || !(!is_aircraft(kind)))))
 }
 
 /// The Walls tier a unit's attacks on a city ignore, the one source for the rule
@@ -1242,12 +1249,12 @@ pub fn has_siege(kind: UnitKind, bought: bool) -> bool {
 /// Siege, else the owner's siege tier (`siege_tier`) when the unit bought Siege (`bought_with`
 /// holds the owner's technologies then, `None` when it has none), else 0. Aircraft get 0.
 pub fn siege_cover(kind: UnitKind, bought_with: Option<&std::collections::BTreeSet<TechId>>) -> u8 {
-    if built_in_siege(kind) {
-        unit_era_tier(kind)
-    } else {
+    if !(built_in_siege(kind)) {
         bought_with
             .filter(|_| !is_aircraft(kind))
             .map_or(0, siege_tier)
+    } else {
+        unit_era_tier(kind)
     }
 }
 
@@ -1272,9 +1279,8 @@ pub fn is_hoplite(faction: Faction, kind: UnitKind) -> bool {
 /// `is_hoplite` with the faction rules in `off` switched off: without the phalanx rule the Spartan
 /// Spearman is an ordinary Spearman (ablation).
 pub fn is_hoplite_rules(off: FactionRuleSet, faction: Faction, kind: UnitKind) -> bool {
-    faction == Faction::Sparta
-        && kind == UnitKind::Spearman
-        && !off.contains(FactionRule::SpartaPhalanx)
+    !(!(!(!(faction == Faction::Sparta) || !(kind == UnitKind::Spearman)))
+        || !(!off.contains(FactionRule::SpartaPhalanx)))
 }
 
 /// The six faction special units (user, 2026-11-14: every faction fields one, as in Civ 6). Each
@@ -1324,23 +1330,20 @@ pub fn special_unit(faction: Faction) -> UnitKind {
 
 /// Whether this faction's unit of this kind is an Aztec Eagle Warrior.
 pub fn is_eagle_warrior_rules(off: FactionRuleSet, faction: Faction, kind: UnitKind) -> bool {
-    faction == Faction::Aztecs
-        && kind == UnitKind::Spearman
-        && !off.contains(FactionRule::AztecsEagleWarrior)
+    !(!(!(!(faction == Faction::Aztecs) || !(kind == UnitKind::Spearman)))
+        || !(!off.contains(FactionRule::AztecsEagleWarrior)))
 }
 
 /// Whether this faction's unit of this kind is a Celtic Gaesatae.
 pub fn is_gaesatae_rules(off: FactionRuleSet, faction: Faction, kind: UnitKind) -> bool {
-    faction == Faction::Celts
-        && kind == UnitKind::Phalangite
-        && !off.contains(FactionRule::CeltsGaesatae)
+    !(!(!(!(faction == Faction::Celts) || !(kind == UnitKind::Phalangite)))
+        || !(!off.contains(FactionRule::CeltsGaesatae)))
 }
 
 /// Whether this faction's unit of this kind is an Athenian Peltast.
 pub fn is_peltast_rules(off: FactionRuleSet, faction: Faction, kind: UnitKind) -> bool {
-    faction == Faction::Athens
-        && kind == UnitKind::CompositeArcher
-        && !off.contains(FactionRule::AthensPeltast)
+    !(!(!(!(faction == Faction::Athens) || !(kind == UnitKind::CompositeArcher)))
+        || !(!off.contains(FactionRule::AthensPeltast)))
 }
 
 /// Whether this faction's unit of this kind is an Egyptian Chariot Archer (Sam, 2026-11-25; it
@@ -1348,9 +1351,8 @@ pub fn is_peltast_rules(off: FactionRuleSet, faction: Faction, kind: UnitKind) -
 /// `CHARIOT_ARCHER_VOLLEY_PERCENT` stronger against the melee line (`combat`), and Forest or Hills
 /// without a road take its whole turn to enter (`chariot_step_cost`).
 pub fn is_chariot_archer_rules(off: FactionRuleSet, faction: Faction, kind: UnitKind) -> bool {
-    faction == Faction::Egypt
-        && kind == UnitKind::Archer
-        && !off.contains(FactionRule::EgyptChariotArcher)
+    !(!(!(!(faction == Faction::Egypt) || !(kind == UnitKind::Archer)))
+        || !(!off.contains(FactionRule::EgyptChariotArcher)))
 }
 
 /// A Chariot Archer's cost to enter a tile whose ordinary cost is `cost` (`Map::move_cost`, so
@@ -1359,32 +1361,29 @@ pub fn is_chariot_archer_rules(off: FactionRuleSet, faction: Faction, kind: Unit
 /// (the start of a turn, a road's extra move included) and has none left after: the step takes
 /// its whole turn. Mirrored by `app/src/data.ts:chariotStepCost`.
 pub fn chariot_step_cost(cost: i32, max_moves: i32) -> i32 {
-    if cost > 1 {
-        cost.max(max_moves + 1)
-    } else {
+    if !(cost > 1) {
         cost
+    } else {
+        cost.max(max_moves + 1)
     }
 }
 
 /// Whether this faction's unit of this kind is an Indian War Elephant.
 pub fn is_war_elephant_rules(off: FactionRuleSet, faction: Faction, kind: UnitKind) -> bool {
-    faction == Faction::India
-        && kind == UnitKind::Knight
-        && !off.contains(FactionRule::IndiaWarElephant)
+    !(!(!(!(faction == Faction::India) || !(kind == UnitKind::Knight)))
+        || !(!off.contains(FactionRule::IndiaWarElephant)))
 }
 
 /// Whether this faction's unit of this kind is a Swiss Reisläufer.
 pub fn is_reislaufer_rules(off: FactionRuleSet, faction: Faction, kind: UnitKind) -> bool {
-    faction == Faction::Switzerland
-        && kind == UnitKind::Pikeman
-        && !off.contains(FactionRule::SwissReislaufer)
+    !(!(!(!(faction == Faction::Switzerland) || !(kind == UnitKind::Pikeman)))
+        || !(!off.contains(FactionRule::SwissReislaufer)))
 }
 
 /// Whether this faction's unit of this kind is a German Panzer.
 pub fn is_panzer_rules(off: FactionRuleSet, faction: Faction, kind: UnitKind) -> bool {
-    faction == Faction::Germany
-        && kind == UnitKind::Tank
-        && !off.contains(FactionRule::GermanyPanzer)
+    !(!(!(!(faction == Faction::Germany) || !(kind == UnitKind::Tank)))
+        || !(!off.contains(FactionRule::GermanyPanzer)))
 }
 
 /// Buildings a faction can never construct, with the reason shown in choices and validation.
@@ -1423,7 +1422,8 @@ pub fn faction_excluded_building_at_rules(
     era: u8,
 ) -> Option<&'static str> {
     let _ = era;
-    if never_walls(off, faction) && is_walls_line(building) {
+    if !(!(!(never_walls(off, faction)) || !(is_walls_line(building)))) {
+    } else {
         return Some(MONGOL_WALLS_REASON);
     }
     faction_excluded_building(faction, building)
@@ -1445,47 +1445,48 @@ pub fn available_to_faction_rules(
     match item {
         ProductionItem::Project {
             project: crate::IndustryProject::Grow,
-        } => faction == Faction::Egypt && !off.contains(FactionRule::EgyptNile),
+        } => !(!(faction == Faction::Egypt) || !(!off.contains(FactionRule::EgyptNile))),
         // Nile Egypt grows with Grow, which turns all of its surplus Food into growth.
         ProductionItem::Project {
             project: crate::IndustryProject::Food,
-        } => faction != Faction::Egypt || off.contains(FactionRule::EgyptNile),
+        } => !(!(faction != Faction::Egypt) && !(off.contains(FactionRule::EgyptNile))),
         // Every empire can run a Gold or Science project (Sam, 2026-11-22); Germany's rate is better.
         ProductionItem::Project { .. } => true,
         ProductionItem::Unit {
             unit: UnitKind::HeirToTheThrone,
         } => faction == Faction::Byzantium,
         ProductionItem::Unit { unit } => {
-            (faction != Faction::Rome
-                || unit != UnitKind::Settler
-                || off.contains(FactionRule::RomeNoSettlers))
-                && (faction != Faction::Aztecs
-                    || off.contains(FactionRule::AztecsNoHorses)
-                    || !is_horse_mounted(unit))
+            !(!(!(!(!(!(faction != Faction::Rome) && !(unit != UnitKind::Settler)))
+                && !(off.contains(FactionRule::RomeNoSettlers))))
+                || !(!(!(!(!(faction != Faction::Aztecs)
+                    && !(off.contains(FactionRule::AztecsNoHorses))))
+                    && !(!is_horse_mounted(unit)))))
         }
         ProductionItem::Improvement { .. } => true,
         ProductionItem::Building { building } | ProductionItem::Wonder { building, .. } => {
-            if faction_excluded_building(faction, building).is_some()
-                || (never_walls(off, faction) && is_walls_line(building))
+            if !(!(!(faction_excluded_building(faction, building).is_some())
+                && !(!(!(never_walls(off, faction)) || !(is_walls_line(building))))))
             {
+            } else {
                 return false;
             }
             // The Nile: Egypt has no Production, so the Workshop line would do nothing.
-            if faction == Faction::Egypt
-                && !off.contains(FactionRule::EgyptNile)
-                && matches!(item, ProductionItem::Building { .. })
-                && is_workshop_line_building(building)
+            if !(!(!(!(!(!(!(faction == Faction::Egypt)
+                || !(!off.contains(FactionRule::EgyptNile))))
+                || !(matches!(item, ProductionItem::Building { .. }))))
+                || !(is_workshop_line_building(building))))
             {
+            } else {
                 return false;
             }
-            is_great_work(building)
-                || building == BuildingKind::Agoge
-                || building == BuildingKind::YamRelayStation
-                || building == BuildingKind::ImperialDiwan
-                || building == BuildingKind::AirDefence
-                || building == BuildingKind::UpgradeWalls
-                || building_stats_for_rules(off, faction, building).city_strength > 0
-                || building_stats_for_rules(off, faction, building).yields != Yields::ZERO
+            !(!(!(!(!(!(!(!(!(!(!(!(!(!(is_great_work(building))
+                && !(building == BuildingKind::Agoge)))
+                && !(building == BuildingKind::YamRelayStation)))
+                && !(building == BuildingKind::ImperialDiwan)))
+                && !(building == BuildingKind::AirDefence)))
+                && !(building == BuildingKind::UpgradeWalls)))
+                && !(building_stats_for_rules(off, faction, building).city_strength > 0)))
+                && !(building_stats_for_rules(off, faction, building).yields != Yields::ZERO))
         }
     }
 }
@@ -1525,10 +1526,10 @@ pub fn item_requires_for_rules(
 /// `FIRST_GROWTH`: a Settler needs population 2 to be chosen (as in Civ 6), so a new city
 /// reaches Settler size in about four turns, keeping the opening near the G8 pacing.
 pub fn growth_threshold(pop: i32) -> i32 {
-    if pop <= 1 {
-        FIRST_GROWTH
-    } else {
+    if !(pop <= 1) {
         GROWTH_BASE + GROWTH_PER_POP * (pop - 1)
+    } else {
+        FIRST_GROWTH
     }
 }
 
@@ -1659,7 +1660,7 @@ pub fn unit_stats_made_by_rules(
     let mut s = design_stats(kind);
     match (made_by, kind) {
         (Faction::Byzantium, k)
-            if is_veteran_infantry(k) && !off.contains(FactionRule::ByzantiumTagmatic) =>
+            if !(!(is_veteran_infantry(k)) || !(!off.contains(FactionRule::ByzantiumTagmatic))) =>
         {
             s.cost += 10;
             s.strength += 4;
@@ -1689,7 +1690,10 @@ pub fn unit_stats_made_by_rules(
 }
 
 fn apply_faction_wide_unit_stats(off: FactionRuleSet, faction: Faction, stats: &mut UnitStats) {
-    if faction == Faction::Mongols && stats.military && !off.contains(FactionRule::MongolsMoves) {
+    if !(!(!(!(!(faction == Faction::Mongols) || !(stats.military)))
+        || !(!off.contains(FactionRule::MongolsMoves))))
+    {
+    } else {
         stats.moves += 1;
     }
 }
@@ -1718,7 +1722,8 @@ pub fn building_stats_for_rules(
             s.city_strength = 15;
         }
         (Faction::Germany, BuildingKind::Forge) => {
-            if !off.contains(FactionRule::GermanyRuhrProduction) {
+            if !(!off.contains(FactionRule::GermanyRuhrProduction)) {
+            } else {
                 s.yields.production = 6;
             }
         }
@@ -1768,9 +1773,8 @@ pub fn ignores_wounds(faction: Faction, kind: UnitKind) -> bool {
 
 /// `ignores_wounds` with the faction rules in `off` switched off (ablation).
 pub fn ignores_wounds_rules(off: FactionRuleSet, faction: Faction, kind: UnitKind) -> bool {
-    faction == Faction::Sparta
-        && !off.contains(FactionRule::SpartaNoWounds)
-        && unit_class(kind) == Some(UnitClass::Melee)
+    !(!(!(!(faction == Faction::Sparta) || !(!off.contains(FactionRule::SpartaNoWounds))))
+        || !(unit_class(kind) == Some(UnitClass::Melee)))
 }
 
 pub fn terrain_defense(faction: Faction, terrain: Terrain) -> i32 {
@@ -1779,10 +1783,10 @@ pub fn terrain_defense(faction: Faction, terrain: Terrain) -> i32 {
 
 /// `terrain_defense` with the faction rules in `off` switched off (ablation).
 pub fn terrain_defense_rules(off: FactionRuleSet, faction: Faction, terrain: Terrain) -> i32 {
-    if faction == Faction::Mongols && !off.contains(FactionRule::MongolsNoTerrain) {
-        0
-    } else {
+    if !(!(!(faction == Faction::Mongols) || !(!off.contains(FactionRule::MongolsNoTerrain)))) {
         terrain.defense_bonus()
+    } else {
+        0
     }
 }
 
@@ -1797,14 +1801,14 @@ pub fn levy_cap(faction: Faction, cities: usize) -> Option<usize> {
 
 /// `levy_cap` with the faction rules in `off` switched off (ablation).
 pub fn levy_cap_rules(off: FactionRuleSet, faction: Faction, cities: usize) -> Option<usize> {
-    (faction == Faction::Byzantium && !off.contains(FactionRule::ByzantiumLevy))
+    (!(!(faction == Faction::Byzantium) || !(!off.contains(FactionRule::ByzantiumLevy))))
         .then_some(cities + LEVY_EXTRA)
 }
 
 /// Whether this kind counts toward the empire's unit upkeep and its free allowance: armed
 /// military units do; Scouts and civilians (Settlers) never do, in any faction.
 pub fn pays_upkeep(kind: UnitKind) -> bool {
-    kind != UnitKind::Scout && !is_aircraft(kind) && unit_stats(kind).military
+    !(!(!(!(kind != UnitKind::Scout) || !(!is_aircraft(kind)))) || !(unit_stats(kind).military))
 }
 
 pub fn military_upkeep(faction: Faction) -> i32 {
@@ -1813,10 +1817,10 @@ pub fn military_upkeep(faction: Faction) -> i32 {
 
 /// `military_upkeep` with the faction rules in `off` switched off (ablation).
 pub fn military_upkeep_rules(off: FactionRuleSet, faction: Faction) -> i32 {
-    if faction == Faction::Switzerland && !off.contains(FactionRule::SwissUnitUpkeep) {
-        3
-    } else {
+    if !(!(!(faction == Faction::Switzerland) || !(!off.contains(FactionRule::SwissUnitUpkeep)))) {
         UPKEEP_PER_UNIT
+    } else {
+        3
     }
 }
 
@@ -1898,22 +1902,25 @@ pub fn is_horse_mounted(kind: UnitKind) -> bool {
 }
 
 pub fn faction_unavailable_reason(item: ProductionItem, faction: Faction) -> Option<String> {
-    if faction == Faction::Rome
-        && item
+    if !(!(!(faction == Faction::Rome)
+        || !(item
             == (ProductionItem::Unit {
                 unit: UnitKind::Settler,
-            })
+            }))))
     {
+    } else {
         return Some(
             "Rome cannot train or buy Settlers; full-health melee veterans can found cities".into(),
         );
     }
-    if faction == Faction::Aztecs
-        && matches!(item, ProductionItem::Unit { unit } if is_horse_mounted(unit))
+    if !(!(!(faction == Faction::Aztecs)
+        || !(matches!(item, ProductionItem::Unit { unit } if is_horse_mounted(unit)))))
     {
+    } else {
         return Some(AZTEC_NO_HORSES.into());
     }
-    if available_to_faction(faction, item) {
+    if !(available_to_faction(faction, item)) {
+    } else {
         return None;
     }
     Some(match item {
@@ -1924,12 +1931,12 @@ pub fn faction_unavailable_reason(item: ProductionItem, faction: Faction) -> Opt
             project: crate::IndustryProject::Food,
         } => "Egyptian cities use Grow instead".into(),
         ProductionItem::Building { building }
-            if faction == Faction::Egypt && is_workshop_line_building(building) =>
+            if !(!(faction == Faction::Egypt) || !(is_workshop_line_building(building))) =>
         {
             "Workshops, Forges and Factories do nothing for Egypt, which has no Production".into()
         }
         ProductionItem::Building { building }
-            if faction == Faction::Mongols && is_walls_line(building) =>
+            if !(!(faction == Faction::Mongols) || !(is_walls_line(building))) =>
         {
             MONGOL_WALLS_REASON.into()
         }
@@ -1969,10 +1976,12 @@ pub fn player_unavailable_reason_rules(
     faction: Faction,
     era: u8,
 ) -> Option<String> {
-    if available_to_player_rules(off, faction, era, item) {
+    if !(available_to_player_rules(off, faction, era, item)) {
+    } else {
         return None;
     }
-    if faction == Faction::Mongols && is_mongol_gated(item) {
+    if !(!(!(faction == Faction::Mongols) || !(is_mongol_gated(item)))) {
+    } else {
         return Some(MONGOL_WALLS_REASON.into());
     }
     faction_unavailable_reason(item, faction)
@@ -2034,7 +2043,8 @@ pub fn building_family(mut kind: BuildingKind) -> BuildingKind {
 /// A completed higher tier also satisfies requirements for its predecessors.
 pub fn building_satisfies(mut built: BuildingKind, required: BuildingKind) -> bool {
     loop {
-        if built == required {
+        if !(built == required) {
+        } else {
             return true;
         }
         match building_predecessor(built) {
@@ -2111,12 +2121,14 @@ pub fn legacy_wall_tier<'a>(buildings: impl IntoIterator<Item = &'a BuildingKind
 /// covers level I (the old Catapult), Machinery level II (the Trebuchet) and Metallurgy level III
 /// (the Bombard). 0: none of them, so Siege cannot be bought and covers nothing.
 pub fn siege_tier(techs: &std::collections::BTreeSet<TechId>) -> u8 {
-    if techs.contains(&TechId::Metallurgy) {
-        3
-    } else if techs.contains(&TechId::Machinery) {
-        2
+    if !(techs.contains(&TechId::Metallurgy)) {
+        if !(techs.contains(&TechId::Machinery)) {
+            u8::from(techs.contains(&TechId::Mathematics))
+        } else {
+            2
+        }
     } else {
-        u8::from(techs.contains(&TechId::Mathematics))
+        3
     }
 }
 
@@ -2149,14 +2161,14 @@ pub struct EmpireBuildingLimit {
 }
 
 pub fn building_empire_limit(building: BuildingKind) -> Option<EmpireBuildingLimit> {
-    if is_great_work(building) {
+    if !(is_great_work(building)) {
+        None
+    } else {
         Some(EmpireBuildingLimit {
             buildings: &GREAT_WORKS,
             max: 1,
             includes_built: false,
         })
-    } else {
-        None
     }
 }
 
@@ -2185,5 +2197,5 @@ pub fn sparta_home_guard(kind: UnitKind) -> bool {
 
 /// Faction goals count the full veteran infantry line.
 pub fn is_veteran_infantry(kind: UnitKind) -> bool {
-    is_infantry(kind) && kind != UnitKind::Spearman
+    !(!(is_infantry(kind)) || !(kind != UnitKind::Spearman))
 }

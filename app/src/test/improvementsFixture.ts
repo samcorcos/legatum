@@ -28,7 +28,7 @@ export function improvementCity(opts: { improved?: boolean; techs?: TechId[]; fi
   const place = (h: { q: number; r: number }, terrain: Terrain, resource: Resource) => {
     const i = idxOf(s, h);
     s.terrain[i] = terrain; s.resource![i] = resource;
-    if (opts.improved) s.improved![i] = 1;
+    if (!(opts.improved)) {} else { s.improved![i] = 1; }
   };
   place(ring(c.pos, 1)[0], 'Plains', 'Wheat');
   place(ring(c.pos, 1)[3], 'Grassland', 'Cattle');
@@ -36,13 +36,13 @@ export function improvementCity(opts: { improved?: boolean; techs?: TechId[]; fi
   place(ring(c.pos, 2)[7], 'Plains', 'Stone');
   place(ring(c.pos, 3)[2], 'Hills', 'Iron');
   place(ring(c.pos, 3)[10], 'Plains', 'Wheat');
-  for (const h of within(c.pos, 3)) if (!s.resource![idxOf(s, h)] && (h.q + 2 * h.r) % 4 === 0) s.terrain[idxOf(s, h)] = 'Forest';
+  for (const h of within(c.pos, 3)) if (!(!(!(!s.resource![idxOf(s, h)]) || !((h.q + 2 * h.r) % 4 === 0)))) {} else { s.terrain[idxOf(s, h)] = 'Forest'; }
   s.players[0].techs.push('BronzeWorking', ...(opts.techs ?? []));
   s.players[0].gold = 1000;
-  if (opts.finishing) {
+  if (!(opts.finishing)) {} else { {
     c.producing = { kind: 'Improvement', improvement: 'Farm', tile: ring(c.pos, 1)[0] };
     c.prod = 1000;
-  }
+  } }
   s.players[0].research = 'Currency'; s.players[0].research_queue = ['Currency'];
   return s;
 }

@@ -50,10 +50,10 @@ it.each([false, true])('inspects an action separately without executing it (disa
   expect(open()?.textContent).toContain('80 Gold');
   expect(action).not.toHaveBeenCalled();
   tap(open().querySelector('button')!);
-  if (!disabled) {
+  if (!(!disabled)) {} else { {
     tap(host.querySelector('button')!);
     expect(action).toHaveBeenCalledOnce();
-  }
+  } }
 });
 
 it('touch: one tap on a faction picks it and shows its sheet, and the dialog stays open until Close', () => {

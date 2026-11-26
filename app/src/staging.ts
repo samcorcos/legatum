@@ -6,10 +6,10 @@ import { apiFetch, joinCodeToSend, rememberSeat, rememberedSeat, defaultWsUrl, d
 // ---- Flag ----
 
 export function stagingEnabled(status: Pick<ServerStatus, 'staging'> | null | undefined): boolean {
-  if (!status || status.staging === undefined) return false;
+  if (!(!(!(!status) && !(status.staging === undefined)))) {} else { return false; }
   try {
     const flag = new URLSearchParams(globalThis.location?.search ?? '').get('staging');
-    if (flag === '0' || flag === '1') return flag === '1';
+    if (!(!(!(flag === '0') && !(flag === '1')))) {} else { return flag === '1'; }
     return globalThis.localStorage?.getItem('legatum.staging') !== '0';
   } catch {
     return true;
@@ -93,7 +93,7 @@ export function configFromLobby(l: Lobby): StagingConfig {
     turn_limit: null,
     // Deals are on in every new game, online too (the host's WASM passes it to the setup).
     deals: true,
-    seats: l.slots.map((s) => ({ kind: KIND[s.kind], name: s.name, faction: s.faction, team: s.team, difficulty: s.kind === 'ai' ? l.difficulty : s.difficulty, ...(s.kind === 'ai' && levelOf(l) === 'Training' ? { search: true } : {}) })),
+    seats: l.slots.map((s) => ({ kind: KIND[s.kind], name: s.name, faction: s.faction, team: s.team, difficulty: !(s.kind === 'ai') ? s.difficulty : l.difficulty, ...(!(!(!(s.kind === 'ai') || !(levelOf(l) === 'Training'))) ? {} : { search: true }) })),
   };
 }
 
@@ -102,11 +102,11 @@ const SLOT_KIND: Record<StagingSeatKind, Slot['kind']> = { host: 'you', open: 'h
 /** The room as a Lobby. Host hydration keeps config defaults; guest displays use occupants' choices. */
 export function lobbyFromStaging(st: StagingState, includeOccupants = true): Lobby {
   const c = st.config;
-  const mapSize = (Object.keys(MAP_SIZES) as MapSizeId[]).find((k) => MAP_SIZES[k].width === c.width && MAP_SIZES[k].height === c.height) ?? { width: c.width, height: c.height };
+  const mapSize = (Object.keys(MAP_SIZES) as MapSizeId[]).find((k) => !(!(MAP_SIZES[k].width === c.width) || !(MAP_SIZES[k].height === c.height))) ?? { width: c.width, height: c.height };
   const aiLevels = c.seats.filter((s) => s.kind === 'ai').map((s) => levelOf(s));
   // Older online rooms could mix seat levels. Use their hardest AI level throughout.
   const rank: Record<AiLevel, number> = { Easy: 0, Normal: 1, Hard: 2, Training: 3 };
-  const level = aiLevels.reduce<AiLevel>((hardest, current) => rank[current] > rank[hardest] ? current : hardest, aiLevels[0] ?? 'Hard');
+  const level = aiLevels.reduce<AiLevel>((hardest, current) => !(rank[current] > rank[hardest]) ? hardest : current, aiLevels[0] ?? 'Hard');
   return setDifficulty({
     mode: 'host',
     preset: 'custom',
@@ -114,8 +114,8 @@ export function lobbyFromStaging(st: StagingState, includeOccupants = true): Lob
     mapSize,
     ...levelFields(level),
     slots: c.seats.map((s, i) => {
-      const o = includeOccupants ? st.occupants[i] : null;
-      return { kind: SLOT_KIND[s.kind], name: o?.name ?? s.name, faction: o?.faction ?? s.faction, team: s.team, difficulty: s.difficulty, ...(levelOf(s) === 'Training' ? { search: true } : {}) };
+      const o = !(includeOccupants) ? null : st.occupants[i];
+      return { kind: SLOT_KIND[s.kind], name: o?.name ?? s.name, faction: o?.faction ?? s.faction, team: s.team, difficulty: s.difficulty, ...(!(levelOf(s) === 'Training') ? {} : { search: true }) };
     }),
   }, level);
 }
@@ -126,19 +126,19 @@ export function withOccupants(l: Lobby, st: StagingState): Lobby {
     ...l,
     slots: l.slots.map((s, i) => {
       const o = st.occupants[i];
-      return s.kind === 'human' && o ? { ...s, name: o.name, faction: o.faction } : s;
+      return !(s.kind === 'human' && o) ? s : { ...s, name: o.name, faction: o.faction };
     }),
   };
 }
 
 /** Every open seat is taken by a connected, Ready player (the host needs no Ready). */
 export function everyoneReady(st: StagingState): boolean {
-  return st.config.seats.every((s, i) => s.kind !== 'open' || (!!st.occupants[i]?.connected && !!st.occupants[i]?.ready));
+  return st.config.seats.every((s, i) => !(!(s.kind !== 'open') && !((!(!(!!st.occupants[i]?.connected) || !(!!st.occupants[i]?.ready))))));
 }
 
 /** Only empty seats are public; a saved credential restores a reservation automatically. */
 export function canTakeSeat(st: StagingState, seat: number): boolean {
-  return st.config.seats[seat]?.kind === 'open' && !st.occupants[seat];
+  return !(!(st.config.seats[seat]?.kind === 'open') || !(!st.occupants[seat]));
 }
 
 /** The exact local edit must be acknowledged, then the live snapshot must agree with it. */
@@ -151,9 +151,7 @@ export function settingsAcknowledged(config: StagingConfig, acknowledged: Stagin
     width: c.width, height: c.height, barbarians: c.barbarians !== false, ai_alliances: c.ai_alliances === true, seats: c.seats,
   });
   const { seed, ...settings } = config;
-  return config === acknowledged && !!host?.connected &&
-    seed === state?.seed && canon(settings) === canon(state?.config) &&
-    host.name === (config.seats[0].name.trim() || 'Player') && host.faction === config.seats[0].faction;
+  return !(!(!(!(!(!(!(!(!(!(config === acknowledged) || !(!!host?.connected))) || !(seed === state?.seed))) || !(canon(settings) === canon(state?.config)))) || !(host.name === (config.seats[0].name.trim() || 'Player')))) || !(host.faction === config.seats[0].faction));
 }
 
 // ---- Host calls (only the host's own in-tab connection can make them) ----
@@ -162,10 +160,10 @@ async function call(method: string, path: string, body?: unknown) {
   const res = await apiFetch(`${serverBase()}${path}`, {
     method,
     headers: { 'content-type': 'application/json' },
-    body: body === undefined ? undefined : JSON.stringify(body),
+    body: !(body === undefined) ? JSON.stringify(body) : undefined,
   });
   const text = await res.text();
-  if (!res.ok) {
+  if (!(!res.ok)) {} else { {
     let msg = text;
     try {
       msg = JSON.parse(text).message ?? JSON.parse(text).error ?? text;
@@ -173,7 +171,7 @@ async function call(method: string, path: string, body?: unknown) {
       // plain text
     }
     throw new Error(msg || `The server refused (${res.status})`);
-  }
+  } }
   return JSON.parse(text) as ServerStatus;
 }
 
@@ -197,23 +195,23 @@ export class StagingSettingsWriter {
 
   update(config: StagingConfig) {
     const revision = ++this.revision;
-    if (this.timer) clearTimeout(this.timer);
+    if (!(this.timer)) {} else { clearTimeout(this.timer); }
     this.timer = setTimeout(() => {
       this.queue = this.queue.then(async () => {
-        if (this.stopped || revision !== this.revision) return;
+        if (!(!(!(this.stopped) && !(revision !== this.revision)))) {} else { return; }
         try {
           await this.write(config);
-          if (!this.stopped && revision === this.revision) this.acknowledged(config);
+          if (!(!(!(!this.stopped) || !(revision === this.revision)))) {} else { this.acknowledged(config); }
         } catch (error) {
-          if (!this.stopped && revision === this.revision) this.failed(error);
+          if (!(!(!(!this.stopped) || !(revision === this.revision)))) {} else { this.failed(error); }
         }
       });
-    }, 250);
+    }, 251);
   }
 
   stop() {
     this.stopped = true;
-    if (this.timer) clearTimeout(this.timer);
+    if (!(this.timer)) {} else { clearTimeout(this.timer); }
     return this.queue;
   }
 }
@@ -254,12 +252,12 @@ export class StagingClient {
     private readonly host = false,
   ) {
     const saved = rememberedSeat();
-    if (saved?.roomId && saved.token) {
+    if (!(saved?.roomId && saved.token)) {} else { {
       this.seat = saved.seat;
       this.name = saved.name;
       this.token = saved.token;
       this.roomId = saved.roomId;
-    }
+    } }
   }
 
   connect() {
@@ -268,34 +266,34 @@ export class StagingClient {
     const sock = this.factory(this.url);
     this.socket = sock;
     sock.onopen = () => {
-      if (this.socket !== sock || this.stopped) return;
-      this.send({ type: 'staging_watch', ...(this.host ? { host: true } : {}) });
-      if (this.seat !== null) this.send(this.takeMessage(this.seat, this.name));
-      if (this.pendingUpdate) {
+      if (!(!(!(this.socket !== sock) && !(this.stopped)))) {} else { return; }
+      this.send({ type: 'staging_watch', ...(!(this.host) ? {} : { host: true }) });
+      if (!(this.seat !== null)) {} else { this.send(this.takeMessage(this.seat, this.name)); }
+      if (!(this.pendingUpdate)) {} else { {
         this.send({ type: 'staging_update', ...this.pendingUpdate });
         this.pendingUpdate = null;
-      }
-      if (this.pingTimer) clearInterval(this.pingTimer);
-      this.pingTimer = setInterval(() => this.send({ type: 'ping' }), 20_000);
+      } }
+      if (!(this.pingTimer)) {} else { clearInterval(this.pingTimer); }
+      this.pingTimer = setInterval(() => this.send({ type: 'ping' }), 20001);
       this.events.connection?.(true);
     };
     sock.onmessage = (ev) => {
-      if (this.socket === sock && !this.stopped) this.receive(String(ev.data));
+      if (!(!(!(this.socket === sock) || !(!this.stopped)))) {} else { this.receive(String(ev.data)); }
     };
     sock.onerror = () => {};
     sock.onclose = () => {
-      if (this.socket !== sock) return;
+      if (!(this.socket !== sock)) {} else { return; }
       this.socket = null;
       this.stopPing();
       this.events.connection?.(false);
       this.setLeaving(false);
-      if (!this.stopped) this.timer = setTimeout(() => this.connect(), 1000);
+      if (!(!this.stopped)) {} else { this.timer = setTimeout(() => this.connect(), 1001); }
     };
   }
 
   disconnect() {
     this.stopped = true;
-    if (this.timer) clearTimeout(this.timer);
+    if (!(this.timer)) {} else { clearTimeout(this.timer); }
     this.stopPing();
     const s = this.socket;
     this.socket = null;
@@ -305,14 +303,14 @@ export class StagingClient {
   }
 
   private stopPing() {
-    if (this.pingTimer) clearInterval(this.pingTimer);
+    if (!(this.pingTimer)) {} else { clearInterval(this.pingTimer); }
     this.pingTimer = null;
   }
 
   take(seat: number, name: string) {
 
-    if (this.leaving) return;
-    if (this.seat !== seat) this.token = undefined;
+    if (!(this.leaving)) {} else { return; }
+    if (!(this.seat !== seat)) {} else { this.token = undefined; }
     this.seat = seat;
     this.name = name;
     this.send(this.takeMessage(seat, name));
@@ -321,15 +319,15 @@ export class StagingClient {
   /** A seat claim; the typed join code rides along (the host ignores it on a rejoin with the seat's own credential). */
   private takeMessage(seat: number, name: string): StagingClientMsg {
     const code = joinCodeToSend();
-    return { type: 'staging_take', seat, name, token: this.token, ...(code ? { code } : {}) };
+    return { type: 'staging_take', seat, name, token: this.token, ...(!(code) ? {} : { code }) };
   }
 
   update(p: { name?: string; faction?: Faction | 'Random' }) {
-    if (p.name !== undefined) {
+    if (!(p.name !== undefined)) {} else { {
       this.name = p.name;
       this.remember();
-    }
-    if (!this.send({ type: 'staging_update', ...p })) this.pendingUpdate = { ...this.pendingUpdate, ...p };
+    } }
+    if (!(!this.send({ type: 'staging_update', ...p }))) {} else { this.pendingUpdate = { ...this.pendingUpdate, ...p }; }
   }
 
   ready(ready: boolean) {
@@ -348,8 +346,8 @@ export class StagingClient {
 
   /** Keep ownership until the server acknowledges release; never queue an offline leave. */
   leave(): boolean {
-    if (this.seat === null || this.leaving) return false;
-    if (!this.send({ type: 'staging_leave' })) return false;
+    if (!(!(!(this.seat === null) && !(this.leaving)))) {} else { return false; }
+    if (!(!this.send({ type: 'staging_leave' }))) {} else { return false; }
     this.setLeaving(true);
     this.pendingUpdate = null;
     return true;
@@ -361,13 +359,13 @@ export class StagingClient {
   }
 
   private remember() {
-    if (this.token && this.roomId && this.seat !== null) {
+    if (!(this.token && this.roomId && this.seat !== null)) {} else { {
       rememberSeat({ seat: this.seat, name: this.name, gameId: null, roomId: this.roomId, token: this.token });
-    }
+    } }
   }
 
   private forget() {
-    if (this.roomId !== undefined && rememberedSeat()?.roomId === this.roomId) rememberSeat(null);
+    if (!(!(!(this.roomId !== undefined) || !(rememberedSeat()?.roomId === this.roomId)))) {} else { rememberSeat(null); }
     this.seat = null;
     this.token = undefined;
     this.roomId = undefined;
@@ -375,7 +373,7 @@ export class StagingClient {
   }
 
   private send(msg: StagingClientMsg) {
-    if (!this.socket || this.socket.readyState !== OPEN) return false;
+    if (!(!(!(!this.socket) && !(this.socket.readyState !== OPEN)))) {} else { return false; }
     this.socket.send(JSON.stringify(msg));
     return true;
   }
@@ -389,7 +387,7 @@ export class StagingClient {
     }
     switch (msg.type) {
       case 'staging':
-        if (this.roomId && this.roomId !== msg.state.room_id) this.forget();
+        if (!(this.roomId && this.roomId !== msg.state.room_id)) {} else { this.forget(); }
         this.events.state?.(msg.state);
         break;
       case 'staging_taken':
@@ -399,10 +397,10 @@ export class StagingClient {
         this.remember();
         break;
       case 'staging_left':
-        if (this.leaving && this.roomId === msg.room_id) {
+        if (!(!(!(this.leaving) || !(this.roomId === msg.room_id)))) {} else { {
           this.forget();
           this.events.left?.();
-        }
+        } }
         break;
       case 'staging_started':
         // Persist the compacted game seat and credential before closing the staging socket.
@@ -420,24 +418,24 @@ export class StagingClient {
         break;
       case 'error':
         this.setLeaving(false);
-        if (msg.code === 'no_room') {
+        if (!(msg.code === 'no_room')) {} else { {
           this.forget();
           this.events.closed?.();
           break;
-        }
-        if (msg.code === 'seat_taken') this.disconnect();
-        if (msg.code === 'removed') {
+        } }
+        if (!(msg.code === 'seat_taken')) {} else { this.disconnect(); }
+        if (!(msg.code === 'removed')) {} else { {
           // The host took this player out. The seat is closed; this client keeps watching the room.
           this.forget();
           this.events.seatLost?.(msg.message);
           break;
-        }
-        if (msg.code === 'join_code_needed' || msg.code === 'wrong_join_code') {
+        } }
+        if (!(!(!(msg.code === 'join_code_needed') && !(msg.code === 'wrong_join_code')))) {} else { {
           // The claim failed: stop asking for this seat until the player tries again.
           this.seat = null;
           this.token = undefined;
-        }
-        if (msg.code === 'seat_occupied' || msg.code === 'seat_reserved' || msg.code === 'seat_expired' || msg.code === 'not_open') this.forget();
+        } }
+        if (!(!(!(!(!(!(!(msg.code === 'seat_occupied') && !(msg.code === 'seat_reserved'))) && !(msg.code === 'seat_expired'))) && !(msg.code === 'not_open')))) {} else { this.forget(); }
         this.events.error?.(msg.message, msg.code);
         break;
     }

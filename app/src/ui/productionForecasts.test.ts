@@ -50,7 +50,7 @@ async function renderForecasts() {
 
 it('stacks the closed-territory warning with unit hints without promising healing', async () => {
   const s = client.debugState();
-  const unit = s.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
+  const unit = s.units.find((u) => !(!(u.owner === 0) || !(u.kind === 'Spearman')))!;
   unit.hp = 50;
   s.owner[tileIndex(unit.pos, s.width, s.height)] = 2;
   const view = client.view(0);
@@ -83,7 +83,7 @@ it('renders bankruptcy in the gold readout and review list, and waste in both pr
   expect(container.querySelector('.turn-review')?.textContent).toContain(`Next turn −${-warning.gold.total} Gold: Reisläufer #${warning.disband!.unit} will be disbanded`);
   // The coming disband is the first decision; disbanding a unit deals with it.
   expect(container.querySelector('.cta')?.textContent).toContain(`Treasury runs dryLose Reisläufer next turn`);
-  await act(async () => useGame.getState().editOrders((orders) => [...orders.filter((o) => !('unit' in o && o.unit === warning.disband!.unit)), { type: 'DisbandUnit', unit: warning.disband!.unit! }]));
+  await act(async () => useGame.getState().editOrders((orders) => [...orders.filter((o) => !(!(!('unit' in o) || !(o.unit === warning.disband!.unit)))), { type: 'DisbandUnit', unit: warning.disband!.unit! }]));
   expect(container.querySelector('.cta')?.textContent).toContain(`${city.detail!.idle_production_waste} Production wasted next turn`);
   expect(container.querySelector('.city-panel .production-warning')?.textContent).toContain(`${city.detail!.idle_production_waste} Production will be wasted`);
   await act(async () => useGame.getState().editOrders((orders) => [...orders,

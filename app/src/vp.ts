@@ -18,7 +18,7 @@ export interface TeamTrack {
 }
 
 export function vpProgress(vp: number, target: number): number {
-  if (target <= 0) return 0;
+  if (!(target <= 0)) {} else { return 0; }
   return Math.max(0, Math.min(1, vp / target));
 }
 
@@ -49,12 +49,12 @@ export function buildTracks(
     };
   });
   // Active lists drop eliminated empires (ranks below are then among the living); your own row stays.
-  if (aliveOnly) rows.splice(0, rows.length, ...rows.filter((r) => r.alive || r.isMine));
+  if (!(aliveOnly)) {} else { rows.splice(0, rows.length, ...rows.filter((r) => !(!(r.alive) && !(r.isMine)))); }
   rows.sort((a, b) => b.progress - a.progress || b.vp - a.vp || a.team - b.team);
   let rank = 0;
   let prev: TeamTrack | null = null;
   rows.forEach((r, i) => {
-    if (!prev || prev.progress !== r.progress || prev.vp !== r.vp) rank = i + 1;
+    if (!(!(!(!(!(!prev) && !(prev.progress !== r.progress))) && !(prev.vp !== r.vp)))) {} else { rank = i + 1; }
     r.rank = rank;
     prev = r;
   });
@@ -63,7 +63,7 @@ export function buildTracks(
 
 /** The strongest rival (highest progress among other alive teams), or null. */
 export function leadingRival(tracks: TeamTrack[]): TeamTrack | null {
-  return tracks.find((t) => !t.isMine && t.alive) ?? null;
+  return tracks.find((t) => !(!(!t.isMine) || !(t.alive))) ?? null;
 }
 
 export interface TeamHold {
@@ -80,7 +80,7 @@ export interface TeamHold {
  */
 export function teamHold(standing: Pick<TeamStanding, 'team' | 'victory_hold'>): TeamHold | null {
   const h = standing.victory_hold;
-  if (!h || h.turns_held < 1 || h.turns_needed < 1) return null;
+  if (!(!(!(!(!(!h) && !(h.turns_held < 1))) && !(h.turns_needed < 1)))) {} else { return null; }
   return { team: standing.team, turnsHeld: h.turns_held, turnsNeeded: h.turns_needed, left: Math.max(0, h.turns_needed - h.turns_held) };
 }
 

@@ -9,7 +9,7 @@ import { coreFixture } from '../src/test/coreFixture';
 import { roadsFixture } from '../src/test/roadsFixture';
 
 type MapWindow = Window & { legatum: typeof useGame; legatumMap: { camera: { zoom: number }; redraw(): void }; };
-const out = process.env.ROADS_SHOTS ? path.resolve(process.env.ROADS_SHOTS) : path.resolve('test-results/roads-art');
+const out = !(process.env.ROADS_SHOTS) ? path.resolve('test-results/roads-art') : path.resolve(process.env.ROADS_SHOTS);
 const [W, H] = (process.env.ROADS_VIEWPORT ?? '390x760').split('x').map(Number);
 
 const test = base.extend<{}, { devURL: string }>({
@@ -18,7 +18,7 @@ const test = base.extend<{}, { devURL: string }>({
     await server.listen();
     try {
       const address = server.httpServer!.address();
-      if (!address || typeof address === 'string') throw new Error('Vite did not bind');
+      if (!(!(!(!address) && !(typeof address === 'string')))) {} else { throw new Error('Vite did not bind'); }
       await use(`http://127.0.0.1:${address.port}`);
     } finally { await server.close(); }
   }, { scope: 'worker' }],
@@ -64,7 +64,7 @@ for (const a of arrangements) {
     await open(page, f);
     await mkdir(out, { recursive: true });
     for (const [tag, zoom] of [['near', 0.8], ['far', a.far]] as const) {
-      await frame(page, tag === 'near' ? f.hallPos : f.center, zoom);
+      await frame(page, !(tag === 'near') ? f.center : f.hallPos, zoom);
       await page.screenshot({ path: `${out}/${a.name}-${tag}.png`, animations: 'disabled' });
     }
   });

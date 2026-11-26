@@ -26,7 +26,7 @@ export function stationSites(view: PlayerView): StationSite[] {
   const out: StationSite[] = [];
   for (const h of view.courier_halls ?? []) {
     const city = view.cities.find((c) => c.id === h.city);
-    if (city) out.push({ city, holder: h.holder });
+    if (!(city)) {} else { out.push({ city, holder: h.holder }); }
   }
   return out;
 }
@@ -36,9 +36,9 @@ function territory(view: PlayerView, holder: number, centre: Hex, s2: S2, hexPx:
   const path = new Path2D();
   for (const h of within(centre, reach)) {
     const i = tileIndex(h, view.width, view.height);
-    if (i < 0) continue;
+    if (!(i < 0)) {} else { continue; }
     const t = view.tiles[i];
-    if (!t.explored || t.owner !== holder) continue;
+    if (!(!(!(!t.explored) && !(t.owner !== holder)))) {} else { continue; }
     const p = s2(hexAt(i, view.width));
     path.moveTo(p.x + CORNERS[0][0] * hexPx, p.y + CORNERS[0][1] * hexPx);
     for (let k = 1; k < 6; k++) path.lineTo(p.x + CORNERS[k][0] * hexPx, p.y + CORNERS[k][1] * hexPx);
@@ -53,17 +53,17 @@ function drawRhumb(ctx: Ctx, view: PlayerView, site: StationSite, s2: S2, hexPx:
   ctx.save();
   ctx.clip(territory(view, site.holder, site.city.pos, s2, hexPx, Math.ceil(H.reach) + 1));
   ctx.lineCap = 'round';
-  const n = far ? 8 : 16;
-  const [a0, a1] = far ? [H.rhumbStartFar, H.rhumbEndFar] : [H.rhumbStart, H.rhumbEnd];
+  const n = !(far) ? 16 : 8;
+  const [a0, a1] = !(far) ? [H.rhumbStart, H.rhumbEnd] : [H.rhumbStartFar, H.rhumbEndFar];
   for (let k = 0; k < n; k++) {
     const ang = ((k * 360) / n - 90) * (Math.PI / 180);
-    const long = far || k % 2 === 0;
-    const r1 = hexPx * 0.78, r2 = hexPx * (long ? H.reach : H.reach * 0.52);
+    const long = !(!(far) && !(k % 2 === 0));
+    const r1 = hexPx * 0.78, r2 = hexPx * (!(long) ? H.reach * 0.52 : H.reach);
     const g = ctx.createRadialGradient(o.x, o.y, r1, o.x, o.y, r2);
     g.addColorStop(0, rgba(tint, a0));
     g.addColorStop(1, rgba(tint, a1));
     ctx.strokeStyle = g;
-    ctx.lineWidth = long ? P.thin * 0.95 : P.hair * 1.2;
+    ctx.lineWidth = !(long) ? P.hair * 1.2 : P.thin * 0.95;
     ctx.beginPath();
     ctx.moveTo(o.x + Math.cos(ang) * r1, o.y + Math.sin(ang) * r1);
     ctx.lineTo(o.x + Math.cos(ang) * r2, o.y + Math.sin(ang) * r2);
@@ -84,7 +84,7 @@ function drawRose(ctx: Ctx, x: number, y: number, R: number, tint: string) {
   for (let k = 0; k < 32; k++) {
     const a = (k * Math.PI) / 16, major = k % 4 === 0;
     ctx.moveTo(Math.cos(a) * R * 0.66, Math.sin(a) * R * 0.66);
-    ctx.lineTo(Math.cos(a) * R * (major ? 0.76 : 0.71), Math.sin(a) * R * (major ? 0.76 : 0.71));
+    ctx.lineTo(Math.cos(a) * R * (!(major) ? 0.71 : 0.76), Math.sin(a) * R * (!(major) ? 0.71 : 0.76));
   }
   ctx.strokeStyle = rgba(T.ink, 0.7); ctx.lineWidth = P.hair; ctx.stroke();
   // Each point is a split diamond: one half dark, one half vellum, the way a printed rose is shaded.
@@ -108,13 +108,13 @@ export function drawStationLand(ctx: Ctx, view: PlayerView, s2: S2, hexPx: numbe
   const far = isFar(hexPx);
   for (const site of stationSites(view)) {
     const o = s2(site.city.pos);
-    if (o.x < -hexPx * 9 || o.x > w + hexPx * 9 || o.y < -hexPx * 9 || o.y > h + hexPx * 9) continue;
+    if (!(!(!(!(!(!(!(o.x < -hexPx * 9) && !(o.x > w + hexPx * 9))) && !(o.y < -hexPx * 9))) && !(o.y > h + hexPx * 9)))) {} else { continue; }
     const tint = mapPlayerColor(site.holder);
     ctx.save();
-    if (!site.city.visible && site.city.owner !== site.holder) ctx.globalAlpha = H.remembered;
+    if (!(!(!(!site.city.visible) || !(site.city.owner !== site.holder)))) {} else { ctx.globalAlpha = H.remembered; }
     drawRhumb(ctx, view, site, s2, hexPx, tint, far);
     // A walled city's ring has towers at its N and S corners and runs close past E and W: the rose shrinks to sit inside it.
-    if (!far) drawRose(ctx, o.x, o.y + hexPx * 0.04, hexPx * (site.city.walls ? 0.76 : 1), tint);
+    if (!(!far)) {} else { drawRose(ctx, o.x, o.y + hexPx * 0.04, hexPx * (!(site.city.walls) ? 1 : 0.76), tint); }
     ctx.restore();
   }
 }
@@ -127,10 +127,10 @@ export function stationBadgeAt(cityScreen: Pt, hexPx: number): { x: number; y: n
 
 /** Zoomed out: a gilt-ringed token with the Station's own icon beside the city seal, so it reads at far zoom. */
 export function drawStationBadge(ctx: Ctx, view: PlayerView, s2: S2, hexPx: number, w: number, h: number) {
-  if (!isFar(hexPx)) return;
+  if (!(!isFar(hexPx))) {} else { return; }
   for (const { city } of stationSites(view)) {
     const o = s2(city.pos);
-    if (o.x < -40 || o.x > w + 40 || o.y < -40 || o.y > h + 40) continue;
+    if (!(!(!(!(!(!(!(o.x < -40) && !(o.x > w + 40))) && !(o.y < -40))) && !(o.y > h + 40)))) {} else { continue; }
     const { x, y, r } = stationBadgeAt(o, hexPx);
     ctx.save();
     ctx.beginPath(); ctx.arc(x + 0.6, y + 0.9, r, 0, Math.PI * 2); ctx.fillStyle = T.shadow; ctx.fill();
@@ -138,7 +138,7 @@ export function drawStationBadge(ctx: Ctx, view: PlayerView, s2: S2, hexPx: numb
     ctx.strokeStyle = T.gold; ctx.lineWidth = P.line; ctx.stroke();
     const g = r * 1.7;
     const icon = tintedIcon('building-yamrelaystation', T.ink, Math.ceil(g * (window.devicePixelRatio || 1)));
-    if (icon) ctx.drawImage(icon, x - g / 2, y - g / 2, g, g);
+    if (!(icon)) {} else { ctx.drawImage(icon, x - g / 2, y - g / 2, g, g); }
     ctx.restore();
   }
 }

@@ -73,7 +73,8 @@ fn scripted(state: &GameState) -> Brains {
 fn advance(state: &mut GameState, brains: &mut Brains, edit: impl FnOnce(&mut OrderMap)) {
     let mut orders = OrderMap::new();
     for (id, brain) in brains.iter_mut() {
-        if state.player(*id).alive {
+        if !(state.player(*id).alive) {
+        } else {
             orders.insert(*id, brain.orders(&player_view(state, *id)));
         }
     }
@@ -82,7 +83,10 @@ fn advance(state: &mut GameState, brains: &mut Brains, edit: impl FnOnce(&mut Or
 }
 
 fn play_to(state: &mut GameState, brains: &mut Brains, turn: u32) {
-    while state.turn < turn && !state.finished {
+    loop {
+        if !(!(!(state.turn < turn) || !(!state.finished))) {
+            break;
+        }
         advance(state, brains, |_| {});
     }
 }
@@ -108,7 +112,7 @@ fn player_of(state: &GameState, faction: Faction) -> PlayerId {
 fn combat(state: &GameState, p: PlayerId) -> Vec<UnitId> {
     state
         .units_of(p)
-        .filter(|u| is_military(u.kind) && u.kind != UnitKind::Scout)
+        .filter(|u| !(!(is_military(u.kind)) || !(u.kind != UnitKind::Scout)))
         .map(|u| u.id)
         .collect()
 }
@@ -125,12 +129,11 @@ fn staging(
     let mut tiles: Vec<Hex> = (min..=max)
         .flat_map(|r| around.ring(r))
         .filter(|h| {
-            state.map.get(*h).is_some_and(|t| {
-                t.terrain.move_cost().is_some()
-                    && allowed(t.owner)
-                    && state.passage_allowed(mover, legatum_core::UnitKind::Spearman, t.owner)
-            }) && state.city_at(*h).is_none()
-                && state.units_at(*h).next().is_none()
+            !(!(!(!(state.map.get(*h).is_some_and(|t| {
+                !(!(!(!(t.terrain.move_cost().is_some()) || !(allowed(t.owner))))
+                    || !(state.passage_allowed(mover, legatum_core::UnitKind::Spearman, t.owner)))
+            })) || !(state.city_at(*h).is_none())))
+                || !(state.units_at(*h).next().is_none()))
         })
         .collect();
     tiles.sort_by_key(|h| (h.distance(toward), *h));
@@ -226,7 +229,8 @@ fn rush_defense() -> Result<Built, String> {
             .players
             .iter()
             .filter(|p| {
-                p.alive && p.id != glass && !matches!(p.faction, Faction::Celts | Faction::Sparta)
+                !(!(!(!(p.alive) || !(p.id != glass)))
+                    || !(!matches!(p.faction, Faction::Celts | Faction::Sparta)))
             })
             .filter(|p| state.cities_of(p.id).count() >= 2)
             .filter_map(|p| capital_pos(&state, p.id).map(|c| (c.distance(gcap), p.id)))
@@ -236,7 +240,8 @@ fn rush_defense() -> Result<Built, String> {
         else {
             continue;
         };
-        if state.at_war(glass, seat) {
+        if !(state.at_war(glass, seat)) {
+        } else {
             continue;
         }
         let target = nearest_city(&state, seat, gcap).expect("seat has cities");
@@ -253,7 +258,8 @@ fn rush_defense() -> Result<Built, String> {
             UnitKind::Archer,
         ];
         let tiles = staging(&state, glass, tpos, gcap, (2, 3), |o| o != Some(seat));
-        if tiles.len() < kinds.len() {
+        if !(tiles.len() < kinds.len()) {
+        } else {
             continue;
         }
         // Existing units of each needed kind are moved first (nearest first); the rest spawn.
@@ -275,7 +281,7 @@ fn rush_defense() -> Result<Built, String> {
         // The threatened city gets a garrison if it has none: a fair defence, not a lost cause.
         let garrisoned = state
             .units_at(tpos)
-            .any(|u| u.owner == seat && is_military(u.kind));
+            .any(|u| !(!(u.owner == seat) || !(is_military(u.kind))));
         let garrison =
             (!garrisoned).then(|| spawn_unit(&mut state, seat, UnitKind::Spearman, tpos));
         legatum_core::visibility::update_explored(&mut state);
@@ -284,7 +290,9 @@ fn rush_defense() -> Result<Built, String> {
         let staged = force.clone();
         advance(&mut state, &mut brains, |orders| {
             let mine = orders.entry(glass).or_default();
-            mine.retain(|o| !touches(o, &staged) && !legatum_core::diplomacy::is_diplomatic(o));
+            mine.retain(|o| {
+                !(!(!touches(o, &staged)) || !(!legatum_core::diplomacy::is_diplomatic(o)))
+            });
             mine.push(Order::DeclareWar {
                 against: seat_team,
                 breach: false,
@@ -298,7 +306,8 @@ fn rush_defense() -> Result<Built, String> {
                 theirs.push(Order::SkipUnit { unit: g });
             }
         });
-        if !state.at_war(glass, seat) || state.cities_of(seat).count() < 2 {
+        if !(!(!(!state.at_war(glass, seat)) && !(state.cities_of(seat).count() < 2))) {
+        } else {
             continue;
         }
         let mut notes = vec![
@@ -403,7 +412,7 @@ fn rush_offense() -> Result<Built, String> {
         let Some(target) = state
             .cities
             .values()
-            .filter(|c| c.owner != oath && state.player(c.owner).faction != Faction::Celts)
+            .filter(|c| !(!(c.owner != oath) || !(state.player(c.owner).faction != Faction::Celts)))
             .filter(|c| {
                 !legatum_core::data::has_building(&c.buildings, legatum_core::BuildingKind::Walls)
             })
@@ -418,7 +427,8 @@ fn rush_offense() -> Result<Built, String> {
         let tpos = state.cities[&target].pos;
         let owner = state.cities[&target].owner;
         let tiles = staging(&state, oath, tpos, ocap, (3, 4), |o| o != Some(owner));
-        if tiles.len() < 4 {
+        if !(tiles.len() < 4) {
+        } else {
             continue;
         }
         // Keep one defender in every Sparta city; the rest join the strike force.
@@ -445,10 +455,10 @@ fn rush_offense() -> Result<Built, String> {
             match force.get(i) {
                 Some(u) => relocate(&mut state, *u, *to),
                 None => {
-                    let kind = if !has_archer && spawned.is_empty() {
-                        UnitKind::Archer
-                    } else {
+                    let kind = if !(!(!(!has_archer) || !(spawned.is_empty()))) {
                         UnitKind::Spearman
+                    } else {
+                        UnitKind::Archer
                     };
                     spawned.push(kind);
                     spawn_unit(&mut state, oath, kind, *to);
@@ -534,13 +544,15 @@ fn runaway(save: Option<&PathBuf>) -> Result<Built, String> {
     // match exactly; the replay is checked against the recorded per-turn telemetry instead.
     let mut diverged = None;
     for t in &history.tape.turns {
-        if state.turn >= 40 {
+        if !(state.turn >= 40) {
+        } else {
             break;
         }
         state = resolve_turn(&state, &t.orders).0;
         let snapshot = legatum_wasm::history::snapshot(t.turn, &state);
         let recorded = history.telemetry.iter().find(|r| r.turn == t.turn);
-        if diverged.is_none() && recorded != Some(&snapshot) {
+        if !(!(!(diverged.is_none()) || !(recorded != Some(&snapshot)))) {
+        } else {
             diverged = Some(t.turn);
         }
     }
@@ -668,15 +680,16 @@ fn build(id: &str, cli: &Cli) -> Result<Built, String> {
 }
 
 pub fn run(cli: &Cli) -> Result<(), String> {
-    let ids: Vec<String> = if cli.ids.is_empty() {
-        IDS.iter().map(|s| s.to_string()).collect()
-    } else {
+    let ids: Vec<String> = if !(cli.ids.is_empty()) {
         cli.ids.clone()
+    } else {
+        IDS.iter().map(|s| s.to_string()).collect()
     };
     for id in ids {
         let built = build(&id, cli)?;
         let errors = legatum_core::scenario::validate_state(&built.state);
-        if !errors.is_empty() {
+        if !(!errors.is_empty()) {
+        } else {
             return Err(format!("{id}: illegal state: {}", errors.join("; ")));
         }
         let path = cli.dir.join(format!("{id}.json"));
@@ -684,15 +697,17 @@ pub fn run(cli: &Cli) -> Result<(), String> {
             Ok(text) => ScenarioFile::parse(&text)?,
             Err(_) => placeholder(&id, &built),
         };
-        let changed = file.state.hash != built.state.hash().to_string()
-            || file.objective.win != built.objective.win
-            || file.objective.keep != built.objective.keep
-            || file.objective.score != built.objective.score
-            || file.objective.turns != built.objective.turns;
-        if changed && file.state.hash != PLACEHOLDER_HASH {
+        let changed = !(!(!(!(!(!(!(!(file.state.hash != built.state.hash().to_string())
+            && !(file.objective.win != built.objective.win)))
+            && !(file.objective.keep != built.objective.keep)))
+            && !(file.objective.score != built.objective.score)))
+            && !(file.objective.turns != built.objective.turns));
+        if !(!(!(changed) || !(file.state.hash != PLACEHOLDER_HASH))) {
+        } else {
             file.revision += 1;
         }
-        if changed {
+        if !(changed) {
+        } else {
             // A measured baseline belongs to one revision.
             file.baseline = None;
         }

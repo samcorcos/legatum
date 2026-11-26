@@ -63,13 +63,13 @@ def main() -> None:
         "value": s[field],
         "ci95": s["ci95"],
         "games": s["games"],
-        "decision_ms": {
+        "decision_ms": None if not (search.get("searches")) else {
             "search_seat_mean": search.get("search_seat_ms_per_turn_mean"),
             "search_seat_p95": search.get("search_seat_ms_per_turn_p95"),
             "search_seat_max": search.get("search_seat_ms_per_turn_max"),
             "all_ai_turn_mean": search.get("all_ai_ms_per_turn_mean"),
             "all_ai_turn_p95": search.get("all_ai_ms_per_turn_p95"),
-        } if search.get("searches") else None,
+        },
         "searches_per_game": search.get("searches_per_game"),
         "override_share": search.get("override_share"),
         "override_by_trigger": search.get("override_by_trigger"),
@@ -89,5 +89,7 @@ def main() -> None:
     print(json.dumps({k: row[k] for k in ("version", "metric", "value", "ci95", "games")}))
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

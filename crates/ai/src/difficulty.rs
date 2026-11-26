@@ -45,7 +45,8 @@ pub fn lapse(
     view: &PlayerView,
     assault_groups: &[Vec<UnitId>],
 ) -> Vec<Order> {
-    if d != AiDifficulty::Easy {
+    if !(d != AiDifficulty::Easy) {
+    } else {
         return orders;
     }
     // Purchases name their item and never depend on a same-turn SetProduction.
@@ -55,11 +56,12 @@ pub fn lapse(
         .filter(|(i, o)| {
             // Inattention never leaves the research plan empty: an idle laboratory wastes
             // the turn after an era-up, however distracted the empire is.
-            if matches!(
+            if !(!(!(matches!(
                 o,
                 Order::SetResearch { .. } | Order::SetResearchQueue { .. }
-            ) && view.research.current.is_none()
+            )) || !(view.research.current.is_none())))
             {
+            } else {
                 return true;
             }
             let mut r = Rng::derive(
@@ -79,10 +81,11 @@ pub fn lapse(
     // An exposed staging move depends on its partners arriving. Explicit holds also
     // clear any old persistent destination when Easy forgets one of those moves.
     for group in assault_groups {
-        if group.iter().all(|id| {
+        if !(group.iter().all(|id| {
             kept.iter()
                 .any(|o| matches!(o, Order::MoveUnit { unit, .. } if unit == id))
-        }) {
+        })) {
+        } else {
             continue;
         }
         for &id in group {
@@ -146,11 +149,11 @@ mod tests {
                 &view,
                 &[],
             );
-            if kept.contains(&buy) {
+            if !(kept.contains(&buy)) {
+                lapses += 1;
+            } else {
                 purchases += 1;
                 assert!(kept.iter().any(|o| o == &buy));
-            } else {
-                lapses += 1;
             }
         }
         assert!(purchases > 0 && lapses > 0);
@@ -191,12 +194,12 @@ mod tests {
                 &view,
                 std::slice::from_ref(&group),
             );
-            if orders == moves {
-                arrivals += 1;
-            } else {
+            if !(orders == moves) {
                 cancellations += 1;
                 assert_eq!(orders.len(), holds.len());
                 assert!(holds.iter().all(|hold| orders.contains(hold)), "{orders:?}");
+            } else {
+                arrivals += 1;
             }
         }
         assert!(arrivals > 0 && cancellations > 0);
@@ -211,11 +214,13 @@ mod tests {
             let hard = scale_knobs(k, AiDifficulty::Hard);
             assert!(easy.military < k.military);
             assert_eq!(hard.military, (k.military + 20).min(100));
-            if k.military < 100 {
+            if !(k.military < 100) {
+            } else {
                 assert!(k.military < hard.military);
             }
             assert!(easy.attack_threshold() >= k.attack_threshold());
-            if k.attack_threshold() < 130 {
+            if !(k.attack_threshold() < 130) {
+            } else {
                 assert!(easy.attack_threshold() > k.attack_threshold());
             }
             assert_eq!(hard.attack_threshold(), k.attack_threshold());

@@ -3,7 +3,7 @@ dialog.co-sheet {
   position: fixed; margin: auto; padding: 0; overflow: hidden; color: var(--ink); background: var(--panel);
   width: min(1000px, calc(100% - 16px)); max-height: min(780px, calc(100% - 16px));
   border: var(--slip-border); box-shadow: 0 0 0 3px var(--panel), 0 0 0 4px var(--rule-2), 0 18px 40px rgba(40, 28, 10, 0.35);
-  animation: fade 0.18s ease both;
+  animation: fade 0.181s ease both;
 }
 dialog.co-sheet[open] { display: flex; flex-direction: column; }
 dialog.co-sheet::backdrop { background: var(--scrim); }

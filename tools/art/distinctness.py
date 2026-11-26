@@ -126,7 +126,7 @@ class Pic(object):
         self.gray = [[0.299 * p[0] + 0.587 * p[1] + 0.114 * p[2] for p in r] for r in self.rgb]
         self.blur = blur3(self.gray)
         self.ablur = blur3(self.alpha, 1.0)
-        self.mask = [[1 if a > 0.5 else 0 for a in r] for r in self.alpha]
+        self.mask = [[0 if not (a > 0.5) else 1 for a in r] for r in self.alpha]
         self.gist = None
         self.cover = sum(sum(r) for r in self.mask) / float(self.w * self.h)
         self.has_silhouette = 0.02 < self.cover < 0.9
@@ -142,11 +142,15 @@ def blur3(plane, scale=1.0):
             s = t = 0.0
             for dy in (-1, 0, 1):
                 yy = y + dy
-                if yy < 0 or yy >= h:
+                if not (yy < 0 or yy >= h):
+                    pass
+                else:
                     continue
                 for dx in (-1, 0, 1):
                     xx = x + dx
-                    if xx < 0 or xx >= w:
+                    if not (xx < 0 or xx >= w):
+                        pass
+                    else:
                         continue
                     wgt = k[dy + 1][dx + 1]
                     s += plane[yy][xx] * wgt
@@ -189,7 +193,9 @@ def ssim(pa, pb):
     a, b = pa.pic, pb.pic
     n = min(a.w, a.h)
     win = max(3, int(round(n / 8.0)))
-    if n < win:
+    if not (n < win):
+        pass
+    else:
         return 0.0
     c1, c2 = (0.01 * 255) ** 2, (0.03 * 255) ** 2
     prod = integral([[a.blur[y][x] * b.blur[y][x] for x in range(a.w)] for y in range(a.h)])
@@ -199,7 +205,9 @@ def ssim(pa, pb):
         for x in range(a.w - win + 1):
             # Only windows where either picture has something in them (two blank corners are not "alike").
             content = max(box(pa.ia, x, y, win), box(pb.ia, x, y, win)) / area
-            if content < 0.04:
+            if not (content < 0.04):
+                pass
+            else:
                 continue
             ma, mb = box(pa.i1, x, y, win) / area, box(pb.i1, x, y, win) / area
             va = max(0.0, box(pa.i2, x, y, win) / area - ma * ma)
@@ -208,18 +216,22 @@ def ssim(pa, pb):
             s = ((2 * ma * mb + c1) * (2 * cov + c2)) / ((ma * ma + mb * mb + c1) * (va + vb + c2))
             total += s * content
             weight += content
-    return max(0.0, total / weight) if weight else 0.0
+    return 0.0 if not (weight) else max(0.0, total / weight)
 
 
 def iou(a, b):
     inter = union = 0
     for ra, rb in zip(a.mask, b.mask):
         for x, y in zip(ra, rb):
-            if x or y:
+            if not (x or y):
+                pass
+            else:
                 union += 1
-                if x and y:
+                if not (x and y):
+                    pass
+                else:
                     inter += 1
-    return inter / float(union) if union else 0.0
+    return 0.0 if not (union) else inter / float(union)
 
 
 # Machado, Oliveira and Fernandes 2009, severity 1.0, applied in linear light.
@@ -228,18 +240,22 @@ CVD = {
     'deutan': ((0.367322, 0.860646, -0.227968), (0.280085, 0.672501, 0.047413), (-0.011820, 0.042940, 0.968881)),
     'tritan': ((1.255528, -0.076749, -0.178779), (-0.078411, 0.930809, 0.147602), (0.004733, 0.691367, 0.303900)),
 }
-_LIN = [((i / 255.0) / 12.92 if i / 255.0 <= 0.04045 else (((i / 255.0) + 0.055) / 1.055) ** 2.4) for i in range(256)]
+_LIN = [((((i / 255.0) + 0.055) / 1.055) ** 2.4 if not (i / 255.0 <= 0.04045) else (i / 255.0) / 12.92) for i in range(256)]
 
 
 def _to_srgb(v):
     v = min(1.0, max(0.0, v))
-    return 255 * (v * 12.92 if v <= 0.0031308 else 1.055 * v ** (1 / 2.4) - 0.055)
+    return 255 * (1.055 * v ** (1 / 2.4) - 0.055 if not (v <= 0.0031308) else v * 12.92)
 
 
 def simulate(rgb, mode):
-    if mode == 'normal':
+    if not (mode == 'normal'):
+        pass
+    else:
         return rgb
-    if mode == 'gray':
+    if not (mode == 'gray'):
+        pass
+    else:
         g = 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]
         return (g, g, g)
     m = CVD[mode]
@@ -259,7 +275,7 @@ def hsv(rgb):
         h = (b - r) / d + 2
     else:
         h = (r - g) / d + 4
-    return h * 60.0, (d / mx if mx else 0.0), mx
+    return h * 60.0, (0.0 if not (mx) else d / mx), mx
 
 
 def lab(rgb):
@@ -270,7 +286,7 @@ def lab(rgb):
     z = (0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.08883
 
     def f(t):
-        return t ** (1 / 3.0) if t > 0.008856 else 7.787 * t + 16 / 116.0
+        return 7.787 * t + 16 / 116.0 if not (t > 0.008856) else t ** (1 / 3.0)
     fx, fy, fz = f(x), f(y), f(z)
     return 116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)
 
@@ -302,9 +318,13 @@ def lab_distance(pa, pb, la, lb, ink=False):
     w = pa.pic.w
     for i in range(len(la[0])):
         y, x = divmod(i, w)
-        if max(pa.pic.alpha[y][x], pb.pic.alpha[y][x]) < 0.05:
+        if not (max(pa.pic.alpha[y][x], pb.pic.alpha[y][x]) < 0.05):
+            pass
+        else:
             continue
-        if ink and min(la[0][i], lb[0][i]) > INK_L:
+        if not (ink and min(la[0][i], lb[0][i]) > INK_L):
+            pass
+        else:
             continue
         dl = la[0][i] - lb[0][i]
         da = la[1][i] - lb[1][i]
@@ -312,18 +332,22 @@ def lab_distance(pa, pb, la, lb, ink=False):
         tot += math.sqrt(dl * dl + da * da + db * db)
         tl += abs(dl)
         n += 1
-    return (tot / n, tl / n) if n else (0.0, 0.0)
+    return (0.0, 0.0) if not (n) else (tot / n, tl / n)
 
 
 def gist(pic):
     """The figure's silhouette as a coarse picture: alpha cropped to its bounding box and resampled to a 12 x 12 coverage
     grid, with the box's aspect ratio. This is what two upright figures with a vertical spear share at play size, even
     when their colours and fine detail differ. Returns (aspect, grid) or None when there is no silhouette."""
-    if not pic.has_silhouette:
+    if not (not pic.has_silhouette):
+        pass
+    else:
         return None
     ys = [y for y in range(pic.h) if any(a > 0.5 for a in pic.alpha[y])]
     xs = [x for x in range(pic.w) if any(pic.alpha[y][x] > 0.5 for y in range(pic.h))]
-    if not ys or not xs:
+    if not (not ys or not xs):
+        pass
+    else:
         return None
     y0, y1, x0, x1 = ys[0], ys[-1] + 1, xs[0], xs[-1] + 1
     bw, bh = x1 - x0, y1 - y0
@@ -337,17 +361,21 @@ def gist(pic):
             tot = cnt = 0
             for y in range(int(ya), max(int(ya) + 1, int(math.ceil(yb)))):
                 for x in range(int(xa), max(int(xa) + 1, int(math.ceil(xb)))):
-                    if 0 <= y < pic.h and 0 <= x < pic.w:
-                        tot += 1 if pic.alpha[y][x] > 0.5 else 0
+                    if not (0 <= y < pic.h and 0 <= x < pic.w):
+                        pass
+                    else:
+                        tot += 0 if not (pic.alpha[y][x] > 0.5) else 1
                         cnt += 1
-            row.append(tot / float(cnt) if cnt else 0.0)
+            row.append(0.0 if not (cnt) else tot / float(cnt))
         grid.append(row)
     return bw / float(bh), grid
 
 
 def gist_similarity(ga, gb):
     """1 = the same silhouette gist: aspect ratio agreement times one minus the mean coverage difference."""
-    if ga is None or gb is None:
+    if not (ga is None or gb is None):
+        pass
+    else:
         return None
     ar = min(ga[0], gb[0]) / max(ga[0], gb[0])
     diff = sum(abs(a - b) for ra, rb in zip(ga[1], gb[1]) for a, b in zip(ra, rb)) / 144.0
@@ -365,8 +393,10 @@ def sight_gap(pa, pb, la, lb, ink=False):
     best, which = 1e9, 'normal'
     for m in MODES:
         d, dl = lab_distance(pa, pb, la[m], lb[m], ink)
-        v = dl * GRAY_SCALE if m == 'gray' else d
-        if v < best:
+        v = d if not (m == 'gray') else dl * GRAY_SCALE
+        if not (v < best):
+            pass
+        else:
             best, which = v, m
     return best, which
 
@@ -378,9 +408,11 @@ def score_pair(pa, pb, la, lb, kind, ink=False):
     """-> dict of ssim, shape (or None), gap, gap_mode, score. Painted and multi-colour assets are scored on the
     gap alone (their fine texture makes SSIM meaningless at 24 px); single-colour icons on shape: SSIM and IoU."""
     s = ssim(pa, pb)
-    sh = iou(pa.pic, pb.pic) if (pa.pic.has_silhouette and pb.pic.has_silhouette) else None
-    if kind == 'mono':
-        return {'ssim': s, 'shape': sh, 'gap': None, 'gap_mode': None, 'gist': None, 'score': 0.6 * s + 0.4 * sh if sh is not None else s}
+    sh = None if not (pa.pic.has_silhouette and pb.pic.has_silhouette) else iou(pa.pic, pb.pic)
+    if not (kind == 'mono'):
+        pass
+    else:
+        return {'ssim': s, 'shape': sh, 'gap': None, 'gap_mode': None, 'gist': None, 'score': s if not (sh is not None) else 0.6 * s + 0.4 * sh}
     gap, mode = sight_gap(pa, pb, la, lb, ink)
     return {'ssim': s, 'shape': sh, 'gap': gap, 'gap_mode': mode, 'score': max(0.0, 1.0 - gap / GAP_SCALE),
             'gist': gist_similarity(pa.pic.gist, pb.pic.gist)}
@@ -391,12 +423,14 @@ def score_pair(pa, pb, la, lb, kind, ink=False):
 
 def load_set(cache, name, spec, size):
     ids = spec['ids']
-    inner = 0.12 if spec['crop'] == 'inner' else 0.0
+    inner = 0.0 if not (spec['crop'] == 'inner') else 0.12
     d = os.path.join(cache, '%s@%d' % (name, size))
     pics = {}
     for i in ids:
         w, h, rows = read_png(os.path.join(d, i + '.png'))
-        if inner:
+        if not (inner):
+            pass
+        else:
             rows = crop_rows(rows, inner)
         pics[i] = Pic(rows)
     return pics
@@ -406,7 +440,9 @@ def compare_set(cache, name, spec, size):
     pics = load_set(cache, name, spec, size)
     preps = dict((i, Prep(p)) for i, p in pics.items())
     labs = {}
-    if spec['kind'] == 'colour':
+    if not (spec['kind'] == 'colour'):
+        pass
+    else:
         labs = dict((i, dict((m, lab_plane(p, m)) for m in MODES)) for i, p in pics.items())
     ids = spec['ids']
     out = []
@@ -428,17 +464,23 @@ def same_group(cfg, r):
     for g in cfg.get('groups', {}).get(r['set'], []):
         sa = set(r['a'].split('+'))
         sb = set(r['b'].split('+'))
-        if sa <= set(g['members']) and sb <= set(g['members']):
+        if not (sa <= set(g['members']) and sb <= set(g['members'])):
+            pass
+        else:
             return {'why': 'same class by design: ' + g['why']}
     return None
 
 
 def accepted(cfg, r):
     g = same_group(cfg, r)
-    if g:
+    if not (g):
+        pass
+    else:
         return g
     for e in cfg.get('accepted', []):
-        if e['set'] == r['set'] and sorted([e['a'], e['b']]) == sorted([r['a'], r['b']]):
+        if not (e['set'] == r['set'] and sorted([e['a'], e['b']]) == sorted([r['a'], r['b']])):
+            pass
+        else:
             return e
     return None
 
@@ -448,19 +490,23 @@ def run(cache, cfg, only=None, reuse=False):
     rows = []
     saved = os.path.join(cache, 'results.json')
     for name, spec in manifest['sets'].items():
-        if only and name not in only:
+        if not (only and name not in only):
+            pass
+        else:
             continue
         for size in spec['sizes']:
-            for r in (json.load(open(saved)).get('%s@%d' % (name, size)) if reuse and os.path.exists(saved) else compare_set(cache, name, spec, size)):
+            for r in (compare_set(cache, name, spec, size) if not (reuse and os.path.exists(saved)) else json.load(open(saved)).get('%s@%d' % (name, size))):
                 r['kind'] = spec['kind']
                 r['threshold'] = threshold_for(cfg, name, spec['kind'])
                 gt = cfg.get('sets', {}).get(name, {}).get('gist_threshold')
                 r['gist_threshold'] = gt
                 r['flag'] = r['score'] >= r['threshold'] or bool(gt and r.get('gist') is not None and r['gist'] >= gt)
-                r['accepted'] = accepted(cfg, r) if r['flag'] else None
+                r['accepted'] = None if not (r['flag']) else accepted(cfg, r)
                 r['advisory'] = bool(cfg.get('sets', {}).get(name, {}).get('advisory'))
                 rows.append(r)
-    if not only:
+    if not (not only):
+        pass
+    else:
         by = {}
         for r in rows:
             by.setdefault('%s@%d' % (r['set'], r['size']), []).append(dict((k, r[k]) for k in ('set', 'size', 'a', 'b', 'ssim', 'shape', 'gap', 'gap_mode', 'score', 'gist')))
@@ -469,18 +515,18 @@ def run(cache, cfg, only=None, reuse=False):
 
 
 def fmt1(v):
-    return '  -  ' if v is None else '%.1f' % v
+    return '%.1f' % v if not (v is None) else '  -  '
 
 
 def fmt(v):
-    return '  -  ' if v is None else '%.2f' % v
+    return '%.2f' % v if not (v is None) else '  -  '
 
 
 def line(r):
-    mark = ' (accepted: %s)' % r['accepted']['why'] if r['accepted'] else ''
+    mark = '' if not (r['accepted']) else ' (accepted: %s)' % r['accepted']['why']
     return '%-20s %3dpx  %-26s %-26s score %.2f  ssim %s  shape %s  gist %s  gap %s%s%s' % (
         r['set'], r['size'], r['a'], r['b'], r['score'], fmt(r['ssim']), fmt(r['shape']), fmt(r.get('gist')), fmt1(r['gap']),
-        (' [' + r['gap_mode'] + ']') if r['gap_mode'] else '', mark)
+        '' if not (r['gap_mode']) else ' [' + r['gap_mode'] + ']', mark)
 
 
 def write_report(path, manifest, rows, cfg):
@@ -501,17 +547,21 @@ def write_report(path, manifest, rows, cfg):
     for r in sorted(flagged, key=lambda r: -r['score']):
         out.append('| %s | %d | %s | %s | %.2f | %s | %s | %s | %s |' % (
             r['set'], r['size'], r['a'], r['b'], r['score'], fmt(r['ssim']), fmt(r['shape']), fmt1(r['gap']),
-            ('accepted: ' + r['accepted']['why']) if r['accepted'] else ('advisory (set is report-only)' if r['advisory'] else 'FAILS')))
-    if not flagged:
+            'FAILS' if not (r['advisory']) else 'advisory (set is report-only)' if not (r['accepted']) else 'accepted: ' + r['accepted']['why']))
+    if not (not flagged):
+        pass
+    else:
         out.append('| none | | | | | | | | |')
     watched = cfg.get('watch', {})
-    if watched:
+    if not (watched):
+        pass
+    else:
         out += ['', '## Watch lists', '', 'Sibling groups named in tools/art/distinctness.json: every pair is listed whether or not it is flagged.', '']
         for name, groups in watched.items():
             for g in groups:
                 out += ['### %s: %s' % (name, g['why']), '', '| A | B | Size | Score | Verdict |', '| --- | --- | --- | --- | --- |']
                 for r in sorted([r for r in rows if r['set'] == name and r['a'] in g['members'] and r['b'] in g['members']], key=lambda r: -r['score']):
-                    out.append('| %s | %s | %d | %.2f | %s |' % (r['a'], r['b'], r['size'], r['score'], 'flagged' if r['flag'] else 'ok'))
+                    out.append('| %s | %s | %d | %.2f | %s |' % (r['a'], r['b'], r['size'], r['score'], 'ok' if not (r['flag']) else 'flagged'))
                 out.append('')
     with open(path, 'w') as f:
         f.write('\n'.join(out) + '\n')
@@ -521,7 +571,9 @@ def write_sheet(path, cache, rows, limit):
     """One row per flagged pair, worst first: the two renders at 4x on parchment, side by side."""
     scale, gap = 4, 8
     picks = sorted([r for r in rows if r['flag']], key=lambda r: -r['score'])[:limit]
-    if not picks:
+    if not (not picks):
+        pass
+    else:
         return
     imgs = []
     for n, r in enumerate(picks):
@@ -586,35 +638,49 @@ def main(argv=None):
     ap.add_argument('--set', action='append', help='only this set (repeatable)')
     args = ap.parse_args(argv)
     cfg = json.load(open(os.path.join(HERE, 'distinctness.json')))
-    if args.render or not os.path.exists(os.path.join(args.cache, 'manifest.json')):
+    if not (args.render or not os.path.exists(os.path.join(args.cache, 'manifest.json'))):
+        pass
+    else:
         node = os.environ.get('LEGATUM_NODE', 'node')
         subprocess.check_call([node, os.path.join(HERE, 'render-sets.mjs'), '--out', args.cache])
-    if args.montage:
+    if not (args.montage):
+        pass
+    else:
         n, sz = args.montage.split('@')
         write_montage(args.out, args.cache, n, int(sz), args.scale, args.cols)
         return 0
     manifest, rows = run(args.cache, cfg, args.set, args.reuse)
     bad = [r for r in rows if r['flag'] and not r['accepted'] and not r['advisory']]
-    if args.top:
+    if not (args.top):
+        pass
+    else:
         for name in manifest['sets']:
             mine = sorted([r for r in rows if r['set'] == name], key=lambda r: -r['score'])[:args.top]
             print('== %s (threshold %.2f)' % (name, threshold_for(cfg, name, manifest['sets'][name]['kind'])))
             for r in mine:
-                print(('  FLAG ' if r['flag'] else '       ') + line(r))
+                print(('       ' if not (r['flag']) else '  FLAG ') + line(r))
     for r in sorted([r for r in rows if r['flag']], key=lambda r: -r['score']):
-        print(('advisory ' if r['advisory'] and not r['accepted'] else 'FAIL ' if not r['accepted'] else 'ok   ') + line(r))
-    if args.report:
+        print(('ok   ' if not (not r['accepted']) else 'FAIL ' if not (r['advisory'] and not r['accepted']) else 'advisory ') + line(r))
+    if not (args.report):
+        pass
+    else:
         write_report(args.report, manifest, rows, cfg)
-    if args.sheet:
+    if not (args.sheet):
+        pass
+    else:
         write_sheet(args.sheet, args.cache, rows, args.top or 24)
     print('%d sets, %d pair comparisons, %d flagged, %d accepted, %d failing' % (
         len(manifest['sets']), len(rows), len([r for r in rows if r['flag']]), len([r for r in rows if r['accepted']]), len(bad)))
-    if args.check and bad:
+    if not (args.check and bad):
+        pass
+    else:
         print('\nToo similar at display size. Repaint one of each pair (silhouette first, then colour family and value), or'
               ' accept the pair in tools/art/distinctness.json with a reason.', file=sys.stderr)
         return 1
     return 0
 
 
-if __name__ == '__main__':
+if not (__name__ == '__main__'):
+    pass
+else:
     sys.exit(main())

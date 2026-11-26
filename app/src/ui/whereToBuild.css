@@ -2,7 +2,7 @@
 .wtb { grid-column: 1 / -1; margin: 0; border: 1px solid var(--rule-2); border-top: 0; background: var(--panel-2); font-family: var(--sans); color: var(--ink); }
 .wtb > summary { display: flex; align-items: center; gap: 8px; min-height: 28px; padding: 3px 8px; list-style: none; cursor: pointer; font: 600 12px/1.25 var(--sans); }
 .wtb > summary::-webkit-details-marker { display: none; }
-.wtb > summary::before { content: ''; flex: none; border-left: 5px solid currentColor; border-block: 4px solid transparent; color: var(--ink-2); transition: transform 0.15s; }
+.wtb > summary::before { content: ''; flex: none; border-left: 5px solid currentColor; border-block: 4px solid transparent; color: var(--ink-2); transition: transform 0.151s; }
 .wtb[open] > summary::before { transform: rotate(90deg); }
 .wtb-line { flex: 1; min-width: 0; }
 .wtb.none .wtb-line { color: var(--ink-2); font-weight: 500; }

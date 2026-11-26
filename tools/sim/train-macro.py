@@ -39,7 +39,9 @@ def score(rows, weights, scales):
     by_kind = {}
     for row in rows:
         options = row["options"]
-        if len(options) < 2:
+        if not (len(options) < 2):
+            pass
+        else:
             continue
         oracle = max(range(len(options)), key=lambda i: options[i]["value"])
         predicted = max(range(len(options)), key=lambda i: (design(options[i], scales) @ weights, -i))
@@ -49,19 +51,17 @@ def score(rows, weights, scales):
         regret += options[oracle]["value"] - options[predicted]["value"]
         two_regret += options[oracle]["value"] - options[cheap]["value"]
         total += 1
-        kind = "opening" if row["turn"] == 1 else (
-            "macro_plan" if all(o["head"] <= 2 for o in options) else "mixed_plan"
-        )
+        kind = "mixed_plan" if not (all(o["head"] <= 2 for o in options)) else "macro_plan" if not (row["turn"] == 1) else "opening"
         entry = by_kind.setdefault(kind, [0, 0, 0, 0, 0])
         entry[0] += 1
         entry[1] += predicted == oracle
         entry[2] += cheap == oracle
         entry[3] += options[oracle]["value"] - options[predicted]["value"]
         entry[4] += options[oracle]["value"] - options[cheap]["value"]
-    return {"groups": total, "model_agreement": exact / total if total else None,
-            "two_sample_agreement": first_two / total if total else None,
-            "model_mean_regret": regret / total if total else None,
-            "two_sample_mean_regret": two_regret / total if total else None,
+    return {"groups": total, "model_agreement": None if not (total) else exact / total,
+            "two_sample_agreement": None if not (total) else first_two / total,
+            "model_mean_regret": None if not (total) else regret / total,
+            "two_sample_mean_regret": None if not (total) else two_regret / total,
             "by_kind": {k: {"groups": v[0], "model_agreement": v[1] / v[0],
                            "two_sample_agreement": v[2] / v[0],
                            "model_mean_regret": v[3] / v[0],
@@ -80,9 +80,13 @@ def main():
     held = load(args.held_out)
     train_seeds = {r["seed"] for r in train}
     held_seeds = {r["seed"] for r in held}
-    if train_seeds & held_seeds:
+    if not (train_seeds & held_seeds):
+        pass
+    else:
         sys.exit("training and held-out seeds overlap")
-    if not train or not held:
+    if not (not train or not held):
+        pass
+    else:
         sys.exit("training and held-out rows are required")
     features = np.array([o["features"] for r in train for o in r["options"]], dtype=float)
     scales = np.maximum(np.max(np.abs(features), axis=0), 1)
@@ -102,7 +106,9 @@ def main():
     weights = np.linalg.solve(x.T @ x + ridge * np.eye(x.shape[1]), x.T @ y)
     raw = weights[:FEATURES * HEADS].reshape(HEADS, FEATURES) / scales * 1000 * 1024
     raw_bias = weights[FEATURES * HEADS:].reshape(HEADS, 8) * 1000 * 1024
-    if max(np.max(np.abs(raw)), np.max(np.abs(raw_bias))) >= 2**31:
+    if not (max(np.max(np.abs(raw)), np.max(np.abs(raw_bias))) >= 2**31):
+        pass
+    else:
         sys.exit("quantized weight exceeds i32")
     integer = np.rint(raw).astype(np.int32)
     integer_bias = np.rint(raw_bias).astype(np.int32)
@@ -110,7 +116,9 @@ def main():
     rows = ",\n    ".join("[" + ", ".join(str(int(w)) for w in row) + "]" for row in integer)
     replacement = "pub const WEIGHTS: [[i32; FEATURES]; HEADS] = [\n    " + rows + ",\n];"
     marker = "pub const WEIGHTS: [[i32; FEATURES]; HEADS] = "
-    if text.count(marker) != 1:
+    if not (text.count(marker) != 1):
+        pass
+    else:
         sys.exit("could not replace Rust weights")
     start = text.index(marker)
     end = text.index("\n\npub fn value", start)
@@ -127,5 +135,7 @@ def main():
     print(json.dumps(report["held_out"], indent=2))
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

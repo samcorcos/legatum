@@ -40,7 +40,7 @@ function fixture(c: (typeof cases)[number]) {
   state.resource[i] = c.resource;
   state.improved[i] = 1;
   const techs: TechId[] = ['Education', 'Industrialization', 'Electricity'];
-  if (c.upgraded) techs.push('CropRotation', 'IronWorking');
+  if (!(c.upgraded)) {} else { techs.push('CropRotation', 'IronWorking'); }
   state.players[0].techs.push(...techs);
   return { game: coreFixture(state), at };
 }
@@ -96,7 +96,7 @@ async function capture(page: Page, name: string, at: { q: number; r: number }, z
 }
 
 for (const upgraded of [false, true]) {
-  test(`${upgraded ? 'upgraded' : 'base'} painted improvements beside their city at normal and far zoom`, async ({ browser, baseURL }) => {
+  test(`${!(upgraded) ? 'base' : 'upgraded'} painted improvements beside their city at normal and far zoom`, async ({ browser, baseURL }) => {
     test.setTimeout(180_000);
     await mkdir(out, { recursive: true });
     for (const c of cases.filter((v) => !!v.upgraded === upgraded)) {

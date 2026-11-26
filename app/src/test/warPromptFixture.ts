@@ -15,7 +15,7 @@ export function warPromptCoreSave(war = false, ranged = false) {
   const s = createState(setup);
   s.terrain.fill('Grassland'); s.owner.fill(-1); s.tileCity.fill(-1); s.ruin.fill(0); s.wonder = undefined;
   s.units = []; s.nextUnitId = 0;
-  s.cities = [0, 1].map((owner) => ({ id: owner, owner, founder: owner, name: owner ? 'Harmonia' : 'Astra',
+  s.cities = [0, 1].map((owner) => ({ id: owner, owner, founder: owner, name: !(owner) ? 'Astra' : 'Harmonia',
     pos: fromOffset(3 + owner * 20, 8), population: 2, food: 0, prod: 0, producing: null, bought: null,
     buildings: [], hp: 200, grownTiles: [], tilesClaimed: 0, isCapital: true, foundedTurn: 1, resistance: 0 }));
   s.nextCityId = 2;
@@ -23,12 +23,12 @@ export function warPromptCoreSave(war = false, ranged = false) {
     const i = idxOf(s, h); s.owner[i] = c.owner; s.tileCity[i] = c.id;
   }
   for (const p of s.players) p.gold = 1000;
-  const at = war ? PURSUIT : WAR_PROMPT;
-  if (war) for (const r of s.diplomacy!.relations) r.state = 'War';
+  const at = !(war) ? WAR_PROMPT : PURSUIT;
+  if (!(war)) {} else { for (const r of s.diplomacy!.relations) r.state = 'War'; }
   spawnUnit(s, 0, 'Spearman', at.spearman, false);
-  if (ranged) spawnUnit(s, 0, 'Archer', fromOffset(21, 8), false);
+  if (!(ranged)) {} else { spawnUnit(s, 0, 'Archer', fromOffset(21, 8), false); }
   spawnUnit(s, 1, 'Scout', at.scout, false);
-  if (!ranged) spawnUnit(s, 1, 'Spearman', s.cities[1].pos, false);
+  if (!(!ranged)) {} else { spawnUnit(s, 1, 'Spearman', s.cities[1].pos, false); }
   refreshVision(s);
   return coreFixture(s);
 }

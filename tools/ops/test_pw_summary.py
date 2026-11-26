@@ -13,7 +13,7 @@ TOOL = os.path.join(HERE, 'pw-summary.py')
 def report(*tests):
     suites = {}
     for file, title, status, message in tests:
-        result = {'duration': 1000, 'errors': [{'message': message}] if message else []}
+        result = {'duration': 1000, 'errors': [] if not (message) else [{'message': message}]}
         suites.setdefault(file, []).append({'title': title, 'file': file, 'tests': [{'status': status, 'results': [result]}]})
     return {'stats': {'expected': sum(1 for t in tests if t[2] == 'expected'), 'unexpected': sum(1 for t in tests if t[2] == 'unexpected'),
                       'flaky': 0, 'skipped': 0, 'duration': 5000},

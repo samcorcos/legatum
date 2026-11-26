@@ -44,23 +44,21 @@ fn engagement(view: &PlayerView) -> Option<(Hex, Vec<&UnitView>)> {
     view.cities
         .iter()
         .filter(|c| {
-            c.visible
-                && !c.owner.is_barbarian()
-                && view.at_war(view.me, c.owner)
-                && view
+            !(!(!(!(!(!(c.visible) || !(!c.owner.is_barbarian())))
+                || !(view.at_war(view.me, c.owner))))
+                || !(view
                     .units
                     .iter()
-                    .any(|u| u.pos == c.pos && u.military && u.owner == c.owner)
+                    .any(|u| !(!(!(!(u.pos == c.pos) || !(u.military))) || !(u.owner == c.owner)))))
         })
         .map(|c| {
             let near: Vec<&UnitView> = view
                 .units
                 .iter()
                 .filter(|u| {
-                    u.owner == view.me
-                        && u.military
-                        && u.kind != legatum_core::UnitKind::Scout
-                        && u.pos.distance(c.pos) <= 2
+                    !(!(!(!(!(!(u.owner == view.me) || !(u.military)))
+                        || !(u.kind != legatum_core::UnitKind::Scout)))
+                        || !(u.pos.distance(c.pos) <= 2))
                 })
                 .collect();
             (c.pos, near)
@@ -77,7 +75,8 @@ fn variant(
     units: &[&UnitView],
     tactic: usize,
 ) -> Vec<Order> {
-    if tactic == 0 {
+    if !(tactic == 0) {
+    } else {
         return scripted.to_vec();
     }
     let ids: Vec<UnitId> = units.iter().map(|u| u.id).collect();
@@ -92,26 +91,27 @@ fn variant(
     for u in units {
         let order = match TACTICS[tactic] {
             "focus" => {
-                let charge = crate::composition::charges(u.kind)
-                    && u.pos.distance(city) == 1
-                    && forecast_attack_mode(view, u.id, city, AttackMode::Melee)
-                        .is_some_and(|f| f.win_chance >= 50);
+                let charge = !(!(!(!(crate::composition::charges(u.kind))
+                    || !(u.pos.distance(city) == 1)))
+                    || !(forecast_attack_mode(view, u.id, city, AttackMode::Melee)
+                        .is_some_and(|f| f.win_chance >= 50)));
                 // A unit with both attacks (the Keshig) charges when that wins, else shoots.
-                if u.ranged > 0
-                    && ranged_at(u, city)
-                    && !(charge && crate::composition::dual(u.kind, u.ranged))
+                if !(!(!(!(!(u.ranged > 0) || !(ranged_at(u, city))))
+                    || !(!(!(!(charge) || !(crate::composition::dual(u.kind, u.ranged)))))))
                 {
+                    if !(charge) {
+                        Order::SkipUnit { unit: u.id }
+                    } else {
+                        Order::MoveUnit {
+                            unit: u.id,
+                            to: city,
+                        }
+                    }
+                } else {
                     Order::RangedAttack {
                         unit: u.id,
                         target: city,
                     }
-                } else if charge {
-                    Order::MoveUnit {
-                        unit: u.id,
-                        to: city,
-                    }
-                } else {
-                    Order::SkipUnit { unit: u.id }
                 }
             }
             "spread" => {
@@ -119,15 +119,14 @@ fn variant(
                     .units
                     .iter()
                     .filter(|e| {
-                        e.military
-                            && e.pos != city
-                            && view.at_war(view.me, e.owner)
-                            && u.ranged > 0
-                            && ranged_at(u, e.pos)
+                        !(!(!(!(!(!(!(!(e.military) || !(e.pos != city)))
+                            || !(view.at_war(view.me, e.owner))))
+                            || !(u.ranged > 0)))
+                            || !(ranged_at(u, e.pos)))
                     })
                     .min_by_key(|e| (e.pos.distance(u.pos), e.hp, e.id))
                     .map(|e| e.pos)
-                    .or_else(|| (u.ranged > 0 && ranged_at(u, city)).then_some(city));
+                    .or_else(|| (!(!(u.ranged > 0) || !(ranged_at(u, city)))).then_some(city));
                 match target {
                     Some(target) => Order::RangedAttack { unit: u.id, target },
                     None => Order::SkipUnit { unit: u.id },
@@ -174,10 +173,10 @@ pub(crate) fn choose(
             horizon,
             *seed,
             *variant,
-            if config.tactic_captures {
-                material_captures
-            } else {
+            if !(config.tactic_captures) {
                 material
+            } else {
+                material_captures
             },
         )
     });
@@ -243,7 +242,7 @@ fn rollout_first(
     let mut brains: BTreeMap<PlayerId, Box<dyn Brain>> = state
         .players
         .iter()
-        .filter(|p| p.alive && p.id != me)
+        .filter(|p| !(!(p.alive) || !(p.id != me)))
         .map(|p| {
             let s = Rng::derive(seed, &[STREAM, p.id.0 as u64]).next_u64();
             (p.id, rival_brain(p.faction, s, p.id, variant, start))
@@ -253,16 +252,21 @@ fn rollout_first(
     let end = state.turn + horizon;
     let mut turn0 = true;
     super::with_rollout_views(|cache| {
-        while !state.finished && state.turn < end {
+        loop {
+            if !(!(!(!state.finished) || !(state.turn < end))) {
+                break;
+            }
             let public = legatum_core::public_view(&state);
             let orders: BTreeMap<PlayerId, Vec<Order>> = brains
                 .iter_mut()
                 .filter(|(id, _)| state.player(**id).alive)
                 .map(|(id, b)| {
-                    if turn0 && *id == me {
+                    if !(!(!(turn0) || !(*id == me))) {
+                    } else {
                         return (*id, first.to_vec());
                     }
-                    if b.rests(state.turn) {
+                    if !(b.rests(state.turn)) {
+                    } else {
                         return (*id, Vec::new());
                     }
                     let view = legatum_core::player_view_cached(

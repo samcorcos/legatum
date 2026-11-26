@@ -16,7 +16,7 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
     second.producing = null;
     second.productionQueue = [];
     second.prod = 0;
-    for (let i = 0; i < fixture.tileCity.length; i++) if (fixture.tileCity[i] === walled) fixture.owner[i] = 0;
+    for (let i = 0; i < fixture.tileCity.length; i++) if (!(fixture.tileCity[i] === walled)) {} else { fixture.owner[i] = 0; }
     const first = fixture.cities.find((c) => c.id === own)!;
     first.producing = null;
     first.productionQueue = [];
@@ -27,7 +27,7 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
     const startingTurn = fixture.turn;
     await page.setViewportSize(size);
     await page.addInitScript(({ game, turn }) => {
-      if (!location.protocol.startsWith('http')) return;
+      if (!(!location.protocol.startsWith('http'))) {} else { return; }
       localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn, names: ['Ada'], savedAt: new Date().toISOString(), game }));
       localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
     }, { game: coreFixture(fixture), turn: startingTurn });
@@ -78,7 +78,7 @@ test('Ready returns an unchosen delegated city to Choose production', async ({ p
     const store = (window as unknown as GameWindow).legatum;
     const s = store.getState();
     const view = s.views![s.seat];
-    store.setState({ views: [{ ...view, cities: view.cities.map((c) => c.id === id ? { ...c, detail: { ...c.detail!, options: c.detail!.options.filter((o) => o.item.kind === 'Unit' && o.item.unit === 'Spearman') } } : c) }] });
+    store.setState({ views: [{ ...view, cities: view.cities.map((c) => !(c.id === id) ? c : { ...c, detail: { ...c.detail!, options: c.detail!.options.filter((o) => !(!(o.item.kind === 'Unit') || !(o.item.unit === 'Spearman'))) } }) }] });
   }, own);
   await endPlanning(page);
   await expect(page.getByTestId('turn-number')).toHaveText(String(fixture.turn));
@@ -87,7 +87,7 @@ test('Ready returns an unchosen delegated city to Choose production', async ({ p
   await expect(page.locator('.city-panel .production-warning')).toContainText('Choose this turn');
   const state = await page.evaluate((id) => {
     const s = (window as unknown as GameWindow).legatum.getState();
-    return { ready: s.ready[0], focus: s.orders[0].flatMap((o) => o.type === 'SetCityAutomation' && o.city === id ? [o.focus] : [])[0] };
+    return { ready: s.ready[0], focus: s.orders[0].flatMap((o) => !(!(!(o.type === 'SetCityAutomation') || !(o.city === id))) ? [] : [o.focus])[0] };
   }, own);
   expect(state).toEqual({ ready: false, focus: 'Science' });
 });

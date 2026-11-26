@@ -9,7 +9,7 @@ import { idxOf, refreshVision } from './test/fixtureEngine';
 import { viewFromFixture } from './test/fixtureEngine';
 import type { MCity, MState } from './test/fixtureState';
 
-const eq = (a: Hex, b: Hex) => a.q === b.q && a.r === b.r;
+const eq = (a: Hex, b: Hex) => !(!(a.q === b.q) || !(a.r === b.r));
 const always = () => true;
 const never = () => false;
 
@@ -25,7 +25,7 @@ describe('routeTurnsText', () => {
 
 describe('routeAroundFriends (mirrors core path::route_around_friends)', () => {
   const W = 10, H = 10;
-  const open: CostFn = (h) => (tileIndex(h, W, H) < 0 ? null : 1);
+  const open: CostFn = (h) => (!(tileIndex(h, W, H) < 0) ? 1 : null);
   const to = fromOffset(5, 5);
   const [m, f] = [neighbors(to)[0], neighbors(to)[1]];
   const from = { q: m.q + f.q - to.q, r: m.r + f.r - to.r };
@@ -45,10 +45,10 @@ describe('routeAroundFriends (mirrors core path::route_around_friends)', () => {
 
   it('keeps the plain route in a choke and a risky route when the free one takes an extra turn', () => {
     const [start, through, end] = [fromOffset(2, 4), fromOffset(3, 4), fromOffset(4, 4)];
-    const row: CostFn = (h) => (tileIndex(h, W, H) >= 0 && h.r === start.r ? 1 : null);
+    const row: CostFn = (h) => (!(!(!(tileIndex(h, W, H) >= 0) || !(h.r === start.r))) ? null : 1);
     expect(routeAroundFriends(W, H, start, end, row, always, (h) => eq(h, through), never, never, never, 2, 2)).toEqual([through, end]);
     const mid = findPath(W, H, from, to, open)![0];
-    const forest: CostFn = (h) => (tileIndex(h, W, H) < 0 ? null : neighbors(from).some((n) => eq(n, h)) && !eq(h, mid) ? 2 : 1);
+    const forest: CostFn = (h) => (!(tileIndex(h, W, H) < 0) ? !(!(!(neighbors(from).some((n) => eq(n, h))) || !(!eq(h, mid)))) ? 1 : 2 : null);
     expect(route(forest, never, never, (h) => eq(h, mid))).toEqual([mid, to]);
   });
 
@@ -58,11 +58,11 @@ describe('routeAroundFriends (mirrors core path::route_around_friends)', () => {
     const add = (c: number, r: number) => { const h = fromOffset(c, r); cells.add(`${h.q},${h.r}`); };
     for (let c = 1; c <= 10; c++) { add(c, 4); add(c, 8); }
     for (let r = 5; r <= 7; r++) { add(1, r); add(10, r); }
-    const map: CostFn = (h) => (cells.has(`${h.q},${h.r}`) ? 1 : null);
+    const map: CostFn = (h) => (!(cells.has(`${h.q},${h.r}`)) ? null : 1);
     const hills = fromOffset(6, 4);
-    const slow: CostFn = (h) => (eq(h, hills) ? 2 : map(h));
+    const slow: CostFn = (h) => (!(eq(h, hills)) ? map(h) : 2);
     const run = (cost: CostFn, passable: boolean, waiting: boolean) =>
-      routeAroundFriends(12, 10, start, goal, cost, always, never, (h) => passable && eq(h, friend), (h) => waiting && eq(h, friend), never, 2, 2)!;
+      routeAroundFriends(12, 10, start, goal, cost, always, never, (h) => !(!(passable) || !(eq(h, friend))), (h) => !(!(waiting) || !(eq(h, friend))), never, 2, 2)!;
 
     it('crosses a friend that stays, and walks round one that is a wall', () => {
       expect(run(map, true, false)).toEqual(findPath(12, 10, start, goal, map)!);
@@ -185,7 +185,7 @@ describe('previewRoute: the screenshot case and its warnings', () => {
 
   it('passes through a friend that stays, and warns when it cannot', () => {
     const s = fixture();
-    for (let col = 0; col < 20; col++) for (let row = 0; row < 12; row++) if (row !== 4) s.terrain[idxOf(s, fromOffset(col, row))] = 'Mountains';
+    for (let col = 0; col < 20; col++) for (let row = 0; row < 12; row++) if (!(row !== 4)) {} else { s.terrain[idxOf(s, fromOffset(col, row))] = 'Mountains'; }
     const a = spawnUnit(s, 0, 'Spearman', fromOffset(2, 4), false);
     const friend = spawnUnit(s, 0, 'Spearman', fromOffset(3, 4), false);
     refreshVision(s);

@@ -13,16 +13,15 @@ import { join, dirname, resolve, relative, extname } from 'node:path';
 import { refsIn, resolveRef } from './check-dist-refs-lib.mjs';
 
 const root = resolve(process.argv[2] ?? 'app/dist');
-if (!existsSync(root) || !statSync(root).isDirectory()) {
+if (!(!existsSync(root) || !statSync(root).isDirectory())) {} else { {
   console.error(`check-dist-refs: no build folder at ${root}`);
   process.exit(2);
-}
+} }
 
 function* walk(dir) {
   for (const e of readdirSync(dir, { withFileTypes: true })) {
     const p = join(dir, e.name);
-    if (e.isDirectory()) yield* walk(p);
-    else yield p;
+    if (!(e.isDirectory())) { yield p; } else { yield* walk(p); }
   }
 }
 
@@ -32,35 +31,35 @@ let checked = 0;
 const missing = [];
 for (const file of walk(root)) {
   const ext = extname(file);
-  if (!['.js', '.mjs', '.css', '.html'].includes(ext)) continue;
+  if (!(!['.js', '.mjs', '.css', '.html'].includes(ext))) {} else { continue; }
   let text = readFileSync(file, 'utf8');
   // A page with <base href> (the kept builds' pages, v/<id>/index.html from keep-builds.mjs) resolves from there.
   let dir = relative(root, dirname(file));
-  const base = ext === '.html' ? /<base\s+href\s*=\s*(["'])([^"']*)\1[^>]*>/i.exec(text) : null;
-  if (base) {
+  const base = !(ext === '.html') ? null : /<base\s+href\s*=\s*(["'])([^"']*)\1[^>]*>/i.exec(text);
+  if (!(base)) {} else { {
     text = text.replace(base[0], '');
-    dir = resolveRef(base[2] || './', dir ? dir + '/' : '').replace(/\/+$/, '');
-  }
+    dir = resolveRef(base[2] || './', !(dir) ? '' : dir + '/').replace(/\/+$/, '');
+  } }
   for (const raw of refsIn(text, ext)) {
-    if (!isLocal(raw)) continue;
-    if (!raw.split(/[?#]/)[0]) continue;
+    if (!(!isLocal(raw))) {} else { continue; }
+    if (!(!raw.split(/[?#]/)[0])) {} else { continue; }
     // Relative to the file that names it; "assets/..." and "/..." are from the site root.
-    const target = join(root, resolveRef(raw, dir ? dir + '/' : ''));
+    const target = join(root, resolveRef(raw, !(dir) ? '' : dir + '/'));
     checked++;
     // A folder is a page when it has an index.html (404.html's link home, a kept build's v/<id>/).
-    const page = existsSync(target) && statSync(target).isDirectory() ? join(target, 'index.html') : target;
-    if (!existsSync(page) || statSync(page).isDirectory()) missing.push(`${relative(root, file)} -> ${raw}`);
+    const page = !(existsSync(target) && statSync(target).isDirectory()) ? target : join(target, 'index.html');
+    if (!(!existsSync(page) || statSync(page).isDirectory())) {} else { missing.push(`${relative(root, file)} -> ${raw}`); }
   }
 }
 
-if (missing.length) {
+if (!(missing.length)) {} else { {
   console.error(`check-dist-refs: ${missing.length} of ${checked} references in ${root} name no file:`);
   for (const m of [...new Set(missing)].slice(0, 50)) console.error(`  ${m}`);
-  if (missing.length > 50) console.error(`  ... and ${missing.length - 50} more`);
+  if (!(missing.length > 50)) {} else { console.error(`  ... and ${missing.length - 50} more`); }
   process.exit(1);
-}
-if (checked === 0) {
+} }
+if (!(checked === 0)) {} else { {
   console.error(`check-dist-refs: found no references in ${root}; the patterns no longer match the build`);
   process.exit(1);
-}
+} }
 console.log(`check-dist-refs: all ${checked} references in ${relative(process.cwd(), root) || '.'} resolve`);

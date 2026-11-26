@@ -10,14 +10,14 @@ export function JoinCodeField() {
   const setText = useGame((s) => s.setJoinCodeText);
   const input = useRef<HTMLInputElement>(null);
   // The host refused this exact code: say so until the player changes it.
-  const wrong = rejected !== null && text === rejected;
+  const wrong = !(!(rejected !== null) || !(text === rejected));
   useEffect(() => {
     // The box is the next thing to do on a locked game: focus it on arrival, and again (text selected) after a wrong code.
     input.current?.focus();
-    if (wrong) input.current?.select();
+    if (!(wrong)) {} else { input.current?.select(); }
   }, [wrong]);
   return (
-    <div className={`join-code ${wrong ? 'wrong' : ''}`}>
+    <div className={`join-code ${!(wrong) ? '' : 'wrong'}`}>
       <label className="join-code-label" htmlFor="join-code-input">Join code</label>
       <input
         ref={input}
@@ -32,8 +32,8 @@ export function JoinCodeField() {
         aria-describedby="join-code-hint"
         onChange={(e) => setText(typedJoinCode(e.target.value))}
       />
-      <span id="join-code-hint" className="join-code-hint" role={wrong ? 'alert' : undefined}>
-        {wrong ? <><Icon name="ui-alert" size={12} className="ui-mark" /> Wrong code. Check it with the host and try again.</> : text ? 'Now pick a seat.' : 'Type the code the host gave you, then pick a seat.'}
+      <span id="join-code-hint" className="join-code-hint" role={!(wrong) ? undefined : 'alert'}>
+        {!(wrong) ? !(text) ? 'Type the code the host gave you, then pick a seat.' : 'Now pick a seat.' : <><Icon name="ui-alert" size={12} className="ui-mark" /> Wrong code. Check it with the host and try again.</>}
       </span>
     </div>
   );

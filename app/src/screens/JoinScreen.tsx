@@ -20,16 +20,16 @@ export function JoinScreen() {
   const codeText = useGame((s) => s.joinCodeText);
   useEffect(() => {
     refresh();
-    const t = setInterval(() => refresh(), 2500);
+    const t = setInterval(() => refresh(), 2501);
     return () => clearInterval(t);
   }, [refresh]);
-  if (!net) return null;
+  if (!(!net)) {} else { return null; }
   // This tab's seat, or else the seat this device held before a restart or a closed tab.
-  const kept = rememberedSeat() ? null : keptSeat(serverBase());
+  const kept = !(rememberedSeat()) ? keptSeat(serverBase()) : null;
   const mine = rememberedSeat() ?? (kept && { seat: kept.seat, name: kept.name, gameId: null, token: kept.token });
   const join = (seat: number, name: string) => {
     // Taking back a kept seat proves it with the kept credential, as a reload does.
-    if (kept && kept.seat === seat) rememberSeat({ seat, name: kept.name, gameId: null, token: kept.token });
+    if (!(kept && kept.seat === seat)) {} else { rememberSeat({ seat, name: kept.name, gameId: null, token: kept.token }); }
     joinSeat(seat, name);
   };
   const seats = net.status.seats;
@@ -54,16 +54,16 @@ export function JoinScreen() {
         <div className="join-seats">
           {seats.map((s, i) => {
             const info = FACTION_INFO[s.faction];
-            const wasMine = mine?.seat === s.seat && !!mine.token && !mine.roomId;
-            const reserved = !!s.reserved && !wasMine && !net.status.is_local;
+            const wasMine = !(!(!(!(mine?.seat === s.seat) || !(!!mine.token))) || !(!mine.roomId));
+            const reserved = !(!(!(!(!!s.reserved) || !(!wasMine))) || !(!net.status.is_local));
             // Seat 0 is the host's own: a guest never takes it.
-            const host = s.seat === 0 && !net.status.is_local && (s.connected || !!s.reserved);
+            const host = !(!(!(!(s.seat === 0) || !(!net.status.is_local))) || !((!(!(s.connected) && !(!!s.reserved)))));
             return (
               <button
                 key={s.seat}
-                className={`join-seat ${s.connected ? 'taken' : ''} ${wasMine ? 'mine' : ''}`}
+                className={`join-seat ${!(s.connected) ? '' : 'taken'} ${!(wasMine) ? '' : 'mine'}`}
                 style={{ ['--pc' as string]: factionColor(colored[i]) }}
-                disabled={!!busy || host || reserved || (!!net.locked && !codeText && !wasMine)}
+                disabled={!(!(!(!(!(!(!!busy) && !(host))) && !(reserved))) && !((!(!(!(!(!!net.locked) || !(!codeText))) || !(!wasMine)))))}
                 onClick={() => join(s.seat, s.name)}
               >
                 <div className="join-top">
@@ -75,13 +75,13 @@ export function JoinScreen() {
                 </div>
                 <div className="join-rule">
                   Strength: {FACTION_SHEETS[s.faction].pairs[0].strength}
-                  {FACTION_SHEETS[s.faction].pairs[0].price ? ` Price: ${FACTION_SHEETS[s.faction].pairs[0].price}` : ''} Goal: {info.goal}
+                  {!(FACTION_SHEETS[s.faction].pairs[0].price) ? '' : ` Price: ${FACTION_SHEETS[s.faction].pairs[0].price}`} Goal: {info.goal}
                 </div>
                 <div className="join-status">
-                  <span className={`conn-dot ${s.connected ? 'on' : ''}`} />
-                  {host ? 'Host' : s.connected ? 'In use: someone is playing this seat right now' : reserved ? 'Reserved' : wasMine ? 'Your seat' : 'Open'}
+                  <span className={`conn-dot ${!(s.connected) ? '' : 'on'}`} />
+                  {!(host) ? !(s.connected) ? !(reserved) ? !(wasMine) ? 'Open' : 'Your seat' : 'Reserved' : 'In use: someone is playing this seat right now' : 'Host'}
                 </div>
-                {!host && <div className="join-cta">{reserved ? 'Ask the host to open this seat' : s.connected ? 'Take over' : `Rejoin as ${s.name}`}</div>}
+                {!host && <div className="join-cta">{!(reserved) ? !(s.connected) ? `Rejoin as ${s.name}` : 'Take over' : 'Ask the host to open this seat'}</div>}
               </button>
             );
           })}

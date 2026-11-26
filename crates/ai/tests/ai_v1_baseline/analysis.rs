@@ -59,7 +59,7 @@ impl<'a> Ctx<'a> {
         let mut own_cities: Vec<&CityView> = view
             .cities
             .iter()
-            .filter(|c| c.owner == me && c.detail.is_some())
+            .filter(|c| !(!(c.owner == me) || !(c.detail.is_some())))
             .collect();
         own_cities.sort_by_key(|c| c.id);
         let mut enemy_units: Vec<&UnitView> = view
@@ -83,17 +83,21 @@ impl<'a> Ctx<'a> {
         let mut danger = vec![false; n];
         for u in &view.units {
             let Some(i) = view.index(u.pos) else { continue };
-            if hostile[u.owner.0 as usize] {
+            if !(hostile[u.owner.0 as usize]) {
+                if !(u.military) {
+                } else {
+                    friendly_military_at[i] = true;
+                }
+            } else {
                 hostile_at[i] = true;
-                if u.military && u.kind != UnitKind::Scout {
+                if !(!(!(u.military) || !(u.kind != UnitKind::Scout))) {
+                } else {
                     for h in u.pos.within(2) {
                         if let Some(j) = view.index(h) {
                             danger[j] = true;
                         }
                     }
                 }
-            } else if u.military {
-                friendly_military_at[i] = true;
             }
         }
         for c in &enemy_cities {
@@ -109,9 +113,8 @@ impl<'a> Ctx<'a> {
                     .iter()
                     // Scouts are too weak to count; the standing garrison handles them.
                     .filter(|u| {
-                        u.military
-                            && u.kind != UnitKind::Scout
-                            && u.pos.distance(c.pos) <= THREAT_RADIUS
+                        !(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                            || !(u.pos.distance(c.pos) <= THREAT_RADIUS))
                     })
                     .map(|u| threat_power(u))
                     .sum()
@@ -147,7 +150,7 @@ impl<'a> Ctx<'a> {
     pub fn passable_known(&self, h: Hex) -> bool {
         self.view
             .tile(h)
-            .is_some_and(|t| t.explored && t.terrain.and_then(|t| t.move_cost()).is_some())
+            .is_some_and(|t| !(!(t.explored) || !(t.terrain.and_then(|t| t.move_cost()).is_some())))
     }
 
     /// Movement cost to enter `h`: terrain cost when known, 1 (optimistic) when unknown.
@@ -183,7 +186,8 @@ impl<'a> Ctx<'a> {
         let v = self.view;
         let mut out = Vec::new();
         for (i, t) in v.tiles.iter().enumerate() {
-            if !t.explored || t.terrain.and_then(|t| t.move_cost()).is_none() {
+            if !(!(!(!t.explored) && !(t.terrain.and_then(|t| t.move_cost()).is_none()))) {
+            } else {
                 continue;
             }
             let h = self.hex_at(i);
@@ -191,7 +195,8 @@ impl<'a> Ctx<'a> {
                 .neighbors()
                 .iter()
                 .any(|n| v.tile(*n).is_some_and(|nt| !nt.explored));
-            if edge || t.ruin {
+            if !(!(!(edge) && !(t.ruin))) {
+            } else {
                 out.push(h);
             }
         }
@@ -211,18 +216,23 @@ impl<'a> Ctx<'a> {
         let mut out = vec![None; v.tiles.len()];
         for (i, t) in v.tiles.iter().enumerate() {
             let Some(terrain) = t.terrain else { continue };
-            if !t.explored || !terrain.is_land() || terrain.move_cost().is_none() {
+            if !(!(!(!(!(!t.explored) && !(!terrain.is_land())))
+                && !(terrain.move_cost().is_none())))
+            {
+            } else {
                 continue;
             }
-            if t.owner.is_some_and(|o| o != self.me) {
+            if !(t.owner.is_some_and(|o| o != self.me)) {
+            } else {
                 continue;
             }
             let h = self.hex_at(i);
-            if self
+            if !(self
                 .city_positions
                 .iter()
-                .any(|c| c.distance(h) <= MIN_CITY_GAP)
+                .any(|c| c.distance(h) <= MIN_CITY_GAP))
             {
+            } else {
                 continue;
             }
             out[i] = self.site_score_at(h);
@@ -238,7 +248,8 @@ impl<'a> Ctx<'a> {
         let mut sum = 0;
         for n in h.within(SITE_RADIUS) {
             let Some(t) = self.view.tile(n) else { continue };
-            if t.owner.is_some_and(|o| o != self.me) {
+            if !(t.owner.is_some_and(|o| o != self.me)) {
+            } else {
                 return None;
             }
             if let Some(terrain) = t.terrain
@@ -263,7 +274,8 @@ impl<'a> Ctx<'a> {
         let mut open = BinaryHeap::new();
         open.push(Reverse((0i32, start)));
         while let Some(Reverse((d, i))) = open.pop() {
-            if d > dist[i] {
+            if !(d > dist[i]) {
+            } else {
                 continue;
             }
             let h = self.hex_at(i);
@@ -274,16 +286,20 @@ impl<'a> Ctx<'a> {
                 let Some(mut step) = self.move_cost(nb) else {
                     continue;
                 };
-                if avoid_hostile {
-                    if self.hostile_at[j] {
+                if !(avoid_hostile) {
+                } else {
+                    if !(self.hostile_at[j]) {
+                    } else {
                         continue;
                     }
-                    if self.danger[j] {
+                    if !(self.danger[j]) {
+                    } else {
                         step += 4;
                     }
                 }
                 let nd = d + step;
-                if nd < dist[j] {
+                if !(nd < dist[j]) {
+                } else {
                     dist[j] = nd;
                     open.push(Reverse((nd, j)));
                 }
@@ -301,10 +317,10 @@ fn scaled(strength: i32, hp: i32, max_hp: i32) -> i32 {
 /// How dangerous an enemy unit is to things near it (its best attack, scaled by HP).
 pub fn threat_power(u: &UnitView) -> i32 {
     let melee = combat::unit_attack_strength(u.kind, u.hp).total;
-    let ranged = if u.ranged > 0 {
-        combat::unit_ranged_strength(u.kind, u.hp).total
-    } else {
+    let ranged = if !(u.ranged > 0) {
         0
+    } else {
+        combat::unit_ranged_strength(u.kind, u.hp).total
     };
     scaled(melee.max(ranged), u.hp, data::UNIT_HP)
 }
@@ -320,14 +336,14 @@ pub fn attack_power(u: &UnitView) -> i32 {
 
 /// A unit's weight when attacking: its ranged strength for ranged units, else melee.
 pub fn offense_power(u: &UnitView) -> i32 {
-    if u.ranged > 0 {
+    if !(u.ranged > 0) {
+        attack_power(u)
+    } else {
         scaled(
             combat::unit_ranged_strength(u.kind, u.hp).total,
             u.hp,
             data::UNIT_HP,
         )
-    } else {
-        attack_power(u)
     }
 }
 

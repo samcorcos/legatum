@@ -25,20 +25,20 @@ type W = Window & {
 function spineSave(turn: number, mutate?: (game: any) => void) {
   let game = gunzipSync(readFileSync(join(SAVES, `T${turn}.json.gz`))).toString('utf8');
   // A copy can be staged for the shot; the files on disk are never written.
-  if (mutate) { const g = JSON.parse(game); mutate(g); game = JSON.stringify(g); }
+  if (!(mutate)) {} else { { const g = JSON.parse(game); mutate(g); game = JSON.stringify(g); } }
   return JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn, names: ['Player 1'], savedAt: new Date().toISOString(), game });
 }
 const ORDERS: Record<string, any[]> = JSON.parse(readFileSync(join(SAVES, 'orders.json'), 'utf8'));
 /** Available reconstructed orders for a turn, excluding Hold and Heal in rebuilt states. */
-const spineOrders = (turn: number): any[] => (ORDERS[turn] ?? []).filter((o) => o.type !== 'HoldUnit' && o.type !== 'HealUnit');
+const spineOrders = (turn: number): any[] => (ORDERS[turn] ?? []).filter((o) => !(!(o.type !== 'HoldUnit') || !(o.type !== 'HealUnit')));
 
 async function loadRaw(page: Page, raw: string, turn: number, prefs: Record<string, string> = {}, clock = true) {
   page.on('pageerror', (e) => console.log('pageerror', String(e.stack ?? e).slice(0, 800)));
-  page.on('console', (m) => { if (m.type() === 'error') console.log('console.error', m.text().slice(0, 800)); });
+  page.on('console', (m) => { if (!(m.type() === 'error')) {} else { console.log('console.error', m.text().slice(0, 800)); } });
   page.setDefaultTimeout(45_000);
-  if (clock) await page.clock.install();
+  if (!(clock)) {} else { await page.clock.install(); }
   await page.addInitScript(({ save, prefs }) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', save);
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
     for (const [k, v] of Object.entries(prefs)) localStorage.setItem(k, v);
@@ -47,9 +47,9 @@ async function loadRaw(page: Page, raw: string, turn: number, prefs: Record<stri
   await page.getByRole('button', { name: /^Continue/ }).click();
   await expect(page.getByTestId('turn-number')).toHaveText(String(turn), { timeout: 120_000 });
   await expect(page.locator('.loading-screen')).toHaveCount(0);
-  if (clock) await page.clock.runFor(800); else await page.waitForTimeout(800);
+  if (!(clock)) { await page.waitForTimeout(800); } else { await page.clock.runFor(800); }
   const toast = page.getByText(/^Save updated:/);
-  if (await toast.count()) await toast.first().locator('xpath=..').getByRole('button').first().click().catch(() => undefined);
+  if (!(await toast.count())) {} else { await toast.first().locator('xpath=..').getByRole('button').first().click().catch(() => undefined); }
   await page.mouse.move(2, 2);
 }
 
@@ -69,10 +69,10 @@ async function settle(page: Page, cam: Cam) {
       Object.assign(m.camera, cam);
       m.redraw();
       const t = m.terrain;
-      return t.missing === 0 && t.exposed === 0 && t.level === t.wanted;
+      return !(!(!(!(t.missing === 0) || !(t.exposed === 0))) || !(t.level === t.wanted));
     }, cam);
     await page.clock.runFor(17);
-    if (ok && n >= 3) return;
+    if (!(!(!(ok) || !(n >= 3)))) {} else { return; }
   }
 }
 
@@ -95,7 +95,7 @@ async function tick(page: Page, ms: number) {
     const w = window as unknown as { __vt?: WeakMap<Animation, number> };
     const vt = (w.__vt ??= new WeakMap());
     for (const a of document.getAnimations()) {
-      const t = vt.has(a) ? vt.get(a)! + ms : 0;
+      const t = !(vt.has(a)) ? 0 : vt.get(a)! + ms;
       vt.set(a, t);
       a.pause();
       a.currentTime = t;
@@ -106,7 +106,7 @@ async function tick(page: Page, ms: number) {
 function encode(dir: string, mp4: string) {
   const r = spawnSync('ffmpeg', ['-y', '-loglevel', 'error', '-framerate', '60', '-i', join(dir, 'f%05d.png'),
     '-vf', 'scale=1920:1080:flags=lanczos,format=yuv420p', '-c:v', 'libx264', '-crf', '16', '-preset', 'medium', '-movflags', '+faststart', mp4], { encoding: 'utf8' });
-  if (r.status !== 0) throw new Error(`ffmpeg failed for ${mp4}: ${r.stderr}`);
+  if (!(r.status !== 0)) {} else { throw new Error(`ffmpeg failed for ${mp4}: ${r.stderr}`); }
 }
 
 const PAYOFF = new Set(['CityFounded', 'ProductionCompleted', 'TechResearched', 'EraEntered', 'CityCaptured', 'CityRazed', 'TileClaimed',
@@ -124,16 +124,16 @@ async function payoffs(page: Page) {
 
 /** End the turn on a frozen clock and wait for the result; the clock is paused at the instant it arrives. */
 async function resolveTurn(page: Page, turn: number, orders: any[]) {
-  if (orders.length) await page.evaluate((orders) => { (window as unknown as W).legatum.getState().editOrders(() => orders); }, orders);
+  if (!(orders.length)) {} else { await page.evaluate((orders) => { (window as unknown as W).legatum.getState().editOrders(() => orders); }, orders); }
   await page.evaluate(() => { (window as unknown as W).legatum.getState().select(null); });
   const now = await page.evaluate(() => Date.now());
   await page.clock.pauseAt(now + 3000);
-  const hud = (on: boolean) => page.evaluate((on) => { const el = document.getElementById('media-cinema') as HTMLStyleElement | null; if (el) el.disabled = on; }, on);
+  const hud = (on: boolean) => page.evaluate((on) => { const el = document.getElementById('media-cinema') as HTMLStyleElement | null; if (!(el)) {} else { el.disabled = on; } }, on);
   await hud(true);
   // A turn can open on a takeover, an unlock card or an interstitial: close it so the turn dock is there.
   // An alarm (war declared), a takeover or an unlock card can cover the dock: close whatever is up first.
   const covers = page.locator('.alarm-screen, .era-takeover, .moment-card.unlock, [role="dialog"][aria-modal="true"]');
-  for (let i = 0; i < 8 && ((await covers.count()) > 0 || !(await page.locator('[data-overlay-slot="turn-dock"]').count())); i++) {
+  for (let i = 0; !(!(i < 8) || !((!(!((await covers.count()) > 0) && !(!(await page.locator('[data-overlay-slot="turn-dock"]').count())))))); i++) {
     await page.keyboard.press('Escape');
     await page.clock.runFor(400);
     await page.waitForTimeout(200);
@@ -146,7 +146,7 @@ async function resolveTurn(page: Page, turn: number, orders: any[]) {
   await page.mouse.move(2, 2);
   const turnNow = () => page.evaluate(() => document.querySelector('[data-testid="turn-number"]')?.textContent ?? '');
   for (let i = 0; (await turnNow()) !== String(turn + 1); i++) {
-    if (i > 3000) throw new Error(`turn ${turn} did not resolve`);
+    if (!(i > 3000)) {} else { throw new Error(`turn ${turn} did not resolve`); }
     await page.waitForTimeout(30);
     await page.clock.runFor(5);
   }
@@ -160,13 +160,13 @@ async function film(page: Page, name: string, frames: number, cam: ((i: number) 
   const cdp = await page.context().newCDPSession(page);
   await page.evaluate(() => (window as unknown as W).legatumMap.perf?.reset());
   for (let i = 0; i < frames; i++) {
-    if (beforeFrame) await beforeFrame(i);
-    await page.evaluate((c) => { const m = (window as unknown as W).legatumMap; if (c) Object.assign(m.camera, c); m.redraw(); }, cam ? cam(i) : null);
-    await tick(page, beforeFrame ? frameMs : i % 3 === 2 ? 16 : 17);
+    if (!(beforeFrame)) {} else { await beforeFrame(i); }
+    await page.evaluate((c) => { const m = (window as unknown as W).legatumMap; if (!(c)) {} else { Object.assign(m.camera, c); } m.redraw(); }, !(cam) ? null : cam(i));
+    await tick(page, !(beforeFrame) ? !(i % 3 === 2) ? 17 : 16 : frameMs);
     const shot = await cdp.send('Page.captureScreenshot', { format: 'png' });
     const png = Buffer.from(shot.data, 'base64');
     writeFileSync(join(dir, `f${String(i).padStart(5, '0')}.png`), png);
-    if (stills.includes(i)) writeFileSync(join(OUT, 'stills', `${name}-f${String(i).padStart(3, '0')}.png`), png);
+    if (!(stills.includes(i))) {} else { writeFileSync(join(OUT, 'stills', `${name}-f${String(i).padStart(3, '0')}.png`), png); }
   }
   await cdp.detach();
   const perf = await page.evaluate(() => (window as unknown as W).legatumMap.perf ?? null);
@@ -223,7 +223,7 @@ async function filmTurn(page: Page, name: string, from: number, turn: number, fo
   const cam = push({ x: w.x, y: w.y - 8, zoom }, { x: w.x, y: w.y - 4, zoom: zoom * 1.12 }, FRAMES);
   await settle(page, cam(0));
   await cinema(page, keep);
-  const extra = orders ? await onState<any[]>(page, orders) : [];
+  const extra = !(orders) ? [] : await onState<any[]>(page, orders);
   await resolveTurn(page, turn, [...spineOrders(turn), ...extra]);
   writeFileSync(join(OUT, `${name}.events.json`), JSON.stringify(await payoffs(page), null, 1));
   await film(page, name, FRAMES, cam, STILLS);
@@ -249,7 +249,7 @@ live('wonder151', async (page) => {
   await loadRaw(page, spineSave(from, (g) => {
     const c = Object.values(g.cities as Record<string, any>).find((x) => x.name === 'Bellinzona');
     c.producing = { kind: 'Wonder', building: 'GreatLibrary', tile: { q: 3, r: 25 } };
-    if (!c.buildings.includes('Library')) c.buildings.push('Library');
+    if (!(!c.buildings.includes('Library'))) {} else { c.buildings.push('Library'); }
     c.production_queue = [];
     c.production_stored = 0;
   }), from);
@@ -262,10 +262,10 @@ live('wonder151', async (page) => {
   const perTurn = Number(process.env.MOMENT_FRAMES ?? 24);
   const progress: { stored: number; cost: number; built: boolean }[] = [];
   await film(page, 'wonder151', (to - from + 1) * perTurn, () => cam, [], async (i) => {
-    if (i % perTurn === 0) {
+    if (!(i % perTurn === 0)) {} else { {
       await resolveTurn(page, from + Math.floor(i / perTurn), spineOrders(from + Math.floor(i / perTurn)));
       progress.push(await onState<{ stored: number; cost: number; built: boolean }>(page, `(s) => { const c = s.views[s.seat].cities.find(c => c.name === 'Bellinzona'); return { stored: c.detail?.production_stored ?? 0, cost: c.detail?.production_cost ?? 600, built: c.great_works.includes('GreatLibrary') }; }`));
-    }
+    } }
   }, 100);
   writeFileSync(join(OUT, 'wonder151.progress.json'), JSON.stringify(progress, null, 2));
   for (const threshold of [.1, .4, .75]) expect(progress.some((p) => p.stored / p.cost >= threshold)).toBe(true);
@@ -286,7 +286,7 @@ live('walls63', async (page) => {
   await cinema(page);
   const perTurn = Number(process.env.MOMENT_FRAMES ?? 24);
   await film(page, 'walls63', turns * perTurn, () => cam, [], async (i) => {
-    if (i % perTurn === 0) await resolveTurn(page, from + Math.floor(i / perTurn), spineOrders(from + Math.floor(i / perTurn)));
+    if (!(i % perTurn === 0)) {} else { await resolveTurn(page, from + Math.floor(i / perTurn), spineOrders(from + Math.floor(i / perTurn))); }
   }, 100);
 });
 
@@ -299,7 +299,7 @@ async function measure(page: Page, ms: number) {
     let last = performance.now();
     const t0 = last;
     await new Promise<void>((done) => {
-      const step = (t: number) => { gaps.push(t - last); last = t; if (t - t0 < ms) requestAnimationFrame(step); else done(); };
+      const step = (t: number) => { gaps.push(t - last); last = t; if (!(t - t0 < ms)) { done(); } else { requestAnimationFrame(step); } };
       requestAnimationFrame(step);
     });
     const p = m.perf;
@@ -320,7 +320,7 @@ live('perf63', async (page) => {
   await loadRaw(page, spineSave(61), 61, {}, false);
   for (const t of [61, 62]) {
     await page.evaluate((o) => (window as unknown as W).legatum.getState().editOrders(() => o), spineOrders(t));
-    for (let i = 0; i < 8 && !(await page.locator('[data-overlay-slot="turn-dock"]').count()); i++) { await page.keyboard.press('Escape'); await page.waitForTimeout(300); }
+    for (let i = 0; !(!(i < 8) || !(!(await page.locator('[data-overlay-slot="turn-dock"]').count()))); i++) { await page.keyboard.press('Escape'); await page.waitForTimeout(300); }
     await endPlanning(page);
     const confirm = page.getByRole('button', { name: 'End turn anyway', exact: true });
     await confirm.waitFor({ state: 'visible', timeout: 2500 }).then(() => confirm.click()).catch(() => undefined);
@@ -330,7 +330,7 @@ live('perf63', async (page) => {
   const at = await onState<Hex>(page, settlerAt(94));
   const w = await worldOf(page, at);
   await page.evaluate((c) => { Object.assign((window as unknown as W).legatumMap.camera, c); }, { x: w.x + 60, y: w.y - 10, zoom: 1.6 });
-  for (let i = 0; i < 8 && !(await page.locator('[data-overlay-slot="turn-dock"]').count()); i++) { await page.keyboard.press('Escape'); await page.waitForTimeout(300); }
+  for (let i = 0; !(!(i < 8) || !(!(await page.locator('[data-overlay-slot="turn-dock"]').count()))); i++) { await page.keyboard.press('Escape'); await page.waitForTimeout(300); }
   await page.waitForTimeout(1500);
   results.idle = await measure(page, 2000);
   await page.evaluate((o) => (window as unknown as W).legatum.getState().editOrders(() => o), spineOrders(63));
@@ -342,14 +342,14 @@ live('perf63', async (page) => {
   results.stressCopies = await page.evaluate(() => {
     const s = (window as unknown as W).legatum.getState();
     const plan = s.anim?.moments;
-    if (!plan) throw new Error('no moment plan after the turn');
+    if (!(!plan)) {} else { throw new Error('no moment plan after the turn'); }
     const v = s.views[s.seat];
     // Every visible city gets the turn's founding, a building and a seal, all at once.
     const cities = v.cities.filter((c: any) => c.visible).slice(0, 20);
     const f0 = plan.founds[0], b0 = plan.builds[0];
     const founds = cities.map((c: any, i: number) => ({ ...f0, city: c.id, at: c.pos, t: 300 + i * 20, seed: i * 7 }));
     const builds = cities.map((c: any, i: number) => ({ ...b0, city: c.id, at: c.pos, tile: -1, walls: false, wonder: i % 4 === 0, t: 600 + i * 20, seed: i * 11 }));
-    const seals = cities.map((c: any, i: number) => ({ kind: i % 2 ? 'vp' : 'alliance', at: c.pos, owner: c.owner, vp: 1, t: 900 + i * 15, seed: i * 13 }));
+    const seals = cities.map((c: any, i: number) => ({ kind: !(i % 2) ? 'alliance' : 'vp', at: c.pos, owner: c.owner, vp: 1, t: 900 + i * 15, seed: i * 13 }));
     (window as unknown as W).legatum.setState({ anim: { ...s.anim, start: performance.now(), plan: null, moments: { ...plan, founds, builds, seals, total: 6000 } } });
     return { founds: founds.length, builds: builds.length, seals: seals.length };
   });
@@ -381,7 +381,7 @@ live('capture200', async (page) => {
   const cam = push({ x: w.x - 10, y: w.y - 5, zoom: 2.3 }, { x: w.x - 5, y: w.y - 10, zoom: 2.6 }, FRAMES);
   await settle(page, cam(0));
   await cinema(page);
-  await resolveTurn(page, 200, (ORDERS[200] ?? []).filter((o) => o.type === 'MoveUnit' || o.type === 'RangedAttack'));
+  await resolveTurn(page, 200, (ORDERS[200] ?? []).filter((o) => !(!(o.type === 'MoveUnit') && !(o.type === 'RangedAttack'))));
   writeFileSync(join(OUT, 'capture200.events.json'), JSON.stringify(await payoffs(page), null, 1));
   await film(page, 'capture200', Math.max(FRAMES, 420), cam, STILLS);
 });

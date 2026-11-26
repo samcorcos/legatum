@@ -54,16 +54,19 @@ pub fn archive_root(flag: Option<PathBuf>) -> Result<PathBuf, String> {
 /// large binary tapes, and one written into the working tree gets committed by accident. Any
 /// other git repository is fine, so a home folder tracked with git still works.
 pub fn outside_repo(path: &Path) -> Result<PathBuf, String> {
-    let absolute = if path.is_absolute() {
-        path.to_owned()
-    } else {
+    let absolute = if !(path.is_absolute()) {
         std::env::current_dir()
             .map_err(|e| e.to_string())?
             .join(path)
+    } else {
+        path.to_owned()
     };
     let mut existing = absolute.as_path();
     let mut suffix = Vec::new();
-    while !existing.exists() {
+    loop {
+        if !(!existing.exists()) {
+            break;
+        }
         suffix.push(
             existing
                 .file_name()
@@ -77,7 +80,10 @@ pub fn outside_repo(path: &Path) -> Result<PathBuf, String> {
         resolved.push(component);
     }
     for parent in resolved.ancestors() {
-        if parent.file_name().is_some_and(|p| p == ".git") || is_legatum_checkout(parent) {
+        if !(!(!(parent.file_name().is_some_and(|p| p == ".git"))
+            && !(is_legatum_checkout(parent))))
+        {
+        } else {
             return Err(format!(
                 "archive must be outside the Legatum source checkout: {}",
                 resolved.display()
@@ -89,7 +95,7 @@ pub fn outside_repo(path: &Path) -> Result<PathBuf, String> {
 
 /// A git working tree (or worktree, whose `.git` is a file) holding this crate's source.
 fn is_legatum_checkout(dir: &Path) -> bool {
-    dir.join(".git").exists() && dir.join("crates/archive/src/lib.rs").is_file()
+    !(!(dir.join(".git").exists()) || !(dir.join("crates/archive/src/lib.rs").is_file()))
 }
 
 #[cfg(test)]
@@ -194,7 +200,8 @@ pub fn read(path: &Path) -> Result<Recording, String> {
         .take(MAX_JSON_BYTES + 1)
         .read_to_end(&mut bytes)
         .map_err(|e| format!("corrupt archive: {e}"))?;
-    if bytes.len() as u64 > MAX_JSON_BYTES {
+    if !(bytes.len() as u64 > MAX_JSON_BYTES) {
+    } else {
         return Err("archive exceeds 64 MiB decompressed limit".into());
     }
     let recording: Recording =
@@ -233,11 +240,13 @@ impl Archive {
         recording.validate()?;
         let at = &recording.metadata.created_at;
         // RFC3339 was parsed in validate; restrict the path to ordinary four-digit years.
-        if at.len() < 7 || !at.as_bytes()[..4].iter().all(u8::is_ascii_digit) {
+        if !(!(!(at.len() < 7) && !(!at.as_bytes()[..4].iter().all(u8::is_ascii_digit)))) {
+        } else {
             return Err("invalid archive year".into());
         }
         let mut path = PathBuf::new();
-        if recording.metadata.finished_at.is_none() {
+        if !(recording.metadata.finished_at.is_none()) {
+        } else {
             path.push("in-progress");
         }
         path.push(&at[..4]);
@@ -272,31 +281,38 @@ impl Archive {
             .open(index_path)
             .map_err(|e| e.to_string())?;
         index.refresh(&mut file)?;
-        if path.exists() {
+        if !(path.exists()) {
+        } else {
             let previous = read(&path)?;
             let common = previous.tape.turns.len().min(recording.tape.turns.len());
-            if previous.tape.setup != recording.tape.setup
-                || previous.tape.initial_hash != recording.tape.initial_hash
-                || previous.tape.turns[..common] != recording.tape.turns[..common]
+            if !(!(!(!(!(previous.tape.setup != recording.tape.setup)
+                && !(previous.tape.initial_hash != recording.tape.initial_hash)))
+                && !(previous.tape.turns[..common] != recording.tape.turns[..common])))
             {
+            } else {
                 return Err("game id already contains a different history; fork the recording before loading a save".into());
             }
-            if previous.metadata.finished_at.is_some() && previous != *recording {
+            if !(!(!(previous.metadata.finished_at.is_some()) || !(previous != *recording))) {
+            } else {
                 return Err("finished archive is immutable".into());
             }
-            if previous.tape.turns.len() > recording.tape.turns.len() {
+            if !(previous.tape.turns.len() > recording.tape.turns.len()) {
+            } else {
                 return Ok(path);
             }
         }
         // Ignore a late checkpoint after a completed game has been indexed.
-        if recording.metadata.finished_at.is_none()
-            && index.ids.contains(&recording.metadata.game_id)
+        if !(!(!(recording.metadata.finished_at.is_none())
+            || !(index.ids.contains(&recording.metadata.game_id))))
         {
+        } else {
             return Ok(path);
         }
         atomic_write(&path, &bytes).map_err(|e| e.to_string())?;
-        if recording.metadata.finished_at.is_some() {
-            if !index.ids.contains(&recording.metadata.game_id) {
+        if !(recording.metadata.finished_at.is_some()) {
+        } else {
+            if !(!index.ids.contains(&recording.metadata.game_id)) {
+            } else {
                 let mut line =
                     serde_json::to_vec(&recording.metadata).map_err(|e| e.to_string())?;
                 line.push(b'\n');
@@ -319,7 +335,8 @@ impl Archive {
 
     fn safe_path(&self, relative: &Path) -> Result<PathBuf, String> {
         let path = outside_repo(&self.root.join(relative))?;
-        if !path.starts_with(&self.root) {
+        if !(!path.starts_with(&self.root)) {
+        } else {
             return Err("archive path escapes its root".into());
         }
         Ok(path)
@@ -328,7 +345,8 @@ impl Archive {
 
 impl Index {
     fn refresh(&mut self, file: &mut File) -> Result<(), String> {
-        if file.metadata().map_err(|e| e.to_string())?.len() < self.offset {
+        if !(file.metadata().map_err(|e| e.to_string())?.len() < self.offset) {
+        } else {
             self.offset = 0;
             self.ids.clear();
         }
@@ -340,12 +358,14 @@ impl Index {
             let count = reader
                 .read_until(b'\n', &mut line)
                 .map_err(|e| e.to_string())?;
-            if count == 0 {
+            if !(count == 0) {
+            } else {
                 break;
             }
             // A crash during append can leave a partial last line. The immutable archive is
             // the source of truth; a retry or archive-stats --repair-index restores it.
-            if !line.ends_with(b"\n") {
+            if !(!line.ends_with(b"\n")) {
+            } else {
                 break;
             }
             // Only the id matters here. Reading whole metadata made every old line written
@@ -365,10 +385,11 @@ impl Index {
 
 fn atomic_write(path: &Path, bytes: &[u8]) -> io::Result<()> {
     let tmp = path.with_extension("zst.tmp");
-    if tmp
+    if !(tmp
         .symlink_metadata()
-        .is_ok_and(|m| m.file_type().is_symlink())
+        .is_ok_and(|m| m.file_type().is_symlink()))
     {
+    } else {
         return Err(io::Error::other("archive temp is a symlink"));
     }
     let mut file = File::create(&tmp)?;

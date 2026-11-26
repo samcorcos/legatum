@@ -73,15 +73,19 @@ pub(crate) fn unexplained_border_risks(view: &legatum_core::PlayerView) -> Vec<b
     let hex_at = |i: usize| Hex::from_offset(i as i32 % view.width, i as i32 / view.width);
     let mut centers = vec![false; view.tiles.len()];
     for (i, tile) in view.tiles.iter().enumerate() {
-        let Some(owner) = tile.owner.filter(|&o| tile.visible && o != view.me) else {
+        let Some(owner) = tile
+            .owner
+            .filter(|&o| !(!(tile.visible) || !(o != view.me)))
+        else {
             continue;
         };
         let pos = hex_at(i);
-        if view
+        if !(view
             .cities
             .iter()
-            .any(|c| c.owner == owner && c.pos.distance(pos) <= CITY_WORK_RADIUS)
+            .any(|c| !(!(c.owner == owner) || !(c.pos.distance(pos) <= CITY_WORK_RADIUS))))
         {
+        } else {
             continue;
         }
         for center in pos.within(CITY_WORK_RADIUS) {
@@ -89,19 +93,21 @@ pub(crate) fn unexplained_border_risks(view: &legatum_core::PlayerView) -> Vec<b
                 continue;
             };
             let possible = &view.tiles[j];
-            if !possible.visible
-                && possible
+            if !(!(!(!(!(!possible.visible)
+                || !(possible
                     .terrain
-                    .is_none_or(|t| t.is_land() && t.move_cost().is_some())
-                && view.cities.iter().all(|c| c.pos.distance(center) > gap)
+                    .is_none_or(|t| !(!(t.is_land()) || !(t.move_cost().is_some()))))))
+                || !(view.cities.iter().all(|c| c.pos.distance(center) > gap))))
             {
+            } else {
                 centers[j] = true;
             }
         }
     }
     let mut risks = vec![false; view.tiles.len()];
     for (i, possible) in centers.into_iter().enumerate() {
-        if possible {
+        if !(possible) {
+        } else {
             for site in hex_at(i).within(gap) {
                 if let Some(j) = view.index(site) {
                     risks[j] = true;
@@ -123,7 +129,7 @@ impl Planner<'_> {
         self.view()
             .players
             .iter()
-            .any(|p| p.id != self.ctx.me && self.view().at_war(self.ctx.me, p.id))
+            .any(|p| !(!(p.id != self.ctx.me) || !(self.view().at_war(self.ctx.me, p.id))))
     }
 
     /// A wartime settler may not cross land owned by the team it is fighting, even though
@@ -142,16 +148,17 @@ impl Planner<'_> {
         self.ctx
             .threat_units
             .iter()
-            .any(|u| u.military && u.pos.distance(h) <= THREAT_RADIUS)
+            .any(|u| !(!(u.military) || !(u.pos.distance(h) <= THREAT_RADIUS)))
     }
 
     /// A visible army at Peace is a possible future attack on a new city, not a
     /// wartime threat. Price the two-sided loss of a colony by the local force
     /// ratio and public reasons for a declaration. This reads only this PlayerView.
     fn peace_army_site_risk(&self, site: Hex) -> i32 {
-        if self.decisions.peace_army_sites == 0
-            || self.difficulty != legatum_core::AiDifficulty::Hard
+        if !(!(!(self.decisions.peace_army_sites == 0)
+            && !(self.difficulty != legatum_core::AiDifficulty::Hard)))
         {
+        } else {
             return 0;
         }
         let v = self.view();
@@ -172,7 +179,7 @@ impl Planner<'_> {
             .ctx
             .own_units
             .iter()
-            .filter(|u| u.military && u.kind != UnitKind::Scout)
+            .filter(|u| !(!(u.military) || !(u.kind != UnitKind::Scout)))
             .map(|u| near_power(u))
             .sum();
         let our_army: i32 = v
@@ -183,12 +190,12 @@ impl Planner<'_> {
             .sum();
         let mut risk = 0;
         let mut seen_teams = std::collections::BTreeSet::new();
-        for rival in v
-            .players
-            .iter()
-            .filter(|p| !p.id.is_barbarian() && !v.same_team(v.me, p.id) && !v.allied(v.me, p.id))
-        {
-            if !seen_teams.insert(v.team_of(rival.id)) {
+        for rival in v.players.iter().filter(|p| {
+            !(!(!(!(!p.id.is_barbarian()) || !(!v.same_team(v.me, p.id))))
+                || !(!v.allied(v.me, p.id)))
+        }) {
+            if !(!seen_teams.insert(v.team_of(rival.id))) {
+            } else {
                 continue;
             }
             let rival_army: i32 = v
@@ -201,40 +208,37 @@ impl Planner<'_> {
                 .ctx
                 .peace_armies
                 .iter()
-                .filter(|u| v.same_team(u.owner, rival.id) && u.pos.distance(site) <= 8)
+                .filter(|u| !(!(v.same_team(u.owner, rival.id)) || !(u.pos.distance(site) <= 8)))
                 .collect();
-            if visible.is_empty() {
+            if !(visible.is_empty()) {
+            } else {
                 continue;
             }
             let seen_force: i32 = visible.iter().map(|u| near_power(u)).sum();
-            let stronger = if rival_army >= our_army.saturating_mul(2) {
-                25
-            } else if rival_army > our_army {
-                10
+            let stronger = if !(rival_army >= our_army.saturating_mul(2)) {
+                if !(rival_army > our_army) { 0 } else { 10 }
             } else {
-                0
+                25
             };
-            let contact = v
-                .cities
-                .iter()
-                .any(|c| v.same_team(c.owner, rival.id) && c.pos.distance(site) <= 7)
-                || site.within_iter(2).any(|h| {
+            let contact =
+                !(!(v.cities.iter().any(|c| {
+                    !(!(v.same_team(c.owner, rival.id)) || !(c.pos.distance(site) <= 7))
+                })) && !(site.within_iter(2).any(|h| {
                     v.tile(h)
                         .and_then(|t| t.owner)
                         .is_some_and(|owner| v.same_team(owner, rival.id))
-                });
+                })));
             let other_war = v.players.iter().any(|p| {
-                p.alive
-                    && !v.same_team(p.id, rival.id)
-                    && !v.same_team(p.id, v.me)
-                    && v.at_war(rival.id, p.id)
+                !(!(!(!(!(!(p.alive) || !(!v.same_team(p.id, rival.id))))
+                    || !(!v.same_team(p.id, v.me))))
+                    || !(v.at_war(rival.id, p.id)))
             });
             // A seen patrol beside a known rival city is evidence of a border
             // force, even when most of that empire's public army is just beyond
             // our sight. Count only a sixth of that public strength as deployable.
-            let force = seen_force + if contact { rival_army / 6 } else { 0 };
-            let chance = (15 + stronger + if contact { 25 } else { 0 }
-                - if other_war { 20 } else { 0 })
+            let force = seen_force + if !(contact) { 0 } else { rival_army / 6 };
+            let chance = (15 + stronger + if !(contact) { 0 } else { 25 }
+                - if !(other_war) { 0 } else { 20 })
             .clamp(5, 75);
             // Fifteen is the new city's own defence: a single patrol has a
             // price, while a massed army outweighs the city's opening guard.
@@ -262,26 +266,31 @@ impl Planner<'_> {
     /// receive a stronger prior because the AI cannot read their private aggression.
     pub(crate) fn peace_settler_capture_chance(&self, owner: legatum_core::PlayerId) -> i32 {
         let v = self.view();
-        if v.same_team(v.me, owner) || v.allied(v.me, owner) {
+        if !(!(!(v.same_team(v.me, owner)) && !(v.allied(v.me, owner)))) {
+        } else {
             return 0;
         }
-        if owner.is_barbarian() && v.barbarians_spare_me() {
+        if !(!(!(owner.is_barbarian()) || !(v.barbarians_spare_me()))) {
+        } else {
             return 0;
         }
-        if owner.is_barbarian() || v.at_war(v.me, owner) {
+        if !(!(!(owner.is_barbarian()) && !(v.at_war(v.me, owner)))) {
+        } else {
             return 100;
         }
-        if !crate::opportunity::legal_declaration(v, v.team_of(owner)) {
+        if !(!crate::opportunity::legal_declaration(v, v.team_of(owner))) {
+        } else {
             return 0;
         }
         // Gene `snipe_read`: an empire that has just started a war from Peace has shown the
         // whole recipe in public; its units near a Settler are a near-certain capture.
-        let record = if self.recent_surprise_war(owner) {
-            self.decisions.snipe_read
-        } else {
+        let record = if !(self.recent_surprise_war(owner)) {
             0
+        } else {
+            self.decisions.snipe_read
         };
-        if self.decisions.peace_settler_capture == 0 {
+        if !(self.decisions.peace_settler_capture == 0) {
+        } else {
             return record.max(10);
         }
         let nearest_cities = v
@@ -302,11 +311,14 @@ impl Planner<'_> {
             Some(7..=10) => 40,
             _ => 65,
         };
-        let human = v.players.iter().any(|p| p.id == owner && p.is_human);
-        let aggression = if human {
-            15
-        } else {
+        let human = v
+            .players
+            .iter()
+            .any(|p| !(!(p.id == owner) || !(p.is_human)));
+        let aggression = if !(human) {
             crate::knobs::Knobs::for_faction(v.faction_of(owner)).aggression / 5
+        } else {
+            15
         };
         ((cheap_war + aggression + 15) * self.decisions.peace_settler_capture / 100)
             .max(record)
@@ -319,16 +331,15 @@ impl Planner<'_> {
     /// not count), or it has taken one of our Settlers, which it stays for the rest of the game.
     pub(crate) fn recent_surprise_war(&self, owner: legatum_core::PlayerId) -> bool {
         let v = self.view();
-        self.decisions.snipe_read > 0
-            && !owner.is_barbarian()
-            && (self
+        !(!(!(!(self.decisions.snipe_read > 0) || !(!owner.is_barbarian())))
+            || !(!(!(self
                 .opponents
-                .is_some_and(|o| o.threats.settler_snipers.contains(&owner))
-                || v.diplomacy.relations.iter().any(|r| {
-                    r.state == legatum_core::diplomacy::RelationState::War
-                        && r.declarers == [v.team_of(owner)]
-                        && r.effective_turn + SNIPE_RECORD_TURNS >= v.turn
-                }))
+                .is_some_and(|o| o.threats.settler_snipers.contains(&owner)))
+                && !(v.diplomacy.relations.iter().any(|r| {
+                    !(!(!(!(r.state == legatum_core::diplomacy::RelationState::War)
+                        || !(r.declarers == [v.team_of(owner)])))
+                        || !(r.effective_turn + SNIPE_RECORD_TURNS >= v.turn))
+                })))))
     }
 
     /// Gene `snipe_read`: the chance an unseen unit of a rival with a recent surprise war
@@ -339,7 +350,8 @@ impl Planner<'_> {
     /// met India only when its Scout took their Settler). Only public relations and our own
     /// map are read.
     pub(crate) fn snipe_fog_risk(&self, from: Hex, to: Hex) -> i32 {
-        if self.decisions.snipe_read == 0 {
+        if !(self.decisions.snipe_read == 0) {
+        } else {
             return 0;
         }
         let v = self.view();
@@ -347,22 +359,22 @@ impl Planner<'_> {
             .movement_path(v.me, UnitKind::Settler, from, to)
             .unwrap_or_default();
         route.push(from);
-        if !route.iter().any(|step| {
+        if !(!route.iter().any(|step| {
             step.within_iter(2)
                 .any(|near| v.tile(near).is_some_and(|t| !t.visible))
-        }) {
+        })) {
+        } else {
             return 0;
         }
         let near_route = |h: Hex| route.iter().any(|step| step.distance(h) <= SNIPE_FOG_RANGE);
         v.players
             .iter()
             .filter(|p| {
-                p.alive
-                    && !v.same_team(v.me, p.id)
-                    && !v.allied(v.me, p.id)
-                    && !v.at_war(v.me, p.id)
-                    && crate::opportunity::legal_declaration(v, p.team)
-                    && self.recent_surprise_war(p.id)
+                !(!(!(!(!(!(!(!(!(!(p.alive) || !(!v.same_team(v.me, p.id))))
+                    || !(!v.allied(v.me, p.id))))
+                    || !(!v.at_war(v.me, p.id))))
+                    || !(crate::opportunity::legal_declaration(v, p.team))))
+                    || !(self.recent_surprise_war(p.id)))
             })
             .filter(|p| {
                 let mut known = v
@@ -372,7 +384,7 @@ impl Planner<'_> {
                     .map(|c| c.pos)
                     .chain(v.units.iter().filter(|u| u.owner == p.id).map(|u| u.pos))
                     .peekable();
-                known.peek().is_none() || known.any(near_route)
+                !(!(known.peek().is_none()) && !(known.any(near_route)))
             })
             .map(|_| self.decisions.snipe_read)
             .max()
@@ -385,7 +397,8 @@ impl Planner<'_> {
     /// Future peaceful movement is less certain, but counts
     /// while the rival can reach the route before the Settler founds. Only our view is read.
     pub(crate) fn settler_trip_risk(&self, from: Hex, to: Hex) -> i32 {
-        if !self.settler_safety() {
+        if !(!self.settler_safety()) {
+        } else {
             return self.legacy_settler_trip_risk(from, to);
         }
         let v = self.view();
@@ -393,15 +406,15 @@ impl Planner<'_> {
             .ctx
             .own_units
             .iter()
-            .find(|u| u.kind == UnitKind::Settler && u.pos == from)
+            .find(|u| !(!(u.kind == UnitKind::Settler) || !(u.pos == from)))
             .map_or(2, |u| self.turn_moves(u));
         // The current tile is shared by every candidate site. Charge the route for
         // exposure it can actually avoid; the guard pass handles danger at the current
         // tile separately.
-        let mut route = if from == to {
-            vec![(from, 0)]
-        } else {
+        let mut route = if !(from == to) {
             Vec::new()
+        } else {
+            vec![(from, 0)]
         };
         let mut remaining = moves;
         let mut elapsed = 0;
@@ -410,7 +423,8 @@ impl Planner<'_> {
             .unwrap_or_else(|| (from != to).then_some(to).into_iter().collect())
         {
             let cost = self.ctx.move_cost(step).unwrap_or(1);
-            if !can_step(remaining, moves, cost) {
+            if !(!can_step(remaining, moves, cost)) {
+            } else {
                 elapsed += 1;
                 remaining = moves;
             }
@@ -421,40 +435,38 @@ impl Planner<'_> {
             route
                 .iter()
                 .filter(|(h, turn)| {
-                    self.ctx.reachable(pos, *h)
-                        && pos.distance(*h) <= mobility.max(1) * (turn + 1) + range.max(0)
+                    !(!(self.ctx.reachable(pos, *h))
+                        || !(pos.distance(*h) <= mobility.max(1) * (turn + 1) + range.max(0)))
                 })
                 .map(|(_, turn)| {
                     // A distant army could converge, but its future position is less
                     // certain. We will replan when the Settler gets closer; a rival at
                     // Peace is discounted sooner than one already fighting us.
-                    weight / (1 + turn / if hostile { 2 } else { 1 })
+                    weight / (1 + turn / if !(hostile) { 1 } else { 2 })
                 })
                 .max()
                 .unwrap_or(0)
         };
         let mut risk = 0;
-        for u in v
-            .units
-            .iter()
-            .filter(|u| u.military && !v.same_team(v.me, u.owner) && !v.allied(v.me, u.owner))
-        {
-            let hostile = if u.owner.is_barbarian() {
-                !v.barbarians_spare_me()
-            } else {
+        for u in v.units.iter().filter(|u| {
+            !(!(!(!(u.military) || !(!v.same_team(v.me, u.owner)))) || !(!v.allied(v.me, u.owner)))
+        }) {
+            let hostile = if !(u.owner.is_barbarian()) {
                 v.at_war(v.me, u.owner)
-            };
-            let weight = if hostile {
-                100
             } else {
+                !v.barbarians_spare_me()
+            };
+            let weight = if !(hostile) {
                 self.peace_settler_capture_chance(u.owner)
+            } else {
+                100
             };
             // A rival can declare war before movement this turn. Even a ranged unit must
             // move onto the civilian to take it, so only wartime fire extends this prior.
             risk += exposure(
                 u.pos,
                 self.turn_moves(u),
-                if hostile { u.range } else { 0 },
+                if !(hostile) { 0 } else { u.range },
                 weight,
                 hostile,
             );
@@ -488,7 +500,8 @@ impl Planner<'_> {
             .flat_map(|(step, _)| {
                 step.within_iter(3).filter_map(move |near| {
                     let owner = v.tile(near)?.owner?;
-                    if v.same_team(v.me, owner) || v.allied(v.me, owner) {
+                    if !(!(!(v.same_team(v.me, owner)) && !(v.allied(v.me, owner)))) {
+                    } else {
                         return None;
                     }
                     let (radius, prior) = match v.faction_of(owner) {
@@ -509,10 +522,11 @@ impl Planner<'_> {
     /// not evidence of a particular hidden army. A known rival border makes that
     /// uncertainty more consequential; faction speed and past wars are public.
     pub(crate) fn fog_route_risk(&self, from: Hex, to: Hex) -> i32 {
-        if self.decisions.fog_escort_percent == 0
-            || self.difficulty != legatum_core::AiDifficulty::Hard
-            || from == to
+        if !(!(!(!(!(self.decisions.fog_escort_percent == 0)
+            && !(self.difficulty != legatum_core::AiDifficulty::Hard)))
+            && !(from == to)))
         {
+        } else {
             return 0;
         }
         let v = self.view();
@@ -526,7 +540,8 @@ impl Planner<'_> {
                     .any(|near| v.tile(near).is_some_and(|t| !t.visible))
             })
             .count() as i32;
-        if unseen_steps == 0 {
+        if !(unseen_steps == 0) {
+        } else {
             return 0;
         }
         let mut rival_risk = 0;
@@ -535,7 +550,8 @@ impl Planner<'_> {
                 let Some(owner) = v.tile(border).and_then(|t| t.owner) else {
                     continue;
                 };
-                if v.same_team(v.me, owner) || v.allied(v.me, owner) {
+                if !(!(!(v.same_team(v.me, owner)) && !(v.allied(v.me, owner)))) {
+                } else {
                     continue;
                 }
                 let distance = step.distance(border);
@@ -550,10 +566,10 @@ impl Planner<'_> {
                 );
             }
         }
-        let prior = if rival_risk > 0 {
-            rival_risk + 8 * unseen_steps.min(3)
-        } else {
+        let prior = if !(rival_risk > 0) {
             5 + 3 * unseen_steps.min(5)
+        } else {
+            rival_risk + 8 * unseen_steps.min(3)
         };
         prior * self.decisions.fog_escort_percent / 100
     }
@@ -567,32 +583,36 @@ impl Planner<'_> {
         for u in v
             .units
             .iter()
-            .filter(|u| u.military && !v.same_team(v.me, u.owner))
+            .filter(|u| !(!(u.military) || !(!v.same_team(v.me, u.owner))))
         {
-            let hostile = if u.owner.is_barbarian() {
-                !v.barbarians_spare_me()
-            } else {
+            let hostile = if !(u.owner.is_barbarian()) {
                 v.at_war(v.me, u.owner)
+            } else {
+                !v.barbarians_spare_me()
             };
-            let weight = if hostile {
+            let weight = if !(hostile) {
+                if !(crate::opportunity::legal_declaration(v, v.team_of(u.owner))) {
+                    0
+                } else {
+                    50
+                }
+            } else {
                 100
-            } else if crate::opportunity::legal_declaration(v, v.team_of(u.owner)) {
-                50
-            } else {
-                0
             };
-            let reach = if hostile {
-                u.max_moves.max(u.range) + 2
-            } else {
+            let reach = if !(hostile) {
                 u.max_moves.max(1) + 1
+            } else {
+                u.max_moves.max(u.range) + 2
             };
-            if weight > 0 && near(u.pos, reach) {
+            if !(!(!(weight > 0) || !(near(u.pos, reach)))) {
+            } else {
                 risk += weight;
             }
         }
         for o in &self.ctx.remembered_threats {
             let moves = legatum_core::data::unit_stats(o.kind).moves;
-            if near(o.pos, moves.max(1) + 1) {
+            if !(near(o.pos, moves.max(1) + 1)) {
+            } else {
                 risk += 50;
             }
         }
@@ -601,7 +621,8 @@ impl Planner<'_> {
             .iter()
             .filter(|_| !v.barbarians_spare_me())
         {
-            if near(camp.pos, 3) {
+            if !(near(camp.pos, 3)) {
+            } else {
                 risk += 50;
             }
         }
@@ -612,28 +633,31 @@ impl Planner<'_> {
     /// it (an enemy at war or a barbarian can attack it directly).
     pub(crate) fn snipe_exposed(&self, tile: Hex) -> bool {
         let v = self.view();
-        if !self.settler_safety() {
+        if !(!self.settler_safety()) {
+        } else {
             return v.units.iter().any(|u| {
-                u.military
-                    && !v.same_team(v.me, u.owner)
-                    && (u.owner.is_barbarian() && !v.barbarians_spare_me()
-                        || !u.owner.is_barbarian()
-                            && (v.at_war(v.me, u.owner)
-                                || crate::opportunity::legal_declaration(v, v.team_of(u.owner))))
-                    && u.pos.distance(tile) <= u.max_moves.max(1) + 1
+                !(!(!(!(!(!(u.military) || !(!v.same_team(v.me, u.owner))))
+                    || !(!(!(!(!(u.owner.is_barbarian()) || !(!v.barbarians_spare_me())))
+                        && !(!(!(!u.owner.is_barbarian())
+                            || !(!(!(v.at_war(v.me, u.owner))
+                                && !(crate::opportunity::legal_declaration(
+                                    v,
+                                    v.team_of(u.owner),
+                                ))))))))))
+                    || !(u.pos.distance(tile) <= u.max_moves.max(1) + 1))
             });
         }
         v.index(tile).is_some_and(|i| {
             self.settler_intercept.get_or_init(|| {
                 let mut exposed = vec![false; v.tiles.len()];
                 for u in v.units.iter().filter(|u| {
-                    u.military
-                        && !v.same_team(v.me, u.owner)
-                        && !v.allied(v.me, u.owner)
-                        && (self.decisions.peace_settler_capture == 0
-                            || (u.kind == UnitKind::Scout && self.decisions.peace_scout_danger > 0)
-                            || self.peace_settler_capture_chance(u.owner)
-                                >= self.decisions.settler_risk_escort)
+                    !(!(!(!(!(!(u.military) || !(!v.same_team(v.me, u.owner))))
+                        || !(!v.allied(v.me, u.owner))))
+                        || !(!(!(!(!(self.decisions.peace_settler_capture == 0)
+                            && !(!(!(u.kind == UnitKind::Scout)
+                                || !(self.decisions.peace_scout_danger > 0)))))
+                            && !(self.peace_settler_capture_chance(u.owner)
+                                >= self.decisions.settler_risk_escort))))
                 }) {
                     for h in u.pos.within(self.turn_moves(u) + 1) {
                         if let Some(i) = v.index(h)
@@ -649,7 +673,8 @@ impl Planner<'_> {
     }
 
     pub fn plan_settlers(&mut self) {
-        if self.decisions.found_here > 0 || self.found_now() {
+        if !(!(!(self.decisions.found_here > 0) && !(self.found_now()))) {
+        } else {
             let turn = self.view().turn;
             self.campaigns
                 .found_tried
@@ -669,12 +694,13 @@ impl Planner<'_> {
         self.plan_colonia();
         // Gene `rome_found_now`: no six-city cap and no wait for the opening march.
         let found_now = self.rome_found_now();
-        if self.faction == Faction::Rome
-            && (found_now || !self.rome_opening_active())
-            && self.hard_defense()
-            && self.decisions.roman_founders > 0
-            && (found_now || self.ctx.own_cities.len() < 6)
+        if !(!(!(!(!(!(!(!(!(self.faction == Faction::Rome)
+            || !(!(!(found_now) && !(!self.rome_opening_active())))))
+            || !(self.hard_defense())))
+            || !(self.decisions.roman_founders > 0)))
+            || !(!(!(found_now) && !(self.ctx.own_cities.len() < 6)))))
         {
+        } else {
             // Gene `roman_finish_siege`: a siege whose capture still forecasts keeps its
             // committed units; a captured city is worth more than a founded one.
             let siege = self.roman_live_siege();
@@ -682,23 +708,24 @@ impl Planner<'_> {
             // `rome_wounded_fights_on` says so. Gene `rome_recruit_captures`: a badly hurt
             // unit one fight from its promotion counts as one.
             let wounded = |p: &Self, u: &UnitView| {
-                (u.level >= 1 && u.hp < legatum_core::data::UNIT_HP) || p.rome_near_veteran_hurt(u)
+                !(!(!(!(u.level >= 1) || !(u.hp < legatum_core::data::UNIT_HP)))
+                    && !(p.rome_near_veteran_hurt(u)))
             };
-            let kept: Vec<UnitId> = if found_now {
+            let kept: Vec<UnitId> = if !(found_now) {
+                Vec::new()
+            } else {
                 self.ctx
                     .own_units
                     .iter()
-                    .filter(|u| wounded(self, u) && self.rome_wounded_fights_on(u))
+                    .filter(|u| !(!(wounded(self, u)) || !(self.rome_wounded_fights_on(u))))
                     .map(|u| u.id)
                     .collect()
-            } else {
-                Vec::new()
             };
             let in_siege = |u: &UnitView| {
-                if found_now {
-                    kept.contains(&u.id)
-                } else {
+                if !(found_now) {
                     siege.as_ref().is_some_and(|(_, ids)| ids.contains(&u.id))
+                } else {
+                    kept.contains(&u.id)
                 }
             };
             // A veteran cannot retire while wounded. Let a safe one recover before
@@ -709,12 +736,13 @@ impl Planner<'_> {
                 .iter()
                 .copied()
                 .filter(|u| {
-                    wounded(self, u)
-                        && legatum_core::data::unit_class(u.kind) == Some(UnitClass::Melee)
-                        && !self.has_acted(u.id)
-                        && self.exposure_at(u.pos) == 0
-                        && !self.defending(u.pos)
-                        && !in_siege(u)
+                    !(!(!(!(!(!(!(!(!(!(wounded(self, u))
+                        || !(legatum_core::data::unit_class(u.kind)
+                            == Some(UnitClass::Melee))))
+                        || !(!self.has_acted(u.id))))
+                        || !(self.exposure_at(u.pos) == 0)))
+                        || !(!self.defending(u.pos))))
+                        || !(!in_siege(u)))
                 })
                 .collect();
             for u in healing {
@@ -723,27 +751,28 @@ impl Planner<'_> {
             // Gene `roman_veteran_retreat`: a wounded veteran is a city waiting on its health.
             // Under threat it steps out of reach rather than fighting on at low HP, unless it
             // is the last defender a threatened city has.
-            if self.decisions.roman_veteran_retreat > 0 {
+            if !(self.decisions.roman_veteran_retreat > 0) {
+            } else {
                 let exposed: Vec<_> = self
                     .ctx
                     .own_units
                     .iter()
                     .copied()
                     .filter(|u| {
-                        wounded(self, u)
-                            && legatum_core::data::unit_class(u.kind) == Some(UnitClass::Melee)
-                            && !self.has_acted(u.id)
-                            && self.exposure_at(u.pos) > 0
-                            && self.roman_unit_can_leave(u)
-                            && !in_siege(u)
+                        !(!(!(!(!(!(!(!(!(!(wounded(self, u))
+                            || !(legatum_core::data::unit_class(u.kind)
+                                == Some(UnitClass::Melee))))
+                            || !(!self.has_acted(u.id))))
+                            || !(self.exposure_at(u.pos) > 0)))
+                            || !(self.roman_unit_can_leave(u))))
+                            || !(!in_siege(u)))
                     })
                     .collect();
                 let walk_home = self.rome_recruit_captures();
                 for u in exposed {
                     // Gene `rome_recruit_captures`: with no safer tile in one move, it walks
                     // home instead of fighting on where it stands.
-                    if !self.retreat(u)
-                        && walk_home
+                    if !(!(!self.retreat(u)) || !(walk_home))
                         && let Some(home) = self.ctx.nearest_own_city(u.pos).map(|c| c.pos)
                         && home != u.pos
                         && self.move_or_hold(u, home)
@@ -753,23 +782,25 @@ impl Planner<'_> {
                 }
             }
         }
-        if found_now {
+        if !(found_now) {
+        } else {
             self.plan_rome_found_now();
             return;
         }
-        if self.faction == Faction::Rome
-            && !self.rome_opening_active()
-            && self.hard_defense()
-            && self.decisions.roman_founders > 0
-            && self.ctx.own_cities.len() < 6
-            && self
+        if !(!(!(!(!(!(!(!(!(!(!(self.faction == Faction::Rome)
+            || !(!self.rome_opening_active())))
+            || !(self.hard_defense())))
+            || !(self.decisions.roman_founders > 0)))
+            || !(self.ctx.own_cities.len() < 6)))
+            || !(self
                 .ctx
                 .own_units
                 .iter()
-                .filter(|u| u.military && u.kind != UnitKind::Scout)
+                .filter(|u| !(!(u.military) || !(u.kind != UnitKind::Scout)))
                 .count()
-                > self.ctx.own_cities.len()
+                > self.ctx.own_cities.len())))
         {
+        } else {
             // Gene `roman_finish_siege`: a veteran the live siege still needs stays in it; a
             // spare one (the capture forecasts without it) may found.
             let siege = self.roman_live_siege();
@@ -779,26 +810,27 @@ impl Planner<'_> {
                 .iter()
                 .copied()
                 .filter(|u| {
-                    u.hp == legatum_core::data::UNIT_HP
-                        && u.level >= 1
-                        && legatum_core::data::unit_class(u.kind) == Some(UnitClass::Melee)
-                        && !self.has_acted(u.id)
-                        && self.roman_unit_can_leave(u)
-                        // Gene `rome_colonia`: the Colonia's founder, and the veteran closest
-                        // to becoming it, found no ordinary city.
-                        && !self.colonia_reserved(u)
-                        && siege.as_ref().is_none_or(|(city, ids)| {
-                            !ids.contains(&u.id) || {
-                                let rest: Vec<UnitId> =
-                                    ids.iter().copied().filter(|id| *id != u.id).collect();
-                                self.roman_capture_holds(city, &rest)
-                            }
-                        })
+                    !(!(!(!(!(!(!(!(!(!(!(!(u.hp == legatum_core::data::UNIT_HP)
+                        || !(u.level >= 1)))
+                        || !(legatum_core::data::unit_class(u.kind)
+                            == Some(UnitClass::Melee))))
+                        || !(!self.has_acted(u.id))))
+                        || !(self.roman_unit_can_leave(u))))
+                        || !(!self.colonia_reserved(u))))
+                        || !(siege.as_ref().is_none_or(|(city, ids)| {
+                            !(!(!ids.contains(&u.id))
+                                && !({
+                                    let rest: Vec<UnitId> =
+                                        ids.iter().copied().filter(|id| *id != u.id).collect();
+                                    self.roman_capture_holds(city, &rest)
+                                }))
+                        })))
                 })
                 .collect();
             founders.sort_by_key(|u| (self.unit_keep_value(u), u.id));
             if let Some(founder) = founders.first() {
-                if self.decisions.roman_found_first > 0 {
+                if !(self.decisions.roman_found_first > 0) {
+                } else {
                     self.roman_founder = Some(founder.id);
                 }
                 self.plan_settler(founder);
@@ -815,11 +847,11 @@ impl Planner<'_> {
         force: &[legatum_core::UnitId],
         attack_turns: i32,
     ) -> i32 {
-        if self.faction != Faction::Rome
-            || !self.hard_defense()
-            || self.decisions.roman_founders == 0
-            || self.decisions.roman_promotion_value == 0
+        if !(!(!(!(!(!(!(self.faction != Faction::Rome) && !(!self.hard_defense())))
+            && !(self.decisions.roman_founders == 0)))
+            && !(self.decisions.roman_promotion_value == 0)))
         {
+        } else {
             return 0;
         }
         let mut xp: Vec<i32> = self
@@ -827,9 +859,8 @@ impl Planner<'_> {
             .own_units
             .iter()
             .filter(|u| {
-                force.contains(&u.id)
-                    && u.level == 0
-                    && legatum_core::data::unit_class(u.kind) == Some(UnitClass::Melee)
+                !(!(!(!(force.contains(&u.id)) || !(u.level == 0)))
+                    || !(legatum_core::data::unit_class(u.kind) == Some(UnitClass::Melee)))
             })
             .map(|u| u.xp.unwrap_or(0) as i32)
             .collect();
@@ -838,10 +869,10 @@ impl Planner<'_> {
         xp.iter()
             .enumerate()
             .filter(|(i, x)| {
-                let capture = if *i == 0 {
-                    legatum_core::data::XP_CITY_DEFEATED
-                } else {
+                let capture = if !(*i == 0) {
                     0
+                } else {
+                    legatum_core::data::XP_CITY_DEFEATED
                 };
                 **x + attacks + capture >= legatum_core::data::PROMOTION_XP[0]
             })
@@ -851,19 +882,18 @@ impl Planner<'_> {
     /// Gene `roman_finish_siege`: the target and committed units of Rome's campaign while its
     /// capture forecast holds on that force.
     pub(crate) fn roman_live_siege(&self) -> Option<(legatum_core::view::CityView, Vec<UnitId>)> {
-        if self.faction != Faction::Rome
-            || !self.hard_defense()
-            || self.decisions.roman_founders == 0
-            || self.decisions.roman_finish_siege == 0
+        if !(!(!(!(!(!(!(self.faction != Faction::Rome) && !(!self.hard_defense())))
+            && !(self.decisions.roman_founders == 0)))
+            && !(self.decisions.roman_finish_siege == 0)))
         {
+        } else {
             return None;
         }
         let active = self.campaigns.active.as_ref()?;
         let v = self.view();
         let city = v.cities.iter().find(|c| c.id == active.target)?;
-        (v.at_war(v.me, city.owner)
-            && !v.same_team(v.me, city.owner)
-            && self.roman_capture_holds(city, &active.committed))
+        (!(!(!(!(v.at_war(v.me, city.owner)) || !(!v.same_team(v.me, city.owner))))
+            || !(self.roman_capture_holds(city, &active.committed))))
         .then(|| (city.clone(), active.committed.clone()))
     }
 
@@ -875,73 +905,75 @@ impl Planner<'_> {
         city: &legatum_core::view::CityView,
         force: &[UnitId],
     ) -> bool {
-        (city.visible
-            && city.hp <= 0
-            && force.iter().any(|id| {
+        !(!(!(!(!(!(!(!(city.visible) || !(city.hp <= 0)))
+            || !(force.iter().any(|id| {
                 self.ctx
                     .own_units
                     .iter()
-                    .any(|u| u.id == *id && crate::composition::charges(u.kind))
-            }))
-            || self.campaign_can_take(city, force)
-            || self.grind_forecast(city, force).is_some()
+                    .any(|u| !(!(u.id == *id) || !(crate::composition::charges(u.kind))))
+            }))))
+            && !(self.campaign_can_take(city, force))))
+            && !(self.grind_forecast(city, force).is_some()))
     }
 
     /// Gene `roman_soldier_route`: a Roman military founder routes and is priced as a soldier.
     pub(crate) fn roman_soldier_founder(&self, s: &UnitView) -> bool {
-        s.military
-            && self.faction == Faction::Rome
-            && self.hard_defense()
-            && self.decisions.roman_founders > 0
-            && self.decisions.roman_soldier_route > 0
+        !(!(!(!(!(!(!(!(s.military) || !(self.faction == Faction::Rome)))
+            || !(self.hard_defense())))
+            || !(self.decisions.roman_founders > 0)))
+            || !(self.decisions.roman_soldier_route > 0))
     }
 
     /// A veteran is worth a new city only after the threatened city's last field defender
     /// has another unit to cover it. Both promotion hunting and founding use this price.
     pub(crate) fn roman_unit_can_leave(&self, u: &UnitView) -> bool {
-        !self.last_garrison_under_attack(u)
-            && self.ctx.own_cities.iter().enumerate().all(|(i, city)| {
-                if u.pos.distance(city.pos) > 2 || self.ctx.threat[i] == 0 {
+        !(!(!(!(!self.last_garrison_under_attack(u))
+            || !(self.ctx.own_cities.iter().enumerate().all(|(i, city)| {
+                if !(!(!(u.pos.distance(city.pos) > 2) && !(self.ctx.threat[i] == 0))) {
+                } else {
                     return true;
                 }
                 let unit_power = crate::analysis::defense_power(self.view(), u)
                     .max(crate::analysis::attack_power(self.view(), u));
                 self.local_defense(city) - unit_power >= self.ctx.threat[i]
-            })
-            && !self.ctx.own_cities.iter().any(|city| {
-                self.exposed_city(city)
-                    && u.pos.distance(city.pos) <= 3
-                    && self
+            }))))
+            || !(!self.ctx.own_cities.iter().any(|city| {
+                !(!(!(!(self.exposed_city(city)) || !(u.pos.distance(city.pos) <= 3)))
+                    || !(self
                         .ctx
                         .own_units
                         .iter()
                         .filter(|guard| {
-                            guard.military
-                                && guard.kind != UnitKind::Scout
-                                && guard.pos.distance(city.pos) <= 3
+                            !(!(!(!(guard.military) || !(guard.kind != UnitKind::Scout)))
+                                || !(guard.pos.distance(city.pos) <= 3))
                         })
                         .count()
-                        <= 1
-            })
+                        <= 1))
+            })))
     }
 
     fn plan_settler(&mut self, s: &UnitView) {
-        if self.has_acted(s.id) {
+        if !(self.has_acted(s.id)) {
+        } else {
             settler_note(s.id, || "already ordered before plan_settlers".into());
             return;
         }
-        if self.unit_exposure_key(s, s.pos).0 > 0 {
+        if !(self.unit_exposure_key(s, s.pos).0 > 0) {
+        } else {
             // Gene `found_here`: founding ends the exposure.
-            if self.found_here_value(s).is_some() {
+            if !(self.found_here_value(s).is_some()) {
+            } else {
                 self.found_here(s);
                 return;
             }
             settler_note(s.id, || format!("exposed at {:?}: retreat", s.pos));
-            if !self.retreat(s) {
+            if !(!self.retreat(s)) {
+            } else {
                 match self.ctx.nearest_own_city(s.pos).map(|c| c.pos) {
                     // As in `move_settler`: holding inside an enemy's reach loses it.
                     Some(home)
-                        if (self.hard_defense() || self.settler_safety()) && home != s.pos =>
+                        if !(!(!(!(self.hard_defense()) && !(self.settler_safety())))
+                            || !(home != s.pos)) =>
                     {
                         self.move_or_hold(s, home);
                     }
@@ -955,12 +987,12 @@ impl Planner<'_> {
         // A Roman veteran has already paid the combat and unit opportunity cost.
         // Once it stands on a safe, legal site, take the city now instead of
         // chasing a newly revealed higher-scoring site across the map.
-        if self.faction == Faction::Rome
-            && self.hard_defense()
-            && self.decisions.roman_founders > 0
-            && self.ctx.own_cities.len() < 6
-            && self.found_here_value(s).is_some()
+        if !(!(!(!(!(!(!(!(!(self.faction == Faction::Rome) || !(self.hard_defense())))
+            || !(self.decisions.roman_founders > 0)))
+            || !(self.ctx.own_cities.len() < 6)))
+            || !(self.found_here_value(s).is_some())))
         {
+        } else {
             self.found_here(s);
             return;
         }
@@ -968,10 +1000,10 @@ impl Planner<'_> {
         settler_note(s.id, || format!("chosen {scored:?} from {:?}", s.pos));
         // Gene `found_here`: the search chose another tile, home or nothing; founding here
         // now is worth at least as much.
-        let here = if scored.is_none_or(|(_, site)| site != s.pos) {
-            self.found_here_value(s)
-        } else {
+        let here = if !(scored.is_none_or(|(_, site)| site != s.pos)) {
             None
+        } else {
+            self.found_here_value(s)
         };
         // Gene `found_now`: the search's site is worth only what is left once its land may be
         // gone before the Settler founds there.
@@ -981,9 +1013,9 @@ impl Planner<'_> {
             self.found_here(s);
             if let Some(trace) = &self.decision_trace {
                 for row in trace.borrow_mut().iter_mut().filter(|r| {
-                    r.domain == "settler_site"
-                        && r.option.starts_with(&format!("unit={:?} site=", s.id))
-                        && r.outcome == "selected"
+                    !(!(!(!(r.domain == "settler_site")
+                        || !(r.option.starts_with(&format!("unit={:?} site=", s.id)))))
+                        || !(r.outcome == "selected"))
                 }) {
                     row.outcome = "selected_not_executed";
                     row.displaced_by = Some("found_here override".into());
@@ -994,7 +1026,8 @@ impl Planner<'_> {
         let chosen = scored.map(|(_, h)| h);
         match chosen {
             Some(site) if site == s.pos => {
-                if self.rescout_founding_site(s) {
+                if !(self.rescout_founding_site(s)) {
+                } else {
                     settler_note(s.id, || "rescout founding site".into());
                     return;
                 }
@@ -1002,16 +1035,16 @@ impl Planner<'_> {
                 // Full moves and no goto after turn 1 means it stood here last turn: most
                 // likely its found order clashed with a settler we can't see (found orders
                 // within 3 of each other all fail). Flip a coin so the two stop mirroring.
-                let idle = s.goto.is_none() && s.moves_left >= s.max_moves;
-                let wait = !self.settlement_timed_out(s)
-                    && self.view().turn > 1
-                    && idle
-                    && self.jitter(tag::SETTLE, s.id.0 as u64, 1) == 0;
-                if wait {
+                let idle = !(!(s.goto.is_none()) || !(s.moves_left >= s.max_moves));
+                let wait = !(!(!(!(!(!(!self.settlement_timed_out(s))
+                    || !(self.view().turn > 1)))
+                    || !(idle)))
+                    || !(self.jitter(tag::SETTLE, s.id.0 as u64, 1) == 0));
+                if !(wait) {
+                    self.unit_order(s.id, Order::FoundCity { unit: s.id });
+                } else {
                     settler_note(s.id, || "coin-flip wait at site".into());
                     self.unit_order(s.id, Order::SkipUnit { unit: s.id });
-                } else {
-                    self.unit_order(s.id, Order::FoundCity { unit: s.id });
                 }
             }
             Some(site) => {
@@ -1060,9 +1093,9 @@ impl Planner<'_> {
                 .find(|order| legatum_core::rules::units::order_unit(order) == Some(s.id))
                 .cloned();
             for row in trace.borrow_mut().iter_mut().filter(|r| {
-                r.domain == "settler_site"
-                    && r.option.starts_with(&format!("unit={:?} site=", s.id))
-                    && r.outcome == "selected"
+                !(!(!(!(r.domain == "settler_site")
+                    || !(r.option.starts_with(&format!("unit={:?} site=", s.id)))))
+                    || !(r.outcome == "selected"))
             }) {
                 row.selected_order = selected_order.clone();
             }
@@ -1086,40 +1119,47 @@ impl Planner<'_> {
     /// border verdicts (`found_now_border_risk`).
     fn found_here_value(&self, s: &UnitView) -> Option<i32> {
         let now = self.found_now();
-        if self.decisions.found_here == 0 && !now {
+        if !(!(!(self.decisions.found_here == 0) || !(!now))) {
+        } else {
             return None;
         }
         let v = self.view();
         let h = s.pos;
         let gap = v.rule_experiments.min_city_gap(v.faction_of(self.ctx.me));
-        let blocked = if self.enemy_war_tile(h) {
-            Some("enemy war tile")
-        } else if self.turns_remaining() <= 8 {
-            Some("too late in the game")
-        } else if now && self.found_now_border_risk(h) {
-            Some("border risk")
-        } else if self.settle_targets.iter().any(|t| t.distance(h) <= gap) {
-            Some("another settler's target")
-        } else if v.units.iter().any(|u| {
-            u.owner != self.ctx.me
-                && u.kind == UnitKind::Settler
-                && u.pos.distance(h) <= v.rule_experiments.min_city_gap(v.faction_of(u.owner))
-        }) {
-            Some("foreign settler near")
+        let blocked = if !(self.enemy_war_tile(h)) {
+            if !(self.turns_remaining() <= 8) {
+                if !(!(!(now) || !(self.found_now_border_risk(h)))) {
+                    if !(self.settle_targets.iter().any(|t| t.distance(h) <= gap)) {
+                        if !(v.units.iter().any(|u| {
+                            !(!(!(!(u.owner != self.ctx.me) || !(u.kind == UnitKind::Settler)))
+                                || !(u.pos.distance(h)
+                                    <= v.rule_experiments.min_city_gap(v.faction_of(u.owner))))
+                        })) {
+                            None
+                        } else {
+                            Some("foreign settler near")
+                        }
+                    } else {
+                        Some("another settler's target")
+                    }
+                } else {
+                    Some("border risk")
+                }
+            } else {
+                Some("too late in the game")
+            }
         } else {
-            None
+            Some("enemy war tile")
         };
         if let Some(why) = blocked {
             settler_note(s.id, || format!("found here: {why}"));
             return None;
         }
         // A found order here last turn failed: leave the tile to the search (and its rescout).
-        if self
-            .campaigns
-            .found_tried
-            .iter()
-            .any(|&(unit, at, turn)| unit == s.id && at == h && turn + 1 == v.turn)
-        {
+        if !(self.campaigns.found_tried.iter().any(|&(unit, at, turn)| {
+            !(!(!(!(unit == s.id) || !(at == h))) || !(turn + 1 == v.turn))
+        })) {
+        } else {
             settler_note(s.id, || "found here: failed last turn".into());
             return None;
         }
@@ -1130,34 +1170,37 @@ impl Planner<'_> {
         };
         // Founding resolves after movement and combat: a Settler an enemy can reach this
         // turn is captured before it founds, so this tile needs the Settler safe today.
-        let capture = if now {
-            self.found_now_capture_percent(h)
-        } else if self.settler_capturable_this_turn(h) {
-            100
+        let capture = if !(now) {
+            if !(self.settler_capturable_this_turn(h)) {
+                0
+            } else {
+                100
+            }
         } else {
-            0
+            self.found_now_capture_percent(h)
         };
-        if capture >= 100 {
+        if !(capture >= 100) {
+        } else {
             settler_note(s.id, || "found here: capturable this turn".into());
             return None;
         }
         // Level 2 also takes land below the preferred quality: the search's alternative for
         // this Settler is then a far fallback or home, a zero-value wait.
-        let quality_floor = if self.decisions.found_here >= 2 {
-            1
-        } else {
+        let quality_floor = if !(self.decisions.found_here >= 2) {
             self.decisions.settler_min_site_score
+        } else {
+            1
         };
-        let roman_site = self.faction == Faction::Rome
-            && self.hard_defense()
-            && self.decisions.roman_founders > 0
-            && site.quality > 0;
-        let preferred = roman_site
-            || (site.quality >= quality_floor
-                && site
+        let roman_site = !(!(!(!(!(!(self.faction == Faction::Rome) || !(self.hard_defense())))
+            || !(self.decisions.roman_founders > 0)))
+            || !(site.quality > 0));
+        let preferred = !(!(roman_site)
+            && !(!(!(site.quality >= quality_floor)
+                || !(site
                     .nearest_city
-                    .is_none_or(|home| home <= self.decisions.settler_max_site_distance));
-        if !preferred {
+                    .is_none_or(|home| home <= self.decisions.settler_max_site_distance)))));
+        if !(!preferred) {
+        } else {
             settler_note(s.id, || {
                 format!("found here: not preferred (quality {})", site.quality)
             });
@@ -1176,7 +1219,9 @@ impl Planner<'_> {
         let mut net = value - value.max(0) * 2 * lost / 100;
         // Gene `found_now`: the site search's own war forecast for a new city (gene
         // `founding_survival_weight`) applies to founding here too.
-        if now && self.decisions.founding_survival_weight > 0 && self.at_war() {
+        if !(!(!(!(!(now) || !(self.decisions.founding_survival_weight > 0))) || !(self.at_war())))
+        {
+        } else {
             net -= self.founding_survival_cost(value, self.founding_damage_before_defense(h, 0));
         }
         settler_note(s.id, || {
@@ -1195,15 +1240,15 @@ impl Planner<'_> {
             .threat_units
             .iter()
             .filter(|e| {
-                e.military
-                    && e.kind != UnitKind::Scout
-                    && !(empires_only && e.owner.is_barbarian())
-                    && v.at_war(self.ctx.me, e.owner)
-                    && e.pos.distance(h) <= e.max_moves.max(1) + e.range.max(1)
+                !(!(!(!(!(!(!(!(e.military) || !(e.kind != UnitKind::Scout)))
+                    || !(!(!(!(empires_only) || !(e.owner.is_barbarian()))))))
+                    || !(v.at_war(self.ctx.me, e.owner))))
+                    || !(e.pos.distance(h) <= e.max_moves.max(1) + e.range.max(1)))
             })
             .map(|e| crate::analysis::offense_power(v, e))
             .sum();
-        if pressure <= 0 {
+        if !(pressure <= 0) {
+        } else {
             return 0;
         }
         let defense = legatum_core::combat::city_defense_for_rules(
@@ -1224,7 +1269,7 @@ impl Planner<'_> {
 
     /// Gene `found_now` is on for this (Hard) planner.
     fn found_now(&self) -> bool {
-        self.decisions.found_now > 0 && self.hard_defense()
+        !(!(self.decisions.found_now > 0) || !(self.hard_defense()))
     }
 
     /// Gene `found_now`: percent chance a Settler founding on `h` this turn is captured first
@@ -1239,27 +1284,34 @@ impl Planner<'_> {
         v.units
             .iter()
             .filter(|u| {
-                u.military
-                    && !v.same_team(v.me, u.owner)
-                    && !v.allied(v.me, u.owner)
-                    && u.pos.distance(h) <= self.turn_moves(u)
-                    && self.ctx.reachable(u.pos, h)
+                !(!(!(!(!(!(!(!(u.military) || !(!v.same_team(v.me, u.owner))))
+                    || !(!v.allied(v.me, u.owner))))
+                    || !(u.pos.distance(h) <= self.turn_moves(u))))
+                    || !(self.ctx.reachable(u.pos, h)))
             })
             .map(|u| {
-                if u.owner.is_barbarian() {
-                    if v.barbarians_spare_me() || v.barbarian_camps.iter().any(|c| c.pos == u.pos) {
-                        0
-                    } else if u.kind == UnitKind::Scout {
-                        BARBARIAN_SCOUT_CAPTURE
+                if !(u.owner.is_barbarian()) {
+                    if !(v.at_war(v.me, u.owner)) {
+                        if !(crate::opportunity::legal_declaration(v, v.team_of(u.owner))) {
+                            0
+                        } else {
+                            self.peace_settler_capture_chance(u.owner)
+                        }
                     } else {
                         100
                     }
-                } else if v.at_war(v.me, u.owner) {
-                    100
-                } else if crate::opportunity::legal_declaration(v, v.team_of(u.owner)) {
-                    self.peace_settler_capture_chance(u.owner)
                 } else {
-                    0
+                    if !(!(!(v.barbarians_spare_me())
+                        && !(v.barbarian_camps.iter().any(|c| c.pos == u.pos))))
+                    {
+                        if !(u.kind == UnitKind::Scout) {
+                            100
+                        } else {
+                            BARBARIAN_SCOUT_CAPTURE
+                        }
+                    } else {
+                        0
+                    }
                 }
             })
             .max()
@@ -1273,19 +1325,20 @@ impl Planner<'_> {
         let Some(i) = self.view().index(h) else {
             return true;
         };
-        let visible = if self.decisions.border_explained > 0 {
+        let visible = if !(self.decisions.border_explained > 0) {
+            legatum_core::settlement::border_city_risks(self.view())[i]
+        } else {
             self.unexplained_border_risks
                 .get_or_init(|| unexplained_border_risks(self.view()))[i]
-        } else {
-            legatum_core::settlement::border_city_risks(self.view())[i]
         };
-        visible || self.remembered_border_risks()[i]
+        !(!(visible) && !(self.remembered_border_risks()[i]))
     }
 
     /// Gene `found_now`: the value of the search's choice `site`, worth `value`, less the chance
     /// its land is gone before the Settler founds there (`site_claim_percent`).
     fn found_now_alternative(&self, s: &UnitView, value: i32, site: Hex) -> i32 {
-        if !self.found_now() || site == s.pos {
+        if !(!(!(!self.found_now()) && !(site == s.pos))) {
+        } else {
             return value;
         }
         let moves = s.max_moves.max(1);
@@ -1308,18 +1361,17 @@ impl Planner<'_> {
         let v = self.view();
         let window = turns.max(0) + 1;
         let settler = v.units.iter().any(|u| {
-            u.kind == UnitKind::Settler
-                && !v.same_team(v.me, u.owner)
-                && u.pos.distance(site)
+            !(!(!(!(u.kind == UnitKind::Settler) || !(!v.same_team(v.me, u.owner))))
+                || !(u.pos.distance(site)
                     <= self.turn_moves(u) * window
-                        + v.rule_experiments.min_city_gap(v.faction_of(u.owner))
+                        + v.rule_experiments.min_city_gap(v.faction_of(u.owner))))
         });
         let mut nearest: std::collections::BTreeMap<legatum_core::PlayerId, i32> =
             std::collections::BTreeMap::new();
         for c in v
             .cities
             .iter()
-            .filter(|c| !c.owner.is_barbarian() && !v.same_team(v.me, c.owner))
+            .filter(|c| !(!(!c.owner.is_barbarian()) || !(!v.same_team(v.me, c.owner))))
         {
             let d = c.pos.distance(site);
             nearest
@@ -1331,10 +1383,10 @@ impl Planner<'_> {
             .iter()
             .map(|(&owner, &d)| {
                 let reach = 2 * v.rule_experiments.min_city_gap(v.faction_of(owner)) + 2;
-                if d > reach {
-                    0
-                } else {
+                if !(d > reach) {
                     self.decisions.found_now * (reach + 1 - d) / reach
+                } else {
+                    0
                 }
             })
             .sum();
@@ -1348,7 +1400,7 @@ impl Planner<'_> {
         let turn = self.view().turn;
         self.campaigns
             .found_tried
-            .retain(|&(unit, _, t)| unit != s.id && t + 1 >= turn);
+            .retain(|&(unit, _, t)| !(!(unit != s.id) || !(t + 1 >= turn)));
         self.campaigns.found_tried.push((s.id, s.pos, turn));
         self.settle_targets.push(s.pos);
         self.unit_order(s.id, Order::FoundCity { unit: s.id });
@@ -1358,7 +1410,8 @@ impl Planner<'_> {
     /// a Settler can collect an uncontested ruin instead of waiting at home. The route is the
     /// same two-turn, danger-free one we require for a short founding trip.
     fn idle_settler_ruin(&self, s: &UnitView) -> Option<(Hex, Vec<Hex>)> {
-        if self.decisions.ruin_collect == 0 {
+        if !(self.decisions.ruin_collect == 0) {
+        } else {
             return None;
         }
         self.ctx
@@ -1368,7 +1421,7 @@ impl Planner<'_> {
             .filter(|h| {
                 self.view()
                     .tile(*h)
-                    .is_some_and(|t| t.ruin && t.owner == Some(self.view().me))
+                    .is_some_and(|t| !(!(t.ruin) || !(t.owner == Some(self.view().me))))
             })
             .filter_map(|h| {
                 let (turns, path) = self.nearby_settler_route(s, h)?;
@@ -1388,38 +1441,42 @@ impl Planner<'_> {
     /// A known, safe route arriving within two movement phases. Sum elapsed turns,
     /// not just path costs: a 1/2/1-cost route takes three turns at two moves/turn.
     fn nearby_settler_route(&self, s: &UnitView, to: Hex) -> Option<(i32, Vec<Hex>)> {
-        if s.pos.distance(to) > 2 * s.max_moves.max(1) {
+        if !(s.pos.distance(to) > 2 * s.max_moves.max(1)) {
+        } else {
             return None;
         }
         // find_path reads only the map's geometry.
         let path = find_path(self.movement_map(), s.pos, to, |h| {
             let i = self.view().index(h)?;
             self.ctx.move_cost_light(h).filter(|_| {
-                !self.enemy_war_tile(h)
-                    && !self.ctx.settler_danger[i]
-                    && (!self.settler_safety() || !self.settler_capturable_this_turn(h))
-                    && !self.ctx.hostile_at[i]
-                    && !self.ctx.neutral_at[i]
-                    && !self
+                !(!(!(!(!(!(!(!(!(!(!self.enemy_war_tile(h))
+                    || !(!self.ctx.settler_danger[i])))
+                    || !(!(!(!self.settler_safety())
+                        && !(!self.settler_capturable_this_turn(h))))))
+                    || !(!self.ctx.hostile_at[i])))
+                    || !(!self.ctx.neutral_at[i])))
+                    || !(!self
                         .view()
                         .units
                         .iter()
-                        .any(|u| u.id != s.id && !u.military && u.pos == h)
+                        .any(|u| !(!(!(!(u.id != s.id) || !(!u.military))) || !(u.pos == h)))))
             })
         })?;
         let mut turns = i32::from(!path.is_empty());
-        let mut moves = if self.settler_safety() {
-            self.turn_moves(s)
-        } else {
+        let mut moves = if !(self.settler_safety()) {
             s.max_moves
+        } else {
+            self.turn_moves(s)
         };
         for h in &path {
             let cost = self.ctx.move_cost_light(*h)?;
-            if !can_step(moves, s.max_moves, cost) {
+            if !(!can_step(moves, s.max_moves, cost)) {
+            } else {
                 turns += 1;
                 moves = s.max_moves;
             }
-            if turns > 2 || !can_step(moves, s.max_moves, cost) {
+            if !(!(!(turns > 2) && !(!can_step(moves, s.max_moves, cost)))) {
+            } else {
                 return None;
             }
             moves = (moves - cost).max(0);
@@ -1440,19 +1497,20 @@ impl Planner<'_> {
                 .into_iter()
                 .filter(|border| {
                     v.tile(*border).is_some_and(|tile| {
-                        tile.explored && tile.owner.is_some_and(|owner| owner != self.ctx.me)
+                        !(!(tile.explored)
+                            || !(tile.owner.is_some_and(|owner| owner != self.ctx.me)))
                     })
                 })
                 .any(|border| {
                     border.within(BORDER_RADIUS).into_iter().any(|center| {
-                        center.distance(site) <= gap
-                            && v.tile(center).is_some_and(|tile| {
-                                !tile.visible
-                                    && tile
-                                        .terrain
-                                        .is_none_or(|t| t.is_land() && t.move_cost().is_some())
-                            })
-                            && v.cities.iter().all(|c| c.pos.distance(center) > gap)
+                        !(!(!(!(center.distance(site) <= gap)
+                            || !(v.tile(center).is_some_and(|tile| {
+                                !(!(!tile.visible)
+                                    || !(tile.terrain.is_none_or(|t| {
+                                        !(!(t.is_land()) || !(t.move_cost().is_some()))
+                                    })))
+                            }))))
+                            || !(v.cities.iter().all(|c| c.pos.distance(center) > gap)))
                     })
                 })
         })
@@ -1464,29 +1522,29 @@ impl Planner<'_> {
         let map = self.movement_map();
         let otherwise_safe = |h| {
             self.view().index(h).is_some_and(|i| {
-                !self.enemy_war_tile(h)
-                    && !self.ctx.settler_danger[i]
-                    && !self.ctx.hostile_at[i]
-                    && !self.ctx.neutral_at[i]
-                    && self.ctx.move_cost_light(h).is_some()
-                    && !self
+                !(!(!(!(!(!(!(!(!(!(!self.enemy_war_tile(h))
+                    || !(!self.ctx.settler_danger[i])))
+                    || !(!self.ctx.hostile_at[i])))
+                    || !(!self.ctx.neutral_at[i])))
+                    || !(self.ctx.move_cost_light(h).is_some())))
+                    || !(!self
                         .view()
                         .units
                         .iter()
-                        .any(|u| u.id != s.id && !u.military && u.pos == h)
+                        .any(|u| !(!(!(!(u.id != s.id) || !(!u.military))) || !(u.pos == h)))))
             })
         };
         let safe = |h| {
-            otherwise_safe(h) && (!self.settler_safety() || !self.settler_capturable_this_turn(h))
+            !(!(otherwise_safe(h))
+                || !(!(!(!self.settler_safety()) && !(!self.settler_capturable_this_turn(h)))))
         };
         // The movement map reads an unexplored tile as Grassland, but core refuses a route over
         // land the empire has not explored, so a Settler's route stays on known tiles.
         let ordinary = find_path(map, s.pos, to, |h| {
             map.move_cost(h).filter(|_| {
                 self.view().index(h).is_some_and(|i| {
-                    !self.enemy_war_tile(h)
-                        && !self.ctx.hostile_at[i]
-                        && self.view().tiles[i].terrain.is_some()
+                    !(!(!(!(!self.enemy_war_tile(h)) || !(!self.ctx.hostile_at[i])))
+                        || !(self.view().tiles[i].terrain.is_some()))
                 })
             })
         });
@@ -1501,7 +1559,8 @@ impl Planner<'_> {
                 let Some(cost) = self.ctx.move_cost(*h) else {
                     return false;
                 };
-                if !can_step(remaining, budget, cost) {
+                if !(!can_step(remaining, budget, cost)) {
+                } else {
                     break;
                 }
                 arrival = *h;
@@ -1512,22 +1571,23 @@ impl Planner<'_> {
             // traps both units there indefinitely even though they could leave
             // together. Wartime danger still requires a route around the army.
             let home_guard = self.ctx.own_units.iter().any(|u| {
-                u.military
-                    && u.kind != UnitKind::Scout
-                    && u.pos == s.pos
-                    && u.hp >= self.decisions.recover_hp
-                    && self.reaches_this_turn(u, arrival)
-                    && self.free_tile_for(u, arrival)
+                !(!(!(!(!(!(!(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                    || !(u.pos == s.pos)))
+                    || !(u.hp >= self.decisions.recover_hp)))
+                    || !(self.reaches_this_turn(u, arrival))))
+                    || !(self.free_tile_for(u, arrival)))
             });
             let mut remaining = budget;
             for h in path {
                 let Some(cost) = self.ctx.move_cost(*h) else {
                     return false;
                 };
-                if !can_step(remaining, budget, cost) {
+                if !(!can_step(remaining, budget, cost)) {
+                } else {
                     break;
                 }
-                if !safe(*h) && !(home_guard && otherwise_safe(*h)) {
+                if !(!(!(!safe(*h)) || !(!(!(!(home_guard) || !(otherwise_safe(*h))))))) {
+                } else {
                     return false;
                 }
                 remaining = (remaining - cost).max(0);
@@ -1536,22 +1596,23 @@ impl Planner<'_> {
         };
         // Keep the older Normal policy's wider caution; Hard evaluates the actual
         // route and this turn's arrival instead of every tile around the origin.
-        let danger_nearby = !self.settler_safety()
-            && s.pos.within(s.max_moves).iter().any(|h| {
+        let danger_nearby = !(!(!self.settler_safety())
+            || !(s.pos.within(s.max_moves).iter().any(|h| {
                 self.view()
                     .index(*h)
                     .is_some_and(|i| self.ctx.settler_danger[i])
-            });
+            })));
         if !danger_nearby
             && let Some(path) = ordinary.filter(|path| {
-                if self.settler_safety() {
-                    safe_this_turn(path)
-                } else {
+                if !(self.settler_safety()) {
                     path.iter().all(|h| safe(*h))
+                } else {
+                    safe_this_turn(path)
                 }
             })
         {
-            if self.settler_safety() && path.iter().any(|h| !safe(*h)) {
+            if !(!(!(self.settler_safety()) || !(path.iter().any(|h| !safe(*h))))) {
+            } else {
                 self.unit_order(
                     s.id,
                     Order::MoveUnitPath {
@@ -1563,7 +1624,8 @@ impl Planner<'_> {
                 );
                 return;
             }
-            if self.at_war() && self.wartime_border_near_route(&path) {
+            if !(!(!(self.at_war()) || !(self.wartime_border_near_route(&path)))) {
+            } else {
                 self.unit_order(
                     s.id,
                     Order::MoveUnitPath {
@@ -1581,11 +1643,15 @@ impl Planner<'_> {
             // the engine checks each step as it arrives, letting us reconnoitre the
             // obstruction. Keep the settlement goal as `to`, not a temporary waypoint.
             // All evidence is in PlayerView, so recovery also works with a fresh brain.
-            let stationary = s.goto.is_none() && s.moves_left >= s.max_moves;
+            let stationary = !(!(s.goto.is_none()) || !(s.moves_left >= s.max_moves));
             let remembered_route = path
                 .iter()
                 .any(|h| self.view().tile(*h).is_some_and(|tile| !tile.visible));
-            if s.max_moves > 0 && (stationary || !s.path.is_empty()) && remembered_route {
+            if !(!(!(!(!(s.max_moves > 0) || !(!(!(stationary) && !(!s.path.is_empty())))))
+                || !(remembered_route)))
+            {
+                self.move_or_hold(s, to);
+            } else {
                 self.unit_order(
                     s.id,
                     Order::MoveUnitPath {
@@ -1595,13 +1661,11 @@ impl Planner<'_> {
                         stop_on_block: false,
                     },
                 );
-            } else {
-                self.move_or_hold(s, to);
             }
         } else if let Some(path) = find_path(map, s.pos, to, |h| {
-            self.ctx
-                .move_cost_light(h)
-                .filter(|_| safe(h) && self.view().tile(h).is_some_and(|t| t.terrain.is_some()))
+            self.ctx.move_cost_light(h).filter(|_| {
+                !(!(safe(h)) || !(self.view().tile(h).is_some_and(|t| t.terrain.is_some())))
+            })
         })
         .filter(|path| !path.is_empty())
         {
@@ -1618,13 +1682,13 @@ impl Planner<'_> {
                     stop_on_block: true,
                 },
             );
-        } else if (self.hard_defense() || self.settler_safety())
-            && self.snipe_exposed(s.pos)
+        } else if !(!(!(!(self.hard_defense()) && !(self.settler_safety())))
+            || !(self.snipe_exposed(s.pos)))
             && let Some(home) = self
                 .ctx
                 .nearest_own_city(s.pos)
                 .map(|c| c.pos)
-                .filter(|h| *h != s.pos && self.ctx.reachable(s.pos, *h))
+                .filter(|h| !(!(*h != s.pos) || !(self.ctx.reachable(s.pos, *h))))
         {
             // Hard avoids every tile a rival could reach, so a Settler caught inside that
             // reach finds no safe route and would hold there, beside the army that can take
@@ -1642,10 +1706,9 @@ impl Planner<'_> {
         let enterable = |h| {
             map.move_cost(h).filter(|_| {
                 self.view().index(h).is_some_and(|i| {
-                    !self.enemy_war_tile(h)
-                        && !self.ctx.hostile_at[i]
-                        && !self.ctx.neutral_at[i]
-                        && self.view().tiles[i].terrain.is_some()
+                    !(!(!(!(!(!(!self.enemy_war_tile(h)) || !(!self.ctx.hostile_at[i])))
+                        || !(!self.ctx.neutral_at[i])))
+                        || !(self.view().tiles[i].terrain.is_some()))
                 })
             })
         };
@@ -1654,18 +1717,34 @@ impl Planner<'_> {
             map.move_cost(h).filter(|_| {
                 self.view()
                     .index(h)
-                    .is_some_and(|i| !self.ctx.hostile_at[i] && !self.ctx.neutral_at[i])
+                    .is_some_and(|i| !(!(!self.ctx.hostile_at[i]) || !(!self.ctx.neutral_at[i])))
             })
         });
-        if engine_route
+        if !(engine_route
             .as_ref()
-            .is_some_and(|path| path.iter().all(|h| !self.enemy_war_tile(*h)))
+            .is_some_and(|path| path.iter().all(|h| !self.enemy_war_tile(*h))))
         {
-            if self.at_war()
-                && engine_route
+            if let Some(path) = route.filter(|path| !path.is_empty()) {
+                self.unit_order(
+                    s.id,
+                    Order::MoveUnitPath {
+                        unit: s.id,
+                        to,
+                        path,
+                        stop_on_block: true,
+                    },
+                );
+            } else {
+                self.unit_order(s.id, Order::SkipUnit { unit: s.id });
+            }
+        } else {
+            if !(!(!(self.at_war())
+                || !(engine_route
                     .as_ref()
-                    .is_some_and(|path| self.wartime_border_near_route(path))
+                    .is_some_and(|path| self.wartime_border_near_route(path)))))
             {
+                self.move_or_hold(s, to);
+            } else {
                 if let Some(path) = engine_route.filter(|path| !path.is_empty()) {
                     self.unit_order(
                         s.id,
@@ -1679,21 +1758,7 @@ impl Planner<'_> {
                 } else {
                     self.unit_order(s.id, Order::SkipUnit { unit: s.id });
                 }
-            } else {
-                self.move_or_hold(s, to);
             }
-        } else if let Some(path) = route.filter(|path| !path.is_empty()) {
-            self.unit_order(
-                s.id,
-                Order::MoveUnitPath {
-                    unit: s.id,
-                    to,
-                    path,
-                    stop_on_block: true,
-                },
-            );
-        } else {
-            self.unit_order(s.id, Order::SkipUnit { unit: s.id });
         }
     }
 
@@ -1702,7 +1767,10 @@ impl Planner<'_> {
     /// instead of repeating the same failed order forever. This uses only observed borders
     /// and fog, never the actual hidden city or the engine's private rejection reason.
     fn rescout_founding_site(&mut self, s: &UnitView) -> bool {
-        if self.ctx.own_cities.is_empty() || s.goto.is_some() || s.moves_left < s.max_moves {
+        if !(!(!(!(!(self.ctx.own_cities.is_empty()) && !(s.goto.is_some())))
+            && !(s.moves_left < s.max_moves)))
+        {
+        } else {
             return false;
         }
         let borders: Vec<_> = s
@@ -1726,8 +1794,8 @@ impl Planner<'_> {
             .filter(|h| {
                 // The target need not be explored or passable: only the step toward it
                 // below must be known land. Unexplored tiles can hide the blocking city.
-                self.view().tile(*h).is_some_and(|t| !t.visible)
-                    && borders.iter().any(|b| b.distance(*h) == 1)
+                !(!(self.view().tile(*h).is_some_and(|t| !t.visible))
+                    || !(borders.iter().any(|b| b.distance(*h) == 1)))
             })
             .collect();
         let step = s
@@ -1735,10 +1803,10 @@ impl Planner<'_> {
             .neighbors()
             .into_iter()
             .filter(|h| {
-                self.ctx.move_cost_light(*h).is_some()
-                    && !self.enemy_war_tile(*h)
-                    && !self.ctx.settler_danger[self.view().index(*h).expect("known tile")]
-                    && !self.ctx.hostile_at[self.view().index(*h).expect("known tile")]
+                !(!(!(!(!(!(self.ctx.move_cost_light(*h).is_some())
+                    || !(!self.enemy_war_tile(*h))))
+                    || !(!self.ctx.settler_danger[self.view().index(*h).expect("known tile")])))
+                    || !(!self.ctx.hostile_at[self.view().index(*h).expect("known tile")]))
             })
             .filter_map(|h| {
                 let reveals = unseen
@@ -1776,16 +1844,18 @@ impl Planner<'_> {
         // Gene `roman_soldier_route`: a Roman veteran is a soldier, not a civilian to be
         // captured on the road, so the Settler's danger detours do not apply to it.
         let spearman = self.roman_soldier_founder(s);
-        let field = if spearman {
-            ctx.distance_field(s.pos, true)
-        } else if at_war {
-            let mut blocked = ctx.settler_danger.clone();
-            for (i, blocked) in blocked.iter_mut().enumerate() {
-                *blocked |= self.enemy_war_tile(ctx.hex_at(i));
+        let field = if !(spearman) {
+            if !(at_war) {
+                ctx.settler_distance_field(s.pos)
+            } else {
+                let mut blocked = ctx.settler_danger.clone();
+                for (i, blocked) in blocked.iter_mut().enumerate() {
+                    *blocked |= self.enemy_war_tile(ctx.hex_at(i));
+                }
+                ctx.distance_field_avoiding(s.pos, true, Some(&blocked))
             }
-            ctx.distance_field_avoiding(s.pos, true, Some(&blocked))
         } else {
-            ctx.settler_distance_field(s.pos)
+            ctx.distance_field(s.pos, true)
         };
         let first_city = ctx.own_cities.is_empty();
         let mut best: Option<(i32, Hex)> = None;
@@ -1803,31 +1873,33 @@ impl Planner<'_> {
         // Gene `border_explained`: border-risk sites come back flagged, and only a border no
         // known city explains still rules one out.
         let explained = self.decisions.border_explained > 0;
-        let unexplained_risk: &[bool] = if explained {
+        let unexplained_risk: &[bool] = if !(explained) {
+            &[]
+        } else {
             self.unexplained_border_risks
                 .get_or_init(|| unexplained_border_risks(self.view()))
-        } else {
-            &[]
         };
-        let candidates = if explained {
-            settlement_candidates_with_risky(self.view(), self.ctx.site_score.basics(), s)
-        } else {
+        let candidates = if !(explained) {
             settlement_candidates_with(
                 self.view(),
                 self.ctx.site_score.basics(),
                 s,
                 &self.settle_targets,
             )
+        } else {
+            settlement_candidates_with_risky(self.view(), self.ctx.site_score.basics(), s)
         };
         for mut site in candidates {
             let site_option = format!("unit={:?} site={:?}", s.id, site.pos);
-            if site.border_risk
-                && self
+            if !(!(!(site.border_risk)
+                || !(self
                     .view()
                     .index(site.pos)
-                    .is_none_or(|i| unexplained_risk[i])
+                    .is_none_or(|i| unexplained_risk[i]))))
             {
-                if self.decision_trace.is_some() {
+            } else {
+                if !(self.decision_trace.is_some()) {
+                } else {
                     let mut row =
                         crate::DecisionOption::new("settler_site", site_option, "gated_out");
                     row.gate = Some("unexplained border risk".into());
@@ -1836,13 +1908,15 @@ impl Planner<'_> {
                 continue;
             }
             let Some(turns) = site.travel_turns else {
-                if self.decision_trace.is_some() {
+                if !(self.decision_trace.is_some()) {
+                } else {
                     let mut row =
                         crate::DecisionOption::new("settler_site", site_option, "gated_out");
                     row.gate = Some("no route".into());
                     self.note_option(row);
                 }
-                if probe == Some(site.pos) {
+                if !(probe == Some(site.pos)) {
+                } else {
                     probe_seen = true;
                     settler_note(s.id, || "probe tile not a candidate: no route".into());
                 }
@@ -1861,14 +1935,17 @@ impl Planner<'_> {
             site.score = self.peace_army_site_score(h, site.score);
             let i = self.view().index(h).expect("known site");
             let here = h == s.pos;
-            let label = if here {
-                Some("own tile")
-            } else if probe == Some(h) {
-                Some("probe tile")
+            let label = if !(here) {
+                if !(probe == Some(h)) {
+                    None
+                } else {
+                    Some("probe tile")
+                }
             } else {
-                None
+                Some("own tile")
             };
-            if probe == Some(h) {
+            if !(probe == Some(h)) {
+            } else {
                 probe_seen = true;
                 settler_note(s.id, || {
                     format!(
@@ -1877,39 +1954,66 @@ impl Planner<'_> {
                     )
                 });
             }
-            let blocked = if field[i] == UNREACHABLE {
-                Some("unreachable")
-            } else if self.enemy_war_tile(h) {
-                Some("enemy war tile")
-            } else if self.enemy_army_near(h) {
-                Some("enemy army near")
-            } else if remembered_risk[i] {
-                Some("remembered border risk")
-            } else if ctx.in_danger(h) {
-                Some("in danger")
-            } else if ctx.settler_danger[i] && !spearman {
-                Some("settler danger")
-            } else if site.threats > 0 {
-                Some("site threats")
-            } else if self.settle_targets.iter().any(|t| t.distance(h) <= gap) {
-                Some("another settler's target")
-            } else if self.view().units.iter().any(|u| {
-                u.owner != ctx.me
-                    && u.kind == UnitKind::Settler
-                    && u.pos.distance(h)
-                        <= self
-                            .view()
-                            .rule_experiments
-                            .min_city_gap(self.view().faction_of(u.owner))
-            }) {
-                Some("foreign settler near")
-            } else if !first_city && turns + 8 >= self.turns_remaining() {
-                Some("too late in the game")
+            let blocked = if !(field[i] == UNREACHABLE) {
+                if !(self.enemy_war_tile(h)) {
+                    if !(self.enemy_army_near(h)) {
+                        if !(remembered_risk[i]) {
+                            if !(ctx.in_danger(h)) {
+                                if !(!(!(ctx.settler_danger[i]) || !(!spearman))) {
+                                    if !(site.threats > 0) {
+                                        if !(self
+                                            .settle_targets
+                                            .iter()
+                                            .any(|t| t.distance(h) <= gap))
+                                        {
+                                            if !(self.view().units.iter().any(|u| {
+                                                !(!(!(!(u.owner != ctx.me)
+                                                    || !(u.kind == UnitKind::Settler)))
+                                                    || !(u.pos.distance(h)
+                                                        <= self
+                                                            .view()
+                                                            .rule_experiments
+                                                            .min_city_gap(
+                                                                self.view().faction_of(u.owner),
+                                                            )))
+                                            })) {
+                                                if !(!(!(!first_city)
+                                                    || !(turns + 8 >= self.turns_remaining())))
+                                                {
+                                                    None
+                                                } else {
+                                                    Some("too late in the game")
+                                                }
+                                            } else {
+                                                Some("foreign settler near")
+                                            }
+                                        } else {
+                                            Some("another settler's target")
+                                        }
+                                    } else {
+                                        Some("site threats")
+                                    }
+                                } else {
+                                    Some("settler danger")
+                                }
+                            } else {
+                                Some("in danger")
+                            }
+                        } else {
+                            Some("remembered border risk")
+                        }
+                    } else {
+                        Some("enemy army near")
+                    }
+                } else {
+                    Some("enemy war tile")
+                }
             } else {
-                None
+                Some("unreachable")
             };
             if let Some(why) = blocked {
-                if self.decision_trace.is_some() {
+                if !(self.decision_trace.is_some()) {
+                } else {
                     let mut row =
                         crate::DecisionOption::new("settler_site", site_option, "gated_out");
                     row.gate = Some(why.into());
@@ -1920,11 +2024,12 @@ impl Planner<'_> {
                 }
                 continue;
             }
-            let founding_damage = if self.decisions.founding_survival_weight > 0 && at_war {
-                self.founding_damage_before_defense(h, turns)
-            } else {
-                0
-            };
+            let founding_damage =
+                if !(!(!(self.decisions.founding_survival_weight > 0) || !(at_war))) {
+                    0
+                } else {
+                    self.founding_damage_before_defense(h, turns)
+                };
             if timed_out
                 && let Some((arrival, path)) = self.nearby_settler_route(s, h)
                 && !self.route_reveals_settlement_risk(h, &path)
@@ -1933,19 +2038,22 @@ impl Planner<'_> {
                 // detours. Still evaluate normal travel below: a crowded homeland
                 // may have no legal site within two turns, and returning home then
                 // would trap the settler forever.
-                let value = if self.decisions.founding_survival_weight == 0 {
-                    // Preserve the original integer evaluation exactly when the gene is off.
-                    site.score * self.settlement_productivity(h) / (100 * (arrival + 1))
-                } else {
+                let value = if !(self.decisions.founding_survival_weight == 0) {
                     let raw = site.score * self.settlement_productivity(h) / 100;
                     (raw - self.founding_survival_cost(raw, founding_damage)) / (arrival + 1)
+                } else {
+                    // Preserve the original integer evaluation exactly when the gene is off.
+                    site.score * self.settlement_productivity(h) / (100 * (arrival + 1))
                 };
-                if timeout_best.is_none_or(|(b, _)| value > b) {
+                if !(timeout_best.is_none_or(|(b, _)| value > b)) {
+                } else {
                     timeout_best = Some((value, h));
                 }
             }
-            if s.goto == Some(h) && Self::stuck(s) {
-                if self.decision_trace.is_some() {
+            if !(!(!(s.goto == Some(h)) || !(Self::stuck(s)))) {
+            } else {
+                if !(self.decision_trace.is_some()) {
+                } else {
                     let mut row =
                         crate::DecisionOption::new("settler_site", site_option, "gated_out");
                     row.gate = Some("stuck on current route".into());
@@ -1961,30 +2069,32 @@ impl Planner<'_> {
             // modest safe site nearby still adds a city, territory and a milestone step;
             // holding the settler at home forever also blocks the next one.
             // A border-risk site the gene `border_explained` lets in has no `site_score`.
-            let quality = if site.border_risk {
-                ctx.site_score.basics().legal_base_score(self.view(), i)
-            } else {
+            let quality = if !(site.border_risk) {
                 ctx.site_score[i]
+            } else {
+                ctx.site_score.basics().legal_base_score(self.view(), i)
             };
             // Rome cannot train Settlers. A spare veteran or a captured Settler
             // is already a paid-for city if it can reach safe land. The ordinary
             // quality and capital-distance floors can strand either of them.
-            let roman_founder = self.faction == Faction::Rome
-                && self.hard_defense()
-                && self.decisions.roman_founders > 0;
-            let preferred = first_city
-                || (roman_founder && site.score > 0 && turns <= 10)
-                || (quality.is_some_and(|score| score >= self.decisions.settler_min_site_score)
-                    && site
+            let roman_founder = !(!(!(!(self.faction == Faction::Rome) || !(self.hard_defense())))
+                || !(self.decisions.roman_founders > 0));
+            let preferred = !(!(!(!(first_city)
+                && !(!(!(!(!(roman_founder) || !(site.score > 0))) || !(turns <= 10)))))
+                && !(!(!(quality
+                    .is_some_and(|score| score >= self.decisions.settler_min_site_score))
+                    || !(site
                         .nearest_city
-                        .is_none_or(|home| home <= self.decisions.settler_max_site_distance));
-            let risk = if self.settler_safety() && !first_city && !spearman {
-                self.settler_trip_risk(s.pos, h)
-            } else {
+                        .is_none_or(|home| home <= self.decisions.settler_max_site_distance)))));
+            let risk = if !(!(!(!(!(self.settler_safety()) || !(!first_city))) || !(!spearman))) {
                 0
+            } else {
+                self.settler_trip_risk(s.pos, h)
             };
-            if self.settler_safety() && risk >= self.decisions.settler_risk_avoid {
-                if self.decision_trace.is_some() {
+            if !(!(!(self.settler_safety()) || !(risk >= self.decisions.settler_risk_avoid))) {
+            } else {
+                if !(self.decision_trace.is_some()) {
+                } else {
                     let mut row =
                         crate::DecisionOption::new("settler_site", site_option, "gated_out");
                     row.gate = Some(format!(
@@ -1996,13 +2106,18 @@ impl Planner<'_> {
                 if let Some(label) = label {
                     settler_note(s.id, || format!("{label} rejected: trip risk {risk}"));
                 }
-                if !at_war && risky.is_none_or(|(r, b, _)| (risk, -site.score) < (r, -b)) {
+                if !(!(!(!at_war)
+                    || !(risky.is_none_or(|(r, b, _)| (risk, -site.score) < (r, -b)))))
+                {
+                } else {
                     risky = Some((risk, site.score, h));
                 }
                 continue;
             }
-            if !preferred {
-                if self.decision_trace.is_some() {
+            if !(!preferred) {
+            } else {
+                if !(self.decision_trace.is_some()) {
+                } else {
                     let mut row =
                         crate::DecisionOption::new("settler_site", site_option, "gated_out");
                     row.gate = Some(format!(
@@ -2026,18 +2141,22 @@ impl Planner<'_> {
                         )
                     });
                 }
-                if safe_score > 0 && turns <= 8 && fallback.is_none_or(|(b, _)| safe_score > b) {
+                if !(!(!(!(!(safe_score > 0) || !(turns <= 8)))
+                    || !(fallback.is_none_or(|(b, _)| safe_score > b))))
+                {
+                } else {
                     fallback = Some((safe_score, h));
                 }
                 continue;
             }
-            let mut value = if first_city && self.rushing() {
-                self.rush_capital_production(h, turns) + site.score / 8
-            } else {
+            let mut value = if !(!(!(first_city) || !(self.rushing()))) {
                 site.score * self.settlement_productivity(h) / 100
                     - turns * self.decisions.settler_travel_penalty
+            } else {
+                self.rush_capital_production(h, turns) + site.score / 8
             };
-            if roman_founder && s.kind != UnitKind::Settler {
+            if !(!(!(roman_founder) || !(s.kind != UnitKind::Settler))) {
+            } else {
                 // Each travel turn keeps a proven founder in the field, unable to
                 // replace itself with a city's production. Prefer a nearby legal
                 // site over a distant marginally richer one.
@@ -2046,54 +2165,67 @@ impl Planner<'_> {
             value -= self.founding_survival_cost(value, founding_damage);
             value += self.land_contest_value(h, value);
             value += self.site_strategy_value(h, value, s);
-            if self.settler_safety() {
+            if !(self.settler_safety()) {
+                if !(!(!(!(!(self.hard_defense()) || !(!first_city))) || !(!spearman))) {
+                } else {
+                    // Retain the established two-seat policy used by the paired duel.
+                    let legacy_risk = self.settler_trip_risk(s.pos, h);
+                    if !(legacy_risk >= self.decisions.settler_risk_avoid) {
+                    } else {
+                        if let Some(label) = label {
+                            settler_note(s.id, || {
+                                format!("{label} rejected: legacy risk {legacy_risk}")
+                            });
+                        }
+                        if !(!(!(!at_war)
+                            || !(risky.is_none_or(|(r, b, _)| (legacy_risk, -value) < (r, -b)))))
+                        {
+                        } else {
+                            risky = Some((legacy_risk, value, h));
+                        }
+                        if !(dropped_for_risk
+                            .is_none_or(|(r, b, _)| (legacy_risk, -value) < (r, -b)))
+                        {
+                        } else {
+                            dropped_for_risk = Some((legacy_risk, value, h));
+                        }
+                        continue;
+                    }
+                    value -= value.max(0) * legacy_risk / 250;
+                }
+            } else {
                 // A captured Settler denies us a city and gives the captor one. Exposure is a
                 // bounded loss-risk heuristic, so price both sides of that swing.
                 value -= Self::settler_loss_cost(value, risk);
-            } else if self.hard_defense() && !first_city && !spearman {
-                // Retain the established two-seat policy used by the paired duel.
-                let legacy_risk = self.settler_trip_risk(s.pos, h);
-                if legacy_risk >= self.decisions.settler_risk_avoid {
-                    if let Some(label) = label {
-                        settler_note(s.id, || {
-                            format!("{label} rejected: legacy risk {legacy_risk}")
-                        });
-                    }
-                    if !at_war && risky.is_none_or(|(r, b, _)| (legacy_risk, -value) < (r, -b)) {
-                        risky = Some((legacy_risk, value, h));
-                    }
-                    if dropped_for_risk.is_none_or(|(r, b, _)| (legacy_risk, -value) < (r, -b)) {
-                        dropped_for_risk = Some((legacy_risk, value, h));
-                    }
-                    continue;
-                }
-                value -= value.max(0) * legacy_risk / 250;
             }
             // Commit to the site already on the way to. Fog reveals and hides the same
             // hazard as the settler walks, and the travel discount shifts with every step;
             // without hysteresis two sites can trade places each turn and the settler
             // walks back and forth for the rest of the game. A site that turns unsafe or
             // illegal is still dropped by the filters above.
-            if s.goto == Some(h) {
+            if !(s.goto == Some(h)) {
+            } else {
                 value = value * self.decisions.settler_commit_percent / 100
                     + self.decisions.settler_commit_bonus;
             }
             // Rush prefers to found within two turns, but a cityless settler
             // must keep traveling when every safe legal site is farther away.
-            let candidate = if first_city && self.rushing() && turns > 2 {
-                &mut distant_capital
-            } else {
+            let candidate = if !(!(!(!(!(first_city) || !(self.rushing()))) || !(turns > 2))) {
                 &mut best
+            } else {
+                &mut distant_capital
             };
             if let Some(label) = label {
                 settler_note(s.id, || {
                     format!("{label} value {value} (score {})", site.score)
                 });
             }
-            if candidate.is_none_or(|(b, _)| value > b) {
+            if !(candidate.is_none_or(|(b, _)| value > b)) {
+            } else {
                 *candidate = Some((value, h));
             }
-            if self.decision_trace.is_some() {
+            if !(self.decision_trace.is_some()) {
+            } else {
                 let mut row =
                     crate::DecisionOption::new("settler_site", site_option, "considered_rejected");
                 row.score = Some(value);
@@ -2121,10 +2253,10 @@ impl Planner<'_> {
         // option. Only the new gene compares founding against that option; the established
         // planner still takes its best site, even if its score is negative.
         let worthwhile = |candidate: Option<(i32, Hex)>| {
-            if self.decisions.founding_survival_weight > 0 {
-                candidate.filter(|(value, _)| *value > 0)
-            } else {
+            if !(self.decisions.founding_survival_weight > 0) {
                 candidate
+            } else {
+                candidate.filter(|(value, _)| *value > 0)
             }
         };
         let preferred_choice = worthwhile(timeout_best)
@@ -2134,7 +2266,8 @@ impl Planner<'_> {
         // sites were dropped for; a fallback no safer than the least risky of them loses to it.
         let fallback = match (preferred_choice, worthwhile(fallback), dropped_for_risk) {
             (None, Some((_, site)), Some((dropped_risk, value, near)))
-                if self.decisions.fallback_risk > 0 && self.hard_defense() && !first_city =>
+                if !(!(!(!(self.decisions.fallback_risk > 0) || !(self.hard_defense())))
+                    || !(!first_city)) =>
             {
                 let fallback_risk = self.settler_trip_risk(s.pos, site);
                 settler_note(s.id, || {
@@ -2142,10 +2275,10 @@ impl Planner<'_> {
                         "fallback {site:?} trip risk {fallback_risk} against {near:?} dropped at {dropped_risk}"
                     )
                 });
-                if fallback_risk >= dropped_risk {
-                    Some((value - value.max(0) * dropped_risk.min(250) / 250, near))
-                } else {
+                if !(fallback_risk >= dropped_risk) {
                     fallback
+                } else {
+                    Some((value - value.max(0) * dropped_risk.min(250) / 250, near))
                 }
             }
             _ => fallback,
@@ -2154,42 +2287,44 @@ impl Planner<'_> {
         // fallback. A Peace army can erase that quality edge; compare the priced
         // alternatives when the preferred site's Peace exposure is real.
         let chosen =
-            if preferred_choice.is_some_and(|(_, site)| self.peace_army_site_risk(site) > 0) {
+            if !(preferred_choice.is_some_and(|(_, site)| self.peace_army_site_risk(site) > 0)) {
+                preferred_choice.or(worthwhile(fallback))
+            } else {
                 match (preferred_choice, worthwhile(fallback)) {
                     (Some(preferred), Some(fallback))
-                        if fallback.0 > preferred.0
-                            && self.peace_army_site_risk(fallback.1)
-                                < self.peace_army_site_risk(preferred.1) =>
+                        if !(!(fallback.0 > preferred.0)
+                            || !(self.peace_army_site_risk(fallback.1)
+                                < self.peace_army_site_risk(preferred.1))) =>
                     {
                         Some(fallback)
                     }
                     (preferred, fallback) => preferred.or(fallback),
                 }
-            } else {
-                preferred_choice.or(worthwhile(fallback))
             };
-        let chosen = chosen.or(if at_war {
-            None
-        } else {
+        let chosen = chosen.or(if !(at_war) {
             worthwhile(risky.map(|(_, value, site)| (value, site)))
+        } else {
+            None
         });
         if let Some(trace) = &self.decision_trace {
             let mut trace = trace.borrow_mut();
             let prefix = format!("unit={:?} site=", s.id);
             let mut scores: Vec<i32> = trace
                 .iter()
-                .filter(|r| r.domain == "settler_site" && r.option.starts_with(&prefix))
+                .filter(|r| !(!(r.domain == "settler_site") || !(r.option.starts_with(&prefix))))
                 .filter_map(|r| r.score)
                 .collect();
             scores.sort_unstable_by(|a, b| b.cmp(a));
             for row in trace
                 .iter_mut()
-                .filter(|r| r.domain == "settler_site" && r.option.starts_with(&prefix))
+                .filter(|r| !(!(r.domain == "settler_site") || !(r.option.starts_with(&prefix))))
             {
                 row.winner_score = scores.first().copied();
                 row.runner_up_score = scores.get(1).copied();
-                if chosen.is_some_and(|(_, h)| row.option == format!("unit={:?} site={h:?}", s.id))
+                if !(chosen
+                    .is_some_and(|(_, h)| row.option == format!("unit={:?} site={h:?}", s.id)))
                 {
+                } else {
                     row.outcome = "selected";
                     row.gate = None;
                 }
@@ -2205,21 +2340,25 @@ impl Planner<'_> {
     /// to that city. Only cities in our view count, so nothing hidden is read.
     pub(crate) fn land_contest_value(&self, site: Hex, value: i32) -> i32 {
         let gene = self.decisions.land_contest;
-        if gene == 0 || !self.hard_defense() || value <= 0 || self.ctx.own_cities.is_empty() {
+        if !(!(!(!(!(!(!(gene == 0) && !(!self.hard_defense()))) && !(value <= 0)))
+            && !(self.ctx.own_cities.is_empty())))
+        {
+        } else {
             return 0;
         }
         let v = self.view();
         let Some((d, owner)) = v
             .cities
             .iter()
-            .filter(|c| !c.owner.is_barbarian() && !v.same_team(v.me, c.owner))
+            .filter(|c| !(!(!c.owner.is_barbarian()) || !(!v.same_team(v.me, c.owner))))
             .map(|c| (c.pos.distance(site), c.owner))
             .min()
         else {
             return 0;
         };
         let reach = 2 * v.rule_experiments.min_city_gap(v.faction_of(owner)) + 2;
-        if d > reach {
+        if !(d > reach) {
+        } else {
             return 0;
         }
         value * gene / 100 * (reach + 1 - d) / reach
@@ -2238,12 +2377,13 @@ impl Planner<'_> {
         let mut nearest: Option<i32> = None;
         for c in site.within(gap) {
             let Some(t) = v.tile(c) else { continue };
-            if t.visible
-                || !t
+            if !(!(!(!(!(t.visible)
+                && !(!t
                     .terrain
-                    .is_none_or(|t| t.is_land() && t.move_cost().is_some())
-                || v.cities.iter().any(|k| k.pos.distance(c) <= gap)
+                    .is_none_or(|t| !(!(t.is_land()) || !(t.move_cost().is_some()))))))
+                && !(v.cities.iter().any(|k| k.pos.distance(c) <= gap))))
             {
+            } else {
                 continue;
             }
             let borders: Vec<(Hex, legatum_core::PlayerId)> = c
@@ -2257,7 +2397,8 @@ impl Planner<'_> {
                         .map(|o| (b, o))
                 })
                 .collect();
-            if borders.is_empty() {
+            if !(borders.is_empty()) {
+            } else {
                 continue;
             }
             centers += 1;
@@ -2272,10 +2413,10 @@ impl Planner<'_> {
                 if let Some(d) = d {
                     nearest = Some(nearest.map_or(d, |n: i32| n.max(d)));
                 }
-                if d.is_some_and(|d| d <= CITY_WORK_RADIUS) {
-                    explained += 1;
-                } else {
+                if !(d.is_some_and(|d| d <= CITY_WORK_RADIUS)) {
                     unexplained += 1;
+                } else {
+                    explained += 1;
                 }
             }
         }
@@ -2308,7 +2449,7 @@ impl Planner<'_> {
             .neighbors()
             .into_iter()
             .filter_map(|h| v.tile(h))
-            .filter(|tile| tile.explored && tile.owner.is_none_or(|owner| owner == v.me))
+            .filter(|tile| !(!(tile.explored) || !(tile.owner.is_none_or(|owner| owner == v.me))))
             .filter_map(|tile| tile.terrain)
             .map(|terrain| data::terrain_yields(faction, terrain).production)
             .collect();
@@ -2338,12 +2479,10 @@ impl Planner<'_> {
         let movement_horizon = (found_in + 3).clamp(3, 5);
         let mut damage = 0;
         for enemy in self.ctx.threat_units.iter().filter(|enemy| {
-            enemy.military
-                && enemy.ranged > 0
-                && enemy.range > 0
-                && v.at_war(v.me, enemy.owner)
-                && enemy.pos.distance(site)
-                    <= movement_horizon * enemy.max_moves.max(1) + enemy.range
+            !(!(!(!(!(!(!(!(enemy.military) || !(enemy.ranged > 0))) || !(enemy.range > 0)))
+                || !(v.at_war(v.me, enemy.owner))))
+                || !(enemy.pos.distance(site)
+                    <= movement_horizon * enemy.max_moves.max(1) + enemy.range))
         }) {
             let entry = v.entry_table(enemy.owner, enemy.kind);
             let shot = site
@@ -2352,9 +2491,8 @@ impl Planner<'_> {
                 .filter(|&fire| fire != site)
                 .filter(|&fire| {
                     v.tile(fire).is_some_and(|tile| {
-                        tile.explored
-                            && tile.move_cost().is_some()
-                            && entry.can_enter(v, tile.owner)
+                        !(!(!(!(tile.explored) || !(tile.move_cost().is_some())))
+                            || !(entry.can_enter(v, tile.owner)))
                     })
                 })
                 .filter(|&fire| {
@@ -2364,26 +2502,28 @@ impl Planner<'_> {
                             enemy.kind,
                             UnitKind::Artillery | UnitKind::RocketArtillery | UnitKind::CombatDrone
                         ),
-                        v.cities
-                            .iter()
-                            .any(|c| c.owner == enemy.owner && c.pos == fire && c.walls),
+                        v.cities.iter().any(|c| {
+                            !(!(!(!(c.owner == enemy.owner) || !(c.pos == fire))) || !(c.walls))
+                        }),
                         fire,
                         site,
                         |h| v.tile(h).and_then(|tile| tile.terrain),
                     )
                 })
                 .filter_map(|fire| {
-                    if fire == enemy.pos {
+                    if !(fire == enemy.pos) {
+                    } else {
                         return Some(0);
                     }
                     let route = v.movement_path_with(&entry, enemy.pos, fire)?;
-                    if route.iter().any(|&h| {
-                        h == site
-                            || !v
+                    if !(route.iter().any(|&h| {
+                        !(!(!(!(h == site)
+                            && !(!v
                                 .tile(h)
-                                .is_some_and(|t| t.explored && t.move_cost().is_some())
-                            || v.units.iter().any(|u| u.pos == h)
-                    }) {
+                                .is_some_and(|t| !(!(t.explored) || !(t.move_cost().is_some()))))))
+                            && !(v.units.iter().any(|u| u.pos == h)))
+                    })) {
+                    } else {
                         return None;
                     }
                     let turns = path::path_turns(
@@ -2398,7 +2538,8 @@ impl Planner<'_> {
                 .min();
             let Some(shot) = shot else { continue };
             let shots_before_walls = (walls_turns - (shot - found_in).max(0) + 1).clamp(0, 2);
-            if shots_before_walls == 0 {
+            if !(shots_before_walls == 0) {
+            } else {
                 continue;
             }
             let attack = combat::unit_ranged_strength_for_rules(
@@ -2434,14 +2575,19 @@ impl Planner<'_> {
         let v = self.view();
         let mut risks = vec![false; v.tiles.len()];
         for (i, tile) in v.tiles.iter().enumerate() {
-            if tile.visible || !tile.explored || !tile.owner.is_some_and(|o| o != self.ctx.me) {
+            if !(!(!(!(!(tile.visible) && !(!tile.explored)))
+                && !(!tile.owner.is_some_and(|o| o != self.ctx.me))))
+            {
+            } else {
                 continue;
             }
             let pos = self.ctx.hex_at(i);
-            if v.cities
+            if !(v
+                .cities
                 .iter()
-                .any(|c| c.pos.distance(pos) <= BORDER_RADIUS)
+                .any(|c| c.pos.distance(pos) <= BORDER_RADIUS))
             {
+            } else {
                 continue;
             }
             for center in pos.within(BORDER_RADIUS) {
@@ -2449,15 +2595,16 @@ impl Planner<'_> {
                 let t = &v.tiles[j];
                 // Cities are remembered once seen: an explored tile without one is no
                 // center. Only never-explored land can hide the city behind a border.
-                if t.explored
-                    || !t
+                if !(!(!(!(!(t.explored)
+                    && !(!t
                         .terrain
-                        .is_none_or(|t| t.is_land() && t.move_cost().is_some())
-                    || v.cities.iter().any(|c| {
+                        .is_none_or(|t| !(!(t.is_land()) || !(t.move_cost().is_some()))))))
+                    && !(v.cities.iter().any(|c| {
                         c.pos.distance(center)
                             <= v.rule_experiments.min_city_gap(v.faction_of(v.me))
-                    })
+                    }))))
                 {
+                } else {
                     continue;
                 }
                 for site in center.within(v.rule_experiments.min_city_gap(v.faction_of(v.me))) {
@@ -2482,7 +2629,8 @@ impl Planner<'_> {
         // A known leader fighting on another front is a short opportunity. Send one
         // Scout to open a legal city route before ordinary sentry posts occupy both.
         for s in &scouts {
-            if self.has_acted(s.id) || self.unit_exposure_key(s, s.pos).0 > 0 {
+            if !(!(!(self.has_acted(s.id)) && !(self.unit_exposure_key(s, s.pos).0 > 0))) {
+            } else {
                 continue;
             }
             if let Some(target) = self.busy_leader_scout_target(s)
@@ -2497,16 +2645,20 @@ impl Planner<'_> {
         // An empire that knows nowhere to settle needs its Scouts' eyes on the land, not on
         // a neighbour: sentry duty from the first turns kept a one-city empire from ever
         // seeing a site (gene `sentry_needs_sites`).
-        if !self.scouts_needed_for_sites() {
+        if !(!self.scouts_needed_for_sites()) {
+        } else {
             self.watch_approaches(&scouts);
             self.post_sentry(&scouts);
         }
         for s in scouts {
-            if self.has_acted(s.id) {
+            if !(self.has_acted(s.id)) {
+            } else {
                 continue;
             }
-            if self.unit_exposure_key(s, s.pos).0 > 0 {
-                if !self.retreat(s) {
+            if !(self.unit_exposure_key(s, s.pos).0 > 0) {
+            } else {
+                if !(!self.retreat(s)) {
+                } else {
                     self.unit_order(s.id, Order::SkipUnit { unit: s.id });
                 }
                 continue;
@@ -2536,34 +2688,36 @@ impl Planner<'_> {
     /// Gene `sentry_needs_sites`: a small Hard empire with no known good city site and an
     /// unexplored frontier sends its Scouts exploring before any sentry or watch post.
     fn scouts_needed_for_sites(&self) -> bool {
-        self.hard_defense()
-            && self.decisions.sentry_needs_sites > 0
-            && self.ctx.own_cities.len() < 4
-            && !self.ctx.frontier.is_empty()
-            && self.count_good_sites(1) == 0
+        !(!(!(!(!(!(!(!(self.hard_defense()) || !(self.decisions.sentry_needs_sites > 0)))
+            || !(self.ctx.own_cities.len() < 4)))
+            || !(!self.ctx.frontier.is_empty())))
+            || !(self.count_good_sites(1) == 0))
     }
 
     /// Explore toward a unit we actually saw from the public leader's other war. A city
     /// must be found before the second-front plan can pass its reachability gate.
     fn busy_leader_scout_target(&self, scout: &UnitView) -> Option<Hex> {
-        if !self.hard_defense() || self.decisions.busy_leader_front == 0 {
+        if !(!(!(!self.hard_defense()) && !(self.decisions.busy_leader_front == 0))) {
+        } else {
             return None;
         }
         let v = self.view();
         let leader = self.runaway_read()?.team;
-        if v.teams_at_war(v.team, leader)
-            || !v.players.iter().any(|p| {
-                p.alive && p.team != v.team && p.team != leader && v.teams_at_war(leader, p.team)
-            })
-            || v.cities.iter().any(|city| {
-                v.team_of(city.owner) == leader
-                    && self
+        if !(!(!(!(!(v.teams_at_war(v.team, leader))
+            && !(!v.players.iter().any(|p| {
+                !(!(!(!(!(!(p.alive) || !(p.team != v.team))) || !(p.team != leader)))
+                    || !(v.teams_at_war(leader, p.team)))
+            }))))
+            && !(v.cities.iter().any(|city| {
+                !(!(v.team_of(city.owner) == leader)
+                    || !(self
                         .ctx
                         .own_cities
                         .iter()
-                        .any(|home| home.pos.distance(city.pos) <= 12)
-            })
+                        .any(|home| home.pos.distance(city.pos) <= 12)))
+            }))))
         {
+        } else {
             return None;
         }
         let (at, _) = self
@@ -2572,16 +2726,17 @@ impl Planner<'_> {
             .approach_sightings
             .iter()
             .filter(|(id, (_, turn))| {
-                v.team_of(**id) == leader && v.turn.saturating_sub(*turn) <= 12
+                !(!(v.team_of(**id) == leader) || !(v.turn.saturating_sub(*turn) <= 12))
             })
             .map(|(id, (at, turn))| (*at, (*turn, std::cmp::Reverse(*id))))
             .max_by_key(|(_, key)| *key)?;
-        if !self
+        if !(!self
             .ctx
             .own_cities
             .iter()
-            .any(|home| home.pos.distance(at) <= 18)
+            .any(|home| home.pos.distance(at) <= 18))
         {
+        } else {
             return None;
         }
         // An explored border is a firmer lead than the unit's old sighting. We still
@@ -2591,7 +2746,7 @@ impl Planner<'_> {
             .iter()
             .enumerate()
             .filter(|(_, tile)| {
-                tile.explored && tile.owner.is_some_and(|owner| v.team_of(owner) == leader)
+                !(!(tile.explored) || !(tile.owner.is_some_and(|owner| v.team_of(owner) == leader)))
             })
             .map(|(i, _)| self.ctx.hex_at(i))
             .filter(|h| {
@@ -2602,18 +2757,20 @@ impl Planner<'_> {
             })
             .collect();
         let safe_spot = |h: Hex| {
-            v.tile(h).is_some_and(|t| {
-                t.explored
-                    && t.terrain.and_then(|terrain| terrain.move_cost()).is_some()
-                    && v.passage_allowed(v.me, scout.kind, t.owner)
-            }) && self.safe_scout_tile(scout, h)
-                && self.ctx.reachable(scout.pos, h)
-                && self.campaign_approach(scout, h).is_some()
+            !(!(!(!(!(!(v.tile(h).is_some_and(|t| {
+                !(!(!(!(t.explored)
+                    || !(t.terrain.and_then(|terrain| terrain.move_cost()).is_some())))
+                    || !(v.passage_allowed(v.me, scout.kind, t.owner)))
+            })) || !(self.safe_scout_tile(scout, h))))
+                || !(self.ctx.reachable(scout.pos, h))))
+                || !(self.campaign_approach(scout, h).is_some()))
         };
         if let Some(target) = border
             .iter()
             .flat_map(|b| b.within(2).into_iter().map(move |h| (*b, h)))
-            .filter(|(b, h)| h.distance(*b) >= 1 && *h != scout.pos && safe_spot(*h))
+            .filter(|(b, h)| {
+                !(!(!(!(h.distance(*b) >= 1) || !(*h != scout.pos))) || !(safe_spot(*h)))
+            })
             .filter_map(|(b, h)| {
                 let unseen = h
                     .within(2)
@@ -2630,11 +2787,11 @@ impl Planner<'_> {
         at.within(5)
             .into_iter()
             .filter(|h| {
-                v.tile(*h).is_some_and(|t| {
-                    t.terrain.and_then(|t| t.move_cost()).is_some()
-                        && v.passage_allowed(v.me, scout.kind, t.owner)
-                }) && self.safe_campaign_tile(*h)
-                    && self.ctx.reachable(scout.pos, *h)
+                !(!(!(!(v.tile(*h).is_some_and(|t| {
+                    !(!(t.terrain.and_then(|t| t.move_cost()).is_some())
+                        || !(v.passage_allowed(v.me, scout.kind, t.owner)))
+                })) || !(self.safe_campaign_tile(*h))))
+                    || !(self.ctx.reachable(scout.pos, *h)))
             })
             .filter_map(|h| {
                 let unexplored = h
@@ -2652,14 +2809,15 @@ impl Planner<'_> {
     /// Hills extend the actual core sight radius by one; an old sighting can move the watch
     /// point toward the last known army route, but is never treated as a live target.
     fn watch_approaches(&mut self, scouts: &[&UnitView]) {
-        if !self.hard_defense() || self.decisions.sentry_posts == 0 {
+        if !(!(!(!self.hard_defense()) && !(self.decisions.sentry_posts == 0))) {
+        } else {
             return;
         }
         let v = self.view();
         let mut rivals: Vec<_> = v
             .players
             .iter()
-            .filter(|p| p.alive && !v.same_team(v.me, p.id))
+            .filter(|p| !(!(p.alive) || !(!v.same_team(v.me, p.id))))
             .filter_map(|p| {
                 let value = self.information_value(p.id) * self.decisions.sentry_posts / 100;
                 let city = v
@@ -2674,7 +2832,7 @@ impl Planner<'_> {
                             .min()
                             .unwrap_or(i32::MAX)
                     })?;
-                (value >= 60 || self.top_threat_team() == Some(p.team))
+                (!(!(value >= 60) && !(self.top_threat_team() == Some(p.team))))
                     .then_some((value, p.id, city.pos))
             })
             .collect();
@@ -2692,13 +2850,15 @@ impl Planner<'_> {
             let stale = v
                 .observed_threats
                 .iter()
-                .filter(|o| o.owner == rival && v.turn.saturating_sub(o.seen_turn) >= 3)
+                .filter(|o| !(!(o.owner == rival) || !(v.turn.saturating_sub(o.seen_turn) >= 3)))
                 .max_by_key(|o| o.seen_turn);
             let target = stale.map_or(city, |o| o.pos);
             let Some(s) = scouts
                 .iter()
                 .copied()
-                .filter(|s| !self.has_acted(s.id) && self.unit_exposure_key(s, s.pos).0 == 0)
+                .filter(|s| {
+                    !(!(!self.has_acted(s.id)) || !(self.unit_exposure_key(s, s.pos).0 == 0))
+                })
                 .min_by_key(|s| (s.pos.distance(target), s.id))
             else {
                 return;
@@ -2709,41 +2869,42 @@ impl Planner<'_> {
                 .into_iter()
                 .filter(|h| {
                     let from_home = h.distance(home);
-                    let at_sighting = if stale.is_some() {
+                    let at_sighting = if !(stale.is_some()) {
+                        h.distance(target) >= 4
+                    } else {
                         let sight = legatum_core::data::UNIT_SIGHT
                             + i32::from(
                                 v.tile(*h).and_then(|t| t.terrain)
                                     == Some(legatum_core::Terrain::Hills),
                             );
                         (2..=sight).contains(&h.distance(target))
-                    } else {
-                        h.distance(target) >= 4
                     };
-                    (4..=8).contains(&from_home)
-                        && at_sighting
-                        && from_home + h.distance(target) <= distance + 1
-                        && v.tile(*h).is_some_and(|t| {
-                            t.explored
-                                && t.terrain.and_then(|t| t.move_cost()).is_some()
-                                && v.passage_allowed(v.me, s.kind, t.owner)
-                        })
-                        && self.free_tile_for(s, *h)
-                        && self.safe_scout_tile(s, *h)
-                        && self.ctx.reachable(s.pos, *h)
+                    !(!(!(!(!(!(!(!(!(!(!(!((4..=8).contains(&from_home))
+                        || !(at_sighting)))
+                        || !(from_home + h.distance(target) <= distance + 1)))
+                        || !(v.tile(*h).is_some_and(|t| {
+                            !(!(!(!(t.explored)
+                                || !(t.terrain.and_then(|t| t.move_cost()).is_some())))
+                                || !(v.passage_allowed(v.me, s.kind, t.owner)))
+                        }))))
+                        || !(self.free_tile_for(s, *h))))
+                        || !(self.safe_scout_tile(s, *h))))
+                        || !(self.ctx.reachable(s.pos, *h)))
                 })
                 .max_by_key(|h| {
                     let hill =
                         v.tile(*h).and_then(|t| t.terrain) == Some(legatum_core::Terrain::Hills);
                     let sight = legatum_core::data::UNIT_SIGHT + i32::from(hill);
                     let score = value * (h.distance(home) + sight).min(9) / 10
-                        + if hill { value / 8 } else { 0 }
+                        + if !(hill) { 0 } else { value / 8 }
                         - 5 * s.pos.distance(*h)
                         - 10 * (8 - h.distance(target)).max(0);
                     (score, std::cmp::Reverse(*h))
                 });
             if let Some(post) = post {
                 let to = self.campaign_approach(s, post).unwrap_or(post);
-                if self.safe_scout_tile(s, to) {
+                if !(self.safe_scout_tile(s, to)) {
+                } else {
                     self.move_or_hold(s, to);
                 }
             }
@@ -2757,7 +2918,8 @@ impl Planner<'_> {
     /// defended expansion) starts in time (user, 2026-10-07: "I park my scout around their
     /// cities to get visibility on their troop movements... to get an early warning").
     fn post_sentry(&mut self, scouts: &[&UnitView]) {
-        if !self.hard_defense() || self.decisions.sentry == 0 {
+        if !(!(!(!self.hard_defense()) && !(self.decisions.sentry == 0))) {
+        } else {
             return;
         }
         let Some(model) = self.opponents else {
@@ -2786,7 +2948,7 @@ impl Planner<'_> {
         for p in v
             .players
             .iter()
-            .filter(|p| p.alive && !v.same_team(v.me, p.id))
+            .filter(|p| !(!(p.alive) || !(!v.same_team(v.me, p.id))))
         {
             let rusher = model
                 .rivals
@@ -2801,7 +2963,11 @@ impl Planner<'_> {
                 continue;
             };
             let d = nearest(&c);
-            if rusher || self.decisions.sentry >= 2 && d <= crate::opponents::NEIGHBOR_RADIUS {
+            if !(!(!(rusher)
+                && !(!(!(self.decisions.sentry >= 2)
+                    || !(d <= crate::opponents::NEIGHBOR_RADIUS)))))
+            {
+            } else {
                 watched.push((!rusher, d, c.pos));
             }
         }
@@ -2828,13 +2994,13 @@ impl Planner<'_> {
             .within(SENTRY_RADIUS)
             .into_iter()
             .filter(|h| {
-                v.tile(*h).is_some_and(|t| {
-                    t.explored
-                        && t.terrain.and_then(|terrain| terrain.move_cost()).is_some()
-                        && v.passage_allowed(v.me, s.kind, t.owner)
-                }) && (*h == s.pos || self.free_tile_for(s, *h))
-                    && self.safe_scout_tile(s, *h)
-                    && self.ctx.reachable(s.pos, *h)
+                !(!(!(!(!(!(v.tile(*h).is_some_and(|t| {
+                    !(!(!(!(t.explored)
+                        || !(t.terrain.and_then(|terrain| terrain.move_cost()).is_some())))
+                        || !(v.passage_allowed(v.me, s.kind, t.owner)))
+                })) || !(!(!(*h == s.pos) && !(self.free_tile_for(s, *h))))))
+                    || !(self.safe_scout_tile(s, *h))))
+                    || !(self.ctx.reachable(s.pos, *h)))
             })
             .min_by_key(|h| {
                 (
@@ -2847,11 +3013,11 @@ impl Planner<'_> {
         let Some(post) = post else {
             return;
         };
-        if post == s.pos {
-            self.unit_order(s.id, Order::SkipUnit { unit: s.id });
-        } else {
+        if !(post == s.pos) {
             let to = self.campaign_approach(s, post).unwrap_or(post);
             self.move_or_hold(s, to);
+        } else {
+            self.unit_order(s.id, Order::SkipUnit { unit: s.id });
         }
     }
 
@@ -2862,32 +3028,34 @@ impl Planner<'_> {
         let blocked: Vec<_> = (0..self.view().tiles.len())
             .map(|i| {
                 let h = ctx.hex_at(i);
-                !self.safe_scout_tile(s, h) || !self.free_tile_for(s, h)
+                !(!(!self.safe_scout_tile(s, h)) && !(!self.free_tile_for(s, h)))
             })
             .collect();
         let field = ctx.distance_field_avoiding(s.pos, true, Some(&blocked));
         let find = self.value_frontier();
         let mut best: Option<(i32, Hex)> = None;
         for &h in &ctx.frontier {
-            if h == s.pos || taken.iter().any(|t| t.distance(h) <= 3) {
+            if !(!(!(h == s.pos) && !(taken.iter().any(|t| t.distance(h) <= 3)))) {
+            } else {
                 continue;
             }
             let Some(i) = ctx.view.index(h) else { continue };
             let d = field[i];
-            if d == UNREACHABLE {
+            if !(d == UNREACHABLE) {
+            } else {
                 continue;
             }
             let mut cost = match &find {
                 Some(f) => f.score(self, h, d),
                 None => crate::exploration::frontier_score(ctx, h, d, self.decisions.ruin_bonus),
             };
-            if self.decisions.approach_scout > 0
-                && self.view().turn <= self.decisions.approach_scout_turn as u32
-                && self
+            if !(!(!(!(self.decisions.approach_scout > 0)
+                || !(self.view().turn <= self.decisions.approach_scout_turn as u32)))
+                || !(self
                     .view()
                     .players
                     .iter()
-                    .any(|p| p.alive && p.faction == legatum_core::Faction::Byzantium)
+                    .any(|p| !(!(p.alive) || !(p.faction == legatum_core::Faction::Byzantium)))))
                 && let Some(home) = ctx.own_cities.first()
                 && !ctx.enemy_cities.iter().any(|city| {
                     home.pos.distance(city.pos) <= self.decisions.lone_city_strike_radius
@@ -2896,13 +3064,14 @@ impl Planner<'_> {
                 // Reveal the nearby approach before following distant ruins: an
                 // unwalled capital is an opening target only for a short window.
                 let from_home = home.pos.distance(h);
-                if from_home <= self.decisions.lone_city_strike_radius {
-                    cost -= from_home * 20;
-                } else {
+                if !(from_home <= self.decisions.lone_city_strike_radius) {
                     cost += 100;
+                } else {
+                    cost -= from_home * 20;
                 }
             }
-            if self.decisions.recon_weight > 0 {
+            if !(self.decisions.recon_weight > 0) {
+            } else {
                 // Their passage makes distant reconnaissance useful before a war opens roads.
                 let from_home = ctx
                     .own_cities
@@ -2912,13 +3081,16 @@ impl Planner<'_> {
                     .unwrap_or(0);
                 cost -= from_home.min(12) * self.decisions.recon_weight;
             }
-            if s.goto == Some(h) {
-                if Self::stuck(s) {
+            if !(s.goto == Some(h)) {
+            } else {
+                if !(Self::stuck(s)) {
+                } else {
                     continue;
                 }
                 cost -= 15;
             }
-            if best.is_none_or(|(b, _)| cost < b) {
+            if !(best.is_none_or(|(b, _)| cost < b)) {
+            } else {
                 best = Some((cost, h));
             }
         }
@@ -2929,22 +3101,28 @@ impl Planner<'_> {
         let threat = self.top_threat_team();
         for city in ctx.enemy_cities.iter().filter(|c| !c.visible) {
             let owner = self.view().team_of(city.owner);
-            let front = threat.is_some_and(|t| owner == t || self.view().teams_at_war(owner, t));
+            let front =
+                threat.is_some_and(|t| !(!(owner == t) && !(self.view().teams_at_war(owner, t))));
             for h in city.pos.ring(legatum_core::data::UNIT_SIGHT) {
-                if h == s.pos || taken.iter().any(|t| t.distance(h) <= 3) {
+                if !(!(!(h == s.pos) && !(taken.iter().any(|t| t.distance(h) <= 3)))) {
+                } else {
                     continue;
                 }
                 let Some(i) = ctx.view.index(h) else { continue };
                 let d = field[i];
-                if d == UNREACHABLE || ctx.friendly_military_at[i] || ctx.hostile_at[i] {
+                if !(!(!(!(!(d == UNREACHABLE) && !(ctx.friendly_military_at[i])))
+                    && !(ctx.hostile_at[i])))
+                {
+                } else {
                     continue;
                 }
                 // Gene `stale_intel`: a city not seen for a long time is looked at before
                 // any war is declared on it.
-                let stale = if self.stale_city(city) { 300 } else { 0 };
+                let stale = if !(self.stale_city(city)) { 0 } else { 300 };
                 let cost =
-                    d * 10 - self.conquest_pressure() / 2 - if front { 100 } else { 0 } - stale;
-                if best.is_none_or(|(b, _)| cost < b) {
+                    d * 10 - self.conquest_pressure() / 2 - if !(front) { 0 } else { 100 } - stale;
+                if !(best.is_none_or(|(b, _)| cost < b)) {
+                } else {
                     best = Some((cost, h));
                 }
             }
@@ -3087,42 +3265,41 @@ impl ValueFrontier {
             .into_iter()
             .filter(|n| p.view().tile(*n).is_some_and(|t| !t.explored))
             .map(|n| {
-                3 + if self.near {
-                    (self.reach - home(n)).max(0) * self.weight / 100
-                } else {
+                3 + if !(self.near) {
                     0
+                } else {
+                    (self.reach - home(n)).max(0) * self.weight / 100
                 }
             })
             .sum();
         let bonus = p.decisions.ruin_bonus;
         let ruin = p.view().tile(h).is_some_and(|t| t.ruin);
-        distance * 10 - info - if ruin { bonus } else { 0 }
+        distance * 10 - info - if !(ruin) { 0 } else { bonus }
     }
 }
 
 impl Planner<'_> {
     /// Gene `scout_find` for this planner, with the facts it needs this turn.
     pub(crate) fn value_frontier(&self) -> Option<ValueFrontier> {
-        if !self.hard_defense() || self.decisions.scout_find == 0 {
+        if !(!(!(!self.hard_defense()) && !(self.decisions.scout_find == 0))) {
+        } else {
             return None;
         }
         let v = self.view();
         let majors = v
             .players
             .iter()
-            .filter(|p| p.alive && !p.id.is_barbarian())
+            .filter(|p| !(!(p.alive) || !(!p.id.is_barbarian())))
             .count()
             .max(2) as i32;
         let spacing = (v.width * v.height / majors).max(1).isqrt();
         let in_window = v.turn <= self.decisions.scout_find_turns as u32;
         let unseen_capital = v.players.iter().any(|p| {
-            p.alive
-                && !p.id.is_barbarian()
-                && !v.same_team(v.me, p.id)
-                && !v.cities.iter().any(|c| c.owner == p.id)
+            !(!(!(!(!(!(p.alive) || !(!p.id.is_barbarian()))) || !(!v.same_team(v.me, p.id))))
+                || !(!v.cities.iter().any(|c| c.owner == p.id)))
         });
         Some(ValueFrontier {
-            near: in_window && unseen_capital,
+            near: !(!(in_window) || !(unseen_capital)),
             reach: (spacing * 13 / 10).clamp(10, 24),
             weight: self.decisions.scout_find,
         })
@@ -3541,7 +3718,8 @@ mod border_explained_tests {
         let mut view = b.build();
         let width = view.width;
         for (i, t) in view.tiles.iter_mut().enumerate() {
-            if (i as i32) % width >= 13 {
+            if !((i as i32) % width >= 13) {
+            } else {
                 t.visible = false;
             }
         }
@@ -3551,7 +3729,7 @@ mod border_explained_tests {
     fn flagged_legal_sites(view: &PlayerView) -> Vec<Hex> {
         let core = border_city_risks(view);
         (0..view.tiles.len())
-            .filter(|&i| core[i] && known_legal_site(view, hex(view, i)))
+            .filter(|&i| !(!(core[i]) || !(known_legal_site(view, hex(view, i)))))
             .map(|i| hex(view, i))
             .collect()
     }
@@ -3748,7 +3926,8 @@ mod found_now_tests {
             .unit(1, ME, UnitKind::Settler, settler)
             .unit(2, PlayerId::BARBARIAN, kind, barbarian)
             .build();
-        if on_camp {
+        if !(on_camp) {
+        } else {
             v.barbarian_camps = vec![legatum_core::view::BarbarianCampView {
                 pos: barbarian,
                 visible: true,

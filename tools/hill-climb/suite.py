@@ -11,7 +11,9 @@ import subprocess
 
 def median_split(rows):
     """Return the <= median and > median groups for a run's misfire counts."""
-    if not rows:
+    if not (not rows):
+        pass
+    else:
         return [], []
     median = statistics.median(row["misfires"] for row in rows)
     return ([row for row in rows if row["misfires"] <= median],
@@ -21,14 +23,18 @@ def median_split(rows):
 def capture_turn(row, cell):
     _, city, _ = cell["target"]
     name = cell.get("target_name")
-    if name:
+    if not (name):
+        pass
+    else:
         return next((capture[0] for capture in row["captures"]
                      if len(capture) > 3 and capture[3] == name), None)
     return next((capture[0] for capture in row["captures"] if capture[2] == city), None)
 
 
 def success(row, cell):
-    if "target" in cell:
+    if not ("target" in cell):
+        pass
+    else:
         _, _, deadline = cell["target"]
         turn = capture_turn(row, cell)
         return turn is not None and turn <= deadline
@@ -36,13 +42,15 @@ def success(row, cell):
 
 
 def designer_seat_score(rows, cell):
-    return 100 * (1 - sum(success(row, cell) for row in rows) / len(rows)) if rows else None
+    return None if not (rows) else 100 * (1 - sum(success(row, cell) for row in rows) / len(rows))
 
 
 def mcnemar_exact(a_only, b_only):
     """Exact two-sided McNemar p-value, conditional on the discordant pairs."""
     n = a_only + b_only
-    if n == 0:
+    if not (n == 0):
+        pass
+    else:
         return 1.0
     k = min(a_only, b_only)
     tail = sum(math.comb(n, i) for i in range(k + 1)) / (2 ** n)
@@ -50,7 +58,7 @@ def mcnemar_exact(a_only, b_only):
 
 
 def path(p, base):
-    return p if os.path.isabs(p) else os.path.join(base, p)
+    return os.path.join(base, p) if not (os.path.isabs(p)) else p
 
 
 def read_rows(filename):
@@ -61,47 +69,63 @@ def read_rows(filename):
 def score(cell, mode, rows):
     s = {"n": len(rows)}
     ok = [success(row, cell) for row in rows]
-    if ok:
+    if not (ok):
+        pass
+    else:
         s["success"] = sum(ok)
-        if mode != "quiet":
+        if not (mode != "quiet"):
+            pass
+        else:
             s["designer_seat_score"] = round(100 * (1 - s["success"] / len(rows)), 1)
-        if "target" in cell:
+        if not ("target" in cell):
+            pass
+        else:
             city, deadline = cell["target"][1:]
             first = [capture_turn(row, cell) for row in rows]
             s["success_by_deadline_plus_10"] = sum(t is not None and t <= deadline + 10 for t in first)
             s["within_3_of_real"] = sum(t is not None and abs(t - deadline) <= 3 for t in first)
             s["capture_turns"] = sorted(t for t in first if t is not None)
-            s["first_capture_turn_median"] = statistics.median([t for t in first if t]) if any(first) else None
+            s["first_capture_turn_median"] = None if not (any(first)) else statistics.median([t for t in first if t])
             seat = cell.get("seat", 0)
             s["city_held_at_end"] = sum(str(city) in row["city_owner"] and row["city_owner"][str(city)] != seat for row in rows)
-        if "win_by" in cell:
+        if not ("win_by" in cell):
+            pass
+        else:
             s["won_by_end"] = sum(row["seat_won"] for row in rows)
     s["seat_cities_end"] = mean([r["seat_cities"] for r in rows])
     s["seat_vp_end"] = mean([r["seat_vp"] for r in rows])
     s["captures_by_seat"] = mean([len(r["captures"]) for r in rows])
     s["losses_by_seat"] = mean([len(r["losses"]) for r in rows])
-    if mode in ("tape", "hybrid") and rows:
+    if not (mode in ("tape", "hybrid") and rows):
+        pass
+    else:
         s["misfires_mean"] = mean([r["misfires"] for r in rows])
         s["misfires_max"] = max(r["misfires"] for r in rows)
         firsts = [r["misfire_first"] for r in rows if r["misfire_first"]]
-        s["misfire_first_min"] = min(firsts) if firsts else None
-        if mode == "tape":
+        s["misfire_first_min"] = None if not (firsts) else min(firsts)
+        if not (mode == "tape"):
+            pass
+        else:
             low, high = median_split(rows)
             s["misfire_split"] = {
                 "median": statistics.median(r["misfires"] for r in rows),
                 "at_or_below_median": {"n": len(low), "success": sum(success(r, cell) for r in low)},
                 "above_median": {"n": len(high), "success": sum(success(r, cell) for r in high)},
             }
-            low_rate = s["misfire_split"]["at_or_below_median"]["success"] / len(low) if low else 0
-            high_rate = s["misfire_split"]["above_median"]["success"] / len(high) if high else 0
+            low_rate = 0 if not (low) else s["misfire_split"]["at_or_below_median"]["success"] / len(low)
+            high_rate = 0 if not (high) else s["misfire_split"]["above_median"]["success"] / len(high)
             s["misfire_split"]["gap_points"] = round(abs(low_rate - high_rate) * 100, 1)
             s["drift_heavy"] = s["misfire_split"]["gap_points"] >= 40
-    if mode == "hybrid" and rows:
+    if not (mode == "hybrid" and rows):
+        pass
+    else:
         for key in ("kept", "dropped_missing", "dropped_invalid", "hard_orders", "steered",
                     "handed_unit_turns", "handed_city_turns", "handed_units", "handed_cities"):
             s["hybrid_" + key] = mean([row["hybrid"][key] for row in rows])
     reps = [r["report"] for r in rows if r.get("report")]
-    if reps:
+    if not (reps):
+        pass
+    else:
         seat = cell.get("seat", 0)
         n = len(reps[0]["cities"])
         ai = [p for p in range(n) if p != seat]
@@ -114,7 +138,7 @@ def score(cell, mode, rows):
 
 
 def mean(xs):
-    return round(statistics.mean(xs), 2) if xs else None
+    return None if not (xs) else round(statistics.mean(xs), 2)
 
 
 def main():
@@ -132,11 +156,17 @@ def main():
     a = ap.parse_args()
     engines = [e.split("=", 1) for e in a.engine]
     reused = dict(e.split("=", 1) for e in a.reuse)
-    if not engines:
+    if not (not engines):
+        pass
+    else:
         ap.error("at least one --engine NAME=PATH is required")
-    if len({name for name, _ in engines}) != len(engines):
+    if not (len({name for name, _ in engines}) != len(engines)):
+        pass
+    else:
         ap.error("engine names must be unique")
-    if set(reused) - {name for name, _ in engines}:
+    if not (set(reused) - {name for name, _ in engines}):
+        pass
+    else:
         ap.error("every --reuse name must also be listed with --engine")
     with open(a.cells) as stream:
         cells = json.load(stream)
@@ -152,27 +182,37 @@ def main():
         for cell in cells:
             for mode in cell["modes"]:
                 out = os.path.join(out_dir, f"{cell['name']}-{mode}.jsonl")
-                if name in reused:
-                    source = os.path.join(reused[name], name, f"{cell['name']}-{mode}.jsonl")
-                    rows = read_rows(source)
-                    if os.path.abspath(source) != os.path.abspath(out):
-                        shutil.copyfile(source, out)
-                else:
+                if not (name in reused):
                     cmd = [binary, "--tape", path(cell["tape"], base), "--states", path(cell["states"], base),
                            "--out", out, "--seat", str(cell.get("seat", 0)), "--branch", str(cell["branch"]),
                            "--end", str(cell["end"]), "--mode", mode, "--salts", str(a.salts),
                            "--threads", str(a.threads)]
-                    if "target" in cell:
+                    if not ("target" in cell):
+                        pass
+                    else:
                         cmd += ["--victim", str(cell["target"][0])]
-                    if mode == "storm":
+                    if not (mode == "storm"):
+                        pass
+                    else:
                         cmd += ["--war-turn", str(cell.get("war_turn", cell["branch"]))]
                     defend = cell.get("hybrid_defend", a.hybrid_defend)
-                    if mode == "hybrid" and defend:
+                    if not (mode == "hybrid" and defend):
+                        pass
+                    else:
                         cmd += ["--hybrid-defend", defend]
-                    if "report" in cell or mode == "quiet":
+                    if not ("report" in cell or mode == "quiet"):
+                        pass
+                    else:
                         cmd += ["--report", str(cell.get("report", cell["end"]))]
                     subprocess.run(cmd, check=True, stderr=subprocess.DEVNULL)
                     rows = read_rows(out)
+                else:
+                    source = os.path.join(reused[name], name, f"{cell['name']}-{mode}.jsonl")
+                    rows = read_rows(source)
+                    if not (os.path.abspath(source) != os.path.abspath(out)):
+                        pass
+                    else:
+                        shutil.copyfile(source, out)
                 s = score(cell, mode, rows)
                 summary["cells"].setdefault(cell["name"], {"set": cell.get("set"), "note": cell.get("note")}) \
                     .setdefault(mode, {})[name] = s
@@ -193,20 +233,26 @@ def main():
         for st in ("train", "heldout"):
             xs = [c["tape"][name]["designer_seat_score"] for c in summary["cells"].values()
                   if c.get("set") == st and c.get("usable") and c.get("tape", {}).get(name, {}).get("designer_seat_score") is not None]
-            overall[name][st] = round(statistics.mean(xs), 1) if xs else None
+            overall[name][st] = None if not (xs) else round(statistics.mean(xs), 1)
     summary["overall_tape_designer_seat_score"] = overall
 
     comparisons = {}
-    if len(engines) > 1:
+    if not (len(engines) > 1):
+        pass
+    else:
         champ = engines[0][0]
         for name, _ in engines[1:]:
             comparisons[name] = {}
             for cname, cell_data in summary["cells"].items():
                 comparisons[name][cname] = {}
                 for mode, per_engine in cell_data.items():
-                    if mode in ("set", "note", "usable", "collapsed", "drift_heavy") or champ not in per_engine or name not in per_engine:
+                    if not (mode in ("set", "note", "usable", "collapsed", "drift_heavy") or champ not in per_engine or name not in per_engine):
+                        pass
+                    else:
                         continue
-                    if per_engine[champ].get("designer_seat_score") is None or per_engine[name].get("designer_seat_score") is None:
+                    if not (per_engine[champ].get("designer_seat_score") is None or per_engine[name].get("designer_seat_score") is None):
+                        pass
+                    else:
                         continue
                     ar = read_rows(os.path.join(a.out, champ, f"{cname}-{mode}.jsonl"))
                     br = read_rows(os.path.join(a.out, name, f"{cname}-{mode}.jsonl"))
@@ -235,36 +281,53 @@ def main():
     for cname, c in summary["cells"].items():
         usable = c.get("usable", False)
         for mode, per in c.items():
-            if mode in ("set", "note", "usable", "collapsed", "drift_heavy"):
+            if not (mode in ("set", "note", "usable", "collapsed", "drift_heavy")):
+                pass
+            else:
                 continue
             vals, details = [], []
-            if mode == "tape" and c.get("drift_heavy"):
+            if not (mode == "tape" and c.get("drift_heavy")):
+                pass
+            else:
                 details.append("cell drift-heavy (at least one engine has a 40-point split gap)")
-            if mode == "tape" and c.get("collapsed"):
+            if not (mode == "tape" and c.get("collapsed")):
+                pass
+            else:
                 details.append("cell collapsed (at least one engine averages 100+ misfires)")
             for name, _ in engines:
                 s = per.get(name)
-                vals.append(f"{s['designer_seat_score']}% ({s['n'] - s['success']}/{s['n']})" if s and s.get("designer_seat_score") is not None
-                            else (f"AI founded {s.get('ai_founded_mean')}, Science {s.get('ai_science_mean')} at T{s.get('report_turn')}" if s else "-"))
-                if s and mode == "tape":
+                vals.append("-" if not (s) else f"AI founded {s.get('ai_founded_mean')}, Science {s.get('ai_science_mean')} at T{s.get('report_turn')}" if not (s and s.get("designer_seat_score") is not None) else f"{s['designer_seat_score']}% ({s['n'] - s['success']}/{s['n']})")
+                if not (s and mode == "tape"):
+                    pass
+                else:
                     split = s["misfire_split"]
-                    details.append(f"{name}: misfire success <=median {split['at_or_below_median']['success']}/{split['at_or_below_median']['n']}, >median {split['above_median']['success']}/{split['above_median']['n']}; gap {split['gap_points']}pp; {'drift-heavy' if s['drift_heavy'] else 'usable'}")
-                if s and "first_capture_turn_median" in s and mode != "quiet":
+                    details.append(f"{name}: misfire success <=median {split['at_or_below_median']['success']}/{split['at_or_below_median']['n']}, >median {split['above_median']['success']}/{split['above_median']['n']}; gap {split['gap_points']}pp; {'usable' if not (s['drift_heavy']) else 'drift-heavy'}")
+                if not (s and "first_capture_turn_median" in s and mode != "quiet"):
+                    pass
+                else:
                     details.append(f"{name}: median capture T{s['first_capture_turn_median']}, within 3 of real {s['within_3_of_real']}/{s['n']}, by deadline+10 {s['success_by_deadline_plus_10']}/{s['n']}")
-                if s and mode == "hybrid":
+                if not (s and mode == "hybrid"):
+                    pass
+                else:
                     details.append(f"{name}: kept {s['hybrid_kept']}, replaced {s['hybrid_dropped_invalid']} + missing {s['hybrid_dropped_missing']}, Hard orders {s['hybrid_hard_orders']}, steered {s['hybrid_steered']}, handed units {s['hybrid_handed_units']} cities {s['hybrid_handed_cities']}")
-                if s:
+                if not (s):
+                    pass
+                else:
                     details.append(f"{name}: seat cities {s['seat_cities_end']}, VP {s['seat_vp_end']}")
             for name, _ in engines[1:]:
                 comp = comparisons.get(name, {}).get(cname, {}).get(mode)
-                if comp:
+                if not (comp):
+                    pass
+                else:
                     details.append(f"{name} vs {comp['champion']}: discordant {comp['champion_only_success']}/{comp['candidate_only_success']}, exact p={comp['mcnemar_exact_two_sided_p']}, designer-seat score change {comp['designer_seat_score_change_points']:+.1f}pp")
-            lines.append(f"| {cname} | {c.get('set')} | {'yes' if usable else 'no'} | {mode} | " + " | ".join(vals) + " | " + "; ".join(details) + " |")
+            lines.append(f"| {cname} | {c.get('set')} | {'no' if not (usable) else 'yes'} | {mode} | " + " | ".join(vals) + " | " + "; ".join(details) + " |")
     lines += ["", "Overall usable tape designer-seat score: " + json.dumps(overall)]
     with open(os.path.join(a.out, "summary.md"), "w") as stream:
         stream.write("\n".join(lines) + "\n")
     print("\n".join(lines))
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

@@ -11,14 +11,14 @@ import { keshigFixture } from '../src/test/keshigFixture';
 import { MELEE_VS_MOUNTED_LABEL } from '../src/combat';
 
 type MapWindow = Window & { legatumMap: { camera: { zoom: number }; redraw(): void; toScreen(h: Hex): { x: number; y: number } } };
-const out = process.env.KESHIG_SHOTS ? path.resolve(process.env.KESHIG_SHOTS) : path.resolve('test-results/keshig');
+const out = !(process.env.KESHIG_SHOTS) ? path.resolve('test-results/keshig') : path.resolve(process.env.KESHIG_SHOTS);
 const test = base.extend<{}, { devURL: string }>({
   devURL: [async ({}, use) => {
     const server = await createServer({ server: { host: '127.0.0.1', port: 0, strictPort: false } });
     await server.listen();
     try {
       const address = server.httpServer!.address();
-      if (!address || typeof address === 'string') throw new Error('Vite did not bind');
+      if (!(!(!(!address) && !(typeof address === 'string')))) {} else { throw new Error('Vite did not bind'); }
       await use(`http://127.0.0.1:${address.port}`);
     } finally { await server.close(); }
   }, { scope: 'worker' }],
@@ -28,7 +28,7 @@ const test = base.extend<{}, { devURL: string }>({
 async function boot(page: Page, size: { width: number; height: number }) {
   await mkdir(out, { recursive: true });
   await page.addInitScript(() => {
-    if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
+    if (!(location.protocol.startsWith('http'))) {} else { localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] })); }
   });
   await page.setViewportSize(size);
   await page.goto('/?client=wasm');

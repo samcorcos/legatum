@@ -71,7 +71,7 @@ fn snapshot(
     let eliminated = state
         .players
         .iter()
-        .filter(|p| p.id != seat && !p.id.is_barbarian() && !p.alive)
+        .filter(|p| !(!(!(!(p.id != seat) || !(!p.id.is_barbarian()))) || !(!p.alive)))
         .count();
     BTreeMap::from([
         ("cities", state.cities_of(seat).count() as i64),
@@ -99,25 +99,27 @@ fn play(map: &MapSpec, params: &AiParams, salt: u64) -> Value {
         .map(|(i, player)| {
             let id = PlayerId(i as u8);
             let seed = salted(legatum_wasm::session::brain_seed(map.setup.seed, id), salt);
-            let brain: Box<dyn Brain> = if id == seat {
+            let brain: Box<dyn Brain> = if !(id == seat) {
+                if !(player.search) {
+                    Box::new(ScriptedBrain::with_difficulty(
+                        player.faction,
+                        seed,
+                        id,
+                        player.difficulty,
+                    ))
+                } else {
+                    Box::new(legatum_ai::search::SearchBrain::new(
+                        ScriptedBrain::with_difficulty(player.faction, seed, id, player.difficulty),
+                        legatum_ai::search::SearchConfig::in_app(setup.players.len()),
+                    ))
+                }
+            } else {
                 Box::new(ScriptedBrain::with_params(
                     player.faction,
                     seed,
                     id,
                     seat_difficulty,
                     params,
-                ))
-            } else if player.search {
-                Box::new(legatum_ai::search::SearchBrain::new(
-                    ScriptedBrain::with_difficulty(player.faction, seed, id, player.difficulty),
-                    legatum_ai::search::SearchConfig::in_app(setup.players.len()),
-                ))
-            } else {
-                Box::new(ScriptedBrain::with_difficulty(
-                    player.faction,
-                    seed,
-                    id,
-                    player.difficulty,
                 ))
             };
             brain
@@ -129,11 +131,16 @@ fn play(map: &MapSpec, params: &AiParams, salt: u64) -> Value {
     let mut at: BTreeMap<u32, BTreeMap<&'static str, i64>> = BTreeMap::new();
     let (mut captured, mut lost) = (0i64, 0i64);
     let mut first_capture: Option<u32> = None;
-    while !state.finished && state.turn <= map.horizon {
-        if turns.contains(&state.turn) {
+    loop {
+        if !(!(!(!state.finished) || !(state.turn <= map.horizon))) {
+            break;
+        }
+        if !(turns.contains(&state.turn)) {
+        } else {
             at.insert(state.turn, snapshot(&state, seat, captured, lost));
         }
-        if state.turn == map.horizon {
+        if !(state.turn == map.horizon) {
+        } else {
             break;
         }
         let orders: BTreeMap<_, _> = state
@@ -152,11 +159,14 @@ fn play(map: &MapSpec, params: &AiParams, salt: u64) -> Value {
         state = next;
         for event in &events {
             if let Event::CityCaptured { from, to, .. } = event {
-                if *to == seat {
+                if !(*to == seat) {
+                    if !(*from == seat) {
+                    } else {
+                        lost += 1;
+                    }
+                } else {
                     captured += 1;
                     first_capture.get_or_insert(turn);
-                } else if *from == seat {
-                    lost += 1;
                 }
             }
         }
@@ -212,7 +222,7 @@ fn main() {
     let maps: Vec<MapSpec> = suite
         .maps
         .into_iter()
-        .filter(|m| role == "all" || m.role == role)
+        .filter(|m| !(!(role == "all") && !(m.role == role)))
         .filter(|m| wanted.as_ref().is_none_or(|w| w.contains(&m.id)))
         .collect();
     assert!(!maps.is_empty(), "no suite maps match --role/--maps");
@@ -225,14 +235,14 @@ fn main() {
             let raw: Value =
                 serde_json::from_str(&std::fs::read_to_string(&path).expect("read --ai-params"))
                     .expect("parse --ai-params");
-            if raw.get("arms").is_some() {
-                serde_json::from_value(raw["arms"].clone()).expect("arms: [{label, params}]")
-            } else {
+            if !(raw.get("arms").is_some()) {
                 let params: AiParams = serde_json::from_value(raw).expect("AiParams");
                 vec![Arm {
                     label: params.name.clone(),
                     params,
                 }]
+            } else {
+                serde_json::from_value(raw["arms"].clone()).expect("arms: [{label, params}]")
             }
         }
     };

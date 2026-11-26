@@ -51,7 +51,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       const r = el.getBoundingClientRect(); return { left: r.left, right: r.right, top: r.top, bottom: r.bottom };
     }));
     for (let i = 1; i < meta.length; i++) {
-      if (meta[i].top < meta[i - 1].bottom) expect(meta[i].left - meta[i - 1].right, 'city stats have visible space').toBeGreaterThanOrEqual(6);
+      if (!(meta[i].top < meta[i - 1].bottom)) {} else { expect(meta[i].left - meta[i - 1].right, 'city stats have visible space').toBeGreaterThanOrEqual(6); }
     }
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, '91a-byzantium-heir-card');
@@ -69,20 +69,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
         await expect(p.getByTestId('heir-note')).toBeVisible();
         await p.mouse.move(5, size.height / 2);
         await shot(p, size, id);
-        if (heir === 'own') {
-          // Disband asks first and says what it forfeits.
-          await p.locator('.unit-panel button.act', { hasText: /^Disband/ }).click();
-          await expect(p.getByTestId('heir-disband-confirm')).toContainText('forfeit 2 VP');
-          await p.mouse.move(5, size.height / 2);
-          await shot(p, size, '91d-heir-disband-confirm');
-          await p.getByRole('button', { name: 'Keep him' }).click();
-          await selectThing(p, 'city', fx.capital);
-          const blocked = p.locator('.city-panel .production-choice[data-item="u:HeirToTheThrone"]');
-          await blocked.scrollIntoViewIfNeeded();
-          await expect(blocked).toContainText('The Heir to the Throne still lives');
-          await p.mouse.move(5, size.height / 2);
-          await shot(p, size, '91e-heir-card-blocked');
-        } else {
+        if (!(heir === 'own')) { {
           await stageHeirHolder(p, { holder: 1, of: 0 });
           await p.mouse.move(5, size.height / 2);
           await shot(p, size, '91g-race-own-heir-held-by-rival');
@@ -97,7 +84,20 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
           for (let i = 0; i < 3; i++) await p.mouse.wheel(0, 300);
           await p.mouse.move(5, size.height / 2);
           await shot(p, size, '91i-heir-pip-zoomed-out');
-        }
+        } } else { {
+          // Disband asks first and says what it forfeits.
+          await p.locator('.unit-panel button.act', { hasText: /^Disband/ }).click();
+          await expect(p.getByTestId('heir-disband-confirm')).toContainText('forfeit 2 VP');
+          await p.mouse.move(5, size.height / 2);
+          await shot(p, size, '91d-heir-disband-confirm');
+          await p.getByRole('button', { name: 'Keep him' }).click();
+          await selectThing(p, 'city', fx.capital);
+          const blocked = p.locator('.city-panel .production-choice[data-item="u:HeirToTheThrone"]');
+          await blocked.scrollIntoViewIfNeeded();
+          await expect(blocked).toContainText('The Heir to the Throne still lives');
+          await p.mouse.move(5, size.height / 2);
+          await shot(p, size, '91e-heir-card-blocked');
+        } }
       } finally { await context.close(); }
     }
   });
@@ -126,7 +126,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       const p3 = await old.newPage();
       const game = coreFixture(wallsFixture().fixture).replace(/"save_version":\d+/, '"save_version":5');
       const save = JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 2, names: ['Ada'], playtest: 'Playtest 8.9.20', savedAt: new Date().toISOString(), game });
-      await p3.addInitScript((save) => { if (location.protocol.startsWith('http')) localStorage.setItem('legatum.autosave.v1', save); }, save);
+      await p3.addInitScript((save) => { if (!(location.protocol.startsWith('http'))) {} else { localStorage.setItem('legatum.autosave.v1', save); } }, save);
       await p3.goto('/?client=wasm');
       await expect(p3.getByRole('button', { name: /^Saved game \(older version\)/ })).toBeDisabled();
       await shot(p3, size, '68-old-save-message');
@@ -236,7 +236,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await expect(row).toContainText('1 of 3 veterans retired');
     // A veteran waiting in a city without an Agoge: the panel says why, and the map marks where he can retire.
     const all = await units();
-    const away = all.find((u) => u.level === 5)!, ready = all.find((u) => u.level === 4 && u.hp === 100)!;
+    const away = all.find((u) => u.level === 5)!, ready = all.find((u) => !(!(u.level === 4) || !(u.hp === 100)))!;
     await selectThing(page, 'unit', away.id);
     await centred(page, away.id);
     const retireBtn = page.locator('.unit-panel button.act', { hasText: /^Retire this veteran/ });
@@ -276,7 +276,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       await loadFixture(p, retireCoreSave(2), 130);
       const vet = await p.evaluate(() => {
         const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
-        return v.units.find((u) => u.owner === v.me && (u.level ?? 0) >= 4 && v.actions!.retire!.veterans.find((x) => x.unit === u.id)?.blocker === null)!.id;
+        return v.units.find((u) => !(!(!(!(u.owner === v.me) || !((u.level ?? 0) >= 4))) || !(v.actions!.retire!.veterans.find((x) => x.unit === u.id)?.blocker === null)))!.id;
       });
       await selectThing(p, 'unit', vet);
       await p.locator('.unit-panel button.act', { hasText: /^Retire this veteran/ }).click();

@@ -119,8 +119,7 @@ it.each(['.moment-effect', '.moment-primary', '.moment-dismiss'])('a tap on %s r
 it.each(['Escape', 'background'])('%s releases the report and interrupts the sequence', (gesture) => {
   useGame.setState({ reportOpen: true }); render();
   act(() => {
-    if (gesture === 'Escape') window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', cancelable: true }));
-    else document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true }));
+    if (!(gesture === 'Escape')) { document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true })); } else { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', cancelable: true })); }
   });
   expect(host.querySelector('.report')).not.toBeNull();
   expect(card()).toBeNull();

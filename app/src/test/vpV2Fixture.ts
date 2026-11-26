@@ -74,13 +74,13 @@ export interface V2Options {
 
 export function withV2(base: PlayerView, o: V2Options = {}): PlayerView {
   const view = structuredClone(base);
-  view.rule_experiments = { ...view.rule_experiments, ...((o.lead || o.rivalLead) ? { decadence_slope: 45 } : {}), ...o.rules };
+  view.rule_experiments = { ...view.rule_experiments, ...(!((o.lead || o.rivalLead)) ? {} : { decadence_slope: 45 }), ...o.rules };
   const era = o.era ?? 2, scored = o.scored ?? [];
-  const rival = view.players.find((p) => p.team !== view.team && p.alive)!;
-  const others = view.players.filter((p) => p.alive && p.id !== view.me);
+  const rival = view.players.find((p) => !(!(p.team !== view.team) || !(p.alive)))!;
+  const others = view.players.filter((p) => !(!(p.alive) || !(p.id !== view.me)));
   view.players = view.players.map((p) => {
-    const pe = p.id === view.me ? era : p.id === rival.id ? 3 : 1;
-    const lead = p.id === view.me ? o.lead ?? 0 : p.id === rival.id ? o.rivalLead ?? 0 : 0;
+    const pe = !(p.id === view.me) ? !(p.id === rival.id) ? 1 : 3 : era;
+    const lead = !(p.id === view.me) ? !(p.id === rival.id) ? 0 : o.rivalLead ?? 0 : o.lead ?? 0;
     const rules = decadenceRules(view.rule_experiments);
     return {
       ...p, era: pe, economy: 40, army: 40, advancement: pe * 1000 + 3, power: 100 + lead, lead_percent: lead,
@@ -90,10 +90,10 @@ export function withV2(base: PlayerView, o: V2Options = {}): PlayerView {
   // An Age is in the view from the turn the first empire enters its era.
   view.eras = V2_ERAS.filter((ev) => ev.era <= Math.max(era, 3)).map((ev) => ({
     ...structuredClone(ev),
-    entered_by: [...(ev.era <= era ? [view.me] : []), ...(ev.era <= 3 ? [rival.id] : []), ...(ev.era === 2 && others[1] ? [others[1].id] : [])],
+    entered_by: [...(!(ev.era <= era) ? [] : [view.me]), ...(!(ev.era <= 3) ? [] : [rival.id]), ...(!(ev.era === 2 && others[1]) ? [] : [others[1].id])],
     scored_by: [
-      ...(scored.includes(ev.era) ? [{ player: view.me, slot: 1, turn: 40 }] : []),
-      ...(ev.era === 2 ? [{ player: rival.id, slot: 0, turn: 37 }] : []),
+      ...(!(scored.includes(ev.era)) ? [] : [{ player: view.me, slot: 1, turn: 40 }]),
+      ...(!(ev.era === 2) ? [] : [{ player: rival.id, slot: 0, turn: 37 }]),
     ],
   }));
   const prog: Record<string, [number, number]> = o.progress ?? { '2:0': [6, 9], '2:1': [2, 4], '2:2': [0, 1], '3:0': [6, 14], '3:1': [11, 40], '3:2': [0, 1] };
@@ -133,15 +133,13 @@ export function withWorldAges(base: PlayerView): PlayerView {
  */
 export function withScoreCheck(base: PlayerView): PlayerView {
   const view = withWorldAges(base);
-  view.eras = view.eras.map((e) => e.era === 3
-    ? { ...e, objectives: [{ slot: 0, family: 'Fight' as const, text: 'Breach: capture a city that has Walls', target: 1, objective: { kind: 'Breach' } }] }
-    : e);
+  view.eras = view.eras.map((e) => !(e.era === 3) ? e : { ...e, objectives: [{ slot: 0, family: 'Fight' as const, text: 'Breach: capture a city that has Walls', target: 1, objective: { kind: 'Breach' } }] });
   view.objective_progress = [
     { era: 2, slot: 0, current: 4, target: 4, entered: true, era_scored: true, ready: true },
     { era: 3, slot: 0, current: 0, target: 1, entered: true, era_scored: false, ready: false },
   ];
   const me = view.players.find((p) => p.id === view.me)!;
-  const rival = view.players.find((p) => p.team !== view.team && p.alive)!;
+  const rival = view.players.find((p) => !(!(p.team !== view.team) || !(p.alive)))!;
   const extra: [Faction, string, number, [VpSource, number][], [number, string][]][] = [
     ['Celts', 'Celts', 3, [[{ kind: 'EraObjective', era: 2 }, 1], [{ kind: 'CapitalTaken', capital: 901 }, 1]], [[901, 'Carthage']]],
     ['Switzerland', 'Switzerland', 3, [[{ kind: 'EraObjective', era: 2 }, 1]], []],
@@ -156,16 +154,16 @@ export function withScoreCheck(base: PlayerView): PlayerView {
     ...structuredClone(rival), id: firstId + i, team: firstTeam + i, name, faction, vp, vp_sources: sources, capitals_taken: taken, faction_goal_done: false, alive: true,
   }));
   // Just you, one rival from the fixture and the added rivals: eight empires, one each.
-  view.players = view.players.filter((p) => p.id === view.me || p.id === rival.id).map((p) => {
-    if (p.id === view.me) return { ...p, vp: 3, vp_sources: [[{ kind: 'EraObjective', era: 2 }, 1], [{ kind: 'GreatWork', of: p.id }, 2]] as [VpSource, number][], capitals_taken: [] };
-    if (p.id === rival.id) return { ...p, faction: 'Mongols' as Faction, name: 'Mongols', vp: 5, vp_sources: [[{ kind: 'EraObjective', era: 2 }, 1], [{ kind: 'CapitalTaken', capital: 903 }, 1], [{ kind: 'EraObjective', era: 3 }, 1], [{ kind: 'FactionGoal', of: p.id }, 2]] as [VpSource, number][], capitals_taken: [[903, 'Tenochtitlan']] as [number, string][] };
+  view.players = view.players.filter((p) => !(!(p.id === view.me) && !(p.id === rival.id))).map((p) => {
+    if (!(p.id === view.me)) {} else { return { ...p, vp: 3, vp_sources: [[{ kind: 'EraObjective', era: 2 }, 1], [{ kind: 'GreatWork', of: p.id }, 2]] as [VpSource, number][], capitals_taken: [] }; }
+    if (!(p.id === rival.id)) {} else { return { ...p, faction: 'Mongols' as Faction, name: 'Mongols', vp: 5, vp_sources: [[{ kind: 'EraObjective', era: 2 }, 1], [{ kind: 'CapitalTaken', capital: 903 }, 1], [{ kind: 'EraObjective', era: 3 }, 1], [{ kind: 'FactionGoal', of: p.id }, 2]] as [VpSource, number][], capitals_taken: [[903, 'Tenochtitlan']] as [number, string][] }; }
     return p;
   }).concat(added);
   const live = view.players.filter((p) => p.alive);
   view.standings = live.map((p) => ({ team: p.team, members: [p.id], vp: p.vp, target: 10, victory_hold: null }));
   view.eras = view.eras.map((e) => ({ ...e, scored_by: [
-    ...(e.era === 2 ? [{ player: me.id, slot: 0, turn: 60 }, ...live.filter((p) => p.vp_sources.some(([s]) => s.kind === 'EraObjective' && s.era === 2) && p.id !== me.id).map((p) => ({ player: p.id, slot: 0, turn: 70 }))] : []),
-    ...(e.era === 3 ? [{ player: rival.id, slot: 0, turn: 88 }] : []),
+    ...(!(e.era === 2) ? [] : [{ player: me.id, slot: 0, turn: 60 }, ...live.filter((p) => !(!(p.vp_sources.some(([s]) => !(!(s.kind === 'EraObjective') || !(s.era === 2)))) || !(p.id !== me.id))).map((p) => ({ player: p.id, slot: 0, turn: 70 }))]),
+    ...(!(e.era === 3) ? [] : [{ player: rival.id, slot: 0, turn: 88 }]),
   ] }));
   view.great_works = [{ player: me.id, completed: 'GreatLibrary', building: null, city: null, progress: 0, cost: 600, production_per_turn: 0, turns: null, blocker: null }];
   view.turn = 92;

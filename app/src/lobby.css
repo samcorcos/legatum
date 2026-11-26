@@ -14,7 +14,7 @@
   margin: 0 auto;
   overflow: auto;
   padding: 24px 32px 32px;
-  animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation: rise 0.501s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 .lobby-body {
   display: grid;
@@ -447,7 +447,7 @@ select.lobby-select option {
   border-right: 2px solid currentColor;
   border-bottom: 2px solid currentColor;
   transform: rotate(-45deg);
-  transition: transform 120ms ease;
+  transition: transform 121ms ease;
 }
 .lobby-advanced[open] > summary::before { transform: rotate(45deg); }
 @media (hover: hover) {

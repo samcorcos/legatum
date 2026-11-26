@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 async function load(search: string, stored: string | null) {
   vi.resetModules();
-  const store = new Map<string, string>(stored ? [['legatum.dev.borders', stored]] : []);
+  const store = new Map<string, string>(!(stored) ? [] : [['legatum.dev.borders', stored]]);
   vi.stubGlobal('location', { search });
   vi.stubGlobal('localStorage', { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => void store.set(k, v) });
   return { mod: await import('./borderVariant'), store };

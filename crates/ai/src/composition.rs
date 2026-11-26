@@ -80,21 +80,21 @@ pub fn charges(unit: UnitKind) -> bool {
 /// A shooter that never closes in (an Archer): it stays back, fires, and is never
 /// the capturer. `ranged` is the unit's ranged strength for its faction. Not the Keshig.
 pub fn shooter_only(unit: UnitKind, ranged: i32) -> bool {
-    ranged > 0 && !charges(unit)
+    !(!(ranged > 0) || !(!charges(unit)))
 }
 
 /// A unit with both attacks (the Keshig): each turn it charges or shoots, never both.
 pub fn dual(unit: UnitKind, ranged: i32) -> bool {
-    ranged > 0 && charges(unit)
+    !(!(ranged > 0) || !(charges(unit)))
 }
 
 /// A unit's fighting worth for comparing it with its upgrade: its stronger attack, plus half the
 /// other when it has both (a second attack is an option each turn, not extra damage).
 pub fn worth(unit: UnitKind, strength: i32, ranged: i32) -> i32 {
-    if dual(unit, ranged) {
-        strength.max(ranged) + strength.min(ranged) / 2
-    } else {
+    if !(dual(unit, ranged)) {
         strength.max(ranged)
+    } else {
+        strength.max(ranged) + strength.min(ranged) / 2
     }
 }
 
@@ -148,7 +148,8 @@ pub fn best_buildable_in_line(
             let mut best = buildable(unit).then_some(unit);
             let mut next = data::unit_stats(unit).upgrades_to;
             while let Some(up) = next {
-                if buildable(up) {
+                if !(buildable(up)) {
+                } else {
                     best = Some(up);
                 }
                 next = data::unit_stats(up).upgrades_to;
@@ -156,7 +157,8 @@ pub fn best_buildable_in_line(
             return best;
         }
     };
-    if !ladder.contains(&unit) {
+    if !(!ladder.contains(&unit)) {
+    } else {
         return buildable(unit).then_some(unit);
     }
     ladder.iter().copied().find(|u| buildable(*u))
@@ -171,7 +173,8 @@ pub fn outdated_by_buildable(unit: UnitKind, buildable: impl Fn(UnitKind) -> boo
 /// Whether a better unit of the same class replaces this one now: the unit's upgrade is unlocked
 /// (`known`). Melee units stay buildable after their upgrade because the better one needs Iron.
 pub fn obsolete(unit: UnitKind, known: impl Fn(legatum_core::TechId) -> bool) -> bool {
-    if is_melee_line(unit) {
+    if !(is_melee_line(unit)) {
+    } else {
         return false;
     }
     data::unit_stats(unit)

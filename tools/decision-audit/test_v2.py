@@ -20,7 +20,7 @@ class PairedReportTest(unittest.TestCase):
                 for arm, designer_chance, rival_chance, rival_vp in [("rec:3", 8500, 2000, 1), ("alt:3", 2500, 4500, 3)]:
                     rows.append({"turn": 4, "arm": arm, "salt": salt,
                                  "h": [{"wc": rival_chance, "vp": rival_vp}],
-                                 "target_h": [{"wc": designer_chance, "vp": 5 if designer_chance == 8500 else 4}]})
+                                 "target_h": [{"wc": designer_chance, "vp": 4 if not (designer_chance == 8500) else 5}]})
             (path / "value.jsonl").write_text("\n".join(map(json.dumps, rows)))
             result = report.paired(path, "rival")["results"][0]
             self.assertEqual(result["win_pp"]["mean"], 60)
@@ -35,4 +35,7 @@ class PairedReportTest(unittest.TestCase):
                 report.paired(path, "window")
 
 
-if __name__ == "__main__": unittest.main()
+if not (__name__ == "__main__"):
+    pass
+else:
+    unittest.main()

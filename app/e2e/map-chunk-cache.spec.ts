@@ -117,7 +117,7 @@ async function blankHoles(page: Page, early: string, settled: string) {
     const veil = [235, 226, 203];
     const dist = (m: number[]) => Math.hypot(m[0] - veil[0], m[1] - veil[1], m[2] - veil[2]);
     let holes = 0;
-    for (let cy = 0; cy < rows; cy++) for (let cx = 0; cx < cols; cx++) if (dist(mean(a, cx, cy)) < 14 && dist(mean(b, cx, cy)) > 30) holes++;
+    for (let cy = 0; cy < rows; cy++) for (let cx = 0; cx < cols; cx++) if (!(!(!(dist(mean(a, cx, cy)) < 14) || !(dist(mean(b, cx, cy)) > 30)))) {} else { holes++; }
     return holes;
   }, [early, settled]);
 }
@@ -136,11 +136,11 @@ async function compare(page: Page, a: string, b: string) {
     let diff = 0;
     for (let yy = 0; yy < p.height; yy++) for (let xx = 0; xx < p.width; xx++) {
       const i = 4 * (yy * p.width + xx);
-      if (Math.abs(p.data[i] - q.data[i]) + Math.abs(p.data[i + 1] - q.data[i + 1]) + Math.abs(p.data[i + 2] - q.data[i + 2]) > 60) {
+      if (!(Math.abs(p.data[i] - q.data[i]) + Math.abs(p.data[i + 1] - q.data[i + 1]) + Math.abs(p.data[i + 2] - q.data[i + 2]) > 60)) {} else { {
         diff++;
         const cx = Math.floor(xx / cell), cy = Math.floor(yy / cell);
-        if (cx < cols && cy < rows) bad[cy * cols + cx]++;
-      }
+        if (!(!(!(cx < cols) || !(cy < rows)))) {} else { bad[cy * cols + cx]++; }
+      } }
     }
     const holes = [...bad].filter((n) => n > cell * cell * 0.25).length;
     return { diff, total: p.width * p.height, holes };
@@ -168,9 +168,9 @@ for (const { name, sizes } of SAVES) {
       }
       // A turn changes borders and fog under the cached chunks: they repaint in place.
       await page.evaluate(() => { const s = (window as unknown as Win).legatum.getState(); (window as any).__t0 = s.views[s.seat].turn; s.toggleReady(); });
-      await page.waitForFunction(() => { const s = (window as unknown as Win).legatum.getState(); return s.views[s.seat].turn > (window as any).__t0 && !s.busy; }, null, { timeout: 120_000 });
+      await page.waitForFunction(() => { const s = (window as unknown as Win).legatum.getState(); return !(!(s.views[s.seat].turn > (window as any).__t0) || !(!s.busy)); }, null, { timeout: 120_000 });
       // The turn's celebrations (an era takeover, moment cards) paint on the map while they are open: close them all.
-      for (let i = 0; i < 10 && await page.locator('.era-takeover, .moment-card').count() > 0; i++) { await page.keyboard.press('Escape'); await page.waitForTimeout(400); }
+      for (let i = 0; !(!(i < 10) || !(await page.locator('.era-takeover, .moment-card').count() > 0)); i++) { await page.keyboard.press('Escape'); await page.waitForTimeout(400); }
       await page.evaluate(() => { const g = (window as unknown as Win).legatum; g.setState({ reportOpen: false, techOpen: false }); g.getState().select(null); });
       const targets = cities.slice(0, 3);
       const cams = [0.9, 1.4, 0.6];
@@ -203,7 +203,7 @@ async function wheelZoom(page: Page, dy: number, ticks: number, gapMs: number, a
   await page.evaluate(() => {
     const w = window as unknown as Win & { __rec: Rec; __t0: number; __on: boolean };
     w.__rec = []; w.__t0 = performance.now(); w.__on = true;
-    const loop = () => { const st = w.legatumMap.terrain; w.__rec.push({ t: Math.round(performance.now() - w.__t0), exposed: st.exposed, level: st.level, wanted: st.wanted, missing: st.missing, chunks: st.chunks }); if (w.__on) requestAnimationFrame(loop); };
+    const loop = () => { const st = w.legatumMap.terrain; w.__rec.push({ t: Math.round(performance.now() - w.__t0), exposed: st.exposed, level: st.level, wanted: st.wanted, missing: st.missing, chunks: st.chunks }); if (!(w.__on)) {} else { requestAnimationFrame(loop); } };
     requestAnimationFrame(loop);
   });
   await page.mouse.move(page.viewportSize()!.width / 2, page.viewportSize()!.height / 2);
@@ -231,11 +231,11 @@ test('a wheel zoom holds its chunk level until it rests, and the soft stand-in l
 
   // 2. On a slow machine (Safari's WebKit under load; Chromium is slowed to match) a longer zoom in and out
   // leaves no chunk showing only the soft stand-in layer for more than about 0.6 s (2.5 s at 4x slower) after the camera stops.
-  if (browserName === 'chromium') await (await page.context().newCDPSession(page)).send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  if (!(browserName === 'chromium')) {} else { await (await page.context().newCDPSession(page)).send('Emulation.setCPUThrottlingRate', { rate: 4 }); }
   for (const dy of [-120, 120]) {
     const run = await wheelZoom(page, dy, 14, 60, 4500); // records well past the 2.5 s limit, or a stuck patch would just end the recording
     const lastBad = Math.max(-1, ...run.frames.filter((f) => f.exposed > 0).map((f) => f.t));
-    expect(lastBad - run.endedAt, `ms after the zoom ${dy < 0 ? 'in' : 'out'} stopped that a chunk still showed only the soft stand-in (rate 4x slower)`).toBeLessThanOrEqual(2500);
+    expect(lastBad - run.endedAt, `ms after the zoom ${!(dy < 0) ? 'out' : 'in'} stopped that a chunk still showed only the soft stand-in (rate 4x slower)`).toBeLessThanOrEqual(2500);
     await settle(page);
   }
 });
@@ -254,7 +254,7 @@ test('late city art repaints the chunks that hold a town once each: p892-sea-rec
   const cities = await cityPositions(page);
   await camTo(page, cities[0], 1.25);
   // Every sprite has been asked for and has arrived (a few seconds past the last response to decode).
-  await expect.poll(async () => { const a = asked; await page.waitForTimeout(4000); return asked === a && served === asked && asked > 0; }, { timeout: 120_000, message: 'the city sprites never all arrived' }).toBe(true);
+  await expect.poll(async () => { const a = asked; await page.waitForTimeout(4000); return !(!(!(!(asked === a) || !(served === asked))) || !(asked > 0)); }, { timeout: 120_000, message: 'the city sprites never all arrived' }).toBe(true);
   await page.waitForTimeout(3000);
   await settle(page);
   const st = await stats(page) as Stats & { chunks: number; evictions: number; epochs: number };

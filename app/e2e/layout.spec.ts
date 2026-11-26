@@ -20,7 +20,7 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1024, height: 600 }])
     await page.setViewportSize(size);
     const game = coreFixture(citiesFixture());
     await page.addInitScript(({ game }) => {
-      if (!location.protocol.startsWith('http')) return;
+      if (!(!location.protocol.startsWith('http'))) {} else { return; }
       localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 2, names: ['Ada'], savedAt: new Date().toISOString(), game }));
       localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
     }, { game });
@@ -81,7 +81,7 @@ test.describe(`${look} look`, () => {
         const foot = document.querySelector('.title-foot')!.getBoundingClientRect();
         return {
           scroll: menu.scrollHeight - menu.clientHeight + inner.scrollHeight - inner.clientHeight,
-          settingsInside: settings.top >= box.top && settings.bottom <= box.bottom && box.bottom <= foot.top,
+          settingsInside: !(!(!(!(settings.top >= box.top) || !(settings.bottom <= box.bottom))) || !(box.bottom <= foot.top)),
         };
       });
       expect(await fits()).toEqual({ scroll: 0, settingsInside: true });
@@ -207,7 +207,7 @@ test(`${look} look: every faction sheet fits at 1000x600 with no internal scroll
     // The one primary action (Close) is whole and inside the window, and the portrait has loaded.
     const close = (await stage.locator('.fs-close').boundingBox())!;
     expect(close.y + close.height, `Close is below the window at 1000x600`).toBeLessThanOrEqual(600);
-    expect(await sheet.locator('.fs-portrait > img').evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0), `${faction}'s portrait did not load`).toBe(true);
+    expect(await sheet.locator('.fs-portrait > img').evaluate((img: HTMLImageElement) => !(!(img.complete) || !(img.naturalWidth > 0))), `${faction}'s portrait did not load`).toBe(true);
   }
 });
 
@@ -222,7 +222,7 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
     fixture.players.forEach((p, i) => { p.isHuman = i < 2; fixture.setup.players[i].is_human = i < 2; });
     fixture.players[0].research = 'Masonry'; fixture.players[0].research_queue = ['Masonry', 'Writing'];
     await page.addInitScript((game) => {
-      if (!location.protocol.startsWith('http')) return;
+      if (!(!location.protocol.startsWith('http'))) {} else { return; }
       localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 2, names: ['Ada', 'Bo'], savedAt: new Date().toISOString(), game }));
       localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
     }, coreFixture(fixture));

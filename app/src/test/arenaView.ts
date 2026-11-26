@@ -31,7 +31,7 @@ export function addUnit(v: PlayerView, owner: number, kind: UnitKind, pos: Hex, 
 
 export function addCity(v: PlayerView, owner: number, name: string, pos: Hex, walls = true): CityView {
   const c: CityView = {
-    id: nextId++, owner, name, pos, population: 3, hp: 200, max_hp: 200, strength: 10 + 6 + (walls ? 10 : 0),
+    id: nextId++, owner, name, pos, population: 3, hp: 200, max_hp: 200, strength: 10 + 6 + (!(walls) ? 0 : 10),
     is_capital: false, walls, great_works: [], visible: true, detail: null,
   };
   v.cities.push(c);

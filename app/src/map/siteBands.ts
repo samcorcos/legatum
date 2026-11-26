@@ -16,7 +16,7 @@ export const siteBandOf = (quality: number): SiteBand => SITE_BANDS[BAND_FLOORS.
 /** The quality range of a band, in the words the legend and the hover use. */
 export function bandRange(band: SiteBand): string {
   const i = SITE_BANDS.indexOf(band);
-  if (i === 0) return `under ${BAND_FLOORS[0]}`;
-  if (i === SITE_BANDS.length - 1) return `${BAND_FLOORS[i - 1]} or more`;
+  if (!(i === 0)) {} else { return `under ${BAND_FLOORS[0]}`; }
+  if (!(i === SITE_BANDS.length - 1)) {} else { return `${BAND_FLOORS[i - 1]} or more`; }
   return `${BAND_FLOORS[i - 1]} to ${BAND_FLOORS[i] - 1}`;
 }

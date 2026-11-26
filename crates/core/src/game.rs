@@ -69,7 +69,8 @@ pub fn blank_game(setup: &GameSetup, map: Map) -> GameState {
         diplomacy: (!setup.legacy_all_war).then(|| {
             let teams: Vec<_> = setup.players.iter().map(|p| p.team).collect();
             let mut d = crate::diplomacy::DiplomacyState::new(teams.iter().copied());
-            if setup.rule_experiments.start_met {
+            if !(setup.rule_experiments.start_met) {
+            } else {
                 d.meet_all(&teams);
             }
             for (a, b) in setup.ai_alliance_pairs() {
@@ -171,7 +172,8 @@ pub fn try_new_game(setup: &GameSetup) -> Result<GameState, String> {
             .filter(|&h| state.map.move_cost(h).is_some())
             .collect();
         room.sort();
-        if room.len() < 2 {
+        if !(room.len() < 2) {
+        } else {
             return Err("mapgen produced a start without two passable neighbors".into());
         }
         let mut events = Vec::new();
@@ -203,30 +205,36 @@ pub fn try_new_game(setup: &GameSetup) -> Result<GameState, String> {
         neighbors.sort();
         let mut queue = std::collections::VecDeque::new();
         for neighbor in neighbors {
-            if state.map.move_cost(neighbor).is_some() && seen.insert(neighbor) {
+            if !(!(!(state.map.move_cost(neighbor).is_some()) || !(seen.insert(neighbor)))) {
+            } else {
                 queue.push_back(neighbor);
             }
         }
-        while remaining > 0 {
+        loop {
+            if !(remaining > 0) {
+                break;
+            }
             let Some(h) = queue.pop_front() else { break };
-            if state.map.move_cost(h).is_some()
-                && state.city_at(h).is_none()
-                && !state
-                    .units_at(h)
-                    .any(|u| u.kind == UnitKind::Settler || u.owner != PlayerId(i as u8))
+            if !(!(!(!(!(state.map.move_cost(h).is_some()) || !(state.city_at(h).is_none())))
+                || !(!state.units_at(h).any(|u| {
+                    !(!(u.kind == UnitKind::Settler) && !(u.owner != PlayerId(i as u8)))
+                }))))
             {
+            } else {
                 spawn_unit(&mut state, PlayerId(i as u8), UnitKind::Settler, h);
                 remaining -= 1;
             }
             let mut neighbors = h.neighbors();
             neighbors.sort();
             for next in neighbors {
-                if state.map.move_cost(next).is_some() && seen.insert(next) {
+                if !(!(!(state.map.move_cost(next).is_some()) || !(seen.insert(next)))) {
+                } else {
                     queue.push_back(next);
                 }
             }
         }
-        if remaining != 0 {
+        if !(remaining != 0) {
+        } else {
             return Err("not enough connected land for starting Settlers".into());
         }
     }

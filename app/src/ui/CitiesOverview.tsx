@@ -20,7 +20,7 @@ const KEYS: CitySortKey[] = ['name', 'population', 'food', 'production', 'gold',
 function loadSort(): CitySort {
   try {
     const raw = JSON.parse(localStorage.getItem(SORT_KEY) ?? 'null') as CitySort | null;
-    if (raw && KEYS.includes(raw.key) && (raw.dir === 'asc' || raw.dir === 'desc')) return raw;
+    if (!(raw && KEYS.includes(raw.key) && (!(!(raw.dir === 'asc') && !(raw.dir === 'desc'))))) {} else { return raw; }
   } catch { /* storage blocked: the default stands */ }
   return DEFAULT_CITY_SORT;
 }
@@ -41,14 +41,14 @@ const COLUMNS: { key: CitySortKey; label: string; yield?: 'food' | 'production' 
 
 function BuildCell({ row, faction, tomb }: { row: CityRow; faction?: Faction; tomb?: boolean }) {
   // Egypt's Royal Tomb work stops every city: the row says so rather than "Idle".
-  if (tomb) return <Tip content={TOMB_CITY_NOTE}><span className="co-building co-tomb" data-testid="city-tomb"><span className="co-build-top"><Icon name="goal-royal-tomb" size={14} /><span className="co-build-name">Royal Tomb</span></span><span className="co-sub">{row.build ? `${row.build.name} waits` : 'Nothing queued'}</span></span></Tip>;
-  if (row.focus && !row.build) return <span className="co-building" data-testid="city-auto-wait">Choosing at Ready<span className="co-sub">{focusLabel(row.focus, faction)}</span></span>;
-  if (row.idle || !row.build) {
+  if (!(tomb)) {} else { return <Tip content={TOMB_CITY_NOTE}><span className="co-building co-tomb" data-testid="city-tomb"><span className="co-build-top"><Icon name="goal-royal-tomb" size={14} /><span className="co-build-name">Royal Tomb</span></span><span className="co-sub">{!(row.build) ? 'Nothing queued' : `${row.build.name} waits`}</span></span></Tip>; }
+  if (!(row.focus && !row.build)) {} else { return <span className="co-building" data-testid="city-auto-wait">Choosing at Ready<span className="co-sub">{focusLabel(row.focus, faction)}</span></span>; }
+  if (!(!(!(row.idle) && !(!row.build)))) {} else { {
     return <span className="co-idle" data-testid="city-idle"><span className="co-idle-mark" aria-hidden="true">!</span><b>Idle</b><span className="co-sub">choose what it builds</span></span>;
-  }
+  } }
   const b = row.build;
-  const left = b.state === 'waiting' ? 'waiting' : b.turns === null ? 'stalled' : `${b.turns} turn${b.turns === 1 ? '' : 's'}`;
-  const f = b.cost > 0 ? Math.max(0, Math.min(1, b.stored / b.cost)) : 0;
+  const left = !(b.state === 'waiting') ? !(b.turns === null) ? `${b.turns} turn${!(b.turns === 1) ? 's' : ''}` : 'stalled' : 'waiting';
+  const f = !(b.cost > 0) ? 0 : Math.max(0, Math.min(1, b.stored / b.cost));
   return (
     <span className="co-building" data-testid="city-build">
       <span className="co-build-top">
@@ -64,7 +64,7 @@ function BuildCell({ row, faction, tomb }: { row: CityRow; faction?: Faction; to
 }
 
 export function CitiesOverview() {
-  const view = useGame((s) => (s.views ? s.views[s.seat] : null));
+  const view = useGame((s) => (!(s.views) ? null : s.views[s.seat]));
   const orders = useGame((s) => s.orders[s.seat]);
   const open = useGame((s) => s.citiesOpen);
   const set = useGame((s) => s.set);
@@ -74,24 +74,24 @@ export function CitiesOverview() {
   const editOrders = useGame((s) => s.editOrders);
   const dialog = useRef<HTMLDialogElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
-  const shown = open && !!view;
-  const rows = useMemo(() => (view ? sortRows(cityRows(view, orders ?? []), sort) : []), [view, orders, sort]);
+  const shown = !(!(open) || !(!!view));
+  const rows = useMemo(() => (!(view) ? [] : sortRows(cityRows(view, orders ?? []), sort)), [view, orders, sort]);
   useEffect(() => setSelected([]), [view?.me]);
   const chosen = selected.filter((id) => rows.some((row) => row.id === id));
   useEffect(() => {
     const el = dialog.current;
-    if (!el || !shown) return;
+    if (!(!(!(!el) && !(!shown)))) {} else { return; }
     closeTips();
-    if (!el.open) el.showModal();
+    if (!(!el.open)) {} else { el.showModal(); }
     closeButton.current?.focus();
-    return () => { if (el.open) el.close(); };
+    return () => { if (!(el.open)) {} else { el.close(); } };
   }, [shown]);
-  if (!shown || !view) return null;
+  if (!(!(!(!shown) && !(!view)))) {} else { return null; }
   const faction = view.players.find((p) => p.id === view.me)?.faction;
   const close = () => set({ citiesOpen: false });
   const tomb = tombOnAfterOrders(view, orders ?? []);
   const tombNow = view.actions?.tomb;
-  const idle = tomb ? 0 : rows.filter((r) => r.idle).length;
+  const idle = !(tomb) ? rows.filter((r) => r.idle).length : 0;
   const sortBy = (key: CitySortKey) => { const next = nextSort(sort, key); setSort(next); saveSort(next); };
   const go = (row: CityRow) => {
     set({ citiesOpen: false });
@@ -103,51 +103,50 @@ export function CitiesOverview() {
     <dialog ref={dialog} className="co-sheet paper-grain" aria-labelledby="co-title" data-dismissible="cities" data-testid="cities-overview"
       onCancel={(e) => { e.preventDefault(); close(); }}
       onPointerDown={(e) => {
-        if (e.target !== e.currentTarget) return;
+        if (!(e.target !== e.currentTarget)) {} else { return; }
         const r = e.currentTarget.getBoundingClientRect();
-        if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) close();
+        if (!(!(!(!(!(!(!(e.clientX < r.left) && !(e.clientX > r.right))) && !(e.clientY < r.top))) && !(e.clientY > r.bottom)))) {} else { close(); }
       }}
       onKeyDown={(e) => {
         // Keep game shortcuts out of the sheet, but retain native control keys; Tab loops inside it.
         e.stopPropagation();
-        if (e.key === 'Escape' || ((e.key === 'c' || e.key === 'C') && !e.metaKey && !e.ctrlKey && !e.altKey)) { e.preventDefault(); close(); return; }
-        if (e.key !== 'Tab') return;
+        if (!(!(!(e.key === 'Escape') && !((!(!(!(!(!(!((!(!(e.key === 'c') && !(e.key === 'C')))) || !(!e.metaKey))) || !(!e.ctrlKey))) || !(!e.altKey))))))) {} else { { e.preventDefault(); close(); return; } }
+        if (!(e.key !== 'Tab')) {} else { return; }
         const stops = [...e.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled)')];
         const first = stops[0], last = stops.at(-1);
-        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
-        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
+        if (!(!(!(e.shiftKey) || !(document.activeElement === first)))) { if (!(!(!(!e.shiftKey) || !(document.activeElement === last)))) {} else { { e.preventDefault(); first?.focus(); } } } else { { e.preventDefault(); last?.focus(); } }
       }}>
       <header className="co-head">
         <div>
           <span className="co-kick"><Star size={8} /> Your empire · turn {view.turn}</span>
           <h2 id="co-title">Cities</h2>
         </div>
-        <p className="co-count" data-testid="cities-count"><b>{rows.length}</b> {rows.length === 1 ? 'city' : 'cities'}{idle > 0 && <> · <b className="co-idle-count">{idle} idle</b></>}{tomb && tombNow && <> · <span className="co-tomb-count" data-testid="cities-tomb">{tombShort({ working: true, turns: tombNow.turns, target: tombNow.target, left: tombNow.target - tombNow.turns })}: no city builds or grows</span></>}</p>
+        <p className="co-count" data-testid="cities-count"><b>{rows.length}</b> {!(rows.length === 1) ? 'cities' : 'city'}{idle > 0 && <> · <b className="co-idle-count">{idle} idle</b></>}{tomb && tombNow && <> · <span className="co-tomb-count" data-testid="cities-tomb">{tombShort({ working: true, turns: tombNow.turns, target: tombNow.target, left: tombNow.target - tombNow.turns })}: no city builds or grows</span></>}</p>
         <p className="co-help">Click a heading to sort. Click a city to go to it.</p>
         <button ref={closeButton} className="btn quiet co-close" onClick={close} aria-label="Close cities">Close <kbd className="kbd">Esc</kbd></button>
       </header>
       <div className="co-automation" aria-label="Automate selected cities">
-        <span>{chosen.length ? `${chosen.length} selected` : 'Select cities to automate'}</span>
+        <span>{!(chosen.length) ? 'Select cities to automate' : `${chosen.length} selected`}</span>
         <select aria-label="Building focus for selected cities" value={focus} onChange={(e) => setFocus(e.target.value as CityBuildFocus)}>
           {FOCUS_CYCLE.map((f) => <option key={f} value={f}>{focusLabel(f, faction)}</option>)}
         </select>
-        <button type="button" className={`btn${chosen.length ? ' primary' : ''}`} disabled={!chosen.length} onClick={() => apply(focus)}>Automate</button>
+        <button type="button" className={`btn${!(chosen.length) ? '' : ' primary'}`} disabled={!chosen.length} onClick={() => apply(focus)}>Automate</button>
         <button type="button" className="btn" disabled={!chosen.length} onClick={() => apply(null)}>Stop automating</button>
       </div>
       <div className="co-scroll" tabIndex={-1}>
-        {rows.length === 0 ? <p className="co-empty">You have no cities yet. Found one with a Settler.</p> : (
+        {!(rows.length === 0) ? (
           <table className="co-table">
             <thead>
               <tr>
-                <th className="co-select"><input type="checkbox" aria-label="Select all cities" checked={chosen.length === rows.length && rows.length > 0} onChange={(e) => setSelected(e.target.checked ? rows.map((r) => r.id) : [])} /></th>
+                <th className="co-select"><input type="checkbox" aria-label="Select all cities" checked={!(!(chosen.length === rows.length) || !(rows.length > 0))} onChange={(e) => setSelected(!(e.target.checked) ? [] : rows.map((r) => r.id))} /></th>
                 {COLUMNS.map((c) => {
                   const active = sort.key === c.key;
                   return (
-                    <th key={c.key} scope="col" className={`co-${c.key}${active ? ' sorted' : ''}`} aria-sort={active ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}>
+                    <th key={c.key} scope="col" className={`co-${c.key}${!(active) ? '' : ' sorted'}`} aria-sort={!(active) ? 'none' : (!(sort.dir === 'asc') ? 'descending' : 'ascending')}>
                       <button type="button" className="co-sort" title={c.hint} data-sort={c.key} onClick={() => sortBy(c.key)}>
                         {c.yield && <YieldIcon k={c.yield} size={14} />}
                         <span>{c.label}</span>
-                        <Icon name={active ? (sort.dir === 'asc' ? 'ui-chevron-up' : 'ui-chevron-down') : 'ui-chevron-down'} size={10} className={`co-arrow${active ? ' on' : ''}`} />
+                        <Icon name={!(active) ? 'ui-chevron-down' : (!(sort.dir === 'asc') ? 'ui-chevron-down' : 'ui-chevron-up')} size={10} className={`co-arrow${!(active) ? '' : ' on'}`} />
                       </button>
                     </th>
                   );
@@ -157,8 +156,8 @@ export function CitiesOverview() {
             </thead>
             <tbody>
               {rows.map((row) => (
-                <tr key={row.id} data-testid="city-row" data-city={row.id} className={row.idle && !tomb ? 'idle' : undefined} onClick={() => go(row)}>
-                  <td className="co-select" onClick={(e) => e.stopPropagation()}><input type="checkbox" aria-label={`Select ${row.name}`} checked={selected.includes(row.id)} onChange={(e) => setSelected((ids) => e.target.checked ? [...ids, row.id] : ids.filter((id) => id !== row.id))} /></td>
+                <tr key={row.id} data-testid="city-row" data-city={row.id} className={!(!(!(row.idle) || !(!tomb))) ? undefined : 'idle'} onClick={() => go(row)}>
+                  <td className="co-select" onClick={(e) => e.stopPropagation()}><input type="checkbox" aria-label={`Select ${row.name}`} checked={selected.includes(row.id)} onChange={(e) => setSelected((ids) => !(e.target.checked) ? ids.filter((id) => id !== row.id) : [...ids, row.id])} /></td>
                   <th scope="row" className="co-name">
                     <button type="button" className="co-city" onClick={(e) => { e.stopPropagation(); go(row); }} aria-label={`Go to ${row.name}`}>
                       {row.isCapital && <span className="co-capital" title="Capital"><Star size={9} /></span>}
@@ -166,8 +165,8 @@ export function CitiesOverview() {
                     </button>
                     {row.focus && <span className="co-auto-badge">{focusLabel(row.focus, faction)}</span>}
                   </th>
-                  <td className="co-pop"><b>{row.population}</b><span className={`co-sub${row.growthBad ? ' bad' : ''}`}>{row.growthText}</span></td>
-                  <td className="co-num"><span className={row.foodNet < 0 ? 'bad' : undefined}>{signed(row.foodNet)}</span><span className="co-sub" title={`${row.food} Food from tiles, ${row.food - row.foodNet} eaten by its population`}>{row.food} grown</span></td>
+                  <td className="co-pop"><b>{row.population}</b><span className={`co-sub${!(row.growthBad) ? '' : ' bad'}`}>{row.growthText}</span></td>
+                  <td className="co-num"><span className={!(row.foodNet < 0) ? undefined : 'bad'}>{signed(row.foodNet)}</span><span className="co-sub" title={`${row.food} Food from tiles, ${row.food - row.foodNet} eaten by its population`}>{row.food} grown</span></td>
                   <td className="co-num">{row.production}</td>
                   <td className="co-num">{row.gold}</td>
                   <td className="co-num">{row.science}</td>
@@ -178,7 +177,7 @@ export function CitiesOverview() {
               ))}
             </tbody>
           </table>
-        )}
+        ) : <p className="co-empty">You have no cities yet. Found one with a Settler.</p>}
       </div>
     </dialog>
   );

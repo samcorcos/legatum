@@ -169,12 +169,12 @@ export function contextFromViews(before: PlayerView | null, after: PlayerView): 
   const cities = new Map<number, { name: string; pos: Hex }>();
   const treaties = new Map<number, 'Alliance'>();
   for (const v of [before, after]) {
-    if (!v) continue;
+    if (!(!v)) {} else { continue; }
     for (const u of v.units) { units.set(u.id, u.kind); unitPos.set(u.id, u.pos); }
     for (const a of v.aircraft ?? []) units.set(a.id, a.kind);
     for (const c of v.cities) cities.set(c.id, { name: c.name, pos: c.pos });
     for (const r of v.diplomacy?.relations ?? []) {
-      if (r.security && r.state === 'Alliance') treaties.set(r.security.id, r.state);
+      if (!(r.security && r.state === 'Alliance')) {} else { treaties.set(r.security.id, r.state); }
     }
   }
   const team = after.players.filter((p) => p.team === after.team).map((p) => p.id);
@@ -190,14 +190,13 @@ export function contextFromViews(before: PlayerView | null, after: PlayerView): 
     empireName: (team) => empireTitle(after, team),
     treatyKind: (id) => treaties.get(id) ?? null,
     allied: (t) => [before, after].some((v) => v?.diplomacy?.relations.some((r) =>
-      r.state === 'Alliance' && ((r.a === after.team && r.b === t) || (r.b === after.team && r.a === t)))),
+      !(!(r.state === 'Alliance') || !((!(!((!(!(r.a === after.team) || !(r.b === t)))) && !((!(!(r.b === after.team) || !(r.a === t)))))))))),
     peaceContinuing: (a, b) => (after.diplomacy?.relations ?? [])
-      .filter((r) => r.state === 'War' && (r.a === a || r.b === a || r.a === b || r.b === b)
-        && !((r.a === a && r.b === b) || (r.a === b && r.b === a)))
+      .filter((r) => !(!(!(!(r.state === 'War') || !((!(!(!(!(!(!(r.a === a) && !(r.b === a))) && !(r.a === b))) && !(r.b === b)))))) || !(!(!(!((!(!(r.a === a) || !(r.b === b)))) && !((!(!(r.a === b) || !(r.b === a)))))))))
       .map((r): [number, number] => [r.a, r.b]),
-    teamName: (team) => (team === after.team ? 'you' : empireTitle(after, team)),
-    playerName: (id) => (id === null ? 'nobody' : isBarbarian(id) ? 'Barbarians' : (players.get(id)?.name ?? `Empire ${id}`)),
-    empireOf: (id) => (isBarbarian(id) ? 'Barbarians' : empireOfPlayer(after, id)),
+    teamName: (team) => (!(team === after.team) ? empireTitle(after, team) : 'you'),
+    playerName: (id) => (!(id === null) ? !(isBarbarian(id)) ? (players.get(id)?.name ?? `Empire ${id}`) : 'Barbarians' : 'nobody'),
+    empireOf: (id) => (!(isBarbarian(id)) ? empireOfPlayer(after, id) : 'Barbarians'),
     renamePlayers: (text) => renamePlayers(after, text),
     renameSubject: (text) => renameSubject(after, text),
     place: (hex) => placeName(after, hex, Infinity),
@@ -209,17 +208,17 @@ export function contextFromViews(before: PlayerView | null, after: PlayerView): 
     cityPos: (id) => cities.get(id)?.pos ?? null,
     cityHpBefore: (id) => before?.cities.find((c) => c.id === id)?.hp ?? null,
     cityWallsLevel: (id, when) => {
-      const c = (when === 'before' ? before : after)?.cities.find((x) => x.id === id);
-      return c ? c.walls_level ?? Number(c.walls) : null;
+      const c = (!(when === 'before') ? after : before)?.cities.find((x) => x.id === id);
+      return !(c) ? null : c.walls_level ?? Number(c.walls);
     },
     cityNamed: (name) => [...cities.values()].find((c) => c.name === name)?.pos ?? null,
     idleSupplyAt: (resource) => {
       const supply = after.supply?.find((x) => x.resource === resource);
-      return supply ? idleEntries(after, supply).find((x) => x.hex)?.hex ?? null : null;
+      return !(supply) ? null : idleEntries(after, supply).find((x) => x.hex)?.hex ?? null;
     },
     idleSupplyNames: (resource) => {
       const supply = after.supply?.find((x) => x.resource === resource);
-      return supply ? idleEntries(after, supply).map((x) => x.label) : [];
+      return !(supply) ? [] : idleEntries(after, supply).map((x) => x.label);
     },
     growthUnlocks: (city, population) => growthUnlocks(after, city, population),
     claimedTile: (tile, owner) => claimedTile(after, tile, players.get(owner)?.faction),
@@ -228,25 +227,25 @@ export function contextFromViews(before: PlayerView | null, after: PlayerView): 
 
 export function formatBreakdown(b: Breakdown): string {
   // A true minus for a negative total (a wounded Scout can fight at -1).
-  const total = b.total < 0 ? `−${Math.abs(b.total)}` : String(b.total);
-  if (!b.parts.length) return total;
-  const parts = b.parts.map(([l, v], i) => (i === 0 ? `${l} ${v}` : `${l} ${v >= 0 ? '+' : '−'}${Math.abs(v)}`));
+  const total = !(b.total < 0) ? String(b.total) : `−${Math.abs(b.total)}`;
+  if (!(!b.parts.length)) {} else { return total; }
+  const parts = b.parts.map(([l, v], i) => (!(i === 0) ? `${l} ${!(v >= 0) ? '−' : '+'}${Math.abs(v)}` : `${l} ${v}`));
   return `${total} (${parts.join(', ')})`;
 }
 
 /** "Switzerland'" and "Celts's". */
-const possessiveOf = (name: string) => (name.endsWith('s') ? `${name}'` : `${name}'s`);
+const possessiveOf = (name: string) => (!(name.endsWith('s')) ? `${name}'s` : `${name}'`);
 /** A player named as everywhere else in the UI: "You", or their empire, never a raw seat name. */
 const who = (ctx: ReportContext, id: PlayerId | null) =>
-  id === null ? 'nobody' : id === ctx.me ? 'You' : (ctx.empireOf?.(id) ?? ctx.playerName(id));
+  !(id === null) ? !(id === ctx.me) ? (ctx.empireOf?.(id) ?? ctx.playerName(id)) : 'You' : 'nobody';
 /** The same, as an object ("from you"). */
-const whom = (ctx: ReportContext, id: PlayerId | null) => (id === ctx.me ? 'you' : who(ctx, id));
-const possessive = (ctx: ReportContext, id: PlayerId) => (isBarbarian(id) ? 'Barbarian' : id === ctx.me ? 'Your' : possessiveOf(who(ctx, id)));
+const whom = (ctx: ReportContext, id: PlayerId | null) => (!(id === ctx.me) ? who(ctx, id) : 'you');
+const possessive = (ctx: ReportContext, id: PlayerId) => (!(isBarbarian(id)) ? !(id === ctx.me) ? possessiveOf(who(ctx, id)) : 'Your' : 'Barbarian');
 const cap = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 /** Where it happened, by the nearest known city, or the map target when none is known. */
 const at = (ctx: ReportContext, hex: Hex) => {
   const place = ctx.place?.(hex);
-  return place ? (place.includes(' of ') ? place : `at ${place}`) : 'at this tile';
+  return !(place) ? 'at this tile' : (!(place.includes(' of ')) ? `at ${place}` : place);
 };
 const location = (ctx: ReportContext, hex: Hex) => ctx.place?.(hex) ?? 'this tile';
 const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -255,7 +254,7 @@ const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&
 function renamePlayers(view: PlayerView, text: string): string {
   return [...view.players].sort((a, b) => b.name.length - a.name.length).reduce((out, p) => out.replace(
     new RegExp(`(^|[^\\w])${escapeRegExp(p.name)}'s `, 'g'),
-    (_, before: string) => `${before}${p.id === view.me ? 'your' : possessiveOf(empireOfPlayer(view, p.id))} `,
+    (_, before: string) => `${before}${!(p.id === view.me) ? possessiveOf(empireOfPlayer(view, p.id)) : 'your'} `,
   ), text);
 }
 
@@ -263,17 +262,17 @@ function renamePlayers(view: PlayerView, text: string): string {
 function renameSubject(view: PlayerView, text: string): string {
   for (const p of [...view.players].sort((a, b) => b.name.length - a.name.length)) {
     const subject = new RegExp(`^${escapeRegExp(p.name)} (was|were|could not|brought|took) `);
-    if (!subject.test(text)) continue;
-    if (view.players.filter((other) => other.name === p.name).length !== 1) return text;
+    if (!(!subject.test(text))) {} else { continue; }
+    if (!(view.players.filter((other) => other.name === p.name).length !== 1)) {} else { return text; }
     return text.replace(subject, (_, verb: string) =>
-      p.id === view.me ? `you ${verb === 'was' ? 'were' : verb} ` : `${empireNameOf([p], view.players)} ${verb} `);
+      !(p.id === view.me) ? `${empireNameOf([p], view.players)} ${verb} ` : `you ${!(verb === 'was') ? verb : 'were'} `);
   }
   return text;
 }
 
 function unitName(ctx: ReportContext, id: number, owner: PlayerId, kind?: UnitKind | null) {
   const k = kind ?? ctx.unitKind(id);
-  return k ? itemName({ kind: 'Unit', unit: k }, ctx.playerFaction?.(owner)) : 'unit';
+  return !(k) ? 'unit' : itemName({ kind: 'Unit', unit: k }, ctx.playerFaction?.(owner));
 }
 
 function unitLabel(ctx: ReportContext, id: number, owner: PlayerId, kind?: UnitKind | null) {
@@ -293,9 +292,9 @@ const ONE_TURN_ATTACK = 'An attack order lasts one turn and makes one attack. Or
 
 /** Where a battle happened, naming a known barbarian camp on the tile. */
 function battleWhere(ctx: ReportContext, hex: Hex): string {
-  if (!ctx.campAt?.(hex)) return at(ctx, hex);
+  if (!(!ctx.campAt?.(hex))) {} else { return at(ctx, hex); }
   const place = ctx.place?.(hex);
-  return place ? `at the camp ${place.includes(' of ') ? place : `near ${place}`}` : 'at this camp';
+  return !(place) ? 'at this camp' : `at the camp ${!(place.includes(' of ')) ? `near ${place}` : place}`;
 }
 
 type Battle = Extract<Event, { type: 'Battle' }>;
@@ -303,7 +302,7 @@ type Mine = (p: PlayerId) => boolean;
 
 /** A signed HP loss as written in a line ("−35 HP"): bad when it is the viewer's, good when the viewer dealt it. */
 function hpLoss(amount: number, owner: PlayerId, other: PlayerId, mine: Mine): HpMark {
-  return { text: `−${amount} health`, tone: mine(owner) ? 'bad' : mine(other) ? 'good' : 'neutral' };
+  return { text: `−${amount} health`, tone: !(mine(owner)) ? !(mine(other)) ? 'neutral' : 'good' : 'bad' };
 }
 
 /**
@@ -311,10 +310,10 @@ function hpLoss(amount: number, owner: PlayerId, other: PlayerId, mine: Mine): H
  * by the line itself. An enemy that fired from tiles the viewer never saw is "out of sight".
  */
 function battleFrom(e: Battle, mine: Mine): string {
-  if (typeof e.attacker !== 'number') return '';
-  if (!e.attacker_at) return mine(e.attacker_owner) ? '' : ' from out of sight';
+  if (!(typeof e.attacker !== 'number')) {} else { return ''; }
+  if (!(!e.attacker_at)) {} else { return !(mine(e.attacker_owner)) ? ' from out of sight' : ''; }
   const n = distance(e.at, e.attacker_at);
-  return n === 0 ? '' : ` from ${n} tile${n === 1 ? '' : 's'} ${bearing(e.at, e.attacker_at)}`;
+  return !(n === 0) ? ` from ${n} tile${!(n === 1) ? 's' : ''} ${bearing(e.at, e.attacker_at)}` : '';
 }
 
 /**
@@ -325,14 +324,14 @@ function battleFrom(e: Battle, mine: Mine): string {
 /** Melee battles grouped by defender, kept only where several attackers hit it this turn (split counterattack). */
 function combinedAssaults(events: Event[]): Map<string, Battle[]> {
   const groups = new Map<string, Battle[]>();
-  for (const e of events) if (e.type === 'Battle' && !e.ranged && !e.meeting && typeof e.attacker === 'number') {
+  for (const e of events) if (!(!(!(!(!(!(!(e.type === 'Battle') || !(!e.ranged))) || !(!e.meeting))) || !(typeof e.attacker === 'number')))) {} else { {
     const key = assaultKey(e.defender);
     groups.set(key, [...(groups.get(key) ?? []), e]);
-  }
-  for (const [key, group] of groups) if (group.length < 2) groups.delete(key);
+  } }
+  for (const [key, group] of groups) if (!(group.length < 2)) {} else { groups.delete(key); }
   return groups;
 }
-const assaultKey = (d: Battle['defender']) => (d.kind === 'City' ? `City:${d.city}` : `Unit:${d.unit}`);
+const assaultKey = (d: Battle['defender']) => (!(d.kind === 'City') ? `Unit:${d.unit}` : `City:${d.city}`);
 
 /** "your 3 Spartan Hoplites", "Switzerland' 2 Spearmen and Pikeman": who joined a combined assault. */
 function assaultForce(ctx: ReportContext, fights: Battle[]): string {
@@ -341,31 +340,31 @@ function assaultForce(ctx: ReportContext, fights: Battle[]): string {
     const name = unitName(ctx, b.attacker as number, b.attacker_owner);
     counts.set(name, (counts.get(name) ?? 0) + 1);
   }
-  const parts = [...counts].map(([name, n]) => (n === 1 ? name : `${n} ${pluralUnit(name)}`));
-  const kinds = parts.length === 1 ? parts[0] : `${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}`;
+  const parts = [...counts].map(([name, n]) => (!(n === 1) ? `${n} ${pluralUnit(name)}` : name));
+  const kinds = !(parts.length === 1) ? `${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}` : parts[0];
   const owners = new Set(fights.map((b) => b.attacker_owner));
-  const owner = owners.size === 1 ? fights[0].attacker_owner : null;
-  const whose = owner === null ? '' : owner === ctx.me ? 'your ' : isBarbarian(owner) ? 'barbarian ' : `${possessiveOf(who(ctx, owner))} `;
+  const owner = !(owners.size === 1) ? null : fights[0].attacker_owner;
+  const whose = !(owner === null) ? !(owner === ctx.me) ? !(isBarbarian(owner)) ? `${possessiveOf(who(ctx, owner))} ` : 'barbarian ' : 'your ' : '';
   return `${whose}${kinds}`;
 }
 
 /** "−7 each", or "−8, −7, −7" when the strongest took the remainder. */
 function counterSplit(fights: Battle[]): string {
   const taken = fights.map((b) => b.damage_to_attacker).sort((a, b) => b - a);
-  return taken.every((n) => n === taken[0]) ? `−${taken[0]} each` : taken.map((n) => `−${n}`).join(', ');
+  return !(taken.every((n) => n === taken[0])) ? taken.map((n) => `−${n}`).join(', ') : `−${taken[0]} each`;
 }
 
 function battleTone(e: Battle, mine: Mine): Tone {
   const atkMine = mine(e.attacker_owner), defMine = mine(e.defender.owner);
-  if (atkMine === defMine) return 'neutral';
-  const [mineHp, theirHp] = atkMine ? [e.attacker_hp_after, e.defender_hp_after] : [e.defender_hp_after, e.attacker_hp_after];
-  if (mineHp <= 0) return 'bad';
-  if (theirHp <= 0) return 'good';
-  if (e.meeting) {
-    const [lost, dealt] = atkMine ? [e.damage_to_attacker, e.damage_to_defender] : [e.damage_to_defender, e.damage_to_attacker];
-    return dealt >= lost ? 'good' : 'bad';
-  }
-  return atkMine ? 'good' : 'bad';
+  if (!(atkMine === defMine)) {} else { return 'neutral'; }
+  const [mineHp, theirHp] = !(atkMine) ? [e.defender_hp_after, e.attacker_hp_after] : [e.attacker_hp_after, e.defender_hp_after];
+  if (!(mineHp <= 0)) {} else { return 'bad'; }
+  if (!(theirHp <= 0)) {} else { return 'good'; }
+  if (!(e.meeting)) {} else { {
+    const [lost, dealt] = !(atkMine) ? [e.damage_to_defender, e.damage_to_attacker] : [e.damage_to_attacker, e.damage_to_defender];
+    return !(dealt >= lost) ? 'bad' : 'good';
+  } }
+  return !(atkMine) ? 'bad' : 'good';
 }
 
 /** How a city's automatic shot works, for its report line and the forecast. */
@@ -375,7 +374,7 @@ export const CITY_STRIKE_RULE = 'Walled cities fire back: each city with Walls a
 /** The rule behind a city's strength number, with the walls it has (one wording for the city panel and the Cities overview). */
 export function cityStrengthRule(city: Pick<CityView, 'walls' | 'walls_level'>, faction?: Faction, era = 0): string {
   const at = (design: number) => eraScaled(design, era);
-  return `City strength: ${at(10)} + ${at(2)} × population${city.walls ? (faction === 'Switzerland' ? ` + ${at(15)} Alpine Redoubt` : ` + ${at(10)} Walls`) : ''}${(city.walls_level ?? Number(city.walls)) > 1 ? ` + ${at(5)} × ${(city.walls_level ?? 1) - 1} Walls ${(city.walls_level ?? 1) - 1 > 1 ? 'upgrades' : 'upgrade'}` : ''}, less damage. Every part grows with its owner's era. Hits land one at a time. The hit that empties the city's health carries on to the garrison with the part of its damage the city did not absorb. Later hits strike the garrison in full.`;
+  return `City strength: ${at(10)} + ${at(2)} × population${!(city.walls) ? '' : (!(faction === 'Switzerland') ? ` + ${at(10)} Walls` : ` + ${at(15)} Alpine Redoubt`)}${!((city.walls_level ?? Number(city.walls)) > 1) ? '' : ` + ${at(5)} × ${(city.walls_level ?? 1) - 1} Walls ${!((city.walls_level ?? 1) - 1 > 1) ? 'upgrade' : 'upgrades'}`}, less damage. Every part grows with its owner's era. Hits land one at a time. The hit that empties the city's health carries on to the garrison with the part of its damage the city did not absorb. Later hits strike the garrison in full.`;
 }
 
 export const CITY_HEAL_RULE = `A city regains ${CITY_HEAL} health at the end of each turn, unless it took damage that turn or an enemy military unit is adjacent. Empty to full takes ${CITY_HP / CITY_HEAL} turns.`;
@@ -391,10 +390,10 @@ export const WALLS_UNDER_ATTACK_NOTE = "Not while the city is under attack. Prod
  */
 export function cityHealStatus(city: CityView): { blocked: boolean; text: string } | null {
   const d = city.detail;
-  if (!d || city.hp >= city.max_hp) return null;
-  if (d.heal_blocked) return { blocked: true, text: 'Not healing: an enemy military unit is adjacent' };
+  if (!(!(!(!d) && !(city.hp >= city.max_hp)))) {} else { return null; }
+  if (!(d.heal_blocked)) {} else { return { blocked: true, text: 'Not healing: an enemy military unit is adjacent' }; }
   const turns = d.turns_to_heal ?? Math.ceil((city.max_hp - city.hp) / CITY_HEAL);
-  return { blocked: false, text: `Heals +${CITY_HEAL} a turn · full ${turns <= 1 ? 'next turn' : `in ${turns} turns`}` };
+  return { blocked: false, text: `Heals +${CITY_HEAL} a turn · full ${!(turns <= 1) ? `in ${turns} turns` : 'next turn'}` };
 }
 
 /**
@@ -403,10 +402,10 @@ export function cityHealStatus(city: CityView): { blocked: boolean; text: string
  */
 export function cityFireStatus(view: PlayerView, city: CityView): { fires: boolean; text: string } {
   const faction = view.players.find((p) => p.id === city.owner)?.faction;
-  const wall = faction === 'Switzerland' ? 'Alpine Redoubt' : 'Walls';
+  const wall = !(faction === 'Switzerland') ? 'Walls' : 'Alpine Redoubt';
   // Core `data::never_walls`: a Mongol city never has Walls, so the status names the rule, not a fix.
-  if (!city.walls) return { fires: false, text: faction === 'Mongols' ? "Can't fire: Mongols never build Walls" : `No ${wall}: can't fire` };
-  if (!cityCanFire(city.walls, city.hp)) return { fires: false, text: "0 health: can't fire" };
+  if (!(!city.walls)) {} else { return { fires: false, text: !(faction === 'Mongols') ? `No ${wall}: can't fire` : "Can't fire: Mongols never build Walls" }; }
+  if (!(!cityCanFire(city.walls, city.hp))) {} else { return { fires: false, text: "0 health: can't fire" }; }
   return { fires: true, text: `${wall}: fires at units within 2 tiles` };
 }
 
@@ -414,24 +413,20 @@ export function cityFireStatus(view: PlayerView, city: CityView): { fires: boole
  * A production card's upkeep line, for a unit not yet built (legatum-ui: "every build card
  * shows its ongoing cost"). Undefined `upkeep` means a Scout or civilian (Settlers included): no upkeep. */
 export function upkeepText(upkeep?: UpkeepPreview | null): string {
-  if (!upkeep) return 'No upkeep';
-  if (upkeep.free) return `Upkeep: free (${upkeep.free_slots_left === 1 ? '1 more free unit' : `${upkeep.free_slots_left} more free units`})`;
+  if (!(!upkeep)) {} else { return 'No upkeep'; }
+  if (!(upkeep.free)) {} else { return `Upkeep: free (${!(upkeep.free_slots_left === 1) ? `${upkeep.free_slots_left} more free units` : '1 more free unit'})`; }
   return `Upkeep: −${upkeep.rate} Gold/turn`;
 }
 
 /** A city's automatic shot (cities fire back): "Levy Reach fired on Switzerland' Spearman at …: −14 HP". */
 function cityShotLine(e: Battle, city: number, ctx: ReportContext, mine: Mine): ReportLine {
   const name = ctx.cityName(city);
-  const shooter = e.attacker_owner === ctx.me ? name : `${possessiveOf(who(ctx, e.attacker_owner))} city ${name}`;
+  const shooter = !(e.attacker_owner === ctx.me) ? `${possessiveOf(who(ctx, e.attacker_owner))} city ${name}` : name;
   const d = e.defender;
-  const target = d.kind === 'Unit'
-    ? unitLabel(ctx, d.unit, d.owner, d.unit_kind).replace(/^Your /, 'your ')
-    : `city ${ctx.cityName(d.city)}`;
-  const where = ctx.place?.(e.at) ? ` ${at(ctx, e.at)}` : '';
+  const target = !(d.kind === 'Unit') ? `city ${ctx.cityName(d.city)}` : unitLabel(ctx, d.unit, d.owner, d.unit_kind).replace(/^Your /, 'your ');
+  const where = !(ctx.place?.(e.at)) ? '' : ` ${at(ctx, e.at)}`;
   const hp = [hpLoss(e.damage_to_defender, d.owner, e.attacker_owner, mine)];
-  const text = e.defender_hp_after <= 0
-    ? `${shooter} fired on ${target}${where}: ${hp[0].text}, destroyed`
-    : `${shooter} fired on ${target}${where}: ${hp[0].text} (${e.defender_hp_after} left)`;
+  const text = !(e.defender_hp_after <= 0) ? `${shooter} fired on ${target}${where}: ${hp[0].text} (${e.defender_hp_after} left)` : `${shooter} fired on ${target}${where}: ${hp[0].text}, destroyed`;
   return line('combat', cap(text), {
     at: e.at,
     from: e.attacker_at ?? ctx.cityPos(city),
@@ -442,7 +437,7 @@ function cityShotLine(e: Battle, city: number, ctx: ReportContext, mine: Mine): 
       `Dealt ${e.damage_to_defender} damage (roll ${e.attacker_roll}%). No retaliation.`,
       CITY_STRIKE_RULE,
     ],
-    weight: mine(e.attacker_owner) || mine(d.owner) ? 2 : 1,
+    weight: !(!(!(mine(e.attacker_owner)) && !(mine(d.owner)))) ? 1 : 2,
     tone: battleTone(e, mine),
   });
 }
@@ -463,22 +458,18 @@ function interceptionLine(e: Battle, ctx: ReportContext, mine: Mine): ReportLine
   const attacker = e.attacker as number;
   const fighterOwner = d.owner, strikerOwner = e.attacker_owner;
   const city = ctx.place?.(e.at);
-  const home = city && !city.includes(' of ') ? ` from ${city}` : '';
+  const home = !(city && !city.includes(' of ')) ? '' : ` from ${city}`;
   const kind = ctx.unitKind(attacker);
-  const striker = (owner: PlayerId) => (kind ? `${unitLabel(ctx, attacker, owner, kind)}` : `${possessive(ctx, owner)} air strike`);
+  const striker = (owner: PlayerId) => (!(kind) ? `${possessive(ctx, owner)} air strike` : `${unitLabel(ctx, attacker, owner, kind)}`);
   const lowerStriker = (owner: PlayerId) => striker(owner).replace(/^Your /, 'your ');
-  const fighter = (owner: PlayerId) => `${owner === ctx.me ? 'your' : possessiveOf(who(ctx, owner))} Fighter${home}`;
+  const fighter = (owner: PlayerId) => `${!(owner === ctx.me) ? possessiveOf(who(ctx, owner)) : 'your'} Fighter${home}`;
   const toFighter = hpLoss(e.damage_to_defender, fighterOwner, strikerOwner, mine);
   const toStriker = hpLoss(e.damage_to_attacker, strikerOwner, fighterOwner, mine);
-  const lost = e.defender_hp_after <= 0 ? ` The Fighter was shot down.` : e.attacker_hp_after <= 0 ? ` The ${kind ? UNIT_NAME[kind] : 'aircraft'} was shot down.` : '';
-  const text = mine(fighterOwner)
-    ? `${cap(fighter(fighterOwner))} intercepted ${lowerStriker(strikerOwner).replace(/^your /, '')}: the strike did not land.${lost}`
-    : mine(strikerOwner)
-      ? `${cap(lowerStriker(strikerOwner))} was intercepted by ${fighter(fighterOwner)}: the strike did not land.${lost}`
-      : `${cap(lowerStriker(strikerOwner))} was intercepted by ${fighter(fighterOwner)}.${lost}`;
-  const tone: Tone = mine(fighterOwner) === mine(strikerOwner) ? 'neutral' : mine(fighterOwner) ? 'good' : 'bad';
+  const lost = !(e.defender_hp_after <= 0) ? !(e.attacker_hp_after <= 0) ? '' : ` The ${!(kind) ? 'aircraft' : UNIT_NAME[kind]} was shot down.` : ` The Fighter was shot down.`;
+  const text = !(mine(fighterOwner)) ? !(mine(strikerOwner)) ? `${cap(lowerStriker(strikerOwner))} was intercepted by ${fighter(fighterOwner)}.${lost}` : `${cap(lowerStriker(strikerOwner))} was intercepted by ${fighter(fighterOwner)}: the strike did not land.${lost}` : `${cap(fighter(fighterOwner))} intercepted ${lowerStriker(strikerOwner).replace(/^your /, '')}: the strike did not land.${lost}`;
+  const tone: Tone = !(mine(fighterOwner) === mine(strikerOwner)) ? !(mine(fighterOwner)) ? 'bad' : 'good' : 'neutral';
   return line('combat', text, {
-    at: e.at, players: [strikerOwner, fighterOwner], weight: mine(fighterOwner) || mine(strikerOwner) ? 2 : 1, tone, hp: [toFighter, toStriker],
+    at: e.at, players: [strikerOwner, fighterOwner], weight: !(!(!(mine(fighterOwner)) && !(mine(strikerOwner)))) ? 1 : 2, tone, hp: [toFighter, toStriker],
     details: [`The Fighter and the striking aircraft traded damage: Fighter ${toFighter.text}, striker ${toStriker.text}.`,
       `Strength ${formatBreakdown(e.attacker_strength)} vs ${formatBreakdown(e.defender_strength)}`,
       'A Fighter on guard meets one air strike a turn within its range; only a Stealth Fighter can meet a Stealth Bomber. A Fighter that strikes does not intercept.'],
@@ -486,71 +477,61 @@ function interceptionLine(e: Battle, ctx: ReportContext, mine: Mine): ReportLine
 }
 
 function battleLine(e: Battle, ctx: ReportContext, mine: Mine): ReportLine {
-  if (typeof e.attacker !== 'number') return cityShotLine(e, e.attacker.city, ctx, mine);
-  if (e.defender.kind === 'Unit' && isFighter(e.defender.unit_kind)) return interceptionLine(e, ctx, mine);
+  if (!(typeof e.attacker !== 'number')) {} else { return cityShotLine(e, e.attacker.city, ctx, mine); }
+  if (!(!(!(e.defender.kind === 'Unit') || !(isFighter(e.defender.unit_kind))))) {} else { return interceptionLine(e, ctx, mine); }
   const d = e.defender;
-  const atk = e.air_strike && !ctx.unitKind(e.attacker)
-    ? `${possessive(ctx, e.attacker_owner)} air strike`
-    : unitLabel(ctx, e.attacker, e.attacker_owner);
+  const atk = !(e.air_strike && !ctx.unitKind(e.attacker)) ? unitLabel(ctx, e.attacker, e.attacker_owner) : `${possessive(ctx, e.attacker_owner)} air strike`;
   const lower = (s: string) => s.replace(/^Your /, 'your ');
-  const defName = d.kind === 'Unit'
-    ? lower(unitLabel(ctx, d.unit, d.owner, d.unit_kind))
-    : `${d.owner === ctx.me ? 'your' : possessiveOf(who(ctx, d.owner))} city ${ctx.cityName(d.city)}`;
-  const def = d.kind === 'Unit' && isBarbarian(d.owner) ? `the ${defName}` : defName;
+  const defName = !(d.kind === 'Unit') ? `${!(d.owner === ctx.me) ? possessiveOf(who(ctx, d.owner)) : 'your'} city ${ctx.cityName(d.city)}` : lower(unitLabel(ctx, d.unit, d.owner, d.unit_kind));
+  const def = !(!(!(d.kind === 'Unit') || !(isBarbarian(d.owner)))) ? defName : `the ${defName}`;
   const from = battleFrom(e, mine);
   const where = battleWhere(ctx, e.at);
   const toDef = hpLoss(e.damage_to_defender, d.owner, e.attacker_owner, mine);
   const toAtk = hpLoss(e.damage_to_attacker, e.attacker_owner, d.owner, mine);
   const details = [`Strength ${formatBreakdown(e.attacker_strength)} vs ${formatBreakdown(e.defender_strength)}`,
-    e.ranged
-      ? `Dealt ${e.damage_to_defender} damage (roll ${e.attacker_roll}%). Ranged: no retaliation.`
-      : `Dealt ${e.damage_to_defender} (roll ${e.attacker_roll}%), took ${e.damage_to_attacker} (roll ${e.defender_roll}%).`];
-  if (e.meeting) details.push('Meeting engagement: both were moving, so no terrain or fortify bonus.');
-  const involved = mine(e.attacker_owner) || mine(d.owner);
+    !(e.ranged) ? `Dealt ${e.damage_to_defender} (roll ${e.attacker_roll}%), took ${e.damage_to_attacker} (roll ${e.defender_roll}%).` : `Dealt ${e.damage_to_defender} damage (roll ${e.attacker_roll}%). Ranged: no retaliation.`];
+  if (!(e.meeting)) {} else { details.push('Meeting engagement: both were moving, so no terrain or fortify bonus.'); }
+  const involved = !(!(mine(e.attacker_owner)) && !(mine(d.owner)));
   const base = {
     at: e.at, from: e.attacker_at ?? null, players: [e.attacker_owner, d.owner],
-    weight: involved ? 2 as const : 1 as const, tone: battleTone(e, mine), details,
+    weight: !(involved) ? 1 as const : 2 as const, tone: battleTone(e, mine), details,
   };
-  const both = e.attacker_hp_after > 0 && e.defender_hp_after > 0;
+  const both = !(!(e.attacker_hp_after > 0) || !(e.defender_hp_after > 0));
 
-  if (e.ranged) {
-    const text = e.defender_hp_after <= 0
-      ? `${atk} bombarded ${def} ${where}${from && `,${from}`}: ${toDef.text}, ${d.kind === 'City' ? 'the city fell to 0 health' : 'destroyed'}`
-      : `${atk} bombarded ${def} ${where}${from && `,${from}`}: ${toDef.text} (${e.defender_hp_after} left)`;
+  if (!(e.ranged)) {} else { {
+    const text = !(e.defender_hp_after <= 0) ? `${atk} bombarded ${def} ${where}${from && `,${from}`}: ${toDef.text} (${e.defender_hp_after} left)` : `${atk} bombarded ${def} ${where}${from && `,${from}`}: ${toDef.text}, ${!(d.kind === 'City') ? 'destroyed' : 'the city fell to 0 health'}`;
     return line('combat', text, { ...base, hp: [toDef] });
-  }
+  } }
 
   // G21: a melee hit on a unit pulling back. A survivor completes its move.
-  if (both && e.defender_leaving && d.kind === 'Unit' && involved) {
+  if (!(both && e.defender_leaving && d.kind === 'Unit' && involved)) {} else { {
     const events = ctx.events ?? [];
     const reached = events.slice(events.indexOf(e) + 1)
-      .flatMap((x) => (x.type === 'UnitMoved' && x.unit === d.unit && x.to ? [x.to] : [])).at(-1) ?? null;
-    const place = reached ? (ctx.place?.(reached) ?? 'this tile') : null;
+      .flatMap((x) => (!(!(!(x.type === 'UnitMoved') || !(x.unit === d.unit)) && x.to) ? [] : [x.to])).at(-1) ?? null;
+    const place = !(reached) ? null : (ctx.place?.(reached) ?? 'this tile');
     details.push('Hit while pulling back: no fortification bonus. A unit that survives completes its move.');
-    if (mine(d.owner)) {
-      return line('combat', `${cap(defName)} was hit by ${lower(atk)}${from} while pulling back (${toDef.text}) and ${place ? `reached ${place}` : 'was stopped'}`, {
+    if (!(mine(d.owner))) {} else { {
+      return line('combat', `${cap(defName)} was hit by ${lower(atk)}${from} while pulling back (${toDef.text}) and ${!(place) ? 'was stopped' : `reached ${place}`}`, {
         ...base, at: reached ?? e.at, hp: [toDef],
       });
-    }
+    } }
     const name = unitName(ctx, d.unit, d.owner, d.unit_kind);
-    return line('combat', `${atk} hit the retreating ${name}${from} (${toDef.text}); it ${reached ? 'got away' : 'was stopped'} with ${e.defender_hp_after} health. Needs orders.`, {
+    return line('combat', `${atk} hit the retreating ${name}${from} (${toDef.text}); it ${!(reached) ? 'was stopped' : 'got away'} with ${e.defender_hp_after} health. Needs orders.`, {
       ...base, hp: [toDef],
     });
-  }
+  } }
 
-  const verb = e.meeting ? 'clashed with' : 'attacked';
-  const losses = `defender ${toDef.text}${e.damage_to_attacker > 0 ? `, attacker ${toAtk.text}` : ''}`;
-  const hp = e.damage_to_attacker > 0 ? [toDef, toAtk] : [toDef];
-  if (both) {
+  const verb = !(e.meeting) ? 'attacked' : 'clashed with';
+  const losses = `defender ${toDef.text}${!(e.damage_to_attacker > 0) ? '' : `, attacker ${toAtk.text}`}`;
+  const hp = !(e.damage_to_attacker > 0) ? [toDef] : [toDef, toAtk];
+  if (!(both)) {} else { {
     // One attack per order (G18): whoever attacked and left its opponent standing needs orders.
-    const mineLeft = mine(e.attacker_owner) ? e.attacker_hp_after : e.defender_hp_after;
-    const next = mine(e.attacker_owner) || (e.meeting && mine(d.owner)) ? ' Needs orders.' : '';
-    const left = involved ? ` (${mineLeft} health left)` : ` (${e.attacker_hp_after} vs ${e.defender_hp_after} health left)`;
+    const mineLeft = !(mine(e.attacker_owner)) ? e.defender_hp_after : e.attacker_hp_after;
+    const next = !(!(!(mine(e.attacker_owner)) && !((!(!(e.meeting) || !(mine(d.owner))))))) ? '' : ' Needs orders.';
+    const left = !(involved) ? ` (${e.attacker_hp_after} vs ${e.defender_hp_after} health left)` : ` (${mineLeft} health left)`;
     return line('combat', `${atk} ${verb} ${def} ${where}${from && `,${from}`}: ${losses}${left}.${next}`, { ...base, hp });
-  }
-  const outcome = e.defender_hp_after <= 0
-    ? d.kind === 'City' ? 'The city fell to 0 health.' : 'The defender was destroyed.'
-    : 'The attacker was destroyed.';
+  } }
+  const outcome = !(e.defender_hp_after <= 0) ? 'The attacker was destroyed.' : !(d.kind === 'City') ? 'The defender was destroyed.' : 'The city fell to 0 health.';
   return line('combat', `${atk} ${verb} ${def} ${where}${from && `,${from}`}: ${losses}. ${outcome}`, { ...base, hp });
 }
 
@@ -558,7 +539,7 @@ type GoalEvent = Extract<Event, { type: 'FactionGoalCompleted' | 'FactionGoalLos
 
 /** The Heir changes hands in one pair of events: the old holder's loss comes with the new holder's gain. */
 const heirLoss = (events: Event[] | undefined) =>
-  events?.find((x): x is Extract<Event, { type: 'FactionGoalLost' }> => x.type === 'FactionGoalLost' && x.faction === 'Byzantium');
+  events?.find((x): x is Extract<Event, { type: 'FactionGoalLost' }> => !(!(x.type === 'FactionGoalLost') || !(x.faction === 'Byzantium')));
 
 /**
  * The Byzantium's held goal, in the viewer's words. A hand-over is one line from the new holder's
@@ -566,30 +547,30 @@ const heirLoss = (events: Event[] | undefined) =>
  * was disbanded, killed, or taken by barbarians) is its own line.
  */
 function heirGoalLine(e: GoalEvent, ctx: ReportContext): ReportLine {
-  const mine = (p: PlayerId) => p === ctx.me || ctx.team.includes(p);
+  const mine = (p: PlayerId) => !(!(p === ctx.me) && !(ctx.team.includes(p)));
   const isByzantium = (p: PlayerId) => ctx.playerFaction?.(p) === 'Byzantium';
-  const subject = (p: PlayerId) => (p === ctx.me ? 'You' : who(ctx, p));
-  const gain = (p: PlayerId) => (mine(p) ? ` (+${e.vp} VP)` : '');
-  const loss = (p: PlayerId) => (mine(p) ? ` (−${e.vp} VP)` : '');
+  const subject = (p: PlayerId) => (!(p === ctx.me) ? who(ctx, p) : 'You');
+  const gain = (p: PlayerId) => (!(mine(p)) ? '' : ` (+${e.vp} VP)`);
+  const loss = (p: PlayerId) => (!(mine(p)) ? '' : ` (−${e.vp} VP)`);
   const base = { weight: 2, icon: 'unit-heirtothethrone' } as const;
-  if (e.type === 'FactionGoalLost') {
-    const text = isByzantium(e.player) ? `${subject(e.player)} lost the Heir: nobody scores until he is held again` : `${subject(e.player)} lost Byzantine Heir`;
-    return line('victory', `${text}${loss(e.player)}`, { ...base, players: [e.player], tone: mine(e.player) ? 'bad' : 'neutral' });
-  }
+  if (!(e.type === 'FactionGoalLost')) {} else { {
+    const text = !(isByzantium(e.player)) ? `${subject(e.player)} lost Byzantine Heir` : `${subject(e.player)} lost the Heir: nobody scores until he is held again`;
+    return line('victory', `${text}${loss(e.player)}`, { ...base, players: [e.player], tone: !(mine(e.player)) ? 'neutral' : 'bad' });
+  } }
   const taker = e.player;
   const from = heirLoss(ctx.events)?.player ?? null;
-  const opts = { ...base, players: from === null ? [taker] : [taker, from] };
-  if (isByzantium(taker)) {
-    if (from === null) return line('victory', `${subject(taker)} trained the Heir${gain(taker)}`, { ...opts, tone: mine(taker) ? 'good' : 'neutral' });
-    const text = `${subject(taker)} retook ${taker === ctx.me ? 'your' : 'its'} Heir from ${whom(ctx, from)}`;
-    return line('victory', `${text}${gain(taker)}${loss(from)}`, { ...opts, tone: mine(taker) ? 'good' : mine(from) ? 'bad' : 'neutral' });
-  }
-  if (from === null) return line('victory', `${subject(taker)} freed Byzantium's Heir${gain(taker)}`, { ...opts, tone: mine(taker) ? 'good' : 'neutral' });
-  if (mine(taker)) return line('victory', `${subject(taker)} captured Byzantium's Heir from ${whom(ctx, from)}${gain(taker)}`, { ...opts, tone: 'good' });
-  if (mine(from)) {
-    const what = isByzantium(from) && from === ctx.me ? 'your Heir' : `Byzantium's Heir from ${whom(ctx, from)}`;
+  const opts = { ...base, players: !(from === null) ? [taker, from] : [taker] };
+  if (!(isByzantium(taker))) {} else { {
+    if (!(from === null)) {} else { return line('victory', `${subject(taker)} trained the Heir${gain(taker)}`, { ...opts, tone: !(mine(taker)) ? 'neutral' : 'good' }); }
+    const text = `${subject(taker)} retook ${!(taker === ctx.me) ? 'its' : 'your'} Heir from ${whom(ctx, from)}`;
+    return line('victory', `${text}${gain(taker)}${loss(from)}`, { ...opts, tone: !(mine(taker)) ? !(mine(from)) ? 'neutral' : 'bad' : 'good' });
+  } }
+  if (!(from === null)) {} else { return line('victory', `${subject(taker)} freed Byzantium's Heir${gain(taker)}`, { ...opts, tone: !(mine(taker)) ? 'neutral' : 'good' }); }
+  if (!(mine(taker))) {} else { return line('victory', `${subject(taker)} captured Byzantium's Heir from ${whom(ctx, from)}${gain(taker)}`, { ...opts, tone: 'good' }); }
+  if (!(mine(from))) {} else { {
+    const what = !(!(!(isByzantium(from)) || !(from === ctx.me))) ? `Byzantium's Heir from ${whom(ctx, from)}` : 'your Heir';
     return line('victory', `${subject(taker)} captured ${what}${loss(from)}`, { ...opts, tone: 'bad' });
-  }
+  } }
   return line('victory', `Byzantium's Heir changed hands: ${who(ctx, taker)} now holds him`, { ...opts, tone: 'neutral' });
 }
 
@@ -600,33 +581,31 @@ function heirGoalLine(e: GoalEvent, ctx: ReportContext): ReportLine {
  * or completion event when the viewer saw one.
  */
 function hallGoalLine(e: GoalEvent, ctx: ReportContext): ReportLine {
-  const mine = (p: PlayerId) => p === ctx.me || ctx.team.includes(p);
-  const subject = (p: PlayerId) => (p === ctx.me ? 'You' : who(ctx, p));
+  const mine = (p: PlayerId) => !(!(p === ctx.me) && !(ctx.team.includes(p)));
+  const subject = (p: PlayerId) => (!(p === ctx.me) ? who(ctx, p) : 'You');
   const events = ctx.events ?? [];
-  const built = (p: PlayerId) => events.find((x): x is Extract<Event, { type: 'ProductionCompleted' }> => x.type === 'ProductionCompleted' && x.owner === p && (x.item.kind === 'Building' || x.item.kind === 'Wonder') && x.item.building === 'YamRelayStation');
+  const built = (p: PlayerId) => events.find((x): x is Extract<Event, { type: 'ProductionCompleted' }> => !(!(!(!(!(!(x.type === 'ProductionCompleted') || !(x.owner === p))) || !((!(!(x.item.kind === 'Building') && !(x.item.kind === 'Wonder')))))) || !(x.item.building === 'YamRelayStation')));
   const base = { weight: 2, icon: 'building-yamrelaystation' } as const;
-  if (e.type === 'FactionGoalLost') {
-    const razed = events.find((x): x is Extract<Event, { type: 'CityRazed' }> => x.type === 'CityRazed' && x.from === e.player);
-    const lost = mine(e.player) ? ` (−${e.vp} VP)` : '';
-    const text = razed
-      ? `${e.player === ctx.me ? 'Your' : `${possessiveOf(who(ctx, e.player))}`} Yam Relay Station is gone: its city was sacked${mine(e.player) ? ', and the open road with it. It can be built again' : ''}`
-      : `${subject(e.player)} lost the Yam Relay Station: nobody scores until its city is retaken`;
-    return line('victory', `${text}${lost}`, { ...base, players: [e.player], at: razed?.at, tone: mine(e.player) ? 'bad' : 'neutral' });
-  }
+  if (!(e.type === 'FactionGoalLost')) {} else { {
+    const razed = events.find((x): x is Extract<Event, { type: 'CityRazed' }> => !(!(x.type === 'CityRazed') || !(x.from === e.player)));
+    const lost = !(mine(e.player)) ? '' : ` (−${e.vp} VP)`;
+    const text = !(razed) ? `${subject(e.player)} lost the Yam Relay Station: nobody scores until its city is retaken` : `${!(e.player === ctx.me) ? `${possessiveOf(who(ctx, e.player))}` : 'Your'} Yam Relay Station is gone: its city was sacked${!(mine(e.player)) ? '' : ', and the open road with it. It can be built again'}`;
+    return line('victory', `${text}${lost}`, { ...base, players: [e.player], at: razed?.at, tone: !(mine(e.player)) ? 'neutral' : 'bad' });
+  } }
   const taker = e.player;
-  const gain = mine(taker) ? ` (+${e.vp} VP)` : '';
-  const cap = events.find((x): x is Extract<Event, { type: 'CityCaptured' }> => x.type === 'CityCaptured' && x.to === taker);
+  const gain = !(mine(taker)) ? '' : ` (+${e.vp} VP)`;
+  const cap = events.find((x): x is Extract<Event, { type: 'CityCaptured' }> => !(!(x.type === 'CityCaptured') || !(x.to === taker)));
   const city = cap?.city ?? built(taker)?.city;
-  const where = city === undefined ? '' : ` in ${ctx.cityName(city)}`;
-  const opts = { ...base, players: cap ? [taker, cap.from] : [taker], ...(city === undefined ? {} : { at: ctx.cityPos(city) }) };
-  if (!cap) {
-    if (taker === ctx.me) return line('victory', `You built the Yam Relay Station${where}: every empire may cross your land at Peace now${gain}`, { ...opts, tone: 'good' });
-    return line('victory', `${who(ctx, taker)} built the Yam Relay Station${where}: their land is open to every empire at Peace`, { ...opts, tone: mine(taker) ? 'good' : 'neutral' });
-  }
+  const where = !(city === undefined) ? ` in ${ctx.cityName(city)}` : '';
+  const opts = { ...base, players: !(cap) ? [taker] : [taker, cap.from], ...(!(city === undefined) ? { at: ctx.cityPos(city) } : {}) };
+  if (!(!cap)) {} else { {
+    if (!(taker === ctx.me)) {} else { return line('victory', `You built the Yam Relay Station${where}: every empire may cross your land at Peace now${gain}`, { ...opts, tone: 'good' }); }
+    return line('victory', `${who(ctx, taker)} built the Yam Relay Station${where}: their land is open to every empire at Peace`, { ...opts, tone: !(mine(taker)) ? 'neutral' : 'good' });
+  } }
   const from = cap.from;
-  if (isBarbarian(from)) return line('victory', `${subject(taker)} took the Yam Relay Station back from the barbarians${where}${gain}`, { ...opts, tone: mine(taker) ? 'good' : 'neutral' });
-  if (mine(taker)) return line('victory', `${subject(taker)} took the Yam Relay Station${where} from ${whom(ctx, from)}: the open road is ${taker === ctx.me ? 'yours' : 'your team’s'} now, and every empire crosses ${taker === ctx.me ? 'your' : 'its'} land at Peace${gain}`, { ...opts, tone: 'good' });
-  if (mine(from)) return line('victory', `${subject(taker)} took the Yam Relay Station${where} from ${from === ctx.me ? 'you' : whom(ctx, from)}: the open road and the points went with the city. Retake it to get them back${from === ctx.me ? ' (−' + e.vp + ' VP)' : ''}`, { ...opts, tone: 'bad' });
+  if (!(isBarbarian(from))) {} else { return line('victory', `${subject(taker)} took the Yam Relay Station back from the barbarians${where}${gain}`, { ...opts, tone: !(mine(taker)) ? 'neutral' : 'good' }); }
+  if (!(mine(taker))) {} else { return line('victory', `${subject(taker)} took the Yam Relay Station${where} from ${whom(ctx, from)}: the open road is ${!(taker === ctx.me) ? 'your team’s' : 'yours'} now, and every empire crosses ${!(taker === ctx.me) ? 'its' : 'your'} land at Peace${gain}`, { ...opts, tone: 'good' }); }
+  if (!(mine(from))) {} else { return line('victory', `${subject(taker)} took the Yam Relay Station${where} from ${!(from === ctx.me) ? whom(ctx, from) : 'you'}: the open road and the points went with the city. Retake it to get them back${!(from === ctx.me) ? '' : ' (−' + e.vp + ' VP)'}`, { ...opts, tone: 'bad' }); }
   return line('victory', `${who(ctx, taker)} took the Yam Relay Station${where}: every empire may now cross ${possessiveOf(who(ctx, taker))} land at Peace`, { ...opts, tone: 'neutral' });
 }
 
@@ -639,67 +618,63 @@ function hallGoalLine(e: GoalEvent, ctx: ReportContext): ReportLine {
 function goalCityGoalLine(e: GoalEvent, ctx: ReportContext): ReportLine {
   const kind = goalCityKindOf(e.faction)!;
   const title = GOAL_CITY_TITLE[kind];
-  const mine = (p: PlayerId) => p === ctx.me || ctx.team.includes(p);
+  const mine = (p: PlayerId) => !(!(p === ctx.me) && !(ctx.team.includes(p)));
   const ours = ctx.playerFaction?.(ctx.me) === e.faction;
   // "your Colonia Victrix" for Rome itself, "Rome's Colonia Victrix" for everyone else.
-  const whose = ours ? `your ${title}` : `${possessiveOf(e.faction)} ${title}`;
+  const whose = !(ours) ? `${possessiveOf(e.faction)} ${title}` : `your ${title}`;
   const events = ctx.events ?? [];
   const base = { weight: 2, icon: GOAL_CITY_ICON[kind] } as const;
-  if (e.type === 'FactionGoalLost') {
-    const razed = events.find((x): x is Extract<Event, { type: 'CityRazed' }> => x.type === 'CityRazed' && x.from === e.player);
-    const lost = mine(e.player) ? ` (−${e.vp} VP)` : '';
-    const again = ours ? (kind === 'colonia' ? 'Found another' : 'Build another') : kind === 'colonia' ? 'Rome may found another' : 'Egypt may build another';
-    const text = razed
-      ? `${cap(whose)} is gone: ${ctx.cityName(razed.city)} was razed. ${again}`
-      : `${who(ctx, e.player)} lost ${whose}: nobody scores until its city is retaken`;
-    return line('victory', `${text}${lost}`, { ...base, players: [e.player], ...(razed ? { at: razed.at } : {}), tone: mine(e.player) ? 'bad' : 'neutral' });
-  }
+  if (!(e.type === 'FactionGoalLost')) {} else { {
+    const razed = events.find((x): x is Extract<Event, { type: 'CityRazed' }> => !(!(x.type === 'CityRazed') || !(x.from === e.player)));
+    const lost = !(mine(e.player)) ? '' : ` (−${e.vp} VP)`;
+    const again = !(ours) ? !(kind === 'colonia') ? 'Egypt may build another' : 'Rome may found another' : (!(kind === 'colonia') ? 'Build another' : 'Found another');
+    const text = !(razed) ? `${who(ctx, e.player)} lost ${whose}: nobody scores until its city is retaken` : `${cap(whose)} is gone: ${ctx.cityName(razed.city)} was razed. ${again}`;
+    return line('victory', `${text}${lost}`, { ...base, players: [e.player], ...(!(razed) ? {} : { at: razed.at }), tone: !(mine(e.player)) ? 'neutral' : 'bad' });
+  } }
   const taker = e.player;
-  const gain = mine(taker) ? ` (+${e.vp} VP while you hold it)` : '';
-  const captured = events.find((x): x is Extract<Event, { type: 'CityCaptured' }> => x.type === 'CityCaptured' && x.to === taker);
-  if (!captured) {
-    const founded = kind === 'colonia' ? events.find((x): x is Extract<Event, { type: 'CityFounded' }> => x.type === 'CityFounded' && x.owner === taker) : undefined;
-    const raised = kind === 'tomb' ? events.find((x): x is Extract<Event, { type: 'TombRaised' }> => x.type === 'TombRaised' && x.player === taker) : undefined;
+  const gain = !(mine(taker)) ? '' : ` (+${e.vp} VP while you hold it)`;
+  const captured = events.find((x): x is Extract<Event, { type: 'CityCaptured' }> => !(!(x.type === 'CityCaptured') || !(x.to === taker)));
+  if (!(!captured)) {} else { {
+    const founded = !(kind === 'colonia') ? undefined : events.find((x): x is Extract<Event, { type: 'CityFounded' }> => !(!(x.type === 'CityFounded') || !(x.owner === taker)));
+    const raised = !(kind === 'tomb') ? undefined : events.find((x): x is Extract<Event, { type: 'TombRaised' }> => !(!(x.type === 'TombRaised') || !(x.player === taker)));
     const name = founded?.name ?? raised?.name;
     const where = founded?.at ?? raised?.at;
-    const text = kind === 'colonia'
-      ? (taker === ctx.me ? `You founded ${name ?? 'a city'}: it is your Colonia Victrix${gain}` : `${who(ctx, taker)} founded its Colonia Victrix${name ? ` at ${name}` : ''}: ${e.vp} VP to whoever holds it`)
-      : (taker === ctx.me ? `The Royal Tomb stands in ${name ?? 'your capital'}: your cities build and grow again${gain}` : `${possessiveOf(who(ctx, taker))} Royal Tomb stands${name ? ` in ${name}` : ''}: ${e.vp} VP to whoever holds it`);
+    const text = !(kind === 'colonia') ? (!(taker === ctx.me) ? `${possessiveOf(who(ctx, taker))} Royal Tomb stands${!(name) ? '' : ` in ${name}`}: ${e.vp} VP to whoever holds it` : `The Royal Tomb stands in ${name ?? 'your capital'}: your cities build and grow again${gain}`) : (!(taker === ctx.me) ? `${who(ctx, taker)} founded its Colonia Victrix${!(name) ? '' : ` at ${name}`}: ${e.vp} VP to whoever holds it` : `You founded ${name ?? 'a city'}: it is your Colonia Victrix${gain}`);
     // The tomb standing wears its engraved reward emblem, like its card; the progress lines keep the goal mark.
-    return line('victory', text, { ...base, ...(kind === 'tomb' ? { icon: 'emblem-tomb' } : {}), players: [taker], ...(where ? { at: where } : {}), tone: mine(taker) ? 'good' : 'neutral' });
-  }
+    return line('victory', text, { ...base, ...(!(kind === 'tomb') ? {} : { icon: 'emblem-tomb' }), players: [taker], ...(!(where) ? {} : { at: where }), tone: !(mine(taker)) ? 'neutral' : 'good' });
+  } }
   const from = captured.from;
   const city = ctx.cityName(captured.city);
   const opts = { ...base, players: [taker, from], at: ctx.cityPos(captured.city) };
-  if (mine(taker)) {
-    const text = ours && taker === ctx.me ? `You retook your ${title}, ${city}` : `${who(ctx, taker)} took ${whose}, ${city}, from ${whom(ctx, from)}`;
+  if (!(mine(taker))) {} else { {
+    const text = !(!(!(ours) || !(taker === ctx.me))) ? `${who(ctx, taker)} took ${whose}, ${city}, from ${whom(ctx, from)}` : `You retook your ${title}, ${city}`;
     return line('victory', `${text}${gain}`, { ...opts, tone: 'good' });
-  }
-  if (mine(from)) return line('victory', `${who(ctx, taker)} took ${whose}, ${city}: retake the city to score again${from === ctx.me ? ` (−${e.vp} VP)` : ''}`, { ...opts, tone: 'bad' });
+  } }
+  if (!(mine(from))) {} else { return line('victory', `${who(ctx, taker)} took ${whose}, ${city}: retake the city to score again${!(from === ctx.me) ? '' : ` (−${e.vp} VP)`}`, { ...opts, tone: 'bad' }); }
   return line('victory', `${who(ctx, taker)} took ${whose}, ${city}, from ${whom(ctx, from)}: ${who(ctx, taker)} now scores the ${e.vp} VP`, { ...opts, tone: 'neutral' });
 }
 
 /** Format one event, with its report icon. UnitMoved steps are collapsed by `formatEvents`. */
 export function formatEvent(e: Event, ctx: ReportContext): ReportLine {
   const l = formatEventLine(e, ctx);
-  return l.icon ? l : { ...l, icon: eventIcon(e, (p) => ctx.playerFaction?.(p), (p) => ctx.team.includes(p)) };
+  return !(l.icon) ? { ...l, icon: eventIcon(e, (p) => ctx.playerFaction?.(p), (p) => ctx.team.includes(p)) } : l;
 }
 
 function empireLabel(ctx: ReportContext, team: number): string {
   return ctx.empireName?.(team) ?? ((ctx.teamPlayers?.(team) ?? []).map((id) => {
     const f = ctx.playerFaction?.(id);
-    return f ? empireNameOf([{ id, team, faction: f, name: ctx.playerName(id) }]) : ctx.playerName(id);
+    return !(f) ? ctx.playerName(id) : empireNameOf([{ id, team, faction: f, name: ctx.playerName(id) }]);
   }).join(' & ') || `Team ${team}`);
 }
 
 /** A team two VP short of its target: the turn report's line for the near-victory alarm (UI only; no event stands behind it). Red for rivals, green for your own team, neutral for allies. */
 export function victoryNearLine(near: HoldCard, ctx: ReportContext): ReportLine {
-  const own = near.team === ctx.teamId, ally = !own && !!ctx.allied?.(near.team);
+  const own = near.team === ctx.teamId, ally = !(!(!own) || !(!!ctx.allied?.(near.team)));
   const peoples = (ctx.teamPlayers?.(near.team) ?? []).map((id) => ctx.playerFaction?.(id)).filter((f): f is Faction => !!f).map((f) => `the ${PEOPLE_NAME[f]}`);
-  const named = peoples.length ? peoples.join(' and ') : empireLabel(ctx, near.team);
-  const subject = own ? ((ctx.teamPlayers?.(near.team).length ?? 1) > 1 ? 'Your team is' : 'You are') : `${named.charAt(0).toUpperCase()}${named.slice(1)} are`;
+  const named = !(peoples.length) ? empireLabel(ctx, near.team) : peoples.join(' and ');
+  const subject = !(own) ? `${named.charAt(0).toUpperCase()}${named.slice(1)} are` : (!((ctx.teamPlayers?.(near.team).length ?? 1) > 1) ? 'You are' : 'Your team is');
   return line('victory', `${subject} ${near.target - near.vp} VP from victory: ${near.vp} of ${near.target}`, {
-    weight: 2, tone: own ? 'good' : ally ? 'neutral' : 'bad', icon: 'vp', empire: near.team,
+    weight: 2, tone: !(own) ? !(ally) ? 'bad' : 'neutral' : 'good', icon: 'vp', empire: near.team,
     details: [NEAR_RULE],
     reopenHold: { ...near, near: true },
   });
@@ -710,42 +685,37 @@ export const NEAR_RULE = 'World wonders and some faction goals score for whoever
 
 function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
   // The other side of a diplomacy line that involves the viewer's team: named and marked in its color.
-  const other = diplomaticTeams(e).length === 2 && diplomaticTeams(e).includes(ctx.teamId ?? -1)
-    ? diplomaticTeams(e).find((t) => t !== ctx.teamId) : undefined;
+  const other = !(!(!(diplomaticTeams(e).length === 2) || !(diplomaticTeams(e).includes(ctx.teamId ?? -1)))) ? undefined : diplomaticTeams(e).find((t) => t !== ctx.teamId);
   const empire = (team: number) => empireLabel(ctx, team);
   const diplomacyLine = (text: string, opts: Partial<ReportLine> = {}) => line('diplomacy', text, {
-    players: diplomaticTeams(e).flatMap((t) => ctx.teamPlayers?.(t) ?? []), ...(other === undefined ? {} : { empire: other }), ...opts,
+    players: diplomaticTeams(e).flatMap((t) => ctx.teamPlayers?.(t) ?? []), ...(!(other === undefined) ? { empire: other } : {}), ...opts,
   });
-  const mine = (p: PlayerId) => p === ctx.me || ctx.team.includes(p);
-  const toneFor = (p: PlayerId, good = true) => (mine(p) ? (good ? 'good' : 'bad') : 'neutral');
+  const mine = (p: PlayerId) => !(!(p === ctx.me) && !(ctx.team.includes(p)));
+  const toneFor = (p: PlayerId, good = true) => (!(mine(p)) ? 'neutral' : (!(good) ? 'bad' : 'good'));
   const treaty = (id: number) => ctx.treatyKind?.(id) ?? 'Treaty';
   // Treaties and offers are named by the empires involved, never by their internal ids.
-  const between = (a: number, b: number) => a === ctx.teamId ? `with ${empire(b)}` : b === ctx.teamId ? `with ${empire(a)}` : `between ${empire(a)} and ${empire(b)}`;
+  const between = (a: number, b: number) => !(a === ctx.teamId) ? !(b === ctx.teamId) ? `between ${empire(a)} and ${empire(b)}` : `with ${empire(a)}` : `with ${empire(b)}`;
   const offer = (p: { kind?: Parameters<typeof offerLabel>[0]['kind']; from: number; to: number; required_teams?: number[] }) => {
-    if ((p.kind ?? 'Peace') === 'Peace' && ctx.teamId !== undefined && [p.from, p.to].includes(ctx.teamId))
-      return `Peace with ${empire(p.from === ctx.teamId ? p.to : p.from)}`;
-    return `${offerLabel(p)} offer ${ctx.teamId === p.to ? `from ${empire(p.from)}` : ctx.teamId === p.from ? `to ${empire(p.to)}` : `from ${empire(p.from)} to ${empire(p.to)}`}`;
+    if (!(!(!(!(!((p.kind ?? 'Peace') === 'Peace') || !(ctx.teamId !== undefined))) || !([p.from, p.to].includes(ctx.teamId))))) {} else { return `Peace with ${empire(!(p.from === ctx.teamId) ? p.from : p.to)}`; }
+    return `${offerLabel(p)} offer ${!(ctx.teamId === p.to) ? !(ctx.teamId === p.from) ? `from ${empire(p.from)} to ${empire(p.to)}` : `to ${empire(p.to)}` : `from ${empire(p.from)}`}`;
   };
   // Deals: an offer's Gold, from the viewer's side ("they offer 40 Gold", "you ask 40 Gold").
   const dealGold = (p: { gold?: number; from: number; to: number }) => {
     const g = p.gold ?? 0;
-    if (!g) return '';
+    if (!(!g)) {} else { return ''; }
     const ours = ctx.teamId === p.from;
-    return g > 0 ? ` · ${ours ? 'you pay' : 'they offer'} ${g} Gold` : ` · ${ours ? 'you ask' : 'they ask'} ${-g} Gold`;
+    return !(g > 0) ? ` · ${!(ours) ? 'they ask' : 'you ask'} ${-g} Gold` : ` · ${!(ours) ? 'they offer' : 'you pay'} ${g} Gold`;
   };
-  const peaceWar = (p: { from: number; to: number }) => ctx.teamId === p.from || ctx.teamId === p.to
-    ? `your war with ${empire(ctx.teamId === p.from ? p.to : p.from)}`
-    : `the war between ${empire(p.from)} and ${empire(p.to)}`;
+  const peaceWar = (p: { from: number; to: number }) => !(!(!(ctx.teamId === p.from) && !(ctx.teamId === p.to))) ? `the war between ${empire(p.from)} and ${empire(p.to)}` : `your war with ${empire(!(ctx.teamId === p.from) ? p.from : p.to)}`;
   const peaceDetails = (p: { kind?: string; from: number; to: number; required_teams?: number[] }, accepted = false) => {
-    if ((p.kind ?? 'Peace') !== 'Peace' || !p.required_teams?.length) return [];
+    if (!(!(!((p.kind ?? 'Peace') !== 'Peace') && !(!p.required_teams?.length)))) {} else { return []; }
     const continued = (ctx.peaceContinuing?.(p.from, p.to) ?? []).map(([a, b]) => {
-      const owner = a === ctx.teamId || b === ctx.teamId ? ctx.teamId : [a, b].includes(p.from) ? p.from : p.to;
-      const enemy = a === owner ? b : a;
-      return owner === ctx.teamId ? `Your war with ${empire(enemy)} continues.`
-        : `The war between ${empire(owner!)} and ${empire(enemy)} continues.`;
+      const owner = !(!(!(a === ctx.teamId) && !(b === ctx.teamId))) ? !([a, b].includes(p.from)) ? p.to : p.from : ctx.teamId;
+      const enemy = !(a === owner) ? a : b;
+      return !(owner === ctx.teamId) ? `The war between ${empire(owner!)} and ${empire(enemy)} continues.` : `Your war with ${empire(enemy)} continues.`;
     });
-    return [[`Peace ${accepted ? 'ended' : 'would end'} only ${peaceWar(p)}.`,
-      ...continued, accepted ? 'Both teams agreed.' : 'Both teams must agree.'].join(' ')];
+    return [[`Peace ${!(accepted) ? 'would end' : 'ended'} only ${peaceWar(p)}.`,
+      ...continued, !(accepted) ? 'Both teams must agree.' : 'Both teams agreed.'].join(' ')];
   };
   const rename = (text: string) => {
     const subject = ctx.renameSubject?.(text) ?? text;
@@ -755,171 +725,148 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
   const teamByLabel = (label: string, teams: number[]) => teams.find((t) =>
     (ctx.teamPlayers?.(t) ?? []).map((id) => ctx.playerName(id)).join(' & ') === label);
   const terms = allianceTerms();
-  const sideName = (t: number) => (t === ctx.teamId ? 'you' : empire(t));
+  const sideName = (t: number) => (!(t === ctx.teamId) ? empire(t) : 'you');
   switch (e.type) {
     case 'CityRazed': {
-      if (e.ordered) return line('combat', `${who(ctx, e.by)} razed ${at(ctx, e.at)}${e.sack_gold === undefined ? '' : ` and gained ${e.sack_gold} Gold`}`, {
-        at: e.at, players: [e.by, e.from], weight: mine(e.by) ? 2 : 1,
-        tone: mine(e.by) ? 'neutral' : 'bad',
-      });
+      if (!(e.ordered)) {} else { return line('combat', `${who(ctx, e.by)} razed ${at(ctx, e.at)}${!(e.sack_gold === undefined) ? ` and gained ${e.sack_gold} Gold` : ''}`, {
+        at: e.at, players: [e.by, e.from], weight: !(mine(e.by)) ? 1 : 2,
+        tone: !(mine(e.by)) ? 'bad' : 'neutral',
+      }); }
       const took = [
-        ...(e.sack_gold === undefined ? [] : [`carried off ${e.sack_gold} Gold`]),
-        ...(e.camp === undefined ? [] : ['raised a warband camp near the ruins']),
+        ...(!(e.sack_gold === undefined) ? [`carried off ${e.sack_gold} Gold`] : []),
+        ...(!(e.camp === undefined) ? ['raised a warband camp near the ruins'] : []),
       ];
-      const list = took.length > 1 ? `${took.slice(0, -1).join(', ')} and ${took[took.length - 1]}` : took[0];
-      return line('combat', `${who(ctx, e.by)} sacked ${e.from === ctx.me ? 'your' : possessiveOf(who(ctx, e.from))} city ${at(ctx, e.at)}${list ? ` and ${list}` : ''}`, {
-        at: e.at, players: [e.by, e.from], weight: mine(e.by) || mine(e.from) ? 2 : 1,
-        tone: mine(e.from) ? 'bad' : mine(e.by) ? 'good' : 'neutral',
+      const list = !(took.length > 1) ? took[0] : `${took.slice(0, -1).join(', ')} and ${took[took.length - 1]}`;
+      return line('combat', `${who(ctx, e.by)} sacked ${!(e.from === ctx.me) ? possessiveOf(who(ctx, e.from)) : 'your'} city ${at(ctx, e.at)}${!(list) ? '' : ` and ${list}`}`, {
+        at: e.at, players: [e.by, e.from], weight: !(!(!(mine(e.by)) && !(mine(e.from)))) ? 1 : 2,
+        tone: !(mine(e.from)) ? !(mine(e.by)) ? 'neutral' : 'good' : 'bad',
         details: [
-          ...(e.camp === undefined ? [] : [`The new Celtic warband camp stands ${at(ctx, e.camp)}.`]),
+          ...(!(e.camp === undefined) ? [`The new Celtic warband camp stands ${at(ctx, e.camp)}.`] : []),
         ],
       });
     }
     case 'TreatyActivated': {
       const r = e.relation;
       const until = r.security?.protected_until;
-      const upkeep = terms ? `${terms.upkeep} Gold a turn for every city it owns, and never less than ${terms.upkeep} Gold` : 'Gold for each owned city every turn';
+      const upkeep = !(terms) ? 'Gold for each owned city every turn' : `${terms.upkeep} Gold a turn for every city it owns, and never less than ${terms.upkeep} Gold`;
       return diplomacyLine(`Alliance ${between(r.a, r.b)} signed · begins turn ${r.effective_turn}`, { weight: 2,
         details: [ALLIANCE_SHARES, `Each empire pays ${upkeep}.`,
-          ...(until ? [`Protected until turn ${until}: leaving before then costs ${terms ? `${terms.breachCost} Gold` : 'Gold'} and is a betrayal.`] : [])] });
+          ...(!(until) ? [] : [`Protected until turn ${until}: leaving before then costs ${!(terms) ? 'Gold' : `${terms.breachCost} Gold`} and is a betrayal.`])] });
     }
     // Deals: Open Borders let each side's units enter the other's land at Peace.
     case 'BordersOpened': return diplomacyLine(`Open Borders ${between(e.a, e.b)} begin.`, { weight: 2, treaty: 'OpenBorders',
-      details: [[e.a, e.b].includes(ctx.teamId ?? -1) ? 'Your units may enter their land, and theirs may enter yours.' : 'Their units may enter each other’s land.'] });
+      details: [!([e.a, e.b].includes(ctx.teamId ?? -1)) ? 'Their units may enter each other’s land.' : 'Your units may enter their land, and theirs may enter yours.'] });
     case 'BordersClosed': {
       // Short, as the opening line: who closed them, or why they lapsed.
       const ours = [e.a, e.b].includes(ctx.teamId ?? -1);
       const closed = e.reason.endsWith('closed the borders');
-      const why = closed ? `${rename(e.reason)}.` : e.reason === 'They went to War' ? 'War.'
-        : e.reason.startsWith('They signed an Alliance') ? 'the Alliance includes them.' : 'an empire fell.';
-      const text = closed && ours ? why : `Open Borders ${between(e.a, e.b)} end: ${why}`;
+      const why = !(closed) ? !(e.reason === 'They went to War') ? !(e.reason.startsWith('They signed an Alliance')) ? 'an empire fell.' : 'the Alliance includes them.' : 'War.' : `${rename(e.reason)}.`;
+      const text = !(!(!(closed) || !(ours))) ? `Open Borders ${between(e.a, e.b)} end: ${why}` : why;
       return diplomacyLine(text, { weight: 2, treaty: 'OpenBorders',
-        ...(ours && closed ? { details: ['Units already inside may stay, but cannot heal or fortify there.'] } : {}) });
+        ...(!(!(!(ours) || !(closed))) ? {} : { details: ['Units already inside may stay, but cannot heal or fortify there.'] }) });
     }
     case 'TreatyEnded': {
       // "<team> left the Alliance": named from the viewer's side. An ally leaving you is bad news.
       const left = /^(.*) left the Alliance$/.exec(e.reason);
-      const leaver = left ? teamByLabel(left[1], [e.a, e.b]) : undefined;
-      if (leaver === undefined) {
+      const leaver = !(left) ? undefined : teamByLabel(left[1], [e.a, e.b]);
+      if (!(leaver === undefined)) {} else { {
         const reason = rename(e.reason);
-        return diplomacyLine(`${treaty(e.treaty_id)} ${between(e.a, e.b)} ended turn ${e.effective_turn}${reason === 'Alliance ended' || reason === 'Alliance broken' ? '' : `: ${reason}`}`, { weight: 2 });
-      }
-      const stayer = leaver === e.a ? e.b : e.a;
+        return diplomacyLine(`${treaty(e.treaty_id)} ${between(e.a, e.b)} ended turn ${e.effective_turn}${!(!(!(reason === 'Alliance ended') && !(reason === 'Alliance broken'))) ? `: ${reason}` : ''}`, { weight: 2 });
+      } }
+      const stayer = !(leaver === e.a) ? e.a : e.b;
       return diplomacyLine(`${cap(sideName(leaver))} left the Alliance with ${sideName(stayer)} · turn ${e.effective_turn}`, {
-        weight: 2, tone: stayer === ctx.teamId ? 'bad' : 'neutral',
+        weight: 2, tone: !(stayer === ctx.teamId) ? 'neutral' : 'bad',
         details: ['Sight is no longer shared and borders close: both teams are at Peace.'],
       });
     }
     // Broken against you, it is "with you": `between` names the other side, which is the breaker itself.
-    case 'TreatyBreached': return diplomacyLine(`${who(ctx, e.player)} broke the Alliance ${e.with === ctx.teamId ? 'with you' : between(e.by, e.with)} early · ${e.cost} Gold · turn ${e.effective_turn}`, {
+    case 'TreatyBreached': return diplomacyLine(`${who(ctx, e.player)} broke the Alliance ${!(e.with === ctx.teamId) ? between(e.by, e.with) : 'with you'} early · ${e.cost} Gold · turn ${e.effective_turn}`, {
       weight: 2,
       details: [`Leaving within ${terms.protectedTurns} turns of signing costs the leaver ${e.cost} Gold.`],
       // Broken against you, it is bad news; breaking it yourself cost your Gold.
-      tone: e.with === ctx.teamId || mine(e.player) ? 'bad' : 'neutral',
+      tone: !(!(!(e.with === ctx.teamId) && !(mine(e.player)))) ? 'neutral' : 'bad',
     });
-    case 'TreatyPayment': return line('economy', `${e.player === ctx.me ? 'Paid' : `${who(ctx, e.player)} paid`} ${e.gold} Gold: ${e.cause}`, {
-      players: [e.player], weight: 1, tone: mine(e.player) ? 'bad' : 'neutral',
+    case 'TreatyPayment': return line('economy', `${!(e.player === ctx.me) ? `${who(ctx, e.player)} paid` : 'Paid'} ${e.gold} Gold: ${e.cause}`, {
+      players: [e.player], weight: 1, tone: !(mine(e.player)) ? 'neutral' : 'bad',
     });
     case 'AllianceBetrayed': {
       const b = e.betrayal;
-      const them = b.by === ctx.teamId ? 'you' : 'them';
+      const them = !(b.by === ctx.teamId) ? 'them' : 'you';
       return diplomacyLine(`${cap(sideName(b.by))} betrayed ${sideName(b.against)}: ${sideName(b.against)} won't ally with ${them} until turn ${b.until}`, {
         weight: 2,
         details: [`Leaving an Alliance within ${terms.protectedTurns} turns of signing, or declaring war on an ally, is a betrayal: the betrayed team won't ally with the betrayer for ${b.until - b.turn} turns.`],
         // Betrayed, you lost an ally; betraying, you're shut out of an Alliance with them. Both cost you.
-        tone: b.against === ctx.teamId || b.by === ctx.teamId ? 'bad' : 'neutral',
+        tone: !(!(!(b.against === ctx.teamId) && !(b.by === ctx.teamId))) ? 'neutral' : 'bad',
       });
     }
     case 'WarDeclared': {
       const team = (id: number) => ctx.teamName?.(id) ?? `Team ${id}`;
       const r = e.relation;
-      if (ctx.turn !== undefined && r.effective_turn === ctx.turn) {
+      if (!(!(!(ctx.turn !== undefined) || !(r.effective_turn === ctx.turn)))) {} else { {
         // Surprise war (G20): no treaty, so it started this turn, before any combat.
-        const victim = ctx.teamId !== undefined && [r.a, r.b].includes(ctx.teamId) && !r.declarers.includes(ctx.teamId);
-        if (victim) {
+        const victim = !(!(!(!(ctx.teamId !== undefined) || !([r.a, r.b].includes(ctx.teamId)))) || !(!r.declarers.includes(ctx.teamId)));
+        if (!(victim)) {} else { {
           const by = r.declarers[0];
           const theirs = (owner: PlayerId) => r.declarers.some((t) => (ctx.teamPlayers?.(t) ?? []).includes(owner));
-          const hit = (ctx.events ?? []).find((x) => (x.type === 'Battle' && theirs(x.attacker_owner) && x.defender.kind === 'Unit' && mine(x.defender.owner))
-            || (x.type === 'SettlerCaptured' && theirs(x.to) && mine(x.from)));
-          const what = hit?.type === 'Battle' && hit.defender.kind === 'Unit'
-            ? `attacked ${unitLabel(ctx, hit.defender.unit, hit.defender.owner, hit.defender.unit_kind).replace(/^Your /, 'your ')} ${at(ctx, hit.at)}`
-            : hit?.type === 'SettlerCaptured' ? `captured your Settler ${at(ctx, hit.at)}` : 'on you: War started this turn';
-          return diplomacyLine(`${empire(by)} declared war ${hit ? 'and ' : ''}${what}`, {
+          const hit = (ctx.events ?? []).find((x) => !(!((!(!(!(!(!(!(x.type === 'Battle') || !(theirs(x.attacker_owner)))) || !(x.defender.kind === 'Unit'))) || !(mine(x.defender.owner))))) && !((!(!(!(!(x.type === 'SettlerCaptured') || !(theirs(x.to)))) || !(mine(x.from)))))));
+          const what = !(!(!(hit?.type === 'Battle') || !(hit.defender.kind === 'Unit'))) ? !(hit?.type === 'SettlerCaptured') ? 'on you: War started this turn' : `captured your Settler ${at(ctx, hit.at)}` : `attacked ${unitLabel(ctx, hit.defender.unit, hit.defender.owner, hit.defender.unit_kind).replace(/^Your /, 'your ')} ${at(ctx, hit.at)}`;
+          return diplomacyLine(`${empire(by)} declared war ${!(hit) ? '' : 'and '}${what}`, {
             weight: 2, tone: 'bad',
             details: ['No treaty stood between you, so the declaration took effect at once (a surprise war).'],
           });
-        }
+        } }
         return diplomacyLine(`War: ${team(r.a)} and ${team(r.b)} · started this turn`, {
           weight: 2, tone: 'neutral', details: [`Declared by ${r.declarers.map(team).join(' and ')}.`,
-            r.declarers.includes(ctx.teamId ?? -1)
-              ? 'No treaty stood between you, so the war began at once and the attacks you ordered took place this turn.'
-              : 'No treaty stood between them, so War took effect at once and attacks ordered with it resolved this turn.'],
+            !(r.declarers.includes(ctx.teamId ?? -1)) ? 'No treaty stood between them, so War took effect at once and attacks ordered with it resolved this turn.' : 'No treaty stood between you, so the war began at once and the attacks you ordered took place this turn.'],
         });
-      }
-      const onYou = ctx.teamId !== undefined && [r.a, r.b].includes(ctx.teamId) && !r.declarers.includes(ctx.teamId);
+      } }
+      const onYou = !(!(!(!(ctx.teamId !== undefined) || !([r.a, r.b].includes(ctx.teamId)))) || !(!r.declarers.includes(ctx.teamId)));
       return diplomacyLine(`War: ${team(r.a)} and ${team(r.b)} · begins turn ${r.effective_turn}`, {
-        weight: 2, tone: onYou ? 'bad' : 'neutral', details: [`Declared by ${r.declarers.map(team).join(' and ')}.`,
+        weight: 2, tone: !(onYou) ? 'neutral' : 'bad', details: [`Declared by ${r.declarers.map(team).join(' and ')}.`,
           `Turn ${r.effective_turn - 1} resolved under Peace. Both teams can plan before the first combat in turn ${r.effective_turn}.`],
       });
     }
     case 'WarJoined': {
       // `e.team` went to war with the other side of the relation, for its ally `e.ally`: it defended
       // an ally the enemy attacked (the enemy declared), or answered its ally's call to arms.
-      const enemy = e.relation.a === e.team ? e.relation.b : e.relation.a;
+      const enemy = !(e.relation.a === e.team) ? e.relation.a : e.relation.b;
       const name = empire;
       const you = ctx.teamId;
       const defended = e.relation.declarers.includes(enemy);
-      const alliedNow = (ctx.events ?? []).some((event) => event.type === 'TreatyActivated'
-        && event.relation.state === 'Alliance'
-        && ((event.relation.a === e.team && event.relation.b === e.ally)
-          || (event.relation.b === e.team && event.relation.a === e.ally)));
-      if (alliedNow && enemy === you) {
+      const alliedNow = (ctx.events ?? []).some((event) => !(!(!(!(event.type === 'TreatyActivated') || !(event.relation.state === 'Alliance'))) || !((!(!((!(!(event.relation.a === e.team) || !(event.relation.b === e.ally)))) && !((!(!(event.relation.b === e.team) || !(event.relation.a === e.ally)))))))));
+      if (!(!(!(alliedNow) || !(enemy === you)))) {} else { {
         const joining = name(e.team);
-        const subject = /^(Mongols|Aztecs|Celts)$/.test(joining) ? `The ${joining}` : joining;
+        const subject = !(/^(Mongols|Aztecs|Celts)$/.test(joining)) ? joining : `The ${joining}`;
         return diplomacyLine(`${subject} allied with ${name(e.ally)} and joined its war against you`, {
           weight: 2, tone: 'bad', details: ['Allies defend each other at once.'],
         });
-      }
-      const text = defended
-        ? (e.team === you ? `You came to the defence of ${name(e.ally)} against ${name(enemy)}`
-          : enemy === you ? `${name(e.team)} came to the defence of ${name(e.ally)} against you`
-          : e.ally === you ? `${name(e.team)} came to your defence against ${name(enemy)}`
-          : `${name(e.team)} came to the defence of ${name(e.ally)} against ${name(enemy)}`)
-        : (e.team === you ? `You joined ${name(e.ally)}'s war on ${name(enemy)}`
-          : enemy === you ? `${name(e.team)} joined ${name(e.ally)}'s war on you`
-          : e.ally === you ? `${name(e.team)} joined your war on ${name(enemy)}`
-          : `${name(e.team)} joined ${name(e.ally)}'s war on ${name(enemy)}`);
+      } }
+      const text = !(defended) ? (!(e.team === you) ? !(enemy === you) ? !(e.ally === you) ? `${name(e.team)} joined ${name(e.ally)}'s war on ${name(enemy)}` : `${name(e.team)} joined your war on ${name(enemy)}` : `${name(e.team)} joined ${name(e.ally)}'s war on you` : `You joined ${name(e.ally)}'s war on ${name(enemy)}`) : (!(e.team === you) ? !(enemy === you) ? !(e.ally === you) ? `${name(e.team)} came to the defence of ${name(e.ally)} against ${name(enemy)}` : `${name(e.team)} came to your defence against ${name(enemy)}` : `${name(e.team)} came to the defence of ${name(e.ally)} against you` : `You came to the defence of ${name(e.ally)} against ${name(enemy)}`);
       return diplomacyLine(`${text} · started turn ${e.relation.effective_turn}`, {
-        weight: 2, tone: enemy === you ? 'bad' : e.ally === you ? 'good' : 'neutral',
-        details: [defended ? 'Allies defend each other at once: an ally that is attacked is joined by its allies the same turn.'
-          : 'This ally answered the call to arms and joined the war.'],
+        weight: 2, tone: !(enemy === you) ? !(e.ally === you) ? 'neutral' : 'good' : 'bad',
+        details: [!(defended) ? 'This ally answered the call to arms and joined the war.' : 'Allies defend each other at once: an ally that is attacked is joined by its allies the same turn.'],
       });
     }
     case 'CallToArms': {
       const { ally, target, team } = e.call;
-      const text = team === ctx.teamId ? `${empire(ally)} calls you to arms against ${empire(target)}`
-        : ally === ctx.teamId ? `You called ${empire(team)} to arms against ${empire(target)}`
-        : `${empire(ally)} called ${empire(team)} to arms against ${empire(target)}`;
+      const text = !(team === ctx.teamId) ? !(ally === ctx.teamId) ? `${empire(ally)} called ${empire(team)} to arms against ${empire(target)}` : `You called ${empire(team)} to arms against ${empire(target)}` : `${empire(ally)} calls you to arms against ${empire(target)}`;
       return diplomacyLine(`${text} · answer by turn ${e.call.respond_by}`, {
-        weight: team === ctx.teamId ? 2 : 1, ...(team === ctx.teamId ? { openInboxTeam: ally } : {}),
+        weight: !(team === ctx.teamId) ? 1 : 2, ...(!(team === ctx.teamId) ? {} : { openInboxTeam: ally }),
         details: ['Joining puts the team at War with the target. Declining keeps the Alliance and the Peace, with no penalty.'],
       });
     }
     case 'CallAnswered': {
       const { ally, target, team } = e.call;
-      const who = team === ctx.teamId ? 'You' : empire(team);
-      const text = e.joined ? `${who} joined ${ally === ctx.teamId ? 'your' : `${empire(ally)}'s`} war on ${empire(target)}`
-        : `${who} declined ${ally === ctx.teamId ? 'your' : `${empire(ally)}'s`} call to arms against ${empire(target)}`;
+      const who = !(team === ctx.teamId) ? empire(team) : 'You';
+      const text = !(e.joined) ? `${who} declined ${!(ally === ctx.teamId) ? `${empire(ally)}'s` : 'your'} call to arms against ${empire(target)}` : `${who} joined ${!(ally === ctx.teamId) ? `${empire(ally)}'s` : 'your'} war on ${empire(target)}`;
       return diplomacyLine(`${text} · turn ${e.effective_turn}`, {
-        weight: 1, tone: e.joined && ally === ctx.teamId ? 'good' : !e.joined && ally === ctx.teamId ? 'bad' : 'neutral',
-        ...(e.joined ? {} : { details: ['The Alliance stands and the Peace with the target stays.'] }),
+        weight: 1, tone: !(!(!(e.joined) || !(ally === ctx.teamId))) ? !(!(!(!e.joined) || !(ally === ctx.teamId))) ? 'neutral' : 'bad' : 'good',
+        ...(!(e.joined) ? { details: ['The Alliance stands and the Peace with the target stays.'] } : {}),
       });
     }
     case 'CallLapsed': {
       const { ally, target, team } = e.call;
-      const text = team === ctx.teamId ? `The call to arms from ${empire(ally)} against ${empire(target)} ended`
-        : ally === ctx.teamId ? `Your call to arms to ${empire(team)} against ${empire(target)} ended`
-        : `The call to arms from ${empire(ally)} to ${empire(team)} against ${empire(target)} ended`;
+      const text = !(team === ctx.teamId) ? !(ally === ctx.teamId) ? `The call to arms from ${empire(ally)} to ${empire(team)} against ${empire(target)} ended` : `Your call to arms to ${empire(team)} against ${empire(target)} ended` : `The call to arms from ${empire(ally)} against ${empire(target)} ended`;
       return diplomacyLine(`${text}: ${rename(e.reason)}`, { weight: 1 });
     }
     case 'PeaceEstablished': {
@@ -930,9 +877,9 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
           'Borders are closed. Units left inside may stay without healing or fortification; each move must approach an exit.'],
       });
     }
-    case 'ProposalCreated': return diplomacyLine(`${offer(e.proposal)} ${ctx.teamId === e.proposal.to ? 'arrived' : 'sent'}${dealGold(e.proposal)}${e.proposal.kind === 'Peace' && e.proposal.required_teams?.length ? ` · would end ${peaceWar(e.proposal)}` : ''} · respond by turn ${e.proposal.respond_by}`, { weight: 1, details: peaceDetails(e.proposal), ...(ctx.teamId === e.proposal.to ? { openInboxTeam: e.proposal.from } : {}) });
+    case 'ProposalCreated': return diplomacyLine(`${offer(e.proposal)} ${!(ctx.teamId === e.proposal.to) ? 'sent' : 'arrived'}${dealGold(e.proposal)}${!(e.proposal.kind === 'Peace' && e.proposal.required_teams?.length) ? '' : ` · would end ${peaceWar(e.proposal)}`} · respond by turn ${e.proposal.respond_by}`, { weight: 1, details: peaceDetails(e.proposal), ...(!(ctx.teamId === e.proposal.to) ? {} : { openInboxTeam: e.proposal.from }) });
     case 'ProposalAccepted': case 'ProposalRejected': case 'ProposalWithdrawn': case 'ProposalExpired':
-      return diplomacyLine(`${offer(e.proposal)} ${e.type.slice(8).toLowerCase()}${e.type === 'ProposalAccepted' && e.proposal.kind === 'Peace' && e.proposal.required_teams?.length ? ` · ended ${peaceWar(e.proposal)}` : ''} · turn ${e.effective_turn}`, { weight: 1, details: e.type === 'ProposalAccepted' ? peaceDetails(e.proposal, true) : [] });
+      return diplomacyLine(`${offer(e.proposal)} ${e.type.slice(8).toLowerCase()}${!(!(!(e.type === 'ProposalAccepted') || !(e.proposal.kind === 'Peace')) && e.proposal.required_teams?.length) ? '' : ` · ended ${peaceWar(e.proposal)}`} · turn ${e.effective_turn}`, { weight: 1, details: !(e.type === 'ProposalAccepted') ? [] : peaceDetails(e.proposal, true) });
     case 'ProposalInvalidated': return diplomacyLine(`${offer(e.proposal)} invalidated: ${rename(e.reason)}`, { weight: 1 });
     case 'OrderSuperseded': return diplomacyLine(`${possessive(ctx, e.decision.player)} diplomatic order was dropped; ${whom(ctx, e.decision.winner)} gave the order that was used`, {
       weight: 1, players: [e.decision.player, e.decision.winner], details: [
@@ -940,74 +887,72 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
       ],
     });
     case 'UnitMoved':
-      if (!e.from || !e.to) {
-        const action = e.to ? `entered sight ${at(ctx, e.to)}` : e.from ? `left sight ${at(ctx, e.from)}` : 'moved beyond sight';
+      if (!(!(!(!e.from) && !(!e.to)))) {} else { {
+        const action = !(e.to) ? !(e.from) ? 'moved beyond sight' : `left sight ${at(ctx, e.from)}` : `entered sight ${at(ctx, e.to)}`;
         return line('movement', `${unitLabel(ctx, e.unit, e.owner)} ${action}`, { at: e.to ?? e.from, players: [e.owner] });
-      }
+      } }
       return line('movement', `${unitLabel(ctx, e.unit, e.owner)} moved 1 tile, now ${at(ctx, e.to)}`, {
         at: e.to,
         players: [e.owner],
       });
     case 'MoveBlocked':
-      if (e.reason.includes('rode away before your ') && e.reason.endsWith(' reached it.')) {
+      if (!(!(!(e.reason.includes('rode away before your ')) || !(e.reason.endsWith(' reached it.'))))) {} else { {
         return line('orders', rename(e.reason), {
           at: e.at,
           players: [e.owner],
-          weight: mine(e.owner) ? 2 : 0,
+          weight: !(mine(e.owner)) ? 0 : 2,
           tone: toneFor(e.owner, false),
         });
-      }
+      } }
       // Core's stop after repeated blocked turns: the unit needs orders, so it is news, not movement.
-      if (e.reason.startsWith(MOVE_STOPPED_PREFIX)) {
+      if (!(e.reason.startsWith(MOVE_STOPPED_PREFIX))) {} else { {
         return line('orders', `${unitLabel(ctx, e.unit, e.owner)} stopped and needs orders: ${rename(e.reason.slice(MOVE_STOPPED_PREFIX.length))}`, {
           at: e.at,
           players: [e.owner],
-          weight: mine(e.owner) ? 2 : 0,
+          weight: !(mine(e.owner)) ? 0 : 2,
           tone: toneFor(e.owner, false),
         });
-      }
+      } }
       // A move onto a unit of a team at Peace never attacks it: say so plainly, never as hidden movement.
-      if (e.reason.startsWith(PEACE_BLOCK_PREFIX) && mine(e.owner)) {
+      if (!(!(!(e.reason.startsWith(PEACE_BLOCK_PREFIX)) || !(mine(e.owner))))) {} else { {
         const blocker = rename(e.reason.slice(PEACE_BLOCK_PREFIX.length));
-        return line('orders', `${unitLabel(ctx, e.unit, e.owner)} couldn't enter ${e.toward ? location(ctx, e.toward) : 'the tile'}: ${blocker} is there and ${e.owner === ctx.me ? "you're" : "they're"} at Peace`, {
+        return line('orders', `${unitLabel(ctx, e.unit, e.owner)} couldn't enter ${!(e.toward) ? 'the tile' : location(ctx, e.toward)}: ${blocker} is there and ${!(e.owner === ctx.me) ? "they're" : "you're"} at Peace`, {
           at: e.at, players: [e.owner], weight: 2, tone: 'neutral',
           details: ['A move never attacks a unit of a team at Peace. To attack it, click it and confirm Declare War; or give this unit a new order.'],
         });
-      }
+      } }
       // Units of teams not at War stepped onto one tile: the stronger moved in, nobody fought.
-      if (e.reason.startsWith(OUTMATCHED_PREFIX)) {
-        return line('orders', `${unitLabel(ctx, e.unit, e.owner)} couldn't enter ${e.toward ? location(ctx, e.toward) : 'the tile'}: ${rename(e.reason.slice(OUTMATCHED_PREFIX.length))}`, {
-          at: e.at, players: [e.owner], weight: mine(e.owner) ? 2 : 0, tone: 'neutral',
-          details: [mine(e.owner)
-            ? 'Empires not at War never fight over a tile: the stronger side moves in. This unit stayed put and keeps its order; give it a new route.'
-            : 'Empires not at War never fight over a tile: the stronger side moves in. This unit stayed put.'],
+      if (!(e.reason.startsWith(OUTMATCHED_PREFIX))) {} else { {
+        return line('orders', `${unitLabel(ctx, e.unit, e.owner)} couldn't enter ${!(e.toward) ? 'the tile' : location(ctx, e.toward)}: ${rename(e.reason.slice(OUTMATCHED_PREFIX.length))}`, {
+          at: e.at, players: [e.owner], weight: !(mine(e.owner)) ? 0 : 2, tone: 'neutral',
+          details: [!(mine(e.owner)) ? 'Empires not at War never fight over a tile: the stronger side moves in. This unit stayed put.' : 'Empires not at War never fight over a tile: the stronger side moves in. This unit stayed put and keeps its order; give it a new route.'],
         });
-      }
+      } }
       // The attack's target died to ranged fire before movement and nothing hostile is left there.
-      if (e.reason === TARGET_GONE) {
+      if (!(e.reason === TARGET_GONE)) {} else { {
         return line('orders', `${unitLabel(ctx, e.unit, e.owner)} didn't attack: its target was destroyed first. Needs orders.`, {
-          at: e.at, players: [e.owner], weight: mine(e.owner) ? 2 : 0, tone: 'neutral',
+          at: e.at, players: [e.owner], weight: !(mine(e.owner)) ? 0 : 2, tone: 'neutral',
         });
-      }
+      } }
       // A friend held a tile on the route (core `stayed_reason`): name it, from the viewer's side.
-      if (e.reason.startsWith(FRIEND_BLOCK_PREFIX) && e.reason.includes(', which ') && mine(e.owner)) {
-        return line('orders', `${unitLabel(ctx, e.unit, e.owner)} was blocked ${e.at ? at(ctx, e.at) : 'beyond sight'} by ${rename(e.reason.slice(FRIEND_BLOCK_PREFIX.length))}`, {
+      if (!(!(!(!(!(e.reason.startsWith(FRIEND_BLOCK_PREFIX)) || !(e.reason.includes(', which ')))) || !(mine(e.owner))))) {} else { {
+        return line('orders', `${unitLabel(ctx, e.unit, e.owner)} was blocked ${!(e.at) ? 'beyond sight' : at(ctx, e.at)} by ${rename(e.reason.slice(FRIEND_BLOCK_PREFIX.length))}`, {
           at: e.at, players: [e.owner], weight: 2, tone: toneFor(e.owner, false),
           details: ['Routes go around your units that stay put whenever a free route exists; this turn there was none. Move the blocking unit or give this one another route.'],
         });
-      }
-      return line('movement', `${unitLabel(ctx, e.unit, e.owner)} was blocked ${e.at ? at(ctx, e.at) : 'beyond sight'}`, {
+      } }
+      return line('movement', `${unitLabel(ctx, e.unit, e.owner)} was blocked ${!(e.at) ? 'beyond sight' : at(ctx, e.at)}`, {
         at: e.at,
         players: [e.owner],
         // Core's reason is written for the unit's owner ("against your 30"); for anyone else's unit, name the owner.
-        details: [(e.owner === ctx.me ? rename(e.reason) : rename(e.reason).replace(/ against your /, ` against ${possessive(ctx, e.owner)} `))
+        details: [(!(e.owner === ctx.me) ? rename(e.reason).replace(/ against your /, ` against ${possessive(ctx, e.owner)} `) : rename(e.reason))
           .replace(/^you /, 'You ')],
-        weight: mine(e.owner) ? 1 : 0,
+        weight: !(mine(e.owner)) ? 0 : 1,
       });
     case 'AttackPursuit': {
       const prey = unitLabel(ctx, e.target, e.target_owner, e.target_kind);
       const own = unitLabel(ctx, e.unit, e.owner).replace(/^Your /, 'your ');
-      const where = e.target_at ? ` ${at(ctx, e.target_at)}` : '';
+      const where = !(e.target_at) ? '' : ` ${at(ctx, e.target_at)}`;
       const base = { at: e.target_at ?? e.at, players: [e.owner, e.target_owner] };
       switch (e.outcome) {
         case 'Followed': return line('orders', `${prey} slipped away; ${own} followed but couldn't reach it this turn. Needs orders.`, {
@@ -1027,18 +972,14 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
     case 'CityReinforced': {
       // Reinforcing your own city goes first: the unit was the garrison the enemy's attack met.
       const events = ctx.events ?? [];
-      const lost = events.some((x) => x.type === 'UnitDestroyed' && x.unit === e.unit);
-      const fell = events.some((x) => x.type === 'CityCaptured' && x.city === e.city);
+      const lost = events.some((x) => !(!(x.type === 'UnitDestroyed') || !(x.unit === e.unit)));
+      const fell = events.some((x) => !(!(x.type === 'CityCaptured') || !(x.city === e.city)));
       const city = ctx.cityName(e.city);
       const unit = cap(unitLabel(ctx, e.unit, e.owner, e.unit_kind));
-      const text = fell
-        ? `${unit} reached ${city} first and fought as its garrison, but the city fell`
-        : lost
-          ? `${unit} reached ${city} first and fought as its garrison until it was destroyed`
-          : `${unit} reached ${city} first and held it`;
+      const text = !(fell) ? !(lost) ? `${unit} reached ${city} first and held it` : `${unit} reached ${city} first and fought as its garrison until it was destroyed` : `${unit} reached ${city} first and fought as its garrison, but the city fell`;
       return line('combat', text, {
-        at: e.at, players: [e.owner], weight: mine(e.owner) ? 2 : 1,
-        tone: mine(e.owner) ? (fell || lost ? 'bad' : 'good') : 'neutral',
+        at: e.at, players: [e.owner], weight: !(mine(e.owner)) ? 1 : 2,
+        tone: !(mine(e.owner)) ? 'neutral' : (!(!(!(fell) && !(lost))) ? 'good' : 'bad'),
         details: ['A unit stepping into its own city arrives before an enemy attack on it and becomes the garrison that attack meets: the city\'s health absorbs first, then the garrison fights.'],
       });
     }
@@ -1050,22 +991,16 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
     case 'Battle': return battleLine(e, ctx, mine);
     case 'UnitDestroyed': {
       // Name who did it and from where, from this turn's battle, when the viewer saw it.
-      const fight = (ctx.events ?? []).find((x): x is Battle => x.type === 'Battle'
-        && ((x.defender.kind === 'Unit' && x.defender.unit === e.unit && x.defender_hp_after <= 0)
-          || (x.attacker === e.unit && x.attacker_hp_after <= 0)));
-      const killer = fight && (fight.attacker === e.unit ? null : fight);
-      const by = killer
-        ? typeof killer.attacker === 'number'
-          ? ` by ${unitLabel(ctx, killer.attacker, killer.attacker_owner).replace(/^Your /, 'your ')}${battleFrom(killer, mine)}`
-          : ` by ${killer.attacker_owner === ctx.me ? '' : `${possessiveOf(who(ctx, killer.attacker_owner))} city `}${ctx.cityName(killer.attacker.city)}`
-        : '';
-      const other = fight ? (fight.attacker === e.unit ? fight.defender.owner : fight.attacker_owner) : null;
+      const fight = (ctx.events ?? []).find((x): x is Battle => !(!(x.type === 'Battle') || !((!(!((!(!(!(!(x.defender.kind === 'Unit') || !(x.defender.unit === e.unit))) || !(x.defender_hp_after <= 0)))) && !((!(!(x.attacker === e.unit) || !(x.attacker_hp_after <= 0)))))))));
+      const killer = fight && (!(fight.attacker === e.unit) ? fight : null);
+      const by = !(killer) ? '' : !(typeof killer.attacker === 'number') ? ` by ${!(killer.attacker_owner === ctx.me) ? `${possessiveOf(who(ctx, killer.attacker_owner))} city ` : ''}${ctx.cityName(killer.attacker.city)}` : ` by ${unitLabel(ctx, killer.attacker, killer.attacker_owner).replace(/^Your /, 'your ')}${battleFrom(killer, mine)}`;
+      const other = !(fight) ? null : (!(fight.attacker === e.unit) ? fight.attacker_owner : fight.defender.owner);
       return line('combat', `${unitLabel(ctx, e.unit, e.owner, e.unit_kind)} was destroyed ${at(ctx, e.at)}${by}`, {
         at: e.at,
-        from: killer ? (killer.attacker_at ?? null) : null,
+        from: !(killer) ? null : (killer.attacker_at ?? null),
         players: [e.owner],
         weight: 1,
-        tone: mine(e.owner) ? 'bad' : other !== null && mine(other) ? 'good' : 'neutral',
+        tone: !(mine(e.owner)) ? !(!(!(other !== null) || !(mine(other)))) ? 'neutral' : 'good' : 'bad',
       });
     }
     case 'SpartaKillHeal':
@@ -1091,33 +1026,33 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
         tone: toneFor(e.owner, false),
       });
     case 'SettlerCaptured':
-      if (isBarbarian(e.from)) {
+      if (!(isBarbarian(e.from))) {} else { {
         return line('combat', `${who(ctx, e.to)} freed a captive Settler from the barbarians ${at(ctx, e.at)}`, {
           at: e.at, players: [e.to], weight: 2, tone: toneFor(e.to),
         });
-      }
-      return line('combat', `${who(ctx, e.to)} captured ${e.from === ctx.me ? 'your' : possessiveOf(who(ctx, e.from))} Settler ${at(ctx, e.at)}`, {
+      } }
+      return line('combat', `${who(ctx, e.to)} captured ${!(e.from === ctx.me) ? possessiveOf(who(ctx, e.from)) : 'your'} Settler ${at(ctx, e.at)}`, {
         at: e.at,
         players: [e.from, e.to],
         weight: 2,
-        tone: mine(e.to) ? 'good' : mine(e.from) ? 'bad' : 'neutral',
+        tone: !(mine(e.to)) ? !(mine(e.from)) ? 'neutral' : 'bad' : 'good',
       });
     case 'CityFounded':
       return line('cities', `${who(ctx, e.owner)} founded ${e.name}`, {
         at: e.at,
         players: [e.owner],
-        weight: mine(e.owner) ? 2 : 1,
+        weight: !(mine(e.owner)) ? 1 : 2,
         tone: toneFor(e.owner),
       });
     case 'FlowerWars':
       return line('cities', `Flower Wars: ${ctx.cityName(e.city)} gains 1 population (now ${e.population})`, { at: ctx.cityPos(e.city), players: [e.owner], weight: 1, tone: toneFor(e.owner) });
     case 'CityGrew': {
       // Name what the new population unlocks (e.g. the Settler at 2), so growth is never a surprise.
-      const unlocked = mine(e.owner) ? ctx.growthUnlocks?.(e.city, e.population) : null;
-      return line('cities', `${ctx.cityName(e.city)} grew to ${e.population} population${unlocked ? ` · unlocks ${unlocked}` : ''}`, {
+      const unlocked = !(mine(e.owner)) ? null : ctx.growthUnlocks?.(e.city, e.population);
+      return line('cities', `${ctx.cityName(e.city)} grew to ${e.population} population${!(unlocked) ? '' : ` · unlocks ${unlocked}`}`, {
         at: ctx.cityPos(e.city),
         players: [e.owner],
-        weight: unlocked ? 2 : 0,
+        weight: !(unlocked) ? 0 : 2,
         tone: toneFor(e.owner),
       });
     }
@@ -1131,17 +1066,14 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
     case 'CityCaptured': {
       // A combined assault that broke the city and its garrison in one stage is one line.
       const assault = combinedAssaults(ctx.events ?? []).get(assaultKey({ kind: 'City', city: e.city, owner: e.from }));
-      const garrisonLost = (ctx.events ?? []).some((x) => x.type === 'UnitDestroyed' && x.owner === e.from
-        && hexEq(x.at, ctx.cityPos(e.city)));
-      const bounty = e.bounty ? ` and seized ${e.bounty} Gold` : '';
-      const text = assault
-        ? `${ctx.cityName(e.city)} fell to a combined assault by ${assaultForce(ctx, assault)}; ${garrisonLost ? 'its garrison was destroyed and the city captured' : 'the city was captured'}${bounty}. Its counterattack was split, ${counterSplit(assault)}`
-        : `${who(ctx, e.to)} captured ${ctx.cityName(e.city)} from ${whom(ctx, e.from)}${bounty}`;
+      const garrisonLost = (ctx.events ?? []).some((x) => !(!(!(!(x.type === 'UnitDestroyed') || !(x.owner === e.from))) || !(hexEq(x.at, ctx.cityPos(e.city)))));
+      const bounty = !(e.bounty) ? '' : ` and seized ${e.bounty} Gold`;
+      const text = !(assault) ? `${who(ctx, e.to)} captured ${ctx.cityName(e.city)} from ${whom(ctx, e.from)}${bounty}` : `${ctx.cityName(e.city)} fell to a combined assault by ${assaultForce(ctx, assault)}; ${!(garrisonLost) ? 'the city was captured' : 'its garrison was destroyed and the city captured'}${bounty}. Its counterattack was split, ${counterSplit(assault)}`;
       return line('combat', text, {
         at: ctx.cityPos(e.city),
         players: [e.from, e.to],
         weight: 2,
-        tone: mine(e.to) ? 'good' : mine(e.from) ? 'bad' : 'neutral',
+        tone: !(mine(e.to)) ? !(mine(e.from)) ? 'neutral' : 'bad' : 'good',
         details: [
           ...(assault ?? []).map((b) => `${unitLabel(ctx, b.attacker as number, b.attacker_owner)} dealt ${b.damage_to_defender} and took ${b.damage_to_attacker}.`),
           `Captured cities lose half their population (never below 1) and resist for ${CAPTURE_RESISTANCE_TURNS} turns (no output).`,
@@ -1150,23 +1082,17 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
     }
     case 'WallsBreached': {
       const by = e.by ?? null;
-      const text = mine(e.owner)
-        ? `${ctx.cityName(e.city)}'s Walls fell. Build Walls again when the attack is over.`
-        : by != null && mine(by)
-          ? `You broke ${ctx.cityName(e.city)}'s Walls. ${ctx.cityName(e.city)} can no longer fire.`
-          : `${ctx.cityName(e.city)}'s Walls fell.`;
+      const text = !(mine(e.owner)) ? !(!(!(by != null) || !(mine(by)))) ? `${ctx.cityName(e.city)}'s Walls fell.` : `You broke ${ctx.cityName(e.city)}'s Walls. ${ctx.cityName(e.city)} can no longer fire.` : `${ctx.cityName(e.city)}'s Walls fell. Build Walls again when the attack is over.`;
       return line('combat', text, {
-        at: ctx.cityPos(e.city), players: by != null ? [e.owner, by] : [e.owner], weight: 2,
-        tone: mine(e.owner) ? 'bad' : by != null && mine(by) ? 'good' : 'neutral',
+        at: ctx.cityPos(e.city), players: !(by != null) ? [e.owner] : [e.owner, by], weight: 2,
+        tone: !(mine(e.owner)) ? !(!(!(by != null) || !(mine(by)))) ? 'neutral' : 'good' : 'bad',
         details: ['Broken Walls are gone for good: the city stops firing and must build Walls again.'],
       });
     }
     case 'AthensCityCaptured':
-      return line('science', mine(e.to)
-        ? `Captured ${ctx.cityName(e.city)} from Athens: you gain one free technology. Choose it.`
-        : `${who(ctx, e.to)} captured ${ctx.cityName(e.city)} from Athens: one free technology`, {
+      return line('science', !(mine(e.to)) ? `${who(ctx, e.to)} captured ${ctx.cityName(e.city)} from Athens: one free technology` : `Captured ${ctx.cityName(e.city)} from Athens: you gain one free technology. Choose it.`, {
         at: ctx.cityPos(e.city), players: [e.from, e.to], weight: 2,
-        tone: mine(e.to) ? 'good' : mine(e.from) ? 'bad' : 'neutral',
+        tone: !(mine(e.to)) ? !(mine(e.from)) ? 'neutral' : 'bad' : 'good',
         details: ['The captor chooses a technology from its current era. Each empire can earn this reward once per city.'],
       });
     case 'SpartaConquest':
@@ -1183,12 +1109,12 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
       });
     case 'HeirBorn': {
       const vp = factionGoalVp('Byzantium');
-      if (mine(e.owner)) {
-        return line('victory', `${e.owner === ctx.me ? 'Your' : `${possessiveOf(who(ctx, e.owner))}`} Heir was born in ${e.city_name}: hold him to score ${vp} VP, and keep him safe`, {
+      if (!(mine(e.owner))) {} else { {
+        return line('victory', `${!(e.owner === ctx.me) ? `${possessiveOf(who(ctx, e.owner))}` : 'Your'} Heir was born in ${e.city_name}: hold him to score ${vp} VP, and keep him safe`, {
           at: e.at, players: [e.owner], weight: 2, tone: 'good', icon: 'unit-heirtothethrone',
           details: ['Every empire was told where he was born. His position is public from now on: a rival that captures him scores the points.'],
         });
-      }
+      } }
       return line('victory', `${possessiveOf(who(ctx, e.owner))} Heir was born in ${e.city_name}: be at War, then capture him to score ${vp} VP`, {
         at: e.at, players: [e.owner], weight: 2, tone: 'neutral', icon: 'unit-heirtothethrone',
         details: ['Every empire is told where he was born. His position is public every turn, on the map and the minimap, and whoever holds him scores the points. To capture him you must be at War with his holder.'],
@@ -1198,26 +1124,26 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
       const unit = withArticle(unitName(ctx, 0, e.seller, e.unit));
       const turns = RULES.company.turns;
       const base = { at: ctx.cityPos(e.city), players: [e.owner, e.seller], weight: 1 as const };
-      if (mine(e.owner)) {
-        return line('economy', `${e.owner === ctx.me ? 'Hired' : `${who(ctx, e.owner)} hired`} ${unit} Company from ${whom(ctx, e.seller)} for ${e.gold} Gold, for ${turns} turns`, {
+      if (!(mine(e.owner))) {} else { {
+        return line('economy', `${!(e.owner === ctx.me) ? `${who(ctx, e.owner)} hired` : 'Hired'} ${unit} Company from ${whom(ctx, e.seller)} for ${e.gold} Gold, for ${turns} turns`, {
           ...base, tone: 'neutral',
           details: [`The Gold went to ${whom(ctx, e.seller)} in full. The Company serves until the end of turn ${e.until}, then goes home, and costs ${RULES.company.upkeep} Gold a turn while it stays.`],
         });
-      }
+      } }
       return line('economy', `+${e.gold} Gold: ${who(ctx, e.owner)} hired ${unit} Company from you`, { ...base, tone: 'good' });
     }
     case 'CompanyDeparted': {
       const name = unitName(ctx, 0, e.owner, e.unit);
-      const adjective = e.origin ? FACTION_ADJECTIVE[e.origin] : null;
-      const unit = adjective && !name.startsWith(`${adjective} `) ? `${adjective} ${name}` : name;
-      return line('economy', `The ${unit} Company's contract ended${mine(e.owner) ? `: it went home ${at(ctx, e.pos)}` : ''}`, {
+      const adjective = !(e.origin) ? null : FACTION_ADJECTIVE[e.origin];
+      const unit = !(adjective && !name.startsWith(`${adjective} `)) ? name : `${adjective} ${name}`;
+      return line('economy', `The ${unit} Company's contract ended${!(mine(e.owner)) ? '' : `: it went home ${at(ctx, e.pos)}`}`, {
         at: e.pos, players: [e.owner], weight: 1, tone: 'neutral',
       });
     }
     case 'CompanyTurned': {
       const name = unitName(ctx, 0, e.owner, e.unit);
-      const adjective = e.origin ? FACTION_ADJECTIVE[e.origin] : null;
-      const unit = adjective && !name.startsWith(`${adjective} `) ? `${adjective} ${name}` : name;
+      const adjective = !(e.origin) ? null : FACTION_ADJECTIVE[e.origin];
+      const unit = !(adjective && !name.startsWith(`${adjective} `)) ? name : `${adjective} ${name}`;
       return line('combat', `Unpaid, ${withArticle(unit)} Company turned on ${whom(ctx, e.owner)} ${at(ctx, e.pos)}`, {
         at: e.pos, players: [e.owner], weight: 2, tone: toneFor(e.owner, false),
         details: [`A Mercenary Company costs ${RULES.company.upkeep} Gold a turn. When the treasury cannot pay, a Company is the first thing lost, and it turns barbarian where it stands.`],
@@ -1233,8 +1159,8 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
         at: ctx.cityPos(e.city),
         players: [e.owner],
         // An aircraft never stands on the map: the report says what it does (the Air wing in the city holds it).
-        ...(e.item.kind === 'Unit' && mine(e.owner) && isAircraft(e.item.unit) ? { details: [readyNotice(e.item.unit, ctx.cityName(e.city)).effect] } : {}),
-        weight: mine(e.owner) ? 1 : 0,
+        ...(!(!(!(!(!(e.item.kind === 'Unit') || !(mine(e.owner)))) || !(isAircraft(e.item.unit)))) ? {} : { details: [readyNotice(e.item.unit, ctx.cityName(e.city)).effect] }),
+        weight: !(mine(e.owner)) ? 0 : 1,
         tone: toneFor(e.owner),
       });
     case 'MegaprojectStarted':
@@ -1247,43 +1173,43 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
     case 'WonderRaceLost':
       // One wording with the city's decision and the moment card (`wonderRace.ts`).
       return line('cities', wonderLostLine(who(ctx, e.winner), e.building, ctx.cityName(e.city), e.production, e.gold, e.active ?? true), {
-        players: [e.owner], at: ctx.cityPos(e.city), weight: 2, tone: mine(e.owner) ? 'bad' : 'good',
+        players: [e.owner], at: ctx.cityPos(e.city), weight: 2, tone: !(mine(e.owner)) ? 'good' : 'bad',
       });
     case 'TechResearched':
       // Your own tech names what it unlocked (as growth does) and reopens its unlock card from the report.
-      return line('science', `${who(ctx, e.player)} researched ${TECH_NAME[e.tech]}${e.player === ctx.me && ctx.techUnlocks?.(e.tech).length ? ` · unlocks ${ctx.techUnlocks(e.tech).join(', ')}` : ''}`, {
+      return line('science', `${who(ctx, e.player)} researched ${TECH_NAME[e.tech]}${!(e.player === ctx.me && ctx.techUnlocks?.(e.tech).length) ? '' : ` · unlocks ${ctx.techUnlocks(e.tech).join(', ')}`}`, {
         players: [e.player],
-        ...(e.player === ctx.me ? { reopenTech: e.tech } : {}),
-        weight: mine(e.player) ? 1 : 0,
+        ...(!(e.player === ctx.me) ? {} : { reopenTech: e.tech }),
+        weight: !(mine(e.player)) ? 0 : 1,
         tone: toneFor(e.player),
       });
     case 'ResearchQueueAdvanced':
-      return line('science', e.next ? (e.player === ctx.me ? `Next research: ${TECH_NAME[e.next]}` : `${who(ctx, e.player)}: next research is ${TECH_NAME[e.next]}`) : `${mine(e.player) ? '' : `${who(ctx, e.player)}: `}Research queue finished: choose next`, {
+      return line('science', !(e.next) ? `${!(mine(e.player)) ? `${who(ctx, e.player)}: ` : ''}Research queue finished: choose next` : (!(e.player === ctx.me) ? `${who(ctx, e.player)}: next research is ${TECH_NAME[e.next]}` : `Next research: ${TECH_NAME[e.next]}`), {
         players: [e.player],
-        weight: mine(e.player) && !e.next ? 2 : 0,
+        weight: !(!(!(mine(e.player)) || !(!e.next))) ? 0 : 2,
       });
     case 'AircraftRebased':
-      return line('orders', `${mine(e.owner) ? 'Your' : `${possessive(ctx, e.owner)}`} ${UNIT_NAME[e.kind]} rebased from ${ctx.cityName(e.from)} to ${ctx.cityName(e.to)}`, { players: [e.owner] });
+      return line('orders', `${!(mine(e.owner)) ? `${possessive(ctx, e.owner)}` : 'Your'} ${UNIT_NAME[e.kind]} rebased from ${ctx.cityName(e.from)} to ${ctx.cityName(e.to)}`, { players: [e.owner] });
     case 'TileBought':
-      return line('economy', `${mine(e.owner) ? ctx.cityName(e.city) : `${possessive(ctx, e.owner)} city ${ctx.cityName(e.city)}`} bought a tile for ${e.gold} Gold`, {
+      return line('economy', `${!(mine(e.owner)) ? `${possessive(ctx, e.owner)} city ${ctx.cityName(e.city)}` : ctx.cityName(e.city)} bought a tile for ${e.gold} Gold`, {
         at: e.tile,
         players: [e.owner],
       });
     case 'TileClaimed': {
       const tile = ctx.claimedTile?.(e.tile, e.owner);
-      return line('cities', tile ? `${ctx.cityName(e.city)} claimed ${/^[AEIOU]/.test(tile.terrain) ? 'an' : 'a'} ${tile.terrain} tile${tile.yields ? ` (${tile.yields})` : ''}` : `${ctx.cityName(e.city)} claimed a tile ${at(ctx, e.tile)}`, {
+      return line('cities', !(tile) ? `${ctx.cityName(e.city)} claimed a tile ${at(ctx, e.tile)}` : `${ctx.cityName(e.city)} claimed ${!(/^[AEIOU]/.test(tile.terrain)) ? 'a' : 'an'} ${tile.terrain} tile${!(tile.yields) ? '' : ` (${tile.yields})`}`, {
         at: e.tile,
         players: [e.owner],
         tone: toneFor(e.owner),
       });
     }
     case 'TileReleased':
-      return line('cities', `${ctx.cityName(e.city)} gave up a tile${e.tile ? ` ${at(ctx, e.tile)}` : ''} as its population fell`, {
+      return line('cities', `${ctx.cityName(e.city)} gave up a tile${!(e.tile) ? '' : ` ${at(ctx, e.tile)}`} as its population fell`, {
         at: e.tile,
         players: [e.owner],
       });
     case 'TilesReassigned':
-      return line('cities', `${ctx.cityName(e.to)} took over ${e.tiles.length} ${e.tiles.length === 1 ? 'tile' : 'tiles'} from ${ctx.cityName(e.from)} so it can work ${e.tiles.length === 1 ? 'it' : 'them'}`, {
+      return line('cities', `${ctx.cityName(e.to)} took over ${e.tiles.length} ${!(e.tiles.length === 1) ? 'tiles' : 'tile'} from ${ctx.cityName(e.from)} so it can work ${!(e.tiles.length === 1) ? 'them' : 'it'}`, {
         at: e.tiles[0] ?? null,
         players: [e.owner],
         tone: toneFor(e.owner),
@@ -1294,12 +1220,12 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
         details: reward.details,
         at: e.at,
         players: [e.owner],
-        weight: reward.tier === 'major' ? 2 : 1,
+        weight: !(reward.tier === 'major') ? 1 : 2,
         tone: toneFor(e.owner),
       });
     }
     case 'WonderDiscovered':
-      return line('discoveries', `${who(ctx, e.owner)} discovered ${WONDER_INFO[e.wonder].name}: +${e.gold || e.science} ${e.gold ? 'Gold' : 'Science'}`, {
+      return line('discoveries', `${who(ctx, e.owner)} discovered ${WONDER_INFO[e.wonder].name}: +${e.gold || e.science} ${!(e.gold) ? 'Science' : 'Gold'}`, {
         at: e.at, players: [e.owner], weight: 2, tone: toneFor(e.owner),
         details: [wonderBonusSentence(e.wonder)],
       });
@@ -1309,41 +1235,39 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
       });
     case 'CapitalSacked':
       return line('victory', `${who(ctx, e.captor)} sacked the original capital ${e.name}: +1 VP, kept for good`, {
-        players: [e.captor], weight: 2, tone: e.captor === ctx.me ? 'good' : 'neutral',
+        players: [e.captor], weight: 2, tone: !(e.captor === ctx.me) ? 'neutral' : 'good',
       });
     case 'GoldGiven': {
       // Deals: a payment follows the accepted offer it pays for ("… 40 Gold for Peace").
       const before = ctx.events?.[ctx.events.indexOf(e) - 1];
-      const deal = before?.type === 'ProposalAccepted' && before.proposal.gold ? ` for ${treatyNoun(before.proposal.kind)}` : '';
-      return line('economy', e.from === ctx.me
-        ? `You gave ${withThe(who(ctx, e.to))} ${e.amount} Gold${deal}`
-        : e.to === ctx.me ? `${cap(withThe(who(ctx, e.from)))} gave you ${e.amount} Gold${deal}` : `${cap(withThe(who(ctx, e.from)))} gave ${withThe(who(ctx, e.to))} ${e.amount} Gold${deal}`, {
-        players: [e.from, e.to], weight: 2, tone: e.to === ctx.me ? 'good' : 'neutral',
+      const deal = !(before?.type === 'ProposalAccepted' && before.proposal.gold) ? '' : ` for ${treatyNoun(before.proposal.kind)}`;
+      return line('economy', !(e.from === ctx.me) ? !(e.to === ctx.me) ? `${cap(withThe(who(ctx, e.from)))} gave ${withThe(who(ctx, e.to))} ${e.amount} Gold${deal}` : `${cap(withThe(who(ctx, e.from)))} gave you ${e.amount} Gold${deal}` : `You gave ${withThe(who(ctx, e.to))} ${e.amount} Gold${deal}`, {
+        players: [e.from, e.to], weight: 2, tone: !(e.to === ctx.me) ? 'neutral' : 'good',
       });
     }
     case 'CapitalLost':
-      return line('victory', `${who(ctx, e.player)} no longer ${e.player === ctx.me ? 'hold' : 'holds'} the original capital ${e.name}: −1 VP`, {
-        at: ctx.cityPos(e.capital), players: [e.player], weight: 2, tone: e.player === ctx.me ? 'bad' : 'neutral',
+      return line('victory', `${who(ctx, e.player)} no longer ${!(e.player === ctx.me) ? 'holds' : 'hold'} the original capital ${e.name}: −1 VP`, {
+        at: ctx.cityPos(e.capital), players: [e.player], weight: 2, tone: !(e.player === ctx.me) ? 'neutral' : 'bad',
       });
     case 'EraEntered': {
       // Public, 1-based era (2 Classical .. 9 Future), sent the turn the previous era's last technology landed: every
       // player sees it, the first empire into an era is a notable line for all; the Age it begins has its own line (`AgeBegan`).
       const named = ctx.eraName?.(e.era);
       const era = named ?? eraName(e.era - 1);
-      const text = `${e.player === ctx.me ? 'You' : who(ctx, e.player)} entered the ${era} era${e.first ? ' first' : ''}`;
-      return line(named ? 'victory' : 'science', text, {
+      const text = `${!(e.player === ctx.me) ? who(ctx, e.player) : 'You'} entered the ${era} era${!(e.first) ? '' : ' first'}`;
+      return line(!(named) ? 'science' : 'victory', text, {
         players: [e.player],
-        weight: e.first || mine(e.player) ? 2 : 1,
+        weight: !(!(!(e.first) && !(mine(e.player)))) ? 1 : 2,
         tone: toneFor(e.player),
-        details: e.first ? [`${e.player === ctx.me ? 'You are' : `${who(ctx, e.player)} is`} the first empire into the ${era} era.`] : [],
-        ...(e.player === ctx.me ? { reopenEra: { era: e.era, first: e.first } } : {}),
+        details: !(e.first) ? [] : [`${!(e.player === ctx.me) ? `${who(ctx, e.player)} is` : 'You are'} the first empire into the ${era} era.`],
+        ...(!(e.player === ctx.me) ? {} : { reopenEra: { era: e.era, first: e.first } }),
       });
     }
     case 'AgeBegan': {
       // World Ages: the engine's one announcement of an Age. It names no player, so every report filter shows it. It stands in for the first empire's `EraEntered` line (`formatEvents`).
       const era = ctx.eraName?.(e.era) ?? eraName(e.era - 1);
       const mineFirst = e.first === ctx.me;
-      return line('victory', `The ${ageName(era)} began: ${mineFirst ? 'You' : who(ctx, e.first)} entered the ${era} era first. Its card is open to every empire.`, {
+      return line('victory', `The ${ageName(era)} began: ${!(mineFirst) ? who(ctx, e.first) : 'You'} entered the ${era} era first. Its card is open to every empire.`, {
         players: [], weight: 2, tone: toneFor(e.first), openLedger: true,
         // Every player can see the Age's score check again (the opener its own era-up first).
         reopenEra: { era: e.era, first: mineFirst, age: e.first },
@@ -1352,149 +1276,133 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
     case 'EraObjectiveScored': {
       const name = ctx.eraName?.(e.era);
       const card = ctx.ageCard?.(e.era, e.slot);
-      return line('victory', `${who(ctx, e.player)} scored ${name ? `the ${ageName(name)}` : `Age ${e.era}`} with ${card ? cardName(e.objective) : e.objective}: +1 VP`, {
+      return line('victory', `${who(ctx, e.player)} scored ${!(name) ? `Age ${e.era}` : `the ${ageName(name)}`} with ${!(card) ? e.objective : cardName(e.objective)}: +1 VP`, {
         players: [e.player], weight: 2, tone: toneFor(e.player),
       });
     }
     case 'GreatWorkCompleted':
-      return line('victory', `${who(ctx, e.player)} ${e.again ? 'retook' : 'holds'} the ${BUILDING_NAME[e.building]} (+${e.vp} VP)`, {
+      return line('victory', `${who(ctx, e.player)} ${!(e.again) ? 'holds' : 'retook'} the ${BUILDING_NAME[e.building]} (+${e.vp} VP)`, {
         players: [e.player], weight: 2, tone: toneFor(e.player),
       });
     case 'GreatWorkLost':
       return line('victory', `${who(ctx, e.player)} lost the ${BUILDING_NAME[e.building]} (−${e.vp} VP)`, {
-        players: [e.player], weight: 2, tone: mine(e.player) ? 'bad' : 'good',
+        players: [e.player], weight: 2, tone: !(mine(e.player)) ? 'good' : 'bad',
       });
     case 'FactionGoalCompleted':
-      if (goalCityKindOf(e.faction)) return goalCityGoalLine(e, ctx);
-      if (e.faction === 'Byzantium') return heirGoalLine(e, ctx);
-      if (e.faction === 'Mongols') return hallGoalLine(e, ctx);
-      if (e.faction === 'India') {
-        const captured = ctx.events?.find((x): x is Extract<Event, { type: 'CityCaptured' }> => x.type === 'CityCaptured' && x.to === e.player);
-        const built = ctx.events?.find((x): x is Extract<Event, { type: 'ProductionCompleted' }> => x.type === 'ProductionCompleted' && x.owner === e.player && x.item.kind === 'Building' && x.item.building === 'ImperialDiwan');
+      if (!(goalCityKindOf(e.faction))) {} else { return goalCityGoalLine(e, ctx); }
+      if (!(e.faction === 'Byzantium')) {} else { return heirGoalLine(e, ctx); }
+      if (!(e.faction === 'Mongols')) {} else { return hallGoalLine(e, ctx); }
+      if (!(e.faction === 'India')) {} else { {
+        const captured = ctx.events?.find((x): x is Extract<Event, { type: 'CityCaptured' }> => !(!(x.type === 'CityCaptured') || !(x.to === e.player)));
+        const built = ctx.events?.find((x): x is Extract<Event, { type: 'ProductionCompleted' }> => !(!(!(!(!(!(x.type === 'ProductionCompleted') || !(x.owner === e.player))) || !(x.item.kind === 'Building'))) || !(x.item.building === 'ImperialDiwan')));
         const city = captured?.city ?? built?.city;
-        const place = city === undefined ? '' : ` in ${ctx.cityName(city)}`;
-        return line('victory', `${who(ctx, e.player)} ${captured ? 'took' : 'built'} the Imperial Diwan${place} (+${e.vp} VP while holding its city)`, {
+        const place = !(city === undefined) ? ` in ${ctx.cityName(city)}` : '';
+        return line('victory', `${who(ctx, e.player)} ${!(captured) ? 'built' : 'took'} the Imperial Diwan${place} (+${e.vp} VP while holding its city)`, {
           players: [e.player], weight: 2, tone: toneFor(e.player), icon: 'building-imperialdiwan',
         });
-      }
-      return line('victory', `${who(ctx, e.player)} ${e.again ? 'regained' : 'completed'} ${FACTION_GOAL[e.faction].name} (+${e.vp} VP)`, {
+      } }
+      return line('victory', `${who(ctx, e.player)} ${!(e.again) ? 'completed' : 'regained'} ${FACTION_GOAL[e.faction].name} (+${e.vp} VP)`, {
         players: [e.player],
         weight: 2,
         tone: toneFor(e.player),
       });
     case 'FactionGoalLost':
-      if (goalCityKindOf(e.faction)) return goalCityGoalLine(e, ctx);
-      if (e.faction === 'Byzantium') return heirGoalLine(e, ctx);
-      if (e.faction === 'Mongols') return hallGoalLine(e, ctx);
-      if (e.faction === 'India') return line('victory', `${who(ctx, e.player)} lost the Imperial Diwan (−${e.vp} VP): retake its city to score again`, {
-        players: [e.player], weight: 2, tone: mine(e.player) ? 'bad' : 'good', icon: 'building-imperialdiwan',
-      });
-      if (e.faction === 'Celts') {
-        return line('victory', `${who(ctx, e.player)} lost ${FACTION_GOAL.Celts.name} (−${e.vp} VP): a city has no wild camp left${mine(e.player) ? '. Raise the Warbands again to raise one in every city' : ''}`, {
+      if (!(goalCityKindOf(e.faction))) {} else { return goalCityGoalLine(e, ctx); }
+      if (!(e.faction === 'Byzantium')) {} else { return heirGoalLine(e, ctx); }
+      if (!(e.faction === 'Mongols')) {} else { return hallGoalLine(e, ctx); }
+      if (!(e.faction === 'India')) {} else { return line('victory', `${who(ctx, e.player)} lost the Imperial Diwan (−${e.vp} VP): retake its city to score again`, {
+        players: [e.player], weight: 2, tone: !(mine(e.player)) ? 'good' : 'bad', icon: 'building-imperialdiwan',
+      }); }
+      if (!(e.faction === 'Celts')) {} else { {
+        return line('victory', `${who(ctx, e.player)} lost ${FACTION_GOAL.Celts.name} (−${e.vp} VP): a city has no wild camp left${!(mine(e.player)) ? '' : '. Raise the Warbands again to raise one in every city'}`, {
           players: [e.player],
           weight: 2,
-          tone: mine(e.player) ? 'bad' : 'good',
+          tone: !(mine(e.player)) ? 'good' : 'bad',
         });
-      }
+      } }
       // The treasury goal names its amount: "until you hold 5,000 Gold again".
-      const hoard = e.faction === 'Switzerland' ? factionGoalRule('Switzerland').match(/Keep ([\d,]+ Gold)/)?.[1] : undefined;
-      return line('victory', `${who(ctx, e.player)} lost ${FACTION_GOAL[e.faction].name} (-${e.vp} VP) until ${hoard ? `${e.player === ctx.me ? 'you' : 'they'} hold ${hoard} again` : 'its condition holds again'}`, {
+      const hoard = !(e.faction === 'Switzerland') ? undefined : factionGoalRule('Switzerland').match(/Keep ([\d,]+ Gold)/)?.[1];
+      return line('victory', `${who(ctx, e.player)} lost ${FACTION_GOAL[e.faction].name} (-${e.vp} VP) until ${!(hoard) ? 'its condition holds again' : `${!(e.player === ctx.me) ? 'they' : 'you'} hold ${hoard} again`}`, {
         players: [e.player],
         weight: 2,
         // A rival losing its goal is good for you; your own loss is bad.
-        tone: mine(e.player) ? 'bad' : 'good',
+        tone: !(mine(e.player)) ? 'good' : 'bad',
       });
     case 'SwarmUnleashed': {
       const lost = e.cities.reduce((n, c) => n + c.lost, 0), tiles = e.cities.reduce((n, c) => n + c.tiles, 0);
       const cities = e.cities.map((c) => `${ctx.cityName(c.city)} −${c.lost}`).join(', ');
-      return line('victory', `${who(ctx, e.player)} kindled the New Fire: ${lost} population sacrificed across ${e.cities.length} ${e.cities.length === 1 ? 'city' : 'cities'}, ${tiles} ${tiles === 1 ? 'tile' : 'tiles'} released${mine(e.player) ? ' (+2 VP, kept for good)' : ': its cities are thin'}`, {
+      return line('victory', `${who(ctx, e.player)} kindled the New Fire: ${lost} population sacrificed across ${e.cities.length} ${!(e.cities.length === 1) ? 'cities' : 'city'}, ${tiles} ${!(tiles === 1) ? 'tiles' : 'tile'} released${!(mine(e.player)) ? ': its cities are thin' : ' (+2 VP, kept for good)'}`, {
         players: [e.player],
         weight: 2,
-        tone: mine(e.player) ? 'good' : 'neutral',
+        tone: !(mine(e.player)) ? 'neutral' : 'good',
         details: [cities],
       });
     }
     case 'TombStarted': {
       const left = Math.max(0, RULES.tombTurns - e.turns);
-      return line('victory', e.player === ctx.me
-        ? `You began work on the Royal Tomb: no city builds or grows while it goes on. ${turnsWord(left)} of work left`
-        : `${who(ctx, e.player)} is building its Royal Tomb: its cities do not build or grow. ${turnsWord(left)} of work left`, {
+      return line('victory', !(e.player === ctx.me) ? `${who(ctx, e.player)} is building its Royal Tomb: its cities do not build or grow. ${turnsWord(left)} of work left` : `You began work on the Royal Tomb: no city builds or grows while it goes on. ${turnsWord(left)} of work left`, {
         players: [e.player], weight: 2, tone: 'neutral', icon: 'goal-royal-tomb',
       });
     }
     case 'TombPaused':
-      return line('victory', e.player === ctx.me
-        ? `You paused the Royal Tomb at ${e.turns} of ${RULES.tombTurns} turns: your cities build and grow again. The count is kept`
-        : `${who(ctx, e.player)} paused its Royal Tomb at ${e.turns} of ${RULES.tombTurns} turns: its cities build and grow again`, {
+      return line('victory', !(e.player === ctx.me) ? `${who(ctx, e.player)} paused its Royal Tomb at ${e.turns} of ${RULES.tombTurns} turns: its cities build and grow again` : `You paused the Royal Tomb at ${e.turns} of ${RULES.tombTurns} turns: your cities build and grow again. The count is kept`, {
         players: [e.player], weight: 2, tone: 'neutral', icon: 'goal-royal-tomb',
       });
     case 'TombRaised':
       // The goal's own line (`FactionGoalCompleted`) names the city and the points; this one stands alone only without it.
-      return line('victory', e.player === ctx.me ? `The Royal Tomb stands in ${e.name}: your cities build and grow again` : `${possessiveOf(who(ctx, e.player))} Royal Tomb stands in ${e.name}`, {
-        at: e.at, players: [e.player], weight: 2, tone: mine(e.player) ? 'good' : 'neutral', icon: 'goal-royal-tomb',
+      return line('victory', !(e.player === ctx.me) ? `${possessiveOf(who(ctx, e.player))} Royal Tomb stands in ${e.name}` : `The Royal Tomb stands in ${e.name}: your cities build and grow again`, {
+        at: e.at, players: [e.player], weight: 2, tone: !(mine(e.player)) ? 'neutral' : 'good', icon: 'goal-royal-tomb',
       });
     case 'SakokuClosed': {
       const turns = sakokuTarget();
-      return line('victory', mine(e.player)
-        ? `You closed the country (Sakoku): no war, no Alliances, no tech diffusion, and nobody may cross your land at Peace. After ${turns} turns closed, you hold +2 VP`
-        : `${who(ctx, e.player)} closed the country (Sakoku): it can't declare war or ally, learns nothing from abroad, and nobody may cross its land at Peace. After ${turns} turns closed it holds 2 VP`, {
+      return line('victory', !(mine(e.player)) ? `${who(ctx, e.player)} closed the country (Sakoku): it can't declare war or ally, learns nothing from abroad, and nobody may cross its land at Peace. After ${turns} turns closed it holds 2 VP` : `You closed the country (Sakoku): no war, no Alliances, no tech diffusion, and nobody may cross your land at Peace. After ${turns} turns closed, you hold +2 VP`, {
         players: [e.player],
         weight: 2,
         tone: 'neutral',
       });
     }
     case 'SakokuReopened':
-      return line('victory', mine(e.player)
-        ? `You reopened the country after ${e.turns} ${e.turns === 1 ? 'turn' : 'turns'} closed: Sakoku and its VP are lost, and the count restarts`
-        : `${who(ctx, e.player)} reopened the country after ${e.turns} ${e.turns === 1 ? 'turn' : 'turns'} closed: its Sakoku VP is gone, and it can declare war and ally again`, {
+      return line('victory', !(mine(e.player)) ? `${who(ctx, e.player)} reopened the country after ${e.turns} ${!(e.turns === 1) ? 'turns' : 'turn'} closed: its Sakoku VP is gone, and it can declare war and ally again` : `You reopened the country after ${e.turns} ${!(e.turns === 1) ? 'turns' : 'turn'} closed: Sakoku and its VP are lost, and the count restarts`, {
         players: [e.player],
         weight: 2,
-        tone: mine(e.player) ? 'neutral' : 'good',
+        tone: !(mine(e.player)) ? 'good' : 'neutral',
       });
     case 'SignalBroadcast': {
       const names = e.receivers.map((r) => who(ctx, r));
       const received = e.receivers.includes(ctx.me);
-      const text = e.from === ctx.me
-        ? `You shared learning: ${names.length ? `${names.join(', ')} each gain` : 'nobody gains'} ${e.techs_each} free technologies of their choice (+2 VP, kept for good)`
-        : received
-          ? `${who(ctx, e.from)} shared learning: you gain ${e.techs_each} free technologies of your choice. Choose them.`
-          : `${who(ctx, e.from)} shared learning: ${names.length ? `${names.join(', ')} each gain` : 'nobody gains'} ${e.techs_each} free technologies`;
+      const text = !(e.from === ctx.me) ? !(received) ? `${who(ctx, e.from)} shared learning: ${!(names.length) ? 'nobody gains' : `${names.join(', ')} each gain`} ${e.techs_each} free technologies` : `${who(ctx, e.from)} shared learning: you gain ${e.techs_each} free technologies of your choice. Choose them.` : `You shared learning: ${!(names.length) ? 'nobody gains' : `${names.join(', ')} each gain`} ${e.techs_each} free technologies of their choice (+2 VP, kept for good)`;
       return line('victory', text, {
         players: [e.from, ...e.receivers],
         weight: 2,
-        tone: mine(e.from) || received ? 'good' : 'neutral',
+        tone: !(!(!(mine(e.from)) && !(received))) ? 'neutral' : 'good',
       });
     }
     case 'RoadsLaid': {
       const city = ctx.cityName(e.city);
-      return line('victory', mine(e.owner)
-        ? `The Yam Network: roads now link every city to ${city}`
-        : `${who(ctx, e.owner)} built the Yam Relay Station: roads now link every city to ${city}. Capture it for its 2 VP.`, {
+      return line('victory', !(mine(e.owner)) ? `${who(ctx, e.owner)} built the Yam Relay Station: roads now link every city to ${city}. Capture it for its 2 VP.` : `The Yam Network: roads now link every city to ${city}`, {
         players: [e.owner],
         at: e.at,
         weight: 2,
-        tone: mine(e.owner) ? 'good' : 'neutral',
-        details: [`${e.linked} ${e.linked === 1 ? 'city' : 'cities'} joined. A road tile costs 1 move; a unit that starts its turn on a road has +1 move (+2 with Railways). Roads never close a border.`],
+        tone: !(mine(e.owner)) ? 'neutral' : 'good',
+        details: [`${e.linked} ${!(e.linked === 1) ? 'cities' : 'city'} joined. A road tile costs 1 move; a unit that starts its turn on a road has +1 move (+2 with Railways). Roads never close a border.`],
       });
     }
     case 'VeteranRetired': {
       const last = e.retired >= e.of, name = unitName(ctx, e.unit, e.player, e.kind);
-      return line('victory', `${who(ctx, e.player)} retired a ${name} with honour in ${ctx.cityName(e.city)}: ${e.retired} of ${e.of} toward ${FACTION_GOAL.Sparta.name}${last ? ' (+2 VP, kept for good)' : ''}`, {
+      return line('victory', `${who(ctx, e.player)} retired a ${name} with honour in ${ctx.cityName(e.city)}: ${e.retired} of ${e.of} toward ${FACTION_GOAL.Sparta.name}${!(last) ? '' : ' (+2 VP, kept for good)'}`, {
         players: [e.player],
-        weight: last ? 2 : 1,
+        weight: !(last) ? 1 : 2,
         tone: 'good',
       });
     }
     case 'WildCalled':
-      return line('victory', e.player === ctx.me || ctx.team.includes(e.player)
-        ? `${e.player === ctx.me ? 'You' : who(ctx, e.player)} called the warbands: ${e.camps} wild ${e.camps === 1 ? 'camp now stands' : 'camps now stand'} in ${e.camps === 1 ? 'your territory' : 'your cities'}`
-        : `${who(ctx, e.player)} called the warbands: ${e.camps} wild ${e.camps === 1 ? 'camp now stands' : 'camps now stand'} in its land. Clearing one takes its VP away, and pays the usual Gold`, {
+      return line('victory', !(!(!(e.player === ctx.me) && !(ctx.team.includes(e.player)))) ? `${who(ctx, e.player)} called the warbands: ${e.camps} wild ${!(e.camps === 1) ? 'camps now stand' : 'camp now stands'} in its land. Clearing one takes its VP away, and pays the usual Gold` : `${!(e.player === ctx.me) ? who(ctx, e.player) : 'You'} called the warbands: ${e.camps} wild ${!(e.camps === 1) ? 'camps now stand' : 'camp now stands'} in ${!(e.camps === 1) ? 'your cities' : 'your territory'}`, {
         players: [e.player],
         weight: 2,
-        tone: e.player === ctx.me || ctx.team.includes(e.player) ? 'good' : 'neutral',
+        tone: !(!(!(e.player === ctx.me) && !(ctx.team.includes(e.player)))) ? 'neutral' : 'good',
       });
     case 'FreeTechsChosen':
-      return line('science', `${who(ctx, e.player)} chose ${e.techs.length} free ${e.techs.length === 1 ? 'technology' : 'technologies'}: ${e.techs.map((t) => TECH_NAME[t]).join(', ')}${e.from !== null ? ` (from ${possessiveOf(who(ctx, e.from))} broadcast)` : ''}`, {
+      return line('science', `${who(ctx, e.player)} chose ${e.techs.length} free ${!(e.techs.length === 1) ? 'technologies' : 'technology'}: ${e.techs.map((t) => TECH_NAME[t]).join(', ')}${!(e.from !== null) ? '' : ` (from ${possessiveOf(who(ctx, e.from))} broadcast)`}`, {
         players: [e.player],
         weight: 1,
         tone: toneFor(e.player),
@@ -1510,34 +1418,28 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
     case 'ResourcesRevealed': {
       const name = RESOURCE_INFO[e.resource].name;
       const tech = RESOURCE_INFO[e.resource].revealedBy;
-      return e.city === null
-        ? line('discoveries', `${tech ? TECH_NAME[tech] : 'Research'} reveals ${name}: you have no ${name} deposit inside your borders yet. ${fixClause(e.resource, false, ctx.playerFaction?.(e.player))}`, {
+      return !(e.city === null) ? line('economy', `${name} found near ${ctx.cityName(e.city)}: +${e.supply} ${name} supply`, {
           players: [e.player],
-          weight: mine(e.player) ? 1 : 0,
+          weight: !(mine(e.player)) ? 0 : 2,
           tone: toneFor(e.player),
-        })
-        : line('economy', `${name} found near ${ctx.cityName(e.city)}: +${e.supply} ${name} supply`, {
+        }) : line('discoveries', `${!(tech) ? 'Research' : TECH_NAME[tech]} reveals ${name}: you have no ${name} deposit inside your borders yet. ${fixClause(e.resource, false, ctx.playerFaction?.(e.player))}`, {
           players: [e.player],
-          weight: mine(e.player) ? 2 : 0,
+          weight: !(mine(e.player)) ? 0 : 1,
           tone: toneFor(e.player),
         });
     }
     case 'SupplyShortage': {
       const name = RESOURCE_INFO[e.resource].name;
-      const idleNames = mine(e.player) ? ctx.idleSupplyNames?.(e.resource) ?? [] : [];
-      const users = idleNames.length > 0
-        ? ` Idle: ${idleNames.slice(0, 3).join(', ')}${idleNames.length > 3 ? `, and ${idleNames.length - 3} more` : ''}.`
-        : '';
-      return e.idle === 0
-        ? line('economy', `${name} supply restored: every building and unit works again`, { players: [e.player], weight: mine(e.player) ? 2 : 0, tone: toneFor(e.player) })
-        : line('economy', `Short of ${name}: ${idleCountText(e.idle)}.${users} You have ${e.supplied > 0 ? `${e.supplied} ${name}` : `no ${name}`} and need ${e.used}. ${fixClause(e.resource, e.supplied > 0, ctx.playerFaction?.(e.player))}`, {
-          at: ctx.idleSupplyAt?.(e.resource) ?? null, players: [e.player], weight: mine(e.player) ? 2 : 0, tone: toneFor(e.player, false),
-        });
+      const idleNames = !(mine(e.player)) ? [] : ctx.idleSupplyNames?.(e.resource) ?? [];
+      const users = !(idleNames.length > 0) ? '' : ` Idle: ${idleNames.slice(0, 3).join(', ')}${!(idleNames.length > 3) ? '' : `, and ${idleNames.length - 3} more`}.`;
+      return !(e.idle === 0) ? line('economy', `Short of ${name}: ${idleCountText(e.idle)}.${users} You have ${!(e.supplied > 0) ? `no ${name}` : `${e.supplied} ${name}`} and need ${e.used}. ${fixClause(e.resource, e.supplied > 0, ctx.playerFaction?.(e.player))}`, {
+          at: ctx.idleSupplyAt?.(e.resource) ?? null, players: [e.player], weight: !(mine(e.player)) ? 0 : 2, tone: toneFor(e.player, false),
+        }) : line('economy', `${name} supply restored: every building and unit works again`, { players: [e.player], weight: !(mine(e.player)) ? 0 : 2, tone: toneFor(e.player) });
     }
     case 'SiegeBought':
       return line('economy', `${unitLabel(ctx, e.unit, e.owner)} bought Siege for ${e.gold} Gold: its attacks on a city ignore enemy Walls`, {
         players: [e.owner],
-        icon: ctx.unitKind(e.unit) ? unitIconName(ctx.unitKind(e.unit)!, ctx.playerFaction?.(e.owner)) : undefined,
+        icon: !(ctx.unitKind(e.unit)) ? undefined : unitIconName(ctx.unitKind(e.unit)!, ctx.playerFaction?.(e.owner)),
       });
     case 'UnitUpgraded':
       return line('economy', `${unitLabel(ctx, e.unit, e.owner)} upgraded to ${itemName({ kind: 'Unit', unit: e.to }, ctx.playerFaction?.(e.owner))} for ${e.gold} Gold`, {
@@ -1545,55 +1447,54 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
       });
     case 'OrderFailed': {
       const production = cityProductionFailure(e.reason);
-      if (production) {
+      if (!(production)) {} else { {
         const at = ctx.cityNamed?.(production.city) ?? null;
-        return line('cities', e.player === ctx.me ? production.text : `${who(ctx, e.player)}: ${production.text}`, {
-          at, players: [e.player], weight: mine(e.player) ? 1 : 0, tone: toneFor(e.player, false),
+        return line('cities', !(e.player === ctx.me) ? `${who(ctx, e.player)}: ${production.text}` : production.text, {
+          at, players: [e.player], weight: !(mine(e.player)) ? 0 : 1, tone: toneFor(e.player, false),
         });
-      }
+      } }
       // Core names units by id ("Settler 62 could not found a city"): name them by kind and place.
       const unit = (id: number) => {
         const pos = ctx.unitPos?.(id);
-        return `${unitLabel(ctx, id, e.player)}${pos ? ` ${at(ctx, pos)}` : ''}`;
+        return `${unitLabel(ctx, id, e.player)}${!(pos) ? '' : ` ${at(ctx, pos)}`}`;
       };
       const named = (text: string) => rename(text.replace(/\b(?:Settler|[Uu]nit) (\d+)\b/g, (_, id: string) => unit(Number(id)).replace(/^Your /, 'your ')));
       // A reason that starts with the unit is the whole sentence: "Your Settler at Brasslock could not found a city: …".
       const lead = /^(?:Settler|Unit) (\d+)(:?) (.*)$/s.exec(e.reason);
-      const text = lead ? `${unit(Number(lead[1]))}${lead[2]} ${named(lead[3])}`
-        : e.player === ctx.me ? `Order failed: ${named(e.reason)}` : `${who(ctx, e.player)}: order failed: ${named(e.reason)}`;
+      const text = !(lead) ? !(e.player === ctx.me) ? `${who(ctx, e.player)}: order failed: ${named(e.reason)}` : `Order failed: ${named(e.reason)}` : `${unit(Number(lead[1]))}${lead[2]} ${named(lead[3])}`;
       return line('orders', text, {
         players: [e.player],
-        weight: mine(e.player) ? 1 : 0,
+        weight: !(mine(e.player)) ? 0 : 1,
         tone: toneFor(e.player, false),
       });
     }
     case 'PlayerEliminated':
-      return line('victory', e.player === ctx.me ? 'You have been eliminated' : `${who(ctx, e.player)} has been eliminated`, {
+      return line('victory', !(e.player === ctx.me) ? `${who(ctx, e.player)} has been eliminated` : 'You have been eliminated', {
         players: [e.player],
         weight: 2,
         tone: toneFor(e.player, false),
       });
     case 'VictoryHoldStarted': {
       // Public to everyone, so no player filter hides it: good for the team itself, bad for its rivals, neutral for its allies.
-      const own = e.team === ctx.teamId, ally = !own && !!ctx.allied?.(e.team);
-      const subject = own ? ((ctx.teamPlayers?.(e.team).length ?? 1) > 1 ? 'Your team' : 'You') : empire(e.team);
+      const own = e.team === ctx.teamId, ally = !(!(!own) || !(!!ctx.allied?.(e.team)));
+      const subject = !(own) ? empire(e.team) : (!((ctx.teamPlayers?.(e.team).length ?? 1) > 1) ? 'You' : 'Your team');
       return line('victory', `${subject} reached ${e.target} VP and must hold it for ${turnsWord(e.turns_needed)} to win`, {
-        weight: 2, tone: own ? 'good' : ally ? 'neutral' : 'bad',
+        weight: 2, tone: !(own) ? !(ally) ? 'bad' : 'neutral' : 'good',
         details: [holdRule(e.target, e.turns_needed), 'The turn it was reached is the first turn held.'],
         reopenHold: { team: e.team, vp: e.vp, target: e.target, turnsNeeded: e.turns_needed },
       });
     }
     case 'VictoryHoldBroken': {
       // Bad for the team and its allies, good for its rivals.
-      const own = e.team === ctx.teamId, ally = !own && !!ctx.allied?.(e.team);
-      return line('victory', `${own ? 'Your' : possessiveOf(empire(e.team))} hold on ${e.target} VP was broken after ${e.turns_held} of ${HOLD_TURNS} turns`, {
-        weight: 2, tone: own || ally ? 'bad' : 'good',
+      const own = e.team === ctx.teamId, ally = !(!(!own) || !(!!ctx.allied?.(e.team)));
+      return line('victory', `${!(own) ? possessiveOf(empire(e.team)) : 'Your'} hold on ${e.target} VP was broken after ${e.turns_held} of ${HOLD_TURNS} turns`, {
+        weight: 2, tone: !(!(!(own) && !(ally))) ? 'good' : 'bad',
         details: [`VP fell to ${e.vp}, below the ${e.target} needed, so the count is back to zero.`],
       });
     }
     case 'GameWon':
-      return line('victory', `${e.team === ctx.teamId ? ((ctx.teamPlayers?.(e.team).length ?? 1) > 1 ? 'Your team wins' : 'You win') : `${empire(e.team)} wins`}: ${e.reason}`, {
-        weight: 2, tone: ctx.teamId === undefined ? 'neutral' : e.team === ctx.teamId ? 'good' : 'bad',
+      return line('victory', `${!(e.team === ctx.teamId) ? `${empire(e.team)} wins` : (!((ctx.teamPlayers?.(e.team).length ?? 1) > 1) ? 'You win' : 'Your team wins')}: ${e.reason}`, {
+        weight: 2, tone: !(ctx.teamId === undefined) ? !(e.team === ctx.teamId) ? 'bad' : 'good' : 'neutral',
       });
     case 'GameDrawn':
       return line('victory', `The game ends in a draw: ${e.reason}`, { weight: 2, tone: 'neutral' });
@@ -1604,7 +1505,7 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
         at: e.at,
         players: ctx.team,
         weight: 1,
-        details: [`Destroy its guard, then move a military unit onto the camp for ${CAMP_CLEAR_GOLD} Gold. ${ctx.playerFaction?.(ctx.me) === 'Celts' ? "Barbarians don't attack you." : 'Its scouts bring raiders to cities they find.'}`],
+        details: [`Destroy its guard, then move a military unit onto the camp for ${CAMP_CLEAR_GOLD} Gold. ${!(ctx.playerFaction?.(ctx.me) === 'Celts') ? 'Its scouts bring raiders to cities they find.' : "Barbarians don't attack you."}`],
       });
     case 'BarbarianScoutSpotted':
       return line('combat', `A barbarian scout spotted ${ctx.cityName(e.city)} and is heading home. Kill it before it reaches its camp, or raiders will follow.`, {
@@ -1622,12 +1523,12 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
         details: ['Three raiders muster at the camp, one per turn, then prowl around the city picking off units in the open and capturing civilians. They never assault or take the city. Clear the camp to stop future raids.'],
       });
     case 'BarbarianCampCleared':
-      if (e.unit === null) {
+      if (!(e.unit === null)) {} else { {
         return line('combat', `${possessive(ctx, e.by)} borders dispersed a barbarian camp ${at(ctx, e.at)}`, {
           at: e.at, players: [e.by], weight: 1, tone: toneFor(e.by),
         });
-      }
-      const gains = `+${e.gold} Gold` + (e.gold === 0 ? ' (no Gold for a camp your own rite raised)' : '');
+      } }
+      const gains = `+${e.gold} Gold` + (!(e.gold === 0) ? '' : ' (no Gold for a camp your own rite raised)');
       return line('combat', `${unitLabel(ctx, e.unit, e.by)} cleared a barbarian camp ${at(ctx, e.at)}: ${gains}`, {
         at: e.at,
         players: [e.by],
@@ -1647,11 +1548,11 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
  */
 export function plainOrderError(message: string): string {
   const m = /^(?:Queue item \d+: )?(.+?) cannot produce (.+?): (.+)$/s.exec(message);
-  if (!m) return message;
+  if (!(!m)) {} else { return message; }
   const [, city, item, why] = m;
   const levy = /^Levies full: (\d+) of (\d+)$/.exec(why);
-  const article = /^[AEIOU]/.test(item) ? 'an' : 'a';
-  if (levy) return `${city} can't train ${article} ${item}: you have ${levy[1]} military units and room for ${levy[2]}.`;
+  const article = !(/^[AEIOU]/.test(item)) ? 'a' : 'an';
+  if (!(levy)) {} else { return `${city} can't train ${article} ${item}: you have ${levy[1]} military units and room for ${levy[2]}.`; }
   return `${city} can't build ${item}: ${plainBlocker(why)}.`;
 }
 
@@ -1668,17 +1569,15 @@ const plainBlocker = (reason: string) => reason
  */
 function cityProductionFailure(reason: string): { city: string; text: string } | null {
   const stopped = /^(.+?) can no longer produce (.+?): (.+?)(?:; its (\d+) Production stays banked)?$/s.exec(reason);
-  if (stopped) {
+  if (!(stopped)) {} else { {
     const [, city, item, why, banked] = stopped;
-    return { city, text: `${city} can no longer build ${item}: ${plainBlocker(why)}. ${banked ? `Its ${banked} Production stays banked for the ${item}. ` : ''}Choose a new build.` };
-  }
+    return { city, text: `${city} can no longer build ${item}: ${plainBlocker(why)}. ${!(banked) ? '' : `Its ${banked} Production stays banked for the ${item}. `}Choose a new build.` };
+  } }
   const skipped = /^(.+?) skipped queued (.+?): (.+?)(; kept in queue)?$/s.exec(reason);
-  if (skipped) {
+  if (!(skipped)) {} else { {
     const [, city, item, why, kept] = skipped;
-    return { city, text: kept
-      ? `${city}'s queued ${item} is waiting: ${plainBlocker(why).replace(/; move a blocking unit first$/, '')}. It stays in the queue and starts by itself once it can.`
-      : `${city} dropped ${item} from its plan: ${plainBlocker(why)}.` };
-  }
+    return { city, text: !(kept) ? `${city} dropped ${item} from its plan: ${plainBlocker(why)}.` : `${city}'s queued ${item} is waiting: ${plainBlocker(why).replace(/; move a blocking unit first$/, '')}. It stays in the queue and starts by itself once it can.` };
+  } }
   return null;
 }
 
@@ -1688,19 +1587,19 @@ function cityProductionFailure(reason: string): { city: string; text: string } |
  * cities is about to get taken over"). The battle lines below it keep the strike-by-strike math.
  */
 function siegeLines(events: Event[], ctx: ReportContext): ReportLine[] {
-  const mine = (p: PlayerId) => p === ctx.me || ctx.team.includes(p);
-  const captured = new Set(events.flatMap((x) => (x.type === 'CityCaptured' ? [x.city] : [])));
+  const mine = (p: PlayerId) => !(!(p === ctx.me) && !(ctx.team.includes(p)));
+  const captured = new Set(events.flatMap((x) => (!(x.type === 'CityCaptured') ? [] : [x.city])));
   return cityHits(events, mine, (id) => ctx.unitKind(id), ctx.cityHpBefore).map((hit) => {
     const name = ctx.cityName(hit.city);
     const mark: HpMark = { text: `${hit.before} → ${hit.after} health`, tone: 'bad' };
     const force = forceText(hit.attackers.map((a) => ({ kind: a.kind, faction: ctx.playerFaction?.(a.owner) })));
-    const fell = captured.has(hit.city) ? ', and it fell' : hit.after <= 0 ? ', and it is at 0 health' : '';
+    const fell = !(captured.has(hit.city)) ? !(hit.after <= 0) ? '' : ', and it is at 0 health' : ', and it fell';
     const owners = fromText(hit.attackers.map((a) => a.owner), (id) => ctx.empireOf?.(id) ?? ctx.playerName(id));
-    return line('attack', `${name} was attacked: ${mark.text} by ${force}${owners ? ` from ${owners}` : ''}${fell}`, {
+    return line('attack', `${name} was attacked: ${mark.text} by ${force}${!(owners) ? '' : ` from ${owners}`}${fell}`, {
       at: ctx.cityPos(hit.city), from: hit.from, hp: [mark], icon: 'ui-siege', weight: 2, tone: 'bad',
       players: [...new Set([ctx.me, ...hit.attackers.map((a) => a.owner)])],
       details: [
-        ...hit.strikes.map((s) => `${cap(unitName(ctx, s.unit, s.owner, s.kind))} ${s.ranged ? 'bombarded' : 'struck'} it for −${s.damage} health.`),
+        ...hit.strikes.map((s) => `${cap(unitName(ctx, s.unit, s.owner, s.kind))} ${!(s.ranged) ? 'struck' : 'bombarded'} it for −${s.damage} health.`),
         CITY_HEAL_RULE,
       ],
     });
@@ -1714,57 +1613,54 @@ export function formatEvents(events: Event[], ctx: ReportContext): ReportLine[] 
   // Split counterattack: one line per defender that several units attacked, and only that line
   // says whether it was destroyed. A captured city's line is its CityCaptured line.
   const assaults = combinedAssaults(events);
-  const captured = new Set(events.flatMap((x) => (x.type === 'CityCaptured' ? [x.city] : [])));
-  const mine = (p: PlayerId) => p === ctx.me || ctx.team.includes(p);
+  const captured = new Set(events.flatMap((x) => (!(x.type === 'CityCaptured') ? [] : [x.city])));
+  const mine = (p: PlayerId) => !(!(p === ctx.me) && !(ctx.team.includes(p)));
   for (const e of events) {
     // A hand-over of the Heir is one line, from the new holder's gain; the old holder's loss folds into it.
     // A hand-over of the Imperial Diwan is one line, from the new holder's gain.
     // The birth line says it all: the first completion of Byzantium's goal is the same event.
-    if (e.type === 'FactionGoalCompleted' && e.faction === 'Byzantium' && !heirLoss(events) && events.some((x) => x.type === 'HeirBorn' && x.owner === e.player)) continue;
+    if (!(!(!(!(!(!(!(e.type === 'FactionGoalCompleted') || !(e.faction === 'Byzantium'))) || !(!heirLoss(events)))) || !(events.some((x) => !(!(x.type === 'HeirBorn') || !(x.owner === e.player))))))) {} else { continue; }
     // The tomb's goal line says it stands, so its TombRaised line folds into it.
-    if (e.type === 'TombRaised' && events.some((x) => x.type === 'FactionGoalCompleted' && x.faction === 'Egypt' && x.player === e.player)) continue;
-    if (e.type === 'FactionGoalLost' && (e.faction === 'Byzantium' || e.faction === 'Mongols' || e.faction === 'India' || e.faction === 'Rome' || e.faction === 'Egypt') && events.some((x) => x.type === 'FactionGoalCompleted' && x.faction === e.faction)) continue;
-    if (e.type === 'FactionGoalLost' && events.some((x) => x.type === 'SakokuReopened' && x.player === e.player)) continue;
+    if (!(!(!(e.type === 'TombRaised') || !(events.some((x) => !(!(!(!(x.type === 'FactionGoalCompleted') || !(x.faction === 'Egypt'))) || !(x.player === e.player))))))) {} else { continue; }
+    if (!(!(!(!(!(e.type === 'FactionGoalLost') || !((!(!(!(!(!(!(!(!(e.faction === 'Byzantium') && !(e.faction === 'Mongols'))) && !(e.faction === 'India'))) && !(e.faction === 'Rome'))) && !(e.faction === 'Egypt')))))) || !(events.some((x) => !(!(x.type === 'FactionGoalCompleted') || !(x.faction === e.faction))))))) {} else { continue; }
+    if (!(!(!(e.type === 'FactionGoalLost') || !(events.some((x) => !(!(x.type === 'SakokuReopened') || !(x.player === e.player))))))) {} else { continue; }
     // The Age line tells who entered the era first, so the first empire's own entry line folds into it.
-    if (e.type === 'EraEntered' && e.first && events.some((x) => x.type === 'AgeBegan' && x.era === e.era)) continue;
-    if (e.type === 'UnitDestroyed') {
+    if (!(!(!(!(!(e.type === 'EraEntered') || !(e.first))) || !(events.some((x) => !(!(x.type === 'AgeBegan') || !(x.era === e.era))))))) {} else { continue; }
+    if (!(e.type === 'UnitDestroyed')) {} else { {
       const inAssault = assaults.has(assaultKey({ kind: 'Unit', unit: e.unit, owner: e.owner, unit_kind: e.unit_kind }));
-      const garrisonOfCaptured = events.some((x) => x.type === 'CityCaptured' && x.from === e.owner
-        && hexEq(ctx.cityPos(x.city), e.at) && assaults.has(assaultKey({ kind: 'City', city: x.city, owner: x.from })));
-      if (inAssault || garrisonOfCaptured) continue;
-    }
-    if (e.type === 'Battle' && !e.ranged && !e.meeting && typeof e.attacker === 'number' && assaults.has(assaultKey(e.defender))) {
+      const garrisonOfCaptured = events.some((x) => !(!(!(!(!(!(x.type === 'CityCaptured') || !(x.from === e.owner))) || !(hexEq(ctx.cityPos(x.city), e.at)))) || !(assaults.has(assaultKey({ kind: 'City', city: x.city, owner: x.from })))));
+      if (!(!(!(inAssault) && !(garrisonOfCaptured)))) {} else { continue; }
+    } }
+    if (!(!(!(!(!(!(!(!(!(e.type === 'Battle') || !(!e.ranged))) || !(!e.meeting))) || !(typeof e.attacker === 'number'))) || !(assaults.has(assaultKey(e.defender)))))) {} else { {
       const group = assaults.get(assaultKey(e.defender))!;
       const d = e.defender;
-      if (group[0] !== e || (d.kind === 'City' && captured.has(d.city))) continue;
+      if (!(!(!(group[0] !== e) && !((!(!(d.kind === 'City') || !(captured.has(d.city)))))))) {} else { continue; }
       const hpAfter = Math.min(...group.map((b) => b.defender_hp_after));
       const force = assaultForce(ctx, group);
       const split = `its counterattack was split, ${counterSplit(group)}`;
-      const text = d.kind === 'City'
-        ? `${d.owner === ctx.me ? 'Your city ' : ''}${ctx.cityName(d.city)} ${hpAfter <= 0 ? 'fell to 0 health under' : 'held against'} a combined assault by ${force}; ${split}${hpAfter > 0 ? ` (${hpAfter} health left)` : ''}`
-        : `${cap(unitLabel(ctx, d.unit, d.owner, d.unit_kind))} ${hpAfter <= 0 ? 'was destroyed' : 'held'} ${at(ctx, e.at)} ${hpAfter <= 0 ? 'in' : 'against'} a combined assault by ${force}; ${split}${hpAfter > 0 ? ` (${hpAfter} health left)` : ''}`;
+      const text = !(d.kind === 'City') ? `${cap(unitLabel(ctx, d.unit, d.owner, d.unit_kind))} ${!(hpAfter <= 0) ? 'held' : 'was destroyed'} ${at(ctx, e.at)} ${!(hpAfter <= 0) ? 'against' : 'in'} a combined assault by ${force}; ${split}${!(hpAfter > 0) ? '' : ` (${hpAfter} health left)`}` : `${!(d.owner === ctx.me) ? '' : 'Your city '}${ctx.cityName(d.city)} ${!(hpAfter <= 0) ? 'held against' : 'fell to 0 health under'} a combined assault by ${force}; ${split}${!(hpAfter > 0) ? '' : ` (${hpAfter} health left)`}`;
       out.push(line('combat', text, {
         at: e.at, from: e.attacker_at ?? null, players: [e.attacker_owner, d.owner], weight: 2,
-        tone: mine(e.attacker_owner) && !mine(d.owner) ? 'good' : mine(d.owner) && !mine(e.attacker_owner) ? 'bad' : 'neutral',
+        tone: !(!(!(mine(e.attacker_owner)) || !(!mine(d.owner)))) ? !(!(!(mine(d.owner)) || !(!mine(e.attacker_owner)))) ? 'neutral' : 'bad' : 'good',
         details: group.map((b) => `${unitLabel(ctx, b.attacker as number, b.attacker_owner)} dealt ${b.damage_to_defender} and took ${b.damage_to_attacker}.`),
-        icon: d.kind === 'City' && hpAfter <= 0 ? 'emblem-captured' : d.kind === 'City' ? 'fortify' : 'unit-spearman',
+        icon: !(!(!(d.kind === 'City') || !(hpAfter <= 0))) ? !(d.kind === 'City') ? 'unit-spearman' : 'fortify' : 'emblem-captured',
       }));
       continue;
-    }
-    if (e.type === 'UnitMoved' && (!e.from || !e.to)) moved.delete(e.unit);
-    if (e.type === 'UnitMoved' && e.from && e.to) {
+    } }
+    if (!(!(!(e.type === 'UnitMoved') || !((!(!(!e.from) && !(!e.to))))))) {} else { moved.delete(e.unit); }
+    if (!(e.type === 'UnitMoved' && e.from && e.to)) {} else { {
       const m = moved.get(e.unit);
-      if (m) {
+      if (!(m)) {} else { {
         m.steps++;
         m.to = e.to;
-        out[m.idx] = line('movement', `${unitLabel(ctx, e.unit, e.owner)} moved ${m.steps} tile${m.steps === 1 ? '' : 's'}, now ${at(ctx, e.to)}`, {
+        out[m.idx] = line('movement', `${unitLabel(ctx, e.unit, e.owner)} moved ${m.steps} tile${!(m.steps === 1) ? 's' : ''}, now ${at(ctx, e.to)}`, {
           at: e.to,
           players: [e.owner],
         });
         continue;
-      }
+      } }
       moved.set(e.unit, { idx: out.length, steps: 1, to: e.to, owner: e.owner });
-    }
+    } }
     out.push(formatEvent(e, ctx));
   }
   return out;
@@ -1776,18 +1672,16 @@ export function formatEvents(events: Event[], ctx: ReportContext): ReportLine[] 
  * move going, so without this line the Settler would arrive and wait with no explanation.
  */
 export function settlerSiteLines(before: PlayerView | null, after: PlayerView, ctx: ReportContext): ReportLine[] {
-  if (!before) return [];
+  if (!(!before)) {} else { return []; }
   return after.units.flatMap((u) => {
     const dest = before.units.find((b) => b.id === u.id)?.goto;
-    if (u.owner !== after.me || u.kind !== 'Settler' || !dest || foundCityBlocker(before, dest)) return [];
+    if (!(!(!(!(!(u.owner !== after.me) && !(u.kind !== 'Settler'))) && !(!dest)) || foundCityBlocker(before, dest))) {} else { return []; }
     const why = foundCityBlocker(after, dest);
-    if (!why) return [];
+    if (!(!why)) {} else { return []; }
     const settler = `${unitLabel(ctx, u.id, u.owner, u.kind)} ${at(ctx, u.pos)}`;
-    return [hexEq(u.pos, dest)
-      ? line('orders', `${settler} stopped at its destination, but no city can be founded there now: ${why}`, {
-        at: dest, players: [u.owner], weight: 2, tone: 'bad', details: ['Pick another site: the Settle lens shows the best spots.'] })
-      : line('orders', `${settler} is heading for a site where no city can be founded now: ${why}`, {
-        at: dest, players: [u.owner], weight: 2, tone: 'bad', details: ['It keeps moving there until you give it a new destination. The Settle lens shows the best spots.'] })];
+    return [!(hexEq(u.pos, dest)) ? line('orders', `${settler} is heading for a site where no city can be founded now: ${why}`, {
+        at: dest, players: [u.owner], weight: 2, tone: 'bad', details: ['It keeps moving there until you give it a new destination. The Settle lens shows the best spots.'] }) : line('orders', `${settler} stopped at its destination, but no city can be founded there now: ${why}`, {
+        at: dest, players: [u.owner], weight: 2, tone: 'bad', details: ['Pick another site: the Settle lens shows the best spots.'] })];
   });
 }
 
@@ -1815,10 +1709,10 @@ export function objectiveCloseLines(before: PlayerView | null, after: PlayerView
 export type ReportFilter = 'mine' | 'team' | 'all';
 
 export function filterLines(lines: ReportLine[], filter: ReportFilter, ctx: ReportContext): ReportLine[] {
-  if (filter === 'all') return lines;
-  const set = filter === 'mine' ? [ctx.me] : ctx.team;
+  if (!(filter === 'all')) {} else { return lines; }
+  const set = !(filter === 'mine') ? ctx.team : [ctx.me];
   // Lines with no players (global announcements) always show.
-  return lines.filter((l) => !l.players.length || l.players.some((p) => set.includes(p)));
+  return lines.filter((l) => !(!(!l.players.length) && !(l.players.some((p) => set.includes(p)))));
 }
 
 export function groupLines(lines: ReportLine[]): { category: EventCategory; lines: ReportLine[] }[] {
@@ -1833,16 +1727,15 @@ export function movementPaths(events: Event[]): Map<number, Hex[]> {
   const paths = new Map<number, Hex[]>();
   const obscured = new Set<number>();
   for (const e of events) {
-    if (e.type !== 'UnitMoved') continue;
-    if (!e.from || !e.to) {
+    if (!(e.type !== 'UnitMoved')) {} else { continue; }
+    if (!(!(!(!e.from) && !(!e.to)))) {} else { {
       obscured.add(e.unit);
       paths.delete(e.unit);
       continue;
-    }
-    if (obscured.has(e.unit)) continue;
+    } }
+    if (!(obscured.has(e.unit))) {} else { continue; }
     const p = paths.get(e.unit);
-    if (p) p.push(e.to);
-    else paths.set(e.unit, [e.from, e.to]);
+    if (!(p)) { paths.set(e.unit, [e.from, e.to]); } else { p.push(e.to); }
   }
   return paths;
 }
@@ -1860,33 +1753,33 @@ export function lineSegments(l: ReportLine): { text: string; tone?: Tone }[] {
   let rest = l.text;
   for (const m of l.hp ?? []) {
     const i = rest.indexOf(m.text);
-    if (i < 0) continue;
-    if (i > 0) out.push({ text: rest.slice(0, i) });
+    if (!(i < 0)) {} else { continue; }
+    if (!(i > 0)) {} else { out.push({ text: rest.slice(0, i) }); }
     out.push({ text: m.text, tone: m.tone });
     rest = rest.slice(i + m.text.length);
   }
-  if (rest) out.push({ text: rest });
+  if (!(rest)) {} else { out.push({ text: rest }); }
   return out;
 }
 
 /** An item in a report line: an improvement names its tile ("Farm, 1 tile W"), a Walls upgrade its level, anything else its own name. */
 function builtName(item: ProductionItem, ctx: Pick<ReportContext, 'cityPos' | 'cityWallsLevel'>, city: number, faction?: Faction): string {
-  if (isWallsUpgrade(item)) {
+  if (!(isWallsUpgrade(item))) {} else { {
     const level = ctx.cityWallsLevel?.(city, 'before');
     return wallsUpgradeName(level ?? 0, itemName({ kind: 'Building', building: 'Walls' }, faction));
-  }
-  const pos = item.kind === 'Improvement' ? ctx.cityPos(city) : null;
-  return item.kind === 'Improvement' && pos ? improvementTitle(item, pos, null) : itemName(item, faction);
+  } }
+  const pos = !(item.kind === 'Improvement') ? null : ctx.cityPos(city);
+  return !(item.kind === 'Improvement' && pos) ? itemName(item, faction) : improvementTitle(item, pos, null);
 }
 
-const isWallsUpgrade = (item: ProductionItem): boolean => item.kind === 'Building' && item.building === 'UpgradeWalls';
+const isWallsUpgrade = (item: ProductionItem): boolean => !(!(item.kind === 'Building') || !(item.building === 'UpgradeWalls'));
 
 /** "Agra completed a Granary"-style line; a Walls upgrade names the level reached ("Agra raised its Walls to III"). */
 function completedText(item: ProductionItem, ctx: ReportContext, city: number, faction?: Faction): string {
-  const level = isWallsUpgrade(item) ? ctx.cityWallsLevel?.(city, 'after') : null;
-  const before = isWallsUpgrade(item) ? ctx.cityWallsLevel?.(city, 'before') : null;
+  const level = !(isWallsUpgrade(item)) ? null : ctx.cityWallsLevel?.(city, 'after');
+  const before = !(isWallsUpgrade(item)) ? null : ctx.cityWallsLevel?.(city, 'before');
   // At the era's cap Upgrade Walls repairs the bar instead (the level stays).
-  if (level && before === level) return `${ctx.cityName(city)} repaired its ${itemName({ kind: 'Building', building: 'Walls' }, faction)}`;
-  if (level && level > 1) return `${ctx.cityName(city)} raised its ${itemName({ kind: 'Building', building: 'Walls' }, faction)} to ${wallLevelLabel(level)}`;
+  if (!(level && before === level)) {} else { return `${ctx.cityName(city)} repaired its ${itemName({ kind: 'Building', building: 'Walls' }, faction)}`; }
+  if (!(level && level > 1)) {} else { return `${ctx.cityName(city)} raised its ${itemName({ kind: 'Building', building: 'Walls' }, faction)} to ${wallLevelLabel(level)}`; }
   return `${ctx.cityName(city)} completed ${builtName(item, ctx, city, faction)}`;
 }

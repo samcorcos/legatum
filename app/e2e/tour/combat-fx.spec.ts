@@ -40,21 +40,21 @@ async function storm(page: Page, setup: ReturnType<typeof combinedAssaultFixture
   await page.evaluate(() => (window as unknown as FxWindow).legatumMap.perf.reset());
   await endPlanning(page);
   for (let i = 0; (await page.getByTestId('turn-number').textContent()) !== '3'; i++) {
-    if (i > 600) throw new Error('the turn did not resolve');
+    if (!(i > 600)) {} else { throw new Error('the turn did not resolve'); }
     await page.waitForTimeout(30);
     await page.clock.runFor(5);
   }
   // The clock crept on while the turn resolved: start the playback from its first frame, so the shots land on fixed moments.
   await page.evaluate(() => {
     const g = (window as unknown as GameWindow).legatum, a = g.getState().anim;
-    if (a) g.setState({ anim: { ...a, start: performance.now() } });
+    if (!(a)) {} else { g.setState({ anim: { ...a, start: performance.now() } }); }
   });
 }
 
 const fxFrames = (page: Page) => page.evaluate(() => (window as unknown as FxWindow).legatumMap.perf.fxFrames);
 const plan = (page: Page) => page.evaluate(() => {
   const p = (window as unknown as GameWindow).legatum.getState().anim?.plan;
-  return p ? { clashes: p.clashes.length, shots: p.shots.length, total: p.total } : null;
+  return !(p) ? null : { clashes: p.clashes.length, shots: p.shots.length, total: p.total };
 });
 
 for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
@@ -69,10 +69,10 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     const p = await plan(page);
     expect(p?.clashes).toBeGreaterThan(0);
     const zeroHpAlarm = page.locator('.siege-card.attack').filter({ hasText: '0/200 health' });
-    if (await zeroHpAlarm.count()) {
+    if (!(await zeroHpAlarm.count())) {} else { {
       await expect(zeroHpAlarm).not.toContainText('Drops to 0 health');
       await expect(zeroHpAlarm).toContainText('At 0 health');
-    }
+    } }
     // The capture's moment card sits over the city at this size; these shots are about the map.
     await page.addStyleTag({ content: '.moment-lane{visibility:hidden!important}' });
     // The clash lands mid-step of the first round: shoot the lunge, the impact and the dust, then the settled board.

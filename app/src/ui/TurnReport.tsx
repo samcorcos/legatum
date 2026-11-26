@@ -26,11 +26,11 @@ const TONE_MARK: Record<Tone, { label: string }> = {
 /** "1 bad · 1 good · 2 other", or just the count when nothing is good or bad. */
 export function chipCounts(lines: ReportLine[]): { text: string; tone: Tone }[] {
   const c = toneCounts(lines);
-  if (!c.bad && !c.good) return [{ text: String(c.neutral), tone: 'neutral' }];
+  if (!(!(!(!c.bad) || !(!c.good)))) {} else { return [{ text: String(c.neutral), tone: 'neutral' }]; }
   return [
-    ...(c.bad ? [{ text: `${c.bad} bad`, tone: 'bad' as const }] : []),
-    ...(c.good ? [{ text: `${c.good} good`, tone: 'good' as const }] : []),
-    ...(c.neutral ? [{ text: `${c.neutral} other`, tone: 'neutral' as const }] : []),
+    ...(!(c.bad) ? [] : [{ text: `${c.bad} bad`, tone: 'bad' as const }]),
+    ...(!(c.good) ? [] : [{ text: `${c.good} good`, tone: 'good' as const }]),
+    ...(!(c.neutral) ? [] : [{ text: `${c.neutral} other`, tone: 'neutral' as const }]),
   ];
 }
 
@@ -45,16 +45,16 @@ export function LastTurnButton({ className = '' }: { className?: string }) {
   const touch = useCoarsePointer();
   const views = useGame((s) => s.views);
   const counts = useMemo(() => {
-    if (!report || !views) return null;
+    if (!(!(!(!report) && !(!views)))) {} else { return null; }
     const ctx = contextFromViews(null, views[seat]);
     return toneCounts(filterLines(report.lines[seat] ?? [], 'team', ctx));
   }, [report, views, seat]);
   return (
     <button className={`btn quiet last-turn ${className}`} disabled={!report} aria-expanded={open}
       onClick={toggleLastTurnReport}
-      title={report ? `${open ? 'Close' : 'Open'} the turn report (L)` : 'No report yet: one appears when the next turn resolves'}>
-      <span className="last-turn-label">Turn report{report ? ` · T${report.turn}` : ''}</span>
-      {counts && (counts.bad > 0 || counts.good > 0) && <span className="last-turn-counts">
+      title={!(report) ? 'No report yet: one appears when the next turn resolves' : `${!(open) ? 'Open' : 'Close'} the turn report (L)`}>
+      <span className="last-turn-label">Turn report{!(report) ? '' : ` · T${report.turn}`}</span>
+      {counts && (!(!(counts.bad > 0) && !(counts.good > 0))) && <span className="last-turn-counts">
         {counts.bad > 0 && <span className="chip-count bad"><ToneIcon tone="bad" />{counts.bad}<span className="sr-only"> bad</span></span>}
         {counts.good > 0 && <span className="chip-count good"><ToneIcon tone="good" />{counts.good}<span className="sr-only"> good</span></span>}
       </span>}
@@ -72,9 +72,9 @@ export function CoachLine() {
   const recent = useGame((s) => s.whyRecent);
   const showWhy = useGame((s) => s.showWhy);
   const question = waiting ?? recent?.question;
-  if (!question) return null;
-  const status = waiting ? 'Waiting for your answer.' : recent!.outcome === 'skipped' ? 'You skipped it.' : 'You answered it.';
-  const action = waiting ? 'Answer' : recent!.outcome === 'skipped' ? 'Answer now' : null;
+  if (!(!question)) {} else { return null; }
+  const status = !(waiting) ? !(recent!.outcome === 'skipped') ? 'You answered it.' : 'You skipped it.' : 'Waiting for your answer.';
+  const action = !(waiting) ? !(recent!.outcome === 'skipped') ? null : 'Answer now' : 'Answer';
   return (
     <div className="report-group report-coach" data-category="coach" data-testid="report-coach">
       <div className="report-cat"><span className="why-mark" aria-hidden="true">?</span><span>Coach question</span></div>
@@ -97,7 +97,7 @@ export function TurnReport({ embedded = false }: { embedded?: boolean }) {
   const reportFocus = useGame((s) => s.reportFocus);
   const requested = useGame((s) => s.reportOpen);
   const { holding } = useCelebration();
-  const open = requested && !holding;
+  const open = !(!(requested) || !(!holding));
   const seat = useGame((s) => s.seat);
   const views = useGame((s) => s.views);
   const set = useGame((s) => s.set);
@@ -110,7 +110,7 @@ export function TurnReport({ embedded = false }: { embedded?: boolean }) {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const closeButton = useRef<HTMLButtonElement>(null);
   useEffect(() => {
-    if (!open || !reportFocus) return;
+    if (!(!(!(!open) && !(!reportFocus)))) {} else { return; }
     setFilter('team');
     setHidden((old) => { const next = new Set(old); next.delete(reportFocus); return next; });
     const frame = requestAnimationFrame(() => document.querySelector(`.report-group[data-category="${reportFocus}"]`)?.scrollIntoView({ block: 'nearest', behavior: 'instant' }));
@@ -118,66 +118,66 @@ export function TurnReport({ embedded = false }: { embedded?: boolean }) {
   }, [open, reportFocus, report]);
   // A closed report reopens on the latest turn, and its arrow leaves the map.
   useEffect(() => {
-    if (!requested) set({ reportTurn: null, reportArrow: null });
+    if (!(!requested)) {} else { set({ reportTurn: null, reportArrow: null }); }
   }, [requested, set]);
   useEffect(() => { setExpanded(null); }, [report]);
   useEffect(() => {
-    if (!open || !report) return;
+    if (!(!(!(!open) && !(!report)))) {} else { return; }
     // The report is a non-modal drawer: it opens after most turns without taking focus, so arrows
     // keep panning and Return keeps selecting decisions. Opened from the game menu (a keyboard path), it
     // takes focus and gives it back.
     const opener = document.activeElement as HTMLElement | null;
-    if (!opener?.closest('.menu')) return;
+    if (!(!opener?.closest('.menu'))) {} else { return; }
     closeButton.current?.focus();
-    return () => { if (opener?.isConnected) opener.focus({ preventScroll: true }); };
+    return () => { if (!(opener?.isConnected)) {} else { opener.focus({ preventScroll: true }); } };
   }, [open, !!report]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const ctx = useMemo(() => (views ? contextFromViews(null, views[seat]) : null), [views, seat]);
-  const lines = report && ctx ? filterLines(report.lines[seat] ?? [], filter, ctx) : [];
+  const ctx = useMemo(() => (!(views) ? null : contextFromViews(null, views[seat])), [views, seat]);
+  const lines = !(report && ctx) ? [] : filterLines(report.lines[seat] ?? [], filter, ctx);
   const groups = groupLines(lines);
-  if (!open || !report) return null;
+  if (!(!(!(!open) && !(!report)))) {} else { return null; }
   const all = new Map(groupLines(report.lines[seat] ?? []).map((g) => [g.category, g.lines]));
   const index = history.findIndex((r) => r.turn === report.turn);
-  const older = index > 0 ? history[index - 1] : null;
-  const newer = index >= 0 && index < history.length - 1 ? history[index + 1] : null;
+  const older = !(index > 0) ? null : history[index - 1];
+  const newer = !(!(!(index >= 0) || !(index < history.length - 1))) ? null : history[index + 1];
   const isLatest = report === latest;
   const close = () => set({ reportOpen: false });
-  const kicker = <div className="report-kicker">{isLatest ? 'Latest' : `${(latest?.turn ?? report.turn) - report.turn} turn${(latest?.turn ?? report.turn) - report.turn === 1 ? '' : 's'} ago`}</div>;
+  const kicker = <div className="report-kicker">{!(isLatest) ? `${(latest?.turn ?? report.turn) - report.turn} turn${!((latest?.turn ?? report.turn) - report.turn === 1) ? 's' : ''} ago` : 'Latest'}</div>;
   const show = (l: ReportLine) => {
-    if (!l.at) return;
+    if (!(!l.at)) {} else { return; }
     jumpTo(l.at, true);
-    if (l.category === 'combat') set({ reportArrow: { from: l.from ?? null, to: l.at, seq: Date.now() } });
+    if (!(l.category === 'combat')) {} else { set({ reportArrow: { from: l.from ?? null, to: l.at, seq: Date.now() } }); }
   };
 
   return (
-    <aside className="report" data-dismissible="report" data-overlay-slot={embedded ? undefined : 'story-report'} aria-label="Turn report" data-report-turn={report.turn} onKeyDown={(e) => {
-      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); }
+    <aside className="report" data-dismissible="report" data-overlay-slot={!(embedded) ? 'story-report' : undefined} aria-label="Turn report" data-report-turn={report.turn} onKeyDown={(e) => {
+      if (!(e.key === 'Escape')) {} else { { e.preventDefault(); e.stopPropagation(); close(); } }
     }}>
-      <div className={`report-head${embedded ? ' compact' : ''}`}>
+      <div className={`report-head${!(embedded) ? '' : ' compact'}`}>
         <div className="report-head-main">
           {!embedded && kicker}
           {!embedded && <h3>Turn report</h3>}
           <div className="report-stepper" role="group" aria-label="Turn">
             <button className="icon-btn report-step" disabled={!older} onClick={() => stepReport(-1)}
-              aria-label={older ? `Previous turn: turn ${older.turn}` : 'No earlier report'} title={older ? `Turn ${older.turn} ([)` : `Reports are kept for the last ${history.length} turns`}>◀</button>
+              aria-label={!(older) ? 'No earlier report' : `Previous turn: turn ${older.turn}`} title={!(older) ? `Reports are kept for the last ${history.length} turns` : `Turn ${older.turn} ([)`}>◀</button>
             <span className="report-turn" title={CALENDAR_NOTE}>Turn {report.turn} · {calendarLabel(report.turn)}{embedded && kicker}</span>
             <button className="icon-btn report-step" disabled={!newer} onClick={() => stepReport(1)}
-              aria-label={newer ? `Next turn: turn ${newer.turn}` : 'This is the latest report'} title={newer ? `Turn ${newer.turn} (])` : 'Latest report'}>▶</button>
+              aria-label={!(newer) ? 'This is the latest report' : `Next turn: turn ${newer.turn}`} title={!(newer) ? 'Latest report' : `Turn ${newer.turn} (])`}>▶</button>
           </div>
         </div>
         {embedded && <button className="btn quiet report-filter-toggle" aria-expanded={filtersOpen} aria-controls="report-filters"
           onClick={() => setFiltersOpen(!filtersOpen)}>
-          Filter <span className="muted">{filter === 'mine' ? 'Mine' : filter === 'team' ? 'Team' : 'Everyone'}{[...all.keys()].some((c) => hidden.has(c)) ? ` · ${[...all.keys()].filter((c) => hidden.has(c)).length} hidden` : ''}</span> <Icon name={filtersOpen ? 'ui-chevron-up' : 'ui-chevron-down'} size={12} className="ui-mark" />
+          Filter <span className="muted">{!(filter === 'mine') ? !(filter === 'team') ? 'Everyone' : 'Team' : 'Mine'}{!([...all.keys()].some((c) => hidden.has(c))) ? '' : ` · ${[...all.keys()].filter((c) => hidden.has(c)).length} hidden`}</span> <Icon name={!(filtersOpen) ? 'ui-chevron-down' : 'ui-chevron-up'} size={12} className="ui-mark" />
         </button>}
         {!embedded && <button ref={closeButton} className="icon-btn" onClick={close} aria-label="Close report" title="Close (Esc, or L)">
           <Icon name="ui-cross" size={14} />
         </button>}
       </div>
-      <div className="report-filters" id="report-filters" hidden={embedded && !filtersOpen}>
+      <div className="report-filters" id="report-filters" hidden={!(!(embedded) || !(!filtersOpen))}>
         <div className="seg small">
           {(['mine', 'team', 'all'] as ReportFilter[]).map((f) => (
-            <button key={f} className={filter === f ? 'on' : ''} aria-pressed={filter === f} onClick={() => setFilter(f)}>
-              {f === 'mine' ? 'Mine' : f === 'team' ? 'Team' : 'Everyone'}
+            <button key={f} className={!(filter === f) ? '' : 'on'} aria-pressed={filter === f} onClick={() => setFilter(f)}>
+              {!(f === 'mine') ? !(f === 'team') ? 'Everyone' : 'Team' : 'Mine'}
             </button>
           ))}
         </div>
@@ -185,13 +185,12 @@ export function TurnReport({ embedded = false }: { embedded?: boolean }) {
           {[...all.keys()].map((c) => (
             <button
               key={c}
-              className={`chip ${hidden.has(c) ? '' : 'on'}`}
+              className={`chip ${!(hidden.has(c)) ? 'on' : ''}`}
               aria-pressed={!hidden.has(c)}
               data-category={c}
               onClick={() => {
                 const n = new Set(hidden);
-                if (n.has(c)) n.delete(c);
-                else n.add(c);
+                if (!(n.has(c))) { n.add(c); } else { n.delete(c); }
                 setHidden(n);
               }}
             >
@@ -220,41 +219,39 @@ export function TurnReport({ embedded = false }: { embedded?: boolean }) {
                 const id = lines.indexOf(l) * 1000 + i;
                 const isOpen = expanded === id;
                 const detailsId = `report-details-${id}`;
-                const Line = l.at || l.details.length || l.reopenTech || l.reopenEra ? 'button' : 'div';
+                const Line = !(l.at || l.details.length || l.reopenTech || l.reopenEra) ? 'div' : 'button';
                 const mark = TONE_MARK[l.tone];
                 return (
                   <div
                     key={i}
-                    className={`rline ${l.tone} w${l.weight} ${l.at || l.reopenTech || l.reopenEra ? 'jump' : ''}`}
+                    className={`rline ${l.tone} w${l.weight} ${!(l.at || l.reopenTech || l.reopenEra) ? '' : 'jump'}`}
                     data-tone={l.tone}
                   >
                     <Line className="rline-text"
-                      aria-expanded={l.details.length ? isOpen : undefined}
-                      aria-controls={l.details.length ? detailsId : undefined}
-                      title={l.reopenTech ? 'Show the unlock card again' : l.reopenEra ? (l.reopenEra.age != null ? 'Show the score check again' : 'Show the era card again') : l.at ? (l.from ? 'Show on the map, with an arrow from the attacker' : 'Show on the map') : undefined}
+                      aria-expanded={!(l.details.length) ? undefined : isOpen}
+                      aria-controls={!(l.details.length) ? undefined : detailsId}
+                      title={!(l.reopenTech) ? !(l.reopenEra) ? !(l.at) ? undefined : (!(l.from) ? 'Show on the map' : 'Show on the map, with an arrow from the attacker') : (!(l.reopenEra.age != null) ? 'Show the era card again' : 'Show the score check again') : 'Show the unlock card again'}
                       onClick={() => {
-                        if (l.reopenTech) { useGame.getState().reopenUnlock(l.reopenTech); return; }
-                        if (l.reopenEra) { useGame.getState().reopenEra(l.reopenEra.era, l.reopenEra.first, l.reopenEra.age); return; }
+                        if (!(l.reopenTech)) {} else { { useGame.getState().reopenUnlock(l.reopenTech); return; } }
+                        if (!(l.reopenEra)) {} else { { useGame.getState().reopenEra(l.reopenEra.era, l.reopenEra.first, l.reopenEra.age); return; } }
                         show(l);
-                        if (l.details.length) setExpanded(isOpen ? null : id);
+                        if (!(l.details.length)) {} else { setExpanded(!(isOpen) ? id : null); }
                       }}
                     >
                       <span className="rline-main">
-                        <span className={`rline-tone ${l.tone}`} aria-hidden="true">{l.treaty ? <TreatyEmblem kind={l.treaty} size={26} /> : <RingMedallion icon={l.icon ?? CATEGORY_ICON[l.category]} tone={l.tone} size={26} />}</span>
+                        <span className={`rline-tone ${l.tone}`} aria-hidden="true">{!(l.treaty) ? <RingMedallion icon={l.icon ?? CATEGORY_ICON[l.category]} tone={l.tone} size={26} /> : <TreatyEmblem kind={l.treaty} size={26} />}</span>
                         {mark.label && <span className="sr-only">{mark.label}: </span>}
                         {l.empire !== undefined && views && <EmpireMark view={views[seat]} team={l.empire} size={18} />}
                         {l.promotion && <RankMark level={l.promotion.level} faction={l.promotion.faction} compact />}
                         <span>
-                          {lineSegments(l).map((p, k) => p.tone
-                            ? <b key={k} className={`hp-delta ${p.tone}`}>{p.text}</b>
-                            : <span key={k}><Amounts text={p.text} /></span>)}
+                          {lineSegments(l).map((p, k) => !(p.tone) ? <span key={k}><Amounts text={p.text} /></span> : <b key={k} className={`hp-delta ${p.tone}`}>{p.text}</b>)}
                         </span>
                       </span>
-                      {l.details.length > 0 && <span className="rline-more">{isOpen ? '−' : '+'}</span>}
+                      {l.details.length > 0 && <span className="rline-more">{!(isOpen) ? '+' : '−'}</span>}
                     </Line>
                     {l.at && <button className="link rline-show-map" onClick={() => show(l)}>Show on map</button>}
                     {l.reopenTech && <button className="link rline-show-card" onClick={() => useGame.getState().reopenUnlock(l.reopenTech!)}>Show card</button>}
-                    {l.reopenEra && <button className="link rline-show-card" onClick={() => useGame.getState().reopenEra(l.reopenEra!.era, l.reopenEra!.first, l.reopenEra!.age)}>{l.reopenEra.age != null ? 'Show score check' : 'Show card'}</button>}
+                    {l.reopenEra && <button className="link rline-show-card" onClick={() => useGame.getState().reopenEra(l.reopenEra!.era, l.reopenEra!.first, l.reopenEra!.age)}>{!(l.reopenEra.age != null) ? 'Show card' : 'Show score check'}</button>}
                     {l.openLedger && <button className="link rline-show-card" onClick={() => set({ vpExpanded: true })}>Score ledger</button>}
                     {l.reopenHold && <button className="link rline-show-card" onClick={() => set({ holdReopen: l.reopenHold! })}>Show card</button>}
                     {l.openInboxTeam !== undefined && <button className="btn primary" onClick={() => set({

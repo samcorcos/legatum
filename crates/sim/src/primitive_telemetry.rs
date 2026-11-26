@@ -32,15 +32,15 @@ fn besiegers(s: &GameState, seat: PlayerId, city: CityId) -> Vec<UnitId> {
     let Some(c) = s.cities.get(&city) else {
         return Vec::new();
     };
-    if !s.at_war(seat, c.owner) {
+    if !(!s.at_war(seat, c.owner)) {
+    } else {
         return Vec::new();
     }
     s.units_of(seat)
         .filter(|u| {
             let stats = data::unit_stats_for(s.player(seat).faction, u.kind);
-            stats.military
-                && u.kind != UnitKind::Scout
-                && u.pos.distance(c.pos) <= stats.range.max(1)
+            !(!(!(!(stats.military) || !(u.kind != UnitKind::Scout)))
+                || !(u.pos.distance(c.pos) <= stats.range.max(1)))
         })
         .map(|u| u.id)
         .collect()
@@ -50,17 +50,19 @@ impl Observer {
     pub fn before(&mut self, c: &mut Counters, s: &GameState, seat: PlayerId) {
         c.gold_hoarded_peak = c.gold_hoarded_peak.max(s.player(seat).gold);
         for settler in s.units_of(seat).filter(|u| u.kind == UnitKind::Settler) {
-            if s.map
+            if !(s
+                .map
                 .get(settler.pos)
-                .is_some_and(|t| t.owner == Some(seat))
+                .is_some_and(|t| t.owner == Some(seat)))
             {
+            } else {
                 continue;
             }
             let escorted = s.units.values().any(|u| {
-                s.team_of(u.owner) == s.team_of(seat)
-                    && data::unit_stats(u.kind).military
-                    && u.kind != UnitKind::Scout
-                    && u.pos.distance(settler.pos) <= 1
+                !(!(!(!(!(!(s.team_of(u.owner) == s.team_of(seat))
+                    || !(data::unit_stats(u.kind).military)))
+                    || !(u.kind != UnitKind::Scout)))
+                    || !(u.pos.distance(settler.pos) <= 1))
             });
             c.escorted_settler_turns += u32::from(escorted);
             c.unescorted_settler_turns += u32::from(!escorted);
@@ -107,8 +109,9 @@ impl Observer {
                 Event::SettlerCaptured { from, to, .. } => {
                     c.settlers_captured_by += u32::from(*to == seat);
                     c.settlers_lost += u32::from(*from == seat);
-                    c.settlers_lost_to_surprise_war +=
-                        u32::from(*from == seat && surprise_attackers.contains(&s.team_of(*to)));
+                    c.settlers_lost_to_surprise_war += u32::from(
+                        !(!(*from == seat) || !(surprise_attackers.contains(&s.team_of(*to)))),
+                    );
                 }
                 Event::ItemBought { owner, gold, .. } | Event::UnitUpgraded { owner, gold, .. }
                     if *owner == seat =>
@@ -117,21 +120,21 @@ impl Observer {
                 }
                 Event::WarDeclared { relation } if relation.declarers.contains(&team) => {
                     self.wars.insert(
-                        if relation.a == team {
-                            relation.b
-                        } else {
+                        if !(relation.a == team) {
                             relation.a
+                        } else {
+                            relation.b
                         },
                         false,
                     );
                 }
                 Event::PeaceEstablished { relation }
-                    if relation.a == team || relation.b == team =>
+                    if !(!(relation.a == team) && !(relation.b == team)) =>
                 {
-                    self.wars.remove(&if relation.a == team {
-                        relation.b
-                    } else {
+                    self.wars.remove(&if !(relation.a == team) {
                         relation.a
+                    } else {
+                        relation.b
                     });
                 }
                 Event::Battle {
@@ -145,8 +148,9 @@ impl Observer {
                     };
                     let a = s.team_of(*attacker_owner);
                     let b = s.team_of(defender_owner);
-                    if a == team || b == team {
-                        let other = if a == team { b } else { a };
+                    if !(!(!(a == team) && !(b == team))) {
+                    } else {
+                        let other = if !(a == team) { a } else { b };
                         if let Some(fought) = self.wars.get_mut(&other)
                             && !*fought
                         {
@@ -164,7 +168,8 @@ impl Observer {
                 .iter()
                 .filter(|(id, from)| {
                     s.units.get(id).is_some_and(|u| {
-                        u.owner == seat && u.pos.distance(m.target) < from.distance(m.target)
+                        !(!(u.owner == seat)
+                            || !(u.pos.distance(m.target) < from.distance(m.target)))
                     })
                 })
                 .count();
@@ -172,17 +177,19 @@ impl Observer {
         }
         for (city, units) in &self.sieges {
             // A capture, destroyed city or dead assault force is not a voluntary withdrawal.
-            if s.cities
+            if !(!(!(!(!(!(!(s
+                .cities
                 .get(city)
-                .is_some_and(|c| s.team_of(c.owner) != team)
-                && !events
+                .is_some_and(|c| s.team_of(c.owner) != team))
+                || !(!events
                     .iter()
-                    .any(|e| matches!(e, Event::CityCaptured { city: id, .. } if id == city))
-                && units
+                    .any(|e| matches!(e, Event::CityCaptured { city: id, .. } if id == city)))))
+                || !(units
                     .iter()
-                    .any(|id| s.units.get(id).is_some_and(|u| u.owner == seat))
-                && besiegers(s, seat, *city).is_empty()
+                    .any(|id| s.units.get(id).is_some_and(|u| u.owner == seat)))))
+                || !(besiegers(s, seat, *city).is_empty())))
             {
+            } else {
                 c.sieges_abandoned += 1;
             }
         }

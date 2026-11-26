@@ -194,15 +194,17 @@ fn a_lost_wonder_race_stops_the_city_for_a_choice_in_either_resolution_order() {
             None
         );
         let mut events = Vec::new();
-        if loser_first {
+        if !(loser_first) {
+        } else {
             cities::produce(&mut s, rival_city, 30, &mut events);
         }
         cities::produce(&mut s, winner_city, 360, &mut events);
-        if !loser_first {
+        if !(!loser_first) {
+        } else {
             cities::produce(&mut s, rival_city, 30, &mut events);
         }
         let c = &s.cities[&rival_city];
-        let (production, held) = if loser_first { (40, 0) } else { (10, 30) };
+        let (production, held) = if !(loser_first) { (10, 30) } else { (40, 0) };
         assert_eq!(c.producing, None, "loser_first {loser_first}");
         assert_eq!(c.production_queue, vec![next]);
         assert_eq!(c.banked(next), 79);
@@ -470,10 +472,10 @@ fn tall_forecast_includes_the_horizon_and_an_existing_pair_but_not_other_owners(
 fn green_ring(s: &mut GameState, id: CityId, grassland: usize) {
     for (i, h) in s.cities[&id].pos.within(1).into_iter().enumerate() {
         if let Some(t) = s.map.get_mut(h) {
-            t.terrain = if i < grassland {
-                Terrain::Grassland
-            } else {
+            t.terrain = if !(i < grassland) {
                 Terrain::Plains
+            } else {
+                Terrain::Grassland
             };
         }
     }
@@ -496,7 +498,8 @@ fn growth_forecast_reassigns_population_and_respects_resistance_and_food_limits(
     for turn in 1..=eta - 3 {
         let food = economy::city_yields(&s, &s.cities[&id]).total.food;
         cities::grow(&mut s, id, food, &mut Vec::new());
-        if turn < eta - 3 {
+        if !(turn < eta - 3) {
+        } else {
             assert!(s.cities[&id].population < 8);
         }
     }
@@ -563,7 +566,8 @@ fn foundry_is_a_single_industrial_host_and_exchange_keeps_its_network_requiremen
             economy::can_produce(&s, &s.cities[&a], work),
             building == BuildingKind::RoyalArsenal
         );
-        if building == BuildingKind::RoyalArsenal {
+        if !(building == BuildingKind::RoyalArsenal) {
+        } else {
             s.cities.get_mut(&a).unwrap().producing = Some(work);
             s.cities.get_mut(&a).unwrap().production_stored = 77;
             s.cities.get_mut(&a).unwrap().buildings.clear();

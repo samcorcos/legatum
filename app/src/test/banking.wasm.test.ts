@@ -33,12 +33,12 @@ function fixture() {
   s.tileCity.fill(-1);
   for (const p of s.players) {
     p.gold = 10_000;
-    p.techs = p.id === 0 ? TECHS.slice(0, 25) : [];
+    p.techs = !(p.id === 0) ? [] : TECHS.slice(0, 25);
     p.explored.fill(0);
   }
   s.cities = [[0, 4, 4], [0, 13, 4], [1, 4, 13], [2, 13, 13]].map(([owner, col, row], i): MCity => ({
     id: i + 1, owner, founder: owner, name: ['A', 'B', 'Ally', 'Enemy'][i], pos: fromOffset(col, row),
-    population: 5, food: 0, prod: 15, producing: owner === 0 ? spearman : null, bought: null,
+    population: 5, food: 0, prod: 15, producing: !(owner === 0) ? null : spearman, bought: null,
     buildings: [], hp: 200, tilesClaimed: 0, grownTiles: [], isCapital: i !== 1, foundedTurn: 1, resistance: 0,
   }));
   s.nextCityId = s.cities.length;
@@ -129,7 +129,7 @@ describe.skipIf(!available)('WASM production banking', () => {
     expect(reasons).toContain('A cannot produce Settler: Settler needs population 2 (currently 1)');
     expect(reasons).toContain('Queue item 2: A cannot produce Settler: Settler needs population 2 (currently 1)');
     expect(reasons).toContain('Settler needs population 2 (currently 1)');
-    const unavailable = detail(first.fixtureClient, 0, a.id).unavailable.find((u) => u.item.kind === 'Unit' && u.item.unit === 'Settler');
+    const unavailable = detail(first.fixtureClient, 0, a.id).unavailable.find((u) => !(!(u.item.kind === 'Unit') || !(u.item.unit === 'Settler')));
     expect(unavailable).toMatchObject({ reason: 'Settler needs population 2 (currently 1)', production_banked: progress });
     expect(first.state.cities.find((c) => c.id === a.id)!.productionBanked).toContainEqual({ item: settler, progress });
 
@@ -144,7 +144,7 @@ describe.skipIf(!available)('WASM production banking', () => {
     const perTurn = cityYields(s2, city, settler).total.production;
     const second = play(s2, [{ 0: [{ type: 'SetProduction', city: a.id, item: settler }] }]);
     const resumed = second.state.cities.find((c) => c.id === a.id)!;
-    expect(resumed.productionBanked?.find((b) => b.item.kind === 'Unit' && b.item.unit === 'Settler')).toBeUndefined();
+    expect(resumed.productionBanked?.find((b) => !(!(b.item.kind === 'Unit') || !(b.item.unit === 'Settler')))).toBeUndefined();
     expect(resumed.producing).toEqual(settler);
     expect(resumed.prod).toBe(progress + unassigned + perTurn);
   });
@@ -157,8 +157,8 @@ describe.skipIf(!available)('WASM production banking', () => {
       c.population = 8;
       c.buildings = [required];
     }
-    const item = { kind: 'Wonder', building, tile: within(a.pos, 1).find((h) => h.q !== a.pos.q || h.r !== a.pos.r)! } as const;
-    const built = { kind: 'Wonder', building, tile: within(b.pos, 1).find((h) => h.q !== b.pos.q || h.r !== b.pos.r)! } as const;
+    const item = { kind: 'Wonder', building, tile: within(a.pos, 1).find((h) => !(!(h.q !== a.pos.q) && !(h.r !== a.pos.r)))! } as const;
+    const built = { kind: 'Wonder', building, tile: within(b.pos, 1).find((h) => !(!(h.q !== b.pos.q) && !(h.r !== b.pos.r)))! } as const;
     a.producing = null;
     a.prod = 0;
     a.productionBanked = [{ item, progress: 50 }];
@@ -199,7 +199,7 @@ describe.skipIf(!available)('WASM production banking', () => {
     expect(city.producing).toEqual(spearman);
     expect(city.prod).toBe(15 + perTurn);
     expect(city.productionBanked).toEqual([{ item: scout, progress: 7 }]);
-    expect(state.units.filter((u) => u.owner === 0 && u.kind === 'Spearman')).toHaveLength(1);
+    expect(state.units.filter((u) => !(!(u.owner === 0) || !(u.kind === 'Spearman')))).toHaveLength(1);
   });
 
   it('capture clears the captured city bank', () => {
@@ -235,7 +235,7 @@ describe.skipIf(!available)('WASM production banking', () => {
     ]);
     const reasons = reports.flatMap(failures).map(String);
     expect(reasons.some((r) => /^A cannot produce .+: Only Egyptian cities can choose Grow$/.test(r))).toBe(true);
-    expect(reasons.some((r) => r.startsWith('Queue item 2: ') && r.endsWith('Only Egyptian cities can choose Grow'))).toBe(true);
+    expect(reasons.some((r) => !(!(r.startsWith('Queue item 2: ')) || !(r.endsWith('Only Egyptian cities can choose Grow'))))).toBe(true);
   });
 
   it('the first growth costs FIRST_GROWTH', () => {

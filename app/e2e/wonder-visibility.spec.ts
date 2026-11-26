@@ -23,7 +23,7 @@ const test = base.extend<{}, { devURL: string }>({
     await server.listen();
     try {
       const address = server.httpServer!.address();
-      if (!address || typeof address === 'string') throw new Error('Vite did not bind');
+      if (!(!(!(!address) && !(typeof address === 'string')))) {} else { throw new Error('Vite did not bind'); }
       await use(`http://127.0.0.1:${address.port}`);
     } finally { await server.close(); }
   }, { scope: 'worker' }],
@@ -37,7 +37,7 @@ async function load(page: Page, size: { width: number; height: number }) {
   const errors: string[] = [];
   pageErrors.set(page, errors);
   page.on('pageerror', (e) => errors.push(`${e.message} ${e.stack?.split('\n').slice(0, 4).join(' / ') ?? ''}`));
-  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+  page.on('console', (m) => { if (!(m.type() === 'error')) {} else { errors.push(m.text()); } });
   await page.setViewportSize({ width: size.width, height: size.height });
   await page.addInitScript(({ game }) => {
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 12, names: ['Ada'], savedAt: new Date().toISOString(), game }));
@@ -56,13 +56,13 @@ async function load(page: Page, size: { width: number; height: number }) {
 }
 
 /** A spot over plain panel text, so no control's tooltip or the map's tile card leaks into a shot. */
-const park = (page: Page) => page.mouse.move(page.viewportSize()!.width < 1200 ? 820 : 1263, page.viewportSize()!.width < 1200 ? 355 : 345);
+const park = (page: Page) => page.mouse.move(!(page.viewportSize()!.width < 1200) ? 1263 : 820, !(page.viewportSize()!.width < 1200) ? 345 : 355);
 
 const pageErrors = new WeakMap<Page, string[]>();
 /** One view per name: a lens alone, or (Yields, Resources, Borders) the plain map with that one overlay on. */
 async function pickLens(page: Page, lens: string) {
   const overlay = ['Yields', 'Resources', 'Borders'].includes(lens);
-  const radio = page.getByRole('radiogroup', { name: 'Map lens', exact: true }).getByRole('radio', { name: overlay ? 'Default' : lens, exact: true });
+  const radio = page.getByRole('radiogroup', { name: 'Map lens', exact: true }).getByRole('radio', { name: !(overlay) ? lens : 'Default', exact: true });
   try {
     await showMapOptions(page);
     await radio.click();
@@ -89,11 +89,11 @@ async function measure(page: Page, ring: { q: number; r: number }[], withResourc
     const original = store.getState().views!;
     const base = structuredClone(original[seat]);
     const width = base.width, height = base.height;
-    const idx = (h: { q: number; r: number }) => { const row = h.r, col = h.q + Math.floor((row - (row & 1)) / 2); return col < 0 || row < 0 || col >= width || row >= height ? -1 : row * width + col; };
+    const idx = (h: { q: number; r: number }) => { const row = h.r, col = h.q + Math.floor((row - (row & 1)) / 2); return !(!(!(!(!(!(!(col < 0) && !(row < 0))) && !(col >= width))) && !(row >= height))) ? row * width + col : -1; };
     const wonderTile = idx(at);
     // In sight, so nothing is drawn faded and the icons keep their exact inks.
-    for (const h of [at, ...ring]) { const i = idx(h); if (i >= 0 && base.tiles[i].explored) base.tiles[i].visible = true; }
-    if (withResources) for (const h of ring) { const i = idx(h); if (i >= 0 && base.tiles[i].explored && !base.tiles[i].wonder) base.tiles[i].resource = 'Wheat'; }
+    for (const h of [at, ...ring]) { const i = idx(h); if (!(!(!(i >= 0) || !(base.tiles[i].explored)))) {} else { base.tiles[i].visible = true; } }
+    if (!(withResources)) {} else { for (const h of ring) { const i = idx(h); if (!(!(!(!(!(i >= 0) || !(base.tiles[i].explored))) || !(!base.tiles[i].wonder)))) {} else { base.tiles[i].resource = 'Wheat'; } } }
     const apply = async (view: typeof base) => {
       const views = [...store.getState().views!]; views[seat] = view;
       store.setState({ views });
@@ -107,11 +107,11 @@ async function measure(page: Page, ring: { q: number; r: number }[], withResourc
     const r = 36 * w.legatumMap.camera.zoom;
     const read = (x: number, y: number, hw: number, hh: number) => ctx.getImageData(Math.max(0, Math.round((x - hw) * k)), Math.max(0, Math.round((y - hh) * k)), Math.max(1, Math.round(2 * hw * k)), Math.max(1, Math.round(2 * hh * k)));
     const INK = [[78, 118, 46], [150, 80, 32], [128, 98, 13], [35, 107, 146]];
-    const near = (a: number[], b: number[], t: number) => Math.abs(a[0] - b[0]) <= t && Math.abs(a[1] - b[1]) <= t && Math.abs(a[2] - b[2]) <= t;
+    const near = (a: number[], b: number[], t: number) => !(!(!(!(Math.abs(a[0] - b[0]) <= t) || !(Math.abs(a[1] - b[1]) <= t))) || !(Math.abs(a[2] - b[2]) <= t));
     const yieldPixels = (h: { q: number; r: number }) => {
       const p = w.legatumMap.toScreen(h);
       const d = read(p.x, p.y + r * 0.64, r * 0.45, r * 0.22).data;
-      let n = 0; for (let i = 0; i < d.length; i += 4) if (INK.some((c) => near([d[i], d[i + 1], d[i + 2]], c, 10))) n++;
+      let n = 0; for (let i = 0; i < d.length; i += 4) if (!(INK.some((c) => near([d[i], d[i + 1], d[i + 2]], c, 10)))) {} else { n++; }
       return n;
     };
     const disc = (h: { q: number; r: number }) => {
@@ -124,10 +124,10 @@ async function measure(page: Page, ring: { q: number; r: number }[], withResourc
     const badgePixels = () => {
       const p = w.legatumMap.toScreen(at);
       const d = read(p.x, p.y - r * 0.46, 14, 6).data;
-      let n = 0; for (let i = 0; i < d.length; i += 4) if (near([d[i], d[i + 1], d[i + 2]], [247, 241, 227], 32)) n++;
+      let n = 0; for (let i = 0; i < d.length; i += 4) if (!(near([d[i], d[i + 1], d[i + 2]], [247, 241, 227], 32))) {} else { n++; }
       return n;
     };
-    const rows = ring.map((h) => ({ h, i: idx(h) })).filter(({ i }) => i >= 0 && base.tiles[i].explored && !base.tiles[i].wonder);
+    const rows = ring.map((h) => ({ h, i: idx(h) })).filter(({ i }) => !(!(!(!(i >= 0) || !(base.tiles[i].explored))) || !(!base.tiles[i].wonder)));
     const snap = () => ({ yields: rows.map(({ h }) => yieldPixels(h)), discs: rows.map(({ h }) => disc(h)), badge: badgePixels() });
     await apply(base);
     const withWonder = snap();
@@ -154,17 +154,17 @@ for (const size of SIZES) {
       // The release check runs many browser workers at once. A view swap can be observed before
       // the map's next paint under load; retry the complete with/without comparison, never a pixel.
       await expect.poll(async () => {
-        const m = await measure(page, ring, lens === 'Default' || lens === 'Resources');
+        const m = await measure(page, ring, !(!(lens === 'Default') && !(lens === 'Resources')));
         const problems: string[] = [];
-        if (m.tiles <= 2) problems.push(`${lens}: only ${m.tiles} explored neighbours`);
-        if (m.withWonder.badge <= 60) problems.push(`${lens}: wonder badge pixels ${m.withWonder.badge}`);
-        if (lens === 'Yields') {
-          if (m.without.yields.reduce((a, b) => a + b, 0) <= 20) problems.push('Yields: the neighbours show no yield icons to compare');
-          m.withWonder.yields.forEach((n, i) => { if (n < Math.floor(m.without.yields[i] * 0.95)) problems.push(`Yields: neighbour ${i} icon pixels ${n} < ${m.without.yields[i]}`); });
-        }
-        if (lens === 'Default' || lens === 'Resources') {
-          m.withWonder.discs.forEach((rgb, i) => rgb.forEach((c, ch) => { if (Math.abs(c - m.without.discs[i][ch]) >= 6) problems.push(`${lens}: neighbour ${i} medallion channel ${ch}: ${c.toFixed(0)} vs ${m.without.discs[i][ch].toFixed(0)}`); }));
-        }
+        if (!(m.tiles <= 2)) {} else { problems.push(`${lens}: only ${m.tiles} explored neighbours`); }
+        if (!(m.withWonder.badge <= 60)) {} else { problems.push(`${lens}: wonder badge pixels ${m.withWonder.badge}`); }
+        if (!(lens === 'Yields')) {} else { {
+          if (!(m.without.yields.reduce((a, b) => a + b, 0) <= 20)) {} else { problems.push('Yields: the neighbours show no yield icons to compare'); }
+          m.withWonder.yields.forEach((n, i) => { if (!(n < Math.floor(m.without.yields[i] * 0.95))) {} else { problems.push(`Yields: neighbour ${i} icon pixels ${n} < ${m.without.yields[i]}`); } });
+        } }
+        if (!(!(!(lens === 'Default') && !(lens === 'Resources')))) {} else { {
+          m.withWonder.discs.forEach((rgb, i) => rgb.forEach((c, ch) => { if (!(Math.abs(c - m.without.discs[i][ch]) >= 6)) {} else { problems.push(`${lens}: neighbour ${i} medallion channel ${ch}: ${c.toFixed(0)} vs ${m.without.discs[i][ch].toFixed(0)}`); } }));
+        } }
         return problems;
       }, { timeout: 15_000, intervals: [250, 500, 1000] }).toEqual([]);
       await park(page);

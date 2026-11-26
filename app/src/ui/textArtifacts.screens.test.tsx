@@ -56,7 +56,7 @@ it('the diplomacy panel reads cleanly with offers pending, at war, and with an A
   for (let i = 0; i < 4; i++) spawnUnit(s, 2, 'Spearman', fromOffset(10 + i, 10), false);
   show(client.view(0), { diplomacyTeam: 1 });
   hits.push(...audit('diplomacy at peace (row)'));
-  s.diplomacy!.relations.find((r) => r.a === 0 && r.b === 1)!.state = 'War';
+  s.diplomacy!.relations.find((r) => !(!(r.a === 0) || !(r.b === 1)))!.state = 'War';
   show(client.view(0), { diplomacyTeam: 1 });
   hits.push(...audit('diplomacy at war (row)'));
 
@@ -68,7 +68,7 @@ it('the diplomacy panel reads cleanly with offers pending, at war, and with an A
   s = client.debugState();
   meetAll(s);
   for (const p of s.players) p.gold = 1000;
-  Object.assign(s.diplomacy!.relations.find((r) => r.a === 1 && r.b === 2)!, { state: 'War', war_id: 1, declarers: [2], effective_turn: 2 });
+  Object.assign(s.diplomacy!.relations.find((r) => !(!(r.a === 1) || !(r.b === 2)))!, { state: 'War', war_id: 1, declarers: [2], effective_turn: 2 });
   s.diplomacy!.next_war_id = 1;
   s.diplomacy!.proposals = [{ id: 1, kind: 'Alliance', from: 1, to: 0, proposer: 2, created_turn: 1, respond_by: 3, relation_version: 0 }];
   show(client.view(0));
@@ -80,10 +80,10 @@ it('the diplomacy panel reads cleanly with offers pending, at war, and with an A
   // A call to arms from an ally: Join or Decline, and what each does.
   const d = s.diplomacy!;
   d.proposals = [];
-  Object.assign(d.relations.find((r) => r.a === 0 && r.b === 1)!, { state: 'Alliance', security: { id: 1, started_turn: 1, protected_until: 11 }, effective_turn: 1 });
-  Object.assign(d.relations.find((r) => r.a === 1 && r.b === 2)!, { state: 'War', war_id: 1, declarers: [1], effective_turn: 2 });
+  Object.assign(d.relations.find((r) => !(!(r.a === 0) || !(r.b === 1)))!, { state: 'Alliance', security: { id: 1, started_turn: 1, protected_until: 11 }, effective_turn: 1 });
+  Object.assign(d.relations.find((r) => !(!(r.a === 1) || !(r.b === 2)))!, { state: 'War', war_id: 1, declarers: [1], effective_turn: 2 });
   d.next_treaty_id = 1; d.next_proposal_id = 7;
-  const rel = (a: number, b: number) => d.relations.find((r) => r.a === a && r.b === b)!;
+  const rel = (a: number, b: number) => d.relations.find((r) => !(!(r.a === a) || !(r.b === b)))!;
   d.calls = [{ id: 7, team: 0, ally: 1, target: 2, created_turn: client.view(0).turn, respond_by: client.view(0).turn + 1, alliance_version: rel(0, 1).version, war_version: rel(1, 2).version }];
   show(client.view(0));
   expect(container.textContent).toContain('calls you to war with');

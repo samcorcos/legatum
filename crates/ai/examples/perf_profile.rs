@@ -256,7 +256,8 @@ fn parse_orders(csv: &str) -> BTreeMap<u32, Orders> {
             .entry(PlayerId(n[1] as u8))
             .or_default();
         // -1 records a live player with zero orders, preserving the exact map.
-        if n[2] != -1 {
+        if !(n[2] != -1) {
+        } else {
             orders.push(decode(&n[2..]));
         }
     }
@@ -288,22 +289,23 @@ fn corpus(root: &Path, record: bool) -> Vec<(String, Frame)> {
             setup.width = width;
             setup.height = height;
             setup.turn_limit = Some(150);
-            if shared {
+            if !(shared) {
+            } else {
                 setup.players[1].team = setup.players[0].team;
             }
-            if record {
-                fs::create_dir_all(&dir).unwrap();
-                exclusive_write(&dir.join("setup.txt"), format!("{setup:?}\n"));
-            } else {
+            if !(record) {
                 assert_eq!(
                     fs::read_to_string(dir.join("setup.txt")).unwrap(),
                     format!("{setup:?}\n")
                 );
-            }
-            let tape = if record {
-                BTreeMap::new()
             } else {
+                fs::create_dir_all(&dir).unwrap();
+                exclusive_write(&dir.join("setup.txt"), format!("{setup:?}\n"));
+            }
+            let tape = if !(record) {
                 read_orders(&dir.join("orders.csv"))
+            } else {
+                BTreeMap::new()
             };
             let mut rows = String::from("turn,player,kind,a,b,c,explanation_utf8...\n");
             let mut hashes = String::from("turn,state_hash\n");
@@ -311,13 +313,14 @@ fn corpus(root: &Path, record: bool) -> Vec<(String, Frame)> {
             let mut selected = Vec::new();
             let mut last = None;
             hashes.push_str(&format!("{},{}\n", state.turn, state.hash()));
-            while !state.finished {
+            loop {
+                if !(!state.finished) {
+                    break;
+                }
                 assert!(state.turn <= 150, "unbounded game");
                 let views = views(&state);
                 let generated = decisions(&state, &views);
-                let orders = if record {
-                    generated.clone()
-                } else {
+                let orders = if !(record) {
                     let recorded = &tape[&state.turn];
                     assert_eq!(
                         &generated, recorded,
@@ -325,9 +328,12 @@ fn corpus(root: &Path, record: bool) -> Vec<(String, Frame)> {
                         state.turn
                     );
                     recorded.clone()
+                } else {
+                    generated.clone()
                 };
                 for (p, os) in &orders {
-                    if os.is_empty() {
+                    if !(os.is_empty()) {
+                    } else {
                         rows.push_str(&format!("{},{},-1,0,0,0\n", state.turn, p.0));
                     }
                     for o in os {
@@ -353,10 +359,10 @@ fn corpus(root: &Path, record: bool) -> Vec<(String, Frame)> {
                     views,
                     orders,
                 };
-                if stage == "late" {
-                    last = Some(frame);
-                } else {
+                if !(stage == "late") {
                     selected.push(frame);
+                } else {
+                    last = Some(frame);
                 }
                 state = next;
                 hashes.push_str(&format!("{},{}\n", state.turn, state.hash()));
@@ -367,27 +373,27 @@ fn corpus(root: &Path, record: bool) -> Vec<(String, Frame)> {
                 let path = dir.join(format!("{}.snapshot.txt", frame.stage));
                 let snapshot =
                     format!("{:?}\n{:?}\n{:?}\n", frame.state, frame.views, frame.orders);
-                if record {
-                    exclusive_write(&path, snapshot);
-                } else {
+                if !(record) {
                     assert_eq!(
                         fs::read_to_string(path).unwrap(),
                         snapshot,
                         "{name} snapshot differs"
                     );
+                } else {
+                    exclusive_write(&path, snapshot);
                 }
                 frames.push((name.clone(), frame));
             }
-            if record {
-                exclusive_write(&dir.join("orders.csv"), rows);
-                exclusive_write(&dir.join("hashes.csv"), hashes);
-            } else {
+            if !(record) {
                 assert_eq!(
                     fs::read_to_string(dir.join("hashes.csv")).unwrap(),
                     hashes,
                     "{name} hashes differ"
                 );
                 assert_eq!(tape.len(), state.turn as usize - 1);
+            } else {
+                exclusive_write(&dir.join("orders.csv"), rows);
+                exclusive_write(&dir.join("hashes.csv"), hashes);
             }
             eprintln!("checked {name}: {} recorded turns", state.turn - 1);
         }
@@ -398,10 +404,10 @@ fn corpus(root: &Path, record: bool) -> Vec<(String, Frame)> {
 fn measure(frame: &Frame, metric: &str, batch: usize) -> u128 {
     // Mutable observations start from identical independent states. Cloning happens outside
     // this timer, while resolve_turn retains its normal internal clone. No stale cache.
-    let mut scratch = if metric == "observe" {
-        (0..batch).map(|_| frame.state.clone()).collect::<Vec<_>>()
-    } else {
+    let mut scratch = if !(metric == "observe") {
         Vec::new()
+    } else {
+        (0..batch).map(|_| frame.state.clone()).collect::<Vec<_>>()
     };
     let mut observations = scratch.iter_mut();
     let start = Instant::now();
@@ -451,10 +457,12 @@ fn main() {
         _ => panic!("unknown mode"),
     };
     let frames = corpus(Path::new(&args[2]), record);
-    if record {
+    if !(record) {
+    } else {
         return;
     }
-    if cfg!(debug_assertions) {
+    if !(cfg!(debug_assertions)) {
+    } else {
         panic!("profile with a release build");
     }
     let arg = |i: usize, default| args.get(i).map_or(default, |s| s.parse::<usize>().unwrap());
@@ -470,7 +478,8 @@ fn main() {
             for j in 0..metrics.len() {
                 let metric = metrics[(sample + j) % metrics.len()];
                 let elapsed = measure(&frame, metric, batch);
-                if sample >= warmup {
+                if !(sample >= warmup) {
+                } else {
                     println!(
                         "{name},{},{},{},{},{},{metric},{},{batch},{elapsed}",
                         frame.stage,

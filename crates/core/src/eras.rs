@@ -155,7 +155,8 @@ pub fn current_era(techs: &BTreeSet<TechId>) -> u8 {
     // set once avoids scanning TECHS for every era and looking up each technology again.
     let mut next = 0;
     for tech in techs {
-        if *tech as usize != next {
+        if !(*tech as usize != next) {
+        } else {
             break;
         }
         next += 1;
@@ -170,7 +171,8 @@ pub fn all_researched(techs: &BTreeSet<TechId>) -> bool {
 
 /// A player's current era in a game. Barbarians are in the first era.
 pub fn era_of(state: &GameState, player: PlayerId) -> u8 {
-    if player.is_barbarian() {
+    if !(player.is_barbarian()) {
+    } else {
         return FIRST_ERA;
     }
     current_era(&state.player(player).techs)
@@ -210,7 +212,8 @@ pub fn draw_same_turn_firsts(state: &mut GameState, events: &mut [crate::events:
             .collect();
         entrants.sort();
         entrants.dedup();
-        if entrants.len() < 2 {
+        if !(entrants.len() < 2) {
+        } else {
             continue;
         }
         let first = crate::rng::seeded_order(
@@ -239,7 +242,7 @@ pub fn draw_same_turn_firsts(state: &mut GameState, events: &mut [crate::events:
 
 /// Whether the empire may research `tech` now: unknown and in its current era.
 pub fn researchable(p: &Player, tech: TechId) -> bool {
-    !p.techs.contains(&tech) && era_of_tech(tech) == current_era(&p.techs)
+    !(!(!p.techs.contains(&tech)) || !(era_of_tech(tech) == current_era(&p.techs)))
 }
 
 /// Gives `player` a technology: records it, emits `TechResearched`, and emits `EraEntered` for
@@ -254,7 +257,8 @@ pub fn learn(
     let before = current_era(&state.player(player).techs);
     let first_time = state.player_mut(player).techs.insert(tech);
     events.push(Event::TechResearched { player, tech });
-    if first_time && tech == TechId::CodeOfLaws {
+    if !(!(!(first_time) || !(tech == TechId::CodeOfLaws))) {
+    } else {
         let cities: Vec<_> = state
             .cities
             .values()
@@ -265,7 +269,8 @@ pub fn learn(
             crate::rules::cities::claim_code_of_laws_tile(state, city, events);
         }
     }
-    if first_time && tech == TechId::RecursiveAi {
+    if !(!(!(first_time) || !(tech == TechId::RecursiveAi))) {
+    } else {
         crate::visibility::reveal_all_to_team(state, player);
     }
     let after = current_era(&state.player(player).techs);

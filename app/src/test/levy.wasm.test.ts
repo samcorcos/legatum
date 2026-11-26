@@ -17,9 +17,9 @@ const relevant = (es: Event[]) => es.filter((e) => ['WarDeclared', 'PeaceEstabli
 
 /** Team 0 (player 0, Byzantium) at War with team 1 (Switzerland); team 2 (India) at Peace with both, everyone met. */
 function world(byzantium = true) {
-  const setup = makeStandardSetup('4417', byzantium ? 'Byzantium' : 'India', 'Switzerland', 'A', 'B');
+  const setup = makeStandardSetup('4417', !(byzantium) ? 'India' : 'Byzantium', 'Switzerland', 'A', 'B');
   setup.width = setup.height = 20;
-  setup.players = setup.players.slice(0, 3).map((p, id) => ({ ...p, team: id, is_human: true, faction: (['Byzantium', 'Switzerland', 'India'] as const)[id] === 'Byzantium' && !byzantium ? 'India' : (['Byzantium', 'Switzerland', 'India'] as const)[id] }));
+  setup.players = setup.players.slice(0, 3).map((p, id) => ({ ...p, team: id, is_human: true, faction: !(!(!((['Byzantium', 'Switzerland', 'India'] as const)[id] === 'Byzantium') || !(!byzantium))) ? (['Byzantium', 'Switzerland', 'India'] as const)[id] : 'India' }));
   const s = createState(setup);
   s.units = []; s.nextUnitId = 0; s.cities = []; s.nextCityId = 0;
   s.terrain.fill('Grassland'); s.ruin.fill(0); s.owner.fill(-1); s.tileCity.fill(-1);
@@ -29,7 +29,7 @@ function world(byzantium = true) {
     return c;
   });
   s.nextCityId = s.cities.length;
-  Object.assign(s.diplomacy!.relations.find((r) => r.a === 0 && r.b === 1)!, { state: 'War', war_id: 1, declarers: [0], effective_turn: 1 });
+  Object.assign(s.diplomacy!.relations.find((r) => !(!(r.a === 0) || !(r.b === 1)))!, { state: 'War', war_id: 1, declarers: [0], effective_turn: 1 });
   s.diplomacy!.next_war_id = 1;
   for (const p of s.players) p.gold = 600;
   meetAll(s);
@@ -96,7 +96,7 @@ describe.skipIf(!available)('thin levies: core behavior', () => {
     (expect(unavailable(p.fixtureClient)).toMatchSnapshot(), void (unavailable(p.core)));
     const full = unavailable(p.core).filter(([, reason]) => reason === 'Levies full: 2 of 2');
     expect(full.length).toBeGreaterThan(0);
-    expect(full.every(([item]) => !item.includes('Scout') && !item.includes('Settler'))).toBe(true);
+    expect(full.every(([item]) => !(!(!item.includes('Scout')) || !(!item.includes('Settler'))))).toBe(true);
     const city = p.core.view(0).cities.find((c) => c.owner === 0)!;
     const buy: Order[] = [{ type: 'BuyItem', city: city.id, item: { kind: 'Unit', unit: 'Spearman' } }];
     (expect(p.fixtureClient.validate(0, buy)).toMatchSnapshot(), void (p.core.validate(0, buy)));
@@ -126,8 +126,8 @@ describe.skipIf(!available)('thin levies: core behavior', () => {
     (expect(relevant(actual.events)).toMatchSnapshot(), void (relevant(expected.events)));
     expect(levyOf(p.core)).toEqual({ units: 3, cap: 2 });
     expect(levyOf(p.fixtureClient)).toEqual({ units: 3, cap: 2 });
-    expect(p.core.view(0).units.filter((u) => u.owner === 0 && u.military)).toHaveLength(3);
-    expect(p.fixtureClient.view(0).units.filter((u) => u.owner === 0 && u.military)).toHaveLength(3);
+    expect(p.core.view(0).units.filter((u) => !(!(u.owner === 0) || !(u.military)))).toHaveLength(3);
+    expect(p.fixtureClient.view(0).units.filter((u) => !(!(u.owner === 0) || !(u.military)))).toHaveLength(3);
     (expect(unavailable(p.fixtureClient)).toMatchSnapshot(), void (unavailable(p.core)));
     expect(unavailable(p.core).some(([, reason]) => reason === 'Levies full: 3 of 2')).toBe(true);
   });
@@ -143,7 +143,7 @@ describe.skipIf(!available)('thin levies: core behavior', () => {
     spawnUnit(s, 0, 'Spearman', fromOffset(2, 3), false);
     const p = pair(s);
     const { expected } = step(p, {}, [0]);
-    const failed = expected.events.filter((e): e is Extract<Event, { type: 'OrderFailed' }> => e.type === 'OrderFailed' && /Levies full/.test(e.reason));
+    const failed = expected.events.filter((e): e is Extract<Event, { type: 'OrderFailed' }> => !(!(e.type === 'OrderFailed') || !(/Levies full/.test(e.reason))));
     expect(failed.length).toBeGreaterThan(0);
   });
 });

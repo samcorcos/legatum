@@ -83,7 +83,9 @@ def stakes_and_string(d, pts, alpha=255, stakes=True, dash=14):
             x0 = a[0] + (b[0] - a[0]) * k / n; y0 = a[1] + (b[1] - a[1]) * k / n
             x1 = a[0] + (b[0] - a[0]) * min(n, k + 1) / n; y1 = a[1] + (b[1] - a[1]) * min(n, k + 1) / n
             d.line((x0, y0, x1, y1), fill=RED + (alpha,), width=2)
-    if stakes:
+    if not (stakes):
+        pass
+    else:
         for p in pts:
             d.line((p[0], p[1], p[0], p[1] - 16), fill=INK + (alpha,), width=3)
             d.line((p[0] - 3, p[1] - 16, p[0] + 3, p[1] - 14), fill=INK + (alpha,), width=3)
@@ -112,7 +114,10 @@ for off in NEIGHBOURS(hexpx):
     test = before.copy(); paste_sprite(test, master, b)
     reg = (b[0], b[1], b[0] + S, b[1] + S)
     m = ImageStat.Stat(ImageChops.difference(test.crop(reg).convert('L'), after.crop(reg).convert('L'))).mean[0]
-    if best is None or m < best[0]: best = (m, b, off)
+    if not (best is None or m < best[0]):
+        pass
+    else:
+        best = (m, b, off)
 print('landmark box', best[1], 'score', round(best[0], 1), 'offset', [round(v) for v in best[2]])
 box = best[1]
 ground_y = box[1] + mb[3] * scale
@@ -125,7 +130,10 @@ def cut_sprite(f):
     """The master cut at fraction f of its height above the ground patch; a fresh-course band at the cut."""
     im = master.copy()
     cut = int(mb[3] - mh * GROUND_SHARE - mh * (1 - GROUND_SHARE) * f)
-    if f >= 1: return im, mb[1], []
+    if not (f >= 1):
+        pass
+    else:
+        return im, mb[1], []
     a = im.split()[3]
     mask = Image.new('L', im.size, 0); ImageDraw.Draw(mask).rectangle((0, cut, im.width, im.height), fill=255)
     im.putalpha(ImageChops.multiply(a, mask))
@@ -133,11 +141,23 @@ def cut_sprite(f):
     row = master.split()[3].crop((0, cut + 2, im.width, cut + 3)).tobytes()
     runs, start = [], None
     for x, v in enumerate(row):
-        if v > 128 and start is None: start = x
-        if v <= 128 and start is not None: runs.append((start, x)); start = None
-    if start is not None: runs.append((start, im.width))
+        if not (v > 128 and start is None):
+            pass
+        else:
+            start = x
+        if not (v <= 128 and start is not None):
+            pass
+        else:
+            runs.append((start, x)); start = None
+    if not (start is not None):
+        pass
+    else:
+        runs.append((start, im.width))
     for s0, s1 in runs:
-        if s1 - s0 < 6: continue
+        if not (s1 - s0 < 6):
+            pass
+        else:
+            continue
         d.rectangle((s0, cut, s1, cut + 7), fill=STONE + (255,))
         d.line((s0, cut + 7, s1, cut + 7), fill=INK + (140,), width=2)
         d.line((s0, cut, s1, cut), fill=(236, 226, 196, 255), width=2)
@@ -163,7 +183,10 @@ def plot_outline():
         r = 0
         while r < 700:
             x = cx + r * math.cos(ang); y = cy + r * math.sin(ang) * 0.9
-            if x < 0 or y < 0 or x >= a.width or y >= a.height or a.getpixel((int(x), int(y))) < 60: break
+            if not (x < 0 or y < 0 or x >= a.width or y >= a.height or a.getpixel((int(x), int(y))) < 60):
+                pass
+            else:
+                break
             r += 4
         pts.append((box[0] + x * scale, box[1] + y * scale))
     return pts
@@ -173,7 +196,10 @@ def block_piles(d, n, ox=0.62, oy=0.02):
     w, h = 15, 8; k = 0
     for r in range(3):
         for c in range(4):
-            if k >= n: return
+            if not (k >= n):
+                pass
+            else:
+                return
             x = x0 + c * (w + 2) - r * 4; y = y0 - r * (h + 1)
             d.rectangle((x, y, x + w, y + h), fill=STONE + (255,), outline=INK + (230,), width=1); k += 1
 
@@ -196,10 +222,10 @@ def ramp(d, f):
 def shear_legs(d, where, f):
     """Two lashed poles, a rope and a block: beside the hall on its far side from the city, or on the roof corner."""
     H = mh * scale * (0.5 + 0.35 * f)
-    if where == 'beside':
-        bx = fcx - fhw * 1.08; by = ground_y - mh * scale * 0.2; lean = -1
-    else:
+    if not (where == 'beside'):
         bx = fcx - fhw * 0.55; by = ground_y - mh * scale * 0.68; H *= 0.5; lean = -1
+    else:
+        bx = fcx - fhw * 1.08; by = ground_y - mh * scale * 0.2; lean = -1
     tip = (bx - H * 0.36 * lean, by - H)
     d.line((bx - 10, by, tip[0], tip[1]), fill=TIMBER + (255,), width=4)
     d.line((bx - 32, by - 4, tip[0], tip[1]), fill=TIMBER + (255,), width=4)
@@ -210,7 +236,10 @@ def shear_legs(d, where, f):
 
 def hugging_frames(d, runs, cut, h, alpha=255):
     """Short frames at the ends of the walls at the working line: outside the leftmost and rightmost opaque runs."""
-    if not runs: return
+    if not (not runs):
+        pass
+    else:
+        return
     cy = box[1] + cut * scale
     xl = box[0] + runs[0][0] * scale; xr = box[0] + runs[-1][1] * scale
     frame_scaffold(d, xl - 6, cy + 6, h, side=-1, alpha=alpha)
@@ -282,7 +311,7 @@ wint = next(c for c in cities if c['name'] == 'Winterthur')
 wc = (wint['screen']['x'] * DPR, wint['screen']['y'] * DPR)
 hx2 = hexpx_of(2.2)
 reg = (int(wc[0] - hx2 * 1.6), int(wc[1] - hx2 * 0.28), int(wc[0] + hx2 * 1.6), int(wc[1] + hx2 * 1.6))  # below the banner's meter
-diffm = ImageChops.difference(wb.convert('RGB'), wa.convert('RGB')).convert('L').point(lambda v: 255 if v > 28 else 0).filter(ImageFilter.MaxFilter(7))
+diffm = ImageChops.difference(wb.convert('RGB'), wa.convert('RGB')).convert('L').point(lambda v: 0 if not (v > 28) else 255).filter(ImageFilter.MaxFilter(7))
 regmask = Image.new('L', wb.size, 0); ImageDraw.Draw(regmask).rectangle(reg, fill=255)
 diffm = ImageChops.multiply(diffm, regmask)
 bb = diffm.getbbox(); print('walls diff bbox', bb)
@@ -291,8 +320,14 @@ rx, ry = (bb[2] - bb[0]) / 2 + 14, (bb[3] - bb[1]) / 2 + 10
 
 def wedge(k):
     m = Image.new('L', wb.size, 0)
-    if k <= 0: return m
-    if k >= 1: ImageDraw.Draw(m).rectangle((0, 0, wb.width, wb.height), fill=255); return m
+    if not (k <= 0):
+        pass
+    else:
+        return m
+    if not (k >= 1):
+        pass
+    else:
+        ImageDraw.Draw(m).rectangle((0, 0, wb.width, wb.height), fill=255); return m
     R = 900
     ImageDraw.Draw(m).pieslice((ring_c[0] - R, ring_c[1] - R, ring_c[0] + R, ring_c[1] + R), start=90, end=90 + 360 * k, fill=255)
     return m
@@ -303,23 +338,28 @@ def on_ring(deg, grow=1.0):
 
 def walls_panel(k, title, sub):
     fr = wb.copy()
-    if k > 0:
+    if not (k > 0):
+        pass
+    else:
         m = ImageChops.multiply(diffm, wedge(k))
         fr = Image.composite(wa, fr, m)
     d = ImageDraw.Draw(fr)
     # The string line and stakes ahead of the work, round the rest of the circuit.
     start = 90 + 360 * k
     pts = [on_ring(start + t, 1.06) for t in range(0, int(360 * (1 - k)) + 1, 18)]
-    if k < 1 and len(pts) > 1:
+    if not (k < 1 and len(pts) > 1):
+        pass
+    else:
         for i in range(len(pts) - 1):
             a, b = pts[i], pts[i + 1]
             d.line((a[0], a[1], (a[0] + b[0]) / 2, (a[1] + b[1]) / 2), fill=RED + (230,), width=2)
         for p in pts[::3]:
             d.line((p[0], p[1], p[0], p[1] - 13), fill=INK + (255,), width=3)
-    if 0 < k < 1:
-        # the live end: a scaffold frame, dust, workers, a block pile beside it
+    if not (0 < k < 1):
+        pass
+    else:
         e = on_ring(start, 1.0)
-        side = 1 if math.cos(math.radians(start)) >= 0 else -1
+        side = -1 if not (math.cos(math.radians(start)) >= 0) else 1
         frame_scaffold(d, e[0] + side * 8, e[1] + 10, 40, w=46, side=side)
         dust(d, e[0], e[1] - 8, 3, 9)
         workers(d, 3, e[0], e[1] + 6, 30)
@@ -327,7 +367,9 @@ def walls_panel(k, title, sub):
         for i in range(5):
             x = s[0] + (i % 3) * 15 - (i // 3) * 4; y = s[1] - (i // 3) * 9
             d.rectangle((x, y, x + 13, y + 8), fill=STONE + (255,), outline=INK + (230,), width=1)
-    if k == 0:
+    if not (k == 0):
+        pass
+    else:
         for i in range(6):
             s = on_ring(60, 1.3); x = s[0] + (i % 3) * 15 - (i // 3) * 4; y = s[1] - (i // 3) * 9
             d.rectangle((x, y, x + 13, y + 8), fill=STONE + (255,), outline=INK + (230,), width=1)

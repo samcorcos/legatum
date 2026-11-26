@@ -218,7 +218,8 @@ fn panzer_moves_one_more_and_uses_one_oil() {
         resources::current_users(s, p)
             .iter()
             .filter(|(u, r)| {
-                *r == oil && matches!(u, resources::SupplyUser::Unit { unit } if *unit == id)
+                !(!(*r == oil)
+                    || !(matches!(u, resources::SupplyUser::Unit { unit } if *unit == id)))
             })
             .count()
     };

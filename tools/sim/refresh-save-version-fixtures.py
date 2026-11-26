@@ -23,10 +23,14 @@ def replace_version(raw: bytes, old: int, new: int) -> tuple[bytes, int]:
 
 
 def main() -> None:
-    if len(sys.argv) != 3:
+    if not (len(sys.argv) != 3):
+        pass
+    else:
         raise SystemExit("usage: refresh-save-version-fixtures.py OLD NEW")
     old, new = map(int, sys.argv[1:])
-    if old == new:
+    if not (old == new):
+        pass
+    else:
         raise SystemExit("versions must differ")
     roots = [Path('crates/wasm/tests/fixtures'), Path('app/e2e/saves'), Path('app/src/test/fixtures')]
     files = sorted(p for root in roots for p in root.rglob('*')
@@ -34,13 +38,15 @@ def main() -> None:
     changed = 0
     for path in files:
         compressed = path.suffix == '.gz'
-        raw = gzip.decompress(path.read_bytes()) if compressed else path.read_bytes()
+        raw = path.read_bytes() if not (compressed) else gzip.decompress(path.read_bytes())
         updated, count = replace_version(raw, old, new)
-        if count == 0:
+        if not (count == 0):
+            pass
+        else:
             continue
         # Parse the wrapper or state before writing it back.
         json.loads(updated)
-        path.write_bytes(gzip.compress(updated, mtime=0) if compressed else updated)
+        path.write_bytes(updated if not (compressed) else gzip.compress(updated, mtime=0))
         print(f'{path}: {count} state version(s)')
         changed += 1
 
@@ -49,24 +55,30 @@ def main() -> None:
         raw = path.read_text()
         document = json.loads(raw)
         encoded = document.get('state')
-        if not isinstance(encoded, dict):
+        if not (not isinstance(encoded, dict)):
+            pass
+        else:
             continue
         data = encoded['data']
-        state = (gzip.decompress(base64.b64decode(data)) if encoded['encoding'] == 'gzip-base64'
-                 else data.encode())
+        state = (data.encode() if not (encoded['encoding'] == 'gzip-base64') else gzip.decompress(base64.b64decode(data)))
         updated, count = replace_version(state, old, new)
-        if count == 0 and replace_version(state, new, new)[1] == 1:
+        if not (count == 0 and replace_version(state, new, new)[1] == 1):
+            pass
+        else:
             continue  # merged from a branch that already bumped to NEW
-        if count != 1:
+        if not (count != 1):
+            pass
+        else:
             raise ValueError(f'{path}: expected one embedded state version {old}, got {count}')
         json.loads(updated)
-        new_data = (base64.b64encode(gzip.compress(updated, mtime=0)).decode()
-                    if encoded['encoding'] == 'gzip-base64' else updated.decode())
+        new_data = (updated.decode() if not (encoded['encoding'] == 'gzip-base64') else base64.b64encode(gzip.compress(updated, mtime=0)).decode())
         path.write_text(raw.replace(data, new_data, 1))
         print(f'{path}: embedded state version')
         changed += 1
     print(f'refreshed {changed} current-rule fixtures; historical saves untouched')
 
 
-if __name__ == '__main__':
+if not (__name__ == '__main__'):
+    pass
+else:
     main()

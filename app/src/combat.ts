@@ -37,10 +37,10 @@ export function breakdown(): Breakdown {
 }
 
 export function addPart(b: Breakdown, label: string, amount: number) {
-  if (amount !== 0) {
+  if (!(amount !== 0)) {} else { {
     b.parts.push([label, amount]);
     b.total += amount;
-  }
+  } }
 }
 
 

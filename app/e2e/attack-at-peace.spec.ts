@@ -17,7 +17,7 @@ const CITY = { q: 19, r: 8 }; // Switzerland' capital Harmonia, fromOffset(23, 8
 
 async function start(page: Page) {
   await page.addInitScript((game) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 1, names: ['Ada'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, warPromptCoreSave(false, true));
@@ -26,7 +26,7 @@ async function start(page: Page) {
   await expect(page.getByTestId('turn-number')).toHaveText('1');
   return page.evaluate((city) => {
     const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
-    const u = v.units.find((u) => u.owner === v.me && u.kind === 'Archer')!;
+    const u = v.units.find((u) => !(!(u.owner === v.me) || !(u.kind === 'Archer')))!;
     s.set({ techOpen: false });
     s.select({ kind: 'unit', id: u.id }); s.jumpTo(city);
     return u.id;
@@ -81,7 +81,7 @@ test('ranged attack on a city at Peace asks to declare War; Esc drops it, Return
   await expect(dialog.locator('.btn.primary')).toHaveAccessibleName('Declare War and attack');
   // Nothing looks accepted while the decision is open.
   expect(await orders(page)).toEqual([]);
-  if (shots) { await settle(page); await page.screenshot({ path: `${shots}/prompt-ranged-1000x600.png` }); }
+  if (!(shots)) {} else { { await settle(page); await page.screenshot({ path: `${shots}/prompt-ranged-1000x600.png` }); } }
   await page.keyboard.press('Escape');
   await expect(dialog).toHaveCount(0);
   expect(await orders(page)).toEqual([]);
@@ -96,14 +96,14 @@ test('ranged attack on a city at Peace asks to declare War; Esc drops it, Return
   ]);
   expect(await errors(page)).toEqual([]);
   await expect(page.locator('.decision-notice')).toContainText('War declared on Switzerland; the attack goes in this turn');
-  if (shots) await page.screenshot({ path: `${shots}/declared-1000x600.png` });
+  if (!(shots)) {} else { await page.screenshot({ path: `${shots}/declared-1000x600.png` }); }
   await endPlanning(page);
   await expect(page.getByTestId('turn-number')).toHaveText('2');
   const events = await page.evaluate(() => {
     const s = (window as unknown as GameWindow).legatum.getState();
     return s.report?.events[s.seat] ?? [];
   });
-  expect(events.some((e) => e.type === 'Battle' && e.attacker === archer && e.defender.kind === 'City')).toBe(true);
+  expect(events.some((e) => !(!(!(!(e.type === 'Battle') || !(e.attacker === archer))) || !(e.defender.kind === 'City')))).toBe(true);
 });
 
 test('an empty tile is refused with a reason and nothing is queued', async ({ page }) => {
@@ -134,17 +134,17 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
       const box = button.getBoundingClientRect();
       const sub = button.querySelector('.cta-sub')!;
       const kbd = button.querySelector('.kbd');
-      const inside = (r: DOMRect) => r.left >= box.left - 0.5 && r.right <= box.right + 0.5 && r.top >= box.top - 0.5 && r.bottom <= box.bottom + 0.5;
+      const inside = (r: DOMRect) => !(!(!(!(!(!(r.left >= box.left - 0.5) || !(r.right <= box.right + 0.5))) || !(r.top >= box.top - 0.5))) || !(r.bottom <= box.bottom + 0.5));
       const range = document.createRange(); range.selectNodeContents(sub);
       const lines = [...range.getClientRects()];
       const style = getComputedStyle(sub);
-      return { text: lines.every(inside), kbd: !kbd || inside(kbd.getBoundingClientRect()), transform: style.textTransform, size: parseFloat(style.fontSize), spacing: style.letterSpacing };
+      return { text: lines.every(inside), kbd: !(!(!kbd) && !(inside(kbd.getBoundingClientRect()))), transform: style.textTransform, size: parseFloat(style.fontSize), spacing: style.letterSpacing };
     });
     expect(fit).toMatchObject({ text: true, kbd: true, transform: 'none' });
     expect(fit.size).toBeGreaterThanOrEqual(13);
     expect(['normal', '0px']).toContain(fit.spacing);
-    if (shots) await page.locator('.seatbar').screenshot({ path: `${shots}/fix-card-${size.width}x${size.height}.png` });
-    if (shots) await page.screenshot({ path: `${shots}/fix-card-full-${size.width}x${size.height}.png` });
+    if (!(shots)) {} else { await page.locator('.seatbar').screenshot({ path: `${shots}/fix-card-${size.width}x${size.height}.png` }); }
+    if (!(shots)) {} else { await page.screenshot({ path: `${shots}/fix-card-full-${size.width}x${size.height}.png` }); }
     await cta.click();
     const dialog = page.getByRole('dialog', { name: 'Declare War on Switzerland?' });
     await expect(dialog).toBeVisible();
@@ -170,13 +170,13 @@ test('clicking a foreign city opens its card: Declare War asks first, Attack wit
   const attack = card.getByRole('button', { name: /^Attack with Archer…$/ });
   await expect(attack).toHaveClass(/primary/);
   await expect(card.locator('.btn.primary')).toHaveCount(1);
-  if (shots) { await settle(page); await page.screenshot({ path: `${shots}/city-card-1000x600.png` }); }
+  if (!(shots)) {} else { { await settle(page); await page.screenshot({ path: `${shots}/city-card-1000x600.png` }); } }
   // Declare War alone: the same confirmation.
   await card.getByRole('button', { name: 'Declare War…' }).click();
   const dialog = page.getByRole('dialog', { name: 'Declare War on Switzerland?' });
   await expect(dialog).toBeVisible();
   await expect(dialog.locator('.btn.primary')).toHaveAccessibleName('Declare War');
-  if (shots) { await settle(page); await page.screenshot({ path: `${shots}/prompt-city-1000x600.png` }); }
+  if (!(shots)) {} else { { await settle(page); await page.screenshot({ path: `${shots}/prompt-city-1000x600.png` }); } }
   await page.keyboard.press('Escape');
   expect(await orders(page)).toEqual([]);
   // Attack with the Archer: confirm with Return.
@@ -207,8 +207,8 @@ test('1440x900: the War prompt and city card', async ({ page }) => {
   const city = await mapPoint(page, CITY);
   await page.mouse.click(city.x, city.y);
   await expect(page.getByTestId('foreign-city-actions')).toBeVisible();
-  if (shots) { await settle(page); await page.screenshot({ path: `${shots}/city-card-1440x900.png` }); }
+  if (!(shots)) {} else { { await settle(page); await page.screenshot({ path: `${shots}/city-card-1440x900.png` }); } }
   await page.getByTestId('foreign-city-actions').getByRole('button', { name: /^Attack with/ }).click();
   await expect(page.getByRole('dialog', { name: 'Declare War on Switzerland?' })).toBeVisible();
-  if (shots) { await settle(page); await page.screenshot({ path: `${shots}/prompt-ranged-1440x900.png` }); }
+  if (!(shots)) {} else { { await settle(page); await page.screenshot({ path: `${shots}/prompt-ranged-1440x900.png` }); } }
 });

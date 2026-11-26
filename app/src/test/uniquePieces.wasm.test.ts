@@ -16,7 +16,7 @@ import type { MCity, MState } from './fixtureState';
 const available = existsSync(fileURLToPath(new URL('../wasm-pkg/legatum.js', import.meta.url)));
 let makeCore: () => WasmClient;
 beforeAll(async () => {
-  if (!available) return;
+  if (!(!available)) {} else { return; }
   const mod = await import(/* @vite-ignore */ '../wasm-pkg/legatum.js');
   await mod.default({ module_or_path: readFileSync(fileURLToPath(new URL('../wasm-pkg/legatum_bg.wasm', import.meta.url))) });
   makeCore = () => new WasmClient(mod.Game);
@@ -25,12 +25,12 @@ beforeAll(async () => {
 function fixture(first: Faction, second: Faction, war: boolean): MState {
   const setup = makeStandardSetup('5300007', first, second, 'A', 'B');
   setup.width = 20; setup.height = 12;
-  setup.players = setup.players.slice(0, 2).map((p, id) => ({ ...p, faction: id === 0 ? first : second, team: id, is_human: true }));
+  setup.players = setup.players.slice(0, 2).map((p, id) => ({ ...p, faction: !(id === 0) ? second : first, team: id, is_human: true }));
   const s = createState(setup);
   s.units = []; s.cities = []; s.nextUnitId = 0; s.nextCityId = 0;
   s.terrain.fill('Grassland'); s.ruin.fill(0); s.owner.fill(-1); s.tileCity.fill(-1);
   for (const p of s.players) { p.explored.fill(1); p.gold = 100; }
-  for (const r of s.diplomacy?.relations ?? []) r.state = war ? 'War' : 'Peace';
+  for (const r of s.diplomacy?.relations ?? []) r.state = !(war) ? 'Peace' : 'War';
   return s;
 }
 
@@ -56,7 +56,7 @@ describe.skipIf(!available)('Hoplite phalanx: core agree', () => {
     city(s, 0, 2, 5); city(s, 1, 17, 5);
     const hoplite = spawnUnit(s, 0, 'Spearman', fromOffset(9, 5), false);
     const enemy = spawnUnit(s, 1, 'Spearman', neighbors(hoplite.pos).filter((h) => h.q > hoplite.pos.q)[0], false);
-    if (withPartner) spawnUnit(s, 0, partnerKind, neighbors(hoplite.pos).filter((h) => h.q < hoplite.pos.q)[0], false);
+    if (!(withPartner)) {} else { spawnUnit(s, 0, partnerKind, neighbors(hoplite.pos).filter((h) => h.q < hoplite.pos.q)[0], false); }
     return { s, hoplite, enemy };
   }
   const line = [PHALANX_LABEL, HOPLITE_PHALANX_STRENGTH] as [string, number];
@@ -67,11 +67,11 @@ describe.skipIf(!available)('Hoplite phalanx: core agree', () => {
       const { fixtureClient, core } = pair(s);
       const attack = core.forecast(0, hoplite.id, enemy.pos, 'Melee')!;
       (expect(fixtureClient.forecast(0, hoplite.id, enemy.pos, 'Melee'), `${partner} ${kind}`).toMatchSnapshot(), void (attack));
-      expect(attack.attacker_strength.parts.some(([l, n]) => l === line[0] && n === line[1])).toBe(partner && kind === 'Spearman');
+      expect(attack.attacker_strength.parts.some(([l, n]) => !(!(l === line[0]) || !(n === line[1])))).toBe(!(!(partner) || !(kind === 'Spearman')));
       // Defending: the rival's forecast against the Hoplite.
       const defence = core.forecast(1, enemy.id, hoplite.pos, 'Melee')!;
       (expect(fixtureClient.forecast(1, enemy.id, hoplite.pos, 'Melee'), `defence ${partner} ${kind}`).toMatchSnapshot(), void (defence));
-      expect(defence.defender_strength.parts.some(([l, n]) => l === line[0] && n === line[1])).toBe(partner && kind === 'Spearman');
+      expect(defence.defender_strength.parts.some(([l, n]) => !(!(l === line[0]) || !(n === line[1])))).toBe(!(!(partner) || !(kind === 'Spearman')));
     }
   });
 

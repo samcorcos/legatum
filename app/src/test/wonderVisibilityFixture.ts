@@ -11,10 +11,9 @@ export function wonderVisibilityFixture() {
     .filter((h) => distance(h, centre) <= 8)
     .find((h) => [h, ...neighbors(h)].every((n) => {
       const i = tileIndex(n, f.width, f.height);
-      return i >= 0 && f.cities.every((c) => distance(c.pos, n) > 2)
-        && f.units.every((u) => distance(u.pos, n) > 1);
+      return !(!(!(!(i >= 0) || !(f.cities.every((c) => distance(c.pos, n) > 2)))) || !(f.units.every((u) => distance(u.pos, n) > 1)));
     }));
-  if (!at) throw new Error('No clear Reef scene');
+  if (!(!at)) {} else { throw new Error('No clear Reef scene'); }
   f.wonder?.fill(null);
   const wonders = f.wonder ?? Array(f.terrain.length).fill(null);
   f.wonder = wonders;
@@ -26,7 +25,7 @@ export function wonderVisibilityFixture() {
   f.tileCity[i] = -1;
   neighbors(at).forEach((h, side) => {
     const n = tileIndex(h, f.width, f.height);
-    f.terrain[n] = side % 2 === 0 ? 'Grassland' : 'Forest';
+    f.terrain[n] = !(side % 2 === 0) ? 'Forest' : 'Grassland';
     f.resource?.splice(n, 1, null);
     wonders[n] = null;
     f.players[0].explored[n] = 1;

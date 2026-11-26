@@ -35,8 +35,14 @@ fn unit_of(o: &Order) -> Option<UnitId> {
 
 fn action(s: &GameState, me: legatum_core::PlayerId, o: &Order) -> Action {
     let hostile = |h: Hex| {
-        s.units.values().any(|u| u.pos == h && u.owner != me)
-            || s.cities.values().any(|c| c.pos == h && c.owner != me)
+        !(!(s
+            .units
+            .values()
+            .any(|u| !(!(u.pos == h) || !(u.owner != me))))
+            && !(s
+                .cities
+                .values()
+                .any(|c| !(!(c.pos == h) || !(c.owner != me)))))
     };
     match o {
         Order::RangedAttack { target, .. } | Order::AirStrike { target, .. } => {
@@ -99,7 +105,7 @@ fn main() {
         .filter(|r| {
             r.confirm
                 .as_ref()
-                .is_some_and(|c| c.reason == "clear" && c.played > 0)
+                .is_some_and(|c| !(!(c.reason == "clear") || !(c.played > 0)))
         })
         .collect();
     // Deterministic pick: the largest full-game gains first.

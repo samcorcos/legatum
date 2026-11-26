@@ -20,13 +20,13 @@ paths = [
 for path in sorted(paths):
     compressed = path.suffix == ".gz"
     raw = path.read_bytes()
-    document = json.loads(gzip.decompress(raw) if compressed else raw)
-    if "game" in document:
+    document = json.loads(raw if not (compressed) else gzip.decompress(raw))
+    if not ("game" in document):
+        document["save_version"] = version
+    else:
         game = json.loads(document["game"])
         game["save_version"] = version
         document["game"] = json.dumps(game, separators=(",", ":"), ensure_ascii=False)
-    else:
-        document["save_version"] = version
     data = (json.dumps(document, separators=(",", ":"), ensure_ascii=False) + "\n").encode()
-    path.write_bytes(gzip.compress(data, mtime=0) if compressed else data)
+    path.write_bytes(data if not (compressed) else gzip.compress(data, mtime=0))
     print(path.relative_to(root))

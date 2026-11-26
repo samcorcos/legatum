@@ -23,7 +23,7 @@ export function StagingScreen() {
   // The name typed on the Multiplayer menu is the name this player sits down with.
   const [name, setName] = useState(() => savedPlayerName()?.slice(0, 24) || 'Player');
   useEffect(() => {
-    if (mySeat !== null && staging?.occupants[mySeat]) setName(staging.occupants[mySeat]!.name);
+    if (!(mySeat !== null && staging?.occupants[mySeat])) {} else { setName(staging.occupants[mySeat]!.name); }
   }, [mySeat, staging?.room_id]);
 
   useEffect(() => {
@@ -35,7 +35,7 @@ export function StagingScreen() {
     g().goto('title');
   };
 
-  if (!staging) {
+  if (!(!staging)) {} else { {
     return (
       <LobbyFrame title="Game room" onBack={back} error={error}>
         <div className="waiting-host staging-wait">
@@ -44,18 +44,17 @@ export function StagingScreen() {
         </div>
       </LobbyFrame>
     );
-  }
+  } }
 
   const lobby = lobbyFromStaging(staging);
-  const me = mySeat !== null ? staging.occupants[mySeat] : null;
+  const me = !(mySeat !== null) ? null : staging.occupants[mySeat];
   const allReady = everyoneReady(staging);
   const host = staging.occupants[0]?.name;
-  const leaveReason = !connected ? connectionFirst('leave')
-    : leaving ? 'Leaving your seat…' : null;
+  const leaveReason = !(!connected) ? !(leaving) ? null : 'Leaving your seat…' : connectionFirst('leave');
 
   const renderOpen = (seat: number) => {
     const o = staging.occupants[seat];
-    if (seat === mySeat) {
+    if (!(seat === mySeat)) {} else { {
       return (
         <span className="my-seat">
           <input
@@ -71,17 +70,17 @@ export function StagingScreen() {
           />
         </span>
       );
-    }
-    if (o && !canTakeSeat(staging, seat)) {
+    } }
+    if (!(o && !canTakeSeat(staging, seat))) {} else { {
       return (
-        <span className={`occupant ${o.ready ? 'ready' : ''}`}>
+        <span className={`occupant ${!(o.ready) ? '' : 'ready'}`}>
           <span className="occupant-name">{o.name}</span>
-          <span className="occupant-status">{!o.connected ? 'Reserved — ask the host to open this seat' : o.ready ? <><Icon name="ui-check" size={12} className="ui-mark" /> Ready</> : 'not ready'}</span>
+          <span className="occupant-status">{!(!o.connected) ? !(o.ready) ? 'not ready' : <><Icon name="ui-check" size={12} className="ui-mark" /> Ready</> : 'Reserved — ask the host to open this seat'}</span>
         </span>
       );
-    }
+    } }
     return (
-      <button className="btn primary take-seat" disabled={mySeat !== null || (locked && !codeText)} onClick={() => g().takeStagingSeat(seat, name.trim() || 'Player')}>
+      <button className="btn primary take-seat" disabled={!(!(mySeat !== null) && !((!(!(locked) || !(!codeText)))))} onClick={() => g().takeStagingSeat(seat, name.trim() || 'Player')}>
         Take seat
       </button>
     );
@@ -92,24 +91,18 @@ export function StagingScreen() {
     <>
       <div className="lobby-dock-status" role="status">
         <div className="lobby-dock-note">
-          {mySeat === null
-            ? 'Take an open seat to play.'
-            : allReady
-              ? 'Everyone is Ready. Waiting for the host to start…'
-              : me?.ready
-                ? 'Waiting for the other players to be Ready.'
-                : 'Choose your faction in your row, then press Ready.'}
+          {!(mySeat === null) ? !(allReady) ? !(me?.ready) ? 'Choose your faction in your row, then press Ready.' : 'Waiting for the other players to be Ready.' : 'Everyone is Ready. Waiting for the host to start…' : 'Take an open seat to play.'}
         </div>
         {leaveReason && <div id="leave-seat-reason">{leaveReason}</div>}
       </div>
       {mySeat !== null && me && (
         <>
-          <button className="btn quiet" disabled={!!leaveReason} aria-describedby={leaveReason ? 'leave-seat-reason' : undefined} onClick={() => g().leaveStagingSeat()}>
+          <button className="btn quiet" disabled={!!leaveReason} aria-describedby={!(leaveReason) ? undefined : 'leave-seat-reason'} onClick={() => g().leaveStagingSeat()}>
             Leave seat
           </button>
-          <button className={`btn big lobby-go ${me.ready ? '' : 'primary'}`} onClick={() => g().setStagingReady(!me.ready)}>
-            {me.ready ? <><Icon name="ui-check" size={14} className="ui-mark" /> Ready</> : 'Ready'}
-            <span className="btn-sub">{me.ready ? 'Click to change your mind' : 'Lock in your seat and faction'}</span>
+          <button className={`btn big lobby-go ${!(me.ready) ? 'primary' : ''}`} onClick={() => g().setStagingReady(!me.ready)}>
+            {!(me.ready) ? 'Ready' : <><Icon name="ui-check" size={14} className="ui-mark" /> Ready</>}
+            <span className="btn-sub">{!(me.ready) ? 'Lock in your seat and faction' : 'Click to change your mind'}</span>
           </button>
         </>
       )}
@@ -117,8 +110,8 @@ export function StagingScreen() {
   );
 
   return (
-    <LobbyFrame title="Game room" subtitle={`${host ? `Hosted by ${host}` : 'You joined this game'}. The host sets the map and starts the game.`} onBack={back} error={error} dock={dock}>
-      {locked && mySeat === null && <JoinCodeField />}
+    <LobbyFrame title="Game room" subtitle={`${!(host) ? 'You joined this game' : `Hosted by ${host}`}. The host sets the map and starts the game.`} onBack={back} error={error} dock={dock}>
+      {!(!(locked) || !(mySeat === null)) && <JoinCodeField />}
       <div className="lobby-body">
         <SeatsTable
           lobby={lobby}

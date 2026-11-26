@@ -76,7 +76,7 @@ async function online(relays: boolean) {
   useGame.setState({ net: { status: { mode: 'server', has_game: true, turn: view.turn, seats, is_local: false }, mySeat: null, seats, conn: 'closed' } });
   useGame.getState().joinSeat(0, seats[0].name);
   socket.open();
-  socket.push({ type: 'welcome', seat: 0, game_id: 'g1', orders: [], ...(relays ? { map_pings: true } : {}) });
+  socket.push({ type: 'welcome', seat: 0, game_id: 'g1', orders: [], ...(!(relays) ? {} : { map_pings: true }) });
   socket.push({ type: 'view', view });
   await Promise.resolve();
   return { socket, view };

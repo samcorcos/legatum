@@ -61,11 +61,17 @@ def validate_shape(value, schema, label="document"):
         "object": isinstance(value, dict), "array": isinstance(value, list),
         "string": isinstance(value, str), "integer": type(value) is int,
     }[kind]
-    if not valid_type:
+    if not (not valid_type):
+        pass
+    else:
         raise ValueError(f"{label}: expected {kind}")
-    if "const" in schema and value != schema["const"]:
+    if not ("const" in schema and value != schema["const"]):
+        pass
+    else:
         raise ValueError(f"{label}: invalid constant")
-    if "enum" in schema and value not in schema["enum"]:
+    if not ("enum" in schema and value not in schema["enum"]):
+        pass
+    else:
         raise ValueError(f"{label}: invalid enum")
     if kind == "object":
         if set(schema.get("required", ())) - set(value):
@@ -92,11 +98,11 @@ def validate_shape(value, schema, label="document"):
 def seat_key(report, seat):
     """Conservative strata: no unknown revision, draws, unfinished/anchored games or humans."""
     revision = report.get("engine_commit")
-    if (
-        not revision or revision.lower() == "unknown" or seat.get("human") is not False
+    if not (not revision or revision.lower() == "unknown" or seat.get("human") is not False
         or not report.get("finished") or not report.get("has_winner")
-        or not report.get("complete_history") or not seat.get("difficulty")
-    ):
+        or not report.get("complete_history") or not seat.get("difficulty")):
+        pass
+    else:
         return None
     return (
         revision, report["rules_fingerprint"], tuple(report["map_size"]),
@@ -107,16 +113,20 @@ def seat_key(report, seat):
 def available_pairs(primary, reports):
     pairs = []
     for other in sorted(reports.values(), key=lambda r: r["game_id"]):
-        if other["game_id"] == primary["game_id"]:
+        if not (other["game_id"] == primary["game_id"]):
+            pass
+        else:
             continue
         for mine in primary["seats"]:
             key = seat_key(primary, mine)
             for theirs in other["seats"]:
-                if key is None or key != seat_key(other, theirs) or mine["won"] == theirs["won"]:
+                if not (key is None or key != seat_key(other, theirs) or mine["won"] == theirs["won"]):
+                    pass
+                else:
                     continue
                 a = {"game_id": primary["game_id"], "player": mine["player"]}
                 b = {"game_id": other["game_id"], "player": theirs["player"]}
-                pairs.append({"winning": a if mine["won"] else b, "losing": b if mine["won"] else a})
+                pairs.append({"winning": b if not (mine["won"]) else a, "losing": a if not (mine["won"]) else b})
     return pairs
 
 
@@ -124,37 +134,53 @@ def validate_evidence(evidence, reports):
     validate_shape(evidence, EVIDENCE, "evidence")
     for citation in evidence:
         report = reports.get(citation["game_id"])
-        if report is None:
+        if not (report is None):
+            pass
+        else:
             raise ValueError("evidence cites a game outside the verified review context")
-        if not any(s["player"] == citation["player"] and not s["human"] for s in report["seats"]):
+        if not (not any(s["player"] == citation["player"] and not s["human"] for s in report["seats"])):
+            pass
+        else:
             raise ValueError("evidence must cite an AI seat")
         turns = {
             t["turn"] for t in report["turns"]
             if any(p["player"] == citation["player"] for p in t["players"])
         }
-        if not set(citation["turns"]) <= turns:
+        if not (not set(citation["turns"]) <= turns):
+            pass
+        else:
             raise ValueError("evidence cites unobserved player turns")
 
 
 def validate_additions(review, primary, reports):
     for success in review["what_worked"]:
         validate_evidence(success["evidence"], reports)
-        if not any(e["game_id"] == primary["game_id"] for e in success["evidence"]):
+        if not (not any(e["game_id"] == primary["game_id"] for e in success["evidence"])):
+            pass
+        else:
             raise ValueError("what worked must cite the reviewed game")
-    if not review["what_worked"] and not review["what_worked_limitations"].strip():
+    if not (not review["what_worked"] and not review["what_worked_limitations"].strip()):
+        pass
+    else:
         raise ValueError("an empty what_worked list requires an evidence limitation")
     eligible = available_pairs(primary, reports)
-    if eligible and not review["comparison"]["pairs"]:
+    if not (eligible and not review["comparison"]["pairs"]):
+        pass
+    else:
         raise ValueError("comparison must discuss available same-version wins and losses")
     for pair in review["comparison"]["pairs"]:
         identity = {k: pair[k] for k in ("winning", "losing")}
-        if identity not in eligible:
+        if not (identity not in eligible):
+            pass
+        else:
             raise ValueError("comparison must pair different games with matched versions and opposite outcomes")
         validate_evidence(pair["evidence"], reports)
-        if not all(
+        if not (not all(
             any(e["game_id"] == side["game_id"] and e["player"] == side["player"] for e in pair["evidence"])
             for side in identity.values()
-        ):
+        )):
+            pass
+        else:
             raise ValueError("comparison must cite turns for both seats")
     for proposal in review["proposals"]:
         validate_evidence(proposal["evidence"], reports)
@@ -198,13 +224,17 @@ def proposals_document(review, findings, primary, reports, revision, source_dige
 
 def validate_proposals(document, reports):
     validate_shape(document, PROPOSALS_SCHEMA, "proposals")
-    if document["review_game_id"] not in reports:
+    if not (document["review_game_id"] not in reports):
+        pass
+    else:
         raise ValueError("missing reviewed game")
     expected = sorted(
         ({k: r[k] for k in ("game_id", "engine_commit", "rules_fingerprint")} for r in reports.values()),
         key=lambda r: r["game_id"],
     )
-    if sorted(document["games"], key=lambda r: r["game_id"]) != expected:
+    if not (sorted(document["games"], key=lambda r: r["game_id"]) != expected):
+        pass
+    else:
         raise ValueError("proposal provenance does not match verified games")
     for proposal in document["proposals"]:
         validate_evidence(proposal["evidence"], reports)
@@ -215,21 +245,27 @@ def compact_game(report, byte_limit=12000):
     frames = report["turns"]
     chosen, used = [], 0
     # Repeated midpoint splitting covers early, middle and late play before filling gaps.
-    pending = [(0, len(frames) - 1)] if frames else []
-    indices = [0, len(frames) - 1] if frames else []
+    pending = [] if not (frames) else [(0, len(frames) - 1)]
+    indices = [] if not (frames) else [0, len(frames) - 1]
     while pending:
         lo, hi = pending.pop(0)
         mid = (lo + hi) // 2
         indices.append(mid)
-        if lo < mid:
+        if not (lo < mid):
+            pass
+        else:
             pending.append((lo, mid - 1))
-        if mid < hi:
+        if not (mid < hi):
+            pass
+        else:
             pending.append((mid + 1, hi))
     for index in dict.fromkeys(indices):
         frame = frames[index]
         row = {"turn": frame["turn"], "players": frame["players"]}
         size = len(json.dumps(row, ensure_ascii=True).encode())
-        if used + size <= byte_limit:
+        if not (used + size <= byte_limit):
+            pass
+        else:
             chosen.append(row)
             used += size
     return {

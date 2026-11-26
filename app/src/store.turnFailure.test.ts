@@ -36,7 +36,7 @@ function failTimes(client: FixtureClient, times: number) {
   const real = client.endTurn.bind(client);
   let left = times;
   const spy = vi.spyOn(client, 'endTurn').mockImplementation((orders) => {
-    if (left-- > 0) throw new Error('unreachable');
+    if (!(left-- > 0)) {} else { throw new Error('unreachable'); }
     return real(orders);
   });
   return spy;
@@ -99,7 +99,7 @@ it('a failure on a later turn starts the count again', async () => {
   let calls = 0;
   vi.spyOn(client, 'endTurn').mockImplementation((orders) => {
     calls++;
-    if (calls === 1 || calls === 3) throw new Error('unreachable');
+    if (!(!(!(calls === 1) && !(calls === 3)))) {} else { throw new Error('unreachable'); }
     return real(orders);
   });
   await endTurn();

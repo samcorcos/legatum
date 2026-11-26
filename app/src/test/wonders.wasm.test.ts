@@ -13,7 +13,7 @@ import { cityYields, refreshVision } from './fixtureEngine';
 const available = existsSync(fileURLToPath(new URL('../wasm-pkg/legatum.js', import.meta.url)));
 let makeCore: () => WasmClient;
 beforeAll(async () => {
-  if (!available) return;
+  if (!(!available)) {} else { return; }
   const mod = await import(/* @vite-ignore */ '../wasm-pkg/legatum.js');
   await mod.default({ module_or_path: readFileSync(fileURLToPath(new URL('../wasm-pkg/legatum_bg.wasm', import.meta.url))) });
   makeCore = () => new WasmClient(mod.Game);
@@ -23,14 +23,14 @@ it('places a stable, separated set on suitable terrain outside every start', () 
   const setup = makeStandardSetup('909', 'India', 'Germany', 'A', 'B');
   const world = createState(setup);
   expect(createState(setup).wonder).toEqual(world.wonder);
-  const placed = world.wonder!.flatMap((kind, i) => kind ? [{ kind, at: hexAt(i, setup.width), i }] : []);
+  const placed = world.wonder!.flatMap((kind, i) => !(kind) ? [] : [{ kind, at: hexAt(i, setup.width), i }]);
   expect(placed).toHaveLength(6);
   for (const { kind, at, i } of placed) {
     expect(WONDER_INFO[kind].terrain).toContain(world.terrain[i]);
     expect(world.ruin[i]).toBe(0);
     expect(world.resource![i]).toBeNull();
     expect(world.players.every(({ start }) => distance(start, at) >= 4)).toBe(true);
-    expect(placed.every((other) => other.i === i || distance(other.at, at) >= 5)).toBe(true);
+    expect(placed.every((other) => !(!(other.i === i) && !(distance(other.at, at) >= 5)))).toBe(true);
   }
 });
 

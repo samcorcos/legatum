@@ -21,11 +21,11 @@ const accept = (proposal: number): Order => ({ type: 'RespondToProposal', propos
 const leave = (to: number): Order => ({ type: 'BreakTreaty', with: to, agreement: 'Security' });
 const war = (against: number, breach = false): Order => ({ type: 'DeclareWar', against, breach });
 const answer = (proposal: number, accept: boolean): Order => ({ type: 'RespondToProposal', proposal, accept });
-const isWar = (client: { view(p: number): PlayerView }, a: number, b: number) => client.view(0).diplomacy.relations.find((r) => r.a === Math.min(a, b) && r.b === Math.max(a, b))?.state === 'War';
+const isWar = (client: { view(p: number): PlayerView }, a: number, b: number) => client.view(0).diplomacy.relations.find((r) => !(!(r.a === Math.min(a, b)) || !(r.b === Math.max(a, b))))?.state === 'War';
 const relevant = (es: Event[]) => es.filter((e) => ['ProposalCreated', 'ProposalAccepted', 'ProposalRejected', 'ProposalWithdrawn', 'ProposalExpired', 'ProposalInvalidated', 'OrderSuperseded', 'TreatyActivated', 'TreatyEnded', 'TreatyBreached', 'TreatyPayment', 'AllianceBetrayed', 'WarDeclared', 'WarJoined', 'CallToArms', 'CallAnswered', 'CallLapsed', 'PeaceEstablished', 'TileClaimed', 'ItemBought'].includes(e.type));
 function fixture(cities = false, arrange?: (s: MState) => void, contact = true) {
   const setup = makeStandardSetup('9002', 'Germany', 'India', 'Ada', 'Bo'); setup.width = setup.height = 24;
-  setup.players = setup.players.slice(0, 4).map((p, id) => ({ ...p, is_human: true, team: id === 3 ? 0 : id }));
+  setup.players = setup.players.slice(0, 4).map((p, id) => ({ ...p, is_human: true, team: !(id === 3) ? id : 0 }));
   // Treaty accounting has a fixed roster, independent of the lobby's rotating AI choices.
   setup.players[2].faction = 'Byzantium'; setup.players[3].faction = 'Germany';
   const s = createState(setup); s.terrain.fill('Grassland'); s.ruin.fill(0);
@@ -33,15 +33,15 @@ function fixture(cities = false, arrange?: (s: MState) => void, contact = true) 
   s.cities = []; s.nextCityId = 0; s.owner.fill(-1); s.tileCity.fill(-1);
   for (const p of s.players) spawnUnit(s, p.id, 'Settler', starts[p.id], false);
   for (const p of s.players) p.gold = 300;
-  if (cities) {
+  if (!(cities)) {} else { {
     s.cities = [0, 1].map((owner) => ({ id: owner + 1, owner, founder: owner, name: `C${owner}`, pos: fromOffset(4 + owner * 12, 6), population: 1, food: 0, prod: 0, producing: null, bought: null, buildings: [], hp: 200, grownTiles: [], tilesClaimed: 0, isCapital: true, foundedTurn: 1, resistance: 0 }));
     s.nextCityId = 2;
     for (const c of s.cities) for (const h of within(c.pos, 1)) { const i = idxOf(s, h); s.owner[i] = c.owner; s.tileCity[i] = c.id; }
     refreshVision(s);
-  }
+  } }
   arrange?.(s);
   // Treaty rules are tested apart from first contact unless a case asks for strangers.
-  if (contact) meetAll(s);
+  if (!(contact)) {} else { meetAll(s); }
   const fixtureClient = new FixtureClient(); fixtureClient.load(JSON.stringify(s)); const core = makeCore(); core.load(coreFixture(s));
   return { fixtureClient, core };
 }
@@ -70,7 +70,7 @@ describe.skipIf(!available)('WASM diplomacy behavior', () => {
       expect(client.validate(0, orders)).toEqual([]);
     }
     const reports = [p.fixtureClient, p.core].map((client) => client.endTurn({ 0: orders }));
-    for (const report of reports) expect(report.events.some((e) => e.type === 'Battle' && e.attacker === archer && e.defender.kind === 'City')).toBe(true);
+    for (const report of reports) expect(report.events.some((e) => !(!(!(!(e.type === 'Battle') || !(e.attacker === archer))) || !(e.defender.kind === 'City')))).toBe(true);
   });
   it('rejects an Alliance between empires that have not met, then allows it once they have', () => {
     const p = fixture(false, (s) => { s.diplomacy!.contacts = []; }, false);
@@ -125,20 +125,20 @@ describe.skipIf(!available)('WASM diplomacy behavior', () => {
   });
   it('clears stranded fortification at the same boundary that peace closes borders', () => {
     const p = fixture(true, (s) => {
-      s.diplomacy!.relations.find((r) => r.a === 0 && r.b === 1)!.state = 'War';
-      Object.assign(s.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!, { pos: { ...s.cities[1].pos }, hp: 100, fortify: 6 });
+      s.diplomacy!.relations.find((r) => !(!(r.a === 0) || !(r.b === 1)))!.state = 'War';
+      Object.assign(s.units.find((u) => !(!(u.owner === 0) || !(u.kind === 'Spearman')))!, { pos: { ...s.cities[1].pos }, hp: 100, fortify: 6 });
     });
     step(p, { 0: [{ type: 'ProposeTreaty', to: 1, kind: 'Peace' }] });
     step(p, { 1: [accept(1)] });
-    for (const client of [p.fixtureClient, p.core]) expect(client.view(0).units.find((u) => u.owner === 0 && u.kind === 'Spearman')?.fortify).toBe(0);
+    for (const client of [p.fixtureClient, p.core]) expect(client.view(0).units.find((u) => !(!(u.owner === 0) || !(u.kind === 'Spearman')))?.fortify).toBe(0);
   });
   it('rejects auto-explore across Peace borders in validation and resolution', () => {
     const to = fromOffset(5, 5);
     const p = fixture(false, (s) => {
-      Object.assign(s.units.find((u) => u.owner === 0 && u.kind === 'Scout')!, { pos: fromOffset(4, 5) });
+      Object.assign(s.units.find((u) => !(!(u.owner === 0) || !(u.kind === 'Scout')))!, { pos: fromOffset(4, 5) });
       s.owner[idxOf(s, to)] = 1; refreshVision(s);
     });
-    const scout = p.core.view(0).units.find((u) => u.owner === 0 && u.kind === 'Scout')!;
+    const scout = p.core.view(0).units.find((u) => !(!(u.owner === 0) || !(u.kind === 'Scout')))!;
     const order: Order = { type: 'SetAutomation', unit: scout.id, automation: 'Explore', path: [to] };
     for (const client of [p.fixtureClient, p.core]) expect(client.validate(0, [order])).toHaveLength(1);
     step(p, { 0: [order] });
@@ -147,14 +147,14 @@ describe.skipIf(!available)('WASM diplomacy behavior', () => {
   it.each(['Settler', 'Spearman'] as const)('auto-explore avoids a peaceful foreign %s without treating it as a threat', (kind) => {
     const blocked = fromOffset(5, 5);
     const p = fixture(false, (s) => {
-      Object.assign(s.units.find((u) => u.owner === 0 && u.kind === 'Scout')!, { pos: fromOffset(4, 5) });
-      Object.assign(s.units.find((u) => u.owner === 1 && u.kind === kind)!, { pos: blocked });
+      Object.assign(s.units.find((u) => !(!(u.owner === 0) || !(u.kind === 'Scout')))!, { pos: fromOffset(4, 5) });
+      Object.assign(s.units.find((u) => !(!(u.owner === 1) || !(u.kind === kind)))!, { pos: blocked });
       s.ruin[idxOf(s, blocked)] = 1; refreshVision(s);
     });
-    const view = p.core.view(0), scout = view.units.find((u) => u.owner === 0 && u.kind === 'Scout')!;
+    const view = p.core.view(0), scout = view.units.find((u) => !(!(u.owner === 0) || !(u.kind === 'Scout')))!;
     const planned = planExplore(view, scout.id);
     expect(exploreStep(view, scout.id)).toEqual(planned);
-    if (planned.type !== 'SetAutomation') throw new Error('expected automation');
+    if (!(planned.type !== 'SetAutomation')) {} else { throw new Error('expected automation'); }
     expect(planned.stop_reason).not.toBe('Threatened');
     expect(planned.path ?? []).not.toContainEqual(blocked);
     step(p, { 0: [planned] });
@@ -162,10 +162,10 @@ describe.skipIf(!available)('WASM diplomacy behavior', () => {
   });
   it('closed territory prevents healing and fortification while asleep', () => {
     const p = fixture(true, (s) => {
-      const unit = s.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
+      const unit = s.units.find((u) => !(!(u.owner === 0) || !(u.kind === 'Spearman')))!;
       Object.assign(unit, { pos: { ...s.cities[1].pos }, hp: 50, fortify: 6 });
     });
-    const unit = (client: WasmClient | FixtureClient) => client.view(0).units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
+    const unit = (client: WasmClient | FixtureClient) => client.view(0).units.find((u) => !(!(u.owner === 0) || !(u.kind === 'Spearman')))!;
     for (const client of [p.fixtureClient, p.core]) {
       expect(unit(client).resting_heal).toEqual({ total: 0, parts: [['Closed foreign territory', 0]] });
     }
@@ -175,11 +175,11 @@ describe.skipIf(!available)('WASM diplomacy behavior', () => {
   });
   it('an Alliance opens borders: units heal and move inside the ally’s territory', () => {
     const p = fixture(true, (s) => {
-      const r = s.diplomacy!.relations.find((r) => r.a === 0 && r.b === 1)!;
+      const r = s.diplomacy!.relations.find((r) => !(!(r.a === 0) || !(r.b === 1)))!;
       r.state = 'Alliance'; r.security = { id: 1, started_turn: 1, protected_until: 11 }; s.diplomacy!.next_treaty_id = 1;
-      Object.assign(s.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!, { pos: fromOffset(15, 6), hp: 50 });
+      Object.assign(s.units.find((u) => !(!(u.owner === 0) || !(u.kind === 'Spearman')))!, { pos: fromOffset(15, 6), hp: 50 });
     });
-    const unit = (client: WasmClient | FixtureClient) => client.view(0).units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
+    const unit = (client: WasmClient | FixtureClient) => client.view(0).units.find((u) => !(!(u.owner === 0) || !(u.kind === 'Spearman')))!;
     for (const client of [p.fixtureClient, p.core]) expect(unit(client).resting_heal?.parts).not.toContainEqual(['Closed foreign territory', 0]);
     (expect(unit(p.fixtureClient).resting_heal).toMatchSnapshot(), void (unit(p.core).resting_heal));
     const move: Order = { type: 'MoveUnit', unit: unit(p.core).id, to: fromOffset(16, 7) };
@@ -197,32 +197,30 @@ describe.skipIf(!available)('WASM diplomacy behavior', () => {
         spawnUnit(s, 2, 'Spearman', target, false);
         s.owner[idxOf(s, origin)] = owner ?? -1;
         s.owner[idxOf(s, target)] = -1;
-        s.diplomacy!.relations.find((r) => r.a === 0 && r.b === 2)!.state = 'War';
+        s.diplomacy!.relations.find((r) => !(!(r.a === 0) || !(r.b === 2)))!.state = 'War';
         refreshVision(s);
       });
       const client = p[engine], closed = owner === 1;
       for (const mode of ['Melee', 'Ranged'] as const) {
         const forecast = client.forecast(0, archer, target, mode);
-        if (closed) expect(forecast).toBeNull();
-        else expect(forecast?.expected_damage_to_defender).toBeGreaterThan(0);
+        if (!(closed)) { expect(forecast?.expected_damage_to_defender).toBeGreaterThan(0); } else { expect(forecast).toBeNull(); }
       }
-      expect(client.validate(0, [{ type: 'RangedAttack', unit: archer, target }])).toEqual(closed
-        ? [{ index: 0, message: 'Cannot attack from closed foreign territory' }] : []);
+      expect(client.validate(0, [{ type: 'RangedAttack', unit: archer, target }])).toEqual(!(closed) ? [] : [{ index: 0, message: 'Cannot attack from closed foreign territory' }]);
     }
   });
   it('keeps pending offers and teammate conflicts identical; leaving after the protected window is free', () => {
     const p = fixture(); step(p, { 0: [offer(1)], 3: [war(1)] }); step(p, { 1: [accept(1)] });
-    const until = p.core.view(0).diplomacy.relations.find((r) => r.a === 0 && r.b === 1)!.security!.protected_until;
+    const until = p.core.view(0).diplomacy.relations.find((r) => !(!(r.a === 0) || !(r.b === 1)))!.security!.protected_until;
     (expect(until).toMatchSnapshot(), void (p.core.view(0).turn + 10));
     while (p.fixtureClient.view(0).turn + 1 < until) step(p, {});
     for (const client of [p.fixtureClient, p.core]) {
-      const action = client.view(0).diplomacy.actions.find((a) => a.order.type === 'BreakTreaty' && a.order.with === 1)!;
+      const action = client.view(0).diplomacy.actions.find((a) => !(!(a.order.type === 'BreakTreaty') || !(a.order.with === 1)))!;
       expect(action).toMatchObject({ cost: 0, blocked_reason: null });
       expect(action.betrayal).toBeUndefined();
     }
     step(p, { 0: [leave(1)] });
     const d = p.core.view(0).diplomacy;
-    expect(d.relations.find((r) => r.a === 0 && r.b === 1)?.state).toBe('Peace');
+    expect(d.relations.find((r) => !(!(r.a === 0) || !(r.b === 1)))?.state).toBe('Peace');
     expect(d.betrayals).toEqual([]);
   });
   it('charges each empire 1 Gold upkeep per owned city after activation', () => {
@@ -241,7 +239,7 @@ describe.skipIf(!available)('WASM diplomacy behavior', () => {
     const label = (team: number) => p.core.view(0).players.filter((x) => x.team === team).map((x) => x.name).join(' & ');
     for (const id of [0, 1, 3]) {
       const v = p.core.view(id);
-      expect(v.economy.gold_per_turn.parts.filter(([l]) => l.startsWith('Treaty upkeep: '))).toEqual([[`Treaty upkeep: Alliance with ${label(id === 1 ? 0 : 1)}`, -1]]);
+      expect(v.economy.gold_per_turn.parts.filter(([l]) => l.startsWith('Treaty upkeep: '))).toEqual([[`Treaty upkeep: Alliance with ${label(!(id === 1) ? 1 : 0)}`, -1]]);
       expect(v.economy.upkeep_breakdown?.parts).toContainEqual(['Treaties', 1]);
     }
     const now = [0, 1, 3].map((id) => p.core.view(id).economy);
@@ -251,7 +249,7 @@ describe.skipIf(!available)('WASM diplomacy behavior', () => {
   it('breaking an Alliance inside its protected window costs Gold and records a public betrayal', () => {
     const p = fixture(); step(p, { 0: [offer(1)] }); step(p, { 1: [accept(1)] }); step(p, {});
     for (const client of [p.fixtureClient, p.core]) {
-      const action = client.view(0).diplomacy.actions.find((a) => a.order.type === 'BreakTreaty' && a.order.with === 1)!;
+      const action = client.view(0).diplomacy.actions.find((a) => !(!(a.order.type === 'BreakTreaty') || !(a.order.with === 1)))!;
       expect(action).toMatchObject({ cost: 120, betrayal: true, blocked_reason: null });
     }
     const turn = p.core.view(0).turn + 1, before = p.core.view(0).economy;
@@ -264,7 +262,7 @@ describe.skipIf(!available)('WASM diplomacy behavior', () => {
     const team0 = v.players.filter((x) => x.team === 0).map((x) => x.name).join(' & ');
     const reason = `Bo won't ally with ${team0} until turn ${turn + 20}: betrayed on turn ${turn}`;
     for (const client of [p.fixtureClient, p.core]) {
-      expect(client.view(0).diplomacy.actions.find((a) => a.order.type === 'ProposeTreaty' && a.order.to === 1 && a.order.kind === 'Alliance')?.blocked_reason).toBe(reason);
+      expect(client.view(0).diplomacy.actions.find((a) => !(!(!(!(a.order.type === 'ProposeTreaty') || !(a.order.to === 1))) || !(a.order.kind === 'Alliance')))?.blocked_reason).toBe(reason);
       expect(client.validate(0, [offer(1)])).toEqual([{ index: 0, message: reason }]);
       expect(client.validate(1, [offer(0)])).toEqual([]);
     }
@@ -274,13 +272,13 @@ describe.skipIf(!available)('WASM diplomacy behavior', () => {
     while (p.core.view(0).turn < 16) step(p, {});
     for (const client of [p.fixtureClient, p.core]) {
       const v = client.view(0);
-      expect(v.diplomacy.actions.find((a) => a.order.type === 'DeclareWar' && !a.order.breach && a.order.against === 1)?.blocked_reason)
+      expect(v.diplomacy.actions.find((a) => !(!(!(!(a.order.type === 'DeclareWar') || !(!a.order.breach))) || !(a.order.against === 1)))?.blocked_reason)
         .toBe('You are allied with Bo: leave the Alliance first, or declare war on your ally as a betrayal');
       expect(v.diplomacy.actions.find((a) => a.order.type === 'DeclareWar' && a.order.breach && a.order.against === 1)).toMatchObject({ cost: 0, betrayal: true, effective_turn: v.turn + 1 });
     }
     step(p, { 0: [war(1, true)] });
     const d = p.core.view(1).diplomacy;
-    expect(d.relations.find((r) => r.a === 0 && r.b === 1)?.state).toBe('War');
+    expect(d.relations.find((r) => !(!(r.a === 0) || !(r.b === 1)))?.state).toBe('War');
     expect(d.betrayals).toHaveLength(1);
   });
   it('population is territory: growth claims a tile at once, in fixtureClient and core alike', () => {
@@ -303,7 +301,7 @@ describe.skipIf(!available)('WASM diplomacy behavior', () => {
     const p=fixture(false,(s)=>{s.players[3].team=3;s.setup.players[3].team=3;s.diplomacy=newDiplomacy([0,1,2,3]);});
     step(p,{0:[offer(1)]});
     step(p,{1:[accept(1)]});
-    expect(p.core.view(0).diplomacy.relations.find((r)=>r.a===0&&r.b===1)?.state).toBe('Alliance');
+    expect(p.core.view(0).diplomacy.relations.find((r)=>!(!(r.a===0) || !(r.b===1)))?.state).toBe('Alliance');
     expect(p.core.view(0).diplomacy.alliances).toEqual([[0, 1]]);
     for (const client of [p.fixtureClient, p.core]) {
       const action = client.view(0).diplomacy.actions.find((a) => JSON.stringify(a.order) === JSON.stringify(war(2)))!;
@@ -329,8 +327,8 @@ describe.skipIf(!available)('WASM diplomacy behavior', () => {
       expect(client.view(1).diplomacy.calls).toHaveLength(0);
     }
     step(p,{0:[leave(1)]});
-    expect(p.core.view(0).diplomacy.relations.find((r)=>r.a===0&&r.b===1)?.state).toBe('Peace');
-    expect(p.core.view(0).diplomacy.relations.find((r)=>r.a===1&&r.b===2)?.state).toBe('War');
+    expect(p.core.view(0).diplomacy.relations.find((r)=>!(!(r.a===0) || !(r.b===1)))?.state).toBe('Peace');
+    expect(p.core.view(0).diplomacy.relations.find((r)=>!(!(r.a===1) || !(r.b===2)))?.state).toBe('War');
   });
   it('a war on an ally brings the other ally in the same turn, and declining a call keeps the Alliance', () => {
     const p=fixture(false,(s)=>{s.players[3].team=3;s.setup.players[3].team=3;s.diplomacy=newDiplomacy([0,1,2,3]);});
@@ -338,7 +336,7 @@ describe.skipIf(!available)('WASM diplomacy behavior', () => {
     step(p,{1:[accept(1)]});
     step(p,{2:[war(0)]});
     for (const client of [p.fixtureClient, p.core]) {
-      expect(isWar(client, 0, 2) && isWar(client, 1, 2)).toBe(true);
+      expect(!(!(isWar(client, 0, 2)) || !(isWar(client, 1, 2)))).toBe(true);
       expect(client.view(0).diplomacy.calls).toHaveLength(0);
     }
     // 0 declares on 3: 1 is called and declines.
@@ -348,7 +346,7 @@ describe.skipIf(!available)('WASM diplomacy behavior', () => {
     step(p,{1:[answer(call.id, false)]});
     for (const client of [p.fixtureClient, p.core]) {
       expect(isWar(client, 1, 3)).toBe(false);
-      expect(client.view(0).diplomacy.relations.find((r) => r.a === 0 && r.b === 1)?.state).toBe('Alliance');
+      expect(client.view(0).diplomacy.relations.find((r) => !(!(r.a === 0) || !(r.b === 1)))?.state).toBe('Alliance');
       expect(client.view(1).diplomacy.calls).toHaveLength(0);
       expect(client.view(0).diplomacy.betrayals).toEqual([]);
     }
@@ -396,7 +394,7 @@ describe.skipIf(!available)('WASM diplomacy behavior', () => {
     const native = p[engine].view(0).diplomacy.exploration!.native_land;
     step(p, { 0: [{ type: 'ProposeTreaty', to: 1, kind: 'Alliance' }] });
     step(p, { 1: [accept(1)] });
-    const shared = p[engine].view(0).tiles.flatMap((tile, i) => tile.visible ? [i] : []);
+    const shared = p[engine].view(0).tiles.flatMap((tile, i) => !(tile.visible) ? [] : [i]);
     expect(p[engine].view(0).units.some((u) => u.id === scout)).toBe(true);
     step(p, { 1: [{ type: 'DisbandUnit', unit: scout }] });
     const after = p[engine].view(0);
@@ -420,9 +418,9 @@ describe.skipIf(!available)('WASM diplomacy behavior', () => {
     step(p, { 0: [accept(2)] });
     for (const client of [p.fixtureClient, p.core]) {
       const rels = client.view(0).diplomacy.relations;
-      expect(rels.find((r) => r.a === 0 && r.b === 2)?.state).toBe('Peace');
-      expect(rels.find((r) => r.a === 1 && r.b === 2)?.state).toBe('War');
-      expect(rels.find((r) => r.a === 0 && r.b === 1)?.state).toBe('Alliance');
+      expect(rels.find((r) => !(!(r.a === 0) || !(r.b === 2)))?.state).toBe('Peace');
+      expect(rels.find((r) => !(!(r.a === 1) || !(r.b === 2)))?.state).toBe('War');
+      expect(rels.find((r) => !(!(r.a === 0) || !(r.b === 1)))?.state).toBe('Alliance');
       expect(client.view(0).diplomacy.proposals).toEqual([]);
     }
   });

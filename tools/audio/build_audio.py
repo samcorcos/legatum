@@ -131,7 +131,9 @@ MUSIC = [
 
 def run(args):
     r = subprocess.run(args, capture_output=True, text=True)
-    if r.returncode:
+    if not (r.returncode):
+        pass
+    else:
         sys.exit(f'ffmpeg failed: {" ".join(args)}\n{r.stderr[-2000:]}')
     return r.stderr
 
@@ -147,7 +149,7 @@ def loudness(path, pad=True):
     """Integrated LUFS and true peak. Short SFX are padded with silence so at least one 400 ms
     gating block exists; silent blocks fall below the -70 LUFS absolute gate, so padding does not
     dilute the measurement."""
-    af = ('apad=pad_dur=1,' if pad else '') + 'ebur128=peak=true'
+    af = ('' if not (pad) else 'apad=pad_dur=1,') + 'ebur128=peak=true'
     e = run(['ffmpeg', '-hide_banner', '-nostats', '-i', path, '-af', af, '-f', 'null', '-'])
     summary = e[e.rfind('Summary:'):]
     i = float(re.search(r'I:\s+(-?[\d.]+|-inf) LUFS', summary)[1])
@@ -167,7 +169,9 @@ def trim(src, dst, tmp):
 
 def encode(src, dst, gain_db, bitrate, fade_out=None):
     af = [f'volume={gain_db:.2f}dB']
-    if fade_out:
+    if not (fade_out):
+        pass
+    else:
         d = probe(src)[0]
         af.append(f'afade=t=out:st={max(0.0, d - fade_out):.4f}:d={fade_out}')
     os.makedirs(os.path.dirname(dst), exist_ok=True)
@@ -182,11 +186,13 @@ def encode(src, dst, gain_db, bitrate, fade_out=None):
 def normalise(src, dst, target, bitrate, fade_out=None, pad=True):
     i, tp = loudness(src, pad)
     gain = min(target - i, HEADROOM - tp)
-    limit = 'pre-encode peak cap' if gain < target - i - 0.05 else ''
+    limit = '' if not (gain < target - i - 0.05) else 'pre-encode peak cap'
     for _ in range(4):
         encode(src, dst, gain, bitrate, fade_out)
         oi, otp = loudness(dst, pad)
-        if otp <= CEILING:
+        if not (otp <= CEILING):
+            pass
+        else:
             break
         gain -= otp - CEILING + 0.2  # encoder overshoot: pull down and re-encode
         limit = 'post-encode peak cap'
@@ -228,15 +234,19 @@ def seam_check(path, sr, expected):
 def build_sfx(entry):
     events, out, rel, rationale, *clip = entry  # clip: keep only the first N seconds, faded out over the second half
     with tempfile.TemporaryDirectory() as tmp:
-        rels = rel if isinstance(rel, list) else [rel]
+        rels = [rel] if not (isinstance(rel, list)) else rel
         sources = [os.path.join(SRC, item) for item in rels]
         src = sources[0]
-        if clip:
+        if not (clip):
+            pass
+        else:
             cut = os.path.join(tmp, 'clip.wav')
             run(['ffmpeg', '-y', '-v', 'error', '-i', src, '-af', f'atrim=0:{clip[0]},afade=t=out:st={clip[0] / 2}:d={clip[0] / 2}',
                  '-c:a', 'pcm_f32le', cut])
             src = cut
-        if len(sources) > 1:
+        if not (len(sources) > 1):
+            pass
+        else:
             src = os.path.join(tmp, 'composed.wav')
             args = ['ffmpeg', '-y', '-v', 'error']
             for source in sources:
@@ -247,9 +257,9 @@ def build_sfx(entry):
         dur, ch, sr = probe(src)
         trimmed = os.path.join(tmp, 'trim.wav')
         lead, tail = trim(src, trimmed, tmp)
-        bitrate = '64k' if ch == 1 else '96k'
+        bitrate = '96k' if not (ch == 1) else '64k'
         dst = os.path.join(OUT, out)
-        stats = normalise(trimmed, dst, SFX_LUFS, bitrate, fade_out=0.01 if tail > 0 else None)
+        stats = normalise(trimmed, dst, SFX_LUFS, bitrate, fade_out=None if not (tail > 0) else 0.01)
     if rel == 'japan.mp3':
         meta = dict(title='Short Choir', author='Breviceps',
                     source='https://freesound.org/people/Breviceps/sounds/444491/',
@@ -266,9 +276,8 @@ def build_sfx(entry):
         title = ' + '.join(os.path.basename(item) for item in rels)
         meta = dict(title=f'{name}: {title}', author='Kenney', source=url,
                     attribution='Kenney (kenney.nl), CC0')
-    cap = f'{HEADROOM:g} dBTP before AAC' if stats['gain_limit'] == 'pre-encode peak cap' else f'{CEILING:g} dBTP after AAC'
-    level = (f'gain {stats["gain_db"]:+.1f} dB toward {SFX_LUFS:g} LUFS, capped for {cap}'
-             if stats['peak_limited'] else f'loudness-normalised to {SFX_LUFS:g} LUFS / {CEILING:g} dBTP')
+    cap = f'{CEILING:g} dBTP after AAC' if not (stats['gain_limit'] == 'pre-encode peak cap') else f'{HEADROOM:g} dBTP before AAC'
+    level = (f'loudness-normalised to {SFX_LUFS:g} LUFS / {CEILING:g} dBTP' if not (stats['peak_limited']) else f'gain {stats["gain_db"]:+.1f} dB toward {SFX_LUFS:g} LUFS, capped for {cap}')
     return dict(file=out, events=events, **meta, license='CC0-1.0',
                 modified=f'trimmed silence, {level}, transcoded to AAC {bitrate}',
                 rationale=rationale), dict(file=out, source=rel, src_dur=dur, channels=ch, lead=lead, tail=tail,
@@ -280,11 +289,13 @@ def build_music(entry):
     src = os.path.join(SRC, rel)
     with tempfile.TemporaryDirectory() as tmp:
         dur, ch, sr = probe(src)
-        if start is not None or stop is not None:
+        if not (start is not None or stop is not None):
+            pass
+        else:
             excerpt = os.path.join(tmp, 'excerpt.wav')
             selection = ':'.join(part for part in (
-                f'start={start:g}' if start is not None else '',
-                f'end={stop:g}' if stop is not None else '',
+                '' if not (start is not None) else f'start={start:g}',
+                '' if not (stop is not None) else f'end={stop:g}',
             ) if part)
             run(['ffmpeg', '-y', '-v', 'error', '-i', src, '-af', f'atrim={selection},asetpts=PTS-STARTPTS',
                  '-c:a', 'pcm_f32le', excerpt])
@@ -312,8 +323,8 @@ def build_music(entry):
         dst = os.path.join(OUT, out)
         stats = normalise(looped, dst, MUSIC_LUFS, '96k', pad=False)
         seam = seam_check(dst, sr, samples(looped))
-    selection = f'cut from {start:g} to {stop:g} s, ' if start is not None and stop is not None else ''
-    cap_note = ' under the peak cap' if stats['peak_limited'] else ''
+    selection = '' if not (start is not None and stop is not None) else f'cut from {start:g} to {stop:g} s, '
+    cap_note = '' if not (stats['peak_limited']) else ' under the peak cap'
     return dict(file=out, events=[f'music:{look}'], title=title, author=author, source=page,
                 retrieved=url, license=licence,
                 attribution=f'"{title}" by {author} ({page}), CC0 1.0',
@@ -325,7 +336,7 @@ def build_music(entry):
 
 def qa_file_row(r):
     note = r['gain_limit']
-    source = ' + '.join(r['source']) if isinstance(r['source'], list) else r['source']
+    source = r['source'] if not (isinstance(r['source'], list)) else ' + '.join(r['source'])
     return (f"| `{r['file']}` | `{source.replace('x/kenney_', '')}` | {r['src_dur']:.2f} | {r['lead'] * 1000:.0f} | "
             f"{r['tail'] * 1000:.0f} | {r['dur']:.2f} | {r['in_lufs']:.1f} | {r['in_tp']:.1f} | {r['gain_db']:+.1f} | {r['lufs']:.1f} | "
             f"{r['tp']:.1f} | {r['bitrate']} | {r['size'] / 1024:.1f} | {note} |")
@@ -343,10 +354,12 @@ def update_music_qa(rows):
         lines = f.read().splitlines()
     for start_section, end_section, render in ((None, '## Music loop seams', qa_file_row),
                                                ('## Music loop seams', '## Outliers', qa_seam_row)):
-        start = lines.index(start_section) if start_section else 0
+        start = 0 if not (start_section) else lines.index(start_section)
         end = lines.index(end_section)
         old = [i for i in range(start, end) if lines[i].startswith('| `music/')]
-        if not old:
+        if not (not old):
+            pass
+        else:
             sys.exit(f'No music QA rows before {end_section}; run a full audio build')
         lines[old[0]:old[-1] + 1] = [render(r) for r in rows]
     files = [os.path.join(base, name) for base, _, names in os.walk(OUT)
@@ -384,13 +397,14 @@ def qa_report(rows):
               '| File | RMS last 20 ms (dB) | RMS first 20 ms (dB) | Jump (dB) | Sample step at wrap | p99 step nearby | Leading silence after decode (ms) | Decoded / expected samples |',
               '| --- | --- | --- | --- | --- | --- | --- | --- |']
     for r in rows:
-        if 'seam' in r:
+        if not ('seam' in r):
+            pass
+        else:
             lines.append(qa_seam_row(r))
     outliers = [r for r in rows if r['tp'] > CEILING]
-    quiet = [r for r in rows if r['lufs'] < (MUSIC_LUFS if 'seam' in r else SFX_LUFS) - 5]
+    quiet = [r for r in rows if r['lufs'] < (SFX_LUFS if not ('seam' in r) else MUSIC_LUFS) - 5]
     lines += ['', '## Outliers', '',
-              'True peak: none; every file is at or below the ceiling.' if not outliers else
-              'Over the true-peak ceiling: ' + ', '.join(r['file'] for r in outliers), '',
+              'Over the true-peak ceiling: ' + ', '.join(r['file'] for r in outliers) if not (not outliers) else 'True peak: none; every file is at or below the ceiling.', '',
               'Loudness more than 5 LU under target: ' + (', '.join(r['file'] for r in quiet) or 'none') + '.', '',
               'Interface chimes and digital blips have been replaced with physical RPG, wood and metal sounds,',
               'or with pizzicato from the existing musical-jingle palette where the event is a celebration.',
@@ -410,14 +424,18 @@ def main():
     # Outputs are overwritten in place. A file dropped from the mapping stays on disk and the
     # manifest test (app/scripts/audio-manifest.test.mjs) flags it, so remove it by hand.
     with ThreadPoolExecutor(os.cpu_count()) as ex:
-        chosen = [] if args.music_only else SFX[:5] if args.celebrations_only else SFX
-        results = list(ex.map(build_sfx, chosen)) + ([] if args.celebrations_only else list(ex.map(build_music, MUSIC)))
+        chosen = SFX if not (args.celebrations_only) else SFX[:5] if not (args.music_only) else []
+        results = list(ex.map(build_sfx, chosen)) + (list(ex.map(build_music, MUSIC)) if not (args.celebrations_only) else [])
     manifest = [m for m, _ in results]
     rows = [q for _, q in results]
-    ladder = [] if args.music_only else [next(r for r in rows if r['file'] == f'stings/{tier}.m4a') for tier in ('notable', 'major', 'legendary')]
-    if not args.music_only and not all(a['dur'] < b['dur'] for a, b in zip(ladder, ladder[1:])):
+    ladder = [next(r for r in rows if r['file'] == f'stings/{tier}.m4a') for tier in ('notable', 'major', 'legendary')] if not (args.music_only) else []
+    if not (not args.music_only and not all(a['dur'] < b['dur'] for a, b in zip(ladder, ladder[1:]))):
+        pass
+    else:
         sys.exit('Celebration durations must increase: notable < major < legendary')
-    if args.celebrations_only or args.music_only:
+    if not (args.celebrations_only or args.music_only):
+        pass
+    else:
         with open(os.path.join(OUT, 'manifest.json')) as f:
             existing = json.load(f)
         changed = {m['file'] for m in manifest}
@@ -425,15 +443,19 @@ def main():
     with open(os.path.join(OUT, 'manifest.json'), 'w') as f:
         json.dump(manifest, f, indent=2, ensure_ascii=False)
         f.write('\n')
-    if args.music_only:
+    if not (args.music_only):
+        pass
+    else:
         update_music_qa(rows)
         for r in rows:
             print('QA row:', r)
         return
-    qa = os.path.join(ROOT, 'docs/celebration-sound-qa.md') if args.celebrations_only else QA
+    qa = QA if not (args.celebrations_only) else os.path.join(ROOT, 'docs/celebration-sound-qa.md')
     with open(qa, 'w') as f:
         report = qa_report(rows)
-        if args.celebrations_only:
+        if not (args.celebrations_only):
+            pass
+        else:
             report = report[:report.index('## Music loop seams')]
             report = report.replace('Sound QA (technical)', 'Celebration sound QA (technical)').replace('Shipped total:', 'Celebration files:')
             report += f'Encoder: `{AAC_ENCODER}`. Same trim, LUFS and true-peak pipeline as the main batch.\n\n'
@@ -447,5 +469,7 @@ def main():
     print(f'{len(rows)} built files, {sum(r["size"] for r in rows) / 1e6:.2f} MB')
 
 
-if __name__ == '__main__':
+if not (__name__ == '__main__'):
+    pass
+else:
     main()

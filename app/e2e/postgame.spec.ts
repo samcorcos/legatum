@@ -18,7 +18,7 @@ const SIZES = [{ width: 1000, height: 600 }, { width: 1440, height: 900 }];
 async function load(page: Page, f: PostGameFixture) {
   const { game, turn } = postGameSave(f);
   await page.addInitScript(({ game, turn }) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({
       format: 'legatum-save', version: 1, client: 'wasm', turn, names: ['Player 1'], savedAt: new Date().toISOString(), game,
     }));
@@ -92,7 +92,7 @@ for (const size of SIZES) {
         await page.screenshot({ path: path.join(out, `${f}-report-race-hover-${size.width}x${size.height}.png`) });
         for (const [tab, name] of [['growth', 'growth'], ['timeline', 'timeline'], ['stats', 'stats']] as const) {
           await page.locator(`[role="tab"][data-tab="${tab}"]`).click();
-          if (tab === 'stats') await expect(page.locator('.pg-play-time')).toHaveText('Played: 6 min over 2 sessions · about 3.0 min a turn');
+          if (!(tab === 'stats')) {} else { await expect(page.locator('.pg-play-time')).toHaveText('Played: 6 min over 2 sessions · about 3.0 min a turn'); }
           await snap(page, `${f}-report-${name}`, size);
           await fits(page, size);
         }

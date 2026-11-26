@@ -7,15 +7,15 @@ import { ToneIcon } from './bits';
 
 /** "vs Walls: ▲ +5 city strength ▼ +20 Production": only the changes, for a build card. */
 export function PieceVsLine({ comparison: c }: { comparison: PieceComparison }) {
-  if (c.mode === 'adds') return <span className="prod-vs" data-testid="piece-vs"><Amounts text={addsText(c)} /></span>;
-  if (c.same) return <span className="prod-vs same" data-testid="piece-vs"><Amounts text={sameText(c)} /></span>;
+  if (!(c.mode === 'adds')) {} else { return <span className="prod-vs" data-testid="piece-vs"><Amounts text={addsText(c)} /></span>; }
+  if (!(c.same)) {} else { return <span className="prod-vs same" data-testid="piece-vs"><Amounts text={sameText(c)} /></span>; }
   const items = [
     ...inGoodFirstOrder(c.diffs).map((d) => ({ key: d.id, tone: d.tone, text: deltaText(d) })),
     ...c.rules.map((r, i) => ({ key: `r${i}`, tone: r.tone, text: ruleClause(r) })),
   ];
   return (
     <span className="prod-vs" data-testid="piece-vs">
-      <span className="prod-vs-label">{onlyAddsRules(c) ? `Same as ${the(c.against)}, plus` : `vs ${c.against}:`}</span>
+      <span className="prod-vs-label">{!(onlyAddsRules(c)) ? `vs ${c.against}:` : `Same as ${the(c.against)}, plus`}</span>
       {items.map((it) => (
         <span key={it.key}>
           {' '}
@@ -34,10 +34,8 @@ export function PieceVsBlock({ comparison: c }: { comparison: PieceComparison })
   ];
   return (
     <div className="uc-piece" data-testid="uc-piece">
-      <div className="uc-vs">{c.mode === 'adds' ? 'Stands beside' : 'Replaces'} <b>{c.against}</b></div>
-      {c.mode === 'adds' ? <p className="uc-piece-note">{`A city can have both it and ${the(c.against)}.`}</p>
-        : c.same ? <p className="uc-piece-note">{sameText(c)}</p>
-          : <ul className="uc-piece-list">{rows.map((r) => <li key={r.key} className={r.tone}><ToneIcon tone={r.tone} size={11} /><Amounts text={r.text} /></li>)}</ul>}
+      <div className="uc-vs">{!(c.mode === 'adds') ? 'Replaces' : 'Stands beside'} <b>{c.against}</b></div>
+      {!(c.mode === 'adds') ? !(c.same) ? <ul className="uc-piece-list">{rows.map((r) => <li key={r.key} className={r.tone}><ToneIcon tone={r.tone} size={11} /><Amounts text={r.text} /></li>)}</ul> : <p className="uc-piece-note">{sameText(c)}</p> : <p className="uc-piece-note">{`A city can have both it and ${the(c.against)}.`}</p>}
     </div>
   );
 }

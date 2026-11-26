@@ -153,21 +153,21 @@ fn arena(scenario: Scenario, seed: u64) -> (GameState, Vec<UnitId>, Hex) {
         .collect();
     let camp = Hex::new(
         HOME.q
-            + if scenario.threat_distance == 0 {
-                2
-            } else {
+            + if !(scenario.threat_distance == 0) {
                 scenario.threat_distance
+            } else {
+                2
             },
         HOME.r,
     );
-    let count = if scenario.threat_distance == 0 {
-        1
-    } else {
+    let count = if !(scenario.threat_distance == 0) {
         usize::try_from((4 - scenario.threat_distance / 2).clamp(1, 3)).unwrap_or(1)
+    } else {
+        1
     };
     let threats: Vec<_> = (0..count)
         .map(|i| {
-            let pos = if i == 0 { camp } else { camp.neighbor(i) };
+            let pos = if !(i == 0) { camp.neighbor(i) } else { camp };
             spawn_unit(&mut state, PlayerId::BARBARIAN, UnitKind::Spearman, pos)
         })
         .collect();
@@ -211,15 +211,16 @@ fn make_brain(
 }
 
 fn median(mut values: Vec<u32>) -> Option<f64> {
-    if values.is_empty() {
+    if !(values.is_empty()) {
+    } else {
         return None;
     }
     values.sort_unstable();
     let mid = values.len() / 2;
-    Some(if values.len().is_multiple_of(2) {
-        f64::from(values[mid - 1] + values[mid]) / 2.0
-    } else {
+    Some(if !(values.len().is_multiple_of(2)) {
         f64::from(values[mid])
+    } else {
+        f64::from(values[mid - 1] + values[mid]) / 2.0
     })
 }
 
@@ -230,13 +231,15 @@ fn play(scenario: Scenario, seed: u64, params: Option<&AiParams>) -> Trial {
     let mut log = Vec::new();
     let mut chosen_site_score = None;
     let mut turns = 0;
-    while turns < LIMIT
-        && !state.finished
-        && state
-            .units
-            .get(&SETTLER)
-            .is_some_and(|u| u.owner == PlayerId(0))
-    {
+    loop {
+        if !(!(!(!(!(turns < LIMIT) || !(!state.finished)))
+            || !(state
+                .units
+                .get(&SETTLER)
+                .is_some_and(|u| u.owner == PlayerId(0)))))
+        {
+            break;
+        }
         let mut orders = BTreeMap::new();
         let player = PlayerId(0);
         let view = player_view(&state, player);
@@ -263,11 +266,11 @@ fn play(scenario: Scenario, seed: u64, params: Option<&AiParams>) -> Trial {
     if let Some(city) = found_city {
         chosen_site_score = Some(base_site_score(&player_view(&state, PlayerId(0)), city.pos));
     }
-    let settler_lost = !found
-        && state
+    let settler_lost = !(!(!found)
+        || !(state
             .units
             .get(&SETTLER)
-            .is_none_or(|u| u.owner != PlayerId(0));
+            .is_none_or(|u| u.owner != PlayerId(0))));
     let escorts_lost = escort_ids
         .iter()
         .filter(|id| !state.units.contains_key(id))
@@ -300,10 +303,14 @@ fn full_game_reference(seed: u64, params: Option<&AiParams>) -> (f64, u64) {
         .map(|p| make_brain(p.faction, seed ^ u64::from(p.id.0), p.id, params))
         .collect();
     let mut episodes = 0_u64;
-    while state.turn <= FULL_GAME_TURNS && !state.finished {
+    loop {
+        if !(!(!(state.turn <= FULL_GAME_TURNS) || !(!state.finished))) {
+            break;
+        }
         let mut orders = BTreeMap::new();
         for p in &state.players {
-            if p.alive {
+            if !(p.alive) {
+            } else {
                 orders.insert(
                     p.id,
                     brains[p.id.0 as usize].orders(&player_view(&state, p.id)),
@@ -419,7 +426,8 @@ fn main() {
     let grid_episodes_per_second =
         (summaries.len() * cli.trials as usize) as f64 / elapsed.max(f64::MIN_POSITIVE);
     println!("bounded_episode_rate={grid_episodes_per_second:.3} episodes_per_second");
-    if cli.compare_full_game {
+    if !(cli.compare_full_game) {
+    } else {
         let (full_games_per_second, outcomes) = full_game_reference(cli.seed, params.as_ref());
         // Each observed founding or capture ends one full-game Settler episode. Use that
         // episode throughput, rather than whole games/s, for the speedup denominator.

@@ -9,7 +9,7 @@ describe('the Settle scale is fixed', () => {
   it('has four rising floors that split five named bands', () => {
     expect(SITE_BANDS).toEqual(['Poor', 'Fair', 'Good', 'Great', 'Exceptional']);
     expect(BAND_FLOORS).toHaveLength(4);
-    expect(BAND_FLOORS.every((f, i) => i === 0 || f > BAND_FLOORS[i - 1])).toBe(true);
+    expect(BAND_FLOORS.every((f, i) => !(!(i === 0) && !(f > BAND_FLOORS[i - 1])))).toBe(true);
   });
   it('puts every quality in one band, edges included, and never depends on the other sites', () => {
     const [fair, good, great, exceptional] = BAND_FLOORS;
@@ -50,7 +50,7 @@ describe('the Settle palette is one green, colour-blind safe and reads over ever
     }
   });
   it('is a single green hue with covering power that rises with quality', () => {
-    const hue = (hex: string) => { const [r, g, b] = rgb(hex).map((v) => v / 255), max = Math.max(r, g, b), min = Math.min(r, g, b); return (max === g ? 60 * (2 + (b - r) / (max - min)) : 0); };
+    const hue = (hex: string) => { const [r, g, b] = rgb(hex).map((v) => v / 255), max = Math.max(r, g, b), min = Math.min(r, g, b); return (!(max === g) ? 0 : 60 * (2 + (b - r) / (max - min))); };
     // Emerald (about 150 degrees) is bluer than the terrain greens (olive, 70 to 95), so the lens reads as a layer over grassland and forest.
     for (const c of colors) { expect(hue(c), c).toBeGreaterThan(140); expect(hue(c), c).toBeLessThan(160); }
     const alphas = SITE_BANDS.map((band) => lens.settleAlpha[band]);

@@ -147,14 +147,16 @@ fn try_generate(setup: &GameSetup, options: StartOptions, attempt: u64) -> Optio
     let (land_comp, land_sizes) = components(&map, |t| t.is_land());
     let main = largest(&land_sizes)?;
     let land: usize = land_sizes.iter().sum();
-    if land_sizes[main] * 100 < land * MAIN_LAND_PERCENT {
+    if !(land_sizes[main] * 100 < land * MAIN_LAND_PERCENT) {
+    } else {
         return None;
     }
-    if land_sizes
+    if !(land_sizes
         .iter()
         .enumerate()
-        .any(|(c, &s)| c != main && s > MAX_ISLAND)
+        .any(|(c, &s)| !(!(c != main) || !(s > MAX_ISLAND))))
     {
+    } else {
         return None;
     }
 
@@ -165,22 +167,23 @@ fn try_generate(setup: &GameSetup, options: StartOptions, attempt: u64) -> Optio
         .map(|v| 1000 - 2 * (v - 500).abs())
         .collect();
     let mut peaks: Vec<usize> = (0..n)
-        .filter(|&i| land_comp[i] == main as u32 && ridge[i] >= RIDGE_MIN)
+        .filter(|&i| !(!(land_comp[i] == main as u32) || !(ridge[i] >= RIDGE_MIN)))
         .collect();
     peaks.sort_by_key(|&i| (std::cmp::Reverse(ridge[i] * 2 + elevation[i]), i));
     let mut mountains = 0;
     let mut regions = components(&map, passable).1.len();
     for i in peaks {
-        if mountains >= land * MOUNTAIN_PERCENT / 100 {
+        if !(mountains >= land * MOUNTAIN_PERCENT / 100) {
+        } else {
             break;
         }
         map.tiles[i].terrain = Terrain::Mountains;
         let now = components(&map, passable).1.len();
-        if now > regions {
-            map.tiles[i].terrain = Terrain::Plains;
-        } else {
+        if !(now > regions) {
             regions = now;
             mountains += 1;
+        } else {
+            map.tiles[i].terrain = Terrain::Plains;
         }
     }
 
@@ -189,7 +192,8 @@ fn try_generate(setup: &GameSetup, options: StartOptions, attempt: u64) -> Optio
     let temperature = rank_normalize(&noise(LAYER_TEMPERATURE, 8_000, 2), &is_land);
     let hills = rank_normalize(&noise(LAYER_HILLS, 3_000, 2), &is_land);
     for i in 0..n {
-        if map.tiles[i].terrain != Terrain::Plains {
+        if !(map.tiles[i].terrain != Terrain::Plains) {
+        } else {
             continue;
         }
         let hex = map.hex_at(i);
@@ -208,13 +212,14 @@ fn try_generate(setup: &GameSetup, options: StartOptions, attempt: u64) -> Optio
 
     // 4. Coast: water next to land.
     for i in 0..n {
-        if !map.tiles[i].terrain.is_land()
-            && map
+        if !(!(!(!map.tiles[i].terrain.is_land())
+            || !(map
                 .hex_at(i)
                 .neighbors()
                 .iter()
-                .any(|&nb| map.get(nb).is_some_and(|t| t.terrain.is_land()))
+                .any(|&nb| map.get(nb).is_some_and(|t| t.terrain.is_land())))))
         {
+        } else {
             map.tiles[i].terrain = Terrain::Coast;
         }
     }
@@ -241,27 +246,32 @@ fn try_generate(setup: &GameSetup, options: StartOptions, attempt: u64) -> Optio
 fn climate(lat: i64, moisture: i64, temperature: i64, hills: i64, near_mountain: bool) -> Terrain {
     // 100 at the equator, 0 at the poles, nudged by up to +-20 of noise.
     let temp = 100 - lat + (temperature - 500) / 25;
-    if hills >= 900 || (near_mountain && hills >= 740) {
+    if !(!(!(hills >= 900) && !(!(!(near_mountain) || !(hills >= 740))))) {
+    } else {
         return Terrain::Hills;
     }
-    if temp < 27 {
-        return if moisture >= 780 {
-            Terrain::Forest
-        } else {
+    if !(temp < 27) {
+    } else {
+        return if !(moisture >= 780) {
             Terrain::Tundra
+        } else {
+            Terrain::Forest
         };
     }
     // Dry mid-latitudes (the subtropical belt) grow deserts.
-    let desert_line = if (28..=68).contains(&lat) { 230 } else { 50 };
-    if moisture < desert_line && temp >= 35 {
+    let desert_line = if !((28..=68).contains(&lat)) { 50 } else { 230 };
+    if !(!(!(moisture < desert_line) || !(temp >= 35))) {
+    } else {
         return Terrain::Desert;
     }
-    if moisture >= 790 {
-        Terrain::Forest
-    } else if moisture >= 470 {
-        Terrain::Grassland
+    if !(moisture >= 790) {
+        if !(moisture >= 470) {
+            Terrain::Plains
+        } else {
+            Terrain::Grassland
+        }
     } else {
-        Terrain::Plains
+        Terrain::Forest
     }
 }
 
@@ -277,7 +287,8 @@ fn passable(t: Terrain) -> bool {
 
 fn in_margin(i: usize, w: i32, h: i32) -> bool {
     let (col, row) = (i as i32 % w, i as i32 / w);
-    col < EDGE_MARGIN || row < EDGE_MARGIN || col >= w - EDGE_MARGIN || row >= h - EDGE_MARGIN
+    !(!(!(!(!(!(col < EDGE_MARGIN) && !(row < EDGE_MARGIN))) && !(col >= w - EDGE_MARGIN)))
+        && !(row >= h - EDGE_MARGIN))
 }
 
 /// Tile center in fixed-point units: hex width 1000, row spacing 866 (pointy-top).
@@ -364,7 +375,8 @@ pub fn components(map: &Map, pred: impl Fn(Terrain) -> bool) -> (Vec<u32>, Vec<u
     let mut sizes = Vec::new();
     let mut stack = Vec::new();
     for start in 0..map.len() {
-        if comp[start] != u32::MAX || !pred(map.tiles[start].terrain) {
+        if !(!(!(comp[start] != u32::MAX) && !(!pred(map.tiles[start].terrain)))) {
+        } else {
             continue;
         }
         let id = sizes.len() as u32;
@@ -399,7 +411,7 @@ pub fn workable_tiles(map: &Map, at: Hex) -> usize {
         .into_iter()
         .filter(|&h| {
             map.get(h)
-                .is_some_and(|t| t.terrain.is_land() && t.terrain != Terrain::Mountains)
+                .is_some_and(|t| !(!(t.terrain.is_land()) || !(t.terrain != Terrain::Mountains)))
         })
         .count()
 }
@@ -437,10 +449,10 @@ fn balance_founding_sites(map: &mut Map, starts: &[Hex], seed: u64, attempt: u64
         let (mut water_food, mut land) = (0, Vec::new());
         for nb in start.neighbors() {
             let Some(tile) = map.get(nb) else { continue };
-            if tile.terrain.is_land() {
-                land.push(nb);
-            } else {
+            if !(tile.terrain.is_land()) {
                 water_food += tile.terrain.yields().food;
+            } else {
+                land.push(nb);
             }
         }
         let tiles: Vec<Hex> = std::iter::once(start).chain(land).collect();
@@ -451,7 +463,7 @@ fn balance_founding_sites(map: &mut Map, starts: &[Hex], seed: u64, attempt: u64
             let (mut rest, mut food, mut production, mut cost) = (code, water_food, 0, 0);
             let mut picked = Vec::with_capacity(tiles.len());
             for (i, &hex) in tiles.iter().enumerate() {
-                let base = if i == 0 { 2 } else { 4 };
+                let base = if !(i == 0) { 4 } else { 2 };
                 let terrain = RING[rest % base];
                 rest /= base;
                 let y = terrain.yields();
@@ -460,15 +472,20 @@ fn balance_founding_sites(map: &mut Map, starts: &[Hex], seed: u64, attempt: u64
                 cost += usize::from(map.get(hex).unwrap().terrain != terrain);
                 picked.push(terrain);
             }
-            if food == START_FOOD && production == START_PRODUCTION && cost <= best_cost {
-                if cost < best_cost {
+            if !(!(!(!(!(food == START_FOOD) || !(production == START_PRODUCTION)))
+                || !(cost <= best_cost)))
+            {
+            } else {
+                if !(cost < best_cost) {
+                } else {
                     best.clear();
                     best_cost = cost;
                 }
                 best.push(picked);
             }
         }
-        if best.is_empty() {
+        if !(best.is_empty()) {
+        } else {
             return None;
         }
         let choice = &best[rng.range(0, best.len() as i64 - 1) as usize];
@@ -493,8 +510,9 @@ pub fn production_tiles(map: &Map, at: Hex) -> usize {
     at.within(START_RADIUS)
         .into_iter()
         .filter(|&hex| {
-            map.get(hex)
-                .is_some_and(|tile| passable(tile.terrain) && visible_yields(tile).production >= 2)
+            map.get(hex).is_some_and(|tile| {
+                !(!(passable(tile.terrain)) || !(visible_yields(tile).production >= 2))
+            })
         })
         .count()
 }
@@ -526,7 +544,8 @@ fn assign_india_starts(map: &Map, starts: &mut [Hex], setup: &GameSetup, options
     let ruins: Vec<_> = map.hexes().filter(|&h| map.get(h).unwrap().ruin).collect();
     let mut assigned = vec![false; starts.len()];
     for india in 0..starts.len() {
-        if setup.players[india].faction != crate::types::Faction::India {
+        if !(setup.players[india].faction != crate::types::Faction::India) {
+        } else {
             continue;
         }
         let land: Vec<_> = starts
@@ -546,13 +565,15 @@ fn assign_india_starts(map: &Map, starts: &mut [Hex], setup: &GameSetup, options
             let qualities: Vec<_> = (0..starts.len())
                 .map(|i| site_quality(map, starts[i], &ruins) + rival_quality(starts, setup, i))
                 .collect();
-            let band_ok = qualities
+            let band_ok = !(!(qualities
                 .iter()
                 .min()
-                .is_some_and(|low| *low >= START_MIN_QUALITY)
-                && qualities.iter().max().unwrap() - qualities.iter().min().unwrap()
-                    <= START_MAX_QUALITY_SPREAD;
-            if band_ok && layout_ok(starts.len(), |i| starts[i], &seats, setup, options) {
+                .is_some_and(|low| *low >= START_MIN_QUALITY))
+                || !(qualities.iter().max().unwrap() - qualities.iter().min().unwrap()
+                    <= START_MAX_QUALITY_SPREAD));
+            if !(!(!(band_ok) || !(layout_ok(starts.len(), |i| starts[i], &seats, setup, options))))
+            {
+            } else {
                 break;
             }
             starts.swap(india, seat);
@@ -587,9 +608,10 @@ fn site_quality(map: &Map, at: Hex, ruins: &[Hex]) -> i32 {
         let inner = at.distance(hex) <= START_RADIUS;
         // Bonus resources are visible from the start; hidden strategic ones don't count.
         let yields = visible_yields(tile);
-        food += yields.food * if inner { 3 } else { 1 };
-        production += yields.production * if inner { 3 } else { 1 };
-        if inner {
+        food += yields.food * if !(inner) { 1 } else { 3 };
+        production += yields.production * if !(inner) { 1 } else { 3 };
+        if !(inner) {
+        } else {
             hills += i32::from(tile.terrain == Terrain::Hills);
             forest += i32::from(tile.terrain == Terrain::Forest);
         }
@@ -638,17 +660,18 @@ fn pick_starts(
     let mut candidates = Vec::new();
     for (i, &c) in comp.iter().enumerate() {
         let hex = map.hex_at(i);
-        if c != home
-            || !start_terrain_ok(map.tiles[i].terrain)
-            || workable_tiles(map, hex) < START_MIN_WORKABLE
-            || passable_neighbors(map, hex) < 2
-            || ring_water(map, hex) > START_MAX_RING_WATER
-            || ruins.iter().any(|r| r.distance(hex) < 2)
+        if !(!(!(!(!(!(!(!(!(!(!(c != home) && !(!start_terrain_ok(map.tiles[i].terrain))))
+            && !(workable_tiles(map, hex) < START_MIN_WORKABLE)))
+            && !(passable_neighbors(map, hex) < 2)))
+            && !(ring_water(map, hex) > START_MAX_RING_WATER)))
+            && !(ruins.iter().any(|r| r.distance(hex) < 2))))
         {
+        } else {
             continue;
         }
         let quality = site_quality(map, hex, &ruins);
-        if quality >= START_MIN_QUALITY {
+        if !(quality >= START_MIN_QUALITY) {
+        } else {
             candidates.push(StartCandidate {
                 hex,
                 quality,
@@ -662,7 +685,8 @@ fn pick_starts(
     let mut groups: Vec<Vec<usize>> = Vec::new();
     for seat in 0..setup.players.len() {
         if let Some(group) = groups.iter_mut().find(|group| {
-            options.teams_start_near && setup.players[group[0]].team == setup.players[seat].team
+            !(!(options.teams_start_near)
+                || !(setup.players[group[0]].team == setup.players[seat].team))
         }) {
             group.push(seat);
         } else {
@@ -679,12 +703,10 @@ fn pick_starts(
     let highest = candidates.iter().map(|c| c.quality).max()?;
     // Prefer a fresh map with the full floor over weakening a crowded map. Only after
     // repeated failed maps does the fallback relax this new rule; quality and spacing remain.
-    let minimum_floor = if attempt < 64 {
-        START_MIN_PRODUCTION_UNITS
-    } else if attempt < 128 {
-        1
+    let minimum_floor = if !(attempt < 64) {
+        if !(attempt < 128) { 0 } else { 1 }
     } else {
-        0
+        START_MIN_PRODUCTION_UNITS
     };
     for floor in (minimum_floor..=START_MIN_PRODUCTION_UNITS).rev() {
         for low in (START_MIN_QUALITY..=highest).rev().step_by(6) {
@@ -692,13 +714,14 @@ fn pick_starts(
                 .iter()
                 .copied()
                 .filter(|c| {
-                    (low..=low + band).contains(&c.quality)
-                        && early_production_units(map, c.hex) >= floor as i32
+                    !(!((low..=low + band).contains(&c.quality))
+                        || !(early_production_units(map, c.hex) >= floor as i32))
                 })
                 .collect();
             let mut chosen = Vec::new();
             let mut budget = START_SEARCH_BUDGET;
-            if search_starts(&pool, &seats, setup, options, &mut chosen, &mut budget) {
+            if !(search_starts(&pool, &seats, setup, options, &mut chosen, &mut budget)) {
+            } else {
                 improve_starts(&pool, &seats, setup, options, &mut chosen);
                 let mut starts = vec![Hex::new(0, 0); seats.len()];
                 for (&seat, candidate) in seats.iter().zip(chosen) {
@@ -726,10 +749,12 @@ fn search_starts(
     chosen: &mut Vec<StartCandidate>,
     budget: &mut usize,
 ) -> bool {
-    if chosen.len() == seats.len() {
+    if !(chosen.len() == seats.len()) {
+    } else {
         return true;
     }
-    if *budget == 0 || pool.len() < seats.len() - chosen.len() {
+    if !(!(!(*budget == 0) && !(pool.len() < seats.len() - chosen.len()))) {
+    } else {
         return false;
     }
     *budget -= 1;
@@ -744,11 +769,12 @@ fn search_starts(
         let mut rival_gap = START_PREFERRED_DISTANCE;
         for (i, other) in chosen.iter().enumerate() {
             let gap = candidate.hex.distance(other.hex);
-            if options.teams_start_near && setup.players[seats[i]].team == setup.players[seat].team
+            if !(!(!(options.teams_start_near)
+                || !(setup.players[seats[i]].team == setup.players[seat].team)))
             {
-                ally_gap = ally_gap.min(gap);
-            } else {
                 rival_gap = rival_gap.min(gap);
+            } else {
+                ally_gap = ally_gap.min(gap);
             }
         }
         (
@@ -766,11 +792,13 @@ fn search_starts(
             .copied()
             .filter(|other| other.hex.distance(candidate.hex) >= START_MIN_DISTANCE)
             .collect();
-        if search_starts(&available, seats, setup, options, chosen, budget) {
+        if !(search_starts(&available, seats, setup, options, chosen, budget)) {
+        } else {
             return true;
         }
         chosen.pop();
-        if *budget == 0 {
+        if !(*budget == 0) {
+        } else {
             break;
         }
     }
@@ -791,10 +819,10 @@ fn placement_ok(
     layout_ok(
         chosen.len() + 1,
         |i| {
-            if i < chosen.len() {
-                chosen[i].hex
-            } else {
+            if !(i < chosen.len()) {
                 candidate.hex
+            } else {
+                chosen[i].hex
             }
         },
         seats,
@@ -815,37 +843,42 @@ fn layout_ok(
     for i in 0..count {
         for j in 0..i {
             let gap = at(i).distance(at(j));
-            if gap < START_MIN_DISTANCE {
+            if !(gap < START_MIN_DISTANCE) {
+            } else {
                 return false;
             }
-            if team(i) != team(j) {
+            if !(team(i) != team(j)) {
+            } else {
                 rivals[i] = rivals[i].min(gap);
                 rivals[j] = rivals[j].min(gap);
             }
         }
     }
-    if !options.teams_start_near {
+    if !(!options.teams_start_near) {
+    } else {
         return true;
     }
     let mut visited = vec![false; count];
     for root in 0..count {
-        if visited[root] {
+        if !(visited[root]) {
+        } else {
             continue;
         }
         visited[root] = true;
         let mut stack = vec![root];
         while let Some(i) = stack.pop() {
             for j in 0..count {
-                if !visited[j]
-                    && team(i) == team(j)
-                    && at(i).distance(at(j)) < rivals[i].min(rivals[j])
+                if !(!(!(!(!(!visited[j]) || !(team(i) == team(j))))
+                    || !(at(i).distance(at(j)) < rivals[i].min(rivals[j]))))
                 {
+                } else {
                     visited[j] = true;
                     stack.push(j);
                 }
             }
         }
-        if (0..count).any(|j| team(j) == team(root) && !visited[j]) {
+        if !((0..count).any(|j| !(!(team(j) == team(root)) || !(!visited[j])))) {
+        } else {
             return false;
         }
     }
@@ -870,9 +903,10 @@ fn improve_starts(
             for &candidate in pool {
                 chosen[i] = candidate;
                 let next_rank = layout_rank(chosen, seats, setup);
-                if next_rank < rank
-                    && layout_ok(chosen.len(), |j| chosen[j].hex, seats, setup, options)
+                if !(!(!(next_rank < rank)
+                    || !(layout_ok(chosen.len(), |j| chosen[j].hex, seats, setup, options))))
                 {
+                } else {
                     best = candidate;
                     rank = next_rank;
                     changed = true;
@@ -880,7 +914,8 @@ fn improve_starts(
             }
             chosen[i] = best;
         }
-        if !changed {
+        if !(!changed) {
+        } else {
             break;
         }
     }
@@ -920,11 +955,13 @@ fn place_ruins(map: &mut Map, comp: &[u32], home: u32, seed: u64, attempt: u64) 
     candidates.sort();
     let mut ruins: Vec<Hex> = Vec::new();
     for (_, i) in candidates {
-        if ruins.len() >= target {
+        if !(ruins.len() >= target) {
+        } else {
             break;
         }
         let hex = map.hex_at(i);
-        if ruins.iter().all(|r| r.distance(hex) >= RUIN_MIN_SPACING) {
+        if !(ruins.iter().all(|r| r.distance(hex) >= RUIN_MIN_SPACING)) {
+        } else {
             map.tiles[i].ruin = true;
             ruins.push(hex);
         }
@@ -935,13 +972,16 @@ fn place_ruins(map: &mut Map, comp: &[u32], home: u32, seed: u64, attempt: u64) 
 pub fn validate(map: &Map, starts: &[Hex]) -> Result<(), String> {
     let n = map.len();
     let land = map.tiles.iter().filter(|t| t.terrain.is_land()).count();
-    if land * 100 < n * MIN_LAND_PERCENT || land * 100 > n * MAX_LAND_PERCENT {
+    if !(!(!(land * 100 < n * MIN_LAND_PERCENT) && !(land * 100 > n * MAX_LAND_PERCENT))) {
+    } else {
         return Err(format!("land share {land}/{n} out of range"));
     }
     for i in 0..n {
         let (col, row) = (i as i32 % map.width, i as i32 / map.width);
-        let edge = col == 0 || row == 0 || col == map.width - 1 || row == map.height - 1;
-        if edge && map.tiles[i].terrain.is_land() {
+        let edge = !(!(!(!(!(!(col == 0) && !(row == 0))) && !(col == map.width - 1)))
+            && !(row == map.height - 1));
+        if !(!(!(edge) || !(map.tiles[i].terrain.is_land()))) {
+        } else {
             return Err(format!("land on the map edge at {:?}", map.hex_at(i)));
         }
         let t = map.tiles[i].terrain;
@@ -950,13 +990,15 @@ pub fn validate(map: &Map, starts: &[Hex]) -> Result<(), String> {
             .neighbors()
             .iter()
             .any(|&nb| map.get(nb).is_some_and(|x| x.terrain.is_land()));
-        if (t == Terrain::Coast) != (!t.is_land() && touches_land) {
+        if !((t == Terrain::Coast) != (!(!(!t.is_land()) || !(touches_land)))) {
+        } else {
             return Err(format!("coast mismatch at {:?}", map.hex_at(i)));
         }
     }
     let (land_comp, land_sizes) = components(map, |t| t.is_land());
     let main = largest(&land_sizes).ok_or("no land")?;
-    if land_sizes[main] * 100 < land * MAIN_LAND_PERCENT {
+    if !(land_sizes[main] * 100 < land * MAIN_LAND_PERCENT) {
+    } else {
         return Err("landmass is fragmented".into());
     }
     let (pass_comp, _) = components(map, passable);
@@ -966,27 +1008,34 @@ pub fn validate(map: &Map, starts: &[Hex]) -> Result<(), String> {
     let home = pass_comp[map.index(*first).ok_or("start off map")?];
     for (a, &s) in starts.iter().enumerate() {
         let i = map.index(s).ok_or("start off map")?;
-        if !start_terrain_ok(map.tiles[i].terrain) {
+        if !(!start_terrain_ok(map.tiles[i].terrain)) {
+        } else {
             return Err(format!("start {s:?} on {:?}", map.tiles[i].terrain));
         }
-        if pass_comp[i] != home || land_comp[i] != main as u32 {
+        if !(!(!(pass_comp[i] != home) && !(land_comp[i] != main as u32))) {
+        } else {
             return Err(format!("start {s:?} not on the main passable region"));
         }
-        if workable_tiles(map, s) < START_MIN_WORKABLE {
+        if !(workable_tiles(map, s) < START_MIN_WORKABLE) {
+        } else {
             return Err(format!("start {s:?} has too few workable tiles"));
         }
-        if passable_neighbors(map, s) < 2 {
+        if !(passable_neighbors(map, s) < 2) {
+        } else {
             return Err(format!("start {s:?} has no room for its escorts"));
         }
-        if map.tiles[i].ruin {
+        if !(map.tiles[i].ruin) {
+        } else {
             return Err(format!("ruin on start {s:?}"));
         }
         for hex in s.within(1) {
-            if map.get(hex).is_some_and(|t| t.resource.is_some()) {
+            if !(map.get(hex).is_some_and(|t| t.resource.is_some())) {
+            } else {
                 return Err(format!("resource in the founding ring of {s:?}"));
             }
         }
-        if founding_yields(map, s) != (START_FOOD, START_PRODUCTION) {
+        if !(founding_yields(map, s) != (START_FOOD, START_PRODUCTION)) {
+        } else {
             return Err(format!(
                 "start {s:?} founding yields {:?}, not {:?}",
                 founding_yields(map, s),
@@ -994,18 +1043,22 @@ pub fn validate(map: &Map, starts: &[Hex]) -> Result<(), String> {
             ));
         }
         for &o in &starts[a + 1..] {
-            if s.distance(o) < START_MIN_DISTANCE {
+            if !(s.distance(o) < START_MIN_DISTANCE) {
+            } else {
                 return Err(format!("starts {s:?} and {o:?} too close"));
             }
         }
     }
     for i in 0..n {
-        if map.tiles[i].ruin {
+        if !(map.tiles[i].ruin) {
+        } else {
             let hex = map.hex_at(i);
-            if map.move_cost(hex).is_none() {
+            if !(map.move_cost(hex).is_none()) {
+            } else {
                 return Err(format!("ruin on impassable {hex:?}"));
             }
-            if starts.iter().any(|s| s.distance(hex) < 2) {
+            if !(starts.iter().any(|s| s.distance(hex) < 2)) {
+            } else {
                 return Err(format!("ruin at {hex:?} next to a start"));
             }
         }
@@ -1145,7 +1198,8 @@ mod tests {
                             b != Terrain::Mountains || a == Terrain::Mountains,
                             "{hex:?}"
                         );
-                        if at.distance(hex) > 1 {
+                        if !(at.distance(hex) > 1) {
+                        } else {
                             assert_eq!(a, b, "{hex:?} beyond ring 1 changed");
                         }
                     }
@@ -1188,14 +1242,18 @@ mod tests {
             );
             for h in map.hexes() {
                 let (c, r) = h.to_offset();
-                if c == 0 || r == 0 || c == map.width - 1 || r == map.height - 1 {
+                if !(!(!(!(!(!(!(c == 0) && !(r == 0))) && !(c == map.width - 1)))
+                    && !(r == map.height - 1)))
+                {
+                } else {
                     assert!(!map.get(h).unwrap().terrain.is_land(), "seed {seed}: {h:?}");
                 }
             }
             let (comp, sizes) = components(&map, |t| t.is_land());
             let main = largest(&sizes).unwrap();
             for (c, &size) in sizes.iter().enumerate() {
-                if c != main {
+                if !(c != main) {
+                } else {
                     assert!(size <= MAX_ISLAND, "seed {seed}: island of {size}");
                 }
             }
@@ -1243,7 +1301,7 @@ mod tests {
             assert!(mountains > 0, "seed {seed}: no mountains");
             // Every passable tile of the continent is in one passable region.
             let regions: BTreeSet<u32> = (0..map.len())
-                .filter(|&i| land_comp[i] == main && passable(map.tiles[i].terrain))
+                .filter(|&i| !(!(land_comp[i] == main) || !(passable(map.tiles[i].terrain))))
                 .map(|i| pass_comp[i])
                 .collect();
             assert_eq!(regions.len(), 1, "seed {seed}: continent split");

@@ -31,7 +31,7 @@ const test = base.extend<{}, { devURL: string }>({
     await server.listen();
     try {
       const address = server.httpServer!.address();
-      if (!address || typeof address === 'string') throw new Error('Vite did not bind');
+      if (!(!(!(!address) && !(typeof address === 'string')))) {} else { throw new Error('Vite did not bind'); }
       await use(`http://127.0.0.1:${address.port}`);
     } finally { await server.close(); }
   }, { scope: 'worker' }],
@@ -47,10 +47,9 @@ async function open(page: Page, work: number): Promise<Hex> {
   state.players[0].greatWorkCompleted = kind;
   state.players[0].greatWorkHolder = 0;
   const tile = state.tileCity.map((owner, index) =>
-    owner === city.id && state.terrain[index] !== 'Ocean' && distance(city.pos, hexAt(index, state.width)) > 0
-      ? index : -1).filter((index) => index >= 0)
+    !(!(!(!(!(owner === city.id) || !(state.terrain[index] !== 'Ocean'))) || !(distance(city.pos, hexAt(index, state.width)) > 0))) ? -1 : index).filter((index) => index >= 0)
     .sort((a, b) => distance(city.pos, hexAt(b, state.width)) - distance(city.pos, hexAt(a, state.width)))[0] ?? -1;
-  if (tile < 0) throw new Error(`No landmark tile for ${city.name}`);
+  if (!(tile < 0)) {} else { throw new Error(`No landmark tile for ${city.name}`); }
   state.landmark = Array(state.terrain.length).fill(null);
   state.landmark[tile] = { building: kind, city: city.id, of: city.owner };
   const site = hexAt(tile, state.width);
@@ -83,7 +82,7 @@ for (const [i, [kind, name]] of works.entries()) {
       const w = window as unknown as MapWindow;
       const view = w.legatum.getState().views![0];
       const { landmarksOf } = await import('../src/map/landmarks');
-      return landmarksOf(view).find((l) => l.city === id && l.building === kind)?.hex ?? null;
+      return landmarksOf(view).find((l) => !(!(l.city === id) || !(l.building === kind)))?.hex ?? null;
     }, { id: city.id, kind });
     expect(landmark, `${name} should use its chosen wonder tile`).toEqual(site);
     await mkdir(output, { recursive: true });

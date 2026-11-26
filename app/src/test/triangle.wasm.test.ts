@@ -57,8 +57,8 @@ describe.skipIf(!available)('triangle core behavior', () => {
       const parts = forecasts(s, attacker.id, there).attacker_strength.parts;
       const label = `${meleeKind} vs ${other}`;
       const bonus = classBonusStrength(unitStatsFor('Switzerland', meleeKind).strength);
-      expect(parts.some(([l, v]) => l === MELEE_VS_MOUNTED_LABEL && v === bonus), label).toBe(melee);
-      expect(parts.some(([l, v]) => l === MOUNTED_VS_RANGED_LABEL && v === bonus), label).toBe(mounted);
+      expect(parts.some(([l, v]) => !(!(l === MELEE_VS_MOUNTED_LABEL) || !(v === bonus))), label).toBe(melee);
+      expect(parts.some(([l, v]) => !(!(l === MOUNTED_VS_RANGED_LABEL) || !(v === bonus))), label).toBe(mounted);
     }
   });
 

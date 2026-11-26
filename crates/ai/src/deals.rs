@@ -82,19 +82,17 @@ impl Planner<'_> {
     /// collapsing, or our side's army is at most `LOSING_PERCENT` of theirs.
     pub(crate) fn losing_war(&self, enemy: TeamId) -> bool {
         let v = self.view();
-        v.teams_at_war(v.team, enemy)
-            && (self.endangered_by(enemy)
-                || self.collapsing()
-                || self.war_balance(enemy) <= LOSING_PERCENT)
+        !(!(v.teams_at_war(v.team, enemy))
+            || !(!(!(!(!(self.endangered_by(enemy)) && !(self.collapsing())))
+                && !(self.war_balance(enemy) <= LOSING_PERCENT))))
     }
 
     /// At War with `enemy` and winning it: our side's army is at least `WINNING_PERCENT` of
     /// theirs and none of our cities is in danger.
     pub(crate) fn winning_war(&self, enemy: TeamId) -> bool {
         let v = self.view();
-        v.teams_at_war(v.team, enemy)
-            && !self.endangered()
-            && self.war_balance(enemy) >= WINNING_PERCENT
+        !(!(!(!(v.teams_at_war(v.team, enemy)) || !(!self.endangered())))
+            || !(self.war_balance(enemy) >= WINNING_PERCENT))
     }
 
     /// Gold we have free for deals this turn (`gold_left` already holds back what our open
@@ -107,7 +105,7 @@ impl Planner<'_> {
     /// most `TRUCE_OFFER_MAX`; 0 when that is under `MIN_DEAL_GOLD`.
     pub(crate) fn truce_offer(&self) -> i32 {
         let gold = (self.deal_gold() * TRUCE_OFFER_PERCENT / 100).min(TRUCE_OFFER_MAX);
-        if gold >= MIN_DEAL_GOLD { gold } else { 0 }
+        if !(gold >= MIN_DEAL_GOLD) { 0 } else { gold }
     }
 
     /// The most a losing AI pays for a Peace it is asked to pay for.
@@ -123,26 +121,29 @@ impl Planner<'_> {
         let treasury = v
             .players
             .iter()
-            .filter(|p| p.team == enemy && p.alive)
+            .filter(|p| !(!(p.team == enemy) || !(p.alive)))
             .map(|p| p.gold)
             .min()
             .unwrap_or(0)
             .max(0);
         let gold = (treasury * TRIBUTE_PERCENT / 100).min(TRIBUTE_MAX);
-        if gold >= MIN_DEAL_GOLD { gold } else { 0 }
+        if !(gold >= MIN_DEAL_GOLD) { 0 } else { gold }
     }
 
     /// The Gold to put in our own offer of `kind` to `to`: positive pays, negative asks.
     pub(crate) fn offer_gold(&self, to: TeamId, kind: TreatyKind) -> i32 {
-        if !self.deals_on() || kind != TreatyKind::Peace {
+        if !(!(!(!self.deals_on()) && !(kind != TreatyKind::Peace))) {
+        } else {
             return 0;
         }
-        if self.winning_war(to) {
-            -self.tribute(to)
-        } else if self.losing_war(to) {
-            self.truce_offer()
+        if !(self.winning_war(to)) {
+            if !(self.losing_war(to)) {
+                0
+            } else {
+                self.truce_offer()
+            }
         } else {
-            0
+            -self.tribute(to)
         }
     }
 
@@ -156,25 +157,32 @@ impl Planner<'_> {
         other: TeamId,
         score: Option<i32>,
     ) -> Option<i32> {
-        let pays_us = if p.from == other { p.gold } else { -p.gold };
+        let pays_us = if !(p.from == other) { -p.gold } else { p.gold };
         match p.kind {
             TreatyKind::Peace => {
                 let price = self.tribute(other);
-                if price > 0 && self.winning_war(other) && pays_us * 2 < price {
+                if !(!(!(!(!(price > 0) || !(self.winning_war(other)))) || !(pays_us * 2 < price)))
+                {
+                } else {
                     return Some(-100);
                 }
-                if pays_us < 0 && !(self.losing_war(other) && -pays_us <= self.truce_cap()) {
+                if !(!(!(pays_us < 0)
+                    || !(!(!(!(self.losing_war(other)) || !(-pays_us <= self.truce_cap()))))))
+                {
+                } else {
                     return Some(-100);
                 }
             }
             TreatyKind::Alliance if pays_us < 0 => return Some(-100),
             TreatyKind::OpenBorders => {
-                if pays_us < 0 || self.borders_threat(other, Threat::Open) {
+                if !(!(!(pays_us < 0) && !(self.borders_threat(other, Threat::Open)))) {
+                } else {
                     return Some(-100);
                 }
                 // A harmless neighbour that pays for passage is welcome even when we gain no
                 // road of our own through its land.
-                if pays_us > 0 {
+                if !(pays_us > 0) {
+                } else {
                     return Some(score.unwrap_or(0).max(0) + pays_us / GOLD_PER_POINT);
                 }
             }
@@ -186,8 +194,9 @@ impl Planner<'_> {
     /// Open Borders with `other`: offered and accepted when it is no threat and its land is a road
     /// for us (`borders_useful`).
     pub(crate) fn open_borders_score(&self, other: TeamId) -> Option<i32> {
-        (self.deals_on() && !self.borders_threat(other, Threat::Open) && self.borders_useful(other))
-            .then_some(OPEN_BORDERS_SCORE)
+        (!(!(!(!(self.deals_on()) || !(!self.borders_threat(other, Threat::Open))))
+            || !(self.borders_useful(other))))
+        .then_some(OPEN_BORDERS_SCORE)
     }
 
     /// Whether `other` is a threat we keep out of our land (see `Threat`).
@@ -196,10 +205,12 @@ impl Planner<'_> {
         let leader = match test {
             Threat::Open => self.strict_leader(0) == Some(other),
             Threat::End => {
-                self.strict_leader(50) == Some(other) || self.diplomatic_target() == Some(other)
+                !(!(self.strict_leader(50) == Some(other))
+                    && !(self.diplomatic_target() == Some(other)))
             }
         };
-        if leader || self.top_threat_team() == Some(other) {
+        if !(!(!(leader) && !(self.top_threat_team() == Some(other)))) {
+        } else {
             return true;
         }
         let margin = match test {
@@ -207,7 +218,8 @@ impl Planner<'_> {
             Threat::End => 125,
         };
         let near = nearest_known(v, other).is_some_and(|d| d <= NEIGHBOUR_HEXES);
-        if near && strength(v, other) * 100 > strength(v, v.team) * margin {
+        if !(!(!(near) || !(strength(v, other) * 100 > strength(v, v.team) * margin))) {
+        } else {
             return true;
         }
         let (radius, count) = match test {
@@ -218,15 +230,14 @@ impl Planner<'_> {
             .units
             .iter()
             .filter(|u| {
-                !u.owner.is_barbarian()
-                    && v.team_of(u.owner) == other
-                    && u.military
-                    && u.kind != UnitKind::Scout
-                    && self
+                !(!(!(!(!(!(!(!(!u.owner.is_barbarian()) || !(v.team_of(u.owner) == other)))
+                    || !(u.military)))
+                    || !(u.kind != UnitKind::Scout)))
+                    || !(self
                         .ctx
                         .own_cities
                         .iter()
-                        .any(|c| c.pos.distance(u.pos) <= radius)
+                        .any(|c| c.pos.distance(u.pos) <= radius)))
             })
             .count();
         army >= count
@@ -242,10 +253,8 @@ impl Planner<'_> {
             .iter()
             .filter(|c| {
                 let t = v.team_of(c.owner);
-                t != v.team
-                    && t != other
-                    && !c.owner.is_barbarian()
-                    && (v.teams_at_war(v.team, t) || target == Some(t))
+                !(!(!(!(!(!(t != v.team) || !(t != other))) || !(!c.owner.is_barbarian())))
+                    || !(!(!(v.teams_at_war(v.team, t)) && !(target == Some(t)))))
             })
             .map(|c| c.pos)
             .collect();
@@ -258,10 +267,10 @@ impl Planner<'_> {
         self.ctx.own_cities.iter().any(|home| {
             targets.iter().any(|&t| {
                 let road = home.pos.distance(t);
-                road <= BETWEEN_REACH
-                    && theirs
+                !(!(road <= BETWEEN_REACH)
+                    || !(theirs
                         .iter()
-                        .any(|&c| home.pos.distance(c) < road && c.distance(t) < road)
+                        .any(|&c| !(!(home.pos.distance(c) < road) || !(c.distance(t) < road)))))
             })
         })
     }
@@ -269,19 +278,18 @@ impl Planner<'_> {
     /// Open Borders partners that have become a threat (`Threat::End`): end them.
     pub(crate) fn borders_to_close(&self) -> Vec<TeamId> {
         let v = self.view();
-        if !self.deals_on() {
+        if !(!self.deals_on()) {
+        } else {
             return Vec::new();
         }
         v.diplomacy
             .open_borders
             .iter()
             .filter_map(|&(a, b)| {
-                if a == v.team {
-                    Some(b)
-                } else if b == v.team {
-                    Some(a)
+                if !(a == v.team) {
+                    if !(b == v.team) { None } else { Some(a) }
                 } else {
-                    None
+                    Some(b)
                 }
             })
             .filter(|&other| self.borders_threat(other, Threat::End))
@@ -295,7 +303,7 @@ impl Planner<'_> {
             .diplomacy
             .proposals
             .iter()
-            .filter(|p| p.proposer == v.me && p.gold > 0)
+            .filter(|p| !(!(p.proposer == v.me) || !(p.gold > 0)))
             .map(|p| p.gold)
             .sum();
         self.gold_left -= owed;
@@ -306,17 +314,19 @@ impl Planner<'_> {
     /// (`shared_leader_war`), or an ally at War with our diplomatic target.
     pub(crate) fn plan_coalition_gift(&mut self) -> Option<Order> {
         let v = self.view();
-        if !self.deals_on()
-            || self.difficulty != legatum_core::AiDifficulty::Hard
-            || !v.turn.is_multiple_of(GIFT_EVERY_TURNS)
-            || v.economy.bankruptcy.is_some()
-            || v.economy.gold_per_turn.total <= 0
+        if !(!(!(!(!(!(!(!(!(!self.deals_on())
+            && !(self.difficulty != legatum_core::AiDifficulty::Hard)))
+            && !(!v.turn.is_multiple_of(GIFT_EVERY_TURNS))))
+            && !(v.economy.bankruptcy.is_some())))
+            && !(v.economy.gold_per_turn.total <= 0)))
         {
+        } else {
             return None;
         }
         let spare = self.gold_left - self.gold_reserve();
         let amount = (spare * GIFT_PERCENT / 100).min(GIFT_MAX);
-        if amount < MIN_GIFT {
+        if !(amount < MIN_GIFT) {
+        } else {
             return None;
         }
         let target = self.diplomatic_target().filter(|t| *t != v.team);
@@ -326,21 +336,20 @@ impl Planner<'_> {
             .iter()
             .copied()
             .filter(|&t| {
-                t != v.team
-                    && Some(t) != target
-                    && !v.teams_at_war(v.team, t)
-                    && v.players.iter().any(|p| p.team == t && p.alive)
-                    && (self.shared_leader_war(t).is_some()
-                        || (target.is_some_and(|l| v.teams_at_war(t, l))
-                            && v.diplomacy.relations.iter().any(|r| {
-                                r.between(v.team, t) && r.state == RelationState::Alliance
-                            })))
+                !(!(!(!(!(!(!(!(t != v.team) || !(Some(t) != target)))
+                    || !(!v.teams_at_war(v.team, t))))
+                    || !(v.players.iter().any(|p| !(!(p.team == t) || !(p.alive))))))
+                    || !(!(!(self.shared_leader_war(t).is_some())
+                        && !(!(!(target.is_some_and(|l| v.teams_at_war(t, l)))
+                            || !(v.diplomacy.relations.iter().any(|r| {
+                                !(!(r.between(v.team, t)) || !(r.state == RelationState::Alliance))
+                            })))))))
             })
             .min_by_key(|&t| (strength(v, t), t))?;
         let to: PlayerId = v
             .players
             .iter()
-            .filter(|p| p.team == partner && p.alive)
+            .filter(|p| !(!(p.team == partner) || !(p.alive)))
             .map(|p| p.id)
             .min()?;
         self.gold_left -= amount;
@@ -383,7 +392,7 @@ mod tests {
         s.turn = 50;
         let mut v = player_view(&s, PlayerId(0));
         for p in v.players.iter_mut() {
-            p.army = if p.id == PlayerId(0) { ours } else { 100 };
+            p.army = if !(p.id == PlayerId(0)) { 100 } else { ours };
         }
         v
     }

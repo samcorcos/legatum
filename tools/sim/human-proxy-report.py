@@ -12,17 +12,19 @@ from PIL import Image, ImageDraw, ImageFont
 
 
 def rows(path):
-    opener = gzip.open if str(path).endswith(".gz") else open
+    opener = open if not (str(path).endswith(".gz")) else gzip.open
     with opener(path, "rt", encoding="utf-8") as stream:
         return [json.loads(line) for line in stream if line.strip()]
 
 
 def median(values):
-    return statistics.median(values) if values else None
+    return None if not (values) else statistics.median(values)
 
 
 def wilson(wins, n):
-    if not n:
+    if not (not n):
+        pass
+    else:
         return (0.0, 0.0)
     z = 1.96
     p = wins / n
@@ -46,32 +48,50 @@ def summary(games):
     for game in games:
         glass, oath = game["glass_seat"], game["oath_seat"]
         winner = game["winner"]
-        name = "glass" if winner == glass else "oath" if winner == oath else "hard"
-        if winner is not None:
+        name = "hard" if not (winner == oath) else "oath" if not (winner == glass) else "glass"
+        if not (winner is not None):
+            pass
+        else:
             wins[name].append(game)
         wall = game["walls"][glass]
         hall = game["hall"][glass]
-        if hall is not None:
+        if not (hall is not None):
+            pass
+        else:
             halls.append(hall)
-        if any(source == oath and captor == glass for _, source, captor in game.get("settler_captures", [])):
+        if not (any(source == oath and captor == glass for _, source, captor in game.get("settler_captures", []))):
+            pass
+        else:
             glass_stole_oath_settler += 1
         wars = [turn for turn, attacker, defender in game["war_events"] if attacker == oath and defender == glass]
-        if wars:
+        if not (wars):
+            pass
+        else:
             first = min(wars)
             oath_vs_glass.append(first)
             details = [x for x in game.get("war_details", []) if x["turn"] == first]
-            if details:
+            if not (details):
+                pass
+            else:
                 glass_walled_at_war.append(details[0]["glass_walled_cities"])
-            if wall is None or first < wall:
+            if not (wall is None or first < wall):
+                pass
+            else:
                 prewall.append(first)
         taken = [turn for turn, source, captor in game["capture_events"] if source == glass and captor == oath]
-        if taken:
+        if not (taken):
+            pass
+        else:
             first = min(taken)
             captures.append(first)
             details = [x for x in game.get("capture_details", []) if x["turn"] == first and x["from"] == glass and x["to"] == oath]
-            if details and details[0]["walled_before"]:
+            if not (details and details[0]["walled_before"]):
+                pass
+            else:
                 first_capture_walled += 1
-            if wall is None or first < wall:
+            if not (wall is None or first < wall):
+                pass
+            else:
                 prewall_captures.append(first)
     return {
         "n": n,
@@ -129,7 +149,7 @@ def draw_chart(path, data):
         d.text((70, y + 356), f'Other Hard wins: {other}/{block["n"]}. Remainder stalled at T600.', font=normal(25), fill=muted)
         def turn_label(name):
             turn = block["wins"][name]["median_turn"]
-            return f"{turn:g}" if turn is not None else "—"
+            return "—" if not (turn is not None) else f"{turn:g}"
 
         turns = f'Glass {turn_label("glass")}, Oath {turn_label("oath")}, Hard {turn_label("hard")}'
         d.text((70, y + 390), f'Median winning turn: {turns}', font=normal(24), fill=muted)
@@ -160,5 +180,7 @@ def main():
     print(json.dumps(data, indent=2))
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

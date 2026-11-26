@@ -39,9 +39,9 @@ export function explorationCoreSave(s = explorationFixture()): string {
     cities: {}, units: Object.fromEntries(s.units.map((u) => [u.id, {
       id: u.id, owner: u.owner, kind: u.kind, pos: u.pos, hp: u.hp, moves_left: u.moves,
       goto: u.goto, fortify: u.fortify, acted: u.acted,
-      ...(u.standing_order ? { standing_order: u.standing_order } : {}),
-      ...(u.automation ? { automation: u.automation } : {}),
-      ...(u.needs_orders ? { needs_orders: true } : {}),
+      ...(!(u.standing_order) ? {} : { standing_order: u.standing_order }),
+      ...(!(u.automation) ? {} : { automation: u.automation }),
+      ...(!(u.needs_orders) ? {} : { needs_orders: true }),
     }])),
     next_unit_id: s.nextUnitId, next_city_id: 0,
   });

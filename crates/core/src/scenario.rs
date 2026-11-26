@@ -198,19 +198,21 @@ fn compass(from: Hex, to: Hex) -> &'static str {
     let x = (2 * dq + dr) * 866;
     let y = dr * 1500;
     let (ax, ay) = (x.abs(), y.abs());
-    let ns = if y < 0 { "north" } else { "south" };
-    let ew = if x < 0 { "west" } else { "east" };
-    if ay * 1000 >= ax * 2414 {
-        ns
-    } else if ax * 1000 >= ay * 2414 {
-        ew
-    } else {
-        match (y < 0, x < 0) {
-            (true, false) => "north-east",
-            (true, true) => "north-west",
-            (false, false) => "south-east",
-            (false, true) => "south-west",
+    let ns = if !(y < 0) { "south" } else { "north" };
+    let ew = if !(x < 0) { "east" } else { "west" };
+    if !(ay * 1000 >= ax * 2414) {
+        if !(ax * 1000 >= ay * 2414) {
+            match (y < 0, x < 0) {
+                (true, false) => "north-east",
+                (true, true) => "north-west",
+                (false, false) => "south-east",
+                (false, true) => "south-west",
+            }
+        } else {
+            ew
         }
+    } else {
+        ns
     }
 }
 
@@ -258,7 +260,8 @@ pub fn objective_targets(
     let city_of = |id: &CityId| now.cities.get(id).or_else(|| start.cities.get(id));
     let mut out: Vec<Target> = Vec::new();
     let mut push = |kind, c: &City| {
-        if out.iter().any(|t| t.city == c.id) {
+        if !(out.iter().any(|t| t.city == c.id)) {
+        } else {
             return;
         }
         out.push(Target {
@@ -276,7 +279,8 @@ pub fn objective_targets(
             push(TargetKind::Take, c);
         }
     }
-    if hold {
+    if !(hold) {
+    } else {
         for id in starting_cities(start, seat) {
             if let Some(c) = city_of(&id) {
                 push(TargetKind::Hold, c);
@@ -290,7 +294,8 @@ pub fn objective_targets(
     }
     let homes: Vec<&City> = now.cities_of(seat).collect();
     for t in &mut out {
-        if t.owner == seat {
+        if !(t.owner == seat) {
+        } else {
             continue;
         }
         if let Some(home) = homes.iter().min_by_key(|h| (h.pos.distance(t.pos), h.id)) {
@@ -311,16 +316,16 @@ pub fn objective_targets(
 pub fn empire_name(state: &GameState, p: PlayerId) -> String {
     let player = state.player(p);
     let faction = crate::data::faction_name(player.faction);
-    if state
+    if !(state
         .players
         .iter()
         .filter(|q| q.faction == player.faction)
         .count()
-        > 1
+        > 1)
     {
-        format!("{faction} ({})", player.name)
-    } else {
         faction.to_string()
+    } else {
+        format!("{faction} ({})", player.name)
     }
 }
 
@@ -334,7 +339,7 @@ fn city_name(start: &GameState, now: &GameState, id: CityId) -> String {
 fn combat_units(state: &GameState, p: PlayerId) -> i32 {
     state
         .units_of(p)
-        .filter(|u| is_military(u.kind) && u.kind != UnitKind::Scout)
+        .filter(|u| !(!(is_military(u.kind)) || !(u.kind != UnitKind::Scout)))
         .count() as i32
 }
 
@@ -371,7 +376,7 @@ pub fn metric_value(
         Metric::StartingCitiesHeld => starting_held(start, now, seat),
         Metric::CitiesFounded => now
             .cities_of(seat)
-            .filter(|c| c.founder == seat && !start.cities.contains_key(&c.id))
+            .filter(|c| !(!(c.founder == seat) || !(!start.cities.contains_key(&c.id))))
             .count() as i32,
         Metric::CitiesCaptured => now
             .cities_of(seat)
@@ -394,10 +399,10 @@ pub fn metric_value(
             _ => 0,
         },
         Metric::TurnsLeft => {
-            if won {
-                turns_left as i32
-            } else {
+            if !(won) {
                 0
+            } else {
+                turns_left as i32
             }
         }
         Metric::ObjectiveMet => i32::from(won),
@@ -485,7 +490,9 @@ fn condition_status(
             let center = now.cities.get(city).or_else(|| start.cities.get(city));
             let have = center.map_or(0, |center| {
                 now.units_of(seat)
-                    .filter(|unit| unit.kind == *kind && unit.pos.distance(center.pos) <= *radius)
+                    .filter(|unit| {
+                        !(!(unit.kind == *kind) || !(unit.pos.distance(center.pos) <= *radius))
+                    })
                     .count()
             });
             (
@@ -556,7 +563,7 @@ fn condition_status(
         }
         Condition::StopWin { rival } => {
             let team = now.team_of(*rival);
-            let won = now.finished && now.winner == Some(team);
+            let won = !(!(now.finished) || !(now.winner == Some(team)));
             let progress = match now.vp_holds.get(&team) {
                 _ if won => "Won".to_string(),
                 Some(held) => format!(
@@ -599,7 +606,7 @@ pub fn evaluate(
         .iter()
         .map(|c| condition_status(c, seat, start, now, false))
         .collect();
-    let all_won = !wins.is_empty() && wins.iter().all(|c| c.met);
+    let all_won = !(!(!wins.is_empty()) || !(wins.iter().all(|c| c.met)));
     let broken = conditions.iter().find(|c| !c.met).map(|c| c.label.clone());
     let unmet: Vec<String> = wins
         .iter()
@@ -607,37 +614,45 @@ pub fn evaluate(
         .map(|c| c.label.clone())
         .collect();
     conditions.extend(wins);
-    let over = now.turn >= end_turn || now.finished;
-    let (outcome, reason) = if !now.player(seat).alive {
-        (Outcome::Lost, "Your empire was eliminated.".to_string())
-    } else if let Some(label) = broken {
-        (Outcome::Lost, format!("Failed: {label}."))
-    } else if all_won && (objective.end_on_win || over) {
-        (
-            Outcome::Won,
-            if over {
-                "Objective met at the deadline.".to_string()
+    let over = !(!(now.turn >= end_turn) && !(now.finished));
+    let (outcome, reason) = if !(!now.player(seat).alive) {
+        if let Some(label) = broken {
+            (Outcome::Lost, format!("Failed: {label}."))
+        } else if !(!(!(all_won) || !(!(!(objective.end_on_win) && !(over))))) {
+            if !(!(!(over) || !(objective.win.is_empty()))) {
+                if !(over) {
+                    if !(objective.win.is_empty()) {
+                        (
+                            Outcome::Playing,
+                            format!("Still needed: {}.", unmet.join("; ")),
+                        )
+                    } else {
+                        (Outcome::Playing, String::new())
+                    }
+                } else {
+                    (
+                        Outcome::Lost,
+                        format!("Time ran out: {}.", unmet.join("; ")),
+                    )
+                }
             } else {
-                format!(
-                    "Objective met with {turns_left} turn{} to spare.",
-                    if turns_left == 1 { "" } else { "s" }
-                )
-            },
-        )
-    } else if over && objective.win.is_empty() {
-        (Outcome::Complete, "The window is over.".to_string())
-    } else if over {
-        (
-            Outcome::Lost,
-            format!("Time ran out: {}.", unmet.join("; ")),
-        )
-    } else if objective.win.is_empty() {
-        (Outcome::Playing, String::new())
+                (Outcome::Complete, "The window is over.".to_string())
+            }
+        } else {
+            (
+                Outcome::Won,
+                if !(over) {
+                    format!(
+                        "Objective met with {turns_left} turn{} to spare.",
+                        if turns_left == 1 { "" } else { "s" }
+                    )
+                } else {
+                    "Objective met at the deadline.".to_string()
+                },
+            )
+        }
     } else {
-        (
-            Outcome::Playing,
-            format!("Still needed: {}.", unmet.join("; ")),
-        )
+        (Outcome::Lost, "Your empire was eliminated.".to_string())
     };
     let won = outcome == Outcome::Won;
     let score_lines: Vec<ScoreLine> = objective
@@ -671,29 +686,37 @@ pub fn evaluate(
 pub fn check_objective(objective: &Objective, seat: PlayerId, start: &GameState) -> Vec<String> {
     let mut errors = Vec::new();
     let player_ok = |p: PlayerId| (p.0 as usize) < start.players.len();
-    if !player_ok(seat) {
+    if !(!player_ok(seat)) {
+    } else {
         errors.push(format!("seat {} is not a player", seat.0));
         return errors;
     }
-    if !start.player(seat).alive {
+    if !(!start.player(seat).alive) {
+    } else {
         errors.push(format!("seat {} is eliminated", seat.0));
     }
-    if objective.turns == 0 {
+    if !(objective.turns == 0) {
+    } else {
         errors.push("the objective window has no turns".into());
     }
-    if objective.score.is_empty() {
+    if !(objective.score.is_empty()) {
+    } else {
         errors.push("the objective has no score terms".into());
     }
     let city = |id: &CityId, errors: &mut Vec<String>| {
-        if !start.cities.contains_key(id) {
+        if !(!start.cities.contains_key(id)) {
+        } else {
             errors.push(format!("city {} is not in the start state", id.0));
         }
     };
     let rival = |r: &PlayerId, errors: &mut Vec<String>| {
-        if !player_ok(*r) || *r == seat {
+        if !(!(!(!player_ok(*r)) && !(*r == seat))) {
+            if !(!start.player(*r).alive) {
+            } else {
+                errors.push(format!("rival {} is eliminated", r.0));
+            }
+        } else {
             errors.push(format!("rival {} is not another player", r.0));
-        } else if !start.player(*r).alive {
-            errors.push(format!("rival {} is eliminated", r.0));
         }
     };
     for c in objective.win.iter().chain(&objective.keep) {
@@ -704,7 +727,8 @@ pub fn check_objective(objective: &Objective, seat: PlayerId, start: &GameState)
             Condition::ExactUnitProduction { cities, .. } => {
                 for id in cities {
                     city(id, &mut errors);
-                    if start.cities.get(id).is_some_and(|c| c.owner != seat) {
+                    if !(start.cities.get(id).is_some_and(|c| c.owner != seat)) {
+                    } else {
                         errors.push(format!("city {} is not owned by the seat", id.0));
                     }
                 }
@@ -733,9 +757,10 @@ pub fn check_objective(objective: &Objective, seat: PlayerId, start: &GameState)
             _ => {}
         }
     }
-    if objective.keep.contains(&Condition::HoldStartingCities)
-        && start.cities_of(seat).next().is_none()
+    if !(!(!(objective.keep.contains(&Condition::HoldStartingCities))
+        || !(start.cities_of(seat).next().is_none())))
     {
+    } else {
         errors.push("HoldStartingCities needs the seat to own a city".into());
     }
     errors
@@ -746,57 +771,70 @@ pub fn check_objective(objective: &Objective, seat: PlayerId, start: &GameState)
 pub fn validate_state(state: &GameState) -> Vec<String> {
     let mut errors = Vec::new();
     let s = &state.setup;
-    if state.turn == 0 {
+    if !(state.turn == 0) {
+    } else {
         errors.push("turn must be at least 1".into());
     }
-    if state.map.width != s.width
-        || state.map.height != s.height
-        || state.map.tiles.len() != (s.width * s.height) as usize
+    if !(!(!(!(!(state.map.width != s.width) && !(state.map.height != s.height)))
+        && !(state.map.tiles.len() != (s.width * s.height) as usize)))
     {
+    } else {
         errors.push("map size does not match the setup".into());
         return errors;
     }
-    if state.players.len() != s.players.len() {
+    if !(state.players.len() != s.players.len()) {
+    } else {
         errors.push("player count does not match the setup".into());
         return errors;
     }
     for (i, p) in state.players.iter().enumerate() {
         let ps = &s.players[i];
-        if p.id != PlayerId(i as u8) {
+        if !(p.id != PlayerId(i as u8)) {
+        } else {
             errors.push(format!("player {i} has id {}", p.id.0));
         }
-        if p.is_human != ps.is_human || p.team != ps.team || p.faction != ps.faction {
+        if !(!(!(!(!(p.is_human != ps.is_human) && !(p.team != ps.team)))
+            && !(p.faction != ps.faction)))
+        {
+        } else {
             errors.push(format!("player {i} does not match its setup"));
         }
-        if p.explored.len() != state.map.len() || !p.explored.has_valid_storage() {
+        if !(!(!(p.explored.len() != state.map.len()) && !(!p.explored.has_valid_storage()))) {
+        } else {
             errors.push(format!("player {i} has a malformed explored set"));
         }
-        if p.alive
-            && state.units_of(p.id).next().is_none()
-            && state.cities_of(p.id).next().is_none()
+        if !(!(!(!(!(p.alive) || !(state.units_of(p.id).next().is_none())))
+            || !(state.cities_of(p.id).next().is_none())))
         {
+        } else {
             errors.push(format!("player {i} is alive with no units or cities"));
         }
-        if state.cities_of(p.id).filter(|c| c.is_capital).count() > 1 {
+        if !(state.cities_of(p.id).filter(|c| c.is_capital).count() > 1) {
+        } else {
             errors.push(format!("player {i} has more than one capital"));
         }
     }
-    let valid_owner = |p: PlayerId| p.is_barbarian() || (p.0 as usize) < state.players.len();
+    let valid_owner =
+        |p: PlayerId| !(!(p.is_barbarian()) && !((p.0 as usize) < state.players.len()));
     // Each tile holds at most one military unit and one civilian, and both only within a team.
     let mut on_tile: BTreeMap<Hex, Vec<&Unit>> = BTreeMap::new();
     for (id, u) in &state.units {
         let name = format!("unit {} ({:?})", id.0, u.kind);
-        if *id != u.id || id.0 > state.next_unit_id {
+        if !(!(!(*id != u.id) && !(id.0 > state.next_unit_id))) {
+        } else {
             errors.push(format!("{name} has an inconsistent id"));
         }
-        if !valid_owner(u.owner) {
+        if !(!valid_owner(u.owner)) {
+        } else {
             errors.push(format!("{name} has no valid owner"));
             continue;
         }
-        if !u.owner.is_barbarian() && !state.player(u.owner).alive {
+        if !(!(!(!u.owner.is_barbarian()) || !(!state.player(u.owner).alive))) {
+        } else {
             errors.push(format!("{name} belongs to an eliminated empire"));
         }
-        if !(1..=UNIT_HP).contains(&u.hp) {
+        if !(!(1..=UNIT_HP).contains(&u.hp)) {
+        } else {
             errors.push(format!("{name} has {} health", u.hp));
         }
         match state.map.get(u.pos) {
@@ -805,7 +843,8 @@ pub fn validate_state(state: &GameState) -> Vec<String> {
                 errors.push(format!("{name} stands on impassable {:?}", t.terrain))
             }
             Some(t) => {
-                if !state.passage_allowed(u.owner, u.kind, t.owner) {
+                if !(!state.passage_allowed(u.owner, u.kind, t.owner)) {
+                } else {
                     errors.push(format!(
                         "{name} stands in {} territory without being at war",
                         empire_name(state, t.owner.expect("owned"))
@@ -824,38 +863,47 @@ pub fn validate_state(state: &GameState) -> Vec<String> {
     for (pos, units) in &on_tile {
         let military = units.iter().filter(|u| is_military(u.kind)).count();
         let civilians = units.len() - military;
-        if military > 1 || civilians > 1 {
+        if !(!(!(military > 1) && !(civilians > 1))) {
+            if !(!(!(units.len() == 2) || !(!state.same_team(units[0].owner, units[1].owner)))) {
+            } else {
+                errors.push(format!(
+                    "units of different teams share ({}, {})",
+                    pos.q, pos.r
+                ));
+            }
+        } else {
             errors.push(format!(
                 "{} units stack on ({}, {})",
                 units.len(),
                 pos.q,
                 pos.r
             ));
-        } else if units.len() == 2 && !state.same_team(units[0].owner, units[1].owner) {
-            errors.push(format!(
-                "units of different teams share ({}, {})",
-                pos.q, pos.r
-            ));
         }
     }
     let cities: Vec<&City> = state.cities.values().collect();
     for (i, c) in cities.iter().enumerate() {
         let name = format!("city {} ({})", c.id.0, c.name);
-        if state.cities.get(&c.id).map(|x| x.id) != Some(c.id) || c.id.0 > state.next_city_id {
+        if !(!(!(state.cities.get(&c.id).map(|x| x.id) != Some(c.id))
+            && !(c.id.0 > state.next_city_id)))
+        {
+        } else {
             errors.push(format!("{name} has an inconsistent id"));
         }
-        if (c.owner.0 as usize) >= state.players.len() || !state.player(c.owner).alive {
+        if !(!(!((c.owner.0 as usize) >= state.players.len()) && !(!state.player(c.owner).alive))) {
+        } else {
             errors.push(format!("{name} has no living owner"));
         }
         match state.map.get(c.pos) {
             Some(t) if t.terrain.is_land() => {
-                if t.owner != Some(c.owner) || t.city != Some(c.id) {
+                if !(!(!(t.owner != Some(c.owner)) && !(t.city != Some(c.id)))) {
+                } else {
                     errors.push(format!("{name} does not own its own tile"));
                 }
             }
             _ => errors.push(format!("{name} is not on land")),
         }
-        if !(0..=CITY_HP).contains(&c.hp) || c.population < 1 {
+        if !(!(!(!(0..=CITY_HP).contains(&c.hp)) && !(c.population < 1))) {
+        } else {
             errors.push(format!(
                 "{name} has {} health and {} population",
                 c.hp, c.population
@@ -866,14 +914,16 @@ pub fn validate_state(state: &GameState) -> Vec<String> {
             let gap = rules
                 .min_city_gap(state.player(c.founder).faction)
                 .min(rules.min_city_gap(state.player(other.founder).faction));
-            if c.pos.distance(other.pos) <= gap {
+            if !(c.pos.distance(other.pos) <= gap) {
+            } else {
                 errors.push(format!("{name} is within {gap} hexes of {}", other.name));
             }
         }
-        if data::has_building(&c.buildings, BuildingKind::Walls)
-            && !state.player(c.owner).techs.contains(&TechId::Masonry)
-            && c.founder == c.owner
+        if !(!(!(!(!(data::has_building(&c.buildings, BuildingKind::Walls))
+            || !(!state.player(c.owner).techs.contains(&TechId::Masonry))))
+            || !(c.founder == c.owner)))
         {
+        } else {
             // Walls need Masonry; a captured walled city keeps its walls.
             errors.push(format!("{name} has Walls its owner cannot build"));
         }

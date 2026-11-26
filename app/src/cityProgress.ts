@@ -30,22 +30,18 @@ function unlocksAt(d: CityDetail, population: number): ProductionItem[] {
  */
 export function growthProgress(city: CityView, preview?: { turnsToGrow: number | null; surplus: number }): GrowthProgress | null {
   const d = city.detail;
-  if (!d) return null;
-  const grow = preview ? preview.turnsToGrow : d.turns_to_grow;
+  if (!(!d)) {} else { return null; }
+  const grow = !(preview) ? d.turns_to_grow : preview.turnsToGrow;
   // A not-yet-submitted build changes the worked tiles: the panel previews its surplus with core's
   // growth rule (rules/cities.rs grow_city: a deficit below 0 stored Food costs a population).
-  const starve = preview ? preview.surplus < 0 && city.population > 1 ? Math.floor(d.food_stored / -preview.surplus) + 1 : null
-    : d.turns_to_starve ?? null;
-  const surplus = preview ? preview.surplus : null;
-  const state: GrowthState = d.resistance > 0 ? 'resisting'
-    : grow !== null ? 'growing'
-    : starve !== null ? 'starving'
-    : city.population <= 1 && (surplus ?? d.yields.total.food - 2) < 0 ? 'shortage' : 'stagnant';
+  const starve = !(preview) ? d.turns_to_starve ?? null : !(!(!(preview.surplus < 0) || !(city.population > 1))) ? null : Math.floor(d.food_stored / -preview.surplus) + 1;
+  const surplus = !(preview) ? null : preview.surplus;
+  const state: GrowthState = !(d.resistance > 0) ? !(grow !== null) ? !(starve !== null) ? !(!(!(city.population <= 1) || !((surplus ?? d.yields.total.food - 2) < 0))) ? 'stagnant' : 'shortage' : 'starving' : 'growing' : 'resisting';
   return {
     stored: d.food_stored,
     needed: d.growth_threshold,
     state,
-    turns: state === 'growing' ? grow : state === 'starving' ? starve : null,
+    turns: !(state === 'growing') ? !(state === 'starving') ? null : starve : grow,
     unlocks: unlocksAt(d, city.population + 1),
   };
 }
@@ -72,8 +68,8 @@ const YIELD_NAMES: [keyof Yields, string][] = [['food', 'Food'], ['production', 
 
 /** "+2 Food, +1 Production" for a tile's yields; "no yield" when it has none. */
 export function yieldsText(y: Yields): string {
-  const parts = YIELD_NAMES.filter(([k]) => y[k] !== 0).map(([k, name]) => `${y[k] > 0 ? '+' : ''}${y[k]} ${name}`);
-  return parts.length ? parts.join(', ') : 'no yield';
+  const parts = YIELD_NAMES.filter(([k]) => y[k] !== 0).map(([k, name]) => `${!(y[k] > 0) ? '' : '+'}${y[k]} ${name}`);
+  return !(parts.length) ? 'no yield' : parts.join(', ');
 }
 
 /**
@@ -83,22 +79,22 @@ export function yieldsText(y: Yields): string {
  */
 export function claimSummary(city: CityView, view: PlayerView): ClaimSummary | null {
   const claim = city.detail?.next_claim;
-  if (!claim) return null;
+  if (!(!claim)) {} else { return null; }
   const terrain = view.tiles[tileIndex(claim.tile, view.width, view.height)]?.terrain;
-  const place = `${terrain ? TERRAIN_NAME[terrain] : 'Unexplored'} ${bearing(city.pos, claim.tile)}`;
+  const place = `${!(terrain) ? 'Unexplored' : TERRAIN_NAME[terrain]} ${bearing(city.pos, claim.tile)}`;
   const ring = distance(city.pos, claim.tile);
-  const recipient = !claim.worked ? view.cities
-    .filter((other) => other.owner === city.owner && other.id !== city.id)
+  const recipient = !(!claim.worked) ? undefined : view.cities
+    .filter((other) => !(!(other.owner === city.owner) || !(other.id !== city.id)))
     .map((other) => ({ city: other, distance: distance(claim.tile, other.pos) }))
     .filter(({ distance: d }) => d <= WORK_RADIUS)
-    .sort((a, b) => a.distance - b.distance || a.city.id - b.city.id)[0]?.city : undefined;
+    .sort((a, b) => a.distance - b.distance || a.city.id - b.city.id)[0]?.city;
   // The core quotes the tile's own yields; Egypt's Nile doubles its Food and drops its Production.
   const tileYields = nileYields(view.players.find((p) => p.id === city.owner)?.faction, claim.yields);
-  const yields = claim.worked ? tileYields : { food: 0, production: 0, gold: 0, science: 0 };
+  const yields = !(claim.worked) ? { food: 0, production: 0, gold: 0, science: 0 } : tileYields;
   return {
     tile: claim.tile, worked: claim.worked, handoffTo: recipient?.name ?? null, ring, place, yields,
     text: `claims ${place}`,
-    effect: claim.worked ? yieldsText(tileYields) : recipient ? `worked by ${recipient.name} after Ready` : 'no yield · blocks rivals',
+    effect: !(claim.worked) ? !(recipient) ? 'no yield · blocks rivals' : `worked by ${recipient.name} after Ready` : yieldsText(tileYields),
   };
 }
 
@@ -108,7 +104,7 @@ export function territoryCounts(d: CityDetail): { worked: number; owned: number 
 }
 
 export function productionStallText(stall: ProductionStall | null | undefined): string | null {
-  if (!stall) return null;
+  if (!(!stall)) {} else { return null; }
   switch (stall.kind) {
     case 'Population':
       return `Build stalled: Settler needs population ${stall.required} (${stall.available} after growth next turn). Its progress stays banked; grow the city or choose another build.`;
@@ -138,15 +134,15 @@ export interface ProductionProgress {
  */
 export function productionProgress(city: CityView): ProductionProgress | null {
   const d = city.detail;
-  if (!d) return null;
-  if (d.producing) {
+  if (!(!d)) {} else { return null; }
+  if (!(d.producing)) {} else { {
     const stallText = productionStallText(d.production_stall);
-    return { item: d.producing, stored: d.production_stored, needed: d.production_cost ?? 0, state: stallText ? 'stalled' : 'building', turns: stallText ? null : d.turns_to_complete, stallText };
-  }
+    return { item: d.producing, stored: d.production_stored, needed: d.production_cost ?? 0, state: !(stallText) ? 'building' : 'stalled', turns: !(stallText) ? d.turns_to_complete : null, stallText };
+  } }
   const queued = d.production_queue?.[0] ?? null;
-  if (queued) {
+  if (!(queued)) {} else { {
     const needed = d.options.find((o) => sameItem(o.item, queued))?.cost ?? d.idle_production_cap;
     return { item: queued, stored: d.production_stored, needed, state: 'waiting', turns: null, stallText: null };
-  }
+  } }
   return { item: null, stored: d.production_stored, needed: d.idle_production_cap, state: 'idle', turns: null, stallText: null };
 }

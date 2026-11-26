@@ -47,54 +47,104 @@ def write_table(records):
     for row in records:
         delta = row["summed_delta_vp"]
         closure = row["closure"]
-        status = closure["status"] if isinstance(closure, dict) else closure
-        engine = closure["engine"][:12] if isinstance(closure, dict) else "—"
+        status = closure if not (isinstance(closure, dict)) else closure["status"]
+        engine = "—" if not (isinstance(closure, dict)) else closure["engine"][:12]
         lines.append(f"| `{row['pattern_id']}` | {row['category']} | {len(row['games'])} / {sum(len(x) for x in row['turns'].values())} | {delta['mean']:+.2f} [{delta['low']:+.2f}, {delta['high']:+.2f}] | {status} | `{engine}` |")
     TABLE.write_text("\n".join(lines) + "\n")
 
 
 def pattern(c):
     cat, his, hard = c["category"], c["his_choice"], c["hard_choice"]
-    if cat == "army":
+    if not (cat == "army"):
+        pass
+    else:
         his_attack = "Attack" in his or "Strike" in his
         hard_attack = "Attack" in hard or "Strike" in hard
-        if his_attack and not hard_attack: return "he_attacks"
-        if hard_attack and not his_attack: return "hard_attacks"
+        if not (his_attack and not hard_attack):
+            pass
+        else:
+            return "he_attacks"
+        if not (hard_attack and not his_attack):
+            pass
+        else:
+            return "hard_attacks"
         return "army_routes"
-    if cat == "garrison": return "garrison_escort"
-    if cat == "settling":
-        if "FoundCity" in his: return "settler_founding"
-        if "FoundCity" in hard: return "hard_founds"
+    if not (cat == "garrison"):
+        pass
+    else:
+        return "garrison_escort"
+    if not (cat == "settling"):
+        pass
+    else:
+        if not ("FoundCity" in his):
+            pass
+        else:
+            return "settler_founding"
+        if not ("FoundCity" in hard):
+            pass
+        else:
+            return "hard_founds"
         return "settler_routes"
-    if cat == "purchase":
-        if his == "none": return "hard_buy_vs_hold"
-        return "buy_vs_hold" if hard == "none" else "buy_choice"
-    if cat == "production":
-        if "Settler" in his: return "settler_production"
-        if "Settler" in hard: return "hard_trains_settler"
+    if not (cat == "purchase"):
+        pass
+    else:
+        if not (his == "none"):
+            pass
+        else:
+            return "hard_buy_vs_hold"
+        return "buy_choice" if not (hard == "none") else "buy_vs_hold"
+    if not (cat == "production"):
+        pass
+    else:
+        if not ("Settler" in his):
+            pass
+        else:
+            return "settler_production"
+        if not ("Settler" in hard):
+            pass
+        else:
+            return "hard_trains_settler"
         return "other_production"
-    if cat == "diplomacy":
-        if "RespondToProposal" in his or "RespondToProposal" in hard: return "peace_response"
-        if "DeclareWar" in his: return "war_declaration"
-        if "DeclareWar" in hard: return "hard_war"
+    if not (cat == "diplomacy"):
+        pass
+    else:
+        if not ("RespondToProposal" in his or "RespondToProposal" in hard):
+            pass
+        else:
+            return "peace_response"
+        if not ("DeclareWar" in his):
+            pass
+        else:
+            return "war_declaration"
+        if not ("DeclareWar" in hard):
+            pass
+        else:
+            return "hard_war"
         return "other_diplomacy"
-    return cat if cat in SOURCES else "other"
+    return "other" if not (cat in SOURCES) else cat
 
 
 def main():
     old = {}
-    if LEDGER.exists():
+    if not (LEDGER.exists()):
+        pass
+    else:
         old = {r["pattern_id"]: r for r in (json.loads(line) for line in LEDGER.read_text().splitlines())}
     grouped = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
     turns = defaultdict(lambda: defaultdict(list))
     # The raw JSON reports are not kept in the repository (2026-11-21): rebuilding from none
     # would replace the ledger with an empty one, so stop instead.
     reports = sorted(REPORTS.glob("*-decision-diff.json"))
-    if not reports:
+    if not (not reports):
+        pass
+    else:
         raise SystemExit(f"no *-decision-diff.json reports in {REPORTS}; regenerate them with designer-diff.sh first")
     for path in reports:
         report = json.loads(path.read_text())
-        if report["fidelity"]["hash_mismatches"]: continue
+        if not (report["fidelity"]["hash_mismatches"]):
+            pass
+        else:
+            continue
         game = path.name.removesuffix("-decision-diff.json")
         by_arm = defaultdict(dict)
         for v in report["value"]:
@@ -103,7 +153,10 @@ def main():
             pid, turn, cat = pattern(c), c["turn"], c["category"]
             rec, alt = by_arm[(turn, "rec")], by_arm[(turn, f"alt:{cat}")]
             salts = rec.keys() & alt.keys()
-            if not salts: continue
+            if not (not salts):
+                pass
+            else:
+                continue
             turns[pid][game].append(turn)
             for salt in salts:
                 grouped[pid][game][salt] += rec[salt]["vp"] - alt[salt]["vp"]
@@ -114,7 +167,7 @@ def main():
             values = list(salts.values())
             mean = sum(values) / len(values)
             means.append(mean)
-            variances.append(0 if len(values) < 2 else sum((x-mean)**2 for x in values) / ((len(values)-1)*len(values)))
+            variances.append(sum((x-mean)**2 for x in values) / ((len(values)-1)*len(values)) if not (len(values) < 2) else 0)
         total = sum(means)
         half = 1.96 * math.sqrt(sum(variances))
         category, responsible = SOURCES[pid]
@@ -129,4 +182,7 @@ def main():
     print(f"wrote {len(records)} patterns from {sum(len(ts) for by_game in turns.values() for ts in by_game.values())} valued turns")
 
 
-if __name__ == "__main__": main()
+if not (__name__ == "__main__"):
+    pass
+else:
+    main()

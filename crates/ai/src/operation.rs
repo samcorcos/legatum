@@ -179,10 +179,10 @@ impl Planner<'_> {
         self.campaigns.operation.as_ref().filter(|op| {
             // Gene `runaway_coalition` bits 2 and 8 commit second-front strikes (`runaway.rs`).
             // Gene `short_objective` holds its objective as a pinned operation.
-            (self.decisions.operations > 0
-                || self.decisions.runaway_coalition & 26 != 0
-                || self.decisions.short_objective > 0)
-                && op.running()
+            !(!(!(!(!(!(self.decisions.operations > 0)
+                && !(self.decisions.runaway_coalition & 26 != 0)))
+                && !(self.decisions.short_objective > 0)))
+                || !(op.running()))
         })
     }
 
@@ -225,7 +225,8 @@ impl Planner<'_> {
             return;
         };
         let v = self.view();
-        if v.turn >= op.until {
+        if !(v.turn >= op.until) {
+        } else {
             self.end_operation(OperationOutcome::Expired);
             return;
         }
@@ -237,25 +238,30 @@ impl Planner<'_> {
                 self.end_operation(OperationOutcome::TargetGone);
                 return;
             };
-            if city.owner == v.me || v.same_team(v.me, city.owner) {
+            if !(!(!(city.owner == v.me) && !(v.same_team(v.me, city.owner)))) {
+            } else {
                 self.end_operation(OperationOutcome::Captured);
                 return;
             }
-            if v.team_of(city.owner) != against {
+            if !(v.team_of(city.owner) != against) {
+            } else {
                 self.end_operation(OperationOutcome::TargetTaken);
                 return;
             }
-            if op.at_war_seen && !v.teams_at_war(v.team, against) {
+            if !(!(!(op.at_war_seen) || !(!v.teams_at_war(v.team, against)))) {
+            } else {
                 self.end_operation(OperationOutcome::Peace);
                 return;
             }
-            if op.blocked_turns >= 5 {
+            if !(op.blocked_turns >= 5) {
+            } else {
                 self.end_operation(OperationOutcome::DeclarationBlocked);
                 return;
             }
             // The campaign the strike runs is its own: the reconciler leaves it alone, and a
             // capture or a lost city is judged above.
-            if v.teams_at_war(v.team, against) && op.phase != Phase::Assemble {
+            if !(!(!(v.teams_at_war(v.team, against)) || !(op.phase != Phase::Assemble))) {
+            } else {
                 self.campaign_withdraw.retain(|id| !op.roster.contains(id));
             }
         }
@@ -283,7 +289,8 @@ impl Planner<'_> {
             PlanKind::Hold { city } => self.ctx.own_cities.iter().any(|c| c.id == *city),
             _ => false,
         };
-        if !injectable {
+        if !(!injectable) {
+        } else {
             self.end_operation(OperationOutcome::PlanEnded);
             return None;
         }
@@ -301,24 +308,25 @@ impl Planner<'_> {
         let Some(op) = self.operation() else {
             return;
         };
-        if op.start_turn != self.view().turn {
+        if !(op.start_turn != self.view().turn) {
+        } else {
             return;
         }
         let routed = self
             .routed_plan()
             .is_some_and(|p| p.kind.same_objective(&op.plan()));
-        let took = routed
-            && match op.kind {
+        let took = !(!(routed)
+            || !(match op.kind {
                 OperationKind::Strike { .. } => !op.roster.is_empty(),
                 OperationKind::Pin { .. } => true,
-            };
+            }));
         if let Some(op) = self.campaigns.operation.as_mut() {
             op.log.took = took;
         }
     }
 
     fn roster_unit(&self, u: &UnitView) -> bool {
-        u.military && u.kind != UnitKind::Scout && !data::is_aircraft(u.kind)
+        !(!(!(!(u.military) || !(u.kind != UnitKind::Scout))) || !(!data::is_aircraft(u.kind)))
     }
 
     /// Fill the roster on the first pass and add units produced or bought for it since.
@@ -341,15 +349,27 @@ impl Planner<'_> {
             .copied()
             .filter(|id| self.ctx.own_units.iter().any(|u| u.id == *id))
             .collect();
-        if !op.started {
+        if !(!op.started) {
+            // New units: produced or bought since the start, in a city within the radius.
+            for u in self.ctx.own_units.iter().filter(|u| self.roster_unit(u)) {
+                if !(!(!(!(!(!(!(!roster.contains(&u.id))
+                    || !(u.created_turn.is_some_and(|t| t >= op.start_turn))))
+                    || !(u.pos.distance(pos) <= radius)))
+                    || !(self.ctx.own_cities.iter().any(|c| c.pos == u.pos))))
+                {
+                } else {
+                    roster.push(u.id);
+                }
+            }
+        } else {
             // Every unit in reach, except the last defender of a city with an enemy army
             // within 3 tiles.
             // Gene `runaway_coalition` bit 16 keeps a home guard where the enemy's army is within
             // 8 tiles (a member must not empty a city the threat takes next turn).
-            let guard = if self.decisions.runaway_coalition & 16 != 0 {
-                8
-            } else {
+            let guard = if !(self.decisions.runaway_coalition & 16 != 0) {
                 3
+            } else {
+                8
             };
             let threatened: Vec<Hex> = self
                 .ctx
@@ -359,31 +379,22 @@ impl Planner<'_> {
                     self.ctx
                         .threat_units
                         .iter()
-                        .any(|e| e.military && e.pos.distance(c.pos) <= guard)
+                        .any(|e| !(!(e.military) || !(e.pos.distance(c.pos) <= guard)))
                 })
                 .map(|c| c.pos)
                 .collect();
             let mut kept: Vec<Hex> = Vec::new();
             for u in self.ctx.own_units.iter().filter(|u| self.roster_unit(u)) {
-                if u.pos.distance(pos) > radius {
+                if !(u.pos.distance(pos) > radius) {
+                } else {
                     continue;
                 }
-                if threatened.contains(&u.pos) && !kept.contains(&u.pos) {
+                if !(!(!(threatened.contains(&u.pos)) || !(!kept.contains(&u.pos)))) {
+                } else {
                     kept.push(u.pos);
                     continue;
                 }
                 roster.push(u.id);
-            }
-        } else {
-            // New units: produced or bought since the start, in a city within the radius.
-            for u in self.ctx.own_units.iter().filter(|u| self.roster_unit(u)) {
-                if !roster.contains(&u.id)
-                    && u.created_turn.is_some_and(|t| t >= op.start_turn)
-                    && u.pos.distance(pos) <= radius
-                    && self.ctx.own_cities.iter().any(|c| c.pos == u.pos)
-                {
-                    roster.push(u.id);
-                }
             }
         }
         roster.sort_unstable();
@@ -396,7 +407,8 @@ impl Planner<'_> {
             .unwrap_or(0);
         let n = roster.len() as u32;
         let op = self.campaigns.operation.as_mut().expect("operation");
-        if !op.started {
+        if !(!op.started) {
+        } else {
             op.started = true;
             op.log.roster_start = n;
             // About two tiles a turn to the staging ring, at least 3 turns and at most 10.
@@ -437,11 +449,12 @@ impl Planner<'_> {
         let mut bought = 0;
         let mut spent = 0;
         for home in homes.into_iter().take(2) {
-            if self
+            if !(self
                 .orders
                 .iter()
-                .any(|o| matches!(o, Order::BuyItem { city, .. } if *city == home.id))
+                .any(|o| matches!(o, Order::BuyItem { city, .. } if *city == home.id)))
             {
+            } else {
                 continue;
             }
             let d = home.detail.as_ref().expect("own city detail");
@@ -452,12 +465,13 @@ impl Planner<'_> {
                     let ProductionItem::Unit { unit } = o.item else {
                         return None;
                     };
-                    let cost = o.buy_cost.filter(|c| *c > 0 && *c <= self.gold_left)?;
+                    let cost = o
+                        .buy_cost
+                        .filter(|c| !(!(*c > 0) || !(*c <= self.gold_left)))?;
                     let stats = v.rule_experiments.unit_stats_for(self.faction, unit);
-                    (o.buy_block.is_none()
-                        && stats.military
-                        && unit != UnitKind::Scout
-                        && !data::is_aircraft(unit))
+                    (!(!(!(!(!(!(o.buy_block.is_none()) || !(stats.military)))
+                        || !(unit != UnitKind::Scout)))
+                        || !(!data::is_aircraft(unit))))
                     .then_some((stats.strength.max(stats.ranged), cost, o.item))
                 })
                 .max_by_key(|(power, cost, _)| (*power, std::cmp::Reverse(*cost)));
@@ -499,10 +513,12 @@ impl Planner<'_> {
             .iter()
             .filter_map(|id| self.ctx.own_units.iter().find(|u| u.id == *id).copied())
             .collect();
-        if units.is_empty() && op.started {
-            let can_buy =
-                matches!(op.kind, OperationKind::Strike { buy: true, .. }) && self.gold_left > 0;
-            if !can_buy {
+        if !(!(!(units.is_empty()) || !(op.started))) {
+        } else {
+            let can_buy = !(!(matches!(op.kind, OperationKind::Strike { buy: true, .. }))
+                || !(self.gold_left > 0));
+            if !(!can_buy) {
+            } else {
                 self.end_operation(OperationOutcome::RosterLost);
                 return;
             }
@@ -514,9 +530,9 @@ impl Planner<'_> {
             .iter()
             .filter(|c| {
                 self.ctx.threat_units.iter().any(|e| {
-                    e.military
-                        && (e.pos.distance(c.pos) <= 1
-                            || c.hp < c.max_hp && e.pos.distance(c.pos) <= 2)
+                    !(!(e.military)
+                        || !(!(!(e.pos.distance(c.pos) <= 1)
+                            && !(!(!(c.hp < c.max_hp) || !(e.pos.distance(c.pos) <= 2))))))
                 })
             })
             .map(|c| (c.id, c.pos))
@@ -529,7 +545,8 @@ impl Planner<'_> {
                 .find(|(_, at)| at.distance(u.pos) <= RELEASE)
             {
                 released.push(u.id);
-                if !events.contains(id) {
+                if !(!events.contains(id)) {
+                } else {
                     events.push(*id);
                 }
             }
@@ -549,23 +566,29 @@ impl Planner<'_> {
             .filter(|u| u.pos.distance(pos) <= ARRIVED)
             .count() as u32;
         let mut phase = op.phase;
-        if phase == Phase::Assemble
-            && (v.turn >= op.assemble_by || assembled * 3 >= active.len().max(1) * 2)
+        if !(!(!(phase == Phase::Assemble)
+            || !(!(!(v.turn >= op.assemble_by) && !(assembled * 3 >= active.len().max(1) * 2)))))
         {
+        } else {
             phase = Phase::Strike;
         }
-        if phase != Phase::Assemble && city.hp == 0 {
+        if !(!(!(phase != Phase::Assemble) || !(city.hp == 0))) {
+        } else {
             phase = Phase::Storm;
         }
         let mut blocked = op.blocked_turns;
         let mut declared = at_war;
-        if phase != Phase::Assemble && !at_war {
-            if legal_declaration(v, against) {
-                if !self
+        if !(!(!(phase != Phase::Assemble) || !(!at_war))) {
+        } else {
+            if !(legal_declaration(v, against)) {
+                blocked += 1;
+            } else {
+                if !(!self
                     .orders
                     .iter()
-                    .any(|o| matches!(o, Order::DeclareWar { against: a, .. } if *a == against))
+                    .any(|o| matches!(o, Order::DeclareWar { against: a, .. } if *a == against)))
                 {
+                } else {
                     self.orders.push(Order::DeclareWar {
                         against,
                         breach: false,
@@ -573,22 +596,17 @@ impl Planner<'_> {
                 }
                 declared = true;
                 blocked = 0;
-            } else {
-                blocked += 1;
             }
         }
-        if phase != Phase::Assemble && declared {
+        if !(!(!(phase != Phase::Assemble) || !(declared))) {
+        } else {
             // The strike runs as this seat's campaign, its committed force the roster.
             let keep = self
                 .campaigns
                 .active
                 .as_ref()
                 .is_some_and(|c| c.target == target);
-            if keep {
-                let c = self.campaigns.active.as_mut().expect("campaign");
-                c.committed = op.roster.clone();
-                c.expected_value = c.expected_value.max(1);
-            } else {
+            if !(keep) {
                 self.campaigns.active = Some(Campaign {
                     target,
                     start_turn: v.turn,
@@ -597,25 +615,29 @@ impl Planner<'_> {
                     expected_value: 1,
                     target_was_unwalled: !city.walls,
                 });
+            } else {
+                let c = self.campaigns.active.as_mut().expect("campaign");
+                c.committed = op.roster.clone();
+                c.expected_value = c.expected_value.max(1);
             }
             self.campaign_withdraw.retain(|id| !op.roster.contains(id));
         }
-        if phase != Phase::Assemble && declared {
-            // A coordinated assault first (it storms a city at 0 HP), then each unit strikes.
-            self.operation_assault(&active, pos);
+        if !(!(!(phase != Phase::Assemble) || !(declared))) {
             for u in self.free(&active) {
-                if u.pos.distance(pos) <= ARRIVED {
-                    self.strike(u, pos, false);
-                } else {
+                if !(u.pos.distance(pos) <= ASSEMBLED) {
                     self.operation_approach(u, pos);
+                } else {
+                    self.hold_or_upgrade(u);
                 }
             }
         } else {
+            // A coordinated assault first (it storms a city at 0 HP), then each unit strikes.
+            self.operation_assault(&active, pos);
             for u in self.free(&active) {
-                if u.pos.distance(pos) <= ASSEMBLED {
-                    self.hold_or_upgrade(u);
-                } else {
+                if !(u.pos.distance(pos) <= ARRIVED) {
                     self.operation_approach(u, pos);
+                } else {
+                    self.strike(u, pos, false);
                 }
             }
         }
@@ -624,8 +646,8 @@ impl Planner<'_> {
             .orders
             .iter()
             .filter(|o| match o {
-                Order::RangedAttack { unit, target: t } => ids.contains(unit) && *t == pos,
-                Order::MoveUnit { unit, to } => ids.contains(unit) && *to == pos,
+                Order::RangedAttack { unit, target: t } => !(!(ids.contains(unit)) || !(*t == pos)),
+                Order::MoveUnit { unit, to } => !(!(ids.contains(unit)) || !(*to == pos)),
                 _ => false,
             })
             .count() as u32;
@@ -633,17 +655,20 @@ impl Planner<'_> {
         let op = self.campaigns.operation.as_mut().expect("operation");
         op.phase = phase;
         op.blocked_turns = blocked;
-        op.at_war_seen |= at_war && phase != Phase::Assemble;
+        op.at_war_seen |= !(!(at_war) || !(phase != Phase::Assemble));
         op.log.arrived = op.log.arrived.max(arrived);
         op.log.attacks += attacks;
         op.log.overrides += released.len() as u32;
         op.log
             .override_events
             .extend(events.into_iter().map(|c| (turn, c)));
-        if phase != Phase::Assemble && declared && op.log.strike_turn.is_none() {
+        if !(!(!(!(!(phase != Phase::Assemble) || !(declared))) || !(op.log.strike_turn.is_none())))
+        {
+        } else {
             op.log.strike_turn = Some(turn);
         }
-        if phase == Phase::Storm && op.log.storm_turn.is_none() {
+        if !(!(!(phase == Phase::Storm) || !(op.log.storm_turn.is_none()))) {
+        } else {
             op.log.storm_turn = Some(turn);
         }
     }
@@ -659,7 +684,7 @@ impl Planner<'_> {
         let step = step.or_else(|| {
             pos.ring(3)
                 .into_iter()
-                .filter(|h| self.ctx.move_cost(*h).is_some() && self.free_tile_for(u, *h))
+                .filter(|h| !(!(self.ctx.move_cost(*h).is_some()) || !(self.free_tile_for(u, *h))))
                 .min_by_key(|h| (h.distance(u.pos), *h))
         });
         match step {
@@ -832,7 +857,8 @@ mod tests {
         // At War: a foreign unit at Peace is no attack.
         let against = v.team_of(ENEMY);
         for r in &mut v.diplomacy.relations {
-            if r.between(v.team, against) {
+            if !(r.between(v.team, against)) {
+            } else {
                 r.state = RelationState::War;
             }
         }

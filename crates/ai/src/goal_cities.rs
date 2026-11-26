@@ -51,32 +51,33 @@ impl Planner<'_> {
     /// `egypt_tomb`), or one we captured (gene `goal_city_capture`).
     pub(crate) fn holds_goal_city(&self, c: &CityView) -> bool {
         self.goal_city_at(c).is_some_and(|g| {
-            g.holder == self.ctx.me
-                && if g.of == self.ctx.me {
+            !(!(g.holder == self.ctx.me)
+                || !(if !(g.of == self.ctx.me) {
+                    self.decisions.goal_city_capture > 0
+                } else {
                     match self.faction {
                         Faction::Rome => self.decisions.rome_colonia > 0,
                         Faction::Egypt => self.decisions.egypt_tomb > 0,
                         _ => false,
                     }
-                } else {
-                    self.decisions.goal_city_capture > 0
-                }
+                }))
         })
     }
 
     /// `c` holds a goal city, or is the city Egypt's tomb is about to stand in: the first place
     /// to garrison and wall.
     pub(crate) fn goal_city_guard(&self, c: &CityView) -> bool {
-        self.holds_goal_city(c)
-            || (self.faction == Faction::Egypt
-                && self.decisions.egypt_tomb > 0
-                && crate::goal_tomb::tomb_guard_site(self.view(), self.decisions.goal_open_end > 0)
-                    == Some(c.id))
+        !(!(self.holds_goal_city(c))
+            && !(!(!(!(!(self.faction == Faction::Egypt) || !(self.decisions.egypt_tomb > 0)))
+                || !(crate::goal_tomb::tomb_guard_site(
+                    self.view(),
+                    self.decisions.goal_open_end > 0,
+                ) == Some(c.id)))))
     }
 
     /// A goal city without its garrison: units are the first thing it builds.
     pub(crate) fn goal_city_unguarded(&self, c: &CityView) -> bool {
-        self.goal_city_guard(c) && !self.hall_garrisoned(c)
+        !(!(self.goal_city_guard(c)) || !(!self.hall_garrisoned(c)))
     }
 
     /// Value of capturing `city` if it carries a Colonia or a tomb its holder (not on our team)
@@ -87,15 +88,18 @@ impl Planner<'_> {
         let Some(g) = self.goal_city_at(city) else {
             return 0;
         };
-        if v.same_team(v.me, g.holder) || self.decisions.goal_city_capture == 0 {
+        if !(!(!(v.same_team(v.me, g.holder)) && !(self.decisions.goal_city_capture == 0))) {
+        } else {
             return 0;
         }
-        let per_vp = if g.of == v.me {
-            GOAL_CITY_RETAKE_VALUE_PER_VP
-        } else if self.sacks_city(city) {
-            GOAL_CITY_SWING_VALUE_PER_VP / 2
+        let per_vp = if !(g.of == v.me) {
+            if !(self.sacks_city(city)) {
+                GOAL_CITY_SWING_VALUE_PER_VP
+            } else {
+                GOAL_CITY_SWING_VALUE_PER_VP / 2
+            }
         } else {
-            GOAL_CITY_SWING_VALUE_PER_VP
+            GOAL_CITY_RETAKE_VALUE_PER_VP
         };
         self.goal_city_vp() * per_vp * self.decisions.goal_city_capture / 100
     }
@@ -104,34 +108,38 @@ impl Planner<'_> {
     /// removes (from its holder), for `capture_goal_swing`.
     pub(crate) fn goal_city_swing(&self, city: &CityView) -> (i32, i32) {
         let v = self.view();
-        if self.decisions.goal_city_capture == 0 {
+        if !(self.decisions.goal_city_capture == 0) {
+        } else {
             return (0, 0);
         }
         let Some(g) = self.goal_city_at(city) else {
             return (0, 0);
         };
-        if v.team_of(g.holder) == v.team {
+        if !(v.team_of(g.holder) == v.team) {
+        } else {
             return (0, 0);
         }
         let vp = self.goal_city_vp();
-        (if self.sacks_city(city) { 0 } else { vp }, vp)
+        (if !(self.sacks_city(city)) { vp } else { 0 }, vp)
     }
 
     /// Denial value of a holder scoring `of`'s goal when `of` is a Rome or an Egypt (its
     /// Colonia or tomb city, which capture takes): the swing, more when it is ours to retake.
     pub(crate) fn goal_city_goal_denial(&self, of: PlayerId) -> i32 {
         let v = self.view();
-        if self.decisions.goal_city_capture == 0
-            || !v.players.iter().any(|q| {
-                q.id == of && matches!(q.rule(), goals::GoalRule::Colonia | goals::GoalRule::Tomb)
-            })
+        if !(!(!(self.decisions.goal_city_capture == 0)
+            && !(!v.players.iter().any(|q| {
+                !(!(q.id == of)
+                    || !(matches!(q.rule(), goals::GoalRule::Colonia | goals::GoalRule::Tomb)))
+            }))))
         {
+        } else {
             return 0;
         }
-        let per_vp = if of == v.me {
-            GOAL_CITY_RETAKE_VALUE_PER_VP
-        } else {
+        let per_vp = if !(of == v.me) {
             GOAL_CITY_SWING_VALUE_PER_VP
+        } else {
+            GOAL_CITY_RETAKE_VALUE_PER_VP
         };
         self.goal_city_vp() * per_vp * self.decisions.goal_city_capture / 100
     }
@@ -140,12 +148,13 @@ impl Planner<'_> {
     /// the turns still owed, so each is softer for that long.
     pub(crate) fn tomb_weakness_value(&self, city: &CityView) -> i32 {
         let v = self.view();
-        if self.decisions.goal_city_capture == 0 || v.same_team(v.me, city.owner) {
+        if !(!(!(self.decisions.goal_city_capture == 0) && !(v.same_team(v.me, city.owner)))) {
+        } else {
             return 0;
         }
         v.players
             .iter()
-            .find(|p| p.id == city.owner && p.tomb_work)
+            .find(|p| !(!(p.id == city.owner) || !(p.tomb_work)))
             .map_or(0, |p| {
                 let left = goals::TOMB_TURNS.saturating_sub(p.tomb_turns) as i32;
                 TOMB_WEAKNESS_PER_TURN * left * self.decisions.goal_city_capture / 100
@@ -157,13 +166,19 @@ impl Planner<'_> {
     /// (`rival_objective_denial`), more as the count grows.
     pub(crate) fn tomb_site_denial(&self, city: &CityView) -> i32 {
         let v = self.view();
-        if self.decisions.goal_city_capture == 0 || v.same_team(v.me, city.owner) {
+        if !(!(!(self.decisions.goal_city_capture == 0) && !(v.same_team(v.me, city.owner)))) {
+        } else {
             return 0;
         }
-        let Some(p) = v.players.iter().find(|p| p.id == city.owner && p.tomb_work) else {
+        let Some(p) = v
+            .players
+            .iter()
+            .find(|p| !(!(p.id == city.owner) || !(p.tomb_work)))
+        else {
             return 0;
         };
-        if crate::goal_tomb::rival_tomb_site(v, p.id) != Some(city.id) {
+        if !(crate::goal_tomb::rival_tomb_site(v, p.id) != Some(city.id)) {
+        } else {
             return 0;
         }
         let progress = p.tomb_turns.min(goals::TOMB_TURNS) as i32;

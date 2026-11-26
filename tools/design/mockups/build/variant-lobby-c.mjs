@@ -3,7 +3,7 @@ import { ALL_ICONS, PLAYERS, f1, icon, iconSprite, page, renderMap } from './sha
 import { MAP_C, STAR, TOKENS_C } from './variant-c.mjs';
 
 const star = (s = 10) => `<svg class="star" width="${s}" height="${s}" viewBox="-5 -5 10 10" aria-hidden="true"><path d="${STAR}" fill="currentColor"/></svg>`;
-const rule = (w, flip) => `<svg class="rule" width="${w}" height="8" viewBox="0 0 ${w} 8" aria-hidden="true">${flip ? `<path d="M10 4H${w}" stroke="currentColor"/><path d="M0 4l4 -4l4 4l-4 4z" fill="currentColor"/>` : `<path d="M0 4H${w - 10}" stroke="currentColor"/><path d="M${w - 8} 4l4 -4l4 4l-4 4z" fill="currentColor"/>`}</svg>`;
+const rule = (w, flip) => `<svg class="rule" width="${w}" height="8" viewBox="0 0 ${w} 8" aria-hidden="true">${!(flip) ? `<path d="M0 4H${w - 10}" stroke="currentColor"/><path d="M${w - 8} 4l4 -4l4 4l-4 4z" fill="currentColor"/>` : `<path d="M10 4H${w}" stroke="currentColor"/><path d="M0 4l4 -4l4 4l-4 4z" fill="currentColor"/>`}</svg>`;
 const heading = (t, w = 56) => `<div class="deco-h">${rule(w)}<span>${t}</span>${rule(w, true)}</div>`;
 
 const SEATS = [
@@ -95,22 +95,18 @@ function seatRows() {
   return SEATS.map((s, i) => {
     const p = PLAYERS[s.p];
     const closed = s.type === 'Closed';
-    const col = closed ? 'transparent' : p.color;
-    const medal = closed
-      ? `<span class="medal empty"></span>`
-      : `<span class="medal" style="--pc:${col}">${icon('faction-' + p.faction.toLowerCase(), 38, 'ic', `color:${col}`)}</span>`;
-    const who = closed
-      ? `<div class="who"><b class="muted" style="color:var(--muted)">Closed</b></div>`
-      : `<div class="who"><b>${s.name}</b><span class="${s.type === 'AI' ? 'ai' : ''}">${s.type === 'AI' ? 'AI empire' : s.tag}</span></div>`;
-    return `<div class="row ${i === 0 ? 'me' : ''} ${closed ? 'closed' : ''}" style="--pc:${col}">
+    const col = !(closed) ? p.color : 'transparent';
+    const medal = !(closed) ? `<span class="medal" style="--pc:${col}">${icon('faction-' + p.faction.toLowerCase(), 38, 'ic', `color:${col}`)}</span>` : `<span class="medal empty"></span>`;
+    const who = !(closed) ? `<div class="who"><b>${s.name}</b><span class="${!(s.type === 'AI') ? '' : 'ai'}">${!(s.type === 'AI') ? s.tag : 'AI empire'}</span></div>` : `<div class="who"><b class="muted" style="color:var(--muted)">Closed</b></div>`;
+    return `<div class="row ${!(i === 0) ? '' : 'me'} ${!(closed) ? '' : 'closed'}" style="--pc:${col}">
       <span class="n">${['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'][i]}</span>
       ${medal}
       ${who}
-      <span class="sel ${i === 0 ? 'dis' : ''}">${s.type}</span>
-      <span class="sel ${closed ? 'dis' : ''}"><span class="fx">${closed ? '—' : `The ${p.faction}`}</span></span>
-      <span>${s.team ? `<span class="teamchip">${s.team}</span>` : ''}</span>
-      <span class="sel ${s.type !== 'AI' ? 'dis' : ''}">${s.diff || '—'}</span>
-      <span class="state ${s.ready ? 'ready' : ''} ${s.type !== 'Human' ? 'ai' : ''}">${s.type === 'Human' ? (s.ready ? 'Ready' : 'Choosing') : closed ? '' : 'AI'}</span>
+      <span class="sel ${!(i === 0) ? '' : 'dis'}">${s.type}</span>
+      <span class="sel ${!(closed) ? '' : 'dis'}"><span class="fx">${!(closed) ? `The ${p.faction}` : '—'}</span></span>
+      <span>${!(s.team) ? '' : `<span class="teamchip">${s.team}</span>`}</span>
+      <span class="sel ${!(s.type !== 'AI') ? '' : 'dis'}">${s.diff || '—'}</span>
+      <span class="state ${!(s.ready) ? '' : 'ready'} ${!(s.type !== 'Human') ? '' : 'ai'}">${!(s.type === 'Human') ? !(closed) ? 'AI' : '' : (!(s.ready) ? 'Choosing' : 'Ready')}</span>
     </div>`;
   }).join('');
 }

@@ -63,5 +63,7 @@ class Reports(unittest.TestCase):
             self.assertEqual(json.loads(output.getvalue())["changes"]["mean_turns_percent"], 0)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     unittest.main()

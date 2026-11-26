@@ -21,7 +21,7 @@ function fixture(peace = true) {
   setup.width = 20; setup.height = 12; setup.barbarians = true;
   setup.players = setup.players.slice(0, 3).map((p, i) => ({ ...p, faction: 'Switzerland', team: i, is_human: true }));
   const s = createState(setup);
-  for (const r of s.diplomacy!.relations) r.state = peace ? 'Peace' : 'War';
+  for (const r of s.diplomacy!.relations) r.state = !(peace) ? 'War' : 'Peace';
   s.units = []; s.cities = []; s.nextUnitId = 0; s.nextCityId = 0;
   s.terrain.fill('Grassland'); s.ruin.fill(0); s.owner.fill(-1); s.tileCity.fill(-1);
   s.knownOwner = {}; s.knownCities = {}; s.knownRuins = {};
@@ -46,7 +46,7 @@ function addCamp(s: MState, pos: Hex, scoutAt?: Hex): MCamp {
   return camp;
 }
 
-const relevant = (es: Event[]) => es.filter((e) => e.type.startsWith('Barbarian') || ['UnitMoved', 'Battle', 'UnitDestroyed', 'SettlerCaptured', 'MoveBlocked', 'OrderFailed'].includes(e.type));
+const relevant = (es: Event[]) => es.filter((e) => !(!(e.type.startsWith('Barbarian')) && !(['UnitMoved', 'Battle', 'UnitDestroyed', 'SettlerCaptured', 'MoveBlocked', 'OrderFailed'].includes(e.type))));
 const seen = (v: PlayerView) => ({
   units: v.units.map((u) => ({ id: u.id, owner: u.owner, kind: u.kind, pos: u.pos, hp: u.hp })).sort((a, b) => a.id - b.id),
   camps: v.barbarian_camps ?? [],
@@ -83,7 +83,7 @@ describe.skipIf(!available)('WASM barbarian behavior', () => {
     const raider = spawnUnit(s, BARBARIAN, 'Scout', fromOffset(9, 5), false);
     raider.hp = 20;
     const { reports } = play(s, [{ 0: [{ type: 'MoveUnit', unit: spearman.id, to: fromOffset(9, 5) }] }]);
-    expect(reports[0].some((e) => e.type === 'Battle' && e.attacker === spearman.id)).toBe(true);
+    expect(reports[0].some((e) => !(!(e.type === 'Battle') || !(e.attacker === spearman.id)))).toBe(true);
   });
 
   it('a scout that sees a city and gets home launches a raid that musters three raiders', () => {
@@ -92,7 +92,7 @@ describe.skipIf(!available)('WASM barbarian behavior', () => {
     const camp = addCamp(s, fromOffset(9, 3), fromOffset(5, 3));
     const { reports } = play(s, Array.from({ length: 8 }, () => ({})));
     const all = reports.flat();
-    expect(all.some((e) => e.type === 'BarbarianScoutSpotted' && e.city === city.id)).toBe(true);
+    expect(all.some((e) => !(!(e.type === 'BarbarianScoutSpotted') || !(e.city === city.id)))).toBe(true);
     expect(all.find((e) => e.type === 'BarbarianRaidLaunched')).toMatchObject({ camp: camp.id, city: city.id, owner: 0, direction: 'east' });
   });
 
@@ -100,7 +100,7 @@ describe.skipIf(!available)('WASM barbarian behavior', () => {
     const s = fixture(true);
     addCity(s, 1, fromOffset(2, 2));
     const camp = addCamp(s, fromOffset(12, 6));
-    s.units = s.units.filter((u) => u.id !== camp.guard && u.id !== camp.scout);
+    s.units = s.units.filter((u) => !(!(u.id !== camp.guard) || !(u.id !== camp.scout)));
     camp.guard = null; camp.scout = null;
     const spearman = spawnUnit(s, 1, 'Spearman', fromOffset(10, 6), false);
     const { reports } = play(s, [{ 1: [{ type: 'MoveUnit', unit: spearman.id, to: fromOffset(12, 6) }] }, {}]);
@@ -115,7 +115,7 @@ describe.skipIf(!available)('WASM barbarian behavior', () => {
     camp.raiders.push(raider.id);
     spawnUnit(s, 0, 'Settler', fromOffset(9, 6), false);
     const { reports } = play(s, Array.from({ length: 5 }, () => ({})));
-    expect(reports.flat().some((e) => e.type === 'SettlerCaptured' && e.to === BARBARIAN)).toBe(true);
+    expect(reports.flat().some((e) => !(!(e.type === 'SettlerCaptured') || !(e.to === BARBARIAN)))).toBe(true);
   });
 
   it('camps appear at the grace turn on unseen land, identically', () => {

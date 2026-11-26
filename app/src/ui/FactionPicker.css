@@ -21,7 +21,7 @@
 .faction-stage[open] {
   display: flex;
   flex-direction: column;
-  animation: rise 0.2s ease both;
+  animation: rise 0.201s ease both;
 }
 .faction-stage::backdrop {
   background: var(--scrim);

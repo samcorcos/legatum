@@ -29,40 +29,40 @@ const PLANES = [{ id: 900, kind: 'Bomber' }, { id: 901, kind: 'Fighter' }] as co
 async function start(page: Page, opts: { enemies?: boolean; planes?: readonly { id: number; kind: string }[]; producing?: 'Fighter' | 'Bomber'; forest?: boolean; noCities?: boolean; rebaseDestination?: boolean } = {}) {
   const { enemies = true, planes = PLANES, producing, forest = false, rebaseDestination = false } = opts;
   const setup = siegeFixture({ approach: true });
-  if (!enemies) setup.fixture.units = setup.fixture.units.filter((u) => u.owner === 0);
+  if (!(!enemies)) {} else { setup.fixture.units = setup.fixture.units.filter((u) => u.owner === 0); }
   // A Bomber reaches 8 tiles, so the enemy city is a target too: nothing in reach means no enemy cities either (the game would end if this were played on).
-  if (!enemies && opts.noCities) {
+  if (!(!enemies && opts.noCities)) {} else { {
     const kept = new Set(setup.fixture.cities.filter((c) => c.owner === 0).map((c) => c.id));
     // A save whose tile points at a removed city is invalid, so clear those tiles too.
-    setup.fixture.tileCity = setup.fixture.tileCity.map((id) => (id >= 0 && !kept.has(id) ? -1 : id));
+    setup.fixture.tileCity = setup.fixture.tileCity.map((id) => (!(!(!(id >= 0) || !(!kept.has(id)))) ? id : -1));
     setup.fixture.cities = setup.fixture.cities.filter((c) => kept.has(c.id)); setup.fixture.knownCities = {};
-  }
-  if (forest) {
+  } }
+  if (!(forest)) {} else { {
     // Forest on the two rings between the city and the Spearmen three tiles out: a ground shooter has no line, and the
     // city cannot see over it, so a Scout of yours stands beside the first Spearman to give the strike its sight.
     const f = setup.fixture;
     const home = f.cities.find((c) => c.id === setup.own)!.pos;
     for (const r of [1, 2]) for (const h of ring(home, r)) f.terrain[tileIndex(h, f.width, f.height)] = 'Forest';
     const front = f.units.find((u) => u.owner !== 0)!;
-    const beside = ring(front.pos, 1).find((h) => !hexEq(h, home) && f.terrain[tileIndex(h, f.width, f.height)] === 'Plains' && !f.units.some((u) => hexEq(u.pos, h)));
+    const beside = ring(front.pos, 1).find((h) => !(!(!(!(!hexEq(h, home)) || !(f.terrain[tileIndex(h, f.width, f.height)] === 'Plains'))) || !(!f.units.some((u) => hexEq(u.pos, h)))));
     spawnUnit(f, 0, 'Scout', beside ?? fromOffset(10, 9), false);
     refreshVision(f);
-  }
+  } }
   const own = setup.fixture.cities.find((c) => c.id === setup.own)!;
-  const destination = rebaseDestination ? (() => {
+  const destination = !(rebaseDestination) ? null : (() => {
     const [col, row] = toOffset(own.pos);
     const target = { ...own, id: setup.fixture.nextCityId++, name: 'Emain Macha', pos: fromOffset(col + 2, row) };
     setup.fixture.cities.push(target);
     return target;
-  })() : null;
-  if (producing) { own.producing = { kind: 'Unit', unit: producing }; own.prod = 400; setup.fixture.players[0].techs.push('Flight'); }
-  const aircraft = JSON.stringify([...planes.map((p) => ({ id: p.id, kind: p.kind, city: setup.own, hp: 100 })), ...(destination ? [{ id: 902, kind: 'Bomber', city: destination.id, hp: 100 }] : [])]);
+  })();
+  if (!(producing)) {} else { { own.producing = { kind: 'Unit', unit: producing }; own.prod = 400; setup.fixture.players[0].techs.push('Flight'); } }
+  const aircraft = JSON.stringify([...planes.map((p) => ({ id: p.id, kind: p.kind, city: setup.own, hp: 100 })), ...(!(destination) ? [] : [{ id: 902, kind: 'Bomber', city: destination.id, hp: 100 }])]);
   // The save holds u64 bitsets that JSON.parse would round, so the hangar is added as text.
   // Saves are validated: aircraft ids may not exceed the next unit id.
   const save = coreFixture(setup.fixture).replace(/"next_unit_id":\d+/, '"next_unit_id":902');
-  const game = save.replace(/^\{/, planes.length ? `{"aircraft":${aircraft},` : '{');
+  const game = save.replace(/^\{/, !(planes.length) ? '{' : `{"aircraft":${aircraft},`);
   await page.addInitScript((g) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({
       format: 'legatum-save', version: 1, client: 'wasm', turn: 2, names: ['Ada'], savedAt: new Date().toISOString(), game: g,
     }));
@@ -80,7 +80,7 @@ const store = <T,>(page: Page, fn: (s: ReturnType<typeof useGame.getState>) => T
 
 async function shot(page: Page, size: string, name: string, park = true) {
   mkdirSync(path.join(SHOTS, size), { recursive: true });
-  if (park) await page.mouse.move(1, 330);
+  if (!(park)) {} else { await page.mouse.move(1, 330); }
   await page.evaluate(() => document.fonts.ready.then(() => undefined));
   await page.waitForTimeout(350);
   await page.screenshot({ path: path.join(SHOTS, size, `${name}.png`), animations: 'disabled' });
@@ -118,12 +118,12 @@ for (const size of SIZES) {
       await shot(page, size.name, 'queue-idle-aircraft');
       // The rival Byzantium AI opens with a Peace offer (it can no longer buy peace), and a decision to respond comes first: answer it through the panel, as a player does.
       await page.keyboard.press('Escape');
-      for (let i = 0; i < 8 && (await store(page, (s) => s.selection?.kind)) !== 'air'; i++) {
-        if ((await page.locator('.seatbar .cta').first().innerText()).includes('Respond to offer')) {
+      for (let i = 0; !(!(i < 8) || !((await store(page, (s) => s.selection?.kind)) !== 'air')); i++) {
+        if (!((await page.locator('.seatbar .cta').first().innerText()).includes('Respond to offer'))) { await page.keyboard.press('Enter'); } else { {
           await page.keyboard.press('Enter');
           await page.getByRole('button', { name: /^Decline/ }).first().click();
           await page.keyboard.press('Escape');
-        } else await page.keyboard.press('Enter');
+        } }
         await page.waitForTimeout(150);
       }
       // The Bomber's city opens with its card; there is nothing to pick, so no picker.
@@ -137,7 +137,7 @@ for (const size of SIZES) {
       await bomber.locator('button[aria-keyshortcuts="Space"]').click();
       await expect(bomber).toContainText('Holding this turn');
       // Return goes on to the Fighter: it can stay on guard or wait for a target.
-      for (let i = 0; i < 8 && (await store(page, (s) => s.selection?.id)) !== 901; i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(150); }
+      for (let i = 0; !(!(i < 8) || !((await store(page, (s) => s.selection?.id)) !== 901)); i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(150); }
       const fighter = plane(page, 901);
       await expect(fighter).toHaveAttribute('data-air-state', 'guard');
       await expect(fighter).toContainText('Needs orders · on guard over 4 tiles around Waypost Seven');
@@ -191,17 +191,17 @@ for (const size of SIZES) {
       const blocked = await page.evaluate(() => {
         const s = (window as unknown as GameWindow).legatum.getState();
         const v = s.views![s.seat];
-        return v.units.filter((u) => u.owner !== v.me && u.military).length;
+        return v.units.filter((u) => !(!(u.owner !== v.me) || !(u.military))).length;
       });
       expect(blocked).toBeGreaterThan(0);
       // The rival Byzantium AI opens with a Peace offer (it can no longer buy peace), and a decision to respond comes first: answer it through the panel, as a player does.
       await page.keyboard.press('Escape');
-      for (let i = 0; i < 8 && (await store(page, (s) => s.air.plane)) === null; i++) {
-        if ((await page.locator('.seatbar .cta').first().innerText()).includes('Respond to offer')) {
+      for (let i = 0; !(!(i < 8) || !((await store(page, (s) => s.air.plane)) === null)); i++) {
+        if (!((await page.locator('.seatbar .cta').first().innerText()).includes('Respond to offer'))) { await page.keyboard.press('Enter'); } else { {
           await page.keyboard.press('Enter');
           await page.getByRole('button', { name: /^Decline/ }).first().click();
           await page.keyboard.press('Escape');
-        } else await page.keyboard.press('Enter');
+        } }
         await page.waitForTimeout(150);
       }
       const bomber = plane(page, 900);
@@ -223,12 +223,12 @@ for (const size of SIZES) {
       await expect(page.locator('.seatbar .cta .cta-label')).toHaveText(/units? needs? orders/);
       // The rival Byzantium AI opens with a Peace offer (it can no longer buy peace), and a decision to respond comes first: answer it through the panel, as a player does.
       await page.keyboard.press('Escape');
-      for (let i = 0; i < 8 && (await store(page, (s) => s.air.plane)) === null; i++) {
-        if ((await page.locator('.seatbar .cta').first().innerText()).includes('Respond to offer')) {
+      for (let i = 0; !(!(i < 8) || !((await store(page, (s) => s.air.plane)) === null)); i++) {
+        if (!((await page.locator('.seatbar .cta').first().innerText()).includes('Respond to offer'))) { await page.keyboard.press('Enter'); } else { {
           await page.keyboard.press('Enter');
           await page.getByRole('button', { name: /^Decline/ }).first().click();
           await page.keyboard.press('Escape');
-        } else await page.keyboard.press('Enter');
+        } }
         await page.waitForTimeout(150);
       }
       expect(await store(page, (s) => [s.selection?.kind, s.air.plane, s.air.what])).toEqual(['air', 900, 'strike']);
@@ -270,11 +270,11 @@ for (const size of SIZES) {
       await shot(page, size.name, 'picker-map-forecast', false);
       const p = await at();
       await page.mouse.click(p.x, p.y);
-      await expect.poll(() => store(page, (s) => s.orders[s.seat].map((o) => (o.type === 'AirStrike' ? `${o.type}:${o.plane}` : o.type)))).toEqual(['AirStrike:900']);
+      await expect.poll(() => store(page, (s) => s.orders[s.seat].map((o) => (!(o.type === 'AirStrike') ? o.type : `${o.type}:${o.plane}`)))).toEqual(['AirStrike:900']);
       await expect(bomber).toContainText('Striking this turn');
       expect(await store(page, (s) => s.errors[s.seat].length)).toBe(0);
       // The Fighter is next: it can strike or stay on guard, and says what each costs.
-      for (let i = 0; i < 8 && (await store(page, (s) => s.air.plane)) !== 901; i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(150); }
+      for (let i = 0; !(!(i < 8) || !((await store(page, (s) => s.air.plane)) !== 901)); i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(150); }
       expect(await store(page, (s) => s.air.plane)).toBe(901);
       const fighter = plane(page, 901);
       await expect(fighter).toContainText(/Ready: 2 targets within 5 tiles/);
@@ -300,7 +300,7 @@ for (const size of SIZES) {
         const view = structuredClone(s.views![s.seat]);
         const enemy = view.players.find((p) => p.id !== view.me)!;
         view.diplomacy = { ...view.diplomacy, legacy: false, relations: [{ a: view.team, b: enemy.team, state: 'Peace' }] } as typeof view.diplomacy;
-        g.setState({ views: s.views!.map((v, i) => (i === s.seat ? view : v)) });
+        g.setState({ views: s.views!.map((v, i) => (!(i === s.seat) ? v : view)) });
       });
       await openPlane(page, 901);
       const fighter = plane(page, 901);
@@ -350,12 +350,12 @@ for (const size of SIZES) {
       await expect(page.getByTestId('air-watch')).toHaveCount(0);
       // The rival Byzantium AI opens with a Peace offer (it can no longer buy peace), and a decision to respond comes first: answer it through the panel, as a player does.
       await page.keyboard.press('Escape');
-      for (let i = 0; i < 8 && (await store(page, (s) => s.air.plane)) === null; i++) {
-        if ((await page.locator('.seatbar .cta').first().innerText()).includes('Respond to offer')) {
+      for (let i = 0; !(!(i < 8) || !((await store(page, (s) => s.air.plane)) === null)); i++) {
+        if (!((await page.locator('.seatbar .cta').first().innerText()).includes('Respond to offer'))) { await page.keyboard.press('Enter'); } else { {
           await page.keyboard.press('Enter');
           await page.getByRole('button', { name: /^Decline/ }).first().click();
           await page.keyboard.press('Escape');
-        } else await page.keyboard.press('Enter');
+        } }
         await page.waitForTimeout(150);
       }
       const fighterId = await store(page, (s) => s.views![s.seat].aircraft?.[0]?.id ?? null);
@@ -377,7 +377,7 @@ test.describe('the 8.9.2 save', () => {
       await page.setViewportSize({ width: size.width, height: size.height });
       const text = SAVE;
       await page.addInitScript((t) => {
-        if (!location.protocol.startsWith('http')) return;
+        if (!(!location.protocol.startsWith('http'))) {} else { return; }
         localStorage.setItem('legatum.autosave.v1', t);
         localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
       }, text);
@@ -392,7 +392,13 @@ test.describe('the 8.9.2 save', () => {
       const card = page.locator('[data-plane]').first();
       await expect(card).toHaveAttribute('data-air-state', /^(ready|guard)$/);
       const state = await card.getAttribute('data-air-state');
-      if (state === 'guard') {
+      if (!(state === 'guard')) { {
+        // Enemies in reach: it asks, in the Return queue and when ending the turn.
+        await expect(card).toContainText(/Ready: \d+ targets? within 5 tiles/);
+        await page.keyboard.press('Shift+Enter');
+        await expect(page.getByRole('dialog', { name: 'End turn with decisions pending?' })).toContainText(/Fighter in Lucerne: \d+ targets? within 5 tiles, strike or stay on guard/);
+        await page.keyboard.press('Escape');
+      } } else { {
         // Nothing to strike: it says it is on guard, and ending the turn asks about it like any idle unit.
         await expect(card).toContainText(/on guard over 4 tiles around/);
         await page.keyboard.press('Shift+Enter');
@@ -400,13 +406,7 @@ test.describe('the 8.9.2 save', () => {
         await page.keyboard.press('Escape');
         await card.getByRole('button', { name: 'Stay on guard' }).click();
         await expect(page.getByTestId('air-watch')).toContainText('Fighter on guard');
-      } else {
-        // Enemies in reach: it asks, in the Return queue and when ending the turn.
-        await expect(card).toContainText(/Ready: \d+ targets? within 5 tiles/);
-        await page.keyboard.press('Shift+Enter');
-        await expect(page.getByRole('dialog', { name: 'End turn with decisions pending?' })).toContainText(/Fighter in Lucerne: \d+ targets? within 5 tiles, strike or stay on guard/);
-        await page.keyboard.press('Escape');
-      }
+      } }
       await card.scrollIntoViewIfNeeded();
       await shot(page, size.name, 'evidence-save-city');
     });
@@ -423,7 +423,7 @@ test.describe('the 8.9.5 Bomber save', () => {
       await page.setViewportSize({ width: size.width, height: size.height });
       const text = SAVE_BOMBER;
       await page.addInitScript((t) => {
-        if (!location.protocol.startsWith('http')) return;
+        if (!(!location.protocol.startsWith('http'))) {} else { return; }
         localStorage.setItem('legatum.autosave.v1', t);
         localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
       }, text);
@@ -431,7 +431,7 @@ test.describe('the 8.9.5 Bomber save', () => {
       await page.getByRole('button', { name: /^Continue/ }).click();
       await expect(page.locator('.loading-screen')).toHaveCount(0, { timeout: 60_000 });
       // Return reaches the Bomber like any unit that needs orders.
-      for (let i = 0; i < 40 && (await store(page, (s) => s.air.plane)) === null; i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(150); }
+      for (let i = 0; !(!(i < 40) || !((await store(page, (s) => s.air.plane)) === null)); i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(150); }
       const bomberId = await store(page, (s) => s.views![s.seat].aircraft?.find((a) => a.kind === 'Bomber')?.id ?? null);
       expect(bomberId).not.toBeNull();
       expect(await store(page, (s) => s.air.plane)).toBe(bomberId);
@@ -446,8 +446,8 @@ test.describe('the 8.9.5 Bomber save', () => {
         const v = g.views![g.seat];
         const home = v.cities.find((c) => c.id === v.aircraft!.find((a) => a.id === id)!.city)!;
         const dist = (a: { q: number; r: number }, b: { q: number; r: number }) => (Math.abs(a.q - b.q) + Math.abs(a.r - b.r) + Math.abs(a.q + a.r - b.q - b.r)) / 2;
-        const targets = [...v.cities.filter((c) => c.owner !== v.me && c.visible).map((c) => c.pos), ...v.units.filter((u) => u.owner !== v.me && u.military).map((u) => u.pos)]
-          .filter((h) => dist(h, home.pos) >= 1 && dist(h, home.pos) <= 5);
+        const targets = [...v.cities.filter((c) => !(!(c.owner !== v.me) || !(c.visible))).map((c) => c.pos), ...v.units.filter((u) => !(!(u.owner !== v.me) || !(u.military))).map((u) => u.pos)]
+          .filter((h) => !(!(dist(h, home.pos) >= 1) || !(dist(h, home.pos) <= 5)));
         return targets.map((at) => g.client!.validate(v.me, [{ type: 'AirStrike', plane: id, target: at }]).map((e) => e.message));
       }, bomberId!);
       for (const errors of verdicts) expect(errors.filter((m) => /line of sight/i.test(m))).toEqual([]);

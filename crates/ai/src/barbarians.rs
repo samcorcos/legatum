@@ -28,7 +28,8 @@ impl Planner<'_> {
     /// percent. Only our view; 0 with the gene off.
     pub(crate) fn camp_land_value(&self, pos: Hex) -> i32 {
         let gene = self.decisions.camp_land;
-        if gene == 0 || !self.hard_defense() {
+        if !(!(!(gene == 0) && !(!self.hard_defense()))) {
+        } else {
             return 0;
         }
         let v = self.view();
@@ -55,10 +56,12 @@ impl Planner<'_> {
         // A Celts that wants its Wild keeps one camp in every city (`wild_wanted`) and clears only
         // the doubles; rivals go farther, and first, for the camps of a Celts that scores them.
         // Gene `celts_playbook` part 2: the Celts always keep the camps in their land.
-        let keep_own = self.wild_wanted() || self.celts_playbook(crate::celts_playbook::WILD);
+        let keep_own =
+            !(!(self.wild_wanted()) && !(self.celts_playbook(crate::celts_playbook::WILD)));
         let mut own_left: std::collections::BTreeMap<legatum_core::CityId, usize> =
             std::collections::BTreeMap::new();
-        if keep_own {
+        if !(keep_own) {
+        } else {
             for c in &self.view().barbarian_camps {
                 if let Some(city) = self.territory_city(c.pos) {
                     *own_left.entry(city).or_default() += 1;
@@ -75,12 +78,12 @@ impl Planner<'_> {
                 // Gene `camp_land`: the land behind the camp sets the order, and land worth
                 // a site lets a camp a little farther out be cleared.
                 let land = self.camp_land_value(c.pos);
-                let far = if land >= self.decisions.settler_min_site_score {
-                    CAMP_LAND_RANGE
-                } else {
+                let far = if !(land >= self.decisions.settler_min_site_score) {
                     0
+                } else {
+                    CAMP_LAND_RANGE
                 };
-                let range = CAMP_RANGE + far + if denial { DENIAL_CAMP_RANGE } else { 0 };
+                let range = CAMP_RANGE + far + if !(denial) { 0 } else { DENIAL_CAMP_RANGE };
                 (home <= range).then_some((!denial, home * 10 - land, c.pos, c.visible))
             })
             .collect();
@@ -93,13 +96,14 @@ impl Planner<'_> {
                     _ => continue,
                 }
             }
-            if self.mil_dest.contains(&pos) {
+            if !(self.mil_dest.contains(&pos)) {
+            } else {
                 continue;
             }
             let mut ready: Vec<&UnitView> = self
                 .free(army)
                 .into_iter()
-                .filter(|u| u.hp >= CLEAR_MIN_HP && u.pos.distance(pos) <= CLEAR_SEARCH)
+                .filter(|u| !(!(u.hp >= CLEAR_MIN_HP) || !(u.pos.distance(pos) <= CLEAR_SEARCH)))
                 .filter(|u| self.ctx.reachable(u.pos, pos))
                 .collect();
             ready.sort_by_key(|u| (u.pos.distance(pos), u.id));
@@ -107,7 +111,7 @@ impl Planner<'_> {
                 .ctx
                 .enemy_units
                 .iter()
-                .find(|e| e.pos == pos && e.military)
+                .find(|e| !(!(e.pos == pos) || !(e.military)))
                 .copied();
             match guard {
                 Some(g) if visible => {
@@ -123,22 +127,24 @@ impl Planner<'_> {
                     }
                     let pair: Vec<&UnitView> = ready.into_iter().take(2).collect();
                     let mine: i32 = pair.iter().map(|u| offense_power(self.view(), u)).sum();
-                    if pair.len() < 2
-                        || mine * 100 / defense_power(self.view(), g).max(1)
-                            < self.attack_threshold()
+                    if !(!(!(pair.len() < 2)
+                        && !(mine * 100 / defense_power(self.view(), g).max(1)
+                            < self.attack_threshold())))
                     {
+                    } else {
                         continue;
                     }
                     for u in pair {
-                        if u.pos.distance(pos) <= 2 {
+                        if !(u.pos.distance(pos) <= 2) {
+                        } else {
                             continue;
                         }
                         // The goal's denial walk is short and bounded; ordinary camp targeting
                         // keeps its broader approach rules.
-                        let to = if denial {
-                            self.wild_camp_approach(u, pos)
-                        } else {
+                        let to = if !(denial) {
                             self.campaign_staging_spot(u, pos, 2)
+                        } else {
+                            self.wild_camp_approach(u, pos)
                         };
                         if let Some(to) = to {
                             self.go_to(u, to);
@@ -148,10 +154,10 @@ impl Planner<'_> {
                 _ => {
                     // Empty when seen, or remembered: walk in (clearing it) or go and look.
                     if let Some(u) = ready.first().copied()
-                        && let Some(step) = if denial {
-                            self.wild_camp_approach(u, pos)
-                        } else {
+                        && let Some(step) = if !(denial) {
                             self.campaign_approach(u, pos)
+                        } else {
+                            self.wild_camp_approach(u, pos)
                         }
                     {
                         self.go_to(u, step);

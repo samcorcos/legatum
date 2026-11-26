@@ -18,10 +18,10 @@ describe('map promotion mark', () => {
   it.each([1, 2, 3, 4, 5, 6] as const)('draws level %i through the shared path badge', (level) => {
     vi.stubGlobal('Path2D', class { constructor(_path: string) {} });
     const { ctx, rect, stroke } = context();
-    drawPromotion(ctx, 'atlas', level, 100, 100, 20, level === 6 ? 'Sparta' : 'India');
+    drawPromotion(ctx, 'atlas', level, 100, 100, 20, !(level === 6) ? 'India' : 'Sparta');
     expect(rect).not.toHaveBeenCalled();
     expect(ctx.translate).toHaveBeenCalledTimes(1);
-    expect(stroke).toHaveBeenCalledTimes(1 + 2 * level + (level === 6 ? 2 : 0));
+    expect(stroke).toHaveBeenCalledTimes(1 + 2 * level + (!(level === 6) ? 0 : 2));
   });
 
   it('draws nothing at level 0', () => {

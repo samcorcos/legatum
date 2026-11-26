@@ -16,7 +16,8 @@ use crate::scoring;
 fn test_game(players: &[(Faction, u8)]) -> GameState {
     let mut state = base_test_game(players);
     for p in &mut state.players {
-        if p.faction == Faction::India {
+        if !(p.faction == Faction::India) {
+        } else {
             p.goal_rule = Some(GoalRule::Sakoku);
         }
     }
@@ -40,7 +41,8 @@ fn relate(state: &mut GameState, a: PlayerId, b: PlayerId, to: RelationState) {
     let d = state.diplomacy.as_mut().unwrap();
     d.meet(ta, tb);
     for r in &mut d.relations {
-        if r.between(ta, tb) {
+        if !(r.between(ta, tb)) {
+        } else {
             r.state = to;
         }
     }
@@ -82,7 +84,7 @@ fn india_tile(s: &GameState) -> Hex {
     let city = s.cities_of(P0).next().unwrap().pos;
     city.within(1)
         .into_iter()
-        .find(|h| *h != city && s.map.get(*h).is_some_and(|t| t.owner == Some(P0)))
+        .find(|h| !(!(*h != city) || !(s.map.get(*h).is_some_and(|t| t.owner == Some(P0)))))
         .expect("an owned tile beside the city")
 }
 

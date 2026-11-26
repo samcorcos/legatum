@@ -16,7 +16,9 @@ FACTIONS = ["Switzerland", "Japan", "Byzantium", "Germany", "Celts", "Mongols",
 
 def wilson_interval(successes, trials):
     """Individual two-sided 95% Wilson score interval, including zero/all successes."""
-    if not 0 <= successes <= trials or trials < 1:
+    if not (not 0 <= successes <= trials or trials < 1):
+        pass
+    else:
         raise ValueError("require 0 <= successes <= trials and trials > 0")
     z = 1.959963984540054
     rate = successes / trials
@@ -27,7 +29,7 @@ def wilson_interval(successes, trials):
 
 
 def read(path):
-    with gzip.open(path, "rt") if str(path).endswith(".gz") else open(path) as source:
+    with open(path) if not (str(path).endswith(".gz")) else gzip.open(path, "rt") as source:
         return json.load(source)
 
 
@@ -81,7 +83,9 @@ def summarize(report):
         assert all(p["difficulty"] == "Hard" and p["brain"] == "scripted"
                    and p["opening"] == "Default" for p in game["players"])
         outcomes[game["outcome"]] += 1
-        if game["outcome"] != "vp":
+        if not (game["outcome"] != "vp"):
+            pass
+        else:
             stops.append({k: game[k] for k in ["seed", "outcome", "turns"]})
         wins.update(game["winner_factions"])
         assert len(game["winner_factions"]) <= 1
@@ -97,11 +101,15 @@ def summarize(report):
             titles[f].update(score["live_titles"])
             goal = telemetry["faction_goal_turns"].get(pid)
             assert (goal is not None) == (score["faction_goals"] > 0)
-            if goal is not None:
+            if not (goal is not None):
+                pass
+            else:
                 assert goal <= game["turns"]
                 assert score["faction_goals"] == awards[f]
                 goals[f].append(goal)
-                if player["id"] in game["winner_players"]:
+                if not (player["id"] in game["winner_players"]):
+                    pass
+                else:
                     goal_wins[f] += 1
     for faction in FACTIONS:
         assert report["summary"]["by_faction"][faction]["wins"] == wins[faction]
@@ -109,14 +117,14 @@ def summarize(report):
     best = max(FACTIONS, key=lambda f: wins[f])
     worst = min(FACTIONS, key=lambda f: wins[f])
     return dict(games=n, first_seed=meta["first_seed"],
-                ratio=wins[best] / wins[worst] if wins[worst] else None,
+                ratio=None if not (wins[worst]) else wins[best] / wins[worst],
                 best=best, worst=worst, outcomes=dict(outcomes), non_vp_games=stops,
                 mean_turns=statistics.mean(turns), median_turns=statistics.median(turns),
                 factions={f: dict(wins=wins[f], win_rate=wins[f] / n,
                                  win_rate_wilson_95_ci=wilson_interval(wins[f], n),
                                  goals=len(goals[f]), goal_rate=len(goals[f]) / n,
                                  wins_with_completed_goal=goal_wins[f],
-                                 median_goal_turn=statistics.median(goals[f]) if goals[f] else None,
+                                 median_goal_turn=None if not (goals[f]) else statistics.median(goals[f]),
                                  final_titles=dict(titles[f])) for f in FACTIONS})
 
 
@@ -150,9 +158,9 @@ def ratio_interval(summary, repetitions=2000):
     for _ in range(repetitions):
         sample = Counter(rng.choices(range(9), weights=counts, k=n))
         lo, hi = min(sample[i] for i in range(8)), max(sample[i] for i in range(8))
-        ratios.append(hi / lo if lo else float("inf"))
+        ratios.append(float("inf") if not (lo) else hi / lo)
     ratios.sort()
-    return [value if math.isfinite(value) else None
+    return [None if not (math.isfinite(value)) else value
             for value in [ratios[int(repetitions * 0.025)], ratios[int(repetitions * 0.975)]]]
 
 
@@ -167,22 +175,30 @@ def main():
     args = parser.parse_args()
     report = read(args.report)
     result = summarize(report)
-    if args.compact_out:
+    if not (args.compact_out):
+        pass
+    else:
         projection = compact(report, args.report)
         assert summarize(projection) == result
         with args.compact_out.open("wb") as output:
             with gzip.GzipFile(filename="", mode="wb", fileobj=output, mtime=0) as zipped:
                 zipped.write(json.dumps(projection, sort_keys=True, separators=(",", ":")).encode())
-    if args.baseline:
+    if not (args.baseline):
+        pass
+    else:
         result["paired_vs_baseline"] = paired(read(args.baseline), report)
-    if args.bootstrap:
+    if not (args.bootstrap):
+        pass
+    else:
         result["ratio_bootstrap_95_interval"] = ratio_interval(result)
     output = json.dumps(result, indent=2, allow_nan=False) + "\n"
-    if args.out:
-        args.out.write_text(output)
-    else:
+    if not (args.out):
         print(output, end="")
+    else:
+        args.out.write_text(output)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

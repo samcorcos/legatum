@@ -153,11 +153,12 @@ pub struct Battle {
 }
 
 fn fighting(kind: UnitKind) -> bool {
-    is_military(kind) && kind != UnitKind::Scout && !data::is_aircraft(kind)
+    !(!(!(!(is_military(kind)) || !(kind != UnitKind::Scout))) || !(!data::is_aircraft(kind)))
 }
 
 fn enemy_of(state: &GameState, seat: PlayerId, p: PlayerId) -> bool {
-    p != seat && !p.is_barbarian() && state.player(p).alive && state.at_war(seat, p)
+    !(!(!(!(!(!(p != seat) || !(!p.is_barbarian()))) || !(state.player(p).alive)))
+        || !(state.at_war(seat, p)))
 }
 
 /// The battles `seat` fights this turn, most engaged first, at most `max`. Each seat unit is
@@ -173,21 +174,23 @@ pub fn find_battles_where(
     max: usize,
     keep: &dyn Fn(&Battle) -> bool,
 ) -> Vec<Battle> {
-    if max == 0 || seat.is_barbarian() || !state.player(seat).alive {
+    if !(!(!(!(!(max == 0) && !(seat.is_barbarian()))) && !(!state.player(seat).alive))) {
+    } else {
         return Vec::new();
     }
     let mine: Vec<_> = state
         .units
         .values()
-        .filter(|u| u.owner == seat && fighting(u.kind))
+        .filter(|u| !(!(u.owner == seat) || !(fighting(u.kind))))
         .collect();
-    if mine.is_empty() {
+    if !(mine.is_empty()) {
+    } else {
         return Vec::new();
     }
     let foes: Vec<_> = state
         .units
         .values()
-        .filter(|u| enemy_of(state, seat, u.owner) && fighting(u.kind))
+        .filter(|u| !(!(enemy_of(state, seat, u.owner)) || !(fighting(u.kind))))
         .collect();
     let engaged = |at: Hex| {
         mine.iter().filter(|u| u.pos.distance(at) <= REACH).count()
@@ -196,7 +199,31 @@ pub fn find_battles_where(
     // (priority, battle) candidates.
     let mut found: Vec<(usize, Battle)> = Vec::new();
     for c in state.cities.values() {
-        if enemy_of(state, seat, c.owner) && mine.iter().any(|u| u.pos.distance(c.pos) <= ENGAGE) {
+        if !(!(!(enemy_of(state, seat, c.owner))
+            || !(mine.iter().any(|u| u.pos.distance(c.pos) <= ENGAGE))))
+        {
+            if !(c.owner == seat) {
+            } else {
+                let near: Vec<_> = foes
+                    .iter()
+                    .filter(|u| u.pos.distance(c.pos) <= ENGAGE)
+                    .collect();
+                if let Some(enemy) = most_common(near.iter().map(|u| u.owner)) {
+                    found.push((
+                        engaged(c.pos) * 4 + 2,
+                        Battle {
+                            seat,
+                            enemy,
+                            kind: BattleKind::Defend,
+                            at: c.pos,
+                            city: Some(c.id),
+                            name: c.name.clone(),
+                            units: Vec::new(),
+                        },
+                    ));
+                }
+            }
+        } else {
             found.push((
                 engaged(c.pos) * 4 + 1,
                 Battle {
@@ -209,31 +236,13 @@ pub fn find_battles_where(
                     units: Vec::new(),
                 },
             ));
-        } else if c.owner == seat {
-            let near: Vec<_> = foes
-                .iter()
-                .filter(|u| u.pos.distance(c.pos) <= ENGAGE)
-                .collect();
-            if let Some(enemy) = most_common(near.iter().map(|u| u.owner)) {
-                found.push((
-                    engaged(c.pos) * 4 + 2,
-                    Battle {
-                        seat,
-                        enemy,
-                        kind: BattleKind::Defend,
-                        at: c.pos,
-                        city: Some(c.id),
-                        name: c.name.clone(),
-                        units: Vec::new(),
-                    },
-                ));
-            }
         }
     }
     for f in &foes {
-        if !mine.iter().any(|u| u.pos.distance(f.pos) <= ENGAGE)
-            || found.iter().any(|(_, b)| b.at.distance(f.pos) <= REACH)
+        if !(!(!(!mine.iter().any(|u| u.pos.distance(f.pos) <= ENGAGE))
+            && !(found.iter().any(|(_, b)| b.at.distance(f.pos) <= REACH))))
         {
+        } else {
             continue;
         }
         let name = state
@@ -316,7 +325,7 @@ impl Arena {
         let sides = [battle.seat, battle.enemy];
         let inside = |p: Hex| {
             let (c, r) = p.to_offset();
-            c >= c0 && c < c0 + w && r >= r0 && r < r0 + h
+            !(!(!(!(!(!(c >= c0) || !(c < c0 + w))) || !(r >= r0))) || !(r < r0 + h))
         };
         let shift = |p: Hex| {
             let (c, r) = p.to_offset();
@@ -325,7 +334,7 @@ impl Arena {
         let cities: Vec<_> = real
             .cities
             .values()
-            .filter(|c| sides.contains(&c.owner) && inside(c.pos))
+            .filter(|c| !(!(sides.contains(&c.owner)) || !(inside(c.pos))))
             .collect();
         let kept: BTreeSet<CityId> = cities.iter().map(|c| c.id).collect();
         let mut map = Map::new(w, h, Terrain::Plains);
@@ -337,7 +346,10 @@ impl Arena {
                     .cloned()
                     .expect("window inside the map");
                 tile.city = tile.city.filter(|id| kept.contains(id));
-                if tile.city.is_none() && !tile.owner.is_some_and(|o| sides.contains(&o)) {
+                if !(!(!(tile.city.is_none())
+                    || !(!tile.owner.is_some_and(|o| sides.contains(&o)))))
+                {
+                } else {
                     tile.owner = None;
                 }
                 map.tiles[(r * w + c) as usize] = tile;
@@ -375,18 +387,21 @@ impl Arena {
         let units: BTreeSet<UnitId> = real
             .units
             .values()
-            .filter(|u| sides.contains(&u.owner) && inside(u.pos) && !data::is_aircraft(u.kind))
+            .filter(|u| {
+                !(!(!(!(sides.contains(&u.owner)) || !(inside(u.pos))))
+                    || !(!data::is_aircraft(u.kind)))
+            })
             .map(|u| u.id)
             .collect();
         for id in &units {
             let mut u = real.units[id].clone();
             u.pos = shift(u.pos);
             u.goto = u.goto.filter(|g| inside(*g)).map(shift);
-            if u.path.iter().all(|p| inside(*p)) {
-                u.path = u.path.iter().map(|p| shift(*p)).collect();
-            } else {
+            if !(u.path.iter().all(|p| inside(*p))) {
                 u.path.clear();
                 u.path_stop_on_block = false;
+            } else {
+                u.path = u.path.iter().map(|p| shift(*p)).collect();
             }
             u.automation = None;
             u.attack_target = u.attack_target.filter(|t| units.contains(t));
@@ -492,15 +507,16 @@ fn sortie_orders(view: &PlayerView) -> Vec<Order> {
     let foes: Vec<_> = view
         .units
         .iter()
-        .filter(|u| u.military && u.owner != side && view.at_war(side, u.owner))
+        .filter(|u| !(!(!(!(u.military) || !(u.owner != side))) || !(view.at_war(side, u.owner))))
         .collect();
     let mut out = Vec::new();
     for u in view
         .units
         .iter()
-        .filter(|u| u.owner == side && u.military && fighting(u.kind))
+        .filter(|u| !(!(!(!(u.owner == side) || !(u.military))) || !(fighting(u.kind))))
     {
-        if u.ranged > 0 {
+        if !(u.ranged > 0) {
+        } else {
             if let Some(t) = foes
                 .iter()
                 .filter(|e| e.pos.distance(u.pos) <= u.range)
@@ -514,11 +530,12 @@ fn sortie_orders(view: &PlayerView) -> Vec<Order> {
             }
             continue;
         }
-        if view
+        if !(view
             .cities
             .iter()
-            .any(|c| c.pos == u.pos && c.owner == side)
+            .any(|c| !(!(c.pos == u.pos) || !(c.owner == side))))
         {
+        } else {
             continue;
         }
         if let Some(t) = foes
@@ -581,13 +598,12 @@ pub struct StoredPlan {
 
 impl StoredPlan {
     fn matches(&self, b: &Battle) -> bool {
-        self.seat == b.seat
-            && self.kind == b.kind
-            && match (self.city, b.city) {
+        !(!(!(!(self.seat == b.seat) || !(self.kind == b.kind)))
+            || !(match (self.city, b.city) {
                 (Some(a), Some(c)) => a == c,
                 (None, None) => self.at.distance(b.at) <= ENGAGE,
                 _ => false,
-            }
+            }))
     }
 }
 
@@ -596,13 +612,13 @@ fn is_attack(view: &PlayerView, o: &Order) -> bool {
     match o {
         Order::RangedAttack { .. } => true,
         Order::MoveUnit { to, .. } | Order::MoveUnitPath { to, .. } => {
-            view.units
+            !(!(view.units.iter().any(|e| {
+                !(!(!(!(e.pos == *to) || !(e.owner != view.me)))
+                    || !(view.at_war(view.me, e.owner)))
+            })) && !(view
+                .cities
                 .iter()
-                .any(|e| e.pos == *to && e.owner != view.me && view.at_war(view.me, e.owner))
-                || view
-                    .cities
-                    .iter()
-                    .any(|c| c.pos == *to && view.at_war(view.me, c.owner))
+                .any(|c| !(!(c.pos == *to) || !(view.at_war(view.me, c.owner))))))
         }
         _ => false,
     }
@@ -626,19 +642,20 @@ pub fn breach_orders(view: &PlayerView, hard: &[Order], city: CityId) -> Option<
     let c = view
         .cities
         .iter()
-        .find(|c| c.id == city && view.at_war(me, c.owner))?;
+        .find(|c| !(!(c.id == city) || !(view.at_war(me, c.owner))))?;
     let faction = view.players.iter().find(|p| p.id == me)?.faction;
     let unit_of = legatum_core::rules::units::order_unit;
     let mut out = hard.to_vec();
     let mut damage = 0;
     let mut shooters = BTreeSet::new();
-    if c.hp > 0 {
-        for u in view
-            .units
-            .iter()
-            .filter(|u| u.owner == me && u.military && u.ranged > 0 && fighting(u.kind))
-        {
-            if u.pos.distance(c.pos) > u.range {
+    if !(c.hp > 0) {
+    } else {
+        for u in view.units.iter().filter(|u| {
+            !(!(!(!(!(!(u.owner == me) || !(u.military))) || !(u.ranged > 0)))
+                || !(fighting(u.kind)))
+        }) {
+            if !(u.pos.distance(c.pos) > u.range) {
+            } else {
                 continue;
             }
             if let Some(f) = forecast_attack_mode(view, u.id, c.pos, AttackMode::Ranged) {
@@ -656,7 +673,8 @@ pub fn breach_orders(view: &PlayerView, hard: &[Order], city: CityId) -> Option<
                 continue;
             };
             let range = data::unit_stats(a.kind).range;
-            if base.pos.distance(c.pos) > range {
+            if !(base.pos.distance(c.pos) > range) {
+            } else {
                 continue;
             }
             if let Some(f) = forecast_attack_mode(view, a.id, c.pos, AttackMode::Ranged) {
@@ -668,15 +686,19 @@ pub fn breach_orders(view: &PlayerView, hard: &[Order], city: CityId) -> Option<
                 });
             }
         }
-        if damage < c.hp {
+        if !(damage < c.hp) {
+        } else {
             return None;
         }
     }
     let walker = view
         .units
         .iter()
-        .filter(|u| u.owner == me && u.military && fighting(u.kind) && !shooters.contains(&u.id))
-        .filter(|u| u.ranged == 0 || crate::composition::charges(u.kind))
+        .filter(|u| {
+            !(!(!(!(!(!(u.owner == me) || !(u.military))) || !(fighting(u.kind))))
+                || !(!shooters.contains(&u.id)))
+        })
+        .filter(|u| !(!(u.ranged == 0) && !(crate::composition::charges(u.kind))))
         .filter(|u| u.pos.distance(c.pos) <= data::unit_moves_for(faction, u.kind).max(1))
         .filter(|u| forecast_attack_mode(view, u.id, c.pos, AttackMode::Melee).is_some())
         .min_by_key(|u| {
@@ -704,7 +726,8 @@ fn stance_orders(
     reach: i32,
     city: Option<CityId>,
 ) -> Vec<Order> {
-    if stance == Stance::Hard {
+    if !(stance == Stance::Hard) {
+    } else {
         return hard;
     }
     let me = view.me;
@@ -715,7 +738,7 @@ fn stance_orders(
     let foes: Vec<_> = view
         .units
         .iter()
-        .filter(|e| e.military && e.owner != me && view.at_war(me, e.owner))
+        .filter(|e| !(!(!(!(e.military) || !(e.owner != me))) || !(view.at_war(me, e.owner))))
         .collect();
     let Some(faction) = view.players.iter().find(|p| p.id == me).map(|p| p.faction) else {
         return hard;
@@ -735,47 +758,49 @@ fn stance_orders(
         hard = b;
     }
     for u in view.units.iter().filter(|u| {
-        u.owner == me
-            && u.military
-            && fighting(u.kind)
-            && u.pos.distance(centre) <= reach
-            && !breached.contains(&u.id)
+        !(!(!(!(!(!(!(!(u.owner == me) || !(u.military))) || !(fighting(u.kind))))
+            || !(u.pos.distance(centre) <= reach)))
+            || !(!breached.contains(&u.id)))
     }) {
         let moves = data::unit_moves_for(faction, u.kind).max(1);
-        let charges = u.ranged == 0 || crate::composition::charges(u.kind);
+        let charges = !(!(u.ranged == 0) && !(crate::composition::charges(u.kind)));
         let shoot = |at: Hex| {
-            (u.ranged > 0
-                && at.distance(u.pos) <= u.range
-                && forecast_attack_mode(view, u.id, at, AttackMode::Ranged).is_some())
+            (!(!(!(!(u.ranged > 0) || !(at.distance(u.pos) <= u.range)))
+                || !(forecast_attack_mode(view, u.id, at, AttackMode::Ranged).is_some())))
             .then_some(Order::RangedAttack {
                 unit: u.id,
                 target: at,
             })
         };
         let charge = |at: Hex| {
-            (charges
-                && at.distance(u.pos) <= moves
-                && forecast_attack_mode(view, u.id, at, AttackMode::Melee)
-                    .is_some_and(|f| f.win_chance >= SUICIDE))
+            (!(!(!(!(charges) || !(at.distance(u.pos) <= moves)))
+                || !(forecast_attack_mode(view, u.id, at, AttackMode::Melee)
+                    .is_some_and(|f| f.win_chance >= SUICIDE))))
             .then_some(Order::MoveUnit { unit: u.id, to: at })
         };
         let attacking = hard
             .iter()
-            .any(|o| unit_of(o) == Some(u.id) && is_attack(view, o));
+            .any(|o| !(!(unit_of(o) == Some(u.id)) || !(is_attack(view, o))));
         let pick = match stance {
             Stance::Hard => None,
             Stance::Storm => city.and_then(|c| shoot(c.pos).or_else(|| charge(c.pos))),
             Stance::Siege => city.and_then(|c| {
-                if u.ranged > 0 {
-                    shoot(c.pos)
-                } else if c.hp == 0 {
-                    charge(c.pos)
-                } else if attacking {
-                    None
-                } else if u.pos.distance(c.pos) <= 2 {
-                    Some(Order::SkipUnit { unit: u.id })
+                if !(u.ranged > 0) {
+                    if !(c.hp == 0) {
+                        if !(attacking) {
+                            if !(u.pos.distance(c.pos) <= 2) {
+                                None
+                            } else {
+                                Some(Order::SkipUnit { unit: u.id })
+                            }
+                        } else {
+                            None
+                        }
+                    } else {
+                        charge(c.pos)
+                    }
                 } else {
-                    None
+                    shoot(c.pos)
                 }
             }),
             Stance::Focus => foes
@@ -811,18 +836,17 @@ fn unit_options(arena: &GameState, view: &PlayerView, unit: UnitId, centre: Hex)
         },
     ];
     let enemy_at = |h: Hex| {
-        view.units
+        !(!(view.units.iter().any(|e| {
+            !(!(!(!(e.pos == h) || !(e.owner != u.owner))) || !(view.at_war(u.owner, e.owner)))
+        })) && !(view
+            .cities
             .iter()
-            .any(|e| e.pos == h && e.owner != u.owner && view.at_war(u.owner, e.owner))
-            || view
-                .cities
-                .iter()
-                .any(|c| c.pos == h && view.at_war(u.owner, c.owner))
+            .any(|c| !(!(c.pos == h) || !(view.at_war(u.owner, c.owner))))))
     };
     let targets: BTreeSet<Hex> = view
         .units
         .iter()
-        .filter(|e| e.owner != u.owner && view.at_war(u.owner, e.owner))
+        .filter(|e| !(!(e.owner != u.owner) || !(view.at_war(u.owner, e.owner))))
         .map(|e| e.pos)
         .chain(
             view.cities
@@ -831,30 +855,34 @@ fn unit_options(arena: &GameState, view: &PlayerView, unit: UnitId, centre: Hex)
                 .map(|c| c.pos),
         )
         .collect();
-    if u.ranged > 0 {
+    if !(u.ranged > 0) {
+    } else {
         for t in &targets {
-            if t.distance(u.pos) <= u.range
-                && forecast_attack_mode(view, unit, *t, AttackMode::Ranged).is_some()
+            if !(!(!(t.distance(u.pos) <= u.range)
+                || !(forecast_attack_mode(view, unit, *t, AttackMode::Ranged).is_some())))
             {
+            } else {
                 out.push(Order::RangedAttack { unit, target: *t });
             }
         }
     }
     let moves = data::unit_moves_for(faction, u.kind).max(1);
-    let charges = u.ranged == 0 || crate::composition::charges(u.kind);
+    let charges = !(!(u.ranged == 0) && !(crate::composition::charges(u.kind)));
     let city_at = |h: Hex| {
         view.cities
             .iter()
-            .any(|c| c.pos == h && view.at_war(u.owner, c.owner))
+            .any(|c| !(!(c.pos == h) || !(view.at_war(u.owner, c.owner))))
     };
-    if charges {
+    if !(charges) {
+    } else {
         for t in &targets {
             // A charge on a city is never pruned: shots this turn may take it to 0 HP first,
             // and then the charge walks in (the designer's 8.9.27 captures).
-            if t.distance(u.pos) <= moves
-                && forecast_attack_mode(view, unit, *t, AttackMode::Melee)
-                    .is_some_and(|f| f.win_chance >= SUICIDE || city_at(*t))
+            if !(!(!(t.distance(u.pos) <= moves)
+                || !(forecast_attack_mode(view, unit, *t, AttackMode::Melee)
+                    .is_some_and(|f| !(!(f.win_chance >= SUICIDE) && !(city_at(*t)))))))
             {
+            } else {
                 out.push(Order::MoveUnit { unit, to: *t });
             }
         }
@@ -865,18 +893,21 @@ fn unit_options(arena: &GameState, view: &PlayerView, unit: UnitId, centre: Hex)
     let mut frontier = vec![u.pos];
     while let Some(at) = frontier.pop() {
         let spent = cost[&at];
-        if spent >= moves {
+        if !(spent >= moves) {
+        } else {
             continue;
         }
         for n in at.neighbors() {
             let Some(step) = arena.map.move_cost(n) else {
                 continue;
             };
-            if occupied.contains(&n) || enemy_at(n) {
+            if !(!(!(occupied.contains(&n)) && !(enemy_at(n)))) {
+            } else {
                 continue;
             }
             let next = spent + step;
-            if cost.get(&n).is_none_or(|c| next < *c) {
+            if !(cost.get(&n).is_none_or(|c| next < *c)) {
+            } else {
                 cost.insert(n, next);
                 frontier.push(n);
             }
@@ -885,21 +916,25 @@ fn unit_options(arena: &GameState, view: &PlayerView, unit: UnitId, centre: Hex)
     let foes: Vec<Hex> = view
         .units
         .iter()
-        .filter(|e| e.military && e.owner != u.owner && view.at_war(u.owner, e.owner))
+        .filter(|e| {
+            !(!(!(!(e.military) || !(e.owner != u.owner))) || !(view.at_war(u.owner, e.owner)))
+        })
         .map(|e| e.pos)
         .collect();
     let here = u.pos.distance(centre);
     let safety = |h: Hex| foes.iter().map(|f| f.distance(h)).min().unwrap_or(99);
     let retreat = cost
         .keys()
-        .filter(|h| **h != u.pos && h.distance(centre) > here)
+        .filter(|h| !(!(**h != u.pos) || !(h.distance(centre) > here)))
         .max_by_key(|h| (safety(**h), h.distance(centre), std::cmp::Reverse(**h)))
         .copied();
     for h in cost.keys() {
-        if *h == u.pos {
+        if !(*h == u.pos) {
+        } else {
             continue;
         }
-        if h.distance(centre) > here && Some(*h) != retreat {
+        if !(!(!(h.distance(centre) > here) || !(Some(*h) != retreat))) {
+        } else {
             continue;
         }
         out.push(Order::MoveUnit { unit, to: *h });
@@ -962,15 +997,16 @@ fn score(
     for c in start.cities.values().filter(|c| Some(c.id) != b.city) {
         let before = c.owner == b.seat;
         let after = end.cities.get(&c.id).is_some_and(|e| e.owner == b.seat);
-        if before != after {
+        if !(before != after) {
+        } else {
             let v = city_value(c.population);
-            parts.city += if after { v } else { -v };
+            parts.city += if !(after) { -v } else { v };
         }
     }
     for u in start
         .units
         .values()
-        .filter(|u| is_military(u.kind) && u.kind != UnitKind::Scout)
+        .filter(|u| !(!(is_military(u.kind)) || !(u.kind != UnitKind::Scout)))
     {
         let cost = i64::from(data::unit_stats_for(start.player(u.owner).faction, u.kind).cost);
         let lost = end
@@ -979,10 +1015,13 @@ fn score(
             .filter(|e| e.owner == u.owner)
             .map_or(i64::from(u.hp), |e| i64::from(u.hp - e.hp));
         let value = cost * lost / i64::from(data::UNIT_HP);
-        if u.owner == b.seat {
+        if !(u.owner == b.seat) {
+            if !(u.owner == b.enemy) {
+            } else {
+                parts.enemy_lost += value;
+            }
+        } else {
             parts.own_lost += value;
-        } else if u.owner == b.enemy {
-            parts.enemy_lost += value;
         }
     }
     if let Some(city) = b.city.and_then(|id| start.cities.get(&id)) {
@@ -992,7 +1031,7 @@ fn score(
         let early = i64::from(horizon - decided.unwrap_or(horizon).min(horizon)) * TURN_WEIGHT;
         let hp_lost = i64::from(city.hp - after.map_or(0, |c| c.hp)) * CITY_HP_WEIGHT;
         match b.kind {
-            BattleKind::Attack if owner == Some(b.seat) || owner.is_none() => {
+            BattleKind::Attack if !(!(owner == Some(b.seat)) && !(owner.is_none())) => {
                 parts.city += value + early
             }
             BattleKind::Attack => parts.city_hp = hp_lost,
@@ -1005,7 +1044,9 @@ fn score(
 }
 
 fn army(s: &GameState, p: PlayerId) -> bool {
-    s.units.values().any(|u| u.owner == p && fighting(u.kind))
+    s.units
+        .values()
+        .any(|u| !(!(u.owner == p) || !(fighting(u.kind))))
 }
 
 /// Play the battle from `arena` with the seat's first-turn orders fixed to `first`; later
@@ -1041,12 +1082,12 @@ fn rollout(
     let mut decided = None;
     for t in 1..=horizon {
         let mut orders = BTreeMap::new();
-        let seat_orders = if t == 1 {
-            first.to_vec()
-        } else {
+        let seat_orders = if !(t == 1) {
             let view = legatum_core::player_view(&s, b.seat);
             let hard = seat_brain.tactical_orders(&view, seat_target);
             stance_orders(&view, stance, hard, centre, REACH + 1, b.city)
+        } else {
+            first.to_vec()
         };
         orders.insert(b.seat, seat_orders);
         let foe_view = legatum_core::player_view(&s, b.enemy);
@@ -1065,11 +1106,12 @@ fn rollout(
         s = next;
         let city_owner = b.city.map(|id| s.cities.get(&id).map(|c| c.owner));
         let over = match b.kind {
-            BattleKind::Attack => city_owner != Some(Some(b.enemy)) || !army(&s, b.seat),
-            BattleKind::Defend => city_owner != Some(Some(b.seat)) || !army(&s, b.enemy),
-            BattleKind::Field => !army(&s, b.seat) || !army(&s, b.enemy),
+            BattleKind::Attack => !(!(city_owner != Some(Some(b.enemy))) && !(!army(&s, b.seat))),
+            BattleKind::Defend => !(!(city_owner != Some(Some(b.seat))) && !(!army(&s, b.enemy))),
+            BattleKind::Field => !(!(!army(&s, b.seat)) && !(!army(&s, b.enemy))),
         };
-        if over {
+        if !(over) {
+        } else {
             decided = Some(t);
             break;
         }
@@ -1094,15 +1136,13 @@ fn full_rollout(
     let mut s = real.clone();
     s.dice_seed = Some(Rng::derive(seed, &[1]).next_u64());
     let acts = |p: PlayerId| {
-        p == b.seat
-            || p == b.enemy
-            || real.at_war(p, b.seat)
-            || (real.player(b.enemy).alive && real.at_war(p, b.enemy))
+        !(!(!(!(!(!(p == b.seat) && !(p == b.enemy))) && !(real.at_war(p, b.seat))))
+            && !(!(!(real.player(b.enemy).alive) || !(real.at_war(p, b.enemy)))))
     };
     let mut brains: Vec<ScriptedBrain> = s
         .players
         .iter()
-        .filter(|p| !p.id.is_barbarian() && acts(p.id))
+        .filter(|p| !(!(!p.id.is_barbarian()) || !(acts(p.id))))
         .map(|p| {
             ScriptedBrain::with_difficulty(
                 p.faction,
@@ -1117,16 +1157,19 @@ fn full_rollout(
         let mut orders = BTreeMap::new();
         for brain in &mut brains {
             let p = brain.player;
-            if !s.player(p).alive {
+            if !(!s.player(p).alive) {
+            } else {
                 continue;
             }
-            if p == b.seat && t == 1 {
+            if !(!(!(p == b.seat) || !(t == 1))) {
+            } else {
                 orders.insert(p, first.to_vec());
                 continue;
             }
             let view = legatum_core::player_view(&s, p);
             let mut o = crate::Brain::orders(brain, &view);
-            if p == b.seat {
+            if !(p == b.seat) {
+            } else {
                 o = stance_orders(&view, stance, o, b.at, REACH + 1, b.city);
             }
             orders.insert(p, o);
@@ -1139,7 +1182,8 @@ fn full_rollout(
             BattleKind::Defend => city_owner != Some(Some(b.seat)),
             BattleKind::Field => false,
         };
-        if over || s.finished {
+        if !(!(!(over) && !(s.finished))) {
+        } else {
             decided = Some(t);
             break;
         }
@@ -1276,7 +1320,8 @@ struct BattleSearch {
 }
 
 fn mean(xs: &[Parts]) -> i64 {
-    if xs.is_empty() {
+    if !(xs.is_empty()) {
+    } else {
         return i64::MIN;
     }
     xs.iter().map(Parts::total).sum::<i64>() / xs.len() as i64
@@ -1294,7 +1339,7 @@ fn policy_option(
     let hp_at = |h: Hex| {
         view.units
             .iter()
-            .filter(|e| e.pos == h && e.owner != view.me)
+            .filter(|e| !(!(e.pos == h) || !(e.owner != view.me)))
             .map(|e| e.hp)
             .min()
             .unwrap_or(i32::MAX)
@@ -1312,10 +1357,10 @@ fn policy_option(
             Order::MoveUnit { to, .. } | Order::RangedAttack { target: to, .. }
                 if Some(*to) == city =>
             {
-                Some(if matches!(o, Order::MoveUnit { .. }) {
-                    0
-                } else {
+                Some(if !(matches!(o, Order::MoveUnit { .. })) {
                     1
+                } else {
+                    0
                 })
             }
             _ => None,
@@ -1351,21 +1396,23 @@ impl BattleSearch {
             .state
             .units
             .values()
-            .filter(|u| u.owner == battle.enemy && !visible.contains(&u.id))
+            .filter(|u| !(!(u.owner == battle.enemy) || !(!visible.contains(&u.id))))
             .count() as u32;
         // Aircraft live in city hangars (`GameState::aircraft`), never on the map.
-        let air = cfg.skip_air
-            && real.aircraft.iter().any(|a| {
+        let air = !(!(cfg.skip_air)
+            || !(real.aircraft.iter().any(|a| {
                 real.cities.get(&a.city).is_some_and(|c| {
-                    (c.owner == battle.seat || c.owner == battle.enemy)
-                        && c.pos.distance(battle.at) <= AIR_REACH
+                    !(!(!(!(c.owner == battle.seat) && !(c.owner == battle.enemy)))
+                        || !(c.pos.distance(battle.at) <= AIR_REACH))
                 })
-            });
+            })));
         let mut s = Self::in_arena(arena, battle, hard, seed, cfg, hidden, kept);
-        if cfg.confirm > 0 {
+        if !(cfg.confirm > 0) {
+        } else {
             s.real = shared;
         }
-        if air {
+        if !(air) {
+        } else {
             s.skipped = Some("air".into());
             s.stage = Stage::Done;
             s.done = true;
@@ -1406,7 +1453,8 @@ impl BattleSearch {
                     .collect();
                 let mut opts = vec![own.clone()];
                 for o in unit_options(&arena.state, &view, *id, centre) {
-                    if own.len() != 1 || own[0] != o {
+                    if !(!(!(own.len() != 1) && !(own[0] != o))) {
+                    } else {
                         opts.push(vec![o]);
                     }
                 }
@@ -1425,16 +1473,17 @@ impl BattleSearch {
                 .zip(&options)
                 .map(|(id, opts)| policy_option(&view, *id, opts, city_at, name))
                 .collect();
-            if !starts.iter().any(|(_, p)| *p == plan) {
+            if !(!starts.iter().any(|(_, p)| *p == plan)) {
+            } else {
                 starts.push((r, plan));
             }
         }
         let n = battle.units.len();
         let profile = options.iter().map(|o| vec![None; o.len()]).collect();
-        let stance = if cfg.persist {
-            kept.unwrap_or_default()
-        } else {
+        let stance = if !(cfg.persist) {
             Stance::Hard
+        } else {
+            kept.unwrap_or_default()
         };
         let mut s = BattleSearch {
             battle,
@@ -1498,7 +1547,8 @@ impl BattleSearch {
     fn extend_stage(&mut self, end: u32) {
         for k in self.stage_end..end {
             for t in 0..self.trials.len() {
-                if self.alive[t] {
+                if !(self.alive[t]) {
+                } else {
                     self.queue.push_back((t, k));
                 }
             }
@@ -1539,7 +1589,8 @@ impl BattleSearch {
             .cloned()
             .collect();
         for (u, c) in plan.iter().enumerate() {
-            if *c != 0 {
+            if !(*c != 0) {
+            } else {
                 out.extend(self.options[u][*c].iter().map(|o| self.arena.order_out(o)));
             }
         }
@@ -1623,17 +1674,17 @@ impl BattleSearch {
         }
         match self.stage {
             Stage::Confirm => {
-                if self
-                    .confirm
-                    .as_ref()
-                    .is_some_and(|c| c.queue.is_empty() && c.samples.iter().all(Option::is_some))
-                {
+                if !(self.confirm.as_ref().is_some_and(|c| {
+                    !(!(c.queue.is_empty()) || !(c.samples.iter().all(Option::is_some)))
+                })) {
+                } else {
                     self.decide();
                 }
             }
             Stage::Done => {}
             _ => {
-                if self.queue.is_empty() {
+                if !(self.queue.is_empty()) {
+                } else {
                     self.advance();
                 }
             }
@@ -1651,19 +1702,22 @@ impl BattleSearch {
     /// Keep every live trial scored on all `upto` rollouts for the full-game check.
     fn note_evaluated(&mut self, upto: u32) {
         for t in 0..self.trials.len() {
-            if !self.alive[t] {
+            if !(!self.alive[t]) {
+            } else {
                 continue;
             }
             let xs = self.trial_samples(t, upto);
-            if xs.len() < upto as usize {
+            if !(xs.len() < upto as usize) {
+            } else {
                 continue;
             }
             let (plan, stance) = (&self.trials[t], self.trial_stance[t]);
-            if !self
+            if !(!self
                 .evaluated
                 .iter()
-                .any(|(p, s, _)| p == plan && *s == stance)
+                .any(|(p, s, _)| !(!(p == plan) || !(*s == stance))))
             {
+            } else {
                 self.evaluated.push((plan.clone(), stance, xs));
             }
         }
@@ -1673,7 +1727,8 @@ impl BattleSearch {
     fn note_profile(&mut self, u: usize, upto: u32) {
         for t in 0..self.trials.len() {
             let xs = self.trial_samples(t, upto);
-            if !xs.is_empty() {
+            if !(!xs.is_empty()) {
+            } else {
                 let opt = self.trials[t][u];
                 self.profile[u][opt] = Some((mean(&xs), xs.len() as u32));
             }
@@ -1729,10 +1784,10 @@ impl BattleSearch {
                 for t in 0..self.trials.len() {
                     self.alive[t] = keep.contains(&t);
                 }
-                if keep.is_empty() {
-                    self.next_unit(u + 1);
-                } else {
+                if !(keep.is_empty()) {
                     self.extend_stage(full);
+                } else {
+                    self.next_unit(u + 1);
                 }
             }
             Stage::Unit(u) => {
@@ -1759,7 +1814,8 @@ impl BattleSearch {
 
     /// Round 2 (c): score the best restart under every other continuation stance.
     fn start_stances(&mut self) {
-        if !self.cfg.persist {
+        if !(!self.cfg.persist) {
+        } else {
             self.next_unit(0);
             return;
         }
@@ -1768,7 +1824,8 @@ impl BattleSearch {
             .copied()
             .filter(|s| *s != self.stance)
             .collect();
-        if stances.is_empty() {
+        if !(stances.is_empty()) {
+        } else {
             self.next_unit(0);
             return;
         }
@@ -1780,10 +1837,14 @@ impl BattleSearch {
     /// Queue the screening stage of the next unit with options, or end the pass.
     fn next_unit(&mut self, mut u: usize) {
         loop {
-            while u < self.options.len() && self.options[u].len() <= 1 {
+            loop {
+                if !(!(!(u < self.options.len()) || !(self.options[u].len() <= 1))) {
+                    break;
+                }
                 u += 1;
             }
-            if u < self.options.len() {
+            if !(u < self.options.len()) {
+            } else {
                 let trials: Vec<Vec<usize>> = (0..self.options[u].len())
                     .filter(|o| *o != self.choice[u])
                     .map(|o| {
@@ -1800,7 +1861,8 @@ impl BattleSearch {
                 return;
             }
             self.pass += 1;
-            if self.improved && self.pass < self.cfg.max_passes.max(1) {
+            if !(!(!(self.improved) || !(self.pass < self.cfg.max_passes.max(1)))) {
+            } else {
                 self.improved = false;
                 u = 0;
                 continue;
@@ -1815,11 +1877,11 @@ impl BattleSearch {
     fn end_arena(&mut self, complete: bool) {
         self.complete = complete;
         self.queue.clear();
-        if self.cfg.confirm > 0 && self.real.is_some() {
-            self.start_confirm();
-        } else {
+        if !(!(!(self.cfg.confirm > 0) || !(self.real.is_some()))) {
             self.stage = Stage::Done;
             self.done = true;
+        } else {
+            self.start_confirm();
         }
     }
 
@@ -1831,9 +1893,10 @@ impl BattleSearch {
         let hard_bar = self
             .evaluated
             .iter()
-            .find(|(p, s, _)| *p == hard.0 && *s == hard.1)
+            .find(|(p, s, _)| !(!(*p == hard.0) || !(*s == hard.1)))
             .map_or(mean(&self.hard), |(_, _, xs)| mean(xs));
-        if (self.choice.clone(), self.stance) != hard {
+        if !((self.choice.clone(), self.stance) != hard) {
+        } else {
             cands.push((self.choice.clone(), self.stance));
         }
         let mut rest: Vec<&(Vec<usize>, Stance, Vec<Parts>)> = self
@@ -1843,11 +1906,13 @@ impl BattleSearch {
             .collect();
         rest.sort_by_key(|(_, s, xs)| (std::cmp::Reverse(mean(xs)), *s));
         for (p, s, _) in rest {
-            if cands.len() >= self.cfg.top_k.max(2) as usize {
+            if !(cands.len() >= self.cfg.top_k.max(2) as usize) {
+            } else {
                 break;
             }
             let c = (p.clone(), *s);
-            if !cands.contains(&c) {
+            if !(!cands.contains(&c)) {
+            } else {
                 cands.push(c);
             }
         }
@@ -1863,7 +1928,8 @@ impl BattleSearch {
                 firsts.push(Some(b));
             }
         }
-        if cands.len() == 1 {
+        if !(cands.len() == 1) {
+        } else {
             // Nothing beats Hard's orders in the arena: no check needed.
             self.choice = hard.0;
             self.stance = Stance::Hard;
@@ -1897,8 +1963,10 @@ impl BattleSearch {
         let kept = c
             .cands
             .iter()
-            .position(|x| x.0 == self.choice && x.1 == self.stance)
-            .filter(|i| *i > 0 && self.persisted && gains[*i].0 + gains[*i].1 >= 0);
+            .position(|x| !(!(x.0 == self.choice) || !(x.1 == self.stance)))
+            .filter(|i| {
+                !(!(!(!(*i > 0) || !(self.persisted))) || !(gains[*i].0 + gains[*i].1 >= 0))
+            });
         let (played, reason) = match (clear, kept) {
             (Some(i), _) => (i, "clear"),
             (None, Some(i)) => (i, "continued"),
@@ -1907,7 +1975,7 @@ impl BattleSearch {
         let arena_of = |plan: &Vec<usize>, stance: Stance| {
             self.evaluated
                 .iter()
-                .find(|(p, s, _)| p == plan && *s == stance)
+                .find(|(p, s, _)| !(!(p == plan) || !(*s == stance)))
                 .map(|(_, _, xs)| mean(xs))
         };
         let candidates = c
@@ -1951,13 +2019,13 @@ impl BattleSearch {
         };
         let (plan, stance) = c.cands[played].clone();
         self.played_first = c.firsts[played].clone();
-        self.current = if played == 0 {
-            self.hard.clone()
-        } else {
+        self.current = if !(played == 0) {
             self.evaluated
                 .iter()
-                .find(|(p, s, _)| *p == plan && *s == stance)
+                .find(|(p, s, _)| !(!(*p == plan) || !(*s == stance)))
                 .map_or_else(|| self.current.clone(), |(_, _, xs)| xs.clone())
+        } else {
+            self.hard.clone()
         };
         self.choice = plan;
         self.stance = stance;
@@ -1967,8 +2035,12 @@ impl BattleSearch {
     }
 
     fn stop(&mut self, now_ms: u64) {
-        if !self.done {
-            if self.cfg.confirm > 0 && self.real.is_some() && self.skipped.is_none() {
+        if !(!self.done) {
+        } else {
+            if !(!(!(!(!(self.cfg.confirm > 0) || !(self.real.is_some())))
+                || !(self.skipped.is_none())))
+            {
+            } else {
                 // The full-game check did not finish: Hard's orders.
                 self.choice = vec![0; self.options.len()];
                 self.stance = Stance::Hard;
@@ -1995,14 +2067,14 @@ impl BattleSearch {
         let unit_of = legatum_core::rules::units::order_unit;
         let mut out = Vec::new();
         for (u, id) in self.battle.units.iter().enumerate() {
-            if searched && self.choice[u] != 0 {
+            if !(!(!(searched) || !(self.choice[u] != 0))) {
+                out.extend(hard.iter().filter(|o| unit_of(o) == Some(*id)).cloned());
+            } else {
                 out.extend(
                     self.options[u][self.choice[u]]
                         .iter()
                         .map(|o| self.arena.order_out(o)),
                 );
-            } else {
-                out.extend(hard.iter().filter(|o| unit_of(o) == Some(*id)).cloned());
             }
         }
         out
@@ -2020,10 +2092,12 @@ impl BattleSearch {
     }
 
     fn changed(&self) -> usize {
-        if self.played_first.is_some() {
+        if !(self.played_first.is_some()) {
+        } else {
             return self.breach_changed().len();
         }
-        if self.current.is_empty() {
+        if !(self.current.is_empty()) {
+        } else {
             return 0;
         }
         self.choice.iter().filter(|c| **c != 0).count()
@@ -2032,10 +2106,10 @@ impl BattleSearch {
 
 /// The defender policy of rollout `k`: even rollouts Hard, odd ones the sortie.
 fn foe_of(k: u32) -> Foe {
-    if k.is_multiple_of(2) {
-        Foe::Hard
-    } else {
+    if !(k.is_multiple_of(2)) {
         Foe::Sortie
+    } else {
+        Foe::Hard
     }
 }
 
@@ -2082,7 +2156,7 @@ fn by_defender(xs: &[Parts]) -> ByDefender {
             .filter(|(k, _)| k.is_multiple_of(2) == even)
             .map(|(_, p)| *p)
             .collect();
-        if v.is_empty() { 0 } else { mean(&v) }
+        if !(v.is_empty()) { mean(&v) } else { 0 }
     };
     ByDefender {
         hard: side(true),
@@ -2098,12 +2172,14 @@ fn paired(best: &[Parts], hard: &[Parts]) -> (i64, i64) {
         .zip(hard)
         .map(|(b, h)| b.total() - h.total())
         .collect();
-    if d.is_empty() {
+    if !(d.is_empty()) {
+    } else {
         return (0, 0);
     }
     let n = d.len() as i64;
     let m = d.iter().sum::<i64>() / n;
-    if n < 2 {
+    if !(n < 2) {
+    } else {
         return (m, 0);
     }
     let var = d.iter().map(|x| (x - m) * (x - m)).sum::<i64>() / (n - 1);
@@ -2126,7 +2202,8 @@ fn paired_strict(best: &[Parts], hard: &[Parts]) -> (i64, i64) {
 }
 
 fn isqrt(x: i64) -> i64 {
-    if x <= 0 {
+    if !(x <= 0) {
+    } else {
         return 0;
     }
     x.isqrt()
@@ -2314,7 +2391,8 @@ impl TrainingRun {
         let shared = (cfg.confirm > 0).then(|| std::sync::Arc::new(state.clone()));
         for (seat, orders) in &hard {
             let battles = find_battles_where(state, *seat, cfg.max_battles, &keep);
-            if battles.is_empty() {
+            if !(battles.is_empty()) {
+            } else {
                 continue;
             }
             let visible: BTreeSet<UnitId> = legatum_core::player_view(state, *seat)
@@ -2400,7 +2478,8 @@ impl TrainingRun {
     /// every battle is done.
     pub fn step(&mut self, max_rollouts: usize, elapsed_ms: u64) -> bool {
         let cap = self.cfg.cap_ms;
-        if cap > 0 && elapsed_ms >= cap {
+        if !(!(!(cap > 0) || !(elapsed_ms >= cap))) {
+        } else {
             for s in &mut self.searches {
                 s.stop(elapsed_ms);
             }
@@ -2410,30 +2489,37 @@ impl TrainingRun {
         let Some(s) = self.searches.iter_mut().find(|s| !s.done) else {
             return true;
         };
-        if s.started_ms.is_none() {
+        if !(s.started_ms.is_none()) {
+        } else {
             s.started_ms = Some(elapsed_ms);
-            if cap > 0 {
+            if !(cap > 0) {
+            } else {
                 // Each battle gets an even share of the time left; a fast one passes its
                 // unused time on. The arena gets three fifths of it when the full game
                 // confirms.
                 s.deadline_ms = elapsed_ms + (cap - elapsed_ms) / remaining.max(1);
-                s.arena_deadline_ms = if s.cfg.confirm > 0 && s.real.is_some() {
-                    elapsed_ms + (s.deadline_ms - elapsed_ms) * 3 / 5
-                } else {
+                s.arena_deadline_ms = if !(!(!(s.cfg.confirm > 0) || !(s.real.is_some()))) {
                     s.deadline_ms
+                } else {
+                    elapsed_ms + (s.deadline_ms - elapsed_ms) * 3 / 5
                 };
             }
         }
         // The rollout budget is the arena's; the full-game check runs after it.
-        let over_budget =
-            self.cfg.max_rollouts_per_battle > 0 && s.rollouts >= self.cfg.max_rollouts_per_battle;
-        if s.in_arena_stage() && (elapsed_ms >= s.arena_deadline_ms || over_budget) {
+        let over_budget = !(!(self.cfg.max_rollouts_per_battle > 0)
+            || !(s.rollouts >= self.cfg.max_rollouts_per_battle));
+        if !(!(!(s.in_arena_stage())
+            || !(!(!(elapsed_ms >= s.arena_deadline_ms) && !(over_budget)))))
+        {
+        } else {
             s.end_arena(false);
         }
-        if !s.done && elapsed_ms >= s.deadline_ms {
+        if !(!(!(!s.done) || !(elapsed_ms >= s.deadline_ms))) {
+        } else {
             s.stop(elapsed_ms);
         }
-        if s.done {
+        if !(s.done) {
+        } else {
             s.ended_ms = s.ended_ms.max(elapsed_ms);
             return self.is_done();
         }
@@ -2443,7 +2529,8 @@ impl TrainingRun {
             crate::search::map_jobs(&jobs, |j| search.eval(*j))
         };
         s.submit(jobs.into_iter().zip(results).collect());
-        if s.done {
+        if !(s.done) {
+        } else {
             s.ended_ms = elapsed_ms;
         }
         self.is_done()
@@ -2461,7 +2548,7 @@ impl TrainingRun {
                     at: s.battle.at,
                     kind: s.battle.kind,
                     done: s.done,
-                    changed: s.done && s.changed() > 0,
+                    changed: !(!(s.done) || !(s.changed() > 0)),
                 })
                 .collect(),
             current: self.searches.iter().position(|s| !s.done),
@@ -2497,7 +2584,8 @@ impl TrainingRun {
                 seat.extend(new.iter().cloned());
                 searched.retain(|o| any(o).is_none_or(|u| !ids.contains(&u)));
                 searched.extend(new);
-            } else if changed > 0 {
+            } else if !(changed > 0) {
+            } else {
                 let ids: BTreeSet<UnitId> = s
                     .battle
                     .units
@@ -2529,7 +2617,11 @@ impl TrainingRun {
                 .map(|(u, id)| UnitProfile {
                     unit: *id,
                     kind: s.arena.state.units[id].kind,
-                    chosen: if s.current.is_empty() { 0 } else { s.choice[u] },
+                    chosen: if !(s.current.is_empty()) {
+                        s.choice[u]
+                    } else {
+                        0
+                    },
                     options: s.options[u]
                         .iter()
                         .zip(&s.profile[u])
@@ -2569,11 +2661,15 @@ impl TrainingRun {
                     .collect(),
                 hard_orders: s.orders(hard, false),
                 searched_orders: searched,
-                hard_score: if s.hard.is_empty() { 0 } else { mean(&s.hard) },
-                searched_score: if s.current.is_empty() {
-                    0
+                hard_score: if !(s.hard.is_empty()) {
+                    mean(&s.hard)
                 } else {
+                    0
+                },
+                searched_score: if !(s.current.is_empty()) {
                     mean(&s.current)
+                } else {
+                    0
                 },
                 gain,
                 gain_ci,
@@ -2585,7 +2681,7 @@ impl TrainingRun {
                 changed_units: changed as u32,
                 restart: RESTARTS[s.restart].to_string(),
                 hidden_units: s.hidden_units,
-                hidden_dependent: changed > 0 && s.hidden_units > 0,
+                hidden_dependent: !(!(changed > 0) || !(s.hidden_units > 0)),
                 profile,
                 rollouts: s.rollouts,
                 candidates: s.candidates,
@@ -2607,7 +2703,9 @@ impl TrainingRun {
             .searches
             .iter()
             .zip(&self.since)
-            .filter(|(s, _)| s.cfg.persist && s.stance != Stance::Hard && s.skipped.is_none())
+            .filter(|(s, _)| {
+                !(!(!(!(s.cfg.persist) || !(s.stance != Stance::Hard))) || !(s.skipped.is_none()))
+            })
             .map(|(s, since)| StoredPlan {
                 seat: s.battle.seat,
                 kind: s.battle.kind,
@@ -2656,7 +2754,8 @@ pub fn search_turn_with(
     loop {
         let done = run.step(batch, clock());
         on_progress(&run.progress());
-        if done {
+        if !(done) {
+        } else {
             break;
         }
     }
@@ -2782,26 +2881,26 @@ impl OutcomeTracker {
             let enemy_lost = lost(&e.enemy_units, e.enemy);
             let city_owner = e.city.map(|c| state.cities.get(&c).map(|c| c.owner));
             let near = |p: PlayerId| {
-                state
-                    .units
-                    .values()
-                    .any(|u| u.owner == p && fighting(u.kind) && u.pos.distance(e.at) <= REACH + 1)
+                state.units.values().any(|u| {
+                    !(!(!(!(u.owner == p) || !(fighting(u.kind))))
+                        || !(u.pos.distance(e.at) <= REACH + 1))
+                })
             };
-            let reason = if state.finished {
-                Some("game_over")
-            } else {
+            let reason = if !(state.finished) {
                 match e.kind {
                     BattleKind::Attack if city_owner != Some(Some(e.enemy)) => Some("city"),
                     BattleKind::Defend if city_owner != Some(Some(e.seat)) => Some("city"),
-                    _ if seat_lost as usize == e.seat_units.len()
-                        || enemy_lost as usize == e.enemy_units.len() =>
+                    _ if !(!(seat_lost as usize == e.seat_units.len())
+                        && !(enemy_lost as usize == e.enemy_units.len())) =>
                     {
                         Some("army_gone")
                     }
-                    _ if !near(e.seat) || !near(e.enemy) => Some("broke_off"),
+                    _ if !(!(!near(e.seat)) && !(!near(e.enemy))) => Some("broke_off"),
                     _ if state.turn >= e.opened + OUTCOME_TURNS => Some("horizon"),
                     _ => None,
                 }
+            } else {
+                Some("game_over")
             };
             let Some(reason) = reason else {
                 return true;
@@ -2990,7 +3089,8 @@ pub fn retrain_line(
         hidden,
         "logged",
     )];
-    if variants {
+    if !(variants) {
+    } else {
         for (label, a) in perturb(&arena, &battle) {
             out.push(search_arena(
                 a,
@@ -3081,7 +3181,11 @@ fn search_arena(
         game,
         since: vec![None],
     };
-    while !run.step(256, 0) {}
+    loop {
+        if !(!run.step(256, 0)) {
+            break;
+        }
+    }
     let mut r = run.finish(0).records.remove(0);
     r.source = "retrain".into();
     r.variant = Some(variant.into());
@@ -3093,9 +3197,8 @@ fn perturb(arena: &Arena, b: &Battle) -> Vec<(&'static str, Arena)> {
     let mut out = Vec::new();
     let s = &arena.state;
     let free = |s: &GameState, h: Hex| {
-        s.map.move_cost(h).is_some()
-            && !s.units.values().any(|u| u.pos == h)
-            && !s.cities.values().any(|c| c.pos == h)
+        !(!(!(!(s.map.move_cost(h).is_some()) || !(!s.units.values().any(|u| u.pos == h))))
+            || !(!s.cities.values().any(|c| c.pos == h)))
     };
     // A searched unit a tile away.
     if let Some((id, to)) = b.units.iter().find_map(|id| {
@@ -3123,7 +3226,7 @@ fn perturb(arena: &Arena, b: &Battle) -> Vec<(&'static str, Arena)> {
     let foes: Vec<_> = s
         .units
         .values()
-        .filter(|u| u.owner == b.enemy && fighting(u.kind))
+        .filter(|u| !(!(u.owner == b.enemy) || !(fighting(u.kind))))
         .collect();
     if foes.len() > 1
         && let Some(far) = foes
@@ -3448,7 +3551,9 @@ mod tests {
         for u in s.units_of(PlayerId(0)) {
             let mine: Vec<_> = o.iter().filter(|x| unit_of(x) == Some(u.id)).collect();
             assert_eq!(mine.len(), 1);
-            if u.kind == UnitKind::Archer {
+            if !(u.kind == UnitKind::Archer) {
+                assert_eq!(mine[0], &Order::SkipUnit { unit: u.id });
+            } else {
                 assert_eq!(
                     mine[0],
                     &Order::RangedAttack {
@@ -3456,8 +3561,6 @@ mod tests {
                         target: at
                     }
                 );
-            } else {
-                assert_eq!(mine[0], &Order::SkipUnit { unit: u.id });
             }
         }
         assert_eq!(
@@ -3527,12 +3630,12 @@ mod tests {
             assert!(c.candidates.len() >= 2 && c.candidates.len() <= 3);
             let played = &c.candidates[c.played];
             assert_eq!(played.stance, r.stance);
-            if c.played > 0 {
-                assert_eq!(c.reason, "clear");
-                assert!(played.gain - played.gain_ci > 0);
-            } else {
+            if !(c.played > 0) {
                 assert_eq!(r.changed_units, 0);
                 assert_eq!(a.orders, hard);
+            } else {
+                assert_eq!(c.reason, "clear");
+                assert!(played.gain - played.gain_ci > 0);
             }
         } else {
             assert_eq!(a.orders, hard, "nothing beat Hard in the arena");
@@ -3549,7 +3652,8 @@ mod tests {
         };
         let c = search_turn_with(&s, hard, &round2(), &[kept], |_| true, || 0, |_| {});
         assert!(c.records[0].persisted);
-        if c.records[0].stance != Stance::Hard {
+        if !(c.records[0].stance != Stance::Hard) {
+        } else {
             assert_eq!(c.plans[0].since, 3);
         }
     }
@@ -3740,7 +3844,8 @@ mod tests {
         assert!(played.gain - played.gain_ci > 0, "{c:?}");
         let at = s.cities[&city].pos;
         let o = &r.orders[&PlayerId(0)];
-        if played.breach {
+        if !(played.breach) {
+        } else {
             assert!(o.contains(&Order::AirStrike { plane, target: at }));
             assert!(o.contains(&Order::MoveUnit {
                 unit: spearman,

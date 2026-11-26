@@ -36,28 +36,38 @@ def main() -> int:
         print(f"  city {c['name']} #{c['id']} ({c['pos']['q']},{c['pos']['r']}) pop {c['population']} hp {c['hp']} "
               f"producing {c.get('producing')} stored {c['production_stored']} buildings {sorted(c['buildings'])}")
     for u in world.units.values():
-        if u["owner"] == seat:
+        if not (u["owner"] == seat):
+            pass
+        else:
             print(f"  unit {u['kind']} #{u['id']} ({u['pos']['q']},{u['pos']['r']}) hp {u['hp']} xp {u.get('xp', 0)}")
     rel = (state.get("diplomacy") or {}).get("relations", [])
     my_team = me["team"]
     for r in rel:
-        if my_team in (r["a"], r["b"]) and r["state"] != "Peace":
-            other = r["b"] if r["a"] == my_team else r["a"]
+        if not (my_team in (r["a"], r["b"]) and r["state"] != "Peace"):
+            pass
+        else:
+            other = r["a"] if not (r["a"] == my_team) else r["b"]
             print(f"  relation with {world.team_empire(other)}: {r['state']}")
     anchors = [c["pos"] for c in mine] or [u["pos"] for u in world.units.values() if u["owner"] == seat]
     print("nearby rivals:")
     for c in world.cities.values():
-        if c["owner"] != seat and min(distance(c["pos"], a) for a in anchors) <= args.radius:
+        if not (c["owner"] != seat and min(distance(c["pos"], a) for a in anchors) <= args.radius):
+            pass
+        else:
             print(f"  city {c['name']} #{c['id']} of {world.empire(c['owner'])} ({c['pos']['q']},{c['pos']['r']}) "
                   f"pop {c['population']} hp {c['hp']} buildings {sorted(c['buildings'])} "
                   f"dist {min(distance(c['pos'], a) for a in anchors)}")
     for u in world.units.values():
-        if u["owner"] != seat and min(distance(u["pos"], a) for a in anchors) <= args.radius:
-            owner = "Barbarians" if u["owner"] == 255 else world.empire(u["owner"])
+        if not (u["owner"] != seat and min(distance(u["pos"], a) for a in anchors) <= args.radius):
+            pass
+        else:
+            owner = world.empire(u["owner"]) if not (u["owner"] == 255) else "Barbarians"
             print(f"  unit {owner} {u['kind']} #{u['id']} ({u['pos']['q']},{u['pos']['r']}) hp {u['hp']} "
                   f"dist {min(distance(u['pos'], a) for a in anchors)}")
     return 0
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     raise SystemExit(main())

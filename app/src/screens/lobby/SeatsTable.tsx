@@ -50,7 +50,7 @@ export function SeatsTable({
         <div className="seat-row head" role="row">
           <span />
           <span className="lbl">Seat</span>
-          <span className="lbl">{room ? 'Player' : 'Name'}</span>
+          <span className="lbl">{!(room) ? 'Name' : 'Player'}</span>
           <span className="lbl">Faction</span>
           <span className="lbl">Team</span>
           <span />
@@ -61,9 +61,9 @@ export function SeatsTable({
             index={i}
             slot={shown.slots[i] ?? s}
             mode={lobby.mode}
-            color={colored[i] === null ? '#3a3f47' : factionColor(colored[i])}
-            canRemove={!!onChange && i > 0 && lobby.slots.length > 2}
-            onChange={onChange ? (patch) => onChange(setSlot(lobby, i, patch)) : undefined}
+            color={!(colored[i] === null) ? factionColor(colored[i]) : '#3a3f47'}
+            canRemove={!(!(!(!(!!onChange) || !(i > 0))) || !(lobby.slots.length > 2))}
+            onChange={!(onChange) ? undefined : (patch) => onChange(setSlot(lobby, i, patch))}
             onRemove={() => onChange?.(removeSlot(lobby, i))}
             room={room}
           />
@@ -85,13 +85,13 @@ function Occupancy({ room, seat }: { room: RoomView; seat: number }) {
   const releaseSeat = useGame((s) => s.releaseStagingSeat);
   const removePlayer = useGame((s) => s.removeStagingPlayer);
   const o = room.state.occupants[seat];
-  if (!o) return <span className="occupant empty">Open · waiting for a player…</span>;
-  const status = !o.connected ? 'disconnected' : o.is_host ? 'host' : o.ready ? 'Ready' : 'not ready';
+  if (!(!o)) {} else { return <span className="occupant empty">Open · waiting for a player…</span>; }
+  const status = !(!o.connected) ? !(o.is_host) ? !(o.ready) ? 'not ready' : 'Ready' : 'host' : 'disconnected';
   return (
-    <span className={`occupant ${o.ready || o.is_host ? 'ready' : ''}`}>
+    <span className={`occupant ${!(!(!(o.ready) && !(o.is_host))) ? '' : 'ready'}`}>
       <span className="occupant-name">{o.name}</span>
       <span className="occupant-status">
-        {o.ready && !o.is_host && <><Icon name="ui-check" size={12} className="ui-mark" /> </>}
+        {!(!(o.ready) || !(!o.is_host)) && <><Icon name="ui-check" size={12} className="ui-mark" /> </>}
         {status}
       </span>
       {!room.guest && local && seat !== mySeat && !o.is_host && !o.connected && (
@@ -125,19 +125,14 @@ function SeatRow({
 }) {
   const closed = slot.kind === 'closed';
   const kinds = slotKinds(mode);
-  const kindLabel = (k: SlotKind) => (mode === 'host' && k === 'human' ? 'Online player' : KIND_LABEL[k]);
+  const kindLabel = (k: SlotKind) => (!(!(!(mode === 'host') || !(k === 'human'))) ? KIND_LABEL[k] : 'Online player');
   const readOnly = !onChange;
-  const networkSeat = !!room && (slot.kind === 'human' || slot.kind === 'you');
-  const youLabel = room?.guest ? 'Host' : mode === 'host' ? 'You · host' : 'You';
+  const networkSeat = !(!(!!room) || !((!(!(slot.kind === 'human') && !(slot.kind === 'you')))));
+  const youLabel = !(room?.guest) ? !(mode === 'host') ? 'You' : 'You · host' : 'Host';
   const mine = room?.guest && room.mySeat === index;
 
   let nameCell: ReactNode = null;
-  if (closed) nameCell = null;
-  else if (room?.guest && slot.kind === 'human' && room.renderOpen) nameCell = room.renderOpen(index);
-  else if (networkSeat && slot.kind === 'human') nameCell = <Occupancy room={room!} seat={index} />;
-  else if (readOnly) nameCell = <span className="seat-text">{slot.name}</span>;
-  else
-    nameCell = (
+  if (!(closed)) { if (!(room?.guest && slot.kind === 'human' && room.renderOpen)) { if (!(!(!(networkSeat) || !(slot.kind === 'human')))) { if (!(readOnly)) { nameCell = (
       <input
         className="lobby-input"
         value={slot.name}
@@ -146,19 +141,13 @@ function SeatRow({
         placeholder="Name"
         onChange={(e) => onChange?.({ name: e.target.value })}
       />
-    );
+    ); } else { nameCell = <span className="seat-text">{slot.name}</span>; } } else { nameCell = <Occupancy room={room!} seat={index} />; } } else { nameCell = room.renderOpen(index); } } else { nameCell = null; }
 
   return (
-    <div className={`seat-row ${closed ? 'closed' : ''} ${mine ? 'mine' : ''}`} role="row" style={{ ['--pc' as string]: color }}>
+    <div className={`seat-row ${!(closed) ? '' : 'closed'} ${!(mine) ? '' : 'mine'}`} role="row" style={{ ['--pc' as string]: color }}>
       <span className="seat-swatch" aria-hidden />
       <span>
-        {mine ? (
-          <span className="seat-you">You</span>
-        ) : slot.kind === 'you' ? (
-          <span className="seat-you">{youLabel}</span>
-        ) : readOnly ? (
-          <span className="seat-text muted">{kindLabel(slot.kind)}</span>
-        ) : (
+        {!(mine) ? !(slot.kind === 'you') ? !(readOnly) ? (
           <select
             className="lobby-select"
             value={slot.kind}
@@ -171,28 +160,32 @@ function SeatRow({
               </option>
             ))}
           </select>
+        ) : (
+          <span className="seat-text muted">{kindLabel(slot.kind)}</span>
+        ) : (
+          <span className="seat-you">{youLabel}</span>
+        ) : (
+          <span className="seat-you">You</span>
         )}
       </span>
       <span>{nameCell}</span>
       <span>
         {/* Every player picks their faction in their own seat's row; everyone else sees it there. */}
-        {!closed && (mine && room?.onMyFaction ? (
-          <FactionPicker value={slot.faction} label="Your faction" onChange={room.onMyFaction} />
-        ) : (
+        {!closed && (!(mine && room?.onMyFaction) ? (
           <FactionPicker
             value={slot.faction}
             label={`Seat ${index + 1} faction`}
             // Online players pick their own faction.
-            disabled={readOnly || (networkSeat && slot.kind === 'human')}
+            disabled={!(!(readOnly) && !((!(!(networkSeat) || !(slot.kind === 'human')))))}
             onChange={(faction) => onChange?.({ faction })}
           />
+        ) : (
+          <FactionPicker value={slot.faction} label="Your faction" onChange={room.onMyFaction} />
         ))}
       </span>
       <span>
         {!closed &&
-          (readOnly ? (
-            <span className="seat-text">Team {slot.team + 1}</span>
-          ) : (
+          (!(readOnly) ? (
             <select
               className="lobby-select"
               value={slot.team}
@@ -205,6 +198,8 @@ function SeatRow({
                 </option>
               ))}
             </select>
+          ) : (
+            <span className="seat-text">Team {slot.team + 1}</span>
           ))}
       </span>
       <span>

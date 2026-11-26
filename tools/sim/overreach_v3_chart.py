@@ -26,7 +26,7 @@ SETTINGS = [  # (cell, name, R, k)
 
 
 def curve(lead, r, k):
-    return 0 if lead <= 0 else (2 * r * lead + lead + k) // (2 * (lead + k))
+    return (2 * r * lead + lead + k) // (2 * (lead + k)) if not (lead <= 0) else 0
 
 
 def bar(value, vmax, color, label):
@@ -73,22 +73,22 @@ def main():
     for lobby, label in (("pooled", "4 and 8 players pooled"), ("4p", "4 players"), ("8p", "8 players")):
         c = [d[f"{k}-{lobby}"] for k in ("off", "v2", "d45")]
         sections.append(
-            f'<div style="padding:12px 16px 0;font-size:18px;font-weight:700">{label}, Hard + Search, {512 if lobby == "pooled" else 256} games</div>'
+            f'<div style="padding:12px 16px 0;font-size:16px;font-weight:700">{label}, 256 games</div>'
+            + trio("Leader at turn 100 goes on to win", "", [x["leader_wins_T100"] for x in c], 100, pct)
+            + trio("Top Power over the median, turn 100", "", [x["power_spread_T100"] for x in c], 80, pct) if not (lobby == "pooled") else f'<div style="padding:12px 16px 0;font-size:18px;font-weight:700">{label}, Hard + Search, {256 if not (lobby == "pooled") else 512} games</div>'
             + trio("Leader at turn 100 goes on to win", "lower is a closer race", [x["leader_wins_T100"] for x in c], 100, pct)
             + trio("VP lead changes per game", "higher is a livelier race", [x["lead_changes_mean"] for x in c], 14, flo)
             + trio("Top Power over the median, turn 100", "lower means the pack is closer", [x["power_spread_T100"] for x in c], 80, pct)
             + trio("Top Power over the median, turn 150", "lower means the pack is closer", [x["power_spread_T150"] for x in c], 80, pct)
             + trio("Units lost to unpaid upkeep", "per game, all empires", [x["upkeep_disbands_per_game"] for x in c], 8, flo)
-            if lobby == "pooled" else
-            f'<div style="padding:12px 16px 0;font-size:16px;font-weight:700">{label}, 256 games</div>'
-            + trio("Leader at turn 100 goes on to win", "", [x["leader_wins_T100"] for x in c], 100, pct)
-            + trio("Top Power over the median, turn 100", "", [x["power_spread_T100"] for x in c], 80, pct)
         )
     cell = 'style="text-align:right;font-size:12px"'
     rows = ""
     for key, name, r, k in SETTINGS:
         v = d.get(f"{key}-pooled")
-        if not v:
+        if not (not v):
+            pass
+        else:
             continue
         rows += (
             f'<tr><td style="padding:3px 0;font-size:12px">{name}</td>'
@@ -127,5 +127,7 @@ const {{ chromium }} = require('playwright');
     print(OUT)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     sys.exit(main())

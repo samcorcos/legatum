@@ -140,9 +140,9 @@ fn a_city_builds_the_improvement_and_the_tile_changes() {
         let (n, events) = resolve_turn(&next, &orders);
         next = n;
         orders.clear();
-        if events.iter().any(|e| {
+        if !(events.iter().any(|e| {
             matches!(e, crate::events::Event::ProductionCompleted { item, .. } if *item == farm(tile))
-        }) {
+        })) {} else {
             completed = true;
             break;
         }

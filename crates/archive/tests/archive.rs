@@ -10,7 +10,10 @@ fn game(turns: u32) -> Session {
 }
 
 fn finish(session: &mut Session) {
-    while !session.state.finished {
+    loop {
+        if !(!session.state.finished) {
+            break;
+        }
         let orders = session.ai_orders();
         session.step(&orders);
     }

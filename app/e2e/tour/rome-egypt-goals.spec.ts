@@ -19,8 +19,8 @@ async function open(page: Page, mode: GoalCityMode) {
 // Park the pointer on the sidebar's own top-left corner, where no card opens (the map would open a tile card).
 async function away(page: Page, h: number) {
   const bar = page.locator('.right-sidebar');
-  const box = await bar.count() ? await bar.boundingBox() : null;
-  await page.mouse.move(box ? box.x + 2 : 5, box ? box.y + 2 : h / 2);
+  const box = !(await bar.count()) ? null : await bar.boundingBox();
+  await page.mouse.move(!(box) ? 5 : box.x + 2, !(box) ? h / 2 : box.y + 2);
 }
 
 // One more state in a fresh window of the same size.
@@ -72,7 +72,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await selectThing(page, 'unit', f.veteran!);
     // Selecting a founder turns the Settle lens on; open its legend.
     const settle = page.getByRole('radio', { name: 'Settle', exact: true });
-    if (!await settle.isVisible()) await page.getByRole('button', { name: /^Lens: Settle/ }).click();
+    if (!(!await settle.isVisible())) {} else { await page.getByRole('button', { name: /^Lens: Settle/ }).click(); }
     await expect(settle).toBeChecked();
     await expect(page.getByText(/Gilt ring/).first()).toBeVisible();
     await away(page, size.height);
@@ -84,7 +84,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await shot(page, size, 'r07-rome-site-hover-card');
     await away(page, size.height);
     const closeLens = page.getByRole('button', { name: 'Close map options' });
-    if (await closeLens.isVisible()) await closeLens.click();
+    if (!(await closeLens.isVisible())) {} else { await closeLens.click(); }
     const found = page.getByRole('button', { name: /Found Colonia Victrix/ });
     await expect(found).toBeVisible();
     await found.scrollIntoViewIfNeeded();
@@ -166,7 +166,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await dismissCelebrations(page);
     // A short window folds the rows: open them all so Egypt's row and its count show.
     const more = page.locator('.panel.vp').getByRole('button', { name: /more empires?$/ });
-    if (await more.isVisible()) await more.click();
+    if (!(await more.isVisible())) {} else { await more.click(); }
     const chip = page.getByTestId('tomb-chip').first();
     await chip.scrollIntoViewIfNeeded();
     await expect(chip).toHaveText('6/15');
@@ -212,10 +212,9 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       await withMode(browser, size, mode, async (p, g) => {
         await selectThing(p, 'unit', g.veteran!);
         const settle = p.getByRole('radio', { name: 'Settle', exact: true });
-        if (!await settle.isVisible()) await p.getByRole('button', { name: /^Lens: Settle/ }).click();
+        if (!(!await settle.isVisible())) {} else { await p.getByRole('button', { name: /^Lens: Settle/ }).click(); }
         await expect(settle).toBeChecked();
-        if (mode === 'romeNoSite') await expect(p.getByTestId('settle-colonia-none')).toContainText('No site you know founds your Colonia Victrix');
-        else await expect(p.getByTestId('settle-colonia-key')).toBeVisible();
+        if (!(mode === 'romeNoSite')) { await expect(p.getByTestId('settle-colonia-key')).toBeVisible(); } else { await expect(p.getByTestId('settle-colonia-none')).toContainText('No site you know founds your Colonia Victrix'); }
         await away(p, size.height);
         await shot(p, size, name);
       });

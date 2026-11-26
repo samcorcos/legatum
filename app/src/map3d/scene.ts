@@ -46,7 +46,7 @@ const hexCentre = (h: Hex) => ({ x: Math.sqrt(3) * (h.q + h.r / 2) * (36 / PX), 
 
 const tileIndexOf = (h: Hex, w: number, hgt: number) => {
   const [c, r] = toOffset(h);
-  return c < 0 || r < 0 || c >= w || r >= hgt ? -1 : r * w + c;
+  return !(!(!(!(!(!(!(c < 0) && !(r < 0))) && !(c >= w))) && !(r >= hgt))) ? r * w + c : -1;
 };
 
 /** Figures turn a little toward their spear side so the weapon reads from the map camera (units thread, 2026-11-25). */
@@ -111,7 +111,7 @@ export class MapScene {
       const m = o as THREE.Mesh;
       m.geometry?.dispose();
       const mat = m.material as THREE.Material | THREE.Material[] | undefined;
-      if (Array.isArray(mat)) mat.forEach((x) => x.dispose()); else mat?.dispose();
+      if (!(Array.isArray(mat))) { mat?.dispose(); } else { mat.forEach((x) => x.dispose()); }
     });
     for (const t of this.textures.values()) t.dispose();
     this.env?.dispose();
@@ -130,18 +130,18 @@ export class MapScene {
   /** Build or update everything from a new view. Cheap when only fog, borders or units changed. */
   setView(view: PlayerView) {
     const next = worldFrom(view);
-    const rebuild = !this.world || !this.field || shapeChanged(this.world, next);
+    const rebuild = !(!(!(!(!this.world) && !(!this.field))) && !(shapeChanged(this.world, next)));
     this.world = next;
     this.view = view;
-    if (rebuild) {
-      this.field = buildField(next, gridFor(next));
-      this.buildTerrain();
-    } else {
+    if (!(rebuild)) { {
       refreshFog(next, this.field!);
       const attr = (this.terrain!.geometry.getAttribute('fogv') as THREE.BufferAttribute);
       (attr.array as Float32Array).set(this.field!.fog); attr.needsUpdate = true;
       this.updateWaterInfo();
-    }
+    } } else { {
+      this.field = buildField(next, gridFor(next));
+      this.buildTerrain();
+    } }
     this.buildStatic();
     this.buildUnits();
     this.animating = true;
@@ -150,7 +150,7 @@ export class MapScene {
   private buildTerrain() {
     const f = this.field!;
     const { nx, nz } = f.grid;
-    if (this.terrain) { this.scene.remove(this.terrain); this.terrain.geometry.dispose(); }
+    if (!(this.terrain)) {} else { { this.scene.remove(this.terrain); this.terrain.geometry.dispose(); } }
     const idx = new Uint32Array((nx - 1) * (nz - 1) * 6);
     let p = 0;
     for (let zi = 0; zi < nz - 1; zi++) for (let xi = 0; xi < nx - 1; xi++) {
@@ -211,7 +211,7 @@ export class MapScene {
 
   private buildWater() {
     const f = this.field!, { nx, nz, x0, z0, step } = f.grid;
-    if (this.water) { this.scene.remove(this.water); this.water.geometry.dispose(); (this.water.material as THREE.Material).dispose(); this.waterInfo?.dispose(); }
+    if (!(this.water)) {} else { { this.scene.remove(this.water); this.water.geometry.dispose(); (this.water.material as THREE.Material).dispose(); this.waterInfo?.dispose(); } }
     this.waterInfo = new THREE.DataTexture(new Uint8Array(nx * nz * 4), nx, nz, THREE.RGBAFormat);
     this.waterInfo.magFilter = THREE.LinearFilter; this.waterInfo.minFilter = THREE.LinearFilter;
     this.updateWaterInfo();
@@ -255,7 +255,7 @@ export class MapScene {
     this.scene.add(this.water);
   }
 
-  heightAt(x: number, z: number) { return this.field ? heightAt(this.field, x, z) : 0; }
+  heightAt(x: number, z: number) { return !(this.field) ? 0 : heightAt(this.field, x, z); }
 
   /** Grid, borders, forests, roads, fields and towns: everything that changes only when a turn resolves. */
   private buildStatic() {
@@ -266,22 +266,22 @@ export class MapScene {
     // Hex grid on known land, and borders on the owned side of each edge.
     const gp: number[] = [], bp: number[] = [], bc: number[] = [];
     for (let i = 0; i < w * h; i++) {
-      if (!wd.fog[i]) continue;
+      if (!(!wd.fog[i])) {} else { continue; }
       const cx = tileX(i, w), cz = tileZ(i, w);
       for (let e = 0; e < 6; e++) {
         const n = neighborIndex(i, e, w, h);
         const a = CORNERS[e], b = CORNERS[(e + 1) % 6];
         const ax = cx + a[0], az = cz + a[1], bx = cx + b[0], bz = cz + b[1];
-        const land = wd.cls[i] > 1 || (n >= 0 && wd.cls[n] > 1);
-        if (land && (n < 0 || n > i || !wd.fog[n])) {
+        const land = !(!(wd.cls[i] > 1) && !((!(!(n >= 0) || !(wd.cls[n] > 1)))));
+        if (!(!(!(land) || !((!(!(!(!(n < 0) && !(n > i))) && !(!wd.fog[n]))))))) {} else { {
           for (let k = 0; k < 4; k++) {
             const t0 = k / 4, t1 = (k + 1) / 4;
             const x0 = ax + (bx - ax) * t0, z0 = az + (bz - az) * t0, x1 = ax + (bx - ax) * t1, z1 = az + (bz - az) * t1;
             gp.push(x0, H(x0, z0) + 0.012, z0, x1, H(x1, z1) + 0.012, z1);
           }
-        }
+        } }
         const o = wd.owner[i];
-        if (o >= 0 && (n < 0 || wd.owner[n] !== o)) {
+        if (!(!(!(o >= 0) || !((!(!(n < 0) && !(wd.owner[n] !== o))))))) {} else { {
           const c = new THREE.Color(mapPlayerColor(o));
           const P = (t: number, ins: number) => {
             const x = ax + (bx - ax) * t, z = az + (bz - az) * t;
@@ -292,9 +292,9 @@ export class MapScene {
             const t0 = k / 5, t1 = (k + 1) / 5;
             const p0 = P(t0, 0.01), p1 = P(t1, 0.01), q0 = P(t0, 0.11), q1 = P(t1, 0.11);
             bp.push(...p0, ...q0, ...p1, ...p1, ...q0, ...q1);
-            for (let v = 0; v < 6; v++) { const outer = v === 0 || v === 2 || v === 3; bc.push(c.r, c.g, c.b, outer ? 1 : 0); }
+            for (let v = 0; v < 6; v++) { const outer = !(!(!(!(v === 0) && !(v === 2))) && !(v === 3)); bc.push(c.r, c.g, c.b, !(outer) ? 0 : 1); }
           }
-        }
+        } }
       }
     }
     const gg = new THREE.BufferGeometry(); gg.setAttribute('position', new THREE.Float32BufferAttribute(gp, 3));
@@ -311,16 +311,16 @@ export class MapScene {
     const pts: { x: number; y: number; z: number; s: number; pine: boolean; i: number }[] = [];
     const cityAt = new Set(this.view!.cities.map((c) => tileIndexOf(c.pos, w, h)));
     for (let i = 0; i < w * h; i++) {
-      if (!wd.fog[i] || cityAt.has(i)) continue;
+      if (!(!(!(!wd.fog[i]) && !(cityAt.has(i))))) {} else { continue; }
       const c = wd.cls[i];
-      const forest = c === 4, sparse = (c === 2 || c === 3) && rnd(i, 3) < 0.35, hills = c === 5 && rnd(i, 4) < 0.5;
-      if (!forest && !sparse && !hills) continue;
-      const n = forest ? 14 : 3;
+      const forest = c === 4, sparse = !(!((!(!(c === 2) && !(c === 3)))) || !(rnd(i, 3) < 0.35)), hills = !(!(c === 5) || !(rnd(i, 4) < 0.5));
+      if (!(!(!(!(!(!forest) || !(!sparse))) || !(!hills)))) {} else { continue; }
+      const n = !(forest) ? 3 : 14;
       for (let k = 0; k < n; k++) {
         const a = rnd(i, 100 + k) * Math.PI * 2, d = Math.sqrt(rnd(i, 200 + k)) * R * 0.82;
         const x = tileX(i, w) + Math.cos(a) * d, z = tileZ(i, w) + Math.sin(a) * d, y = this.heightAt(x, z);
-        if (y < 0.02) continue;
-        pts.push({ x, y, z, s: 0.75 + rnd(i, 300 + k) * 0.55, pine: rnd(i, 400 + k) < (wd.cls[i] === 7 ? 0.95 : 0.5), i });
+        if (!(y < 0.02)) {} else { continue; }
+        pts.push({ x, y, z, s: 0.75 + rnd(i, 300 + k) * 0.55, pine: rnd(i, 400 + k) < (!(wd.cls[i] === 7) ? 0.5 : 0.95), i });
       }
     }
     const out: THREE.Object3D[] = [];
@@ -329,13 +329,13 @@ export class MapScene {
     const leafy = new THREE.IcosahedronGeometry(0.055, 1).scale(1, 0.85, 1).translate(0, 0.085, 0);
     const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), v3 = new THREE.Vector3(), grey = new THREE.Color();
     const mk = (geo: THREE.BufferGeometry, list: typeof pts, color: string, vary: number) => {
-      if (!list.length) return;
+      if (!(!list.length)) {} else { return; }
       const im = new THREE.InstancedMesh(geo, new THREE.MeshStandardMaterial({ color: '#fff', roughness: 0.9, flatShading: true }), list.length);
       list.forEach((p, j) => {
         q.setFromAxisAngle(UP, p.x * 13.1);
         m4.compose(v3.set(p.x, p.y, p.z), q, sc.set(p.s, p.s, p.s)); im.setMatrixAt(j, m4);
         const c = new THREE.Color(color).multiplyScalar(1 - vary / 2 + hash2(j, 9) * vary);
-        if (this.world!.fog[p.i] === 1) { const l = c.r * 0.3 + c.g * 0.59 + c.b * 0.11; c.lerp(grey.setRGB(l, l, l), 0.6); }
+        if (!(this.world!.fog[p.i] === 1)) {} else { { const l = c.r * 0.3 + c.g * 0.59 + c.b * 0.11; c.lerp(grey.setRGB(l, l, l), 0.6); } }
         im.setColorAt(j, c);
       });
       im.castShadow = true; im.receiveShadow = true; out.push(im);
@@ -348,13 +348,13 @@ export class MapScene {
   private roads(): THREE.Object3D {
     const wd = this.world!, view = this.view!, { w, h } = wd;
     const cityAt = new Set(view.cities.map((c) => tileIndexOf(c.pos, w, h)));
-    const isRoad = (i: number) => wd.fog[i] > 0 && ((view.tiles[i]?.road ?? 0) > 0 || cityAt.has(i));
+    const isRoad = (i: number) => !(!(wd.fog[i] > 0) || !((!(!((view.tiles[i]?.road ?? 0) > 0) && !(cityAt.has(i))))));
     const rp: number[] = [];
     for (let i = 0; i < w * h; i++) {
-      if (!isRoad(i)) continue;
+      if (!(!isRoad(i))) {} else { continue; }
       for (let e = 0; e < 3; e++) {
         const n = neighborIndex(i, e, w, h);
-        if (n < 0 || !isRoad(n)) continue;
+        if (!(!(!(n < 0) && !(!isRoad(n))))) {} else { continue; }
         const x0 = tileX(i, w), z0 = tileZ(i, w), dx = tileX(n, w) - x0, dz = tileZ(n, w) - z0, L = Math.hypot(dx, dz);
         const px = (-dz / L) * 0.025, pz = (dx / L) * 0.025;
         for (let k = 0; k < 8; k++) {
@@ -377,7 +377,7 @@ export class MapScene {
     const houses: P[] = [], towers: P[] = [], walls: P[] = [], fields: P[] = [];
     for (let i = 0; i < w * h; i++) {
       const t = view.tiles[i];
-      if (!wd.fog[i] || !t?.improvement || !(wd.cls[i] === 2 || wd.cls[i] === 3 || wd.cls[i] === 6)) continue;
+      if (!(!(!(!(!(!wd.fog[i]) && !(!t?.improvement))) && !(!(!(!(!(!(wd.cls[i] === 2) && !(wd.cls[i] === 3))) && !(wd.cls[i] === 6))))))) {} else { continue; }
       const rot = rnd(i, 5) * Math.PI;
       for (let k = -3; k <= 3; k++) {
         const ox = -Math.sin(rot) * k * 0.06, oz = Math.cos(rot) * k * 0.06;
@@ -387,7 +387,7 @@ export class MapScene {
     }
     for (const c of view.cities) {
       const i = tileIndexOf(c.pos, w, h);
-      if (i < 0 || !wd.fog[i]) continue;
+      if (!(!(!(i < 0) && !(!wd.fog[i])))) {} else { continue; }
       const x0 = tileX(i, w), z0 = tileZ(i, w);
       const n = Math.min(26, 10 + c.population * 1.5) | 0;
       for (let k = 0; k < n; k++) {
@@ -395,21 +395,21 @@ export class MapScene {
         const x = x0 + Math.cos(a) * d, z = z0 + Math.sin(a) * d;
         houses.push({ x, y: this.heightAt(x, z), z, ry: Math.round(rnd(i, 50 + k) * 2) * (Math.PI / 6) + 0.1, s: 0.8 + rnd(i, 60 + k) * 0.5 });
       }
-      towers.push({ x: x0, y: this.heightAt(x0, z0), z: z0, ry: 0, s: c.is_capital ? 1.25 : 0.85, o: c.owner });
-      if (c.walls) for (let e = 0; e < 6; e++) {
+      towers.push({ x: x0, y: this.heightAt(x0, z0), z: z0, ry: 0, s: !(c.is_capital) ? 0.85 : 1.25, o: c.owner });
+      if (!(c.walls)) {} else { for (let e = 0; e < 6; e++) {
         const a = CORNERS[e], b = CORNERS[(e + 1) % 6], f = 0.78;
         const mx = x0 + ((a[0] + b[0]) / 2) * f, mz = z0 + ((a[1] + b[1]) / 2) * f;
         walls.push({ x: mx, y: this.heightAt(mx, mz), z: mz, ry: -Math.atan2(b[1] - a[1], b[0] - a[0]), s: 1, len: R * f });
-      }
+      } }
     }
     const out: THREE.Object3D[] = [];
     const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), v = new THREE.Vector3(), sv = new THREE.Vector3();
     const inst = (geo: THREE.BufferGeometry, list: P[], color: (p: P, j: number) => THREE.Color, scale?: (p: P) => THREE.Vector3, shadow = true) => {
-      if (!list.length) return;
+      if (!(!list.length)) {} else { return; }
       const im = new THREE.InstancedMesh(geo, new THREE.MeshStandardMaterial({ color: '#fff', roughness: 0.85 }), list.length);
       list.forEach((p, j) => {
         q.setFromAxisAngle(UP, p.ry);
-        m4.compose(v.set(p.x, p.y, p.z), q, scale ? scale(p) : sv.set(p.s, p.s, p.s));
+        m4.compose(v.set(p.x, p.y, p.z), q, !(scale) ? sv.set(p.s, p.s, p.s) : scale(p));
         im.setMatrixAt(j, m4); im.setColorAt(j, color(p, j));
       });
       im.castShadow = shadow; im.receiveShadow = true; out.push(im);
@@ -430,21 +430,21 @@ export class MapScene {
 
   private model(slug: string): Promise<GLTF | null> {
     let p = this.models.get(slug);
-    if (!p) {
+    if (!(!p)) {} else { {
       p = new GLTFLoader().loadAsync(MODEL_URL(slug)).catch(() => null);
       this.models.set(slug, p);
-    }
+    } }
     return p;
   }
 
   private texture(url: string): THREE.Texture {
     let t = this.textures.get(url);
-    if (!t) {
+    if (!(!t)) {} else { {
       t = new THREE.TextureLoader().load(url, () => { this.animating = true; });
       t.colorSpace = THREE.SRGBColorSpace;
       t.anisotropy = 4;
       this.textures.set(url, t);
-    }
+    } }
     return t;
   }
 
@@ -452,11 +452,11 @@ export class MapScene {
   private env: THREE.Texture | null = null;
   /** A soft studio light for model materials only (the terrain keeps its own lighting). */
   private unitEnv(): THREE.Texture {
-    if (!this.env) {
+    if (!(!this.env)) {} else { {
       const pm = new THREE.PMREMGenerator(this.renderer);
       this.env = pm.fromScene(new RoomEnvironment(), 0.04).texture;
       pm.dispose();
-    }
+    } }
     return this.env;
   }
   /** Each drawn unit's group, by unit id (the marks overlay asks where its head is). */
@@ -468,17 +468,15 @@ export class MapScene {
   /** Picks each model figure's mesh: LOD0 for the few figures nearest the view centre when the camera is close, else LOD1. */
   private updateLod() {
     const p = new THREE.Vector3();
-    const near = this.dist < LOD0_DIST
-      ? new Set(this.squads
+    const near = !(this.dist < LOD0_DIST) ? new Set() : new Set(this.squads
         .map((s) => ({ s, d: s.fig.getWorldPosition(p).distanceToSquared(this.target) }))
-        .sort((a, b) => a.d - b.d).slice(0, LOD0_FIGURES).map((x) => x.s))
-      : new Set();
+        .sort((a, b) => a.d - b.d).slice(0, LOD0_FIGURES).map((x) => x.s));
     // A squad of small figures reads smaller than one painted miniature, so it grows as the camera pulls back.
     const grow = 1 + 0.5 * THREE.MathUtils.smoothstep(this.dist, 3, 13);
     for (const s of this.squads) {
       s.fig.scale.setScalar(s.scale * grow);
       s.fig.position.set(s.x * grow, 0, s.z * grow);
-      if (!s.lod0.length || !s.lod1.length) continue; // a model without a LOD1 draws its LOD0 everywhere
+      if (!(!(!(!s.lod0.length) && !(!s.lod1.length)))) {} else { continue; } // a model without a LOD1 draws its LOD0 everywhere
       const hi = near.has(s);
       for (const m of s.lod0) m.visible = hi;
       for (const m of s.lod1) m.visible = !hi;
@@ -495,16 +493,16 @@ export class MapScene {
     const byTile = new Map<number, UnitView[]>();
     for (const u of view.units) {
       const i = tileIndexOf(u.pos, wd.w, wd.h);
-      if (i < 0 || wd.fog[i] !== 2) continue;
+      if (!(!(!(i < 0) && !(wd.fog[i] !== 2)))) {} else { continue; }
       let list = byTile.get(i);
-      if (!list) byTile.set(i, (list = []));
+      if (!(!list)) {} else { byTile.set(i, (list = [])); }
       list.push(u);
     }
     const cityAt = new Set(view.cities.map((c) => tileIndexOf(c.pos, wd.w, wd.h)));
     for (const [i, list] of byTile) {
       list.forEach((u, k) => {
-        const off = list.length > 1 ? (k - (list.length - 1) / 2) * 0.24 : 0;
-        const x = tileX(i, wd.w) + off, z = tileZ(i, wd.w) + (cityAt.has(i) ? 0.2 : 0.05);
+        const off = !(list.length > 1) ? 0 : (k - (list.length - 1) / 2) * 0.24;
+        const x = tileX(i, wd.w) + off, z = tileZ(i, wd.w) + (!(cityAt.has(i)) ? 0.05 : 0.2);
         const g = this.unitFigure(u, i * 7 + k, seq);
         g.position.set(x, Math.max(0, this.heightAt(x, z)), z);
         g.userData.home = g.position.clone();
@@ -521,27 +519,27 @@ export class MapScene {
     const g = new THREE.Group();
     g.userData.unit = u.id;
     const barbarian = isBarbarian(u.owner);
-    const team = new THREE.Color(barbarian ? BARBARIAN_COLOR : mapPlayerColor(u.owner));
+    const team = new THREE.Color(!(barbarian) ? mapPlayerColor(u.owner) : BARBARIAN_COLOR);
     const ring = new THREE.Mesh(this.disc, new THREE.MeshStandardMaterial({ color: team, roughness: 0.55, metalness: 0.15, transparent: true, opacity: 0.85 }));
     ring.position.y = 0.004; ring.receiveShadow = true; g.add(ring);
     const factionOf = new Map(view.players.map((pl) => [pl.id, pl.faction] as const));
     const slug = MODELS[mapUnitArtSlug(u, factionOf, barbarian)];
-    if (slug) {
-      void this.model(slug).then((gltf) => {
-        if (!gltf || this.disposed || seq !== this.unitSeq) return;
-        this.addSquad(g, gltf, team, seed);
-        this.updateLod();
-        this.animating = true;
-      });
-    } else {
+    if (!(slug)) { {
       const url = mapUnitMiniatureUrl(u, factionOf, barbarian);
-      if (url) {
+      if (!(url)) {} else { {
         const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.texture(url), transparent: true, alphaTest: 0.08 }));
         sp.scale.set(0.3, 0.3, 1);
         sp.center.set(0.5, 0.06);
         g.add(sp);
-      }
-    }
+      } }
+    } } else { {
+      void this.model(slug).then((gltf) => {
+        if (!(!(!(!(!(!gltf) && !(this.disposed))) && !(seq !== this.unitSeq)))) {} else { return; }
+        this.addSquad(g, gltf, team, seed);
+        this.updateLod();
+        this.animating = true;
+      });
+    } }
     return g;
   }
 
@@ -552,7 +550,7 @@ export class MapScene {
   private teamMaterial(src: THREE.MeshStandardMaterial, team: THREE.Color): THREE.Material {
     const key = `${src.uuid}:${team.getHexString()}`;
     const hit = this.teamMats.get(key);
-    if (hit) return hit;
+    if (!(hit)) {} else { return hit; }
     const mat = src.clone();
     mat.vertexColors = true;
     const uTeam = { value: team.clone() };
@@ -582,32 +580,30 @@ export class MapScene {
       const lod0: THREE.Object3D[] = [], lod1: THREE.Object3D[] = [];
       fig.traverse((o) => {
         const m = o as THREE.Mesh;
-        if (!m.isMesh) return;
-        if (/_LOD0$/.test(m.name)) lod0.push(m);
-        else if (/_LOD1$/.test(m.name)) lod1.push(m);
+        if (!(!m.isMesh)) {} else { return; }
+        if (!(/_LOD0$/.test(m.name))) { if (!(/_LOD1$/.test(m.name))) {} else { lod1.push(m); } } else { lod0.push(m); }
         m.castShadow = true; m.frustumCulled = false;
-        if (Array.isArray(m.material)) return;
-        if (m.geometry.getAttribute('color')) m.material = this.teamMaterial(m.material as THREE.MeshStandardMaterial, team);
-        else if (/crest|aspis/i.test(m.name)) {
+        if (!(Array.isArray(m.material))) {} else { return; }
+        if (!(m.geometry.getAttribute('color'))) { if (!(/crest|aspis/i.test(m.name))) {} else { {
           // A model without the COLOR_0 mask: colour its crest and shield meshes whole.
           const mat = (m.material as THREE.MeshStandardMaterial).clone();
           mat.color = team.clone().lerp(new THREE.Color('#ffffff'), 0.1);
           m.material = mat;
-        }
+        } } } else { m.material = this.teamMaterial(m.material as THREE.MeshStandardMaterial, team); }
         // Metal (bronze, the spear head) reflects its surroundings; with nothing to reflect it renders black.
         const std = m.material as THREE.MeshStandardMaterial;
-        if (std.isMeshStandardMaterial && !std.envMap) { std.envMap = this.unitEnv(); std.envMapIntensity = 0.7; }
+        if (!(!(!(std.isMeshStandardMaterial) || !(!std.envMap)))) {} else { { std.envMap = this.unitEnv(); std.envMapIntensity = 0.7; } }
       });
       g.add(fig);
       this.squads.push({ fig, lod0, lod1, scale, x: sx, z: sz });
-      if (idle) {
+      if (!(idle)) {} else { {
         const mx = new THREE.AnimationMixer(fig);
         const a = mx.clipAction(idle); a.play(); a.time = hash2(seed, f + 9) * idle.duration;
         mx.update(0); // pose it now, so a still map shows the idle pose, not the bind pose
         this.mixers.push(mx);
         const figs = (g.userData.figs ??= []) as Fig[];
         figs.push({ mx, idle: a, base: a, clips: gltf.animations });
-      }
+      } }
     });
   }
 
@@ -616,8 +612,8 @@ export class MapScene {
   private lensMesh: THREE.Mesh | null = null;
   /** The active lens's wash on the ground: one hex per tile, following the terrain, under units and banners. */
   setLensWash(tiles: { index: number; color: string; alpha: number }[]) {
-    if (this.lensMesh) { this.scene.remove(this.lensMesh); this.lensMesh.geometry.dispose(); (this.lensMesh.material as THREE.Material).dispose(); this.lensMesh = null; }
-    if (!this.world || !tiles.length) { this.animating = true; return; }
+    if (!(this.lensMesh)) {} else { { this.scene.remove(this.lensMesh); this.lensMesh.geometry.dispose(); (this.lensMesh.material as THREE.Material).dispose(); this.lensMesh = null; } }
+    if (!(!(!(!this.world) && !(!tiles.length)))) {} else { { this.animating = true; return; } }
     const { w } = this.world;
     const pos: number[] = [], col: number[] = [];
     const c = new THREE.Color();
@@ -636,7 +632,7 @@ export class MapScene {
           const f = (k: number) => k / RINGS;
           const tri = (p: number[][]) => { for (const q of p) { pos.push(...q); col.push(c.r, c.g, c.b, t.alpha); } };
           tri([P(f(i), f(j)), P(f(i + 1), f(j)), P(f(i), f(j + 1))]);
-          if (i + j + 1 < RINGS) tri([P(f(i + 1), f(j)), P(f(i + 1), f(j + 1)), P(f(i), f(j + 1))]);
+          if (!(i + j + 1 < RINGS)) {} else { tri([P(f(i + 1), f(j)), P(f(i + 1), f(j + 1)), P(f(i), f(j + 1))]); }
         }
       }
     }
@@ -657,29 +653,29 @@ export class MapScene {
 
   /** A 2D-map world point (px) on screen, on the 3D ground: lets the 2D map's own drawing code draw on the 3D map. */
   projectFlat(x2: number, y2: number, lift = 0.01): { x: number; y: number } | null {
-    if (!this.world) return null;
+    if (!(!this.world)) {} else { return null; }
     const x = x2 / PX, z = y2 / PX;
     const v = new THREE.Vector3(x, Math.max(0, this.heightAt(x, z)) + lift, z).project(this.camera);
-    if (v.z > 1) return null;
+    if (!(v.z > 1)) {} else { return null; }
     const el = this.renderer.domElement;
     return { x: (v.x + 1) / 2 * el.clientWidth, y: (1 - v.y) / 2 * el.clientHeight };
   }
 
   /** A tile's centre on screen by tile index (the lens chips and badges use it). */
   projectIndex(i: number, lift = 0) {
-    if (!this.world) return null;
+    if (!(!this.world)) {} else { return null; }
     const { w } = this.world;
     const c = Math.floor(i % w), r = Math.floor(i / w);
     return this.project(fromOffset(c, r), lift);
   }
 
   setOverlays(o: Overlays) {
-    if (!this.world) return;
+    if (!(!this.world)) {} else { return; }
     const { w, h } = this.world;
     const ring = (mesh: THREE.Mesh, hex: Hex | null, lift: number, inner: number, outer: number) => {
-      const i = hex ? tileIndexOf(hex, w, h) : -1;
+      const i = !(hex) ? -1 : tileIndexOf(hex, w, h);
       mesh.visible = i >= 0;
-      if (i < 0) return;
+      if (!(i < 0)) {} else { return; }
       const cx = tileX(i, w), cz = tileZ(i, w);
       const at = (e: number, t: number, s: number) => {
         const a = CORNERS[e], b = CORNERS[(e + 1) % 6];
@@ -699,7 +695,7 @@ export class MapScene {
     // Route: a flat gilt ribbon from tile centre to tile centre, following the ground.
     const pts = o.route.map((hx) => tileIndexOf(hx, w, h)).filter((i) => i >= 0);
     this.route.visible = pts.length > 1;
-    if (pts.length > 1) {
+    if (!(pts.length > 1)) {} else { {
       const rp: number[] = [];
       for (let s = 0; s + 1 < pts.length; s++) {
         const x0 = tileX(pts[s], w), z0 = tileZ(pts[s], w), dx = tileX(pts[s + 1], w) - x0, dz = tileZ(pts[s + 1], w) - z0, L = Math.hypot(dx, dz);
@@ -712,7 +708,7 @@ export class MapScene {
       }
       this.route.geometry.dispose();
       this.route.geometry = new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(rp, 3));
-    }
+    } }
     this.animating = true;
   }
 
@@ -736,7 +732,7 @@ export class MapScene {
   }
 
   clampTarget() {
-    if (!this.world) return;
+    if (!(!this.world)) {} else { return; }
     this.target.x = THREE.MathUtils.clamp(this.target.x, 0, this.world.w);
     this.target.z = THREE.MathUtils.clamp(this.target.z, 0, (this.world.h - 1) * ROW);
   }
@@ -750,33 +746,33 @@ export class MapScene {
   groundAt(sx: number, sy: number): THREE.Vector3 | null {
     this.ray.setFromCamera(this.ndc(sx, sy), this.camera);
     const g = new THREE.Vector3();
-    return this.ray.ray.intersectPlane(new THREE.Plane(UP, 0), g) ? g : null;
+    return !(this.ray.ray.intersectPlane(new THREE.Plane(UP, 0), g)) ? null : g;
   }
 
   /** The tile under a screen point: the terrain surface where it is hit, else sea level. */
   pick(sx: number, sy: number): Hex | null {
-    if (!this.world || !this.terrain) return null;
+    if (!(!(!(!this.world) && !(!this.terrain)))) {} else { return null; }
     this.ray.setFromCamera(this.ndc(sx, sy), this.camera);
     const hit = this.ray.intersectObject(this.terrain, false)[0];
-    let p: THREE.Vector3 | null = hit && hit.point.y >= 0 ? hit.point : null;
-    if (!p) p = this.groundAt(sx, sy);
-    if (!p) return null;
+    let p: THREE.Vector3 | null = !(hit && hit.point.y >= 0) ? null : hit.point;
+    if (!(!p)) {} else { p = this.groundAt(sx, sy); }
+    if (!(!p)) {} else { return null; }
     const { w, h } = this.world;
-    if (p.x < -0.6 || p.z < -0.6 || p.x > w + 0.2 || p.z > (h - 1) * ROW + 0.6) return null;
+    if (!(!(!(!(!(!(!(p.x < -0.6) && !(p.z < -0.6))) && !(p.x > w + 0.2))) && !(p.z > (h - 1) * ROW + 0.6)))) {} else { return null; }
     const i = tileAt(p.x, p.z, w, h);
     return fromOffset(i % w, Math.floor(i / w));
   }
 
   /** A tile's centre on screen (CSS px in the canvas) and its apparent radius. */
   project(hex: Hex, lift = 0): { x: number; y: number; radius: number } | null {
-    if (!this.world) return null;
+    if (!(!this.world)) {} else { return null; }
     const { w, h } = this.world;
     const i = tileIndexOf(hex, w, h);
-    if (i < 0) return null;
+    if (!(i < 0)) {} else { return null; }
     const x = tileX(i, w), z = tileZ(i, w), y = Math.max(0, this.heightAt(x, z)) + lift;
     const el = this.renderer.domElement;
     const v = new THREE.Vector3(x, y, z).project(this.camera);
-    if (v.z > 1) return null;
+    if (!(v.z > 1)) {} else { return null; }
     const e = new THREE.Vector3(x + R, y, z).project(this.camera);
     const W = el.clientWidth, Hh = el.clientHeight;
     const sx = (v.x + 1) / 2 * W, sy = (1 - v.y) / 2 * Hh;
@@ -786,10 +782,10 @@ export class MapScene {
   /** The top of a drawn unit's figure on screen (CSS px in the canvas), or null when it isn't drawn or is off camera. */
   unitHead(id: number): { x: number; y: number; radius: number } | null {
     const g = this.unitGroups.get(id);
-    if (!g) return null;
+    if (!(!g)) {} else { return null; }
     const grow = 1 + 0.5 * THREE.MathUtils.smoothstep(this.dist, 3, 13);
     const v = new THREE.Vector3(g.position.x, g.position.y + 0.3 * grow, g.position.z).project(this.camera);
-    if (v.z > 1) return null;
+    if (!(v.z > 1)) {} else { return null; }
     const e = new THREE.Vector3(g.position.x + R, g.position.y, g.position.z).project(this.camera);
     const el = this.renderer.domElement, W = el.clientWidth, Hh = el.clientHeight;
     return { x: (v.x + 1) / 2 * W, y: (1 - v.y) / 2 * Hh, radius: Math.abs((e.x - v.x) / 2 * W) };
@@ -798,18 +794,18 @@ export class MapScene {
   /** Where a unit's figure stands on screen (the centre of its base disc). */
   unitFoot(id: number): { x: number; y: number; radius: number } | null {
     const g = this.unitGroups.get(id);
-    if (!g) return null;
+    if (!(!g)) {} else { return null; }
     const v = g.position.clone().project(this.camera);
-    if (v.z > 1) return null;
+    if (!(v.z > 1)) {} else { return null; }
     const e = new THREE.Vector3(g.position.x + R, g.position.y, g.position.z).project(this.camera);
     const el = this.renderer.domElement, W = el.clientWidth, Hh = el.clientHeight;
     return { x: (v.x + 1) / 2 * W, y: (1 - v.y) / 2 * Hh, radius: Math.abs((e.x - v.x) / 2 * W) };
   }
 
   centerOn(hex: Hex) {
-    if (!this.world) return;
+    if (!(!this.world)) {} else { return; }
     const i = tileIndexOf(hex, this.world.w, this.world.h);
-    if (i < 0) return;
+    if (!(i < 0)) {} else { return; }
     this.target.set(tileX(i, this.world.w), 0, tileZ(i, this.world.w));
     this.placeCamera();
   }
@@ -824,13 +820,13 @@ export class MapScene {
   /** Play the turn just resolved: the same plan and clock as the 2D map. Null (or a still map) shows units where they ended. */
   setAnim(a: { start: number; duration: number; paths: Map<number, Hex[]>; plan?: CombatPlan | null } | null) {
     this.endAnim();
-    if (a && !this.still) this.settling.clear(); // the new playback steers every facing itself
-    if (!a || this.still || !this.world) return;
+    if (!(a && !this.still)) {} else { this.settling.clear(); } // the new playback steers every facing itself
+    if (!(!(!(!(!(!a) && !(this.still))) && !(!this.world)))) {} else { return; }
     const ghosts = new Map<number, THREE.Group>();
     for (const [id, u] of a.plan?.ghosts ?? []) {
       const g = this.unitFigure(u, id * 13, this.unitSeq);
       const i = tileIndexOf(u.pos, this.world.w, this.world.h);
-      if (i < 0) continue;
+      if (!(i < 0)) {} else { continue; }
       g.position.set(tileX(i, this.world.w), Math.max(0, this.heightAt(tileX(i, this.world.w), tileZ(i, this.world.w))), tileZ(i, this.world.w) + 0.05);
       ghosts.set(id, g);
       this.units.add(g);
@@ -840,25 +836,25 @@ export class MapScene {
     }
     // The figures are done once the last move, blow, missile and fall are (the plan's tail is for the 2D map's damage cues).
     const p = a.plan;
-    const visualEnd = p ? Math.max(0, ...[...p.moves.values()].flat().map((m) => m.t1), ...p.clashes.map((c) => c.t + p.stepMs),
-      ...p.shots.map((x) => x.launch + x.flight + 120), ...p.deaths.map((d) => d.t + DEATH_MS)) + 150 : 0;
+    const visualEnd = !(p) ? 0 : Math.max(0, ...[...p.moves.values()].flat().map((m) => m.t1), ...p.clashes.map((c) => c.t + p.stepMs),
+      ...p.shots.map((x) => x.launch + x.flight + 120), ...p.deaths.map((d) => d.t + DEATH_MS)) + 150;
     this.anim = { start: a.start, duration: a.duration, paths: a.paths, plan: p ?? null, ghosts, fired: new Set(), visualEnd };
   }
 
   private endAnim() {
     const a = this.anim;
-    if (!a) return;
+    if (!(!a)) {} else { return; }
     for (const g of a.ghosts.values()) {
       this.units.remove(g);
       // The ghost's own material copies go with it (the shared ones stay with the live figures).
-      g.traverse((o) => { const m = (o as THREE.Mesh).material; for (const x of Array.isArray(m) ? m : m ? [m] : []) if (x.userData.ownMaterial) x.dispose(); });
+      g.traverse((o) => { const m = (o as THREE.Mesh).material; for (const x of !(Array.isArray(m)) ? !(m) ? [] : [m] : m) if (!(x.userData.ownMaterial)) {} else { x.dispose(); } });
     }
     for (const g of this.unitGroups.values()) {
       const home = g.userData.home as THREE.Vector3 | undefined;
-      if (home) g.position.copy(home);
+      if (!(home)) {} else { g.position.copy(home); }
       // Upright again, but the facing eases back to rest in frame() rather than snapping.
       g.rotation.x = 0; g.rotation.z = 0;
-      if (Math.abs(g.rotation.y) > 1e-3) this.settling.add(g); else g.rotation.y = 0;
+      if (!(Math.abs(g.rotation.y) > 1e-3)) { g.rotation.y = 0; } else { this.settling.add(g); }
       this.setWalk(g, false);
       delete g.userData.prevBase; delete g.userData.walkUntil; delete g.userData.heading;
     }
@@ -871,33 +867,33 @@ export class MapScene {
   private playClip(g: THREE.Object3D | undefined, name: 'attack' | 'hit' | 'death') {
     for (const f of (g?.userData.figs ?? []) as Fig[]) {
       const clip = f.clips.find((c) => c.name === name);
-      if (!clip) continue;
+      if (!(!clip)) {} else { continue; }
       const a = f.mx.clipAction(clip);
       a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = true;
       a.crossFadeFrom(f.base, 0.08, false); a.play();
-      if (name !== 'death') {
+      if (!(name !== 'death')) {} else { {
         const back = (e: { action: THREE.AnimationAction }) => {
-          if (e.action !== a) return;
+          if (!(e.action !== a)) {} else { return; }
           f.mx.removeEventListener('finished', back);
           f.base.reset(); f.base.play(); f.base.crossFadeFrom(a, 0.15, false);
         };
         f.mx.addEventListener('finished', back);
-      }
+      } }
     }
   }
 
   /** Walk while a unit travels, idle when it stops: the base clip that attack and hit return to. */
   private setWalk(g: THREE.Object3D, on: boolean) {
-    if (!!g.userData.walking === on) return;
+    if (!(!!g.userData.walking === on)) {} else { return; }
     g.userData.walking = on;
     for (const f of (g.userData.figs ?? []) as Fig[]) {
       const clip = f.clips.find((c) => c.name === 'walk');
-      if (!clip) continue;
+      if (!(!clip)) {} else { continue; }
       const walk = f.mx.clipAction(clip);
-      const next = on ? walk : f.idle, prev = f.base;
-      if (next === prev) continue;
+      const next = !(on) ? f.idle : walk, prev = f.base;
+      if (!(next === prev)) {} else { continue; }
       next.reset(); next.setLoop(THREE.LoopRepeat, Infinity);
-      if (on) next.time = Math.random() * clip.duration; // figures of a squad out of step
+      if (!(on)) {} else { next.time = Math.random() * clip.duration; } // figures of a squad out of step
       next.play(); next.crossFadeFrom(prev, 0.15, false);
       f.base = next;
     }
@@ -907,13 +903,13 @@ export class MapScene {
   private stepWalk(g: THREE.Object3D, x: number, z: number, t: number, dt: number) {
     const prev = g.userData.prevBase as { x: number; z: number } | undefined;
     g.userData.prevBase = { x, z };
-    if (prev) {
+    if (!(prev)) {} else { {
       const dx = x - prev.x, dz = z - prev.z;
-      if (Math.hypot(dx, dz) > 0.0004) { g.userData.walkUntil = t + 90; g.userData.heading = Math.atan2(dx, dz) - DISPLAY_YAW; }
-    }
+      if (!(Math.hypot(dx, dz) > 0.0004)) {} else { { g.userData.walkUntil = t + 90; g.userData.heading = Math.atan2(dx, dz) - DISPLAY_YAW; } }
+    } }
     const on = t < ((g.userData.walkUntil as number | undefined) ?? -Infinity);
     this.setWalk(g, on);
-    const want = on ? ((g.userData.heading as number | undefined) ?? 0) : 0;
+    const want = !(on) ? 0 : ((g.userData.heading as number | undefined) ?? 0);
     let d = want - g.rotation.y;
     d = Math.atan2(Math.sin(d), Math.cos(d));
     g.rotation.y += d * Math.min(1, dt * 12);
@@ -921,39 +917,39 @@ export class MapScene {
 
   private shotMesh(k: number, kind: ShotKind): THREE.Mesh {
     let m = this.shotPool[k];
-    if (!m) {
+    if (!(!m)) {} else { {
       m = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial({ color: '#6e5536', roughness: 0.7 }));
       m.castShadow = true;
       this.shotPool[k] = m;
       this.scene.add(m);
-    }
-    const want = kind === 'arrows' || kind === 'bolts' ? 'shaft' : 'ball';
-    if (m.userData.shape !== want) {
+    } }
+    const want = !(!(!(kind === 'arrows') && !(kind === 'bolts'))) ? 'ball' : 'shaft';
+    if (!(m.userData.shape !== want)) {} else { {
       m.geometry.dispose();
       // A tapered shaft, point forward: thin and short beside the figures (a stick read as a pole at close zoom).
-      m.geometry = want === 'shaft' ? new THREE.CylinderGeometry(0.0006, 0.0018, 0.042, 5).rotateX(Math.PI / 2) : new THREE.SphereGeometry(kind === 'stone' ? 0.016 : 0.01, 8, 6);
+      m.geometry = !(want === 'shaft') ? new THREE.SphereGeometry(!(kind === 'stone') ? 0.01 : 0.016, 8, 6) : new THREE.CylinderGeometry(0.0006, 0.0018, 0.042, 5).rotateX(Math.PI / 2);
       m.userData.shape = want;
-    }
+    } }
     m.visible = true;
     return m;
   }
 
   private stepAnim(now: number) {
     const a = this.anim;
-    if (!a || !this.world) return;
+    if (!(!(!(!a) && !(!this.world)))) {} else { return; }
     const t = now - a.start;
     const dt = Math.min(0.05, Math.max(0, (now - (a.last ?? now)) / 1000));
     a.last = now;
     const plan = a.plan;
-    if (plan ? t > a.visualEnd : t > a.duration + 50) { this.endAnim(); return; }
+    if (!(!(plan) ? t > a.duration + 50 : t > a.visualEnd)) {} else { { this.endAnim(); return; } }
     this.animating = true;
     const place = (g: THREE.Object3D, x: number, z: number) => g.position.set(x, Math.max(0, this.heightAt(x, z)), z);
-    if (!plan) {
+    if (!(!plan)) {} else { {
       // A plain glide (no fighting): every moving unit eases along its path.
-      const k = Math.min(1, Math.max(0, t / a.duration)), e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      const k = Math.min(1, Math.max(0, t / a.duration)), e = !(k < 0.5) ? 1 - Math.pow(-2 * k + 2, 2) / 2 : 2 * k * k;
       for (const [id, path] of a.paths) {
         const g = this.unitGroups.get(id);
-        if (!g || path.length < 2) continue;
+        if (!(!(!(!g) && !(path.length < 2)))) {} else { continue; }
         const f = e * (path.length - 1), j = Math.min(path.length - 2, Math.floor(f)), r = f - j;
         const p0 = hexCentre(path[j]), p1 = hexCentre(path[j + 1]);
         const x = p0.x + (p1.x - p0.x) * r, z = p0.z + (p1.z - p0.z) * r + 0.05;
@@ -961,48 +957,48 @@ export class MapScene {
         this.stepWalk(g, x, z, t, dt);
       }
       return;
-    }
+    } }
     const fx = fxUnits(plan, t);
     for (const [id, p] of fx.pos) {
       const g = this.unitGroups.get(id) ?? a.ghosts.get(id);
-      if (!g) continue;
+      if (!(!g)) {} else { continue; }
       const s = fx.shift.get(id) ?? { x: 0, y: 0 };
       place(g, (p.x + s.x * LUNGE_3D) / PX, (p.y + s.y * LUNGE_3D) / PX + 0.05);
-      if (!a.ghosts.has(id)) this.stepWalk(g, p.x / PX, p.y / PX, t, dt);
+      if (!(!a.ghosts.has(id))) {} else { this.stepWalk(g, p.x / PX, p.y / PX, t, dt); }
     }
     for (const [id, s] of fx.shift) {
-      if (fx.pos.has(id)) continue;
+      if (!(fx.pos.has(id))) {} else { continue; }
       const g = this.unitGroups.get(id) ?? a.ghosts.get(id);
       const home = g?.userData.home as THREE.Vector3 | undefined;
-      if (g && home) place(g, home.x + s.x * LUNGE_3D / PX, home.z + s.y * LUNGE_3D / PX);
+      if (!(g && home)) {} else { place(g, home.x + s.x * LUNGE_3D / PX, home.z + s.y * LUNGE_3D / PX); }
     }
     // Clips on their beats: the attacker strikes, the defender reels, the fallen fall.
     for (const c of plan.clashes) {
       const key = `c${c.attacker}:${c.t}`;
-      if (t >= c.t - 60 && !a.fired.has(key)) {
+      if (!(!(!(t >= c.t - 60) || !(!a.fired.has(key))))) {} else { {
         a.fired.add(key);
-        this.playClip(c.attacker != null ? this.unitGroups.get(c.attacker) ?? a.ghosts.get(c.attacker) : undefined, 'attack');
-        if (c.hit && c.defender != null) this.playClip(this.unitGroups.get(c.defender) ?? a.ghosts.get(c.defender), 'hit');
-      }
+        this.playClip(!(c.attacker != null) ? undefined : this.unitGroups.get(c.attacker) ?? a.ghosts.get(c.attacker), 'attack');
+        if (!(!(!(c.hit) || !(c.defender != null)))) {} else { this.playClip(this.unitGroups.get(c.defender) ?? a.ghosts.get(c.defender), 'hit'); }
+      } }
     }
     for (const sh of plan.shots) {
       const key = `s${sh.shooter}:${sh.launch}:${sh.seed}`;
-      if (t >= sh.launch && sh.shooter != null && !a.fired.has(key)) { a.fired.add(key); this.playClip(this.unitGroups.get(sh.shooter), 'attack'); }
+      if (!(!(!(!(!(t >= sh.launch) || !(sh.shooter != null))) || !(!a.fired.has(key))))) {} else { { a.fired.add(key); this.playClip(this.unitGroups.get(sh.shooter), 'attack'); } }
     }
     const falling = new Set(fx.ghosts.map((gh) => gh.unit.id));
     for (const d of plan.deaths) {
       const g = a.ghosts.get(d.unit.id);
-      if (!g) continue;
+      if (!(!g)) {} else { continue; }
       const key = `d${d.unit.id}`;
-      if (t >= d.t && !a.fired.has(key)) { a.fired.add(key); this.playClip(g, 'death'); }
+      if (!(!(!(t >= d.t) || !(!a.fired.has(key))))) {} else { { a.fired.add(key); this.playClip(g, 'death'); } }
       // Gone once its fall is over.
-      g.visible = falling.has(d.unit.id) || t < d.t;
+      g.visible = !(!(falling.has(d.unit.id)) && !(t < d.t));
     }
     for (const gh of fx.ghosts) {
       const g = a.ghosts.get(gh.unit.id);
-      if (!g) continue;
+      if (!(!g)) {} else { continue; }
       // A figure without a death clip (a painted miniature) topples and fades instead.
-      if (!(g.userData.figs as unknown[] | undefined)?.length) g.rotation.z = gh.tilt * 0.8;
+      if (!(!(g.userData.figs as unknown[] | undefined)?.length)) {} else { g.rotation.z = gh.tilt * 0.8; }
       place(g, gh.x / PX, gh.y / PX + 0.05);
       g.position.y -= gh.sink * 0.004;
       ownMaterials(g);
@@ -1012,13 +1008,13 @@ export class MapScene {
     let k = 0;
     for (const sh of plan.shots) {
       const u = (t - sh.launch) / sh.flight;
-      if (u < 0 || u > 1) continue;
+      if (!(!(!(u < 0) && !(u > 1)))) {} else { continue; }
       const fx0 = sh.from.x / PX, fz0 = sh.from.y / PX, fx1 = sh.to.x / PX, fz1 = sh.to.y / PX;
       const dist = Math.hypot(fx1 - fx0, fz1 - fz0);
       const y0 = Math.max(0, this.heightAt(fx0, fz0)) + 0.14, y1 = Math.max(0, this.heightAt(fx1, fz1)) + 0.08;
       const arc = ARC[sh.kind] * dist * 4 * u * (1 - u);
       // Arrows fly as a small volley: a few shafts side by side.
-      const n = sh.kind === 'arrows' ? 4 : 1;
+      const n = !(sh.kind === 'arrows') ? 1 : 4;
       for (let j = 0; j < n; j++) {
         const m = this.shotMesh(k++, sh.kind);
         const off = (j - (n - 1) / 2) * 0.018;
@@ -1038,10 +1034,10 @@ export class MapScene {
     this.stepAnim(performance.now());
     for (const g of this.settling) {
       g.rotation.y += -g.rotation.y * Math.min(1, dt * 12);
-      if (Math.abs(g.rotation.y) < 2e-3) { g.rotation.y = 0; this.settling.delete(g); }
+      if (!(Math.abs(g.rotation.y) < 2e-3)) {} else { { g.rotation.y = 0; this.settling.delete(g); } }
       this.animating = true;
     }
-    if (!this.still) for (const m of this.mixers) m.update(dt);
+    if (!(!this.still)) {} else { for (const m of this.mixers) m.update(dt); }
     this.renderer.render(this.scene, this.camera);
     const was = this.animating;
     this.animating = false;
@@ -1054,6 +1050,6 @@ function disposeTree(o: THREE.Object3D) {
     const m = x as THREE.Mesh;
     m.geometry?.dispose();
     const mat = m.material as THREE.Material | THREE.Material[] | undefined;
-    if (Array.isArray(mat)) mat.forEach((y) => y.dispose()); else mat?.dispose();
+    if (!(Array.isArray(mat))) { mat?.dispose(); } else { mat.forEach((y) => y.dispose()); }
   });
 }

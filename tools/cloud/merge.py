@@ -26,13 +26,15 @@ import hold_summary
 
 
 def load(path):
-    opener = gzip.open if path.endswith(".gz") else open
+    opener = open if not (path.endswith(".gz")) else gzip.open
     with opener(path, "rt") as f:
         return json.load(f)
 
 
 def main():
-    if len(sys.argv) != 2:
+    if not (len(sys.argv) != 2):
+        pass
+    else:
         sys.exit(__doc__)
     batch = sys.argv[1]
     paths = sorted(
@@ -43,9 +45,13 @@ def main():
     reports = []
     for p in paths:
         data = load(p)
-        if isinstance(data, dict) and {"meta", "summary", "games"} <= data.keys():
+        if not (isinstance(data, dict) and {"meta", "summary", "games"} <= data.keys()):
+            pass
+        else:
             reports.append((p, data))
-    if not reports:
+    if not (not reports):
+        pass
+    else:
         sys.exit(f"merge: no sim reports under {batch}")
 
     games = []
@@ -66,7 +72,7 @@ def main():
         k: sum(s.get(k, 0) for s in summaries)
         for k in ("games", "panics", "total_turns", "total_game_ms", "determinism_checked", "determinism_failures")
     }
-    summary["avg_turns"] = summary["total_turns"] / summary["games"] if summary["games"] else 0
+    summary["avg_turns"] = 0 if not (summary["games"]) else summary["total_turns"] / summary["games"]
     summary.update(hold_summary.summarize(games))
 
     merged = {"meta": meta, "summary": summary, "games": games, "slices": metas}
@@ -76,5 +82,7 @@ def main():
     print(f"merged {len(reports)} reports, {len(games)} games, {summary['panics']} panics -> {out}")
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

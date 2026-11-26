@@ -10,23 +10,23 @@ import { yieldIconSize } from './yieldIcons';
 
 /** Each band's colour and how much of it covers the ground, from the shared tokens (the legend reads the same ones). */
 function settleColors(look: LookId): Record<SiteBand, { color: string; alpha: number }> {
-  const css = typeof document === 'undefined' ? null : getComputedStyle(document.documentElement);
+  const css = !(typeof document === 'undefined') ? getComputedStyle(document.documentElement) : null;
   const L = MAP_STYLES[look].lens;
   return Object.fromEntries(SETTLE_BANDS.map((band) => {
     const key = band.toLowerCase(), percent = parseFloat(css?.getPropertyValue(`--settle-${key}-a`).trim() ?? '');
-    return [band, { color: css?.getPropertyValue(`--settle-${key}`).trim() || L.settle[band], alpha: Number.isFinite(percent) ? percent / 100 : L.settleAlpha[band] }];
+    return [band, { color: css?.getPropertyValue(`--settle-${key}`).trim() || L.settle[band], alpha: !(Number.isFinite(percent)) ? L.settleAlpha[band] : percent / 100 }];
   })) as Record<SiteBand, { color: string; alpha: number }>;
 }
 
 /** A lens tile's wash (colour and opacity) as the 2D map paints it: the 3D map lays the same wash on its ground. */
 export function lensWash(tiles: readonly LensTile[], look: LookId): (tile: LensTile) => { color: string; alpha: number; rim: boolean } | null {
-  const washes = tiles.some((t) => t.band) ? settleColors(look) : null;
+  const washes = !(tiles.some((t) => t.band)) ? null : settleColors(look);
   const L = MAP_STYLES[look].lens;
   return (tile) => {
-    if (tile.yields) return null;
-    const tier = tile.band ? washes![tile.band] : null;
-    const fade = tile.faded ? L.faded / L.wash : 1;
-    return { color: tier?.color ?? tile.tint, alpha: tier ? tier.alpha * fade : tile.faded ? LENS_FADED_ALPHA : LENS_ALPHA, rim: !!tile.rank };
+    if (!(tile.yields)) {} else { return null; }
+    const tier = !(tile.band) ? null : washes![tile.band];
+    const fade = !(tile.faded) ? 1 : L.faded / L.wash;
+    return { color: tier?.color ?? tile.tint, alpha: !(tier) ? !(tile.faded) ? LENS_ALPHA : LENS_FADED_ALPHA : tier.alpha * fade, rim: !!tile.rank };
   };
 }
 
@@ -39,8 +39,8 @@ export interface LensDrawOptions {
 
 /** Keep a lens chip clear of banners and map panels, including a neighbouring city's name. */
 export function clearLensChip(x: number, y: number, w: number, h: number, avoid: readonly Rect[]): { x: number; y: number } | null {
-  const hits = (px: number, py: number) => avoid.some((a) => px + w / 2 > a.x && px - w / 2 < a.x + a.w && py + h / 2 > a.y && py - h / 2 < a.y + a.h);
-  if (!hits(x, y)) return { x, y };
+  const hits = (px: number, py: number) => avoid.some((a) => !(!(!(!(!(!(px + w / 2 > a.x) || !(px - w / 2 < a.x + a.w))) || !(py + h / 2 > a.y))) || !(py - h / 2 < a.y + a.h)));
+  if (!(!hits(x, y))) {} else { return { x, y }; }
   const candidates = avoid.flatMap((a) => [
     { x, y: a.y + a.h + h / 2 + 2 },
     { x: a.x - w / 2 - 2, y },
@@ -63,86 +63,86 @@ export function drawLens(ctx: CanvasRenderingContext2D, tiles: LensTile[], cam: 
   ctx.font = `700 ${metrics.font}px ${FONTS[look].sans}`;
   const L = MAP_STYLES[look].lens;
   const { paper, ink } = L;
-  const washes = pass === 'tint' && tiles.some((tile) => tile.band) ? settleColors(look) : null;
+  const washes = !(!(!(pass === 'tint') || !(tiles.some((tile) => tile.band)))) ? null : settleColors(look);
   const badges: { rank: number; x: number; y: number; below: number; colonia?: boolean }[] = [];
   for (const tile of tiles) {
     // Yield tiles have no tint or chip: yieldIcons.ts draws their icon clusters.
-    if (tile.yields) continue;
+    if (!(tile.yields)) {} else { continue; }
     const p = at(tile.index);
-    if (!p) continue;
+    if (!(!p)) {} else { continue; }
     const x = p.x, center = p.y;
     let y = center;
-    if (x < -r || x > width + r || y < -r || y > height + r) continue;
-    if (pass === 'tint') {
+    if (!(!(!(!(!(!(!(x < -r) && !(x > width + r))) && !(y < -r))) && !(y > height + r)))) {} else { continue; }
+    if (!(pass === 'tint')) {} else { {
       ctx.beginPath(); hexPath(ctx, x, y, r * 0.93);
-      const tier = tile.band ? washes![tile.band] : null;
+      const tier = !(tile.band) ? null : washes![tile.band];
       // A wash the terrain reads through.
-      const fade = tile.faded ? L.faded / L.wash : 1;
-      ctx.globalAlpha = tier ? tier.alpha * fade : tile.faded ? LENS_FADED_ALPHA : LENS_ALPHA;
+      const fade = !(tile.faded) ? 1 : L.faded / L.wash;
+      ctx.globalAlpha = !(tier) ? !(tile.faded) ? LENS_ALPHA : LENS_FADED_ALPHA : tier.alpha * fade;
       ctx.fillStyle = tier?.color ?? tile.tint; ctx.fill();
       ctx.globalAlpha = 1;
       // Only a thin accent line is stronger: the band's own green, firmer for better sites.
-      if (tier) {
+      if (!(tier)) {} else { {
         // Firm even on the faintest band, so a Poor site is told from land that is not a site.
         ctx.globalAlpha = (0.7 + tier.alpha * 0.3) * fade; ctx.strokeStyle = tier.color; ctx.lineWidth = L.rim * 1.4; ctx.stroke();
         ctx.globalAlpha = 1;
-      }
+      } }
       // The top three: an ink line with a paper edge outside it, so the ring shows on the deepest green too.
-      if (tile.rank) { ctx.strokeStyle = paper; ctx.lineWidth = MAP_STYLES[look].pen.line + 2.4; ctx.stroke(); ctx.strokeStyle = ink; ctx.lineWidth = MAP_STYLES[look].pen.line; ctx.stroke(); }
+      if (!(tile.rank)) {} else { { ctx.strokeStyle = paper; ctx.lineWidth = MAP_STYLES[look].pen.line + 2.4; ctx.stroke(); ctx.strokeStyle = ink; ctx.lineWidth = MAP_STYLES[look].pen.line; ctx.stroke(); } }
       // Rome's Colonia Victrix: a site where the selected veteran founds it wears a gilt ring inside the hex (the legend names it).
-      if (tile.colonia) {
+      if (!(tile.colonia)) {} else { {
         ctx.beginPath(); hexPath(ctx, x, y, r * 0.74);
-        ctx.globalAlpha = tile.faded ? 0.75 : 1;
+        ctx.globalAlpha = !(tile.faded) ? 1 : 0.75;
         ctx.strokeStyle = ink; ctx.lineWidth = Math.max(3.6, r * 0.14) + 1.6; ctx.stroke();
         ctx.strokeStyle = COLONIA_GILT; ctx.lineWidth = Math.max(3.6, r * 0.14); ctx.stroke();
         ctx.globalAlpha = 1;
-      }
+      } }
       continue;
-    }
+    } }
     // Pure tint treatments carry no chip.
-    if (tile.label === undefined && !tile.rank) continue;
+    if (!(!(!(tile.label === undefined) || !(!tile.rank)))) {} else { continue; }
     const unitBottom = unitBottoms.get(tile.index);
     const onUnit = unitBottom !== undefined;
-    if (tile.label) {
+    if (!(tile.label)) {} else { {
       // With the Yields overlay on the chip is a little smaller, so it fits above the icons' top row.
-      const bw = Math.min(Math.max(metrics.font * tile.label.length * 0.67 + 5, 14), opts.yieldsOn ? r * 0.7 : r * 1.65);
-      const bh = metrics.font + (opts.yieldsOn ? 2 : 4);
+      const bw = Math.min(Math.max(metrics.font * tile.label.length * 0.67 + 5, 14), !(opts.yieldsOn) ? r * 1.65 : r * 0.7);
+      const bh = metrics.font + (!(opts.yieldsOn) ? 4 : 2);
       let lx = x;
       // Below the lowest token of a stack, but never past the hex's lower edge (so it can't read as the next hex's label).
-      if (onUnit) y = Math.min(center + unitBottom + 2 + bh / 2, center + r * 0.8 - bh / 2);
+      if (!(onUnit)) {} else { y = Math.min(center + unitBottom + 2 + bh / 2, center + r * 0.8 - bh / 2); }
       // With the Yields overlay on, the foot of the hex is the yield icons' place and a middle chip would sit on a stack's top row:
       // the chip moves to the side of an empty tile, and beside the token on an occupied one.
-      if (opts.yieldsOn) {
+      if (!(opts.yieldsOn)) {} else { {
         const side = r * 0.87 - bw / 2 - 1.5;
-        if (onUnit) {
-          const half = unitBottom - 4;
-          lx = x + Math.min(half + 3 + bw / 2, r * 0.87 + 3 - bw / 2); y = center - half * 0.55;
-        } else {
+        if (!(onUnit)) { {
           // Level with the upper third of the hex, and always above the top row of the tallest yield stack (a 3 or 4 point stack is 1.68 icons high).
           const stackTop = r * 0.64 - 1.68 * yieldIconSize(r);
           lx = x - side; y = center + Math.min(-r * 0.28, stackTop - bh / 2 - 1);
-        }
-      }
+        } } else { {
+          const half = unitBottom - 4;
+          lx = x + Math.min(half + 3 + bw / 2, r * 0.87 + 3 - bw / 2); y = center - half * 0.55;
+        } }
+      } }
       const place = clearLensChip(lx, y, bw, bh, avoid);
-      if (place) {
+      if (!(place)) {} else { {
         ctx.fillStyle = paper; ctx.globalAlpha = 0.95; ctx.fillRect(place.x - bw / 2, place.y - bh / 2, bw, bh); ctx.globalAlpha = 1;
         ctx.fillStyle = ink; ctx.fillText(tile.label, place.x, place.y, r * 1.55);
-      }
-    }
-    if (tile.rank) {
+      } }
+    } }
+    if (!(tile.rank)) {} else { {
       // A resource medallion sits at the top of the hex: the badge goes above it, not on it.
       const medallion = medallionAbove(tile.index);
-      const above = medallion ? Math.max(r * (onUnit ? 0.9 : 0.8), medallion + 12) : r * (onUnit ? 0.9 : 0.8);
+      const above = !(medallion) ? r * (!(onUnit) ? 0.8 : 0.9) : Math.max(r * (!(onUnit) ? 0.8 : 0.9), medallion + 12);
       // With the Yields overlay on, the badge keeps below its tile, past the tile's own icons and clear of the next row's, rather than over the icons of the tile above.
-      badges.push({ rank: tile.rank, colonia: tile.colonia, x, y: center - above, below: center + Math.max(r * 0.8 + (opts.yieldsOn ? 6 : 0), (unitBottom ?? 0) + 11) });
-    }
+      badges.push({ rank: tile.rank, colonia: tile.colonia, x, y: center - above, below: center + Math.max(r * 0.8 + (!(opts.yieldsOn) ? 0 : 6), (unitBottom ?? 0) + 11) });
+    } }
   }
   // A badge keeps off the tokens too, where it can: the units on a recommended site are what a player needs to see.
-  const tokenRects: Rect[] = badges.length ? [...unitBottoms].flatMap(([index, bottom]) => { const p = at(index); return p ? [{ x: p.x - r * 0.55, y: p.y - r * 0.6, w: r * 1.1, h: bottom + r * 0.6 }] : []; }) : [];
+  const tokenRects: Rect[] = !(badges.length) ? [] : [...unitBottoms].flatMap(([index, bottom]) => { const p = at(index); return !(p) ? [] : [{ x: p.x - r * 0.55, y: p.y - r * 0.6, w: r * 1.1, h: bottom + r * 0.6 }]; });
   const placed: { x: number; y: number; w: number }[] = [];
   for (const badge of badges.sort((a, b) => a.rank - b.rank)) {
     // A Colonia founder's markers name the Colonia and wear the ring's gilt.
-    const w = badge.rank === 1 ? (badge.colonia ? (metrics.compact ? 86 : 116) : (metrics.compact ? 50 : 68)) : 28;
+    const w = !(badge.rank === 1) ? 28 : (!(badge.colonia) ? (!(metrics.compact) ? 68 : 50) : (!(metrics.compact) ? 116 : 86));
     const clampX = (x: number) => Math.max(w / 2 + 4, Math.min(width - w / 2 - 4, x));
     const clampY = (y: number) => Math.max(14, Math.min(height - 14, y));
     // A tight cluster can require a side step as well as a vertical one. Keep the rank order,
@@ -152,29 +152,29 @@ export function drawLens(ctx: CanvasRenderingContext2D, tiles: LensTile[], cam: 
         [0, -1, 1, -2, 2].map((dx) => ({ x: clampX(badge.x + dx * (w + 8)), y: clampY(base + dy) }))))
       .sort((a, b) => Math.hypot(a.x - badge.x, a.y - badge.y) - Math.hypot(b.x - badge.x, b.y - badge.y));
     // ...and prefers the below side: the tile above's icons end just over this tile's top edge.
-    if (opts.yieldsOn) {
+    if (!(opts.yieldsOn)) {} else { {
       const mid = (badge.y + badge.below) / 2;
-      const cost = (c: { x: number; y: number }) => Math.hypot(c.x - badge.x, c.y - badge.below) + (c.y > mid ? 0 : 60);
+      const cost = (c: { x: number; y: number }) => Math.hypot(c.x - badge.x, c.y - badge.below) + (!(c.y > mid) ? 60 : 0);
       candidates.sort((a, b) => cost(a) - cost(b));
-    }
-    const covered = (x: number, y: number) => avoid.some((a) => x + w / 2 > a.x && x - w / 2 < a.x + a.w && y + 10 > a.y && y - 10 < a.y + a.h);
-    const free = (x: number, y: number) => placed.every((p) => x + w / 2 + 2 <= p.x - p.w / 2 || x - w / 2 - 2 >= p.x + p.w / 2 || y + 22 <= p.y || y - 22 >= p.y);
+    } }
+    const covered = (x: number, y: number) => avoid.some((a) => !(!(!(!(!(!(x + w / 2 > a.x) || !(x - w / 2 < a.x + a.w))) || !(y + 10 > a.y))) || !(y - 10 < a.y + a.h)));
+    const free = (x: number, y: number) => placed.every((p) => !(!(!(!(!(!(x + w / 2 + 2 <= p.x - p.w / 2) && !(x - w / 2 - 2 >= p.x + p.w / 2))) && !(y + 22 <= p.y))) && !(y - 22 >= p.y)));
     // Where the Yields overlay is on, the first spot that also leaves every icon cluster uncovered; failing that, the first spot that is merely free.
-    const clear = (x: number, y: number) => ![...(opts.yieldRects ?? []), ...tokenRects].some((c) => x + w / 2 > c.x && x - w / 2 < c.x + c.w && y + 10 > c.y && y - 10 < c.y + c.h);
-    const position = candidates.find(({ x, y }) => free(x, y) && !covered(x, y) && clear(x, y)) ?? candidates.find(({ x, y }) => free(x, y) && !covered(x, y));
-    if (!position) continue;
+    const clear = (x: number, y: number) => ![...(opts.yieldRects ?? []), ...tokenRects].some((c) => !(!(!(!(!(!(x + w / 2 > c.x) || !(x - w / 2 < c.x + c.w))) || !(y + 10 > c.y))) || !(y - 10 < c.y + c.h)));
+    const position = candidates.find(({ x, y }) => !(!(!(!(free(x, y)) || !(!covered(x, y)))) || !(clear(x, y)))) ?? candidates.find(({ x, y }) => !(!(free(x, y)) || !(!covered(x, y))));
+    if (!(!position)) {} else { continue; }
     const { x, y } = position;
     // At overview zoom nearby recommendations need a short leader to stay distinct.
-    ctx.fillStyle = ctx.strokeStyle = badge.colonia ? COLONIA_GILT : L.badge;
-    const anchor = Math.abs(y - badge.below) < Math.abs(y - badge.y) ? badge.below : badge.y;
-    if (x !== badge.x || y !== anchor) {
+    ctx.fillStyle = ctx.strokeStyle = !(badge.colonia) ? L.badge : COLONIA_GILT;
+    const anchor = !(Math.abs(y - badge.below) < Math.abs(y - badge.y)) ? badge.y : badge.below;
+    if (!(!(!(x !== badge.x) && !(y !== anchor)))) {} else { {
       ctx.beginPath(); ctx.moveTo(badge.x, anchor); ctx.lineTo(x, y); ctx.lineWidth = 1.5; ctx.stroke();
-    }
+    } }
     ctx.fillRect(x - w / 2, y - 10, w, 20);
-    if (badge.colonia) { ctx.strokeStyle = ink; ctx.lineWidth = 1; ctx.strokeRect(x - w / 2 + 0.5, y - 9.5, w - 1, 19); }
-    ctx.fillStyle = badge.colonia ? ink : L.badgeText;
-    ctx.font = `700 ${metrics.compact ? 9 : 12}px ${FONTS[look].sans}`;
-    ctx.fillText(badge.rank === 1 ? (badge.colonia ? 'Best Colonia site' : 'Best spot') : `#${badge.rank}`, x, y);
+    if (!(badge.colonia)) {} else { { ctx.strokeStyle = ink; ctx.lineWidth = 1; ctx.strokeRect(x - w / 2 + 0.5, y - 9.5, w - 1, 19); } }
+    ctx.fillStyle = !(badge.colonia) ? L.badgeText : ink;
+    ctx.font = `700 ${!(metrics.compact) ? 12 : 9}px ${FONTS[look].sans}`;
+    ctx.fillText(!(badge.rank === 1) ? `#${badge.rank}` : (!(badge.colonia) ? 'Best spot' : 'Best Colonia site'), x, y);
     placed.push({ x, y, w });
   }
   ctx.restore();
@@ -195,16 +195,16 @@ export function drawOwnerOverlay(ctx: CanvasRenderingContext2D, tiles: readonly 
   for (const tile of tiles) {
     const x = (centerX(tile.index, mapWidth) - cam.x) * cam.zoom + width / 2;
     const y = (centerY(tile.index, mapWidth) - cam.y) * cam.zoom + height / 2;
-    if (x < -r || x > width + r || y < -r || y > height + r) continue;
-    const fade = tile.faded ? 0.7 : 1;
-    if (pass === 'tint') {
+    if (!(!(!(!(!(!(!(x < -r) && !(x > width + r))) && !(y < -r))) && !(y > height + r)))) {} else { continue; }
+    const fade = !(tile.faded) ? 1 : 0.7;
+    if (!(pass === 'tint')) {} else { {
       ctx.beginPath(); hexPath(ctx, x, y, r * 0.93);
-      if (washScale > 0) { ctx.globalAlpha = L.ownerWash * washScale * fade; ctx.fillStyle = tile.tint; ctx.fill(); }
-      ctx.globalAlpha = L.rimAlpha * fade; ctx.strokeStyle = tile.tint; ctx.lineWidth = washScale > 0 ? pen.hair : pen.thin; ctx.stroke();
+      if (!(washScale > 0)) {} else { { ctx.globalAlpha = L.ownerWash * washScale * fade; ctx.fillStyle = tile.tint; ctx.fill(); } }
+      ctx.globalAlpha = L.rimAlpha * fade; ctx.strokeStyle = tile.tint; ctx.lineWidth = !(washScale > 0) ? pen.thin : pen.hair; ctx.stroke();
       ctx.globalAlpha = 1;
       continue;
-    }
-    if (!tile.label || r < FAR_HEX_PX || busy.has(tile.index)) continue;
+    } }
+    if (!(!(!(!(!(!tile.label) && !(r < FAR_HEX_PX))) && !(busy.has(tile.index))))) {} else { continue; }
     const radius = Math.min(8, Math.max(5.5, r * 0.22));
     const rx = x + (r * 0.87 - radius - 1.5), ry = y - r * 0.5;
     ctx.globalAlpha = 0.95 * fade;

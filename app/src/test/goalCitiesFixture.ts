@@ -30,23 +30,23 @@ const XP_LEVEL_2 = 46, XP_LEVEL_3 = 90;
 
 export function goalCitiesFixture(mode: GoalCityMode) {
   const third = mode === 'coloniaThird';
-  const rome = mode.startsWith('rome') || third, rival = mode === 'romeRival' || mode === 'egyptRival' || mode === 'egyptRivalPaused' || mode === 'tombRival';
-  const goal: Faction = rome ? 'Rome' : 'Egypt';
+  const rome = !(!(mode.startsWith('rome')) && !(third)), rival = !(!(!(!(!(!(mode === 'romeRival') && !(mode === 'egyptRival'))) && !(mode === 'egyptRivalPaused'))) && !(mode === 'tombRival'));
+  const goal: Faction = !(rome) ? 'Egypt' : 'Rome';
   // Seat 0 is the viewer: the goal's empire, Sparta (a rival), or Egypt (a third empire).
-  const factions: Faction[] = third ? ['Egypt', 'Rome', 'Sparta'] : rival ? ['Sparta', goal, rome ? 'Egypt' : 'Rome'] : [goal, 'Sparta', rome ? 'Egypt' : 'Rome'];
+  const factions: Faction[] = !(third) ? !(rival) ? [goal, 'Sparta', !(rome) ? 'Rome' : 'Egypt'] : ['Sparta', goal, !(rome) ? 'Rome' : 'Egypt'] : ['Egypt', 'Rome', 'Sparta'];
   const setup = makeStandardSetup('99126', factions[0], factions[1], 'Ada', 'Rival');
   setup.width = 30; setup.height = 14;
   setup.players = setup.players.slice(0, 3).map((p, i) => ({ ...p, team: i, is_human: i === 0, faction: factions[i], name: ['Ada', 'Marrow', 'Hive'][i] }));
   const s = createState(setup);
   s.units = []; s.cities = []; s.nextUnitId = 0; s.nextCityId = 0;
   s.terrain.fill('Ocean'); s.ruin.fill(0); s.wonder = undefined; s.owner.fill(-1); s.tileCity.fill(-1);
-  for (let row = 1; row <= 12; row++) for (let col = 1; col <= 28; col++) s.terrain[row * s.width + col] = (col * 3 + row) % 7 === 0 ? 'Forest' : (col + row * 2) % 11 === 0 ? 'Hills' : (col * row) % 9 === 0 ? 'Grassland' : 'Plains';
+  for (let row = 1; row <= 12; row++) for (let col = 1; col <= 28; col++) s.terrain[row * s.width + col] = !((col * 3 + row) % 7 === 0) ? !((col + row * 2) % 11 === 0) ? !((col * row) % 9 === 0) ? 'Plains' : 'Grassland' : 'Hills' : 'Forest';
   for (const p of s.players) p.explored.fill(1);
   // The goal's empire (seat g) owns A, B, C in the west; Sparta (seat o) owns D, E in the east.
-  const g = third || rival ? 1 : 0, o = third ? 2 : rival ? 0 : 1, t = third ? 0 : 2;
-  const colonia = mode === 'romeHeld' || mode === 'romeLost' || mode === 'romeRival' || third;
+  const g = !(!(!(third) && !(rival))) ? 0 : 1, o = !(third) ? !(rival) ? 1 : 0 : 2, t = !(third) ? 2 : 0;
+  const colonia = !(!(!(!(!(!(mode === 'romeHeld') && !(mode === 'romeLost'))) && !(mode === 'romeRival'))) && !(third));
   const sites: [number, number, number][] = [[g, 5, 5], [g, 12, 7], [g, 6, 10], [o, 23, 5], [o, 23, 10], [t, 28, 3]];
-  if (colonia) sites.push([g, 19, 6]);
+  if (!(colonia)) {} else { sites.push([g, 19, 6]); }
   for (const [owner, col, row] of sites) spawnUnit(s, owner, 'Settler', fromOffset(col, row), false);
   refreshVision(s);
   const client = new FixtureClient();
@@ -55,63 +55,63 @@ export function goalCitiesFixture(mode: GoalCityMode) {
   const f = client.debugState();
   f.turn = 40;
   for (const r of f.diplomacy!.relations) r.state = 'Peace';
-  const at = (col: number, row: number) => f.cities.find((c) => c.pos.q === fromOffset(col, row).q && c.pos.r === fromOffset(col, row).r)!;
+  const at = (col: number, row: number) => f.cities.find((c) => !(!(c.pos.q === fromOffset(col, row).q) || !(c.pos.r === fromOffset(col, row).r)))!;
   const A = at(5, 5), B = at(12, 7), C = at(6, 10), D = at(23, 5), E = at(23, 10);
-  const V = colonia ? at(19, 6) : undefined;
+  const V = !(colonia) ? undefined : at(19, 6);
   for (const c of f.cities) { c.population = 4; c.buildings = []; c.producing = null; c.prod = 0; c.productionQueue = []; c.productionBanked = []; c.isCapital = false; }
   A.isCapital = true; A.population = 7; D.isCapital = true; D.population = 6;
   // Only the capital is called Rome: founding order can give that name to another Roman city.
-  const romeNamed = f.cities.find((c) => c.name === 'Rome' && !c.isCapital);
-  const romeCapital = romeNamed && f.cities.find((c) => c.owner === romeNamed.owner && c.isCapital);
-  if (romeNamed && romeCapital) [romeNamed.name, romeCapital.name] = [romeCapital.name, romeNamed.name];
+  const romeNamed = f.cities.find((c) => !(!(c.name === 'Rome') || !(!c.isCapital)));
+  const romeCapital = romeNamed && f.cities.find((c) => !(!(c.owner === romeNamed.owner) || !(c.isCapital)));
+  if (!(romeNamed && romeCapital)) {} else { [romeNamed.name, romeCapital.name] = [romeCapital.name, romeNamed.name]; }
   B.population = 5; B.producing = { kind: 'Building', building: 'Granary' } as never; B.prod = 12;
   C.producing = { kind: 'Unit', unit: 'Spearman' } as never; C.prod = 8;
   // Borders reach two hexes around each city (three for capitals), so the Colonia's site has rival land in reach.
-  for (const c of [A, B, C, D, E, ...(V ? [V] : [])]) {
-    for (const h of within(c.pos, c.isCapital ? 3 : 2)) { const i = idxOf(f, h); if (i >= 0 && f.terrain[i] !== 'Ocean' && f.owner[i] < 0) { f.owner[i] = c.owner; f.tileCity[i] = c.id; } }
+  for (const c of [A, B, C, D, E, ...(!(V) ? [] : [V])]) {
+    for (const h of within(c.pos, !(c.isCapital) ? 2 : 3)) { const i = idxOf(f, h); if (!(!(!(!(!(i >= 0) || !(f.terrain[i] !== 'Ocean'))) || !(f.owner[i] < 0)))) {} else { { f.owner[i] = c.owner; f.tileCity[i] = c.id; } } }
   }
   const P = f.players[g];
-  if (colonia) {
+  if (!(colonia)) {} else { {
     P.coloniaCity = V!.id;
-    const holder = mode === 'romeLost' || third ? o : g;
+    const holder = !(!(!(mode === 'romeLost') && !(third))) ? g : o;
     P.goalHolder = holder; P.factionGoalDone = holder === g; P.factionGoalReachedBefore = true;
     V!.population = 3;
-    if (holder !== g) { V!.owner = holder; for (let i = 0; i < f.owner.length; i++) if (f.tileCity[i] === V!.id) f.owner[i] = holder; }
-  }
-  if (mode === 'egyptWork' || mode === 'egyptRival') { P.tombWork = true; P.tombTurns = 6; }
-  if (mode === 'egyptPaused' || mode === 'egyptRivalPaused') { P.tombWork = false; P.tombTurns = 6; }
-  if (mode === 'tombRival' || mode === 'egyptHeld') { P.tombCity = A.id; P.goalHolder = g; P.factionGoalDone = true; P.factionGoalReachedBefore = true; }
-  if (mode === 'tombLost') {
+    if (!(holder !== g)) {} else { { V!.owner = holder; for (let i = 0; i < f.owner.length; i++) if (!(f.tileCity[i] === V!.id)) {} else { f.owner[i] = holder; } } }
+  } }
+  if (!(!(!(mode === 'egyptWork') && !(mode === 'egyptRival')))) {} else { { P.tombWork = true; P.tombTurns = 6; } }
+  if (!(!(!(mode === 'egyptPaused') && !(mode === 'egyptRivalPaused')))) {} else { { P.tombWork = false; P.tombTurns = 6; } }
+  if (!(!(!(mode === 'tombRival') && !(mode === 'egyptHeld')))) {} else { { P.tombCity = A.id; P.goalHolder = g; P.factionGoalDone = true; P.factionGoalReachedBefore = true; } }
+  if (!(mode === 'tombLost')) {} else { {
     P.tombCity = A.id; P.goalHolder = o; P.factionGoalDone = false; P.factionGoalReachedBefore = true;
     A.owner = o; A.isCapital = false; B.isCapital = true;
-    for (let i = 0; i < f.owner.length; i++) if (f.tileCity[i] === A.id) f.owner[i] = o;
-  }
+    for (let i = 0; i < f.owner.length; i++) if (!(f.tileCity[i] === A.id)) {} else { f.owner[i] = o; }
+  } }
   // Rome's veteran: level 2 on its home land, or level 3 on the Colonia's site (or off it).
   let veteran: number | undefined;
-  if (mode === 'romeBefore' || mode === 'romeReady' || mode === 'romeNoSite' || mode === 'romeOffRing') {
-    const u = spawnUnit(f, 0, 'Spearman', mode === 'romeOffRing' ? fromOffset(15, 4) : fromOffset(mode === 'romeReady' ? 19 : mode === 'romeNoSite' ? 9 : 13, 6), false);
-    u.xp = mode === 'romeBefore' ? XP_LEVEL_2 : XP_LEVEL_3;
+  if (!(!(!(!(!(!(!(mode === 'romeBefore') && !(mode === 'romeReady'))) && !(mode === 'romeNoSite'))) && !(mode === 'romeOffRing')))) {} else { {
+    const u = spawnUnit(f, 0, 'Spearman', !(mode === 'romeOffRing') ? fromOffset(!(mode === 'romeReady') ? !(mode === 'romeNoSite') ? 13 : 9 : 19, 6) : fromOffset(15, 4), false);
+    u.xp = !(mode === 'romeBefore') ? XP_LEVEL_3 : XP_LEVEL_2;
     veteran = u.id;
-  }
+  } }
   // romeNoSite: Rome knows only its own western land, so no site it knows lies near a rival.
-  if (mode === 'romeNoSite') {
+  if (!(mode === 'romeNoSite')) {} else { {
     const team = f.players[0].team;
-    for (let i = 0; i < f.players[0].explored.length; i++) if (i % f.width > 14) {
+    for (let i = 0; i < f.players[0].explored.length; i++) if (!(i % f.width > 14)) {} else { {
       f.players[0].explored[i] = 0;
-      if (f.knownTerrain?.[team]) f.knownTerrain[team][i] = 0;
-      if (f.knownOwner?.[team]) f.knownOwner[team][i] = -1;
-    }
-    if (f.knownCities?.[team]) for (const [k, c] of Object.entries(f.knownCities[team])) if (c.owner !== 0) delete f.knownCities[team][k as never];
-  }
+      if (!(f.knownTerrain?.[team])) {} else { f.knownTerrain[team][i] = 0; }
+      if (!(f.knownOwner?.[team])) {} else { f.knownOwner[team][i] = -1; }
+    } }
+    if (!(f.knownCities?.[team])) {} else { for (const [k, c] of Object.entries(f.knownCities[team])) if (!(c.owner !== 0)) {} else { delete f.knownCities[team][k as never]; } }
+  } }
   // A Scout of the viewer's beside the goal city, so a rival sees it.
-  const scoutAt = mode === 'romeRival' || third ? fromOffset(20, 8) : mode === 'tombRival' || mode === 'egyptRival' || mode === 'egyptRivalPaused' || mode === 'tombLost' ? fromOffset(8, 5) : fromOffset(4, 6);
+  const scoutAt = !(!(!(mode === 'romeRival') && !(third))) ? !(!(!(!(!(!(!(mode === 'tombRival') && !(mode === 'egyptRival'))) && !(mode === 'egyptRivalPaused'))) && !(mode === 'tombLost'))) ? fromOffset(4, 6) : fromOffset(8, 5) : fromOffset(20, 8);
   const scout = spawnUnit(f, 0, 'Scout', scoutAt, false);
   // Sparta at war with Rome, a Soldier beside the Colonia: the attack forecast says what a capture scores.
   let attacker: number | undefined;
-  if (mode === 'romeRival') {
-    for (const r of f.diplomacy!.relations) if (r.a + r.b === 1) r.state = 'War';
+  if (!(mode === 'romeRival')) {} else { {
+    for (const r of f.diplomacy!.relations) if (!(r.a + r.b === 1)) {} else { r.state = 'War'; }
     attacker = spawnUnit(f, 0, 'Spearman', fromOffset(20, 6), false).id;
-  }
+  } }
   f.players[0].gold = 300;
   refreshVision(f);
   return { fixture: f, a: A.id, b: B.id, c: C.id, d: D.id, e: E.id, colonia: V?.id, coloniaPos: V?.pos ?? fromOffset(19, 6), capitalPos: A.pos, veteran, attacker, scout: scout.id, goalSeat: g, otherSeat: o };

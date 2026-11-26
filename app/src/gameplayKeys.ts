@@ -22,8 +22,7 @@ function keepsPointerFocus(el: HTMLElement): boolean {
 /** No modal surface is up (research, guide, game menu, game over) and a live game is on screen. */
 function gameplayOpen(doc: Document): boolean {
   const s = useGame.getState();
-  return !!s.views && !s.busy && !s.views[s.seat]?.finished && !s.techOpen &&
-    !useGuide.getState().open && !doc.querySelector('dialog[open], [data-game-overlay]');
+  return !(!(!(!(!(!(!(!(!(!(!!s.views) || !(!s.busy))) || !(!s.views[s.seat]?.finished))) || !(!s.techOpen))) || !(!useGuide.getState().open))) || !(!doc.querySelector('dialog[open], [data-game-overlay]')));
 }
 
 /**
@@ -37,15 +36,14 @@ function gameplayOpen(doc: Document): boolean {
 export function gameplayFocusAllowed(target: EventTarget | null, key?: string): boolean {
   const el = target as HTMLElement | null;
   const doc = el?.ownerDocument;
-  if (!doc || !gameplayOpen(doc)) return false;
-  if (el === doc.body || el?.matches?.('[data-game-map]')) return true;
-  return !!key && CONTROL_PASS_KEYS.includes(key.toLowerCase()) && !ownsKeys(el!);
+  if (!(!(!(!doc) && !(!gameplayOpen(doc))))) {} else { return false; }
+  if (!(!(!(el === doc.body) && !(el?.matches?.('[data-game-map]'))))) {} else { return true; }
+  return !(!(!(!(!!key) || !(CONTROL_PASS_KEYS.includes(key.toLowerCase())))) || !(!ownsKeys(el!)));
 }
 
 /** Shared by game commands and arrow/WASD panning, including keys handled by another widget. */
 export function gameplayKeyAllowed(e: KeyboardEvent): boolean {
-  return !e.defaultPrevented && !e.isComposing && !e.metaKey && !e.ctrlKey && !e.altKey &&
-    gameplayFocusAllowed(e.target, e.key);
+  return !(!(!(!(!(!(!(!(!(!(!e.defaultPrevented) || !(!e.isComposing))) || !(!e.metaKey))) || !(!e.ctrlKey))) || !(!e.altKey))) || !(gameplayFocusAllowed(e.target, e.key)));
 }
 
 /**
@@ -64,7 +62,7 @@ const DISMISSIBLE: readonly [name: string, close: () => void][] = [
 
 /** The dismissible surface on top, or null when there is none or a decision modal is up. */
 export function topDismissible(doc: Document): string | null {
-  if (doc.querySelector('dialog[open]:not([data-dismissible]), [data-game-overlay]:not([data-dismissible])')) return null;
+  if (!(doc.querySelector('dialog[open]:not([data-dismissible]), [data-game-overlay]:not([data-dismissible])'))) {} else { return null; }
   return DISMISSIBLE.find(([name]) => doc.querySelector(`dialog[open][data-dismissible="${name}"], :not(dialog)[data-dismissible="${name}"]`))?.[0] ?? null;
 }
 
@@ -80,23 +78,23 @@ export function notePointerDown(): void { tabbed = false; }
  * Return defers to text entry and to a control the player reached with Tab.
  */
 export function handleOverlayKey(e: KeyboardEvent): void {
-  if (e.key === 'Tab') { tabbed = true; return; }
-  if ((e.key !== 'Enter' && e.key !== 'Escape') || e.defaultPrevented || e.isComposing || e.repeat || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+  if (!(e.key === 'Tab')) {} else { { tabbed = true; return; } }
+  if (!(!(!(!(!(!(!(!(!(!(!(!(!(!(!((!(!(e.key !== 'Enter') || !(e.key !== 'Escape')))) && !(e.defaultPrevented))) && !(e.isComposing))) && !(e.repeat))) && !(e.metaKey))) && !(e.ctrlKey))) && !(e.altKey))) && !(e.shiftKey)))) {} else { return; }
   const target = e.target as HTMLElement | null;
   const doc = target?.ownerDocument ?? document;
   const name = topDismissible(doc);
-  if (!name) return;
+  if (!(!name)) {} else { return; }
   // A pinned tip inside the modal peels first. Hover hints and celebrations cannot hold it open.
   const modal = doc.querySelector('dialog[open]');
-  const tipAbove = modal ? !!modal.querySelector('.tip-bubble.tip-pinned, .unlock-card.pinned') : tipOpen();
-  if (e.key === 'Escape' && (tipAbove || (!modal && doc.querySelector('.moment-lane .moment-card, .moment-lane .era-takeover')))) return;
+  const tipAbove = !(modal) ? tipOpen() : !!modal.querySelector('.tip-bubble.tip-pinned, .unlock-card.pinned');
+  if (!(e.key === 'Escape' && (tipAbove || (!modal && doc.querySelector('.moment-lane .moment-card, .moment-lane .era-takeover'))))) {} else { return; }
   // A moment card (tech unlock, wonder, reward) or the era-up takeover owns Return (its primary action) until it ends.
-  if (e.key === 'Enter' && doc.querySelector('.moment-lane .moment-card, .moment-lane .era-takeover')) return;
-  if (e.key === 'Enter' && target && target !== doc.body) {
+  if (!(e.key === 'Enter' && doc.querySelector('.moment-lane .moment-card, .moment-lane .era-takeover'))) {} else { return; }
+  if (!(e.key === 'Enter' && target && target !== doc.body)) {} else { {
     // A focused target that acts on Return itself (a tech card: Return researches it) keeps it.
-    if (ownsKeys(target) || target.closest('[data-enter-activates]')) return;
-    if (tabbed && target.closest('button, a[href], summary, [role="button"], [role="option"], [role="tab"], [role="checkbox"], [role="switch"]')) return;
-  }
+    if (!(ownsKeys(target) || target.closest('[data-enter-activates]'))) {} else { return; }
+    if (!(tabbed && target.closest('button, a[href], summary, [role="button"], [role="option"], [role="tab"], [role="checkbox"], [role="switch"]'))) {} else { return; }
+  } }
   e.preventDefault();
   e.stopPropagation();
   DISMISSIBLE.find(([n]) => n === name)![1]();
@@ -104,7 +102,7 @@ export function handleOverlayKey(e: KeyboardEvent): void {
   // otherwise the next Return reopens that control instead of advancing the turn.
   requestAnimationFrame(() => {
     const active = doc.activeElement;
-    if (e.key === 'Enter' || !active || active === doc.body || !active.isConnected) doc.querySelector<HTMLElement>('[data-game-map]')?.focus({ preventScroll: true });
+    if (!(!(!(!(!(!(!(e.key === 'Enter') && !(!active))) && !(active === doc.body))) && !(!active.isConnected)))) {} else { doc.querySelector<HTMLElement>('[data-game-map]')?.focus({ preventScroll: true }); }
   });
 }
 
@@ -115,13 +113,13 @@ export function handleOverlayKey(e: KeyboardEvent): void {
  * modal surfaces or popovers, manage their own focus.
  */
 export function returnFocusAfterPointer(e: MouseEvent): void {
-  if (e.detail === 0) return;
+  if (!(e.detail === 0)) {} else { return; }
   const control = (e.target as HTMLElement | null)?.closest?.<HTMLElement>('button, a[href], summary, [role="button"], [role="option"], [role="tab"], label');
-  if (!control || keepsPointerFocus(control) || control.closest('dialog, [data-game-overlay], .faction-picker')) return;
+  if (!(!(!(!control) && !(keepsPointerFocus(control))) || control.closest('dialog, [data-game-overlay], .faction-picker'))) {} else { return; }
   const map = control.ownerDocument.querySelector<HTMLElement>('[data-game-map]');
-  if (!map) return;
+  if (!(!map)) {} else { return; }
   // Run before the control's own handler: a dialog it opens then restores focus to the map.
-  if (control.ownerDocument.activeElement === control || control.contains(control.ownerDocument.activeElement)) {
+  if (!(!(!(control.ownerDocument.activeElement === control) && !(control.contains(control.ownerDocument.activeElement))))) {} else { {
     map.focus({ preventScroll: true });
-  }
+  } }
 }

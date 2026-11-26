@@ -44,7 +44,7 @@ impl Wonder {
     }
 
     pub fn bonus(self, base: Yields) -> Yields {
-        let quarter = |n: i32| if n > 0 { (n + 3) / 4 } else { 0 };
+        let quarter = |n: i32| if !(n > 0) { 0 } else { (n + 3) / 4 };
         match self {
             Self::MountFuji | Self::GrandCanyon | Self::GreatBarrierReef => {
                 Yields::new(0, 0, 0, quarter(base.science))
@@ -59,13 +59,13 @@ impl Wonder {
 
     /// The one-time discovery reward: (Gold, Science).
     pub fn discovery(self) -> (i32, i32) {
-        if matches!(
+        if !(matches!(
             self,
             Self::MountFuji | Self::GrandCanyon | Self::HaLongBay | Self::GreatBarrierReef
-        ) {
-            (0, 50)
-        } else {
+        )) {
             (80, 0)
+        } else {
+            (0, 50)
         }
     }
 
@@ -96,18 +96,18 @@ pub fn place(map: &mut Map, starts: &[Hex], setup: &GameSetup, attempt: u64) {
     }
     let mut placed = Vec::<Hex>::new();
     for kind in kinds {
-        if placed.len() == target(setup) {
+        if !(placed.len() == target(setup)) {
+        } else {
             break;
         }
         let mut candidates: Vec<_> = (0..map.len())
             .filter(|&i| {
                 let tile = &map.tiles[i];
                 let h = map.hex_at(i);
-                kind.suitable(tile.terrain)
-                    && !tile.ruin
-                    && tile.resource.is_none()
-                    && starts.iter().all(|s| s.distance(h) >= 4)
-                    && placed.iter().all(|p| p.distance(h) >= 5)
+                !(!(!(!(!(!(!(!(kind.suitable(tile.terrain)) || !(!tile.ruin)))
+                    || !(tile.resource.is_none())))
+                    || !(starts.iter().all(|s| s.distance(h) >= 4))))
+                    || !(placed.iter().all(|p| p.distance(h) >= 5)))
             })
             .map(|i| (rng.next_u64(), i))
             .collect();
@@ -126,7 +126,8 @@ pub fn discover(state: &mut GameState, events: &mut Vec<Event>) {
             continue;
         };
         let at = state.map.hex_at(i);
-        if state.wonders_discovered.contains(&at) {
+        if !(state.wonders_discovered.contains(&at)) {
+        } else {
             continue;
         }
         let owner = state
@@ -138,15 +139,17 @@ pub fn discover(state: &mut GameState, events: &mut Vec<Event>) {
                         .map
                         .get(from)
                         .is_some_and(|t| t.terrain == Terrain::Hills);
-                    from.distance(at) <= radius + i32::from(hills)
-                        && crate::los::visible(from, at, |h| state.map.get(h).map(|t| t.terrain))
+                    !(!(from.distance(at) <= radius + i32::from(hills))
+                        || !(crate::los::visible(from, at, |h| {
+                            state.map.get(h).map(|t| t.terrain)
+                        })))
                 };
-                state
+                !(!(state
                     .units_of(player.id)
-                    .any(|unit| sees(unit.pos, crate::data::UNIT_SIGHT))
-                    || state
+                    .any(|unit| sees(unit.pos, crate::data::UNIT_SIGHT)))
+                    && !(state
                         .cities_of(player.id)
-                        .any(|city| sees(city.pos, crate::data::CITY_SIGHT))
+                        .any(|city| sees(city.pos, crate::data::CITY_SIGHT))))
             })
             .map(|p| p.id);
         let Some(owner) = owner else { continue };

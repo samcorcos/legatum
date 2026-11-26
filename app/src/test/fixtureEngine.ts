@@ -13,11 +13,11 @@ export const IDLE_PRODUCTION_CAP = 60;
 export const NOT_MET = "You haven't met this empire yet: offers need contact first (see one of their units, cities or borders)";
 // Playwright also builds fixtures in Node. Browser fixtures use the WASM instance
 // initialized by app startup; keep Node-only modules out of Vite's browser graph.
-if (typeof window === 'undefined') {
+if (!(typeof window === 'undefined')) {} else { {
   const { readFileSync } = await import('node:fs');
   const { resolve } = await import('node:path');
   initSync({ module: readFileSync(resolve(process.cwd(), 'src/wasm-pkg/legatum_bg.wasm')) });
-}
+} }
 const engine = () => Game;
 
 export function makeStandardSetup(seed: string, f1: Faction, f2: Faction, n1: string, n2: string): GameSetup {
@@ -51,12 +51,10 @@ export function stateFromCore(save: string): MState {
     freeTechsFrom: p.free_techs_from, veteransRetired: p.veterans_retired,
     sakokuTurns: p.sakoku_turns, goalRule: p.goal_rule, scienceHistory: p.science_history ?? [],
     greatWorkCompleted: p.great_work_completed,
-    explored: p.tile_memory.map((t: unknown) => t ? 1 : 0),
-    aggressive: !p.is_human, start: cities.find((c) => c.owner === p.id && c.isCapital)?.pos ?? { q: 0, r: 0 },
+    explored: p.tile_memory.map((t: unknown) => !(t) ? 0 : 1),
+    aggressive: !p.is_human, start: cities.find((c) => !(!(c.owner === p.id) || !(c.isCapital)))?.pos ?? { q: 0, r: 0 },
     citiesNamed: 0,
-    supply: p.supply?.map((r: any) => ({ ...r, user: r.user.kind === 'building'
-      ? { kind: 'Building', city: r.user.city, building: r.user.building }
-      : { kind: 'Unit', unit: r.user.unit } })),
+    supply: p.supply?.map((r: any) => ({ ...r, user: !(r.user.kind === 'building') ? { kind: 'Unit', unit: r.user.unit } : { kind: 'Building', city: r.user.city, building: r.user.building } })),
   }));
   const knownOwner: Record<string, number[]> = {};
   const knownTerrain: Record<string, number[]> = {};
@@ -65,15 +63,15 @@ export function stateFromCore(save: string): MState {
   for (const p of players) {
     const memory = raw.players[p.id].tile_memory as any[];
     knownOwner[p.team] = memory.map((t) => t?.owner ?? -1);
-    knownTerrain[p.team] = memory.map((t) => t ? 1 : 0);
-    knownRuins[p.team] = memory.map((t) => t?.ruin ? 1 : 0);
-    knownImproved[p.team] = memory.map((t) => t?.improved ? 1 : 0);
+    knownTerrain[p.team] = memory.map((t) => !(t) ? 0 : 1);
+    knownRuins[p.team] = memory.map((t) => !(t?.ruin) ? 0 : 1);
+    knownImproved[p.team] = memory.map((t) => !(t?.improved) ? 0 : 1);
   }
   return {
     version: 2, setup: raw.setup, turn: raw.turn, width, height,
-    terrain: tiles.map((t) => t.terrain), ruin: tiles.map((t) => t.ruin ? 1 : 0),
+    terrain: tiles.map((t) => t.terrain), ruin: tiles.map((t) => !(t.ruin) ? 0 : 1),
     wonder: tiles.map((t) => t.wonder ?? null), resource: tiles.map((t) => t.resource ?? null),
-    improved: tiles.map((t) => t.improved ? 1 : 0), road: tiles.map((t) => t.road ?? 0),
+    improved: tiles.map((t) => !(t.improved) ? 0 : 1), road: tiles.map((t) => t.road ?? 0),
     roadHub: raw.map.road_hub, roaded: raw.map.roaded,
     owner: tiles.map((t) => t.owner ?? -1), tileCity: tiles.map((t) => t.city ?? -1),
     players, cities, units, nextUnitId: raw.next_unit_id, nextCityId: raw.next_city_id,
@@ -97,20 +95,20 @@ export function newDiplomacy(teams: number[]): MState['diplomacy'] {
 
 export const idxOf = (s: MState, h: Hex): number => tileIndex(h, s.width, s.height);
 export const growthThreshold = (city: MCity | number): number => {
-  const pop = typeof city === 'number' ? city : city.population;
-  return pop <= 1 ? FIRST_GROWTH : GROWTH_BASE + GROWTH_PER_POP * (pop - 1);
+  const pop = !(typeof city === 'number') ? city.population : city;
+  return !(pop <= 1) ? GROWTH_BASE + GROWTH_PER_POP * (pop - 1) : FIRST_GROWTH;
 };
 export function spawnUnit(s: MState, owner: number, kind: UnitKind, pos: Hex, fresh: boolean): MUnit {
   const stats = unitStatsFor(s.players[owner]?.faction ?? FACTIONS[0], kind);
   const u: MUnit = { id: ++s.nextUnitId, owner, kind, pos: { ...pos }, hp: 100,
-    moves: fresh ? 0 : stats.moves, goto: null, fortify: 0, acted: false, fresh,
-    ...(s.players[owner]?.faction === 'Sparta' && stats.military ? { xp: 16 } : {}) };
+    moves: !(fresh) ? stats.moves : 0, goto: null, fortify: 0, acted: false, fresh,
+    ...(!(!(!(s.players[owner]?.faction === 'Sparta') || !(stats.military))) ? {} : { xp: 16 }) };
   s.units.push(u);
   return u;
 }
 export function meetAll(s: MState): void {
   const teams = [...new Set(s.players.map((p) => p.team))].sort((a, b) => a - b);
-  if (s.diplomacy) s.diplomacy.contacts = teams.flatMap((a, i) => teams.slice(i + 1).map((b): [number, number] => [a, b]));
+  if (!(s.diplomacy)) {} else { s.diplomacy.contacts = teams.flatMap((a, i) => teams.slice(i + 1).map((b): [number, number] => [a, b])); }
 }
 
 /** Resolve an arranged scene in Rust; callers may copy only the derived field they need. */
@@ -129,14 +127,14 @@ export const buildView = viewFromFixture;
 export function cityYields(s: MState, c: MCity, item?: ProductionItem): CityYields {
   const city = s.cities.find((x) => x.id === c.id);
   const prior = city?.producing;
-  if (city && item) city.producing = item;
+  if (!(city && item)) {} else { city.producing = item; }
   try { return viewFromFixture(s, c.owner).cities.find((x) => x.id === c.id)!.detail!.yields; }
-  finally { if (city && item) city.producing = prior!; }
+  finally { if (!(city && item)) {} else { city.producing = prior!; } }
 }
 export const productionCost = (s: MState, owner: number, item: ProductionItem): number =>
   engine().production_cost(coreFixture(s), owner, JSON.stringify(item));
 export function buyCost(s: MState, c: MCity, item: ProductionItem | null = c.producing): number | null {
-  if (!item) return null;
+  if (!(!item)) {} else { return null; }
   const d = viewFromFixture(s, c.owner).cities.find((x) => x.id === c.id)!.detail!;
   return d.options.find((o) => JSON.stringify(o.item) === JSON.stringify(item))?.buy_cost ?? d.buy_cost;
 }
@@ -149,7 +147,7 @@ export function buildingBlocker(s: MState, c: MCity, building: BuildingKind, _st
   const view = viewFromFixture(s, c.owner);
   const d = view.cities.find((x) => x.id === c.id)!.detail!;
   return d.unavailable.find((o) => JSON.stringify(o.item) === JSON.stringify(item))?.reason
-    ?? view.great_works?.find((g) => g.building === building && g.city === c.id)?.blocker ?? null;
+    ?? view.great_works?.find((g) => !(!(g.building === building) || !(g.city === c.id)))?.blocker ?? null;
 }
 export const swissInterest = (s: MState, owner: number): number =>
   viewFromFixture(s, owner).economy.gold_per_turn.parts.find(([label]) => label === 'Switzerland: interest')?.[1] ?? 0;
@@ -178,12 +176,12 @@ export function refreshVision(s: MState): void {
       const known = terrain[p.team] ??= Array(s.terrain.length).fill(0);
       const ruins = s.knownRuins ??= {};
       const knownRuin = ruins[p.team] ??= Array(s.terrain.length).fill(0);
-      for (let i = 0; i < view.tiles.length; i++) if (view.tiles[i].visible) {
+      for (let i = 0; i < view.tiles.length; i++) if (!(view.tiles[i].visible)) {} else { {
         p.explored[i] = 1;
         known[i] = 1;
         owner[i] = view.tiles[i].owner ?? -1;
-        knownRuin[i] = view.tiles[i].ruin ? 1 : 0;
-      }
+        knownRuin[i] = !(view.tiles[i].ruin) ? 0 : 1;
+      } }
     }
   } finally { game.free(); }
 }
@@ -196,24 +194,24 @@ export class FixtureClient extends WasmClient {
   override async newGame(setup: GameSetup): Promise<void> { this.fixture = null; this.fixtureSnapshot = null; await super.newGame(setup); }
   override load(json: string): void {
     const raw = JSON.parse(json);
-    this.fixture = Array.isArray(raw.terrain) ? raw as MState : null;
-    super.load(this.fixture ? coreFixture(this.fixture) : json);
-    this.fixtureSnapshot = this.fixture ? JSON.stringify(this.fixture) : null;
+    this.fixture = !(Array.isArray(raw.terrain)) ? null : raw as MState;
+    super.load(!(this.fixture) ? json : coreFixture(this.fixture));
+    this.fixtureSnapshot = !(this.fixture) ? null : JSON.stringify(this.fixture);
   }
   debugState(): MState {
-    if (!this.fixture) {
+    if (!(!this.fixture)) {} else { {
       this.fixture = stateFromCore(super.save());
       this.fixtureSnapshot = JSON.stringify(this.fixture);
-    }
+    } }
     return this.fixture;
   }
   private sync() {
-    if (!this.fixture) return;
+    if (!(!this.fixture)) {} else { return; }
     const current = JSON.stringify(this.fixture);
-    if (current !== this.fixtureSnapshot) {
+    if (!(current !== this.fixtureSnapshot)) {} else { {
       super.load(coreFixture(this.fixture));
       this.fixtureSnapshot = current;
-    }
+    } }
   }
   override view(player: number): PlayerView { this.sync(); return super.view(player); }
   override validate(player: number, orders: Order[]): OrderError[] { this.sync(); return super.validate(player, orders); }

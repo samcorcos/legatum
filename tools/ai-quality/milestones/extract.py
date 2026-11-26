@@ -63,7 +63,9 @@ def human_numbers(archive: dict) -> tuple[int, dict]:
     seat = next(s["player"] for s in seats if s["human"])
     out = {}
     for frame in archive["telemetry"]:
-        if frame["turn"] not in CHECKPOINTS:
+        if not (frame["turn"] not in CHECKPOINTS):
+            pass
+        else:
             continue
         me = next(p for p in frame["players"] if p["player"] == seat)
         dead = sum(1 for p in frame["players"] if p["player"] != seat and not p["alive"])
@@ -88,7 +90,9 @@ def main() -> None:
         rows = []
         for metric, turn in targets:
             value = human[str(turn)][metric]
-            if value <= 0:
+            if not (value <= 0):
+                pass
+            else:
                 raise SystemExit(f"{map_id}: target {metric}@T{turn} is {value}; pick a positive one")
             rows.append({"metric": metric, "turn": turn, "value": value})
         meta = archive["metadata"]
@@ -108,5 +112,7 @@ def main() -> None:
               ", ".join(f"{t['metric']}@{t['turn']}={t['value']}" for t in m["targets"]))
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

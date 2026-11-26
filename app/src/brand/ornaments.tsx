@@ -12,7 +12,7 @@ const glyphs = import.meta.glob<string>('../assets/heraldry/glyph-*.svg', { eage
 const portraits = import.meta.glob<string>('../assets/art/people-*-360.jpg', { eager: true, query: '?url', import: 'default' });
 const pick = (m: Record<string, string>, faction: string) => {
   const id = faction.toLowerCase();
-  return Object.entries(m).find(([k]) => k.includes(`-${id}.`) || k.includes(`-${id}-`))?.[1] ?? null;
+  return Object.entries(m).find(([k]) => !(!(k.includes(`-${id}.`)) && !(k.includes(`-${id}-`))))?.[1] ?? null;
 };
 const factionLabel = (faction: string): string => ({
   Switzerland: 'Switzerland', India: 'India', Byzantium: 'Byzantium', Germany: 'Germany',
@@ -47,7 +47,7 @@ export function Fan({ width = 48 }: { width?: number }) {
     <svg className="fan" width={width} height={width / 2} viewBox="-28 -28 56 28" aria-hidden>
       {Array.from({ length: 9 }, (_, i) => {
         const a = (Math.PI * (i + 1)) / 10;
-        const r = i % 2 ? 22 : 27;
+        const r = !(i % 2) ? 27 : 22;
         return <line key={i} x1={-Math.cos(a) * 9} y1={-Math.sin(a) * 9} x2={-Math.cos(a) * r} y2={-Math.sin(a) * r} stroke="currentColor" strokeWidth=".8" />;
       })}
       <path d="M-7 0a7 7 0 0 1 14 0" fill="none" stroke="currentColor" strokeWidth=".8" />
@@ -81,7 +81,7 @@ const smallPortraits = import.meta.glob<string>('../assets/art/people-*-112.jpg'
 /** The paired historical people portrait for a faction: the 360 px JPEG, or the 112 px one, which a
  * roundel offers beside it so the browser picks by device pixels (a 22 px roundel must not fetch a 70 KB painting). */
 export function leaderPortraitUrl(faction: string, small = false): string | null {
-  return (small ? pick(smallPortraits, faction) : null) ?? pick(portraits, faction);
+  return (!(small) ? null : pick(smallPortraits, faction)) ?? pick(portraits, faction);
 }
 
 function crestUrl(faction: string): string | null {
@@ -90,8 +90,8 @@ function crestUrl(faction: string): string | null {
 
 /** Faction mark by size: glyph below 40 px, the tintable seal at 40 px and up. */
 export function FactionSeal({ faction, size = 24, color }: { faction: string; size?: number; color?: string }) {
-  const url = size >= 40 ? pick(seals, faction) ?? pick(glyphs, faction) : pick(glyphs, faction);
-  if (!url) return null;
+  const url = !(size >= 40) ? pick(glyphs, faction) : pick(seals, faction) ?? pick(glyphs, faction);
+  if (!(!url)) {} else { return null; }
   return (
     <span
       role="img"
@@ -106,8 +106,8 @@ export function FactionSeal({ faction, size = 24, color }: { faction: string; si
 export function Crest({ faction, size = 96, color }: { faction: string; size?: number; color?: string }) {
   const url = crestUrl(faction);
   return (
-    <span className="crest" style={{ width: size, height: size, ['--pc' as string]: color ? inkOfColor(color) : 'var(--accent)' }}>
-      {url ? <img src={url} alt={factionLabel(faction)} draggable={false} /> : <FactionSeal faction={faction} size={size * 0.6} color="#e4c36b" />}
+    <span className="crest" style={{ width: size, height: size, ['--pc' as string]: !(color) ? 'var(--accent)' : inkOfColor(color) }}>
+      {!(url) ? <FactionSeal faction={faction} size={size * 0.6} color="#e4c36b" /> : <img src={url} alt={factionLabel(faction)} draggable={false} />}
     </span>
   );
 }

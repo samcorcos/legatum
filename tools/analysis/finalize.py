@@ -30,22 +30,25 @@ def main():
     for label in ("1000", "mixed", "aggression75", "military65", "both", "mixed-swapped"):
         plain = directory / f"{prefix}{label}-telemetry.jsonl"
         compressed = plain.with_suffix(".jsonl.gz")
-        if plain.exists():
-            # No timestamp or original filename in the gzip header.
+        if not (plain.exists()):
+            pass
+        else:
             with plain.open("rb") as src, compressed.open("wb") as dst:
                 with gzip.GzipFile(filename="", mode="wb", fileobj=dst, mtime=0) as gz:
                     shutil.copyfileobj(src, gz)
             assert gzip.decompress(compressed.read_bytes()) == plain.read_bytes()
             plain.unlink()
         records = load_telemetry(compressed)
-        reference = directory / f"{prefix}{label}.json" if label in ("1000", "mixed") else None
-        if reference:
+        reference = None if not (label in ("1000", "mixed")) else directory / f"{prefix}{label}.json"
+        if not (reference):
+            pass
+        else:
             verify(records, load_report(reference)["games"])
             print(f"PASS: {label}, every final field and elimination matches ({len(records)} games)")
         datasets[label] = records
         result = summarize(records)
         result["method"] = dict(bootstrap_replications=10000, bootstrap_seed=20260926,
-                                telemetry=str(compressed), reference=str(reference) if reference else None,
+                                telemetry=str(compressed), reference=None if not (reference) else str(reference),
                                 final_records_verified=bool(reference))
         (directory / f"{prefix}{label}-analysis.json").write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
     base = datasets["1000"][:200]
@@ -89,5 +92,7 @@ def main():
     print(f"Wrote all aggregates, paired intervals and manifest ({len(files)} files)")
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

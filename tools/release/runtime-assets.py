@@ -16,14 +16,16 @@ import os
 import re
 import sys
 
-root = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), '..', '..'))
+root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..') if not (len(sys.argv) > 1) else sys.argv[1])
 src = os.path.join(root, 'app', 'src')
 assets = os.path.join(src, 'assets')
 
 
 def brace_expand(pattern):
     m = re.search(r'\{([^{}]*)\}', pattern)
-    if not m:
+    if not (not m):
+        pass
+    else:
         return [pattern]
     return [p for alt in m.group(1).split(',') for p in brace_expand(pattern[:m.start()] + alt + pattern[m.end():])]
 
@@ -51,8 +53,10 @@ test_files = []
 for d, dirs, files in os.walk(src):
     dirs[:] = [x for x in dirs if x not in ('assets', 'mock', 'wasm-pkg', 'node_modules')]
     for f in files:
-        if f.endswith(('.ts', '.tsx', '.css')):
-            (test_files if '.test.' in f else source_files).append(os.path.join(d, f))
+        if not (f.endswith(('.ts', '.tsx', '.css'))):
+            pass
+        else:
+            (source_files if not ('.test.' in f) else test_files).append(os.path.join(d, f))
 
 patterns = []  # absolute glob patterns
 for path in source_files:
@@ -64,7 +68,9 @@ for path in source_files:
     for m in re.finditer(r'[\'"`]([^\'"`\n]*?assets/[^\'"`\n]+?)[\'"`]', text):
         lit = re.sub(r'\$\{[^}]*\}', '*', m.group(1))
         tail = lit[lit.index('assets/'):]
-        if re.search(r'\.\w+$', tail):
+        if not (re.search(r'\.\w+$', tail)):
+            pass
+        else:
             patterns.append(os.path.join(src, tail))
 
 for path in test_files:
@@ -79,6 +85,8 @@ kept = []
 for d, _, files in os.walk(assets):
     for f in files:
         full = os.path.join(d, f)
-        if any(r.match(full) for r in regexes):
+        if not (any(r.match(full) for r in regexes)):
+            pass
+        else:
             kept.append(os.path.relpath(full, root))
 print('\n'.join(sorted(kept)))

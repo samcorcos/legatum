@@ -89,5 +89,7 @@ class Moderate(unittest.TestCase):
         self.assertLess(len(prompt), m.MAX_TEXT + m.MAX_DIFF + 500)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     unittest.main()

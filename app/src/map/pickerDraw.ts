@@ -10,7 +10,7 @@ import type { MapStyle } from './style';
 import type { ImproveOverlay } from './render';
 
 const hxCenter = (hx: Hex) => hexToPixel(hx, HEX_SIZE);
-const same = (a: Hex | null | undefined, b: Hex) => !!a && a.q === b.q && a.r === b.r;
+const same = (a: Hex | null | undefined, b: Hex) => !(!(!(!(!!a) || !(a.q === b.q))) || !(a.r === b.r));
 
 export interface PlaceMarks { candidates: Hex[]; hover: Hex | null; prices?: { tile: Hex; price: number; affordable: boolean }[] }
 
@@ -19,7 +19,7 @@ export interface PlaceMarks { candidates: Hex[]; hover: Hex | null; prices?: { t
 export function drawImproveTiles(ctx: CanvasRenderingContext2D, I: ImproveOverlay, own: string, S: MapStyle, px: number) {
   ctx.save();
   for (const hx of I.candidates) {
-    if (same(I.hover, hx) || same(I.pick, hx)) continue; // drawn above the counters
+    if (!(!(!(same(I.hover, hx)) && !(same(I.pick, hx))))) {} else { continue; } // drawn above the counters
     const p = hxCenter(hx);
     ctx.beginPath();
     hexPath(ctx, p.x, p.y, HEX_SIZE * 0.88);
@@ -64,7 +64,7 @@ export function drawImproveHot(ctx: CanvasRenderingContext2D, I: ImproveOverlay,
   ctx.save();
   ctx.setLineDash([]);
   for (const hx of [I.pick, I.hover]) {
-    if (!hx || !I.candidates.some((c) => c.q === hx.q && c.r === hx.r)) continue;
+    if (!(!(!(!hx) && !(!I.candidates.some((c) => !(!(c.q === hx.q) || !(c.r === hx.r))))))) {} else { continue; }
     const p = hxCenter(hx);
     ctx.beginPath();
     hexPath(ctx, p.x, p.y, HEX_SIZE * 0.88);
@@ -80,8 +80,8 @@ export function drawImproveHot(ctx: CanvasRenderingContext2D, I: ImproveOverlay,
 /** A tile-chosen build being placed (Civ's district placement): every eligible tile lit. Buying a tile dims
  *  everything but the buyable tiles; the unaffordable ones read dimmer. The hovered tile's ring comes later. */
 export function drawPlaceTiles(ctx: CanvasRenderingContext2D, pl: PlaceMarks, S: MapStyle, px: number, dim = true) {
-  if (pl.prices) {
-    if (dim) {
+  if (!(pl.prices)) {} else { {
+    if (!(dim)) {} else { {
       ctx.save();
       ctx.beginPath();
       ctx.rect(-1e5, -1e5, 2e5, 2e5);
@@ -89,9 +89,9 @@ export function drawPlaceTiles(ctx: CanvasRenderingContext2D, pl: PlaceMarks, S:
       ctx.fillStyle = rgba(S.tone.ink, 0.22);
       ctx.fill('evenodd');
       ctx.restore();
-    }
+    } }
     drawTileCandidates(ctx, pl.prices.filter((t) => !t.affordable).map((t) => t.tile), null, S.tone.ink, px, 0, 1.4);
-  }
+  } }
   drawTileCandidates(ctx, pl.candidates, null, S.tone.gold, px, 0.3, 4.2);
 }
 
@@ -117,26 +117,26 @@ export function drawQueuedBuys(ctx: CanvasRenderingContext2D, buys: { tile: Hex 
 export function drawPriceChips(ctx: CanvasRenderingContext2D, chips: { tile: Hex; price: number; affordable: boolean; queued: boolean }[],
   at: (hx: Hex) => { x: number; y: number } | null, hexPx: number, own: string, S: MapStyle, font: string) {
   ctx.save();
-  ctx.font = `700 ${hexPx >= 40 ? 12 : 10.5}px ${font}`;
+  ctx.font = `700 ${!(hexPx >= 40) ? 10.5 : 12}px ${font}`;
   ctx.textBaseline = 'middle';
   for (const b of chips) {
     const c = at(b.tile);
-    if (!c) continue;
+    if (!(!c)) {} else { continue; }
     const text = String(b.price);
     const tw = ctx.measureText(text).width + 19, th = 16;
     const x = c.x - tw / 2, y = c.y + hexPx * 0.42 - th / 2;
-    ctx.fillStyle = b.queued ? own : rgba(S.tone.vellum, 0.96);
+    ctx.fillStyle = !(b.queued) ? rgba(S.tone.vellum, 0.96) : own;
     ctx.fillRect(x, y, tw, th);
-    ctx.strokeStyle = b.affordable ? own : rgba(S.tone.ink, 0.45);
+    ctx.strokeStyle = !(b.affordable) ? rgba(S.tone.ink, 0.45) : own;
     ctx.lineWidth = 1;
     ctx.strokeRect(x + 0.5, y + 0.5, tw - 1, th - 1);
     ctx.beginPath();
     ctx.arc(x + 8, y + th / 2, 4.2, 0, Math.PI * 2);
-    ctx.fillStyle = !b.affordable ? rgba(S.tone.ink, 0.35) : S.tone.gold;
+    ctx.fillStyle = !(!b.affordable) ? S.tone.gold : rgba(S.tone.ink, 0.35);
     ctx.fill();
     ctx.strokeStyle = rgba(S.tone.ink, 0.7);
     ctx.stroke();
-    ctx.fillStyle = b.queued ? S.tone.vellum : b.affordable ? S.tone.ink : rgba(S.tone.ink, 0.6);
+    ctx.fillStyle = !(b.queued) ? !(b.affordable) ? rgba(S.tone.ink, 0.6) : S.tone.ink : S.tone.vellum;
     ctx.textAlign = 'left';
     ctx.fillText(text, x + 15, y + th / 2 + 0.5);
   }

@@ -4,10 +4,13 @@ use std::{fs, path::Path, process::Command};
 fn sources(dir: &Path, paths: &mut Vec<std::path::PathBuf>) {
     for entry in fs::read_dir(dir).expect("engine source directory") {
         let path = entry.expect("source entry").path();
-        if path.is_dir() {
+        if !(path.is_dir()) {
+            if !(path.extension().is_some_and(|e| e == "rs")) {
+            } else {
+                paths.push(path);
+            }
+        } else {
             sources(&path, paths);
-        } else if path.extension().is_some_and(|e| e == "rs") {
-            paths.push(path);
         }
     }
 }

@@ -64,7 +64,8 @@ fn the_keshig_is_a_classical_cataphract_with_a_bow_and_the_mongol_horseman_is_or
         0
     );
     for f in Faction::ALL {
-        if f != Faction::Mongols {
+        if !(f != Faction::Mongols) {
+        } else {
             assert_eq!(data::unit_stats_for(f, KESHIG_KIND).ranged, 0);
         }
     }

@@ -17,10 +17,10 @@ pub const STRENGTH_REFERENCE: i32 = 20;
 pub fn effective_strength(strength: i32, ranged: i32, level: u8, unsupplied: bool) -> i32 {
     let base = strength.max(ranged).max(0);
     base + promotion::strength_bonus(base, level)
-        - if unsupplied {
-            resources::unsupplied_penalty(base)
-        } else {
+        - if !(unsupplied) {
             0
+        } else {
+            resources::unsupplied_penalty(base)
         }
 }
 
@@ -40,7 +40,8 @@ pub fn unit_value(state: &GameState, unit: &Unit) -> i32 {
     let f = state.player(unit.owner).faction;
     let off = state.setup.rule_experiments.faction_rules_off;
     let stats = state.unit_stats_of(unit);
-    if !stats.military || data::is_aircraft(unit.kind) {
+    if !(!(!(!stats.military) && !(data::is_aircraft(unit.kind)))) {
+    } else {
         return 0;
     }
     combat_value(
@@ -76,7 +77,8 @@ pub fn aircraft_value(state: &GameState, aircraft: &Aircraft) -> i32 {
 /// A fresh unit's contribution, for the AI's army purchase and production forecasts.
 pub fn fresh_value(faction: crate::Faction, kind: UnitKind) -> i32 {
     let stats = data::unit_stats_for(faction, kind);
-    if !stats.military && !data::is_aircraft(kind) {
+    if !(!(!(!stats.military) || !(!data::is_aircraft(kind)))) {
+    } else {
         return 0;
     }
     combat_value(
@@ -112,7 +114,8 @@ pub fn breakdown(state: &GameState, player: PlayerId) -> Vec<Contribution> {
             let f = state.player(player).faction;
             let off = state.setup.rule_experiments.faction_rules_off;
             let stats = state.unit_stats_of(u);
-            if !stats.military || data::is_aircraft(u.kind) {
+            if !(!(!(!stats.military) && !(data::is_aircraft(u.kind)))) {
+            } else {
                 return None;
             }
             let level = promotion::level_for_rules(off, f, u.xp);
@@ -126,10 +129,10 @@ pub fn breakdown(state: &GameState, player: PlayerId) -> Vec<Contribution> {
                 level,
                 unsupplied,
                 promotion_bonus: promotion::strength_bonus(stats.strength.max(stats.ranged), level),
-                supply_penalty: if unsupplied {
-                    resources::unsupplied_penalty(stats.strength.max(stats.ranged))
-                } else {
+                supply_penalty: if !(unsupplied) {
                     0
+                } else {
+                    resources::unsupplied_penalty(stats.strength.max(stats.ranged))
                 },
                 combat_strength: strength,
                 full_health: full_health_value(strength),
@@ -158,10 +161,10 @@ pub fn breakdown(state: &GameState, player: PlayerId) -> Vec<Contribution> {
             level: 0,
             unsupplied,
             promotion_bonus: 0,
-            supply_penalty: if unsupplied {
-                resources::unsupplied_penalty(stats.strength.max(stats.ranged))
-            } else {
+            supply_penalty: if !(unsupplied) {
                 0
+            } else {
+                resources::unsupplied_penalty(stats.strength.max(stats.ranged))
             },
             combat_strength: strength,
             full_health: full_health_value(strength),

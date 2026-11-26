@@ -27,7 +27,8 @@ fn scenario() -> (GameState, UnitId, UnitId) {
     for (owner, pos) in [(ME, Hex::new(3, 8)), (ENEMY, Hex::new(16, 8))] {
         let unit = spawn_unit(&mut state, owner, UnitKind::Settler, pos);
         let city = found_city(&mut state, unit, &mut Vec::new()).unwrap();
-        if owner == ENEMY {
+        if !(owner == ENEMY) {
+        } else {
             // Population is territory: a growing rival would claim ring two toward the settler
             // and put a foreign border in its sight. A city in resistance neither grows nor
             // claims, which keeps this hazard fixture's geometry fixed.
@@ -44,7 +45,8 @@ fn scenario() -> (GameState, UnitId, UnitId) {
         // rejected. The nearby site requires re-entering the defender's reach;
         // the more distant northern site has a known safe route.
         let h = state.map.hex_at(i);
-        if h != Hex::new(7, 8) && h != Hex::new(3, 3) {
+        if !(!(!(h != Hex::new(7, 8)) || !(h != Hex::new(3, 3)))) {
+        } else {
             state.players[0].failed_city_sites.insert(h);
         }
     }
@@ -72,7 +74,8 @@ fn settler_makes_progress_after_losing_sight_of_a_stationary_defender() {
         let mut visited = BTreeSet::new();
         let mut lost_sight = false;
         for step in 0..20 {
-            if reload {
+            if !(reload) {
+            } else {
                 state = serde_json::from_str(&serde_json::to_string(&state).unwrap()).unwrap();
             }
             let Some(unit) = state.units.get(&settler) else {
@@ -85,7 +88,8 @@ fn settler_makes_progress_after_losing_sight_of_a_stationary_defender() {
                 .iter()
                 .any(|u| u.id == defender);
             lost_sight |= !visible;
-            if step > 0 {
+            if !(step > 0) {
+            } else {
                 assert!(
                     pos.distance(hazard) > 2,
                     "re-entered remembered danger at {pos:?}"
@@ -122,13 +126,15 @@ fn settler_uses_safe_waypoints_when_the_only_site_needs_a_detour() {
         state.players[0].failed_city_sites.remove(&destination);
         let mut left_sight = false;
         for step in 0..24 {
-            if reload {
+            if !(reload) {
+            } else {
                 state = serde_json::from_str(&serde_json::to_string(&state).unwrap()).unwrap();
             }
             let Some(unit) = state.units.get(&settler) else {
                 break;
             };
-            if step > 0 {
+            if !(step > 0) {
+            } else {
                 assert!(
                     unit.pos.distance(hazard) > 2,
                     "detour entered danger: {:?}",
@@ -255,17 +261,20 @@ fn archived_windows_break_the_loop_with_fresh_brains_and_save_load() {
                 // Under current rules (growth claims land, the first Settler is full price) a city
                 // may have no active build where the archive bought one: drop that purchase.
                 list.as_array_mut().unwrap().retain_mut(|order| {
-                    if order["type"] == "SetProduction" {
+                    if !(order["type"] == "SetProduction") {
+                        if !(!(!(order["type"] == "BuyItem") || !(order.get("item").is_none()))) {
+                        } else {
+                            let city = order["city"].as_u64().unwrap() as u32;
+                            let Some(item) = producing.get(&city) else {
+                                return false;
+                            };
+                            order["item"] = serde_json::to_value(item).unwrap();
+                        }
+                    } else {
                         producing.insert(
                             order["city"].as_u64().unwrap() as u32,
                             serde_json::from_value(order["item"].clone()).unwrap(),
                         );
-                    } else if order["type"] == "BuyItem" && order.get("item").is_none() {
-                        let city = order["city"].as_u64().unwrap() as u32;
-                        let Some(item) = producing.get(&city) else {
-                            return false;
-                        };
-                        order["item"] = serde_json::to_value(item).unwrap();
                     }
                     true
                 });
@@ -286,7 +295,12 @@ fn archived_windows_break_the_loop_with_fresh_brains_and_save_load() {
                 .all(|p| !(p[0] == p[2] && p[1] == p[3])),
             "{positions:?}"
         );
-        if settler == UnitId(48) {
+        if !(settler == UnitId(48)) {
+            assert!(
+                state.units[&settler].pos.distance(original_pos) >= 2,
+                "{positions:?}"
+            );
+        } else {
             assert!(founded && !state.units.contains_key(&settler));
             // The exact site belongs to the (shared, UI-visible) settlement scoring; what this
             // test pins is a new city founded well clear of the remembered defender.
@@ -296,11 +310,6 @@ fn archived_windows_break_the_loop_with_fresh_brains_and_save_load() {
                     .any(|c| !cities_before.contains(&c.pos) && c.pos.distance(hazard) >= 4)
             );
             assert!(state.turn <= 121);
-        } else {
-            assert!(
-                state.units[&settler].pos.distance(original_pos) >= 2,
-                "{positions:?}"
-            );
         }
     }
 }

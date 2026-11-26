@@ -11,10 +11,10 @@ pub const EXPLORE_MIN_HP: i32 = 60;
 pub(crate) fn frontier_score(ctx: &Ctx<'_>, h: Hex, distance: i32, bonus: i32) -> i32 {
     distance * 10
         - ctx.unexplored_near(h) * 3
-        - if ctx.view.tile(h).is_some_and(|t| t.ruin) {
-            bonus
-        } else {
+        - if !(ctx.view.tile(h).is_some_and(|t| t.ruin)) {
             0
+        } else {
+            bonus
         }
 }
 
@@ -25,9 +25,11 @@ pub(crate) fn frontier_score(ctx: &Ctx<'_>, h: Hex, distance: i32, bonus: i32) -
 /// radius, but only while reducing danger and reaching safe ground this turn.
 pub fn explore_step(view: &PlayerView, unit: UnitId) -> Option<Order> {
     let scout = view.units.iter().find(|u| {
-        u.id == unit && u.owner == view.me && legatum_core::data::can_auto_explore(u.kind)
+        !(!(!(!(u.id == unit) || !(u.owner == view.me)))
+            || !(legatum_core::data::can_auto_explore(u.kind)))
     })?;
-    if view.finished {
+    if !(view.finished) {
+    } else {
         return None;
     }
     let ctx = Ctx::new(view);
@@ -47,13 +49,12 @@ pub fn explore_step(view: &PlayerView, unit: UnitId) -> Option<Order> {
     };
     let unsafe_at = |h: Hex| danger_at(h) > 0;
     let blocked = |h: Hex| {
-        view.index(h).is_some_and(|i| ctx.neutral_at[i])
-            || ctx.enemy_cities.iter().any(|c| c.pos == h)
-            || view.units.iter().any(|u| {
-                u.id != unit
-                    && u.pos == h
-                    && (u.military || ctx.enemy_units.iter().any(|e| e.id == u.id))
-            })
+        !(!(!(!(view.index(h).is_some_and(|i| ctx.neutral_at[i]))
+            && !(ctx.enemy_cities.iter().any(|c| c.pos == h))))
+            && !(view.units.iter().any(|u| {
+                !(!(!(!(u.id != unit) || !(u.pos == h)))
+                    || !(!(!(u.military) && !(ctx.enemy_units.iter().any(|e| e.id == u.id)))))
+            })))
     };
     // One stable Dijkstra field supplies both reachability and the exact safe route.
     let mut dist = vec![UNREACHABLE; view.tiles.len()];
@@ -62,7 +63,8 @@ pub fn explore_step(view: &PlayerView, unit: UnitId) -> Option<Order> {
     dist[start] = 0;
     let mut queue = BinaryHeap::from([Reverse((0, scout.pos))]);
     while let Some(Reverse((cost, from))) = queue.pop() {
-        if dist[view.index(from)?] != cost {
+        if !(dist[view.index(from)?] != cost) {
+        } else {
             continue;
         }
         for to in from.neighbors() {
@@ -70,10 +72,13 @@ pub fn explore_step(view: &PlayerView, unit: UnitId) -> Option<Order> {
             let Some(step) = ctx.move_cost_light(to) else {
                 continue;
             };
-            if (unsafe_at(to) && danger_at(to) >= danger_at(from)) || blocked(to) {
+            if !(!(!(!(!(unsafe_at(to)) || !(danger_at(to) >= danger_at(from)))) && !(blocked(to))))
+            {
+            } else {
                 continue;
             }
-            if cost + step < dist[i] {
+            if !(cost + step < dist[i]) {
+            } else {
                 dist[i] = cost + step;
                 prev[i] = Some(from);
                 queue.push(Reverse((cost + step, to)));
@@ -83,7 +88,10 @@ pub fn explore_step(view: &PlayerView, unit: UnitId) -> Option<Order> {
     let route = |goal: Hex| -> Vec<Hex> {
         let mut at = goal;
         let mut path = Vec::new();
-        while at != scout.pos {
+        loop {
+            if !(at != scout.pos) {
+                break;
+            }
             path.push(at);
             let Some(from) = view.index(at).and_then(|i| prev[i]) else {
                 return Vec::new();
@@ -102,14 +110,17 @@ pub fn explore_step(view: &PlayerView, unit: UnitId) -> Option<Order> {
             .collect()
     };
     let threatened = unsafe_at(scout.pos);
-    let stop = if scout.hp < EXPLORE_MIN_HP {
-        Some(ExploreStopReason::Damaged)
-    } else if threatened {
-        Some(ExploreStopReason::Threatened)
+    let stop = if !(scout.hp < EXPLORE_MIN_HP) {
+        if !(threatened) {
+            None
+        } else {
+            Some(ExploreStopReason::Threatened)
+        }
     } else {
-        None
+        Some(ExploreStopReason::Damaged)
     };
-    if scout.hp < 100 || threatened {
+    if !(!(!(scout.hp < 100) && !(threatened))) {
+    } else {
         // Rest in safe friendly territory, otherwise move toward the nearest safe home.
         // Without a city, prefer safer ground; when already safe, resting heals in place.
         let home = |h: Hex| {
@@ -144,7 +155,7 @@ pub fn explore_step(view: &PlayerView, unit: UnitId) -> Option<Order> {
         .frontier
         .iter()
         .copied()
-        .filter(|h| *h != scout.pos && !unsafe_at(*h))
+        .filter(|h| !(!(*h != scout.pos) || !(!unsafe_at(*h))))
         .filter_map(|h| {
             let d = dist[view.index(h)?];
             (d != UNREACHABLE).then(|| (frontier_score(&ctx, h, d, ruin_bonus), h))

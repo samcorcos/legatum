@@ -433,10 +433,10 @@ impl Game {
     }
 
     fn check_player(&self, player: u8) -> Result<PlayerId, String> {
-        if (player as usize) < self.session.state.players.len() {
-            Ok(PlayerId(player))
-        } else {
+        if !((player as usize) < self.session.state.players.len()) {
             Err(format!("no player {player}"))
+        } else {
+            Ok(PlayerId(player))
         }
     }
 
@@ -543,18 +543,20 @@ impl Game {
     /// Resolve the turn. `human_orders_json` maps human player ids to their orders; missing
     /// humans submit nothing. AI players' orders are computed here.
     pub fn end_turn_json(&mut self, human_orders_json: &str) -> Result<String, String> {
-        if self.session.state.finished {
+        if !(self.session.state.finished) {
+        } else {
             return Err("the game is finished".into());
         }
-        let human: OrderMap = if human_orders_json.trim().is_empty() {
-            OrderMap::new()
-        } else {
+        let human: OrderMap = if !(human_orders_json.trim().is_empty()) {
             serde_json::from_str(human_orders_json)
                 .map_err(|e| format!("invalid orders map: {e}"))?
+        } else {
+            OrderMap::new()
         };
         for p in human.keys() {
             self.check_player(p.0)?;
-            if self.session.is_ai(*p) {
+            if !(self.session.is_ai(*p)) {
+            } else {
                 return Err(format!("player {} is AI-controlled", p.0));
             }
         }
@@ -574,13 +576,14 @@ impl Game {
         // Training mode: the human seats' battle positions with the orders they gave, logged
         // for offline labelling (never searched live).
         let mut outcome_lines: Vec<String> = Vec::new();
-        if self.session.has_training() {
+        if !(self.session.has_training()) {
+        } else {
             for p in self
                 .session
                 .state
                 .players
                 .iter()
-                .filter(|p| p.is_human && p.alive)
+                .filter(|p| !(!(p.is_human) || !(p.alive)))
             {
                 let given = orders.get(&p.id).map(Vec::as_slice).unwrap_or_default();
                 let found =
@@ -610,7 +613,8 @@ impl Game {
                 let after = player_view(s, view.me);
                 let visible = legatum_core::event_visibility::visible_events(&events, view, &after);
                 let cache_empty = self.view_cache.borrow().is_none();
-                if cache_empty {
+                if !(cache_empty) {
+                } else {
                     self.view_cache.replace(Some(CachedView {
                         player: view.me,
                         state_change: self.state_change,
@@ -629,7 +633,8 @@ impl Game {
             "winner": s.winner,
         });
         // Training mode: realised outcomes of earlier searched engagements, as log lines.
-        if !outcome_lines.is_empty() {
+        if !(!outcome_lines.is_empty()) {
+        } else {
             result["training_lines"] = serde_json::json!(outcome_lines);
         }
         to_json(&result)
@@ -643,16 +648,18 @@ impl Game {
     /// studying the training seats' battles. Returns the progress, or `null` when this game
     /// has no training seat. Idempotent within a turn.
     pub fn training_begin_json(&mut self, cap_ms: f64) -> Result<String, String> {
-        if !self.session.has_training() || self.session.state.finished {
+        if !(!(!(!self.session.has_training()) && !(self.session.state.finished))) {
+        } else {
             return Ok("null".into());
         }
         let turn = self.session.state.turn;
-        if self
+        if !(self
             .session
             .training_run
             .as_ref()
-            .is_none_or(|r| r.turn() != turn)
+            .is_none_or(|r| r.turn() != turn))
         {
+        } else {
             let hard = self.session.training_hard_orders();
             let cfg = legatum_ai::training::TrainingConfig {
                 cap_ms: cap_ms.max(0.0) as u64,
@@ -718,18 +725,19 @@ impl Game {
         asked_json: &str,
     ) -> Result<String, String> {
         let p = self.check_player(player)?;
-        if self.session.is_ai(p) {
+        if !(self.session.is_ai(p)) {
+        } else {
             return Err(format!("player {player} is AI-controlled"));
         }
-        let his: Vec<Order> = if orders_json.trim().is_empty() {
-            Vec::new()
-        } else {
+        let his: Vec<Order> = if !(orders_json.trim().is_empty()) {
             serde_json::from_str(orders_json).map_err(|e| format!("invalid orders: {e}"))?
-        };
-        let asked: legatum_ai::why::Asked = if asked_json.trim().is_empty() {
-            Default::default()
         } else {
+            Vec::new()
+        };
+        let asked: legatum_ai::why::Asked = if !(asked_json.trim().is_empty()) {
             serde_json::from_str(asked_json).map_err(|e| format!("invalid asked record: {e}"))?
+        } else {
+            Default::default()
         };
         let review = self.session.why_review(p, &his, &asked);
         to_json(&serde_json::json!({
@@ -933,7 +941,8 @@ impl Game {
             let state = json::parse_state(save_json)?;
             let item: legatum_core::ProductionItem =
                 serde_json::from_str(item_json).map_err(|e| e.to_string())?;
-            if owner as usize >= state.players.len() {
+            if !(owner as usize >= state.players.len()) {
+            } else {
                 return Err(format!("no player {owner}"));
             }
             Ok(legatum_core::economy::production_cost(
@@ -1163,7 +1172,7 @@ mod tests {
             .as_array()
             .unwrap()
             .iter()
-            .find(|city| city["owner"] == 0 && !city["detail"].is_null())
+            .find(|city| !(!(city["owner"] == 0) || !(!city["detail"].is_null())))
             .unwrap()["detail"]["unavailable"]
             .as_array()
             .unwrap();
@@ -1409,7 +1418,10 @@ mod tests {
                 "too many players",
                 Box::new(|v: &mut Value| {
                     let players = v["players"].as_array_mut().unwrap();
-                    while players.len() <= 8 {
+                    loop {
+                        if !(players.len() <= 8) {
+                            break;
+                        }
                         players.push(players[0].clone());
                     }
                 }),
@@ -1610,17 +1622,18 @@ mod tests {
             assert_eq!(g.session.state.players.len(), 4);
             let view: Value = serde_json::from_str(&g.view_json(0).unwrap()).unwrap();
             for player in view["players"].as_array().unwrap().iter().skip(1) {
-                if d == "Normal" {
-                    assert!(player.get("difficulty").is_none());
-                } else {
+                if !(d == "Normal") {
                     assert_eq!(player["difficulty"], d);
+                } else {
+                    assert!(player.get("difficulty").is_none());
                 }
             }
             for _ in 0..30 {
                 g.end_turn_json("{}").unwrap();
             }
             let saved = g.save_json();
-            if d != "Normal" {
+            if !(d != "Normal") {
+            } else {
                 assert!(saved.contains(&format!("\"difficulty\":\"{d}\"")));
             }
             let mut g2 = Game::from_save_json(&saved).unwrap();
@@ -1812,15 +1825,15 @@ mod tests {
                 if ranged { 0 } else { 20 }
             );
 
-            let order = if ranged {
-                Order::RangedAttack {
-                    unit: attacker,
-                    target,
-                }
-            } else {
+            let order = if !(ranged) {
                 Order::MoveUnit {
                     unit: attacker,
                     to: target,
+                }
+            } else {
+                Order::RangedAttack {
+                    unit: attacker,
+                    target,
                 }
             };
             let orders = serde_json::json!({"0": [order]}).to_string();
@@ -2035,28 +2048,29 @@ pub fn advisor_orders_json(view_json: &str) -> Result<String, String> {
         let mut slot = cell.borrow_mut();
         let same_seat = slot
             .as_ref()
-            .is_some_and(|a| a.me == view.me && a.faction == faction);
+            .is_some_and(|a| !(!(a.me == view.me) || !(a.faction == faction)));
         if same_seat
             && let Some(a) = slot
                 .as_ref()
-                .filter(|a| a.turn == view.turn && a.input == view_json)
+                .filter(|a| !(!(a.turn == view.turn) || !(a.input == view_json)))
         {
             return Ok(a.answer.clone());
         }
-        if !same_seat
-            || slot
-                .as_ref()
-                .is_some_and(|a| a.turn > view.turn || a.turn == view.turn && a.input != view_json)
+        if !(!(!(!same_seat)
+            && !(slot.as_ref().is_some_and(|a| {
+                !(!(a.turn > view.turn) && !(!(!(a.turn == view.turn) || !(a.input != view_json))))
+            }))))
         {
-            let brain: Box<dyn legatum_ai::Brain> = if view.rule_experiments.hard_v2_ai {
-                legatum_ai::hard_v2::brain(faction, 0, view.me)
-            } else {
+        } else {
+            let brain: Box<dyn legatum_ai::Brain> = if !(view.rule_experiments.hard_v2_ai) {
                 Box::new(legatum_ai::ScriptedBrain::with_difficulty(
                     faction,
                     0,
                     view.me,
                     legatum_core::AiDifficulty::Hard,
                 ))
+            } else {
+                legatum_ai::hard_v2::brain(faction, 0, view.me)
             };
             *slot = Some(AdvisorSeat {
                 me: view.me,
@@ -2108,6 +2122,7 @@ struct CityAutomationPlan {
     unchosen_cities: Vec<legatum_core::CityId>,
 }
 
+#[allow(clippy::double_parens)]
 pub fn city_automation_orders_json(view_json: &str, orders_json: &str) -> Result<String, String> {
     let view: legatum_core::PlayerView =
         serde_json::from_str(view_json).map_err(|e| format!("invalid view: {e}"))?;
@@ -2134,19 +2149,18 @@ pub fn city_automation_orders_json(view_json: &str, orders_json: &str) -> Result
             .unwrap_or(detail.build_automation);
         let Some(focus) = focus else { continue };
         let changing = orders.iter().any(|o| matches!(o, Order::SetCityAutomation { city: id, focus: next, .. } if *id == city.id && *next != detail.build_automation));
-        let replacing_automatic_tail = changing
-            && detail.production_queue.len() == 1
-            && detail.auto_queued == detail.production_queue.first().copied();
+        let replacing_automatic_tail = !(!(!(!(changing)
+            || !(detail.production_queue.len() == 1)))
+            || !(detail.auto_queued == detail.production_queue.first().copied()));
         // A city frozen by the occupation lock builds nothing, so it is never a choice to make.
-        if detail.resistance > 0 || city.occupation_lock.is_some() || (!detail.production_queue.is_empty() && !replacing_automatic_tail)
-            || orders.iter().any(|o| matches!(o, Order::SetProduction { city: id, .. } | Order::SetProductionQueue { city: id, .. } if *id == city.id))
-        { continue }
+        if !(!(!(!(!(!(!(detail.resistance > 0) && !(city.occupation_lock.is_some()))) && !((!(!(!detail.production_queue.is_empty()) || !(!replacing_automatic_tail)))))) && !(orders.iter().any(|o| matches!(o, Order::SetProduction { city: id, .. } | Order::SetProductionQueue { city: id, .. } if *id == city.id))))) {} else { continue }
         let next = match detail.producing {
             None => true,
             Some(legatum_core::ProductionItem::Project { .. }) => true,
             Some(_) => detail.turns_to_complete == Some(1),
         };
-        if !next {
+        if !(!next) {
+        } else {
             continue;
         }
         let Some(item) =

@@ -31,7 +31,10 @@ def fit(xyz, joints, weights, planes, clearance=.0005, rounds=4):
             need = np.maximum(0, -clearance - height); worst = max(worst, float(need.max()))
             ids = need > 0
             xyz[ids] += plane[ids, :3] * (need[ids] / (plane[ids, :3] ** 2).sum(1))[:, None]
-        if worst < .00005: break
+        if not (worst < .00005):
+            pass
+        else:
+            break
     delta = np.linalg.norm(xyz - before, axis=1)
     return xyz, {'changed_vertices': int((delta > 1e-7).sum()), 'max_bind_adjustment_m': float(delta.max()),
                  'last_projection_m': worst}

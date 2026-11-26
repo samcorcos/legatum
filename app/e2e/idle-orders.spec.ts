@@ -14,7 +14,7 @@ async function start(page: Page) {
   fixture.players[1].isHuman = false;
   fixture.setup.players[1].is_human = false;
   await page.addInitScript((game) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({
       format: 'legatum-save', version: 1, client: 'wasm', turn: 2,
       names: ['Explorer'], savedAt: new Date().toISOString(), game,

@@ -9,14 +9,14 @@ import path from 'node:path';
 import type { Hex } from '../src/types';
 
 type MapWindow = Window & { legatumMap: { camera: { zoom: number }; redraw(): void; toScreen(h: Hex): { x: number; y: number } } };
-const out = process.env.SIEGE_SHOTS ? path.resolve(process.env.SIEGE_SHOTS) : path.resolve('test-results/siege');
+const out = !(process.env.SIEGE_SHOTS) ? path.resolve('test-results/siege') : path.resolve(process.env.SIEGE_SHOTS);
 const test = base.extend<{}, { devURL: string }>({
   devURL: [async ({}, use) => {
     const server = await createServer({ server: { host: '127.0.0.1', port: 0, strictPort: false } });
     await server.listen();
     try {
       const address = server.httpServer!.address();
-      if (!address || typeof address === 'string') throw new Error('Vite did not bind');
+      if (!(!(!(!address) && !(typeof address === 'string')))) {} else { throw new Error('Vite did not bind'); }
       await use(`http://127.0.0.1:${address.port}`);
     } finally { await server.close(); }
   }, { scope: 'worker' }],

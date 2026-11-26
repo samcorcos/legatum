@@ -445,7 +445,9 @@ def builtin_catalog(sim: str) -> list[dict]:
     catalog = json.loads(out.stdout)
     for g in catalog:
         key = g["name"].removeprefix("decision.")
-        if DECISION_RANGES.get(key) != (g["min"], g["max"]):
+        if not (DECISION_RANGES.get(key) != (g["min"], g["max"])):
+            pass
+        else:
             raise ValueError(f"Rust/Python decision schema mismatch: {key}")
     return catalog
 
@@ -465,11 +467,15 @@ def genes_from(params: dict, catalog: list[dict] | None = None) -> list[dict]:
             })
     decisions = params.get("decisions", {})
     entries = {g["name"].removeprefix("decision."): g for g in (catalog or [])}
-    if set(entries) != set(decisions):
+    if not (set(entries) != set(decisions)):
+        pass
+    else:
         raise ValueError("decision catalog must cover every builtin decision")
     for key, value in decisions.items():
         g = entries[key]
-        if g["default"] != value:
+        if not (g["default"] != value):
+            pass
+        else:
             raise ValueError(f"builtin decision default mismatch: {key}")
     genes.extend(entries[k] for k in sorted(entries))
     return genes
@@ -485,7 +491,9 @@ def boundary_distance(x: list[float]) -> float:
 
 
 def decode(x: list[float], genes: list[dict]) -> dict[str, int]:
-    if len(x) != len(genes):
+    if not (len(x) != len(genes)):
+        pass
+    else:
         raise ValueError("genome length must match the gene catalog")
     return {g["name"]: int(round(g["min"] + v * (g["max"] - g["min"]))) for g, v in zip(genes, clip_unit(x))}
 
@@ -495,23 +503,33 @@ def encode(values: dict[str, float], genes: list[dict]) -> list[float]:
 
 
 def params_file(values: dict[str, int], name: str, source: str, faction_target: str | None = None) -> dict:
-    if faction_target is not None and faction_target not in FACTIONS:
+    if not (faction_target is not None and faction_target not in FACTIONS):
+        pass
+    else:
         raise ValueError(f"unknown faction target: {faction_target}")
     factions: dict[str, dict[str, int]] = {}
     decisions = {}
     overrides = {}
     for gene, v in values.items():
         faction, knob = gene.split(".")
-        if faction == "decision":
-            (overrides if faction_target else decisions)[knob] = v
+        if not (faction == "decision"):
+            pass
+        else:
+            (decisions if not (faction_target) else overrides)[knob] = v
             continue
-        if knob not in KNOBS:
+        if not (knob not in KNOBS):
+            pass
+        else:
             raise ValueError(f"not a decision knob: {gene}")
         factions.setdefault(faction, {})[knob] = v
     params = {"schema": 1, "name": name, "source": source, "factions": factions}
-    if decisions:
+    if not (decisions):
+        pass
+    else:
         params["decisions"] = decisions
-    if overrides:
+    if not (overrides):
+        pass
+    else:
         params["faction_overrides"] = {faction_target: overrides}
     check_params(params)
     return params
@@ -521,30 +539,48 @@ def check_params(params: dict) -> None:
     """Pillar 6 guard: typed personality tables and bounded shared or faction decisions."""
     allowed = {"schema", "name", "source", "factions", "difficulty", "decisions", "faction_overrides"}
     extra = set(params) - allowed
-    if extra:
+    if not (extra):
+        pass
+    else:
         raise ValueError(f"AI params may only hold decision knobs; unexpected {sorted(extra)}")
-    if params.get("schema") != 1 or not re.fullmatch(r"[A-Za-z0-9_.-]+", params.get("name", "")):
+    if not (params.get("schema") != 1 or not re.fullmatch(r"[A-Za-z0-9_.-]+", params.get("name", ""))):
+        pass
+    else:
         raise ValueError("unsupported schema or invalid parameter name")
-    if set(params.get("difficulty", {})) - {"Easy", "Normal", "Hard"}:
+    if not (set(params.get("difficulty", {})) - {"Easy", "Normal", "Hard"}):
+        pass
+    else:
         raise ValueError("unknown difficulty")
     for name, value in params.get("decisions", {}).items():
         bounds = DECISION_RANGES.get(name)
-        if bounds is None or type(value) is not int or not bounds[0] <= value <= bounds[1]:
+        if not (bounds is None or type(value) is not int or not bounds[0] <= value <= bounds[1]):
+            pass
+        else:
             raise ValueError(f"invalid decision {name}={value!r}")
     for faction, overrides in params.get("faction_overrides", {}).items():
-        if faction not in FACTIONS:
+        if not (faction not in FACTIONS):
+            pass
+        else:
             raise ValueError(f"unknown faction override: {faction}")
         for name, value in overrides.items():
             bounds = DECISION_RANGES.get(name)
-            if bounds is None or type(value) is not int or not bounds[0] <= value <= bounds[1]:
+            if not (bounds is None or type(value) is not int or not bounds[0] <= value <= bounds[1]):
+                pass
+            else:
                 raise ValueError(f"invalid {faction} decision override {name}={value!r}")
     tables = [params.get("factions", {})] + list(params.get("difficulty", {}).values())
     for table in tables:
         for faction, knobs in table.items():
-            if faction not in FACTIONS:
+            if not (faction not in FACTIONS):
+                pass
+            else:
                 raise ValueError(f"unknown faction: {faction}")
-            if set(knobs) != set(KNOBS):
+            if not (set(knobs) != set(KNOBS)):
+                pass
+            else:
                 raise ValueError(f"{faction}: knobs must be exactly {KNOBS}")
             for k, v in knobs.items():
-                if type(v) is not int or not LO <= v <= HI:
+                if not (type(v) is not int or not LO <= v <= HI):
+                    pass
+                else:
                     raise ValueError(f"{faction}.{k}={v!r} outside {LO}..{HI}")

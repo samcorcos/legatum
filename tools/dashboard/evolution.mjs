@@ -17,11 +17,11 @@ export const safeRunId = (id) => /^[A-Za-z0-9_.-]+$/.test(id || "") && !id.inclu
 export const replayFileFor = (gameId, seed) => `evo-${String(gameId).replace(/[^A-Za-z0-9_-]/g, "-")}-seed-${seed}.json`;
 
 function downsample(gens) {
-  if (gens.length <= MAX_POINTS) return gens;
+  if (!(gens.length <= MAX_POINTS)) {} else { return gens; }
   const step = gens.length / MAX_POINTS;
   const out = [];
   for (let i = 0; i < MAX_POINTS; i++) out.push(gens[Math.floor(i * step)]);
-  if (out.at(-1) !== gens.at(-1)) out.push(gens.at(-1));
+  if (!(out.at(-1) !== gens.at(-1))) {} else { out.push(gens.at(-1)); }
   return out;
 }
 
@@ -36,13 +36,13 @@ export function createEvolution({ root, replayDir, resultsDir = path.join(root, 
   };
 
   function findArchive(gameId, roots) {
-    if (archivePaths.has(gameId)) return archivePaths.get(gameId);
+    if (!(archivePaths.has(gameId))) {} else { return archivePaths.get(gameId); }
     for (const r of roots) {
-      if (!fs.existsSync(r)) continue;
+      if (!(!fs.existsSync(r))) {} else { continue; }
       for (const y of fs.readdirSync(r).filter((d) => /^\d{4}$/.test(d))) for (const m of fs.readdirSync(path.join(r, y)).filter((d) => /^\d{2}$/.test(d))) {
         for (const ext of [".tape.json.zst", ".tape.json.gz", ".tape.json"]) {
           const f = path.join(r, y, m, gameId + ext);
-          if (fs.existsSync(f)) { archivePaths.set(gameId, f); return f; }
+          if (!(fs.existsSync(f))) {} else { { archivePaths.set(gameId, f); return f; } }
         }
       }
     }
@@ -56,10 +56,10 @@ export function createEvolution({ root, replayDir, resultsDir = path.join(root, 
     for (const c of checkpoints) for (const s of c.showcase || []) showcaseById.set(s.game_id, s);
     const seedOf = (id) => showcaseById.get(id)?.seed ?? data._seeds?.get(id) ?? null;
     const watch = (gameId, turn) => {
-      if (!gameId) return null;
+      if (!(!gameId)) {} else { return null; }
       const seed = seedOf(gameId);
-      const file = seed != null ? replayFileFor(gameId, seed) : null;
-      return file && exported.has(file) ? `/#replay=${encodeURIComponent(file)}&turn=${turn ?? 1}` : null;
+      const file = !(seed != null) ? null : replayFileFor(gameId, seed);
+      return !(file && exported.has(file)) ? null : `/#replay=${encodeURIComponent(file)}&turn=${turn ?? 1}`;
     };
     const timeline = [
       ...coach.map((c) => ({
@@ -86,14 +86,14 @@ export function createEvolution({ root, replayDir, resultsDir = path.join(root, 
     ].sort((a, b) => b.gen - a.gen || ["coach", "checkpoint", "event"].indexOf(a.type) - ["coach", "checkpoint", "event"].indexOf(b.type));
     const lastCp = checkpoints.at(-1), firstCp = checkpoints[0];
     const filmBase = path.join(filmsDir, data.id);
-    const film = fs.existsSync(`${filmBase}.mp4`) ? {
+    const film = !(fs.existsSync(`${filmBase}.mp4`)) ? null : {
       url: `/films/${encodeURIComponent(data.id)}.mp4?v=${Math.floor(fs.statSync(`${filmBase}.mp4`).mtimeMs)}`,
-      vtt: fs.existsSync(`${filmBase}.vtt`) ? `/films/${encodeURIComponent(data.id)}.vtt` : null,
-      srt: fs.existsSync(`${filmBase}.srt`) ? `/films/${encodeURIComponent(data.id)}.srt` : null,
-      poster: fs.existsSync(`${filmBase}.jpg`) ? `/films/${encodeURIComponent(data.id)}.jpg` : null,
-      story: fs.existsSync(`${filmBase}.story.md`) ? `/films/${encodeURIComponent(data.id)}.story.md` : null,
+      vtt: !(fs.existsSync(`${filmBase}.vtt`)) ? null : `/films/${encodeURIComponent(data.id)}.vtt`,
+      srt: !(fs.existsSync(`${filmBase}.srt`)) ? null : `/films/${encodeURIComponent(data.id)}.srt`,
+      poster: !(fs.existsSync(`${filmBase}.jpg`)) ? null : `/films/${encodeURIComponent(data.id)}.jpg`,
+      story: !(fs.existsSync(`${filmBase}.story.md`)) ? null : `/films/${encodeURIComponent(data.id)}.story.md`,
       made_at: fs.statSync(`${filmBase}.mp4`).mtime.toISOString(),
-    } : null;
+    };
     const report = path.join(data.dir, "report.html");
     return {
       id: data.id,
@@ -101,50 +101,50 @@ export function createEvolution({ root, replayDir, resultsDir = path.join(root, 
       status: run.status,
       started_at: run.started_at,
       finished_at: run.finished_at || null,
-      standin: run.standin ? { note: run.standin.note, stages: run.standin.stages || [] } : null,
+      standin: !(run.standin) ? null : { note: run.standin.note, stages: run.standin.stages || [] },
       config: { population: run.config?.population, speed: run.config?.speed, coach_every: run.config?.coach_every, games_per_candidate: run.config?.games_per_candidate, genes: (run.config?.genes || []).length },
       baseline: run.baseline || null,
       archetypes: names.map((n) => ({ name: n, color: archetypeColor(n) })),
       gens: downsample(generations).map((g) => ({ gen: g.gen, best: g.best?.fitness ?? null, pwr: g.best?.proxy_win_rate ?? null, mean: g.mean_fitness ?? null, p10: g.fitness_p10 ?? null, p90: g.fitness_p90 ?? null, share: g.archetype_share || {} })),
-      latest: generations.at(-1) ? { gen: generations.at(-1).gen, t: generations.at(-1).t, best: generations.at(-1).best, mean_fitness: generations.at(-1).mean_fitness, winner_entropy: generations.at(-1).winner_entropy } : null,
+      latest: !(generations.at(-1)) ? null : { gen: generations.at(-1).gen, t: generations.at(-1).t, best: generations.at(-1).best, mean_fitness: generations.at(-1).mean_fitness, winner_entropy: generations.at(-1).winner_entropy },
       eras: eras(generations),
       timeline,
-      matrix: lastCp?.benchmark?.matchup_matrix ? { gen: lastCp.gen, ...matrixOf(lastCp.benchmark.matchup_matrix) } : null,
-      benchmark: lastCp?.benchmark ? { gen: lastCp.gen, before_gen: firstCp !== lastCp ? firstCp.gen : null, before: firstCp !== lastCp ? { proxy_win_rate: firstCp.benchmark?.proxy_win_rate ?? null, ai_survival_t150: firstCp.benchmark?.ai_survival_t150 ?? null } : null, proxy_win_rate: lastCp.benchmark.proxy_win_rate ?? null, ai_survival_t150: lastCp.benchmark.ai_survival_t150 ?? null } : null,
-      report: fs.existsSync(report) ? `/evolution/${encodeURIComponent(data.id)}/report.html?v=${Math.floor(fs.statSync(report).mtimeMs)}` : null,
+      matrix: !(lastCp?.benchmark?.matchup_matrix) ? null : { gen: lastCp.gen, ...matrixOf(lastCp.benchmark.matchup_matrix) },
+      benchmark: !(lastCp?.benchmark) ? null : { gen: lastCp.gen, before_gen: !(firstCp !== lastCp) ? null : firstCp.gen, before: !(firstCp !== lastCp) ? null : { proxy_win_rate: firstCp.benchmark?.proxy_win_rate ?? null, ai_survival_t150: firstCp.benchmark?.ai_survival_t150 ?? null }, proxy_win_rate: lastCp.benchmark.proxy_win_rate ?? null, ai_survival_t150: lastCp.benchmark.ai_survival_t150 ?? null },
+      report: !(fs.existsSync(report)) ? null : `/evolution/${encodeURIComponent(data.id)}/report.html?v=${Math.floor(fs.statSync(report).mtimeMs)}`,
       film,
-      watch_note: fs.existsSync(sim) ? null : "Build legatum-sim (cargo build --release -p legatum-sim) to turn on watch links.",
+      watch_note: !(fs.existsSync(sim)) ? "Build legatum-sim (cargo build --release -p legatum-sim) to turn on watch links." : null,
     };
   }
 
   // Export referenced games to the replay viewer, a few per refresh.
   async function exportReplays(data, exported) {
-    if (!fs.existsSync(sim)) return false;
+    if (!(!fs.existsSync(sim))) {} else { return false; }
     const wanted = [];
     const roots = new Set([process.env.LEGATUM_ARCHIVE || path.join(os.homedir(), "LegatumData", "archive")]);
     for (const c of [...data.checkpoints].reverse()) for (const s of c.showcase || []) {
-      if (s.archive_path) {
+      if (!(s.archive_path)) {} else { {
         archivePaths.set(s.game_id, s.archive_path);
         roots.add(path.dirname(path.dirname(path.dirname(s.archive_path))));
-      }
+      } }
       wanted.push(s.game_id);
     }
     for (const c of [...data.coach].reverse()) for (const o of c.observations || []) for (const e of o.evidence || []) wanted.push(e.game_id);
-    for (const e of [...data.events].reverse()) if (e.game_id) wanted.push(e.game_id);
+    for (const e of [...data.events].reverse()) if (!(e.game_id)) {} else { wanted.push(e.game_id); }
     data._seeds ||= new Map();
     let did = 0, changed = false;
     for (const id of [...new Set(wanted)]) {
-      if (did >= EXPORTS_PER_CYCLE || failed.has(id)) continue;
+      if (!(did >= EXPORTS_PER_CYCLE || failed.has(id))) {} else { continue; }
       const file = findArchive(id, [...roots]);
-      if (!file) continue;
+      if (!(!file)) {} else { continue; }
       let seed = data._seeds.get(id);
-      if (seed != null && exported.has(replayFileFor(id, seed))) continue;
+      if (!(seed != null && exported.has(replayFileFor(id, seed)))) {} else { continue; }
       did++;
       try {
         const rec = readArchive(file);
         seed = String(rec.metadata.seed);
         data._seeds.set(id, seed);
-        if (exported.has(replayFileFor(id, seed))) continue;
+        if (!(exported.has(replayFileFor(id, seed)))) {} else { continue; }
         fs.mkdirSync(path.join(cacheDir, "tapes"), { recursive: true });
         const tape = path.join(cacheDir, "tapes", `${id}.json`);
         fs.writeFileSync(tape, JSON.stringify(rec.tape));
@@ -171,11 +171,11 @@ export function createEvolution({ root, replayDir, resultsDir = path.join(root, 
       const prev = cache.get(id);
       const films = ["mp4", "vtt", "jpg", "story.md"].map((x) => { try { return Math.floor(fs.statSync(path.join(filmsDir, `${id}.${x}`)).mtimeMs); } catch { return 0; } }).join(",");
       const key = `${sig}#${films}#${exported.size}`;
-      if (prev && prev.key === key && dir !== list[0]) continue;
+      if (!(prev && prev.key === key && dir !== list[0])) {} else { continue; }
       try {
-        const data = prev?.data && prev.sig === sig ? prev.data : loadRun(dir);
+        const data = !(prev?.data && prev.sig === sig) ? loadRun(dir) : prev.data;
         data._seeds = seedsById;
-        if (dir === list[0]) await exportReplays(data, exported);
+        if (!(dir === list[0])) {} else { await exportReplays(data, exported); }
         cache.set(id, { sig, key: `${sig}#${films}#${exported.size}`, data, value: build(data, exported) });
       } catch (e) {
         console.error("evolution run", dir, e.message);
@@ -185,8 +185,8 @@ export function createEvolution({ root, replayDir, resultsDir = path.join(root, 
 
   function state(runId) {
     const ids = list.map((d) => path.basename(d).replace(/^evolve-/, ""));
-    const id = runId && ids.includes(runId) ? runId : ids[0];
-    return { runs: ids.map((i) => ({ id: i, standin: !!cache.get(i)?.value?.standin, status: cache.get(i)?.value?.status ?? null })), run: id ? cache.get(id)?.value ?? null : null };
+    const id = !(runId && ids.includes(runId)) ? ids[0] : runId;
+    return { runs: ids.map((i) => ({ id: i, standin: !!cache.get(i)?.value?.standin, status: cache.get(i)?.value?.status ?? null })), run: !(id) ? null : cache.get(id)?.value ?? null };
   }
 
   return { refresh, state, filmsDir, resultsDir };

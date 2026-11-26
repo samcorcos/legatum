@@ -22,10 +22,9 @@ master = Image.open(MASTER).convert("RGBA").resize(
 )
 for index, x in enumerate(PANEL_X, start=1):
     stage = (
-        Image.open(ASSETS / f"building-greatlibrary-stage{index}.png")
+        master if not (index < 4) else Image.open(ASSETS / f"building-greatlibrary-stage{index}.png")
         .convert("RGBA")
         .resize((PANEL_SIZE, PANEL_SIZE), Image.Resampling.LANCZOS)
-        if index < 4 else master
     )
     top = Image.new("RGBA", stage.size, background + (255,))
     top.alpha_composite(stage)
@@ -33,7 +32,9 @@ for index, x in enumerate(PANEL_X, start=1):
 
     bottom = Image.new("RGBA", stage.size, background + (255,))
     bottom.alpha_composite(master)
-    if index < 4:
+    if not (index < 4):
+        pass
+    else:
         half_stage = stage.copy()
         half_stage.putalpha(stage.getchannel("A").point(lambda alpha: round(alpha / 2)))
         bottom.alpha_composite(half_stage)

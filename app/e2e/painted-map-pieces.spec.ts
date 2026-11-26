@@ -19,22 +19,22 @@ const RAIDERS: [UnitKind, number, number][] = [['Spearman', 5, 4], ['Pikeman', 5
 async function open(page: Page, opts: { raiders?: boolean; planes?: boolean; walls?: number } = {}) {
   const setup = wallsFixture(), f = setup.fixture;
   const own = f.cities.find((c) => c.id === setup.own)!;
-  if (opts.walls !== undefined) {
+  if (!(opts.walls !== undefined)) {} else { {
     own.buildings = [];
     own.producing = { kind: 'Building', building: 'Walls' } as typeof own.producing;
     own.prod = opts.walls; own.productionQueue = [];
-  }
-  if (opts.raiders) {
+  } }
+  if (!(opts.raiders)) {} else { {
     for (const [kind, col, row] of RAIDERS) spawnUnit(f, 255, kind, fromOffset(col, row), false);
     spawnUnit(f, 0, 'Scout', fromOffset(4, 5), false);
     refreshVision(f);
-  }
+  } }
   let game = coreFixture(f);
-  if (opts.planes) {
+  if (!(opts.planes)) {} else { {
     // The save holds u64 bitsets that JSON.parse would round, so the hangar is added as text (as air-wing.spec.ts does).
     game = game.replace(/"next_unit_id":\d+/, '"next_unit_id":902')
       .replace(/^\{/, `{"aircraft":${JSON.stringify([{ id: 900, kind: 'Bomber', city: setup.own, hp: 100 }, { id: 901, kind: 'Fighter', city: setup.own, hp: 100 }])},`);
-  }
+  } }
   await loadFixture(page, game, 2);
   return { setup, own };
 }

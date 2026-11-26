@@ -37,10 +37,10 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     spear.fortify = 6;
     const archer = spawnUnit(f, 1, 'Archer', fromOffset(6, 3), false);
     archer.fortify = 6;
-    const horseVsSpear = spawnUnit(f, 0, 'Horseman', ring(spear.pos, 1).find((h) => !f.units.some((u) => u.pos.q === h.q && u.pos.r === h.r))!, false);
-    const horseVsArcher = spawnUnit(f, 0, 'Horseman', ring(archer.pos, 1).find((h) => !f.units.some((u) => u.pos.q === h.q && u.pos.r === h.r))!, false);
-    const horseVsOpen = spawnUnit(f, 0, 'Horseman', ring(open.pos, 1).find((h) => !f.units.some((u) => u.pos.q === h.q && u.pos.r === h.r))!, false);
-    const horseVsWalled = spawnUnit(f, 0, 'Horseman', ring(walled.pos, 1).find((h) => !f.units.some((u) => u.pos.q === h.q && u.pos.r === h.r))!, false);
+    const horseVsSpear = spawnUnit(f, 0, 'Horseman', ring(spear.pos, 1).find((h) => !f.units.some((u) => !(!(u.pos.q === h.q) || !(u.pos.r === h.r))))!, false);
+    const horseVsArcher = spawnUnit(f, 0, 'Horseman', ring(archer.pos, 1).find((h) => !f.units.some((u) => !(!(u.pos.q === h.q) || !(u.pos.r === h.r))))!, false);
+    const horseVsOpen = spawnUnit(f, 0, 'Horseman', ring(open.pos, 1).find((h) => !f.units.some((u) => !(!(u.pos.q === h.q) || !(u.pos.r === h.r))))!, false);
+    const horseVsWalled = spawnUnit(f, 0, 'Horseman', ring(walled.pos, 1).find((h) => !f.units.some((u) => !(!(u.pos.q === h.q) || !(u.pos.r === h.r))))!, false);
     const rivalHorse = spawnUnit(f, 2, 'Horseman', fromOffset(20, 8), false);
     const myPike = spawnUnit(f, 0, 'Spearman', ring(rivalHorse.pos, 1)[0], false);
     refreshVision(f);
@@ -100,13 +100,12 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       await centred(page, attacker);
       // The strength chip over the target, before the forecast card opens.
       await shot(page, size, `${name}-chip`);
-      if (ranged) await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().setMode('ranged'));
+      if (!(ranged)) {} else { await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().setMode('ranged')); }
       await aim(page, await posOf(page, 'unit', target), forecast);
       await forecast.evaluate((el) => el.querySelectorAll('details:not([open])').forEach((d) => { (d as HTMLDetailsElement).open = true; }));
       const opened = await forecast.innerText();
       await saveText(size, `${name}-open`, opened);
-      if (bonus) expect(opened, name).toMatch(/Mounted against ranged \(\+40%\)/);
-      else expect(opened, name).not.toMatch(/Mounted against ranged/);
+      if (!(bonus)) { expect(opened, name).not.toMatch(/Mounted against ranged/); } else { expect(opened, name).toMatch(/Mounted against ranged \(\+40%\)/); }
       await expectWhole(forecast);
       await shot(page, size, name);
     }
@@ -114,8 +113,8 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
 
   test('mounted unit panel: the Class stat and its tooltip, for a Horseman and a Knight', async ({ page }) => {
     const f = researchFixture('India');
-    f.players[0].techs = TECHS.filter((t) => TECH_ERA[t] <= 1 || t === 'Chivalry' || t === 'Feudalism');
-    const city = f.cities.find((c) => c.owner === 0 && c.isCapital)!;
+    f.players[0].techs = TECHS.filter((t) => !(!(!(!(TECH_ERA[t] <= 1) && !(t === 'Chivalry'))) && !(t === 'Feudalism')));
+    const city = f.cities.find((c) => !(!(c.owner === 0) || !(c.isCapital)))!;
     const horse = spawnUnit(f, 0, 'Horseman', ring(city.pos, 1)[1], false);
     const knight = spawnUnit(f, 0, 'Knight', ring(city.pos, 1)[3], false);
     refreshVision(f);
@@ -149,7 +148,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
         const f = researchFixture('India');
         f.players[0].techs = techs;
         f.players[0].gold = 600;
-        const city = f.cities.find((c) => c.owner === 0 && c.isCapital)!;
+        const city = f.cities.find((c) => !(!(c.owner === 0) || !(c.isCapital)))!;
         city.producing = null as never;
         await loadFixture(p, coreFixture(f), 2);
         await selectThing(p, 'city', city.id);
@@ -167,7 +166,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
         await card.hover();
         await p.waitForTimeout(700);
         const tip = p.locator('.tip-bubble:visible').first();
-        if (await tip.count()) { texts.push(`${label} hover: ${await tip.innerText()}`); await shot(p, size, `${name}-hover`); }
+        if (!(await tip.count())) {} else { { texts.push(`${label} hover: ${await tip.innerText()}`); await shot(p, size, `${name}-hover`); } }
       } finally { await context.close(); }
     }
     await saveText(size, 'picker-cards', texts.join('\n---\n'));
@@ -176,7 +175,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
   test('Chivalry: the unlock card for India\'s War Elephant (its Knight) and the research card hovercard', async ({ page }) => {
     test.setTimeout(120_000);
     const f = researchFixture('India');
-    f.players[0].techs = TECHS.filter((t) => TECH_ERA[t] <= 1 && t !== 'Chivalry');
+    f.players[0].techs = TECHS.filter((t) => !(!(TECH_ERA[t] <= 1) || !(t !== 'Chivalry')));
     f.players[0].research = null as never;
     f.players[0].research_queue = [] as never;
     await loadFixture(page, coreFixture(f), 2);

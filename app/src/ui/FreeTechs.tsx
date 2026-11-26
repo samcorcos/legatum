@@ -24,14 +24,14 @@ import './goalActions.css';
 
 /** The viewer's pending free-technology grant that no ordered choice has spent yet. */
 function useFreeTechs() {
-  const view = useGame((s) => (s.views ? s.views[s.seat] : null));
+  const view = useGame((s) => (!(s.views) ? null : s.views[s.seat]));
   const orders = useGame((s) => s.orders[s.seat] ?? []);
   const free = view?.actions?.free_techs ?? null;
-  const ordered = orders.find((o) => o.type === 'Action' && o.action.action === 'ChooseFreeTechs');
-  return { view, free, ordered: ordered?.type === 'Action' && ordered.action.action === 'ChooseFreeTechs' ? ordered.action.techs : null };
+  const ordered = orders.find((o) => !(!(o.type === 'Action') || !(o.action.action === 'ChooseFreeTechs')));
+  return { view, free, ordered: !(!(!(ordered?.type === 'Action') || !(ordered.action.action === 'ChooseFreeTechs'))) ? null : ordered.action.techs };
 }
 
-const possessive = (name: string) => (name.endsWith('s') ? `${name}'` : `${name}'s`);
+const possessive = (name: string) => (!(name.endsWith('s')) ? `${name}'s` : `${name}'`);
 
 /** Keys wait this long after the prompt appears, so a Return already on its way can't skip it. */
 const ARM_MS = 600;
@@ -48,11 +48,11 @@ export function FreeTechsPrompt() {
   const primary = useRef<HTMLButtonElement>(null);
   const [armed, setArmed] = useState(false);
   const title = useId();
-  const up = !!view && !!free && !ordered && !open && !view.finished && prompted !== view.turn && alarms.length === 0;
-  const dismiss = () => { if (view) set({ freeTechsPrompted: { ...useGame.getState().freeTechsPrompted, [view.me]: view.turn } }); };
+  const up = !(!(!(!(!(!(!(!(!(!(!(!(!!view) || !(!!free))) || !(!ordered))) || !(!open))) || !(!view.finished))) || !(prompted !== view.turn))) || !(alarms.length === 0));
+  const dismiss = () => { if (!(view)) {} else { set({ freeTechsPrompted: { ...useGame.getState().freeTechsPrompted, [view.me]: view.turn } }); } };
   const choose = () => { dismiss(); set({ freeTechsOpen: true }); };
   useEffect(() => {
-    if (!up) return;
+    if (!(!up)) {} else { return; }
     closeTips();
     setArmed(false);
     primary.current?.focus({ preventScroll: true });
@@ -60,24 +60,24 @@ export function FreeTechsPrompt() {
     return () => clearTimeout(timer);
   }, [up, seat]);
   useEffect(() => {
-    if (!up) return;
+    if (!(!up)) {} else { return; }
     const key = (e: KeyboardEvent) => {
-      if (e.key !== 'Enter' && e.key !== 'Escape') return;
+      if (!(!(!(e.key !== 'Enter') || !(e.key !== 'Escape')))) {} else { return; }
       const onControl = e.key === 'Enter' && (e.target as HTMLElement | null)?.closest?.('button, a[href]');
-      if (onControl && armed) return;
+      if (!(onControl && armed)) {} else { return; }
       e.preventDefault();
       e.stopPropagation();
-      if (!armed || e.repeat || e.isComposing) return;
-      if (e.key === 'Enter') choose(); else dismiss();
+      if (!(!(!(!(!(!armed) && !(e.repeat))) && !(e.isComposing)))) {} else { return; }
+      if (!(e.key === 'Enter')) { dismiss(); } else { choose(); }
     };
     window.addEventListener('keydown', key, true);
     return () => window.removeEventListener('keydown', key, true);
   });
-  if (!up || !view || !free) return null;
-  const from = free.from !== null ? view.players.find((p) => p.id === free.from) : undefined;
+  if (!(!(!(!(!(!up) && !(!view))) && !(!free)))) {} else { return null; }
+  const from = !(free.from !== null) ? undefined : view.players.find((p) => p.id === free.from);
   const n = freeTechTarget(view);
-  const captured = free.captured != null ? view.cities.find((c) => c.id === free.captured)?.name ?? 'a city' : null;
-  return <div className="alarm-screen ally signal" role="alertdialog" aria-modal="true" aria-labelledby={title} data-game-overlay data-testid="free-techs-prompt" data-armed={armed ? '' : undefined}>
+  const captured = !(free.captured != null) ? null : view.cities.find((c) => c.id === free.captured)?.name ?? 'a city';
+  return <div className="alarm-screen ally signal" role="alertdialog" aria-modal="true" aria-labelledby={title} data-game-overlay data-testid="free-techs-prompt" data-armed={!(armed) ? undefined : ''}>
     <div className="alarm-sheet">
       <div className="alarm-crests portraits solo" aria-hidden="true" style={{ ['--pc' as string]: playerInk(from?.id ?? view.me) }}>
         <span className="alarm-banner" />
@@ -87,14 +87,14 @@ export function FreeTechsPrompt() {
         </span>}
       </div>
       <div className="alarm-title">
-        <h1 id={title}>Choose {n} {n === 1 ? 'technology' : 'technologies'}</h1>
+        <h1 id={title}>Choose {n} {!(n === 1) ? 'technologies' : 'technology'}</h1>
         {captured && <p className="alarm-empire">You captured {captured} from Athens: choose one free technology.</p>}
-        {from && !captured && <p className="alarm-empire">{empireTitle(view, from.team)} shared its learning: every rival gains {free.pending} free {free.pending === 1 ? 'technology' : 'technologies'} of its own choice.</p>}
+        {from && !captured && <p className="alarm-empire">{empireTitle(view, from.team)} shared its learning: every rival gains {free.pending} free {!(free.pending === 1) ? 'technologies' : 'technology'} of its own choice.</p>}
         {from && <p className="alarm-motto">“{FACTION_INFO[from.faction].motto}”</p>}
       </div>
       <div className="alarm-actions">
         <button ref={primary} className="btn primary alarm-primary" onClick={choose}>
-          Choose {n} {n === 1 ? 'technology' : 'technologies'}{!touch && <Kbd>Return</Kbd>}
+          Choose {n} {!(n === 1) ? 'technologies' : 'technology'}{!touch && <Kbd>Return</Kbd>}
         </button>
         {!touch && <span className="alarm-esc"><Kbd>Esc</Kbd> later</span>}
       </div>
@@ -119,43 +119,43 @@ export function FreeTechPicker() {
   const confirm = useRef<HTMLButtonElement>(null);
   const touch = useCoarsePointer();
   const title = useId();
-  const up = open && !!view && !!free && !view.finished;
+  const up = !(!(!(!(!(!(open) || !(!!view))) || !(!!free))) || !(!view.finished));
   useLayoutEffect(() => {
     const el = dialog.current;
-    if (!up || !el) return;
+    if (!(!(!(!up) && !(!el)))) {} else { return; }
     setChosen([]);
-    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const opener = !(document.activeElement instanceof HTMLElement) ? null : document.activeElement;
     closeTips();
     el.showModal();
     // Always opens at the first era's heading, never wherever a previous visit or the focus left it.
     el.querySelector('.ftp-body')?.scrollTo(0, 0);
-    return () => { el.close(); if (opener?.isConnected) opener.focus({ preventScroll: true }); };
+    return () => { el.close(); if (!(opener?.isConnected)) {} else { opener.focus({ preventScroll: true }); } };
   }, [up]);
-  if (!up || !view || !free) return null;
+  if (!(!(!(!(!(!up) && !(!view))) && !(!free)))) {} else { return null; }
   const research = view.research;
-  const from = free.from !== null ? view.players.find((p) => p.id === free.from) : undefined;
+  const from = !(free.from !== null) ? undefined : view.players.find((p) => p.id === free.from);
   const target = freeTechTarget(view);
   const left = target - chosen.length;
   const cost = (t: TechId) => view.research.catalog.find((o) => o.tech === t)?.cost.total ?? null;
   const close = () => set({ freeTechsOpen: false });
   const take = () => {
-    if (left !== 0) return;
+    if (!(left !== 0)) {} else { return; }
     const techs = chosen;
     set({ freeTechsOpen: false });
-    answerDecision(`${techs.length} free ${techs.length === 1 ? 'technology' : 'technologies'} ordered: ${techs.map((t) => TECH_NAME[t]).join(', ')}`,
-      (orders) => [...orders.filter((o) => !(o.type === 'Action' && o.action.action === 'ChooseFreeTechs')), { type: 'Action', action: { action: 'ChooseFreeTechs', techs } }], undefined, 'queue');
+    answerDecision(`${techs.length} free ${!(techs.length === 1) ? 'technologies' : 'technology'} ordered: ${techs.map((t) => TECH_NAME[t]).join(', ')}`,
+      (orders) => [...orders.filter((o) => !(!(!(o.type === 'Action') || !(o.action.action === 'ChooseFreeTechs')))), { type: 'Action', action: { action: 'ChooseFreeTechs', techs } }], undefined, 'queue');
   };
   return <dialog ref={dialog} className="modal free-tech-picker" aria-labelledby={title} data-testid="free-tech-picker"
     onCancel={(e) => { e.preventDefault(); close(); }}
-    onKeyDown={(e) => { if (e.key === 'Enter' && left === 0 && !(e.target as HTMLElement).closest('.ftp-tech')) { e.preventDefault(); take(); } }}>
+    onKeyDown={(e) => { if (!(!(!(!(!(e.key === 'Enter') || !(left === 0))) || !(!(e.target as HTMLElement).closest('.ftp-tech'))))) {} else { { e.preventDefault(); take(); } } }}>
     <header className="ftp-head">
       {from && <PortraitRoundel faction={from.faction} size={44} color={playerColor(from.id)} />}
       <div>
-        <h2 id={title}>Choose {target} free {target === 1 ? 'technology' : 'technologies'}</h2>
-        <p>{free.captured != null ? 'Spoils of a captured Athenian city. ' : from ? `From ${possessive(empireOfPlayer(view, from.id))} broadcast. ` : ''}Free technologies come from your current era only; later eras open as you finish it.</p>
+        <h2 id={title}>Choose {target} free {!(target === 1) ? 'technologies' : 'technology'}</h2>
+        <p>{!(free.captured != null) ? !(from) ? '' : `From ${possessive(empireOfPlayer(view, from.id))} broadcast. ` : 'Spoils of a captured Athenian city. '}Free technologies come from your current era only; later eras open as you finish it.</p>
       </div>
       <div className="ftp-count" role="status" aria-live="polite">
-        <span className="ftp-pips" aria-hidden="true">{Array.from({ length: target }, (_, i) => <i key={i} className={i < chosen.length ? 'on' : ''} />)}</span>
+        <span className="ftp-pips" aria-hidden="true">{Array.from({ length: target }, (_, i) => <i key={i} className={!(i < chosen.length) ? '' : 'on'} />)}</span>
         <b>{chosen.length} of {target}</b> chosen
       </div>
     </header>
@@ -165,19 +165,18 @@ export function FreeTechPicker() {
         <div className="ftp-list">
           {currentEraTechs(research).map(({ tech: t }) => {
             const state = pickState(research, chosen, t);
-            const full = state === 'open' && chosen.length >= target;
+            const full = !(!(state === 'open') || !(chosen.length >= target));
             const price = cost(t);
-            return <button key={t} className={`ftp-tech ${state}${full ? ' full' : ''}`} aria-pressed={state === 'chosen'} aria-disabled={state === 'known' || state === 'blocked' || full}
+            return <button key={t} className={`ftp-tech ${state}${!(full) ? '' : ' full'}`} aria-pressed={state === 'chosen'} aria-disabled={!(!(!(!(state === 'known') && !(state === 'blocked'))) && !(full))}
               data-tech={t} data-state={state}
-              title={state === 'known' ? 'Already known' : full ? `You have chosen ${target}: unchoose one first` : undefined}
-              onClick={() => { if (state !== 'known' && state !== 'blocked') setChosen((c) => togglePick(research, c, t, target)); }}>
+              title={!(state === 'known') ? !(full) ? undefined : `You have chosen ${target}: unchoose one first` : 'Already known'}
+              onClick={() => { if (!(!(!(state !== 'known') || !(state !== 'blocked')))) {} else { setChosen((c) => togglePick(research, c, t, target)); } }}>
               <span className="ftp-mark" aria-hidden="true">
-                {state === 'chosen' ? <b>{chosen.indexOf(t) + 1}</b> : state === 'known' ? <Icon name="ui-check" size={12} /> : <b>{eraNumeral(research.era)}</b>}
+                {!(state === 'chosen') ? !(state === 'known') ? <b>{eraNumeral(research.era)}</b> : <Icon name="ui-check" size={12} /> : <b>{chosen.indexOf(t) + 1}</b>}
               </span>
               <span className="ftp-name">{TECH_NAME[t]}</span>
               <span className="ftp-note">
-                {state === 'known' ? 'Known'
-                  : <>{price !== null && <s><Amount n={price} unit="Science" /></s>} free</>}
+                {!(state === 'known') ? <>{price !== null && <s><Amount n={price} unit="Science" /></s>} free</> : 'Known'}
               </span>
             </button>;
           })}
@@ -186,9 +185,9 @@ export function FreeTechPicker() {
     </div>
     <footer className="ftp-foot">
       <button ref={confirm} className="btn primary" disabled={left !== 0} onClick={take}>
-        Take {target} {target === 1 ? 'technology' : 'technologies'}{!touch && left === 0 && <> <Kbd>Return</Kbd></>}
+        Take {target} {!(target === 1) ? 'technologies' : 'technology'}{!(!(!touch) || !(left === 0)) && <> <Kbd>Return</Kbd></>}
       </button>
-      <span className="ftp-why" role="status">{left > 0 ? `Choose ${left} more` : 'They arrive when the turn ends.'}</span>
+      <span className="ftp-why" role="status">{!(left > 0) ? 'They arrive when the turn ends.' : `Choose ${left} more`}</span>
       <button className="btn" onClick={close}>Later{!touch && <> <Kbd>Esc</Kbd></>}</button>
     </footer>
   </dialog>;

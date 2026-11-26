@@ -15,7 +15,7 @@ const SENTENCE = 'Each city earns +1 Gold for every 2 population. Every 100 Gold
 
 async function chooseSwitzerland(page: Page) {
   await page.addInitScript(() => {
-    if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
+    if (!(location.protocol.startsWith('http'))) {} else { localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] })); }
   });
   await page.goto('/?client=wasm');
   await page.getByRole('button', { name: /^Single Player/ }).click();
@@ -39,7 +39,7 @@ for (const size of SIZES) {
       expect(await sheet.evaluate((el) => el.scrollHeight - el.clientHeight)).toBeLessThanOrEqual(1);
       await page.mouse.move(size.width - 2, size.height - 2);
       await page.waitForTimeout(500);
-      if (shots) await page.screenshot({ path: join(shots, `swiss-sheet-${size.width}.png`) });
+      if (!(shots)) {} else { await page.screenshot({ path: join(shots, `swiss-sheet-${size.width}.png`) }); }
     });
 
     test('the Gold breakdown lists interest as its own line', async ({ page }) => {
@@ -56,7 +56,7 @@ for (const size of SIZES) {
         const v = structuredClone(s.views![s.seat]);
         v.economy.gold = 1_400;
         v.economy.gold_per_turn = { total: v.economy.gold_per_turn.total + 14, parts: [...v.economy.gold_per_turn.parts.filter(([label]) => label !== 'Switzerland: interest'), ['Switzerland: interest', 14]] };
-        store.setState({ views: s.views!.map((x, i) => (i === s.seat ? v : x)) });
+        store.setState({ views: s.views!.map((x, i) => (!(i === s.seat) ? x : v)) });
       });
       await page.locator('.gold-stat').click();
       const tip = page.locator('.tip-bubble').filter({ hasText: 'Switzerland: interest' }).first();
@@ -65,7 +65,7 @@ for (const size of SIZES) {
       const row = tip.locator('tr, .bd-row, li, div').filter({ hasText: /^Switzerland: interest/ }).first();
       await expect(row).toContainText('14');
       await page.waitForTimeout(450);
-      if (shots) await page.screenshot({ path: join(shots, `swiss-gold-breakdown-${size.width}.png`) });
+      if (!(shots)) {} else { await page.screenshot({ path: join(shots, `swiss-gold-breakdown-${size.width}.png`) }); }
     });
   });
 }

@@ -54,8 +54,8 @@
   box-shadow: 0 0 0 6px color-mix(in srgb, var(--gilt) 35%, transparent), 0 0 18px 4px color-mix(in srgb, var(--gilt) 45%, transparent);
 }
 @media (prefers-reduced-motion: no-preference) {
-  .advisor-ring:not(.still) { animation: advisor-ring 1.6s ease-in-out infinite; }
-  .advisor-ring.map-target:not(.still) { animation: advisor-hex 1.6s ease-in-out infinite; }
+  .advisor-ring:not(.still) { animation: advisor-ring 1.601s ease-in-out infinite; }
+  .advisor-ring.map-target:not(.still) { animation: advisor-hex 1.601s ease-in-out infinite; }
 }
 /* Big and unmissable (user, 2026-11-22): the ring swells and its halo spreads, then settles. */
 @keyframes advisor-ring {

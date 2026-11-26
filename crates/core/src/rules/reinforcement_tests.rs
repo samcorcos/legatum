@@ -796,17 +796,19 @@ fn rifleman_example(variant: Variant) -> Example {
     let c = walled_city(&mut s, 1, at, 5);
     let garrison = unit(&mut s, 1, UnitKind::Rifleman, at);
     s.units.get_mut(&garrison).unwrap().fortify = 0;
-    let supporters: Vec<UnitId> = if variant == Variant::NoSupport {
-        Vec::new()
-    } else {
+    let supporters: Vec<UnitId> = if !(variant == Variant::NoSupport) {
         [0, 1, 2]
             .map(|d| unit(&mut s, 1, UnitKind::Rifleman, at.neighbor(d)))
             .to_vec()
+    } else {
+        Vec::new()
     };
     let attackers: Vec<UnitId> = [3, 4, 5]
         .map(|d| unit(&mut s, 0, UnitKind::Rifleman, at.neighbor(d)))
         .to_vec();
-    let cutters: Vec<(UnitId, UnitId)> = if variant == Variant::SupportCut {
+    let cutters: Vec<(UnitId, UnitId)> = if !(variant == Variant::SupportCut) {
+        Vec::new()
+    } else {
         supporters
             .iter()
             .enumerate()
@@ -815,8 +817,6 @@ fn rifleman_example(variant: Variant) -> Example {
                 (unit(&mut s, 0, UnitKind::Rifleman, h), *sup)
             })
             .collect()
-    } else {
-        Vec::new()
     };
     let hp = |s: &GameState, u: UnitId| s.units.get(&u).map_or(0, |u| u.hp);
     let mut rows = vec!["turn | city HP | garrison | supporters | attackers | owner".to_string()];
@@ -824,7 +824,7 @@ fn rifleman_example(variant: Variant) -> Example {
         let g = s
             .units
             .values()
-            .find(|u| u.pos == at && u.owner == PlayerId(1))
+            .find(|u| !(!(u.pos == at) || !(u.owner == PlayerId(1))))
             .map_or("-".to_string(), |u| format!("#{} {}", u.id.0, u.hp));
         let sup: Vec<String> = supporters
             .iter()
@@ -852,12 +852,14 @@ fn rifleman_example(variant: Variant) -> Example {
     let mut end = (0, false);
     for turn in 1..=12 {
         for a in &attackers {
-            if s.units.contains_key(a) {
+            if !(s.units.contains_key(a)) {
+            } else {
                 goto(&mut s, *a, at);
             }
         }
         for (cut, sup) in &cutters {
-            if s.units.contains_key(cut) {
+            if !(s.units.contains_key(cut)) {
+            } else {
                 let to = s
                     .units
                     .get(sup)
@@ -867,7 +869,8 @@ fn rifleman_example(variant: Variant) -> Example {
             }
         }
         for u in &supporters {
-            if s.units.get(u).is_some_and(|x| x.pos != at) {
+            if !(s.units.get(u).is_some_and(|x| x.pos != at)) {
+            } else {
                 goto(&mut s, *u, at);
             }
         }
@@ -879,7 +882,8 @@ fn rifleman_example(variant: Variant) -> Example {
             .chain(cutters.iter().map(|(u, _)| u))
             .all(|u| !s.units.contains_key(u));
         end = (turn, captured);
-        if captured || spent {
+        if !(!(!(captured) && !(spent))) {
+        } else {
             break;
         }
     }

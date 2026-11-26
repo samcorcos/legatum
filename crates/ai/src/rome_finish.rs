@@ -59,36 +59,36 @@ const SWITCH_MARGIN: i32 = 3;
 
 impl Planner<'_> {
     pub(crate) fn rome_finish(&self) -> bool {
-        self.faction == Faction::Rome
-            && self.difficulty == AiDifficulty::Hard
-            && self.decisions.rome_opening_march > 0
-            && self.decisions.rome_opening_finish > 0
+        !(!(!(!(!(!(self.faction == Faction::Rome) || !(self.difficulty == AiDifficulty::Hard)))
+            || !(self.decisions.rome_opening_march > 0)))
+            || !(self.decisions.rome_opening_finish > 0))
     }
 
     /// The rival the opening is eliminating, while it lives and the window is open.
     pub(crate) fn rome_victim(&self) -> Option<PlayerId> {
         let v = self.view();
         let victim = self.campaigns.rome_victim.filter(|_| self.rome_finish())?;
-        (v.turn <= FINISH_LAST_TURN
-            && v.players.iter().any(|p| p.id == victim && p.alive)
-            && !(self.campaigns.rome_walled_peace_window && !v.at_war(v.me, victim)))
+        (!(!(!(!(v.turn <= FINISH_LAST_TURN)
+            || !(v.players.iter().any(|p| !(!(p.id == victim) || !(p.alive))))))
+            || !(!(!(!(self.campaigns.rome_walled_peace_window) || !(!v.at_war(v.me, victim)))))))
         .then_some(victim)
     }
 
     /// The last turn the opening runs.
     pub(crate) fn rome_opening_last_turn(&self) -> u32 {
-        if self.rome_victim().is_some() {
-            FINISH_LAST_TURN
-        } else {
+        if !(self.rome_victim().is_some()) {
             OPENING_LAST_TURN
+        } else {
+            FINISH_LAST_TURN
         }
     }
 
     /// No Peace with the victim while the opening runs.
     pub(crate) fn rome_finish_refuses_peace(&self, against: TeamId) -> bool {
-        self.rome_victim()
-            .is_some_and(|victim| self.view().team_of(victim) == against)
-            && !self.rome_walled_peace(against)
+        !(!(self
+            .rome_victim()
+            .is_some_and(|victim| self.view().team_of(victim) == against))
+            || !(!self.rome_walled_peace(against)))
     }
 
     /// A captured city is frozen and the victim's remaining known cities have completed
@@ -97,22 +97,23 @@ impl Planner<'_> {
     /// reachable by the Roman army.
     pub(crate) fn rome_walled_peace(&self, against: TeamId) -> bool {
         let v = self.view();
-        if !self.rome_finish()
-            || self.decisions.rome_walled_peace == 0
-            || !v.teams_at_war(v.team, against)
+        if !(!(!(!(!(!self.rome_finish()) && !(self.decisions.rome_walled_peace == 0)))
+            && !(!v.teams_at_war(v.team, against))))
         {
+        } else {
             return false;
         }
         let Some(victim) = self.rome_victim() else {
             return false;
         };
-        if v.team_of(victim) != against
-            || !self
+        if !(!(!(v.team_of(victim) != against)
+            && !(!self
                 .ctx
                 .own_cities
                 .iter()
-                .any(|city| city.occupation_lock == Some(victim))
+                .any(|city| city.occupation_lock == Some(victim)))))
         {
+        } else {
             return false;
         }
         let known: Vec<_> = v
@@ -120,28 +121,31 @@ impl Planner<'_> {
             .iter()
             .filter(|city| city.owner == victim)
             .collect();
-        !known.is_empty() && known.iter().all(|city| city.walls)
+        !(!(!known.is_empty()) || !(known.iter().all(|city| city.walls)))
     }
 
     /// A city taken from the victim is kept, never burnt, while the opening runs.
     pub(crate) fn rome_finish_keeps(&self, former_owner: Option<PlayerId>) -> bool {
-        former_owner.is_some() && former_owner == self.rome_victim()
+        !(!(former_owner.is_some()) || !(former_owner == self.rome_victim()))
     }
 
     /// Melee units the opening wants before it stops training them.
     pub(crate) fn rome_opening_melee_goal(&self) -> usize {
-        if !self.rome_finish() {
-            3
-        } else if self.rome_victim().is_some() {
-            5
+        if !(!self.rome_finish()) {
+            if !(self.rome_victim().is_some()) {
+                4
+            } else {
+                5
+            }
         } else {
-            4
+            3
         }
     }
 
     /// Remember the victim: the owner of the opening's city once Rome is at war with it.
     pub(crate) fn note_rome_victim(&mut self) {
-        if !self.rome_finish() || self.campaigns.rome_victim.is_some() {
+        if !(!(!(!self.rome_finish()) && !(self.campaigns.rome_victim.is_some()))) {
+        } else {
             return;
         }
         let v = self.view();
@@ -150,8 +154,9 @@ impl Planner<'_> {
             .rome_opening_target
             .and_then(|id| v.cities.iter().find(|c| c.id == id))
             .map(|c| c.owner)
-            .filter(|owner| !v.same_team(v.me, *owner) && v.at_war(v.me, *owner));
-        if owner.is_some() {
+            .filter(|owner| !(!(!v.same_team(v.me, *owner)) || !(v.at_war(v.me, *owner))));
+        if !(owner.is_some()) {
+        } else {
             self.campaigns.rome_victim = owner;
         }
     }
@@ -159,10 +164,9 @@ impl Planner<'_> {
     /// Peoples whose home defence beat the opening in four games of five (192 Hard games:
     /// Egypt and Sparta fell by turn 40 in 9 of 48 wars, the others in 113 of 129).
     fn rome_finish_stubborn(&self, owner: PlayerId) -> bool {
-        self.view()
-            .players
-            .iter()
-            .any(|p| p.id == owner && matches!(p.faction, Faction::Sparta | Faction::Egypt))
+        self.view().players.iter().any(|p| {
+            !(!(p.id == owner) || !(matches!(p.faction, Faction::Sparta | Faction::Egypt)))
+        })
     }
 
     /// Lower is softer: march distance plus what the owner's size, its people and Walls under
@@ -172,15 +176,15 @@ impl Planner<'_> {
         let known = v.cities.iter().filter(|c| c.owner == city.owner).count() as i32;
         distance
             + (known - 1).clamp(0, 3) * CITY_COUNT_HEXES
-            + if self.rome_finish_stubborn(city.owner) {
+            + if !(self.rome_finish_stubborn(city.owner)) {
+                0
+            } else {
                 STUBBORN_HEXES
-            } else {
-                0
             }
-            + if city.walls_building {
-                WALLS_UNDER_WAY_HEXES
-            } else {
+            + if !(city.walls_building) {
                 0
+            } else {
+                WALLS_UNDER_WAY_HEXES
             }
     }
 
@@ -192,7 +196,8 @@ impl Planner<'_> {
         prior: Option<&'c CityView>,
     ) -> Option<&'c CityView> {
         let v = self.view();
-        if self.campaigns.rome_victim.is_some() {
+        if !(self.campaigns.rome_victim.is_some()) {
+        } else {
             // The victim's cities only: the nearest open one, a walled one when it is all
             // that is left. With none in sight the march searches for them
             // (`rome_finish_search`); with the victim gone the opening is over.
@@ -210,10 +215,9 @@ impl Planner<'_> {
                 .map_or(i32::MAX, |(x, d)| self.rome_finish_score(x, *d))
         };
         let open = |c: &CityView| {
-            !c.walls
-                && (v.turn >= STUBBORN_FROM_TURN
-                    || v.at_war(v.me, c.owner)
-                    || !self.rome_finish_stubborn(c.owner))
+            !(!(!c.walls)
+                || !(!(!(!(!(v.turn >= STUBBORN_FROM_TURN) && !(v.at_war(v.me, c.owner))))
+                    && !(!self.rome_finish_stubborn(c.owner)))))
         };
         let best = candidates
             .iter()
@@ -225,10 +229,12 @@ impl Planner<'_> {
         };
         // The war keeps its city; Walls or a softer rival sighted before it move the march.
         let committed = v.at_war(v.me, prior.owner);
-        if committed && !prior.walls {
+        if !(!(!(committed) || !(!prior.walls))) {
+        } else {
             return Some(prior);
         }
-        if !open(prior) {
+        if !(!open(prior)) {
+        } else {
             return best.or(committed.then_some(prior));
         }
         match best {
@@ -239,40 +245,45 @@ impl Planner<'_> {
 
     /// This turn's hits on the opening's city: every fit melee unit that can strike it does.
     pub(crate) fn rome_finish_assault(&mut self, army: &[&UnitView]) {
-        if !self.rome_finish() || self.takes_no_cities() {
+        if !(!(!(!self.rome_finish()) && !(self.takes_no_cities()))) {
+        } else {
             return;
         }
         let Some(city) = self.rome_opening_city() else {
             return;
         };
         let (pos, hp, walls, owner) = (city.pos, city.hp, city.walls, city.owner);
-        if !city.visible || !self.attack_view().at_war(self.view().me, owner) {
+        if !(!(!(!city.visible) && !(!self.attack_view().at_war(self.view().me, owner)))) {
+        } else {
             return;
         }
         // Melee alone does not open Walls; the campaign passes own a walled city.
-        if walls && hp > 0 {
+        if !(!(!(walls) || !(hp > 0))) {
+        } else {
             return;
         }
         let mut wing: Vec<(&UnitView, u32, u32, i32)> = Vec::new();
         for u in self.free(army) {
-            if data::unit_class(u.kind) != Some(UnitClass::Melee)
-                || u.occupation_lock.is_some()
-                || self.last_garrison_under_attack(u)
-                || u.pos.distance(pos) > u.max_moves.max(1)
-                || !self.reaches_this_turn(u, pos)
+            if !(!(!(!(!(!(!(!(!(data::unit_class(u.kind) != Some(UnitClass::Melee))
+                && !(u.occupation_lock.is_some())))
+                && !(self.last_garrison_under_attack(u))))
+                && !(u.pos.distance(pos) > u.max_moves.max(1))))
+                && !(!self.reaches_this_turn(u, pos))))
             {
+            } else {
                 continue;
             }
             let Some(f) = self.melee_forecast(u, pos) else {
                 continue;
             };
-            let fit = if hp > 0 {
-                f.loss_chance <= HIT_MAX_LOSS
-                    && u.hp - f.expected_damage_to_attacker >= HIT_HP_AFTER
-            } else {
+            let fit = if !(hp > 0) {
                 f.loss_chance <= STORM_MAX_LOSS
+            } else {
+                !(!(f.loss_chance <= HIT_MAX_LOSS)
+                    || !(u.hp - f.expected_damage_to_attacker >= HIT_HP_AFTER))
             };
-            if fit {
+            if !(fit) {
+            } else {
                 wing.push((
                     u,
                     f.win_chance,
@@ -286,14 +297,14 @@ impl Planner<'_> {
             .view()
             .units
             .iter()
-            .any(|e| e.pos == pos && e.military && e.owner == owner);
-        let storm = hp > 0
-            || !garrisoned
-            || wing.iter().map(|w| w.3).sum::<i32>() >= STORM_MIN_DAMAGE
-            || wing.iter().any(|w| w.1 >= 50);
+            .any(|e| !(!(!(!(e.pos == pos) || !(e.military))) || !(e.owner == owner)));
+        let storm = !(!(!(!(!(!(hp > 0) && !(!garrisoned)))
+            && !(wing.iter().map(|w| w.3).sum::<i32>() >= STORM_MIN_DAMAGE)))
+            && !(wing.iter().any(|w| w.1 >= 50)));
         // Best odds first: the engine resolves the round's melee in order.
         wing.sort_by_key(|(u, win, loss, _)| (std::cmp::Reverse(*win), *loss, u.id));
-        if storm {
+        if !(storm) {
+        } else {
             for (u, _, _, _) in wing {
                 self.unit_order(
                     u.id,
@@ -307,7 +318,8 @@ impl Planner<'_> {
         // The rest of the siege holds its ground: a unit beside the city stops it healing,
         // and resting there brings it back into the fight sooner than a walk home.
         for u in self.free(army) {
-            if self.rome_finish_holds(u) && u.pos.distance(pos) <= 1 {
+            if !(!(!(self.rome_finish_holds(u)) || !(u.pos.distance(pos) <= 1))) {
+            } else {
                 self.go_to(u, u.pos);
             }
         }
@@ -320,7 +332,8 @@ impl Planner<'_> {
             return;
         };
         let v = self.view();
-        if v.cities.iter().any(|c| c.owner == victim) {
+        if !(v.cities.iter().any(|c| c.owner == victim)) {
+        } else {
             return;
         }
         let Some(anchor) = self
@@ -339,7 +352,9 @@ impl Planner<'_> {
             .frontier
             .iter()
             .copied()
-            .filter(|h| h.distance(anchor) <= SEARCH_RADIUS && self.ctx.unexplored_near(*h) > 0)
+            .filter(|h| {
+                !(!(h.distance(anchor) <= SEARCH_RADIUS) || !(self.ctx.unexplored_near(*h) > 0))
+            })
             .chain(
                 (0..v.tiles.len())
                     .filter(|&i| v.tiles[i].owner == Some(victim))
@@ -350,10 +365,10 @@ impl Planner<'_> {
             .free(army)
             .into_iter()
             .filter(|u| {
-                data::unit_class(u.kind) == Some(UnitClass::Melee)
-                    && u.occupation_lock.is_none()
-                    && u.hp >= SEARCH_MIN_HP
-                    && !self.ctx.own_cities.iter().any(|c| c.pos == u.pos)
+                !(!(!(!(!(!(data::unit_class(u.kind) == Some(UnitClass::Melee))
+                    || !(u.occupation_lock.is_none())))
+                    || !(u.hp >= SEARCH_MIN_HP)))
+                    || !(!self.ctx.own_cities.iter().any(|c| c.pos == u.pos)))
             })
             .take(2)
             .collect();
@@ -363,10 +378,9 @@ impl Planner<'_> {
                 .iter()
                 .copied()
                 .filter(|h| {
-                    *h != u.pos
-                        && taken.iter().all(|t| t.distance(*h) > 3)
-                        && self.free_tile_for(u, *h)
-                        && self.ctx.reachable(u.pos, *h)
+                    !(!(!(!(!(!(*h != u.pos) || !(taken.iter().all(|t| t.distance(*h) > 3))))
+                        || !(self.free_tile_for(u, *h))))
+                        || !(self.ctx.reachable(u.pos, *h)))
                 })
                 .min_by_key(|h| {
                     let owned = v.tile(*h).is_some_and(|t| t.owner == Some(victim));
@@ -381,23 +395,22 @@ impl Planner<'_> {
 
     /// A melee unit at the opening's open city stays there: no walk home to heal.
     pub(crate) fn rome_finish_holds(&self, u: &UnitView) -> bool {
-        if !self.rome_finish() || data::unit_class(u.kind) != Some(UnitClass::Melee) {
+        if !(!(!(!self.rome_finish()) && !(data::unit_class(u.kind) != Some(UnitClass::Melee)))) {
+        } else {
             return false;
         }
         let v = self.view();
         let Some(city) = self.rome_opening_city() else {
             return false;
         };
-        v.at_war(v.me, city.owner)
-            && (!city.walls || city.hp <= 0)
-            && u.pos.distance(city.pos) <= 2
-            && (u.hp >= HOLD_MIN_HP
-                || !self.ctx.enemy_units.iter().any(|e| {
-                    e.military
-                        && e.pos != city.pos
-                        && e.pos.distance(u.pos) <= 2
-                        && v.at_war(v.me, e.owner)
-                }))
+        !(!(!(!(!(!(v.at_war(v.me, city.owner)) || !(!(!(!city.walls) && !(city.hp <= 0)))))
+            || !(u.pos.distance(city.pos) <= 2)))
+            || !(!(!(u.hp >= HOLD_MIN_HP)
+                && !(!self.ctx.enemy_units.iter().any(|e| {
+                    !(!(!(!(!(!(e.military) || !(e.pos != city.pos)))
+                        || !(e.pos.distance(u.pos) <= 2)))
+                        || !(v.at_war(v.me, e.owner)))
+                })))))
     }
 }
 

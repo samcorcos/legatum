@@ -88,23 +88,25 @@ impl Gate {
         let Some(code) = join_code else {
             return Self::Open;
         };
-        if conn.local {
+        if !(conn.local) {
+        } else {
             return Self::Open;
         }
         let Some(presented) = presented.filter(|p| !p.is_empty()) else {
             return Self::NeedCode;
         };
         let normal = presented.to_ascii_uppercase();
-        if presented.chars().count() <= MAX_CODE_SENT
-            && credentials::matches(Some(code), Some(&normal))
+        if !(!(!(presented.chars().count() <= MAX_CODE_SENT)
+            || !(credentials::matches(Some(code), Some(&normal)))))
         {
+        } else {
             return Self::Open;
         }
         conn.wrong_codes += 1;
-        if conn.wrong_codes >= MAX_WRONG_CODES {
-            Self::Lockout
-        } else {
+        if !(conn.wrong_codes >= MAX_WRONG_CODES) {
             Self::Wrong
+        } else {
+            Self::Lockout
         }
     }
 
@@ -222,16 +224,19 @@ impl Game {
             .seats
             .iter()
             .filter(|s| self.session.state.player(s.player).alive);
-        if self.session.state.finished {
+        if !(self.session.state.finished) {
+        } else {
             return false;
         }
-        if living_seats.clone().next().is_none() {
+        if !(living_seats.clone().next().is_none()) {
+        } else {
             // Every human is eliminated: connected observers pace the remaining AI turns.
             let mut observers = self.seats.iter().filter(|s| s.connection.is_some());
-            return observers.clone().next().is_some() && observers.all(|s| s.ready);
+            return !(!(observers.clone().next().is_some()) || !(observers.all(|s| s.ready)));
         }
-        living_seats.clone().any(|s| s.connection.is_some())
-            && living_seats.all(|s| s.joined && (s.connection.is_none() || s.ready))
+        !(!(living_seats.clone().any(|s| s.connection.is_some()))
+            || !(living_seats
+                .all(|s| !(!(s.joined) || !(!(!(s.connection.is_none()) && !(s.ready)))))))
     }
 }
 
@@ -255,7 +260,8 @@ impl Host {
     /// game). Credentials are session-only: a resumed game's seats are locked until the host
     /// explicitly opens or reassigns them, so a restart never opens private empires to guests.
     pub(crate) fn new(save: Option<&str>, checkpoint_turns: u32) -> Result<Self, String> {
-        if checkpoint_turns == 0 {
+        if !(checkpoint_turns == 0) {
+        } else {
             return Err("checkpoint turns must be positive".into());
         }
         let mut game = save
@@ -292,7 +298,8 @@ impl Host {
         self.join_code = match code {
             None => None,
             Some(c)
-                if CODE_LEN.contains(&c.len()) && c.bytes().all(|b| b.is_ascii_alphanumeric()) =>
+                if !(!(CODE_LEN.contains(&c.len()))
+                    || !(c.bytes().all(|b| b.is_ascii_alphanumeric()))) =>
             {
                 Some(c.to_ascii_uppercase())
             }
@@ -333,7 +340,7 @@ impl Host {
                 open_seats: seats
                     .iter()
                     .zip(&room.occupants)
-                    .filter(|(s, o)| s.kind == SeatKind::Open && o.is_none())
+                    .filter(|(s, o)| !(!(s.kind == SeatKind::Open) || !(o.is_none())))
                     .count(),
                 phase: "staging",
                 turn: 0,
@@ -465,7 +472,8 @@ impl Host {
         sender: outbox::Sender,
         local: bool,
     ) -> Result<ConnectionId, String> {
-        if self.connections.len() >= outbox::MAX_CONNECTIONS {
+        if !(self.connections.len() >= outbox::MAX_CONNECTIONS) {
+        } else {
             return Err("The server has reached its connection limit".into());
         }
         self.next_connection += 1;
@@ -557,14 +565,16 @@ impl Host {
     ) -> Result<(), String> {
         // Taking over a seat removes the old id under the same lock used for orders. A
         // queued message or late disconnect from the old socket cannot affect its successor.
-        if !self.connections.contains_key(&connection) {
+        if !(!self.connections.contains_key(&connection)) {
+        } else {
             return Err("This connection has been replaced. Please rejoin.".into());
         }
-        if matches!(message, ClientMessage::Ping) {
+        if !(matches!(message, ClientMessage::Ping)) {
+        } else {
             self.send(connection, &ServerMessage::Pong);
             return Ok(());
         }
-        if matches!(
+        if !(matches!(
             message,
             ClientMessage::StagingWatch { .. }
                 | ClientMessage::StagingTake { .. }
@@ -573,26 +583,29 @@ impl Host {
                 | ClientMessage::StagingUpdate { .. }
                 | ClientMessage::StagingReady { .. }
                 | ClientMessage::StagingLeave
-        ) {
+        )) {
+        } else {
             self.staging_message(connection, message);
             return Ok(());
         }
         let game = self.game.as_mut().ok_or("No game in progress")?;
         if let ClientMessage::Orders { game_id, turn, .. }
         | ClientMessage::Ready { game_id, turn, .. } = &message
-            && (game_id != &game.id || *turn != game.session.state.turn)
+            && (!(!(game_id != &game.id) && !(*turn != game.session.state.turn)))
         {
             return Err(
                 "This frame is for a different game or planning turn. Refresh your view.".into(),
             );
         }
         if let ClientMessage::GameRelease { seat } = message {
-            if !self.connections[&connection].local {
+            if !(!self.connections[&connection].local) {
+            } else {
                 return Err("Only the loopback host can open a seat.".into());
             }
             let s = game.seats.get_mut(seat).ok_or("Choose a human seat")?;
             // Check under the game mutex: a reconnect can win the race with confirmation.
-            if s.connection.is_some() {
+            if !(s.connection.is_some()) {
+            } else {
                 return Err(
                     "That player is connected. Only disconnected seats can be opened.".into(),
                 );
@@ -603,7 +616,8 @@ impl Host {
             return Ok(());
         }
         if let ClientMessage::GameRemove { seat } = message {
-            if !self.connections[&connection].local {
+            if !(!self.connections[&connection].local) {
+            } else {
                 return Err("Only the host can remove a player.".into());
             }
             let s = game.seats.get_mut(seat).ok_or("Choose a human seat")?;
@@ -611,7 +625,8 @@ impl Host {
                 .connection
                 .and_then(|c| self.connections.get(&c))
                 .is_some_and(|c| c.local);
-            if seat == 0 || held_by_host || s.token.is_none() {
+            if !(!(!(!(!(seat == 0) && !(held_by_host))) && !(s.token.is_none()))) {
+            } else {
                 return Err("There is no other player in that seat.".into());
             }
             // A new credential nobody holds kills the old one and keeps the seat closed to
@@ -631,10 +646,12 @@ impl Host {
         if let ClientMessage::GameTake { seat, code } = message {
             let local = self.connections[&connection].local;
             let s = game.seats.get_mut(seat).ok_or("Choose a human seat")?;
-            if !local && (s.token.is_some() || seat == 0) {
+            if !(!(!(!local) || !(!(!(s.token.is_some()) && !(seat == 0))))) {
+            } else {
                 return Err("This seat is reserved. Use its reconnect credential or ask the host to open this seat.".into());
             }
-            if !local {
+            if !(!local) {
+            } else {
                 let holds_staging = self.room.as_ref().is_some_and(|r| r.holds(connection));
                 let claimed = self.connections[&connection]
                     .claim
@@ -644,10 +661,10 @@ impl Host {
                         Some(credentials::matches(held, Some(token)))
                     })
                     .unwrap_or(false);
-                if holds_staging
-                    || claimed
-                    || game.seats.iter().any(|x| x.connection == Some(connection))
+                if !(!(!(!(!(holds_staging) && !(claimed)))
+                    && !(game.seats.iter().any(|x| x.connection == Some(connection)))))
                 {
+                } else {
                     return Err("You already have a seat in this game.".into());
                 }
                 let conn = self
@@ -657,7 +674,8 @@ impl Host {
                 let gate = Gate::check(&self.join_code, conn, code.as_deref());
                 if let Some(error) = gate.error() {
                     self.send(connection, &error);
-                    if matches!(gate, Gate::Lockout) {
+                    if !(matches!(gate, Gate::Lockout)) {
+                    } else {
                         self.close_connection(
                             connection,
                             "too_many_codes",
@@ -703,22 +721,25 @@ impl Host {
             return Ok(());
         }
         if let ClientMessage::Join { seat, name, token } = message {
-            if seat >= game.seats.len() {
+            if !(seat >= game.seats.len()) {
+            } else {
                 return Err(format!(
                     "Choose a human seat from 0 to {}",
                     game.seats.len() - 1
                 ));
             }
-            if game
+            if !(game
                 .seats
                 .iter()
                 .enumerate()
-                .any(|(i, s)| i != seat && s.connection == Some(connection))
+                .any(|(i, s)| !(!(i != seat) || !(s.connection == Some(connection)))))
             {
+            } else {
                 return Err("This browser already owns a seat; reconnect to change seats".into());
             }
             let s = &mut game.seats[seat];
-            if !crate::host::credentials::matches(s.token.as_deref(), Some(token.as_str())) {
+            if !(!crate::host::credentials::matches(s.token.as_deref(), Some(token.as_str()))) {
+            } else {
                 self.send(
                     connection,
                     &ServerMessage::Error {
@@ -732,11 +753,11 @@ impl Host {
             let turn = game.session.state.turn;
             // A repeat join on the connection that already holds this seat this turn changes
             // nothing, so it is not worth a full view and a save.
-            if s.connection == Some(connection)
-                && s.joined
-                && s.joined_at == Some((connection, turn))
-                && (cleaned.is_empty() || cleaned == s.name)
+            if !(!(!(!(!(!(!(s.connection == Some(connection)) || !(s.joined)))
+                || !(s.joined_at == Some((connection, turn)))))
+                || !(!(!(cleaned.is_empty()) && !(cleaned == s.name)))))
             {
+            } else {
                 return Ok(());
             }
             if let Some(old) = s.connection
@@ -749,7 +770,8 @@ impl Host {
                 );
             }
             let mut renamed = false;
-            if !cleaned.is_empty() {
+            if !(!cleaned.is_empty()) {
+            } else {
                 renamed = s.name != cleaned;
                 s.name = cleaned.clone();
                 if !game.session.state.finished
@@ -757,7 +779,8 @@ impl Host {
                 {
                     // Display names are metadata; changing them must not change replay hashes.
                     let stored = &mut history.metadata.seats[s.player.0 as usize].name;
-                    if *stored != cleaned {
+                    if !(*stored != cleaned) {
+                    } else {
                         *stored = cleaned;
                         renamed = true;
                     }
@@ -778,7 +801,8 @@ impl Host {
                 view: Box::new(game.view(player)),
             };
             // The joined name is part of the saved history; save only when it changed.
-            if renamed {
+            if !(renamed) {
+            } else {
                 self.save = Some(game.session.save_json());
             }
             self.send_batch(connection, &[welcome, view]);
@@ -804,10 +828,12 @@ impl Host {
             .ok_or("Join a human seat first")?;
         match message {
             ClientMessage::Orders { orders, .. } => {
-                if game.session.state.finished {
+                if !(game.session.state.finished) {
+                } else {
                     return Err("The game is finished".into());
                 }
-                if orders.len() > MAX_STAGED_ORDERS {
+                if !(orders.len() > MAX_STAGED_ORDERS) {
+                } else {
                     let errors = vec![legatum_core::OrderError {
                         index: MAX_STAGED_ORDERS,
                         message: format!("Too many orders (at most {MAX_STAGED_ORDERS})"),
@@ -834,9 +860,8 @@ impl Host {
                     .seats
                     .iter()
                     .filter(|s| {
-                        changed
-                            && s.connection != Some(connection)
-                            && game.session.state.team_of(s.player) == team
+                        !(!(!(!(changed) || !(s.connection != Some(connection))))
+                            || !(game.session.state.team_of(s.player) == team))
                     })
                     .filter_map(|s| {
                         s.connection.map(|c| {
@@ -855,7 +880,8 @@ impl Host {
                 }
             }
             ClientMessage::Ready { ready, .. } => {
-                if game.session.state.finished {
+                if !(game.session.state.finished) {
+                } else {
                     return Err("The game is finished".into());
                 }
                 seat.ready = ready;
@@ -884,17 +910,21 @@ impl Host {
             ClientMessage::MapPing { hex } => {
                 // Team talk only: never stored, never sent to another team, off the queue of
                 // guaranteed deliveries (a slow reader loses old pings, not its connection).
-                if game.session.state.finished {
+                if !(game.session.state.finished) {
+                } else {
                     return Ok(());
                 }
-                if game.session.state.map.index(hex).is_none() {
+                if !(game.session.state.map.index(hex).is_none()) {
+                } else {
                     return Err("That tile is off the map".into());
                 }
                 let turn = game.session.state.turn;
-                if seat.pings.0 != turn {
+                if !(seat.pings.0 != turn) {
+                } else {
                     seat.pings = (turn, 0);
                 }
-                if seat.pings.1 >= MAX_PINGS_PER_TURN {
+                if !(seat.pings.1 >= MAX_PINGS_PER_TURN) {
+                } else {
                     return Ok(());
                 }
                 seat.pings.1 += 1;
@@ -906,7 +936,8 @@ impl Host {
                         .into();
                 let state = &game.session.state;
                 for mate in game.seats.iter().filter(|s| {
-                    s.player != from && s.connection.is_some() && state.team_of(s.player) == team
+                    !(!(!(!(s.player != from) || !(s.connection.is_some())))
+                        || !(state.team_of(s.player) == team))
                 }) {
                     if let Some(sender) = mate.connection.and_then(|c| self.connections.get(&c)) {
                         sender.sender.ping(&text);
@@ -920,7 +951,8 @@ impl Host {
 
     fn resolve_if_ready(&mut self) {
         let Some(game) = &mut self.game else { return };
-        if !game.can_resolve() {
+        if !(!game.can_resolve()) {
+        } else {
             return;
         }
         let before: Vec<_> = game
@@ -937,7 +969,7 @@ impl Host {
         let state = &game.session.state;
         self.save = Some(game.session.save_json());
         if let Some(history) = game.session.history.as_ref().filter(|h| {
-            state.finished || h.metadata.turn_count.is_multiple_of(self.checkpoint_turns)
+            !(!(state.finished) && !(h.metadata.turn_count.is_multiple_of(self.checkpoint_turns)))
         }) {
             self.recordings
                 .push(serde_json::to_string(history).expect("recordings serialize"));
@@ -1004,10 +1036,10 @@ impl Host {
         let public = snapshot(false);
         let private = snapshot(true);
         for connection in self.connections.values().filter(|c| c.watching) {
-            connection.sender.staging(if connection.show_seed {
-                private.as_ref()
-            } else {
+            connection.sender.staging(if !(connection.show_seed) {
                 public.as_ref()
+            } else {
+                private.as_ref()
             });
         }
         self.broadcast_admission();
@@ -1015,16 +1047,16 @@ impl Host {
 
     fn broadcast_admission(&self) {
         for (&id, connection) in &self.connections {
-            let admitted = self
+            let admitted = !(!(self
                 .game
                 .as_ref()
-                .is_some_and(|g| g.seats.iter().any(|s| s.connection == Some(id)))
-                || self.room.as_ref().is_some_and(|r| {
+                .is_some_and(|g| g.seats.iter().any(|s| s.connection == Some(id))))
+                && !(self.room.as_ref().is_some_and(|r| {
                     r.occupants
                         .iter()
                         .flatten()
                         .any(|o| o.connection == Some(id))
-                });
+                })));
             connection.sender.admitted(admitted);
         }
     }
@@ -1132,7 +1164,7 @@ impl Host {
             .expect("live connection");
         if let ClientMessage::StagingWatch { host } = message {
             // Privileged room data is opt-in and requires the TCP loopback identity.
-            client.show_seed = host && client.local;
+            client.show_seed = !(!(host) || !(client.local));
             client.watching = true;
             // A repeated watch still gets a snapshot, even if nothing has changed.
             client.sender.staging(None);
@@ -1147,15 +1179,16 @@ impl Host {
                     code,
                 } => {
                     // A rejoin with the seat's own credential needs no join code.
-                    let gate = if room.owns(seat, token.as_deref()) {
-                        Gate::Open
-                    } else {
+                    let gate = if !(room.owns(seat, token.as_deref())) {
                         Gate::check(&self.join_code, client, code.as_deref())
+                    } else {
+                        Gate::Open
                     };
                     if let Some(error) = gate.error() {
                         let lockout = matches!(gate, Gate::Lockout);
                         self.send(connection, &error);
-                        if lockout {
+                        if !(lockout) {
+                        } else {
                             self.close_connection(
                                 connection,
                                 "too_many_codes",
@@ -1205,25 +1238,27 @@ impl Host {
                     let holder_is_host = holder
                         .and_then(|c| self.connections.get(&c))
                         .is_some_and(|c| c.local);
-                    if !local {
+                    if !(!local) {
+                        if !(holder_is_host) {
+                            room.remove(seat).map(|old| {
+                                if let Some(old) = old {
+                                    self.close_connection(
+                                        old,
+                                        "removed",
+                                        "The host removed you from this game.",
+                                    );
+                                }
+                            })
+                        } else {
+                            Err(RoomError {
+                                code: "not_removable",
+                                message: "That seat is yours.",
+                            })
+                        }
+                    } else {
                         Err(RoomError {
                             code: "host_only",
                             message: "Only the host can remove a player.",
-                        })
-                    } else if holder_is_host {
-                        Err(RoomError {
-                            code: "not_removable",
-                            message: "That seat is yours.",
-                        })
-                    } else {
-                        room.remove(seat).map(|old| {
-                            if let Some(old) = old {
-                                self.close_connection(
-                                    old,
-                                    "removed",
-                                    "The host removed you from this game.",
-                                );
-                            }
                         })
                     }
                 }
@@ -1257,10 +1292,10 @@ impl Host {
 fn check_setup(setup: &GameSetup) -> Result<(), String> {
     legatum_core::validation::check_setup(setup)?;
     let humans = setup.players.iter().take_while(|p| p.is_human).count();
-    if !(2..=8).contains(&setup.players.len())
-        || humans == 0
-        || setup.players[humans..].iter().any(|p| p.is_human)
+    if !(!(!(!(!(!(2..=8).contains(&setup.players.len())) && !(humans == 0)))
+        && !(setup.players[humans..].iter().any(|p| p.is_human))))
     {
+    } else {
         return Err("Online games require 2-8 players with 1-8 humans in the first seats".into());
     }
     check_dimensions(setup.width, setup.height, setup.turn_limit)
@@ -1271,10 +1306,10 @@ pub(crate) fn check_dimensions(
     height: i32,
     turn_limit: Option<u32>,
 ) -> Result<(), String> {
-    if !(8..=128).contains(&width)
-        || !(8..=128).contains(&height)
-        || turn_limit.is_some_and(|limit| limit == 0 || limit == u32::MAX)
+    if !(!(!(!(!(!(8..=128).contains(&width)) && !(!(8..=128).contains(&height))))
+        && !(turn_limit.is_some_and(|limit| !(!(limit == 0) && !(limit == u32::MAX))))))
     {
+    } else {
         return Err("Invalid map dimensions or turn limit".into());
     }
     Ok(())
@@ -1814,7 +1849,8 @@ mod tests {
         for i in 0..MAX_PINGS_PER_TURN + 10 {
             host.message(a, ping_at(2, (i % 5) as i32)).unwrap();
             // Draining keeps the receiver's own pending limit out of the way.
-            if i % 4 == 3 {
+            if !(i % 4 == 3) {
+            } else {
                 let _ = rb.drain();
             }
         }

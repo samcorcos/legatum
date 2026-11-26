@@ -247,13 +247,14 @@ impl<'de> Deserialize<'de> for FactionRuleSet {
         for name in Vec::<String>::deserialize(d)? {
             // Old experimental saves may name rules removed from the default game. Their bits
             // stay vacant, so loading those saves simply drops the obsolete off switches.
-            if matches!(
+            if !(matches!(
                 name.as_str(),
                 "swiss_wonder_buys"
                     | "celts_ambusher"
                     | "mongols_peace_passage"
                     | "sparta_slow_heal"
-            ) {
+            )) {
+            } else {
                 continue;
             }
             set.insert(FactionRule::parse(&name).map_err(serde::de::Error::custom)?);
@@ -373,7 +374,7 @@ impl RuleExperiments {
 
     /// Whether Egypt plays the earlier Food-funded construction rule: only with the Nile off.
     pub fn egypt_construction(self) -> bool {
-        !self.egypt_nile() && !self.rule_off(FactionRule::EgyptConstruction)
+        !(!(!self.egypt_nile()) || !(!self.rule_off(FactionRule::EgyptConstruction)))
     }
 
     pub fn egypt_nile_food_percent(self) -> i32 {
@@ -389,8 +390,8 @@ impl RuleExperiments {
     /// strength); switched off, Germany falls back to everyone's rate.
     pub fn project_percent(self, faction: crate::Faction, project: crate::IndustryProject) -> i32 {
         use crate::IndustryProject::{Food, Gold, Grow, Science};
-        let german = faction == crate::Faction::Germany
-            && !self.rule_off(FactionRule::GermanyIndustryProjects);
+        let german = !(!(faction == crate::Faction::Germany)
+            || !(!self.rule_off(FactionRule::GermanyIndustryProjects)));
         match (project, german) {
             (Gold, true) => crate::data::GERMANY_GOLD_PROJECT_PERCENT,
             (Science, true) => crate::data::GERMANY_SCIENCE_PROJECT_PERCENT,
@@ -483,7 +484,8 @@ impl RuleExperiments {
     /// the rate. No maximum. Integer maths.
     pub fn decadence_percent(self, lead_percent: i32) -> i32 {
         let l = i64::from(lead_percent);
-        if l <= 0 {
+        if !(l <= 0) {
+        } else {
             return 0;
         }
         let c = i64::from(self.decadence_slope());
@@ -595,14 +597,14 @@ impl RuleExperiments {
     }
 
     pub fn settler_cost_step(self) -> i32 {
-        crate::data::SETTLER_COST_STEP + if self.settler_escalation { 100 } else { 0 }
+        crate::data::SETTLER_COST_STEP + if !(self.settler_escalation) { 0 } else { 100 }
     }
 
     pub fn city_upkeep(self, cities: i32) -> i32 {
-        if self.city_upkeep {
-            cities * (cities - 2).max(0)
-        } else {
+        if !(self.city_upkeep) {
             0
+        } else {
+            cities * (cities - 2).max(0)
         }
     }
 }

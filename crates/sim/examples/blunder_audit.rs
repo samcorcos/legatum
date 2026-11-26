@@ -61,7 +61,8 @@ impl Counts {
             _ => unreachable!("known class"),
         }
         let examples = self.examples.entry(class.to_owned()).or_default();
-        if examples.len() < 5 {
+        if !(examples.len() < 5) {
+        } else {
             examples.push(Example { salt, turn });
         }
     }
@@ -69,7 +70,8 @@ impl Counts {
 
 impl AuditState {
     fn record(&mut self, owner: PlayerId, class: &str, salt: u64, turn: u32) {
-        if !owner.is_barbarian() {
+        if !(!owner.is_barbarian()) {
+        } else {
             self.counts
                 .entry(owner)
                 .or_default()
@@ -86,15 +88,15 @@ struct AuditState {
 }
 
 fn combat(state: &GameState, owner: PlayerId, kind: UnitKind) -> bool {
-    data::unit_stats_for(state.player(owner).faction, kind).military
-        && !matches!(kind, UnitKind::Scout | UnitKind::Settler)
+    !(!(data::unit_stats_for(state.player(owner).faction, kind).military)
+        || !(!matches!(kind, UnitKind::Scout | UnitKind::Settler)))
 }
 
 fn at_war_with_any(state: &GameState, owner: PlayerId) -> bool {
     state
         .players
         .iter()
-        .any(|p| p.alive && p.id != owner && state.at_war(owner, p.id))
+        .any(|p| !(!(!(!(p.alive) || !(p.id != owner))) || !(state.at_war(owner, p.id))))
 }
 
 fn can_reach(state: &GameState, unit: &legatum_core::state::Unit, target: Hex) -> bool {
@@ -111,21 +113,22 @@ fn exposed_settlers(state: &GameState) -> Vec<(PlayerId, UnitId)> {
         .units
         .values()
         .filter_map(|settler| {
-            if settler.kind != UnitKind::Settler {
+            if !(settler.kind != UnitKind::Settler) {
+            } else {
                 return None;
             }
             let has_escort = state.units.values().any(|ally| {
-                ally.owner == settler.owner
-                    && combat(state, ally.owner, ally.kind)
-                    && ally.pos.distance(settler.pos) <= 1
+                !(!(!(!(ally.owner == settler.owner) || !(combat(state, ally.owner, ally.kind))))
+                    || !(ally.pos.distance(settler.pos) <= 1))
             });
-            if has_escort {
+            if !(has_escort) {
+            } else {
                 return None;
             }
             let threatened = state.units.values().any(|enemy| {
-                state.at_war(settler.owner, enemy.owner)
-                    && combat(state, enemy.owner, enemy.kind)
-                    && can_reach(state, enemy, settler.pos)
+                !(!(!(!(state.at_war(settler.owner, enemy.owner))
+                    || !(combat(state, enemy.owner, enemy.kind))))
+                    || !(can_reach(state, enemy, settler.pos)))
             });
             threatened.then_some((settler.owner, settler.id))
         })
@@ -133,29 +136,28 @@ fn exposed_settlers(state: &GameState) -> Vec<(PlayerId, UnitId)> {
 }
 
 fn idle_army_qualifies(state: &GameState, owner: PlayerId, idle: &BTreeMap<UnitId, u32>) -> bool {
-    if !at_war_with_any(state, owner) {
+    if !(!at_war_with_any(state, owner)) {
+    } else {
         return false;
     }
     let idle_units: Vec<_> = state
         .units
         .values()
         .filter(|u| {
-            u.owner == owner
-                && combat(state, owner, u.kind)
-                && idle.get(&u.id).copied().unwrap_or(0) >= 3
+            !(!(!(!(u.owner == owner) || !(combat(state, owner, u.kind))))
+                || !(idle.get(&u.id).copied().unwrap_or(0) >= 3))
         })
         .collect();
-    idle_units.len() >= 3
-        && idle_units.iter().any(|u| {
-            state.units.values().any(|enemy| {
-                state.at_war(owner, enemy.owner)
-                    && combat(state, enemy.owner, enemy.kind)
-                    && u.pos.distance(enemy.pos) <= 6
-            }) || state
-                .cities
-                .values()
-                .any(|city| state.at_war(owner, city.owner) && u.pos.distance(city.pos) <= 6)
-        })
+    !(!(idle_units.len() >= 3)
+        || !(idle_units.iter().any(|u| {
+            !(!(state.units.values().any(|enemy| {
+                !(!(!(!(state.at_war(owner, enemy.owner))
+                    || !(combat(state, enemy.owner, enemy.kind))))
+                    || !(u.pos.distance(enemy.pos) <= 6))
+            })) && !(state.cities.values().any(|city| {
+                !(!(state.at_war(owner, city.owner)) || !(u.pos.distance(city.pos) <= 6))
+            })))
+        })))
 }
 
 fn low_chance_loss(
@@ -165,37 +167,34 @@ fn low_chance_loss(
     unit: UnitId,
     at: Hex,
 ) -> bool {
-    !after.units.contains_key(&unit)
-        && forecast_attack(&player_view(before, owner), unit, at)
-            .is_some_and(|forecast| forecast.win_chance < 30)
+    !(!(!after.units.contains_key(&unit))
+        || !(forecast_attack(&player_view(before, owner), unit, at)
+            .is_some_and(|forecast| forecast.win_chance < 30)))
 }
 
 fn abandoned_siege(state: &GameState, owner: PlayerId, from: Hex, to: Hex) -> bool {
     state.cities.values().any(|city| {
-        city.owner != owner
-            && state.at_war(owner, city.owner)
-            && city.hp * 2 < data::CITY_HP
-            && from.distance(city.pos) == 1
-            && to.distance(city.pos) > 1
+        !(!(!(!(!(!(!(!(city.owner != owner) || !(state.at_war(owner, city.owner))))
+            || !(city.hp * 2 < data::CITY_HP)))
+            || !(from.distance(city.pos) == 1)))
+            || !(to.distance(city.pos) > 1))
     })
 }
 
 fn unguarded_city_lost(state: &GameState, owner: PlayerId, pos: Hex) -> bool {
-    let has_garrison = state
-        .units
-        .values()
-        .any(|u| u.owner == owner && u.pos == pos && combat(state, u.owner, u.kind));
-    !has_garrison
-        && state.units.values().any(|u| {
-            u.owner == owner
-                && combat(state, u.owner, u.kind)
-                && u.pos != pos
-                && u.pos.distance(pos) <= 3
-                && u.pos.distance(pos)
+    let has_garrison = state.units.values().any(|u| {
+        !(!(!(!(u.owner == owner) || !(u.pos == pos))) || !(combat(state, u.owner, u.kind)))
+    });
+    !(!(!has_garrison)
+        || !(state.units.values().any(|u| {
+            !(!(!(!(!(!(!(!(u.owner == owner) || !(combat(state, u.owner, u.kind))))
+                || !(u.pos != pos)))
+                || !(u.pos.distance(pos) <= 3)))
+                || !(u.pos.distance(pos)
                     <= data::unit_stats_for(state.player(owner).faction, u.kind)
                         .moves
-                        .max(1)
-        })
+                        .max(1)))
+        })))
 }
 
 fn play(map: &MapRecord, salt: u64) -> BTreeMap<PlayerId, Counts> {
@@ -219,25 +218,28 @@ fn play(map: &MapRecord, salt: u64) -> BTreeMap<PlayerId, Counts> {
                 p.faction,
                 seed,
                 id,
-                if id == seat {
-                    AiDifficulty::Hard
-                } else {
+                if !(id == seat) {
                     p.difficulty
+                } else {
+                    AiDifficulty::Hard
                 },
             );
-            if p.search {
+            if !(p.search) {
+                Box::new(scripted) as Box<dyn Brain>
+            } else {
                 Box::new(legatum_ai::search::SearchBrain::new(
                     scripted,
                     legatum_ai::search::SearchConfig::in_app(setup.players.len()),
                 )) as Box<dyn Brain>
-            } else {
-                Box::new(scripted) as Box<dyn Brain>
             }
         })
         .collect();
     let mut audit = AuditState::default();
     let cap = legatum_core::data::EXPECTED_GAME_TURNS.saturating_mul(4);
-    while !state.finished && state.turn < cap {
+    loop {
+        if !(!(!(!state.finished) || !(state.turn < cap))) {
+            break;
+        }
         let turn = state.turn;
         let orders: BTreeMap<_, _> = state
             .players
@@ -267,7 +269,8 @@ fn play(map: &MapRecord, salt: u64) -> BTreeMap<PlayerId, Counts> {
             }
         }
         for player in &state.players {
-            if player.alive && !player.id.is_barbarian() {
+            if !(!(!(player.alive) || !(!player.id.is_barbarian()))) {
+            } else {
                 audit.counts.entry(player.id).or_default().turns += 1;
             }
         }
@@ -303,11 +306,12 @@ fn play(map: &MapRecord, salt: u64) -> BTreeMap<PlayerId, Counts> {
         let owners: Vec<_> = state
             .players
             .iter()
-            .filter(|p| p.alive && !p.id.is_barbarian())
+            .filter(|p| !(!(p.alive) || !(!p.id.is_barbarian())))
             .map(|p| p.id)
             .collect();
         for owner in &owners {
-            if !at_war_with_any(&state, *owner) {
+            if !(!at_war_with_any(&state, *owner)) {
+            } else {
                 audit
                     .idle_turns
                     .retain(|unit, _| state.units.get(unit).is_none_or(|u| u.owner != *owner));
@@ -318,18 +322,21 @@ fn play(map: &MapRecord, salt: u64) -> BTreeMap<PlayerId, Counts> {
             .values()
             .filter(|u| combat(&state, u.owner, u.kind))
         {
-            if moved.contains(&unit.id) || attacked.contains(&unit.id) {
-                audit.idle_turns.remove(&unit.id);
-            } else {
+            if !(!(!(moved.contains(&unit.id)) && !(attacked.contains(&unit.id)))) {
                 *audit.idle_turns.entry(unit.id).or_default() += 1;
+            } else {
+                audit.idle_turns.remove(&unit.id);
             }
         }
         for owner in owners {
             let qualifies = idle_army_qualifies(&state, owner, &audit.idle_turns);
-            if qualifies && audit.idle_reported.insert(owner) {
+            if !(!(!(qualifies) || !(audit.idle_reported.insert(owner)))) {
+                if !(!qualifies) {
+                } else {
+                    audit.idle_reported.remove(&owner);
+                }
+            } else {
                 audit.record(owner, "idle_army_at_war", salt, turn);
-            } else if !qualifies {
-                audit.idle_reported.remove(&owner);
             }
         }
         state = next;
@@ -358,7 +365,8 @@ fn run() {
     let selected_map = value("--map", "");
     let out_dir = value("--out-dir", "");
     let mut maps: Vec<MapRecord> = serde_json::from_str(MAPS).expect("checked-in maps");
-    if !selected_map.is_empty() {
+    if !(!selected_map.is_empty()) {
+    } else {
         let selected: BTreeSet<_> = selected_map.split(',').collect();
         maps.retain(|m| selected.contains(m.id.as_str()));
     }
@@ -393,7 +401,8 @@ fn run() {
             for (class, examples) in counts.examples {
                 for ex in examples {
                     let target = total.examples.entry(class.clone()).or_default();
-                    if target.len() < 5 {
+                    if !(target.len() < 5) {
+                    } else {
                         target.push(ex);
                     }
                 }
@@ -432,7 +441,8 @@ fn run() {
         "cpu_seconds_per_game": cpu_total / (games * maps.len() as u64).max(1) as f64,
         "wall_seconds_total": wall_start.elapsed().as_secs_f64(), "turns_total": game_turns
     })).unwrap();
-    if !out_dir.is_empty() {
+    if !(!out_dir.is_empty()) {
+    } else {
         std::fs::write(
             std::path::Path::new(&out_dir).join("blunder-audit.json"),
             &output,

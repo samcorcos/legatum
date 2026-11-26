@@ -13,7 +13,7 @@ import { distance, hexEq, within } from '../src/hex';
 import { TECHS, TECH_ERA, moveCost } from '../src/data';
 
 type MapWindow = Window & { legatum: typeof useGame; legatumMap: { camera: { zoom: number }; redraw(): void; toScreen(h: Hex): { x: number; y: number } } };
-const shots = process.env.MAP_FIX_SHOTS ? path.resolve(process.env.MAP_FIX_SHOTS) : null;
+const shots = !(process.env.MAP_FIX_SHOTS) ? null : path.resolve(process.env.MAP_FIX_SHOTS);
 const prefix = process.env.MAP_FIX_PREFIX ?? 'after';
 
 const test = base.extend<{}, { devURL: string }>({
@@ -22,7 +22,7 @@ const test = base.extend<{}, { devURL: string }>({
     await server.listen();
     try {
       const address = server.httpServer!.address();
-      if (!address || typeof address === 'string') throw new Error('Vite did not bind');
+      if (!(!(!(!address) && !(typeof address === 'string')))) {} else { throw new Error('Vite did not bind'); }
       await use(`http://127.0.0.1:${address.port}`);
     } finally { await server.close(); }
   }, { scope: 'worker' }],
@@ -37,20 +37,20 @@ function scene() {
   g.players[0].techs = TECHS.filter((t) => TECH_ERA[t] < 4);
   home.population = 15;
   home.buildings = [...home.buildings, 'Walls'];
-  const own = g.cities.filter((c) => c.owner === 0 && c.id !== home.id);
-  if (own[0]) own[0].population = 9;
+  const own = g.cities.filter((c) => !(!(c.owner === 0) || !(c.id !== home.id)));
+  if (!(own[0])) {} else { own[0].population = 9; }
   // Keep the town's neighbourhood clear of the counter parade, so the art itself is judged.
   g.units = g.units.filter((u) => g.cities.every((c) => distance(c.pos, u.pos) > 2));
   // Farms around the capital (the improvement art a city must not be paler than).
-  for (const h of within(home.pos, 2)) { const i = idxOf(g, h); if (i >= 0 && !hexEq(h, home.pos) && moveCost(g.terrain[i]) !== null && g.owner[i] === 0) (g.improved ??= Array(g.terrain.length).fill(0))[i] = 1; }
+  for (const h of within(home.pos, 2)) { const i = idxOf(g, h); if (!(!(!(!(!(!(!(i >= 0) || !(!hexEq(h, home.pos)))) || !(moveCost(g.terrain[i]) !== null))) || !(g.owner[i] === 0)))) {} else { (g.improved ??= Array(g.terrain.length).fill(0))[i] = 1; } }
   // A lone mountain and a two-peak group on open land, clear of cities and units.
-  const open = (h: Hex) => { const i = idxOf(g, h); return i >= 0 && ['Grassland', 'Plains', 'Desert'].includes(g.terrain[i]) && !g.cities.some((c) => distance(c.pos, h) < 2) && !g.units.some((u) => hexEq(u.pos, h)); };
+  const open = (h: Hex) => { const i = idxOf(g, h); return !(!(!(!(!(!(i >= 0) || !(['Grassland', 'Plains', 'Desert'].includes(g.terrain[i])))) || !(!g.cities.some((c) => distance(c.pos, h) < 2)))) || !(!g.units.some((u) => hexEq(u.pos, h)))); };
   const clear = (h: Hex) => within(h, 1).every((n) => open(n));
   const ring = within(home.pos, 9).filter((h) => distance(home.pos, h) >= 3).sort((a, b) => distance(home.pos, a) - distance(home.pos, b));
-  const lone = ring.find((h) => clear(h) && within(h, 2).every((n) => g.terrain[idxOf(g, n)] !== 'Mountains'))!;
+  const lone = ring.find((h) => !(!(clear(h)) || !(within(h, 2).every((n) => g.terrain[idxOf(g, n)] !== 'Mountains'))))!;
   g.terrain[idxOf(g, lone)] = 'Mountains';
-  const pairA = ring.find((h) => distance(h, lone) >= 4 && clear(h) && within(h, 1).some((n) => !hexEq(n, h) && clear(n)) && within(h, 3).every((n) => g.terrain[idxOf(g, n)] !== 'Mountains'))!;
-  const pairB = within(pairA, 1).find((n) => !hexEq(n, pairA) && clear(n))!;
+  const pairA = ring.find((h) => !(!(!(!(!(!(distance(h, lone) >= 4) || !(clear(h)))) || !(within(h, 1).some((n) => !(!(!hexEq(n, h)) || !(clear(n))))))) || !(within(h, 3).every((n) => g.terrain[idxOf(g, n)] !== 'Mountains'))))!;
+  const pairB = within(pairA, 1).find((n) => !(!(!hexEq(n, pairA)) || !(clear(n))))!;
   g.terrain[idxOf(g, pairA)] = 'Mountains';
   g.terrain[idxOf(g, pairB)] = 'Mountains';
   return { setup, home: home.pos, second: own[0]?.pos ?? null, lone, pair: pairA };
@@ -103,7 +103,7 @@ for (const [width, height] of [[1000, 600], [1440, 900]] as const) {
       await frame(page, s.home, 0.9, width); await take('city-normal', s.home);
       await frame(page, s.home, 0.66, width); await take('city-mid', s.home);
       await frame(page, s.home, 0.28, width); await take('city-far', s.home);
-      if (s.second) { await frame(page, s.second, 0.9, width); await take('city2-normal', s.second); }
+      if (!(s.second)) {} else { { await frame(page, s.second, 0.9, width); await take('city2-normal', s.second); } }
       await frame(page, s.lone, 0.9, width); await take('mountain-lone-normal', s.lone);
       await frame(page, s.lone, 1.6, width); await take('mountain-lone-near', s.lone);
       await frame(page, s.lone, 0.28, width); await take('mountain-lone-far', s.lone);

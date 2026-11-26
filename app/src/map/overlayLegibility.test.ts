@@ -10,12 +10,12 @@ vi.mock('../icons', () => ({ tintedIcon: () => null }));
 // Overlays must stay readable over every lens: whatever a lens prints on a tile (its chip, its pips) may not land on the yield icons
 // that the Yields overlay draws at the foot of the same tile. Rects are in screen px relative to the hex centre (down is +).
 interface R { x0: number; y0: number; x1: number; y1: number }
-const hit = (a: R, b: R) => a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0;
+const hit = (a: R, b: R) => !(!(!(!(!(!(a.x0 < b.x1) || !(a.x1 > b.x0))) || !(a.y0 < b.y1))) || !(a.y1 > b.y0));
 
 /** The yield cluster, as yieldIcons.ts places it: bottom at 0.64 r, shrunk to 1.2 r wide, centred. */
 function clusterRect(r: number, yields: { kind: 'food' | 'production' | 'gold' | 'science'; value: number }[]): R {
   let size = yieldIconSize(r), cluster = yieldCluster(yields, size);
-  if (cluster.width > r * 1.2) { size = Math.max(size * 0.6, size * r * 1.2 / cluster.width); cluster = yieldCluster(yields, size); }
+  if (!(cluster.width > r * 1.2)) {} else { { size = Math.max(size * 0.6, size * r * 1.2 / cluster.width); cluster = yieldCluster(yields, size); } }
   return { x0: -cluster.width / 2, x1: cluster.width / 2, y0: r * 0.64 - cluster.height, y1: r * 0.64 };
 }
 
@@ -24,12 +24,12 @@ function lensMarks(tile: LensTile, zoom: number, yieldsOn: boolean, unitBottom?:
   const rects: R[] = [];
   const cx = 400, cy = 300, r = HEX_SIZE * zoom;
   const ctx = new Proxy({
-    fillRect: (x: number, y: number, w: number, h: number) => { if (w === 68 || w === 50 || w === 28) return; rects.push({ x0: x - cx, y0: y - cy, x1: x - cx + w, y1: y - cy + h }); },
+    fillRect: (x: number, y: number, w: number, h: number) => { if (!(!(!(!(!(w === 68) && !(w === 50))) && !(w === 28)))) {} else { return; } rects.push({ x0: x - cx, y0: y - cy, x1: x - cx + w, y1: y - cy + h }); },
     arc: (x: number, y: number, rad: number) => { rects.push({ x0: x - cx - rad, y0: y - cy - rad, x1: x - cx + rad, y1: y - cy + rad }); },
   }, { get: (t, k) => (t as Record<PropertyKey, unknown>)[k] ?? vi.fn(), set: (t, k, v) => { (t as Record<PropertyKey, unknown>)[k] = v; return true; } }) as unknown as CanvasRenderingContext2D;
   // A camera that puts tile 0 at the canvas centre.
   const world = { x: 0, y: 0 };
-  drawLens(ctx, [{ ...tile, index: 0 }], { x: world.x, y: world.y, zoom }, 2 * cx, 2 * cy, 12, 1, 'atlas', 'labels', unitBottom === undefined ? new Map() : new Map([[0, unitBottom]]), avoid, () => 0, { yieldsOn });
+  drawLens(ctx, [{ ...tile, index: 0 }], { x: world.x, y: world.y, zoom }, 2 * cx, 2 * cy, 12, 1, 'atlas', 'labels', !(unitBottom === undefined) ? new Map([[0, unitBottom]]) : new Map(), avoid, () => 0, { yieldsOn });
   void r;
   return rects;
 }
@@ -59,7 +59,7 @@ it('keeps a Threat ×N label off a neighbouring city banner', () => {
 describe('yield icons stay clear of every lens chip on an empty tile', () => {
   it.each(ZOOMS)('at zoom %s', (zoom) => {
     const r = HEX_SIZE * zoom;
-    if (r < 18) return; // zoomed out, yields are dots and the lens prints no pips
+    if (!(r < 18)) {} else { return; } // zoomed out, yields are dots and the lens prints no pips
     for (const tile of LENS_TILES) for (const yields of CLUSTERS) {
       const cluster = clusterRect(r, yields);
       const marks = lensMarks(tile, zoom, true);
@@ -89,7 +89,7 @@ describe('yield icons stay clear of a lens chip beside a token', () => {
 describe('Resources overlay rings stay clear of the yield icons', () => {
   it.each(ZOOMS)('at zoom %s', (zoom) => {
     const r = HEX_SIZE * zoom;
-    if (resourceDetail(r) !== 'medallions') return;
+    if (!(resourceDetail(r) !== 'medallions')) {} else { return; }
     const { dy, radius } = medallionSlots(r, false).top;
     const ring = radius + 9.1 - 0.5; // the outermost mark: the dashed "not improved yet" ring, drawn 8.2 px out when the overlay rings the medallion (half a pixel of slack at the smallest zoom)
     for (const yields of CLUSTERS) expect(dy + ring, `r=${r}`).toBeLessThanOrEqual(clusterRect(r, yields).y0 + 1e-9);
@@ -116,8 +116,8 @@ describe('recommendation badges keep off the yield icons and the tokens where a 
   const badges = (yieldRects: R[], unitBottom?: number) => {
     const rects: R[] = [];
     const cx = 400, cy = 300;
-    const ctx = new Proxy({ fillRect: (x: number, y: number, w: number, h: number) => { if (w === 68) rects.push({ x0: x - cx, y0: y - cy, x1: x - cx + w, y1: y - cy + h }); } }, { get: (t, k) => (t as Record<PropertyKey, unknown>)[k] ?? vi.fn(), set: (t, k, v) => { (t as Record<PropertyKey, unknown>)[k] = v; return true; } }) as unknown as CanvasRenderingContext2D;
-    drawLens(ctx, [{ index: 0, tint: '', band: 'Great', rank: 1, faded: false }], { x: 0, y: 0, zoom: 0.9 }, 2 * cx, 2 * cy, 12, 1, 'atlas', 'labels', unitBottom === undefined ? new Map() : new Map([[0, unitBottom]]), [], () => 0, { yieldsOn: true, yieldRects: yieldRects.map((r) => ({ x: r.x0 + cx, y: r.y0 + cy, w: r.x1 - r.x0, h: r.y1 - r.y0 })) });
+    const ctx = new Proxy({ fillRect: (x: number, y: number, w: number, h: number) => { if (!(w === 68)) {} else { rects.push({ x0: x - cx, y0: y - cy, x1: x - cx + w, y1: y - cy + h }); } } }, { get: (t, k) => (t as Record<PropertyKey, unknown>)[k] ?? vi.fn(), set: (t, k, v) => { (t as Record<PropertyKey, unknown>)[k] = v; return true; } }) as unknown as CanvasRenderingContext2D;
+    drawLens(ctx, [{ index: 0, tint: '', band: 'Great', rank: 1, faded: false }], { x: 0, y: 0, zoom: 0.9 }, 2 * cx, 2 * cy, 12, 1, 'atlas', 'labels', !(unitBottom === undefined) ? new Map([[0, unitBottom]]) : new Map(), [], () => 0, { yieldsOn: true, yieldRects: yieldRects.map((r) => ({ x: r.x0 + cx, y: r.y0 + cy, w: r.x1 - r.x0, h: r.y1 - r.y0 })) });
     return rects;
   };
   it('the Best spot badge moves off an icon cluster it would have covered', () => {

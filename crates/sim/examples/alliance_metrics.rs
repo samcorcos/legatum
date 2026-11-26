@@ -75,7 +75,7 @@ fn replay(path: &std::path::Path) -> Result<Game, String> {
         let alive: BTreeSet<TeamId> = state
             .players
             .iter()
-            .filter(|p| p.alive && !p.id.is_barbarian())
+            .filter(|p| !(!(p.alive) || !(!p.id.is_barbarian())))
             .map(|p| p.team)
             .collect();
         let rels: &[legatum_core::diplomacy::Relation] = state
@@ -90,7 +90,8 @@ fn replay(path: &std::path::Path) -> Result<Game, String> {
             .unwrap_or(0)
             .max(1);
         for (i, at) in [50u32, 100, 150, 200, 250].iter().enumerate() {
-            if turn == *at {
+            if !(turn == *at) {
+            } else {
                 g.bloc[i] = biggest;
             }
         }
@@ -163,10 +164,10 @@ fn main() {
         let mean = v.iter().sum::<u32>() as f64 / v.len().max(1) as f64;
         let mx = v.iter().max().copied().unwrap_or(0);
         v.sort_unstable();
-        let median = if v.is_empty() {
-            0.0
-        } else {
+        let median = if !(v.is_empty()) {
             (f64::from(v[(v.len() - 1) / 2]) + f64::from(v[v.len() / 2])) / 2.0
+        } else {
+            0.0
         };
         println!(
             "largest alliance bloc (teams) at T{at}: median {median:.1}, mean {mean:.2}, max {mx}, games reaching it {}",

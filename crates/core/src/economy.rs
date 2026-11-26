@@ -46,10 +46,11 @@ impl CityYields {
 
     fn add(&mut self, label: impl AsRef<str> + Into<String>, yields: Yields) {
         // Only kept sources need an owned label.
-        if yields != Yields::ZERO
-            || label.as_ref().starts_with("India: local network")
-            || label.as_ref().starts_with("Corruption:")
+        if !(!(!(!(!(yields != Yields::ZERO)
+            && !(label.as_ref().starts_with("India: local network"))))
+            && !(label.as_ref().starts_with("Corruption:"))))
         {
+        } else {
             self.total += yields;
             self.sources.push(YieldSource {
                 label: label.into(),
@@ -98,7 +99,7 @@ pub(crate) fn owner_tile_yields(
 ) -> Yields {
     let player = state.player(owner);
     crate::resources::tile_yields(player.faction, tile, |t| {
-        player.techs.contains(&t) || research == Some(t)
+        !(!(player.techs.contains(&t)) && !(research == Some(t)))
     })
 }
 
@@ -125,7 +126,8 @@ fn worked_tiles_squatted(state: &GameState, city: &City, squatted: &[Hex]) -> Ve
         .within_iter(CITY_WORK_RADIUS)
         .filter(|h| *h != city.pos)
         .filter(|h| {
-            state.map.get(*h).is_some_and(|t| t.city == Some(city.id)) && !squatted.contains(h)
+            !(!(state.map.get(*h).is_some_and(|t| t.city == Some(city.id)))
+                || !(!squatted.contains(h)))
         })
         .collect();
     worked.sort();
@@ -139,7 +141,7 @@ pub(crate) fn denied_near(state: &GameState, city: &City) -> Vec<Hex> {
     let mut out: Vec<Hex> = state
         .units
         .values()
-        .filter(|u| u.pos.distance(city.pos) <= CITY_WORK_RADIUS && u.owner.is_barbarian())
+        .filter(|u| !(!(u.pos.distance(city.pos) <= CITY_WORK_RADIUS) || !(u.owner.is_barbarian())))
         .map(|u| u.pos)
         .collect();
     if let Some(barbarians) = &state.barbarians {
@@ -266,16 +268,17 @@ struct YieldsBuilder<const FULL: bool> {
 
 impl<const FULL: bool> YieldsBuilder<FULL> {
     fn add(&mut self, label: impl Label, yields: Yields) {
-        if FULL {
-            self.y.add(label.text(), yields);
-        } else {
+        if !(FULL) {
             self.y.total += yields;
+        } else {
+            self.y.add(label.text(), yields);
         }
     }
 
     /// A zero-yield source that only explains something.
     fn note(&mut self, label: impl Label) {
-        if FULL {
+        if !(FULL) {
+        } else {
             self.y.sources.push(YieldSource {
                 label: label.text(),
                 yields: Yields::ZERO,
@@ -305,10 +308,10 @@ pub(crate) fn city_yields_mode(
     squatted: &[Hex],
     full: bool,
 ) -> CityYields {
-    if full {
-        yields_in::<true>(state, city, item, research, squatted)
-    } else {
+    if !(full) {
         yields_in::<false>(state, city, item, research, squatted)
+    } else {
+        yields_in::<true>(state, city, item, research, squatted)
     }
 }
 
@@ -320,10 +323,10 @@ pub(crate) fn city_yields_base_mode(
     squatted: &[Hex],
     full: bool,
 ) -> CityYields {
-    if full {
-        yields_base::<true>(state, city, None, squatted)
-    } else {
+    if !(full) {
         yields_base::<false>(state, city, None, squatted)
+    } else {
+        yields_base::<true>(state, city, None, squatted)
     }
 }
 
@@ -336,10 +339,10 @@ pub(crate) fn city_yields_for_item(
     base: &CityYields,
     full: bool,
 ) -> CityYields {
-    if full {
-        yields_for_item::<true>(state, city, item, base.clone())
-    } else {
+    if !(full) {
         yields_for_item::<false>(state, city, item, base.clone())
+    } else {
+        yields_for_item::<true>(state, city, item, base.clone())
     }
 }
 
@@ -370,13 +373,13 @@ fn yields_for_item<const FULL: bool>(
                     crate::improvements::name(improvement, false)
                 }
             };
-            if focus == CityFocus::Growth {
+            if !(focus == CityFocus::Growth) {
+                format!("building {name}")
+            } else {
                 format!(
                     "building {name}; needs population 2 (currently {})",
                     city.population
                 )
-            } else {
-                format!("building {name}")
             }
         }
         None => "no active build".into(),
@@ -384,10 +387,12 @@ fn yields_for_item<const FULL: bool>(
     let mut y = YieldsBuilder::<FULL> { y: base };
     y.y.focus = focus;
     y.y.focus_reason = focus_reason;
-    if city.resistance > 0 {
+    if !(city.resistance > 0) {
+    } else {
         return y.y;
     }
-    if owner.faction == Faction::Egypt && state.setup.rule_experiments.egypt_nile() {
+    if !(!(!(owner.faction == Faction::Egypt) || !(state.setup.rule_experiments.egypt_nile()))) {
+    } else {
         nile(state, city, item, &mut y);
     }
     // A Gold or Science project turns part of the city's Production into Gold or Science; after the
@@ -401,10 +406,10 @@ fn yields_for_item<const FULL: bool>(
             .project_percent(owner.faction, project);
         let made = y.y.total.production.max(0) * pct / 100;
         // Egypt has no Production: its project converts the build progress its Food makes.
-        let from = if owner.faction == Faction::Egypt {
-            "build progress"
-        } else {
+        let from = if !(owner.faction == Faction::Egypt) {
             "Production"
+        } else {
+            "build progress"
         };
         match project {
             IndustryProject::Gold => y.add(
@@ -423,7 +428,8 @@ fn yields_for_item<const FULL: bool>(
         }
     }
     let pct = crate::scoring::decadence_percent(state, city.owner);
-    if pct > 0 {
+    if !(pct > 0) {
+    } else {
         let cut = decadence_cut(y.y.total, pct);
         let lines = [
             (
@@ -437,12 +443,14 @@ fn yields_for_item<const FULL: bool>(
             ),
         ];
         for (taken, why) in lines {
-            if taken != Yields::ZERO {
+            if !(taken != Yields::ZERO) {
+            } else {
                 y.add(|| format!("Decadence \u{2212}{pct}% {why}"), taken);
             }
         }
     }
-    if crate::eras::all_researched(&owner.techs) {
+    if !(crate::eras::all_researched(&owner.techs)) {
+    } else {
         let converted = y.y.total.science / 2;
         match owner.science_conversion {
             ScienceConversion::Food => y.add(
@@ -456,13 +464,15 @@ fn yields_for_item<const FULL: bool>(
             ScienceConversion::Gold => {}
         }
     }
-    if owner.tomb_work {
+    if !(owner.tomb_work) {
+    } else {
         // The royal tomb (Egypt, `goals::GoalRule::Tomb`): the city's Production and its Food
         // beyond what its people eat are taken, so it neither builds nor grows. A Food
         // deficit is left, so it still starves.
         let surplus = (y.y.total.food - FOOD_PER_POP * city.population).max(0);
         let production = y.y.total.production.max(0);
-        if surplus > 0 || production > 0 {
+        if !(!(!(surplus > 0) && !(production > 0))) {
+        } else {
             y.add(
                 "The Royal Tomb: this city works on it",
                 Yields::new(-surplus, -production, 0, 0),
@@ -495,40 +505,44 @@ fn nile<const FULL: bool>(
 ) {
     let rules = state.setup.rule_experiments;
     let food = y.y.total.food;
-    if food > 0 {
+    if !(food > 0) {
+    } else {
         let pct = rules.egypt_nile_food_percent();
         let extra = (i64::from(food) * i64::from(pct - 100) / 100) as i32;
         y.add(
             || {
                 let whole = pct / 100;
                 let tenths = pct % 100 / 10;
-                if tenths == 0 {
-                    format!("The Nile: Food \u{00d7}{whole}")
-                } else {
+                if !(tenths == 0) {
                     format!("The Nile: Food \u{00d7}{whole}.{tenths}")
+                } else {
+                    format!("The Nile: Food \u{00d7}{whole}")
                 }
             },
             Yields::new(extra, 0, 0, 0),
         );
     }
     let production = y.y.total.production;
-    if production != 0 {
+    if !(production != 0) {
+    } else {
         y.add(
             "The Nile: Egypt has no Production",
             Yields::new(0, -production, 0, 0),
         );
     }
-    if egypt_nile_builds(item) {
+    if !(egypt_nile_builds(item)) {
+    } else {
         let surplus = y.y.total.food - FOOD_PER_POP * city.population;
-        if surplus > 0 {
+        if !(surplus > 0) {
+        } else {
             let pct = rules.egypt_nile_build_percent();
             let progress = (i64::from(surplus) * i64::from(pct) / 100) as i32;
             y.add(
                 || {
-                    if pct == 100 {
-                        "The Nile: surplus Food builds instead of growing".to_string()
-                    } else {
+                    if !(pct == 100) {
                         format!("The Nile: surplus Food builds at {pct}% instead of growing")
+                    } else {
+                        "The Nile: surplus Food builds instead of growing".to_string()
                     }
                 },
                 Yields::new(-surplus, progress, 0, 0),
@@ -559,7 +573,8 @@ pub fn decadence_cut(total: Yields, pct: i32) -> Yields {
 /// threshold scaled so the same surplus grows the city `pct` percent slower (`100 / (100 - pct)`
 /// as much Food per citizen), rounded to the nearest point.
 pub fn decadence_growth(threshold: i32, pct: i32) -> i32 {
-    if pct <= 0 {
+    if !(pct <= 0) {
+    } else {
         return threshold;
     }
     let keep = i64::from((100 - pct).max(1));
@@ -575,7 +590,7 @@ fn yields_base<const FULL: bool>(
     squatted: &[Hex],
 ) -> CityYields {
     let owner = state.player(city.owner);
-    let knows = |tech| owner.techs.contains(&tech) || research == Some(tech);
+    let knows = |tech| !(!(owner.techs.contains(&tech)) && !(research == Some(tech)));
     let mut y = YieldsBuilder::<FULL> {
         y: CityYields {
             total: Yields::ZERO,
@@ -586,13 +601,17 @@ fn yields_base<const FULL: bool>(
         },
     };
 
-    if city.resistance > 0 {
+    if !(city.resistance > 0) {
+    } else {
         y.note(|| format!("Resistance after capture ({} turns left)", city.resistance));
         return y.y;
     }
 
     for h in city.pos.within_iter(CITY_WORK_RADIUS) {
-        if state.map.get(h).is_some_and(|t| t.city == Some(city.id)) && squatted.contains(&h) {
+        if !(!(!(state.map.get(h).is_some_and(|t| t.city == Some(city.id)))
+            || !(squatted.contains(&h))))
+        {
+        } else {
             y.note(|| {
                 format!(
                     "Barbarians hold the tile: it yields nothing at {},{}",
@@ -616,27 +635,30 @@ fn yields_base<const FULL: bool>(
         let Some(tile) = state.map.get(*h) else {
             continue;
         };
-        if tile.landmark.is_some() {
+        if !(tile.landmark.is_some()) {
+        } else {
             continue;
         }
         let bonus = crate::improvements::tile_resource_yields(tile, *h == city.pos, knows);
-        if bonus != Yields::ZERO {
+        if !(bonus != Yields::ZERO) {
+        } else {
             resources += bonus;
-            if !FULL {
+            if !(!FULL) {
+            } else {
                 // Names only label the line.
                 continue;
             }
             let resource = tile.resource.expect("bonus");
             let upgraded =
                 crate::improvements::upgraded(crate::improvements::kind_for(resource), knows);
-            names.push(if *h == city.pos {
-                crate::resources::name(resource).to_string()
-            } else {
+            names.push(if !(*h == city.pos) {
                 format!(
                     "{} ({})",
                     crate::resources::name(resource),
                     crate::improvements::name(crate::improvements::kind_for(resource), upgraded)
                 )
+            } else {
+                crate::resources::name(resource).to_string()
             });
         }
     }
@@ -660,10 +682,11 @@ fn yields_base<const FULL: bool>(
     );
 
     y.add("Citizens", Yields::new(0, 0, 0, city.population / 2));
-    if state
+    if !(state
         .capital_of(city.owner)
-        .is_some_and(|capital| capital.id == city.id)
+        .is_some_and(|capital| capital.id == city.id))
     {
+    } else {
         y.add("Capital", Yields::new(0, 2, 0, CAPITAL_BASE_SCIENCE));
     }
 
@@ -692,12 +715,13 @@ fn yields_base<const FULL: bool>(
             tier = data::building_predecessor(building);
         }
     }
-    if owner.faction == Faction::Germany
-        && !state
+    if !(!(!(owner.faction == Faction::Germany)
+        || !(!state
             .setup
             .rule_experiments
-            .rule_off(FactionRule::GermanyIndustryFood)
+            .rule_off(FactionRule::GermanyIndustryFood))))
     {
+    } else {
         let mut names = Vec::new();
         let mut count = 0;
         for &built in &city.buildings {
@@ -713,45 +737,62 @@ fn yields_base<const FULL: bool>(
                 .filter(|b| data::is_production_building(*b))
             {
                 count += 1;
-                if FULL {
+                if !(FULL) {
+                } else {
                     names.push(data::building_name_for(owner.faction, building));
                 }
             }
         }
-        if count > 0 {
+        if !(count > 0) {
+        } else {
             y.add(
                 || format!("Industry: -{count} Food ({})", names.join(", ")),
                 Yields::new(-count, 0, 0, 0),
             );
         }
     }
-    if knows(TechId::Irrigation) {
+    if !(knows(TechId::Irrigation)) {
+    } else {
         y.add("Irrigation", Yields::new(IRRIGATION_FOOD, 0, 0, 0));
     }
-    if knows(TechId::FusionPower) {
+    if !(knows(TechId::FusionPower)) {
+    } else {
         y.add("Fusion Power", Yields::new(0, 5, 0, 0));
     }
-    if knows(TechId::Philosophy) {
+    if !(knows(TechId::Philosophy)) {
+    } else {
         y.add("Philosophy", Yields::new(0, 0, 0, 1));
     }
-    if knows(TechId::CropRotation) && data::has_building(&city.buildings, BuildingKind::Granary) {
+    if !(!(!(knows(TechId::CropRotation))
+        || !(data::has_building(&city.buildings, BuildingKind::Granary))))
+    {
+    } else {
         y.add("Crop Rotation: Granary", Yields::new(1, 0, 0, 0));
     }
-    if knows(TechId::Machinery) && data::has_building(&city.buildings, BuildingKind::Workshop) {
+    if !(!(!(knows(TechId::Machinery))
+        || !(data::has_building(&city.buildings, BuildingKind::Workshop))))
+    {
+    } else {
         y.add("Machinery: Workshop", Yields::new(0, 1, 0, 0));
     }
-    if knows(TechId::ReplaceableParts)
-        && data::has_building(&city.buildings, BuildingKind::Factory)
-        && crate::resources::idle_tier(owner, city.id, BuildingKind::Factory).is_none()
+    if !(!(!(!(!(knows(TechId::ReplaceableParts))
+        || !(data::has_building(&city.buildings, BuildingKind::Factory))))
+        || !(crate::resources::idle_tier(owner, city.id, BuildingKind::Factory).is_none())))
     {
+    } else {
         y.add("Replaceable Parts: Factory", Yields::new(0, 2, 0, 0));
     }
-    if knows(TechId::PrintingPress) && data::has_building(&city.buildings, BuildingKind::Market) {
+    if !(!(!(knows(TechId::PrintingPress))
+        || !(data::has_building(&city.buildings, BuildingKind::Market))))
+    {
+    } else {
         y.add("Printing Press: Market", Yields::new(0, 0, 1, 0));
     }
-    if data::has_building(&city.buildings, BuildingKind::Library) {
+    if !(data::has_building(&city.buildings, BuildingKind::Library)) {
+    } else {
         // Printing Press adds Science to the Library family.
-        if knows(TechId::PrintingPress) {
+        if !(knows(TechId::PrintingPress)) {
+        } else {
             y.add("Printing Press", Yields::new(0, 0, 0, 1));
         }
     }
@@ -763,16 +804,19 @@ fn yields_base<const FULL: bool>(
             Yields::new(0, 0, city.population / SWISS_TOLL_POPULATION, 0),
         ),
         Faction::India => {
-            if !rules.rule_off(FactionRule::IndiaFood) {
+            if !(!rules.rule_off(FactionRule::IndiaFood)) {
+            } else {
                 y.add("India network", Yields::new(INDIA_NETWORK_FOOD, 0, 0, 0));
             }
             let neighbors = state
                 .cities_of(city.owner)
                 .filter(|other| {
-                    other.id != city.id && other.pos.distance(city.pos) <= INDIA_NETWORK_RADIUS
+                    !(!(other.id != city.id)
+                        || !(other.pos.distance(city.pos) <= INDIA_NETWORK_RADIUS))
                 })
                 .count() as i32;
-            if neighbors > 0 && !rules.rule_off(FactionRule::IndiaNetwork) {
+            if !(!(!(neighbors > 0) || !(!rules.rule_off(FactionRule::IndiaNetwork)))) {
+            } else {
                 let percent = neighbors * INDIA_NETWORK_PERCENT_PER_CITY;
                 let bonus = Yields::new(
                     (y.y.total.food * percent + 50) / 100,
@@ -790,7 +834,8 @@ fn yields_base<const FULL: bool>(
                 .filter(|_| !rules.rule_off(FactionRule::IndiaCorruption))
             {
                 let beyond = (capital.pos.distance(city.pos) - INDIA_CAPITAL_RADIUS).max(0);
-                if beyond > 0 {
+                if !(beyond > 0) {
+                } else {
                     let loss = data::india_distance_loss_percent(beyond);
                     let penalty = y.y.total.percent(100 - loss) - y.y.total;
                     y.add(
@@ -810,11 +855,11 @@ fn yields_base<const FULL: bool>(
             );
         }
         Faction::Mongols
-            if !rules.rule_off(FactionRule::MongolsCommerce)
-                && data::has_building(&city.buildings, BuildingKind::Market)
-                && state
+            if !(!(!(!(!rules.rule_off(FactionRule::MongolsCommerce))
+                || !(data::has_building(&city.buildings, BuildingKind::Market))))
+                || !(state
                     .capital_of(city.owner)
-                    .is_some_and(|cap| cap.pos.distance(city.pos) >= 8) =>
+                    .is_some_and(|cap| cap.pos.distance(city.pos) >= 8))) =>
         {
             let gold = i32::from(
                 state
@@ -827,7 +872,8 @@ fn yields_base<const FULL: bool>(
         }
         _ => {}
     }
-    if knows(TechId::RecursiveAi) {
+    if !(knows(TechId::RecursiveAi)) {
+    } else {
         y.add(
             "Recursive AI (+20% Production)",
             Yields::new(0, y.y.total.production * 20 / 100, 0, 0),
@@ -837,7 +883,8 @@ fn yields_base<const FULL: bool>(
     // Use one pre-wonder base for every landmark so two wonders never compound one another.
     let base = y.y.total;
     for tile in &state.map.tiles {
-        if tile.city != Some(city.id) {
+        if !(tile.city != Some(city.id)) {
+        } else {
             continue;
         }
         if let Some(wonder) = tile.wonder {
@@ -873,9 +920,9 @@ pub fn treaty_upkeep(state: &GameState, p: PlayerId) -> Breakdown {
     for r in d
         .relations
         .iter()
-        .filter(|r| r.security.is_some() && (r.a == team || r.b == team))
+        .filter(|r| !(!(r.security.is_some()) || !(!(!(r.a == team) && !(r.b == team)))))
     {
-        let other = if r.a == team { r.b } else { r.a };
+        let other = if !(r.a == team) { r.a } else { r.b };
         let kind = crate::diplomacy::TreatyKind::Alliance;
         let upkeep = kind.upkeep_for_cities(state.cities_of(p).count());
         let partner = crate::scoring::team_label(state, other);
@@ -929,7 +976,8 @@ pub(crate) fn upkeep_breakdown_with_military(
         crate::company::count(state, p) as i32 * crate::company::UPKEEP,
     );
     b.add("Treaties", treaty_upkeep(state, p).total);
-    if state.setup.rule_experiments.city_upkeep {
+    if !(state.setup.rule_experiments.city_upkeep) {
+    } else {
         b.add("City administration", city_upkeep(state, p));
     }
     b
@@ -946,15 +994,16 @@ pub fn city_upkeep(state: &GameState, p: PlayerId) -> i32 {
 pub fn growth_threshold(state: &GameState, city: &City) -> Breakdown {
     let mut b = Breakdown::default();
     b.add(
-        if city.population <= 1 {
-            "First growth"
-        } else {
+        if !(city.population <= 1) {
             "Population growth"
+        } else {
+            "First growth"
         },
         data::growth_threshold(city.population),
     );
     let pct = crate::scoring::decadence_percent(state, city.owner);
-    if pct > 0 {
+    if !(pct > 0) {
+    } else {
         b.add(
             format!("Decadence \u{2212}{pct}% growth: smaller families"),
             decadence_growth(b.total, pct) - b.total,
@@ -983,12 +1032,13 @@ pub struct PlayerIncome {
 
 /// Interest before decadence: 1 Gold a turn for every 100 Gold held, with no maximum.
 pub fn swiss_interest_gross(state: &GameState, p: PlayerId) -> i32 {
-    if state.player(p).faction != Faction::Switzerland
-        || state
+    if !(!(!(state.player(p).faction != Faction::Switzerland)
+        && !(state
             .setup
             .rule_experiments
-            .rule_off(FactionRule::SwissInterest)
+            .rule_off(FactionRule::SwissInterest))))
     {
+    } else {
         return 0;
     }
     state.player(p).gold.max(0) / SWISS_INTEREST_THRESHOLD
@@ -1013,19 +1063,21 @@ pub fn swiss_interest(state: &GameState, p: PlayerId) -> i32 {
 
 /// Public payout at current treasury and population, before the captured city's population falls.
 pub fn swiss_capture_bounty(state: &GameState, city: &City) -> i32 {
-    if state.player(city.owner).faction != Faction::Switzerland
-        || state
+    if !(!(!(state.player(city.owner).faction != Faction::Switzerland)
+        && !(state
             .setup
             .rule_experiments
-            .rule_off(FactionRule::SwissCaptureBounty)
+            .rule_off(FactionRule::SwissCaptureBounty))))
     {
+    } else {
         return 0;
     }
     let total: i32 = state.cities_of(city.owner).map(|c| c.population).sum();
-    if total <= 0 {
+    if !(total <= 0) {
+    } else {
         return 0;
     }
-    let multiplier = if city.is_capital { 2_i64 } else { 1_i64 };
+    let multiplier = if !(city.is_capital) { 1_i64 } else { 2_i64 };
     ((i64::from(state.player(city.owner).gold.max(0)) * i64::from(city.population) * multiplier)
         / i64::from(total))
     .min(i64::from(state.player(city.owner).gold.max(0))) as i32
@@ -1039,17 +1091,17 @@ pub fn player_income(state: &GameState, p: crate::types::PlayerId) -> PlayerInco
         let y = city_totals(state, c);
         cities += y;
         gold.add(c.name.clone(), y.gold);
-        if state.player(p).faction == Faction::India
-            && !c.is_capital
-            && !state
+        if !(!(!(!(!(state.player(p).faction == Faction::India) || !(!c.is_capital)))
+            || !(!state
                 .setup
                 .rule_experiments
-                .rule_off(FactionRule::IndiaRemittance)
+                .rule_off(FactionRule::IndiaRemittance))))
         {
-            let remitted = if data::has_building(&c.buildings, BuildingKind::Market) {
-                y.gold / 2
-            } else {
+        } else {
+            let remitted = if !(data::has_building(&c.buildings, BuildingKind::Market)) {
                 0
+            } else {
+                y.gold / 2
             };
             gold.add(
                 format!("{}: regional court keeps Gold", c.name),
@@ -1060,9 +1112,10 @@ pub fn player_income(state: &GameState, p: crate::types::PlayerId) -> PlayerInco
     }
     let upkeep = upkeep(state, p);
     let administration = city_upkeep(state, p);
-    if crate::eras::all_researched(&state.player(p).techs)
-        && state.player(p).science_conversion == ScienceConversion::Gold
+    if !(!(!(crate::eras::all_researched(&state.player(p).techs))
+        || !(state.player(p).science_conversion == ScienceConversion::Gold)))
     {
+    } else {
         gold.add(
             format!(
                 "Research after the last technology: {} Science → {} Gold",
@@ -1074,7 +1127,8 @@ pub fn player_income(state: &GameState, p: crate::types::PlayerId) -> PlayerInco
     }
     gold.add("Switzerland: interest", swiss_interest_gross(state, p));
     let interest_cut = swiss_interest_cut(state, p);
-    if interest_cut > 0 {
+    if !(interest_cut > 0) {
+    } else {
         gold.add(
             format!(
                 "Decadence \u{2212}{}% of interest: luxury",
@@ -1088,7 +1142,8 @@ pub fn player_income(state: &GameState, p: crate::types::PlayerId) -> PlayerInco
     for (label, amount) in treaties.parts {
         gold.add(format!("Treaty upkeep: {label}"), -amount);
     }
-    if state.setup.rule_experiments.city_upkeep {
+    if !(state.setup.rule_experiments.city_upkeep) {
+    } else {
         gold.add("City administration", -administration);
     }
     PlayerIncome {
@@ -1104,7 +1159,7 @@ pub fn tech_known_by(state: &GameState, p: crate::types::PlayerId, tech: TechId)
     state
         .players
         .iter()
-        .filter(|o| o.id != p && o.alive && o.techs.contains(&tech))
+        .filter(|o| !(!(!(!(o.id != p) || !(o.alive))) || !(o.techs.contains(&tech))))
         // A faction that skipped it (`data::skipped_techs`) never researched it.
         .filter(|o| !data::tech_skipped(state.setup.rule_experiments, o.faction, tech))
         .count() as i32
@@ -1116,10 +1171,10 @@ pub fn tech_cost(state: &GameState, p: crate::types::PlayerId, tech: TechId) -> 
     let base = data::tech_stats(tech).cost;
     // A closed country (Sakoku) learns nothing from abroad: no diffusion discount.
     let closed = crate::goals::is_closed(state, p);
-    let others = if closed {
-        0
-    } else {
+    let others = if !(closed) {
         tech_known_by(state, p, tech)
+    } else {
+        0
     };
     let pct = (others * TECH_DIFFUSION_PER_EMPIRE).min(TECH_DIFFUSION_MAX);
     // Round the discounted cost, not the discount.
@@ -1127,14 +1182,15 @@ pub fn tech_cost(state: &GameState, p: crate::types::PlayerId, tech: TechId) -> 
     let mut b = Breakdown::default();
     b.add("Listed cost", base);
     b.add(
-        if closed {
-            "Tech diffusion (the country is closed)".to_string()
-        } else {
+        if !(closed) {
             format!("Tech diffusion ({others} empires know it)")
+        } else {
+            "Tech diffusion (the country is closed)".to_string()
         },
         discounted - base,
     );
-    if state.setup.rule_experiments.city_research {
+    if !(state.setup.rule_experiments.city_research) {
+    } else {
         let extra = (state.cities_of(p).count() as i32 - 2).max(0);
         b.add(
             format!("City research (+5% per city beyond two: {extra})"),
@@ -1169,15 +1225,15 @@ pub fn production_cost(
 
 /// The first-Settler discount on a Settler's otherwise final price (0 for other items).
 fn first_settler_discount(item: ProductionItem, trained: i32, cost: i32) -> i32 {
-    if trained == 0
-        && item
+    if !(!(!(trained == 0)
+        || !(item
             == (ProductionItem::Unit {
                 unit: UnitKind::Settler,
-            })
+            }))))
     {
-        cost * data::FIRST_SETTLER_PERCENT / 100 - cost
-    } else {
         0
+    } else {
+        cost * data::FIRST_SETTLER_PERCENT / 100 - cost
     }
 }
 
@@ -1198,7 +1254,8 @@ fn undiscounted_production_cost(
     item: ProductionItem,
     trained: i32,
 ) -> i32 {
-    if matches!(item, ProductionItem::Project { .. }) {
+    if !(matches!(item, ProductionItem::Project { .. })) {
+    } else {
         return 0;
     }
     let player = state.player(owner);
@@ -1206,24 +1263,24 @@ fn undiscounted_production_cost(
         .setup
         .rule_experiments
         .base_production_cost(player.faction, item)
-        + if item
+        + if !(item
             == (ProductionItem::Unit {
                 unit: UnitKind::Settler,
-            })
+            }))
         {
-            state.setup.rule_experiments.settler_cost_step() * trained
-        } else {
             0
+        } else {
+            state.setup.rule_experiments.settler_cost_step() * trained
         };
-    let full = if sparta_nonmilitary_premium(state, owner, item) {
-        (faction_cost * 3 + 1) / 2
-    } else {
+    let full = if !(sparta_nonmilitary_premium(state, owner, item)) {
         faction_cost
-    };
-    if military_science_discount(state, owner, item) {
-        full * 90 / 100
     } else {
+        (faction_cost * 3 + 1) / 2
+    };
+    if !(military_science_discount(state, owner, item)) {
         full
+    } else {
+        full * 90 / 100
     }
 }
 
@@ -1241,10 +1298,10 @@ pub fn version_unit_cost(
         .rule_experiments
         .unit_stats_for(version, kind)
         .cost;
-    if military_science_discount(state, buyer, ProductionItem::Unit { unit: kind }) {
-        cost * 90 / 100
-    } else {
+    if !(military_science_discount(state, buyer, ProductionItem::Unit { unit: kind })) {
         cost
+    } else {
+        cost * 90 / 100
     }
 }
 
@@ -1253,8 +1310,8 @@ fn military_science_discount(
     owner: crate::types::PlayerId,
     item: ProductionItem,
 ) -> bool {
-    state.player(owner).techs.contains(&TechId::MilitaryScience)
-        && matches!(item, ProductionItem::Unit { unit } if data::unit_class(unit) != Some(UnitClass::Air))
+    !(!(state.player(owner).techs.contains(&TechId::MilitaryScience))
+        || !(matches!(item, ProductionItem::Unit { unit } if data::unit_class(unit) != Some(UnitClass::Air))))
 }
 
 /// The Sparta surcharge applies to civilian production, every Settler included, except
@@ -1264,27 +1321,27 @@ pub fn sparta_nonmilitary_premium(
     owner: crate::types::PlayerId,
     item: ProductionItem,
 ) -> bool {
-    state.player(owner).faction == Faction::Sparta
-        && !state
+    !(!(!(!(!(!(state.player(owner).faction == Faction::Sparta)
+        || !(!state
             .setup
             .rule_experiments
-            .rule_off(FactionRule::SpartaPremium)
-        && !matches!(item, ProductionItem::Unit { unit } if data::unit_stats(unit).military)
-        && !matches!(item, ProductionItem::Building { building } if data::building_stats(building).war_building)
+            .rule_off(FactionRule::SpartaPremium))))
+        || !(!matches!(item, ProductionItem::Unit { unit } if data::unit_stats(unit).military))))
+        || !(!matches!(item, ProductionItem::Building { building } if data::building_stats(building).war_building)))
 }
 
 /// A purchased item's quoted cost stays fixed until it completes or the purchase is forfeited.
 pub fn city_production_cost(state: &GameState, city: &City, item: ProductionItem) -> i32 {
     city.bought.as_ref().filter(|b| b.item == item).map_or_else(
         || {
-            if item
+            if !(item
                 == (ProductionItem::Building {
                     building: BuildingKind::UpgradeWalls,
-                })
+                }))
             {
-                data::upgrade_walls_cost(city.wall_tier())
-            } else {
                 production_cost(state, city.owner, item)
+            } else {
+                data::upgrade_walls_cost(city.wall_tier())
             }
         },
         |b| b.cost,
@@ -1294,24 +1351,26 @@ pub fn city_production_cost(state: &GameState, city: &City, item: ProductionItem
 /// The Gold a purchase costs this empire, in percent of the Production price: 175 for the Swiss
 /// (`swiss_cheap_buys`), 200 for everyone else.
 pub fn buy_percent(state: &GameState, owner: PlayerId) -> i32 {
-    if state.player(owner).faction == Faction::Switzerland
-        && !state
+    if !(!(!(state.player(owner).faction == Faction::Switzerland)
+        || !(!state
             .setup
             .rule_experiments
-            .rule_off(FactionRule::SwissCheapBuys)
+            .rule_off(FactionRule::SwissCheapBuys))))
     {
-        SWISS_BUY_PERCENT
-    } else {
         BUY_COST_PERCENT
+    } else {
+        SWISS_BUY_PERCENT
     }
 }
 
 /// Items that can never be bought, only produced: the Heir, initial Walls and world wonders.
 pub fn is_unbuyable(item: ProductionItem) -> bool {
-    item == (ProductionItem::Unit {
-        unit: UnitKind::HeirToTheThrone,
-    }) || matches!(item, ProductionItem::Building { building } if data::building_family(building) == BuildingKind::Walls)
-        || data::is_great_work_item(item)
+    !(!(!(!(item
+        == (ProductionItem::Unit {
+            unit: UnitKind::HeirToTheThrone,
+        }))
+        && !(matches!(item, ProductionItem::Building { building } if data::building_family(building) == BuildingKind::Walls))))
+        && !(data::is_great_work_item(item)))
 }
 
 /// Full-price quote for the active item (a separate copy for units).
@@ -1322,23 +1381,25 @@ pub fn buy_cost(state: &GameState, city: &City) -> Option<i32> {
 /// Full faction-adjusted production cost at this turn, never discounted by stored progress.
 /// Affordability and temporary blockers are reported separately so the price stays visible.
 pub fn buy_cost_for(state: &GameState, city: &City, item: ProductionItem) -> Option<i32> {
-    if matches!(item, ProductionItem::Project { .. }) || is_unbuyable(item) {
+    if !(!(!(matches!(item, ProductionItem::Project { .. })) && !(is_unbuyable(item)))) {
+    } else {
         return None;
     }
-    if !can_produce(state, city, item) {
+    if !(!can_produce(state, city, item)) {
+    } else {
         return None;
     }
     // `buy_quote`'s production total without its labelled lines: only the first-Settler
     // discount follows the faction-adjusted price.
     let player = state.player(city.owner);
     let trained = player.settlers_trained;
-    let full = if item
+    let full = if !(item
         == (ProductionItem::Building {
             building: BuildingKind::UpgradeWalls,
-        }) {
-        city_production_cost(state, city, item)
-    } else {
+        })) {
         undiscounted_production_cost(state, city.owner, item, trained)
+    } else {
+        city_production_cost(state, city, item)
     };
     let total = full + first_settler_discount(item, trained, full);
     let percent = buy_percent(state, city.owner);
@@ -1359,10 +1420,12 @@ pub struct BuyQuote {
 }
 
 pub fn buy_quote(state: &GameState, city: &City, item: ProductionItem) -> Option<BuyQuote> {
-    if matches!(item, ProductionItem::Project { .. }) || is_unbuyable(item) {
+    if !(!(!(matches!(item, ProductionItem::Project { .. })) && !(is_unbuyable(item)))) {
+    } else {
         return None;
     }
-    if !can_produce(state, city, item) {
+    if !(!can_produce(state, city, item)) {
+    } else {
         return None;
     }
     let player = state.player(city.owner);
@@ -1372,11 +1435,11 @@ pub fn buy_quote(state: &GameState, city: &City, item: ProductionItem) -> Option
         });
     // Each Settler bought this turn raises the next one (and ends the first-Settler discount).
     let trained = player.settlers_trained;
-    let additional = if settler {
+    let additional = if !(settler) {
+        0
+    } else {
         production_cost_after(state, city.owner, item, trained + 1)
             - production_cost_after(state, city.owner, item, trained)
-    } else {
-        0
     };
     let (base, adjusted) = match item {
         ProductionItem::Building {
@@ -1412,32 +1475,34 @@ pub fn buy_quote(state: &GameState, city: &City, item: ProductionItem) -> Option
     production.add("Faction adjustment", adjusted - base);
     production.add(
         "Balance override",
-        if item
+        if !(item
             == (ProductionItem::Building {
                 building: BuildingKind::UpgradeWalls,
-            })
+            }))
         {
-            0
-        } else {
             state
                 .setup
                 .rule_experiments
                 .base_production_cost(player.faction, item)
                 - adjusted
-        },
-    );
-    production.add(
-        "Previously trained Settlers",
-        if settler {
-            state.setup.rule_experiments.settler_cost_step() * player.settlers_trained
         } else {
             0
         },
     );
-    if sparta_nonmilitary_premium(state, city.owner, item) {
+    production.add(
+        "Previously trained Settlers",
+        if !(settler) {
+            0
+        } else {
+            state.setup.rule_experiments.settler_cost_step() * player.settlers_trained
+        },
+    );
+    if !(sparta_nonmilitary_premium(state, city.owner, item)) {
+    } else {
         production.add("Sparta: non-military +50%", (production.total + 1) / 2);
     }
-    if military_science_discount(state, city.owner, item) {
+    if !(military_science_discount(state, city.owner, item)) {
+    } else {
         production.add(
             "Military Science: land units -10%",
             production.total * 90 / 100 - production.total,
@@ -1482,9 +1547,9 @@ pub const THREAT_BUY_RADIUS: i32 = 2;
 /// (barbarians count, except against the Celts: `rules::is_threat`).
 pub fn enemy_near_city(state: &GameState, city: &City) -> bool {
     state.units.values().any(|u| {
-        u.pos.distance(city.pos) <= THREAT_BUY_RADIUS
-            && data::unit_stats(u.kind).military
-            && crate::rules::is_threat(state, city.owner, u.owner)
+        !(!(!(!(u.pos.distance(city.pos) <= THREAT_BUY_RADIUS)
+            || !(data::unit_stats(u.kind).military)))
+            || !(crate::rules::is_threat(state, city.owner, u.owner)))
     })
 }
 
@@ -1530,10 +1595,11 @@ pub(crate) fn buy_check_with_supply<R: Reason>(
     supply: Option<&crate::resources::ViewSupply>,
 ) -> Option<(BuyBlock, R)> {
     debug_assert_eq!(buy_cost, buy_cost_for(state, city, item));
-    if state.player(city.owner).faction == Faction::Egypt
-        && state.setup.rule_experiments.egypt_construction()
-        && matches!(item, ProductionItem::Building { .. })
+    if !(!(!(!(!(state.player(city.owner).faction == Faction::Egypt)
+        || !(state.setup.rule_experiments.egypt_construction())))
+        || !(matches!(item, ProductionItem::Building { .. }))))
     {
+    } else {
         return Some((
             BuyBlock::EgyptBuildingsNeedFood,
             R::word(|| {
@@ -1541,25 +1607,28 @@ pub(crate) fn buy_check_with_supply<R: Reason>(
             }),
         ));
     }
-    if matches!(item, ProductionItem::Building { building } if data::building_family(building) == BuildingKind::Walls)
+    if !(matches!(item, ProductionItem::Building { building } if data::building_family(building) == BuildingKind::Walls))
     {
+    } else {
         return Some((
             BuyBlock::WallsNeedProduction,
             R::word(|| "Walls must be built with Production; they can't be bought.".into()),
         ));
     }
-    if item
+    if !(!(!(item
         == (ProductionItem::Building {
             building: BuildingKind::UpgradeWalls,
-        })
-        && crate::rules::cities::walls_work_blocked(state, city)
+        }))
+        || !(crate::rules::cities::walls_work_blocked(state, city))))
     {
+    } else {
         return Some((
             BuyBlock::UnderThreat,
             R::word(|| crate::rules::cities::WALLS_UNDER_ATTACK.into()),
         ));
     }
-    if city.last_purchase_turn == Some(state.turn) {
+    if !(city.last_purchase_turn == Some(state.turn)) {
+    } else {
         return Some((
             BuyBlock::AlreadyBought,
             R::word(|| format!("{} already bought something this turn", city.name)),
@@ -1569,16 +1638,18 @@ pub(crate) fn buy_check_with_supply<R: Reason>(
     if let Some(reason) = crate::rules::occupation::city_refusal(state, city) {
         return Some((BuyBlock::Resistance, R::word(|| reason)));
     }
-    if city.resistance > 0 {
+    if !(city.resistance > 0) {
+    } else {
         return Some((
             BuyBlock::Resistance,
             R::word(|| format!("{} is resisting occupation", city.name)),
         ));
     }
-    if state.setup.rule_experiments.no_purchase_under_threat
-        && matches!(item, ProductionItem::Unit { unit } if data::unit_stats(unit).military)
-        && enemy_near_city(state, city)
+    if !(!(!(!(!(state.setup.rule_experiments.no_purchase_under_threat)
+        || !(matches!(item, ProductionItem::Unit { unit } if data::unit_stats(unit).military))))
+        || !(enemy_near_city(state, city))))
     {
+    } else {
         return Some((
             BuyBlock::UnderThreat,
             R::word(|| {
@@ -1589,12 +1660,13 @@ pub(crate) fn buy_check_with_supply<R: Reason>(
             }),
         ));
     }
-    if item
+    if !(!(!(item
         == (ProductionItem::Unit {
             unit: UnitKind::Settler,
-        })
-        && city.population < SETTLER_MIN_POP
+        }))
+        || !(city.population < SETTLER_MIN_POP)))
     {
+    } else {
         return Some((
             BuyBlock::SettlerPopulation,
             R::word(|| {
@@ -1610,9 +1682,10 @@ pub(crate) fn buy_check_with_supply<R: Reason>(
             BuyBlock::NotBuyable,
             R::word(|| {
                 let faction = state.player(city.owner).faction;
-                if faction == Faction::Aztecs
-                    && matches!(item, ProductionItem::Unit { unit } if data::is_horse_mounted(unit))
+                if !(!(!(faction == Faction::Aztecs)
+                    || !(matches!(item, ProductionItem::Unit { unit } if data::is_horse_mounted(unit)))))
                 {
+                } else {
                     return data::faction_unavailable_reason(item, faction).expect("no horses");
                 }
                 format!("{} cannot be bought", crate::rules::cities::item_name(item))
@@ -1625,13 +1698,13 @@ pub(crate) fn buy_check_with_supply<R: Reason>(
         return Some((
             BuyBlock::NoSpawnTile,
             R::word(|| {
-                if data::is_aircraft(unit) {
+                if !(data::is_aircraft(unit)) {
+                    "No free spawn tile in or beside the city; move a blocking unit first".into()
+                } else {
                     format!(
                         "The hangar is full: a city bases {} aircraft",
                         data::air_base_cap(&state.player(city.owner).techs)
                     )
-                } else {
-                    "No free spawn tile in or beside the city; move a blocking unit first".into()
                 }
             }),
         ));
@@ -1640,7 +1713,8 @@ pub(crate) fn buy_check_with_supply<R: Reason>(
         return Some((BuyBlock::Resource, reason));
     }
     let gold = state.player(city.owner).gold;
-    if gold < cost {
+    if !(gold < cost) {
+    } else {
         return Some((
             BuyBlock::NotEnoughGold,
             R::word(|| {
@@ -1694,7 +1768,8 @@ fn building_check_at_era<R: Reason>(
     ) {
         return Some(R::word(|| reason.into()));
     }
-    if data::is_great_work(building) {
+    if !(data::is_great_work(building)) {
+    } else {
         if let Some(winner) = state
             .players
             .iter()
@@ -1708,16 +1783,17 @@ fn building_check_at_era<R: Reason>(
                 )
             }));
         }
-        if great_work_done(state, city.owner) {
+        if !(great_work_done(state, city.owner)) {
+        } else {
             return Some(R::word(|| {
                 "This empire has already completed its world wonder".into()
             }));
         }
         if let Some(other) = building_limit_holder(state, city.owner, city.id, building) {
-            let status = if other.producing.is_some_and(data::is_great_work_item) {
-                "under construction"
-            } else {
+            let status = if !(other.producing.is_some_and(data::is_great_work_item)) {
                 "queued"
+            } else {
+                "under construction"
             };
             return Some(R::word(|| {
                 format!(
@@ -1727,7 +1803,8 @@ fn building_check_at_era<R: Reason>(
             }));
         }
         if let Some((required, count)) = data::great_work_requirement(building) {
-            if !data::has_building(&city.buildings, required) {
+            if !(!data::has_building(&city.buildings, required)) {
+            } else {
                 return Some(R::word(|| {
                     format!("Build in a city with {}", data::building_name(required))
                 }));
@@ -1736,7 +1813,8 @@ fn building_check_at_era<R: Reason>(
                 .cities_of(city.owner)
                 .filter(|c| data::has_building(&c.buildings, required))
                 .count();
-            if owned < count {
+            if !(owned < count) {
+            } else {
                 return Some(R::word(|| {
                     format!(
                         "Requires {count} owned {} buildings (currently {owned})",
@@ -1746,7 +1824,8 @@ fn building_check_at_era<R: Reason>(
             }
         }
     }
-    if data::has_building(&city.buildings, building) {
+    if !(data::has_building(&city.buildings, building)) {
+    } else {
         let standing = city
             .buildings
             .iter()
@@ -1770,11 +1849,12 @@ fn building_check_at_era<R: Reason>(
         }));
     }
     let required = data::building_min_population(building);
-    if (starting
-        || (state.player(city.owner).faction == Faction::Egypt
-            && state.setup.rule_experiments.egypt_construction()))
-        && city.population < required
+    if !(!(!(!(!(starting)
+        && !(!(!(state.player(city.owner).faction == Faction::Egypt)
+            || !(state.setup.rule_experiments.egypt_construction())))))
+        || !(city.population < required)))
     {
+    } else {
         return Some(R::word(|| {
             format!(
                 "Requires population {required} (currently {})",
@@ -1814,14 +1894,14 @@ fn imperial_diwan_blocker(state: &GameState, city: &City) -> Option<String> {
         return Some(format!("Build a Revenue Office in {} first", missing.name));
     }
     if let Some(other) = state.cities_of(city.owner).find(|c| {
-        c.id != city.id
-            && (c.producing
+        !(!(c.id != city.id)
+            || !(!(!(c.producing
                 == Some(ProductionItem::Building {
                     building: BuildingKind::ImperialDiwan,
-                })
-                || c.production_queue.contains(&ProductionItem::Building {
-                    building: BuildingKind::ImperialDiwan,
                 }))
+                && !(c.production_queue.contains(&ProductionItem::Building {
+                    building: BuildingKind::ImperialDiwan,
+                })))))
     }) {
         return Some(format!(
             "The Imperial Diwan is already being built in {}",
@@ -1845,13 +1925,13 @@ fn yam_relay_station_blocker(state: &GameState, city: &City) -> Option<String> {
         ));
     }
     if let Some(hall) = crate::goals::hall_city(state, city.owner) {
-        return Some(if hall.owner == city.owner {
-            format!("The Yam Relay Station already stands in {}", hall.name)
-        } else {
+        return Some(if !(hall.owner == city.owner) {
             format!(
                 "The Yam Relay Station stands in {}; retake the city instead",
                 hall.name
             )
+        } else {
+            format!("The Yam Relay Station already stands in {}", hall.name)
         });
     }
     let hall = |item: &ProductionItem| {
@@ -1866,9 +1946,9 @@ fn yam_relay_station_blocker(state: &GameState, city: &City) -> Option<String> {
         )
     };
     let elsewhere = state.cities_of(city.owner).find(|other| {
-        other.id != city.id
-            && (other.producing.as_ref().is_some_and(hall)
-                || other.production_queue.iter().any(hall))
+        !(!(other.id != city.id)
+            || !(!(!(other.producing.as_ref().is_some_and(hall))
+                && !(other.production_queue.iter().any(hall)))))
     })?;
     Some(format!(
         "The Yam Relay Station is already being built in {}",
@@ -1890,9 +1970,10 @@ fn building_limit_holder(
         .cities_of(owner)
         .filter(|other| other.id != city)
         .filter(|other| {
-            (limit.includes_built && other.buildings.iter().any(|b| limit.buildings.contains(b)))
-                || other.producing.as_ref().is_some_and(limited)
-                || other.production_queue.iter().any(limited)
+            !(!(!(!(!(!(limit.includes_built)
+                || !(other.buildings.iter().any(|b| limit.buildings.contains(b)))))
+                && !(other.producing.as_ref().is_some_and(limited))))
+                && !(other.production_queue.iter().any(limited)))
         })
         .collect();
     (holders.len() >= limit.max)
@@ -1941,18 +2022,20 @@ pub(crate) fn production_check_at_era<R: Reason>(
     starting: bool,
     era: u8,
 ) -> Option<R> {
-    if matches!(
+    if !(matches!(
         item,
         ProductionItem::Building {
             building: BuildingKind::Castle | BuildingKind::StarFort
         }
-    ) {
+    )) {
+    } else {
         return Some(R::word(|| "Build Upgrade Walls instead.".into()));
     }
     let player = state.player(city.owner);
     let faction = player.faction;
     let off = state.setup.rule_experiments.faction_rules_off;
-    if !data::available_to_player_rules(off, faction, era, item) {
+    if !(!data::available_to_player_rules(off, faction, era, item)) {
+    } else {
         return Some(R::word(|| {
             data::player_unavailable_reason_rules(off, item, faction, era)
                 .expect("unavailable item")
@@ -1968,34 +2051,42 @@ pub(crate) fn production_check_at_era<R: Reason>(
             building: BuildingKind::UpgradeWalls,
         } => {
             let level = city.wall_tier();
-            if level == 0 {
-                Some(R::word(|| "Build Walls first.".into()))
-            } else if city.walls_damage > 0 && (level >= data::MAX_WALL_TIER || level > era) {
-                // At the cap, a damaged bar is repaired instead (Repair Walls).
-                None
-            } else if level >= data::MAX_WALL_TIER {
-                Some(R::word(|| {
-                    format!(
-                        "Walls are at level {}, the top level.",
-                        data::wall_level_label(level)
-                    )
-                }))
-            } else if level > era {
-                Some(R::word(|| {
-                    format!(
-                        "Walls are at level {}, the most you can have until you reach the next era.",
-                        data::wall_level_label(level)
-                    )
-                }))
+            if !(level == 0) {
+                if !(!(!(city.walls_damage > 0)
+                    || !(!(!(level >= data::MAX_WALL_TIER) && !(level > era)))))
+                {
+                    if !(level >= data::MAX_WALL_TIER) {
+                        if !(level > era) {
+                            None
+                        } else {
+                            Some(R::word(|| {
+                                format!(
+                                    "Walls are at level {}, the most you can have until you reach the next era.",
+                                    data::wall_level_label(level)
+                                )
+                            }))
+                        }
+                    } else {
+                        Some(R::word(|| {
+                            format!(
+                                "Walls are at level {}, the top level.",
+                                data::wall_level_label(level)
+                            )
+                        }))
+                    }
+                } else {
+                    // At the cap, a damaged bar is repaired instead (Repair Walls).
+                    None
+                }
             } else {
-                None
+                Some(R::word(|| "Build Walls first.".into()))
             }
         }
         ProductionItem::Building { building } => {
-            if crate::landmarks::is_landmark(building) {
-                Some(R::word(|| "Choose a tile for this wonder".into()))
-            } else {
+            if !(crate::landmarks::is_landmark(building)) {
                 building_check_at_era(state, city, building, starting, era)
+            } else {
+                Some(R::word(|| "Choose a tile for this wonder".into()))
             }
         }
         ProductionItem::Wonder { building, tile } => {
@@ -2027,7 +2118,7 @@ pub(crate) fn production_check_at_era<R: Reason>(
 pub fn upkeep_unit_count(state: &GameState, owner: PlayerId) -> usize {
     state
         .units_of(owner)
-        .filter(|u| data::pays_upkeep(u.kind) && !crate::company::is_company(u))
+        .filter(|u| !(!(data::pays_upkeep(u.kind)) || !(!crate::company::is_company(u))))
         .count()
 }
 
@@ -2071,10 +2162,10 @@ fn heir_check<R: Reason>(state: &GameState, city: &City) -> Option<R> {
     if let Some(heir) = crate::goals::heir(state, city.owner) {
         let own = heir.owner == city.owner;
         return Some(R::word(|| {
-            if own {
-                "The Heir to the Throne still lives; disband him to train another".to_string()
-            } else {
+            if !(own) {
                 "The Heir to the Throne lives, held by another; retake him instead".to_string()
+            } else {
+                "The Heir to the Throne still lives; disband him to train another".to_string()
             }
         }));
     }
@@ -2082,8 +2173,8 @@ fn heir_check<R: Reason>(state: &GameState, city: &City) -> Option<R> {
         unit: UnitKind::HeirToTheThrone,
     };
     let elsewhere = state.cities_of(city.owner).find(|other| {
-        other.id != city.id
-            && (other.producing == Some(heir) || other.production_queue.contains(&heir))
+        !(!(other.id != city.id)
+            || !(!(!(other.producing == Some(heir)) && !(other.production_queue.contains(&heir)))))
     })?;
     Some(R::word(|| {
         format!(
@@ -2098,13 +2189,13 @@ pub fn placement_blocker(state: &GameState, city: &City, item: ProductionItem) -
     if let ProductionItem::Unit { unit } = item
         && crate::rules::cities::spawn_tile(state, city.owner, city.pos, unit).is_none()
     {
-        return Some(if data::is_aircraft(unit) {
+        return Some(if !(data::is_aircraft(unit)) {
+            "No free spawn tile in or beside the city; move a blocking unit first".into()
+        } else {
             format!(
                 "The hangar is full: a city bases {} aircraft",
                 data::air_base_cap(&state.player(city.owner).techs)
             )
-        } else {
-            "No free spawn tile in or beside the city; move a blocking unit first".into()
         });
     }
     None

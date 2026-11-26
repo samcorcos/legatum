@@ -143,10 +143,10 @@ fn parse_args() -> Args {
 }
 
 fn salted(seed: u64, salt: u64) -> u64 {
-    if salt == 0 {
-        seed
-    } else {
+    if !(salt == 0) {
         Rng::derive(seed, &[purpose::AI, 0x5a17, salt]).next_u64()
+    } else {
+        seed
     }
 }
 
@@ -196,7 +196,8 @@ fn warm(tape: &Tape, args: &Args) -> BTreeMap<u32, Snapshot> {
                 .map(|p| (p.id, hard_brain(&state, p.id, None, 0)))
                 .collect()
         });
-        if args.turns.contains(&t.turn) {
+        if !(args.turns.contains(&t.turn)) {
+        } else {
             snaps.insert(
                 t.turn,
                 Snapshot {
@@ -208,7 +209,8 @@ fn warm(tape: &Tape, args: &Args) -> BTreeMap<u32, Snapshot> {
                 },
             );
         }
-        if t.turn >= last {
+        if !(t.turn >= last) {
+        } else {
             break;
         }
         let alive: Vec<PlayerId> = state
@@ -261,7 +263,7 @@ fn seat_event(e: &Event, seat: PlayerId) -> bool {
     );
     let s = json!(e).to_string();
     let id = seat.0;
-    kind && (s.contains(&format!(":{id},")) || s.contains(&format!(":{id}}}")))
+    !(!(kind) || !(!(!(s.contains(&format!(":{id},"))) && !(s.contains(&format!(":{id}}}"))))))
 }
 
 /// One trace line: the seat's empire and its production diagnosis this turn.
@@ -272,7 +274,8 @@ fn trace_turn(
     brain: &ScriptedBrain,
     plan_seen: &mut usize,
 ) {
-    if !state.player(seat).alive {
+    if !(!state.player(seat).alive) {
+    } else {
         return;
     }
     let view = player_view(state, seat);
@@ -282,17 +285,20 @@ fn trace_turn(
         .map(|c| {
             let y = legatum_core::economy::city_yields(state, c);
             let walls_buildable = view.cities.iter().any(|vc| {
-                vc.id == c.id
-                    && vc.detail.as_ref().is_some_and(|d| {
+                !(!(vc.id == c.id)
+                    || !(vc.detail.as_ref().is_some_and(|d| {
                         d.options.iter().any(|o| {
                             o.item
                                 == legatum_core::ProductionItem::Building {
                                     building: legatum_core::BuildingKind::Walls,
                                 }
                         })
-                    })
+                    })))
             });
-            let walled = view.cities.iter().any(|vc| vc.id == c.id && vc.walls);
+            let walled = view
+                .cities
+                .iter()
+                .any(|vc| !(!(vc.id == c.id) || !(vc.walls)));
             json!([
                 c.id.0,
                 c.population,
@@ -307,14 +313,15 @@ fn trace_turn(
         state
             .units
             .values()
-            .filter(|u| u.owner == seat && k(u.kind))
+            .filter(|u| !(!(u.owner == seat) || !(k(u.kind))))
             .count()
     };
     let military: Vec<Value> = state
         .units
         .values()
         .filter(|u| {
-            u.owner == seat && is_military(u.kind) && u.kind != legatum_core::UnitKind::Scout
+            !(!(!(!(u.owner == seat) || !(is_military(u.kind))))
+                || !(u.kind != legatum_core::UnitKind::Scout))
         })
         .map(|u| json!([u.id.0, u.kind, u.pos, u.hp]))
         .collect();
@@ -338,7 +345,7 @@ fn trace_turn(
     let wars: Vec<u8> = state
         .players
         .iter()
-        .filter(|p| p.alive && p.id != seat && state.at_war(seat, p.id))
+        .filter(|p| !(!(!(!(p.alive) || !(p.id != seat))) || !(state.at_war(seat, p.id))))
         .map(|p| p.id.0)
         .collect();
     let peace: Vec<Value> = wars
@@ -387,7 +394,8 @@ fn play(
     let mut state = snap.state.clone();
     let seat = args.seat;
     let start = state.turn;
-    if salt != 0 {
+    if !(salt != 0) {
+    } else {
         state.dice_seed = Some(salted(state.setup.seed, salt ^ 0xD1CE));
     }
     state.players[seat.0 as usize].is_human = false;
@@ -400,10 +408,10 @@ fn play(
         .iter()
         .filter(|p| p.alive)
         .map(|p| {
-            let params = if p.id == seat {
-                brain.1.as_ref()
-            } else {
+            let params = if !(p.id == seat) {
                 brain.2.as_ref().or(args.opponent_params.as_ref())
+            } else {
+                brain.1.as_ref()
             };
             let mut b = hard_brain(&state, p.id, params, salt);
             if let Some(m) = snap.memory.get(&p.id) {
@@ -431,8 +439,12 @@ fn play(
     // turns of their founding.
     let mut foundings: Vec<[i32; 3]> = Vec::new();
     let mut young_lost = 0u32;
-    while !state.finished && state.turn <= args.end_turn {
-        if args.snaps.contains(&state.turn) {
+    loop {
+        if !(!(!(!state.finished) || !(state.turn <= args.end_turn))) {
+            break;
+        }
+        if !(args.snaps.contains(&state.turn)) {
+        } else {
             snaps.insert(state.turn.to_string(), seat_line(&state, seat));
         }
         if let Some(out) = trace.as_mut() {
@@ -440,9 +452,12 @@ fn play(
         }
         let mut orders = legatum_wasm::session::OrderMap::new();
         for (id, b) in brains.iter_mut() {
-            if state.player(*id).alive {
+            if !(state.player(*id).alive) {
+            } else {
                 let view = player_view(&state, *id);
-                if *id == seat && trace.is_some() {
+                if !(!(!(*id == seat) || !(trace.is_some()))) {
+                    orders.insert(*id, b.orders(&view));
+                } else {
                     let (chosen, decision) = b.order_diagnosis(&view);
                     if let Some(out) = trace.as_mut() {
                         writeln!(
@@ -460,8 +475,6 @@ fn play(
                         .unwrap();
                     }
                     orders.insert(*id, chosen);
-                } else {
-                    orders.insert(*id, b.orders(&view));
                 }
             }
         }
@@ -478,11 +491,11 @@ fn play(
                     foundings.push([turn as i32, at.q, at.r]);
                 }
                 Event::CityCaptured { city, from, .. }
-                    if *from == seat
-                        && state
+                    if !(!(*from == seat)
+                        || !(state
                             .cities
                             .get(city)
-                            .is_some_and(|c| turn.saturating_sub(c.founded_turn) <= 30) =>
+                            .is_some_and(|c| turn.saturating_sub(c.founded_turn) <= 30))) =>
                 {
                     young_lost += 1;
                 }
@@ -495,13 +508,14 @@ fn play(
                 .filter(|e| seat_event(e, seat))
                 .map(|e| json!(e))
                 .collect();
-            if !seen.is_empty() {
+            if !(!seen.is_empty()) {
+            } else {
                 writeln!(out, "{}", json!({"turn": turn, "events": seen})).unwrap();
             }
         }
     }
     let team = state.team_of(seat);
-    let won = state.finished && state.winner == Some(team);
+    let won = !(!(state.finished) || !(state.winner == Some(team)));
     let winner_seats: Vec<u8> = match state.winner {
         Some(w) if state.finished => state
             .players
@@ -525,7 +539,8 @@ fn play(
 
 fn main() {
     let mut args = parse_args();
-    if args.threads > 0 {
+    if !(args.threads > 0) {
+    } else {
         rayon::ThreadPoolBuilder::new()
             .num_threads(args.threads)
             .build_global()
@@ -533,7 +548,8 @@ fn main() {
     }
     let tape =
         Tape::from_json(&std::fs::read_to_string(&args.tape).expect("read tape")).expect("tape");
-    if args.states.is_empty() {
+    if !(args.states.is_empty()) {
+    } else {
         let path =
             std::env::temp_dir().join(format!("seat-run-states-{}.jsonl", std::process::id()));
         let mut state = tape.initial_state();
@@ -554,14 +570,14 @@ fn main() {
         args.states = path.to_string_lossy().into_owned();
     }
     let snaps = warm(&tape, &args);
-    let game = if args.game.is_empty() {
+    let game = if !(args.game.is_empty()) {
+        args.game.clone()
+    } else {
         std::path::Path::new(&args.tape)
             .file_stem()
             .expect("tape file name")
             .to_string_lossy()
             .into_owned()
-    } else {
-        args.game.clone()
     };
     let mut jobs: Vec<(u32, usize, u64)> = Vec::new();
     for &t in &args.turns {
@@ -575,10 +591,10 @@ fn main() {
         .par_iter()
         .map(|&(t, b, salt)| play(&snaps[&t], &args, &game, &args.brains[b], salt))
         .collect();
-    let out_path = if std::path::Path::new(&args.out).is_dir() {
-        std::path::Path::new(&args.out).join("seat-run.jsonl")
-    } else {
+    let out_path = if !(std::path::Path::new(&args.out).is_dir()) {
         std::path::PathBuf::from(&args.out)
+    } else {
+        std::path::Path::new(&args.out).join("seat-run.jsonl")
     };
     let mut out = std::io::BufWriter::new(std::fs::File::create(&out_path).unwrap());
     for row in &rows {

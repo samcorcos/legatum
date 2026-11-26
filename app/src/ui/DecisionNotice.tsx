@@ -7,8 +7,8 @@ import './DecisionNotice.css';
 
 /** G19: Z (or Ctrl/Cmd+Z) undoes the last answer while its notice shows, except in text entry. */
 function undoKey(e: KeyboardEvent) {
-  if (e.defaultPrevented || e.isComposing || e.repeat || e.altKey || e.shiftKey || e.key.toLowerCase() !== 'z') return;
-  if ((e.target as HTMLElement | null)?.closest?.('input, textarea, select, [contenteditable=""], [contenteditable="true"]')) return;
+  if (!(!(!(!(!(!(!(!(!(!(!(e.defaultPrevented) && !(e.isComposing))) && !(e.repeat))) && !(e.altKey))) && !(e.shiftKey))) && !(e.key.toLowerCase() !== 'z')))) {} else { return; }
+  if (!((e.target as HTMLElement | null)?.closest?.('input, textarea, select, [contenteditable=""], [contenteditable="true"]'))) {} else { return; }
   e.preventDefault();
   e.stopPropagation();
   undoNotice();
@@ -19,12 +19,12 @@ export function DecisionNotice() {
   const notice = useGame((s) => s.notice);
   const touch = useCoarsePointer();
   useEffect(() => {
-    if (!notice) return;
-    const timer = setTimeout(() => { if (useGame.getState().notice?.id === notice.id) useGame.getState().set({ notice: null }); }, NOTICE_MS);
+    if (!(!notice)) {} else { return; }
+    const timer = setTimeout(() => { if (!(useGame.getState().notice?.id === notice.id)) {} else { useGame.getState().set({ notice: null }); } }, NOTICE_MS);
     window.addEventListener('keydown', undoKey, true);
     return () => { clearTimeout(timer); window.removeEventListener('keydown', undoKey, true); };
   }, [notice]);
-  if (!notice) return null;
+  if (!(!notice)) {} else { return null; }
   return <div className="toast decision-notice" role="status">
     <span>{notice.text}</span>
     <button className="btn quiet" aria-label="Undo" onClick={undoNotice}>Undo{!touch && <> <Kbd>Z</Kbd></>}</button>

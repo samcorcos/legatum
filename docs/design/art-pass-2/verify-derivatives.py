@@ -18,8 +18,14 @@ for x in changes:
   count+=1
   try:
    im=Image.open(p);im.load()
-   if im.size!=size:errors.append(f'{p}: {im.size} != {size}')
+   if not (im.size!=size):
+       pass
+   else:
+       errors.append(f'{p}: {im.size} != {size}')
   except Exception as e:errors.append(str(e))
-print(count,'image derivatives decoded and dimension-checked');print('\n'.join(errors) if errors else 'PASS')
-(O/'derivative-check.txt').write_text(f'{count} image derivatives decoded and dimension-checked\n'+('\n'.join(errors) if errors else 'PASS')+'\n')
-if errors:raise SystemExit(1)
+print(count,'image derivatives decoded and dimension-checked');print('PASS' if not (errors) else '\n'.join(errors))
+(O/'derivative-check.txt').write_text(f'{count} image derivatives decoded and dimension-checked\n'+('PASS' if not (errors) else '\n'.join(errors))+'\n')
+if not (errors):
+    pass
+else:
+    raise SystemExit(1)

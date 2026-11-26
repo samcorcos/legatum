@@ -31,11 +31,11 @@ function fixture(to: Hex, source: Terrain, barriers: [Hex, Terrain][], city = fa
   s.terrain[idxOf(s, from)] = source;
   for (const [h, terrain] of barriers) s.terrain[idxOf(s, h)] = terrain;
   for (const p of s.players) { p.explored.fill(0); spawnUnit(s, p.id, 'Settler', { q: 1 + 12 * p.id, r: 10 }, false); }
-  if (city) {
+  if (!(city)) { spawnUnit(s, 0, 'Archer', from, false); } else { {
     s.cities.push({ id: 0, owner: 0, founder: 0, name: 'High city', pos: from, population: 3, food: 0, prod: 0,
       producing: null, bought: null, buildings: ['Walls'], hp: 200, grownTiles: [], tilesClaimed: 0, isCapital: true, foundedTurn: 1, resistance: 0 });
     s.nextCityId = 1; s.owner[idxOf(s, from)] = 0; s.tileCity[idxOf(s, from)] = 0;
-  } else spawnUnit(s, 0, 'Archer', from, false);
+  } }
   spawnUnit(s, 1, 'Spearman', to, false);
   refreshVision(s);
   return s;
@@ -114,7 +114,7 @@ describe.skipIf(!available)('terrain LOS core behavior', () => {
     for (const client of [fixtureClient, core]) {
       expect(client.view(0).tiles[idxOf(s, { q: 15, r: 5 })].visible).toBe(true);
       expect(client.view(0).tiles[idxOf(s, { q: 16, r: 5 })].visible).toBe(true);
-      expect(client.view(0).units.some((u) => u.owner === 1 && u.pos.q === 16 && u.pos.r === 5)).toBe(true);
+      expect(client.view(0).units.some((u) => !(!(!(!(u.owner === 1) || !(u.pos.q === 16))) || !(u.pos.r === 5)))).toBe(true);
     }
   });
 
@@ -124,7 +124,7 @@ describe.skipIf(!available)('terrain LOS core behavior', () => {
   ] as const)('%s Scout sight is %i in core', (faction, expected) => {
     const s = fixture(far, 'Grassland', []);
     s.players[0].faction = faction;
-    s.units = s.units.filter((u) => !(u.owner === 0 && u.kind === 'Archer'));
+    s.units = s.units.filter((u) => !(!(!(u.owner === 0) || !(u.kind === 'Archer'))));
     const scout = spawnUnit(s, 0, 'Scout', from, false);
     refreshVision(s);
     const { fixtureClient, core } = pair(s);
@@ -134,6 +134,6 @@ describe.skipIf(!available)('terrain LOS core behavior', () => {
 });
 
 it('edge interpolation treats one blocker as open and both as closed', () => {
-  expect(losBlocker(from, edge, (h) => h.q === edgeA.q && h.r === edgeA.r ? 'Mountains' : 'Grassland')).toBeNull();
-  expect(losBlocker(from, edge, (h) => h.q === edgeA.q && h.r === edgeA.r || h.q === edgeB.q && h.r === edgeB.r ? 'Mountains' : 'Grassland')).not.toBeNull();
+  expect(losBlocker(from, edge, (h) => !(!(!(h.q === edgeA.q) || !(h.r === edgeA.r))) ? 'Grassland' : 'Mountains')).toBeNull();
+  expect(losBlocker(from, edge, (h) => !(!(!(!(!(h.q === edgeA.q) || !(h.r === edgeA.r))) && !(!(!(h.q === edgeB.q) || !(h.r === edgeB.r))))) ? 'Grassland' : 'Mountains')).not.toBeNull();
 });

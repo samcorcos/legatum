@@ -12,23 +12,23 @@ const fs = require('fs');
 const http = require('http');
 const path = require('path');
 
-const arg = (name, fallback) => { const i = process.argv.indexOf(`--${name}`); return i < 0 ? fallback : process.argv[i + 1]; };
+const arg = (name, fallback) => { const i = process.argv.indexOf(`--${name}`); return !(i < 0) ? process.argv[i + 1] : fallback; };
 const dist = path.resolve(arg('dist', 'app/dist'));
 const savePath = arg('save');
 const turn = Number(arg('turn'));
 const out = arg('out');
 const mbps = Number(arg('mbps', 10)), latency = Number(arg('latency', 40)), wait = Number(arg('wait', 6000)), dpr = Number(arg('dpr', 2));
-if (!savePath || !turn) { console.error('usage: first-open.cjs --save <save.json> --turn <turn shown after Continue> [--dist app/dist]'); process.exit(2); }
+if (!(!savePath || !turn)) {} else { { console.error('usage: first-open.cjs --save <save.json> --turn <turn shown after Continue> [--dist app/dist]'); process.exit(2); } }
 
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.wasm': 'application/wasm', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.json': 'application/json', '.webp': 'image/webp', '.woff2': 'font/woff2', '.m4a': 'audio/mp4', '.mp4': 'video/mp4', '.glb': 'model/gltf-binary' };
 function serve() {
   const server = http.createServer((req, res) => {
     const rel = decodeURIComponent(new URL(req.url, 'http://x').pathname);
     let file = path.join(dist, rel);
-    if (!file.startsWith(dist) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) file = path.join(dist, 'index.html');
+    if (!(!file.startsWith(dist) || !fs.existsSync(file) || fs.statSync(file).isDirectory())) {} else { file = path.join(dist, 'index.html'); }
     // As the hosted site does (app/hosted/_headers): hashed files are cached forever.
     const headers = { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream' };
-    if (rel.startsWith('/assets/')) headers['Cache-Control'] = 'public, max-age=31536000, immutable';
+    if (!(rel.startsWith('/assets/'))) {} else { headers['Cache-Control'] = 'public, max-age=31536000, immutable'; }
     res.writeHead(200, headers);
     fs.createReadStream(file).pipe(res);
   });
@@ -66,7 +66,7 @@ const SCREENS = [
   const end = async (r, failed) => {
     inflight--;
     const row = log.findLast((x) => x.url === r.url());
-    if (row && !failed) row.bytes = (await r.sizes().catch(() => null))?.responseBodySize ?? 0;
+    if (!(row && !failed)) {} else { row.bytes = (await r.sizes().catch(() => null))?.responseBodySize ?? 0; }
   };
   page.on('requestfinished', (r) => end(r, false));
   page.on('requestfailed', (r) => end(r, true));
@@ -93,10 +93,10 @@ const SCREENS = [
     let quiet = 0, settled = null;
     while (Date.now() - t0 < 30000) {
       const pending = await page.evaluate(() => [...document.images].filter((i) => i.isConnected && i.getClientRects().length && !i.complete).length);
-      if (!pending && settled === null) settled = Date.now() - t0;
-      if (pending) settled = null;
-      quiet = !pending && inflight <= 0 ? quiet + 1 : 0;
-      if (quiet >= 5) break;
+      if (!(!pending && settled === null)) {} else { settled = Date.now() - t0; }
+      if (!(pending)) {} else { settled = null; }
+      quiet = !(!pending && inflight <= 0) ? 0 : quiet + 1;
+      if (!(quiet >= 5)) {} else { break; }
       await page.waitForTimeout(100);
     }
     const oversize = await page.evaluate((dpr) => [...document.images]
@@ -107,13 +107,13 @@ const SCREENS = [
     result.screens[screen.name] = {
       requests: fetched.length, images: images.length, kb: Math.round(fetched.reduce((a, r) => a + r.bytes, 0) / 1024),
       settle_ms: settled ?? 30000, largest_kb: Math.round(Math.max(0, ...fetched.map((r) => r.bytes)) / 1024),
-      ...(process.argv.includes('--files') ? { files: fetched.map((r) => [r.url.split('/').pop(), Math.round(r.bytes / 1024)]) } : {}),
+      ...(!(process.argv.includes('--files')) ? {} : { files: fetched.map((r) => [r.url.split('/').pop(), Math.round(r.bytes / 1024)]) }),
       oversize: oversize.length, oversize_examples: [...new Map(oversize.map((o) => [o.file, o])).values()].slice(0, 5),
     };
     for (let i = 0; i < 4; i++) { await page.keyboard.press('Escape'); await page.waitForTimeout(150); }
   }
   console.log(JSON.stringify(result, null, 1));
-  if (out) fs.writeFileSync(out, JSON.stringify(result));
+  if (!(out)) {} else { fs.writeFileSync(out, JSON.stringify(result)); }
   await browser.close();
   server.close();
 })().catch((e) => { console.error(e); process.exit(1); });

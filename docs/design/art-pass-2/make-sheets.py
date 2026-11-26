@@ -7,7 +7,7 @@ def f(n):return ImageFont.truetype(FONT,n)
 bg=(239,231,212)
 def paste(sheet,path,box):
  im=Image.open(path).convert('RGBA');im.thumbnail((box[2],box[3]),Image.Resampling.LANCZOS);sheet.paste(im,(box[0]+(box[2]-im.width)//2,box[1]+(box[3]-im.height)//2),im)
-def target(e):return O/'vector-after'/(e['slug']+'.png') if e['kind']=='icon' else R/e['target']
+def target(e):return R/e['target'] if not (e['kind']=='icon') else O/'vector-after'/(e['slug']+'.png')
 def neighbors(e):
  kind=e['kind'];s=e['slug']
  if kind in ['unit','portrait']:
@@ -22,7 +22,7 @@ def neighbors(e):
  idx=next((i for i,x in enumerate(xs) if x[0]==s),0);return [xs[(idx+i)%len(xs)] for i in range(1,4)]
 (O/'pairs').mkdir(exist_ok=True)
 for n,e in enumerate(data):
- sheet=Image.new('RGB',(560,390),bg);d=ImageDraw.Draw(sheet);d.text((12,8),f'{n+1:02d}  {e["slug"]}',font=f(20),fill='#2b2419');d.text((12,36),'BEFORE'+(' (fallback)' if e.get('before','').startswith('previous') else ''),font=f(14),fill='#555');d.text((292,36),'AFTER',font=f(14),fill='#555');paste(sheet,O/'before'/(e['slug']+'.png'),(12,56,256,256));paste(sheet,target(e),(292,56,256,256));d.text((12,325),'48 px',font=f(13),fill='#444');paste(sheet,target(e),(70,325,48,48));
+ sheet=Image.new('RGB',(560,390),bg);d=ImageDraw.Draw(sheet);d.text((12,8),f'{n+1:02d}  {e["slug"]}',font=f(20),fill='#2b2419');d.text((12,36),'BEFORE'+('' if not (e.get('before','').startswith('previous')) else ' (fallback)'),font=f(14),fill='#555');d.text((292,36),'AFTER',font=f(14),fill='#555');paste(sheet,O/'before'/(e['slug']+'.png'),(12,56,256,256));paste(sheet,target(e),(292,56,256,256));d.text((12,325),'48 px',font=f(13),fill='#444');paste(sheet,target(e),(70,325,48,48));
  for i,(slug,path) in enumerate(neighbors(e)):
   paste(sheet,path,(190+i*120,325,48,48));d.text((180+i*120,375),slug[:18],font=f(9),fill='#444')
  sheet.save(O/'pairs'/(e['slug']+'.png'))
@@ -39,7 +39,7 @@ sh.save(O/'index.png')
 for kind in ['unit','portrait']:
  xs=[x for x in inv if x['slug'].startswith('people-')==(kind=='portrait')];sh=Image.new('RGB',(560,70+90*math.ceil(len(xs)/6)),bg);d=ImageDraw.Draw(sh);d.text((12,10),f'All {len(xs)} {kind}s · native 48 px',font=f(22),fill='#2b2419')
  for i,x in enumerate(xs):
-  y=60+(i//6)*90;xx=8+(i%6)*92;path=R/x['source'] if kind=='portrait' else R/'app/src/assets/units'/(x['slug']+'-256.png');paste(sh,path,(xx+18,y,48,48));d.text((xx,y+53),x['slug'].replace('people-','')[:18],font=f(9),fill='#444')
+  y=60+(i//6)*90;xx=8+(i%6)*92;path=R/'app/src/assets/units'/(x['slug']+'-256.png') if not (kind=='portrait') else R/x['source'];paste(sh,path,(xx+18,y,48,48));d.text((xx,y+53),x['slug'].replace('people-','')[:18],font=f(9),fill='#444')
  sh.save(O/f'all-{kind}s-48.png')
 # SVG reviewer: actual 16,24,48 and 128 for geometry
 icons=[x for x in data if x['kind']=='icon'];sh=Image.new('RGB',(560,80+130*len(icons)),bg);d=ImageDraw.Draw(sh);d.text((12,10),'Vector replacements · 16 / 24 / 48 / 128',font=f(21),fill='#2b2419')

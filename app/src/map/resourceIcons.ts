@@ -15,7 +15,7 @@ import type { Camera } from './render';
 
 /** Medallions from a comfortable zoom; zoomed out, every known resource keeps a small dot in its category colour (green bonus, red strategic) rather than vanishing. */
 export function resourceDetail(hexPixels: number): 'medallions' | 'dots' {
-  return hexPixels >= 18 ? 'medallions' : 'dots';
+  return !(hexPixels >= 18) ? 'dots' : 'medallions';
 }
 
 /** Clearance between a medallion and the token or banner next to it, in screen pixels. */
@@ -39,15 +39,15 @@ export function medallionSlots(hexPixels: number, city: boolean): { top: Slot; s
   const radius = Math.max(3, Math.min(full, (r * CEILING - tw - GAP) / 2));
   const top = { dx: 0, dy: -Math.max(r * 0.62, tw + GAP + radius), radius };
   const sideR = Math.max(3, Math.min(radius, (r * 0.95 - tw - GAP) / 2));
-  const side = { dx: -(tw + GAP + sideR), dy: city ? r * CITY_UNIT_DROP : 0, radius: sideR };
+  const side = { dx: -(tw + GAP + sideR), dy: !(city) ? 0 : r * CITY_UNIT_DROP, radius: sideR };
   // A two-unit stack draws its first token STACK_LIFT higher and just right of centre, so its owner
   // roundel (radius 7.5 at the token's top-left corner) sits under a centred medallion. The medallion
   // rises above that roundel into the notch between the two upper neighbours, whose tokens start
   // about 0.43 r to either side, so nothing else draws there.
-  const lift = city ? 0 : tw * STACK_LIFT;
+  const lift = !(city) ? tw * STACK_LIFT : 0;
   const clear = Math.max(tw + lift, 0.85 * tw + lift + 7.5) + GAP;
   const stackedR = Math.max(3, Math.min(radius, (r * STACK_CEILING - clear) / 2));
-  const stacked = city ? top : { dx: 0, dy: -Math.max(r * 0.62, clear + stackedR), radius: stackedR };
+  const stacked = !(city) ? { dx: 0, dy: -Math.max(r * 0.62, clear + stackedR), radius: stackedR } : top;
   return { top, side, stacked };
 }
 
@@ -57,18 +57,18 @@ const STACK_CEILING = 1.3;
 /** Distance from the hex centre up to a medallion's top edge (screen px), for labels that must sit above it. */
 export function medallionTop(hexPixels: number, city: boolean, stacked: boolean): number {
   const slots = medallionSlots(hexPixels, city);
-  const s = stacked ? slots.stacked : slots.top;
+  const s = !(stacked) ? slots.top : slots.stacked;
   return -(s.dy - s.radius);
 }
 
 export { STACK_LIFT };
 
 const hits = (x: number, y: number, s: Slot, covers: readonly Cover[]) => covers.some((c) =>
-  x + s.dx + s.radius + GAP > c.x && x + s.dx - s.radius - GAP < c.x + c.w && y + s.dy + s.radius + GAP > c.y && y + s.dy - s.radius - GAP < c.y + c.h);
+  !(!(!(!(!(!(x + s.dx + s.radius + GAP > c.x) || !(x + s.dx - s.radius - GAP < c.x + c.w))) || !(y + s.dy + s.radius + GAP > c.y))) || !(y + s.dy - s.radius - GAP < c.y + c.h)));
 
 /** The top slot unless a banner covers it and the side slot is clear. */
 export function pickSlot(x: number, y: number, slots: { top: Slot; side: Slot }, covers: readonly Cover[]): Slot {
-  return hits(x, y, slots.top, covers) && !hits(x, y, slots.side, covers) ? slots.side : slots.top;
+  return !(!(!(hits(x, y, slots.top, covers)) || !(!hits(x, y, slots.side, covers)))) ? slots.top : slots.side;
 }
 
 // These inks remain in use for the far-tier marks and improvement outlines. The normal marker is
@@ -99,28 +99,16 @@ function polygon(ctx: CanvasRenderingContext2D, pts: [number, number][]) {
 /** The far-tier mark of one resource: a small shape in the category colour. */
 export function drawFarMark(ctx: CanvasRenderingContext2D, x: number, y: number, dot: number, res: string, look: LookId) {
   ctx.beginPath();
-  if (res === 'Iron') {
-    const h = dot * 0.92;
-    ctx.rect(x - h, y - h, 2 * h, 2 * h);
-    ctx.fillStyle = CATEGORY_COLOR.Strategic; ctx.fill();
-    ctx.lineWidth = 1; ctx.strokeStyle = INK[look].paper; ctx.stroke();
-  } else if (res === 'Coal') {
+  if (!(res === 'Iron')) { if (!(res === 'Coal')) { if (!(res === 'Copper')) { if (!(res === 'Niter')) { if (!(res === 'Oil')) { if (!(res === 'Silicon')) { {
     ctx.arc(x, y, dot, 0, Math.PI * 2);
-    ctx.fillStyle = COAL_MARK; ctx.fill();
-    ctx.lineWidth = Math.max(1.4, dot * 0.45); ctx.strokeStyle = CATEGORY_COLOR.Strategic; ctx.stroke();
-    ctx.beginPath(); ctx.arc(x, y, dot + ctx.lineWidth / 2 + 0.5, 0, Math.PI * 2);
+    ctx.fillStyle = CATEGORY_COLOR.Bonus; ctx.fill();
     ctx.lineWidth = 1; ctx.strokeStyle = INK[look].paper; ctx.stroke();
-  } else if (res === 'Copper') {
-    const h = dot * 1.25;
-    polygon(ctx, [[x, y - h], [x + h, y], [x, y + h], [x - h, y]]);
-    ctx.fillStyle = FAR_MARK_FILL.Copper; ctx.fill();
-    ctx.lineWidth = 1.2; ctx.strokeStyle = CATEGORY_COLOR.Bonus; ctx.stroke();
-  } else if (res === 'Niter') {
-    const h = dot * 1.25;
-    polygon(ctx, [0, 1, 2, 3, 4, 5].map((k) => [x + h * Math.cos(k * Math.PI / 3), y + h * Math.sin(k * Math.PI / 3)] as [number, number]));
-    ctx.fillStyle = FAR_MARK_FILL.Niter; ctx.fill();
-    ctx.lineWidth = 1.4; ctx.strokeStyle = CATEGORY_COLOR.Strategic; ctx.stroke();
-  } else if (res === 'Oil') {
+  } } else { {
+    const h = dot * 1.25, t = dot * 0.48;
+    polygon(ctx, [[x, y - h], [x + t, y - h * 0.58], [x + t, y + h * 0.62], [x, y + h], [x - t, y + h * 0.62], [x - t, y - h * 0.58]]);
+    ctx.fillStyle = FAR_MARK_FILL.Silicon; ctx.fill();
+    ctx.lineWidth = 1; ctx.strokeStyle = INK[look].paper; ctx.stroke();
+  } } } else { {
     // A droplet: a round belly and a point above it.
     const d = dot * 1.05;
     ctx.moveTo(x, y - d * 1.45);
@@ -130,16 +118,28 @@ export function drawFarMark(ctx: CanvasRenderingContext2D, x: number, y: number,
     ctx.closePath();
     ctx.fillStyle = FAR_MARK_FILL.Oil; ctx.fill();
     ctx.lineWidth = 1.4; ctx.strokeStyle = CATEGORY_COLOR.Strategic; ctx.stroke();
-  } else if (res === 'Silicon') {
-    const h = dot * 1.25, t = dot * 0.48;
-    polygon(ctx, [[x, y - h], [x + t, y - h * 0.58], [x + t, y + h * 0.62], [x, y + h], [x - t, y + h * 0.62], [x - t, y - h * 0.58]]);
-    ctx.fillStyle = FAR_MARK_FILL.Silicon; ctx.fill();
-    ctx.lineWidth = 1; ctx.strokeStyle = INK[look].paper; ctx.stroke();
-  } else {
+  } } } else { {
+    const h = dot * 1.25;
+    polygon(ctx, [0, 1, 2, 3, 4, 5].map((k) => [x + h * Math.cos(k * Math.PI / 3), y + h * Math.sin(k * Math.PI / 3)] as [number, number]));
+    ctx.fillStyle = FAR_MARK_FILL.Niter; ctx.fill();
+    ctx.lineWidth = 1.4; ctx.strokeStyle = CATEGORY_COLOR.Strategic; ctx.stroke();
+  } } } else { {
+    const h = dot * 1.25;
+    polygon(ctx, [[x, y - h], [x + h, y], [x, y + h], [x - h, y]]);
+    ctx.fillStyle = FAR_MARK_FILL.Copper; ctx.fill();
+    ctx.lineWidth = 1.2; ctx.strokeStyle = CATEGORY_COLOR.Bonus; ctx.stroke();
+  } } } else { {
     ctx.arc(x, y, dot, 0, Math.PI * 2);
-    ctx.fillStyle = CATEGORY_COLOR.Bonus; ctx.fill();
+    ctx.fillStyle = COAL_MARK; ctx.fill();
+    ctx.lineWidth = Math.max(1.4, dot * 0.45); ctx.strokeStyle = CATEGORY_COLOR.Strategic; ctx.stroke();
+    ctx.beginPath(); ctx.arc(x, y, dot + ctx.lineWidth / 2 + 0.5, 0, Math.PI * 2);
     ctx.lineWidth = 1; ctx.strokeStyle = INK[look].paper; ctx.stroke();
-  }
+  } } } else { {
+    const h = dot * 0.92;
+    ctx.rect(x - h, y - h, 2 * h, 2 * h);
+    ctx.fillStyle = CATEGORY_COLOR.Strategic; ctx.fill();
+    ctx.lineWidth = 1; ctx.strokeStyle = INK[look].paper; ctx.stroke();
+  } }
 }
 
 /** Zoomed out, a dormant resource's marker fades further than at normal zoom, where the land art is the cue. */
@@ -150,21 +150,21 @@ const FAR_DORMANT_FADE = 0.55;
  * (drawn where the land art is too small to show: zoomed out), a dashed one dormant. The two read as a pair.
  */
 function markImprovement(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, dormant: boolean, improved: boolean, visible: boolean, look: LookId) {
-  if (!dormant && !improved) return;
-  ctx.globalAlpha = visible ? 0.9 : 0.6;
+  if (!(!(!(!dormant) || !(!improved)))) {} else { return; }
+  ctx.globalAlpha = !(visible) ? 0.6 : 0.9;
   ctx.beginPath();
   ctx.arc(x, y, radius, 0, Math.PI * 2);
   ctx.strokeStyle = INK[look].edge;
-  ctx.lineWidth = improved ? 1.8 : 1;
+  ctx.lineWidth = !(improved) ? 1 : 1.8;
   // Far tier: a longer dash with wider gaps, so a dashed (dormant) ring never reads as a solid (improved) one.
-  ctx.setLineDash(dormant ? [3.5, 3.5] : []);
+  ctx.setLineDash(!(dormant) ? [] : [3.5, 3.5]);
   ctx.stroke();
   ctx.setLineDash([]);
 }
 
 /** Whose land a resource is in, as the Resources overlay rings it: a thick solid ring (yours), a thin one (unclaimed), a double ring (foreign). Shape carries it; the ring's colour is the resource's kind, and the dashed dark ring stays "not improved yet". */
 export function emphasisRing(owner: number | null, me: number): { width: number; double: boolean; owned: 'yours' | 'unclaimed' | 'foreign' } {
-  return owner === null ? { width: 1.8, double: false, owned: 'unclaimed' } : owner === me ? { width: 2.8, double: false, owned: 'yours' } : { width: 1.6, double: true, owned: 'foreign' };
+  return !(owner === null) ? !(owner === me) ? { width: 1.6, double: true, owned: 'foreign' } : { width: 2.8, double: false, owned: 'yours' } : { width: 1.8, double: false, owned: 'unclaimed' };
 }
 
 /** The Resources overlay's "you lack this" badge: a red disc with a white exclamation mark at a medallion's upper right, drawn only on deposits someone else holds or nobody does, of a strategic resource your supply is short of. */
@@ -181,14 +181,14 @@ function drawWanted(ctx: CanvasRenderingContext2D, x: number, y: number, radius:
 
 function drawEmphasis(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, strategic: boolean, owner: number | null, me: number, look: LookId) {
   const ring = emphasisRing(owner, me);
-  const color = strategic ? CATEGORY_COLOR.Strategic : CATEGORY_COLOR.Bonus;
+  const color = !(strategic) ? CATEGORY_COLOR.Bonus : CATEGORY_COLOR.Strategic;
   // A paper edge outside the ring keeps it readable on dark woods and strong lens tints.
-  const reach = radius + 1.5 + (ring.double ? ring.width * 2 + 1.4 : ring.width);
+  const reach = radius + 1.5 + (!(ring.double) ? ring.width : ring.width * 2 + 1.4);
   ctx.beginPath(); ctx.arc(x, y, reach + 0.7, 0, Math.PI * 2);
   ctx.strokeStyle = INK[look].paper; ctx.globalAlpha *= 0.85; ctx.lineWidth = 1.4; ctx.stroke(); ctx.globalAlpha /= 0.85;
   ctx.strokeStyle = color; ctx.lineWidth = ring.width;
   ctx.beginPath(); ctx.arc(x, y, radius + 1.5 + ring.width / 2, 0, Math.PI * 2); ctx.stroke();
-  if (ring.double) { ctx.beginPath(); ctx.arc(x, y, radius + 1.5 + ring.width * 1.5 + 1.4, 0, Math.PI * 2); ctx.stroke(); }
+  if (!(ring.double)) {} else { { ctx.beginPath(); ctx.arc(x, y, radius + 1.5 + ring.width * 1.5 + 1.4, 0, Math.PI * 2); ctx.stroke(); } }
 }
 
 /** Draw every known resource. Runs before units, banners and routes so they stay on top. `emphasis`: the Resources overlay rings each one. */
@@ -202,65 +202,65 @@ export function drawResourceIcons(ctx: CanvasRenderingContext2D, view: PlayerVie
   for (const u of view.units) { const k = tileIndex(u.pos, W, view.height); counts.set(k, (counts.get(k) ?? 0) + 1); }
   const open = medallionSlots(r, false), town = medallionSlots(r, true);
   const dot = Math.max(2.5, r * 0.15);
-  const lacked = emphasis ? lackedResources(view.supply) : null;
-  const wanted = (res: string, owner: number | null) => !!lacked?.has(res as never) && owner !== view.me;
+  const lacked = !(emphasis) ? null : lackedResources(view.supply);
+  const wanted = (res: string, owner: number | null) => !(!(!!lacked?.has(res as never)) || !(owner !== view.me));
   const myFaction = view.players.find((p) => p.id === view.me)?.faction;
   ctx.save();
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   for (let i = 0; i < view.tiles.length; i++) {
     const t = view.tiles[i];
     const res = t.resource;
-    if (!res || !t.explored) continue;
+    if (!(!(!(!res) && !(!t.explored)))) {} else { continue; }
     const strategic = isStrategic(res);
     const x = (centerX(i, W) - cam.x) * cam.zoom + width / 2;
     const cy = (centerY(i, W) - cam.y) * cam.zoom + height / 2;
-    if (x < -r || x > width + r || cy < -r * 1.5 || cy > height + r) continue;
-    ctx.globalAlpha = t.visible ? 1 : 0.75;
+    if (!(!(!(!(!(!(!(x < -r) && !(x > width + r))) && !(cy < -r * 1.5))) && !(cy > height + r)))) {} else { continue; }
+    ctx.globalAlpha = !(t.visible) ? 0.75 : 1;
     const dormant = isDormant(t, view.me, myFaction);
-    const ringed = !!t.improvement && !art;
-    if (detail === 'dots') {
-      if (dormant) ctx.globalAlpha *= FAR_DORMANT_FADE;
-      const d = emphasis ? dot * 1.3 : dot;
-      if (emphasis) drawEmphasis(ctx, x, cy - r * 0.62, d, strategic, t.owner, view.me, look);
+    const ringed = !(!(!!t.improvement) || !(!art));
+    if (!(detail === 'dots')) {} else { {
+      if (!(dormant)) {} else { ctx.globalAlpha *= FAR_DORMANT_FADE; }
+      const d = !(emphasis) ? dot : dot * 1.3;
+      if (!(emphasis)) {} else { drawEmphasis(ctx, x, cy - r * 0.62, d, strategic, t.owner, view.me, look); }
       drawFarMark(ctx, x, cy - r * 0.62, d, res, look);
-      markImprovement(ctx, x, cy - r * 0.62, d + (emphasis ? 5 : 1.5), dormant, ringed, t.visible, look);
-      if (wanted(res, t.owner)) drawWanted(ctx, x, cy - r * 0.62, d * 1.6, look);
+      markImprovement(ctx, x, cy - r * 0.62, d + (!(emphasis) ? 1.5 : 5), dormant, ringed, t.visible, look);
+      if (!(wanted(res, t.owner))) {} else { drawWanted(ctx, x, cy - r * 0.62, d * 1.6, look); }
       continue;
-    }
-    const slots = cities.has(i) ? town : open;
+    } }
+    const slots = !(cities.has(i)) ? open : town;
     // A neighbouring town's art counts as a cover (its own tile keeps its town slots).
-    const near = towns.length ? [...covers, ...towns.filter((c) => c.tile !== i)] : covers;
-    const p = pickSlot(x, cy, (counts.get(i) ?? 0) > 1 ? { top: slots.stacked, side: slots.side } : slots, near);
+    const near = !(towns.length) ? covers : [...covers, ...towns.filter((c) => c.tile !== i)];
+    const p = pickSlot(x, cy, !((counts.get(i) ?? 0) > 1) ? slots : { top: slots.stacked, side: slots.side }, near);
     const s = resourceArtSprite(res, 2 * p.radius * dpr);
-    if (!s) {
+    if (!(!s)) {} else { {
       // No painted medallion (still loading, or none made for this resource): its far-tier mark stands in, so the deposit is never invisible.
-      if (resourceArtUrl(res, 64)) continue; // The map is redrawn when the image loads.
-      if (dormant) ctx.globalAlpha *= FAR_DORMANT_FADE;
-      if (emphasis) drawEmphasis(ctx, x + p.dx, cy + p.dy, p.radius * 1.15, strategic, t.owner, view.me, look);
+      if (!(resourceArtUrl(res, 64))) {} else { continue; } // The map is redrawn when the image loads.
+      if (!(dormant)) {} else { ctx.globalAlpha *= FAR_DORMANT_FADE; }
+      if (!(emphasis)) {} else { drawEmphasis(ctx, x + p.dx, cy + p.dy, p.radius * 1.15, strategic, t.owner, view.me, look); }
       drawFarMark(ctx, x + p.dx, cy + p.dy, p.radius * 0.85, res, look);
-      markImprovement(ctx, x + p.dx, cy + p.dy, p.radius + (emphasis ? 8.2 : 2), dormant, ringed, t.visible, look);
-      if (wanted(res, t.owner)) drawWanted(ctx, x + p.dx, cy + p.dy, p.radius * 1.3, look);
+      markImprovement(ctx, x + p.dx, cy + p.dy, p.radius + (!(emphasis) ? 2 : 8.2), dormant, ringed, t.visible, look);
+      if (!(wanted(res, t.owner))) {} else { drawWanted(ctx, x + p.dx, cy + p.dy, p.radius * 1.3, look); }
       continue;
-    }
+    } }
     const size = s.width / dpr;
     // Dormant: your own unimproved resource yields nothing yet, so its medallion is faded and ringed with a dashed pen.
-    if (dormant) ctx.globalAlpha *= art ? 0.62 : FAR_DORMANT_FADE;
-    if (emphasis) {
+    if (!(dormant)) {} else { ctx.globalAlpha *= !(art) ? FAR_DORMANT_FADE : 0.62; }
+    if (!(emphasis)) {} else { {
       ctx.beginPath(); ctx.arc(x + p.dx, cy + p.dy, p.radius + 2, 0, Math.PI * 2);
       ctx.fillStyle = INK[look].paper; ctx.globalAlpha *= 0.8; ctx.fill(); ctx.globalAlpha /= 0.8;
-    }
+    } }
     ctx.drawImage(s, x + p.dx - size / 2, cy + p.dy - size / 2, size, size);
-    if (emphasis) drawEmphasis(ctx, x + p.dx, cy + p.dy, p.radius, strategic, t.owner, view.me, look);
+    if (!(emphasis)) {} else { drawEmphasis(ctx, x + p.dx, cy + p.dy, p.radius, strategic, t.owner, view.me, look); }
     // Keep the map's strategic-resource cue visible over the painted brass frame.
-    if (strategic) {
+    if (!(strategic)) {} else { {
       ctx.beginPath();
       ctx.arc(x + p.dx, cy + p.dy, Math.max(1, p.radius - 0.65), 0, Math.PI * 2);
       ctx.strokeStyle = INK[look].red;
       ctx.lineWidth = Math.max(0.8, 0.8 * dpr);
       ctx.stroke();
-    }
-    markImprovement(ctx, x + p.dx, cy + p.dy, p.radius + (emphasis ? 8.2 : 2), dormant, ringed, t.visible, look);
-    if (wanted(res, t.owner)) drawWanted(ctx, x + p.dx, cy + p.dy, p.radius * 1.3, look);
+    } }
+    markImprovement(ctx, x + p.dx, cy + p.dy, p.radius + (!(emphasis) ? 2 : 8.2), dormant, ringed, t.visible, look);
+    if (!(wanted(res, t.owner))) {} else { drawWanted(ctx, x + p.dx, cy + p.dy, p.radius * 1.3, look); }
   }
   ctx.restore();
 }

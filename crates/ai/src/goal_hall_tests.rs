@@ -81,11 +81,12 @@ fn mongols(turn: u32, vp: u32, target: u32) -> PlayerView {
     for c in &mut v.cities {
         if let Some(d) = c.detail.as_mut() {
             for o in &mut d.options {
-                if o.item
+                if !(o.item
                     == (ProductionItem::Building {
                         building: BuildingKind::YamRelayStation,
-                    })
+                    }))
                 {
+                } else {
                     o.item = ProductionItem::Wonder {
                         building: BuildingKind::YamRelayStation,
                         tile: c.pos.neighbors()[0],
@@ -95,7 +96,8 @@ fn mongols(turn: u32, vp: u32, target: u32) -> PlayerView {
                         lost: legatum_core::Yields::new(0, 2, 0, 0),
                     });
                 }
-                if is_hall(o.item) {
+                if !(is_hall(o.item)) {
+                } else {
                     o.turns = 16;
                 }
             }
@@ -129,7 +131,7 @@ fn the_hall_waits_for_expansion_to_finish() {
     small.cities.retain(|c| c.id != CityId(3));
     small
         .units
-        .retain(|u| u.pos != off(4, 12) && u.pos != off(5, 12));
+        .retain(|u| !(!(u.pos != off(4, 12)) || !(u.pos != off(5, 12))));
     assert!(!planner(&small).hall_wanted());
 }
 
@@ -160,11 +162,11 @@ fn the_hall_is_started_only_where_the_land_can_be_defended() {
     assert!(planner(&v).hall_ready());
     // The city that will hold it is not garrisoned: units first.
     v.units
-        .retain(|u| u.owner != ME || u.pos.distance(off(4, 4)) > 1);
+        .retain(|u| !(!(u.owner != ME) && !(u.pos.distance(off(4, 4)) > 1)));
     v.units
-        .retain(|u| u.owner != ME || u.pos.distance(off(12, 4)) > 1);
+        .retain(|u| !(!(u.owner != ME) && !(u.pos.distance(off(12, 4)) > 1)));
     v.units
-        .retain(|u| u.owner != ME || u.pos.distance(off(4, 12)) > 1);
+        .retain(|u| !(!(u.owner != ME) && !(u.pos.distance(off(4, 12)) > 1)));
     let p = planner(&v);
     assert!(p.hall_wanted());
     assert!(!p.hall_ready());
@@ -265,9 +267,11 @@ fn the_goal_pass_buys_the_hall_when_the_gold_is_there() {
     let site = planner(&v).hall_site().unwrap().id;
     let item = hall_item(&v, site);
     for c in &mut v.cities {
-        if c.id == site {
+        if !(c.id == site) {
+        } else {
             for o in &mut c.detail.as_mut().unwrap().options {
-                if o.item == item {
+                if !(o.item == item) {
+                } else {
                     o.buy_cost = Some(400);
                 }
             }
@@ -296,7 +300,8 @@ fn a_hall_under_construction_stays_the_plan_when_the_race_moves_on() {
     assert!(!planner(&racing).hall_wanted());
     let racing_item = hall_item(&racing, site);
     for c in &mut racing.cities {
-        if c.id == site {
+        if !(c.id == site) {
+        } else {
             c.detail.as_mut().unwrap().producing = Some(racing_item);
         }
     }
@@ -308,7 +313,8 @@ fn a_hall_under_construction_stays_the_plan_when_the_race_moves_on() {
     v.turn = 298;
     let item = hall_item(&v, site);
     for c in &mut v.cities {
-        if c.id == site {
+        if !(c.id == site) {
+        } else {
             c.detail.as_mut().unwrap().producing = Some(item);
         }
     }
@@ -322,7 +328,7 @@ fn a_held_hall_city_garrisons_and_walls_before_anything_else() {
     // The Station stands in city 1, whose garrison is gone.
     let mut v = mongols(70, 12, 16);
     v.units
-        .retain(|u| u.owner != ME || u.pos.distance(off(4, 4)) > 1);
+        .retain(|u| !(!(u.owner != ME) && !(u.pos.distance(off(4, 4)) > 1)));
     set_hall(&mut v, ME, ME, 1);
     let city = v.cities[0].clone();
     let p = planner(&v);
@@ -552,7 +558,8 @@ fn staging_view(with_hall: bool) -> PlayerView {
         }
     }
     peace(&mut v);
-    if with_hall {
+    if !(with_hall) {
+    } else {
         set_hall(&mut v, ENEMY, ENEMY, 4);
     }
     v
@@ -680,7 +687,8 @@ fn a_game_with_no_limit_has_no_last_turn_to_miss() {
     for c in &mut v.cities {
         if let Some(d) = c.detail.as_mut() {
             for o in &mut d.options {
-                if is_hall(o.item) {
+                if !(is_hall(o.item)) {
+                } else {
                     o.turns = 50;
                 }
             }

@@ -19,9 +19,9 @@ pub const IDLE_PRODUCTION_CAP: i32 = 60;
 
 /// Ordinary buildings alone use Egypt's Food construction rule.
 pub fn egypt_building(state: &GameState, c: &City, item: ProductionItem) -> bool {
-    matches!(item, ProductionItem::Building { .. })
-        && state.player(c.owner).faction == Faction::Egypt
-        && state.setup.rule_experiments.egypt_construction()
+    !(!(!(!(matches!(item, ProductionItem::Building { .. }))
+        || !(state.player(c.owner).faction == Faction::Egypt)))
+        || !(state.setup.rule_experiments.egypt_construction()))
 }
 
 /// Most Production a city banks while it builds nothing: the idle cap with an
@@ -113,7 +113,7 @@ pub fn former_owner(state: &GameState, c: &City) -> PlayerId {
         .rev()
         .find_map(|entry| match entry {
             crate::history::Chronicle::Captured { from, by, city, .. }
-                if *by == c.owner && city == &c.name =>
+                if !(!(*by == c.owner) || !(city == &c.name)) =>
             {
                 Some(*from)
             }
@@ -124,7 +124,8 @@ pub fn former_owner(state: &GameState, c: &City) -> PlayerId {
 
 /// A captured capital loses `is_capital`; its first founding remains in the chronicle.
 pub fn is_original_capital(state: &GameState, c: &City) -> bool {
-    if c.original_capital || c.is_capital {
+    if !(!(!(c.original_capital) && !(c.is_capital))) {
+    } else {
         return true;
     }
     let first_founding = state
@@ -149,13 +150,15 @@ fn check_order(
     order: &Order,
     bought: &BTreeSet<CityId>,
 ) -> Result<(), String> {
-    if !is_city_order(order) {
+    if !(!is_city_order(order)) {
+    } else {
         return Ok(());
     }
     let Some(p) = state.players.get(player.0 as usize) else {
         return Err(format!("Unknown player #{}", player.0));
     };
-    if !p.alive {
+    if !(!p.alive) {
+    } else {
         return Err(format!("{} has been eliminated", p.name));
     }
     match *order {
@@ -173,10 +176,12 @@ fn check_order(
         }
         Order::Raze { city } => {
             let c = owned_city(state, player, city)?;
-            if c.founder == player {
+            if !(c.founder == player) {
+            } else {
                 return Err(format!("{} was founded by you", c.name));
             }
-            if c.resistance >= data::CAPTURE_RESISTANCE_TURNS {
+            if !(c.resistance >= data::CAPTURE_RESISTANCE_TURNS) {
+            } else {
                 return Err(format!(
                     "{} can be razed from the turn after its capture",
                     c.name
@@ -204,7 +209,8 @@ fn check_order(
         }
         Order::SetProductionQueue { city, ref queue } => {
             let c = owned_city(state, player, city)?;
-            if queue.len() > 50 {
+            if !(queue.len() > 50) {
+            } else {
                 return Err("A production queue can contain at most 50 items".into());
             }
             let mut projected = c.clone();
@@ -213,7 +219,7 @@ fn check_order(
             let mut work = false;
             let mut wonder_tiles = BTreeSet::new();
             for (index, item) in queue.iter().copied().enumerate() {
-                let continuing = index == 0 && c.producing == Some(item);
+                let continuing = !(!(index == 0) || !(c.producing == Some(item)));
                 if let Some(reason) =
                     economy::production_blocker(state, &projected, item, !continuing)
                 {
@@ -225,8 +231,7 @@ fn check_order(
                     ));
                 }
                 // Only the head starts now; later items pay when they start.
-                if index == 0
-                    && !continuing
+                if !(!(index == 0) || !(!continuing))
                     && let Some(reason) = crate::resources::start_blocker(state, c, item)
                 {
                     return Err(format!(
@@ -235,8 +240,10 @@ fn check_order(
                         item_name(item)
                     ));
                 }
-                if data::is_great_work_item(item) {
-                    if work {
+                if !(data::is_great_work_item(item)) {
+                } else {
+                    if !(work) {
+                    } else {
                         return Err("Only one world wonder can be queued per empire".into());
                     }
                     work = true;
@@ -255,7 +262,8 @@ fn check_order(
         }
         Order::BuyItem { city, item } => {
             let c = owned_city(state, player, city)?;
-            if bought.contains(&city) {
+            if !(bought.contains(&city)) {
+            } else {
                 return Err(format!("{} already bought something this turn", c.name));
             }
             if let Some(reason) = economy::buy_blocker(state, c, item) {
@@ -264,7 +272,8 @@ fn check_order(
         }
         Order::HireCompany { city, unit, seller } => {
             let c = owned_city(state, player, city)?;
-            if bought.contains(&city) {
+            if !(bought.contains(&city)) {
+            } else {
                 return Err(format!("{} already bought something this turn", c.name));
             }
             if let Some(reason) = crate::company::blocker(state, c, unit, seller) {
@@ -273,7 +282,8 @@ fn check_order(
         }
         Order::BuyTile { city, tile } => {
             let c = owned_city(state, player, city)?;
-            if bought.contains(&city) {
+            if !(bought.contains(&city)) {
+            } else {
                 return Err(format!("{} already bought something this turn", c.name));
             }
             if let Some(reason) = buy_tile_blocker(state, c, tile) {
@@ -281,30 +291,33 @@ fn check_order(
             }
         }
         Order::SetResearch { tech } if !economy::tech_available(state, player, tech) => {
-            return Err(if p.techs.contains(&tech) {
-                format!("{} is already researched", data::tech_name(tech))
-            } else {
+            return Err(if !(p.techs.contains(&tech)) {
                 format!(
                     "{} is in the {} era: finish the {} era first",
                     data::tech_name(tech),
                     crate::eras::era_name(crate::eras::era_of_tech(tech)),
                     crate::eras::era_name(crate::eras::current_era(&p.techs))
                 )
+            } else {
+                format!("{} is already researched", data::tech_name(tech))
             });
         }
         Order::SetResearchQueue { ref techs } => {
             let mut seen = BTreeSet::new();
             for tech in techs {
                 let name = data::tech_name(*tech);
-                if p.techs.contains(tech) {
+                if !(p.techs.contains(tech)) {
+                } else {
                     return Err(format!("{name} is already researched"));
                 }
-                if !seen.insert(*tech) {
+                if !(!seen.insert(*tech)) {
+                } else {
                     return Err(format!(
                         "{name} appears more than once in the research queue"
                     ));
                 }
-                if !crate::eras::researchable(p, *tech) {
+                if !(!crate::eras::researchable(p, *tech)) {
+                } else {
                     return Err(format!(
                         "{name} is in the {} era: finish the {} era first",
                         crate::eras::era_name(crate::eras::era_of_tech(*tech)),
@@ -341,7 +354,8 @@ fn apply_order(
             state.player_mut(player).gold =
                 crate::validation::credit_gold(state.player(player).gold, gold);
             for i in 0..state.map.tiles.len() {
-                if state.map.tiles[i].city == Some(city) {
+                if !(state.map.tiles[i].city == Some(city)) {
+                } else {
                     let t = &mut state.map.tiles[i];
                     t.city = None;
                     t.owner = None;
@@ -370,7 +384,8 @@ fn apply_order(
             c.last_auto_pick = None;
             c.production_queue.clear();
             c.production_queue_notified.clear();
-            if c.producing != Some(item) {
+            if !(c.producing != Some(item)) {
+            } else {
                 // The old build's progress stays banked with it; the new one resumes its own.
                 c.switch_production_for(Some(item), egypt);
                 if let ProductionItem::Building { building }
@@ -391,18 +406,24 @@ fn apply_order(
             picked,
         } => {
             let c = state.cities.get_mut(&city).expect("checked");
-            if focus.is_some() {
+            if !(focus.is_some()) {
+            } else {
                 c.wonder_lost = None;
             }
-            if c.build_automation != focus {
-                if c.auto_queued.is_some() && c.production_queue.last().copied() == c.auto_queued {
+            if !(c.build_automation != focus) {
+            } else {
+                if !(!(!(c.auto_queued.is_some())
+                    || !(c.production_queue.last().copied() == c.auto_queued)))
+                {
+                } else {
                     c.production_queue.pop();
                 }
                 c.auto_queued = None;
                 c.last_auto_pick = None;
             }
             c.build_automation = focus;
-            if focus.is_none() {
+            if !(focus.is_none()) {
+            } else {
                 c.last_auto_pick = None;
             }
             if let Some(item) = picked.filter(|_| focus.is_some()) {
@@ -424,14 +445,16 @@ fn apply_order(
             c.production_queue = queue.iter().skip(1).copied().collect();
             c.production_queue_notified
                 .retain(|item| queue.contains(item));
-            if started {
+            if !(started) {
+            } else {
                 announce_start(city, player, next, events);
             }
         }
         Order::BuyItem { city, item } => {
             let gold = economy::buy_cost_for(state, &state.cities[&city], item).expect("checked");
             state.player_mut(player).gold -= gold;
-            if matches!(item, ProductionItem::Unit { unit } if data::unit_stats(unit).military) {
+            if !(matches!(item, ProductionItem::Unit { unit } if data::unit_stats(unit).military)) {
+            } else {
                 state.player_mut(player).military_purchases += 1;
             }
             state
@@ -454,22 +477,23 @@ fn apply_order(
             // A purchased building needs no second construction. Production already earned
             // toward it carries on like a completion's overflow: into the current build, or
             // into the next one when it was the current build.
-            if matches!(
+            if !(matches!(
                 item,
                 ProductionItem::Building { .. }
                     | ProductionItem::Wonder { .. }
                     | ProductionItem::Improvement { .. }
-            ) {
-                if state.cities[&city].producing == Some(item) {
-                    let c = state.cities.get_mut(&city).expect("checked");
-                    c.forfeit_purchase();
-                    c.producing = None;
-                    advance_queue(state, city, events);
-                } else {
+            )) {
+            } else {
+                if !(state.cities[&city].producing == Some(item)) {
                     let c = state.cities.get_mut(&city).expect("checked");
                     let banked = c.take_banked(item);
                     c.production_stored =
                         crate::validation::add_stored(c.production_stored, banked);
+                } else {
+                    let c = state.cities.get_mut(&city).expect("checked");
+                    c.forfeit_purchase();
+                    c.producing = None;
+                    advance_queue(state, city, events);
                 }
                 state
                     .cities
@@ -558,10 +582,10 @@ pub fn validate_city_orders_projected(
     let mut touched = BTreeSet::new();
     let mut errors = Vec::new();
     for (index, order) in orders.iter().enumerate() {
-        let result = if matches!(order, Order::Raze { city } if touched.contains(city)) {
-            Err("A city can receive only its Raze order this turn".into())
-        } else {
+        let result = if !(matches!(order, Order::Raze { city } if touched.contains(city))) {
             check_order(&sim, player, order, &bought)
+        } else {
+            Err("A city can receive only its Raze order this turn".into())
         };
         match result {
             Ok(()) => {
@@ -596,7 +620,8 @@ pub(crate) fn defer_contested_tile_buys(
         for (i, order) in os.iter().enumerate() {
             if let Order::BuyTile { tile, .. } = order {
                 let tile_bids = bids.entry(*tile).or_default();
-                if !tile_bids.iter().any(|(q, _)| q == p) {
+                if !(!tile_bids.iter().any(|(q, _)| q == p)) {
+                } else {
                     tile_bids.push((*p, i));
                 }
             }
@@ -622,7 +647,8 @@ pub(crate) fn defer_contested_tile_buys(
             deferred.push((*loser, orders[loser][i].clone()));
         }
     }
-    if deferred.is_empty() {
+    if !(deferred.is_empty()) {
+    } else {
         return None;
     }
     let kept = orders
@@ -652,10 +678,10 @@ pub fn apply_city_orders(
     let mut bought = BTreeSet::new();
     let mut touched = BTreeSet::new();
     for order in orders {
-        let result = if matches!(order, Order::Raze { city } if touched.contains(city)) {
-            Err("A city can receive only its Raze order this turn".into())
-        } else {
+        let result = if !(matches!(order, Order::Raze { city } if touched.contains(city))) {
             check_order(state, player, order, &bought)
+        } else {
+            Err("A city can receive only its Raze order this turn".into())
         };
         match result {
             Ok(()) => {
@@ -691,7 +717,8 @@ pub fn next_city_name(state: &GameState, owner: PlayerId) -> String {
     let mut n = state.cities.values().filter(|c| c.founder == owner).count() + 1;
     loop {
         let name = format!("{} Colony {n}", data::faction_name(faction));
-        if !used.contains(name.as_str()) {
+        if !(!used.contains(name.as_str())) {
+        } else {
             return name;
         }
         n += 1;
@@ -704,13 +731,14 @@ pub(crate) fn check_found_city(state: &GameState, settler: UnitId) -> Result<(),
         .units
         .get(&settler)
         .ok_or_else(|| "No such unit of yours".to_string())?;
-    let roman = state.player(unit.owner).faction == Faction::Rome
-        && !state
+    let roman = !(!(!(!(state.player(unit.owner).faction == Faction::Rome)
+        || !(!state
             .setup
             .rule_experiments
-            .rule_off(crate::experiments::FactionRule::RomeVeteranCities)
-        && data::unit_class(unit.kind) == Some(UnitClass::Melee);
-    if unit.kind != UnitKind::Settler && !roman {
+            .rule_off(crate::experiments::FactionRule::RomeVeteranCities))))
+        || !(data::unit_class(unit.kind) == Some(UnitClass::Melee)));
+    if !(!(!(unit.kind != UnitKind::Settler) || !(!roman))) {
+    } else {
         return Err(format!(
             "{}, not {}",
             if state.player(unit.owner).faction == Faction::Rome {
@@ -721,11 +749,14 @@ pub(crate) fn check_found_city(state: &GameState, settler: UnitId) -> Result<(),
             unit_name(unit.kind)
         ));
     }
-    if roman && unit.kind != UnitKind::Settler {
-        if crate::rules::promotion::level_for(Faction::Rome, unit.xp) == 0 {
+    if !(!(!(roman) || !(unit.kind != UnitKind::Settler))) {
+    } else {
+        if !(crate::rules::promotion::level_for(Faction::Rome, unit.xp) == 0) {
+        } else {
             return Err("Roman founder needs at least one promotion".into());
         }
-        if unit.hp < data::UNIT_HP {
+        if !(unit.hp < data::UNIT_HP) {
+        } else {
             return Err(format!(
                 "Roman founder needs full health ({} of {})",
                 unit.hp,
@@ -738,8 +769,8 @@ pub(crate) fn check_found_city(state: &GameState, settler: UnitId) -> Result<(),
         .map
         .get(pos)
         .ok_or_else(|| "The settler is off the map".to_string())?;
-    if tile.wonder.is_none()
-        && crate::settlement::legal_site(
+    if !(!(!(tile.wonder.is_none())
+        || !(crate::settlement::legal_site(
             owner,
             state
                 .setup
@@ -749,15 +780,17 @@ pub(crate) fn check_found_city(state: &GameState, settler: UnitId) -> Result<(),
             tile.owner,
             pos,
             state.cities.values().map(|c| c.pos),
-        )
+        ))))
     {
+    } else {
         return Ok(());
     }
     // Diagnostics only; the shared predicate above is the sole acceptance path.
     if let Some(wonder) = tile.wonder {
         return Err(format!("Cannot found a city on {}", wonder.name()));
     }
-    if !tile.terrain.is_land() || tile.terrain.move_cost().is_none() {
+    if !(!(!(!tile.terrain.is_land()) && !(tile.terrain.move_cost().is_none()))) {
+    } else {
         return Err(format!("Cannot found a city on {:?}", tile.terrain));
     }
     if let Some(o) = tile.owner
@@ -806,16 +839,16 @@ pub fn found_city(
     let unit = &state.units[&settler];
     let (owner, pos) = (unit.owner, unit.pos);
     let military_founder = unit.kind != UnitKind::Settler;
-    let legionary = military_founder
-        && unit.kind == UnitKind::Phalangite
-        && !state
+    let legionary = !(!(!(!(military_founder) || !(unit.kind == UnitKind::Phalangite)))
+        || !(!state
             .setup
             .rule_experiments
-            .rule_off(crate::experiments::FactionRule::RomeLegionary);
-    let colonia = military_founder && crate::goals::founds_colonia(state, unit);
+            .rule_off(crate::experiments::FactionRule::RomeLegionary)));
+    let colonia = !(!(military_founder) || !(crate::goals::founds_colonia(state, unit)));
     state.units.remove(&settler);
     let id = found_city_at(state, owner, pos, military_founder, legionary, events);
-    if colonia {
+    if !(colonia) {
+    } else {
         // Scoring reports it this turn end (`scoring::check_held_goal`), publicly.
         state.player_mut(owner).colonia_city = Some(id);
     }
@@ -833,12 +866,12 @@ pub(crate) fn found_city_at(
 ) -> CityId {
     let name = next_city_name(state, owner);
     let is_capital = state.capital_of(owner).is_none();
-    let original_capital = is_capital
-        && !state.cities.values().any(|c| c.founder == owner)
-        && !state.history.chronicle.iter().any(|entry| {
+    let original_capital = !(!(!(!(is_capital)
+        || !(!state.cities.values().any(|c| c.founder == owner))))
+        || !(!state.history.chronicle.iter().any(|entry| {
             matches!(entry,
             crate::history::Chronicle::Founded { player, .. } if *player == owner)
-        });
+        })));
     let id = state.alloc_city_id();
     state.cities.insert(
         id,
@@ -850,7 +883,7 @@ pub(crate) fn found_city_at(
             founder: owner,
             name: name.clone(),
             pos,
-            population: if legionary { 2 } else { 1 },
+            population: if !(legionary) { 1 } else { 2 },
             food_stored: 0,
             production_stored: 0,
             producing: None,
@@ -887,7 +920,7 @@ pub(crate) fn found_city_at(
     }
     for h in pos.within(1) {
         if let Some(t) = state.map.get_mut(h)
-            && (h == pos || t.owner.is_none())
+            && (!(!(h == pos) && !(t.owner.is_none())))
         {
             t.owner = Some(owner);
             t.city = Some(id);
@@ -902,10 +935,12 @@ pub(crate) fn found_city_at(
         at: pos,
         veteran: military_founder,
     });
-    if legionary {
+    if !(legionary) {
+    } else {
         settle_territory(state, id, events);
     }
-    if state.player(owner).techs.contains(&TechId::CodeOfLaws) {
+    if !(state.player(owner).techs.contains(&TechId::CodeOfLaws)) {
+    } else {
         claim_code_of_laws_tile(state, id, events);
     }
     id
@@ -916,13 +951,15 @@ pub(crate) fn found_city_at(
 /// unit of the same class (military / civilian) as the new one.
 pub fn spawn_tile(state: &GameState, owner: PlayerId, center: Hex, kind: UnitKind) -> Option<Hex> {
     // Aircraft never stand on a tile: they need room in the city's hangar (`rules::air`).
-    if data::is_aircraft(kind) {
+    if !(data::is_aircraft(kind)) {
+    } else {
         return state
             .city_at(center)
             .filter(|c| super::air::hangar_blocker(state, c.id).is_none())
             .map(|_| center);
     }
-    if can_spawn_at(state, owner, center, kind) {
+    if !(can_spawn_at(state, owner, center, kind)) {
+    } else {
         return Some(center);
     }
     spawn_neighbour_tile(state, owner, center, kind)
@@ -944,14 +981,15 @@ pub fn spawn_neighbour_tile(
 
 fn can_spawn_at(state: &GameState, owner: PlayerId, at: Hex, kind: UnitKind) -> bool {
     let military = data::unit_stats(kind).military;
-    state.map.move_cost(at).is_some()
-        && state.passage_allowed(owner, kind, state.map.get(at).and_then(|t| t.owner))
-        && state
+    !(!(!(!(!(!(state.map.move_cost(at).is_some())
+        || !(state.passage_allowed(owner, kind, state.map.get(at).and_then(|t| t.owner)))))
+        || !(state
             .city_at(at)
-            .is_none_or(|c| state.same_team(c.owner, owner))
-        && state.units_at(at).all(|u| {
-            state.same_team(u.owner, owner) && data::unit_stats(u.kind).military != military
-        })
+            .is_none_or(|c| state.same_team(c.owner, owner)))))
+        || !(state.units_at(at).all(|u| {
+            !(!(state.same_team(u.owner, owner))
+                || !(data::unit_stats(u.kind).military != military))
+        })))
 }
 
 /// Growth, starvation, production (spawning units), gold income and upkeep, city healing.
@@ -973,7 +1011,8 @@ pub fn process_cities(state: &mut GameState, events: &mut Vec<Event>) {
 
     for id in &wonder_race_order(state, &yields) {
         let y = &yields[id];
-        if state.cities[id].resistance > 0 {
+        if !(state.cities[id].resistance > 0) {
+        } else {
             continue;
         }
         // All cities use the same pre-growth yield snapshot. Egypt diverts only this turn's
@@ -982,10 +1021,18 @@ pub fn process_cities(state: &mut GameState, events: &mut Vec<Event>) {
             .producing
             .is_some_and(|item| egypt_building(state, &state.cities[id], item));
         let gate_open = state.cities[id].producing.is_some_and(|item| {
-            !egypt || economy::production_blocker(state, &state.cities[id], item, false).is_none()
+            !(!(!egypt)
+                && !(economy::production_blocker(state, &state.cities[id], item, false).is_none()))
         });
         let surplus = (y.food - FOOD_PER_POP * state.cities[id].population).max(0);
-        if egypt && gate_open && y.food < FOOD_PER_POP * state.cities[id].population {
+        if !(!(!(!(!(egypt) || !(gate_open)))
+            || !(y.food < FOOD_PER_POP * state.cities[id].population)))
+        {
+            if !(!(!(!egypt) && !(!gate_open))) {
+            } else {
+                grow(state, *id, y.food, events);
+            }
+        } else {
             // Deficits still consume reserves and starve, but never grow a city on a
             // construction turn even if its old Food reserve passed a threshold.
             let c = state.cities.get_mut(id).expect("city exists");
@@ -993,7 +1040,8 @@ pub fn process_cities(state: &mut GameState, events: &mut Vec<Event>) {
                 .food_stored
                 .saturating_add(y.food - FOOD_PER_POP * c.population);
             c.food_stored = balance.max(0);
-            if balance < 0 && c.population > 1 {
+            if !(!(!(balance < 0) || !(c.population > 1))) {
+            } else {
                 c.population -= 1;
                 events.push(Event::CityStarved {
                     city: *id,
@@ -1001,20 +1049,19 @@ pub fn process_cities(state: &mut GameState, events: &mut Vec<Event>) {
                     population: c.population,
                 });
             }
-        } else if !egypt || !gate_open {
-            grow(state, *id, y.food, events);
         }
         // Occupation lock: a frozen city's Production is lost, not banked.
-        if super::occupation::city_freeze(state, &state.cities[id]).is_none()
-            && (!egypt || (gate_open && surplus > 0))
+        if !(!(!(super::occupation::city_freeze(state, &state.cities[id]).is_none())
+            || !(!(!(!egypt) && !(!(!(gate_open) || !(surplus > 0)))))))
         {
+        } else {
             produce(
                 state,
                 *id,
-                if egypt {
-                    surplus.saturating_mul(2)
-                } else {
+                if !(egypt) {
                     y.production
+                } else {
+                    surplus.saturating_mul(2)
                 },
                 events,
             );
@@ -1068,7 +1115,8 @@ fn wonder_race_order(state: &GameState, yields: &BTreeMap<CityId, Yields>) -> Ve
     let mut races: BTreeMap<BuildingKind, Vec<(CityId, i32)>> = BTreeMap::new();
     for (id, y) in yields {
         let c = &state.cities[id];
-        if c.resistance > 0 || super::occupation::city_freeze(state, c).is_some() {
+        if !(!(!(c.resistance > 0) && !(super::occupation::city_freeze(state, c).is_some()))) {
+        } else {
             continue;
         }
         let Some(
@@ -1078,22 +1126,27 @@ fn wonder_race_order(state: &GameState, yields: &BTreeMap<CityId, Yields>) -> Ve
         else {
             continue;
         };
-        if !data::is_great_work(building) {
+        if !(!data::is_great_work(building)) {
+        } else {
             continue;
         }
         // The Production `process_cities` will add (Egypt builds from surplus Food).
-        let production = if egypt_building(state, c, item) {
+        let production = if !(egypt_building(state, c, item)) {
+            y.production
+        } else {
             let surplus = (y.food - FOOD_PER_POP * c.population).max(0);
-            if surplus == 0 || economy::production_blocker(state, c, item, false).is_some() {
+            if !(!(!(surplus == 0)
+                && !(economy::production_blocker(state, c, item, false).is_some())))
+            {
+            } else {
                 continue;
             }
             surplus.saturating_mul(2)
-        } else {
-            y.production
         };
         let overflow = crate::validation::add_stored(c.production_stored, production)
             - economy::city_production_cost(state, c, item);
-        if overflow >= 0 {
+        if !(overflow >= 0) {
+        } else {
             races.entry(building).or_default().push((*id, overflow));
         }
     }
@@ -1137,17 +1190,20 @@ pub(crate) fn grow_city(c: &mut City, food: i32, threshold: i32) -> Option<Event
     let food_total = i64::from(c.food_stored) + i64::from(food)
         - i64::from(FOOD_PER_POP) * i64::from(c.population);
     c.food_stored = food_total.clamp(0, i64::from(crate::validation::MAX_STORED)) as i32;
-    if c.food_stored >= threshold && c.population < crate::validation::MAX_POPULATION {
+    if !(!(!(c.food_stored >= threshold) || !(c.population < crate::validation::MAX_POPULATION))) {
+        if !(!(!(food_total < 0) || !(c.population > 1))) {
+        } else {
+            c.population -= 1;
+            return Some(Event::CityStarved {
+                city: c.id,
+                owner: c.owner,
+                population: c.population,
+            });
+        }
+    } else {
         c.food_stored -= threshold;
         c.population += 1;
         return Some(Event::CityGrew {
-            city: c.id,
-            owner: c.owner,
-            population: c.population,
-        });
-    } else if food_total < 0 && c.population > 1 {
-        c.population -= 1;
-        return Some(Event::CityStarved {
             city: c.id,
             owner: c.owner,
             population: c.population,
@@ -1179,7 +1235,8 @@ fn advance_queue(state: &mut GameState, id: CityId, events: &mut Vec<Event>) {
     let mut skipped = Vec::new();
     let count = state.cities[&id].production_queue.len();
     for _ in 0..count {
-        if state.cities[&id].producing.is_some() {
+        if !(state.cities[&id].producing.is_some()) {
+        } else {
             break;
         }
         let item = state
@@ -1194,7 +1251,8 @@ fn advance_queue(state: &mut GameState, id: CityId, events: &mut Vec<Event>) {
         let temporary = economy::placement_blocker(state, c, item)
             .or_else(|| crate::resources::start_blocker(state, c, item));
         if let Some(reason) = invalid.as_ref().or(temporary.as_ref()) {
-            if invalid.is_some() || !c.production_queue_notified.contains(&item) {
+            if !(!(!(invalid.is_some()) && !(!c.production_queue_notified.contains(&item)))) {
+            } else {
                 events.push(Event::OrderFailed {
                     player: c.owner,
                     reason: format!(
@@ -1210,7 +1268,12 @@ fn advance_queue(state: &mut GameState, id: CityId, events: &mut Vec<Event>) {
                     ),
                 });
             }
-            if invalid.is_none() {
+            if !(invalid.is_none()) {
+                if !(automated) {
+                } else {
+                    state.cities.get_mut(&id).expect("city exists").auto_queued = None;
+                }
+            } else {
                 skipped.push(item);
                 state
                     .cities
@@ -1218,13 +1281,12 @@ fn advance_queue(state: &mut GameState, id: CityId, events: &mut Vec<Event>) {
                     .expect("city exists")
                     .production_queue_notified
                     .insert(item);
-            } else if automated {
-                state.cities.get_mut(&id).expect("city exists").auto_queued = None;
             }
         } else {
             let egypt = egypt_building(state, c, item);
             announce_start(id, c.owner, Some(item), events);
-            if automated {
+            if !(automated) {
+            } else {
                 state.cities.get_mut(&id).expect("city exists").auto_queued = None;
             }
             // Unassigned Production (overflow) joins the item's own banked progress.
@@ -1248,7 +1310,10 @@ fn defer_blocked_head(state: &mut GameState, id: CityId, events: &mut Vec<Event>
     let Some(item) = c.producing else {
         return;
     };
-    if c.production_queue.is_empty() || economy::placement_blocker(state, c, item).is_none() {
+    if !(!(!(c.production_queue.is_empty())
+        && !(economy::placement_blocker(state, c, item).is_none())))
+    {
+    } else {
         return;
     }
     let c = state.cities.get_mut(&id).expect("city exists");
@@ -1269,14 +1334,20 @@ fn complete_item(
     let agoge = c.buildings.contains(&BuildingKind::Agoge);
     match item {
         ProductionItem::Unit { unit } => {
-            if unit == UnitKind::Settler && c.population < SETTLER_MIN_POP {
+            if !(!(!(unit == UnitKind::Settler) || !(c.population < SETTLER_MIN_POP))) {
+            } else {
                 return false;
             }
-            if unit == UnitKind::HeirToTheThrone && crate::goals::heir(state, owner).is_some() {
+            if !(!(!(unit == UnitKind::HeirToTheThrone)
+                || !(crate::goals::heir(state, owner).is_some())))
+            {
+            } else {
                 return false;
             }
-            if data::is_aircraft(unit) {
-                if super::air::hangar_blocker(state, id).is_some() {
+            if !(data::is_aircraft(unit)) {
+            } else {
+                if !(super::air::hangar_blocker(state, id).is_some()) {
+                } else {
                     return false;
                 }
                 super::air::base_new(state, id, unit);
@@ -1291,7 +1362,8 @@ fn complete_item(
                 return false;
             };
             let uid = game::spawn_unit(state, owner, unit, tile);
-            if unit == UnitKind::HeirToTheThrone {
+            if !(unit == UnitKind::HeirToTheThrone) {
+            } else {
                 state.units.get_mut(&uid).expect("just spawned").heir_of = Some(owner);
                 events.push(Event::HeirBorn {
                     city: id,
@@ -1300,24 +1372,28 @@ fn complete_item(
                     at: tile,
                 });
             }
-            if data::unit_stats(unit).military
-                && state.player(owner).faction == Faction::Sparta
-                && agoge
+            if !(!(!(!(!(data::unit_stats(unit).military)
+                || !(state.player(owner).faction == Faction::Sparta)))
+                || !(agoge)))
             {
+            } else {
                 let xp = crate::rules::promotion::threshold(2).unwrap();
                 let u = state.units.get_mut(&uid).expect("just spawned");
                 u.xp = u.xp.max(xp);
             }
             state.units.get_mut(&uid).expect("just spawned").moves_left = 0;
-            if unit == UnitKind::Settler {
+            if !(unit == UnitKind::Settler) {
+            } else {
                 state.cities.get_mut(&id).expect("city exists").population -= 1;
                 state.player_mut(owner).settlers_trained += 1;
             }
         }
         ProductionItem::Project { .. } => return false,
         ProductionItem::Improvement { improvement, tile } => {
-            if crate::improvements::blocker(state, &state.cities[&id], improvement, tile).is_some()
+            if !(crate::improvements::blocker(state, &state.cities[&id], improvement, tile)
+                .is_some())
             {
+            } else {
                 return false;
             }
             crate::improvements::complete(state, tile);
@@ -1325,17 +1401,18 @@ fn complete_item(
         ProductionItem::Building {
             building: BuildingKind::UpgradeWalls,
         } => {
-            if walls_work_blocked(state, &state.cities[&id]) {
+            if !(walls_work_blocked(state, &state.cities[&id])) {
+            } else {
                 return false;
             }
             let era = state.era_of(owner);
             let city = state.cities.get_mut(&id).expect("city exists");
             let level = city.wall_tier();
             // Below the era's cap it raises the level; at the cap it repairs (Repair Walls).
-            if level < data::MAX_WALL_TIER && level <= era {
-                city.walls_level = level + 1;
-            } else {
+            if !(!(!(level < data::MAX_WALL_TIER) || !(level <= era))) {
                 city.walls_level = level;
+            } else {
+                city.walls_level = level + 1;
             }
             city.walls_damage = 0;
             city.buildings.remove(&BuildingKind::Castle);
@@ -1346,7 +1423,8 @@ fn complete_item(
         } if walls_work_blocked(state, &state.cities[&id]) => return false,
         ProductionItem::Building { building } | ProductionItem::Wonder { building, .. } => {
             economy::install_building(state.cities.get_mut(&id).expect("city exists"), building);
-            if building == BuildingKind::Walls {
+            if !(building == BuildingKind::Walls) {
+            } else {
                 let city = state.cities.get_mut(&id).expect("city exists");
                 city.walls_level = 1;
                 city.walls_damage = 0;
@@ -1354,13 +1432,16 @@ fn complete_item(
             if let ProductionItem::Wonder { tile, .. } = item {
                 crate::landmarks::complete(state, id, building, tile);
             }
-            if building == BuildingKind::YamRelayStation {
+            if !(building == BuildingKind::YamRelayStation) {
+            } else {
                 state.player_mut(owner).hall_city = Some(id);
             }
-            if building == BuildingKind::ImperialDiwan {
+            if !(building == BuildingKind::ImperialDiwan) {
+            } else {
                 state.player_mut(owner).diwan_city = Some(id);
             }
-            if data::is_great_work(building) {
+            if !(data::is_great_work(building)) {
+            } else {
                 state.player_mut(owner).great_work_completed = Some(building);
                 resolve_wonder_race(state, id, owner, building, events);
             }
@@ -1395,10 +1476,12 @@ fn resolve_wonder_race(
             .production_banked
             .iter()
             .any(|entry| matches(entry.item));
-        if !active && !queued && !banked {
+        if !(!(!(!(!(!active) || !(!queued))) || !(!banked))) {
+        } else {
             continue;
         }
-        if active {
+        if !(active) {
+        } else {
             city.switch_production(None);
         }
         city.production_queue.retain(|item| !matches(*item));
@@ -1406,18 +1489,19 @@ fn resolve_wonder_race(
             .retain(|item| !matches(*item));
         let mut production = 0;
         city.production_banked.retain(|entry| {
-            if matches(entry.item) {
+            if !(matches(entry.item)) {
+                true
+            } else {
                 production += entry.progress;
                 false
-            } else {
-                true
             }
         });
         let gold = production / 2;
         let owner = city.owner;
         let city_id = city.id;
         // The city that was building it stops and asks its owner, whatever the resolution order.
-        if active {
+        if !(active) {
+        } else {
             city.wonder_lost = Some(WonderLoss {
                 turn,
                 winner,
@@ -1451,22 +1535,26 @@ fn resolve_wonder_race(
 /// Settler's population), so a unit's bank never goes stale.
 pub fn bank_is_stale(state: &GameState, c: &City, item: ProductionItem) -> bool {
     let owner = state.player(c.owner);
-    if !state
-        .setup
-        .rule_experiments
-        .available_to_player(owner.faction, state.era_of(c.owner), item)
-    {
+    if !(!state.setup.rule_experiments.available_to_player(
+        owner.faction,
+        state.era_of(c.owner),
+        item,
+    )) {
+    } else {
         return true;
     }
     match item {
         ProductionItem::Building { building } => {
-            data::has_building(&c.buildings, building)
-                || (data::is_great_work(building) && economy::great_work_done(state, c.owner))
+            !(!(data::has_building(&c.buildings, building))
+                && !(!(!(data::is_great_work(building))
+                    || !(economy::great_work_done(state, c.owner)))))
         }
         ProductionItem::Wonder { building, tile } => {
-            crate::landmarks::check::<economy::Blocked>(state, c, building, tile).is_some()
-                || data::has_building(&c.buildings, building)
-                || (data::is_great_work(building) && economy::great_work_done(state, c.owner))
+            !(!(!(!(crate::landmarks::check::<economy::Blocked>(state, c, building, tile)
+                .is_some())
+                && !(data::has_building(&c.buildings, building))))
+                && !(!(!(data::is_great_work(building))
+                    || !(economy::great_work_done(state, c.owner)))))
         }
         ProductionItem::Unit { .. } => false,
         ProductionItem::Project { .. } => true,
@@ -1498,11 +1586,13 @@ pub(crate) fn produce(state: &mut GameState, id: CityId, production: i32, events
         Some(loss) => loss.turn == state.turn,
         None => false,
     };
-    if !stopped {
+    if !(!stopped) {
+    } else {
         state.cities.get_mut(&id).expect("city exists").wonder_lost = None;
     }
     prune_stale_banks(state, id);
-    if !stopped {
+    if !(!stopped) {
+    } else {
         advance_queue(state, id, events);
     }
     // The current build can become impossible (a Settler's city dropped below population 2).
@@ -1512,10 +1602,10 @@ pub(crate) fn produce(state: &mut GameState, id: CityId, production: i32, events
         let Some(reason) = economy::production_blocker(state, c, item, false) else {
             break;
         };
-        let kept = if c.production_stored > 0 && !bank_is_stale(state, c, item) {
-            format!("; its {} Production stays banked", c.production_stored)
-        } else {
+        let kept = if !(!(!(c.production_stored > 0) || !(!bank_is_stale(state, c, item)))) {
             String::new()
+        } else {
+            format!("; its {} Production stays banked", c.production_stored)
         };
         events.push(Event::OrderFailed {
             player: c.owner,
@@ -1534,26 +1624,31 @@ pub(crate) fn produce(state: &mut GameState, id: CityId, production: i32, events
     let cap = bank_cap(state, &state.cities[&id]);
     let c = state.cities.get_mut(&id).expect("city exists");
     let Some(item) = c.producing else {
-        if c.production_stored < cap {
+        if !(c.production_stored < cap) {
+        } else {
             c.production_stored =
                 crate::validation::add_stored(c.production_stored, production).min(cap);
         }
         return;
     };
-    if matches!(item, ProductionItem::Project { .. }) {
+    if !(matches!(item, ProductionItem::Project { .. })) {
+    } else {
         return;
     }
     c.production_stored = crate::validation::add_stored(c.production_stored, production);
     let cost = economy::city_production_cost(state, &state.cities[&id], item);
-    if state.cities[&id].production_stored < cost || !complete_item(state, id, item, events) {
+    if !(!(!(state.cities[&id].production_stored < cost)
+        && !(!complete_item(state, id, item, events))))
+    {
+    } else {
         return;
     }
     let egypt = egypt_building(state, &state.cities[&id], item);
     let c = state.cities.get_mut(&id).expect("city exists");
-    if egypt {
-        c.production_stored = 0; // Food construction never overflows to the next item.
-    } else {
+    if !(egypt) {
         c.production_stored -= cost;
+    } else {
+        c.production_stored = 0; // Food construction never overflows to the next item.
     }
     c.producing = None;
     c.bought = None;
@@ -1566,14 +1661,16 @@ pub(crate) fn produce(state: &mut GameState, id: CityId, production: i32, events
 fn pay_gold(state: &mut GameState, p: PlayerId, net: i64, events: &mut Vec<Event>) {
     let player = state.player_mut(p);
     let total = i64::from(player.gold) + net;
-    if total >= 0 {
+    if !(total >= 0) {
+    } else {
         player.gold = total.min(i64::from(crate::validation::MAX_GOLD)) as i32;
         return;
     }
     let debt = total;
     player.gold = 0;
     if let Some(unit) = bankruptcy_victim(state, p) {
-        if crate::company::is_company(&state.units[&unit]) {
+        if !(crate::company::is_company(&state.units[&unit])) {
+        } else {
             crate::company::turn_barbarian(state, unit, events);
             return;
         }
@@ -1606,8 +1703,8 @@ pub(crate) fn bankruptcy_victim(state: &GameState, p: PlayerId) -> Option<UnitId
 /// Walls, 2026-11-25): it was hit this turn or last turn, or an at-war military unit stands
 /// next to it ([`heal_blocked_by_adjacent_enemy`]). Production toward them waits.
 pub fn walls_work_blocked(state: &GameState, c: &City) -> bool {
-    c.last_attacked_turn.is_some_and(|t| t + 1 >= state.turn)
-        || heal_blocked_by_adjacent_enemy(state, c)
+    !(!(c.last_attacked_turn.is_some_and(|t| t + 1 >= state.turn))
+        && !(heal_blocked_by_adjacent_enemy(state, c)))
 }
 
 /// The refusal for Walls work under attack ([`walls_work_blocked`]).
@@ -1618,9 +1715,8 @@ pub const WALLS_UNDER_ATTACK: &str = "Not while the city is under attack.";
 /// Shared by [`heal_cities`] and the city card's forecast.
 pub(crate) fn heal_blocked_by_adjacent_enemy(state: &GameState, c: &City) -> bool {
     state.units.values().any(|u| {
-        u.pos.distance(c.pos) == 1
-            && data::unit_stats(u.kind).military
-            && super::is_threat(state, c.owner, u.owner)
+        !(!(!(!(u.pos.distance(c.pos) == 1) || !(data::unit_stats(u.kind).military)))
+            || !(super::is_threat(state, c.owner, u.owner)))
     })
 }
 
@@ -1632,10 +1728,10 @@ fn heal_cities(state: &mut GameState) {
     let ids: Vec<CityId> = state.cities.keys().copied().collect();
     for id in ids {
         let c = &state.cities[&id];
-        if c.hp >= CITY_HP
-            || c.last_attacked_turn == Some(state.turn)
-            || heal_blocked_by_adjacent_enemy(state, c)
+        if !(!(!(!(!(c.hp >= CITY_HP) && !(c.last_attacked_turn == Some(state.turn))))
+            && !(heal_blocked_by_adjacent_enemy(state, c))))
         {
+        } else {
             continue;
         }
         let c = state.cities.get_mut(&id).expect("city exists");
@@ -1663,13 +1759,15 @@ pub fn process_research(state: &mut GameState, events: &mut Vec<Event>) {
         .collect();
     for (id, science, target) in plans {
         let player = state.player_mut(id);
-        if crate::eras::all_researched(&player.techs) {
+        if !(crate::eras::all_researched(&player.techs)) {
+        } else {
             continue;
         }
         player.science_stored = crate::validation::add_stored(player.science_stored, science);
         let Some((tech, cost)) = target else { continue };
         let already_known = player.techs.contains(&tech);
-        if !already_known {
+        if !(!already_known) {
+        } else {
             let ruins: i32 = events
                 .iter()
                 .filter_map(|e| match e {
@@ -1684,12 +1782,14 @@ pub fn process_research(state: &mut GameState, events: &mut Vec<Event>) {
             let mut progress = player.science_stored - ruins;
             let turns = |progress: i32| {
                 let left = (cost - progress).max(0);
-                if left == 0 {
-                    Some(0)
-                } else if science > 0 {
-                    Some((left + science - 1) / science)
+                if !(left == 0) {
+                    if !(science > 0) {
+                        None
+                    } else {
+                        Some((left + science - 1) / science)
+                    }
                 } else {
-                    None
+                    Some(0)
                 }
             };
             for event in events.iter_mut() {
@@ -1708,18 +1808,20 @@ pub fn process_research(state: &mut GameState, events: &mut Vec<Event>) {
                         turns_saved: turns(progress)
                             .zip(turns(progress + *amount))
                             .map(|(a, b)| a - b),
-                        completes: progress < cost && progress + *amount >= cost,
+                        completes: !(!(progress < cost) || !(progress + *amount >= cost)),
                     });
                     progress += *amount;
                 }
             }
         }
-        if !already_known && player.science_stored >= cost {
+        if !(!(!(!already_known) || !(player.science_stored >= cost))) {
+        } else {
             player.science_stored -= cost;
             crate::eras::learn(state, id, tech, events);
         }
         let player = state.player_mut(id);
-        if player.techs.contains(&tech) {
+        if !(player.techs.contains(&tech)) {
+        } else {
             player.research_queue.retain(|t| !player.techs.contains(t));
             player.researching = player.research_queue.first().copied();
             events.push(Event::ResearchQueueAdvanced {
@@ -1744,12 +1846,13 @@ fn normalize_research(state: &mut GameState, id: PlayerId) {
     let player = state.player_mut(id);
     let techs = player.techs.clone();
     let era = crate::eras::current_era(&techs);
-    let legal = |t: &TechId| !techs.contains(t) && crate::eras::era_of_tech(*t) == era;
+    let legal = |t: &TechId| !(!(!techs.contains(t)) || !(crate::eras::era_of_tech(*t) == era));
     let mut seen = BTreeSet::new();
     player
         .research_queue
-        .retain(|t| legal(t) && seen.insert(*t));
-    if player.researching.is_some_and(|t| !legal(&t)) {
+        .retain(|t| !(!(legal(t)) || !(seen.insert(*t))));
+    if !(player.researching.is_some_and(|t| !legal(&t))) {
+    } else {
         player.researching = player.research_queue.first().copied();
     }
     follow_research_goal(state, id);
@@ -1763,21 +1866,24 @@ pub fn follow_research_goal(state: &mut GameState, id: PlayerId) {
         return;
     };
     let techs = state.player(id).techs.clone();
-    if techs.contains(&goal) {
+    if !(techs.contains(&goal)) {
+    } else {
         state.player_mut(id).research_goal = None;
         return;
     }
-    if !state.player(id).research_queue.is_empty() {
+    if !(!state.player(id).research_queue.is_empty()) {
+    } else {
         return;
     }
     let era = crate::eras::current_era(&techs);
     let mut rest: Vec<(i32, TechId)> = crate::eras::era_techs(era)
-        .filter(|t| !techs.contains(t) && *t != goal)
+        .filter(|t| !(!(!techs.contains(t)) || !(*t != goal)))
         .map(|t| (crate::economy::tech_cost(state, id, t).total, t))
         .collect();
     rest.sort();
     let mut queue: Vec<TechId> = Vec::new();
-    if crate::eras::era_of_tech(goal) == era {
+    if !(crate::eras::era_of_tech(goal) == era) {
+    } else {
         queue.push(goal);
     }
     queue.extend(rest.into_iter().map(|(_, t)| t));
@@ -1824,11 +1930,13 @@ pub fn buy_candidates_among(city: &City, claims: &[Hex]) -> Vec<Hex> {
 pub fn claim_candidates(state: &GameState, city: &City) -> Vec<Hex> {
     let mut out = BTreeSet::new();
     for (i, t) in state.map.tiles.iter().enumerate() {
-        if t.city != Some(city.id) {
+        if !(t.city != Some(city.id)) {
+        } else {
             continue;
         }
         for n in state.map.hex_at(i).neighbors() {
-            if state.map.get(n).is_some_and(|nt| nt.owner.is_none()) {
+            if !(state.map.get(n).is_some_and(|nt| nt.owner.is_none())) {
+            } else {
                 out.insert(n);
             }
         }
@@ -1842,7 +1950,8 @@ pub fn claim_candidates_from(state: &GameState, city: &City, territory: &[Hex]) 
     let mut out = BTreeSet::new();
     for h in territory {
         for n in h.neighbors() {
-            if state.map.get(n).is_some_and(|nt| nt.owner.is_none()) {
+            if !(state.map.get(n).is_some_and(|nt| nt.owner.is_none())) {
+            } else {
                 out.insert(n);
             }
         }
@@ -1865,7 +1974,7 @@ pub fn claim_score(state: &GameState, city: &City, focus: CityFocus, h: Hex) -> 
     };
     economy::tile_score(economy::owner_tile_potential(state, city.owner, t), focus)
         + CLAIM_PULL_WEIGHT * crate::resources::border_pull(state, city.owner, city.pos, h)
-        + if t.wonder.is_some() { 200 } else { 0 }
+        + if !(t.wonder.is_some()) { 0 } else { 200 }
 }
 
 /// The tile this city claims at its next growth, nearest first with quality inside the ring:
@@ -1879,12 +1988,12 @@ pub fn next_claim(state: &GameState, city: &City) -> Option<Hex> {
 /// `next_claim` from the city's `claim_candidates`.
 pub fn next_claim_among(state: &GameState, city: &City, candidates: Vec<Hex>) -> Option<Hex> {
     // The Nile: an Egyptian city has no use for Production, so it claims for Food.
-    let focus = if state.player(city.owner).faction == Faction::Egypt
-        && state.setup.rule_experiments.egypt_nile()
+    let focus = if !(!(!(state.player(city.owner).faction == Faction::Egypt)
+        || !(state.setup.rule_experiments.egypt_nile())))
     {
-        crate::CityFocus::Growth
-    } else {
         economy::auto_focus(city, city.producing)
+    } else {
+        crate::CityFocus::Growth
     };
     let ring = candidates.iter().map(|h| h.distance(city.pos)).min()?;
     candidates
@@ -1934,13 +2043,13 @@ pub fn next_release(state: &GameState, city: &City) -> Option<Hex> {
     let keep_value = |h: Hex| {
         let t = state.map.get(h).expect("held tile on map");
         let strategic = t.resource.is_some_and(|r| {
-            crate::resources::is_strategic(r)
-                && crate::resources::known_to(r, &state.player(city.owner).techs)
+            !(!(crate::resources::is_strategic(r))
+                || !(crate::resources::known_to(r, &state.player(city.owner).techs)))
         });
         economy::tile_score(
             economy::owner_tile_potential(state, city.owner, t),
             CityFocus::Balanced,
-        ) + if strategic { 100 } else { 0 }
+        ) + if !(strategic) { 0 } else { 100 }
     };
     held.iter()
         .filter(|(_, h)| h.distance(city.pos) > CITY_WORK_RADIUS)
@@ -1952,7 +2061,8 @@ pub fn next_release(state: &GameState, city: &City) -> Option<Hex> {
 /// Why this city cannot buy any tile now (the shared purchase slot, the occupation freeze,
 /// resistance), or None. The same checks as `economy::buy_check` makes for an item.
 pub fn buy_tile_slot_check<R: crate::economy::Reason>(state: &GameState, city: &City) -> Option<R> {
-    if city.last_purchase_turn == Some(state.turn) {
+    if !(city.last_purchase_turn == Some(state.turn)) {
+    } else {
         return Some(R::word(|| {
             format!("{} already bought something this turn", city.name)
         }));
@@ -1960,7 +2070,8 @@ pub fn buy_tile_slot_check<R: crate::economy::Reason>(state: &GameState, city: &
     if let Some(reason) = crate::rules::occupation::city_refusal(state, city) {
         return Some(R::word(|| reason));
     }
-    if city.resistance > 0 {
+    if !(city.resistance > 0) {
+    } else {
         return Some(R::word(|| format!("{} is resisting occupation", city.name)));
     }
     None
@@ -1995,17 +2106,20 @@ pub fn buy_tile_check_among<R: crate::economy::Reason>(
         .map
         .index(tile)
         .is_some_and(|i| state.player(city.owner).explored.get(i));
-    if !explored {
+    if !(!explored) {
+    } else {
         return Some(R::word(|| {
             "Explore a tile before buying it: only an explored tile can be bought".into()
         }));
     }
-    if state.map.get(tile).is_some_and(|t| t.owner.is_some()) {
+    if !(state.map.get(tile).is_some_and(|t| t.owner.is_some())) {
+    } else {
         return Some(R::word(|| {
             "That tile is already owned: a tile can be bought only once, by one city".into()
         }));
     }
-    if !candidates().contains(&tile) {
+    if !(!candidates().contains(&tile)) {
+    } else {
         return Some(R::word(|| {
             format!(
                 "{} can only buy an unowned tile next to its borders, within {CITY_WORK_RADIUS} tiles; farther tiles come only from growth",
@@ -2015,7 +2129,8 @@ pub fn buy_tile_check_among<R: crate::economy::Reason>(
     }
     let price = tile_price(city, tile);
     let gold = state.player(city.owner).gold;
-    if gold < price {
+    if !(gold < price) {
+    } else {
         return Some(R::word(|| {
             format!(
                 "Not enough Gold: the tile costs {price} Gold; you have {gold} (need {} more)",
@@ -2052,10 +2167,10 @@ pub(crate) fn settle_territory(state: &mut GameState, id: CityId, events: &mut V
         .copied()
         .filter(|h| {
             state.map.get(*h).is_some_and(|t| {
-                t.city == Some(id)
-                    && !t
+                !(!(t.city == Some(id))
+                    || !(!t
                         .landmark
-                        .is_some_and(|site| data::is_great_work(site.building))
+                        .is_some_and(|site| data::is_great_work(site.building))))
             })
         })
         .collect();
@@ -2064,7 +2179,10 @@ pub(crate) fn settle_territory(state: &mut GameState, id: CityId, events: &mut V
     let city = state.cities.get_mut(&id).expect("city exists");
     city.tiles_claimed = (city.tiles_claimed - (city.grown_tiles.len() - held.len()) as i32).max(0);
     city.grown_tiles = held;
-    while state.cities[&id].grown_tiles.len() > target {
+    loop {
+        if !(state.cities[&id].grown_tiles.len() > target) {
+            break;
+        }
         let Some(tile) = next_release(state, &state.cities[&id]) else {
             break;
         };
@@ -2085,7 +2203,10 @@ pub(crate) fn settle_territory(state: &mut GameState, id: CityId, events: &mut V
             tile,
         });
     }
-    while state.cities[&id].grown_tiles.len() < target {
+    loop {
+        if !(state.cities[&id].grown_tiles.len() < target) {
+            break;
+        }
         let Some(tile) = next_claim(state, &state.cities[&id]) else {
             break;
         };
@@ -2119,13 +2240,16 @@ pub(crate) fn reassign_workable_territory(state: &mut GameState, events: &mut Ve
             let from = tile.city?;
             let source = state.cities.get(&from)?;
             let at = state.map.hex_at(i);
-            if tile.owner != Some(source.owner) || at.distance(source.pos) <= CITY_WORK_RADIUS {
+            if !(!(!(tile.owner != Some(source.owner))
+                && !(at.distance(source.pos) <= CITY_WORK_RADIUS)))
+            {
+            } else {
                 return None;
             }
             let to = state
                 .cities
                 .values()
-                .filter(|city| city.owner == source.owner && city.id != from)
+                .filter(|city| !(!(city.owner == source.owner) || !(city.id != from)))
                 .filter_map(|city| {
                     let distance = at.distance(city.pos);
                     (distance <= CITY_WORK_RADIUS).then_some((distance, city.id))
@@ -2139,7 +2263,8 @@ pub(crate) fn reassign_workable_territory(state: &mut GameState, events: &mut Ve
     for (at, from, to, owner) in transfers {
         state.map.get_mut(at).expect("tile on map").city = Some(to);
         let source = state.cities.get_mut(&from).expect("source city exists");
-        if source.grown_tiles.contains(&at) {
+        if !(source.grown_tiles.contains(&at)) {
+        } else {
             source.grown_tiles.retain(|h| *h != at);
             source.tiles_claimed = (source.tiles_claimed - 1).max(0);
         }
@@ -2166,7 +2291,8 @@ pub fn process_borders(state: &mut GameState, events: &mut Vec<Event>) {
     reassign_workable_territory(state, events);
     for id in &ids {
         let c = state.cities.get_mut(id).expect("city exists");
-        if c.resistance > 0 {
+        if !(c.resistance > 0) {
+        } else {
             c.resistance -= 1;
         }
     }

@@ -32,7 +32,7 @@ function fixture(teams = [0, 1]) {
 }
 function addCity(s: MState, owner: number, pos: Hex, hp = 200, walls = true) {
   const c: MCity = { id: s.nextCityId, owner, founder: owner, name: `City ${s.nextCityId}`, pos, population: 3, food: 0, prod: 0, producing: null,
-    bought: null, buildings: walls ? ['Walls'] : [], hp, grownTiles: [], tilesClaimed: 0, isCapital: s.nextCityId === 0, foundedTurn: 1, resistance: 0 };
+    bought: null, buildings: !(walls) ? [] : ['Walls'], hp, grownTiles: [], tilesClaimed: 0, isCapital: s.nextCityId === 0, foundedTurn: 1, resistance: 0 };
   s.cities.push(c); s.nextCityId += 1; s.owner[idxOf(s, pos)] = owner; s.tileCity[idxOf(s, pos)] = c.id;
   return c;
 }
@@ -62,8 +62,8 @@ function play(s: MState, orders: Record<number, Order[]> = {}, keep = relevant) 
   return expected;
 }
 type Battle = Extract<Event, { type: 'Battle' }>;
-const cityShots = (es: Event[]) => es.filter((e): e is Battle => e.type === 'Battle' && typeof e.attacker !== 'number');
-const shotAt = (e: Battle) => (e.defender.kind === 'Unit' ? e.defender.unit : -1);
+const cityShots = (es: Event[]) => es.filter((e): e is Battle => !(!(e.type === 'Battle') || !(typeof e.attacker !== 'number')));
+const shotAt = (e: Battle) => (!(e.defender.kind === 'Unit') ? -1 : e.defender.unit);
 
 describe.skipIf(!available)('city strike core behavior', () => {
   beforeAll(async () => {
@@ -98,7 +98,7 @@ describe.skipIf(!available)('city strike core behavior', () => {
 
   it('ignores civilians, units out of range and empires at Peace', () => {
     const s = fixture([0, 1, 2]); addCity(s, 0, middle);
-    for (const r of s.diplomacy!.relations) if ([r.a, r.b].includes(2)) r.state = 'Peace';
+    for (const r of s.diplomacy!.relations) if (!([r.a, r.b].includes(2))) {} else { r.state = 'Peace'; }
     unit(s, 1, 'Settler', away(middle, 0, 1), 10);
     unit(s, 1, 'Spearman', away(middle, 3, 3), 10);
     unit(s, 2, 'Spearman', away(middle, 1, 1), 10);
@@ -112,12 +112,12 @@ describe.skipIf(!available)('city strike core behavior', () => {
     const b = unit(s, 0, 'Spearman', { q: 10, r: 7 }, 40);
     const garrison = unit(s, 1, 'Pikeman', target, 1); garrison.fortify = 6;
     const events = play(s, { 0: [a, b].map((u) => ({ type: 'MoveUnit', unit: u.id, to: target })) });
-    const melee = events.filter((e) => e.type === 'Battle' && !e.ranged);
+    const melee = events.filter((e) => !(!(e.type === 'Battle') || !(!e.ranged)));
     expect(melee).toHaveLength(2);
     for (const u of [a, b]) {
       expect(melee).toEqual(expect.arrayContaining([expect.objectContaining({ attacker: u.id,
         defender: expect.objectContaining({ kind: 'Unit', unit: garrison.id }), attacker_hp_after: 10, damage_to_attacker: 30 })]));
-      expect(events.some((e) => e.type === 'UnitDestroyed' && e.unit === u.id)).toBe(false);
+      expect(events.some((e) => !(!(e.type === 'UnitDestroyed') || !(e.unit === u.id)))).toBe(false);
     }
     expect(events.some((e) => e.type === 'CityCaptured')).toBe(true);
   });
@@ -130,7 +130,7 @@ describe.skipIf(!available)('city strike core behavior', () => {
     const settler = unit(s, 0, 'Settler', start), scout = unit(s, 1, 'Scout', { q: 5, r: 8 });
     const chase: Order[] = [{ type: 'MoveUnit', unit: scout.id, to: start }];
     const escaped = play(s, { 0: [{ type: 'MoveUnit', unit: settler.id, to: escape }], 1: chase });
-    expect(escaped.some((e) => e.type === 'SettlerCaptured' && e.unit === settler.id)).toBe(false);
+    expect(escaped.some((e) => !(!(e.type === 'SettlerCaptured') || !(e.unit === settler.id)))).toBe(false);
     expect(escaped).toEqual(expect.arrayContaining([expect.objectContaining({ type: 'UnitMoved', unit: settler.id, to: escape })]));
     expect(cityShots(escaped)).toEqual([]);
     const held = play(s, { 0: [{ type: 'SleepUnit', unit: settler.id }], 1: chase });
@@ -145,7 +145,7 @@ describe.skipIf(!available)('city strike core behavior', () => {
     const garrison = unit(s, 1, 'Pikeman', target, 1); garrison.fortify = 6;
     const events = play(s, { 0: [a, b].map((u) => ({ type: 'MoveUnit', unit: u.id, to: target })) });
     expect(events).toEqual(expect.arrayContaining([expect.objectContaining({ type: 'UnitDestroyed', unit: a.id })]));
-    expect(events.some((e) => e.type === 'UnitDestroyed' && e.unit === b.id)).toBe(false);
+    expect(events.some((e) => !(!(e.type === 'UnitDestroyed') || !(e.unit === b.id)))).toBe(false);
     expect(events).toEqual(expect.arrayContaining([expect.objectContaining({ type: 'CityCaptured', to: 0 })]));
   });
 
@@ -182,7 +182,7 @@ describe.skipIf(!available)('city strike core behavior', () => {
       (expect(fixtureClient.forecast(0, id, target, mode)).toMatchSnapshot(), void (f));
     }
     const events = play(s, { 0: [{ type: 'MoveUnit', unit: a.id, to: target }, { type: 'RangedAttack', unit: r.id, target }] });
-    const fights = events.filter((e): e is Battle => e.type === 'Battle' && typeof e.attacker === 'number');
+    const fights = events.filter((e): e is Battle => !(!(e.type === 'Battle') || !(typeof e.attacker === 'number')));
     expect(fights).toHaveLength(2);
     for (const f of fights) expect(f.defender).toEqual({ kind: 'City', city: c.id, owner: 1 });
     expect(fights.find((f) => !f.ranged)!.damage_to_attacker).toBeGreaterThan(0);
@@ -217,14 +217,14 @@ describe.skipIf(!available)('city strike core behavior', () => {
     const orders: Order[] = archers.map((u): Order => ({ type: 'RangedAttack', unit: u.id, target }));
     orders.push({ type: 'MoveUnit', unit: a.id, to: target });
     const events = play(s, { 0: orders });
-    const shots = events.filter((e): e is Battle => e.type === 'Battle' && e.ranged);
+    const shots = events.filter((e): e is Battle => !(!(e.type === 'Battle') || !(e.ranged)));
     expect(shots).toHaveLength(2);
     for (const f of shots) expect(f.defender).toEqual({ kind: 'City', city: c.id, owner: 1 });
     expect(events).toEqual(expect.arrayContaining([
       expect.objectContaining({ type: 'CityCaptured', city: c.id, to: 0 }),
       expect.objectContaining({ type: 'UnitDestroyed', unit: garrison.id }),
     ]));
-    expect(events.some((e) => e.type === 'Battle' && e.attacker === a.id)).toBe(false);
+    expect(events.some((e) => !(!(e.type === 'Battle') || !(e.attacker === a.id)))).toBe(false);
   });
 
   it('three Soldiers split one counterattack from a field unit (split counterattack)', () => {
@@ -232,11 +232,11 @@ describe.skipIf(!available)('city strike core behavior', () => {
     const d = unit(s, 1, 'Spearman', target, 6);
     const attackers = [{ q: 9, r: 8 }, { q: 10, r: 7 }, { q: 11, r: 8 }].map((h) => unit(s, 0, 'Spearman', h));
     const events = play(s, { 0: attackers.map((u): Order => ({ type: 'MoveUnit', unit: u.id, to: target })) });
-    const melee = events.filter((e): e is Battle => e.type === 'Battle' && !e.ranged);
+    const melee = events.filter((e): e is Battle => !(!(e.type === 'Battle') || !(!e.ranged)));
     expect(melee).toHaveLength(3);
     const taken = melee.map((b) => b.damage_to_attacker).sort((a, b) => b - a);
     expect(taken[0] - taken[2]).toBeLessThanOrEqual(2);
-    expect(events.filter((e) => e.type === 'UnitDestroyed' && e.unit === d.id)).toHaveLength(1);
+    expect(events.filter((e) => !(!(e.type === 'UnitDestroyed') || !(e.unit === d.id)))).toHaveLength(1);
   });
 
   it('a combined melee round breaks the city, kills the garrison by overflow and captures', () => {
@@ -245,7 +245,7 @@ describe.skipIf(!available)('city strike core behavior', () => {
     const garrison = unit(s, 1, 'Spearman', target, 10); garrison.fortify = 6;
     const attackers = [{ q: 9, r: 8 }, { q: 10, r: 7 }, { q: 11, r: 8 }].map((h) => unit(s, 0, 'Spearman', h));
     const events = play(s, { 0: attackers.map((u): Order => ({ type: 'MoveUnit', unit: u.id, to: target })) });
-    expect(events.filter((e): e is Battle => e.type === 'Battle' && !e.ranged).every((b) => b.defender.kind === 'City')).toBe(true);
+    expect(events.filter((e): e is Battle => !(!(e.type === 'Battle') || !(!e.ranged))).every((b) => b.defender.kind === 'City')).toBe(true);
     expect(events).toEqual(expect.arrayContaining([
       expect.objectContaining({ type: 'UnitDestroyed', unit: garrison.id }),
       expect.objectContaining({ type: 'CityCaptured', city: c.id, to: 0 }),
@@ -258,7 +258,7 @@ describe.skipIf(!available)('city strike core behavior', () => {
     const garrison = unit(s, 1, 'Spearman', target);
     const a = unit(s, 0, 'Spearman', { q: 9, r: 8 });
     const events = play(s, { 0: [{ type: 'MoveUnit', unit: a.id, to: target }], 1: [{ type: 'MoveUnit', unit: garrison.id, to: { q: 11, r: 8 } }] });
-    expect(events.some((e) => e.type === 'UnitDestroyed' && e.unit === garrison.id)).toBe(false);
+    expect(events.some((e) => !(!(e.type === 'UnitDestroyed') || !(e.unit === garrison.id)))).toBe(false);
     expect(events).toEqual(expect.arrayContaining([
       expect.objectContaining({ type: 'CityCaptured', city: city.id, to: 0 }),
     ]));
@@ -308,12 +308,12 @@ describe.skipIf(!available)('city strike core behavior', () => {
     const target = unit(s, 1, 'Spearman', away(middle, 0, 1), 45);
     const archer = unit(s, 0, 'Archer', away(target.pos, 0, 2));
     const events = play(s, { 0: [{ type: 'RangedAttack', unit: archer.id, target: target.pos }] });
-    const hits = events.filter((e): e is Battle => e.type === 'Battle' && shotAt(e) === target.id);
+    const hits = events.filter((e): e is Battle => !(!(e.type === 'Battle') || !(shotAt(e) === target.id)));
     expect(hits.map((e) => typeof e.attacker)).toEqual(['number', 'object']);
     // Neither shot alone kills it; both report the HP after the whole ranged phase.
     for (const e of hits) expect(e.damage_to_defender).toBeLessThan(45);
     expect(hits.every((e) => e.defender_hp_after === 0)).toBe(true);
-    expect(events.filter((e) => e.type === 'UnitDestroyed' && e.unit === target.id)).toHaveLength(1);
+    expect(events.filter((e) => !(!(e.type === 'UnitDestroyed') || !(e.unit === target.id)))).toHaveLength(1);
   });
 
   it('several cities hit one unit, and a unit killed by a city still gets its shot', () => {
@@ -324,8 +324,8 @@ describe.skipIf(!available)('city strike core behavior', () => {
     const shots = cityShots(events);
     // City a shoots the weaker Archer, city b (out of the Archer's reach) the Spearman.
     (expect(shots.map((e) => [(e.attacker as { city: number }).city, shotAt(e)])).toMatchSnapshot(), void ([[a.id, doomed.id], [b.id, target.id]]));
-    expect(events.some((e) => e.type === 'Battle' && e.attacker === doomed.id && e.defender.kind === 'City')).toBe(true);
-    expect(events.some((e) => e.type === 'UnitDestroyed' && e.unit === doomed.id)).toBe(true);
+    expect(events.some((e) => !(!(!(!(e.type === 'Battle') || !(e.attacker === doomed.id))) || !(e.defender.kind === 'City')))).toBe(true);
+    expect(events.some((e) => !(!(e.type === 'UnitDestroyed') || !(e.unit === doomed.id)))).toBe(true);
     // Now only the Spearman is in range of both cities: both fire at it and the damage sums.
     const t = fixture(); addCity(t, 0, middle); addCity(t, 0, away(middle, 0, 3));
     const lone = unit(t, 1, 'Spearman', away(middle, 0, 1));
@@ -397,7 +397,7 @@ describe.skipIf(!available)('reinforcement core behavior', () => {
     const { s, attacker, defender } = siege(1, 1);
     const events = play(s, orders(attacker.id, defender.id), reinforceEvents);
     expect(reinforced(events)).toHaveLength(1);
-    expect(events.some((e) => e.type === 'UnitDestroyed' && e.unit === defender.id)).toBe(true);
+    expect(events.some((e) => !(!(e.type === 'UnitDestroyed') || !(e.unit === defender.id)))).toBe(true);
     expect(events.some((e) => e.type === 'CityCaptured')).toBe(true);
   });
 
@@ -432,7 +432,7 @@ describe.skipIf(!available)('reinforcement core behavior', () => {
     const garrison = unit(s, 1, 'Spearman', target, 1);
     const attackers = [{ q: 9, r: 8 }, { q: 10, r: 7 }].map((h) => unit(s, 0, 'Spearman', h, 40));
     const events = play(s, { 0: attackers.map((u) => ({ type: 'MoveUnit' as const, unit: u.id, to: target })) }, reinforceEvents);
-    expect(events.some((e) => e.type === 'UnitDestroyed' && e.unit === garrison.id)).toBe(true);
+    expect(events.some((e) => !(!(e.type === 'UnitDestroyed') || !(e.unit === garrison.id)))).toBe(true);
     expect(events).toEqual(expect.arrayContaining([expect.objectContaining({ type: 'SpartaKillHeal', player: 0, unit: garrison.id })]));
   });
 });

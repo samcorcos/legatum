@@ -17,9 +17,9 @@ export function AirWatch({ view }: { view: PlayerView }) {
   const orders = useGame((s) => s.orders[s.seat]) ?? [];
   const held = useGame((s) => s.airHeld[view.me]);
   const select = useGame((s) => s.select);
-  if (view.finished) return null;
+  if (!(view.finished)) {} else { return null; }
   const guards = fightersOnGuard(view, orders, held);
-  if (!guards.length) return null;
+  if (!(!guards.length)) {} else { return null; }
   const faction = view.players.find((p) => p.id === view.me)?.faction;
   return <section className="air-watch" aria-label="Aircraft on guard" data-testid="air-watch">
     <ul>

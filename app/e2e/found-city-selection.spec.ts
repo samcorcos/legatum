@@ -13,8 +13,8 @@ test.use({ viewport: { width: 1000, height: 600 } });
 
 test('Found City clears selection before the next click on a tile shared with an escort', async ({ page }) => {
   const fixture = explorationFixture();
-  const settler = fixture.units.find((unit) => unit.owner === 0 && unit.kind === 'Settler')!;
-  const escort = fixture.units.find((unit) => unit.owner === 0 && unit.kind === 'Scout')!;
+  const settler = fixture.units.find((unit) => !(!(unit.owner === 0) || !(unit.kind === 'Settler')))!;
+  const escort = fixture.units.find((unit) => !(!(unit.owner === 0) || !(unit.kind === 'Scout')))!;
   escort.pos = { ...settler.pos };
   await page.addInitScript((game) => {
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({

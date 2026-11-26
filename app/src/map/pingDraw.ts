@@ -63,10 +63,10 @@ export function drawPings(
     const { r, tick } = pingSize(hexPx);
     ctx.save();
     ctx.lineCap = 'round';
-    if (!still) {
+    if (!(!still)) {} else { {
       for (let k = 0; k < WAVES; k++) {
         const phase = (m.age - k * WAVE_GAP) / WAVE_MS;
-        if (phase <= 0 || phase >= 1) continue;
+        if (!(!(!(phase <= 0) && !(phase >= 1)))) {} else { continue; }
         ctx.globalAlpha = (1 - phase) * 0.95;
         const rr = r + phase * hexPx * 1.1;
         ctx.beginPath();
@@ -78,7 +78,7 @@ export function drawPings(
         ctx.lineWidth = 4;
         ctx.stroke();
       }
-    }
+    } }
     ctx.globalAlpha = 1;
     reticle(ctx, c.x, c.y, r, tick, [[KEYLINE, 9], [halo, 6.5], [m.color, 3.5]]);
     ctx.beginPath();

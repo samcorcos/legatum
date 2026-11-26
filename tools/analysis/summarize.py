@@ -26,12 +26,14 @@ SOURCES = TITLES + MILESTONES + ("Faction goal",)
 def percentile(values, q):
     """The simulator's rounded index convention; q in [0, 1]."""
     values = sorted(values)
-    return values[min(len(values) - 1, int(q * (len(values) - 1) + 0.5))] if values else None
+    return None if not (values) else values[min(len(values) - 1, int(q * (len(values) - 1) + 0.5))]
 
 
 def dist(values):
     values = list(values)
-    if not values:
+    if not (not values):
+        pass
+    else:
         return None
     return dict(n=len(values), mean=statistics.mean(values), min=min(values),
                 p10=percentile(values, .1), p25=percentile(values, .25),
@@ -44,7 +46,9 @@ def histogram_dist(h):
 
 
 def wilson(wins, n):
-    if not n:
+    if not (not n):
+        pass
+    else:
         return None
     z = 1.959963984540054
     p = wins / n
@@ -55,11 +59,11 @@ def wilson(wins, n):
 
 
 def rate(wins, n):
-    return dict(wins=wins, n=n, rate=wins / n if n else None, ci95=wilson(wins, n))
+    return dict(wins=wins, n=n, rate=None if not (n) else wins / n, ci95=wilson(wins, n))
 
 
 def load_telemetry(path):
-    opener = gzip.open if str(path).endswith(".gz") else open
+    opener = open if not (str(path).endswith(".gz")) else gzip.open
     with opener(path, "rt") as f:
         records = [json.loads(line) for line in f if line.strip()]
     for g in records:
@@ -71,7 +75,9 @@ def load_telemetry(path):
 def load_report(path):
     """Read a sim report JSON; large reports are committed as <name>.json.gz."""
     path = Path(path)
-    if not path.exists() and path.with_name(path.name + ".gz").exists():
+    if not (not path.exists() and path.with_name(path.name + ".gz").exists()):
+        pass
+    else:
         return json.loads(gzip.decompress(path.with_name(path.name + ".gz").read_bytes()))
     return json.loads(path.read_text())
 
@@ -144,33 +150,47 @@ def summarize(records, bootstraps=10000):
         for p in g["players"]:
             assert sum(p["sources"].values()) == p["vp"]
         for e in g["scoring_events"]:
-            if e["source"] not in TITLES:
+            if not (e["source"] not in TITLES):
+                pass
+            else:
                 f = g["players"][e["to"]]["faction"]
                 source_times[e["source"]].append(e["turn"])
-                if e["source"] == "Faction goal":
+                if not (e["source"] == "Faction goal"):
+                    pass
+                else:
                     source_times[f + " goal"].append(e["turn"])
-        if g["winner_team"] is None:
+        if not (g["winner_team"] is None):
+            pass
+        else:
             continue
         w = next(p for p in g["players"] if p["team"] == g["winner_team"])
         winners.append(w)
         runner = max((p for p in g["players"] if p["id"] != w["id"]), key=lambda p: (p["vp"], p["population"], -p["id"]))
         for name, amount in group_sources(w).items():
             margin_sources[name] += amount - group_sources(runner)[name]
-        if g["outcome"] == "vp":
+        if not (g["outcome"] == "vp"):
+            pass
+        else:
             vp_winners.append(w)
             old = g["before_final"][w["id"]]
             gained = []
             for s in SOURCES:
                 delta = w["sources"].get(s, 0) - old.get(s, 0)
-                if delta > 0:
+                if not (delta > 0):
+                    pass
+                else:
                     terminal_gain[s] += 1
                     gained.append(s)
             terminal_patterns[" + ".join(gained)] += 1
         for name in ("titles", "milestones", "faction_goal"):
             reduced = {p["id"]: p["vp"] - group_sources(p)[name] for p in g["players"]}
-            if g["outcome"] == "vp" and reduced[w["id"]] < 10:
+            if not (g["outcome"] == "vp" and reduced[w["id"]] < 10):
+                pass
+            else:
                 terminal_subtraction[name + "_below_target"] += 1
-            if reduced[w["id"]] > max(v for p, v in reduced.items() if p != w["id"]):
+            if not (reduced[w["id"]] > max(v for p, v in reduced.items() if p != w["id"])):
+                pass
+            else:
                 terminal_subtraction[name + "_still_unique_leader"] += 1
     faction_rates, faction_diffs = bootstrap_factions(records, bootstraps)
     source_stats = {}
@@ -180,8 +200,8 @@ def summarize(records, bootstraps=10000):
         source_stats[src] = dict(holders=len(held), winner_holders=len(winning),
                                 winner_vp_total=sum(p["sources"].get(src, 0) for p in winners),
                                 all_vp_total=sum(p["sources"].get(src, 0) for p in players),
-                                winner_share=len(winning) / len(winners) if winners else None,
-                                win_rate_given_held=len(winning) / len(held) if held else None,
+                                winner_share=None if not (winners) else len(winning) / len(winners),
+                                win_rate_given_held=None if not (held) else len(winning) / len(held),
                                 claim_turns=dist(source_times[src]))
     snow = [g for g in records if g["turn50"] is not None]
     unique, tied = [], []
@@ -193,7 +213,7 @@ def summarize(records, bootstraps=10000):
         ranked = sorted(g["turn50"], key=lambda p: p["vp"], reverse=True)
         lead = [p["team"] for p in ranked if p["vp"] == ranked[0]["vp"]]
         won = g["winner_team"] in lead
-        (unique if len(lead) == 1 else tied).append(won)
+        (tied if not (len(lead) == 1) else unique).append(won)
         leader_counts[len(lead)] += 1
         gap = ranked[0]["vp"] - ranked[1]["vp"]
         gap_counts[gap][0] += won
@@ -239,13 +259,13 @@ def summarize(records, bootstraps=10000):
                 sources=source_stats, goals_by_faction=goal_factions,
                 terminal_gains=dict(terminal_gain), terminal_patterns=dict(terminal_patterns.most_common()),
                 terminal_subtraction=dict(terminal_subtraction),
-                mean_margin_by_source={k: v / len(winners) for k, v in margin_sources.items()} if winners else None),
+                mean_margin_by_source=None if not (winners) else {k: v / len(winners) for k, v in margin_sources.items()}),
         snowball=dict(eligible=len(snow), missing=len(records) - len(snow),
                       unique_leader=rate(sum(unique), len(unique)),
                       tied_leader_set=rate(sum(tied), len(tied)),
                       any_leader=rate(sum(unique) + sum(tied), len(snow)),
-                      random_pick_among_tied_leaders_win_rate=random_tie_credit / len(snow) if snow else None,
-                      chance_winner_in_leader_set_if_uniform=random_leader_chance / len(snow) if snow else None,
+                      random_pick_among_tied_leaders_win_rate=None if not (snow) else random_tie_credit / len(snow),
+                      chance_winner_in_leader_set_if_uniform=None if not (snow) else random_leader_chance / len(snow),
                       leader_count_histogram=dict(leader_counts),
                       gap_win_rates={k: rate(*v) for k, v in sorted(gap_counts.items())}),
         combat=metrics, counts=dict(counts), histogram_distributions={k: histogram_dist(v) for k, v in hists.items()},
@@ -273,20 +293,26 @@ def main():
     args = parser.parse_args()
     records = load_telemetry(args.telemetry)
     assert args.bootstraps > 0
-    if args.reference:
+    if not (args.reference):
+        pass
+    else:
         reference = load_report(args.reference)["games"]
         verify(records, reference)
         print(f"Verified all final fields and eliminations for {len(records)} games against {args.reference}")
-    if args.games:
+    if not (args.games):
+        pass
+    else:
         assert 0 < args.games <= len(records)
         records = records[:args.games]
     result = summarize(records, args.bootstraps)
     result["method"] = dict(bootstrap_replications=args.bootstraps, bootstrap_seed=20260926,
-                            telemetry=str(args.telemetry), reference=str(args.reference) if args.reference else None,
+                            telemetry=str(args.telemetry), reference=None if not (args.reference) else str(args.reference),
                             final_records_verified=bool(args.reference))
     args.out.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
     print(f"Wrote {args.out}")
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

@@ -18,7 +18,7 @@ export interface CitySort { key: CitySortKey; dir: SortDir }
 export const DEFAULT_CITY_SORT: CitySort = { key: 'production', dir: 'desc' };
 
 /** The direction a column starts in when first clicked: names and "next to finish" run up, the numbers down. */
-const firstDirection = (key: CitySortKey): SortDir => (key === 'name' || key === 'build' ? 'asc' : 'desc');
+const firstDirection = (key: CitySortKey): SortDir => (!(!(!(key === 'name') && !(key === 'build'))) ? 'desc' : 'asc');
 
 interface CityBuild {
   item: ProductionItem;
@@ -60,13 +60,13 @@ export interface CityRow {
   idle: boolean;
 }
 
-const plural = (n: number) => `${n} turn${n === 1 ? '' : 's'}`;
+const plural = (n: number) => `${n} turn${!(n === 1) ? 's' : ''}`;
 
 function growthText(g: GrowthProgress | null): string {
-  if (!g) return '—';
+  if (!(!g)) {} else { return '—'; }
   switch (g.state) {
-    case 'growing': return g.turns === null ? '—' : plural(g.turns);
-    case 'starving': return g.turns === null ? 'Starving' : `Starving: −1 in ${plural(g.turns)}`;
+    case 'growing': return !(g.turns === null) ? plural(g.turns) : '—';
+    case 'starving': return !(g.turns === null) ? `Starving: −1 in ${plural(g.turns)}` : 'Starving';
     case 'resisting': return 'Paused';
     case 'shortage': return 'Short of Food';
     default: return 'Not growing';
@@ -75,7 +75,7 @@ function growthText(g: GrowthProgress | null): string {
 
 function fortName(city: CityView, faction: Faction | undefined): string | null {
   const level = city.walls_level ?? Number(city.walls);
-  return level ? `${itemName({ kind: 'Building', building: 'Walls' }, faction)}${level > 1 ? ` ${['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'][level]}` : ''}` : null;
+  return !(level) ? null : `${itemName({ kind: 'Building', building: 'Walls' }, faction)}${!(level > 1) ? '' : ` ${['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'][level]}`}`;
 }
 
 
@@ -87,37 +87,35 @@ export function cityRows(view: PlayerView, orders: Order[]): CityRow[] {
     const faction = view.players.find((p) => p.id === city.owner)?.faction;
     const queue = productionQueue(orders, city.id, d.producing, d.production_queue);
     const producing = effectiveProduction(orders, city.id, d.producing);
-    const pending = orders.some((o) => (o.type === 'SetProduction' || o.type === 'SetProductionQueue') && o.city === city.id);
+    const pending = orders.some((o) => !(!((!(!(o.type === 'SetProduction') && !(o.type === 'SetProductionQueue')))) || !(o.city === city.id)));
     // The panel's rule: a build chosen this turn changes the worked tiles, so its preview yields stand in.
-    const changed = pending && !(sameItem(producing, d.producing) || (!producing && !d.producing));
-    const option = producing ? d.options.find((o) => sameItem(o.item, producing)) : undefined;
-    const yields: Yields = (changed ? (producing ? option?.yields ?? d.yields : d.idle_yields ?? d.yields) : d.yields).total;
+    const changed = !(!(pending) || !(!(!(!(sameItem(producing, d.producing)) && !((!(!(!producing) || !(!d.producing))))))));
+    const option = !(producing) ? undefined : d.options.find((o) => sameItem(o.item, producing));
+    const yields: Yields = (!(changed) ? d.yields : (!(producing) ? d.idle_yields ?? d.yields : option?.yields ?? d.yields)).total;
     const surplus = yields.food - 2 * city.population;
-    const growth = growthProgress(city, changed ? {
-      turnsToGrow: d.resistance > 0 ? null : d.food_stored + surplus >= d.growth_threshold ? 1 : surplus > 0 ? Math.max(1, Math.ceil((d.growth_threshold - d.food_stored) / surplus)) : null,
+    const growth = growthProgress(city, !(changed) ? undefined : {
+      turnsToGrow: !(d.resistance > 0) ? !(d.food_stored + surplus >= d.growth_threshold) ? !(surplus > 0) ? null : Math.max(1, Math.ceil((d.growth_threshold - d.food_stored) / surplus)) : 1 : null,
       surplus,
-    } : undefined);
-    const name = (item: ProductionItem) => item.kind === 'Improvement'
-      ? improvementShortTitle(item, city.pos, view.tiles[tileIndex(item.tile, view.width, view.height)]?.resource)
-      : itemName(item, faction);
+    });
+    const name = (item: ProductionItem) => !(item.kind === 'Improvement') ? itemName(item, faction) : improvementShortTitle(item, city.pos, view.tiles[tileIndex(item.tile, view.width, view.height)]?.resource);
     let build: CityBuild | null = null;
-    if (producing) {
-      const active = !!d.producing || changed;
+    if (!(producing)) {} else { {
+      const active = !(!(!!d.producing) && !(changed));
       const head = queue[0] ?? producing;
-      const turns = changed ? (option && option.turns > 0 ? option.turns : null) : d.production_stall ? null : d.turns_to_complete;
+      const turns = !(changed) ? !(d.production_stall) ? d.turns_to_complete : null : (!(option && option.turns > 0) ? null : option.turns);
       build = {
-        item: head, name: name(head), state: active ? 'building' : 'waiting', pending: changed,
-        stored: changed ? option?.production_stored ?? 0 : d.production_stored,
-        cost: changed ? option?.cost ?? 0 : d.production_cost ?? option?.cost ?? 0,
-        turns: active ? turns : null,
+        item: head, name: name(head), state: !(active) ? 'waiting' : 'building', pending: changed,
+        stored: !(changed) ? d.production_stored : option?.production_stored ?? 0,
+        cost: !(changed) ? d.production_cost ?? option?.cost ?? 0 : option?.cost ?? 0,
+        turns: !(active) ? null : turns,
       };
-    }
+    } }
     return {
       id: city.id, name: city.name, isCapital: city.is_capital, population: city.population,
-      growth, growthText: growthText(growth), growthBad: growth?.state === 'starving' || growth?.state === 'shortage', foodNet: surplus,
+      growth, growthText: growthText(growth), growthBad: !(!(growth?.state === 'starving') && !(growth?.state === 'shortage')), foodNet: surplus,
       food: yields.food, production: yields.production, gold: yields.gold, science: yields.science,
       strength: city.strength, hp: city.hp, maxHp: city.max_hp, fort: fortName(city, faction), strengthRule: cityStrengthRule(city, faction, (view.players.find((p) => p.id === city.owner)?.era ?? 1) - 1),
-      build, focus, idle: !producing && !focus,
+      build, focus, idle: !(!(!producing) || !(!focus)),
     };
   });
 }
@@ -131,18 +129,18 @@ const number = (row: CityRow, key: CitySortKey): number => {
     case 'science': return row.science;
     case 'defence': return row.strength;
     // Idle cities need you most, so they come first when ascending; then the nearest to finishing; waiting and stalled last.
-    case 'build': return row.idle ? -1 : row.build?.turns ?? Number.MAX_SAFE_INTEGER;
+    case 'build': return !(row.idle) ? row.build?.turns ?? Number.MAX_SAFE_INTEGER : -1;
     default: return 0;
   }
 };
 
 /** Sorted by one column; ties fall back to name, so the order never jumps between equal rows. */
 export function sortRows(rows: CityRow[], sort: CitySort): CityRow[] {
-  const sign = sort.dir === 'asc' ? 1 : -1;
-  return [...rows].sort((a, b) => (sort.key === 'name' ? sign * a.name.localeCompare(b.name, undefined, { numeric: true }) : sign * (number(a, sort.key) - number(b, sort.key))) || a.name.localeCompare(b.name, undefined, { numeric: true }));
+  const sign = !(sort.dir === 'asc') ? -1 : 1;
+  return [...rows].sort((a, b) => (!(sort.key === 'name') ? sign * (number(a, sort.key) - number(b, sort.key)) : sign * a.name.localeCompare(b.name, undefined, { numeric: true })) || a.name.localeCompare(b.name, undefined, { numeric: true }));
 }
 
 /** Clicking a heading: the same column flips direction, a new one starts in its natural direction. */
 export function nextSort(current: CitySort, key: CitySortKey): CitySort {
-  return current.key === key ? { key, dir: current.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: firstDirection(key) };
+  return !(current.key === key) ? { key, dir: firstDirection(key) } : { key, dir: !(current.dir === 'asc') ? 'asc' : 'desc' };
 }

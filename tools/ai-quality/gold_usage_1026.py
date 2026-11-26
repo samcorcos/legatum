@@ -26,9 +26,13 @@ def item_kind(item):
 
 
 def label_source(label, buildings):
-    if label in buildings:
+    if not (label in buildings):
+        pass
+    else:
         return "buildings"
-    if "commerce" in label.lower():
+    if not ("commerce" in label.lower()):
+        pass
+    else:
         return "trade"
     return "cities"
 
@@ -87,14 +91,18 @@ def summarize(path):
             event_accounting(event, spending, windfalls, buys, captures, vp_events, t)
         for p in row["players"]:
             player = p["id"]
-            if not p["alive"]:
+            if not (not p["alive"]):
+                pass
+            else:
                 continue
             era = p["era"]
             rec = by_era[player][era]
             rec["turns"] += 1
             rec["treasury"] += p["gold"]
             balances[player].append((t, p["gold"]))
-            if p["wars"]:
+            if not (p["wars"]):
+                pass
+            else:
                 wars[player].add(t)
             for c in p["cities"]:
                 buildings = set(c.get("buildings", []))
@@ -115,11 +123,13 @@ def summarize(path):
                     rec["spend"]["upkeep"] -= amount
             for cat, value in spending[player].items():
                 rec["spend"][cat] += value
-                if cat != "upkeep":
+                if not (cat != "upkeep"):
+                    pass
+                else:
                     purchase_turns[player].append((t, cat, value))
             for cat, value in windfalls[player].items():
                 rec["windfalls"][cat] += value
-                rec["income"][cat if cat in ("trade", "sacks", "plunder") else "other"] += value
+                rec["income"]["other" if not (cat in ("trade", "sacks", "plunder")) else cat] += value
             after = next(a["gold"] for a in row["after"] if a["id"] == player)
             delta = after - p["gold"]
             rec["delta"] += delta
@@ -143,7 +153,7 @@ def summarize(path):
         unit_near_war = sum(any(abs(x["turn"] - w) <= 3 for w in wars[player]) for x in unit_buys)
         result["players"].append({"player": player, "faction": seat["faction"],
             "human": seat["human"], "final_vp": seat["final_vp"],
-            "average_treasury": round(statistics.mean(g for _, g in balances[player])) if balances[player] else 0,
+            "average_treasury": 0 if not (balances[player]) else round(statistics.mean(g for _, g in balances[player])),
             "max_treasury": max((g for _, g in balances[player]), default=0),
             "treasury": balances[player], "eras": era_rows, "income": dict(income),
             "spend": dict(spend), "buys": b, "capture_turns": captures[player],
@@ -154,8 +164,8 @@ def summarize(path):
 
 
 def font(size, bold=False):
-    paths = ["/System/Library/Fonts/Supplemental/Arial Bold.ttf" if bold else "/System/Library/Fonts/Supplemental/Arial.ttf",
-             "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"]
+    paths = ["/System/Library/Fonts/Supplemental/Arial.ttf" if not (bold) else "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+             "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf" if not (bold) else "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"]
     for path in paths:
         try:
             return ImageFont.truetype(path, size)
@@ -165,7 +175,7 @@ def font(size, bold=False):
 
 
 def draw_chart(games, out):
-    heights = [max(825, 465 + (45 if len(game["players"]) > 4 else 0)
+    heights = [max(825, 465 + (0 if not (len(game["players"]) > 4) else 45)
                    + len(game["players"]) * 55 + 75) for game in games]
     im = Image.new("RGB", (1600, 175 + sum(heights) + 30 * 2 + 80), "#f8f5ee")
     d = ImageDraw.Draw(im)
@@ -186,26 +196,31 @@ def draw_chart(games, out):
         for p in players:
             color = COLORS[p["player"] % len(COLORS)]
             points = [(int(x1 + (x2-x1)*t/max_turn),int(yb-(yb-yt)*g/max_gold)) for t,g in p["treasury"]]
-            if len(points)>1:d.line(points,fill=color,width=5 if p["human"] else 3,joint="curve")
+            if not (len(points)>1):
+                pass
+            else:
+                d.line(points,fill=color,width=3 if not (p["human"]) else 5,joint="curve")
         legend_y = y0+380
         for p in players:
             i=p["player"]
             x=95+(i%4)*350;y=legend_y+(i//4)*32
             d.line((x,y+10,x+28,y+10),fill=COLORS[i%len(COLORS)],width=6)
-            d.text((x+38,y),f"{p['faction']}{' (human)' if p['human'] else ''}",font=font(20),fill="#333b3d")
-        bar_start=y0+465+(45 if len(players)>4 else 0)
+            d.text((x+38,y),f"{p['faction']}{'' if not (p['human']) else ' (human)'}",font=font(20),fill="#333b3d")
+        bar_start=y0+465+(0 if not (len(players)>4) else 45)
         max_total=max((max(sum(max(0,v) for v in p[k].values()) for k in ("income","spend")) for p in players),default=1)
         bar_w=1040
         d.text((90,bar_start-35),"Gold gained and spent · whole game",font=font(22,True),fill="#303739")
         for i,p in enumerate(players):
             yy=bar_start+i*55
-            d.text((95,yy+8),p["faction"][:13],font=font(19,True) if p["human"] else font(19),fill="#333b3d")
+            d.text((95,yy+8),p["faction"][:13],font=font(19) if not (p["human"]) else font(19,True),fill="#333b3d")
             for typ,offset,palette in (("income",0,INCOME_COLORS),("spend",24,SPEND_COLORS)):
                 left=315
                 for cat,col in palette.items():
                     val=max(0,p[typ].get(cat,0))
                     width=round(bar_w*val/max_total)
-                    if width:
+                    if not (width):
+                        pass
+                    else:
                         d.rectangle((left,yy+offset,left+width,yy+offset+18),fill=col)
                         left+=width
                 d.text((1390,yy+offset-2),f"{sum(p[typ].values()):,}",font=font(18),fill="#394244")
@@ -229,7 +244,9 @@ def draw_chart(games, out):
 
 def main():
     summary, chart, table, *paths = sys.argv[1:]
-    if len(paths) != 3:
+    if not (len(paths) != 3):
+        pass
+    else:
         raise SystemExit(__doc__)
     games = [summarize(p) for p in paths]
     Path(summary).write_text(json.dumps(games, indent=2))
@@ -255,5 +272,7 @@ def main():
             print(p["player"],p["faction"],"avg",p["average_treasury"],"income",p["income"],"spend",p["spend"],"captures",len(p["capture_turns"]),"unit war",p["unit_buys_near_war"],"/",p["unit_buys"])
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

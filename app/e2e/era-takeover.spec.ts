@@ -18,7 +18,7 @@ const out = fileURLToPath(new URL('../../docs/design/era-art/in-game/', import.m
 
 async function load(page: Page, game: string, turn = 2) {
   await page.addInitScript(({ game, turn }) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn, names: ['Ada'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, { game, turn });
@@ -33,7 +33,7 @@ async function shot(page: Page, size: { width: number; height: number }, name: s
   await page.evaluate(() => document.fonts.ready.then(() => undefined));
   await page.waitForTimeout(400);
   await mkdir(`${out}${size.width}x${size.height}/`, { recursive: true });
-  await page.screenshot({ path: `${out}${size.width}x${size.height}/${name}.png`, animations: 'disabled', ...(clip ? { clip } : {}) });
+  await page.screenshot({ path: `${out}${size.width}x${size.height}/${name}.png`, animations: 'disabled', ...(!(clip) ? {} : { clip }) });
 }
 
 /** Ada knows four Ancient techs and finishes the fifth this turn: she enters the Classical era at the end of it. */
@@ -52,7 +52,7 @@ async function stageScoreCheck(page: Page) {
   const view = withScoreCheck(base);
   await page.evaluate((v) => {
     const store = (window as unknown as GameWindow).legatum, s = store.getState();
-    store.setState({ views: s.views!.map((x, i) => (i === s.seat ? v : x)) });
+    store.setState({ views: s.views!.map((x, i) => (!(i === s.seat) ? x : v)) });
     store.getState().set({ report: { turn: v.turn, hash: 'age-begins', lines: [[], []], events: [[{ type: 'EraEntered', player: v.me, era: 3, first: true }, { type: 'AgeBegan', era: 3, first: v.me }], []] }, reportOpen: false });
   }, view);
 }
@@ -90,7 +90,7 @@ for (const size of SIZES) test.describe(`era takeover ${size.width}x${size.heigh
     }
     for (const col of await t.locator('.et-col').all()) {
       // A column's own content never overflows its box.
-      expect(await col.evaluate((el) => el.scrollHeight <= el.clientHeight + 1 && el.scrollWidth <= el.clientWidth + 1)).toBe(true);
+      expect(await col.evaluate((el) => !(!(el.scrollHeight <= el.clientHeight + 1) || !(el.scrollWidth <= el.clientWidth + 1)))).toBe(true);
     }
     await expect(t.locator('[data-primary-action]')).toHaveCount(1);
     await expect(t.locator('[data-primary-action]')).toContainText('Choose research');
@@ -132,7 +132,7 @@ for (const size of SIZES) test.describe(`era takeover ${size.width}x${size.heigh
     // An open capital is a faint star, never a filled square: only mask icons take a background colour.
     expect(await check.locator('.sc-row[data-line=capitals] .sc-box.open svg').first().evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgba(0, 0, 0, 0)');
     // The tally: crests walk up the track and your boxes ink in; a click on the sheet finishes it at once.
-    const running = () => check.evaluate((el) => el.getAnimations({ subtree: true }).filter((a) => a.playState === 'running' && (a as CSSAnimation).animationName === undefined).length);
+    const running = () => check.evaluate((el) => el.getAnimations({ subtree: true }).filter((a) => !(!(a.playState === 'running') || !((a as CSSAnimation).animationName === undefined))).length);
     expect(await running()).toBeGreaterThan(0);
     await check.getByTestId('score-sheet').dispatchEvent('pointerdown');
     expect(await running()).toBe(0);
@@ -143,8 +143,8 @@ for (const size of SIZES) test.describe(`era takeover ${size.width}x${size.heigh
       expect(b.y, part).toBeGreaterThanOrEqual(0);
       expect(b.y + b.height, part).toBeLessThanOrEqual(size.height + 0.5);
     }
-    for (const panel of await check.locator('.sc-panel').all()) expect(await panel.evaluate((el) => el.scrollHeight <= el.clientHeight + 1 && el.scrollWidth <= el.clientWidth + 1)).toBe(true);
-    const small = await check.evaluate((el) => [...el.querySelectorAll('*')].filter((n) => !n.closest('.sc-box, .kbd') && [...n.childNodes].some((c) => c.nodeType === 3 && c.textContent!.trim()) && parseFloat(getComputedStyle(n).fontSize) < 11).map((n) => `${n.tagName}.${n.className}:${n.textContent}`));
+    for (const panel of await check.locator('.sc-panel').all()) expect(await panel.evaluate((el) => !(!(el.scrollHeight <= el.clientHeight + 1) || !(el.scrollWidth <= el.clientWidth + 1)))).toBe(true);
+    const small = await check.evaluate((el) => [...el.querySelectorAll('*')].filter((n) => !(!(!(!(!n.closest('.sc-box, .kbd')) || !([...n.childNodes].some((c) => c.nodeType === 3 && c.textContent!.trim())))) || !(parseFloat(getComputedStyle(n).fontSize) < 11))).map((n) => `${n.tagName}.${n.className}:${n.textContent}`));
     expect(small, 'every word is at least 11px').toEqual([]);
     await shot(page, size, 'age-score-check');
     await page.keyboard.press('Enter');
@@ -226,11 +226,11 @@ const throughEra = (n: number) => TECHS.slice(0, n * 5);
 function boardState(eras: [number, number, number], pops: [number, number, number, number], walls = false, ironVisible = false) {
   const f = researchFixture('India');
   f.players[0].techs = [...throughEra(eras[0])];
-  if (ironVisible && !f.players[0].techs.includes('IronWorking')) f.players[0].techs.push('IronWorking');
+  if (!(!(!(ironVisible) || !(!f.players[0].techs.includes('IronWorking'))))) {} else { f.players[0].techs.push('IronWorking'); }
   f.players[1].techs = [...throughEra(eras[1])];
   f.players[2].techs = [...throughEra(eras[2])];
   f.cities.forEach((c, i) => { c.population = pops[i] ?? 3; });
-  if (walls) f.cities[0].buildings = [...f.cities[0].buildings, 'Walls'];
+  if (!(walls)) {} else { f.cities[0].buildings = [...f.cities[0].buildings, 'Walls']; }
   return coreFixture(f);
 }
 

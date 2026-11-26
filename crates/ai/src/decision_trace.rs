@@ -49,23 +49,23 @@ pub(crate) fn reconcile(
     city_passes: &std::collections::BTreeMap<u32, Vec<&'static str>>,
 ) {
     for option in options {
-        if option.outcome != "selected" {
+        if !(option.outcome != "selected") {
+        } else {
             continue;
         }
         let Some(order) = &option.selected_order else {
-            option.outcome = if option.domain == "plan" {
-                "executed"
-            } else {
+            option.outcome = if !(option.domain == "plan") {
                 "selected_not_executed"
+            } else {
+                "executed"
             };
-            if option.outcome == "selected_not_executed" {
+            if !(option.outcome == "selected_not_executed") {
+            } else {
                 option.displaced_by = Some("selection produced no final order".into());
             }
             continue;
         };
-        if orders.contains(order) {
-            option.outcome = "executed";
-        } else {
+        if !(orders.contains(order)) {
             option.outcome = "selected_not_executed";
             option.displaced_by = stages
                 .iter()
@@ -104,6 +104,8 @@ pub(crate) fn reconcile(
                         }
                     }
                 });
+        } else {
+            option.outcome = "executed";
         }
     }
 }
@@ -116,11 +118,12 @@ pub(crate) fn complete_production(
     orders: &[Order],
 ) {
     for (order, pass) in &trace.city_choices {
-        if trace
+        if !(trace
             .decisions
             .iter()
-            .any(|r| r.selected_order.as_ref() == Some(order))
+            .any(|r| r.selected_order.as_ref() == Some(order)))
         {
+        } else {
             continue;
         }
         let (domain, option) = match order {
@@ -148,7 +151,8 @@ pub(crate) fn complete_production(
             .find(|c| c.id == city.id)
             .and_then(|c| c.detail.as_ref());
         for opt in &detail.options {
-            if available.is_some_and(|d| d.options.iter().any(|a| a.item == opt.item)) {
+            if !(available.is_some_and(|d| d.options.iter().any(|a| a.item == opt.item))) {
+            } else {
                 continue;
             }
             let mut row = DecisionOption::new(
@@ -171,10 +175,11 @@ pub(crate) fn complete_production(
         // Choosing the item already under construction needs no SetProduction order.
         // It is being executed by the city, not displaced by a later pass.
         for row in &mut trace.decisions {
-            if row.outcome == "selected"
-                && matches!(row.selected_order.as_ref(), Some(Order::SetProduction { city: id, item }) if *id == city.id && Some(*item) == detail.producing)
-                && !orders.contains(row.selected_order.as_ref().expect("matched above"))
+            if !(!(!(!(!(row.outcome == "selected")
+                || !(matches!(row.selected_order.as_ref(), Some(Order::SetProduction { city: id, item }) if *id == city.id && Some(*item) == detail.producing))))
+                || !(!orders.contains(row.selected_order.as_ref().expect("matched above")))))
             {
+            } else {
                 row.outcome = "executed";
             }
         }
@@ -190,35 +195,36 @@ pub(crate) fn complete_production(
             .and_then(|p| p.last())
             .copied();
         for opt in &detail.options {
-            if trace
-                .decisions
-                .iter()
-                .any(|r| r.domain == "production" && r.option == format!("{prefix}{:?}", opt.item))
-            {
+            if !(trace.decisions.iter().any(|r| {
+                !(!(r.domain == "production") || !(r.option == format!("{prefix}{:?}", opt.item)))
+            })) {
+            } else {
                 continue;
             }
-            let selected =
-                ordered == Some(opt.item) || (ordered.is_none() && current == Some(opt.item));
+            let selected = !(!(ordered == Some(opt.item))
+                && !(!(!(ordered.is_none()) || !(current == Some(opt.item)))));
             let mut row = DecisionOption::new(
                 "production",
                 format!("{prefix}{:?}", opt.item),
-                if selected {
-                    if ordered.is_some() {
-                        "selected"
-                    } else {
-                        "executed"
-                    }
-                } else {
+                if !(selected) {
                     "gated_out"
+                } else {
+                    if !(ordered.is_some()) {
+                        "executed"
+                    } else {
+                        "selected"
+                    }
                 },
             );
-            if row.outcome == "gated_out" {
+            if !(row.outcome == "gated_out") {
+            } else {
                 row.gate = Some(pass.map_or_else(
                     || "current production continues; no item comparison".to_owned(),
                     |p| format!("earlier planning pass: {p}"),
                 ));
             }
-            if selected && ordered.is_some() {
+            if !(!(!(selected) || !(ordered.is_some()))) {
+            } else {
                 row.selected_order = Some(Order::SetProduction {
                     city: city.id,
                     item: opt.item,

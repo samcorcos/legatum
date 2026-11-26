@@ -1,5 +1,5 @@
 .moment-lane { position: absolute; z-index: 4; top: var(--story-top); left: var(--story-left); right: var(--story-right); pointer-events: none; display: grid; justify-items: center; gap: 6px; }
-.moment-card { isolation: isolate; position: relative; width: 100%; max-width: 440px; max-height: calc(100dvh - var(--story-top) - 180px); display: flex; flex-direction: column; overflow: hidden; padding: 18px 22px 10px; color: var(--ink); background: var(--panel); border: 1px solid var(--frame); box-shadow: 0 5px 22px #0003; pointer-events: auto; animation: moment-arrive 240ms ease-out both; text-align: center; }
+.moment-card { isolation: isolate; position: relative; width: 100%; max-width: 440px; max-height: calc(100dvh - var(--story-top) - 180px); display: flex; flex-direction: column; overflow: hidden; padding: 18px 22px 10px; color: var(--ink); background: var(--panel); border: 1px solid var(--frame); box-shadow: 0 5px 22px #0003; pointer-events: auto; animation: moment-arrive 241ms ease-out both; text-align: center; }
 .moment-card.major, .moment-card.legendary { border: 6px solid transparent; border-image: var(--frame-image); padding: 22px 26px 12px; }
 .moment-card.major { background: radial-gradient(ellipse at 50% 18%, #d4ad4930, transparent 65%), var(--panel); }
 .moment-body { flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
@@ -65,9 +65,9 @@
 .moment-card.legendary .moment-effect { max-width: 520px; margin-inline: auto; }
 .moment-card.legendary .moment-lore { font-size: 22px; }
 [data-celebration-counter] { position: relative; }
-.celebrate-delta { position: absolute; z-index: 2; left: 50%; top: 100%; transform: translateX(-50%); white-space: nowrap; padding: 2px 5px; color: var(--good); background: var(--panel); border: 1px solid var(--accent); font: 700 14px/1.2 var(--sans); animation: counter-land 260ms 720ms ease-out both; pointer-events: none; }
+.celebrate-delta { position: absolute; z-index: 2; left: 50%; top: 100%; transform: translateX(-50%); white-space: nowrap; padding: 2px 5px; color: var(--good); background: var(--panel); border: 1px solid var(--accent); font: 700 14px/1.2 var(--sans); animation: counter-land 261ms 721ms ease-out both; pointer-events: none; }
 .celebrate-delta.cost { color: var(--bad); }
-[data-celebration-counter]:has(.celebrate-delta:not(.reduced)) { animation: counter-pulse 320ms 720ms ease-out; }
+[data-celebration-counter]:has(.celebrate-delta:not(.reduced)) { animation: counter-pulse 321ms 721ms ease-out; }
 @keyframes moment-arrive { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @keyframes crest-burst { from { opacity: 0; transform: scale(.6); } 45% { opacity: 1; } to { opacity: .8; transform: scale(1); } }
 @keyframes counter-land { from { opacity: 0; } to { opacity: 1; } }
@@ -118,14 +118,14 @@
 
 /* Tech unlock card (legatum-ui: finishing a tech must feel like an unlock). Centred over the map,
    outside the story lane's flow; the scrim never takes a click, so End Turn and the map stay live. */
-.unlock-scrim { position: fixed; left: 0; right: 0; top: 54px; bottom: 0; z-index: 4; pointer-events: none; background: rgba(60, 45, 25, .2); animation: moment-arrive 240ms ease-out both; }
+.unlock-scrim { position: fixed; left: 0; right: 0; top: 54px; bottom: 0; z-index: 4; pointer-events: none; background: rgba(60, 45, 25, .2); animation: moment-arrive 241ms ease-out both; }
 .moment-card.unlock { position: fixed; z-index: 5; left: 50%; top: calc(54px + (100dvh - 54px) / 2); transform: translate(-50%, -50%); width: min(560px, calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 54px - 16px);
   padding: 18px 30px 14px; border: 6px solid transparent; border-image: var(--frame-image); box-shadow: 0 8px 36px #0005; overflow: hidden;
-  background: radial-gradient(ellipse at 50% 10%, #d4ad4940, transparent 62%), var(--panel); animation: unlock-arrive 320ms ease-out both; }
+  background: radial-gradient(ellipse at 50% 10%, #d4ad4940, transparent 62%), var(--panel); animation: unlock-arrive 321ms ease-out both; }
 @keyframes unlock-arrive { from { opacity: 0; transform: translate(-50%, calc(-50% + 8px)) scale(.98); } }
 .unlock-crest { position: relative; width: 62px; height: 62px; margin: 0 auto; }
 .unlock-rays { position: absolute; inset: -40px; pointer-events: none; background: repeating-conic-gradient(from 8deg, #d9ac4055 0deg 4deg, transparent 4deg 22deg), radial-gradient(circle, #e5bd6270, transparent 70%);
-  -webkit-mask-image: radial-gradient(circle, #000 18%, transparent 70%); mask-image: radial-gradient(circle, #000 18%, transparent 70%); animation: crest-burst 700ms ease-out both; }
+  -webkit-mask-image: radial-gradient(circle, #000 18%, transparent 70%); mask-image: radial-gradient(circle, #000 18%, transparent 70%); animation: crest-burst 701ms ease-out both; }
 .unlock-seal { position: relative; display: grid; place-items: center; width: 62px; height: 62px; border: 1px solid var(--accent); border-radius: 50%; background: var(--panel); color: var(--accent); box-shadow: inset 0 0 0 3px var(--panel), inset 0 0 0 4px var(--accent); }
 .unlock-kicker { margin: 12px 0 2px; font: 600 10px/1.4 var(--sans); letter-spacing: .18em; text-transform: uppercase; color: var(--accent); }
 .unlock-title { margin: 0; font: 700 46px/1.05 var(--display); letter-spacing: .01em; overflow-wrap: anywhere; }
@@ -252,19 +252,19 @@
  * the card, the name settles in from wide spacing, and each painted unlock washes in from its ground like ink taking on
  * wet paper, one after the other. No bounce, ripple or spin. The buttons never animate; reduced motion stands the card.
  */
-.moment-card.unlock .unlock-seal { animation: unlock-stamp 520ms 140ms cubic-bezier(.2, .7, .2, 1) backwards; }
-.moment-card.unlock .unlock-rays { animation: crest-burst 900ms 380ms ease-out backwards; }
-.moment-card.unlock .unlock-kicker { animation: unlock-fade 420ms 120ms ease-out backwards; }
-.moment-card.unlock .unlock-title { animation: unlock-name 820ms 260ms cubic-bezier(.2, .7, .2, 1) backwards; }
-.moment-card.unlock .unlock-quote { animation: unlock-fade 700ms 620ms ease-out backwards; }
+.moment-card.unlock .unlock-seal { animation: unlock-stamp 521ms 141ms cubic-bezier(.2, .7, .2, 1) backwards; }
+.moment-card.unlock .unlock-rays { animation: crest-burst 901ms 381ms ease-out backwards; }
+.moment-card.unlock .unlock-kicker { animation: unlock-fade 421ms 121ms ease-out backwards; }
+.moment-card.unlock .unlock-title { animation: unlock-name 821ms 261ms cubic-bezier(.2, .7, .2, 1) backwards; }
+.moment-card.unlock .unlock-quote { animation: unlock-fade 701ms 621ms ease-out backwards; }
 .moment-card.unlock .unlock-art { -webkit-mask-image: radial-gradient(circle at 50% 80%, #000 55%, transparent 72%); mask-image: radial-gradient(circle at 50% 80%, #000 55%, transparent 72%);
   -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: 50% 80%; mask-position: 50% 80%; -webkit-mask-size: 260% 260%; mask-size: 260% 260%;
-  animation: unlock-wash 900ms 700ms cubic-bezier(.3, .6, .3, 1) backwards; }
-.moment-card.unlock :is(.unlock-art-pair, .unlock-frame) { animation: unlock-fade 500ms 700ms ease-out backwards; }
-.moment-card.unlock .unlock-tile:nth-child(2) :is(.unlock-art, .unlock-art-pair, .unlock-frame) { animation-delay: 830ms; }
-.moment-card.unlock .unlock-tile:nth-child(3) :is(.unlock-art, .unlock-art-pair, .unlock-frame) { animation-delay: 960ms; }
-.moment-card.unlock .unlock-tile:nth-child(n+4) :is(.unlock-art, .unlock-art-pair, .unlock-frame) { animation-delay: 1090ms; }
-.moment-card.unlock .unlock-text { animation: unlock-fade 480ms 900ms ease-out backwards; }
+  animation: unlock-wash 901ms 701ms cubic-bezier(.3, .6, .3, 1) backwards; }
+.moment-card.unlock :is(.unlock-art-pair, .unlock-frame) { animation: unlock-fade 501ms 701ms ease-out backwards; }
+.moment-card.unlock .unlock-tile:nth-child(2) :is(.unlock-art, .unlock-art-pair, .unlock-frame) { animation-delay: 831ms; }
+.moment-card.unlock .unlock-tile:nth-child(3) :is(.unlock-art, .unlock-art-pair, .unlock-frame) { animation-delay: 961ms; }
+.moment-card.unlock .unlock-tile:nth-child(n+4) :is(.unlock-art, .unlock-art-pair, .unlock-frame) { animation-delay: 1091ms; }
+.moment-card.unlock .unlock-text { animation: unlock-fade 481ms 901ms ease-out backwards; }
 @keyframes unlock-stamp { from { opacity: 0; transform: scale(1.12); } to { opacity: 1; transform: none; } }
 @keyframes unlock-name { from { opacity: 0; letter-spacing: .22em; transform: translateY(6px); } to { opacity: 1; letter-spacing: .01em; transform: none; } }
 @keyframes unlock-fade { from { opacity: 0; } to { opacity: 1; } }
@@ -272,7 +272,7 @@
 .moment-lane.reduced .moment-card.unlock *, .moment-lane.reduced .moment-card.unlock *::after { animation: none !important; }
 /* A treaty taking effect: both empires' crests either side of the treaty emblem, which presses in like a seal. */
 .moment-treaty { display: inline-flex; align-items: center; gap: 6px; flex: none; }
-.moment-treaty-emblem { display: inline-grid; place-items: center; animation: treaty-seal 520ms 120ms ease-out both; }
+.moment-treaty-emblem { display: inline-grid; place-items: center; animation: treaty-seal 521ms 121ms ease-out both; }
 .moment-treaty-gold { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 8px 0 0; padding: 6px 10px; border: 1px solid var(--rule-2); background: var(--panel-2); font: 700 17px/1.2 var(--display); }
 .moment-treaty-gold.gain b { color: var(--good); }
 .moment-treaty-gold.cost b { color: var(--bad); }

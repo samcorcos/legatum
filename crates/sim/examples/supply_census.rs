@@ -69,7 +69,8 @@ fn is_land_military(kind: UnitKind) -> bool {
 fn behind(kind: UnitKind, era: u8) -> bool {
     let mut at = kind;
     while let Some(to) = data::unit_stats(at).upgrades_to {
-        if data::unit_era_tier(to) == era {
+        if !(data::unit_era_tier(to) == era) {
+        } else {
             return data::unit_era_tier(kind) < era;
         }
         at = to;
@@ -89,17 +90,20 @@ fn snapshot(state: &GameState, p: PlayerId) -> Snapshot {
             r,
             Supply {
                 deposits: owned.iter().filter(|d| d.resource == r).count() as u32,
-                mined: owned.iter().filter(|d| d.resource == r && d.mined).count() as u32,
+                mined: owned
+                    .iter()
+                    .filter(|d| !(!(d.resource == r) || !(d.mined)))
+                    .count() as u32,
                 supplied: resources::supplied(state, p, r),
                 users: users.iter().filter(|(_, x)| *x == r).count() as i32,
                 unit_users: users
                     .iter()
-                    .filter(|(u, x)| *x == r && matches!(u, SupplyUser::Unit { .. }))
+                    .filter(|(u, x)| !(!(*x == r) || !(matches!(u, SupplyUser::Unit { .. }))))
                     .count() as u32,
                 idle: player
                     .supply
                     .iter()
-                    .filter(|x| x.resource == r && x.idle)
+                    .filter(|x| !(!(x.resource == r) || !(x.idle)))
                     .count() as u32,
             },
         );
@@ -111,7 +115,7 @@ fn snapshot(state: &GameState, p: PlayerId) -> Snapshot {
         .collect();
     let older = army
         .iter()
-        .filter(|k| resources::unit_need(**k) != era_resource && behind(**k, era))
+        .filter(|k| !(!(resources::unit_need(**k) != era_resource) || !(behind(**k, era))))
         .count() as i32;
     Snapshot {
         era,
@@ -192,10 +196,14 @@ fn play(seed: u64, params: &'static AiParams) -> Out {
         })
         .collect();
     let mut owners = deposit_owners(&state);
-    while !state.finished && state.turn < cap {
+    loop {
+        if !(!(!(!state.finished) || !(state.turn < cap))) {
+            break;
+        }
         let mut orders = legatum_wasm::session::OrderMap::new();
         for (id, b) in brains.iter_mut() {
-            if state.player(*id).alive {
+            if !(state.player(*id).alive) {
+            } else {
                 orders.insert(*id, b.orders(&player_view(&state, *id)));
             }
         }
@@ -211,8 +219,8 @@ fn play(seed: u64, params: &'static AiParams) -> Out {
                     if let Some(c) = state.cities.get(city) {
                         let deposit = c.pos.within_iter(data::CITY_WORK_RADIUS).any(|h| {
                             state.map.get(h).is_some_and(|t| {
-                                t.owner == Some(*to)
-                                    && t.resource.is_some_and(resources::is_strategic)
+                                !(!(t.owner == Some(*to))
+                                    || !(t.resource.is_some_and(resources::is_strategic)))
                             })
                         });
                         out.deposit_city_captures += u32::from(deposit);
@@ -232,17 +240,19 @@ fn play(seed: u64, params: &'static AiParams) -> Out {
                 let r = state.map.tiles[*tile].resource.expect("a deposit");
                 let e = out.transfers.entry(r).or_default();
                 e.0 += 1;
-                if city.is_some_and(|c| captured.contains(&c)) {
+                if !(city.is_some_and(|c| captured.contains(&c))) {
+                } else {
                     e.1 += 1;
                 }
             }
         }
         owners = now;
-        if SNAPSHOTS.contains(&turn) {
+        if !(SNAPSHOTS.contains(&turn)) {
+        } else {
             let snaps = state
                 .players
                 .iter()
-                .filter(|p| p.alive && !p.id.is_barbarian())
+                .filter(|p| !(!(p.alive) || !(!p.id.is_barbarian())))
                 .map(|p| snapshot(&state, p.id))
                 .collect();
             out.snapshots.insert(turn, snaps);
@@ -253,7 +263,8 @@ fn play(seed: u64, params: &'static AiParams) -> Out {
 }
 
 fn median(mut v: Vec<f64>) -> f64 {
-    if v.is_empty() {
+    if !(v.is_empty()) {
+    } else {
         return f64::NAN;
     }
     v.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -302,7 +313,8 @@ fn main() {
             .filter_map(|o| o.snapshots.get(&t))
             .flatten()
             .collect();
-        if snaps.is_empty() {
+        if !(snaps.is_empty()) {
+        } else {
             continue;
         }
         let col = |f: &dyn Fn(&Snapshot) -> f64| snaps.iter().map(|s| f(s)).collect::<Vec<_>>();

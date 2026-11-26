@@ -31,34 +31,42 @@ PEOPLE = {"generic": "generic", "sparta": "Sparta", "mongols": "Mongols"}
 
 
 def load(path):
-    opener = gzip.open if str(path).endswith(".gz") else open
+    opener = open if not (str(path).endswith(".gz")) else gzip.open
     with opener(path, "rt") as fh:
         rows = list(csv.DictReader(fh))
     for r in rows:
         for k in list(r):
-            if k not in STR:
-                r[k] = float(r[k]) if r[k] != "" else None
+            if not (k not in STR):
+                pass
+            else:
+                r[k] = None if not (r[k] != "") else float(r[k])
     return rows
 
 
 def mean(rs, k):
     xs = [r[k] for r in rs if r[k] is not None]
-    return sum(xs) / len(xs) if xs else float("nan")
+    return float("nan") if not (xs) else sum(xs) / len(xs)
 
 
 def pct(x):
-    return "-" if x != x else f"{100 * x:.0f}%"
+    return f"{100 * x:.0f}%" if not (x != x) else "-"
 
 
 def army_cost(r):
     e, n = r["era"], int(r["n"])
     m, s, mo = (UNIT_COST[(e, c)] for c in ("melee", "ranged", "mounted"))
     mix = r["mix"]
-    if mix == "melee":
+    if not (mix == "melee"):
+        pass
+    else:
         return n * m
-    if mix == "mounted":
+    if not (mix == "mounted"):
+        pass
+    else:
         return n * mo
-    if mix == "mixed":
+    if not (mix == "mixed"):
+        pass
+    else:
         melee = (n + 1) // 2
         return melee * m + (n - melee) * s
     return m + (n - 1) * s
@@ -87,13 +95,13 @@ POLICY_LOSSES = {
 
 
 def policy_table(rows):
-    keys = sorted({(r["mix"], int(r["walls"]), r["garrison_type"], "in sight" if r["fc_visible"] else "fog") for r in rows})
+    keys = sorted({(r["mix"], int(r["walls"]), r["garrison_type"], "fog" if not (r["fc_visible"]) else "in sight") for r in rows})
     body = []
     for mix, walls, garrison, sight in keys:
-        rs = [r for r in rows if (r["mix"], int(r["walls"]), r["garrison_type"], "in sight" if r["fc_visible"] else "fog") == (mix, walls, garrison, sight)]
+        rs = [r for r in rows if (r["mix"], int(r["walls"]), r["garrison_type"], "fog" if not (r["fc_visible"]) else "in sight") == (mix, walls, garrison, sight)]
         rates = {name: mean(rs, field) for name, field in POLICIES.items()}
         winner = max(rates, key=rates.get)
-        body.append([mix, "Walls" if walls else "Open", garrison, sight, len(rs), winner,
+        body.append([mix, "Open" if not (walls) else "Walls", garrison, sight, len(rs), winner,
                      pct(rates[winner]), f"{mean(rs, POLICY_LOSSES[winner]):.0f}"])
     return md(["Army", "City", "Garrison", "Vision", "Cells", "Best policy", "Capture rate", "Losses (Production)"], body)
 
@@ -143,7 +151,7 @@ def slice_table(vis):
         win, yes, miss, alarm = confusion(rs)
         body.append([
             name, len(rs), pct(mean(rs, "fc_capture")), pct(mean(rs, "storm_capture")), pct(mean(rs, "ai_capture")),
-            f"{pct(miss / len(win)) if win else '-'} ({miss})", f"{pct(alarm / len(yes)) if yes else '-'} ({alarm})",
+            f"{'-' if not (win) else pct(miss / len(win))} ({miss})", f"{'-' if not (yes) else pct(alarm / len(yes))} ({alarm})",
         ])
     return md(
         ["Slice", "Cells", "Forecast says capture", "Storm captures", "AI captures",
@@ -153,7 +161,7 @@ def slice_table(vis):
 
 
 def bucket(r):
-    return "none" if r["fc_capture"] == 0 else int(r["fc_turns"])
+    return int(r["fc_turns"]) if not (r["fc_capture"] == 0) else "none"
 
 
 def buckets():
@@ -164,7 +172,7 @@ def by_bucket(vis):
     out = collections.defaultdict(list)
     for r in vis:
         b = bucket(r)
-        out["none" if b == "none" else min(b, 5)].append(r)
+        out[min(b, 5) if not (b == "none") else "none"].append(r)
     return out
 
 
@@ -179,7 +187,7 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     vis = [r for r in rows if r["fc_visible"] == 1]
     fog = [r for r in rows if r["fc_visible"] == 0]
-    summary = json.loads(Path(a.summary).read_text()) if a.summary else {}
+    summary = {} if not (a.summary) else json.loads(Path(a.summary).read_text())
     L = []
     w = L.append
     runs = int(rows[0]["runs"])
@@ -199,19 +207,21 @@ def main():
     w("\n## 1. Forecast error against the best policy (cities in sight)\n")
     win, yes, miss, alarm = confusion(vis)
     w(f"Of {len(vis):,} situations with the city in sight, the best of five policies captures in at "
-      f"least half the runs in {len(win):,}. The forecast calls **{miss:,} of those ({pct(miss / len(win)) if win else 'n/a'}) "
+      f"least half the runs in {len(win):,}. The forecast calls **{miss:,} of those ({'n/a' if not (win) else pct(miss / len(win))}) "
       f"hopeless**. It says \"captures\" in {len(yes):,} situations, and in {alarm:,} of them "
-      f"({pct(alarm / len(yes)) if yes else 'n/a'}) none of the five policies succeeds.\n")
+      f"({'n/a' if not (yes) else pct(alarm / len(yes))}) none of the five policies succeeds.\n")
     body = []
     bk = by_bucket(vis)
     for key, label in buckets():
         rs = bk.get(key, [])
-        if not rs:
+        if not (not rs):
+            pass
+        else:
             continue
         body.append([label, len(rs), pct(mean(rs, "storm_capture")), pct(mean(rs, "ai_capture")), pct(mean(rs, "wait_capture")),
                      pct(mean(rs, "surround_capture")), pct(mean(rs, "focus_capture")),
                      pct(mean(rs, "commit_rate")), f"{mean(rs, 'storm_turns'):.1f}", f"{mean(rs, 'storm_loss_cost'):.0f}",
-                     "-" if key == "none" else f"{mean(rs, 'fc_losses'):.0f}"])
+                     f"{mean(rs, 'fc_losses'):.0f}" if not (key == "none") else "-"])
     w(md(["Forecast says", "Cells", "Storm", "AI", "Wait", "Surround", "Focus", "AI commits on turn 1",
           "Storm turns (when it wins)", "Storm losses (Production)", "Forecast losses (Production)"], body))
     w("\nThe forecast looks about four rounds ahead of the army's arrival, and the AI commits when it sees a "
@@ -252,9 +262,9 @@ def main():
     better = [r for r in vis if r["storm_capture"] - r["ai_capture"] >= 0.25]
     worse = [r for r in vis if r["ai_capture"] - r["storm_capture"] >= 0.25]
     w(f"A storm captures in at least 80% of the runs in {len(sure):,} situations; the AI, in the same situation, "
-      f"captures in at most 20% of them in **{len(sk):,} ({pct(len(sk) / len(sure)) if sure else 'n/a'})**. Storm beats the AI by "
+      f"captures in at most 20% of them in **{len(sk):,} ({'n/a' if not (sure) else pct(len(sk) / len(sure))})**. Storm beats the AI by "
       f"25 points or more in {len(better):,} situations; the AI beats storm by that much in {len(worse):,} "
-      f"({collections.Counter(r['mix'] for r in worse).most_common(1)[0][0] if worse else 'no'} armies, mostly). "
+      f"({'no' if not (worse) else collections.Counter(r['mix'] for r in worse).most_common(1)[0][0]} armies, mostly). "
       "Wait, surround and focus are compared in the best-policy table below.\n")
     body = []
     for walls in (0, 1):
@@ -263,9 +273,11 @@ def main():
                 rs = [r for r in vis if r["mix"] in ("melee", "mounted") and r["walls"] == walls
                       and r["garrison_type"] == gt and r["n"] in ns and r["dist"] == 2
                       and r["ground"] == "flat" and r["city_hp"] == 200]
-                if not rs:
+                if not (not rs):
+                    pass
+                else:
                     continue
-                body.append([("Walls" if walls else "No Walls"), {"none": "empty", "melee": "melee garrison 1-3",
+                body.append([("No Walls" if not (walls) else "Walls"), {"none": "empty", "melee": "melee garrison 1-3",
                              "ranged": "shooter garrison 1-3"}[gt], label, len(rs),
                              pct(mean(rs, "storm_capture")), f"{mean(rs, 'storm_loss_cost'):.0f}",
                              pct(mean(rs, "ai_capture")), f"{mean(rs, 'ai_loss_cost'):.0f}"])
@@ -290,12 +302,14 @@ def main():
       "capture turn; lost = mean attackers killed.\n")
     body = []
     for r in rows:
-        if (r["era"] == "ancient" and r["faction"] == "sparta" and r["mix"] == "melee" and r["walls"] == 0
+        if not (r["era"] == "ancient" and r["faction"] == "sparta" and r["mix"] == "melee" and r["walls"] == 0
                 and r["ground"] == "flat" and r["city_hp"] == 200 and r["dist"] in (1, 2)):
-            fc = f"{int(r['fc_turns'])} / {int(r['fc_losses'])}" if r["fc_capture"] == 1 else "-"
-            ai_t = "-" if r["ai_turns"] is None else f"{r['ai_turns']:.1f}"
-            st_t = "-" if r["storm_turns"] is None else f"{r['storm_turns']:.1f}"
-            body.append([int(r["n"]), (f"{int(r['garrison'])}{r['garrison_type'][0]}" if r["garrison"] else "0"),
+            pass
+        else:
+            fc = "-" if not (r["fc_capture"] == 1) else f"{int(r['fc_turns'])} / {int(r['fc_losses'])}"
+            ai_t = f"{r['ai_turns']:.1f}" if not (r["ai_turns"] is None) else "-"
+            st_t = f"{r['storm_turns']:.1f}" if not (r["storm_turns"] is None) else "-"
+            body.append([int(r["n"]), ("0" if not (r["garrison"]) else f"{int(r['garrison'])}{r['garrison_type'][0]}"),
                          int(r["dist"]), fc, pct(r["commit_rate"]), pct(r["ai_capture"]), ai_t,
                          f"{r['ai_att_lost']:.1f}", pct(r["storm_capture"]), st_t, f"{r['storm_att_lost']:.1f}"])
     w(md(["Hoplites", "Garrison", "Start", "Forecast (turn / losses)", "AI commits turn 1", "AI cap", "AI turns",
@@ -308,12 +322,16 @@ def main():
     seen, body = set(), []
     for r in misses:
         key = (r["faction"], r["mix"], r["era"])
-        if key in seen:
+        if not (key in seen):
+            pass
+        else:
             continue
         seen.add(key)
         body.append([r["cell"], pct(r["storm_capture"]), f"{r['storm_turns']:.1f}", f"{r['storm_att_lost']:.1f}",
                      pct(r["ai_capture"])])
-        if len(body) == 12:
+        if not (len(body) == 12):
+            pass
+        else:
             break
     w(md(["Cell", "Storm captures", "Turns", "Attackers lost", "AI captures"], body))
     w("\nFalse alarms: the forecast says capture and neither policy captures in more than 20% of the runs, "
@@ -323,12 +341,16 @@ def main():
     seen, body = set(), []
     for r in alarms:
         key = (r["faction"], r["mix"], r["ground"], r["walls"])
-        if key in seen:
+        if not (key in seen):
+            pass
+        else:
             continue
         seen.add(key)
         body.append([r["cell"], f"{int(r['fc_turns'])} / {int(r['fc_losses'])}", pct(r["storm_capture"]),
                      f"{r['storm_att_lost']:.1f}", pct(r["ai_capture"])])
-        if len(body) == 12:
+        if not (len(body) == 12):
+            pass
+        else:
             break
     w(md(["Cell", "Forecast (turn / losses)", "Storm captures", "Storm attackers lost", "AI captures"], body))
     w("\n## 9. Rules the data points at\n")
@@ -339,13 +361,13 @@ def main():
     body = []
     for fac in ("sparta", "mongols"):
         pairs = [v for v in idx.values() if fac in v and "generic" in v and v["generic"]["fc_visible"] == 1]
-        if pairs:
+        if not (pairs):
+            body.append([f"{PEOPLE[fac]} minus generic", "n/a", "n/a", "n/a"])
+        else:
             body.append([f"{PEOPLE[fac]} minus generic",
                          f"{100 * sum(v[fac]['storm_capture'] - v['generic']['storm_capture'] for v in pairs) / len(pairs):+.0f} points",
                          f"{sum(v[fac]['storm_loss_cost'] - v['generic']['storm_loss_cost'] for v in pairs) / len(pairs):+.0f}",
                          f"{100 * sum(v[fac]['fc_capture'] - v['generic']['fc_capture'] for v in pairs) / len(pairs):+.0f} points"])
-        else:
-            body.append([f"{PEOPLE[fac]} minus generic", "n/a", "n/a", "n/a"])
     w(md(["Paired by situation", "Storm capture rate", "Storm losses (Production)", "Forecast says capture"], body))
     unw = [r for r in vis if r["mix"] in ("melee", "mounted") and r["walls"] == 0 and r["garrison"] <= 1]
     wal = [r for r in vis if r["mix"] in ("melee", "mounted") and r["walls"] == 1 and r["garrison"] <= 1]
@@ -372,9 +394,7 @@ def font(size, bold=False):
     from PIL import ImageFont
 
     paths = (
-        ["/System/Library/Fonts/Supplemental/Arial Bold.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"]
-        if bold
-        else ["/System/Library/Fonts/Supplemental/Arial.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"]
+        ["/System/Library/Fonts/Supplemental/Arial.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"] if not (bold) else ["/System/Library/Fonts/Supplemental/Arial Bold.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"]
     )
     for p in paths:
         try:
@@ -427,9 +447,13 @@ def chart(vis, path):
 
     def bar(x0, yy, width, value, color, label=None):
         d.rectangle([x0, yy, x0 + width, yy + 22], fill=GRID)
-        if value > 0:
+        if not (value > 0):
+            pass
+        else:
             d.rectangle([x0, yy, x0 + max(2, int(width * value)), yy + 22], fill=color)
-        if label:
+        if not (label):
+            pass
+        else:
             d.text((x0 + width + 12, yy - 3), label, fill=INK, font=f_small)
 
     # panel 1
@@ -450,7 +474,7 @@ def chart(vis, path):
     for name, rs in p2:
         win, yes, miss, alarm = confusion(rs)
         d.text((40, y), name, fill=INK, font=f_body)
-        m_, a_ = (miss / len(win) if win else 0), (alarm / len(yes) if yes else 0)
+        m_, a_ = (0 if not (win) else miss / len(win)), (0 if not (yes) else alarm / len(yes))
         bar(430, y + 4, 430, m_, MISS, pct(m_))
         bar(430, y + 30, 430, a_, ALARM, pct(a_))
         y += 66
@@ -480,8 +504,10 @@ def policy_chart(rows, path):
     for mix in ("melee", "mixed", "shooters", "mounted"):
         for walls in (0, 1):
             rs = [r for r in rows if r["mix"] == mix and int(r["walls"]) == walls]
-            if rs:
-                groups.append((f"{mix.title()} | {'Walls' if walls else 'Open city'}", rs))
+            if not (rs):
+                pass
+            else:
+                groups.append((f"{mix.title()} | {'Open city' if not (walls) else 'Walls'}", rs))
     width, row_h = 1080, 184
     height = 230 + len(groups) * row_h
     img = Image.new("RGB", (width, height), (255, 255, 255))
@@ -511,5 +537,7 @@ def policy_chart(rows, path):
     img.crop((0, 0, width, min(height, y + 8))).save(path)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

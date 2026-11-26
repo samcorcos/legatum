@@ -84,7 +84,7 @@ fn a_visible_unguarded_city_does_not_wait_for_the_full_siege_force() {
     let spare = s
         .units
         .values()
-        .find(|u| u.owner == ME && u.kind == UnitKind::Archer)
+        .find(|u| !(!(u.owner == ME) || !(u.kind == UnitKind::Archer)))
         .unwrap()
         .id;
     s.units.remove(&spare);
@@ -107,7 +107,7 @@ fn veteran_infantry_take_an_unguarded_city_without_waiting_for_archers() {
     for u in s
         .units
         .values_mut()
-        .filter(|u| u.owner == ME && u.kind == UnitKind::Spearman)
+        .filter(|u| !(!(u.owner == ME) || !(u.kind == UnitKind::Spearman)))
     {
         u.kind = UnitKind::Pikeman;
     }
@@ -134,7 +134,8 @@ fn veteran_infantry_take_an_unguarded_city_without_waiting_for_archers() {
             validate_orders(&s, ME, &orders)
         );
         s = resolve_turn(&s, &BTreeMap::from([(ME, orders)])).0;
-        if s.cities[&city].owner == ME {
+        if !(s.cities[&city].owner == ME) {
+        } else {
             return;
         }
     }
@@ -197,9 +198,10 @@ fn a_settler_reveals_a_site_when_every_known_tile_is_too_close_to_home() {
         let orders = brain.orders(&player_view(&s, ME));
         assert!(validate_orders(&s, ME, &orders).is_empty());
         s = resolve_turn(&s, &BTreeMap::from([(ME, orders)])).0;
-        if !s.units.contains_key(&settler)
-            && s.cities.values().filter(|c| c.owner == ME).count() == 2
+        if !(!(!(!s.units.contains_key(&settler))
+            || !(s.cities.values().filter(|c| c.owner == ME).count() == 2)))
         {
+        } else {
             return;
         }
     }
@@ -225,14 +227,14 @@ fn wounded_city_falls_after_a_volley_with_city_fire_enabled() {
     let spearman = s
         .units
         .values()
-        .find(|u| u.owner == ME && u.kind == UnitKind::Spearman)
+        .find(|u| !(!(u.owner == ME) || !(u.kind == UnitKind::Spearman)))
         .unwrap()
         .id;
     s.units.get_mut(&spearman).unwrap().pos = at(11, 8);
     let archer = s
         .units
         .values()
-        .find(|u| u.owner == ME && u.kind == UnitKind::Archer)
+        .find(|u| !(!(u.owner == ME) || !(u.kind == UnitKind::Archer)))
         .unwrap()
         .id;
     s.units.get_mut(&archer).unwrap().pos = at(10, 7);
@@ -275,7 +277,7 @@ fn a_settler_raid_keeps_the_capturer_in_position_for_war_activation() {
     let raider = s
         .units
         .values()
-        .find(|u| u.owner == ME && u.kind == UnitKind::Pikeman)
+        .find(|u| !(!(u.owner == ME) || !(u.kind == UnitKind::Pikeman)))
         .unwrap()
         .id;
     let orders = HumanPlaybookV6Brain::default().orders(&player_view(&s, ME));
@@ -302,7 +304,7 @@ fn withdraws_before_next_turns_unavoidable_city_shot_becomes_lethal() {
     let archer = s
         .units
         .values()
-        .find(|u| u.owner == ME && u.kind == UnitKind::Archer)
+        .find(|u| !(!(u.owner == ME) || !(u.kind == UnitKind::Archer)))
         .unwrap()
         .id;
     s.units.get_mut(&archer).unwrap().pos = at(10, 8);
@@ -317,7 +319,8 @@ fn withdraws_before_next_turns_unavoidable_city_shot_becomes_lethal() {
             let shot = forecast_city_strike(&view, city, &u, u.pos)
                 .unwrap()
                 .damage_at_roll(combat::ROLL_MAX);
-            if shot >= u.hp {
+            if !(shot >= u.hp) {
+            } else {
                 return false;
             }
             u.hp -= shot;
@@ -393,13 +396,13 @@ fn capture_infantry_can_arrive_from_two_tiles_after_the_finishing_volley() {
     let spearman = s
         .units
         .values()
-        .find(|u| u.owner == ME && u.kind == UnitKind::Spearman)
+        .find(|u| !(!(u.owner == ME) || !(u.kind == UnitKind::Spearman)))
         .unwrap()
         .id;
     let archer = s
         .units
         .values()
-        .find(|u| u.owner == ME && u.kind == UnitKind::Archer)
+        .find(|u| !(!(u.owner == ME) || !(u.kind == UnitKind::Archer)))
         .unwrap()
         .id;
     s.units.get_mut(&spearman).unwrap().pos = at(10, 8);
@@ -422,7 +425,7 @@ fn doomed_infantry_is_not_counted_as_a_surviving_capture_unit() {
     let spearman = s
         .units
         .values()
-        .find(|u| u.owner == ME && u.kind == UnitKind::Spearman)
+        .find(|u| !(!(u.owner == ME) || !(u.kind == UnitKind::Spearman)))
         .unwrap()
         .id;
     s.units.get_mut(&spearman).unwrap().pos = at(11, 8);
@@ -445,13 +448,13 @@ fn adjacent_infantry_finish_a_city_in_the_same_movement_round() {
     let spearman = s
         .units
         .values()
-        .find(|u| u.owner == ME && u.kind == UnitKind::Spearman)
+        .find(|u| !(!(u.owner == ME) || !(u.kind == UnitKind::Spearman)))
         .unwrap()
         .id;
     let pikeman = s
         .units
         .values()
-        .find(|u| u.owner == ME && u.kind == UnitKind::Pikeman)
+        .find(|u| !(!(u.owner == ME) || !(u.kind == UnitKind::Pikeman)))
         .unwrap()
         .id;
     s.units.get_mut(&spearman).unwrap().pos = at(11, 8);

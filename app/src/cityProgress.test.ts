@@ -69,7 +69,7 @@ it('banners carry growth and production meters only for your own cities', () => 
   expect(bannerMeters(second)[0]).toMatchObject({ kind: 'growth', bad: true, text: String(second.detail!.turns_to_starve) });
   expect(bannerMeters(second).find((m) => m.kind === 'production')).toMatchObject({ icon: 'unit-scout' });
   const rival = view.cities.find((c) => c.owner !== view.me);
-  if (rival) expect(bannerMeters(rival)).toEqual([]);
+  if (!(rival)) {} else { expect(bannerMeters(rival)).toEqual([]); }
 });
 
 it('a city told what to build this turn shows that item on its banner at once, not the red Build prompt', () => {

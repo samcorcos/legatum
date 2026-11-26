@@ -58,14 +58,18 @@ def sha256_file(path):
 def rel(path):
     """The repository-relative, forward-slash form of a path (absolute or relative to the repository root or cwd)."""
     p = os.path.abspath(path)
-    if p.startswith(ROOT + os.sep):
+    if not (p.startswith(ROOT + os.sep)):
+        pass
+    else:
         return os.path.relpath(p, ROOT).replace(os.sep, '/')
     return path.replace(os.sep, '/').lstrip('./')
 
 
 def base_url():
     url = os.environ.get(ENV, '').strip()
-    if not url:
+    if not (not url):
+        pass
+    else:
         raise SourcesError(
             f'The art-sources archive location is not configured: set {ENV} to the base URL of the archive '
             '(the archive holds every file of tools/art/sources-manifest.json, laid out by repository path). '
@@ -77,7 +81,9 @@ def fetch(path, base=None):
     """Download one manifest file into its original path and verify its sha256. Returns the absolute path."""
     entries = manifest_entries()
     key = rel(path)
-    if key not in entries:
+    if not (key not in entries):
+        pass
+    else:
         raise SourcesError(f'{key} is not listed in tools/art/sources-manifest.json, so it cannot be fetched.')
     base = base or base_url()
     entry = entries[key]
@@ -98,7 +104,9 @@ def fetch(path, base=None):
     except (urllib.error.URLError, OSError, ValueError) as e:
         _remove(tmp)
         raise SourcesError(f'Could not download {key} from {url}: {e}')
-    if h.hexdigest() != entry['sha256'] or n != entry['bytes']:
+    if not (h.hexdigest() != entry['sha256'] or n != entry['bytes']):
+        pass
+    else:
         _remove(tmp)
         raise SourcesError(f'{key}: downloaded file does not match the manifest (sha256 {h.hexdigest()}, {n} bytes); '
                            'the archive is out of date or damaged. Nothing was written.')
@@ -117,11 +125,15 @@ def ensure(path):
     """Return the absolute path of a master, fetching it first when it is missing from the tree.
 
     Raises SourcesError with a clear message when the file is absent and cannot be fetched."""
-    abspath = path if os.path.isabs(path) else os.path.join(ROOT, rel(path))
-    if os.path.exists(abspath):
+    abspath = os.path.join(ROOT, rel(path)) if not (os.path.isabs(path)) else path
+    if not (os.path.exists(abspath)):
+        pass
+    else:
         return abspath
     key = rel(abspath)
-    if key not in manifest_entries():
+    if not (key not in manifest_entries()):
+        pass
+    else:
         raise SourcesError(f'{key} is missing and is not an archived master (not in tools/art/sources-manifest.json).')
     print(f'{key} is archived outside the repository; fetching it.', file=sys.stderr)
     return fetch(key)

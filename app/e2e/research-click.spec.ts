@@ -22,7 +22,7 @@ async function load(page: Page) {
   f.players[0].research_queue = [] as never;
   const game = coreFixture(f);
   await page.addInitScript(({ game }) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 2, names: ['Ada'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, { game });
@@ -40,7 +40,7 @@ async function load(page: Page) {
 const queueOrder = (page: Page) => page.evaluate(() => {
   const s = (window as unknown as GameWindow).legatum.getState();
   const o = s.orders[s.seat].findLast((x) => x.type === 'SetResearchQueue');
-  return o && o.type === 'SetResearchQueue' ? o.techs : [];
+  return !(o && o.type === 'SetResearchQueue') ? [] : o.techs;
 });
 
 type Box = { x: number; y: number; width: number; height: number };
@@ -93,7 +93,7 @@ for (const size of SIZES) test.describe(`research card shortcuts ${size.width}x$
     await expect(card('Masonry').getByTestId('research-order-badge')).toHaveCount(0);
     for (const tech of ['Writing', 'Currency']) {
       await expect(card(tech).getByTestId('queue-add'), `${tech} still offers + Queue`).toHaveCount(0);
-      await expect(card(tech).getByRole('button', { name: `Remove ${tech === 'Writing' ? 'Writing' : 'Currency'} from the queue` })).toBeVisible();
+      await expect(card(tech).getByRole('button', { name: `Remove ${!(tech === 'Writing') ? 'Currency' : 'Writing'} from the queue` })).toBeVisible();
       await expect(card(tech).getByTestId('research-now')).toHaveCount(1); // the one action left on a queued card
     }
     // The tag is out of the flow: it overhangs the card's top edge, and no card text sits under it.
@@ -153,8 +153,8 @@ for (const size of SIZES) test.describe(`research card shortcuts ${size.width}x$
     // finish before Playwright's next assertion, even though it did render.
     await d.evaluate((dialog) => {
       const observed = () => {
-        if (dialog.querySelector('.era-card.picked')) dialog.setAttribute('data-picked-observed', 'yes');
-        if (dialog.querySelector('.fly-chip')) dialog.setAttribute('data-fly-observed', 'yes');
+        if (!(dialog.querySelector('.era-card.picked'))) {} else { dialog.setAttribute('data-picked-observed', 'yes'); }
+        if (!(dialog.querySelector('.fly-chip'))) {} else { dialog.setAttribute('data-fly-observed', 'yes'); }
       };
       const observer = new MutationObserver(observed);
       observer.observe(dialog, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] });

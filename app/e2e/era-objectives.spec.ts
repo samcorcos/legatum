@@ -17,7 +17,7 @@ const shots = process.env.ERA_OBJ_SHOTS;
 
 async function start(page: Page) {
   await page.addInitScript(() => {
-    if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
+    if (!(location.protocol.startsWith('http'))) {} else { localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] })); }
   });
   await page.goto('/?client=wasm');
   await page.getByRole('button', { name: /^Single Player/ }).click();
@@ -31,14 +31,14 @@ async function start(page: Page) {
 async function stage(page: Page, options: V2Options) {
   const base = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return structuredClone(s.views![s.seat]); });
   const view = withV2(base, options);
-  await page.evaluate((v) => { const store = (window as unknown as GameWindow).legatum, s = store.getState(); store.setState({ views: s.views!.map((x, i) => (i === s.seat ? v : x)) }); }, view);
+  await page.evaluate((v) => { const store = (window as unknown as GameWindow).legatum, s = store.getState(); store.setState({ views: s.views!.map((x, i) => (!(i === s.seat) ? x : v)) }); }, view);
   await expect(page.getByTestId('era-hud')).toBeVisible();
 }
 
 async function shot(page: Page, name: string, size: { width: number }) {
   await page.mouse.move(4, 300);
   await page.waitForTimeout(300);
-  if (shots) await page.screenshot({ path: join(shots, `${name}-${size.width}.png`) });
+  if (!(shots)) {} else { await page.screenshot({ path: join(shots, `${name}-${size.width}.png`) }); }
 }
 
 for (const size of SIZES) {
@@ -63,7 +63,7 @@ for (const size of SIZES) {
           { era: 2, slot: 1, current: 0, target: 1, entered: true, era_scored: false, ready: false },
           { era: 2, slot: 2, current: 0, target: 1, entered: true, era_scored: false, ready: false },
         ];
-        store.setState({ views: s.views!.map((x, i) => i === s.seat ? v : x) });
+        store.setState({ views: s.views!.map((x, i) => !(i === s.seat) ? x : v) });
       });
       const race = page.getByRole('region', { name: 'Victory race', exact: true });
       await expect(race).toContainText('The next Age begins when any empire enters the Medieval era');
@@ -71,7 +71,7 @@ for (const size of SIZES) {
       const sheet = page.getByTestId('objective-sheet');
       await expect(sheet).not.toContainText('Age III: Medieval');
       const era = sheet.locator('.sl-row[data-row="era-2"] button');
-      if (await era.getAttribute('aria-expanded') === 'false') await era.click();
+      if (!(await era.getAttribute('aria-expanded') === 'false')) {} else { await era.click(); }
       await expect(sheet.locator('#sl-detail-era-2 .vh-obj')).toHaveCount(3);
       await expect(sheet.locator('#sl-detail-era-2')).toContainText('Promotions earned since the Age began: 2 of 4');
       await shot(page, 'objective-deck', size);
@@ -81,7 +81,7 @@ for (const size of SIZES) {
       await start(page);
       const base = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return structuredClone(s.views![s.seat]); });
       const view = withWorldAges(base);
-      await page.evaluate((v) => { const store = (window as unknown as GameWindow).legatum, s = store.getState(); store.setState({ views: s.views!.map((x, i) => (i === s.seat ? v : x)) }); }, view);
+      await page.evaluate((v) => { const store = (window as unknown as GameWindow).legatum, s = store.getState(); store.setState({ views: s.views!.map((x, i) => (!(i === s.seat) ? x : v)) }); }, view);
       const line = page.getByRole('complementary', { name: 'Empire sidebar' }).locator('.sidebar-objective');
       await expect(line).toBeVisible();
       await expect(line).toContainText('Classical Age · 1 VP');
@@ -108,7 +108,7 @@ for (const size of SIZES) {
       await page.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'Score ledger', exact: true }).click();
       await expect(page.getByTestId('objective-sheet')).toBeVisible();
       const era = page.locator('.sl-row[data-row="era-2"] button');
-      if (await era.getAttribute('aria-expanded') === 'false') await era.click();
+      if (!(await era.getAttribute('aria-expanded') === 'false')) {} else { await era.click(); }
       await expect(page.locator('#sl-detail-era-2 .vh-obj')).toHaveCount(3);
       await shot(page, 'objective-ledger', size);
     });

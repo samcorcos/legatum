@@ -122,7 +122,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
 
   test('the Byzantium faction sheet states the Company rule and how rivals counter it', async ({ page }) => {
     test.setTimeout(120_000);
-    await page.addInitScript(() => { if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] })); });
+    await page.addInitScript(() => { if (!(location.protocol.startsWith('http'))) {} else { localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] })); } });
     await page.goto('/?client=wasm');
     await page.getByRole('button', { name: /^Single Player/ }).click();
     await page.getByRole('button', { name: /^Seat 1 faction:/ }).click();

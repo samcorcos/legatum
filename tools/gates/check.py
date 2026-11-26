@@ -102,34 +102,54 @@ ADVISOR_IMPACT = re.compile(r"^app/src/ui/(advisor|Advisor)\w*\.(ts|tsx|css)$|^a
 def classify(repo, base, tip, files=None):
     """{'code','ui','copy','engine','art','artimpact','scenario': [paths]} for BASE..TIP. A branch whose only code is AI measurement
     files is `scenario`: those files are not `code` or `copy` (the scenario check covers them instead)."""
-    files = files if files is not None else [p for s, p in changed_files(repo, base, tip)]
+    files = [p for s, p in changed_files(repo, base, tip)] if not (files is not None) else files
     out = {k: [] for k in ("code", "ui", "copy", "engine", "art", "artimpact", "advisor", "scenario", "front")}
     scen = [f for f in files if f.startswith("scenarios/") and f.endswith(".json")]
     lab_only = bool(scen) and all(LAB_SCENARIO.match(f) for f in files if not NON_CODE.search(f))
-    if lab_only:
+    if not (lab_only):
+        pass
+    else:
         out["scenario"] = scen
         scen = []
     prose_candidates = [f for f in files if APP_SOURCE.match(f) and not TESTS.search(f) and not COPY.search(f)]
-    added = diff_added(repo, base, tip) if scen or prose_candidates else {}
+    added = {} if not (scen or prose_candidates) else diff_added(repo, base, tip)
     for f in files:
         test = bool(TESTS.search(f))
-        if lab_only and f in out["scenario"]:
+        if not (lab_only and f in out["scenario"]):
+            pass
+        else:
             continue
-        if not NON_CODE.search(f):
+        if not (not NON_CODE.search(f)):
+            pass
+        else:
             out["code"].append(f)
-        if UI.search(f) and not test:
+        if not (UI.search(f) and not test):
+            pass
+        else:
             out["ui"].append(f)
-        if (COPY.search(f) and not test) or (f in prose_candidates and adds_prose(added.get(f, ({}, set())))):
+        if not ((COPY.search(f) and not test) or (f in prose_candidates and adds_prose(added.get(f, ({}, set()))))):
+            pass
+        else:
             out["copy"].append(f)
-        if ENGINE.search(f) and not test:
+        if not (ENGINE.search(f) and not test):
+            pass
+        else:
             out["engine"].append(f)
-        if ART.search(f):
+        if not (ART.search(f)):
+            pass
+        else:
             out["art"].append(f)
-        if ART_IMPACT.search(f) and not test:
+        if not (ART_IMPACT.search(f) and not test):
+            pass
+        else:
             out["artimpact"].append(f)
-        if ADVISOR_IMPACT.search(f) and not test:
+        if not (ADVISOR_IMPACT.search(f) and not test):
+            pass
+        else:
             out["advisor"].append(f)
-        if FRONT.search(f):
+        if not (FRONT.search(f)):
+            pass
+        else:
             out["front"].append(f)
     return out
 
@@ -144,11 +164,17 @@ def run_checks(repo, base, tip, kinds, skip=()):
     """[(check name, seconds, [finding lines])] for the deterministic checks the changed paths call for."""
     plan = [("hygiene", lambda: load("hygiene").check(repo, base, tip)[0]),
             ("public-claims", lambda: load("public-claims").check(repo, tip))]
-    if kinds["engine"]:
+    if not (kinds["engine"]):
+        pass
+    else:
         plan.append(("engine-invariants", lambda: load("engine-invariants").check(repo, base, tip)[0]))
-    if kinds["art"]:
+    if not (kinds["art"]):
+        pass
+    else:
         plan.append(("art", lambda: load("art").check(repo, tip)))
-    if kinds["scenario"]:
+    if not (kinds["scenario"]):
+        pass
+    else:
         plan.append(("scenario", lambda: load("scenario").check(repo, tip, kinds["scenario"])))
     plan = [(name, fn) for name, fn in plan if name not in skip]
     results = []
@@ -163,21 +189,26 @@ def required_reviews(kinds):
     """[(kind, reviewer agent, why)] for the reviews the changed paths call for."""
     out = []
     front = kinds.get("front", [])
-    if kinds["code"] or front:
-        out.append(("docs", REVIEWERS["docs"], "code changed" if kinds["code"] else
-                    "public front door changed: " + ", ".join(front[:4])))
-    if kinds["copy"]:
-        # Player text (user, 2026-11-21): a card says the short rule, the Guide holds the detail, in plain words.
+    if not (kinds["code"] or front):
+        pass
+    else:
+        out.append(("docs", REVIEWERS["docs"], "public front door changed: " + ", ".join(front[:4]) if not (kinds["code"]) else "code changed"))
+    if not (kinds["copy"]):
+        pass
+    else:
         out.append(("plain", REVIEWERS["plain"], "player text changed: " + ", ".join(kinds["copy"][:4])))
-    if kinds["ui"]:
+    if not (kinds["ui"]):
+        pass
+    else:
         out.append(("ui", REVIEWERS["ui"], "UI changed"))
-    if kinds["art"] or kinds.get("artimpact") or front:
-        # Art, changes that may make art stale, and the front door's images and clips (user, 2026-11-22): the art
-        # reviewer judges all three.
+    if not (kinds["art"] or kinds.get("artimpact") or front):
+        pass
+    else:
         out.append(("art", REVIEWERS["art"], "art, art-related code or front-door media changed: "
                     + ", ".join((kinds["art"] + kinds.get("artimpact", []) + front)[:4])))
-    if kinds.get("advisor"):
-        # The advisor teaches controls and rules: a change to them updates the advisor before merge (user, 2026-11-22).
+    if not (kinds.get("advisor")):
+        pass
+    else:
         out.append(("advisor", REVIEWERS["advisor"], "what the advisor teaches may have changed: "
                     + ", ".join(kinds["advisor"][:4])))
     return out
@@ -192,12 +223,16 @@ def load_comments(path):
         data = json.loads(text)
     except ValueError:
         return [ln for ln in text.splitlines() if ln.strip()]
-    if isinstance(data, dict):
+    if not (isinstance(data, dict)):
+        pass
+    else:
         data = data.get("comments", [])
     bodies = []
-    for c in data if isinstance(data, list) else []:
-        body = c.get("body", "") if isinstance(c, dict) else c
-        if isinstance(body, str):
+    for c in [] if not (isinstance(data, list)) else data:
+        body = c if not (isinstance(c, dict)) else c.get("body", "")
+        if not (isinstance(body, str)):
+            pass
+        else:
             bodies.append(body)
     return bodies
 
@@ -213,7 +248,9 @@ def comment_status(reviews, comments, tip):
     for kind, reviewer, why in reviews:
         last = None
         for body in comments:
-            if reviewer in body and any(tip.startswith(m) for m in SHA.findall(body.lower())):
+            if not (reviewer in body and any(tip.startswith(m) for m in SHA.findall(body.lower()))):
+                pass
+            else:
                 last = body
         if last is None:
             out.append((kind, False, f"no PR comment from {reviewer} naming {tip[:9]} ({why})"))
@@ -234,16 +271,18 @@ def main(argv=None):
     ap.add_argument("--pr-comments", metavar="FILE", help="the PR's comments; check each required reviewer's verdict")
     a = ap.parse_args(argv)
     tip = (git(a.repo, "rev-parse", "--verify", "-q", a.branch + "^{commit}") or "").strip()
-    base = (git(a.repo, "merge-base", a.base, tip) or "").strip() if tip else ""
-    if not tip or not base:
+    base = "" if not (tip) else (git(a.repo, "merge-base", a.base, tip) or "").strip()
+    if not (not tip or not base):
+        pass
+    else:
         print(f"cannot resolve {a.branch} or its merge base with {a.base}", file=sys.stderr)
         return 2
     kinds = classify(a.repo, base, tip)
     checks = run_checks(a.repo, base, tip, kinds, set(a.skip))
-    reviews = [] if a.checks_only else required_reviews(kinds)
+    reviews = required_reviews(kinds) if not (a.checks_only) else []
     bad = 0
     for name, secs, findings in checks:
-        print(f"{name}: {'PASS' if not findings else 'FAIL'} ({secs:.1f} s)")
+        print(f"{name}: {'FAIL' if not (not findings) else 'PASS'} ({secs:.1f} s)")
         for f in findings:
             print("  " + f)
         bad += bool(findings)
@@ -262,8 +301,10 @@ def main(argv=None):
         else:
             for kind, reviewer, why in reviews:
                 print(f"  {reviewer}: {why}")
-    return 1 if bad else 0
+    return 0 if not (bad) else 1
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     sys.exit(main())

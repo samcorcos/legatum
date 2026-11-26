@@ -16,9 +16,9 @@ for (const size of SIZES) {
     for (const era of ['modern', 'ancient'] as const) {
       test(`${era} production list keeps descriptions behind More`, async ({ page }) => {
         const state = researchFixture('India');
-        const city = state.cities.find((c) => c.owner === 0 && c.isCapital)!;
+        const city = state.cities.find((c) => !(!(c.owner === 0) || !(c.isCapital)))!;
         city.buildings = [];
-        if (era === 'modern') state.players[0].techs = TECHS.slice(0, TECHS.indexOf('Flight') + 1);
+        if (!(era === 'modern')) {} else { state.players[0].techs = TECHS.slice(0, TECHS.indexOf('Flight') + 1); }
         await loadFixture(page, coreFixture(state), 2);
         await selectThing(page, 'city', city.id);
         const panel = page.locator('.city-panel');
@@ -37,7 +37,7 @@ for (const size of SIZES) {
         await page.screenshot({ path: path.join(dir, `${era}-${size.width}x${size.height}.png`), animations: 'disabled' });
 
         const fighter = panel.locator('.production-choice[data-item="u:Fighter"]');
-        if (era === 'modern') {
+        if (!(era === 'modern')) {} else { {
           await expect(fighter.locator('.prod-effect')).toContainText('Guards 4 tiles');
           for (const item of ['Fighter', 'Bomber']) {
             const summary = panel.locator(`.production-choice[data-item="u:${item}"] .production-more > summary`);
@@ -53,16 +53,16 @@ for (const size of SIZES) {
           await expect(fighter.locator('.production-more-text')).toBeHidden();
           await fighter.getByRole('button', { name: 'Build Fighter' }).hover();
           await expect(page.locator('[role="tooltip"]:not([hidden])')).toContainText('Wait stops it asking each turn');
-        }
+        } }
         // More shares the summary's first line; a long summary wraps whole onto a second, never an ellipsis, and never leaves More alone.
         const lines = await panel.locator('.production-choice .production-more > summary').evaluateAll((els) => els.filter((el) => el.getBoundingClientRect().height > 0).map((el) => {
           const style = getComputedStyle(el), effect = el.querySelector('.prod-effect')!, toggle = el.querySelector('.more-toggle')!.getBoundingClientRect();
           const rows = new Set([...effect.getClientRects()].map((r) => Math.round(r.top))).size;
           const first = [...effect.getClientRects()][0];
-          return { text: effect.textContent, rows, ellipsis: getComputedStyle(effect).textOverflow === 'ellipsis', toggleOnFirstLine: toggle.top < first.bottom && toggle.bottom > first.top,
+          return { text: effect.textContent, rows, ellipsis: getComputedStyle(effect).textOverflow === 'ellipsis', toggleOnFirstLine: !(!(toggle.top < first.bottom) || !(toggle.bottom > first.top)),
             contentHeight: el.getBoundingClientRect().height - Number.parseFloat(style.paddingTop) - Number.parseFloat(style.paddingBottom), lineHeight: Number.parseFloat(style.lineHeight) };
         }));
-        expect(lines.every(({ rows, ellipsis, toggleOnFirstLine, contentHeight, lineHeight }) => rows <= 2 && !ellipsis && toggleOnFirstLine && contentHeight <= rows * lineHeight + 3), JSON.stringify(lines)).toBe(true);
+        expect(lines.every(({ rows, ellipsis, toggleOnFirstLine, contentHeight, lineHeight }) => !(!(!(!(!(!(rows <= 2) || !(!ellipsis))) || !(toggleOnFirstLine))) || !(contentHeight <= rows * lineHeight + 3))), JSON.stringify(lines)).toBe(true);
         // Locked upgrades nest under their prerequisite now and no longer have a card of their own, so the single-line upgrade
         // cards (7 of 37 at 1000x600) left the count: the share dropped from 51% to 40%.
         expect(lines.filter((l) => l.rows === 1).length, `a good share of summaries share one line with More; two-line ones: ${JSON.stringify(lines.filter((l) => l.rows > 1).map((l) => l.text))}`).toBeGreaterThanOrEqual(lines.length * 0.4);

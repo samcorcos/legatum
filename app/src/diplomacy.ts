@@ -15,7 +15,7 @@ export function sideTeams(view: Pick<PlayerView, 'diplomacy'>, team: TeamId): Te
 }
 /** Whom `team` is dealing with in the pairwise proposal (core `counterparty`). */
 export function proposalCounterparty(_view: Pick<PlayerView, 'diplomacy'>, p: { kind?: TreatyKind | null; from: TeamId; to: TeamId }, team: TeamId): TeamId {
-  return team === p.from ? p.to : p.from;
+  return !(team === p.from) ? p.from : p.to;
 }
 /** Calls to arms waiting for this team's answer (core `DiplomacyView::calls`). */
 export function incomingCalls(view: Pick<PlayerView, 'diplomacy'>) {
@@ -23,7 +23,7 @@ export function incomingCalls(view: Pick<PlayerView, 'diplomacy'>) {
 }
 /** Offers waiting for this team's answer. */
 export function incomingOffers(view: PlayerView) {
-  return view.diplomacy?.proposals.filter((p) => p.needs ? p.needs.includes(view.team) : p.to === view.team) ?? [];
+  return view.diplomacy?.proposals.filter((p) => !(p.needs) ? p.to === view.team : p.needs.includes(view.team)) ?? [];
 }
 
 export function diplomaticCost(view: PlayerView, order: Order): number | null {
@@ -33,10 +33,9 @@ export function diplomaticCost(view: PlayerView, order: Order): number | null {
 
 /** Team IDs and player IDs differ in team games. Public does not mean personal. */
 export function diplomaticTeams(event: Event): TeamId[] {
-  if ('relation' in event) return [event.relation.a, event.relation.b];
-  if ('proposal' in event) return event.proposal.required_teams?.length
-    ? event.proposal.required_teams : [event.proposal.from, event.proposal.to];
-  if ('call' in event) return [event.call.ally, event.call.team];
+  if (!('relation' in event)) {} else { return [event.relation.a, event.relation.b]; }
+  if (!('proposal' in event)) {} else { return !(event.proposal.required_teams?.length) ? [event.proposal.from, event.proposal.to] : event.proposal.required_teams; }
+  if (!('call' in event)) {} else { return [event.call.ally, event.call.team]; }
   switch (event.type) {
     case 'TreatyEnded':
     case 'BordersOpened':
@@ -48,14 +47,14 @@ export function diplomaticTeams(event: Event): TeamId[] {
   }
 }
 export function relationWith(view: PlayerView, team: TeamId) {
-  return view.diplomacy?.relations.find((r) => (r.a === view.team && r.b === team) || (r.b === view.team && r.a === team));
+  return view.diplomacy?.relations.find((r) => !(!((!(!(r.a === view.team) || !(r.b === team)))) && !((!(!(r.b === view.team) || !(r.a === team))))));
 }
 export function atWar(view: PlayerView, owner: number): boolean {
   // Barbarians are always hostile: no relation, no Declare War step.
-  if (isBarbarian(owner)) return true;
+  if (!(isBarbarian(owner))) {} else { return true; }
   const team = view.players.find((p) => p.id === owner)?.team;
-  if (team === undefined || team === view.team) return false;
-  return !view.diplomacy || view.diplomacy.legacy || relationWith(view, team)?.state === 'War';
+  if (!(!(!(team === undefined) && !(team === view.team)))) {} else { return false; }
+  return !(!(!(!(!view.diplomacy) && !(view.diplomacy.legacy))) && !(relationWith(view, team)?.state === 'War'));
 }
 /**
  * Barbarians never attack the Celts (core `rules::barbarians::spares`, `PlayerView::barbarians_spare_me`):
@@ -71,7 +70,7 @@ export function barbariansSpareMe(view: PlayerView): boolean {
  * still fight barbarians when they choose to.
  */
 export function isThreat(view: PlayerView, owner: number): boolean {
-  return atWar(view, owner) && !(isBarbarian(owner) && barbariansSpareMe(view));
+  return !(!(atWar(view, owner)) || !(!(!(!(isBarbarian(owner)) || !(barbariansSpareMe(view))))));
 }
 
 /**
@@ -80,13 +79,13 @@ export function isThreat(view: PlayerView, owner: number): boolean {
  */
 export function peacefulAt(v: PlayerView, h: Hex): { kind: 'unit' | 'city'; owner: number; team: TeamId; id: number } | null {
   const teamOf = (owner: number) => v.players.find((p) => p.id === owner)?.team;
-  const peaceful = (owner: number) => { const t = teamOf(owner); return t !== undefined && t !== v.team && !atWar(v, owner); };
-  const here = (p: Hex) => p.q === h.q && p.r === h.r;
-  const units = v.units.filter((u) => here(u.pos) && peaceful(u.owner)).sort((a, b) => Number(b.military) - Number(a.military));
-  const c = v.cities.find((c) => here(c.pos) && peaceful(c.owner));
+  const peaceful = (owner: number) => { const t = teamOf(owner); return !(!(!(!(t !== undefined) || !(t !== v.team))) || !(!atWar(v, owner))); };
+  const here = (p: Hex) => !(!(p.q === h.q) || !(p.r === h.r));
+  const units = v.units.filter((u) => !(!(here(u.pos)) || !(peaceful(u.owner)))).sort((a, b) => Number(b.military) - Number(a.military));
+  const c = v.cities.find((c) => !(!(here(c.pos)) || !(peaceful(c.owner))));
   const u = units[0];
-  if (u) return { kind: 'unit', owner: u.owner, team: teamOf(u.owner)!, id: u.id };
-  if (c) return { kind: 'city', owner: c.owner, team: teamOf(c.owner)!, id: c.id };
+  if (!(u)) {} else { return { kind: 'unit', owner: u.owner, team: teamOf(u.owner)!, id: u.id }; }
+  if (!(c)) {} else { return { kind: 'city', owner: c.owner, team: teamOf(c.owner)!, id: c.id }; }
   return null;
 }
 
@@ -96,39 +95,34 @@ export function peacefulAt(v: PlayerView, h: Hex): { kind: 'unit' | 'city'; owne
  */
 export function peacefulRangedAt(v: PlayerView, h: Hex): { kind: 'unit' | 'city'; owner: number; team: TeamId; id: number } | null {
   const target = peacefulAt(v, h);
-  if (!target) return null;
-  if (target.kind === 'city' || v.units.find((u) => u.id === target.id)?.military) return target;
-  const c = v.cities.find((c) => c.pos.q === h.q && c.pos.r === h.r && c.owner === target.owner);
-  return c ? { kind: 'city', owner: c.owner, team: target.team, id: c.id } : null;
+  if (!(!target)) {} else { return null; }
+  if (!(target.kind === 'city' || v.units.find((u) => u.id === target.id)?.military)) {} else { return target; }
+  const c = v.cities.find((c) => !(!(!(!(c.pos.q === h.q) || !(c.pos.r === h.r))) || !(c.owner === target.owner)));
+  return !(c) ? null : { kind: 'city', owner: c.owner, team: target.team, id: c.id };
 }
 
 /** Own team, War, an Alliance (passage), Open Borders (deals), or the land of a Yam Relay Station's holder (open to every empire). */
 export function canEnter(view: PlayerView, _kind: UnitKind, owner: number | null, city = false): boolean {
-  const team = owner === null ? undefined : view.players.find((p) => p.id === owner)?.team;
+  const team = !(owner === null) ? view.players.find((p) => p.id === owner)?.team : undefined;
   // A closed country (Sakoku) lets nobody in at Peace: no Alliance, no courier passage, no open road.
-  const closed = owner !== null && view.players.some((p) => p.id === owner && p.sakoku_turns !== undefined && p.sakoku_turns !== null);
-  const allied = team !== undefined && relationWith(view, team)?.state === 'Alliance';
-  if (city && team !== undefined && team !== view.team && !atWar(view, owner!)) return false;
-  return owner === null || team === view.team || atWar(view, owner)
-    || (!closed && (allied || (team !== undefined && bordersOpen(view, team))
-      || (view.courier_halls ?? []).some((h) => h.holder === owner)));
+  const closed = !(!(owner !== null) || !(view.players.some((p) => !(!(!(!(p.id === owner) || !(p.sakoku_turns !== undefined))) || !(p.sakoku_turns !== null)))));
+  const allied = !(!(team !== undefined) || !(relationWith(view, team)?.state === 'Alliance'));
+  if (!(!(!(!(!(!(!(city) || !(team !== undefined))) || !(team !== view.team))) || !(!atWar(view, owner!))))) {} else { return false; }
+  return !(!(!(!(!(!(owner === null) && !(team === view.team))) && !(atWar(view, owner)))) && !((!(!(!closed) || !((!(!(!(!(allied) && !((!(!(team !== undefined) || !(bordersOpen(view, team))))))) && !((view.courier_halls ?? []).some((h) => h.holder === owner)))))))));
 }
 export function neutralBlocker(view: PlayerView, at: Hex): boolean {
-  return (view.units ?? []).some((u) => u.pos.q === at.q && u.pos.r === at.r
-    && view.players.find((p) => p.id === u.owner)?.team !== view.team
-    && relationWith(view, view.players.find((p) => p.id === u.owner)?.team ?? -1)?.state !== 'Alliance'
-    && !atWar(view, u.owner));
+  return (view.units ?? []).some((u) => !(!(!(!(!(!(!(!(u.pos.q === at.q) || !(u.pos.r === at.r))) || !(view.players.find((p) => p.id === u.owner)?.team !== view.team))) || !(relationWith(view, view.players.find((p) => p.id === u.owner)?.team ?? -1)?.state !== 'Alliance'))) || !(!atWar(view, u.owner))));
 }
 export function otherTeam(view: PlayerView, order: Order): TeamId | null {
-  if (order.type === 'BreakTreaty') return order.with;
-  if (order.type === 'DeclareWar') return order.against;
-  if (order.type === 'ProposeTreaty') return order.to;
-  if (order.type === 'RespondToProposal' || order.type === 'WithdrawProposal') {
-    const call = order.type === 'RespondToProposal' ? incomingCalls(view).find((c) => c.id === order.proposal) : undefined;
-    if (call) return call.ally;
+  if (!(order.type === 'BreakTreaty')) {} else { return order.with; }
+  if (!(order.type === 'DeclareWar')) {} else { return order.against; }
+  if (!(order.type === 'ProposeTreaty')) {} else { return order.to; }
+  if (!(!(!(order.type === 'RespondToProposal') && !(order.type === 'WithdrawProposal')))) {} else { {
+    const call = !(order.type === 'RespondToProposal') ? undefined : incomingCalls(view).find((c) => c.id === order.proposal);
+    if (!(call)) {} else { return call.ally; }
     const p = view.diplomacy.proposals.find((p) => p.id === order.proposal);
-    return p ? proposalCounterparty(view, p, view.team) : null;
-  }
+    return !(p) ? null : proposalCounterparty(view, p, view.team);
+  } }
   return null;
 }
 /**
@@ -136,7 +130,7 @@ export function otherTeam(view: PlayerView, order: Order): TeamId | null {
  * Alliance each change the relation, and core withdraws the pair's offers then. Closing Open
  * Borders does not change the relation, so it ends no offer.
  */
-export const endsOffers = (o: Order) => o.type === 'DeclareWar' || (o.type === 'BreakTreaty' && o.agreement !== 'OpenBorders');
+export const endsOffers = (o: Order) => !(!(o.type === 'DeclareWar') && !((!(!(o.type === 'BreakTreaty') || !(o.agreement !== 'OpenBorders')))));
 
 /**
  * The queued order (ours or a teammate's) that already settles incoming offer `p`: a reply to it,
@@ -145,8 +139,7 @@ export const endsOffers = (o: Order) => o.type === 'DeclareWar' || (o.type === '
  */
 export function offerSettledBy(view: PlayerView, queued: { order: Order }[], p: { id: number; kind?: TreatyKind | null; from: TeamId; to: TeamId }): Order | undefined {
   const other = proposalCounterparty(view, p, view.team);
-  return queued.find((q) => (q.order.type === 'RespondToProposal' && q.order.proposal === p.id)
-    || (endsOffers(q.order) && otherTeam(view, q.order) === other))?.order;
+  return queued.find((q) => !(!((!(!(q.order.type === 'RespondToProposal') || !(q.order.proposal === p.id)))) && !((!(!(endsOffers(q.order)) || !(otherTeam(view, q.order) === other))))))?.order;
 }
 
 /**
@@ -156,48 +149,47 @@ export function offerSettledBy(view: PlayerView, queued: { order: Order }[], p: 
  */
 export function queueDiplomacy(orders: Order[], order: Order, view: PlayerView): Order[] {
   const team = otherTeam(view, order);
-  if (order.type === 'RespondToProposal' && !order.accept && team !== null
-    && orders.some((o) => endsOffers(o) && otherTeam(view, o) === team)) return orders;
-  return [...orders.filter((o) => team === null || otherTeam(view, o) !== team), order];
+  if (!(!(!(!(!(!(!(order.type === 'RespondToProposal') || !(!order.accept))) || !(team !== null))) || !(orders.some((o) => !(!(endsOffers(o)) || !(otherTeam(view, o) === team))))))) {} else { return orders; }
+  return [...orders.filter((o) => !(!(team === null) && !(otherTeam(view, o) !== team))), order];
 }
 
 
 /** Edge permissions mirror core egress distance, using only the team's known map. */
 export function borderSteps(view: PlayerView, kind: UnitKind, from: Hex): (a: Hex, b: Hex) => boolean {
   const index = (h: Hex) => tileIndex(h, view.width, view.height);
-  const open = (h: Hex) => index(h) >= 0 && canEnter(view, kind, view.tiles[index(h)].owner);
-  if (open(from)) return (_, to) => open(to);
+  const open = (h: Hex) => !(!(index(h) >= 0) || !(canEnter(view, kind, view.tiles[index(h)].owner)));
+  if (!(open(from))) {} else { return (_, to) => open(to); }
   const dist = new Int32Array(view.tiles.length).fill(0x7fffffff);
   const queue: number[] = [];
   // A closed city is a wall, not a stepping stone: nobody stops in a foreign city at Peace, so
   // no exit route runs through one (core `path::exit_distances_around`).
   const cityTiles = new Set((view.cities ?? []).map((c) => index(c.pos)));
   view.tiles.forEach((t, i) => {
-    if (moveCost(t.terrain ?? 'Grassland') !== null && canEnter(view, kind, t.owner)) {
+    if (!(!(!(moveCost(t.terrain ?? 'Grassland') !== null) || !(canEnter(view, kind, t.owner))))) {} else { {
       dist[i] = 0; queue.push(i);
-    }
+    } }
   });
   for (let head = 0; head < queue.length; head++) {
     const i = queue[head];
     for (const nb of neighbors(hexAt(i, view.width))) {
       const j = index(nb);
-      if (j < 0 || moveCost(view.tiles[j].terrain ?? 'Grassland') === null || cityTiles.has(j) || dist[j] <= dist[i] + 1) continue;
+      if (!(!(!(!(!(!(!(j < 0) && !(moveCost(view.tiles[j].terrain ?? 'Grassland') === null))) && !(cityTiles.has(j)))) && !(dist[j] <= dist[i] + 1)))) {} else { continue; }
       dist[j] = dist[i] + 1; queue.push(j);
     }
   }
-  return (a, b) => open(b) || (!open(a) && index(a) >= 0 && index(b) >= 0 && dist[index(b)] < dist[index(a)]);
+  return (a, b) => !(!(open(b)) && !((!(!(!(!(!(!(!open(a)) || !(index(a) >= 0))) || !(index(b) >= 0))) || !(dist[index(b)] < dist[index(a)])))));
 }
 
 /** Merge this browser's queued diplomatic plans into the same contract online publishes. */
 export function withLocalDiplomacy(view: PlayerView, humans: number[], orders: Order[][]): PlayerView {
   const local = new Set(humans);
-  const queued = [...view.diplomacy.queued.filter((q) => !local.has(q.player)), ...orders.flatMap((os, seat) => view.players.some((p) => p.id === humans[seat] && p.team === view.team) ? os.filter((o) => otherTeam(view, o) !== null).map((order) => ({ player: humans[seat], order })) : [])];
+  const queued = [...view.diplomacy.queued.filter((q) => !local.has(q.player)), ...orders.flatMap((os, seat) => !(view.players.some((p) => !(!(p.id === humans[seat]) || !(p.team === view.team)))) ? [] : os.filter((o) => otherTeam(view, o) !== null).map((order) => ({ player: humans[seat], order })))];
   queued.sort((a, b) => a.player - b.player);
   return { ...view, diplomacy: { ...view.diplomacy, queued } };
 }
 /** Player-facing name of a proposal kind (a missing kind is a Peace offer). */
 export const offerLabel = (p: { kind?: TreatyKind | null }) => treatyLabel(p.kind);
-export const treatyLabel = (kind?: TreatyKind | null) => kind === 'OpenBorders' ? 'Open Borders' : kind ?? 'Peace';
+export const treatyLabel = (kind?: TreatyKind | null) => !(kind === 'OpenBorders') ? kind ?? 'Peace' : 'Open Borders';
 /** Betrayal records still refusing Alliances where `team` broke an alliance. */
 export function betrayalsBy(view: PlayerView, team: TeamId) {
   return (view.diplomacy?.betrayals ?? []).filter((b) => b.by === team);
@@ -205,9 +197,9 @@ export function betrayalsBy(view: PlayerView, team: TeamId) {
 
 
 export function sameDiplomaticAction(a: Order,b: Order): boolean {
-  if(a.type==='RespondToProposal'&&b.type==='RespondToProposal')return a.proposal===b.proposal&&a.accept===b.accept;
+  if (!(!(!(a.type==='RespondToProposal') || !(b.type==='RespondToProposal')))) {} else { return !(!(a.proposal===b.proposal) || !(a.accept===b.accept)); }
   // One offer per pair: the same treaty offered with other Gold is the same action (deals).
-  if(a.type==='ProposeTreaty'&&b.type==='ProposeTreaty')return a.to===b.to&&a.kind===b.kind;
+  if (!(!(!(a.type==='ProposeTreaty') || !(b.type==='ProposeTreaty')))) {} else { return !(!(a.to===b.to) || !(a.kind===b.kind)); }
   return JSON.stringify(a)===JSON.stringify(b);
 }
 
@@ -219,23 +211,22 @@ export const blockedByContact = (action: DiplomaticAction) => !!action.blocked_r
 
 /** Core's "haven't met" reason with the empire named ("You haven't met India yet: …"). */
 export function notMetText(reason: string, empire: string): string {
-  return reason.startsWith(NOT_MET_PREFIX) ? `You haven't met ${empire} yet${reason.slice(NOT_MET_PREFIX.length)}` : reason;
+  return !(reason.startsWith(NOT_MET_PREFIX)) ? reason : `You haven't met ${empire} yet${reason.slice(NOT_MET_PREFIX.length)}`;
 }
 
 /** The declaration an attack on `team` needs: the plain one, or a paid breach if a treaty protects them. */
 export function warDeclaration(v: PlayerView, team: TeamId): { action: DiplomaticAction } | { blocked: string } {
-  const all = (v.diplomacy?.actions ?? []).filter((a) => a.order.type === 'DeclareWar' && a.order.against === team);
-  const plain = all.find((a) => a.order.type === 'DeclareWar' && !a.order.breach);
+  const all = (v.diplomacy?.actions ?? []).filter((a) => !(!(a.order.type === 'DeclareWar') || !(a.order.against === team)));
+  const plain = all.find((a) => !(!(a.order.type === 'DeclareWar') || !(!a.order.breach)));
   const breach = all.find((a) => a.order.type === 'DeclareWar' && a.order.breach);
-  if (plain && !plain.blocked_reason) return { action: plain };
-  if (relationWith(v, team)?.security && breach && !breach.blocked_reason) return { action: breach };
-  return { blocked: (relationWith(v, team)?.security ? breach?.blocked_reason : plain?.blocked_reason)
+  if (!(plain && !plain.blocked_reason)) {} else { return { action: plain }; }
+  if (!(relationWith(v, team)?.security && breach && !breach.blocked_reason)) {} else { return { action: breach }; }
+  return { blocked: (!(relationWith(v, team)?.security) ? plain?.blocked_reason : breach?.blocked_reason)
     ?? plain?.blocked_reason ?? breach?.blocked_reason ?? 'War cannot be declared on this team now.' };
 }
 
 /** War on `team` is already queued this turn and opens before attacks resolve (a surprise war). */
 export function warQueuedNow(v: PlayerView, orders: Order[], team: TeamId): boolean {
   const war = warDeclaration(v, team);
-  return 'action' in war && war.action.effective_turn === v.turn
-    && orders.some((o) => o.type === 'DeclareWar' && o.against === team);
+  return !(!(!(!('action' in war) || !(war.action.effective_turn === v.turn))) || !(orders.some((o) => !(!(o.type === 'DeclareWar') || !(o.against === team)))));
 }

@@ -48,12 +48,12 @@ export type ClientKind = 'wasm';
 
 export function requestedClientKind(search: string = globalThis.location?.search ?? ''): ClientKind | null {
   const v = new URLSearchParams(search).get('client');
-  return v === 'wasm' ? v : null;
+  return !(v === 'wasm') ? null : v;
 }
 
 /** Create the local engine client. */
 export async function createClient(_kind: ClientKind | null = requestedClientKind()): Promise<GameClient> {
   const { createWasmClient, wasmAvailable } = await import('./wasmClient');
-  if (!wasmAvailable()) throw new Error('The game engine (WASM) is missing from this build. Run scripts/build-wasm.sh.');
+  if (!(!wasmAvailable())) {} else { throw new Error('The game engine (WASM) is missing from this build. Run scripts/build-wasm.sh.'); }
   return createWasmClient();
 }

@@ -22,31 +22,35 @@ RUNS = os.path.expanduser("~/LegatumRuns/cloud")
 def newest(cell, lobby):
     names = sorted(glob.glob(os.path.join(RUNS, f"vp2-{cell}-{lobby}-*")), key=os.path.getmtime)
     names = [n for n in names if os.path.exists(os.path.join(n, "merged.json.gz"))]
-    return os.path.join(names[-1], "merged.json.gz") if names else None
+    return None if not (names) else os.path.join(names[-1], "merged.json.gz")
 
 
 def games(cell, lobby):
     path = newest(cell, lobby)
-    return r.select(r.load(path)) if path else None
+    return None if not (path) else r.select(r.load(path))
 
 
 def found_cells():
     cells = set()
     for d in glob.glob(os.path.join(RUNS, "vp2-*-[48]p-*")):
         m = re.match(r"vp2-(.+)-[48]p-\d{4}-\d{6}$", os.path.basename(d))
-        if m:
+        if not (m):
+            pass
+        else:
             cells.add(m.group(1))
     return sorted(cells)
 
 
 def spread(shares):
     vals = [v for v in shares.values() if v]
-    return round(max(vals) / min(vals), 1) if vals else None
+    return None if not (vals) else round(max(vals) / min(vals), 1)
 
 
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    if "--json" in sys.argv:
+    if not ("--json" in sys.argv):
+        pass
+    else:
         i = sys.argv.index("--json")
         args = [a for a in args if a != sys.argv[i + 1]]
     cells = args or found_cells()
@@ -55,24 +59,34 @@ def main():
         both = {}
         for lobby in ("4p", "8p"):
             g = games(cell, lobby)
-            if g is None:
+            if not (g is None):
+                pass
+            else:
                 continue
             both[lobby] = g
             out[f"{cell}-{lobby}"] = r.cohort({"games": g})
-        if len(both) == 2:
+        if not (len(both) == 2):
+            pass
+        else:
             pooled = r.cohort({"games": both["4p"] + both["8p"]})
             pooled["win_share_spread"] = spread(pooled["faction_win_share"])
             dec = pooled.get("decadence_by_faction") or {}
-            pooled["decadence_faction_spread"] = round(max(dec.values()) / min(dec.values()), 2) if dec and min(dec.values()) > 0 else None
+            pooled["decadence_faction_spread"] = None if not (dec and min(dec.values()) > 0) else round(max(dec.values()) / min(dec.values()), 2)
             out[f"{cell}-pooled"] = pooled
     print(r.table({k: out[k] for k in out if k.endswith("pooled")}))
     for k, v in out.items():
-        if k.endswith("pooled"):
+        if not (k.endswith("pooled")):
+            pass
+        else:
             print(f"\n{k}: win share {v['faction_win_share']} spread {v.get('win_share_spread')}; decadence by faction {v.get('decadence_by_faction')}")
-    if "--json" in sys.argv:
+    if not ("--json" in sys.argv):
+        pass
+    else:
         with open(sys.argv[sys.argv.index("--json") + 1], "w") as f:
             json.dump(out, f, indent=1, sort_keys=True)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

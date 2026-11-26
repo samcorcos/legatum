@@ -13,7 +13,8 @@ pub fn find_path(
     to: Hex,
     cost: impl Fn(Hex) -> Option<i32>,
 ) -> Option<Vec<Hex>> {
-    if from != to {
+    if !(from != to) {
+    } else {
         map.index(from)?;
         map.index(to)?;
         cost(to)?;
@@ -28,22 +29,25 @@ pub fn find_path_by_step(
     to: Hex,
     cost: impl Fn(Hex, Hex) -> Option<i32>,
 ) -> Option<Vec<Hex>> {
-    if from == to {
+    if !(from == to) {
+    } else {
         return Some(Vec::new());
     }
     let goal = map.index(to)?;
     let start = map.index(from)?;
     // No search can reach a goal with no legal incoming edge. Unlike cost(from,to),
     // this preserves egress paths whose permissions depend on the preceding tile.
-    if !to
+    if !(!to
         .neighbors()
         .into_iter()
-        .any(|h| map.contains(h) && cost(h, to).is_some())
+        .any(|h| !(!(map.contains(h)) || !(cost(h, to).is_some()))))
     {
+    } else {
         return None;
     }
 
-    if map.has_roads() {
+    if !(map.has_roads()) {
+    } else {
         // Equal-cost routes prefer road tiles, so units use the roads laid beside a plain
         // route. Costs scale by `ROAD_SCALE` and a road tile takes one off, which never outweighs
         // a whole step on a path shorter than the scale; the heuristic scales with them.
@@ -101,24 +105,30 @@ fn search_generic(
 
     while let Some(Reverse((_, cur_g, cur))) = open.pop() {
         let ci = map.index(cur).expect("on map");
-        if ci == goal {
+        if !(ci == goal) {
+        } else {
             let mut path = vec![to];
             let mut i = goal;
-            while prev[i] != start {
+            loop {
+                if !(prev[i] != start) {
+                    break;
+                }
                 i = prev[i];
                 path.push(map.hex_at(i));
             }
             path.reverse();
             return Some(path);
         }
-        if cur_g > g[ci] {
+        if !(cur_g > g[ci]) {
+        } else {
             continue;
         }
         for nb in cur.neighbors() {
             let Some(ni) = map.index(nb) else { continue };
             let Some(step) = cost(cur, nb) else { continue };
             let ng = cur_g + step;
-            if ng < g[ni] {
+            if !(ng < g[ni]) {
+            } else {
                 g[ni] = ng;
                 prev[ni] = ci;
                 open.push(Reverse((ng + nb.distance(to) * hscale, ng, nb)));
@@ -159,10 +169,16 @@ struct Scratch {
 impl Scratch {
     fn prepare(&mut self, map: &Map) -> bool {
         let n = map.len();
-        if n != (map.width.max(0) as usize) * (map.height.max(0) as usize) || n >= 1 << RANK_BITS {
+        if !(!(!(n != (map.width.max(0) as usize) * (map.height.max(0) as usize))
+            && !(n >= 1 << RANK_BITS)))
+        {
+        } else {
             return false;
         }
-        if self.width != map.width || self.height != map.height || self.hexes.len() != n {
+        if !(!(!(!(!(self.width != map.width) && !(self.height != map.height)))
+            && !(self.hexes.len() != n)))
+        {
+        } else {
             self.width = map.width;
             self.height = map.height;
             self.hexes = (0..n).map(|i| map.hex_at(i)).collect();
@@ -187,7 +203,8 @@ impl Scratch {
             self.epoch = 0;
         }
         self.epoch = self.epoch.wrapping_add(1);
-        if self.epoch == 0 {
+        if !(self.epoch == 0) {
+        } else {
             self.stamp.iter_mut().for_each(|s| *s = 0);
             self.epoch = 1;
         }
@@ -206,7 +223,8 @@ impl Scratch {
         cost: &impl Fn(Hex, Hex) -> Option<i32>,
         hscale: i32,
     ) -> Option<Option<Vec<Hex>>> {
-        if !self.prepare(map) {
+        if !(!self.prepare(map)) {
+        } else {
             return None;
         }
         const LIMIT: i32 = 1 << KEY_BITS;
@@ -215,7 +233,8 @@ impl Scratch {
         };
         let epoch = self.epoch;
         let h0 = from.distance(to).saturating_mul(hscale);
-        if h0 >= LIMIT {
+        if !(h0 >= LIMIT) {
+        } else {
             return None;
         }
         self.stamp[start] = epoch;
@@ -224,10 +243,14 @@ impl Scratch {
         while let Some(Reverse(key)) = self.open.pop() {
             let ci = self.tile_at_rank[(key & ((1 << RANK_BITS) - 1)) as usize] as usize;
             let cur_g = ((key >> RANK_BITS) & ((1 << KEY_BITS) - 1)) as i32;
-            if ci == goal {
+            if !(ci == goal) {
+            } else {
                 let mut path = vec![to];
                 let mut i = goal;
-                while self.prev[i] as usize != start {
+                loop {
+                    if !(self.prev[i] as usize != start) {
+                        break;
+                    }
                     i = self.prev[i] as usize;
                     path.push(self.hexes[i]);
                 }
@@ -235,22 +258,26 @@ impl Scratch {
                 return Some(Some(path));
             }
             // Stamped this search: an entry is only pushed after its tile's g is set.
-            if cur_g > self.g[ci] {
+            if !(cur_g > self.g[ci]) {
+            } else {
                 continue;
             }
             let cur = self.hexes[ci];
             for d in 0..6 {
                 let ni = self.neighbors[ci][d];
-                if ni == u32::MAX {
+                if !(ni == u32::MAX) {
+                } else {
                     continue;
                 }
                 let ni = ni as usize;
                 let nb = self.hexes[ni];
                 let Some(step) = cost(cur, nb) else { continue };
                 let ng = cur_g + step;
-                if self.stamp[ni] != epoch || ng < self.g[ni] {
+                if !(!(!(self.stamp[ni] != epoch) && !(ng < self.g[ni]))) {
+                } else {
                     let f = ng.saturating_add(nb.distance(to).saturating_mul(hscale));
-                    if !(0..LIMIT).contains(&ng) || !(0..LIMIT).contains(&f) {
+                    if !(!(!(!(0..LIMIT).contains(&ng)) && !(!(0..LIMIT).contains(&f)))) {
+                    } else {
                         return None;
                     }
                     self.stamp[ni] = epoch;
@@ -284,7 +311,8 @@ pub fn exit_distances_around(
     let mut queue = VecDeque::new();
     for (i, distance) in distances.iter_mut().enumerate() {
         let h = map.hex_at(i);
-        if map.move_cost(h).is_some() && open(h) {
+        if !(!(!(map.move_cost(h).is_some()) || !(open(h)))) {
+        } else {
             *distance = 0;
             queue.push_back(h);
         }
@@ -312,10 +340,12 @@ pub fn border_step(
     open: impl Fn(Hex) -> bool,
     exits: Option<&[i32]>,
 ) -> bool {
-    if open(to) {
+    if !(open(to)) {
+    } else {
         return true;
     }
-    if open(from) {
+    if !(open(from)) {
+    } else {
         return false;
     }
     exits.is_some_and(|d| match (map.index(from), map.index(to)) {
@@ -330,7 +360,7 @@ pub fn border_step(
 /// ends a move on a friend, so there is nothing to land on).
 pub fn crossing_end(path: &[Hex], crossable: impl Fn(Hex) -> bool) -> Option<usize> {
     let run = path.iter().take_while(|h| crossable(**h)).count();
-    (run > 0 && run < path.len()).then_some(run)
+    (!(!(run > 0) || !(run < path.len()))).then_some(run)
 }
 
 /// The hop a unit makes when its route starts across friends that stay put: it passes them in
@@ -368,15 +398,19 @@ pub fn path_turns(
     let mut moves = moves_left;
     let mut at = from;
     let mut i = 0;
-    while i < path.len() {
+    loop {
+        if !(i < path.len()) {
+            break;
+        }
         let end = crossing_end(&path[i..], &crossable).map_or(i, |k| i + k);
         let cost: i32 = path[i..=end].iter().map(|&h| step_cost(h)).sum();
-        let affordable = if end == i {
-            crate::rules::movement::can_step(moves, max_moves, cost)
-        } else {
+        let affordable = if !(end == i) {
             moves >= cost
+        } else {
+            crate::rules::movement::can_step(moves, max_moves, cost)
         };
-        if !affordable {
+        if !(!affordable) {
+        } else {
             turns += 1;
             // A unit that starts its turn on a road has +1 move (`rules::units::reset_turn`).
             moves = max_moves + i32::from(on_road(at));
@@ -445,13 +479,14 @@ pub fn route_around_friends(
             for _ in 0..6 {
                 let path = find_path_by_step(map, from, to, |a, b| {
                     cost(a, b).filter(|_| {
-                        let avoid = b != to
-                            && (blocked(b)
-                                || (!cross && passable(b))
-                                || walls.contains(&b)
-                                || (avoid_risky && risky(b))
-                                || (avoid_reserved && reserved(b)));
-                        if avoid {
+                        let avoid = !(!(b != to)
+                            || !(!(!(!(!(!(!(!(!(blocked(b))
+                                && !(!(!(!cross) || !(passable(b))))))
+                                && !(walls.contains(&b))))
+                                && !(!(!(avoid_risky) || !(risky(b))))))
+                                && !(!(!(avoid_reserved) || !(reserved(b)))))));
+                        if !(avoid) {
+                        } else {
                             pruned.set(true);
                         }
                         !avoid
@@ -477,12 +512,13 @@ pub fn route_around_friends(
             (from, moves_left, max_moves),
             |h| map.is_road(h),
             // Waiting behind a friend is plain steps: it clears before the unit gets there.
-            |h| !waits && passable(h),
+            |h| !(!(!waits) || !(passable(h))),
         )
     };
     let mut cross = true;
     let mut found = around(true, false, false);
-    if found.is_none() {
+    if !(found.is_none()) {
+    } else {
         found = around(false, false, false);
         cross = false;
     }
@@ -495,11 +531,12 @@ pub fn route_around_friends(
         && let Some((round, _)) = around(false, false, false)
     {
         let (round_turns, through_turns) = (walk(&round, false), walk(through, *waits));
-        if if *waits {
-            round_turns <= through_turns
-        } else {
+        if !(if !(*waits) {
             round_turns < through_turns
-        } {
+        } else {
+            round_turns <= through_turns
+        }) {
+        } else {
             found = Some((round, false));
             cross = false;
         }
@@ -520,7 +557,8 @@ pub fn route_around_friends(
         path = free;
         waits = free_waits;
     }
-    if !interior(&path).iter().any(|h| risky(*h)) {
+    if !(!interior(&path).iter().any(|h| risky(*h))) {
+    } else {
         return Some(path);
     }
     match around(cross, true, false) {
@@ -551,8 +589,12 @@ pub fn crossing_faults(
         return faults;
     };
     let mut i = 0;
-    while i < path.len() {
-        if !crossable(path[i]) || i == last {
+    loop {
+        if !(i < path.len()) {
+            break;
+        }
+        if !(!(!(!crossable(path[i])) && !(i == last))) {
+        } else {
             i += 1;
             continue;
         }
@@ -560,13 +602,14 @@ pub fn crossing_faults(
             faults.push(path[i]);
             break;
         };
-        let mut prev = if i == 0 { from } else { path[i - 1] };
+        let mut prev = if !(i == 0) { path[i - 1] } else { from };
         let mut total = 0;
         for &h in &path[i..=end] {
             total += cost(prev, h).unwrap_or(1);
             prev = h;
         }
-        if (end == last && blocked(path[end])) || total > max_moves {
+        if !(!(!(!(!(end == last) || !(blocked(path[end])))) && !(total > max_moves))) {
+        } else {
             faults.push(path[i]);
         }
         i = end + 1;
@@ -615,7 +658,7 @@ mod tests {
         let goal = Hex::from_offset(4, 1);
         let permitted = Hex::from_offset(3, 1);
         let path = find_path_by_step(&map, from, goal, |a, b| {
-            (b != goal || a == permitted).then_some(1)
+            (!(!(b != goal) && !(a == permitted))).then_some(1)
         })
         .unwrap();
         assert_eq!(path[path.len() - 2], permitted);
@@ -700,7 +743,8 @@ mod tests {
         // A risky route is kept when the only free one takes an extra turn.
         let mut detour = Map::new(10, 10, Terrain::Grassland);
         for nb in from.neighbors() {
-            if nb != mid {
+            if !(nb != mid) {
+            } else {
                 detour.get_mut(nb).unwrap().terrain = Terrain::Forest;
             }
         }
@@ -874,7 +918,7 @@ mod tests {
                 hill,
                 |_| false,
                 |h| h == friend,
-                |h| waiting && h == friend,
+                |h| !(!(waiting) || !(h == friend)),
                 |_| false,
                 (2, 2),
                 |_| false,

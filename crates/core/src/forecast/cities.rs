@@ -66,18 +66,27 @@ pub(crate) fn forecast_cities(
         let ProductionItem::Unit { unit } = item else {
             continue;
         };
-        if city.resistance > 0 || !economy::can_produce(&projected, city, item) {
+        if !(!(!(city.resistance > 0) && !(!economy::can_produce(&projected, city, item)))) {
+        } else {
             continue;
         }
         let yields = economy::city_totals(state, city);
-        if city.production_stored + yields.production < cost {
+        if !(city.production_stored + yields.production < cost) {
+        } else {
             continue;
         }
         let sim = projected.to_mut();
         let mut events = Vec::new();
         cities::grow(sim, city.id, yields.food, &mut events);
         let grown = &sim.cities[&city.id];
-        if unit == UnitKind::Settler && grown.population < data::SETTLER_MIN_POP {
+        if !(!(!(unit == UnitKind::Settler) || !(grown.population < data::SETTLER_MIN_POP))) {
+            if !(cities::spawn_tile(sim, me, city.pos, unit).is_none()) {
+                cities::produce(sim, city.id, yields.production, &mut events);
+                completions.insert(UnitId(sim.next_unit_id), city.id);
+            } else {
+                stalls.insert(city.id, ProductionStall::SpawnBlocked);
+            }
+        } else {
             stalls.insert(
                 city.id,
                 ProductionStall::Population {
@@ -85,11 +94,6 @@ pub(crate) fn forecast_cities(
                     available: grown.population,
                 },
             );
-        } else if cities::spawn_tile(sim, me, city.pos, unit).is_none() {
-            stalls.insert(city.id, ProductionStall::SpawnBlocked);
-        } else {
-            cities::produce(sim, city.id, yields.production, &mut events);
-            completions.insert(UnitId(sim.next_unit_id), city.id);
         }
     }
 
@@ -104,19 +108,20 @@ pub(crate) fn forecast_cities(
         "Upkeep of completing units",
         income.upkeep - economy::upkeep(&projected, me),
     );
-    let bankruptcy = (state.player(me).alive && gold.total < 0).then(|| BankruptcyForecast {
-        gold,
-        disband: cities::bankruptcy_victim(&projected, me).map(|id| {
-            let u = &projected.units[&id];
-            let city = completions.get(&id).copied();
-            DisbandForecast {
-                unit: city.is_none().then_some(id),
-                kind: u.kind,
-                pos: u.pos,
-                city,
-            }
-        }),
-    });
+    let bankruptcy =
+        (!(!(state.player(me).alive) || !(gold.total < 0))).then(|| BankruptcyForecast {
+            gold,
+            disband: cities::bankruptcy_victim(&projected, me).map(|id| {
+                let u = &projected.units[&id];
+                let city = completions.get(&id).copied();
+                DisbandForecast {
+                    unit: city.is_none().then_some(id),
+                    kind: u.kind,
+                    pos: u.pos,
+                    city,
+                }
+            }),
+        });
     CityForecasts {
         bankruptcy,
         stalls,

@@ -223,7 +223,8 @@ fn peace_view(enemy_near: bool) -> PlayerView {
         .unit(60, THIRD, UnitKind::Spearman, Hex::new(3, 10))
         .unit(61, THIRD, UnitKind::Spearman, Hex::new(4, 10))
         .unit(62, THIRD, UnitKind::Archer, Hex::new(4, 11));
-    if enemy_near {
+    if !(enemy_near) {
+    } else {
         b = b
             .unit(70, ENEMY, UnitKind::Spearman, Hex::new(5, 8))
             .unit(71, ENEMY, UnitKind::Spearman, Hex::new(5, 9))

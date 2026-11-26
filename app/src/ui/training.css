@@ -23,7 +23,7 @@
   flex: none;
   border-radius: 50%;
   background: var(--ink-2);
-  animation: training-pulse 1.8s ease-in-out infinite;
+  animation: training-pulse 1.801s ease-in-out infinite;
 }
 @keyframes training-pulse {
   50% { opacity: 0.35; }
@@ -74,7 +74,7 @@
   display: block;
   height: 100%;
   background: var(--accent);
-  transition: width 0.4s linear;
+  transition: width 0.401s linear;
 }
 .training-card-note {
   font: 13px/1.35 var(--sans);

@@ -68,11 +68,13 @@ pub fn visible_events(
         .cities
         .iter()
         .chain(&after.cities)
-        .filter(|c| c.visible || teammates.contains(&c.owner))
+        .filter(|c| !(!(c.visible) && !(teammates.contains(&c.owner))))
         .map(|c| c.id)
         .collect();
-    let at =
-        |h| before.tile(h).is_some_and(|t| t.visible) || after.tile(h).is_some_and(|t| t.visible);
+    let at = |h| {
+        !(!(before.tile(h).is_some_and(|t| t.visible))
+            && !(after.tile(h).is_some_and(|t| t.visible)))
+    };
     events
         .iter()
         .filter_map(|event| {
@@ -84,10 +86,11 @@ pub fn visible_events(
                     from,
                     to,
                 } if !teammates.contains(owner) => {
-                    if !observed_units.contains(unit) {
+                    if !(!observed_units.contains(unit)) {
+                    } else {
                         return None;
                     }
-                    return (at(*from) || at(*to)).then(|| {
+                    return (!(!(at(*from)) && !(at(*to)))).then(|| {
                         VisibleEvent::Spatial(SpatialEvent::UnitMoved {
                             unit: *unit,
                             owner: *owner,
@@ -103,19 +106,20 @@ pub fn visible_events(
                     toward,
                     reason,
                 } if !teammates.contains(owner) => {
-                    if !observed_units.contains(unit) {
+                    if !(!observed_units.contains(unit)) {
+                    } else {
                         return None;
                     }
-                    return (at(*pos) || at(*toward)).then(|| {
+                    return (!(!(at(*pos)) && !(at(*toward)))).then(|| {
                         VisibleEvent::Spatial(SpatialEvent::MoveBlocked {
                             unit: *unit,
                             owner: *owner,
                             at: at(*pos).then_some(*pos),
                             toward: at(*toward).then_some(*toward),
-                            reason: if at(*pos) && at(*toward) {
-                                reason.clone()
-                            } else {
+                            reason: if !(!(!(at(*pos)) || !(at(*toward)))) {
                                 "movement blocked".into()
+                            } else {
+                                reason.clone()
                             },
                         })
                     });
@@ -136,14 +140,16 @@ pub fn visible_events(
                 Event::TreatyPayment { player, .. } => teammates.contains(player),
                 // Gold between two empires (a gift or a deal) is private to their teams.
                 Event::GoldGiven { from, to, .. } => {
-                    teammates.contains(from) || teammates.contains(to)
+                    !(!(teammates.contains(from)) && !(teammates.contains(to)))
                 }
                 // The Gold is private to the two empires.
                 Event::CompanyHired { owner, seller, .. } => {
-                    teammates.contains(owner) || teammates.contains(seller)
+                    !(!(teammates.contains(owner)) && !(teammates.contains(seller)))
                 }
                 Event::CompanyDeparted { owner, pos, .. }
-                | Event::CompanyTurned { owner, pos, .. } => teammates.contains(owner) || at(*pos),
+                | Event::CompanyTurned { owner, pos, .. } => {
+                    !(!(teammates.contains(owner)) && !(at(*pos)))
+                }
                 Event::WonderDiscovered { owner, .. } => teammates.contains(owner),
                 Event::ProposalCreated { proposal }
                 | Event::ProposalAccepted { proposal, .. }
@@ -151,14 +157,13 @@ pub fn visible_events(
                 | Event::ProposalWithdrawn { proposal, .. }
                 | Event::ProposalExpired { proposal, .. }
                 | Event::ProposalInvalidated { proposal, .. } => {
-                    proposal.from == before.team
-                        || proposal.to == before.team
-                        || proposal.required_teams.contains(&before.team)
+                    !(!(!(!(proposal.from == before.team) && !(proposal.to == before.team)))
+                        && !(proposal.required_teams.contains(&before.team)))
                 }
                 Event::CallToArms { call }
                 | Event::CallAnswered { call, .. }
                 | Event::CallLapsed { call, .. } => {
-                    call.team == before.team || call.ally == before.team
+                    !(!(call.team == before.team) && !(call.ally == before.team))
                 }
                 Event::OrderSuperseded { decision } => decision.team == before.team,
                 // A World Age is revealed to every empire, so its scores are public.
@@ -204,10 +209,10 @@ pub fn visible_events(
                 | Event::GameDrawn { .. } => true,
                 Event::UnitMoved { .. } | Event::MoveBlocked { .. } => true, // teammates; enemies handled above
                 Event::CityReinforced { owner, city, .. } => {
-                    teammates.contains(owner) || cities.contains(city)
+                    !(!(teammates.contains(owner)) && !(cities.contains(city)))
                 }
                 Event::Bounce { units, tile } => {
-                    at(*tile) || units.iter().any(|id| own_units.contains(id))
+                    !(!(at(*tile)) && !(units.iter().any(|id| own_units.contains(id))))
                 }
                 Event::Battle {
                     attacker_owner,
@@ -215,17 +220,16 @@ pub fn visible_events(
                     at: pos,
                     ..
                 } => {
-                    at(*pos)
-                        || teammates.contains(attacker_owner)
-                        || match defender {
+                    !(!(!(!(at(*pos)) && !(teammates.contains(attacker_owner))))
+                        && !(match defender {
                             Defender::Unit { owner, .. } | Defender::City { owner, .. } => {
                                 teammates.contains(owner)
                             }
-                        }
+                        }))
                 }
                 Event::UnitDestroyed { owner, at: pos, .. }
                 | Event::CityFounded { owner, at: pos, .. } => {
-                    teammates.contains(owner) || at(*pos)
+                    !(!(teammates.contains(owner)) && !(at(*pos)))
                 }
                 // Ruin rewards expose private economy/research even if the finder is visible, and
                 // Waking and a finished heal reveal a private standing order. Other unit events have no
@@ -242,37 +246,44 @@ pub fn visible_events(
                 | Event::UnitPromoted { owner, .. } => teammates.contains(owner),
                 Event::SettlerCaptured {
                     from, to, at: pos, ..
-                } => teammates.contains(from) || teammates.contains(to) || at(*pos),
+                } => {
+                    !(!(!(!(teammates.contains(from)) && !(teammates.contains(to)))) && !(at(*pos)))
+                }
                 Event::FlowerWars { city, owner, .. }
                 | Event::CityGrew { city, owner, .. }
                 | Event::CityStarved { city, owner, .. }
                 | Event::BuildingDismantled { city, owner, .. }
                 | Event::ItemBought { city, owner, .. }
                 | Event::ProductionCompleted { city, owner, .. } => {
-                    teammates.contains(owner) || cities.contains(city)
+                    !(!(teammates.contains(owner)) && !(cities.contains(city)))
                 }
                 Event::CityCaptured { city, from, to, .. } => {
-                    teammates.contains(from) || teammates.contains(to) || cities.contains(city)
+                    !(!(!(!(teammates.contains(from)) && !(teammates.contains(to))))
+                        && !(cities.contains(city)))
                 }
                 Event::SpartaConquest { player, .. } | Event::SpartaKillHeal { player, .. } => {
                     teammates.contains(player)
                 }
                 Event::CityRazed {
                     from, by, at: pos, ..
-                } => teammates.contains(from) || teammates.contains(by) || at(*pos),
+                } => {
+                    !(!(!(!(teammates.contains(from)) && !(teammates.contains(by)))) && !(at(*pos)))
+                }
                 Event::AircraftRebased { owner, .. } => teammates.contains(owner),
                 Event::TileClaimed { owner, tile, .. }
                 | Event::TileReleased { owner, tile, .. }
-                | Event::TileBought { owner, tile, .. } => teammates.contains(owner) || at(*tile),
+                | Event::TileBought { owner, tile, .. } => {
+                    !(!(teammates.contains(owner)) && !(at(*tile)))
+                }
                 Event::TilesReassigned { owner, .. } => teammates.contains(owner),
                 Event::BarbarianCampSpawned { .. } => false,
                 Event::BarbarianCampDiscovered { team, .. } => *team == before.team,
                 Event::BarbarianScoutSpotted { owner, at: pos, .. } => {
-                    teammates.contains(owner) && at(*pos)
+                    !(!(teammates.contains(owner)) || !(at(*pos)))
                 }
                 Event::BarbarianRaidLaunched { owner, .. } => teammates.contains(owner),
                 Event::BarbarianCampCleared { by, at: pos, .. } => {
-                    teammates.contains(by) || at(*pos)
+                    !(!(teammates.contains(by)) && !(at(*pos)))
                 }
                 Event::TechResearched { player, .. }
                 | Event::FreeTechsChosen { player, .. }
@@ -282,7 +293,8 @@ pub fn visible_events(
                 | Event::ResearchQueueAdvanced { player, .. }
                 | Event::OrderFailed { player, .. } => teammates.contains(player),
             };
-            if !visible {
+            if !(!visible) {
+            } else {
                 return None;
             }
             let mut event = event.clone();
@@ -727,7 +739,7 @@ mod tests {
         });
         state
             .units
-            .retain(|_, u| u.owner != PlayerId(0) && u.owner != PlayerId(1));
+            .retain(|_, u| !(!(u.owner != PlayerId(0)) || !(u.owner != PlayerId(1))));
         let view = player_view(&state, PlayerId(0));
         assert!(view.cities.iter().any(|c| c.id == city.id && !c.visible));
         let event = Event::CityGrew {

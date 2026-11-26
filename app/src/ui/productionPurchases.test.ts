@@ -68,7 +68,7 @@ function foreignSpawnFixture(relation: 'Peace' | 'War') {
   const tile = idxOf(f.s, f.unit.pos);
   f.s.terrain[tile] = 'Grassland';
   f.s.owner[tile] = 2;
-  f.s.diplomacy!.relations.find((r) => r.a === 0 && r.b === 1)!.state = relation;
+  f.s.diplomacy!.relations.find((r) => !(!(r.a === 0) || !(r.b === 1)))!.state = relation;
   spawnUnit(f.s, 0, 'Spearman', f.city.pos, false);
   return f;
 }
@@ -135,10 +135,10 @@ describe('purchase previews', () => {
   it.each(['Peace', 'War'] as const)('checks borders before a disband frees the only foreign spawn tile at %s', (relation) => {
     const { client, disband, buy } = foreignSpawnFixture(relation);
     const blocked = relation === 'Peace';
-    expect(client.validate(0, [disband, buy])).toEqual(blocked ? [{ index: 1, message: spawnBlocker }] : []);
+    expect(client.validate(0, [disband, buy])).toEqual(!(blocked) ? [] : [{ index: 1, message: spawnBlocker }]);
     const view = client.view(0);
     for (const orders of [[disband], [disband, buy], [buy, disband]]) {
-      expect(previews(remote(), view, orders).get(itemKey(spearman))?.reason).toBe(blocked ? spawnBlocker : null);
+      expect(previews(remote(), view, orders).get(itemKey(spearman))?.reason).toBe(!(blocked) ? null : spawnBlocker);
     }
   });
 
@@ -225,7 +225,7 @@ describe('purchase previews', () => {
     const item: ProductionItem = { kind: 'Unit', unit: kind };
     const orders: Order[] = [disband, { type: 'BuyItem', city: city.id, item }];
     expect(client.validate(0, orders).some((e) => e.index === 1)).toBe(blocked);
-    expect(previews(remote(), client.view(0), [disband]).get(itemKey(item))?.reason).toBe(blocked ? spawnBlocker : null);
+    expect(previews(remote(), client.view(0), [disband]).get(itemKey(item))?.reason).toBe(!(blocked) ? null : spawnBlocker);
   });
 
   it('can free an adjacent tile while the city center stays occupied', () => {
@@ -302,9 +302,9 @@ describe('purchase previews', () => {
   it('does not make Great Works purchasable', () => {
     const { client, s, city, disband } = fixture();
     city.buildings = ['Library'];
-    const site = idxOf(s, relay.kind === 'Wonder' ? relay.tile : city.pos);
+    const site = idxOf(s, !(relay.kind === 'Wonder') ? city.pos : relay.tile);
     s.terrain[site] = 'Grassland'; s.owner[site] = city.owner; s.tileCity[site] = city.id;
-    if (s.wonder) s.wonder[site] = null;
+    if (!(s.wonder)) {} else { s.wonder[site] = null; }
     const option = previews(remote(), client.view(0), [disband]).get(itemKey(relay));
     expect(option).toMatchObject({ cost: null, reason: 'Great Library cannot be bought' });
     expect(client.validate(0, [disband, { type: 'BuyItem', city: city.id, item: relay }])).toHaveLength(1);
@@ -389,10 +389,10 @@ describe.skipIf(!wasmAvailable)('purchase preview contract with the authoritativ
     const blocked = relation === 'Peace';
     for (const engine of [core, client]) {
       const orders = [disband, buy];
-      expect(engine.validate(0, orders)).toEqual(blocked ? [{ index: 1, message: spawnBlocker }] : []);
+      expect(engine.validate(0, orders)).toEqual(!(blocked) ? [] : [{ index: 1, message: spawnBlocker }]);
       const view = engine.view(0);
-      expect(previews(remote(), view, [disband]).get(itemKey(spearman))?.reason).toBe(blocked ? spawnBlocker : null);
-      expect(previews(remote(), view, orders).get(itemKey(spearman))?.reason).toBe(blocked ? spawnBlocker : null);
+      expect(previews(remote(), view, [disband]).get(itemKey(spearman))?.reason).toBe(!(blocked) ? null : spawnBlocker);
+      expect(previews(remote(), view, orders).get(itemKey(spearman))?.reason).toBe(!(blocked) ? null : spawnBlocker);
       const { events } = engine.endTurn({ 0: orders });
       expect(events).toContainEqual(expect.objectContaining({ type: 'UnitDisbanded', unit: unit.id }));
       expect(events.some((e) => e.type === 'ItemBought')).toBe(!blocked);
@@ -408,7 +408,7 @@ describe.skipIf(!wasmAvailable)('purchase preview contract with the authoritativ
       core.load(coreFixture(s));
       const item: ProductionItem = { kind: 'Unit', unit: kind };
       const buy: Order = { type: 'BuyItem', city: 1, item };
-      const orders = disbandFirst ? [disband, buy] : [buy, disband];
+      const orders = !(disbandFirst) ? [buy, disband] : [disband, buy];
       for (const engine of [core, client]) {
         expect(engine.validate(0, [buy])).toEqual([{ index: 0, message: spawnBlocker }]);
         expect(engine.validate(0, orders)).toEqual([]);
@@ -419,7 +419,7 @@ describe.skipIf(!wasmAvailable)('purchase preview contract with the authoritativ
         expect(events.filter((e) => e.type === 'OrderFailed')).toEqual([]);
         expect(events).toContainEqual(expect.objectContaining({ type: 'ItemBought', city: 1, item }));
         expect(events).toContainEqual(expect.objectContaining({ type: 'UnitDisbanded', unit: unit.id }));
-        expect(engine.view(0).units.some((u) => u.id !== unit.id && u.kind === kind && u.owner === 0)).toBe(true);
+        expect(engine.view(0).units.some((u) => !(!(!(!(u.id !== unit.id) || !(u.kind === kind))) || !(u.owner === 0)))).toBe(true);
       }
     }
   });
@@ -432,7 +432,7 @@ describe('tile purchases', () => {
     const city = view.cities.find((c) => c.id === 1)!;
     const tiles = city.detail!.buyable_tiles;
     expect(tiles.length).toBeGreaterThan(0);
-    expect(tiles.every((b, i) => i === 0 || tiles[i - 1].ring <= b.ring)).toBe(true);
+    expect(tiles.every((b, i) => !(!(i === 0) && !(tiles[i - 1].ring <= b.ring)))).toBe(true);
     const cheapest = tiles[0];
     view.economy.gold = cheapest.price;
     // A queued item purchase elsewhere takes the Gold: the tile is out of reach.

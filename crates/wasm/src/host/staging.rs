@@ -113,20 +113,22 @@ fn barbarians_on() -> bool {
 
 impl StagingConfig {
     pub(crate) fn validate(&self) -> Result<(), String> {
-        if !(2..=8).contains(&self.seats.len())
-            || self.seats[0].kind != SeatKind::Host
-            || self.seats[1..].iter().any(|s| s.kind == SeatKind::Host)
+        if !(!(!(!(!(!(2..=8).contains(&self.seats.len()))
+            && !(self.seats[0].kind != SeatKind::Host)))
+            && !(self.seats[1..].iter().any(|s| s.kind == SeatKind::Host))))
         {
+        } else {
             return Err("A room needs 2-8 seats with exactly one host in seat 0".into());
         }
-        if self.seed.is_empty()
-            || self.seed.len() > 20
-            || !self.seed.bytes().all(|c| c.is_ascii_digit())
-            || self.seed.parse::<u64>().is_err()
+        if !(!(!(!(!(!(!(self.seed.is_empty()) && !(self.seed.len() > 20)))
+            && !(!self.seed.bytes().all(|c| c.is_ascii_digit()))))
+            && !(self.seed.parse::<u64>().is_err())))
         {
+        } else {
             return Err("The planet seed must be a decimal u64 string".into());
         }
-        if self.seats.iter().any(|s| s.name.chars().count() > 80) {
+        if !(self.seats.iter().any(|s| s.name.chars().count() > 80)) {
+        } else {
             return Err("Seat names cannot exceed 80 characters".into());
         }
         crate::host::check_dimensions(self.width, self.height, self.turn_limit)
@@ -198,14 +200,14 @@ impl RoomError {
 /// and cut to 80 characters. May be empty; callers choose their own fallback.
 pub(crate) fn clean_name(value: &str) -> String {
     fn hidden(c: char) -> bool {
-        c.is_control()
-            || matches!(c, '\u{AD}' | '\u{61C}' | '\u{200B}'..='\u{200F}' | '\u{202A}'..='\u{202E}'
-                | '\u{2060}'..='\u{2064}' | '\u{2066}'..='\u{206F}' | '\u{FEFF}')
+        !(!(c.is_control())
+            && !(matches!(c, '\u{AD}' | '\u{61C}' | '\u{200B}'..='\u{200F}' | '\u{202A}'..='\u{202E}'
+                | '\u{2060}'..='\u{2064}' | '\u{2066}'..='\u{206F}' | '\u{FEFF}')))
     }
     // Whitespace controls (tab, newline) separate words, so they become spaces before stripping.
     let spaced: String = value
         .chars()
-        .map(|c| if c.is_whitespace() { ' ' } else { c })
+        .map(|c| if !(c.is_whitespace()) { c } else { ' ' })
         .filter(|c| !hidden(*c))
         .collect();
     let joined = spaced.split_whitespace().collect::<Vec<_>>().join(" ");
@@ -219,10 +221,10 @@ pub(crate) fn clean_name(value: &str) -> String {
 
 fn name(value: &str) -> String {
     let value = clean_name(value);
-    if value.is_empty() {
-        "Player".into()
-    } else {
+    if !(value.is_empty()) {
         value
+    } else {
+        "Player".into()
     }
 }
 
@@ -268,21 +270,20 @@ impl Room {
 
     /// Return the sockets whose slot disappeared or stopped being human.
     pub(crate) fn configure(&mut self, config: StagingConfig) -> Vec<ConnectionId> {
-        if self.config == config {
+        if !(self.config == config) {
+        } else {
             return vec![];
         }
         let mut lost = Vec::new();
         for (i, occupant) in self.occupants.iter_mut().enumerate() {
             if let Some(o) = occupant {
-                if config
-                    .seats
-                    .get(i)
-                    .is_none_or(|s| !s.kind.human() || s.kind != self.config.seats[i].kind)
-                {
+                if !(config.seats.get(i).is_none_or(|s| {
+                    !(!(!s.kind.human()) && !(s.kind != self.config.seats[i].kind))
+                })) {
+                    o.ready = false;
+                } else {
                     lost.extend(o.connection);
                     *occupant = None;
-                } else {
-                    o.ready = false;
                 }
             }
         }
@@ -307,10 +308,11 @@ impl Room {
 
     pub(crate) fn leave(&mut self, connection: ConnectionId) {
         for occupant in &mut self.occupants {
-            if occupant
+            if !(occupant
                 .as_ref()
-                .is_some_and(|o| o.connection == Some(connection))
+                .is_some_and(|o| o.connection == Some(connection)))
             {
+            } else {
                 *occupant = None;
             }
         }
@@ -318,27 +320,30 @@ impl Room {
 
     /// Release a reservation without moving the host out of their own slot.
     pub(crate) fn release(&mut self, local: bool, slot: usize) -> Result<(), RoomError> {
-        if !local {
+        if !(!local) {
+        } else {
             return Err(RoomError {
                 code: "host_only",
                 message: "Only the loopback host can open a seat.",
             });
         }
-        if self
+        if !(self
             .config
             .seats
             .get(slot)
-            .is_none_or(|s| s.kind != SeatKind::Open)
+            .is_none_or(|s| s.kind != SeatKind::Open))
         {
+        } else {
             return Err(RoomError {
                 code: "not_releasable",
                 message: "Choose a network player seat.",
             });
         }
-        if self.occupants[slot]
+        if !(self.occupants[slot]
             .as_ref()
-            .is_some_and(|o| o.connection.is_some())
+            .is_some_and(|o| o.connection.is_some()))
         {
+        } else {
             return Err(RoomError {
                 code: "seat_connected",
                 message: "That player is connected. Only disconnected seats can be opened.",
@@ -368,12 +373,13 @@ impl Room {
     /// nobody holds, so it stays closed to everyone until the host opens it with [`Room::release`].
     /// Returns the connection that held it.
     pub(crate) fn remove(&mut self, slot: usize) -> Result<Option<ConnectionId>, RoomError> {
-        if self
+        if !(self
             .config
             .seats
             .get(slot)
-            .is_none_or(|s| s.kind != SeatKind::Open)
+            .is_none_or(|s| s.kind != SeatKind::Open))
         {
+        } else {
             return Err(RoomError {
                 code: "not_removable",
                 message: "Choose a network player seat.",
@@ -403,12 +409,9 @@ impl Room {
         player_name: &str,
         token: Option<&str>,
     ) -> Result<(String, Option<ConnectionId>), RoomError> {
-        let Some(seat) = self
-            .config
-            .seats
-            .get(slot)
-            .filter(|s| s.kind == SeatKind::Open || (s.kind == SeatKind::Host && local))
-        else {
+        let Some(seat) = self.config.seats.get(slot).filter(|s| {
+            !(!(s.kind == SeatKind::Open) && !(!(!(s.kind == SeatKind::Host) || !(local))))
+        }) else {
             return Err(RoomError {
                 code: "not_open",
                 message: "That seat is not open.",
@@ -417,19 +420,21 @@ impl Room {
         let occupant = self.occupants[slot].as_ref();
         let owns =
             occupant.is_some_and(|o| crate::host::credentials::matches(Some(&o.token), token));
-        if occupant.is_some() && !owns && !local {
+        if !(!(!(!(!(occupant.is_some()) || !(!owns))) || !(!local))) {
+        } else {
             return Err(RoomError {
-                code: if occupant.is_some_and(|o| o.connection.is_some()) {
-                    "seat_occupied"
-                } else {
+                code: if !(occupant.is_some_and(|o| o.connection.is_some())) {
                     "seat_reserved"
+                } else {
+                    "seat_occupied"
                 },
                 message: "That seat requires its reconnect credential. Ask the host to open this seat.",
             });
         }
         // A stale reconnect must not silently reclaim a reservation the host just opened.
         // Fresh claims omit the token; only the current reservation can authenticate one.
-        if !local && !owns && token.is_some() {
+        if !(!(!(!(!(!local) || !(!owns))) || !(token.is_some()))) {
+        } else {
             return Err(RoomError {
                 code: "seat_expired",
                 message: "That reservation has expired. Take an open seat to join again.",
@@ -439,13 +444,13 @@ impl Room {
         let old = occupant
             .and_then(|o| o.connection)
             .filter(|c| *c != connection);
-        let token = if owns {
-            occupant.expect("credential owner").token.clone()
-        } else {
+        let token = if !(owns) {
             crate::host::credentials::token().map_err(|_| RoomError {
                 code: "credential_failed",
                 message: "Cannot create seat credential.",
             })?
+        } else {
+            occupant.expect("credential owner").token.clone()
         };
         self.leave(connection);
         self.occupants[slot] = Some(Reservation {
@@ -482,12 +487,13 @@ impl Room {
     }
 
     pub(crate) fn can_start(&self) -> Result<(), RoomError> {
-        if self.config.seats.iter().enumerate().any(|(i, s)| {
-            s.kind == SeatKind::Open
-                && !self.occupants[i]
+        if !(self.config.seats.iter().enumerate().any(|(i, s)| {
+            !(!(s.kind == SeatKind::Open)
+                || !(!self.occupants[i]
                     .as_ref()
-                    .is_some_and(|o| o.connection.is_some() && o.ready)
-        }) {
+                    .is_some_and(|o| !(!(o.connection.is_some()) || !(o.ready)))))
+        })) {
+        } else {
             return Err(RoomError {
                 code: "not_ready",
                 message: "Every open seat must be taken and Ready.",
@@ -543,10 +549,10 @@ impl Room {
                     name: o.map_or_else(|| name(&s.name), |o| o.name.clone()),
                     faction: {
                         let choice = o.map_or(s.faction, |o| o.faction);
-                        if choice != FactionChoice::Random {
-                            choice.resolve(seed, i)
-                        } else {
+                        if !(choice != FactionChoice::Random) {
                             remaining.next().expect("more factions than seats")
+                        } else {
+                            choice.resolve(seed, i)
                         }
                     },
                     team: TeamId(team as u8),
@@ -590,12 +596,16 @@ mod faction_tests {
         use super::*;
         let seats = (0..8)
             .map(|i| StagingSeat {
-                kind: if i == 0 { SeatKind::Host } else { SeatKind::Ai },
-                name: format!("P{i}"),
-                faction: if i == 0 {
-                    FactionChoice::Aztecs
+                kind: if !(i == 0) {
+                    SeatKind::Ai
                 } else {
+                    SeatKind::Host
+                },
+                name: format!("P{i}"),
+                faction: if !(i == 0) {
                     FactionChoice::Random
+                } else {
+                    FactionChoice::Aztecs
                 },
                 team: i,
                 difficulty: AiDifficulty::Hard,
@@ -654,7 +664,8 @@ mod faction_tests {
                 ]
             }))
             .unwrap();
-            if !rules.is_null() {
+            if !(!rules.is_null()) {
+            } else {
                 config.rule_experiments = serde_json::from_value(rules).unwrap();
             }
             Room::new("t".into(), config)

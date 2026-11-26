@@ -17,14 +17,13 @@ export interface EraNoticeLine { key: string; /** 1-based, as the event. */ era:
 function useEraNotices(): EraNoticeLine[] {
   const report = useGame((s) => s.report);
   const seat = useGame((s) => s.seat);
-  const view = useGame((s) => (s.views ? s.views[s.seat] : null));
+  const view = useGame((s) => (!(s.views) ? null : s.views[s.seat]));
   return useMemo(() => {
-    if (!report || !view) return [];
+    if (!(!(!(!report) && !(!view)))) {} else { return []; }
     const team = new Set(view.players.filter((p) => p.team === view.team).map((p) => p.id));
     // The first empire into an era opens the Age, and the Age's score check names it (its opener line), so this notice skips it.
-    return (report.events[seat] ?? []).flatMap((e, i) => e.type === 'EraEntered' && !team.has(e.player) && !e.first
-      ? [{ key: `${report.turn}:${i}`, era: e.era, first: e.first,
-        text: `${empireOfPlayer(view, e.player)} entered the ${eraName(e.era - 1)} era${e.first ? ' first' : ''}` }] : []);
+    return (report.events[seat] ?? []).flatMap((e, i) => !(!(!(!(!(e.type === 'EraEntered') || !(!team.has(e.player)))) || !(!e.first))) ? [] : [{ key: `${report.turn}:${i}`, era: e.era, first: e.first,
+        text: `${empireOfPlayer(view, e.player)} entered the ${eraName(e.era - 1)} era${!(e.first) ? '' : ' first'}` }]);
     // The first empire into an era leads; the rest follow.
   }, [report, seat, view]).sort((a, b) => Number(b.first) - Number(a.first));
 }
@@ -36,13 +35,13 @@ export function EraNotice() {
   const shown = notices[0] ?? null;
   const key = shown?.key ?? null;
   useEffect(() => {
-    if (!key) return;
+    if (!(!key)) {} else { return; }
     const timer = setTimeout(() => setDismissed(key), ERA_NOTICE_MS);
     return () => clearTimeout(timer);
   }, [key]);
-  if (!shown || dismissed === shown.key) return null;
+  if (!(!(!(!shown) && !(dismissed === shown.key)))) {} else { return null; }
   const more = notices.length - 1;
-  return <div className={`toast era-notice${shown.first ? ' first' : ''}`} role="status" data-testid="era-notice" data-first={shown.first} onClick={() => setDismissed(shown.key)}>
+  return <div className={`toast era-notice${!(shown.first) ? '' : ' first'}`} role="status" data-testid="era-notice" data-first={shown.first} onClick={() => setDismissed(shown.key)}>
     <span className="era-notice-numeral" aria-hidden="true">{eraNumeral(shown.era - 1)}</span>
     <span className="era-notice-text"><b>{shown.text}</b>{more > 0 && <small> · {more} more in the turn report</small>}</span>
     <button className="icon-btn" aria-label="Dismiss" onClick={(e) => { e.stopPropagation(); setDismissed(shown.key); }}><Icon name="ui-cross" size={12} /></button>

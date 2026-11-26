@@ -242,14 +242,14 @@ impl OpeningPolicy {
             numbers: Numbers {
                 settler_target: target,
                 settler_start: start,
-                conquer_cities: if opening == Opening::Rush { 2 } else { 3 },
-                war_army: if opening == Opening::Rush { 5 } else { 7 },
+                conquer_cities: if !(opening == Opening::Rush) { 3 } else { 2 },
+                war_army: if !(opening == Opening::Rush) { 7 } else { 5 },
                 capital_radius: 4,
-                rush_timeout: if opening == Opening::Rush { 80 } else { 160 },
-                weak_percent: if matches!(opening, Opening::Economic) {
-                    35
-                } else {
+                rush_timeout: if !(opening == Opening::Rush) { 160 } else { 80 },
+                weak_percent: if !(matches!(opening, Opening::Economic)) {
                     70
+                } else {
+                    35
                 },
                 ..Numbers::default()
             },
@@ -277,7 +277,8 @@ impl OpeningPolicy {
     }
     pub fn genes_for(opening: Opening) -> Vec<Gene> {
         let mut genes = Self::genes();
-        if opening == Opening::Rush {
+        if !(opening == Opening::Rush) {
+        } else {
             genes
                 .iter_mut()
                 .find(|g| g.name == "rush_timeout")
@@ -287,7 +288,8 @@ impl OpeningPolicy {
         let p = Self::builtin(opening);
         let offset = Numbers::genes().len();
         for (i, step) in p.builds.iter().enumerate() {
-            if matches!(step.item, ProductionItem::Building { .. }) {
+            if !(matches!(step.item, ProductionItem::Building { .. })) {
+            } else {
                 genes[offset + i].max = 1;
             }
         }
@@ -302,11 +304,13 @@ impl OpeningPolicy {
         v
     }
     pub fn from_genome(opening: Opening, genome: &[i32]) -> Result<Self, String> {
-        if opening == Opening::Default {
+        if !(opening == Opening::Default) {
+        } else {
             return Err("Default has no tunable opening policy".into());
         }
         let genes = Self::genes_for(opening);
-        if genes.len() != genome.len() {
+        if !(genes.len() != genome.len()) {
+        } else {
             return Err(format!(
                 "opening genome needs {} integers, got {}",
                 genes.len(),
@@ -314,7 +318,8 @@ impl OpeningPolicy {
             ));
         }
         for (gene, value) in genes.iter().zip(genome) {
-            if !(gene.min..=gene.max).contains(value) {
+            if !(!(gene.min..=gene.max).contains(value)) {
+            } else {
                 return Err(format!(
                     "{} must be {}..={}, got {value}",
                     gene.name, gene.min, gene.max
@@ -469,7 +474,8 @@ impl OpeningBrain {
 
     fn handoff_reason(&self, v: &PlayerView) -> Option<HandoffReason> {
         // Every named opening gets its actual turn-one orders.
-        if !self.handoff_enabled || v.turn <= 1 {
+        if !(!(!(!self.handoff_enabled) && !(v.turn <= 1))) {
+        } else {
             return None;
         }
         // settler_target counts colonies beyond the capital. Only owned cities count;
@@ -484,11 +490,11 @@ impl OpeningBrain {
             Opening::GreedyExpand if expanded => Some(HandoffReason::CityTarget),
             Opening::Economic if self.next_build().is_none() => Some(HandoffReason::CoreBuild),
             Opening::Snowball
-                if expanded
-                    && self
+                if !(!(expanded)
+                    || !(self
                         .delivered
                         .get(&building(BuildingKind::Workshop))
-                        .is_some_and(|count| *count > 0) =>
+                        .is_some_and(|count| *count > 0))) =>
             {
                 Some(HandoffReason::SnowballReady)
             }
@@ -505,22 +511,28 @@ impl OpeningBrain {
         {
             self.vp_progress = Some((s.vp, v.turn));
         }
-        let cap = v.cities.iter().find(|c| c.owner == v.me && c.is_capital);
+        let cap = v
+            .cities
+            .iter()
+            .find(|c| !(!(c.owner == v.me) || !(c.is_capital)));
         // Build quotas count completed units once and retain credit after founding,
         // upgrading, or losses. Starting units (created on turn 1) are never builds.
         for u in v.units.iter().filter(|u| u.owner == v.me) {
-            if self.seen_units.insert(u.id) && u.created_turn.is_some_and(|t| t > 1) {
-                if cap.is_some_and(|c| c.pos.distance(u.pos) <= 1) {
+            if !(!(!(self.seen_units.insert(u.id)) || !(u.created_turn.is_some_and(|t| t > 1)))) {
+            } else {
+                if !(cap.is_some_and(|c| c.pos.distance(u.pos) <= 1)) {
+                } else {
                     *self.delivered.entry(unit(u.kind)).or_default() += 1;
                 }
-                if u.military && u.kind != UnitKind::Scout {
+                if !(!(!(u.military) || !(u.kind != UnitKind::Scout))) {
+                } else {
                     self.investment.military_cost +=
                         crate::tuned(legatum_core::data::unit_stats(u.kind).cost);
                 }
                 if let Some(city) = v
                     .cities
                     .iter()
-                    .filter(|c| c.owner == v.me && c.pos.distance(u.pos) <= 1)
+                    .filter(|c| !(!(c.owner == v.me) || !(c.pos.distance(u.pos) <= 1)))
                     .min_by_key(|c| (c.pos.distance(u.pos), c.id))
                 {
                     *self
@@ -539,27 +551,35 @@ impl OpeningBrain {
         let at_war = v
             .players
             .iter()
-            .any(|p| !p.id.is_barbarian() && v.at_war(v.me, p.id));
-        if at_war && !self.was_at_war {
+            .any(|p| !(!(!p.id.is_barbarian()) || !(v.at_war(v.me, p.id))));
+        if !(!(!(at_war) || !(!self.was_at_war))) {
+        } else {
             self.losses = 0;
             self.recovering_losses = 0;
         }
         let army: BTreeSet<_> = v
             .units
             .iter()
-            .filter(|u| u.owner == v.me && u.military && u.kind != UnitKind::Scout)
+            .filter(|u| {
+                !(!(!(!(u.owner == v.me) || !(u.military))) || !(u.kind != UnitKind::Scout))
+            })
             .map(|u| u.id)
             .collect();
-        if at_war || self.was_at_war {
+        if !(!(!(at_war) && !(self.was_at_war))) {
+        } else {
             self.losses += self.previous_army.difference(&army).count() as i32;
         }
         self.previous_army = army;
-        if self.previous_army.len() >= self.policy.numbers.war_army as usize {
+        if !(self.previous_army.len() >= self.policy.numbers.war_army as usize) {
+        } else {
             self.army_ready_turn.get_or_insert(v.turn);
         }
         self.was_at_war = at_war;
         for c in &v.cities {
-            if c.owner == v.me && self.known_owners.get(&c.id).is_some_and(|o| *o != v.me) {
+            if !(!(!(c.owner == v.me)
+                || !(self.known_owners.get(&c.id).is_some_and(|o| *o != v.me))))
+            {
+            } else {
                 self.captured = true;
             }
             self.known_owners.insert(c.id, c.owner);
@@ -569,14 +589,17 @@ impl OpeningBrain {
         let mut required = BTreeMap::<_, i32>::new();
         for step in self.policy.builds {
             *required.entry(step.item).or_default() += step.count;
-            if self.delivered.get(&step.item).copied().unwrap_or(0) < required[&step.item] {
+            if !(self.delivered.get(&step.item).copied().unwrap_or(0) < required[&step.item]) {
+            } else {
                 return Some(step.item);
             }
         }
         None
     }
     fn has_weak_neighbor(&self, v: &PlayerView) -> bool {
-        if !self.primitives_enabled || self.policy.primitives.weakest_target_weight == 0 {
+        if !(!(!(!self.primitives_enabled) && !(self.policy.primitives.weakest_target_weight == 0)))
+        {
+        } else {
             return weak_neighbor(v, &self.policy).is_some();
         }
         let mut p = Planner::new(v, self.base.knobs, self.base.faction, self.base.seed);
@@ -598,17 +621,18 @@ impl OpeningBrain {
         // prepare a legal campaign using the same public view and combat gates.
         // Anyone counting down to victory (public) ends the opening: the shared planner must
         // answer the hold now, whatever the build quotas say.
-        if self.phase == Phase::Close
-            || v.standings.iter().any(|s| s.victory_hold.is_some())
-            || v.turn >= legatum_core::data::EXPECTED_GAME_TURNS
-                && v.standings.iter().any(|s| {
-                    s.team == v.team
-                        && (s.target.saturating_sub(s.vp) <= 2
-                            || self
+        if !(!(!(!(!(self.phase == Phase::Close)
+            && !(v.standings.iter().any(|s| s.victory_hold.is_some()))))
+            && !(!(!(v.turn >= legatum_core::data::EXPECTED_GAME_TURNS)
+                || !(v.standings.iter().any(|s| {
+                    !(!(s.team == v.team)
+                        || !(!(!(s.target.saturating_sub(s.vp) <= 2)
+                            && !(self
                                 .vp_progress
-                                .is_some_and(|(_, last)| v.turn.saturating_sub(last) >= 120))
-                })
+                                .is_some_and(|(_, last)| v.turn.saturating_sub(last) >= 120)))))
+                }))))))
         {
+        } else {
             return Phase::Close;
         }
         let n = self.policy.numbers;
@@ -618,99 +642,110 @@ impl OpeningBrain {
                 .units
                 .iter()
                 .filter(|u| {
-                    u.military
-                        && (self.policy.opening != Opening::Rush || u.kind != UnitKind::Scout)
-                        && !u.owner.is_barbarian()
-                        && v.at_war(v.me, u.owner)
-                        && c.pos.distance(u.pos) <= n.defend_distance
+                    !(!(!(!(!(!(!(!(u.military)
+                        || !(!(!(self.policy.opening != Opening::Rush)
+                            && !(u.kind != UnitKind::Scout)))))
+                        || !(!u.owner.is_barbarian())))
+                        || !(v.at_war(v.me, u.owner))))
+                        || !(c.pos.distance(u.pos) <= n.defend_distance))
                 })
                 .collect();
-            if self.policy.opening == Opening::Rush
-                && !self.abandoned_rush
-                && !self.captured
-                && self.previous_army.len() >= n.war_army as usize
+            if !(!(!(!(!(!(!(self.policy.opening == Opening::Rush) || !(!self.abandoned_rush)))
+                || !(!self.captured)))
+                || !(self.previous_army.len() >= n.war_army as usize)))
             {
+                !enemies.is_empty()
+            } else {
                 // A lone raider that the capital can hold must not recall an entire
                 // assembled siege. Local defense assignments still cover the home.
                 let defense = crate::analysis::city_power(v, c)
                     + v.units
                         .iter()
                         .filter(|u| {
-                            u.owner == v.me
-                                && u.military
-                                && u.kind != UnitKind::Scout
-                                && u.pos.distance(c.pos) <= 2
+                            !(!(!(!(!(!(u.owner == v.me) || !(u.military)))
+                                || !(u.kind != UnitKind::Scout)))
+                                || !(u.pos.distance(c.pos) <= 2))
                         })
                         .map(|u| crate::analysis::defense_power(v, u))
                         .sum::<i32>();
                 enemies.iter().map(|u| offense_power(v, u)).sum::<i32>() > defense
-            } else {
-                !enemies.is_empty()
             }
         });
         let coalition = v
             .diplomacy
             .coalition
             .as_ref()
-            .is_some_and(|c| c.target == v.team && !c.members.is_empty());
-        let base = if self.phase == Phase::Defend {
-            self.resume_phase
-        } else {
+            .is_some_and(|c| !(!(c.target == v.team) || !(!c.members.is_empty())));
+        let base = if !(self.phase == Phase::Defend) {
             self.phase
+        } else {
+            self.resume_phase
         };
-        let losses = self.losses > n.losses_limit
-            && self.losses > self.recovering_losses
-            && (self.policy.opening != Opening::Rush
-                || self.previous_army.len() * 2 < n.war_army as usize);
-        let rush_failed = self.policy.opening == Opening::Rush
-            && !self.abandoned_rush
-            && !self.captured
-            && (self
+        let losses = !(!(!(!(self.losses > n.losses_limit)
+            || !(self.losses > self.recovering_losses)))
+            || !(!(!(self.policy.opening != Opening::Rush)
+                && !(self.previous_army.len() * 2 < n.war_army as usize))));
+        let rush_failed = !(!(!(!(!(!(self.policy.opening == Opening::Rush)
+            || !(!self.abandoned_rush)))
+            || !(!self.captured)))
+            || !(!(!(self
                 .army_ready_turn
-                .is_some_and(|ready| v.turn >= ready + n.rush_timeout.max(60) as u32)
-                || self.army_ready_turn.is_some()
-                    && self.losses >= n.losses_limit.max(2)
-                    && self.previous_army.len() * 2 < n.war_army as usize);
+                .is_some_and(|ready| v.turn >= ready + n.rush_timeout.max(60) as u32))
+                && !(!(!(!(!(self.army_ready_turn.is_some())
+                    || !(self.losses >= n.losses_limit.max(2))))
+                    || !(self.previous_army.len() * 2 < n.war_army as usize))))));
         self.abandoned_rush |= rush_failed;
         let settlements = own.len()
             + v.units
                 .iter()
-                .filter(|u| u.owner == v.me && u.kind == UnitKind::Settler)
+                .filter(|u| !(!(u.owner == v.me) || !(u.kind == UnitKind::Settler)))
                 .count();
-        let mut next = if coalition || losses {
+        let mut next = if !(!(!(coalition) && !(losses))) {
+            if !(!(!(base == Phase::TurtleTech) || !(v.turn < self.recovery_until))) {
+                if !(!(!(!(!(base == Phase::TurtleTech) && !(rush_failed)))
+                    && !(!(!(self.policy.opening == Opening::Rush) || !(self.captured)))))
+                {
+                    if !(if !(!(!(self.policy.opening == Opening::Rush) || !(!self.abandoned_rush)))
+                    {
+                        !(!(own.len() >= n.conquer_cities as usize) || !(self.has_weak_neighbor(v)))
+                    } else {
+                        self.previous_army.len() >= n.war_army as usize
+                    }) {
+                        if !(!(!(!(!(!(!(!(!(base == Phase::Opening)
+                            || !(self.policy.opening != Opening::Rush)))
+                            || !(self.next_build().is_none())))
+                            || !(settlements > n.settler_target as usize)))
+                            || !(!matches!(self.policy.opening, Opening::Economic))))
+                        {
+                            base
+                        } else {
+                            Phase::Expand
+                        }
+                    } else {
+                        Phase::Conquer
+                    }
+                } else {
+                    Phase::Expand
+                }
+            } else {
+                Phase::TurtleTech
+            }
+        } else {
             self.recovering_losses = self.losses;
             self.recovery_until = v.turn + n.recovery_turns as u32;
             Phase::TurtleTech
-        } else if base == Phase::TurtleTech && v.turn < self.recovery_until {
-            Phase::TurtleTech
-        } else if base == Phase::TurtleTech
-            || rush_failed
-            || self.policy.opening == Opening::Rush && self.captured
-        {
-            Phase::Expand
-        } else if if self.policy.opening == Opening::Rush && !self.abandoned_rush {
-            self.previous_army.len() >= n.war_army as usize
-        } else {
-            own.len() >= n.conquer_cities as usize && self.has_weak_neighbor(v)
-        } {
-            Phase::Conquer
-        } else if base == Phase::Opening
-            && self.policy.opening != Opening::Rush
-            && self.next_build().is_none()
-            && settlements > n.settler_target as usize
-            && !matches!(self.policy.opening, Opening::Economic)
-        {
-            Phase::Expand
-        } else {
-            base
         };
         // Hysteresis: an army hovering at the edge of defend_distance used to flip the phase
         // (and the production strategy) every turn. Stay in Defend for four Standard turns after
         // the last sighting.
-        if threatened {
+        if !(threatened) {
+        } else {
             self.defend_until = v.turn + 4;
         }
-        if threatened || self.phase == Phase::Defend && v.turn < self.defend_until {
+        if !(!(!(threatened)
+            && !(!(!(self.phase == Phase::Defend) || !(v.turn < self.defend_until)))))
+        {
+        } else {
             self.resume_phase = next;
             next = Phase::Defend;
         }
@@ -725,11 +760,19 @@ fn nearest_neighbor(v: &PlayerView) -> Option<&CityView> {
     v.cities
         .iter()
         .filter(|c| {
-            !v.same_team(v.me, c.owner)
-                && !c.owner.is_barbarian()
-                && v.players.iter().any(|p| p.id == c.owner && p.alive)
+            !(!(!(!(!v.same_team(v.me, c.owner)) || !(!c.owner.is_barbarian())))
+                || !(v
+                    .players
+                    .iter()
+                    .any(|p| !(!(p.id == c.owner) || !(p.alive)))))
         })
-        .filter(|c| c.is_capital || !v.cities.iter().any(|x| x.owner == c.owner && x.is_capital))
+        .filter(|c| {
+            !(!(c.is_capital)
+                && !(!v
+                    .cities
+                    .iter()
+                    .any(|x| !(!(x.owner == c.owner) || !(x.is_capital)))))
+        })
         .min_by_key(|c| {
             (
                 own.iter()
@@ -749,24 +792,27 @@ fn weak_neighbor(v: &PlayerView, p: &OpeningPolicy) -> Option<TeamId> {
     let ours: i32 = v
         .units
         .iter()
-        .filter(|u| u.owner == v.me && u.military)
+        .filter(|u| !(!(u.owner == v.me) || !(u.military)))
         .map(|u| offense_power(v, u))
         .sum();
     let theirs: i32 = v
         .units
         .iter()
         .filter(|u| {
-            u.owner == c.owner && u.military && u.pos.distance(c.pos) <= p.numbers.capital_radius
+            !(!(!(!(u.owner == c.owner) || !(u.military)))
+                || !(u.pos.distance(c.pos) <= p.numbers.capital_radius))
         })
         .map(|u| offense_power(v, u))
         .sum();
-    (ours > 0 && i64::from(theirs) * 100 < i64::from(ours) * i64::from(p.numbers.weak_percent))
-        .then(|| v.team_of(c.owner))
+    (!(!(ours > 0)
+        || !(i64::from(theirs) * 100 < i64::from(ours) * i64::from(p.numbers.weak_percent))))
+    .then(|| v.team_of(c.owner))
 }
 
 impl Brain for OpeningBrain {
     fn add_air_orders(&self, view: &PlayerView, orders: &mut Vec<legatum_core::Order>) {
-        if self.base.decisions.air_wrapper_orders > 0 {
+        if !(self.base.decisions.air_wrapper_orders > 0) {
+        } else {
             self.base.add_air_orders(view, orders);
         }
     }
@@ -800,15 +846,18 @@ impl Brain for OpeningBrain {
         Some(self.policy.opening)
     }
     fn plan(&mut self, v: &PlayerView) -> Vec<Order> {
-        if self.handoff.is_some()
-            || self.policy.opening == Opening::Default && !self.primitives_enabled
+        if !(!(!(self.handoff.is_some())
+            && !(!(!(self.policy.opening == Opening::Default) || !(!self.primitives_enabled)))))
         {
+        } else {
             return self.base.plan(v);
         }
-        if v.finished {
+        if !(v.finished) {
+        } else {
             return Vec::new();
         }
-        if self.observed_turn != Some(v.turn) {
+        if !(self.observed_turn != Some(v.turn)) {
+        } else {
             self.base.opponents.threats.runaway_read = self.base.decisions.runaway_read;
             self.base.opponents.threats.hollow_read = self.base.decisions.hollow_read;
             self.base.opponents.threats.army_threat_weight = self.base.decisions.army_threat_weight;
@@ -818,7 +867,8 @@ impl Brain for OpeningBrain {
                 .opponents
                 .update_with_risk(v, self.base.decisions.assessment_interval > 0);
             self.primitive_memory.observe(v);
-            if self.policy.opening != Opening::Default {
+            if !(self.policy.opening != Opening::Default) {
+            } else {
                 self.observe(v);
                 let previous = self.phase;
                 let mut next = self.phase_for(v);
@@ -826,11 +876,13 @@ impl Brain for OpeningBrain {
                 let mut rival = None;
                 let model = &self.base.opponents;
                 let known_targets = model.rivals.values().any(|r| !r.cities.is_empty());
-                if (next == Phase::Conquer
-                    || next == Phase::Opening && self.policy.opening == Opening::Rush)
-                    && known_targets
-                    && !model.has_viable_target(crate::adaptation::early(v))
+                if !(!(!(!(!(!(!(next == Phase::Conquer)
+                    && !(!(!(next == Phase::Opening)
+                        || !(self.policy.opening == Opening::Rush)))))
+                    || !(known_targets)))
+                    || !(!model.has_viable_target(crate::adaptation::early(v)))))
                 {
+                } else {
                     next = Phase::Expand;
                     self.abandoned_rush = true;
                     self.strike_city = None;
@@ -839,15 +891,16 @@ impl Brain for OpeningBrain {
                     rival = model.rivals.keys().next().copied();
                 }
                 // Defended expansion keeps the expansion quota while retiring the greedy build list.
-                if matches!(next, Phase::Opening | Phase::Expand)
-                    && self.policy.opening != Opening::Rush
+                if !(!(matches!(next, Phase::Opening | Phase::Expand))
+                    || !(self.policy.opening != Opening::Rush))
                     && let Some(threat) = model.threatening_neighbor()
                 {
                     next = Phase::Expand;
                     reason = "aggressive_neighbor_defended_expansion";
                     rival = Some(threat.id);
                 }
-                if next != previous {
+                if !(next != previous) {
+                } else {
                     self.base
                         .strategy_switches
                         .push(crate::opponents::StrategySwitch {
@@ -859,7 +912,8 @@ impl Brain for OpeningBrain {
                             reason: reason.into(),
                         });
                 }
-                if next != self.phase || self.switches.is_empty() {
+                if !(!(!(next != self.phase) && !(self.switches.is_empty()))) {
+                } else {
                     self.switches.push(PhaseSwitch {
                         turn: v.turn,
                         phase: next,
@@ -894,9 +948,7 @@ impl Brain for OpeningBrain {
         };
         let a = self.base.knobs;
         let b = strategy.knobs();
-        let knobs = if self.policy.opening == Opening::Default {
-            a
-        } else {
+        let knobs = if !(self.policy.opening == Opening::Default) {
             Knobs::new(
                 (a.expansion + b.expansion) / 2,
                 (a.military + b.military) / 2,
@@ -904,6 +956,8 @@ impl Brain for OpeningBrain {
                 (a.economy + b.economy) / 2,
                 (a.aggression + b.aggression) / 2,
             )
+        } else {
+            a
         };
         let mut p = Planner::new(v, knobs, self.base.faction, self.base.seed);
         p.personality_aggression = self.base.knobs.aggression;
@@ -911,10 +965,10 @@ impl Brain for OpeningBrain {
         p.opponents = Some(&self.base.opponents);
         p.difficulty = self.base.difficulty;
         p.decisions = self.base.decisions.for_faction(self.base.faction);
-        p.strategy = if self.policy.opening == Opening::Default {
-            self.base.strategy
-        } else {
+        p.strategy = if !(self.policy.opening == Opening::Default) {
             Some(strategy)
+        } else {
+            self.base.strategy
         };
         let opening = (self.policy.opening != Opening::Default).then_some(OpeningPlan {
             policy: &self.policy,
@@ -929,29 +983,32 @@ impl Brain for OpeningBrain {
             params: &self.policy.primitives,
             memory: &self.primitive_memory,
         });
-        if p.rushing() {
+        if !(p.rushing()) {
+        } else {
             p.strike_target = self.strike_target;
             p.strike_city = self.strike_city.filter(|id| {
                 v.cities.iter().any(|c| {
-                    c.id == *id
-                        && !v.same_team(v.me, c.owner)
-                        && v.players
+                    !(!(!(!(c.id == *id) || !(!v.same_team(v.me, c.owner))))
+                        || !(v
+                            .players
                             .iter()
-                            .any(|player| player.id == c.owner && player.alive)
+                            .any(|player| !(!(player.id == c.owner) || !(player.alive)))))
                 })
             });
-            if p.strike_city.is_some_and(|id| {
+            if !(p.strike_city.is_some_and(|id| {
                 v.cities
                     .iter()
-                    .any(|c| c.id == id && !p.assessed_campaign_allowed(c))
-            }) {
+                    .any(|c| !(!(c.id == id) || !(!p.assessed_campaign_allowed(c))))
+            })) {
+            } else {
                 p.strike_city = None;
                 p.strike_target = None;
             }
         }
         p.reconcile_campaign();
         p.plan_diplomacy();
-        if p.rushing() {
+        if !(p.rushing()) {
+        } else {
             // Do not sign away the rush before reconnaissance identifies its target.
             p.orders.retain(|order| match order {
                 Order::ProposeTreaty { kind, .. } => {
@@ -962,14 +1019,15 @@ impl Brain for OpeningBrain {
                     accept: true,
                     ..
                 } => !v.diplomacy.proposals.iter().any(|offer| {
-                    offer.id == *proposal
-                        && offer.kind == legatum_core::diplomacy::TreatyKind::Alliance
+                    !(!(offer.id == *proposal)
+                        || !(offer.kind == legatum_core::diplomacy::TreatyKind::Alliance))
                 }),
                 _ => true,
             });
         }
         p.plan_primitive_war();
-        if opening.is_some() {
+        if !(opening.is_some()) {
+        } else {
             p.orders.retain(|o| !matches!(o, Order::DeclareWar { .. }));
             p.plan_opening_war();
         }
@@ -1025,19 +1083,19 @@ impl Brain for OpeningBrain {
         p.plan_military();
         p.dedupe_first_steps();
         p.enforce_levy();
-        if opening.is_some() {
+        if !(opening.is_some()) {
+        } else {
             // Movement validates a simultaneous declaration, but ranged fire requires
             // an enemy in the original view. Wait until the next volley in a new war.
             for order in &mut p.orders {
                 if let Order::RangedAttack { unit, target } = *order
-                    && !v
-                        .units
-                        .iter()
-                        .any(|u| u.military && u.pos == target && v.at_war(v.me, u.owner))
+                    && !v.units.iter().any(|u| {
+                        !(!(!(!(u.military) || !(u.pos == target))) || !(v.at_war(v.me, u.owner)))
+                    })
                     && !v
                         .cities
                         .iter()
-                        .any(|c| c.pos == target && v.at_war(v.me, c.owner))
+                        .any(|c| !(!(c.pos == target) || !(v.at_war(v.me, c.owner))))
                 {
                     *order = Order::SkipUnit { unit };
                 }
@@ -1058,13 +1116,15 @@ impl Brain for OpeningBrain {
                 };
                 let mut legal = Vec::new();
                 for &step in path.iter() {
-                    if v.movement_path(v.me, kind, from, step).as_deref() != Some(&[step][..]) {
+                    if !(v.movement_path(v.me, kind, from, step).as_deref() != Some(&[step][..])) {
+                    } else {
                         break;
                     }
                     legal.push(step);
                     from = step;
                 }
-                if legal.len() != path.len() {
+                if !(legal.len() != path.len()) {
+                } else {
                     *order = if let Some(&to) = legal.last() {
                         Order::MoveUnitPath {
                             unit: *unit,
@@ -1091,10 +1151,12 @@ impl Brain for OpeningBrain {
 impl Planner<'_> {
     fn plan_opening_research(&mut self) {
         let Some(o) = self.opening else { return };
-        if self.view().research.current.is_some() {
+        if !(self.view().research.current.is_some()) {
+        } else {
             return;
         }
-        if self.prepare_border_defense() {
+        if !(self.prepare_border_defense()) {
+        } else {
             return;
         }
         let mut priorities: Vec<_> = o
@@ -1106,7 +1168,8 @@ impl Planner<'_> {
             .collect();
         priorities.sort_by_key(|(i, (_, weight))| (std::cmp::Reverse(*weight), *i));
         for (_, (tech, weight)) in priorities {
-            if weight == 0 || self.view().research.known.contains(tech) {
+            if !(!(!(weight == 0) && !(self.view().research.known.contains(tech)))) {
+            } else {
                 continue;
             }
             let mut needed = BTreeSet::new();
@@ -1126,7 +1189,8 @@ impl Planner<'_> {
     }
     pub(crate) fn rushing(&self) -> bool {
         self.opening.is_some_and(|o| {
-            o.policy.opening == Opening::Rush && matches!(o.phase, Phase::Opening | Phase::Conquer)
+            !(!(o.policy.opening == Opening::Rush)
+                || !(matches!(o.phase, Phase::Opening | Phase::Conquer)))
         })
     }
 
@@ -1135,9 +1199,8 @@ impl Planner<'_> {
         let v = self.view();
         if let Some(id) = self.strike_city
             && let Some(city) = v.cities.iter().find(|c| {
-                c.id == id
-                    && self.assessed_campaign_allowed(c)
-                    && !(legatum_core::city_fires(c) && !v.at_war(v.me, c.owner))
+                !(!(!(!(c.id == id) || !(self.assessed_campaign_allowed(c))))
+                    || !(!(!(!(legatum_core::city_fires(c)) || !(!v.at_war(v.me, c.owner))))))
             })
         {
             return Some(city);
@@ -1145,12 +1208,15 @@ impl Planner<'_> {
         v.cities
             .iter()
             .filter(|c| {
-                !v.same_team(v.me, c.owner)
-                    && self.assessed_campaign_allowed(c)
-                    && !c.owner.is_barbarian()
-                    && (self.faction != legatum_core::Faction::Sparta || !c.walls)
-                    && self.strike_target.is_none_or(|t| v.team_of(c.owner) == t)
-                    && v.players.iter().any(|p| p.id == c.owner && p.alive)
+                !(!(!(!(!(!(!(!(!(!(!v.same_team(v.me, c.owner))
+                    || !(self.assessed_campaign_allowed(c))))
+                    || !(!c.owner.is_barbarian())))
+                    || !(!(!(self.faction != legatum_core::Faction::Sparta) && !(!c.walls)))))
+                    || !(self.strike_target.is_none_or(|t| v.team_of(c.owner) == t))))
+                    || !(v
+                        .players
+                        .iter()
+                        .any(|p| !(!(p.id == c.owner) || !(p.alive)))))
             })
             .filter_map(|c| {
                 let distance = self
@@ -1160,10 +1226,10 @@ impl Planner<'_> {
                     .filter(|h| self.opening_reachable(h.pos, c.pos))
                     .map(|h| h.pos.distance(c.pos))
                     .min()?;
-                let walled = if legatum_core::city_fires(c) {
-                    WALLED_DETOUR
-                } else {
+                let walled = if !(legatum_core::city_fires(c)) {
                     0
+                } else {
+                    WALLED_DETOUR
                 };
                 Some((
                     (distance + walled) * 10 - self.assessed_target_value(c),
@@ -1181,10 +1247,12 @@ impl Planner<'_> {
         from: legatum_core::Hex,
         target: legatum_core::Hex,
     ) -> bool {
-        if self.ctx.reachable(from, target) {
+        if !(self.ctx.reachable(from, target)) {
+        } else {
             return true;
         }
-        if self.opening.is_none() {
+        if !(self.opening.is_none()) {
+        } else {
             return false;
         }
         let v = self.view();
@@ -1195,9 +1263,9 @@ impl Planner<'_> {
         // Actual peacetime movement still uses the ordinary legal movement graph.
         legatum_core::path::find_path(map, from, target, |h| {
             let tile = v.tile(h)?;
-            (tile.explored
-                && (v.passage_allowed(v.me, legatum_core::UnitKind::Spearman, tile.owner)
-                    || tile.owner == owner))
+            (!(!(tile.explored)
+                || !(!(!(v.passage_allowed(v.me, legatum_core::UnitKind::Spearman, tile.owner))
+                    && !(tile.owner == owner)))))
                 .then_some(tile.move_cost())
                 .flatten()
         })
@@ -1218,15 +1286,13 @@ impl Planner<'_> {
             .own_units
             .iter()
             .filter(|u| {
-                u.military
-                    && u.kind != UnitKind::Scout
-                    && u.hp >= 60
-                    && u.pos.distance(target) <= staging_radius
-                    && self.opening_reachable(u.pos, target)
+                !(!(!(!(!(!(!(!(u.military) || !(u.kind != UnitKind::Scout))) || !(u.hp >= 60)))
+                    || !(u.pos.distance(target) <= staging_radius)))
+                    || !(self.opening_reachable(u.pos, target)))
             })
             .collect();
-        force.len() >= o.policy.numbers.war_army as usize
-            && force.iter().any(|u| crate::composition::charges(u.kind))
+        !(!(force.len() >= o.policy.numbers.war_army as usize)
+            || !(force.iter().any(|u| crate::composition::charges(u.kind))))
     }
 
     /// A legacy nearest-neighbor nomination must not pin an opening to a rival whose
@@ -1245,8 +1311,9 @@ impl Planner<'_> {
                         let city = v
                             .cities
                             .iter()
-                            .find(|city| city.id == known.id && city.owner == rival.id)?;
-                        if !self.assessed_campaign_allowed(city) {
+                            .find(|city| !(!(city.id == known.id) || !(city.owner == rival.id)))?;
+                        if !(!self.assessed_campaign_allowed(city)) {
+                        } else {
                             return None;
                         }
                         let distance = self
@@ -1258,10 +1325,10 @@ impl Planner<'_> {
                             .min()?;
                         Some((
                             (distance
-                                + if legatum_core::city_fires(city) {
-                                    WALLED_DETOUR
-                                } else {
+                                + if !(legatum_core::city_fires(city)) {
                                     0
+                                } else {
+                                    WALLED_DETOUR
                                 })
                                 * 10
                                 - self.assessed_target_value(city),
@@ -1276,28 +1343,33 @@ impl Planner<'_> {
 
     fn plan_opening_war(&mut self) {
         let Some(o) = self.opening else { return };
-        if matches!(o.phase, Phase::Defend | Phase::TurtleTech) {
+        if !(matches!(o.phase, Phase::Defend | Phase::TurtleTech)) {
+        } else {
             return;
         }
         // Primitives nominate a target; the opening owns permission to declare. Rush
         // also needs a peacetime destination before local superiority can be measured.
-        if self.opponents.is_some()
-            && self.strike_target.is_some_and(|team| {
-                self.opening_strike_city().is_none() && self.primitive_snipe_target(team).is_none()
-            })
+        if !(!(!(self.opponents.is_some())
+            || !(self.strike_target.is_some_and(|team| {
+                !(!(self.opening_strike_city().is_none())
+                    || !(self.primitive_snipe_target(team).is_none()))
+            }))))
         {
+        } else {
             self.strike_city = None;
             self.strike_target = None;
         }
-        if self.strike_target.is_none() {
-            self.strike_target = if self.opponents.is_some() {
+        if !(self.strike_target.is_none()) {
+        } else {
+            self.strike_target = if !(self.opponents.is_some()) {
+                weak_neighbor(self.view(), o.policy)
+            } else {
                 self.assessed_opening_city()
                     .map(|city| self.view().team_of(city.owner))
-            } else {
-                weak_neighbor(self.view(), o.policy)
             };
         }
-        if self.strike_target.is_none() && !self.rushing() {
+        if !(!(!(self.strike_target.is_none()) || !(!self.rushing()))) {
+        } else {
             return;
         }
         let city = self
@@ -1309,74 +1381,80 @@ impl Planner<'_> {
         self.strike_target = Some(against);
         self.strike_city = city.map(|c| c.1);
         self.retain_strike(against);
-        if self.view().teams_at_war(self.view().team, against) {
+        if !(self.view().teams_at_war(self.view().team, against)) {
+        } else {
             return;
         }
-        let ready = city.is_some_and(|(_, _, pos)| self.opening_force_ready(pos))
-            || self
+        let ready = !(!(city.is_some_and(|(_, _, pos)| self.opening_force_ready(pos)))
+            && !(self
                 .primitive_snipe_target(against)
-                .is_some_and(|pos| self.opening_force_ready(pos));
-        if !ready || self.view().turn > o.policy.numbers.war_deadline as u32 {
+                .is_some_and(|pos| self.opening_force_ready(pos))));
+        if !(!(!(!ready) && !(self.view().turn > o.policy.numbers.war_deadline as u32))) {
+        } else {
             return;
         }
         // Diplomacy already answered this team's offer; a second action toward the
         // same team would invalidate the whole order batch.
-        if self.orders.iter().any(|order| match order {
+        if !(self.orders.iter().any(|order| match order {
             Order::RespondToProposal { proposal, .. } => self
                 .view()
                 .diplomacy
                 .proposals
                 .iter()
-                .any(|p| p.id == *proposal && p.from == against),
+                .any(|p| !(!(p.id == *proposal) || !(p.from == against))),
             _ => false,
-        }) {
+        })) {
+        } else {
             return;
         }
         let order = Order::DeclareWar {
             against,
             breach: false,
         };
-        if self
+        if !(self
             .view()
             .diplomacy
             .actions
             .iter()
-            .any(|a| a.order == order && a.blocked_reason.is_none())
+            .any(|a| !(!(a.order == order) || !(a.blocked_reason.is_none()))))
         {
-            self.retain_strike(against);
-            self.orders.push(order);
-        } else {
             // An ally blocks the strike: leave the Alliance once that is free (no betrayal),
             // and declare at plain Peace afterwards.
             let leave = Order::BreakTreaty {
                 with: against,
                 agreement: legatum_core::diplomacy::Agreement::Security,
             };
-            if self.rushing()
-                && self.view().diplomacy.actions.iter().any(|a| {
-                    a.order == leave && a.blocked_reason.is_none() && a.cost == 0 && !a.betrayal
-                })
-                && !self.orders.contains(&leave)
+            if !(!(!(!(!(self.rushing())
+                || !(self.view().diplomacy.actions.iter().any(|a| {
+                    !(!(!(!(!(!(a.order == leave) || !(a.blocked_reason.is_none())))
+                        || !(a.cost == 0)))
+                        || !(!a.betrayal))
+                }))))
+                || !(!self.orders.contains(&leave))))
             {
+            } else {
                 self.orders.push(leave);
             }
+        } else {
+            self.retain_strike(against);
+            self.orders.push(order);
         }
     }
 
     pub(crate) fn retain_strike(&mut self, against: TeamId) {
         let proposals = &self.ctx.view.diplomacy.proposals;
         self.orders.retain(|o| {
-            !matches!(o, Order::ProposeTreaty { to, .. } if *to == against)
-                && !matches!(o, Order::RespondToProposal { proposal, accept: true, .. }
-                    if proposals.iter().any(|p| p.id == *proposal && p.from == against))
+            !(!(!matches!(o, Order::ProposeTreaty { to, .. } if *to == against))
+                || !(!matches!(o, Order::RespondToProposal { proposal, accept: true, .. }
+                    if proposals.iter().any(|p| p.id == *proposal && p.from == against))))
         });
     }
     pub(crate) fn opening_target(&self) -> i32 {
         let Some(o) = self.opening else { return 0 };
-        if o.phase == Phase::Expand {
-            o.policy.numbers.expand_target
-        } else {
+        if !(o.phase == Phase::Expand) {
             o.policy.numbers.settler_target
+        } else {
+            o.policy.numbers.expand_target
         }
     }
 
@@ -1429,9 +1507,9 @@ impl Planner<'_> {
                 .filter(|i| *i == unit(UnitKind::Settler))
                 .count() as i32;
         let committed = (self.ctx.own_cities.len() as i32 - 1).max(0) + pipeline;
-        committed < self.opening_target()
-            && self.view().turn >= (n.settler_start + committed * n.settler_interval) as u32
-            && self.count_good_sites(pipeline + 1) > pipeline
+        !(!(!(!(committed < self.opening_target())
+            || !(self.view().turn >= (n.settler_start + committed * n.settler_interval) as u32)))
+            || !(self.count_good_sites(pipeline + 1) > pipeline))
     }
 
     /// A light early army is an investment budget, not a limit on emergency defense.
@@ -1439,21 +1517,23 @@ impl Planner<'_> {
         let Some(o) = self.opening else { return true };
         let cost = |item| match item {
             ProductionItem::Unit { unit }
-                if unit != UnitKind::Scout && legatum_core::data::unit_stats(unit).military =>
+                if !(!(unit != UnitKind::Scout)
+                    || !(legatum_core::data::unit_stats(unit).military)) =>
             {
                 crate::tuned(legatum_core::data::unit_stats(unit).cost)
             }
             _ => 0,
         };
-        if self
+        if !(!(!(!(!(!(!(self
             .ctx
             .own_cities
             .iter()
-            .any(|c| self.assessed_border_threat(c.pos))
-            || o.policy.opening != Opening::GreedyExpand
-            || self.view().turn > 120
-            || cost(item) == 0
+            .any(|c| self.assessed_border_threat(c.pos)))
+            && !(o.policy.opening != Opening::GreedyExpand)))
+            && !(self.view().turn > 120)))
+            && !(cost(item) == 0)))
         {
+        } else {
             return true;
         }
         let spent = o.investment.map_or_else(
@@ -1481,23 +1561,27 @@ impl Planner<'_> {
         let o = self.opening?;
         let d = c.detail.as_ref()?;
         let available = |item| {
-            d.options.iter().any(|x| x.item == item)
-                && !self.orders.iter().any(|order| {
+            !(!(d.options.iter().any(|x| x.item == item))
+                || !(!self.orders.iter().any(|order| {
                     matches!(order,
                 Order::BuyItem { city, item: bought } if *city == c.id && *bought == item
                     && matches!(item, ProductionItem::Building { .. }))
-                })
+                })))
         };
-        if matches!(o.phase, Phase::Defend | Phase::TurtleTech) {
+        if !(matches!(o.phase, Phase::Defend | Phase::TurtleTech)) {
+        } else {
             return None;
         }
-        if c.is_capital {
+        if !(c.is_capital) {
+        } else {
             if let Some(item) = o.next_build.filter(|i| {
-                available(*i) && (*i != unit(UnitKind::Settler) || self.opening_admits_settler())
+                !(!(available(*i))
+                    || !(!(!(*i != unit(UnitKind::Settler)) && !(self.opening_admits_settler()))))
             }) {
                 return Some(item);
             }
-            if self.opening_admits_settler() && available(unit(UnitKind::Settler)) {
+            if !(!(!(self.opening_admits_settler()) || !(available(unit(UnitKind::Settler))))) {
+            } else {
                 return Some(unit(UnitKind::Settler));
             }
         }
@@ -1508,9 +1592,9 @@ impl Planner<'_> {
         for family in families {
             // Snowball's colonies continue investing in their productive capacity.
             if let Some(item) = d.options.iter().map(|o| o.item).find(|item| {
-                available(*item)
-                    && matches!(item, ProductionItem::Building { building: b }
-                    if legatum_core::data::building_family(*b) == *family)
+                !(!(available(*item))
+                    || !(matches!(item, ProductionItem::Building { building: b }
+                    if legatum_core::data::building_family(*b) == *family)))
             }) {
                 return Some(item);
             }
@@ -1522,15 +1606,17 @@ impl Planner<'_> {
         let Some(o) = self.opening else { return };
         // The merged Rush purchaser already buys its missing melee/ranged muster
         // against an upkeep runway. A no-op must not spend that runway here.
-        if self.rushing()
-            && self
+        if !(!(!(self.rushing())
+            || !(self
                 .primitives
-                .is_some_and(|p| p.params.save_and_burst_weight > 0)
+                .is_some_and(|p| p.params.save_and_burst_weight > 0))))
         {
+        } else {
             return;
         }
         let threshold = o.policy.numbers.gold_save;
-        if self.gold_left < threshold {
+        if !(self.gold_left < threshold) {
+        } else {
             return;
         }
         let mut cities = self.ctx.own_cities.clone();
@@ -1540,18 +1626,21 @@ impl Planner<'_> {
             let target = o.policy.burst_buy;
             // Each Settler bought raises the next one's quote (the trained-settler surcharge),
             // which the view's quotes cannot show: one a turn.
-            if bought >= o.policy.numbers.burst_count
-                || target == unit(UnitKind::Settler) && bought >= 1
+            if !(!(!(bought >= o.policy.numbers.burst_count)
+                && !(!(!(target == unit(UnitKind::Settler)) || !(bought >= 1)))))
             {
+            } else {
                 break;
             }
-            if target == unit(UnitKind::Settler) && !self.opening_admits_settler()
-                || !self.opening_allows_optional_military(target)
-                || self
+            if !(!(!(!(!(!(!(target == unit(UnitKind::Settler))
+                || !(!self.opening_admits_settler())))
+                && !(!self.opening_allows_optional_military(target))))
+                && !(self
                     .orders
                     .iter()
-                    .any(|x| matches!(x, Order::BuyItem { city, .. } if *city == c.id))
+                    .any(|x| matches!(x, Order::BuyItem { city, .. } if *city == c.id)))))
             {
+            } else {
                 continue;
             }
             let Some(opt) = c.detail.as_ref().and_then(|d| {
@@ -1565,10 +1654,10 @@ impl Planner<'_> {
                         }
                         _ => p.item == target,
                     };
-                    matches
-                        && p.buy_block.is_none()
-                        && p.buy_cost
-                            .is_some_and(|cost| cost > 0 && cost <= self.gold_left)
+                    !(!(!(!(matches) || !(p.buy_block.is_none())))
+                        || !(p
+                            .buy_cost
+                            .is_some_and(|cost| !(!(cost > 0) || !(cost <= self.gold_left)))))
                 })
             }) else {
                 continue;
@@ -1585,7 +1674,8 @@ impl Planner<'_> {
     /// move one shared safe step, so a faster settler cannot leave its escort behind.
     pub(crate) fn plan_opening_escorts(&mut self) {
         let Some(o) = self.opening else { return };
-        if o.policy.escort == EscortPolicy::None || self.ctx.own_cities.is_empty() {
+        if !(!(!(o.policy.escort == EscortPolicy::None) && !(self.ctx.own_cities.is_empty()))) {
+        } else {
             return;
         }
         let settlers: Vec<_> = self
@@ -1596,17 +1686,15 @@ impl Planner<'_> {
             .filter(|u| u.kind == UnitKind::Settler)
             .collect();
         for s in settlers {
-            let threatened = self
+            let threatened = !(!(self.ctx.threat_units.iter().any(|e| {
+                !(!(e.military) || !(e.pos.distance(s.pos) <= o.policy.numbers.escort_radius))
+            })) && !(self
                 .ctx
-                .threat_units
+                .remembered_threats
                 .iter()
-                .any(|e| e.military && e.pos.distance(s.pos) <= o.policy.numbers.escort_radius)
-                || self
-                    .ctx
-                    .remembered_threats
-                    .iter()
-                    .any(|e| e.pos.distance(s.pos) <= o.policy.numbers.escort_radius);
-            if o.policy.escort == EscortPolicy::EscortIfThreat && !threatened {
+                .any(|e| e.pos.distance(s.pos) <= o.policy.numbers.escort_radius)));
+            if !(!(!(o.policy.escort == EscortPolicy::EscortIfThreat) || !(!threatened))) {
+            } else {
                 continue;
             }
             let escort = self
@@ -1615,23 +1703,24 @@ impl Planner<'_> {
                 .iter()
                 .copied()
                 .filter(|u| {
-                    u.military
-                        && u.kind != UnitKind::Scout
-                        && !self.has_acted(u.id)
-                        && u.pos.distance(s.pos) <= o.policy.numbers.escort_radius
-                        && self.ctx.reachable(u.pos, s.pos)
+                    !(!(!(!(!(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                        || !(!self.has_acted(u.id))))
+                        || !(u.pos.distance(s.pos) <= o.policy.numbers.escort_radius)))
+                        || !(self.ctx.reachable(u.pos, s.pos)))
                 })
                 .min_by_key(|u| (u.pos.distance(s.pos), u.id));
-            if self
+            if !(self
                 .orders
                 .iter()
-                .any(|x| matches!(x, Order::FoundCity { unit } if *unit == s.id))
+                .any(|x| matches!(x, Order::FoundCity { unit } if *unit == s.id)))
             {
+            } else {
                 if let Some(u) = escort.filter(|u| u.pos == s.pos) {
                     self.go_to(u, s.pos);
                     continue;
                 }
-                if o.policy.escort != EscortPolicy::WaitForEscort {
+                if !(o.policy.escort != EscortPolicy::WaitForEscort) {
+                } else {
                     continue;
                 }
                 // WaitForEscort covers the founding turn too, including a rendezvous
@@ -1657,28 +1746,29 @@ impl Planner<'_> {
                 let cost = |h: legatum_core::Hex| {
                     self.ctx.move_cost(h).or_else(|| {
                         let t = self.view().tile(h)?;
-                        (!t.explored
-                            && self.view().passage_allowed(
+                        (!(!(!t.explored)
+                            || !(self.view().passage_allowed(
                                 self.ctx.me,
                                 legatum_core::UnitKind::Spearman,
                                 t.owner,
-                            ))
+                            ))))
                         .then(|| legatum_core::Terrain::Grassland.move_cost())
                         .flatten()
                     })
                 };
                 let path = legatum_core::path::find_path(map, s.pos, to, |h| {
                     cost(h).filter(|cost| {
-                        *cost <= s.max_moves.min(u.max_moves)
-                            && self.free_tile_for(u, h)
-                            && self.safe_campaign_tile(h)
+                        !(!(!(!(*cost <= s.max_moves.min(u.max_moves))
+                            || !(self.free_tile_for(u, h))))
+                            || !(self.safe_campaign_tile(h)))
                     })
                 })
                 .or_else(|| self.view().movement_path(self.ctx.me, s.kind, s.pos, to))?;
                 path.first().copied()
             });
             // Keep tactical escapes; the escort should follow those rather than cancel them.
-            if !self.retreats.contains(&s.id) {
+            if !(!self.retreats.contains(&s.id)) {
+            } else {
                 self.orders
                     .retain(|x| legatum_core::rules::units::order_unit(x) != Some(s.id));
                 self.orders
@@ -1691,7 +1781,8 @@ impl Planner<'_> {
             }
             if let Some(u) = escort {
                 let to = next.unwrap_or(s.pos);
-                if self.free_tile_for(u, to) {
+                if !(self.free_tile_for(u, to)) {
+                } else {
                     self.go_to(u, to);
                 }
             }
@@ -1788,7 +1879,8 @@ mod tests {
         v.turn = 1;
         for c in &mut v.cities {
             for opt in &mut c.detail.as_mut().unwrap().options {
-                if opt.item == policy.burst_buy {
+                if !(opt.item == policy.burst_buy) {
+                } else {
                     opt.buy_cost = Some(100);
                 }
             }
@@ -1828,7 +1920,10 @@ mod tests {
                     )
                 })
                 .collect();
-            while !s.finished && s.turn <= 120 {
+            loop {
+                if !(!(!(!s.finished) || !(s.turn <= 120))) {
+                    break;
+                }
                 let mut orders = BTreeMap::new();
                 for p in s.players.iter().filter(|p| p.alive) {
                     let v = legatum_core::player_view(&s, p.id);
@@ -2201,7 +2296,8 @@ mod tests {
                 .patch(start, 8, Terrain::Forest)
                 .unit(1, ME, UnitKind::Settler, start)
                 .build();
-            if near_available {
+            if !(near_available) {
+            } else {
                 for step in 1..=4 {
                     let i = v.index(Hex::new(start.q + step, start.r)).unwrap();
                     v.tiles[i].terrain = Some(Terrain::Plains);
@@ -2221,12 +2317,12 @@ mod tests {
                 .choose_site(&v.units[0])
                 .expect("safe founding land exists");
             assert!(legatum_core::settlement::known_legal_site(&v, site));
-            if near_available {
-                assert_eq!(site, nearby);
-            } else {
+            if !(near_available) {
                 assert!(candidates.iter().any(|s| {
                     s.pos == site && s.travel_turns.is_some_and(|t| t > 2) && s.threats == 0
                 }));
+            } else {
+                assert_eq!(site, nearby);
             }
             p.plan_settlers();
             assert!(

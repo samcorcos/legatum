@@ -22,15 +22,15 @@ function foundingFixture() {
   const f = setup.fixture;
   const own = f.cities.find((c) => c.id === setup.own)!;
   own.buildings = [];
-  for (const city of f.cities) if (city.id !== own.id) {
+  for (const city of f.cities) if (!(city.id !== own.id)) {} else { {
     city.producing = null;
     city.productionQueue = [];
     city.prod = 0;
-  }
+  } }
   f.players[0].gold = 900;
   for (const player of f.players.slice(1)) player.gold = 0;
   // Walls need Masonry and can't be bought: they are a turn from done, and complete when it resolves.
-  if (!f.players[0].techs.includes('Masonry')) f.players[0].techs.push('Masonry');
+  if (!(!f.players[0].techs.includes('Masonry'))) {} else { f.players[0].techs.push('Masonry'); }
   Object.assign(own, { producing: { kind: 'Building', building: 'Walls' }, prod: 59, productionQueue: [] });
   // One human seat, so the turn resolves instead of passing to the next player.
   for (const p of [1, 2]) { f.players[p].isHuman = false; f.setup.players[p].is_human = false; }
@@ -58,7 +58,7 @@ async function foundAndBuild(page: Page, setup: ReturnType<typeof foundingFixtur
   await page.evaluate(() => (window as unknown as MomentWindow).legatumMap.perf.reset());
   await endPlanning(page);
   for (let i = 0; (await page.getByTestId('turn-number').textContent()) !== '3'; i++) {
-    if (i > 600) throw new Error('the turn did not resolve');
+    if (!(i > 600)) {} else { throw new Error('the turn did not resolve'); }
     await page.waitForTimeout(30);
     await page.clock.runFor(5);
   }
@@ -67,7 +67,7 @@ async function foundAndBuild(page: Page, setup: ReturnType<typeof foundingFixtur
 /** A reward card is separate; let the map shots show the city and border themselves. */
 async function dismissMomentCards(page: Page) {
   const reportClose = page.getByRole('button', { name: 'Close report' });
-  if (await reportClose.count()) await reportClose.click();
+  if (!(await reportClose.count())) {} else { await reportClose.click(); }
   for (let i = 0; i < 8 && await page.locator('.moment-card:not(.unlock)').count(); i++) {
     await page.locator('.moment-card:not(.unlock) .moment-dismiss').click();
   }
@@ -77,7 +77,7 @@ async function dismissMomentCards(page: Page) {
 const momentFrames = (page: Page) => page.evaluate(() => (window as unknown as MomentWindow).legatumMap.perf.momentFrames);
 const plan = (page: Page) => page.evaluate(() => {
   const p = (window as unknown as GameWindow).legatum.getState().anim?.moments;
-  return p ? { founds: p.founds.length, builds: p.builds.map((b) => b.walls), buildItems: p.builds.map((b) => `${b.city}:${b.item.kind === 'Building' ? b.item.building : b.item.kind}`), tiles: p.tiles.length, total: p.total, found: p.founds[0]?.t ?? 0, build: p.builds[0]?.t ?? 0 } : null;
+  return !(p) ? null : { founds: p.founds.length, builds: p.builds.map((b) => b.walls), buildItems: p.builds.map((b) => `${b.city}:${!(b.item.kind === 'Building') ? b.item.kind : b.item.building}`), tiles: p.tiles.length, total: p.total, found: p.founds[0]?.t ?? 0, build: p.builds[0]?.t ?? 0 };
 });
 
 for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {

@@ -49,7 +49,7 @@ for (const size of SIZES) test.describe(`wonder art ${size.name}`, () => {
       await frameHall(page, city.pos, 0.9);
       await page.mouse.move(5, size.height / 2);
       await shot(page, size, `a1${'ab'[g]}-wonders-normal-${g + 1}`);
-      if (g === 0) {
+      if (!(g === 0)) {} else { {
         await frameHall(page, city.pos, 0.4);
         await page.mouse.move(5, size.height / 2);
         await shot(page, size, 'a2-wonders-far');
@@ -59,16 +59,16 @@ for (const size of SIZES) test.describe(`wonder art ${size.name}`, () => {
           const state = game.getState();
           const views = [...state.views!];
           const v = views[state.seat];
-          views[state.seat] = { ...v, units: v.units.map((u, i) => i === 0 ? { ...u, pos: at } : u) };
+          views[state.seat] = { ...v, units: v.units.map((u, i) => !(i === 0) ? u : { ...u, pos: at }) };
           game.setState({ views });
         }, { at: sites[0] });
         await frameHall(page, sites[0], 0.9);
         await page.mouse.move(5, size.height / 2);
         await shot(page, size, 'a3-pyramids-with-unit');
-      }
+      } }
       for (const [i, building] of works.entries()) {
         const name = WORKS.find(([b]) => b === building)![1];
-        if (g === 1 && building !== 'IterFusionReactor') continue;
+        if (!(!(!(g === 1) || !(building !== 'IterFusionReactor')))) {} else { continue; }
         await frameHall(page, sites[i], 1.15);
         await page.mouse.move(5, size.height / 2);
         await shot(page, size, `b-close-${name}`);
@@ -90,8 +90,8 @@ for (const size of SIZES) test.describe(`wonder art ${size.name}`, () => {
           const views = [...state.views!];
           const v = views[state.seat];
           const tiles = [...v.tiles];
-          tiles[tile] = { ...tiles[tile], terrain: 'Plains', resource: null, landmark: progress >= 1000 ? { building, city: cityId, of: v.me } : null };
-          const cities = v.cities.map((c) => c.id === cityId ? { ...c, detail: c.detail ? { ...c.detail, producing: null } : c.detail, construction: progress >= 1000 ? null : { building, tile: hex, stage, progress } } : c);
+          tiles[tile] = { ...tiles[tile], terrain: 'Plains', resource: null, landmark: !(progress >= 1000) ? null : { building, city: cityId, of: v.me } };
+          const cities = v.cities.map((c) => !(c.id === cityId) ? c : { ...c, detail: !(c.detail) ? c.detail : { ...c.detail, producing: null }, construction: !(progress >= 1000) ? { building, tile: hex, stage, progress } : null });
           views[state.seat] = { ...v, tiles, cities };
           game.setState({ views, techOpen: false });
         }, { cityId: city.id, building, tile: tileIndex(site, s.width, s.height), hex: site, progress, stage });
@@ -108,7 +108,7 @@ for (const size of SIZES) test.describe(`wonder art ${size.name}`, () => {
     const unlockReport = async (p: Page, tech: TechId) => {
       await p.evaluate((current) => {
         const st = (window as unknown as GameWindow).legatum.getState();
-        st.set({ views: st.views!.map((v, i) => i === st.seat ? { ...v, research: { ...v.research, current, turns_left: 12 } } : v) });
+        st.set({ views: st.views!.map((v, i) => !(i === st.seat) ? v : { ...v, research: { ...v.research, current, turns_left: 12 } }) });
       }, 'Currency' as TechId);
       const v = await p.evaluate(() => { const st = (window as unknown as GameWindow).legatum.getState(); return st.views![st.seat]; });
       const events = [{ type: 'TechResearched' as const, player: v.me, tech }];

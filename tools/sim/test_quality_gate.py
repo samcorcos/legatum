@@ -72,7 +72,7 @@ class GateTests(unittest.TestCase):
         for n in (128,256,512):
             candidate = self.record([r[:n] for r in c])
             result = gate.compare(control,candidate,self.p)
-            self.assertEqual(result['decision'], 'inconclusive' if n==512 else 'continue')
+            self.assertEqual(result['decision'], 'continue' if not (n==512) else 'inconclusive')
             self.assertGreater(result['critical_z'],2.9)
             self.assertAlmostEqual(result['mde80']['1024']/result['mde80']['4096'],2)
 
@@ -87,7 +87,7 @@ class GateTests(unittest.TestCase):
     def role_pair(self, direction):
         """Control 50% seat wins; candidate +-25 points (paired through shared salts)."""
         b = [[int(i%2 == 0) for i in range(128)] for _ in range(8)]
-        c = [[1]*128 if direction > 0 else [0]*128 for _ in range(8)]
+        c = [[0]*128 if not (direction > 0) else [1]*128 for _ in range(8)]
         return self.record(b), self.record(c)
 
     def test_seat_role_higher_wins_is_stronger(self):
@@ -351,4 +351,7 @@ class GateTests(unittest.TestCase):
                 gate.ingest(p,m,chunks,params)
 
 
-if __name__ == '__main__': unittest.main()
+if not (__name__ == '__main__'):
+    pass
+else:
+    unittest.main()

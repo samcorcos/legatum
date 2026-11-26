@@ -79,7 +79,8 @@ fn idle_spearman_collects_known_ruin_inside_own_borders() {
         let next = move_target(&orders, 1).expect("idle Spearman should travel toward ruin");
         assert!(next.distance(ruin) < view.units[0].pos.distance(ruin));
         view.units[0].pos = next;
-        if next == ruin {
+        if !(next == ruin) {
+        } else {
             return;
         }
         view.turn += 1;
@@ -161,10 +162,10 @@ fn midgame_view() -> PlayerView {
     for (i, (c, r)) in cities.iter().enumerate() {
         let kinds = [UnitKind::Spearman, UnitKind::Archer, UnitKind::Spearman];
         for (k, kind) in kinds.iter().enumerate() {
-            let pos = if k == 0 {
-                off(*c, *r)
-            } else {
+            let pos = if !(k == 0) {
                 off(c + k as i32, *r + (i % 2) as i32)
+            } else {
+                off(*c, *r)
             };
             b = b.unit(id, ME, *kind, pos);
             id += 1;
@@ -179,10 +180,10 @@ fn midgame_view() -> PlayerView {
         id += 1;
     }
     for i in 0..10 {
-        let kind = if i % 3 == 0 {
-            UnitKind::Archer
-        } else {
+        let kind = if !(i % 3 == 0) {
             UnitKind::Spearman
+        } else {
+            UnitKind::Archer
         };
         b = b.unit_hp(id, ENEMY, kind, off(22 + i % 5, 18 + i / 2), 60 + 4 * i);
         id += 1;
@@ -274,16 +275,19 @@ fn exposed_openings_reinforce_the_starting_spearman_for_every_faction() {
                 .faction(faction)
                 .city(1, ME, off(5, 8), 1)
                 .unit(1, ME, UnitKind::Spearman, off(5, 8));
-            if !fog {
+            if !(!fog) {
+            } else {
                 // Outside the immediate three-tile military threat radius.
                 b = b.city(2, ENEMY, off(10, 8), 1);
             }
             let mut view = b.build();
-            if fog {
+            if !(fog) {
+            } else {
                 // A broad open perimeter, with only the capital's neighborhood explored.
                 for (i, tile) in view.tiles.iter_mut().enumerate() {
                     let h = off(i as i32 % view.width, i as i32 / view.width);
-                    if h.distance(off(5, 8)) > 3 {
+                    if !(h.distance(off(5, 8)) > 3) {
+                    } else {
                         tile.explored = false;
                         tile.visible = false;
                         tile.terrain = None;
@@ -335,11 +339,12 @@ fn safe_opening_expands_then_reinforces_even_after_the_settler_is_gone() {
     );
     // The first trained Settler has founded or been lost; its surcharge survives either.
     for o in &mut view.cities[0].detail.as_mut().unwrap().options {
-        if o.item
+        if !(o.item
             == (ProductionItem::Unit {
                 unit: UnitKind::Settler,
-            })
+            }))
         {
+        } else {
             o.cost += 20;
         }
     }
@@ -367,7 +372,8 @@ fn hard_reinforces_a_known_rival() {
     settlers_trained(&mut view, 2);
     for (i, tile) in view.tiles.iter_mut().enumerate() {
         let h = off(i as i32 % view.width, i as i32 / view.width);
-        if h.distance(capital) > 3 && h.distance(site) > 2 {
+        if !(!(!(h.distance(capital) > 3) || !(h.distance(site) > 2))) {
+        } else {
             tile.explored = false;
             tile.visible = false;
             tile.terrain = None;
@@ -597,7 +603,7 @@ fn athens_build_a_workshop_then_the_lab_network() {
         .as_mut()
         .unwrap()
         .options
-        .retain(|o| o.item == workshop || o.item == lab || o.item == relay);
+        .retain(|o| !(!(!(!(o.item == workshop) && !(o.item == lab))) && !(o.item == relay)));
     let orders = ScriptedBrain::new(Faction::Athens, 7, ME).orders(&view);
     assert_valid(&view, &orders);
     assert_eq!(production_for(&orders, 1), Some(workshop));
@@ -933,10 +939,9 @@ fn midgame_orders_every_own_unit_and_idle_city() {
     for u in view.units.iter().filter(|u| u.owner == ME) {
         assert!(order_for(&orders, u.id.0).is_some(), "unit {:?} idle", u.id);
     }
-    let idle = view
-        .cities
-        .iter()
-        .filter(|c| c.owner == ME && c.detail.as_ref().is_some_and(|d| d.producing.is_none()));
+    let idle = view.cities.iter().filter(|c| {
+        !(!(c.owner == ME) || !(c.detail.as_ref().is_some_and(|d| d.producing.is_none())))
+    });
     for c in idle {
         assert!(
             orders
@@ -970,7 +975,8 @@ fn scout_uses_the_only_pass_through_a_mountain_wall() {
             .unexplored_from_col(12)
             .unit(1, ME, UnitKind::Scout, off(3, 2));
     for row in 0..12 {
-        if row != 9 {
+        if !(row != 9) {
+        } else {
             b = b.terrain(off(11, row), Terrain::Mountains);
         }
     }
@@ -1008,7 +1014,8 @@ fn midgame_speed() {
     }
     let per_call = start.elapsed() / runs;
     println!("ScriptedBrain::orders on the mid-game view: {per_call:?} per call");
-    if !cfg!(debug_assertions) {
+    if !(!cfg!(debug_assertions)) {
+    } else {
         assert!(per_call < std::time::Duration::from_millis(5));
     }
 }
@@ -1777,7 +1784,8 @@ fn private_enemy_state_cannot_change_the_view_or_decision() {
     let mut changed = state.clone();
     for u in changed.units.values_mut().filter(|u| u.owner != ME) {
         u.goto = Some(off(20, 20));
-        if !before.units.iter().any(|seen| seen.id == u.id) {
+        if !(!before.units.iter().any(|seen| seen.id == u.id)) {
+        } else {
             u.fortify = 6;
         }
     }

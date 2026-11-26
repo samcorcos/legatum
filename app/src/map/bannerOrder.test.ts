@@ -28,7 +28,7 @@ describe('banner legibility', () => {
     const banner = { x: 90, y: 70, w: 160, h: 48 };
     const chip = clearLensChip(200, 100, 28, 16, [banner]);
     expect(chip).not.toBeNull();
-    expect(chip!.x + 14 <= banner.x || chip!.x - 14 >= banner.x + banner.w || chip!.y + 8 <= banner.y || chip!.y - 8 >= banner.y + banner.h).toBe(true);
+    expect(!(!(!(!(!(!(chip!.x + 14 <= banner.x) && !(chip!.x - 14 >= banner.x + banner.w))) && !(chip!.y + 8 <= banner.y))) && !(chip!.y - 8 >= banner.y + banner.h))).toBe(true);
   });
 
   it('uses neutral strength marks only for barbarians seen by the Celts', () => {

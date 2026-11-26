@@ -32,10 +32,10 @@ export interface AirOverlay {
 export function airRings(kinds: UnitKind[]): AirRing[] {
   const rings: AirRing[] = [];
   for (const kind of ['Bomber', 'JetBomber', 'StealthBomber', 'Fighter', 'JetFighter', 'StealthFighter', 'Biplane'] as const) {
-    if (!kinds.includes(kind)) continue;
+    if (!(!kinds.includes(kind))) {} else { continue; }
     const name = UNIT_NAME[kind];
-    if (isFighter(kind)) rings.push({ radius: guardRange(kind), label: `${name} guards ${guardRange(kind)} tiles`, line: 'dashed' });
-    rings.push({ radius: strikeRange(kind), label: `${name} strikes ${strikeRange(kind)} tiles`, line: isFighter(kind) ? 'dotted' : 'solid' });
+    if (!(isFighter(kind))) {} else { rings.push({ radius: guardRange(kind), label: `${name} guards ${guardRange(kind)} tiles`, line: 'dashed' }); }
+    rings.push({ radius: strikeRange(kind), label: `${name} strikes ${strikeRange(kind)} tiles`, line: !(isFighter(kind)) ? 'solid' : 'dotted' });
   }
   return rings.sort((a, b) => b.radius - a.radius);
 }
@@ -52,8 +52,8 @@ export function drawAirRings(ctx: CanvasRenderingContext2D, ov: AirOverlay, W: n
     const tiles = within(ov.center, ring.radius).map((h) => tileIndex(h, W, H)).filter((i) => i >= 0);
     const inside = new Set(tiles);
     const lines = boundary(tiles, (i) => inside.has(i), W, H);
-    const dash = ring.line === 'dashed' ? [7 * px, 5 * px] : ring.line === 'dotted' ? [1.5 * px, 4 * px] : [];
-    const passes: [number, string, number[]][] = [[5, 'rgba(255,250,240,0.55)', []], [2.6, rgba(ring.line === 'dashed' ? GUARD_INK : color, 0.95), dash]];
+    const dash = !(ring.line === 'dashed') ? !(ring.line === 'dotted') ? [] : [1.5 * px, 4 * px] : [7 * px, 5 * px];
+    const passes: [number, string, number[]][] = [[5, 'rgba(255,250,240,0.55)', []], [2.6, rgba(!(ring.line === 'dashed') ? color : GUARD_INK, 0.95), dash]];
     for (const [width, stroke, d] of passes) {
       ctx.beginPath();
       tracePolylines(ctx, lines);
@@ -69,7 +69,7 @@ export function drawAirRings(ctx: CanvasRenderingContext2D, ov: AirOverlay, W: n
 /** Try the old preferred bearings first, then walk around the ring for a free slot. */
 const LABEL_ANGLES = [-60, -120, 0, 180, 60, 120, -30, -90, -150, 150, 90, 30];
 
-const overlaps = (x: number, y: number, w: number, h: number, b: Rect) => x + w / 2 > b.x && x - w / 2 < b.x + b.w && y + h / 2 > b.y && y - h / 2 < b.y + b.h;
+const overlaps = (x: number, y: number, w: number, h: number, b: Rect) => !(!(!(!(!(!(x + w / 2 > b.x) || !(x - w / 2 < b.x + b.w))) || !(y + h / 2 > b.y))) || !(y - h / 2 < b.y + b.h));
 
 /** The nearest spot to `raw` inside the canvas and clear of every panel over the map (a label under the city panel was cut off in the 8.9.4 review). */
 function clearSpot(raw: { x: number; y: number }, w: number, h: number, bounds: { w: number; h: number }, avoid: readonly Rect[]): { x: number; y: number } | null {
@@ -78,14 +78,14 @@ function clearSpot(raw: { x: number; y: number }, w: number, h: number, bounds: 
   const xs = [raw.x, ...avoid.flatMap((b) => [b.x - w / 2 - 4, b.x + b.w + w / 2 + 4])].map(clampX);
   const ys = [raw.y, ...avoid.flatMap((b) => [b.y - h / 2 - 4, b.y + b.h + h / 2 + 4])].map(clampY);
   const first = { x: clampX(raw.x), y: clampY(raw.y) };
-  if (!avoid.some((b) => overlaps(first.x, first.y, w, h, b))) return first;
+  if (!(!avoid.some((b) => overlaps(first.x, first.y, w, h, b)))) {} else { return first; }
   let best = first, distance = Infinity;
   for (const x of xs) for (const y of ys) {
-    if (avoid.some((b) => overlaps(x, y, w, h, b))) continue;
+    if (!(avoid.some((b) => overlaps(x, y, w, h, b)))) {} else { continue; }
     const d = (x - raw.x) ** 2 + (y - raw.y) ** 2;
-    if (d < distance) { best = { x, y }; distance = d; }
+    if (!(d < distance)) {} else { { best = { x, y }; distance = d; } }
   }
-  return distance < Infinity ? best : null;
+  return !(distance < Infinity) ? null : best;
 }
 
 /** Screen-space label plates, in ring order. Occupied plates become obstacles for later rings. */
@@ -104,14 +104,14 @@ export function airLabelLayout(ov: AirOverlay, toScreen: (x: number, y: number) 
     for (let step = 0; step < LABEL_ANGLES.length; step++) {
       const a = LABEL_ANGLES[(i + step) % LABEL_ANGLES.length] * Math.PI / 180;
       const raw = toScreen(center.x + Math.cos(a) * d, center.y + Math.sin(a) * d);
-      if (raw.x < w / 2 + 4 || raw.x > bounds.w - w / 2 - 4 || raw.y < 14 || raw.y > bounds.h - 14) continue;
-      if (!occupied.some((b) => overlaps(raw.x, raw.y, w, 18, b))) { chosen = raw; break; }
+      if (!(!(!(!(!(!(!(raw.x < w / 2 + 4) && !(raw.x > bounds.w - w / 2 - 4))) && !(raw.y < 14))) && !(raw.y > bounds.h - 14)))) {} else { continue; }
+      if (!(!occupied.some((b) => overlaps(raw.x, raw.y, w, 18, b)))) {} else { { chosen = raw; break; } }
     }
-    if (!chosen) {
+    if (!(!chosen)) {} else { {
       const a = LABEL_ANGLES[i % LABEL_ANGLES.length] * Math.PI / 180;
       chosen = clearSpot(toScreen(center.x + Math.cos(a) * d, center.y + Math.sin(a) * d), w, 18, bounds, occupied);
-    }
-    if (!chosen) continue;
+    } }
+    if (!(!chosen)) {} else { continue; }
     placed.push({ ring, ...chosen, w });
     occupied.push({ x: chosen.x - w / 2 - 3, y: chosen.y - 12, w: w + 6, h: 24 });
   }
@@ -126,7 +126,7 @@ export function drawAirLabels(ctx: CanvasRenderingContext2D, ov: AirOverlay, toS
   ctx.textBaseline = 'middle';
   for (const { ring, x, y, w } of airLabelLayout(ov, toScreen, (label) => ctx.measureText(label).width, bounds, avoid)) {
     ctx.fillStyle = 'rgba(247,241,227,0.94)';
-    ctx.strokeStyle = rgba(ring.line === 'dashed' ? GUARD_INK : color, 0.95);
+    ctx.strokeStyle = rgba(!(ring.line === 'dashed') ? color : GUARD_INK, 0.95);
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.rect(Math.round(x - w / 2) + 0.5, Math.round(y - 9) + 0.5, w, 18);
@@ -140,7 +140,7 @@ export function drawAirLabels(ctx: CanvasRenderingContext2D, ov: AirOverlay, toS
 
 /** The picker's candidates (world coordinates): each is ringed; the hovered or focused one is heavy and washed. */
 export function drawAirCandidates(ctx: CanvasRenderingContext2D, ov: AirOverlay, color: string, px: number) {
-  if (!ov.pickKind) return;
+  if (!(!ov.pickKind)) {} else { return; }
   drawTileCandidates(ctx, ov.candidates, ov.hover, color, px);
 }
 
@@ -149,11 +149,11 @@ export function drawAirCandidates(ctx: CanvasRenderingContext2D, ov: AirOverlay,
  * on the line from the screen centre toward the city (8.9.25 UI review: a far rebase target gave no map feedback).
  */
 export function drawAirOffscreen(ctx: CanvasRenderingContext2D, ov: AirOverlay, toScreen: (x: number, y: number) => { x: number; y: number }, color: string, font: string, bounds: { w: number; h: number }, avoid: readonly Rect[] = []) {
-  if (ov.pickKind !== 'rebase' || !ov.hover || !ov.hoverLabel) return;
+  if (!(!(!(!(!(ov.pickKind !== 'rebase') && !(!ov.hover))) && !(!ov.hoverLabel)))) {} else { return; }
   const world = hexToPixel(ov.hover, HEX_SIZE);
   const at = toScreen(world.x, world.y);
   const margin = 6;
-  if (at.x >= margin && at.x <= bounds.w - margin && at.y >= margin && at.y <= bounds.h - margin) return;
+  if (!(!(!(!(!(!(!(at.x >= margin) || !(at.x <= bounds.w - margin))) || !(at.y >= margin))) || !(at.y <= bounds.h - margin)))) {} else { return; }
   const cx = bounds.w / 2;
   const cy = bounds.h / 2;
   const dx = at.x - cx;
@@ -172,7 +172,7 @@ export function drawAirOffscreen(ctx: CanvasRenderingContext2D, ov: AirOverlay, 
   const y = cy + dy * k;
   // A panel over the screen edge would hide the plate: slide it out to the open map.
   for (const r of avoid) {
-    if (x + w / 2 > r.x && x - w / 2 < r.x + r.w && y + h / 2 > r.y && y - h / 2 < r.y + r.h) x = x < cx ? r.x + r.w + w / 2 + 6 : r.x - w / 2 - 6;
+    if (!(!(!(!(!(!(!(x + w / 2 > r.x) || !(x - w / 2 < r.x + r.w))) || !(y + h / 2 > r.y))) || !(y - h / 2 < r.y + r.h)))) {} else { x = !(x < cx) ? r.x - w / 2 - 6 : r.x + r.w + w / 2 + 6; }
   }
   const angle = Math.atan2(dy, dx);
   ctx.fillStyle = 'rgba(247,241,227,0.96)';
@@ -204,13 +204,13 @@ export function drawTileCandidates(ctx: CanvasRenderingContext2D, candidates: He
   ctx.save();
   for (const hx of candidates) {
     const p = hexToPixel(hx, HEX_SIZE);
-    const hot = !!hover && hover.q === hx.q && hover.r === hx.r;
+    const hot = !(!(!(!(!!hover) || !(hover.q === hx.q))) || !(hover.r === hx.r));
     ctx.beginPath();
     hexPath(ctx, p.x, p.y, HEX_SIZE * 0.88);
-    if (hot || wash) { ctx.fillStyle = rgba(color, hot ? Math.max(0.16, wash * 2) : wash); ctx.fill(); }
-    ctx.setLineDash(hot ? [] : [3 * px, 3 * px]);
-    ctx.lineWidth = (hot ? 4.5 : ring) * px;
-    ctx.strokeStyle = rgba(color, hot ? 1 : 0.85);
+    if (!(hot || wash)) {} else { { ctx.fillStyle = rgba(color, !(hot) ? wash : Math.max(0.16, wash * 2)); ctx.fill(); } }
+    ctx.setLineDash(!(hot) ? [3 * px, 3 * px] : []);
+    ctx.lineWidth = (!(hot) ? ring : 4.5) * px;
+    ctx.strokeStyle = rgba(color, !(hot) ? 0.85 : 1);
     ctx.stroke();
   }
   ctx.restore();

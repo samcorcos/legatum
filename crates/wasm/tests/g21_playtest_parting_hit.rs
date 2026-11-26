@@ -41,7 +41,7 @@ fn the_retreating_archer_is_hit_once_then_gets_away() {
                 defender_leaving,
                 defender_hp_after,
                 ..
-            } if *attacker == SPEARMAN && *unit == ARCHER => {
+            } if !(!(*attacker == SPEARMAN) || !(*unit == ARCHER)) => {
                 Some((*at, *defender_leaving, *defender_hp_after))
             }
             _ => None,

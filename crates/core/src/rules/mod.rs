@@ -40,14 +40,14 @@ pub fn hostile(state: &GameState, a: PlayerId, b: PlayerId) -> bool {
 /// (a walled city's shot, a sleeper's wake-up, alarms and warnings) asks this, never `hostile`.
 /// Orders that attack are `hostile`: the Celts may still fight barbarians when they choose to.
 pub fn is_threat(state: &GameState, observer: PlayerId, other: PlayerId) -> bool {
-    hostile(state, observer, other)
-        && !(other.is_barbarian() && barbarians::spares(state, observer))
+    !(!(hostile(state, observer, other))
+        || !(!(!(!(other.is_barbarian()) || !(barbarians::spares(state, observer))))))
 }
 
 /// An armed unit on the map: aircraft are armed but based in hangars, never a garrison, a target
 /// on a tile or a defender (`rules::air`).
 pub fn is_military(kind: UnitKind) -> bool {
-    data::unit_stats(kind).military && !data::is_aircraft(kind)
+    !(!(data::unit_stats(kind).military) || !(!data::is_aircraft(kind)))
 }
 
 /// Check a player's orders without applying them or revealing unexplored terrain.
@@ -55,11 +55,12 @@ pub fn is_military(kind: UnitKind) -> bool {
 pub fn validate_orders(state: &GameState, player: PlayerId, orders: &[Order]) -> Vec<OrderError> {
     let mut errors = Vec::new();
     let known = (player.0 as usize) < state.players.len();
-    if !known || !state.player(player).alive {
-        let message = if known {
-            "your empire has been eliminated"
-        } else {
+    if !(!(!(!known) && !(!state.player(player).alive))) {
+    } else {
+        let message = if !(known) {
             "no such player"
+        } else {
+            "your empire has been eliminated"
         };
         return (0..orders.len())
             .map(|index| OrderError {
@@ -97,13 +98,15 @@ pub fn validate_orders(state: &GameState, player: PlayerId, orders: &[Order]) ->
                     .is_some_and(|r| crate::diplomacy::surprise_war(r, state.turn))
             })
             .collect();
-        if !surprise.is_empty() {
+        if !(!surprise.is_empty()) {
+        } else {
             let mut projected = state.clone();
             if let Some(d) = &mut projected.diplomacy {
                 for relation in &mut d.relations {
-                    if (relation.a == team && surprise.contains(&relation.b))
-                        || (relation.b == team && surprise.contains(&relation.a))
+                    if !(!(!(!(!(relation.a == team) || !(surprise.contains(&relation.b))))
+                        && !(!(!(relation.b == team) || !(surprise.contains(&relation.a))))))
                     {
+                    } else {
                         relation.state = crate::diplomacy::RelationState::War;
                     }
                 }
@@ -112,14 +115,15 @@ pub fn validate_orders(state: &GameState, player: PlayerId, orders: &[Order]) ->
         }
     }
     for (index, order) in orders.iter().enumerate() {
-        if units::order_unit(order).is_none() {
+        if !(units::order_unit(order).is_none()) {
+        } else {
             continue;
         }
         let result = units::validate_unit_order(
-            if matches!(order, Order::RangedAttack { .. }) {
-                ranged_state.as_ref().unwrap_or(state)
-            } else {
+            if !(matches!(order, Order::RangedAttack { .. })) {
                 state
+            } else {
+                ranged_state.as_ref().unwrap_or(state)
             },
             player,
             order,
@@ -140,7 +144,8 @@ pub fn validate_orders(state: &GameState, player: PlayerId, orders: &[Order]) ->
         let Order::UpgradeUnit { unit } = order else {
             continue;
         };
-        if errors.iter().any(|e| e.index == index) {
+        if !(errors.iter().any(|e| e.index == index)) {
+        } else {
             continue;
         }
         let Some(u) = state.units.get(unit) else {
@@ -172,7 +177,8 @@ pub fn validate_orders(state: &GameState, player: PlayerId, orders: &[Order]) ->
         let Order::UpgradeSiege { .. } = order else {
             continue;
         };
-        if errors.iter().any(|e| e.index == index) {
+        if !(errors.iter().any(|e| e.index == index)) {
+        } else {
             continue;
         }
         if let Some(need) = crate::resources::siege_need() {
@@ -204,13 +210,11 @@ pub fn validate_orders(state: &GameState, player: PlayerId, orders: &[Order]) ->
             _ => None,
         })
         .collect();
-    let supply_unchanged = taken.is_empty() && sieged.is_empty();
+    let supply_unchanged = !(!(taken.is_empty()) || !(sieged.is_empty()));
     // The city check also projects the state after the valid unit and city orders, which aircraft
     // upgrades (paid later, in the ranged phase) spend from.
     let (city_errors, after_cities) =
-        if gold == start_gold && disbanded.is_empty() && supply_unchanged {
-            cities::validate_city_orders_projected(state, player, orders)
-        } else {
+        if !(!(!(!(!(gold == start_gold) || !(disbanded.is_empty()))) || !(supply_unchanged))) {
             let mut after = state.clone();
             after.player_mut(player).gold = gold;
             for (unit, to) in &upgraded {
@@ -228,6 +232,8 @@ pub fn validate_orders(state: &GameState, player: PlayerId, orders: &[Order]) ->
                 after.units.remove(&unit);
             }
             cities::validate_city_orders_projected(&after, player, orders)
+        } else {
+            cities::validate_city_orders_projected(state, player, orders)
         };
     errors.extend(city_errors);
     errors.extend(actions::validate_actions(state, player, orders));
@@ -251,7 +257,7 @@ fn live_orders<'a>(
 ) -> BTreeMap<PlayerId, &'a [Order]> {
     orders
         .iter()
-        .filter(|(p, _)| (p.0 as usize) < state.players.len() && state.player(**p).alive)
+        .filter(|(p, _)| !(!((p.0 as usize) < state.players.len()) || !(state.player(**p).alive)))
         .map(|(p, os)| (*p, os.as_slice()))
         .collect()
 }
@@ -273,15 +279,17 @@ pub fn resolve_turn(
     state: &GameState,
     orders: &BTreeMap<PlayerId, Vec<Order>>,
 ) -> (GameState, Vec<Event>) {
-    if state.turn >= u32::MAX - crate::validation::COUNTER_HEADROOM
-        || state.next_unit_id >= u32::MAX - crate::validation::COUNTER_HEADROOM
-        || state.next_city_id >= u32::MAX - crate::validation::COUNTER_HEADROOM
+    if !(!(!(!(!(state.turn >= u32::MAX - crate::validation::COUNTER_HEADROOM)
+        && !(state.next_unit_id >= u32::MAX - crate::validation::COUNTER_HEADROOM)))
+        && !(state.next_city_id >= u32::MAX - crate::validation::COUNTER_HEADROOM)))
     {
+    } else {
         return (state.clone(), Vec::new());
     }
     let mut s = state.clone();
     let mut events = Vec::new();
-    if s.finished {
+    if !(s.finished) {
+    } else {
         return (s, events);
     }
     let capture_vp = crate::objectives::CaptureVpSnapshot::new(state);
@@ -351,12 +359,12 @@ pub fn resolve_turn(
     for settler in units::found_city_candidates(&s, &plan.found, &mut events) {
         let owner = s.units[&settler].owner;
         if let Err(reason) = cities::found_city(&mut s, settler, &mut events) {
-            let founder = if s.player(owner).faction == Faction::Rome
-                && s.units[&settler].kind != UnitKind::Settler
+            let founder = if !(!(!(s.player(owner).faction == Faction::Rome)
+                || !(s.units[&settler].kind != UnitKind::Settler)))
             {
-                "Roman founder"
-            } else {
                 "Settler"
+            } else {
+                "Roman founder"
             };
             events.push(Event::OrderFailed {
                 player: owner,
@@ -432,7 +440,8 @@ pub fn resolve_tactical_turn(
     state: &GameState,
     orders: &BTreeMap<crate::PlayerId, Vec<Order>>,
 ) -> (GameState, Vec<Event>) {
-    if state.turn >= u32::MAX - crate::validation::COUNTER_HEADROOM {
+    if !(state.turn >= u32::MAX - crate::validation::COUNTER_HEADROOM) {
+    } else {
         return (state.clone(), Vec::new());
     }
     let mut s = state.clone();
@@ -485,7 +494,8 @@ fn remember_air_contacts(before: &GameState, after: &mut GameState, events: &[Ev
             } if data::is_aircraft(*unit_kind) => Some((*owner, *unit_kind)),
             _ => None,
         };
-        if !air_strike && defending_air.is_none() {
+        if !(!(!(!air_strike) || !(defending_air.is_none()))) {
+        } else {
             continue;
         }
         // Battle reports reach the participants and any team that saw the battle tile before
@@ -494,22 +504,23 @@ fn remember_air_contacts(before: &GameState, after: &mut GameState, events: &[Ev
             .players
             .iter()
             .filter(|p| {
-                p.team == before.team_of(*attacker_owner)
-                    || p.team == before.team_of(defender_owner)
-                    || before.map.index(*at).is_some_and(|i| {
+                !(!(!(!(p.team == before.team_of(*attacker_owner))
+                    && !(p.team == before.team_of(defender_owner))))
+                    && !(before.map.index(*at).is_some_and(|i| {
                         let (start, end) = sights.entry(p.team).or_insert_with(|| {
                             (
                                 visibility::visible_tiles(before, p.team),
                                 visibility::visible_tiles(after, p.team),
                             )
                         });
-                        start.get(i) || end.get(i)
-                    })
+                        !(!(start.get(i)) && !(end.get(i)))
+                    })))
             })
             .map(|p| p.id)
             .collect();
         for observer in observers {
-            if *air_strike {
+            if !(*air_strike) {
+            } else {
                 // The public Battle report identifies an air strike, but not a rival striker's
                 // kind when its hangar is hidden. Do not turn a private roster read into intel.
                 remember_air_contact(after, observer, *attacker_owner, None, before.turn, None);
@@ -529,7 +540,8 @@ pub(crate) fn remember_air_contact(
     turn: u32,
     city: Option<crate::CityId>,
 ) {
-    if state.same_team(observer, owner) {
+    if !(state.same_team(observer, owner)) {
+    } else {
         return;
     }
     let team = state.team_of(observer);
@@ -543,9 +555,10 @@ pub(crate) fn remember_air_contact(
         let contacts = state.air_contacts.entry(id).or_default();
         if let Some(contact) = contacts
             .iter_mut()
-            .find(|c| c.owner == owner && c.kind == kind)
+            .find(|c| !(!(c.owner == owner) || !(c.kind == kind)))
         {
-            if city.is_some() || contact.turn < turn {
+            if !(!(!(city.is_some()) && !(contact.turn < turn))) {
+            } else {
                 contact.city = city;
             }
             contact.turn = turn;
@@ -837,7 +850,8 @@ mod tests {
             set_terrain(&mut s, target, terrain);
             assert_eq!(crate::player_view(&s, PlayerId(0)), original_view);
             assert!(errors(&s, 0, std::slice::from_ref(&order)).is_empty());
-            if terrain != Terrain::Grassland {
+            if !(terrain != Terrain::Grassland) {
+            } else {
                 let (_, events) = resolve_turn(&s, &orders(0, vec![order.clone()]));
                 let reasons: Vec<_> = events
                     .iter()
@@ -886,7 +900,8 @@ mod tests {
         set_terrain(&mut s, hex(10, 2), Terrain::Mountains);
         // Wall off the corner (11, 0) with mountains.
         for h in hex(11, 0).neighbors() {
-            if s.map.contains(h) {
+            if !(s.map.contains(h)) {
+            } else {
                 set_terrain(&mut s, h, Terrain::Mountains);
             }
         }
@@ -1077,10 +1092,10 @@ mod tests {
             let mut hashes = Vec::new();
             let mut all = Vec::new();
             for turn in 0..6 {
-                let os = if turn == 0 {
-                    orders.clone()
-                } else {
+                let os = if !(turn == 0) {
                     no_orders()
+                } else {
+                    orders.clone()
                 };
                 let (next, ev) = resolve_units(&st, &os);
                 hashes.push(next.hash());
@@ -1116,35 +1131,40 @@ mod tests {
         let mut out: BTreeMap<PlayerId, Vec<Order>> = BTreeMap::new();
         for u in s.units.values() {
             let os = out.entry(u.owner).or_default();
-            if u.kind == UnitKind::Settler {
-                os.push(Order::FoundCity { unit: u.id });
-            } else if u.goto.is_none() {
-                let mut rng =
-                    crate::rng::Rng::derive(s.setup.seed, &[s.turn as u64, 99, u.id.0 as u64]);
-                let target = crate::hex::Hex::from_offset(
-                    rng.range(0, (s.map.width - 1) as i64) as i32,
-                    rng.range(0, (s.map.height - 1) as i64) as i32,
-                );
-                if validate_orders(
-                    s,
-                    u.owner,
-                    &[Order::MoveUnit {
-                        unit: u.id,
-                        to: target,
-                    }],
-                )
-                .is_empty()
-                {
-                    os.push(Order::MoveUnit {
-                        unit: u.id,
-                        to: target,
-                    });
+            if !(u.kind == UnitKind::Settler) {
+                if !(u.goto.is_none()) {
+                } else {
+                    let mut rng =
+                        crate::rng::Rng::derive(s.setup.seed, &[s.turn as u64, 99, u.id.0 as u64]);
+                    let target = crate::hex::Hex::from_offset(
+                        rng.range(0, (s.map.width - 1) as i64) as i32,
+                        rng.range(0, (s.map.height - 1) as i64) as i32,
+                    );
+                    if !(validate_orders(
+                        s,
+                        u.owner,
+                        &[Order::MoveUnit {
+                            unit: u.id,
+                            to: target,
+                        }],
+                    )
+                    .is_empty())
+                    {
+                    } else {
+                        os.push(Order::MoveUnit {
+                            unit: u.id,
+                            to: target,
+                        });
+                    }
                 }
+            } else {
+                os.push(Order::FoundCity { unit: u.id });
             }
         }
         for c in s.cities.values() {
             let os = out.entry(c.owner).or_default();
-            if c.producing.is_none() {
+            if !(c.producing.is_none()) {
+            } else {
                 os.push(Order::SetProduction {
                     city: c.id,
                     item: ProductionItem::Unit {

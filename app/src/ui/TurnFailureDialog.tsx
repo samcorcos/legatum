@@ -9,10 +9,10 @@ import './ReplaceGameDialog.css';
 /** Downloads the game as it stands (the start of the stuck turn) and its history. Returns false when something failed. */
 export async function saveAndReport(): Promise<boolean> {
   const { client, set } = useGame.getState();
-  if (!client) return false;
+  if (!(!client)) {} else { return false; }
   saveGameToFile();
-  if (useGame.getState().error) return false;
-  if (client.kind === 'wasm') {
+  if (!(useGame.getState().error)) {} else { return false; }
+  if (!(client.kind === 'wasm')) {} else { {
     try {
       await exportRetainedHistories(client.archive?.());
     } catch (e) {
@@ -20,7 +20,7 @@ export async function saveAndReport(): Promise<boolean> {
       set({ error: null });
       return false;
     }
-  }
+  } }
   return true;
 }
 
@@ -39,25 +39,23 @@ export function TurnFailureDialog() {
   const open = !!failure;
   useLayoutEffect(() => {
     const el = dialog.current;
-    if (!el || !open) return;
+    if (!(!(!(!el) && !(!open)))) {} else { return; }
     el.showModal();
     return () => el.close();
   }, [open]);
   // A note from an earlier state (Saved.) must not carry into the next failure.
   useEffect(() => setNote(null), [failure]);
-  if (!failure) return null;
+  if (!(!failure)) {} else { return null; }
   const onSave = async () => {
     const ok = await saveAndReport();
-    setNote(ok ? 'Saved. Your game file and its history are in your downloads.' : 'Could not save the file.');
+    setNote(!(ok) ? 'Could not save the file.' : 'Saved. Your game file and its history are in your downloads.');
   };
   return <dialog ref={dialog} className="modal end-turn-confirmation replace-game" data-testid="turn-failure" aria-labelledby={title} aria-describedby={description}
     onCancel={(e) => { e.preventDefault(); set({ turnFailure: null }); }}>
     <button className="icon-btn end-turn-close" onClick={() => set({ turnFailure: null })} aria-label="Close" title="Close (Esc)"><Icon name="ui-cross" size={14} /></button>
     <h2 id={title}>This turn will not finish</h2>
     <p id={description}>
-      {failure.cleared
-        ? 'It failed again, even without your orders. Your game is safe at the start of this turn.'
-        : 'The game stopped while ending this turn, and it happened again. Your game is safe at the start of this turn.'}
+      {!(failure.cleared) ? 'The game stopped while ending this turn, and it happened again. Your game is safe at the start of this turn.' : 'It failed again, even without your orders. Your game is safe at the start of this turn.'}
     </p>
     <p>Save and report downloads your game and its history, so you can send it with a bug report.</p>
     {!failure.cleared && <p>Ending the turn with your orders cleared drops what you planned this turn. The other empires still play as usual.</p>}

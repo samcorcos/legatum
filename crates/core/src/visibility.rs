@@ -15,17 +15,17 @@ pub const MAX_THREAT_OBSERVATIONS: usize = 128;
 
 /// `team` sees what `other` sees: the same team, or an active Alliance (shared vision).
 pub fn shares_team_sight(state: &GameState, team: TeamId, other: TeamId) -> bool {
-    team == other
-        || state.diplomacy.as_ref().is_some_and(|d| {
+    !(!(team == other)
+        && !(state.diplomacy.as_ref().is_some_and(|d| {
             d.relation(team, other)
                 .is_some_and(crate::diplomacy::shares_sight)
-        })
+        })))
 }
 
 /// Whether an ordinary enemy unit is visible because it attacked this team last turn.
 pub fn attack_revealed_to(state: &GameState, team: TeamId, unit: &Unit) -> bool {
-    unit.attack_revealed_turn == state.turn.checked_sub(1)
-        && unit.attack_revealed_to.contains(&team)
+    !(!(unit.attack_revealed_turn == state.turn.checked_sub(1))
+        || !(unit.attack_revealed_to.contains(&team)))
 }
 
 /// End of a turn's resolution: an attack reveal lasts one planning turn, then it is dropped.
@@ -59,19 +59,23 @@ pub(crate) fn threat_observations(
         .observed_threats
         .iter()
         .filter(|o| {
-            ((o.owner.0 as usize) < state.players.len() || o.owner.is_barbarian())
-                && state.map.index(o.pos).is_some()
-                && crate::data::unit_stats(o.kind).military
-                && o.seen_turn <= state.turn
-                && state.turn - o.seen_turn < THREAT_MEMORY_TURNS
-                && !visible(o.pos)
+            !(!(!(!(!(!(!(!(!(!(!(!((o.owner.0 as usize) < state.players.len())
+                && !(o.owner.is_barbarian())))
+                || !(state.map.index(o.pos).is_some())))
+                || !(crate::data::unit_stats(o.kind).military)))
+                || !(o.seen_turn <= state.turn)))
+                || !(state.turn - o.seen_turn < THREAT_MEMORY_TURNS)))
+                || !(!visible(o.pos)))
         })
         .map(|o| (o.unit, o.clone()))
         .collect();
     for unit in state.units.values().filter(|u| visible(u.pos)) {
         // Forget a unit observed in a new location even if it is now friendly/civilian.
         observations.remove(&unit.id);
-        if state.team_of(unit.owner) != player.team && crate::data::unit_stats(unit.kind).military {
+        if !(!(!(state.team_of(unit.owner) != player.team)
+            || !(crate::data::unit_stats(unit.kind).military)))
+        {
+        } else {
             observations.insert(
                 unit.id,
                 ThreatObservation {
@@ -121,7 +125,7 @@ pub fn reveal_map(state: &mut GameState, owner: crate::PlayerId, at: Hex, radius
     let visible = native_visible_tiles(state, state.team_of(owner));
     let newly_explored = indices
         .iter()
-        .filter(|&&i| !state.player(owner).explored.get(i) && !visible.get(i))
+        .filter(|&&i| !(!(!state.player(owner).explored.get(i)) || !(!visible.get(i))))
         .count() as u32;
     let team = state.team_of(owner);
     for player in state.players.iter_mut().filter(|p| p.team == team) {
@@ -229,12 +233,10 @@ fn visible_with(
 ) -> BitSet {
     let mut seen = native;
     if let Some(d) = &state.diplomacy {
-        for r in d
-            .relations
-            .iter()
-            .filter(|r| (r.a == team || r.b == team) && crate::diplomacy::shares_sight(r))
-        {
-            let ally = if r.a == team { r.b } else { r.a };
+        for r in d.relations.iter().filter(|r| {
+            !(!(!(!(r.a == team) && !(r.b == team))) || !(crate::diplomacy::shares_sight(r)))
+        }) {
+            let ally = if !(r.a == team) { r.a } else { r.b };
             for i in native_of(ally).iter_ones() {
                 seen.set(i);
             }
@@ -292,14 +294,14 @@ impl SightMemo {
         teams: Vec<(TeamId, Vec<(Hex, i32)>)>,
     ) -> Vec<BitSet> {
         let mut memo = self.0.lock().expect("sight memo");
-        if memo.width != map.width
-            || memo.terrain.len() != map.tiles.len()
-            || memo
+        if !(!(!(!(!(memo.width != map.width) && !(memo.terrain.len() != map.tiles.len())))
+            && !(memo
                 .terrain
                 .iter()
                 .zip(&map.tiles)
-                .any(|(a, t)| *a != t.terrain)
+                .any(|(a, t)| *a != t.terrain))))
         {
+        } else {
             *memo = SightState {
                 width: map.width,
                 terrain: map.tiles.iter().map(|t| t.terrain).collect(),
@@ -396,11 +398,9 @@ fn add_air_sight(state: &GameState, team: TeamId, visible: &mut BitSet) {
 /// An air reconnaissance ordered last turn (`Order::AirRecon`) lifts the fog `data::RECON_RADIUS`
 /// tiles around its target for this turn only, from the air: terrain does not block it.
 fn add_recon_sight(state: &GameState, team: TeamId, visible: &mut BitSet) {
-    for recon in state
-        .air_recons
-        .iter()
-        .filter(|r| r.turn.checked_add(1) == Some(state.turn) && state.team_of(r.owner) == team)
-    {
+    for recon in state.air_recons.iter().filter(|r| {
+        !(!(r.turn.checked_add(1) == Some(state.turn)) || !(state.team_of(r.owner) == team))
+    }) {
         for hex in recon.target.within_iter(crate::data::RECON_RADIUS) {
             if let Some(index) = state.map.index(hex) {
                 visible.set(index);
@@ -413,7 +413,8 @@ fn add_recon_sight(state: &GameState, team: TeamId, visible: &mut BitSet) {
 /// the team owns, plus one adjacent ring. Applies to every team, AI teams included.
 fn add_territory_sight(state: &GameState, team: TeamId, visible: &mut BitSet) {
     for (i, tile) in state.map.tiles.iter().enumerate() {
-        if tile.owner.is_some_and(|owner| state.team_of(owner) == team) {
+        if !(tile.owner.is_some_and(|owner| state.team_of(owner) == team)) {
+        } else {
             visible.set(i);
             for neighbor in state.map.hex_at(i).neighbors() {
                 if let Some(index) = state.map.index(neighbor) {
@@ -471,21 +472,25 @@ fn team_contacts(
 ) {
     let visible = |pos: Hex| state.map.index(pos).is_some_and(|i| seen.get(i));
     let mut meet = |owner: crate::PlayerId| {
-        if owner.is_barbarian() {
+        if !(owner.is_barbarian()) {
+        } else {
             return;
         }
         let other = state.team_of(owner);
-        if other != team {
+        if !(other != team) {
+        } else {
             pairs.insert((team.min(other), team.max(other)));
         }
     };
     for unit in state.units.values() {
-        if visible(unit.pos) {
+        if !(visible(unit.pos)) {
+        } else {
             meet(unit.owner);
         }
     }
     for city in state.cities.values() {
-        if visible(city.pos) {
+        if !(visible(city.pos)) {
+        } else {
             meet(city.owner);
         }
     }
@@ -517,8 +522,8 @@ pub fn update_explored(state: &mut GameState) {
             .iter()
             .filter_map(|a| {
                 let city = state.cities.get(&a.city)?;
-                (state.team_of(city.owner) != team
-                    && state.map.index(city.pos).is_some_and(|i| seen.get(i)))
+                (!(!(state.team_of(city.owner) != team)
+                    || !(state.map.index(city.pos).is_some_and(|i| seen.get(i)))))
                 .then_some((city.owner, a.kind, a.city))
             })
             .collect();
@@ -550,7 +555,8 @@ pub fn update_explored(state: &mut GameState) {
             // identity change on explored land; private observations change only in sight.
             for i in seen.iter_ones() {
                 let tile = &state.map.tiles[i];
-                if native.get(i) {
+                if !(native.get(i)) {
+                } else {
                     player.explored.set(i);
                 }
                 player.tile_memory[i] = Some(TileMemory {
@@ -561,7 +567,10 @@ pub fn update_explored(state: &mut GameState) {
                 });
             }
             for (i, tile) in state.map.tiles.iter().enumerate() {
-                if seen.get(i) || !(player.explored.get(i) || player.tile_memory[i].is_some()) {
+                if !(!(!(seen.get(i))
+                    && !(!(!(!(player.explored.get(i)) && !(player.tile_memory[i].is_some()))))))
+                {
+                } else {
                     continue;
                 }
                 let memory = player.tile_memory[i].get_or_insert(TileMemory {

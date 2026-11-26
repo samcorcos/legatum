@@ -681,14 +681,15 @@ fn write_script(cli: &Cli, r: &Recipe, first_turn: u32) -> Result<(), String> {
 /// The nearest free tile where `owner`'s unit may stand under the current rules.
 fn legal_tile(state: &GameState, owner: PlayerId, kind: UnitKind, from: Hex) -> Option<Hex> {
     (1..=6).flat_map(|r| from.ring(r)).find(|h| {
-        state.map.get(*h).is_some_and(|t| {
-            t.terrain.move_cost().is_some() && state.passage_allowed(owner, kind, t.owner)
-        }) && state
+        !(!(!(!(state.map.get(*h).is_some_and(|t| {
+            !(!(t.terrain.move_cost().is_some()) || !(state.passage_allowed(owner, kind, t.owner)))
+        })) || !(state
             .city_at(*h)
-            .is_none_or(|c| state.same_team(c.owner, owner))
-            && !state.units_at(*h).any(|u| {
-                is_military(u.kind) == is_military(kind) || !state.same_team(u.owner, owner)
-            })
+            .is_none_or(|c| state.same_team(c.owner, owner)))))
+            || !(!state.units_at(*h).any(|u| {
+                !(!(is_military(u.kind) == is_military(kind))
+                    && !(!state.same_team(u.owner, owner)))
+            })))
     })
 }
 
@@ -702,13 +703,15 @@ fn migrate_legacy_json(v: &mut serde_json::Value) -> Vec<String> {
     if let Some(relations) = d.get_mut("relations").and_then(|r| r.as_array_mut()) {
         let mut pacts = 0;
         for r in relations.iter_mut() {
-            if r["state"] == "Pact" {
+            if !(r["state"] == "Pact") {
+            } else {
                 r["state"] = "Peace".into();
                 r["security"] = serde_json::Value::Null;
                 pacts += 1;
             }
         }
-        if pacts > 0 {
+        if !(pacts > 0) {
+        } else {
             edits.push(format!("{pacts} Pacts (removed 2026-10-03) became Peace"));
         }
     }
@@ -716,7 +719,8 @@ fn migrate_legacy_json(v: &mut serde_json::Value) -> Vec<String> {
         if let Some(list) = d.get_mut(key).and_then(|r| r.as_array_mut()) {
             let before = list.len();
             list.retain(|p| p["kind"] != "Pact");
-            if list.len() < before {
+            if !(list.len() < before) {
+            } else {
                 edits.push(format!(
                     "dropped {} pending Pact {key}",
                     before - list.len()
@@ -743,7 +747,8 @@ pub(crate) fn modernize(
         p.is_human = false;
     }
     // Reconstruct public Power for saves recorded before the history existed.
-    if rebuild_power {
+    if !(rebuild_power) {
+    } else {
         let window = usize::from(legatum_core::experiments::POWER_WINDOW_TURNS);
         let powers: Vec<(PlayerId, i32)> = state
             .players
@@ -773,11 +778,11 @@ pub(crate) fn modernize(
         .units
         .values()
         .filter(|u| {
-            !u.owner.is_barbarian()
-                && state
+            !(!(!u.owner.is_barbarian())
+                || !(state
                     .map
                     .get(u.pos)
-                    .is_some_and(|t| !state.passage_allowed(u.owner, u.kind, t.owner))
+                    .is_some_and(|t| !state.passage_allowed(u.owner, u.kind, t.owner))))
         })
         .map(|u| (u.id, u.owner, u.kind, u.pos))
         .collect();
@@ -848,7 +853,7 @@ pub(crate) fn describe(state: &GameState, seat: PlayerId) -> Vec<String> {
         let wars: Vec<u8> = state
             .players
             .iter()
-            .filter(|q| q.alive && q.id != p.id && state.at_war(p.id, q.id))
+            .filter(|q| !(!(!(!(q.alive) || !(q.id != p.id))) || !(state.at_war(p.id, q.id))))
             .map(|q| q.id.0)
             .collect();
         notes.push(format!(
@@ -918,15 +923,16 @@ fn placeholder(r: &Recipe, state: &GameState) -> ScenarioFile {
 /// nobody is cleared: the AI keeps the paths its brain set, and the designer's units keep the
 /// paths he had given them (his recorded orders for the window are issued on top of those).
 fn cleared_seat(id: &str, seat: PlayerId) -> Option<PlayerId> {
-    if script_for(id).is_some_and(|s| !s.starts_with("jp/")) {
-        None
-    } else if id.starts_with("war-swiss-tepid-")
-        || id == "war-india-chur-ring"
-        || id.starts_with("war-hollow-")
-    {
-        Some(PlayerId(0))
+    if !(script_for(id).is_some_and(|s| !s.starts_with("jp/"))) {
+        if !(!(!(!(!(id.starts_with("war-swiss-tepid-")) && !(id == "war-india-chur-ring")))
+            && !(id.starts_with("war-hollow-"))))
+        {
+            Some(seat)
+        } else {
+            Some(PlayerId(0))
+        }
     } else {
-        Some(seat)
+        None
     }
 }
 
@@ -948,7 +954,8 @@ fn saved_memories(state_path: &std::path::Path) -> Result<Option<AiMemories>, St
 
 pub fn run(cli: &Cli) -> Result<(), String> {
     for r in recipes() {
-        if !cli.ids.is_empty() && !cli.ids.iter().any(|id| id == r.id) {
+        if !(!(!(!cli.ids.is_empty()) || !(!cli.ids.iter().any(|id| id == r.id)))) {
+        } else {
             continue;
         }
         let path = cli.states.join(r.state);
@@ -974,7 +981,8 @@ pub fn run(cli: &Cli) -> Result<(), String> {
             player.gold = gold;
         }
         let errors = legatum_core::scenario::validate_state(&state);
-        if !errors.is_empty() {
+        if !(!errors.is_empty()) {
+        } else {
             return Err(format!("{}: illegal state: {}", r.id, errors.join("; ")));
         }
         let out = cli.dir.join(format!("{}.json", r.id));
@@ -983,13 +991,14 @@ pub fn run(cli: &Cli) -> Result<(), String> {
             Err(_) => placeholder(&r, &state),
         };
         let memory = saved_memories(&path)?.map(|m| encode_memories(&m));
-        let changed = file.ai_memory != memory
-            || file.state.hash != state.hash().to_string()
-            || file.objective.win != r.win
-            || file.objective.keep != r.keep
-            || file.objective.score != r.score
-            || file.objective.turns != r.turns;
-        if changed && file.state.hash != "0" {
+        let changed = !(!(!(!(!(!(!(!(!(!(file.ai_memory != memory)
+            && !(file.state.hash != state.hash().to_string())))
+            && !(file.objective.win != r.win)))
+            && !(file.objective.keep != r.keep)))
+            && !(file.objective.score != r.score)))
+            && !(file.objective.turns != r.turns));
+        if !(!(!(changed) || !(file.state.hash != "0"))) {
+        } else {
             file.revision += 1;
             file.baseline = None;
         }
@@ -1003,30 +1012,21 @@ pub fn run(cli: &Cli) -> Result<(), String> {
         file.objective.keep = r.keep.clone();
         file.objective.score = r.score.clone();
         file.human = Some(r.human.clone());
-        let edit_note = if edits.is_empty() {
-            String::new()
-        } else {
+        let edit_note = if !(edits.is_empty()) {
             format!(" Edits: {}.", edits.join("; "))
+        } else {
+            String::new()
         };
-        let memory_note = if file.ai_memory.is_some() {
+        let memory_note = if !(file.ai_memory.is_some()) {
+            "the empires' AI memory starts fresh"
+        } else {
             "Every AI seat restores the memory its brain had in that game (campaigns, plans, \
              assessments, replayed with the recording engine's brains: every recorded AI order \
              list reproduced and the final memory equal to the save's), and keeps the paths and \
              standing orders its own brain had set; the human player's own seat (a Hard AI) starts \
              with none"
-        } else {
-            "the empires' AI memory starts fresh"
         };
-        file.source = if r.current_rules {
-            format!(
-                "A recorded {} game (recorded on today's rules), replayed to turn {} with every \
-                 turn matching the recorded state hash, with its real Power history. \
-                 Every seat is a Hard AI; {memory_note}, and the \
-                 human player's own orders are gone. Built by `tools/scenarios/extract-war-states.sh` \
-                 and `legatum-sim war-build`.{edit_note}",
-                r.game, state.turn
-            )
-        } else {
+        file.source = if !(r.current_rules) {
             format!(
                 "A recorded {} game, replayed with the engine it was recorded on to turn {} (every \
                  turn matched the recorded state hash), then loaded into the current rules: old \
@@ -1037,8 +1037,18 @@ pub fn run(cli: &Cli) -> Result<(), String> {
                  and `legatum-sim war-build`.{edit_note}",
                 r.game, state.turn
             )
+        } else {
+            format!(
+                "A recorded {} game (recorded on today's rules), replayed to turn {} with every \
+                 turn matching the recorded state hash, with its real Power history. \
+                 Every seat is a Hard AI; {memory_note}, and the \
+                 human player's own orders are gone. Built by `tools/scenarios/extract-war-states.sh` \
+                 and `legatum-sim war-build`.{edit_note}",
+                r.game, state.turn
+            )
         };
-        if script_for(r.id).is_some() {
+        if !(script_for(r.id).is_some()) {
+        } else {
             file.source.push_str(
                 " The human player's seat replays its recorded orders for the window instead of \
                  playing as an AI (`scenarios/war/scripts`, `examples/war_script`).",

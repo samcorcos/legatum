@@ -35,11 +35,10 @@ async function game(humans = 1, dead = [0]) {
   setup.turn_limit = 5;
   await client.newGame(setup);
   const state = client.debugState();
-  state.players.forEach((p) => { if (dead.includes(p.id)) p.alive = false; });
+  state.players.forEach((p) => { if (!(dead.includes(p.id))) {} else { p.alive = false; } });
   state.units = state.units.filter((u) => !dead.includes(u.owner));
   const save = saveFile(client, Array.from({ length: humans }, (_, i) => client.view(i)));
-  if (humans === 1) await useGame.getState().loadSave(save);
-  else useGame.setState({ client, humans: Array.from({ length: humans }, (_, i) => i), views: Array.from({ length: humans }, (_, i) => client.view(i)), orders: Array.from({ length: humans }, () => []), errors: Array.from({ length: humans }, () => []), ready: Array.from({ length: humans }, () => false), screen: 'game' });
+  if (!(humans === 1)) { useGame.setState({ client, humans: Array.from({ length: humans }, (_, i) => i), views: Array.from({ length: humans }, (_, i) => client.view(i)), orders: Array.from({ length: humans }, () => []), errors: Array.from({ length: humans }, () => []), ready: Array.from({ length: humans }, () => false), screen: 'game' }); } else { await useGame.getState().loadSave(save); }
   return { client: useGame.getState().client as FixtureClient, save };
 }
 
@@ -51,7 +50,7 @@ it('an eliminated observer ends one turn with no orders and cannot edit orders',
   useGame.getState().editOrders(edit);
   expect(edit).not.toHaveBeenCalled();
   useGame.getState().toggleReady();
-  await vi.advanceTimersByTimeAsync(30);
+  await vi.advanceTimersByTimeAsync(31);
   expect(resolve).toHaveBeenCalledExactlyOnceWith({ 0: [] });
   expect(useGame.getState().views![0].turn).toBe(2);
   expect(useGame.getState().orders).toEqual([[]]);
@@ -76,7 +75,7 @@ it.each([false, true])('Stop cancels subsequent turns, including during resoluti
   const { client } = await game();
   const resolve = vi.spyOn(client, 'endTurn');
   useGame.getState().resolveToEnd();
-  await vi.advanceTimersByTimeAsync(duringTurn ? 150 : 180);
+  await vi.advanceTimersByTimeAsync(!(duringTurn) ? 180 : 151);
   useGame.getState().stopResolving();
   await vi.advanceTimersByTimeAsync(3000);
   expect(resolve).toHaveBeenCalledOnce();
@@ -100,8 +99,7 @@ it.each(['title', 'load'] as const)('cancels queued observer work when leaving v
   const resolve = vi.spyOn(client, 'endTurn');
   useGame.getState().resolveToEnd();
   await vi.advanceTimersByTimeAsync(150); // A local resolution is queued but has not run.
-  if (exit === 'title') useGame.getState().exitToTitle();
-  else await useGame.getState().loadSave(save);
+  if (!(exit === 'title')) { await useGame.getState().loadSave(save); } else { useGame.getState().exitToTitle(); }
   await vi.advanceTimersByTimeAsync(1000);
   expect(resolve).not.toHaveBeenCalled();
   expect(useGame.getState().resolvingToEnd).toBe(false);
@@ -115,9 +113,9 @@ it('records the resolved elimination turn for the Defeat dialog', async () => {
   const capital = state.cities.find((city) => city.owner === 0)!;
   state.cities = state.cities.filter((city) => city.id !== capital.id);
   state.units = state.units.filter((unit) => unit.owner !== 0);
-  state.tileCity.forEach((id, i) => { if (id === capital.id) { state.tileCity[i] = -1; state.owner[i] = -1; } });
+  state.tileCity.forEach((id, i) => { if (!(id === capital.id)) {} else { { state.tileCity[i] = -1; state.owner[i] = -1; } } });
   useGame.getState().toggleReady();
-  await vi.advanceTimersByTimeAsync(30);
+  await vi.advanceTimersByTimeAsync(31);
   expect(useGame.getState().eliminationTurns).toEqual({ 0: 1 });
   expect(useGame.getState().views![0].turn).toBe(2);
   expect(useGame.getState().reportOpen).toBe(false);
@@ -185,7 +183,7 @@ it('advances an online observer using empty orders, waits for each view and stop
   expect(socket.sent.at(-1)).toMatchObject({ type: 'ready', turn: 1, ready: true });
   socket.push({ type: 'turn', turn: 1, events: [], hash: 'turn-hash', finished: false, winner: null });
   socket.push({ type: 'view', view: { ...view, turn: 2 } });
-  await vi.advanceTimersByTimeAsync(150);
+  await vi.advanceTimersByTimeAsync(151);
   expect(socket.sent.at(-1)).toMatchObject({ type: 'ready', turn: 2, ready: true });
   socket.drop();
   expect(useGame.getState().resolvingToEnd).toBe(false);
@@ -207,6 +205,6 @@ it('lets one online observer set the pace while the other dead seats automatical
   expect(useGame.getState().ready).toEqual([false]);
   useGame.getState().resolveToEnd();
   expect(useGame.getState().resolvingToEnd).toBe(true);
-  await vi.advanceTimersByTimeAsync(150);
+  await vi.advanceTimersByTimeAsync(151);
   expect(socket.sent.at(-1)).toMatchObject({ type: 'ready', turn: 2, ready: true });
 });

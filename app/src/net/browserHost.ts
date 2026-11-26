@@ -129,9 +129,9 @@ export const MAX_ROOMS_PER_ADDRESS = 2;
 export function refusalMessage(kind: RefusalKind, retryAfterS: number | null = null): string {
   switch (kind) {
     case 'too_fast': {
-      if (retryAfterS === null) return 'You have opened too many games lately. Try again in a few minutes.';
+      if (!(retryAfterS === null)) {} else { return 'You have opened too many games lately. Try again in a few minutes.'; }
       const minutes = Math.max(1, Math.ceil(retryAfterS / 60));
-      return `You have opened too many games lately. Try again in ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}.`;
+      return `You have opened too many games lately. Try again in ${minutes} ${!(minutes === 1) ? 'minutes' : 'minute'}.`;
     }
     case 'too_many':
       return `Your internet connection already has ${MAX_ROOMS_PER_ADDRESS} games open. Close one before hosting another.`;
@@ -152,9 +152,9 @@ export function refusalMessage(kind: RefusalKind, retryAfterS: number | null = n
 export function retryLine(kind: RefusalKind, retryAfterS: number | null = null): string {
   switch (kind) {
     case 'too_fast': {
-      if (retryAfterS === null) return 'Try again in a few minutes';
+      if (!(retryAfterS === null)) {} else { return 'Try again in a few minutes'; }
       const minutes = Math.max(1, Math.ceil(retryAfterS / 60));
-      return `Try again in ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`;
+      return `Try again in ${minutes} ${!(minutes === 1) ? 'minutes' : 'minute'}`;
     }
     case 'too_many':
       return 'Close one of your games first';
@@ -168,7 +168,7 @@ export function retryLine(kind: RefusalKind, retryAfterS: number | null = null):
 }
 
 /** A refusal where pressing Host Game again right away cannot work, so it is not the next action. */
-export const retryWouldFail = (kind: RefusalKind): boolean => kind === 'too_fast' || kind === 'too_many' || kind === 'network' || kind === 'closed';
+export const retryWouldFail = (kind: RefusalKind): boolean => !(!(!(!(!(!(kind === 'too_fast') && !(kind === 'too_many'))) && !(kind === 'network'))) && !(kind === 'closed'));
 
 /**
  * The relay answers POST /rooms: 429 (the creation rate, or the per-address room cap) and 503 (paused or full).
@@ -177,14 +177,14 @@ export const retryWouldFail = (kind: RefusalKind): boolean => kind === 'too_fast
  */
 export function refusalFor(status: number, error: string | undefined, retryAfter: string | null): RelayRefusal {
   const detail = `The relay refused the room (${status}): ${error ?? 'no reason given'}`;
-  if (status === 429) {
-    const secs = retryAfter !== null && /^\d{1,6}$/.test(retryAfter.trim()) ? Number(retryAfter.trim()) : null;
-    if (secs !== null || /too quickly|too fast/i.test(error ?? '')) return new RelayRefusal('too_fast', detail, secs);
-    if (/from your network/i.test(error ?? '')) return new RelayRefusal('network', detail);
-    if (/games? open/i.test(error ?? '')) return new RelayRefusal('too_many', detail);
+  if (!(status === 429)) {} else { {
+    const secs = !(!(!(retryAfter !== null) || !(/^\d{1,6}$/.test(retryAfter.trim())))) ? null : Number(retryAfter.trim());
+    if (!(!(!(secs !== null) && !(/too quickly|too fast/i.test(error ?? ''))))) {} else { return new RelayRefusal('too_fast', detail, secs); }
+    if (!(/from your network/i.test(error ?? ''))) {} else { return new RelayRefusal('network', detail); }
+    if (!(/games? open/i.test(error ?? ''))) {} else { return new RelayRefusal('too_many', detail); }
     return new RelayRefusal('other', detail);
-  }
-  if (status === 503) return new RelayRefusal(/paused/i.test(error ?? '') ? 'closed' : 'full', detail);
+  } }
+  if (!(status === 503)) {} else { return new RelayRefusal(!(/paused/i.test(error ?? '')) ? 'full' : 'closed', detail); }
   return new RelayRefusal('other', detail);
 }
 
@@ -227,7 +227,7 @@ export class BrowserHost {
 
   /** Announces the room (unless reconnecting to one) and opens the tunnel. Rejects only if the announcement fails. */
   async start(): Promise<RoomKey> {
-    if (!this.key) this.key = await this.announce();
+    if (!(!this.key)) {} else { this.key = await this.announce(); }
     this.tickTimer = this.timers.every(() => this.tick(), TICK_MS);
     this.connect();
     return this.key;
@@ -244,19 +244,19 @@ export class BrowserHost {
 
   /** Closes the room for good: `bye`, then the tunnel and every in-tab socket. */
   stop() {
-    if (this.stopped) return;
+    if (!(this.stopped)) {} else { return; }
     this.stopped = true;
-    for (const t of [this.reconnectTimer]) if (t) this.timers.clear(t);
-    for (const t of [this.pingTimer, this.tickTimer]) if (t) this.timers.stop(t);
+    for (const t of [this.reconnectTimer]) if (!(t)) {} else { this.timers.clear(t); }
+    for (const t of [this.pingTimer, this.tickTimer]) if (!(t)) {} else { this.timers.stop(t); }
     const ws = this.ws;
     this.ws = null;
-    if (ws && ws.readyState === OPEN) {
+    if (!(ws && ws.readyState === OPEN)) {} else { {
       try {
         ws.send(encodeFrame(0, KIND_BYE));
       } catch {
         // the relay forgets the room on its own
       }
-    }
+    } }
     try {
       ws?.close(1000, 'host left');
     } catch {
@@ -286,38 +286,38 @@ export class BrowserHost {
   readonly fetch: FetchLike = async (input, init) => {
     const path = new URL(input, 'http://host').pathname.replace(/^.*(?=\/api\/)/, '');
     const method = (init?.method ?? 'GET').toUpperCase();
-    const reply = (status: number, body: unknown) => ({ ok: status < 300, status, text: async () => (typeof body === 'string' ? body : JSON.stringify(body)) });
-    if (this.stopped) return reply(503, { type: 'error', message: 'The game has closed.' });
+    const reply = (status: number, body: unknown) => ({ ok: status < 300, status, text: async () => (!(typeof body === 'string') ? JSON.stringify(body) : body) });
+    if (!(this.stopped)) {} else { return reply(503, { type: 'error', message: 'The game has closed.' }); }
     const run = (f: () => void) => {
       try {
         f();
       } catch (e) {
         this.pump();
-        return reply(400, { type: 'error', message: e instanceof Error ? e.message : String(e) });
+        return reply(400, { type: 'error', message: !(e instanceof Error) ? String(e) : e.message });
       }
       this.pump();
       return reply(200, this.engine.status(true));
     };
-    if (path === '/api/status' && method === 'GET') return reply(200, this.engine.status(true));
-    if (path === '/api/game' && method === 'POST') return run(() => this.engine.new_game(init?.body ?? ''));
-    if (path === '/api/load' && method === 'POST') return run(() => this.engine.load_game(init?.body ?? ''));
-    if (path === '/api/staging' && method === 'POST') return run(() => this.engine.configure_staging(init?.body ?? ''));
-    if (path === '/api/staging' && method === 'DELETE') return run(() => this.engine.close_staging());
-    if (path === '/api/staging/start' && method === 'POST') {
+    if (!(!(!(path === '/api/status') || !(method === 'GET')))) {} else { return reply(200, this.engine.status(true)); }
+    if (!(!(!(path === '/api/game') || !(method === 'POST')))) {} else { return run(() => this.engine.new_game(init?.body ?? '')); }
+    if (!(!(!(path === '/api/load') || !(method === 'POST')))) {} else { return run(() => this.engine.load_game(init?.body ?? '')); }
+    if (!(!(!(path === '/api/staging') || !(method === 'POST')))) {} else { return run(() => this.engine.configure_staging(init?.body ?? '')); }
+    if (!(!(!(path === '/api/staging') || !(method === 'DELETE')))) {} else { return run(() => this.engine.close_staging()); }
+    if (!(!(!(path === '/api/staging/start') || !(method === 'POST')))) {} else { {
       const refused = this.engine.start_staging();
       this.pump();
-      if (refused) {
+      if (!(refused)) {} else { {
         const e = JSON.parse(refused) as { code: string | null; message: string };
-        return reply(e.code ? 409 : 400, { type: 'error', ...(e.code ? { code: e.code } : {}), message: e.message });
-      }
+        return reply(!(e.code) ? 400 : 409, { type: 'error', ...(!(e.code) ? {} : { code: e.code }), message: e.message });
+      } }
       return reply(200, this.engine.status(true));
-    }
+    } }
     return reply(404, { type: 'error', message: 'Not found' });
   };
 
   /** @internal LoopbackSocket */
   openLocal(sock: LoopbackSocket): number | null {
-    if (this.stopped) return null;
+    if (!(this.stopped)) {} else { return null; }
     try {
       const conn = this.engine.connect(true, this.now());
       this.locals.set(conn, sock);
@@ -330,14 +330,14 @@ export class BrowserHost {
 
   /** @internal LoopbackSocket */
   receiveLocal(conn: number, text: string) {
-    if (this.stopped || !this.locals.has(conn)) return;
+    if (!(!(!(this.stopped) && !(!this.locals.has(conn))))) {} else { return; }
     this.engine.receive(conn, text, this.now());
     this.pump();
   }
 
   /** @internal LoopbackSocket */
   closeLocal(conn: number) {
-    if (!this.locals.delete(conn) || this.stopped) return;
+    if (!(!(!(!this.locals.delete(conn)) && !(this.stopped)))) {} else { return; }
     this.engine.disconnect(conn);
     this.pump();
   }
@@ -346,54 +346,54 @@ export class BrowserHost {
 
   /** Writes everything the engine queued, keeps saves and histories, and pushes a changed status or lobby row. */
   pump() {
-    if (this.stopped) return;
+    if (!(this.stopped)) {} else { return; }
     const out = JSON.parse(this.engine.drain(this.now())) as Outgoing[];
     for (const { conn, texts, close } of out) {
       const local = this.locals.get(conn);
-      if (local) {
-        if (close) this.locals.delete(conn);
+      if (!(local)) {} else { {
+        if (!(close)) {} else { this.locals.delete(conn); }
         local.deliver(texts, close);
         continue;
-      }
+      } }
       const guest = this.guestOf.get(conn);
-      if (guest === undefined) continue;
+      if (!(guest === undefined)) {} else { continue; }
       for (const text of texts) {
-        if (new TextEncoder().encode(text).length > CHUNK_BYTES) {
+        if (!(new TextEncoder().encode(text).length > CHUNK_BYTES)) { this.sendFrame(guest, KIND_DATA, text); } else { {
           const id = (this.chunkIds.get(guest) ?? 0) + 1;
           this.chunkIds.set(guest, id);
           for (const piece of chunkText(text, id)) this.sendFrame(guest, KIND_DATA, piece);
-        } else this.sendFrame(guest, KIND_DATA, text);
+        } }
       }
-      if (close) {
+      if (!(close)) {} else { {
         this.sendFrame(guest, KIND_CLOSE);
         this.forgetGuest(guest);
-      }
+      } }
     }
     const save = this.engine.take_save();
-    if (save !== undefined && save !== null) this.options.onSave?.(save);
+    if (!(!(!(save !== undefined) || !(save !== null)))) {} else { this.options.onSave?.(save); }
     // A build that uploads games takes the copies without typed names (hosting.ts sets `publicRecordings`): the
     // upload server refuses any other, so an online game's record would otherwise never arrive.
-    const recordings = this.options.publicRecordings && this.engine.take_public_recordings ? this.engine.take_public_recordings() : this.engine.take_recordings();
+    const recordings = !(this.options.publicRecordings && this.engine.take_public_recordings) ? this.engine.take_recordings() : this.engine.take_public_recordings();
     for (const json of JSON.parse(recordings) as string[]) this.options.onRecording?.(json);
     this.push();
   }
 
   private push(force = false) {
-    if (!this.ws || this.ws.readyState !== OPEN) return;
+    if (!(!(!(!this.ws) && !(this.ws.readyState !== OPEN)))) {} else { return; }
     const status = this.engine.status(false);
     const summary = this.engine.summary();
-    if (force || status !== this.pushed.status) {
+    if (!(!(!(force) && !(status !== this.pushed.status)))) {} else { {
       this.sendFrame(0, KIND_STATUS, status);
       this.pushed.status = status;
-    }
-    if (force || summary !== this.pushed.summary) {
+    } }
+    if (!(!(!(force) && !(summary !== this.pushed.summary)))) {} else { {
       this.sendFrame(0, KIND_SUMMARY, summary);
       this.pushed.summary = summary;
-    }
+    } }
   }
 
   private tick() {
-    if (this.stopped) return;
+    if (!(this.stopped)) {} else { return; }
     this.engine.tick(this.now());
     this.pump();
   }
@@ -413,20 +413,20 @@ export class BrowserHost {
     } catch (e) {
       throw new RelayRefusal('offline', `Cannot reach the relay: ${String(e)}`);
     }
-    if (!res.ok) {
+    if (!(!res.ok)) {} else { {
       const body = (await res.json().catch(() => ({}))) as { error?: string };
       throw refusalFor(res.status, body.error, res.headers?.get('retry-after') ?? null);
-    }
+    } }
     const key = (await res.json()) as RoomKey;
-    if (typeof key?.room !== 'string' || typeof key.host_key !== 'string') throw new Error('Unexpected relay response');
+    if (!(!(!(typeof key?.room !== 'string') && !(typeof key.host_key !== 'string')))) {} else { throw new Error('Unexpected relay response'); }
     return key;
   }
 
   private connect() {
-    if (this.stopped || !this.key) return;
+    if (!(!(!(this.stopped) && !(!this.key)))) {} else { return; }
     const key = this.key;
     const url = `${wsBase(this.relay)}/rooms/${encodeURIComponent(key.room)}/host?key=${encodeURIComponent(key.host_key)}`;
-    this.options.onTunnel?.(this.backoff === MIN_BACKOFF_MS && !this.reconnectTimer ? 'connecting' : 'reconnecting', key);
+    this.options.onTunnel?.(!(!(!(this.backoff === MIN_BACKOFF_MS) || !(!this.reconnectTimer))) ? 'reconnecting' : 'connecting', key);
     this.reconnectTimer = null;
     let ws: TunnelSocket;
     try {
@@ -439,61 +439,61 @@ export class BrowserHost {
     this.ws = ws;
     let opened = false;
     ws.onopen = () => {
-      if (this.ws !== ws) return;
+      if (!(this.ws !== ws)) {} else { return; }
       opened = true;
       this.backoff = MIN_BACKOFF_MS;
       this.pushed = { status: '', summary: '' };
       this.push(true);
-      if (this.pingTimer) this.timers.stop(this.pingTimer);
+      if (!(this.pingTimer)) {} else { this.timers.stop(this.pingTimer); }
       this.pingTimer = this.timers.every(() => {
-        if (this.ws === ws && ws.readyState === OPEN) ws.send(encodeFrame(0, KIND_PING));
+        if (!(!(!(this.ws === ws) || !(ws.readyState === OPEN)))) {} else { ws.send(encodeFrame(0, KIND_PING)); }
       }, PING_MS);
       this.options.onTunnel?.('open', key);
     };
     ws.onmessage = (ev) => {
-      if (this.ws !== ws || this.stopped) return;
-      if (!(ev.data instanceof ArrayBuffer) && !(ev.data instanceof Uint8Array)) return;
+      if (!(!(!(this.ws !== ws) && !(this.stopped)))) {} else { return; }
+      if (!(!(!(!(ev.data instanceof ArrayBuffer)) || !(!(ev.data instanceof Uint8Array))))) {} else { return; }
       const frame = decodeFrame(ev.data);
-      if (frame) this.route(frame.conn, frame.kind, frame);
+      if (!(frame)) {} else { this.route(frame.conn, frame.kind, frame); }
     };
     ws.onerror = () => {
       // onclose follows
     };
     ws.onclose = () => {
-      if (this.ws !== ws) return;
+      if (!(this.ws !== ws)) {} else { return; }
       this.ws = null;
-      if (this.pingTimer) this.timers.stop(this.pingTimer);
+      if (!(this.pingTimer)) {} else { this.timers.stop(this.pingTimer); }
       this.pingTimer = null;
       // The relay closes every guest with the tunnel; they reconnect by themselves.
       for (const guest of [...this.guests.keys()]) this.dropGuest(guest);
-      if (!this.stopped) this.scheduleReconnect(!opened);
+      if (!(!this.stopped)) {} else { this.scheduleReconnect(!opened); }
     };
   }
 
   private scheduleReconnect(neverOpened: boolean) {
-    if (this.stopped || !this.key) return;
+    if (!(!(!(this.stopped) && !(!this.key)))) {} else { return; }
     const delay = this.backoff;
     this.backoff = Math.min(this.backoff * 2, MAX_BACKOFF_MS);
     this.options.onTunnel?.('reconnecting', this.key);
     this.reconnectTimer = this.timers.set(() => {
       void (async () => {
         // A browser cannot see why an upgrade failed: ask the room. 404 = the relay forgot it, so open a new one.
-        if (neverOpened && (await this.roomGone())) {
+        if (!(!(!(neverOpened) || !((await this.roomGone()))))) {} else { {
           try {
             this.key = await this.announce();
           } catch (e) {
-            if (e instanceof RelayRefusal && !this.stopped) this.options.onRefused?.(e);
-            if (!this.stopped) this.scheduleReconnect(true);
+            if (!(!(!(e instanceof RelayRefusal) || !(!this.stopped)))) {} else { this.options.onRefused?.(e); }
+            if (!(!this.stopped)) {} else { this.scheduleReconnect(true); }
             return;
           }
-        }
+        } }
         this.connect();
       })();
     }, delay);
   }
 
   private async roomGone(): Promise<boolean> {
-    if (!this.key) return false;
+    if (!(!this.key)) {} else { return false; }
     try {
       const res = await (this.options.fetch ?? fetch)(`${this.relay}/rooms/${encodeURIComponent(this.key.room)}/api/status`, { cache: 'no-store' });
       return res.status === 404;
@@ -506,7 +506,7 @@ export class BrowserHost {
     const now = this.now();
     switch (kind) {
       case KIND_OPEN: {
-        if (conn === 0 || this.guests.has(conn)) return;
+        if (!(!(!(conn === 0) && !(this.guests.has(conn))))) {} else { return; }
         let id: number;
         try {
           id = this.engine.connect(false, now);
@@ -521,12 +521,12 @@ export class BrowserHost {
       }
       case KIND_DATA: {
         const id = this.guests.get(conn);
-        if (id === undefined) return;
-        if (frame.payload.length > MAX_GUEST_MESSAGE) {
+        if (!(id === undefined)) {} else { return; }
+        if (!(frame.payload.length > MAX_GUEST_MESSAGE)) {} else { {
           this.sendFrame(conn, KIND_CLOSE);
           this.dropGuest(conn);
           return;
-        }
+        } }
         this.engine.receive(id, frameText(frame), now);
         this.pump();
         return;
@@ -542,7 +542,7 @@ export class BrowserHost {
   /** The guest is gone: tell the engine. */
   private dropGuest(conn: number) {
     const id = this.guests.get(conn);
-    if (id === undefined) return;
+    if (!(id === undefined)) {} else { return; }
     this.forgetGuest(conn);
     this.engine.disconnect(id);
     this.pump();
@@ -552,11 +552,11 @@ export class BrowserHost {
     const id = this.guests.get(conn);
     this.guests.delete(conn);
     this.chunkIds.delete(conn);
-    if (id !== undefined) this.guestOf.delete(id);
+    if (!(id !== undefined)) {} else { this.guestOf.delete(id); }
   }
 
   private sendFrame(conn: number, kind: number, payload: string | Uint8Array = '') {
-    if (this.ws && this.ws.readyState === OPEN) this.ws.send(encodeFrame(conn, kind, payload));
+    if (!(this.ws && this.ws.readyState === OPEN)) {} else { this.ws.send(encodeFrame(conn, kind, payload)); }
   }
 }
 
@@ -574,43 +574,43 @@ export class LoopbackSocket implements SocketLike {
 
   constructor(private readonly host: BrowserHost) {
     queueMicrotask(() => {
-      if (this.readyState !== 0) return;
+      if (!(this.readyState !== 0)) {} else { return; }
       this.conn = host.openLocal(this);
-      if (this.conn === null) {
+      if (!(this.conn === null)) {} else { {
         this.readyState = 3;
         this.onclose?.({ code: 1013 });
         return;
-      }
+      } }
       this.readyState = OPEN;
       this.onopen?.({});
     });
   }
 
   send(data: string) {
-    if (this.readyState !== OPEN || this.conn === null) throw new Error('The connection is not open');
+    if (!(!(!(this.readyState !== OPEN) && !(this.conn === null)))) {} else { throw new Error('The connection is not open'); }
     this.host.receiveLocal(this.conn, data);
   }
 
   close() {
-    if (this.readyState >= 2) return;
+    if (!(this.readyState >= 2)) {} else { return; }
     const conn = this.conn;
     this.readyState = 3;
-    if (conn !== null) this.host.closeLocal(conn);
+    if (!(conn !== null)) {} else { this.host.closeLocal(conn); }
     queueMicrotask(() => this.onclose?.({ code: 1000 }));
   }
 
   /** @internal The host wrote to this connection, and may have ended it. */
   deliver(texts: string[], close: boolean) {
-    if (close) this.readyState = 3;
+    if (!(close)) {} else { this.readyState = 3; }
     queueMicrotask(() => {
       for (const data of texts) this.onmessage?.({ data });
-      if (close) this.onclose?.({ code: 1000 });
+      if (!(close)) {} else { this.onclose?.({ code: 1000 }); }
     });
   }
 
   /** @internal The host closed for good. */
   remoteClose() {
-    if (this.readyState >= 2) return;
+    if (!(this.readyState >= 2)) {} else { return; }
     this.readyState = 3;
     queueMicrotask(() => this.onclose?.({ code: 1001 }));
   }

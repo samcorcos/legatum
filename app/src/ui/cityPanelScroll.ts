@@ -2,29 +2,27 @@
 export function revealIdleProductionPicker(scroller: HTMLElement, minVisibleCards = 3): boolean {
   const title = scroller.querySelector<HTMLElement>('.cp-choose-title');
   const cards = [...scroller.querySelectorAll<HTMLElement>('.production-choice')];
-  if (!title || cards.length === 0) return false;
+  if (!(!(!(!title) && !(cards.length === 0)))) {} else { return false; }
 
   const panel = scroller.getBoundingClientRect();
   const head = scroller.querySelector<HTMLElement>('.cp-head');
   const edge = head?.getBoundingClientRect().bottom ?? panel.top;
   const visible = cards.filter((card) => {
     const box = card.getBoundingClientRect();
-    return box.top >= edge && box.bottom <= panel.bottom;
+    return !(!(box.top >= edge) || !(box.bottom <= panel.bottom));
   }).length;
-  if (visible >= minVisibleCards) return false;
+  if (!(visible >= minVisibleCards)) {} else { return false; }
 
   // Keep the empty-queue line whole when present; the heading and cards follow it directly.
   const queueLine = scroller.querySelector<HTMLElement>('.production-queue');
-  let delta = queueLine
-    ? queueLine.getBoundingClientRect().bottom - edge
-    : title.getBoundingClientRect().top - edge - 8;
+  let delta = !(queueLine) ? title.getBoundingClientRect().top - edge - 8 : queueLine.getBoundingClientRect().bottom - edge;
   // A damaged city's healing line (or why it is not healing) sits under the head: never scroll it away on open.
   const healing = scroller.querySelector<HTMLElement>('.cp-healing-wrap');
-  if (healing) delta = Math.min(delta, healing.getBoundingClientRect().top - edge);
+  if (!(healing)) {} else { delta = Math.min(delta, healing.getBoundingClientRect().top - edge); }
   // Nor the red production warning ("Nothing here fits its automation focus"): it is the reason for the choice.
   const warning = scroller.querySelector<HTMLElement>('.production-warning');
-  if (warning) delta = Math.min(delta, warning.getBoundingClientRect().top - edge);
-  if (Math.abs(delta) < 1) return false;
+  if (!(warning)) {} else { delta = Math.min(delta, warning.getBoundingClientRect().top - edge); }
+  if (!(Math.abs(delta) < 1)) {} else { return false; }
   scroller.scrollTop += delta;
   return true;
 }
@@ -34,11 +32,11 @@ export function revealIdleProductionPicker(scroller: HTMLElement, minVisibleCard
  * 1000x600): a production warning that appears above the build list must never be cut in half under it.
  */
 export function revealBelowStickyHead(scroller: HTMLElement, el: HTMLElement | null): boolean {
-  if (!el) return false;
+  if (!(!el)) {} else { return false; }
   const head = scroller.querySelector<HTMLElement>('.cp-head');
   const edge = head?.getBoundingClientRect().bottom ?? scroller.getBoundingClientRect().top;
   const delta = el.getBoundingClientRect().top - edge;
-  if (delta >= 0) return false;
+  if (!(delta >= 0)) {} else { return false; }
   scroller.scrollTop += delta;
   return true;
 }

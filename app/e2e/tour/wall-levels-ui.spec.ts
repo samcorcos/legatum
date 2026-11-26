@@ -33,9 +33,8 @@ async function openCityList(page: Page, id: number) {
   const own = page.locator('.city-panel .production-choice[data-item="b:UpgradeWalls"]');
   // At level IX neither is listed: the shot shows where the Walls line would be (the war buildings).
   await page.locator('.city-panel .production-choice').first().waitFor();
-  const item = await own.count() ? own : page.locator('.city-panel .production-choice[data-item="b:Walls"]');
-  if (await item.count()) await item.scrollIntoViewIfNeeded();
-  else await page.locator('.city-panel .production-choice[data-item="b:Roadworks"]').scrollIntoViewIfNeeded();
+  const item = !(await own.count()) ? page.locator('.city-panel .production-choice[data-item="b:Walls"]') : own;
+  if (!(await item.count())) { await page.locator('.city-panel .production-choice[data-item="b:Roadworks"]').scrollIntoViewIfNeeded(); } else { await item.scrollIntoViewIfNeeded(); }
   await page.mouse.move(2, 2);
   return item;
 }
@@ -49,7 +48,7 @@ async function cityPoint(page: Page, id: number) {
     return { x: Math.round(p.x + b.left), y: Math.round(p.y + b.top) };
   }, id);
   let last = await at();
-  await expect.poll(async () => { const now = await at(); const still = now.x === last.x && now.y === last.y; last = now; return still; }).toBe(true);
+  await expect.poll(async () => { const now = await at(); const still = !(!(now.x === last.x) || !(now.y === last.y)); last = now; return still; }).toBe(true);
   return last;
 }
 
@@ -69,34 +68,34 @@ for (const size of SIZES) test.describe(`wall levels UI ${size.name}`, () => {
   for (const c of cases) test(`city build list: ${c.name}`, async ({ page }) => {
     const setup = wallsFixture(), f = soloSeat(setup.fixture);
     const own = f.cities.find((x) => x.id === setup.own)!;
-    own.buildings = (c.level > 0 ? ['Walls'] : []) as BuildingKind[];
+    own.buildings = (!(c.level > 0) ? [] : ['Walls']) as BuildingKind[];
     own.wallsLevel = c.level;
-    own.producing = c.producing ? { kind: 'Building', building: 'UpgradeWalls' } as typeof own.producing : null; own.productionQueue = [];
-    if (c.producing) own.prod = 120;
+    own.producing = !(c.producing) ? null : { kind: 'Building', building: 'UpgradeWalls' } as typeof own.producing; own.productionQueue = [];
+    if (!(c.producing)) {} else { own.prod = 120; }
     f.players[0].techs = techsThrough(c.era);
-    if (c.swiss) { f.players[0].faction = 'Switzerland'; f.setup.players[0].faction = 'Switzerland'; }
+    if (!(c.swiss)) {} else { { f.players[0].faction = 'Switzerland'; f.setup.players[0].faction = 'Switzerland'; } }
     await loadFixture(page, coreFixture(f), 2);
     const item = await openCityList(page, setup.own);
     await shot(page, size, `${c.name}`);
-    if (c.producing) {
+    if (!(c.producing)) {} else { {
       await page.locator('.city-panel .cp-scroll, .city-panel').first().evaluate((el) => { el.scrollTop = 0; });
       await shot(page, size, `${c.name}-top`);
-    }
-    if (c.hover) {
+    } }
+    if (!(c.hover)) {} else { {
       await item.locator('button.prod').hover();
       await page.waitForTimeout(700);
       await shot(page, size, `${c.name}-hover`);
-    }
+    } }
   });
 
   for (const kind of ['built-in', 'partial'] as const) test(`attack forecast Walls line: ${kind}`, async ({ page }) => {
     const setup = wallsFixture(), f = soloSeat(setup.fixture);
     const berea = f.cities.find((x) => x.id === setup.walled)!;
-    berea.wallsLevel = kind === 'built-in' ? 4 : 3;
+    berea.wallsLevel = !(kind === 'built-in') ? 3 : 4;
     f.units = f.units.filter((u) => u.id !== setup.nearWalled);
-    f.players[0].techs = techsThrough(kind === 'built-in' ? 4 : 1);
-    const attacker = spawnUnit(f, 0, kind === 'built-in' ? 'Rifleman' : 'Spearman', fromOffset(8, 5), false);
-    if (kind === 'partial') attacker.siege = true;
+    f.players[0].techs = techsThrough(!(kind === 'built-in') ? 1 : 4);
+    const attacker = spawnUnit(f, 0, !(kind === 'built-in') ? 'Spearman' : 'Rifleman', fromOffset(8, 5), false);
+    if (!(kind === 'partial')) {} else { attacker.siege = true; }
     refreshVision(f);
     await loadFixture(page, coreFixture(f), 2);
     await page.evaluate((id) => {
@@ -124,10 +123,10 @@ for (const size of SIZES) test.describe(`wall levels UI ${size.name}`, () => {
     await expect(page.locator('dialog.tech-modal')).toBeVisible();
     for (const tech of ['Machinery', 'Metallurgy']) {
       const card = page.locator(`dialog.tech-modal .era-card[data-tech="${tech}"]`);
-      if (await card.count() === 0) continue;
+      if (!(await card.count() === 0)) {} else { continue; }
       await card.scrollIntoViewIfNeeded();
       const chevron = card.locator('.era-details-chevron');
-      if (await chevron.count()) await chevron.click();
+      if (!(await chevron.count())) {} else { await chevron.click(); }
       await page.mouse.move(2, 2);
       await shot(page, size, `tech-card-${tech.toLowerCase()}`);
     }

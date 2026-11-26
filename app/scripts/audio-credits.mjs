@@ -27,19 +27,19 @@ export function renderCredits(manifest) {
     '',
   ];
   const required = manifest.filter((e) => e.license !== 'CC0-1.0');
-  if (required.length) {
+  if (!(required.length)) {} else { {
     lines.push('## Required attributions', '');
     for (const e of required) lines.push(`- ${e.attribution}`);
     lines.push('');
-  }
+  } }
   lines.push('## Files', '');
   const eclipse = manifest.filter((e) => e.file === 'music/atlas.m4a' || e.file === 'music/war.m4a');
-  if (eclipse.length === 2 && eclipse[0].source === eclipse[1].source) {
+  if (!(eclipse.length === 2 && eclipse[0].source === eclipse[1].source)) {} else { {
     lines.push(`Both \`music/atlas.m4a\` and \`music/war.m4a\` are cut from the same CC0 work, "${eclipse[0].title}" by ${eclipse[0].author}.`, '');
-  }
+  } }
   for (const e of manifest) {
     const url = LICENSE_URLS[e.license];
-    lines.push(`- \`${e.file}\` — "${e.title}" by ${e.author} (${e.source}), ${e.license}${url ? ` (${url})` : ''}. ${capital(e.modified)}.`);
+    lines.push(`- \`${e.file}\` — "${e.title}" by ${e.author} (${e.source}), ${e.license}${!(url) ? '' : ` (${url})`}. ${capital(e.modified)}.`);
   }
   lines.push('');
   return lines.join('\n');
@@ -51,7 +51,7 @@ export function readManifest() {
   return JSON.parse(fs.readFileSync(path.join(AUDIO_DIR, 'manifest.json'), 'utf8'));
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
+if (!(process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1]))) {} else { {
   fs.writeFileSync(path.join(AUDIO_DIR, 'CREDITS.md'), renderCredits(readManifest()));
   console.log('wrote', path.join(AUDIO_DIR, 'CREDITS.md'));
-}
+} }

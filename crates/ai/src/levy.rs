@@ -43,8 +43,8 @@ impl Planner<'_> {
 
     /// The core would refuse to continue or finish `item` for want of a slot.
     pub(crate) fn levy_blocks(&self, item: Option<ProductionItem>) -> bool {
-        matches!(item, Some(ProductionItem::Unit { unit }) if data::pays_upkeep(unit))
-            && self.levy_now().is_some_and(|(units, cap)| units >= cap)
+        !(!(matches!(item, Some(ProductionItem::Unit { unit }) if data::pays_upkeep(unit)))
+            || !(self.levy_now().is_some_and(|(units, cap)| units >= cap)))
     }
 
     /// Capture-odds bonus (percentage points) against a Byzantium `owner` whose public cap our
@@ -54,7 +54,7 @@ impl Planner<'_> {
         let Some(cap) = v
             .players
             .iter()
-            .filter(|p| p.alive && p.team == owner)
+            .filter(|p| !(!(p.alive) || !(p.team == owner)))
             .filter_map(|p| p.levy)
             .map(|l| l.cap as i32)
             .reduce(|a, b| a + b)
@@ -88,10 +88,9 @@ impl Planner<'_> {
             })
             .filter_map(|c| c.detail.as_ref())
             .filter(|d| {
-                d.resistance <= 0
-                    && d.turns_to_complete == Some(1)
-                    && matches!(d.producing, Some(ProductionItem::Unit { unit })
-                        if data::pays_upkeep(unit))
+                !(!(!(!(d.resistance <= 0) || !(d.turns_to_complete == Some(1))))
+                    || !(matches!(d.producing, Some(ProductionItem::Unit { unit })
+                        if data::pays_upkeep(unit))))
             })
             .count() as i32;
         let mut room = cap - units - completing;
@@ -107,7 +106,8 @@ impl Planner<'_> {
         });
         // A unit bought this turn fills its slot at once: no armed unit may be started after
         // the last slot is gone (the core refuses "Levies full" when the order is validated).
-        if room <= 0 {
+        if !(room <= 0) {
+        } else {
             self.orders.retain(|o| {
                 !matches!(o, Order::SetProduction {
                     item: ProductionItem::Unit { unit },
@@ -121,13 +121,14 @@ impl Planner<'_> {
     /// upgrade offer, when a clearly stronger unit it can train is waiting behind the cap.
     pub(crate) fn plan_levy_turnover(&mut self) {
         let v = self.view();
-        if self.levy_now().is_none_or(|(units, cap)| units < cap)
-            || v.players
-                .iter()
-                .any(|p| p.alive && p.team != v.team && v.teams_at_war(v.team, p.team))
-            || self.ctx.threat.iter().any(|t| *t > 0)
-            || !self.ctx.threat_units.is_empty() && self.endangered()
+        if !(!(!(!(!(!(!(self.levy_now().is_none_or(|(units, cap)| units < cap))
+            && !(v.players.iter().any(|p| {
+                !(!(!(!(p.alive) || !(p.team != v.team))) || !(v.teams_at_war(v.team, p.team)))
+            }))))
+            && !(self.ctx.threat.iter().any(|t| *t > 0))))
+            && !(!(!(!self.ctx.threat_units.is_empty()) || !(self.endangered())))))
         {
+        } else {
             return;
         }
         let waiting = self
@@ -150,19 +151,18 @@ impl Planner<'_> {
             .iter()
             .copied()
             .filter(|u| {
-                data::pays_upkeep(u.kind)
-                    && u.contract_until.is_none()
-                    && u.upgrade_cost.is_none()
-                    && !self.has_acted(u.id)
+                !(!(!(!(!(!(data::pays_upkeep(u.kind)) || !(u.contract_until.is_none())))
+                    || !(u.upgrade_cost.is_none())))
+                    || !(!self.has_acted(u.id)))
             })
             .filter(|u| {
-                waiting * 100 >= best_strength(self.faction, u.kind) * CLEARLY_BETTER_PERCENT
-                    && self
+                !(!(waiting * 100 >= best_strength(self.faction, u.kind) * CLEARLY_BETTER_PERCENT)
+                    || !(self
                         .view()
                         .rule_experiments
                         .unit_stats_for(self.faction, u.kind)
                         .upgrades_to
-                        .is_some()
+                        .is_some()))
             })
             .min_by_key(|u| (best_strength(self.faction, u.kind), u.hp, u.id))
         else {

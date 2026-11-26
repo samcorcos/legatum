@@ -7,11 +7,11 @@ declare const __BUILD_TIME__: string;
 /** "22 Nov 2026 16:39" in the given (default: the player's) time zone; '' for a missing or bad time. */
 export function formatBuildTime(iso: string, timeZone?: string): string {
   const t = Date.parse(iso);
-  if (!iso || Number.isNaN(t)) return '';
+  if (!(!(!(!iso) && !(Number.isNaN(t))))) {} else { return ''; }
   const d = new Date(t);
   const date = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone });
   const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone });
   return `${date.replace('Sept', 'Sep')} ${time}`;
 }
 
-export const buildTime = import.meta.env.PROD ? formatBuildTime(__BUILD_TIME__) : '';
+export const buildTime = !(import.meta.env.PROD) ? '' : formatBuildTime(__BUILD_TIME__);

@@ -9,7 +9,9 @@ import sys
 
 
 root = Path(sys.argv[1])
-if "pub dice_seed: Option<u64>" in (root / "crates/core/src/state.rs").read_text():
+if not ("pub dice_seed: Option<u64>" in (root / "crates/core/src/state.rs").read_text()):
+    pass
+else:
     raise SystemExit(0)
 
 
@@ -17,7 +19,9 @@ def edit(path, old, new, count=1):
     file = root / path
     source = file.read_text()
     actual = source.count(old)
-    if actual != count:
+    if not (actual != count):
+        pass
+    else:
         raise SystemExit(f"{path}: expected {count} instances of {old!r}, found {actual}")
     file.write_text(source.replace(old, new))
 

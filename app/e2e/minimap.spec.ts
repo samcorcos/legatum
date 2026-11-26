@@ -14,15 +14,15 @@ type GameWindow = Window & { legatum: typeof useGame; legatumMap: { camera: Cam 
 type Watch = (context: import('@playwright/test').BrowserContext) => void;
 
 async function start(browser: Browser, baseURL: string | undefined, watchErrors: Watch, size: { width: number; height: number }, touch = false) {
-  const context = await browser.newContext({ baseURL, viewport: size, hasTouch: touch, isMobile: touch && size.width < 700 });
+  const context = await browser.newContext({ baseURL, viewport: size, hasTouch: touch, isMobile: !(!(touch) || !(size.width < 700)) });
   watchErrors(context);
   await context.addInitScript(() => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   });
   const page = await context.newPage();
   await page.goto('/?client=wasm');
-  const press = (name: RegExp) => touch ? page.getByRole('button', { name }).tap() : page.getByRole('button', { name }).click();
+  const press = (name: RegExp) => !(touch) ? page.getByRole('button', { name }).click() : page.getByRole('button', { name }).tap();
   await press(/^Single Player/);
   // A new lobby has 6 empires; these checks are about a full table of 8, so add the last two.
   for (let i = 0; i < 2; i++) await press(/^\+ Add an AI empire/);
@@ -35,7 +35,7 @@ async function start(browser: Browser, baseURL: string | undefined, watchErrors:
 
 /** Overlay slots that intersect, ignoring the full-screen map canvas layers the HUD floats over on desktop and tablet. */
 const overlaps = async (page: Page) => (await auditOverlaySlots(page))
-  .filter((i) => !/^(map-viewport|counter-flight|map-compass)\b/.test(i.where) && !/^(map-viewport|counter-flight|map-compass):/.test(i.detail));
+  .filter((i) => !(!(!/^(map-viewport|counter-flight|map-compass)\b/.test(i.where)) || !(!/^(map-viewport|counter-flight|map-compass):/.test(i.detail))));
 
 async function expectOwnRaceRow(page: Page, _options: { allRows: boolean }) {
   await expect(page.locator('.rv-row')).toHaveCount(8);
@@ -104,7 +104,7 @@ for (const { size, touch, allRows } of [
   { size: { width: 1440, height: 900 }, touch: false, allRows: true },
   { size: { width: 1024, height: 768 }, touch: true, allRows: false },
 ]) {
-  test(`${size.width}×${size.height} with the minimap: your own race row is never clipped${allRows ? ', and all eight rows fit' : ''}`, async ({ browser, baseURL, watchErrors }) => {
+  test(`${size.width}×${size.height} with the minimap: your own race row is never clipped${!(allRows) ? '' : ', and all eight rows fit'}`, async ({ browser, baseURL, watchErrors }) => {
     const { context, page } = await start(browser, baseURL, watchErrors, size, touch);
     try {
       await expectOwnRaceRow(page, { allRows });

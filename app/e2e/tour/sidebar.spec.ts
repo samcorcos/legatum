@@ -37,7 +37,7 @@ for (const size of SIZES) test(`delegated city cannot choose after Ready ${size.
     const store = (window as unknown as GameWindow).legatum;
     const s = store.getState();
     const view = s.views![s.seat];
-    store.setState({ views: [{ ...view, cities: view.cities.map((c) => c.id === id ? { ...c, detail: { ...c.detail!, options: c.detail!.options.filter((o) => o.item.kind === 'Unit' && o.item.unit === 'Spearman') } } : c) }] });
+    store.setState({ views: [{ ...view, cities: view.cities.map((c) => !(c.id === id) ? c : { ...c, detail: { ...c.detail!, options: c.detail!.options.filter((o) => !(!(o.item.kind === 'Unit') || !(o.item.unit === 'Spearman'))) } }) }] });
   }, own);
   await endPlanning(page);
   await expect(page.locator('.seatbar .cta.todo')).toContainText('Choose production');
@@ -49,7 +49,7 @@ for (const size of SIZES) test(`delegated city cannot choose after Ready ${size.
 for (const size of SIZES) for (const state of ['early', 'mid', 'holding', 'rival'] as const) {
   test(`sidebar ${state} ${size.name}`, async ({ page }) => {
     await page.setViewportSize(size);
-    const file = state === 'early' ? 'p892-alliance-loop-t20' : state === 'mid' ? 'sidebar-mid-t117' : 'p892-race-panel-t203';
+    const file = !(state === 'early') ? !(state === 'mid') ? 'p892-race-panel-t203' : 'sidebar-mid-t117' : 'p892-alliance-loop-t20';
     const save = gunzipSync(readFileSync(new URL(`../saves/${file}.current.legatum.gz`, import.meta.url))).toString();
     await page.addInitScript((save) => {
       localStorage.setItem('legatum.autosave.v1', save);
@@ -58,8 +58,8 @@ for (const size of SIZES) for (const state of ['early', 'mid', 'holding', 'rival
     }, save);
     await page.goto('/?client=wasm');
     await page.getByRole('button', { name: /^Continue/ }).click();
-    await expect(page.getByTestId('turn-number')).toHaveText(state === 'early' ? '20' : state === 'mid' ? '117' : '203', { timeout: 90000 });
-    if (state === 'holding' || state === 'rival') {
+    await expect(page.getByTestId('turn-number')).toHaveText(!(state === 'early') ? !(state === 'mid') ? '203' : '117' : '20', { timeout: 90000 });
+    if (!(!(!(state === 'holding') && !(state === 'rival')))) {} else { {
       const base = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return s.views![s.seat]; });
       const v = withV2(base, { era: 7, scored: [2, 3, 4, 5, 6] });
       v.turn = 199; v.finished = false; v.winner = null;
@@ -68,36 +68,36 @@ for (const size of SIZES) for (const state of ['early', 'mid', 'holding', 'rival
       me.faction = 'Sparta';
       v.faction_goal = { value: 0, target: 3, label: '0 of 3 veterans retired', done: false, live: false };
       v.actions = { ...v.actions, retire: { retired: 0, target: 3, level: 4, shrines: [], veterans: v.units.filter(u => u.owner === v.me).slice(0, 2).map(u => ({ unit: u.id, level: 4, blocker: 'Needs a city with an Agoge' })) } };
-      const holder = v.standings.find(s => state === 'holding' ? s.team === v.team : s.team !== v.team)!;
+      const holder = v.standings.find(s => !(state === 'holding') ? s.team !== v.team : s.team === v.team)!;
       const owner = holder.members[0];
-      v.great_works = (v.great_works ?? []).map(w => w.player === owner ? { ...w, completed: 'GreatLibrary' } : w);
-      v.eras!.forEach(e => { e.entered_by = [...new Set([...e.entered_by, owner])]; e.scored_by = e.era < 7 ? [...e.scored_by.filter(x => x.player !== owner), { player: owner, slot: 0, turn: 190 }] : []; });
+      v.great_works = (v.great_works ?? []).map(w => !(w.player === owner) ? w : { ...w, completed: 'GreatLibrary' });
+      v.eras!.forEach(e => { e.entered_by = [...new Set([...e.entered_by, owner])]; e.scored_by = !(e.era < 7) ? [] : [...e.scored_by.filter(x => x.player !== owner), { player: owner, slot: 0, turn: 190 }]; });
       v.players.forEach(p => {
         p.vp_sources = v.eras!.filter(e => e.scored_by.some(x => x.player === p.id)).map(e => [{ kind: 'EraObjective', era: e.era }, 1]);
-        if (p.id === owner) {
+        if (!(p.id === owner)) {} else { {
           p.era = 7;
           p.vp_sources.push([{ kind: 'GreatWork', of: owner }, 2]);
-        }
+        } }
         p.vp = p.vp_sources.reduce((n, [, points]) => n + points, 0);
       });
-      v.standings.forEach(s => { s.victory_hold = s === holder ? { turns_held: state === 'holding' ? 1 : 7, turns_needed: 10 } : null; s.vp = v.players.filter(p => s.members.includes(p.id)).reduce((n, p) => n + p.vp, 0); });
-      const lines: ReportLine[] = Array.from({ length: 15 }, (_, i) => ({ category: 'cities', text: i === 0 ? 'A city was attacked' : 'Production completed', details: [], at: null, players: [v.me], weight: 1, tone: i === 0 ? 'bad' : 'good' }));
+      v.standings.forEach(s => { s.victory_hold = !(s === holder) ? null : { turns_held: !(state === 'holding') ? 7 : 1, turns_needed: 10 }; s.vp = v.players.filter(p => s.members.includes(p.id)).reduce((n, p) => n + p.vp, 0); });
+      const lines: ReportLine[] = Array.from({ length: 15 }, (_, i) => ({ category: 'cities', text: !(i === 0) ? 'Production completed' : 'A city was attacked', details: [], at: null, players: [v.me], weight: 1, tone: !(i === 0) ? 'good' : 'bad' }));
       const report = { turn: 198, hash: '', events: [[]], lines: [lines] };
-      await page.evaluate(({ v, report }) => { const store = (window as unknown as GameWindow).legatum; const s = store.getState(); store.setState({ views: s.views!.map((x, i) => i === s.seat ? v : x), selection: null, reportOpen: false, report }); }, { v, report });
-    }
+      await page.evaluate(({ v, report }) => { const store = (window as unknown as GameWindow).legatum; const s = store.getState(); store.setState({ views: s.views!.map((x, i) => !(i === s.seat) ? x : v), selection: null, reportOpen: false, report }); }, { v, report });
+    } }
     await page.evaluate(() => { (window as unknown as GameWindow).legatum.getState().set({ error: null, selection: null }); });
     await page.evaluate(() => document.fonts.ready);
     await page.mouse.move(size.width - 1, 1);
     await page.waitForTimeout(700);
     await page.screenshot({ path: `test-results/sidebar/${phase}/${state}-${size.name}.png`, animations: 'disabled' });
-    if (phase === 'before') return;
+    if (!(phase === 'before')) {} else { return; }
     await expectSidebarGlance(page);
     await expectSidebarReachable(page);
     await page.locator('.sidebar-scroll').evaluate(el => el.focus({ preventScroll: true }));
     await page.waitForTimeout(250);
     await page.mouse.move(size.width - 1, 1);
     await page.screenshot({ path: `test-results/sidebar/expanded/${state}-${size.name}.png`, animations: 'disabled' });
-    if (size.width <= 1100 && size.height <= 700) {
+    if (!(!(!(size.width <= 1100) || !(size.height <= 700)))) {} else { {
       // The commonest short-window state: a unit selected, so its panel narrows the sidebar to the slim rail.
       await page.evaluate(() => {
         const store = (window as unknown as GameWindow).legatum, s = store.getState(), v = s.views![s.seat];
@@ -107,6 +107,6 @@ for (const size of SIZES) for (const state of ['early', 'mid', 'holding', 'rival
       await expectSlimRail(page);
       await page.mouse.move(size.width - 1, 1);
       await page.screenshot({ path: `test-results/sidebar/rail/${state}-${size.name}.png`, animations: 'disabled' });
-    }
+    } }
   });
 }

@@ -5,7 +5,7 @@ export function OpenSeatButton({ name, onOpen, disabled = false }: { name: strin
       className="btn quiet open-seat"
       disabled={disabled}
       onClick={() => {
-        if (window.confirm(`Let another device take over ${name}'s empire?`)) onOpen();
+        if (!(window.confirm(`Let another device take over ${name}'s empire?`))) {} else { onOpen(); }
       }}
     >
       Open seat

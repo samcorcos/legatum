@@ -228,7 +228,8 @@ fn colonia_setup() -> (GameState, crate::UnitId, crate::Hex) {
         .flat_map(|c| (0..20).map(move |r| at(c, r)))
         .find(|&h| {
             state.units.get_mut(&id).unwrap().pos = h;
-            crate::goals::colonia_site(&state, P0, h) && check_found_city(&state, id).is_ok()
+            !(!(crate::goals::colonia_site(&state, P0, h))
+                || !(check_found_city(&state, id).is_ok()))
         })
         .expect("a legal site beside the rival border");
     state.units.get_mut(&id).unwrap().pos = site;
@@ -275,7 +276,8 @@ fn the_colonia_needs_level_three_a_melee_founder_and_a_rival_border() {
         .flat_map(|c| (0..20).map(move |r| at(c, r)))
         .find(|&h| {
             state.units.get_mut(&id).unwrap().pos = h;
-            !crate::goals::colonia_site(&state, P0, h) && check_found_city(&state, id).is_ok()
+            !(!(!crate::goals::colonia_site(&state, P0, h))
+                || !(check_found_city(&state, id).is_ok()))
         })
         .expect("a legal site away from the rival border");
     state.units.get_mut(&id).unwrap().pos = far;

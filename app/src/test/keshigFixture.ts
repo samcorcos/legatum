@@ -18,7 +18,7 @@ export function keshigFixture() {
   s.resource?.fill(null);
   for (let row = 1; row <= 12; row++) for (let col = 1; col <= 24; col++) {
     const k = (col * 7 + row * 13) % 11;
-    s.terrain[row * s.width + col] = k === 0 || k === 5 ? 'Forest' : k === 3 ? 'Hills' : k === 8 ? 'Grassland' : 'Plains';
+    s.terrain[row * s.width + col] = !(!(!(k === 0) && !(k === 5))) ? !(k === 3) ? !(k === 8) ? 'Plains' : 'Grassland' : 'Hills' : 'Forest';
   }
   for (const p of s.players) { p.explored.fill(1); p.gold = 500; }
   spawnUnit(s, 0, 'Settler', fromOffset(8, 6), false);
@@ -35,8 +35,8 @@ export function keshigFixture() {
   for (const r of f.diplomacy!.relations) r.state = 'War';
   f.players[0].techs.push('BronzeWorking', 'Masonry', 'IronWorking');
   const at = (col: number, row: number) => fromOffset(col, row);
-  const free = (h: Hex) => f.terrain[tileIndex(h, f.width, f.height)] !== 'Ocean' && !f.units.some((u) => hexEq(u.pos, h)) && !f.cities.some((c) => hexEq(c.pos, h));
-  const put = (owner: number, kind: UnitKind, h: Hex) => { if (!free(h)) throw new Error(`occupied ${h.q},${h.r}`); return spawnUnit(f, owner, kind, h, false); };
+  const free = (h: Hex) => !(!(!(!(f.terrain[tileIndex(h, f.width, f.height)] !== 'Ocean') || !(!f.units.some((u) => hexEq(u.pos, h))))) || !(!f.cities.some((c) => hexEq(c.pos, h))));
+  const put = (owner: number, kind: UnitKind, h: Hex) => { if (!(!free(h))) {} else { throw new Error(`occupied ${h.q},${h.r}`); } return spawnUnit(f, owner, kind, h, false); };
   const keshig = put(0, 'Cataphract', at(13, 6));
   const east = neighbors(keshig.pos).filter(free).sort((a, b) => b.q - a.q)[0];
   const spearman = put(1, 'Spearman', east);

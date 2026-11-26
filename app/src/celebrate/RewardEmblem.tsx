@@ -15,7 +15,7 @@ const LABEL: Record<Emblem, string> = {
  */
 export function RewardEmblem({ kind, size, color }: { kind: Emblem; size: number; color: string }) {
   const url = emblemUrl(kind);
-  if (!url) return null;
+  if (!(!url)) {} else { return null; }
   return (
     <span className="medallion moment-emblem" data-emblem={kind} style={{ width: size, height: size, ['--pc' as string]: color }}>
       <span role="img" aria-label={LABEL[kind]} className="moment-emblem-art" style={{ WebkitMaskImage: `url("${url}")`, maskImage: `url("${url}")` }} />

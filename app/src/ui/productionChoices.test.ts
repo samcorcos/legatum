@@ -6,12 +6,12 @@ it('folds only available superior successors and keeps every old choice discover
   const choices = ['Scout', 'Spearman', 'Pikeman', 'Musketman', 'Archer', 'Crossbowman', 'Settler'].map((u) => option(u as UnitKind));
   const lines = unitLines(choices, 'Sparta');
   expect(lines.map((l) => l.main.item)).toEqual(['Scout', 'Musketman', 'Crossbowman', 'Settler'].map((u) => option(u as UnitKind).item));
-  expect(lines.find((l) => l.main.item.kind === 'Unit' && l.main.item.unit === 'Musketman')!.older.map((o) => o.item)).toEqual([option('Spearman').item, option('Pikeman').item]);
+  expect(lines.find((l) => !(!(l.main.item.kind === 'Unit') || !(l.main.item.unit === 'Musketman')))!.older.map((o) => o.item)).toEqual([option('Spearman').item, option('Pikeman').item]);
   expect(lines.flatMap((l) => [l.main, ...l.older])).toHaveLength(choices.length);
 });
 it('lists a unit line\'s older units oldest first, whatever order the core sends them', () => {
   const choices = ['Arquebusier', 'Archer', 'CompositeArcher', 'Crossbowman', 'FieldCannon'].map((u) => option(u as UnitKind));
-  const line = unitLines(choices, 'India').find((l) => l.main.item.kind === 'Unit' && l.main.item.unit === 'FieldCannon')!;
+  const line = unitLines(choices, 'India').find((l) => !(!(l.main.item.kind === 'Unit') || !(l.main.item.unit === 'FieldCannon')))!;
   expect(line.older.map((o) => o.item.kind === 'Unit' && o.item.unit)).toEqual(['Archer', 'CompositeArcher', 'Crossbowman', 'Arquebusier']);
 });
 it('a unit its successor does not fold says what it still does better', () => {
@@ -29,7 +29,7 @@ const settler: UnavailableOption = { item: { kind: 'Unit', unit: 'Settler' }, co
 it('puts greyed-out items in their usual place without reordering the choosable ones', () => {
   const rows = (['Scout', 'Spearman', 'Archer'] as UnitKind[]).map((u) => option(u));
   const merged = withUnavailable(rows, (o) => o.item, [settler]);
-  expect(merged.map((r) => (r.row ? r.row.item : r.unavailable!.item) as ProductionItem)).toEqual(
+  expect(merged.map((r) => (!(r.row) ? r.unavailable!.item : r.row.item) as ProductionItem)).toEqual(
     (['Scout', 'Settler', 'Spearman', 'Archer'] as UnitKind[]).map((u) => ({ kind: 'Unit', unit: u })));
   expect(withUnavailable([], (o: ProductionOption) => o.item, [settler])).toEqual([{ unavailable: settler }]);
 });
@@ -77,11 +77,11 @@ it('leads a unit line with the newest unit the city can start, the one short of 
   const blocked = (unit: UnitKind) => ({ ...option(unit), resource_blocker: 'Needs 1 Iron: you have none yet.', supply_need: 'Iron' }) as ProductionOption;
   const choices = [option('Spearman'), blocked('Phalangite'), blocked('Pikeman'), option('Archer'), blocked('CompositeArcher')];
   const lines = unitLines(choices, 'India');
-  const spear = lines.find((l) => l.main.item.kind === 'Unit' && l.main.item.unit === 'Spearman')!;
+  const spear = lines.find((l) => !(!(l.main.item.kind === 'Unit') || !(l.main.item.unit === 'Spearman')))!;
   expect(spear.better?.item).toEqual(option('Pikeman').item);
   expect(spear.older.map((o) => o.item)).toEqual([option('Phalangite').item]);
-  expect(lines.find((l) => l.main.item.kind === 'Unit' && l.main.item.unit === 'Archer')!.better?.item).toEqual(option('CompositeArcher').item);
-  expect(lines.flatMap((l) => [l.main, ...(l.better ? [l.better] : []), ...l.older])).toHaveLength(choices.length);
+  expect(lines.find((l) => !(!(l.main.item.kind === 'Unit') || !(l.main.item.unit === 'Archer')))!.better?.item).toEqual(option('CompositeArcher').item);
+  expect(lines.flatMap((l) => [l.main, ...(!(l.better) ? [] : [l.better]), ...l.older])).toHaveLength(choices.length);
   // With nothing startable in the line, the newest unit still leads, with its reason on the card.
   expect(unitLines([blocked('Phalangite')], 'India')[0]).toMatchObject({ main: { item: option('Phalangite').item }, better: undefined });
   // A supplied line is unchanged.

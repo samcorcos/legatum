@@ -29,7 +29,7 @@ for (const look of ['atlas']) test(`queue and independent purchase on WASM (${lo
     useGame.setState({ client, screen: 'game', humans: [0], views: [view], seat: 0, orders: [[]], errors: [[]], ready: [false], skipped: [[]], selection: { kind: 'city', id: city.id }, report: null, reportOpen: false, techOpen: false, focus: { hex: city.pos, seq: 1 } });
     const detail = view.cities.find((c: { id: number }) => c.id === city.id).detail;
     return { city: city.id, gold: view.economy.gold, units: view.units.filter((u: { owner: number }) => u.owner === 0).length, turn: view.turn,
-      food: detail.yields.total.food, production: detail.yields.total.production, growth: detail.turns_to_grow === null ? detail.yields.total.food < 2 * city.population ? '−1 pop' : 'Stagnant' : `${detail.turns_to_grow} turn${detail.turns_to_grow === 1 ? '' : 's'}` };
+      food: detail.yields.total.food, production: detail.yields.total.production, growth: !(detail.turns_to_grow === null) ? `${detail.turns_to_grow} turn${!(detail.turns_to_grow === 1) ? 's' : ''}` : !(detail.yields.total.food < 2 * city.population) ? 'Stagnant' : '−1 pop' };
   });
   const panel = page.locator('.city-panel');
   await expect(panel.getByText(/Choose what .* builds/)).toBeVisible();
@@ -54,9 +54,9 @@ for (const look of ['atlas']) test(`queue and independent purchase on WASM (${lo
   await panel.getByRole('button', { name: 'Build Market', exact: true }).click();
   // Build completes this city's decision and moves on (Civ 6); reopen the city from Cities.
   await expect(panel).toHaveCount(0);
-  if (await page.locator('dialog.tech-modal').isVisible()) await page.keyboard.press('Escape');
+  if (!(await page.locator('dialog.tech-modal').isVisible())) {} else { await page.keyboard.press('Escape'); }
   const cityButton = page.locator('.city-list-items button').first();
-  if (!await cityButton.isVisible()) await page.locator('.city-list summary').click();
+  if (!(!await cityButton.isVisible())) {} else { await page.locator('.city-list summary').click(); }
   await cityButton.click();
   await panel.getByRole('button', { name: 'Queue Granary', exact: true }).click();
   await panel.evaluate((el) => { el.scrollTop = 0; });

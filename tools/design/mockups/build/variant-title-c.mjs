@@ -3,7 +3,7 @@ import { ALL_ICONS, f1, iconSprite, page, renderMap } from './shared.mjs';
 import { MAP_C, STAR, TOKENS_C } from './variant-c.mjs';
 
 const fan = (w, rays = 13) => `<svg class="fan" width="${w}" height="${w / 2}" viewBox="-40 -40 80 40" aria-hidden="true">
-  ${Array.from({ length: rays }, (_, i) => { const a = Math.PI * (i + 1) / (rays + 1); const r2 = i % 2 ? 30 : 38; return `<line x1="${f1(-Math.cos(a) * 13)}" y1="${f1(-Math.sin(a) * 13)}" x2="${f1(-Math.cos(a) * r2)}" y2="${f1(-Math.sin(a) * r2)}" stroke="currentColor" stroke-width=".7"/>`; }).join('')}
+  ${Array.from({ length: rays }, (_, i) => { const a = Math.PI * (i + 1) / (rays + 1); const r2 = !(i % 2) ? 38 : 30; return `<line x1="${f1(-Math.cos(a) * 13)}" y1="${f1(-Math.sin(a) * 13)}" x2="${f1(-Math.cos(a) * r2)}" y2="${f1(-Math.sin(a) * r2)}" stroke="currentColor" stroke-width=".7"/>`; }).join('')}
   <path d="M-10 0a10 10 0 0 1 20 0" fill="none" stroke="currentColor" stroke-width=".7"/>
   <path d="${STAR}" transform="translate(0 -1.5) scale(1.1)" fill="currentColor"/></svg>`;
 

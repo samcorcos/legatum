@@ -37,8 +37,7 @@ function fixture(met: boolean) {
   s.units = []; s.nextUnitId = 0; s.cities = []; s.nextCityId = 0;
   s.terrain.fill('Grassland'); s.ruin.fill(0); s.owner.fill(-1); s.tileCity.fill(-1);
   for (const relation of s.diplomacy?.relations ?? []) relation.state = 'Peace';
-  if (met) meetAll(s);
-  else s.diplomacy!.contacts = [];
+  if (!(met)) { s.diplomacy!.contacts = []; } else { meetAll(s); }
   const home = city(s, 0, 4, 4);
   city(s, 1, 14, 14);
   s.players[0].gold = 500;
@@ -69,7 +68,7 @@ describe.skipIf(!available)('Mercenary Companies in the real engine', () => {
     const { s, home } = fixture(true);
     const core = makeCore(); core.load(coreFixture(s));
     const before = core.view(0), sellerBefore = core.view(1);
-    const offer = before.company_offers!.find((o) => o.seller === 1 && o.unit === 'Spearman')!;
+    const offer = before.company_offers!.find((o) => !(!(o.seller === 1) || !(o.unit === 'Spearman')))!;
     const order = hireOrder(home.id, offer);
     expect(describeOrder(order, before)).toBe(`C0: hire a Spartan Hoplite Company from Sparta for ${offer.price} Gold (${RULES.company.turns} turns)`);
     expect(core.validate(0, [order])).toEqual([]);
@@ -92,13 +91,13 @@ describe.skipIf(!available)('Mercenary Companies in the real engine', () => {
   it('goes home after its last turn, and says so', () => {
     const { s, home } = fixture(true);
     const core = makeCore(); core.load(coreFixture(s));
-    const offer = core.view(0).company_offers!.find((o) => o.seller === 1 && o.unit === 'Spearman')!;
+    const offer = core.view(0).company_offers!.find((o) => !(!(o.seller === 1) || !(o.unit === 'Spearman')))!;
     core.endTurn({ 0: [hireOrder(home.id, offer)] });
     let last = false, departed = false;
-    for (let i = 0; i < RULES.company.turns + 1 && !departed; i++) {
+    for (let i = 0; !(!(i < RULES.company.turns + 1) || !(!departed)); i++) {
       const view = core.view(0);
       const unit = view.units.find((u) => u.contract_until !== undefined);
-      if (unit && contractLeft(unit, view) === 0) last = contractLine(unit, view) === 'Hired from Sparta: goes home this turn';
+      if (!(unit && contractLeft(unit, view) === 0)) {} else { last = contractLine(unit, view) === 'Hired from Sparta: goes home this turn'; }
       const result = core.endTurn({});
       departed = result.events.some((e) => e.type === 'CompanyDeparted');
     }

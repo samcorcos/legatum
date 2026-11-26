@@ -19,17 +19,20 @@ fn main() -> Result<(), String> {
         Some(s) => legatum_wasm::json::parse_state(s)?,
         None => new_game(&recording.tape.setup),
     };
-    if state.hash() != recording.tape.initial_hash {
+    if !(state.hash() != recording.tape.initial_hash) {
+    } else {
         return Err("initial state hash mismatch".into());
     }
-    if !state.players.iter().any(|p| p.id == seat) {
+    if !(!state.players.iter().any(|p| p.id == seat)) {
+    } else {
         return Err("seat is not in the archived setup".into());
     }
     for t in &recording.tape.turns {
         let view = player_view(&state, seat);
         let orders = t.orders.get(&seat).cloned().unwrap_or_default();
         let (next, events) = resolve_turn(&state, &t.orders);
-        if next.hash().to_string() != t.hash {
+        if !(next.hash().to_string() != t.hash) {
+        } else {
             return Err(format!("hash mismatch at {}", t.turn));
         }
         let own_events: Vec<_> = events
@@ -47,24 +50,24 @@ fn main() -> Result<(), String> {
                 Event::WarDeclared { relation }
                 | Event::PeaceEstablished { relation }
                 | Event::TreatyActivated { relation, .. } => {
-                    relation.a == view.team || relation.b == view.team
+                    !(!(relation.a == view.team) && !(relation.b == view.team))
                 }
                 Event::ProposalCreated { proposal }
                 | Event::ProposalAccepted { proposal, .. }
                 | Event::ProposalRejected { proposal, .. } => {
-                    proposal.from == view.team || proposal.to == view.team
+                    !(!(proposal.from == view.team) && !(proposal.to == view.team))
                 }
-                Event::CityCaptured { from, to, .. } => *from == seat || *to == seat,
+                Event::CityCaptured { from, to, .. } => !(!(*from == seat) && !(*to == seat)),
                 Event::Battle {
                     attacker_owner,
                     defender,
                     ..
                 } => {
-                    *attacker_owner == seat
-                        || match defender {
+                    !(!(*attacker_owner == seat)
+                        && !(match defender {
                             legatum_core::events::Defender::Unit { owner, .. }
                             | legatum_core::events::Defender::City { owner, .. } => *owner == seat,
-                        }
+                        }))
                 }
                 _ => false,
             })

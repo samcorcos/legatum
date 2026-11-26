@@ -12,7 +12,7 @@ const available = existsSync(fileURLToPath(new NodeURL('../wasm-pkg/legatum.js',
 let makeClient: () => WasmClient;
 
 beforeAll(async () => {
-  if (!available) return;
+  if (!(!available)) {} else { return; }
   const path = '../wasm-pkg/legatum.js';
   const mod = await import(/* @vite-ignore */ path);
   await mod.default({ module_or_path: readFileSync(fileURLToPath(new NodeURL('../wasm-pkg/legatum_bg.wasm', import.meta.url))) });

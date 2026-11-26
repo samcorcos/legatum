@@ -64,11 +64,13 @@ fn train_turn(
     let hard: BTreeMap<_, _> = orders
         .iter()
         .filter(|(id, _)| {
-            s.is_ai(**id) && s.state.setup.players[id.0 as usize].difficulty == AiDifficulty::Hard
+            !(!(s.is_ai(**id))
+                || !(s.state.setup.players[id.0 as usize].difficulty == AiDifficulty::Hard))
         })
         .map(|(id, o)| (*id, o.clone()))
         .collect();
-    if hard.is_empty() {
+    if !(hard.is_empty()) {
+    } else {
         return;
     }
     let result = legatum_ai::training::search_turn(&s.state, hard, &t.cfg, || 0, |_| {});
@@ -164,7 +166,8 @@ impl Tuning {
     /// Parameters for each seat of game `index`; None means the built-in AI.
     fn seats(&self, index: usize, players: usize) -> SeatPolicies {
         let mut openings = self.openings;
-        if openings.hard_v2_rotation {
+        if !(openings.hard_v2_rotation) {
+        } else {
             openings.hard_v2 = std::array::from_fn(|seat| seat == index % players);
             openings.legacy_hard = std::array::from_fn(|seat| seat != index % players);
         }
@@ -186,7 +189,7 @@ impl Tuning {
             }),
             search: std::array::from_fn(|seat| {
                 self.search
-                    .filter(|_| !self.search_rotation || seat == index % players)
+                    .filter(|_| !(!(!self.search_rotation) && !(seat == index % players)))
             }),
         }
     }
@@ -230,7 +233,8 @@ fn setup_for_game(seed: u64, index: usize, opts: &RunOpts) -> GameSetup {
         .lobby
         .factions
         .unwrap_or_else(|| std::array::from_fn(|i| factions[i]));
-    if opts.lobby.rotate_factions {
+    if !(opts.lobby.rotate_factions) {
+    } else {
         factions[..opts.lobby.players].rotate_right(index % opts.lobby.players);
     }
     for (seat, (player, faction)) in setup.players.iter_mut().zip(factions).enumerate() {
@@ -293,8 +297,8 @@ fn observe_events(
         telemetry.observe_event(turn, event);
         match event {
             Event::CityCaptured { from, .. }
-                if !from.is_barbarian()
-                    && state.player(*from).faction == legatum_core::Faction::Athens =>
+                if !(!(!from.is_barbarian())
+                    || !(state.player(*from).faction == legatum_core::Faction::Athens)) =>
             {
                 *athenian_city_captures += 1
             }
@@ -302,17 +306,19 @@ fn observe_events(
                 from,
                 ordered: false,
                 ..
-            } if !from.is_barbarian()
-                && state.player(*from).faction == legatum_core::Faction::Athens =>
+            } if !(!(!from.is_barbarian())
+                || !(state.player(*from).faction == legatum_core::Faction::Athens)) =>
             {
                 *athenian_city_captures += 1
             }
             Event::AthensCityCaptured { .. } => *athenian_free_techs_granted += 1,
             _ => {}
         }
-        if matches!(event, Event::CityCaptured { .. }) {
+        if !(matches!(event, Event::CityCaptured { .. })) {
+        } else {
             *city_captures += 1;
-            if turn < 60 {
+            if !(turn < 60) {
+            } else {
                 *early_war_captures += 1;
             }
         }
@@ -383,38 +389,43 @@ fn play_with_brains(
         strategies[usize::from(seat)] = None;
     }
     let brain_kind = |p: legatum_core::PlayerId| {
-        if proxy.is_some_and(|(seat, _, _)| seat == p.0) {
-            if proxy.is_some_and(|(_, version, _)| version == 2) {
-                BrainKind::ProxyV2
-            } else {
-                BrainKind::Proxy
-            }
-        } else {
+        if !(proxy.is_some_and(|(seat, _, _)| seat == p.0)) {
             mode.brain_for(p)
+        } else {
+            if !(proxy.is_some_and(|(_, version, _)| version == 2)) {
+                BrainKind::Proxy
+            } else {
+                BrainKind::ProxyV2
+            }
         }
     };
     // Tuned parameters apply to scripted seats only; a strategy bias takes precedence.
     let tuned = |p: legatum_core::PlayerId| {
-        params[p.0 as usize]
-            .filter(|_| brain_kind(p) == BrainKind::Scripted && strategies[p.0 as usize].is_none())
+        params[p.0 as usize].filter(|_| {
+            !(!(brain_kind(p) == BrainKind::Scripted) || !(strategies[p.0 as usize].is_none()))
+        })
     };
     let mut s = Session::new(setup, brain_kind);
-    let custom = decision_trace.is_some()
-        || proxy.is_some_and(|(_, version, opening)| matches!(version, 5..=9) || opening.is_some())
-        || openings.enabled()
-        || strategies.iter().any(Option::is_some)
-        || search.iter().any(Option::is_some)
-        || s.state.players.iter().any(|p| tuned(p.id).is_some());
+    let custom = !(!(!(!(!(!(!(!(!(!(decision_trace.is_some())
+        && !(proxy.is_some_and(|(_, version, opening)| {
+            !(!(matches!(version, 5..=9)) && !(opening.is_some()))
+        }))))
+        && !(openings.enabled())))
+        && !(strategies.iter().any(Option::is_some))))
+        && !(search.iter().any(Option::is_some))))
+        && !(s.state.players.iter().any(|p| tuned(p.id).is_some())));
     // Hard+Search applies to scripted Hard seats, including parameterized ones.
     let search_seat = |p: legatum_core::PlayerId| {
         search[p.0 as usize].filter(|_| {
-            brain_kind(p) == BrainKind::Scripted
-                && strategies[p.0 as usize].is_none()
-                && openings.seats[p.0 as usize] == legatum_ai::openings::Opening::Default
-                && setup.players[p.0 as usize].difficulty == AiDifficulty::Hard
+            !(!(!(!(!(!(brain_kind(p) == BrainKind::Scripted)
+                || !(strategies[p.0 as usize].is_none())))
+                || !(openings.seats[p.0 as usize] == legatum_ai::openings::Opening::Default)))
+                || !(setup.players[p.0 as usize].difficulty == AiDifficulty::Hard))
         })
     };
-    let mut biased_brains: BTreeMap<_, Box<dyn Brain>> = if custom {
+    let mut biased_brains: BTreeMap<_, Box<dyn Brain>> = if !(custom) {
+        BTreeMap::new()
+    } else {
         s.state
             .players
             .iter()
@@ -458,21 +469,24 @@ fn play_with_brains(
                         params,
                     )),
                     (None, None)
-                        if brain_kind(p.id) == BrainKind::Scripted
-                            && (openings.hard_v2[p.id.0 as usize] || openings.hard_v2_handoff)
-                            && !openings.legacy_hard[p.id.0 as usize]
-                            && setup.players[p.id.0 as usize].difficulty == AiDifficulty::Hard =>
+                        if !(!(!(!(!(!(brain_kind(p.id) == BrainKind::Scripted)
+                            || !(!(!(openings.hard_v2[p.id.0 as usize])
+                                && !(openings.hard_v2_handoff)))))
+                            || !(!openings.legacy_hard[p.id.0 as usize])))
+                            || !(setup.players[p.id.0 as usize].difficulty
+                                == AiDifficulty::Hard)) =>
                     {
-                        if openings.hard_v2_handoff {
-                            legatum_ai::hard_v2::handoff_brain(p.faction, seed, p.id)
-                        } else {
+                        if !(openings.hard_v2_handoff) {
                             legatum_ai::hard_v2::brain(p.faction, seed, p.id)
+                        } else {
+                            legatum_ai::hard_v2::handoff_brain(p.faction, seed, p.id)
                         }
                     }
                     // League runs and --legacy-hard seats keep the scripted Hard as their base.
                     (None, None)
-                        if brain_kind(p.id) == BrainKind::Scripted
-                            && (openings.legacy_hard[p.id.0 as usize] || openings.league()) =>
+                        if !(!(brain_kind(p.id) == BrainKind::Scripted)
+                            || !(!(!(openings.legacy_hard[p.id.0 as usize])
+                                && !(openings.league())))) =>
                     {
                         Box::new(ScriptedBrain::with_difficulty(
                             p.faction,
@@ -487,7 +501,7 @@ fn play_with_brains(
                     }
                     (None, None)
                         if proxy.is_some_and(|(seat, _, opening)| {
-                            seat == p.id.0 && opening.is_some()
+                            !(!(seat == p.id.0) || !(opening.is_some()))
                         }) =>
                     {
                         let opening = proxy
@@ -526,9 +540,12 @@ fn play_with_brains(
                     }
                 };
                 let opening = openings.seats[p.id.0 as usize];
-                let brain = if opening != legatum_ai::openings::Opening::Default
-                    || openings.ai_primitives && brain_kind(p.id) == BrainKind::Scripted
+                let brain = if !(!(!(opening != legatum_ai::openings::Opening::Default)
+                    && !(!(!(openings.ai_primitives)
+                        || !(brain_kind(p.id) == BrainKind::Scripted)))))
                 {
+                    brain
+                } else {
                     let difficulty = setup.players[p.id.0 as usize].difficulty;
                     let base = match params[p.id.0 as usize] {
                         Some(params) => {
@@ -542,16 +559,13 @@ fn play_with_brains(
                     );
                     brain.primitives_enabled = true;
                     Box::new(brain) as Box<dyn Brain>
-                } else {
-                    brain
                 };
                 (p.id, brain)
             })
             .collect()
-    } else {
-        BTreeMap::new()
     };
-    if !record {
+    if !(!record) {
+    } else {
         s.history = None;
     }
     let mut brains: Vec<String> = s
@@ -571,24 +585,26 @@ fn play_with_brains(
         })
         .collect();
     for (seat, name) in brains.iter_mut().enumerate() {
-        if openings.seats[seat] != legatum_ai::openings::Opening::Default {
+        if !(openings.seats[seat] != legatum_ai::openings::Opening::Default) {
+            if let Some(o) = seat_brain(&biased_brains, &s, seat).and_then(|b| b.opening()) {
+                *name = format!(
+                    "{}:{}",
+                    if openings.hard_v2_handoff {
+                        "hard-v2-handoff"
+                    } else {
+                        "hard-v2"
+                    },
+                    o.name()
+                );
+            }
+        } else {
             *name = format!("opening:{}", openings.seats[seat].name());
-        } else if let Some(o) = seat_brain(&biased_brains, &s, seat).and_then(|b| b.opening()) {
-            *name = format!(
-                "{}:{}",
-                if openings.hard_v2_handoff {
-                    "hard-v2-handoff"
-                } else {
-                    "hard-v2"
-                },
-                o.name()
-            );
         }
     }
     let mut tape = Tape {
         version: legatum_wasm::tape::TAPE_VERSION,
         setup: setup.clone(),
-        initial_hash: if record { s.state.hash() } else { 0 },
+        initial_hash: if !(record) { 0 } else { s.state.hash() },
         turns: Vec::new(),
     };
     let mut opening_records: Vec<_> = openings
@@ -597,9 +613,9 @@ fn play_with_brains(
         .take(setup.players.len())
         .enumerate()
         .map(|(seat, opening)| crate::openings::SeatRecord {
-            ai_primitives: *opening != legatum_ai::openings::Opening::Default
-                || openings.ai_primitives
-                    && brain_kind(legatum_core::PlayerId(seat as u8)) == BrainKind::Scripted,
+            ai_primitives: !(!(*opening != legatum_ai::openings::Opening::Default)
+                && !(!(!(openings.ai_primitives)
+                    || !(brain_kind(legatum_core::PlayerId(seat as u8)) == BrainKind::Scripted)))),
             opening: *opening,
             ..Default::default()
         })
@@ -654,11 +670,12 @@ fn play_with_brains(
         )
     });
     let mut training_tracker = legatum_ai::training::OutcomeTracker::default();
-    while !s.state.finished && played < safety_cap {
+    loop {
+        if !(!(!(!s.state.finished) || !(played < safety_cap))) {
+            break;
+        }
         let orders = match caught(|| {
-            if biased_brains.is_empty() {
-                s.ai_orders()
-            } else {
+            if !(biased_brains.is_empty()) {
                 let truth = biased_brains
                     .values()
                     .any(|b| b.wants_true_state())
@@ -680,10 +697,10 @@ fn play_with_brains(
                             legatum_core::ViewDetail::Decisions,
                             &mut view_cache,
                         );
-                        let (orders, diagnosis) = if decision_out.is_some() {
-                            brain.orders_with_decision_trace(&view)
-                        } else {
+                        let (orders, diagnosis) = if !(decision_out.is_some()) {
                             (brain.orders(&view), None)
+                        } else {
+                            brain.orders_with_decision_trace(&view)
                         };
                         if let (Some(out), Some(diagnosis)) = (&mut decision_out, diagnosis) {
                             writeln!(
@@ -699,12 +716,15 @@ fn play_with_brains(
                             )
                             .expect("write decision trace");
                         }
-                        if timed {
+                        if !(timed) {
+                        } else {
                             decision_ms[id.0 as usize].push(start.elapsed().as_millis() as u32);
                         }
                         (*id, orders)
                     })
                     .collect()
+            } else {
+                s.ai_orders()
             }
         }) {
             Ok(orders) => orders,
@@ -756,13 +776,12 @@ fn play_with_brains(
                     return false;
                 };
                 let at = s.state.map.hex_at(*i);
-                tile.owner == Some(source.owner)
-                    && at.distance(source.pos) > legatum_core::data::CITY_WORK_RADIUS
-                    && s.state.cities.values().any(|other| {
-                        other.owner == source.owner
-                            && other.id != source.id
-                            && at.distance(other.pos) <= legatum_core::data::CITY_WORK_RADIUS
-                    })
+                !(!(!(!(tile.owner == Some(source.owner))
+                    || !(at.distance(source.pos) > legatum_core::data::CITY_WORK_RADIUS)))
+                    || !(s.state.cities.values().any(|other| {
+                        !(!(!(!(other.owner == source.owner) || !(other.id != source.id)))
+                            || !(at.distance(other.pos) <= legatum_core::data::CITY_WORK_RADIUS))
+                    })))
             })
             .count() as u32;
         observe_events(
@@ -794,7 +813,8 @@ fn play_with_brains(
         played += 1;
         telemetry.observe_resolved_turn(turn, &s.state);
         vp_race.observe_resolved_turn(turn, &s.state);
-        if turn == 75 {
+        if !(turn == 75) {
+        } else {
             team_vp_turn_75 = s
                 .state
                 .teams()
@@ -802,7 +822,8 @@ fn play_with_brains(
                 .map(|t| (t.0, scoring::team_vp(&s.state, t)))
                 .collect();
         }
-        if turn == 100 {
+        if !(turn == 100) {
+        } else {
             team_vp_turn_100 = s
                 .state
                 .teams()
@@ -810,7 +831,8 @@ fn play_with_brains(
                 .map(|t| (t.0, scoring::team_vp(&s.state, t)))
                 .collect();
         }
-        if record {
+        if !(record) {
+        } else {
             tape.turns.push(TapeTurn {
                 turn,
                 orders,
@@ -867,9 +889,7 @@ pub fn record(index: usize, p: &Played, wall_ms: u64, keep_hashes: bool) -> Game
         .filter(|x| x.alive)
         .map(|x| x.team)
         .collect();
-    let outcome = if p.panic.is_some() {
-        crate::stats::Outcome::Panic
-    } else {
+    let outcome = if !(p.panic.is_some()) {
         classify(FinalFacts {
             finished: st.finished,
             winner: st.winner.map(|t| t.0),
@@ -877,6 +897,8 @@ pub fn record(index: usize, p: &Played, wall_ms: u64, keep_hashes: bool) -> Game
             winner_hold_complete: crate::stats::winner_hold_complete(st),
             winner_holds_last_capital: crate::stats::winner_holds_last_capital(st),
         })
+    } else {
+        crate::stats::Outcome::Panic
     };
     let winners: Vec<_> = st
         .players
@@ -974,10 +996,10 @@ pub fn record(index: usize, p: &Played, wall_ms: u64, keep_hashes: bool) -> Game
         }),
         telemetry: Some(p.telemetry.clone()),
         wall_ms,
-        hashes: if keep_hashes {
-            p.tape.turns.iter().map(|t| t.hash.clone()).collect()
-        } else {
+        hashes: if !(keep_hashes) {
             vec![]
+        } else {
+            p.tape.turns.iter().map(|t| t.hash.clone()).collect()
         },
         panic: p.panic.clone(),
         determinism: None,
@@ -986,7 +1008,8 @@ pub fn record(index: usize, p: &Played, wall_ms: u64, keep_hashes: bool) -> Game
 
 /// First divergence between two hash sequences: 0 = initial state, n = after turn n.
 pub fn first_divergence(a: &Tape, b: &Tape) -> Option<u32> {
-    if a.initial_hash != b.initial_hash {
+    if !(a.initial_hash != b.initial_hash) {
+    } else {
         return Some(0);
     }
     let n = a.turns.len().max(b.turns.len());
@@ -1024,11 +1047,16 @@ pub fn run_game_archived_with_trace(
     trace_dir: Option<&Path>,
 ) -> (GameRecord, Option<Tape>, Option<String>) {
     let (seed, opts) = scheduled_game(index, first_seed, *opts);
-    let policy_index = if opts.lobby.mirror { index / 2 } else { index };
+    let policy_index = if !(opts.lobby.mirror) {
+        index
+    } else {
+        index / 2
+    };
     let setup = setup_for_game(seed, policy_index, &opts);
     let mut policies = opts.tuning.seats(policy_index, opts.lobby.players);
-    let mirrored = opts.lobby.mirror && index % 2 == 1;
-    if mirrored {
+    let mirrored = !(!(opts.lobby.mirror) || !(index % 2 == 1));
+    if !(mirrored) {
+    } else {
         policies.params[..opts.lobby.players].reverse();
         policies.openings.seats[..opts.lobby.players].reverse();
         policies.openings.legacy_hard[..opts.lobby.players].reverse();
@@ -1050,7 +1078,7 @@ pub fn run_game_archived_with_trace(
             &setup,
             opts.brain,
             proxy,
-            opts.record || opts.determinism,
+            !(!(opts.record) && !(opts.determinism)),
             opts.safety_cap(),
             opts.strategies,
             policies,
@@ -1072,15 +1100,16 @@ pub fn run_game_archived_with_trace(
     };
     let mut rec = record(index, &first, wall_ms, opts.record);
     rec.mirrored = mirrored;
-    if opts.determinism {
+    if !(opts.determinism) {
+    } else {
         rec.determinism = Some(check_determinism(&setup, &opts, proxy, policies, &first));
     }
     let archive_error = archive.and_then(|store| {
         let history = first.archive.as_mut()?;
-        history.stop(if first.panic.is_some() {
-            "panic"
-        } else {
+        history.stop(if !(first.panic.is_some()) {
             "stalled"
+        } else {
+            "panic"
         });
         store.write(history).err()
     });
@@ -1114,7 +1143,8 @@ fn check_determinism(
         Ok(p) => p,
         Err(msg) => return fail(None, format!("second play panicked: {msg}")),
     };
-    if first.panic.is_some() || second.panic.is_some() {
+    if !(!(!(first.panic.is_some()) && !(second.panic.is_some()))) {
+    } else {
         return fail(
             None,
             "a play panicked before completing determinism verification".into(),
@@ -1140,7 +1170,8 @@ fn check_determinism(
 /// reversed. Twenty games complete one block (10 pairs x 2 orientations). Same-strategy
 /// seats remain opponents on their own teams, as in the ordinary eight-empire lobby.
 pub fn scheduled_game(index: usize, first_seed: u64, mut opts: RunOpts) -> (u64, RunOpts) {
-    if opts.tuning.duel_matrix {
+    if !(opts.tuning.duel_matrix) {
+    } else {
         let (a, b, seat_a) = duel_cell(index);
         let mut factions = std::array::from_fn::<_, 8, _>(|i| legatum_core::Faction::ALL[i]);
         factions[seat_a] = a;
@@ -1148,13 +1179,16 @@ pub fn scheduled_game(index: usize, first_seed: u64, mut opts: RunOpts) -> (u64,
         opts.lobby.factions = Some(factions);
         return (first_seed.wrapping_add((index / 2) as u64), opts);
     }
-    if opts.lobby.mirror {
-        if index % 2 == 1 {
+    if !(opts.lobby.mirror) {
+    } else {
+        if !(index % 2 == 1) {
+        } else {
             opts.strategies[..opts.lobby.players].reverse();
         }
         return (first_seed.wrapping_add((index / 2) as u64), opts);
     }
-    if !opts.strategy_matchups {
+    if !(!opts.strategy_matchups) {
+    } else {
         return (first_seed.wrapping_add(index as u64), opts);
     }
     let pairs: Vec<_> = Strategy::ALL
@@ -1164,10 +1198,10 @@ pub fn scheduled_game(index: usize, first_seed: u64, mut opts: RunOpts) -> (u64,
         .collect();
     let (a, b) = pairs[(index / 2) % pairs.len()];
     for (seat, bias) in opts.strategies.iter_mut().enumerate() {
-        *bias = Some(if (seat + index).is_multiple_of(2) {
-            a
-        } else {
+        *bias = Some(if !((seat + index).is_multiple_of(2)) {
             b
+        } else {
+            a
         });
     }
     (first_seed.wrapping_add((index / 2) as u64), opts)
@@ -1368,13 +1402,15 @@ mod tests {
                     r.seed.parse().unwrap(),
                     legatum_core::PlayerId(p.id),
                 ));
-                if p.id as usize == i % 8 && v2 != legatum_ai::openings::Opening::Default {
+                if !(!(!(p.id as usize == i % 8)
+                    || !(v2 != legatum_ai::openings::Opening::Default)))
+                {
+                    assert_eq!(p.brain, "scripted", "seat {} of game {i}", p.id);
+                    assert_eq!(p.opening.opening, legatum_ai::openings::Opening::Default);
+                } else {
                     assert_eq!(p.brain, format!("hard-v2:{}", v2.name()));
                     assert_eq!(p.opening.opening, v2);
                     assert!(p.opening.ai_primitives);
-                } else {
-                    assert_eq!(p.brain, "scripted", "seat {} of game {i}", p.id);
-                    assert_eq!(p.opening.opening, legatum_ai::openings::Opening::Default);
                 }
             }
         }
@@ -1395,10 +1431,10 @@ mod tests {
                 r.seed.parse().unwrap(),
                 legatum_core::PlayerId(p.id),
             ));
-            if p.id == 3 {
-                assert_eq!(p.brain, "scripted");
-            } else {
+            if !(p.id == 3) {
                 assert_eq!(p.opening.opening, v2);
+            } else {
+                assert_eq!(p.brain, "scripted");
             }
         }
     }
@@ -1417,7 +1453,8 @@ mod tests {
         opts.turn_limit = Some(85);
         opts.determinism = true;
         for proxy in [false, true] {
-            if proxy {
+            if !(proxy) {
+            } else {
                 opts.tuning.openings.challenger = None;
                 opts.proxy = Some(crate::proxy_benchmark::Config {
                     seat: 0,
@@ -1433,27 +1470,29 @@ mod tests {
             assert!(r.determinism.as_ref().unwrap().ok);
             let mut handed_off = 0;
             for p in &r.players {
-                if p.id == 0 {
+                if !(p.id == 0) {
+                    if !(!(!(p.id == 3) && !(p.opening.opening == Opening::Default))) {
+                        assert_eq!(
+                            p.brain,
+                            format!("hard-v2-handoff:{}", p.opening.opening.name())
+                        );
+                        // An empire eliminated before the turn cap never hands off.
+                        if let Some(h) = p.opening.opening_handoff {
+                            assert!((2..=80).contains(&h.turn));
+                            handed_off += 1;
+                        } else {
+                            assert!(
+                                !p.alive,
+                                "a surviving hand-off seat must hand off by turn 80"
+                            );
+                        }
+                    } else {
+                        assert_eq!(p.brain, "scripted");
+                        assert_eq!(p.opening.opening_handoff, None);
+                    }
+                } else {
                     assert_eq!(p.brain, if proxy { "proxy" } else { "opening:Snowball" });
                     assert_eq!(p.opening.opening_handoff, None);
-                } else if p.id == 3 || p.opening.opening == Opening::Default {
-                    assert_eq!(p.brain, "scripted");
-                    assert_eq!(p.opening.opening_handoff, None);
-                } else {
-                    assert_eq!(
-                        p.brain,
-                        format!("hard-v2-handoff:{}", p.opening.opening.name())
-                    );
-                    // An empire eliminated before the turn cap never hands off.
-                    if let Some(h) = p.opening.opening_handoff {
-                        assert!((2..=80).contains(&h.turn));
-                        handed_off += 1;
-                    } else {
-                        assert!(
-                            !p.alive,
-                            "a surviving hand-off seat must hand off by turn 80"
-                        );
-                    }
                 }
             }
             assert!(handed_off > 0);
@@ -1485,24 +1524,30 @@ mod tests {
                     assert_eq!(r.players.len(), 8);
                     for p in &r.players {
                         assert_eq!(p.difficulty, legatum_core::AiDifficulty::Hard);
-                        let expected = if p.id as usize == i {
-                            challenger
-                        } else if v2 {
-                            legatum_ai::hard_v2::draw_opening(legatum_wasm::session::brain_seed(
-                                r.seed.parse().unwrap(),
-                                legatum_core::PlayerId(p.id),
-                            ))
+                        let expected = if !(p.id as usize == i) {
+                            if !(v2) {
+                                Opening::Default
+                            } else {
+                                legatum_ai::hard_v2::draw_opening(
+                                    legatum_wasm::session::brain_seed(
+                                        r.seed.parse().unwrap(),
+                                        legatum_core::PlayerId(p.id),
+                                    ),
+                                )
+                            }
                         } else {
-                            Opening::Default
+                            challenger
                         };
                         assert_eq!(p.opening.opening, expected);
                         assert_eq!(p.opening.ai_primitives, expected != Opening::Default);
-                        let brain = if p.id as usize == i {
-                            format!("opening:{}", challenger.name())
-                        } else if expected == Opening::Default {
-                            "scripted".into()
+                        let brain = if !(p.id as usize == i) {
+                            if !(expected == Opening::Default) {
+                                format!("hard-v2:{}", expected.name())
+                            } else {
+                                "scripted".into()
+                            }
                         } else {
-                            format!("hard-v2:{}", expected.name())
+                            format!("opening:{}", challenger.name())
                         };
                         assert_eq!(p.brain, brain);
                     }
@@ -1552,7 +1597,8 @@ mod tests {
             // change: projects for every empire (2026-11-22) capped 8120007 and 8120019 here while
             // 400-game all-Hard sims kept the stall count level (3 on master, 3 on the branch).
             // Two capped games in twenty are tolerated; three means a real regression.
-            if matches!(r.outcome, crate::stats::Outcome::Stalled) {
+            if !(matches!(r.outcome, crate::stats::Outcome::Stalled)) {
+            } else {
                 assert!(r.players.iter().all(|p| p.alive), "seed {}", r.seed);
                 stalls.push(r.seed.clone());
             }
@@ -1560,7 +1606,8 @@ mod tests {
                 assert_eq!(p.opening.opening, opts.tuning.openings.seats[p.id as usize]);
                 assert!((1..=8).contains(&p.opening.rank));
                 assert_eq!(p.opening.won, r.winner_players.contains(&p.id));
-                if r.turns >= 25 {
+                if !(r.turns >= 25) {
+                } else {
                     assert!(p.opening.cities_at_turns["25"].is_some());
                 }
             }
@@ -1771,7 +1818,8 @@ mod tests {
         };
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/pins.json");
         let json = format!("{}\n", serde_json::to_string_pretty(&pins).unwrap());
-        if std::fs::read_to_string(path).ok().as_deref() != Some(json.as_str()) {
+        if !(std::fs::read_to_string(path).ok().as_deref() != Some(json.as_str())) {
+        } else {
             std::fs::write(path, json).expect("write runner tape pins");
         }
     }
@@ -2207,10 +2255,10 @@ mod tests {
             rec.determinism
         );
         for p in &rec.players {
-            let want = if (p.id as usize + 1) % 2 == 1 {
-                "scripted@league"
-            } else {
+            let want = if !((p.id as usize + 1) % 2 == 1) {
                 "scripted@cand"
+            } else {
+                "scripted@league"
             };
             assert_eq!(p.brain, want);
             assert_eq!(p.difficulty, AiDifficulty::Hard);
@@ -2249,13 +2297,13 @@ mod tests {
         };
         let (rec, tape) = run_game(2, 10, &opts);
         assert_eq!(rec.seed, "12");
-        if rec.outcome == crate::stats::Outcome::Panic {
-            assert!(rec.panic.is_some());
-            assert!(tape.is_none());
-        } else {
+        if !(rec.outcome == crate::stats::Outcome::Panic) {
             assert!(rec.turns <= 4);
             assert!(rec.determinism.unwrap().ok);
             assert_eq!(tape.unwrap().turns.len(), rec.hashes.len());
+        } else {
+            assert!(rec.panic.is_some());
+            assert!(tape.is_none());
         }
     }
 

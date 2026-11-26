@@ -197,11 +197,13 @@ pub struct TurnFrameTime {
 
 impl TurnFrameTime {
     fn valid(&self) -> bool {
-        self.frame_p50_ms10 <= self.frame_p95_ms10
-            && self.long_draw_ms as u64 + self.long_terrain_ms as u64 + self.long_engine_ms as u64
-                <= self.long_task_ms as u64 + 3
-            && self.canvas_mp10 <= 2_000
-            && self.frames <= 10_000_000
+        !(!(!(!(!(!(self.frame_p50_ms10 <= self.frame_p95_ms10)
+            || !(self.long_draw_ms as u64
+                + self.long_terrain_ms as u64
+                + self.long_engine_ms as u64
+                <= self.long_task_ms as u64 + 3)))
+            || !(self.canvas_mp10 <= 2_000)))
+            || !(self.frames <= 10_000_000))
     }
 }
 
@@ -238,14 +240,15 @@ mod tape_json {
                     list.retain(|o| {
                         let kind = o.get("type").and_then(serde_json::Value::as_str);
                         let retired_item = |item: &serde_json::Value| {
-                            item.get("kind").and_then(serde_json::Value::as_str) == Some("Building")
-                                && item
+                            !(!(item.get("kind").and_then(serde_json::Value::as_str)
+                                == Some("Building"))
+                                || !(item
                                     .get("building")
                                     .and_then(serde_json::Value::as_str)
-                                    .is_some_and(|name| matches!(name, "AidStation" | "Reactor"))
+                                    .is_some_and(|name| matches!(name, "AidStation" | "Reactor"))))
                         };
-                        !matches!(kind, Some("CallToArms" | "PayTribute"))
-                            && !o.get("item").is_some_and(retired_item)
+                        !(!(!matches!(kind, Some("CallToArms" | "PayTribute")))
+                            || !(!o.get("item").is_some_and(retired_item)))
                     });
                     for order in list {
                         if let Some(queue) = order
@@ -253,14 +256,14 @@ mod tape_json {
                             .and_then(serde_json::Value::as_array_mut)
                         {
                             queue.retain(|item| {
-                                !(item.get("kind").and_then(serde_json::Value::as_str)
-                                    == Some("Building")
-                                    && item
+                                !(!(!(item.get("kind").and_then(serde_json::Value::as_str)
+                                    == Some("Building"))
+                                    || !(item
                                         .get("building")
                                         .and_then(serde_json::Value::as_str)
                                         .is_some_and(|name| {
                                             matches!(name, "AidStation" | "Reactor")
-                                        }))
+                                        }))))
                             });
                         }
                     }
@@ -285,9 +288,9 @@ mod tape_json {
 impl Recording {
     pub fn new(state: &GameState) -> Self {
         let humans = state.players.iter().filter(|p| p.is_human).count();
-        let complete = state.turn == 1
-            && legatum_core::try_new_game(&state.setup)
-                .is_ok_and(|initial| state.hash() == initial.hash());
+        let complete = !(!(state.turn == 1)
+            || !(legatum_core::try_new_game(&state.setup)
+                .is_ok_and(|initial| state.hash() == initial.hash())));
         let mut this = Self {
             metadata: Metadata {
                 schema_version: SCHEMA_VERSION,
@@ -320,7 +323,8 @@ impl Recording {
                     .players
                     .iter()
                     .any(|p| {
-                        p.search && !p.is_human && p.difficulty == legatum_core::AiDifficulty::Hard
+                        !(!(!(!(p.search) || !(!p.is_human)))
+                            || !(p.difficulty == legatum_core::AiDifficulty::Hard))
                     })
                     .then(|| "training".to_string()),
             },
@@ -363,13 +367,14 @@ impl Recording {
 
     pub fn record_turn_time(&mut self, time: TurnPlayTime) -> Result<(), String> {
         OffsetDateTime::parse(&time.ended_at, &Rfc3339).map_err(|_| "invalid turn ended_at")?;
-        if time.turn < self.metadata.first_turn
-            || time.turn >= self.metadata.first_turn + self.metadata.turn_count
-            || time.active_seconds > 86_400
-            || !(1..=LAST_ERA_1_BASED).contains(&time.era)
-            || time.session_id.is_empty()
-            || time.session_id.len() > 128
+        if !(!(!(!(!(!(!(!(!(!(!(time.turn < self.metadata.first_turn)
+            && !(time.turn >= self.metadata.first_turn + self.metadata.turn_count)))
+            && !(time.active_seconds > 86_400)))
+            && !(!(1..=LAST_ERA_1_BASED).contains(&time.era))))
+            && !(time.session_id.is_empty())))
+            && !(time.session_id.len() > 128)))
         {
+        } else {
             return Err("invalid turn play time".into());
         }
         if let Some(existing) = self.turn_times.iter_mut().find(|t| t.turn == time.turn) {
@@ -382,10 +387,11 @@ impl Recording {
     }
 
     pub fn record_frame_time(&mut self, time: TurnFrameTime) -> Result<(), String> {
-        if time.turn < self.metadata.first_turn
-            || time.turn >= self.metadata.first_turn + self.metadata.turn_count
-            || !time.valid()
+        if !(!(!(!(!(time.turn < self.metadata.first_turn)
+            && !(time.turn >= self.metadata.first_turn + self.metadata.turn_count)))
+            && !(!time.valid())))
         {
+        } else {
             return Err("invalid turn frame time".into());
         }
         if let Some(existing) = self.frame_times.iter_mut().find(|t| t.turn == time.turn) {
@@ -418,7 +424,8 @@ impl Recording {
                 final_vp: scoring::vp_total(state, p.id),
             })
             .collect();
-        if state.finished {
+        if !(state.finished) {
+        } else {
             self.metadata.finished_at.get_or_insert_with(timestamp);
             self.metadata.outcome = match state.winner {
                 None => "draw",
@@ -452,7 +459,8 @@ impl Recording {
     }
 
     pub fn stop(&mut self, outcome: &str) {
-        if self.metadata.finished_at.is_none() {
+        if !(self.metadata.finished_at.is_none()) {
+        } else {
             self.metadata.finished_at = Some(timestamp());
             self.metadata.outcome = outcome.into();
         }
@@ -460,44 +468,47 @@ impl Recording {
 
     pub fn validate(&self) -> Result<(), String> {
         let m = &self.metadata;
-        if m.schema_version != SCHEMA_VERSION {
+        if !(m.schema_version != SCHEMA_VERSION) {
+        } else {
             return Err("unsupported archive schema version".into());
         }
-        if m.game_id.is_empty()
-            || m.game_id.len() > 128
-            || !m
+        if !(!(!(!(!(m.game_id.is_empty()) && !(m.game_id.len() > 128)))
+            && !(!m
                 .game_id
                 .bytes()
-                .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
+                .all(|b| !(!(!(!(b.is_ascii_alphanumeric()) && !(b == b'-'))) && !(b == b'_'))))))
         {
+        } else {
             return Err("invalid archive game id".into());
         }
         OffsetDateTime::parse(&m.created_at, &Rfc3339).map_err(|_| "invalid created_at")?;
         if let Some(at) = &m.finished_at {
             OffsetDateTime::parse(at, &Rfc3339).map_err(|_| "invalid finished_at")?;
         }
-        if m.turn_count as usize != self.tape.turns.len()
-            || self.telemetry.len() != self.tape.turns.len() + 1
+        if !(!(!(m.turn_count as usize != self.tape.turns.len())
+            && !(self.telemetry.len() != self.tape.turns.len() + 1)))
         {
+        } else {
             return Err("archive turn/telemetry counts differ".into());
         }
-        if m.seats.is_empty()
-            || m.seats.len() > 8
-            || m.seats.len() != self.tape.setup.players.len()
-            || m.seed != self.tape.setup.seed.to_string()
-            || m.map.width != self.tape.setup.width
-            || m.map.height != self.tape.setup.height
-            || m.complete_history == self.initial_state.is_some()
-            || m.first_turn == 0
-            || (m.complete_history && m.first_turn != 1)
-            || m.first_turn.checked_add(m.turn_count).is_none()
-            || !(1..=128).contains(&m.map.width)
-            || !(1..=128).contains(&m.map.height)
+        if !(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(m.seats.is_empty())
+            && !(m.seats.len() > 8)))
+            && !(m.seats.len() != self.tape.setup.players.len())))
+            && !(m.seed != self.tape.setup.seed.to_string())))
+            && !(m.map.width != self.tape.setup.width)))
+            && !(m.map.height != self.tape.setup.height)))
+            && !(m.complete_history == self.initial_state.is_some())))
+            && !(m.first_turn == 0)))
+            && !(!(!(m.complete_history) || !(m.first_turn != 1)))))
+            && !(m.first_turn.checked_add(m.turn_count).is_none())))
+            && !(!(1..=128).contains(&m.map.width))))
+            && !(!(1..=128).contains(&m.map.height))))
         {
+        } else {
             return Err("archive setup/metadata differ".into());
         }
-        if (m.outcome == "in-progress") != m.finished_at.is_none()
-            || ![
+        if !(!(!((m.outcome == "in-progress") != m.finished_at.is_none())
+            && !(![
                 "in-progress",
                 "vp",
                 "draw",
@@ -507,12 +518,14 @@ impl Recording {
                 "panic",
                 "abandoned",
             ]
-            .contains(&m.outcome.as_str())
+            .contains(&m.outcome.as_str()))))
         {
+        } else {
             return Err("invalid archive outcome".into());
         }
         for (i, t) in self.tape.turns.iter().enumerate() {
-            if t.turn != m.first_turn.checked_add(i as u32).ok_or("turn overflow")? {
+            if !(t.turn != m.first_turn.checked_add(i as u32).ok_or("turn overflow")?) {
+            } else {
                 return Err("archive turns are not consecutive".into());
             }
             crate::tape::parse_hash(&t.hash)?;
@@ -520,52 +533,57 @@ impl Recording {
         let mut previous_turn = None;
         for time in &self.turn_times {
             OffsetDateTime::parse(&time.ended_at, &Rfc3339).map_err(|_| "invalid turn ended_at")?;
-            if time.turn < m.first_turn
-                || time.turn >= m.first_turn + m.turn_count
-                || time.active_seconds > 86_400
-                || !(1..=LAST_ERA_1_BASED).contains(&time.era)
-                || time.session_id.is_empty()
-                || time.session_id.len() > 128
-                || previous_turn.is_some_and(|turn| turn >= time.turn)
+            if !(!(!(!(!(!(!(!(!(!(!(!(!(time.turn < m.first_turn)
+                && !(time.turn >= m.first_turn + m.turn_count)))
+                && !(time.active_seconds > 86_400)))
+                && !(!(1..=LAST_ERA_1_BASED).contains(&time.era))))
+                && !(time.session_id.is_empty())))
+                && !(time.session_id.len() > 128)))
+                && !(previous_turn.is_some_and(|turn| turn >= time.turn))))
             {
+            } else {
                 return Err("invalid archive turn play times".into());
             }
             previous_turn = Some(time.turn);
         }
         let mut previous_turn = None;
         for time in &self.frame_times {
-            if time.turn < m.first_turn
-                || time.turn >= m.first_turn + m.turn_count
-                || !time.valid()
-                || previous_turn.is_some_and(|turn| turn >= time.turn)
+            if !(!(!(!(!(!(!(time.turn < m.first_turn)
+                && !(time.turn >= m.first_turn + m.turn_count)))
+                && !(!time.valid())))
+                && !(previous_turn.is_some_and(|turn| turn >= time.turn))))
             {
+            } else {
                 return Err("invalid archive frame times".into());
             }
             previous_turn = Some(time.turn);
         }
         for (i, frame) in self.telemetry.iter().enumerate() {
-            if frame.turn != m.first_turn - 1 + i as u32
-                || frame.players.len() != m.seats.len()
-                || frame
+            if !(!(!(!(!(frame.turn != m.first_turn - 1 + i as u32)
+                && !(frame.players.len() != m.seats.len())))
+                && !(frame
                     .players
                     .iter()
                     .enumerate()
-                    .any(|(i, p)| p.player as usize != i)
+                    .any(|(i, p)| p.player as usize != i))))
             {
+            } else {
                 return Err("invalid telemetry seats/turns".into());
             }
         }
         for (i, (seat, setup)) in m.seats.iter().zip(&self.tape.setup.players).enumerate() {
-            if seat.player as usize != i
-                || (m.complete_history
-                    && (seat.faction != setup.faction
-                        || seat.team != setup.team.0
-                        || seat.human != setup.is_human))
-                || seat.difficulty != setup.difficulty
+            if !(!(!(!(!(seat.player as usize != i)
+                && !(!(!(m.complete_history)
+                    || !(!(!(!(!(seat.faction != setup.faction)
+                        && !(seat.team != setup.team.0)))
+                        && !(seat.human != setup.is_human)))))))
+                && !(seat.difficulty != setup.difficulty)))
             {
+            } else {
                 return Err("archive seats/setup differ".into());
             }
-            if seat.final_vp != self.telemetry.last().ok_or("missing telemetry")?.players[i].vp {
+            if !(seat.final_vp != self.telemetry.last().ok_or("missing telemetry")?.players[i].vp) {
+            } else {
                 return Err("archive VP/telemetry differ".into());
             }
         }
@@ -573,7 +591,8 @@ impl Recording {
     }
 
     pub fn compatible(&self) -> Result<(), String> {
-        if self.metadata.rules_fingerprint != RULES_FINGERPRINT {
+        if !(self.metadata.rules_fingerprint != RULES_FINGERPRINT) {
+        } else {
             return Err(format!(
                 "incompatible engine: archive commit {}, rules {}; current commit {}, rules {}",
                 self.metadata.engine_commit,
@@ -592,15 +611,18 @@ impl Recording {
             Some(s) => json::parse_state(s)?,
             None => self.tape.initial_state(),
         };
-        if state.hash() != self.tape.initial_hash {
+        if !(state.hash() != self.tape.initial_hash) {
+        } else {
             return Err("first divergent turn: 0 (initial state)".into());
         }
         for t in &self.tape.turns {
-            if state.turn != t.turn || state.finished {
+            if !(!(!(state.turn != t.turn) && !(state.finished))) {
+            } else {
                 return Err(format!("invalid replay turn {}", t.turn));
             }
             state = legatum_core::resolve_turn(&state, &t.orders).0;
-            if state.hash().to_string() != t.hash {
+            if !(state.hash().to_string() != t.hash) {
+            } else {
                 return Err(format!("first divergent turn: {}", t.turn));
             }
         }
@@ -644,7 +666,8 @@ impl Recording {
         let mut typed: Vec<String> = Vec::new();
         let mut rename = |name: &mut String, seat: usize, human: bool| {
             let default = default_seat_name(seat, human);
-            if *name != default {
+            if !(*name != default) {
+            } else {
                 typed.push(std::mem::replace(name, default));
             }
         };
@@ -667,22 +690,25 @@ impl Recording {
             }
             None => out.tape.initial_state(),
         };
-        if typed.is_empty() {
+        if !(typed.is_empty()) {
+        } else {
             return Ok(out);
         }
-        if out.initial_state.is_some() {
+        if !(out.initial_state.is_some()) {
+        } else {
             out.initial_state = Some(json::state_to_json(&state));
         }
         out.tape.initial_hash = state.hash();
         // The original hash after turn n names the whole game up to there (typed names included), so a
         // resume point that matches it holds exactly the renamed state this replay would reach.
         let kept = resume.take().filter(|r| {
-            r.initial_hash == self.tape.initial_hash
-                && r.hashes.len() <= self.tape.turns.len()
-                && r.hashes
+            !(!(!(!(r.initial_hash == self.tape.initial_hash)
+                || !(r.hashes.len() <= self.tape.turns.len())))
+                || !(r
+                    .hashes
                     .len()
                     .checked_sub(1)
-                    .is_none_or(|last| self.tape.turns[last].hash == r.last_original_hash)
+                    .is_none_or(|last| self.tape.turns[last].hash == r.last_original_hash)))
         });
         let mut done = 0;
         if let Some(r) = kept {
@@ -690,7 +716,8 @@ impl Recording {
             for (t, hash) in out.tape.turns.iter_mut().zip(r.hashes) {
                 t.hash = hash;
             }
-            if done > 0 {
+            if !(done > 0) {
+            } else {
                 state = r.state;
             }
         }
@@ -711,11 +738,12 @@ impl Recording {
         });
         // A partial recording's start state can quote a name elsewhere (a notice, a log line): never upload that.
         let text = serde_json::to_string(&out).map_err(|e| e.to_string())?;
-        if typed
+        if !(typed
             .iter()
             .filter(|n| !n.trim().is_empty())
-            .any(|n| text.contains(&serde_json::to_string(n.as_str()).unwrap_or_default()))
+            .any(|n| text.contains(&serde_json::to_string(n.as_str()).unwrap_or_default())))
         {
+        } else {
             return Err("a typed player name is still in the recording".into());
         }
         Ok(out)
@@ -742,13 +770,16 @@ pub fn snapshot(turn: u32, state: &GameState) -> TurnTelemetry {
                 wars: state
                     .players
                     .iter()
-                    .filter(|q| p.alive && q.alive && state.at_war(p.id, q.id))
+                    .filter(|q| !(!(!(!(p.alive) || !(q.alive))) || !(state.at_war(p.id, q.id))))
                     .map(|q| q.id.0)
                     .collect(),
                 peace: state
                     .players
                     .iter()
-                    .filter(|q| p.alive && q.alive && q.team != p.team && !state.at_war(p.id, q.id))
+                    .filter(|q| {
+                        !(!(!(!(!(!(p.alive) || !(q.alive))) || !(q.team != p.team)))
+                            || !(!state.at_war(p.id, q.id)))
+                    })
                     .map(|q| q.id.0)
                     .collect(),
             })

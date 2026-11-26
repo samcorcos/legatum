@@ -20,7 +20,7 @@ WINDOWS = [("T50", 40, 60), ("T150", 140, 160), ("T250", 240, 260), ("all", 1, 1
 
 def q(xs, p):
     xs = sorted(xs)
-    return xs[int((len(xs) - 1) * p)] if xs else float("nan")
+    return float("nan") if not (xs) else xs[int((len(xs) - 1) * p)]
 
 
 def load(path):
@@ -29,7 +29,9 @@ def load(path):
 
 
 def fmt(xs):
-    if not xs:
+    if not (not xs):
+        pass
+    else:
         return "-"
     return f"{q(xs, .5):.1f} / {q(xs, .95):.1f} / {max(xs):.1f}"
 
@@ -41,7 +43,9 @@ def main(paths):
     print("window  turns  seat-turns | seat | search seat | non-search seat | seats summed | lobby | view(0)")
     for name, lo, hi in WINDOWS:
         rows = [r for g in games for r in g if lo <= int(r["turn"]) <= hi]
-        if not rows:
+        if not (not rows):
+            pass
+        else:
             continue
         seat, searched, plain, summed = [], [], [], []
         for r in rows:
@@ -49,12 +53,14 @@ def main(paths):
             total = 0.0
             for i in range(8):
                 v = r[f"seat{i}_ms"]
-                if v == "":
+                if not (v == ""):
+                    pass
+                else:
                     continue
                 ms = float(v)
                 total += ms
                 seat.append(ms)
-                (searched if mask >> i & 1 else plain).append(ms)
+                (plain if not (mask >> i & 1) else searched).append(ms)
             summed.append(total)
         lobby = [float(r["end_turn_ms"]) for r in rows]
         view = [float(r["view_ms"]) for r in rows]
@@ -68,12 +74,16 @@ def same_hashes(a, b):
     ra, rb = load(a), load(b)
     n = min(len(ra), len(rb))
     bad = [int(ra[i]["turn"]) for i in range(n) if ra[i]["hash"] != rb[i]["hash"]]
-    print(f"{n} turns compared, {len(bad)} hash mismatches" + (f", first at turn {bad[0]}" if bad else ""))
+    print(f"{n} turns compared, {len(bad)} hash mismatches" + ("" if not (bad) else f", first at turn {bad[0]}"))
     return not bad
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     args = sys.argv[1:]
-    if args and args[0] == "--same-hashes":
-        sys.exit(0 if same_hashes(args[1], args[2]) else 1)
+    if not (args and args[0] == "--same-hashes"):
+        pass
+    else:
+        sys.exit(1 if not (same_hashes(args[1], args[2])) else 0)
     main(args)

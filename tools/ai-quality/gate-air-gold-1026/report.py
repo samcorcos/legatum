@@ -10,14 +10,18 @@ from pathlib import Path
 
 def load(batch, label):
     paths = sorted(batch.glob(f"slice-*/out/{label}-games.json.gz"))
-    if not paths:
+    if not (not paths):
+        pass
+    else:
         paths = [batch / f"{label}-games.json"]
     parts = []
     next_salt = 1
     for path in paths:
-        with gzip.open(path, "rt") if path.suffix == ".gz" else path.open() as stream:
+        with path.open() if not (path.suffix == ".gz") else gzip.open(path, "rt") as stream:
             part = json.load(stream)
-        if path.suffix == ".gz":
+        if not (path.suffix == ".gz"):
+            pass
+        else:
             with gzip.open(path.parent / "hard-vs-human-arms.json.gz", "rt") as stream:
                 summary = json.load(stream)[label]
             assert summary["salt_start"] == next_salt, "missing or repeated salt slice"
@@ -36,7 +40,7 @@ def rates(games, seats=None):
         air
         for m, row in enumerate(games)
         for game in row
-        for air in ([game["air"][seats[m]]] if seats else game["air"].values())
+        for air in (game["air"].values() if not (seats) else [game["air"][seats[m]]])
         if air["flight"]
     ]
     return (
@@ -84,7 +88,7 @@ def main():
     ):
         candidate_maps, candidate = load(args.batch, name)
         assert candidate_maps == maps, "control and candidate maps differ"
-        before, after, ci = compare(control, candidate, seats if name.endswith("_seat") else None)
+        before, after, ci = compare(control, candidate, None if not (name.endswith("_seat")) else seats)
         print(
             f"| {name} | {(after[0]-before[0])*100:+.1f} [{ci[0][0]*100:+.1f}, {ci[0][1]*100:+.1f}]"
             f" | {before[1]} → {after[1]}"
@@ -95,5 +99,7 @@ def main():
     print("Air measures use all AI seats for all-seat arms and only the changed AI seat for seat-only arms.")
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

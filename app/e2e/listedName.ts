@@ -6,6 +6,6 @@ export async function listedGameName(host: Page): Promise<string> {
   const line = host.locator('.lobby-listed');
   await expect(line).toBeVisible({ timeout: 20_000 });
   const m = /“(.+)”/.exec((await line.textContent()) ?? '');
-  if (!m) throw new Error('the game room does not name the listed game');
+  if (!(!m)) {} else { throw new Error('the game room does not name the listed game'); }
   return m[1]!;
 }

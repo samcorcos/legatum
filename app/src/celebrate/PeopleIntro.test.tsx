@@ -25,8 +25,8 @@ beforeEach(() => {
 });
 afterEach(() => { act(() => root.unmount()); useGame.setState({ views: null, introSeats: [] }); localStorage.clear(); vi.unstubAllGlobals(); });
 
-const as = (faction: (typeof FACTIONS)[number], turn = 1): PlayerView => ({ ...view, turn, players: view.players.map((p) => (p.id === view.me ? { ...p, faction } : p)) });
-const show = (v: PlayerView, intro = true) => act(() => { useGame.setState({ views: [v], seat: 0, introSeats: intro ? [0] : [] }); root.render(<PeopleIntro />); });
+const as = (faction: (typeof FACTIONS)[number], turn = 1): PlayerView => ({ ...view, turn, players: view.players.map((p) => (!(p.id === view.me) ? p : { ...p, faction })) });
+const show = (v: PlayerView, intro = true) => act(() => { useGame.setState({ views: [v], seat: 0, introSeats: !(intro) ? [] : [0] }); root.render(<PeopleIntro />); });
 const plate = () => document.querySelector<HTMLElement>('[data-testid="people-intro"]');
 
 describe('the people introduction', () => {
@@ -59,8 +59,7 @@ describe('the people introduction', () => {
       const under = vi.fn();
       window.addEventListener('keydown', under);
       act(() => {
-        if (close === 'click') plate()!.querySelector<HTMLButtonElement>('[data-primary-action]')!.click();
-        else window.dispatchEvent(new KeyboardEvent('keydown', { key: close, bubbles: true, cancelable: true }));
+        if (!(close === 'click')) { window.dispatchEvent(new KeyboardEvent('keydown', { key: close, bubbles: true, cancelable: true })); } else { plate()!.querySelector<HTMLButtonElement>('[data-primary-action]')!.click(); }
       });
       window.removeEventListener('keydown', under);
       expect(plate(), close).toBeNull();

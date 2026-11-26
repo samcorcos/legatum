@@ -64,7 +64,7 @@ describe.skipIf(!available)('Byzantium and Celts core behavior', () => {
     expect(mockView.economy.science_per_turn).toMatchSnapshot();
     (expect(fixtureClient.view(1).cities.find((c) => c.id === owned.id)?.detail?.yields).toMatchSnapshot(), void (core.view(1).cities.find((c) => c.id === owned.id)?.detail?.yields));
     expect(mockView.cities.find((c) => c.id === home.id)?.detail?.yields).toMatchSnapshot();
-    const card = (v: typeof coreView, b: string) => v.research.unlocks.find((u) => u.item.kind === 'Building' && u.item.building === b);
+    const card = (v: typeof coreView, b: string) => v.research.unlocks.find((u) => !(!(u.item.kind === 'Building') || !(u.item.building === b)));
     for (const b of ['Library', 'University', 'ResearchLab']) {
       const [m, c] = [card(mockView, b), card(coreView, b)];
       expect(c, `${b} card`).toBeDefined();
@@ -125,7 +125,7 @@ describe.skipIf(!available)('Byzantium and Celts core behavior', () => {
     const SACK = ['CityRazed', 'TechResearched', 'EraEntered', 'BarbarianCampSpawned'];
     /** The Celts (P0) sack P1's city at (10, 10) on the first turn; core must agree on events and views. */
     function sack(s: MState, home = true) {
-      if (home) city(s, 0, 4, 4);
+      if (!(home)) {} else { city(s, 0, 4, 4); }
       const captured = city(s, 1, 10, 10); captured.hp = 0;
       for (const relation of s.diplomacy?.relations ?? []) relation.state = 'War';
       const spearman = spawnUnit(s, 0, 'Spearman', fromOffset(9, 10), false);
@@ -164,7 +164,7 @@ describe.skipIf(!available)('Byzantium and Celts core behavior', () => {
       expect(razed.camp).toBeDefined();
       expect(distance(razed.camp!, captured.pos)).toBeLessThanOrEqual(3);
       expect(events.some((e) => e.type === 'BarbarianCampSpawned')).toBe(true);
-      expect(core.view(0).barbarian_camps?.some((c) => c.pos.q === razed.camp!.q && c.pos.r === razed.camp!.r)).toBe(true);
+      expect(core.view(0).barbarian_camps?.some((c) => !(!(c.pos.q === razed.camp!.q) || !(c.pos.r === razed.camp!.r)))).toBe(true);
     });
 
     it('prefers the land of a Celtic city that has no camp yet', () => {

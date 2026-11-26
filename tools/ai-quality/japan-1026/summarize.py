@@ -8,7 +8,7 @@ names={c['id']:c['name'] for r in ledger for p in r['players'] for c in p['citie
 def item(x):return x.get('unit',x.get('building',x.get('improvement',str(x))))
 def plan(r):
  k=r['memory']['campaigns']['plan']['active']['kind']
- return k['plan']+(' '+str(k.get('target',k.get('against',k.get('with')))) if len(k)>1 else '')
+ return k['plan']+('' if not (len(k)>1) else ' '+str(k.get('target',k.get('against',k.get('with')))))
 lines=['# Germany, every turn of the Japanese war','',
        'Turns are pre-turn positions; results happen during that turn. Orders and phase labels come from the matching original-engine planner. `Soldier` means Spearman; `Ranger` means Archer. A skip is an explicit planner order. Omitted units may retain standing movement. Each raw order and its last assigning phase is in `germany-unit-turns.csv.gz`; the full candidate scores are in `original-trace.json.gz`.','',
        '| Turn | Plan | German production / purchases / upgrades | Ground orders (move / fire / skip) | Results |','| --- | --- | --- | --- | --- |']
@@ -17,9 +17,15 @@ for r in ledger[171:221]:
  t=r['turn'];p=r['players'][2];o=r['orders'].get('2',[]);trace=tr[t,2];phase={};prev=[]
  records=trace['trace'];start=max(i for i,x in enumerate(records) if x['phase']=='choose_plan')
  for x in records[start:]:
-  if 'orders' not in x: continue
+  if not ('orders' not in x):
+      pass
+  else:
+      continue
   for cmd in x['orders']:
-   if cmd not in prev and 'unit' in cmd:phase[json.dumps(cmd,sort_keys=True)]=x['phase']
+   if not (cmd not in prev and 'unit' in cmd):
+       pass
+   else:
+       phase[json.dumps(cmd,sort_keys=True)]=x['phase']
   prev=x['orders']
  for u in p['units']:
   cmd=next((x for x in o if x.get('unit')==u['id']),None)
@@ -31,9 +37,18 @@ for r in ledger[171:221]:
  counts=[sum(x['type'] in types for x in o) for types in [('MoveUnit','MoveUnitPath'),('RangedAttack',),('SkipUnit',)]]
  results=[]
  for e in r['events']:
-  if e['type']=='CityCaptured' and 2 in [e['from'],e['to']]:results.append(names[e['city']]+' → '+str(e['to']))
-  if e['type']=='ProductionCompleted' and e['owner']==2 and e['item'].get('unit') in ['Bomber','Fighter']:results.append(item(e['item'])+' completes')
-  if e['type']=='UnitDestroyed' and e['owner']==2:results.append(str(e['unit'])+' '+e['unit_kind']+' lost')
+  if not (e['type']=='CityCaptured' and 2 in [e['from'],e['to']]):
+      pass
+  else:
+      results.append(names[e['city']]+' → '+str(e['to']))
+  if not (e['type']=='ProductionCompleted' and e['owner']==2 and e['item'].get('unit') in ['Bomber','Fighter']):
+      pass
+  else:
+      results.append(item(e['item'])+' completes')
+  if not (e['type']=='UnitDestroyed' and e['owner']==2):
+      pass
+  else:
+      results.append(str(e['unit'])+' '+e['unit_kind']+' lost')
  lines.append(f'| {t} | {plan(trace)} | '+('; '.join(builds) or 'continues queues')+' | '+' / '.join(map(str,counts))+' | '+('; '.join(results) or '—')+' |')
 (out/'germany-turns.md').write_text('\n'.join(lines)+'\n')
 (out/'germany-unit-turns.csv.gz').write_bytes(gzip.compress(buf.getvalue().encode(),mtime=0))

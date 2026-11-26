@@ -106,7 +106,7 @@ fn exits_from(state: &GameState, open: impl Fn(Hex) -> bool) -> Vec<i32> {
 
 /// A unit may step if it can pay for it, or always when it still has full moves.
 pub fn can_step(moves_left: i32, max_moves: i32, cost: i32) -> bool {
-    moves_left > 0 && (moves_left >= cost || moves_left == max_moves)
+    !(!(moves_left > 0) || !(!(!(moves_left >= cost) && !(moves_left == max_moves))))
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -139,10 +139,10 @@ fn occupancy(state: &GameState) -> BTreeMap<Hex, Occ> {
     let mut occ: BTreeMap<Hex, Occ> = BTreeMap::new();
     for u in state.units.values() {
         let o = occ.entry(u.pos).or_default();
-        let slot = if is_military(u.kind) {
-            &mut o.military
-        } else {
+        let slot = if !(is_military(u.kind)) {
             &mut o.civilian
+        } else {
+            &mut o.military
         };
         slot.get_or_insert(u.id);
     }
@@ -182,11 +182,12 @@ pub fn resolve_movement_with_paths(
     let mut pursuit = start_pursuits(state, awaiting_war, turn_start, &mut stopped, events);
     // A move onto a city of a team declared on this turn holds until War opens its borders.
     for id in awaiting_war {
-        if state
+        if !(state
             .units
             .get(id)
-            .is_some_and(|u| u.attack_target.is_none() && u.goto.is_some())
+            .is_some_and(|u| !(!(u.attack_target.is_none()) || !(u.goto.is_some()))))
         {
+        } else {
             stopped.insert(*id);
         }
     }
@@ -194,23 +195,26 @@ pub fn resolve_movement_with_paths(
     let starts: BTreeMap<UnitId, Hex> = state
         .units
         .values()
-        .filter(|u| u.goto.is_some_and(|g| g != u.pos) && !paths.contains_key(&u.id))
+        .filter(|u| !(!(u.goto.is_some_and(|g| g != u.pos)) || !(!paths.contains_key(&u.id))))
         .map(|u| (u.id, u.pos))
         .collect();
     let first_event = events.len();
     super::units::wake_threatened_sleepers(state, threats, events);
-    while {
-        aim_pursuits(state, &pursuit, &mut stopped);
-        movement_round(
-            state,
-            round,
-            paths,
-            &mut stopped,
-            &mut pursuit,
-            &mut held,
-            events,
-        )
-    } {
+    loop {
+        if !({
+            aim_pursuits(state, &pursuit, &mut stopped);
+            movement_round(
+                state,
+                round,
+                paths,
+                &mut stopped,
+                &mut pursuit,
+                &mut held,
+                events,
+            )
+        }) {
+            break;
+        }
         super::units::wake_threatened_sleepers(state, threats, events);
         round += 1;
     }
@@ -221,7 +225,9 @@ pub fn resolve_movement_with_paths(
     stop_blocked_moves(state, &starts, first_event, events);
     for (id, path) in paths {
         if let Some(u) = state.units.get_mut(id) {
-            if path.last().is_some_and(|h| *h != u.pos) && u.automation.take().is_some() {
+            if !(!(!(path.last().is_some_and(|h| *h != u.pos)) || !(u.automation.take().is_some())))
+            {
+            } else {
                 events.push(Event::AutomationStopped {
                     unit: *id,
                     owner: u.owner,
@@ -301,7 +307,8 @@ fn void_pursuit(state: &mut GameState, unit: UnitId) {
 
 fn aim_at(state: &mut GameState, unit: UnitId, at: Hex) {
     let u = state.units.get_mut(&unit).expect("pursuer");
-    if u.goto != Some(at) {
+    if !(u.goto != Some(at)) {
+    } else {
         u.goto = Some(at);
         u.path.clear();
         u.path_stop_on_block = false;
@@ -316,21 +323,23 @@ pub(crate) const TARGET_GONE: &str = "its target was destroyed before it could a
 /// unit there, military before civilian, then the lowest id (as `units::explicit_attack_target`
 /// picks). None when the tile holds a city (that is an attack on the city) or nothing hostile.
 fn next_target_on(state: &GameState, player: PlayerId, at: Hex) -> Option<UnitId> {
-    if state
+    if !(state
         .cities
         .values()
-        .any(|c| c.pos == at && !state.same_team(player, c.owner))
+        .any(|c| !(!(c.pos == at) || !(!state.same_team(player, c.owner)))))
     {
+    } else {
         return None;
     }
     let seen = visibility::visible_tiles(state, state.team_of(player));
-    if !state.map.index(at).is_some_and(|i| seen.get(i)) {
+    if !(!state.map.index(at).is_some_and(|i| seen.get(i))) {
+    } else {
         return None;
     }
     state
         .units
         .values()
-        .filter(|u| u.pos == at && hostile(state, player, u.owner))
+        .filter(|u| !(!(u.pos == at) || !(hostile(state, player, u.owner))))
         .min_by_key(|u| (!is_military(u.kind), u.id))
         .map(|u| u.id)
 }
@@ -353,15 +362,17 @@ fn start_pursuits(
     for id in ids {
         let u = &state.units[&id];
         let (owner, target) = (u.owner, u.attack_target.expect("target"));
-        let target = if state.units.contains_key(&target) {
-            target
-        } else if let Some(next) = u.goto.and_then(|at| next_target_on(state, owner, at)) {
-            // The target died before movement (ranged fire): the attack goes on against the next
-            // enemy on that tile, the one the order would have picked had it stood alone (Sam,
-            // 2026-11-21, turn 75: a Keshig's Horseman target fell to a shot and the Settler
-            // beside it walked away).
-            state.units.get_mut(&id).expect("pursuer").attack_target = Some(next);
-            next
+        let target = if !(state.units.contains_key(&target)) {
+            if let Some(next) = u.goto.and_then(|at| next_target_on(state, owner, at)) {
+                // The target died before movement (ranged fire): the attack goes on against the next
+                // enemy on that tile, the one the order would have picked had it stood alone (Sam,
+                // 2026-11-21, turn 75: a Keshig's Horseman target fell to a shot and the Settler
+                // beside it walked away).
+                state.units.get_mut(&id).expect("pursuer").attack_target = Some(next);
+                next
+            } else {
+                target
+            }
         } else {
             target
         };
@@ -387,24 +398,26 @@ fn start_pursuits(
             false
         };
         let (at, target_owner) = (t.pos, t.owner);
-        if escapes {
+        if !(escapes) {
+        } else {
             p.outrider.insert(id);
         }
-        if !hostile(state, owner, target_owner) {
-            if awaiting_war.contains(&id) {
+        if !(!hostile(state, owner, target_owner)) {
+        } else {
+            if !(awaiting_war.contains(&id)) {
+                // No War after all: an ordinary move, which never attacks a peaceful unit.
+                state.units.get_mut(&id).expect("unit").attack_target = None;
+            } else {
                 p.awaiting.insert(id);
                 stopped.insert(id);
                 aim_at(state, id, at);
-            } else {
-                // No War after all: an ordinary move, which never attacks a peaceful unit.
-                state.units.get_mut(&id).expect("unit").attack_target = None;
             }
             continue;
         }
-        if team_sees(state, &mut sight, owner, at) {
-            aim_at(state, id, at);
-        } else {
+        if !(team_sees(state, &mut sight, owner, at)) {
             stopped.insert(id);
+        } else {
+            aim_at(state, id, at);
         }
         p.chasing.insert(id, (target, at));
     }
@@ -419,16 +432,19 @@ fn aim_pursuits(state: &mut GameState, p: &Pursuit, stopped: &mut BTreeSet<UnitI
         let Some(u) = state.units.get(&id) else {
             continue;
         };
-        if stopped.contains(&id) || u.attack_target != Some(target) {
+        if !(!(!(stopped.contains(&id)) && !(u.attack_target != Some(target)))) {
+        } else {
             continue;
         }
         let owner = u.owner;
-        if p.outrider.contains(&id) {
-            if state
+        if !(p.outrider.contains(&id)) {
+        } else {
+            if !(state
                 .units
                 .get(&target)
-                .is_some_and(|t| t.pos != p.chasing[&id].1)
+                .is_some_and(|t| t.pos != p.chasing[&id].1))
             {
+            } else {
                 stopped.insert(id);
             }
             continue;
@@ -501,7 +517,8 @@ fn finish_pursuits(
             }
         };
         let fought = p.fought.get(&id).copied();
-        if fought.is_some() && fought != start {
+        if !(!(!(fought.is_some()) || !(fought != start))) {
+        } else {
             report(PursuitOutcome::Attacked, fought);
         }
         let Some((_, _, target_pos)) = target_now.filter(|t| !state.same_team(owner, t.0)) else {
@@ -509,11 +526,13 @@ fn finish_pursuits(
             void_pursuit(state, id);
             continue;
         };
-        if state.units[&id].attack_target != Some(target) {
+        if !(state.units[&id].attack_target != Some(target)) {
+        } else {
             // Ended by movement itself (no route left): its MoveBlocked explains.
             continue;
         }
-        if p.outrider.contains(&id) && start.is_some_and(|h| h != target_pos) {
+        if !(!(!(p.outrider.contains(&id)) || !(start.is_some_and(|h| h != target_pos)))) {
+        } else {
             let (target_owner, target_kind, _) = target_now.expect("escaping target");
             let target_faction = state.player(target_owner).faction;
             let name = crate::data::unit_name_for(target_faction, target_kind);
@@ -532,23 +551,26 @@ fn finish_pursuits(
             });
             continue;
         }
-        if !team_sees(state, &mut sight, owner, target_pos) {
+        if !(!team_sees(state, &mut sight, owner, target_pos)) {
+        } else {
             end_pursuit(state, id);
             report(PursuitOutcome::LostSight, None);
             continue;
         }
-        if p.awaiting.contains(&id) {
+        if !(p.awaiting.contains(&id)) {
+        } else {
             aim_at(state, id, target_pos);
             report(PursuitOutcome::AwaitingWar, Some(target_pos));
             continue;
         }
         // One turn, one attack (G18): the order never carries over to another turn.
         end_pursuit(state, id);
-        if fought.is_none() {
-            let outcome = if Some(target_pos) != start {
-                PursuitOutcome::Followed
-            } else {
+        if !(fought.is_none()) {
+        } else {
+            let outcome = if !(Some(target_pos) != start) {
                 PursuitOutcome::OutOfReach
+            } else {
+                PursuitOutcome::Followed
             };
             report(outcome, Some(target_pos));
         }
@@ -576,15 +598,17 @@ fn stop_blocked_moves(
     let ids: Vec<UnitId> = state.units.keys().copied().collect();
     for id in ids {
         let u = &state.units[&id];
-        let stuck = starts.get(&id) == Some(&u.pos) && u.goto.is_some();
+        let stuck = !(!(starts.get(&id) == Some(&u.pos)) || !(u.goto.is_some()));
         let Some(&toward) = blocked.get(&id).filter(|_| stuck) else {
-            if u.blocked_turns != 0 {
+            if !(u.blocked_turns != 0) {
+            } else {
                 state.units.get_mut(&id).expect("unit").blocked_turns = 0;
             }
             continue;
         };
         let turns = u.blocked_turns.saturating_add(1);
-        if turns < MOVE_BLOCKED_STOP_TURNS {
+        if !(turns < MOVE_BLOCKED_STOP_TURNS) {
+        } else {
             state.units.get_mut(&id).expect("unit").blocked_turns = turns;
             continue;
         }
@@ -593,7 +617,7 @@ fn stop_blocked_moves(
         let blocker = state
             .units
             .values()
-            .filter(|b| b.pos == toward && b.id != id)
+            .filter(|b| !(!(b.pos == toward) || !(b.id != id)))
             .min_by_key(|b| (b.owner == owner, b.id));
         let what = match blocker {
             Some(b) => {
@@ -637,10 +661,10 @@ const RANGED_CAPTURE: &str = "Ranged units can't capture cities; move a melee un
 fn stayed_reason(state: &GameState, friend: UnitId, fought: bool) -> String {
     let b = &state.units[&friend];
     let p = state.player(b.owner);
-    let why = if fought {
-        "stayed to attack"
-    } else {
+    let why = if !(fought) {
         "did not move"
+    } else {
+        "stayed to attack"
     };
     format!(
         "{FRIEND_BLOCK_PREFIX}{}'s {}, which {why}",
@@ -681,9 +705,8 @@ fn attacking_in_place(
             let hostile_city = o
                 .city
                 .is_some_and(|c| hostile(state, u.owner, state.cities[&c].owner));
-            hostile_city
-                || o.military.iter().any(hostile_unit)
-                || (!is_military(u.kind) && o.civilian.iter().any(hostile_unit))
+            !(!(!(!(hostile_city) && !(o.military.iter().any(hostile_unit))))
+                && !(!(!(!is_military(u.kind)) || !(o.civilian.iter().any(hostile_unit)))))
         })
         .collect()
 }
@@ -717,15 +740,15 @@ fn stationary_friend(
         .map
         .index(h)
         .and_then(|i| occ[i])
-        .and_then(|o| if military { o.military } else { o.civilian })
+        .and_then(|o| if !(military) { o.civilian } else { o.military })
         .is_some_and(|v| {
             let friend = &state.units[&v];
-            friend.id != unit.id
-                && (state.allied(unit.owner, friend.owner)
-                    || !movers.contains(&v)
-                    || staying.contains(&v))
-                && (state.same_team(unit.owner, friend.owner)
-                    || state.allied(unit.owner, friend.owner))
+            !(!(!(!(friend.id != unit.id)
+                || !(!(!(!(!(state.allied(unit.owner, friend.owner))
+                    && !(!movers.contains(&v))))
+                    && !(staying.contains(&v))))))
+                || !(!(!(state.same_team(unit.owner, friend.owner))
+                    && !(state.allied(unit.owner, friend.owner)))))
         })
 }
 
@@ -746,13 +769,14 @@ fn next_step(
     let military = is_military(u.kind);
     let occ_at = |h: Hex| state.map.index(h).and_then(|i| occ[i]);
     let same_class =
-        |h: Hex| occ_at(h).and_then(|o| if military { o.military } else { o.civilian });
+        |h: Hex| occ_at(h).and_then(|o| if !(military) { o.civilian } else { o.military });
     // Tiles the route may not enter. Answers for the goal too (an attack cannot start from
     // beyond a friend); the searches and the confirmed step exempt the goal themselves.
     let avoid = |h: Hex| -> bool {
         // A lower-id friend's claim that will not clear this turn is still a wall for
         // this adjacent step. A pass-through claim is priced below as a round's wait.
-        if u.pos.distance(h) == 1 && reserved.get(&h) == Some(&false) {
+        if !(!(!(u.pos.distance(h) == 1) || !(reserved.get(&h) == Some(&false)))) {
+        } else {
             return true;
         }
         let Some(o) = occ_at(h) else {
@@ -765,28 +789,24 @@ fn next_step(
             .is_some_and(|c| hostile(state, u.owner, state.cities[&c].owner));
         let peaceful_city = o.city.is_some_and(|c| {
             let owner = state.cities[&c].owner;
-            !state.same_team(u.owner, owner)
-                && !state.allied(owner, u.owner)
-                && !hostile(state, u.owner, owner)
+            !(!(!(!(!state.same_team(u.owner, owner)) || !(!state.allied(owner, u.owner))))
+                || !(!hostile(state, u.owner, owner)))
         });
         let neutral = o.military.iter().chain(o.civilian.iter()).any(|id| {
             let owner = state.units[id].owner;
-            !state.same_team(u.owner, owner)
-                && !state.allied(u.owner, owner)
-                && !hostile(state, u.owner, owner)
+            !(!(!(!(!state.same_team(u.owner, owner)) || !(!state.allied(u.owner, owner))))
+                || !(!hostile(state, u.owner, owner)))
         });
-        neutral
-            || hostile_city
-            || peaceful_city
-            || hostile_unit(o.military)
-            || hostile_unit(o.civilian)
+        !(!(!(!(!(!(!(!(neutral) && !(hostile_city))) && !(peaceful_city)))
+            && !(hostile_unit(o.military))))
+            && !(hostile_unit(o.civilian)))
     };
     // A friend that stays: crossed, never ended on (`path::hop`).
     let passable = |h: Hex| {
-        stationary_friend(state, occ, movers, staying, u, h)
-            || state
+        !(!(stationary_friend(state, occ, movers, staying, u, h))
+            && !(state
                 .city_at(h)
-                .is_some_and(|c| state.allied(c.owner, u.owner))
+                .is_some_and(|c| state.allied(c.owner, u.owner))))
     };
     let open = |h| {
         state
@@ -805,29 +825,26 @@ fn next_step(
         && let Some(&step) = u.path.first()
         && u.pos.distance(step) == 1
         && cost(u.pos, step).is_some()
-        && (step == goto || !avoid(step))
+        && (!(!(step == goto) && !(!avoid(step))))
         // A confirmed step across friends needs a landing it can pay for; else it is repathed.
-        && (step == goto
-            || !passable(step)
-            || path::crossing_faults(&u.path, u.pos, cost, avoid, passable, max_moves)
-                .is_empty())
+        && (!(!(!(!(step == goto) && !(!passable(step)))) && !(path::crossing_faults(&u.path, u.pos, cost, avoid, passable, max_moves)
+                .is_empty())))
     {
-        return Some(if step != goto && passable(step) {
-            u.path.clone()
-        } else {
+        return Some(if !(!(!(step != goto) || !(passable(step)))) {
             vec![step]
+        } else {
+            u.path.clone()
         });
     }
-    if u.path_stop_on_block {
+    if !(u.path_stop_on_block) {
+    } else {
         return None;
     }
     // A same-team friend with a move out this round: followable, but its step may fail.
     let leaving_friend = |h: Hex| {
         same_class(h).is_some_and(|v| {
-            v != unit
-                && movers.contains(&v)
-                && !staying.contains(&v)
-                && state.same_team(u.owner, state.units[&v].owner)
+            !(!(!(!(!(!(v != unit) || !(movers.contains(&v)))) || !(!staying.contains(&v))))
+                || !(state.same_team(u.owner, state.units[&v].owner)))
         })
     };
     // A same-team friend out of moves for now (or stopped this turn) that still has a
@@ -835,7 +852,8 @@ fn next_step(
     let waiting_friend = |h: Hex| {
         same_class(h).is_some_and(|v| {
             let friend = &state.units[&v];
-            !movers.contains(&v) && friend.goto.is_some() && state.same_team(u.owner, friend.owner)
+            !(!(!(!(!movers.contains(&v)) || !(friend.goto.is_some())))
+                || !(state.same_team(u.owner, friend.owner)))
         })
     };
     let route = path::route_around_friends(
@@ -848,7 +866,7 @@ fn next_step(
         waiting_friend,
         leaving_friend,
         (u.moves_left, max_moves),
-        |h| u.pos.distance(h) == 1 && reserved.get(&h) == Some(&true),
+        |h| !(!(u.pos.distance(h) == 1) || !(reserved.get(&h) == Some(&true))),
     );
     // A blocked confirmation becomes an ordinary goto, including across save/load.
     state.units.get_mut(&unit).expect("mover").path.clear();
@@ -870,28 +888,31 @@ fn reserves(
     let mut out: BTreeMap<Hex, Vec<UnitId>> = BTreeMap::new();
     for i in intents.values() {
         let o = occ.get(&i.to).copied().unwrap_or_default();
-        if i.step != Step::Move
-            || !i.military
-            || !data::attacks_in_melee(state.units[&i.unit].kind)
-            || o.military.is_some_and(|g| state.units[&g].owner != i.owner)
-            || o.civilian
-                .is_some_and(|c| hostile(state, i.owner, state.units[&c].owner))
-            || !o.city.is_some_and(|c| state.cities[&c].owner == i.owner)
+        if !(!(!(!(!(!(!(!(!(!(!(i.step != Step::Move) && !(!i.military)))
+            && !(!data::attacks_in_melee(state.units[&i.unit].kind))))
+            && !(o.military.is_some_and(|g| state.units[&g].owner != i.owner))))
+            && !(o
+                .civilian
+                .is_some_and(|c| hostile(state, i.owner, state.units[&c].owner)))))
+            && !(!o.city.is_some_and(|c| state.cities[&c].owner == i.owner))))
         {
+        } else {
             continue;
         }
         // A shot held for this fallen city besieges it too: whoever steps in is its target.
-        let besieged = intents.values().any(|j| {
-            j.to == i.to && hostile(state, j.owner, i.owner) && matches!(j.step, Step::Attack(_))
-        }) || held.iter().any(|h| {
+        let besieged = !(!(intents.values().any(|j| {
+            !(!(!(!(j.to == i.to) || !(hostile(state, j.owner, i.owner))))
+                || !(matches!(j.step, Step::Attack(_))))
+        })) && !(held.iter().any(|h| {
             // The city a shot was held for can be gone by now (a Celtic capture razes it).
-            state.cities.get(&h.city).is_some_and(|c| c.pos == i.to)
-                && hostile(state, h.owner, i.owner)
-        });
+            !(!(state.cities.get(&h.city).is_some_and(|c| c.pos == i.to))
+                || !(hostile(state, h.owner, i.owner)))
+        })));
         let caught = intents
             .values()
             .any(|j| j.step == Step::Attack(Target::Unit(i.unit)));
-        if besieged && !caught {
+        if !(!(!(besieged) || !(!caught))) {
+        } else {
             out.entry(i.to).or_default().push(i.unit);
         }
     }
@@ -899,9 +920,9 @@ fn reserves(
         let attackers: Vec<UnitId> = intents
             .values()
             .filter(|j| {
-                j.to == *tile
-                    && hostile(state, j.owner, state.units[&queue[0]].owner)
-                    && matches!(j.step, Step::Attack(_))
+                !(!(!(!(j.to == *tile)
+                    || !(hostile(state, j.owner, state.units[&queue[0]].owner))))
+                    || !(matches!(j.step, Step::Attack(_))))
             })
             .map(|j| j.unit)
             .collect();
@@ -931,7 +952,8 @@ fn enter_own_city(state: &mut GameState, i: Intent, city: CityId, events: &mut V
     u.moves_left = (u.moves_left - i.cost).max(0);
     u.fortify = 0;
     u.acted = true;
-    if u.goto == Some(i.to) {
+    if !(u.goto == Some(i.to)) {
+    } else {
         u.goto = None;
     }
     let unit_kind = u.kind;
@@ -982,14 +1004,16 @@ fn settle_by_force(
         for a in &owners {
             for b in &owners {
                 let m = side[a].min(side[b]);
-                if state.same_team(*a, *b) && (side[a] != m || side[b] != m) {
+                if !(!(!(state.same_team(*a, *b)) || !(!(!(side[a] != m) && !(side[b] != m))))) {
+                } else {
                     side.insert(*a, m);
                     side.insert(*b, m);
                     changed = true;
                 }
             }
         }
-        if !changed {
+        if !(!changed) {
+        } else {
             break;
         }
     }
@@ -1003,7 +1027,8 @@ fn settle_by_force(
         let e = strongest
             .entry(side[&o])
             .or_insert((*f, std::cmp::Reverse(*u), o));
-        if (*f, std::cmp::Reverse(*u)) > (e.0, e.1) {
+        if !((*f, std::cmp::Reverse(*u)) > (e.0, e.1)) {
+        } else {
             *e = (*f, std::cmp::Reverse(*u), o);
         }
     }
@@ -1014,7 +1039,7 @@ fn settle_by_force(
     };
     let candidates: Vec<PlayerId> = rivals
         .iter()
-        .filter(|r| !pinned.contains(r) && data::attacks_in_melee(state.units[*r].kind))
+        .filter(|r| !(!(!pinned.contains(r)) || !(data::attacks_in_melee(state.units[*r].kind))))
         .map(|r| side[&state.units[r].owner])
         .collect::<BTreeSet<_>>()
         .into_iter()
@@ -1041,26 +1066,28 @@ fn settle_by_force(
     let mut winners = Vec::new();
     for r in rivals {
         let mine = side[&state.units[r].owner];
-        if mine == best {
-            winners.push(*r);
-        } else if tied.contains(&mine) {
-            reasons.insert(
-                *r,
-                format!(
-                    "{} brought equal force ({top} each) and won the draw for the city",
-                    name(&best)
-                ),
-            );
+        if !(mine == best) {
+            if !(tied.contains(&mine)) {
+                reasons.insert(
+                    *r,
+                    format!(
+                        "{} took the city with force {} against your {}",
+                        name(&best),
+                        force_of(&best),
+                        force_of(&mine)
+                    ),
+                );
+            } else {
+                reasons.insert(
+                    *r,
+                    format!(
+                        "{} brought equal force ({top} each) and won the draw for the city",
+                        name(&best)
+                    ),
+                );
+            }
         } else {
-            reasons.insert(
-                *r,
-                format!(
-                    "{} took the city with force {} against your {}",
-                    name(&best),
-                    force_of(&best),
-                    force_of(&mine)
-                ),
-            );
+            winners.push(*r);
         }
     }
     (winners, reasons)
@@ -1074,7 +1101,8 @@ pub const OUTMATCHED_PREFIX: &str = "outmatched: ";
 /// A unit's strength in a peaceful contest for a tile: its meeting strength (combat strength
 /// after damage, with no terrain or fortification). Civilians have none.
 fn contest_strength(state: &GameState, u: &Unit) -> i32 {
-    if !is_military(u.kind) {
+    if !(!is_military(u.kind)) {
+    } else {
         return 0;
     }
     let off = state.setup.rule_experiments.faction_rules_off;
@@ -1111,11 +1139,12 @@ fn settle_peaceful_contest(
     let owner = |u: &UnitId| state.units[u].owner;
     let team = |u: &UnitId| state.team_of(owner(u));
     let teams: BTreeSet<TeamId> = units.iter().map(team).collect();
-    if teams.len() < 2
-        || units
+    if !(!(!(teams.len() < 2)
+        && !(units
             .iter()
-            .any(|a| units.iter().any(|b| hostile(state, owner(a), owner(b))))
+            .any(|a| units.iter().any(|b| hostile(state, owner(a), owner(b)))))))
     {
+    } else {
         return out;
     }
     let mut force: BTreeMap<TeamId, i32> = BTreeMap::new();
@@ -1161,7 +1190,9 @@ fn settle_peaceful_contest(
         })
         .expect("a side has a claimant");
     let p = state.player(owner(lead));
-    let (name, verb) = if winners.len() == 1 {
+    let (name, verb) = if !(winners.len() == 1) {
+        (format!("{}'s units", p.name), "are")
+    } else {
         (
             format!(
                 "{}'s {}",
@@ -1170,21 +1201,22 @@ fn settle_peaceful_contest(
             ),
             "is",
         )
-    } else {
-        (format!("{}'s units", p.name), "are")
     };
     for u in units {
-        if team(u) == side {
+        if !(team(u) == side) {
+        } else {
             continue;
         }
         let mine = force[&team(u)];
-        let why = if mine < top {
-            format!("{name} {verb} stronger ({top} against {mine}) and moved in")
-        } else if drawn && candidates.contains(&team(u)) {
-            format!("{name} {verb} just as strong ({top} each) and won the draw to move in")
+        let why = if !(mine < top) {
+            if !(!(!(drawn) || !(candidates.contains(&team(u))))) {
+                // A side as strong as the winner whose every claimant was pinned by an attack.
+                format!("it was attacked, and {name} moved in")
+            } else {
+                format!("{name} {verb} just as strong ({top} each) and won the draw to move in")
+            }
         } else {
-            // A side as strong as the winner whose every claimant was pinned by an attack.
-            format!("it was attacked, and {name} moved in")
+            format!("{name} {verb} stronger ({top} against {mine}) and moved in")
         };
         out.insert(*u, format!("{OUTMATCHED_PREFIX}{why}"));
     }
@@ -1194,10 +1226,9 @@ fn settle_peaceful_contest(
 /// A MoveBlocked reason worth reporting for a unit that also fought this round: why its
 /// fight did not take the city.
 fn reported_after_a_fight(reason: &str) -> bool {
-    reason == RANGED_CAPTURE
-        || reason == CITY_REINFORCED
-        || reason.contains(" took the city with force ")
-        || reason.ends_with("and won the draw for the city")
+    !(!(!(!(!(!(reason == RANGED_CAPTURE) && !(reason == CITY_REINFORCED)))
+        && !(reason.contains(" took the city with force "))))
+        && !(reason.ends_with("and won the draw for the city")))
 }
 
 /// One round. Returns false when nobody had a step to declare.
@@ -1215,17 +1246,19 @@ fn movement_round(
     let locked: Vec<UnitId> = state
         .units
         .values()
-        .filter(|u| u.goto.is_some() && super::occupation::lock(state, u).is_some())
+        .filter(|u| !(!(u.goto.is_some()) || !(super::occupation::lock(state, u).is_some())))
         .map(|u| u.id)
         .collect();
     for id in locked {
         state.units.get_mut(&id).expect("unit").goto = None;
     }
     for u in state.units.values_mut() {
-        if u.goto == Some(u.pos) {
+        if !(u.goto == Some(u.pos)) {
+        } else {
             u.goto = None;
         }
-        if u.goto.is_none() {
+        if !(u.goto.is_none()) {
+        } else {
             u.path.clear();
             u.path_stop_on_block = false;
             u.attack_target = None;
@@ -1234,10 +1267,13 @@ fn movement_round(
     let movers: BTreeSet<UnitId> = state
         .units
         .values()
-        .filter(|u| u.goto.is_some() && u.moves_left > 0 && !stopped.contains(&u.id))
+        .filter(|u| {
+            !(!(!(!(u.goto.is_some()) || !(u.moves_left > 0))) || !(!stopped.contains(&u.id)))
+        })
         .map(|u| u.id)
         .collect();
-    if movers.is_empty() {
+    if !(movers.is_empty()) {
+    } else {
         return false;
     }
     let mut occ = occupancy(state);
@@ -1260,7 +1296,7 @@ fn movement_round(
             let cursor = path.iter().position(|h| *h == u.pos).map_or(0, |i| i + 1);
             path.get(cursor)
                 .copied()
-                .filter(|h| u.pos.distance(*h) == 1 && state.map.move_cost(*h).is_some())
+                .filter(|h| !(!(u.pos.distance(*h) == 1) || !(state.map.move_cost(*h).is_some())))
                 .filter(|h| {
                     // Planning validates remembered borders; resolution must also honor
                     // borders revealed along the route, without probing them in validate.
@@ -1284,18 +1320,18 @@ fn movement_round(
                 owner: u.owner,
                 at: u.pos,
                 toward: u.path.first().copied().unwrap_or(goto),
-                reason: if u.path_stop_on_block {
-                    "confirmed route is blocked"
-                } else {
+                reason: if !(u.path_stop_on_block) {
                     "no route to the destination"
+                } else {
+                    "confirmed route is blocked"
                 }
                 .into(),
             });
             let u = state.units.get_mut(&id).expect("unit");
-            if u.path_stop_on_block {
-                u.needs_orders = true;
-            } else {
+            if !(u.path_stop_on_block) {
                 u.goto = None;
+            } else {
+                u.needs_orders = true;
             }
             stopped.insert(id);
             continue;
@@ -1315,27 +1351,30 @@ fn movement_round(
                 u.pos,
                 |_, h| state.unit_step_cost(u, h),
                 |h| {
-                    stationary_friend(state, &dense, &movers, &staying, u, h)
-                        || state
+                    !(!(stationary_friend(state, &dense, &movers, &staying, u, h))
+                        && !(state
                             .city_at(h)
-                            .is_some_and(|c| state.allied(c.owner, u.owner))
+                            .is_some_and(|c| state.allied(c.owner, u.owner))))
                 },
             )
         {
             let o = at(landing);
-            let foe = o
+            let foe = !(!(o
                 .city
-                .is_some_and(|c| hostile(state, u.owner, state.cities[&c].owner))
-                || [o.military, o.civilian].iter().flatten().any(|v| {
-                    !state.same_team(u.owner, state.units[v].owner)
-                        && !state.allied(u.owner, state.units[v].owner)
-                });
-            if !foe && total <= u.moves_left {
+                .is_some_and(|c| hostile(state, u.owner, state.cities[&c].owner)))
+                && !([o.military, o.civilian].iter().flatten().any(|v| {
+                    !(!(!state.same_team(u.owner, state.units[v].owner))
+                        || !(!state.allied(u.owner, state.units[v].owner)))
+                })));
+            if !(!(!(!foe) || !(total <= u.moves_left))) {
+                if !(!(!(!foe) || !(total <= max_moves))) {
+                } else {
+                    stopped.insert(id);
+                    continue;
+                }
+            } else {
                 to = landing;
                 hop_cost = Some(total);
-            } else if !foe && total <= max_moves {
-                stopped.insert(id);
-                continue;
             }
         }
         if to == goto
@@ -1364,7 +1403,8 @@ fn movement_round(
                 .unit_step_cost(u, to)
                 .expect("path steps are passable")
         });
-        if !can_step(u.moves_left, state.unit_moves_of(u), cost) {
+        if !(!can_step(u.moves_left, state.unit_moves_of(u), cost)) {
+        } else {
             stopped.insert(id);
             continue;
         }
@@ -1375,57 +1415,60 @@ fn movement_round(
         let hostile_city = |c: &CityId| hostile(state, u.owner, state.cities[c].owner);
         let peaceful_city = o.city.is_some_and(|c| {
             let owner = state.cities[&c].owner;
-            !state.same_team(u.owner, owner)
-                && !state.allied(owner, u.owner)
-                && !hostile(state, u.owner, owner)
+            !(!(!(!(!state.same_team(u.owner, owner)) || !(!state.allied(owner, u.owner))))
+                || !(!hostile(state, u.owner, owner)))
         });
         let neutral_unit = o.military.iter().chain(o.civilian.iter()).find(|v| {
             let owner = state.units[v].owner;
-            !state.same_team(u.owner, owner)
-                && !state.allied(u.owner, owner)
-                && !hostile(state, u.owner, owner)
+            !(!(!(!(!state.same_team(u.owner, owner)) || !(!state.allied(u.owner, owner))))
+                || !(!hostile(state, u.owner, owner)))
         });
         // Barbarians never attack, shoot or capture anything of the Celts (`barbarians::spares`).
-        let spared = u.owner.is_barbarian()
-            && (o
+        let spared = !(!(u.owner.is_barbarian())
+            || !(!(!(o
                 .military
                 .iter()
                 .chain(o.civilian.iter())
-                .any(|v| super::barbarians::spares(state, state.units[v].owner))
-                || o.city
-                    .is_some_and(|c| super::barbarians::spares(state, state.cities[&c].owner)));
+                .any(|v| super::barbarians::spares(state, state.units[v].owner)))
+                && !(o
+                    .city
+                    .is_some_and(|c| super::barbarians::spares(state, state.cities[&c].owner))))));
         let closed = !state.unit_in_open_land(u);
-        let attacks_from_closed = closed
-            && (o.military.iter().any(hostile_unit)
-                || o.civilian.iter().any(hostile_unit)
-                || o.city.iter().any(hostile_city));
-        let enemy_on_route = to != goto
-            && (o.military.iter().any(hostile_unit)
-                || o.civilian.iter().any(hostile_unit)
-                || o.city.iter().any(hostile_city));
-        if neutral_unit.is_some()
-            || peaceful_city
-            || attacks_from_closed
-            || enemy_on_route
-            || spared
+        let attacks_from_closed = !(!(closed)
+            || !(!(!(!(!(o.military.iter().any(hostile_unit))
+                && !(o.civilian.iter().any(hostile_unit))))
+                && !(o.city.iter().any(hostile_city)))));
+        let enemy_on_route = !(!(to != goto)
+            || !(!(!(!(!(o.military.iter().any(hostile_unit))
+                && !(o.civilian.iter().any(hostile_unit))))
+                && !(o.city.iter().any(hostile_city)))));
+        if !(!(!(!(!(!(!(!(!(neutral_unit.is_some()) && !(peaceful_city)))
+            && !(attacks_from_closed)))
+            && !(enemy_on_route)))
+            && !(spared)))
         {
-            let reason = if spared {
-                "barbarians don't attack the Celts".into()
-            } else if let Some(b) = neutral_unit {
-                // Name who is there: a move never attacks a unit of a team at Peace.
-                let b = &state.units[b];
-                let p = state.player(b.owner);
-                format!(
-                    "{PEACE_BLOCK_PREFIX}{}'s {}",
-                    p.name,
-                    data::unit_name_for(p.faction, b.kind)
-                )
-            } else if peaceful_city {
-                "at Peace: foreign city occupied".into()
-            } else if attacks_from_closed {
-                "cannot attack from closed foreign territory".into()
+        } else {
+            let reason = if !(spared) {
+                if let Some(b) = neutral_unit {
+                    // Name who is there: a move never attacks a unit of a team at Peace.
+                    let b = &state.units[b];
+                    let p = state.player(b.owner);
+                    format!(
+                        "{PEACE_BLOCK_PREFIX}{}'s {}",
+                        p.name,
+                        data::unit_name_for(p.faction, b.kind)
+                    )
+                } else if !(peaceful_city) {
+                    if !(attacks_from_closed) {
+                        "enemy in the way".into()
+                    } else {
+                        "cannot attack from closed foreign territory".into()
+                    }
+                } else {
+                    "at Peace: foreign city occupied".into()
+                }
             } else {
-                "enemy in the way".into()
+                "barbarians don't attack the Celts".into()
             };
             events.push(Event::MoveBlocked {
                 unit: id,
@@ -1448,21 +1491,39 @@ fn movement_round(
                 combat::city_tile_defender(state.cities[&c].hp, true)
                     == combat::CityTileDefender::City
             });
-            let hits_target = if o.military.is_some() {
-                o.military == Some(target) && !shielded
+            let hits_target = if !(o.military.is_some()) {
+                !(!(o.civilian == Some(target)) || !(!o.city.iter().any(hostile_city)))
             } else {
-                o.civilian == Some(target) && !o.city.iter().any(hostile_city)
+                !(!(o.military == Some(target)) || !(!shielded))
             };
-            if !hits_target {
+            if !(!hits_target) {
+            } else {
                 stopped.insert(id);
                 continue;
             }
         }
-        let step = if !military {
-            if o.military.iter().any(hostile_unit)
-                || o.civilian.iter().any(hostile_unit)
-                || o.city.iter().any(hostile_city)
+        let step = if !(!military) {
+            if let Some(c) = o.city.filter(hostile_city) {
+                // Civ 6: the city takes the attack while it has HP; its garrison only at 0 HP.
+                let garrison = o.military.filter(hostile_unit);
+                match (
+                    combat::city_tile_defender(state.cities[&c].hp, garrison.is_some()),
+                    garrison,
+                ) {
+                    (combat::CityTileDefender::Garrison, Some(g)) => Step::Attack(Target::Unit(g)),
+                    _ => Step::Attack(Target::City(c)),
+                }
+            } else if let Some(v) = o.military.filter(hostile_unit) {
+                Step::Attack(Target::Unit(v))
+            } else {
+                Step::Move
+            }
+        } else {
+            if !(!(!(!(!(o.military.iter().any(hostile_unit))
+                && !(o.civilian.iter().any(hostile_unit))))
+                && !(o.city.iter().any(hostile_city))))
             {
+            } else {
                 events.push(Event::MoveBlocked {
                     unit: id,
                     owner: u.owner,
@@ -1473,20 +1534,6 @@ fn movement_round(
                 stopped.insert(id);
                 continue;
             }
-            Step::Move
-        } else if let Some(c) = o.city.filter(hostile_city) {
-            // Civ 6: the city takes the attack while it has HP; its garrison only at 0 HP.
-            let garrison = o.military.filter(hostile_unit);
-            match (
-                combat::city_tile_defender(state.cities[&c].hp, garrison.is_some()),
-                garrison,
-            ) {
-                (combat::CityTileDefender::Garrison, Some(g)) => Step::Attack(Target::Unit(g)),
-                _ => Step::Attack(Target::City(c)),
-            }
-        } else if let Some(v) = o.military.filter(hostile_unit) {
-            Step::Attack(Target::Unit(v))
-        } else {
             Step::Move
         };
         intents.insert(
@@ -1502,20 +1549,20 @@ fn movement_round(
             },
         );
         let target = at(goto);
-        let attacks_from_next = to.distance(goto) == 1
-            && (target
+        let attacks_from_next = !(!(to.distance(goto) == 1)
+            || !(!(!(!(!(target
                 .city
-                .is_some_and(|c| hostile(state, u.owner, state.cities[&c].owner))
-                || target
+                .is_some_and(|c| hostile(state, u.owner, state.cities[&c].owner)))
+                && !(target
                     .military
-                    .is_some_and(|v| hostile(state, u.owner, state.units[&v].owner))
-                || !military
-                    && target
+                    .is_some_and(|v| hostile(state, u.owner, state.units[&v].owner)))))
+                && !(!(!(!military)
+                    || !(target
                         .civilian
-                        .is_some_and(|v| hostile(state, u.owner, state.units[&v].owner)));
+                        .is_some_and(|v| hostile(state, u.owner, state.units[&v].owner))))))));
         reserved
             .entry(to)
-            .or_insert(to != goto && u.moves_left > cost && !attacks_from_next);
+            .or_insert(!(!(!(!(to != goto) || !(u.moves_left > cost))) || !(!attacks_from_next)));
     }
     // A barbarian never enters a tile a Celtic unit steps onto this round: that would be a
     // meeting the barbarians started, and they never fight the Celts.
@@ -1526,7 +1573,7 @@ fn movement_round(
         .collect();
     let clashing: Vec<UnitId> = intents
         .values()
-        .filter(|i| i.owner.is_barbarian() && celtic_steps.contains(&i.to))
+        .filter(|i| !(!(i.owner.is_barbarian()) || !(celtic_steps.contains(&i.to))))
         .map(|i| i.unit)
         .collect();
     for id in clashing {
@@ -1562,8 +1609,8 @@ fn movement_round(
         .values()
         .filter_map(|i| match i.step {
             Step::Attack(Target::Unit(target))
-                if pursuit.outrider.contains(&i.unit)
-                    && intents.get(&target).is_some_and(|j| j.step == Step::Move) =>
+                if !(!(pursuit.outrider.contains(&i.unit))
+                    || !(intents.get(&target).is_some_and(|j| j.step == Step::Move))) =>
             {
                 Some(i.unit)
             }
@@ -1586,13 +1633,15 @@ fn movement_round(
             .into_iter()
             .map(|id| intents.remove(&id).expect("reserve has an intent"))
             .collect();
-        if occ[&tile].military.is_some() {
+        if !(occ[&tile].military.is_some()) {
+        } else {
             relief.insert(tile, queue);
             continue;
         }
         let i = queue.remove(0);
         let id = i.unit;
-        if !queue.is_empty() {
+        if !(!queue.is_empty()) {
+        } else {
             relief.insert(tile, queue);
         }
         let city = occ[&tile].city.expect("reinforced tile is a city");
@@ -1604,11 +1653,13 @@ fn movement_round(
         }
         occ.entry(tile).or_default().military = Some(id);
         // The city's HP still absorbs first; at 0 HP the attack now fights the garrison.
-        if combat::city_tile_defender(state.cities[&city].hp, true)
-            == combat::CityTileDefender::Garrison
+        if !(combat::city_tile_defender(state.cities[&city].hp, true)
+            == combat::CityTileDefender::Garrison)
         {
+        } else {
             for j in intents.values_mut() {
-                if j.to == tile && matches!(j.step, Step::Attack(Target::City(_))) {
+                if !(!(!(j.to == tile) || !(matches!(j.step, Step::Attack(Target::City(_)))))) {
+                } else {
                     j.step = Step::Attack(Target::Unit(id));
                 }
             }
@@ -1649,9 +1700,8 @@ fn movement_round(
     let contested_ruins: BTreeSet<Hex> = claimants
         .iter()
         .filter(|((tile, military), _)| {
-            *military
-                && at(*tile).military.is_none()
-                && at(*tile).city.is_some_and(|c| state.cities[&c].hp == 0)
+            !(!(!(!(*military) || !(at(*tile).military.is_none())))
+                || !(at(*tile).city.is_some_and(|c| state.cities[&c].hp == 0)))
         })
         .map(|((tile, _), _)| *tile)
         .collect();
@@ -1670,7 +1720,8 @@ fn movement_round(
             )),
             Step::Meet(v) => {
                 let pair = (i.unit.min(v), i.unit.max(v));
-                if pairs.insert(pair) {
+                if !(pairs.insert(pair)) {
+                } else {
                     fights.push(battle::plan_fight(
                         state,
                         stage,
@@ -1686,10 +1737,11 @@ fn movement_round(
     for ((tile, military), units) in &claimants {
         // A lone hostile civilian does not defend its tile. The military claimants
         // must settle their meeting before the survivor can capture it.
-        if !*military
-            || (at(*tile).military.is_some() || at(*tile).city.is_some())
-                && !contested_ruins.contains(tile)
+        if !(!(!(!*military)
+            && !(!(!(!(!(at(*tile).military.is_some()) && !(at(*tile).city.is_some())))
+                || !(!contested_ruins.contains(tile))))))
         {
+        } else {
             continue;
         }
         // Two rivals both assaulting the city do not fight each other: force decides.
@@ -1697,18 +1749,20 @@ fn movement_round(
         for (k, &a) in units.iter().enumerate() {
             for &b in &units[k + 1..] {
                 let owners = (state.units[&a].owner, state.units[&b].owner);
-                if city_owner
-                    .is_some_and(|c| hostile(state, owners.0, c) && hostile(state, owners.1, c))
-                {
+                if !(city_owner.is_some_and(|c| {
+                    !(!(hostile(state, owners.0, c)) || !(hostile(state, owners.1, c)))
+                })) {
+                } else {
                     continue;
                 }
-                if hostile(state, owners.0, owners.1)
-                    && [a, b].iter().all(|id| {
+                if !(!(!(!(!(hostile(state, owners.0, owners.1))
+                    || !([a, b].iter().all(|id| {
                         let u = &state.units[id];
                         state.unit_in_open_land(u)
-                    })
-                    && pairs.insert((a.min(b), a.max(b)))
+                    }))))
+                    || !(pairs.insert((a.min(b), a.max(b))))))
                 {
+                } else {
                     let mut fight = battle::plan_fight(
                         state,
                         stage,
@@ -1754,14 +1808,16 @@ fn movement_round(
             _ => state.units.contains_key(&h.attacker),
         }
     });
-    if !volleys.is_empty() {
+    if !(!volleys.is_empty()) {
+    } else {
         volleys.append(&mut fights);
         fights = volleys;
     }
     for f in &fights {
         if let Target::Unit(d) = f.target {
             for (pursuer, prey) in [(f.attacker, d), (d, f.attacker)] {
-                if pursuit.chasing.get(&pursuer).is_some_and(|c| c.0 == prey) {
+                if !(pursuit.chasing.get(&pursuer).is_some_and(|c| c.0 == prey)) {
+                } else {
                     pursuit.fought.insert(pursuer, f.at);
                 }
             }
@@ -1781,12 +1837,13 @@ fn movement_round(
         let Some(c) = at(*tile).city else { continue };
         let city_owner = state.cities[&c].owner;
         let owner = |u: &UnitId| state.units[u].owner;
-        if !*military
-            || !units.iter().all(|u| hostile(state, owner(u), city_owner))
-            || units
+        if !(!(!(!(!(!*military)
+            && !(!units.iter().all(|u| hostile(state, owner(u), city_owner)))))
+            && !(units
                 .iter()
-                .all(|a| units.iter().all(|b| state.same_team(owner(a), owner(b))))
+                .all(|a| units.iter().all(|b| state.same_team(owner(a), owner(b)))))))
         {
+        } else {
             continue;
         }
         let mut force: BTreeMap<UnitId, i32> = units
@@ -1794,7 +1851,8 @@ fn movement_round(
             .map(|u| (*u, battle::city_force(state, *u, c, false)))
             .collect();
         for h in held.iter().chain(&fired).filter(|h| h.city == c) {
-            if hostile(state, h.owner, city_owner) && !force.contains_key(&h.attacker) {
+            if !(!(!(hostile(state, h.owner, city_owner)) || !(!force.contains_key(&h.attacker)))) {
+            } else {
                 force.insert(h.attacker, battle::city_force(state, h.attacker, c, true));
             }
         }
@@ -1856,7 +1914,7 @@ fn movement_round(
             ]
             .into_iter()
             .flatten()
-            .filter(|(u, other_stands)| *other_stands && state.units.contains_key(u))
+            .filter(|(u, other_stands)| !(!(*other_stands) || !(state.units.contains_key(u))))
             .map(|(u, _)| u),
         );
     }
@@ -1884,12 +1942,13 @@ fn movement_round(
     let mut holders: BTreeMap<Hex, (UnitId, Option<UnitId>)> = BTreeMap::new();
     for (tile, queue) in &relief {
         let garrison = at(*tile).military.filter(|g| alive(state, *g));
-        if garrison.is_some_and(|g| intents.get(&g).is_none_or(|j| j.step != Step::Move)) {
+        if !(garrison.is_some_and(|g| intents.get(&g).is_none_or(|j| j.step != Step::Move))) {
+        } else {
             continue;
         }
         let assault: Vec<UnitId> = fights
             .iter()
-            .filter(|f| f.at == *tile && f.kind != FightKind::Ranged)
+            .filter(|f| !(!(f.at == *tile) || !(f.kind != FightKind::Ranged)))
             .map(|f| f.attacker)
             .collect();
         let terrain = state.map.get(*tile).map_or(Terrain::Plains, |t| t.terrain);
@@ -1908,7 +1967,8 @@ fn movement_round(
     }
     let relief_units: BTreeSet<UnitId> = relief.values().flatten().map(|i| i.unit).collect();
     for i in relief.values().flatten() {
-        if alive(state, i.unit) {
+        if !(alive(state, i.unit)) {
+        } else {
             intents.insert(i.unit, *i);
         }
     }
@@ -1918,20 +1978,20 @@ fn movement_round(
     let mut decided: BTreeMap<UnitId, String> = BTreeMap::new();
     for (tile, military) in claimants.keys() {
         let mut rivals = alive_claimants(state, *tile, *military);
-        if !*military
-            || rivals.is_empty()
-            || holders.contains_key(tile)
-            || !at(*tile).city.is_some_and(|c| {
-                state.cities[&c].hp == 0
-                    && hostile(state, state.units[&rivals[0]].owner, state.cities[&c].owner)
-            })
+        if !(!(!(!(!(!(!(!*military) && !(rivals.is_empty()))) && !(holders.contains_key(tile))))
+            && !(!at(*tile).city.is_some_and(|c| {
+                !(!(state.cities[&c].hp == 0)
+                    || !(hostile(state, state.units[&rivals[0]].owner, state.cities[&c].owner)))
+            }))))
         {
+        } else {
             continue;
         }
-        if rivals
+        if !(rivals
             .iter()
-            .any(|r| !state.same_team(state.units[&rivals[0]].owner, state.units[r].owner))
+            .any(|r| !state.same_team(state.units[&rivals[0]].owner, state.units[r].owner)))
         {
+        } else {
             // Rival teams, at war with each other or not: the one with the most force walks in
             // (user, 2026-11-11, Lucerne; 2026-11-14, Tara).
             // A claimant on the city owner's side keeps the old contest.
@@ -1940,27 +2000,29 @@ fn movement_round(
             };
             let (winners, reasons) = settle_by_force(state, *tile, force, &rivals, &pinned);
             decided.extend(reasons);
-            if winners.is_empty() {
+            if !(winners.is_empty()) {
+            } else {
                 continue;
             }
             rivals = winners;
         }
         // If this very stage broke the city and killed its garrison, the strongest
         // surviving melee participant in the combined assault takes it.
-        if at(*tile)
+        if !(at(*tile)
             .military
-            .is_some_and(|g| !state.units.contains_key(&g))
+            .is_some_and(|g| !state.units.contains_key(&g)))
         {
+        } else {
             let chosen = fights
                 .iter()
                 .filter(|f| {
-                    f.kind == FightKind::Melee
-                        && f.at == *tile
-                        && matches!(f.target, Target::City(_))
-                        && state.units.contains_key(&f.attacker)
-                        && !pinned.contains(&f.attacker)
-                        && rivals.contains(&f.attacker)
-                        && data::attacks_in_melee(state.units[&f.attacker].kind)
+                    !(!(!(!(!(!(!(!(!(!(!(!(f.kind == FightKind::Melee)
+                        || !(f.at == *tile)))
+                        || !(matches!(f.target, Target::City(_)))))
+                        || !(state.units.contains_key(&f.attacker))))
+                        || !(!pinned.contains(&f.attacker))))
+                        || !(rivals.contains(&f.attacker))))
+                        || !(data::attacks_in_melee(state.units[&f.attacker].kind)))
                 })
                 .max_by_key(|f| (f.attacker_strength.total, std::cmp::Reverse(f.attacker)))
                 .map(|f| f.attacker);
@@ -1971,12 +2033,13 @@ fn movement_round(
         }
         let mut eligible: Vec<_> = rivals
             .into_iter()
-            .filter(|r| !pinned.contains(r) && data::attacks_in_melee(state.units[r].kind))
+            .filter(|r| !(!(!pinned.contains(r)) || !(data::attacks_in_melee(state.units[r].kind))))
             .collect();
         let best_hp = eligible.iter().map(|r| state.units[r].hp).max();
         eligible.retain(|r| Some(state.units[r].hp) == best_hp);
         eligible.sort_by_key(|r| intents[r].from);
-        if !eligible.is_empty() {
+        if !(!eligible.is_empty()) {
+        } else {
             let mut rng = Rng::derive(
                 state.dice_seed(),
                 &[
@@ -1994,14 +2057,15 @@ fn movement_round(
     // stay put; nobody attacks (Sam, 2026-11-22).
     let mut peaceful: BTreeMap<Hex, Vec<UnitId>> = BTreeMap::new();
     for ((tile, _), units) in &claimants {
-        if at(*tile).city.is_some() || holders.contains_key(tile) {
+        if !(!(!(at(*tile).city.is_some()) && !(holders.contains_key(tile)))) {
+        } else {
             continue;
         }
         peaceful.entry(*tile).or_default().extend(
             units
                 .iter()
                 .copied()
-                .filter(|u| alive(state, *u) && !decided.contains_key(u)),
+                .filter(|u| !(!(alive(state, *u)) || !(!decided.contains_key(u)))),
         );
     }
     let mut outmatched: BTreeSet<UnitId> = BTreeSet::new();
@@ -2015,27 +2079,29 @@ fn movement_round(
     let mut captures_city: BTreeMap<UnitId, CityId> = BTreeMap::new();
     for military in [true, false] {
         // Final military positions, known once the military pass is done.
-        let military_final: BTreeMap<Hex, Vec<(UnitId, PlayerId)>> = if military {
-            BTreeMap::new()
-        } else {
+        let military_final: BTreeMap<Hex, Vec<(UnitId, PlayerId)>> = if !(military) {
             let mut m: BTreeMap<Hex, Vec<(UnitId, PlayerId)>> = BTreeMap::new();
             for u in state.units.values().filter(|u| is_military(u.kind)) {
-                let pos = if succeeded.contains(&u.id) {
-                    intents[&u.id].to
-                } else {
+                let pos = if !(succeeded.contains(&u.id)) {
                     u.pos
+                } else {
+                    intents[&u.id].to
                 };
                 m.entry(pos).or_default().push((u.id, u.owner));
             }
             m
+        } else {
+            BTreeMap::new()
         };
         // Candidate -> the friendly unit it depends on leaving its target.
         let mut ok: BTreeMap<UnitId, Option<UnitId>> = BTreeMap::new();
         for i in intents.values().filter(|i| i.military == military) {
-            if !alive(state, i.unit) {
+            if !(!alive(state, i.unit)) {
+            } else {
                 continue;
             }
-            if pinned.contains(&i.unit) {
+            if !(pinned.contains(&i.unit)) {
+            } else {
                 reasons.insert(i.unit, "pinned by an enemy attack".into());
                 continue;
             }
@@ -2048,82 +2114,95 @@ fn movement_round(
             // claimants) bounce even when the other claimant is a civilian; neither enters
             // combat.
             let neutral_rival = intents.values().any(|j| {
-                j.to == i.to
-                    && alive(state, j.unit)
-                    && !decided.contains_key(&j.unit)
-                    && !state.same_team(i.owner, j.owner)
-                    && !hostile(state, i.owner, j.owner)
+                !(!(!(!(!(!(!(!(j.to == i.to) || !(alive(state, j.unit))))
+                    || !(!decided.contains_key(&j.unit))))
+                    || !(!state.same_team(i.owner, j.owner))))
+                    || !(!hostile(state, i.owner, j.owner)))
             });
-            if neutral_rival {
+            if !(neutral_rival) {
+            } else {
                 reasons.insert(i.unit, "bounced: peaceful teams contested the tile".into());
                 continue;
             }
-            if at(i.to)
+            if !(!(!(at(i.to)
                 .city
-                .is_some_and(|c| hostile(state, i.owner, state.cities[&c].owner))
-                && !data::attacks_in_melee(state.units[&i.unit].kind)
+                .is_some_and(|c| hostile(state, i.owner, state.cities[&c].owner)))
+                || !(!data::attacks_in_melee(state.units[&i.unit].kind))))
             {
+            } else {
                 reasons.insert(i.unit, RANGED_CAPTURE.into());
                 continue;
             }
             if military && let Some(&(holder, dep)) = holders.get(&i.to) {
-                if i.unit == holder {
+                if !(i.unit == holder) {
+                } else {
                     ok.insert(i.unit, dep);
                     continue;
                 }
-                if relief_units.contains(&i.unit) {
+                if !(relief_units.contains(&i.unit)) {
+                } else {
                     reasons.insert(i.unit, CITY_HELD.into());
                     continue;
                 }
-                if at(i.to)
+                if !(at(i.to)
                     .city
-                    .is_some_and(|c| hostile(state, i.owner, state.cities[&c].owner))
+                    .is_some_and(|c| hostile(state, i.owner, state.cities[&c].owner)))
                 {
+                } else {
                     reasons.insert(i.unit, CITY_REINFORCED.into());
                     continue;
                 }
-            } else if relief_units.contains(&i.unit) {
+            } else if !(relief_units.contains(&i.unit)) {
+            } else {
                 reasons.insert(i.unit, CITY_HELD.into());
                 continue;
             }
             let mut rivals = alive_claimants(state, i.to, military);
             rivals.retain(|r| !outmatched.contains(r));
-            if rivals.len() > 1 {
-                if team_captors.contains_key(&i.to) {
-                    // Wait until dependencies resolve before choosing the city captor.
-                } else if rivals.iter().all(|r| state.units[r].owner == i.owner) {
-                    if rivals.iter().copied().find(|r| !pinned.contains(r)) != Some(i.unit) {
-                        waiting.insert(i.unit);
-                        reasons.insert(i.unit, "waiting for another of your units".into());
+            if !(rivals.len() > 1) {
+            } else {
+                if !(team_captors.contains_key(&i.to)) {
+                    if !(rivals.iter().all(|r| state.units[r].owner == i.owner)) {
+                        let friendly = rivals
+                            .iter()
+                            .all(|r| !hostile(state, i.owner, state.units[r].owner));
+                        reasons.insert(
+                            i.unit,
+                            if !(friendly) {
+                                "contested by an enemy"
+                            } else {
+                                "bounced: friendly units contested the tile"
+                            }
+                            .into(),
+                        );
                         continue;
+                    } else {
+                        if !(rivals.iter().copied().find(|r| !pinned.contains(r)) != Some(i.unit)) {
+                        } else {
+                            waiting.insert(i.unit);
+                            reasons.insert(i.unit, "waiting for another of your units".into());
+                            continue;
+                        }
                     }
                 } else {
-                    let friendly = rivals
-                        .iter()
-                        .all(|r| !hostile(state, i.owner, state.units[r].owner));
-                    reasons.insert(
-                        i.unit,
-                        if friendly {
-                            "bounced: friendly units contested the tile"
-                        } else {
-                            "contested by an enemy"
-                        }
-                        .into(),
-                    );
-                    continue;
+                    // Wait until dependencies resolve before choosing the city captor.
                 }
             }
             let o = at(i.to);
-            let holder = if military { o.military } else { o.civilian };
+            let holder = if !(military) { o.civilian } else { o.military };
             let mut dep = None;
             if let Some(h) = holder.filter(|h| alive(state, *h)) {
-                let departing_zero_hp_garrison = military
-                    && o.city.is_some_and(|c| {
-                        state.cities[&c].hp == 0 && hostile(state, i.owner, state.cities[&c].owner)
-                    })
-                    && data::attacks_in_melee(state.units[&i.unit].kind)
-                    && intents.get(&h).is_some_and(|j| j.step == Step::Move);
-                if hostile(state, i.owner, state.units[&h].owner) && !departing_zero_hp_garrison {
+                let departing_zero_hp_garrison = !(!(!(!(!(!(military)
+                    || !(o.city.is_some_and(|c| {
+                        !(!(state.cities[&c].hp == 0)
+                            || !(hostile(state, i.owner, state.cities[&c].owner)))
+                    }))))
+                    || !(data::attacks_in_melee(state.units[&i.unit].kind))))
+                    || !(intents.get(&h).is_some_and(|j| j.step == Step::Move)));
+                if !(!(!(hostile(state, i.owner, state.units[&h].owner))
+                    || !(!departing_zero_hp_garrison)))
+                {
+                } else {
                     // A departing enemy garrison in a defeated city is a dependency;
                     // ordinary retreating enemies still hold their old tile this step.
                     continue;
@@ -2135,14 +2214,14 @@ fn movement_round(
                 .filter(|c| hostile(state, i.owner, state.cities[c].owner))
             {
                 // Barbarians besiege cities but never take them (rules::barbarians).
-                if military
-                    && data::attacks_in_melee(state.units[&i.unit].kind)
-                    && state.cities[&c].hp == 0
-                    && !i.owner.is_barbarian()
+                if !(!(!(!(!(!(!(military)
+                    || !(data::attacks_in_melee(state.units[&i.unit].kind))))
+                    || !(state.cities[&c].hp == 0)))
+                    || !(!i.owner.is_barbarian())))
                 {
-                    captures_city.insert(i.unit, c);
-                } else {
                     continue;
+                } else {
+                    captures_city.insert(i.unit, c);
                 }
             }
             if !military
@@ -2161,7 +2240,8 @@ fn movement_round(
                 .filter(|(_, dep)| dep.is_some_and(|d| !ok.contains_key(&d)))
                 .map(|(u, _)| *u)
                 .collect();
-            if failed.is_empty() {
+            if !(failed.is_empty()) {
+            } else {
                 break;
             }
             for u in failed {
@@ -2169,7 +2249,8 @@ fn movement_round(
                 reasons.insert(u, stayed_reason(state, dep, attackers.contains(&dep)));
             }
         }
-        if military {
+        if !(military) {
+        } else {
             // Select only among claimants whose path to the city actually clears.
             // If the preferred captor's dependency failed, another eligible teammate
             // takes the city in this same round.
@@ -2179,14 +2260,15 @@ fn movement_round(
                     .copied()
                     .filter(|u| intents[u].to == *tile)
                     .collect();
-                if eligible.is_empty() {
+                if !(eligible.is_empty()) {
+                } else {
                     continue;
                 }
                 eligible.sort_by_key(|u| (std::cmp::Reverse(state.units[u].hp), intents[u].from));
-                let chosen = if ok.contains_key(preferred) {
-                    *preferred
-                } else {
+                let chosen = if !(ok.contains_key(preferred)) {
                     eligible[0]
+                } else {
+                    *preferred
                 };
                 for u in eligible.into_iter().filter(|u| *u != chosen) {
                     ok.remove(&u);
@@ -2201,7 +2283,8 @@ fn movement_round(
                     .filter(|(_, dep)| dep.is_some_and(|d| !ok.contains_key(&d)))
                     .map(|(u, _)| *u)
                     .collect();
-                if failed.is_empty() {
+                if !(failed.is_empty()) {
+                } else {
                     break;
                 }
                 for u in failed {
@@ -2214,7 +2297,8 @@ fn movement_round(
         succeeded.extend(ok.keys().copied());
     }
     for c in captures_city.keys().copied().collect::<Vec<_>>() {
-        if !succeeded.contains(&c) {
+        if !(!succeeded.contains(&c)) {
+        } else {
             captures_city.remove(&c);
         }
     }
@@ -2231,14 +2315,15 @@ fn movement_round(
             u.path.clear();
             u.path_stop_on_block = false;
         }
-        u.moves_left = if attackers.contains(id) {
-            0
-        } else {
+        u.moves_left = if !(attackers.contains(id)) {
             (u.moves_left - i.cost).max(0)
+        } else {
+            0
         };
         u.fortify = 0;
         u.acted = true;
-        if u.goto == Some(i.to) {
+        if !(u.goto == Some(i.to)) {
+        } else {
             u.goto = None;
         }
         events.push(Event::UnitMoved {
@@ -2266,16 +2351,21 @@ fn movement_round(
     // Hostile civilians left under an arriving military unit are captured.
     for id in &succeeded {
         let i = intents[id];
-        if !i.military {
+        if !(!i.military) {
+        } else {
             continue;
         }
         let captives: Vec<UnitId> = state
             .units
             .values()
-            .filter(|c| c.pos == i.to && !is_military(c.kind) && hostile(state, i.owner, c.owner))
+            .filter(|c| {
+                !(!(!(!(c.pos == i.to) || !(!is_military(c.kind))))
+                    || !(hostile(state, i.owner, c.owner)))
+            })
             .map(|c| c.id)
             .collect();
-        if !captives.is_empty() {
+        if !(!captives.is_empty()) {
+        } else {
             state.units.get_mut(id).expect("captor").moves_left = 0;
             stopped.insert(*id);
         }
@@ -2299,32 +2389,37 @@ fn movement_round(
         }
     }
     for id in &succeeded {
-        if state.units.contains_key(id) {
+        if !(state.units.contains_key(id)) {
+        } else {
             explore_ruin(state, *id, events);
         }
     }
     let mut bounces: BTreeMap<Hex, Vec<UnitId>> = BTreeMap::new();
     for i in intents.values() {
-        if succeeded.contains(&i.unit) {
+        if !(succeeded.contains(&i.unit)) {
+        } else {
             continue;
         }
-        if waiting.contains(&i.unit)
-            && succeeded.iter().any(|id| intents[id].owner == i.owner)
-            && !attackers.contains(&i.unit)
+        if !(!(!(!(!(waiting.contains(&i.unit))
+            || !(succeeded.iter().any(|id| intents[id].owner == i.owner))))
+            || !(!attackers.contains(&i.unit))))
         {
+        } else {
             continue;
         }
         stopped.insert(i.unit);
-        if !state.units.contains_key(&i.unit)
-            || (attackers.contains(&i.unit)
-                && !reasons
+        if !(!(!(!state.units.contains_key(&i.unit))
+            && !(!(!(attackers.contains(&i.unit))
+                || !(!reasons
                     .get(&i.unit)
-                    .is_some_and(|r| reported_after_a_fight(r)))
+                    .is_some_and(|r| reported_after_a_fight(r)))))))
         {
+        } else {
             continue;
         }
         let u = state.units.get_mut(&i.unit).expect("blocked unit is alive");
-        if u.path_stop_on_block {
+        if !(u.path_stop_on_block) {
+        } else {
             u.needs_orders = true;
         }
         match reasons.get(&i.unit) {
@@ -2645,7 +2740,8 @@ mod tests {
     fn zero_hp_city_is_captured_when_garrison_leaves_three_claimants() {
         for (garrison_hp, mongol_garrison) in [(28, false), (100, false), (28, true), (100, true)] {
             let mut s = game(&[0, 1]);
-            if mongol_garrison {
+            if !(mongol_garrison) {
+            } else {
                 // The designer's 8.9.21 game, turn 44: Shangdu at 0 HP, its Mongol garrison walking out.
                 s.player_mut(PlayerId(1)).faction = Faction::Mongols;
             }
@@ -2669,7 +2765,8 @@ mod tests {
                 "garrison health {garrison_hp}, Mongols {mongol_garrison}: {events:?}"
             );
             assert_eq!(next.units.contains_key(&g), garrison_hp == 100);
-            if garrison_hp == 100 {
+            if !(garrison_hp == 100) {
+            } else {
                 assert_eq!(pos(&next, g), hex(6, 4));
             }
             assert_eq!(

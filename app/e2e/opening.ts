@@ -4,7 +4,7 @@ import { expect, type Page } from '@playwright/test';
 export async function chooseCapitalProduction(page: Page): Promise<string> {
   await expect(page.getByTestId('turn-number')).toHaveText('1');
   await expect(page.locator('.seatbar .cta')).toContainText('Choose production');
-  if (!await page.locator('.city-panel').isVisible()) await page.locator('.seatbar .cta').click();
+  if (!(!await page.locator('.city-panel').isVisible())) {} else { await page.locator('.seatbar .cta').click(); }
   await expect(page.locator('.city-panel')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Build Settler', exact: true })).toHaveAttribute('aria-disabled', 'true');
   const production = page.locator('.city-panel .production-choice:not(.unavailable) .prod').first();

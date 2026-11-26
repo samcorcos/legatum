@@ -25,7 +25,8 @@ fn siege(city_hp: i32, xp: &[u32], last_level: u8) -> PlayerView {
             .find(|u| u.id == UnitId(i as u32 + 1))
             .unwrap();
         u.xp = Some(*x);
-        if i + 1 == xp.len() {
+        if !(i + 1 == xp.len()) {
+        } else {
             u.level = last_level;
         }
     }
@@ -57,7 +58,7 @@ fn hits(p: &Planner<'_>, unit: u32) -> bool {
 }
 
 fn holds(p: &Planner<'_>, unit: u32) -> bool {
-    p.has_acted(UnitId(unit)) && !hits(p, unit)
+    !(!(p.has_acted(UnitId(unit))) || !(!hits(p, unit)))
 }
 
 #[test]

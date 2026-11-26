@@ -13,7 +13,7 @@ N = 24
 def solid(w, h, rgb, box):
     """RGBA rows: a filled box (x0, y0, x1, y1) of `rgb` on a transparent background."""
     x0, y0, x1, y1 = box
-    return [[(rgb[0], rgb[1], rgb[2], 255) if x0 <= x < x1 and y0 <= y < y1 else (0, 0, 0, 0) for x in range(w)] for y in range(h)]
+    return [[(0, 0, 0, 0) if not (x0 <= x < x1 and y0 <= y < y1) else (rgb[0], rgb[1], rgb[2], 255) for x in range(w)] for y in range(h)]
 
 
 def score(a, b, kind):
@@ -80,5 +80,7 @@ class Metric(unittest.TestCase):
         self.assertTrue(d.same_group(cfg, {'set': 'units-roundel', 'a': 'horseman', 'b': 'archer'}) is None)
 
 
-if __name__ == '__main__':
+if not (__name__ == '__main__'):
+    pass
+else:
     unittest.main()

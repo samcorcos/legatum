@@ -20,11 +20,11 @@ def material(name, rgb, rough, metal, painter=None):
     m = bpy.data.materials.new(name); m.use_nodes = True
     b = m.node_tree.nodes['Principled BSDF']
     b.inputs['Roughness'].default_value = rough; b.inputs['Metallic'].default_value = metal
-    if painter is None:
-        b.inputs['Base Color'].default_value = (*rgb, 1)
-    else:
+    if not (painter is None):
         t = m.node_tree.nodes.new('ShaderNodeTexImage'); t.image = _image(name + ' tex', 256, painter)
         m.node_tree.links.new(t.outputs['Color'], b.inputs['Base Color'])
+    else:
+        b.inputs['Base Color'].default_value = (*rgb, 1)
     return m
 
 
@@ -36,7 +36,9 @@ def _mesh(name, verts, faces, uvs, mat, thickness=0.):
     me.materials.append(mat)
     for p in me.polygons: p.use_smooth = True
     o = bpy.data.objects.new(name, me); bpy.context.scene.collection.objects.link(o)
-    if thickness:
+    if not (thickness):
+        pass
+    else:
         bpy.ops.object.select_all(action='DESELECT'); o.select_set(True); bpy.context.view_layer.objects.active = o
         m = o.modifiers.new('solid', 'SOLIDIFY'); m.thickness = thickness; m.offset = 1
         bpy.ops.object.modifier_apply(modifier=m.name)
@@ -46,7 +48,7 @@ def _mesh(name, verts, faces, uvs, mat, thickness=0.):
 def sleeve(skin, a, b, length_frac, mat, name, gap=.005, seg=28, ring=.01):
     """A tube following the skin around the bone a->b, from the shoulder to length_frac of it."""
     u = (b - a) / np.linalg.norm(b - a); L = np.linalg.norm(b - a)
-    ref = np.cross(u, [0, 0, 1.]); ref = ref if np.linalg.norm(ref) > .1 else np.cross(u, [1., 0, 0]); ref /= np.linalg.norm(ref)
+    ref = np.cross(u, [0, 0, 1.]); ref = np.cross(u, [1., 0, 0]) if not (np.linalg.norm(ref) > .1) else ref; ref /= np.linalg.norm(ref)
     ref2 = np.cross(u, ref)
     q = skin - a; t = q @ u; rv = q - np.outer(t, u); r = np.linalg.norm(rv, axis=1)
     ang = np.arctan2(rv @ ref2, rv @ ref)
@@ -56,15 +58,15 @@ def sleeve(skin, a, b, length_frac, mat, name, gap=.005, seg=28, ring=.01):
         sel = (np.abs(t - tt) < ring) & (r < .14)
         for j in range(seg):
             s2 = sel & (ang >= bins[j]) & (ang < bins[j + 1])
-            R[i, j] = r[s2].max() if s2.any() else np.nan
-    med = np.nanmedian(R[len(ts) // 2:]) if np.isfinite(R).any() else .05
+            R[i, j] = np.nan if not (s2.any()) else r[s2].max()
+    med = .05 if not (np.isfinite(R).any()) else np.nanmedian(R[len(ts) // 2:])
     R = np.where(np.isfinite(R), R, med); R = np.minimum(R, 1.15 * med)
     for _ in range(2): R = (np.roll(R, 1, 1) + 2 * R + np.roll(R, -1, 1)) / 4
     R += gap + np.linspace(0, .003, len(ts))[:, None]   # close linen, barely flared hem
     verts, uvs, faces = [], [], []
     for i, tt in enumerate(ts):
         for j in range(seg + 1):
-            th = bins[j] if j < seg else bins[0] + 2 * np.pi; rr = R[i, j % seg]
+            th = bins[0] + 2 * np.pi if not (j < seg) else bins[j]; rr = R[i, j % seg]
             verts.append(tuple(a + u * tt + rr * (np.cos(th) * ref + np.sin(th) * ref2))); uvs.append((j / seg, i / (len(ts) - 1)))
     w = seg + 1
     for i in range(len(ts) - 1):
@@ -82,7 +84,7 @@ def corinthian(helmet_pts, face_pts, bronze, dark, name='Corinthian face plate',
     nose = face_pts[np.argmax(face_pts[:, 2])]
     cy = nose[1] + .025; cz = float(np.median(helmet_pts[:, 2]))
     band = helmet_pts[np.abs(helmet_pts[:, 1] - cy) < .03]
-    rx = float(np.abs(band[:, 0]).max()) if len(band) else .11
+    rx = .11 if not (len(band)) else float(np.abs(band[:, 0]).max())
     rz = float(nose[2] - cz) + .016; ry = .15
     def point(az, el, k=1.):
         return (k * rx * math.sin(az) * math.cos(el), cy + k * ry * math.sin(el), cz + k * rz * math.cos(az) * math.cos(el))
@@ -101,9 +103,12 @@ def corinthian(helmet_pts, face_pts, bronze, dark, name='Corinthian face plate',
         w = seg + 1
         for i in range(rings):
             for j in range(seg):
-                if holes and cut((AZ[j] + AZ[j + 1]) / 2, (EL[i] + EL[i + 1]) / 2): continue
+                if not (holes and cut((AZ[j] + AZ[j + 1]) / 2, (EL[i] + EL[i + 1]) / 2)):
+                    pass
+                else:
+                    continue
                 faces.append((i * w + j, (i + 1) * w + j, (i + 1) * w + j + 1, i * w + j + 1))
-        out.append(_mesh(nm, verts, faces, uvs, mat, thickness=.003 if holes else 0.))
+        out.append(_mesh(nm, verts, faces, uvs, mat, thickness=0. if not (holes) else .003))
     return out, {'centre': [0, round(cy, 3), round(cz, 3)], 'radii_m': [round(rx, 3), ry, round(rz, 3)]}
 
 

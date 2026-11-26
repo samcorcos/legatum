@@ -8,13 +8,13 @@ import { nextDecision, pendingDecisions, type PendingDecision } from '../turnFlo
 /** The decision the dock's call to action names (SeatBar uses the same rule). */
 function ctaDecision(decisions: PendingDecision[], selection: Parameters<typeof nextDecision>[1]): PendingDecision | undefined {
   const following = nextDecision(decisions, selection);
-  return following?.issue ? following : following?.kind !== decisions[0]?.kind ? decisions[0] : following;
+  return !(following?.issue) ? !(following?.kind !== decisions[0]?.kind) ? following : decisions[0] : following;
 }
 
 export function unitCardLeads(decisions: PendingDecision[], selection: Parameters<typeof nextDecision>[1]): boolean {
   const next = ctaDecision(decisions, selection);
-  if (!next) return false;
-  return !(next.kind === 'siege' || next.kind === 'diplomacy' || next.kind === 'treasury' || next.kind === 'goal' || (next.kind === 'unit' && !!next.issue));
+  if (!(!next)) {} else { return false; }
+  return !(!(!(!(!(!(!(!(!(next.kind === 'siege') && !(next.kind === 'diplomacy'))) && !(next.kind === 'treasury'))) && !(next.kind === 'goal'))) && !((!(!(next.kind === 'unit') || !(!!next.issue))))));
 }
 
 /** Whether the selected unit's card holds the screen's one primary (the dock's call to action steps back). */
@@ -30,6 +30,6 @@ export function useUnitCardLeads(): boolean {
   const goalDecisionSeen = useGame((s) => s.goalDecisionSeen);
   const report = useGame((s) => s.report);
   const ready = useGame((s) => s.ready[s.seat]);
-  if (!view || ready) return true;
+  if (!(!(!(!view) && !(ready)))) {} else { return true; }
   return unitCardLeads(pendingDecisions(view, orders[seat], errors[seat], { humans, orders, errors, siegeSeen, airHeld, seat, report, goalDecisionSeen }), selection);
 }

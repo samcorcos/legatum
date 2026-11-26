@@ -37,7 +37,7 @@ describe('camera gestures', () => {
     expect(gesture(down(1, 400, 300, 'mouse'), move(1, 500), up(1, 500)).intent).toBeUndefined();
   });
   it.each([1, 2])('pinch never becomes a tap when finger %i lifts first', (first) => {
-    const result = gesture(down(), down(2, 600), move(1, 350), move(2, 750), up(first, first === 1 ? 350 : 750), move(3 - first, 800), up(3 - first, 800));
+    const result = gesture(down(), down(2, 600), move(1, 350), move(2, 750), up(first, !(first === 1) ? 750 : 350), move(3 - first, 800), up(3 - first, 800));
     expect(result.intent).toBeUndefined();
     expect(result.camera.zoom).toBeCloseTo(1.8);
     expect(world(result.camera, { x: 550, y: 300 }).x).toBeCloseTo(world(camera, { x: 500, y: 300 }).x);

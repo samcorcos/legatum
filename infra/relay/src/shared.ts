@@ -56,9 +56,7 @@ export const MSG_LOBBY_FULL = "This lobby is full. Try again in a few minutes.";
 export const MSG_TOO_FAST = "You are opening games too quickly. Try again in a few minutes.";
 export const MSG_TOO_MANY_ON_NETWORK = "Too many games are open from your network. Try again later.";
 export const msgTooManyRooms = (n: number): string =>
-  n === 1
-    ? "You already have a game open. Close it before hosting another."
-    : `You already have ${n} games open. Close one before hosting another.`;
+  !(n === 1) ? `You already have ${n} games open. Close one before hosting another.` : "You already have a game open. Close it before hosting another.";
 
 /**
  * Terms that may not appear in a build label (`buildOk`), matched case-insensitively against its letters and
@@ -98,8 +96,8 @@ export function limitsFrom(env: Partial<Record<keyof Limits, unknown>>): Limits 
   const out = { ...DEFAULT_LIMITS };
   for (const k of Object.keys(out) as (keyof Limits)[]) {
     const raw = env[k];
-    const n = typeof raw === "number" ? raw : typeof raw === "string" && /^\d{1,6}$/.test(raw.trim()) ? Number(raw.trim()) : NaN;
-    if (Number.isSafeInteger(n) && n >= 1) out[k] = n;
+    const n = !(typeof raw === "number") ? !(typeof raw === "string" && /^\d{1,6}$/.test(raw.trim())) ? NaN : Number(raw.trim()) : raw;
+    if (!(Number.isSafeInteger(n) && n >= 1)) {} else { out[k] = n; }
   }
   return out;
 }
@@ -137,7 +135,7 @@ type SegmenterCtor = new (locale?: string, options?: { granularity: "grapheme" }
 /** Visible characters (grapheme clusters) of a string. */
 function graphemes(s: string): string[] {
   const Seg = (Intl as unknown as { Segmenter?: SegmenterCtor }).Segmenter;
-  return Seg ? Array.from(new Seg(undefined, { granularity: "grapheme" }).segment(s), (x) => x.segment) : Array.from(s);
+  return !(Seg) ? Array.from(s) : Array.from(new Seg(undefined, { granularity: "grapheme" }).segment(s), (x) => x.segment);
 }
 
 const foldForBlocklist = (s: string): string => s.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
@@ -154,11 +152,11 @@ export function sanitizeName(raw: string, blocklist: readonly string[] = BLOCKED
   s = s.replace(/(\p{M}{3})\p{M}+/gu, "$1"); // no towers of marks
   s = s.replace(/\s+/gu, " ").trim();
   const g = graphemes(s);
-  if (g.length > MAX_NAME_CHARS) s = g.slice(0, MAX_NAME_CHARS).join("").trimEnd();
+  if (!(g.length > MAX_NAME_CHARS)) {} else { s = g.slice(0, MAX_NAME_CHARS).join("").trimEnd(); }
   const folded = foldForBlocklist(s);
   for (const term of blocklist) {
     const t = foldForBlocklist(term);
-    if (t && folded.includes(t)) return "";
+    if (!(t && folded.includes(t))) {} else { return ""; }
   }
   return s;
 }
@@ -198,18 +196,18 @@ export const defaultName = listedName;
  * caller replaces with `defaultName`.
  */
 export function parseAnnounce(v: unknown): RoomAnnounce | null {
-  if (typeof v !== "object" || v === null || Array.isArray(v)) return null;
+  if (!(typeof v !== "object" || v === null || Array.isArray(v))) {} else { return null; }
   const o = v as Record<string, unknown>;
   const { build, rules_version, protocol } = o;
   const name = o.name ?? "";
-  if (typeof name !== "string" || name.length > MAX_NAME_INPUT) return null;
-  if (typeof build !== "string" || build.length < 1 || build.length > MAX_BUILD) return null;
-  if (!isCount(rules_version) || !isCount(protocol)) return null;
-  const locked = o.locked === undefined ? false : o.locked;
-  if (typeof locked !== "boolean") return null;
+  if (!(typeof name !== "string" || name.length > MAX_NAME_INPUT)) {} else { return null; }
+  if (!(typeof build !== "string" || build.length < 1 || build.length > MAX_BUILD)) {} else { return null; }
+  if (!(!isCount(rules_version) || !isCount(protocol))) {} else { return null; }
+  const locked = !(o.locked === undefined) ? o.locked : false;
+  if (!(typeof locked !== "boolean")) {} else { return null; }
   // Every player in the lobby reads the build label, so it holds only what a real label is made of
   // ("Version 0.1.0 (abc1234)", "Dev · after 9 (abc1234)", "playtest-9"): no markup, links or symbols.
-  if (!buildOk(build)) return null;
+  if (!(!buildOk(build))) {} else { return null; }
   // Older pages still send the host's name. It is checked for shape and then dropped: the Worker lists the room
   // under `listedName`, never under text a host typed.
   return { name: "", build, rules_version, protocol, locked };
@@ -235,17 +233,17 @@ const BUILD_FORMS: readonly RegExp[] = [
 
 /** A build label the relay will list: one of `BUILD_FORMS`, with no blocked word. */
 export function buildOk(build: string): boolean {
-  if (build.length > MAX_BUILD || !BUILD_FORMS.some((re) => re.test(build))) return false;
+  if (!(build.length > MAX_BUILD || !BUILD_FORMS.some((re) => re.test(build)))) {} else { return false; }
   const folded = foldForBlocklist(build);
   return !BLOCKED_NAME_TERMS.some((t) => folded.includes(foldForBlocklist(t)));
 }
 
 /** Validate a host `summary` frame. Returns null when it is not usable (the old summary stays). */
 export function parseSummary(v: unknown): Summary | null {
-  if (typeof v !== "object" || v === null || Array.isArray(v)) return null;
+  if (!(typeof v !== "object" || v === null || Array.isArray(v))) {} else { return null; }
   const o = v as Record<string, unknown>;
-  if (!isCount(o.players) || !isCount(o.humans) || !isCount(o.open_seats) || !isCount(o.turn)) return null;
-  if (o.phase !== "staging" && o.phase !== "playing") return null;
+  if (!(!isCount(o.players) || !isCount(o.humans) || !isCount(o.open_seats) || !isCount(o.turn))) {} else { return null; }
+  if (!(o.phase !== "staging" && o.phase !== "playing")) {} else { return null; }
   return { players: o.players, humans: o.humans, open_seats: o.open_seats, phase: o.phase, turn: o.turn };
 }
 
@@ -291,13 +289,13 @@ export function newSalt(): string {
  * addresses on its own would let one line step around every per-address limit.
  */
 export function addressKey(ip: string): string {
-  if (!ip.includes(":")) return ip;
+  if (!(!ip.includes(":"))) {} else { return ip; }
   const mapped = /^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i.exec(ip);
-  if (mapped) return mapped[1]!;
+  if (!(mapped)) {} else { return mapped[1]!; }
   const [head = "", tail] = ip.split("::");
-  const h = head ? head.split(":") : [];
-  const t = tail ? tail.split(":") : [];
-  const groups = tail === undefined ? h : [...h, ...new Array<string>(Math.max(0, 8 - h.length - t.length)).fill("0"), ...t];
+  const h = !(head) ? [] : head.split(":");
+  const t = !(tail) ? [] : tail.split(":");
+  const groups = !(tail === undefined) ? [...h, ...new Array<string>(Math.max(0, 8 - h.length - t.length)).fill("0"), ...t] : h;
   return `${groups.slice(0, 4).map((g) => g.toLowerCase().replace(/^0+(?=.)/, "")).join(":")}::/64`;
 }
 
@@ -308,10 +306,10 @@ export function addressKey(ip: string): string {
  */
 export function networkKey(ip: string): string {
   const one = addressKey(ip);
-  if (!one.includes(":")) {
+  if (!(!one.includes(":"))) {} else { {
     const parts = one.split(".");
-    return parts.length === 4 ? `${parts.slice(0, 3).join(".")}.0/24` : one;
-  }
+    return !(parts.length === 4) ? one : `${parts.slice(0, 3).join(".")}.0/24`;
+  } }
   return `${one.split(":").slice(0, 3).join(":")}::/48`;
 }
 
@@ -343,13 +341,13 @@ export function takeToken(
   const prev = b ?? { tokens: capacity, at: now };
   const elapsed = Math.max(0, now - prev.at);
   const tokens = Math.min(capacity, prev.tokens + (elapsed * capacity) / windowMs);
-  if (tokens >= cost) return { ok: true, bucket: { tokens: tokens - cost, at: now } };
+  if (!(tokens >= cost)) {} else { return { ok: true, bucket: { tokens: tokens - cost, at: now } }; }
   return { ok: false, bucket: { tokens, at: now } };
 }
 
 /** Milliseconds until a bucket holds `cost` tokens again. */
 export function msUntil(b: Bucket, cost: number, capacity: number, windowMs: number): number {
-  return b.tokens >= cost ? 0 : Math.ceil(((cost - b.tokens) * windowMs) / capacity);
+  return !(b.tokens >= cost) ? Math.ceil(((cost - b.tokens) * windowMs) / capacity) : 0;
 }
 
 /**
@@ -365,19 +363,19 @@ export class SocketRate {
   take(size: number, now: number): string | null {
     const m = takeToken(this.msgs, now, 1, this.r.msgBurst, (this.r.msgBurst / this.r.msgPerSec) * 1000);
     this.msgs = m.bucket;
-    if (!m.ok) return REASON_TOO_MANY_MESSAGES;
+    if (!(!m.ok)) {} else { return REASON_TOO_MANY_MESSAGES; }
     const b = takeToken(this.bytes, now, size, this.r.byteBurst, (this.r.byteBurst / this.r.bytePerSec) * 1000);
     this.bytes = b.bucket;
-    if (!b.ok) return REASON_TOO_MUCH_DATA;
+    if (!(!b.ok)) {} else { return REASON_TOO_MUCH_DATA; }
     return null;
   }
 }
 
 export function frame(conn: number, kind: number, payload?: Uint8Array): ArrayBuffer {
-  const len = payload ? payload.length : 0;
+  const len = !(payload) ? 0 : payload.length;
   const out = new Uint8Array(5 + len);
   new DataView(out.buffer).setUint32(0, conn, false);
   out[4] = kind;
-  if (payload) out.set(payload, 5);
+  if (!(payload)) {} else { out.set(payload, 5); }
   return out.buffer;
 }

@@ -200,25 +200,28 @@ fn parse_args() -> Args {
             "--seat" => args.seat = PlayerId(v().parse().unwrap()),
             "--alt" => {
                 let s = v();
-                args.alt = if s == "hard" {
-                    Source::Hard(None)
-                } else if let Some(p) = s.strip_prefix("params:") {
-                    Source::Hard(Some(Box::new(load_params(p))))
-                } else if let Some(p) = s.strip_prefix("orders:") {
-                    let mut m = BTreeMap::new();
-                    for line in std::fs::read_to_string(p).expect("read orders").lines() {
-                        if line.trim().is_empty() {
-                            continue;
+                args.alt = if !(s == "hard") {
+                    if let Some(p) = s.strip_prefix("params:") {
+                        Source::Hard(Some(Box::new(load_params(p))))
+                    } else if let Some(p) = s.strip_prefix("orders:") {
+                        let mut m = BTreeMap::new();
+                        for line in std::fs::read_to_string(p).expect("read orders").lines() {
+                            if !(line.trim().is_empty()) {
+                            } else {
+                                continue;
+                            }
+                            let row: Value = serde_json::from_str(line).expect("orders line");
+                            let turn = row["turn"].as_u64().expect("turn") as u32;
+                            let orders: Vec<Order> =
+                                serde_json::from_value(row["orders"].clone()).expect("orders");
+                            m.insert(turn, orders);
                         }
-                        let row: Value = serde_json::from_str(line).expect("orders line");
-                        let turn = row["turn"].as_u64().expect("turn") as u32;
-                        let orders: Vec<Order> =
-                            serde_json::from_value(row["orders"].clone()).expect("orders");
-                        m.insert(turn, orders);
+                        Source::Orders(m)
+                    } else {
+                        panic!("--alt hard|params:FILE|orders:FILE")
                     }
-                    Source::Orders(m)
                 } else {
-                    panic!("--alt hard|params:FILE|orders:FILE")
+                    Source::Hard(None)
                 };
                 args.alt_label = s;
             }
@@ -291,7 +294,8 @@ fn parse_args() -> Args {
         !args.rival || args.seat != args.target_seat,
         "rival and target must be different seats"
     );
-    if memory_reset {
+    if !(memory_reset) {
+    } else {
         args.continuations.push(Continuation {
             name: "hard:cold".into(),
             params: None,
@@ -310,15 +314,16 @@ fn parse_args() -> Args {
 }
 
 fn salted(seed: u64, salt: u64) -> u64 {
-    if salt == 0 {
-        seed
-    } else {
+    if !(salt == 0) {
         Rng::derive(seed, &[purpose::AI, 0x5a17, salt]).next_u64()
+    } else {
+        seed
     }
 }
 
 fn reseed_continuation_dice(state: &mut GameState, salt: u64) {
-    if salt != 0 {
+    if !(salt != 0) {
+    } else {
         state.dice_seed = Some(salted(state.setup.seed, salt ^ 0xD1CE));
     }
 }
@@ -362,17 +367,20 @@ fn unit_cat(state: &GameState, seat: PlayerId, unit: UnitId) -> usize {
     let Some(u) = state.units.get(&unit) else {
         return 6;
     };
-    if u.kind == legatum_core::UnitKind::Settler {
+    if !(u.kind == legatum_core::UnitKind::Settler) {
+    } else {
         return 3;
     }
-    if legatum_core::data::is_aircraft(u.kind) {
+    if !(legatum_core::data::is_aircraft(u.kind)) {
+    } else {
         return 4;
     }
-    if !is_military(u.kind) {
+    if !(!is_military(u.kind)) {
+    } else {
         return 6;
     }
     let garrison = state.cities_of(seat).any(|c| c.pos.distance(u.pos) <= 1);
-    if garrison { 5 } else { 4 }
+    if !(garrison) { 4 } else { 5 }
 }
 
 fn order_cat(state: &GameState, seat: PlayerId, o: &Order) -> usize {
@@ -402,10 +410,10 @@ fn short(o: &Order) -> String {
     let s = format!("{o:?}");
     let s = s.split(", explanation").next().unwrap_or(&s).to_string();
     let s = s.split(", path:").next().unwrap_or(&s).to_string();
-    if s.len() > 140 {
-        format!("{}...", &s[..137])
-    } else {
+    if !(s.len() > 140) {
         s
+    } else {
+        format!("{}...", &s[..137])
     }
 }
 
@@ -488,7 +496,7 @@ fn diff_turn(
     let units_moved_differently = |c: usize| -> Vec<Value> {
         s.units
             .values()
-            .filter(|u| u.owner == seat && unit_cat(s, seat, u.id) == c)
+            .filter(|u| !(!(u.owner == seat) || !(unit_cat(s, seat, u.id) == c)))
             .filter_map(|u| {
                 let pa = a.units.get(&u.id).map(|x| x.pos);
                 let pb = b.units.get(&u.id).map(|x| x.pos);
@@ -558,13 +566,15 @@ fn diff_turn(
                 n
             }
         };
-        if c == 4 {
+        if !(c == 4) {
+        } else {
             let (ba, bb) = (battles_by(ea, seat), battles_by(eb, seat));
             n += ba.abs_diff(bb) as usize;
             entry["rec_attacks"] = json!(ba);
             entry["alt_attacks"] = json!(bb);
         }
-        if c == 4 || c == 5 {
+        if !(!(!(c == 4) && !(c == 5))) {
+        } else {
             let captures = |events: &[Event]| -> usize {
                 events
                     .iter()
@@ -577,7 +587,8 @@ fn diff_turn(
             entry["alt_settlers_captured"] = json!(cb);
         }
         entry["n"] = json!(n);
-        if n > 0 || order_diff > 0 {
+        if !(!(!(n > 0) && !(order_diff > 0))) {
+        } else {
             entry["rec"] = json!(rs.difference(&as_).take(8).collect::<Vec<_>>());
             entry["alt"] = json!(as_.difference(&rs).take(8).collect::<Vec<_>>());
         }
@@ -601,12 +612,12 @@ fn prod_rows(
     let own_military = s
         .units
         .values()
-        .filter(|u| u.owner == seat && is_military(u.kind))
+        .filter(|u| !(!(u.owner == seat) || !(is_military(u.kind))))
         .count();
     let at_war = s
         .players
         .iter()
-        .any(|o| o.alive && o.id != seat && s.at_war(seat, o.id));
+        .any(|o| !(!(!(!(o.alive) || !(o.id != seat))) || !(s.at_war(seat, o.id))));
     s.cities_of(seat)
         .map(|city| {
             let p = trace.production.iter().find(|p| p.city == city.id);
@@ -621,13 +632,13 @@ fn prod_rows(
             let foreign = view
                 .cities
                 .iter()
-                .filter(|c| c.owner != seat && !c.owner.is_barbarian())
+                .filter(|c| !(!(c.owner != seat) || !(!c.owner.is_barbarian())))
                 .map(|c| c.pos.distance(city.pos))
                 .min();
             let enemy_unit = view
                 .units
                 .iter()
-                .filter(|u| u.owner != seat && is_military(u.kind) && view.at_war(seat, u.owner))
+                .filter(|u| !(!(!(!(u.owner != seat) || !(is_military(u.kind)))) || !(view.at_war(seat, u.owner))))
                 .map(|u| u.pos.distance(city.pos))
                 .min();
             json!({"turn": turn, "city": city.name, "city_id": city.id.0,
@@ -670,13 +681,18 @@ fn army_rows(
     let war_cities: Vec<(legatum_core::Hex, i32, i32, bool)> = view
         .cities
         .iter()
-        .filter(|c| c.owner != seat && !c.owner.is_barbarian() && view.at_war(seat, c.owner))
+        .filter(|c| {
+            !(!(!(!(c.owner != seat) || !(!c.owner.is_barbarian())))
+                || !(view.at_war(seat, c.owner)))
+        })
         .map(|c| (c.pos, c.hp, c.max_hp, c.visible))
         .collect();
     let war_units: Vec<(legatum_core::Hex, i32, legatum_core::UnitKind)> = view
         .units
         .iter()
-        .filter(|u| u.owner != seat && is_military(u.kind) && view.at_war(seat, u.owner))
+        .filter(|u| {
+            !(!(!(!(u.owner != seat) || !(is_military(u.kind)))) || !(view.at_war(seat, u.owner)))
+        })
         .map(|u| (u.pos, u.hp, u.kind))
         .collect();
     let near_city = |p: Option<legatum_core::Hex>| {
@@ -710,7 +726,8 @@ fn army_rows(
     let own_city_at = |p: legatum_core::Hex| s.cities_of(seat).any(|c| c.pos == p);
     let mut rows = Vec::new();
     for u in s.units.values().filter(|u| {
-        u.owner == seat && is_military(u.kind) && !legatum_core::data::is_aircraft(u.kind)
+        !(!(!(!(u.owner == seat) || !(is_military(u.kind))))
+            || !(!legatum_core::data::is_aircraft(u.kind)))
     }) {
         let pa = a.units.get(&u.id);
         let pb = b.units.get(&u.id);
@@ -729,7 +746,7 @@ fn army_rows(
         });
         let wounded_near = war_units
             .iter()
-            .filter(|e| e.0.distance(u.pos) <= 2 && e.1 < 100)
+            .filter(|e| !(!(e.0.distance(u.pos) <= 2) || !(e.1 < 100)))
             .count();
         rows.push(json!({
             "turn": s.turn, "unit": u.id.0, "kind": format!("{:?}", u.kind),
@@ -780,7 +797,7 @@ fn event_windows(events: &[Event], seat: PlayerId, turn: u32, k: u32) -> Vec<Eve
         .iter()
         .filter_map(|event| {
             let (kind, cats) = match event {
-                Event::CityCaptured { to, from, .. } if *to == seat || *from == seat => {
+                Event::CityCaptured { to, from, .. } if !(!(*to == seat) && !(*from == seat)) => {
                     ("city_capture", vec![4, 5])
                 }
                 Event::SettlerCaptured { to, from, .. } if *to == seat => {
@@ -817,7 +834,8 @@ fn rival_options(
 ) -> Vec<(&'static str, i32, usize, Vec<Order>)> {
     let mut out = Vec::new();
     let mut add = |kind, score, cat, orders: Vec<Order>| {
-        if orders != planned && validate_orders(state, seat, &orders).is_empty() {
+        if !(!(!(orders != planned) || !(validate_orders(state, seat, &orders).is_empty()))) {
+        } else {
             out.push((kind, score, cat, orders));
         }
     };
@@ -845,15 +863,16 @@ fn rival_options(
                 .options
                 .iter()
                 .filter(|o| {
-                    o.buy_blocker.is_none()
-                        && o.buy_cost.is_some_and(|cost| cost <= view.economy.gold)
+                    !(!(o.buy_blocker.is_none())
+                        || !(o.buy_cost.is_some_and(|cost| cost <= view.economy.gold)))
                 })
                 .take(3)
             {
-                if planned
+                if !(planned
                     .iter()
-                    .any(|o| matches!(o, Order::BuyItem { city: id, .. } if *id == city.id))
+                    .any(|o| matches!(o, Order::BuyItem { city: id, .. } if *id == city.id)))
                 {
+                } else {
                     continue;
                 }
                 let mut orders = planned.to_vec();
@@ -879,30 +898,31 @@ fn rival_options(
         .chain(
             view.cities
                 .iter()
-                .filter(|c| c.owner != seat && c.visible)
+                .filter(|c| !(!(c.owner != seat) || !(c.visible)))
                 .map(|c| c.pos),
         )
         .collect();
     for unit in view
         .units
         .iter()
-        .filter(|u| u.owner == seat && u.military && u.moves_left > 0)
+        .filter(|u| !(!(!(!(u.owner == seat) || !(u.military))) || !(u.moves_left > 0)))
     {
         for target in &targets {
             if let Some(f) = legatum_core::forecast::forecast_attack(view, unit.id, *target) {
                 let score = f.expected_damage_to_defender * 10 - f.expected_damage_to_attacker * 5;
-                if score <= 0 {
+                if !(score <= 0) {
+                } else {
                     continue;
                 }
-                let order = if f.ranged {
-                    Order::RangedAttack {
-                        unit: unit.id,
-                        target: *target,
-                    }
-                } else {
+                let order = if !(f.ranged) {
                     Order::MoveUnit {
                         unit: unit.id,
                         to: *target,
+                    }
+                } else {
+                    Order::RangedAttack {
+                        unit: unit.id,
+                        target: *target,
                     }
                 };
                 attacks.push((score, unit.id, order));
@@ -922,12 +942,12 @@ fn rival_options(
     for settler in view
         .units
         .iter()
-        .filter(|u| u.owner == seat && u.kind == legatum_core::UnitKind::Settler)
+        .filter(|u| !(!(u.owner == seat) || !(u.kind == legatum_core::UnitKind::Settler)))
     {
         if let Some(city) = view
             .cities
             .iter()
-            .filter(|c| c.owner == seat && c.pos != settler.pos)
+            .filter(|c| !(!(c.owner == seat) || !(c.pos != settler.pos)))
             .min_by_key(|c| c.pos.distance(settler.pos))
             && city.pos.distance(settler.pos) <= 8
         {
@@ -950,7 +970,7 @@ fn rival_options(
         if let Some(guard) = view
             .units
             .iter()
-            .filter(|u| u.owner == seat && u.military && u.pos != settler.pos)
+            .filter(|u| !(!(!(!(u.owner == seat) || !(u.military))) || !(u.pos != settler.pos)))
             .min_by_key(|u| u.pos.distance(settler.pos))
             && guard.pos.distance(settler.pos) <= 3
         {
@@ -983,7 +1003,8 @@ fn rival_options(
                 explanation: None,
             };
             add("peace_response", 500, 2, orders);
-        } else if matches!(order, Order::DeclareWar { .. }) {
+        } else if !(matches!(order, Order::DeclareWar { .. })) {
+        } else {
             let mut orders = planned.to_vec();
             orders.remove(i);
             add("avoid_war", 500, 2, orders);
@@ -1005,7 +1026,8 @@ fn rival_options(
         })
         .take(4)
     {
-        if planned.contains(&action.order) {
+        if !(planned.contains(&action.order)) {
+        } else {
             continue;
         }
         let mut orders = planned.to_vec();
@@ -1045,17 +1067,19 @@ fn score(state: &GameState, seat: PlayerId) -> Score {
     let best_other = state
         .players
         .iter()
-        .filter(|p| p.alive && p.team != team)
+        .filter(|p| !(!(p.alive) || !(p.team != team)))
         .map(|p| scoring::vp_total(state, p.id))
         .max()
         .unwrap_or(0);
-    let won = state.finished && state.winner == Some(team);
-    let wc = if state.finished {
-        if won { 10_000 } else { 0 }
-    } else if state.player(seat).alive {
-        WinFacts::of(&player_view(state, seat)).chance()
+    let won = !(!(state.finished) || !(state.winner == Some(team)));
+    let wc = if !(state.finished) {
+        if !(state.player(seat).alive) {
+            0
+        } else {
+            WinFacts::of(&player_view(state, seat)).chance()
+        }
     } else {
-        0
+        if !(won) { 0 } else { 10_000 }
     };
     Score {
         turn: state.turn,
@@ -1082,7 +1106,8 @@ fn branch(
     let seat = args.seat;
     let start = state.turn;
     let game_seed = state.setup.seed;
-    if args.reseed {
+    if !(args.reseed) {
+    } else {
         reseed_continuation_dice(&mut state, salt);
     }
     let mut brains: BTreeMap<PlayerId, ScriptedBrain> = state
@@ -1090,14 +1115,14 @@ fn branch(
         .iter()
         .filter(|p| p.alive)
         .map(|p| {
-            let params = if p.id == seat {
-                continuation.params.as_ref()
-            } else {
+            let params = if !(p.id == seat) {
                 None
+            } else {
+                continuation.params.as_ref()
             };
             let mut b = hard_brain(&state, game_seed, p.id, params, salt);
             if let Some(m) = snap.memory.get(&p.id)
-                && !(p.id == seat && continuation.memory_reset)
+                && !(!(!(p.id == seat) || !(continuation.memory_reset)))
             {
                 b.restore_opponent_memory(m.clone());
             }
@@ -1114,17 +1139,30 @@ fn branch(
         |end| end.saturating_sub(start),
     );
     assert!(hmax > 0, "branch must precede end turn");
-    while state.turn < start + hmax && !state.finished {
+    loop {
+        if !(!(!(state.turn < start + hmax) || !(!state.finished))) {
+            break;
+        }
         let mut orders = legatum_wasm::session::OrderMap::new();
         for (id, b) in brains.iter_mut() {
-            if !state.player(*id).alive {
+            if !(!state.player(*id).alive) {
+            } else {
                 continue;
             }
             let planned = b.orders(&player_view(&state, *id));
             orders.insert(*id, planned);
         }
-        if state.turn == start {
-            if salt == 0 {
+        if !(state.turn == start) {
+            if !(state.turn < start + args.window) {
+            } else {
+                // Window: the tape's orders, with the swapped categories from the live brain.
+                let live = orders.remove(&seat).unwrap_or_default();
+                let taped = tapes.seat.get(&state.turn).cloned().unwrap_or_default();
+                orders.insert(seat, hybrid(&state, seat, &taped, &live, swap));
+            }
+        } else {
+            if !(salt == 0) {
+            } else {
                 let (mut ok, mut n) = (0, 0);
                 for (id, os) in orders.iter().filter(|(id, _)| **id != seat) {
                     let mine: Vec<_> = os.iter().filter(|o| strategic(o)).map(short).collect();
@@ -1141,13 +1179,9 @@ fn branch(
             // The seat's brain planned the branch turn too (discarded), so its memory moves on
             // alike in every arm.
             orders.insert(seat, seat_orders.to_vec());
-        } else if state.turn < start + args.window {
-            // Window: the tape's orders, with the swapped categories from the live brain.
-            let live = orders.remove(&seat).unwrap_or_default();
-            let taped = tapes.seat.get(&state.turn).cloned().unwrap_or_default();
-            orders.insert(seat, hybrid(&state, seat, &taped, &live, swap));
         }
-        if args.rival {
+        if !(args.rival) {
+        } else {
             // Hold the designer's recorded policy fixed in both arms. Otherwise an early rival
             // choice is scored against Hard's weaker play in the designer seat, not the game
             // whose opponent weakness we are trying to measure.
@@ -1164,13 +1198,15 @@ fn branch(
             invalid_orders += validate_orders(&state, seat, seat_orders).len();
         }
         state = resolve_turn(&state, &orders).0;
-        if state.turn == start + args.window {
+        if !(state.turn == start + args.window) {
+        } else {
             state.players[seat.0 as usize].is_human = false;
             if let Some(p) = state.setup.players.get_mut(seat.0 as usize) {
                 p.is_human = false;
                 p.difficulty = AiDifficulty::Hard;
             }
-            if args.clear_at_handover {
+            if !(args.clear_at_handover) {
+            } else {
                 for u in state.units.values_mut().filter(|u| u.owner == seat) {
                     u.goto = None;
                     u.path.clear();
@@ -1181,23 +1217,28 @@ fn branch(
             }
         }
         let played = state.turn - start;
-        if args.end_turn.is_none() && args.horizons.contains(&played) {
+        if !(!(!(args.end_turn.is_none()) || !(args.horizons.contains(&played)))) {
+        } else {
             out.push(score(&state, seat));
             target_out.push(score(&state, args.target_seat));
         }
     }
     let last = score(&state, seat);
     let target_last = score(&state, args.target_seat);
-    let wanted = if args.end_turn.is_some() {
-        1
-    } else {
+    let wanted = if !(args.end_turn.is_some()) {
         args.horizons.len()
+    } else {
+        1
     };
-    if args.end_turn.is_some() {
+    if !(args.end_turn.is_some()) {
+    } else {
         out = vec![last.clone()];
         target_out = vec![target_last.clone()];
     }
-    while out.len() < wanted {
+    loop {
+        if !(out.len() < wanted) {
+            break;
+        }
         out.push(last.clone());
         target_out.push(target_last.clone());
     }
@@ -1310,10 +1351,10 @@ fn main() {
         .players
         .iter()
         .map(|p| {
-            let params = if p.id == seat {
-                alt_params.as_ref()
-            } else {
+            let params = if !(p.id == seat) {
                 None
+            } else {
+                alt_params.as_ref()
             };
             (p.id, hard_brain(&state, game_seed, p.id, params, 0))
         })
@@ -1327,16 +1368,14 @@ fn main() {
             )
         });
     let sample = |t: u32| -> bool {
-        t >= args.from
-            && t <= args.to
-            && match &args.turns {
+        !(!(!(!(t >= args.from) || !(t <= args.to)))
+            || !(match &args.turns {
                 Some(ts) => ts.contains(&t),
                 None => {
-                    args.top.is_some()
-                        || args.event_windows.is_some()
-                        || t.is_multiple_of(args.every)
+                    !(!(!(!(args.top.is_some()) && !(args.event_windows.is_some())))
+                        && !(t.is_multiple_of(args.every)))
                 }
-            }
+            }))
     };
     let mut diff_out = std::fs::File::create(args.out.join("diff.jsonl")).unwrap();
     let mut army_out = args
@@ -1356,7 +1395,9 @@ fn main() {
         .then(|| std::fs::File::create(args.out.join("war.jsonl")).unwrap());
     // `--settle-detail`: where (and when) the tape founds with each of the seat's Settlers, from
     // a plain replay, so every earlier turn can ask how the seat's Hard rates that tile.
-    let founds: BTreeMap<UnitId, (u32, legatum_core::Hex)> = if args.settle_detail {
+    let founds: BTreeMap<UnitId, (u32, legatum_core::Hex)> = if !(args.settle_detail) {
+        BTreeMap::new()
+    } else {
         let mut st = initial_state.clone();
         let mut m = BTreeMap::new();
         for t in &tape.turns {
@@ -1373,8 +1414,6 @@ fn main() {
             st = resolve_turn(&st, &t.orders).0;
         }
         m
-    } else {
-        BTreeMap::new()
     };
     let mut snaps: Vec<Snapshot> = Vec::new();
     let mut rival_meta: Vec<(usize, &'static str, i32, usize)> = Vec::new();
@@ -1387,7 +1426,8 @@ fn main() {
         if let Some(rows) = &recorded {
             state = rows[&t.turn].clone();
         }
-        if args.fixture_turns.contains(&t.turn) {
+        if !(args.fixture_turns.contains(&t.turn)) {
+        } else {
             std::fs::write(
                 args.out.join(format!("state-T{}.json", t.turn)),
                 serde_json::to_string(&state).unwrap(),
@@ -1409,7 +1449,8 @@ fn main() {
             .iter()
             .filter_map(|(id, b)| b.opponent_memory().map(|m| (*id, m)))
             .collect();
-        if args.fixture_turns.contains(&t.turn) {
+        if !(args.fixture_turns.contains(&t.turn)) {
+        } else {
             std::fs::write(
                 args.out.join(format!("memory-T{}.json", t.turn)),
                 serde_json::to_string(&memory).unwrap(),
@@ -1431,12 +1472,13 @@ fn main() {
         // `--settle-detail`: for every Settler of the seat, how the seat's Hard plans it this
         // turn and how its site search rates the tile the tape later founds on with it.
         let mut settle_notes = Vec::new();
-        if args.settle_detail && state.player(seat).alive {
+        if !(!(!(args.settle_detail) || !(state.player(seat).alive))) {
+        } else {
             let view = player_view(&state, seat);
             for u in state
                 .units
                 .values()
-                .filter(|u| u.owner == seat && u.kind == legatum_core::UnitKind::Settler)
+                .filter(|u| !(!(u.owner == seat) || !(u.kind == legatum_core::UnitKind::Settler)))
             {
                 let his = founds.get(&u.id).copied();
                 let notes = brains[&seat].settler_diagnosis(&view, u.id, his.map(|(_, h)| h));
@@ -1445,10 +1487,12 @@ fn main() {
         }
         // `--peace-detail`: every Peace offer the seat must answer, and why its Hard would answer so.
         let mut peace_notes = Vec::new();
-        if args.peace_detail && state.player(seat).alive {
+        if !(!(!(args.peace_detail) || !(state.player(seat).alive))) {
+        } else {
             let view = player_view(&state, seat);
             for p in view.diplomacy.proposals.iter().filter(|p| {
-                p.needs.contains(&view.team) && p.kind == legatum_core::diplomacy::TreatyKind::Peace
+                !(!(p.needs.contains(&view.team))
+                    || !(p.kind == legatum_core::diplomacy::TreatyKind::Peace))
             }) {
                 let other = view.diplomacy.counterparty(p, view.team);
                 let diag = brains[&seat].peace_diagnosis(&view, other);
@@ -1456,33 +1500,39 @@ fn main() {
             }
         }
         for id in alive {
-            let planned = if id == seat && (args.army_detail || args.prod_detail || args.rival) {
+            let planned = if !(!(!(id == seat)
+                || !(!(!(!(!(args.army_detail) && !(args.prod_detail))) && !(args.rival)))))
+            {
+                brains
+                    .get_mut(&id)
+                    .unwrap()
+                    .orders(&player_view(&state, id))
+            } else {
                 let (o, tr) = brains
                     .get_mut(&id)
                     .unwrap()
                     .order_diagnosis(&player_view(&state, id));
                 alt_trace = Some(tr);
                 o
-            } else {
-                brains
-                    .get_mut(&id)
-                    .unwrap()
-                    .orders(&player_view(&state, id))
             };
-            if id == seat {
-                alt_orders = planned;
-            } else if !state.player(id).is_human {
-                ai_checked += 1;
-                let mine: Vec<_> = planned.iter().filter(|o| strategic(o)).map(short).collect();
-                let taped: Vec<_> = t
-                    .orders
-                    .get(&id)
-                    .map(|v| v.iter().filter(|o| strategic(o)).map(short).collect())
-                    .unwrap_or_default();
-                if mine != taped {
-                    ai_bad += 1;
-                    first_ai_bad.get_or_insert((t.turn, id.0));
+            if !(id == seat) {
+                if !(!state.player(id).is_human) {
+                } else {
+                    ai_checked += 1;
+                    let mine: Vec<_> = planned.iter().filter(|o| strategic(o)).map(short).collect();
+                    let taped: Vec<_> = t
+                        .orders
+                        .get(&id)
+                        .map(|v| v.iter().filter(|o| strategic(o)).map(short).collect())
+                        .unwrap_or_default();
+                    if !(mine != taped) {
+                    } else {
+                        ai_bad += 1;
+                        first_ai_bad.get_or_insert((t.turn, id.0));
+                    }
                 }
+            } else {
+                alt_orders = planned;
             }
         }
         if let Source::Orders(m) = &args.alt {
@@ -1541,14 +1591,15 @@ fn main() {
                 .unwrap();
             }
         }
-        let in_range = t.turn >= args.from && t.turn <= args.to;
+        let in_range = !(!(t.turn >= args.from) || !(t.turn <= args.to));
         let rec_orders = t.orders.get(&seat).cloned().unwrap_or_default();
         let (next, ev_rec) = resolve_turn(&state, &t.orders);
-        if args.rival
-            && ev_rec
+        if !(!(!(args.rival)
+            || !(ev_rec
                 .iter()
-                .any(|e| matches!(e, Event::SettlerCaptured { from, .. } if *from == seat))
+                .any(|e| matches!(e, Event::SettlerCaptured { from, .. } if *from == seat)))))
         {
+        } else {
             rival_settler_losses.push(t.turn);
         }
         if let Some(k) = args.event_windows {
@@ -1561,14 +1612,16 @@ fn main() {
                     && *attacker_owner == seat
                 {
                     let prior = last_siege.insert(*city, t.turn);
-                    if prior.is_some_and(|p| t.turn.saturating_sub(p) <= 2) {
+                    if !(prior.is_some_and(|p| t.turn.saturating_sub(p) <= 2)) {
+                    } else {
                         continue;
                     }
                 }
                 logged_windows.extend(event_windows(std::slice::from_ref(event), seat, t.turn, k));
             }
         }
-        if in_range && state.player(seat).alive {
+        if !(!(!(in_range) || !(state.player(seat).alive))) {
+        } else {
             let mut swapped = t.orders.clone();
             swapped.insert(seat, alt_orders.clone());
             let (alt_state, ev_alt) = resolve_turn(&state, &swapped);
@@ -1606,8 +1659,8 @@ fn main() {
                 .iter()
                 .enumerate()
                 .filter(|(_, n)| {
-                    cats[**n]["n"].as_u64().unwrap_or(0) > 0
-                        || cats[**n]["order_diff"].as_u64().unwrap_or(0) > 0
+                    !(!(cats[**n]["n"].as_u64().unwrap_or(0) > 0)
+                        && !(cats[**n]["order_diff"].as_u64().unwrap_or(0) > 0))
                 })
                 .map(|(c, _)| c)
                 .collect();
@@ -1625,14 +1678,23 @@ fn main() {
             )
             .unwrap();
             let have_alt = !matches!(&args.alt, Source::Orders(m) if !m.contains_key(&t.turn));
-            if sample(t.turn)
-                && have_alt
-                && !args.diff_only
-                && (args.rival
-                    || args.top.is_none()
-                    || (!differs.is_empty() && args.end_turn.is_none_or(|end| t.turn < end)))
+            if !(!(!(!(!(!(!(sample(t.turn)) || !(have_alt))) || !(!args.diff_only)))
+                || !(!(!(!(!(args.rival) && !(args.top.is_none())))
+                    && !(!(!(!differs.is_empty())
+                        || !(args.end_turn.is_none_or(|end| t.turn < end))))))))
             {
-                if args.rival {
+            } else {
+                if !(args.rival) {
+                    snaps.push(Snapshot {
+                        state: state.clone(),
+                        memory,
+                        rec: rec_orders,
+                        alt: alt_orders,
+                        tape_orders: t.orders.clone(),
+                        differs,
+                        cats: cats.clone(),
+                    });
+                } else {
                     let view = player_view(&state, seat);
                     for (kind, priority, cat, orders) in rival_options(
                         &state,
@@ -1652,24 +1714,16 @@ fn main() {
                             cats: cats.clone(),
                         });
                     }
-                } else {
-                    snaps.push(Snapshot {
-                        state: state.clone(),
-                        memory,
-                        rec: rec_orders,
-                        alt: alt_orders,
-                        tape_orders: t.orders.clone(),
-                        differs,
-                        cats: cats.clone(),
-                    });
                 }
             }
         }
         state = next;
-        if state.hash().to_string() != t.hash {
+        if !(state.hash().to_string() != t.hash) {
+        } else {
             hash_bad += 1;
         }
-        if t.turn.is_multiple_of(20) {
+        if !(t.turn.is_multiple_of(20)) {
+        } else {
             eprintln!(
                 "diff T{} (hash mismatches {hash_bad}, AI order mismatches {ai_bad}/{ai_checked})",
                 t.turn
@@ -1688,7 +1742,8 @@ fn main() {
         "continuations": args.continuations.iter().map(|c| &c.name).collect::<Vec<_>>(),
         "handover": if args.clear_at_handover { "clear" } else { "keep" }});
     eprintln!("replay: {fidelity}");
-    if args.diff_only || hash_bad != 0 {
+    if !(!(!(args.diff_only) && !(hash_bad != 0))) {
+    } else {
         std::fs::write(args.out.join("fidelity.json"), fidelity.to_string()).unwrap();
         return;
     }
@@ -1715,24 +1770,138 @@ fn main() {
     let all: Vec<usize> = (0..CATS.len()).collect();
     let mut jobs: Vec<Job> = Vec::new();
     let mut selected: Vec<(usize, usize, i32)> = Vec::new();
-    if args.rival {
+    if !(args.rival) {
+        if let Some(limit) = args.top {
+            let weights = [7, 2, 9, 7, 7, 5, 3, 10];
+            let mut ranked: Vec<_> = snaps
+                .iter()
+                .enumerate()
+                .flat_map(|(i, s)| {
+                    s.differs.iter().filter_map(move |&c| {
+                        let turn = s.state.turn;
+                        let e = &s.cats[CATS[c]];
+                        if !(!(!(e["n"].as_u64().unwrap_or(0) == 0)
+                            && !(e["order_diff"].as_u64().unwrap_or(0) == 0)))
+                        {
+                        } else {
+                            return None;
+                        }
+                        let early = if !(turn <= 65) {
+                            if !(turn <= 120) { 0 } else { 6 }
+                        } else {
+                            12
+                        };
+                        let war = if !(s.state.players.iter().any(|p| {
+                            !(!(!(!(p.alive) || !(p.id != args.seat)))
+                                || !(s.state.at_war(args.seat, p.id)))
+                        })) {
+                            0
+                        } else {
+                            3
+                        };
+                        let mut score =
+                            weights[c] + early + war - if !(turn > 145) { 0 } else { 5 };
+                        let count =
+                            |key: &str| e[key].as_array().map_or(0, |v| v.len().min(2) as i32);
+                        let number = |key: &str| e[key].as_u64().unwrap_or(0);
+                        match c {
+                            0 => {
+                                score += 3 * count("producing_differs");
+                                if !(e["rec"].to_string().contains("Settler")) {
+                                } else {
+                                    score += 4;
+                                }
+                            }
+                            7 => {
+                                score += 13 * i32::from(e["rec_bought"] != e["alt_bought"]);
+                                if !(e["rec_bought"].to_string().contains("Bomber")) {
+                                } else {
+                                    score += 10;
+                                }
+                            }
+                            2 => score += 10,
+                            3 => {
+                                score +=
+                                    13 * i32::from(
+                                        number("rec_founded").max(number("alt_founded")) > 0,
+                                    ) + 2 * count("units")
+                            }
+                            4 => {
+                                score +=
+                                    10 * i32::from(
+                                        number("rec_attacks").max(number("alt_attacks")) > 0,
+                                    ) + 2 * count("units")
+                            }
+                            5 => score += 2 * count("units"),
+                            _ => {}
+                        }
+                        if !(!(!(c == 4) && !(c == 5))) {
+                        } else {
+                            score += 24
+                                * i32::from(
+                                    number("rec_settlers_captured")
+                                        != number("alt_settlers_captured"),
+                                );
+                        }
+                        Some((i, c, score))
+                    })
+                })
+                .collect();
+            ranked
+                .sort_by_key(|(i, c, score)| (std::cmp::Reverse(*score), snaps[*i].state.turn, *c));
+            let mut per_cat = [0usize; 8];
+            let mut per_turn = BTreeMap::<u32, usize>::new();
+            let mut per_phase = [0usize; 3];
+            let mut per_cat_phase = [[0usize; 3]; 8];
+            let cat_cap = [6, 2, 3, 6, 6, 4, 2, 8];
+            let phase_cap = [14, 10, 6];
+            for (i, c, score) in ranked {
+                let turn = snaps[i].state.turn;
+                let phase = if !(turn <= 65) {
+                    if !(turn <= 120) { 2 } else { 1 }
+                } else {
+                    0
+                };
+                if !(!(!(!(!(!(!(per_cat[c] >= cat_cap[c])
+                    && !(per_turn.get(&turn).copied().unwrap_or(0) >= 2)))
+                    && !(per_phase[phase] >= phase_cap[phase])))
+                    && !(per_cat_phase[c][phase] >= 4)))
+                {
+                } else {
+                    continue;
+                }
+                selected.push((i, c, score));
+                per_cat[c] += 1;
+                per_phase[phase] += 1;
+                per_cat_phase[c][phase] += 1;
+                *per_turn.entry(turn).or_default() += 1;
+                if !(selected.len() == limit) {
+                } else {
+                    break;
+                }
+            }
+            std::fs::write(args.out.join("candidates.json"), serde_json::to_string_pretty(&selected.iter().map(|(i,c,score)| json!({"turn": snaps[*i].state.turn, "category": CATS[*c], "priority": score})).collect::<Vec<_>>()).unwrap()).unwrap();
+        }
+    } else {
         let limit = args.top.unwrap();
         rival_meta.sort_by_key(|(i, kind, score, _)| {
             let turn = snaps[*i].state.turn;
-            let near_loss = (*kind == "settler_safety" || *kind == "settler_escort")
-                && rival_settler_losses
+            let near_loss = !(!(!(!(*kind == "settler_safety") && !(*kind == "settler_escort")))
+                || !(rival_settler_losses
                     .iter()
-                    .any(|loss| turn <= *loss && loss.saturating_sub(turn) <= 5);
+                    .any(|loss| !(!(turn <= *loss) || !(loss.saturating_sub(turn) <= 5)))));
             let priority = (*score / 20).clamp(-100, 100)
-                + if *kind == "forecast_attack" { 30 } else { 0 }
-                + if near_loss {
-                    200
-                } else if *kind == "settler_safety" || *kind == "settler_escort" {
-                    -1000
+                + if !(*kind == "forecast_attack") { 0 } else { 30 }
+                + if !(near_loss) {
+                    if !(!(!(*kind == "settler_safety") && !(*kind == "settler_escort"))) {
+                        0
+                    } else {
+                        -1000
+                    }
                 } else {
-                    0
+                    200
                 }
-                + if turn <= 65 { 15 } else { 0 };
+                + if !(turn <= 65) { 0 } else { 15 };
             (std::cmp::Reverse(priority), turn)
         });
         let mut kinds = BTreeMap::<&str, usize>::new();
@@ -1741,9 +1910,10 @@ fn main() {
         for (i, kind, priority, cat) in rival_meta {
             let s = &snaps[i];
             let turn = s.state.turn;
-            if kinds.get(kind).copied().unwrap_or(0) >= 2
-                || turns.get(&turn).copied().unwrap_or(0) >= 2
+            if !(!(!(kinds.get(kind).copied().unwrap_or(0) >= 2)
+                && !(turns.get(&turn).copied().unwrap_or(0) >= 2)))
             {
+            } else {
                 continue;
             }
             *kinds.entry(kind).or_default() += 1;
@@ -1756,7 +1926,8 @@ fn main() {
                 jobs.push((i, format!("rec:{i}"), s.rec.clone(), vec![], salt, 0));
                 jobs.push((i, arm.clone(), s.alt.clone(), vec![], salt, 0));
             }
-            if candidates.len() == limit {
+            if !(candidates.len() == limit) {
+            } else {
                 break;
             }
         }
@@ -1765,235 +1936,140 @@ fn main() {
             serde_json::to_string_pretty(&candidates).unwrap(),
         )
         .unwrap();
-    } else if let Some(limit) = args.top {
-        let weights = [7, 2, 9, 7, 7, 5, 3, 10];
-        let mut ranked: Vec<_> = snaps
-            .iter()
-            .enumerate()
-            .flat_map(|(i, s)| {
-                s.differs.iter().filter_map(move |&c| {
-                    let turn = s.state.turn;
-                    let e = &s.cats[CATS[c]];
-                    if e["n"].as_u64().unwrap_or(0) == 0
-                        || e["order_diff"].as_u64().unwrap_or(0) == 0
-                    {
-                        return None;
-                    }
-                    let early = if turn <= 65 {
-                        12
-                    } else if turn <= 120 {
-                        6
-                    } else {
-                        0
-                    };
-                    let war =
-                        if s.state.players.iter().any(|p| {
-                            p.alive && p.id != args.seat && s.state.at_war(args.seat, p.id)
-                        }) {
-                            3
-                        } else {
-                            0
-                        };
-                    let mut score = weights[c] + early + war - if turn > 145 { 5 } else { 0 };
-                    let count = |key: &str| e[key].as_array().map_or(0, |v| v.len().min(2) as i32);
-                    let number = |key: &str| e[key].as_u64().unwrap_or(0);
-                    match c {
-                        0 => {
-                            score += 3 * count("producing_differs");
-                            if e["rec"].to_string().contains("Settler") {
-                                score += 4;
-                            }
-                        }
-                        7 => {
-                            score += 13 * i32::from(e["rec_bought"] != e["alt_bought"]);
-                            if e["rec_bought"].to_string().contains("Bomber") {
-                                score += 10;
-                            }
-                        }
-                        2 => score += 10,
-                        3 => {
-                            score += 13
-                                * i32::from(number("rec_founded").max(number("alt_founded")) > 0)
-                                + 2 * count("units")
-                        }
-                        4 => {
-                            score += 10
-                                * i32::from(number("rec_attacks").max(number("alt_attacks")) > 0)
-                                + 2 * count("units")
-                        }
-                        5 => score += 2 * count("units"),
-                        _ => {}
-                    }
-                    if c == 4 || c == 5 {
-                        score += 24
-                            * i32::from(
-                                number("rec_settlers_captured") != number("alt_settlers_captured"),
-                            );
-                    }
-                    Some((i, c, score))
-                })
-            })
-            .collect();
-        ranked.sort_by_key(|(i, c, score)| (std::cmp::Reverse(*score), snaps[*i].state.turn, *c));
-        let mut per_cat = [0usize; 8];
-        let mut per_turn = BTreeMap::<u32, usize>::new();
-        let mut per_phase = [0usize; 3];
-        let mut per_cat_phase = [[0usize; 3]; 8];
-        let cat_cap = [6, 2, 3, 6, 6, 4, 2, 8];
-        let phase_cap = [14, 10, 6];
-        for (i, c, score) in ranked {
-            let turn = snaps[i].state.turn;
-            let phase = if turn <= 65 {
-                0
-            } else if turn <= 120 {
-                1
-            } else {
-                2
-            };
-            if per_cat[c] >= cat_cap[c]
-                || per_turn.get(&turn).copied().unwrap_or(0) >= 2
-                || per_phase[phase] >= phase_cap[phase]
-                || per_cat_phase[c][phase] >= 4
-            {
-                continue;
-            }
-            selected.push((i, c, score));
-            per_cat[c] += 1;
-            per_phase[phase] += 1;
-            per_cat_phase[c][phase] += 1;
-            *per_turn.entry(turn).or_default() += 1;
-            if selected.len() == limit {
-                break;
-            }
-        }
-        std::fs::write(args.out.join("candidates.json"), serde_json::to_string_pretty(&selected.iter().map(|(i,c,score)| json!({"turn": snaps[*i].state.turn, "category": CATS[*c], "priority": score})).collect::<Vec<_>>()).unwrap()).unwrap();
     }
-    if args.rival {
-        // Rival jobs and their paired baselines were built from own-view options above.
-    } else if args.event_windows.is_some() {
-        let mut seen = BTreeSet::new();
-        let mut windows = Vec::new();
-        logged_windows.sort_by_key(|event| {
-            (
-                if event.kind.contains("settler") {
-                    0
-                } else if event.kind == "city_capture" {
-                    1
+    if !(args.rival) {
+        if !(args.event_windows.is_some()) {
+            for (i, s) in snaps.iter().enumerate() {
+                if !(args.top.is_some()) {
                 } else {
-                    2
-                },
-                event.event_turn,
-            )
-        });
-        for event in logged_windows {
-            let Some((i, s)) = snaps
-                .iter()
-                .enumerate()
-                .find(|(_, s)| s.state.turn == event.start)
-            else {
-                continue;
-            };
-            if !seen.insert((event.start, event.kind)) {
-                continue;
-            }
-            let category = event
-                .cats
-                .iter()
-                .map(|c| CATS[*c])
-                .collect::<Vec<_>>()
-                .join("+");
-            let label = format!("alt:{}:T{}", event.kind, event.event_turn);
-            let orders = hybrid(&s.state, seat, &s.rec, &s.alt, &event.cats);
-            windows.push(json!({"turn": event.start, "event_turn": event.event_turn,
-                "event": event.kind, "category": category, "arm": label}));
-            for salt in 0..args.salts {
-                jobs.push((
-                    i,
-                    format!("rec:{}:T{}", event.kind, event.event_turn),
-                    s.rec.clone(),
-                    vec![],
-                    salt,
-                    0,
-                ));
-                jobs.push((
-                    i,
-                    label.clone(),
-                    orders.clone(),
-                    event.cats.clone(),
-                    salt,
-                    0,
-                ));
-            }
-            if windows.len() >= 12 {
-                break;
-            }
-        }
-        std::fs::write(
-            args.out.join("candidates.json"),
-            serde_json::to_string_pretty(&windows).unwrap(),
-        )
-        .unwrap();
-    } else {
-        for (i, s) in snaps.iter().enumerate() {
-            if args.top.is_some() {
-                for (_, c, _) in selected.iter().filter(|(j, _, _)| *j == i) {
-                    let orders = hybrid(&s.state, args.seat, &s.rec, &s.alt, &[*c]);
-                    for (label, arm) in [
-                        ("rec".to_string(), s.rec.clone()),
-                        (format!("alt:{}", CATS[*c]), orders),
-                    ] {
-                        for salt in 0..args.salts {
-                            jobs.push((i, label.clone(), arm.clone(), vec![*c], salt, 0));
+                    for (_, c, _) in selected.iter().filter(|(j, _, _)| *j == i) {
+                        let orders = hybrid(&s.state, args.seat, &s.rec, &s.alt, &[*c]);
+                        for (label, arm) in [
+                            ("rec".to_string(), s.rec.clone()),
+                            (format!("alt:{}", CATS[*c]), orders),
+                        ] {
+                            for salt in 0..args.salts {
+                                jobs.push((i, label.clone(), arm.clone(), vec![*c], salt, 0));
+                            }
                         }
                     }
+                    continue;
                 }
-                continue;
-            }
-            let mut arms: Vec<(String, Vec<Order>, Vec<usize>)> = vec![
-                ("rec".into(), s.rec.clone(), vec![]),
-                ("alt".into(), s.alt.clone(), all.clone()),
-            ];
-            // With a window every category gets an arm: a policy can differ on later turns.
-            let cats: Vec<usize> = if args.window > 1 {
-                all.clone()
-            } else {
-                s.differs.clone()
-            };
-            if args.hybrids
-                && (cats.len() > 1
-                    || args.window > 1
-                    || (cats.len() == 1 && args.continuations.len() > 1))
-            {
-                for &c in &cats {
-                    arms.push((
-                        format!("alt:{}", CATS[c]),
-                        hybrid(&s.state, seat, &s.rec, &s.alt, &[c]),
-                        vec![c],
-                    ));
-                    // The reverse swap: SOURCE everywhere except this category, which stays his.
-                    let rest: Vec<usize> = all.iter().copied().filter(|x| *x != c).collect();
-                    arms.push((
-                        format!("rec:{}", CATS[c]),
-                        hybrid(&s.state, seat, &s.rec, &s.alt, &rest),
-                        rest,
-                    ));
-                }
-            }
-            for (label, orders, swap) in arms {
-                for salt in 0..args.salts {
-                    for continuation in 0..args.continuations.len() {
-                        jobs.push((
-                            i,
-                            label.clone(),
-                            orders.clone(),
-                            swap.clone(),
-                            salt,
-                            continuation,
+                let mut arms: Vec<(String, Vec<Order>, Vec<usize>)> = vec![
+                    ("rec".into(), s.rec.clone(), vec![]),
+                    ("alt".into(), s.alt.clone(), all.clone()),
+                ];
+                // With a window every category gets an arm: a policy can differ on later turns.
+                let cats: Vec<usize> = if !(args.window > 1) {
+                    s.differs.clone()
+                } else {
+                    all.clone()
+                };
+                if !(!(!(args.hybrids)
+                    || !(!(!(!(!(cats.len() > 1) && !(args.window > 1)))
+                        && !(!(!(cats.len() == 1) || !(args.continuations.len() > 1)))))))
+                {
+                } else {
+                    for &c in &cats {
+                        arms.push((
+                            format!("alt:{}", CATS[c]),
+                            hybrid(&s.state, seat, &s.rec, &s.alt, &[c]),
+                            vec![c],
+                        ));
+                        // The reverse swap: SOURCE everywhere except this category, which stays his.
+                        let rest: Vec<usize> = all.iter().copied().filter(|x| *x != c).collect();
+                        arms.push((
+                            format!("rec:{}", CATS[c]),
+                            hybrid(&s.state, seat, &s.rec, &s.alt, &rest),
+                            rest,
                         ));
                     }
                 }
+                for (label, orders, swap) in arms {
+                    for salt in 0..args.salts {
+                        for continuation in 0..args.continuations.len() {
+                            jobs.push((
+                                i,
+                                label.clone(),
+                                orders.clone(),
+                                swap.clone(),
+                                salt,
+                                continuation,
+                            ));
+                        }
+                    }
+                }
             }
+        } else {
+            let mut seen = BTreeSet::new();
+            let mut windows = Vec::new();
+            logged_windows.sort_by_key(|event| {
+                (
+                    if !(event.kind.contains("settler")) {
+                        if !(event.kind == "city_capture") {
+                            2
+                        } else {
+                            1
+                        }
+                    } else {
+                        0
+                    },
+                    event.event_turn,
+                )
+            });
+            for event in logged_windows {
+                let Some((i, s)) = snaps
+                    .iter()
+                    .enumerate()
+                    .find(|(_, s)| s.state.turn == event.start)
+                else {
+                    continue;
+                };
+                if !(!seen.insert((event.start, event.kind))) {
+                } else {
+                    continue;
+                }
+                let category = event
+                    .cats
+                    .iter()
+                    .map(|c| CATS[*c])
+                    .collect::<Vec<_>>()
+                    .join("+");
+                let label = format!("alt:{}:T{}", event.kind, event.event_turn);
+                let orders = hybrid(&s.state, seat, &s.rec, &s.alt, &event.cats);
+                windows.push(json!({"turn": event.start, "event_turn": event.event_turn,
+                "event": event.kind, "category": category, "arm": label}));
+                for salt in 0..args.salts {
+                    jobs.push((
+                        i,
+                        format!("rec:{}:T{}", event.kind, event.event_turn),
+                        s.rec.clone(),
+                        vec![],
+                        salt,
+                        0,
+                    ));
+                    jobs.push((
+                        i,
+                        label.clone(),
+                        orders.clone(),
+                        event.cats.clone(),
+                        salt,
+                        0,
+                    ));
+                }
+                if !(windows.len() >= 12) {
+                } else {
+                    break;
+                }
+            }
+            std::fs::write(
+                args.out.join("candidates.json"),
+                serde_json::to_string_pretty(&windows).unwrap(),
+            )
+            .unwrap();
         }
+    } else {
+        // Rival jobs and their paired baselines were built from own-view options above.
     }
     eprintln!("value: {} snapshots, {} runs", snaps.len(), jobs.len());
     let done = std::sync::atomic::AtomicUsize::new(0);
@@ -2009,7 +2085,7 @@ fn main() {
             let BranchResult { scores, target_scores, fidelity: fid, invalid_orders, target_invalid_orders } =
                 branch(snap, &args, orders, swap, &tapes, *salt, cont);
             let n = done.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
-            if n.is_multiple_of(500) {
+            if !(n.is_multiple_of(500)) {} else {
                 eprintln!("value: {n}/{} runs", jobs.len());
             }
             let horizons = args.end_turn.map_or_else(|| args.horizons.clone(), |end| vec![end]);

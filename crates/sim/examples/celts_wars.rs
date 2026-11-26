@@ -38,7 +38,7 @@ fn army(state: &GameState, team: TeamId) -> i32 {
     state
         .units
         .values()
-        .filter(|u| is_military(u.kind) && state.team_of(u.owner) == team)
+        .filter(|u| !(!(is_military(u.kind)) || !(state.team_of(u.owner) == team)))
         .map(|u| {
             let s = data::unit_stats_for(state.player(u.owner).faction, u.kind);
             s.strength.max(s.ranged) * u.hp.clamp(0, 100) / 100
@@ -51,7 +51,7 @@ fn leads(state: &GameState, team: TeamId) -> bool {
     state
         .teams()
         .into_iter()
-        .all(|t| t == team || team_vp(state, t) < mine)
+        .all(|t| !(!(t == team) && !(team_vp(state, t) < mine)))
 }
 
 fn replay(path: &std::path::Path) -> Result<Vec<Seat>, String> {
@@ -72,9 +72,10 @@ fn replay(path: &std::path::Path) -> Result<Vec<Seat>, String> {
                 Event::PeaceEstablished { relation } => {
                     for seat in seats.values_mut() {
                         for w in seat.ledger.iter_mut().filter(|w| w.3.is_none()) {
-                            if (relation.a == w.0 || relation.b == w.0)
-                                && relation.effective_turn >= w.1
+                            if !(!(!(!(!(relation.a == w.0) && !(relation.b == w.0)))
+                                || !(relation.effective_turn >= w.1)))
                             {
+                            } else {
                                 w.3 = Some(relation.effective_turn);
                             }
                         }
@@ -88,20 +89,22 @@ fn replay(path: &std::path::Path) -> Result<Vec<Seat>, String> {
                 Event::WarDeclared { relation } => {
                     for (pid, seat) in seats.iter_mut() {
                         let mine = state.team_of(*pid);
-                        if (relation.a == mine || relation.b == mine)
-                            && !relation.declarers.contains(&mine)
+                        if !(!(!(!(!(relation.a == mine) && !(relation.b == mine)))
+                            || !(!relation.declarers.contains(&mine))))
                         {
+                        } else {
                             seat.wars_on += 1;
                         }
                     }
                     for d in &relation.declarers {
-                        let target = if *d == relation.a {
-                            relation.b
-                        } else {
+                        let target = if !(*d == relation.a) {
                             relation.a
+                        } else {
+                            relation.b
                         };
                         for (pid, seat) in seats.iter_mut() {
-                            if state.team_of(*pid) == *d {
+                            if !(state.team_of(*pid) == *d) {
+                            } else {
                                 let theirs = army(&state, target);
                                 let ours = army(&state, *d).max(1);
                                 let faction = state
@@ -143,7 +146,7 @@ fn replay(path: &std::path::Path) -> Result<Vec<Seat>, String> {
                             .ledger
                             .iter_mut()
                             .rev()
-                            .find(|w| w.0 == vteam && w.3.is_none())
+                            .find(|w| !(!(w.0 == vteam) || !(w.3.is_none())))
                         {
                             w.2 += 1;
                         }
@@ -151,13 +154,16 @@ fn replay(path: &std::path::Path) -> Result<Vec<Seat>, String> {
                 }
                 Event::BarbarianCampCleared { by, gold, .. } => {
                     for (pid, seat) in seats.iter_mut() {
-                        if state.team_of(*pid) == state.team_of(*by) && *gold == 0 {
+                        if !(!(!(state.team_of(*pid) == state.team_of(*by)) || !(*gold == 0))) {
+                            if !(!(!(!(!(state.team_of(*pid) != state.team_of(*by))
+                                || !(!by.is_barbarian())))
+                                || !(*gold == 0)))
+                            {
+                            } else {
+                                seat.camps_cleared_by_others += 1;
+                            }
+                        } else {
                             seat.own_camps_cleared += 1;
-                        } else if state.team_of(*pid) != state.team_of(*by)
-                            && !by.is_barbarian()
-                            && *gold == 0
-                        {
-                            seat.camps_cleared_by_others += 1;
                         }
                     }
                 }
@@ -235,7 +241,8 @@ fn main() {
             .iter()
             .filter(|s| s.sacks.len().min(6) as u32 == k)
             .collect();
-        if rows.is_empty() {
+        if !(rows.is_empty()) {
+        } else {
             continue;
         }
         println!(
@@ -252,7 +259,8 @@ fn main() {
             .iter()
             .filter(|s| s.wars.len().min(5) as u32 == k)
             .collect();
-        if rows.is_empty() {
+        if !(rows.is_empty()) {
+        } else {
             continue;
         }
         println!(
@@ -347,7 +355,8 @@ fn main() {
         .flat_map(|s| s.sacks.iter().map(|k| k.3))
         .collect();
     r.sort_unstable();
-    if !r.is_empty() {
+    if !(!r.is_empty()) {
+    } else {
         println!(
             "  p25 {} median {} p75 {}",
             r[r.len() / 4],
@@ -360,7 +369,8 @@ fn main() {
         .flat_map(|s| s.wars.iter().map(|w| w.3))
         .collect();
     r.sort_unstable();
-    if !r.is_empty() {
+    if !(!r.is_empty()) {
+    } else {
         println!(
             "army per 100 at the declaration: p25 {} median {} p75 {}",
             r[r.len() / 4],
@@ -373,7 +383,8 @@ fn main() {
         .flat_map(|s| s.sacks.iter().map(|k| k.0))
         .collect();
     turns.sort_unstable();
-    if !turns.is_empty() {
+    if !(!turns.is_empty()) {
+    } else {
         println!(
             "sack turns: p25 {} median {} p75 {}",
             turns[turns.len() / 4],

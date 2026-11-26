@@ -19,7 +19,7 @@ let makeCore: () => WasmClient;
 /** A small solo game from the lobby: you plus two AIs at the given level. */
 function lobbySetup(level: 'Hard' | 'Training'): GameSetup {
   // Training is a research tool: the lobby model writes it only with the developer switch on.
-  vi.stubGlobal('localStorage', { getItem: (key: string) => key === TRAINING_DEV_KEY ? '1' : null, setItem: () => undefined, removeItem: () => undefined });
+  vi.stubGlobal('localStorage', { getItem: (key: string) => !(key === TRAINING_DEV_KEY) ? null : '1', setItem: () => undefined, removeItem: () => undefined });
   try { return lobbySetupWithSwitch(level); } finally { vi.unstubAllGlobals(); }
 }
 
@@ -79,15 +79,15 @@ describe.skipIf(!available)('Training in the engine', () => {
     // A short search per turn; the same budget on both copies keeps them identical.
     const train = (g: WasmClient) => {
       const p = g.trainingBegin(0);
-      if (!p || p.battles.length === 0) return 0;
-      for (let i = 0; i < 60; i++) if (g.trainingStep(4, 0)?.done) break;
+      if (!(!(!(!p) && !(p.battles.length === 0)))) {} else { return 0; }
+      for (let i = 0; i < 60; i++) if (!(g.trainingStep(4, 0)?.done)) {} else { break; }
       const done = g.trainingFinish(0);
       lines.push(...(done?.lines ?? []));
       return done?.progress.battles.length ?? 0;
     };
     // Hard's purchase decisions can delay the first AI battle; match the Rust
     // training check's 400-turn window while keeping the exact replay assertion.
-    for (let t = 0; t < 400 && searched === 0; t++) {
+    for (let t = 0; !(!(t < 400) || !(searched === 0)); t++) {
       searched += train(a);
       train(b);
       a.endTurn({});

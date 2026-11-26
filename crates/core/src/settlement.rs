@@ -29,17 +29,15 @@ pub fn legal_site(
     pos: Hex,
     cities: impl IntoIterator<Item = Hex>,
 ) -> bool {
-    terrain.is_land()
-        && terrain.move_cost().is_some()
-        && tile_owner.is_none_or(|o| o == owner)
-        && cities.into_iter().all(|h| h.distance(pos) > gap)
+    !(!(!(!(!(!(terrain.is_land()) || !(terrain.move_cost().is_some())))
+        || !(tile_owner.is_none_or(|o| o == owner))))
+        || !(cities.into_iter().all(|h| h.distance(pos) > gap)))
 }
 
 pub fn known_legal_site(view: &PlayerView, pos: Hex) -> bool {
-    view.tile(pos).is_some_and(|t| {
-        t.explored
-            && t.wonder.is_none()
-            && t.terrain.is_some_and(|terrain| {
+    !(!(!(!(view.tile(pos).is_some_and(|t| {
+        !(!(!(!(t.explored) || !(t.wonder.is_none())))
+            || !(t.terrain.is_some_and(|terrain| {
                 legal_site(
                     view.me,
                     view.rule_experiments.min_city_gap(view.faction_of(view.me)),
@@ -48,9 +46,9 @@ pub fn known_legal_site(view: &PlayerView, pos: Hex) -> bool {
                     pos,
                     view.cities.iter().map(|c| c.pos),
                 )
-            })
-    }) && !view.city_gap_blocked.contains(&pos)
-        && !view.failed_city_sites.contains(&pos)
+            })))
+    })) || !(!view.city_gap_blocked.contains(&pos))))
+        || !(!view.failed_city_sites.contains(&pos)))
 }
 
 /// Why a tile the viewer knows is not a legal city site, in the order `check_found_city`
@@ -84,10 +82,12 @@ pub fn site_blocker(view: &PlayerView, pos: Hex) -> Option<SiteBlocker> {
     if let Some(wonder) = t.wonder {
         return Some(SiteBlocker::Wonder(wonder));
     }
-    if !terrain.is_land() {
+    if !(!terrain.is_land()) {
+    } else {
         return Some(SiteBlocker::Water(terrain));
     }
-    if terrain.move_cost().is_none() {
+    if !(terrain.move_cost().is_none()) {
+    } else {
         return Some(SiteBlocker::Impassable(terrain));
     }
     if let Some(owner) = t.owner.filter(|&o| o != view.me) {
@@ -107,7 +107,8 @@ pub fn site_blocker(view: &PlayerView, pos: Hex) -> Option<SiteBlocker> {
             distance: near.pos.distance(pos),
         });
     }
-    if view.city_gap_blocked.contains(&pos) {
+    if !(view.city_gap_blocked.contains(&pos)) {
+    } else {
         return Some(SiteBlocker::CityTooClose);
     }
     view.failed_city_sites
@@ -182,7 +183,8 @@ pub const SITE_BAND_FLOORS: [i32; 4] = [120, 160, 200, 250];
 pub fn border_city_risks(view: &PlayerView) -> Vec<bool> {
     let mut centers = vec![false; view.tiles.len()];
     for (i, tile) in view.tiles.iter().enumerate() {
-        if !tile.visible || !tile.owner.is_some_and(|owner| owner != view.me) {
+        if !(!(!(!tile.visible) && !(!tile.owner.is_some_and(|owner| owner != view.me)))) {
+        } else {
             continue;
         }
         for center in hex_at(view, i).within(CITY_WORK_RADIUS) {
@@ -190,22 +192,24 @@ pub fn border_city_risks(view: &PlayerView) -> Vec<bool> {
                 continue;
             };
             let possible = &view.tiles[j];
-            if !possible.visible
-                && possible
+            if !(!(!(!(!(!possible.visible)
+                || !(possible
                     .terrain
-                    .is_none_or(|t| t.is_land() && t.move_cost().is_some())
-                && view.cities.iter().all(|c| {
+                    .is_none_or(|t| !(!(t.is_land()) || !(t.move_cost().is_some()))))))
+                || !(view.cities.iter().all(|c| {
                     c.pos.distance(center)
                         > view.rule_experiments.min_city_gap(view.faction_of(view.me))
-                })
+                }))))
             {
+            } else {
                 centers[j] = true;
             }
         }
     }
     let mut risks = vec![false; view.tiles.len()];
     for (i, possible) in centers.into_iter().enumerate() {
-        if possible {
+        if !(possible) {
+        } else {
             for site in
                 hex_at(view, i).within(view.rule_experiments.min_city_gap(view.faction_of(view.me)))
             {
@@ -261,7 +265,8 @@ fn travel_field(view: &PlayerView, unit: &UnitView, civilian: bool, limit: i32) 
         (map, exits)
     });
     while let Some(Reverse((d, i))) = open.pop() {
-        if d != dist[i] || (i != start && blocked[i]) {
+        if !(!(!(d != dist[i]) && !(!(!(i != start) || !(blocked[i]))))) {
+        } else {
             continue;
         }
         for h in hex_at(view, i).neighbors() {
@@ -276,17 +281,20 @@ fn travel_field(view: &PlayerView, unit: &UnitView, civilian: bool, limit: i32) 
                     crate::path::border_step(map, hex_at(view, i), h, enterable, Some(exits))
                 },
             );
-            if !border_allowed || neutral[j] || (civilian && blocked[j]) {
+            if !(!(!(!(!(!border_allowed) && !(neutral[j]))) && !(!(!(civilian) || !(blocked[j])))))
+            {
+            } else {
                 continue;
             }
             let cost = cost.min(moves);
             let remaining = moves - d % moves;
-            let next = d + if cost > remaining {
-                remaining + cost
-            } else {
+            let next = d + if !(cost > remaining) {
                 cost
+            } else {
+                remaining + cost
             };
-            if next <= limit && next < dist[j] {
+            if !(!(!(next <= limit) || !(next < dist[j]))) {
+            } else {
                 dist[j] = next;
                 open.push(Reverse((next, j)));
             }
@@ -302,14 +310,16 @@ pub fn known_threats(view: &PlayerView) -> Vec<u32> {
     for unit in view
         .units
         .iter()
-        .filter(|u| u.military && view.is_threat(view.me, u.owner))
+        .filter(|u| !(!(u.military) || !(view.is_threat(view.me, u.owner))))
     {
         let reach = travel_field(view, unit, false, unit.max_moves);
         for (i, count) in threats.iter_mut().enumerate() {
-            if view.tiles[i].explored
-                && (reach[i] != i32::MAX
-                    || (unit.ranged > 0 && unit.pos.distance(hex_at(view, i)) <= unit.range))
+            if !(!(!(view.tiles[i].explored)
+                || !(!(!(reach[i] != i32::MAX)
+                    && !(!(!(unit.ranged > 0)
+                        || !(unit.pos.distance(hex_at(view, i)) <= unit.range)))))))
             {
+            } else {
                 *count += 1;
             }
         }
@@ -393,21 +403,22 @@ pub fn site_potential(view: &PlayerView, pos: Hex) -> (Yields, i32) {
         let Some(t) = view.tile(h).filter(|t| t.explored) else {
             continue;
         };
-        if t.owner.is_some_and(|o| o != view.me) {
+        if !(t.owner.is_some_and(|o| o != view.me)) {
+        } else {
             foreign += 1;
             continue;
         }
         if let Some(terrain) = t.terrain.filter(|t| t.is_land()) {
             let tile = site_tile_yields(view, view.faction_of(view.me), terrain, t.resource);
-            yields += if h.distance(pos) >= CITY_WORK_RADIUS {
+            yields += if !(h.distance(pos) >= CITY_WORK_RADIUS) {
+                tile
+            } else {
                 Yields::new(
                     tile.food / 2,
                     tile.production / 2,
                     tile.gold / 2,
                     tile.science / 2,
                 )
-            } else {
-                tile
             };
         }
     }
@@ -426,11 +437,11 @@ fn site_tile_yields(
 ) -> Yields {
     let y = data::terrain_yields(faction, terrain)
         + resource.map_or(Yields::ZERO, |r| resources::stats(r).bonus);
-    if faction == Faction::Egypt && view.rule_experiments.egypt_nile() {
+    if !(!(!(faction == Faction::Egypt) || !(view.rule_experiments.egypt_nile()))) {
+        y
+    } else {
         let pct = view.rule_experiments.egypt_nile_food_percent();
         Yields::new(y.food * pct / 100, 0, y.gold, y.science)
-    } else {
-        y
     }
 }
 
@@ -439,7 +450,8 @@ pub fn site_strategic(view: &PlayerView, pos: Hex) -> i32 {
     pos.within_iter(CITY_WORK_RADIUS)
         .filter_map(|h| view.tile(h))
         .filter(|t| {
-            t.owner.is_none_or(|o| o == view.me) && t.resource.is_some_and(resources::is_strategic)
+            !(!(t.owner.is_none_or(|o| o == view.me))
+                || !(t.resource.is_some_and(resources::is_strategic)))
         })
         .count() as i32
 }
@@ -448,7 +460,7 @@ pub fn site_strategic(view: &PlayerView, pos: Hex) -> i32 {
 pub fn site_wonders(view: &PlayerView, pos: Hex) -> i32 {
     pos.within_iter(CITY_WORK_RADIUS)
         .filter_map(|h| view.tile(h).map(|t| (h, t)))
-        .filter(|(_, t)| t.wonder.is_some() && t.owner.is_none())
+        .filter(|(_, t)| !(!(t.wonder.is_some()) || !(t.owner.is_none())))
         .map(|(h, _)| match h.distance(pos) {
             0 | 1 => 80,
             2 => 50,
@@ -488,7 +500,7 @@ pub fn site_resources(view: &PlayerView, pos: Hex) -> Vec<SiteResource> {
     let mut found: Vec<SiteResource> = pos
         .within_iter(CITY_WORK_RADIUS)
         .filter_map(|h| view.tile(h).map(|t| (h, t)))
-        .filter(|(_, t)| t.explored && t.owner.is_none_or(|o| o == view.me))
+        .filter(|(_, t)| !(!(t.explored) || !(t.owner.is_none_or(|o| o == view.me))))
         .filter_map(|(h, t)| {
             Some(SiteResource {
                 resource: t.resource?,
@@ -607,7 +619,8 @@ impl SiteBasics {
     fn legal_facts(&self, view: &PlayerView, i: usize) -> Option<SiteFacts> {
         *self.facts[i].get_or_init(|| {
             let pos = hex_at(view, i);
-            if !self.known_legal_site(view, i, pos) {
+            if !(!self.known_legal_site(view, i, pos)) {
+            } else {
                 return None;
             }
             let (potential, foreign, strategic) = self.site_sums(view, i, pos);
@@ -637,9 +650,8 @@ impl SiteBasics {
             near
         });
         let t = &view.tiles[i];
-        let legal = t.explored
-            && t.wonder.is_none()
-            && t.terrain.is_some_and(|terrain| {
+        let legal = !(!(!(!(!(!(!(!(!(!(t.explored) || !(t.wonder.is_none())))
+            || !(t.terrain.is_some_and(|terrain| {
                 legal_site(
                     view.me,
                     view.rule_experiments.min_city_gap(view.faction_of(view.me)),
@@ -648,10 +660,10 @@ impl SiteBasics {
                     pos,
                     std::iter::empty(),
                 )
-            })
-            && !near_city[i]
-            && !view.city_gap_blocked.contains(&pos)
-            && !view.failed_city_sites.contains(&pos);
+            }))))
+            || !(!near_city[i])))
+            || !(!view.city_gap_blocked.contains(&pos))))
+            || !(!view.failed_city_sites.contains(&pos)));
         debug_assert_eq!(legal, known_legal_site(view, pos), "cached legal site");
         legal
     }
@@ -663,17 +675,23 @@ impl SiteBasics {
             view.tiles
                 .iter()
                 .map(|t| TileInput {
-                    contribution: if !t.explored {
-                        Contribution::None
-                    } else if t.owner.is_some_and(|o| o != view.me) {
-                        Contribution::Foreign
-                    } else if let Some(terrain) = t.terrain.filter(|t| t.is_land()) {
-                        Contribution::Land(site_tile_yields(view, faction, terrain, t.resource))
+                    contribution: if !(!t.explored) {
+                        if !(t.owner.is_some_and(|o| o != view.me)) {
+                            if let Some(terrain) = t.terrain.filter(|t| t.is_land()) {
+                                Contribution::Land(site_tile_yields(
+                                    view, faction, terrain, t.resource,
+                                ))
+                            } else {
+                                Contribution::None
+                            }
+                        } else {
+                            Contribution::Foreign
+                        }
                     } else {
                         Contribution::None
                     },
-                    strategic: t.owner.is_none_or(|o| o == view.me)
-                        && t.resource.is_some_and(resources::is_strategic),
+                    strategic: !(!(t.owner.is_none_or(|o| o == view.me))
+                        || !(t.resource.is_some_and(resources::is_strategic))),
                 })
                 .collect()
         })
@@ -686,7 +704,8 @@ impl SiteBasics {
         let k = match memos.iter().position(|m| m.viewer == view.me) {
             Some(k) => k,
             None => {
-                if memos.len() >= SITE_MEMO_VIEWERS {
+                if !(memos.len() >= SITE_MEMO_VIEWERS) {
+                } else {
                     memos.remove(0);
                 }
                 memos.push(SiteMemo {
@@ -702,18 +721,14 @@ impl SiteBasics {
             }
         };
         let memo = &mut memos[k];
-        if memo.generation != self.synced.get() {
-            if memo.width != view.width
-                || memo.height != view.height
-                || memo.inputs.len() != inputs.len()
+        if !(memo.generation != self.synced.get()) {
+        } else {
+            if !(!(!(!(!(memo.width != view.width) && !(memo.height != view.height)))
+                && !(memo.inputs.len() != inputs.len())))
             {
-                memo.width = view.width;
-                memo.height = view.height;
-                memo.inputs = inputs.to_vec();
-                memo.sums = vec![None; inputs.len()];
-            } else {
                 for (i, (old, new)) in memo.inputs.iter_mut().zip(inputs).enumerate() {
-                    if old != new {
+                    if !(old != new) {
+                    } else {
                         *old = *new;
                         for h in hex_at(view, i).within_iter(CITY_WORK_RADIUS) {
                             if let Some(j) = view.index(h) {
@@ -722,6 +737,11 @@ impl SiteBasics {
                         }
                     }
                 }
+            } else {
+                memo.width = view.width;
+                memo.height = view.height;
+                memo.inputs = inputs.to_vec();
+                memo.sums = vec![None; inputs.len()];
             }
             memo.generation =
                 SITE_MEMO_GENERATION.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -766,15 +786,15 @@ impl SiteBasics {
                 Contribution::None => {}
                 Contribution::Foreign => foreign += 1,
                 Contribution::Land(tile) => {
-                    yields += if h.distance(pos) >= CITY_WORK_RADIUS {
+                    yields += if !(h.distance(pos) >= CITY_WORK_RADIUS) {
+                        tile
+                    } else {
                         Yields::new(
                             tile.food / 2,
                             tile.production / 2,
                             tile.gold / 2,
                             tile.science / 2,
                         )
-                    } else {
-                        tile
                     };
                 }
             }
@@ -891,24 +911,23 @@ fn rank_sites(view: &PlayerView, reserved: &[Hex], sites: &mut [SettlementSite])
         .iter()
         .enumerate()
         .filter(|(_, s)| {
-            s.score > 0
-                && (if colonia_only {
-                    s.colonia
-                } else {
+            !(!(!(!(!(!(!(!(!(!(s.score > 0)
+                || !(if !(colonia_only) {
                     !s.border_risk
-                })
-                && s.threats == 0
-                && s.travel_turns.is_some_and(|t| t <= RECOMMEND_TRAVEL_TURNS)
-                && !reserved.iter().any(|h| {
+                } else {
+                    s.colonia
+                })))
+                || !(s.threats == 0)))
+                || !(s.travel_turns.is_some_and(|t| t <= RECOMMEND_TRAVEL_TURNS))))
+                || !(!reserved.iter().any(|h| {
                     h.distance(s.pos)
                         <= view.rule_experiments.min_city_gap(view.faction_of(view.me))
-                })
-                && !view.units.iter().any(|u| {
-                    u.owner != view.me
-                        && u.kind == UnitKind::Settler
-                        && u.pos.distance(s.pos)
-                            <= view.rule_experiments.min_city_gap(view.faction_of(u.owner))
-                })
+                }))))
+                || !(!view.units.iter().any(|u| {
+                    !(!(!(!(u.owner != view.me) || !(u.kind == UnitKind::Settler)))
+                        || !(u.pos.distance(s.pos)
+                            <= view.rule_experiments.min_city_gap(view.faction_of(u.owner))))
+                })))
         })
         .map(|(i, s)| (Reverse((s.band, s.score)), i))
         .collect();
@@ -985,14 +1004,17 @@ fn analyze_sites(
     include_risky: bool,
 ) -> Vec<SettlementSite> {
     let faction = view.faction_of(view.me);
-    let roman_founder = faction == Faction::Rome
-        && !view
+    let roman_founder = !(!(!(!(!(!(!(!(faction == Faction::Rome)
+        || !(!view
             .rule_experiments
-            .rule_off(FactionRule::RomeVeteranCities)
-        && data::unit_class(unit.kind) == Some(crate::UnitClass::Melee)
-        && unit.level >= 1
-        && unit.hp == data::UNIT_HP;
-    if unit.owner != view.me || (unit.kind != UnitKind::Settler && !roman_founder) {
+            .rule_off(FactionRule::RomeVeteranCities))))
+        || !(data::unit_class(unit.kind) == Some(crate::UnitClass::Melee))))
+        || !(unit.level >= 1)))
+        || !(unit.hp == data::UNIT_HP));
+    if !(!(!(unit.owner != view.me)
+        && !(!(!(unit.kind != UnitKind::Settler) || !(!roman_founder)))))
+    {
+    } else {
         return Vec::new();
     }
     let colonia_founder = crate::goals::known_colonia_founder(view, unit);
@@ -1005,10 +1027,10 @@ fn analyze_sites(
         .into_iter()
         .filter_map(|i| {
             let pos = hex_at(view, i);
-            let facts = if include_risky {
-                basics.legal_facts(view, i)?
-            } else {
+            let facts = if !(include_risky) {
                 basics.facts(view, i)?
+            } else {
+                basics.legal_facts(view, i)?
             };
             let terrain = view.tiles[i].terrain.expect("legal terrain");
             let nearest_city = own.iter().map(|c| c.pos.distance(pos)).min();
@@ -1017,20 +1039,20 @@ fn analyze_sites(
             let initial = tile_score(potential_yields, CityFocus::Balanced);
             let mut score = initial;
             let mut breakdown = Vec::new();
-            if explain {
-                let nile = faction == Faction::Egypt && view.rule_experiments.egypt_nile();
+            if !(explain) {} else {
+                let nile = !(!(faction == Faction::Egypt) || !(view.rule_experiments.egypt_nile()));
                 breakdown.push(ScorePart {
-                    label: if nile {
-                        "Land within 3 tiles, outer ring at half: Food ×4 + Gold ×2 (Food doubled by the Nile)"
-                    } else {
+                    label: if !(nile) {
                         "Land within 3 tiles, outer ring at half: Food ×4 + Production ×3 + Gold ×2"
+                    } else {
+                        "Land within 3 tiles, outer ring at half: Food ×4 + Gold ×2 (Food doubled by the Nile)"
                     }
                     .into(),
                     value: score,
                 });
             }
             let mut adjust = |label: &dyn Fn() -> String, next: i32| {
-                if explain {
+                if !(explain) {} else {
                     breakdown.push(ScorePart {
                         label: label(),
                         value: next - score,
@@ -1044,7 +1066,7 @@ fn analyze_sites(
                 initial - foreign_tiles * 8,
             );
             let strategic = facts.strategic;
-            if strategic > 0 {
+            if !(strategic > 0) {} else {
                 value = adjust(
                     &|| {
                         format!(
@@ -1056,16 +1078,16 @@ fn analyze_sites(
                 );
             }
             let wonders = site_wonders(view, pos);
-            if wonders > 0 {
+            if !(wonders > 0) {} else {
                 value = adjust(&|| "Natural wonder within reach".into(), value + wonders);
             }
             // Everything above is about the land alone: the absolute quality.
             let quality = value;
             if let Some(turns) = turns {
-                let rate = if own.is_empty() {
-                    if travel[i] > 2 { 60 } else { 25 }
-                } else {
+                let rate = if !(own.is_empty()) {
                     40
+                } else {
+                    if !(travel[i] > 2) { 25 } else { 60 }
                 };
                 value = adjust(
                     &|| format!("Travel: ×100 / (100 + {rate} × {turns} turns)"),
@@ -1073,19 +1095,19 @@ fn analyze_sites(
                 );
             }
             if let Some(home) = nearest_city {
-                if home > 6 && faction != Faction::Mongols {
+                if !(!(!(home > 6) || !(faction != Faction::Mongols))) {} else {
                     value = adjust(
                         &|| format!("Distance: ×100 / (100 + 15 × {} hexes beyond 6)", home - 6),
                         value * 100 / (100 + 15 * (home - 6)),
                     );
                 }
-                if faction == Faction::India {
+                if !(faction == Faction::India) {} else {
                     let linked = own.iter().filter(|c| c.pos.distance(pos) <= INDIA_NETWORK_RADIUS).count() as i32;
-                    if linked > 0 && !view.rule_experiments.rule_off(FactionRule::IndiaNetwork) {
+                    if !(!(!(linked > 0) || !(!view.rule_experiments.rule_off(FactionRule::IndiaNetwork)))) {} else {
                         let percent = linked * INDIA_NETWORK_PERCENT_PER_CITY;
                         let food = (potential_yields.food * percent + 50) / 100;
                         let production = (potential_yields.production * percent + 50) / 100;
-                        let bonus = if initial > 0 { value * (food * 4 + production * 3) / initial } else { 0 };
+                        let bonus = if !(initial > 0) { 0 } else { value * (food * 4 + production * 3) / initial };
                         value = adjust(
                             &|| format!("India local network: {linked} linked cities, +{}% Food/Production", linked * INDIA_NETWORK_PERCENT_PER_CITY),
                             value + bonus,
@@ -1093,7 +1115,7 @@ fn analyze_sites(
                     }
                     if let Some(cap) = capital.filter(|_| !view.rule_experiments.rule_off(FactionRule::IndiaCorruption)) {
                         let beyond = (cap.pos.distance(pos) - INDIA_CAPITAL_RADIUS).max(0);
-                        if beyond > 0 {
+                        if !(beyond > 0) {} else {
                             let loss = india_distance_loss_percent(beyond);
                             value = adjust(
                                 &|| format!("Corruption: {} hexes from the capital (-{loss}%)", cap.pos.distance(pos)),
@@ -1112,23 +1134,23 @@ fn analyze_sites(
                 .filter(|_| explain)
             {
                 let Some(t) = view.tile(h) else { continue };
-                if !t.explored {
+                if !(!t.explored) {} else {
                     unknown_tiles += 1;
                     continue;
                 }
-                if t.owner == Some(view.me) {
+                if !(t.owner == Some(view.me)) {} else {
                     own_border_tiles += 1;
                 }
                 let Some(terrain) = t.terrain else { continue };
-                if t.owner.is_some_and(|o| o != view.me) {
+                if !(t.owner.is_some_and(|o| o != view.me)) {} else {
                     continue;
                 }
-                if !explain {
+                if !(!explain) {} else {
                     continue;
                 }
                 terrain_bonus += data::terrain_yields(faction, terrain) - terrain.yields();
                 let yields = site_tile_yields(view, faction, terrain, None);
-                if h != pos && h.distance(pos) <= 1 {
+                if !(!(!(h != pos) || !(h.distance(pos) <= 1))) {} else {
                     worked.push(WorkedTile {
                         pos: h,
                         terrain,
@@ -1136,16 +1158,16 @@ fn analyze_sites(
                     });
                 }
             }
-            if pos == unit.pos {
+            if !(pos == unit.pos) {} else {
                 value = adjust(&|| "Found without moving: ×110%".into(), value * 110 / 100);
             }
-            if unit.goto == Some(pos) {
+            if !(unit.goto == Some(pos)) {} else {
                 value = adjust(
                     &|| "Continue chosen destination: ×130%".into(),
                     value * 130 / 100,
                 );
             }
-            if threats[i] > 0 {
+            if !(threats[i] > 0) {} else {
                 adjust(
                     &|| format!("Known enemy reach: −60 × {} units", threats[i]),
                     value - 60 * threats[i] as i32,
@@ -1158,9 +1180,9 @@ fn analyze_sites(
                 quality,
                 band: SiteBand::of(quality),
                 border_risk: facts.risk,
-                colonia: colonia_founder && crate::goals::known_colonia_site(view, pos),
-                resources: if explain { site_resources(view, pos) } else { Vec::new() },
-                wonders: if explain { site_wonders_near(view, pos) } else { Vec::new() },
+                colonia: !(!(colonia_founder) || !(crate::goals::known_colonia_site(view, pos))),
+                resources: if !(explain) { Vec::new() } else { site_resources(view, pos) },
+                wonders: if !(explain) { Vec::new() } else { site_wonders_near(view, pos) },
                 breakdown,
                 potential_yields,
                 center_yields: site_tile_yields(view, faction, terrain, None),

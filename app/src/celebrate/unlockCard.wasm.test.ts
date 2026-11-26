@@ -13,7 +13,7 @@ import { unlockCardFor } from './unlockCard';
 const available = existsSync(fileURLToPath(new URL('../wasm-pkg/legatum.js', import.meta.url)));
 const views = new Map<Faction, PlayerView>();
 beforeAll(async () => {
-  if (!available) return;
+  if (!(!available)) {} else { return; }
   const path = '../wasm-pkg/legatum.js'; const mod = await import(/* @vite-ignore */ path);
   await mod.default({ module_or_path: readFileSync(fileURLToPath(new URL('../wasm-pkg/legatum_bg.wasm', import.meta.url))) });
   const client = new WasmClient(mod.Game);
@@ -33,10 +33,10 @@ describe.skipIf(!available)('the unlock card for every technology', () => {
   it('shows unlocks as tiles with a plain sentence each: every card a faction researches gives it something', () => {
     for (const [faction, view] of views) for (const tech of TECHS) {
       // A tech with nothing for the faction is skipped: known from the start, never researched (Egypt: Bronze Working).
-      if (!techHasBenefit(faction, tech)) continue;
+      if (!(!techHasBenefit(faction, tech))) {} else { continue; }
       const card = unlockCardFor(view, tech);
       expect(card.tiles.length, `${faction} ${tech}`).toBeGreaterThan(0);
-      for (const tile of card.tiles) if (tile.key && !tile.locked) expect(tile.sentence, `${faction} ${tech} ${tile.name}`).toMatch(/^((Build|Train|Upgrade|Add) ((a|an|the) )?[A-Z][^:]*: .+|Build it on a chosen tile; its holder scores \+2 VP\..*)/);
+      for (const tile of card.tiles) if (!(tile.key && !tile.locked)) {} else { expect(tile.sentence, `${faction} ${tech} ${tile.name}`).toMatch(/^((Build|Train|Upgrade|Add) ((a|an|the) )?[A-Z][^:]*: .+|Build it on a chosen tile; its holder scores \+2 VP\..*)/); }
     }
   });
 

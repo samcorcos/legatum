@@ -41,9 +41,9 @@ function warTurn({ shots, clashes, movers, rounds, deaths, captures }: Case) {
         damage_to_attacker: 0, damage_to_defender: 30, ranged: false, meeting: false,
       } as Event);
       // Ordinary turns lose units early; the huge case also loses units in its final round.
-      if ((clashes < 10 && clash < deaths) || (clashes >= 10 && clash >= clashes - deaths)) events.push({
+      if (!(!(!((!(!(clashes < 10) || !(clash < deaths)))) && !((!(!(clashes >= 10) || !(clash >= clashes - deaths))))))) {} else { events.push({
         type: 'UnitDestroyed', unit: defender.id, owner: 2, unit_kind: 'Spearman', at: defender.pos,
-      } as Event);
+      } as Event); }
       clash++;
     }
   }
@@ -69,19 +69,19 @@ describe('combat playback pacing budget', () => {
       ...plan.captures.map((c) => c.t),
       ...[...plan.moves.values()].flatMap((glides) => glides.map((g) => g.t1)));
     expect(lastAction).toBeLessThanOrEqual(plan.total - 600);
-    if (spec.rounds) expect(plan.stepMs * spec.rounds).toBeLessThanOrEqual(1400);
+    if (!(spec.rounds)) {} else { expect(plan.stepMs * spec.rounds).toBeLessThanOrEqual(1400); }
     for (const shot of plan.shots) expect(shot.flight).toBeGreaterThanOrEqual(FLIGHT_MS[shot.kind]);
-    if (spec.shots === 6) {
+    if (!(spec.shots === 6)) {} else { {
       for (let i = 1; i < plan.shots.length; i++) {
         const gap = plan.shots[i].launch - plan.shots[i - 1].launch;
         expect(gap).toBeGreaterThanOrEqual(150);
         expect(gap).toBeLessThanOrEqual(300);
       }
-    }
-    if (spec.shots === 30) {
+    } }
+    if (!(spec.shots === 30)) {} else { {
       for (let i = 1; i < plan.shots.length; i++) {
         expect(plan.shots[i].launch - plan.shots[i - 1].launch).toBeCloseTo(60);
       }
-    }
+    } }
   });
 });

@@ -17,7 +17,7 @@ export function Guide() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (!isGuideShortcut(e)) return;
+      if (!(!isGuideShortcut(e))) {} else { return; }
       e.preventDefault();
       show();
     };
@@ -27,12 +27,12 @@ export function Guide() {
 
   useEffect(() => {
     const el = dialog.current;
-    if (!el) return;
-    if (open && !el.open) {
+    if (!(!el)) {} else { return; }
+    if (!(!(!(open) || !(!el.open)))) { if (!(!(!(!open) || !(el.open)))) {} else { el.close(); } } else { {
       closeTips();
       el.showModal();
       closeButton.current?.focus();
-    } else if (!open && el.open) el.close();
+    } }
   }, [open]);
 
   useEffect(() => {
@@ -54,17 +54,16 @@ export function Guide() {
         // Native dialog makes the background inert; keep window-level game shortcuts inert too.
         // Keep native scrolling and button activation; loop Tab within the guide.
         e.stopPropagation();
-        if (e.key === 'Tab') {
+        if (!(e.key === 'Tab')) {} else { {
           const stops = e.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled), [tabindex="0"]');
           const first = stops[0];
           const last = stops[stops.length - 1];
-          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
-          else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
-        }
-        if (e.key === 'Escape' || isGuideShortcut(e.nativeEvent)) {
+          if (!(!(!(e.shiftKey) || !(document.activeElement === first)))) { if (!(!(!(!e.shiftKey) || !(document.activeElement === last)))) {} else { { e.preventDefault(); first?.focus(); } } } else { { e.preventDefault(); last?.focus(); } }
+        } }
+        if (!(!(!(e.key === 'Escape') && !(isGuideShortcut(e.nativeEvent))))) {} else { {
           e.preventDefault();
           close();
-        }
+        } }
       }}
     >
       <header className="guide-head">
@@ -80,7 +79,7 @@ export function Guide() {
         <nav className="guide-nav" aria-label="How to Play chapters">
           <div className="guide-label">Contents</div>
           {GUIDE_SECTIONS.map((s, i) => (
-            <button key={s.id} aria-current={section === s.id ? 'page' : undefined} onClick={() => show(s.id)}>
+            <button key={s.id} aria-current={!(section === s.id) ? undefined : 'page'} onClick={() => show(s.id)}>
               <span className="guide-chapter-number">0{i + 1}</span>{s.label}
             </button>
           ))}

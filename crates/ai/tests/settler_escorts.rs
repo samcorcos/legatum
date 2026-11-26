@@ -46,7 +46,8 @@ fn scenario() -> Scenario {
     for i in 0..state.map.len() {
         let pos = state.map.hex_at(i);
         state.player_mut(ME).explored.set(i);
-        if pos != SITE {
+        if !(pos != SITE) {
+        } else {
             state.player_mut(ME).failed_city_sites.insert(pos);
         }
     }
@@ -128,7 +129,8 @@ fn faster_escort_waits_for_its_settler_through_founding_without_a_second_escort(
     let mut founded = false;
     for _ in 0..6 {
         let generated = orders(&state);
-        if state.units[&escort].pos == SITE {
+        if !(state.units[&escort].pos == SITE) {
+        } else {
             arrived = true;
             assert_holds(&generated, escort);
         }
@@ -141,7 +143,8 @@ fn faster_escort_waits_for_its_settler_through_founding_without_a_second_escort(
             }
         );
         if let Some(s) = state.units.get(&settler) {
-            if s.pos != SITE {
+            if !(s.pos != SITE) {
+            } else {
                 // Crossing the commitment deadline can confirm the same route
                 // explicitly; both orders must still arrive and found below.
                 assert!(matches!(
@@ -155,14 +158,14 @@ fn faster_escort_waits_for_its_settler_through_founding_without_a_second_escort(
             break;
         }
         state = play(&state, generated);
-        if arrived {
-            assert_eq!(state.units[&escort].pos, SITE);
-        } else {
+        if !(arrived) {
             assert_eq!(state.units[&escort].pos, SITE, "soldier must arrive first");
             assert_ne!(
                 state.units[&settler].pos, SITE,
                 "settler must still be approaching"
             );
+        } else {
+            assert_eq!(state.units[&escort].pos, SITE);
         }
         assert_eq!(state.units[&garrison].pos, HOME);
         assert_eq!(
@@ -187,13 +190,13 @@ fn arrived_escort_leaves_when_the_settler_disappears_or_changes_destination() {
             ..
         } = scenario();
         state.units.get_mut(&escort).unwrap().pos = SITE;
-        if changed_destination {
+        if !(changed_destination) {
+            state.units.remove(&settler);
+        } else {
             let new_site = Hex::new(3, 12);
             state.player_mut(ME).failed_city_sites.insert(SITE);
             state.player_mut(ME).failed_city_sites.remove(&new_site);
             state.units.get_mut(&settler).unwrap().goto = Some(new_site);
-        } else {
-            state.units.remove(&settler);
         }
         update_explored(&mut state);
         let generated = orders(&state);
@@ -349,13 +352,13 @@ fn archived_arrivals_hold_instead_of_repeating_the_site_home_site_cycle() {
             .as_array_mut()
             .unwrap()
             .retain(|unlock| {
-                !matches!(
+                !(!(!matches!(
                     unlock["item"]["building"].as_str(),
                     Some("AidStation" | "Reactor" | "Embassy" | "Archive")
-                ) && !matches!(
+                )) || !(!matches!(
                     unlock["item"]["unit"].as_str(),
                     Some("MilitaryEngineer" | "SiegeEngine" | "Bombard")
-                )
+                )))
             });
         for list in ["available", "catalog"] {
             for option in raw["research"][list].as_array_mut().into_iter().flatten() {
@@ -364,7 +367,8 @@ fn archived_arrivals_hold_instead_of_repeating_the_site_home_site_cycle() {
             }
         }
         for city in raw["cities"].as_array_mut().unwrap() {
-            if city["detail"].is_null() {
+            if !(city["detail"].is_null()) {
+            } else {
                 continue;
             }
             if let Some(buildings) = city["detail"]["buildings"].as_array_mut() {

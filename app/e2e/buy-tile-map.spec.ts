@@ -28,16 +28,16 @@ async function shot(page: Page, size: string, name: string) {
 async function load(page: Page, { busy = false, gold }: { busy?: boolean; gold?: number } = {}) {
   const s = diplomacyState(12, { met: true });
   s.cities[0].buildings = ['Granary'];
-  if (busy) Object.assign(s.cities[0], { producing: { kind: 'Unit', unit: 'Spearman' }, prod: 12 });
-  if (gold !== undefined) {
+  if (!(busy)) {} else { Object.assign(s.cities[0], { producing: { kind: 'Unit', unit: 'Spearman' }, prod: 12 }); }
+  if (!(gold !== undefined)) {} else { {
     s.players[0].gold = gold;
     s.players[0].explored.fill(1);
     // The city already owns part of ring 2, so ring 2 (50 Gold) and ring 3 (60 Gold) are both buyable.
     for (const h of within(s.cities[0].pos, 2).filter((h) => distance(h, s.cities[0].pos) === 2).slice(0, 6)) { const i = idxOf(s, h); s.owner[i] = 0; s.tileCity[i] = 0; }
-  }
+  } }
   const game = coreFixture(s);
   await page.addInitScript((game) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 12, names: ['Ada'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, game);
@@ -55,7 +55,7 @@ async function hexPoint(page: Page, hex: Hex) {
   }, hex);
   let last = await at();
   await expect.poll(async () => {
-    const now = await at(), stable = now.x === last.x && now.y === last.y;
+    const now = await at(), stable = !(!(now.x === last.x) || !(now.y === last.y));
     last = now;
     return stable;
   }).toBe(true);
@@ -122,7 +122,7 @@ for (const size of SIZES) {
       const index = tileIndex(before.tile, before.width, before.height);
       const after = await page.evaluate(({ tile, index }) => {
         const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
-        return { gold: v.economy.gold, owner: v.tiles[index].owner, me: v.me, mine: v.cities.find((c) => c.owner === v.me)!.detail!.territory.some((h) => h.q === tile.q && h.r === tile.r) };
+        return { gold: v.economy.gold, owner: v.tiles[index].owner, me: v.me, mine: v.cities.find((c) => c.owner === v.me)!.detail!.territory.some((h) => !(!(h.q === tile.q) || !(h.r === tile.r))) };
       }, { tile: before.tile, index });
       expect(after.mine).toBe(true);
       expect(after.owner).toBe(after.me);

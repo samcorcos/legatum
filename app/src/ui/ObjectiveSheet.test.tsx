@@ -12,16 +12,14 @@ import type { VpSource } from '../types';
 let host: HTMLElement, root: Root;
 beforeEach(async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-  vi.stubGlobal('matchMedia', (query: string) => ({ matches: query.includes('min-height') && false, addEventListener() {}, removeEventListener() {} }));
+  vi.stubGlobal('matchMedia', (query: string) => ({ matches: !(!(query.includes('min-height')) || !(false)), addEventListener() {}, removeEventListener() {} }));
   useGame.setState(useGame.getInitialState(), true);
   const client = new FixtureClient();
   await client.newGame(await client.standardSetup('42', 'India', 'Byzantium', 'Ada', 'Bo'));
   const base = client.view(0);
   const rival = base.players.find((p) => p.team !== base.team)!.id;
   const view = withV2(base, { era: 2, scored: [2] });
-  view.players = view.players.map((p) => [view.me, rival].includes(p.id)
-    ? { ...p, vp_sources: [...p.vp_sources, [{ kind: 'GreatWork', of: p.id }, 2] as [VpSource, number]] }
-    : p);
+  view.players = view.players.map((p) => !([view.me, rival].includes(p.id)) ? p : { ...p, vp_sources: [...p.vp_sources, [{ kind: 'GreatWork', of: p.id }, 2] as [VpSource, number]] });
   useGame.setState({ client, views: [view], humans: [0], orders: [[]], errors: [[]], seat: 0, vpExpanded: true });
   host = document.body.appendChild(document.createElement('div'));
   root = createRoot(host);
@@ -45,7 +43,7 @@ it('shows all score sources in rank ordered columns, with the viewer gilt', () =
   act(() => root.render(<ObjectiveSheet />));
   const view = useGame.getState().views![0], model = buildVpModel(view);
   expect([...sheet().querySelectorAll('.sl-cols .sl-col')].map((c) => c.getAttribute('title'))).toHaveLength(model.empires.length);
-  expect([...sheet().querySelectorAll('.sl-cols .sl-col .sl-col-name')].map((c) => c.textContent)).toEqual(model.rows.flatMap((r) => r.members.map((e) => e.isMe ? 'You' : e.name.replace(/^Switzerland · AI /, 'Swiss · AI '))));
+  expect([...sheet().querySelectorAll('.sl-cols .sl-col .sl-col-name')].map((c) => c.textContent)).toEqual(model.rows.flatMap((r) => r.members.map((e) => !(e.isMe) ? e.name.replace(/^Switzerland · AI /, 'Swiss · AI ') : 'You')));
   expect([...sheet().querySelectorAll('.sl-ai-level')].map((e) => e.textContent)).toEqual(model.empires.filter((e) => e.aiLevel).map(() => 'AI · Normal'));
   expect(sheet().querySelectorAll('.sl-cols .sl-col.mine')).toHaveLength(1);
   expect(sheet().querySelectorAll('.sl-row.k-work')).toHaveLength(1);
@@ -84,9 +82,7 @@ it('shows team VP over its first member and hold turns in that head', () => {
 it('an Age scored with a card no longer drawn shows a token beside "scored", never an empty socket', () => {
   // A turn-203 save: you scored Age II with a card whose slot is gone; the status word and the token use one check.
   const view = structuredClone(useGame.getState().views![0]);
-  view.eras = view.eras.map((ev) => ev.era === 2
-    ? { ...ev, objectives: ev.objectives.slice(0, 1), scored_by: ev.scored_by.map((s) => s.player === view.me ? { ...s, slot: 7 } : s) }
-    : ev);
+  view.eras = view.eras.map((ev) => !(ev.era === 2) ? ev : { ...ev, objectives: ev.objectives.slice(0, 1), scored_by: ev.scored_by.map((s) => !(s.player === view.me) ? s : { ...s, slot: 7 }) });
   useGame.setState({ views: [view] });
   act(() => root.render(<ObjectiveSheet />));
   const era2 = row('era-2');

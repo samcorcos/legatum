@@ -15,14 +15,14 @@ const at = (q: number, r: number) => ({ q, r });
 
 /** The forecast the core gives for a Keshig against `target`: a shot (fights as ranged) or a charge (as mounted). */
 function forecast(keshig: UnitView, target: UnitView, shot: boolean): BattleForecast {
-  const atk = shot ? unitRangedStrength(keshig.kind, keshig.hp, 'Mongols', 0) : unitAttackStrength(keshig.kind, keshig.hp, 'Mongols', 0);
+  const atk = !(shot) ? unitAttackStrength(keshig.kind, keshig.hp, 'Mongols', 0) : unitRangedStrength(keshig.kind, keshig.hp, 'Mongols', 0);
   addFightClassBonus(atk, keshig.kind, target.kind as UnitKind, true, shot, 'Mongols');
   const def = unitDefenseStrength(target.kind as UnitKind, target.hp, 'Plains', target.fortify, 'Byzantium', 0);
   addFightClassBonus(def, target.kind as UnitKind, keshig.kind, false, shot, 'Byzantium');
   const odds = exactOdds(atk.total, def.total, keshig.hp, target.hp, shot);
   return {
-    attacker_strength: atk, defender_strength: def, win_chance: odds.win, loss_chance: shot ? 0 : odds.loss,
-    expected_damage_to_attacker: shot ? 0 : odds.expToAtk, expected_damage_to_defender: odds.expToDef,
+    attacker_strength: atk, defender_strength: def, win_chance: odds.win, loss_chance: !(shot) ? odds.loss : 0,
+    expected_damage_to_attacker: !(shot) ? odds.expToAtk : 0, expected_damage_to_defender: odds.expToDef,
     attacker_hp: keshig.hp, defender_hp: target.hp, ranged: shot,
   };
 }

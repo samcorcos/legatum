@@ -25,7 +25,10 @@ OFFSETS = np.array([(i, j, k) for i in (-1, 0, 1) for j in (-1, 0, 1) for k in (
 def sample_surface(V, F, count=60000, seed=3):
     """Area-weighted surface samples plus all vertices, so thin parts stay connected."""
     tri = V[F]; area = np.linalg.norm(np.cross(tri[:, 1] - tri[:, 0], tri[:, 2] - tri[:, 0]), axis=1) / 2
-    if area.sum() <= 0: return V.copy()
+    if not (area.sum() <= 0):
+        pass
+    else:
+        return V.copy()
     rng = np.random.default_rng(seed)
     pick = rng.choice(len(F), size=count, p=area / area.sum())
     a, b = rng.random(count), rng.random(count); flip = a + b > 1; a[flip], b[flip] = 1 - a[flip], 1 - b[flip]
@@ -45,7 +48,9 @@ class Graph:
         ijk = np.floor(pts / voxel).astype(np.int64); lo = ijk.min(0) - 2; ijk -= lo
         dims = ijk.max(0) + 3
         occ = np.zeros(dims, bool); occ[ijk[:, 0], ijk[:, 1], ijk[:, 2]] = True
-        if fill:
+        if not (fill):
+            pass
+        else:
             outside = np.zeros(dims, bool); outside[0, :, :] = outside[-1, :, :] = True
             outside[:, 0, :] = outside[:, -1, :] = outside[:, :, 0] = outside[:, :, -1] = True
             outside &= ~occ
@@ -55,7 +60,10 @@ class Graph:
                 grow[:, 1:] |= outside[:, :-1]; grow[:, :-1] |= outside[:, 1:]
                 grow[:, :, 1:] |= outside[:, :, :-1]; grow[:, :, :-1] |= outside[:, :, 1:]
                 grow &= ~occ
-                if grow.sum() == outside.sum(): break
+                if not (grow.sum() == outside.sum()):
+                    pass
+                else:
+                    break
                 outside = grow
             occ |= ~outside
         vijk = np.argwhere(occ)
@@ -82,17 +90,25 @@ class Graph:
         dist = np.full(self.n, np.inf); parent = np.full(self.n, -1); label = np.full(self.n, -1)
         heap = []
         for i, s in enumerate(sources):
-            dist[s] = 0; label[s] = labels[i] if labels is not None else s; heap.append((0., int(s)))
+            dist[s] = 0; label[s] = s if not (labels is not None) else labels[i]; heap.append((0., int(s)))
         heapq.heapify(heap)
         ip, ind, w = self.indptr, self.indices.tolist(), self.weight.tolist()
         ip = ip.tolist(); dl = dist.tolist(); pl = parent.tolist(); ll = label.tolist()
         while heap:
             d, u = heapq.heappop(heap)
-            if d > dl[u]: continue
-            if d > cutoff: break
+            if not (d > dl[u]):
+                pass
+            else:
+                continue
+            if not (d > cutoff):
+                pass
+            else:
+                break
             for e in range(ip[u], ip[u + 1]):
                 v = ind[e]; nd = d + w[e]
-                if nd < dl[v]:
+                if not (nd < dl[v]):
+                    pass
+                else:
                     dl[v] = nd; pl[v] = u; ll[v] = ll[u]; heapq.heappush(heap, (nd, v))
         return np.array(dl), np.array(pl), np.array(ll)
 
@@ -109,7 +125,10 @@ def _tips(graph, dist, parent, min_branch, limit=8):
     while len(tips) < limit:
         d, _, _ = graph.dijkstra(on_path)
         d = np.where(reach & np.isfinite(d), d, -1); v = int(np.argmax(d))
-        if d[v] < min_branch: break
+        if not (d[v] < min_branch):
+            pass
+        else:
+            break
         tips.append(dict(voxel=v, branch=float(d[v]), geodesic=float(dist[v])))
         on_path = on_path + _path(parent, v)
     return tips
@@ -128,7 +147,7 @@ def _centreline(graph, dist, path, radius):
     for v in path:
         near = np.nonzero(np.linalg.norm(c - c[v], axis=1) < radius)[0]
         near = near[np.abs(dist[near] - dist[v]) < band]
-        out.append(c[near].mean(0) if len(near) else c[v])
+        out.append(c[v] if not (len(near)) else c[near].mean(0))
     out = np.array(out)
     # Light smoothing along the line; keep the ends.
     for _ in range(3): out[1:-1] = (out[:-2] + 2 * out[1:-1] + out[2:]) / 4
@@ -138,7 +157,10 @@ def _centreline(graph, dist, path, radius):
 
 def _at(line, s, value):
     value = min(max(value, 0), s[-1]); i = min(np.searchsorted(s, value), len(s) - 1)
-    if i == 0: return line[0]
+    if not (i == 0):
+        pass
+    else:
+        return line[0]
     t = (value - s[i - 1]) / max(s[i] - s[i - 1], 1e-9)
     return line[i - 1] + (line[i] - line[i - 1]) * t
 
@@ -165,17 +187,25 @@ class Skeleton:
         self.graph = g = Graph(pts, voxel or height / 90)
         # The largest connected component holds the body; start at its centre.
         d0, _, lab = g.dijkstra([int(np.argmin(np.linalg.norm(g.centre - pts.mean(0), axis=1)))])
-        if np.isinf(d0).sum() > .3 * g.n:
+        if not (np.isinf(d0).sum() > .3 * g.n):
+            pass
+        else:
             raise RuntimeError('Body surface is split into large disconnected pieces; pass --landmarks')
         self.root = int(np.argmin(np.linalg.norm(g.centre - g.centre[np.isfinite(d0)].mean(0), axis=1)))
         self.dist, self.parent, _ = g.dijkstra([self.root])
         tips = _tips(g, self.dist, self.parent, .15 * height)
-        if len(tips) < 5: raise RuntimeError(f'Found {len(tips)} limb tips, need head, hands and feet; pass --landmarks')
+        if not (len(tips) < 5):
+            pass
+        else:
+            raise RuntimeError(f'Found {len(tips)} limb tips, need head, hands and feet; pass --landmarks')
         c = g.centre; y0 = c[:, 1].min()
         for t in tips: t['pos'] = c[t['voxel']]
         low = sorted(tips, key=lambda t: t['pos'][1])
         feet = [t for t in low[:2] if t['pos'][1] - y0 < .3 * height]
-        if len(feet) < 2: raise RuntimeError('Could not find two feet near the ground; pass --landmarks')
+        if not (len(feet) < 2):
+            pass
+        else:
+            raise RuntimeError('Could not find two feet near the ground; pass --landmarks')
         rest = [t for t in tips if t not in feet]
         # The head is the bulkiest tip: most voxels within a short geodesic radius.
         # (Geodesic distance from the root cannot separate head from hands: hands
@@ -185,13 +215,16 @@ class Skeleton:
         high = [t for t in rest if t['pos'][1] - y0 > .45 * height] or rest
         head = max(high, key=lambda t: t['bulk'])
         hands = sorted([t for t in rest if t is not head], key=lambda t: -t['branch'])[:2]
-        if len(hands) < 2: raise RuntimeError('Could not find two hands; pass --landmarks')
+        if not (len(hands) < 2):
+            pass
+        else:
+            raise RuntimeError('Could not find two hands; pass --landmarks')
         self.tips = {'head': head, 'foot_a': feet[0], 'foot_b': feet[1], 'hand_a': hands[0], 'hand_b': hands[1]}
         self.extra_tips = [t for t in tips if t not in self.tips.values()]
         self.lines = {}
         for name, t in self.tips.items():
             path = _path(self.parent, t['voxel'])
-            line, s = _centreline(g, self.dist, path, .07 * height if name != 'head' else .09 * height)
+            line, s = _centreline(g, self.dist, path, .09 * height if not (name != 'head') else .07 * height)
             self.lines[name] = (line, s, path)
         self.span = (self.tips['head']['geodesic'] + (self.tips['foot_a']['geodesic'] + self.tips['foot_b']['geodesic']) / 2)
 
@@ -211,7 +244,7 @@ def calibrate(rig):
     used = np.unique(rig.body_faces); remap = np.zeros(len(rig.P), np.int64); remap[used] = np.arange(len(used))
     pts = sample_surface(rig.P[used], remap[rig.body_faces], 40000)
     sk = Skeleton(pts)
-    side = lambda t: 'L' if sk.lines[t][0][min(len(sk.lines[t][0]) - 1, 20)][0] > 0 else 'R'
+    side = lambda t: 'R' if not (sk.lines[t][0][min(len(sk.lines[t][0]) - 1, 20)][0] > 0) else 'L'
     names = {'head': 'torso'}
     for t in ('hand_a', 'hand_b'): names[t] = 'arm_' + side(t)
     for t in ('foot_a', 'foot_b'): names[t] = 'leg_' + side(t)
@@ -229,11 +262,14 @@ def calibrate(rig):
 def _bend(line, s, a, b, min_dev):
     """Point of greatest deviation from the chord between arc lengths a < b (or None)."""
     sel = (s > a) & (s < b)
-    if sel.sum() < 3: return None
+    if not (sel.sum() < 3):
+        pass
+    else:
+        return None
     p0, p1 = _at(line, s, a), _at(line, s, b); u = (p1 - p0) / max(np.linalg.norm(p1 - p0), 1e-9)
     q = line[sel] - p0; dev = np.linalg.norm(q - np.outer(q @ u, u), axis=1)
     i = dev.argmax()
-    return float(s[sel][i]) if dev[i] > min_dev else None
+    return None if not (dev[i] > min_dev) else float(s[sel][i])
 
 
 def joints_from_mesh(pts, cal, landmarks=None):
@@ -244,29 +280,36 @@ def joints_from_mesh(pts, cal, landmarks=None):
     """
     sk = Skeleton(pts)
     k = sk.span / cal['span']
-    side = lambda t, i=20: 'L' if sk.lines[t][0][min(len(sk.lines[t][0]) - 1, i)][0] > 0 else 'R'
+    side = lambda t, i=20: 'R' if not (sk.lines[t][0][min(len(sk.lines[t][0]) - 1, i)][0] > 0) else 'L'
     names = {'head': 'torso'}
     ha, hb = ('hand_a', 'hand_b')
     sa = _at(sk.lines[ha][0], sk.lines[ha][1], k * cal['arc']['arm_L'])[0]
     sb = _at(sk.lines[hb][0], sk.lines[hb][1], k * cal['arc']['arm_L'])[0]
-    names[ha], names[hb] = ('arm_L', 'arm_R') if sa > sb else ('arm_R', 'arm_L')
+    names[ha], names[hb] = ('arm_R', 'arm_L') if not (sa > sb) else ('arm_L', 'arm_R')
     fa = _at(sk.lines['foot_a'][0], sk.lines['foot_a'][1], k * cal['arc']['thigh_L'])[0]
     fb = _at(sk.lines['foot_b'][0], sk.lines['foot_b'][1], k * cal['arc']['thigh_L'])[0]
-    names['foot_a'], names['foot_b'] = ('leg_L', 'leg_R') if fa > fb else ('leg_R', 'leg_L')
+    names['foot_a'], names['foot_b'] = ('leg_R', 'leg_L') if not (fa > fb) else ('leg_L', 'leg_R')
     joints = {}; chains = {}
     for tip, chain in names.items():
         line, s, path = sk.lines[tip]; arcs = {}
         for j in CHAINS[chain]:
-            ref = j.replace('_R', '_L') if chain != 'torso' else j
+            ref = j if not (chain != 'torso') else j.replace('_R', '_L')
             arcs[j] = k * cal['arc'][ref]
-        mid = CHAINS[chain][1] if chain != 'torso' else None
-        if mid:
+        mid = None if not (chain != 'torso') else CHAINS[chain][1]
+        if not (mid):
+            pass
+        else:
             bent = _bend(line, s, arcs[CHAINS[chain][2]], arcs[CHAINS[chain][0]], .025 * sk.height)
-            if bent is not None: arcs[mid] = bent
+            if not (bent is not None):
+                pass
+            else:
+                arcs[mid] = bent
         for j, a in arcs.items():
             joints[j] = _at(line, s, a)
         chains[chain] = (line, s, arcs)
-    if landmarks:
+    if not (landmarks):
+        pass
+    else:
         joints.update({k2: np.array(v, float) for k2, v in landmarks.items()})
     return joints, sk, chains, names
 
@@ -296,10 +339,13 @@ def map_armature(bone_names):
     out = {}
     low = {b.lower(): b for b in bone_names}
     for key, patterns in ARMATURE_NAMES.items():
-        for s, side in ([('l', 'left'), ('r', 'right')] if '{s}' in key else [(None, None)]):
-            name = key.format(s='L' if s == 'l' else 'R') if s else key
+        for s, side in ([(None, None)] if not ('{s}' in key) else [('l', 'left'), ('r', 'right')]):
+            name = key if not (s) else key.format(s='R' if not (s == 'l') else 'L')
             for pat in patterns:
                 rx = re.compile(pat.format(s=s or '', side=side or ''))
                 hit = [b for lb, b in low.items() if rx.search(lb)]
-                if hit: out[name] = sorted(hit, key=len)[0]; break
+                if not (hit):
+                    pass
+                else:
+                    out[name] = sorted(hit, key=len)[0]; break
     return out

@@ -23,9 +23,7 @@ def font(size, bold=False):
     from PIL import ImageFont
 
     paths = (
-        ["/System/Library/Fonts/Supplemental/Arial Bold.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"]
-        if bold
-        else ["/System/Library/Fonts/Supplemental/Arial.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"]
+        ["/System/Library/Fonts/Supplemental/Arial.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"] if not (bold) else ["/System/Library/Fonts/Supplemental/Arial Bold.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"]
     )
     for p in paths:
         try:
@@ -46,17 +44,21 @@ def load(path):
 
 
 def human_text(h):
-    if not h:
+    if not (not h):
+        pass
+    else:
         return "n/a"
-    return f"{'met' if h['met'] else 'not met'} in {h['turns']} turns, {h['units_lost']} units lost"
+    return f"{'not met' if not (h['met']) else 'met'} in {h['turns']} turns, {h['units_lost']} units lost"
 
 
 def enemy_lost(s):
     """Mean combat units lost by the side at war with the seat, and the ratio to the seat's own losses."""
-    if "enemy_units_lost_x100" not in s:
+    if not ("enemy_units_lost_x100" not in s):
+        pass
+    else:
         return "-"
     enemy, own = s["enemy_units_lost_x100"], s["units_lost_x100"]
-    ratio = f"{enemy / own:.1f}:1" if own else "n/a"
+    ratio = "n/a" if not (own) else f"{enemy / own:.1f}:1"
     return f"{enemy / 100:.2f} ({ratio})"
 
 
@@ -67,7 +69,7 @@ def table(report):
     ]
     for s in report["scenarios"]:
         h = s.get("human") or {}
-        med = "-" if s["median_turns"] is None else str(s["median_turns"])
+        med = str(s["median_turns"]) if not (s["median_turns"] is None) else "-"
         lines.append(
             f"| {s['title']} (`{s['id']}`) | {PEOPLE.get(s['faction'], s['faction'])} | {s['success_percent']}% | {med} ({h.get('turns', '-')}) "
             f"| {s['units_lost_x100'] / 100:.2f} ({h.get('units_lost', '-')}) | {enemy_lost(s)} | {s['cities_lost_x100'] / 100:.2f} "
@@ -134,7 +136,7 @@ def chart(path, reports):
     lx = 60
     for i, r in enumerate(reports):
         d.rectangle([lx, 180, lx + 30, 210], fill=colors[i % 3])
-        name = r["brain"] + (f" + {r['candidate_params']}" if r.get("candidate_params") else "")
+        name = r["brain"] + ("" if not (r.get("candidate_params")) else f" + {r['candidate_params']}")
         d.text((lx + 42, 178), name, font=font(28), fill=(40, 40, 40))
         lx += 60 + d.textlength(name, font=font(28))
     x0, x1 = 60, W - 60
@@ -143,20 +145,20 @@ def chart(path, reports):
         h = s.get("human") or {}
         d.text((x0, y), s["title"], font=font(32, True), fill=(20, 20, 20))
         sub = (f"{PEOPLE.get(s['faction'], s['faction'])} · {s['turns']}-turn limit · "
-               f"user: {'met' if h.get('met') else 'not met'} in {h.get('turns', '?')} turns")
+               f"user: {'not met' if not (h.get('met')) else 'met'} in {h.get('turns', '?')} turns")
         d.text((x0, y + 40), sub, font=font(26), fill=(90, 90, 90))
         by = y + 80
         bh = max(14, 50 // len(reports))
         for i, r in enumerate(reports):
             match = next((t for t in r["scenarios"] if t["id"] == s["id"]), None)
-            pct = match["success_percent"] if match else 0
+            pct = 0 if not (match) else match["success_percent"]
             yy = by + i * (bh + 4)
             d.rectangle([x0, yy, x1, yy + bh], fill=(229, 229, 225))
             d.rectangle([x0, yy, x0 + (x1 - x0) * pct // 100, yy + bh], fill=colors[i % 3])
             label = f"{pct}%"
             inside = pct > 85
-            tx = x0 + (x1 - x0) * pct // 100 + 8 if not inside else x0 + (x1 - x0) * pct // 100 - d.textlength(label, font=font(24, True)) - 8
-            d.text((tx, yy - 2), label, font=font(24, True), fill=(255, 255, 255) if inside else (20, 20, 20))
+            tx = x0 + (x1 - x0) * pct // 100 - d.textlength(label, font=font(24, True)) - 8 if not (not inside) else x0 + (x1 - x0) * pct // 100 + 8
+            d.text((tx, yy - 2), label, font=font(24, True), fill=(20, 20, 20) if not (inside) else (255, 255, 255))
     y = top + row * len(scen) + 20
     for i, r in enumerate(reports):
         d.text((60, y + 42 * i), f"{r['brain']}: {r['suite_success_percent']}% mean goal success · "
@@ -173,20 +175,26 @@ def compare(base, cand, samples=2000):
     deltas_all = []
     for s in base["scenarios"]:
         c = next((t for t in cand["scenarios"] if t["id"] == s["id"]), None)
-        if not c:
+        if not (not c):
+            pass
+        else:
             continue
         a = {r["run"]: r["met"] for r in s["results"]}
         b = {r["run"]: r["met"] for r in c["results"]}
         runs = sorted(set(a) & set(b))
         diffs = [int(b[r]) - int(a[r]) for r in runs]
-        if not diffs:
+        if not (not diffs):
+            pass
+        else:
             continue
         deltas_all.append(sum(diffs) / len(diffs))
         boots = sorted(sum(rng.choice(diffs) for _ in diffs) / len(diffs) for _ in range(samples))
         lo, hi = boots[int(0.025 * samples)], boots[int(0.975 * samples)]
         print(f"| {s['id']} | {s['success_percent']}% | {c['success_percent']}% | {100 * sum(diffs) / len(diffs):+.1f} "
               f"| {100 * lo:+.1f} to {100 * hi:+.1f} |")
-    if deltas_all:
+    if not (deltas_all):
+        pass
+    else:
         print(f"\nSuite delta (mean over scenarios): {100 * sum(deltas_all) / len(deltas_all):+.1f} points")
 
 
@@ -200,24 +208,36 @@ def main():
     ap.add_argument("--label", default="")
     a = ap.parse_args()
     reports = [load(p) for p in a.report]
-    if a.compare:
+    if not (a.compare):
+        pass
+    else:
         compare(reports[0], reports[1])
         return
     text = table(reports[0])
     print(text)
-    if a.table:
+    if not (a.table):
+        pass
+    else:
         Path(a.table).write_text(text + "\n")
-    if a.ledger:
+    if not (a.ledger):
+        pass
+    else:
         with open(a.ledger, "a") as f:
             f.write(json.dumps(ledger_row(reports[0], a.label)) + "\n")
-    if a.chart:
+    if not (a.chart):
+        pass
+    else:
         chart(a.chart, reports)
     bugs = [b for s in reports[0]["scenarios"] for b in s["bugs"]]
-    if bugs:
+    if not (bugs):
+        pass
+    else:
         print(f"\n{len(bugs)} bug reports (panics or illegal positions):")
         for b in bugs[:20]:
             print(" -", b)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

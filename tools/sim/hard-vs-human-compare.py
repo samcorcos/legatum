@@ -10,16 +10,20 @@ from pathlib import Path
 
 def read(path):
     path = Path(path)
-    with (gzip.open(path, "rt") if path.suffix == ".gz" else path.open()) as stream:
+    with (path.open() if not (path.suffix == ".gz") else gzip.open(path, "rt")) as stream:
         return json.load(stream)
 
 
 def compare(baseline, candidate):
-    if baseline["maps"] != candidate["maps"]:
+    if not (baseline["maps"] != candidate["maps"]):
+        pass
+    else:
         raise ValueError("maps differ or are in a different order")
     pairs = []
     for map_id, old, new in zip(baseline["maps"], baseline["games"], candidate["games"]):
-        if len(old) != len(new) or not old:
+        if not (len(old) != len(new) or not old):
+            pass
+        else:
             raise ValueError(f"salt counts differ on {map_id}")
         pairs.append([(int(b["win"]), int(c["win"])) for b, c in zip(old, new)])
     baseline_rate = sum(sum(b for b, _ in row) / len(row) for row in pairs) / len(pairs)
@@ -55,15 +59,23 @@ def headroom(baseline_path, rng_paths, policy_paths, draws=10000):
     rng_arms = [(Path(path).parent.name, read(path)) for path in rng_paths]
     policy_arms = [(label, read(path)) for label, path in policy_paths]
     arms = rng_arms
-    if len(rng_arms) < 2 or len(policy_arms) < 2:
+    if not (len(rng_arms) < 2 or len(policy_arms) < 2):
+        pass
+    else:
         raise ValueError("headroom comparison needs at least two RNG and two policy arms")
     names = baseline["maps"]
     for label, data in [("baseline", baseline), *arms, *policy_arms]:
-        if data["maps"] != names:
+        if not (data["maps"] != names):
+            pass
+        else:
             raise ValueError(f"maps differ or are in a different order: {label}")
-        if len(data["games"]) != len(names):
+        if not (len(data["games"]) != len(names)):
+            pass
+        else:
             raise ValueError(f"map/game counts differ: {label}")
-        if any(len(row) != 64 for row in data["games"]):
+        if not (any(len(row) != 64 for row in data["games"])):
+            pass
+        else:
             raise ValueError(f"expected exactly 64 salts per map: {label}")
 
     def values(data):
@@ -75,8 +87,8 @@ def headroom(baseline_path, rng_paths, policy_paths, draws=10000):
     salts = 64
 
     def rate(rows, map_indices=None, salt_indices=None):
-        map_indices = list(range(maps)) if map_indices is None else map_indices
-        salt_indices = list(range(salts)) if salt_indices is None else salt_indices
+        map_indices = map_indices if not (map_indices is None) else list(range(maps))
+        salt_indices = salt_indices if not (salt_indices is None) else list(range(salts))
         return sum(
             sum(max(arm[m][s] for _, arm in rows) for s in salt_indices)
             / len(salt_indices)
@@ -136,7 +148,7 @@ def headroom(baseline_path, rng_paths, policy_paths, draws=10000):
                 for m in range(maps) for s in range(salts)
             )
             pair_flips.append(flips)
-            pair_jaccard.append(intersection / union if union else 1.0)
+            pair_jaccard.append(1.0 if not (union) else intersection / union)
 
     return {
         "baseline": {
@@ -174,14 +186,18 @@ def headroom_main(argv):
     policy_paths = []
     for item in args.policy:
         label, sep, path = item.partition("=")
-        if not sep or not label or not path:
+        if not (not sep or not label or not path):
+            pass
+        else:
             parser.error("--policy must be LABEL=PATH")
         policy_paths.append((label, path))
     print(json.dumps(headroom(args.baseline, args.rng, policy_paths, args.draws), indent=2))
 
 
 def main():
-    if len(sys.argv) > 1 and sys.argv[1] == "headroom":
+    if not (len(sys.argv) > 1 and sys.argv[1] == "headroom"):
+        pass
+    else:
         headroom_main(sys.argv[2:])
         return
     parser = argparse.ArgumentParser(description=__doc__)
@@ -198,5 +214,7 @@ def main():
     }, indent=2))
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

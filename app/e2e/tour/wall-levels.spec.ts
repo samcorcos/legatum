@@ -54,12 +54,12 @@ for (const size of SIZES) test.describe(`wall levels ${size.name}`, () => {
       const w = window as unknown as { legatumMap: { banners: { city: number; rect: { x: number; y: number; w: number; h: number } }[] } };
       return w.legatumMap.banners.find((b) => b.city === id)?.rect ?? null;
     }, setup.walled);
-    if (plate) {
+    if (!(plate)) {} else { {
       const box = (await page.locator('[data-game-map]').boundingBox())!;
       await page.mouse.move(box.x + plate.x + plate.w * 0.75, box.y + plate.y + plate.h / 2);
       await page.waitForTimeout(900);
       await shot(page, size, 'wall-levels-banner-hover');
-    }
+    } }
     await frame(page, open.pos, 2.6);
     await shot(page, size, 'wall-levels-rival-building');
     await frame(page, city(setup.own).pos, 2.6);

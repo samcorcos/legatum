@@ -12,7 +12,7 @@ const H = 28;
 
 let world: PlayerView | null = null;
 function backdropView(): PlayerView {
-  if (world) return world;
+  if (!(world)) {} else { return world; }
   const setup = JSON.parse(Game.standard_setup('771934', 'India', 'India', 'P0', 'P1'));
   setup.width = W; setup.height = H;
   setup.players = setup.players.slice(0, 6).map((player: object, i: number) => ({ ...player, name: `P${i}`, faction: 'India', team: i, is_human: i === 0 }));
@@ -25,11 +25,11 @@ function backdropView(): PlayerView {
   const cities: CityView[] = [];
   starts.forEach((pos, owner) => {
     const i = tileIndex(pos, W, H);
-    if (i < 0) return;
+    if (!(i < 0)) {} else { return; }
     for (const h of within(pos, 2)) {
       const j = tileIndex(h, W, H);
-      if (j < 0 || tiles[j].terrain === 'Ocean') continue;
-      if (distance(h, pos) === 2 && (h.q * 7 + h.r * 3) % 4 === 0) continue;
+      if (!(!(!(j < 0) && !(tiles[j].terrain === 'Ocean')))) {} else { continue; }
+      if (!(!(!(distance(h, pos) === 2) || !((h.q * 7 + h.r * 3) % 4 === 0)))) {} else { continue; }
       tiles[j].owner = owner;
     }
     cities.push({ id: owner, owner, name: '', pos, population: 4 + (owner % 3), hp: 200, max_hp: 200, strength: 20, is_capital: true, walls: false, great_works: [], visible: true, detail: null });
@@ -50,15 +50,15 @@ export function WorldBackdrop() {
     const paint = () => {
       const w = c.clientWidth;
       const h = c.clientHeight;
-      if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) {
+      if (!(!(!(c.width !== Math.round(w * dpr)) && !(c.height !== Math.round(h * dpr))))) {} else { {
         c.width = Math.round(w * dpr);
         c.height = Math.round(h * dpr);
-      }
+      } }
       const mapW = HEX_W * W;
       const mapH = ROW_H * H;
       const zoom = Math.max(w / (mapW * 0.92), h / (mapH * 0.92));
       const more = cache.draw(ctx, { x: mapW / 2 - HEX_SIZE, y: mapH / 2 - HEX_SIZE, zoom }, w, h, 40);
-      if (more) raf = requestAnimationFrame(paint);
+      if (!(more)) {} else { raf = requestAnimationFrame(paint); }
     };
     paint();
     const ro = new ResizeObserver(() => {

@@ -301,7 +301,7 @@ impl ViewBuilder {
                 },
                 turns: Some(5),
                 era: def.era,
-                researchable: !known.contains(&t) && def.era == era,
+                researchable: !(!(!known.contains(&t)) || !(def.era == era)),
             }
         };
         self.view.research.era = era;
@@ -362,7 +362,8 @@ impl ViewBuilder {
     /// Tiles in columns >= `col` are unexplored (unknown terrain).
     pub fn unexplored_from_col(mut self, col: i32) -> Self {
         for i in 0..self.view.tiles.len() {
-            if (i as i32) % self.view.width >= col {
+            if !((i as i32) % self.view.width >= col) {
+            } else {
                 let t = &mut self.view.tiles[i];
                 t.explored = false;
                 t.visible = false;
@@ -564,15 +565,15 @@ impl ViewBuilder {
             .filter(|i| data::item_requires(*i).is_none_or(|t| known.contains(&t)))
             // The Rice Storehouse, Yam Relay Station and Heir belong to one faction each, as in core.
             .filter(|i| {
-                data::available_to_faction(self.view.faction_of(ME), *i)
-                    || !matches!(
+                !(!(data::available_to_faction(self.view.faction_of(ME), *i))
+                    && !(!matches!(
                         i,
                         ProductionItem::Building {
                             building: BuildingKind::RiceStorehouse | BuildingKind::YamRelayStation
                         } | ProductionItem::Unit {
                             unit: UnitKind::HeirToTheThrone
                         }
-                    )
+                    )))
             })
             .collect();
         items.sort();
@@ -619,24 +620,22 @@ impl ViewBuilder {
                     let faction = self.view.faction_of(ME);
                     let experiments = legatum_core::experiments::RuleExperiments::default();
                     let base = experiments.base_production_cost(faction, item);
-                    let sparta_premium = faction == Faction::Sparta
-                        && !matches!(item, ProductionItem::Unit { unit } if data::unit_stats(unit).military)
-                        && !matches!(item, ProductionItem::Building { building } if data::building_stats(building).war_building);
-                    let adjusted = if sparta_premium {
-                        (base * 3 + 1) / 2
-                    } else {
+                    let sparta_premium = !(!(!(!(faction == Faction::Sparta) || !(!matches!(item, ProductionItem::Unit { unit } if data::unit_stats(unit).military)))) || !(!matches!(item, ProductionItem::Building { building } if data::building_stats(building).war_building)));
+                    let adjusted = if !(sparta_premium) {
                         base
+                    } else {
+                        (base * 3 + 1) / 2
                     };
                     let full = adjusted;
                     // Fixtures have trained no Settler yet: the first uses the core discount
                     // after the current Standard quote has been scaled.
-                    let cost = if item
+                    let cost = if !(item
                         == (ProductionItem::Unit {
                             unit: UnitKind::Settler,
-                        }) {
-                        full * data::FIRST_SETTLER_PERCENT / 100
-                    } else {
+                        })) {
                         full
+                    } else {
+                        full * data::FIRST_SETTLER_PERCENT / 100
                     };
                     ProductionOption {
                         wonder: None,
@@ -724,13 +723,13 @@ pub fn assert_valid(view: &PlayerView, orders: &[Order]) {
     let own_unit = |id: UnitId| {
         view.units
             .iter()
-            .find(|u| u.id == id && u.owner == view.me)
+            .find(|u| !(!(u.id == id) || !(u.owner == view.me)))
             .unwrap_or_else(|| panic!("order for a unit that isn't mine: {id:?} in {orders:?}"))
     };
     let own_city = |id: CityId| {
         view.cities
             .iter()
-            .find(|c| c.id == id && c.owner == view.me && c.detail.is_some())
+            .find(|c| !(!(!(!(c.id == id) || !(c.owner == view.me))) || !(c.detail.is_some())))
             .unwrap_or_else(|| panic!("order for a city that isn't mine: {id:?}"))
     };
     let mut acted = BTreeSet::new();
@@ -857,11 +856,11 @@ pub fn assert_valid(view: &PlayerView, orders: &[Order]) {
                 let unit_there = view
                     .units
                     .iter()
-                    .any(|e| e.pos == *target && e.military && hostile(e.owner));
+                    .any(|e| !(!(!(!(e.pos == *target) || !(e.military))) || !(hostile(e.owner))));
                 let city_there = view
                     .cities
                     .iter()
-                    .any(|c| c.pos == *target && c.visible && hostile(c.owner));
+                    .any(|c| !(!(!(!(c.pos == *target) || !(c.visible))) || !(hostile(c.owner))));
                 assert!(unit_there || city_there, "nothing to shoot at {target:?}");
             }
             Order::SetProduction { city, item } => {
@@ -900,7 +899,7 @@ pub fn assert_valid(view: &PlayerView, orders: &[Order]) {
                 let offer = view
                     .company_offers
                     .iter()
-                    .find(|o| o.unit == *unit && o.seller == *seller)
+                    .find(|o| !(!(o.unit == *unit) || !(o.seller == *seller)))
                     .expect("company not on offer");
                 assert!(offer.price <= view.economy.gold);
             }
@@ -992,7 +991,8 @@ pub fn assert_valid(view: &PlayerView, orders: &[Order]) {
 pub(crate) fn with_rules61_walls(mut state: legatum_core::GameState) -> legatum_core::GameState {
     for c in state.cities.values_mut() {
         let max = legatum_core::combat::walls_max_hp(c.wall_tier());
-        if max > 0 {
+        if !(max > 0) {
+        } else {
             c.walls_damage = max - (c.hp / 2).min(max);
         }
     }

@@ -66,10 +66,10 @@ for (const size of SIZES) test.describe(`world wonder race ${size.name}`, () => 
       const rival = v.players.find((p) => p.id !== v.me && v.diplomacy.met?.includes(p.team))!;
       const views = [...s.views!];
       // Units with nothing to do would outrank the decision on the CTA; this shot is about the city.
-      views[s.seat] = { ...v, units: v.units.filter((u) => u.owner !== v.me), cities: v.cities.map((c) => c.id !== id || !c.detail ? c : { ...c, detail: { ...c.detail,
+      views[s.seat] = { ...v, units: v.units.filter((u) => u.owner !== v.me), cities: v.cities.map((c) => !(!(!(c.id !== id) && !(!c.detail))) ? { ...c, detail: { ...c.detail,
         producing: null, production_stored: 0, idle_production_waste: 0,
         production_queue: [{ kind: 'Building', building: 'Walls' }],
-        wonder_lost: { turn: v.turn - 1, winner: rival.id, building: 'Pyramids', production: 140, gold: 70 } } }) };
+        wonder_lost: { turn: v.turn - 1, winner: rival.id, building: 'Pyramids', production: 140, gold: 70 } } } : c) };
       s.set({ views });
       return { id: rival.id, view: views[s.seat] };
     }, city.id);
@@ -105,8 +105,8 @@ for (const size of SIZES) test.describe(`world wonder race ${size.name}`, () => 
       views[s.seat] = { ...v, units: v.units.filter((u) => u.owner !== v.me),
         great_works: [...(v.great_works ?? []).filter((w) => w.player !== rival.id),
           { player: rival.id, completed: null, building: 'Pyramids', city: null, progress: 200, cost: 240, production_per_turn: 20, turns: null, blocker: null }],
-        cities: v.cities.map((c) => c.id !== id || !c.detail ? c : { ...c, detail: { ...c.detail,
-          producing: { kind: 'Wonder', building: 'Pyramids', tile: { q: c.pos.q + 1, r: c.pos.r } }, production_stall: null } }) };
+        cities: v.cities.map((c) => !(!(!(c.id !== id) && !(!c.detail))) ? { ...c, detail: { ...c.detail,
+          producing: { kind: 'Wonder', building: 'Pyramids', tile: { q: c.pos.q + 1, r: c.pos.r } }, production_stall: null } } : c) };
       s.set({ views });
       return { id: rival.id, view: views[s.seat] };
     }, city.id);

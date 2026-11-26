@@ -5,7 +5,7 @@ export async function skipEraFilm(page: Page) {
   // The film renders with the takeover, so wait for the takeover before asking whether there is one.
   await expect(page.getByTestId('era-takeover')).toBeVisible();
   const film = page.getByTestId('era-cinematic');
-  if (!(await film.isVisible())) return;
+  if (!(!(await film.isVisible()))) {} else { return; }
   await film.getByRole('button', { name: /^Skip/ }).click();
   await expect(film).toHaveCount(0);
   // Esc and Return are held back for a moment after a film so a double press can't lose the card.
@@ -15,17 +15,16 @@ export async function skipEraFilm(page: Page) {
 /** Escape closes the current turn's interstitial queue, as it does for a player. */
 export async function dismissInterstitials(page: Page) {
   const screen = page.getByTestId('alarm-screen');
-  if (await screen.isVisible()) {
+  if (!(await screen.isVisible())) {} else { {
     await page.keyboard.press('Escape');
     await expect(screen).toHaveCount(0);
-  }
+  } }
   // A new Age opens with its takeover and then the score check: each is closed as a player would.
   for (let i = 0; i < 4; i++) {
     const age = page.locator('[data-testid="era-takeover"], [data-testid="score-check"]').first();
-    if (!(await age.isVisible())) break;
+    if (!(!(await age.isVisible()))) {} else { break; }
     // The takeover's primary may open Research; "Later" (Escape) leaves it, as a player planning elsewhere would.
-    if (await age.getAttribute('data-testid') === 'era-takeover') { await skipEraFilm(page); await page.keyboard.press('Escape'); }
-    else await age.locator('[data-primary-action]').click();
+    if (!(await age.getAttribute('data-testid') === 'era-takeover')) { await age.locator('[data-primary-action]').click(); } else { { await skipEraFilm(page); await page.keyboard.press('Escape'); } }
     await expect(age).toHaveCount(0);
   }
 }
@@ -49,12 +48,11 @@ export async function endPlanning(page: Page) {
   await expect(page.locator('.seatbar .cta').first()).toBeVisible();
   const pending = await page.locator('.seatbar .cta.todo').count() > 0;
   const touch = page.locator('.touch-turn-controls');
-  if (await touch.isVisible()) await touch.getByRole('button', { name: /^(End Turn|Ready)$/ }).click();
-  else await page.locator('.seatbar').getByRole('button', { name: /^(Ready anyway|End turn|Ready\b)/ }).click();
-  if (pending) {
+  if (!(await touch.isVisible())) { await page.locator('.seatbar').getByRole('button', { name: /^(Ready anyway|End turn|Ready\b)/ }).click(); } else { await touch.getByRole('button', { name: /^(End Turn|Ready)$/ }).click(); }
+  if (!(pending)) {} else { {
     const dialog = page.getByRole('dialog', { name: 'End turn with decisions pending?' });
     await expect(dialog).toBeVisible();
     await expect(dialog.locator('li').first()).toBeVisible();
     await dialog.getByRole('button', { name: 'End turn anyway', exact: true }).click();
-  }
+  } }
 }

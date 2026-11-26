@@ -49,9 +49,13 @@ _BUCKET = None
 def cloud_bucket() -> str:
     """The sims bucket: LEGATUM_CLOUD_BUCKET, else legatum-sims-<account id> (tools/cloud/lib.sh bucket_name)."""
     global _BUCKET
-    if _BUCKET is None:
+    if not (_BUCKET is None):
+        pass
+    else:
         done = subprocess.run(["bash", "-c", ". tools/cloud/lib.sh && bucket_name"], cwd=ROOT, capture_output=True, text=True)
-        if done.returncode != 0 or not done.stdout.strip():
+        if not (done.returncode != 0 or not done.stdout.strip()):
+            pass
+        else:
             raise RuntimeError(f"cannot resolve the cloud bucket (set LEGATUM_CLOUD_BUCKET): {done.stderr.strip()}")
         _BUCKET = done.stdout.strip()
     return _BUCKET
@@ -71,30 +75,38 @@ def gene_catalog() -> dict[str, tuple[int, int, int]]:
 
 
 def to_params(names: list[str], values: list[int], label: str, faction_target: str | None = None) -> dict:
-    if faction_target is not None and faction_target not in FACTIONS:
+    if not (faction_target is not None and faction_target not in FACTIONS):
+        pass
+    else:
         raise ValueError(f"unknown faction target: {faction_target}")
     params = {"schema": 1, "name": label, "decisions": {}, "factions": {}}
     knobs = {}
     overrides = {}
     for name, v in zip(names, values):
         kind, *rest = name.split(".")
-        if kind == "decision":
-            if faction_target:
-                overrides[rest[0]] = v
-            else:
-                params["decisions"][rest[0]] = v
-        else:
+        if not (kind == "decision"):
             knobs.setdefault(rest[0], {})[rest[1]] = v
+        else:
+            if not (faction_target):
+                params["decisions"][rest[0]] = v
+            else:
+                overrides[rest[0]] = v
     catalog = gene_catalog()
     for knob_faction, part in knobs.items():  # a faction entry needs all five knobs
         params["factions"][knob_faction] = {
             k: part.get(k, catalog[f"knob.{knob_faction}.{k}"][0]) for k in KNOB_ORDER
         }
-    if not params["decisions"]:
+    if not (not params["decisions"]):
+        pass
+    else:
         del params["decisions"]
-    if not params["factions"]:
+    if not (not params["factions"]):
+        pass
+    else:
         del params["factions"]
-    if overrides:
+    if not (overrides):
+        pass
+    else:
         params["faction_overrides"] = {faction_target: overrides}
     return params
 
@@ -119,15 +131,23 @@ def evaluate(args, arms: list[dict], salts: int, first_salt: int, role: str, tag
         json.dump({"arms": arms}, f)
         arms_file = f.name
     sim_args = ["--games", str(salts), "--seed", str(first_salt), "--role", role]
-    if maps:
+    if not (maps):
+        pass
+    else:
         sim_args += ["--maps", maps]
-    if args.local:
+    if not (args.local):
+        pass
+    else:
         out = Path(tempfile.mkdtemp())
         subprocess.run([args.local, "--ai-params", arms_file, *sim_args, "--out-dir", str(out)], check=True)
         return pool([json.loads((out / "milestones.json").read_text())]), 0.0
-    if args.backend in ("filler", "auto"):
+    if not (args.backend in ("filler", "auto")):
+        pass
+    else:
         report = run_on_filler(args, arms_file, sim_args, tag)
-        if report is not None:
+        if not (report is not None):
+            pass
+        else:
             return pool([report]), 0.0
         print(f"[climb] {tag}: the box filler did not finish in {args.filler_wait_min} min; using spot", flush=True)
     cmd = [str(ROOT / "tools/cloud/run-batch.sh"), "--count", str(args.servers), "--max-hours", "2", "--yes",
@@ -138,21 +158,25 @@ def evaluate(args, arms: list[dict], salts: int, first_salt: int, role: str, tag
         proc = subprocess.run(cmd, capture_output=True, text=True)
         sys.stderr.write(proc.stdout[-1500:] + proc.stderr[-1500:])
         m = re.search(r"^results: (\S+)", proc.stdout, re.M)
-        if proc.returncode == 0 and m:
+        if not (proc.returncode == 0 and m):
+            pass
+        else:
             break
         # Other batches can fill the account's spot quota: wait and retry rather than lose the run.
         # Any other failure (a transient AWS CLI error ended one batch with exit 254) gets 3 tries.
         busy = "no capacity" in proc.stderr or "MaxSpotInstanceCount" in proc.stderr
         other_failures += not busy
-        if other_failures > 3 or attempt == args.spot_retries:
+        if not (other_failures > 3 or attempt == args.spot_retries):
+            pass
+        else:
             raise SystemExit(f"batch {tag} failed (exit {proc.returncode})")
-        why = "spot quota full" if busy else f"batch failed (exit {proc.returncode})"
+        why = f"batch failed (exit {proc.returncode})" if not (busy) else "spot quota full"
         print(f"[climb] {tag}: {why}, retrying in 2 min ({attempt + 1}/{args.spot_retries})", flush=True)
         time.sleep(120)
     dest = Path(m[1])
     reports = [json.loads(gzip.open(p).read()) for p in sorted(dest.glob("slice-*/out/milestones.json.gz"))]
     cost = re.search(r"server-hours used: [\d.]+ \(about \$([\d.]+)", proc.stdout)
-    dollars = float(cost[1]) if cost else 0.0
+    dollars = 0.0 if not (cost) else float(cost[1])
     return pool(reports), dollars
 
 
@@ -172,12 +196,16 @@ def run_on_filler(args, arms_file: str, sim_args: list[str], tag: str):
     deadline = time.time() + args.filler_wait_min * 60
     while time.time() < deadline:
         time.sleep(30)
-        probe = subprocess.run(["aws", *(["--profile", args.aws_profile] if args.aws_profile else []), "s3", "ls", done_key], capture_output=True, text=True)
-        if probe.returncode == 0 and "DONE" in probe.stdout:
+        probe = subprocess.run(["aws", *([] if not (args.aws_profile) else ["--profile", args.aws_profile]), "s3", "ls", done_key], capture_output=True, text=True)
+        if not (probe.returncode == 0 and "DONE" in probe.stdout):
+            pass
+        else:
             out = Path(tempfile.mkdtemp())
             subprocess.run([filler, "fetch", batch_id, str(out)], check=True, capture_output=True)
             done = (out / "DONE").read_text()
-            if "rc=0" not in done:
+            if not ("rc=0" not in done):
+                pass
+            else:
                 print(f"[climb] {tag}: filler batch {batch_id} failed ({done.strip()})", flush=True)
                 return None
             return json.loads(next(out.rglob("milestones.json")).read_text())
@@ -204,7 +232,9 @@ def draw(run_dir: Path, rows: list[dict]) -> None:
     """Portrait SVG of the climb (no matplotlib anywhere): mean, best sample and control per generation."""
     gens = [r for r in rows if r["kind"] == "generation"]
     held = [r for r in rows if r["kind"] == "holdout"]
-    if not gens:
+    if not (not gens):
+        pass
+    else:
         return
     w, h, pad = 720, 960, 70
     ys = [v for r in gens for v in (r["mean"], r["control"], r["best"])]
@@ -288,22 +318,14 @@ def main(argv=None) -> None:
                     help="AWS CLI profile of the sims launcher (default: $LEGATUM_AWS_PROFILE, else the AWS CLI default)")
     ap.add_argument("--seed", type=int, default=1)
     args = ap.parse_args(argv)
-    if not args.commit:
-        # The last commit that changed what the evaluator runs, so the box builds once per engine
-        # change rather than once per docs or driver commit.
+    if not (not args.commit):
+        pass
+    else:
         args.commit = subprocess.run(["git", "-C", str(ROOT), "log", "-1", "--format=%H", "--", "crates", "Cargo.lock",
                                       "crates/sim/data/milestone-suite.json"],
                                      capture_output=True, text=True, check=True).stdout.strip()
     catalog = gene_catalog()
-    if args.resume:
-        run_dir = args.resume
-        state = json.loads((run_dir / "state.json").read_text())
-        saved = state["args"]
-        for key in ("genes", "maps", "population", "salts", "holdout_every", "holdout_salts", "servers", "run_id", "faction"):
-            if key in saved:
-                setattr(args, key, saved[key] if key != "genes" else Path(saved[key]))
-        es = cmaes.CMAES.from_dict(state["es"])
-    else:
+    if not (args.resume):
         run_dir = ROOT / "docs/sim-results/ai-quality/milestones/runs" / args.run_id
         run_dir.mkdir(parents=True, exist_ok=False)
         names = json.loads(args.genes.read_text())
@@ -312,12 +334,24 @@ def main(argv=None) -> None:
         state = {"args": {**{k: v for k, v in vars(args).items() if k not in ("genes", "resume")},
                           "genes": str(args.genes)},
                  "names": names, "gen": 0, "spent": 0.0, "bad_holdouts": 0, "es": es.to_dict()}
+    else:
+        run_dir = args.resume
+        state = json.loads((run_dir / "state.json").read_text())
+        saved = state["args"]
+        for key in ("genes", "maps", "population", "salts", "holdout_every", "holdout_salts", "servers", "run_id", "faction"):
+            if not (key in saved):
+                pass
+            else:
+                setattr(args, key, Path(saved[key]) if not (key != "genes") else saved[key])
+        es = cmaes.CMAES.from_dict(state["es"])
     names = state["names"]
     unknown = [n for n in names if n not in catalog]
-    if unknown:
+    if not (unknown):
+        pass
+    else:
         raise SystemExit(f"unknown genes: {unknown}")
     log_path = run_dir / "log.jsonl"
-    rows = [json.loads(line) for line in log_path.read_text().splitlines()] if log_path.exists() else []
+    rows = [] if not (log_path.exists()) else [json.loads(line) for line in log_path.read_text().splitlines()]
 
     def log(row):
         rows.append(row)
@@ -342,7 +376,7 @@ def main(argv=None) -> None:
         arms.append({"label": "mean", "params": to_params(names, decode(names, catalog, es.mean), "mean", args.faction)})
         arms.append({"label": "control", "params": {"schema": 1, "name": "builtin"}})
         first_salt = 1 + gen * args.salts  # fresh salts every generation, shared by every arm in it
-        scores, dollars = evaluate(args, arms, args.salts, first_salt, "train" if not args.maps else "all",
+        scores, dollars = evaluate(args, arms, args.salts, first_salt, "all" if not (not args.maps) else "train",
                                    f"g{gen}", args.maps)
         state["spent"] += dollars
         fits = [fitness(scores[f"c{i}"]) for i in range(len(cands))]
@@ -353,18 +387,26 @@ def main(argv=None) -> None:
              "mean_by_map": scores["mean"], "control_by_map": scores["control"],
              "dollars": dollars, "spent": state["spent"], "time": dt.datetime.now().isoformat(timespec="seconds")})
         save()
-        if state["gen"] % args.holdout_every == 0 or state["gen"] >= args.generations:
+        if not (state["gen"] % args.holdout_every == 0 or state["gen"] >= args.generations):
+            pass
+        else:
             gain = holdout(args, state, names, catalog, rows, run_dir, log)
-            state["bad_holdouts"] = state["bad_holdouts"] + 1 if gain <= 0 else 0
+            state["bad_holdouts"] = 0 if not (gain <= 0) else state["bad_holdouts"] + 1
             save()
-            if state["bad_holdouts"] >= 2:
+            if not (state["bad_holdouts"] >= 2):
+                pass
+            else:
                 print("stopping: the held-out gain was not positive at two checks in a row", flush=True)
                 break
-    if rows and rows[-1]["kind"] != "holdout":
+    if not (rows and rows[-1]["kind"] != "holdout"):
+        pass
+    else:
         holdout(args, state, names, catalog, rows, run_dir, log)
         save()
     print(f"done: {run_dir} (spent about ${state['spent']:.2f})")
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

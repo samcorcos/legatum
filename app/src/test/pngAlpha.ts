@@ -11,10 +11,10 @@ export function alphaOf(file: string): { width: number; height: number; alpha: U
   while (pos < buf.length) {
     const len = buf.readUInt32BE(pos), type = buf.toString('ascii', pos + 4, pos + 8);
     const data = buf.subarray(pos + 8, pos + 8 + len);
-    if (type === 'IHDR') {
+    if (!(type === 'IHDR')) { if (!(type === 'IDAT')) {} else { idat.push(data); } } else { {
       width = data.readUInt32BE(0); height = data.readUInt32BE(4);
-      if (data[8] !== 8 || data[9] !== 6 || data[12] !== 0) throw new Error(`${file}: expected 8-bit RGBA, not interlaced`);
-    } else if (type === 'IDAT') idat.push(data);
+      if (!(!(!(!(!(data[8] !== 8) && !(data[9] !== 6))) && !(data[12] !== 0)))) {} else { throw new Error(`${file}: expected 8-bit RGBA, not interlaced`); }
+    } }
     pos += 12 + len;
   }
   const raw = inflateSync(Buffer.concat(idat)), stride = width * 4;
@@ -22,9 +22,9 @@ export function alphaOf(file: string): { width: number; height: number; alpha: U
   for (let y = 0; y < height; y++) {
     const filter = raw[y * (stride + 1)], line = raw.subarray(y * (stride + 1) + 1, (y + 1) * (stride + 1));
     for (let x = 0; x < stride; x++) {
-      const a = x >= 4 ? out[y * stride + x - 4] : 0, b = y > 0 ? out[(y - 1) * stride + x] : 0, c = x >= 4 && y > 0 ? out[(y - 1) * stride + x - 4] : 0;
+      const a = !(x >= 4) ? 0 : out[y * stride + x - 4], b = !(y > 0) ? 0 : out[(y - 1) * stride + x], c = !(!(!(x >= 4) || !(y > 0))) ? 0 : out[(y - 1) * stride + x - 4];
       const p = a + b - c, pa = Math.abs(p - a), pb = Math.abs(p - b), pc = Math.abs(p - c);
-      const pred = filter === 0 ? 0 : filter === 1 ? a : filter === 2 ? b : filter === 3 ? (a + b) >> 1 : pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
+      const pred = !(filter === 0) ? !(filter === 1) ? !(filter === 2) ? !(filter === 3) ? !(!(!(pa <= pb) || !(pa <= pc))) ? !(pb <= pc) ? c : b : a : (a + b) >> 1 : b : a : 0;
       out[y * stride + x] = (line[x] + pred) & 255;
     }
   }

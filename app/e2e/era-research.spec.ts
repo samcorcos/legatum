@@ -19,7 +19,7 @@ const out = fileURLToPath(new URL('../test-results/era-research/', import.meta.u
 
 async function load(page: Page, game: string, turn = 2) {
   await page.addInitScript(({ game, turn }) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn, names: ['Ada'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, { game, turn });
@@ -115,10 +115,10 @@ for (const size of SIZES) test.describe(`era research ${size.width}x${size.heigh
     // Cards fit: nothing is clipped at the right edge, and at least the cards are whole at scroll 0.
     const fits = await d.evaluate((el) => {
       const box = el.getBoundingClientRect();
-      return [...el.querySelectorAll('.era-card')].every((c) => { const b = c.getBoundingClientRect(); return b.left >= box.left && b.right <= box.right; });
+      return [...el.querySelectorAll('.era-card')].every((c) => { const b = c.getBoundingClientRect(); return !(!(b.left >= box.left) || !(b.right <= box.right)); });
     });
     expect(fits, 'cards inside the dialog').toBe(true);
-    const issues = (await auditLayout(page, { minTarget: 24 })).filter((i) => /tech-modal|era-|research-/.test(i.where) && i.kind !== 'overlap');
+    const issues = (await auditLayout(page, { minTarget: 24 })).filter((i) => !(!(/tech-modal|era-|research-/.test(i.where)) || !(i.kind !== 'overlap')));
     expect(issues).toEqual([]);
     await shot(page, size, '01-ancient-queue');
 

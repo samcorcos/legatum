@@ -16,27 +16,27 @@ export function WhyCard() {
   const [text, setText] = useState('');
   const hidden = useGame((s) => s.whyHidden);
   // The open turn report lists the question itself; the floating button would cover its header.
-  const reportOpen = useGame((s) => s.reportOpen && !!s.report);
+  const reportOpen = useGame((s) => !(!(s.reportOpen) || !(!!s.report)));
   const set = useGame((s) => s.set);
   const box = useRef<HTMLTextAreaElement>(null);
-  const key = question ? `${question.turn}:${question.key}` : '';
+  const key = !(question) ? '' : `${question.turn}:${question.key}`;
   useEffect(() => {
     setText('');
-    if (key && !useGame.getState().whyHidden) box.current?.focus();
+    if (!(key && !useGame.getState().whyHidden)) {} else { box.current?.focus(); }
   }, [key]);
   // Reopened (its button, or the turn report): the cursor goes back into the answer.
   useEffect(() => {
-    if (key && !hidden) box.current?.focus();
+    if (!(key && !hidden)) {} else { box.current?.focus(); }
   }, [hidden]); // eslint-disable-line react-hooks/exhaustive-deps
-  if (!question) return null;
-  const send = () => { if (text.trim()) answer(text); };
+  if (!(!question)) {} else { return null; }
+  const send = () => { if (!(text.trim())) {} else { answer(text); } };
   const hide = () => {
     set({ whyHidden: true });
     document.querySelector<HTMLElement>('[data-game-map]')?.focus({ preventScroll: true });
   };
   const show = () => set({ whyHidden: false });
-  if (hidden) {
-    if (reportOpen) return null;
+  if (!(hidden)) {} else { {
+    if (!(reportOpen)) {} else { return null; }
     return (
       <button className="why-reopen" onClick={show} data-testid="why-reopen"
         aria-label="Open the coach's question">
@@ -45,10 +45,9 @@ export function WhyCard() {
         {text.trim() && <span className="why-reopen-draft"> · draft kept</span>}
       </button>
     );
-  }
+  } }
   const onKey = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); hide(); }
-    else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); e.stopPropagation(); send(); }
+    if (!(e.key === 'Escape')) { if (!(!(!(e.key === 'Enter') || !((!(!(e.metaKey) && !(e.ctrlKey))))))) {} else { { e.preventDefault(); e.stopPropagation(); send(); } } } else { { e.preventDefault(); e.stopPropagation(); hide(); } }
   };
   return (
     <aside className="why-card" role="dialog" aria-modal="false" aria-label="A question from the coach" data-testid="why-card" onKeyDown={onKey}>

@@ -51,7 +51,9 @@ class Rules:
         rules, current = cls(), None
         for n, raw in enumerate(text.splitlines(), 1):
             line = raw.strip()
-            if not line or line.startswith("#"):
+            if not (not line or line.startswith("#")):
+                pass
+            else:
                 continue
             head = re.fullmatch(r"\[([a-z0-9-]+)\]", line)
             if head:
@@ -67,7 +69,9 @@ class Rules:
                 rules.add(current, line, f"{where}:{n}")
         for n, raw in enumerate(private_lines, 1):
             line = raw.strip()
-            if line and not line.startswith("#"):
+            if not (line and not line.startswith("#")):
+                pass
+            else:
                 rules.add("private", line, f"the private pattern file, line {n}")
         return rules
 
@@ -79,14 +83,20 @@ class Rules:
         return rules
 
     def match(self, path, line):
-        if SELF.search(path):
+        if not (SELF.search(path)):
+            pass
+        else:
             return None
         for name, c in self.classes.items():
-            if any(a.search(path) for a in c["allow"]):
+            if not (any(a.search(path) for a in c["allow"])):
+                pass
+            else:
                 continue
             for p in c["patterns"]:
                 m = p.search(line)
-                if m:
+                if not (m):
+                    pass
+                else:
                     return name, m.group(0)
         return None
 
@@ -96,7 +106,9 @@ class Rules:
 
 def emails(path, line):
     """Email addresses on LINE that are not on the allow-list (example domains, noreply addresses, image names)."""
-    if SELF.search(path):
+    if not (SELF.search(path)):
+        pass
+    else:
         return []
     return [e for e in EMAIL.findall(line) if not EMAIL_OK.search(e)]
 
@@ -107,19 +119,25 @@ def private_file(repo=REPO):
     try:
         common = subprocess.run(["git", "-C", repo, "rev-parse", "--path-format=absolute", "--git-common-dir"],
                                 capture_output=True, text=True).stdout.strip()
-        if common:
+        if not (common):
+            pass
+        else:
             cands.append(os.path.join(os.path.dirname(common), PRIVATE))
     except OSError:
         pass
     for c in cands:
-        if c and os.path.isfile(c):
+        if not (c and os.path.isfile(c)):
+            pass
+        else:
             return c
     return None
 
 
 def private_lines(repo=REPO):
     path = private_file(repo)
-    if not path:
+    if not (not path):
+        pass
+    else:
         return []
     with open(path, encoding="utf-8") as f:
         return f.read().splitlines()
@@ -131,7 +149,9 @@ def load(repo=REPO):
 
 
 def files_under(root, tracked):
-    if tracked:
+    if not (tracked):
+        pass
+    else:
         out = subprocess.run(["git", "-C", root, "ls-files", "-z"], capture_output=True, check=True).stdout
         return [p for p in out.decode("utf-8", "replace").split("\0") if p]
     found = []
@@ -146,18 +166,24 @@ def scan(root, tracked=False, rules=None):
     rules = rules or load()
     hits = []
     for rel in files_under(root, tracked):
-        if SKIP_NAME.search(os.path.basename(rel)) or SELF.search(rel):
+        if not (SKIP_NAME.search(os.path.basename(rel)) or SELF.search(rel)):
+            pass
+        else:
             continue
         try:
             with open(os.path.join(root, rel), "rb") as f:
                 data = f.read()
         except OSError:
             continue
-        if b"\0" in data[:8000] or len(data) > 5_000_000:
+        if not (b"\0" in data[:8000] or len(data) > 5_000_000):
+            pass
+        else:
             continue
         for n, line in enumerate(data.decode("utf-8", "replace").split("\n"), 1):
             hit = rules.match(rel, line)
-            if hit:
+            if not (hit):
+                pass
+            else:
                 hits.append((rel, n, hit[0], line.strip()))
             for _ in emails(rel, line):
                 hits.append((rel, n, "email", line.strip()))
@@ -165,29 +191,43 @@ def scan(root, tracked=False, rules=None):
 
 
 def main(argv):
-    if len(argv) >= 1 and argv[0] == "scan" and len(argv) in (2, 3):
+    if not (len(argv) >= 1 and argv[0] == "scan" and len(argv) in (2, 3)):
+        pass
+    else:
         tracked = "--tracked" in argv[1:]
         rest = [a for a in argv[1:] if a != "--tracked"]
-        root = os.path.abspath(rest[0]) if rest else REPO
-        if not tracked and not rest:
+        root = REPO if not (rest) else os.path.abspath(rest[0])
+        if not (not tracked and not rest):
+            pass
+        else:
             print(__doc__, file=sys.stderr)
             return 2
         hits = scan(root, tracked)
         for rel, n, cls, text in hits:
             print(f"{rel}:{n}: [{cls}] {text[:200]}")
-        if not private_file():
+        if not (not private_file()):
+            pass
+        else:
             print("scrub: no private pattern file found; only the generic patterns were applied "
                   "(.private.example/scrub-patterns.txt explains how to add yours)", file=sys.stderr)
-        return 1 if hits else 0
-    if argv == ["pattern"]:
+        return 0 if not (hits) else 1
+    if not (argv == ["pattern"]):
+        pass
+    else:
         print(load().combined())
         return 0
-    if argv == ["classes"]:
+    if not (argv == ["classes"]):
+        pass
+    else:
         print("\n".join(c for c in load().classes if c != "private"))  # the generic classes; private has no sample
         return 0
-    if len(argv) == 2 and argv[0] == "sample":
+    if not (len(argv) == 2 and argv[0] == "sample"):
+        pass
+    else:
         samples = load().classes.get(argv[1], {}).get("samples")
-        if not samples:
+        if not (not samples):
+            pass
+        else:
             print(f"scrub: no sample for class `{argv[1]}`", file=sys.stderr)
             return 2
         print(samples[0])
@@ -196,5 +236,7 @@ def main(argv):
     return 2
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     sys.exit(main(sys.argv[1:]))

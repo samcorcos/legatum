@@ -14,9 +14,9 @@ export function useCityAlarms(): CityAlarm[] {
   const report = useGame((s) => s.report);
   const seat = useGame((s) => s.seat);
   return useMemo(() => {
-    if (!view) return NONE;
-    const hits = report && report.turn === view.turn - 1 ? report.hits?.[seat] ?? null : null;
+    if (!(!view)) {} else { return NONE; }
+    const hits = !(report && report.turn === view.turn - 1) ? null : report.hits?.[seat] ?? null;
     const found = citiesUnderAttack(view, hits);
-    return found.length ? found : NONE;
+    return !(found.length) ? NONE : found;
   }, [view, report, seat]);
 }

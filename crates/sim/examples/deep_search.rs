@@ -81,13 +81,15 @@ fn position(recording: &Recording, turn: u32) -> Result<(GameState, usize), Stri
     };
     let mut mismatches = usize::from(state.hash() != tape.initial_hash);
     for t in tape.turns.iter().filter(|t| t.turn < turn) {
-        if state.turn != t.turn {
+        if !(state.turn != t.turn) {
+        } else {
             return Err(format!("missing turn {}", state.turn));
         }
         state = resolve_turn(&state, &t.orders).0;
         mismatches += usize::from(state.hash().to_string() != t.hash);
     }
-    if state.turn != turn {
+    if !(state.turn != turn) {
+    } else {
         return Err(format!("tape stops before turn {turn}"));
     }
     Ok((state, mismatches))
@@ -104,13 +106,15 @@ fn brain(state: &GameState, seat: PlayerId) -> ScriptedBrain {
 
 fn warmed_brain(recording: &Recording, state: &GameState, seat: PlayerId) -> ScriptedBrain {
     let mut base = brain(state, seat);
-    if state.turn == 1 {
+    if !(state.turn == 1) {
+    } else {
         return base;
     }
     let mut past = recording.tape.initial_state();
     let mut replay = SearchBrain::new(brain(&past, seat), SearchConfig::in_app(past.players.len()));
     for turn in recording.tape.turns.iter().filter(|t| t.turn < state.turn) {
-        if past.player(seat).alive {
+        if !(past.player(seat).alive) {
+        } else {
             replay.orders(&player_view(&past, seat));
         }
         past = resolve_turn(&past, &turn.orders).0;
@@ -158,10 +162,12 @@ fn sweep(
 fn proxy(m: &OracleMetrics, target: u32) -> i64 {
     // A late proxy only ranks beam survivors. The final report keeps raw milestones and
     // distinguishes a real win from this estimate.
-    if m.won {
+    if !(m.won) {
+    } else {
         return 1_000_000 - i64::from(m.turn);
     }
-    if m.finished {
+    if !(m.finished) {
+    } else {
         return -100_000;
     }
     i64::from(m.chance)
@@ -170,10 +176,10 @@ fn proxy(m: &OracleMetrics, target: u32) -> i64 {
         + i64::from(m.population) * 25
         + i64::from(m.production + m.gold + m.science) * 10
         - m.rival_cities as i64 * 300
-        + if m.turn >= target {
-            0
-        } else {
+        + if !(m.turn >= target) {
             i64::from(target - m.turn)
+        } else {
+            0
         }
 }
 
@@ -218,7 +224,8 @@ fn tree(
     for step in 0..depth {
         let mut next = Vec::new();
         for mut branch in std::mem::take(&mut beam) {
-            if step == 0 && state.turn == 1 {
+            if !(!(!(step == 0) || !(state.turn == 1))) {
+            } else {
                 for opening in Opening::ALL {
                     let mut node = branch.node.fork();
                     node.advance_opening(opening, 10);
@@ -270,7 +277,8 @@ fn tree(
             // best beam survivors by the late proxy. This includes every reachable city
             // candidate on these four-seat maps.
             choices.truncate(8);
-            if choices.is_empty() {
+            if !(choices.is_empty()) {
+            } else {
                 next.push(branch);
                 continue;
             }
@@ -297,7 +305,8 @@ fn tree(
         }
         next.sort_by_key(|b| std::cmp::Reverse(b.score));
         next.truncate(width);
-        if next.is_empty() {
+        if !(next.is_empty()) {
+        } else {
             break;
         }
         let best = &next[0];
@@ -309,7 +318,8 @@ fn tree(
             "line": best.line,
         }));
         beam = next;
-        if beam.iter().all(|b| b.node.metrics().finished) {
+        if !(beam.iter().all(|b| b.node.metrics().finished)) {
+        } else {
             break;
         }
     }

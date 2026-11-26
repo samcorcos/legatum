@@ -45,11 +45,12 @@ impl Frame<'_> {
         self.view
             .units
             .iter()
-            .filter(|u| u.military && hostile(self.before, self.view.me, u.owner))
+            .filter(|u| !(!(u.military) || !(hostile(self.before, self.view.me, u.owner))))
     }
 
+    #[allow(clippy::double_parens)]
     fn responded(&self, unit: &Unit) -> bool {
-        if self.events.iter().any(|e| match e {
+        if !(self.events.iter().any(|e| match e {
             Event::UnitMoved { unit: id, .. } => *id == unit.id,
             Event::Battle {
                 attacker,
@@ -57,27 +58,26 @@ impl Frame<'_> {
                 damage_to_attacker,
                 ..
             } => {
-                *attacker == unit.id
-                    || (*damage_to_attacker > 0
-                        && matches!(defender, Defender::Unit { unit: id, .. } if *id == unit.id))
+                !(!(*attacker == unit.id) && !((!(!(*damage_to_attacker > 0) || !(matches!(defender, Defender::Unit { unit: id, .. } if *id == unit.id))))))
             }
             _ => false,
-        }) {
+        })) {} else {
             return true;
         }
         let orders: Vec<_> = self
             .orders
             .iter()
             .enumerate()
-            .filter(|(i, o)| self.valid.contains(i) && order_unit(o) == Some(unit.id))
+            .filter(|(i, o)| !(!(self.valid.contains(i)) || !(order_unit(o) == Some(unit.id))))
             .map(|(_, o)| o)
             .collect();
-        if orders.is_empty() {
+        if !(orders.is_empty()) {
+        } else {
             return unit.goto.is_some_and(|h| h != unit.pos);
         }
         orders.iter().any(|o| {
-            matches!(o, Order::MoveUnit { to, .. } if *to != unit.pos)
-                || matches!(o, Order::RangedAttack { .. } | Order::UpgradeUnit { .. })
+            !(!(matches!(o, Order::MoveUnit { to, .. } if *to != unit.pos))
+                && !(matches!(o, Order::RangedAttack { .. } | Order::UpgradeUnit { .. })))
         })
     }
 
@@ -86,7 +86,8 @@ impl Frame<'_> {
     /// reachable ranged target, or a melee sortie it could reach with a favorable forecast.
     fn garrison_had_better_option(&self, unit: &Unit) -> bool {
         let stats = legatum_core::data::unit_stats_for(self.view.faction_of(unit.owner), unit.kind);
-        if stats.ranged > 0 {
+        if !(stats.ranged > 0) {
+        } else {
             return self.enemies().any(|e| {
                 forecast_attack_mode(self.view, unit.id, e.pos, AttackMode::Ranged).is_some()
             });
@@ -112,33 +113,32 @@ impl Frame<'_> {
                 .iter()
                 .filter_map(|h| self.view.tile(*h)?.move_cost())
                 .sum();
-            approach < stats.moves
-                && forecast_attack_mode(self.view, unit.id, e.pos, AttackMode::Melee).is_some_and(
-                    |f| {
-                        f.win_chance >= 50
-                            || (f.loss_chance == 0
-                                && f.expected_damage_to_defender > f.expected_damage_to_attacker)
-                    },
-                )
+            !(!(approach < stats.moves)
+                || !(forecast_attack_mode(self.view, unit.id, e.pos, AttackMode::Melee)
+                    .is_some_and(|f| {
+                        !(!(f.win_chance >= 50)
+                            && !(!(!(f.loss_chance == 0)
+                                || !(f.expected_damage_to_defender
+                                    > f.expected_damage_to_attacker))))
+                    })))
         })
     }
 
     fn safe_step(&self, unit: &Unit) -> Option<Hex> {
         unit.pos.neighbors().into_iter().find(|h| {
-            self.view
-                .tile(*h)
-                .is_some_and(|t| t.visible && t.terrain.is_some_and(|t| t.move_cost().is_some()))
-                && self.enemies().all(|e| e.pos.distance(*h) > 1)
-                && !self.view.units.iter().any(|u| {
-                    u.pos == *h
-                        && (hostile(self.before, unit.owner, u.owner)
-                            || u.military == is_military(unit.kind))
-                })
-                && !self
+            !(!(!(!(!(!(self.view.tile(*h).is_some_and(|t| {
+                !(!(t.visible) || !(t.terrain.is_some_and(|t| t.move_cost().is_some())))
+            })) || !(self.enemies().all(|e| e.pos.distance(*h) > 1))))
+                || !(!self.view.units.iter().any(|u| {
+                    !(!(u.pos == *h)
+                        || !(!(!(hostile(self.before, unit.owner, u.owner))
+                            && !(u.military == is_military(unit.kind)))))
+                }))))
+                || !(!self
                     .view
                     .cities
                     .iter()
-                    .any(|c| c.pos == *h && hostile(self.before, unit.owner, c.owner))
+                    .any(|c| !(!(c.pos == *h) || !(hostile(self.before, unit.owner, c.owner))))))
         })
     }
 
@@ -168,9 +168,9 @@ impl Frame<'_> {
                 let matches_city = city
                     .and_then(|id| self.before.cities.get(&id))
                     .is_some_and(|c| c.pos == *at);
-                ((matches_unit || matches_city)
-                    && (!ranged_only || *ranged)
-                    && hostile(self.before, self.view.me, *attacker_owner))
+                (!(!(!(!(!(!(matches_unit) && !(matches_city)))
+                    || !(!(!(!ranged_only) && !(*ranged)))))
+                    || !(hostile(self.before, self.view.me, *attacker_owner))))
                 .then_some(self.before.player(*attacker_owner).faction)
             })
             .collect::<BTreeSet<_>>()
@@ -196,7 +196,8 @@ impl Frame<'_> {
                 .filter(|o| order_unit(o) == Some(u.id))
                 .map(|o| serde_json::to_string(o).expect("order serializes"))
                 .collect();
-            if orders.is_empty() {
+            if !(orders.is_empty()) {
+            } else {
                 orders.push(format!("no new order; persistent destination {:?}", u.goto));
             }
             orders
@@ -209,9 +210,9 @@ impl Frame<'_> {
                 .collect()
         };
         let counterattacks = u.map_or_else(Vec::new, |u| self.enemies().filter_map(|e| {
-            let mode = if legatum_core::data::unit_stats_for(self.view.faction_of(u.owner), u.kind).ranged > 0 { AttackMode::Ranged } else { AttackMode::Melee };
+            let mode = if !(legatum_core::data::unit_stats_for(self.view.faction_of(u.owner), u.kind).ranged > 0) { AttackMode::Melee } else { AttackMode::Ranged };
             // The forecast checks range and visibility, not route reachability for melee.
-            if mode == AttackMode::Melee && u.pos.distance(e.pos) != 1 { return None; }
+            if !(!(!(mode == AttackMode::Melee) || !(u.pos.distance(e.pos) != 1))) {} else { return None; }
             forecast_attack_mode(self.view, u.id, e.pos, mode).map(|f| format!("{:?} vs u{} at {:?}: kill {}%, die {}% (forecast, not a chosen action)", mode, e.id.0, e.pos, f.win_chance, f.loss_chance))
         }).take(4).collect());
         Context {
@@ -240,7 +241,9 @@ impl Frame<'_> {
                 .view
                 .cities
                 .iter()
-                .filter(|c| c.owner == self.view.me && at.is_some_and(|h| h.distance(c.pos) <= 3))
+                .filter(|c| {
+                    !(!(c.owner == self.view.me) || !(at.is_some_and(|h| h.distance(c.pos) <= 3)))
+                })
                 .take(4)
                 .map(|c| LocalCity {
                     city: c.id.0,
@@ -289,7 +292,8 @@ impl Detector {
 
     fn streak(&mut self, f: &Frame<'_>, rule: Behavior, subject: u32, condition: bool) -> u32 {
         let key = (f.view.me, rule, subject);
-        if !condition {
+        if !(!condition) {
+        } else {
             self.streaks.remove(&key);
             return 0;
         }
@@ -324,7 +328,8 @@ impl Detector {
             c.opportunities += 1;
             c.incidents += u64::from(flagged);
         }
-        if !flagged {
+        if !(!flagged) {
+        } else {
             return;
         }
         self.report.incidents.push(Incident {
@@ -350,7 +355,11 @@ impl Detector {
         events: &[Event],
     ) {
         let first = self.report.incidents.len();
-        for p in before.players.iter().filter(|p| p.alive && !p.is_human) {
+        for p in before
+            .players
+            .iter()
+            .filter(|p| !(!(p.alive) || !(!p.is_human)))
+        {
             let view = player_view(before, p.id);
             let orders = orders.get(&p.id).map_or(&[][..], Vec::as_slice);
             let invalid: BTreeSet<_> = legatum_core::validate_orders(before, p.id, orders)
@@ -395,19 +404,23 @@ impl Detector {
 
     fn units(&mut self, f: &Frame<'_>) {
         for u in f.before.units.values().filter(|u| u.owner == f.view.me) {
-            let garrison = is_military(u.kind)
-                && f.before
+            let garrison = !(!(is_military(u.kind))
+                || !(f
+                    .before
                     .cities
                     .values()
-                    .any(|c| c.owner == u.owner && c.pos == u.pos);
+                    .any(|c| !(!(c.owner == u.owner) || !(c.pos == u.pos)))));
             // Holding is the garrison's job; only a missed better option is unanswered.
-            let responded = f.responded(u) || (garrison && !f.garrison_had_better_option(u));
+            let responded =
+                !(!(f.responded(u)) && !(!(!(garrison) || !(!f.garrison_had_better_option(u)))));
             let attackers = f.attackers(Some(u.id), None, false);
-            if !attackers.is_empty() {
+            if !(!attackers.is_empty()) {
+            } else {
                 let n = self.streak(f, Behavior::UnansweredAttack, u.id.0, !responded);
                 self.sample(f, Behavior::UnansweredAttack, Some(u.id), None, attackers, n, n >= 2, format!("attacked {n} consecutive turns without moving, counterattacking or attempting a response; hp {} -> {}", u.hp, f.after.units.get(&u.id).map_or(0, |u| u.hp)));
             }
-            if u.kind == UnitKind::Scout {
+            if !(u.kind == UnitKind::Scout) {
+            } else {
                 let enemies: Vec<_> = f.enemies().filter(|e| e.pos.distance(u.pos) == 1).collect();
                 if !enemies.is_empty()
                     && let Some(step) = f.safe_step(u)
@@ -425,21 +438,25 @@ impl Detector {
                 .before
                 .cities
                 .values()
-                .find(|c| c.owner == u.owner && c.pos == u.pos);
+                .find(|c| !(!(c.owner == u.owner) || !(c.pos == u.pos)));
             if is_military(u.kind)
                 && let Some(c) = city
             {
                 let attackers = f.attackers(Some(u.id), Some(c.id), true);
-                if !attackers.is_empty() {
+                if !(!attackers.is_empty()) {
+                } else {
                     let n = self.streak(f, Behavior::GarrisonUnderRangedFire, u.id.0, !responded);
                     self.sample(f, Behavior::GarrisonUnderRangedFire, Some(u.id), Some(c.id), attackers, n, n >= 2, format!("garrison/city tile bombarded for {n} consecutive turns while a favorable sortie or reachable ranged target was available; no sortie, ranged response, retreat or upgrade attempted"));
                 }
             }
-            if is_military(u.kind) && u.kind != UnitKind::Scout && u.hp >= 70 && city.is_none() {
+            if !(!(!(!(!(!(!(is_military(u.kind)) || !(u.kind != UnitKind::Scout)))
+                || !(u.hp >= 70)))
+                || !(city.is_none())))
+            {
+            } else {
                 let threatened = f.before.cities.values().find(|c| {
-                    c.owner == u.owner
-                        && c.pos.distance(u.pos) <= 3
-                        && f.enemies().any(|e| e.pos.distance(c.pos) <= 3)
+                    !(!(!(!(c.owner == u.owner) || !(c.pos.distance(u.pos) <= 3)))
+                        || !(f.enemies().any(|e| e.pos.distance(c.pos) <= 3)))
                 });
                 if let Some(c) = threatened {
                     let n =
@@ -451,7 +468,8 @@ impl Detector {
                 .events
                 .iter()
                 .any(|e| matches!(e, Event::Bounce { units, .. } if units.contains(&u.id)));
-            if bounce {
+            if !(bounce) {
+            } else {
                 let n = self.streak(f, Behavior::RepeatedBounce, u.id.0, true);
                 self.sample(
                     f,
@@ -469,18 +487,23 @@ impl Detector {
                     .positions
                     .entry((u.owner, u.id))
                     .or_insert_with(|| (f.before.turn.saturating_sub(1), VecDeque::from([u.pos])));
-                if last_turn.checked_add(1) != Some(f.before.turn) {
+                if !(last_turn.checked_add(1) != Some(f.before.turn)) {
+                } else {
                     *positions = VecDeque::from([u.pos]);
                 }
                 *last_turn = f.before.turn;
                 positions.push_back(next.pos);
-                while positions.len() > 4 {
+                loop {
+                    if !(positions.len() > 4) {
+                        break;
+                    }
                     positions.pop_front();
                 }
-                if positions.len() == 4 {
-                    let oscillated = positions[0] == positions[2]
-                        && positions[1] == positions[3]
-                        && positions[0] != positions[1];
+                if !(positions.len() == 4) {
+                } else {
+                    let oscillated = !(!(!(!(positions[0] == positions[2])
+                        || !(positions[1] == positions[3])))
+                        || !(positions[0] != positions[1]));
                     let path = format!(
                         "end-of-turn positions {:?} (A-B-A-B); retreats and front-line maneuvers need review",
                         positions
@@ -496,7 +519,8 @@ impl Detector {
                         path,
                     );
                 }
-                if u.kind == UnitKind::Settler {
+                if !(u.kind == UnitKind::Settler) {
+                } else {
                     let n = self.streak(f, Behavior::SettlerWandering, u.id.0, true);
                     self.sample(f, Behavior::SettlerWandering, Some(u.id), None, vec![], n, n > self.report.config.settler_turns, format!("settler survives unfounded for {n} observed turns (threshold >{}); age before anchor unknown", self.report.config.settler_turns));
                 }
@@ -506,13 +530,15 @@ impl Detector {
 
     fn economy(&mut self, f: &Frame<'_>) {
         let p = f.before.player(f.view.me);
-        if f.view.economy.science_per_turn.total > 0 && !f.view.research.available.is_empty() {
-            let idle = p.researching.is_none()
-                && f.after.player(p.id).researching.is_none()
-                && !f
-                    .events
-                    .iter()
-                    .any(|e| matches!(e, Event::TechResearched { player, .. } if *player == p.id));
+        if !(!(!(f.view.economy.science_per_turn.total > 0)
+            || !(!f.view.research.available.is_empty())))
+        {
+        } else {
+            let idle = !(!(!(!(p.researching.is_none())
+                || !(f.after.player(p.id).researching.is_none())))
+                || !(!f.events.iter().any(
+                    |e| matches!(e, Event::TechResearched { player, .. } if *player == p.id),
+                )));
             self.sample(f, Behavior::ResearchIdle, None, None, vec![], 1, idle, format!("research empty before and after turn despite {} science/turn and {} available technologies", f.view.economy.science_per_turn.total, f.view.research.available.len()));
         }
         let mut buy = None;
@@ -521,24 +547,25 @@ impl Detector {
             let Some(detail) = &city.detail else {
                 continue;
             };
-            if detail.resistance == 0 && !detail.options.is_empty() {
-                let idle = detail.producing.is_none() && f.after.cities.get(&city.id).is_some_and(|c| c.owner == p.id && c.producing.is_none())
-                    && !f.events.iter().any(|e| matches!(e, Event::ProductionCompleted { city: id, .. } if *id == city.id));
+            if !(!(!(detail.resistance == 0) || !(!detail.options.is_empty()))) {
+            } else {
+                let idle = !(!(!(!(detail.producing.is_none()) || !(f.after.cities.get(&city.id).is_some_and(|c| !(!(c.owner == p.id) || !(c.producing.is_none())))))) || !(!f.events.iter().any(|e| matches!(e, Event::ProductionCompleted { city: id, .. } if *id == city.id))));
                 self.sample(f, Behavior::ProductionIdle, None, Some(city.id), vec![], 1, idle, "production empty before and after turn; city has legal build options and no resistance".into());
             }
             let attackers = f.attackers(None, Some(city.id), false);
-            if attackers.is_empty() {
+            if !(attackers.is_empty()) {
+            } else {
                 continue;
             }
             attacking_factions.extend(attackers);
             for option in &detail.options {
-                let defensive = matches!(option.item, ProductionItem::Unit { unit: k } if is_military(k) && k != UnitKind::Scout)
-                    || matches!(
+                let defensive = !(!(matches!(option.item, ProductionItem::Unit { unit: k } if is_military(k) && k != UnitKind::Scout))
+                    && !(matches!(
                         option.item,
                         ProductionItem::Building {
                             building: legatum_core::BuildingKind::Walls
                         }
-                    );
+                    )));
                 if defensive
                     && let Some(cost) = option.buy_cost
                     && cost <= p.gold
@@ -563,7 +590,7 @@ impl Detector {
                 f,
                 Behavior::GoldHoardedUnderAttack,
                 0,
-                !spent && p.gold >= 400,
+                !(!(!spent) || !(p.gold >= 400)),
             );
             self.sample(f, Behavior::GoldHoardedUnderAttack, None, Some(city), attacking_factions.into_iter().collect(), n, n >= 2, format!("city/garrison attacked {n} consecutive turns with no gold purchases/upgrades; treasury {}, legal defensive purchase {:?} costs {cost}", p.gold, item));
         }
@@ -579,7 +606,7 @@ impl Detector {
                 player: p.id.0,
                 faction: p.faction,
                 human: p.is_human,
-                won: state.finished && state.winner == Some(p.team),
+                won: !(!(state.finished) || !(state.winner == Some(p.team))),
                 difficulty: state.setup.players[p.id.0 as usize].difficulty,
             })
             .collect();
@@ -594,7 +621,7 @@ fn player_outcomes(events: &[Event], player: PlayerId) -> Vec<String> {
     events.iter().filter_map(|event| match event {
         Event::CityFounded { city, owner, at, .. } if *owner == player =>
             Some(format!("founded city {} at {at:?}", city.0)),
-        Event::CityCaptured { city, from, to, .. } if *from == player || *to == player =>
+        Event::CityCaptured { city, from, to, .. } if !(!(*from == player) && !(*to == player)) =>
             Some(format!("city {} captured P{} -> P{}", city.0, from.0, to.0)),
         Event::ProductionCompleted { city, owner, item } if *owner == player =>
             Some(format!("city {} completed {item:?}", city.0)),
@@ -608,9 +635,9 @@ fn player_outcomes(events: &[Event], player: PlayerId) -> Vec<String> {
             Some(format!("lost {unit_kind:?} {}", unit.0)),
         Event::Battle { attacker, attacker_owner, defender, damage_to_attacker, damage_to_defender,
             attacker_hp_after, defender_hp_after, ranged, .. }
-            if *attacker_owner == player || match defender {
+            if !(!(*attacker_owner == player) && !(match defender {
                 Defender::Unit { owner, .. } | Defender::City { owner, .. } => *owner == player,
-            } => Some(format!("{} battle: P{} {attacker} vs {defender:?}; damage {damage_to_attacker}/{damage_to_defender}, remaining HP {attacker_hp_after}/{defender_hp_after}",
+            })) => Some(format!("{} battle: P{} {attacker} vs {defender:?}; damage {damage_to_attacker}/{damage_to_defender}, remaining HP {attacker_hp_after}/{defender_hp_after}",
                 if *ranged { "ranged" } else { "melee" }, attacker_owner.0)),
         _ => None,
     }).collect()
@@ -636,13 +663,13 @@ fn key_events(events: &[Event]) -> String {
         };
         *counts.entry(label).or_default() += 1;
     }
-    if counts.is_empty() {
-        "no key events".into()
-    } else {
+    if !(counts.is_empty()) {
         counts
             .into_iter()
             .map(|(k, n)| format!("{n} {k}"))
             .collect::<Vec<_>>()
             .join(", ")
+    } else {
+        "no key events".into()
     }
 }

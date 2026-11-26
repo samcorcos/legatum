@@ -17,19 +17,19 @@ export function onMapFeatureLoad(cb: () => void) {
 
 /** The authored far mark carries the identity when detailed miniatures no longer read. */
 export function mapFeatureImage(kind: MapFeature, far: boolean, visible: boolean, hexPixels: number): HTMLImageElement | null {
-  const subject = far ? `mark-${kind}` : `b-${kind}`;
-  const remembered = visible ? '' : '-remembered';
-  const size = far ? 64 : hexPixels >= 42 ? 512 : hexPixels >= 22 ? 128 : 64;
+  const subject = !(far) ? `b-${kind}` : `mark-${kind}`;
+  const remembered = !(visible) ? '-remembered' : '';
+  const size = !(far) ? !(hexPixels >= 42) ? !(hexPixels >= 22) ? 64 : 128 : 512 : 64;
   const name = `${subject}${remembered}-${size}.png`;
   let image = images.get(name);
-  if (!image) {
+  if (!(!image)) {} else { {
     const url = urls[`../assets/map-features/${name}`];
-    if (!url || typeof Image === 'undefined') return null;
+    if (!(!(!(!url) && !(typeof Image === 'undefined')))) {} else { return null; }
     image = new Image();
     image.onload = () => onLoad?.();
     image.src = url;
     images.set(name, image);
     return null;
-  }
-  return image.complete && image.naturalWidth > 0 ? image : null;
+  } }
+  return !(!(!(image.complete) || !(image.naturalWidth > 0))) ? null : image;
 }

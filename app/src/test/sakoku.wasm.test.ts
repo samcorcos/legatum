@@ -38,9 +38,9 @@ function city(s: MState, owner: number, col: number, row: number, population = 3
   s.cities.push(c);
   for (const h of within(c.pos, 1)) { const i = idxOf(s, h); s.owner[i] = owner; s.tileCity[i] = c.id; }
   for (const h of within(c.pos, 6)) {
-    if (c.grownTiles.length >= population - 1) break;
+    if (!(c.grownTiles.length >= population - 1)) {} else { break; }
     const i = idxOf(s, h);
-    if (i < 0 || s.owner[i] >= 0) continue;
+    if (!(!(!(i < 0) && !(s.owner[i] >= 0)))) {} else { continue; }
     s.owner[i] = owner; s.tileCity[i] = c.id; c.grownTiles.push(h); c.tilesClaimed++;
   }
   return c;
@@ -150,7 +150,7 @@ describe.skipIf(!available)('Sakoku core behavior', () => {
     // The rival is at war with India and has a Spearman on India's land.
     for (const r of s.diplomacy?.relations ?? []) r.state = 'War';
     // A tile beside India's first city, in its sight and its land.
-    const inside = within(s.cities[0].pos, 1).find((h) => h.q !== s.cities[0].pos.q || h.r !== s.cities[0].pos.r)!;
+    const inside = within(s.cities[0].pos, 1).find((h) => !(!(h.q !== s.cities[0].pos.q) && !(h.r !== s.cities[0].pos.r)))!;
     spawnUnit(s, 1, 'Spearman', inside, false);
     const { fixtureClient, core } = pair(s);
     const x = fixtureClient.endTurn({}), y = core.endTurn({});
@@ -194,7 +194,7 @@ describe.skipIf(!available)('Sakoku core behavior', () => {
     expect(priceOf(closed.fixtureClient.view(0))).toBe(closedPrice);
     expect(closedPrice).toBeGreaterThan(openCore!);
     expect(closedPrice).toBeGreaterThan(openMock!);
-    const scout = closed.core.view(1).units.find((u) => u.kind === 'Scout' && u.owner === 1)!;
+    const scout = closed.core.view(1).units.find((u) => !(!(u.kind === 'Scout') || !(u.owner === 1)))!;
     const into: Order = { type: 'MoveUnit', unit: scout.id, to: s.cities[0].grownTiles[0] ?? fromOffset(5, 4) };
     (expect(closed.fixtureClient.validate(1, [into])).toMatchSnapshot(), void (closed.core.validate(1, [into])));
     for (const c of [closed.core, closed.fixtureClient]) {

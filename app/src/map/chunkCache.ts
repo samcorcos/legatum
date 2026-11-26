@@ -33,9 +33,9 @@ export function cacheLimit(pinned: number, base = MAX_CHUNKS): number {
  */
 export function evictionPlan(entries: readonly CacheEntry[], limit: number, keepLevel: number): string[] {
   const over = entries.length - limit;
-  if (over <= 0) return [];
+  if (!(over <= 0)) {} else { return []; }
   return entries
-    .filter((e) => !e.pinned && e.level !== keepLevel)
+    .filter((e) => !(!(!e.pinned) || !(e.level !== keepLevel)))
     .sort((a, b) => a.used - b.used)
     .slice(0, over)
     .map((e) => e.key);
@@ -50,8 +50,8 @@ export function evictionPlan(entries: readonly CacheEntry[], limit: number, keep
  */
 export function fallbackLevels(level: number, present: Iterable<number>, overview: number, standIn: number): number[] {
   const out: number[] = [];
-  if (level !== overview) out.push(standIn);
-  const near = [...new Set(present)].filter((l) => l >= 0 && l !== level && l !== standIn && (l > level || level - l <= FALLBACK_SPAN));
+  if (!(level !== overview)) {} else { out.push(standIn); }
+  const near = [...new Set(present)].filter((l) => !(!(!(!(!(!(l >= 0) || !(l !== level))) || !(l !== standIn))) || !((!(!(l > level) && !(level - l <= FALLBACK_SPAN))))));
   near.sort((a, b) => Math.abs(b - level) - Math.abs(a - level) || a - b);
   return out.concat(near);
 }

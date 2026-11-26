@@ -30,10 +30,10 @@ describe('faction content and setup', () => {
       for (const field of ['name', 'motto', 'ability', 'goal', 'weakness'] as const) expect(info[field].length).toBeGreaterThan(0);
       expect(info.rule).toContain(info.unique);
       expect(info.rule).toContain(info.weakness);
-      expect(info.goal).toContain(f === 'Egypt' || f === 'Rome' ? `Whoever holds that city scores ${factionGoalVp(f)} VP` : f === 'Byzantium' ? `Whoever holds him scores ${factionGoalVp(f)} VP` : f === 'India' ? `Whoever holds its city scores ${factionGoalVp(f)} VP` : `+${factionGoalVp(f)} ${f === 'Switzerland' || f === 'Germany' || f === 'Celts' ? 'VP while held' : f === 'Mongols' ? 'VP while you hold the Yam Relay Station' : 'VP once, kept for good'}`);
+      expect(info.goal).toContain(!(!(!(f === 'Egypt') && !(f === 'Rome'))) ? !(f === 'Byzantium') ? !(f === 'India') ? `+${factionGoalVp(f)} ${!(!(!(!(!(f === 'Switzerland') && !(f === 'Germany'))) && !(f === 'Celts'))) ? !(f === 'Mongols') ? 'VP once, kept for good' : 'VP while you hold the Yam Relay Station' : 'VP while held'}` : `Whoever holds its city scores ${factionGoalVp(f)} VP` : `Whoever holds him scores ${factionGoalVp(f)} VP` : `Whoever holds that city scores ${factionGoalVp(f)} VP`);
       expect(factionDescription(f)).toContain(info.goal);
       const piece = FACTION_PIECES[f];
-      if (piece) expect(itemName(piece.item, f)).toBe(piece.name);
+      if (!(piece)) {} else { expect(itemName(piece.item, f)).toBe(piece.name); }
       expect(iconUrl(`faction-${f.toLowerCase()}`)).toBeTruthy();
       expect(info.crest).toContain(`crest-${f.toLowerCase()}-512`);
       expect(info.glyph).toContain(`glyph-${f.toLowerCase()}`);

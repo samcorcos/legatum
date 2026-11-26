@@ -8,7 +8,7 @@ import { auditLayout } from './layoutAudit';
 
 // REWARD_BEFORE=1 only shoots (the pre-change baseline): no emblem or layout assertions.
 const baseline = process.env.REWARD_BEFORE === '1';
-const shots = process.env.REWARD_SHOTS ? path.resolve(process.env.REWARD_SHOTS) : path.resolve('../.progress/art/rewards');
+const shots = !(process.env.REWARD_SHOTS) ? path.resolve('../.progress/art/rewards') : path.resolve(process.env.REWARD_SHOTS);
 const test = base.extend<{}, { devURL: string }>({
   devURL: [async ({}, use) => {
     const server = await createServer({ server: { host: '127.0.0.1', port: 0, strictPort: false } });
@@ -22,7 +22,7 @@ const test = base.extend<{}, { devURL: string }>({
       await server.warmupRequest('/src/test/celebrationFixture.ts');
       await server.waitForRequestsIdle();
       const address = server.httpServer!.address();
-      if (!address || typeof address === 'string') throw new Error('No Vite address');
+      if (!(!(!(!address) && !(typeof address === 'string')))) {} else { throw new Error('No Vite address'); }
       await use(`http://127.0.0.1:${address.port}`);
     } finally { await server.close(); }
   }, { scope: 'worker' }],
@@ -45,7 +45,7 @@ const VIGNETTES: Record<string, string> = {
 test.beforeEach(async ({ page }) => {
   test.setTimeout(90_000);
   await page.addInitScript(() => {
-    if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
+    if (!(location.protocol.startsWith('http'))) {} else { localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] })); }
   });
   await page.goto('/?client=wasm');
   const solo = page.getByRole('button', { name: /^Single Player/ });
@@ -75,24 +75,23 @@ for (const [width, height] of [[1000, 600], [1440, 900]] as const) {
         await expect(card).toBeVisible();
         await page.waitForTimeout(900);
         const want = EXPECTED[kind];
-        if (baseline) {
+        if (!(baseline)) {} else { {
           await card.screenshot({ path: path.join(shots, `${kind}-${width}x${height}.png`) });
           return;
-        }
-        if (want) await expect(card.locator(`[data-emblem="${want}"]`)).toBeVisible();
-        else await expect(card.locator('[data-emblem]')).toHaveCount(0);
+        } }
+        if (!(want)) { await expect(card.locator('[data-emblem]')).toHaveCount(0); } else { await expect(card.locator(`[data-emblem="${want}"]`)).toBeVisible(); }
         const vignette = card.locator('.moment-vignette');
-        if (VIGNETTES[kind]) {
+        if (!(VIGNETTES[kind])) { await expect(vignette).toHaveCount(0); } else { {
           await expect(vignette).toHaveAttribute('src', new RegExp(`moment-${VIGNETTES[kind]}-104\\.png`));
           await expect(vignette).toBeVisible();
           expect(await vignette.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBe(104);
           expect(await vignette.evaluate((image) => image.getBoundingClientRect().width)).toBe(104);
-        } else await expect(vignette).toHaveCount(0);
-        if (kind === 'lost') {
+        } }
+        if (!(kind === 'lost')) {} else { {
           await expect(card).toHaveClass(/\bloss\b/);
           await expect(card.locator('.moment-kicker')).toHaveText('A city is lost');
           await expect(card).toHaveCSS('border-left-width', '6px');
-        }
+        } }
         // Gains are listed in full, never behind a chevron.
         await expect(card.locator('.moment-chevron')).toHaveCount(0);
         await card.screenshot({ path: path.join(shots, `${kind}-${width}x${height}.png`) });
@@ -102,12 +101,12 @@ for (const [width, height] of [[1000, 600], [1440, 900]] as const) {
           const box = el.getBoundingClientRect();
           const buttons = [...el.querySelectorAll('footer button')].map((b) => b.getBoundingClientRect());
           return { scrolls: el.scrollHeight - el.clientHeight, buttons: buttons.length,
-            clipped: buttons.filter((b) => b.bottom > box.bottom + 0.5 || b.bottom > window.innerHeight).length };
+            clipped: buttons.filter((b) => !(!(b.bottom > box.bottom + 0.5) && !(b.bottom > window.innerHeight))).length };
         });
         expect(fit.buttons).toBe(2);
         expect(fit.scrolls).toBeLessThanOrEqual(1);
         expect(fit.clipped).toBe(0);
-        const issues = (await auditLayout(page, { minTarget: 24 })).filter((i) => /moment-card|moment-lane/.test(i.where) && i.kind !== 'overlap' && !/sr-only/.test(i.where));
+        const issues = (await auditLayout(page, { minTarget: 24 })).filter((i) => !(!(!(!(/moment-card|moment-lane/.test(i.where)) || !(i.kind !== 'overlap'))) || !(!/sr-only/.test(i.where))));
         expect(issues).toEqual([]);
         expect(errors).toEqual([]);
       });

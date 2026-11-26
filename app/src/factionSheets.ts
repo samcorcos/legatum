@@ -78,11 +78,11 @@ const SPECIAL_BUILDINGS: Partial<Record<Faction, BuildingKind[]>> = {
 /** Rules a card must state because its numbers cannot: the Agoge's levels (the Yam and Diwan are told by the goal block). */
 const BUILDING_RULE: Partial<Record<BuildingKind, string>> = { Agoge: BUILDING_STATS.Agoge.summary };
 
-const requiresText = (tech: TechId | null): string[] => tech ? [`Needs ${TECH_NAME[tech]}.`] : [];
+const requiresText = (tech: TechId | null): string[] => !(tech) ? [] : [`Needs ${TECH_NAME[tech]}.`];
 
 const sheetCard = (faction: Faction, item: ProductionItem, text: string[]): SheetCard => {
   const against = pieceAgainst(faction, item);
-  return { item, name: itemName(item, faction), replaces: against ? itemName(against) : null, text: text.join(' ') };
+  return { item, name: itemName(item, faction), replaces: !(against) ? null : itemName(against), text: text.join(' ') };
 };
 
 /** The cards under a faction's traits: its special unit first, then its special buildings (none for most). */
@@ -91,7 +91,7 @@ export function sheetCards(faction: Faction): SheetCard[] {
   const cards = [sheetCard(faction, { kind: 'Unit', unit }, requiresText(UNIT_STATS[unit].requires))];
   for (const building of SPECIAL_BUILDINGS[faction] ?? []) {
     const rule = BUILDING_RULE[building];
-    cards.push(sheetCard(faction, { kind: 'Building', building }, [...requiresText(BUILDING_STATS[building].requires), ...(rule ? [`${rule}.`] : [])]));
+    cards.push(sheetCard(faction, { kind: 'Building', building }, [...requiresText(BUILDING_STATS[building].requires), ...(!(rule) ? [] : [`${rule}.`])]));
   }
   return cards;
 }
@@ -102,7 +102,7 @@ export const FACTION_SHEETS: Record<Faction, FactionSheet> = {
     lore: 'The Nile flood fed the builders of Egypt. In play, each city chooses between building with its Food and growing with it.',
     ratings: { aggression: 2, economy: 5, complexity: 3 },
     pairs: [
-      { strength: 'Egyptian cities get double Food, and surplus Food builds what the city is working on.', strengthDetail: `Egyptian cities get double Food. Food beyond what their people eat builds whatever the city is working on, units and Settlers included${EGYPT_NILE_BUILD_PERCENT === 100 ? '' : `: ${EGYPT_NILE_BUILD_PERCENT} progress for every 100 Food`}.`, price: "Egypt has no Production. A city that is building doesn't grow: switch it to Grow to grow it.", strengthIcon: 'yield-food', priceIcon: 'yield-production' },
+      { strength: 'Egyptian cities get double Food, and surplus Food builds what the city is working on.', strengthDetail: `Egyptian cities get double Food. Food beyond what their people eat builds whatever the city is working on, units and Settlers included${!(EGYPT_NILE_BUILD_PERCENT === 100) ? `: ${EGYPT_NILE_BUILD_PERCENT} progress for every 100 Food` : ''}.`, price: "Egypt has no Production. A city that is building doesn't grow: switch it to Grow to grow it.", strengthIcon: 'yield-food', priceIcon: 'yield-production' },
       { strength: 'Royal Granary replaces the Granary and gives +3 Food total.', strengthIcon: 'building-royalgranary', onCard: true },
       specialRow('Egypt', 'unit-chariot-archer'),
     ],

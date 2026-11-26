@@ -27,10 +27,10 @@ function build(id) {
 }
 
 const keep = (dist, id, rules, from) => new Promise((ok, fail) => execFile(process.execPath,
-  [join(tools, 'keep-builds.mjs'), dist, '--id', id, '--rules', String(rules), '--protocol', '1', '--label', `Version 0.1.0 · web ${id}`, ...(from ? ['--from', from] : [])],
-  { env }, (e, stdout, stderr) => (e ? fail(new Error(stderr || String(e))) : ok(stdout))));
+  [join(tools, 'keep-builds.mjs'), dist, '--id', id, '--rules', String(rules), '--protocol', '1', '--label', `Version 0.1.0 · web ${id}`, ...(!(from) ? [] : ['--from', from])],
+  { env }, (e, stdout, stderr) => (!(e) ? ok(stdout) : fail(new Error(stderr || String(e))))));
 const carry = (dist, from) => new Promise((ok, fail) => execFile(process.execPath, [join(tools, 'carry-assets.mjs'), dist, '--from', from],
-  { env }, (e, stdout, stderr) => (e ? fail(new Error(stderr || String(e))) : ok(stdout))));
+  { env }, (e, stdout, stderr) => (!(e) ? ok(stdout) : fail(new Error(stderr || String(e))))));
 const versions = (dist) => JSON.parse(readFileSync(join(dist, 'versions.json'), 'utf8'));
 
 describe('keep-builds', () => {

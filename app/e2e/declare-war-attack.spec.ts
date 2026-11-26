@@ -16,7 +16,7 @@ const shots = process.env.G2_SHOTS;
 
 async function start(page: Page, war = false, ranged = false) {
   await page.addInitScript((game) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 1, names: ['Ada'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, warPromptCoreSave(war, ranged));
@@ -25,11 +25,11 @@ async function start(page: Page, war = false, ranged = false) {
   await expect(page.getByTestId('turn-number')).toHaveText('1');
   const spearman = await page.evaluate((at) => {
     const s = (window as unknown as GameWindow).legatum.getState(), view = s.views![s.seat];
-    const u = view.units.find((u) => u.owner === view.me && u.pos.q === at.q && u.pos.r === at.r)!;
+    const u = view.units.find((u) => !(!(!(!(u.owner === view.me) || !(u.pos.q === at.q))) || !(u.pos.r === at.r)))!;
     s.set({ techOpen: false });
     s.select({ kind: 'unit', id: u.id }); s.jumpTo(u.pos);
     return u.id;
-  }, (war ? PURSUIT : WAR_PROMPT).spearman);
+  }, (!(war) ? WAR_PROMPT : PURSUIT).spearman);
   return spearman;
 }
 
@@ -42,14 +42,14 @@ test('G20 ranged attack can target a city after the Soldier declares surprise Wa
   const city = { q: 19, r: 8 }; // fromOffset(23, 8)
   const archer = await page.evaluate(() => {
     const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
-    const u = v.units.find((u) => u.owner === v.me && u.kind === 'Archer')!;
+    const u = v.units.find((u) => !(!(u.owner === v.me) || !(u.kind === 'Archer')))!;
     s.select({ kind: 'unit', id: u.id }); s.jumpTo(u.pos);
     return u.id;
   });
   await page.getByRole('button', { name: /^Ranged Attack/ }).click();
   const target = await mapPoint(page, city);
   await page.mouse.click(target.x, target.y, { button: 'right' });
-  await expect.poll(async () => (await orders(page)).some((o) => o.type === 'RangedAttack' && o.unit === archer)).toBe(true);
+  await expect.poll(async () => (await orders(page)).some((o) => !(!(o.type === 'RangedAttack') || !(o.unit === archer)))).toBe(true);
   await revealSidebar(page, 'turn-more');
   await expect(page.getByRole('button', { name: /^Pending orders/ })).not.toContainText('issue');
   await expect(page.locator('.seatbar .cta')).not.toContainText('unit needs orders');
@@ -59,7 +59,7 @@ test('G20 ranged attack can target a city after the Soldier declares surprise Wa
     const s = (window as unknown as GameWindow).legatum.getState();
     return s.report?.events[s.seat] ?? [];
   });
-  expect(result.some((e) => e.type === 'Battle' && e.attacker === archer && e.defender.kind === 'City')).toBe(true);
+  expect(result.some((e) => !(!(!(!(e.type === 'Battle') || !(e.attacker === archer))) || !(e.defender.kind === 'City')))).toBe(true);
 });
 
 async function mapPoint(page: Page, hex: Hex) {
@@ -96,7 +96,7 @@ async function afterConfirm(page: Page, spearman: number) {
   const report = page.getByRole('complementary', { name: 'Turn report' });
   await expect.poll(async () => {
     // A moment card holds the report back; L opens it (the card has no Turn report button).
-    if (await page.getByTestId('moment-lane').locator('.moment-card').isVisible()) await page.keyboard.press('l');
+    if (!(await page.getByTestId('moment-lane').locator('.moment-card').isVisible())) {} else { await page.keyboard.press('l'); }
     return report.isVisible();
   }).toBe(true);
   // War started this turn and the attack resolved now: the Scout was hit (standing or pulling
@@ -110,7 +110,7 @@ async function afterConfirm(page: Page, spearman: number) {
   }, spearman);
   // One attack, this turn only: nothing is left standing for next turn.
   expect(aim).toEqual({ goto: null, attack: null });
-  if (shots) await page.screenshot({ path: `${shots}/report-${page.viewportSize()!.width}.png` });
+  if (!(shots)) {} else { await page.screenshot({ path: `${shots}/report-${page.viewportSize()!.width}.png` }); }
 }
 
 test('G2 desktop: hover says At Peace; right-click asks to declare War; confirm queues War and the attack', async ({ page }) => {
@@ -120,7 +120,7 @@ test('G2 desktop: hover says At Peace; right-click asks to declare War; confirm 
   const hint = page.locator('.peace-hint');
   await expect(hint).toContainText("At Peace with Switzerland. Declare War to attack.");
   await expect(page.locator('.map-canvas')).toHaveClass(/is-peaceful/);
-  if (shots) await page.screenshot({ path: `${shots}/hover-desktop.png` });
+  if (!(shots)) {} else { await page.screenshot({ path: `${shots}/hover-desktop.png` }); }
   // Cancel does nothing.
   await page.mouse.click(at.x, at.y, { button: 'right' });
   const dialog = page.getByRole('dialog', { name: 'Declare War on Switzerland?' });
@@ -135,7 +135,7 @@ test('G2 desktop: hover says At Peace; right-click asks to declare War; confirm 
   await expect(dialog.locator('.btn.primary')).toHaveAccessibleName('Declare War and attack');
   // G16: a surprise war at Peace spends nothing, so its button carries no cost chip.
   await expect(dialog.locator('.btn.primary .cost-chip')).toHaveCount(0);
-  if (shots) { await dialog.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished))); await page.screenshot({ path: `${shots}/dialog-desktop.png` }); }
+  if (!(shots)) {} else { { await dialog.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished))); await page.screenshot({ path: `${shots}/dialog-desktop.png` }); } }
   await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
   await expect(dialog).toHaveCount(0);
   expect(await orders(page)).toEqual([]);
@@ -161,7 +161,7 @@ test('G2 at War: an attack on a unit follows it, and the report says what happen
   await page.mouse.move(at.x, at.y);
   await expect(page.locator('.forecast-pursuit')).toContainText('One attack this turn, then your Spearman stays where it fought and needs orders.');
   await expect(page.locator('.forecast-pursuit')).toContainText('moves this turn, your Spearman pursues it');
-  if (shots) await page.screenshot({ path: `${shots}/forecast-war.png` });
+  if (!(shots)) {} else { await page.screenshot({ path: `${shots}/forecast-war.png` }); }
   await page.mouse.click(at.x, at.y, { button: 'right' });
   await expect(page.getByRole('dialog')).toHaveCount(0);
   const queued = await orders(page);
@@ -172,7 +172,7 @@ test('G2 at War: an attack on a unit follows it, and the report says what happen
   const report = page.getByRole('complementary', { name: 'Turn report' });
   await expect.poll(async () => {
     // A moment card holds the report back; L opens it (the card has no Turn report button).
-    if (await page.getByTestId('moment-lane').locator('.moment-card').isVisible()) await page.keyboard.press('l');
+    if (!(await page.getByTestId('moment-lane').locator('.moment-card').isVisible())) {} else { await page.keyboard.press('l'); }
     return report.isVisible();
   }).toBe(true);
   // Either the Scout was hit (standing or pulling back), or it slipped away and the report says so.
@@ -184,5 +184,5 @@ test('G2 at War: an attack on a unit follows it, and the report says what happen
   }, spearman);
   // G18: the attack was one attack, this turn only.
   expect(aim).toEqual({ goto: null, attack: null });
-  if (shots) await page.screenshot({ path: `${shots}/report-war.png` });
+  if (!(shots)) {} else { await page.screenshot({ path: `${shots}/report-war.png` }); }
 });

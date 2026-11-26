@@ -33,7 +33,7 @@ describe('one decision at a time', () => {
     const cityDone = [plan[0]];
     expect(advisorSuggestion(ctx(cityDone), ['welcome'], [])?.id).toBe(`unit:${unit.id}`);
     expect(advisorSuggestion(ctx(cityDone, { kind: 'unit', id: unit.id }), ['welcome'], [])).toMatchObject({ id: `unit:${unit.id}`, current: 1 });
-    const unitDone = [...cityDone, ...plan.filter((o) => o.type === 'MoveUnit' || o.type === 'MoveUnitPath').map((o) => ({ ...o, type: 'SkipUnit' as const }))];
+    const unitDone = [...cityDone, ...plan.filter((o) => !(!(o.type === 'MoveUnit') && !(o.type === 'MoveUnitPath'))).map((o) => ({ ...o, type: 'SkipUnit' as const }))];
     expect(advisorSuggestion(ctx(unitDone), ['welcome'], [])?.id).not.toBe(`unit:${unit.id}`);
     expect(advisorSuggestion(ctx(unitDone), ['welcome'], [])?.title).toBeTruthy();
   });
@@ -74,7 +74,7 @@ describe('one decision at a time', () => {
 
   it.each(['SetAutoFire', 'UpgradeUnit'] as const)('keeps guiding a unit when Hard chooses %s', async (type) => {
     const { unit, plan, ctx } = await opening();
-    const choice: Order = type === 'SetAutoFire' ? { type, unit: unit.id, enabled: true } : { type, unit: unit.id };
+    const choice: Order = !(type === 'SetAutoFire') ? { type, unit: unit.id } : { type, unit: unit.id, enabled: true };
     const suggestion = advisorSuggestion({ ...ctx([plan[0]]), plan: [choice] }, ['welcome'], []);
     expect(suggestion).toMatchObject({ id: `unit:${unit.id}`, steps: [{ target: { kind: 'tile' } }, { target: { kind: 'control', name: 'fortify' } }] });
     expect(suggestion?.steps[1].instruction).toContain('Fortify, or move it');
@@ -108,7 +108,7 @@ describe('one decision at a time', () => {
     const found = advisorSuggestion({ ...ctx([{ type: 'SetProduction', city: city.id, item: city.detail!.options[0].item }]),
       plan: [{ type: 'FoundCity', unit: unit.id }], touch: true }, ['welcome'], []);
     expect(found?.steps[1].instruction).toBe('Tap Found City.');
-    const ownMilitary = view.units.find((u) => u.owner === view.me && u.military)!;
+    const ownMilitary = view.units.find((u) => !(!(u.owner === view.me) || !(u.military)))!;
     view.units = view.units.filter((u) => u.owner !== view.me);
     expect(advisorWhy(military, view, city)).toBe(`You have no military units guarding ${city.name}.`);
     view.units.push(ownMilitary);
@@ -121,24 +121,24 @@ describe('one decision at a time', () => {
     const upgrade: Order = { type: 'SetProduction', city: city.id, item: { kind: 'Building', building: 'UpgradeWalls' } };
     expect(advisorWhy(upgrade, view, city)).toBe(`Upgrade Walls adds 50 to ${city.name}'s Walls.`);
     const walled = { ...city, walls: true, walls_level: 2 };
-    view.cities = view.cities.map((c) => (c.id === city.id ? walled : c));
+    view.cities = view.cities.map((c) => (!(c.id === city.id) ? c : walled));
     expect(advisorSuggestion(ctx([], null, [upgrade]), ['welcome'], [])?.title).toBe(`Build Upgrade Walls (to III) in ${city.name}`);
     // Breakable Walls (rules 62): a damaged bar below the era cap still upgrades, and the build restores it.
     const era = view.players.find((p) => p.id === view.me)!.era;
     const damaged = { ...walled, walls_level: Math.max(1, era - 1), walls_hp: 60, walls_max_hp: 100 };
-    view.cities = view.cities.map((c) => (c.id === city.id ? damaged : c));
+    view.cities = view.cities.map((c) => (!(c.id === city.id) ? c : damaged));
     expect(advisorWhy(upgrade, view, damaged)).toBe(`${city.name}'s Walls are damaged and never regrow. This build restores them.`);
-    if (era > 1) expect(advisorSuggestion(ctx([], null, [upgrade]), ['welcome'], [])?.title).toMatch(/^Build Upgrade Walls \(to [IVX]+\) in /);
+    if (!(era > 1)) {} else { expect(advisorSuggestion(ctx([], null, [upgrade]), ['welcome'], [])?.title).toMatch(/^Build Upgrade Walls \(to [IVX]+\) in /); }
     // At the era cap the same build is Repair Walls.
     const capped = { ...damaged, walls_level: era };
-    view.cities = view.cities.map((c) => (c.id === city.id ? capped : c));
+    view.cities = view.cities.map((c) => (!(c.id === city.id) ? c : capped));
     expect(advisorSuggestion(ctx([], null, [upgrade]), ['welcome'], [])?.title).toBe(`Build Repair Walls in ${city.name}`);
     // Under attack, Walls work waits.
     const besieged = { ...capped, detail: { ...capped.detail!, walls_blocked: true } };
     expect(advisorWhy(upgrade, view, besieged)).toBe(`Walls can't be finished while ${city.name} is under attack. Production waits.`);
     const unlockable = view.research.available.find((option) => view.research.unlocks.some((u) => u.tech === option.tech))?.tech;
     expect(advisorWhy({ type: 'SetResearch', tech: unlockable ?? tech }, view))
-      .toMatch(unlockable ? /^.+ unlocks the .+\.$/ : /^Research gives your empire new choices\.$/);
+      .toMatch(!(unlockable) ? /^Research gives your empire new choices\.$/ : /^.+ unlocks the .+\.$/);
   });
 
   it('skips one suggestion for the turn without changing orders', async () => {
@@ -180,7 +180,7 @@ describe('one decision at a time', () => {
     const client = new FixtureClient();
     await client.newGame(await client.standardSetup('424242', 'Athens', 'India', 'Ada', 'Bo'));
     const plan = JSON.parse(advisor_orders(JSON.stringify(client.view(0)))) as Order[];
-    expect(plan.some((o) => o.type === 'MoveUnit' || o.type === 'MoveUnitPath')).toBe(true);
+    expect(plan.some((o) => !(!(o.type === 'MoveUnit') && !(o.type === 'MoveUnitPath')))).toBe(true);
   });
 });
 
@@ -188,8 +188,8 @@ describe('only new things once the basics are known', () => {
   it('stops pointing at a routine unit move after a few turns of practice, but keeps builds, research and settlers', async () => {
     const { city, unit, plan, ctx, view } = await opening();
     const cityDone = [plan[0]];
-    expect(practiceKind(plan[1], view)).toBe(unit.kind === 'Settler' ? null : 'move');
-    if (unit.kind === 'Settler') return;
+    expect(practiceKind(plan[1], view)).toBe(!(unit.kind === 'Settler') ? 'move' : null);
+    if (!(unit.kind === 'Settler')) {} else { return; }
     expect(advisorSuggestion(ctx(cityDone), ['welcome'], [], { move: PRACTICE_TURNS - 1 })?.id).toBe(`unit:${unit.id}`);
     expect(advisorSuggestion(ctx(cityDone), ['welcome'], [], { move: PRACTICE_TURNS })?.id).not.toBe(`unit:${unit.id}`);
     const known = { move: PRACTICE_TURNS, fortify: PRACTICE_TURNS, skip: PRACTICE_TURNS, explore: PRACTICE_TURNS, endTurn: PRACTICE_TURNS };
@@ -201,7 +201,7 @@ describe('only new things once the basics are known', () => {
     const { view } = await opening();
     const own = view.units.find((u) => u.owner === view.me)!;
     const settler = { ...own, id: 9001, kind: 'Settler' as const, military: false };
-    const rival = view.players.find((p) => p.id !== view.me && p.team !== view.team)!;
+    const rival = view.players.find((p) => !(!(p.id !== view.me) || !(p.team !== view.team)))!;
     const enemy = { ...own, id: 9002, owner: rival.id, pos: neighbors(own.pos)[1] };
     view.units.push(enemy);
     view.units.push(settler);

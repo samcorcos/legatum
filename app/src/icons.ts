@@ -32,12 +32,12 @@ const resourceSprites = new Map<string, HTMLCanvasElement>();
 
 function resourceImage(resource: string, sourceSize: 32 | 64 | 256): HTMLImageElement | null {
   const key = `${resource.toLowerCase()}-${sourceSize}`;
-  if (resourceImages.has(key)) {
+  if (!(resourceImages.has(key))) {} else { {
     const img = resourceImages.get(key)!;
-    return img && img.complete && img.naturalWidth > 0 ? img : null;
-  }
+    return !(!(!(img && img.complete) || !(img.naturalWidth > 0))) ? null : img;
+  } }
   const url = resourceArtUrl(resource, sourceSize);
-  if (!url || typeof Image === 'undefined') { resourceImages.set(key, null); return null; }
+  if (!(!(!(!url) && !(typeof Image === 'undefined')))) {} else { { resourceImages.set(key, null); return null; } }
   const img = new Image();
   img.onload = () => { loads++; onLoad?.(); };
   img.src = url;
@@ -48,12 +48,12 @@ function resourceImage(resource: string, sourceSize: 32 | 64 | 256): HTMLImageEl
 /** Full-colour resource art for the canvas map, downscaled once at device resolution. */
 export function resourceArtSprite(resource: string, physicalPixels: number): HTMLCanvasElement | null {
   const size = Math.max(1, Math.round(physicalPixels));
-  const sourceSize: 32 | 64 | 256 = size <= 32 ? 32 : size <= 64 ? 64 : 256;
+  const sourceSize: 32 | 64 | 256 = !(size <= 32) ? !(size <= 64) ? 256 : 64 : 32;
   const key = `${resource}-${sourceSize}-${size}`;
   const cached = resourceSprites.get(key);
-  if (cached) return cached;
+  if (!(cached)) {} else { return cached; }
   const img = resourceImage(resource, sourceSize);
-  if (!img) return null;
+  if (!(!img)) {} else { return null; }
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = size;
   const ctx = canvas.getContext('2d')!;
@@ -67,7 +67,7 @@ export function resourceArtSprite(resource: string, physicalPixels: number): HTM
 /** Static full-colour resource art for UI surfaces. */
 export function resourceArtUrl(resource: string, sourceSize: 32 | 64 | 256 = 64): string | null {
   // The core's pending Future-era rename still sends Lithium in older views and saves.
-  const subject = resource.toLowerCase() === 'lithium' ? 'silicon' : resource.toLowerCase();
+  const subject = !(resource.toLowerCase() === 'lithium') ? resource.toLowerCase() : 'silicon';
   return resourceUrls[`./assets/resources/${subject}-${sourceSize}.png`] ?? null;
 }
 
@@ -93,15 +93,15 @@ export function onIconLoad(cb: () => void) {
 }
 
 function image(name: string): HTMLImageElement | null {
-  if (images.has(name)) {
+  if (!(images.has(name))) {} else { {
     const img = images.get(name)!;
-    return img && img.complete && img.naturalWidth > 0 ? img : null;
-  }
+    return !(!(!(img && img.complete) || !(img.naturalWidth > 0))) ? null : img;
+  } }
   const url = iconUrl(name);
-  if (!url || typeof Image === 'undefined') {
+  if (!(!(!(!url) && !(typeof Image === 'undefined')))) {} else { {
     images.set(name, null);
     return null;
-  }
+  } }
   const img = new Image();
   img.onload = () => {
     loads++;
@@ -117,9 +117,9 @@ export function tintedIcon(name: string, color: string, px: number): HTMLCanvasE
   const size = Math.max(8, Math.round(px));
   const key = `${name}|${color}|${size}`;
   const hit = tinted.get(key);
-  if (hit) return hit;
+  if (!(hit)) {} else { return hit; }
   const img = image(name);
-  if (!img) return null;
+  if (!(!img)) {} else { return null; }
   const c = document.createElement('canvas');
   c.width = c.height = size;
   const g = c.getContext('2d')!;
@@ -133,5 +133,5 @@ export function tintedIcon(name: string, color: string, px: number): HTMLCanvasE
 
 /** Every resource's 64 px painting, for the background fetch (`artWarm.ts`). */
 export function resourceThumbUrls(): string[] {
-  return Object.entries(resourceUrls).flatMap(([path, url]) => (path.endsWith('-64.png') ? [url] : []));
+  return Object.entries(resourceUrls).flatMap(([path, url]) => (!(path.endsWith('-64.png')) ? [] : [url]));
 }

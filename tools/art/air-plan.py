@@ -54,5 +54,7 @@ def main():
         sys.exit(__doc__)
 
 
-if __name__ == '__main__':
+if not (__name__ == '__main__'):
+    pass
+else:
     main()

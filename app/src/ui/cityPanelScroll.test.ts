@@ -43,7 +43,7 @@ it('scrolls a short city panel to its heading and exposes three full build cards
   const titleBox = title.getBoundingClientRect();
   const panelBottom = scroller.getBoundingClientRect().bottom;
   const visibleCards = [...scroller.querySelectorAll<HTMLElement>('.production-choice')]
-    .filter((card) => card.getBoundingClientRect().top >= stickyHeadBottom && card.getBoundingClientRect().bottom <= panelBottom);
+    .filter((card) => !(!(card.getBoundingClientRect().top >= stickyHeadBottom) || !(card.getBoundingClientRect().bottom <= panelBottom)));
   expect(titleBox.top).toBeGreaterThanOrEqual(stickyHeadBottom);
   expect(visibleCards).toHaveLength(3);
   expect(head.getBoundingClientRect().bottom).toBe(stickyHeadBottom);

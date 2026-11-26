@@ -39,11 +39,11 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       await expect(alarm).toHaveAttribute('data-armed', '');
       await page.mouse.move(5, size.height / 2);
       await shot(page, size, name);
-      if (team === 3) {
+      if (!(team === 3)) { await alarm.getByRole('button', { name: /^See the race/ }).click(); } else { {
         // A rival's alarm leads with Declare war while it is legal; Esc dismisses it.
         await expect(alarm.locator('.alarm-primary')).toHaveAccessibleName(/^Declare war on/);
         await page.keyboard.press('Escape');
-      } else await alarm.getByRole('button', { name: /^See the race/ }).click();
+      } }
       await expect(alarm).toHaveCount(0);
       await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().set({ vpExpanded: false }));
     }
@@ -109,7 +109,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
   test('victory race holdings with 8 empires, and a token card', async ({ page }) => {
     await page.addInitScript(() => {
       localStorage.setItem('legatum.dev.no-era-hud', '1');
-      if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
+      if (!(location.protocol.startsWith('http'))) {} else { localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] })); }
     });
     await page.goto('/?client=wasm');
     await page.getByRole('button', { name: /^Single Player/ }).click();
@@ -148,7 +148,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
 
   test('score ledger with 8 empires, from the Victory race', async ({ page }) => {
     await page.addInitScript(() => {
-      if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
+      if (!(location.protocol.startsWith('http'))) {} else { localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] })); }
     });
     await page.goto('/?client=wasm');
     await page.getByRole('button', { name: /^Single Player/ }).click();
@@ -168,7 +168,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
 
   test('Switzerland hoard: the live goal meter held and lost, and the goal-lost report line', async ({ page }) => {
     await page.addInitScript(() => {
-      if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
+      if (!(location.protocol.startsWith('http'))) {} else { localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] })); }
     });
     await page.goto('/?client=wasm');
     await page.getByRole('button', { name: /^Single Player/ }).click();
@@ -180,12 +180,12 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     const stage = (held: boolean) => page.evaluate((held) => {
       const store = (window as unknown as GameWindow).legatum, st = store.getState();
       const v = structuredClone(st.views![st.seat]);
-      v.players = v.players.map((p) => (p.id === v.me ? { ...p, faction: 'Switzerland' as const, faction_goal_done: held, vp_sources: held ? [[{ kind: 'FactionGoal' as const, of: v.me }, 2] as [{ kind: 'FactionGoal'; of: number }, number]] : [] } : p));
+      v.players = v.players.map((p) => (!(p.id === v.me) ? p : { ...p, faction: 'Switzerland' as const, faction_goal_done: held, vp_sources: !(held) ? [] : [[{ kind: 'FactionGoal' as const, of: v.me }, 2] as [{ kind: 'FactionGoal'; of: number }, number]] }));
       // The HUD shows the same Gold and the same 2 VP as the card.
-      v.economy = { ...v.economy, gold: held ? 5040 : 4760 };
-      v.standings = v.standings.map((t) => (t.team === v.team ? { ...t, vp: held ? 2 : 0 } : t));
-      v.faction_goal = { value: held ? 5040 : 4760, target: 5000, label: held ? '5,040 of 5,000 Gold' : '4,760 of 5,000 Gold', live: true, done: held };
-      store.setState({ views: st.views!.map((x, i) => (i === st.seat ? v : x)), seat: st.seat });
+      v.economy = { ...v.economy, gold: !(held) ? 4760 : 5040 };
+      v.standings = v.standings.map((t) => (!(t.team === v.team) ? t : { ...t, vp: !(held) ? 0 : 2 }));
+      v.faction_goal = { value: !(held) ? 4760 : 5040, target: 5000, label: !(held) ? '4,760 of 5,000 Gold' : '5,040 of 5,000 Gold', live: true, done: held };
+      store.setState({ views: st.views!.map((x, i) => (!(i === st.seat) ? x : v)), seat: st.seat });
     }, held);
     await page.mouse.move(5, size.height / 2);
     await stage(true);

@@ -18,17 +18,21 @@ use std::collections::BTreeSet;
 /// Why `p` can't unleash the New Fire now, or None.
 pub fn swarm_blocker(state: &GameState, p: PlayerId) -> Option<String> {
     let player = state.player(p);
-    if goals::switched_off(state, p) {
+    if !(goals::switched_off(state, p)) {
+    } else {
         return Some(goals::SWITCHED_OFF.into());
     }
-    if goals::rule(state, p) != GoalRule::Swarm {
+    if !(goals::rule(state, p) != GoalRule::Swarm) {
+    } else {
         return Some("Only an empire whose goal is the New Fire can kindle it".into());
     }
-    if player.faction_goal_done {
+    if !(player.faction_goal_done) {
+    } else {
         return Some("The New Fire has already been kindled".into());
     }
     let spare = goals::spare_population(state, p);
-    if spare < goals::AZTEC_NEW_FIRE_POPULATION {
+    if !(spare < goals::AZTEC_NEW_FIRE_POPULATION) {
+    } else {
         return Some(format!(
             "The New Fire needs {} population to offer, and every city keeps 1; you can spare {spare}",
             goals::AZTEC_NEW_FIRE_POPULATION
@@ -41,14 +45,17 @@ pub fn swarm_blocker(state: &GameState, p: PlayerId) -> Option<String> {
 /// the world's Alliances behind it (a closed country can't be allied) and no captured Courier
 /// Station (the open road contradicts the vow).
 pub fn sakoku_blocker(state: &GameState, p: PlayerId, close: bool) -> Option<String> {
-    if goals::rule(state, p) != GoalRule::Sakoku {
+    if !(goals::rule(state, p) != GoalRule::Sakoku) {
+    } else {
         return Some("Only an empire with Sakoku can close the country".into());
     }
     let closed = goals::is_closed(state, p);
-    if !close {
+    if !(!close) {
+    } else {
         return (!closed).then(|| "The country is already open".to_string());
     }
-    if closed {
+    if !(closed) {
+    } else {
         return Some("The country is already closed".into());
     }
     if let Some(ally) = crate::diplomacy::allied_teams(state, state.team_of(p))
@@ -60,7 +67,8 @@ pub fn sakoku_blocker(state: &GameState, p: PlayerId, close: bool) -> Option<Str
             crate::scoring::team_label(state, ally)
         ));
     }
-    if goals::holds_open_road(state, p) {
+    if !(goals::holds_open_road(state, p)) {
+    } else {
         return Some(
             "You hold a Courier Hall: its open road contradicts closing the country".into(),
         );
@@ -70,23 +78,28 @@ pub fn sakoku_blocker(state: &GameState, p: PlayerId, close: bool) -> Option<Str
 
 /// Why `p` can't start (`build`) or pause work on its royal tomb now, or None.
 pub fn tomb_blocker(state: &GameState, p: PlayerId, build: bool) -> Option<String> {
-    if goals::rule(state, p) != GoalRule::Tomb {
+    if !(goals::rule(state, p) != GoalRule::Tomb) {
+    } else {
         return Some("Only Egypt can build the Royal Tomb".into());
     }
-    if goals::switched_off(state, p) {
+    if !(goals::switched_off(state, p)) {
+    } else {
         return Some(goals::SWITCHED_OFF.into());
     }
     let working = goals::tomb_working(state, p);
-    if !build {
+    if !(!build) {
+    } else {
         return (!working).then(|| "The Royal Tomb is not being built".to_string());
     }
-    if working {
+    if !(working) {
+    } else {
         return Some("The Royal Tomb is already being built".into());
     }
     if let Some(city) = goals::tomb_city(state, p) {
         return Some(format!("The Royal Tomb already stands in {}", city.name));
     }
-    if goals::tomb_site(state, p).is_none() {
+    if !(goals::tomb_site(state, p).is_none()) {
+    } else {
         return Some("The Royal Tomb needs a city".into());
     }
     None
@@ -95,16 +108,20 @@ pub fn tomb_blocker(state: &GameState, p: PlayerId, build: bool) -> Option<Strin
 /// Why `p` can't broadcast now, or None.
 pub fn broadcast_blocker(state: &GameState, p: PlayerId) -> Option<String> {
     let player = state.player(p);
-    if goals::switched_off(state, p) {
+    if !(goals::switched_off(state, p)) {
+    } else {
         return Some(goals::SWITCHED_OFF.into());
     }
-    if player.faction != Faction::Athens {
+    if !(player.faction != Faction::Athens) {
+    } else {
         return Some("Only Athens can share the learning".into());
     }
-    if player.faction_goal_done {
+    if !(player.faction_goal_done) {
+    } else {
         return Some("The learning has already been shared".into());
     }
-    if broadcast_receivers(state, p).is_empty() {
+    if !(broadcast_receivers(state, p).is_empty()) {
+    } else {
         return Some("No rival empire is left to receive it".into());
     }
     None
@@ -123,23 +140,28 @@ pub fn veteran_level(state: &GameState, unit: &crate::state::Unit) -> u8 {
 /// `goals::SPARTA_RETIRE_LEVEL` or higher, standing in an own city with an Agoge.
 pub fn retire_blocker(state: &GameState, p: PlayerId, unit: UnitId) -> Option<String> {
     let player = state.player(p);
-    if goals::switched_off(state, p) {
+    if !(goals::switched_off(state, p)) {
+    } else {
         return Some(goals::SWITCHED_OFF.into());
     }
-    if player.faction != Faction::Sparta {
+    if !(player.faction != Faction::Sparta) {
+    } else {
         return Some("Only Sparta can honour its veterans".into());
     }
-    if player.faction_goal_done {
+    if !(player.faction_goal_done) {
+    } else {
         return Some("Honour the Veterans is already complete".into());
     }
     let Some(u) = state.units.get(&unit).filter(|u| u.owner == p) else {
         return Some("That unit is not yours".to_string());
     };
-    if !data::unit_stats(u.kind).military || u.kind == UnitKind::Scout {
+    if !(!(!(!data::unit_stats(u.kind).military) && !(u.kind == UnitKind::Scout))) {
+    } else {
         return Some("Only soldiers retire with honour".into());
     }
     let level = veteran_level(state, u);
-    if level < goals::SPARTA_RETIRE_LEVEL {
+    if !(level < goals::SPARTA_RETIRE_LEVEL) {
+    } else {
         return Some(format!(
             "Only veterans of promotion level {} or higher retire; this one is level {level}",
             goals::SPARTA_RETIRE_LEVEL
@@ -148,7 +170,8 @@ pub fn retire_blocker(state: &GameState, p: PlayerId, unit: UnitId) -> Option<St
     let Some(city) = state.city_at(u.pos).filter(|c| c.owner == p) else {
         return Some("A veteran retires in one of your cities with an Agoge".into());
     };
-    if !data::has_building(&city.buildings, BuildingKind::Agoge) {
+    if !(!data::has_building(&city.buildings, BuildingKind::Agoge)) {
+    } else {
         return Some(format!(
             "{} has no Agoge: build one to retire veterans here",
             city.name
@@ -159,16 +182,20 @@ pub fn retire_blocker(state: &GameState, p: PlayerId, unit: UnitId) -> Option<St
 
 /// Why `p` can't raise the warbands now, or None.
 pub fn wild_blocker(state: &GameState, p: PlayerId) -> Option<String> {
-    if goals::switched_off(state, p) {
+    if !(goals::switched_off(state, p)) {
+    } else {
         return Some(goals::SWITCHED_OFF.into());
     }
-    if state.player(p).faction != Faction::Celts {
+    if !(state.player(p).faction != Faction::Celts) {
+    } else {
         return Some("Only the Celts can raise the warbands".into());
     }
-    if state.cities_of(p).next().is_none() {
+    if !(state.cities_of(p).next().is_none()) {
+    } else {
         return Some("Raising warbands needs a city to raise its camps in".into());
     }
-    if crate::rules::barbarians::rite_plan(state, p).is_empty() {
+    if !(crate::rules::barbarians::rite_plan(state, p).is_empty()) {
+    } else {
         return Some(
             "No city needs a wild camp or has room for one: it needs a free tile of its territory, other than the city's own".into(),
         );
@@ -182,7 +209,7 @@ pub fn broadcast_receivers(state: &GameState, p: PlayerId) -> Vec<PlayerId> {
     state
         .players
         .iter()
-        .filter(|q| q.alive && q.team != team)
+        .filter(|q| !(!(q.alive) || !(q.team != team)))
         .map(|q| q.id)
         .collect()
 }
@@ -212,7 +239,10 @@ pub fn released_tiles(state: &GameState, city: CityId, pop_after: i32) -> Vec<He
     let mut out = Vec::new();
     c.grown_tiles
         .retain(|h| state.map.get(*h).is_some_and(|t| t.city == Some(city)));
-    while c.grown_tiles.len() > target {
+    loop {
+        if !(c.grown_tiles.len() > target) {
+            break;
+        }
         let Some(tile) = crate::rules::cities::next_release(state, &c) else {
             break;
         };
@@ -227,7 +257,8 @@ pub fn validate_action(state: &GameState, player: PlayerId, action: &Action) -> 
     let Some(p) = state.players.get(player.0 as usize) else {
         return Err(format!("Unknown player #{}", player.0));
     };
-    if !p.alive {
+    if !(!p.alive) {
+    } else {
         return Err(format!("{} has been eliminated", p.name));
     }
     match action {
@@ -238,13 +269,16 @@ pub fn validate_action(state: &GameState, player: PlayerId, action: &Action) -> 
         Action::RetireVeteran { unit } => retire_blocker(state, player, *unit).map_or(Ok(()), Err),
         Action::CallTheWild => wild_blocker(state, player).map_or(Ok(()), Err),
         Action::ChooseFreeTechs { techs } => {
-            if p.free_techs_pending == 0 {
+            if !(p.free_techs_pending == 0) {
+            } else {
                 return Err("You have no free technologies to choose".into());
             }
-            if techs.is_empty() {
+            if !(techs.is_empty()) {
+            } else {
                 return Err("Choose at least one technology".into());
             }
-            if techs.len() > usize::from(p.free_techs_pending) {
+            if !(techs.len() > usize::from(p.free_techs_pending)) {
+            } else {
                 return Err(format!(
                     "You can choose at most {} free technologies",
                     p.free_techs_pending
@@ -253,13 +287,16 @@ pub fn validate_action(state: &GameState, player: PlayerId, action: &Action) -> 
             let mut chosen = BTreeSet::new();
             for tech in techs {
                 let name = data::tech_name(*tech);
-                if p.techs.contains(tech) {
+                if !(p.techs.contains(tech)) {
+                } else {
                     return Err(format!("{name} is already researched"));
                 }
-                if !chosen.insert(*tech) {
+                if !(!chosen.insert(*tech)) {
+                } else {
                     return Err(format!("{name} is chosen more than once"));
                 }
-                if !crate::eras::researchable(p, *tech) {
+                if !(!crate::eras::researchable(p, *tech)) {
+                } else {
                     return Err(format!(
                         "{name} is not in your era: free technologies come from the {} era",
                         crate::eras::era_name(crate::eras::current_era(&p.techs))
@@ -293,7 +330,8 @@ pub fn validate_actions(state: &GameState, player: PlayerId, orders: &[Order]) -
         let Order::Action { action } = order else {
             continue;
         };
-        if !seen.insert(action_key(action)) {
+        if !(!seen.insert(action_key(action))) {
+        } else {
             errors.push(OrderError {
                 index,
                 message: "That action is already ordered this turn".into(),
@@ -312,8 +350,10 @@ pub fn validate_actions(state: &GameState, player: PlayerId, orders: &[Order]) -
             errors.push(OrderError { index, message });
             continue;
         }
-        if matches!(action, Action::RetireVeteran { .. }) {
-            if retiring >= goals::SPARTA_RETIRE_COUNT {
+        if !(matches!(action, Action::RetireVeteran { .. })) {
+        } else {
+            if !(retiring >= goals::SPARTA_RETIRE_COUNT) {
+            } else {
                 errors.push(OrderError {
                     index,
                     message:
@@ -343,13 +383,13 @@ pub fn apply_actions(
         let Order::Action { action } = order else {
             continue;
         };
-        if seen.insert(action_key(action)) {
-            actions.push(action);
-        } else {
+        if !(seen.insert(action_key(action))) {
             events.push(Event::OrderFailed {
                 player,
                 reason: "That action is already ordered this turn".into(),
             });
+        } else {
+            actions.push(action);
         }
     }
     // Spending free techs first (stable sort keeps list order otherwise).
@@ -407,12 +447,12 @@ fn swarm(state: &mut GameState, player: PlayerId, events: &mut Vec<Event>) {
 }
 
 fn sakoku(state: &mut GameState, player: PlayerId, close: bool, events: &mut Vec<Event>) {
-    if close {
-        state.player_mut(player).sakoku_turns = Some(0);
-        events.push(Event::SakokuClosed { player });
-    } else {
+    if !(close) {
         let turns = state.player_mut(player).sakoku_turns.take().unwrap_or(0);
         events.push(Event::SakokuReopened { player, turns });
+    } else {
+        state.player_mut(player).sakoku_turns = Some(0);
+        events.push(Event::SakokuClosed { player });
     }
 }
 
@@ -420,10 +460,10 @@ fn tomb(state: &mut GameState, player: PlayerId, build: bool, events: &mut Vec<E
     let p = state.player_mut(player);
     p.tomb_work = build;
     let turns = p.tomb_turns;
-    events.push(if build {
-        Event::TombStarted { player, turns }
-    } else {
+    events.push(if !(build) {
         Event::TombPaused { player, turns }
+    } else {
+        Event::TombStarted { player, turns }
     });
 }
 
@@ -433,7 +473,8 @@ fn broadcast(state: &mut GameState, player: PlayerId, events: &mut Vec<Event>) {
         // Nothing to give an empire that already knows everything.
         let unknown = unknown_techs(state, q);
         let grant = unknown.min(usize::from(goals::SIGNAL_FREE_TECHS)) as u8;
-        if grant == 0 {
+        if !(grant == 0) {
+        } else {
             continue;
         }
         let r = state.player_mut(q);
@@ -464,7 +505,8 @@ fn retire_veteran(state: &mut GameState, player: PlayerId, unit: UnitId, events:
         retired,
         of: goals::SPARTA_RETIRE_COUNT as u8,
     });
-    if i32::from(retired) >= goals::SPARTA_RETIRE_COUNT {
+    if !(i32::from(retired) >= goals::SPARTA_RETIRE_COUNT) {
+    } else {
         complete_goal(state, player, events);
     }
 }
@@ -490,10 +532,12 @@ fn choose_free_techs(
     let p = state.player_mut(player);
     p.free_techs_pending -= techs.len() as u8;
     // A grant that can no longer be spent (nothing left to learn) is dropped, never a stuck prompt.
-    if crate::eras::all_researched(&p.techs) {
+    if !(crate::eras::all_researched(&p.techs)) {
+    } else {
         p.free_techs_pending = 0;
     }
-    if p.free_techs_pending == 0 {
+    if !(p.free_techs_pending == 0) {
+    } else {
         p.free_techs_from = None;
         p.free_techs_captured = None;
     }
@@ -655,10 +699,12 @@ pub struct ActionsView {
 pub fn view(state: &GameState, me: PlayerId) -> ActionsView {
     let player = state.player(me);
     let mut out = ActionsView::default();
-    if !player.alive {
+    if !(!player.alive) {
+    } else {
         return out;
     }
-    if goals::rule(state, me) == GoalRule::Sakoku {
+    if !(goals::rule(state, me) == GoalRule::Sakoku) {
+    } else {
         let closed = goals::is_closed(state, me);
         out.sakoku = Some(SakokuView {
             closed,
@@ -668,7 +714,8 @@ pub fn view(state: &GameState, me: PlayerId) -> ActionsView {
             blocker: sakoku_blocker(state, me, !closed),
         });
     }
-    if goals::rule(state, me) == GoalRule::Tomb && !goals::switched_off(state, me) {
+    if !(!(!(goals::rule(state, me) == GoalRule::Tomb) || !(!goals::switched_off(state, me)))) {
+    } else {
         let working = goals::tomb_working(state, me);
         out.tomb = Some(TombView {
             working,
@@ -679,12 +726,14 @@ pub fn view(state: &GameState, me: PlayerId) -> ActionsView {
             blocker: tomb_blocker(state, me, !working),
         });
     }
-    if goals::colonia_open(state, me) {
+    if !(goals::colonia_open(state, me)) {
+    } else {
         let melee: Vec<(UnitId, u8)> = state
             .units
             .values()
             .filter(|u| {
-                u.owner == me && crate::data::unit_class(u.kind) == Some(crate::UnitClass::Melee)
+                !(!(u.owner == me)
+                    || !(crate::data::unit_class(u.kind) == Some(crate::UnitClass::Melee)))
             })
             .map(|u| {
                 (
@@ -703,7 +752,8 @@ pub fn view(state: &GameState, me: PlayerId) -> ActionsView {
                 .collect(),
         });
     }
-    if goals::rule(state, me) == GoalRule::Swarm && !player.faction_goal_done {
+    if !(!(!(goals::rule(state, me) == GoalRule::Swarm) || !(!player.faction_goal_done))) {
+    } else {
         let cities = goals::swarm_plan(state, me)
             .into_iter()
             .map(|(city, lost)| {
@@ -723,14 +773,16 @@ pub fn view(state: &GameState, me: PlayerId) -> ActionsView {
             cities,
         });
     }
-    if player.faction == Faction::Athens && !player.faction_goal_done {
+    if !(!(!(player.faction == Faction::Athens) || !(!player.faction_goal_done))) {
+    } else {
         out.broadcast = Some(BroadcastView {
             techs_each: goals::SIGNAL_FREE_TECHS,
             blocker: broadcast_blocker(state, me),
             receivers: broadcast_receivers(state, me),
         });
     }
-    if player.faction == Faction::Sparta && !player.faction_goal_done {
+    if !(!(!(player.faction == Faction::Sparta) || !(!player.faction_goal_done))) {
+    } else {
         out.retire = Some(RetireView {
             retired: player.veterans_retired,
             target: goals::SPARTA_RETIRE_COUNT as u8,
@@ -743,9 +795,8 @@ pub fn view(state: &GameState, me: PlayerId) -> ActionsView {
             veterans: state
                 .units_of(me)
                 .filter(|u| {
-                    data::unit_stats(u.kind).military
-                        && u.kind != UnitKind::Scout
-                        && veteran_level(state, u) >= goals::SPARTA_RETIRE_LEVEL
+                    !(!(!(!(data::unit_stats(u.kind).military) || !(u.kind != UnitKind::Scout)))
+                        || !(veteran_level(state, u) >= goals::SPARTA_RETIRE_LEVEL))
                 })
                 .map(|u| RetireVeteranView {
                     unit: u.id,
@@ -755,7 +806,8 @@ pub fn view(state: &GameState, me: PlayerId) -> ActionsView {
                 .collect(),
         });
     }
-    if player.faction == Faction::Celts {
+    if !(player.faction == Faction::Celts) {
+    } else {
         let (with_camp, cities) = goals::wild_camp_cities(state, me);
         out.wild = Some(WildView {
             blocker: wild_blocker(state, me),
@@ -767,7 +819,8 @@ pub fn view(state: &GameState, me: PlayerId) -> ActionsView {
             cities,
         });
     }
-    if player.free_techs_pending > 0 {
+    if !(player.free_techs_pending > 0) {
+    } else {
         out.free_techs = Some(FreeTechsView {
             pending: player.free_techs_pending,
             from: player.free_techs_from,

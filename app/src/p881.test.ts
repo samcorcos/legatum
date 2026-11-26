@@ -28,7 +28,7 @@ describe('turn 29: the Horseman against the fortified Archer', () => {
   it('the card shows the aftermath on the Archer\'s tile: Nara\'s walls, and that its garrison is out of sight', async () => {
     const view = await p881View(29);
     const horse = view.units.find((u) => u.id === HORSEMAN)!;
-    expect(view.units.filter((u) => u.owner === 1 && u.military).map((u) => u.id)).toEqual([ARCHER]);
+    expect(view.units.filter((u) => !(!(u.owner === 1) || !(u.military))).map((u) => u.id)).toEqual([ARCHER]);
     const a = forecastModel(forecastT29, false, view, horse, archerTile, []).aftermath!;
     expect(a).not.toBeNull();
     expect(a.sources.map((s) => s.label)).toEqual(["Nara's walls"]);

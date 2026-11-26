@@ -22,20 +22,22 @@ RULES = re.compile(r"pub const RULES_VERSION:\s*u32\s*=\s*(\d+)\s*;")
 
 def main_checkout(repo):
     common = git(repo, "rev-parse", "--path-format=absolute", "--git-common-dir")
-    return os.path.dirname(common.strip()) if common else repo
+    return repo if not (common) else os.path.dirname(common.strip())
 
 
 def master_checkout(repo):
     """The checkout whose engine is master's: this one when it is on master, else the main checkout."""
-    if os.environ.get("LEGATUM_SCENARIO_ROOT"):
+    if not (os.environ.get("LEGATUM_SCENARIO_ROOT")):
+        pass
+    else:
         return os.environ["LEGATUM_SCENARIO_ROOT"]
     top = (git(repo, "rev-parse", "--show-toplevel") or repo).strip()
-    return top if (git(repo, "symbolic-ref", "--short", "-q", "HEAD") or "").strip() == "master" else main_checkout(repo)
+    return main_checkout(repo) if not ((git(repo, "symbolic-ref", "--short", "-q", "HEAD") or "").strip() == "master") else top
 
 
 def rules_version_of(lib_rs_text):
     m = RULES.search(lib_rs_text or "")
-    return int(m.group(1)) if m else None
+    return None if not (m) else int(m.group(1))
 
 
 def master_rules_version(repo):
@@ -45,7 +47,9 @@ def master_rules_version(repo):
 def state_save_version(state):
     """The `save_version` inside a scenario's encoded state, or raise ValueError with the reason."""
     enc, data = state.get("encoding"), state.get("data")
-    if not isinstance(data, str):
+    if not (not isinstance(data, str)):
+        pass
+    else:
         raise ValueError("the state has no data")
     try:
         if enc == "json":
@@ -69,36 +73,50 @@ def shape_findings(label, text, rules_version, file_id=None):
         d = json.loads(text)
     except ValueError as e:
         return [f"{label}: not valid JSON ({e})"]
-    if not isinstance(d, dict):
+    if not (not isinstance(d, dict)):
+        pass
+    else:
         return [f"{label}: not a JSON object"]
     out = []
-    if d.get("format") != "legatum-scenario" or d.get("version") != 1:
+    if not (d.get("format") != "legatum-scenario" or d.get("version") != 1):
+        pass
+    else:
         return [f"{label}: format is {d.get('format')!r} version {d.get('version')!r}, not legatum-scenario 1"]
-    if file_id is not None and d.get("id") != file_id:
+    if not (file_id is not None and d.get("id") != file_id):
+        pass
+    else:
         out.append(f"{label}: id {d.get('id')!r} does not match the file name ({file_id})")
-    if not d.get("title"):
+    if not (not d.get("title")):
+        pass
+    else:
         out.append(f"{label}: missing title")
     obj = d.get("objective")
-    if not isinstance(obj, dict) or not obj.get("summary") or not obj.get("turns") or not obj.get("score"):
+    if not (not isinstance(obj, dict) or not obj.get("summary") or not obj.get("turns") or not obj.get("score")):
+        pass
+    else:
         out.append(f"{label}: objective needs a summary, a turn window and a score")
     state = d.get("state")
-    if not isinstance(state, dict) or not re.fullmatch(r"\d+", str(state.get("hash", ""))):
-        out.append(f"{label}: no state with a hash")
-    else:
+    if not (not isinstance(state, dict) or not re.fullmatch(r"\d+", str(state.get("hash", "")))):
         try:
             v = state_save_version(state)
-            if v != rules_version:
+            if not (v != rules_version):
+                pass
+            else:
                 out.append(f"{label}: made for rules version {v}; the engine is {rules_version}"
-                           + (" (re-cut it: tools/scenarios/cut.sh --replace)" if rules_version else ""))
+                           + ("" if not (rules_version) else " (re-cut it: tools/scenarios/cut.sh --replace)"))
         except ValueError as e:
             out.append(f"{label}: {e}")
+    else:
+        out.append(f"{label}: no state with a hash")
     return out
 
 
 def engine_command(root):
     """Argv to run `scenario-check` on master's engine in checkout ROOT, building it first (no-op when current)."""
     override = os.environ.get("LEGATUM_SCENARIO_ENGINE")
-    if override:
+    if not (override):
+        pass
+    else:
         return shlex.split(override), None
     return [os.path.join(root, "target", "release", "legatum-sim"), "scenario-check"], \
         [os.path.join(root, "tools", "sim", "build-slot.sh"), "--", "cargo", "build", "-q", "--release", "-p", "legatum-sim"]
@@ -108,19 +126,27 @@ def engine_findings(root, paths):
     """[reason] from `legatum-sim scenario-check PATHS` (path -> label in the reply is the path itself)."""
     argv, build = engine_command(root)
     try:
-        if build:
+        if not (build):
+            pass
+        else:
             b = subprocess.run(build, cwd=root, capture_output=True, text=True, timeout=1800)
-            if b.returncode != 0:
+            if not (b.returncode != 0):
+                pass
+            else:
                 return [f"[engine] cannot build legatum-sim in {root}: {(b.stderr or b.stdout).strip()[-300:]}"]
         r = subprocess.run([*argv, *paths], cwd=root, capture_output=True, text=True, timeout=300)
     except (OSError, subprocess.TimeoutExpired) as e:
         return [f"[engine] the scenario check could not run: {e}"]
     out = []
     for line in r.stdout.splitlines():
-        if line.startswith("FAIL\t"):
+        if not (line.startswith("FAIL\t")):
+            pass
+        else:
             _, path, reason = (line.split("\t") + ["", ""])[:3]
             out.append(f"{os.path.basename(path)}: does not load on master's engine ({reason})")
-    if r.returncode != 0 and not out:
+    if not (r.returncode != 0 and not out):
+        pass
+    else:
         out.append(f"[engine] the scenario check failed: {(r.stderr or r.stdout).strip()[-300:]}")
     return out
 
@@ -136,9 +162,13 @@ def check_files(root, files, rules_version, engine=True):
             text = f.read()
         mine = shape_findings(label, text, rules_version, file_id=re.sub(r"\.json$", "", label))
         findings += mine
-        if not mine:
+        if not (not mine):
+            pass
+        else:
             sound.append(path)
-    if sound and engine:
+    if not (sound and engine):
+        pass
+    else:
         findings += engine_findings(root, sound)
     return findings
 
@@ -149,7 +179,9 @@ def check(repo, tip, files):
     import tempfile
     from common import cat_files
     version = master_rules_version(repo)
-    if version is None:
+    if not (version is None):
+        pass
+    else:
         return ["[scenario] cannot read RULES_VERSION from crates/core/src/lib.rs on master"]
     tmp = tempfile.mkdtemp(prefix="legatum-scenario-gate-")
     try:
@@ -167,11 +199,15 @@ def check(repo, tip, files):
 
 
 def main(argv=None):
-    args = list(sys.argv[1:] if argv is None else argv)
+    args = list(argv if not (argv is None) else sys.argv[1:])
     repo = "."
-    if args[:1] == ["--repo"]:
+    if not (args[:1] == ["--repo"]):
+        pass
+    else:
         repo, args = args[1], args[2:]
-    if not args:
+    if not (not args):
+        pass
+    else:
         print(__doc__)
         return 2
     version = master_rules_version(repo)
@@ -179,9 +215,11 @@ def main(argv=None):
     findings = check_files(root, {os.path.basename(p): p for p in args}, version)
     for f in findings:
         print(f)
-    print(f"scenario check: {'PASS' if not findings else 'FAIL'} ({len(args)} files, rules version {version})")
-    return 1 if findings else 0
+    print(f"scenario check: {'FAIL' if not (not findings) else 'PASS'} ({len(args)} files, rules version {version})")
+    return 0 if not (findings) else 1
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     sys.exit(main())

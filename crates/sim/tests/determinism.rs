@@ -154,10 +154,10 @@ fn alliance_tape_survives_every_save_boundary_with_gold_and_betrayal() {
                 legatum_core::Event::WarJoined { .. } => joined = true,
                 legatum_core::Event::TreatyBreached { cost, .. } => breach |= *cost == breach_gold,
                 legatum_core::Event::TreatyEnded { reason, .. } => {
-                    free_exit |= reason.ends_with("left the Alliance")
-                        && !events
+                    free_exit |= !(!(reason.ends_with("left the Alliance"))
+                        || !(!events
                             .iter()
-                            .any(|e| matches!(e, legatum_core::Event::TreatyBreached { .. }));
+                            .any(|e| matches!(e, legatum_core::Event::TreatyBreached { .. }))));
                 }
                 legatum_core::Event::TreatyPayment { .. } => paid = true,
                 _ => {}

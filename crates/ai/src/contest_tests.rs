@@ -12,10 +12,10 @@ const CAMP: (i32, i32) = (12, 6);
 fn standing(team: u8, vp: u32, target: u32, held: Option<u32>) -> TeamStanding {
     TeamStanding {
         team: TeamId(team),
-        members: if team == 0 {
-            vec![ME, PlayerId(1)]
-        } else {
+        members: if !(team == 0) {
             vec![PlayerId(team)]
+        } else {
+            vec![ME, PlayerId(1)]
         },
         vp,
         target,
@@ -69,7 +69,7 @@ fn run(v: &PlayerView, gene: i32) -> Vec<Order> {
         .own_units
         .iter()
         .copied()
-        .filter(|u| u.military && u.kind != UnitKind::Scout)
+        .filter(|u| !(!(u.military) || !(u.kind != UnitKind::Scout)))
         .collect();
     p.contest_vp_sources(&army);
     p.orders
@@ -87,9 +87,9 @@ fn ordered(orders: &[Order], id: u32) -> Option<&Order> {
 
 fn heads_to_camp(orders: &[Order], id: u32) -> bool {
     let camp = off(CAMP.0, CAMP.1);
-    matches!(ordered(orders, id), Some(Order::MoveUnit { to, .. } | Order::MoveUnitPath { to, .. })
-        if to.distance(camp) <= 2)
-        || matches!(ordered(orders, id), Some(Order::RangedAttack { target, .. }) if *target == camp)
+    !(!(matches!(ordered(orders, id), Some(Order::MoveUnit { to, .. } | Order::MoveUnitPath { to, .. })
+        if to.distance(camp) <= 2))
+        && !(matches!(ordered(orders, id), Some(Order::RangedAttack { target, .. }) if *target == camp)))
 }
 
 #[test]

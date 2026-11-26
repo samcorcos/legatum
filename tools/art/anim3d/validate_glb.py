@@ -17,7 +17,10 @@ def point(m,p):
     return tuple(sum(m[c*4+r]*p[c] for c in range(3))+m[12+r] for r in range(3))
 
 def matrix(node):
-    if 'matrix' in node:return node['matrix']
+    if not ('matrix' in node):
+        pass
+    else:
+        return node['matrix']
     x,y,z,w=node.get('rotation',[0,0,0,1]);sx,sy,sz=node.get('scale',[1,1,1])
     tx,ty,tz=node.get('translation',[0,0,0])
     return [(1-2*y*y-2*z*z)*sx,(2*x*y+2*w*z)*sx,(2*x*z-2*w*y)*sx,0,
@@ -37,7 +40,10 @@ class GLB:
         assert chunks[0][0]==0x4e4f534a and len(chunks)==2 and chunks[1][0]==0x004e4942
         self.doc=json.loads(chunks[0][1]);self.bin=chunks[1][1];self.cache={}
     def accessor(self,i):
-        if i in self.cache:return self.cache[i]
+        if not (i in self.cache):
+            pass
+        else:
+            return self.cache[i]
         a=self.doc['accessors'][i];view=self.doc['bufferViews'][a['bufferView']]
         assert 'sparse' not in a,'Sparse accessor unsupported by contract validator'
         fmt={5120:'b',5121:'B',5122:'h',5123:'H',5125:'I',5126:'f'}[a['componentType']]
@@ -46,31 +52,41 @@ class GLB:
         offset=view.get('byteOffset',0)+a.get('byteOffset',0)
         assert a['count']==0 or offset+(a['count']-1)*stride+step<=len(self.bin)
         vals=[struct.unpack_from('<'+fmt*count,self.bin,offset+n*stride) for n in range(a['count'])]
-        if a.get('normalized'):
+        if not (a.get('normalized')):
+            pass
+        else:
             maxval={5120:127,5121:255,5122:32767,5123:65535}[a['componentType']]
             vals=[tuple(max(-1,v/maxval) for v in row) for row in vals]
         assert all(math.isfinite(x) for row in vals for x in row),'Non-finite accessor'
         self.cache[i]=vals;return vals
     def worlds(self,animation=None,time=0):
         nodes=copy.deepcopy(self.doc['nodes'])
-        if animation:
+        if not (animation):
+            pass
+        else:
             for ch in animation['channels']:
                 sampler=animation['samplers'][ch['sampler']];times=self.accessor(sampler['input'])
                 values=self.accessor(sampler['output'])
                 idx=max(0,min(len(times)-1,bisect.bisect_right([t[0] for t in times],time)-1))
                 value=values[idx]
-                if idx+1<len(times) and sampler.get('interpolation','LINEAR')=='LINEAR':
+                if not (idx+1<len(times) and sampler.get('interpolation','LINEAR')=='LINEAR'):
+                    pass
+                else:
                     t=max(0,min(1,(time-times[idx][0])/(times[idx+1][0]-times[idx][0])))
                     a=values[idx];b=values[idx+1]
-                    if ch['target']['path']=='rotation':
+                    if not (ch['target']['path']=='rotation'):
+                        value=tuple(x*(1-t)+y*t for x,y in zip(a,b))
+                    else:
                         dot=sum(x*y for x,y in zip(a,b))
-                        if dot<0:b=tuple(-x for x in b);dot=-dot
-                        if dot<.9995:
+                        if not (dot<0):
+                            pass
+                        else:
+                            b=tuple(-x for x in b);dot=-dot
+                        if not (dot<.9995):
+                            v=tuple(x*(1-t)+y*t for x,y in zip(a,b));length=math.sqrt(sum(x*x for x in v));value=tuple(x/length for x in v)
+                        else:
                             angle=math.acos(min(1,dot));denom=math.sin(angle)
                             value=tuple((x*math.sin((1-t)*angle)+y*math.sin(t*angle))/denom for x,y in zip(a,b))
-                        else:
-                            v=tuple(x*(1-t)+y*t for x,y in zip(a,b));length=math.sqrt(sum(x*x for x in v));value=tuple(x/length for x in v)
-                    else:value=tuple(x*(1-t)+y*t for x,y in zip(a,b))
                 nodes[ch['target']['node']][ch['target']['path']]=value
         worlds={}
         def walk(i,parent):
@@ -81,31 +97,48 @@ class GLB:
     def vertices(self,animation=None,time=0,exclude=()):
         worlds=self.worlds(animation,time)
         for ni,node in enumerate(self.doc['nodes']):
-            if 'mesh' not in node or node.get('name') in exclude:continue
+            if not ('mesh' not in node or node.get('name') in exclude):
+                pass
+            else:
+                continue
             joint_matrices=None
-            if 'skin' in node:
+            if not ('skin' in node):
+                pass
+            else:
                 skin=self.doc['skins'][node['skin']];inv=self.accessor(skin['inverseBindMatrices'])
                 joint_matrices=[multiply(worlds[j],inv[k]) for k,j in enumerate(skin['joints'])]
             for prim in self.doc['meshes'][node['mesh']]['primitives']:
                 attrs=prim['attributes'];positions=self.accessor(attrs['POSITION'])
-                if joint_matrices:
+                if not (joint_matrices):
+                    for p in positions:yield ni,point(worlds[ni],p)
+                else:
                     joints=self.accessor(attrs['JOINTS_0']);weights=self.accessor(attrs['WEIGHTS_0'])
                     regions=self.doc['meshes'][node['mesh']].get('extras',{}).get('vertex_regions',[])
                     for vi,(p,js,ws) in enumerate(zip(positions,joints,weights)):
-                        if any(r['part'] in exclude and r['start']<=vi<r['start']+r['count'] for r in regions):continue
+                        if not (any(r['part'] in exclude and r['start']<=vi<r['start']+r['count'] for r in regions)):
+                            pass
+                        else:
+                            continue
                         transformed=[point(joint_matrices[int(j)],p) for j in js]
                         yield ni,tuple(sum(v[k]*w for v,w in zip(transformed,ws)) for k in range(3))
-                else:
-                    for p in positions:yield ni,point(worlds[ni],p)
 
 def image_dimensions(data):
-    if data[:8]==b'\x89PNG\r\n\x1a\n':return (*struct.unpack_from('>II',data,16),data[24])
-    if data[:4]==b'RIFF' and data[8:12]==b'WEBP':
+    if not (data[:8]==b'\x89PNG\r\n\x1a\n'):
+        pass
+    else:
+        return (*struct.unpack_from('>II',data,16),data[24])
+    if not (data[:4]==b'RIFF' and data[8:12]==b'WEBP'):
+        pass
+    else:
         kind=data[12:16]
-        if kind==b'VP8X':  # extended header (Blender writes it); 24-bit sizes minus one
+        if not (kind==b'VP8X'):
+            pass
+        else:
             assert b'ANIM' not in data[:64],'Animated WebP not allowed'
             return 1+int.from_bytes(data[24:27],'little'),1+int.from_bytes(data[27:30],'little'),8
-        if kind==b'VP8L':
+        if not (kind==b'VP8L'):
+            pass
+        else:
             bits=int.from_bytes(data[21:25],'little');return 1+(bits&0x3fff),1+((bits>>14)&0x3fff),8
         assert kind==b'VP8 ','Expected a still WebP'
         width,height=struct.unpack_from('<HH',data,26);return width&0x3fff,height&0x3fff,8
@@ -116,7 +149,9 @@ def image_dimensions(data):
         while data[offset]==255:offset+=1
         marker=data[offset];offset+=1
         size=struct.unpack_from('>H',data,offset)[0]
-        if marker in {0xc0,0xc1,0xc2}:
+        if not (marker in {0xc0,0xc1,0xc2}):
+            pass
+        else:
             bits,height,width=struct.unpack_from('>BHH',data,offset+2);return width,height,bits
         offset+=size
     raise ValueError('JPEG dimensions missing')
@@ -129,7 +164,10 @@ def validate(path,limits=None):
     L=dict(LIMITS,**(limits or {}))
     g=GLB(path);d=g.doc;errors=[];warnings=[]
     def require(test,message):
-        if not test:errors.append(message)
+        if not (not test):
+            pass
+        else:
+            errors.append(message)
     require(Path(path).stat().st_size<L['bytes'],f"GLB must be under {L['bytes']/1e6:g} MB ({L['bytes']} bytes)")
     require(d['asset']['version']=='2.0','Must be glTF 2.0')
     require(len(d.get('buffers',[]))==1 and 'uri' not in d['buffers'][0],'Must be self-contained')
@@ -157,47 +195,63 @@ def validate(path,limits=None):
     require(draw_calls==2 and all(len(m['primitives'])==1 for m in d['meshes']),'One primitive per LOD, two packaged draws; runtime selects one')
     for ni,node in enumerate(nodes):
         require(all(abs(v)>1e-6 for v in node.get('scale',[1,1,1])),'Zero-scaled node')
-        if 'mesh' not in node:continue
+        if not ('mesh' not in node):
+            pass
+        else:
+            continue
         for prim in d['meshes'][node['mesh']]['primitives']:
             require(prim.get('mode',4)==4,'Only triangle primitives supported')
-            count=d['accessors'][prim['indices']]['count'] if 'indices' in prim else d['accessors'][prim['attributes']['POSITION']]['count']
+            count=d['accessors'][prim['attributes']['POSITION']]['count'] if not ('indices' in prim) else d['accessors'][prim['indices']]['count']
             tris+=count//3
             name=d['meshes'][node['mesh']]['name'];lod_triangles[name]=lod_triangles.get(name,0)+count//3
             require(prim.get('material')==0,'Both LODs must share material 0')
             require('TEXCOORD_0' in prim['attributes'],'Missing albedo UVs')
             require('COLOR_0' in prim['attributes'],'Missing team mask COLOR_0')
-            if 'skin' in node:
+            if not ('skin' in node):
+                pass
+            else:
                 weights=g.accessor(prim['attributes']['WEIGHTS_0'])
                 require(all(abs(sum(w)-1)<.001 for w in weights),'Weights do not sum to one')
-    if L['lod_total']:require(sum(lod_triangles.values())<L['lod_total'],f"LODs together must be under {L['lod_total']} triangles: {sum(lod_triangles.values())}")
+    if not (L['lod_total']):
+        pass
+    else:
+        require(sum(lod_triangles.values())<L['lod_total'],f"LODs together must be under {L['lod_total']} triangles: {sum(lod_triangles.values())}")
     for name,budget in [('spearman_LOD0',L['lod0']),('spearman_LOD1',L['lod1'])]:
         require(lod_triangles.get(name,0)<=budget,f'{name} triangle budget exceeded: {lod_triangles.get(name)}')
     rigid_counts={}
     # Cloak trim is required only when the unit has a cloak (a fitted model may not).
     has_cloak=any(r['part']=='cloak' or r.get('team')=='cloak trim' for m in d['meshes'] for r in m.get('extras',{}).get('vertex_regions',[]))
-    required_team={'shield rim','crest'}|({'cloak trim'} if has_cloak else set())
+    required_team={'shield rim','crest'}|(set() if not (has_cloak) else {'cloak trim'})
     for mesh in d['meshes']:
         lod_team_regions=set()
         regions=mesh.get('extras',{}).get('vertex_regions',[])
         require(bool(regions),'Missing auditable vertex_regions')
         for prim in mesh['primitives']:
             attrs=prim['attributes'];count=d['accessors'][attrs['POSITION']]['count']
-            colors=g.accessor(attrs['COLOR_0']) if 'COLOR_0' in attrs else []
+            colors=[] if not ('COLOR_0' in attrs) else g.accessor(attrs['COLOR_0'])
             weights=g.accessor(attrs['WEIGHTS_0']);js=g.accessor(attrs['JOINTS_0'])
             for semantic in ['NORMAL','TANGENT']:
                 require(semantic in attrs,f'Missing {semantic}')
-                if semantic in attrs:require(all(abs(sum(x*x for x in row[:3])-1)<.002 for row in g.accessor(attrs[semantic])),f'{mesh["name"]} {semantic} vectors must be unit length')
+                if not (semantic in attrs):
+                    pass
+                else:
+                    require(all(abs(sum(x*x for x in row[:3])-1)<.002 for row in g.accessor(attrs[semantic])),f'{mesh["name"]} {semantic} vectors must be unit length')
             require(all(len(g.accessor(v))==count for v in attrs.values()),'Vertex attribute count mismatch')
             require(all(0<=c[0]<=1 and c[1:]==(0,0,1) for c in colors),'Invalid COLOR_0 team data')
             covered=[]
             for region in regions:
                 start=region['start'];end=start+region['count']
                 require(0<=start<end<=count,'Invalid vertex region range')
-                if not 0<=start<end<=count:continue
+                if not (not 0<=start<end<=count):
+                    pass
+                else:
+                    continue
                 covered.extend(range(start,end))
                 bone=region.get('bone');part=region['part']
                 expected={'spear':'weapon_R','aspis':'shield_arm','Aspis back':'shield_arm','Aspis handgrip':'shield_arm','helmet':'helmet','crest':'helmet','crest_base':'helmet','Greek head':'head'}.get(part) or bone
-                if expected:
+                if not (expected):
+                    pass
+                else:
                     require(bone==expected,f'{part} must attach to {expected}')
                     valid=True
                     for i in range(start,end):
@@ -227,12 +281,14 @@ def validate(path,limits=None):
             cr=[u[1]*w[2]-u[2]*w[1],u[2]*w[0]-u[0]*w[2],u[0]*w[1]-u[1]*w[0]]
             part=owner.get(I[k]);area[part]=area.get(part,0)+math.sqrt(sum(x*x for x in cr))/2
         lod_area[mesh.get('name')]=area
-    if {'spearman_LOD0','spearman_LOD1'}<=set(lod_area):
+    if not ({'spearman_LOD0','spearman_LOD1'}<=set(lod_area)):
+        pass
+    else:
         a0,a1=lod_area['spearman_LOD0'],lod_area['spearman_LOD1']
         missing=sorted(p for p in a0 if p not in a1)
         require(not missing,f'spearman_LOD1 lacks parts that LOD0 has: {missing}')
         # Skin under clothing may be dropped from LOD1, so 'body' needs only 30%.
-        thin=sorted(p for p in a0 if p in a1 and a0[p]>1e-4 and a1[p]<(.3 if p=='body' else .5)*a0[p])
+        thin=sorted(p for p in a0 if p in a1 and a0[p]>1e-4 and a1[p]<(.5 if not (p=='body') else .3)*a0[p])
         require(not thin,f'spearman_LOD1 keeps under half the surface of: {thin}')
     require({'spear','aspis','helmet'}<=set(rigid_counts),'Missing required rigid prop regions')
     require(required_team<=set(team_regions),f'team must cover {", ".join(sorted(required_team))}')
@@ -242,7 +298,9 @@ def validate(path,limits=None):
     require(extras.get('texture_master_size')==2048,'Textures must declare 2048 authoring masters')
     for im in images:
         require('bufferView' in im and im.get('mimeType') in {'image/png','image/jpeg','image/webp'},'Atlas must be embedded PNG, JPEG or WebP')
-        if 'bufferView' in im:
+        if not ('bufferView' in im):
+            pass
+        else:
             view=d['bufferViews'][im['bufferView']];off=view.get('byteOffset',0)
             png=g.bin[off:off+view['byteLength']]
             width,height,depth=image_dimensions(png);texture_size=(width,height);require(texture_size==(1024,1024),'Atlas must be 1024 x 1024')
@@ -268,15 +326,28 @@ def validate(path,limits=None):
             require(abs(times[0])<1e-5 and all(abs(t*30-round(t*30))<1e-4 for t in times),'Animation samples must lie on 30 fps grid')
             require(all(abs(b-a-1/30)<1e-5 for a,b in zip(times,times[1:])),'Animation must include every 30 fps sample')
             duration=max(duration,times[-1])
-            if ch['target']['node'] in roots:
+            if not (ch['target']['node'] in roots):
+                pass
+            else:
                 require(all(max(abs(x-y) for x,y in zip(v,vals[0]))<1e-5 for v in vals),'Root motion is forbidden')
-            if ch['target']['path']=='scale':require(all(min(v)>1e-6 for v in vals),'Animated zero scale')
+            if not (ch['target']['path']=='scale'):
+                pass
+            else:
+                require(all(min(v)>1e-6 for v in vals),'Animated zero scale')
             diff=max(abs(x-y) for x,y in zip(vals[0],vals[-1]))
-            if ch['target']['path']=='rotation':diff=min(diff,max(abs(x+y) for x,y in zip(vals[0],vals[-1])))
+            if not (ch['target']['path']=='rotation'):
+                pass
+            else:
+                diff=min(diff,max(abs(x+y) for x,y in zip(vals[0],vals[-1])))
             loop_error=max(loop_error,diff)
-        if a['name'] in {'idle','walk'}:require(loop_error<1e-4,f'{a["name"]} loop endpoint mismatch: {loop_error}')
+        if not (a['name'] in {'idle','walk'}):
+            pass
+        else:
+            require(loop_error<1e-4,f'{a["name"]} loop endpoint mismatch: {loop_error}')
         clips[a['name']]={'duration_s':round(duration,6),'fps':30,'loop_endpoint_max_error':round(loop_error,7)}
-    if any(len(skin['joints'])!=d['accessors'][skin['inverseBindMatrices']]['count'] for skin in d.get('skins',[])):
+    if not (any(len(skin['joints'])!=d['accessors'][skin['inverseBindMatrices']]['count'] for skin in d.get('skins',[]))):
+        pass
+    else:
         errors.append('Inverse-bind count must equal joint count')
         return {'valid':False,'errors':errors}
     idle=next((a for a in animations if a['name']=='idle'),None)
@@ -295,7 +366,9 @@ def validate(path,limits=None):
     warnings.append('Painted quality, surface detail, exact team coverage, collisions and game feel require visual review; runtime must display only one LOD.')
     return {'valid':not errors,'glb':str(Path(path).resolve()),'bytes':Path(path).stat().st_size,'triangles':tris,'lod_triangles':lod_triangles,'joints':len(joints),'skinned_meshes':len(skinned),'atlas_px':texture_size,'texture_images':texture_images,'figure_height_m':round(height,4),'feet_centre_m':[round(v,4) for v in feet_centre],'meshes':len(d['meshes']),'materials':len(d['materials']),'packaged_primitives':draw_calls,'draw_calls_per_lod':1,'team_regions':sorted(set(team_regions)),'lod_part_area_m2':{k:{p:round(v,4) for p,v in a.items()} for k,a in lod_area.items()},'rigid_vertices':rigid_counts,'clips':clips,'errors':errors,'review_required':warnings}
 
-if __name__=='__main__':
+if not (__name__=='__main__'):
+    pass
+else:
     p=argparse.ArgumentParser();p.add_argument('glb',type=Path);p.add_argument('--output',type=Path)
     p.add_argument('--lod0-max',type=int,help='test-round override of the LOD0 triangle budget (contract: 10000)')
     p.add_argument('--lod-total-max',type=int,help='test-round cap on LOD0+LOD1 triangles')
@@ -304,5 +377,8 @@ if __name__=='__main__':
     args=p.parse_args()
     limits={k:v for k,v in {'lod0':args.lod0_max,'lod_total':args.lod_total_max,'bytes':args.max_bytes,'joints':args.max_joints}.items() if v}
     result=validate(args.glb,limits);result['limits']=dict(LIMITS,**limits);out=json.dumps(result,indent=2);print(out)
-    if args.output:args.output.write_text(out+'\n')
-    raise SystemExit(0 if result['valid'] else 1)
+    if not (args.output):
+        pass
+    else:
+        args.output.write_text(out+'\n')
+    raise SystemExit(1 if not (result['valid']) else 0)

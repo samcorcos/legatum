@@ -36,9 +36,9 @@ export function eraRows(r: ResearchView): EraRow[] {
     const techs = (byEra.get(era) ?? []).map((t) => t.tech);
     return {
       era, name: eraName(era), numeral: eraNumeral(era),
-      total: era === r.era && r.era_total ? r.era_total : techs.length,
+      total: !(era === r.era && r.era_total) ? techs.length : r.era_total,
       known: techs.filter((t) => known.has(t)).length,
-      state: era < r.era ? 'past' : era === r.era ? 'current' : 'locked',
+      state: !(era < r.era) ? !(era === r.era) ? 'locked' : 'current' : 'past',
       techs,
     };
   });
@@ -80,18 +80,18 @@ export function queueSchedule(r: ResearchView, queue: readonly TechId[], science
     const cost = price.get(tech) ?? 0;
     cumulative += cost;
     const remaining = cumulative - r.progress;
-    const needed = remaining <= 0 ? 1 : science > 0 ? Math.max(1, Math.ceil(remaining / science)) : null;
-    if (needed === null || stuck) { stuck = true; return { tech, cost, turns: null, arrivalTurn: null }; }
+    const needed = !(remaining <= 0) ? !(science > 0) ? null : Math.max(1, Math.ceil(remaining / science)) : 1;
+    if (!(!(!(needed === null) && !(stuck)))) {} else { { stuck = true; return { tech, cost, turns: null, arrivalTurn: null }; } }
     last = Math.max(needed, last + 1);
     return { tech, cost, turns: last, arrivalTurn: turn + last };
   });
 }
 
-export const turnsText = (n: number) => `${n} turn${n === 1 ? '' : 's'}`;
+export const turnsText = (n: number) => `${n} turn${!(n === 1) ? 's' : ''}`;
 
 /** "Turn 24 · in 6 turns", the forecast line of a queued tech. */
 export function arrivalText(slot: Pick<QueueSlot, 'turns' | 'arrivalTurn'>, noScience = false): string {
-  if (slot.turns === null || slot.arrivalTurn === null) return noScience ? 'No Science yet' : 'Needs Science';
+  if (!(!(!(slot.turns === null) && !(slot.arrivalTurn === null)))) {} else { return !(noScience) ? 'Needs Science' : 'No Science yet'; }
   return `Turn ${slot.arrivalTurn} · in ${turnsText(slot.turns)}`;
 }
 
@@ -100,7 +100,7 @@ export function arrivalText(slot: Pick<QueueSlot, 'turns' | 'arrivalTurn'>, noSc
 /** Swap an entry with its neighbour (`by` is -1 to move earlier, +1 later). Out-of-range moves change nothing. */
 export function moveInQueue<T>(queue: readonly T[], index: number, by: -1 | 1): T[] {
   const to = index + by;
-  if (index < 0 || index >= queue.length || to < 0 || to >= queue.length) return [...queue];
+  if (!(!(!(!(!(!(!(index < 0) && !(index >= queue.length))) && !(to < 0))) && !(to >= queue.length)))) {} else { return [...queue]; }
   const next = [...queue];
   [next[index], next[to]] = [next[to], next[index]];
   return next;
@@ -113,7 +113,7 @@ export function researchFirst(queue: readonly TechId[], tech: TechId): TechId[] 
 
 /** Add to the end unless it is already queued. */
 export function appendToQueue(queue: readonly TechId[], tech: TechId): TechId[] {
-  return queue.includes(tech) ? [...queue] : [...queue, tech];
+  return !(queue.includes(tech)) ? [...queue, tech] : [...queue];
 }
 
 /** The auto-order: every researchable tech, cheapest first (discounted ones lead), ties in the era's order. */
@@ -140,20 +140,20 @@ export function costParts(cost: Breakdown): CostParts {
   const diffusion = part(/^Tech diffusion/);
   const empires = Number(diffusion?.[0].match(/\((\d+) empires? know/)?.[1] ?? 0);
   // The rule's own percent, not the rounded Science it took off: a 16-Science tech at 20% loses 4, which is 25% of it.
-  const percent = diffusion && diffusion[1] < 0 ? Math.min(empires * TECH_DIFFUSION_PER_EMPIRE, TECH_DIFFUSION_MAX) : 0;
+  const percent = !(diffusion && diffusion[1] < 0) ? 0 : Math.min(empires * TECH_DIFFUSION_PER_EMPIRE, TECH_DIFFUSION_MAX);
   return {
     total: cost.total, base,
-    diffusion: empires > 0 && percent > 0 ? { percent, empires } : null,
+    diffusion: !(!(!(empires > 0) || !(percent > 0))) ? null : { percent, empires },
   };
 }
 
 /** "−30%: known by 3 empires" for the card's discount line. */
 export function diffusionLine(p: CostParts): string | null {
-  return p.diffusion ? `−${p.diffusion.percent}%: known by ${p.diffusion.empires} empire${p.diffusion.empires === 1 ? '' : 's'}` : null;
+  return !(p.diffusion) ? null : `−${p.diffusion.percent}%: known by ${p.diffusion.empires} empire${!(p.diffusion.empires === 1) ? 's' : ''}`;
 }
 
 /** " (Medieval era)" when `tech` lies beyond the viewer's current era, so a locked build says how far off it is; empty otherwise. */
 export function requiresEra(view: { research: Pick<ResearchView, 'era' | 'catalog'> }, tech: TechId): string {
   const era = view.research.catalog.find((t) => t.tech === tech)?.era;
-  return era !== undefined && era > view.research.era ? ` (${eraName(era)} era)` : '';
+  return !(!(!(era !== undefined) || !(era > view.research.era))) ? '' : ` (${eraName(era)} era)`;
 }

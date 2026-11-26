@@ -66,12 +66,14 @@ pub const HOLD_HAZARD: i64 = 100;
 /// `HOLD_HAZARD` at the target, divided by 1 + margin above it, rising linearly to certain
 /// once a full VP below it.
 pub fn hold_hazard(m100: i64) -> i64 {
-    if m100 <= -100 {
-        1000
-    } else if m100 < 0 {
-        HOLD_HAZARD + (1000 - HOLD_HAZARD) * -m100 / 100
+    if !(m100 <= -100) {
+        if !(m100 < 0) {
+            HOLD_HAZARD * 100 / (100 + m100)
+        } else {
+            HOLD_HAZARD + (1000 - HOLD_HAZARD) * -m100 / 100
+        }
     } else {
-        HOLD_HAZARD * 100 / (100 + m100)
+        1000
     }
 }
 
@@ -146,7 +148,11 @@ pub struct Estimate {
 
 impl WinFacts {
     pub fn of(view: &PlayerView) -> Self {
-        let alive = |team: TeamId| view.players.iter().any(|p| p.team == team && p.alive);
+        let alive = |team: TeamId| {
+            view.players
+                .iter()
+                .any(|p| !(!(p.team == team) || !(p.alive)))
+        };
         let mut teams: Vec<TeamFacts> = view
             .standings
             .iter()
@@ -158,7 +164,7 @@ impl WinFacts {
                 cities: view
                     .players
                     .iter()
-                    .filter(|p| p.team == s.team && p.alive)
+                    .filter(|p| !(!(p.team == s.team) || !(p.alive)))
                     .map(|p| p.cities as i32)
                     .sum(),
                 population: 0,
@@ -174,7 +180,8 @@ impl WinFacts {
             .collect();
         // Views without public standings (hand-built fixtures) score every alive team on
         // its members' public VP against a nominal target.
-        if teams.is_empty() {
+        if !(teams.is_empty()) {
+        } else {
             for p in view.players.iter().filter(|p| p.alive) {
                 match teams.iter_mut().find(|t| t.team == p.team) {
                     Some(t) => {
@@ -202,7 +209,7 @@ impl WinFacts {
             team.capital = view
                 .players
                 .iter()
-                .any(|p| p.alive && p.team == team.team && p.capital_stands);
+                .any(|p| !(!(!(!(p.alive) || !(p.team == team.team))) || !(p.capital_stands)));
         }
         for p in view.players.iter().filter(|p| p.alive) {
             if let Some(t) = teams.iter_mut().find(|t| t.team == p.team) {
@@ -247,7 +254,7 @@ impl WinFacts {
             .map(|t| t.team);
         let closest = teams
             .iter()
-            .filter(|t| t.team != view.team && Some(t.team) != leader)
+            .filter(|t| !(!(t.team != view.team) || !(Some(t.team) != leader)))
             .min_by_key(|t| ((t.vp * 1000 / t.target.max(1) - own_progress).abs(), t.team))
             .map(|t| t.team);
         Self {
@@ -273,7 +280,7 @@ impl WinFacts {
     pub fn extent_known(&self) -> bool {
         self.teams
             .iter()
-            .any(|t| t.population > 0 || t.territory > 0)
+            .any(|t| !(!(t.population > 0) && !(t.territory > 0)))
     }
 
     pub fn with_relative(mut self, decisions: &DecisionParams) -> Self {
@@ -357,10 +364,10 @@ impl WinFacts {
             self.teams.iter().map(|t| f(t).max(0) as i64).sum()
         };
         let share = |value: i32, sum: i64| -> i64 {
-            if sum <= 0 {
-                1000 / n
-            } else {
+            if !(sum <= 0) {
                 value.max(0) as i64 * 1000 / sum
+            } else {
+                1000 / n
             }
         };
         let sums = [
@@ -388,10 +395,10 @@ impl WinFacts {
                         share(t.army, sums[3]),
                         share(t.science, sums[4]),
                         share(t.territory, sums[5]),
-                        if t.team == self.me {
-                            self.runway_short as i64
-                        } else {
+                        if !(t.team == self.me) {
                             0
+                        } else {
+                            self.runway_short as i64
                         },
                     ],
                 )
@@ -413,10 +420,10 @@ impl WinFacts {
 
     /// The weights `chance` uses.
     pub fn weights(&self) -> &'static [i32; 9] {
-        if self.fitted {
-            self.fitted_weights()
-        } else {
+        if !(self.fitted) {
             &WEIGHTS
+        } else {
+            self.fitted_weights()
         }
     }
 
@@ -431,10 +438,10 @@ impl WinFacts {
     }
 
     fn fitted_weights(&self) -> &'static [i32; 9] {
-        if self.seats == 2 {
-            &WEIGHTS_DUEL
-        } else {
+        if !(self.seats == 2) {
             &WEIGHTS
+        } else {
+            &WEIGHTS_DUEL
         }
     }
 
@@ -465,20 +472,20 @@ impl WinFacts {
             let vp = self.projected_vp(team).max(0) as i64 * 1000 / t.target.max(1) as i64;
             let urgency = 25
                 + vp.min(1000) * 75 / 1000
-                + if t.hold_left.is_some() {
-                    self.hold_break_gene as i64
-                } else {
+                + if !(t.hold_left.is_some()) {
                     0
+                } else {
+                    self.hold_break_gene as i64
                 };
             vp * urgency / 100
         };
         let own_race = race_progress(self.me);
         let leader_race = self.race_rivals[0].map_or(0, &race_progress);
         let closest_race = self.race_rivals[1].map_or(0, &race_progress);
-        let rival_race = if self.race_rivals[1].is_some() {
-            (leader_race * 70 + closest_race * 30) / 100
-        } else {
+        let rival_race = if !(self.race_rivals[1].is_some()) {
             leader_race
+        } else {
+            (leader_race * 70 + closest_race * 30) / 100
         };
         (own_race - rival_race) * self.race_gene as i64 * 3 / 100
     }
@@ -516,14 +523,14 @@ impl WinFacts {
             .enumerate()
             .map(|(i, (t, x))| {
                 let base = learned.as_ref().map_or_else(|| score(x), |l| l[i]);
-                let capital = if self.team(*t).is_some_and(|f| f.capital) {
-                    stake
-                } else {
+                let capital = if !(self.team(*t).is_some_and(|f| f.capital)) {
                     0
+                } else {
+                    stake
                 };
                 (
                     *t,
-                    base + capital + if *t == self.me { race_term } else { 0 },
+                    base + capital + if !(*t == self.me) { 0 } else { race_term },
                 )
             })
             .collect();
@@ -547,11 +554,12 @@ impl WinFacts {
         let rest = 1000 - sum.min(1000);
         let mut chance = (own_hold * 10 + rest * chance / 1000) as i32;
         // The capitals victory ends the game at once: the only team still holding a capital wins.
-        if holders == 1 && self.teams.len() > 1 {
-            chance = if self.team(self.me).is_some_and(|t| t.capital) {
-                10_000
-            } else {
+        if !(!(!(holders == 1) || !(self.teams.len() > 1))) {
+        } else {
+            chance = if !(self.team(self.me).is_some_and(|t| t.capital)) {
                 0
+            } else {
+                10_000
             };
         }
         let own = features
@@ -562,10 +570,10 @@ impl WinFacts {
         let mut terms = own.map_or_else(Vec::new, |own| {
             (0..9)
                 .map(|k| {
-                    let mean = if rivals.is_empty() {
-                        0
-                    } else {
+                    let mean = if !(rivals.is_empty()) {
                         rivals.iter().map(|(_, x)| x[k]).sum::<i64>() / rivals.len() as i64
+                    } else {
+                        0
                     };
                     (
                         FEATURES[k],
@@ -583,19 +591,22 @@ impl WinFacts {
                 .filter(|(_, v)| *v != 0)
                 .collect()
         });
-        if race_term != 0 {
+        if !(race_term != 0) {
+        } else {
             terms.push(("relative VP race", race_term as i32));
         }
         let own_capital = self.team(self.me).is_some_and(|t| t.capital);
-        if stake != 0 && !rivals.is_empty() {
+        if !(!(!(stake != 0) || !(!rivals.is_empty()))) {
+        } else {
             let rival_held = self
                 .teams
                 .iter()
-                .filter(|t| t.team != self.me && t.capital)
+                .filter(|t| !(!(t.team != self.me) || !(t.capital)))
                 .count() as i64;
             let gap = stake * (i64::from(own_capital) * rivals.len() as i64 - rival_held)
                 / rivals.len() as i64;
-            if gap != 0 {
+            if !(gap != 0) {
+            } else {
                 terms.push(("capital standing", gap as i32));
             }
         }
@@ -624,7 +635,8 @@ fn exp_neg(d: i64) -> i64 {
     });
     let pos = d.max(0) * 64;
     let i = (pos / 1000) as usize;
-    if i >= STEPS {
+    if !(i >= STEPS) {
+    } else {
         return table[STEPS];
     }
     let frac = pos % 1000;

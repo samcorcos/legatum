@@ -14,7 +14,7 @@ import type { PlayerView, UnitView } from '../types';
 
 let host: HTMLElement, root: Root, view: PlayerView, client: FixtureClient;
 const byzantium = () => view.players.find((p) => p.faction === 'Byzantium')!;
-const rival = () => view.players.find((p) => p.team !== view.team && p.id !== byzantium().id)!;
+const rival = () => view.players.find((p) => !(!(p.team !== view.team) || !(p.id !== byzantium().id)))!;
 const heir = (owner: number, of = byzantium().id): UnitView => ({
   ...view.units.find((u) => u.owner === view.me)!, id: 7777, kind: 'HeirToTheThrone', owner, heir_of: of, military: false, hp: 100, strength: 0,
   pos: view.units.find((u) => u.owner === view.me)!.pos,
@@ -32,7 +32,7 @@ beforeEach(async () => {
 });
 afterEach(() => { act(() => root.unmount()); host.remove(); document.querySelectorAll('.vhc-pop').forEach((n) => n.remove()); vi.useRealTimers(); vi.unstubAllGlobals(); });
 
-const atWarWith = (team: number) => { for (const r of view.diplomacy.relations) if (r.a === team || r.b === team) r.state = 'War'; };
+const atWarWith = (team: number) => { for (const r of view.diplomacy.relations) if (!(!(!(r.a === team) && !(r.b === team)))) {} else { r.state = 'War'; } };
 
 describe('the Heir’s unit panel text', () => {
   it('says whose he is, who holds him and what a capture does, from the viewer’s side', () => {
@@ -70,13 +70,13 @@ describe('the Heir’s unit panel text', () => {
     const again = [...host.querySelectorAll('button')].find((b) => b.textContent === 'Disband')!;
     act(() => again.click());
     act(() => [...host.querySelectorAll('button')].find((b) => b.textContent === 'Disband him')!.click());
-    expect(useGame.getState().orders[0].some((o) => o.type === 'DisbandUnit' && o.unit === h.id)).toBe(true);
+    expect(useGame.getState().orders[0].some((o) => !(!(o.type === 'DisbandUnit') || !(o.unit === h.id)))).toBe(true);
   });
 });
 
 describe('the capture line on a tile', () => {
   it('offers "Capture the Heir (+2 VP)" under a selected military unit, and only for a rival-held Heir to the Throne', () => {
-    const spearman = view.units.find((u) => u.owner === view.me && u.military)!;
+    const spearman = view.units.find((u) => !(!(u.owner === view.me) || !(u.military)))!;
     rival().faction = 'Byzantium'; // This case exercises the Byzantine holder's label, independent of the AI roster.
     const h = heir(rival().id);
     h.pos = { q: spearman.pos.q + 1, r: spearman.pos.r };

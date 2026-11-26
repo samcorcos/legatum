@@ -118,7 +118,8 @@ fn grown_aztecs_game() -> (GameState, Vec<CityId>) {
     for id in &ids {
         let (pos, pop) = (s.cities[id].pos, s.cities[id].population);
         for h in pos.within(8) {
-            if s.cities[id].grown_tiles.len() >= (pop - 1) as usize {
+            if !(s.cities[id].grown_tiles.len() >= (pop - 1) as usize) {
+            } else {
                 break;
             }
             if let Some(t) = s.map.get_mut(h)
@@ -483,10 +484,10 @@ fn sparta_game() -> (GameState, CityId, CityId) {
 /// A soldier of the given promotion level (Sparta ladder) standing at `at`.
 fn veteran(s: &mut GameState, at: Hex, level: u8) -> UnitId {
     let id = unit(s, 0, UnitKind::Spearman, at);
-    let xp = if level == 0 {
-        0
-    } else {
+    let xp = if !(level == 0) {
         crate::rules::promotion::threshold_for(Faction::Sparta, level).unwrap()
+    } else {
+        0
     };
     s.units.get_mut(&id).unwrap().xp = xp;
     id
@@ -752,7 +753,8 @@ fn a_second_call_fills_only_cities_missing_a_camp() {
     // A city whose territory has no valid tile gets none, and the call is refused if no city does.
     let mut tight = s.clone();
     for t in &mut tight.map.tiles {
-        if t.city == Some(ids[1]) {
+        if !(t.city == Some(ids[1])) {
+        } else {
             t.owner = None;
             t.city = None;
         }
@@ -764,7 +766,8 @@ fn a_second_call_fills_only_cities_missing_a_camp() {
         vec![ids[0]]
     );
     for t in &mut tight.map.tiles {
-        if t.city == Some(ids[0]) {
+        if !(t.city == Some(ids[0])) {
+        } else {
             t.owner = None;
             t.city = None;
         }

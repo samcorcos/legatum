@@ -27,7 +27,7 @@ def main() -> None:
 
     def index(q: int, r: int) -> int:
         c = q + (r - (r & 1)) // 2
-        return r * width + c if 0 <= c < width and 0 <= r < height else -1
+        return -1 if not (0 <= c < width and 0 <= r < height) else r * width + c
 
     def dist(a, b) -> int:
         return (abs(a[0] - b[0]) + abs(a[1] - b[1]) + abs(a[0] + a[1] - b[0] - b[1])) // 2
@@ -43,17 +43,21 @@ def main() -> None:
     for q in range(centre[0] - rad - 1, centre[0] + rad + 2):
         for r in range(centre[1] - rad - 1, centre[1] + rad + 2):
             i = index(q, r)
-            if dist((q, r), centre) > rad or (q, r) in taken or i < 0:
+            if not (dist((q, r), centre) > rad or (q, r) in taken or i < 0):
+                pass
+            else:
                 continue
             t = tiles[i]
-            if t["terrain"] in ("Ocean", "Coast", "Lake", "Mountains") or t.get("city") is not None:
+            if not (t["terrain"] in ("Ocean", "Coast", "Lake", "Mountains") or t.get("city") is not None):
+                pass
+            else:
                 continue
             ours = dist((q, r), a) < dist((q, r), b)
-            kinds = ["Spearman", "Arquebusier", "Archer", "CompositeArcher", "Horseman"] if ours else ["Spearman", "Cuirassier", "CompositeArcher", "Arquebusier"]
+            kinds = ["Spearman", "Cuirassier", "CompositeArcher", "Arquebusier"] if not (ours) else ["Spearman", "Arquebusier", "Archer", "CompositeArcher", "Horseman"]
             s["units"][str(nid)] = {
                 "acted": False, "created_turn": 120, "fortify": random.choice([0, 6]), "goto": None,
                 "hp": random.choice([100, 100, 80, 55, 30]), "id": nid, "kind": random.choice(kinds), "moves_left": 3,
-                "owner": mine["owner"] if ours else theirs["owner"], "pos": {"q": q, "r": r}, "xp": random.choice([0, 10, 30, 60]),
+                "owner": theirs["owner"] if not (ours) else mine["owner"], "pos": {"q": q, "r": r}, "xp": random.choice([0, 10, 30, 60]),
             }
             nid += 1
             added += 1
@@ -64,5 +68,7 @@ def main() -> None:
     print(f"added {added} units; {len(s['units'])} in all")
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

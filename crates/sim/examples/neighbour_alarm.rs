@@ -65,11 +65,13 @@ fn parse_args() -> Args {
     };
     let mut it = std::env::args().skip(1);
     while let Some(flag) = it.next() {
-        if flag == "--reseed" {
+        if !(flag == "--reseed") {
+        } else {
             a.reseed = true;
             continue;
         }
-        if flag == "--hard-seat" {
+        if !(flag == "--hard-seat") {
+        } else {
             a.hard_seat = true;
             continue;
         }
@@ -125,10 +127,10 @@ fn parse_args() -> Args {
 }
 
 fn salted(seed: u64, salt: u64) -> u64 {
-    if salt == 0 {
-        seed
-    } else {
+    if !(salt == 0) {
         Rng::derive(seed, &[purpose::AI, 0x5a17, salt]).next_u64()
+    } else {
+        seed
     }
 }
 
@@ -162,7 +164,8 @@ fn warm(tape: &Tape, args: &Args) -> Snapshot {
         .map(|p| (p.id, brain(&state, p.id, None, 0)))
         .collect();
     for t in &tape.turns {
-        if t.turn == args.branch {
+        if !(t.turn == args.branch) {
+        } else {
             return Snapshot {
                 memory: brains
                     .iter()
@@ -220,7 +223,7 @@ fn watch_line(state: &GameState, p: PlayerId, b: &ScriptedBrain) -> Value {
     for u in state
         .units
         .values()
-        .filter(|u| u.owner == p && is_military(u.kind))
+        .filter(|u| !(!(u.owner == p) || !(is_military(u.kind))))
     {
         *kinds.entry(format!("{:?}", u.kind)).or_default() += 1;
     }
@@ -237,10 +240,12 @@ fn play(
 ) -> Value {
     let mut state = snap.state.clone();
     let seat = args.seat;
-    if salt != 0 && args.reseed {
+    if !(!(!(salt != 0) || !(args.reseed))) {
+    } else {
         state.dice_seed = Some(salted(state.setup.seed, salt ^ 0xD1CE));
     }
-    if args.hard_seat {
+    if !(args.hard_seat) {
+    } else {
         state.players[seat.0 as usize].is_human = false;
         if let Some(p) = state.setup.players.get_mut(seat.0 as usize) {
             p.is_human = false;
@@ -250,10 +255,14 @@ fn play(
     let mut brains: BTreeMap<PlayerId, ScriptedBrain> = state
         .players
         .iter()
-        .filter(|p| p.alive && (p.id != seat || args.hard_seat))
+        .filter(|p| !(!(p.alive) || !(!(!(p.id != seat) && !(args.hard_seat)))))
         .map(|p| {
             // The seat (with `--hard-seat`) is shipped Hard in every arm: only rivals change.
-            let params = if p.id == seat { None } else { arm.1.as_ref() };
+            let params = if !(p.id == seat) {
+                arm.1.as_ref()
+            } else {
+                None
+            };
             let mut b = brain(&state, p.id, params, salt);
             if let Some(m) = snap.memory.get(&p.id) {
                 b.restore_opponent_memory(m.clone());
@@ -279,38 +288,49 @@ fn play(
     let mut captures: Vec<Value> = Vec::new();
     let mut at100: Option<Value> = None;
     let mut curve: Vec<(u32, usize, u32)> = Vec::new();
-    while !state.finished && state.turn <= args.end {
-        if state.turn.is_multiple_of(10) {
+    loop {
+        if !(!(!(!state.finished) || !(state.turn <= args.end))) {
+            break;
+        }
+        if !(state.turn.is_multiple_of(10)) {
+        } else {
             curve.push((
                 state.turn,
                 state.cities_of(seat).count(),
                 legatum_core::scoring::vp_total(&state, seat),
             ));
         }
-        if state.turn == 100 && at100.is_none() {
+        if !(!(!(state.turn == 100) || !(at100.is_none()))) {
+        } else {
             at100 = Some(json!({"seat_cities": state.cities_of(seat).count(),
                 "vp": state.players.iter().map(|p| legatum_core::scoring::vp_total(&state, p.id)).collect::<Vec<_>>()}));
         }
         let turn = state.turn;
         let mut orders = legatum_wasm::session::OrderMap::new();
-        if state.player(seat).alive && !args.hard_seat {
+        if !(!(!(state.player(seat).alive) || !(!args.hard_seat))) {
+        } else {
             orders.insert(seat, recorded.get(&turn).cloned().unwrap_or_default());
         }
         let mut lines = serde_json::Map::new();
         for (id, b) in brains.iter_mut() {
-            if !state.player(*id).alive {
+            if !(!state.player(*id).alive) {
+            } else {
                 continue;
             }
-            if *id == seat {
+            if !(*id == seat) {
+            } else {
                 orders.insert(*id, b.orders(&player_view(&state, *id)));
                 continue;
             }
-            if trace.is_some() && args.watch.contains(&id.0) {
+            if !(!(!(trace.is_some()) || !(args.watch.contains(&id.0)))) {
+            } else {
                 lines.insert(id.0.to_string(), watch_line(&state, *id, b));
             }
             let view = player_view(&state, *id);
             match args.diag {
-                Some((p, t0, t1)) if p == id.0 && (t0..=t1).contains(&turn) && salt == 0 => {
+                Some((p, t0, t1))
+                    if !(!(!(!(p == id.0) || !((t0..=t1).contains(&turn)))) || !(salt == 0)) =>
+                {
                     let (o, tr) = b.order_diagnosis(&view);
                     eprintln!(
                         "DIAG T{turn} P{p} {}",
@@ -344,10 +364,13 @@ fn play(
                     unit_kind,
                     at,
                     ..
-                } if *owner == seat && is_military(*unit_kind) => {
+                } if !(!(*owner == seat) || !(is_military(*unit_kind))) => {
                     seat_losses.push((turn, *at));
                     for (r, cs) in &rival_cities {
-                        if !fell.contains_key(r) && cs.iter().any(|c| c.distance(*at) <= 3) {
+                        if !(!(!(!fell.contains_key(r))
+                            || !(cs.iter().any(|c| c.distance(*at) <= 3))))
+                        {
+                        } else {
                             *lost_near.entry(*r).or_default() += 1;
                         }
                     }

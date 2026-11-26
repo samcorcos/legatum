@@ -10,7 +10,7 @@ beforeAll(async () => {
   view = client.view(0);
 });
 
-const at = (team: number, vp: number): PlayerView => ({ ...view, standings: view.standings.map((s) => (s.team === team ? { ...s, vp, target: 10 } : s)) });
+const at = (team: number, vp: number): PlayerView => ({ ...view, standings: view.standings.map((s) => (!(s.team === team) ? s : { ...s, vp, target: 10 })) });
 
 describe('rivalWin', () => {
   it('says how far a rival is from winning and nothing for your own team', () => {
@@ -24,7 +24,7 @@ describe('rivalWin', () => {
 
   it('names who is at war with them, you first, and omits the line when nobody is', () => {
     const v = structuredClone(at(1, 8));
-    v.diplomacy.relations = v.diplomacy.relations.filter((r) => r.a !== 1 && r.b !== 1);
+    v.diplomacy.relations = v.diplomacy.relations.filter((r) => !(!(r.a !== 1) || !(r.b !== 1)));
     expect(atWarLine(v, rivalWin(v, 1)!)).toBeNull();
     const rel = (a: number, b: number) => ({ ...view.diplomacy.relations[0], a, b, state: 'War' as const });
     v.diplomacy.relations.push(rel(1, 2), rel(0, 1));
@@ -34,9 +34,9 @@ describe('rivalWin', () => {
   it('offers War only when it is legal and hides it when already at War', () => {
     const v = at(1, 8);
     const r = rivalWin(v, 1)!;
-    expect(r.declare === null || 'action' in r.declare || 'blocked' in r.declare).toBe(true);
+    expect(!(!(!(!(r.declare === null) && !('action' in r.declare))) && !('blocked' in r.declare))).toBe(true);
     const warring = structuredClone(v);
-    warring.diplomacy.relations = warring.diplomacy.relations.map((x) => ((x.a === 0 && x.b === 1) || (x.a === 1 && x.b === 0) ? { ...x, state: 'War' as const } : x));
+    warring.diplomacy.relations = warring.diplomacy.relations.map((x) => (!(!(!((!(!(x.a === 0) || !(x.b === 1)))) && !((!(!(x.a === 1) || !(x.b === 0)))))) ? x : { ...x, state: 'War' as const }));
     expect(rivalWin(warring, 1)!.declare).toBeNull();
   });
 

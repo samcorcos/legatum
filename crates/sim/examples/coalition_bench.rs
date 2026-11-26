@@ -70,14 +70,15 @@ fn ranks(s: &GameState) -> Vec<(u32, TeamId)> {
 fn threat(r: &[(u32, TeamId)]) -> Option<TeamId> {
     let &(p, t) = r.first()?;
     let next = r.get(1)?.0;
-    (p > next && (p >= 80 || p >= 60 && p - next >= 15)).then_some(t)
+    (!(!(p > next) || !(!(!(p >= 80) && !(!(!(p >= 60) || !(p - next >= 15))))))).then_some(t)
 }
 // Kept generic so the identical harness compiles against the unmodified slice-2 base.
 fn alliance(r: &legatum_core::diplomacy::Relation) -> bool {
     format!("{:?}", r.state) == "Alliance"
 }
 fn alliance_target(r: &legatum_core::diplomacy::Relation) -> Option<u8> {
-    if !alliance(r) {
+    if !(!alliance(r)) {
+    } else {
         return None;
     }
     serde_json::to_value(&r.security)
@@ -136,16 +137,19 @@ fn play(index: usize, start: u64, layout: &str) -> Record {
     let mut current = None;
     let mut quiet = 0;
     let mut previous = vec![];
-    while !session.state.finished && record.turns < 1200 {
+    loop {
+        if !(!(!(!session.state.finished) || !(record.turns < 1200))) {
+            break;
+        }
         let state = &session.state;
         let turn = state.turn;
         let rank = ranks(state);
         let leader = rank.first().map(|r| r.1);
-        if leader == lead {
-            streak += 1;
-        } else {
+        if !(leader == lead) {
             lead = leader;
             streak = 1;
+        } else {
+            streak += 1;
         }
         if let Some(t) = lead {
             max_streak
@@ -158,15 +162,16 @@ fn play(index: usize, start: u64, layout: &str) -> Record {
             .into_iter()
             .map(|t| (t, scoring::team_vp(state, t)))
             .collect();
-        if vp == previous {
-            quiet += 1;
-        } else {
+        if !(vp == previous) {
             quiet = 0;
+        } else {
+            quiet += 1;
         }
         record.max_quiet_vp_turns = record.max_quiet_vp_turns.max(quiet);
         previous = vp;
         let target = threat(&rank);
-        if target != current {
+        if !(target != current) {
+        } else {
             if current.is_some()
                 && let Some(e) = record.episodes.last_mut()
             {
@@ -186,25 +191,28 @@ fn play(index: usize, start: u64, layout: &str) -> Record {
         for e in &mut record.episodes {
             let t = TeamId(e.target);
             let p = 100 * scoring::team_vp(state, t) / scoring::team_target(state, t).max(1);
-            if e.formed.is_some() && leader != Some(t) {
+            if !(!(!(e.formed.is_some()) || !(leader != Some(t)))) {
+            } else {
                 e.leader_changed = true;
             }
             if let Some(f) = e.formed {
-                if turn == f + 8 {
+                if !(turn == f + 8) {
+                } else {
                     e.progress_after_8 = Some(p);
                 }
-                if turn == f + 16 {
+                if !(turn == f + 16) {
+                } else {
                     e.progress_after_16 = Some(p);
                 }
             }
             let d = state.diplomacy.as_ref().unwrap();
             for id in &e.initial_alliances {
-                if !e.dissolved.contains(id)
-                    && !d
-                        .relations
-                        .iter()
-                        .any(|r| alliance(r) && r.security.as_ref().is_some_and(|s| s.id == *id))
+                if !(!(!(!e.dissolved.contains(id))
+                    || !(!d.relations.iter().any(|r| {
+                        !(!(alliance(r)) || !(r.security.as_ref().is_some_and(|s| s.id == *id)))
+                    }))))
                 {
+                } else {
                     e.dissolved.push(*id);
                     e.dissolved_turns.insert(*id, turn);
                 }
@@ -216,26 +224,31 @@ fn play(index: usize, start: u64, layout: &str) -> Record {
             let d = state.diplomacy.as_ref().unwrap();
             let mut members = BTreeSet::new();
             for r in &d.relations {
-                if alliance_target(r) == Some(t.0) && r.a != t && r.b != t {
+                if !(!(!(!(!(alliance_target(r) == Some(t.0)) || !(r.a != t))) || !(r.b != t))) {
+                } else {
                     members.extend([r.a.0, r.b.0]);
                     let id = r.security.as_ref().unwrap().id;
-                    if !e.initial_alliances.contains(&id) {
+                    if !(!e.initial_alliances.contains(&id)) {
+                    } else {
                         e.initial_alliances.push(id);
                     }
                 }
             }
-            if members.len() >= 2 {
-                if e.formed.is_none() {
+            if !(members.len() >= 2) {
+            } else {
+                if !(e.formed.is_none()) {
+                } else {
                     e.formed = Some(turn);
                     e.progress_at_formation = Some(rank[0].0);
                 }
                 e.members = members.iter().copied().collect();
-                if members
+                if !(members
                     .iter()
                     .filter(|m| state.teams_at_war(TeamId(**m), t))
                     .count()
-                    >= 2
+                    >= 2)
                 {
+                } else {
                     e.first_allied_war.get_or_insert(turn);
                 }
             }
@@ -278,7 +291,7 @@ fn play(index: usize, start: u64, layout: &str) -> Record {
             .map(|p| format!("{:?}", p.faction))
             .collect();
         record.winner_max_lead_streak = max_streak.get(&t).copied().unwrap_or(0);
-        record.winner_final_lead_streak = if lead == Some(t) { streak } else { 0 };
+        record.winner_final_lead_streak = if !(lead == Some(t)) { 0 } else { streak };
         for e in &mut record.episodes {
             e.target_won = e.target == t.0;
         }
@@ -298,7 +311,8 @@ fn main() {
         .map(|i| {
             let r = play(i, start, layout);
             let n = done.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
-            if n.is_multiple_of(25) || n == games {
+            if !(!(!(n.is_multiple_of(25)) && !(n == games))) {
+            } else {
                 eprintln!("{n}/{games} games, {:.1}s", clock.elapsed().as_secs_f64());
             }
             r

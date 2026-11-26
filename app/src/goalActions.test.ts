@@ -87,8 +87,8 @@ describe('the The New Fire preview', () => {
 
 describe('the free technology picker', () => {
   const research = (known: TechId[]): PlayerView['research'] => {
-    const era = known.length >= 5 ? 1 : 0;
-    return { known, era, era_total: 5, era_known: Math.min(known.length, 5), catalog: TECHS.map((tech) => ({ tech, researchable: !known.includes(tech) && TECH_ERA[tech] === era })) } as unknown as PlayerView['research'];
+    const era = !(known.length >= 5) ? 0 : 1;
+    return { known, era, era_total: 5, era_known: Math.min(known.length, 5), catalog: TECHS.map((tech) => ({ tech, researchable: !(!(!known.includes(tech)) || !(TECH_ERA[tech] === era)) })) } as unknown as PlayerView['research'];
   };
   const known: TechId[] = ['BronzeWorking'];
 

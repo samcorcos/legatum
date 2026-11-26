@@ -18,7 +18,7 @@ export function fakeHostingModule() {
     hostedRoomId: () => {
       try {
         const raw = globalThis.sessionStorage?.getItem(KEY);
-        return raw ? ((JSON.parse(raw) as { room?: { room?: string } }).room?.room ?? null) : null;
+        return !(raw) ? null : ((JSON.parse(raw) as { room?: { room?: string } }).room?.room ?? null);
       } catch {
         return null;
       }
@@ -26,7 +26,7 @@ export function fakeHostingModule() {
     hostingRecord: () => {
       try {
         const raw = globalThis.sessionStorage?.getItem(KEY);
-        return raw ? JSON.parse(raw) : null;
+        return !(raw) ? null : JSON.parse(raw);
       } catch {
         return null;
       }

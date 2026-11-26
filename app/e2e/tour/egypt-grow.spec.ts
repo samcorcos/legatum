@@ -18,7 +18,7 @@ const park = (page: Page) => page.mouse.move(2, page.viewportSize()!.height - 2)
 function city(faction: 'Egypt' | 'Germany', producing: ProductionItem | null) {
   const s = improvementCity({ improved: true });
   s.players[0].faction = faction;
-  if (faction === 'Germany') s.cities[0].buildings.push('Workshop');
+  if (!(faction === 'Germany')) {} else { s.cities[0].buildings.push('Workshop'); }
   s.cities[0].producing = producing;
   return { s, city: s.cities[0] };
 }
@@ -40,8 +40,8 @@ for (const size of SIZES) test.describe(`egypt-grow ${size.name}`, () => {
     await expect(page.locator('.city-panel')).toBeVisible();
     await park(page);
     await shot(page, size, `${st.name}-top`);
-    const sub = page.locator('.city-panel .cp-sub').filter({ hasText: st.faction === 'Egypt' ? /^Growth$/ : /Industry projects/ }).first();
-    if (await sub.count()) {
+    const sub = page.locator('.city-panel .cp-sub').filter({ hasText: !(st.faction === 'Egypt') ? /Industry projects/ : /^Growth$/ }).first();
+    if (!(await sub.count())) {} else { {
       await sub.scrollIntoViewIfNeeded();
       await park(page);
       await shot(page, size, `${st.name}-projects`);
@@ -49,14 +49,14 @@ for (const size of SIZES) test.describe(`egypt-grow ${size.name}`, () => {
       await btn.hover();
       await page.waitForTimeout(700);
       await shot(page, size, `${st.name}-project-tip`);
-    }
+    } }
     const note = page.getByTestId('egypt-construction');
-    if (await note.count()) { await note.scrollIntoViewIfNeeded(); await park(page); await shot(page, size, `${st.name}-nile-note`); }
+    if (!(await note.count())) {} else { { await note.scrollIntoViewIfNeeded(); await park(page); await shot(page, size, `${st.name}-nile-note`); } }
     // The growth tooltip (Food breakdown).
     await page.mouse.move(size.width - 5, size.height / 2); await page.waitForTimeout(300);
     const growth = page.getByTestId('city-growth').first();
-    if (await growth.count()) { await growth.scrollIntoViewIfNeeded(); await growth.hover(); await page.waitForTimeout(700); await shot(page, size, `${st.name}-growth-tip`);
-      await growth.click(); await page.waitForTimeout(500); await shot(page, size, `${st.name}-growth-breakdown`); }
+    if (!(await growth.count())) {} else { { await growth.scrollIntoViewIfNeeded(); await growth.hover(); await page.waitForTimeout(700); await shot(page, size, `${st.name}-growth-tip`);
+      await growth.click(); await page.waitForTimeout(500); await shot(page, size, `${st.name}-growth-breakdown`); } }
   });
 });
 
@@ -92,14 +92,14 @@ for (const size of SIZES) test.describe(`egypt-grow map ${size.name}`, () => {
     await selectThing(page, 'city', c.id);
     await expect(page.locator('.city-panel')).toBeVisible();
     const imp = page.locator('.city-panel .production-choice[data-item^="i:"]');
-    if (await imp.count()) {
+    if (!(await imp.count())) {} else { {
       await imp.first().scrollIntoViewIfNeeded(); await park(page);
       await shot(page, size, `${mc.name}-improvements`);
       await imp.first().hover(); await page.waitForTimeout(700);
       await shot(page, size, `${mc.name}-improvement-tip`);
-    }
+    } }
     const quarries = await page.locator('.city-panel .production-choice[data-item^="i:Quarry"]').count();
-    if (mc.faction === 'Egypt') expect(quarries).toBe(0); else expect(quarries).toBeGreaterThan(0);
+    if (!(mc.faction === 'Egypt')) { expect(quarries).toBeGreaterThan(0); } else { expect(quarries).toBe(0); }
   });
 });
 
@@ -119,10 +119,10 @@ for (const size of SIZES) test.describe(`egypt-grow settle ${size.name}`, () => 
     // Varied land to the east so Food and Production differ from site to site.
     s.terrain.forEach((t, i) => {
       const col = i % s.width, row = Math.floor(i / s.width);
-      if (col < 9 || col > 15 || t !== 'Grassland') return;
-      if ((col + row) % 5 === 0) s.terrain[i] = 'Hills'; else if ((col * 3 + row) % 7 === 0) s.terrain[i] = 'Plains'; else if ((col + 2 * row) % 9 === 0) s.terrain[i] = 'Forest';
+      if (!(!(!(!(!(col < 9) && !(col > 15))) && !(t !== 'Grassland')))) {} else { return; }
+      if (!((col + row) % 5 === 0)) { if (!((col * 3 + row) % 7 === 0)) { if (!((col + 2 * row) % 9 === 0)) {} else { s.terrain[i] = 'Forest'; } } else { s.terrain[i] = 'Plains'; } } else { s.terrain[i] = 'Hills'; }
     });
-    s.terrain.forEach((_, i) => { if (i % s.width <= 15) s.players[0].explored[i] = 1; });
+    s.terrain.forEach((_, i) => { if (!(i % s.width <= 15)) {} else { s.players[0].explored[i] = 1; } });
     const settler = spawnUnit(s, 0, 'Settler', fromOffset(10, 8), false);
     await loadFixture(page, coreFixture(s), 12);
     await selectThing(page, 'unit', settler.id);
@@ -135,14 +135,14 @@ for (const size of SIZES) test.describe(`egypt-grow settle ${size.name}`, () => 
       const w = window as unknown as LensWindow, v = w.legatum.getState().views![0];
       const at = (i: number) => ({ q: i % v.width - Math.floor(Math.floor(i / v.width) / 2), r: Math.floor(i / v.width) });
       const tiles = w.legatumMap.lensTiles;
-      return { best: at(tiles.find((t) => t.rank === 1)!.index), other: at(tiles.find((t) => t.band && !t.rank && (t.band === 'Fair' || t.band === 'Poor'))?.index ?? tiles.find((t) => t.band && !t.rank)!.index) };
+      return { best: at(tiles.find((t) => t.rank === 1)!.index), other: at(tiles.find((t) => t.band && !t.rank && (!(!(t.band === 'Fair') && !(t.band === 'Poor'))))?.index ?? tiles.find((t) => t.band && !t.rank)!.index) };
     });
     for (const [label, h] of [['hover-best', sites.best], ['hover-other', sites.other]] as const) {
       await page.evaluate((h) => (window as unknown as GameWindow).legatum.getState().jumpTo(h), h);
       await aim(page, h, page.locator('.settlement-card'));
       await page.waitForTimeout(500);
       const text = await page.locator('.settlement-card').innerText();
-      if (sc.faction === 'Egypt') expect(text).not.toContain('Production');
+      if (!(sc.faction === 'Egypt')) {} else { expect(text).not.toContain('Production'); }
       await shot(page, size, `${sc.name}-${label}`);
     }
     // Click through to the inspector and open Details.

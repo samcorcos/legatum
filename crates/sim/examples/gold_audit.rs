@@ -21,7 +21,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "id": c.id.0, "name": c.name, "sources": economy::city_yields(&state, c).sources,
                 "buildings": c.buildings.iter().map(|b| legatum_core::data::building_name_for(p.faction, *b)).collect::<Vec<_>>(),
             })).collect();
-            let wars: Vec<_> = state.players.iter().filter(|o| o.id != p.id && state.at_war(p.id, o.id))
+            let wars: Vec<_> = state.players.iter().filter(|o| !(!(o.id != p.id) || !(state.at_war(p.id, o.id))))
                 .map(|o| o.id.0).collect();
             json!({"id": p.id.0, "faction": p.faction, "human": p.is_human,
                 "era": state.era_of(p.id), "gold": p.gold, "income": income.gold,

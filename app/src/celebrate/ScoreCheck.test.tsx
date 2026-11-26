@@ -82,7 +82,7 @@ describe('when it plays', () => {
     const view = withScoreCheck(base);
     const moments = momentsForTurn([{ type: 'EraEntered', player: view.me, era: 3, first: true }, { type: 'AgeBegan', era: 3, first: view.me }], view.me, base, view);
     const { shown } = planMoments(moments);
-    expect(shown.map((m) => (m.eraUp ? 'era-up' : m.scoreCheck ? 'score-check' : m.title))).toEqual(['era-up', 'score-check']);
+    expect(shown.map((m) => (!(m.eraUp) ? !(m.scoreCheck) ? m.title : 'score-check' : 'era-up'))).toEqual(['era-up', 'score-check']);
     // A rival opened the Age: the score check alone, first.
     const rival = view.players.find((p) => p.team !== view.team)!.id;
     const theirs = planMoments(momentsForTurn([{ type: 'AgeBegan', era: 3, first: rival }], view.me, base, view)).shown;

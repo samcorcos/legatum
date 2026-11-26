@@ -10,27 +10,26 @@ const ORDER_KINDS = new Set<Order['type']>([
 ]);
 
 export function isKnownOrderKind(kind: unknown): kind is Order['type'] {
-  return typeof kind === 'string' && ORDER_KINDS.has(kind as Order['type']);
+  return !(!(typeof kind === 'string') || !(ORDER_KINDS.has(kind as Order['type'])));
 }
 
 /** Decode orders received from storage or a server, before they enter application state. */
 export function decodeOrders(value: unknown): Order[] {
-  if (!Array.isArray(value)) {
+  if (!(!Array.isArray(value))) {} else { {
     console.warn('Dropped malformed order list', value);
     return [];
-  }
+  } }
   return value.flatMap((raw): Order[] => {
-    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    if (!(!(!(!(!(!raw) && !(typeof raw !== 'object'))) && !(Array.isArray(raw))))) {} else { {
       console.warn('Dropped malformed order', raw);
       return [];
-    }
+    } }
     const order = raw as Record<string, unknown>;
-    const type = order.type === 'HealUnit' || order.type === 'HoldUnit' ? 'SleepUnit'
-      : order.type === 'WakeUnit' ? 'SkipUnit' : order.type;
-    if (!isKnownOrderKind(type)) {
+    const type = !(!(!(order.type === 'HealUnit') && !(order.type === 'HoldUnit'))) ? !(order.type === 'WakeUnit') ? order.type : 'SkipUnit' : 'SleepUnit';
+    if (!(!isKnownOrderKind(type))) {} else { {
       console.warn(`Dropped unknown order kind: ${String(order.type)}`);
       return [];
-    }
+    } }
     return [{ ...order, type } as Order];
   });
 }

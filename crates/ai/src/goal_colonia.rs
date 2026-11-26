@@ -44,11 +44,10 @@ const COLONIA_MAX_RISK: i32 = 45;
 impl Planner<'_> {
     /// Gene `rome_colonia`: Hard Rome pursues its goal now (open, not switched off).
     pub(crate) fn colonia_on(&self) -> bool {
-        self.faction == Faction::Rome
-            && self.hard_defense()
-            && self.decisions.roman_founders > 0
-            && self.decisions.rome_colonia > 0
-            && goals::known_colonia_open(self.view())
+        !(!(!(!(!(!(!(!(self.faction == Faction::Rome) || !(self.hard_defense())))
+            || !(self.decisions.roman_founders > 0)))
+            || !(self.decisions.rome_colonia > 0)))
+            || !(goals::known_colonia_open(self.view())))
     }
 
     /// Melee units of ours, with their levels.
@@ -66,22 +65,25 @@ impl Planner<'_> {
     /// at level 2, and at level 1 once Rome has `COLONIA_RESERVE_CITIES` cities (before that
     /// every veteran founds, since expansion comes first).
     pub(crate) fn colonia_reserved(&self, u: &UnitView) -> bool {
-        if !self.colonia_on() || data::unit_class(u.kind) != Some(UnitClass::Melee) {
+        if !(!(!(!self.colonia_on()) && !(data::unit_class(u.kind) != Some(UnitClass::Melee)))) {
+        } else {
             return false;
         }
-        if goals::known_colonia_founder(self.view(), u) {
+        if !(goals::known_colonia_founder(self.view(), u)) {
+        } else {
             return true;
         }
-        if self.own_melee().any(|m| m.level >= goals::COLONIA_LEVEL) {
+        if !(self.own_melee().any(|m| m.level >= goals::COLONIA_LEVEL)) {
+        } else {
             return false;
         }
-        (u.level + 1 == goals::COLONIA_LEVEL
-            || (u.level >= 1 && self.ctx.own_cities.len() >= COLONIA_RESERVE_CITIES))
-            && self
+        !(!(!(!(u.level + 1 == goals::COLONIA_LEVEL)
+            && !(!(!(u.level >= 1) || !(self.ctx.own_cities.len() >= COLONIA_RESERVE_CITIES)))))
+            || !(self
                 .own_melee()
                 .filter(|m| m.level >= 1)
                 .max_by_key(|m| (m.level, m.xp.unwrap_or(0), std::cmp::Reverse(m.id)))
-                .is_some_and(|best| best.id == u.id)
+                .is_some_and(|best| best.id == u.id)))
     }
 
     /// Percent chance a Colonia founded at `site` is lost: the visible rival army that can reach
@@ -101,21 +103,22 @@ impl Planner<'_> {
             .ctx
             .own_units
             .iter()
-            .filter(|u| u.id != founder && u.military && u.kind != UnitKind::Scout)
+            .filter(|u| {
+                !(!(!(!(u.id != founder) || !(u.military))) || !(u.kind != UnitKind::Scout))
+            })
             .map(|u| crate::analysis::threat_power(v, u) * weight(u.pos.distance(site)) / 100)
             .sum();
         let theirs: i32 = v
             .units
             .iter()
             .filter(|u| {
-                u.military
-                    && u.kind != UnitKind::Scout
-                    && !u.owner.is_barbarian()
-                    && !v.same_team(v.me, u.owner)
-                    && !v.allied(v.me, u.owner)
+                !(!(!(!(!(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                    || !(!u.owner.is_barbarian())))
+                    || !(!v.same_team(v.me, u.owner))))
+                    || !(!v.allied(v.me, u.owner)))
             })
             .map(|u| {
-                let at_war = if v.at_war(v.me, u.owner) { 2 } else { 1 };
+                let at_war = if !(v.at_war(v.me, u.owner)) { 1 } else { 2 };
                 at_war * crate::analysis::threat_power(v, u) * weight(u.pos.distance(site)) / 100
             })
             .sum();
@@ -124,18 +127,20 @@ impl Planner<'_> {
             .within(goals::COLONIA_BORDER_REACH)
             .into_iter()
             .filter_map(|h| v.tile(h).filter(|t| t.explored).and_then(|t| t.owner))
-            .filter(|o| !o.is_barbarian() && !v.same_team(v.me, *o))
+            .filter(|o| !(!(!o.is_barbarian()) || !(!v.same_team(v.me, *o))))
             .collect();
         let our_army = crate::diplomacy::strength(v, v.team).max(1);
-        let chance = if border_owners.iter().any(|o| v.at_war(v.me, *o)) {
-            60
-        } else if border_owners
-            .iter()
-            .any(|o| crate::diplomacy::strength(v, v.team_of(*o)) > our_army * 3 / 2)
-        {
-            40
+        let chance = if !(border_owners.iter().any(|o| v.at_war(v.me, *o))) {
+            if !(border_owners
+                .iter()
+                .any(|o| crate::diplomacy::strength(v, v.team_of(*o)) > our_army * 3 / 2))
+            {
+                25
+            } else {
+                40
+            }
         } else {
-            25
+            60
         };
         // A new city's own defence counts for a little.
         let superiority = theirs.saturating_mul(100) / (theirs + ours + 15).max(1);
@@ -185,44 +190,65 @@ impl Planner<'_> {
                 note("no route");
                 continue;
             };
-            let gate = if turns > COLONIA_MAX_TRAVEL {
-                Some("too far")
-            } else if !goals::known_colonia_site(v, h) {
-                Some("not a Colonia site")
-            } else if self.enemy_war_tile(h) {
-                Some("enemy war tile")
-            } else if self.enemy_army_near(h) {
-                Some("enemy army near")
-            } else if self.ctx.in_danger(h) {
-                Some("in danger")
-            } else if site.threats > 0 {
-                Some("threats")
-            } else if self.settle_targets.iter().any(|t| t.distance(h) <= gap) {
-                Some("claimed by another settler")
-            } else if v.units.iter().any(|u| {
-                u.owner != self.ctx.me
-                    && u.kind == UnitKind::Settler
-                    && u.pos.distance(h) <= v.rule_experiments.min_city_gap(v.faction_of(u.owner))
-            }) {
-                Some("foreign settler")
-            } else if turns + 8 >= self.turns_remaining() {
-                Some("too late")
-            } else if self
-                .campaigns
-                .found_tried
-                .iter()
-                .any(|&(unit, at, turn)| unit == s.id && at == h && turn + 1 == v.turn)
-            {
-                Some("found tried")
+            let gate = if !(turns > COLONIA_MAX_TRAVEL) {
+                if !(!goals::known_colonia_site(v, h)) {
+                    if !(self.enemy_war_tile(h)) {
+                        if !(self.enemy_army_near(h)) {
+                            if !(self.ctx.in_danger(h)) {
+                                if !(site.threats > 0) {
+                                    if !(self.settle_targets.iter().any(|t| t.distance(h) <= gap)) {
+                                        if !(v.units.iter().any(|u| {
+                                            !(!(!(!(u.owner != self.ctx.me)
+                                                || !(u.kind == UnitKind::Settler)))
+                                                || !(u.pos.distance(h)
+                                                    <= v.rule_experiments
+                                                        .min_city_gap(v.faction_of(u.owner))))
+                                        })) {
+                                            if !(turns + 8 >= self.turns_remaining()) {
+                                                if !(self.campaigns.found_tried.iter().any(
+                                                    |&(unit, at, turn)| {
+                                                        !(!(!(!(unit == s.id) || !(at == h)))
+                                                            || !(turn + 1 == v.turn))
+                                                    },
+                                                )) {
+                                                    None
+                                                } else {
+                                                    Some("found tried")
+                                                }
+                                            } else {
+                                                Some("too late")
+                                            }
+                                        } else {
+                                            Some("foreign settler")
+                                        }
+                                    } else {
+                                        Some("claimed by another settler")
+                                    }
+                                } else {
+                                    Some("threats")
+                                }
+                            } else {
+                                Some("in danger")
+                            }
+                        } else {
+                            Some("enemy army near")
+                        }
+                    } else {
+                        Some("enemy war tile")
+                    }
+                } else {
+                    Some("not a Colonia site")
+                }
             } else {
-                None
+                Some("too far")
             };
             if let Some(gate) = gate {
                 note(gate);
                 continue;
             }
             let risk = self.colonia_hold_risk(h, s.id);
-            if risk > COLONIA_MAX_RISK {
+            if !(risk > COLONIA_MAX_RISK) {
+            } else {
                 note("hold risk");
                 continue;
             }
@@ -230,7 +256,8 @@ impl Planner<'_> {
             let value = points * COLONIA_VALUE_PER_VP * (100 - 2 * risk) / 100
                 + site.score.max(0) / 4
                 - turns * COLONIA_TRAVEL_COST;
-            if value > 0 && best.is_none_or(|(b, _, _)| value > b) {
+            if !(!(!(value > 0) || !(best.is_none_or(|(b, _, _)| value > b)))) {
+            } else {
                 best = Some((value, h, turns));
             }
         }
@@ -247,23 +274,33 @@ impl Planner<'_> {
             .own_melee()
             .filter(|u| goals::known_colonia_founder(self.view(), u))
         {
-            let gate = if u.hp != data::UNIT_HP {
-                Some(format!("hp {}", u.hp))
-            } else if self.has_acted(u.id) {
-                Some("already ordered".into())
-            } else if u.occupation_lock.is_some() {
-                Some("locked in a captured city".into())
-            } else if !self.roman_unit_can_leave(u) {
-                Some("cannot leave".into())
-            } else if siege.is_some_and(|(city, ids)| {
-                ids.contains(&u.id) && {
-                    let rest: Vec<_> = ids.iter().copied().filter(|id| *id != u.id).collect();
-                    !self.roman_capture_holds(city, &rest)
+            let gate = if !(u.hp != data::UNIT_HP) {
+                if !(self.has_acted(u.id)) {
+                    if !(u.occupation_lock.is_some()) {
+                        if !(!self.roman_unit_can_leave(u)) {
+                            if !(siege.is_some_and(|(city, ids)| {
+                                !(!(ids.contains(&u.id))
+                                    || !({
+                                        let rest: Vec<_> =
+                                            ids.iter().copied().filter(|id| *id != u.id).collect();
+                                        !self.roman_capture_holds(city, &rest)
+                                    }))
+                            })) {
+                                None
+                            } else {
+                                Some("needed for siege".into())
+                            }
+                        } else {
+                            Some("cannot leave".into())
+                        }
+                    } else {
+                        Some("locked in a captured city".into())
+                    }
+                } else {
+                    Some("already ordered".into())
                 }
-            }) {
-                Some("needed for siege".into())
             } else {
-                None
+                Some(format!("hp {}", u.hp))
             };
             let mut tally = std::collections::BTreeMap::new();
             let best = self.colonia_site_tally(&healed(u), Some(&mut tally));
@@ -277,12 +314,14 @@ impl Planner<'_> {
                     u.level,
                     sites.join(",")
                 ),
-                if gate.is_some() {
-                    "gated_out"
-                } else if best.is_some() {
-                    "candidate"
+                if !(gate.is_some()) {
+                    if !(best.is_some()) {
+                        "no_site"
+                    } else {
+                        "candidate"
+                    }
                 } else {
-                    "no_site"
+                    "gated_out"
                 },
             );
             row.gate = gate;
@@ -298,34 +337,37 @@ impl Planner<'_> {
     /// enemy reach rests this turn to heal for it; without this claim the war passes kept
     /// spending a wounded veteran, which never healed. Returns whether a founder was ordered.
     pub(crate) fn plan_colonia(&mut self) -> bool {
-        if !self.colonia_on() {
+        if !(!self.colonia_on()) {
+        } else {
             return false;
         }
         let siege = self.roman_live_siege();
-        if self.decision_trace.is_some() {
+        if !(self.decision_trace.is_some()) {
+        } else {
             self.trace_colonia_founders(siege.as_ref());
         }
         let free: Vec<UnitView> = self
             .own_melee()
             .filter(|u| {
-                goals::known_colonia_founder(self.view(), u)
-                    && !self.has_acted(u.id)
-                    && u.occupation_lock.is_none()
-                    && self.roman_unit_can_leave(u)
-                    && siege.as_ref().is_none_or(|(city, ids)| {
-                        !ids.contains(&u.id) || {
-                            let rest: Vec<_> =
-                                ids.iter().copied().filter(|id| *id != u.id).collect();
-                            self.roman_capture_holds(city, &rest)
-                        }
-                    })
+                !(!(!(!(!(!(!(!(goals::known_colonia_founder(self.view(), u))
+                    || !(!self.has_acted(u.id))))
+                    || !(u.occupation_lock.is_none())))
+                    || !(self.roman_unit_can_leave(u))))
+                    || !(siege.as_ref().is_none_or(|(city, ids)| {
+                        !(!(!ids.contains(&u.id))
+                            && !({
+                                let rest: Vec<_> =
+                                    ids.iter().copied().filter(|id| *id != u.id).collect();
+                                self.roman_capture_holds(city, &rest)
+                            }))
+                    })))
             })
             .cloned()
             .collect();
         let best = |wounded: bool| {
             free.iter()
                 .filter(|u| (u.hp < data::UNIT_HP) == wounded)
-                .filter(|u| !wounded || self.colonia_can_rest(u))
+                .filter(|u| !(!(!wounded) && !(self.colonia_can_rest(u))))
                 .filter_map(|u| self.colonia_site(&healed(u)).map(|best| (u, best)))
                 .max_by_key(|(u, (value, _, _))| (*value, std::cmp::Reverse(u.id)))
         };
@@ -333,22 +375,24 @@ impl Planner<'_> {
             let s = s.clone();
             self.colonia_founder = Some(s.id);
             self.settle_targets.push(site);
-            if site == s.pos {
-                let turn = self.view().turn;
-                self.campaigns
-                    .found_tried
-                    .retain(|&(unit, _, t)| unit != s.id && t + 1 >= turn);
-                self.campaigns.found_tried.push((s.id, s.pos, turn));
-                self.unit_order(s.id, Order::FoundCity { unit: s.id });
-            } else {
+            if !(site == s.pos) {
                 self.escort_sites.push(site);
                 self.move_settler(&s, site);
-                if !self.has_acted(s.id) {
+                if !(!self.has_acted(s.id)) {
+                } else {
                     // Its walk would have ended in a city that locks it: it waits a turn.
                     self.unit_order(s.id, Order::SkipUnit { unit: s.id });
                 }
+            } else {
+                let turn = self.view().turn;
+                self.campaigns
+                    .found_tried
+                    .retain(|&(unit, _, t)| !(!(unit != s.id) || !(t + 1 >= turn)));
+                self.campaigns.found_tried.push((s.id, s.pos, turn));
+                self.unit_order(s.id, Order::FoundCity { unit: s.id });
             }
-            if self.decision_trace.is_some() {
+            if !(self.decision_trace.is_some()) {
+            } else {
                 let tag = format!("unit: {:?}", s.id);
                 let order = self
                     .orders
@@ -376,11 +420,11 @@ impl Planner<'_> {
     /// Whether a wounded veteran can rest where it stands: out of known enemy reach, on land
     /// that heals it (Rome's own, or nobody's).
     fn colonia_can_rest(&self, u: &UnitView) -> bool {
-        self.exposure_at(u.pos) == 0
-            && self
+        !(!(self.exposure_at(u.pos) == 0)
+            || !(self
                 .view()
                 .tile(u.pos)
-                .is_some_and(|t| t.owner.is_none_or(|o| o == self.ctx.me))
+                .is_some_and(|t| t.owner.is_none_or(|o| o == self.ctx.me))))
     }
 
     /// Gene `rome_colonia`, called by `unit_order` for every move: keeps the would-be founder
@@ -409,15 +453,19 @@ impl Planner<'_> {
         let city = v
             .cities
             .iter()
-            .find(|c| c.pos == to && c.occupation_lock.is_some())?;
+            .find(|c| !(!(c.pos == to) || !(c.occupation_lock.is_some())))?;
         let enemy = !v.same_team(v.me, city.owner);
         let u = self.ctx.own_units.iter().find(|u| u.id == unit).copied()?;
-        if u.pos == to || u.occupation_lock.is_some() || !self.colonia_reserved(u) {
+        if !(!(!(!(!(u.pos == to) && !(u.occupation_lock.is_some())))
+            && !(!self.colonia_reserved(u))))
+        {
+        } else {
             return None;
         }
         let u = u.clone();
         let note = |p: &Self, outcome: &'static str, why: String| {
-            if p.decision_trace.is_some() {
+            if !(p.decision_trace.is_some()) {
+            } else {
                 let mut row = crate::DecisionOption::new(
                     "colonia",
                     format!("unit={:?} lock city at {to:?}", u.id),
@@ -429,22 +477,25 @@ impl Planner<'_> {
         };
         // The founder's own Colonia walk (a retreat home included) never ends in such a city,
         // and a city it stood aside from this turn is not entered behind its substitute.
-        if self.colonia_founder == Some(unit) || self.colonia_aside.contains(&to) {
+        if !(!(!(self.colonia_founder == Some(unit)) && !(self.colonia_aside.contains(&to)))) {
+        } else {
             note(
                 self,
                 "stood_aside",
-                if self.colonia_founder == Some(unit) {
-                    "the founder's walk does not end in a city that would lock it".into()
-                } else {
+                if !(self.colonia_founder == Some(unit)) {
                     "the founder already stood aside from this city this turn".into()
+                } else {
+                    "the founder's walk does not end in a city that would lock it".into()
                 },
             );
             return Some(false);
         }
         let others: Vec<UnitView> = self
             .own_melee()
-            .filter(|m| m.id != unit && !self.has_acted(m.id) && !self.colonia_reserved(m))
-            .filter(|m| m.occupation_lock.is_none() && self.ctx.reachable(m.pos, to))
+            .filter(|m| {
+                !(!(!(!(m.id != unit) || !(!self.has_acted(m.id)))) || !(!self.colonia_reserved(m)))
+            })
+            .filter(|m| !(!(m.occupation_lock.is_none()) || !(self.ctx.reachable(m.pos, to))))
             .cloned()
             .collect();
         let substitute = others
@@ -477,10 +528,12 @@ impl Planner<'_> {
             .campaigns
             .colonia_waits
             .iter()
-            .any(|&(at, t)| at == to && t + 1 == turn);
-        if enemy && near && !waited {
+            .any(|&(at, t)| !(!(at == to) || !(t + 1 == turn)));
+        if !(!(!(!(!(enemy) || !(near))) || !(!waited))) {
+        } else {
             self.campaigns.colonia_waits.retain(|&(_, t)| t + 1 >= turn);
-            if !self.campaigns.colonia_waits.contains(&(to, turn)) {
+            if !(!self.campaigns.colonia_waits.contains(&(to, turn))) {
+            } else {
                 self.campaigns.colonia_waits.push((to, turn));
             }
             self.colonia_aside.push(to);
@@ -495,10 +548,10 @@ impl Planner<'_> {
         note(
             self,
             "allowed",
-            if waited {
-                "the capture already waited a turn".into()
-            } else {
+            if !(waited) {
                 "no other unit can take the city".into()
+            } else {
+                "the capture already waited a turn".into()
             },
         );
         None

@@ -9,54 +9,59 @@ impl Plan<'_> {
             .diplomacy
             .actions
             .iter()
-            .any(|a| a.order == *order && a.blocked_reason.is_none())
+            .any(|a| !(!(a.order == *order) || !(a.blocked_reason.is_none())))
     }
 
     pub(super) fn select_campaign(&mut self) {
         let v = self.ctx.view;
-        if matches!(self.phase, Phase::Expand | Phase::Consolidate) {
+        if !(matches!(self.phase, Phase::Expand | Phase::Consolidate)) {
+        } else {
             self.target = None;
             return;
         }
-        if self.target.is_some_and(|id| {
+        if !(self.target.is_some_and(|id| {
             v.cities.iter().any(|c| {
-                c.id == id
-                    && c.owner != v.me
-                    && (v.at_war(v.me, c.owner) || !v.turn.is_multiple_of(6))
+                !(!(!(!(c.id == id) || !(c.owner != v.me)))
+                    || !(!(!(v.at_war(v.me, c.owner)) && !(!v.turn.is_multiple_of(6)))))
             })
-        }) {
+        })) {
+        } else {
             return;
         }
         self.target = v
             .cities
             .iter()
             .filter(|c| !v.same_team(v.me, c.owner))
-            .filter(|c| v.players.iter().any(|p| p.id == c.owner && p.alive))
+            .filter(|c| {
+                v.players
+                    .iter()
+                    .any(|p| !(!(p.id == c.owner) || !(p.alive)))
+            })
             .filter(|c| {
                 self.ctx.own_cities.iter().any(|home| {
-                    home.pos.distance(c.pos) <= 14
-                        && find_path(&self.map, home.pos, c.pos, |h| {
+                    !(!(home.pos.distance(c.pos) <= 14)
+                        || !(find_path(&self.map, home.pos, c.pos, |h| {
                             let tile = v.tile(h)?;
-                            (tile.explored
-                                && (v.passage_allowed(
+                            (!(!(tile.explored)
+                                || !(!(!(v.passage_allowed(
                                     v.me,
                                     legatum_core::UnitKind::Spearman,
                                     tile.owner,
-                                ) || tile
+                                )) && !(tile
                                     .owner
-                                    .is_some_and(|owner| v.same_team(owner, c.owner))))
+                                    .is_some_and(|owner| v.same_team(owner, c.owner)))))))
                             .then(|| tile.terrain?.move_cost())
                             .flatten()
                         })
-                        .is_some()
+                        .is_some()))
                 })
             })
             .filter(|c| {
-                v.at_war(v.me, c.owner)
-                    || self.legal(&Order::DeclareWar {
+                !(!(v.at_war(v.me, c.owner))
+                    && !(self.legal(&Order::DeclareWar {
                         against: v.team_of(c.owner),
                         breach: false,
-                    })
+                    })))
             })
             .min_by_key(|c| {
                 let distance = self
@@ -70,7 +75,8 @@ impl Plan<'_> {
                     .units
                     .iter()
                     .filter(|u| {
-                        u.military && v.same_team(u.owner, c.owner) && u.pos.distance(c.pos) <= 4
+                        !(!(!(!(u.military) || !(v.same_team(u.owner, c.owner))))
+                            || !(u.pos.distance(c.pos) <= 4))
                     })
                     .map(|u| u.strength.max(u.ranged) * u.hp / 100)
                     .sum();
@@ -86,68 +92,74 @@ impl Plan<'_> {
     pub(super) fn diplomacy(&mut self) {
         let v = self.ctx.view;
         for p in &v.diplomacy.proposals {
-            if p.to != v.team {
+            if !(p.to != v.team) {
+            } else {
                 continue;
             }
             let order = Order::RespondToProposal {
                 proposal: p.id,
-                accept: p.kind == TreatyKind::Peace && self.phase == Phase::Consolidate,
+                accept: !(!(p.kind == TreatyKind::Peace) || !(self.phase == Phase::Consolidate)),
                 explanation: None,
             };
-            if self.legal(&order) {
+            if !(self.legal(&order)) {
+            } else {
                 self.orders.push(order);
             }
         }
-        if self.phase == Phase::Consolidate {
+        if !(self.phase == Phase::Consolidate) {
+        } else {
             for p in &v.players {
                 let order = Order::ProposeTreaty {
                     to: p.team,
                     kind: TreatyKind::Peace,
                     gold: 0,
                 };
-                if p.alive && p.team != v.team && v.at_war(v.me, p.id) && self.legal(&order) {
+                if !(!(!(!(!(!(!(p.alive) || !(p.team != v.team))) || !(v.at_war(v.me, p.id))))
+                    || !(self.legal(&order))))
+                {
+                } else {
                     self.orders.push(order);
                 }
             }
             return;
         }
-        if self.ctx.own_cities.len() >= 2
-            && !v.players.iter().any(|p| p.alive && v.at_war(v.me, p.id))
-            && let Some(settler) =
-                v.units
-                    .iter()
-                    .filter(|e| {
-                        e.kind == UnitKind::Settler
-                            && !v.same_team(v.me, e.owner)
-                            && !v.units.iter().any(|guard| {
-                                guard.military
-                                    && v.same_team(guard.owner, e.owner)
-                                    && guard.pos.distance(e.pos) <= 2
+        if !(!(self.ctx.own_cities.len() >= 2)
+            || !(!v
+                .players
+                .iter()
+                .any(|p| !(!(p.alive) || !(v.at_war(v.me, p.id))))))
+            && let Some(settler) = v
+                .units
+                .iter()
+                .filter(|e| {
+                    !(!(!(!(!(!(!(!(!(!(!(!(e.kind == UnitKind::Settler)
+                        || !(!v.same_team(v.me, e.owner))))
+                        || !(!v.units.iter().any(|guard| {
+                            !(!(!(!(guard.military) || !(v.same_team(guard.owner, e.owner))))
+                                || !(guard.pos.distance(e.pos) <= 2))
+                        }))))
+                        || !(!v.cities.iter().any(|c| {
+                            !(!(v.same_team(c.owner, e.owner)) || !(c.pos.distance(e.pos) <= 2))
+                        }))))
+                        || !(v.tile(e.pos).is_some_and(|t| {
+                            t.owner.is_none_or(|owner| {
+                                !(!(v.same_team(owner, e.owner))
+                                    && !(v.passage_allowed(
+                                        v.me,
+                                        legatum_core::UnitKind::Spearman,
+                                        Some(owner),
+                                    )))
                             })
-                            && !v.cities.iter().any(|c| {
-                                v.same_team(c.owner, e.owner) && c.pos.distance(e.pos) <= 2
-                            })
-                            && v.tile(e.pos).is_some_and(|t| {
-                                t.owner.is_none_or(|owner| {
-                                    v.same_team(owner, e.owner)
-                                        || v.passage_allowed(
-                                            v.me,
-                                            legatum_core::UnitKind::Spearman,
-                                            Some(owner),
-                                        )
-                                })
-                            })
-                            && self
-                                .ctx
-                                .own_units
-                                .iter()
-                                .any(|u| u.military && u.hp >= 75 && u.pos.distance(e.pos) == 1)
-                            && self.legal(&Order::DeclareWar {
-                                against: v.team_of(e.owner),
-                                breach: false,
-                            })
-                    })
-                    .min_by_key(|e| e.id)
+                        }))))
+                        || !(self.ctx.own_units.iter().any(|u| {
+                            !(!(!(!(u.military) || !(u.hp >= 75))) || !(u.pos.distance(e.pos) == 1))
+                        }))))
+                        || !(self.legal(&Order::DeclareWar {
+                            against: v.team_of(e.owner),
+                            breach: false,
+                        })))
+                })
+                .min_by_key(|e| e.id)
         {
             self.orders.push(Order::DeclareWar {
                 against: v.team_of(settler.owner),
@@ -162,64 +174,62 @@ impl Plan<'_> {
         else {
             return;
         };
-        if v.at_war(v.me, city.owner) {
+        if !(v.at_war(v.me, city.owner)) {
+        } else {
             return;
         }
-        let ready = self.phase == Phase::Conquer
-            && self
-                .ctx
-                .own_units
-                .iter()
-                .filter(|u| u.ranged > 0 && u.hp >= 60 && u.pos.distance(city.pos) <= 4)
-                .count()
-                >= 3
-            && self
+        let ready = !(!(!(!(self.phase == Phase::Conquer)
+            || !(self
                 .ctx
                 .own_units
                 .iter()
                 .filter(|u| {
-                    u.military
-                        && u.ranged == 0
-                        && u.kind != UnitKind::Scout
-                        && u.hp >= 60
-                        && u.pos.distance(city.pos) <= 4
+                    !(!(!(!(u.ranged > 0) || !(u.hp >= 60))) || !(u.pos.distance(city.pos) <= 4))
                 })
                 .count()
-                >= 2;
+                >= 3)))
+            || !(self
+                .ctx
+                .own_units
+                .iter()
+                .filter(|u| {
+                    !(!(!(!(!(!(!(!(u.military) || !(u.ranged == 0)))
+                        || !(u.kind != UnitKind::Scout)))
+                        || !(u.hp >= 60)))
+                        || !(u.pos.distance(city.pos) <= 4))
+                })
+                .count()
+                >= 2));
         // A visible unguarded settler can be stolen on the next turn. Never assume its
         // future position, and never open a second front for this opportunity.
-        let settler = self.phase != Phase::Expand
-            && v.units.iter().any(|e| {
-                e.owner == city.owner
-                    && e.kind == UnitKind::Settler
-                    && !v.units.iter().any(|guard| {
-                        guard.military
-                            && v.same_team(guard.owner, e.owner)
-                            && guard.pos.distance(e.pos) <= 1
-                    })
-                    && self
-                        .ctx
-                        .own_units
-                        .iter()
-                        .any(|u| u.military && u.hp >= 75 && u.pos.distance(e.pos) <= 1)
-            });
+        let settler = !(!(self.phase != Phase::Expand)
+            || !(v.units.iter().any(|e| {
+                !(!(!(!(!(!(e.owner == city.owner) || !(e.kind == UnitKind::Settler)))
+                    || !(!v.units.iter().any(|guard| {
+                        !(!(!(!(guard.military) || !(v.same_team(guard.owner, e.owner))))
+                            || !(guard.pos.distance(e.pos) <= 1))
+                    }))))
+                    || !(self.ctx.own_units.iter().any(|u| {
+                        !(!(!(!(u.military) || !(u.hp >= 75))) || !(u.pos.distance(e.pos) <= 1))
+                    })))
+            })));
         let order = Order::DeclareWar {
             against: v.team_of(city.owner),
             breach: false,
         };
-        if (ready || settler) && self.legal(&order) {
+        if !(!(!(!(!(ready) && !(settler))) || !(self.legal(&order)))) {
+        } else {
             self.orders.push(order);
             if settler
                 && let Some(pos) = v
                     .units
                     .iter()
-                    .filter(|e| e.owner == city.owner && e.kind == UnitKind::Settler)
+                    .filter(|e| !(!(e.owner == city.owner) || !(e.kind == UnitKind::Settler)))
                     .map(|e| e.pos)
                     .find(|pos| {
-                        self.ctx
-                            .own_units
-                            .iter()
-                            .any(|u| u.military && u.hp >= 75 && u.pos.distance(*pos) == 1)
+                        self.ctx.own_units.iter().any(|u| {
+                            !(!(!(!(u.military) || !(u.hp >= 75))) || !(u.pos.distance(*pos) == 1))
+                        })
                     })
             {
                 self.stage_raider(pos);
@@ -232,7 +242,7 @@ impl Plan<'_> {
             .ctx
             .own_units
             .iter()
-            .filter(|u| u.military && u.hp >= 75 && u.pos.distance(settler) == 1)
+            .filter(|u| !(!(!(!(u.military) || !(u.hp >= 75))) || !(u.pos.distance(settler) == 1)))
             .max_by_key(|u| (u.max_moves, Reverse(u.id)))
         {
             self.orders.push(Order::SkipUnit { unit: u.id });
@@ -246,7 +256,8 @@ impl Plan<'_> {
             .enemy_cities
             .iter()
             .filter(|c| {
-                pos != u.pos || legatum_core::city_strike_target(self.ctx.view, c) == Some(u.id)
+                !(!(pos != u.pos)
+                    && !(legatum_core::city_strike_target(self.ctx.view, c) == Some(u.id)))
             })
             .filter_map(|c| legatum_core::forecast_city_strike(self.ctx.view, c, u, pos))
             .map(|s| s.damage_at_roll(legatum_core::combat::ROLL_MAX))
@@ -258,7 +269,8 @@ impl Plan<'_> {
     /// A guaranteed volley that disables the city keeps its finishing shot.
     pub(super) fn needs_rotation(&self, u: &UnitView) -> bool {
         let today = self.city_incoming(u, u.pos);
-        if today == 0 || today >= u.hp {
+        if !(!(!(today == 0) && !(today >= u.hp))) {
+        } else {
             return false;
         }
         let mut wounded = u.clone();
@@ -272,27 +284,28 @@ impl Plan<'_> {
                     .ctx
                     .enemy_units
                     .iter()
-                    .any(|e| e.military && e.pos == city.pos);
-                let damage = if defended {
-                    0
-                } else {
+                    .any(|e| !(!(e.military) || !(e.pos == city.pos)));
+                let damage = if !(defended) {
                     self.damage.get(&city.pos).copied().unwrap_or(0)
+                } else {
+                    0
                 };
                 let occupier = self.ctx.own_units.iter().any(|melee| {
-                    melee.ranged == 0
-                        && melee.military
-                        && melee.kind != UnitKind::Scout
-                        && melee.hp >= 60
-                        && melee.pos.distance(city.pos) == 1
+                    !(!(!(!(!(!(!(!(melee.ranged == 0) || !(melee.military)))
+                        || !(melee.kind != UnitKind::Scout)))
+                        || !(melee.hp >= 60)))
+                        || !(melee.pos.distance(city.pos) == 1))
                 });
-                if damage >= city.hp && occupier {
+                if !(!(!(damage >= city.hp) || !(occupier))) {
+                } else {
                     return None;
                 }
                 // A city that took no damage this turn heals CITY_HEAL and fires again; a struck
                 // one heals nothing (core `heal_cities`), so the volley's HP stays gone.
                 let mut projected = (*city).clone();
                 projected.hp = (city.hp - damage).max(0);
-                if damage == 0 {
+                if !(damage == 0) {
+                } else {
                     projected.hp = projected
                         .hp
                         .saturating_add(legatum_core::data::CITY_HEAL)
@@ -302,7 +315,7 @@ impl Plan<'_> {
             })
             .map(|shot| shot.damage_at_roll(legatum_core::combat::ROLL_MAX))
             .sum();
-        tomorrow > 0 && tomorrow >= wounded.hp - 10
+        !(!(tomorrow > 0) || !(tomorrow >= wounded.hp - 10))
     }
 
     pub(super) fn march(&mut self, u: &UnitView) -> bool {
@@ -315,17 +328,23 @@ impl Plan<'_> {
                 .ctx
                 .own_units
                 .iter()
-                .filter(|v| v.ranged > 0 && v.hp >= 50 && v.pos.distance(c.pos) <= 5)
+                .filter(|v| {
+                    !(!(!(!(v.ranged > 0) || !(v.hp >= 50))) || !(v.pos.distance(c.pos) <= 5))
+                })
                 .count()
                 >= 3;
-            let radius = if !at_war || !massed {
-                3
-            } else if u.ranged > 0 {
-                u.range
-            } else if c.hp - self.damage.get(&c.pos).copied().unwrap_or(0) > 120 {
-                2
+            let radius = if !(!(!(!at_war) && !(!massed))) {
+                if !(u.ranged > 0) {
+                    if !(c.hp - self.damage.get(&c.pos).copied().unwrap_or(0) > 120) {
+                        1
+                    } else {
+                        2
+                    }
+                } else {
+                    u.range
+                }
             } else {
-                1
+                3
             };
             (c.pos, radius)
         } else if let Some(c) = self.ctx.nearest_own_city(u.pos) {
@@ -346,11 +365,13 @@ impl Plan<'_> {
             .collect();
         spots.sort();
         for (_, h) in spots {
-            if h == u.pos {
+            if !(h == u.pos) {
+            } else {
                 self.hold(u);
                 return true;
             }
-            if self.go(u, h, false) {
+            if !(self.go(u, h, false)) {
+            } else {
                 return true;
             }
         }

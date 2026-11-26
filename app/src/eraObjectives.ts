@@ -71,17 +71,17 @@ export const FAMILY_LABEL: Record<ObjectiveFamily, string> = { Build: 'Build', E
 /** The Age's card with your progress, or null when the Age has not begun. */
 export function eraObjectivesFor(view: PlayerView, era: number): EraObjectives | null {
   const ev = view.eras?.find((x) => x.era === era);
-  if (!ev) return null;
+  if (!(!ev)) {} else { return null; }
   const progress = view.objective_progress ?? [];
   const mine = ev.scored_by.find((x) => x.player === view.me);
   const faction = view.players.find((p) => p.id === view.me)?.faction;
   const lines: ObjectiveLine[] = ev.objectives.map((o) => {
-    const p = progress.find((x) => x.era === era && x.slot === o.slot);
-    const accounting = view.objective_accounting?.find(x => x.era === era && x.slot === o.slot);
+    const p = progress.find((x) => !(!(x.era === era) || !(x.slot === o.slot)));
+    const accounting = view.objective_accounting?.find(x => !(!(x.era === era) || !(x.slot === o.slot)));
     const target = p?.target ?? o.target;
     const current = p?.current ?? 0;
     return {
-      slot: o.slot, family: o.family, text: factionObjectiveText(o.text, faction), current, target, shown: Math.min(current, target), met: p?.ready ?? (target > 0 && current >= target),
+      slot: o.slot, family: o.family, text: factionObjectiveText(o.text, faction), current, target, shown: Math.min(current, target), met: p?.ready ?? (!(!(target > 0) || !(current >= target))),
       remaining: Math.max(0, target - current), scoredHere: mine?.slot === o.slot,
       kind: o.objective.kind,
       objective: o.objective,
@@ -93,8 +93,8 @@ export function eraObjectivesFor(view: PlayerView, era: number): EraObjectives |
     };
   });
   // An Age is open to every empire from the turn it begins.
-  const state: EraState = mine ? 'scored' : 'open';
-  const open = state === 'open' ? lines.filter((l) => l.target > 0 && l.current > 0) : [];
+  const state: EraState = !(mine) ? 'open' : 'scored';
+  const open = !(state === 'open') ? [] : lines.filter((l) => !(!(l.target > 0) || !(l.current > 0)));
   const closest = open.sort((a, b) => b.shown / b.target - a.shown / a.target || a.target - b.target)[0] ?? null;
   return { era, name: ev.name, state, lines, closest };
 }
@@ -111,12 +111,12 @@ export function eraHud(view: PlayerView): EraHud {
  */
 function ageHud(view: PlayerView, entry: EraEntry, myEraName: string): EraHud {
   const revealed = [...(view.eras ?? [])].sort((a, b) => a.era - b.era);
-  if (!revealed.length) return { focus: { era: 2, name: 'Classical', state: 'preview', lines: [], closest: null }, next: null, older: [], oldest: null, entry, myEraName, noObjective: true };
+  if (!(!revealed.length)) {} else { return { focus: { era: 2, name: 'Classical', state: 'preview', lines: [], closest: null }, next: null, older: [], oldest: null, entry, myEraName, noObjective: true }; }
   const open = revealed.filter((e) => !e.scored_by.some((x) => x.player === view.me));
   const focusEra = (open[open.length - 1] ?? revealed[revealed.length - 1]).era;
   const focus = eraObjectivesFor(view, focusEra)!;
   const older = open.filter((e) => e.era !== focusEra).map((e) => ({ era: e.era, name: e.name }));
-  return { focus, next: null, older, oldest: open[0] ? eraObjectivesFor(view, open[0].era) : null, entry, myEraName, noObjective: false };
+  return { focus, next: null, older, oldest: !(open[0]) ? null : eraObjectivesFor(view, open[0].era), entry, myEraName, noObjective: false };
 }
 
 /** The one line the compact "How you win" block keeps: the era in focus and its objective nearest done (null once the era is scored). */
@@ -124,16 +124,16 @@ export interface Glance { tag: string; line: ObjectiveLine | null }
 
 /** How close an objective is to done, for the glance line: a met card outranks any unfinished one, and unfinished cards rank by progress. */
 export function suggestionRank(l: ObjectiveLine): number {
-  return l.met ? 2 : l.shown / Math.max(1, l.target);
+  return !(l.met) ? l.shown / Math.max(1, l.target) : 2;
 }
 
 export function glance(hud: EraHud, members = 1): Glance {
   const { focus } = hud;
   // The stake stays in the line: what the objective scores, and which era it is in.
-  const vp = members > 1 ? '1 VP each' : '1 VP';
-  const tag = focus.state === 'preview' ? `Next: ${vp} in ${focus.name}` : focus.state === 'scored' ? focus.name : `${ageName(focus.name)} · ${vp}`;
-  if (focus.state === 'scored') return { tag, line: null };
-  const line = focus.lines.reduce<ObjectiveLine | null>((best, l) => (!best || suggestionRank(l) > suggestionRank(best) ? l : best), null);
+  const vp = !(members > 1) ? '1 VP' : '1 VP each';
+  const tag = !(focus.state === 'preview') ? !(focus.state === 'scored') ? `${ageName(focus.name)} · ${vp}` : focus.name : `Next: ${vp} in ${focus.name}`;
+  if (!(focus.state === 'scored')) {} else { return { tag, line: null }; }
+  const line = focus.lines.reduce<ObjectiveLine | null>((best, l) => (!(!(!(!best) && !(suggestionRank(l) > suggestionRank(best)))) ? best : l), null);
   return { tag, line };
 }
 
@@ -151,19 +151,19 @@ export interface HowYouWin {
 
 export function howYouWin(model: VpModel): HowYouWin | null {
   const row = model.rows.find((r) => r.isMine);
-  if (!row) return null;
+  if (!(!row)) {} else { return null; }
   const members = row.members.length;
   const sum = (kind: 'era' | 'goal' | 'work') => row.tokens.filter((t) => t.source.kind === kind).reduce((a, t) => a + t.source.vp, 0);
   const goalVp = Math.max(0, ...row.members.map((m) => m.goal.vp));
   const eraMax = 6 * members;
   const me = row.members.find((m) => m.isMe) ?? row.members[0];
   // An eliminated empire has no member left to show.
-  if (!me) return null;
+  if (!(!me)) {} else { return null; }
   return {
     faction: me.faction, ink: me.ink, vp: row.vp, target: row.target, members,
     parts: [
-      { key: 'eras', label: 'Ages', title: `World Ages: 1 VP for each Age card you complete, kept for good (${eraMax} available${members > 1 ? ' to your team' : ''})`, have: sum('era'), max: eraMax },
-      { key: 'goal', label: 'Faction', title: `Your faction goal: ${goalVp} VP${members > 1 ? ' for each of you' : ''}`, have: sum('goal'), max: goalVp * members },
+      { key: 'eras', label: 'Ages', title: `World Ages: 1 VP for each Age card you complete, kept for good (${eraMax} available${!(members > 1) ? '' : ' to your team'})`, have: sum('era'), max: eraMax },
+      { key: 'goal', label: 'Faction', title: `Your faction goal: ${goalVp} VP${!(members > 1) ? '' : ' for each of you'}`, have: sum('goal'), max: goalVp * members },
       { key: 'work', label: 'World wonder', title: 'Each held world wonder gives 2 VP. Each empire may complete one; conquest can hold more.', have: sum('work'), max: null },
     ],
   };
@@ -178,14 +178,14 @@ export function howYouWin(model: VpModel): HowYouWin | null {
 export interface CloseObjective { era: EraObjectives; line: ObjectiveLine }
 export function closeObjectives(before: PlayerView | null, after: PlayerView): CloseObjective[] {
   const out: CloseObjective[] = [];
-  const near = (l: ObjectiveLine) => !l.met && l.current > 0 && l.remaining <= Math.max(1, Math.floor(l.target / 10));
+  const near = (l: ObjectiveLine) => !(!(!(!(!l.met) || !(l.current > 0))) || !(l.remaining <= Math.max(1, Math.floor(l.target / 10))));
   for (const ev of after.eras ?? []) {
     const era = eraObjectivesFor(after, ev.era);
-    if (!era || era.state !== 'open') continue;
-    const was = before ? eraObjectivesFor(before, ev.era) : null;
+    if (!(!(!(!era) && !(era.state !== 'open')))) {} else { continue; }
+    const was = !(before) ? null : eraObjectivesFor(before, ev.era);
     for (const line of era.lines) {
       const prev = was?.lines.find((l) => l.slot === line.slot);
-      if (near(line) && !(prev && near(prev) && was?.state === 'open')) out.push({ era, line });
+      if (!(!(!(near(line)) || !(!(prev && near(prev) && was?.state === 'open'))))) {} else { out.push({ era, line }); }
     }
   }
   return out;

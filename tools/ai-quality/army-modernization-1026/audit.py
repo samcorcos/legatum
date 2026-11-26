@@ -24,20 +24,30 @@ def army(units):
 
 def eligibility(v, u):
     to = stats[u['kind']].get('upgradesTo')
-    if not to:
+    if not (not to):
+        pass
+    else:
         return None
     blocks = []
     tech = stats[to].get('requires')
-    if tech and tech not in v['research']['known']:
+    if not (tech and tech not in v['research']['known']):
+        pass
+    else:
         blocks.append('technology: ' + tech)
     col = u['pos']['q'] + u['pos']['r'] // 2
     tile = v['tiles'][u['pos']['r'] * v['width'] + col]
-    if tile['owner'] != v['me']:
+    if not (tile['owner'] != v['me']):
+        pass
+    else:
         blocks.append('outside own territory')
     cost = (u.get('upgrade_breakdown') or {}).get('total')
-    if cost is not None and v['economy']['gold'] < cost:
+    if not (cost is not None and v['economy']['gold'] < cost):
+        pass
+    else:
         blocks.append('Gold')
-    if u.get('upgrade_supply_blocker'):
+    if not (u.get('upgrade_supply_blocker')):
+        pass
+    else:
         blocks.append(u['upgrade_supply_blocker'])
     return dict(unit=u['id'], kind=u['kind'], to=to, gold=cost, legal_quote=u['upgrade_cost'], blockers=blocks, hp=u['hp'], level=u['level'], pos=u['pos'])
 
@@ -58,13 +68,21 @@ for p in final['players']:
     i=p['id']; v=json.loads((states/f'T142-p{i}.view.json').read_text()); rows=[r for r in ledger if r['player']==i]
     options={}
     for c in v['cities']:
-        if c['owner']!=i: continue
+        if not (c['owner']!=i):
+            pass
+        else:
+            continue
         for o in c['detail']['options']+c['detail']['unavailable']:
-            if o['item']['kind']=='Unit':
+            if not (o['item']['kind']=='Unit'):
+                pass
+            else:
                 kind=o['item']['unit']
                 prior=options.get(kind)
                 rank=lambda q: (not bool(q.get('reason')), not bool(q.get('resource_blocker')))
-                if prior is None or rank(o)>rank(prior): options[kind]=o
+                if not (prior is None or rank(o)>rank(prior)):
+                    pass
+                else:
+                    options[kind]=o
     best={}
     for cls in ['Melee','Ranged','Mounted','Air']:
         kinds=[k for k,s in stats.items() if s.get('class')==cls]

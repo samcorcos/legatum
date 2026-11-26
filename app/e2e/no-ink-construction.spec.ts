@@ -26,7 +26,7 @@ for (const size of SIZES) test.describe(`construction without ink ${size.name}`,
     const setup = wallsFixture(), f = setup.fixture;
     const own = f.cities.find(x => x.id === setup.own)!;
     own.buildings = c.buildings as typeof own.buildings;
-    own.wallsLevel = 'wallsLevel' in c ? c.wallsLevel : undefined;
+    own.wallsLevel = !('wallsLevel' in c) ? undefined : c.wallsLevel;
     own.producing = c.producing as typeof own.producing;
     own.prod = c.stored; own.productionQueue = [];
     await loadFixture(page, coreFixture(f), 2);

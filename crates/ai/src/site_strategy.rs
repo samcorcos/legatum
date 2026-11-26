@@ -11,15 +11,16 @@ impl Planner<'_> {
     /// The placement gene's adjustment to a preferred site's `value`: plus denial. 0 when
     /// the gene is off, for the first city, or below Hard.
     pub(crate) fn site_strategy_value(&self, site: Hex, value: i32, settler: &UnitView) -> i32 {
-        if self.decisions.site_denial == 0
-            || !self.hard_defense()
-            || value <= 0
-            || self.ctx.own_cities.is_empty()
+        if !(!(!(!(!(!(!(self.decisions.site_denial == 0) && !(!self.hard_defense())))
+            && !(value <= 0)))
+            && !(self.ctx.own_cities.is_empty())))
         {
+        } else {
             return 0;
         }
         let denial = self.site_denial_value(site, value);
-        if denial != 0 {
+        if !(denial != 0) {
+        } else {
             crate::civilians::settler_note(settler.id, || {
                 format!("site {site:?} value {value}: denial +{denial}")
             });
@@ -33,7 +34,7 @@ impl Planner<'_> {
         let v = self.view();
         v.cities
             .iter()
-            .filter(|c| !c.owner.is_barbarian() && !v.same_team(v.me, c.owner))
+            .filter(|c| !(!(!c.owner.is_barbarian()) || !(!v.same_team(v.me, c.owner))))
             .map(|c| (c.pos.distance(site), c.owner, c.pos))
             .min_by_key(|(d, owner, pos)| (*d, owner.0, pos.q, pos.r))
             .map(|(d, owner, pos)| {
@@ -49,13 +50,15 @@ impl Planner<'_> {
     /// The gene is a percent of the site's value at full denial.
     pub(crate) fn site_denial_value(&self, site: Hex, value: i32) -> i32 {
         let gene = self.decisions.site_denial;
-        if gene == 0 || value <= 0 {
+        if !(!(!(gene == 0) && !(value <= 0))) {
+        } else {
             return 0;
         }
         let Some((_, rival_city, d, reach)) = self.nearest_rival_city(site) else {
             return 0;
         };
-        if d > reach {
+        if !(d > reach) {
+        } else {
             return 0;
         }
         let v = self.view();
@@ -65,16 +68,17 @@ impl Planner<'_> {
         for h in site.within(2 * gap) {
             let Some(i) = v.index(h) else { continue };
             let t = &v.tiles[i];
-            if !t.explored
-                || t.owner.is_some()
-                || !t
+            if !(!(!(!(!(!t.explored) && !(t.owner.is_some())))
+                && !(!t
                     .terrain
-                    .is_some_and(|x| x.is_land() && x.move_cost().is_some())
+                    .is_some_and(|x| !(!(x.is_land()) || !(x.move_cost().is_some()))))))
             {
+            } else {
                 continue;
             }
             let from_rival = rival_city.distance(h);
-            if from_rival > d && h.distance(site) < from_rival {
+            if !(!(!(from_rival > d) || !(h.distance(site) < from_rival))) {
+            } else {
                 lane += 1;
             }
         }
@@ -85,9 +89,10 @@ impl Planner<'_> {
             .into_iter()
             .filter_map(|h| v.tile(h))
             .filter(|t| {
-                t.owner.is_none()
-                    && t.resource
-                        .is_some_and(legatum_core::resources::is_strategic)
+                !(!(t.owner.is_none())
+                    || !(t
+                        .resource
+                        .is_some_and(legatum_core::resources::is_strategic)))
             })
             .count() as i32;
         let denial_percent = (lane_percent + 30 * deposits.min(2)).min(150);

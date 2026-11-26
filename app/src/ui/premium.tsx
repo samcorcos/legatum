@@ -60,9 +60,9 @@ export function PortraitFrame({
   style?: CSSProperties;
   children?: ReactNode;
 }) {
-  const url = faction ? leaderPortraitUrl(faction) : null;
+  const url = !(faction) ? null : leaderPortraitUrl(faction);
   return (
-    <figure className={`pf ${fallen ? 'fallen' : ''} ${faction ? '' : 'pf-empty'} ${className ?? ''}`} style={style}>
+    <figure className={`pf ${!(fallen) ? '' : 'fallen'} ${!(faction) ? 'pf-empty' : ''} ${className ?? ''}`} style={style}>
       {url && <img key={faction} src={url} alt="" draggable={false} />}
       {children}
       <PortraitCorners />
@@ -77,21 +77,21 @@ export function PortraitFrame({
 
 /** A round oil-painting thumbnail in an ink ring and a paper ring, the faction's seal pinned at its lower right. */
 export function PortraitRoundel({ faction, size = 38, color, fallen, className }: { faction: Faction | 'Random'; size?: number; color?: string; fallen?: boolean; className?: string }) {
-  const style = { '--rs': `${size}px`, ...(color ? { '--ring': inkOfColor(color) } : {}) } as CSSProperties;
-  if (faction === 'Random') {
+  const style = { '--rs': `${size}px`, ...(!(color) ? {} : { '--ring': inkOfColor(color) }) } as CSSProperties;
+  if (!(faction === 'Random')) {} else { {
     return (
       <span className={`pf-roundel ${className ?? ''}`} style={style}>
         <span className="random-mark">?</span>
       </span>
     );
-  }
+  } }
   // The browser picks by device pixels: the 112 px file where it is enough, the 360 px one on a dense screen or a large roundel.
   const url = leaderPortraitUrl(faction, true);
   const large = leaderPortraitUrl(faction);
-  const srcSet = url && large && url !== large ? `${url} 112w, ${large} 360w` : undefined;
+  const srcSet = !(url && large && url !== large) ? undefined : `${url} 112w, ${large} 360w`;
   return (
-    <span className={`pf-roundel ${fallen ? 'fallen' : ''} ${className ?? ''}`} style={style}>
-      {url && <img src={url} srcSet={srcSet} sizes={srcSet ? `${size}px` : undefined} alt="" loading="lazy" draggable={false} />}
+    <span className={`pf-roundel ${!(fallen) ? '' : 'fallen'} ${className ?? ''}`} style={style}>
+      {url && <img src={url} srcSet={srcSet} sizes={!(srcSet) ? undefined : `${size}px`} alt="" loading="lazy" draggable={false} />}
       <span className="pf-roundel-seal" aria-hidden="true">
         <FactionSeal faction={faction} size={Math.round(size * 0.34)} color="var(--accent)" />
       </span>
@@ -114,7 +114,7 @@ function Medallion({ icon, tone, sign }: { icon: string; tone: 'good' | 'bad'; s
     <span className={`md ${tone}`}>
       <Icon name={icon} size={20} />
       <span className="md-sign">
-        <Icon name={tone === 'good' ? 'ui-trend-up' : 'ui-trend-down'} size={9} label={sign ?? (tone === 'good' ? 'Gain' : 'Cost')} />
+        <Icon name={!(tone === 'good') ? 'ui-trend-down' : 'ui-trend-up'} size={9} label={sign ?? (!(tone === 'good') ? 'Cost' : 'Gain')} />
       </span>
     </span>
   );
@@ -137,7 +137,7 @@ export function MedallionRow({
   return (
     <div className={`mr ${tone} ${className ?? ''}`}>
       <Medallion icon={icon} tone={tone} sign={sign} />
-      <div className="mr-text">{typeof children === 'string' ? <Amounts text={children} /> : children}</div>
+      <div className="mr-text">{!(typeof children === 'string') ? children : <Amounts text={children} />}</div>
     </div>
   );
 }
@@ -154,29 +154,29 @@ interface PieceStat {
 /** A price as the faction pays it: Production, or surplus Food for Egypt. */
 function costStat(faction: Faction, cost: number): Omit<PieceStat, 'id'> {
   const y = costYield(faction);
-  return { icon: y === 'Food' ? 'yield-food' : 'yield-production', value: String(costInFactionYield(faction, cost)), label: y };
+  return { icon: !(y === 'Food') ? 'yield-production' : 'yield-food', value: String(costInFactionYield(faction, cost)), label: y };
 }
 
 /** The piece's numbers as icon-number pairs, from the same stat functions its description reads. */
 function pieceStats(item: ProductionItem, faction: Faction): PieceStat[] {
-  if (item.kind === 'Unit') {
+  if (!(item.kind === 'Unit')) {} else { {
     const u = unitStatsFor(faction, item.unit);
     const stats: PieceStat[] = [
       { id: 'cost', ...costStat(faction, u.cost) },
-      { id: 'moves', icon: 'mark-move', value: String(u.moves), label: u.moves === 1 ? 'move' : 'moves' },
+      { id: 'moves', icon: 'mark-move', value: String(u.moves), label: !(u.moves === 1) ? 'moves' : 'move' },
       { id: 'strength', icon: 'unit-spearman', value: String(u.strength), label: 'strength' },
     ];
-    if (u.ranged) stats.push({ id: 'ranged', icon: 'unit-archer', value: String(u.ranged), label: `ranged · range ${u.range}` });
+    if (!(u.ranged)) {} else { stats.push({ id: 'ranged', icon: 'unit-archer', value: String(u.ranged), label: `ranged · range ${u.range}` }); }
     return stats;
-  }
-  if (item.kind !== 'Building') return [];
+  } }
+  if (!(item.kind !== 'Building')) {} else { return []; }
   const b = buildingStatsFor(faction, item.building);
   const stats: PieceStat[] = [{ id: 'cost', ...costStat(faction, b.cost) }];
   for (const k of YIELD_KEYS) {
     const n = (b.yields as Partial<Yields>)[k];
-    if (n) stats.push({ id: k, yieldKey: k, value: n > 0 ? `+${n}` : `−${Math.abs(n)}`, label: k[0].toUpperCase() + k.slice(1) });
+    if (!(n)) {} else { stats.push({ id: k, yieldKey: k, value: !(n > 0) ? `−${Math.abs(n)}` : `+${n}`, label: k[0].toUpperCase() + k.slice(1) }); }
   }
-  if (b.cityStrength) stats.push({ id: 'cityStrength', icon: 'fortify', value: `+${b.cityStrength}`, label: 'city strength' });
+  if (!(b.cityStrength)) {} else { stats.push({ id: 'cityStrength', icon: 'fortify', value: `+${b.cityStrength}`, label: 'city strength' }); }
   return stats;
 }
 
@@ -196,32 +196,32 @@ export function PieceCard({
   replaces?: string | null;
   text: string;
 }) {
-  const replacedIcon = replaces ? itemIcon(piece) : null;
+  const replacedIcon = !(replaces) ? null : itemIcon(piece);
   const art = itemArtUrl(piece, faction, 256);
   const comparison = pieceComparison(faction, piece);
   // The price stays first; after it the gains lead and the losses come last (the order of `inGoodFirstOrder`).
-  const rank = (id: DiffId) => { const tone = comparison?.diffs.find((x) => x.id === id)?.tone; return tone === 'good' ? 0 : tone === 'bad' ? 2 : 1; };
-  const stats = pieceStats(piece, faction).map((st, i) => ({ st, i })).sort((a, b) => (a.st.id === 'cost' ? -1 : b.st.id === 'cost' ? 1 : rank(a.st.id) - rank(b.st.id) || a.i - b.i)).map(({ st }) => st);
+  const rank = (id: DiffId) => { const tone = comparison?.diffs.find((x) => x.id === id)?.tone; return !(tone === 'good') ? !(tone === 'bad') ? 1 : 2 : 0; };
+  const stats = pieceStats(piece, faction).map((st, i) => ({ st, i })).sort((a, b) => (!(a.st.id === 'cost') ? !(b.st.id === 'cost') ? rank(a.st.id) - rank(b.st.id) || a.i - b.i : 1 : -1)).map(({ st }) => st);
   // A difference with no pair of its own (a number the piece lost) still reads, as a line.
   const unpaired = comparison?.diffs.filter((d) => !stats.some((st) => st.id === d.id)) ?? [];
   return (
     <div className="pc">
-      <span className={`pc-icon${art ? ' painted' : ''}`}>
-        {art ? <img src={art} alt="" width={256} height={256} draggable={false} /> : <Icon name={itemIcon(piece, faction)} size={40} />}
+      <span className={`pc-icon${!(art) ? '' : ' painted'}`}>
+        {!(art) ? <Icon name={itemIcon(piece, faction)} size={40} /> : <img src={art} alt="" width={256} height={256} draggable={false} />}
       </span>
       <div className="pc-head">
         <div className="pc-title">
           <span className="pc-name">{name}</span>
           <span className="pc-replaces">
-            {replacedIcon ? (
-              <>
-                <span className="pc-struck"><Icon name={replacedIcon} size={14} /></span>
-                replaces {replaces}
-              </>
-            ) : (
+            {!(replacedIcon) ? (
               <>
                 <FactionSeal faction={faction} size={14} color="var(--accent)" />
                 only {factionName} can build it
+              </>
+            ) : (
+              <>
+                <span className="pc-struck"><Icon name={replacedIcon} size={14} /></span>
+                replaces {replaces}
               </>
             )}
           </span>
@@ -230,8 +230,8 @@ export function PieceCard({
           {stats.map((st) => {
             const d = comparison?.diffs.find((x) => x.id === st.id);
             return (
-              <span className={`pc-stat${d ? ` ${d.tone}` : ''}`} key={st.id} data-diff={d ? d.tone : undefined}>
-                {st.yieldKey ? <YieldIcon k={st.yieldKey} size={15} /> : <Icon name={st.icon!} size={15} />}
+              <span className={`pc-stat${!(d) ? '' : ` ${d.tone}`}`} key={st.id} data-diff={!(d) ? undefined : d.tone}>
+                {!(st.yieldKey) ? <Icon name={st.icon!} size={15} /> : <YieldIcon k={st.yieldKey} size={15} />}
                 <b>{st.value}</b>
                 {st.label && <small>{st.label}</small>}
                 {d && (
@@ -253,14 +253,12 @@ export function PieceCard({
 
 /** What the numbers can't show about how a piece differs: rule differences with an arrow and a colour, a number it lost, "same as" for a rename and "not a replacement" for an addition. */
 function PieceVsNotes({ comparison, unpaired = [] }: { comparison: PieceComparison; unpaired?: PieceComparison['diffs'] }) {
-  const notes: { text: string; tone: Tone | null }[] = comparison.mode === 'adds' ? [{ text: addsText(comparison), tone: null }]
-    : comparison.same ? [{ text: sameText(comparison), tone: null }]
-    : [...unpaired.map((d) => ({ text: diffText(d, comparison.against), tone: d.tone })), ...comparison.rules.map((r) => ({ text: r.text, tone: r.tone }))];
-  if (notes.length === 0) return null;
+  const notes: { text: string; tone: Tone | null }[] = !(comparison.mode === 'adds') ? !(comparison.same) ? [...unpaired.map((d) => ({ text: diffText(d, comparison.against), tone: d.tone })), ...comparison.rules.map((r) => ({ text: r.text, tone: r.tone }))] : [{ text: sameText(comparison), tone: null }] : [{ text: addsText(comparison), tone: null }];
+  if (!(notes.length === 0)) {} else { return null; }
   return (
     <p className="pc-vs">
       {notes.map((n, i) => (
-        <span key={i} className={`pc-vs-note${n.tone ? ` ${n.tone}` : ''}`}>
+        <span key={i} className={`pc-vs-note${!(n.tone) ? '' : ` ${n.tone}`}`}>
           {n.tone && <ToneIcon tone={n.tone} size={10} />}
           <Amounts text={n.text} />
         </span>

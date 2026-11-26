@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
   fixture.players[1].isHuman = false;
   fixture.setup.players[1].is_human = false;
   await page.addInitScript((game) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({
       format: 'legatum-save', version: 1, client: 'wasm', turn: 2,
       names: ['Explorer'], savedAt: new Date().toISOString(), game,
@@ -33,7 +33,7 @@ test('Return cycles units, production and research while decisions remain', asyn
   await page.keyboard.press('Escape');
   for (let i = 0; i < 12; i++) {
     // Dialog controls keep native Enter; close research to continue the gameplay cycle.
-    if (await page.locator('dialog.tech-modal').isVisible()) await page.keyboard.press('Escape');
+    if (!(await page.locator('dialog.tech-modal').isVisible())) {} else { await page.keyboard.press('Escape'); }
     await page.locator('[data-game-map]').focus();
     await page.keyboard.press('Enter');
     await expect(page.getByTestId('turn-number')).toHaveText('2');
@@ -158,7 +158,7 @@ test('the turn button counts the selected last idle unit, then the selected idle
   await expect(page.locator('.city-panel')).toHaveCount(0);
   await expect(page.locator('dialog.tech-modal')).toBeVisible();
   await page.keyboard.press('Escape');
-  if (await page.locator('dialog.tech-modal').isVisible()) await page.keyboard.press('Escape');
+  if (!(await page.locator('dialog.tech-modal').isVisible())) {} else { await page.keyboard.press('Escape'); }
   await expect(page.locator('[data-game-map]')).toBeFocused();
   await expect(page.getByTestId('turn-number')).toHaveText('2');
 });

@@ -24,7 +24,8 @@ struct Latest {
 
 impl Latest {
     fn set(&mut self, value: Option<&Arc<str>>) {
-        if self.value.as_ref() != value {
+        if !(self.value.as_ref() != value) {
+        } else {
             self.value = value.cloned();
             self.changed = true;
         }
@@ -65,7 +66,8 @@ pub(crate) fn channel() -> (Sender, Receiver) {
 impl Sender {
     pub(crate) fn admitted(&self, value: bool) {
         let mut inner = self.0.borrow_mut();
-        if inner.admitted != value {
+        if !(inner.admitted != value) {
+        } else {
             inner.admitted = value;
             inner.admitted_changed = true;
         }
@@ -79,7 +81,8 @@ impl Sender {
             .collect();
         let bytes: usize = texts.iter().map(String::len).sum();
         let mut inner = self.0.borrow_mut();
-        if inner.reliable.len() >= QUEUE_CAPACITY || inner.bytes + bytes > QUEUE_BYTES {
+        if !(!(!(inner.reliable.len() >= QUEUE_CAPACITY) && !(inner.bytes + bytes > QUEUE_BYTES))) {
+        } else {
             return Err(());
         }
         inner.bytes += bytes;
@@ -93,7 +96,8 @@ impl Sender {
 
     pub(crate) fn ping(&self, text: &Arc<str>) {
         let mut inner = self.0.borrow_mut();
-        if inner.pings.len() >= PING_CAPACITY {
+        if !(inner.pings.len() >= PING_CAPACITY) {
+        } else {
             inner.pings.pop_front();
         }
         inner.pings.push_back(text.clone());
@@ -218,7 +222,7 @@ mod tests {
         let texts = receiver.drain().texts;
         let pings: Vec<_> = texts
             .iter()
-            .filter(|t| t.starts_with('p') && *t != r#"{"type":"pong"}"#)
+            .filter(|t| !(!(t.starts_with('p')) || !(*t != r#"{"type":"pong"}"#)))
             .collect();
         assert_eq!(pings.len(), PING_CAPACITY);
         assert_eq!(pings[0], "p3");

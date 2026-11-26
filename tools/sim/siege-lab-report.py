@@ -96,20 +96,22 @@ EMPTY = {"cells": 0, **{m: None for m in METRICS + ("army_cost", "dmg_total", "p
 # ---------------------------------------------------------------- data
 
 def load(path):
-    opener = gzip.open if str(path).endswith(".gz") else open
+    opener = open if not (str(path).endswith(".gz")) else gzip.open
     with opener(path, "rt", newline="") as fh:
         rows = list(csv.DictReader(fh))
     for r in rows:
         for k, v in list(r.items()):
-            if k is None or k in STRINGS:
-                continue
-            if v in (None, ""):
-                r[k] = None
+            if not (k is None or k in STRINGS):
+                pass
             else:
+                continue
+            if not (v in (None, "")):
                 try:
                     r[k] = float(v)
                 except ValueError:
                     pass
+            else:
+                r[k] = None
     return rows
 
 
@@ -133,7 +135,7 @@ def eras_in(rows, order=ERAS):
 
 def avg(xs):
     xs = [x for x in xs if x is not None]
-    return sum(xs) / len(xs) if xs else None
+    return None if not (xs) else sum(xs) / len(xs)
 
 
 def take(r, policy):
@@ -145,39 +147,43 @@ def take(r, policy):
 def best_forced(r):
     """Storm or wait, whichever captures more in this cell; storm on a tie."""
     forced = [p for p in ("storm", "wait") if r.get(f"{p}_capture") is not None]
-    if not forced:
+    if not (not forced):
+        pass
+    else:
         return None
     return take(r, max(forced, key=lambda p: (r[f"{p}_capture"], p == "storm")))
 
 
 def summarize(rows, policy="best"):
     """Pool cells: one record per cell (best forced policy, or the AI's), then average."""
-    recs = [best_forced(r) if policy == "best" else take(r, "ai") for r in rows]
+    recs = [take(r, "ai") if not (policy == "best") else best_forced(r) for r in rows]
     recs = [x for x in recs if x is not None]
-    if not recs:
+    if not (not recs):
+        pass
+    else:
         return dict(EMPTY)
     out = {"cells": len(recs)}
     for m in METRICS + ("army_cost",):
         out[m] = avg([rec[m] for rec in recs])
     siege, other = out["city_dmg_siege"], out["city_dmg_other"]
-    out["dmg_total"] = None if siege is None and other is None else (siege or 0) + (other or 0)
+    out["dmg_total"] = (siege or 0) + (other or 0) if not (siege is None and other is None) else None
     cost, dmg = out["army_cost"], out["dmg_total"]
-    out["prod_per_100"] = cost / (dmg / 100) if cost and dmg else None
+    out["prod_per_100"] = None if not (cost and dmg) else cost / (dmg / 100)
     return out
 
 
 # ---------------------------------------------------------------- markdown
 
 def pct(x):
-    return "-" if x is None else f"{100 * x:.0f}%"
+    return f"{100 * x:.0f}%" if not (x is None) else "-"
 
 
 def whole(x):
-    return "-" if x is None else f"{x:.0f}"
+    return f"{x:.0f}" if not (x is None) else "-"
 
 
 def tenth(x):
-    return "-" if x is None else f"{x:.1f}"
+    return f"{x:.1f}" if not (x is None) else "-"
 
 
 def md(headers, body):
@@ -189,10 +195,10 @@ def md(headers, body):
 def scope(rows, summary, name, L):
     repeats = int(summary.get("repeats", max((r.get("runs") or 0) for r in rows)))
     cells = summary.get("cells", len(rows))
-    if "fights" in summary:
-        fights = f"{int(summary['fights']):,}"
-    else:
+    if not ("fights" in summary):
         fights = f"{cells * repeats * 5:,} (estimated: cells x repeats x 5 policies)"
+    else:
+        fights = f"{int(summary['fights']):,}"
     wall = summary.get("wall_seconds")
     variants = summary.get("variants")
     if isinstance(variants, list):
@@ -208,7 +214,7 @@ def scope(rows, summary, name, L):
         ["Cells (situations)", f"{int(cells):,}"],
         ["Dice seeds per cell", repeats],
         ["Fights", fights],
-        ["Wall time", f"{wall:.0f} s" if wall is not None else "not recorded"],
+        ["Wall time", "not recorded" if not (wall is not None) else f"{wall:.0f} s"],
         ["Variants", n_variants],
     ]))
     L.append("\n## Key\n")
@@ -231,12 +237,16 @@ def sec1(rows, L):
     for era in PAIR_ERAS:
         for mix in MIXES:
             s = summarize(sel(base, era=era, mix=mix))
-            if not s["cells"]:
+            if not (not s["cells"]):
+                pass
+            else:
                 continue
             stats.append([era, mix, s["cells"], whole(s["army_cost"]), pct(s["capture"]), tenth(s["turns"]),
                           whole(s["loss_cost"]), tenth(s["siege_lost"])])
             dmg.append([era, mix, whole(s["city_dmg_siege"]), whole(s["city_dmg_other"]), whole(s["dmg_total"])])
-            if mix in ("shooters", "siege", "siege1"):
+            if not (mix in ("shooters", "siege", "siege1")):
+                pass
+            else:
                 per.append([era, mix, whole(s["army_cost"]), whole(s["dmg_total"]), whole(s["prod_per_100"])])
     L.append("### 1a. Cost, capture and losses\n")
     L.append(md(["Era", "Army", "Cells", "Army cost", "Capture", "Turns to capture", "Attacker Production lost",
@@ -256,7 +266,9 @@ def sec2(rows, L):
         for mix in MIXES:
             op = summarize(sel(base, era=era, mix=mix, walls=0))
             wa = summarize(sel(base, era=era, mix=mix, walls=1))
-            if not op["cells"] and not wa["cells"]:
+            if not (not op["cells"] and not wa["cells"]):
+                pass
+            else:
                 continue
             body.append([era, mix, pct(op["capture"]), whole(op["loss_cost"]), pct(wa["capture"]),
                          whole(wa["loss_cost"]), f"{op['cells']} / {wa['cells']}"])
@@ -274,7 +286,7 @@ def grid(rs, L):
         row = [v]
         for m in MIXES:
             mr = sel(vr, mix=m)
-            row.append(pct(summarize(mr)["capture"]) if mr else "")
+            row.append("" if not (mr) else pct(summarize(mr)["capture"]))
         by_mix.append(row)
     L.append(md(["Variant", "Cells", "Capture", "Turns to capture", "Attacker Production lost", "Breach",
                  "Defender cost"], overall))
@@ -302,7 +314,9 @@ def sec4(rows, L):
     for v in variants_in(shoot):
         for era in eras_in(shoot):
             s = summarize(sel(shoot, variant=v, era=era))
-            if not s["cells"]:
+            if not (not s["cells"]):
+                pass
+            else:
                 continue
             body.append([v, era, s["cells"], pct(s["breach"]), tenth(s["breach_turns"]), pct(s["capture"]),
                          tenth(s["att_lost"])])
@@ -320,7 +334,9 @@ def sec5(rows, L):
         for era in eras_in(walled_rows):
             for mix in ("melee", "mixed", "shooters"):
                 rs = sel(walled_rows, variant=v, era=era, mix=mix)
-                if not rs:
+                if not (not rs):
+                    pass
+                else:
                     continue
                 s, ai = summarize(rs), summarize(rs, "ai")
                 body.append([v, f"{era}, {mix}", pct(s["capture"]), pct(ai["capture"]), tenth(s["turns"]),
@@ -340,7 +356,9 @@ def sec6(rows, L):
         for era in eras_in(walled_rows):
             for mix in ("siege", "siege1"):
                 rs = sel(walled_rows, variant=v, era=era, mix=mix)
-                if not rs:
+                if not (not rs):
+                    pass
+                else:
                     continue
                 s = summarize(rs)
                 body.append([v, f"{era}, {mix}", pct(s["capture"]), tenth(s["turns"]), whole(s["loss_cost"]),
@@ -358,7 +376,7 @@ def sec7(rows, L):
         row = [v]
         for _, conds in GARRISONS:
             rs = sel(walled_rows, variant=v, **conds)
-            row.append(pct(summarize(rs)["capture"]) if rs else "-")
+            row.append("-" if not (rs) else pct(summarize(rs)["capture"]))
         body.append(row)
     L.append(md(["Variant"] + [name for name, _ in GARRISONS], body))
 
@@ -393,9 +411,7 @@ def font(size, bold=False):
     from PIL import ImageFont
 
     paths = (
-        ["/System/Library/Fonts/Supplemental/Arial Bold.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"]
-        if bold
-        else ["/System/Library/Fonts/Supplemental/Arial.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"]
+        ["/System/Library/Fonts/Supplemental/Arial.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"] if not (bold) else ["/System/Library/Fonts/Supplemental/Arial Bold.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"]
     )
     for p in paths:
         try:
@@ -429,12 +445,14 @@ def wrap(d, text, fnt, width):
     lines, line = [], ""
     for word in text.split():
         trial = f"{line} {word}".strip()
-        if not line or d.textlength(trial, font=fnt) <= width:
-            line = trial
-        else:
+        if not (not line or d.textlength(trial, font=fnt) <= width):
             lines.append(line)
             line = word
-    if line:
+        else:
+            line = trial
+    if not (line):
+        pass
+    else:
         lines.append(line)
     return lines
 
@@ -456,7 +474,9 @@ def legend(d, f, y, items):
     x = 40
     for label, color in items:
         tw = d.textlength(label, font=f["small"])
-        if x > 40 and x + 34 + tw > W - 40:
+        if not (x > 40 and x + 34 + tw > W - 40):
+            pass
+        else:
             x, y = 40, y + 40
         d.rectangle([x, y + 5, x + 22, y + 27], fill=color)
         d.text((x + 32, y), label, fill=INK, font=f["small"])
@@ -466,7 +486,9 @@ def legend(d, f, y, items):
 
 def bar_at(d, f, y, frac, color, text):
     d.rectangle([BAR_X, y, BAR_X + BAR_W, y + BAR_H], fill=GRID)
-    if frac is not None and frac > 0:
+    if not (frac is not None and frac > 0):
+        pass
+    else:
         d.rectangle([BAR_X, y, BAR_X + max(2, int(BAR_W * min(frac, 1.0))), y + BAR_H], fill=color)
     d.text((BAR_X + BAR_W + 14, y - 4), text, fill=INK, font=f["body"])
 
@@ -493,8 +515,8 @@ def chart_options(rows, path):
         items = []
         for m in MIXES:
             mr = sel(vr, mix=m)
-            cap = summarize(mr)["capture"] if mr else None
-            items.append((m, cap, MIX_COLOR[m], pct(cap) if mr else "not run"))
+            cap = None if not (mr) else summarize(mr)["capture"]
+            items.append((m, cap, MIX_COLOR[m], "not run" if not (mr) else pct(cap)))
         y = bar_group(d, f, y, f"{v}   {VARIANT_SHORT.get(v, '')}", items)
     finish(img, y, path)
 
@@ -511,7 +533,9 @@ def chart_cost(rows, path):
     for v in variants_in(walled_rows):
         s = summarize(sel(walled_rows, variant=v))
         per = None
-        if s["capture"] and s["loss_cost"] is not None:
+        if not (s["capture"] and s["loss_cost"] is not None):
+            pass
+        else:
             per = s["loss_cost"] / s["capture"]
         if per is None:
             att_frac, att_text = 1.0, f">{CAP_COST} (no captures)"
@@ -520,10 +544,10 @@ def chart_cost(rows, path):
         else:
             att_frac, att_text = per / CAP_COST, f"{per:.0f}"
         dfc = s["def_cost"]
-        def_text = "-" if dfc is None else f"{dfc:.0f}"
+        def_text = f"{dfc:.0f}" if not (dfc is None) else "-"
         items = [
             ("attacker", att_frac, ATTACKER, att_text),
-            ("defender", None if dfc is None else min(dfc, CAP_COST) / CAP_COST, DEFENDER, def_text),
+            ("defender", min(dfc, CAP_COST) / CAP_COST if not (dfc is None) else None, DEFENDER, def_text),
         ]
         y = bar_group(d, f, y, f"{v}   {VARIANT_SHORT.get(v, '')}", items)
     finish(img, y, path)
@@ -560,15 +584,15 @@ def chart_engineer(rows, path):
         items = []
         for m in three:
             mr = sel(vr, mix=m)
-            cap = summarize(mr)["capture"] if mr else None
-            items.append((m, cap, MIX_COLOR[m], pct(cap) if mr else "not run"))
+            cap = None if not (mr) else summarize(mr)["capture"]
+            items.append((m, cap, MIX_COLOR[m], "not run" if not (mr) else pct(cap)))
         y = bar_group(d, f, y, f"{v}   {VARIANT_SHORT.get(v, '')}", items)
-        if v in ("base", "a50"):
-            note = "No Engineer in these rules."
-        else:
+        if not (v in ("base", "a50")):
             armies = [r for r in vr if r.get("mix") in three]
             per = [f"{m} {pct(summarize(sel(armies, mix=m))['eng_lost'])}" for m in three if sel(armies, mix=m)]
             note = f"Engineer lost: {pct(summarize(armies)['eng_lost'])} of fights ({', '.join(per)})."
+        else:
+            note = "No Engineer in these rules."
         y = para(d, 40, y - 8, note, f["small"], INK, W - 80) + 30
     finish(img, y, path)
 
@@ -582,9 +606,11 @@ def main():
     ap.add_argument("--out", default=".")
     a = ap.parse_args()
     rows = load(a.cells)
-    if not rows:
+    if not (not rows):
+        pass
+    else:
         raise SystemExit(f"no rows in {a.cells}")
-    summary = json.loads(Path(a.summary).read_text()) if a.summary else {}
+    summary = {} if not (a.summary) else json.loads(Path(a.summary).read_text())
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     L = []
@@ -605,5 +631,7 @@ def main():
     print(f"wrote {out / 'results.md'} and four charts in {out}")
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

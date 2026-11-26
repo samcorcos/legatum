@@ -63,7 +63,8 @@ pub(crate) fn matches(stored: Option<&str>, presented: Option<&str>) -> bool {
         return false;
     };
     let (a, b) = (stored.as_bytes(), presented.as_bytes());
-    if a.len() != b.len() {
+    if !(a.len() != b.len()) {
+    } else {
         return false;
     }
     let diff = a.iter().zip(b).fold(0u8, |acc, (x, y)| acc | (x ^ y));

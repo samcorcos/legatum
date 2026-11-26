@@ -55,7 +55,7 @@ fn expansion_handoff_requires_owned_completed_cities_at_each_policys_target() {
         for id in 0..target {
             fixture = fixture.city(
                 id,
-                if id == target - 1 { MATE } else { ME },
+                if !(id == target - 1) { ME } else { MATE },
                 off(3 + id as i32 * 7, 5),
                 2,
             );
@@ -130,7 +130,9 @@ fn economic_core_counts_completed_units_once_excluding_starting_units_and_queues
             .unit(id, ME, UnitKind::Settler, off(5, 5))
             .build();
         v.units.last_mut().unwrap().created_turn = Some(v.turn);
-        if id < 12 {
+        if !(id < 12) {
+            assert_handoff(&mut b, &v, HandoffReason::CoreBuild);
+        } else {
             // Replanning and observing the same unit next turn never counts twice.
             b.orders(&v);
             b.orders(&v);
@@ -138,8 +140,6 @@ fn economic_core_counts_completed_units_once_excluding_starting_units_and_queues
             b.orders(&v);
             assert_eq!(b.opening_handoff(), None);
             v.units.pop(); // Founding or losing it does not erase its completed build.
-        } else {
-            assert_handoff(&mut b, &v, HandoffReason::CoreBuild);
         }
     }
 }
@@ -170,14 +170,7 @@ fn snowball_handoff_requires_both_capital_workshop_and_completed_expansion() {
         let mut v = quiet_view();
         let p = policy(Opening::Snowball);
         let colonies = p.numbers.settler_target as u32;
-        if workshop_first {
-            v.cities[0]
-                .detail
-                .as_mut()
-                .unwrap()
-                .buildings
-                .push(BuildingKind::Workshop);
-        } else {
+        if !(workshop_first) {
             for id in 1..=colonies {
                 v = ViewBuilder { view: v }
                     .city(id, ME, off(3 + id as i32 * 6, 15), 2)
@@ -190,16 +183,6 @@ fn snowball_handoff_requires_both_capital_workshop_and_completed_expansion() {
                 .unwrap()
                 .buildings
                 .push(BuildingKind::Workshop);
-        }
-        let mut b = OpeningBrain::new(base(&v), p).with_handoff();
-        b.orders(&v);
-        assert_eq!(b.opening_handoff(), None);
-        if workshop_first {
-            for id in 1..=colonies {
-                v = ViewBuilder { view: v }
-                    .city(id, ME, off(3 + id as i32 * 6, 15), 2)
-                    .build();
-            }
         } else {
             v.cities[0]
                 .detail
@@ -207,6 +190,23 @@ fn snowball_handoff_requires_both_capital_workshop_and_completed_expansion() {
                 .unwrap()
                 .buildings
                 .push(BuildingKind::Workshop);
+        }
+        let mut b = OpeningBrain::new(base(&v), p).with_handoff();
+        b.orders(&v);
+        assert_eq!(b.opening_handoff(), None);
+        if !(workshop_first) {
+            v.cities[0]
+                .detail
+                .as_mut()
+                .unwrap()
+                .buildings
+                .push(BuildingKind::Workshop);
+        } else {
+            for id in 1..=colonies {
+                v = ViewBuilder { view: v }
+                    .city(id, ME, off(3 + id as i32 * 6, 15), 2)
+                    .build();
+            }
         }
         v.turn += 1;
         assert_handoff(&mut b, &v, HandoffReason::SnowballReady);

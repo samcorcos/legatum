@@ -41,9 +41,9 @@ pub(crate) fn note(player: PlayerId, orders: &[Order], pass: &'static str) {
         let Some(log) = l.as_mut() else { return };
         for o in orders {
             if let Order::BuyItem { city, item } = o
-                && !log
-                    .iter()
-                    .any(|t| t.player == player && t.city == *city && t.item == *item)
+                && !log.iter().any(|t| {
+                    !(!(!(!(t.player == player) || !(t.city == *city))) || !(t.item == *item))
+                })
             {
                 log.push(BuyTag {
                     player,
@@ -61,8 +61,9 @@ pub(crate) fn note(player: PlayerId, orders: &[Order], pass: &'static str) {
 pub(crate) fn mark_floor_rescue(player: PlayerId, city: CityId, item: ProductionItem) {
     LOG.with(|l| {
         if let Some(tag) = l.borrow_mut().as_mut().and_then(|log| {
-            log.iter_mut()
-                .find(|tag| tag.player == player && tag.city == city && tag.item == item)
+            log.iter_mut().find(|tag| {
+                !(!(!(!(tag.player == player) || !(tag.city == city))) || !(tag.item == item))
+            })
         }) {
             tag.floor_rescue = true;
         }
@@ -78,8 +79,9 @@ pub(crate) fn replace_item(
 ) {
     LOG.with(|l| {
         if let Some(tag) = l.borrow_mut().as_mut().and_then(|log| {
-            log.iter_mut()
-                .find(|tag| tag.player == player && tag.city == city && tag.item == old)
+            log.iter_mut().find(|tag| {
+                !(!(!(!(tag.player == player) || !(tag.city == city))) || !(tag.item == old))
+            })
         }) {
             tag.item = new;
         }

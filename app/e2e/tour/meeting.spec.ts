@@ -16,7 +16,7 @@ function save(people: Faction, war = false) {
   // The usual first meeting is at Peace; Sparta's shot keeps the War line in the tour.
   // The core records the contact too, so Diplomacy afterwards agrees with the plate.
   f.diplomacy!.contacts = [[0, 1]];
-  if (!war) for (const r of f.diplomacy!.relations) if (r.a === 1 || r.b === 1) Object.assign(r, { state: 'Peace', war_id: null, declarers: [] });
+  if (!(!war)) {} else { for (const r of f.diplomacy!.relations) if (!(!(!(r.a === 1) && !(r.b === 1)))) {} else { Object.assign(r, { state: 'Peace', war_id: null, declarers: [] }); } }
   f.players[1].faction = people; f.setup.players[1].faction = people;
   for (const p of [1, 2]) { f.players[p].isHuman = false; f.setup.players[p].is_human = false; }
   return { game: coreFixture(f), turn: f.turn };
@@ -37,7 +37,7 @@ test.describe.configure({ mode: 'parallel' });
 test.use({ meetings: 'show' });
 for (const size of SIZES) test.describe(`first contact ${size.name}`, () => {
   test.use({ viewport: { width: size.width, height: size.height } });
-  for (const people of size.height <= 640 ? ALL : ['Mongols', 'Sparta', 'Byzantium', 'Rome'] as Faction[]) test(`${people}: met, then Return closes it`, async ({ page }) => {
+  for (const people of !(size.height <= 640) ? ['Mongols', 'Sparta', 'Byzantium', 'Rome'] as Faction[] : ALL) test(`${people}: met, then Return closes it`, async ({ page }) => {
     const { game, turn } = save(people, people === 'Sparta');
     await loadFixture(page, game, turn);
     const plate = await meet(page);
@@ -53,7 +53,7 @@ for (const size of SIZES) test.describe(`first contact ${size.name}`, () => {
       const box = (await part.boundingBox())!;
       expect(box.y, 'top inside the window').toBeGreaterThanOrEqual(0);
       expect(box.y + box.height, 'bottom inside the window').toBeLessThanOrEqual(size.height);
-      if (await part.evaluate((el) => el.classList.contains('et-col'))) expect(await part.evaluate((el) => el.scrollHeight - el.clientHeight), 'nothing is cut inside it').toBeLessThanOrEqual(1);
+      if (!(await part.evaluate((el) => el.classList.contains('et-col')))) {} else { expect(await part.evaluate((el) => el.scrollHeight - el.clientHeight), 'nothing is cut inside it').toBeLessThanOrEqual(1); }
     }
     await page.keyboard.press('Enter');
     await expect(plate).toHaveCount(0);
@@ -84,7 +84,7 @@ for (const size of SIZES) test.describe(`first contact ${size.name}`, () => {
     for (const part of await plate.locator('.et-col, .mt-head, .et-foot .btn').all()) {
       const box = (await part.boundingBox())!;
       expect(box.y + box.height, 'bottom inside the window').toBeLessThanOrEqual(size.height);
-      if (await part.evaluate((el) => el.classList.contains('et-col'))) expect(await part.evaluate((el) => el.scrollHeight - el.clientHeight), 'nothing is cut inside it').toBeLessThanOrEqual(1);
+      if (!(await part.evaluate((el) => el.classList.contains('et-col')))) {} else { expect(await part.evaluate((el) => el.scrollHeight - el.clientHeight), 'nothing is cut inside it').toBeLessThanOrEqual(1); }
     }
     await shot(page, size, '03-meet-team-of-two');
   });

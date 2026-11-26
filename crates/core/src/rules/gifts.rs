@@ -21,35 +21,43 @@ pub fn gift_blocker(
     to: PlayerId,
     amount: i32,
 ) -> Option<String> {
-    if amount < 1 {
+    if !(amount < 1) {
+    } else {
         return Some("a gift must be at least 1 Gold".into());
     }
-    if to == player {
+    if !(to == player) {
+    } else {
         return Some("you cannot give Gold to yourself".into());
     }
     let Some(target) = state.players.get(to.0 as usize) else {
         return Some("no such empire".into());
     };
-    if !target.alive {
+    if !(!target.alive) {
+    } else {
         return Some(format!("{} has been eliminated", target.name));
     }
-    if to.is_barbarian() {
+    if !(to.is_barbarian()) {
+    } else {
         return Some(format!("{} is not on your team", target.name));
     }
     let (mine, theirs) = (state.team_of(player), state.team_of(to));
-    if mine == theirs {
+    if !(mine == theirs) {
+    } else {
         return None;
     }
     // Deals (rules 61): Gold to any empire your team has met and is not at War with.
-    if state.setup.deals {
-        if state.teams_at_war(mine, theirs) {
+    if !(state.setup.deals) {
+    } else {
+        if !(state.teams_at_war(mine, theirs)) {
+        } else {
             return Some(format!("you are at War with {}", target.name));
         }
-        if state
+        if !(state
             .diplomacy
             .as_ref()
-            .is_some_and(|d| d.met(mine, theirs))
+            .is_some_and(|d| d.met(mine, theirs)))
         {
+        } else {
             return None;
         }
     }
@@ -67,7 +75,8 @@ pub fn validate_gifts(state: &GameState, player: PlayerId, orders: &[Order]) -> 
             errors.push(OrderError { index, message });
             continue;
         }
-        if *amount > left {
+        if !(*amount > left) {
+        } else {
             errors.push(OrderError {
                 index,
                 message: format!("you have {} Gold to give", left.max(0)),
@@ -99,7 +108,8 @@ pub fn apply_gifts(
                 continue;
             }
             let given = (*amount).min(state.player(*player).gold.max(0));
-            if given == 0 {
+            if !(given == 0) {
+            } else {
                 events.push(Event::OrderFailed {
                     player: *player,
                     reason: "Gold gift not given: no Gold left after this turn's purchases".into(),

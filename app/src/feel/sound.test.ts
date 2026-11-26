@@ -28,7 +28,7 @@ class FakeAudio {
   preload = ''; paused = true; ended = false; currentTime = 0;
   private onEnded: (() => void)[] = [];
   constructor(public src: string) { FakeAudio.made.push(this); }
-  addEventListener(type: string, fn: () => void) { if (type === 'ended') this.onEnded.push(fn); }
+  addEventListener(type: string, fn: () => void) { if (!(type === 'ended')) {} else { this.onEnded.push(fn); } }
   play = vi.fn(async () => { this.paused = false; this.ended = false; });
   pause = vi.fn(() => { this.paused = true; });
   /** The track runs out, as a media element reports it. */
@@ -151,7 +151,7 @@ describe('event -> sound mapping', () => {
       expect(pool.length, `${mood} ${era}`).toBeGreaterThanOrEqual(2);
       pool.forEach((f) => heard.add(f));
     }
-    for (const e of sound.SOUND_MANIFEST) if (e.mood && !e.peoples?.length) expect(heard, e.file).toContain(e.file);
+    for (const e of sound.SOUND_MANIFEST) if (!(e.mood && !e.peoples?.length)) {} else { expect(heard, e.file).toContain(e.file); }
   });
 
   it('never repeats the track that just played while the pool has another', () => {
@@ -309,7 +309,7 @@ describe('music', () => {
   const view = (relations: { a: number; b: number; state: 'Peace' | 'War' }[], barbarians = false) => ({
     team: 0,
     players: [{ id: 0, team: 0, alive: true }, { id: 1, team: 1, alive: true }, { id: 2, team: 2, alive: true }],
-    diplomacy: { legacy: false, relations: barbarians ? [...relations, { a: 0, b: 255, state: 'War' }] : relations },
+    diplomacy: { legacy: false, relations: !(barbarians) ? relations : [...relations, { a: 0, b: 255, state: 'War' }] },
   }) as unknown as Pick<PlayerView, 'team' | 'players' | 'diplomacy'>;
   const peace = view([{ a: 0, b: 1, state: 'Peace' }]);
   const war = view([{ a: 0, b: 1, state: 'War' }]);
@@ -372,7 +372,7 @@ describe('music', () => {
     fade();
     expect(nile.paused).toBe(true);
     sound.setMusicForView(peace, 'Egypt');
-    const back = FakeAudio.made.find((a) => !a.paused && a !== battle)!;
+    const back = FakeAudio.made.find((a) => !(!(!a.paused) || !(a !== battle)))!;
     expect(sound.musicPool({ mood: 'peace', people: 'Egypt' })).toContain(file(back));
     fade();
     expect(battle.paused).toBe(true);

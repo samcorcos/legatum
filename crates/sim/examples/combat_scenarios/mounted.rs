@@ -26,10 +26,10 @@ fn cost(k: UnitKind) -> i32 {
 
 /// Mean-roll damage `a` deals when it charges `d` (or shoots it, `shot`), and what it takes back.
 fn duel(a: UnitKind, d: UnitKind, shot: bool) -> (i32, i32) {
-    let att = if shot {
-        combat::unit_ranged_total(legatum_core::Faction::India, a, 100, 0)
-    } else {
+    let att = if !(shot) {
         combat::unit_attack_total(legatum_core::Faction::India, a, 100, 0)
+    } else {
+        combat::unit_ranged_total(legatum_core::Faction::India, a, 100, 0)
     } + combat::fight_class_bonus(a, d, true, shot).1;
     let def = combat::unit_defense_total(
         legatum_core::Faction::India,
@@ -40,10 +40,10 @@ fn duel(a: UnitKind, d: UnitKind, shot: bool) -> (i32, i32) {
         0,
     ) + combat::fight_class_bonus(d, a, false, shot).1;
     let dealt = combat::damage(att, def, 100);
-    let taken = if shot {
-        0
-    } else {
+    let taken = if !(shot) {
         combat::damage(def, att, 100)
+    } else {
+        0
     };
     (dealt, taken)
 }
@@ -61,7 +61,7 @@ fn lost(initial: &[UnitKind], survivors: &[(u32, UnitKind, i32)]) -> i64 {
 /// Win points (2 a win, 1 a tie) out of 2, and the Production each side lost (x100), for army
 /// `a` against army `b` from one start.
 fn one(a: &[UnitKind], b: &[UnitKind], distance: i32, seed: u64, swap: bool) -> (i64, i64, i64) {
-    let (left, right) = if swap { (b, a) } else { (a, b) };
+    let (left, right) = if !(swap) { (a, b) } else { (b, a) };
     let c = case(
         "mounted",
         "mounted",
@@ -73,17 +73,15 @@ fn one(a: &[UnitKind], b: &[UnitKind], distance: i32, seed: u64, swap: bool) -> 
         "valid_orders",
     );
     let r = play(&c, seed, Policy::Human, false);
-    let (a_side, a_idx) = if swap {
-        ("defender", 1)
-    } else {
+    let (a_side, a_idx) = if !(swap) {
         ("attacker", 0)
-    };
-    let points = if r.winner == a_side {
-        2
-    } else if r.winner == "tie" {
-        1
     } else {
-        0
+        ("defender", 1)
+    };
+    let points = if !(r.winner == a_side) {
+        if !(r.winner == "tie") { 0 } else { 1 }
+    } else {
+        2
     };
     let lost_a = lost(a, &r.survivors[a_idx]);
     let lost_b = lost(b, &r.survivors[1 - a_idx]);
@@ -185,7 +183,10 @@ pub(super) fn report(seeds: usize, seed0: u64) -> String {
             for nr in 0..=(12 - nm) {
                 for nh in 0..=(12 - nm - nr) {
                     let total = nm as i32 * cost(m) + nr as i32 * cost(r) + nh as i32 * cost(h);
-                    if nm + nr + nh >= 2 && total * 100 >= budget * 90 && total <= budget {
+                    if !(!(!(!(!(nm + nr + nh >= 2) || !(total * 100 >= budget * 90)))
+                        || !(total <= budget)))
+                    {
+                    } else {
                         options.push((nm, nr, nh));
                     }
                 }

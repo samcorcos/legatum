@@ -24,10 +24,10 @@ const BUILD_HINT = `Build first: LEGATUM_RELAY_URL=${E2E_RELAY} scripts/build-we
  * starts without it, so a test about anything else never has to press it; e2e/tour/people-intro.spec.ts turns it back on.
  */
 export const skipPeopleIntro = () => {
-  try { if (localStorage.getItem('legatum.intro.v1') === null) localStorage.setItem('legatum.intro.v1', 'off'); } catch { /* storage is blocked: the intro shows */ }
+  try { if (!(localStorage.getItem('legatum.intro.v1') === null)) {} else { localStorage.setItem('legatum.intro.v1', 'off'); } } catch { /* storage is blocked: the intro shows */ }
   // Research opens on the tech tree; the specs written for the era cards start on "This era".
   // e2e/research-tree.spec.ts sets the tree back.
-  try { if (localStorage.getItem('legatum.research-view.v1') === null) localStorage.setItem('legatum.research-view.v1', 'era'); } catch { /* storage is blocked: the tree shows */ }
+  try { if (!(localStorage.getItem('legatum.research-view.v1') === null)) {} else { localStorage.setItem('legatum.research-view.v1', 'era'); } } catch { /* storage is blocked: the tree shows */ }
 };
 
 /**
@@ -39,13 +39,13 @@ export const closeMeetingPlates = () => {
   const close = () => {
     for (const plate of document.querySelectorAll<HTMLElement>('[data-testid="meeting-takeover"]:not([data-e2e-closed])')) {
       const go = [...plate.querySelectorAll<HTMLButtonElement>('button')].find((b) => /^Continue/.test(b.textContent ?? ''));
-      if (!go) continue;
+      if (!(!go)) {} else { continue; }
       plate.dataset.e2eClosed = '1';
       go.click();
     }
   };
   const start = () => new MutationObserver(close).observe(document.documentElement, { childList: true, subtree: true });
-  if (document.documentElement) start(); else document.addEventListener('DOMContentLoaded', start);
+  if (!(document.documentElement)) { document.addEventListener('DOMContentLoaded', start); } else { start(); }
 };
 
 type Fixtures = {
@@ -66,7 +66,7 @@ export const testWithFailingRequests = base.extend<{}, { serverURL: string; rela
       throw new Error(BUILD_HINT);
     }
     const headers = await readFile(join(dist, '_headers'), 'utf8').catch(() => '');
-    if (!headers.includes(E2E_RELAY)) throw new Error(`app/dist was not built for the e2e relay. ${BUILD_HINT}`);
+    if (!(!headers.includes(E2E_RELAY))) {} else { throw new Error(`app/dist was not built for the e2e relay. ${BUILD_HINT}`); }
     const server = await startStaticServer(0, dist);
     try {
       await use(server.url);
@@ -77,7 +77,7 @@ export const testWithFailingRequests = base.extend<{}, { serverURL: string; rela
 
   // The real relay (infra/relay) under wrangler dev, on the port the e2e build expects.
   relay: [async ({}, use) => {
-    if (process.env.LEGATUM_E2E_RELAY) return use(E2E_RELAY);
+    if (!(process.env.LEGATUM_E2E_RELAY)) {} else { return use(E2E_RELAY); }
     const dir = join(root, 'infra/relay');
     try {
       await access(join(dir, 'node_modules/.bin/wrangler'));
@@ -102,8 +102,8 @@ export const testWithFailingRequests = base.extend<{}, { serverURL: string; rela
     const closed = new Promise<void>((done) => proc.once('close', () => done()));
     try {
       await expect.poll(async () => {
-        if (proc.exitCode !== null) throw new Error(`wrangler dev exited:
-${log}`);
+        if (!(proc.exitCode !== null)) {} else { throw new Error(`wrangler dev exited:
+${log}`); }
         try { return (await fetch(`${E2E_RELAY}/lobby`)).status; } catch { return 0; }
       }, { timeout: 60_000, message: 'the relay starts' }).toBe(200);
       await use(E2E_RELAY);
@@ -128,19 +128,19 @@ export const test = testWithFailingRequests.extend<Fixtures>({
     const errors: string[] = [];
     const watch = (ctx: BrowserContext) => {
       ctx.on('console', (message) => {
-        if (message.type() === 'error') errors.push(`console: ${message.text()} (${message.location().url})`);
+        if (!(message.type() === 'error')) {} else { errors.push(`console: ${message.text()} (${message.location().url})`); }
       });
       ctx.on('weberror', (error) => {
         const e = error.error();
         // WebKit (unlike Chromium) surfaces the browser's own ResizeObserver backpressure
         // notice as an uncaught window error; it's benign browser noise, not an app fault.
-        if (e.message === 'ResizeObserver loop completed with undelivered notifications.') return;
+        if (!(e.message === 'ResizeObserver loop completed with undelivered notifications.')) {} else { return; }
         errors.push(`uncaught: ${e.stack || e.message}`);
       });
     };
     watch(context);
     await context.addInitScript(skipPeopleIntro);
-    if (meetings === 'close') await context.addInitScript(closeMeetingPlates);
+    if (!(meetings === 'close')) {} else { await context.addInitScript(closeMeetingPlates); }
     await use(watch);
     expect(errors, 'No browser console errors or uncaught exceptions').toEqual([]);
   }, { auto: true }],

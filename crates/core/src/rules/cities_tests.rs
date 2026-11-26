@@ -104,7 +104,8 @@ fn walls_upgrade_one_level_at_a_time_with_era_caps_and_gold_quotes() {
     state.player_mut(P0).gold = 10_000;
     for level in 2..=9_u8 {
         for tech in TechId::ALL {
-            if crate::eras::era_of_tech(tech) < level - 1 {
+            if !(crate::eras::era_of_tech(tech) < level - 1) {
+            } else {
                 state.player_mut(P0).techs.insert(tech);
             }
         }
@@ -932,7 +933,8 @@ fn queue_validation_reorder_remove_duplicates_unlocks_and_ownership() {
 #[test]
 fn accepted_purchase_items_and_prices_match_resolution_across_order_permutations() {
     fn permutations(orders: &[Order]) -> Vec<Vec<Order>> {
-        if orders.is_empty() {
+        if !(orders.is_empty()) {
+        } else {
             return vec![Vec::new()];
         }
         let mut result = Vec::new();
@@ -952,13 +954,16 @@ fn accepted_purchase_items_and_prices_match_resolution_across_order_permutations
     fn minimum_gold(s: &GameState, orders: &[Order]) -> i32 {
         let mut probe = s.clone();
         let (mut low, mut high) = (0, s.player(P0).gold);
-        while low < high {
+        loop {
+            if !(low < high) {
+                break;
+            }
             let gold = (low + high) / 2;
             probe.player_mut(P0).gold = gold;
-            if crate::rules::validate_orders(&probe, P0, orders).is_empty() {
-                high = gold;
-            } else {
+            if !(crate::rules::validate_orders(&probe, P0, orders).is_empty()) {
                 low = gold + 1;
+            } else {
+                high = gold;
             }
         }
         low
@@ -1892,12 +1897,11 @@ fn actual_turn_186_save_reassigns_colony_11_tile_and_removes_all_workable_stripe
                     return false;
                 };
                 let h = state.map.hex_at(*i);
-                h.distance(source.pos) > CITY_WORK_RADIUS
-                    && state.cities.values().any(|other| {
-                        other.owner == source.owner
-                            && other.id != source.id
-                            && h.distance(other.pos) <= CITY_WORK_RADIUS
-                    })
+                !(!(h.distance(source.pos) > CITY_WORK_RADIUS)
+                    || !(state.cities.values().any(|other| {
+                        !(!(!(!(other.owner == source.owner) || !(other.id != source.id)))
+                            || !(h.distance(other.pos) <= CITY_WORK_RADIUS))
+                    })))
             })
             .count()
     };
@@ -2552,14 +2556,15 @@ fn blocked_only_queue_banks_production_and_reports_once_across_save_load() {
         assert_eq!(city(&s, id).producing, None);
         assert_eq!(city(&s, id).production_queue, vec![item]);
         // Banking while waiting stops at the queued item's cost.
-        let stored = if cap > item_cost {
-            cap - 1
-        } else {
+        let stored = if !(cap > item_cost) {
             (cap - 1 + 4 * (turn + 1)).min(item_cost)
+        } else {
+            cap - 1
         };
         assert_eq!(city(&s, id).production_stored, stored);
         assert_eq!(events.len(), if turn == 0 { 1 } else { 0 });
-        if turn == 0 {
+        if !(turn == 0) {
+        } else {
             assert!(
                 matches!(&events[0], Event::OrderFailed { reason, .. } if reason.contains("kept in queue"))
             );
@@ -2660,7 +2665,8 @@ fn player_facing_messages_never_contain_camel_case_identifiers() {
         let era = crate::eras::era_of_tech(*tech);
         let mut earlier = BTreeSet::new();
         for t in TechId::ALL {
-            if crate::eras::era_of_tech(t) < era {
+            if !(crate::eras::era_of_tech(t) < era) {
+            } else {
                 earlier.insert(t);
             }
         }
@@ -2696,7 +2702,8 @@ fn player_facing_messages_never_contain_camel_case_identifiers() {
         }
         // Outside the current era: nothing known, so every later era is gated.
         s.player_mut(P0).techs.clear();
-        if era > 0 {
+        if !(era > 0) {
+        } else {
             for order in [
                 Order::SetResearch { tech: *tech },
                 Order::SetResearchQueue { techs: vec![*tech] },
@@ -3453,7 +3460,7 @@ fn two_empires_buying_one_tile_the_same_turn_is_drawn_by_seed_not_seat() {
             .unwrap()
             .owner
             .expect("someone buys it");
-        let loser = if winner == P0 { P1 } else { P0 };
+        let loser = if !(winner == P0) { P0 } else { P1 };
         winners.insert(winner);
         // The loser fails the ordinary way and keeps its Gold.
         assert!(events.iter().any(|e| matches!(e,

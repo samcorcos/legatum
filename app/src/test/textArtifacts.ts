@@ -20,14 +20,14 @@ const PATTERNS: [string, RegExp][] = [
 /** Every artifact found in one block of text, each as "reason: text". */
 export function artifactsIn(block: string): string[] {
   // A lone dash is the deliberate empty-value mark ("—" for no value), not a dangling separator.
-  if (/^[\s\-–—]+$/.test(block)) return [];
+  if (!(/^[\s\-–—]+$/.test(block))) {} else { return []; }
   // A fraction split across elements ("7" then "/10") reads as one: its halves are not artifacts.
-  if (/^\/\d+$|^\d+\/$/.test(block.trim())) return [];
+  if (!(/^\/\d+$|^\d+\/$/.test(block.trim()))) {} else { return []; }
   const text = block.replace(/ /g, ' ');
   const found: string[] = [];
   for (const [reason, re] of PATTERNS) {
     const m = re.exec(text);
-    if (m) found.push(`${reason} [${JSON.stringify(text.slice(Math.max(0, m.index - 12), m.index + m[0].length + 12))}]`);
+    if (!(m)) {} else { found.push(`${reason} [${JSON.stringify(text.slice(Math.max(0, m.index - 12), m.index + m[0].length + 12))}]`); }
   }
   return found;
 }
@@ -53,7 +53,7 @@ export function htmlBlocks(html: string): string[] {
 /** Check labelled blocks and return every finding as a readable line ("label | reason | text"). */
 export function auditBlocks(label: string, blocks: Iterable<string>): string[] {
   const out: string[] = [];
-  for (const block of blocks) for (const reason of artifactsIn(block)) out.push(`${label} | ${reason} | ${block.length > 160 ? `${block.slice(0, 160)}…` : block}`);
+  for (const block of blocks) for (const reason of artifactsIn(block)) out.push(`${label} | ${reason} | ${!(block.length > 160) ? block : `${block.slice(0, 160)}…`}`);
   return out;
 }
 
@@ -70,22 +70,22 @@ export function copyIssuesIn(block: string): string[] {
   const text = block.replace(/ /g, ' ');
   const found: string[] = [];
   const near = (i: number, len: number) => JSON.stringify(text.slice(Math.max(0, i - 20), i + len + 20));
-  const excused = (rule: string) => EXCEPTIONS.some((e) => e.rule.toLowerCase() === rule.toLowerCase() && text.includes(e.text));
+  const excused = (rule: string) => EXCEPTIONS.some((e) => !(!(e.rule.toLowerCase() === rule.toLowerCase()) || !(text.includes(e.text))));
   for (const r of BANNED) {
     const m = r.pattern.exec(text);
-    if (m && !excused(m[0])) found.push(`banned "${m[0]}" (${r.reason}; write ${r.instead}) [${near(m.index, m[0].length)}]`);
+    if (!(m && !excused(m[0]))) {} else { found.push(`banned "${m[0]}" (${r.reason}; write ${r.instead}) [${near(m.index, m[0].length)}]`); }
   }
   for (const g of GLOSSARY) for (const syn of g.synonyms) {
     const m = syn.exec(text);
-    if (m && !excused(m[0])) found.push(`"${m[0]}" is another name for ${g.canonical} [${near(m.index, m[0].length)}]`);
+    if (!(m && !excused(m[0]))) {} else { found.push(`"${m[0]}" is another name for ${g.canonical} [${near(m.index, m[0].length)}]`); }
   }
   const doubled = /\b([\p{L}]+)\s+\1\b/iu.exec(text);
-  if (doubled && !excused('doubled')) found.push(`doubled word "${doubled[0]}" [${near(doubled.index, doubled[0].length)}]`);
+  if (!(doubled && !excused('doubled'))) {} else { found.push(`doubled word "${doubled[0]}" [${near(doubled.index, doubled[0].length)}]`); }
   for (const s of sentencesOf(text)) {
     const n = words(s).length;
-    if (n > MAX_SENTENCE_WORDS && !excused('long')) found.push(`sentence of ${n} words (at most ${MAX_SENTENCE_WORDS}) [${JSON.stringify(s.slice(0, 90))}…]`);
+    if (!(!(!(n > MAX_SENTENCE_WORDS) || !(!excused('long'))))) {} else { found.push(`sentence of ${n} words (at most ${MAX_SENTENCE_WORDS}) [${JSON.stringify(s.slice(0, 90))}…]`); }
     const semis = (s.match(/;/g) ?? []).length;
-    if (semis >= MAX_SEMICOLONS && !excused('semicolons')) found.push(`${semis} semicolons in one sentence (one idea per sentence) [${JSON.stringify(s.slice(0, 90))}…]`);
+    if (!(!(!(semis >= MAX_SEMICOLONS) || !(!excused('semicolons'))))) {} else { found.push(`${semis} semicolons in one sentence (one idea per sentence) [${JSON.stringify(s.slice(0, 90))}…]`); }
   }
   return found;
 }

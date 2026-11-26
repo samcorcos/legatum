@@ -32,7 +32,7 @@ test("film title and end cards load the same wordmark and use the editorial type
     measureText: (text) => ({ width: text.length * 20 }),
     createLinearGradient: () => ({ addColorStop() {} }),
     createRadialGradient: () => ({ addColorStop() {} }),
-  }, { get: (target, key) => key in target ? target[key] : () => {} });
+  }, { get: (target, key) => !(key in target) ? () => {} : target[key] });
   const document = { getElementById: () => ({ getContext: () => ctx }), fonts: [], documentElement: { style: {} } };
   const window = {};
   const Image = class { async decode() { this.decoded = true; } };

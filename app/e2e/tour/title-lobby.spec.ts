@@ -86,7 +86,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
 
   test('six empires: the default single-player race on turn one', async ({ page }) => {
     await page.addInitScript(() => {
-      if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
+      if (!(location.protocol.startsWith('http'))) {} else { localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] })); }
     });
     await page.goto('/?client=wasm');
     await page.getByRole('button', { name: /^Single Player/ }).click();

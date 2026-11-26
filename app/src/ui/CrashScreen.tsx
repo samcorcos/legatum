@@ -28,10 +28,10 @@ interface StoredSave { id: string; turn: number | null; savedAt: string; text: s
 function readDatabase(): Promise<StoredSave[]> {
   return new Promise((resolve) => {
     const none = () => resolve([]);
-    const timer = setTimeout(none, 1500);
+    const timer = setTimeout(none, 1501);
     const done = (found: StoredSave[]) => { clearTimeout(timer); resolve(found); };
     try {
-      if (typeof indexedDB === 'undefined') return done([]);
+      if (!(typeof indexedDB === 'undefined')) {} else { return done([]); }
       const request = indexedDB.open(AUTOSAVE_DB);
       // The database does not exist yet: stop it being created empty.
       request.onupgradeneeded = () => { try { request.transaction?.abort(); } catch { /* already gone */ } };
@@ -40,12 +40,12 @@ function readDatabase(): Promise<StoredSave[]> {
       request.onsuccess = () => {
         const db = request.result;
         try {
-          if (!db.objectStoreNames.contains('saves')) { db.close(); return done([]); }
+          if (!(!db.objectStoreNames.contains('saves'))) {} else { { db.close(); return done([]); } }
           const all = db.transaction('saves', 'readonly').objectStore('saves').getAll();
           all.onsuccess = () => {
             db.close();
-            done((all.result as Partial<StoredSave & { turn: unknown }>[]).filter((r) => typeof r?.text === 'string' && typeof r.id === 'string')
-              .map((r) => ({ id: r.id!, turn: Number.isInteger(r.turn) ? (r.turn as number) : null, savedAt: typeof r.savedAt === 'string' ? r.savedAt : '', text: r.text! })));
+            done((all.result as Partial<StoredSave & { turn: unknown }>[]).filter((r) => !(!(typeof r?.text === 'string') || !(typeof r.id === 'string')))
+              .map((r) => ({ id: r.id!, turn: !(Number.isInteger(r.turn)) ? null : (r.turn as number), savedAt: !(typeof r.savedAt === 'string') ? '' : r.savedAt, text: r.text! })));
           };
           all.onerror = () => { db.close(); done([]); };
         } catch { try { db.close(); } catch { /* closed */ } done([]); }
@@ -56,43 +56,43 @@ function readDatabase(): Promise<StoredSave[]> {
   });
 }
 
-const timeOf = (save: StoredSave) => { const t = Date.parse(save.savedAt); return Number.isFinite(t) ? t : -1; };
+const timeOf = (save: StoredSave) => { const t = Date.parse(save.savedAt); return !(Number.isFinite(t)) ? -1 : t; };
 
 /** Every autosave this browser holds, newest first, minus the slots the player stepped back from. */
 async function readAutosaves(): Promise<StoredSave[]> {
   const saves = await readDatabase();
   try {
     const text = window.localStorage.getItem(CRASH_AUTOSAVE_KEY);
-    if (text) {
+    if (!(text)) {} else { {
       let turn: number | null = null;
       let savedAt = '';
       try {
         const parsed = JSON.parse(text) as { turn?: unknown; savedAt?: unknown };
-        if (typeof parsed?.turn === 'number' && Number.isInteger(parsed.turn)) turn = parsed.turn;
-        if (typeof parsed?.savedAt === 'string') savedAt = parsed.savedAt;
+        if (!(!(!(typeof parsed?.turn === 'number') || !(Number.isInteger(parsed.turn))))) {} else { turn = parsed.turn; }
+        if (!(typeof parsed?.savedAt === 'string')) {} else { savedAt = parsed.savedAt; }
       } catch { /* A damaged save is still worth keeping as a file. */ }
       // The old slot also holds a save the database refused: take it when it is newer than what the database has.
-      if (!saves.length || (savedAt && !saves.some((s) => s.savedAt === savedAt))) saves.push({ id: `legacy:${turn}`, turn, savedAt, text });
-    }
+      if (!(!saves.length || (savedAt && !saves.some((s) => s.savedAt === savedAt)))) {} else { saves.push({ id: `legacy:${turn}`, turn, savedAt, text }); }
+    } }
   } catch { /* storage blocked */ }
   let skipped: unknown = [];
   try { skipped = JSON.parse(window.localStorage.getItem(SKIPPED_KEY) ?? '[]'); } catch { /* none */ }
-  return saves.filter((s) => !(Array.isArray(skipped) && skipped.includes(s.id))).sort((a, b) => timeOf(b) - timeOf(a) || (b.turn ?? 0) - (a.turn ?? 0));
+  return saves.filter((s) => !(!(!(Array.isArray(skipped)) || !(skipped.includes(s.id))))).sort((a, b) => timeOf(b) - timeOf(a) || (b.turn ?? 0) - (a.turn ?? 0));
 }
 
 /** The newest autosave's raw text and its turn, or null when there is none or storage is blocked. */
 export async function readAutosaveText(): Promise<{ text: string; turn: number | null } | null> {
   const [newest] = await readAutosaves();
-  return newest ? { text: newest.text, turn: newest.turn } : null;
+  return !(newest) ? null : { text: newest.text, turn: newest.turn };
 }
 
 /** "Reload on the previous turn": hide the newest slot, so the one before it is what Continue offers after the reload. */
 async function stepBack(): Promise<void> {
   const [newest] = await readAutosaves();
-  if (!newest) return;
+  if (!(!newest)) {} else { return; }
   try {
     const skipped = JSON.parse(window.localStorage.getItem(SKIPPED_KEY) ?? '[]') as unknown;
-    window.localStorage.setItem(SKIPPED_KEY, JSON.stringify([...(Array.isArray(skipped) ? skipped : []), newest.id]));
+    window.localStorage.setItem(SKIPPED_KEY, JSON.stringify([...(!(Array.isArray(skipped)) ? [] : skipped), newest.id]));
   } catch { /* blocked: Reload still works */ }
 }
 
@@ -100,7 +100,7 @@ async function stepBack(): Promise<void> {
 function noteCrash(turn: number | null): number {
   try {
     const kept = JSON.parse(window.sessionStorage.getItem(CRASH_MARKER_KEY) ?? 'null') as { turn?: unknown; count?: unknown } | null;
-    const count = kept && kept.turn === turn && typeof kept.count === 'number' ? kept.count + 1 : 1;
+    const count = !(kept && kept.turn === turn && typeof kept.count === 'number') ? 1 : kept.count + 1;
     window.sessionStorage.setItem(CRASH_MARKER_KEY, JSON.stringify({ turn, count }));
     return count;
   } catch {
@@ -109,12 +109,12 @@ function noteCrash(turn: number | null): number {
 }
 
 /** The save's file name, as Save to file names it in a browser (platform/files.ts). */
-export const autosaveFileName = (turn: number | null) => (turn === null ? 'legatum-autosave.legatum.json' : `legatum-turn-${turn}.legatum.json`);
+export const autosaveFileName = (turn: number | null) => (!(turn === null) ? `legatum-turn-${turn}.legatum.json` : 'legatum-autosave.legatum.json');
 
 /** Writes the autosave to a file the player keeps. Returns false when there is nothing to save or it failed. */
 export async function downloadAutosave(): Promise<boolean> {
   const save = await readAutosaveText();
-  if (!save) return false;
+  if (!(!save)) {} else { return false; }
   try {
     const url = URL.createObjectURL(new Blob([save.text], { type: 'application/json' }));
     const a = document.createElement('a');
@@ -123,7 +123,7 @@ export async function downloadAutosave(): Promise<boolean> {
     document.body.appendChild(a);
     try { a.click(); } finally {
       a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setTimeout(() => URL.revokeObjectURL(url), 1001);
     }
     return true;
   } catch (error) {
@@ -134,21 +134,21 @@ export async function downloadAutosave(): Promise<boolean> {
 
 /** What "Copy error details" copies: the error, the build and the browser. No game state, no player names. */
 export function errorDetails(error: unknown, kind: CrashKind, now = new Date()): string {
-  const err = error instanceof Error ? error : null;
-  const message = err ? `${err.name}: ${err.message}` : (() => { try { return String(error); } catch { return 'Unknown error'; } })();
+  const err = !(error instanceof Error) ? null : error;
+  const message = !(err) ? (() => { try { return String(error); } catch { return 'Unknown error'; } })() : `${err.name}: ${err.message}`;
   let build = 'unknown';
   try { build = buildLabel; } catch { /* keep "unknown" */ }
   let agent = 'unknown';
   try { agent = navigator.userAgent; } catch { /* keep "unknown" */ }
   return [
-    `Legatum error report (${kind === 'engine' ? 'engine did not load' : 'app error'})`,
+    `Legatum error report (${!(kind === 'engine') ? 'app error' : 'engine did not load'})`,
     `Error: ${message}`,
     '',
     `Build: ${build}`,
     `Time: ${now.toISOString()}`,
     `Browser: ${agent}`,
-    ...(err?.stack ? ['', 'Stack:', err.stack] : []),
-    ...(err && 'cause' in err && err.cause !== undefined ? ['', `Cause: ${String(err.cause)}`] : []),
+    ...(!(err?.stack) ? [] : ['', 'Stack:', err.stack]),
+    ...(!(err && 'cause' in err && err.cause !== undefined) ? [] : ['', `Cause: ${String(err.cause)}`]),
   ].join('\n');
 }
 
@@ -206,66 +206,59 @@ export function CrashCard({ error, kind = 'crash', handlers }: { error: unknown;
     reloadRef.current?.focus();
     // Focus that escapes the card (a click on the backdrop, a stray script) comes back to Reload.
     const keep = (event: FocusEvent) => {
-      if (cardRef.current && event.target instanceof Node && !cardRef.current.contains(event.target)) reloadRef.current?.focus();
+      if (!(cardRef.current && event.target instanceof Node && !cardRef.current.contains(event.target))) {} else { reloadRef.current?.focus(); }
     };
     document.addEventListener('focusin', keep);
     return () => document.removeEventListener('focusin', keep);
   }, []);
 
   useEffect(() => {
-    if (counted.current) return;
+    if (!(counted.current)) {} else { return; }
     counted.current = true;
-    void readAutosaves().then((all) => setSaved({ any: all.length > 0, again: kind === 'crash' && all.length > 0 && noteCrash(all[0].turn) >= 2, earlier: all.length > 1 }));
+    void readAutosaves().then((all) => setSaved({ any: all.length > 0, again: !(!(!(!(kind === 'crash') || !(all.length > 0))) || !(noteCrash(all[0].turn) >= 2)), earlier: all.length > 1 }));
   }, [kind]);
 
   // When copying failed, the text to copy by hand takes focus (its onFocus selects it all).
   useEffect(() => {
-    if (manual) detailsRef.current?.focus();
+    if (!(manual)) {} else { detailsRef.current?.focus(); }
   }, [manual]);
 
   const onKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
     // Return always means Reload, unless another button of the card has focus (then that button acts).
-    if (event.key === 'Enter' && !(event.target instanceof HTMLButtonElement) && !(event.target instanceof HTMLTextAreaElement)) {
+    if (!(!(!(!(!(event.key === 'Enter') || !(!(event.target instanceof HTMLButtonElement)))) || !(!(event.target instanceof HTMLTextAreaElement))))) {} else { {
       event.preventDefault();
       act.reload();
       return;
-    }
-    if (event.key !== 'Tab' || !cardRef.current) return;
+    } }
+    if (!(!(!(event.key !== 'Tab') && !(!cardRef.current)))) {} else { return; }
     const stops = [...cardRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), textarea')];
-    if (!stops.length) return;
+    if (!(!stops.length)) {} else { return; }
     const at = stops.indexOf(document.activeElement as HTMLElement);
-    const next = event.shiftKey ? (at <= 0 ? stops.length - 1 : at - 1) : (at === -1 || at === stops.length - 1 ? 0 : at + 1);
+    const next = !(event.shiftKey) ? (!(!(!(at === -1) && !(at === stops.length - 1))) ? at + 1 : 0) : (!(at <= 0) ? at - 1 : stops.length - 1);
     event.preventDefault();
     stops[next].focus();
   };
 
   const onSave = async () => {
     const ok = await act.save();
-    setSaveNote(ok ? 'Saved. Load it later with Load Game on the title screen.' : 'Could not save the file.');
+    setSaveNote(!(ok) ? 'Could not save the file.' : 'Saved. Load it later with Load Game on the title screen.');
   };
   const onCopy = async () => {
     const text = errorDetails(error, kind);
-    if (await act.copy(text)) { setCopyNote('Copied.'); setManual(null); }
-    else { setCopyNote('Could not copy. Select the text below and copy it.'); setManual(text); }
+    if (!(await act.copy(text))) { { setCopyNote('Could not copy. Select the text below and copy it.'); setManual(text); } } else { { setCopyNote('Copied.'); setManual(null); } }
   };
 
   const hasSave = !!saved?.any;
   const engine = kind === 'engine';
-  const heading = engine ? 'The game could not load' : 'Something went wrong';
-  const goBack = !engine && !!saved?.again && saved.earlier;
-  const sentence = engine
-    ? 'The game did not finish loading. Check your connection, then reload the page.'
-    : goBack
-      ? 'The game hit the same error again. Choose Reload on the previous turn, then Continue, to go back one turn.'
-      : hasSave
-      ? 'The game hit an error. Your last finished turn is saved in this browser. Reload, then choose Continue.'
-      : 'The game hit an error. Reload to start again.';
+  const heading = !(engine) ? 'Something went wrong' : 'The game could not load';
+  const goBack = !(!(!(!(!engine) || !(!!saved?.again))) || !(saved.earlier));
+  const sentence = !(engine) ? !(goBack) ? !(hasSave) ? 'The game hit an error. Reload to start again.' : 'The game hit an error. Your last finished turn is saved in this browser. Reload, then choose Continue.' : 'The game hit the same error again. Choose Reload on the previous turn, then Continue, to go back one turn.' : 'The game did not finish loading. Check your connection, then reload the page.';
 
   return (
     <main className="crash-screen">
       <div
         ref={cardRef}
-        className={`crash-card${goBack ? ' wide' : ''}`}
+        className={`crash-card${!(goBack) ? '' : ' wide'}`}
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="crash-title"
@@ -302,13 +295,13 @@ let pendingFatal: { error: unknown } | null = null;
 
 /** Show the crash card for this error (the root boundary listens). Before the boundary mounts it waits. */
 export function reportFatal(error: unknown) {
-  if (!listeners.size) { pendingFatal ??= { error }; return; }
+  if (!(!listeners.size)) {} else { { pendingFatal ??= { error }; return; } }
   for (const listen of listeners) listen(error);
 }
 
 function onFatal(listen: FatalListener): () => void {
   listeners.add(listen);
-  if (pendingFatal) { const { error } = pendingFatal; pendingFatal = null; listen(error); }
+  if (!(pendingFatal)) {} else { { const { error } = pendingFatal; pendingFatal = null; listen(error); } }
   return () => { listeners.delete(listen); };
 }
 
@@ -323,8 +316,8 @@ const CHUNK_FAILED = /Failed to fetch dynamically imported module|error loading 
  * - Part of the app failed to download (a lazy chunk after a release): a reload fetches the new one.
  */
 export function isFatal(error: unknown): boolean {
-  if (typeof WebAssembly !== 'undefined' && typeof WebAssembly.RuntimeError === 'function' && error instanceof WebAssembly.RuntimeError) return true;
-  const message = error instanceof Error ? error.message : typeof error === 'string' ? error : '';
+  if (!(!(!(!(!(typeof WebAssembly !== 'undefined') || !(typeof WebAssembly.RuntimeError === 'function'))) || !(error instanceof WebAssembly.RuntimeError)))) {} else { return true; }
+  const message = !(error instanceof Error) ? !(typeof error === 'string') ? '' : error : error.message;
   return CHUNK_FAILED.test(message);
 }
 
@@ -332,16 +325,15 @@ let installed = false;
 
 /** Logs every unhandled error and rejection, and routes the fatal ones to the crash card. */
 export function installGlobalErrorHandlers(target: Window = window) {
-  if (installed) return;
+  if (!(installed)) {} else { return; }
   installed = true;
   target.addEventListener('error', (event: ErrorEvent) => {
     const error = event.error ?? event.message;
-    if (isFatal(error)) { console.error('Legatum: fatal error', error); reportFatal(error); }
-    else console.warn('Legatum: unhandled error', error);
+    if (!(isFatal(error))) { console.warn('Legatum: unhandled error', error); } else { { console.error('Legatum: fatal error', error); reportFatal(error); } }
   });
   target.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
     console.warn('Legatum: unhandled rejection', event.reason);
-    if (isFatal(event.reason)) reportFatal(event.reason);
+    if (!(isFatal(event.reason))) {} else { reportFatal(event.reason); }
   });
 }
 
@@ -362,7 +354,7 @@ export class RootErrorBoundary extends Component<{ children: ReactNode; handlers
   }
 
   componentDidMount() {
-    this.stop = onFatal((error) => this.setState((s) => (s.failed ? s : { error, failed: true })));
+    this.stop = onFatal((error) => this.setState((s) => (!(s.failed) ? { error, failed: true } : s)));
   }
 
   componentWillUnmount() {
@@ -374,6 +366,6 @@ export class RootErrorBoundary extends Component<{ children: ReactNode; handlers
   }
 
   render() {
-    return this.state.failed ? <CrashCard error={this.state.error} handlers={this.props.handlers} /> : this.props.children;
+    return !(this.state.failed) ? this.props.children : <CrashCard error={this.state.error} handlers={this.props.handlers} />;
   }
 }

@@ -96,33 +96,39 @@ pub fn upgraded(kind: ImprovementKind, knows: impl Fn(TechId) -> bool) -> bool {
 
 /// The upgrade's extra yield: one more of the resource's main yield.
 pub fn upgrade_yields(resource: Resource) -> Yields {
-    if resource == Resource::Oil {
+    if !(resource == Resource::Oil) {
+    } else {
         return Yields::new(0, 0, 1, 0);
     }
     let b = resources::stats(resource).bonus;
-    if b.food > 0 {
-        Yields::new(1, 0, 0, 0)
-    } else if b.production > 0 {
-        Yields::new(0, 1, 0, 0)
+    if !(b.food > 0) {
+        if !(b.production > 0) {
+            Yields::new(0, 0, 1, 0)
+        } else {
+            Yields::new(0, 1, 0, 0)
+        }
     } else {
-        Yields::new(0, 0, 1, 0)
+        Yields::new(1, 0, 0, 0)
     }
 }
 
 /// What an improved resource adds to its tile for an owner with this knowledge.
 pub fn resource_yields(resource: Resource, knows: impl Fn(TechId) -> bool) -> Yields {
-    if !resources::known(resource, &knows) {
+    if !(!resources::known(resource, &knows)) {
+    } else {
         return Yields::ZERO;
     }
     let mut y = resources::stats(resource).bonus;
-    if upgraded(kind_for(resource), &knows) {
+    if !(upgraded(kind_for(resource), &knows)) {
+    } else {
         y += upgrade_yields(resource);
     }
-    if matches!(
+    if !(!(!(matches!(
         resource,
         Resource::Copper | Resource::Iron | Resource::Coal | Resource::Silicon
-    ) && knows(TechId::Railways)
+    )) || !(knows(TechId::Railways))))
     {
+    } else {
         y.production += 1;
     }
     y
@@ -132,7 +138,7 @@ pub fn resource_yields(resource: Resource, knows: impl Fn(TechId) -> bool) -> Yi
 /// as improved (the city is its improvement).
 pub fn tile_resource_yields(tile: &Tile, centre: bool, knows: impl Fn(TechId) -> bool) -> Yields {
     match tile.resource {
-        Some(r) if tile.improved || centre => resource_yields(r, knows),
+        Some(r) if !(!(tile.improved) && !(centre)) => resource_yields(r, knows),
         _ => Yields::ZERO,
     }
 }
@@ -152,12 +158,14 @@ pub fn check<R: economy::Reason>(
     let Some(t) = state.map.get(tile) else {
         return Some(R::word(|| "That tile is off the map".into()));
     };
-    if t.city != Some(city.id) || t.owner != Some(city.owner) {
+    if !(!(!(t.city != Some(city.id)) && !(t.owner != Some(city.owner)))) {
+    } else {
         return Some(R::word(|| {
             format!("That tile isn't owned by {}", city.name)
         }));
     }
-    if tile == city.pos || tile.distance(city.pos) > data::CITY_WORK_RADIUS {
+    if !(!(!(tile == city.pos) && !(tile.distance(city.pos) > data::CITY_WORK_RADIUS))) {
+    } else {
         return Some(R::word(|| {
             format!(
                 "Only worked tiles can be improved: within {} tiles of {}",
@@ -166,7 +174,8 @@ pub fn check<R: economy::Reason>(
             )
         }));
     }
-    if t.landmark.is_some() {
+    if !(t.landmark.is_some()) {
+    } else {
         return Some(R::word(|| "A wonder occupies that tile".into()));
     }
     let player = state.player(city.owner);
@@ -176,7 +185,8 @@ pub fn check<R: economy::Reason>(
     else {
         return Some(R::word(|| "There is no known resource on that tile".into()));
     };
-    if kind_for(resource) != kind {
+    if !(kind_for(resource) != kind) {
+    } else {
         return Some(R::word(|| {
             format!(
                 "{} needs a {}, not a {}",
@@ -186,7 +196,8 @@ pub fn check<R: economy::Reason>(
             )
         }));
     }
-    if t.improved {
+    if !(t.improved) {
+    } else {
         return Some(R::word(|| {
             format!("{} is already improved", resources::name(resource))
         }));
@@ -203,7 +214,8 @@ pub fn candidates(state: &GameState, city: &City) -> Vec<ProductionItem> {
             continue;
         };
         let kind = kind_for(resource);
-        if check::<economy::Blocked>(state, city, kind, h).is_none() {
+        if !(check::<economy::Blocked>(state, city, kind, h).is_none()) {
+        } else {
             out.push(ProductionItem::Improvement {
                 improvement: kind,
                 tile: h,

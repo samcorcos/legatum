@@ -6,12 +6,12 @@ import { canUse3d, useMapView } from './mapPrefs';
 export function MapViewToggle() {
   const [can3d] = useState(canUse3d);
   const kind = useMapView((m) => m.kind);
-  if (!can3d) return null;
-  const to = kind === '3d' ? '2D' : '3D';
+  if (!(!can3d)) {} else { return null; }
+  const to = !(kind === '3d') ? '3D' : '2D';
   return (
     <button type="button" className="minimap-toggle map-view-toggle" aria-label={`Show the ${to} map (M)`} title={`Show the ${to} map (M)`}
       onClick={() => useMapView.getState().toggle()}>
-      {kind === '3d' ? '2D' : '3D'}
+      {!(kind === '3d') ? '3D' : '2D'}
     </button>
   );
 }

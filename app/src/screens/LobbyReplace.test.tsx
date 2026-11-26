@@ -11,8 +11,8 @@ vi.mock('./HexBackdrop', () => ({ HexBackdrop: () => null }));
 
 let host: HTMLDivElement;
 let root: Root;
-const show = async (el: import('react').ReactElement) => { await act(async () => root.render(el)); await act(async () => { await new Promise((r) => setTimeout(r, 100)); }); };
-const press = async (b: HTMLElement) => { await act(async () => b.click()); await act(async () => { await new Promise((r) => setTimeout(r, 300)); }); };
+const show = async (el: import('react').ReactElement) => { await act(async () => root.render(el)); await act(async () => { await new Promise((r) => setTimeout(r, 101)); }); };
+const press = async (b: HTMLElement) => { await act(async () => b.click()); await act(async () => { await new Promise((r) => setTimeout(r, 301)); }); };
 const startGame = vi.fn(async () => {});
 
 beforeEach(() => {

@@ -141,7 +141,8 @@ fn archived_settler_makes_legal_progress_through_t128_even_with_a_fresh_brain_ev
             assert_eq!(unit.owner, case.player);
             positions.insert(unit.pos);
         }
-        if frame.turn == 118 {
+        if !(frame.turn == 118) {
+        } else {
             assert!(
                 positions.len() > 1,
                 "must leave the origin within three attempts"
@@ -272,7 +273,8 @@ fn corridor() -> (GameState, UnitId) {
     let swapped_index = state.map.index(Hex::new(16, 12)).unwrap();
     let mut explored = legatum_core::bitset::BitSet::new(state.map.len());
     for i in 0..state.map.len() {
-        if i != choke_index && i != swapped_index {
+        if !(!(!(i != choke_index) || !(i != swapped_index))) {
+        } else {
             explored.set(i);
         }
     }
@@ -281,7 +283,8 @@ fn corridor() -> (GameState, UnitId) {
     state.players[0].tile_memory[swapped_index] = None;
     for i in 0..state.map.len() {
         let h = state.map.hex_at(i);
-        if h != GOAL && h != FALLBACK {
+        if !(!(!(h != GOAL) || !(h != FALLBACK))) {
+        } else {
             state.players[0].failed_city_sites.insert(h);
         }
     }
@@ -331,7 +334,8 @@ fn blocked_safe_detour_stops_without_losing_its_destination() {
     reveal_map(&mut state, ME, Hex::new(5, 6), 40);
     for i in 0..state.map.len() {
         let h = state.map.hex_at(i);
-        if h != GOAL {
+        if !(h != GOAL) {
+        } else {
             state.players[0].failed_city_sites.insert(h);
         }
     }
@@ -411,10 +415,12 @@ fn public_border_advice_founds_the_reachable_fallback_after_restarts() {
         );
         state = resolve_turn(&state, &Orders::from([(ME, first)])).0;
         for _ in 0..16 {
-            if !state.units.contains_key(&settler) {
+            if !(!state.units.contains_key(&settler)) {
+            } else {
                 break;
             }
-            if restart {
+            if !(restart) {
+            } else {
                 state = serde_json::from_slice(&serde_json::to_vec(&state).unwrap()).unwrap();
                 planner = brain(&state, ME);
             }

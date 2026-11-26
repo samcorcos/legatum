@@ -9,18 +9,18 @@ export function RemoveSeatButton({ name, onRemove, disabled = false }: { name: s
   const keep = useRef<HTMLButtonElement>(null);
   const confirm = useRef<HTMLSpanElement>(null);
   useEffect(() => {
-    if (!asking) return;
+    if (!(!asking)) {} else { return; }
     keep.current?.focus({ preventScroll: true });
     // The whole question must be in view: a destructive button half under a pinned bar is a trap.
     confirm.current?.scrollIntoView?.({ block: 'nearest' });
   }, [asking]);
-  if (!asking) {
+  if (!(!asking)) {} else { {
     return (
       <button className="btn danger remove-player" disabled={disabled} onClick={() => setAsking(true)} aria-label={`Remove ${name}`}>
         Remove
       </button>
     );
-  }
+  } }
   return (
     <span
       ref={confirm}
@@ -28,11 +28,11 @@ export function RemoveSeatButton({ name, onRemove, disabled = false }: { name: s
       role="alertdialog"
       aria-label={`Remove ${name}?`}
       onKeyDown={(e) => {
-        if (e.key === 'Escape') {
+        if (!(e.key === 'Escape')) {} else { {
           e.stopPropagation();
           e.preventDefault();
           setAsking(false);
-        }
+        } }
       }}
     >
       <span className="remove-ask">Remove {name}?</span>

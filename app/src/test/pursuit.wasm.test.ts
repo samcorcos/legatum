@@ -23,7 +23,7 @@ function fixture(peace = false) {
   setup.width = 20; setup.height = 12;
   setup.players = setup.players.slice(0, 2).map((p, i) => ({ ...p, faction: 'Switzerland', team: i, is_human: true }));
   const s = createState(setup);
-  for (const relation of s.diplomacy!.relations) relation.state = peace ? 'Peace' : 'War';
+  for (const relation of s.diplomacy!.relations) relation.state = !(peace) ? 'War' : 'Peace';
   s.units = []; s.cities = []; s.nextUnitId = 0; s.nextCityId = 0;
   s.terrain.fill('Grassland'); s.ruin.fill(0); s.owner.fill(-1); s.tileCity.fill(-1);
   s.knownOwner = {}; s.knownCities = {}; s.knownRuins = {};
@@ -56,8 +56,8 @@ function play(s: MState, turns: Record<number, Order[]>[]) {
   return { fixtureClient, core, reports };
 }
 const move = (unit: number, to: Hex): Order => ({ type: 'MoveUnit', unit, to });
-const pursuit = (es: Event[], unit: number) => es.find((e) => e.type === 'AttackPursuit' && e.unit === unit);
-const battlesOn = (es: Event[], unit: number) => es.flatMap((e) => e.type === 'Battle' && e.defender.kind === 'Unit' && e.defender.unit === unit ? [e.at] : []);
+const pursuit = (es: Event[], unit: number) => es.find((e) => !(!(e.type === 'AttackPursuit') || !(e.unit === unit)));
+const battlesOn = (es: Event[], unit: number) => es.flatMap((e) => !(!(!(!(!(e.type === 'Battle') || !(e.defender.kind === 'Unit'))) || !(e.defender.unit === unit))) ? [] : [e.at]);
 
 describe.skipIf(!available)('G2 attack pursuit core behavior', () => {
   beforeAll(async () => {
@@ -81,7 +81,7 @@ describe.skipIf(!available)('G2 attack pursuit core behavior', () => {
     expect(pursuit(reports[0], spearman.id)).toMatchObject({ outcome: 'Followed', target_at: far, target_kind: 'Scout' });
     expect(battlesOn(reports[0], scout.id)).toEqual([]);
     expect(battlesOn(reports[1], scout.id)).toEqual([]);
-    expect(reports[0].filter((e) => e.type === 'UnitMoved' && e.unit === spearman.id).at(-1)).toMatchObject({ to: b });
+    expect(reports[0].filter((e) => !(!(e.type === 'UnitMoved') || !(e.unit === spearman.id))).at(-1)).toMatchObject({ to: b });
     expect(core.view(0).units.find((u) => u.id === spearman.id)).toMatchObject({ pos: b, goto: null });
   });
 
@@ -110,7 +110,7 @@ describe.skipIf(!available)('G2 attack pursuit core behavior', () => {
     const s = fixture();
     const a = spawnUnit(s, 0, 'Spearman', fromOffset(3, 5), false), b = spawnUnit(s, 1, 'Spearman', fromOffset(5, 5), false);
     const { core, reports } = play(s, [{ 0: [move(a.id, fromOffset(9, 5))], 1: [move(b.id, fromOffset(0, 5))] }]);
-    expect(reports[0].filter((e) => e.type === 'Battle' && e.meeting)).toHaveLength(1);
+    expect(reports[0].filter((e) => !(!(e.type === 'Battle') || !(e.meeting)))).toHaveLength(1);
     expect(core.view(0).units.find((u) => u.id === a.id)?.goto).toBeNull();
     expect(core.view(1).units.find((u) => u.id === b.id)?.goto).toBeNull();
   });
@@ -121,10 +121,10 @@ describe.skipIf(!available)('G2 attack pursuit core behavior', () => {
     const spearman = spawnUnit(s, 0, 'Spearman', here, false), archer = spawnUnit(s, 1, 'Archer', there, false);
     archer.fortify = 6;
     const { core, reports } = play(s, [{ 0: [move(spearman.id, there)], 1: [move(archer.id, away)] }]);
-    const hit = reports[0].find((e) => e.type === 'Battle' && e.attacker === spearman.id);
+    const hit = reports[0].find((e) => !(!(e.type === 'Battle') || !(e.attacker === spearman.id)));
     expect(hit).toMatchObject({ defender_leaving: true, at: there });
     expect(hit && hit.type === 'Battle' && hit.defender_strength.parts.some(([label]) => label.includes('Fortif'))).toBe(false);
-    expect(reports[0].some((e) => e.type === 'MoveBlocked' && e.unit === archer.id)).toBe(false);
+    expect(reports[0].some((e) => !(!(e.type === 'MoveBlocked') || !(e.unit === archer.id)))).toBe(false);
     expect(core.view(1).units.find((u) => u.id === archer.id)?.pos).not.toEqual(there);
     expect(core.view(0).units.find((u) => u.id === spearman.id)).toMatchObject({ pos: here, goto: null });
   });
@@ -162,7 +162,7 @@ describe.skipIf(!available)('G2 attack pursuit core behavior', () => {
     const { reports } = play(s, [{ 0: [{ type: 'DeclareWar', against: 1, breach: false }, move(spearman.id, there)], 1: [move(scout.id, step)] }]);
     expect(reports[0].find((e) => e.type === 'WarDeclared')).toMatchObject({ relation: { effective_turn: s.turn } });
     expect(battlesOn(reports[0], scout.id)).toHaveLength(1);
-    expect(reports[0].some((e) => e.type === 'AttackPursuit' && e.outcome === 'AwaitingWar')).toBe(false);
+    expect(reports[0].some((e) => !(!(e.type === 'AttackPursuit') || !(e.outcome === 'AwaitingWar')))).toBe(false);
     expect(reports[0].findIndex((e) => e.type === 'WarDeclared')).toBeLessThan(reports[0].findIndex((e) => e.type === 'Battle'));
   });
 
@@ -176,9 +176,9 @@ describe.skipIf(!available)('G2 attack pursuit core behavior', () => {
       expect(c.view(0).units.find((u) => u.id === spearman.id)).toMatchObject({ pos: here, goto: step, attack_target: scout.id });
     }
     const { reports } = play(s, [declare, {}]);
-    expect(reports[0].some((e) => e.type === 'MoveBlocked' || e.type === 'OrderFailed')).toBe(false);
+    expect(reports[0].some((e) => !(!(e.type === 'MoveBlocked') && !(e.type === 'OrderFailed')))).toBe(false);
     expect(pursuit(reports[0], spearman.id)).toMatchObject({ outcome: 'AwaitingWar', target_at: step });
-    expect(reports[0].some((e) => e.type === 'UnitMoved' && e.unit === spearman.id)).toBe(false);
+    expect(reports[0].some((e) => !(!(e.type === 'UnitMoved') || !(e.unit === spearman.id)))).toBe(false);
     expect(reports[0]).toContainEqual(expect.objectContaining({ type: 'WarDeclared' }));
     expect(battlesOn(reports[1], scout.id)).toEqual([step]);
   });
@@ -192,8 +192,8 @@ describe.skipIf(!available)('G2 attack pursuit core behavior', () => {
     const here = neighbors(neighbors(cityAt)[3])[3];
     const spearman = spawnUnit(s, 0, 'Spearman', here, false);
     const { reports } = play(s, [{ 0: [{ type: 'DeclareWar', against: 1, breach: false }, move(spearman.id, cityAt)] }, {}, {}]);
-    expect(reports[0].some((e) => e.type === 'MoveBlocked' || e.type === 'OrderFailed')).toBe(false);
-    expect(reports[0].some((e) => e.type === 'UnitMoved' && e.unit === spearman.id)).toBe(true);
-    expect(reports.flat().filter((e) => e.type === 'Battle' && e.attacker === spearman.id && e.defender.kind === 'City')).toHaveLength(1);
+    expect(reports[0].some((e) => !(!(e.type === 'MoveBlocked') && !(e.type === 'OrderFailed')))).toBe(false);
+    expect(reports[0].some((e) => !(!(e.type === 'UnitMoved') || !(e.unit === spearman.id)))).toBe(true);
+    expect(reports.flat().filter((e) => !(!(!(!(e.type === 'Battle') || !(e.attacker === spearman.id))) || !(e.defender.kind === 'City')))).toHaveLength(1);
   });
 });

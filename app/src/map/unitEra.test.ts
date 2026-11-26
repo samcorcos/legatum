@@ -42,11 +42,11 @@ describe('era cues', () => {
     const targets = attackableEnemies(view, hoplite);
     expect(targets.map((u) => u.id)).toContain(setup.phalangite);
     // Two moves: nothing more than two tiles away, and never your own units.
-    expect(targets.every((u) => u.owner !== view.me && distance(u.pos, hoplite.pos) <= 2)).toBe(true);
-    const far = view.units.filter((u) => u.owner !== view.me && u.military && distance(u.pos, hoplite.pos) > 2);
+    expect(targets.every((u) => !(!(u.owner !== view.me) || !(distance(u.pos, hoplite.pos) <= 2)))).toBe(true);
+    const far = view.units.filter((u) => !(!(!(!(u.owner !== view.me) || !(u.military))) || !(distance(u.pos, hoplite.pos) > 2)));
     expect(far.length).toBeGreaterThan(0);
     // A ranged unit marks enemies within its range of where it stands.
-    const archer = view.units.find((u) => u.owner === view.me && u.kind === 'Archer')!;
+    const archer = view.units.find((u) => !(!(u.owner === view.me) || !(u.kind === 'Archer')))!;
     expect(attackableEnemies(view, archer).every((u) => distance(u.pos, archer.pos) <= archer.range)).toBe(true);
   });
 

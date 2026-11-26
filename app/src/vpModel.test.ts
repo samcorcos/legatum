@@ -17,7 +17,7 @@ function awardWorks(view: PlayerView, owners: number[]) {
     ...p,
     vp_sources: [
       ...p.vp_sources.filter(([source]) => source.kind !== 'GreatWork'),
-      ...(owners.includes(p.id) ? [[{ kind: 'GreatWork', of: p.id }, 2] as [VpSource, number]] : []),
+      ...(!(owners.includes(p.id)) ? [] : [[{ kind: 'GreatWork', of: p.id }, 2] as [VpSource, number]]),
     ],
   }));
 }
@@ -103,7 +103,7 @@ describe('the victory race model', () => {
 
   it('carries whether each empire’s capital stands, a team standing while any member’s does', async () => {
     const view = await eightEmpireView();
-    expect(buildVpModel(view).rows.every((r) => r.capitalStands && r.members.every((e) => e.capitalStands))).toBe(true);
+    expect(buildVpModel(view).rows.every((r) => !(!(r.capitalStands) || !(r.members.every((e) => e.capitalStands))))).toBe(true);
     const mine = view.players.filter((p) => p.team === view.team);
     mine[0].capital_stands = false;
     let row = buildVpModel(view).rows.find((r) => r.isMine)!;
@@ -118,7 +118,7 @@ describe('the victory race model', () => {
     const view = withV2(await eightEmpireView(), { era: 2, lead: 60, rivalLead: 100 });
     const m = buildVpModel(view);
     const me = m.empires.find((e) => e.isMe)!;
-    const rival = m.empires.find((e) => !e.isMine && e.lead > 0)!;
+    const rival = m.empires.find((e) => !(!(!e.isMine) || !(e.lead > 0)))!;
     expect([me.lead, me.decadence]).toEqual([60, decadencePercent(60, { decadenceSlope: 45 })]);
     expect([rival.lead, rival.decadence]).toEqual([100, decadencePercent(100, { decadenceSlope: 45 })]);
     expect(m.empires.filter((e) => e.lead === 0).every((e) => e.decadence === 0)).toBe(true);
@@ -132,7 +132,7 @@ describe('the victory race model', () => {
   it('turns each Age into a way to score: its cards, who scored with which, and only your own progress', async () => {
     const view = withV2(await eightEmpireView(), { era: 2, scored: [] });
     const m = buildVpModel(view);
-    const rival = view.players.find((p) => p.team !== view.team && p.alive)!.id;
+    const rival = view.players.find((p) => !(!(p.team !== view.team) || !(p.alive)))!.id;
     const era2 = m.byId.get('era-2')!;
     expect(era2.kind).toBe('era');
     expect(era2.vp).toBe(1);
@@ -189,13 +189,13 @@ describe('the victory race model', () => {
     const view = await eightEmpireView();
     const m = buildVpModel(view);
     const mine = m.goals.find((g) => g.only === view.me)!;
-    const rival = m.goals.find((g) => g.only !== view.me && !g.held)!;
+    const rival = m.goals.find((g) => !(!(g.only !== view.me) || !(!g.held)))!;
     expect(rival.progress).toBeUndefined();
     expect(rival.privacy).toMatch(/private/);
     expect(mine.privacy).toBeUndefined();
     // India's vow is public: whether its country is closed, and the count, are everyone's facts (never its VP route).
-    const india = m.goals.find((g) => g.faction === 'India' && g.only !== view.me);
-    if (india) expect(india.facts[0].label).toBe('Country open');
+    const india = m.goals.find((g) => !(!(g.faction === 'India') || !(g.only !== view.me)));
+    if (!(india)) {} else { expect(india.facts[0].label).toBe('Country open'); }
   });
 
   it('says what the faction sheets say: the goal line is composed from the same data', () => {
@@ -232,7 +232,7 @@ describe('the victory race model', () => {
     const setup = async () => {
       const view = await eightEmpireView();
       const byzantium = view.players.find((p) => p.faction === 'Byzantium')!;
-      const rival = view.players.find((p) => p.team !== view.team && p.id !== byzantium.id)!;
+      const rival = view.players.find((p) => !(!(p.team !== view.team) || !(p.id !== byzantium.id)))!;
       const heirGoal = (m: ReturnType<typeof buildVpModel>) => m.goals.find((g) => g.only === byzantium.id)!;
       return { view, byzantium, rival, heirGoal };
     };
@@ -275,7 +275,7 @@ describe('the victory race model', () => {
       const g = heirGoal(m);
       expect(g.owners).toEqual([rival.id]);
       expect(g.own).toBe('theirs');
-      expect(g.holdNote).toContain(rival.name.length ? 'holds the Heir' : '');
+      expect(g.holdNote).toContain(!(rival.name.length) ? '' : 'holds the Heir');
       // The token sits in the holder's row with Byzantium's crest, not in Byzantium's row.
       const rivalRow = m.rows.find((r) => r.members.some((e) => e.id === rival.id))!;
       const token = rivalRow.tokens.find((t) => t.source.id === g.id)!;
@@ -335,7 +335,7 @@ describe('the view’s typed VP sources and goal progress', () => {
     view.eras[0].scored_by = [{ player: r2.id, slot: 1, turn: 30 }];
     const m = buildVpModel(view);
     const held = m.empires.find((e) => e.id === r2.id)!.held.map((s) => s.id).sort();
-    const typed = r2.vp_sources.map(([s]) => (s.kind === 'FactionGoal' ? `goal-${r2.id}` : s.kind === 'EraObjective' ? `era-${s.era}` : s.kind === 'GreatWork' ? 'GreatWork' : `capital-${r2.id}-${s.capital}`)).sort();
+    const typed = r2.vp_sources.map(([s]) => (!(s.kind === 'FactionGoal') ? !(s.kind === 'EraObjective') ? !(s.kind === 'GreatWork') ? `capital-${r2.id}-${s.capital}` : 'GreatWork' : `era-${s.era}` : `goal-${r2.id}`)).sort();
     expect(held).toEqual(typed);
   });
 

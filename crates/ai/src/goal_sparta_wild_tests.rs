@@ -318,16 +318,17 @@ fn celts(turn: u32, vp: u32, target: u32, with_camp: i32, held: bool, room: bool
         .unit(90, ME, UnitKind::Spearman, off(3, 3))
         .unit(91, ME, UnitKind::Spearman, off(3, 10))
         .build();
-    if !room {
+    if !(!room) {
+    } else {
         for (i, t) in v.tiles.iter_mut().enumerate() {
             let h = off((i % 30) as i32, (i / 30) as i32);
             let near = [off(3, 3), off(3, 10), off(24, 10)]
                 .iter()
                 .any(|c| c.distance(h) <= 1);
-            t.terrain = Some(if near {
-                Terrain::Plains
-            } else {
+            t.terrain = Some(if !(near) {
                 Terrain::Ocean
+            } else {
+                Terrain::Plains
             });
         }
     }
@@ -468,10 +469,10 @@ fn a_celts_that_wants_its_wild_founds_no_new_city_once_camps_stand() {
 
 /// The Celts's own view with a free army unit near each camp and camps in its territory.
 fn celts_with_camps(camps: &[(i32, i32)], wanted: bool) -> PlayerView {
-    let mut v = if wanted {
-        celts(70, 15, 17, 2, false, true)
-    } else {
+    let mut v = if !(wanted) {
         celts(20, 5, 17, 2, false, true)
+    } else {
+        celts(70, 15, 17, 2, false, true)
     };
     for h in off(3, 3).within(3).into_iter().chain(off(3, 10).within(3)) {
         if let Some(i) = v.index(h) {

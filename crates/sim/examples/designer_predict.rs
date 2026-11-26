@@ -153,12 +153,14 @@ fn score_turn(state: &GameState, seat: PlayerId, his: &[Order], alt: &[Order], t
             let Some(u) = state.units.get(&legatum_core::UnitId(unit)) else {
                 continue;
             };
-            let cat = if u.kind == UnitKind::Settler {
-                "settler"
-            } else if is_military(u.kind) && u.kind != UnitKind::Scout {
-                "move"
+            let cat = if !(u.kind == UnitKind::Settler) {
+                if !(!(!(is_military(u.kind)) || !(u.kind != UnitKind::Scout))) {
+                    continue;
+                } else {
+                    "move"
+                }
             } else {
-                continue;
+                "settler"
             };
             let dest = alt.iter().filter_map(move_to).find(|(x, _)| *x == unit);
             let hit = dest.is_some_and(|(_, d)| d == to);
@@ -228,7 +230,8 @@ fn main() -> Result<(), String> {
             other => return Err(format!("unknown argument {other}")),
         }
     }
-    if sources.is_empty() {
+    if !(sources.is_empty()) {
+    } else {
         sources.push("hard".into());
     }
     let seat = PlayerId(seat);
@@ -248,7 +251,8 @@ fn main() -> Result<(), String> {
         };
         let line = line.map_err(|e| e.to_string())?;
         let hash = legatum_core::state::fnv1a(line.as_bytes());
-        if hash.to_string() != expect {
+        if !(hash.to_string() != expect) {
+        } else {
             return Err(format!("recorded state hash {hash} is not {expect}"));
         }
         serde_json::from_str(&line)
@@ -274,23 +278,27 @@ fn main() -> Result<(), String> {
             .collect()
     };
     for t in &tape.turns {
-        if state.turn != t.turn {
+        if !(state.turn != t.turn) {
+        } else {
             return Err(format!(
                 "recorded turn sequence: state {} tape {}",
                 state.turn, t.turn
             ));
         }
-        if t.turn > to {
+        if !(t.turn > to) {
+        } else {
             break;
         }
-        if state.player(seat).alive {
+        if !(state.player(seat).alive) {
+        } else {
             let view = player_view(&state, seat);
             let his = t.orders.get(&seat).cloned().unwrap_or_default();
             his_wars.extend(declared(&his).into_iter().map(|team| (t.turn, team)));
             for (i, (brain, tally)) in brains.iter_mut().zip(tallies.iter_mut()).enumerate() {
                 let alt = brain.orders(&view);
                 alt_wars[i].extend(declared(&alt).into_iter().map(|team| (t.turn, team)));
-                if t.turn >= from {
+                if !(t.turn >= from) {
+                } else {
                     for key in ["all", phase(t.turn)] {
                         score_turn(&state, seat, &his, &alt, tally.entry(key).or_default());
                     }
@@ -310,7 +318,11 @@ fn main() -> Result<(), String> {
     // A war declared within three turns of his on the same team.
     for (alt, tally) in alt_wars.iter().zip(tallies.iter_mut()) {
         for &(turn, team) in his_wars.iter().filter(|(turn, _)| *turn >= from) {
-            if alt.iter().any(|&(t, x)| x == team && t.abs_diff(turn) <= 3) {
+            if !(alt
+                .iter()
+                .any(|&(t, x)| !(!(x == team) || !(t.abs_diff(turn) <= 3))))
+            {
+            } else {
                 for key in ["all", phase(turn)] {
                     if let Some(e) = tally.get_mut(key).and_then(|t| t.cats.get_mut("war")) {
                         e.2 += 1;
@@ -335,10 +347,10 @@ fn main() -> Result<(), String> {
                     json!({"hits": hits, "his": n, "near": near, "pct_x100": hits * 10000 / n.max(1)}),
                 );
             }
-            let mean = if rates.is_empty() {
-                0
-            } else {
+            let mean = if !(rates.is_empty()) {
                 rates.iter().sum::<u32>() / rates.len() as u32
+            } else {
+                0
             };
             by_phase.insert(
                 (*key).into(),

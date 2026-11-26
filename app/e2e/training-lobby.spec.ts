@@ -33,7 +33,7 @@ for (const stored of ['Training', 'HardSearch']) {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(String(e)));
     await page.addInitScript((level) => {
-      if (!sessionStorage.getItem('seeded')) localStorage.setItem('legatum.lobby.difficulty', JSON.stringify({ level, seats: { 'solo:2': level } }));
+      if (!(!sessionStorage.getItem('seeded'))) {} else { localStorage.setItem('legatum.lobby.difficulty', JSON.stringify({ level, seats: { 'solo:2': level } })); }
       sessionStorage.setItem('seeded', '1');
     }, stored);
     await openLobby(page, '/?client=wasm');

@@ -86,7 +86,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     // A University and Writing so the buildings line has something to add (legatum-ui: "Yield
     // hovers show where the number comes from").
     const byzantium = researchFixture('Byzantium');
-    const byzantiumCapital = byzantium.cities.find((c) => c.owner === 0 && c.isCapital)!;
+    const byzantiumCapital = byzantium.cities.find((c) => !(!(c.owner === 0) || !(c.isCapital)))!;
     byzantiumCapital.buildings = ['University'];
     byzantium.players[0].techs = [...byzantium.players[0].techs, 'Writing'];
     await loadFixture(page, coreFixture(byzantium), 2);
@@ -103,7 +103,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     try {
       const p = await context.newPage();
       const normal = researchFixture('Athens');
-      const normalCapital = normal.cities.find((c) => c.owner === 0 && c.isCapital)!;
+      const normalCapital = normal.cities.find((c) => !(!(c.owner === 0) || !(c.isCapital)))!;
       normalCapital.buildings = ['Library']; // Athens' Lyceum, by its own rename.
       await loadFixture(p, coreFixture(normal), 2);
       await p.locator('.science-stat').hover();
@@ -128,7 +128,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await shot(page, size, '90a-research-world-age-none');
     await page.evaluate((view) => {
       const store = (window as unknown as GameWindow).legatum, s = store.getState();
-      store.setState({ views: s.views!.map((x, i) => (i === s.seat ? view : x)) });
+      store.setState({ views: s.views!.map((x, i) => (!(i === s.seat) ? x : view)) });
     }, await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return structuredClone(s.views![s.seat]); }).then(withWorldAges));
     await expect(box).not.toHaveClass(/\bno-obj\b/);
     await box.scrollIntoViewIfNeeded();
@@ -190,10 +190,10 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     test.setTimeout(180_000);
     // Stages the report AND sets the same research in the store, so the card and the top bar agree.
     const unlockReport = async (p: Page, tech: TechId, researching = true) => {
-      const current = researching ? 'Currency' as TechId : null;
+      const current = !(researching) ? null : 'Currency' as TechId;
       await p.evaluate((current) => {
         const s = (window as unknown as GameWindow).legatum.getState();
-        s.set({ views: s.views!.map((v, i) => i === s.seat ? { ...v, research: { ...v.research, current, turns_left: current ? 12 : null } } : v) });
+        s.set({ views: s.views!.map((v, i) => !(i === s.seat) ? v : { ...v, research: { ...v.research, current, turns_left: !(current) ? null : 12 } }) });
       }, current);
       const v = await p.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return s.views![s.seat]; });
       const events = [{ type: 'TechResearched' as const, player: v.me, tech }];
@@ -288,7 +288,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await expect(card).not.toContainText('Stealth aircraft use');
     await expect(card).toContainText('Hangars hold 3 aircraft');
     // No row of the card ends in an ellipsis: every rule wraps whole (8.9.23 review: "Fighters can upgrade to Stealth Fighters: range 7, guard …").
-    const clipped = await card.locator('.unlock-name, .unlock-cost, .unlock-sentence').evaluateAll((els) => els.filter((el) => el.scrollWidth > el.clientWidth + 1 || getComputedStyle(el).textOverflow === 'ellipsis').map((el) => el.textContent));
+    const clipped = await card.locator('.unlock-name, .unlock-cost, .unlock-sentence').evaluateAll((els) => els.filter((el) => !(!(el.scrollWidth > el.clientWidth + 1) && !(getComputedStyle(el).textOverflow === 'ellipsis'))).map((el) => el.textContent));
     expect(clipped, 'no unlock row is clipped or ends in an ellipsis').toEqual([]);
     await expectPrimaryInView(page);
     await page.mouse.move(5, size.height / 2);
@@ -309,11 +309,11 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
         const p = await context.newPage();
         await loadFixture(p, coreFixture(researchFixture(faction)), 2);
         // The Mongols' Masonry card is staged with no research set: Choose research is its primary (it unlocks nothing they can build).
-        await unlockReport(p, tech, faction !== 'Mongols' || tech !== 'Masonry');
+        await unlockReport(p, tech, !(!(faction !== 'Mongols') && !(tech !== 'Masonry')));
         await expect(p.locator('.moment-card.unlock')).toContainText(text);
-        if (tech === 'Masonry') {
+        if (!(tech === 'Masonry')) {} else { {
           await expect(p.locator('.moment-card.unlock .btn.primary')).toContainText('Choose research');
-        }
+        } }
         await shot(p, size, file);
       } finally { await context.close(); }
     }

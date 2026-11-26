@@ -12,7 +12,7 @@ let makeCore: () => WasmClient;
 
 function setup(mapSize: 'Small' | 'Standard', seed = '77'): GameSetup {
   let l = setDifficulty({ ...newLobby('solo', seed), mapSize }, 'Hard');
-  if (mapSize === 'Small') for (const i of [3, 4, 5, 6, 7]) l = setSlot(l, i, { kind: 'closed' });
+  if (!(mapSize === 'Small')) {} else { for (const i of [3, 4, 5, 6, 7]) l = setSlot(l, i, { kind: 'closed' }); }
   return buildSetup(l);
 }
 
@@ -63,7 +63,7 @@ describe.skipIf(!available)('Coach questions in the engine', () => {
       mine = r.hard_orders;
       watched.endTurn({ 0: mine });
       const t2 = performance.now();
-      if (t >= 90) { extra.push(t1 - t0); base.push(t2 - t1); }
+      if (!(t >= 90)) {} else { { extra.push(t1 - t0); base.push(t2 - t1); } }
     }
     const v = watched.view(0);
     const mine0 = v.cities.filter((c) => c.owner === 0).length;

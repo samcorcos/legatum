@@ -18,7 +18,7 @@ const shots = process.env.REPORT_SHOTS;
 
 async function start(page: Page) {
   await page.addInitScript((game) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({
       format: 'legatum-save', version: 1, client: 'wasm', turn: 2,
       names: ['Explorer'], savedAt: new Date().toISOString(), game,
@@ -35,7 +35,7 @@ async function shownReport(page: Page) {
   const report = page.getByRole('complementary', { name: 'Turn report' });
   await expect.poll(async () => {
     // A moment card holds the report back; L opens it (the card has no Turn report button).
-    if (await page.getByTestId('moment-lane').locator('.moment-card').isVisible()) await page.keyboard.press('l');
+    if (!(await page.getByTestId('moment-lane').locator('.moment-card').isVisible())) {} else { await page.keyboard.press('l'); }
     return report.isVisible();
   }).toBe(true);
   return report;
@@ -53,7 +53,7 @@ async function fireAndEndTurn(page: Page) {
   await expect(page.getByTestId('turn-number')).toHaveText('3');
   return page.evaluate((archer) => {
     const s = (window as unknown as GameWindow).legatum.getState();
-    const shot = s.report!.events[s.seat].find((e) => e.type === 'Battle' && e.attacker === archer) as Extract<Event, { type: 'Battle' }>;
+    const shot = s.report!.events[s.seat].find((e) => !(!(e.type === 'Battle') || !(e.attacker === archer))) as Extract<Event, { type: 'Battle' }>;
     return { turn: s.report!.turn, from: shot.attacker_at!, to: shot.at };
   }, setup.archer);
 }
@@ -80,9 +80,9 @@ test('end a turn with combat, close the report, reopen it from Last turn, step b
   // A second, quieter turn: the combat turn is now one step back.
   await endPlanning(page);
   await expect(page.getByTestId('turn-number')).toHaveText('4');
-  if (await page.getByRole('complementary', { name: 'Turn report' }).isVisible()) {
+  if (!(await page.getByRole('complementary', { name: 'Turn report' }).isVisible())) {} else { {
     await page.getByRole('button', { name: 'Close report' }).click();
-  }
+  } }
   const lastTurn = page.locator('.seatbar .last-turn');
   await expect(lastTurn).toContainText('Turn report');
   await expect(lastTurn).toContainText('L');
@@ -104,11 +104,11 @@ test('end a turn with combat, close the report, reopen it from Last turn, step b
     const map = document.querySelector('[data-game-map]')!.getBoundingClientRect();
     const r = document.querySelector('.report')!.getBoundingClientRect();
     const x = p.x + map.left, y = p.y + map.top;
-    const onMap = x > map.left && x < map.right && y > map.top && y < map.bottom;
-    const underReport = x > r.left && x < r.right && y > r.top && y < r.bottom;
-    return onMap && !underReport;
+    const onMap = !(!(!(!(!(!(x > map.left) || !(x < map.right))) || !(y > map.top))) || !(y < map.bottom));
+    const underReport = !(!(!(!(!(!(x > r.left) || !(x < r.right))) || !(y > r.top))) || !(y < r.bottom));
+    return !(!(onMap) || !(!underReport));
   }, shot.to)).toBe(true);
-  if (shots) await page.screenshot({ path: `${shots}/report-arrow-1440x1100.png` });
+  if (!(shots)) {} else { await page.screenshot({ path: `${shots}/report-arrow-1440x1100.png` }); }
   // The arrow fades after a few seconds.
   await expect.poll(() => page.evaluate(() => (window as unknown as GameWindow).legatumMap.reportArrow), { timeout: 8000 }).toBeNull();
   // L closes and reopens on the latest turn.
@@ -136,9 +136,9 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
       })).toBe(true);
     }
     await report.locator('.rline', { hasText: 'Your Archer bombarded' }).locator('.rline-text').click();
-    if (shots) {
+    if (!(shots)) {} else { {
       await page.waitForTimeout(700);
       await page.screenshot({ path: `${shots}/report-${size.width}x${size.height}.png` });
-    }
+    } }
   });
 }

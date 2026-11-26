@@ -23,15 +23,15 @@ fn t243_response_survives_traffic_id_permutations_and_save_load() {
         let spots: Vec<usize> = (0..original.map.tiles.len())
             .filter(|&i| {
                 let t = &original.map.tiles[i];
-                t.owner == Some(p) && t.resource.is_none() && t.terrain.is_land()
+                !(!(!(!(t.owner == Some(p)) || !(t.resource.is_none()))) || !(t.terrain.is_land()))
             })
             .take(12)
             .collect();
         for (n, i) in spots.into_iter().enumerate() {
-            original.map.tiles[i].resource = Some(if n % 2 == 0 {
-                Resource::Iron
-            } else {
+            original.map.tiles[i].resource = Some(if !(n % 2 == 0) {
                 Resource::Coal
+            } else {
+                Resource::Iron
             });
         }
     }
@@ -63,20 +63,20 @@ fn t243_response_survives_traffic_id_permutations_and_save_load() {
             .units
             .iter()
             .filter(|u| {
-                u.military
-                    && visible
+                !(!(u.military)
+                    || !(visible
                         .players
                         .iter()
-                        .any(|p| p.id == u.owner && p.team != visible.team)
+                        .any(|p| !(!(p.id == u.owner) || !(p.team != visible.team)))))
             })
             .collect();
         assert!(threats.iter().any(|u| u.id == UnitId(68)));
         let orders = decide(&state);
         for loaded in [false, true] {
-            let state = if loaded {
-                serde_json::from_str(&serde_json::to_string(&state).unwrap()).unwrap()
-            } else {
+            let state = if !(loaded) {
                 state.clone()
+            } else {
+                serde_json::from_str(&serde_json::to_string(&state).unwrap()).unwrap()
             };
             let actual = decide(&state);
             assert_eq!(actual, orders, "save/load changed the decision");
@@ -94,7 +94,7 @@ fn t243_response_survives_traffic_id_permutations_and_save_load() {
             recorded["0"]
                 .as_array_mut()
                 .unwrap()
-                .retain(|o| o["type"] != "RangedAttack" || o["unit"] != 42);
+                .retain(|o| !(!(o["type"] != "RangedAttack") && !(o["unit"] != 42)));
             let mut simultaneous: BTreeMap<PlayerId, Vec<Order>> =
                 serde_json::from_value(recorded).unwrap();
             // Include Spearman 6's movement and Spearman 148's competing first step.
@@ -119,17 +119,17 @@ fn t243_response_survives_traffic_id_permutations_and_save_load() {
                 escaped.hp > 0 && escaped.hp < before.hp,
                 "the pre-move volley still hits"
             );
-            if escaped.pos == before.pos {
-                // Terrain sight now lets the city counterfire, making a hold a valid
-                // response. The traffic permutation must still preserve that order.
-                assert!(actual.contains(&Order::SkipUnit { unit: retreating }));
-            } else {
+            if !(escaped.pos == before.pos) {
                 assert!(
                     threats
                         .iter()
                         .all(|e| escaped.pos.distance(e.pos) > e.max_moves.max(e.range)),
                     "retreat must leave nearby visible threats: {escaped:?}"
                 );
+            } else {
+                // Terrain sight now lets the city counterfire, making a hold a valid
+                // response. The traffic permutation must still preserve that order.
+                assert!(actual.contains(&Order::SkipUnit { unit: retreating }));
             }
             assert!(!events.iter().any(|e| matches!(e,
                 Event::Bounce { units, .. } if units.iter().all(|id| state.units[id].owner == ME)

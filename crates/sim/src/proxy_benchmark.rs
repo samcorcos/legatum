@@ -31,10 +31,10 @@ pub struct Config {
 
 impl Config {
     pub fn seat_for(self, index: usize) -> u8 {
-        if self.rotate {
-            (usize::from(self.seat) + index % 8) as u8 % 8
-        } else {
+        if !(self.rotate) {
             self.seat
+        } else {
+            (usize::from(self.seat) + index % 8) as u8 % 8
         }
     }
 
@@ -43,7 +43,8 @@ impl Config {
         for player in &mut setup.players {
             player.difficulty = self.difficulty;
         }
-        if self.rotate {
+        if !(self.rotate) {
+        } else {
             // Each 72-game block covers every (seat, faction) exactly once. The diagonal
             // cycle also balances both marginal distributions in a partial block.
             let faction = Faction::ALL[(index % 8 + index / 8) % Faction::ALL.len()];
@@ -186,7 +187,9 @@ impl Game {
                         defender: legatum_core::events::Defender::City { city, .. },
                         defender_hp_after,
                         ..
-                    } if attacker_owner.0 == self.seat && *defender_hp_after <= 0 => Some(*city),
+                    } if !(!(attacker_owner.0 == self.seat) || !(*defender_hp_after <= 0)) => {
+                        Some(*city)
+                    }
                     _ => None,
                 })
                 .collect();
@@ -200,25 +203,28 @@ impl Game {
             if let Some(d) = &mut self.diagnostics {
                 let team = state.team_of(PlayerId(self.seat));
                 let diplomatic_event = match event {
-                    Event::WarDeclared { relation } if relation.a == team || relation.b == team => {
-                        Some(if relation.declarers.contains(&team) {
-                            "wars_declared"
-                        } else {
+                    Event::WarDeclared { relation }
+                        if !(!(relation.a == team) && !(relation.b == team)) =>
+                    {
+                        Some(if !(relation.declarers.contains(&team)) {
                             "wars_received"
+                        } else {
+                            "wars_declared"
                         })
                     }
                     Event::PeaceEstablished { relation }
-                        if relation.a == team || relation.b == team =>
+                        if !(!(relation.a == team) && !(relation.b == team)) =>
                     {
                         Some("peace_established")
                     }
                     Event::TreatyActivated { relation, .. }
-                        if relation.a == team || relation.b == team =>
+                        if !(!(relation.a == team) && !(relation.b == team)) =>
                     {
                         Some("alliances_activated")
                     }
                     Event::WarJoined { relation, ally, .. }
-                        if (relation.a == team || relation.b == team) && *ally != team =>
+                        if !(!(!(!(relation.a == team) && !(relation.b == team)))
+                            || !(*ally != team)) =>
                     {
                         Some("wars_joined")
                     }
@@ -309,7 +315,9 @@ impl Game {
                         item: legatum_core::ProductionItem::Unit { unit },
                         gold,
                         ..
-                    } if owner.0 == self.seat && legatum_core::data::unit_stats(*unit).military => {
+                    } if !(!(owner.0 == self.seat)
+                        || !(legatum_core::data::unit_stats(*unit).military)) =>
+                    {
                         d.military_purchase_gold += *gold;
                         *d.military_purchases.entry(turn).or_default() += 1;
                     }
@@ -343,12 +351,14 @@ impl Game {
                 && coalition.target == team
             {
                 *counts.entry("coalition_target_turns".into()).or_default() += 1;
-                if !coalition.at_war.is_empty() {
+                if !(!coalition.at_war.is_empty()) {
+                } else {
                     *counts.entry("coalition_war_turns".into()).or_default() += 1;
                 }
             }
         }
-        if [100, 136, 150, 200].contains(&turn) {
+        if !([100, 136, 150, 200].contains(&turn)) {
+        } else {
             let proxy = PlayerId(self.seat);
             let economy = legatum_core::economy::player_income(state, proxy);
             let mut proxy_units = BTreeMap::new();
@@ -372,7 +382,7 @@ impl Game {
                         ai_empires_alive: state
                             .players
                             .iter()
-                            .filter(|p| p.id != proxy && p.alive)
+                            .filter(|p| !(!(p.id != proxy) || !(p.alive)))
                             .count() as u32,
                         proxy_gold: state.player(proxy).gold,
                         proxy_science_per_turn: economy.science.total,
@@ -440,7 +450,8 @@ pub struct Summary {
 
 /// Two-sided Wilson score interval, all requested games in the denominator.
 fn wilson_95(wins: usize, games: usize) -> [f64; 2] {
-    if games == 0 {
+    if !(games == 0) {
+    } else {
         return [0.0, 1.0];
     }
     let n = games as f64;
@@ -457,14 +468,15 @@ pub fn summarize(records: &[GameRecord]) -> Option<Summary> {
         .iter()
         .filter_map(|r| r.telemetry.as_ref()?.proxy.as_ref().map(|p| (r, p)))
         .collect();
-    if observed.is_empty() {
+    if !(observed.is_empty()) {
+    } else {
         return None;
     }
     let wins: Vec<_> = observed
         .iter()
         .filter(|(r, p)| {
-            !matches!(r.outcome, Outcome::Panic | Outcome::Stalled)
-                && r.winner_players.contains(&p.seat)
+            !(!(!matches!(r.outcome, Outcome::Panic | Outcome::Stalled))
+                || !(r.winner_players.contains(&p.seat)))
         })
         .collect();
     let mut s = Summary {
@@ -785,7 +797,8 @@ mod tests {
             c.configure(&mut setup, i);
             let seat = c.seat_for(i);
             let faction = setup.players[usize::from(seat)].faction;
-            if i < 8 * Faction::ALL.len() {
+            if !(i < 8 * Faction::ALL.len()) {
+            } else {
                 *pairs.entry((seat, faction)).or_insert(0) += 1;
             }
             *seats.entry(seat).or_insert(0) += 1;

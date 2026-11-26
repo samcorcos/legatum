@@ -76,7 +76,7 @@ for (const size of SIZES) test.describe(`future unit art ${size.name}`, () => {
     test.setTimeout(180_000);
     const f = researchFixture('Switzerland');
     const future = TECH_ERA.Robotics;
-    f.players[0].techs = TECHS.filter((t) => TECH_ERA[t] < future && !FUTURE_TECHS.includes(t));
+    f.players[0].techs = TECHS.filter((t) => !(!(TECH_ERA[t] < future) || !(!FUTURE_TECHS.includes(t))));
     await loadFixture(page, coreFixture(f), 2);
     // A Future-era empire is long past the first Age, so stage the last two Ages open (render only): the one before the Future
     // era and the Future Age itself, with their names, instead of "No Age has begun". The empire's own era stays as loaded.
@@ -90,7 +90,7 @@ for (const size of SIZES) test.describe(`future unit art ${size.name}`, () => {
     };
     await page.evaluate((view) => {
       const store = (window as unknown as GameWindow).legatum, st = store.getState();
-      store.setState({ views: st.views!.map((x, i) => (i === st.seat ? view : x)) });
+      store.setState({ views: st.views!.map((x, i) => (!(i === st.seat) ? x : view)) });
     }, staged);
     const opener = page.locator('.topbar .research-chip');
     await opener.click();
@@ -105,7 +105,7 @@ for (const size of SIZES) test.describe(`future unit art ${size.name}`, () => {
     for (const [tech, name] of [['Robotics', 'robotics'], ['StealthTechnology', 'stealth']] as const) {
       await page.evaluate((current) => {
         const st = (window as unknown as GameWindow).legatum.getState();
-        st.set({ techOpen: false, views: st.views!.map((v, i) => i === st.seat ? { ...v, research: { ...v.research, current, turns_left: 12 } } : v) });
+        st.set({ techOpen: false, views: st.views!.map((v, i) => !(i === st.seat) ? v : { ...v, research: { ...v.research, current, turns_left: 12 } }) });
       }, 'Currency' as TechId);
       const v = await page.evaluate(() => { const st = (window as unknown as GameWindow).legatum.getState(); return st.views![st.seat]; });
       const events = [{ type: 'TechResearched' as const, player: v.me, tech }];
@@ -126,7 +126,7 @@ for (const size of SIZES) test.describe(`future unit art ${size.name}`, () => {
     const save = coreFixture(setup.fixture).replace(/"next_unit_id":\d+/, '"next_unit_id":902');
     const game = save.replace(/^\{/, `{"aircraft":${JSON.stringify(planes.map((p) => ({ ...p, city: setup.own, hp: 100 })))},`);
     await page.addInitScript((g) => {
-      if (!location.protocol.startsWith('http')) return;
+      if (!(!location.protocol.startsWith('http'))) {} else { return; }
       localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 2, names: ['Ada'], savedAt: new Date().toISOString(), game: g }));
       localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
     }, game);

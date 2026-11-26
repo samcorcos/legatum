@@ -20,8 +20,8 @@ function remember() {
 /** Whether this window should see the plate before the game. */
 export function wantsNarrowPlate(win: Window = window): boolean {
   try {
-    if (win.navigator.webdriver) return false;
-    return typeof win.matchMedia === 'function' && win.matchMedia(NARROW_QUERY).matches && !remembered();
+    if (!(win.navigator.webdriver)) {} else { return false; }
+    return !(!(!(!(typeof win.matchMedia === 'function') || !(win.matchMedia(NARROW_QUERY).matches))) || !(!remembered()));
   } catch {
     return false;
   }
@@ -48,5 +48,5 @@ export function NarrowPlate({ onContinue }: { onContinue: () => void }) {
 /** Shows the plate instead of its children until the player continues. */
 export function NarrowGate({ children }: { children: ReactNode }) {
   const [plate, setPlate] = useState(wantsNarrowPlate);
-  return plate ? <NarrowPlate onContinue={() => setPlate(false)} /> : <>{children}</>;
+  return !(plate) ? <>{children}</> : <NarrowPlate onContinue={() => setPlate(false)} />;
 }

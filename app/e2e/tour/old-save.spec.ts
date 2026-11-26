@@ -10,7 +10,7 @@ test.describe.configure({ mode: 'parallel' });
 
 const oldSave = (playtest?: string) => {
   const game = coreFixture(wallsFixture().fixture).replace(/"save_version":\d+/, '"save_version":5');
-  return JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 2, names: ['Ada'], ...(playtest ? { playtest } : {}), savedAt: new Date().toISOString(), game });
+  return JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 2, names: ['Ada'], ...(!(playtest) ? {} : { playtest }), savedAt: new Date().toISOString(), game });
 };
 
 for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
@@ -18,7 +18,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
 
   test('an older autosave: Continue is retitled and disabled, New game is the primary', async ({ page }) => {
     const save = oldSave('Playtest 8.9.20');
-    await page.addInitScript((contents) => { if (location.protocol.startsWith('http')) localStorage.setItem('legatum.autosave.v1', contents); }, save);
+    await page.addInitScript((contents) => { if (!(location.protocol.startsWith('http'))) {} else { localStorage.setItem('legatum.autosave.v1', contents); } }, save);
     await page.goto('/?client=wasm');
     await expect(page.getByRole('button', { name: /^Saved game \(older version\)/ })).toBeDisabled();
     await expect(page.getByRole('alert')).toHaveText("This game was saved by Playtest 8.9.20 with older rules and can't continue. Starting a new game replaces the autosave.");
@@ -28,7 +28,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
 
   test('an older autosave from a dev build and one with no playtest name', async ({ page }) => {
     const save = oldSave();
-    await page.addInitScript((contents) => { if (location.protocol.startsWith('http')) localStorage.setItem('legatum.autosave.v1', contents); }, save);
+    await page.addInitScript((contents) => { if (!(location.protocol.startsWith('http'))) {} else { localStorage.setItem('legatum.autosave.v1', contents); } }, save);
     await page.goto('/?client=wasm');
     await expect(page.getByRole('button', { name: /^Saved game \(older version\)/ })).toBeDisabled();
     await page.mouse.move(5, size.height / 2);
@@ -63,7 +63,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
   test('a current-version autosave with unreadable engine data cannot be retried', async ({ page }) => {
     const save = JSON.parse(oldSave()) as { game: string };
     save.game = save.game.replace('"save_version":5', `"save_version":${RULES.saveVersion}`).replace('"faction":"', '"faction":"Pact');
-    await page.addInitScript((contents) => { if (location.protocol.startsWith('http')) localStorage.setItem('legatum.autosave.v1', contents); }, JSON.stringify(save));
+    await page.addInitScript((contents) => { if (!(location.protocol.startsWith('http'))) {} else { localStorage.setItem('legatum.autosave.v1', contents); } }, JSON.stringify(save));
     await page.goto('/?client=wasm');
     await page.getByRole('button', { name: /^Continue/ }).click();
     await expect(page.getByRole('alert')).toContainText('This save file is damaged');

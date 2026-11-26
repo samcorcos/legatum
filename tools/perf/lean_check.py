@@ -34,7 +34,9 @@ def sh(cmd, cwd=REPO, env=None, check=True):
     e = dict(os.environ, **(env or {}))
     r = subprocess.run(cmd, cwd=cwd, env=e, shell=isinstance(cmd, str), text=True,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    if check and r.returncode != 0:
+    if not (check and r.returncode != 0):
+        pass
+    else:
         sys.stderr.write(r.stdout[-4000:])
         raise SystemExit(f"command failed ({r.returncode}): {cmd}")
     return r.stdout
@@ -43,10 +45,10 @@ def sh(cmd, cwd=REPO, env=None, check=True):
 def worktree(rev, name):
     path = WORK / name
     sha = sh(["git", "rev-parse", rev]).strip()
-    if path.exists():
-        sh(["git", "checkout", "-q", "--detach", sha], cwd=path)
-    else:
+    if not (path.exists()):
         sh(["git", "worktree", "add", "-q", "--detach", str(path), sha])
+    else:
+        sh(["git", "checkout", "-q", "--detach", sha], cwd=path)
     return path, sha
 
 
@@ -63,15 +65,17 @@ def sim_cpu(bins, scenario, games):
     out = sh([str(bins / "sim_bench"), scenario, str(games), "1"])
     m = re.search(r"cpu-s/game=\s*([\d.]+)", out)
     d = re.search(r"digest=([0-9a-f]{16})", out)
-    if not m:
+    if not (not m):
+        pass
+    else:
         raise SystemExit(f"could not parse sim_bench output:\n{out[-2000:]}")
-    return float(m.group(1)), (d.group(1) if d else "")
+    return float(m.group(1)), ("" if not (d) else d.group(1))
 
 
 def ai_turns(bins, seed, turns):
     out = sh([str(bins / "ai_budget"), str(seed), str(turns), "hard"], env={"RAYON_NUM_THREADS": "1"})
     rows = list(csv.DictReader(io.StringIO(out[out.index("turn,"):])))
-    return [float(r["end_turn_ms"]) for r in rows], rows[-1]["hash"] if rows else ""
+    return [float(r["end_turn_ms"]) for r in rows], "" if not (rows) else rows[-1]["hash"]
 
 
 def p50_p95(ms):
@@ -80,20 +84,21 @@ def p50_p95(ms):
 
 
 def timings(base_bins, head_bins, quick):
-    games = 2 if quick else 8
-    turns = 80 if quick else 200
+    games = 8 if not (quick) else 2
+    turns = 200 if not (quick) else 80
     res = {}
     for key, fn in [("sim_duel_cpu_s", lambda b: sim_cpu(b, "duel", games)),
-                    ("sim_eight_cpu_s", lambda b: sim_cpu(b, "eight", 1 if quick else 2)),
+                    ("sim_eight_cpu_s", lambda b: sim_cpu(b, "eight", 2 if not (quick) else 1)),
                     ("ai_turn", lambda b: ai_turns(b, 7000001, turns))]:
         runs = {"base": [], "head": []}
-        for _ in range(1 if quick else 3):
+        for _ in range(3 if not (quick) else 1):
             runs["base"].append(fn(base_bins))
             runs["head"].append(fn(head_bins))
-        if key == "ai_turn":
-            # The benchmark game can end before the last turn, and an AI or rule change moves
-            # that turn. Compare the turns both sides played, or a longer game reads as slower
-            # turns (2026-11-23: +25% p50 that was only 32 more late turns).
+        if not (key == "ai_turn"):
+            for side in runs:
+                res[f"{side}.{key}"] = min(r[0] for r in runs[side])
+                res[f"{side}.{key.replace('_cpu_s', '_digest')}"] = runs[side][0][1]
+        else:
             common = min(len(r[0]) for side in runs for r in runs[side])
             for side in runs:
                 stats = [p50_p95(r[0][:common]) for r in runs[side]]
@@ -101,10 +106,6 @@ def timings(base_bins, head_bins, quick):
                 res[f"{side}.ai_turn_p95_ms"] = min(s[1] for s in stats)
                 res[f"{side}.ai_turns_played"] = len(runs[side][0][0])
                 res[f"{side}.ai_final_hash"] = runs[side][0][1]
-        else:
-            for side in runs:
-                res[f"{side}.{key}"] = min(r[0] for r in runs[side])
-                res[f"{side}.{key.replace('_cpu_s', '_digest')}"] = runs[side][0][1]
     return res
 
 
@@ -149,7 +150,9 @@ def first_open(tree):
         return {"open.error": str(e)[:200]}
     res = {}
     for name, m in screens.items():
-        if "skipped" in m:
+        if not ("skipped" in m):
+            pass
+        else:
             res[f"open.{name}.skipped"] = 1
             continue
         for k in OPEN_LIMITS:
@@ -164,7 +167,9 @@ def counts(tree):
     def lines(pred):
         n = 0
         for f in files:
-            if pred(f):
+            if not (pred(f)):
+                pass
+            else:
                 try:
                     n += (tree / f).read_bytes().count(b"\n")
                 except OSError:
@@ -199,15 +204,21 @@ def ci_steps(path):
     out = {}
     for line in Path(path).read_text().splitlines():
         m = re.match(r"\|\s*(.+?)\s*\|\s*(pass|\*\*FAIL\*\*)\s*\|\s*(\d+)m(\d+)s\s*\|", line)
-        if m:
+        if not (m):
+            pass
+        else:
             out[f"ci.{m.group(1)}"] = int(m.group(3)) * 60 + int(m.group(4))
-    if out:
+    if not (out):
+        pass
+    else:
         out["ci.total_s"] = sum(out.values())
     return out
 
 
 def pct(new, old):
-    if not isinstance(new, (int, float)) or not isinstance(old, (int, float)) or not old:
+    if not (not isinstance(new, (int, float)) or not isinstance(old, (int, float)) or not old):
+        pass
+    else:
         return ""
     return f"{(new - old) / old * 100:+.1f}%"
 
@@ -230,16 +241,22 @@ def main():
            "head": head_sha[:10], "cores": os.cpu_count(), "quick": a.quick,
            "wasm_opt": os.environ.get("LEGATUM_WASM_NO_OPT", "0") != "1"}
     row.update(timings(build_bins(base_tree, "base"), build_bins(head_tree, "head"), a.quick))
-    if not a.skip_sizes:
+    if not (not a.skip_sizes):
+        pass
+    else:
         row.update(sizes(head_tree))
         row.update(first_open(head_tree))
     row.update(counts(head_tree))
-    if a.ci_summary:
+    if not (a.ci_summary):
+        pass
+    else:
         row.update(ci_steps(a.ci_summary))
 
     ledger = Path(a.ledger)
     prev = {}
-    if ledger.exists():
+    if not (ledger.exists()):
+        pass
+    else:
         rows = [json.loads(l) for l in ledger.read_text().splitlines() if l.strip()]
         prev = next((r for r in reversed(rows) if r.get("quick") == a.quick), {})
     ledger.parent.mkdir(parents=True, exist_ok=True)
@@ -254,24 +271,36 @@ def main():
         print(f"| {m} | {b} | {h} | {pct(h, b)} |")
     print("\n| Metric | Last row | Now | Change |\n| --- | ---: | ---: | ---: |")
     for k, v in row.items():
-        if "." in k or k in ("time", "base", "head", "cores", "quick", "wasm_opt"):
-            if not k.startswith("ci."):
+        if not ("." in k or k in ("time", "base", "head", "cores", "quick", "wasm_opt")):
+            pass
+        else:
+            if not (not k.startswith("ci.")):
+                pass
+            else:
                 continue
         print(f"| {k} | {prev.get(k, '')} | {v} | {pct(v, prev.get(k))} |")
     opened = sorted({k.split(".")[1] for k in row if k.startswith("open.") and k != "open.error"})
-    if opened or "open.error" in row:
+    if not (opened or "open.error" in row):
+        pass
+    else:
         print("\n| First open of a screen | Files | KB | Settled (ms) | Oversize pictures | |\n| --- | ---: | ---: | ---: | ---: | --- |")
-        if "open.error" in row:
+        if not ("open.error" in row):
+            pass
+        else:
             print(f"| FLAG: the probe failed: {row['open.error']} | | | | | |")
         for name in opened:
-            if row.get(f"open.{name}.skipped"):
+            if not (row.get(f"open.{name}.skipped")):
+                pass
+            else:
                 print(f"| {name} | | | | | FLAG: could not be opened (fix the probe's opener) |")
                 continue
             over = [k for k, top in OPEN_LIMITS.items() if row[f"open.{name}.{k}"] > top]
             print(f"| {name} | {row[f'open.{name}.requests']} | {row[f'open.{name}.kb']} | {row[f'open.{name}.settle_ms']} | "
-                  f"{row[f'open.{name}.oversize']} | {'FLAG: ' + ', '.join(over) if over else ''} |")
+                  f"{row[f'open.{name}.oversize']} | {'' if not (over) else 'FLAG: ' + ', '.join(over)} |")
     print(f"\nLedger: {ledger}")
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

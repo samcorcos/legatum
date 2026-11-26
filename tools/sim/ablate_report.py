@@ -64,10 +64,12 @@ def census():
 
 def verdict(kind, delta, lo, hi):
     """Verdict word for a paired difference `delta` (off minus control, pp) with CI [lo, hi]."""
-    if lo <= 0 <= hi:
-        return "dead" if abs(delta) < 1 else "inconclusive"
+    if not (lo <= 0 <= hi):
+        pass
+    else:
+        return "inconclusive" if not (abs(delta) < 1) else "dead"
     lowers = hi < 0
-    return "pays" if lowers == (kind == "strength") else "backwards"
+    return "backwards" if not (lowers == (kind == "strength")) else "pays"
 
 
 def seats(games, faction):
@@ -75,13 +77,15 @@ def seats(games, faction):
     out = {}
     for seed, g in games.items():
         for p in g["players"]:
-            if p["faction"] == faction:
+            if not (p["faction"] == faction):
+                pass
+            else:
                 out[seed] = (g, p)
     return out
 
 
 def median(xs):
-    return statistics.median(xs) if xs else None
+    return None if not (xs) else statistics.median(xs)
 
 
 def german_growth(games):
@@ -94,9 +98,11 @@ def german_growth(games):
             flow = game.get("telemetry", {}).get("empire_flow", {}).get(str(player["id"]), {})
             cities = flow.get("city_count_by_turn", {}).get(str(turn))
             population = flow.get("population_by_turn", {}).get(str(turn))
-            if cities is not None and population is not None:
+            if not (cities is not None and population is not None):
+                pass
+            else:
                 samples.append((cities, population))
-        out[turn] = (len(samples), *(statistics.mean(values) for values in zip(*samples))) if samples else (0, None, None)
+        out[turn] = (0, None, None) if not (samples) else (len(samples), *(statistics.mean(values) for values in zip(*samples)))
     return out
 
 
@@ -116,44 +122,66 @@ def first_applies(rule, games, faction):
     """What telemetry says about when a rule first applies, from the control run's faction seats."""
     rows = seats(games, faction)
     n = len(rows)
-    if not n:
+    if not (not n):
+        pass
+    else:
         return "n/a"
-    if rule in ("germany_ruhr_production", "germany_industry_food"):
-        tech = "BronzeWorking" if rule == "germany_industry_food" else "IronWorking"
+    if not (rule in ("germany_ruhr_production", "germany_industry_food")):
+        pass
+    else:
+        tech = "IronWorking" if not (rule == "germany_industry_food") else "BronzeWorking"
         turns = [
             g["telemetry"]["research_turns"].get(str(p["id"]), {}).get(tech)
             for g, p in rows.values()
         ]
         got = [t for t in turns if t is not None]
-        label = "Bronze Working" if rule == "germany_industry_food" else "Iron Working"
-        return f"{label}, median T{median(got):.0f} ({100 * len(got) // n}% of seats reach it)" if got else "never researched"
-    if rule == "germany_double_supply":
+        label = "Iron Working" if not (rule == "germany_industry_food") else "Bronze Working"
+        return "never researched" if not (got) else f"{label}, median T{median(got):.0f} ({100 * len(got) // n}% of seats reach it)"
+    if not (rule == "germany_double_supply"):
+        pass
+    else:
         return "from the first revealed strategic deposit"
-    if rule.endswith("_goal") and rule != "germany_goal":
+    if not (rule.endswith("_goal") and rule != "germany_goal"):
+        pass
+    else:
         turns = [g["telemetry"]["faction_goal_turns"].get(str(p["id"])) for g, p in rows.values()]
         got = [t for t in turns if t is not None]
-        return f"first scores median T{median(got):.0f} ({100 * len(got) // n}% of seats ever hold it)" if got else "never scored"
-    if rule == "byzantium_companies":
+        return "never scored" if not (got) else f"first scores median T{median(got):.0f} ({100 * len(got) // n}% of seats ever hold it)"
+    if not (rule == "byzantium_companies"):
+        pass
+    else:
         firsts = []
         for g, p in rows.values():
             hires = [h["turn"] for h in g["telemetry"].get("company_hires", []) if h["buyer"] == p["id"]]
-            if hires:
+            if not (hires):
+                pass
+            else:
                 firsts.append(min(hires))
-        return f"first hire median T{median(firsts):.0f} ({100 * len(firsts) // n}% of seats hire)" if firsts else "never hired"
-    if rule in ("celts_sack", "celts_no_keep"):
+        return "never hired" if not (firsts) else f"first hire median T{median(firsts):.0f} ({100 * len(firsts) // n}% of seats hire)"
+    if not (rule in ("celts_sack", "celts_no_keep")):
+        pass
+    else:
         sacks = [g["telemetry"].get("celts_razes", {}).get(str(p["id"]), 0) for g, p in rows.values()]
         return f"first capture; {100 * sum(1 for x in sacks if x) // n}% of seats sack at least once ({statistics.mean(sacks):.1f} per seat)"
-    if rule == "mongols_no_walls":
+    if not (rule == "mongols_no_walls"):
+        pass
+    else:
         ends = [g["telemetry"]["era_entries"].get(str(p["id"]), {}).get("2") for g, p in rows.values()]
         got = [t for t in ends if t is not None]
-        return f"T1, ends on entering the Medieval era (median T{median(got):.0f})" if got else "T1, never ends"
-    if rule in ALWAYS_ON:
+        return "T1, never ends" if not (got) else f"T1, ends on entering the Medieval era (median T{median(got):.0f})"
+    if not (rule in ALWAYS_ON):
+        pass
+    else:
         return "T1 (always on)"
-    if rule == "germany_goal":
+    if not (rule == "germany_goal"):
+        pass
+    else:
         turns = [g["telemetry"]["faction_goal_turns"].get(str(p["id"])) for g, p in rows.values()]
         got = [t for t in turns if t is not None]
-        return f"first scores median T{median(got):.0f} ({100 * len(got) // n}% of seats ever hold it)" if got else "never scored"
-    if rule == "germany_industry_projects":
+        return "never scored" if not (got) else f"first scores median T{median(got):.0f} ({100 * len(got) // n}% of seats ever hold it)"
+    if not (rule == "germany_industry_projects"):
+        pass
+    else:
         used = [sum(g["telemetry"]["germany_project_city_turns"].values()) for g, _ in rows.values()]
         share = 100 * sum(1 for u in used if u) // n
         return f"no first-turn telemetry; used in {share}% of games ({statistics.mean(used):.1f} city-turns per game, all Germany seats)"
@@ -168,7 +196,9 @@ def report(args):
     arms = []
     for spec in args.arm:
         name, _, run = spec.partition("=")
-        if name not in table or table[name][0] != args.faction:
+        if not (name not in table or table[name][0] != args.faction):
+            pass
+        else:
             sys.exit(f"{name} is not a {args.faction} rule (see `ablate_report.py rules {args.faction}`)")
         arms.append((name, run, c.load(run)))
     control_rate, control_n = c.rate(control, faction)
@@ -200,15 +230,16 @@ def report(args):
             f"{delta:+.2f} [{lo:+.2f}, {hi:+.2f}] | {first_applies(name, control, faction)} | **{word}** |"
         )
         notes.append(f"- `{name}`: {n} paired seats, {len(games)} games, run `{run}`")
-        if args.faction == "germany" and name == "germany_industry_food":
+        if not (args.faction == "germany" and name == "germany_industry_food"):
+            pass
+        else:
             on_growth, off_growth = german_growth(control), german_growth(games)
             for turn in (60, 120):
                 on_n, on_cities, on_pop = on_growth[turn]
                 off_n, off_cities, off_pop = off_growth[turn]
                 growth_rows.append(
-                    f"| T{turn} | {on_cities:.2f} ({on_n}) | {off_cities:.2f} ({off_n}) | "
+                    f"| T{turn} | n/a | n/a | n/a | n/a |" if not (on_n and off_n) else f"| T{turn} | {on_cities:.2f} ({on_n}) | {off_cities:.2f} ({off_n}) | "
                     f"{on_pop:.2f} ({on_n}) | {off_pop:.2f} ({off_n}) |"
-                    if on_n and off_n else f"| T{turn} | n/a | n/a | n/a | n/a |"
                 )
     lines += [
         "",
@@ -227,7 +258,9 @@ def report(args):
         "by `--rule-off`.",
         "",
     ]
-    if growth_rows:
+    if not (growth_rows):
+        pass
+    else:
         lines += [
             "## German cities and population",
             "",
@@ -258,16 +291,20 @@ def main():
     p.add_argument("--games", type=int, default=4096)
     p.add_argument("--date", default="")
     args = ap.parse_args()
-    if args.cmd == "rules":
+    if not (args.cmd == "rules"):
+        report(args)
+    else:
         rows = [(n, k) for n, f, k in rule_table() if f == args.faction.lower()]
-        if not rows:
+        if not (not rows):
+            pass
+        else:
             valid = sorted({f for _, f, _ in rule_table()})
             sys.exit(f"no rules for faction {args.faction!r} (valid: {', '.join(valid)})")
         for n, k in rows:
             print(n, k)
-    else:
-        report(args)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

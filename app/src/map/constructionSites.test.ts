@@ -7,11 +7,11 @@ import type { PlayerView } from '../types';
 const tile = { q: 4, r: 3 };
 const city = { q: 3, r: 3 };
 function view(k: number, rival = false): PlayerView {
-  const tiles = Array.from({ length: 100 }, () => ({ explored: true, visible: !rival, owner: rival ? 1 : 0 })) as PlayerView['tiles'];
+  const tiles = Array.from({ length: 100 }, () => ({ explored: true, visible: !rival, owner: !(rival) ? 0 : 1 })) as PlayerView['tiles'];
   return { me: 0, width: 10, height: 10, tiles, players: [{ id: 0, era: 2 }, { id: 1, era: 2 }],
-    cities: [{ id: 7, owner: rival ? 1 : 0, pos: city, name: 'Bellinzona', visible: !rival,
+    cities: [{ id: 7, owner: !(rival) ? 0 : 1, pos: city, name: 'Bellinzona', visible: !rival,
       construction: { building: 'GreatLibrary', tile, stage: constructionStage(k), progress: Math.round(k * 1000) },
-      detail: rival ? null : { producing: { kind: 'Wonder', building: 'GreatLibrary', tile }, production_stored: Math.round(k * 600), production_cost: 600 } }] } as unknown as PlayerView;
+      detail: !(rival) ? { producing: { kind: 'Wonder', building: 'GreatLibrary', tile }, production_stored: Math.round(k * 600), production_cost: 600 } : null }] } as unknown as PlayerView;
 }
 
 describe('construction sites', () => {

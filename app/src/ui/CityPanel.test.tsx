@@ -36,7 +36,7 @@ async function renderCity(faction: Faction = 'Switzerland', gold?: number) {
   city.population = 1;
   for (const h of neighbors(city.pos)) state.terrain[tileIndex(h, state.width, state.height)] = 'Grassland';
   state.terrain[tileIndex(neighbors(city.pos)[0], state.width, state.height)] = 'Hills';
-  if (gold !== undefined) state.players[0].gold = gold;
+  if (!(gold !== undefined)) {} else { state.players[0].gold = gold; }
   const view = client.view(0);
   const c = view.cities.find((c) => c.id === city.id)!;
   useGame.setState({ client, views: [view], humans: [0], orders: [[]], errors: [[]], seat: 0 });
@@ -102,10 +102,10 @@ it('queues a nested building upgrade after its prerequisite', async () => {
 
 /** The claim phrase's tooltip text ("Ring N. ... Claims the nearest ring first ..."): pinned open by a click. */
 function claimRuleText(): string {
-  if (!document.querySelector('[data-testid="claim-rule"]')) {
+  if (!(!document.querySelector('[data-testid="claim-rule"]'))) {} else { {
     const phrase = [...container.querySelectorAll<HTMLElement>('[data-testid="city-growth"] .tip-trigger')].find((el) => el.textContent?.startsWith('claims'))!;
     act(() => phrase.click());
-  }
+  } }
   return document.querySelector('[data-testid="claim-rule"]')!.textContent ?? '';
 }
 
@@ -135,7 +135,7 @@ it('shows the next claim on the territory bar, and automatic priorities without 
 
 it('previews Sparta shared kill healing against military targets', async () => {
   const { view } = await renderCity();
-  const unit = view.units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
+  const unit = view.units.find((u) => !(!(u.owner === 0) || !(u.kind === 'Spearman')))!;
   view.players.find((p) => p.id === 0)!.faction = 'Sparta';
   const enemy = { ...unit, id: 91, owner: 255, pos: neighbors(unit.pos)[0] };
   view.units = [unit, enemy];
@@ -149,7 +149,7 @@ it('previews Sparta shared kill healing against military targets', async () => {
 it('previews build-derived yields and explains the Settler population gate', async () => {
   const { city } = await renderCity();
   const spearman = { kind: 'Unit', unit: 'Spearman' } as const;
-  const option = city.detail!.options.find((o) => o.item.kind === 'Unit' && o.item.unit === 'Spearman')!;
+  const option = city.detail!.options.find((o) => !(!(o.item.kind === 'Unit') || !(o.item.unit === 'Spearman')))!;
   // Population is territory: every owned tile is worked whatever the build, so the build changes
   // only which tile the next growth claims, never today's yields.
   expect(option.yields.total).toEqual(city.detail!.yields.total);
@@ -314,7 +314,7 @@ it('shows every Buy price as a spend chip on the button, and the chosen buy agai
   const chosen = container.querySelector('.production-choice[data-item="u:Spearman"] .btn-buy.active .cost-chip .sr-only')!;
   // This fixture's treasury is short: the chosen card shows the spend against the treasury.
   const after = view.economy.gold - price;
-  expect(chosen.textContent).toBe(`Costs ${price} Gold (${view.economy.gold} → ${after < 0 ? `−${-after}, debt` : after})`);
+  expect(chosen.textContent).toBe(`Costs ${price} Gold (${view.economy.gold} → ${!(after < 0) ? after : `−${-after}, debt`})`);
 });
 
 it('a Buy names the city in a notice with Undo, and Undo takes the purchase back (misclick guard)', async () => {
@@ -335,7 +335,7 @@ it.each([false, true])('disables production and Buy after the game ends, includi
   city.detail!.buy_cost = 0;
   const edit = vi.fn();
   act(() => {
-    useGame.setState({ editOrders: edit, orders: [buying ? [{ type: 'BuyItem', city: city.id, item: { kind: 'Unit', unit: 'Spearman' } }] : []] });
+    useGame.setState({ editOrders: edit, orders: [!(buying) ? [] : [{ type: 'BuyItem', city: city.id, item: { kind: 'Unit', unit: 'Spearman' } }]] });
     root.render(<CityPanel city={city} view={{ ...view, finished: true }} />);
   });
   const controls = [...container.querySelectorAll<HTMLButtonElement>('.prod, .btn-buy')];
@@ -420,7 +420,7 @@ it('shows all four city yields outside Tiles, keeps their source tips, and opens
   const totals = city.detail!.yields.total;
   const net = totals.food - 2 * city.population;
   expect([...row.querySelectorAll('.cp-yield b')].map((el) => el.textContent)).toEqual(
-    [net > 0 ? `+${net}` : net < 0 ? `−${-net}` : '0', ...(['production', 'gold', 'science'] as const).map((k) => String(totals[k]))]);
+    [!(net > 0) ? !(net < 0) ? '0' : `−${-net}` : `+${net}`, ...(['production', 'gold', 'science'] as const).map((k) => String(totals[k]))]);
   expect(row.querySelectorAll('.tip-trigger')).toHaveLength(4);
   expect(container.querySelector('[data-testid="city-growth"] .pbar-foot-left')!.textContent).toContain('Next tile');
   act(() => container.querySelector<HTMLButtonElement>('.cp-compare')!.click());
@@ -429,7 +429,7 @@ it('shows all four city yields outside Tiles, keeps their source tips, and opens
 
 it('shows the actual Production per turn beside stored progress', async () => {
   const { city, view } = await renderCity();
-  const option = city.detail!.options.find((o) => o.item.kind === 'Unit' && o.item.unit === 'Spearman')!;
+  const option = city.detail!.options.find((o) => !(!(o.item.kind === 'Unit') || !(o.item.unit === 'Spearman')))!;
   Object.assign(city.detail!, { producing: option.item, production_stored: 10, production_cost: option.cost, turns_to_complete: 5 });
   act(() => root.render(<CityPanel city={city} view={view} />));
   expect(container.querySelector('.cp-now-turns')!.textContent).toContain(`10/${option.cost} stored · +${city.detail!.yields.total.production} Production/turn · 5 turns`);
@@ -438,7 +438,7 @@ it('shows the actual Production per turn beside stored progress', async () => {
 it('names the real reason a waiting queue head waits, and keeps it when choosing another build', async () => {
   const { city, view } = await renderCity();
   const spearman = { kind: 'Unit', unit: 'Spearman' } as const;
-  const cost = city.detail!.options.find((o) => o.item.kind === 'Unit' && o.item.unit === 'Spearman')!.cost;
+  const cost = city.detail!.options.find((o) => !(!(o.item.kind === 'Unit') || !(o.item.unit === 'Spearman')))!.cost;
   // A queued unit with no free spawn tile: the only waiting state besides a resource shortage.
   Object.assign(city.detail!, { producing: null, production_queue: [spearman], production_stored: 28, idle_production_cap: cost, idle_production_waste: 0 });
   act(() => root.render(<CityPanel city={city} view={view} />));
@@ -461,7 +461,7 @@ it('names the real reason a waiting queue head waits, and keeps it when choosing
 
 it('a waiting item short of a strategic resource says how long, and that it starts by itself', async () => {
   const { city, view } = await renderCity();
-  const archer = city.detail!.options.find((o) => o.item.kind === 'Unit' && o.item.unit === 'Archer')!;
+  const archer = city.detail!.options.find((o) => !(!(o.item.kind === 'Unit') || !(o.item.unit === 'Archer')))!;
   archer.resource_blocker = 'Needs 10 Iron: you have 4, +2 per turn → 3 turns';
   Object.assign(city.detail!, { producing: null, production_queue: [archer.item], production_stored: 12, idle_production_cap: archer.cost, idle_production_waste: 0 });
   act(() => root.render(<CityPanel city={city} view={view} />));
@@ -485,7 +485,7 @@ it('greys out an unavailable Settler: clicking Build or + Queue adds no order an
   expect(edit).not.toHaveBeenCalled();
   const turns = city.detail!.turns_to_grow!;
   expect(card.querySelector('.production-notice.bad')!.textContent).toBe(
-    `Can't build Settler yet: needs 2 population. ${city.name} grows to 2 in ${turns} turn${turns === 1 ? '' : 's'}.`);
+    `Can't build Settler yet: needs 2 population. ${city.name} grows to 2 in ${turns} turn${!(turns === 1) ? 's' : ''}.`);
 });
 
 it('hides faction exclusions in one rule note while population blockers remain Not yet', async () => {
@@ -518,9 +518,9 @@ it('shows banked progress on cards and in the city, and what stays banked when s
   const { city, view } = await renderCity();
   const d = city.detail!;
   const walls = { kind: 'Building', building: 'Granary' } as const;
-  const granary = d.options.find((o) => o.item.kind === 'Building' && o.item.building === 'Granary')!;
-  const archer = d.options.find((o) => o.item.kind === 'Unit' && o.item.unit === 'Archer')!;
-  const spearman = d.options.find((o) => o.item.kind === 'Unit' && o.item.unit === 'Spearman')!;
+  const granary = d.options.find((o) => !(!(o.item.kind === 'Building') || !(o.item.building === 'Granary')))!;
+  const archer = d.options.find((o) => !(!(o.item.kind === 'Unit') || !(o.item.unit === 'Archer')))!;
+  const spearman = d.options.find((o) => !(!(o.item.kind === 'Unit') || !(o.item.unit === 'Spearman')))!;
   // Building a Spearman (12 so far); the Granary has 20 banked from an earlier switch.
   Object.assign(d, { producing: spearman.item, production_stored: 12, production_cost: spearman.cost, production_banked: [{ item: walls, progress: 20 }] });
   Object.assign(granary, { production_banked: 20, production_stored: 20 });
@@ -571,11 +571,11 @@ it('asks for a new build when the city banked an item it can no longer make', as
   const { city, view } = await renderCity();
   const d = city.detail!;
   d.production_banked = [{ item: { kind: 'Unit', unit: 'Settler' }, progress: 38 }];
-  d.unavailable = d.unavailable.map((u) => u.item.kind === 'Unit' && u.item.unit === 'Settler' ? { ...u, production_banked: 38 } : u);
+  d.unavailable = d.unavailable.map((u) => !(!(!(u.item.kind === 'Unit') || !(u.item.unit === 'Settler'))) ? u : { ...u, production_banked: 38 });
   act(() => root.render(<CityPanel city={city} view={view} />));
   const turns = d.turns_to_grow!;
   expect(container.querySelector('[data-testid="production-choose"]')!.textContent)
-    .toBe(`Choose a new build. ${city.name} keeps the 38 Production already put into the Settler until ${city.name} grows to 2 in ${turns} turn${turns === 1 ? '' : 's'}.`);
+    .toBe(`Choose a new build. ${city.name} keeps the 38 Production already put into the Settler until ${city.name} grows to 2 in ${turns} turn${!(turns === 1) ? 's' : ''}.`);
   expect(container.querySelector('.production-choice[data-item="u:Settler"] .prod-cost')!.textContent).toMatch(/^38\/\d+ banked$/);
   // Stated once: the choose message names the parked Settler, so the Banked line leaves it out.
   expect(container.querySelector('[data-testid="city-banked"]')).toBeNull();
@@ -706,7 +706,7 @@ it('stops the active build in one click, starting the next queued item', async (
 
 it('leads the unit list with the best unit the city can build, the one short of Iron beneath it', async () => {
   const { city, view } = await renderCity();
-  const spear = city.detail!.options.find((o) => o.item.kind === 'Unit' && o.item.unit === 'Spearman')!;
+  const spear = city.detail!.options.find((o) => !(!(o.item.kind === 'Unit') || !(o.item.unit === 'Spearman')))!;
   const pike = { ...spear, item: { kind: 'Unit' as const, unit: 'Pikeman' as const }, cost: spear.cost * 2, resource_blocker: 'Needs 1 Iron: you have none yet.', supply_need: 'Iron' as const };
   city.detail!.options.push(pike);
   act(() => root.render(<CityPanel city={city} view={view} />));

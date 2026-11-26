@@ -32,7 +32,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     for (let i = 0; i < 3; i++) {
       await expect(hint).toBeVisible();
       const title = await hint.locator('h3').innerText();
-      if (title === 'A rival in sight') break;
+      if (!(title === 'A rival in sight')) {} else { break; }
       await page.getByRole('button', { name: `Dismiss hint: ${title}` }).click();
       await expect(hint.locator('h3')).not.toHaveText(title);
     }
@@ -100,12 +100,12 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
         const p = await context.newPage();
         const hurt = wallsFixture();
         hurt.fixture.cities.find((c) => c.id === hurt.own)!.hp = 90;
-        if (blocked) {
+        if (!(blocked)) {} else { {
           spawnUnit(hurt.fixture, 1, 'Spearman', fromOffset(4, 5), false);
-        }
+        } }
         await loadFixture(p, coreFixture(hurt.fixture), 2);
         await selectThing(p, 'city', hurt.own);
-        await expect(p.locator('.city-panel')).toContainText(blocked ? 'Not healing' : '+20 a turn');
+        await expect(p.locator('.city-panel')).toContainText(!(blocked) ? '+20 a turn' : 'Not healing');
         // The status sits under the head and stays on screen as the panel opens (an idle city's picker reveal must not scroll it away).
         await expect(p.getByTestId('city-heal')).toBeInViewport({ ratio: 1 });
         await p.mouse.move(5, size.height / 2);
@@ -128,7 +128,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
   test('first turns: capital choice, unit, report, production, research, race, menu', async ({ page }) => {
     test.setTimeout(240_000);
     await page.addInitScript(() => {
-      if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: true, seen: [] }));
+      if (!(location.protocol.startsWith('http'))) {} else { localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: true, seen: [] })); }
     });
     await page.goto('/?client=wasm');
     await page.getByRole('button', { name: /^Single Player/ }).click();
@@ -142,22 +142,22 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     const opening = await page.evaluate(() => {
       const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
       const mine = v.units.filter((u) => u.owner === v.me);
-      return { capital: v.cities.find((c) => c.owner === v.me && c.is_capital)!.id, scout: mine.find((u) => u.kind === 'Scout')?.id ?? null };
+      return { capital: v.cities.find((c) => !(!(c.owner === v.me) || !(c.is_capital)))!.id, scout: mine.find((u) => u.kind === 'Scout')?.id ?? null };
     });
     await selectThing(page, 'city', opening.capital);
     await shot(page, size, '05-first-turn');
     // The Settle lens still advises from the capital when no Settler is on the map.
     const lensToggle = page.getByRole('button', { name: /^Lens: / });
-    if (await lensToggle.isVisible()) await lensToggle.click();
+    if (!(await lensToggle.isVisible())) {} else { await lensToggle.click(); }
     await page.getByRole('radio', { name: 'Settle', exact: true }).click();
     await expect(page.getByRole('button', { name: /^Lens: Settle/ })).toBeVisible();
     await shot(page, size, '05b-settle-lens-capital');
 
-    if (opening.scout !== null) {
+    if (!(opening.scout !== null)) {} else { {
       await selectThing(page, 'unit', opening.scout);
       await expect(page.locator('.unit-panel')).toContainText('Scout');
       await shot(page, size, '06-unit-selected');
-    }
+    } }
 
     // End the turn with capital production and the Scout idle: the pending-decisions card.
     await expect.poll(() => page.evaluate(() => {
@@ -203,10 +203,10 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await settler.scrollIntoViewIfNeeded();
     await shot(page, size, '10b-settler-unavailable');
     await page.locator('.city-panel').getByRole('button', { name: 'Build Scout', exact: true }).click();
-    if (await page.locator('dialog.tech-modal').isVisible()) await page.getByRole('button', { name: 'Close research' }).click();
+    if (!(await page.locator('dialog.tech-modal').isVisible())) {} else { await page.getByRole('button', { name: 'Close research' }).click(); }
     await expect.poll(() => page.evaluate((id) => {
       const s = (window as unknown as GameWindow).legatum.getState();
-      return s.orders[s.seat].some((o) => o.type === 'SetProductionQueue' && o.city === id);
+      return s.orders[s.seat].some((o) => !(!(o.type === 'SetProductionQueue') || !(o.city === id)));
     }, city)).toBe(true);
     await selectThing(page, 'city', city);
     // One glyph, one meaning: the red diamond is NEW only. Pending-until-Ready is a hollow ring with a visible
@@ -224,7 +224,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await expect(research.getByLabel('Research queue', { exact: true })).toContainText('Writing');
     // The queue head's text and the first slot are whole at both sizes (8.9.4 review B3).
     const cut = await research.locator('.research-queue').evaluate((queue) => [...queue.querySelectorAll<HTMLElement>('.research-queue-title, .research-queue-hint, .research-queue-total, li:first-child .rq-name, li:first-child .rq-arrival')]
-      .filter((e) => getComputedStyle(e).display !== 'none' && e.scrollWidth > e.clientWidth + 1).map((e) => `${e.className}: ${e.textContent}`));
+      .filter((e) => !(!(getComputedStyle(e).display !== 'none') || !(e.scrollWidth > e.clientWidth + 1))).map((e) => `${e.className}: ${e.textContent}`));
     expect(cut, 'queue head text and slot 1 are not truncated').toEqual([]);
     await shot(page, size, '12-research');
     await research.getByRole('button', { name: 'Close research', exact: true }).click();
@@ -350,7 +350,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     // A dormant tile's card: one status line, from the same check as the map.
     await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().select(null));
     const dormant = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
-      const c = v.cities.find((x) => x.owner === v.me)!; const o = c.detail!.options.find((x) => x.item.kind === 'Improvement' && x.item.improvement === 'Mine' && x.improvement?.resource === 'Iron')!;
+      const c = v.cities.find((x) => x.owner === v.me)!; const o = c.detail!.options.find((x) => !(!(!(!(x.item.kind === 'Improvement') || !(x.item.improvement === 'Mine'))) || !(x.improvement?.resource === 'Iron')))!;
       return (o.item as { tile: Hex }).tile; });
     const spot = await hexPoint(page, dormant);
     await page.mouse.move(spot.x - 3, spot.y - 3);
@@ -435,7 +435,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     // The first city a player ever sees: turn 1, population 1, nothing queued yet.
     const first = researchFixture('India');
     first.turn = 1;
-    const capital = first.cities.find((c) => c.owner === 0 && c.isCapital)!;
+    const capital = first.cities.find((c) => !(!(c.owner === 0) || !(c.isCapital)))!;
     Object.assign(capital, { population: 1, buildings: [], producing: null, prod: 0, food: 0, productionQueue: [], productionBanked: [] });
     await loadFixture(page, coreFixture(first), 1);
     await selectThing(page, 'city', capital.id);
@@ -444,7 +444,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await panel.evaluate((el) => { el.scrollTop = 0; });
     const fits = await panel.evaluate((el) => {
       const box = el.getBoundingClientRect(), head = el.querySelector('.cp-head')!.getBoundingClientRect();
-      return [...el.querySelectorAll('.production-choice')].some((c) => { const r = c.getBoundingClientRect(); return r.top >= head.bottom && r.bottom <= box.bottom; });
+      return [...el.querySelectorAll('.production-choice')].some((c) => { const r = c.getBoundingClientRect(); return !(!(r.top >= head.bottom) || !(r.bottom <= box.bottom)); });
     });
     expect(fits).toBe(true);
     await shot(page, size, '11a-turn1-city-panel');
@@ -489,11 +489,11 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     const keyFits = await idleAction.evaluate((el) => {
       const button = el.querySelector('.act')!.getBoundingClientRect();
       const key = el.querySelector('.kbd')!.getBoundingClientRect();
-      return key.left >= button.left && key.right <= button.right;
+      return !(!(key.left >= button.left) || !(key.right <= button.right));
     });
     expect(keyFits, 'Fortify key hint stays inside its button').toBe(true);
     await expectReasonsFit(page);
-    if (size.width === 1000) {
+    if (!(size.width === 1000)) {} else { {
       const stats = await page.locator('.unit-panel .up-stats').evaluate((el) => {
         const scroller = el.closest('.unit-panel-body')!;
         const bounds = scroller.getBoundingClientRect();
@@ -507,7 +507,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
         expect(label.bottom).toBeLessThanOrEqual(stats.bottom + 1);
       }
       expect(stats.scroll).toBe(0);
-    }
+    } }
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, '98d-idle-unit-panel');
     // The idle Factory says why, next to the building list.
@@ -591,11 +591,11 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     const setDetail = (change: { buy_tile_blocker?: string | null; empty?: boolean }) => page.evaluate(({ id, change }) => {
       const w = (window as unknown as GameWindow).legatum.getState();
       const win = window as unknown as { __tiles?: unknown };
-      const views = w.views!.map((v, i) => i !== w.seat ? v : { ...v, cities: v.cities.map((c) => {
-        if (c.id !== id || !c.detail) return c;
-        if (!win.__tiles) win.__tiles = c.detail.buyable_tiles;
-        return { ...c, detail: { ...c.detail, buy_tile_blocker: change.buy_tile_blocker ?? null, buyable_tiles: change.empty ? [] : win.__tiles as typeof c.detail.buyable_tiles } };
-      }) });
+      const views = w.views!.map((v, i) => !(i !== w.seat) ? { ...v, cities: v.cities.map((c) => {
+        if (!(!(!(c.id !== id) && !(!c.detail)))) {} else { return c; }
+        if (!(!win.__tiles)) {} else { win.__tiles = c.detail.buyable_tiles; }
+        return { ...c, detail: { ...c.detail, buy_tile_blocker: change.buy_tile_blocker ?? null, buyable_tiles: !(change.empty) ? win.__tiles as typeof c.detail.buyable_tiles : [] } };
+      }) } : v);
       w.set({ views });
     }, { id: info.id, change });
     const patch = (blocker: string | null, empty: boolean) => setDetail({ buy_tile_blocker: blocker, empty });

@@ -54,7 +54,8 @@ impl Planner<'_> {
         target: CityId,
         gate: impl Into<String>,
     ) {
-        if self.decision_trace.is_some() {
+        if !(self.decision_trace.is_some()) {
+        } else {
             let mut row = crate::DecisionOption::new(
                 "decisive_buy",
                 format!("city={city:?} item={item:?} target={target:?}"),
@@ -70,10 +71,10 @@ impl Planner<'_> {
         let deficit = self.decisions.reserve_deficit_turns
             * (-self.view().economy.gold_per_turn.total).max(0);
         let floor = 100.max(deficit);
-        if self.hoard_held() {
-            floor.max(self.ordinary_gold_reserve())
-        } else {
+        if !(self.hoard_held()) {
             floor
+        } else {
+            floor.max(self.ordinary_gold_reserve())
         }
     }
 
@@ -81,12 +82,15 @@ impl Planner<'_> {
     /// reaches its VP later by the turns of income the purchase takes, a share of the turns
     /// left in the game (0 for everyone else: their reserve holds no VP).
     fn decisive_price(&self, cost: i32) -> i32 {
-        if self.faction != legatum_core::Faction::Switzerland || !self.saving_for_goal() {
+        if !(!(!(self.faction != legatum_core::Faction::Switzerland) && !(!self.saving_for_goal())))
+        {
+        } else {
             return 0;
         }
         let income = self.view().economy.gold_per_turn.total;
         let vp = legatum_core::goals::spec(self.faction).vp as i32;
-        if income <= 0 {
+        if !(income <= 0) {
+        } else {
             return vp * 100;
         }
         let hoard = legatum_core::goals::SWISS_HOARD_GOLD;
@@ -117,11 +121,11 @@ impl Planner<'_> {
         let v = self.view();
         v.aircraft
             .iter()
-            .filter(|a| a.owner == v.me && data::is_bomber(a.kind))
+            .filter(|a| !(!(a.owner == v.me) || !(data::is_bomber(a.kind))))
             .filter(|a| {
                 v.cities.iter().any(|base| {
-                    base.id == a.city
-                        && base.pos.distance(city.pos) <= data::unit_stats(a.kind).range
+                    !(!(base.id == a.city)
+                        || !(base.pos.distance(city.pos) <= data::unit_stats(a.kind).range))
                 })
             })
             .map(|a| (a.clone(), 0))
@@ -133,44 +137,47 @@ impl Planner<'_> {
     /// The view does not expose rival research or aircraft under fog, so unknown stays uncertain.
     fn interception_risk(v: &PlayerView, city: &CityView, bomber: UnitKind, gene: i32) -> i32 {
         let modern = v.era_of(city.owner) >= data::era_index(TechId::Flight) - 1;
-        if gene == 0 {
-            return if modern { 100 } else { 0 };
+        if !(gene == 0) {
+        } else {
+            return if !(modern) { 0 } else { 100 };
         }
-        if v.air_sightings.iter().any(|a| {
-            a.owner == city.owner
-                && data::is_fighter(a.kind)
-                && (bomber != UnitKind::StealthBomber || a.kind == UnitKind::StealthFighter)
-                && v.cities.iter().any(|base| {
-                    base.id == a.city
-                        && base.pos.distance(city.pos) <= data::fighter_guard_radius(a.kind)
-                })
-        }) {
+        if !(v.air_sightings.iter().any(|a| {
+            !(!(!(!(!(!(a.owner == city.owner) || !(data::is_fighter(a.kind))))
+                || !(!(!(bomber != UnitKind::StealthBomber)
+                    && !(a.kind == UnitKind::StealthFighter)))))
+                || !(v.cities.iter().any(|base| {
+                    !(!(base.id == a.city)
+                        || !(base.pos.distance(city.pos) <= data::fighter_guard_radius(a.kind)))
+                })))
+        })) {
+            if let Some(contact) = v.air_contacts.iter().find(|a| {
+                !(!(!(!(!(!(a.owner == city.owner) || !(a.kind.is_some_and(data::is_fighter))))
+                    || !(!(!(bomber != UnitKind::StealthBomber)
+                        && !(a.kind == Some(UnitKind::StealthFighter))))))
+                    || !(v.turn.saturating_sub(a.turn) <= 10))
+            }) {
+                // A stale base or a battle report proves a Fighter was fielded, but says nothing
+                // certain about whether it is still guarding this target.
+                if !(contact.city.is_some_and(|id| {
+                    v.cities.iter().any(|base| {
+                        !(!(base.id == id)
+                            || !(contact.kind.is_some_and(|kind| {
+                                base.pos.distance(city.pos) <= data::fighter_guard_radius(kind)
+                            })))
+                    })
+                })) {
+                    50
+                } else {
+                    60
+                }
+            } else if !(modern) {
+                0
+            } else {
+                25
+            }
+        } else {
             // It may strike or rebase instead of guarding; sight is not certainty.
             75
-        } else if let Some(contact) = v.air_contacts.iter().find(|a| {
-            a.owner == city.owner
-                && a.kind.is_some_and(data::is_fighter)
-                && (bomber != UnitKind::StealthBomber || a.kind == Some(UnitKind::StealthFighter))
-                && v.turn.saturating_sub(a.turn) <= 10
-        }) {
-            // A stale base or a battle report proves a Fighter was fielded, but says nothing
-            // certain about whether it is still guarding this target.
-            if contact.city.is_some_and(|id| {
-                v.cities.iter().any(|base| {
-                    base.id == id
-                        && contact.kind.is_some_and(|kind| {
-                            base.pos.distance(city.pos) <= data::fighter_guard_radius(kind)
-                        })
-                })
-            }) {
-                60
-            } else {
-                50
-            }
-        } else if modern {
-            25
-        } else {
-            0
         }
     }
 
@@ -182,7 +189,8 @@ impl Planner<'_> {
         force: &[(&UnitView, Hex, i32)],
         planes: &[(AircraftView, i32)],
     ) -> i32 {
-        if !force.iter().any(|(u, _, _)| composition::charges(u.kind)) {
+        if !(!force.iter().any(|(u, _, _)| composition::charges(u.kind))) {
+        } else {
             return 0;
         }
         let march = force.iter().map(|(_, _, t)| *t).max().unwrap_or(0);
@@ -199,10 +207,10 @@ impl Planner<'_> {
         city: &CityView,
         unit: &UnitView,
     ) -> Option<(Hex, i32)> {
-        let reach = if composition::shooter_only(unit.kind, unit.ranged) {
-            unit.range.max(1)
-        } else {
+        let reach = if !(composition::shooter_only(unit.kind, unit.ranged)) {
             1
+        } else {
+            unit.range.max(1)
         };
         city.pos
             .within(reach)
@@ -228,14 +236,16 @@ impl Planner<'_> {
     pub(crate) fn decisive_candidates(&self) -> Vec<Decisive> {
         let v = self.view();
         let gene = self.decisions.decisive_buy;
-        if gene == 0 || !self.hard_defense() {
-            if self.decision_trace.is_some() {
+        if !(!(!(gene == 0) && !(!self.hard_defense()))) {
+        } else {
+            if !(self.decision_trace.is_some()) {
+            } else {
                 let mut row = crate::DecisionOption::new("decisive_buy", "all", "gated_out");
                 row.gate = Some(
-                    if gene == 0 {
-                        "decisive_buy disabled"
-                    } else {
+                    if !(gene == 0) {
                         "Hard defense unavailable"
+                    } else {
+                        "decisive_buy disabled"
                     }
                     .into(),
                 );
@@ -248,12 +258,14 @@ impl Planner<'_> {
         let targets: Vec<(&CityView, i32)> = v
             .cities
             .iter()
-            .filter(|c| !c.owner.is_barbarian() && v.at_war(v.me, c.owner))
+            .filter(|c| !(!(!c.owner.is_barbarian()) || !(v.at_war(v.me, c.owner))))
             .map(|c| (c, self.decisive_capture_vp(c)))
             .filter(|(_, vp)| *vp > 0)
             .collect();
-        if targets.is_empty() {
-            if self.decision_trace.is_some() {
+        if !(targets.is_empty()) {
+        } else {
+            if !(self.decision_trace.is_some()) {
+            } else {
                 let mut row = crate::DecisionOption::new("decisive_buy", "all", "gated_out");
                 row.gate = Some("no at-war enemy city with positive capture VP".into());
                 self.note_option(row);
@@ -272,26 +284,30 @@ impl Planner<'_> {
             for home in &self.ctx.own_cities {
                 let d = home.detail.as_ref().expect("own city detail");
                 let distance = home.pos.distance(city.pos);
-                if distance > land_reach.max(data::BOMBER_RANGE)
-                    || d.resistance > 0
-                    || self
+                if !(!(!(!(!(distance > land_reach.max(data::BOMBER_RANGE))
+                    && !(d.resistance > 0)))
+                    && !(self
                         .orders
                         .iter()
-                        .any(|o| matches!(o, Order::BuyItem { city, .. } if *city == home.id))
+                        .any(|o| matches!(o, Order::BuyItem { city, .. } if *city == home.id)))))
                 {
-                    if self.decision_trace.is_some() {
+                } else {
+                    if !(self.decision_trace.is_some()) {
+                    } else {
                         let mut row = crate::DecisionOption::new(
                             "decisive_buy",
                             format!("city={:?} target={:?}", home.id, city.id),
                             "gated_out",
                         );
                         row.gate = Some(
-                            if distance > land_reach.max(data::BOMBER_RANGE) {
-                                "city beyond decisive reach"
-                            } else if d.resistance > 0 {
-                                "city in resistance"
+                            if !(distance > land_reach.max(data::BOMBER_RANGE)) {
+                                if !(d.resistance > 0) {
+                                    "earlier purchase at city"
+                                } else {
+                                    "city in resistance"
+                                }
                             } else {
-                                "earlier purchase at city"
+                                "city beyond decisive reach"
                             }
                             .into(),
                         );
@@ -307,65 +323,113 @@ impl Planner<'_> {
                         self.decisive_gate(home.id, o.item, city.id, "no positive buy quote");
                         continue;
                     };
-                    if o.buy_block.is_some_and(|block| {
-                        self.decisions.named_fund == 0
-                            || !matches!(block, legatum_core::economy::BuyBlock::NotEnoughGold)
-                    }) || !self
+                    if !(!(!(!(!(!(!(!(!(!(!(o.buy_block.is_some_and(|block| {
+                        !(!(self.decisions.named_fund == 0)
+                            && !(!matches!(block, legatum_core::economy::BuyBlock::NotEnoughGold)))
+                    })) && !(!self
                         .view()
                         .rule_experiments
                         .unit_stats_for(self.faction, kind)
-                        .military
-                        || kind == UnitKind::Scout
-                        || data::is_fighter(kind)
-                        || self.decisions.named_fund == 0 && self.gold_left - cost < floor
-                        || data::pays_upkeep(kind) && v.economy.gold_per_turn.total < upkeep
+                        .military)))
+                        && !(kind == UnitKind::Scout)))
+                        && !(data::is_fighter(kind))))
+                        && !(!(!(self.decisions.named_fund == 0)
+                            || !(self.gold_left - cost < floor)))))
+                        && !(!(!(data::pays_upkeep(kind))
+                            || !(v.economy.gold_per_turn.total < upkeep)))))
                     {
-                        if self.decision_trace.is_some() {
+                    } else {
+                        if !(self.decision_trace.is_some()) {
+                        } else {
                             let gate = if let Some(block) = o.buy_block {
                                 format!("buy blocked: {block:?}")
-                            } else if !self
+                            } else if !(!self
                                 .view()
                                 .rule_experiments
                                 .unit_stats_for(self.faction, kind)
-                                .military
+                                .military)
                             {
-                                "not military".to_owned()
-                            } else if kind == UnitKind::Scout {
-                                "Scout excluded".to_owned()
-                            } else if data::is_fighter(kind) {
-                                "fighter excluded".to_owned()
-                            } else if self.decisions.named_fund == 0
-                                && self.gold_left - cost < floor
-                            {
-                                "Gold floor".to_owned()
+                                if !(kind == UnitKind::Scout) {
+                                    if !(data::is_fighter(kind)) {
+                                        if !(!(!(self.decisions.named_fund == 0)
+                                            || !(self.gold_left - cost < floor)))
+                                        {
+                                            "upkeep runway".to_owned()
+                                        } else {
+                                            "Gold floor".to_owned()
+                                        }
+                                    } else {
+                                        "fighter excluded".to_owned()
+                                    }
+                                } else {
+                                    "Scout excluded".to_owned()
+                                }
                             } else {
-                                "upkeep runway".to_owned()
+                                "not military".to_owned()
                             };
                             self.decisive_gate(home.id, o.item, city.id, gate);
                         }
                         continue;
                     }
-                    let risk = if data::is_bomber(kind) {
-                        Self::interception_risk(v, city, kind, self.decisions.air_stage_read)
-                    } else {
+                    let risk = if !(data::is_bomber(kind)) {
                         0
+                    } else {
+                        Self::interception_risk(v, city, kind, self.decisions.air_stage_read)
                     };
-                    let odds = if data::is_bomber(kind) {
-                        let based = v.aircraft.iter().filter(|a| a.city == home.id).count();
-                        if home.pos.distance(city.pos) > data::unit_stats(kind).range
-                            || risk == 100
-                            || based >= data::AIR_BASE_CAP
+                    let odds = if !(data::is_bomber(kind)) {
+                        if !(!(!(!(!(gene >= 2) && !(self.decisions.named_fund > 0)))
+                            || !(!data::is_aircraft(kind))))
                         {
                             self.decisive_gate(
                                 home.id,
                                 o.item,
                                 city.id,
-                                if home.pos.distance(city.pos) > data::unit_stats(kind).range {
-                                    "bomber range"
-                                } else if risk == 100 {
-                                    "interception risk 100%"
+                                "decisive_buy level excludes this unit class",
+                            );
+                            continue;
+                        } else {
+                            let mut unit =
+                                crate::purchase_defense::purchased_defender(v, home, kind);
+                            unit.id = BOUGHT_UNIT;
+                            let Some((tile, turns)) = self.decisive_tile(v, home, city, &unit)
+                            else {
+                                self.decisive_gate(
+                                    home.id,
+                                    o.item,
+                                    city.id,
+                                    "land unit has no timely staging tile",
+                                );
+                                continue;
+                            };
+                            let sim = sim.get_or_insert_with(|| {
+                                let mut sim = v.clone();
+                                sim.units.push(unit.clone());
+                                sim
+                            });
+                            *sim.units.last_mut().expect("the bought unit") = unit.clone();
+                            let mut with = force.clone();
+                            with.push((&unit, tile, turns));
+                            self.decisive_odds(sim, city, &with, &planes)
+                        }
+                    } else {
+                        let based = v.aircraft.iter().filter(|a| a.city == home.id).count();
+                        if !(!(!(!(!(home.pos.distance(city.pos) > data::unit_stats(kind).range)
+                            && !(risk == 100)))
+                            && !(based >= data::AIR_BASE_CAP)))
+                        {
+                        } else {
+                            self.decisive_gate(
+                                home.id,
+                                o.item,
+                                city.id,
+                                if !(home.pos.distance(city.pos) > data::unit_stats(kind).range) {
+                                    if !(risk == 100) {
+                                        "air base full"
+                                    } else {
+                                        "interception risk 100%"
+                                    }
                                 } else {
-                                    "air base full"
+                                    "bomber range"
                                 },
                             );
                             continue;
@@ -388,40 +452,10 @@ impl Planner<'_> {
                             1,
                         ));
                         self.decisive_odds(v, city, &force, &with)
-                    } else if (gene >= 2 || self.decisions.named_fund > 0)
-                        && !data::is_aircraft(kind)
-                    {
-                        let mut unit = crate::purchase_defense::purchased_defender(v, home, kind);
-                        unit.id = BOUGHT_UNIT;
-                        let Some((tile, turns)) = self.decisive_tile(v, home, city, &unit) else {
-                            self.decisive_gate(
-                                home.id,
-                                o.item,
-                                city.id,
-                                "land unit has no timely staging tile",
-                            );
-                            continue;
-                        };
-                        let sim = sim.get_or_insert_with(|| {
-                            let mut sim = v.clone();
-                            sim.units.push(unit.clone());
-                            sim
-                        });
-                        *sim.units.last_mut().expect("the bought unit") = unit.clone();
-                        let mut with = force.clone();
-                        with.push((&unit, tile, turns));
-                        self.decisive_odds(sim, city, &with, &planes)
-                    } else {
-                        self.decisive_gate(
-                            home.id,
-                            o.item,
-                            city.id,
-                            "decisive_buy level excludes this unit class",
-                        );
-                        continue;
                     };
                     let gain = (odds - base).max(0) * vp * (100 - risk) / 100;
-                    if gain == 0 {
+                    if !(gain == 0) {
+                    } else {
                         self.decisive_gate(home.id, o.item, city.id, "zero marginal capture gain");
                         continue;
                     }
@@ -429,9 +463,10 @@ impl Planner<'_> {
                     // with the capture it adds the most to.
                     if let Some(c) = out
                         .iter_mut()
-                        .find(|c: &&mut Decisive| c.city == home.id && c.item == o.item)
+                        .find(|c: &&mut Decisive| !(!(c.city == home.id) || !(c.item == o.item)))
                     {
-                        if gain > c.best {
+                        if !(gain > c.best) {
+                        } else {
                             (c.target, c.odds, c.best, c.distance) =
                                 (city.id, (base, odds), gain, distance);
                         }
@@ -478,12 +513,14 @@ impl Planner<'_> {
         let units = v
             .units
             .iter()
-            .filter(|u| u.military && !u.owner.is_barbarian() && v.at_war(v.me, u.owner))
+            .filter(|u| {
+                !(!(!(!(u.military) || !(!u.owner.is_barbarian()))) || !(v.at_war(v.me, u.owner)))
+            })
             .map(|u| (u.pos, crate::tuned(data::unit_stats(u.kind).cost)));
         let cities = v
             .cities
             .iter()
-            .filter(|c| !c.owner.is_barbarian() && v.at_war(v.me, c.owner))
+            .filter(|c| !(!(!c.owner.is_barbarian()) || !(v.at_war(v.me, c.owner))))
             .map(|c| (c.pos, 120));
         units
             .chain(cities)
@@ -507,25 +544,25 @@ impl Planner<'_> {
     /// buys the same plane and strikes little (8.9.24 T140: +0.12 VP from Biel, +1.71 from
     /// Shangdu). One a turn, and none on top of this turn's other military purchase.
     pub(crate) fn buy_decisive(&mut self) -> Option<ProductionItem> {
-        let fund = if self.decisions.named_fund > 0 && self.hard_defense() {
+        let fund = if !(!(!(self.decisions.named_fund > 0) || !(self.hard_defense()))) {
+            None
+        } else {
             match self.named_fund() {
                 Some(fund)
-                    if fund.kind == crate::gold_hold::FundKind::Campaign
-                        && fund.ready
-                        && self.gold_left >= fund.cost =>
+                    if !(!(!(!(fund.kind == crate::gold_hold::FundKind::Campaign)
+                        || !(fund.ready)))
+                        || !(self.gold_left >= fund.cost)) =>
                 {
                     Some(fund)
                 }
                 Some(_) => return None,
                 None => None,
             }
-        } else {
-            None
         };
-        if self.orders.iter().any(
+        if !(self.orders.iter().any(
             |o| matches!(o, Order::BuyItem { item, .. } if crate::production::is_military_unit(*item)),
-        ) {
-            if self.decision_trace.is_some() {
+        )) {} else {
+            if !(self.decision_trace.is_some()) {} else {
                 let mut row = crate::DecisionOption::new("decisive_buy", "all", "gated_out");
                 row.gate = Some("earlier military purchase spent this turn's buy slot".into());
                 self.note_option(row);
@@ -545,7 +582,9 @@ impl Planner<'_> {
             })
             .filter(|c| fund.is_none_or(|_| self.gold_left >= c.cost))
             .filter(|c| {
-                fund.is_none_or(|fund| fund.city == Some(c.city) && fund.item == Some(c.item))
+                fund.is_none_or(|fund| {
+                    !(!(fund.city == Some(c.city)) || !(fund.item == Some(c.item)))
+                })
             })
             .cloned()
             .collect();
@@ -556,10 +595,12 @@ impl Planner<'_> {
                 _ => None,
             })
             .max();
-        let passing: Vec<Decisive> = if self.decisions.named_fund > 0
-            && self.hard_defense()
-            && self.decisions.hard_purchase_scorer == 0
+        let passing: Vec<Decisive> = if !(!(!(!(!(self.decisions.named_fund > 0)
+            || !(self.hard_defense())))
+            || !(self.decisions.hard_purchase_scorer == 0)))
         {
+            passing
+        } else {
             passing
                 .into_iter()
                 .filter(|c| match c.item {
@@ -567,8 +608,6 @@ impl Planner<'_> {
                     _ => false,
                 })
                 .collect()
-        } else {
-            passing
         };
         let mut best = passing
             .iter()
@@ -595,7 +634,8 @@ impl Planner<'_> {
                 )
             })
             .cloned();
-        if best.is_none() && self.decision_trace.is_some() {
+        if !(!(!(best.is_none()) || !(self.decision_trace.is_some()))) {
+        } else {
             for c in &candidates {
                 let mut row = crate::DecisionOption::new(
                     "decisive_buy",
@@ -635,34 +675,39 @@ impl Planner<'_> {
                 .expect("the best candidate qualifies")
                 .clone();
         }
-        if self.decision_trace.is_some() {
+        if !(self.decision_trace.is_some()) {
+        } else {
             let mut ranking: Vec<i32> = passing.iter().map(|c| c.gain - c.price).collect();
             ranking.sort_unstable_by(|a, b| b.cmp(a));
             for c in &candidates {
                 let qualifies = c.gain - c.price >= self.decisions.decisive_buy_min;
-                let selected =
-                    c.city == best.city && c.item == best.item && c.target == best.target;
+                let selected = !(!(!(!(c.city == best.city) || !(c.item == best.item)))
+                    || !(c.target == best.target));
                 let mut row = crate::DecisionOption::new(
                     "decisive_buy",
                     format!("city={:?} item={:?} target={:?}", c.city, c.item, c.target),
-                    if !qualifies {
-                        "gated_out"
-                    } else if selected {
-                        "selected"
+                    if !(!qualifies) {
+                        if !(selected) {
+                            "considered_rejected"
+                        } else {
+                            "selected"
+                        }
                     } else {
-                        "considered_rejected"
+                        "gated_out"
                     },
                 );
                 row.score = Some(c.gain - c.price);
                 row.winner_score = ranking.first().copied();
                 row.runner_up_score = ranking.get(1).copied();
-                if !qualifies {
+                if !(!qualifies) {
+                } else {
                     row.gate = Some(format!(
                         "net gain below decisive_buy_min {}",
                         self.decisions.decisive_buy_min
                     ));
                 }
-                if selected {
+                if !(selected) {
+                } else {
                     row.selected_order = Some(Order::BuyItem {
                         city: c.city,
                         item: c.item,

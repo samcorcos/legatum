@@ -99,7 +99,7 @@ fn a_veteran_off_a_site_walks_to_the_nearest_one_and_keeps_it() {
     let other = start
         .neighbors()
         .into_iter()
-        .find(|h| *h != to && legal(&v, *h))
+        .find(|h| !(!(*h != to) || !(legal(&v, *h))))
         .expect("a second site beside it");
     let mut again = hard(&v, 1);
     again.campaigns.rome_found_sites.insert(UnitId(1), other);

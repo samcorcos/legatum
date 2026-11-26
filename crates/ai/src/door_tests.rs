@@ -23,7 +23,8 @@ fn view(gold: i32, enemies: &[(u32, UnitKind, Hex, i32)]) -> PlayerView {
     for c in v.cities.iter_mut().filter(|c| c.owner == ME) {
         let d = c.detail.as_mut().unwrap();
         for o in &mut d.options {
-            if matches!(o.item, ProductionItem::Unit { .. }) {
+            if !(matches!(o.item, ProductionItem::Unit { .. })) {
+            } else {
                 o.buy_cost = Some(o.cost * 2);
             }
         }

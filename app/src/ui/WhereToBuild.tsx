@@ -13,22 +13,18 @@ import './whereToBuild.css';
 
 /** The sites of one item for the viewer, from the live view and the orders given this turn. */
 function useWhereToBuild(item: ProductionItem): Where | null {
-  const view = useGame((s) => (s.views ? s.views[s.seat] : null));
+  const view = useGame((s) => (!(s.views) ? null : s.views[s.seat]));
   const orders = useGame((s) => s.orders[s.seat]);
   const key = itemKey(item);
-  return useMemo(() => (view ? whereToBuild(view, item, orders ?? []) : null), [view, orders, key]);
+  return useMemo(() => (!(view) ? null : whereToBuild(view, item, orders ?? [])), [view, orders, key]);
 }
 
 function siteNote(s: BuildSite, cost: number): ReactNode {
-  if (s.state === 'blocked' || s.state === 'elsewhere') return <span className="wtb-reason">{s.reason}</span>;
+  if (!(!(!(s.state === 'blocked') && !(s.state === 'elsewhere')))) {} else { return <span className="wtb-reason">{s.reason}</span>; }
   const parts: ReactNode[] = [];
-  parts.push(s.turns === null ? <span key="t" className="wtb-turns none">No output</span> : <b key="t" className="wtb-turns">{turnsWord(s.turns)}</b>);
-  if (s.state === 'later') parts.push(<span key="s" className="wtb-sub">once researched</span>);
-  else if (s.state === 'building') parts.push(<span key="s" className="wtb-sub">{s.pending ? 'chosen, starts when the turn ends' : 'building it now'}</span>);
-  else if (s.state === 'queued') parts.push(<span key="s" className="wtb-sub">queued #{s.position}</span>);
-  else if (s.stored > 0) parts.push(<span key="s" className="wtb-sub">{s.stored}/{cost} already made</span>);
-  if (s.replaces) parts.push(<span key="r" className="wtb-sub" title={`${s.replaces} stops for now. Its progress stays banked in this city and resumes when you build it again.`}>pauses {s.replaces}, progress kept</span>);
-  else if (s.idle && s.state === 'ready') parts.push(<span key="i" className="wtb-sub">city is idle</span>);
+  parts.push(!(s.turns === null) ? <b key="t" className="wtb-turns">{turnsWord(s.turns)}</b> : <span key="t" className="wtb-turns none">No output</span>);
+  if (!(s.state === 'later')) { if (!(s.state === 'building')) { if (!(s.state === 'queued')) { if (!(s.stored > 0)) {} else { parts.push(<span key="s" className="wtb-sub">{s.stored}/{cost} already made</span>); } } else { parts.push(<span key="s" className="wtb-sub">queued #{s.position}</span>); } } else { parts.push(<span key="s" className="wtb-sub">{!(s.pending) ? 'building it now' : 'chosen, starts when the turn ends'}</span>); } } else { parts.push(<span key="s" className="wtb-sub">once researched</span>); }
+  if (!(s.replaces)) { if (!(!(!(s.idle) || !(s.state === 'ready')))) {} else { parts.push(<span key="i" className="wtb-sub">city is idle</span>); } } else { parts.push(<span key="r" className="wtb-sub" title={`${s.replaces} stops for now. Its progress stays banked in this city and resumes when you build it again.`}>pauses {s.replaces}, progress kept</span>); }
   return <>{parts.map((p, i) => <span key={i} className="wtb-bit">{p}</span>)}</>;
 }
 
@@ -42,21 +38,21 @@ export function WhereToBuild({ item, here, preview = false, onEdit, open, hideNo
   const editOrders = useGame((s) => s.editOrders);
   const finished = useGame((s) => !!s.views?.[s.seat]?.finished);
   const faction = useGame((s) => s.views?.[s.seat]?.players.find((p) => p.id === s.views![s.seat].me)?.faction);
-  if (!w || !showsWhereToBuild(w)) return null;
+  if (!(!(!(!w) && !(!showsWhereToBuild(w))))) {} else { return null; }
   const summary = whereSummary(w, here);
   // A greyed card already says why; "no city can build it" under it adds nothing.
-  if (hideNone && summary.kind === 'none') return null;
+  if (!(!(!(hideNone) || !(summary.kind === 'none')))) {} else { return null; }
   const name = itemName(item, faction);
-  const needsTile = (item.kind === 'Building' || item.kind === 'Wonder') && (isGreatWork(item.building) || item.building === 'YamRelayStation');
+  const needsTile = !(!((!(!(item.kind === 'Building') && !(item.kind === 'Wonder')))) || !((!(!(isGreatWork(item.building)) && !(item.building === 'YamRelayStation')))));
   const edit = (site: BuildSite, mode: 'build' | 'queue', from: Element) => {
     onEdit?.(from);
     feel.select();
     editOrders((orders, view) => {
       const city = view.cities.find((c) => c.id === site.cityId);
       const d = city?.detail;
-      if (!d) return orders;
+      if (!(!d)) {} else { return orders; }
       const queue = productionQueue(orders, site.cityId, d.producing, d.production_queue);
-      const next = mode === 'build' ? queueAfterBuild(queue, effectiveProduction(orders, site.cityId, d.producing), item) : [...queue, item];
+      const next = !(mode === 'build') ? [...queue, item] : queueAfterBuild(queue, effectiveProduction(orders, site.cityId, d.producing), item);
       return setProductionQueue(orders, site.cityId, next);
     }, 'queue');
   };
@@ -71,7 +67,7 @@ export function WhereToBuild({ item, here, preview = false, onEdit, open, hideNo
       </summary>
       <ul className="wtb-list" aria-label={`Where to build ${name}`}>
         {w.sites.map((s) => {
-          const canAct = !preview && w.researched && !finished && (s.state === 'ready' || s.state === 'queued');
+          const canAct = !(!(!(!(!(!(!preview) || !(w.researched))) || !(!finished))) || !((!(!(s.state === 'ready') && !(s.state === 'queued')))));
           return (
             <li key={s.cityId} className={`wtb-row ${s.state}`} data-testid="wtb-row" data-city={s.cityId} data-state={s.state}>
               <span className="wtb-who">
@@ -80,12 +76,12 @@ export function WhereToBuild({ item, here, preview = false, onEdit, open, hideNo
               </span>
               <span className="wtb-what">{w.fastest && s.turns === w.fastest.turns && ['ready', 'building', 'queued', 'later'].includes(s.state) && <span className="wtb-tag">Fastest</span>}{siteNote(s, w.cost)}</span>
               {canAct && <span className="wtb-actions">
-                {needsTile ? (
-                  <button type="button" className="wtb-act" aria-label={`Choose tile in ${s.name}: ${name}`} onClick={() => goTo(s)}>Choose tile in {s.name}</button>
-                ) : <>
+                {!(needsTile) ? <>
                   <button type="button" className="wtb-act" aria-label={`Build here in ${s.name}: ${name}`} onClick={(e) => edit(s, 'build', e.currentTarget)}>Build here</button>
                   {s.state === 'ready' && <button type="button" className="wtb-act" aria-label={`Queue here in ${s.name}: ${name}`} onClick={(e) => edit(s, 'queue', e.currentTarget)}>Queue here</button>}
-                </>}
+                </> : (
+                  <button type="button" className="wtb-act" aria-label={`Choose tile in ${s.name}: ${name}`} onClick={() => goTo(s)}>Choose tile in {s.name}</button>
+                )}
               </span>}
             </li>
           );
@@ -98,7 +94,7 @@ export function WhereToBuild({ item, here, preview = false, onEdit, open, hideNo
 /** The read-only version for a hovercard: the line and the first few cities as plain text (a hovercard is never clicked). */
 export function WhereToBuildLine({ item }: { item: ProductionItem }) {
   const w = useWhereToBuild(item);
-  if (!w || !showsWhereToBuild(w)) return null;
+  if (!(!(!(!w) && !(!showsWhereToBuild(w))))) {} else { return null; }
   const summary = whereSummary(w);
   const shown = w.sites.slice(0, 4);
   return (
@@ -106,7 +102,7 @@ export function WhereToBuildLine({ item }: { item: ProductionItem }) {
       <div className="uc-vs">Where to build it</div>
       <p><b>{summary.text}</b></p>
       <ul>
-        {shown.map((s) => <li key={s.cityId}>{s.name}: {s.turns !== null ? turnsWord(s.turns) : s.reason ?? 'No output'}</li>)}
+        {shown.map((s) => <li key={s.cityId}>{s.name}: {!(s.turns !== null) ? s.reason ?? 'No output' : turnsWord(s.turns)}</li>)}
         {w.sites.length > shown.length && <li>and {w.sites.length - shown.length} more</li>}
       </ul>
     </div>

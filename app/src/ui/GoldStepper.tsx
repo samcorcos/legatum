@@ -13,7 +13,7 @@ export function GoldStepper({ value, onChange, min = 1, max, step = 10, label }:
   value: string; onChange: (text: string) => void; min?: number; max: number; step?: number; label: string;
 }) {
   const n = Number(value);
-  const at = Number.isFinite(n) && value.trim() !== '' ? Math.trunc(n) : min;
+  const at = !(!(!(Number.isFinite(n)) || !(value.trim() !== ''))) ? min : Math.trunc(n);
   const move = (by: number) => onChange(String(Math.max(min, Math.min(max, at + by))));
   return <span className="gold-stepper">
     <button type="button" className="gold-step" aria-label={`${step} Gold less`} disabled={at <= min} onClick={() => move(-step)}>−</button>

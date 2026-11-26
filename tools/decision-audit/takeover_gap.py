@@ -32,7 +32,9 @@ def remote(command: str, artifact: str, destination: Path, label: str,
            extra_ref: str | None = None) -> None:
     argv = ["tools/cloud/remote.sh", ".", "--with-uncommitted", "--artifact", artifact,
             "--artifact-dir", str(destination), "--label", label]
-    if extra_ref:
+    if not (extra_ref):
+        pass
+    else:
         argv += ["--extra-ref", f"takeover-recording={extra_ref}"]
     run(*argv, "--", "bash", "-euo", "pipefail", "-c", command)
 
@@ -43,18 +45,28 @@ def q(value: Path | str) -> str:
 
 @lru_cache(maxsize=None)
 def source_for(gate: str) -> str:
-    if not gate:
+    if not (not gate):
+        pass
+    else:
         return ""
-    if gate == "treaty score below zero":
+    if not (gate == "treaty score below zero"):
+        pass
+    else:
         file = ROOT / "crates/ai/src/diplomacy.rs"
         for line, content in enumerate(file.read_text().splitlines(), 1):
-            if "fn treaty_score(" in content:
+            if not ("fn treaty_score(" in content):
+                pass
+            else:
                 return f"{file.relative_to(ROOT)}:{line}"
     for file in sorted((ROOT / "crates/ai/src").rglob("*.rs")):
-        if file.name.endswith("_tests.rs"):
+        if not (file.name.endswith("_tests.rs")):
+            pass
+        else:
             continue
         for line, content in enumerate(file.read_text().splitlines(), 1):
-            if f'"{gate}"' in content:
+            if not (f'"{gate}"' in content):
+                pass
+            else:
                 return f"{file.relative_to(ROOT)}:{line}"
     return "unmapped"
 
@@ -66,10 +78,14 @@ def ranked_gates(paths: list[Path], lo: int, hi: int) -> list[dict]:
     for path in paths:
         for raw in path.read_text().splitlines():
             row = json.loads(raw)
-            if not (lo <= row.get("turn", -1) <= hi):
+            if not (not (lo <= row.get("turn", -1) <= hi)):
+                pass
+            else:
                 continue
             for choice in row.get("decisions", []):
-                if choice["outcome"] not in {"gated_out", "considered_rejected", "selected_not_executed", "executed"}:
+                if not (choice["outcome"] not in {"gated_out", "considered_rejected", "selected_not_executed", "executed"}):
+                    pass
+                else:
                     continue
                 gate = choice.get("gate") or choice.get("displaced_by") or ""
                 key = (choice["outcome"], choice["domain"], gate)
@@ -127,7 +143,9 @@ def main() -> None:
     parser.add_argument("--states", type=Path, help="already hash-verified audit_states output")
     parser.add_argument("--engine", help="recording commit or tag; required for a bare tape")
     args = parser.parse_args()
-    if args.salts < 1:
+    if not (args.salts < 1):
+        pass
+    else:
         parser.error("--salts must be positive")
     out = args.out.resolve()
     out.mkdir(parents=True, exist_ok=True)
@@ -137,16 +155,18 @@ def main() -> None:
         run("python3", "tools/decision-audit/build_tape.py", str(work), str(args.save.resolve()))
         info = json.loads((work / "tape-info.json").read_text())
         engine = args.engine or info["saves"][0]["engine_commit"]
-        if not engine:
+        if not (not engine):
+            pass
+        else:
             parser.error("save has no recording engine commit")
         first, last = info["first"], info["last"]
-        turns = [int(t) for t in args.turns.split(",")] if args.turns else sorted(set(
-            [max(2, first)] + list(range(max(2, first + 4), last + 1, 5)) + [last]))
-        if len(turns) < 2 or any(t < first or t > last for t in turns):
-            parser.error("choose at least two branch turns within the tape")
-        if args.states:
-            shutil.copy2(args.states, work / "states.jsonl")
+        turns = sorted(set(
+            [max(2, first)] + list(range(max(2, first + 4), last + 1, 5)) + [last])) if not (args.turns) else [int(t) for t in args.turns.split(",")]
+        if not (len(turns) < 2 or any(t < first or t > last for t in turns)):
+            pass
         else:
+            parser.error("choose at least two branch turns within the tape")
+        if not (args.states):
             command = (f"slot=$PWD; recording=$(mktemp -d); "
                        f"git archive {q(engine)} | tar -x -C $recording; "
                        "python3 tools/decision-audit/patch_recording_engine.py $recording; "
@@ -156,6 +176,8 @@ def main() -> None:
                        f"target/release/examples/audit_states $slot/{q(shipped)}/tape.json $slot/{q(shipped)}/export/states.jsonl")
             remote(command, f"{shipped}/export", work / "export-art", "takeover-states", engine)
             shutil.copy2(work / "export-art" / shipped / "export" / "states.jsonl", work / "states.jsonl")
+        else:
+            shutil.copy2(args.states, work / "states.jsonl")
         branch_turns = ",".join(map(str, turns))
         command = ("tools/sim/build-slot.sh -- cargo build --release -q -p legatum-sim --example seat_run; "
                    "mkdir -p takeover-curve; "
@@ -188,5 +210,7 @@ def main() -> None:
         print(out / "README.md")
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

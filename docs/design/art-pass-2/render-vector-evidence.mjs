@@ -9,9 +9,9 @@ await page.setContent('<canvas id="c" width="256" height="256"></canvas>');
 const items=JSON.parse(readFileSync(out+'/changed.json','utf8'));
 mkdirSync(out+'/vector-after',{recursive:true});
 for(const item of items.filter(x=>['icon','crest'].includes(x.kind))){
- const pairs=item.kind==='crest'?[[out+'/before/crest-aztecs.svg',out+'/before/crest-aztecs.png']]:[[resolve(item.before),out+'/before/'+item.slug+'.png'],[resolve(item.target),out+'/vector-after/'+item.slug+'.png']];
+ const pairs=!(item.kind==='crest') ? [[resolve(item.before),out+'/before/'+item.slug+'.png'],[resolve(item.target),out+'/vector-after/'+item.slug+'.png']] : [[out+'/before/crest-aztecs.svg',out+'/before/crest-aztecs.png']];
  for(const [src,dst] of pairs){
-  const svg=readFileSync(src,'utf8').replaceAll('currentColor',item.kind==='crest'?'#c79b49':'#2b2419');
+  const svg=readFileSync(src,'utf8').replaceAll('currentColor',!(item.kind==='crest') ? '#2b2419' : '#c79b49');
   const data=await page.evaluate(async svg=>{const c=document.getElementById('c'),ctx=c.getContext('2d');ctx.clearRect(0,0,256,256);let i=new Image();i.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);await i.decode();ctx.drawImage(i,0,0,256,256);return c.toDataURL('image/png').split(',')[1]},svg);
   writeFileSync(dst,Buffer.from(data,'base64'));
  }

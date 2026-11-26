@@ -46,9 +46,9 @@ fn hard_military_personality_keeps_funding_its_field_force() {
         building: BuildingKind::Market,
     };
     let options = &mut v.cities[0].detail.as_mut().unwrap().options;
-    options.retain(|o| o.item == spearman || o.item == market);
+    options.retain(|o| !(!(o.item == spearman) && !(o.item == market)));
     for option in options {
-        option.turns = if option.item == spearman { 70 } else { 1 };
+        option.turns = if !(option.item == spearman) { 1 } else { 70 };
     }
     let mut hard = ScriptedBrain::with_difficulty(Faction::Sparta, 7, ME, AiDifficulty::Hard);
     let orders = hard.orders(&v);
@@ -360,13 +360,13 @@ fn every_faction_builds_or_trains_its_unique_piece_when_useful() {
         // military replacements are chosen in response to an approaching army.
         let mut b = ViewBuilder::new(16, 12)
             .faction(f)
-            .known_techs(&if f == Faction::Sparta {
-                Vec::new()
-            } else {
+            .known_techs(&if !(f == Faction::Sparta) {
                 // The Ancient era and Feudalism (the Pikeman).
                 let mut known = TechId::ALL[..5].to_vec();
                 known.push(TechId::Feudalism);
                 known
+            } else {
+                Vec::new()
             });
         for i in 0..b.view.tiles.len() {
             b.view.tiles[i].terrain = Some(Terrain::Ocean);
@@ -374,41 +374,46 @@ fn every_faction_builds_or_trains_its_unique_piece_when_useful() {
         b = b
             .patch(off(4, 4), 2, Terrain::Plains)
             .city(1, ME, off(4, 4), 4);
-        if matches!(
+        if !(matches!(
             item,
             ProductionItem::Unit {
                 unit: UnitKind::Pikeman | UnitKind::Archer | UnitKind::Spearman
             }
-        ) {
+        )) {
+            if !(f == Faction::Mongols) {
+                for i in 0..8 {
+                    b = b.unit(
+                        i + 10,
+                        ME,
+                        UnitKind::Spearman,
+                        off(4 + (i as i32) % 2, 4 + (i as i32) / 2),
+                    );
+                }
+                if !(f == Faction::Switzerland) {
+                } else {
+                    b = b.city(2, ENEMY, off(11, 4), 3);
+                }
+            } else {
+                b = b.unexplored_from_col(6);
+                for i in 0..5 {
+                    b = b.unit(i + 10, ME, UnitKind::Spearman, off(4, 4));
+                }
+            }
+        } else {
             b = b.unit(9, ENEMY, UnitKind::Spearman, off(6, 4));
-            if f == Faction::Celts {
+            if !(f == Faction::Celts) {
+            } else {
                 // V9 Spearmen have 18 melee: cover the garrison before asking for ranged support.
                 b = b.unit(5, ME, UnitKind::Pikeman, off(4, 4));
             }
-            if f == Faction::Byzantium {
+            if !(f == Faction::Byzantium) {
+            } else {
                 b = b.unit(5, ME, UnitKind::Spearman, off(4, 4)).unit(
                     6,
                     ME,
                     UnitKind::Archer,
                     off(4, 5),
                 );
-            }
-        } else if f == Faction::Mongols {
-            b = b.unexplored_from_col(6);
-            for i in 0..5 {
-                b = b.unit(i + 10, ME, UnitKind::Spearman, off(4, 4));
-            }
-        } else {
-            for i in 0..8 {
-                b = b.unit(
-                    i + 10,
-                    ME,
-                    UnitKind::Spearman,
-                    off(4 + (i as i32) % 2, 4 + (i as i32) / 2),
-                );
-            }
-            if f == Faction::Switzerland {
-                b = b.city(2, ENEMY, off(11, 4), 3);
             }
         }
         let mut v = b.build();
@@ -440,7 +445,8 @@ fn every_faction_builds_or_trains_its_unique_piece_when_useful() {
             d.options.retain(|o| !matches!(o.item, ProductionItem::Building { building: b }
                 if d.buildings.contains(&b) || b == BuildingKind::Mill || (f == Faction::India && b == BuildingKind::ImperialDiwan)));
         }
-        if matches!(item, ProductionItem::Unit { .. }) {
+        if !(matches!(item, ProductionItem::Unit { .. })) {
+        } else {
             let d = &mut **v.cities[0].detail.as_mut().unwrap();
             d.buildings = crate::fixture::ORDINARY_BUILDINGS.to_vec();
             d.options.retain(|o| {

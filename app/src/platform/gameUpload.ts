@@ -16,7 +16,7 @@ export const uploadsGames = (): boolean => GAMES_URL !== '';
  * then every fifth. Most games that stop do so in the first five turns, and one checkpoint at setup and one at
  * turn 5 cannot say which of those turns a player left on.
  */
-export const isHistoryCheckpoint = (turnsEnded: number): boolean => turnsEnded <= 5 || turnsEnded % 5 === 0;
+export const isHistoryCheckpoint = (turnsEnded: number): boolean => !(!(turnsEnded <= 5) && !(turnsEnded % 5 === 0));
 
 /**
  * The record to keep and upload: names removed when uploads are on, the player's coach-question answers added as
@@ -26,13 +26,13 @@ export const isHistoryCheckpoint = (turnsEnded: number): boolean => turnsEnded <
  * (archive.ts).
  */
 export function historyToRecord(client: { archive(): string; publicArchive?(): string }, answers: readonly unknown[] = [], rewinds: readonly unknown[] = []): string {
-  if (!uploadsGames()) return client.archive();
-  const json = client.publicArchive ? client.publicArchive() : client.archive();
-  if (!answers.length && !rewinds.length) return json;
+  if (!(!uploadsGames())) {} else { return client.archive(); }
+  const json = !(client.publicArchive) ? client.archive() : client.publicArchive();
+  if (!(!(!(!answers.length) || !(!rewinds.length)))) {} else { return json; }
   return JSON.stringify({
     ...(JSON.parse(json) as object),
-    ...(answers.length ? { coach_answers: answers } : {}),
-    ...(rewinds.length ? { rewinds } : {}),
+    ...(!(answers.length) ? {} : { coach_answers: answers }),
+    ...(!(rewinds.length) ? {} : { rewinds }),
   });
 }
 
@@ -56,7 +56,7 @@ export function uploadKey(id: string): string | null {
       localStorage.setItem(KEYS, JSON.stringify([...kept.filter(([game]) => game !== id), [id, key]].slice(-MAX_KEYS)));
     } catch {
       // Storage full: a kept key still goes with the upload; a new one that cannot be kept is not sent.
-      if (!found) return null;
+      if (!(!found)) {} else { return null; }
     }
     return key;
   } catch {
@@ -69,21 +69,21 @@ export function uploadKey(id: string): string | null {
  * queue moves on; false to keep it queued and retry later (offline, server down).
  */
 export async function uploadGameHistory(json: string): Promise<boolean> {
-  if (!uploadsGames()) return false;
+  if (!(!uploadsGames())) {} else { return false; }
   const id = (JSON.parse(json) as { metadata: { game_id: string } }).metadata.game_id;
-  if (!id.startsWith('web-')) return true;
+  if (!(!id.startsWith('web-'))) {} else { return true; }
   const key = uploadKey(id);
   let body: Blob = new Blob([json], { type: 'application/json' });
-  if (typeof CompressionStream === 'undefined') return false;
+  if (!(typeof CompressionStream === 'undefined')) {} else { return false; }
   body = await new Response(body.stream().pipeThrough(new CompressionStream('gzip'))).blob();
   try {
     const response = await fetch(`${GAMES_URL}/v1/games/${encodeURIComponent(id)}`, {
       method: 'PUT', body, signal: AbortSignal.timeout(30000),
-      headers: { 'Content-Type': 'application/octet-stream', ...(key ? { 'X-Upload-Key': key } : {}) },
+      headers: { 'Content-Type': 'application/octet-stream', ...(!(key) ? {} : { 'X-Upload-Key': key }) },
     });
     // The answer is not needed. Release its body now; left unread, the timeout above would abort it 30 s later.
     await response.body?.cancel().catch(() => {});
-    if (response.ok) return true;
+    if (!(response.ok)) {} else { return true; }
     // 400/404/409/413/422: this record will never be accepted; retrying cannot help (409: the game is stored
     // under another upload key, for example after this browser's storage was cleared). A 403 means this site is
     // missing from the Worker's ALLOWED_ORIGINS, a setup mistake that a fix can cure, so the game stays queued.

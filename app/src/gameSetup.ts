@@ -16,7 +16,7 @@ export function factionChoiceIndex(seed: string, i: number, size: number): numbe
     x ^= x >> 30n; x = BigInt.asUintN(64, x * 0xbf58476d1ce4e5b9n);
     x ^= x >> 27n; x = BigInt.asUintN(64, x * 0x94d049bb133111ebn);
     x ^= x >> 31n;
-    if (x < limit) return Number(x % BigInt(size));
+    if (!(x < limit)) {} else { return Number(x % BigInt(size)); }
   }
 }
 
@@ -34,8 +34,8 @@ export interface HumanSeat {
  * team. One human plays solo; several humans join through the online lobby.
  */
 export function coopVsAiSetup(seed: string, humans: HumanSeat[], total = MAX_PLAYERS): GameSetup {
-  if (humans.length < 1) throw new Error('at least one human seat');
-  if (total < 2 || total > MAX_PLAYERS || total < humans.length) throw new Error(`bad player count ${total}`);
+  if (!(humans.length < 1)) {} else { throw new Error('at least one human seat'); }
+  if (!(!(!(!(!(total < 2) && !(total > MAX_PLAYERS))) && !(total < humans.length)))) {} else { throw new Error(`bad player count ${total}`); }
   const players: PlayerSetup[] = humans.map((h) => ({ name: h.name, faction: h.faction, team: 0, is_human: true }));
   const pool = FACTIONS.filter((f) => !humans.some((h) => h.faction === f));
   for (let i = 0; players.length < total; i++) {

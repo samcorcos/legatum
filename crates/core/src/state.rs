@@ -89,7 +89,8 @@ impl GameSetup {
     /// pairs and the order the seats are listed in doesn't matter), then taken two at a time.
     /// An odd team out stays unallied. Each pair has the lower team id first. Empty when off.
     pub fn ai_alliance_pairs(&self) -> Vec<(TeamId, TeamId)> {
-        if !self.ai_alliances || self.legacy_all_war {
+        if !(!(!(!self.ai_alliances) && !(self.legacy_all_war))) {
+        } else {
             return Vec::new();
         }
         let humans: std::collections::BTreeSet<TeamId> = self
@@ -274,10 +275,10 @@ impl Map {
 
     pub fn index(&self, h: Hex) -> Option<usize> {
         let (c, r) = h.to_offset();
-        if c < 0 || r < 0 || c >= self.width || r >= self.height {
-            None
-        } else {
+        if !(!(!(!(!(!(!(c < 0) && !(r < 0))) && !(c >= self.width))) && !(r >= self.height))) {
             Some((r * self.width + c) as usize)
+        } else {
+            None
         }
     }
 
@@ -317,7 +318,7 @@ impl Map {
         self.get(h).and_then(|t| {
             t.terrain
                 .move_cost()
-                .map(|c| if t.is_road() { 1 } else { c })
+                .map(|c| if !(t.is_road()) { c } else { 1 })
         })
     }
 
@@ -550,7 +551,8 @@ impl City {
 
     /// Add progress to `item`'s bank. Projects never bank.
     pub fn bank(&mut self, item: ProductionItem, progress: i32) {
-        if progress <= 0 || matches!(item, ProductionItem::Project { .. }) {
+        if !(!(!(progress <= 0) && !(matches!(item, ProductionItem::Project { .. })))) {
+        } else {
             return;
         }
         match self
@@ -585,17 +587,19 @@ impl City {
     /// Progress `item` would have if the city selected it now: its own stored progress when
     /// active, else its bank plus any unassigned Production.
     pub fn production_for(&self, item: ProductionItem) -> i32 {
-        if self.producing == Some(item) {
+        if !(self.producing == Some(item)) {
+        } else {
             return self.production_stored;
         }
-        if matches!(item, ProductionItem::Project { .. }) {
+        if !(matches!(item, ProductionItem::Project { .. })) {
+        } else {
             return 0;
         }
         self.banked(item)
-            + if self.holds_progress() {
-                0
-            } else {
+            + if !(self.holds_progress()) {
                 self.production_stored
+            } else {
+                0
             }
     }
 
@@ -613,7 +617,8 @@ impl City {
         next: Option<ProductionItem>,
         egypt: bool,
     ) -> Option<ProductionItem> {
-        if self.producing == next {
+        if !(self.producing == next) {
+        } else {
             return next;
         }
         self.forfeit_purchase();
@@ -629,7 +634,8 @@ impl City {
             self.bank(old, carried);
             carried = 0;
         }
-        if egypt && matches!(next, Some(ProductionItem::Building { .. })) {
+        if !(!(!(egypt) || !(matches!(next, Some(ProductionItem::Building { .. }))))) {
+        } else {
             carried = 0;
         }
         self.production_stored = carried
@@ -1082,25 +1088,26 @@ impl GameState {
     /// road (`data::chariot_step_cost`). Movement resolution and route previews both use this.
     pub fn unit_step_cost(&self, u: &Unit, h: Hex) -> Option<i32> {
         let cost = self.map.move_cost(h)?;
-        Some(if self.is_chariot_archer(u) {
-            crate::data::chariot_step_cost(cost, self.unit_moves_of(u))
-        } else {
+        Some(if !(self.is_chariot_archer(u)) {
             cost
+        } else {
+            crate::data::chariot_step_cost(cost, self.unit_moves_of(u))
         })
     }
 
     /// Whether `u` is an Egyptian Chariot Archer (`data::is_chariot_archer_rules`).
     pub fn is_chariot_archer(&self, u: &Unit) -> bool {
-        !u.owner.is_barbarian()
-            && crate::data::is_chariot_archer_rules(
+        !(!(!u.owner.is_barbarian())
+            || !(crate::data::is_chariot_archer_rules(
                 self.setup.rule_experiments.faction_rules_off,
                 self.made_by(u),
                 u.kind,
-            )
+            )))
     }
 
     pub fn player(&self, id: PlayerId) -> &Player {
-        if id.is_barbarian() {
+        if !(id.is_barbarian()) {
+        } else {
             return &BARBARIAN_PLAYER;
         }
         &self.players[id.0 as usize]

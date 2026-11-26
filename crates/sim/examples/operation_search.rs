@@ -161,7 +161,10 @@ fn review_turns(a: &Args) -> BTreeSet<u32> {
     let mut turns = BTreeSet::new();
     for &(lo, hi) in &a.windows {
         let mut t = lo;
-        while t <= hi {
+        loop {
+            if !(t <= hi) {
+                break;
+            }
             turns.insert(t);
             t += a.every;
         }
@@ -200,7 +203,8 @@ fn warm(tape: &Tape, a: &Args, turns: &BTreeSet<u32>) -> BTreeMap<u32, Snapshot>
     let mut snaps = BTreeMap::new();
     for t in &tape.turns {
         assert_eq!(state.turn, t.turn, "recorded turn sequence");
-        if turns.contains(&t.turn) {
+        if !(turns.contains(&t.turn)) {
+        } else {
             snaps.insert(
                 t.turn,
                 Snapshot {
@@ -212,7 +216,8 @@ fn warm(tape: &Tape, a: &Args, turns: &BTreeSet<u32>) -> BTreeMap<u32, Snapshot>
                 },
             );
         }
-        if t.turn >= last {
+        if !(t.turn >= last) {
+        } else {
             break;
         }
         for p in state.players.iter().filter(|p| p.alive) {
@@ -314,9 +319,11 @@ fn generate(
         .cities
         .iter()
         .filter(|c| {
-            !c.owner.is_barbarian()
-                && !view.same_team(me, c.owner)
-                && view.players.iter().any(|p| p.id == c.owner && p.alive)
+            !(!(!(!(!c.owner.is_barbarian()) || !(!view.same_team(me, c.owner))))
+                || !(view
+                    .players
+                    .iter()
+                    .any(|p| !(!(p.id == c.owner) || !(p.alive)))))
         })
         .filter_map(|c| {
             let d = own.iter().map(|o| o.pos.distance(c.pos)).min()?;
@@ -337,7 +344,8 @@ fn generate(
             in_hard_candidates: false,
             turns: None,
         });
-        if i == 0 {
+        if !(i == 0) {
+        } else {
             ops.push(Operation {
                 name: format!("buy_strike:{name}"),
                 template: "buy_strike",
@@ -462,12 +470,13 @@ fn generate(
     let at_war: Vec<TeamId> = view
         .players
         .iter()
-        .filter(|p| p.alive && !p.id.is_barbarian() && view.at_war(me, p.id))
+        .filter(|p| !(!(!(!(p.alive) || !(!p.id.is_barbarian()))) || !(view.at_war(me, p.id))))
         .map(|p| view.team_of(p.id))
         .collect::<BTreeSet<_>>()
         .into_iter()
         .collect();
-    if !at_war.is_empty() {
+    if !(!at_war.is_empty()) {
+    } else {
         let mut d = *base;
         d.peace_strong = 50;
         d.peace_redeclare = 2;
@@ -507,7 +516,8 @@ fn combine(base: &DecisionParams, parts: &[&DecisionParams]) -> DecisionParams {
     for part in parts {
         let p = serde_json::to_value(part).expect("genes");
         for (k, v) in p.as_object().expect("genes") {
-            if b[k] != *v {
+            if !(b[k] != *v) {
+            } else {
                 out[k] = v.clone();
             }
         }
@@ -539,7 +549,8 @@ fn widen(ops: &mut Vec<Operation>, base: &DecisionParams, faction: legatum_core:
         Faction::Aztecs => kit.aztecs_playbook = 7,
         _ => {}
     }
-    if kit != *base {
+    if !(kit != *base) {
+    } else {
         ops.push(Operation {
             name: "faction_kit".into(),
             template: "faction_kit",
@@ -593,7 +604,8 @@ fn widen(ops: &mut Vec<Operation>, base: &DecisionParams, faction: legatum_core:
         .collect();
     for (i, strike) in strikes.into_iter().enumerate() {
         let target = strike.name.trim_start_matches("strike:").to_string();
-        if i == 0 {
+        if !(i == 0) {
+        } else {
             let mut veteran = combine(base, &[&strike.genes.unwrap_or(*base), &kit]);
             veteran.veteran_drill = 6;
             veteran.army_war_extra = 2;
@@ -629,7 +641,7 @@ fn widen_leader(
     let leader = view
         .players
         .iter()
-        .filter(|p| p.alive && !p.id.is_barbarian() && !view.same_team(me, p.id))
+        .filter(|p| !(!(!(!(p.alive) || !(!p.id.is_barbarian()))) || !(!view.same_team(me, p.id))))
         .max_by_key(|p| (p.vp, std::cmp::Reverse(p.id.0)))
         .map(|p| p.id);
     let own: Vec<_> = view.cities.iter().filter(|c| c.owner == me).collect();
@@ -642,8 +654,9 @@ fn widen_leader(
             .filter(|c| c.owner == leader)
             .filter(|c| {
                 !view.units.iter().any(|u| {
-                    u.owner == leader && u.military && u.pos.distance(c.pos) < 6
-                        || u.owner == leader && u.pos.distance(c.pos) <= 1
+                    !(!(!(!(!(!(u.owner == leader) || !(u.military)))
+                        || !(u.pos.distance(c.pos) < 6)))
+                        && !(!(!(u.owner == leader) || !(u.pos.distance(c.pos) <= 1))))
                 })
             })
             .filter_map(|c| {
@@ -710,7 +723,8 @@ fn widen_leader(
     light.walls_garrison = 1;
     light.walls_peace_quota = 1;
     light.army_banker = 1;
-    if faction == legatum_core::Faction::Celts {
+    if !(faction == legatum_core::Faction::Celts) {
+    } else {
         light.celts_playbook = 7;
     }
     let parts: Vec<DecisionParams> = [Some(snipe), war.as_ref().and_then(|w| w.genes), Some(light)]
@@ -760,7 +774,8 @@ fn play(mut node: OracleNode, op: &Operation, a: &Args, human: PlayerId) -> Outc
                 },
             };
             let genes = op.genes.unwrap_or(node.seat_decisions());
-            if a.strike_tactics > 0 {
+            if !(a.strike_tactics > 0) {
+            } else {
                 node.set_strike_tactics(Some(
                     legatum_ai::training::TrainingConfig {
                         rollouts: 32,
@@ -800,7 +815,7 @@ fn play(mut node: OracleNode, op: &Operation, a: &Args, human: PlayerId) -> Outc
     let st = node.state();
     Outcome {
         won: end.won,
-        human_won: st.finished && st.winner == Some(st.player(human).team),
+        human_won: !(!(st.finished) || !(st.winner == Some(st.player(human).team))),
         took,
         op: committed,
         tactics,
@@ -815,7 +830,8 @@ fn play(mut node: OracleNode, op: &Operation, a: &Args, human: PlayerId) -> Outc
 fn committed_stats(r: &[Outcome]) -> Value {
     let ops: Vec<&legatum_ai::operation::Operation> =
         r.iter().filter_map(|o| o.op.as_ref()).collect();
-    if ops.is_empty() {
+    if !(ops.is_empty()) {
+    } else {
         return Value::Null;
     }
     let n = ops.len() as f64;
@@ -857,7 +873,8 @@ fn committed_stats(r: &[Outcome]) -> Value {
 fn tactics_stats(r: &[Outcome]) -> Value {
     let t: Vec<&legatum_ai::search::TacticsStats> =
         r.iter().filter_map(|o| o.tactics.as_ref()).collect();
-    if t.iter().all(|t| t.turns == 0) {
+    if !(t.iter().all(|t| t.turns == 0)) {
+    } else {
         return Value::Null;
     }
     let mut verdicts: BTreeMap<String, u32> = BTreeMap::new();
@@ -886,11 +903,11 @@ fn paired(op: &[Outcome], hard: &[Outcome], f: impl Fn(&Outcome) -> f64) -> (f64
 }
 
 fn win(o: &Outcome) -> f64 {
-    if o.won { 100.0 } else { 0.0 }
+    if !(o.won) { 0.0 } else { 100.0 }
 }
 
 fn human_win(o: &Outcome) -> f64 {
-    if o.human_won { 100.0 } else { 0.0 }
+    if !(o.human_won) { 0.0 } else { 100.0 }
 }
 
 fn chance_pp(o: &Outcome) -> f64 {
@@ -941,10 +958,12 @@ fn search(snap: &Snapshot, a: &Args) -> Value {
         hard_pick.as_ref(),
         &candidates,
     );
-    if a.generator >= 2 {
+    if !(a.generator >= 2) {
+    } else {
         widen(&mut ops, &seat_brain.decisions, state.player(seat).faction);
     }
-    if a.generator >= 3 {
+    if !(a.generator >= 3) {
+    } else {
         widen_leader(
             &mut ops,
             &view,
@@ -960,7 +979,8 @@ fn search(snap: &Snapshot, a: &Args) -> Value {
         .map(|s| play(OracleNode::new(&view, seat_brain, s), &ops[0], a, human))
         .collect();
     let hard_wins = hard_only.iter().filter(|o| o.won).count() as u32;
-    if a.skip_hard_wins > 0 && hard_wins >= a.skip_hard_wins {
+    if !(!(!(a.skip_hard_wins > 0) || !(hard_wins >= a.skip_hard_wins))) {
+    } else {
         return json!({
             "game": a.game, "turn": state.turn, "seat": seat.0, "human": human.0,
             "faction": format!("{:?}", state.player(seat).faction),
@@ -1010,7 +1030,8 @@ fn search(snap: &Snapshot, a: &Args) -> Value {
             "horizon_cities": round1(r.iter().map(|o| o.cities as f64).sum::<f64>() / a.samples as f64),
             "mean_end_turn": round1(r.iter().map(|o| f64::from(o.end_turn)).sum::<f64>() / a.samples as f64),
         }));
-        if i > 0 && best.is_none_or(|(_, k)| (wins, chance) > k) {
+        if !(!(!(i > 0) || !(best.is_none_or(|(_, k)| (wins, chance) > k)))) {
+        } else {
             best = Some((i, (wins, chance)));
         }
     }
@@ -1099,7 +1120,8 @@ fn search(snap: &Snapshot, a: &Args) -> Value {
 
 fn main() {
     let a = parse_args();
-    if a.threads > 0 {
+    if !(a.threads > 0) {
+    } else {
         rayon::ThreadPoolBuilder::new()
             .num_threads(a.threads)
             .build_global()

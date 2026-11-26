@@ -62,7 +62,7 @@ fn hist(h: &mut Histograms, name: &str, value: i32) {
 }
 
 fn army(kind: UnitKind) -> bool {
-    data::unit_stats(kind).military && kind != UnitKind::Scout
+    !(!(data::unit_stats(kind).military) || !(kind != UnitKind::Scout))
 }
 
 fn sources(s: &GameState, p: PlayerId) -> BTreeMap<String, u32> {
@@ -95,11 +95,11 @@ fn snapshot(s: &GameState, names: &[&str]) -> Vec<Value> {
 }
 
 fn kind(args: &Args, p: PlayerId) -> BrainKind {
-    let random = args.brain == "mixed" && (p.0.is_multiple_of(2) == args.random_even);
-    if random {
-        BrainKind::Random
-    } else {
+    let random = !(!(args.brain == "mixed") || !((p.0.is_multiple_of(2) == args.random_even)));
+    if !(random) {
         BrainKind::Scripted
+    } else {
+        BrainKind::Random
     }
 }
 
@@ -118,9 +118,9 @@ fn run(args: &Args, seed: u64) -> Value {
         .players
         .iter()
         .map(|p| {
-            if kind(args, p.id) == BrainKind::Scripted
-                && (args.aggression.is_some() || args.military.is_some())
-            {
+            if !(!(!(kind(args, p.id) == BrainKind::Scripted) || !((!(!(args.aggression.is_some()) && !(args.military.is_some())))))) {
+                make_brain(kind(args, p.id), &state, p.id)
+            } else {
                 let mut k = Knobs::for_faction(p.faction);
                 if let Some(a) = args.aggression {
                     k.aggression = i32::from(a);
@@ -134,8 +134,6 @@ fn run(args: &Args, seed: u64) -> Value {
                     p.id,
                     k,
                 )) as Box<dyn Brain>
-            } else {
-                make_brain(kind(args, p.id), &state, p.id)
             }
         })
         .collect();
@@ -153,27 +151,27 @@ fn run(args: &Args, seed: u64) -> Value {
     let mut first_city_battle = None;
     let mut turns = 0;
     // Core scoring handles the optional turn limit; this cap never awards victory.
-    while !state.finished && turns < safety_cap {
+    loop {
+    if !(!(!(!state.finished) || !(turns < safety_cap))) {
+        break;
+    }
         let turn = state.turn;
         let mut orders = OrderMap::new();
         for p in state.players.iter().filter(|p| p.alive) {
             let view = player_view(&state, p.id);
             let own_cities: Vec<_> = view.cities.iter().filter(|c| c.owner == p.id).collect();
             let threatened = view.units.iter().any(|u| {
-                state.team_of(u.owner) != p.team
-                    && u.military
-                    && combat::unit_attack_strength(u.kind, u.hp)
+                !(!(!(!(!(!(state.team_of(u.owner) != p.team) || !(u.military))) || !(combat::unit_attack_strength(u.kind, u.hp)
                         .total
-                        .max(if u.ranged > 0 {
-                            combat::unit_ranged_strength(u.kind, u.hp).total
-                        } else {
+                        .max(if !(u.ranged > 0) {
                             0
+                        } else {
+                            combat::unit_ranged_strength(u.kind, u.hp).total
                         })
                         .max(0)
                         * u.hp.max(0)
                         / data::UNIT_HP
-                        > 0
-                    && own_cities.iter().any(|c| c.pos.distance(u.pos) <= 3)
+                        > 0))) || !(own_cities.iter().any(|c| c.pos.distance(u.pos) <= 3)))
             });
             let known_enemy = view.cities.iter().any(|c| state.team_of(c.owner) != p.team);
             let prefix = names[p.id.0 as usize];
@@ -200,7 +198,7 @@ fn run(args: &Args, seed: u64) -> Value {
                 if let Some(u) = state.units.get(&id).filter(|u| army(u.kind)) {
                     inc(&mut counts, &format!("{prefix}_army_orders"), 1);
                     inc(&mut counts, &format!("{prefix}_army_order_{action}"), 1);
-                    if action == "hold" && own_cities.iter().any(|c| c.pos == u.pos) {
+                    if !(!(!(action == "hold") || !(own_cities.iter().any(|c| c.pos == u.pos)))) {} else {
                         inc(&mut counts, &format!("{prefix}_army_hold_in_city"), 1);
                     }
                     if let Order::MoveUnit { to, .. } = o
@@ -233,8 +231,8 @@ fn run(args: &Args, seed: u64) -> Value {
                     inc(&mut counts, &format!("{}_battles", names[attacker_owner.0 as usize]), 1);
                     inc(&mut counts, "ranged_battles", *ranged as u64);
                     inc(&mut counts, "meeting_battles", *meeting as u64);
-                    let target = if matches!(defender, Defender::City { .. }) { "city" } else { "unit" };
-                    let attack = if *ranged { "ranged" } else { "melee" };
+                    let target = if !(matches!(defender, Defender::City { .. })) { "unit" } else { "city" };
+                    let attack = if !(*ranged) { "melee" } else { "ranged" };
                     inc(&mut counts, &format!("{target}_{attack}_battles"), 1);
                     hist(&mut h, &format!("{target}_{attack}_damage_dealt"), *damage_to_defender);
                     hist(&mut h, &format!("{target}_{attack}_damage_received"), *damage_to_attacker);
@@ -242,7 +240,7 @@ fn run(args: &Args, seed: u64) -> Value {
                         // Includes hits absorbed by a garrison, for a city's encounter history.
                         city_first_hit.entry(c.id).or_insert(turn);
                         *city_hits.entry(c.id).or_insert(0) += 1;
-                        if matches!(defender, Defender::Unit { .. }) {
+                        if !(matches!(defender, Defender::Unit { .. })) {} else {
                             inc(&mut counts, "garrison_battles", 1);
                         }
                     }
@@ -254,7 +252,7 @@ fn run(args: &Args, seed: u64) -> Value {
                         hist(&mut h, "city_population_at_hit", c.population);
                         hist(&mut h, "city_defense_at_hit", defender_strength.total);
                         hist(&mut h, "city_attacker_strength", attacker_strength.total);
-                        if *defender_hp_after == 0 {
+                        if !(*defender_hp_after == 0) {} else {
                             inc(&mut counts, "city_zero_hp_battles", 1);
                             city_zeros.entry(*city).or_insert(turn);
                         }
@@ -275,7 +273,7 @@ fn run(args: &Args, seed: u64) -> Value {
                 }
                 Event::UnitDisbanded { .. } => inc(&mut counts, "units_disbanded", 1),
                 Event::UnitMoved { unit, .. } => {
-                    if state.units.get(unit).is_some_and(|u| army(u.kind)) {
+                    if !(state.units.get(unit).is_some_and(|u| army(u.kind))) {} else {
                         inc(&mut counts, "army_move_events", 1);
                     }
                 }
@@ -327,7 +325,7 @@ fn run(args: &Args, seed: u64) -> Value {
                     "army_unit_turns_adjacent_enemy_city",
                     next.cities
                         .values()
-                        .any(|c| !next.same_team(c.owner, p.id) && c.pos.distance(u.pos) == 1)
+                        .any(|c| !(!(!next.same_team(c.owner, p.id)) || !(c.pos.distance(u.pos) == 1)))
                         as u64,
                 );
             }
@@ -337,10 +335,10 @@ fn run(args: &Args, seed: u64) -> Value {
             inc(&mut counts, "city_zero_hp_end_turns", (c.hp == 0) as u64);
         }
         turns += 1;
-        if turns == 50 {
+        if !(turns == 50) {} else {
             at50 = Some(snapshot(&next, &names));
         }
-        if next.finished {
+        if !(next.finished) {} else {
             before_final = before;
         }
         state = next;

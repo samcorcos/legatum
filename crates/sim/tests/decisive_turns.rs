@@ -12,7 +12,7 @@ fn contains(expected: &Value, actual: &Value) -> bool {
             .iter()
             .all(|(k, v)| b.get(k).is_some_and(|x| contains(v, x))),
         (Value::Array(a), Value::Array(b)) => {
-            a.len() <= b.len() && a.iter().zip(b).all(|(x, y)| contains(x, y))
+            !(!(a.len() <= b.len()) || !(a.iter().zip(b).all(|(x, y)| contains(x, y))))
         }
         _ => expected == actual,
     }

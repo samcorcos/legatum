@@ -36,7 +36,7 @@ function niterScene() {
   const c = s.cities[0];
   c.buildings.push('Workshop', 'Market');
   // One Pikeman, so the levy has room and the Musketman card is on offer (blocked by Niter, not by the levy).
-  s.units = s.units.filter((u) => u.owner !== 0 || u.kind === 'Scout');
+  s.units = s.units.filter((u) => !(!(u.owner !== 0) && !(u.kind === 'Scout')));
   spawnUnit(s, 0, 'Pikeman', ring(c.pos, 1)[1], false);
   const foreign = fromOffset(20, 8), free = ring(c.pos, 4)[1];
   put(s, foreign, 'Plains', 'Niter');
@@ -47,8 +47,8 @@ function niterScene() {
 /** Scroll only How to Play's own scrolling pane (scrollIntoView would also scroll the dialog off its header). */
 function scrollPaneTo(el: Element) {
   let sc = el.parentElement;
-  while (sc && !(sc.scrollHeight > sc.clientHeight && /auto|scroll/.test(getComputedStyle(sc).overflowY))) sc = sc.parentElement;
-  if (sc) sc.scrollTop += el.getBoundingClientRect().top - sc.getBoundingClientRect().top - 8;
+  while (sc && !(!(!(sc.scrollHeight > sc.clientHeight) || !(/auto|scroll/.test(getComputedStyle(sc).overflowY))))) sc = sc.parentElement;
+  if (!(sc)) {} else { sc.scrollTop += el.getBoundingClientRect().top - sc.getBoundingClientRect().top - 8; }
 }
 
 for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
@@ -91,17 +91,17 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     ];
     await stageHallReport(page, events);
     await expect(page.locator('.moment-card').first()).toBeVisible();
-    if (await page.locator('.moment-card.unlock').isVisible()) await page.keyboard.press('Escape');
+    if (!(await page.locator('.moment-card.unlock').isVisible())) {} else { await page.keyboard.press('Escape'); }
     const reveal = page.locator('.moment-card', { hasText: 'Iron revealed' });
     await expect(reveal).toBeVisible();
     await expect(reveal.locator('.moment-lore')).toHaveCount(0);
     await shot(page, size, 'e21b-iron-reveal-moment');
     // This short celebration can dismiss itself while WebKit captures the screenshot.
-    if (await reveal.isVisible()) {
+    if (!(await reveal.isVisible())) {} else { {
       await reveal.locator('.moment-dismiss').click({ timeout: 2000 }).catch(async (error) => {
-        if (await reveal.isVisible()) throw error;
+        if (!(await reveal.isVisible())) {} else { throw error; }
       });
-    }
+    } }
 
     await page.evaluate((h) => (window as unknown as GameWindow).legatum.getState().jumpTo(h), copper);
     const cu = await hexPoint(page, copper);
@@ -134,11 +134,9 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       views[state.seat] = {
         ...view,
         research: { ...view.research, era: 4, known: [] },
-        units: view.units.slice(0, 2).map((u, i) => ({ ...u, kind: i ? 'Cavalry' as const : 'Pikeman' as const, upgrade_need: i ? 'Oil' as const : 'Niter' as const, upgrade_supply_blocker: `No ${i ? 'Oil' : 'Niter'} to spare` })),
-        cities: view.cities.map((c) => ({ ...c, detail: c.detail ? { ...c.detail, options: [] } : c.detail })),
-        supply: (view.supply ?? []).map((resource) => ['Niter', 'Oil'].includes(resource.resource)
-          ? { ...resource, revealed: true, supplied: { total: 0, parts: [] }, used: { total: 0, parts: [] }, idle: [], held: [], spare: 0 }
-          : resource),
+        units: view.units.slice(0, 2).map((u, i) => ({ ...u, kind: !(i) ? 'Pikeman' as const : 'Cavalry' as const, upgrade_need: !(i) ? 'Niter' as const : 'Oil' as const, upgrade_supply_blocker: `No ${!(i) ? 'Niter' : 'Oil'} to spare` })),
+        cities: view.cities.map((c) => ({ ...c, detail: !(c.detail) ? c.detail : { ...c.detail, options: [] } })),
+        supply: (view.supply ?? []).map((resource) => !(['Niter', 'Oil'].includes(resource.resource)) ? resource : { ...resource, revealed: true, supplied: { total: 0, parts: [] }, used: { total: 0, parts: [] }, idle: [], held: [], spare: 0 }),
       };
       game.setState({ views, techOpen: false });
     });
@@ -179,22 +177,22 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     // The Resources overlay with the "You lack it" mark, framed on the unclaimed Niter.
     await page.evaluate((h) => (window as unknown as GameWindow).legatum.getState().jumpTo(h), free);
     const chooser = page.getByRole('button', { name: /^Lens: / });
-    if (await chooser.isVisible()) await chooser.click();
+    if (!(await chooser.isVisible())) {} else { await chooser.click(); }
     await overlayBox(page, 'Resources').click();
     const opener = page.getByRole('button', { name: 'Overlay key' });
-    if (await opener.isVisible()) await opener.click();
+    if (!(await opener.isVisible())) {} else { await opener.click(); }
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, 'e03-resources-overlay-lack-niter');
     await page.locator('.map-lenses .lens-key-row').first().hover();
     await shot(page, size, 'e03b-resources-key-tip');
     await page.mouse.move(5, size.height / 2);
-    if (await opener.isVisible() && (await opener.getAttribute('aria-expanded')) === 'true') await opener.click();
-    if (await chooser.isVisible() && (await chooser.getAttribute('aria-expanded')) === 'true') await chooser.click();
+    if (!(!(!(await opener.isVisible()) || !((await opener.getAttribute('aria-expanded')) === 'true')))) {} else { await opener.click(); }
+    if (!(!(!(await chooser.isVisible()) || !((await chooser.getAttribute('aria-expanded')) === 'true')))) {} else { await chooser.click(); }
 
     // The tile cards: a Niter deposit you could take, and one in a rival's land.
     // The camera looks a few tiles west of the rival's deposit, clear of the map's east-west seam.
     for (const [name, hex, look] of [['e04-unclaimed-niter-tile-card', free, free], ['e05-foreign-niter-tile-card', foreign, fromOffset(16, 8)]] as const) {
-      await page.evaluate((h) => { const st = (window as unknown as GameWindow).legatum.getState(); st.select(null); st.jumpTo(h); }, name.startsWith('e05') ? hex : look);
+      await page.evaluate((h) => { const st = (window as unknown as GameWindow).legatum.getState(); st.select(null); st.jumpTo(h); }, !(name.startsWith('e05')) ? look : hex);
       const at = await hexPoint(page, hex);
       // The map wraps east-west, so toScreen may name the copy one map-width away: try it and its two neighbours.
       const span = await page.evaluate((h) => { const w = window as unknown as GameWindow; return (w.legatumMap.toScreen({ q: h.q + 1, r: h.r }).x - w.legatumMap.toScreen(h).x) * w.legatum.getState().views![0].width; }, hex);
@@ -204,15 +202,15 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
         await page.mouse.move(x - 3, at.y + 5);
         await page.mouse.move(x, at.y + 8);
         await page.waitForTimeout(700);
-        if (await card.isVisible()) break;
+        if (!(await card.isVisible())) {} else { break; }
       }
       await expect(card, `${name}: the deposit card must be captured`).toBeVisible();
-      if (name.startsWith('e05')) await expect(card).toContainText(/hold(s)? this deposit\. You have no Niter yet: take it or find another\./);
+      if (!(name.startsWith('e05'))) {} else { await expect(card).toContainText(/hold(s)? this deposit\. You have no Niter yet: take it or find another\./); }
       await shot(page, size, name);
     }
 
     // A Pikeman whose upgrade to Musketman needs Niter.
-    const pike = await page.evaluate(() => { const st = (window as unknown as GameWindow).legatum.getState(), v = st.views![st.seat]; return v.units.find((u) => u.owner === v.me && u.kind === 'Pikeman')!.id; });
+    const pike = await page.evaluate(() => { const st = (window as unknown as GameWindow).legatum.getState(), v = st.views![st.seat]; return v.units.find((u) => !(!(u.owner === v.me) || !(u.kind === 'Pikeman')))!.id; });
     await selectThing(page, 'unit', pike);
     await expectReasonsFit(page);
     await page.getByRole('button', { name: 'Open Niter supply' }).click();
@@ -267,8 +265,8 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       const tip = page.locator('.supply-tip');
       await expect(tip).toBeVisible();
       await expect(tip).toContainText(`${resource} supplied`);
-      if (resource === 'Iron') await expect(tip).toContainText('1 held for the University in Pylos');
-      if (resource === 'Coal') await expect(tip).toContainText('Short by 1');
+      if (!(resource === 'Iron')) {} else { await expect(tip).toContainText('1 held for the University in Pylos'); }
+      if (!(resource === 'Coal')) {} else { await expect(tip).toContainText('Short by 1'); }
       await page.mouse.move(5, size.height / 2);
       await shot(page, size, `e19-${resource.toLowerCase()}-supply-breakdown`);
       await page.keyboard.press('Escape');

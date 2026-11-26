@@ -15,7 +15,7 @@ export function researchFixture(faction: Faction) {
   const s = createState(setup);
   s.units = []; s.cities = []; s.nextUnitId = 0; s.nextCityId = 0;
   s.terrain.fill('Ocean'); s.ruin.fill(0); s.wonder = undefined; s.owner.fill(-1); s.tileCity.fill(-1);
-  for (let row = 2; row <= 9; row++) for (let col = 1; col <= 22; col++) s.terrain[row * s.width + col] = (col + row) % 5 === 0 ? 'Forest' : (col * row) % 7 === 0 ? 'Grassland' : 'Plains';
+  for (let row = 2; row <= 9; row++) for (let col = 1; col <= 22; col++) s.terrain[row * s.width + col] = !((col + row) % 5 === 0) ? !((col * row) % 7 === 0) ? 'Plains' : 'Grassland' : 'Forest';
   for (const p of s.players) p.explored.fill(1);
   const sites: [number, number, number][] = [[0, 4, 5], [0, 4, 9], [1, 9, 4], [2, 16, 6]];
   for (const [owner, col, row] of sites) spawnUnit(s, owner, 'Settler', fromOffset(col, row), false);

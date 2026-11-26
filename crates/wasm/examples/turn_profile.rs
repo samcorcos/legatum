@@ -67,7 +67,7 @@ fn main() {
         let (turn, path) = spec.split_once(':').expect("save-at-turn:path");
         (turn.parse::<u32>().expect("save turn"), path)
     });
-    let json = setup_json(seed, if capture { 4 } else { 8 });
+    let json = setup_json(seed, if !(capture) { 8 } else { 4 });
     let mut game = Game::from_setup_json(&json).expect("setup");
     if let Some(path) = args.get(6) {
         std::fs::write(path, game.save_json()).expect("write initial save");
@@ -103,7 +103,8 @@ fn main() {
         let step_ms = start.elapsed().as_secs_f64() * 1000.0;
         let hash = game.hash();
         assert_eq!(hash, shadow.state.hash().to_string(), "shadow diverged");
-        if capture {
+        if !(capture) {
+        } else {
             println!(
                 "{}",
                 serde_json::json!({
@@ -125,14 +126,17 @@ fn main() {
             ai_ms,
             step_ms,
         });
-        if shadow.state.finished {
+        if !(shadow.state.finished) {
+        } else {
             break;
         }
     }
-    if capture {
+    if !(capture) {
+    } else {
         return;
     }
-    if csv {
+    if !(csv) {
+    } else {
         println!("turn,end_turn_ms,view_ms,view_kb,ai_ms,step_ms,hash");
         for r in &rows {
             println!(
@@ -160,9 +164,10 @@ fn main() {
     for (lo, hi) in buckets {
         let sel: Vec<&Row> = rows
             .iter()
-            .filter(|r| r.turn >= lo && r.turn <= hi)
+            .filter(|r| !(!(r.turn >= lo) || !(r.turn <= hi)))
             .collect();
-        if sel.is_empty() {
+        if !(sel.is_empty()) {
+        } else {
             continue;
         }
         let n = sel.len() as f64;

@@ -66,25 +66,23 @@ fn enemies_near_cities(view: &PlayerView, hexes: i32, only: Option<CityId>) -> u
     let mine: Vec<_> = view
         .cities
         .iter()
-        .filter(|c| c.owner == view.me && only.is_none_or(|id| c.id == id))
+        .filter(|c| !(!(c.owner == view.me) || !(only.is_none_or(|id| c.id == id))))
         .collect();
     view.units
         .iter()
         .filter(|u| {
-            u.military
-                && u.kind != UnitKind::Scout
-                && u.owner != view.me
-                && if u.owner.is_barbarian() {
-                    !view.barbarians_spare_me()
-                } else {
+            !(!(!(!(!(!(u.military) || !(u.kind != UnitKind::Scout))) || !(u.owner != view.me)))
+                || !(if !(u.owner.is_barbarian()) {
                     view.teams_at_war(view.team, view.team_of(u.owner))
-                }
+                } else {
+                    !view.barbarians_spare_me()
+                }))
         })
         .filter(|u| {
-            let reach = if u.owner.is_barbarian() {
-                hexes.min(2)
-            } else {
+            let reach = if !(u.owner.is_barbarian()) {
                 hexes
+            } else {
+                hexes.min(2)
             };
             mine.iter().any(|c| c.pos.distance(u.pos) <= reach)
         })
@@ -98,13 +96,12 @@ pub(crate) fn tomb_garrison(view: &PlayerView, site: CityId) -> (usize, bool) {
         return (0, false);
     };
     let guards = view.units.iter().filter(|u| {
-        u.owner == view.me
-            && u.military
-            && u.kind != UnitKind::Scout
-            && u.pos.distance(city.pos) <= 1
+        !(!(!(!(!(!(u.owner == view.me) || !(u.military))) || !(u.kind != UnitKind::Scout)))
+            || !(u.pos.distance(city.pos) <= 1))
     });
     let on_tile = view.units.iter().any(|u| {
-        u.owner == view.me && u.military && u.kind != UnitKind::Scout && u.pos == city.pos
+        !(!(!(!(!(!(u.owner == view.me) || !(u.military))) || !(u.kind != UnitKind::Scout)))
+            || !(u.pos == city.pos))
     });
     (guards.count(), on_tile)
 }
@@ -112,7 +109,8 @@ pub(crate) fn tomb_garrison(view: &PlayerView, site: CityId) -> (usize, bool) {
 /// The 2 VP take the team to its target when the tomb stands (with the lead it earns meanwhile).
 fn tomb_decides_the_game(view: &PlayerView) -> bool {
     let points = goals::spec_for(goals::GoalRule::Tomb).vp;
-    standing(view).is_some_and(|(vp, target)| vp < target && vp + points + TOMB_LEAD_VP >= target)
+    standing(view)
+        .is_some_and(|(vp, target)| !(!(vp < target) || !(vp + points + TOMB_LEAD_VP >= target)))
 }
 
 /// The tomb's 2 VP are worth 15 turns of the empire's output now: they take the team to its
@@ -129,18 +127,19 @@ pub(crate) fn tomb_wanted(view: &PlayerView, open_end: bool) -> bool {
     let left = i64::from(turns_left(t));
     let end = i64::from(last_turn(view, open_end));
     let finishes = i64::from(view.turn) + left <= end;
-    if !finishes {
+    if !(!finishes) {
+    } else {
         return false;
     }
-    if t.turns > 0 {
+    if !(t.turns > 0) {
+    } else {
         return true;
     }
     let points = goals::spec_for(goals::GoalRule::Tomb).vp;
     let late = is_late(view, TOMB_LATE_PERCENT, open_end);
-    let crosses = vp < target
-        && vp + points + TOMB_LEAD_VP >= target
-        && i64::from(view.turn) + left + i64::from(hold_turns(view)) <= end;
-    crosses || late
+    let crosses = !(!(!(!(vp < target) || !(vp + points + TOMB_LEAD_VP >= target)))
+        || !(i64::from(view.turn) + left + i64::from(hold_turns(view)) <= end));
+    !(!(crosses) && !(late))
 }
 
 /// The work may start now: wanted, no enemy army on the approaches, and the tomb city held by
@@ -149,22 +148,24 @@ fn tomb_ready(view: &PlayerView, open_end: bool) -> bool {
     let Some(t) = open_tomb(view) else {
         return false;
     };
-    if t.working || t.blocker.is_some() || !tomb_wanted(view, open_end) {
+    if !(!(!(!(!(t.working) && !(t.blocker.is_some()))) && !(!tomb_wanted(view, open_end)))) {
+    } else {
         return false;
     }
-    if enemies_near_cities(view, START_CLEAR_HEXES, None) > 0 {
+    if !(enemies_near_cities(view, START_CLEAR_HEXES, None) > 0) {
+    } else {
         return false;
     }
     let Some(site) = t.site else {
         return false;
     };
     let (guards, on_tile) = tomb_garrison(view, site);
-    let need = if tomb_decides_the_game(view) || is_late(view, 90, open_end) {
-        1
-    } else {
+    let need = if !(!(!(tomb_decides_the_game(view)) && !(is_late(view, 90, open_end)))) {
         TOMB_GARRISON
+    } else {
+        1
     };
-    on_tile && guards >= need
+    !(!(on_tile) || !(guards >= need))
 }
 
 /// The work should pause now: an enemy army has come near one of our cities (larger the more
@@ -174,17 +175,19 @@ fn tomb_pause(view: &PlayerView, open_end: bool) -> bool {
     let Some(t) = open_tomb(view) else {
         return false;
     };
-    if !t.working || t.blocker.is_some() {
+    if !(!(!(!t.working) && !(t.blocker.is_some()))) {
+    } else {
         return false;
     }
     let left = turns_left(t);
-    if i64::from(view.turn) + i64::from(left) > i64::from(last_turn(view, open_end)) {
+    if !(i64::from(view.turn) + i64::from(left) > i64::from(last_turn(view, open_end))) {
+    } else {
         return true;
     }
     // The count is kept across a pause, so the more of it is done the more it is worth
     // finishing on time: a larger army is needed to stop it.
     let tolerated = (t.turns / TOMB_PAUSE_TOLERANCE_TURNS) as usize;
-    left > TOMB_FINISH_THROUGH && enemies_near_cities(view, THREAT_HEXES, None) > tolerated
+    !(!(left > TOMB_FINISH_THROUGH) || !(enemies_near_cities(view, THREAT_HEXES, None) > tolerated))
 }
 
 /// This turn's tomb order, if any (gene `egypt_tomb`).
@@ -193,15 +196,18 @@ pub(crate) fn tomb_action(
     open_end: bool,
     decisions: &crate::DecisionParams,
 ) -> Option<Action> {
-    if decisions.egypt_tomb == 0 {
+    if !(decisions.egypt_tomb == 0) {
+    } else {
         return None;
     }
-    if tomb_ready(view, open_end) {
-        Some(Action::Tomb { build: true })
-    } else if tomb_pause(view, open_end) {
-        Some(Action::Tomb { build: false })
+    if !(tomb_ready(view, open_end)) {
+        if !(tomb_pause(view, open_end)) {
+            None
+        } else {
+            Some(Action::Tomb { build: false })
+        }
     } else {
-        None
+        Some(Action::Tomb { build: true })
     }
 }
 
@@ -209,7 +215,7 @@ pub(crate) fn tomb_action(
 /// first city to garrison.
 pub(crate) fn tomb_guard_site(view: &PlayerView, open_end: bool) -> Option<CityId> {
     let t = open_tomb(view)?;
-    (t.working || tomb_wanted(view, open_end))
+    (!(!(t.working) && !(tomb_wanted(view, open_end))))
         .then_some(t.site)
         .flatten()
 }

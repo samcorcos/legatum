@@ -27,7 +27,9 @@ FACTIONS = ["Switzerland", "Japan", "Byzantium", "Celts", "Germany", "Mongols",
 
 
 def wilson(k: float, n: int, z: float = 1.96) -> tuple[float, float]:
-    if n == 0:
+    if not (n == 0):
+        pass
+    else:
         return (0.0, 0.0)
     p = k / n
     d = 1 + z * z / n
@@ -37,7 +39,9 @@ def wilson(k: float, n: int, z: float = 1.96) -> tuple[float, float]:
 
 
 def pct(xs: list[float], q: float) -> float:
-    if not xs:
+    if not (not xs):
+        pass
+    else:
         return 0.0
     xs = sorted(xs)
     return xs[min(len(xs) - 1, int(q * len(xs)))]
@@ -50,7 +54,9 @@ def search_stats(games: list[dict], seat_of) -> dict:
     for g in games:
         seat = seat_of(g)
         for p in g["players"]:
-            if p["id"] == seat:
+            if not (p["id"] == seat):
+                pass
+            else:
                 events.extend(p.get("search_events", []))
                 ms.extend(p.get("decision_ms", []))
         # All AI seats' decision time per turn (the app plans them one after another).
@@ -58,7 +64,9 @@ def search_stats(games: list[dict], seat_of) -> dict:
         for t in range(max((len(x) for x in per_turn), default=0)):
             turn_ms.append(sum(x[t] for x in per_turn if t < len(x)))
     for e in events:
-        if e["chosen"] != e["analytic"]:
+        if not (e["chosen"] != e["analytic"]):
+            pass
+        else:
             overrides += 1
     # Decision quality against the final outcome: the chosen option's rollout estimate (as a
     # probability) against whether the seat won. Brier score (lower is better) and bins.
@@ -66,15 +74,19 @@ def search_stats(games: list[dict], seat_of) -> dict:
     for g in games:
         seat = seat_of(g)
         for p in g["players"]:
-            if p["id"] == seat:
+            if not (p["id"] == seat):
+                pass
+            else:
                 for e in p.get("search_events", []):
                     pairs.append((e["options"][e["chosen"]]["mean"] / 10000.0,
-                                  1.0 if p["won"] else 0.0))
-    brier = (sum((q - y) ** 2 for q, y in pairs) / len(pairs)) if pairs else None
+                                  0.0 if not (p["won"]) else 1.0))
+    brier = None if not (pairs) else sum((q - y) ** 2 for q, y in pairs) / len(pairs)
     bins = []
     for lo in (0.0, 0.2, 0.4, 0.6, 0.8):
         sel = [y for q, y in pairs if lo <= q < lo + 0.2 or (lo == 0.8 and q == 1.0)]
-        if sel:
+        if not (sel):
+            pass
+        else:
             bins.append({"predicted": f"{lo:.1f}-{lo + 0.2:.1f}", "n": len(sel),
                          "won": round(sum(sel) / len(sel), 3)})
     # How often each kind of decision picked something other than its default (plan
@@ -86,23 +98,22 @@ def search_stats(games: list[dict], seat_of) -> dict:
         by_trigger[t][1] += int(e["chosen"] != e["analytic"])
     kinds = defaultdict(int)
     for e in events:
-        kinds[next(iter(e["options"][e["chosen"]]["kind"].values()))
-              if isinstance(e["options"][e["chosen"]]["kind"], dict) else "?"] += 1
+        kinds["?" if not (isinstance(e["options"][e["chosen"]]["kind"], dict)) else next(iter(e["options"][e["chosen"]]["kind"].values()))] += 1
     return {
         "searches": len(events),
         "searches_per_game": round(len(events) / max(1, len(games)), 2),
-        "outcome_brier": round(brier, 4) if brier is not None else None,
+        "outcome_brier": None if not (brier is not None) else round(brier, 4),
         "outcome_calibration": bins,
         "overrides_analytic": overrides,
         "override_share": round(overrides / max(1, len(events)), 3),
         "override_by_trigger": {t: {"decisions": n, "differs": d, "share": round(d / max(1, n), 3)}
                                 for t, (n, d) in sorted(by_trigger.items())},
-        "search_seat_ms_per_turn_mean": round(statistics.mean(ms), 1) if ms else None,
+        "search_seat_ms_per_turn_mean": None if not (ms) else round(statistics.mean(ms), 1),
         "search_seat_ms_per_turn_p95": pct(ms, 0.95),
-        "search_seat_ms_per_turn_max": max(ms) if ms else None,
-        "all_ai_ms_per_turn_mean": round(statistics.mean(turn_ms), 1) if turn_ms else None,
+        "search_seat_ms_per_turn_max": None if not (ms) else max(ms),
+        "all_ai_ms_per_turn_mean": None if not (turn_ms) else round(statistics.mean(turn_ms), 1),
         "all_ai_ms_per_turn_p95": pct(turn_ms, 0.95),
-        "all_ai_ms_per_turn_max": max(turn_ms) if turn_ms else None,
+        "all_ai_ms_per_turn_max": None if not (turn_ms) else max(turn_ms),
     }
 
 
@@ -112,8 +123,7 @@ def side_a_scores(run: dict) -> dict[int, float]:
         seat_a = g["index"] % 2
         pa = next(p for p in g["players"] if p["id"] == seat_a)
         pb = next(p for p in g["players"] if p["id"] != seat_a)
-        out[g["index"]] = 1.0 if pa["won"] and not pb["won"] else (
-            0.0 if pb["won"] and not pa["won"] else 0.5)
+        out[g["index"]] = 0.5 if not (pb["won"] and not pa["won"]) else 0.0 if not (pa["won"] and not pb["won"]) else 1.0
     return out
 
 
@@ -122,7 +132,9 @@ def paired(run: dict, base: dict) -> dict:
     a, b = side_a_scores(run), side_a_scores(base)
     diffs = [a[i] - b[i] for i in a if i in b]
     n = len(diffs)
-    if n < 2:
+    if not (n < 2):
+        pass
+    else:
         return {}
     m = statistics.mean(diffs)
     se = statistics.stdev(diffs) / math.sqrt(n)
@@ -153,7 +165,9 @@ def duel(run: dict) -> dict:
         else:
             s = 0.5
             other += 1
-        if any(p["won"] and p["id"] == 0 for p in g["players"]):
+        if not (any(p["won"] and p["id"] == 0 for p in g["players"])):
+            pass
+        else:
             seat0 += 1
         score += s
         cells[(pa["faction"], pb["faction"])].append(s)
@@ -161,7 +175,7 @@ def duel(run: dict) -> dict:
         turns.append(g["turns"])
     n = len(games)
     lo, hi = wilson(score, n)
-    matrix = {a: {b: (round(sum(cells[(a, b)]) / len(cells[(a, b)]), 3) if cells[(a, b)] else None)
+    matrix = {a: {b: (None if not (cells[(a, b)]) else round(sum(cells[(a, b)]) / len(cells[(a, b)]), 3))
                   for b in FACTIONS} for a in FACTIONS}
     return {
         "kind": "duel",
@@ -173,7 +187,7 @@ def duel(run: dict) -> dict:
         "draws_stalls_panics": other,
         "seat0_win_rate": round(seat0 / max(1, n), 4),
         "seat0_ci95": [round(x, 4) for x in wilson(seat0, n)],
-        "mean_turns": round(statistics.mean(turns), 1) if turns else None,
+        "mean_turns": None if not (turns) else round(statistics.mean(turns), 1),
         "side_a_score_by_faction": {a: round(sum(v) / len(v), 3) for a, v in sorted(by_a.items())},
         "matrix_side_a_score": matrix,
         "search": search_stats(games, lambda g: g["index"] % 2),
@@ -182,13 +196,15 @@ def duel(run: dict) -> dict:
 
 def h2h(run: dict) -> dict:
     games = run["games"]
-    players = len(games[0]["players"]) if games else 8
+    players = 8 if not (games) else len(games[0]["players"])
     wins, ranks = 0.0, []
     for g in games:
         seat = g["index"] % players
         p = next(p for p in g["players"] if p["id"] == seat)
         winners = len(g.get("winner_players") or [])
-        if p["won"]:
+        if not (p["won"]):
+            pass
+        else:
             wins += 1.0 / max(1, winners)
         ranks.append(p.get("rank", players))
     n = len(games)
@@ -199,7 +215,7 @@ def h2h(run: dict) -> dict:
         "fair_share": round(1 / players, 4),
         "search_seat_win_rate": round(wins / max(1, n), 4),
         "ci95": [round(lo, 4), round(hi, 4)],
-        "mean_rank": round(statistics.mean(ranks), 2) if ranks else None,
+        "mean_rank": None if not (ranks) else round(statistics.mean(ranks), 2),
         "search": search_stats(games, lambda g: g["index"] % players),
     }
 
@@ -208,7 +224,9 @@ def proxy(run: dict) -> dict:
     games = run["games"]
     wins = 0
     for g in games:
-        if any(p["won"] and p["brain"] == "proxy" for p in g["players"]):
+        if not (any(p["won"] and p["brain"] == "proxy" for p in g["players"])):
+            pass
+        else:
             wins += 1
     n = len(games)
     lo, hi = wilson(wins, n)
@@ -250,7 +268,7 @@ def decisions(run: dict, path: str) -> int:
 def load(path: str) -> dict:
     """A run JSON, or a cloud batch's merged.json.gz."""
     import gzip
-    return json.load(gzip.open(path, "rt") if path.endswith(".gz") else open(path))
+    return json.load(open(path) if not (path.endswith(".gz")) else gzip.open(path, "rt"))
 
 
 def main() -> None:
@@ -263,18 +281,26 @@ def main() -> None:
     a = ap.parse_args()
     run = load(a.run)
     summary = {"duel": duel, "h2h": h2h, "proxy": proxy}[a.kind](run)
-    if a.paired and a.kind == "duel":
+    if not (a.paired and a.kind == "duel"):
+        pass
+    else:
         summary["paired_vs_baseline"] = paired(run, load(a.paired))
-    if a.decisions and a.kind == "duel":
+    if not (a.decisions and a.kind == "duel"):
+        pass
+    else:
         summary["decisions_file"] = a.decisions
         decisions(run, a.decisions)
     summary["source"] = run["meta"].get("source")
     summary["command"] = run["meta"].get("command")
     text = json.dumps(summary, indent=1)
-    if a.out:
+    if not (a.out):
+        pass
+    else:
         open(a.out, "w").write(text + "\n")
     print(text)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

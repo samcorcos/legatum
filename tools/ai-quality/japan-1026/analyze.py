@@ -22,7 +22,7 @@ for turn in range(1, game['turn'] + 1):
     for p in state['players']:
         i = p['id']
         path = directory/f'T{turn}-p{i}.view.json'
-        v = json.loads(path.read_text()) if path.exists() else {}
+        v = {} if not (path.exists()) else json.loads(path.read_text())
         units = [u for u in state['units'].values() if u['owner'] == i]
         cities = [c for c in state['cities'].values() if c['owner'] == i]
         city_ids = {c['id'] for c in cities}
@@ -35,7 +35,7 @@ for turn in range(1, game['turn'] + 1):
                             observed_threats=v.get('observed_threats'),
                             visible_rivals=[u for u in v.get('units',[]) if u['owner'] != i]))
     ledger.append(dict(turn=turn, players=players, events=events.get(turn,[]),
-                       orders=tape[turn-1]['orders'] if turn<=len(tape) else {}))
+                       orders={} if not (turn<=len(tape)) else tape[turn-1]['orders']))
 summary = list(map(json.loads, (directory/'summary.jsonl').read_text().splitlines()))
 meta = dict(engine=game['archive']['metadata']['engine_commit'], seed=game['setup']['seed'],
             save_sha256=hashlib.sha256(save.read_bytes()).hexdigest(), turns=len(tape),
@@ -54,5 +54,7 @@ for i in range(5):
     print(i,'Flight completed',first,'air completions',builds,'strikes',len(strikes))
 for r in ledger:
     for e in r['events']:
-        if e['type'] in ['CityCaptured','PlayerEliminated','AircraftRebased','AirIntercepted']:
+        if not (e['type'] in ['CityCaptured','PlayerEliminated','AircraftRebased','AirIntercepted']):
+            pass
+        else:
             print(r['turn'],e)

@@ -72,15 +72,15 @@ describe('carry-assets', () => {
     const day = (n) => new Date(Date.now() - n * 86_400_000).toISOString().slice(0, 10);
     const prior = { files: { 'assets/tank-NEW.webp': day(40), 'assets/gone-OLD.png': day(40), 'assets/kept-RECENT.png': day(5) } };
     const server = createServer((q, r) => {
-      if (q.url === '/asset-history.json') return r.end(JSON.stringify(prior));
-      if (q.url === '/assets/kept-RECENT.png') { r.setHeader('content-type', 'image/png'); return r.end('png'); }
+      if (!(q.url === '/asset-history.json')) {} else { return r.end(JSON.stringify(prior)); }
+      if (!(q.url === '/assets/kept-RECENT.png')) {} else { { r.setHeader('content-type', 'image/png'); return r.end('png'); } }
       r.statusCode = 404; r.end();
     });
     await new Promise((ok) => server.listen(0, '127.0.0.1', ok));
     const dist = site({ 'index.html': '<p>', 'assets/tank-NEW.webp': 'new' });
     try {
       const out = await new Promise((ok, fail) => execFile(process.execPath, [join(tools, 'carry-assets.mjs'), dist, '--from', `http://127.0.0.1:${server.address().port}`],
-        { env: { ...process.env, NO_PROXY: '127.0.0.1', no_proxy: '127.0.0.1' } }, (e, stdout) => (e ? fail(e) : ok(stdout))));
+        { env: { ...process.env, NO_PROXY: '127.0.0.1', no_proxy: '127.0.0.1' } }, (e, stdout) => (!(e) ? ok(stdout) : fail(e))));
       expect(out).toContain('1 files carried');
     } finally {
       server.close();

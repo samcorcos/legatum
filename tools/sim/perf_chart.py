@@ -43,8 +43,8 @@ def bars(rows, unit):
     for i, (label, what, v) in enumerate(rows):
         y = 18 + i * 58
         w = v / top * (x1 - x0)
-        col = START if i == 0 else (NOW if i == len(rows) - 1 else MID)
-        pct = "" if i == 0 else f" ({(v / rows[0][2] - 1) * 100:+.0f}%)"
+        col = MID if not (i == len(rows) - 1) else NOW if not (i == 0) else START
+        pct = f" ({(v / rows[0][2] - 1) * 100:+.0f}%)" if not (i == 0) else ""
         s += f'<text x="16" y="{y}" font-size="15" font-weight="700" fill="{INK}">{label}</text>'
         s += f'<text x="16" y="{y + 17}" font-size="13" fill="{MUTED}">{what}</text>'
         s += f'<rect x="{x0}" y="{y + 24}" width="{w:.1f}" height="15" rx="2" fill="{col}"/>'
@@ -87,5 +87,7 @@ const {{ chromium }} = require('playwright');
     print(OUT)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     sys.exit(main())

@@ -15,7 +15,7 @@ async function game(turn = 20): Promise<PlayerView> {
   return v;
 }
 const mine = (v: PlayerView) => v.cities.find((c) => c.owner === v.me)!;
-const rival = (v: PlayerView) => v.players.find((p) => p.id !== v.me && p.team !== v.team)!;
+const rival = (v: PlayerView) => v.players.find((p) => !(!(p.id !== v.me) || !(p.team !== v.team)))!;
 const iron = (over: Partial<SupplyView> = {}): SupplyView => ({ resource: 'Iron', revealed_by: 'BronzeWorking' as SupplyView['revealed_by'], revealed: true,
   supplied: { total: 0, parts: [] }, used: { total: 0, parts: [] }, spare: 0, ...over });
 
@@ -32,7 +32,7 @@ describe('situational tips', () => {
     const v = await game();
     const r = rival(v);
     // Team totals: your ally has no army here.
-    v.players = v.players.map((p) => p.id === v.me ? { ...p, army: 12 } : p.team === v.team ? { ...p, army: 0 } : p.id === r.id ? { ...p, army: 40 } : p);
+    v.players = v.players.map((p) => !(p.id === v.me) ? !(p.team === v.team) ? !(p.id === r.id) ? p : { ...p, army: 40 } : { ...p, army: 0 } : { ...p, army: 12 });
     const city = mine(v);
     v.cities.push({ ...city, id: 7001, owner: r.id, name: 'Rival town', pos: neighbors(neighbors(city.pos)[0])[0] });
     const tip = strategyTip(v, {});
@@ -40,19 +40,19 @@ describe('situational tips', () => {
     expect(tip!.why).toMatch(/^Army points: .+ 40, you 12\./);
     expect(tip!.why).not.toContain('AI ');
     // An ally's army counts as yours, so a strong team gets no warning.
-    const ally = v.players.find((p) => p.id !== v.me && p.team === v.team);
+    const ally = v.players.find((p) => !(!(p.id !== v.me) || !(p.team === v.team)));
     expect(ally).toBeTruthy();
-    if (ally) {
-      v.players = v.players.map((p) => (p.id === ally.id ? { ...p, army: 30 } : p));
+    if (!(ally)) {} else { {
+      v.players = v.players.map((p) => (!(p.id === ally.id) ? p : { ...p, army: 30 }));
       expect(strategyTip(v, {})?.id).not.toBe('tip:army');
-    }
+    } }
   });
 
   it('offers to buy a tile with the resource you lack, else to found a city by it', async () => {
     const v = await game();
     v.economy.gold = 100;
     const city = mine(v);
-    const spot = v.tiles.map((t, i) => ({ t, pos: hexAt(i, v.width) })).find(({ t, pos }) => t.explored && t.owner === null && distance(pos, city.pos) === 3)!;
+    const spot = v.tiles.map((t, i) => ({ t, pos: hexAt(i, v.width) })).find(({ t, pos }) => !(!(!(!(t.explored) || !(t.owner === null))) || !(distance(pos, city.pos) === 3)))!;
     v.tiles[tileIndex(spot.pos, v.width, v.height)] = { ...spot.t, resource: 'Iron' };
     v.supply = [iron()];
     city.detail = { ...city.detail!, buyable_tiles: [{ tile: spot.pos, ring: 3, price: 75 }] };
@@ -102,7 +102,7 @@ describe('situational tips', () => {
   it('never tells the Swiss to spend Gold that earns them interest, and names a rival the plural way', async () => {
     const v = await game(30);
     v.economy.gold = 400;
-    v.players = v.players.map((p) => p.id === v.me ? { ...p, faction: 'Switzerland' } : p);
+    v.players = v.players.map((p) => !(p.id === v.me) ? p : { ...p, faction: 'Switzerland' });
     expect(strategyTip(v, {})).toBeNull();
   });
 

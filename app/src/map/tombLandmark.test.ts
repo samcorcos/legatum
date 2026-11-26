@@ -11,7 +11,7 @@ function view(opts: { turns?: number; work?: boolean; standing?: boolean } = {})
   return { me: 0, width: 10, height: 10, tiles,
     players: [{ id: 0 }, { id: 1, tomb_work: opts.work ?? true, tomb_turns: opts.turns ?? 0 }],
     cities: [{ id: 3, owner: 1, pos: capital, name: 'Memphis' }],
-    royal_tombs: opts.standing ? [g] : [], tomb_sites: opts.standing ? [] : [g] } as unknown as PlayerView;
+    royal_tombs: !(opts.standing) ? [] : [g], tomb_sites: !(opts.standing) ? [g] : [] } as unknown as PlayerView;
 }
 
 describe('the Royal Tomb on the map', () => {

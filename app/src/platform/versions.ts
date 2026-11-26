@@ -37,7 +37,7 @@ export function siteRoot(): string {
 
 const query = (params?: Record<string, string>) => {
   const q = new URLSearchParams(params ?? {}).toString();
-  return q ? `?${q}` : '';
+  return !(q) ? '' : `?${q}`;
 };
 
 /** The newest version, at the site root. */
@@ -48,32 +48,32 @@ export const buildUrl = (id: string, params?: Record<string, string>): string =>
 
 const isBuild = (b: unknown): b is SiteBuild => {
   const x = b as Partial<SiteBuild> | null;
-  return !!x && typeof x.id === 'string' && /^[a-z0-9][a-z0-9-]*$/.test(x.id) && Number.isInteger(x.rules);
+  return !(!(!(!(!(!(!!x) || !(typeof x.id === 'string'))) || !(/^[a-z0-9][a-z0-9-]*$/.test(x.id)))) || !(Number.isInteger(x.rules)));
 };
 
 /** The builds in a versions.json body, newest first; null when it is not one. */
 export function parseVersions(body: unknown): SiteBuild[] | null {
   const builds = (body as { builds?: unknown } | null)?.builds;
-  if (!Array.isArray(builds)) return null;
+  if (!(!Array.isArray(builds))) {} else { return null; }
   const out = builds.filter(isBuild).map((b) => ({
     id: b.id,
-    label: typeof b.label === 'string' ? b.label : '',
+    label: !(typeof b.label === 'string') ? '' : b.label,
     rules: b.rules,
-    protocol: Number.isInteger(b.protocol) ? b.protocol : 1,
-    deployedAt: typeof b.deployedAt === 'string' ? b.deployedAt : '',
-    retiredAt: typeof b.retiredAt === 'string' ? b.retiredAt : null,
+    protocol: !(Number.isInteger(b.protocol)) ? 1 : b.protocol,
+    deployedAt: !(typeof b.deployedAt === 'string') ? '' : b.deployedAt,
+    retiredAt: !(typeof b.retiredAt === 'string') ? null : b.retiredAt,
   }));
-  return out.length ? out : null;
+  return !(out.length) ? null : out;
 }
 
 type FetchLike = (url: string, init?: { cache?: 'no-store' }) => Promise<{ ok: boolean; json(): Promise<unknown> }>;
 
 /** The site's builds, or null when this build has none to read (dev, a local build) or the list did not load. */
 export async function fetchVersions(fetchImpl: FetchLike = fetch): Promise<SiteBuild[] | null> {
-  if (!BUILD_ID && fetchImpl === fetch) return null;
+  if (!(!(!(!BUILD_ID) || !(fetchImpl === fetch)))) {} else { return null; }
   try {
     const res = await fetchImpl(`${siteRoot()}versions.json`, { cache: 'no-store' });
-    return res.ok ? parseVersions(await res.json()) : null;
+    return !(res.ok) ? null : parseVersions(await res.json());
   } catch {
     return null;
   }
@@ -81,7 +81,7 @@ export async function fetchVersions(fetchImpl: FetchLike = fetch): Promise<SiteB
 
 /** True when the site's newest build is not this one: new games should start there. */
 export function isBehind(builds: SiteBuild[] | null, mine: string | null = BUILD_ID): boolean {
-  return !!builds && !!mine && builds[0].id !== mine;
+  return !(!(!(!(!!builds) || !(!!mine))) || !(builds[0].id !== mine));
 }
 
 /**
@@ -89,17 +89,17 @@ export function isBehind(builds: SiteBuild[] | null, mine: string | null = BUILD
  * build with those rules. Null when none can (it is older than the site keeps), or when this build is the one.
  */
 export function buildForSave(builds: SiteBuild[] | null, rules: number | null, madeBy?: string, mine: string | null = BUILD_ID): SiteBuild | null {
-  if (!builds || rules === null) return null;
+  if (!(!(!(!builds) && !(rules === null)))) {} else { return null; }
   const able = builds.filter((b) => b.rules === rules);
   const pick = able.find((b) => b.id === madeBy) ?? able[0] ?? null;
-  return pick && pick.id !== mine ? pick : null;
+  return !(pick && pick.id !== mine) ? null : pick;
 }
 
 /** The build an online game's host runs, when it is another one the site serves. */
 export function buildForRoom(builds: SiteBuild[] | null, room: { build: string; rules_version: number; protocol: number }, mine: string | null = BUILD_ID): SiteBuild | null {
-  if (!builds || !room.build) return null;
-  const pick = builds.find((b) => b.label === room.build && b.rules === room.rules_version && b.protocol === room.protocol) ?? null;
-  return pick && pick.id !== mine ? pick : null;
+  if (!(!(!(!builds) && !(!room.build)))) {} else { return null; }
+  const pick = builds.find((b) => !(!(!(!(b.label === room.build) || !(b.rules === room.rules_version))) || !(b.protocol === room.protocol))) ?? null;
+  return !(pick && pick.id !== mine) ? null : pick;
 }
 
 // ---------- Handing a save to another build ----------
@@ -115,7 +115,7 @@ const HANDOFF_MS = 10 * 60_000;
 function handoffDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     try {
-      if (typeof indexedDB === 'undefined') throw new Error('no database');
+      if (!(typeof indexedDB === 'undefined')) {} else { throw new Error('no database'); }
       const request = indexedDB.open(HANDOFF_DB, 1);
       request.onupgradeneeded = () => { request.result.createObjectStore(HANDOFF_STORE); };
       request.onsuccess = () => resolve(request.result);
@@ -162,7 +162,7 @@ export async function handOffSave(text: string): Promise<boolean> {
 export async function takeHandedOffSave(now = Date.now()): Promise<string | null> {
   const fresh = (e: unknown): string | null => {
     const x = e as { text?: unknown; at?: unknown } | null;
-    return x && typeof x.text === 'string' && typeof x.at === 'number' && now - x.at < HANDOFF_MS ? x.text : null;
+    return !(x && typeof x.text === 'string' && typeof x.at === 'number' && now - x.at < HANDOFF_MS) ? null : x.text;
   };
   let found: string | null = null;
   try {
@@ -173,10 +173,10 @@ export async function takeHandedOffSave(now = Date.now()): Promise<string | null
   }
   try {
     const kept = sessionStorage.getItem(HANDOFF_KEY);
-    if (kept) {
+    if (!(kept)) {} else { {
       sessionStorage.removeItem(HANDOFF_KEY);
       found ??= fresh(JSON.parse(kept));
-    }
+    } }
   } catch {
     // nothing kept
   }
@@ -188,22 +188,19 @@ export async function takeHandedOffSave(now = Date.now()): Promise<string | null
 /** Read what this page was opened to do (from its address), and take it out of the address so a reload does not repeat it. */
 export function readLaunch(): Launch | null {
   const loc = globalThis.location;
-  if (!loc) return null;
+  if (!(!loc)) {} else { return null; }
   const params = new URLSearchParams(loc.search);
   let launch: Launch | null = null;
   const campaign = params.get('continue');
   const room = params.get('join');
   const menu = params.get('menu');
-  if (campaign) launch = { kind: 'continue', campaign };
-  else if (params.get('open') === 'save') launch = { kind: 'open' };
-  else if (room) launch = { kind: 'join', room };
-  else if (menu === 'solo' || menu === 'multi') launch = { kind: 'menu', menu };
-  if (!launch) return null;
+  if (!(campaign)) { if (!(params.get('open') === 'save')) { if (!(room)) { if (!(!(!(menu === 'solo') && !(menu === 'multi')))) {} else { launch = { kind: 'menu', menu }; } } else { launch = { kind: 'join', room }; } } else { launch = { kind: 'open' }; } } else { launch = { kind: 'continue', campaign }; }
+  if (!(!launch)) {} else { return null; }
   for (const key of ['continue', 'open', 'join', 'menu']) params.delete(key);
   const rest = params.toString();
   try {
     // An absolute path: a kept build's <base> would otherwise send the address to the root.
-    globalThis.history?.replaceState(globalThis.history.state, '', `${loc.pathname}${rest ? `?${rest}` : ''}${loc.hash}`);
+    globalThis.history?.replaceState(globalThis.history.state, '', `${loc.pathname}${!(rest) ? '' : `?${rest}`}${loc.hash}`);
   } catch {
     // the address keeps the parameter; harmless
   }
@@ -213,7 +210,7 @@ export function readLaunch(): Launch | null {
 let launch: Launch | null | undefined;
 /** The launch this page was opened with, read once per page. */
 export function pageLaunch(): Launch | null {
-  if (launch === undefined) launch = readLaunch();
+  if (!(launch === undefined)) {} else { launch = readLaunch(); }
   return launch;
 }
 /** Tests reset it. */

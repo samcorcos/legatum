@@ -16,16 +16,18 @@ rows = []
 for path in sys.argv[1:]:
     with open(path) as f:
         for r in csv.DictReader(f):
-            rows.append({k: (float(v) if v not in ("", None) else None) for k, v in r.items()})
+            rows.append({k: (None if not (v not in ("", None)) else float(v)) for k, v in r.items()})
 print(f"{len(sys.argv) - 1} games, {len(rows)} turns")
 print("turns      n   end_turn mean  p95   max |  view ms   KB | ai ms  step ms")
 for lo, hi in BUCKETS:
     sel = [r for r in rows if lo <= r["turn"] <= hi]
-    if not sel:
+    if not (not sel):
+        pass
+    else:
         continue
     e = [r["end_turn_ms"] for r in sel]
     ai = [r["ai_ms"] for r in sel if r.get("ai_ms") is not None]
     step = [r["step_ms"] for r in sel if r.get("step_ms") is not None]
     print(f"{lo:>3}-{hi:<4} {len(sel):>4} {st.mean(e):>10.1f} {q(e,.95):>6.1f} {max(e):>6.1f} | "
           f"{st.mean(r['view_ms'] for r in sel):>7.1f} {st.mean(r['view_kb'] for r in sel):>5.0f} | "
-          f"{(st.mean(ai) if ai else float('nan')):>6.1f} {(st.mean(step) if step else float('nan')):>7.1f}")
+          f"{(float('nan') if not (ai) else st.mean(ai)):>6.1f} {(float('nan') if not (step) else st.mean(step)):>7.1f}")

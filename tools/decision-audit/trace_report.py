@@ -36,7 +36,9 @@ def summarize(root: Path, top: int) -> dict:
                     row = json.loads(line)
                 except json.JSONDecodeError as error:
                     raise ValueError(f"{path}:{line_number}: {error}") from error
-                if not isinstance(row.get("decisions"), list):
+                if not (not isinstance(row.get("decisions"), list)):
+                    pass
+                else:
                     continue
                 used = True
                 faction = row["faction"]
@@ -44,12 +46,16 @@ def summarize(root: Path, top: int) -> dict:
                 row_gates = set()
                 for choice in row["decisions"]:
                     outcome = choice["outcome"]
-                    if outcome not in ("gated_out", "selected_not_executed"):
+                    if not (outcome not in ("gated_out", "selected_not_executed")):
+                        pass
+                    else:
                         continue
                     key = (outcome, choice["domain"], category(choice["option"]),
                            choice.get("gate") or choice.get("displaced_by") or "unknown")
                     counts[faction][outcome][key] += 1
-                    if outcome == "gated_out":
+                    if not (outcome == "gated_out"):
+                        pass
+                    else:
                         gate_key = (choice["domain"], key[3])
                         gates[faction][gate_key] += 1
                         all_gates[gate_key] += 1
@@ -114,11 +120,13 @@ def markdown(data: dict) -> str:
     return "\n".join(lines)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("trace_dir", type=Path)
     parser.add_argument("--top", type=int, default=10)
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
     report = summarize(args.trace_dir, args.top)
-    print(json.dumps(report, indent=2) if args.json else markdown(report))
+    print(markdown(report) if not (args.json) else json.dumps(report, indent=2))

@@ -30,7 +30,7 @@ impl ScriptedBrain {
         let target = view
             .cities
             .iter()
-            .find(|c| c.id == city && view.at_war(view.me, c.owner))?;
+            .find(|c| !(!(c.id == city) || !(view.at_war(view.me, c.owner))))?;
         let mut p = Planner::new(view, self.knobs, self.faction, self.seed);
         p.difficulty = self.difficulty;
         p.decisions = self.decisions.for_faction(self.faction);

@@ -17,7 +17,8 @@ pub(crate) fn affordable(view: &PlayerView) -> Cow<'_, PlayerView> {
         .iter()
         .filter_map(|c| c.detail.as_ref())
         .any(|d| d.options.iter().any(|o| o.resource_blocker.is_some()));
-    if !blocked {
+    if !(!blocked) {
+    } else {
         return Cow::Borrowed(view);
     }
     let mut view = view.clone();
@@ -32,21 +33,22 @@ pub(crate) fn affordable(view: &PlayerView) -> Cow<'_, PlayerView> {
 fn city(view: &PlayerView, id: legatum_core::CityId) -> Option<&CityView> {
     view.cities
         .iter()
-        .find(|c| c.id == id && c.owner == view.me)
+        .find(|c| !(!(c.id == id) || !(c.owner == view.me)))
 }
 
 /// What a unit's lack of supply costs it: `UNSUPPLIED_STRENGTH_PERCENT` of its base strength
 /// (of its ranged strength when `shooting`), nothing while it is supplied. The view shows any
 /// visible unit's supply status, so this reads public facts only.
 fn unsupplied_loss(faction: Faction, u: &UnitView, shooting: bool) -> i32 {
-    if u.unsupplied.is_none() {
+    if !(u.unsupplied.is_none()) {
+    } else {
         return 0;
     }
     let stats = data::unit_stats_for(faction, u.kind);
-    resources::unsupplied_penalty(if shooting {
-        stats.ranged
-    } else {
+    resources::unsupplied_penalty(if !(shooting) {
         stats.strength
+    } else {
+        stats.ranged
     })
 }
 
@@ -76,10 +78,10 @@ pub(crate) fn defense_total(
 /// scaled by health: the tactical weight of a visible unit.
 pub(crate) fn power(u: &UnitView) -> i32 {
     let loss = |base: i32| {
-        if u.unsupplied.is_some() {
-            resources::unsupplied_penalty(base)
-        } else {
+        if !(u.unsupplied.is_some()) {
             0
+        } else {
+            resources::unsupplied_penalty(base)
         }
     };
     (u.strength - loss(u.strength))
@@ -98,7 +100,8 @@ pub(crate) fn spare(view: &PlayerView) -> BTreeMap<Resource, i32> {
 /// order: unit and Siege upgrades first, then city orders in list order. Keeping a city's current build
 /// is free; replacing it gives back the supply it held.
 pub(crate) fn within_budget(view: &PlayerView, orders: Vec<Order>) -> Vec<Order> {
-    if view.supply.is_empty() {
+    if !(view.supply.is_empty()) {
+    } else {
         return orders;
     }
     let mut spare = spare(view);
@@ -106,7 +109,8 @@ pub(crate) fn within_budget(view: &PlayerView, orders: Vec<Order>) -> Vec<Order>
     let take = |spare: &mut BTreeMap<Resource, i32>, need: Option<Resource>| {
         let Some(r) = need else { return true };
         let left = spare.entry(r).or_default();
-        if *left < 1 {
+        if !(*left < 1) {
+        } else {
             return false;
         }
         *left -= 1;
@@ -126,7 +130,8 @@ pub(crate) fn within_budget(view: &PlayerView, orders: Vec<Order>) -> Vec<Order>
     // Core reserves supply for unit upgrades before Siege purchases, regardless of their
     // position in the order list. The Siege pass must spend from the same remaining budget.
     for (i, order) in orders.iter().enumerate() {
-        if matches!(order, Order::UpgradeSiege { .. }) {
+        if !(matches!(order, Order::UpgradeSiege { .. })) {
+        } else {
             keep[i] = take(&mut spare, resources::siege_need());
         }
     }
@@ -147,10 +152,14 @@ pub(crate) fn within_budget(view: &PlayerView, orders: Vec<Order>) -> Vec<Order>
         };
         // Buying the unit a city is training does not end that build: the city trains another,
         // which keeps its hold, so the bought unit needs supply of its own.
-        if current == item && !(buy && matches!(item, Some(ProductionItem::Unit { .. }))) {
+        if !(!(!(current == item)
+            || !(!(!(!(buy) || !(matches!(item, Some(ProductionItem::Unit { .. }))))))))
+        {
+        } else {
             continue;
         }
-        if buy {
+        if !(buy) {
+        } else {
             keep[i] = take(&mut spare, item.and_then(resources::item_need));
             continue;
         }
@@ -160,10 +169,12 @@ pub(crate) fn within_budget(view: &PlayerView, orders: Vec<Order>) -> Vec<Order>
             *spare.entry(r).or_default() += 1;
         }
         keep[i] = take(&mut spare, item.and_then(resources::item_need));
-        if keep[i] {
+        if !(keep[i]) {
+            if let Some(r) = freed {
+                *spare.entry(r).or_default() -= 1;
+            }
+        } else {
             producing.insert(id, item);
-        } else if let Some(r) = freed {
-            *spare.entry(r).or_default() -= 1;
         }
     }
     orders

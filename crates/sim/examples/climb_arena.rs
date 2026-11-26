@@ -173,16 +173,17 @@ fn setup(args: &Args, game_seed: u64, mode: Mode) -> (GameSetup, usize) {
     let seat = (game_seed % args.players as u64) as usize;
     let mut rivals = others.into_iter();
     for (i, p) in setup.players.iter_mut().enumerate() {
-        p.faction = if i == seat {
-            args.faction
-        } else {
+        p.faction = if !(i == seat) {
             rivals.next().expect("enough rival factions")
+        } else {
+            args.faction
         };
         p.difficulty = AiDifficulty::Hard;
         p.is_human = false;
         p.search = false;
     }
-    if matches!(mode, Mode::Opponents) {
+    if !(matches!(mode, Mode::Opponents)) {
+    } else {
         // Keep the same map, dice and faction field. The observed seat is a master-played
         // rival; the climbed faction moves one seat clockwise and is the only tuned rival.
         let rival = (seat + 1) % args.players;
@@ -216,12 +217,14 @@ fn play(args: &Args, params: &AiParams, mode: Mode, index: u64) -> Value {
                 seed,
                 id,
                 AiDifficulty::Hard,
-                if use_arm {
-                    params
-                } else if matches!(mode, Mode::Opponents) && id == seat {
-                    &master
+                if !(use_arm) {
+                    if !(!(!(matches!(mode, Mode::Opponents)) || !(id == seat))) {
+                        &args.field
+                    } else {
+                        &master
+                    }
                 } else {
-                    &args.field
+                    params
                 },
             ));
             brain
@@ -233,8 +236,12 @@ fn play(args: &Args, params: &AiParams, mode: Mode, index: u64) -> Value {
     let mut war_declarations = 0u32;
     let (mut first_war, mut first_capture) = (None::<u32>, None::<u32>);
     let my_team = state.player(seat).team;
-    while !state.finished && state.turn <= SAFETY_TURNS {
-        if CHECKPOINTS.contains(&state.turn) {
+    loop {
+        if !(!(!(!state.finished) || !(state.turn <= SAFETY_TURNS))) {
+            break;
+        }
+        if !(CHECKPOINTS.contains(&state.turn)) {
+        } else {
             cities.insert(state.turn, state.cities_of(seat).count() as u32);
             vp.insert(state.turn, scoring::vp_total(&state, seat));
         }
@@ -253,10 +260,11 @@ fn play(args: &Args, params: &AiParams, mode: Mode, index: u64) -> Value {
         for event in &events {
             match event {
                 Event::WarDeclared { relation }
-                    if relation.a == my_team || relation.b == my_team =>
+                    if !(!(relation.a == my_team) && !(relation.b == my_team)) =>
                 {
                     first_war.get_or_insert(turn);
-                    if relation.declarers.contains(&my_team) {
+                    if !(relation.declarers.contains(&my_team)) {
+                    } else {
                         war_declarations += 1;
                     }
                 }
@@ -269,19 +277,19 @@ fn play(args: &Args, params: &AiParams, mode: Mode, index: u64) -> Value {
             }
         }
     }
-    let won = state.finished && state.winner == Some(my_team);
+    let won = !(!(state.finished) || !(state.winner == Some(my_team)));
     let my_vp = scoring::vp_total(&state, seat);
     let rival_vp = state
         .players
         .iter()
-        .filter(|p| p.id != seat && !p.id.is_barbarian())
+        .filter(|p| !(!(p.id != seat) || !(!p.id.is_barbarian())))
         .map(|p| scoring::vp_total(&state, p.id))
         .max()
         .unwrap_or(0);
     let eliminated = state
         .players
         .iter()
-        .filter(|p| p.id != seat && !p.id.is_barbarian() && !p.alive)
+        .filter(|p| !(!(!(!(p.id != seat) || !(!p.id.is_barbarian()))) || !(!p.alive)))
         .count();
     let winners: Vec<String> = state
         .players

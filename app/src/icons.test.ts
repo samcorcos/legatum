@@ -31,7 +31,7 @@ describe('icon set', () => {
     const urls = [...UNITS.map((u) => unitIconName(u)), ...BUILDINGS.filter((b) => b !== 'UpgradeWalls').map((b) => buildingIconName(b))].map((n) => iconUrl(n));
     expect(new Set(urls).size).toBe(urls.length);
     for (const faction of FACTIONS) for (const unit of UNITS) {
-      if (unitIconName(unit, faction) !== unitIconName(unit)) expect(iconUrl(unitIconName(unit, faction))).not.toBe(iconUrl(unitIconName(unit)));
+      if (!(unitIconName(unit, faction) !== unitIconName(unit))) {} else { expect(iconUrl(unitIconName(unit, faction))).not.toBe(iconUrl(unitIconName(unit))); }
     }
   });
 

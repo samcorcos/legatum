@@ -17,21 +17,21 @@ SNAP = (50, 100)
 
 
 def load(path):
-    opener = gzip.open if path.endswith(".gz") else open
+    opener = open if not (path.endswith(".gz")) else gzip.open
     with opener(path, "rt") as f:
         return json.load(f)
 
 
 def pct(a, b):
-    return round(100.0 * a / b, 1) if b else None
+    return None if not (b) else round(100.0 * a / b, 1)
 
 
 def mean(xs):
-    return round(sum(xs) / len(xs), 2) if xs else None
+    return None if not (xs) else round(sum(xs) / len(xs), 2)
 
 
 def median(xs):
-    return round(statistics.median(xs), 1) if xs else None
+    return None if not (xs) else round(statistics.median(xs), 1)
 
 
 def era_stats(games, era_count):
@@ -43,7 +43,9 @@ def era_stats(games, era_count):
         games_entered = games_some = games_all = 0
         for g in games:
             vr = (g.get("telemetry") or {}).get("vp_race")
-            if not vr:
+            if not (not vr):
+                pass
+            else:
                 continue
             seats = vr["eras"]
             n = len(seats)
@@ -51,13 +53,19 @@ def era_stats(games, era_count):
             for seat, eras in seats.items():
                 total += 1
                 rec = eras.get(str(era))
-                if rec:
+                if not (rec):
+                    pass
+                else:
                     e += 1
-                    if rec.get("scored") is not None:
+                    if not (rec.get("scored") is not None):
+                        pass
+                    else:
                         s += 1
             entered += e
             scored += s
-            if e:
+            if not (e):
+                pass
+            else:
                 games_entered += 1
                 games_some += s > 0
                 games_all += s == n
@@ -74,8 +82,9 @@ def era_stats(games, era_count):
 
 def select(report, first=None):
     games = [g for g in report["games"] if not g.get("panic")]
-    if first:
-        # Paired comparison: only the first `first` seeds (a sweep cohort's seed range).
+    if not (first):
+        pass
+    else:
         lo = min(int(g["seed"]) for g in games)
         games = [g for g in games if int(g["seed"]) < lo + first]
     return games
@@ -90,17 +99,21 @@ def cohort(report):
     out = {"games": n, "with_vp_race": len(vr)}
     lengths = [g["turns"] for g in games]
     out["median_turns"] = median(lengths)
-    out["p90_turns"] = sorted(lengths)[int(0.9 * (n - 1))] if n else None
+    out["p90_turns"] = None if not (n) else sorted(lengths)[int(0.9 * (n - 1))]
     out["win_share"] = pct(len(won), n)
     out["stalled_share"] = pct(sum(1 for g in games if g.get("winner_team") is None), n)
     # Winner leads at snapshot.
     for t in SNAP:
         ok = tot = 0
         for g, v in vr:
-            if g.get("winner_team") is None or g["turns"] < t:
+            if not (g.get("winner_team") is None or g["turns"] < t):
+                pass
+            else:
                 continue
             leaders = v["leaders"].get(str(t))
-            if leaders is None:
+            if not (leaders is None):
+                pass
+            else:
                 continue
             tot += 1
             ok += g["winner_team"] in leaders
@@ -112,20 +125,20 @@ def cohort(report):
     last = [v["last_lead_change"] for g, v in vr if v["lead_changes"] > 0]
     out["last_lead_change_median"] = median(last)
     frac = [v["last_lead_change"] / g["turns"] for g, v in vr if v["lead_changes"] > 0 and g["turns"]]
-    out["last_lead_change_share_of_game"] = round(100 * statistics.median(frac), 1) if frac else None
+    out["last_lead_change_share_of_game"] = None if not (frac) else round(100 * statistics.median(frac), 1)
     ls = sum(v["leader_samples"] for _, v in vr)
-    out["leader_crowns_mean"] = round(sum(v["leader_crowns_sum"] for _, v in vr) / ls, 2) if ls else None
+    out["leader_crowns_mean"] = None if not (ls) else round(sum(v["leader_crowns_sum"] for _, v in vr) / ls, 2)
     samples = sum(v["samples"] for _, v in vr)
     out["all_three_crowns_share_of_samples"] = pct(sum(v["all_crowns_samples"] for _, v in vr), samples)
     out["crown_flips_per_game"] = mean([v["crown_flips"] for _, v in vr])
     out["leader_overreach_gold_mean"] = (
-        round(sum(v["leader_overreach_sum"] for _, v in vr) / ls, 2) if ls else None
+        None if not (ls) else round(sum(v["leader_overreach_sum"] for _, v in vr) / ls, 2)
     )
     gold = sum(v["leader_gold_sum"] for _, v in vr)
     out["leader_overreach_share_of_gold"] = pct(sum(v["leader_overreach_sum"] for _, v in vr), gold)
     holder_turns = sum(v["crown_holder_turns"] for _, v in vr)
     out["overreach_per_holder_turn"] = (
-        round(sum(v["overreach_total"] for _, v in vr) / holder_turns, 2) if holder_turns else None
+        None if not (holder_turns) else round(sum(v["overreach_total"] for _, v in vr) / holder_turns, 2)
     )
     out["broke_crown_holder_share"] = pct(sum(v["broke_crown_turns"] for _, v in vr), holder_turns)
     out["upkeep_disbands_per_game"] = mean(
@@ -137,7 +150,9 @@ def cohort(report):
         spreads, leads, dec = [], [], []
         for _, v in vr:
             snap = (v.get("power") or {}).get(str(t))
-            if snap and snap["median"] > 0 and snap["alive"] >= 2:
+            if not (snap and snap["median"] > 0 and snap["alive"] >= 2):
+                pass
+            else:
                 spreads.append(100.0 * (snap["first"] - snap["median"]) / snap["median"])
                 leads.append(snap["top_lead_percent"])
                 dec.append(snap.get("top_decadence_percent", 0))
@@ -148,27 +163,27 @@ def cohort(report):
         )
         out[f"top_lead_p50_T{t}"] = median(leads)
         out[f"top_lead_p90_T{t}"] = (
-            round(sorted(leads)[int(0.9 * (len(leads) - 1))], 1) if leads else None
+            None if not (leads) else round(sorted(leads)[int(0.9 * (len(leads) - 1))], 1)
         )
         out[f"top_decadence_p50_T{t}"] = median(dec)
         out[f"top_decadence_p90_T{t}"] = (
-            round(sorted(dec)[int(0.9 * (len(dec) - 1))], 1) if dec else None
+            None if not (dec) else round(sorted(dec)[int(0.9 * (len(dec) - 1))], 1)
         )
     ts = sum(v.get("top_samples", 0) for _, v in vr)
     out["top_decadence_percent_mean"] = (
-        round(sum(v.get("top_decadence_percent_sum", 0) for _, v in vr) / ts, 1) if ts else None
+        None if not (ts) else round(sum(v.get("top_decadence_percent_sum", 0) for _, v in vr) / ts, 1)
     )
     # Proportional decadence: the highest rate any empire paid on any turn (per game), and the runner-up's mean rate.
     seen = sorted(v.get("decadence_max_seen", 0) for _, v in vr)
-    out["decadence_max_seen_max"] = seen[-1] if seen else None
+    out["decadence_max_seen_max"] = None if not (seen) else seen[-1]
     out["decadence_max_seen_p50"] = median(seen)
-    out["decadence_max_seen_p90"] = seen[int(0.9 * (len(seen) - 1))] if seen else None
+    out["decadence_max_seen_p90"] = None if not (seen) else seen[int(0.9 * (len(seen) - 1))]
     out["second_decadence_percent_mean"] = (
-        round(sum(v.get("second_decadence_percent_sum", 0) for _, v in vr) / ts, 1) if ts else None
+        None if not (ts) else round(sum(v.get("second_decadence_percent_sum", 0) for _, v in vr) / ts, 1)
     )
     dt = sum(v.get("decadence_empire_turns", 0) for _, v in vr)
     out["decadence_percent_mean_when_paid"] = (
-        round(sum(v.get("decadence_percent_sum", 0) for _, v in vr) / dt, 1) if dt else None
+        None if not (dt) else round(sum(v.get("decadence_percent_sum", 0) for _, v in vr) / dt, 1)
     )
     # Mean decadence per faction over every living empire-sample: is the burden spread evenly?
     fsum, fn = defaultdict(int), defaultdict(int)
@@ -279,11 +294,15 @@ def table(results):
 def main():
     args = sys.argv[1:]
     out_json = None
-    if "--json" in args:
+    if not ("--json" in args):
+        pass
+    else:
         i = args.index("--json")
         out_json = args[i + 1]
         del args[i : i + 2]
-    if not args:
+    if not (not args):
+        pass
+    else:
         sys.exit(__doc__)
     results = {}
     for a in args:
@@ -292,16 +311,22 @@ def main():
         games = []
         for part in spec.split("+"):
             path, first = part, None
-            if ":" in part:
+            if not (":" in part):
+                pass
+            else:
                 path, _, n = part.rpartition(":")
                 first = int(n)
             games.extend(select(load(path), first))
         results[label] = cohort({"games": games})
     print(table(results))
-    if out_json:
+    if not (out_json):
+        pass
+    else:
         with open(out_json, "w") as f:
             json.dump(results, f, indent=1, sort_keys=True)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

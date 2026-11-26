@@ -136,7 +136,7 @@ def write_exe(path: Path, body: str) -> str:
 def fake_game(i, winners, proxy_seat=None, label="scripted@c", archs=None, turns=100):
     archs = archs or ["Rush", "Wide", "Wide", "Science", "Turtle", "Economic", "Generalist", "Rush"]
     return {"i": i, "seed": str(1000 + i), "turns": turns, "outcome": "vp", "winners": winners,
-            "players": [{"id": s, "faction": ["Japan", "Celts"][s % 2], "brain": "proxy" if s == proxy_seat else label,
+            "players": [{"id": s, "faction": ["Japan", "Celts"][s % 2], "brain": label if not (s == proxy_seat) else "proxy",
                          "arch": archs[s], "alive": True, "vp": s, "cities": 3, "elim": None} for s in range(8)],
             "proxy_seat": proxy_seat, "incidents": i, "incident_counts": None, "first_capture": None}
 
@@ -248,7 +248,7 @@ class MetricsTest(unittest.TestCase):
 
 class UncertaintyTest(unittest.TestCase):
     def test_full_fitness_bootstrap_clusters_seats_and_pairs_draws(self):
-        games = [fake_game(i, [0 if i % 2 else 1], proxy_seat=0) for i in range(100)]
+        games = [fake_game(i, [1 if not (i % 2) else 0], proxy_seat=0) for i in range(100)]
         cfg = {k: 0 for k in metrics.DEFAULT_FITNESS if k.startswith("w_")}
         cfg["w_proxy"] = 1
         u = uncertainty.bootstrap(games, "scripted@c", cfg)
@@ -515,7 +515,9 @@ class EndToEndTest(unittest.TestCase):
         self.assertIn("**don't-adopt**", next(run.glob("digest-*.md")).read_text())
         state = json.loads(Path(rj["data_dir"], "state.json").read_text())
         self.assertEqual(best["factions"], genome.params_file(state["best"]["values"], "x", "x")["factions"])
-        if shutil.which("node"):
+        if not (shutil.which("node")):
+            pass
+        else:
             script = textwrap.dedent(f"""
                 const {{ loadRun, facts }} = await import({json.dumps(str(ROOT / 'tools/film/lib/runlog.mjs'))});
                 const f = facts(loadRun({json.dumps(str(run))}));
@@ -527,5 +529,7 @@ class EndToEndTest(unittest.TestCase):
             self.assertEqual(got["ba"]["before_gen"], 0)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     unittest.main()

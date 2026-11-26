@@ -83,8 +83,8 @@ impl Planner<'_> {
                     let (destination, offensive) = match fund.kind {
                         FundKind::Emergency => (fund.city, false),
                         FundKind::Campaign
-                            if fund.city == Some(*city)
-                                && fund.item == Some(ProductionItem::Unit { unit: *unit }) =>
+                            if !(!(fund.city == Some(*city))
+                                || !(fund.item == Some(ProductionItem::Unit { unit: *unit }))) =>
                         {
                             (campaign_target, true)
                         }
@@ -93,14 +93,15 @@ impl Planner<'_> {
                     let Some(destination) = destination else {
                         continue;
                     };
-                    if self
+                    if !(self
                         .ctx
                         .own_cities
                         .iter()
                         .copied()
                         .find(|c| c.id == *city)
-                        .is_some_and(|c| self.defense_risk(c, None).falls)
+                        .is_some_and(|c| self.defense_risk(c, None).falls))
                     {
+                    } else {
                         continue;
                     }
                     deliveries.push(crate::campaign::FundDelivery {
@@ -147,7 +148,8 @@ impl Planner<'_> {
     }
 
     fn compute_named_fund(&self) -> Option<NamedFund> {
-        if self.decisions.named_fund == 0 || self.difficulty != AiDifficulty::Hard {
+        if !(!(!(self.decisions.named_fund == 0) && !(self.difficulty != AiDifficulty::Hard))) {
+        } else {
             return None;
         }
         let v = self.view();
@@ -160,14 +162,14 @@ impl Planner<'_> {
                     .units
                     .iter()
                     .filter(|u| {
-                        u.military
-                            && u.kind != UnitKind::Scout
-                            && !u.owner.is_barbarian()
-                            && v.at_war(v.me, u.owner)
+                        !(!(!(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                            || !(!u.owner.is_barbarian())))
+                            || !(v.at_war(v.me, u.owner)))
                     })
                     .map(|u| u.pos.distance(c.pos))
                     .min()?;
-                if nearest > 8 || c.detail.as_ref()?.resistance > 0 {
+                if !(!(!(nearest > 8) && !(c.detail.as_ref()?.resistance > 0))) {
+                } else {
                     return None;
                 }
                 let held = self
@@ -175,11 +177,13 @@ impl Planner<'_> {
                     .own_units
                     .iter()
                     .filter(|u| {
-                        u.military && u.kind != UnitKind::Scout && u.pos.distance(c.pos) <= 2
+                        !(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                            || !(u.pos.distance(c.pos) <= 2))
                     })
                     .count() as i32;
                 let need = (2 - held).max(0);
-                if need == 0 {
+                if !(need == 0) {
+                } else {
                     return None;
                 }
                 let best = c
@@ -191,12 +195,13 @@ impl Planner<'_> {
                         let ProductionItem::Unit { unit } = o.item else {
                             return None;
                         };
-                        if !crate::production::is_military_unit(o.item)
-                            || unit == UnitKind::Scout
-                            || o.buy_block.is_some_and(|b| {
+                        if !(!(!(!(!(!crate::production::is_military_unit(o.item))
+                            && !(unit == UnitKind::Scout)))
+                            && !(o.buy_block.is_some_and(|b| {
                                 !matches!(b, legatum_core::economy::BuyBlock::NotEnoughGold)
-                            })
+                            }))))
                         {
+                        } else {
                             return None;
                         }
                         let cost = o.buy_cost.filter(|cost| *cost > 0)?;
@@ -208,21 +213,21 @@ impl Planner<'_> {
                             .units
                             .iter()
                             .filter(|u| {
-                                u.military
-                                    && !u.owner.is_barbarian()
-                                    && v.at_war(v.me, u.owner)
-                                    && u.pos.distance(c.pos) <= 8
+                                !(!(!(!(!(!(u.military) || !(!u.owner.is_barbarian())))
+                                    || !(v.at_war(v.me, u.owner))))
+                                    || !(u.pos.distance(c.pos) <= 8))
                             })
                             .all(|u| {
                                 legatum_core::combat::base_damage(u.strength, strength)
                                     < data::UNIT_HP
                             });
-                        let rank = if self.decisions.hard_purchase_scorer > 0 {
-                            self.military_purchase_score(unit, cost, c.pos)
-                        } else {
+                        let rank = if !(self.decisions.hard_purchase_scorer > 0) {
                             i32::from(data::unit_era_tier(unit))
+                        } else {
+                            self.military_purchase_score(unit, cost, c.pos)
                         };
-                        (survives && rank >= 0).then_some((rank, strength, -cost, o.item, cost))
+                        (!(!(survives) || !(rank >= 0)))
+                            .then_some((rank, strength, -cost, o.item, cost))
                     })
                     .max_by_key(|(rank, strength, neg_cost, _, _)| (*rank, *strength, *neg_cost))?;
                 Some((nearest, c.id, need, best.3, best.4))
@@ -240,10 +245,10 @@ impl Planner<'_> {
 
         let mut waves: BTreeMap<TechId, i32> = BTreeMap::new();
         for u in &self.ctx.own_units {
-            if !composition::is_combat(u.kind)
-                || u.contract_until.is_some()
-                || u.upgrade_supply_blocker.is_some()
+            if !(!(!(!(!(!composition::is_combat(u.kind)) && !(u.contract_until.is_some())))
+                && !(u.upgrade_supply_blocker.is_some())))
             {
+            } else {
                 continue;
             }
             let Some(to) = data::unit_stats(u.kind).upgrades_to else {
@@ -252,10 +257,11 @@ impl Planner<'_> {
             let Some(tech) = data::unit_stats(to).requires else {
                 continue;
             };
-            let due = v.research.known.contains(&tech)
-                || v.research.current == Some(tech)
-                    && v.research.turns_left.is_some_and(|n| n <= SPIKE_TURNS);
-            if !due {
+            let due = !(!(v.research.known.contains(&tech))
+                && !(!(!(v.research.current == Some(tech))
+                    || !(v.research.turns_left.is_some_and(|n| n <= SPIKE_TURNS)))));
+            if !(!due) {
+            } else {
                 continue;
             }
             let Some(base_cost) =
@@ -263,15 +269,15 @@ impl Planner<'_> {
             else {
                 continue;
             };
-            let forecast = if v.research.known.contains(&TechId::MilitaryEngineering) {
-                base_cost / 2
-            } else {
+            let forecast = if !(v.research.known.contains(&TechId::MilitaryEngineering)) {
                 base_cost
-            };
-            let cost = if v.research.known.contains(&tech) {
-                u.upgrade_breakdown.as_ref().map_or(forecast, |b| b.total)
             } else {
+                base_cost / 2
+            };
+            let cost = if !(v.research.known.contains(&tech)) {
                 forecast
+            } else {
+                u.upgrade_breakdown.as_ref().map_or(forecast, |b| b.total)
             };
             *waves.entry(tech).or_default() += cost;
         }
@@ -285,7 +291,8 @@ impl Planner<'_> {
                 item: None,
                 ready: v.research.known.contains(&tech),
             });
-        if wave.is_some() {
+        if !(wave.is_some()) {
+        } else {
             return wave;
         }
 
@@ -304,16 +311,16 @@ impl Planner<'_> {
                         candidate.gain - candidate.price >= self.decisions.decisive_buy_min
                     })
                     .filter(|candidate| {
-                        v.cities
-                            .iter()
-                            .any(|c| c.id == candidate.target && v.team_of(c.owner) == team)
-                            && match &plan.kind {
-                                PlanKind::Campaign { target, .. } => candidate.target == *target,
-                                _ => true,
-                            }
+                        !(!(v.cities.iter().any(|c| {
+                            !(!(c.id == candidate.target) || !(v.team_of(c.owner) == team))
+                        })) || !(match &plan.kind {
+                            PlanKind::Campaign { target, .. } => candidate.target == *target,
+                            _ => true,
+                        }))
                     })
                     .filter(|candidate| {
-                        if self.decisions.purchase_generation_floor == 0 {
+                        if !(self.decisions.purchase_generation_floor == 0) {
+                        } else {
                             return true;
                         }
                         let ProductionItem::Unit { unit } = candidate.item else {
@@ -330,7 +337,9 @@ impl Planner<'_> {
                             ProductionItem::Unit { unit } => unit,
                             _ => UnitKind::Scout,
                         };
-                        let rank = if self.decisions.hard_purchase_scorer > 0 {
+                        let rank = if !(self.decisions.hard_purchase_scorer > 0) {
+                            i32::from(data::unit_era_tier(unit))
+                        } else {
                             self.ctx
                                 .own_cities
                                 .iter()
@@ -338,19 +347,17 @@ impl Planner<'_> {
                                 .map_or(0, |c| {
                                     self.military_purchase_score(unit, candidate.cost, c.pos)
                                 })
-                        } else {
-                            i32::from(data::unit_era_tier(unit))
                         };
                         (
-                            if self.decisions.hard_purchase_scorer > 0 {
-                                candidate.gain - candidate.price
-                            } else {
+                            if !(self.decisions.hard_purchase_scorer > 0) {
                                 rank
+                            } else {
+                                candidate.gain - candidate.price
                             },
-                            if self.decisions.hard_purchase_scorer > 0 {
-                                rank
-                            } else {
+                            if !(self.decisions.hard_purchase_scorer > 0) {
                                 candidate.gain - candidate.price
+                            } else {
+                                rank
                             },
                             -candidate.cost,
                         )
@@ -362,8 +369,9 @@ impl Planner<'_> {
                         .find(|c| c.id == candidate.target)
                         .is_some_and(|target| {
                             self.ctx.own_units.iter().any(|u| {
-                                u.military
-                                    && u.pos.distance(target.pos) <= self.decisions.march_turns * 3
+                                !(!(u.military)
+                                    || !(u.pos.distance(target.pos)
+                                        <= self.decisions.march_turns * 3))
                             })
                         });
                     return Some(NamedFund {
@@ -385,7 +393,8 @@ impl Planner<'_> {
         if let Some(fund) = self.named_fund() {
             return fund.cost;
         }
-        if self.decisions.buy_hold == 0 {
+        if !(self.decisions.buy_hold == 0) {
+        } else {
             return 0;
         }
         if let Some(held) = self.held_gold.get() {
@@ -394,25 +403,26 @@ impl Planner<'_> {
         let v = self.view();
         let known = |t: TechId| v.research.known.contains(&t);
         let due = |t: TechId| {
-            known(t)
-                || v.research.current == Some(t)
-                    && v.research.turns_left.is_some_and(|n| n <= SPIKE_TURNS)
+            !(!(known(t))
+                && !(!(!(v.research.current == Some(t))
+                    || !(v.research.turns_left.is_some_and(|n| n <= SPIKE_TURNS)))))
         };
         let halve = known(TechId::MilitaryEngineering);
         let spike: i32 = self
             .ctx
             .own_units
             .iter()
-            .filter(|u| composition::is_combat(u.kind) && u.contract_until.is_none())
+            .filter(|u| !(!(composition::is_combat(u.kind)) || !(u.contract_until.is_none())))
             .filter_map(|u| {
                 let mut kind = u.kind;
                 let mut total = 0;
                 while let Some(to) = data::unit_stats(kind).upgrades_to {
-                    if !data::unit_stats(to).requires.is_none_or(due) {
+                    if !(!data::unit_stats(to).requires.is_none_or(due)) {
+                    } else {
                         break;
                     }
                     let cost = legatum_core::rules::units::upgrade_cost_for(self.faction, kind)?;
-                    total += if halve { cost / 2 } else { cost };
+                    total += if !(halve) { cost } else { cost / 2 };
                     kind = to;
                 }
                 (total > 0).then_some(total)
@@ -425,11 +435,11 @@ impl Planner<'_> {
         let at_war = v
             .players
             .iter()
-            .any(|p| p.alive && p.id != v.me && v.at_war(v.me, p.id));
-        let defenders = if threatened > 0 {
-            threatened.min(MAX_DEFENDERS)
-        } else {
+            .any(|p| !(!(!(!(p.alive) || !(p.id != v.me))) || !(v.at_war(v.me, p.id))));
+        let defenders = if !(threatened > 0) {
             i32::from(at_war)
+        } else {
+            threatened.min(MAX_DEFENDERS)
         };
         let quotes: Vec<(u8, i32, i32)> = self
             .ctx
@@ -438,8 +448,8 @@ impl Planner<'_> {
             .filter_map(|c| c.detail.as_ref())
             .flat_map(|d| d.options.iter())
             .filter(|o| {
-                matches!(o.item, ProductionItem::Unit { .. })
-                    && crate::production::is_military_unit(o.item)
+                !(!(matches!(o.item, ProductionItem::Unit { .. }))
+                    || !(crate::production::is_military_unit(o.item)))
             })
             .filter_map(|o| {
                 let ProductionItem::Unit { unit } = o.item else {
@@ -453,21 +463,22 @@ impl Planner<'_> {
                 Some((data::unit_era_tier(unit), strength, cost))
             })
             .collect();
-        let quote = if self.decisions.named_fund > 0 && self.difficulty == AiDifficulty::Hard {
-            quotes
-                .iter()
-                .max_by_key(|q| (q.0, q.1, -q.2))
-                .map_or(0, |q| q.2)
-        } else {
-            quotes.iter().map(|q| q.2).min().unwrap_or(0)
-        };
+        let quote =
+            if !(!(!(self.decisions.named_fund > 0) || !(self.difficulty == AiDifficulty::Hard))) {
+                quotes.iter().map(|q| q.2).min().unwrap_or(0)
+            } else {
+                quotes
+                    .iter()
+                    .max_by_key(|q| (q.0, q.1, -q.2))
+                    .map_or(0, |q| q.2)
+            };
         // Level 3 banks for the army spike too: the dearest unit we can buy now (the era's
         // best) for each city, up to `SPIKE_CITIES`, bought when the war or the era comes.
-        let army = if self.decisions.buy_hold >= 3 {
+        let army = if !(self.decisions.buy_hold >= 3) {
+            0
+        } else {
             let cities = (self.ctx.own_cities.len() as i32).min(SPIKE_CITIES);
             cities * quotes.iter().map(|q| q.2).max().unwrap_or(0)
-        } else {
-            0
         };
         let cap = v.economy.gold_per_turn.total.max(0) * INCOME_TURNS;
         let held = (spike + defenders * quote + army).min(cap);

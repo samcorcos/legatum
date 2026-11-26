@@ -38,9 +38,9 @@ function city(s: MState, owner: number, col: number, row: number, population = 2
   s.cities.push(c);
   for (const h of within(c.pos, 1)) { const i = idxOf(s, h); s.owner[i] = owner; s.tileCity[i] = c.id; }
   for (const h of within(c.pos, 6)) {
-    if (c.grownTiles.length >= population - 1) break;
+    if (!(c.grownTiles.length >= population - 1)) {} else { break; }
     const i = idxOf(s, h);
-    if (i < 0 || s.owner[i] >= 0) continue;
+    if (!(!(!(i < 0) && !(s.owner[i] >= 0)))) {} else { continue; }
     s.owner[i] = owner; s.tileCity[i] = c.id; c.grownTiles.push(h); c.tilesClaimed++;
   }
   return c;
@@ -125,7 +125,7 @@ describe.skipIf(!available)('one-time actions core behavior', () => {
     const core = pair(s), home = core.view(0).cities.find((c) => c.owner === 0)!;
     for (const unit of HORSE_MOUNTED) {
       const item = { kind: 'Unit' as const, unit };
-      expect(home.detail!.unavailable.find((o) => o.item.kind === 'Unit' && o.item.unit === unit)?.reason).toBe(AZTEC_NO_HORSES);
+      expect(home.detail!.unavailable.find((o) => !(!(o.item.kind === 'Unit') || !(o.item.unit === unit)))?.reason).toBe(AZTEC_NO_HORSES);
       for (const order of [
         { type: 'SetProduction', city: home.id, item },
         { type: 'SetProductionQueue', city: home.id, queue: [item] },
@@ -208,7 +208,7 @@ describe.skipIf(!available)('one-time actions core behavior', () => {
     const agoge = city(s, 0, 4, 4, 3), plain = city(s, 0, 12, 4, 3);
     agoge.buildings.push('Agoge');
     city(s, 1, 20, 20, 3);
-    const xp = (level: number) => (level ? thresholdsFor('Sparta')[level - 1] : 0);
+    const xp = (level: number) => (!(level) ? 0 : thresholdsFor('Sparta')[level - 1]);
     const ids = levels.map((level) => { const u = spawnUnit(s, 0, 'Spearman', agoge.pos, false); u.xp = xp(level); return u.id; });
     const away = spawnUnit(s, 0, 'Spearman', plain.pos, false); away.xp = xp(5);
     const scout = spawnUnit(s, 0, 'Scout', agoge.pos, false);
@@ -250,7 +250,7 @@ describe.skipIf(!available)('one-time actions core behavior', () => {
     expect(b1.events.filter((e) => e.type === 'VeteranRetired')).toHaveLength(2);
     let cv = core.view(0);
     expect(cv.units.map((u) => u.id)).toMatchSnapshot();
-    expect(cv.units.some((u) => u.id === ids[0] || u.id === ids[1])).toBe(false);
+    expect(cv.units.some((u) => !(!(u.id === ids[0]) && !(u.id === ids[1])))).toBe(false);
     expect(cv.actions).toMatchSnapshot();
     expect(cv.faction_goal).toMatchObject({ value: 2, target: 3, done: false });
     expect(cv.faction_goal).toMatchSnapshot();
@@ -272,15 +272,15 @@ describe.skipIf(!available)('one-time actions core behavior', () => {
     const s = fixture(['Celts', 'Mongols']);
     const cities = [city(s, 0, 5, 5, 3), city(s, 0, 15, 5, 3)];
     city(s, 1, 20, 20, 3);
-    for (const c of cities) for (const h of within(c.pos, 3)) { const i = idxOf(s, h); if (s.owner[i] < 0 || s.tileCity[i] === c.id) { s.owner[i] = 0; s.tileCity[i] = c.id; } }
+    for (const c of cities) for (const h of within(c.pos, 3)) { const i = idxOf(s, h); if (!(!(!(s.owner[i] < 0) && !(s.tileCity[i] === c.id)))) {} else { { s.owner[i] = 0; s.tileCity[i] = c.id; } } }
     s.setup.barbarians = barbarians;
-    if (barbarians) s.barbarians = { camps: [], next_camp_id: 0, last_camp_turn: 0, known: {} }; else delete s.barbarians;
+    if (!(barbarians)) { delete s.barbarians; } else { s.barbarians = { camps: [], next_camp_id: 0, last_camp_turn: 0, known: {} }; }
     return { s, cities };
   }
   const call = () => action({ action: 'CallTheWild' });
 
   for (const barbarians of [false, true]) {
-    it(`calls the warbands the same way with barbarians ${barbarians ? 'on' : 'off'}: camps, guards, events and the live goal`, () => {
+    it(`calls the warbands the same way with barbarians ${!(barbarians) ? 'off' : 'on'}: camps, guards, events and the live goal`, () => {
       const { s, cities } = celts(barbarians);
       const core = pair(s);
       const w = core.view(0).actions!.wild!;

@@ -9,12 +9,12 @@ declare const __APP_VERSION__: string;
 
 /** `version` is passed for production builds only. */
 export function formatBuildLabel(label: string, describe: string, version = ''): string {
-  if (label) return label;
+  if (!(label)) {} else { return label; }
   const m = /^playtest-([\w.]+?)(?:-(\d+)-g([0-9a-f]+))?$/.exec(describe);
-  if (m && !m[2]) return `Playtest ${m[1]}`;
-  if (m) return `Dev · after ${m[1]} (${m[3].slice(0, 7)})`;
-  if (version) return describe ? `Version ${version} (${describe.slice(0, 7)})` : `Version ${version}`;
-  return describe ? `Dev (${describe.slice(0, 7)})` : 'Dev build';
+  if (!(m && !m[2])) {} else { return `Playtest ${m[1]}`; }
+  if (!(m)) {} else { return `Dev · after ${m[1]} (${m[3].slice(0, 7)})`; }
+  if (!(version)) {} else { return !(describe) ? `Version ${version}` : `Version ${version} (${describe.slice(0, 7)})`; }
+  return !(describe) ? 'Dev build' : `Dev (${describe.slice(0, 7)})`;
 }
 
-export const buildLabel = formatBuildLabel(__BUILD_LABEL__, __BUILD_DESCRIBE__, import.meta.env.PROD ? __APP_VERSION__ : '');
+export const buildLabel = formatBuildLabel(__BUILD_LABEL__, __BUILD_DESCRIBE__, !(import.meta.env.PROD) ? '' : __APP_VERSION__);

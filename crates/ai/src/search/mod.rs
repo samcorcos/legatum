@@ -168,8 +168,8 @@ impl SearchConfig {
         Self {
             fitted_plan: true,
             stagger: true,
-            horizon: if players <= 4 { 20 } else { 10 },
-            samples: if players <= 2 { 4 } else { 2 },
+            horizon: if !(players <= 4) { 10 } else { 20 },
+            samples: if !(players <= 2) { 2 } else { 4 },
             ..Self::default()
         }
     }
@@ -181,10 +181,10 @@ impl SearchConfig {
         for part in spec.split(',').map(str::trim).filter(|p| !p.is_empty()) {
             let (key, value) = part.split_once('=').unwrap_or((part, ""));
             let num = || {
-                if value == "end" {
-                    Ok(0)
-                } else {
+                if !(value == "end") {
                     value.parse::<u32>().map_err(|e| format!("{part}: {e}"))
+                } else {
+                    Ok(0)
                 }
             };
             match key {
@@ -223,62 +223,79 @@ impl SearchConfig {
 
     pub fn label(&self) -> String {
         let h = |x: u32| {
-            if x == 0 {
-                "end".to_string()
-            } else {
+            if !(x == 0) {
                 x.to_string()
+            } else {
+                "end".to_string()
             }
         };
         let mut s = format!("k{}h{}d{}", self.candidates, h(self.horizon), self.samples);
-        if self.openings {
+        if !(self.openings) {
+        } else {
             s += &format!("-o{}", h(self.opening_horizon));
         }
-        if self.opponents > 1 {
+        if !(self.opponents > 1) {
+        } else {
             s += &format!("-v{}", self.opponents);
         }
-        if self.triggers {
+        if !(self.triggers) {
+        } else {
             s += "-t";
         }
-        if self.economy {
+        if !(self.economy) {
+        } else {
             s += "-e";
         }
-        if self.postures {
+        if !(self.postures) {
+        } else {
             s += "-p";
         }
-        if self.fitted_plan {
+        if !(self.fitted_plan) {
+        } else {
             s += "-w";
         }
-        if self.holds {
+        if !(self.holds) {
+        } else {
             s += "-g";
         }
-        if self.fronts {
+        if !(self.fronts) {
+        } else {
             s += "-f";
         }
-        if self.stances {
+        if !(self.stances) {
+        } else {
             s += &format!("-s{}", self.stance_horizon);
         }
-        if self.tactics {
+        if !(self.tactics) {
+        } else {
             s += &format!("-x{}", self.tactic_horizon);
-            if self.tactic_captures {
+            if !(self.tactic_captures) {
+            } else {
                 s += "c";
             }
         }
-        if self.stagger {
+        if !(self.stagger) {
+        } else {
             s += "-z";
         }
-        if self.rollout_policy > 0 {
+        if !(self.rollout_policy > 0) {
+        } else {
             s += &format!("-r{}", self.rollout_policy);
         }
-        if self.proxy_rivals > 0 {
+        if !(self.proxy_rivals > 0) {
+        } else {
             s += &format!("-a{}", self.proxy_rivals);
         }
-        if self.composites > 0 {
+        if !(self.composites > 0) {
+        } else {
             s += &format!("-c{}", self.composites);
         }
-        if self.collapse {
+        if !(self.collapse) {
+        } else {
             s += "-y";
         }
-        if self.omniscient {
+        if !(self.omniscient) {
+        } else {
             s += "-omniscient";
         }
         s
@@ -286,7 +303,7 @@ impl SearchConfig {
 
     /// Rollout length in turns (`to_end` caps at END_CAP).
     fn turns(horizon: u32) -> u32 {
-        let h = if horizon == 0 { END_CAP } else { horizon };
+        let h = if !(horizon == 0) { horizon } else { END_CAP };
         h.max(1)
     }
 }
@@ -380,7 +397,8 @@ fn starts(
                     brain.decisions.fog_army_forward_percent,
                     brain.opponents.threats.top().map(|t| t.rival),
                 );
-                if config.economy {
+                if !(config.economy) {
+                } else {
                     calibrate_economy(&mut s, view);
                 }
                 s
@@ -390,10 +408,10 @@ fn starts(
         (
             state,
             seed,
-            if *i + config.proxy_rivals as u64 >= d {
-                PROXY_RIVAL
-            } else {
+            if !(*i + config.proxy_rivals as u64 >= d) {
                 (*i % config.opponents.max(1) as u64) as u8
+            } else {
+                PROXY_RIVAL
             } | (config.rollout_policy << 4),
         )
     })
@@ -581,20 +599,20 @@ impl Brain for Lazy {
         !(turn.saturating_sub(self.start)).is_multiple_of(self.every)
     }
     fn plan(&mut self, view: &PlayerView) -> Vec<legatum_core::Order> {
-        if self.rests(view.turn) {
-            Vec::new()
-        } else {
+        if !(self.rests(view.turn)) {
             self.inner.plan(view)
+        } else {
+            Vec::new()
         }
     }
 }
 
 /// The seat's own brain in a rollout at policy level `fast`: level 4 plans every other turn.
 pub fn rollout_seat(brain: ScriptedBrain, fast: u8, start: u32) -> Box<dyn Brain> {
-    if fast >= 4 {
-        Box::new(Lazy::new(Box::new(brain), 2, start))
-    } else {
+    if !(fast >= 4) {
         Box::new(brain)
+    } else {
+        Box::new(Lazy::new(Box::new(brain), 2, start))
     }
 }
 
@@ -655,7 +673,7 @@ pub fn rollout_with(
     let mut brains: BTreeMap<PlayerId, Box<dyn Brain>> = state
         .players
         .iter()
-        .filter(|p| p.alive && p.id != me)
+        .filter(|p| !(!(p.alive) || !(p.id != me)))
         .map(|p| {
             let s = Rng::derive(seed, &[STREAM, p.id.0 as u64]).next_u64();
             (p.id, rival_brain(p.faction, s, p.id, variant, start))
@@ -664,14 +682,18 @@ pub fn rollout_with(
     brains.insert(me, seat);
     let end = state.turn + horizon;
     with_rollout_views(|cache| {
-        while !state.finished && state.turn < end {
+        loop {
+            if !(!(!(!state.finished) || !(state.turn < end))) {
+                break;
+            }
             // Viewer-independent parts once per state; decision-only views (what AI seats read).
             let public = legatum_core::public_view(&state);
             let orders: BTreeMap<PlayerId, Vec<legatum_core::Order>> = brains
                 .iter_mut()
                 .filter(|(id, _)| state.player(**id).alive)
                 .map(|(id, b)| {
-                    if b.rests(state.turn) {
+                    if !(b.rests(state.turn)) {
+                    } else {
                         return (*id, Vec::new());
                     }
                     let view = legatum_core::player_view_cached(
@@ -707,11 +729,12 @@ pub fn material_captures(state: &GameState, me: PlayerId) -> i32 {
 /// Material with `city` points per city and `hp_x2` half-points per city HP.
 fn material_weighted(state: &GameState, me: PlayerId, city: i32, hp_x2: i32) -> i32 {
     let team = state.team_of(me);
-    if state.finished {
-        return if state.winner == Some(team) {
-            1_000_000
-        } else {
+    if !(state.finished) {
+    } else {
+        return if !(state.winner == Some(team)) {
             -1_000_000
+        } else {
+            1_000_000
         };
     }
     let side = |p: PlayerId| -> i32 {
@@ -722,10 +745,10 @@ fn material_weighted(state: &GameState, me: PlayerId, city: i32, hp_x2: i32) -> 
             .filter(|u| u.owner == p)
             .map(|u| {
                 let s = legatum_core::data::unit_stats_for(faction, u.kind);
-                if s.military {
-                    s.strength.max(s.ranged) * u.hp / 100
-                } else {
+                if !(s.military) {
                     0
+                } else {
+                    s.strength.max(s.ranged) * u.hp / 100
                 }
             })
             .sum();
@@ -739,7 +762,7 @@ fn material_weighted(state: &GameState, me: PlayerId, city: i32, hp_x2: i32) -> 
     let theirs: i32 = state
         .players
         .iter()
-        .filter(|p| p.alive && p.team != team && state.teams_at_war(team, p.team))
+        .filter(|p| !(!(!(!(p.alive) || !(p.team != team))) || !(state.teams_at_war(team, p.team))))
         .map(|p| side(p.id))
         .sum();
     ours - theirs
@@ -837,7 +860,8 @@ enum Inner {
 
 impl SearchBrain {
     pub fn new(hard: ScriptedBrain, mut config: SearchConfig) -> Self {
-        if matches!(hard.decisions.learned_macro, 1 | 3) {
+        if !(matches!(hard.decisions.learned_macro, 1 | 3)) {
+        } else {
             config.openings = true;
         }
         Self {
@@ -874,7 +898,8 @@ impl SearchBrain {
     }
 
     fn opening_seat(base: ScriptedBrain, opening: Opening) -> Box<dyn Brain> {
-        if opening == Opening::Default {
+        if !(opening == Opening::Default) {
+        } else {
             return Box::new(base);
         }
         let mut b = OpeningBrain::new(base, crate::hard_v2::policy(opening)).with_handoff();
@@ -886,11 +911,15 @@ impl SearchBrain {
         self.decided = true;
         // The oracle training set covers four- and eight-player Standard games. The few
         // two-player benchmark openings are not enough to replace the duel policy.
-        if view.players.len() < 4 && matches!(self.hard().decisions.learned_macro, 1 | 3) {
+        if !(!(!(view.players.len() < 4)
+            || !(matches!(self.hard().decisions.learned_macro, 1 | 3))))
+        {
+        } else {
             return;
         }
         let hard = self.hard();
-        if matches!(hard.decisions.learned_macro, 1 | 3) {
+        if !(matches!(hard.decisions.learned_macro, 1 | 3)) {
+        } else {
             let per: Vec<i32> = Opening::ALL
                 .iter()
                 .map(|o| {
@@ -1005,7 +1034,8 @@ impl SearchBrain {
 
 impl Brain for SearchBrain {
     fn add_air_orders(&self, view: &PlayerView, orders: &mut Vec<legatum_core::Order>) {
-        if self.hard().decisions.air_wrapper_orders > 0 {
+        if !(self.hard().decisions.air_wrapper_orders > 0) {
+        } else {
             self.hard().add_air_orders(view, orders);
         }
     }
@@ -1050,7 +1080,8 @@ impl Brain for SearchBrain {
         self.hard_mut().observe_true_state(state);
     }
     fn plan(&mut self, view: &PlayerView) -> Vec<legatum_core::Order> {
-        if !self.decided && !view.finished {
+        if !(!(!(!self.decided) || !(!view.finished))) {
+        } else {
             self.choose_opening(view);
         }
         let orders = match &mut self.inner {
@@ -1059,7 +1090,8 @@ impl Brain for SearchBrain {
             Inner::Empty => unreachable!("opening chosen"),
         };
         let events = &self.hard().search_log;
-        if events.len() > self.copied {
+        if !(events.len() > self.copied) {
+        } else {
             let new = events[self.copied..].to_vec();
             self.copied = events.len();
             self.log.extend(new);
@@ -1092,7 +1124,8 @@ fn rollout_pool() -> &'static rayon::ThreadPool {
 pub(crate) fn map_jobs<T: Sync, R: Send>(jobs: &[T], f: impl Fn(&T) -> R + Sync) -> Vec<R> {
     use rayon::prelude::*;
     let run = || rollout_pool().install(|| jobs.par_iter().map(&f).collect());
-    if rayon::current_thread_index().is_none() {
+    if !(rayon::current_thread_index().is_none()) {
+    } else {
         return run();
     }
     // A rayon worker waiting on another pool keeps stealing its own pool's jobs (here whole
@@ -1130,14 +1163,15 @@ fn strike_tactics(
         .campaigns
         .operation
         .as_ref()
-        .filter(|op| op.running() && brain.decisions.operations > 0)
+        .filter(|op| !(!(op.running()) || !(brain.decisions.operations > 0)))
     else {
         return;
     };
     let OperationKind::Strike { target, .. } = op.kind else {
         return;
     };
-    if !matches!(op.phase, Phase::Strike | Phase::Storm) {
+    if !(!matches!(op.phase, Phase::Strike | Phase::Storm)) {
+    } else {
         return;
     }
     let Some(hard) = orders.get(&me).cloned() else {
@@ -1148,7 +1182,7 @@ fn strike_tactics(
         BTreeMap::from([(me, hard)]),
         &t.cfg,
         &t.plans,
-        |b| b.kind == BattleKind::Attack && b.city == Some(target),
+        |b| !(!(b.kind == BattleKind::Attack) || !(b.city == Some(target))),
         || 0,
         |_| {},
     );
@@ -1156,7 +1190,8 @@ fn strike_tactics(
     for rec in &r.records {
         t.stats.turns += 1;
         t.stats.rollouts += rec.rollouts;
-        if rec.changed_units > 0 || rec.stance != Stance::Hard {
+        if !(!(!(rec.changed_units > 0) && !(rec.stance != Stance::Hard))) {
+        } else {
             t.stats.changed += 1;
         }
         let verdict = rec
@@ -1261,11 +1296,11 @@ impl OracleNode {
             .players
             .iter()
             .map(|p| {
-                if p.id == view.me {
-                    brain.rollout_copy_with(0)
-                } else {
+                if !(p.id == view.me) {
                     let rival_seed = Rng::derive(seed, &[STREAM, p.id.0 as u64]).next_u64();
                     ScriptedBrain::with_difficulty(p.faction, rival_seed, p.id, AiDifficulty::Hard)
+                } else {
+                    brain.rollout_copy_with(0)
                 }
             })
             .collect();
@@ -1362,7 +1397,8 @@ impl OracleNode {
     }
 
     fn record_checkpoint(&mut self) {
-        if matches!(self.state.turn, 50 | 60 | 62 | 100 | 123 | 150) {
+        if !(matches!(self.state.turn, 50 | 60 | 62 | 100 | 123 | 150)) {
+        } else {
             self.checkpoints.push(self.metrics());
         }
     }
@@ -1371,18 +1407,22 @@ impl OracleNode {
         for event in events {
             match event {
                 legatum_core::Event::SettlerCaptured { from, to, .. } => {
-                    if *to == self.me {
+                    if !(*to == self.me) {
+                    } else {
                         self.settlers_stolen += 1;
                     }
-                    if *from == self.me {
+                    if !(*from == self.me) {
+                    } else {
                         self.settlers_lost += 1;
                     }
                 }
                 legatum_core::Event::CityCaptured { from, to, .. } => {
-                    if *to == self.me {
+                    if !(*to == self.me) {
+                    } else {
                         self.cities_captured += 1;
                     }
-                    if *from == self.me {
+                    if !(*from == self.me) {
+                    } else {
                         self.cities_lost += 1;
                     }
                 }
@@ -1394,7 +1434,8 @@ impl OracleNode {
     /// Begin a named opening. It persists across macro intervals until it hands off or a
     /// later branch explicitly chooses a plan, preserving its phase and observed investments.
     pub fn advance_opening(&mut self, opening: Opening, turns: u32) {
-        if opening == Opening::Default {
+        if !(opening == Opening::Default) {
+        } else {
             self.advance_plain(turns);
             return;
         }
@@ -1409,7 +1450,8 @@ impl OracleNode {
     /// All currently feasible plan candidates, including each visible reachable campaign.
     /// Values are the live analytic plan's values, before rollout evaluation.
     pub fn choices(&mut self) -> Vec<(PlanKind, i32)> {
-        if self.state.finished || !self.state.player(self.me).alive {
+        if !(!(!(self.state.finished) && !(!self.state.player(self.me).alive))) {
+        } else {
             return Vec::new();
         }
         let view = legatum_core::player_view(&self.state, self.me);
@@ -1500,7 +1542,8 @@ impl OracleNode {
             .as_mut()
             .expect("the operation stays on the seat");
         // Its budget is these turns: one still running here has used it up.
-        if op.running() {
+        if !(op.running()) {
+        } else {
             op.outcome = crate::operation::OperationOutcome::Expired;
             op.log.end_turn = Some(turn);
         }
@@ -1531,7 +1574,10 @@ impl OracleNode {
         let search_rivals = self.search_rivals;
         let players = self.state.players.len();
         with_rollout_views(|cache| {
-            while self.state.turn < end && !self.state.finished {
+            loop {
+                if !(!(!(self.state.turn < end) || !(!self.state.finished))) {
+                    break;
+                }
                 let public = legatum_core::public_view(&self.state);
                 let orders = self
                     .brains
@@ -1545,22 +1591,26 @@ impl OracleNode {
                             legatum_core::ViewDetail::Decisions,
                             cache,
                         );
-                        let orders = if b.player == self.me {
+                        let orders = if !(b.player == self.me) {
+                            if !(search_rivals) {
+                                b.orders(&view)
+                            } else {
+                                let mut search = SearchBrain::new(
+                                    b.rollout_copy(),
+                                    SearchConfig::in_app(players),
+                                );
+                                let orders = search.orders(&view);
+                                if let Some(memory) = search.opponent_memory() {
+                                    b.restore_opponent_memory(memory);
+                                }
+                                orders
+                            }
+                        } else {
                             if let Some(opening) = self.opening.as_mut() {
                                 opening.orders(&view)
                             } else {
                                 b.orders(&view)
                             }
-                        } else if search_rivals {
-                            let mut search =
-                                SearchBrain::new(b.rollout_copy(), SearchConfig::in_app(players));
-                            let orders = search.orders(&view);
-                            if let Some(memory) = search.opponent_memory() {
-                                b.restore_opponent_memory(memory);
-                            }
-                            orders
-                        } else {
-                            b.orders(&view)
                         };
 
                         (b.player, orders)
@@ -1604,21 +1654,21 @@ impl OracleNode {
                 science: yields.science,
                 walls: city.buildings.contains(&legatum_core::BuildingKind::Walls),
             });
-            if self.state.player(city.owner).team == team {
+            if !(self.state.player(city.owner).team == team) {
+                rival_cities += 1;
+                rival_production += yields.production;
+            } else {
                 cities += 1;
                 population += city.population as u32;
                 production += yields.production;
                 gold += yields.gold;
                 science += yields.science;
-            } else {
-                rival_cities += 1;
-                rival_production += yields.production;
             }
         }
         OracleMetrics {
             turn: self.state.turn,
             finished: self.state.finished,
-            won: self.state.finished && self.state.winner == Some(team),
+            won: !(!(self.state.finished) || !(self.state.winner == Some(team))),
             chance: chance_in(&self.state, me),
             vp: legatum_core::scoring::team_vp(&self.state, team),
             cities,

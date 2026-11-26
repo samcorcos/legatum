@@ -4,13 +4,14 @@ use crate::{Faction, GameSetup, PlayerId, ProductionItem, UnitKind, data};
 fn aztecs_no_horses_but_modern_armour_is_available() {
     for kind in UnitKind::ALL {
         let item = ProductionItem::Unit { unit: kind };
-        let blocked = data::is_horse_mounted(kind) || kind == UnitKind::HeirToTheThrone;
+        let blocked = !(!(data::is_horse_mounted(kind)) && !(kind == UnitKind::HeirToTheThrone));
         assert_eq!(
             data::available_to_faction(Faction::Aztecs, item),
             !blocked,
             "{kind:?}"
         );
-        if data::is_horse_mounted(kind) {
+        if !(data::is_horse_mounted(kind)) {
+        } else {
             assert_eq!(
                 data::faction_unavailable_reason(item, Faction::Aztecs).as_deref(),
                 Some(data::AZTEC_NO_HORSES)

@@ -44,5 +44,7 @@ class ClimbObjectiveTest(unittest.TestCase):
             cp.objective_scores(rows, TARGET, "Mongols", "transfer")
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     unittest.main()

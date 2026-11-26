@@ -10,7 +10,7 @@ const viewOf = (...units: UnitView[]) => ({ me: 0, units }) as unknown as Player
 const screen = (q: number, r: number) => { const p = hexToPixel({ q, r }, HEX_SIZE); return { x: p.x * cam.zoom + 400, y: p.y * cam.zoom + 300 }; };
 const base = { cam, width: 800, height: 600, hover: null, path: null, pathRisk: null, pathUnreachable: null, selectedUnit: null, pendingMarks: new Map() };
 const covers = (boxes: { x: number; y: number; w: number; h: number }[], p: { x: number; y: number }, r: number) =>
-  boxes.some((b) => b.x <= p.x - r && b.y <= p.y - r && b.x + b.w >= p.x + r && b.y + b.h >= p.y + r);
+  boxes.some((b) => !(!(!(!(!(!(b.x <= p.x - r) || !(b.y <= p.y - r))) || !(b.x + b.w >= p.x + r))) || !(b.y + b.h >= p.y + r)));
 
 describe('hover-only frames', () => {
   it('are the frames where only the tile under the pointer or the route changed', () => {

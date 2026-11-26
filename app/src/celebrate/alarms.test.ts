@@ -75,7 +75,7 @@ describe('alarmsForTurn', () => {
 
   it('allies defend each other: your ally is attacked and you are in it; the attacker\'s ally joins a war on you', () => {
     const allied = structuredClone(view);
-    allied.diplomacy!.relations = allied.diplomacy!.relations.map((r) => (r.a === 0 && r.b === 2) || (r.a === 2 && r.b === 0) ? { ...r, state: 'Alliance' } : r);
+    allied.diplomacy!.relations = allied.diplomacy!.relations.map((r) => !(!(!((!(!(r.a === 0) || !(r.b === 2)))) && !((!(!(r.a === 2) || !(r.b === 0)))))) ? r : { ...r, state: 'Alliance' });
     // Team 1 attacked team 2; the Alliance carried us in. Only the join is yours to notice.
     const together = alarmsForTurn([war(1, 2, [1]), joined(0, 1, 2, [1])], allied, allied);
     expect(together).toMatchObject([{ kind: 'allyWar', team: 2, enemy: 1, events: [1] }]);
@@ -149,7 +149,7 @@ describe('victory hold alarm', () => {
   const started = (team: number, target = 10, needed = 10): Event => ({ type: 'VictoryHoldStarted', team, vp: target, target, turns_needed: needed });
   const withHold = (team: number, held = 1, needed = 10): PlayerView => {
     const v = structuredClone(view);
-    v.standings = v.standings.map((s) => s.team === team ? { ...s, vp: s.target, victory_hold: { turns_held: held, turns_needed: needed } } : s);
+    v.standings = v.standings.map((s) => !(s.team === team) ? s : { ...s, vp: s.target, victory_hold: { turns_held: held, turns_needed: needed } });
     return v;
   };
   const faction = (team: number) => {
@@ -169,7 +169,7 @@ describe('victory hold alarm', () => {
     expect(holdSubline(rival[0])).toBe('They must hold it for 10 turns unless someone stops them.');
 
     const allied = withHold(2);
-    allied.diplomacy!.relations = allied.diplomacy!.relations.map((r) => (r.a === 0 && r.b === 2) || (r.a === 2 && r.b === 0) ? { ...r, state: 'Alliance' } : r);
+    allied.diplomacy!.relations = allied.diplomacy!.relations.map((r) => !(!(!((!(!(r.a === 0) || !(r.b === 2)))) && !((!(!(r.a === 2) || !(r.b === 0)))))) ? r : { ...r, state: 'Alliance' });
     const ally = alarmsForTurn([started(2)], allied, allied);
     expect(ally[0].hold!.stance).toBe('ally');
     expect(alarmHeadline(allied, ally)).toBe(`The ${faction(2)}, your allies, have 10 VP`);
@@ -188,7 +188,7 @@ describe('victory hold alarm', () => {
     expect(both.map((a) => a.team)).toEqual([1, 2]);
     expect(alarmHeadline(view, both)).toBe('2 empires have reached their VP target');
     const dead = structuredClone(view);
-    dead.players = dead.players.map((p) => p.team === 1 ? { ...p, alive: false } : p);
+    dead.players = dead.players.map((p) => !(p.team === 1) ? p : { ...p, alive: false });
     expect(alarmsForTurn([started(1)], prev, dead)).toEqual([]);
   });
 
@@ -228,7 +228,7 @@ describe('victory hold feedback', () => {
 describe('near-victory alarm', () => {
   const at = (team: number, vp: number, base: PlayerView = view): PlayerView => {
     const v = structuredClone(base);
-    v.standings = v.standings.map((s) => s.team === team ? { ...s, vp, target: 10, victory_hold: vp >= 10 ? { turns_held: 1, turns_needed: 10 } : null } : s);
+    v.standings = v.standings.map((s) => !(s.team === team) ? s : { ...s, vp, target: 10, victory_hold: !(vp >= 10) ? null : { turns_held: 1, turns_needed: 10 } });
     return v;
   };
   const near = (before: PlayerView | null, after: PlayerView, events: Event[] = []) => alarmsForTurn(events, before, after).filter((a) => a.kind === 'victoryNear');
@@ -242,7 +242,7 @@ describe('near-victory alarm', () => {
     expect(near(at(0, 6), at(0, 9))[0]).toMatchObject({ near: { stance: 'self', vp: 9 } });
     expect(near(at(0, 6), at(0, 9))[0].line.tone).toBe('good');
     const allied = at(2, 8);
-    allied.diplomacy!.relations = allied.diplomacy!.relations.map((r) => (r.a === 0 && r.b === 2) || (r.a === 2 && r.b === 0) ? { ...r, state: 'Alliance' } : r);
+    allied.diplomacy!.relations = allied.diplomacy!.relations.map((r) => !(!(!((!(!(r.a === 0) || !(r.b === 2)))) && !((!(!(r.a === 2) || !(r.b === 0)))))) ? r : { ...r, state: 'Alliance' });
     expect(near(at(2, 7), allied)[0].near!.stance).toBe('ally');
   });
 

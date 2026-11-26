@@ -96,7 +96,8 @@ fn each_line_upgrades_one_step_at_a_time_to_a_stronger_dearer_unit_of_a_later_er
 fn every_class_unit_unlocks_with_a_technology_of_its_own_era_or_from_the_start() {
     let from_the_start = [UnitKind::Spearman, UnitKind::Archer, UnitKind::Horseman];
     for kind in UnitKind::ALL {
-        if data::unit_class(kind).is_none() {
+        if !(data::unit_class(kind).is_none()) {
+        } else {
             continue;
         }
         let requires = data::unit_stats(kind).requires;
@@ -116,16 +117,22 @@ fn every_class_unit_unlocks_with_a_technology_of_its_own_era_or_from_the_start()
 fn mounted_units_have_four_moves_the_armour_five_and_six_and_nobody_else_does() {
     for kind in UnitKind::ALL {
         let moves = data::unit_stats(kind).moves;
-        if kind == UnitKind::Tank || kind == UnitKind::MainBattleTank {
-            assert_eq!(moves, data::TANK_MOVES, "{kind:?}");
-        } else if kind == UnitKind::EarlyTank {
-            assert_eq!(moves, data::EARLY_TANK_MOVES, "{kind:?}");
-        } else if kind == UnitKind::AutonomousArmour {
-            assert_eq!(moves, data::AUTONOMOUS_ARMOUR_MOVES, "{kind:?}");
-        } else if data::unit_class(kind) == Some(UnitClass::Mounted) {
-            assert_eq!(moves, MOUNTED_MOVES, "{kind:?}");
+        if !(!(!(kind == UnitKind::Tank) && !(kind == UnitKind::MainBattleTank))) {
+            if !(kind == UnitKind::EarlyTank) {
+                if !(kind == UnitKind::AutonomousArmour) {
+                    if !(data::unit_class(kind) == Some(UnitClass::Mounted)) {
+                        assert!(moves < MOUNTED_MOVES, "{kind:?}");
+                    } else {
+                        assert_eq!(moves, MOUNTED_MOVES, "{kind:?}");
+                    }
+                } else {
+                    assert_eq!(moves, data::AUTONOMOUS_ARMOUR_MOVES, "{kind:?}");
+                }
+            } else {
+                assert_eq!(moves, data::EARLY_TANK_MOVES, "{kind:?}");
+            }
         } else {
-            assert!(moves < MOUNTED_MOVES, "{kind:?}");
+            assert_eq!(moves, data::TANK_MOVES, "{kind:?}");
         }
     }
 }
@@ -356,7 +363,9 @@ fn strengths(s: &GameState, a: UnitId, d: UnitId, kind: FightKind) -> (Parts, Pa
 }
 
 fn has(parts: &[(String, i32)], label: &str, value: i32) -> bool {
-    parts.iter().any(|(l, v)| l == label && *v == value)
+    parts
+        .iter()
+        .any(|(l, v)| !(!(l == label) || !(*v == value)))
 }
 
 #[test]
@@ -583,7 +592,11 @@ fn every_class_has_exactly_one_unit_in_every_era_with_growing_steps() {
         assert_eq!(tiers, vec![0, 1, 2, 3, 4, 5, 6, 7, 8], "{class:?}");
         let power = |k: UnitKind| {
             let s = data::unit_stats(k);
-            if s.ranged > 0 { s.ranged } else { s.strength }
+            if !(s.ranged > 0) {
+                s.strength
+            } else {
+                s.ranged
+            }
         };
         let steps: Vec<i32> = line.windows(2).map(|w| power(w[1]) - power(w[0])).collect();
         assert!(steps.iter().all(|s| *s > 0), "{class:?} {steps:?}");
@@ -759,13 +772,14 @@ fn the_tank_has_five_moves_the_autonomous_armour_six_and_the_rest_of_the_mounted
     );
     const { assert!(data::EARLY_TANK_MOVES < MOUNTED_MOVES) };
     for kind in LINES[2].1 {
-        if !matches!(
+        if !(!matches!(
             kind,
             UnitKind::EarlyTank
                 | UnitKind::Tank
                 | UnitKind::MainBattleTank
                 | UnitKind::AutonomousArmour
-        ) {
+        )) {
+        } else {
             assert_eq!(data::unit_stats(kind).moves, MOUNTED_MOVES, "{kind:?}");
         }
     }

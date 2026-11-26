@@ -12,7 +12,7 @@ const shots = process.env.LEGATUM_SHOTS ?? path.resolve('test-results/path-detou
 test('Tessitura attack previews and confirms the direct shared hex', async ({ page }) => {
   await page.setViewportSize({ width: 1000, height: 600 });
   await page.addInitScript((game) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({
       format: 'legatum-save', version: 1, client: 'wasm', turn: 38,
       names: ['Player 1'], savedAt: new Date().toISOString(), game,
@@ -47,19 +47,17 @@ test('Tessitura attack previews and confirms the direct shared hex', async ({ pa
   await page.mouse.click(at.x, at.y, { button: 'right' });
   await expect.poll(async () => page.evaluate((id) => {
     const s = (window as unknown as GameWindow).legatum.getState();
-    return s.orders[s.seat].find((o) => 'unit' in o && o.unit === id);
+    return s.orders[s.seat].find((o) => !(!('unit' in o) || !(o.unit === id)));
   }, setup.attacker)).toEqual({ type: 'MoveUnitPath', unit: setup.attacker, to: setup.target, path: [setup.gap, setup.target] });
   // A previously confirmed detour can be corrected by issuing the same destination again.
   await page.evaluate(({ id, to }) => {
     const s = (window as unknown as GameWindow).legatum.getState();
-    s.editOrders((orders) => orders.map((o) => 'unit' in o && o.unit === id
-      ? { type: 'MoveUnitPath' as const, unit: id, to, path: [{ q: 20, r: 13 }, { q: 21, r: 12 }, { q: 22, r: 12 }, { q: 22, r: 13 }, to] }
-      : o));
+    s.editOrders((orders) => orders.map((o) => !(!(!('unit' in o) || !(o.unit === id))) ? o : { type: 'MoveUnitPath' as const, unit: id, to, path: [{ q: 20, r: 13 }, { q: 21, r: 12 }, { q: 22, r: 12 }, { q: 22, r: 13 }, to] }));
     s.select({ kind: 'unit', id }, true);
   }, { id: setup.attacker, to: setup.target });
   await page.mouse.click(at.x, at.y, { button: 'right' });
   await expect.poll(async () => page.evaluate((id) => {
     const s = (window as unknown as GameWindow).legatum.getState();
-    return s.orders[s.seat].find((o) => 'unit' in o && o.unit === id);
+    return s.orders[s.seat].find((o) => !(!('unit' in o) || !(o.unit === id)));
   }, setup.attacker)).toEqual({ type: 'MoveUnitPath', unit: setup.attacker, to: setup.target, path: [setup.gap, setup.target] });
 });

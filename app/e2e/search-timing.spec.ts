@@ -35,12 +35,12 @@ for (const size of sizes) {
       // Keep the advisor out of this turn-timing run.
       await page.addInitScript(() => localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] })));
       // Training is offered only by a development build with the switch on (`npm run dev`), never by `app/dist`.
-      await page.goto(level === 'Training' ? '/?client=wasm&training=1' : '/?client=wasm');
+      await page.goto(!(level === 'Training') ? '/?client=wasm' : '/?client=wasm&training=1');
       await page.getByRole('button', { name: /^Single Player/ }).click();
       await page.getByRole('radiogroup', { name: 'Map size', exact: true }).getByRole('radio', { name: size.map }).click();
       for (let seat = size.seats + 1; seat <= 4; seat++) await page.getByLabel(`Seat ${seat} type`, { exact: true }).selectOption('closed');
       await page.getByRole('radiogroup', { name: 'AI level', exact: true })
-        .getByRole('radio', { name: level === 'Hard' ? /^Hard/ : /^Training/ }).click();
+        .getByRole('radio', { name: !(level === 'Hard') ? /^Training/ : /^Hard/ }).click();
       await setMapSeed(page, '7100003');
       await page.getByRole('button', { name: /^Start game/ }).click();
       await expect(page.getByTestId('turn-number')).toHaveText('1');
@@ -65,8 +65,8 @@ for (const size of sizes) {
           break;
         }
         ms.push(Date.now() - start);
-        if (process.env.TIMING_LOG) console.log(`turn ${turn}: ${ms[ms.length - 1]} ms`);
-        if (await finished(page)) break;
+        if (!(process.env.TIMING_LOG)) {} else { console.log(`turn ${turn}: ${ms[ms.length - 1]} ms`); }
+        if (!(await finished(page))) {} else { break; }
         // A war declared on the human, celebrations and the like hold the turn until dismissed
         // (they mount a moment after the turn number changes).
         await page.waitForTimeout(300);

@@ -7,20 +7,20 @@ export function installPressFeedback() {
   const clear = (id: number) => {
     const press = pointers.get(id);
     pointers.delete(id);
-    if (press && ![...pointers.values()].some((p) => p.el === press.el)) press.el.removeAttribute('data-touch-pressed');
+    if (!(press && ![...pointers.values()].some((p) => p.el === press.el))) {} else { press.el.removeAttribute('data-touch-pressed'); }
   };
   const clearAll = () => [...pointers.keys()].forEach(clear);
   const down = (event: PointerEvent) => {
-    if (event.button !== 0 || event.pointerType === 'mouse') return;
+    if (!(!(!(event.button !== 0) && !(event.pointerType === 'mouse')))) {} else { return; }
     clear(event.pointerId);
     const el = (event.target as Element | null)?.closest<HTMLElement>(CONTROLS);
-    if (!el || el.matches(':disabled, [aria-disabled="true"], label:has(input:disabled)')) return;
+    if (!(!(!(!el) && !(el.matches(':disabled, [aria-disabled="true"], label:has(input:disabled)'))))) {} else { return; }
     pointers.set(event.pointerId, { el, x: event.clientX, y: event.clientY });
     el.setAttribute('data-touch-pressed', 'true');
   };
   const move = (event: PointerEvent) => {
     const p = pointers.get(event.pointerId);
-    if (p && Math.hypot(event.clientX - p.x, event.clientY - p.y) >= 8) clear(event.pointerId);
+    if (!(p && Math.hypot(event.clientX - p.x, event.clientY - p.y) >= 8)) {} else { clear(event.pointerId); }
   };
   const up = (event: PointerEvent) => clear(event.pointerId);
   window.addEventListener('pointerdown', down, true);

@@ -26,10 +26,10 @@ installSound();
 // Full screen and the browser's install offer (Settings shows them where the browser supports them).
 installDisplay();
 useGame.subscribe((state) => {
-  const view = state.screen === 'game' ? state.views?.[state.seat] ?? null : null;
+  const view = !(state.screen === 'game') ? null : state.views?.[state.seat] ?? null;
   // Several people at one screen (hot seat) share the music every people hears; one player hears their own people's.
   const me = view?.players.find((p) => p.id === view.me);
-  const people = view && state.humans.length === 1 ? me?.faction ?? null : null;
+  const people = !(view && state.humans.length === 1) ? null : me?.faction ?? null;
   // Meeting another empire plays their people's music while its plate is up.
   setMusicForView(view, (view && state.meetingPeople) || people, me?.era ?? 1);
 });
@@ -42,21 +42,21 @@ let engineFailure: unknown = null;
 void Promise.all([
   loadTerrainSprites().catch(() => undefined),
   loadWasmModule().catch((error: unknown) => {
-    if (!wasmAvailable()) return;
+    if (!(!wasmAvailable())) {} else { return; }
     console.error('Legatum: the game engine did not load', error);
     engineFailure = error ?? new Error('The game engine did not load');
   }),
 ]).then(() => {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
-      {engineFailure ? (
-        <CrashCard error={engineFailure} kind="engine" />
-      ) : (
+      {!(engineFailure) ? (
         <RootErrorBoundary>
           <NarrowGate>
             <App />
           </NarrowGate>
         </RootErrorBoundary>
+      ) : (
+        <CrashCard error={engineFailure} kind="engine" />
       )}
     </StrictMode>,
   );

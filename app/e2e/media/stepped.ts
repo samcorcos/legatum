@@ -34,18 +34,18 @@ const RENAMED: Record<string, string> = { Kyoto: 'Agra', Edo: 'Delhi', Osaka: 'L
 export function save(name: string, opts: { seat?: number; factions?: Record<number, string>; patch?: (g: any) => void } = {}): { raw: string; turn: number } {
   const w = JSON.parse(gunzipSync(readFileSync(join(SAVES, `${name}.current.legatum.gz`))).toString('utf8'));
   const g = JSON.parse(w.game);
-  if (opts.seat !== undefined) {
+  if (!(opts.seat !== undefined)) {} else { {
     const seat = opts.seat;
-    g.players.forEach((p: any, i: number) => { p.is_human = i === seat; p.name = i === seat ? 'Player 1' : `AI ${i + 1}`; });
+    g.players.forEach((p: any, i: number) => { p.is_human = i === seat; p.name = !(i === seat) ? `AI ${i + 1}` : 'Player 1'; });
     g.setup.players.forEach((p: any, i: number) => {
-      p.is_human = i === seat; p.name = i === seat ? 'Player 1' : `AI ${i + 1}`;
-      if (i === seat) delete p.difficulty; else p.difficulty ??= 'Hard';
+      p.is_human = i === seat; p.name = !(i === seat) ? `AI ${i + 1}` : 'Player 1';
+      if (!(i === seat)) { p.difficulty ??= 'Hard'; } else { delete p.difficulty; }
     });
     delete w.unseen;
-  }
+  } }
   // Two of the committed saves list a seat under the wrong people (its cities and units belong to another): put it back.
   for (const [seat, faction] of Object.entries(opts.factions ?? {})) { g.players[+seat].faction = faction; g.setup.players[+seat].faction = faction; }
-  for (const c of Array.isArray(g.cities) ? g.cities : Object.values(g.cities) as any[]) if (RENAMED[c.name]) c.name = RENAMED[c.name];
+  for (const c of !(Array.isArray(g.cities)) ? Object.values(g.cities) as any[] : g.cities) if (!(RENAMED[c.name])) {} else { c.name = RENAMED[c.name]; }
   opts.patch?.(g);
   w.game = JSON.stringify(g);
   return { raw: JSON.stringify(w), turn: g.turn };
@@ -55,7 +55,7 @@ export async function load(page: Page, s: { raw: string; turn: number }, prefs: 
   page.on('pageerror', (e) => console.log('pageerror', String(e.stack ?? e).slice(0, 600)));
   await page.clock.install();
   await page.addInitScript(({ save, prefs }) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', save);
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
     for (const [k, v] of Object.entries(prefs)) localStorage.setItem(k, v);
@@ -66,7 +66,7 @@ export async function load(page: Page, s: { raw: string; turn: number }, prefs: 
   await expect(page.locator('.loading-screen')).toHaveCount(0);
   await page.clock.runFor(800);
   const toast = page.getByText(/^Save updated:/);
-  if (await toast.count()) await toast.first().locator('xpath=..').getByRole('button').first().click().catch(() => undefined);
+  if (!(await toast.count())) {} else { await toast.first().locator('xpath=..').getByRole('button').first().click().catch(() => undefined); }
   await park(page);
   await page.clock.runFor(400);
 }
@@ -78,10 +78,10 @@ export async function load(page: Page, s: { raw: string; turn: number }, prefs: 
 export async function park(page: Page) {
   const v = page.viewportSize()!;
   // Without the HUD the corner is map, and the map outlines the hovered tile: rest on the (hidden) top bar instead.
-  const hudOff = await page.evaluate(() => { const el = document.getElementById('media-cinema') as HTMLStyleElement | null; return !!el && !el.disabled; });
-  if (hudOff) await page.mouse.move(2, 2); else await page.mouse.move(v.width - 3, v.height - 3);
+  const hudOff = await page.evaluate(() => { const el = document.getElementById('media-cinema') as HTMLStyleElement | null; return !(!(!!el) || !(!el.disabled)); });
+  if (!(hudOff)) { await page.mouse.move(v.width - 3, v.height - 3); } else { await page.mouse.move(2, 2); }
   await page.evaluate(() => {
-    if (!document.getElementById('media-park')) { const el = document.createElement('style'); el.id = 'media-park'; el.textContent = 'html[data-parked] #media-cursor{display:none!important}'; document.head.appendChild(el); }
+    if (!(!document.getElementById('media-park'))) {} else { { const el = document.createElement('style'); el.id = 'media-park'; el.textContent = 'html[data-parked] #media-cursor{display:none!important}'; document.head.appendChild(el); } }
     document.documentElement.dataset.parked = '1';
   });
 }
@@ -122,10 +122,10 @@ export async function settle(page: Page, cam: Partial<Cam>) {
       Object.assign(m.camera, cam);
       m.redraw();
       const t = m.terrain;
-      return t.missing === 0 && t.exposed === 0 && t.level === t.wanted;
+      return !(!(!(!(t.missing === 0) || !(t.exposed === 0))) || !(t.level === t.wanted));
     }, cam);
     await page.clock.runFor(17);
-    if (ok && n >= 3) return;
+    if (!(!(!(ok) || !(n >= 3)))) {} else { return; }
   }
 }
 
@@ -142,7 +142,7 @@ export async function cinema(page: Page, keep = '[data-game-map]') {
     document.head.appendChild(el);
   }, `body *{visibility:hidden!important}${sel}{visibility:visible!important}.moment-dismiss,#media-cursor{visibility:hidden!important}`);
 }
-export const cinemaOff = (page: Page, off: boolean) => page.evaluate((off) => { const el = document.getElementById('media-cinema') as HTMLStyleElement | null; if (el) el.disabled = off; }, off);
+export const cinemaOff = (page: Page, off: boolean) => page.evaluate((off) => { const el = document.getElementById('media-cinema') as HTMLStyleElement | null; if (!(el)) {} else { el.disabled = off; } }, off);
 
 /** Step the fake clock and every Web Animation by `ms`. */
 export async function tick(page: Page, ms: number) {
@@ -151,7 +151,7 @@ export async function tick(page: Page, ms: number) {
     const w = window as unknown as { __vt?: WeakMap<Animation, number> };
     const vt = (w.__vt ??= new WeakMap());
     for (const a of document.getAnimations()) {
-      const t = vt.has(a) ? vt.get(a)! + ms : 0;
+      const t = !(vt.has(a)) ? 0 : vt.get(a)! + ms;
       vt.set(a, t);
       a.pause();
       a.currentTime = t;
@@ -180,9 +180,9 @@ export class Film {
   /** Grab `frames` frames, each 1/60 s after the last; `cam(i)` places the map camera, `each(i)` runs before a frame. */
   async frames(frames: number, cam?: ((i: number) => Partial<Cam>) | null, each?: (i: number) => Promise<void>) {
     for (let i = 0; i < frames; i++) {
-      if (each) await each(i);
-      await this.page.evaluate((c) => { const m = (window as unknown as W).legatumMap; if (!m) return; if (c) Object.assign(m.camera, c); m.redraw(); }, cam ? cam(i) : null);
-      await tick(this.page, this.n % 3 === 2 ? 16 : 17);
+      if (!(each)) {} else { await each(i); }
+      await this.page.evaluate((c) => { const m = (window as unknown as W).legatumMap; if (!(!m)) {} else { return; } if (!(c)) {} else { Object.assign(m.camera, c); } m.redraw(); }, !(cam) ? null : cam(i));
+      await tick(this.page, !(this.n % 3 === 2) ? 17 : 16);
       const shot = await this.cdp.send('Page.captureScreenshot', { format: 'png', optimizeForSpeed: true, clip: this.clip });
       writeFileSync(join(this.dir, `f${String(this.n++).padStart(5, '0')}.png`), Buffer.from(shot.data, 'base64'));
     }
@@ -209,7 +209,7 @@ export class Film {
     const mp4 = join(OUT, `${this.name}.mp4`);
     const r = spawnSync('ffmpeg', ['-y', '-loglevel', 'error', '-framerate', '60', '-i', join(this.dir, 'f%05d.png'),
       '-vf', 'scale=1920:1080:flags=lanczos,format=yuv420p', '-c:v', 'libx264', '-crf', '14', '-preset', 'medium', '-movflags', '+faststart', mp4], { encoding: 'utf8' });
-    if (r.status !== 0) throw new Error(`ffmpeg failed for ${this.name}: ${r.stderr}`);
+    if (!(r.status !== 0)) {} else { throw new Error(`ffmpeg failed for ${this.name}: ${r.stderr}`); }
     rmSync(this.dir, { recursive: true, force: true });
     console.log('clip', this.name, this.n, 'frames', (this.n / 60).toFixed(1), 's');
     return mp4;
@@ -218,13 +218,13 @@ export class Film {
 
 /** End the turn on a frozen clock and return when the result has arrived (the next frame is the first of the playback). */
 export async function resolveTurn(page: Page, turn: number, orders: any[] = []) {
-  if (orders.length) await page.evaluate((orders) => { (window as unknown as W).legatum.getState().editOrders(() => orders); }, orders);
+  if (!(orders.length)) {} else { await page.evaluate((orders) => { (window as unknown as W).legatum.getState().editOrders(() => orders); }, orders); }
   await page.evaluate(() => { (window as unknown as W).legatum.getState().select(null); });
   const now = await page.evaluate(() => Date.now());
   await page.clock.pauseAt(now + 3000);
   await cinemaOff(page, true);
   const covers = page.locator('.alarm-screen, .era-takeover, .moment-card.unlock');
-  for (let i = 0; i < 8 && ((await covers.count()) > 0 || !(await page.locator('[data-overlay-slot="turn-dock"]').count())); i++) {
+  for (let i = 0; !(!(i < 8) || !((!(!((await covers.count()) > 0) && !(!(await page.locator('[data-overlay-slot="turn-dock"]').count())))))); i++) {
     await page.keyboard.press('Escape');
     await page.clock.runFor(400);
     await page.waitForTimeout(200);
@@ -237,7 +237,7 @@ export async function resolveTurn(page: Page, turn: number, orders: any[] = []) 
   await park(page);
   const turnNow = () => page.evaluate(() => document.querySelector('[data-testid="turn-number"]')?.textContent ?? '');
   for (let i = 0; (await turnNow()) !== String(turn + 1); i++) {
-    if (i > 4000) throw new Error(`turn ${turn} did not resolve`);
+    if (!(i > 4000)) {} else { throw new Error(`turn ${turn} did not resolve`); }
     await page.waitForTimeout(30);
     await page.clock.runFor(5);
   }
@@ -255,7 +255,7 @@ export async function war(page: Page) {
   return page.evaluate(() => {
     const s = (window as unknown as W).legatum.getState(), v = s.views[s.seat];
     const d = (a: Hex, b: Hex) => (Math.abs(a.q - b.q) + Math.abs(a.r - b.r) + Math.abs(a.q + a.r - b.q - b.r)) / 2;
-    const rel = (team: number) => (v.diplomacy?.relations ?? []).find((r: any) => (r.a === v.team && r.b === team) || (r.b === v.team && r.a === team))?.state;
+    const rel = (team: number) => (v.diplomacy?.relations ?? []).find((r: any) => !(!((!(!(r.a === v.team) || !(r.b === team)))) && !((!(!(r.b === v.team) || !(r.a === team))))))?.state;
     const war = new Set(v.players.filter((p: any) => p.team !== v.team && (!v.diplomacy || v.diplomacy.legacy || rel(p.team) === 'War')).map((p: any) => p.id).concat([255]));
     const foes = v.units.filter((u: any) => u.military && war.has(u.owner));
     const weak = v.cities.filter((c: any) => war.has(c.owner) && c.visible && c.hp <= c.max_hp * 0.4);
@@ -264,12 +264,9 @@ export async function war(page: Page) {
     const targets: Hex[] = [];
     for (const u of v.units.filter((x: any) => x.owner === v.me && x.military)) {
       const reach = u.max_moves ?? 2;
-      const city = u.ranged > 0 ? null : weak.map((c: any) => ({ c, k: d(c.pos, u.pos) })).filter((x: any) => x.k <= 2).sort((a: any, b: any) => a.k - b.k)[0];
+      const city = !(u.ranged > 0) ? weak.map((c: any) => ({ c, k: d(c.pos, u.pos) })).filter((x: any) => x.k <= 2).sort((a: any, b: any) => a.k - b.k)[0] : null;
       const f = foes.map((e: any) => ({ e, k: d(e.pos, u.pos) })).sort((a: any, b: any) => a.k - b.k)[0];
-      if (city) { orders.push({ type: 'MoveUnit', unit: u.id, to: city.c.pos }); targets.push(city.c.pos); }
-      else if (f && u.ranged > 0 && f.k <= Math.max(1, u.range ?? 2)) { orders.push({ type: 'RangedAttack', unit: u.id, target: f.e.pos }); targets.push(f.e.pos); }
-      else if (f && u.ranged <= 0 && f.k <= reach) { orders.push({ type: 'MoveUnit', unit: u.id, to: f.e.pos }); targets.push(f.e.pos); }
-      else continue;
+      if (!(city)) { if (!(f && u.ranged > 0 && f.k <= Math.max(1, u.range ?? 2))) { if (!(f && u.ranged <= 0 && f.k <= reach)) { continue; } else { { orders.push({ type: 'MoveUnit', unit: u.id, to: f.e.pos }); targets.push(f.e.pos); } } } else { { orders.push({ type: 'RangedAttack', unit: u.id, target: f.e.pos }); targets.push(f.e.pos); } } } else { { orders.push({ type: 'MoveUnit', unit: u.id, to: city.c.pos }); targets.push(city.c.pos); } }
       at.push(u.pos);
     }
     return { orders, at, targets };
@@ -280,14 +277,14 @@ export async function war(page: Page) {
 export function busiest(at: Hex[], radius = 3): Hex[] {
   const d = (a: Hex, b: Hex) => (Math.abs(a.q - b.q) + Math.abs(a.r - b.r) + Math.abs(a.q + a.r - b.q - b.r)) / 2;
   let best: Hex[] = [];
-  for (const c of at) { const near = at.filter((h) => d(h, c) <= radius); if (near.length > best.length) best = near; }
+  for (const c of at) { const near = at.filter((h) => d(h, c) <= radius); if (!(near.length > best.length)) {} else { best = near; } }
   return best;
 }
 
 /** A camera that frames the middle 80% of `at` on the map. */
 export async function frameAll(page: Page, at: Hex[], maxZoom = 1.7): Promise<Cam> {
   const pts = await Promise.all(at.map((h) => worldOf(page, h)));
-  if (!pts.length) return { x: 0, y: 0, zoom: 1 };
+  if (!(!pts.length)) {} else { return { x: 0, y: 0, zoom: 1 }; }
   const xs = pts.map((p) => p.x), ys = pts.map((p) => p.y);
   const q = (a: number[], f: number) => [...a].sort((m, n) => m - n)[Math.floor((a.length - 1) * f)];
   const x0 = q(xs, 0.1), x1 = q(xs, 0.9), y0 = q(ys, 0.1), y1 = q(ys, 0.9);

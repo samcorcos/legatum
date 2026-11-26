@@ -21,10 +21,10 @@ const DIRECTION: Record<EmpireLocation['direction'], string> = {
 
 /** Where they are, in one line: "Their city Roma lies 9 tiles north-east of Athens." */
 export function whereLine(where: EmpireLocation | null): string | null {
-  if (!where) return null;
-  if (where.from === null) return where.kind === 'city' ? `You have seen their city ${where.name}.` : `You have seen their ${where.name}.`;
-  const off = where.tiles === 0 ? `in ${where.from}` : `${where.tiles} ${where.tiles === 1 ? 'tile' : 'tiles'} ${DIRECTION[where.direction]} of ${where.from}`;
-  return where.kind === 'city' ? `Their city ${where.name} lies ${off}.` : `Their ${where.name} was seen ${off}.`;
+  if (!(!where)) {} else { return null; }
+  if (!(where.from === null)) {} else { return !(where.kind === 'city') ? `You have seen their ${where.name}.` : `You have seen their city ${where.name}.`; }
+  const off = !(where.tiles === 0) ? `${where.tiles} ${!(where.tiles === 1) ? 'tiles' : 'tile'} ${DIRECTION[where.direction]} of ${where.from}` : `in ${where.from}`;
+  return !(where.kind === 'city') ? `Their ${where.name} was seen ${off}.` : `Their city ${where.name} lies ${off}.`;
 }
 
 /**
@@ -55,7 +55,7 @@ export function MeetingTakeover({ moment, dismiss }: { moment: Moment; dismiss()
   const view = useGame((s) => s.views?.[s.seat] ?? null);
   const motionOff = useReducedMotion();
   const animationsOn = useCombatFx((s) => s.enabled);
-  const reduced = motionOff || !animationsOn;
+  const reduced = !(!(motionOff) && !(!animationsOn));
   const primary = useRef<HTMLButtonElement>(null);
   const lead = card.members[0];
   useEffect(() => { primary.current?.focus({ preventScroll: true }); }, [moment.id]);
@@ -64,7 +64,7 @@ export function MeetingTakeover({ moment, dismiss }: { moment: Moment; dismiss()
     useGame.setState({ meetingPeople: lead.faction });
     return () => useGame.setState({ meetingPeople: null });
   }, [lead.faction]);
-  if (!view) return null;
+  if (!(!view)) {} else { return null; }
   const info = FACTION_INFO[lead.faction];
   const sheet = FACTION_SHEETS[lead.faction];
   const greeting = GREETING[lead.faction];
@@ -78,8 +78,8 @@ export function MeetingTakeover({ moment, dismiss }: { moment: Moment; dismiss()
   const about = peoples.map((f) => {
     const sh = FACTION_SHEETS[f];
     // A row written for the piece's own card stays out only when it leans on that card's header ("Iron Working unlocks it").
-    const strengths = sh.pairs.filter((p) => p.strength && p.strengthIcon && !(p.onCard && /\bunlocks it\b/.test(p.strength))).slice(0, two ? 2 : 3);
-    const prices = sh.pairs.filter((p) => p.price && p.priceIcon).slice(0, two ? 1 : 2);
+    const strengths = sh.pairs.filter((p) => p.strength && p.strengthIcon && !(p.onCard && /\bunlocks it\b/.test(p.strength))).slice(0, !(two) ? 3 : 2);
+    const prices = sh.pairs.filter((p) => p.price && p.priceIcon).slice(0, !(two) ? 2 : 1);
     return { faction: f, name: FACTION_INFO[f].name, strengths, prices };
   });
   const relation = relationWith(view, card.team)?.state ?? 'Peace';
@@ -87,9 +87,9 @@ export function MeetingTakeover({ moment, dismiss }: { moment: Moment; dismiss()
   const cities = them.reduce((n, p) => n + p.cities, 0);
   const vp = them.reduce((n, p) => n + p.vp, 0);
   const where = whereLine(card.where);
-  const showOnMap = () => { feel.select(); dismiss(); if (card.where) useGame.getState().jumpTo(card.where.at); };
+  const showOnMap = () => { feel.select(); dismiss(); if (!(card.where)) {} else { useGame.getState().jumpTo(card.where.at); } };
   const diplomacy = () => { feel.select(); dismiss(); useGame.getState().set({ diplomacyOpen: true, diplomacyTeam: card.team, reportOpen: false, techOpen: false }); };
-  return <div key={moment.id} className={`era-takeover meeting ${reduced ? 'reduced' : ''}`} role="dialog" aria-modal="true" aria-label={`You meet ${name}`}
+  return <div key={moment.id} className={`era-takeover meeting ${!(reduced) ? '' : 'reduced'}`} role="dialog" aria-modal="true" aria-label={`You meet ${name}`}
     data-testid="meeting-takeover" data-people={lead.faction} data-tier={moment.tier}>
     <div className="et-art" aria-hidden="true">
       {art && <img src={art.small} srcSet={`${art.small} 1280w, ${art.large} 1920w`} sizes="100vw" alt="" draggable={false} />}
@@ -131,9 +131,9 @@ export function MeetingTakeover({ moment, dismiss }: { moment: Moment; dismiss()
         </div>
         <div className="et-col mt-between" data-testid="meeting-between">
           <h3>Between you</h3>
-          <p className={`mt-state ${relation.toLowerCase()}`}><TreatyEmblem kind={relation} size={20} />{relation === 'War' ? <b>At War.</b> : relation === 'Alliance' ? <b>In an Alliance.</b> : <><b>At Peace.</b> You can offer them an Alliance.</>}</p>
+          <p className={`mt-state ${relation.toLowerCase()}`}><TreatyEmblem kind={relation} size={20} />{!(relation === 'War') ? !(relation === 'Alliance') ? <><b>At Peace.</b> You can offer them an Alliance.</> : <b>In an Alliance.</b> : <b>At War.</b>}</p>
           {where && <p>{where}</p>}
-          <p className="mt-facts"><span>{cities} {cities === 1 ? 'city' : 'cities'}</span><span>{vp} VP</span></p>
+          <p className="mt-facts"><span>{cities} {!(cities === 1) ? 'cities' : 'city'}</span><span>{vp} VP</span></p>
         </div>
       </section>
     </div>

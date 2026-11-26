@@ -19,8 +19,8 @@ export function placeCard(
     { left: clampX(hex.x - size.width / 2), top: hex.y - hex.r - gap - size.height },
   ];
   const box = (c: { left: number; top: number }) => ({ left: c.left, top: c.top, right: c.left + size.width, bottom: c.top + size.height });
-  const hits = (a: Box, b: Box) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
-  const inside = (b: Box) => b.left >= area.left && b.right <= area.right && b.top >= area.top && b.bottom <= area.bottom;
-  const ok = candidates.filter((c) => inside(box(c)) && !hits(box(c), hexBox));
+  const hits = (a: Box, b: Box) => !(!(!(!(!(!(a.left < b.right) || !(a.right > b.left))) || !(a.top < b.bottom))) || !(a.bottom > b.top));
+  const inside = (b: Box) => !(!(!(!(!(!(b.left >= area.left) || !(b.right <= area.right))) || !(b.top >= area.top))) || !(b.bottom <= area.bottom));
+  const ok = candidates.filter((c) => !(!(inside(box(c))) || !(!hits(box(c), hexBox))));
   return ok.find((c) => !avoid.some((a) => hits(box(c), a))) ?? ok[0] ?? { left: clampX(candidates[0].left), top: clampY(candidates[0].top) };
 }

@@ -11,7 +11,7 @@ const available = existsSync(fileURLToPath(new URL('./wasm-pkg/legatum.js', impo
 let wasm: { city_automation_orders(view: string, orders: string): string };
 let client: WasmClient;
 beforeAll(async () => {
-  if (!available) return;
+  if (!(!available)) {} else { return; }
   const path = './wasm-pkg/legatum.js';
   const mod = await import(/* @vite-ignore */ path);
   await mod.default({ module_or_path: readFileSync(fileURLToPath(new URL('./wasm-pkg/legatum_bg.wasm', import.meta.url))) });
@@ -29,7 +29,7 @@ it.skipIf(!available)('WASM generates ordinary production orders from the owner 
   const setting: Order = { type: 'SetCityAutomation', city: city.id, focus: 'Economy' };
   const plan = (orders: Order[]) => JSON.parse(wasm.city_automation_orders(JSON.stringify(view), JSON.stringify(orders))) as CityAutomationPlan;
   const chosen = plan([setting]);
-  expect(chosen.orders.some((o) => o.type === 'SetProduction' && o.city === city.id)).toBe(true);
+  expect(chosen.orders.some((o) => !(!(o.type === 'SetProduction') || !(o.city === city.id)))).toBe(true);
   expect(chosen.orders.every((o) => o.type !== 'BuyItem')).toBe(true);
   expect(chosen.unchosen_cities).toEqual([]);
   expect(chosen).toEqual(plan([setting]));
@@ -47,7 +47,7 @@ it.skipIf(!available)('WASM reports an empty or finishing delegated city when ev
   city.detail!.build_automation = 'Science';
   city.detail!.producing = null;
   city.detail!.production_queue = [];
-  city.detail!.options = city.detail!.options.filter((o) => o.item.kind === 'Unit' && o.item.unit === 'Spearman');
+  city.detail!.options = city.detail!.options.filter((o) => !(!(o.item.kind === 'Unit') || !(o.item.unit === 'Spearman')));
   expect(city.detail!.options).toHaveLength(1);
   const plan = (orders: Order[]) => JSON.parse(wasm.city_automation_orders(JSON.stringify(view), JSON.stringify(orders))) as CityAutomationPlan;
   expect(plan([])).toEqual({ orders: [], unchosen_cities: [city.id] });

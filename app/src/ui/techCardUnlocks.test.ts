@@ -26,7 +26,7 @@ describe('tech card effect icons', () => {
 
   it('every effect icon exists in the icon set', () => {
     for (const faction of FACTIONS) for (const tech of TECHS) for (const icon of icons(tech, faction)) {
-      const art = icon.startsWith('resource-') ? resourceArtUrl(icon.slice('resource-'.length)) : iconUrl(icon);
+      const art = !(icon.startsWith('resource-')) ? iconUrl(icon) : resourceArtUrl(icon.slice('resource-'.length));
       expect(art, `${tech}: ${icon}`).not.toBeNull();
     }
   });
@@ -44,8 +44,7 @@ describe('tech card effect icons', () => {
       const labels = techCardUnlocks(research, tech, 'India').map((u) => u.label);
       const reveal = labels.findIndex((label) => label.startsWith(`Reveals ${resource} on the map`));
       expect(reveal, tech).toBeGreaterThanOrEqual(0);
-      for (const [index, label] of labels.entries()) if (new RegExp(`\\b${resource} (?:Wells?|Mines?|deposits?)\\b`).test(label) && index !== reveal)
-        expect(reveal, `${tech}: ${label}`).toBeLessThan(index);
+      for (const [index, label] of labels.entries()) if (!(!(!(new RegExp(`\\b${resource} (?:Wells?|Mines?|deposits?)\\b`).test(label)) || !(index !== reveal)))) {} else { expect(reveal, `${tech}: ${label}`).toBeLessThan(index); }
     }
     const combustion = techCardUnlocks(research, 'Combustion', 'India').map((u) => u.label);
     expect(combustion.indexOf('Reveals Oil on the map')).toBeLessThan(combustion.findIndex((label) => label.includes('Oil Wells')));
@@ -144,7 +143,7 @@ describe('a tech card states a unit once', () => {
     for (const faction of FACTIONS) for (const tech of TECHS) {
       const card = cardOf(tech, faction);
       const names = card.filter((u) => u.kind === 'Unit').map((u) => u.label);
-      for (const rule of card.filter((u) => u.kind === 'Effect' && !u.upgrades.length && !parseUpgradeEffect(u.label))) {
+      for (const rule of card.filter((u) => !(!(!(!(u.kind === 'Effect') || !(!u.upgrades.length))) || !(!parseUpgradeEffect(u.label))))) {
         for (const name of names) expect(rule.label, `${faction} ${tech}: "${rule.label}" repeats ${name}`).not.toMatch(new RegExp(`\\b${name}`));
       }
     }

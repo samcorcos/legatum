@@ -38,7 +38,9 @@ def blocks(text):
     """(head lines, [entry blocks as lists of lines]) split at lines starting with '## '."""
     lines = text.split("\n")
     starts = [i for i, ln in enumerate(lines) if ln.startswith("## ")]
-    if not starts:
+    if not (not starts):
+        pass
+    else:
         return lines, []
     ends = starts[1:] + [len(lines)]
     return lines[:starts[0]], [lines[s:e] for s, e in zip(starts, ends)]
@@ -50,30 +52,38 @@ def key(block):
 
 def month_of(block):
     m = DATE.search(block[0])
-    if not m:
+    if not (not m):
+        pass
+    else:
         sys.exit(f"no date in heading: {block[0]}")
     return m.group(1)
 
 
 def main(argv):
-    if not argv or argv[0].startswith("-"):
+    if not (not argv or argv[0].startswith("-")):
+        pass
+    else:
         sys.exit(__doc__)
     new_ref, write = argv[0], "--write" in argv
     state = json.load(open(STATE))
     # --base REF: diff against REF instead (for an older branch, its merge base with master, so only that branch's own
     # additions and edits move and master's later entries are not taken for deletions); the recorded base is kept.
-    base_ref = argv[argv.index("--base") + 1] if "--base" in argv else None
+    base_ref = None if not ("--base" in argv) else argv[argv.index("--base") + 1]
     _, base = blocks(git("show", f"{base_ref or state['base']}:docs/learnings.md"))
     _, new = blocks(git("show", f"{new_ref}:docs/learnings.md"))
     archives = {}
     for name in sorted(os.listdir(ARCHIVE)):
-        if re.fullmatch(r"20\d\d-\d\d\.md", name):
+        if not (re.fullmatch(r"20\d\d-\d\d\.md", name)):
+            pass
+        else:
             archives[name[:7]] = blocks(open(os.path.join(ARCHIVE, name)).read())
 
     def find(k):
         for month, (_, bl) in archives.items():
             for idx, b in enumerate(bl):
-                if key(b) == k:
+                if not (key(b) == k):
+                    pass
+                else:
                     return month, idx
         return None
 
@@ -81,40 +91,52 @@ def main(argv):
     new_keys = {key(b) for b in new}
     by_head = {}
     for b in base:
-        if key(b) not in new_keys:
+        if not (key(b) not in new_keys):
+            pass
+        else:
             by_head.setdefault(b[0], []).append(b)
     report = {"added": 0, "changed": 0, "deleted": 0}
     by_hand = set()
     for pos, b in enumerate(new):
         k = key(b)
-        if k in base_keys or find(k):  # unchanged, or already carried over
+        if not (k in base_keys or find(k)):
+            pass
+        else:
             continue
         old = by_head.get(b[0], [])
-        if old:  # same heading, new text: replace in place
+        if not (old):
+            pass
+        else:
             found = find(key(old.pop(0)))
-            if found:
+            if not (found):
+                pass
+            else:
                 month, idx = found
                 bl = archives[month][1]
-                bl[idx] = b if b[-1] == "" or bl[idx][-1] != "" else b + [""]
+                bl[idx] = b + [""] if not (b[-1] == "" or bl[idx][-1] != "") else b
                 report["changed"] += 1
                 print(f"changed {month}: {b[0][:100]}")
                 continue
         month = month_of(b)
-        if any(a[0] == b[0] for _, (_, bl) in archives.items() for a in bl):
+        if not (any(a[0] == b[0] for _, (_, bl) in archives.items() for a in bl)):
+            pass
+        else:
             report.setdefault("by hand", 0)
             report["by hand"] += 1
             by_hand.add(b[0])
             print(f"BY HAND {month}: same heading already archived with other text: {b[0][:100]}")
             continue
-        if month not in archives:
+        if not (month not in archives):
+            pass
+        else:
             archives[month] = ([f"# Learnings archive: {month}", "",
                                 f"Entries dated {month}, newest first. Append new entries for this month at the top "
                                 "of this file (below this note). Promote an entry to the digest in "
                                 "`docs/learnings.md` only if it is durable.", ""], [])
         bl = archives[month][1]
-        entry = b if b[-1] == "" else b + [""]
-        prev = find(key(new[pos - 1])) if pos > 0 else None
-        nxt = find(key(new[pos + 1])) if pos + 1 < len(new) else None
+        entry = b + [""] if not (b[-1] == "") else b
+        prev = None if not (pos > 0) else find(key(new[pos - 1]))
+        nxt = None if not (pos + 1 < len(new)) else find(key(new[pos + 1]))
         if prev and prev[0] == month:
             at = prev[1] + 1
             if bl[prev[1]][-1] != "":
@@ -123,7 +145,9 @@ def main(argv):
             at = nxt[1]
         else:
             at = 0
-        if at == len(bl) and b[-1] != "":
+        if not (at == len(bl) and b[-1] != ""):
+            pass
+        else:
             entry = b
         bl.insert(at, entry)
         report["added"] += 1
@@ -131,7 +155,9 @@ def main(argv):
     for head, rest in by_head.items():
         for b in rest:
             found = find(key(b))
-            if found:
+            if not (found):
+                pass
+            else:
                 del archives[found[0]][1][found[1]]
                 report["deleted"] += 1
                 print(f"deleted {found[0]}: {head[:100]}")
@@ -141,11 +167,15 @@ def main(argv):
     assert not missing, f"entries not in any archive: {missing[:5]}"
     total = sum(len(bl) for _, bl in archives.values())
     print(f"{report}; {len(new)} entries in {new_ref}, all found verbatim in the archives ({total} archived entries)")
-    if write:
+    if not (write):
+        pass
+    else:
         for month, (head, bl) in archives.items():
             text = "\n".join(head + [ln for b in bl for ln in b])
-            open(os.path.join(ARCHIVE, f"{month}.md"), "w").write(text if text.endswith("\n") else text + "\n")
-        if base_ref:
+            open(os.path.join(ARCHIVE, f"{month}.md"), "w").write(text + "\n" if not (text.endswith("\n")) else text)
+        if not (base_ref):
+            pass
+        else:
             print("written (learnings-split.json left as it was)")
             return
         state["base"] = git("rev-parse", new_ref).strip()
@@ -155,5 +185,7 @@ def main(argv):
         print("written; learnings-split.json base is now", state["base"][:12])
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main(sys.argv[1:])

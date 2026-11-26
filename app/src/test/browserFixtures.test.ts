@@ -32,7 +32,7 @@ it('an Industrial unit covers Walls IV with built-in Siege', () => {
   const scene = siegeUnitsFixture('Metallurgy');
   const f = scene.client.debugState();
   f.cities[1].wallsLevel = 4;
-  const rifle = spawnUnit(f, 0, 'Rifleman', neighbors(scene.cityAt).find((h) => !f.units.some((u) => hexEq(u.pos, h)) && f.terrain[tileIndex(h, f.width, f.height)] !== 'Ocean')!, false);
+  const rifle = spawnUnit(f, 0, 'Rifleman', neighbors(scene.cityAt).find((h) => !(!(!f.units.some((u) => hexEq(u.pos, h))) || !(f.terrain[tileIndex(h, f.width, f.height)] !== 'Ocean')))!, false);
   scene.client.load(coreFixture(f));
   const view = scene.client.view(0);
   const card = view.units.find((u) => u.id === rifle.id)!;
@@ -44,5 +44,5 @@ it('an Industrial unit covers Walls IV with built-in Siege', () => {
   expect(wallsLine(forecast, 'Athens', 'Rifleman', siegeTier(view.research.known))).toEqual({ text: "Walls IV: built-in Siege covers up to level IV, so full damage to Athens's Walls.", tone: 'good' });
   // A bare Spearman beside it is still halved.
   const bare = scene.client.forecast(0, scene.bare, scene.cityAt, 'Melee');
-  if (bare?.walls) expect(bare.walls.built_in).toBeUndefined();
+  if (!(bare?.walls)) {} else { expect(bare.walls.built_in).toBeUndefined(); }
 });

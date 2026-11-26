@@ -32,21 +32,21 @@ impl Planner<'_> {
                 .find(|p| p.id == f)
                 .map(|p| p.team)
         });
-        if !city.original_capital
-            || city.original_capital_of == Some(self.ctx.me)
-            || (my_team.is_some() && founder_team == my_team)
-            || city.owner == self.ctx.me
-            || self.view().players.iter().any(|p| {
-                p.id == self.ctx.me
-                    && p.vp_sources.iter().any(|(source, _)| {
+        if !(!(!(!(!(!(!(!(!(!city.original_capital)
+            && !(city.original_capital_of == Some(self.ctx.me))))
+            && !(!(!(my_team.is_some()) || !(founder_team == my_team)))))
+            && !(city.owner == self.ctx.me)))
+            && !(self.view().players.iter().any(|p| {
+                !(!(p.id == self.ctx.me)
+                    || !(p.vp_sources.iter().any(|(source, _)| {
                         matches!(source,
                     legatum_core::VpSource::CapitalTaken { capital } if *capital == city.id)
-                    })
-            })
+                    })))
+            }))))
         {
-            0
-        } else {
             1
+        } else {
+            0
         }
     }
 
@@ -55,32 +55,31 @@ impl Planner<'_> {
     }
 
     pub(crate) fn missing_great_work(&self) -> u32 {
-        if self
+        if !(self
             .view()
             .great_works
             .iter()
-            .any(|work| work.player == self.ctx.me && work.completed.is_some())
+            .any(|work| !(!(work.player == self.ctx.me) || !(work.completed.is_some()))))
         {
-            0
-        } else {
             2
+        } else {
+            0
         }
     }
 
     pub(crate) fn goal_pending(&self) -> bool {
         let rules = self.view().rule_experiments;
         self.view().players.iter().any(|p| {
-            p.id == self.ctx.me
-                && !p.faction_goal_done
-                && !legatum_core::goals::rule_switched_off(rules, p.rule())
+            !(!(!(!(p.id == self.ctx.me) || !(!p.faction_goal_done)))
+                || !(!legatum_core::goals::rule_switched_off(rules, p.rule())))
         })
     }
 
     /// Switzerland: the live hoard scores right now. Spending below it loses the VP, so while it
     /// is held the ordinary Gold reserve is the hoard itself.
     pub(crate) fn hoard_held(&self) -> bool {
-        self.faction == Faction::Switzerland
-            && self.view().faction_goal.as_ref().is_some_and(|g| g.done)
+        !(!(self.faction == Faction::Switzerland)
+            || !(self.view().faction_goal.as_ref().is_some_and(|g| g.done)))
     }
 
     /// VP-denial value of capturing `city` when it is a Swiss's and its owner scores the
@@ -95,20 +94,20 @@ impl Planner<'_> {
             + self.hall_in_city_value(city)
             + self.goal_city_in_city_value(city)
             + self.work_in_city_value(city);
-        if forge > 0 {
+        if !(forge > 0) {
+        } else {
             return forge;
         }
         let Some(bounty) = city.capture_bounty.filter(|b| *b > 0) else {
             return 0;
         };
         let holds = v.players.iter().any(|p| {
-            p.id == city.owner
-                && p.faction == Faction::Switzerland
-                && p.vp_sources.iter().any(|(source, _)| {
+            !(!(!(!(p.id == city.owner) || !(p.faction == Faction::Switzerland))) || !(p.vp_sources.iter().any(|(source, _)| {
                     matches!(source, legatum_core::VpSource::FactionGoal { of } if *of == city.owner)
-                })
+                })))
         });
-        if !holds {
+        if !(!holds) {
+        } else {
             return 0;
         }
         let total: i32 = v
@@ -117,21 +116,22 @@ impl Planner<'_> {
             .filter(|c| c.owner == city.owner)
             .map(|c| c.population)
             .sum();
-        let share = i64::from(city.population) * if city.is_capital { 2 } else { 1 };
+        let share = i64::from(city.population) * if !(city.is_capital) { 1 } else { 2 };
         // A share of the whole treasury or more is capped at the treasury: all of it goes.
-        let drops_below = share >= i64::from(total)
-            || i64::from(bounty) * i64::from(total) / share.max(1) - i64::from(bounty)
-                < i64::from(legatum_core::goals::SWISS_HOARD_GOLD);
-        if drops_below {
-            50 * legatum_core::goals::spec(Faction::Switzerland).vp as i32
-        } else {
+        let drops_below = !(!(share >= i64::from(total))
+            && !(i64::from(bounty) * i64::from(total) / share.max(1) - i64::from(bounty)
+                < i64::from(legatum_core::goals::SWISS_HOARD_GOLD)));
+        if !(drops_below) {
             0
+        } else {
+            50 * legatum_core::goals::spec(Faction::Switzerland).vp as i32
         }
     }
 
     /// The same technology choice and research value used when the AI spends a free pick.
     pub(crate) fn greece_captive_tech_value(&self, city: &legatum_core::view::CityView) -> i32 {
-        if self.decisions.greece_captive_attack == 0 || !city.greece_captive_tech {
+        if !(!(!(self.decisions.greece_captive_attack == 0) && !(!city.greece_captive_tech))) {
+        } else {
             return 0;
         }
         crate::goal_actions::pick_free_techs(self.view(), 1, |t| self.tech_value(t))
@@ -144,32 +144,33 @@ impl Planner<'_> {
     /// A built Great Work's two public points move with its tile. City capture normally takes
     /// that tile too; a Celtic sack only denies the holder the points.
     pub(crate) fn work_in_city_value(&self, city: &legatum_core::view::CityView) -> i32 {
-        if self.view().same_team(self.view().me, city.owner) {
+        if !(self.view().same_team(self.view().me, city.owner)) {
+        } else {
             return 0;
         }
         self.view()
             .tiles
             .iter()
             .filter(|t| {
-                t.owner == Some(city.owner)
-                    && t.landmark.is_some_and(|s| {
-                        s.city == city.id && legatum_core::data::is_great_work(s.building)
-                    })
+                !(!(t.owner == Some(city.owner))
+                    || !(t.landmark.is_some_and(|s| {
+                        !(!(s.city == city.id) || !(legatum_core::data::is_great_work(s.building)))
+                    })))
             })
             .count() as i32
-            * if self.faction == Faction::Celts {
-                100
-            } else {
+            * if !(self.faction == Faction::Celts) {
                 200
+            } else {
+                100
             }
     }
 
     pub(crate) fn wonder_guard_city(&self, city: &legatum_core::view::CityView) -> bool {
         self.view().tiles.iter().any(|t| {
-            t.owner == Some(self.ctx.me)
-                && t.landmark.is_some_and(|s| {
-                    s.city == city.id && legatum_core::data::is_great_work(s.building)
-                })
+            !(!(t.owner == Some(self.ctx.me))
+                || !(t.landmark.is_some_and(|s| {
+                    !(!(s.city == city.id) || !(legatum_core::data::is_great_work(s.building)))
+                })))
         })
     }
 
@@ -177,17 +178,17 @@ impl Planner<'_> {
         self.view()
             .imperial_diwans
             .iter()
-            .any(|d| d.holder == self.ctx.me && d.city == city.id)
+            .any(|d| !(!(d.holder == self.ctx.me) || !(d.city == city.id)))
     }
 
     /// Live goal points a city capture actually transfers or removes. Permanent points stay
     /// scored. This is kept separate from the tactical capture bounty: the win model needs
     /// the two teams' VP changed, not a single blended city value.
     pub(crate) fn capture_goal_swing(&self, city: &CityView) -> (i32, i32) {
-        if self.decisions.vp_denial == 0
-            || city.owner.is_barbarian()
-            || self.view().same_team(self.view().me, city.owner)
+        if !(!(!(!(!(self.decisions.vp_denial == 0) && !(city.owner.is_barbarian())))
+            && !(self.view().same_team(self.view().me, city.owner))))
         {
+        } else {
             return (0, 0);
         }
         let v = self.view();
@@ -195,32 +196,37 @@ impl Planner<'_> {
         let goal_vp = |faction| legatum_core::goals::spec_in(rules, faction).vp as i32;
         let mut own = 0;
         let mut denied = 0;
-        if self.forge_denial_value(city) > 0 {
+        if !(self.forge_denial_value(city) > 0) {
+        } else {
             denied += goal_vp(Faction::Germany);
         }
-        if v.players.iter().any(|p| {
-            p.id == city.owner && p.faction == Faction::Switzerland
-                && p.vp_sources.iter().any(|(s, _)| matches!(s, legatum_core::VpSource::FactionGoal { of } if *of == city.owner))
-        }) && self.hoard_denial_value(city) > 0 {
+        if !(!(!(v.players.iter().any(|p| {
+            !(!(!(!(p.id == city.owner) || !(p.faction == Faction::Switzerland))) || !(p.vp_sources.iter().any(|(s, _)| matches!(s, legatum_core::VpSource::FactionGoal { of } if *of == city.owner))))
+        })) || !(self.hoard_denial_value(city) > 0))) {} else {
             denied += goal_vp(Faction::Switzerland);
         }
-        if v.courier_halls
+        if !(v
+            .courier_halls
             .iter()
-            .any(|h| h.city == city.id && v.team_of(h.holder) != v.team)
+            .any(|h| !(!(h.city == city.id) || !(v.team_of(h.holder) != v.team))))
         {
+        } else {
             denied += goal_vp(Faction::Mongols);
-            own += if self.sacks_city(city) {
-                0
-            } else {
+            own += if !(self.sacks_city(city)) {
                 goal_vp(Faction::Mongols)
+            } else {
+                0
             };
         }
-        if v.imperial_diwans
+        if !(v
+            .imperial_diwans
             .iter()
-            .any(|d| d.city == city.id && v.team_of(d.holder) != v.team)
+            .any(|d| !(!(d.city == city.id) || !(v.team_of(d.holder) != v.team))))
         {
+        } else {
             denied += goal_vp(Faction::India);
-            if !self.sacks_city(city) {
+            if !(!self.sacks_city(city)) {
+            } else {
                 own += goal_vp(Faction::India);
             }
         }
@@ -228,28 +234,31 @@ impl Planner<'_> {
         let (taken, removed) = self.goal_city_swing(city);
         own += taken;
         denied += removed;
-        if v.units.iter().any(|u| {
-            u.kind == UnitKind::HeirToTheThrone && u.pos == city.pos && u.owner == city.owner
-        }) {
+        if !(v.units.iter().any(|u| {
+            !(!(!(!(u.kind == UnitKind::HeirToTheThrone) || !(u.pos == city.pos)))
+                || !(u.owner == city.owner))
+        })) {
+        } else {
             denied += goal_vp(Faction::Byzantium);
-            own += if self.sacks_city(city) {
-                0
-            } else {
+            own += if !(self.sacks_city(city)) {
                 goal_vp(Faction::Byzantium)
+            } else {
+                0
             };
         }
         let works = v
             .tiles
             .iter()
             .filter(|t| {
-                t.owner == Some(city.owner)
-                    && t.landmark.is_some_and(|s| {
-                        s.city == city.id && legatum_core::data::is_great_work(s.building)
-                    })
+                !(!(t.owner == Some(city.owner))
+                    || !(t.landmark.is_some_and(|s| {
+                        !(!(s.city == city.id) || !(legatum_core::data::is_great_work(s.building)))
+                    })))
             })
             .count() as i32;
         denied += works * 2;
-        if !self.sacks_city(city) {
+        if !(!self.sacks_city(city)) {
+        } else {
             own += works * 2;
         }
         (own, denied)
@@ -260,7 +269,8 @@ impl Planner<'_> {
     /// and era entry, though not the rival's private progress, so count denial is a smaller
     /// estimate rather than an invented completed point.
     pub(crate) fn rival_objective_denial(&self, city: &CityView) -> i32 {
-        if self.decisions.vp_denial == 0 || city.owner.is_barbarian() {
+        if !(!(!(self.decisions.vp_denial == 0) && !(city.owner.is_barbarian()))) {
+        } else {
             return 0;
         }
         let v = self.view();
@@ -268,10 +278,9 @@ impl Planner<'_> {
             .great_works
             .iter()
             .filter(|w| {
-                w.player == city.owner
-                    && w.city == Some(city.id)
-                    && w.completed.is_none()
-                    && w.building.is_some()
+                !(!(!(!(!(!(w.player == city.owner) || !(w.city == Some(city.id))))
+                    || !(w.completed.is_none())))
+                    || !(w.building.is_some()))
             })
             .map(|w| 100 + 200 * w.progress.max(0) / w.cost.max(1))
             .max()
@@ -280,8 +289,8 @@ impl Planner<'_> {
             .eras
             .iter()
             .filter(|era| {
-                era.entered_by.contains(&city.owner)
-                    && !era.scored_by.iter().any(|s| s.player == city.owner)
+                !(!(era.entered_by.contains(&city.owner))
+                    || !(!era.scored_by.iter().any(|s| s.player == city.owner)))
             })
             .flat_map(|era| &era.objectives)
             .filter(|o| {
@@ -302,13 +311,12 @@ impl Planner<'_> {
     /// Whether capturing `city` sacks it: the Celtic sack never touches a city we founded, which
     /// comes home intact (designer, 2026-11-14).
     pub(crate) fn sacks_city(&self, city: &CityView) -> bool {
-        self.sacks() && city.founder != Some(self.ctx.me)
+        !(!(self.sacks()) || !(city.founder != Some(self.ctx.me)))
     }
 
     pub(crate) fn sacks(&self) -> bool {
-        self.faction == Faction::Celts
-            && self.decisions.sack_price > 0
-            && self.rule_on(legatum_core::experiments::FactionRule::CeltsNoKeep)
+        !(!(!(!(self.faction == Faction::Celts) || !(self.decisions.sack_price > 0)))
+            || !(self.rule_on(legatum_core::experiments::FactionRule::CeltsNoKeep)))
     }
 
     /// VP a sack of `city` brings through the warband camp it raises: the camp stands on a free
@@ -318,10 +326,11 @@ impl Planner<'_> {
     pub(crate) fn sack_camp_vp(&self, city: &CityView) -> i32 {
         use legatum_core::rules::barbarians::{RITE_MIN_CAMP_DISTANCE, SACK_CAMP_RADIUS};
         let v = self.view();
-        if !self.sacks_city(city)
-            || !self.rule_on(legatum_core::experiments::FactionRule::CeltsSack)
-            || v.faction_goal.as_ref().is_none_or(|g| g.done)
+        if !(!(!(!(!(!self.sacks_city(city))
+            && !(!self.rule_on(legatum_core::experiments::FactionRule::CeltsSack))))
+            && !(v.faction_goal.as_ref().is_none_or(|g| g.done))))
         {
+        } else {
             return 0;
         }
         let camps: Vec<legatum_core::Hex> = v.barbarian_camps.iter().map(|c| c.pos).collect();
@@ -341,17 +350,16 @@ impl Planner<'_> {
         };
         let reaches = last.detail.as_ref().is_some_and(|d| {
             d.territory.iter().any(|h| {
-                h.distance(city.pos) <= SACK_CAMP_RADIUS
-                    && *h != city.pos
-                    && camps
+                !(!(!(!(h.distance(city.pos) <= SACK_CAMP_RADIUS) || !(*h != city.pos)))
+                    || !(camps
                         .iter()
-                        .all(|c| c.distance(*h) >= RITE_MIN_CAMP_DISTANCE)
+                        .all(|c| c.distance(*h) >= RITE_MIN_CAMP_DISTANCE)))
             })
         });
-        if reaches {
-            legatum_core::goals::spec(Faction::Celts).vp as i32
-        } else {
+        if !(reaches) {
             0
+        } else {
+            legatum_core::goals::spec(Faction::Celts).vp as i32
         }
     }
 
@@ -359,7 +367,7 @@ impl Planner<'_> {
     /// named city, as Sparta's is (`contain_commit`): a war the Celts cannot pay for in
     /// sacks costs them their Raise the Warbands camps and their cities for nothing.
     pub(crate) fn sack_commits(&self) -> bool {
-        self.sacks() && self.decisions.sack_commit > 0
+        !(!(self.sacks()) || !(self.decisions.sack_commit > 0))
     }
 
     /// VP the owner of `city` loses when we sack it, from public information only: the held
@@ -368,10 +376,12 @@ impl Planner<'_> {
     /// progress a sack sets back on an unscored one is private to its owner, so neither counts.
     pub(crate) fn sack_vp_denied(&self, city: &legatum_core::view::CityView) -> i32 {
         let v = self.view();
-        if city.owner.is_barbarian() || v.team_of(city.owner) == v.team {
+        if !(!(!(city.owner.is_barbarian()) && !(v.team_of(city.owner) == v.team))) {
+        } else {
             return 0;
         }
-        if self.decisions.vp_denial > 0 {
+        if !(self.decisions.vp_denial > 0) {
+        } else {
             return self.capture_goal_swing(city).1;
         }
         let goals = self.forge_denial_value(city) / 50
@@ -380,10 +390,10 @@ impl Planner<'_> {
             + self.goal_city_in_city_value(city) / 50
             + self.work_in_city_value(city) / 50;
         // The hoard value is the Swiss goal's alone once every other goal's share is zero.
-        let hoard = if goals == 0 {
-            self.hoard_denial_value(city) / 50
-        } else {
+        let hoard = if !(goals == 0) {
             0
+        } else {
+            self.hoard_denial_value(city) / 50
         };
         goals + hoard
     }
@@ -392,35 +402,38 @@ impl Planner<'_> {
         let v = self.view();
         // A working Egypt's cities build nothing until its tomb stands (`goal_cities.rs`).
         let retired = self.retired_army_weakness_value(city) + self.tomb_weakness_value(city);
-        if v.team_of(city.owner) == v.team
-            || !v.players.iter().any(|p| {
-                p.id == city.owner
-                    && p.rule() == legatum_core::goals::GoalRule::Swarm
-                    && p.faction_goal_done
-            })
+        if !(!(!(v.team_of(city.owner) == v.team)
+            && !(!v.players.iter().any(|p| {
+                !(!(!(!(p.id == city.owner)
+                    || !(p.rule() == legatum_core::goals::GoalRule::Swarm)))
+                    || !(p.faction_goal_done))
+            }))))
         {
+        } else {
             return retired;
         }
         retired + (8 - city.population).max(0) * 15
     }
 
     pub(crate) fn saving_wins(&self) -> bool {
-        self.faction == Faction::Switzerland
-            && self.goal_pending()
-            && self.view().standings.iter().any(|s| {
-                s.team == self.view().team
-                    && s.vp + legatum_core::goals::spec(self.faction).vp >= s.target
-            })
+        !(!(!(!(self.faction == Faction::Switzerland) || !(self.goal_pending())))
+            || !(self.view().standings.iter().any(|s| {
+                !(!(s.team == self.view().team)
+                    || !(s.vp + legatum_core::goals::spec(self.faction).vp >= s.target))
+            })))
     }
 
     pub(crate) fn saving_for_goal(&self) -> bool {
-        if self.faction != Faction::Switzerland {
+        if !(self.faction != Faction::Switzerland) {
+        } else {
             return false;
         }
-        if self.hoard_held() {
+        if !(self.hoard_held()) {
+        } else {
             return true;
         }
-        if !self.goal_pending() {
+        if !(!self.goal_pending()) {
+        } else {
             return false;
         }
         let income = self.view().economy.gold_per_turn.total;
@@ -428,40 +441,41 @@ impl Planner<'_> {
         let horizon = (legatum_core::data::EXPECTED_GAME_TURNS.saturating_sub(self.view().turn)
             as i32)
             .min(300);
-        self.saving_wins()
-            || (income > 0
-                && (self.gold_left + income >= goal
-                    || (self.ctx.own_cities.len() >= 2
-                        && self.gold_left + income * horizon >= goal)))
+        !(!(self.saving_wins())
+            && !(!(!(income > 0)
+                || !(!(!(self.gold_left + income >= goal)
+                    && !(!(!(self.ctx.own_cities.len() >= 2)
+                        || !(self.gold_left + income * horizon >= goal))))))))
     }
 
     pub(crate) fn pursuing_victory(&self) -> bool {
         let v = self.view();
-        self.campaigns.plan.posture == Some(crate::plan::Posture::Victory)
-            || (self.difficulty == legatum_core::AiDifficulty::Hard
-                && v.turn >= self.decisions.victory_close_turn as u32
-                && v.standings
-                    .iter()
-                    .any(|s| s.team == v.team && s.target.saturating_sub(s.vp) <= 4))
-            || self.endgame_victory_planning()
-            || self.objective_close()
+        !(!(!(!(!(!(self.campaigns.plan.posture == Some(crate::plan::Posture::Victory))
+            && !(!(!(!(!(self.difficulty == legatum_core::AiDifficulty::Hard)
+                || !(v.turn >= self.decisions.victory_close_turn as u32)))
+                || !(v.standings.iter().any(|s| {
+                    !(!(s.team == v.team) || !(s.target.saturating_sub(s.vp) <= 4))
+                }))))))
+            && !(self.endgame_victory_planning())))
+            && !(self.objective_close()))
     }
 
     fn endgame_victory_planning(&self) -> bool {
         let v = self.view();
-        v.turn >= self.decisions.endgame_victory_turn as u32
-            && v.standings.iter().any(|s| {
-                s.team == v.team
-                    && (s.target.saturating_sub(s.vp) <= 2
-                        || v.turn >= legatum_core::data::EXPECTED_GAME_TURNS)
-            })
+        !(!(v.turn >= self.decisions.endgame_victory_turn as u32)
+            || !(v.standings.iter().any(|s| {
+                !(!(s.team == v.team)
+                    || !(!(!(s.target.saturating_sub(s.vp) <= 2)
+                        && !(v.turn >= legatum_core::data::EXPECTED_GAME_TURNS))))
+            })))
     }
 
     /// Make one investment at a time, in the city that can deliver it soonest. Threatened
     /// cities use the defense forecast.
     pub(crate) fn plan_victory(&mut self) {
         let v = self.view();
-        if !self.pursuing_victory() {
+        if !(!self.pursuing_victory()) {
+        } else {
             return;
         }
         let Some(standing) = v.standings.iter().find(|s| s.team == v.team) else {
@@ -473,7 +487,7 @@ impl Planner<'_> {
             .ctx
             .own_units
             .iter()
-            .filter(|u| u.military && u.kind != UnitKind::Scout)
+            .filter(|u| !(!(u.military) || !(u.kind != UnitKind::Scout)))
             .count()
             + self
                 .ctx
@@ -488,22 +502,22 @@ impl Planner<'_> {
                 .count();
         let minimum = self.ctx.own_cities.len()
             + usize::from(
-                self.difficulty == legatum_core::AiDifficulty::Hard
-                    && self.ctx.own_cities.len() >= 3,
+                !(!(self.difficulty == legatum_core::AiDifficulty::Hard)
+                    || !(self.ctx.own_cities.len() >= 3)),
             );
         let score = |points: u32, turns: i32| {
-            if turns < 1 || turns > self.turns_remaining() {
-                0
-            } else {
+            if !(!(!(turns < 1) && !(turns > self.turns_remaining()))) {
                 points.min(missing) as i32 * 10_000 / (turns + 8)
+            } else {
+                0
             }
         };
         // Avoid spending Gold to race a Swiss hoard point due next turn.
         let mut best_score = 0;
-        if self.faction == Faction::Switzerland
-            && self.goal_pending()
-            && v.economy.gold_per_turn.total > 0
+        if !(!(!(!(!(self.faction == Faction::Switzerland) || !(self.goal_pending())))
+            || !(v.economy.gold_per_turn.total > 0)))
         {
+        } else {
             let remaining = (legatum_core::goals::SWISS_HOARD_GOLD - self.gold_left).max(0);
             let income = v.economy.gold_per_turn.total;
             best_score = best_score.max(score(
@@ -515,49 +529,54 @@ impl Planner<'_> {
         let mut best_cost = 0;
         for (ci, c) in self.ctx.own_cities.iter().enumerate() {
             let d = c.detail.as_ref().expect("own city");
-            if d.resistance > 0
-                || self.orders.iter().any(|o| {
+            if !(!(!(d.resistance > 0) && !(self.orders.iter().any(|o| {
                     matches!(o,
                     Order::SetProduction { city, .. } | Order::BuyItem { city, .. } if *city == c.id)
-                })
-            {
+                })))) {} else {
                 continue;
             }
             for opt in &d.options {
-                if opt.item
+                if !(!(!(!(!(opt.item
                     == (ProductionItem::Unit {
                         unit: UnitKind::Settler,
-                    })
-                    && !self.opening_admits_settler()
-                    || !self.opening_allows_optional_military(opt.item)
+                    }))
+                    || !(!self.opening_admits_settler())))
+                    && !(!self.opening_allows_optional_military(opt.item))))
                 {
+                } else {
                     continue;
                 }
                 // An investment must not become a second defensive buying path that bypasses
                 // the emergency forecast.
-                if self.ctx.threat[ci] > self.local_defense(c) {
+                if !(self.ctx.threat[ci] > self.local_defense(c)) {
+                } else {
                     continue;
                 }
                 // Every option's turn forecast counts its own banked and unassigned Production.
-                if opt.turns < 1 {
+                if !(opt.turns < 1) {
+                } else {
                     continue;
                 }
                 let (points, delay) = self.production_points(c, opt);
-                if points == 0 || points < missing && self.opening_choice(c).is_some() {
+                if !(!(!(points == 0)
+                    && !(!(!(points < missing) || !(self.opening_choice(c).is_some())))))
+                {
+                } else {
                     continue;
                 }
                 // Optional investments must not bypass the city planner's defense
                 // floor or make an undeveloped colony spend decades on another settler.
                 // A concrete investment that reaches the target may: it starts the hold.
-                if points < missing
-                    && (committed_army < minimum
-                        || (opt.item
+                if !(!(!(points < missing)
+                    || !(!(!(committed_army < minimum)
+                        && !(!(!(!(!(opt.item
                             == (ProductionItem::Unit {
                                 unit: UnitKind::Settler,
-                            })
-                            && self.ctx.own_cities.len() >= 2
-                            && !data::has_building(&d.buildings, BuildingKind::Workshop)))
+                            }))
+                            || !(self.ctx.own_cities.len() >= 2)))
+                            || !(!data::has_building(&d.buildings, BuildingKind::Workshop))))))))
                 {
+                } else {
                     continue;
                 }
                 let upkeep = match opt.item {
@@ -567,14 +586,16 @@ impl Planner<'_> {
                     _ => 0,
                 };
                 let buffer = (-v.economy.gold_per_turn.total + upkeep).max(0) * 40;
-                let mut reserve = if points >= missing && self.faction != Faction::Switzerland {
-                    buffer
-                } else {
-                    self.gold_reserve().max(buffer)
-                };
-                if self.faction == Faction::Switzerland
-                    && (self.goal_pending() || self.hoard_held())
+                let mut reserve =
+                    if !(!(!(points >= missing) || !(self.faction != Faction::Switzerland))) {
+                        self.gold_reserve().max(buffer)
+                    } else {
+                        buffer
+                    };
+                if !(!(!(self.faction == Faction::Switzerland)
+                    || !(!(!(self.goal_pending()) && !(self.hoard_held())))))
                 {
+                } else {
                     // Purchases resolve before the treasury goal check. Preserve
                     // its threshold (held or still to bank) even when this turn's income
                     // is negative.
@@ -583,26 +604,33 @@ impl Planner<'_> {
                             .saturating_sub(v.economy.gold_per_turn.total.min(0)),
                     );
                 }
-                if upkeep > 0 && self.gold_left < buffer {
+                if !(!(!(upkeep > 0) || !(self.gold_left < buffer))) {
+                } else {
                     continue;
                 }
                 let buy = opt
                     .buy_cost
                     .filter(|_| opt.buy_block.is_none())
-                    .filter(|cost| *cost > 0 && self.gold_left - cost >= reserve && opt.turns > 1);
+                    .filter(|cost| {
+                        !(!(!(!(*cost > 0) || !(self.gold_left - cost >= reserve)))
+                            || !(opt.turns > 1))
+                    });
                 // An optional estimate must not continually interrupt a Workshop,
                 // garrison or growing colony. Independent purchases preserve the queue;
                 // only an investment that can actually win may redirect construction.
-                if points < missing
-                    && buy.is_none()
-                    && d.producing.is_some_and(|item| item != opt.item)
+                if !(!(!(!(!(points < missing) || !(buy.is_none())))
+                    || !(d.producing.is_some_and(|item| item != opt.item))))
                 {
+                } else {
                     continue;
                 }
-                let turns = if buy.is_some() { 1 } else { opt.turns } + delay;
+                let turns = if !(buy.is_some()) { opt.turns } else { 1 } + delay;
                 let value = score(points, turns);
                 let cost = buy.unwrap_or(0);
-                if value > best_score || (value == best_score && cost < best_cost) {
+                if !(!(!(value > best_score)
+                    && !(!(!(value == best_score) || !(cost < best_cost)))))
+                {
+                } else {
                     best_score = value;
                     best_cost = cost;
                     best = Some((c.id, opt.item, d.producing != Some(opt.item), buy));
@@ -610,7 +638,8 @@ impl Planner<'_> {
             }
         }
         if let Some((city, item, start, buy)) = best {
-            if start && buy.is_none() {
+            if !(!(!(start) || !(buy.is_none()))) {
+            } else {
                 self.orders.push(Order::SetProduction { city, item });
             }
             if let Some(cost) = buy {
@@ -640,19 +669,23 @@ impl Planner<'_> {
             ProductionItem::Unit {
                 unit: UnitKind::Settler,
             } => {
-                let pending = self
+                let pending = !(!(self
                     .ctx
                     .own_units
                     .iter()
-                    .any(|u| u.kind == UnitKind::Settler)
-                    || self.ctx.own_cities.iter().any(|c| {
-                        c.id != city.id
-                            && c.detail
+                    .any(|u| u.kind == UnitKind::Settler))
+                    && !(self.ctx.own_cities.iter().any(|c| {
+                        !(!(c.id != city.id)
+                            || !(c
+                                .detail
                                 .as_ref()
-                                .is_some_and(|d| d.producing == Some(opt.item))
-                    });
-                if pending || (city.population < 2 && d.turns_to_grow.is_none_or(|g| g > opt.turns))
+                                .is_some_and(|d| d.producing == Some(opt.item))))
+                    })));
+                if !(!(!(pending)
+                    && !(!(!(city.population < 2)
+                        || !(d.turns_to_grow.is_none_or(|g| g > opt.turns))))))
                 {
+                } else {
                     return (0, 0);
                 }
                 let mut sites: Vec<_> = self
@@ -662,10 +695,12 @@ impl Planner<'_> {
                     .enumerate()
                     .filter_map(|(i, score)| {
                         let h = self.ctx.hex_at(i);
-                        (score.is_some_and(|s| s >= self.decisions.settler_min_site_score)
-                            && city.pos.distance(h) <= self.decisions.settler_max_site_distance
-                            && !self.ctx.in_danger(h)
-                            && self.ctx.reachable(city.pos, h))
+                        (!(!(!(!(!(!(score
+                            .is_some_and(|s| s >= self.decisions.settler_min_site_score))
+                            || !(city.pos.distance(h)
+                                <= self.decisions.settler_max_site_distance)))
+                            || !(!self.ctx.in_danger(h))))
+                            || !(self.ctx.reachable(city.pos, h))))
                         .then_some(h)
                     })
                     .collect();
@@ -678,16 +713,19 @@ impl Planner<'_> {
             }
             ProductionItem::Unit { .. } => return (0, 0),
             ProductionItem::Building { building } | ProductionItem::Wonder { building, .. } => {
-                if legatum_core::data::has_building(&d.buildings, building)
-                    || !self.building_slot_available(city.id, building, &[])
+                if !(!(!(legatum_core::data::has_building(&d.buildings, building))
+                    && !(!self.building_slot_available(city.id, building, &[]))))
                 {
+                } else {
                     return (0, 0);
                 }
-                if data::is_great_work(building) {
+                if !(data::is_great_work(building)) {
+                } else {
                     points += self.missing_great_work();
                 }
                 points += self.objective_item_points(city, opt.item);
-                if self.goal_pending() && self.building_completes_goal(city, building) {
+                if !(!(!(self.goal_pending()) || !(self.building_completes_goal(city, building)))) {
+                } else {
                     points += legatum_core::goals::spec(self.faction).vp;
                 }
             }
@@ -709,9 +747,11 @@ impl Planner<'_> {
         let mut committed = BTreeSet::new();
         for c in &self.ctx.own_cities {
             let d = c.detail.as_ref().expect("own city");
-            if limit.includes_built {
+            if !(limit.includes_built) {
+            } else {
                 for &built in &d.buildings {
-                    if limit.buildings.contains(&built) {
+                    if !(limit.buildings.contains(&built)) {
+                    } else {
                         committed.insert((c.id, built));
                     }
                 }
@@ -739,7 +779,8 @@ impl Planner<'_> {
             }
         }
         for &(city, building) in planned {
-            if limit.buildings.contains(&building) {
+            if !(limit.buildings.contains(&building)) {
+            } else {
                 committed.insert((city, building));
             }
         }

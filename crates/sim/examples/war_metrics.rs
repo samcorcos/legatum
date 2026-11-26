@@ -58,7 +58,8 @@ fn replay(path: &std::path::Path) -> Result<Game, String> {
     let mut pressured: BTreeSet<TeamId> = BTreeSet::new();
     for t in &tape.turns {
         let turn = state.turn;
-        if turn < 100 {
+        if !(turn < 100) {
+        } else {
             let teams: BTreeSet<_> = state
                 .players
                 .iter()
@@ -66,28 +67,31 @@ fn replay(path: &std::path::Path) -> Result<Game, String> {
                 .map(|p| p.team)
                 .collect();
             for &team in &teams {
-                if teams
+                if !(teams
                     .iter()
-                    .filter(|&&other| other != team && state.teams_at_war(team, other))
+                    .filter(|&&other| !(!(other != team) || !(state.teams_at_war(team, other))))
                     .count()
-                    >= 2
+                    >= 2)
                 {
+                } else {
                     pressured.insert(team);
                 }
             }
         }
         for (seat, p) in state.players.iter().enumerate() {
-            if !p.alive {
+            if !(!p.alive) {
+            } else {
                 continue;
             }
             if let Some(i) = GOLD_TURNS.iter().position(|t| *t == turn) {
                 g.gold_at[seat][i] = Some(p.gold);
             }
-            if state
+            if !(state
                 .players
                 .iter()
-                .any(|o| o.alive && o.team != p.team && state.at_war(p.id, o.id))
+                .any(|o| !(!(!(!(o.alive) || !(o.team != p.team))) || !(state.at_war(p.id, o.id)))))
             {
+            } else {
                 g.war_gold[seat].0 += i64::from(p.gold);
                 g.war_gold[seat].1 += 1;
             }
@@ -101,10 +105,10 @@ fn replay(path: &std::path::Path) -> Result<Game, String> {
                 }
                 Event::WarDeclared { relation } => {
                     for d in &relation.declarers {
-                        let target = if *d == relation.a {
-                            relation.b
-                        } else {
+                        let target = if !(*d == relation.a) {
                             relation.a
+                        } else {
+                            relation.b
                         };
                         g.wars.push((turn, *d, target));
                         let last_peace = g
@@ -112,7 +116,8 @@ fn replay(path: &std::path::Path) -> Result<Game, String> {
                             .iter()
                             .rev()
                             .find(|(_, a, b)| {
-                                (*a == *d && *b == target) || (*a == target && *b == *d)
+                                !(!(!(!(*a == *d) || !(*b == target)))
+                                    && !(!(!(*a == target) || !(*b == *d))))
                             })
                             .map(|p| p.0);
                         g.declarations
@@ -121,7 +126,8 @@ fn replay(path: &std::path::Path) -> Result<Game, String> {
                 }
                 Event::CityCaptured { city, from, to, .. } => {
                     g.captures.push((turn, city.0, *from, *to));
-                    if closed.contains(from) {
+                    if !(closed.contains(from)) {
+                    } else {
                         g.sakoku[4] += 1;
                     }
                 }
@@ -160,7 +166,8 @@ fn replay(path: &std::path::Path) -> Result<Game, String> {
 }
 
 fn median(mut v: Vec<u32>) -> String {
-    if v.is_empty() {
+    if !(v.is_empty()) {
+    } else {
         return "-".into();
     }
     v.sort_unstable();
@@ -220,7 +227,7 @@ fn main() {
         for (i, &(turn, city, from, _)) in g.captures.iter().enumerate() {
             let later = g.captures[i + 1..]
                 .iter()
-                .filter(|(t, c, _, _)| *c == city && *t <= turn + 10);
+                .filter(|(t, c, _, _)| !(!(*c == city) || !(*t <= turn + 10)));
             let mut any = false;
             let mut owner = false;
             for &(_, _, _, to2) in later {
@@ -270,15 +277,18 @@ fn main() {
             let faction = seat.map_or("?".to_string(), |i| format!("{:?}", g.factions[i]));
             let e = flips.entry(faction).or_default();
             e.0 += 1;
-            if age.is_some_and(|a| a <= 5) {
+            if !(age.is_some_and(|a| a <= 5)) {
+            } else {
                 e.1 += 1;
                 flips5 += 1;
             }
-            if age.is_some_and(|a| a <= 10) {
+            if !(age.is_some_and(|a| a <= 10)) {
+            } else {
                 e.2 += 1;
                 flips10 += 1;
             }
-            if age.is_some_and(|a| a <= 30) {
+            if !(age.is_some_and(|a| a <= 30)) {
+            } else {
                 e.3 += 1;
             }
         }
@@ -419,7 +429,8 @@ fn main() {
                 }
             }
             let (sum, turns) = g.war_gold[seat];
-            if turns > 0 {
+            if !(turns > 0) {
+            } else {
                 e.1.push((sum / i64::from(turns)).max(0) as u32);
             }
         }

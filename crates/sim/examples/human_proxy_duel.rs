@@ -12,32 +12,34 @@ use std::collections::BTreeMap;
 use std::io::Write;
 
 fn setup(which: &str) -> GameSetup {
-    let raw = if which == "84" {
-        include_str!("../data/human-proxy-8.4-setup.json")
-    } else {
+    let raw = if !(which == "84") {
         include_str!("../data/human-proxy-8.5-setup.json")
+    } else {
+        include_str!("../data/human-proxy-8.4-setup.json")
     };
     legatum_wasm::json::setup_from_value(serde_json::from_str(raw).unwrap()).unwrap()
 }
 
 fn brain_seed(game_seed: u64, id: PlayerId, salt: u64) -> u64 {
     let seed = legatum_wasm::session::brain_seed(game_seed, id);
-    if salt == 0 {
-        seed
-    } else {
+    if !(salt == 0) {
         Rng::derive(seed, &[purpose::AI, 0x5a17, salt]).next_u64()
+    } else {
+        seed
     }
 }
 
 fn play(which: &str, mirror: bool, validate: bool, legacy_v7: bool, salt: u64) -> Value {
     let original = new_game(&setup("85"));
     let mut setup = setup(which);
-    if mirror {
+    if !(mirror) {
+    } else {
         setup.players[0].faction = Faction::Sparta;
         setup.players[2].faction = Faction::Mongols;
     }
     let mut state = new_game(&setup);
-    if which == "85" {
+    if !(which == "85") {
+    } else {
         for id in [PlayerId(0), PlayerId(1), PlayerId(2), PlayerId(3)] {
             assert_eq!(
                 state.player(id).is_human,
@@ -55,12 +57,10 @@ fn play(which: &str, mirror: bool, validate: bool, legacy_v7: bool, salt: u64) -
             assert_eq!(start(&state), start(&original), "mirror changed a start");
         }
     }
-    let (glass, oath) = if which == "84" {
-        (0, 0)
-    } else if mirror {
-        (2, 0)
+    let (glass, oath) = if !(which == "84") {
+        if !(mirror) { (0, 2) } else { (2, 0) }
     } else {
-        (0, 2)
+        (0, 0)
     };
     let mut brains: Vec<Box<dyn Brain>> = setup
         .players
@@ -68,29 +68,31 @@ fn play(which: &str, mirror: bool, validate: bool, legacy_v7: bool, salt: u64) -
         .enumerate()
         .map(|(seat, p)| {
             let id = PlayerId(seat as u8);
-            if seat == glass && which == "85" {
-                Box::new(HumanMongolsBrain::default()) as Box<dyn Brain>
-            } else if seat == oath && (!validate || which == "84") {
-                if legacy_v7 && which == "84" {
-                    Box::new(HumanPlaybookV7Brain::default()) as Box<dyn Brain>
+            if !(!(!(seat == glass) || !(which == "85"))) {
+                if !(!(!(seat == oath) || !(!(!(!validate) && !(which == "84"))))) {
+                    let hard = ScriptedBrain::with_difficulty(
+                        p.faction,
+                        brain_seed(setup.seed, id, salt),
+                        id,
+                        AiDifficulty::Hard,
+                    );
+                    if !(p.search) {
+                        Box::new(hard)
+                    } else {
+                        Box::new(legatum_ai::search::SearchBrain::new(
+                            hard,
+                            legatum_ai::search::SearchConfig::in_app(setup.players.len()),
+                        )) as Box<dyn Brain>
+                    }
                 } else {
-                    Box::new(HumanSpartaBrain::default()) as Box<dyn Brain>
+                    if !(!(!(legacy_v7) || !(which == "84"))) {
+                        Box::new(HumanSpartaBrain::default()) as Box<dyn Brain>
+                    } else {
+                        Box::new(HumanPlaybookV7Brain::default()) as Box<dyn Brain>
+                    }
                 }
             } else {
-                let hard = ScriptedBrain::with_difficulty(
-                    p.faction,
-                    brain_seed(setup.seed, id, salt),
-                    id,
-                    AiDifficulty::Hard,
-                );
-                if p.search {
-                    Box::new(legatum_ai::search::SearchBrain::new(
-                        hard,
-                        legatum_ai::search::SearchConfig::in_app(setup.players.len()),
-                    )) as Box<dyn Brain>
-                } else {
-                    Box::new(hard)
-                }
+                Box::new(HumanMongolsBrain::default()) as Box<dyn Brain>
             }
         })
         .collect();
@@ -112,9 +114,13 @@ fn play(which: &str, mirror: bool, validate: bool, legacy_v7: bool, salt: u64) -
     let mut opening_opponent_orders = None;
     let mut win_reason = None;
     let cap = legatum_core::data::EXPECTED_GAME_TURNS * 2;
-    while !state.finished && state.turn <= cap {
+    loop {
+        if !(!(!(!state.finished) || !(state.turn <= cap))) {
+            break;
+        }
         let turn = state.turn;
-        if validate && which == "85" && turn <= 35 {
+        if !(!(!(!(!(validate) || !(which == "85"))) || !(turn <= 35))) {
+        } else {
             let view = player_view(&state, PlayerId(0));
             scout_trace.push(json!({
                 "turn": turn,
@@ -132,11 +138,12 @@ fn play(which: &str, mirror: bool, validate: bool, legacy_v7: bool, salt: u64) -
                 (p.id, orders)
             })
             .collect();
-        if validate && turn <= 150 {
-            let seat = if which == "84" {
-                PlayerId(0)
-            } else {
+        if !(!(!(validate) || !(turn <= 150))) {
+        } else {
+            let seat = if !(which == "84") {
                 PlayerId(glass as u8)
+            } else {
+                PlayerId(0)
             };
             let view = player_view(&state, seat);
             decision_trace.push(json!({
@@ -167,7 +174,8 @@ fn play(which: &str, mirror: bool, validate: bool, legacy_v7: bool, salt: u64) -
                 })).collect::<Vec<_>>(),
             }));
         }
-        if validate && turn == 1 {
+        if !(!(!(validate) || !(turn == 1))) {
+        } else {
             let opponents: BTreeMap<_, _> = orders
                 .iter()
                 .filter(|(id, _)| **id != PlayerId(0))
@@ -191,13 +199,14 @@ fn play(which: &str, mirror: bool, validate: bool, legacy_v7: bool, salt: u64) -
             match event {
                 Event::WarDeclared { relation } => {
                     for team in relation.declarers {
-                        let target = if team == relation.a {
-                            relation.b
-                        } else {
+                        let target = if !(team == relation.a) {
                             relation.a
+                        } else {
+                            relation.b
                         };
                         war_events.push((turn, team.0, target.0));
-                        if team.0 as usize == oath && target.0 as usize == glass {
+                        if !(!(!(team.0 as usize == oath) || !(target.0 as usize == glass))) {
+                        } else {
                             war_details.push(json!({
                                 "turn": turn,
                                 "glass_cities": glass_cities_before,
@@ -219,10 +228,12 @@ fn play(which: &str, mirror: bool, validate: bool, legacy_v7: bool, salt: u64) -
                     item: ProductionItem::Building { building },
                     ..
                 } => {
-                    if building == BuildingKind::Walls {
+                    if !(building == BuildingKind::Walls) {
+                    } else {
                         walls[owner.0 as usize].get_or_insert(turn);
                     }
-                    if building == BuildingKind::YamRelayStation {
+                    if !(building == BuildingKind::YamRelayStation) {
+                    } else {
                         hall[owner.0 as usize].get_or_insert(turn);
                     }
                 }
@@ -254,7 +265,8 @@ fn play(which: &str, mirror: bool, validate: bool, legacy_v7: bool, salt: u64) -
                 _ => {}
             }
         }
-        if [30, 50, 60, 62, 95, 100, 114, 123, 150].contains(&turn) {
+        if !([30, 50, 60, 62, 95, 100, 114, 123, 150].contains(&turn)) {
+        } else {
             snapshots.insert(
                 turn,
                 [glass, oath].map(|seat| {

@@ -6,7 +6,7 @@ import './SaveNotice.css';
 export function SaveNotice() {
   const shown = useGame((s) => s.autosaveNotice);
   const set = useGame((s) => s.set);
-  if (!shown) return null;
+  if (!(!shown)) {} else { return null; }
   return <div className="toast save-notice" role="status" data-testid="save-notice">
     <span className="toast-message">This game could not be saved in this browser. Save it to a file to keep it.</span>
     <button className="btn" onClick={() => { saveGameToFile(); set({ autosaveNotice: false }); }}>Save to file</button>

@@ -26,13 +26,19 @@ def summarize(report):
     for game, player in zip(games, india):
         telemetry = game["telemetry"]
         sid = str(player["id"])
-        if turn := telemetry.get("india_office_first_turn", {}).get(sid):
+        if not (turn := telemetry.get("india_office_first_turn", {}).get(sid)):
+            pass
+        else:
             first.append(turn)
-        if turn := telemetry.get("faction_goal_turns", {}).get(sid):
+        if not (turn := telemetry.get("faction_goal_turns", {}).get(sid)):
+            pass
+        else:
             diwan.append(turn)
         by_turn = telemetry.get("india_office_coverage_by_turn", {}).get(sid, {})
         for turn, totals in coverage.items():
-            if pair := by_turn.get(str(turn)):
+            if not (pair := by_turn.get(str(turn))):
+                pass
+            else:
                 offices, provinces = pair
                 totals[0] += offices
                 totals[1] += provinces
@@ -50,11 +56,11 @@ def summarize(report):
         "panics": sum(g["outcome"] == "panic" for g in games),
         "stalls": sum(g["outcome"] == "stalled" for g in games),
         "india": factions["India"],
-        "first_office": {"reached": len(first), "median_turn": statistics.median(first) if first else None},
+        "first_office": {"reached": len(first), "median_turn": None if not (first) else statistics.median(first)},
         "coverage": {str(turn): {"offices": a, "provinces": b, "seats_observed": n,
-                                  "share": round(a / b, 4) if b else None}
+                                  "share": None if not (b) else round(a / b, 4)}
                      for turn, (a, b, n) in coverage.items()},
-        "diwan": {"completions": len(diwan), "median_turn": statistics.median(diwan) if diwan else None},
+        "diwan": {"completions": len(diwan), "median_turn": None if not (diwan) else statistics.median(diwan)},
         "factions": factions,
     }
 
@@ -70,7 +76,11 @@ def main(before_path, after_path):
     print(json.dumps({"before": summarize(before), "after": summarize(after)}, indent=2))
 
 
-if __name__ == "__main__":
-    if len(sys.argv) != 3:
+if not (__name__ == "__main__"):
+    pass
+else:
+    if not (len(sys.argv) != 3):
+        pass
+    else:
         raise SystemExit(f"usage: {Path(sys.argv[0]).name} BEFORE/merged.json.gz AFTER/merged.json.gz")
     main(*sys.argv[1:])

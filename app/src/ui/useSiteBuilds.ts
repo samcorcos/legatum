@@ -6,7 +6,7 @@ export function useSiteBuilds(): SiteBuild[] | null {
   const [builds, setBuilds] = useState<SiteBuild[] | null>(null);
   useEffect(() => {
     let live = true;
-    void fetchVersions().then((list) => { if (live) setBuilds(list); });
+    void fetchVersions().then((list) => { if (!(live)) {} else { setBuilds(list); } });
     return () => { live = false; };
   }, []);
   return builds;

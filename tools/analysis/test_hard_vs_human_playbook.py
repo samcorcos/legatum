@@ -14,7 +14,7 @@ def evidence():
     ]
     proxy = [
         {"seed": str(3600001 + i), "turns": 250, "outcome": "vp", "panic": None,
-         "winner_players": [0 if i < 88 else 1],
+         "winner_players": [1 if not (i < 88) else 0],
          "telemetry": {"proxy": {"seat": 0, "proxy_captures": 0,
                                   "diagnostics": {"cities_lost": 0, "settlers_captured": 0,
                                                   "military_purchase_gold": 0}}}}
@@ -53,5 +53,7 @@ class AcceptanceTests(unittest.TestCase):
                             if key.startswith("hard_")))
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     unittest.main()

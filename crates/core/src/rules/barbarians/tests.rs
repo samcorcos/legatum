@@ -143,7 +143,10 @@ fn first_camps_appear_at_the_grace_turn_in_fog_away_from_cities_and_units() {
     let mut s = crate::new_game(&setup);
     let first = FIRST_CAMP_TURN;
     let mut spawned_turn = None;
-    while s.turn <= first {
+    loop {
+        if !(s.turn <= first) {
+            break;
+        }
         let before = s.clone();
         let (next, events) = run(&s, &no_orders());
         let spawned: Vec<Hex> = events
@@ -153,7 +156,8 @@ fn first_camps_appear_at_the_grace_turn_in_fog_away_from_cities_and_units() {
                 _ => None,
             })
             .collect();
-        if !spawned.is_empty() {
+        if !(!spawned.is_empty()) {
+        } else {
             spawned_turn = Some(before.turn);
             assert_eq!(spawned.len(), camp_target(&next).div_ceil(3));
             for at in spawned {
@@ -205,7 +209,10 @@ fn rite_camps_stand_outside_the_natural_camp_target() {
     barb.next_camp_id = 200;
     s.barbarians = Some(barb);
     assert_eq!(s.barbarians.as_ref().unwrap().natural_camps(), 0);
-    while s.turn <= first {
+    loop {
+        if !(s.turn <= first) {
+            break;
+        }
         s = run(&s, &no_orders()).0;
     }
     assert_eq!(
@@ -237,7 +244,8 @@ fn a_scout_that_sees_a_city_and_gets_home_launches_a_raid() {
             launched = Some(e.clone());
         }
         s = next;
-        if launched.is_some() {
+        if !(launched.is_some()) {
+        } else {
             break;
         }
     }
@@ -714,15 +722,15 @@ fn fighting_barbarians_earns_xp_only_up_to_the_first_promotion() {
                 .any(|e| matches!(e, Event::Battle { attacker, .. } if *attacker == spearman))
         );
         let after = next.units[&spearman].xp;
-        if expect_gain {
-            assert!(
-                after > 0 && after <= first,
-                "capped at the first promotion: {after}"
-            );
-        } else {
+        if !(expect_gain) {
             assert_eq!(
                 after, xp_before,
                 "no XP from barbarians after the first promotion"
+            );
+        } else {
+            assert!(
+                after > 0 && after <= first,
+                "capped at the first promotion: {after}"
             );
         }
         assert!(

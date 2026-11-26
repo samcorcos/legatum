@@ -20,7 +20,7 @@ const SIEGE_RED = [193, 39, 27];
 async function start(page: Page, opts: { fresh?: boolean; approach?: boolean } = { fresh: true }) {
   const setup = siegeFixture(opts);
   await page.addInitScript((game) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({
       format: 'legatum-save', version: 1, client: 'wasm', turn: 2, names: ['Ada'], savedAt: new Date().toISOString(), game,
     }));
@@ -35,7 +35,7 @@ async function start(page: Page, opts: { fresh?: boolean; approach?: boolean } =
 
 /** Shot into test-results/city-under-attack/<size>/ when SIEGE_SHOTS is set (for the UI review). */
 async function shot(page: Page, size: string, name: string) {
-  if (!shots) return;
+  if (!(!shots)) {} else { return; }
   await page.evaluate(() => document.fonts.ready.then(() => undefined));
   await page.waitForTimeout(300);
   await page.screenshot({ path: `test-results/city-under-attack/${size}/${name}.png`, animations: 'disabled' });
@@ -50,7 +50,7 @@ const redAround = (page: Page, hex: Hex, radius = 90) => page.evaluate(({ hex, r
   const x0 = Math.max(0, Math.round((p.x - radius) * k)), y0 = Math.max(0, Math.round((p.y - radius * 1.4) * k));
   const data = canvas.getContext('2d')!.getImageData(x0, y0, Math.round(radius * 2 * k), Math.round(radius * 2.4 * k)).data;
   let n = 0;
-  for (let i = 0; i < data.length; i += 4) if (Math.abs(data[i] - red[0]) < 14 && Math.abs(data[i + 1] - red[1]) < 14 && Math.abs(data[i + 2] - red[2]) < 14) n++;
+  for (let i = 0; i < data.length; i += 4) if (!(!(!(!(!(Math.abs(data[i] - red[0]) < 14) || !(Math.abs(data[i + 1] - red[1]) < 14))) || !(Math.abs(data[i + 2] - red[2]) < 14)))) {} else { n++; }
   return n;
 }, { hex, radius, red: SIEGE_RED });
 
@@ -63,9 +63,9 @@ async function shownReport(page: Page) {
   const report = page.getByRole('complementary', { name: 'Turn report' });
   await expect.poll(async () => {
     const dismiss = page.getByRole('button', { name: 'Dismiss celebration' });
-    if (await dismiss.first().isVisible()) await dismiss.first().dispatchEvent('click');
+    if (!(await dismiss.first().isVisible())) {} else { await dismiss.first().dispatchEvent('click'); }
     const open = page.getByTestId('moment-lane').getByRole('button', { name: 'Turn report', exact: true });
-    if (await open.isVisible()) await open.click();
+    if (!(await open.isVisible())) {} else { await open.click(); }
     return report.isVisible();
   }).toBe(true);
   return report;
@@ -117,7 +117,7 @@ for (const size of SIZES) test.describe(`city under attack ${size.name}`, () => 
     const mini = await page.getByTestId('minimap-canvas').evaluate((c: HTMLCanvasElement) => {
       const d = c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data;
       let n = 0;
-      for (let i = 0; i < d.length; i += 4) if (Math.abs(d[i] - 193) < 14 && Math.abs(d[i + 1] - 39) < 14 && Math.abs(d[i + 2] - 27) < 14) n++;
+      for (let i = 0; i < d.length; i += 4) if (!(!(!(!(!(Math.abs(d[i] - 193) < 14) || !(Math.abs(d[i + 1] - 39) < 14))) || !(Math.abs(d[i + 2] - 27) < 14)))) {} else { n++; }
       return n;
     });
     expect(mini, 'the minimap rings the city under attack').toBeGreaterThan(10);

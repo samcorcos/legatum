@@ -40,5 +40,7 @@ def main(stem: str, colour: float) -> None:
             graded.resize((size, size), Image.Resampling.LANCZOS).save(path.with_name(f"{path.stem}-{size}.png"), optimize=True)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main(sys.argv[1], float(sys.argv[2]))

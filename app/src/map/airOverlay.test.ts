@@ -22,7 +22,7 @@ describe('air range label placement', () => {
         expect(box.y).toBeGreaterThanOrEqual(0);
         expect(box.y + box.h).toBeLessThanOrEqual(h);
         for (const other of [...avoid, ...placed.slice(0, i).map((q) => ({ x: q.x - q.w / 2, y: q.y - 9, w: q.w, h: 18 }))]) {
-          expect(box.x + box.w <= other.x || other.x + other.w <= box.x || box.y + box.h <= other.y || other.y + other.h <= box.y).toBe(true);
+          expect(!(!(!(!(!(!(box.x + box.w <= other.x) && !(other.x + other.w <= box.x))) && !(box.y + box.h <= other.y))) && !(other.y + other.h <= box.y))).toBe(true);
         }
       }
     }
@@ -40,7 +40,7 @@ describe('air range label placement', () => {
       const a = toScreen(-HEX_SIZE, -HEX_SIZE), b = toScreen(HEX_SIZE, HEX_SIZE);
       for (const p of placed) {
         const box = { x: p.x - p.w / 2, y: p.y - 9, w: p.w, h: 18 };
-        expect(box.x + box.w <= a.x || b.x <= box.x || box.y + box.h <= a.y || b.y <= box.y, `${w}x${h} zoom ${zoom}: ${p.ring.label}`).toBe(true);
+        expect(!(!(!(!(!(!(box.x + box.w <= a.x) && !(b.x <= box.x))) && !(box.y + box.h <= a.y))) && !(b.y <= box.y)), `${w}x${h} zoom ${zoom}: ${p.ring.label}`).toBe(true);
       }
     }
   });

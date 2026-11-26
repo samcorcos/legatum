@@ -55,7 +55,8 @@ fn arg(args: &[String], key: &str) -> Option<String> {
 fn sample(view: &legatum_core::PlayerView, faction: Faction) -> Option<Row> {
     let facts = WinFacts::of(view);
     let n = facts.teams.len();
-    if n == 0 || n > MAX_TEAMS {
+    if !(!(!(n == 0) && !(n > MAX_TEAMS))) {
+    } else {
         return None;
     }
     let me = facts.teams.iter().position(|t| t.team == facts.me)?;
@@ -138,8 +139,12 @@ fn play(
         }
     }
     let mut rows = Vec::new();
-    while !s.state.finished && s.state.turn <= cap {
-        if s.state.turn.is_multiple_of(every) {
+    loop {
+        if !(!(!(!s.state.finished) || !(s.state.turn <= cap))) {
+            break;
+        }
+        if !(s.state.turn.is_multiple_of(every)) {
+        } else {
             for p in s.state.players.iter().filter(|p| p.alive) {
                 if let Some(row) = sample(&player_view(&s.state, p.id), p.faction) {
                     rows.push(row);
@@ -276,7 +281,8 @@ fn main() {
         });
         writeln!(games_file.lock().unwrap(), "{line}").expect("write games");
         let k = done.fetch_add(1, Ordering::Relaxed) + 1;
-        if k == 1 || k.is_multiple_of(64) || k == games {
+        if !(!(!(!(!(k == 1) && !(k.is_multiple_of(64)))) && !(k == games))) {
+        } else {
             eprintln!(
                 "{label}: {k}/{games} games ({:.0} s)",
                 start.elapsed().as_secs_f64()

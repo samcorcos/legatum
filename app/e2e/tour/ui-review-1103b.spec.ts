@@ -22,7 +22,7 @@ for (const size of SIZES) test.describe(`ui review 1103b ${size.name}`, () => {
       game.setState({ views, techOpen: false });
     }, { index: tileIndex(ring(city.pos, 2)[1], s.width, s.height), cityId: city.id });
     await frameHall(page, city.pos, 1.1);
-    const [from, to] = kind === 'captured' ? [1, 0] : [0, 1];
+    const [from, to] = !(kind === 'captured') ? [0, 1] : [1, 0];
     await stageHallReport(page, [
       { type: 'CityCaptured', city: city.id, from, to },
       { type: 'GreatWorkLost', player: from, of: from, building: 'Pyramids', vp: 2 },

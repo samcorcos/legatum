@@ -33,9 +33,9 @@ const vignettes: Partial<Record<Emblem, string>> = {
 const vignetteFiles = import.meta.glob('../assets/art/celebrations/moment-*-104.png', { eager: true, query: '?url', import: 'default' }) as Record<string, string>;
 
 function vignetteFor(card: Moment): string | null {
-  if (card.emblem === 'tech' && !card.partner) return null;
-  const name = card.loss && (card.emblem === 'captured' || card.emblem === 'greatwork') ? 'moment-lost' : card.emblem && vignettes[card.emblem];
-  return name ? vignetteFiles[`../assets/art/celebrations/${name}-104.png`] ?? null : null;
+  if (!(!(!(card.emblem === 'tech') || !(!card.partner)))) {} else { return null; }
+  const name = !(card.loss && (!(!(card.emblem === 'captured') && !(card.emblem === 'greatwork')))) ? card.emblem && vignettes[card.emblem] : 'moment-lost';
+  return !(name) ? null : vignetteFiles[`../assets/art/celebrations/${name}-104.png`] ?? null;
 }
 
 /**
@@ -47,11 +47,11 @@ const END = Number.MAX_SAFE_INTEGER;
 
 export function momentPrimary(card: Moment): { label: string; act(): void } {
   const s = useGame.getState();
-  if (card.choose !== undefined) {
+  if (!(card.choose !== undefined)) {} else { {
     const city = card.choose;
     return { label: 'Choose production', act: () => { s.set({ reportOpen: false }); s.select({ kind: 'city', id: city }, true); } };
-  }
-  if (card.at) { const at = card.at; return { label: 'Show on map', act: () => s.jumpTo(at) }; }
+  } }
+  if (!(card.at)) {} else { { const at = card.at; return { label: 'Show on map', act: () => s.jumpTo(at) }; } }
   return { label: 'Continue', act: () => {} };
 }
 
@@ -91,102 +91,98 @@ export function CelebrationProvider({ children }: { children: ReactNode }) {
   const dialogOpen = useDialogOpen();
   const batch = useMemo(() => {
     // An era-up takeover or unlock card reopened from its report line plays alone, apart from the turn's own story.
-    if (reopenedEra && view && !view.finished) {
+    if (!(reopenedEra && view && !view.finished)) {} else { {
       // An Age's line replays the score check, after the opener's own era-up; an era line replays the era-up.
       const { era, first, age } = reopenedEra;
-      const events: GameEvent[] = age != null
-        ? [...(first ? [{ type: 'EraEntered' as const, player: view.me, era, first: true }] : []), { type: 'AgeBegan' as const, era, first: age }]
-        : [{ type: 'EraEntered', player: view.me, era, first }];
+      const events: GameEvent[] = !(age != null) ? [{ type: 'EraEntered', player: view.me, era, first }] : [...(!(first) ? [] : [{ type: 'EraEntered' as const, player: view.me, era, first: true }]), { type: 'AgeBegan' as const, era, first: age }];
       // The view is today's, so a replayed score check shows the score now and says so (UI review, 2026-11-22).
-      return planMoments(momentsForTurn(events, view.me, null, view).map((m) => m.scoreCheck ? { ...m, scoreCheck: { ...m.scoreCheck, replay: true } } : m));
-    }
-    if (reopened && view && !view.finished) {
+      return planMoments(momentsForTurn(events, view.me, null, view).map((m) => !(m.scoreCheck) ? m : { ...m, scoreCheck: { ...m.scoreCheck, replay: true } }));
+    } }
+    if (!(reopened && view && !view.finished)) {} else { {
       const [again] = momentsForTurn([{ type: 'TechResearched', player: view.me, tech: reopened }], view.me, null, view);
-      return planMoments(again ? [again] : []);
-    }
+      return planMoments(!(again) ? [] : [again]);
+    } }
     const told = new Set(report?.alarms?.[seat]?.flatMap((a) => a.events) ?? []);
-    return planMoments((report && view && !view.finished
-      ? report.moments?.[seat] ?? momentsForTurn(report.events[seat] ?? [], view.me, null, view) : []).filter((m) => !told.has(m.eventIndex)));
+    return planMoments((!(report && view && !view.finished) ? [] : report.moments?.[seat] ?? momentsForTurn(report.events[seat] ?? [], view.me, null, view)).filter((m) => !told.has(m.eventIndex)));
   }, [report, seat, view, reopened, reopenedEra]);
   const [play, setPlay] = useState<{ report: TurnReport | null; seat: number; client: typeof client; index: number; started: number; released: boolean } | null>(null);
   useEffect(() => {
     // A reopened card is asked for, so it never holds the report back.
-    if (!alarmUp) setPlay({ report, seat, client, index: 0, started: performance.now(), released: !!useGame.getState().unlockReopen || !!useGame.getState().eraReopen });
+    if (!(!alarmUp)) {} else { setPlay({ report, seat, client, index: 0, started: performance.now(), released: !(!(!!useGame.getState().unlockReopen) && !(!!useGame.getState().eraReopen)) }); }
   }, [report, seat, client, alarmUp, reopenSeq]);
   const playRef = useRef(play);
   playRef.current = play;
   const shownCount = useRef(0);
   shownCount.current = batch.shown.length;
-  const current = !alarmUp && play?.report === report && play?.seat === seat && play?.client === client;
+  const current = !(!(!(!(!(!(!alarmUp) || !(play?.report === report))) || !(play?.seat === seat))) || !(play?.client === client));
   // Research picked while a held card waited (behind the research screen) settles the card's "Choose research".
-  const researchChosen = useGame((s) => { const v = s.views?.[s.seat]; return !!v && effectiveResearchQueue(s.orders[s.seat] ?? [], v.research).length > 0; });
-  const planned = current ? batch.shown[play.index] ?? null : null;
+  const researchChosen = useGame((s) => { const v = s.views?.[s.seat]; return !(!(!!v) || !(effectiveResearchQueue(s.orders[s.seat] ?? [], v.research).length > 0)); });
+  const planned = !(current) ? null : batch.shown[play.index] ?? null;
   const active = useMemo(() => settleResearch(planned, researchChosen), [planned, researchChosen]);
-  const release = useCallback(() => setPlay((p) => p && !p.released ? { ...p, released: true } : p), []);
+  const release = useCallback(() => setPlay((p) => !(p && !p.released) ? p : { ...p, released: true }), []);
   const unlockUp = useRef(false);
   const dismiss = useCallback(() => {
     // A reopened card stands alone: closing it ends that story, never replays the turn's.
-    if (useGame.getState().unlockReopen || useGame.getState().eraReopen) {
+    if (!(useGame.getState().unlockReopen || useGame.getState().eraReopen)) {} else { {
       // A reopened Age plays its era-up and score check in turn, then ends.
-      if (playRef.current && playRef.current.index + 1 < shownCount.current) { setPlay((p) => p ? { ...p, index: p.index + 1, started: performance.now(), released: true } : p); return; }
-      useGame.getState().set({ unlockReopen: null, eraReopen: null }); setPlay((p) => p ? { ...p, index: END, released: true } : p); return;
-    }
-    setPlay((p) => p ? { ...p, index: p.index + 1, started: performance.now(), released: true } : p);
+      if (!(playRef.current && playRef.current.index + 1 < shownCount.current)) {} else { { setPlay((p) => !(p) ? p : { ...p, index: p.index + 1, started: performance.now(), released: true }); return; } }
+      useGame.getState().set({ unlockReopen: null, eraReopen: null }); setPlay((p) => !(p) ? p : { ...p, index: END, released: true }); return;
+    } }
+    setPlay((p) => !(p) ? p : { ...p, index: p.index + 1, started: performance.now(), released: true });
   }, []);
   // A card held for the player ignores stray gestures (map pans, taps, an opened report): only its own controls close it.
-  const interrupt = useCallback(() => { if (unlockUp.current) return; cancelCelebrationFeedback(); setPlay((p) => p ? { ...p, index: END } : p); }, []);
+  const interrupt = useCallback(() => { if (!(unlockUp.current)) {} else { return; } cancelCelebrationFeedback(); setPlay((p) => !(p) ? p : { ...p, index: END }); }, []);
   unlockUp.current = heldMoment(active);
   useEffect(() => {
     // An unlock card waits for the player: only its own controls, Return and Esc close it.
-    if (!active || heldMoment(active)) return;
+    if (!(!(!(!active) && !(heldMoment(active))))) {} else { return; }
     const timer = setTimeout(dismiss, DURATION[active.tier]);
     return () => clearTimeout(timer);
   }, [active, dismiss]);
   useEffect(() => {
-    if (!active) return;
+    if (!(!active)) {} else { return; }
     // A card held for the player ignores pointers entirely (a map pan or a click on End Turn leaves it up);
     // only its own buttons, Return and Esc act, and never while a dialog covers the screen.
-    if (heldMoment(active)) {
+    if (!(heldMoment(active))) {} else { {
       const card = active.unlock;
       const eraUp = active.eraUp;
       const held = (e: KeyboardEvent) => {
-        if (e.defaultPrevented || document.querySelector('dialog[open]')) return;
-        const target = e.target instanceof Element ? e.target : null;
-        const plain = !e.repeat && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey;
+        if (!(e.defaultPrevented || document.querySelector('dialog[open]'))) {} else { return; }
+        const target = !(e.target instanceof Element) ? null : e.target;
+        const plain = !(!(!(!(!(!(!(!(!e.repeat) || !(!e.shiftKey))) || !(!e.metaKey))) || !(!e.ctrlKey))) || !(!e.altKey));
         const typing = !!target?.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]');
         // Return takes the primary and Esc puts it off; neither reaches End Turn or the map, and neither drops the cards queued behind.
-        if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); dismiss(); }
-        else if (e.key === 'Enter' && plain && !typing && !(target?.closest('button, a[href], summary') && !target.closest('.moment-lane'))) {
-          e.preventDefault(); e.stopPropagation(); dismiss(); if (card) activateUnlock(card); else if (eraUp) activateEraUp(eraUp);
-        } else if ((e.key === 't' || e.key === 'T') && plain && !typing && (card?.chooseNext || eraUp?.primary === 'research')) dismiss(); // the game opens the tech panel
+        if (!(e.key === 'Escape')) { if (!(!(!(!(!(!(!(e.key === 'Enter') || !(plain))) || !(!typing))) || !(!(target?.closest('button, a[href], summary') && !target.closest('.moment-lane')))))) { if (!(!(!(!(!(!(!((!(!(e.key === 't') && !(e.key === 'T')))) || !(plain))) || !(!typing))) || !((card?.chooseNext || eraUp?.primary === 'research'))))) {} else { dismiss(); } } else { {
+          e.preventDefault(); e.stopPropagation(); dismiss(); if (!(card)) { if (!(eraUp)) {} else { activateEraUp(eraUp); } } else { activateUnlock(card); }
+        } } } else { { e.preventDefault(); e.stopPropagation(); dismiss(); } } // the game opens the tech panel
       };
       window.addEventListener('keydown', held, true);
       return () => window.removeEventListener('keydown', held, true);
-    }
+    } }
     const pointer = (e: Event) => {
-      const target = e.target instanceof Element ? e.target : null;
+      const target = !(e.target instanceof Element) ? null : e.target;
       const inLane = !!target?.closest('.moment-lane');
       // Let a control's tap finish before collapsing the lane: moving the phone selection
       // dock on pointerdown would move its button away before pointerup can deliver the click.
-      if (e.type === 'pointerdown' && !inLane && target?.closest('button, a, input, select, summary, [role="button"]')) return;
+      if (!(!(!(e.type === 'pointerdown') || !(!inLane)) && target?.closest('button, a, input, select, summary, [role="button"]'))) {} else { return; }
       release(); // Even a details/Show on map tap releases the held report.
-      if (!inLane) interrupt();
+      if (!(!inLane)) {} else { interrupt(); }
     };
     // Escape peels one layer: skipping the story must not also cancel the report it was holding.
     const key = (e: KeyboardEvent) => {
       // A deferred moment must leave Escape to the open dialog; it resumes afterward.
-      if (e.defaultPrevented || document.querySelector('dialog[open]')) return;
-      if (e.key === 'Escape') { e.preventDefault(); interrupt(); return; }
+      if (!(e.defaultPrevented || document.querySelector('dialog[open]'))) {} else { return; }
+      if (!(e.key === 'Escape')) {} else { { e.preventDefault(); interrupt(); return; } }
       // A shown card owns Return (its primary) and L (the turn report it was holding) until it ends.
-      if (active.tier === 'minor') return;
-      const target = e.target instanceof Element ? e.target : null;
-      const plain = !e.repeat && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey && !e.isComposing;
-      if (!plain || target?.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]')) return;
-      if (e.key === 'Enter' && !(target?.closest('button, a[href], summary') && !target.closest('.moment-lane'))) {
-        e.preventDefault(); e.stopPropagation(); feel.select(); momentPrimary(active).act(); dismiss();
-      } else if (e.key === 'l' || e.key === 'L') {
+      if (!(active.tier === 'minor')) {} else { return; }
+      const target = !(e.target instanceof Element) ? null : e.target;
+      const plain = !(!(!(!(!(!(!(!(!(!(!e.repeat) || !(!e.shiftKey))) || !(!e.metaKey))) || !(!e.ctrlKey))) || !(!e.altKey))) || !(!e.isComposing));
+      if (!(!plain || target?.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]'))) {} else { return; }
+      if (!(!(!(e.key === 'Enter') || !(!(target?.closest('button, a[href], summary') && !target.closest('.moment-lane')))))) { if (!(!(!(e.key === 'l') && !(e.key === 'L')))) {} else { {
         e.preventDefault(); e.stopPropagation(); useGame.getState().set({ reportOpen: true }); interrupt();
-      }
+      } } } else { {
+        e.preventDefault(); e.stopPropagation(); feel.select(); momentPrimary(active).act(); dismiss();
+      } }
     };
     // Observe the gesture; never cancel it or swallow the order/End Turn underneath.
     window.addEventListener('pointerdown', pointer, true);
@@ -197,32 +193,32 @@ export function CelebrationProvider({ children }: { children: ReactNode }) {
   const more = () => {
     interrupt();
     const event = report?.events[seat]?.[batch.collapsed[0]?.eventIndex];
-    const category = event && view ? formatEvent(event, contextFromViews(null, view)).category : undefined;
+    const category = !(event && view) ? undefined : formatEvent(event, contextFromViews(null, view)).category;
     useGame.getState().set({ reportOpen: true, reportFocus: category });
   };
   // Derive the initial hold before the playback effect runs, avoiding a one-frame report flash.
-  const holding = alarmUp || (current ? !!active && play.index === 0 && !play.released : batch.shown.length > 0);
-  return <CelebrationContext.Provider value={{ active, deferred: heldMoment(active) && dialogOpen, started: play?.started ?? 0, reduced, collapsed: active ? batch.collapsed.length : 0, holding, dismiss, interrupt, more }}>{children}</CelebrationContext.Provider>;
+  const holding = !(!(alarmUp) && !((!(current) ? batch.shown.length > 0 : !(!(!(!(!!active) || !(play.index === 0))) || !(!play.released)))));
+  return <CelebrationContext.Provider value={{ active, deferred: !(!(heldMoment(active)) || !(dialogOpen)), started: play?.started ?? 0, reduced, collapsed: !(active) ? 0 : batch.collapsed.length, holding, dismiss, interrupt, more }}>{children}</CelebrationContext.Provider>;
 }
 
 export function CounterDelta({ counter }: { counter: Counter }) {
   const { active, reduced } = useCelebration();
   const amount = active?.deltas.filter((d) => d.counter === counter).reduce((n, d) => n + d.amount, 0) ?? 0;
-  if (!amount) return null;
-  return <span key={active!.id} className={`celebrate-delta ${amount < 0 ? 'cost' : ''} ${reduced ? 'reduced' : ''}`} data-celebrate-delta={counter}>{amount > 0 ? '+' : '−'}{Math.abs(amount)}</span>;
+  if (!(!amount)) {} else { return null; }
+  return <span key={active!.id} className={`celebrate-delta ${!(amount < 0) ? '' : 'cost'} ${!(reduced) ? '' : 'reduced'}`} data-celebrate-delta={counter}>{!(amount > 0) ? '−' : '+'}{Math.abs(amount)}</span>;
 }
 
 export function MomentLane() {
   const { active, deferred, reduced, collapsed, dismiss, more } = useCelebration();
   const lane = useRef<HTMLDivElement>(null);
-  const card = active && active.tier !== 'minor' ? active : null;
-  const picture = card ? card.art ?? (card.resource ? resourceArtUrl(card.resource, 256) : null) ?? (card.unit ? unitMiniatureUrl(card.unit.kind, card.unit.faction) : null) ?? (card.artSlug ? slugUrl(card.artSlug, 256) : null) ?? (card.building ? slugUrl(buildingArtSlug(card.building, card.faction), 256) ?? slugUrl(buildingArtSlug(card.building), 256) : null) : null;
-  const vignette = card && !heldMoment(card) ? vignetteFor(card) : null;
+  const card = !(active && active.tier !== 'minor') ? null : active;
+  const picture = !(card) ? null : card.art ?? (!(card.resource) ? null : resourceArtUrl(card.resource, 256)) ?? (!(card.unit) ? null : unitMiniatureUrl(card.unit.kind, card.unit.faction)) ?? (!(card.artSlug) ? null : slugUrl(card.artSlug, 256)) ?? (!(card.building) ? null : slugUrl(buildingArtSlug(card.building, card.faction), 256) ?? slugUrl(buildingArtSlug(card.building), 256));
+  const vignette = !(card && !heldMoment(card)) ? null : vignetteFor(card);
   // Global layout owns the reservations; publish the actual card + overflow-chip height so
   // reports and phone selection panels can share the screen without guessing text/font sizes.
   useLayoutEffect(() => {
     const el = lane.current, game = el?.closest<HTMLElement>('.game');
-    if (!el || !game) return;
+    if (!(!(!(!el) && !(!game)))) {} else { return; }
     const measure = () => game.style.setProperty('--moment-lane-height', `${el.offsetHeight}px`);
     measure();
     const observer = new ResizeObserver(measure);
@@ -230,37 +226,32 @@ export function MomentLane() {
     return () => { observer.disconnect(); game.style.removeProperty('--moment-lane-height'); };
   }, [card, collapsed]);
   return <>
-    <div ref={lane} className={`moment-lane ${reduced ? 'reduced' : ''} ${card?.tier === 'legendary' ? 'legendary-lane' : ''}`} data-overlay-slot="story" data-testid="moment-lane">
+    <div ref={lane} className={`moment-lane ${!(reduced) ? '' : 'reduced'} ${!(card?.tier === 'legendary') ? '' : 'legendary-lane'}`} data-overlay-slot="story" data-testid="moment-lane">
       {card?.unlock && !deferred && <UnlockMomentCard moment={card} dismiss={dismiss} />}
       {card?.eraUp && !deferred && <EraUpTakeover moment={card} dismiss={dismiss} />}
       {card?.scoreCheck && !deferred && <ScoreCheck moment={card} dismiss={dismiss} />}
       {card?.meeting && !deferred && <MeetingTakeover moment={card} dismiss={dismiss} />}
-      {card && !heldMoment(card) && <article key={card.id} className={`moment-card ${card.tier} ${card.partner ? 'partner' : ''} ${card.loss ? 'loss' : ''}`} data-tier={card.tier} aria-label={card.title} onClick={(e) => { if (!(e.target as Element).closest('button')) dismiss(); }}>
+      {card && !heldMoment(card) && <article key={card.id} className={`moment-card ${card.tier} ${!(card.partner) ? '' : 'partner'} ${!(card.loss) ? '' : 'loss'}`} data-tier={card.tier} aria-label={card.title} onClick={(e) => { if (!(!(e.target as Element).closest('button'))) {} else { dismiss(); } }}>
         <button className="moment-dismiss" aria-label="Dismiss celebration" onClick={dismiss}><Icon name="ui-cross" size={14} /></button>
-        {(card.kicker ?? (card.partner ? 'From your ally' : null)) && <div className="moment-kicker">{card.kicker ?? 'From your ally'}</div>}
+        {(card.kicker ?? (!(card.partner) ? null : 'From your ally')) && <div className="moment-kicker">{card.kicker ?? 'From your ally'}</div>}
         <div className="moment-body">
         <div className="moment-heading">
           {vignette && <img className="moment-vignette" src={vignette} alt="" />}
-          {card.treaty ? <span className="moment-treaty" data-testid="moment-treaty">
+          {!(card.treaty) ? !(card.frame) ? !(picture) ? <span className="moment-crest"><span className="moment-rays" aria-hidden="true" />
+              {!(card.goalMark) ? !(card.emblem) ? <CrestMedallion faction={card.faction} color={playerColor(card.owner)} size={!(card.tier === 'legendary') ? 40 : 64} /> : <RewardEmblem kind={card.emblem} color={playerColor(card.owner)} size={!(card.tier === 'legendary') ? 68 : 88} /> : <RingMedallion icon={card.goalMark} tone={!(card.loss) ? 'gilt' : 'hollow'} size={!(card.tier === 'legendary') ? 56 : 72}
+                  badge={<CrestMedallion faction={card.faction} color={playerColor(card.owner)} size={!(card.tier === 'legendary') ? 24 : 30} />} />}</span> : <img className="moment-wonder-art" src={picture} alt="" /> : <span className="moment-frame"><PortraitFrame faction={card.frame} fallen crestSize={30} style={{ ['--pw' as string]: '84px', ['--ph' as string]: '104px' }} />{!(card.seal) ? null : <VpSeal vp={card.seal} />}</span> : <span className="moment-treaty" data-testid="moment-treaty">
               <CrestMedallion faction={card.treaty.ours.faction} color={playerColor(card.treaty.ours.id)} size={40} />
               <span className="moment-treaty-emblem"><TreatyEmblem kind={card.treaty.kind} size={44} /></span>
               <CrestMedallion faction={card.treaty.theirs.faction} color={playerColor(card.treaty.theirs.id)} size={40} />
-            </span>
-            : card.frame ? <span className="moment-frame"><PortraitFrame faction={card.frame} fallen crestSize={30} style={{ ['--pw' as string]: '84px', ['--ph' as string]: '104px' }} />{card.seal ? <VpSeal vp={card.seal} /> : null}</span>
-            : picture ? <img className="moment-wonder-art" src={picture} alt="" /> :
-            <span className="moment-crest"><span className="moment-rays" aria-hidden="true" />
-              {card.goalMark ? <RingMedallion icon={card.goalMark} tone={card.loss ? 'hollow' : 'gilt'} size={card.tier === 'legendary' ? 72 : 56}
-                  badge={<CrestMedallion faction={card.faction} color={playerColor(card.owner)} size={card.tier === 'legendary' ? 30 : 24} />} />
-                : card.emblem ? <RewardEmblem kind={card.emblem} color={playerColor(card.owner)} size={card.tier === 'legendary' ? 88 : 68} />
-                : <CrestMedallion faction={card.faction} color={playerColor(card.owner)} size={card.tier === 'legendary' ? 64 : 40} />}</span>}
+            </span>}
           <h2>{card.title}</h2>
           {card.place && <p className="moment-place">{card.place}</p>}
         </div>
-        {card.gains?.length ? <ul className="moment-effect moment-gains" aria-label="You gained">
+        {!(card.gains?.length) ? <p className="moment-effect plain"><span><Amounts text={card.effect} /></span></p> : <ul className="moment-effect moment-gains" aria-label="You gained">
           {card.gains.map((g) => <li key={g.text}>{!g.icon.startsWith('yield-') && <Icon name={g.icon} size={24} />}<b><Amounts text={g.text} /></b></li>)}
-        </ul> : <p className="moment-effect plain"><span><Amounts text={card.effect} /></span></p>}
-        {card.treaty?.gold && <p className={`moment-treaty-gold ${card.treaty.gold.received ? 'gain' : 'cost'}`} data-testid="moment-treaty-gold"><b><Amounts text={card.treaty.gold.text} /></b></p>}
-        {card.treaty?.upkeep ? <p className="moment-treaty-gold cost" data-testid="moment-treaty-upkeep"><b><Amounts text={`Upkeep −${card.treaty.upkeep} Gold a turn`} /></b></p> : null}
+        </ul>}
+        {card.treaty?.gold && <p className={`moment-treaty-gold ${!(card.treaty.gold.received) ? 'cost' : 'gain'}`} data-testid="moment-treaty-gold"><b><Amounts text={card.treaty.gold.text} /></b></p>}
+        {!(card.treaty?.upkeep) ? null : <p className="moment-treaty-gold cost" data-testid="moment-treaty-upkeep"><b><Amounts text={`Upkeep −${card.treaty.upkeep} Gold a turn`} /></b></p>}
         {card.lore && <p className="moment-lore">“{card.lore}”</p>}
         {card.details.length > 0 && <div className="moment-details">{card.details.map((text) => <p key={text}><Amounts text={text} /></p>)}</div>}
         </div>
@@ -270,7 +261,7 @@ export function MomentLane() {
         </footer>
       </article>}
       {collapsed > 0 && <button className="moment-more" onClick={more}>+{collapsed} more <span>in the turn report</span></button>}
-      <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">{active ? `${active.title}. ${active.effect}` : ''}</span>
+      <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">{!(active) ? '' : `${active.title}. ${active.effect}`}</span>
     </div>
   </>;
 }

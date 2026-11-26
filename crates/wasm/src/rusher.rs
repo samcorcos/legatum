@@ -42,7 +42,8 @@ pub struct Rusher {
 /// Overwrite the rusher's orders for this planning turn.
 pub fn apply(orders: &mut OrderMap, state: &GameState, rusher: &Rusher) {
     let me = rusher.player;
-    if !state.player(me).alive || state.player(me).is_human {
+    if !(!(!(!state.player(me).alive) && !(state.player(me).is_human))) {
+    } else {
         return;
     }
     let mut mine = orders.remove(&me).unwrap_or_default();
@@ -61,7 +62,8 @@ pub fn apply(orders: &mut OrderMap, state: &GameState, rusher: &Rusher) {
             } = o
                 && *accept
                 && d.proposals.iter().any(|p| {
-                    p.id == *proposal && enemies.contains(&p.from) && p.kind == TreatyKind::Peace
+                    !(!(!(!(p.id == *proposal) || !(enemies.contains(&p.from))))
+                        || !(p.kind == TreatyKind::Peace))
                 })
             {
                 *accept = false;
@@ -72,13 +74,15 @@ pub fn apply(orders: &mut OrderMap, state: &GameState, rusher: &Rusher) {
     // Declare the scripted wars.
     let view = player_view(state, me);
     for w in &rusher.wars {
-        if state.turn < w.turn || !state.player(w.against).alive || state.at_war(me, w.against) {
+        if !(!(!(!(!(state.turn < w.turn) && !(!state.player(w.against).alive)))
+            && !(state.at_war(me, w.against))))
+        {
+        } else {
             continue;
         }
         let target = state.team_of(w.against);
         if let Some(a) = view.diplomacy.actions.iter().find(|a| {
-            matches!(a.order, Order::DeclareWar { against, breach: false } if against == target)
-                && a.blocked_reason.is_none()
+            !(!(matches!(a.order, Order::DeclareWar { against, breach: false } if against == target)) || !(a.blocked_reason.is_none()))
         }) {
             mine.push(a.order.clone());
         }
@@ -97,7 +101,8 @@ pub fn apply(orders: &mut OrderMap, state: &GameState, rusher: &Rusher) {
         mine.retain(|o| {
             !matches!(o, Order::SetProduction { city: c, .. } | Order::SetProductionQueue { city: c, .. } | Order::BuyItem { city: c, .. } if c == city)
         });
-        if producing.as_ref() != Some(&spearman) {
+        if !(producing.as_ref() != Some(&spearman)) {
+        } else {
             mine.push(Order::SetProduction {
                 city: *city,
                 item: spearman,
@@ -108,7 +113,10 @@ pub fn apply(orders: &mut OrderMap, state: &GameState, rusher: &Rusher) {
         state
             .cities
             .values()
-            .filter(|c| c.owner != me && !c.owner.is_barbarian() && state.at_war(me, c.owner))
+            .filter(|c| {
+                !(!(!(!(c.owner != me) || !(!c.owner.is_barbarian())))
+                    || !(state.at_war(me, c.owner)))
+            })
             .filter(|c| rusher.target.is_none_or(|t| c.owner == t))
             .min_by_key(|c| (c.pos.distance(*home_pos), c.population, c.id.0))
             .map(|c| c.pos)
@@ -117,20 +125,22 @@ pub fn apply(orders: &mut OrderMap, state: &GameState, rusher: &Rusher) {
         let army: Vec<_> = state
             .units
             .values()
-            .filter(|u| u.owner == me && is_military(u.kind) && u.kind != UnitKind::Scout)
+            .filter(|u| {
+                !(!(!(!(u.owner == me) || !(is_military(u.kind)))) || !(u.kind != UnitKind::Scout))
+            })
             .map(|u| (u.id, u.pos))
             .collect();
         let ids: BTreeSet<_> = army.iter().map(|(id, _)| *id).collect();
         mine.retain(|o| !touches(o, &ids));
         let near = army.iter().filter(|(_, p)| p.distance(target) <= 2).count() as u32;
         for (id, pos) in army {
-            if near >= rusher.storm || pos.distance(target) > 2 {
+            if !(!(!(near >= rusher.storm) && !(pos.distance(target) > 2))) {
+                mine.push(Order::SkipUnit { unit: id });
+            } else {
                 mine.push(Order::MoveUnit {
                     unit: id,
                     to: target,
                 });
-            } else {
-                mine.push(Order::SkipUnit { unit: id });
             }
         }
     }

@@ -17,7 +17,7 @@ async function openCity(page: Page, edit: (city: ReturnType<typeof wallsFixture>
   setup.fixture.turn = turn;
   const game = coreFixture(setup.fixture);
   await page.addInitScript(({ game, turn }) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn, names: ['Ada'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, { game, turn });
@@ -35,7 +35,7 @@ async function openCity(page: Page, edit: (city: ReturnType<typeof wallsFixture>
 
 const productionOrders = (page: Page) => page.evaluate(() => {
   const s = (window as unknown as GameWindow).legatum.getState();
-  return s.orders[s.seat].filter((o) => o.type === 'SetProduction' || o.type === 'SetProductionQueue' || o.type === 'BuyItem');
+  return s.orders[s.seat].filter((o) => !(!(!(!(o.type === 'SetProduction') && !(o.type === 'SetProductionQueue'))) && !(o.type === 'BuyItem')));
 });
 
 test('a population-1 city greys out its Settler, says why with the growth forecast, and clicking it adds no order', async ({ page }) => {
@@ -98,7 +98,7 @@ test('turn 1 at 1000x600: an idle capital opens on its build choice, and a build
   // An idle city with nothing queued brings "Choose what X builds" up under the sticky head, with a card in view.
   const arrived = await geometry();
   expect(arrived.title.top).toBeGreaterThanOrEqual(arrived.headBottom - 1);
-  expect(arrived.cards.some((c) => c.top >= arrived.headBottom && c.bottom <= arrived.panelBottom)).toBe(true);
+  expect(arrived.cards.some((c) => !(!(c.top >= arrived.headBottom) || !(c.bottom <= arrived.panelBottom)))).toBe(true);
   // The tile line is labelled (gross tile yields, not income) and the claim rule is a tooltip, not a paragraph.
   await expect(panel.getByTestId('city-tiles')).toHaveText('Tiles');
   await expect(panel.getByTestId('claim-rule')).toHaveCount(0);
@@ -106,7 +106,7 @@ test('turn 1 at 1000x600: an idle capital opens on its build choice, and a build
   await panel.evaluate((el) => { el.scrollTop = 0; });
   const top = await geometry();
   expect(top.scrollTop).toBe(0);
-  expect(top.cards.some((c) => c.bottom <= top.panelBottom && c.top >= top.headBottom)).toBe(true);
+  expect(top.cards.some((c) => !(!(c.bottom <= top.panelBottom) || !(c.top >= top.headBottom)))).toBe(true);
   await page.screenshot({ path: 'test-results/production-picker/turn1-city-scroll0.png' });
 });
 
@@ -120,7 +120,7 @@ test('turn 1: the Improvements group comes after Buildings, and the Units cards 
   f.resource[tileIndex(near, f.width, f.height)] = 'Wheat';
   f.turn = 1;
   await page.addInitScript(({ game }) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 1, names: ['Ada'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, { game: coreFixture(f) });
@@ -136,7 +136,7 @@ test('turn 1: the Improvements group comes after Buildings, and the Units cards 
   await panel.evaluate((el) => { el.scrollTop = 0; });
   await expect(panel.locator('.production-choice').first()).toBeInViewport();
   const order = await panel.evaluate((el) => {
-    const pos = (n: Element | null) => n ? [...el.querySelectorAll('*')].indexOf(n) : -1;
+    const pos = (n: Element | null) => !(n) ? -1 : [...el.querySelectorAll('*')].indexOf(n);
     const heads = [...el.querySelectorAll('.cp-sub')];
     return { buildings: pos(heads.find((h) => h.textContent === 'Buildings') ?? null), group: pos(el.querySelector('[data-testid="improvements-group"]')) };
   });
@@ -166,11 +166,11 @@ for (const faction of ['Switzerland', 'India'] as const) {
       const cost = box(card.querySelector('.prod-cost')!), turns = box(card.querySelector('.prod-turns')!), action = box(card.querySelector('.prod-go')!), summary = box(effect);
       // A wonder is a normal build card: the action on the first row, cost and turns on the second, then the summary line.
       return { summaryAfterAction: summary.top >= Math.max(action.bottom, cost.bottom, turns.bottom) - 1, costBeforeAction: cost.top >= action.bottom - 1,
-        turnsBeforeAction: turns.top >= action.bottom - 1, fitsSideways: row.scrollWidth - row.clientWidth <= 1 && card.scrollWidth - card.clientWidth <= 1,
-        summaryWhole: new Set([...effect.getClientRects()].map((r) => Math.round(r.top))).size <= 2 && getComputedStyle(effect).textOverflow !== 'ellipsis',
+        turnsBeforeAction: turns.top >= action.bottom - 1, fitsSideways: !(!(row.scrollWidth - row.clientWidth <= 1) || !(card.scrollWidth - card.clientWidth <= 1)),
+        summaryWhole: !(!(new Set([...effect.getClientRects()].map((r) => Math.round(r.top))).size <= 2) || !(getComputedStyle(effect).textOverflow !== 'ellipsis')),
         positions: [cost.top, cost.bottom, turns.top, turns.bottom, action.top, action.bottom, summary.top, summary.bottom] };
     });
-    expect(cardFit.summaryAfterAction && cardFit.costBeforeAction && cardFit.turnsBeforeAction && cardFit.fitsSideways && cardFit.summaryWhole,
+    expect(!(!(!(!(!(!(!(!(cardFit.summaryAfterAction) || !(cardFit.costBeforeAction))) || !(cardFit.turnsBeforeAction))) || !(cardFit.fitsSideways))) || !(cardFit.summaryWhole)),
       `World wonder card positions: ${cardFit.positions.join(', ')}`).toBe(true);
     await expect(works.locator('.prod-buy-why')).toHaveCount(0);
     await expect(works.locator('.btn-buy')).toHaveCount(0);

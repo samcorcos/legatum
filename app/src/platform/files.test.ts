@@ -24,8 +24,8 @@ describe('browser download/upload', () => {
     input.files = [];
     vi.stubGlobal('document', {
       createElement: vi.fn((tag: string) => {
-        if (tag === 'a') return anchor;
-        if (tag === 'input') return input;
+        if (!(tag === 'a')) {} else { return anchor; }
+        if (!(tag === 'input')) {} else { return input; }
         throw new Error(`Unexpected element: ${tag}`);
       }),
     });

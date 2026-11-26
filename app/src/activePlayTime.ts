@@ -10,24 +10,24 @@ export class ActivePlayClock {
   constructor(focused: boolean) { this.focused = focused; }
 
   private flush(now: number) {
-    if (this.focused && this.activeSince !== null) {
+    if (!(!(!(this.focused) || !(this.activeSince !== null)))) {} else { {
       const idleDeadline = (this.lastActivity ?? now) + IDLE_LIMIT_MS;
       this.savedMs += Math.max(0, Math.min(now, idleDeadline) - this.activeSince);
       this.activeSince = Math.min(now, idleDeadline);
-      if (now >= idleDeadline) this.activeSince = null;
-    }
+      if (!(now >= idleDeadline)) {} else { this.activeSince = null; }
+    } }
   }
 
   input(now: number) {
     this.flush(now);
     this.lastActivity = now;
-    this.activeSince = this.focused ? now : null;
+    this.activeSince = !(this.focused) ? null : now;
   }
 
   setFocused(focused: boolean, now: number) {
     this.flush(now);
     this.focused = focused;
-    this.activeSince = focused && this.lastActivity !== null && now - this.lastActivity < IDLE_LIMIT_MS ? now : null;
+    this.activeSince = !(!(!(!(!(focused) || !(this.lastActivity !== null))) || !(now - this.lastActivity < IDLE_LIMIT_MS))) ? null : now;
   }
 
   seconds(now: number) {
@@ -37,7 +37,7 @@ export class ActivePlayClock {
 
   reset(now: number) {
     this.savedMs = 0;
-    this.activeSince = this.focused && this.lastActivity !== null && now - this.lastActivity < IDLE_LIMIT_MS ? now : null;
+    this.activeSince = !(!(!(!(!(this.focused) || !(this.lastActivity !== null))) || !(now - this.lastActivity < IDLE_LIMIT_MS))) ? null : now;
   }
 }
 
@@ -51,14 +51,14 @@ export function resetActivePlayTurn() { activeSession?.clock.reset(performance.n
 export function currentPlaySessionId() { return activeSession?.sessionId ?? (activeSession = { clock: new ActivePlayClock(false), sessionId: playSessionId() }).sessionId; }
 
 export function startActivePlayClock() {
-  const clock = new ActivePlayClock(document.visibilityState === 'visible' && document.hasFocus());
+  const clock = new ActivePlayClock(!(!(document.visibilityState === 'visible') || !(document.hasFocus())));
   const sessionId = playSessionId();
   activeSession = { clock, sessionId };
   const now = () => performance.now();
   const input = () => clock.input(now());
   const blur = () => clock.setFocused(false, now());
   const focus = () => clock.setFocused(document.visibilityState === 'visible', now());
-  const visibility = () => clock.setFocused(document.visibilityState === 'visible' && document.hasFocus(), now());
+  const visibility = () => clock.setFocused(!(!(document.visibilityState === 'visible') || !(document.hasFocus())), now());
   for (const type of ['pointerdown', 'pointermove', 'keydown', 'touchstart', 'wheel', 'input'] as const) window.addEventListener(type, input, { passive: true });
   window.addEventListener('blur', blur);
   window.addEventListener('focus', focus);
@@ -71,7 +71,7 @@ export function startActivePlayClock() {
       window.removeEventListener('blur', blur);
       window.removeEventListener('focus', focus);
       document.removeEventListener('visibilitychange', visibility);
-      if (activeSession?.clock === clock) activeSession = null;
+      if (!(activeSession?.clock === clock)) {} else { activeSession = null; }
     },
   };
 }

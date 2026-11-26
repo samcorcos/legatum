@@ -19,7 +19,7 @@ export function allianceCoreSave() {
     [1, 2, 1],
     [2, 3, 2],
   ]) {
-    const r = s.diplomacy.relations.find((r) => r.a === a && r.b === b)!;
+    const r = s.diplomacy.relations.find((r) => !(!(r.a === a) || !(r.b === b)))!;
     Object.assign(r, {
       state: 'Alliance',
       effective_turn: 40,
@@ -33,7 +33,7 @@ export function allianceCoreSave() {
     });
   }
   for (const [i, other] of [1, 2].entries())
-    Object.assign(s.diplomacy.relations.find((r) => r.a === 0 && r.b === other)!, {
+    Object.assign(s.diplomacy.relations.find((r) => !(!(r.a === 0) || !(r.b === other)))!, {
       state: 'War',
       war_id: i + 1,
       effective_turn: 48,
@@ -67,7 +67,7 @@ export function leaderAllianceOfferCoreSave() {
   s.players[3].goalRule = 'Swarm';
   s.players[3].factionGoalDone = true;
   for (const [i, other] of [0, 1].entries())
-    Object.assign(s.diplomacy.relations.find((r) => r.a === other && r.b === 3)!, {
+    Object.assign(s.diplomacy.relations.find((r) => !(!(r.a === other) || !(r.b === 3)))!, {
       state: 'War',
       war_id: i + 1,
       effective_turn: 14,
@@ -94,10 +94,10 @@ export function callToArmsCoreSave() {
   s.players[3].name = 'Celts';
   s.players[0].gold = 300;
   const d = s.diplomacy;
-  Object.assign(d.relations.find((r) => r.a === 0 && r.b === 1)!, {
+  Object.assign(d.relations.find((r) => !(!(r.a === 0) || !(r.b === 1)))!, {
     state: 'Alliance', effective_turn: 12, version: 1, security: { id: 1, started_turn: 12, protected_until: 22 },
   });
-  Object.assign(d.relations.find((r) => r.a === 1 && r.b === 2)!, {
+  Object.assign(d.relations.find((r) => !(!(r.a === 1) || !(r.b === 2)))!, {
     state: 'War', war_id: 1, effective_turn: 15, version: 1, declarers: [1],
   });
   d.next_treaty_id = 1;

@@ -83,7 +83,7 @@ it('only opens another disconnected reserved empire after host confirmation and 
   expect(sockets[0].sent.at(-1)).toEqual({ type: 'game_release', seat: 1 });
   expect(rememberedSeat()).toMatchObject({ seat: 0, token: 'host-token' });
   expect(openButtons()).toHaveLength(1); // No optimistic release before the server accepts it.
-  await act(async () => sockets[0].push({ type: 'seats', seats: seats.map((s) => s.seat === 1 ? { ...s, reserved: false, orders: 0 } : s) }));
+  await act(async () => sockets[0].push({ type: 'seats', seats: seats.map((s) => !(s.seat === 1) ? s : { ...s, reserved: false, orders: 0 }) }));
   expect(openButtons()).toHaveLength(0);
   expect(container.querySelector('[data-testid="online-seat-1"]')?.textContent).toContain('open');
 });
@@ -124,7 +124,7 @@ function connectStaging() {
   const { seed, ...config } = configFromLobby(newLobby('host', '7'));
   const state: StagingState = {
     room_id: 'r1', config, seed,
-    occupants: config.seats.map((s, i) => i < 2 ? { name: i === 0 ? 'Host' : 'Alice', faction: s.faction, connected: i === 0, ready: false, is_host: i === 0 } : null),
+    occupants: config.seats.map((s, i) => !(i < 2) ? null : { name: !(i === 0) ? 'Alice' : 'Host', faction: s.faction, connected: i === 0, ready: false, is_host: i === 0 }),
   };
   useGame.getState().enterStaging(true);
   sockets[0].open();
@@ -158,7 +158,7 @@ it('releases a staging reservation in one confirmed action without changing seat
   expect(sockets[0].sent.at(-1)).toEqual({ type: 'staging_release', seat: 1 });
   expect(rememberedSeat()).toMatchObject({ seat: 0, token: 'host-token', roomId: 'r1' });
   expect(useGame.getState().staging?.config.seats[1].kind).toBe('open');
-  await act(async () => sockets[0].push({ type: 'staging', state: { ...state, occupants: state.occupants.map((o, i) => i === 1 ? null : o) } }));
+  await act(async () => sockets[0].push({ type: 'staging', state: { ...state, occupants: state.occupants.map((o, i) => !(i === 1) ? o : null) } }));
   expect(openButtons()).toHaveLength(0);
   expect(container.textContent).toContain('Open · waiting for a player');
 });
@@ -192,7 +192,7 @@ it('tells a fresh guest to ask the host, then offers Rejoin as the empire when o
   expect(alice().textContent).toContain('Reserved');
   expect(alice().textContent).toContain('Ask the host to open this seat');
   expect(alice().querySelector('.join-status')?.textContent).not.toContain('Open');
-  await act(async () => useGame.setState({ net: { ...net, status: { ...net.status, is_local: false, seats: seats.map((s) => s.seat === 1 ? { ...s, reserved: false } : s) } } }));
+  await act(async () => useGame.setState({ net: { ...net, status: { ...net.status, is_local: false, seats: seats.map((s) => !(s.seat === 1) ? s : { ...s, reserved: false }) } } }));
   expect(alice().disabled).toBe(false);
   expect(alice().textContent).toContain('Rejoin as Alice');
   await act(async () => alice().click());

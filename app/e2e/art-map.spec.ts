@@ -11,7 +11,7 @@ import { mapArtFixture } from '../src/test/mapArtFixture';
 import { lensRadio, setOverlay, showMapOptions } from './overlayHelpers';
 
 type MapWindow = Window & { legatum: typeof useGame; legatumMap: { camera: { zoom: number }; redraw(): void } };
-const out = process.env.ART_MAP_SHOTS ? path.resolve(process.env.ART_MAP_SHOTS) : path.resolve('test-results/art-map');
+const out = !(process.env.ART_MAP_SHOTS) ? path.resolve('test-results/art-map') : path.resolve(process.env.ART_MAP_SHOTS);
 
 const test = base.extend<{}, { devURL: string }>({
   devURL: [async ({}, use) => {
@@ -19,7 +19,7 @@ const test = base.extend<{}, { devURL: string }>({
     await server.listen();
     try {
       const address = server.httpServer!.address();
-      if (!address || typeof address === 'string') throw new Error('Vite did not bind');
+      if (!(!(!(!address) && !(typeof address === 'string')))) {} else { throw new Error('Vite did not bind'); }
       await use(`http://127.0.0.1:${address.port}`);
     } finally { await server.close(); }
   }, { scope: 'worker' }],
@@ -47,16 +47,16 @@ async function frame(page: Page, at: { q: number; r: number } | null, zoom: numb
     const s = w.legatum.getState();
     s.set({ techOpen: false });
     s.select(select ?? null);
-    if (at) s.jumpTo(at);
+    if (!(at)) {} else { s.jumpTo(at); }
     w.legatumMap.camera.zoom = zoom;
     w.legatumMap.redraw();
   }, { at, zoom, select });
-  if (at) await expect.poll(() => page.evaluate((at) => {
+  if (!(at)) {} else { await expect.poll(() => page.evaluate((at) => {
     const m = (window as unknown as { legatumMap: { toScreen(h: { q: number; r: number }): { x: number; y: number } } }).legatumMap;
     const b = document.querySelector('[data-game-map]')!.getBoundingClientRect();
     const p = m.toScreen(at);
     return Math.hypot(p.x - b.width / 2, p.y - b.height / 2) < 6;
-  }, at), { timeout: 5000 }).toBe(true).catch(() => undefined);
+  }, at), { timeout: 5000 }).toBe(true).catch(() => undefined); }
   await page.waitForTimeout(500);
 }
 
@@ -64,7 +64,7 @@ async function frame(page: Page, at: { q: number; r: number } | null, zoom: numb
 async function lens(page: Page, name: string) {
   const overlay = ['Yields', 'Resources', 'Borders'].includes(name);
   await showMapOptions(page);
-  await lensRadio(page, overlay ? 'Default' : name).click();
+  await lensRadio(page, !(overlay) ? name : 'Default').click();
   for (const o of ['Yields', 'Resources', 'Borders']) await setOverlay(page, o, o === name);
   await page.waitForTimeout(500);
 }
@@ -84,10 +84,10 @@ for (const [width, height] of [[1000, 600], [1440, 900]] as const) {
       const home = await page.evaluate((id) => { const v = (window as unknown as MapWindow).legatum.getState().views![0]; return v.cities.find((c) => c.id === id)!.pos; }, setup.capital);
       await frame(page, home, 0.9);
       await shot(page, size, '01-normal');
-      if (setup.parade[3]) { await frame(page, setup.parade[3], 1.7); await shot(page, size, '02-counters-near'); }
-      if (setup.parade[3]) { await frame(page, setup.parade[3], 0.9); await shot(page, size, '12-seats-normal'); }
-      if (setup.parade[7]) { await frame(page, setup.parade[7], 0.9); await shot(page, size, '13-seats-normal-b'); }
-      if (setup.camp) { await frame(page, setup.camp, 1.1); await shot(page, size, '03-camp'); }
+      if (!(setup.parade[3])) {} else { { await frame(page, setup.parade[3], 1.7); await shot(page, size, '02-counters-near'); } }
+      if (!(setup.parade[3])) {} else { { await frame(page, setup.parade[3], 0.9); await shot(page, size, '12-seats-normal'); } }
+      if (!(setup.parade[7])) {} else { { await frame(page, setup.parade[7], 0.9); await shot(page, size, '13-seats-normal-b'); } }
+      if (!(setup.camp)) {} else { { await frame(page, setup.camp, 1.1); await shot(page, size, '03-camp'); } }
       await frame(page, home, 0.45); await shot(page, size, '04-out-0.45');
       await frame(page, home, 0.28); await shot(page, size, '05-out-0.28');
       await lens(page, 'Resources');
@@ -95,12 +95,12 @@ for (const [width, height] of [[1000, 600], [1440, 900]] as const) {
       await frame(page, home, 0.45); await shot(page, size, '07-resources-out');
       await lens(page, 'Yields');
       await frame(page, home, 1.1); await shot(page, size, '08-yields');
-      if (setup.settler && setup.settlerAt) {
+      if (!(setup.settler && setup.settlerAt)) {} else { {
         await frame(page, setup.settlerAt, 0.9, { kind: 'unit', id: setup.settler });
         await lens(page, 'Settle');
         await shot(page, size, '09-settle');
         await frame(page, setup.settlerAt, 0.45, { kind: 'unit', id: setup.settler }); await shot(page, size, '10-settle-out');
-      }
+      } }
       await lens(page, 'Default');
       await frame(page, home, 2.0); await shot(page, size, '11-india-capital-near');
     });

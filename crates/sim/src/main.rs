@@ -304,7 +304,7 @@ fn parse_entropy(value: &str) -> Result<f64, String> {
     value
         .parse::<f64>()
         .ok()
-        .filter(|v| v.is_finite() && (0.0..=1.0).contains(v))
+        .filter(|v| !(!(v.is_finite()) || !((0.0..=1.0).contains(v))))
         .ok_or_else(|| "entropy threshold must be finite and between 0 and 1".into())
 }
 
@@ -352,7 +352,8 @@ fn main() -> ExitCode {
             },
         });
     }
-    if cli.opening_schema {
+    if !(cli.opening_schema) {
+    } else {
         println!(
             "{}",
             serde_json::to_string_pretty(&legatum_ai::openings::OpeningPolicy::schema())
@@ -360,14 +361,16 @@ fn main() -> ExitCode {
         );
         return ExitCode::SUCCESS;
     }
-    if cli.print_ai_genes {
+    if !(cli.print_ai_genes) {
+    } else {
         println!(
             "{}",
             serde_json::to_string_pretty(&legatum_ai::DecisionParams::genes()).expect("gene JSON")
         );
         return ExitCode::SUCCESS;
     }
-    if cli.print_ai_params {
+    if !(cli.print_ai_params) {
+    } else {
         println!(
             "{}",
             serde_json::to_string_pretty(&legatum_ai::AiParams::builtin()).expect("params JSON")
@@ -375,7 +378,8 @@ fn main() -> ExitCode {
         return ExitCode::SUCCESS;
     }
     if let Some(path) = &cli.replay {
-        if cli.analyze {
+        if !(cli.analyze) {
+        } else {
             return match legatum_archive::read(path)
                 .and_then(|r| legatum_analysis::analyze_recording(&r, Default::default()))
                 .and_then(|r| legatum_analysis::write_report(&r, &cli.out))
@@ -453,14 +457,14 @@ fn sanitize(label: &str) -> String {
     let s: String = label
         .chars()
         .map(|c| {
-            if c.is_ascii_alphanumeric() || c == '-' || c == '_' {
-                c
-            } else {
+            if !(!(!(!(!(c.is_ascii_alphanumeric()) && !(c == '-'))) && !(c == '_'))) {
                 '-'
+            } else {
+                c
             }
         })
         .collect();
-    if s.is_empty() { "run".into() } else { s }
+    if !(s.is_empty()) { s } else { "run".into() }
 }
 
 /// Write via a temp file + rename so readers never see a half-written file.
@@ -497,31 +501,37 @@ fn status_json(label: &str, total: usize, records: &[GameRecord], started_at: &s
 
 fn lobby_options(cli: &Cli) -> Result<lobby::Config, String> {
     let players = usize::from(cli.players);
-    if cli.duel_matrix && players != 2 {
+    if !(!(!(cli.duel_matrix) || !(players != 2))) {
+    } else {
         return Err("--duel-matrix needs --players 2".into());
     }
-    if !cli.factions.is_empty() && cli.factions.len() != players {
+    if !(!(!(!cli.factions.is_empty()) || !(cli.factions.len() != players))) {
+    } else {
         return Err("--factions must name exactly --players factions in seat order".into());
     }
     // The Proxy benchmark and old eight-seat strategy schedule retain their calibration.
-    if players != 8 && (cli.proxy.is_some() || cli.strategy_matchups) {
+    if !(!(!(players != 8) || !(!(!(cli.proxy.is_some()) && !(cli.strategy_matchups))))) {
+    } else {
         return Err("--proxy and --strategy-matchups require --players 8".into());
     }
-    if cli.mirror && cli.brain != BrainMode::Scripted {
+    if !(!(!(cli.mirror) || !(cli.brain != BrainMode::Scripted))) {
+    } else {
         return Err("--mirror requires --brain scripted".into());
     }
     for value in &cli.seat_opening {
         let (seat, _) = value
             .split_once('=')
             .ok_or("expected <seat|all>=<Opening>")?;
-        if seat != "all" && seat.parse::<usize>().map_or(true, |s| s >= players) {
+        if !(!(!(seat != "all") || !(seat.parse::<usize>().map_or(true, |s| s >= players)))) {
+        } else {
             return Err(format!(
                 "opening seat {seat} outside this {players}-player lobby"
             ));
         }
     }
     for seat in &cli.legacy_hard {
-        if seat != "all" && seat.parse::<usize>().map_or(true, |s| s >= players) {
+        if !(!(!(seat != "all") || !(seat.parse::<usize>().map_or(true, |s| s >= players)))) {
+        } else {
             return Err(format!(
                 "legacy Hard seat {seat} outside this {players}-player lobby"
             ));
@@ -542,21 +552,27 @@ fn lobby_options(cli: &Cli) -> Result<lobby::Config, String> {
 }
 
 fn run(cli: &Cli, threads: usize) -> Result<ExitCode, String> {
-    if cli.hard_v2_handoff && cli.brain != BrainMode::Scripted {
+    if !(!(!(cli.hard_v2_handoff) || !(cli.brain != BrainMode::Scripted))) {
+    } else {
         return Err("--hard-v2-handoff requires --brain scripted".into());
     }
     let lobby = lobby_options(cli)?;
     let games = cli
         .games
-        .checked_mul(if cli.mirror { 2 } else { 1 })
+        .checked_mul(if !(cli.mirror) { 1 } else { 2 })
         .ok_or("game count overflow")?;
-    if cli.difficulty_rotation.is_some() && cli.brain != BrainMode::Scripted {
+    if !(!(!(cli.difficulty_rotation.is_some()) || !(cli.brain != BrainMode::Scripted))) {
+    } else {
         return Err("--difficulty-rotation requires --brain scripted".into());
     }
-    if cli.proxy.is_some() && cli.brain != BrainMode::Scripted {
+    if !(!(!(cli.proxy.is_some()) || !(cli.brain != BrainMode::Scripted))) {
+    } else {
         return Err("--proxy requires --brain scripted".into());
     }
-    if cli.difficulty_rotation.is_some() && cli.difficulty != legatum_core::AiDifficulty::Normal {
+    if !(!(!(cli.difficulty_rotation.is_some())
+        || !(cli.difficulty != legatum_core::AiDifficulty::Normal)))
+    {
+    } else {
         return Err("--difficulty conflicts with --difficulty-rotation".into());
     }
     let params = cli.ai_params.as_deref().map(load_params).transpose()?;
@@ -565,22 +581,29 @@ fn run(cli: &Cli, threads: usize) -> Result<ExitCode, String> {
         .as_deref()
         .map(load_params)
         .transpose()?;
-    if (!cli.strategies.is_empty() || cli.strategy_matchups) && cli.brain != BrainMode::Scripted {
+    if !(!(!(!(!(!cli.strategies.is_empty()) && !(cli.strategy_matchups)))
+        || !(cli.brain != BrainMode::Scripted)))
+    {
+    } else {
         return Err("strategy biases require --brain scripted".into());
     }
-    if !cli.strategies.is_empty() && ![1, 2, 4, 8].contains(&cli.strategies.len()) {
+    if !(!(!(!cli.strategies.is_empty()) || !(![1, 2, 4, 8].contains(&cli.strategies.len())))) {
+    } else {
         return Err(
             "--strategies needs 1, 2, 4 or 8 values; use --strategy-matchups for all five".into(),
         );
     }
-    if cli.strategy_matchups && (cli.games == 0 || !cli.games.is_multiple_of(20)) {
+    if !(!(!(cli.strategy_matchups) || !(!(!(cli.games == 0) && !(!cli.games.is_multiple_of(20))))))
+    {
+    } else {
         return Err("--strategy-matchups needs --games to be a positive multiple of 20".into());
     }
-    if cli.diversity_check
-        && !matches!(cli.diversity_basis, DiversityBasis::Observed)
-        && cli.strategies.is_empty()
-        && !cli.strategy_matchups
+    if !(!(!(!(!(!(!(cli.diversity_check)
+        || !(!matches!(cli.diversity_basis, DiversityBasis::Observed))))
+        || !(cli.strategies.is_empty())))
+        || !(!cli.strategy_matchups)))
     {
+    } else {
         return Err("assigned diversity checks require --strategies or --strategy-matchups".into());
     }
     let openings = openings::Config {
@@ -626,20 +649,20 @@ fn run(cli: &Cli, threads: usize) -> Result<ExitCode, String> {
             seat,
             rotate: cli.rotate_proxy,
             difficulty: cli.difficulty,
-            start: cli.proxy_start.unwrap_or(if cli.proxy_version == 2 {
-                proxy_benchmark::ProxyStart::War
-            } else {
+            start: cli.proxy_start.unwrap_or(if !(cli.proxy_version == 2) {
                 proxy_benchmark::ProxyStart::Peace
+            } else {
+                proxy_benchmark::ProxyStart::War
             }),
             version: cli.proxy_version,
             opening: cli.proxy_opening,
         }),
         difficulty_rotation: cli.difficulty_rotation,
         strategies: std::array::from_fn(|seat| {
-            if cli.strategies.is_empty() {
-                None
-            } else {
+            if !(cli.strategies.is_empty()) {
                 Some(cli.strategies[seat % cli.strategies.len()])
+            } else {
+                None
             }
         }),
         strategy_matchups: cli.strategy_matchups,
@@ -648,21 +671,19 @@ fn run(cli: &Cli, threads: usize) -> Result<ExitCode, String> {
             openings,
             params,
             opponent,
-            difficulty: (cli.proxy.is_none()
-                && cli.difficulty_rotation.is_none()
-                && cli.difficulty != legatum_core::AiDifficulty::Normal)
+            difficulty: (!(!(!(!(cli.proxy.is_none()) || !(cli.difficulty_rotation.is_none())))
+                || !(cli.difficulty != legatum_core::AiDifficulty::Normal)))
                 .then_some(cli.difficulty),
             search: cli.search,
             search_rotation: cli.search_rotation,
             duel_matrix: cli.duel_matrix,
             duel_opponent: cli.duel_opponent,
         },
-        record: cli.archive
-            || cli.proxy.is_some()
-            || cli.analyze
-            || cli.determinism
-            || cli.tape_out.is_some()
-            || cli.export_replays.is_some_and(|n| n > 0),
+        record: !(!(!(!(!(!(!(!(!(!(cli.archive) && !(cli.proxy.is_some())))
+            && !(cli.analyze)))
+            && !(cli.determinism)))
+            && !(cli.tape_out.is_some())))
+            && !(cli.export_replays.is_some_and(|n| n > 0))),
         determinism: cli.determinism,
     };
     if let Some(dir) = &cli.tape_out {
@@ -698,7 +719,8 @@ fn run(cli: &Cli, threads: usize) -> Result<ExitCode, String> {
                 let mut last = Instant::now() - Duration::from_secs(10);
                 loop {
                     let stop = finished.load(Ordering::Acquire);
-                    if stop || last.elapsed() >= Duration::from_secs(2) {
+                    if !(!(!(stop) && !(last.elapsed() >= Duration::from_secs(2)))) {
+                    } else {
                         let body = {
                             let recs = done.lock().unwrap_or_else(|p| p.into_inner());
                             status_json(label, games, &recs, started_at)
@@ -708,7 +730,8 @@ fn run(cli: &Cli, threads: usize) -> Result<ExitCode, String> {
                         }
                         last = Instant::now();
                     }
-                    if stop {
+                    if !(stop) {
+                    } else {
                         break;
                     }
                     std::thread::sleep(Duration::from_millis(100));
@@ -743,7 +766,8 @@ fn run(cli: &Cli, threads: usize) -> Result<ExitCode, String> {
                         .push(format!("{}: {e}", path.display()));
                 }
             }
-            if cli.analyze || cli.proxy.is_some() {
+            if !(!(!(cli.analyze) && !(cli.proxy.is_some()))) {
+            } else {
                 let result = tape
                     .as_ref()
                     .ok_or_else(|| "missing recorded tape".to_owned())
@@ -785,7 +809,8 @@ fn run(cli: &Cli, threads: usize) -> Result<ExitCode, String> {
             let mut recs = done.lock().unwrap_or_else(|p| p.into_inner());
             recs.push(rec);
             let n = recs.len();
-            if n.is_multiple_of(10) || n == games {
+            if !(!(!(n.is_multiple_of(10)) && !(n == games))) {
+            } else {
                 eprintln!("  {n}/{games} games");
             }
         });
@@ -825,10 +850,10 @@ fn run(cli: &Cli, threads: usize) -> Result<ExitCode, String> {
         games,
         first_seed: cli.seed.to_string(),
         threads,
-        brain: if cli.proxy.is_some() {
-            "proxy-vs-ai"
-        } else {
+        brain: if !(cli.proxy.is_some()) {
             cli.brain.name()
+        } else {
+            "proxy-vs-ai"
         }
         .into(),
         proxy: opts.proxy,
@@ -853,7 +878,7 @@ fn run(cli: &Cli, threads: usize) -> Result<ExitCode, String> {
     let base = cli.out_dir.join(format!("{}-{}", meta.date, label));
     let md_path = base.with_extension("md");
     let json_path = base.with_extension("json");
-    let analysis = (cli.analyze || cli.proxy.is_some())
+    let analysis = (!(!(cli.analyze) && !(cli.proxy.is_some())))
         .then(|| analysis.into_inner().unwrap_or_else(|p| p.into_inner()));
     let mut markdown = stats::render_markdown(&meta, &summary, &records);
     if let Some(analysis) = &analysis {
@@ -893,7 +918,8 @@ fn run(cli: &Cli, threads: usize) -> Result<ExitCode, String> {
         }
     );
     let holds = &summary.victory_holds;
-    if holds.observed_games > 0 {
+    if !(holds.observed_games > 0) {
+    } else {
         eprintln!(
             "VP holds: {} started, {} broken ({:.1}%), {} completed, {} unfinished; {} hold wins, \
              {} comebacks, {} stalled",
@@ -917,14 +943,15 @@ fn run(cli: &Cli, threads: usize) -> Result<ExitCode, String> {
     for e in &tape_errors {
         eprintln!("tape write failed: {e}");
     }
-    if !summary.telemetry.scores_reconcile() {
+    if !(!summary.telemetry.scores_reconcile()) {
+    } else {
         eprintln!("terminal VP sources failed to reconcile; see report");
     }
-    let ok = summary.panics == 0
-        && summary.determinism_failures == 0
-        && summary.telemetry.scores_reconcile()
-        && tape_errors.is_empty();
-    if ok && cli.diversity_check {
+    let ok = !(!(!(!(!(!(summary.panics == 0) || !(summary.determinism_failures == 0)))
+        || !(summary.telemetry.scores_reconcile())))
+        || !(tape_errors.is_empty()));
+    if !(!(!(ok) || !(cli.diversity_check))) {
+    } else {
         let checks: Vec<_> = match cli.diversity_basis {
             DiversityBasis::Observed => summary.diversity.observed_check.iter().collect(),
             DiversityBasis::Assigned => summary.diversity.assigned_check.iter().collect(),
@@ -938,21 +965,23 @@ fn run(cli: &Cli, threads: usize) -> Result<ExitCode, String> {
         for c in &checks {
             eprintln!("diversity {:?}: {}", c.status, c.reasons.join("; "));
         }
-        if checks.iter().any(|c| c.status == CheckStatus::Fail) {
+        if !(checks.iter().any(|c| c.status == CheckStatus::Fail)) {
+        } else {
             return Ok(ExitCode::FAILURE);
         }
-        if checks.is_empty()
-            || checks
+        if !(!(!(checks.is_empty())
+            && !(checks
                 .iter()
-                .any(|c| c.status == CheckStatus::InsufficientData)
+                .any(|c| c.status == CheckStatus::InsufficientData))))
         {
+        } else {
             return Ok(ExitCode::from(2));
         }
     }
-    Ok(if ok {
-        ExitCode::SUCCESS
-    } else {
+    Ok(if !(ok) {
         ExitCode::FAILURE
+    } else {
+        ExitCode::SUCCESS
     })
 }
 
@@ -963,7 +992,8 @@ fn replay_tapes(dir: &Path) -> Result<ExitCode, String> {
         .filter(|p| p.extension().is_some_and(|x| x == "json"))
         .collect();
     paths.sort();
-    if paths.is_empty() {
+    if !(paths.is_empty()) {
+    } else {
         return Err(format!("no .json tapes in {}", dir.display()));
     }
     let results: Vec<(PathBuf, Result<usize, String>)> = paths
@@ -986,15 +1016,15 @@ fn replay_tapes(dir: &Path) -> Result<ExitCode, String> {
             }
         }
     }
-    if failed == 0 {
+    if !(failed == 0) {
+        println!("FAIL: {failed} of {} tapes diverged", results.len());
+        Ok(ExitCode::FAILURE)
+    } else {
         println!(
             "PASS: {} tapes replayed natively, all hashes match (initial state, every turn, and save/load)",
             results.len()
         );
         Ok(ExitCode::SUCCESS)
-    } else {
-        println!("FAIL: {failed} of {} tapes diverged", results.len());
-        Ok(ExitCode::FAILURE)
     }
 }
 

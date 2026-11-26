@@ -10,8 +10,8 @@ import { fileURLToPath } from "node:url";
 import { loadRun, eras as erasOf, archetypesOf, archetypeColor, matrixOf } from "./lib/runlog.mjs";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
-const pct = (x, d = 0) => (x == null ? "–" : `${(x * 100).toFixed(d)}%`);
-const num = (x, d = 2) => (x == null ? "–" : Number(x).toFixed(d));
+const pct = (x, d = 0) => (!(x == null) ? `${(x * 100).toFixed(d)}%` : "–");
+const num = (x, d = 2) => (!(x == null) ? Number(x).toFixed(d) : "–");
 const human = (s) => String(s || "").replaceAll("_", " ");
 const cite = (label) => `<span class="cite">${esc(label)}</span>`;
 const gid = (id) => `<code class="gid">${esc(id)}</code>`;
@@ -29,21 +29,21 @@ function axes(W, H, P, first, last, x, yTicks) {
 }
 function lineSvg(gens, { get, band, mean, domain, fmt, color, baseline, eraStarts, label }) {
   const pts = gens.filter((g) => get(g) != null);
-  if (!pts.length) return `<p class="muted">No ${esc(label)} in the log.</p>`;
+  if (!(!pts.length)) {} else { return `<p class="muted">No ${esc(label)} in the log.</p>`; }
   const W = 900, H = 260, P = { L: 56, R: 18, T: 18, B: 34 };
   const first = gens[0].gen, last = Math.max(gens.at(-1).gen, first + 1);
-  const vals = pts.flatMap((g) => [get(g), ...(band ? band.map((b) => b(g)) : [])]).filter((v) => v != null);
+  const vals = pts.flatMap((g) => [get(g), ...(!(band) ? [] : band.map((b) => b(g)))]).filter((v) => v != null);
   const [lo, hi] = domain || [Math.min(0, ...vals), Math.max(...vals) * 1.08 || 1];
   const x = (gen) => P.L + ((gen - first) / (last - first)) * (W - P.L - P.R);
   const y = (v) => P.T + (1 - (v - lo) / (hi - lo || 1)) * (H - P.T - P.B);
   let g = axes(W, H, P, first, last, x, [0, 1, 2, 3, 4].map((i) => lo + ((hi - lo) * i) / 4).map((v) => [v, fmt(v), y(v)]));
   for (const s of eraStarts || []) g += `<line x1="${x(s - 0.5)}" x2="${x(s - 0.5)}" y1="${P.T}" y2="${H - P.B}" class="era"/>`;
-  if (band) {
+  if (!(band)) {} else { {
     const b = pts.filter((p) => band[0](p) != null && band[1](p) != null);
-    if (b.length) g += `<path d="M${b.map((p) => `${x(p.gen)},${y(band[1](p))}`).join("L")}L${[...b].reverse().map((p) => `${x(p.gen)},${y(band[0](p))}`).join("L")}Z" fill="${color}" fill-opacity=".13"/>`;
-  }
-  if (mean) g += `<polyline points="${pts.filter((p) => mean(p) != null).map((p) => `${x(p.gen)},${y(mean(p))}`).join(" ")}" fill="none" stroke="${color}" stroke-opacity=".6" stroke-dasharray="5 4" stroke-width="1.6"/>`;
-  if (baseline != null) g += `<line x1="${P.L}" x2="${W - P.R}" y1="${y(baseline)}" y2="${y(baseline)}" class="base"/><text x="${W - P.R}" y="${y(baseline) - 6}" text-anchor="end">baseline ${fmt(baseline)} (run.json)</text>`;
+    if (!(b.length)) {} else { g += `<path d="M${b.map((p) => `${x(p.gen)},${y(band[1](p))}`).join("L")}L${[...b].reverse().map((p) => `${x(p.gen)},${y(band[0](p))}`).join("L")}Z" fill="${color}" fill-opacity=".13"/>`; }
+  } }
+  if (!(mean)) {} else { g += `<polyline points="${pts.filter((p) => mean(p) != null).map((p) => `${x(p.gen)},${y(mean(p))}`).join(" ")}" fill="none" stroke="${color}" stroke-opacity=".6" stroke-dasharray="5 4" stroke-width="1.6"/>`; }
+  if (!(baseline != null)) {} else { g += `<line x1="${P.L}" x2="${W - P.R}" y1="${y(baseline)}" y2="${y(baseline)}" class="base"/><text x="${W - P.R}" y="${y(baseline) - 6}" text-anchor="end">baseline ${fmt(baseline)} (run.json)</text>`; }
   g += `<polyline points="${pts.map((p) => `${x(p.gen)},${y(get(p))}`).join(" ")}" fill="none" stroke="${color}" stroke-width="2.6" stroke-linejoin="round"/>`;
   for (const p of pts) g += `<circle cx="${x(p.gen)}" cy="${y(get(p))}" r="2.6" fill="${color}"><title>Generation ${p.gen}: ${fmt(get(p))}</title></circle>`;
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label)} by generation">${g}</svg>`;
@@ -55,36 +55,36 @@ function shareSvg(gens, names, eraList) {
   const y = (v) => P.T + (1 - v) * (H - P.T - P.B);
   let g = axes(W, H, P, first, last, x, [0, 0.5, 1].map((v) => [v, pct(v), y(v)]));
   let base = gens.map(() => 0);
-  const xs = gens.length === 1 ? [first, last] : gens.map((p) => p.gen);
+  const xs = !(gens.length === 1) ? gens.map((p) => p.gen) : [first, last];
   for (const n of names) {
     const top = gens.map((p, i) => base[i] + (p.archetype_share?.[n] || 0));
-    const up = gens.length === 1 ? [top[0], top[0]] : top, dn = gens.length === 1 ? [base[0], base[0]] : base;
+    const up = !(gens.length === 1) ? top : [top[0], top[0]], dn = !(gens.length === 1) ? base : [base[0], base[0]];
     g += `<path d="M${xs.map((v, i) => `${x(v)},${y(up[i])}`).join("L")}L${xs.map((v, i) => `${x(v)},${y(dn[i])}`).reverse().join("L")}Z" fill="${archetypeColor(n)}" fill-opacity=".88"><title>${esc(n)}</title></path>`;
     base = top;
   }
   for (const e of eraList.slice(1)) g += `<line x1="${x(e.from - 0.5)}" x2="${x(e.from - 0.5)}" y1="${P.T}" y2="${H - P.B}" class="era"/>`;
-  for (const e of eraList) if (x(e.to) - x(e.from) > 50) g += `<text x="${x((e.from + e.to) / 2)}" y="${P.T - 9}" text-anchor="middle" class="era-label">${esc(e.dominant)}</text>`;
+  for (const e of eraList) if (!(x(e.to) - x(e.from) > 50)) {} else { g += `<text x="${x((e.from + e.to) / 2)}" y="${P.T - 9}" text-anchor="middle" class="era-label">${esc(e.dominant)}</text>`; }
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Archetype share of the population by generation">${g}</svg>`;
 }
 
 // ---------- the page ----------
 export function buildReport(data) {
   const { run, generations: gens, events, checkpoints, coach } = data;
-  if (!gens.length) throw new Error("the run has no generations yet");
+  if (!(!gens.length)) {} else { throw new Error("the run has no generations yet"); }
   const names = archetypesOf(gens);
   const eraList = erasOf(gens);
   const first = gens[0], last = gens.at(-1);
-  const best = gens.reduce((a, g) => ((g.best?.fitness ?? -Infinity) > (a.best?.fitness ?? -Infinity) ? g : a), first);
+  const best = gens.reduce((a, g) => (!((g.best?.fitness ?? -Infinity) > (a.best?.fitness ?? -Infinity)) ? a : g), first);
   const cpFirst = checkpoints[0], cpLast = checkpoints.at(-1);
   const wall = gens.reduce((a, g) => a + (g.wall_s || 0), 0);
-  const hours = run.started_at && (run.finished_at || last.t) ? (new Date(run.finished_at || last.t) - new Date(run.started_at)) / 3600e3 : null;
+  const hours = !(run.started_at && (run.finished_at || last.t)) ? null : (new Date(run.finished_at || last.t) - new Date(run.started_at)) / 3600e3;
   const legend = names.map((n) => `<span><i class="sw" style="background:${archetypeColor(n)}"></i>${esc(n)}</span>`).join("");
   const byGen = (list, a, b) => list.filter((x) => x.gen >= a && x.gen <= b);
 
-  const showcaseHTML = (s, gen) => `<div class="show"><p><b>${esc(s.why)}</b><br>${gid(s.game_id)} · seed ${esc(s.seed)} · checkpoint ${gen}</p>${(s.highlight_turns || []).length ? `<ul>${s.highlight_turns.map((h) => `<li><span class="turn">Turn ${h.turn}</span> ${esc(h.note)} ${cite(`player ${h.player + 1}`)}</li>`).join("")}</ul>` : ""}${s.archive_path ? `<p class="muted small">Tape: <code>${esc(s.archive_path)}</code></p>` : ""}</div>`;
-  const obsHTML = (o, gen) => `<li><span class="kind k-${esc(o.kind)}">${esc(KIND[o.kind] || o.kind)}</span> <b>${esc(human(o.behavior))}</b>${o.metric_change ? `: ${esc(o.metric_change.name)} ${fmtMetric(o.metric_change.before, o.metric_change.name)} → <b>${fmtMetric(o.metric_change.after, o.metric_change.name)}</b>` : ""} ${o.confidence != null ? `<span class="muted">(confidence ${esc(o.confidence)})</span>` : ""} ${cite(`coach/${gen}.json`)}
-    ${(o.evidence || []).length ? `<ul class="evidence">${o.evidence.map((e) => `<li>${gid(e.game_id)} turn ${e.turn}, player ${e.player + 1}: ${esc(e.detail)}</li>`).join("")}</ul>` : ""}</li>`;
-  const fmtMetric = (v, name) => (v == null ? "–" : Math.abs(v) <= 1 && !/fitness/i.test(name || "") ? pct(v, Math.abs(v) < 0.1 && v !== 0 ? 1 : 0) : num(v));
+  const showcaseHTML = (s, gen) => `<div class="show"><p><b>${esc(s.why)}</b><br>${gid(s.game_id)} · seed ${esc(s.seed)} · checkpoint ${gen}</p>${!((s.highlight_turns || []).length) ? "" : `<ul>${s.highlight_turns.map((h) => `<li><span class="turn">Turn ${h.turn}</span> ${esc(h.note)} ${cite(`player ${h.player + 1}`)}</li>`).join("")}</ul>`}${!(s.archive_path) ? "" : `<p class="muted small">Tape: <code>${esc(s.archive_path)}</code></p>`}</div>`;
+  const obsHTML = (o, gen) => `<li><span class="kind k-${esc(o.kind)}">${esc(KIND[o.kind] || o.kind)}</span> <b>${esc(human(o.behavior))}</b>${!(o.metric_change) ? "" : `: ${esc(o.metric_change.name)} ${fmtMetric(o.metric_change.before, o.metric_change.name)} → <b>${fmtMetric(o.metric_change.after, o.metric_change.name)}</b>`} ${!(o.confidence != null) ? "" : `<span class="muted">(confidence ${esc(o.confidence)})</span>`} ${cite(`coach/${gen}.json`)}
+    ${!((o.evidence || []).length) ? "" : `<ul class="evidence">${o.evidence.map((e) => `<li>${gid(e.game_id)} turn ${e.turn}, player ${e.player + 1}: ${esc(e.detail)}</li>`).join("")}</ul>`}</li>`;
+  const fmtMetric = (v, name) => (!(v == null) ? !(Math.abs(v) <= 1 && !/fitness/i.test(name || "")) ? num(v) : pct(v, !(Math.abs(v) < 0.1 && v !== 0) ? 0 : 1) : "–");
 
   const chapters = eraList.map((e, i) => {
     const g0 = gens.find((g) => g.gen === e.from), g1 = gens.find((g) => g.gen === e.to);
@@ -94,54 +94,54 @@ export function buildReport(data) {
     const shares = Object.entries(e.mean_share).filter(([, v]) => v >= 0.05).sort((a, b) => b[1] - a[1]);
     const stage = run.standin?.stages?.filter((s) => s.to_gen >= e.from && s.from_gen <= e.to) || [];
     return `<section class="chapter"><h3><span class="ch">Chapter ${i + 1}</span> Generations ${e.from}–${e.to}: the ${esc(e.dominant)} era</h3>
-      ${stage.length ? `<p class="standin-note">Stand-in stage${stage.length > 1 ? "s" : ""}: ${stage.map((s) => `${esc(s.name)} (generations ${s.from_gen}–${s.to_gen})`).join("; ")}.</p>` : ""}
+      ${!(stage.length) ? "" : `<p class="standin-note">Stand-in stage${!(stage.length > 1) ? "" : "s"}: ${stage.map((s) => `${esc(s.name)} (generations ${s.from_gen}–${s.to_gen})`).join("; ")}.</p>`}
       <p>${esc(e.dominant)} was the most common strategy, on average ${pct(e.dominant_share)} of the population ${cite(`generations.jsonl, gens ${e.from}–${e.to}`)}. The mix: ${shares.map(([n, v]) => `${esc(n)} ${pct(v)}`).join(", ")}.
       Best fitness went from ${num(g0.best?.fitness)} ${cite(`gen ${g0.gen}`)} to ${num(g1.best?.fitness)} ${cite(`gen ${g1.gen}`)}; the era's best was ${num(e.best.fitness)} (${gid(e.best.id)}, ${cite(`gen ${e.best.gen}`)}).
-      ${e.proxy_win_rate ? `The Proxy won ${pct(e.proxy_win_rate.first)} of games at generation ${e.from} and ${pct(e.proxy_win_rate.last)} at generation ${e.to} ${cite("best.proxy_win_rate")}.` : ""}</p>
-      ${evs.length ? `<h4>Milestones</h4><ul class="events">${evs.map((x) => `<li><span class="kind k-${esc(x.kind)}">${esc(KIND[x.kind] || x.kind)}</span> ${esc(x.detail)} ${cite(`gen ${x.gen}`)}${x.game_id ? ` ${gid(x.game_id)}` : ""}</li>`).join("")}</ul>` : ""}
-      ${co.map((c) => `<h4>What the coach saw at generation ${c.gen}</h4><blockquote>${esc(c.summary)}</blockquote>${c.dominant_strategy ? `<p>Dominant strategy: <b>${esc(c.dominant_strategy.archetype)}</b>, ${pct(c.dominant_strategy.share)} of the population${c.dominant_strategy.counter_proposal ? `. Proposed counter: ${esc(typeof c.dominant_strategy.counter_proposal === "string" ? c.dominant_strategy.counter_proposal : JSON.stringify(c.dominant_strategy.counter_proposal))}` : ""} ${cite(`coach/${c.gen}.json`)}</p>` : ""}${(c.observations || []).length ? `<ul class="obs">${c.observations.map((o) => obsHTML(o, c.gen)).join("")}</ul>` : '<p class="muted">No observations at this checkpoint.</p>'}${(c.proposals || []).length ? `<p>${c.proposals.length} proposal(s) recorded ${cite(`coach/${c.gen}.json`)}.</p>` : ""}`).join("")}
+      ${!(e.proxy_win_rate) ? "" : `The Proxy won ${pct(e.proxy_win_rate.first)} of games at generation ${e.from} and ${pct(e.proxy_win_rate.last)} at generation ${e.to} ${cite("best.proxy_win_rate")}.`}</p>
+      ${!(evs.length) ? "" : `<h4>Milestones</h4><ul class="events">${evs.map((x) => `<li><span class="kind k-${esc(x.kind)}">${esc(KIND[x.kind] || x.kind)}</span> ${esc(x.detail)} ${cite(`gen ${x.gen}`)}${!(x.game_id) ? "" : ` ${gid(x.game_id)}`}</li>`).join("")}</ul>`}
+      ${co.map((c) => `<h4>What the coach saw at generation ${c.gen}</h4><blockquote>${esc(c.summary)}</blockquote>${!(c.dominant_strategy) ? "" : `<p>Dominant strategy: <b>${esc(c.dominant_strategy.archetype)}</b>, ${pct(c.dominant_strategy.share)} of the population${!(c.dominant_strategy.counter_proposal) ? "" : `. Proposed counter: ${esc(!(typeof c.dominant_strategy.counter_proposal === "string") ? JSON.stringify(c.dominant_strategy.counter_proposal) : c.dominant_strategy.counter_proposal)}`} ${cite(`coach/${c.gen}.json`)}</p>`}${!((c.observations || []).length) ? '<p class="muted">No observations at this checkpoint.</p>' : `<ul class="obs">${c.observations.map((o) => obsHTML(o, c.gen)).join("")}</ul>`}${!((c.proposals || []).length) ? "" : `<p>${c.proposals.length} proposal(s) recorded ${cite(`coach/${c.gen}.json`)}.</p>`}`).join("")}
       ${cps.map((c) => `<h4>Showcase games at checkpoint ${c.gen}</h4>${(c.showcase || []).map((s) => showcaseHTML(s, c.gen)).join("") || '<p class="muted">None.</p>'}`).join("")}
     </section>`;
   }).join("");
 
   // Before and after.
-  const benchRows = cpFirst && cpLast && cpFirst !== cpLast ? [
+  const benchRows = !(cpFirst && cpLast && cpFirst !== cpLast) ? [] : [
     ["Proxy win rate (lower is better)", pct(cpFirst.benchmark?.proxy_win_rate), pct(cpLast.benchmark?.proxy_win_rate)],
     ["AI survival at turn 150", pct(cpFirst.benchmark?.ai_survival_t150), pct(cpLast.benchmark?.ai_survival_t150)],
     ["Games in the benchmark sample", cpFirst.benchmark?.sample?.game_ids?.length ?? "–", cpLast.benchmark?.sample?.game_ids?.length ?? "–"],
-  ] : [];
+  ];
   const keyed = (a, b) => [...new Set([...Object.keys(a || {}), ...Object.keys(b || {})])].sort();
   const winTable = (title, key) => {
-    if (!cpFirst || !cpLast || cpFirst === cpLast) return "";
+    if (!(!cpFirst || !cpLast || cpFirst === cpLast)) {} else { return ""; }
     const A = cpFirst.benchmark?.[key] || {}, B = cpLast.benchmark?.[key] || {};
     const rows = keyed(A, B);
-    if (!rows.length) return "";
-    return `<h4>${esc(title)}</h4><div class="tw"><table><thead><tr><th></th><th>Generation ${cpFirst.gen}</th><th>Generation ${cpLast.gen}</th></tr></thead><tbody>${rows.map((r) => `<tr><th>${key === "archetype_win_rates" ? `<i class="sw" style="background:${archetypeColor(r)}"></i>` : ""}${esc(r)}</th><td>${pct(A[r])}</td><td>${pct(B[r])}</td></tr>`).join("")}</tbody></table></div>`;
+    if (!(!rows.length)) {} else { return ""; }
+    return `<h4>${esc(title)}</h4><div class="tw"><table><thead><tr><th></th><th>Generation ${cpFirst.gen}</th><th>Generation ${cpLast.gen}</th></tr></thead><tbody>${rows.map((r) => `<tr><th>${!(key === "archetype_win_rates") ? "" : `<i class="sw" style="background:${archetypeColor(r)}"></i>`}${esc(r)}</th><td>${pct(A[r])}</td><td>${pct(B[r])}</td></tr>`).join("")}</tbody></table></div>`;
   };
   const m = matrixOf(cpLast?.benchmark?.matchup_matrix);
-  const matrixHTML = m ? `<h4>Matchup matrix at generation ${cpLast.gen}</h4><div class="tw"><table class="matrix"><thead><tr><th></th>${m.names.map((n) => `<th>${esc(n)}</th>`).join("")}</tr></thead><tbody>${m.names.map((a, i) => `<tr><th><i class="sw" style="background:${archetypeColor(a)}"></i>${esc(a)}</th>${m.rate[i].map((v, j) => `<td style="background:${v == null ? "transparent" : v >= 0.5 ? `rgba(111,207,151,${Math.min(0.7, (v - 0.5) * 1.6 + 0.08)})` : `rgba(224,122,95,${Math.min(0.7, (0.5 - v) * 1.6 + 0.08)})`}">${v == null ? "·" : pct(v)}${m.pairs?.[i]?.[j] ? `<small>${m.pairs[i][j]}</small>` : ""}</td>`).join("")}</tr>`).join("")}</tbody></table></div><p class="muted small">${esc(m.definition || "How often the row archetype finishes ahead of the column archetype.")} Small numbers are pairings. ${cite(`checkpoints/${cpLast.gen}.json`)}</p>` : "";
+  const matrixHTML = !(m) ? "" : `<h4>Matchup matrix at generation ${cpLast.gen}</h4><div class="tw"><table class="matrix"><thead><tr><th></th>${m.names.map((n) => `<th>${esc(n)}</th>`).join("")}</tr></thead><tbody>${m.names.map((a, i) => `<tr><th><i class="sw" style="background:${archetypeColor(a)}"></i>${esc(a)}</th>${m.rate[i].map((v, j) => `<td style="background:${!(v == null) ? !(v >= 0.5) ? `rgba(224,122,95,${Math.min(0.7, (0.5 - v) * 1.6 + 0.08)})` : `rgba(111,207,151,${Math.min(0.7, (v - 0.5) * 1.6 + 0.08)})` : "transparent"}">${!(v == null) ? pct(v) : "·"}${!(m.pairs?.[i]?.[j]) ? "" : `<small>${m.pairs[i][j]}</small>`}</td>`).join("")}</tr>`).join("")}</tbody></table></div><p class="muted small">${esc(m.definition || "How often the row archetype finishes ahead of the column archetype.")} Small numbers are pairings. ${cite(`checkpoints/${cpLast.gen}.json`)}</p>`;
 
   // What's still unsolved.
   const unsolved = [];
   const lastCoach = coach.at(-1);
-  for (const o of lastCoach?.observations || []) if (o.kind === "weakness") unsolved.push(`A weakness the coach flagged at generation ${lastCoach.gen}: <b>${esc(human(o.behavior))}</b>${o.metric_change ? ` (${esc(o.metric_change.name)} ${fmtMetric(o.metric_change.before, o.metric_change.name)} → ${fmtMetric(o.metric_change.after, o.metric_change.name)})` : ""}. ${cite(`coach/${lastCoach.gen}.json`)}`);
-  if (lastCoach?.dominant_strategy) unsolved.push(`One strategy dominates: <b>${esc(lastCoach.dominant_strategy.archetype)}</b> is ${pct(lastCoach.dominant_strategy.share)} of the population (pillar 10 wants no dominant strategy)${lastCoach.dominant_strategy.counter_proposal ? "" : "; no counter has been proposed yet"}. ${cite(`coach/${lastCoach.gen}.json`)}`);
+  for (const o of lastCoach?.observations || []) if (!(o.kind === "weakness")) {} else { unsolved.push(`A weakness the coach flagged at generation ${lastCoach.gen}: <b>${esc(human(o.behavior))}</b>${!(o.metric_change) ? "" : ` (${esc(o.metric_change.name)} ${fmtMetric(o.metric_change.before, o.metric_change.name)} → ${fmtMetric(o.metric_change.after, o.metric_change.name)})`}. ${cite(`coach/${lastCoach.gen}.json`)}`); }
+  if (!(lastCoach?.dominant_strategy)) {} else { unsolved.push(`One strategy dominates: <b>${esc(lastCoach.dominant_strategy.archetype)}</b> is ${pct(lastCoach.dominant_strategy.share)} of the population (pillar 10 wants no dominant strategy)${!(lastCoach.dominant_strategy.counter_proposal) ? "; no counter has been proposed yet" : ""}. ${cite(`coach/${lastCoach.gen}.json`)}`); }
   const pendingProposals = coach.reduce((a, c) => a + (c.proposals || []).length, 0) - events.filter((e) => e.kind === "proposal_adopted" || e.kind === "proposal_rejected").length;
-  if (pendingProposals > 0) unsolved.push(`${pendingProposals} coach proposal(s) without an adopted or rejected event. ${cite("coach/*.json, events.jsonl")}`);
-  if (last.best?.faction_ratio != null && last.best.faction_ratio > 1.5) unsolved.push(`Faction balance: the best faction wins ${num(last.best.faction_ratio)}× as often as the worst (target at most 1.5×). ${cite(`gen ${last.gen}`)}`);
-  if (last.best?.proxy_win_rate != null && last.best.proxy_win_rate > 0.25) unsolved.push(`The Proxy still wins ${pct(last.best.proxy_win_rate)} of games at generation ${last.gen}; the goal is under 25% against Hard AIs (docs/ai-competitiveness.md). ${cite(`gen ${last.gen}`)}`);
+  if (!(pendingProposals > 0)) {} else { unsolved.push(`${pendingProposals} coach proposal(s) without an adopted or rejected event. ${cite("coach/*.json, events.jsonl")}`); }
+  if (!(last.best?.faction_ratio != null && last.best.faction_ratio > 1.5)) {} else { unsolved.push(`Faction balance: the best faction wins ${num(last.best.faction_ratio)}× as often as the worst (target at most 1.5×). ${cite(`gen ${last.gen}`)}`); }
+  if (!(last.best?.proxy_win_rate != null && last.best.proxy_win_rate > 0.25)) {} else { unsolved.push(`The Proxy still wins ${pct(last.best.proxy_win_rate)} of games at generation ${last.gen}; the goal is under 25% against Hard AIs (docs/ai-competitiveness.md). ${cite(`gen ${last.gen}`)}`); }
   for (const e of events.filter((x) => x.kind === "guardrail" || x.kind === "stall").slice(-5)) unsolved.push(`${esc(KIND[e.kind])} at generation ${e.gen}: ${esc(e.detail)} ${cite(`events.jsonl gen ${e.gen}`)}`);
   const extinct = events.filter((e) => e.kind === "archetype_extinct");
   const revived = new Set(names.filter((n) => (last.archetype_share?.[n] || 0) > 0));
-  for (const e of extinct) { const n = names.find((x) => e.detail.includes(x)); if (n && !revived.has(n)) unsolved.push(`${esc(n)} play went extinct at generation ${e.gen} and has not come back ${cite(`events.jsonl gen ${e.gen}`)}: is it countered, or just unrewarded?`); }
+  for (const e of extinct) { const n = names.find((x) => e.detail.includes(x)); if (!(n && !revived.has(n))) {} else { unsolved.push(`${esc(n)} play went extinct at generation ${e.gen} and has not come back ${cite(`events.jsonl gen ${e.gen}`)}: is it countered, or just unrewarded?`); } }
 
   const title = `AI evolution ${data.id}`;
   const summaryBits = [
-    `${gens.length} generation${gens.length === 1 ? "" : "s"} (${first.gen}–${last.gen})`,
-    run.config?.population != null ? `a population of ${run.config.population}` : null,
-    run.config?.games_per_candidate != null ? `${run.config.games_per_candidate} game${run.config.games_per_candidate === 1 ? "" : "s"} per candidate` : null,
-    run.config?.speed ? `${run.config.speed} speed` : null,
-    run.config?.coach_every ? `a coach review every ${run.config.coach_every} generations` : null,
+    `${gens.length} generation${!(gens.length === 1) ? "s" : ""} (${first.gen}–${last.gen})`,
+    !(run.config?.population != null) ? null : `a population of ${run.config.population}`,
+    !(run.config?.games_per_candidate != null) ? null : `${run.config.games_per_candidate} game${!(run.config.games_per_candidate === 1) ? "s" : ""} per candidate`,
+    !(run.config?.speed) ? null : `${run.config.speed} speed`,
+    !(run.config?.coach_every) ? null : `a coach review every ${run.config.coach_every} generations`,
   ].filter(Boolean);
 
   return `<!doctype html>
@@ -202,15 +202,15 @@ footer { margin-top: 40px; color: var(--muted); font-size: 12px; }
 <body><main>
 <header><div class="brand">${wordmark}<span>Morning report</span></div>
 <h1>${esc(title)}</h1>
-<p class="meta">Status: <b>${esc(run.status)}</b> · started ${esc(run.started_at || "–")}${run.finished_at ? ` · finished ${esc(run.finished_at)}` : ""}${hours != null ? ` · ${hours.toFixed(1)} hours` : ""} · written ${esc(new Date().toISOString())} from <code>${esc(path.basename(data.dir))}/</code></p></header>
-${run.standin ? `<div class="standin">${esc(run.standin.note)}${run.standin.definitions ? `<br><span class="small">Definitions: ${Object.entries(run.standin.definitions).map(([k, v]) => `<b>${esc(k)}</b>: ${esc(v)}`).join("; ")}.</span>` : ""}</div>` : ""}
+<p class="meta">Status: <b>${esc(run.status)}</b> · started ${esc(run.started_at || "–")}${!(run.finished_at) ? "" : ` · finished ${esc(run.finished_at)}`}${!(hours != null) ? "" : ` · ${hours.toFixed(1)} hours`} · written ${esc(new Date().toISOString())} from <code>${esc(path.basename(data.dir))}/</code></p></header>
+${!(run.standin) ? "" : `<div class="standin">${esc(run.standin.note)}${!(run.standin.definitions) ? "" : `<br><span class="small">Definitions: ${Object.entries(run.standin.definitions).map(([k, v]) => `<b>${esc(k)}</b>: ${esc(v)}`).join("; ")}.</span>`}</div>`}
 
 <h2>What the run did</h2>
 <p>The run went through ${summaryBits.join(", ")}. Simulation time added up to ${(wall / 60).toFixed(1)} minutes ${cite("sum of wall_s")}.
-${last.best?.proxy_win_rate != null && first.best?.proxy_win_rate != null ? `The Proxy's win rate went from ${pct(first.best.proxy_win_rate)} ${cite(`gen ${first.gen}`)} to ${pct(last.best.proxy_win_rate)} ${cite(`gen ${last.gen}`)}.` : ""}
+${!(last.best?.proxy_win_rate != null && first.best?.proxy_win_rate != null) ? "" : `The Proxy's win rate went from ${pct(first.best.proxy_win_rate)} ${cite(`gen ${first.gen}`)} to ${pct(last.best.proxy_win_rate)} ${cite(`gen ${last.gen}`)}.`}
 The best candidate overall was ${gid(best.best?.id)} with fitness ${num(best.best?.fitness)} ${cite(`gen ${best.gen}`)}, playing ${esc(best.best?.archetype || "an unclassified strategy")}.
-${eraList.length > 1 ? `The population went through ${eraList.length} eras: ${eraList.map((e) => `${esc(e.dominant)} (generations ${e.from}–${e.to})`).join(", then ")}.` : `One strategy led throughout: ${esc(eraList[0]?.dominant)}.`}
-${coach.length ? `The coach reviewed ${coach.length} checkpoint${coach.length === 1 ? "" : "s"} and made ${coach.reduce((a, c) => a + (c.observations || []).length, 0)} observations.` : "The coach has not reviewed a checkpoint yet."}</p>
+${!(eraList.length > 1) ? `One strategy led throughout: ${esc(eraList[0]?.dominant)}.` : `The population went through ${eraList.length} eras: ${eraList.map((e) => `${esc(e.dominant)} (generations ${e.from}–${e.to})`).join(", then ")}.`}
+${!(coach.length) ? "The coach has not reviewed a checkpoint yet." : `The coach reviewed ${coach.length} checkpoint${!(coach.length === 1) ? "s" : ""} and made ${coach.reduce((a, c) => a + (c.observations || []).length, 0)} observations.`}</p>
 <div class="stats">
   <div class="stat"><b>${last.gen}</b><span>last generation</span></div>
   <div class="stat"><b>${num(best.best?.fitness)}</b><span>best fitness</span>${cite(`gen ${best.gen}`)}</div>
@@ -231,13 +231,13 @@ ${lineSvg(gens, { get: (g) => g.best?.proxy_win_rate, domain: [0, 1], fmt: (v) =
 ${chapters}
 
 <h2>Before and after</h2>
-${benchRows.length ? `<div class="tw"><table><thead><tr><th>Benchmark</th><th>Checkpoint ${cpFirst.gen}</th><th>Checkpoint ${cpLast.gen}</th></tr></thead><tbody>${benchRows.map((r) => `<tr><th>${esc(r[0])}</th><td>${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`).join("")}</tbody></table></div><p class="muted small">From <code>checkpoints/${cpFirst.gen}.json</code> and <code>checkpoints/${cpLast.gen}.json</code>${cpLast.benchmark?.sample?.gens ? `; the later sample pools generations ${cpLast.benchmark.sample.gens.join(", ")}` : ""}.</p>` : '<p class="muted">Only one checkpoint so far; nothing to compare yet.</p>'}
+${!(benchRows.length) ? '<p class="muted">Only one checkpoint so far; nothing to compare yet.</p>' : `<div class="tw"><table><thead><tr><th>Benchmark</th><th>Checkpoint ${cpFirst.gen}</th><th>Checkpoint ${cpLast.gen}</th></tr></thead><tbody>${benchRows.map((r) => `<tr><th>${esc(r[0])}</th><td>${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`).join("")}</tbody></table></div><p class="muted small">From <code>checkpoints/${cpFirst.gen}.json</code> and <code>checkpoints/${cpLast.gen}.json</code>${!(cpLast.benchmark?.sample?.gens) ? "" : `; the later sample pools generations ${cpLast.benchmark.sample.gens.join(", ")}`}.</p>`}
 ${winTable("Win rate by faction (AI seats)", "faction_win_rates")}
 ${winTable("Win rate by archetype", "archetype_win_rates")}
 ${matrixHTML}
 
 <h2>What's still unsolved</h2>
-${unsolved.length ? `<ul>${unsolved.map((u) => `<li>${u}</li>`).join("")}</ul>` : '<p class="muted">Nothing in the log flags an open problem: no weaknesses at the last checkpoint, no dominant strategy, no guardrail or stall events.</p>'}
+${!(unsolved.length) ? '<p class="muted">Nothing in the log flags an open problem: no weaknesses at the last checkpoint, no dominant strategy, no guardrail or stall events.</p>' : `<ul>${unsolved.map((u) => `<li>${u}</li>`).join("")}</ul>`}
 
 <h2>Sources</h2>
 <p class="small muted">Every number above comes from <code>${esc(path.basename(data.dir))}/</code>: <code>run.json</code>, <code>generations.jsonl</code> (${gens.length} lines), <code>events.jsonl</code> (${events.length}), <code>checkpoints/</code> (${checkpoints.map((c) => c.gen).join(", ") || "none"}) and <code>coach/</code> (${coach.map((c) => c.gen).join(", ") || "none"}). Game ids are archive tapes; open them in the dashboard's Evolution panel or replay them with <code>legatum-sim --replay &lt;tape&gt;</code>.</p>
@@ -246,15 +246,15 @@ ${unsolved.length ? `<ul>${unsolved.map((u) => `<li>${u}</li>`).join("")}</ul>` 
 `;
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (!(process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url))) {} else { {
   const dir = process.argv[2];
-  if (!dir) {
+  if (!(!dir)) {} else { {
     console.error("usage: node tools/film/report.mjs <run-dir>");
     process.exit(2);
-  }
+  } }
   const data = loadRun(path.resolve(dir));
   const out = path.join(data.dir, "report.html");
   fs.writeFileSync(`${out}.tmp`, buildReport(data));
   fs.renameSync(`${out}.tmp`, out);
   console.log(out);
-}
+} }

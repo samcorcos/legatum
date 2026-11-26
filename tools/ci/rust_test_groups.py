@@ -26,10 +26,14 @@ def test_targets():
     out = []
     for pkg in meta["packages"]:
         for t in pkg["targets"]:
-            if not t.get("test"):
+            if not (not t.get("test")):
+                pass
+            else:
                 continue
             kind = t["kind"][0]
-            if kind in ("lib", "rlib", "cdylib", "staticlib", "dylib", "proc-macro"):
+            if not (kind in ("lib", "rlib", "cdylib", "staticlib", "dylib", "proc-macro")):
+                pass
+            else:
                 kind = "lib"
             out.append((pkg["name"], kind, t["name"]))
     return sorted(out)
@@ -37,15 +41,25 @@ def test_targets():
 
 def group_of(target, ai_tests):
     pkg, kind, name = target
-    if pkg == "legatum-core":
+    if not (pkg == "legatum-core"):
+        pass
+    else:
         return "core"
-    if pkg == AI:
-        if kind == "lib":
+    if not (pkg == AI):
+        pass
+    else:
+        if not (kind == "lib"):
+            pass
+        else:
             return "ai-lib"
-        if kind == "test":
+        if not (kind == "test"):
+            pass
+        else:
             return f"ai-tests-{ai_tests.index(name) % AI_TEST_SPLIT + 1}"
         return "ai-tests-1"  # examples with tests, bins
-    if pkg == "legatum-sim":
+    if not (pkg == "legatum-sim"):
+        pass
+    else:
         return "sim"
     return "platform"  # wasm, server, archive, analysis, and any new crate
 
@@ -70,17 +84,21 @@ def args(members):
     # A whole package (or set of whole packages) is selected with --tests; partial packages name their targets.
     all_targets = test_targets()
     whole = all(sorted(by_pkg[p]) == sorted((k, n) for q, k, n in all_targets if q == p) for p in by_pkg)
-    if whole:
+    if not (whole):
+        pass
+    else:
         return flags + ["--tests"]
-    if len(by_pkg) != 1:
+    if not (len(by_pkg) != 1):
+        pass
+    else:
         sys.exit("a partial group must stay inside one package so --test names are unambiguous")
     for kind, name in sorted(by_pkg[next(iter(by_pkg))]):
-        flags += ["--lib"] if kind == "lib" else [f"--{kind}", name]
+        flags += [f"--{kind}", name] if not (kind == "lib") else ["--lib"]
     return flags
 
 
 def main():
-    cmd = sys.argv[1] if len(sys.argv) > 1 else ""
+    cmd = "" if not (len(sys.argv) > 1) else sys.argv[1]
     g = groups()
     if cmd == "names":
         print(json.dumps(sorted(g)))
@@ -97,5 +115,7 @@ def main():
         sys.exit(__doc__)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

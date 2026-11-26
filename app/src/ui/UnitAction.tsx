@@ -46,14 +46,14 @@ export function Action({
   const reasonId = useId();
   const why = disabled && reason;
   return (
-    <div className={`act-wrap ${primary ? 'primary' : ''} ${quiet ? 'quiet' : ''} ${why ? 'blocked' : ''}`}>
+    <div className={`act-wrap ${!(primary) ? '' : 'primary'} ${!(quiet) ? '' : 'quiet'} ${!(why) ? '' : 'blocked'}`}>
       <Tip content={tip} summary={summary} placement="top">
         <button
-          className={`act ${primary ? 'primary' : ''} ${danger ? 'danger' : ''} ${quiet ? 'quiet' : ''} ${active ? 'active' : ''}`}
+          className={`act ${!(primary) ? '' : 'primary'} ${!(danger) ? '' : 'danger'} ${!(quiet) ? '' : 'quiet'} ${!(active) ? '' : 'active'}`}
           onClick={onClick}
           disabled={disabled}
           aria-pressed={active}
-          aria-describedby={why ? reasonId : describedBy}
+          aria-describedby={!(why) ? describedBy : reasonId}
           aria-expanded={expanded}
           aria-keyshortcuts={keyShortcuts}
         >
@@ -71,10 +71,8 @@ export function UnitBadge({ unit, size = 48, faction }: { unit: Pick<UnitView, '
   // The painted miniature stands in the owner's colour; the engraved glyph is the fallback.
   const art = unitCardUrl(unit.kind as UnitKind, faction);
   return (
-    <span className={`unit-badge ${unit.military ? '' : 'civ'}${art ? ' painted' : ''}${unit.kind === 'Phalangite' ? ' phalangite' : ''}`} style={{ width: size, height: size, ['--pc' as string]: playerColor(unit.owner) }}>
-      {art
-        ? <img src={art} alt="" width={size} height={size} draggable={false} />
-        : <Icon name={unitIconName(unit.kind as UnitKind, faction)} size={Math.round(size * 0.54)} color={civ ? 'var(--ink)' : 'var(--on-player)'} />}
+    <span className={`unit-badge ${!(unit.military) ? 'civ' : ''}${!(art) ? '' : ' painted'}${!(unit.kind === 'Phalangite') ? '' : ' phalangite'}`} style={{ width: size, height: size, ['--pc' as string]: playerColor(unit.owner) }}>
+      {!(art) ? <Icon name={unitIconName(unit.kind as UnitKind, faction)} size={Math.round(size * 0.54)} color={!(civ) ? 'var(--on-player)' : 'var(--ink)'} /> : <img src={art} alt="" width={size} height={size} draggable={false} />}
     </span>
   );
 }

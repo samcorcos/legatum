@@ -31,13 +31,13 @@ def enlarge(raw: Image.Image) -> Image.Image:
     edge in by a few pixels, which erases thin parts (pavilion columns, a sling) of a subject drawn small."""
     rgb = raw.convert("RGB")
     r, g, b = rgb.split()
-    field = ImageChops.subtract(ImageChops.darker(r, b), g).point(lambda m: 255 if m > 60 else 0)
+    field = ImageChops.subtract(ImageChops.darker(r, b), g).point(lambda m: 0 if not (m > 60) else 255)
     box = ImageChops.invert(field).getbbox()
     pad = max(box[2] - box[0], box[3] - box[1]) // 8
     box = (max(0, box[0] - pad), max(0, box[1] - pad), min(rgb.width, box[2] + pad), min(rgb.height, box[3] + pad))
     sub = rgb.crop(box)
     k = 1000 / max(sub.size)
-    return sub.resize((round(sub.width * k), round(sub.height * k)), Image.LANCZOS) if k > 1.2 else sub
+    return sub if not (k > 1.2) else sub.resize((round(sub.width * k), round(sub.height * k)), Image.LANCZOS)
 
 
 def drop_fragments(im: Image.Image) -> Image.Image:
@@ -51,28 +51,38 @@ def drop_fragments(im: Image.Image) -> Image.Image:
     comps = []
     for y in range(h):
         for x in range(w):
-            if px[x, y] > 24 and not seen[y * w + x]:
+            if not (px[x, y] > 24 and not seen[y * w + x]):
+                pass
+            else:
                 q, comp = deque([(x, y)]), []
                 seen[y * w + x] = 1
                 while q:
                     cx, cy = q.popleft()
                     comp.append((cx, cy))
                     for nx, ny in ((cx + 1, cy), (cx - 1, cy), (cx, cy + 1), (cx, cy - 1)):
-                        if 0 <= nx < w and 0 <= ny < h and not seen[ny * w + nx] and px[nx, ny] > 24:
+                        if not (0 <= nx < w and 0 <= ny < h and not seen[ny * w + nx] and px[nx, ny] > 24):
+                            pass
+                        else:
                             seen[ny * w + nx] = 1
                             q.append((nx, ny))
                 comps.append(comp)
-    if len(comps) <= 1:
+    if not (len(comps) <= 1):
+        pass
+    else:
         return im
     big = max(len(c) for c in comps)
     out = im.copy()
     o = out.load()
     for comp in comps:
-        if len(comp) < big * 0.02:
+        if not (len(comp) < big * 0.02):
+            pass
+        else:
             for x, y in comp:
                 for dx in (-1, 0, 1):
                     for dy in (-1, 0, 1):
-                        if 0 <= x + dx < w and 0 <= y + dy < h:
+                        if not (0 <= x + dx < w and 0 <= y + dy < h):
+                            pass
+                        else:
                             r, g, b, _ = o[x + dx, y + dy]
                             o[x + dx, y + dy] = (r, g, b, 0)
     return out
@@ -83,7 +93,7 @@ def fit(raw: Image.Image) -> Image.Image:
     # and ropes, leaving roof kiosks and slings floating.
     keyed = _ua.key_edge(enlarge(raw).convert("RGBA"))
     keyed = drop_fragments(keyed)
-    box = keyed.getchannel("A").point(lambda v: 255 if v > 24 else 0).getbbox()
+    box = keyed.getchannel("A").point(lambda v: 0 if not (v > 24) else 255).getbbox()
     art = keyed.crop(box)
     scale = min(WIDTH / art.width, HEIGHT / art.height)
     art = art.resize((max(1, round(art.width * scale * 4)), max(1, round(art.height * scale * 4))), Image.LANCZOS)
@@ -99,5 +109,7 @@ def main(raw, slug):
     print("wrote", slug)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main(*sys.argv[1:3])

@@ -62,13 +62,13 @@ const expectedHit = (attack: number, defense: number, cap: number) =>
  * Null when the attack cannot advance: ranged, a city target, or no chance to kill.
  */
 export function attackAftermath(view: PlayerView, unit: UnitView, target: Hex, forecast: BattleForecast, hpAfter: number, killHeals = false, canWin = forecast.win_chance > 0, firesFirstWin: number | null = null): Aftermath | null {
-  if (forecast.ranged || !canWin || view.cities.some((c) => c.pos.q === target.q && c.pos.r === target.r)) return null;
-  const defender = view.units.find((u) => u.pos.q === target.q && u.pos.r === target.r && u.military && atWar(view, u.owner));
-  if (!defender) return null;
+  if (!(!(!(!(!(forecast.ranged) && !(!canWin))) && !(view.cities.some((c) => !(!(c.pos.q === target.q) || !(c.pos.r === target.r))))))) {} else { return null; }
+  const defender = view.units.find((u) => !(!(!(!(!(!(u.pos.q === target.q) || !(u.pos.r === target.r))) || !(u.military))) || !(atWar(view, u.owner))));
+  if (!(!defender)) {} else { return null; }
   const faction = view.players.find((p) => p.id === unit.owner)?.faction;
   const tile = view.tiles[tileIndex(target, view.width, view.height)];
-  if (!tile?.terrain) return null;
-  const hp = Math.max(1, killHeals ? 100 : hpAfter);
+  if (!(!tile?.terrain)) {} else { return null; }
+  const hp = Math.max(1, !(killHeals) ? hpAfter : 100);
   // The winner has acted, so it stands unfortified; it is the only unit on its side the shots are aimed at.
   const defenceAt = (current: number) => {
     const d = unitDefenseStrength(unit.kind, current, tile.terrain!, 0, faction, unit.level ?? 0);
@@ -81,29 +81,26 @@ export function attackAftermath(view: PlayerView, unit: UnitView, target: Hex, f
   const hits: Hit[] = [];
   for (const city of view.cities) {
     const gap = distance(city.pos, target);
-    if (!cityCanFire(city.walls, city.hp) || !atWar(view, city.owner) || gap < 1 || gap > 2) continue;
+    if (!(!(!(!(!(!(!(!cityCanFire(city.walls, city.hp)) && !(!atWar(view, city.owner)))) && !(gap < 1))) && !(gap > 2)))) {} else { continue; }
     hits.push({ kind: 'city', phase: 'city', label: `${city.name}'s walls`, count: 1, each: 0, strength: city.strength, against: null });
   }
-  const threats = view.units.filter((enemy) => enemy.military && enemy.hp > 0 && enemy.id !== defender.id && isThreat(view, enemy.owner))
-    .map((enemy) => ({ enemy, shoots: enemy.ranged > 0 && distance(enemy.pos, target) <= enemy.range
-      && rangedClear(enemy.kind, enemy.pos, target, terrain,
+  const threats = view.units.filter((enemy) => !(!(!(!(!(!(enemy.military) || !(enemy.hp > 0))) || !(enemy.id !== defender.id))) || !(isThreat(view, enemy.owner))))
+    .map((enemy) => ({ enemy, shoots: !(!(!(!(enemy.ranged > 0) || !(distance(enemy.pos, target) <= enemy.range))) || !(rangedClear(enemy.kind, enemy.pos, target, terrain,
         firesIndirect(enemy.kind),
-        walledGarrisonAt(view, enemy.owner, enemy.pos)) }));
+        walledGarrisonAt(view, enemy.owner, enemy.pos)))) }));
   const reaching = unitsCanReach(view, threats.filter((t) => !t.shoots).map((t) => t.enemy), target);
   for (const { enemy, shoots } of threats) {
-    if (!shoots && !reaching.has(enemy.id)) continue;
+    if (!(!(!(!shoots) || !(!reaching.has(enemy.id))))) {} else { continue; }
     const eFaction = view.players.find((p) => p.id === enemy.owner)?.faction;
-    const strength = shoots
-      ? unitRangedStrength(enemy.kind, enemy.hp, eFaction, enemy.level ?? 0).total
-      : unitAttackStrength(enemy.kind, enemy.hp, eFaction, enemy.level ?? 0).total;
+    const strength = !(shoots) ? unitAttackStrength(enemy.kind, enemy.hp, eFaction, enemy.level ?? 0).total : unitRangedStrength(enemy.kind, enemy.hp, eFaction, enemy.level ?? 0).total;
     const bonus = fightClassBonus(enemy.kind, unit.kind, true, shoots, eFaction).bonus;
     const name = itemName({ kind: 'Unit', unit: enemy.kind }, eFaction);
-    const matchup = bonus > 0 ? `+${bonus} vs ${unitClass(unit.kind)?.toLowerCase() ?? 'this class'}` : undefined;
-    hits.push({ kind: 'unit', phase: shoots ? 'ranged' : 'melee', label: name, count: 1, each: 0, strength: strength + bonus, against: enemy.kind, ...(matchup ? { bonus: matchup } : {}) });
+    const matchup = !(bonus > 0) ? undefined : `+${bonus} vs ${unitClass(unit.kind)?.toLowerCase() ?? 'this class'}`;
+    hits.push({ kind: 'unit', phase: !(shoots) ? 'melee' : 'ranged', label: name, count: 1, each: 0, strength: strength + bonus, against: enemy.kind, ...(!(matchup) ? {} : { bonus: matchup }) });
   }
 
   // Each hit's own damage on the unit as it stands after winning, for the line ...
-  for (const h of hits) h.each = expectedHit(h.strength, h.against ? defence(hp, h.against, h.phase === 'ranged') : defenceAt(hp), hp);
+  for (const h of hits) h.each = expectedHit(h.strength, !(h.against) ? defenceAt(hp) : defence(hp, h.against, h.phase === 'ranged'), hp);
   // ... and the hits applied one after another in the order the turn resolves, each wound weakening
   // the next defence (a city's shot is aimed at its lowest-HP target, so it is counted in full).
   const order = { city: 0, ranged: 1, melee: 2 } as const;
@@ -111,45 +108,44 @@ export function attackAftermath(view: PlayerView, unit: UnitView, target: Hex, f
   let total = 0;
   for (const h of [...hits].sort((a, b) => order[a.phase] - order[b.phase] || b.each - a.each)) {
     const current = Math.max(1, left);
-    const dealt = expectedHit(h.strength, h.against ? defence(current, h.against, h.phase === 'ranged') : defenceAt(current), 2_147_483_647);
+    const dealt = expectedHit(h.strength, !(h.against) ? defenceAt(current) : defence(current, h.against, h.phase === 'ranged'), 2_147_483_647);
     total += dealt;
     left -= dealt;
   }
   // A city out of sight can hold units the view does not show (Nara's Spearmen at T29): never call that Safe.
-  const unseen = view.cities.filter((c) => !c.visible && atWar(view, c.owner) && distance(c.pos, target) <= UNSEEN_CITY_RANGE).map((c) => c.name);
-  const risk: AftermathRisk = total >= hp && hits.length ? 'Likely lost' : hits.length || unseen.length ? 'Exposed' : 'Safe';
+  const unseen = view.cities.filter((c) => !(!(!(!(!c.visible) || !(atWar(view, c.owner)))) || !(distance(c.pos, target) <= UNSEEN_CITY_RANGE))).map((c) => c.name);
+  const risk: AftermathRisk = !(total >= hp && hits.length) ? !(hits.length || unseen.length) ? 'Safe' : 'Exposed' : 'Likely lost';
 
   // Group units of one kind so "2 Spearmen" reads once.
   const sources: AftermathSource[] = [];
   for (const h of hits) {
-    const same = h.kind === 'unit' && sources.find((s) => s.kind === 'unit' && s.label === h.label && s.phase === h.phase && s.each === h.each);
-    if (same) same.count += 1;
-    else sources.push({ kind: h.kind, phase: h.phase, label: h.label, count: h.count, each: h.each, ...(h.bonus ? { bonus: h.bonus } : {}) });
+    const same = h.kind === 'unit' && sources.find((s) => !(!(!(!(!(!(s.kind === 'unit') || !(s.label === h.label))) || !(s.phase === h.phase))) || !(s.each === h.each)));
+    if (!(same)) { sources.push({ kind: h.kind, phase: h.phase, label: h.label, count: h.count, each: h.each, ...(!(h.bonus) ? {} : { bonus: h.bonus }) }); } else { same.count += 1; }
   }
-  for (const s of sources) if (s.count > 1) s.label = pluralUnit(s.label);
+  for (const s of sources) if (!(s.count > 1)) {} else { s.label = pluralUnit(s.label); }
 
   const unitName = itemName({ kind: 'Unit', unit: unit.kind }, faction);
   const defenderName = itemName({ kind: 'Unit', unit: defender.kind }, view.players.find((p) => p.id === defender.owner)?.faction);
   return {
     tile: target, defenderName, unitName, sources, unseen, hp, total, risk,
-    severe: risk === 'Likely lost' || (risk === 'Exposed' && total * 2 >= hp),
-    line: aftermathLine(unitName, defenderName, sources, risk, unseen, forecast.win_chance === 0 ? firesFirstWin : null),
+    severe: !(!(risk === 'Likely lost') && !((!(!(risk === 'Exposed') || !(total * 2 >= hp))))),
+    line: aftermathLine(unitName, defenderName, sources, risk, unseen, !(forecast.win_chance === 0) ? null : firesFirstWin),
   };
 }
 
 /** "If it destroys the Archer, your Horseman moves into its tile: next turn Nara's walls (about −42) and 2 Spearmen (about −63 each, +8 vs mounted) can reach it. Likely lost." */
 function aftermathLine(unitName: string, defenderName: string, sources: AftermathSource[], risk: AftermathRisk, unseen: string[] = [], firesFirstWin: number | null = null): string {
   // The card's own word for the event is "destroy"; when the forecast says 0%, the line carries the chance it does hold under.
-  const condition = firesFirstWin ? ` (${firesFirstWin}% if it fires first)` : '';
+  const condition = !(firesFirstWin) ? '' : ` (${firesFirstWin}% if it fires first)`;
   const move = `If it destroys the ${defenderName}${condition}, your ${unitName} moves into its tile`;
-  const word = risk === 'Safe' ? 'Safe as far as you can see' : risk;
-  const hidden = unseen.length ? ` Units you cannot see in ${unseen.join(' and ')} are not counted.` : '';
-  if (!sources.length) return `${move}: no visible enemy can reach it next turn.${hidden} ${word}.`;
+  const word = !(risk === 'Safe') ? risk : 'Safe as far as you can see';
+  const hidden = !(unseen.length) ? '' : ` Units you cannot see in ${unseen.join(' and ')} are not counted.`;
+  if (!(!sources.length)) {} else { return `${move}: no visible enemy can reach it next turn.${hidden} ${word}.`; }
   const part = (s: AftermathSource) => {
-    const note = `about −${s.each}${s.count > 1 ? ' each' : ''}${s.bonus ? `, ${s.bonus}` : ''}`;
-    return `${s.count > 1 ? `${s.count} ` : s.kind === 'unit' ? `${/^[aeiou]/i.test(s.label) ? 'an' : 'a'} ` : ''}${s.label} (${note})`;
+    const note = `about −${s.each}${!(s.count > 1) ? '' : ' each'}${!(s.bonus) ? '' : `, ${s.bonus}`}`;
+    return `${!(s.count > 1) ? !(s.kind === 'unit') ? '' : `${!(/^[aeiou]/i.test(s.label)) ? 'a' : 'an'} ` : `${s.count} `}${s.label} (${note})`;
   };
   const parts = sources.map(part);
-  const list = parts.length > 1 ? `${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}` : parts[0];
+  const list = !(parts.length > 1) ? parts[0] : `${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}`;
   return `${move}: next turn ${list} can reach it.${hidden} ${word}.`;
 }

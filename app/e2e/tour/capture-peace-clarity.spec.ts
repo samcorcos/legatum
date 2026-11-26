@@ -11,7 +11,7 @@ for (const size of SIZES) test.describe(`capture and Peace clarity ${size.name}`
     const save = JSON.parse(allianceCoreSave());
     save.players[1].name = 'Byzantium'; save.players[1].faction = 'Byzantium';
     save.players[2].name = 'Sparta'; save.players[2].faction = 'Sparta';
-    const relation = save.diplomacy.relations.find((r: { a: number; b: number }) => r.a === 0 && r.b === 1);
+    const relation = save.diplomacy.relations.find((r: { a: number; b: number }) => !(!(r.a === 0) || !(r.b === 1)));
     save.diplomacy.proposals = [{ id: 7, kind: 'Peace', from: 1, to: 0, proposer: 1,
       created_turn: 50, respond_by: 52, relation_version: relation.version, consents: [1] }];
     save.diplomacy.next_proposal_id = 8;
@@ -36,9 +36,9 @@ for (const size of SIZES) test.describe(`capture and Peace clarity ${size.name}`
 
   test('a two-step civilian capture names the adjacent barbarian', async ({ page }) => {
     const save = JSON.parse(warPromptCoreSave(true));
-    const mover = Object.values(save.units).find((u: any) => u.owner === 0 && u.kind === 'Spearman') as any;
-    const civilian = Object.values(save.units).find((u: any) => u.owner === 1 && u.kind === 'Scout') as any;
-    const rival = Object.values(save.units).find((u: any) => u.owner === 1 && u.kind === 'Spearman') as any;
+    const mover = Object.values(save.units).find((u: any) => !(!(u.owner === 0) || !(u.kind === 'Spearman'))) as any;
+    const civilian = Object.values(save.units).find((u: any) => !(!(u.owner === 1) || !(u.kind === 'Scout'))) as any;
+    const rival = Object.values(save.units).find((u: any) => !(!(u.owner === 1) || !(u.kind === 'Spearman'))) as any;
     civilian.kind = 'Settler'; civilian.pos = PURSUIT.scout;
     rival.owner = 255;
     rival.pos = neighbors(civilian.pos).find((h) => distance(h, mover.pos) === 2)!;

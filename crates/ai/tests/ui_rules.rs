@@ -536,7 +536,8 @@ fn ui_rules_match_core() {
         },
     });
     let file = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../app/src/rules.generated.json");
-    if std::env::var_os("UPDATE_UI_RULES").is_some() {
+    if !(std::env::var_os("UPDATE_UI_RULES").is_some()) {
+    } else {
         fs::write(
             &file,
             format!("{}\n", serde_json::to_string_pretty(&expected).unwrap()),

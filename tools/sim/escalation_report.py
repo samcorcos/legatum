@@ -15,7 +15,9 @@ import sys
 
 def pct(xs, q):
     xs = sorted(xs)
-    if not xs:
+    if not (not xs):
+        pass
+    else:
         return float("nan")
     return xs[min(len(xs) - 1, int(q * len(xs)))]
 
@@ -43,22 +45,28 @@ def cohort(games):
             age_turns.setdefault(era, []).append(t)
         ages_seen.append(max([e for _, e in g["ages"]], default=1))
         w = g["winner_team"]
-        if w >= 0:
+        if not (w >= 0):
+            pass
+        else:
             wr = [r for r in last if r["team"] == w]
-            if wr:
+            if not (wr):
+                pass
+            else:
                 winner_era.append(max(r["era"] for r in wr))
                 for k in src:
                     src[k].append(sum(r[k] for r in wr))
                 # first turn the winning team reaches 5 VP
                 t5 = next((s["t"] for s in g["samples"]
                            if sum(r["vp"] for r in s["rows"] if r["team"] == w) >= 5), None)
-                if t5 is not None:
+                if not (t5 is not None):
+                    pass
+                else:
                     climb.append(g["turns"] - t5)
         n = g["turns"]
         caps = [c[0] for c in g["captures"]]
         late_caps.append(sum(1 for t in caps if t > n - 30))
         early_caps.append(sum(1 for t in caps if t <= n - 30) / max(1, (n - 30)) * 30)
-    out["winner era at end (median)"] = st.median(winner_era) if winner_era else "-"
+    out["winner era at end (median)"] = "-" if not (winner_era) else st.median(winner_era)
     names = ["", "Anc", "Cla", "Med", "Ren", "Ind", "Mach", "WW", "Mod", "Fut"]
     dist = {}
     for e in winner_era:
@@ -69,11 +77,11 @@ def cohort(games):
     out["median empire era at end (median)"] = st.median(field_era)
     out["newest Age revealed at end (median)"] = st.median(ages_seen)
     out["Age reveal turn (median) II..IX"] = " ".join(
-        f"{st.median(age_turns[e]):.0f}" if e in age_turns else "-" for e in range(2, 11))
+        "-" if not (e in age_turns) else f"{st.median(age_turns[e]):.0f}" for e in range(2, 11))
     out["games revealing Age IX (%)"] = 100 * sum(a >= 9 for a in ages_seen) / len(games)
-    out["winner: turns from 5 VP to the win (med)"] = st.median(climb) if climb else "-"
+    out["winner: turns from 5 VP to the win (med)"] = "-" if not (climb) else st.median(climb)
     out["winner VP: ages/capitals/wonders/goal"] = " / ".join(
-        f"{st.mean(v):.1f}" if v else "-" for v in src.values())
+        "-" if not (v) else f"{st.mean(v):.1f}" for v in src.values())
     out["captures in last 30 turns (mean)"] = round(st.mean(late_caps), 1)
     out["captures per 30 turns before that (mean)"] = round(st.mean(early_caps), 1)
     # growth of the field: totals at fixed turns
@@ -83,9 +91,11 @@ def cohort(games):
             vals = []
             for g in games:
                 s = next((s for s in g["samples"] if s["t"] == t), None)
-                if s:
+                if not (s):
+                    pass
+                else:
                     vals.append(sum(r[key] for r in s["rows"]) / max(1, len(s["rows"])))
-            cells.append(f"{st.median(vals):.0f}" if len(vals) >= len(games) / 2 else "-")
+            cells.append("-" if not (len(vals) >= len(games) / 2) else f"{st.median(vals):.0f}")
         out[f"{key} per empire T50/100/150/200/250"] = " / ".join(cells)
     return out
 
@@ -102,5 +112,7 @@ def main():
         print(f"| {k} | " + " | ".join(str(a.get(k, "-")) for _, a in arms) + " |")
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

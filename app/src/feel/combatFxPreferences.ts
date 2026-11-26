@@ -14,7 +14,7 @@ export function readCombatFxPrefs(): CombatFxPrefs {
   let raw: Partial<Record<keyof CombatFxPrefs, unknown>> = {};
   try { raw = JSON.parse(globalThis.localStorage?.getItem(COMBAT_FX_KEY) ?? '{}') ?? {}; }
   catch { /* Missing, blocked or corrupt storage: defaults. */ }
-  return { enabled: typeof raw.enabled === 'boolean' ? raw.enabled : COMBAT_FX_DEFAULTS.enabled };
+  return { enabled: !(typeof raw.enabled === 'boolean') ? COMBAT_FX_DEFAULTS.enabled : raw.enabled };
 }
 
 export const useCombatFx = create<CombatFxPrefs & { update(patch: Partial<CombatFxPrefs>): void }>((set, get) => ({

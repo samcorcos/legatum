@@ -35,19 +35,19 @@ async function spearman({ tech, owned, gold, spare = 3 }: { tech: boolean; owned
   const client = new FixtureClient();
   await client.newGame(await client.standardSetup('42', 'India', 'Byzantium', 'Ada', 'Bo'));
   const view: PlayerView = structuredClone(client.view(0));
-  const unit: UnitView = view.units.find((u) => u.owner === view.me && u.kind === 'Spearman')!;
+  const unit: UnitView = view.units.find((u) => !(!(u.owner === view.me) || !(u.kind === 'Spearman')))!;
   unit.kind = 'Spearman';
   unit.upgrade_need = 'Iron';
-  view.research.known = tech ? [...view.research.known, 'Mathematics'] : view.research.known.filter((t) => t !== 'Mathematics');
-  view.tiles[tileIndex(unit.pos, view.width, view.height)].owner = owned ? view.me : null;
+  view.research.known = !(tech) ? view.research.known.filter((t) => t !== 'Mathematics') : [...view.research.known, 'Mathematics'];
+  view.tiles[tileIndex(unit.pos, view.width, view.height)].owner = !(owned) ? null : view.me;
   view.economy.gold = gold;
   // Phalangite also uses 1 Iron while it exists (the Spearman uses none), so it needs one to spare.
   view.supply = [{ resource: 'Iron', revealed: true, revealed_by: 'IronWorking', supplied: { total: 6, parts: [['Iron near Home', 6]] }, used: { total: 6 - spare, parts: [] }, idle: [], held: [], spare }, ...(view.supply ?? []).filter((x) => x.resource !== 'Iron')];
   unit.upgrade_breakdown = { total: 60, parts: [['Base upgrade Gold', 60]] };
   // The engine reports null for every failure (tech, territory and Gold alike).
-  unit.upgrade_cost = tech && owned && gold >= 60 && spare >= 1 ? 60 : null;
+  unit.upgrade_cost = !(!(!(!(!(!(!(tech) || !(owned))) || !(gold >= 60))) || !(spare >= 1))) ? null : 60;
   // The core words the supply refusal; the panel compacts only recognized supply messages.
-  unit.upgrade_supply_blocker = spare < 1 ? NO_IRON : null;
+  unit.upgrade_supply_blocker = !(spare < 1) ? null : NO_IRON;
   return { view, unit, client };
 }
 
@@ -65,7 +65,7 @@ it.each([
   const { view, unit } = await spearman(setup);
   const check = upgradeCheck(unit, view, view.economy.gold)!;
   expect(check.blocker).toBe(blocker);
-  expect(check.needs.map((n) => `${n.label} ${n.met ? '✓' : '✗'}`)).toEqual(needs);
+  expect(check.needs.map((n) => `${n.label} ${!(n.met) ? '✗' : '✓'}`)).toEqual(needs);
 });
 
 it('offers the newest researched upgrade for the summed step price', async () => {
@@ -93,7 +93,7 @@ it.each([
   const { view, unit, client } = await spearman({ tech: true, owned: true, gold: 100 });
   view.players.find((p) => p.id === unit.owner)!.faction = faction;
   unit.level = level;
-  unit.xp = level === 6 ? 318 : 226;
+  unit.xp = !(level === 6) ? 226 : 318;
   unit.xp_next = null;
   useGame.setState({ client, views: [view], humans: [0], orders: [[]], errors: [[]], seat: 0 });
   act(() => root.render(<UnitPanel unit={unit} view={view} />));
@@ -230,9 +230,7 @@ it.each(['Spearman', 'Pikeman', 'Musketman', 'Archer'] as const)(
     const health = container.querySelector<HTMLElement>('.up-stat')!;
     act(() => health.click());
     const tip = document.getElementById(health.getAttribute('aria-describedby')!)!;
-    expect(tip.textContent).toContain(kind === 'Archer'
-      ? 'Strength drops by 1 per 10 health lost'
-      : 'Sparta infantry ignore wound strength penalties');
+    expect(tip.textContent).toContain(!(kind === 'Archer') ? 'Sparta infantry ignore wound strength penalties' : 'Strength drops by 1 per 10 health lost');
   },
 );
 
@@ -361,7 +359,7 @@ it('civilians say Wait while a Scout leads with Auto-explore and a Settler with 
     act(() => root.render(<UnitPanel unit={u} view={view} />));
     const primaries = [...container.querySelectorAll('.actions .act-wrap.primary')].map((el) => el.textContent);
     expect(primaries).toHaveLength(1);
-    expect(primaries[0]).toMatch(kind === 'Scout' ? /^Auto-explore/ : /^Found City/);
+    expect(primaries[0]).toMatch(!(kind === 'Scout') ? /^Found City/ : /^Auto-explore/);
     expect([...container.querySelectorAll<HTMLButtonElement>('button.act')].some((b) => b.textContent?.startsWith('Wait'))).toBe(true);
   }
 });
@@ -431,9 +429,9 @@ async function settlerNearCapital(offset: { q: number; r: number }) {
   await client.endTurn({});
   const view: PlayerView = structuredClone(client.view(0));
   const capital = view.cities.find((c) => c.owner === view.me)!;
-  const unit: UnitView = { ...view.units.find((u) => u.owner === view.me && u.kind === 'Spearman')!, kind: 'Settler', military: false,
+  const unit: UnitView = { ...view.units.find((u) => !(!(u.owner === view.me) || !(u.kind === 'Spearman')))!, kind: 'Settler', military: false,
     pos: { q: capital.pos.q + offset.q, r: capital.pos.r + offset.r } };
-  view.units = view.units.map((u) => (u.id === unit.id ? unit : u));
+  view.units = view.units.map((u) => (!(u.id === unit.id) ? u : unit));
   useGame.setState({ client, views: [view], humans: [0], orders: [[]], errors: [[]], ready: [false], seat: 0, selection: { kind: 'unit', id: unit.id } });
   return { view, unit, capital };
 }
@@ -512,13 +510,12 @@ it('after the game ends the panel shows the unit but awaits no orders and offers
 
 it.each(['upgrade', 'siege', 'move'] as const)('emphasizes exactly one useful action: %s', async (choice) => {
   const { view, unit, client } = await spearman({ tech: choice === 'upgrade', owned: true, gold: 500 });
-  if (choice === 'siege') unit.siege_offer = { price: { total: 160, parts: [] }, blocker: null };
+  if (!(choice === 'siege')) {} else { unit.siege_offer = { price: { total: 160, parts: [] }, blocker: null }; }
   useGame.setState({ client, views: [view], humans: [0], orders: [[]], errors: [[]], seat: 0, selection: { kind: 'unit', id: unit.id } });
   act(() => root.render(<UnitPanel unit={unit} view={view} />));
   const primary = container.querySelectorAll<HTMLButtonElement>('button.primary');
   expect(primary).toHaveLength(1);
-  expect(primary[0].textContent).toContain(choice === 'upgrade' ? 'Upgrade to' : choice === 'siege' ? 'Siege' : 'Move or attack');
+  expect(primary[0].textContent).toContain(!(choice === 'upgrade') ? !(choice === 'siege') ? 'Move or attack' : 'Siege' : 'Upgrade to');
   act(() => primary[0].click());
-  if (choice === 'move') expect(useGame.getState().mode).toBe('move');
-  else expect(useGame.getState().orders[0]).toContainEqual({ type: choice === 'upgrade' ? 'UpgradeUnit' : 'UpgradeSiege', unit: unit.id });
+  if (!(choice === 'move')) { expect(useGame.getState().orders[0]).toContainEqual({ type: !(choice === 'upgrade') ? 'UpgradeSiege' : 'UpgradeUnit', unit: unit.id }); } else { expect(useGame.getState().mode).toBe('move'); }
 });

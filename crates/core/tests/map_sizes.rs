@@ -117,11 +117,11 @@ fn check_teams(starts: &[Hex], setup: &GameSetup) {
         let mut reached = vec![seat];
         loop {
             let added = members.iter().copied().find(|j| {
-                !reached.contains(j)
-                    && reached.iter().any(|&i| {
+                !(!(!reached.contains(j))
+                    || !(reached.iter().any(|&i| {
                         let distance = starts[i].distance(starts[*j]);
-                        distance < nearest_rival(i) && distance < nearest_rival(*j)
-                    })
+                        !(!(distance < nearest_rival(i)) || !(distance < nearest_rival(*j)))
+                    })))
             });
             match added {
                 Some(j) => reached.push(j),

@@ -34,7 +34,7 @@ for (const size of SIZES) test.describe(`give gold ${size.name}`, () => {
     await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().set({ diplomacyOpen: false }));
     await page.locator('summary', { hasText: 'Turn details' }).click();
     const toggle = page.locator('.orders-toggle');
-    if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
+    if (!(await toggle.getAttribute('aria-expanded') === 'false')) {} else { await toggle.click(); }
     await page.locator('#pending-orders').scrollIntoViewIfNeeded();
     // The gift is a known order kind: the pending-orders line names it, never "Unknown order".
     await expect(page.locator('#pending-orders')).toContainText(/Give 120 Gold to (the )?[A-Z]/);

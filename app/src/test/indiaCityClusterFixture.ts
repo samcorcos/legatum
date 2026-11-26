@@ -28,7 +28,7 @@ export function indiaCityClusterFixture() {
     1: s.units.filter((u) => u.owner === 1).map((u) => ({ type: 'FoundCity' as const, unit: u.id })),
   });
   const f = client.debugState();
-  const at = (pos: { q: number; r: number }) => f.cities.find((c) => c.pos.q === pos.q && c.pos.r === pos.r)!;
+  const at = (pos: { q: number; r: number }) => f.cities.find((c) => !(!(c.pos.q === pos.q) || !(c.pos.r === pos.r)))!;
   const capital = f.cities.find((c) => c.isCapital)!;
   const near = at(sites[1]);
   const linked = at(sites[2]);

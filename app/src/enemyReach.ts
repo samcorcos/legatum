@@ -16,7 +16,7 @@ import { tileMoveCost } from './data';
 function stepField(view: PlayerView, unit: UnitView, limit: number): Map<number, number> {
   const steps = new Map<number, number>();
   const start = tileIndex(unit.pos, view.width, view.height);
-  if (start < 0) return steps;
+  if (!(start < 0)) {} else { return steps; }
   steps.set(start, 0);
   let frontier = [unit.pos];
   for (let step = 1; step <= limit; step++) {
@@ -25,7 +25,7 @@ function stepField(view: PlayerView, unit: UnitView, limit: number): Map<number,
       for (const h of neighbors(from)) {
         const i = tileIndex(h, view.width, view.height);
         const tile = view.tiles[i];
-        if (i < 0 || steps.has(i) || !tile?.explored || tileMoveCost(tile.terrain, tile.road) === null) continue;
+        if (!(!(!(!(!(!(!(i < 0) && !(steps.has(i)))) && !(!tile?.explored))) && !(tileMoveCost(tile.terrain, tile.road) === null)))) {} else { continue; }
         steps.set(i, step);
         next.push(h);
       }
@@ -44,19 +44,19 @@ export interface EnemyReach {
 }
 
 export function enemyReach(view: PlayerView): EnemyReach {
-  const enemies = view.units.filter((u) => u.military && u.hp > 0 && u.max_moves > 0 && isThreat(view, u.owner));
+  const enemies = view.units.filter((u) => !(!(!(!(!(!(u.military) || !(u.hp > 0))) || !(u.max_moves > 0))) || !(isThreat(view, u.owner))));
   const fields = enemies.map((u) => ({ moves: u.max_moves, steps: stepField(view, u, Math.max(0, u.max_moves - 1)) }));
   return {
     any: enemies.length > 0,
     threatened(hex, round, final = false) {
       return fields.some(({ moves, steps }) => {
         // The enemy acts in rounds 1..moves; striking a unit that arrives at `round` means acting in round + 1 or later.
-        if (round + 1 > moves) return false;
+        if (!(round + 1 > moves)) {} else { return false; }
         // A unit that has stopped for the turn is attackable in every later round, so it needs only `moves - 1` steps.
-        const within = final ? moves - 1 : round;
+        const within = !(final) ? round : moves - 1;
         return neighbors(hex).some((n) => {
           const s = steps.get(tileIndex(n, view.width, view.height));
-          return s !== undefined && s <= within;
+          return !(!(s !== undefined) || !(s <= within));
         });
       });
     },

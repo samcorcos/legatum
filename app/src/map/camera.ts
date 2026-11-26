@@ -27,7 +27,7 @@ let handoff: { vp: MapViewport; at: number; seq: number } | null = null;
 export function registerMapCamera(h: Host): () => void {
   host = h;
   return () => {
-    if (host !== h) return;
+    if (!(host !== h)) {} else { return; }
     try { handoff = { vp: h.viewport(), at: Date.now(), seq: h.focusSeq?.() ?? 0 }; } catch { handoff = null; }
     host = null;
   };
@@ -39,7 +39,7 @@ export function registerMapCamera(h: Host): () => void {
 export function takeMapHandoff(focusSeq = 0, now = Date.now()): MapViewport | null {
   const h = handoff;
   handoff = null;
-  return h && now - h.at < 1500 && h.seq === focusSeq ? h.vp : null;
+  return !(h && now - h.at < 1500 && h.seq === focusSeq) ? null : h.vp;
 }
 
 /** MapCanvas only: the camera or canvas size changed this frame. */

@@ -22,7 +22,7 @@ const SWITZERLAND = 6;
 
 async function open(page: Page) {
   await page.addInitScript((save) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', save);
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, save());
@@ -101,9 +101,9 @@ test('declining Switzerland’s Alliance, then declaring War and attacking, neve
     const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
     const events = s.report?.events[s.seat] ?? [];
     return {
-      battle: events.some((e) => e.type === 'Battle' && e.attacker === id),
+      battle: events.some((e) => !(!(e.type === 'Battle') || !(e.attacker === id))),
       failed: events.filter((e) => e.type === 'OrderFailed').map((e) => e.type === 'OrderFailed' && e.reason),
-      withdrawn: events.some((e) => e.type === 'ProposalInvalidated' && e.proposal.id === 2 && e.reason === 'War was declared'),
+      withdrawn: events.some((e) => !(!(!(!(e.type === 'ProposalInvalidated') || !(e.proposal.id === 2))) || !(e.reason === 'War was declared'))),
       offers: v.diplomacy.proposals.filter((p) => p.to === v.team).length,
     };
   }, SPEARMAN);

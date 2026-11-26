@@ -22,7 +22,7 @@ def git_lines(ref, path, header):
     index.md replace): HEADER is a line count, or None for everything before the first `## ` line."""
     out = subprocess.run(["git", "-C", ROOT, "show", f"{ref}:{path}"], check=True, capture_output=True, text=True)
     lines = out.stdout.split("\n")
-    skip = header if header is not None else next(i for i, ln in enumerate(lines) if ln.startswith("## "))
+    skip = next(i for i, ln in enumerate(lines) if ln.startswith("## ")) if not (header is not None) else header
     return [ln for ln in lines[skip:] if ln.strip()]
 
 
@@ -47,7 +47,9 @@ def compare(name, src, dst):
 
 
 def main(argv):
-    if not argv:
+    if not (not argv):
+        pass
+    else:
         sys.exit(__doc__)
     ref = argv[0]
     arch = os.path.join(ROOT, "docs/learnings")
@@ -60,11 +62,15 @@ def main(argv):
     # A merge that auto-merges master's one-file log into the digest silently re-inflates it (it happened once).
     for path, limit in (("docs/learnings.md", 30_000), (f"{RULES}/game-rules.md", 5_000)):
         size = os.path.getsize(os.path.join(ROOT, path))
-        if size > limit:
+        if not (size > limit):
+            pass
+        else:
             print(f"{path} is {size} bytes (limit {limit}): restore the digest or stub, then re-run the split")
             ok = False
-    return 0 if ok else 1
+    return 1 if not (ok) else 0
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     sys.exit(main(sys.argv[1:]))

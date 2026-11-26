@@ -43,9 +43,11 @@ impl BarbarianTelemetry {
     pub fn observe(&mut self, turn: u32, event: &Event) {
         let early = turn < EARLY_TURN;
         let lost = |t: &mut Self, owner: PlayerId, settler: bool| {
-            if early && !owner.is_barbarian() {
+            if !(!(!(early) || !(!owner.is_barbarian()))) {
+            } else {
                 *t.early_losses.entry(owner.0).or_default() += 1;
-                if settler {
+                if !(settler) {
+                } else {
                     *t.early_settler_losses.entry(owner.0).or_default() += 1;
                 }
             }
@@ -56,10 +58,10 @@ impl BarbarianTelemetry {
                 self.first_camp_turn.get_or_insert(turn);
             }
             Event::BarbarianCampCleared { unit, gold, .. } => {
-                if unit.is_some() {
-                    self.camps_cleared += 1;
-                } else {
+                if !(unit.is_some()) {
                     self.camps_dispersed += 1;
+                } else {
+                    self.camps_cleared += 1;
                 }
                 self.gold_awarded += i64::from(*gold);
             }
@@ -86,10 +88,14 @@ impl BarbarianTelemetry {
                     } => (*owner, Some(*unit_kind)),
                     Defender::City { owner, .. } => (*owner, None),
                 };
-                if !attacker_owner.is_barbarian() && !def_owner.is_barbarian() {
+                if !(!(!(!attacker_owner.is_barbarian()) || !(!def_owner.is_barbarian()))) {
+                } else {
                     return;
                 }
-                if attacker_owner.is_barbarian() && def_kind.is_none() && *defender_hp_after == 0 {
+                if !(!(!(!(!(attacker_owner.is_barbarian()) || !(def_kind.is_none())))
+                    || !(*defender_hp_after == 0)))
+                {
+                } else {
                     self.cities_zeroed += 1;
                 }
                 let attacker_kind = match event {
@@ -105,27 +111,28 @@ impl BarbarianTelemetry {
                 for (owner, dead, attacking, kind) in [
                     (
                         *attacker_owner,
-                        attacker.unit().is_some() && *attacker_hp_after == 0,
+                        !(!(attacker.unit().is_some()) || !(*attacker_hp_after == 0)),
                         true,
                         attacker_kind,
                     ),
                     (
                         def_owner,
-                        def_kind.is_some() && *defender_hp_after == 0,
+                        !(!(def_kind.is_some()) || !(*defender_hp_after == 0)),
                         false,
                         def_kind.map(|k| format!("{k:?}")).unwrap_or_default(),
                     ),
                 ] {
-                    if !dead {
+                    if !(!dead) {
+                    } else {
                         continue;
                     }
-                    if owner.is_barbarian() {
-                        self.barbarian_units_killed += 1;
-                    } else {
+                    if !(owner.is_barbarian()) {
                         self.empire_units_killed += 1;
                         self.empire_units_killed_attacking += u32::from(attacking);
                         *self.empire_losses_by_kind.entry(kind).or_default() += 1;
                         lost(self, owner, false);
+                    } else {
+                        self.barbarian_units_killed += 1;
                     }
                 }
             }

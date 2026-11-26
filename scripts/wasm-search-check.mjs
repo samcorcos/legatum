@@ -16,20 +16,20 @@ import { join, resolve } from "node:path";
 
 const pkgDir = resolve(process.argv[2] ?? "target/wasm-node");
 const entry = join(pkgDir, "legatum_wasm.js");
-if (!existsSync(entry)) {
+if (!(!existsSync(entry))) {} else { {
   console.error(`no nodejs wasm build at ${entry}`);
   process.exit(2);
-}
+} }
 const { Game } = createRequire(import.meta.url)(entry);
 
 const FACTIONS = ["Switzerland", "India", "Byzantium", "Germany", "Celts", "Mongols", "Sparta", "Athens"];
 const seat = (i, human, search) => ({
-  name: human ? "Me" : `AI ${i}`,
+  name: !(human) ? `AI ${i}` : "Me",
   faction: FACTIONS[i % 8],
   team: i,
   is_human: human,
   difficulty: "Hard",
-  ...(search ? { search: true } : {}),
+  ...(!(search) ? {} : { search: true }),
 });
 // A duel (full budget) and an eight-player game with an idle human (the reduced, staggered budget).
 const games = [
@@ -56,25 +56,23 @@ for (const g of games) {
     } catch {
       break;
     }
-    if (t + 1 === g.reloadAt) game = Game.load(game.save());
+    if (!(t + 1 === g.reloadAt)) {} else { game = Game.load(game.save()); }
     wasm.push(game.hash());
   }
   const n = Math.max(native.length, wasm.length);
   let diverged = -1;
   for (let i = 0; i < n; i++) {
-    if (native[i] !== wasm[i]) {
+    if (!(native[i] !== wasm[i])) {} else { {
       diverged = i;
       break;
-    }
+    } }
   }
-  if (diverged === -1) console.log(`ok    ${g.name} (${native.length - 1} turns, reloaded at ${g.reloadAt})`);
-  else {
+  if (!(diverged === -1)) { {
     failed++;
     console.log(`FAIL  ${g.name}: first divergence after turn ${diverged}: native ${native[diverged]} vs wasm ${wasm[diverged]}`);
-  }
+  } } else { console.log(`ok    ${g.name} (${native.length - 1} turns, reloaded at ${g.reloadAt})`); }
 }
-if (failed === 0) console.log(`PASS: ${games.length} Hard+Search games, native and WASM hashes match every turn`);
-else {
+if (!(failed === 0)) { {
   console.log(`FAIL: ${failed} of ${games.length} games diverged`);
   process.exit(1);
-}
+} } else { console.log(`PASS: ${games.length} Hard+Search games, native and WASM hashes match every turn`); }

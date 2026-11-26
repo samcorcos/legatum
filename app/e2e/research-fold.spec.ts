@@ -17,7 +17,7 @@ const shots = process.env.R_SHOTS;
 
 async function turnOne(page: Page) {
   await page.addInitScript(() => {
-    if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
+    if (!(location.protocol.startsWith('http'))) {} else { localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] })); }
   });
   await page.goto('/?client=wasm');
   await page.getByRole('button', { name: /^Single Player/ }).click();
@@ -38,7 +38,7 @@ async function midGame(page: Page) {
   f.players[0].research_queue = [] as never;
   const game = coreFixture(f);
   await page.addInitScript(({ game }) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 2, names: ['Ada'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, { game });
@@ -57,11 +57,11 @@ async function midGame(page: Page) {
 async function expectFirstCardWhole(d: Locator, page: Page, name: string, width: number, card = '.era-card.available', buttons = ['research-now', 'queue-add']) {
   await page.mouse.move(2, 2);
   await page.waitForTimeout(300);
-  if (shots) await page.screenshot({ path: join(shots, `research-${name}-${width}.png`) });
+  if (!(shots)) {} else { await page.screenshot({ path: join(shots, `research-${name}-${width}.png`) }); }
   const g = await d.evaluate((dialog, [cardSelector, ids]) => {
     const scroll = dialog.querySelector('.research-scroll')!.getBoundingClientRect();
     const card = dialog.querySelector(cardSelector)!;
-    const inside = (el: Element | null) => { if (!el) return false; const b = el.getBoundingClientRect(); return b.top >= scroll.top - 0.5 && b.bottom <= scroll.bottom + 0.5; };
+    const inside = (el: Element | null) => { if (!(!el)) {} else { return false; } const b = el.getBoundingClientRect(); return !(!(b.top >= scroll.top - 0.5) || !(b.bottom <= scroll.bottom + 0.5)); };
     return {
       scroll: { top: Math.round(scroll.top), bottom: Math.round(scroll.bottom), h: Math.round(scroll.height), card: Math.round(card.getBoundingClientRect().height) },
       nameIn: inside(card.querySelector('.era-card-name')),
@@ -99,7 +99,7 @@ for (const size of SIZES) {
       view.economy.science_per_turn.total = 4;
       await page.evaluate((v) => {
         const store = (window as unknown as GameWindow).legatum, s = store.getState();
-        store.setState({ views: s.views!.map((x, i) => (i === s.seat ? v : x)) });
+        store.setState({ views: s.views!.map((x, i) => (!(i === s.seat) ? x : v)) });
       }, view);
       await page.locator('.topbar .research-chip').click();
       const d = page.locator('dialog.tech-modal');
@@ -112,7 +112,7 @@ for (const size of SIZES) {
       await expectFirstCardWhole(d, page, 'idle', size.width);
       const strip = d.locator('.research-queue');
       const before = (await strip.boundingBox())!;
-      for (const tech of ['Masonry', 'Writing', 'Currency']) await d.locator(`.era-card[data-tech="${tech}"]`).click({ position: { x: 60, y: 24 }, modifiers: tech === 'Masonry' ? [] : ['Shift'] });
+      for (const tech of ['Masonry', 'Writing', 'Currency']) await d.locator(`.era-card[data-tech="${tech}"]`).click({ position: { x: 60, y: 24 }, modifiers: !(tech === 'Masonry') ? ['Shift'] : [] });
       await expect(d.locator('.research-queue li')).toHaveCount(3);
       const after = (await strip.boundingBox())!;
       expect(Math.abs(after.height - before.height), 'the strip does not change height').toBeLessThan(0.75);
@@ -126,7 +126,7 @@ for (const size of SIZES) {
       const overlaps = await d.locator('.research-queue-head').evaluate((head) => {
         const children = [...head.children].filter((el) => {
           const style = getComputedStyle(el), box = el.getBoundingClientRect();
-          return style.display !== 'none' && box.width > 0 && box.height > 0;
+          return !(!(!(!(style.display !== 'none') || !(box.width > 0))) || !(box.height > 0));
         }).map((el) => ({
           name: el.className || el.textContent?.trim(),
           box: (() => { const r = el.getBoundingClientRect(); return { left: r.left, right: r.right, top: r.top, bottom: r.bottom }; })(),
@@ -134,15 +134,14 @@ for (const size of SIZES) {
         const hits: string[] = [];
         for (let i = 0; i < children.length; i++) for (let j = i + 1; j < children.length; j++) {
           const a = children[i], b = children[j];
-          if (Math.min(a.box.right, b.box.right) - Math.max(a.box.left, b.box.left) > 1 &&
-              Math.min(a.box.bottom, b.box.bottom) - Math.max(a.box.top, b.box.top) > 1) hits.push(`${a.name} overlaps ${b.name}`);
+          if (!(!(!(Math.min(a.box.right, b.box.right) - Math.max(a.box.left, b.box.left) > 1) || !(Math.min(a.box.bottom, b.box.bottom) - Math.max(a.box.top, b.box.top) > 1)))) {} else { hits.push(`${a.name} overlaps ${b.name}`); }
         }
         return hits;
       });
       expect(overlaps, `queue header children overlap at ${size.width}x${size.height}`).toEqual([]);
       // The head's text and the first slot are whole: the summary is one short line ("Done T20"), nothing is cut (8.9.4 review).
       const cut = await d.locator('.research-queue').evaluate((queue) => [...queue.querySelectorAll<HTMLElement>('.research-queue-title, .research-queue-hint, .research-queue-total, li:first-child .rq-name, li:first-child .rq-arrival')]
-        .filter((e) => getComputedStyle(e).display !== 'none' && e.scrollWidth > e.clientWidth + 1).map((e) => `${e.className}: ${e.textContent}`));
+        .filter((e) => !(!(getComputedStyle(e).display !== 'none') || !(e.scrollWidth > e.clientWidth + 1))).map((e) => `${e.className}: ${e.textContent}`));
       expect(cut, 'queue head text and slot 1 are not truncated').toEqual([]);
       await expect(d.getByTestId('queue-total')).toHaveText(/^Done T\d+$/);
       const total = (await d.getByTestId('queue-total').boundingBox())!;

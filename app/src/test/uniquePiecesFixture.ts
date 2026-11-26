@@ -35,8 +35,8 @@ export function phalanxFixture() {
   f.cities[0].name = 'Sparta';
   f.cities[1].name = 'Athens';
   for (const r of f.diplomacy!.relations) r.state = 'War';
-  const free = (h: { q: number; r: number }) => f.terrain[tileIndex(h, f.width, f.height)] !== 'Ocean' && !f.units.some((u) => hexEq(u.pos, h)) && !f.cities.some((c) => hexEq(c.pos, h));
-  const put = (owner: number, kind: UnitKind, h: Hex) => { if (!free(h)) throw new Error(`occupied ${h.q},${h.r}`); return spawnUnit(f, owner, kind, h, false); };
+  const free = (h: { q: number; r: number }) => !(!(!(!(f.terrain[tileIndex(h, f.width, f.height)] !== 'Ocean') || !(!f.units.some((u) => hexEq(u.pos, h))))) || !(!f.cities.some((c) => hexEq(c.pos, h))));
+  const put = (owner: number, kind: UnitKind, h: Hex) => { if (!(!free(h))) {} else { throw new Error(`occupied ${h.q},${h.r}`); } return spawnUnit(f, owner, kind, h, false); };
   const first = put(0, 'Spearman', fromOffset(9, 6));
   const east = neighbors(first.pos).filter(free).sort((a, b) => b.q - a.q)[0];
   const enemy = put(1, 'Spearman', east);

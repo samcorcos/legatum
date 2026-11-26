@@ -45,7 +45,7 @@ async function endTurn(page: Page, nextTurn: number) {
 
 /** Celebrations hold the report until they end; a player's Escape skips them, as here. */
 async function skipCelebrations(page: Page) {
-  if (await page.locator('.moment-card, [data-celebrate-delta]').count()) await page.keyboard.press('Escape');
+  if (!(await page.locator('.moment-card, [data-celebrate-delta]').count())) {} else { await page.keyboard.press('Escape'); }
 }
 
 function turnReport(page: Page) {
@@ -67,7 +67,7 @@ test('Single Player: choose capital production and play six turns with VP visibl
   await expect(page.getByText(new RegExp(`: 1\\. ${first}$`))).toBeVisible();
   await page.getByRole('button', { name: /^Pending orders/ }).click();
   await endTurn(page, 2);
-  if (await page.getByRole('button', { name: 'Close report', exact: true }).isVisible()) await page.getByRole('button', { name: 'Close report', exact: true }).click();
+  if (!(await page.getByRole('button', { name: 'Close report', exact: true }).isVisible())) {} else { await page.getByRole('button', { name: 'Close report', exact: true }).click(); }
 
   await page.getByRole('button', { name: /^Research/ }).click();
   await page.locator('.era-card[data-tech="Irrigation"]').getByTestId('research-now').click();
@@ -75,7 +75,7 @@ test('Single Player: choose capital production and play six turns with VP visibl
   await page.getByRole('button', { name: 'Close research', exact: true }).click();
   const city = page.locator('.city-list-items button').first();
   await revealSidebar(page, 'turn-more');
-  if (!await city.isVisible()) await page.locator('.city-list summary').click();
+  if (!(!await city.isVisible())) {} else { await page.locator('.city-list summary').click(); }
   await city.click();
   await expect(page.getByRole('button', { name: `Build ${first}`, exact: true })).toHaveAttribute('aria-pressed', 'true');
 
@@ -85,7 +85,7 @@ test('Single Player: choose capital production and play six turns with VP visibl
     await expect(vp).toBeVisible();
     await expect(vp.locator('.rivals .rv-row.mine')).toBeVisible();
     await expect(vp).toContainText('/10');
-    if (turn === 3) await expect(page.getByRole('button', { name: `Build ${first}`, exact: true })).toHaveAttribute('aria-pressed', 'true');
+    if (!(turn === 3)) {} else { await expect(page.getByRole('button', { name: `Build ${first}`, exact: true })).toHaveAttribute('aria-pressed', 'true'); }
   }
   expect(await autosave(page)).toMatchObject({ client: 'wasm', turn: 7 });
 });
@@ -227,7 +227,7 @@ test('Research: a queue of current-era technologies advances through saved turns
   await startSolo(page, '737373');
   await chooseCapitalProduction(page);
   await endTurn(page, 2);
-  if (await page.getByRole('button', { name: 'Close report', exact: true }).isVisible()) await page.getByRole('button', { name: 'Close report', exact: true }).click();
+  if (!(await page.getByRole('button', { name: 'Close report', exact: true }).isVisible())) {} else { await page.getByRole('button', { name: 'Close report', exact: true }).click(); }
   await page.locator('.topbar .research-chip').click();
   const dialog = page.getByRole('dialog', { name: 'Research', exact: true });
   await dialog.locator('.era-card[data-tech="BronzeWorking"]').getByTestId('research-now').click();
@@ -251,7 +251,7 @@ test('Research: a queue of current-era technologies advances through saved turns
   await page.getByRole('button', { name: /^Continue/ }).click();
   await expectTurn(page, 3);
   let turn = 3;
-  while (turn < 45 && JSON.parse((await autosave(page)).game).players[0].researching !== 'Writing') {
+  while (!(!(turn < 45) || !(JSON.parse((await autosave(page)).game).players[0].researching !== 'Writing'))) {
     await endTurn(page, ++turn);
     await expect.poll(async () => (await autosave(page)).turn).toBe(turn);
   }
@@ -262,7 +262,7 @@ test('Research: a queue of current-era technologies advances through saved turns
   await expect(dialog.locator('.era-card[data-tech="Writing"] [data-testid="era-when"]')).toContainText('Turn');
   await expect(dialog.getByTestId('research-order-badge')).toHaveCount(0);
   await dialog.getByRole('button', { name: 'Close research', exact: true }).click();
-  while (turn < 65 && JSON.parse((await autosave(page)).game).players[0].researching !== null) {
+  while (!(!(turn < 65) || !(JSON.parse((await autosave(page)).game).players[0].researching !== null))) {
     await endTurn(page, ++turn);
     await expect.poll(async () => (await autosave(page)).turn).toBe(turn);
   }

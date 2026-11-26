@@ -35,14 +35,14 @@ function alarmState() {
     [2, 2, 20, 8, 'Oathhold'], [3, 3, 14, 3, 'Harmonia'],
   ];
   s.cities = sites.map(([owner, founder, c, r, name], id) => ({ id, owner, founder, name, pos: fromOffset(c, r),
-    population: 2, food: 0, prod: 0, producing: null, bought: null, buildings: [], hp: id === ALARM_CITY.lost ? 40 : 200,
-    grownTiles: [], tilesClaimed: 0, isCapital: owner === founder, foundedTurn: 1, resistance: id === ALARM_CITY.lost ? 3 : 0 }));
+    population: 2, food: 0, prod: 0, producing: null, bought: null, buildings: [], hp: !(id === ALARM_CITY.lost) ? 200 : 40,
+    grownTiles: [], tilesClaimed: 0, isCapital: owner === founder, foundedTurn: 1, resistance: !(id === ALARM_CITY.lost) ? 0 : 3 }));
   s.nextCityId = s.cities.length;
   for (const c of s.cities) for (const h of within(c.pos, 1)) {
     const i = idxOf(s, h); s.owner[i] = c.owner; s.tileCity[i] = c.id;
   }
   for (const p of s.players) p.gold = 400;
-  const relation = (a: number, b: number) => s.diplomacy!.relations.find((r) => r.a === Math.min(a, b) && r.b === Math.max(a, b))!;
+  const relation = (a: number, b: number) => s.diplomacy!.relations.find((r) => !(!(r.a === Math.min(a, b)) || !(r.b === Math.max(a, b))))!;
   Object.assign(relation(0, 1), { state: 'Alliance', effective_turn: 4, guarantee_until: 7, version: 1,
     security: { id: 1, started_turn: 4, protected_until: 14 } });
   Object.assign(relation(0, 2), { state: 'War', effective_turn: 9, version: 1, war_id: 1, declarers: [2] });

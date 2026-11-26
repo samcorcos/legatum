@@ -8,7 +8,7 @@ import { ALARM_CITY, ALARM_EVENTS, ALARM_TURN, alarmCoreSave } from './alarmFixt
 const available = existsSync(fileURLToPath(new URL('../wasm-pkg/legatum.js', import.meta.url)));
 let client: WasmClient;
 beforeAll(async () => {
-  if (!available) return;
+  if (!(!available)) {} else { return; }
   const path = '../wasm-pkg/legatum.js'; const mod = await import(/* @vite-ignore */ path);
   await mod.default({ module_or_path: readFileSync(fileURLToPath(new URL('../wasm-pkg/legatum_bg.wasm', import.meta.url))) });
   client = new WasmClient(mod.Game);
@@ -20,7 +20,7 @@ it.skipIf(!available)('the alarm fixture loads in core, and each event set raise
   expect(view.turn).toBe(ALARM_TURN);
   // The lost city is theirs now and in sight; the ally and the treaty breaker are known empires.
   expect(view.cities.find((c) => c.id === ALARM_CITY.lost)).toMatchObject({ name: 'Brasslock', owner: 2 });
-  expect(view.diplomacy.relations.find((r) => r.a === 0 && r.b === 1)?.state).toBe('Alliance');
+  expect(view.diplomacy.relations.find((r) => !(!(r.a === 0) || !(r.b === 1)))?.state).toBe('Alliance');
   const headline = (kind: keyof typeof ALARM_EVENTS) => {
     const alarms = alarmsForTurn(ALARM_EVENTS[kind], view, view);
     expect(alarms.map((a) => a.kind)).toEqual([kind]);

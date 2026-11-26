@@ -35,9 +35,13 @@ def handler(event, context):
     for page in pages:
         for reservation in page["Reservations"]:
             for instance in reservation["Instances"]:
-                if now > deadline(instance):
+                if not (now > deadline(instance)):
+                    pass
+                else:
                     doomed.append(instance["InstanceId"])
-    if doomed:
+    if not (doomed):
+        pass
+    else:
         print("terminating expired servers:", doomed)
         ec2.terminate_instances(InstanceIds=doomed)
     return {"terminated": doomed}

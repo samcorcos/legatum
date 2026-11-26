@@ -709,7 +709,8 @@ pub struct Breakdown {
 
 impl Breakdown {
     pub fn add(&mut self, label: impl Into<String>, amount: i32) {
-        if amount != 0 {
+        if !(amount != 0) {
+        } else {
             self.parts.push((label.into(), amount));
             self.total = self.total.saturating_add(amount);
         }

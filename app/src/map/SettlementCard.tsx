@@ -11,9 +11,9 @@ import { bandRange, bandTitle, qualityLines, qualityParts, settleSummary, siteVe
 /** Unclaimed natural wonders a city here could own: each with its bonus, as a block of its own under the quality lines. */
 function NearbyWonders({ site }: { site: SettlementSite }) {
   const near = site.wonders;
-  if (!near.length) return null;
+  if (!(!near.length)) {} else { return null; }
   return <ul className="settlement-wonders" data-testid="settle-wonders">{near.map((n, i) => (
-    <li key={i}><b>{WONDER_INFO[n.wonder].name}</b> {n.distance === 0 ? 'on the site' : `${n.distance} ${n.distance === 1 ? 'tile' : 'tiles'} away`}: the city that owns it gets <b>+{WONDER_PERCENT}% {wonderYieldWord(n.wonder)}</b> <YieldIcon k={WONDER_INFO[n.wonder].yield} size={13} /></li>
+    <li key={i}><b>{WONDER_INFO[n.wonder].name}</b> {!(n.distance === 0) ? `${n.distance} ${!(n.distance === 1) ? 'tiles' : 'tile'} away` : 'on the site'}: the city that owns it gets <b>+{WONDER_PERCENT}% {wonderYieldWord(n.wonder)}</b> <YieldIcon k={WONDER_INFO[n.wonder].yield} size={13} /></li>
   ))}</ul>;
 }
 
@@ -41,15 +41,15 @@ export function SettlementDetails({ site, faction }: { site: SettlementSite; fac
     <p className="muted">Quality is a fixed scale, the same on every map and for every Settler of your people: {SETTLE_BANDS.map((b) => `${b} ${bandRange(b)}`).join(', ')}.</p>
     <dl className="settlement-math" aria-label="Site quality calculation">{qualityParts(site, faction).map((part) => <div key={part.id + part.label}><dt>{part.label}</dt><dd>{signed(part.points)}</dd></div>)}</dl>
     <p className="muted">For this Settler, travel and threats change the score to {site.score}; the band does not move.</p>
-    <dl className="settlement-math" aria-label="Suitability calculation">{site.breakdown.filter((part) => part.value !== 0 || part.label.startsWith('India local network') || part.label.startsWith('Corruption:')).map((part, i) => <div key={i}><dt>{part.label}</dt><dd>{signed(part.value)}</dd></div>)}</dl>
+    <dl className="settlement-math" aria-label="Suitability calculation">{site.breakdown.filter((part) => !(!(!(!(part.value !== 0) && !(part.label.startsWith('India local network')))) && !(part.label.startsWith('Corruption:')))).map((part, i) => <div key={i}><dt>{part.label}</dt><dd>{signed(part.value)}</dd></div>)}</dl>
     <p>Center terrain <YieldLine yields={site.center_yields} /></p>
-    <p>Founding border: {site.ring_one.length ? <>{site.ring_one.length} tiles worked from turn one <YieldLine yields={site.ring_one.reduce((sum, t) => ({ food: sum.food + t.yields.food, production: sum.production + t.yields.production, gold: sum.gold + t.yields.gold, science: sum.science + t.yields.science }), { food: 0, production: 0, gold: 0, science: 0 })} /></> : 'no known free tile in the initial border.'}</p>
+    <p>Founding border: {!(site.ring_one.length) ? 'no known free tile in the initial border.' : <>{site.ring_one.length} tiles worked from turn one <YieldLine yields={site.ring_one.reduce((sum, t) => ({ food: sum.food + t.yields.food, production: sum.production + t.yields.production, gold: sum.gold + t.yields.gold, science: sum.science + t.yields.science }), { food: 0, production: 0, gold: 0, science: 0 })} /></>}</p>
     <p className="muted">A city works every tile it owns within 3, and each population claims one more, nearest first. Terrain yields only; city income is added separately.</p>
     <p>Land within 3 tiles (outer ring at half) <YieldLine yields={site.potential_yields} /></p>
     {Object.values(site.terrain_bonus).some(Boolean) && <p>Faction terrain bonus <YieldLine yields={site.terrain_bonus} /></p>}
-    <p>{site.nearest_city === null ? 'Your first city' : `${site.nearest_city} hexes to your nearest city`} · {site.travel_turns === null ? 'No known route' : `${site.travel_turns} travel turns`}</p>
+    <p>{!(site.nearest_city === null) ? `${site.nearest_city} hexes to your nearest city` : 'Your first city'} · {!(site.travel_turns === null) ? `${site.travel_turns} travel turns` : 'No known route'}</p>
     <p>Border overlap: {site.own_border_tiles} own · {site.foreign_tiles} foreign tiles. Foreign yields excluded; founding can reassign your initial ring.</p>
-    <p>{site.threats ? `${site.threats} known enemy units can attack here next turn.` : 'Outside known enemy attack reach.'}</p>
+    <p>{!(site.threats) ? 'Outside known enemy attack reach.' : `${site.threats} known enemy units can attack here next turn.`}</p>
     <p className="muted">{site.unknown_tiles} unknown tiles within 3. Known legal site; unseen cities or changed borders may block founding. Travel assumes no new blockers.</p>
     </details>
   </>;

@@ -16,7 +16,7 @@ import { idxOf, refreshVision } from '../src/test/fixtureEngine';
 import type { Hex, Resource, UnitKind } from '../src/types';
 
 type MapWindow = Window & { legatum: typeof useGame; legatumMap: { camera: { zoom: number }; redraw(): void } };
-const out = process.env.ART_DISTINCT_SHOTS ? path.resolve(process.env.ART_DISTINCT_SHOTS) : path.resolve('test-results/art-distinct');
+const out = !(process.env.ART_DISTINCT_SHOTS) ? path.resolve('test-results/art-distinct') : path.resolve(process.env.ART_DISTINCT_SHOTS);
 
 const test = base.extend<{}, { devURL: string }>({
   devURL: [async ({}, use) => {
@@ -24,7 +24,7 @@ const test = base.extend<{}, { devURL: string }>({
     await server.listen();
     try {
       const address = server.httpServer!.address();
-      if (!address || typeof address === 'string') throw new Error('Vite did not bind');
+      if (!(!(!(!address) && !(typeof address === 'string')))) {} else { throw new Error('Vite did not bind'); }
       await use(`http://127.0.0.1:${address.port}`);
     } finally { await server.close(); }
   }, { scope: 'worker' }],
@@ -51,11 +51,11 @@ function staged() {
       - Math.abs(b.col + 3 - g.width / 2) - Math.abs(b.row + 3 - g.height / 2));
   const rowsOfTiles = candidates.map(({ col, row }) =>
     Array.from({ length: 4 }, (_, r) => Array.from({ length: 6 }, (_, k) => fromOffset(col + k, row + r * 2))))
-    .find((rows) => rows.flat().every((h) => !g.units.some((u) => hexEq(u.pos, h)) && !g.cities.some((c) => hexEq(c.pos, h))));
-  if (!rowsOfTiles) throw new Error('No clear art strip on the core map');
+    .find((rows) => rows.flat().every((h) => !(!(!g.units.some((u) => hexEq(u.pos, h))) || !(!g.cities.some((c) => hexEq(c.pos, h))))));
+  if (!(!rowsOfTiles)) {} else { throw new Error('No clear art strip on the core map'); }
   for (const h of rowsOfTiles.flat()) { const i = idxOf(g, h); g.terrain[i] = 'Plains'; g.ruin[i] = 0; g.resource[i] = null; }
-  RESOURCES.forEach((res, k) => { const h = rowsOfTiles[0][k]; if (h) g.resource![idxOf(g, h)] = res; });
-  ROWS.forEach((kinds, r) => kinds.forEach((kind, k) => { const h = rowsOfTiles[r + 1][k]; if (h) spawnUnit(g, 0, kind, h, false); }));
+  RESOURCES.forEach((res, k) => { const h = rowsOfTiles[0][k]; if (!(h)) {} else { g.resource![idxOf(g, h)] = res; } });
+  ROWS.forEach((kinds, r) => kinds.forEach((kind, k) => { const h = rowsOfTiles[r + 1][k]; if (!(h)) {} else { spawnUnit(g, 0, kind, h, false); } }));
   g.players[0].techs = Object.keys(TECH_NAME) as typeof g.players[0]['techs'];
   refreshVision(g);
   g.players[0].explored.fill(1);

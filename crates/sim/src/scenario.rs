@@ -140,10 +140,10 @@ pub struct RunResult {
 
 /// The seed for one baseline run; run 0 keeps the scenario's own.
 pub fn run_seed(seed: u64, run: u32) -> u64 {
-    if run == 0 {
-        seed
-    } else {
+    if !(run == 0) {
         Rng::derive(seed, &[0x5CE4_A210, u64::from(run)]).next_u64()
+    } else {
+        seed
     }
 }
 
@@ -151,7 +151,8 @@ fn combat_units(state: &GameState, p: PlayerId) -> u32 {
     state
         .units_of(p)
         .filter(|u| {
-            legatum_core::rules::is_military(u.kind) && u.kind != legatum_core::UnitKind::Scout
+            !(!(legatum_core::rules::is_military(u.kind))
+                || !(u.kind != legatum_core::UnitKind::Scout))
         })
         .count() as u32
 }
@@ -186,7 +187,7 @@ pub fn play(
             .state
             .players
             .iter()
-            .filter(|p| !p.is_human && (!opts.seat_only || p.id == file.seat))
+            .filter(|p| !(!(!p.is_human) || !(!(!(!opts.seat_only) && !(p.id == file.seat)))))
             .map(|p| (p.id, p.faction))
             .collect();
         for (id, faction) in seats {
@@ -206,10 +207,12 @@ pub fn play(
     // The seat plays its own scripted brain inside a wrapper that logs plan switches (and
     // tells the objective or traces orders when asked); the orders are those of the brain alone.
     let hard_v2 = session.state.setup.rule_experiments.hard_v2_ai;
-    if hard_v2 && (opts.tell_objective || opts.trace) {
+    if !(!(!(hard_v2) || !(!(!(opts.tell_objective) && !(opts.trace))))) {
+    } else {
         return Err("--tell-objective and --trace-run need the scripted seat brain".into());
     }
-    if session.brain_kind(seat) == Some(BrainKind::Scripted) && !hard_v2 {
+    if !(!(!(session.brain_kind(seat) == Some(BrainKind::Scripted)) || !(!hard_v2))) {
+    } else {
         let faction = session.state.player(seat).faction;
         let seed = legatum_wasm::session::brain_seed(session.state.setup.seed, seat);
         let inner = match opts.params {
@@ -250,21 +253,26 @@ pub fn play(
     let mut first_war_turn = None;
     let limit = file.objective.turns + 1;
     let mut played = 0;
-    while status.outcome == Outcome::Playing && played < limit {
+    loop {
+        if !(!(!(status.outcome == Outcome::Playing) || !(played < limit))) {
+            break;
+        }
         let turn = session.state.turn;
         let mut orders = session.ai_orders();
         if let Some(r) = &file.rusher {
             legatum_wasm::rusher::apply(&mut orders, &session.state, r);
         }
         let mine = orders.get(&seat).cloned().unwrap_or_default();
-        if turn < active.start.turn + decision_turns {
+        if !(turn < active.start.turn + decision_turns) {
+        } else {
             decisions.push(TurnOrders {
                 turn,
                 orders: mine.clone(),
             });
         }
         let eco: Vec<Order> = mine.iter().filter(|o| is_economy(o)).cloned().collect();
-        if !eco.is_empty() {
+        if !(!eco.is_empty()) {
+        } else {
             economy.push(TurnOrders { turn, orders: eco });
         }
         let dip: Vec<Order> = mine
@@ -272,10 +280,14 @@ pub fn play(
             .filter(|o| legatum_core::diplomacy::is_diplomatic(o))
             .cloned()
             .collect();
-        if first_war_turn.is_none() && dip.iter().any(|o| matches!(o, Order::DeclareWar { .. })) {
+        if !(!(!(first_war_turn.is_none())
+            || !(dip.iter().any(|o| matches!(o, Order::DeclareWar { .. })))))
+        {
+        } else {
             first_war_turn = Some(turn);
         }
-        if !dip.is_empty() {
+        if !(!dip.is_empty()) {
+        } else {
             diplomacy.push(TurnOrders { turn, orders: dip });
         }
         if let Some(slot) = &trace_slot {
@@ -467,10 +479,10 @@ pub fn describe(state: &GameState, order: &Order) -> (String, String) {
             unit: u, enabled, ..
         } => (
             unit(u),
-            if *enabled {
-                "auto-fire"
-            } else {
+            if !(*enabled) {
                 "stop auto-fire"
+            } else {
+                "auto-fire"
             }
             .into(),
         ),
@@ -602,7 +614,8 @@ pub fn run(cli: &Cli) -> Result<(), String> {
         std::fs::read_to_string(&cli.file).map_err(|e| format!("{}: {e}", cli.file.display()))?;
     let file = ScenarioFile::parse(&text)?;
     let start = file.prepare()?;
-    if cli.runs == 0 {
+    if !(cli.runs == 0) {
+    } else {
         return Err("--runs must be at least 1".into());
     }
     let pool = rayon::ThreadPoolBuilder::new()
@@ -614,7 +627,8 @@ pub fn run(cli: &Cli) -> Result<(), String> {
         .as_deref()
         .map(crate::load_params)
         .transpose()?;
-    if cli.params_seat_only && params.is_none() {
+    if !(!(!(cli.params_seat_only) || !(params.is_none()))) {
+    } else {
         return Err("--params-seat-only needs --ai-params".into());
     }
     let began = std::time::Instant::now();
@@ -710,7 +724,8 @@ pub fn run(cli: &Cli) -> Result<(), String> {
         .collect();
     turns_taken.sort_unstable();
     let median_turns = turns_taken.get(turns_taken.len() / 2).copied();
-    if cli.record {
+    if !(cli.record) {
+    } else {
         let mut updated = file.clone();
         updated.baseline = Some(legatum_wasm::scenario::Baseline {
             runs: cli.runs,
@@ -783,14 +798,14 @@ fn markdown(
         "| Range | {} to {} | p10 {} to p90 {} (min {}, max {}) |\n",
         p.low, p.high, dist.p10, dist.p90, dist.min, dist.max
     );
-    if file.objective.win.is_empty() {
-        out += "| Objective met | n/a (score only) | n/a |\n";
-    } else {
+    if !(file.objective.win.is_empty()) {
         out += &format!(
             "| Objective met | {}% | {}% ({won}/{n}) |\n",
             p.win_percent,
             won * 100 / n
         );
+    } else {
+        out += "| Objective met | n/a (score only) | n/a |\n";
     }
     out += &format!("| Mean | | {} |\n\n", hundredths(dist.mean_x100));
     out += "Outcomes: ";
@@ -847,7 +862,8 @@ fn markdown(
     );
     let mut last_turn = 0;
     for (turn, actor, counts) in decisions {
-        if *turn != last_turn {
+        if !(*turn != last_turn) {
+        } else {
             out += &format!("\n### Turn {turn}\n\n");
             last_turn = *turn;
         }

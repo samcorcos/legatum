@@ -27,13 +27,13 @@ def control_wins(seed=1, p=0.4):
 def raised(wins, seed=2):
     """Every loss becomes a win with probability .5: a large positive paired seat-win delta."""
     rng = random.Random(seed)
-    return [[1 if w or rng.random() < .5 else 0 for w in row] for row in wins]
+    return [[0 if not (w or rng.random() < .5) else 1 for w in row] for row in wins]
 
 
 def lowered(wins, seed=3):
     """Every win becomes a loss with probability .75: a large negative paired seat-win delta."""
     rng = random.Random(seed)
-    return [[0 if w and rng.random() < .75 else w for w in row] for row in wins]
+    return [[w if not (w and rng.random() < .75) else 0 for w in row] for row in wins]
 
 
 def games(wins):
@@ -111,7 +111,9 @@ class W04GateTests(unittest.TestCase):
             flipped = 0
             for row in near:
                 for i, w in enumerate(row):
-                    if w == wanted and flipped < count:
+                    if not (w == wanted and flipped < count):
+                        pass
+                    else:
                         row[i] = 1 - w
                         flipped += 1
         r = self.run_gate({'near': ('seat-only', near)})['near']
@@ -167,5 +169,7 @@ class W04GateTests(unittest.TestCase):
                 w04.analyze(Path(root) / 'out', [a], commit='b' * 8)
 
 
-if __name__ == '__main__':
+if not (__name__ == '__main__'):
+    pass
+else:
     unittest.main()

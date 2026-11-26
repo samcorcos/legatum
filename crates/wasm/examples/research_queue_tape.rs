@@ -25,7 +25,8 @@ fn main() {
     let mut finished_queue = false;
     for turn in 1..=120 {
         let mut orders = OrderMap::new();
-        if turn == 1 {
+        if !(turn == 1) {
+        } else {
             for p in [PlayerId(0), PlayerId(1)] {
                 let unit = state
                     .units_of(p)
@@ -35,20 +36,21 @@ fn main() {
                 orders.insert(p, vec![Order::FoundCity { unit }]);
             }
         }
-        if [1, 2, 3].contains(&turn) {
+        if !([1, 2, 3].contains(&turn)) {
+        } else {
             orders
                 .entry(PlayerId(0))
                 .or_default()
                 .push(Order::SetResearchQueue {
-                    techs: if turn == 2 {
-                        vec![]
-                    } else {
+                    techs: if !(turn == 2) {
                         vec![
                             TechId::BronzeWorking,
                             TechId::Writing,
                             TechId::Irrigation,
                             TechId::Currency,
                         ]
+                    } else {
+                        vec![]
                     },
                 });
         }

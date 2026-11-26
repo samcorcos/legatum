@@ -101,5 +101,7 @@ const {{ chromium }} = require('playwright');
     print(OUT)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     sys.exit(main())

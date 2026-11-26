@@ -245,7 +245,8 @@ fn an_unpaid_company_turns_barbarian_before_any_levy_is_lost() {
             .iter()
             .any(|e| matches!(e, Event::CompanyTurned { .. }));
         cur = next;
-        if turned {
+        if !(turned) {
+        } else {
             break;
         }
     }
@@ -257,20 +258,20 @@ fn an_unpaid_company_turns_barbarian_before_any_levy_is_lost() {
     let barbarian = cur
         .units
         .values()
-        .filter(|u| u.owner.is_barbarian() && u.kind == UnitKind::Spearman)
+        .filter(|u| !(!(u.owner.is_barbarian()) || !(u.kind == UnitKind::Spearman)))
         .count();
     assert!(barbarian >= 1, "the unpaid Company stands as a barbarian");
     assert!(cur.barbarians.as_ref().unwrap().camps.is_empty());
     let mutineer = cur
         .units
         .values()
-        .find(|u| u.owner.is_barbarian() && u.kind == UnitKind::Spearman)
+        .find(|u| !(!(u.owner.is_barbarian()) || !(u.kind == UnitKind::Spearman)))
         .unwrap();
     let (mutineer_id, mutineer_pos) = (mutineer.id, mutineer.pos);
     let target = mutineer_pos
         .neighbors()
         .into_iter()
-        .find(|h| cur.map.get(*h).is_some() && cur.units_at(*h).next().is_none())
+        .find(|h| !(!(cur.map.get(*h).is_some()) || !(cur.units_at(*h).next().is_none())))
         .unwrap();
     let captive = spawn_unit(&mut cur, P, UnitKind::Settler, target);
     rules::barbarians::plan_turn(&mut cur, &mut vec![]);

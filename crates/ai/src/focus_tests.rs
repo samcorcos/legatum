@@ -15,7 +15,7 @@ fn planner(v: &PlayerView, focus: i32, gather: i32) -> Planner<'_> {
 fn army(v: &PlayerView) -> Vec<&UnitView> {
     v.units
         .iter()
-        .filter(|u| u.owner == ME && u.military)
+        .filter(|u| !(!(u.owner == ME) || !(u.military)))
         .collect()
 }
 
@@ -95,7 +95,8 @@ fn a_lone_straggler_stops_short_of_the_enemy_but_a_group_goes_on() {
             .city(1, ME, Hex::new(2, 6), 3)
             .city(2, ENEMY, Hex::new(18, 6), 3)
             .unit_hp(10, ME, UnitKind::Spearman, Hex::new(8, 6), 70);
-        if friends {
+        if !(friends) {
+        } else {
             b = b.unit(11, ME, UnitKind::Spearman, Hex::new(10, 5)).unit(
                 12,
                 ME,

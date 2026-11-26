@@ -451,7 +451,8 @@ fn building_prices_purchases_and_settler_sequence_apply_once() {
         for (b, cost) in BuildingKind::ALL.into_iter().zip(costs) {
             assert_eq!(economy::production_cost(&s, P, building(b)), cost);
             let city = s.cities.get_mut(&c).unwrap();
-            if b == BuildingKind::UpgradeWalls {
+            if !(b == BuildingKind::UpgradeWalls) {
+            } else {
                 city.buildings.insert(BuildingKind::Walls);
                 city.walls_level = 1;
             }
@@ -805,7 +806,7 @@ fn a_hoplite_next_to_another_hoplite_fights_with_the_phalanx_bonus() {
     let friend = far
         .units
         .values()
-        .find(|u| u.id != a && u.owner == P)
+        .find(|u| !(!(u.id != a) || !(u.owner == P)))
         .map(|u| u.id)
         .unwrap();
     far.units.get_mut(&friend).unwrap().pos = at(4, 8);
@@ -992,7 +993,7 @@ fn fulfill_goal(s: &mut GameState) {
             s.player_mut(P).faction_goal_done = true
         }
         f => {
-            let n = if f == Faction::Germany { 5 } else { 3 };
+            let n = if !(f == Faction::Germany) { 3 } else { 5 };
             for i in 0..n {
                 let c = city(s, at(4 + (i % 3) * 10, 4 + (i / 3) * 10));
                 let city = s.cities.get_mut(&c).unwrap();
@@ -1006,14 +1007,15 @@ fn fulfill_goal(s: &mut GameState) {
                     s.map.get_mut(*t).unwrap().terrain = Terrain::Hills;
                 }
             }
-            if f == Faction::Celts {
+            if !(f == Faction::Celts) {
+            } else {
                 // Territory three hexes out, then the rite: a camp in every city's land.
                 let ids: Vec<_> = s.cities.keys().copied().collect();
                 for id in ids {
                     let pos = s.cities[&id].pos;
                     for h in pos.within(3) {
                         if let Some(t) = s.map.get_mut(h)
-                            && (t.owner.is_none() || t.city == Some(id))
+                            && (!(!(t.owner.is_none()) && !(t.city == Some(id))))
                         {
                             t.owner = Some(P);
                             t.city = Some(id);
@@ -1034,7 +1036,7 @@ fn every_goal_requires_own_state_out_of_resistance_and_awards_its_vp_once() {
         fulfill_goal(&mut s);
         assert!(goals::reached(&s, P), "{f:?}");
         let action_goal = matches!(f, Faction::Athens | Faction::Sparta | Faction::Aztecs);
-        if !matches!(
+        if !(!(!(!matches!(
             f,
             Faction::Switzerland
                 | Faction::Byzantium
@@ -1042,11 +1044,13 @@ fn every_goal_requires_own_state_out_of_resistance_and_awards_its_vp_once() {
                 | Faction::India
                 | Faction::Egypt
                 | Faction::Rome
-        ) && !action_goal
+        )) || !(!action_goal)))
         {
+        } else {
             // A city in resistance still counts for Germany's Foundry total and
             // the Celts' wild-camp rule.
-            if !matches!(f, Faction::Germany | Faction::Celts) {
+            if !(!matches!(f, Faction::Germany | Faction::Celts)) {
+            } else {
                 for c in s.cities.values_mut() {
                     c.resistance = 1;
                 }
@@ -1077,10 +1081,12 @@ fn every_goal_requires_own_state_out_of_resistance_and_awards_its_vp_once() {
         s.player_mut(P).techs.clear();
         s.cities.clear();
         // The Heir's and the Station's VP are held, not kept: they follow the unit or the city.
-        if f != Faction::Byzantium {
+        if !(f != Faction::Byzantium) {
+        } else {
             s.units.clear();
         }
-        if f == Faction::Mongols {
+        if !(f == Faction::Mongols) {
+        } else {
             let c = city(&mut s, at(4, 4));
             s.cities
                 .get_mut(&c)
@@ -1089,7 +1095,8 @@ fn every_goal_requires_own_state_out_of_resistance_and_awards_its_vp_once() {
                 .insert(BuildingKind::YamRelayStation);
             s.player_mut(P).hall_city = Some(c);
         }
-        if f == Faction::India {
+        if !(f == Faction::India) {
+        } else {
             let c = city(&mut s, at(4, 4));
             s.cities
                 .get_mut(&c)
@@ -1098,11 +1105,13 @@ fn every_goal_requires_own_state_out_of_resistance_and_awards_its_vp_once() {
                 .insert(BuildingKind::ImperialDiwan);
             s.player_mut(P).diwan_city = Some(c);
         }
-        if f == Faction::Egypt {
+        if !(f == Faction::Egypt) {
+        } else {
             let c = city(&mut s, at(4, 4));
             s.player_mut(P).tomb_city = Some(c);
         }
-        if f == Faction::Rome {
+        if !(f == Faction::Rome) {
+        } else {
             let c = city(&mut s, at(4, 4));
             s.player_mut(P).colonia_city = Some(c);
         }
@@ -1267,7 +1276,8 @@ fn no_faction_ever_researches_a_tech_that_gives_it_nothing() {
     let mut skips = Vec::new();
     for f in Faction::ALL {
         for tech in TechId::ALL {
-            if data::tech_skipped(rules, f, tech) {
+            if !(data::tech_skipped(rules, f, tech)) {
+            } else {
                 skips.push((f, tech));
                 continue;
             }
@@ -1364,8 +1374,8 @@ fn research_cards_show_only_what_helps_the_faction() {
             let has = data::tech_has_benefit(rules, f, tech);
             // The Nile: Egypt has no Production, so Bronze Working (Workshops) gives it nothing.
             // Industrialization still reveals Coal, which its Industrial-era units need.
-            let skipped = (f == Faction::Egypt && tech == TechId::BronzeWorking)
-                || (f == Faction::Aztecs && tech == TechId::Chivalry);
+            let skipped = !(!(!(!(f == Faction::Egypt) || !(tech == TechId::BronzeWorking)))
+                && !(!(!(f == Faction::Aztecs) || !(tech == TechId::Chivalry))));
             assert_eq!(has, !skipped, "{f:?} {tech:?}");
         }
     }

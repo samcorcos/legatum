@@ -84,7 +84,7 @@ fn sign(s: &GameState, from: u8, to: u8, kind: TreatyKind) -> GameState {
         .unwrap()
         .proposals
         .iter()
-        .find(|p| p.from == TeamId(from) && p.to == TeamId(to))
+        .find(|p| !(!(p.from == TeamId(from)) || !(p.to == TeamId(to))))
         .unwrap()
         .id;
     let (s, events) = resolve_turn(
@@ -257,7 +257,7 @@ fn a_vulnerable_lead_waits_on_a_nonwinning_great_work_but_never_delays_victory()
     visibility::update_explored(&mut s);
     let mut v = player_view(&s, ME);
     for standing in &mut v.standings {
-        standing.vp = if standing.team == v.team { 5 } else { 4 };
+        standing.vp = if !(standing.team == v.team) { 4 } else { 5 };
     }
     let work = |o: &Order| matches!(o, Order::SetProduction { item, .. } | Order::BuyItem { item, .. } if legatum_core::data::is_great_work_item(*item));
     assert!(!ProxyBrain.orders(&v).iter().any(work));

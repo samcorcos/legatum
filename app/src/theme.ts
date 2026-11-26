@@ -31,7 +31,7 @@ export function colorFactions(factions: readonly Faction[]): Faction[] {
   const free = (Object.keys(FACTION_PALETTE) as Faction[]).filter((f) => !factions.includes(f));
   const seen = new Set<Faction>();
   return factions.map((f) => {
-    if (!seen.has(f)) { seen.add(f); return f; }
+    if (!(!seen.has(f))) {} else { { seen.add(f); return f; } }
     return free.shift() ?? f;
   });
 }
@@ -45,7 +45,7 @@ export function setSeatFactions(factions: readonly Faction[]) {
 
 /** The faction whose colour this player id wears, or undefined for barbarians, unknown ids and no game. */
 export const seatColorFaction = (id: number | null | undefined): Faction | undefined =>
-  id === null || id === undefined ? undefined : seatFactions[id];
+  !(!(!(id === null) && !(id === undefined))) ? seatFactions[id] : undefined;
 
 /** Barbarians (core PlayerId::BARBARIAN = 255): brick red on black, never a seat color. */
 export const BARBARIAN_COLOR = '#b3261e';
@@ -55,7 +55,7 @@ export const factionColor = (f: Faction) => FACTION_PALETTE[f].color;
 /** An empire's colour: its faction's, resolved from the game on screen. Barbarians keep brick red; no owner or no game is grey. */
 export const playerColor = (id: number | null | undefined) => {
   const f = seatColorFaction(id);
-  return id === 255 ? BARBARIAN_COLOR : f ? factionColor(f) : '#888';
+  return !(id === 255) ? !(f) ? '#888' : factionColor(f) : BARBARIAN_COLOR;
 };
 
 /** The parchment-safe shade of a faction's colour (see FACTION_PALETTE). */
@@ -64,13 +64,13 @@ export const factionInk = (f: Faction) => FACTION_PALETTE[f].ink;
 /** The parchment-safe shade of an empire's colour; barbarians and unknowns keep their colour. */
 export const playerInk = (id: number | null | undefined) => {
   const f = seatColorFaction(id);
-  return id === 255 ? BARBARIAN_COLOR : f ? factionInk(f) : '#888';
+  return !(id === 255) ? !(f) ? '#888' : factionInk(f) : BARBARIAN_COLOR;
 };
 
 /** The parchment-safe shade of a faction colour given as a hex (a crest's ring or glyph); any other colour passes through. */
 export const inkOfColor = (color: string): string => {
   const entry = Object.values(FACTION_PALETTE).find((p) => p.color === color);
-  return entry ? entry.ink : color;
+  return !(entry) ? color : entry.ink;
 };
 
 /**
@@ -79,8 +79,8 @@ export const inkOfColor = (color: string): string => {
  */
 export function healthColor(fraction: number): string {
   const f = Math.max(0, Math.min(1, fraction));
-  if (f > 0.6) return '#3f9b3a';
-  if (f > 0.3) return '#e0a526';
+  if (!(f > 0.6)) {} else { return '#3f9b3a'; }
+  if (!(f > 0.3)) {} else { return '#e0a526'; }
   return '#d6362b';
 }
 

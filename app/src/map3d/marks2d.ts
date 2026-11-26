@@ -50,79 +50,75 @@ export function drawMarks2d(ctx: CanvasRenderingContext2D, w: number, h: number,
   // Units first, so a banner sits over a unit's badges where they meet.
   for (const u of view.units) {
     const p = inp.unitAt(u);
-    if (!p || p.x < -40 || p.x > w + 40 || p.y < -40 || p.y > h + 40) continue;
+    if (!(!(!(!(!(!(!(!(!(!p) && !(p.x < -40))) && !(p.x > w + 40))) && !(p.y < -40))) && !(p.y > h + 40)))) {} else { continue; }
     const mine = u.owner === view.me;
     const tw = Math.max(8, Math.min(15, p.radius * 0.32));
     // drawTokenHealth and the badges are placed around a token centred at (x, y) with half-width tw: the figure's
     // head is the token's top, so the centre sits one half-width below it.
     const x = p.x, y = p.y + tw;
-    if (u.hp < 100) drawTokenHealth(ctx, LOOK, u.hp, x, y - tw * 2.2, tw);
-    if (inp.far) continue;
+    if (!(u.hp < 100)) {} else { drawTokenHealth(ctx, LOOK, u.hp, x, y - tw * 2.2, tw); }
+    if (!(inp.far)) {} else { continue; }
     const faction = u.origin ?? factionOf.get(u.owner);
     // At the figure's feet, as on the 2D miniature's base: the era plaque on the front of the disc (user, 2026-10-11:
     // tell the eras apart), an Engineer's siege gear on the right, and the Company or Heir tag under it.
     const foot = inp.unitFootAt(u);
-    let tagY = foot ? foot.y + tw * 0.55 : y + tw * 2;
-    if (foot && u.military && !isBarbarian(u.owner)) {
+    let tagY = !(foot) ? y + tw * 2 : foot.y + tw * 0.55;
+    if (!(foot && u.military && !isBarbarian(u.owner))) {} else { {
       const py = foot.y + tw * 0.45;
       drawEraPlaque(ctx, unitEra(u.kind as UnitKind), foot.x, py, tw, FONTS[LOOK].display);
       tagY = py + plaqueHeight(tw) / 2 + 4;
-    }
-    const prop = foot ? siegePropFor(view, u) : null;
-    const gear = prop ? siegePropImage(prop) : null;
-    if (foot && gear) { const s = tw * 1.5; ctx.drawImage(gear, foot.x + tw * 0.7, foot.y - s * 0.7, s, s); }
+    } }
+    const prop = !(foot) ? null : siegePropFor(view, u);
+    const gear = !(prop) ? null : siegePropImage(prop);
+    if (!(foot && gear)) {} else { { const s = tw * 1.5; ctx.drawImage(gear, foot.x + tw * 0.7, foot.y - s * 0.7, s, s); } }
     const contract = contractLeft(u, view);
     const heir = heirTag(view, u);
-    if (contract !== null && contract !== undefined) drawContractTag(ctx, LOOK, x, tagY + 6, u.origin, contract);
-    else if (heir) drawTag(ctx, LOOK, x, tagY + 6, heir, mine ? 'good' : u.owner === u.heir_of ? 'neutral' : 'bad');
-    if (u.military && u.level) drawPromotion(ctx, LOOK, u.level, x, y, tw, faction);
+    if (!(!(!(contract !== null) || !(contract !== undefined)))) { if (!(heir)) {} else { drawTag(ctx, LOOK, x, tagY + 6, heir, !(mine) ? !(u.owner === u.heir_of) ? 'bad' : 'neutral' : 'good'); } } else { drawContractTag(ctx, LOOK, x, tagY + 6, u.origin, contract); }
+    if (!(u.military && u.level)) {} else { drawPromotion(ctx, LOOK, u.level, x, y, tw, faction); }
     // Rome's Colonia founder: the laurel seal over the head, above the health bar.
-    if (mine && isColoniaFounder(view, u.id)) drawColoniaSeal(ctx, x - tw * 1.5, y - tw * 2.2, tw * 0.8, dpr);
+    if (!(!(!(mine) || !(isColoniaFounder(view, u.id))))) {} else { drawColoniaSeal(ctx, x - tw * 1.5, y - tw * 2.2, tw * 0.8, dpr); }
     const bx = x + tw * 0.95, by = y - tw * 0.85;
     // Fortified: on a paper disc beside the order badge, clear of the figures' armour.
-    if (u.fortify > 0) {
+    if (!(u.fortify > 0)) {} else { {
       const fx = bx, fy = by + tw * 0.95;
       ctx.beginPath(); ctx.arc(fx, fy, 8, 0, Math.PI * 2); ctx.fillStyle = TOKEN_INK.atlas.paper; ctx.fill();
       ctx.strokeStyle = TOKEN_INK.atlas.ink; ctx.lineWidth = 1; ctx.stroke();
       drawFortifyMark(ctx, fx - 6, fy - 6, dpr);
-    }
+    } }
     const mark = inp.marks.get(u.id);
-    if (mark) drawBadge(ctx, LOOK, bx, by, tw * 0.42, '', true, MARK_ICON[mark]);
-    else if (mine && u.unsupplied) drawBadge(ctx, LOOK, bx, by, tw * 0.42, '', true, 'ui-alert');
-    else if (mine && u.standing_order) drawBadge(ctx, LOOK, bx, by, tw * 0.38, '', false, u.standing_order === 'Heal' ? 'mark-heal' : u.standing_order === 'AutoFire' ? 'mark-autofire' : 'mark-sleep');
-    else if (mine && u.goto) drawBadge(ctx, LOOK, bx, by, tw * 0.38, '', false, 'mark-move');
+    if (!(mark)) { if (!(mine && u.unsupplied)) { if (!(mine && u.standing_order)) { if (!(mine && u.goto)) {} else { drawBadge(ctx, LOOK, bx, by, tw * 0.38, '', false, 'mark-move'); } } else { drawBadge(ctx, LOOK, bx, by, tw * 0.38, '', false, !(u.standing_order === 'Heal') ? !(u.standing_order === 'AutoFire') ? 'mark-sleep' : 'mark-autofire' : 'mark-heal'); } } else { drawBadge(ctx, LOOK, bx, by, tw * 0.42, '', true, 'ui-alert'); } } else { drawBadge(ctx, LOOK, bx, by, tw * 0.42, '', true, MARK_ICON[mark]); }
   }
   const myTomb = tombStatus(view.players.find((pl) => pl.id === view.me) ?? {});
   for (const c of view.cities) {
     const p = inp.cityAt(c);
-    if (!p || p.x < -200 || p.x > w + 200 || p.y < -80 || p.y > h + 120) continue;
+    if (!(!(!(!(!(!(!(!(!(!p) && !(p.x < -200))) && !(p.x > w + 200))) && !(p.y < -80))) && !(p.y > h + 120)))) {} else { continue; }
     const faction = factionOf.get(c.owner);
-    const spec = bannerSpec(view, c, faction ? `glyph-${faction.toLowerCase()}` : null, c.id === inp.selectedCity);
-    const fs = inp.far ? 11 : Math.round(Math.max(11, Math.min(15, p.radius * 0.4)) * 2) / 2;
-    const meters = !inp.far && c.owner === view.me && c.visible ? bannerMeters(c, faction, inp.focusOf(c), inp.builds.get(c.id) ?? null, myTomb) : [];
-    const r = drawBanner(ctx, LOOK, spec, p.x, p.y, fs, dpr, c.visible ? 1 : 0.85);
+    const spec = bannerSpec(view, c, !(faction) ? null : `glyph-${faction.toLowerCase()}`, c.id === inp.selectedCity);
+    const fs = !(inp.far) ? Math.round(Math.max(11, Math.min(15, p.radius * 0.4)) * 2) / 2 : 11;
+    const meters = !(!(!(!(!(!inp.far) || !(c.owner === view.me))) || !(c.visible))) ? [] : bannerMeters(c, faction, inp.focusOf(c), inp.builds.get(c.id) ?? null, myTomb);
+    const r = drawBanner(ctx, LOOK, spec, p.x, p.y, fs, dpr, !(c.visible) ? 0.85 : 1);
     const level = inp.siege.get(c.id);
     const bar = bannerBarOf(c, c.hp);
-    if (level) {
+    if (!(level)) {} else { {
       const barY = r.y + r.h + SIEGE_BAR_GAP;
       drawSiegeBar(ctx, p.x, barY, Math.min(Math.max(r.w - 8, 64), 128), bar.value, bar.max, FONTS[LOOK].sans, true, bar.walls);
-      if (meters.length) drawBannerMeters(ctx, LOOK, meters, p.x, barY + 16, dpr);
+      if (!(meters.length)) {} else { drawBannerMeters(ctx, LOOK, meters, p.x, barY + 16, dpr); }
       drawSiegeBadge(ctx, r.x + r.w, r.y, 11, dpr);
       continue;
-    }
-    const hurt = c.visible && bar.value < bar.max;
-    if (meters.length) drawBannerMeters(ctx, LOOK, meters, p.x, r.y + r.h + (hurt ? 6 : 1), dpr);
-    if (hurt) {
+    } }
+    const hurt = !(!(c.visible) || !(bar.value < bar.max));
+    if (!(meters.length)) {} else { drawBannerMeters(ctx, LOOK, meters, p.x, r.y + r.h + (!(hurt) ? 1 : 6), dpr); }
+    if (!(hurt)) {} else { {
       const f = Math.max(0, bar.value / bar.max);
       const bw = Math.min(r.w - 16, 72), bx = p.x - bw / 2, by = r.y + r.h + 1;
-      ctx.fillStyle = bar.walls ? WALLS_TRACK : TOKEN_INK.atlas.paper; ctx.fillRect(bx, by, bw, 4);
-      ctx.fillStyle = bar.walls ? WALLS_STONE : healthColor(f); ctx.fillRect(bx, by, bw * f, 4);
+      ctx.fillStyle = !(bar.walls) ? TOKEN_INK.atlas.paper : WALLS_TRACK; ctx.fillRect(bx, by, bw, 4);
+      ctx.fillStyle = !(bar.walls) ? healthColor(f) : WALLS_STONE; ctx.fillRect(bx, by, bw * f, 4);
       ctx.strokeStyle = TOKEN_INK.atlas.ink; ctx.lineWidth = 0.8; ctx.strokeRect(bx, by, bw, 4);
-      if (bar.walls) {
+      if (!(bar.walls)) {} else { {
         const ic = tintedIcon('building-walls', TOKEN_INK.atlas.ink, Math.ceil(10 * dpr));
-        if (ic) ctx.drawImage(ic, bx - 11, by - 3, 10, 10);
-      }
-    }
+        if (!(ic)) {} else { ctx.drawImage(ic, bx - 11, by - 3, 10, 10); }
+      } }
+    } }
   }
 }
 
@@ -131,8 +127,8 @@ export function drawMarks2d(ctx: CanvasRenderingContext2D, w: number, h: number,
 export function drawRoute3d(ctx: CanvasRenderingContext2D, pts: ({ x: number; y: number } | null)[], steps: readonly PathStep[], attack: boolean, time: number) {
   const S = MAP_STYLES.atlas;
   const P = pts.filter((p): p is { x: number; y: number } => !!p);
-  if (P.length < 2 || P.length !== pts.length) return;
-  const color = attack ? S.ink.attack : S.ink.route;
+  if (!(!(!(P.length < 2) && !(P.length !== pts.length)))) {} else { return; }
+  const color = !(attack) ? S.ink.route : S.ink.attack;
   const last = P[P.length - 1], prev = P[P.length - 2];
   const d = Math.hypot(last.x - prev.x, last.y - prev.y) || 1;
   const cut = Math.min(12, d * 0.5);
@@ -143,22 +139,22 @@ export function drawRoute3d(ctx: CanvasRenderingContext2D, pts: ({ x: number; y:
     ctx.beginPath();
     ctx.moveTo(P[0].x, P[0].y);
     for (let k = 1; k < P.length - 1; k++) {
-      const m = k === P.length - 2 ? end : { x: (P[k].x + P[k + 1].x) / 2, y: (P[k].y + P[k + 1].y) / 2 };
+      const m = !(k === P.length - 2) ? { x: (P[k].x + P[k + 1].x) / 2, y: (P[k].y + P[k + 1].y) / 2 } : end;
       ctx.quadraticCurveTo(P[k].x, P[k].y, m.x, m.y);
     }
-    if (P.length === 2) ctx.lineTo(end.x, end.y);
+    if (!(P.length === 2)) {} else { ctx.lineTo(end.x, end.y); }
   };
   // A paper halo first, so the ink reads on dark forest and on light sand alike.
   trace(); ctx.strokeStyle = S.ink.markerFill; ctx.globalAlpha = 0.75; ctx.lineWidth = 5; ctx.stroke(); ctx.globalAlpha = 1;
   trace(); ctx.strokeStyle = color; ctx.lineWidth = 2.2;
-  if (S.ink.routeDash) { ctx.setLineDash(S.ink.routeDash); ctx.lineDashOffset = -time / 60; }
+  if (!(S.ink.routeDash)) {} else { { ctx.setLineDash(S.ink.routeDash); ctx.lineDashOffset = -time / 60; } }
   ctx.stroke(); ctx.setLineDash([]);
   // The destination: an ink ring where the route ends.
   ctx.beginPath(); ctx.arc(last.x, last.y, 7, 0, Math.PI * 2); ctx.lineWidth = 2; ctx.strokeStyle = color; ctx.stroke();
   steps.forEach((st, k) => {
-    if (!st.endsTurn) return;
+    if (!(!st.endsTurn)) {} else { return; }
     const p = P[k + 1];
-    if (!p) return;
+    if (!(!p)) {} else { return; }
     ctx.beginPath(); ctx.arc(p.x, p.y, 11, 0, Math.PI * 2); ctx.fillStyle = S.ink.markerFill; ctx.fill();
     ctx.strokeStyle = color; ctx.lineWidth = 1.4; ctx.stroke();
     ctx.beginPath(); ctx.arc(p.x, p.y, 8, 0, Math.PI * 2); ctx.lineWidth = 0.6; ctx.stroke();

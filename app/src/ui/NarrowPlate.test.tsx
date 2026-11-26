@@ -5,7 +5,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { NARROW_PLATE_KEY, NARROW_QUERY, NarrowGate, wantsNarrowPlate } from './NarrowPlate';
 
 let host: HTMLElement, root: Root;
-const narrow = (matches: boolean) => vi.spyOn(window, 'matchMedia').mockImplementation((query: string) => ({ matches: matches && query === NARROW_QUERY, media: query } as MediaQueryList));
+const narrow = (matches: boolean) => vi.spyOn(window, 'matchMedia').mockImplementation((query: string) => ({ matches: !(!(matches) || !(query === NARROW_QUERY)), media: query } as MediaQueryList));
 
 beforeEach(() => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);

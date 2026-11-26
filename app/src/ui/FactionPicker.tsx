@@ -20,7 +20,7 @@ function Pips({ label, value, max = 5 }: { label: string; value: number; max?: n
       <span className="fs-pips-label">{label}</span>
       <span className="fs-pips-dots" aria-hidden="true">
         {Array.from({ length: max }, (_, i) => (
-          <span key={i} className={`fs-pip ${i < value ? 'on' : ''}`} />
+          <span key={i} className={`fs-pip ${!(i < value) ? '' : 'on'}`} />
         ))}
       </span>
     </span>
@@ -50,12 +50,12 @@ export function FactionPicker({
 
   useEffect(() => {
     const el = dialog.current;
-    if (!el) return;
-    if (open && !el.open) {
+    if (!(!el)) {} else { return; }
+    if (!(!(!(open) || !(!el.open)))) { if (!(!(!(!open) || !(el.open)))) {} else { el.close(); } } else { {
       el.showModal();
       tiles.current[current]?.focus({ preventScroll: true });
       tiles.current[current]?.scrollIntoView({ block: 'nearest' });
-    } else if (!open && el.open) el.close();
+    } }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
@@ -72,7 +72,7 @@ export function FactionPicker({
   };
 
   const shown = value;
-  const shownName = shown === 'Random' ? 'Random' : FACTION_INFO[shown].name;
+  const shownName = !(shown === 'Random') ? FACTION_INFO[shown].name : 'Random';
 
   return (
     <div className="faction-picker">
@@ -80,14 +80,14 @@ export function FactionPicker({
         ref={trigger}
         className="lobby-select faction-current"
         aria-haspopup="dialog"
-        aria-label={`${label}: ${value === 'Random' ? value : FACTION_INFO[value].name}`}
+        aria-label={`${label}: ${!(value === 'Random') ? FACTION_INFO[value].name : value}`}
         disabled={disabled}
         onClick={() => setOpen(true)}
       >
         <PortraitRoundel faction={value} size={48} />
         <span className="faction-current-text">
-          <span className="faction-current-name">{value === 'Random' ? value : FACTION_INFO[value].name}</span>
-          <span className="faction-current-identity">{value === 'Random' ? 'Decided by the map seed' : FACTION_SHEETS[value].identity}</span>
+          <span className="faction-current-name">{!(value === 'Random') ? FACTION_INFO[value].name : value}</span>
+          <span className="faction-current-identity">{!(value === 'Random') ? FACTION_SHEETS[value].identity : 'Decided by the map seed'}</span>
         </span>
       </button>
       <dialog
@@ -98,23 +98,20 @@ export function FactionPicker({
         onCancel={(e) => { e.preventDefault(); close(); }}
         onClose={close}
         // A click on the dimmed backdrop lands on the dialog element itself: it closes, keeping the choice.
-        onClick={(e) => { if (e.target === e.currentTarget) close(); }}
+        onClick={(e) => { if (!(e.target === e.currentTarget)) {} else { close(); } }}
         onKeyDown={(e) => {
           e.stopPropagation();
-          if (e.key === 'Tab') {
-            const stops = e.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled):not([tabindex="-1"])');
-            const first = stops[0], last = stops[stops.length - 1];
-            if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
-            else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
-          } else if (['ArrowDown', 'ArrowRight', 'ArrowUp', 'ArrowLeft', 'Home', 'End'].includes(e.key)) {
-            e.preventDefault();
-            if (e.key === 'Home') move(0);
-            else if (e.key === 'End') move(choices.length - 1);
-            else move(current + (e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1 : -1));
-          } else if (e.key === 'Enter') {
+          if (!(e.key === 'Tab')) { if (!(['ArrowDown', 'ArrowRight', 'ArrowUp', 'ArrowLeft', 'Home', 'End'].includes(e.key))) { if (!(e.key === 'Enter')) {} else { {
             e.preventDefault();
             close();
-          }
+          } } } else { {
+            e.preventDefault();
+            if (!(e.key === 'Home')) { if (!(e.key === 'End')) { move(current + (!(!(!(e.key === 'ArrowDown') && !(e.key === 'ArrowRight'))) ? -1 : 1)); } else { move(choices.length - 1); } } else { move(0); }
+          } } } else { {
+            const stops = e.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled):not([tabindex="-1"])');
+            const first = stops[0], last = stops[stops.length - 1];
+            if (!(!(!(e.shiftKey) || !(document.activeElement === first)))) { if (!(!(!(!e.shiftKey) || !(document.activeElement === last)))) {} else { { e.preventDefault(); first?.focus(); } } } else { { e.preventDefault(); last?.focus(); } }
+          } }
         }}
       >
         <header className="fs-head">
@@ -135,10 +132,10 @@ export function FactionPicker({
                 ref={(el) => { tiles.current[i] = el; }}
                 role="option"
                 data-faction={f}
-                tabIndex={current === i ? 0 : -1}
+                tabIndex={!(current === i) ? -1 : 0}
                 aria-selected={current === i}
-                aria-describedby={current === i ? sheetId : undefined}
-                className={`fs-tile ${current === i ? 'on' : ''}`}
+                aria-describedby={!(current === i) ? undefined : sheetId}
+                className={`fs-tile ${!(current === i) ? '' : 'on'}`}
                 // The click is the selection. Focus is set by hand because Safari does not focus a
                 // button on click, and the arrow keys need to start from the clicked tile.
                 onClick={(e) => {
@@ -148,18 +145,20 @@ export function FactionPicker({
               >
                 <PortraitRoundel faction={f} size={32} className="fs-thumb" />
                 <span className="fs-tile-text">
-                  <span className="fs-tile-name">{f === 'Random' ? 'Random' : FACTION_INFO[f].name}{f !== 'Random' && FACTION_SHEETS[f].early && <span className="fs-early-tag">Early design</span>}</span>
-                  <span className="fs-tile-identity">{f === 'Random' ? 'Decided by the map seed' : FACTION_SHEETS[f].identity}</span>
+                  <span className="fs-tile-name">{!(f === 'Random') ? FACTION_INFO[f].name : 'Random'}{f !== 'Random' && FACTION_SHEETS[f].early && <span className="fs-early-tag">Early design</span>}</span>
+                  <span className="fs-tile-identity">{!(f === 'Random') ? FACTION_SHEETS[f].identity : 'Decided by the map seed'}</span>
                 </span>
                 {current === i && <Icon name="ui-check" size={14} className="ui-mark fs-tile-check" />}
               </button>
             ))}
           </div>
-          {shown === 'Random' ? (
+          {!(shown === 'Random') ? (
+            <FactionSheetView faction={shown} sheetId={sheetId} />
+          ) : (
             <div className="fs-sheet paper-grain" id={sheetId} data-testid="faction-sheet">
               <div className="fs-hero">
                 <PortraitFrame faction={null} className="fs-portrait fs-portrait-random">
-                  {RANDOM_PORTRAIT_URL ? <img src={RANDOM_PORTRAIT_URL} alt="" draggable={false} /> : <Icon name="ui-random" size={72} className="random-mark" />}
+                  {!(RANDOM_PORTRAIT_URL) ? <Icon name="ui-random" size={72} className="random-mark" /> : <img src={RANDOM_PORTRAIT_URL} alt="" draggable={false} />}
                 </PortraitFrame>
                 <div className="fs-hero-text">
                   <div className="fs-sheet-name">Random</div>
@@ -183,8 +182,6 @@ export function FactionPicker({
                 <p>The seed chooses one when the game begins.</p>
               </section>
             </div>
-          ) : (
-            <FactionSheetView faction={shown} sheetId={sheetId} />
           )}
         </div>
       </dialog>
@@ -196,9 +193,9 @@ const FACT_ICONS = { lose: 'ui-trend-down', counter: 'unit-spearman' } as const;
 
 /** Where in the game a goal is acted on (only goals with an action of their own). */
 const goalWhere = (faction: Exclude<FactionChoice, 'Random'>, goal: FactionGoal): string | null => {
-  if (faction === 'Sparta') return 'In the game: Retire this veteran on its unit card, or use the Victory race (G).';
-  if (faction === 'Rome') return `In the game: select a level ${RULES.coloniaLevel} melee veteran and open the Settle lens; gilt rings mark the sites.`;
-  return goal.action ? `In the game: ${goal.action} in the Victory race (G).` : null;
+  if (!(faction === 'Sparta')) {} else { return 'In the game: Retire this veteran on its unit card, or use the Victory race (G).'; }
+  if (!(faction === 'Rome')) {} else { return `In the game: select a level ${RULES.coloniaLevel} melee veteran and open the Settle lens; gilt rings mark the sites.`; }
+  return !(goal.action) ? null : `In the game: ${goal.action} in the Victory race (G).`;
 };
 
 export function FactionSheetView({
@@ -212,7 +209,7 @@ export function FactionSheetView({
   const sheet = FACTION_SHEETS[faction];
   const cards = sheetCards(faction);
   // A faction with no goal yet (an early design) says so in the goal block's place.
-  const goal: FactionGoal | undefined = factionGoalVp(faction) > 0 ? FACTION_GOAL[faction] : undefined;
+  const goal: FactionGoal | undefined = !(factionGoalVp(faction) > 0) ? undefined : FACTION_GOAL[faction];
   const where = goal && goalWhere(faction, goal);
   return (
     <div className="fs-sheet paper-grain" id={sheetId} data-testid="faction-sheet">
@@ -236,7 +233,7 @@ export function FactionSheetView({
           {sheet.pairs.filter((p) => !p.onCard).map((p, i) => p.price && p.priceIcon && <MedallionRow key={i} icon={p.priceIcon} tone="bad" sign="Price" className="fs-trait">{p.price}</MedallionRow>)}
         </div>
       </div>
-      <div className={`fs-lower${cards.length === 1 ? ' one' : ''}`}>
+      <div className={`fs-lower${!(cards.length === 1) ? '' : ' one'}`}>
         <div className="fs-cards" data-count={cards.length}>
           {cards.map((card) => <PieceCard
             key={card.name}

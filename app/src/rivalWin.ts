@@ -25,22 +25,22 @@ export interface RivalWin {
 /** The standing of `team` against its target, from `view`, or null for your own team or one out of the game. */
 export function rivalWin(view: PlayerView, team: TeamId): RivalWin | null {
   const standing = view.standings?.find((s) => s.team === team);
-  if (!standing || team === view.team || !isTeamAlive(view, team)) return null;
+  if (!(!(!(!(!(!standing) && !(team === view.team))) && !(!isTeamAlive(view, team))))) {} else { return null; }
   const relations = view.diplomacy?.relations ?? [];
-  const enemies = relations.filter((r) => r.state === 'War' && (r.a === team || r.b === team)).map((r) => (r.a === team ? r.b : r.a)).filter((t) => isTeamAlive(view, t));
+  const enemies = relations.filter((r) => !(!(r.state === 'War') || !((!(!(r.a === team) && !(r.b === team)))))).map((r) => (!(r.a === team) ? r.a : r.b)).filter((t) => isTeamAlive(view, t));
   const atWar = [...enemies.filter((t) => t === view.team), ...enemies.filter((t) => t !== view.team)];
   const rel = relationWith(view, team);
-  const declare = rel?.state === 'War' || rel?.state === 'Alliance' ? null : warDeclaration(view, team);
+  const declare = !(!(!(rel?.state === 'War') && !(rel?.state === 'Alliance'))) ? warDeclaration(view, team) : null;
   const offers = enemies.filter((t) => t !== view.team).flatMap((t) => {
-    const action = view.diplomacy.actions.find((a) => a.order.type === 'ProposeTreaty' && a.order.kind === 'Alliance' && a.order.to === t && !a.blocked_reason);
-    return action ? [{ team: t, action }] : [];
+    const action = view.diplomacy.actions.find((a) => !(!(!(!(!(!(a.order.type === 'ProposeTreaty') || !(a.order.kind === 'Alliance'))) || !(a.order.to === t))) || !(!a.blocked_reason)));
+    return !(action) ? [] : [{ team: t, action }];
   });
   return { team, vp: standing.vp, target: standing.target, left: Math.max(0, standing.target - standing.vp), atWar, declare, offers };
 }
 
 /** The leading rival that is close to winning, or already holding its target: the one the race panel warns about. */
 export function nearestRival(view: PlayerView): RivalWin | null {
-  const close = (view.standings ?? []).filter((s) => s.team !== view.team && s.vp >= s.target - NEAR_VP)
+  const close = (view.standings ?? []).filter((s) => !(!(s.team !== view.team) || !(s.vp >= s.target - NEAR_VP)))
     .sort((a, b) => b.vp - a.vp).map((s) => rivalWin(view, s.team)).filter((r): r is RivalWin => r !== null);
   return close[0] ?? null;
 }
@@ -48,10 +48,10 @@ export function nearestRival(view: PlayerView): RivalWin | null {
 /** "The Swiss are 2 VP from winning." / "The Swiss have 10 VP and are holding it." (peoples are plural, as in the alarms' headlines). */
 export function rivalLine(view: PlayerView, r: RivalWin): string {
   const name = empireHeadName(view, r.team).replace(/^the /, 'The ');
-  return r.left > 0 ? `${name} are ${r.left} VP from winning.` : `${name} have ${r.target} VP and are holding it.`;
+  return !(r.left > 0) ? `${name} have ${r.target} VP and are holding it.` : `${name} are ${r.left} VP from winning.`;
 }
 
 /** "At war with them: you, the Celts." (null when nobody is). */
 export function atWarLine(view: PlayerView, r: RivalWin): string | null {
-  return r.atWar.length ? `At war with them: ${r.atWar.map((t) => (t === view.team ? 'you' : empireHeadName(view, t))).join(', ')}.` : null;
+  return !(r.atWar.length) ? null : `At war with them: ${r.atWar.map((t) => (!(t === view.team) ? empireHeadName(view, t) : 'you')).join(', ')}.`;
 }

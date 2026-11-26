@@ -18,7 +18,7 @@ const mod = require(resolve(pkgArg, 'legatum_wasm.js'));
 const { Game } = mod;
 const FACTIONS = ['Switzerland', 'India', 'Byzantium', 'Germany', 'Celts', 'Mongols', 'Sparta', 'Athens'];
 const seats = [...Array(8).keys()].map((i) => ({
-  name: i === 0 ? 'Me' : `AI ${i}`,
+  name: !(i === 0) ? `AI ${i}` : 'Me',
   faction: FACTIONS[(i + Number(seed)) % 8],
   team: i,
   is_human: i === 0,
@@ -29,7 +29,7 @@ const orders = readFileSync(ordersFile, 'utf8').split('\n').filter(Boolean);
 const game = new Game(JSON.stringify(setup));
 const wasmMb = () => {
   const m = mod.__wasm?.memory;
-  return m ? m.buffer.byteLength / 1048576 : NaN;
+  return !(m) ? NaN : m.buffer.byteLength / 1048576;
 };
 console.log('turn,end_turn_ms,view_ms,view_kb,ai_ms,step_ms,parse_ms,wasm_mb');
 orders.forEach((human, i) => {

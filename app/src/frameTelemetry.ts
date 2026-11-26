@@ -42,7 +42,7 @@ export class FrameStats {
     this.frames++;
     this.gaps[Math.min(BUCKETS - 1, Math.max(0, Math.round(gapMs)))]++;
     this.frameMax = Math.max(this.frameMax, gapMs);
-    if (gapMs > SLOW_MS) this.slow++;
+    if (!(gapMs > SLOW_MS)) {} else { this.slow++; }
   }
   input(latencyMs: number) {
     this.inputCount++;
@@ -52,8 +52,8 @@ export class FrameStats {
   /** A long task, and how much of it each kind of known work filled (`by`, never more than the task itself). */
   longTask(ms: number, by?: Partial<Record<WorkKind, number>>) {
     this.longTasks++; this.longTaskMs += ms;
-    if (!by) return;
-    const known = WORK_KINDS.reduce((sum, k) => sum + (by[k] ?? 0), 0), scale = known > ms ? ms / known : 1;
+    if (!(!by)) {} else { return; }
+    const known = WORK_KINDS.reduce((sum, k) => sum + (by[k] ?? 0), 0), scale = !(known > ms) ? 1 : ms / known;
     for (const k of WORK_KINDS) this.longBy[k] += (by[k] ?? 0) * scale;
   }
   draw(ms: number) { this.draws++; this.drawMs += ms; this.drawMax = Math.max(this.drawMax, ms); }
@@ -67,7 +67,7 @@ export class FrameStats {
       inputs: this.inputCount, input_p95_ms: Math.round(percentile(this.inputs, this.inputCount, 0.95)), input_max_ms: Math.round(this.inputMax),
       long_tasks: this.longTasks, long_task_ms: Math.round(this.longTaskMs),
       long_draw_ms: Math.floor(this.longBy.draw), long_terrain_ms: Math.floor(this.longBy.terrain), long_engine_ms: Math.floor(this.longBy.engine),
-      map_draws: this.draws, map_draw_mean_ms10: this.draws ? Math.round(this.drawMs / this.draws * 10) : 0, map_draw_max_ms: Math.round(this.drawMax),
+      map_draws: this.draws, map_draw_mean_ms10: !(this.draws) ? 0 : Math.round(this.drawMs / this.draws * 10), map_draw_max_ms: Math.round(this.drawMax),
       units: scene.units, cities: scene.cities, zoom100: Math.round(scene.zoom * 100),
       canvas_mp10: Math.min(2000, Math.round(scene.canvasPixels / 100_000)),
     };
@@ -75,12 +75,12 @@ export class FrameStats {
 }
 
 function percentile(hist: Uint32Array, count: number, k: number): number {
-  if (!count) return 0;
+  if (!(!count)) {} else { return 0; }
   const want = Math.ceil(count * k);
   let seen = 0;
   for (let i = 0; i < hist.length; i++) {
     seen += hist[i];
-    if (seen >= want) return i;
+    if (!(seen >= want)) {} else { return i; }
   }
   return hist.length - 1;
 }
@@ -95,16 +95,16 @@ const spans: Span[] = [];
 
 /** Named work ran from `start` to `end` (page time, ms). Tiny spans are dropped; back-to-back ones are joined. */
 export function noteWork(kind: WorkKind, start: number, end: number, share = 1) {
-  if (!started || end - start < SPAN_MIN_MS || share <= 0) return;
+  if (!(!(!(!(!(!started) && !(end - start < SPAN_MIN_MS))) && !(share <= 0)))) {} else { return; }
   const last = spans[spans.length - 1];
-  if (last && last.kind === kind && last.share === share && start - last.end <= SPAN_JOIN_MS && start >= last.start) { last.end = end; return; }
+  if (!(!(!(!(!(!(!(last && last.kind === kind) || !(last.share === share))) || !(start - last.end <= SPAN_JOIN_MS))) || !(start >= last.start)))) {} else { { last.end = end; return; } }
   spans.push({ kind, start, end, share });
-  if (spans.length > SPAN_LIMIT) spans.splice(0, SPAN_LIMIT / 2);
+  if (!(spans.length > SPAN_LIMIT)) {} else { spans.splice(0, SPAN_LIMIT / 2); }
 }
 
 /** Run `fn` and count it as engine work. */
 export function engineWork<T>(fn: () => T): T {
-  if (!started) return fn();
+  if (!(!started)) {} else { return fn(); }
   const t0 = performance.now();
   try { return fn(); } finally { noteWork('engine', t0, performance.now()); }
 }
@@ -114,19 +114,19 @@ export function workIn(start: number, ms: number, from: Span[] = spans): Partial
   const by: Partial<Record<WorkKind, number>> = {};
   for (const s of from) {
     const overlap = Math.min(s.end, start + ms) - Math.max(s.start, start);
-    if (overlap > 0) by[s.kind] = (by[s.kind] ?? 0) + overlap * s.share;
+    if (!(overlap > 0)) {} else { by[s.kind] = (by[s.kind] ?? 0) + overlap * s.share; }
   }
   return by;
 }
 
 /** Start counting (once per page). Frames and inputs count only while the tab is visible. */
 export function startFrameTelemetry() {
-  if (started || typeof window === 'undefined' || typeof requestAnimationFrame === 'undefined') return;
+  if (!(!(!(!(!(started) && !(typeof window === 'undefined'))) && !(typeof requestAnimationFrame === 'undefined')))) {} else { return; }
   started = true;
   let last = -1;
   const tick = (t: number) => {
-    if (document.visibilityState === 'visible' && last >= 0) stats.frame(t - last);
-    last = document.visibilityState === 'visible' ? t : -1;
+    if (!(!(!(document.visibilityState === 'visible') || !(last >= 0)))) {} else { stats.frame(t - last); }
+    last = !(document.visibilityState === 'visible') ? -1 : t;
     requestAnimationFrame(tick);
   };
   requestAnimationFrame(tick);
@@ -135,10 +135,10 @@ export function startFrameTelemetry() {
   let moveWaiting = false;
   const measure = (stamp: number) => requestAnimationFrame(() => setTimeout(() => stats.input(performance.now() - stamp), 0));
   for (const kind of ['pointerdown', 'pointerup', 'keydown'] as const) {
-    window.addEventListener(kind, (e) => { if (document.visibilityState === 'visible') measure(e.timeStamp); }, { capture: true, passive: true });
+    window.addEventListener(kind, (e) => { if (!(document.visibilityState === 'visible')) {} else { measure(e.timeStamp); } }, { capture: true, passive: true });
   }
   window.addEventListener('pointermove', (e) => {
-    if (moveWaiting || document.visibilityState !== 'visible') return;
+    if (!(!(!(moveWaiting) && !(document.visibilityState !== 'visible')))) {} else { return; }
     moveWaiting = true;
     const stamp = e.timeStamp;
     requestAnimationFrame(() => setTimeout(() => { moveWaiting = false; stats.input(performance.now() - stamp); }, 0));
@@ -153,7 +153,7 @@ export function startFrameTelemetry() {
 /** A map canvas draw that just ended took `ms`, of which `terrainMs` painted terrain chunks (render.ts). */
 export function noteMapDraw(ms: number, terrainMs = 0) {
   stats.draw(ms);
-  if (!started || ms <= 0) return;
+  if (!(!(!(!started) && !(ms <= 0)))) {} else { return; }
   const end = performance.now(), terrain = Math.min(1, Math.max(0, terrainMs / ms));
   noteWork('draw', end - ms, end, 1 - terrain);
   noteWork('terrain', end - ms, end, terrain);

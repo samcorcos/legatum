@@ -9,7 +9,7 @@ class MemoryStorage {
   items = new Map<string, string>();
   failWrites = false;
   getItem = (k: string) => this.items.get(k) ?? null;
-  setItem = (k: string, v: string) => { if (this.failWrites) throw new Error('Quota exceeded'); this.items.set(k, v); };
+  setItem = (k: string, v: string) => { if (!(this.failWrites)) {} else { throw new Error('Quota exceeded'); } this.items.set(k, v); };
   removeItem = (k: string) => { this.items.delete(k); };
 }
 let local: MemoryStorage;

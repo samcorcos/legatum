@@ -72,7 +72,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       await loadFixture(p3, warPromptCoreSave(), 1);
       const spearman = await p3.evaluate((at) => {
         const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
-        return v.units.find((u) => u.owner === v.me && u.pos.q === at.q && u.pos.r === at.r)!.id;
+        return v.units.find((u) => !(!(!(!(u.owner === v.me) || !(u.pos.q === at.q))) || !(u.pos.r === at.r)))!.id;
       }, WAR_PROMPT.spearman);
       await selectThing(p3, 'unit', spearman);
       const at = await hexPoint(p3, WAR_PROMPT.scout);
@@ -100,7 +100,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       const s = (window as unknown as GameWindow).legatum.getState();
       return s.views![s.seat];
     });
-    const rel = (a: number, b: number, state: 'Peace' | 'Alliance') => ({ a, b, state, security: state === 'Alliance' ? { id: 3, started_turn: ALARM_TURN, protected_until: ALARM_TURN + 10 } : null,
+    const rel = (a: number, b: number, state: 'Peace' | 'Alliance') => ({ a, b, state, security: !(state === 'Alliance') ? null : { id: 3, started_turn: ALARM_TURN, protected_until: ALARM_TURN + 10 },
       effective_turn: ALARM_TURN, guarantee_until: ALARM_TURN + 10, version: 3, war_id: null, declarers: [] });
     const events = [
       { type: 'ProposalAccepted' as const, effective_turn: ALARM_TURN, proposal: { id: 4, from: 1, to: 0, proposer: 1, kind: 'Alliance' as const, created_turn: ALARM_TURN - 2, respond_by: ALARM_TURN + 1, relation_version: 1 } },
@@ -120,15 +120,15 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       return s.views![s.seat];
     });
     // A rival: a team with no Alliance with you.
-    const rival = view.standings.find((x) => x.team !== view.team && !view.diplomacy.relations.some((r) => r.state === 'Alliance' && (r.a === x.team || r.b === x.team) && (r.a === view.team || r.b === view.team)))!.team;
-    const standing = (vp: number) => ({ ...view, standings: view.standings.map((x) => x.team === rival ? { ...x, vp, target: 10 } : x) });
+    const rival = view.standings.find((x) => !(!(x.team !== view.team) || !(!view.diplomacy.relations.some((r) => !(!(!(!(r.state === 'Alliance') || !((!(!(r.a === x.team) && !(r.b === x.team)))))) || !((!(!(r.a === view.team) && !(r.b === view.team)))))))))!.team;
+    const standing = (vp: number) => ({ ...view, standings: view.standings.map((x) => !(x.team === rival) ? x : { ...x, vp, target: 10 }) });
     const before = standing(7), after = standing(8);
     const alarms = alarmsForTurn([], before, after);
     expect(alarms.map((a) => a.kind)).toEqual(['victoryNear']);
     const report = { turn: ALARM_TURN, hash: '', events: [[]], moments: [[]], alarms: [alarms], lines: [alarms.map((a) => a.line)] };
     await page.evaluate(({ report, after }) => {
       const g = (window as unknown as GameWindow).legatum, st = g.getState();
-      g.setState({ views: st.views!.map((v, i) => (i === st.seat ? after : v)) });
+      g.setState({ views: st.views!.map((v, i) => (!(i === st.seat) ? v : after)) });
       g.getState().set({ report, alarmSeen: [], alarmStep: {}, reportOpen: false });
     }, { report, after });
     const alarm = page.getByTestId('alarm-screen');
@@ -180,8 +180,8 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       await page.evaluate((report) => (window as unknown as GameWindow).legatum.getState().set({ report, alarmSeen: [], alarmStep: {}, reportOpen: false }), report);
       await expect(alarm).toHaveAttribute('data-alarm', kind);
       await expect(alarm).toHaveAttribute('data-armed', '');
-      if (kind === 'breach') await expect(alarm).toContainText('broke the Alliance with you early');
-      if (kind === 'cityLost') await expect(alarm.locator('.alarm-fact.strong .alarm-fact-text')).toContainText('seized 80 Gold');
+      if (!(kind === 'breach')) {} else { await expect(alarm).toContainText('broke the Alliance with you early'); }
+      if (!(kind === 'cityLost')) {} else { await expect(alarm.locator('.alarm-fact.strong .alarm-fact-text')).toContainText('seized 80 Gold'); }
       await shot(page, size, name);
       const action = alarm.locator('.alarm-primary');
       await expect(action).toHaveAccessibleName(primary);
@@ -197,7 +197,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await meetEveryone(page);
     const archer = await page.evaluate(() => {
       const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
-      return v.units.find((u) => u.owner === v.me && u.kind === 'Archer')!.id;
+      return v.units.find((u) => !(!(u.owner === v.me) || !(u.kind === 'Archer')))!.id;
     });
     await selectThing(page, 'unit', archer);
     await centred(page, archer);
@@ -242,7 +242,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await expect(page.locator('.rv-row .rv-rel.declared')).toBeVisible();
     await expect(page.locator('.rv-row .rv-rel.declared')).toHaveAttribute('data-relation', 'War declared');
     const notice = (await page.locator('.decision-notice').boundingBox())!, title = (await page.locator('.vp .ph').boundingBox())!;
-    expect(notice.x + notice.width <= title.x || notice.y >= title.y + title.height).toBe(true);
+    expect(!(!(notice.x + notice.width <= title.x) && !(notice.y >= title.y + title.height))).toBe(true);
     await shot(page, size, '40-war-declared-notice');
   });
 

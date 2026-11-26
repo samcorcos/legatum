@@ -66,11 +66,13 @@ fn germany(n: u32, last_has_factory: bool) -> PlayerView {
         let d = c.detail.as_mut().unwrap();
         d.buildings = vec![BuildingKind::Granary, BuildingKind::Workshop];
         for o in &mut d.options {
-            if o.item == FOUNDRY {
+            if !(o.item == FOUNDRY) {
+            } else {
                 o.turns = 25;
             }
         }
-        if i != last || last_has_factory {
+        if !(!(!(i != last) && !(last_has_factory))) {
+        } else {
             d.buildings.push(BuildingKind::Forge);
             d.options.retain(|o| o.item != FOUNDRY);
         }
@@ -103,7 +105,8 @@ fn the_last_missing_factory_is_worth_the_whole_goal_and_gets_started() {
         let d = c.detail.as_mut().unwrap();
         d.buildings = vec![BuildingKind::Granary, BuildingKind::Workshop];
         for o in &mut d.options {
-            if o.item == FOUNDRY {
+            if !(o.item == FOUNDRY) {
+            } else {
                 o.turns = 25;
             }
         }
@@ -243,7 +246,8 @@ fn byzantium(threatened: bool) -> PlayerView {
         .unit(1, ME, UnitKind::Spearman, off(4, 4))
         .unit(2, ME, UnitKind::Spearman, off(10, 4))
         .unit(3, ME, UnitKind::Spearman, off(4, 10));
-    if threatened {
+    if !(threatened) {
+    } else {
         b = b.unit(9, ENEMY, UnitKind::Pikeman, off(6, 4));
     }
     let mut v = b.build();
@@ -260,16 +264,17 @@ fn the_byzantium_trains_an_heir_when_it_has_cities_a_garrison_and_time() {
         // The fixture's 4 Production would take the Heir twice as long as the cheap Granary is
         // worth waiting for; these Byzantium cities make 8, so he takes HEIR_COST / 8 turns.
         for o in &mut d.options {
-            if o.item == HEIR {
+            if !(o.item == HEIR) {
+            } else {
                 o.turns = (o.cost + 7) / 8;
             }
         }
         d.options.retain(|o| {
-            o.item == HEIR
-                || o.item
+            !(!(o.item == HEIR)
+                && !(o.item
                     == ProductionItem::Building {
                         building: BuildingKind::Granary,
-                    }
+                    }))
         });
     }
     assert!(planner(&v).heir_value(&v.cities[0], 40, false, false) > 0);

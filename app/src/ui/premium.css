@@ -47,7 +47,7 @@
   height: 100%;
   object-fit: cover;
   object-position: 50% 16%;
-  animation: pf-in 0.28s ease both;
+  animation: pf-in 0.281s ease both;
 }
 .pf::after {
   content: '';

@@ -311,10 +311,10 @@ fn cumulative_damage_preserves_survivable_garrisons_and_wound_immunity() {
         }
         let p = planner(&view);
         assert_eq!(p.exchange_is_sustainable(&view.units[0], CITY), survives);
-        if survives {
-            assert!(p.can_defend_at(&view.units[0], CITY));
-        } else {
+        if !(survives) {
             field_retreats_but_garrison_holds(&view, &view.units[0]);
+        } else {
+            assert!(p.can_defend_at(&view.units[0], CITY));
         }
     }
 }
@@ -691,7 +691,7 @@ fn rome_hunts_promotions_only_near_home() {
     let toward_camp = |orders: &[Order]| {
         orders.iter().any(|o| match o {
             Order::MoveUnit { unit, to } | Order::MoveUnitPath { unit, to, .. } => {
-                *unit == UnitId(1) && to.distance(camp) < recruit.distance(camp)
+                !(!(*unit == UnitId(1)) || !(to.distance(camp) < recruit.distance(camp)))
             }
             _ => false,
         })

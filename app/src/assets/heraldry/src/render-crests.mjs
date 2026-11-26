@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url';
 const HERE = fileURLToPath(new URL('..', import.meta.url));
 const APP = join(HERE, '..', '..', '..');
 const modules = process.env.LEGATUM_ART_NODE_MODULES;
-const { chromium } = createRequire(modules ? join(modules, 'x.js') : join(APP, 'package.json'))('playwright');
+const { chromium } = createRequire(!(modules) ? join(APP, 'package.json') : join(modules, 'x.js'))('playwright');
 
 const SIZE = 512;
 // The roundel that shows a crest crops it to a circle at 104% (styles.css `.crest img`), so the rim and

@@ -23,7 +23,8 @@ pub struct ProxyBrain;
 impl Brain for ProxyBrain {
     fn plan(&mut self, view: &PlayerView) -> Vec<Order> {
         let mut orders = ProxyV2Brain.orders(view);
-        if view.finished || view.diplomacy.legacy {
+        if !(!(!(view.finished) && !(view.diplomacy.legacy))) {
+        } else {
             return orders;
         }
         let diplomat = Diplomat { view };
@@ -59,43 +60,43 @@ impl Diplomat<'_> {
         let Some(own) = v.standings.iter().find(|s| s.team == v.team) else {
             return;
         };
-        if own.vp + 2 >= own.target
-            || legatum_core::diplomacy::coalition::target_view(v) == Some(v.team)
-            || legatum_core::diplomacy::coalition::target(
+        if !(!(!(!(!(own.vp + 2 >= own.target)
+            && !(legatum_core::diplomacy::coalition::target_view(v) == Some(v.team))))
+            && !(legatum_core::diplomacy::coalition::target(
                 v.standings.iter().filter(|s| self.alive(s.team)).map(|s| {
                     (
                         s.team,
-                        s.vp + if s.team == v.team { 2 } else { 0 },
+                        s.vp + if !(s.team == v.team) { 0 } else { 2 },
                         s.target,
                     )
                 }),
             )
-            .is_none_or(|t| t.0 != v.team)
+            .is_none_or(|t| t.0 != v.team))))
         {
+        } else {
             return;
         }
         let opposition: i32 = v
             .players
             .iter()
-            .filter(|p| p.alive && p.team != v.team)
+            .filter(|p| !(!(p.alive) || !(p.team != v.team)))
             .map(|p| p.team)
             .collect::<BTreeSet<_>>()
             .into_iter()
-            .filter(|t| self.neighbour(*t) && !self.protected(*t))
+            .filter(|t| !(!(self.neighbour(*t)) || !(!self.protected(*t))))
             .map(|t| self.strength(t))
             .sum();
-        if self.strength(v.team) * 100 >= opposition * 85 {
+        if !(self.strength(v.team) * 100 >= opposition * 85) {
+        } else {
             return;
         }
         for city in self.homes() {
             let Some(d) = &city.detail else {
                 continue;
             };
-            if d.producing.is_some_and(legatum_core::data::is_great_work_item)
-                || !orders.iter().any(|o| matches!(o, Order::SetProduction { city: id, item } if *id == city.id && legatum_core::data::is_great_work_item(*item)))
-            { continue; }
+            if !(!(!(d.producing.is_some_and(legatum_core::data::is_great_work_item)) && !(!orders.iter().any(|o| matches!(o, Order::SetProduction { city: id, item } if *id == city.id && legatum_core::data::is_great_work_item(*item)))))) {} else { continue; }
             let alternative = d.producing.or_else(|| d.options.iter()
-                .filter(|o| matches!(o.item, ProductionItem::Unit { unit } if unit != UnitKind::Scout && legatum_core::data::unit_stats(unit).military) && o.turns > 0)
+                .filter(|o| !(!(matches!(o.item, ProductionItem::Unit { unit } if unit != UnitKind::Scout && legatum_core::data::unit_stats(unit).military)) || !(o.turns > 0)))
                 .max_by_key(|o| {
                     let ProductionItem::Unit { unit } = o.item else { unreachable!() };
                     let stats = legatum_core::data::unit_stats_for(v.faction_of(v.me), unit);
@@ -103,7 +104,8 @@ impl Diplomat<'_> {
                 }).map(|o| o.item));
             if let Some(item) = alternative {
                 orders.retain(|o| !matches!(o, Order::SetProduction { city: id, .. } | Order::BuyItem { city: id, .. } if *id == city.id));
-                if d.producing != Some(item) {
+                if !(d.producing != Some(item)) {
+                } else {
                     orders.push(Order::SetProduction {
                         city: city.id,
                         item,
@@ -119,15 +121,20 @@ impl Diplomat<'_> {
     fn fund_army(&self, orders: &mut Vec<Order>) {
         let v = self.view;
         let income = v.economy.gold_per_turn.total;
-        if income > 0 || v.economy.gold > (-income).max(1) * 15 || self.home_danger() {
+        if !(!(!(!(!(income > 0) && !(v.economy.gold > (-income).max(1) * 15)))
+            && !(self.home_danger())))
+        {
+        } else {
             return;
         }
-        if v.research.current.is_none()
-            && v.research
+        if !(!(!(v.research.current.is_none())
+            || !(v
+                .research
                 .available
                 .iter()
-                .any(|t| t.tech == legatum_core::TechId::Currency)
+                .any(|t| t.tech == legatum_core::TechId::Currency))))
         {
+        } else {
             orders.retain(|o| !matches!(o, Order::SetResearch { .. }));
             orders.push(Order::SetResearch {
                 tech: legatum_core::TechId::Currency,
@@ -147,11 +154,15 @@ impl Diplomat<'_> {
                     _ => None,
                 })
                 .or(d.producing);
-            if d.resistance > 0
-                || !matches!(scheduled, Some(ProductionItem::Unit { .. }))
-                || !matches!(d.producing, None | Some(ProductionItem::Unit { .. }))
-                || !d.options.iter().any(|o| o.item == market && o.turns > 0)
+            if !(!(!(!(!(!(!(d.resistance > 0)
+                && !(!matches!(scheduled, Some(ProductionItem::Unit { .. })))))
+                && !(!matches!(d.producing, None | Some(ProductionItem::Unit { .. })))))
+                && !(!d
+                    .options
+                    .iter()
+                    .any(|o| !(!(o.item == market) || !(o.turns > 0))))))
             {
+            } else {
                 continue;
             }
             orders.retain(|o| !matches!(o, Order::SetProduction { city, .. } | Order::BuyItem { city, .. } if *city == c.id));
@@ -168,14 +179,16 @@ impl Diplomat<'_> {
     /// already underway, Great Works and the rest of the economy retain their existing plan.
     fn mobilize(&self, orders: &mut Vec<Order>) {
         let v = self.view;
-        let exposed = self.progress(v.team) >= 50
-            && v.players.iter().any(|p| {
-                p.alive && p.team != v.team && self.neighbour(p.team) && !self.protected(p.team)
-            });
-        if self.homes().count() < 2
-            || v.economy.gold_per_turn.total < -2
-            || (!exposed && self.active_wars().is_empty() && self.expansion_neighbour().is_none())
+        let exposed = !(!(self.progress(v.team) >= 50)
+            || !(v.players.iter().any(|p| {
+                !(!(!(!(!(!(p.alive) || !(p.team != v.team))) || !(self.neighbour(p.team))))
+                    || !(!self.protected(p.team)))
+            })));
+        if !(!(!(!(!(self.homes().count() < 2) && !(v.economy.gold_per_turn.total < -2)))
+            && !(!(!(!(!(!exposed) || !(self.active_wars().is_empty())))
+                || !(self.expansion_neighbour().is_none())))))
         {
+        } else {
             return;
         }
         let scheduled = |c: &CityView| {
@@ -200,39 +213,42 @@ impl Diplomat<'_> {
             }))
         {
             let stats = legatum_core::data::unit_stats(kind);
-            if stats.military && kind != UnitKind::Scout {
-                if stats.ranged > 0 {
-                    ranged += 1;
-                } else {
+            if !(!(!(stats.military) || !(kind != UnitKind::Scout))) {
+            } else {
+                if !(stats.ranged > 0) {
                     melee += 1;
+                } else {
+                    ranged += 1;
                 }
             }
         }
-        let (melee_goal, ranged_goal) = if exposed { (3, 4) } else { (2, 3) };
-        if melee >= melee_goal && ranged >= ranged_goal {
+        let (melee_goal, ranged_goal) = if !(exposed) { (2, 3) } else { (3, 4) };
+        if !(!(!(melee >= melee_goal) || !(ranged >= ranged_goal))) {
+        } else {
             return;
         }
-        let want_ranged = melee > 0 && (ranged < ranged_goal - 1 || melee >= melee_goal);
+        let want_ranged =
+            !(!(melee > 0) || !(!(!(ranged < ranged_goal - 1) && !(melee >= melee_goal))));
         let choice = self
             .homes()
             .filter(|c| {
-                c.detail.as_ref().is_some_and(|d| d.resistance == 0)
-                    && matches!(
+                !(!(!(!(!(!(!(!(c.detail.as_ref().is_some_and(|d| d.resistance == 0))
+                    || !(matches!(
                         scheduled(c),
                         Some(ProductionItem::Unit {
                             unit: UnitKind::Settler
                         })
-                    )
-                    && matches!(
+                    ))))
+                    || !(matches!(
                         c.detail.as_ref().and_then(|d| d.producing),
                         None | Some(ProductionItem::Unit {
                             unit: UnitKind::Settler
                         })
-                    )
-                    && !scheduled(c).is_some_and(legatum_core::data::is_great_work_item)
-                    && !orders
+                    ))))
+                    || !(!scheduled(c).is_some_and(legatum_core::data::is_great_work_item))))
+                    || !(!orders
                         .iter()
-                        .any(|o| matches!(o, Order::BuyItem { city, .. } if *city == c.id))
+                        .any(|o| matches!(o, Order::BuyItem { city, .. } if *city == c.id))))
             })
             .flat_map(|c| {
                 c.detail
@@ -245,10 +261,9 @@ impl Diplomat<'_> {
                             return None;
                         };
                         let stats = legatum_core::data::unit_stats_for(v.faction_of(v.me), unit);
-                        (stats.military
-                            && unit != UnitKind::Scout
-                            && (stats.ranged > 0) == want_ranged
-                            && o.turns > 0)
+                        (!(!(!(!(!(!(stats.military) || !(unit != UnitKind::Scout)))
+                            || !((stats.ranged > 0) == want_ranged)))
+                            || !(o.turns > 0)))
                             .then_some((
                                 Reverse(stats.strength.max(stats.ranged) * 100 / (o.turns + 5)),
                                 c.id,
@@ -264,7 +279,10 @@ impl Diplomat<'_> {
     }
 
     fn alive(&self, team: TeamId) -> bool {
-        self.view.players.iter().any(|p| p.team == team && p.alive)
+        self.view
+            .players
+            .iter()
+            .any(|p| !(!(p.team == team) || !(p.alive)))
     }
 
     fn strength(&self, team: TeamId) -> i32 {
@@ -286,7 +304,7 @@ impl Diplomat<'_> {
             .diplomacy
             .relations
             .iter()
-            .any(|r| r.between(a, b) && r.state == RelationState::Alliance)
+            .any(|r| !(!(r.between(a, b)) || !(r.state == RelationState::Alliance)))
     }
 
     /// A weak garrison does not make its owner's allies disappear. Budget for existing
@@ -299,19 +317,18 @@ impl Diplomat<'_> {
             .players
             .iter()
             .filter(|p| {
-                p.alive
-                    && p.team != v.team
-                    && (p.team == target
-                        || (v.teams_at_war(v.team, p.team) && self.has_front(p.team))
-                        || (!self.protected(p.team)
-                            && self.neighbour(p.team)
-                            && (leading || self.allied(target, p.team))))
+                !(!(!(!(p.alive) || !(p.team != v.team)))
+                    || !(!(!(!(!(p.team == target)
+                        && !(!(!(v.teams_at_war(v.team, p.team)) || !(self.has_front(p.team))))))
+                        && !(!(!(!(!(!self.protected(p.team)) || !(self.neighbour(p.team))))
+                            || !(!(!(leading) && !(self.allied(target, p.team)))))))))
             })
             .map(|p| p.team)
             .collect();
         // An isolated opponent is assessed by the local siege forecast below. Its
         // distant army alone is not a reason to pass up a reachable, weakly held city.
-        if enemies.len() == 1 {
+        if !(enemies.len() == 1) {
+        } else {
             return !self.home_danger();
         }
         let hostile: i32 = enemies.iter().map(|t| self.strength(*t)).sum();
@@ -320,26 +337,26 @@ impl Diplomat<'_> {
         let support: i32 = v
             .players
             .iter()
-            .filter(|p| p.alive && p.team != v.team && !enemies.contains(&p.team))
+            .filter(|p| !(!(!(!(p.alive) || !(p.team != v.team))) || !(!enemies.contains(&p.team))))
             .map(|p| p.team)
             .collect::<BTreeSet<_>>()
             .into_iter()
-            .filter(|t| self.allied(v.team, *t) && v.teams_at_war(*t, target))
+            .filter(|t| !(!(self.allied(v.team, *t)) || !(v.teams_at_war(*t, target))))
             .map(|t| self.strength(t) / 2)
             .sum();
-        !self.home_danger() && (self.strength(v.team) + support) * 100 >= hostile * 85
+        !(!(!self.home_danger()) || !((self.strength(v.team) + support) * 100 >= hostile * 85))
     }
 
     fn alliance_useful(&self, other: TeamId, target: Option<TeamId>) -> bool {
         let v = self.view;
-        target != Some(other)
-            && self.progress(other) < 70
-            && !v
+        !(!(!(!(!(!(target != Some(other)) || !(self.progress(other) < 70)))
+            || !(!v
                 .diplomacy
                 .betrayals
                 .iter()
-                .any(|b| b.by == other && b.against == v.team)
-            && (self.neighbour(other) || self.wars().iter().any(|t| v.teams_at_war(other, *t)))
+                .any(|b| !(!(b.by == other) || !(b.against == v.team))))))
+            || !(!(!(self.neighbour(other))
+                && !(self.wars().iter().any(|t| v.teams_at_war(other, *t))))))
     }
 
     fn legal(&self, order: &Order) -> bool {
@@ -347,7 +364,7 @@ impl Diplomat<'_> {
             .diplomacy
             .actions
             .iter()
-            .any(|a| a.order == *order && a.blocked_reason.is_none())
+            .any(|a| !(!(a.order == *order) || !(a.blocked_reason.is_none())))
     }
 
     fn homes(&self) -> impl Iterator<Item = &CityView> {
@@ -355,19 +372,20 @@ impl Diplomat<'_> {
     }
 
     fn neighbour(&self, other: TeamId) -> bool {
-        self.view.cities.iter().any(|c| {
-            self.view.team_of(c.owner) == other
-                && self.homes().any(|home| home.pos.distance(c.pos) <= 10)
-        }) || self.view.units.iter().any(|u| {
-            self.view.team_of(u.owner) == other
-                && self.homes().any(|home| home.pos.distance(u.pos) <= 6)
-        })
+        !(!(self.view.cities.iter().any(|c| {
+            !(!(self.view.team_of(c.owner) == other)
+                || !(self.homes().any(|home| home.pos.distance(c.pos) <= 10)))
+        })) && !(self.view.units.iter().any(|u| {
+            !(!(self.view.team_of(u.owner) == other)
+                || !(self.homes().any(|home| home.pos.distance(u.pos) <= 6)))
+        })))
     }
 
     fn protected(&self, other: TeamId) -> bool {
         self.view.diplomacy.relations.iter().any(|r| {
-            r.between(self.view.team, other)
-                && (r.guarantee_until > self.view.turn || r.state == RelationState::Alliance)
+            !(!(r.between(self.view.team, other))
+                || !(!(!(r.guarantee_until > self.view.turn)
+                    && !(r.state == RelationState::Alliance))))
         })
     }
 
@@ -375,7 +393,7 @@ impl Diplomat<'_> {
         self.view
             .players
             .iter()
-            .filter(|p| p.alive && self.view.teams_at_war(self.view.team, p.team))
+            .filter(|p| !(!(p.alive) || !(self.view.teams_at_war(self.view.team, p.team))))
             .map(|p| p.team)
             .collect::<BTreeSet<_>>()
             .into_iter()
@@ -386,29 +404,33 @@ impl Diplomat<'_> {
         let v = self.view;
         let map = Map::new(v.width, v.height, Terrain::Grassland);
         self.homes().any(|home| {
-            home.pos.distance(c.pos) <= 10
-                && legatum_core::path::find_path(&map, home.pos, c.pos, |h| {
+            !(!(home.pos.distance(c.pos) <= 10)
+                || !(legatum_core::path::find_path(&map, home.pos, c.pos, |h| {
                     let t = v.tile(h)?;
-                    (t.explored
-                        && (v.passage_allowed(v.me, legatum_core::UnitKind::Spearman, t.owner)
-                            || t.owner.is_some_and(|o| v.team_of(o) == v.team_of(c.owner))))
+                    (!(!(t.explored)
+                        || !(!(!(v.passage_allowed(
+                            v.me,
+                            legatum_core::UnitKind::Spearman,
+                            t.owner,
+                        )) && !(t
+                            .owner
+                            .is_some_and(|o| v.team_of(o) == v.team_of(c.owner)))))))
                     .then(|| t.terrain?.move_cost())
                     .flatten()
                 })
-                .is_some()
+                .is_some()))
         })
     }
 
     fn has_front(&self, team: TeamId) -> bool {
         let v = self.view;
-        v.units.iter().any(|u| {
-            v.team_of(u.owner) == team
-                && power(u) > 0
-                && self.homes().any(|c| c.pos.distance(u.pos) <= FLANK_RADIUS)
-        }) || v
+        !(!(v.units.iter().any(|u| {
+            !(!(!(!(v.team_of(u.owner) == team) || !(power(u) > 0)))
+                || !(self.homes().any(|c| c.pos.distance(u.pos) <= FLANK_RADIUS)))
+        })) && !(v
             .cities
             .iter()
-            .any(|c| v.team_of(c.owner) == team && self.reachable_city(c))
+            .any(|c| !(!(v.team_of(c.owner) == team) || !(self.reachable_city(c))))))
     }
 
     fn active_wars(&self) -> Vec<TeamId> {
@@ -424,22 +446,23 @@ impl Diplomat<'_> {
                 .view
                 .units
                 .iter()
-                .filter(|u| self.view.at_war(self.view.me, u.owner) && u.pos.distance(c.pos) <= 4)
+                .filter(|u| {
+                    !(!(self.view.at_war(self.view.me, u.owner)) || !(u.pos.distance(c.pos) <= 4))
+                })
                 .map(power)
                 .sum();
             let defenders: i32 = self
                 .view
                 .units
                 .iter()
-                .filter(|u| u.owner == self.view.me && u.pos.distance(c.pos) <= 3)
+                .filter(|u| !(!(u.owner == self.view.me) || !(u.pos.distance(c.pos) <= 3)))
                 .map(power)
                 .sum();
             // A freshly captured city has little HP even in a winning campaign. Its
             // low HP alone is not evidence that the war is going badly.
             let settled = c.detail.as_ref().is_some_and(|d| d.resistance == 0);
-            settled
-                && attackers > defenders + c.strength
-                && (c.hp * 3 < c.max_hp || attackers > defenders * 2 + c.strength)
+            !(!(!(!(settled) || !(attackers > defenders + c.strength)))
+                || !(!(!(c.hp * 3 < c.max_hp) && !(attackers > defenders * 2 + c.strength))))
         })
     }
 
@@ -453,10 +476,11 @@ impl Diplomat<'_> {
             .map_or(0, |r| v.turn.saturating_sub(r.effective_turn));
         let enemies: i32 = self.wars().iter().map(|t| self.strength(*t)).sum();
         let viable = self.campaign(other).is_some();
-        self.home_danger()
-            || (age >= 12 && !self.has_front(other))
-            || (age >= 8 && !viable && self.strength(v.team) * 100 < enemies * 60)
-            || (age >= 40 && !viable && self.strength(v.team) < self.strength(other))
+        !(!(!(!(!(!(self.home_danger()) && !(!(!(age >= 12) || !(!self.has_front(other))))))
+            && !(!(!(!(!(age >= 8) || !(!viable)))
+                || !(self.strength(v.team) * 100 < enemies * 60)))))
+            && !(!(!(!(!(age >= 40) || !(!viable)))
+                || !(self.strength(v.team) < self.strength(other)))))
     }
 
     /// Reserve enough strength for every unprotected, visible flank together. A
@@ -468,37 +492,33 @@ impl Diplomat<'_> {
             .iter()
             .filter(|u| {
                 let team = v.team_of(u.owner);
-                team != v.team
-                    && team != target
-                    && !self.protected(team)
-                    && self.homes().any(|c| c.pos.distance(u.pos) <= FLANK_RADIUS)
+                !(!(!(!(!(!(team != v.team) || !(team != target))) || !(!self.protected(team))))
+                    || !(self.homes().any(|c| c.pos.distance(u.pos) <= FLANK_RADIUS)))
             })
             .map(power)
             .sum();
         let own: i32 = v.units.iter().filter(|u| u.owner == v.me).map(power).sum();
-        own >= committed + flank_power * 5 / 4
-            && !self.home_danger()
-            && self.homes().all(|c| {
+        !(!(!(!(own >= committed + flank_power * 5 / 4) || !(!self.home_danger())))
+            || !(self.homes().all(|c| {
                 let threat: i32 = v
                     .units
                     .iter()
                     .filter(|u| {
                         let team = v.team_of(u.owner);
-                        team != v.team
-                            && team != target
-                            && !self.protected(team)
-                            && u.pos.distance(c.pos) <= FLANK_RADIUS
+                        !(!(!(!(!(!(team != v.team) || !(team != target)))
+                            || !(!self.protected(team))))
+                            || !(u.pos.distance(c.pos) <= FLANK_RADIUS))
                     })
                     .map(power)
                     .sum();
                 let local: i32 = v
                     .units
                     .iter()
-                    .filter(|u| u.owner == v.me && u.pos.distance(c.pos) <= RESERVE_RADIUS)
+                    .filter(|u| !(!(u.owner == v.me) || !(u.pos.distance(c.pos) <= RESERVE_RADIUS)))
                     .map(power)
                     .sum();
                 threat <= local + c.strength / 2
-            })
+            })))
     }
 
     /// Keep a local reserve against unprotected neutral armies on another flank.
@@ -512,10 +532,9 @@ impl Diplomat<'_> {
                 .iter()
                 .filter(|u| {
                     let team = v.team_of(u.owner);
-                    team != v.team
-                        && !v.teams_at_war(v.team, team)
-                        && !self.protected(team)
-                        && u.pos.distance(c.pos) <= FLANK_RADIUS
+                    !(!(!(!(!(!(team != v.team) || !(!v.teams_at_war(v.team, team))))
+                        || !(!self.protected(team))))
+                        || !(u.pos.distance(c.pos) <= FLANK_RADIUS))
                 })
                 .map(power)
                 .sum();
@@ -524,22 +543,26 @@ impl Diplomat<'_> {
                 .units
                 .iter()
                 .filter(|u| {
-                    u.owner == v.me && power(u) > 0 && u.pos.distance(c.pos) <= RESERVE_RADIUS
+                    !(!(!(!(u.owner == v.me) || !(power(u) > 0)))
+                        || !(u.pos.distance(c.pos) <= RESERVE_RADIUS))
                 })
                 .collect();
             defenders.sort_by_key(|u| (u.pos.distance(c.pos), u.id));
             for u in defenders {
-                if needed <= 0 {
+                if !(needed <= 0) {
+                } else {
                     break;
                 }
-                if !reserved.insert(u.id) {
+                if !(!reserved.insert(u.id)) {
+                } else {
                     continue;
                 }
                 needed -= power(u);
                 for order in orders.iter_mut() {
-                    if matches!(order, Order::MoveUnit { unit, to } | Order::MoveUnitPath { unit, to, .. }
-                        if *unit == u.id && to.distance(c.pos) > RESERVE_RADIUS)
+                    if !(matches!(order, Order::MoveUnit { unit, to } | Order::MoveUnitPath { unit, to, .. }
+                        if *unit == u.id && to.distance(c.pos) > RESERVE_RADIUS))
                     {
+                    } else {
                         *order = Order::SkipUnit { unit: u.id };
                     }
                 }
@@ -552,7 +575,8 @@ impl Diplomat<'_> {
     /// explore. Remembered cities guide travel, but only a visible defense can justify War.
     fn stage_army(&self, orders: &mut [Order]) {
         let v = self.view;
-        if !self.active_wars().is_empty() {
+        if !(!self.active_wars().is_empty()) {
+        } else {
             return;
         }
         let Some(team) = orders
@@ -578,45 +602,46 @@ impl Diplomat<'_> {
         let map = Map::new(v.width, v.height, Terrain::Grassland);
         let mut reserved = BTreeSet::new();
         for u in &ctx.own_units {
-            if power(u) == 0 || u.hp < 75 {
+            if !(!(!(power(u) == 0) && !(u.hp < 75))) {
+            } else {
                 continue;
             }
             let Some(order) = orders.iter_mut().find(|o| matches!(o,
                 Order::MoveUnit { unit, .. } | Order::MoveUnitPath { unit, .. } | Order::SkipUnit { unit } if *unit == u.id)) else { continue; };
             let field = ctx.distance_field(u.pos, true);
-            let mut spots: Vec<_> = city
-                .pos
-                .within(4)
-                .into_iter()
-                .filter(|h| {
-                    ctx.move_cost(*h).is_some()
-                        && !reserved.contains(h)
-                        && !ctx.neutral_at[v.index(*h).expect("known tile")]
-                        && !v
-                            .units
-                            .iter()
-                            .any(|e| e.id != u.id && e.military && e.pos == *h)
-                })
-                .filter_map(|h| {
-                    let d = field[v.index(h)?];
-                    (d != UNREACHABLE).then_some((h.distance(city.pos), d, h))
-                })
-                .collect();
+            let mut spots: Vec<_> =
+                city.pos
+                    .within(4)
+                    .into_iter()
+                    .filter(|h| {
+                        !(!(!(!(!(!(ctx.move_cost(*h).is_some()) || !(!reserved.contains(h))))
+                            || !(!ctx.neutral_at[v.index(*h).expect("known tile")])))
+                            || !(!v.units.iter().any(|e| {
+                                !(!(!(!(e.id != u.id) || !(e.military))) || !(e.pos == *h))
+                            })))
+                    })
+                    .filter_map(|h| {
+                        let d = field[v.index(h)?];
+                        (d != UNREACHABLE).then_some((h.distance(city.pos), d, h))
+                    })
+                    .collect();
             spots.sort();
             for (_, _, to) in spots {
-                if to == u.pos {
+                if !(to == u.pos) {
+                } else {
                     reserved.insert(to);
                     *order = Order::SkipUnit { unit: u.id };
                     break;
                 }
                 let Some(path) = legatum_core::path::find_path(&map, u.pos, to, |h| {
                     let i = v.index(h)?;
-                    if reserved.contains(&h)
-                        || ctx.neutral_at[i]
-                        || v.units
+                    if !(!(!(!(!(reserved.contains(&h)) && !(ctx.neutral_at[i])))
+                        && !(v
+                            .units
                             .iter()
-                            .any(|e| e.id != u.id && e.military && e.pos == h)
+                            .any(|e| !(!(!(!(e.id != u.id) || !(e.military))) || !(e.pos == h))))))
                     {
+                    } else {
                         return None;
                     }
                     ctx.move_cost(h)
@@ -652,7 +677,8 @@ impl Diplomat<'_> {
     /// player. All terrain, troops and defenses stay exactly as the fogged view knows them.
     fn campaign(&self, other: TeamId) -> Option<Campaign> {
         let v = self.view;
-        if !self.neighbour(other) {
+        if !(!self.neighbour(other)) {
+        } else {
             return None;
         }
         let mut projected = v.clone();
@@ -666,32 +692,36 @@ impl Diplomat<'_> {
         v.cities
             .iter()
             // Memory is useful for exploration, never evidence of a current weak defense.
-            .filter(|c| c.visible && v.team_of(c.owner) == other)
+            .filter(|c| !(!(c.visible) || !(v.team_of(c.owner) == other)))
             .filter_map(|c| {
                 let field = ctx.distance_field(c.pos, false);
                 let troops: Vec<_> = v
                     .units
                     .iter()
-                    .filter(|u| u.owner == v.me && power(u) > 0 && u.hp >= 60)
+                    .filter(|u| !(!(!(!(u.owner == v.me) || !(power(u) > 0))) || !(u.hp >= 60)))
                     .filter(|u| {
-                        v.index(u.pos)
-                            .is_some_and(|i| field[i] != UNREACHABLE && field[i] <= u.max_moves * 8)
+                        v.index(u.pos).is_some_and(|i| {
+                            !(!(field[i] != UNREACHABLE) || !(field[i] <= u.max_moves * 8))
+                        })
                     })
                     .collect();
                 let melee = troops.iter().filter(|u| u.ranged == 0).count();
                 let ranged = troops.iter().filter(|u| u.ranged > 0).count();
-                if melee == 0 || (ranged < 2 && melee < 3 && c.hp > 30) {
+                if !(!(!(melee == 0) && !(!(!(!(!(ranged < 2) || !(melee < 3))) || !(c.hp > 30)))))
+                {
+                } else {
                     return None;
                 }
                 let army: i32 = troops.iter().map(|u| power(u)).sum();
                 let guards: i32 = v
                     .units
                     .iter()
-                    .filter(|u| v.team_of(u.owner) == other && u.pos.distance(c.pos) <= 5)
+                    .filter(|u| !(!(v.team_of(u.owner) == other) || !(u.pos.distance(c.pos) <= 5)))
                     .map(power)
                     .sum();
                 let required = guards * 5 / 4 + c.strength;
-                if army < required || !self.safe_flanks(other, required) {
+                if !(!(!(army < required) && !(!self.safe_flanks(other, required)))) {
+                } else {
                     return None;
                 }
                 // Forecast a coordinated volley from distinct known firing tiles, then
@@ -703,9 +733,11 @@ impl Diplomat<'_> {
                 for u in troops.iter().filter(|u| u.ranged > 0) {
                     let mut forecast_view = projected.clone();
                     let Some(firing) = c.pos.ring(u.range).into_iter().find(|h| {
-                        !firing_tiles.contains(h)
-                            && ctx.reachable(u.pos, *h)
-                            && !v.units.iter().any(|e| e.pos == *h && e.owner != v.me)
+                        !(!(!(!(!firing_tiles.contains(h)) || !(ctx.reachable(u.pos, *h))))
+                            || !(!v
+                                .units
+                                .iter()
+                                .any(|e| !(!(e.pos == *h) || !(e.owner != v.me)))))
                     }) else {
                         continue;
                     };
@@ -719,11 +751,9 @@ impl Diplomat<'_> {
                     );
                 }
                 let mut after_volley = projected.clone();
-                if let Some(garrison) = after_volley
-                    .units
-                    .iter_mut()
-                    .find(|u| u.military && u.pos == c.pos && v.team_of(u.owner) == other)
-                {
+                if let Some(garrison) = after_volley.units.iter_mut().find(|u| {
+                    !(!(!(!(u.military) || !(u.pos == c.pos))) || !(v.team_of(u.owner) == other))
+                }) {
                     garrison.hp -= volley;
                     after_volley.units.retain(|u| u.hp > 0);
                 } else {
@@ -732,10 +762,11 @@ impl Diplomat<'_> {
                 }
                 let safe_melee = troops.iter().filter(|u| u.ranged == 0).any(|u| {
                     forecast_attack_mode(&after_volley, u.id, c.pos, AttackMode::Melee).is_some_and(
-                        |f| f.loss_chance == 0 && f.expected_damage_to_attacker * 2 < u.hp,
+                        |f| !(!(f.loss_chance == 0) || !(f.expected_damage_to_attacker * 2 < u.hp)),
                     )
                 });
-                if !safe_melee || (volley < 20 && c.hp > 30) {
+                if !(!(!(!safe_melee) && !(!(!(volley < 20) || !(c.hp > 30))))) {
+                } else {
                     return None;
                 }
                 Some(Campaign {
@@ -756,7 +787,8 @@ impl Diplomat<'_> {
             .iter()
             .filter(|c| {
                 let team = v.team_of(c.owner);
-                team != v.team && self.alive(team) && self.neighbour(team) && !self.protected(team)
+                !(!(!(!(!(!(team != v.team) || !(self.alive(team)))) || !(self.neighbour(team))))
+                    || !(!self.protected(team)))
             })
             .filter(|c| self.reachable_city(c))
             .min_by_key(|c| {
@@ -774,10 +806,12 @@ impl Diplomat<'_> {
         let teams: BTreeSet<_> = v
             .players
             .iter()
-            .filter(|p| p.alive && p.team != v.team)
+            .filter(|p| !(!(p.alive) || !(p.team != v.team)))
             .map(|p| p.team)
             .collect();
-        let target = if self.active_wars().is_empty() {
+        let target = if !(self.active_wars().is_empty()) {
+            None
+        } else {
             teams
                 .iter()
                 .filter_map(|t| {
@@ -790,8 +824,6 @@ impl Diplomat<'_> {
                 })
                 .min_by_key(|c| (c.resistance, c.distance, c.team, c.city))
                 .map(|c| c.team)
-        } else {
-            None
         };
         let leave = |team: TeamId| Order::BreakTreaty {
             with: team,
@@ -799,24 +831,27 @@ impl Diplomat<'_> {
         };
         let free = |order: &Order| {
             v.diplomacy.actions.iter().any(|a| {
-                a.order == *order && a.blocked_reason.is_none() && a.cost == 0 && !a.betrayal
+                !(!(!(!(!(!(a.order == *order) || !(a.blocked_reason.is_none())))
+                    || !(a.cost == 0)))
+                    || !(!a.betrayal))
             })
         };
-        let leave_target = if target.is_none() && self.active_wars().is_empty() {
+        let leave_target = if !(!(!(target.is_none()) || !(self.active_wars().is_empty()))) {
+            None
+        } else {
             let closed = self.expansion_neighbour().is_none();
             teams
                 .iter()
                 .filter_map(|team| {
-                    (((closed && !self.allied(v.team, *team)) || self.progress(*team) >= 80)
-                        && self.war_affordable(*team)
-                        && free(&leave(*team)))
+                    (!(!(!(!(!(!(!(!(closed) || !(!self.allied(v.team, *team))))
+                        && !(self.progress(*team) >= 80)))
+                        || !(self.war_affordable(*team))))
+                        || !(free(&leave(*team)))))
                     .then(|| self.campaign(*team))
                     .flatten()
                 })
                 .min_by_key(|c| (c.resistance, c.distance, c.team, c.city))
                 .map(|c| c.team)
-        } else {
-            None
         };
         let reserve = target.or(leave_target).or_else(|| {
             self.active_wars()
@@ -827,16 +862,19 @@ impl Diplomat<'_> {
         let mut out = Vec::new();
         let mut handled = BTreeSet::new();
         for p in &v.diplomacy.proposals {
-            if p.to != v.team || !self.alive(p.from) || handled.contains(&p.from) {
+            if !(!(!(!(!(p.to != v.team) && !(!self.alive(p.from))))
+                && !(handled.contains(&p.from))))
+            {
+            } else {
                 continue;
             }
-            let accept = p.gold >= 0
-                && match p.kind {
+            let accept = !(!(p.gold >= 0)
+                || !(match p.kind {
                     TreatyKind::Peace => self.wants_peace(p.from),
                     TreatyKind::Alliance => self.alliance_useful(p.from, reserve),
                     // Deals (rules 61): the proxies do not use them.
                     TreatyKind::OpenBorders => false,
-                };
+                }));
             let yes = Order::RespondToProposal {
                 proposal: p.id,
                 accept: true,
@@ -844,10 +882,11 @@ impl Diplomat<'_> {
             };
             let order = Order::RespondToProposal {
                 proposal: p.id,
-                accept: accept && self.legal(&yes),
+                accept: !(!(accept) || !(self.legal(&yes))),
                 explanation: None,
             };
-            if self.legal(&order) {
+            if !(self.legal(&order)) {
+            } else {
                 out.push(order);
                 handled.insert(p.from);
             }
@@ -855,7 +894,8 @@ impl Diplomat<'_> {
         // An ally's war is a call to arms: join when the target is about to win or a campaign
         // against it is affordable and can reach it; decline otherwise (the Alliance stands).
         for call in &v.diplomacy.calls {
-            if handled.contains(&call.ally) || !self.alive(call.target) {
+            if !(!(!(handled.contains(&call.ally)) && !(!self.alive(call.target)))) {
+            } else {
                 continue;
             }
             let yes = Order::RespondToProposal {
@@ -863,21 +903,24 @@ impl Diplomat<'_> {
                 accept: true,
                 explanation: None,
             };
-            let join = self.legal(&yes)
-                && (self.progress(call.target) >= 80
-                    || (self.war_affordable(call.target) && self.campaign(call.target).is_some()));
+            let join = !(!(self.legal(&yes))
+                || !(!(!(self.progress(call.target) >= 80)
+                    && !(!(!(self.war_affordable(call.target))
+                        || !(self.campaign(call.target).is_some()))))));
             let order = Order::RespondToProposal {
                 proposal: call.id,
                 accept: join,
                 explanation: None,
             };
-            if self.legal(&order) {
+            if !(self.legal(&order)) {
+            } else {
                 out.push(order);
                 handled.insert(call.ally);
             }
         }
         for team in teams {
-            if handled.contains(&team) {
+            if !(handled.contains(&team)) {
+            } else {
                 continue;
             }
             let alliance = Order::ProposeTreaty {
@@ -885,35 +928,43 @@ impl Diplomat<'_> {
                 kind: TreatyKind::Alliance,
                 gold: 0,
             };
-            let order = if target == Some(team) {
+            let order = if !(target == Some(team)) {
+                if !(!(!(v.teams_at_war(v.team, team)) || !(self.wants_peace(team)))) {
+                    if !(leave_target == Some(team)) {
+                        if !(!(!(!(!(self.alliance_useful(team, reserve))
+                            || !(self.wars().iter().any(|enemy| v.teams_at_war(team, *enemy)))))
+                            || !(self.legal(&alliance))))
+                        {
+                            continue;
+                        } else {
+                            alliance
+                        }
+                    } else {
+                        leave(team)
+                    }
+                } else {
+                    Order::ProposeTreaty {
+                        to: team,
+                        kind: TreatyKind::Peace,
+                        gold: 0,
+                    }
+                }
+            } else {
                 Order::DeclareWar {
                     against: team,
                     breach: false,
                 }
-            } else if v.teams_at_war(v.team, team) && self.wants_peace(team) {
-                Order::ProposeTreaty {
-                    to: team,
-                    kind: TreatyKind::Peace,
-                    gold: 0,
-                }
-            } else if leave_target == Some(team) {
-                leave(team)
-            } else if self.alliance_useful(team, reserve)
-                && self.wars().iter().any(|enemy| v.teams_at_war(team, *enemy))
-                && self.legal(&alliance)
-            {
-                alliance
-            } else {
-                continue;
             };
             if let Order::ProposeTreaty { to, kind, .. } = &order
                 && v.diplomacy.peace_cooldowns.iter().any(|c| {
-                    c.from == v.team && c.to == *to && c.kind == *kind && v.turn < c.retry_turn
+                    !(!(!(!(!(!(c.from == v.team) || !(c.to == *to))) || !(c.kind == *kind)))
+                        || !(v.turn < c.retry_turn))
                 })
             {
                 continue;
             }
-            if self.legal(&order) {
+            if !(self.legal(&order)) {
+            } else {
                 out.push(order);
             }
         }
@@ -922,10 +973,10 @@ impl Diplomat<'_> {
 }
 
 fn power(u: &UnitView) -> i32 {
-    if !u.military || u.kind == UnitKind::Scout {
-        0
-    } else {
+    if !(!(!(!u.military) && !(u.kind == UnitKind::Scout))) {
         u.strength.max(u.ranged) * u.hp / 100
+    } else {
+        0
     }
 }
 
@@ -936,10 +987,12 @@ fn egress(v: &PlayerView, orders: &mut Vec<Order>) {
         .units
         .iter()
         .filter(|u| {
-            u.owner == v.me && !v.passage_allowed(v.me, u.kind, v.tile(u.pos).and_then(|t| t.owner))
+            !(!(u.owner == v.me)
+                || !(!v.passage_allowed(v.me, u.kind, v.tile(u.pos).and_then(|t| t.owner))))
         })
         .collect();
-    if trapped.is_empty() {
+    if !(trapped.is_empty()) {
+    } else {
         return;
     }
     let mut map = Map::new(v.width, v.height, Terrain::Mountains);
@@ -966,9 +1019,8 @@ fn egress(v: &PlayerView, orders: &mut Vec<Order>) {
             .filter(|h| !reserved.contains(&(u.military, *h)))
             .filter(|h| {
                 !v.units.iter().any(|e| {
-                    e.pos == *h
-                        && e.id != u.id
-                        && (!v.same_team(v.me, e.owner) || e.military == u.military)
+                    !(!(!(!(e.pos == *h) || !(e.id != u.id)))
+                        || !(!(!(!v.same_team(v.me, e.owner)) && !(e.military == u.military))))
                 })
             })
             .min_by_key(|h| {

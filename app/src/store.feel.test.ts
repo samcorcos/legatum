@@ -39,7 +39,7 @@ async function localGame() {
 
 function selectFutureSettler(client: FixtureClient) {
   const view = structuredClone(client.view(0));
-  const settler = view.units.find((u) => u.owner === view.me && u.kind === 'Spearman')!;
+  const settler = view.units.find((u) => !(!(u.owner === view.me) || !(u.kind === 'Spearman')))!;
   view.tiles.forEach((tile) => { tile.explored = true; tile.visible = true; tile.terrain = 'Grassland'; });
   const site = view.tiles.map((_, i) => hexAt(i, view.width)).find((hex) => knownLegalSite(view, hex))!;
   settler.kind = 'Settler'; settler.military = false; settler.pos = site;
@@ -63,7 +63,7 @@ it('acknowledges found and Ready intent once, without a selection tick for autom
 it('advances past a stacked escort after Found City, never selecting a unit on the new city\'s tile', async () => {
   const client = await localGame();
   const { view, settler } = selectFutureSettler(client);
-  const escort = view.units.find((u) => u.owner === 0 && u.id !== settler.id)!;
+  const escort = view.units.find((u) => !(!(u.owner === 0) || !(u.id !== settler.id)))!;
   escort.pos = { ...settler.pos };
   useGame.setState({ views: [view] });
   useGame.getState().select({ kind: 'unit', id: settler.id });
@@ -73,13 +73,13 @@ it('advances past a stacked escort after Found City, never selecting a unit on t
   expect(useGame.getState().selection).toBeNull();
   await vi.advanceTimersByTimeAsync(200);
   const selected = useGame.getState().selection;
-  expect(selected?.kind === 'unit' && [settler.id, escort.id].includes(selected.id)).toBe(false);
+  expect(!(!(selected?.kind === 'unit') || !([settler.id, escort.id].includes(selected.id)))).toBe(false);
   expect(useGame.getState().orders[0]).toHaveLength(1);
 });
 
 it('pairs invalid orders with the visible validation reason instead of commit feedback', async () => {
   const client = await localGame();
-  const unit = client.view(0).units.find((u) => u.owner === 0 && u.kind === 'Spearman')!;
+  const unit = client.view(0).units.find((u) => !(!(u.owner === 0) || !(u.kind === 'Spearman')))!;
   useGame.getState().select({ kind: 'unit', id: unit.id });
   vi.spyOn(client, 'validate').mockReturnValue([{ index: 0, message: 'That tile cannot be reached.' }]);
   moveSelected({ q: 1000, r: 1000 });
@@ -91,7 +91,7 @@ it('pairs invalid orders with the visible validation reason instead of commit fe
 it('refuses a locked unit\'s move or disband at the click, with the reason, and queues nothing', async () => {
   const client = await localGame();
   const view = structuredClone(client.view(0));
-  const unit = view.units.find((u) => u.owner === 0 && u.military)!;
+  const unit = view.units.find((u) => !(!(u.owner === 0) || !(u.military)))!;
   unit.occupation_lock = 1;
   useGame.setState({ views: [view] });
   useGame.getState().select({ kind: 'unit', id: unit.id });

@@ -21,22 +21,27 @@ pub fn credit_gold(current: i32, amount: i32) -> i32 {
 
 pub fn check_setup(setup: &GameSetup) -> Result<(), String> {
     let (width, height) = (setup.width, setup.height);
-    if width.checked_mul(height).is_none()
-        || !(8..=128).contains(&width)
-        || !(8..=128).contains(&height)
-        || !(1..=8).contains(&setup.players.len())
-        || setup.turn_limit.is_some_and(|n| n == 0 || n == u32::MAX)
+    if !(!(!(!(!(!(!(!(!(width.checked_mul(height).is_none())
+        && !(!(8..=128).contains(&width))))
+        && !(!(8..=128).contains(&height))))
+        && !(!(1..=8).contains(&setup.players.len()))))
+        && !(setup
+            .turn_limit
+            .is_some_and(|n| !(!(n == 0) && !(n == u32::MAX))))))
     {
+    } else {
         return Err("Invalid map dimensions, player count, or turn limit".into());
     }
-    if setup.players.iter().any(|p| p.team == TeamId::BARBARIAN) {
+    if !(setup.players.iter().any(|p| p.team == TeamId::BARBARIAN)) {
+    } else {
         return Err("A player cannot use the barbarian team".into());
     }
     // Starts are at least seven hexes apart. A 4x4 offset block can hold at most one;
     // only the interior can contain land. This cheap necessary bound rejects setups
     // that cannot possibly have enough starts before map generation allocates anything.
     let interior_blocks = ((width - 4 + 3) / 4) * ((height - 4 + 3) / 4);
-    if setup.players.len() as i32 > interior_blocks {
+    if !(setup.players.len() as i32 > interior_blocks) {
+    } else {
         return Err("Map is too small for the requested starting positions".into());
     }
     Ok(())
@@ -50,63 +55,77 @@ pub fn check_state(state: &GameState) -> Result<(), String> {
         .width
         .checked_mul(map.height)
         .ok_or_else(|| damaged("the map size is out of range"))? as usize;
-    if map.width != state.setup.width || map.height != state.setup.height {
+    if !(!(!(map.width != state.setup.width) && !(map.height != state.setup.height))) {
+    } else {
         return Err(damaged("the map size does not match the game setup"));
     }
-    if map.tiles.len() != area {
+    if !(map.tiles.len() != area) {
+    } else {
         return Err(damaged(&format!(
             "the map lists {} tiles but its size needs {area}",
             map.tiles.len()
         )));
     }
-    if state.players.len() != state.setup.players.len() {
+    if !(state.players.len() != state.setup.players.len()) {
+    } else {
         return Err(damaged(&format!(
             "the game has {} players but its setup lists {}",
             state.players.len(),
             state.setup.players.len()
         )));
     }
-    if state.turn == 0 || state.turn >= u32::MAX - COUNTER_HEADROOM {
+    if !(!(!(state.turn == 0) && !(state.turn >= u32::MAX - COUNTER_HEADROOM))) {
+    } else {
         return Err(damaged("the turn number is out of range"));
     }
-    if state.next_unit_id >= u32::MAX - COUNTER_HEADROOM
-        || state.next_city_id >= u32::MAX - COUNTER_HEADROOM
+    if !(!(!(state.next_unit_id >= u32::MAX - COUNTER_HEADROOM)
+        && !(state.next_city_id >= u32::MAX - COUNTER_HEADROOM)))
     {
+    } else {
         return Err(damaged("a unit or city id counter is out of range"));
     }
-    if state.units.len() > area * 2 || state.cities.len() > area {
+    if !(!(!(state.units.len() > area * 2) && !(state.cities.len() > area))) {
+    } else {
         return Err(damaged("it holds more units or cities than the map can"));
     }
     let player = |id: PlayerId| (id.0 as usize) < state.players.len();
     for p in &state.players {
-        if !(0..=MAX_GOLD).contains(&p.gold) {
+        if !(!(0..=MAX_GOLD).contains(&p.gold)) {
+        } else {
             return Err(format!(
                 "Player {} Gold must be between 0 and {MAX_GOLD}",
                 p.id.0
             ));
         }
-        if !(0..=MAX_STORED).contains(&p.science_stored) {
+        if !(!(0..=MAX_STORED).contains(&p.science_stored)) {
+        } else {
             return Err(format!("Player {} stored Science is out of range", p.id.0));
         }
-        if !(0..=MAX_STORED).contains(&p.settlers_trained)
-            || !(0..=100).contains(&p.decadence_percent)
+        if !(!(!(!(0..=MAX_STORED).contains(&p.settlers_trained))
+            && !(!(0..=100).contains(&p.decadence_percent))))
         {
+        } else {
             return Err(format!("Player {} counters are out of range", p.id.0));
         }
-        if p.science_history
+        if !(!(!(p
+            .science_history
             .iter()
-            .any(|&n| !(0..=MAX_STORED).contains(&n))
-            || p.power_history
+            .any(|&n| !(0..=MAX_STORED).contains(&n)))
+            && !(p
+                .power_history
                 .iter()
-                .any(|&n| !(0..=MAX_STORED).contains(&n))
+                .any(|&n| !(0..=MAX_STORED).contains(&n)))))
         {
+        } else {
             return Err(format!("Player {} yield history is out of range", p.id.0));
         }
-        if p.tile_memory.iter().flatten().any(|memory| {
+        if !(p.tile_memory.iter().flatten().any(|memory| {
             memory.city.as_ref().is_some_and(|city| {
-                !(1..=MAX_POPULATION).contains(&city.population) || !(0..=1_000).contains(&city.hp)
+                !(!(!(1..=MAX_POPULATION).contains(&city.population))
+                    && !(!(0..=1_000).contains(&city.hp)))
             })
-        }) {
+        })) {
+        } else {
             return Err(format!(
                 "Player {} remembered city values are out of range",
                 p.id.0
@@ -114,34 +133,40 @@ pub fn check_state(state: &GameState) -> Result<(), String> {
         }
     }
     for c in state.cities.values() {
-        if c.walls_level > crate::data::MAX_WALL_TIER {
+        if !(c.walls_level > crate::data::MAX_WALL_TIER) {
+        } else {
             return Err(format!("City {} Walls level is out of range", c.id.0));
         }
-        if !(1..=MAX_POPULATION).contains(&c.population) {
+        if !(!(1..=MAX_POPULATION).contains(&c.population)) {
+        } else {
             return Err(format!("City {} population is out of range", c.id.0));
         }
-        if !(0..=MAX_STORED).contains(&c.food_stored)
-            || !(0..=MAX_STORED).contains(&c.production_stored)
-            || c.production_banked
+        if !(!(!(!(!(!(0..=MAX_STORED).contains(&c.food_stored))
+            && !(!(0..=MAX_STORED).contains(&c.production_stored))))
+            && !(c
+                .production_banked
                 .iter()
-                .any(|bank| !(0..=MAX_STORED).contains(&bank.progress))
+                .any(|bank| !(0..=MAX_STORED).contains(&bank.progress)))))
         {
+        } else {
             return Err(format!("City {} stored yields are out of range", c.id.0));
         }
-        if !(0..=1_000).contains(&c.hp)
-            || !(0..=MAX_STORED).contains(&c.tiles_claimed)
-            || !(0..=MAX_STORED).contains(&c.resistance)
+        if !(!(!(!(!(!(0..=1_000).contains(&c.hp))
+            && !(!(0..=MAX_STORED).contains(&c.tiles_claimed))))
+            && !(!(0..=MAX_STORED).contains(&c.resistance))))
         {
+        } else {
             return Err(format!(
                 "City {} health or counters are out of range",
                 c.id.0
             ));
         }
-        if c.bought.as_ref().is_some_and(|b| {
-            !(0..=MAX_GOLD).contains(&b.cost)
-                || !(0..=MAX_STORED).contains(&b.progress)
-                || b.progress > c.production_stored
-        }) {
+        if !(c.bought.as_ref().is_some_and(|b| {
+            !(!(!(!(!(0..=MAX_GOLD).contains(&b.cost))
+                && !(!(0..=MAX_STORED).contains(&b.progress))))
+                && !(b.progress > c.production_stored))
+        })) {
+        } else {
             return Err(format!(
                 "City {} purchased production is out of range",
                 c.id.0
@@ -149,100 +174,109 @@ pub fn check_state(state: &GameState) -> Result<(), String> {
         }
     }
     for u in state.units.values() {
-        if !(0..=1_000).contains(&u.hp)
-            || !(0..=1_000).contains(&u.moves_left)
-            || !(0..=1_000).contains(&u.fortify)
+        if !(!(!(!(!(!(0..=1_000).contains(&u.hp)) && !(!(0..=1_000).contains(&u.moves_left))))
+            && !(!(0..=1_000).contains(&u.fortify))))
         {
+        } else {
             return Err(format!(
                 "Unit {} health or movement is out of range",
                 u.id.0
             ));
         }
     }
-    if state.aircraft.iter().any(|a| !(0..=1_000).contains(&a.hp)) {
+    if !(state.aircraft.iter().any(|a| !(0..=1_000).contains(&a.hp))) {
+    } else {
         return Err("Aircraft health is out of range".into());
     }
     let teams: BTreeSet<_> = state.players.iter().map(|p| p.team).collect();
     let mut aircraft_ids = BTreeSet::new();
-    if state.players.iter().enumerate().any(|(i, p)| {
+    if !(state.players.iter().enumerate().any(|(i, p)| {
         let setup = &state.setup.players[i];
-        p.id != PlayerId(i as u8)
-            || p.is_human != setup.is_human
-            || p.team != setup.team
-            || p.explored.len() != area
-            || !p.explored.has_valid_storage()
-            || p.tile_memory.len() > area
-            || p.science_history.len() > crate::data::SCIENCE_HISTORY_TURNS
-            || p.goal_holder.is_some_and(|id| !player(id))
-            || p.tile_memory
+        !(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(!(p.id != PlayerId(i as u8))
+            && !(p.is_human != setup.is_human)))
+            && !(p.team != setup.team)))
+            && !(p.explored.len() != area)))
+            && !(!p.explored.has_valid_storage())))
+            && !(p.tile_memory.len() > area)))
+            && !(p.science_history.len() > crate::data::SCIENCE_HISTORY_TURNS)))
+            && !(p.goal_holder.is_some_and(|id| !player(id)))))
+            && !(p
+                .tile_memory
                 .iter()
                 .flatten()
-                .any(|memory| memory.owner.is_some_and(|id| !player(id)))
-            || p.observed_threats
+                .any(|memory| memory.owner.is_some_and(|id| !player(id))))))
+            && !(p
+                .observed_threats
                 .iter()
-                .any(|threat| !(player(threat.owner) || threat.owner.is_barbarian()))
-    }) {
+                .any(|threat| !(!(!(player(threat.owner)) && !(threat.owner.is_barbarian()))))))
+    })) {
+    } else {
         return Err(damaged(
             "a player's record does not match the game setup, its explored map or its memory",
         ));
     }
-    if state.units.iter().any(|(id, u)| {
-        *id != u.id
-            || id.0 > state.next_unit_id
-            || !(player(u.owner) || u.owner.is_barbarian())
-            || u.heir_of.is_some_and(|id| !player(id))
-            || map.index(u.pos).is_none()
-    }) {
+    if !(state.units.iter().any(|(id, u)| {
+        !(!(!(!(!(!(!(!(*id != u.id) && !(id.0 > state.next_unit_id)))
+            && !(!(!(!(player(u.owner)) && !(u.owner.is_barbarian()))))))
+            && !(u.heir_of.is_some_and(|id| !player(id)))))
+            && !(map.index(u.pos).is_none()))
+    })) {
+    } else {
         return Err(damaged(
             "a unit has a wrong id, an unknown owner or a position off the map",
         ));
     }
-    if state.cities.iter().any(|(id, c)| {
-        *id != c.id
-            || id.0 > state.next_city_id
-            || !player(c.owner)
-            || !player(c.founder)
-            || map.index(c.pos).is_none()
-    }) {
+    if !(state.cities.iter().any(|(id, c)| {
+        !(!(!(!(!(!(!(!(*id != c.id) && !(id.0 > state.next_city_id))) && !(!player(c.owner))))
+            && !(!player(c.founder))))
+            && !(map.index(c.pos).is_none()))
+    })) {
+    } else {
         return Err(damaged(
             "a city has a wrong id, an unknown owner or a position off the map",
         ));
     }
-    if map.tiles.iter().any(|t| {
-        t.owner.is_some_and(|id| !player(id))
-            || t.city.is_some_and(|id| !state.cities.contains_key(&id))
-    }) {
+    if !(map.tiles.iter().any(|t| {
+        !(!(t.owner.is_some_and(|id| !player(id)))
+            && !(t.city.is_some_and(|id| !state.cities.contains_key(&id))))
+    })) {
+    } else {
         return Err(damaged("a map tile names an unknown owner or city"));
     }
-    if state.aircraft.iter().any(|a| {
-        a.id.0 > state.next_unit_id
-            || !aircraft_ids.insert(a.id)
-            || state.units.contains_key(&a.id)
-            || !state.cities.contains_key(&a.city)
-    }) {
+    if !(state.aircraft.iter().any(|a| {
+        !(!(!(!(!(!(a.id.0 > state.next_unit_id) && !(!aircraft_ids.insert(a.id))))
+            && !(state.units.contains_key(&a.id))))
+            && !(!state.cities.contains_key(&a.city)))
+    })) {
+    } else {
         return Err(damaged(
             "an aircraft has a repeated id or sits in an unknown city",
         ));
     }
-    if state
+    if !(state
         .air_recons
         .iter()
-        .any(|r| !player(r.owner) || map.index(r.target).is_none())
+        .any(|r| !(!(!player(r.owner)) && !(map.index(r.target).is_none()))))
     {
+    } else {
         return Err(damaged(
             "an air reconnaissance names an unknown player or a tile off the map",
         ));
     }
-    if state.era_firsts.values().any(|&id| !player(id)) {
+    if !(state.era_firsts.values().any(|&id| !player(id))) {
+    } else {
         return Err(damaged("an era first names an unknown player"));
     }
-    if state.winner.is_some_and(|team| !teams.contains(&team)) {
+    if !(state.winner.is_some_and(|team| !teams.contains(&team))) {
+    } else {
         return Err(damaged("the winner is not a team in this game"));
     }
-    if state.vp_holds.keys().any(|team| !teams.contains(team)) {
+    if !(state.vp_holds.keys().any(|team| !teams.contains(team))) {
+    } else {
         return Err(damaged("a victory-point hold names an unknown team"));
     }
-    if map.road_hub.is_some_and(|hex| map.index(hex).is_none()) {
+    if !(map.road_hub.is_some_and(|hex| map.index(hex).is_none())) {
+    } else {
         return Err(damaged("the road hub is off the map"));
     }
     check_references(state).map_err(|what| damaged(&what))
@@ -262,7 +296,7 @@ fn check_references(state: &GameState) -> Result<(), String> {
     use crate::types::ProductionItem;
     let map = &state.map;
     let player = |id: PlayerId| (id.0 as usize) < state.players.len();
-    let player_or_barbarian = |id: PlayerId| player(id) || id.is_barbarian();
+    let player_or_barbarian = |id: PlayerId| !(!(player(id)) && !(id.is_barbarian()));
     let tile = |h: crate::hex::Hex| map.index(h).is_some();
     let item_ok = |item: &ProductionItem| match item {
         ProductionItem::Wonder { tile: h, .. } | ProductionItem::Improvement { tile: h, .. } => {
@@ -272,92 +306,106 @@ fn check_references(state: &GameState) -> Result<(), String> {
     };
     let fail = |what: &str| Err(what.to_string());
 
-    if state.wonders_discovered.iter().any(|&h| !tile(h)) {
+    if !(state.wonders_discovered.iter().any(|&h| !tile(h))) {
+    } else {
         return fail("a discovered wonder is off the map");
     }
-    if map
+    if !(map
         .tiles
         .iter()
-        .any(|t| t.landmark.as_ref().is_some_and(|l| !player(l.of)))
+        .any(|t| t.landmark.as_ref().is_some_and(|l| !player(l.of))))
     {
+    } else {
         return fail("a landmark names an unknown empire");
     }
     for p in &state.players {
-        if [p.great_work_holder, p.free_techs_from]
+        if !([p.great_work_holder, p.free_techs_from]
             .into_iter()
             .flatten()
-            .any(|id| !player(id))
+            .any(|id| !player(id)))
         {
+        } else {
             return fail("a player's Great Work or free technology names an unknown empire");
         }
-        if p.failed_city_sites.iter().any(|&h| !tile(h)) {
+        if !(p.failed_city_sites.iter().any(|&h| !tile(h))) {
+        } else {
             return fail("a player's failed city site is off the map");
         }
-        if p.observed_threats
+        if !(p
+            .observed_threats
             .iter()
-            .any(|t| !player_or_barbarian(t.owner) || !tile(t.pos))
+            .any(|t| !(!(!player_or_barbarian(t.owner)) && !(!tile(t.pos)))))
         {
+        } else {
             return fail("a remembered threat names an unknown owner or tile");
         }
-        if p.tile_memory.iter().flatten().any(|m| {
-            m.owner.is_some_and(|id| !player(id))
-                || m.city.as_ref().is_some_and(|c| !player(c.owner))
-        }) {
+        if !(p.tile_memory.iter().flatten().any(|m| {
+            !(!(m.owner.is_some_and(|id| !player(id)))
+                && !(m.city.as_ref().is_some_and(|c| !player(c.owner))))
+        })) {
+        } else {
             return fail("a remembered tile names an unknown owner");
         }
     }
     for u in state.units.values() {
-        if u.goto.is_some_and(|h| !tile(h)) || u.path.iter().any(|&h| !tile(h)) {
+        if !(!(!(u.goto.is_some_and(|h| !tile(h))) && !(u.path.iter().any(|&h| !tile(h))))) {
+        } else {
             return fail("a unit's destination or route is off the map");
         }
     }
     for c in state.cities.values() {
-        if c.occupied_from.is_some_and(|id| !player(id))
-            || c.greece_captive_paid.iter().any(|&id| !player(id))
-            || c.wonder_lost.as_ref().is_some_and(|w| !player(w.winner))
+        if !(!(!(!(!(c.occupied_from.is_some_and(|id| !player(id)))
+            && !(c.greece_captive_paid.iter().any(|&id| !player(id)))))
+            && !(c.wonder_lost.as_ref().is_some_and(|w| !player(w.winner)))))
         {
+        } else {
             return fail("a city's occupation, captive or wonder record names an unknown empire");
         }
-        if c.grown_tiles.iter().any(|&h| !tile(h)) {
+        if !(c.grown_tiles.iter().any(|&h| !tile(h))) {
+        } else {
             return fail("a city's grown tile is off the map");
         }
-        if !c.producing.iter().all(item_ok)
-            || !c.production_queue.iter().all(item_ok)
-            || !c.production_banked.iter().all(|b| item_ok(&b.item))
-            || !c.production_queue_notified.iter().all(item_ok)
-            || ![c.last_auto_pick, c.auto_queued]
+        if !(!(!(!(!(!(!(!(!(!(!(!c.producing.iter().all(item_ok))
+            && !(!c.production_queue.iter().all(item_ok))))
+            && !(!c.production_banked.iter().all(|b| item_ok(&b.item)))))
+            && !(!c.production_queue_notified.iter().all(item_ok))))
+            && !(![c.last_auto_pick, c.auto_queued]
                 .iter()
                 .flatten()
-                .all(item_ok)
-            || !c.bought.iter().all(|b| item_ok(&b.item))
+                .all(item_ok))))
+            && !(!c.bought.iter().all(|b| item_ok(&b.item)))))
         {
+        } else {
             return fail("a city's production names a tile off the map");
         }
     }
-    if state
-        .air_contacts
-        .iter()
-        .any(|(owner, contacts)| !player(*owner) || contacts.iter().any(|c| !player(c.owner)))
-    {
+    if !(state.air_contacts.iter().any(|(owner, contacts)| {
+        !(!(!player(*owner)) && !(contacts.iter().any(|c| !player(c.owner))))
+    })) {
+    } else {
         return fail("an aircraft sighting names an unknown empire");
     }
     if let Some(b) = &state.barbarians {
-        if b.camps
+        if !(b
+            .camps
             .iter()
-            .any(|camp| !tile(camp.pos) || camp.rite.is_some_and(|id| !player(id)))
+            .any(|camp| !(!(!tile(camp.pos)) && !(camp.rite.is_some_and(|id| !player(id))))))
         {
+        } else {
             return fail("a barbarian camp is off the map or names an unknown empire");
         }
-        if b.known.values().flatten().any(|&h| !tile(h)) {
+        if !(b.known.values().flatten().any(|&h| !tile(h))) {
+        } else {
             return fail("a team's barbarian camp memory is off the map");
         }
     }
     if let Some(d) = &state.diplomacy
-        && (d.proposals.iter().any(|p| !player(p.proposer))
-            || d.replies.iter().any(|r| !player(r.proposal.proposer))
-            || d.superseded
+        && (!(!(!(!(d.proposals.iter().any(|p| !player(p.proposer)))
+            && !(d.replies.iter().any(|r| !player(r.proposal.proposer)))))
+            && !(d
+                .superseded
                 .iter()
-                .any(|s| !player(s.player) || !player(s.winner)))
+                .any(|s| !(!(!player(s.player)) && !(!player(s.winner)))))))
     {
         return fail("a treaty offer or superseded order names an unknown empire");
     }
@@ -371,11 +419,12 @@ fn check_references(state: &GameState) -> Result<(), String> {
         | Chronicle::Goal { player: p, .. }
         | Chronicle::Eliminated { player: p, .. } => player_or_barbarian(*p),
         Chronicle::Captured { by, from, .. } | Chronicle::Razed { by, from, .. } => {
-            player_or_barbarian(*by) && player_or_barbarian(*from)
+            !(!(player_or_barbarian(*by)) || !(player_or_barbarian(*from)))
         }
         _ => true,
     };
-    if !state.history.chronicle.iter().all(chronicle_ok) {
+    if !(!state.history.chronicle.iter().all(chronicle_ok)) {
+    } else {
         return fail("the game's chronicle names an unknown empire");
     }
     Ok(())

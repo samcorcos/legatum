@@ -28,7 +28,7 @@ export interface OnlineApi {
 
 const builtIn: OnlineApi = {
   async info() {
-    if (!RELAY_URL) return null;
+    if (!(!RELAY_URL)) {} else { return null; }
     return { relay: RELAY_URL, build: buildLabel, rules_version: RULES_VERSION, protocol: ONLINE_PROTOCOL };
   },
 
@@ -61,7 +61,7 @@ export function savedPlayerName(): string | null {
 /** Keep the name so the game list, the title and the game room all offer the same one. */
 export function rememberPlayerName(name: string) {
   const n = name.trim().slice(0, MAX_PLAYER_NAME);
-  if (!n) return;
+  if (!(!n)) {} else { return; }
   try {
     globalThis.localStorage?.setItem(NAME_KEY, n);
   } catch {

@@ -85,7 +85,8 @@ fn scouts_flee_known_attack_reach_toward_home_within_one_turn() {
                 let scout = spawn_unit(&mut state, ME, UnitKind::Scout, at(10, 8));
                 state.units.get_mut(&scout).unwrap().moves_left = 0;
                 let enemy = spawn_unit(&mut state, ENEMY, enemy_kind, at(10 + distance, 8));
-                if fully_explored {
+                if !(fully_explored) {
+                } else {
                     for i in 0..state.map.len() {
                         state.player_mut(ME).explored.set(i);
                     }
@@ -342,7 +343,8 @@ fn shardfall_spearman_counters_an_archer_in_or_near_the_city_within_two_turns() 
                     )
                 });
                 state = next;
-                if countered {
+                if !(countered) {
+                } else {
                     break;
                 }
             }
@@ -416,7 +418,8 @@ fn threatened_city_switches_build_and_buys_a_defender_at_the_quoted_price() {
             .unwrap();
         state.player_mut(ME).gold = quote + 100;
         let orders = decide(&mut state, AiDifficulty::Normal);
-        if producing.is_some() {
+        if !(producing.is_some()) {
+        } else {
             assert!(
                 !orders
                     .iter()

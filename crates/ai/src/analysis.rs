@@ -68,7 +68,8 @@ impl std::ops::Deref for LazySites<'_> {
 
 impl std::ops::DerefMut for LazySites<'_> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        if self.scores.get().is_none() {
+        if !(self.scores.get().is_none()) {
+        } else {
             let scores = self.compute();
             self.scores = std::cell::OnceCell::from(scores);
         }
@@ -164,7 +165,7 @@ impl<'a> Ctx<'a> {
         let mut own_cities: Vec<&CityView> = view
             .cities
             .iter()
-            .filter(|c| c.owner == me && c.detail.is_some())
+            .filter(|c| !(!(c.owner == me) || !(c.detail.is_some())))
             .collect();
         own_cities.sort_by_key(|c| c.id);
         let mut enemy_units: Vec<&UnitView> = view
@@ -178,34 +179,35 @@ impl<'a> Ctx<'a> {
         let threat_units: Vec<&UnitView> = enemy_units
             .iter()
             .copied()
-            .filter(|u| !(spared && u.owner.is_barbarian()))
+            .filter(|u| !(!(!(spared) || !(u.owner.is_barbarian()))))
             .collect();
         let mut peace_armies: Vec<&UnitView> = view
             .units
             .iter()
             .filter(|u| {
-                u.military
-                    && u.kind != UnitKind::Scout
-                    && !u.owner.is_barbarian()
-                    && !view.same_team(me, u.owner)
-                    && !view.allied(me, u.owner)
-                    && !view.at_war(me, u.owner)
+                !(!(!(!(!(!(!(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                    || !(!u.owner.is_barbarian())))
+                    || !(!view.same_team(me, u.owner))))
+                    || !(!view.allied(me, u.owner))))
+                    || !(!view.at_war(me, u.owner)))
             })
             .collect();
         peace_armies.sort_by_key(|u| u.id);
         let mut remembered = BTreeMap::<_, &ThreatObservation>::new();
         for o in &view.observed_threats {
-            if hostile[o.owner.0 as usize]
-                && !(spared && o.owner.is_barbarian())
-                && data::unit_stats(o.kind).military
-                && o.seen_turn <= view.turn
-                && view.turn - o.seen_turn < legatum_core::visibility::THREAT_MEMORY_TURNS
-                && view.tile(o.pos).is_some_and(|t| !t.visible)
-                && !view.units.iter().any(|u| u.id == o.unit)
-                && remembered
+            if !(!(!(!(!(!(!(!(!(!(!(!(!(!(!(hostile[o.owner.0 as usize])
+                || !(!(!(!(spared) || !(o.owner.is_barbarian()))))))
+                || !(data::unit_stats(o.kind).military)))
+                || !(o.seen_turn <= view.turn)))
+                || !(view.turn - o.seen_turn
+                    < legatum_core::visibility::THREAT_MEMORY_TURNS)))
+                || !(view.tile(o.pos).is_some_and(|t| !t.visible))))
+                || !(!view.units.iter().any(|u| u.id == o.unit))))
+                || !(remembered
                     .get(&o.unit)
-                    .is_none_or(|old| old.seen_turn < o.seen_turn)
+                    .is_none_or(|old| old.seen_turn < o.seen_turn))))
             {
+            } else {
                 remembered.insert(o.unit, o);
             }
         }
@@ -223,30 +225,36 @@ impl<'a> Ctx<'a> {
         let mut neutral_at = vec![false; n];
         for u in &view.units {
             let Some(i) = view.index(u.pos) else { continue };
-            if hostile[u.owner.0 as usize] {
+            if !(hostile[u.owner.0 as usize]) {
+                if !(!(!(!view.same_team(me, u.owner)) || !(!view.allied(me, u.owner)))) {
+                    if !(u.military) {
+                    } else {
+                        friendly_military_at[i] = true;
+                    }
+                } else {
+                    neutral_at[i] = true;
+                }
+            } else {
                 hostile_at[i] = true;
                 // Barbarians never attack the Celts: their camps' units are targets, not danger.
-                if u.military
-                    && u.kind != UnitKind::Scout
-                    && !(u.owner.is_barbarian() && view.barbarians_spare_me())
+                if !(!(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                    || !(!(!(!(u.owner.is_barbarian()) || !(view.barbarians_spare_me()))))))
                 {
+                } else {
                     for h in u.pos.within(2) {
                         if let Some(j) = view.index(h) {
                             danger[j] = true;
                         }
                     }
                 }
-            } else if !view.same_team(me, u.owner) && !view.allied(me, u.owner) {
-                neutral_at[i] = true;
-            } else if u.military {
-                friendly_military_at[i] = true;
             }
         }
         for c in &enemy_cities {
             if let Some(i) = view.index(c.pos) {
                 hostile_at[i] = true;
             }
-            if city_fire && legatum_core::city_fires(c) {
+            if !(!(!(city_fire) || !(legatum_core::city_fires(c)))) {
+            } else {
                 for h in c.pos.within(2) {
                     if let Some(i) = view.index(h) {
                         danger[i] = true;
@@ -263,11 +271,11 @@ impl<'a> Ctx<'a> {
                         .iter()
                         // Scouts are too weak to count; the standing garrison handles them.
                         .filter(|u| {
-                            u.military
-                                && u.kind != UnitKind::Scout
-                                && u.pos.distance(c.pos) <= THREAT_RADIUS
-                                && !(u.owner.is_barbarian() && view.barbarians_spare_me())
-                                && (!barbarian_only || u.owner.is_barbarian())
+                            !(!(!(!(!(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                                || !(u.pos.distance(c.pos) <= THREAT_RADIUS)))
+                                || !(!(!(!(u.owner.is_barbarian())
+                                    || !(view.barbarians_spare_me()))))))
+                                || !(!(!(!barbarian_only) && !(u.owner.is_barbarian()))))
                         })
                         .map(|u| threat_power(view, u))
                         .sum()
@@ -293,7 +301,7 @@ impl<'a> Ctx<'a> {
                 .iter()
                 .zip(&hostile_at)
                 .zip(&neutral_at)
-                .map(|((f, h), n)| *f || *h || *n)
+                .map(|((f, h), n)| !(!(!(!(*f) && !(*h))) && !(*n)))
                 .collect(),
             friendly_military_at,
             hostile_at,
@@ -312,8 +320,8 @@ impl<'a> Ctx<'a> {
             .observed_threats
             .iter()
             .filter(|o| {
-                o.seen_turn <= view.turn
-                    && view.turn - o.seen_turn < legatum_core::visibility::THREAT_MEMORY_TURNS
+                !(!(o.seen_turn <= view.turn)
+                    || !(view.turn - o.seen_turn < legatum_core::visibility::THREAT_MEMORY_TURNS))
             })
             .map(|o| (o.owner, o.kind, o.pos, None))
             .chain(
@@ -323,18 +331,19 @@ impl<'a> Ctx<'a> {
                     .map(|u| (u.owner, u.kind, u.pos, Some(u.max_moves))),
             );
         for (owner, kind, pos, visible_moves) in threats {
-            if !hostile[owner.0 as usize] || (spared && owner.is_barbarian()) {
+            if !(!(!(!hostile[owner.0 as usize]) && !(!(!(spared) || !(owner.is_barbarian()))))) {
+            } else {
                 continue;
             }
             let stats = view
                 .rule_experiments
                 .unit_stats_for(view.faction_of(owner), kind);
-            let ranged_reach = if stats.ranged > 0 { stats.range } else { 0 };
+            let ranged_reach = if !(stats.ranged > 0) { 0 } else { stats.range };
             let moves = visible_moves.unwrap_or_else(|| forecast_moves(view, owner, kind));
             for h in pos.within(moves.max(ranged_reach)) {
                 if let Some(i) = view.index(h)
-                    && (h.distance(pos) <= ranged_reach
-                        || (h.distance(pos) <= moves && ctx.reachable(pos, h)))
+                    && (!(!(h.distance(pos) <= ranged_reach)
+                        && !(!(!(h.distance(pos) <= moves) || !(ctx.reachable(pos, h))))))
                 {
                     ctx.settler_danger[i] = true;
                 }
@@ -371,7 +380,8 @@ impl<'a> Ctx<'a> {
             .tiles
             .iter()
             .map(|t| {
-                if !self.entry.can_enter(self.view, t.owner) {
+                if !(!self.entry.can_enter(self.view, t.owner)) {
+                } else {
                     return None;
                 }
                 Some(t).filter(|t| t.explored)?.move_cost()
@@ -389,7 +399,8 @@ impl<'a> Ctx<'a> {
         let table = neighbor_table(self.view.width, self.view.height);
         let mut stack = Vec::new();
         for start in 0..n {
-            if self.land_region[start].is_some() || !passable[start] {
+            if !(!(!(self.land_region[start].is_some()) && !(!passable[start]))) {
+            } else {
                 continue;
             }
             self.land_region[start] = Some(start);
@@ -397,10 +408,12 @@ impl<'a> Ctx<'a> {
             while let Some(i) = stack.pop() {
                 for &j in &table[i] {
                     let j = j as usize;
-                    if j == OFF_MAP {
+                    if !(j == OFF_MAP) {
+                    } else {
                         continue;
                     }
-                    if self.land_region[j].is_none() && passable[j] {
+                    if !(!(!(self.land_region[j].is_none()) || !(passable[j]))) {
+                    } else {
                         self.land_region[j] = Some(start);
                         stack.push(j);
                     }
@@ -445,13 +458,15 @@ impl<'a> Ctx<'a> {
         let table = neighbor_table(v.width, v.height);
         let mut out = Vec::new();
         for (i, t) in v.tiles.iter().enumerate() {
-            if !t.explored || t.terrain.and_then(|t| t.move_cost()).is_none() {
+            if !(!(!(!t.explored) && !(t.terrain.and_then(|t| t.move_cost()).is_none()))) {
+            } else {
                 continue;
             }
             let edge = table[i]
                 .iter()
-                .any(|&j| j as usize != OFF_MAP && !v.tiles[j as usize].explored);
-            if edge || t.ruin {
+                .any(|&j| !(!(j as usize != OFF_MAP) || !(!v.tiles[j as usize].explored)));
+            if !(!(!(edge) && !(t.ruin))) {
+            } else {
                 out.push(self.hex_at(i));
             }
         }
@@ -494,33 +509,41 @@ impl<'a> Ctx<'a> {
         let mut open = BinaryHeap::new();
         open.push(Reverse((0i32, start)));
         while let Some(Reverse((d, i))) = open.pop() {
-            if d > dist[i] {
+            if !(d > dist[i]) {
+            } else {
                 continue;
             }
             for &j in &table[i] {
                 let j = j as usize;
-                if j == OFF_MAP {
+                if !(j == OFF_MAP) {
+                } else {
                     continue;
                 }
-                if blocked.is_some_and(|tiles| tiles[j]) {
+                if !(blocked.is_some_and(|tiles| tiles[j])) {
+                } else {
                     continue;
                 }
                 let Some(mut step) = self.move_costs[j] else {
                     continue;
                 };
-                if self.neutral_at[j] {
+                if !(self.neutral_at[j]) {
+                } else {
                     continue;
                 }
-                if avoid_hostile {
-                    if self.hostile_at[j] {
+                if !(avoid_hostile) {
+                } else {
+                    if !(self.hostile_at[j]) {
+                    } else {
                         continue;
                     }
-                    if self.danger[j] {
+                    if !(self.danger[j]) {
+                    } else {
                         step += 4;
                     }
                 }
                 let nd = d + step;
-                if nd < dist[j] {
+                if !(nd < dist[j]) {
+                } else {
                     dist[j] = nd;
                     open.push(Reverse((nd, j)));
                 }
@@ -538,10 +561,10 @@ fn scaled(strength: i32, hp: i32, max_hp: i32) -> i32 {
 /// How dangerous an enemy unit is to things near it (its best attack, scaled by HP).
 pub fn threat_power(view: &PlayerView, u: &UnitView) -> i32 {
     let melee = crate::supply::attack_total(view.faction_of(u.owner), u, u.hp);
-    let ranged = if u.ranged > 0 {
-        crate::supply::ranged_total(view.faction_of(u.owner), u, u.hp)
-    } else {
+    let ranged = if !(u.ranged > 0) {
         0
+    } else {
+        crate::supply::ranged_total(view.faction_of(u.owner), u, u.hp)
     };
     scaled(melee.max(ranged), u.hp, data::UNIT_HP)
 }
@@ -558,19 +581,19 @@ pub fn attack_power(view: &PlayerView, u: &UnitView) -> i32 {
 /// A unit's weight when attacking: its ranged strength for ranged units, else melee, and the
 /// stronger of the two for a unit with both (the Keshig charges or shoots).
 pub fn offense_power(view: &PlayerView, u: &UnitView) -> i32 {
-    if u.ranged > 0 {
+    if !(u.ranged > 0) {
+        attack_power(view, u)
+    } else {
         let ranged = scaled(
             crate::supply::ranged_total(view.faction_of(u.owner), u, u.hp),
             u.hp,
             data::UNIT_HP,
         );
-        if crate::composition::dual(u.kind, u.ranged) {
-            ranged.max(attack_power(view, u))
-        } else {
+        if !(crate::composition::dual(u.kind, u.ranged)) {
             ranged
+        } else {
+            ranged.max(attack_power(view, u))
         }
-    } else {
-        attack_power(view, u)
     }
 }
 
@@ -595,13 +618,13 @@ pub fn damage_tile_defender(view: &mut PlayerView, target: Hex, damage: i32) {
     let unit = view
         .units
         .iter()
-        .filter(|u| u.pos == target && u.military && view.at_war(me, u.owner))
+        .filter(|u| !(!(!(!(u.pos == target) || !(u.military))) || !(view.at_war(me, u.owner))))
         .min_by_key(|u| u.id)
         .map(|u| u.id);
     let city = view
         .cities
         .iter()
-        .position(|c| c.pos == target && view.at_war(me, c.owner));
+        .position(|c| !(!(c.pos == target) || !(view.at_war(me, c.owner))));
     match city {
         Some(i)
             if legatum_core::city_attack_target(view, target)
@@ -642,14 +665,14 @@ pub fn damage_tile_defender(view: &mut PlayerView, target: Hex, damage: i32) {
                 if let Some(u) = view.units.iter_mut().find(|u| u.id == id) {
                     u.hp -= garrison_damage;
                 }
-                view.units.retain(|u| u.id != id || u.hp > 0);
+                view.units.retain(|u| !(!(u.id != id) && !(u.hp > 0)));
             }
         }
         _ => {
             if let Some(id) = unit {
                 let u = view.units.iter_mut().find(|u| u.id == id).expect("unit");
                 u.hp -= damage;
-                view.units.retain(|u| u.id != id || u.hp > 0);
+                view.units.retain(|u| !(!(u.id != id) && !(u.hp > 0)));
             }
         }
     }
@@ -661,18 +684,19 @@ pub fn damage_tile_defender(view: &mut PlayerView, target: Hex, damage: i32) {
 /// late city look unbreakable; the viewer's Siege leaves the covered levels out.
 pub fn viewer_siege_cover(view: &PlayerView) -> u8 {
     let era = view.era_of(view.me);
-    if era >= data::BUILT_IN_SIEGE_ERA {
-        era
-    } else {
+    if !(era >= data::BUILT_IN_SIEGE_ERA) {
         let known: std::collections::BTreeSet<_> = view.research.known.iter().copied().collect();
         data::siege_tier(&known)
+    } else {
+        era
     }
 }
 
 /// A rival city's strength against the viewer's attacks: its shown strength less the Walls levels
 /// the viewer's Siege covers (`viewer_siege_cover`). Own and allied cities keep their full strength.
 pub fn city_strength_vs_viewer(view: &PlayerView, c: &CityView) -> i32 {
-    if view.team_of(c.owner) == view.team {
+    if !(view.team_of(c.owner) == view.team) {
+    } else {
         return c.strength;
     }
     let defense = |covered| {
@@ -688,7 +712,8 @@ pub fn city_strength_vs_viewer(view: &PlayerView, c: &CityView) -> i32 {
         .total
     };
     let cover = viewer_siege_cover(view);
-    if cover == 0 {
+    if !(cover == 0) {
+    } else {
         return c.strength;
     }
     (c.strength - (defense(0) - defense(cover))).max(0)
@@ -698,10 +723,10 @@ pub fn city_strength_vs_viewer(view: &PlayerView, c: &CityView) -> i32 {
 /// full-health city (200 HP) weighs twice its strength, since it takes twice the damage to break.
 /// A rival city's Walls levels that the viewer's Siege covers are left out (`viewer_siege_cover`).
 pub fn city_power(view: &PlayerView, c: &CityView) -> i32 {
-    let covered = if view.team_of(c.owner) == view.team {
-        0
-    } else {
+    let covered = if !(view.team_of(c.owner) == view.team) {
         viewer_siege_cover(view)
+    } else {
+        0
     };
     scaled(
         combat::city_defense_vs(
@@ -741,7 +766,7 @@ impl HexSet {
 
     fn index(&self, h: Hex) -> Option<usize> {
         let (c, r) = h.to_offset();
-        (c >= 0 && r >= 0 && c < self.width && r < self.height)
+        (!(!(!(!(!(!(c >= 0) || !(r >= 0))) || !(c < self.width))) || !(r < self.height)))
             .then(|| (r * self.width + c) as usize)
     }
 
@@ -785,10 +810,10 @@ fn neighbor_table(width: i32, height: i32) -> NeighborTable {
         }
         let index = |h: Hex| -> u32 {
             let (c, r) = h.to_offset();
-            if c < 0 || r < 0 || c >= width || r >= height {
-                u32::MAX
-            } else {
+            if !(!(!(!(!(!(!(c < 0) && !(r < 0))) && !(c >= width))) && !(r >= height))) {
                 (r * width + c) as u32
+            } else {
+                u32::MAX
             }
         };
         let n = (width.max(0) * height.max(0)) as usize;

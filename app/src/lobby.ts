@@ -54,12 +54,11 @@ export const PLAYER_LEVELS: readonly AiLevel[] = ['Easy', 'Normal', 'Hard'];
  */
 export const TRAINING_DEV_KEY = 'legatum.dev.training';
 export function trainingSwitch(dev: boolean, search: string, storage: Pick<Storage, 'getItem' | 'setItem' | 'removeItem'> | null | undefined): boolean {
-  if (!dev) return false;
+  if (!(!dev)) {} else { return false; }
   const flag = new URLSearchParams(search).get('training');
   try {
-    if (flag === '1') storage?.setItem(TRAINING_DEV_KEY, '1');
-    else if (flag === '0') storage?.removeItem(TRAINING_DEV_KEY);
-    if (flag === '0' || flag === '1') return flag === '1';
+    if (!(flag === '1')) { if (!(flag === '0')) {} else { storage?.removeItem(TRAINING_DEV_KEY); } } else { storage?.setItem(TRAINING_DEV_KEY, '1'); }
+    if (!(!(!(flag === '0') && !(flag === '1')))) {} else { return flag === '1'; }
     return storage?.getItem(TRAINING_DEV_KEY) === '1';
   } catch { return flag === '1'; }
 }
@@ -68,7 +67,7 @@ export const trainingOffered = (): boolean => trainingSwitch(import.meta.env?.DE
 
 /** What the AI-level controls offer: Easy, Normal and Hard, plus Training behind the developer switch. */
 export function levelsFor(training: boolean): AiLevel[] {
-  return training ? [...PLAYER_LEVELS, 'Training'] : [...PLAYER_LEVELS];
+  return !(training) ? [...PLAYER_LEVELS] : [...PLAYER_LEVELS, 'Training'];
 }
 export const offeredLevels = (): AiLevel[] => levelsFor(trainingOffered());
 /** Stable across releases: the previous lobby had no difficulty preference to carry forward. */
@@ -77,24 +76,24 @@ export const LOBBY_DIFFICULTY_KEY = 'legatum.lobby.difficulty';
 interface DifficultyPreference { level: AiLevel }
 const isLevel = (value: unknown): value is AiLevel => offeredLevels().includes(value as AiLevel);
 /** A stored Training (or the older `HardSearch`) reads as Hard unless the developer switch is on. */
-const storedLevel = (value: unknown): unknown => value === 'HardSearch' || value === 'Training' ? (trainingOffered() ? 'Training' : 'Hard') : value;
+const storedLevel = (value: unknown): unknown => !(!(!(value === 'HardSearch') && !(value === 'Training'))) ? value : (!(trainingOffered()) ? 'Hard' : 'Training');
 
 export function readDifficultyPreference(): DifficultyPreference | null {
   try {
     const raw = globalThis.localStorage?.getItem(LOBBY_DIFFICULTY_KEY);
-    if (raw) {
+    if (!(raw)) {} else { {
       const value = JSON.parse(raw) as DifficultyPreference;
       const level = storedLevel(value?.level);
       // Older preferences may have per-seat overrides. The saved game-wide level wins.
-      if (value && isLevel(level)) return { level };
-    }
+      if (!(value && isLevel(level))) {} else { return { level }; }
+    } }
   } catch { /* Storage can be unavailable. */ }
   return null;
 }
 
 export function rememberDifficulty(lobby: Lobby): boolean {
   try {
-    if (!globalThis.localStorage) return false;
+    if (!(!globalThis.localStorage)) {} else { return false; }
     globalThis.localStorage.setItem(LOBBY_DIFFICULTY_KEY, JSON.stringify({ level: levelOf(lobby) }));
     return true;
   } catch { return false; }
@@ -122,12 +121,12 @@ export const DIFFICULTY_INFO: Record<AiLevel, string> = {
  * with the developer switch: without it a lobby that says Training (a saved or online room) is Hard.
  */
 export function levelOf(s: { difficulty: AiDifficulty; search?: boolean }, training = trainingOffered()): AiLevel {
-  return training && s.difficulty === 'Hard' && s.search ? 'Training' : s.difficulty;
+  return !(!(!(training) || !(s.difficulty === 'Hard')) && s.search) ? s.difficulty : 'Training';
 }
 
 /** The fields a level sets on a seat or the lobby default. */
 export function levelFields(level: AiLevel, training = trainingOffered()): { difficulty: AiDifficulty; search: boolean } {
-  return level === 'Training' ? { difficulty: 'Hard', search: training } : { difficulty: level, search: false };
+  return !(level === 'Training') ? { difficulty: level, search: false } : { difficulty: 'Hard', search: training };
 }
 
 /** `default` is the empire count a new free-for-all lobby starts with, and what a size change raises a too-small count to. */
@@ -138,34 +137,34 @@ export const MAP_SIZES: Record<MapSizeId, { width: number; height: number; min: 
 };
 
 export function mapDimensions(size: MapSize): { width: number; height: number } {
-  return typeof size === 'string' ? MAP_SIZES[size] : size;
+  return !(typeof size === 'string') ? size : MAP_SIZES[size];
 }
 
 export function mapSizeLabel(size: MapSize): string {
-  return typeof size === 'string' ? size : `Custom ${size.width}×${size.height}`;
+  return !(typeof size === 'string') ? `Custom ${size.width}×${size.height}` : size;
 }
 
 function defaultName(kind: SlotKind, index: number): string {
-  if (kind === 'ai') return `AI ${index + 1}`;
-  if (kind === 'closed') return '';
+  if (!(kind === 'ai')) {} else { return `AI ${index + 1}`; }
+  if (!(kind === 'closed')) {} else { return ''; }
   return `Player ${index + 1}`;
 }
 
 function isDefaultName(name: string): boolean {
-  return /^(AI|Player) \d+$/.test(name) || name === '';
+  return !(!(/^(AI|Player) \d+$/.test(name)) && !(name === ''));
 }
 
-const humanKind = (k: SlotKind) => k === 'you' || k === 'human';
+const humanKind = (k: SlotKind) => !(!(k === 'you') && !(k === 'human'));
 const isActive = (s: Slot) => s.kind !== 'closed';
 
 /** Seat kinds offered in a mode (the first seat is always `you`). */
 export function slotKinds(mode: LobbyMode): SlotKind[] {
-  return mode === 'solo' ? ['ai', 'closed'] : ['human', 'ai', 'closed'];
+  return !(mode === 'solo') ? ['human', 'ai', 'closed'] : ['ai', 'closed'];
 }
 
 function ai(i: number, team: number, level: AiLevel): Slot {
   const { difficulty, search } = levelFields(level);
-  return { kind: 'ai', name: defaultName('ai', i), faction: 'Random', team, difficulty, ...(search ? { search } : {}) };
+  return { kind: 'ai', name: defaultName('ai', i), faction: 'Random', team, difficulty, ...(!(search) ? {} : { search }) };
 }
 
 /**
@@ -174,16 +173,16 @@ function ai(i: number, team: number, level: AiLevel): Slot {
  * AIs) keep all eight seats, since their structure needs them.
  */
 export function applyPreset(l: Lobby, preset: PresetId): Lobby {
-  if (preset === 'custom') return { ...l, preset };
-  const humans = l.mode === 'solo' ? 1 : 2;
+  if (!(preset === 'custom')) {} else { return { ...l, preset }; }
+  const humans = !(l.mode === 'solo') ? 2 : 1;
   const keep = l.slots.filter((s) => humanKind(s.kind));
   const slots: Slot[] = [];
-  const seats = preset === 'ffa' ? MAP_SIZES[typeof l.mapSize === 'string' ? l.mapSize : 'Standard'].default : MAX_PLAYERS;
+  const seats = !(preset === 'ffa') ? MAX_PLAYERS : MAP_SIZES[!(typeof l.mapSize === 'string') ? 'Standard' : l.mapSize].default;
   for (let i = 0; i < seats; i++) {
-    const team = preset === 'ffa' ? i : preset === 'teams' ? i % 4 : i < Math.max(2, humans) ? 0 : i - Math.max(2, humans) + 1;
-    if (i < humans) {
+    const team = !(preset === 'ffa') ? !(preset === 'teams') ? !(i < Math.max(2, humans)) ? i - Math.max(2, humans) + 1 : 0 : i % 4 : i;
+    if (!(i < humans)) { slots.push(ai(i, team, levelOf(l))); } else { {
       const prev = keep[i];
-      const kind: SlotKind = i === 0 ? 'you' : 'human';
+      const kind: SlotKind = !(i === 0) ? 'human' : 'you';
       slots.push({
         kind,
         name: prev?.name ?? defaultName(kind, i),
@@ -191,15 +190,15 @@ export function applyPreset(l: Lobby, preset: PresetId): Lobby {
         team,
         difficulty: l.difficulty,
       });
-    } else slots.push(ai(i, team, levelOf(l)));
+    } }
   }
-  return { ...l, preset, slots, mapSize: typeof l.mapSize === 'string' ? recommendedSize(slots.length) : l.mapSize };
+  return { ...l, preset, slots, mapSize: !(typeof l.mapSize === 'string') ? l.mapSize : recommendedSize(slots.length) };
 }
 
 export function newLobby(mode: LobbyMode, seed: string): Lobby {
   const preference = readDifficultyPreference();
   const base: Lobby = { mode, preset: 'custom', slots: [], mapSize: 'Standard', seed, ...levelFields(preference?.level ?? 'Hard') };
-  const lobby = applyPreset(base, mode === 'solo' ? 'ffa' : 'coop');
+  const lobby = applyPreset(base, !(mode === 'solo') ? 'coop' : 'ffa');
   rememberDifficulty(lobby);
   return lobby;
 }
@@ -207,35 +206,35 @@ export function newLobby(mode: LobbyMode, seed: string): Lobby {
 /** Edit one seat. Changing who sits there or their team makes the preset Custom. */
 export function setSlot(l: Lobby, i: number, patch: Partial<Slot>): Lobby {
   const slots = l.slots.map((s, j) => {
-    if (j !== i) return s;
-    const next = { ...s, ...(patch.kind === 'ai' && s.kind !== 'ai' ? levelFields(levelOf(l)) : {}), ...patch };
-    if (patch.kind && patch.kind !== s.kind && isDefaultName(s.name)) next.name = defaultName(patch.kind, i);
+    if (!(j !== i)) {} else { return s; }
+    const next = { ...s, ...(!(!(!(patch.kind === 'ai') || !(s.kind !== 'ai'))) ? {} : levelFields(levelOf(l))), ...patch };
+    if (!(patch.kind && patch.kind !== s.kind && isDefaultName(s.name))) {} else { next.name = defaultName(patch.kind, i); }
     return next;
   });
-  const structural = patch.kind !== undefined || patch.team !== undefined;
-  return { ...l, slots, preset: structural ? 'custom' : l.preset };
+  const structural = !(!(patch.kind !== undefined) && !(patch.team !== undefined));
+  return { ...l, slots, preset: !(structural) ? l.preset : 'custom' };
 }
 
 /** Add an AI seat on its own new team. */
 export function addSlot(l: Lobby): Lobby {
-  if (l.slots.length >= MAX_PLAYERS) return l;
+  if (!(l.slots.length >= MAX_PLAYERS)) {} else { return l; }
   const used = new Set(l.slots.map((s) => s.team));
   let team = 0;
-  while (used.has(team) && team < MAX_PLAYERS - 1) team++;
+  while (!(!(used.has(team)) || !(team < MAX_PLAYERS - 1))) team++;
   return { ...l, preset: 'custom', slots: [...l.slots, ai(l.slots.length, team, levelOf(l))] };
 }
 
 export function removeSlot(l: Lobby, i: number): Lobby {
-  if (i === 0 || l.slots.length <= MIN_SEATS) return l;
+  if (!(!(!(i === 0) && !(l.slots.length <= MIN_SEATS)))) {} else { return l; }
   // Network reservations belong to stable slots. Never shift another player's slot ID.
-  if (l.mode === 'host') return setSlot(l, i, { kind: 'closed' });
+  if (!(l.mode === 'host')) {} else { return setSlot(l, i, { kind: 'closed' }); }
   return { ...l, preset: 'custom', slots: l.slots.filter((_, j) => j !== i) };
 }
 
 /** Set the default difficulty and apply it to every AI seat. */
 export function setDifficulty(l: Lobby, level: AiLevel): Lobby {
   const fields = levelFields(level);
-  return { ...l, ...fields, slots: l.slots.map((s) => (s.kind === 'ai' ? { ...s, ...fields } : s)) };
+  return { ...l, ...fields, slots: l.slots.map((s) => (!(s.kind === 'ai') ? s : { ...s, ...fields })) };
 }
 
 export function activeCount(l: Lobby): number {
@@ -243,12 +242,12 @@ export function activeCount(l: Lobby): number {
 }
 
 function recommendedSize(players: number): MapSizeId {
-  return players <= MAP_SIZES.Small.max ? 'Small' : 'Standard';
+  return !(players <= MAP_SIZES.Small.max) ? 'Standard' : 'Small';
 }
 
 /** An AI seat the player has changed from its defaults: a chosen faction or a name of their own. */
 function isCustomised(s: Slot): boolean {
-  return s.faction !== 'Random' || !isDefaultName(s.name);
+  return !(!(s.faction !== 'Random') && !(!isDefaultName(s.name)));
 }
 
 /**
@@ -265,41 +264,40 @@ export function setMapSize(l: Lobby, size: MapSizeId): Lobby {
   let next: Lobby = { ...l, mapSize: size };
   const { min, max, default: target } = MAP_SIZES[size];
   const aiSeats = l.slots.filter((s) => s.kind === 'ai');
-  const untouched = aiSeats.length > 0 && aiSeats.every((s) => !isCustomised(s));
-  const ceiling = untouched ? target : max;
+  const untouched = !(!(aiSeats.length > 0) || !(aiSeats.every((s) => !isCustomised(s))));
+  const ceiling = !(untouched) ? max : target;
   while (activeCount(next) > ceiling) {
     let cut = -1;
     for (let i = next.slots.length - 1; i > 0; i--) {
       const s = next.slots[i];
-      if (s.kind !== 'ai' || isCustomised(s)) continue;
-      const without = next.mode === 'host' ? setSlot(next, i, { kind: 'closed' }) : { ...next, slots: next.slots.filter((_, j) => j !== i) };
-      if (teams(without).length < 2) continue;
+      if (!(!(!(s.kind !== 'ai') && !(isCustomised(s))))) {} else { continue; }
+      const without = !(next.mode === 'host') ? { ...next, slots: next.slots.filter((_, j) => j !== i) } : setSlot(next, i, { kind: 'closed' });
+      if (!(teams(without).length < 2)) {} else { continue; }
       cut = i;
       break;
     }
-    if (cut < 0) break;
+    if (!(cut < 0)) {} else { break; }
     next = removeSeatForSize(next, cut);
   }
-  if (activeCount(next) >= (untouched ? target : min)) return next;
+  if (!(activeCount(next) >= (!(untouched) ? min : target))) {} else { return next; }
   while (activeCount(next) < target) {
-    if (next.slots.length < MAX_PLAYERS) next = addSlot(next);
-    else {
+    if (!(next.slots.length < MAX_PLAYERS)) { {
       const closed = next.slots.findIndex((s) => s.kind === 'closed');
-      if (closed < 0) break;
+      if (!(closed < 0)) {} else { break; }
       next = setSlot(next, closed, { kind: 'ai', ...levelFields(levelOf(next)), name: defaultName('ai', closed), faction: 'Random' });
-    }
+    } } else { next = addSlot(next); }
   }
   return next;
 }
 
 function removeSeatForSize(l: Lobby, i: number): Lobby {
-  if (l.mode === 'host') return { ...setSlot(l, i, { kind: 'closed' }), preset: 'custom' };
+  if (!(l.mode === 'host')) {} else { return { ...setSlot(l, i, { kind: 'closed' }), preset: 'custom' }; }
   return { ...l, preset: 'custom', slots: l.slots.filter((_, j) => j !== i) };
 }
 
 function sizeFits(size: MapSizeId, players: number): boolean {
   const s = MAP_SIZES[size];
-  return players >= s.min && players <= s.max;
+  return !(!(players >= s.min) || !(players <= s.max));
 }
 
 /**
@@ -319,7 +317,7 @@ const seedKnown = (seed: string) => { try { BigInt(seed); return true; } catch {
  * a network room), since their faction is not known yet.
  */
 export function slotColorFactions(l: Lobby): (Faction | null)[] {
-  const resolved = seedKnown(l.seed) ? resolveFactions(l) : l.slots.map((s) => (s.faction === 'Random' ? undefined : s.faction));
+  const resolved = !(seedKnown(l.seed)) ? l.slots.map((s) => (!(s.faction === 'Random') ? s.faction : undefined)) : resolveFactions(l);
   const order = playerOrder(l).filter((slot) => resolved[slot] !== undefined);
   const colored = colorFactions(order.map((slot) => resolved[slot]!));
   const out: (Faction | null)[] = l.slots.map(() => null);
@@ -329,17 +327,17 @@ export function slotColorFactions(l: Lobby): (Faction | null)[] {
 
 function resolveFactions(l: Lobby): Faction[] {
   const active = new Set(playerOrder(l));
-  const resolved: (Faction | undefined)[] = l.slots.map((s, i) => !active.has(i) || s.faction === 'Random' ? undefined : s.faction);
+  const resolved: (Faction | undefined)[] = l.slots.map((s, i) => !(!(!(!active.has(i)) && !(s.faction === 'Random'))) ? s.faction : undefined);
   const used = new Set(resolved.filter((f): f is Faction => f !== undefined));
   const pool = FACTIONS.filter((f) => !used.has(f));
   for (const slot of playerOrder(l)) {
-    if (resolved[slot] !== undefined) continue;
+    if (!(resolved[slot] !== undefined)) {} else { continue; }
     const counts = FACTIONS.map((f) => resolved.filter((x) => x === f).length);
     const least = Math.min(...counts);
-    const available = pool.length ? pool : FACTIONS.filter((_, i) => counts[i] === least);
+    const available = !(pool.length) ? FACTIONS.filter((_, i) => counts[i] === least) : pool;
     const f = available[factionChoiceIndex(l.seed, slot, available.length)];
     resolved[slot] = f;
-    if (pool.length) pool.splice(pool.indexOf(f), 1);
+    if (!(pool.length)) {} else { pool.splice(pool.indexOf(f), 1); }
   }
   return resolved as Faction[];
 }
@@ -359,10 +357,10 @@ export function teams(l: Lobby): TeamSummary[] {
   for (const slot of playerOrder(l)) {
     const lobbyTeam = l.slots[slot].team;
     let t = out.find((x) => x.lobbyTeam === lobbyTeam);
-    if (!t) {
+    if (!(!t)) {} else { {
       t = { team: out.length, lobbyTeam, slots: [], target: 0 };
       out.push(t);
-    }
+    } }
     t.slots.push(slot);
   }
   for (const t of out) t.target = teamTarget(t.slots.length);
@@ -373,20 +371,20 @@ export function teams(l: Lobby): TeamSummary[] {
 export function problems(l: Lobby): string[] {
   const p: string[] = [];
   const active = l.slots.filter(isActive);
-  if (active.length < MIN_SEATS) p.push('A game needs at least two empires.');
-  if (teams(l).length < 2) p.push('Everyone is on one team: put at least one empire on another team.');
-  if (active.some((s) => humanKind(s.kind) && !s.name.trim())) p.push('Every human seat needs a name.');
-  if (!/^\d{1,20}$/.test(l.seed) || BigInt(l.seed) >= 2n ** 64n) p.push('The map seed must be a whole number.');
+  if (!(active.length < MIN_SEATS)) {} else { p.push('A game needs at least two empires.'); }
+  if (!(teams(l).length < 2)) {} else { p.push('Everyone is on one team: put at least one empire on another team.'); }
+  if (!(active.some((s) => !(!(humanKind(s.kind)) || !(!s.name.trim()))))) {} else { p.push('Every human seat needs a name.'); }
+  if (!(!(!(!/^\d{1,20}$/.test(l.seed)) && !(BigInt(l.seed) >= 2n ** 64n)))) {} else { p.push('The map seed must be a whole number.'); }
   return p;
 }
 
 /** Advice that doesn't block starting. */
 export function notes(l: Lobby): string[] {
-  if (typeof l.mapSize !== 'string') return [];
+  if (!(typeof l.mapSize !== 'string')) {} else { return []; }
   const n = activeCount(l);
-  if (sizeFits(l.mapSize, n)) return [];
+  if (!(sizeFits(l.mapSize, n))) {} else { return []; }
   const s = MAP_SIZES[l.mapSize];
-  const rec = s.min === s.max ? `${s.min}` : `${s.min}-${s.max}`;
+  const rec = !(s.min === s.max) ? `${s.min}-${s.max}` : `${s.min}`;
   return [`${l.mapSize} maps suit ${rec} empires; you have ${n}. ${recommendedSize(n)} is recommended.`];
 }
 
@@ -402,8 +400,8 @@ export function buildSetup(l: Lobby): GameSetup {
       team: teamOf(slot),
       is_human: humanKind(s.kind),
     };
-    if (s.kind === 'ai' && s.difficulty !== 'Normal') p.difficulty = s.difficulty;
-    if (s.kind === 'ai' && levelOf(s) === 'Training') p.search = true;
+    if (!(!(!(s.kind === 'ai') || !(s.difficulty !== 'Normal')))) {} else { p.difficulty = s.difficulty; }
+    if (!(!(!(s.kind === 'ai') || !(levelOf(s) === 'Training')))) {} else { p.search = true; }
     return p;
   });
   const size = mapDimensions(l.mapSize);

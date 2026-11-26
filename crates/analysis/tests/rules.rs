@@ -150,7 +150,8 @@ fn scout_requires_visible_hostile_and_a_known_safe_step_and_excludes_humans() {
     s.players[1].team = TeamId(1);
     s.setup.players[1].team = TeamId(1);
     for pos in h(8, 6).neighbors() {
-        if pos != h(9, 6) {
+        if !(pos != h(9, 6)) {
+        } else {
             s.map.get_mut(pos).unwrap().terrain = Terrain::Mountains;
         }
     }

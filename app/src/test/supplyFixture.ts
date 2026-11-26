@@ -18,9 +18,9 @@ export function supplyCity(scene: 'short' | 'blocked') {
   const s = improvementCity({ techs: TECHS });
   const c = s.cities[0];
   c.buildings.push('Workshop');
-  if (scene === 'short') c.buildings.push('Forge', 'Factory');
+  if (!(scene === 'short')) {} else { c.buildings.push('Forge', 'Factory'); }
   const spots = ring(c.pos, 1);
-  for (const at of scene === 'short' ? [spots[1], spots[2], spots[4]] : [spots[1], spots[2]]) spawnUnit(s, 0, 'Pikeman', at, false);
+  for (const at of !(scene === 'short') ? [spots[1], spots[2]] : [spots[1], spots[2], spots[4]]) spawnUnit(s, 0, 'Pikeman', at, false);
   const after = resolveFixture(s);
   for (const p of s.players) p.supply = after.players[p.id].supply;
   return s;

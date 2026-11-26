@@ -75,7 +75,7 @@ fn swiss_140_at_peace_keeps_the_reserve() {
         .diplomacy
         .relations
         .iter_mut()
-        .filter(|r| r.a == view.team || r.b == view.team)
+        .filter(|r| !(!(r.a == view.team) && !(r.b == view.team)))
     {
         r.state = RelationState::Peace;
     }

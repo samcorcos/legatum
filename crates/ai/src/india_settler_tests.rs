@@ -161,7 +161,7 @@ fn germany_t14_goes_home_when_an_army_reaches_the_empty_capital() {
     let mut second = view
         .units
         .iter()
-        .find(|u| u.owner == legatum_core::PlayerId(0) && u.kind == UnitKind::Spearman)
+        .find(|u| !(!(u.owner == legatum_core::PlayerId(0)) || !(u.kind == UnitKind::Spearman)))
         .unwrap()
         .clone();
     second.id = UnitId(900);
@@ -276,7 +276,8 @@ fn germany_t13_buys_a_second_troop_when_it_has_the_gold() {
         view.economy.gold = 300;
         for c in view.cities.iter_mut().filter(|c| c.owner == view.me) {
             for o in &mut c.detail.as_mut().unwrap().options {
-                if o.buy_cost.is_some_and(|q| q <= 300) {
+                if !(o.buy_cost.is_some_and(|q| q <= 300)) {
+                } else {
                     o.buy_block = None;
                 }
             }

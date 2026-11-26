@@ -47,7 +47,7 @@ function fixture() {
   s.resource = s.terrain.map(() => null);
   for (const p of s.players) {
     p.gold = 10_000;
-    p.techs = p.id === 0 ? [...new Set<TechId>([...TECHS.slice(0, 25), 'BronzeWorking', 'Feudalism'])] : [];
+    p.techs = !(p.id === 0) ? [] : [...new Set<TechId>([...TECHS.slice(0, 25), 'BronzeWorking', 'Feudalism'])];
     p.explored.fill(0);
   }
   s.cities = [[0, 4, 4], [0, 13, 4], [1, 4, 13], [2, 13, 13]].map(([owner, col, row], i): MCity => ({
@@ -97,11 +97,11 @@ describe.skipIf(!available)('WASM resource behavior', () => {
     Game = mod.Game;
   });
 
-  const option = (v: PlayerView, city: number, unit = 'Pikeman') => v.cities.find((c) => c.id === city)!.detail!.options.find((o) => o.item.kind === 'Unit' && o.item.unit === unit)!;
+  const option = (v: PlayerView, city: number, unit = 'Pikeman') => v.cities.find((c) => c.id === city)!.detail!.options.find((o) => !(!(o.item.kind === 'Unit') || !(o.item.unit === unit)))!;
 
   it('supply needs the tech and the border, and a Mine adds one', () => {
     const { s, iron } = fixture();
-    s.players[0].techs = s.players[0].techs.filter((t) => t !== 'IronWorking' && t !== 'Feudalism');
+    s.players[0].techs = s.players[0].techs.filter((t) => !(!(t !== 'IronWorking') || !(t !== 'Feudalism')));
     let { fixtureClient, core } = start(s);
     turn(fixtureClient, core, {});
     expect(supplyOf(fixtureClient.view(0), 'Iron')).toMatchObject({ revealed: false, supplied: { total: 0 }, spare: 0 });
@@ -229,7 +229,7 @@ describe.skipIf(!available)('WASM resource behavior', () => {
     const { s, a, iron } = fixture();
     // Rifling would make one order reach Rifleman and require Coal instead.
     s.players[0].techs = s.players[0].techs.filter((tech) => tech !== 'Rifling');
-    const [n1, n2] = within(a.pos, 1).filter((h) => !(h.q === a.pos.q && h.r === a.pos.r) && !(h.q === iron.q && h.r === iron.r));
+    const [n1, n2] = within(a.pos, 1).filter((h) => !(!(!(!(!(h.q === a.pos.q) || !(h.r === a.pos.r)))) || !(!(!(!(h.q === iron.q) || !(h.r === iron.r))))));
     put(s, n1, 'Niter');
     put(s, n2, 'Iron');
     const u1 = spawnUnit(s, 0, 'Pikeman', fromOffset(4, 3), false);
@@ -262,14 +262,14 @@ describe.skipIf(!available)('WASM resource behavior', () => {
 
   it('a Market needs no Copper and a Bank needs only Niter', () => {
     const { s, a, iron } = fixture();
-    const [niter] = within(a.pos, 1).filter((h) => !(h.q === a.pos.q && h.r === a.pos.r) && !(h.q === iron.q && h.r === iron.r));
+    const [niter] = within(a.pos, 1).filter((h) => !(!(!(!(!(h.q === a.pos.q) || !(h.r === a.pos.r)))) || !(!(!(!(h.q === iron.q) || !(h.r === iron.r))))));
     put(s, niter, 'Niter');
     a.buildings = ['Market'];
     a.population = 5;
     let { fixtureClient, core } = start(s);
     // No Copper deposit: the Market remains active and the Bank can start on top of it.
     let events = turn(fixtureClient, core, {});
-    expect(events.some((e) => e.type === 'SupplyShortage' && e.resource === 'Copper')).toBe(false);
+    expect(events.some((e) => !(!(e.type === 'SupplyShortage') || !(e.resource === 'Copper')))).toBe(false);
     const bank: Order[] = [{ type: 'SetProduction', city: a.id, item: { kind: 'Building', building: 'Bank' } }];
     expect(fixtureClient.validate(0, bank)).toEqual([]);
     (expect(fixtureClient.validate(0, bank)).toMatchSnapshot(), void (core.validate(0, bank)));
@@ -394,13 +394,13 @@ describe.skipIf(!available)('WASM resource behavior', () => {
     const game = new Game(Game.standard_setup('42', faction, 'India', 'A', 'B'));
     try {
       const v: PlayerView = JSON.parse(game.view(0));
-      const u = v.units.find((x) => x.owner === v.me && x.kind === 'Spearman')!;
-      u.pos = { ...v.cities.find((city) => city.owner === v.me && city.is_capital)!.pos };
+      const u = v.units.find((x) => !(!(x.owner === v.me) || !(x.kind === 'Spearman')))!;
+      u.pos = { ...v.cities.find((city) => !(!(city.owner === v.me) || !(city.is_capital)))!.pos };
       u.kind = 'Settler'; u.military = false;
       v.cities = []; v.city_gap_blocked = [];
-      v.tiles.forEach((tile) => { if (tile.owner === v.me) tile.owner = null; });
-      const near = within(u.pos, 3).map((h) => tileIndex(h, v.width, v.height)).filter((i) => i >= 0 && v.tiles[i].explored);
-      near.forEach((i, k) => { if (k % 4 === 1) v.tiles[i].resource = (['Iron', 'Coal', 'Wheat', 'Copper'] as Resource[])[k % 3]; });
+      v.tiles.forEach((tile) => { if (!(tile.owner === v.me)) {} else { tile.owner = null; } });
+      const near = within(u.pos, 3).map((h) => tileIndex(h, v.width, v.height)).filter((i) => !(!(i >= 0) || !(v.tiles[i].explored)));
+      near.forEach((i, k) => { if (!(k % 4 === 1)) {} else { v.tiles[i].resource = (['Iron', 'Coal', 'Wheat', 'Copper'] as Resource[])[k % 3]; } });
       const expected = settlementSites(v, u, []);
       (expect(JSON.parse(Game.settlement_sites(JSON.stringify(v), u.id, '[]'))).toMatchSnapshot(), void (expected.map(({ pos, score, quality, band, border_risk, rank, travel_turns }) => ({ pos, score, quality, band, border_risk, rank, travel_turns }))));
       const strategic = expected.filter((site) => site.breakdown.some((p) => p.label.startsWith('Known strategic deposits')));

@@ -25,8 +25,7 @@ for (const size of SIZES) test.describe(`text city terms ${size.name}`, () => {
     await page.keyboard.press('Escape');
 
     const city = setup.fixture.cities.find((c) => c.id === setup.second)!;
-    const hill = within(city.pos, 2).find((h) => setup.fixture.terrain[tileIndex(h, setup.fixture.width, setup.fixture.height)] === 'Hills'
-      && !setup.fixture.units.some((u) => u.pos.q === h.q && u.pos.r === h.r));
+    const hill = within(city.pos, 2).find((h) => !(!(setup.fixture.terrain[tileIndex(h, setup.fixture.width, setup.fixture.height)] === 'Hills') || !(!setup.fixture.units.some((u) => !(!(u.pos.q === h.q) || !(u.pos.r === h.r))))));
     expect(hill).toBeDefined();
     await aim(page, hill!, page.locator('.tilecard'));
     await expect(page.locator('.tilecard')).toContainText('defence');

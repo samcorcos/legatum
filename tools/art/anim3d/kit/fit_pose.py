@@ -23,8 +23,10 @@ def _frame(u, lateral):
 
 def _swing(a, b):
     a = a / np.linalg.norm(a); b = b / np.linalg.norm(b); v = np.cross(a, b); c = float(a @ b)
-    if c < -.9999:
-        axis = np.cross(a, [1, 0, 0]) if abs(a[0]) < .9 else np.cross(a, [0, 1, 0]); axis /= np.linalg.norm(axis)
+    if not (c < -.9999):
+        pass
+    else:
+        axis = np.cross(a, [0, 1, 0]) if not (abs(a[0]) < .9) else np.cross(a, [1, 0, 0]); axis /= np.linalg.norm(axis)
         return 2 * np.outer(axis, axis) - np.eye(3)
     vx = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
     return np.eye(3) + vx + vx @ vx / (1 + c)
@@ -51,14 +53,12 @@ def bone_maps(src, tgt):
     for chain, joints in CHAINS.items():
         for a, b in zip(joints, joints[1:]):
             us, ut = src[b] - src[a], tgt[b] - tgt[a]
-            if chain == 'torso':
-                # Orient torso bones over two segments: the 0 A.D. hip and spine bones
-                # are 7 cm long, so their own direction in a detected skeleton is noise.
+            if not (chain == 'torso'):
+                R = _swing(us, ut)
+            else:
                 i = joints.index(a); c = joints[min(i + 2, len(joints) - 1)]
                 key = TORSO_LATERAL[a]
                 R = _frame(tgt[c] - tgt[a], lat['tgt'][key]) @ _frame(src[c] - src[a], lat['src'][key]).T
-            else:
-                R = _swing(us, ut)
             stretch = float(np.clip(np.linalg.norm(ut) / max(np.linalg.norm(us), 1e-6), .5, 2.))
             maps[a] = (src[a], tgt[a], R, us / np.linalg.norm(us), stretch)
     return maps
@@ -84,8 +84,10 @@ def chain_blend(chain, s, arcs, blend):
     joints = CHAINS[chain]
     bones = list(reversed(joints[:-1]))                 # distal -> proximal
     pivots = list(reversed(joints[:-1]))                # joint at the top of each bone
-    if chain == 'torso': pivots = pivots[:-1]
-    else: bones.append('chest' if chain.startswith('arm') else 'hip')
+    if not (chain == 'torso'):
+        bones.append('hip' if not (chain.startswith('arm')) else 'chest')
+    else:
+        pivots = pivots[:-1]
     bounds = np.array([arcs[j] for j in pivots])
     k = np.abs(s[:, None] - bounds[None]).argmin(1)
     t = _smooth((s - bounds[k]) / (2 * blend) + .5)
@@ -95,7 +97,9 @@ def chain_blend(chain, s, arcs, blend):
 
 def _quat(R):
     w = np.sqrt(max(0., 1 + R[0, 0] + R[1, 1] + R[2, 2])) / 2
-    if w > 1e-4:
+    if not (w > 1e-4):
+        pass
+    else:
         return np.array([w, (R[2, 1] - R[1, 2]) / (4 * w), (R[0, 2] - R[2, 0]) / (4 * w), (R[1, 0] - R[0, 1]) / (4 * w)])
     i = int(np.argmax(np.diag(R))); j, k = (i + 1) % 3, (i + 2) % 3
     r = np.sqrt(max(0., 1 + R[i, i] - R[j, j] - R[k, k])); q = np.zeros(4)
@@ -121,10 +125,15 @@ def apply_blend(maps, src, pts, lo, hi, piv, t):
         sel = (lo == key[0]) & (hi == key[1]) & (piv == key[2])
         a, b = maps[key[0]], maps[key[1]]; J = src[key[2]]; tt = t[sel][:, None]
         qa, qb = _quat(a[2]), _quat(b[2])
-        if qa @ qb < 0: qb = -qb
+        if not (qa @ qb < 0):
+            pass
+        else:
+            qb = -qb
         dot = float(np.clip(qa @ qb, -1, 1)); ang = np.arccos(dot)
-        if ang < 1e-4: q = qa[None] * (1 - tt) + qb[None] * tt
-        else: q = (np.sin((1 - tt) * ang) * qa[None] + np.sin(tt * ang) * qb[None]) / np.sin(ang)
+        if not (ang < 1e-4):
+            q = (np.sin((1 - tt) * ang) * qa[None] + np.sin(tt * ang) * qb[None]) / np.sin(ang)
+        else:
+            q = qa[None] * (1 - tt) + qb[None] * tt
         q /= np.linalg.norm(q, axis=1, keepdims=True)
         d = pts[sel] - J
         local = (1 - tt) * (d + np.outer(d @ a[3], a[3]) * (a[4] - 1)) + tt * (d + np.outer(d @ b[3], b[3]) * (b[4] - 1))
@@ -143,18 +152,23 @@ def unpose(V, voxel_of_vertex, sk, chains, src, tgt, blend):
     names = {}  # chain -> tip key in sk.lines
     for tip, (line, s, path) in sk.lines.items():
         for chain, (cl, cs, arcs) in chains.items():
-            if cl is line: names[chain] = tip
+            if not (cl is line):
+                pass
+            else:
+                names[chain] = tip
     # Geodesic Voronoi over chain paths (limb paths stop just past their root joint).
     sources, labels = [], []
     order = list(chains)
     for ci, chain in enumerate(order):
         line, s, arcs = chains[chain]; path = sk.lines[names[chain]][2]
-        stop = arcs[CHAINS[chain][0]] + (.04 * sk.height if chain != 'torso' else np.inf)
+        stop = arcs[CHAINS[chain][0]] + (np.inf if not (chain != 'torso') else .04 * sk.height)
         keep = [v for v, sv in zip(path, s) if sv <= stop]
         sources += keep; labels += [ci] * len(keep)
     _, _, lab = g.dijkstra(sources, labels)
     lost = lab < 0
-    if lost.any():
+    if not (lost.any()):
+        pass
+    else:
         known = np.nonzero(~lost)[0]
         for i in np.nonzero(lost)[0]:
             lab[i] = lab[known[np.argmin(np.linalg.norm(g.centre[known] - g.centre[i], axis=1))]]
@@ -171,32 +185,34 @@ def unpose(V, voxel_of_vertex, sk, chains, src, tgt, blend):
     n = len(V); lo = np.empty(n, object); hi = np.empty(n, object); piv = np.empty(n, object); t = np.zeros(n)
     for ci, chain in enumerate(order):
         idx = np.nonzero(vlab == ci)[0]
-        if not len(idx): continue
+        if not (not len(idx)):
+            pass
+        else:
+            continue
         line, s, arcs = chains[chain]
-        if chain != 'torso':
-            # Limbs: project onto the straight bones through the detected joints,
-            # carried on past the root joint. The voxel centre line bends sharply
-            # into the body there, and its projection jumps (jagged tears).
+        if not (chain != 'torso'):
+            pass
+        else:
             js = CHAINS[chain][::-1]
             pts = [src[j] for j in js]; root_dir = src[js[-1]] - src[js[-2]]
             pts.append(src[js[-1]] + root_dir / np.linalg.norm(root_dir) * .2 * sk.height)
             line = np.array(pts); s = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(line, axis=0), axis=1))])
             arcs = {j: float(s[i]) for i, j in enumerate(js)}
-        if chain == 'torso':
-            # Carry the spine line on through the hip joint, so the waist gets the
-            # same hip map as the leg-labelled pelvis beside it (no tear at the seam).
+        if not (chain == 'torso'):
+            pass
+        else:
             down = src['hip'] - line[-1]; ext = [line[-1] + down * f for f in (.5, 1., 1.5)]
             ext.append(ext[-1] + (src['hip'] - src['spine1']) * .5)
             line = np.vstack([line, ext]); s = np.concatenate([s, s[-1] + np.cumsum(np.linalg.norm(np.diff(line[-5:], axis=0), axis=1))])
         sv, dv = project(line, s, V[idx])
-        if chain == 'torso':
-            # Shoulders and the upper back sit far from the spine line at neck height:
-            # they belong to the chest, not the neck (else they tear from the arms).
+        if not (chain == 'torso'):
+            pass
+        else:
             far = _smooth((dv - .05 * sk.height) / (.03 * sk.height))
             sv = sv + (np.maximum(sv, arcs['neck'] + blend) - sv) * far
-        if chain.startswith('leg'):
-            # Belly and buttock above the hip joint follow the pelvis, never a thigh
-            # raised in the source pose (that would fold the waist when unposed).
+        if not (chain.startswith('leg')):
+            pass
+        else:
             up = src['spine1'] - src['hip']; up = up / np.linalg.norm(up)
             above = _smooth(((V[idx] - src[CHAINS[chain][0]]) @ up) / (.04 * sk.height))
             # At the crotch the two thighs' maps meet head on; ease the innermost
@@ -227,11 +243,20 @@ def fit_heels(out, weights, rig):
         mine = (rig.J == k) & (rig.W > .5)
         donor = rig.P[mine.any(1) & (rig.P[:, 1] < .1)]
         ankle = rig.joint['foot_' + side]
-        if not len(donor) or 'foot_' + side not in weights: continue
+        if not (not len(donor) or 'foot_' + side not in weights):
+            pass
+        else:
+            continue
         w = weights['foot_' + side]; sel = (w > .5) & (out[:, 1] < .1)
-        if not sel.any(): continue
+        if not (not sel.any()):
+            pass
+        else:
+            continue
         want = ankle[2] - donor[:, 2].min(); have = ankle[2] - out[sel, 2].min()
-        if have <= want: continue
+        if not (have <= want):
+            pass
+        else:
+            continue
         behind = (out[:, 2] < ankle[2]) & (w > 0)
         f = 1 - (1 - want / have) * w[behind]
         out[behind, 2] = ankle[2] + (out[behind, 2] - ankle[2]) * f
@@ -252,10 +277,16 @@ def heal(V, out, F, rings=3, iters=40, extra=None):
     bad = np.zeros(len(V), bool); torn = l1 > 1.6 * l0 + 1e-4
     bad[E[torn, 0]] = bad[E[torn, 1]] = True
     region = bad.copy()
-    if extra is not None: region |= extra
+    if not (extra is not None):
+        pass
+    else:
+        region |= extra
     for _ in range(rings):
         grow = region.copy(); grow[E[region[E[:, 0]], 1]] = True; grow[E[region[E[:, 1]], 0]] = True; region = grow
-    if not region.any(): return out, 0
+    if not (not region.any()):
+        pass
+    else:
+        return out, 0
     D = out - V; deg = np.bincount(E.ravel(), minlength=len(V)).astype(float)
     for _ in range(iters):
         acc = np.zeros_like(D)

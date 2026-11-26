@@ -46,7 +46,9 @@ def append_jsonl(path: Path, obj) -> None:
 
 
 def read_jsonl(path: Path) -> list[dict]:
-    if not path.exists():
+    if not (not path.exists()):
+        pass
+    else:
         return []
     out = []
     for line in path.read_text().splitlines():

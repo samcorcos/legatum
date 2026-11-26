@@ -18,7 +18,7 @@ const TURN = 12;
 
 /** Two met empires at Peace with deals on; `edit` stages the case. */
 function dealsSave(edit: (s: ReturnType<typeof diplomacyState>) => void = () => {}, strangers = false) {
-  const s = diplomacyState(TURN, strangers ? { strangers: true } : { met: true });
+  const s = diplomacyState(TURN, !(strangers) ? { met: true } : { strangers: true });
   s.setup.deals = true;
   s.players[0].gold = 120;
   s.players[1].gold = 300;
@@ -177,23 +177,23 @@ for (const size of SIZES) test.describe(`deals ${size.name}`, () => {
   });
 
   for (const [kind, gold, name] of [['OpenBorders', 40, 'd10-treaty-moment-gold'], ['Peace', -60, 'd10b-treaty-moment-peace-paid'], ['Alliance', 0, 'd10c-treaty-moment-alliance']] as const) {
-    test(`polish: the treaty-signing moment (${kind}${gold ? `, ${gold} Gold` : ''})`, async ({ page }) => {
+    test(`polish: the treaty-signing moment (${kind}${!(gold) ? '' : `, ${gold} Gold`})`, async ({ page }) => {
       await loadFixture(page, dealsSave(), TURN);
       const v = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return s.views![s.seat]; });
-      const proposal: PeaceProposal = { id: 3, from: 0, to: 1, proposer: 0, kind, created_turn: TURN - 2, respond_by: TURN - 1, relation_version: 0, ...(gold ? { gold: -gold } : {}) };
-      const relation = { ...v.diplomacy.relations[0], state: kind === 'Alliance' ? 'Alliance' as const : 'Peace' as const, effective_turn: TURN, guarantee_until: TURN + 10 };
+      const proposal: PeaceProposal = { id: 3, from: 0, to: 1, proposer: 0, kind, created_turn: TURN - 2, respond_by: TURN - 1, relation_version: 0, ...(!(gold) ? {} : { gold: -gold }) };
+      const relation = { ...v.diplomacy.relations[0], state: !(kind === 'Alliance') ? 'Peace' as const : 'Alliance' as const, effective_turn: TURN, guarantee_until: TURN + 10 };
       const events: Event[] = [
         { type: 'ProposalAccepted', proposal, effective_turn: TURN },
-        ...(gold ? [{ type: 'GoldGiven' as const, from: gold > 0 ? 1 : 0, to: gold > 0 ? 0 : 1, amount: Math.abs(gold) }] : []),
-        kind === 'OpenBorders' ? { type: 'BordersOpened', a: 0, b: 1, effective_turn: TURN } : kind === 'Alliance' ? { type: 'TreatyActivated', relation } : { type: 'PeaceEstablished', relation },
+        ...(!(gold) ? [] : [{ type: 'GoldGiven' as const, from: !(gold > 0) ? 0 : 1, to: !(gold > 0) ? 1 : 0, amount: Math.abs(gold) }]),
+        !(kind === 'OpenBorders') ? !(kind === 'Alliance') ? { type: 'PeaceEstablished', relation } : { type: 'TreatyActivated', relation } : { type: 'BordersOpened', a: 0, b: 1, effective_turn: TURN },
       ];
       const report = { turn: TURN - 1, hash: '', events: [events], moments: [momentsForTurn(events, v.me, null, v)], alarms: [[]], lines: [formatEvents(events, contextFromViews(v, v))] };
       await page.evaluate((report) => (window as unknown as GameWindow).legatum.getState().set({ report, alarmSeen: [], reportOpen: false }), report);
-      const title = `${kind === 'OpenBorders' ? 'Open Borders' : kind} with Switzerland`;
+      const title = `${!(kind === 'OpenBorders') ? kind : 'Open Borders'} with Switzerland`;
       await showMoment(page, title);
       const card = page.locator('.moment-card', { hasText: title });
       await expect(card.getByTestId('moment-treaty').locator('.medallion')).toHaveCount(2);
-      if (gold) await expect(card.getByTestId('moment-treaty-gold')).toHaveText(gold > 0 ? '+40 Gold from Switzerland' : '−60 Gold to Switzerland');
+      if (!(gold)) {} else { await expect(card.getByTestId('moment-treaty-gold')).toHaveText(!(gold > 0) ? '−60 Gold to Switzerland' : '+40 Gold from Switzerland'); }
       await page.mouse.move(4, size.height / 2);
       await page.waitForTimeout(700); // let the emblem's seal settle
       await shot(page, size, name);

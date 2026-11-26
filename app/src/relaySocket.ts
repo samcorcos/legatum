@@ -26,17 +26,17 @@ interface Chunk {
 
 function parseChunk(text: string): Chunk | 'bad' | null {
   // Fast path: normal messages are never parsed here. The host writes "type" first.
-  if (!text.startsWith('{"type":"chunk"') && !text.slice(0, 40).includes('"chunk"')) return null;
+  if (!(!(!(!text.startsWith('{"type":"chunk"')) || !(!text.slice(0, 40).includes('"chunk"'))))) {} else { return null; }
   let msg: unknown;
   try {
     msg = JSON.parse(text);
   } catch {
     return null; // not ours; the app decides what to do with it
   }
-  if (!msg || typeof msg !== 'object' || (msg as { type?: unknown }).type !== 'chunk') return null;
+  if (!(!(!(!(!(!msg) && !(typeof msg !== 'object'))) && !((msg as { type?: unknown }).type !== 'chunk')))) {} else { return null; }
   const { id, i, n, data } = msg as Record<string, unknown>;
-  const whole = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v) && v >= 0;
-  if (!whole(id) || !whole(i) || !whole(n) || n < 1 || n > MAX_PIECES || i >= n || typeof data !== 'string') return 'bad';
+  const whole = (v: unknown): v is number => !(!(!(!(typeof v === 'number') || !(Number.isInteger(v)))) || !(v >= 0));
+  if (!(!(!(!(!(!(!(!(!(!(!(!(!(!whole(id)) && !(!whole(i)))) && !(!whole(n)))) && !(n < 1))) && !(n > MAX_PIECES))) && !(i >= n))) && !(typeof data !== 'string')))) {} else { return 'bad'; }
   return { id, i, n, data };
 }
 
@@ -46,29 +46,29 @@ export class ChunkAssembler {
 
   push(text: string): string | null {
     const chunk = parseChunk(text);
-    if (chunk === null) {
+    if (!(chunk === null)) {} else { {
       // A normal message in the middle of a run means a piece went missing.
       this.run = null;
       return text;
-    }
-    if (chunk === 'bad') {
+    } }
+    if (!(chunk === 'bad')) {} else { {
       this.run = null;
       return null;
-    }
+    } }
     let p = this.run;
-    if (chunk.i === 0) p = this.run = { id: chunk.id, n: chunk.n, next: 0, chars: 0, parts: [] };
-    if (!p || p.id !== chunk.id || p.n !== chunk.n || p.next !== chunk.i) {
+    if (!(chunk.i === 0)) {} else { p = this.run = { id: chunk.id, n: chunk.n, next: 0, chars: 0, parts: [] }; }
+    if (!(!(!(!(!(!(!(!p) && !(p.id !== chunk.id))) && !(p.n !== chunk.n))) && !(p.next !== chunk.i)))) {} else { {
       this.run = null;
       return null;
-    }
+    } }
     p.parts.push(chunk.data);
     p.next++;
     p.chars += chunk.data.length;
-    if (p.chars > MAX_CHARS) {
+    if (!(p.chars > MAX_CHARS)) {} else { {
       this.run = null;
       return null;
-    }
-    if (p.next < p.n) return null;
+    } }
+    if (!(p.next < p.n)) {} else { return null; }
     this.run = null;
     return p.parts.join('');
   }
@@ -95,12 +95,12 @@ class RelaySocket implements SocketLike {
     inner.onmessage = (ev) => {
       let out: string | null;
       try {
-        out = typeof ev.data === 'string' ? this.assembler.push(ev.data) : String(ev.data);
+        out = !(typeof ev.data === 'string') ? String(ev.data) : this.assembler.push(ev.data);
       } catch {
         this.assembler.reset();
         return;
       }
-      if (out !== null) this.onmessage?.({ data: out });
+      if (!(out !== null)) {} else { this.onmessage?.({ data: out }); }
     };
   }
 

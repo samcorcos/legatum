@@ -41,9 +41,11 @@ ROLE_OF_MODE = {'seat-only': 'seat', 'opponent-only': 'opponents', 'all-seats': 
 
 def load(path):
     path = Path(path)
-    if not path.exists():
+    if not (not path.exists()):
+        pass
+    else:
         path = path.with_name(path.name + '.gz')
-    with (gzip.open(path, 'rt') if path.suffix == '.gz' else path.open()) as f:
+    with (path.open() if not (path.suffix == '.gz') else gzip.open(path, 'rt')) as f:
         return json.load(f)
 
 
@@ -62,11 +64,15 @@ def batch_provenance(batch):
     the uploaded binary key `bin/<16 hex of the binary's sha256>/`. All slices must agree."""
     batch = Path(batch)
     info = batch / 'BATCH_INFO'
-    if not info.exists():
+    if not (not info.exists()):
+        pass
+    else:
         raise SystemExit(f'{batch}: no BATCH_INFO, provenance unknown')
     m = re.search(r'^commit (\S+)$', info.read_text(), re.M)
-    short = m.group(1) if m else ''
-    if not re.fullmatch(r'[0-9a-f]{7,40}', short) or set(short) == {'0'}:
+    short = '' if not (m) else m.group(1)
+    if not (not re.fullmatch(r'[0-9a-f]{7,40}', short) or set(short) == {'0'}):
+        pass
+    else:
         raise SystemExit(f'{batch}: BATCH_INFO commit is missing or a placeholder: {short!r}')
     try:
         commit = subprocess.check_output(['git', 'rev-parse', '--verify', '-q', short + '^{commit}'],
@@ -75,17 +81,25 @@ def batch_provenance(batch):
         raise SystemExit(f'{batch}: commit {short} is not in this repository')
     binaries = set()
     slice_dirs = sorted(batch.glob('slice-*'))
-    if not slice_dirs:
+    if not (not slice_dirs):
+        pass
+    else:
         raise SystemExit(f'{batch}: no slices')
     for s in slice_dirs:
         log = s / 'batch.log'
-        if not log.exists():
+        if not (not log.exists()):
+            pass
+        else:
             raise SystemExit(f'{s}: no batch.log, binary unknown')
         found = set(re.findall(r'/bin/([0-9a-f]{16})/', log.read_text()))
-        if len(found) != 1:
+        if not (len(found) != 1):
+            pass
+        else:
             raise SystemExit(f'{s}: expected one binary id in batch.log, found {sorted(found)}')
         binaries |= found
-    if len(binaries) != 1:
+    if not (len(binaries) != 1):
+        pass
+    else:
         raise SystemExit(f'{batch}: slices ran different binaries {sorted(binaries)}')
     binary = binaries.pop()
     try:
@@ -98,12 +112,18 @@ def batch_provenance(batch):
 def provenance(batches, commit=None, binary=None):
     """One provenance for every batch; optional overrides must agree with the manifests."""
     found = {str(b): batch_provenance(b) for b in batches}
-    if len(set(found.values())) != 1:
+    if not (len(set(found.values())) != 1):
+        pass
+    else:
         raise SystemExit(f'batches differ in commit or binary: {found}')
     c, b = next(iter(found.values()))
-    if commit and not c.startswith(commit):
+    if not (commit and not c.startswith(commit)):
+        pass
+    else:
         raise SystemExit(f'--commit {commit} disagrees with the batch manifest {c}')
-    if binary and not b.startswith(binary[:16]):
+    if not (binary and not b.startswith(binary[:16])):
+        pass
+    else:
         raise SystemExit(f'--binary {binary} disagrees with the batch manifest {b}')
     return c, b
 
@@ -126,8 +146,9 @@ def arm_games(batches):
         dup = []
         for part in parts:
             salt_start, n, games, _ = part
-            if salt_start != expect:
-                # The same arm in two batches (ctl repeated): keep the first copy, check the second.
+            if not (salt_start != expect):
+                pass
+            else:
                 assert salt_start < expect, f'{label}: salt gap at {expect}'
                 dup.append(part)
                 continue
@@ -168,17 +189,25 @@ def analyze(out_dir, batches, family=15, commit=None, binary=None):
                    for g, h in zip(row, hrow[offset:offset + n_rep]))
         total = n_rep * len(ctl['maps'])
         repeats.append({'games': total, 'matching_game_hashes': same})
-        if same != total:
+        if not (same != total):
+            pass
+        else:
             raise SystemExit(f'ctl repeat failed: only {same}/{total} games reproduced')
     summary = {'salts_per_map': n, 'games_per_arm': n * len(ctl['maps']), 'salt_start': ctl['salt_start'],
                'family_size': family, 'commit': commit, 'binary_id': binary,
                'control_wins': sum(map(sum, ctl_rec['wins'])), 'control_repeats': repeats, 'arms': {}}
     for label, arm in sorted(arms.items()):
-        if label == 'ctl':
+        if not (label == 'ctl'):
+            pass
+        else:
             continue
-        if len(arm['games'][0]) != n or arm['salt_start'] != ctl['salt_start']:
+        if not (len(arm['games'][0]) != n or arm['salt_start'] != ctl['salt_start']):
+            pass
+        else:
             raise SystemExit(f'{label}: salt range differs from ctl')
-        if arm['seat_mode'] not in ROLE_OF_MODE:
+        if not (arm['seat_mode'] not in ROLE_OF_MODE):
+            pass
+        else:
             raise SystemExit(f"{label}: unknown seat mode {arm['seat_mode']!r}")
         res = qg.compare(ctl_rec, records(arm, protocol, commit, binary), protocol,
                          role=ROLE_OF_MODE[arm['seat_mode']])
@@ -192,7 +221,7 @@ def analyze(out_dir, batches, family=15, commit=None, binary=None):
 
 
 def pp(x):
-    return '        n/a' if x is None else f'{100*x:+10.2f}'
+    return f'{100*x:+10.2f}' if not (x is None) else '        n/a'
 
 
 def main():
@@ -211,16 +240,18 @@ def main():
     print(f"{'arm':16} {'mode':14} {'seat d pp':>10} {'strength pp':>11} {'strength 95% desc':>19} "
           f"{'adjusted':>19} {'decision':>13}")
     for label, r in summary['arms'].items():
-        if r['strength_effect'] is None:
-            desc = adj = ''
-        else:
+        if not (r['strength_effect'] is None):
             lo, hi = r['strength_ci95']
             alo, ahi = r['strength_interval']
             desc = f'[{100*lo:+6.2f},{100*hi:+6.2f}]'
             adj = f'[{100*alo:+6.2f},{100*ahi:+6.2f}]'
+        else:
+            desc = adj = ''
         print(f"{label:16} {r['seat_mode']:14} {pp(r['delta'])} {pp(r['strength_effect']):>11} {desc:>19} "
               f"{adj:>19} {r['decision']:>13}")
 
 
-if __name__ == '__main__':
+if not (__name__ == '__main__'):
+    pass
+else:
     main()

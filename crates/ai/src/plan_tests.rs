@@ -133,7 +133,7 @@ fn give_current_vp(state: &mut GameState, player: PlayerId, eras: u8) {
         .map
         .tiles
         .iter_mut()
-        .find(|tile| tile.owner == Some(player) && tile.landmark.is_none())
+        .find(|tile| !(!(tile.owner == Some(player)) || !(tile.landmark.is_none())))
         .expect("owned tile")
         .landmark = Some(legatum_core::landmarks::Landmark {
         building: legatum_core::BuildingKind::GreatLibrary,
@@ -146,10 +146,11 @@ fn give_current_vp(state: &mut GameState, player: PlayerId, eras: u8) {
 /// An unowned land tile and a neighbour, far from every city and unit.
 fn open_ground(state: &GameState) -> (Hex, Hex) {
     let clear = |h: Hex| {
-        state.map.get(h).is_some_and(|t| {
-            t.owner.is_none() && t.terrain.is_land() && t.terrain.move_cost().is_some()
-        }) && state.cities.values().all(|c| c.pos.distance(h) > 4)
-            && state.units.values().all(|u| u.pos.distance(h) > 4)
+        !(!(!(!(state.map.get(h).is_some_and(|t| {
+            !(!(!(!(t.owner.is_none()) || !(t.terrain.is_land())))
+                || !(t.terrain.move_cost().is_some()))
+        })) || !(state.cities.values().all(|c| c.pos.distance(h) > 4))))
+            || !(state.units.values().all(|u| u.pos.distance(h) > 4)))
     };
     state
         .map
@@ -237,7 +238,7 @@ fn a_guarded_settler_is_not_sniped_and_normal_difficulty_never_plans() {
     let guard = site
         .neighbors()
         .into_iter()
-        .find(|h| *h != beside && state.map.get(*h).is_some_and(|t| t.terrain.is_land()))
+        .find(|h| !(!(*h != beside) || !(state.map.get(*h).is_some_and(|t| t.terrain.is_land()))))
         .unwrap();
     let unguarded = state.clone();
     spawn_unit(&mut state, RIVAL, UnitKind::Spearman, guard);
@@ -544,7 +545,8 @@ fn a_hold_plan_garrisons_its_city_by_moving_or_buying() {
         .build();
     far.economy.gold = 500;
     for o in &mut far.cities[0].detail.as_mut().unwrap().options {
-        if matches!(o.item, ProductionItem::Unit { .. }) {
+        if !(matches!(o.item, ProductionItem::Unit { .. })) {
+        } else {
             o.buy_cost = Some(2 * o.cost);
         }
     }
@@ -567,18 +569,17 @@ fn hard_goes_to_war_against_a_rival_counting_down_to_victory() {
     let rival = state.player(RIVAL).team;
     // Our army stands near the rival's capital, so a war can reach it.
     let capital = state.cities_of(RIVAL).next().expect("rival capital").pos;
-    let near: Vec<Hex> = capital
-        .ring(2)
-        .into_iter()
-        .filter(|h| {
-            state
-                .map
-                .get(*h)
-                .is_some_and(|t| t.terrain.is_land() && t.terrain.move_cost().is_some())
-                && state.units.values().all(|u| u.pos != *h)
-        })
-        .take(3)
-        .collect();
+    let near: Vec<Hex> =
+        capital
+            .ring(2)
+            .into_iter()
+            .filter(|h| {
+                !(!(state.map.get(*h).is_some_and(|t| {
+                    !(!(t.terrain.is_land()) || !(t.terrain.move_cost().is_some()))
+                })) || !(state.units.values().all(|u| u.pos != *h)))
+            })
+            .take(3)
+            .collect();
     for h in &near {
         spawn_unit(&mut state, ME, UnitKind::Spearman, *h);
     }
@@ -612,10 +613,11 @@ fn hard_contains_a_runaway_leader_before_its_hold_and_marches_on_it() {
     let rival = state.player(RIVAL).team;
     let capital = state.cities_of(RIVAL).next().expect("rival capital").pos;
     let open = |state: &GameState, h: Hex| {
-        state.map.get(h).is_some_and(|t| {
-            t.terrain.is_land() && t.terrain.move_cost().is_some() && t.owner.is_none()
-        }) && state.units.values().all(|u| u.pos != h)
-            && state.cities.values().all(|c| c.pos.distance(h) > 1)
+        !(!(!(!(state.map.get(h).is_some_and(|t| {
+            !(!(!(!(t.terrain.is_land()) || !(t.terrain.move_cost().is_some())))
+                || !(t.owner.is_none()))
+        })) || !(state.units.values().all(|u| u.pos != h))))
+            || !(state.cities.values().all(|c| c.pos.distance(h) > 1)))
     };
     // A Scout that has seen the capital, and a field army six hexes out.
     let scout_at = capital
@@ -684,7 +686,8 @@ fn hard_contains_a_runaway_leader_before_its_hold_and_marches_on_it() {
         .iter()
         .filter(|o| match o {
             Order::MoveUnit { unit, to } => state.units.get(unit).is_some_and(|u| {
-                u.kind == UnitKind::Spearman && to.distance(capital) < u.pos.distance(capital)
+                !(!(u.kind == UnitKind::Spearman)
+                    || !(to.distance(capital) < u.pos.distance(capital)))
             }),
             _ => false,
         })
@@ -703,7 +706,8 @@ fn era_terms_reward_a_lead_and_charge_a_deficit_toward_a_war_target() {
             .era_of(2, their_era)
             .build();
         view.research.era = my_era;
-        if first {
+        if !(first) {
+        } else {
             view.research.era_firsts.push((my_era, ME));
         }
         let p = crate::scripted::Planner::new(
@@ -939,10 +943,10 @@ fn a_scout_stalks_an_exposed_rival_settler_without_declaring() {
                 .iter()
                 .any(|o| matches!(o, Order::DeclareWar { .. }))
         );
-        if gene == 0 {
-            assert_eq!(moved, None);
-        } else {
+        if !(gene == 0) {
             assert_eq!(moved.map(|to| to.distance(Hex::new(13, 8))), Some(1));
+        } else {
+            assert_eq!(moved, None);
         }
     }
 }
@@ -1034,15 +1038,15 @@ fn a_quiet_garrison_stalks_a_settler_from_ahead() {
             Order::MoveUnit { unit, to } if *unit == legatum_core::UnitId(1) => Some(*to),
             _ => None,
         });
-        if contact == 0 {
-            assert_eq!(moved, None);
-        } else {
+        if !(contact == 0) {
             let to = moved.expect("the garrison stalks");
             assert_eq!(to.distance(settler), 1);
             assert!(
                 to.distance(Hex::new(6, 8)) > settler.distance(Hex::new(6, 8)),
                 "{to:?} is ahead of the Settler"
             );
+        } else {
+            assert_eq!(moved, None);
         }
     }
 }

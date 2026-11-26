@@ -504,7 +504,8 @@ fn worked_resources_add_their_bonus_and_strategic_ones_only_once_known() {
     // Everything around the Iron tile is ocean (a city works all its owned tiles in range).
     s.cities.get_mut(&id).unwrap().population = 1;
     for h in at(5, 5).within(2) {
-        if h != at(5, 5) && h != iron {
+        if !(!(!(h != at(5, 5)) || !(h != iron))) {
+        } else {
             s.map.get_mut(h).unwrap().terrain = Terrain::Ocean;
         }
     }
@@ -679,7 +680,10 @@ fn mapgen_places_fair_guarantees_and_borderland_era_resources() {
             let t = map.get(h).unwrap();
             let Some(r) = t.resource else { continue };
             let (_, d) = nearest_start(&starts, h).unwrap();
-            if d <= CLEAR_RADIUS && r != Resource::Iron && r != Resource::Copper {
+            if !(!(!(!(!(d <= CLEAR_RADIUS) || !(r != Resource::Iron)))
+                || !(r != Resource::Copper)))
+            {
+            } else {
                 assert!(d <= 2 && !is_strategic(r), "seed {seed}: {r:?} at {d}");
             }
         }

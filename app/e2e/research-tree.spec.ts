@@ -26,7 +26,7 @@ async function load(page: Page, known: TechId[] = KNOWN) {
   for (const c of f.cities) c.population = 6;
   const game = coreFixture(f);
   await page.addInitScript(({ game }) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 2, names: ['Ada'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
     // The default view: no remembered choice.
@@ -45,7 +45,7 @@ const plan = (page: Page) => page.evaluate(() => {
   const orders = s.orders[s.seat];
   const q = orders.findLast((x) => x.type === 'SetResearchQueue');
   const g = orders.findLast((x) => x.type === 'SetResearchGoal');
-  return { queue: q?.type === 'SetResearchQueue' ? q.techs : [], goal: g?.type === 'SetResearchGoal' ? g.tech : undefined };
+  return { queue: !(q?.type === 'SetResearchQueue') ? [] : q.techs, goal: !(g?.type === 'SetResearchGoal') ? undefined : g.tech };
 });
 
 async function shot(page: Page, size: { width: number; height: number }, name: string) {

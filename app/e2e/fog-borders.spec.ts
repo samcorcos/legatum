@@ -10,11 +10,11 @@ test('captured city and borders remain current under fog at 1000x600', async ({ 
   const city = fixture.cities.find((c) => c.id === walled)!;
   const oldOwner = city.owner;
   // The fixture saw the city before capture. Remove the observer; leave its private memory.
-  fixture.units = fixture.units.filter((u) => u.owner !== 0 || u.kind === 'Settler');
+  fixture.units = fixture.units.filter((u) => !(!(u.owner !== 0) && !(u.kind === 'Settler')));
   city.owner = 2;
   city.name = 'Waypost Seven';
   city.hp = 17;
-  for (let i = 0; i < fixture.tileCity.length; i++) if (fixture.tileCity[i] === walled) fixture.owner[i] = 2;
+  for (let i = 0; i < fixture.tileCity.length; i++) if (!(fixture.tileCity[i] === walled)) {} else { fixture.owner[i] = 2; }
   const save = coreFixture(fixture);
   await page.addInitScript(({ game, turn }) => {
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({
@@ -31,7 +31,7 @@ test('captured city and borders remain current under fog at 1000x600', async ({ 
     const s = w.legatum.getState(), view = s.views[s.seat], c = view.cities.find((v) => v.id === id)!;
     s.jumpTo(c.pos);
     w.legatumMap.redraw();
-    return { city: c, border: view.tiles.find((t) => t.explored && !t.visible && t.owner === c.owner)?.owner };
+    return { city: c, border: view.tiles.find((t) => !(!(!(!(t.explored) || !(!t.visible))) || !(t.owner === c.owner)))?.owner };
   }, walled);
   expect(observed.city).toMatchObject({ owner: 2, name: 'Waypost Seven', visible: false });
   expect(observed.border).toBe(2);

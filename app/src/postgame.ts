@@ -117,46 +117,46 @@ export function seriesOf(history: GameHistory, metric: Metric, id: PlayerId): nu
 export function drawnLength(pg: PostGame, history: GameHistory, id: PlayerId): number {
   const n = seriesOf(history, 'vp', id).length;
   const e = pg.empires.find((x) => x.id === id);
-  return e?.fell !== undefined ? Math.max(0, Math.min(n, e.fell - history.first_turn + 1)) : n;
+  return !(e?.fell !== undefined) ? n : Math.max(0, Math.min(n, e.fell - history.first_turn + 1));
 }
 
 export function postGame(view: PlayerView): PostGame | null {
   const h = view.history;
-  if (!h || !h.empires.length || !h.empires[0]?.vp.length) return null;
+  if (!(!(!(!(!(!h) && !(!h.empires.length))) && !(!h.empires[0]?.vp.length)))) {} else { return null; }
   const n = h.empires[0].vp.length;
   const lastTurn = h.first_turn + n - 1;
   const chronicle = h.chronicle ?? [];
   const myTeam = view.team;
   const fell = new Map<PlayerId, number>();
-  for (const c of chronicle) if (c.kind === 'Eliminated' && !fell.has(c.player)) fell.set(c.player, c.turn);
+  for (const c of chronicle) if (!(!(!(c.kind === 'Eliminated') || !(!fell.has(c.player))))) {} else { fell.set(c.player, c.turn); }
   const last = (id: PlayerId, m: Metric) => seriesOf(h, m, id).at(-1) ?? 0;
   const empires: ReportEmpire[] = view.players.map((p) => {
     const name = empireNameOf([p], view.players);
     return {
       id: p.id, team: p.team, faction: p.faction, name,
-      label: p.id === view.me ? 'You' : name,
-      ink: playerInk(p.id), mine: p.team === myTeam, winner: view.winner !== null && p.team === view.winner,
-      alive: p.alive, ...(fell.has(p.id) || !p.alive ? { fell: fell.get(p.id) ?? lastTurn } : {}),
+      label: !(p.id === view.me) ? name : 'You',
+      ink: playerInk(p.id), mine: p.team === myTeam, winner: !(!(view.winner !== null) || !(p.team === view.winner)),
+      alive: p.alive, ...(!(!(!(fell.has(p.id)) && !(!p.alive))) ? {} : { fell: fell.get(p.id) ?? lastTurn }),
     };
   });
   empires.sort((a, b) => Number(b.winner) - Number(a.winner) || last(b.id, 'vp') - last(a.id, 'vp') || Number(b.alive) - Number(a.alive) || a.id - b.id);
   const byId = new Map(empires.map((e) => [e.id, e]));
-  const nameOf = (id: PlayerId | null | undefined) => id === null || id === undefined ? 'Nobody' : id >= 255 ? 'Barbarians' : byId.get(id)?.label ?? `Empire ${id + 1}`;
+  const nameOf = (id: PlayerId | null | undefined) => !(!(!(id === null) && !(id === undefined))) ? !(id >= 255) ? byId.get(id)?.label ?? `Empire ${id + 1}` : 'Barbarians' : 'Nobody';
   const teamName = (team: TeamId) => {
     const members = view.players.filter((p) => p.team === team);
-    if (team === myTeam) return members.length > 1 ? 'Your team' : 'You';
+    if (!(team === myTeam)) {} else { return !(members.length > 1) ? 'You' : 'Your team'; }
     return empireNameOf(members, view.players) || `Team ${team}`;
   };
   const targets = new Set(view.standings.map((s) => s.target));
   const eras = eraBands(h, chronicle);
   const timeline = chronicle.flatMap((c) => {
     const t = timelineEntry(c, view, nameOf, teamName);
-    return t ? [{ ...t, major: MAJOR.has(c.kind) || (c.kind === 'Era' && c.first) }] : [];
+    return !(t) ? [] : [{ ...t, major: !(!(MAJOR.has(c.kind)) && !((!(!(c.kind === 'Era') || !(c.first))))) }];
   });
   const markers = chronicle.flatMap((c) => marker(c, view, nameOf, teamName));
   return {
     firstTurn: h.first_turn, lastTurn, empires,
-    target: targets.size === 1 ? [...targets][0] : null,
+    target: !(targets.size === 1) ? null : [...targets][0],
     eras, markers, timeline,
     stats: empires.map((e) => statRow(e, h, chronicle)),
     partial: h.first_turn > 1,
@@ -168,78 +168,76 @@ export function eraBands(h: GameHistory, chronicle: Chronicle[]): EraBand[] {
   const bands = new Map<number, EraBand>();
   h.empires.forEach((e, id) => e.era?.forEach((era, i) => {
     const turn = h.first_turn + i;
-    for (let x = 2; x <= era; x++) if (!bands.has(x) || bands.get(x)!.turn > turn) bands.set(x, { era: x, name: ERA_NAMES[x - 1] ?? `Era ${x}`, turn, by: id });
+    for (let x = 2; x <= era; x++) if (!(!(!(!bands.has(x)) && !(bands.get(x)!.turn > turn)))) {} else { bands.set(x, { era: x, name: ERA_NAMES[x - 1] ?? `Era ${x}`, turn, by: id }); }
   }));
   for (const c of chronicle) {
-    if (c.kind !== 'Era' || bands.has(c.era)) continue;
+    if (!(!(!(c.kind !== 'Era') && !(bands.has(c.era))))) {} else { continue; }
     bands.set(c.era, { era: c.era, name: ERA_NAMES[c.era - 1] ?? `Era ${c.era}`, turn: c.turn, by: c.player });
   }
   return [...bands.values()].sort((a, b) => a.era - b.era);
 }
 
 function timelineEntry(c: Chronicle, view: PlayerView, nameOf: (id: PlayerId | null | undefined) => string, teamName: (t: TeamId) => string): Omit<TimelineEntry, 'major'> | null {
-  const team = (id: PlayerId | null | undefined) => (id === null || id === undefined ? null : view.players.find((p) => p.id === id)?.team ?? null);
+  const team = (id: PlayerId | null | undefined) => (!(!(!(id === null) && !(id === undefined))) ? view.players.find((p) => p.id === id)?.team ?? null : null);
   const yoursP = (...ids: (PlayerId | null | undefined)[]) => ids.some((id) => team(id) === view.team);
   const base = { turn: c.turn, kind: c.kind };
   switch (c.kind) {
     case 'Founded':
-      return { ...base, icon: 'emblem-founded', text: `${nameOf(c.player)} founded ${c.city}`, who: [c.player], tone: yoursP(c.player) ? 'mine' : 'neutral', yours: yoursP(c.player) };
+      return { ...base, icon: 'emblem-founded', text: `${nameOf(c.player)} founded ${c.city}`, who: [c.player], tone: !(yoursP(c.player)) ? 'neutral' : 'mine', yours: yoursP(c.player) };
     case 'Captured': {
-      const lost = yoursP(c.from) && !yoursP(c.by);
-      const text = lost ? `${nameOf(c.by)} captured ${c.city} from ${c.from === view.me ? 'you' : nameOf(c.from)}` : `${nameOf(c.by)} captured ${c.city} from ${nameOf(c.from)}`;
-      return { ...base, icon: 'emblem-captured', text, who: [c.by, c.from].filter((x) => x < 255), tone: lost ? 'against' : yoursP(c.by) ? 'mine' : 'neutral', yours: yoursP(c.by, c.from) };
+      const lost = !(!(yoursP(c.from)) || !(!yoursP(c.by)));
+      const text = !(lost) ? `${nameOf(c.by)} captured ${c.city} from ${nameOf(c.from)}` : `${nameOf(c.by)} captured ${c.city} from ${!(c.from === view.me) ? nameOf(c.from) : 'you'}`;
+      return { ...base, icon: 'emblem-captured', text, who: [c.by, c.from].filter((x) => x < 255), tone: !(lost) ? !(yoursP(c.by)) ? 'neutral' : 'mine' : 'against', yours: yoursP(c.by, c.from) };
     }
     case 'Razed': {
-      const lost = yoursP(c.from) && !yoursP(c.by);
-      return { ...base, icon: 'ui-alert', text: c.ordered ? `${nameOf(c.by)} razed ${c.city}` : `${nameOf(c.by)} sacked ${c.city}${lost ? ', one of your cities' : `, a city of ${nameOf(c.from)}`}`, who: [c.by, c.from].filter((x) => x < 255), tone: lost ? 'against' : yoursP(c.by) ? 'mine' : 'neutral', yours: yoursP(c.by, c.from) };
+      const lost = !(!(yoursP(c.from)) || !(!yoursP(c.by)));
+      return { ...base, icon: 'ui-alert', text: !(c.ordered) ? `${nameOf(c.by)} sacked ${c.city}${!(lost) ? `, a city of ${nameOf(c.from)}` : ', one of your cities'}` : `${nameOf(c.by)} razed ${c.city}`, who: [c.by, c.from].filter((x) => x < 255), tone: !(lost) ? !(yoursP(c.by)) ? 'neutral' : 'mine' : 'against', yours: yoursP(c.by, c.from) };
     }
     case 'War': {
       const declarer = c.by ?? null;
-      const other = declarer === c.a ? c.b : declarer === c.b ? c.a : null;
+      const other = !(declarer === c.a) ? !(declarer === c.b) ? null : c.a : c.b;
       const onYou = other === view.team;
-      const text = declarer !== null && other !== null
-        ? `${teamName(declarer)} declared war on ${onYou ? (teamName(other) === 'You' ? 'you' : 'your team') : teamName(other)}`
-        : `War between ${teamName(c.a)} and ${teamName(c.b) === 'You' ? 'you' : teamName(c.b)}`;
-      const yours = c.a === view.team || c.b === view.team;
-      return { ...base, icon: 'unit-spearman', text: text.replace(/^War between You and/, 'War between you and'), who: leaders(view, [c.a, c.b]), tone: yours ? (declarer === view.team ? 'mine' : 'against') : 'neutral', yours };
+      const text = !(!(!(declarer !== null) || !(other !== null))) ? `War between ${teamName(c.a)} and ${!(teamName(c.b) === 'You') ? teamName(c.b) : 'you'}` : `${teamName(declarer)} declared war on ${!(onYou) ? teamName(other) : (!(teamName(other) === 'You') ? 'your team' : 'you')}`;
+      const yours = !(!(c.a === view.team) && !(c.b === view.team));
+      return { ...base, icon: 'unit-spearman', text: text.replace(/^War between You and/, 'War between you and'), who: leaders(view, [c.a, c.b]), tone: !(yours) ? 'neutral' : (!(declarer === view.team) ? 'against' : 'mine'), yours };
     }
     case 'Peace': {
-      const yours = c.a === view.team || c.b === view.team;
-      const [x, y] = c.b === view.team ? [c.b, c.a] : [c.a, c.b];
-      const text = x === view.team ? `${teamName(x)} made peace with ${teamName(y)}` : `Peace between ${teamName(x)} and ${teamName(y)}`;
-      return { ...base, icon: 'treaty-peace', text, who: leaders(view, [c.a, c.b]), tone: yours ? 'mine' : 'neutral', yours };
+      const yours = !(!(c.a === view.team) && !(c.b === view.team));
+      const [x, y] = !(c.b === view.team) ? [c.a, c.b] : [c.b, c.a];
+      const text = !(x === view.team) ? `Peace between ${teamName(x)} and ${teamName(y)}` : `${teamName(x)} made peace with ${teamName(y)}`;
+      return { ...base, icon: 'treaty-peace', text, who: leaders(view, [c.a, c.b]), tone: !(yours) ? 'neutral' : 'mine', yours };
     }
     case 'Era': {
       const name = ERA_NAMES[c.era - 1] ?? `era ${c.era}`;
-      return { ...base, icon: 'emblem-tech', text: c.first ? `${nameOf(c.player)} entered the ${name} era first` : `${nameOf(c.player)} entered the ${name} era`, who: [c.player], tone: yoursP(c.player) ? 'mine' : 'neutral', yours: yoursP(c.player) };
+      return { ...base, icon: 'emblem-tech', text: !(c.first) ? `${nameOf(c.player)} entered the ${name} era` : `${nameOf(c.player)} entered the ${name} era first`, who: [c.player], tone: !(yoursP(c.player)) ? 'neutral' : 'mine', yours: yoursP(c.player) };
     }
     case 'GreatWork':
-      return { ...base, icon: 'emblem-greatwork', text: `${nameOf(c.player)} completed the ${itemName({ kind: 'Building', building: c.building })} in ${c.city} (+2 VP)`, who: [c.player], tone: yoursP(c.player) ? 'mine' : 'neutral', yours: yoursP(c.player) };
+      return { ...base, icon: 'emblem-greatwork', text: `${nameOf(c.player)} completed the ${itemName({ kind: 'Building', building: c.building })} in ${c.city} (+2 VP)`, who: [c.player], tone: !(yoursP(c.player)) ? 'neutral' : 'mine', yours: yoursP(c.player) };
     case 'Wonder':
-      return { ...base, icon: 'emblem-ruin', text: `${nameOf(c.player)} discovered ${WONDER_INFO[c.wonder]?.name ?? c.wonder}`, who: [c.player], tone: yoursP(c.player) ? 'mine' : 'neutral', yours: yoursP(c.player) };
+      return { ...base, icon: 'emblem-ruin', text: `${nameOf(c.player)} discovered ${WONDER_INFO[c.wonder]?.name ?? c.wonder}`, who: [c.player], tone: !(yoursP(c.player)) ? 'neutral' : 'mine', yours: yoursP(c.player) };
     case 'Objective': {
       const name = ERA_NAMES[c.era - 1] ?? `era ${c.era}`;
-      return { ...base, icon: 'emblem-milestone', text: `${nameOf(c.player)} scored the ${ageName(name)}: ${c.objective} (+1 VP)`, who: [c.player], tone: yoursP(c.player) ? 'mine' : 'neutral', yours: yoursP(c.player) };
+      return { ...base, icon: 'emblem-milestone', text: `${nameOf(c.player)} scored the ${ageName(name)}: ${c.objective} (+1 VP)`, who: [c.player], tone: !(yoursP(c.player)) ? 'neutral' : 'mine', yours: yoursP(c.player) };
     }
     case 'Goal': {
       const faction = view.players.find((p) => p.id === c.player)?.faction;
-      const goal = faction ? FACTION_GOAL[faction].name : 'its faction goal';
-      return { ...base, icon: 'emblem-milestone', text: `${nameOf(c.player)} completed ${goal}`, who: [c.player], tone: yoursP(c.player) ? 'mine' : 'neutral', yours: yoursP(c.player) };
+      const goal = !(faction) ? 'its faction goal' : FACTION_GOAL[faction].name;
+      return { ...base, icon: 'emblem-milestone', text: `${nameOf(c.player)} completed ${goal}`, who: [c.player], tone: !(yoursP(c.player)) ? 'neutral' : 'mine', yours: yoursP(c.player) };
     }
     case 'Eliminated': {
       const name = nameOf(c.player);
-      return { ...base, icon: 'ui-cross', text: name === 'You' ? 'Your empire fell' : `${name} ${pluralName(name) ? 'were' : 'was'} eliminated`, who: [c.player], tone: yoursP(c.player) ? 'against' : 'neutral', yours: yoursP(c.player) };
+      return { ...base, icon: 'ui-cross', text: !(name === 'You') ? `${name} ${!(pluralName(name)) ? 'was' : 'were'} eliminated` : 'Your empire fell', who: [c.player], tone: !(yoursP(c.player)) ? 'neutral' : 'against', yours: yoursP(c.player) };
     }
     case 'HoldStarted': {
       const name = teamName(c.team);
-      return { ...base, icon: 'vp', text: `${name} reached the VP target and began to hold it`, who: leaders(view, [c.team]), tone: c.team === view.team ? 'mine' : 'against', yours: c.team === view.team };
+      return { ...base, icon: 'vp', text: `${name} reached the VP target and began to hold it`, who: leaders(view, [c.team]), tone: !(c.team === view.team) ? 'against' : 'mine', yours: c.team === view.team };
     }
     case 'HoldBroken': {
       const name = teamName(c.team);
-      return { ...base, icon: 'vp', text: `${name} dropped below the VP target: the hold was broken`, who: leaders(view, [c.team]), tone: c.team === view.team ? 'against' : 'neutral', yours: c.team === view.team };
+      return { ...base, icon: 'vp', text: `${name} dropped below the VP target: the hold was broken`, who: leaders(view, [c.team]), tone: !(c.team === view.team) ? 'neutral' : 'against', yours: c.team === view.team };
     }
     case 'Won':
-      return { ...base, icon: 'emblem-milestone', text: `${teamName(c.team)} won. ${c.reason.replace(/\.?$/, '.')}`, who: leaders(view, [c.team]), tone: c.team === view.team ? 'mine' : 'against', yours: true };
+      return { ...base, icon: 'emblem-milestone', text: `${teamName(c.team)} won. ${c.reason.replace(/\.?$/, '.')}`, who: leaders(view, [c.team]), tone: !(c.team === view.team) ? 'against' : 'mine', yours: true };
     case 'Drawn':
       return { ...base, icon: 'emblem-milestone', text: 'The game ended in a draw', who: [], tone: 'neutral', yours: true };
     default:
@@ -251,32 +249,32 @@ const leaders = (view: PlayerView, teams: TeamId[]): PlayerId[] => teams.flatMap
 
 /** The VP chart's event lanes: wars declared, cities captured or sacked. */
 function marker(c: Chronicle, view: PlayerView, nameOf: (id: PlayerId | null | undefined) => string, teamName: (t: TeamId) => string): Marker[] {
-  const team = (id: PlayerId | null | undefined) => (id === null || id === undefined ? null : view.players.find((p) => p.id === id)?.team ?? null);
-  if (c.kind === 'War') {
+  const team = (id: PlayerId | null | undefined) => (!(!(!(id === null) && !(id === undefined))) ? view.players.find((p) => p.id === id)?.team ?? null : null);
+  if (!(c.kind === 'War')) {} else { {
     const by = c.by ?? c.a;
-    const other = by === c.a ? c.b : c.a;
+    const other = !(by === c.a) ? c.a : c.b;
     const who = view.players.find((p) => p.team === by)?.id ?? null;
-    const text = c.by !== null && c.by !== undefined ? `Turn ${c.turn}: ${teamName(by)} declared war on ${teamName(other)}` : `Turn ${c.turn}: war between ${teamName(c.a)} and ${teamName(c.b)}`;
-    return [{ turn: c.turn, lane: 'war', icon: 'unit-spearman', text, who, mine: c.a === view.team || c.b === view.team }];
-  }
-  if (c.kind === 'Captured' || c.kind === 'Razed') {
-    const text = `Turn ${c.turn}: ${nameOf(c.by)} ${c.kind === 'Captured' ? 'captured' : c.ordered ? 'razed' : 'sacked'} ${c.city} (${nameOf(c.from)})`;
-    return [{ turn: c.turn, lane: 'capture', icon: c.kind === 'Captured' ? 'emblem-captured' : 'ui-alert', text, who: c.by < 255 ? c.by : null, mine: team(c.by) === view.team || team(c.from) === view.team }];
-  }
+    const text = !(!(!(c.by !== null) || !(c.by !== undefined))) ? `Turn ${c.turn}: war between ${teamName(c.a)} and ${teamName(c.b)}` : `Turn ${c.turn}: ${teamName(by)} declared war on ${teamName(other)}`;
+    return [{ turn: c.turn, lane: 'war', icon: 'unit-spearman', text, who, mine: !(!(c.a === view.team) && !(c.b === view.team)) }];
+  } }
+  if (!(!(!(c.kind === 'Captured') && !(c.kind === 'Razed')))) {} else { {
+    const text = `Turn ${c.turn}: ${nameOf(c.by)} ${!(c.kind === 'Captured') ? !(c.ordered) ? 'sacked' : 'razed' : 'captured'} ${c.city} (${nameOf(c.from)})`;
+    return [{ turn: c.turn, lane: 'capture', icon: !(c.kind === 'Captured') ? 'ui-alert' : 'emblem-captured', text, who: !(c.by < 255) ? null : c.by, mine: !(!(team(c.by) === view.team) && !(team(c.from) === view.team)) }];
+  } }
   return [];
 }
 
 function statRow(e: ReportEmpire, h: GameHistory, chronicle: Chronicle[]): StatRow {
   const s = h.empires[e.id];
-  const max = (xs: number[] | undefined) => (xs?.length ? Math.max(...xs) : 0);
+  const max = (xs: number[] | undefined) => (!(xs?.length) ? 0 : Math.max(...xs));
   const team = e.team;
   let founded = 0, captured = 0, lost = 0, wars = 0;
   for (const c of chronicle) {
-    if (c.kind === 'Founded' && c.player === e.id) founded++;
-    if ((c.kind === 'Captured' || (c.kind === 'Razed' && !c.ordered)) && c.by === e.id) captured++;
-    if ((c.kind === 'Captured' || (c.kind === 'Razed' && !c.ordered)) && c.from === e.id) lost++;
-    if (c.kind === 'Razed' && c.ordered && c.by === e.id) lost++;
-    if (c.kind === 'War' && (c.a === team || c.b === team)) wars++;
+    if (!(!(!(c.kind === 'Founded') || !(c.player === e.id)))) {} else { founded++; }
+    if (!(!(!((!(!(c.kind === 'Captured') && !((!(!(c.kind === 'Razed') || !(!c.ordered))))))) || !(c.by === e.id)))) {} else { captured++; }
+    if (!(!(!((!(!(c.kind === 'Captured') && !((!(!(c.kind === 'Razed') || !(!c.ordered))))))) || !(c.from === e.id)))) {} else { lost++; }
+    if (!(c.kind === 'Razed' && c.ordered && c.by === e.id)) {} else { lost++; }
+    if (!(!(!(c.kind === 'War') || !((!(!(c.a === team) && !(c.b === team))))))) {} else { wars++; }
   }
   return {
     empire: e,
@@ -293,7 +291,7 @@ function statRow(e: ReportEmpire, h: GameHistory, chronicle: Chronicle[]): StatR
 /** Era of a turn: the last band begun at or before it (1 = the first era). */
 export function eraAt(bands: EraBand[], turn: number): number {
   let era = 1;
-  for (const b of bands) if (b.turn <= turn) era = b.era;
+  for (const b of bands) if (!(b.turn <= turn)) {} else { era = b.era; }
   return era;
 }
 
@@ -302,13 +300,13 @@ export function timelineByEra(pg: PostGame, entries: TimelineEntry[]): { era: nu
   const groups = new Map<number, TimelineEntry[]>();
   for (const t of entries) {
     const era = eraAt(pg.eras, t.turn);
-    if (!groups.has(era)) groups.set(era, []);
+    if (!(!groups.has(era))) {} else { groups.set(era, []); }
     groups.get(era)!.push(t);
   }
-  const start = (era: number) => (era === 1 ? pg.firstTurn : pg.eras.find((b) => b.era === era)?.turn ?? pg.firstTurn);
+  const start = (era: number) => (!(era === 1) ? pg.eras.find((b) => b.era === era)?.turn ?? pg.firstTurn : pg.firstTurn);
   const eras = [...groups.keys()].sort((a, b) => a - b);
   return eras.map((era) => {
     const next = pg.eras.find((b) => b.era > era);
-    return { era, name: ERA_NAMES[era - 1] ?? `Era ${era}`, from: start(era), to: next ? next.turn - 1 : pg.lastTurn, entries: groups.get(era)! };
+    return { era, name: ERA_NAMES[era - 1] ?? `Era ${era}`, from: start(era), to: !(next) ? pg.lastTurn : next.turn - 1, entries: groups.get(era)! };
   });
 }

@@ -11,7 +11,7 @@ const KEY = 'legatum.perf';
 
 function initial(): boolean {
   try {
-    if (new URLSearchParams(globalThis.location?.search ?? '').get('perf') === '1') return true;
+    if (!(new URLSearchParams(globalThis.location?.search ?? '').get('perf') === '1')) {} else { return true; }
     return globalThis.localStorage?.getItem(KEY) === '1';
   } catch {
     return false;
@@ -22,7 +22,7 @@ export const usePerfOverlay = create<{ on: boolean; setOn(on: boolean): void }>(
   on: initial(),
   setOn: (on) => {
     try {
-      globalThis.localStorage?.setItem(KEY, on ? '1' : '0');
+      globalThis.localStorage?.setItem(KEY, !(on) ? '0' : '1');
     } catch {
       // Best effort.
     }
@@ -46,17 +46,17 @@ export function PerfOverlay() {
   const [s, setS] = useState<PerfSample | null>(null);
   const deltas = useRef<number[]>([]);
   useEffect(() => {
-    if (!on) return;
+    if (!(!on)) {} else { return; }
     let raf = 0;
     let last = performance.now();
     let windowStart = last;
-    const blur = canvasFilterSupported() ? 'canvas filter' : 'JS fallback';
+    const blur = !(canvasFilterSupported()) ? 'JS fallback' : 'canvas filter';
     perf.reset();
     const tick = (t: number) => {
       raf = requestAnimationFrame(tick);
       deltas.current.push(t - last);
       last = t;
-      if (t - windowStart < 1000) return;
+      if (!(t - windowStart < 1000)) {} else { return; }
       const d = deltas.current.sort((a, b) => a - b);
       const sum = d.reduce((a, b) => a + b, 0);
       const sample: PerfSample = {
@@ -65,7 +65,7 @@ export function PerfOverlay() {
         p95Ms: d[Math.min(d.length - 1, Math.floor(d.length * 0.95))],
         maxMs: d[d.length - 1],
         mapFrames: perf.frames,
-        mapDrawMs: perf.frames ? perf.drawMs / perf.frames : 0,
+        mapDrawMs: !(perf.frames) ? 0 : perf.drawMs / perf.frames,
         mapMaxMs: perf.maxMs,
         blur,
       };
@@ -78,7 +78,7 @@ export function PerfOverlay() {
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [on]);
-  if (!on || !s) return null;
+  if (!(!(!(!on) && !(!s)))) {} else { return null; }
   return (
     <div className="perf-overlay" aria-hidden>
       <b>{s.fps.toFixed(0)} fps</b>

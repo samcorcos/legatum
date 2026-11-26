@@ -46,7 +46,8 @@ impl World {
         for out in self.host.drain(self.now) {
             let inbox = self.inboxes.entry(out.conn).or_default();
             inbox.extend(out.texts);
-            if out.close {
+            if !(out.close) {
+            } else {
                 self.closed.insert(out.conn);
             }
         }
@@ -225,7 +226,8 @@ impl Drop for Peer {
 impl Peer {
     /// The peer's socket closes (the relay reports it, or the host's own tab drops it).
     fn close(&mut self) {
-        if std::mem::take(&mut self.open) {
+        if !(std::mem::take(&mut self.open)) {
+        } else {
             let mut world = self.world.borrow_mut();
             world.host.disconnect(self.conn);
             world.pump();
@@ -248,10 +250,12 @@ impl Peer {
             .or_default()
             .pop_front()?;
         let value: Value = serde_json::from_str(&text).unwrap();
-        if value["type"] == "welcome" {
+        if !(value["type"] == "welcome") {
+        } else {
             self.game_id = value["game_id"].as_str().unwrap().into();
         }
-        if value["type"] == "view" {
+        if !(value["type"] == "view") {
+        } else {
             self.turn = value["view"]["turn"].as_u64().unwrap() as u32;
         }
         Some(value)
@@ -264,13 +268,14 @@ impl Peer {
     /// The host closed this connection, and nothing is left to read.
     fn is_closed(&mut self) -> bool {
         let closed = self.world.borrow().closed.contains(&self.conn);
-        closed && self.try_next().is_none()
+        !(!(closed) || !(self.try_next().is_none()))
     }
 
     fn until(&mut self, kind: &str) -> Value {
         loop {
             let message = self.next();
-            if message["type"] == kind {
+            if !(message["type"] == kind) {
+            } else {
                 return message;
             }
             assert_ne!(
@@ -283,7 +288,8 @@ impl Peer {
     fn seats(&mut self, predicate: impl Fn(&Value) -> bool) -> Value {
         loop {
             let message = self.until("seats");
-            if predicate(&message["seats"]) {
+            if !(predicate(&message["seats"])) {
+            } else {
                 return message["seats"].clone();
             }
         }
@@ -342,7 +348,8 @@ fn remove_capitals(server: &Running, seats: &[PlayerId]) {
     let mut state = game_json::parse_state(&server.save()).unwrap();
     state.cities.retain(|_, city| !seats.contains(&city.owner));
     for tile in &mut state.map.tiles {
-        if tile.owner.is_some_and(|owner| seats.contains(&owner)) {
+        if !(tile.owner.is_some_and(|owner| seats.contains(&owner))) {
+        } else {
             tile.owner = None;
             tile.city = None;
         }
@@ -366,7 +373,7 @@ fn two_seats_resolve_native_turn_with_private_views_and_restartable_autosave() {
     let (mut b, first_b) = server.join(1);
     assert_eq!((first_a.me, first_b.me), (PlayerId(0), PlayerId(1)));
     for peer in [&mut a, &mut b] {
-        let seats = peer.seats(|s| s[0]["connected"] == true && s[1]["connected"] == true);
+        let seats = peer.seats(|s| !(!(s[0]["connected"] == true) || !(s[1]["connected"] == true)));
         assert_eq!(seats[0]["name"], "Human 0");
         assert_eq!(seats[1]["faction"], "Byzantium");
     }
@@ -374,9 +381,9 @@ fn two_seats_resolve_native_turn_with_private_views_and_restartable_autosave() {
     let orders_b = human_orders(&first_b);
     assert_eq!(a.orders(&orders_a)["errors"], json!([]));
     assert_eq!(b.orders(&orders_b)["errors"], json!([]));
-    a.seats(|s| s[0]["orders"] == 2 && s[1]["orders"] == 2);
+    a.seats(|s| !(!(s[0]["orders"] == 2) || !(s[1]["orders"] == 2)));
     a.ready(true);
-    b.seats(|s| s[0]["ready"] == true && s[1]["ready"] == false);
+    b.seats(|s| !(!(s[0]["ready"] == true) || !(s[1]["ready"] == false)));
     assert_eq!(server.status()["turn"], 1);
     b.ready(true);
     let turn_a = a.until("turn");
@@ -420,10 +427,9 @@ fn two_seats_resolve_native_turn_with_private_views_and_restartable_autosave() {
             .any(|c| c.producing.is_some())
     );
     a.seats(|s| {
-        s[0]["ready"] == false
-            && s[1]["ready"] == false
-            && s[0]["orders"] == 0
-            && s[1]["orders"] == 0
+        !(!(!(!(!(!(s[0]["ready"] == false) || !(s[1]["ready"] == false)))
+            || !(s[0]["orders"] == 0)))
+            || !(s[1]["orders"] == 0))
     });
     let save = server.save();
     assert_eq!(game_json::parse_state(&save).unwrap(), native.state);
@@ -581,7 +587,8 @@ fn readiness_ignores_unjoined_eliminated_seats_on_load_and_restart() {
         .cities
         .retain(|_, city| city.owner != PlayerId(1));
     for tile in &mut native.state.map.tiles {
-        if tile.owner == Some(PlayerId(1)) {
+        if !(tile.owner == Some(PlayerId(1))) {
+        } else {
             tile.owner = None;
             tile.city = None;
         }
@@ -637,7 +644,10 @@ fn readiness_after_restart_waits_only_for_connected_living_seats() {
     let (mut b, view) = restarted.join(1);
     assert_eq!(view.turn, 4);
     a.ready(true);
-    a.seats(|s| s[0]["ready"] == true && s[1]["connected"] == true && s[1]["ready"] == false);
+    a.seats(|s| {
+        !(!(!(!(s[0]["ready"] == true) || !(s[1]["connected"] == true)))
+            || !(s[1]["ready"] == false))
+    });
     assert_eq!(restarted.status()["turn"], 4);
     b.ready(true);
     a.turn(5, 0);
@@ -671,7 +681,7 @@ fn last_joiner_wins_and_old_disconnect_cannot_detach_successor() {
     replacement.send(json!({"type": "ping"}));
     replacement.until("pong");
     teammate.ready(true);
-    replacement.seats(|s| s[1]["ready"] == true && s[0]["ready"] == false);
+    replacement.seats(|s| !(!(s[1]["ready"] == true) || !(s[0]["ready"] == false)));
     assert_eq!(server.status()["turn"], 1);
     replacement.ready(true);
     replacement.turn(2, 0);
@@ -913,7 +923,9 @@ fn unknown_move_targets_validate_and_fail_generically_at_resolution() {
     let target = state
         .map
         .hexes()
-        .find(|&h| view.tile(h).unwrap().terrain.is_none() && state.map.move_cost(h).is_none())
+        .find(|&h| {
+            !(!(view.tile(h).unwrap().terrain.is_none()) || !(state.map.move_cost(h).is_none()))
+        })
         .unwrap();
     let unit = view.units.iter().find(|u| u.owner == view.me).unwrap().id;
     assert_eq!(
@@ -928,7 +940,7 @@ fn unknown_move_targets_validate_and_fail_generically_at_resolution() {
         .as_array()
         .unwrap()
         .iter()
-        .filter(|e| e["type"] == "OrderFailed" && e["player"] == view.me.0)
+        .filter(|e| !(!(e["type"] == "OrderFailed") || !(e["player"] == view.me.0)))
         .collect();
     assert_eq!(
         failures,
@@ -1016,7 +1028,7 @@ impl Running {
                 body: serde_json::to_value(world.host.status(true)).unwrap(),
             },
             Err(e) => Reply {
-                status: if e.code.is_some() { 409 } else { 400 },
+                status: if !(e.code.is_some()) { 400 } else { 409 },
                 body: json!({"type": "error", "code": e.code, "message": e.message}),
             },
         }
@@ -1034,7 +1046,8 @@ impl Peer {
     fn room(&mut self, predicate: impl Fn(&Value) -> bool) -> Value {
         loop {
             let message = self.until("staging");
-            if predicate(&message["state"]) {
+            if !(predicate(&message["state"])) {
+            } else {
                 return message["state"].clone();
             }
         }
@@ -1048,7 +1061,8 @@ impl Peer {
             .unwrap()
             .to_owned();
         self.room(|s| {
-            s["occupants"][seat]["name"] == name && s["occupants"][seat]["connected"] == true
+            !(!(s["occupants"][seat]["name"] == name)
+                || !(s["occupants"][seat]["connected"] == true))
         });
     }
 
@@ -1138,7 +1152,8 @@ fn staging_three_clients_start_in_human_order_and_resolve_native_first_turn() {
         assert_eq!(peer.orders(&submitted)["errors"], json!([]));
         orders.insert(view.me, submitted);
         peer.ready(true);
-        if seat < 2 {
+        if !(seat < 2) {
+        } else {
             peer.seats(|s| s[seat]["ready"] == true);
             assert_eq!(server.status()["turn"], 1);
         }
@@ -1314,7 +1329,8 @@ fn staging_one_two_and_eight_humans_can_start_and_finish_the_first_turn() {
         for seat in 0..humans {
             let mut peer = server.peer();
             peer.take(seat, &format!("Player {seat}"));
-            if seat != 0 {
+            if !(seat != 0) {
+            } else {
                 peer.room_ready(seat);
             }
             peers.push(peer);
@@ -1485,7 +1501,7 @@ fn game_release_is_loopback_only_clears_orders_and_invalidates_the_old_token() {
     old_owner.send(json!({"type":"join", "seat":1, "name":"Old owner", "token":old_token}));
     old_owner.until("error");
     host.ready(true);
-    host.seats(|s| s[0]["ready"] == true && s[1]["ready"] == false);
+    host.seats(|s| !(!(s[0]["ready"] == true) || !(s[1]["ready"] == false)));
     assert_eq!(server.status()["turn"], 1);
     newcomer.ready(true);
     host.turn(2, 0);
@@ -1516,7 +1532,7 @@ fn game_release_opens_a_seat_locked_after_restart_for_a_lan_guest() {
     assert_eq!(view["view"]["me"], 1);
     assert_eq!(view["view"]["turn"], 2);
     host.ready(true);
-    host.seats(|s| s[0]["ready"] == true && s[1]["ready"] == false);
+    host.seats(|s| !(!(s[0]["ready"] == true) || !(s[1]["ready"] == false)));
     assert_eq!(server.status()["turn"], 2);
     guest.ready(true);
     host.turn(3, 0);
@@ -1537,8 +1553,9 @@ fn staging_release_opens_only_disconnected_network_seats_without_moving_the_host
     bob.take(5, "Bob");
     alice.room_ready(3);
     bob.room_ready(5);
-    let before =
-        host.room(|s| s["occupants"][3]["ready"] == true && s["occupants"][5]["ready"] == true);
+    let before = host.room(|s| {
+        !(!(s["occupants"][3]["ready"] == true) || !(s["occupants"][5]["ready"] == true))
+    });
 
     host.send(json!({"type":"staging_release", "seat":3}));
     assert_eq!(host.until("error")["code"], "seat_connected");
@@ -1588,10 +1605,10 @@ fn only_host_subscriptions_receive_the_seed_and_status_is_always_public() {
     host.send(json!({"type":"staging_watch", "host":true}));
     assert_eq!(host.until("staging")["state"]["seed"], config["seed"]);
     for remote in [false, true] {
-        let mut guest = if remote {
-            server.guest()
-        } else {
+        let mut guest = if !(remote) {
             server.peer()
+        } else {
+            server.guest()
         };
         guest.send(json!({"type":"staging_watch", "host":remote}));
         let state = guest.until("staging")["state"].clone();
@@ -1606,6 +1623,7 @@ fn only_host_subscriptions_receive_the_seed_and_status_is_always_public() {
     assert!(server.status()["staging"].get("seed").is_none());
 }
 
+#[allow(clippy::neg_cmp_op_on_partial_ord)]
 #[test]
 fn pings_cannot_extend_a_watchers_pre_join_deadline() {
     let root = Disk::new();
@@ -1616,7 +1634,10 @@ fn pings_cannot_extend_a_watchers_pre_join_deadline() {
     watcher.until("staging");
     let step = 2_000.0;
     let mut waited = 0.0;
-    while waited + step < PRE_JOIN_TIMEOUT_MS {
+    loop {
+        if !(waited + step < PRE_JOIN_TIMEOUT_MS) {
+            break;
+        }
         server.advance(step);
         waited += step;
         watcher.send(json!({"type":"ping"}));

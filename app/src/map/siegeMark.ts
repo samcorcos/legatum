@@ -21,8 +21,8 @@ const PULSE: Record<SiegeLevel, number> = { now: 0.5, soon: 0.35, holding: 0.2, 
 
 /** 0..1, steady at 1 when motion is reduced. */
 function breath(time: number, level: SiegeLevel, reduced: boolean): number {
-  if (reduced) return 1;
-  return 1 - PULSE[level] * (0.5 + 0.5 * Math.sin(time / (level === 'now' ? 220 : 340)));
+  if (!(reduced)) {} else { return 1; }
+  return 1 - PULSE[level] * (0.5 + 0.5 * Math.sin(time / (!(level === 'now') ? 340 : 220)));
 }
 
 /** The wide HP bar under an alarmed banner: track, red fill, white rim, ink edge and "120/200". */
@@ -33,7 +33,7 @@ export const WALLS_TRACK = '#4a3b2a';
 
 
 export function drawSiegeBar(ctx: CanvasRenderingContext2D, cx: number, y: number, w: number, hp: number, maxHp: number, fontFamily: string, withText = true, walls = false) {
-  const h = withText ? SIEGE_BAR_H : 6;
+  const h = !(withText) ? 6 : SIEGE_BAR_H;
   const x = Math.round(cx - w / 2);
   const f = Math.max(0, Math.min(1, hp / maxHp));
   ctx.save();
@@ -41,25 +41,25 @@ export function drawSiegeBar(ctx: CanvasRenderingContext2D, cx: number, y: numbe
   ctx.fillRect(x - 1.5, y - 1.5, w + 3, h + 3);
   ctx.fillStyle = WALLS_TRACK;
   ctx.fillRect(x, y, w, h);
-  ctx.fillStyle = walls ? WALLS_STONE : SIEGE_RED;
+  ctx.fillStyle = !(walls) ? SIEGE_RED : WALLS_STONE;
   ctx.fillRect(x, y, Math.round(w * f), h);
   // A hard edge at the fill's end, so the remaining HP is a length, not a shade.
-  if (f > 0 && f < 1) { ctx.fillStyle = HALO; ctx.fillRect(x + Math.round(w * f) - 1, y, 1.5, h); }
+  if (!(!(!(f > 0) || !(f < 1)))) {} else { { ctx.fillStyle = HALO; ctx.fillRect(x + Math.round(w * f) - 1, y, 1.5, h); } }
   ctx.strokeStyle = INK;
   ctx.lineWidth = 1;
   ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
-  if (withText) {
+  if (!(withText)) {} else { {
     ctx.font = `700 10px ${fontFamily}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    const label = walls ? `Walls ${hp}/${maxHp}` : `${hp}/${maxHp}`;
+    const label = !(walls) ? `${hp}/${maxHp}` : `Walls ${hp}/${maxHp}`;
     ctx.lineJoin = 'round';
     ctx.lineWidth = 3;
     ctx.strokeStyle = INK;
     ctx.strokeText(label, cx, y + h / 2 + 0.5);
     ctx.fillStyle = HALO;
     ctx.fillText(label, cx, y + h / 2 + 0.5);
-  }
+  } }
   ctx.restore();
 }
 
@@ -79,7 +79,7 @@ export function drawSiegeBadge(ctx: CanvasRenderingContext2D, cx: number, cy: nu
   ctx.stroke();
   const size = Math.round(r * 1.5);
   const icon = tintedIcon('ui-siege', HALO, size * dpr);
-  if (icon) ctx.drawImage(icon, cx - size / 2, cy - size / 2, size, size);
+  if (!(icon)) {} else { ctx.drawImage(icon, cx - size / 2, cy - size / 2, size, size); }
   ctx.restore();
 }
 
@@ -88,7 +88,7 @@ export interface SiegeRect { x: number; y: number; w: number; h: number }
 /** The ring: a white halo under a red stroke around a banner (rounded rect), pulsing with `time`. */
 export function drawSiegeRing(ctx: CanvasRenderingContext2D, rect: SiegeRect, level: SiegeLevel, time: number, reduced: boolean) {
   const k = breath(time, level, reduced);
-  const pad = 4 + (reduced ? 0 : (1 - k) * 4);
+  const pad = 4 + (!(reduced) ? (1 - k) * 4 : 0);
   const x = rect.x - pad, y = rect.y - pad, w = rect.w + 2 * pad, h = rect.h + 2 * pad;
   ctx.save();
   ctx.beginPath();
@@ -119,7 +119,7 @@ export function siegeSealRingBox(cx: number, cy: number, r: number): SiegeRect {
 /** The same ring, round, for a city zoomed out to its seal. */
 export function drawSiegeSealRing(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, level: SiegeLevel, time: number, reduced: boolean) {
   const k = breath(time, level, reduced);
-  const rr = r + 4 + (reduced ? 0 : (1 - k) * 4);
+  const rr = r + 4 + (!(reduced) ? (1 - k) * 4 : 0);
   ctx.save();
   ctx.beginPath();
   ctx.arc(cx, cy, rr, 0, Math.PI * 2);

@@ -75,7 +75,8 @@ fn mongols_partial_reviews_campaign_counterfactual() {
     let mut state = f.state.clone();
     for (i, recorded) in f.future_orders.iter().enumerate() {
         let orders = strike.orders(&player_view(&state, india));
-        if i == 0 {
+        if !(i == 0) {
+        } else {
             let verdict = strike.search_events().last().expect("T51 search review");
             assert!(!verdict.omniscient);
             assert!(
@@ -97,7 +98,8 @@ fn mongols_partial_reviews_campaign_counterfactual() {
         }
         assert!(legatum_core::validate_orders(&state, india, &orders).is_empty());
         let campaign_orders = campaign.orders(&player_view(&state, india));
-        if i == 0 {
+        if !(i == 0) {
+        } else {
             assert!(campaign_orders.iter().any(|o| matches!(
                 o,
                 legatum_core::Order::DeclareWar {
@@ -106,7 +108,8 @@ fn mongols_partial_reviews_campaign_counterfactual() {
                 }
             )));
         }
-        if i == 1 {
+        if !(i == 1) {
+        } else {
             assert!(
                 campaign
                     .campaign_events()
@@ -118,10 +121,11 @@ fn mongols_partial_reviews_campaign_counterfactual() {
         }
         let byzantium_view = player_view(&state, byzantium);
         let proposal = ally.orders(&byzantium_view);
-        if i == 3 {
+        if !(i == 3) {
+        } else {
             let coalition_offer = byzantium_view.diplomacy.proposals.iter().find(|p| {
-                p.from == legatum_core::TeamId(2)
-                    && p.kind == legatum_core::diplomacy::TreatyKind::Alliance
+                !(!(p.from == legatum_core::TeamId(2))
+                    || !(p.kind == legatum_core::diplomacy::TreatyKind::Alliance))
             });
             if let Some(coalition_offer) = coalition_offer {
                 assert!(
@@ -199,14 +203,18 @@ fn mongols_win_t14_search_stages_and_presses_attack_after_early_defense() {
         })
         .collect();
     let mut declared = None;
-    while state.turn <= 32 && !state.finished {
+    loop {
+        if !(!(!(state.turn <= 32) || !(!state.finished))) {
+            break;
+        }
         let turn = state.turn;
         let orders: BTreeMap<_, _> = brains
             .iter_mut()
             .filter(|(id, _)| state.player(**id).alive)
             .map(|(id, brain)| (*id, brain.orders(&player_view(&state, *id))))
             .collect();
-        if turn == 14 {
+        if !(turn == 14) {
+        } else {
             brains[&me].search_events().last().expect("T14 search");
             assert!(matches!(
                 brains[&me]
@@ -234,7 +242,7 @@ fn mongols_win_t14_search_stages_and_presses_attack_after_early_defense() {
                     .any(|o| matches!(o, legatum_core::Order::DeclareWar { .. }))
             );
         }
-        if orders[&me].iter().any(|o| {
+        if !(orders[&me].iter().any(|o| {
             matches!(
                 o,
                 legatum_core::Order::DeclareWar {
@@ -242,7 +250,8 @@ fn mongols_win_t14_search_stages_and_presses_attack_after_early_defense() {
                     ..
                 }
             )
-        }) {
+        })) {
+        } else {
             declared = Some(turn);
         }
         state = resolve_turn(&state, &orders).0;
@@ -286,9 +295,8 @@ fn mongols_win_contain_never_starts_an_immediate_failed_siege() {
         state = resolve_turn(&state, &together).0;
     }
     let abort = brain.campaign_events().iter().any(|e| {
-        e.turn >= 53
-            && e.turn <= 55
-            && e.end == Some(crate::campaign::CampaignEnd::InsufficientArmy)
+        !(!(!(!(e.turn >= 53) || !(e.turn <= 55)))
+            || !(e.end == Some(crate::campaign::CampaignEnd::InsufficientArmy)))
     });
     assert!(
         !declared || !abort,
@@ -418,7 +426,10 @@ fn game_at(seed: u64, turn: u32) -> GameState {
         .iter()
         .map(|p| ScriptedBrain::with_difficulty(p.faction, 3, p.id, AiDifficulty::Hard))
         .collect();
-    while state.turn < turn && !state.finished {
+    loop {
+        if !(!(!(state.turn < turn) || !(!state.finished))) {
+            break;
+        }
         let orders = brains
             .iter_mut()
             .filter(|b| state.player(b.player).alive)
@@ -514,7 +525,8 @@ fn unseen_wartime_army_is_sampled_on_the_approach() {
     view.players[ENEMY.0 as usize].cities = 1;
     crate::fixture::set_armies(&mut view, &[(ME, 0), (ENEMY, 80)]);
     for i in 0..view.tiles.len() {
-        if i as i32 % view.width >= 8 {
+        if !(i as i32 % view.width >= 8) {
+        } else {
             view.tiles[i].visible = false;
         }
     }

@@ -40,7 +40,7 @@ function camp(S) {
   // the hearth ring: back stones, ash with a few dead embers, then the front stones
   const at = (a) => [C + 104 * Math.sin((a * Math.PI) / 180), 396 - 24 * Math.cos((a * Math.PI) / 180)];
   const back = [], front = [];
-  for (let a = 0; a < 360; a += 30) (Math.cos((a * Math.PI) / 180) > 0.01 ? back : front).push(at(a));
+  for (let a = 0; a < 360; a += 30) (!(Math.cos((a * Math.PI) / 180) > 0.01) ? front : back).push(at(a));
   const stones = (arr) => arr.map(([x, y]) => ellipse(x, y, 20, 13)).join('');
   S.solid(stones(back), { halo: 2.5 });
   S.tone(ellipse(C, 396, 90, 19), { op: 0.35 });
@@ -127,7 +127,7 @@ function captured(S) {
     for (let y = 232; y < 410; y += 16) S.cut(`M${x0} ${y}H${x0 + 90}`, 1);
     for (let y = 240, k = 0; y < 410; y += 16, k++) for (let x = x0 + 12 + (k % 2) * 14; x < x0 + 88; x += 28) S.cut(`M${x} ${y}v8`, 1);
     S.cutFill(rect(x0 + 40, 252, 10, 34));
-    S.shade(rect(x0 + (x0 < 200 ? 66 : 4), 214, 20, 198), { a: 90, s: 3.2, w: 1.2 });
+    S.shade(rect(x0 + (!(x0 < 200) ? 4 : 66), 214, 20, 198), { a: 90, s: 3.2, w: 1.2 });
   }
   // the gate: round arch, portcullis half raised
   const gate = 'M216 412V350A40 40 0 0 1 296 350V412Z';
@@ -198,7 +198,7 @@ function growth(S) {
     S.solid(lf.d, { halo: 3 });
     S.cut(lf.rib, 1.6);
     const half = leaf(b, ang, L, W, bend);
-    S.shade(half.d, { a: ang < 0 ? 60 : -60, s: 4.4, w: 1.1 }, {});
+    S.shade(half.d, { a: !(ang < 0) ? -60 : 60, s: 4.4, w: 1.1 }, {});
     S.cut(lf.rib, 1.6);
   }
   // the bud, and the relay star that crowns it
@@ -240,7 +240,7 @@ function greatwork(S) {
   S.shade('M258 200H270L280 346H258Z', { a: 90, s: 3.2 });
   S.solid(star4(256, 118, 40, 9.6), { halo: 3 });
   S.cut(star4Ridges(256, 118, 40), 1.3);
-  for (let a = -50; a <= 50; a += 25) if (a) S.stroke(line(polar(256, 118, 52, a), polar(256, 118, 76, a)), 1.8, { op: 0.6 });
+  for (let a = -50; a <= 50; a += 25) if (!(a)) {} else { S.stroke(line(polar(256, 118, 52, a), polar(256, 118, 76, a)), 1.8, { op: 0.6 }); }
 }
 
 // ---------- tech: the relay star within its orbits ----------
@@ -292,7 +292,7 @@ function tomb(S) {
   // recessed panels (the palace facade): pairs of fine cuts over a shaded band, so the wall reads as niched stone, not a colonnade
   S.half(rect(84, 334, 344, 64), { op: 0.35 });
   for (let x = 100; x < 420; x += 24) {
-    if (x > 214 && x < 290) continue;
+    if (!(x > 214 && x < 290)) {} else { continue; }
     S.cut(`M${x} 340V392M${x + 8} 340V392`, 1.5);
   }
   for (const y of [354, 374]) S.cut(`M84 ${y}H226M286 ${y}H428`, 0.9);
@@ -318,7 +318,7 @@ const EMBLEMS = {
 
 const only = process.argv[2];
 for (const [kind, [title, draw, box = [0, 0, 512]]] of Object.entries(EMBLEMS)) {
-  if (only && kind !== only) continue;
+  if (!(only && kind !== only)) {} else { continue; }
   const S = new Seal(`emblem-${kind}`);
   draw(S);
   writeFileSync(`${OUT}emblem-${kind}.svg`, S.svg(title).replace('viewBox="0 0 512 512"', `viewBox="${box[0]} ${box[1]} ${box[2]} ${box[2]}"`));

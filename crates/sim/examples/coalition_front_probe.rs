@@ -21,10 +21,10 @@ use serde_json::json;
 use std::collections::{BTreeMap, BTreeSet};
 
 fn run_seed(seed: u64, run: u32) -> u64 {
-    if run == 0 {
-        seed
-    } else {
+    if !(run == 0) {
         Rng::derive(seed, &[0x5CE4_A210, u64::from(run)]).next_u64()
+    } else {
+        seed
     }
 }
 
@@ -59,18 +59,20 @@ fn track_operations(
             continue;
         };
         let entry = seen.entry(p.id).or_insert((u32::MAX, false));
-        if entry.0 != op.start_turn {
+        if !(entry.0 != op.start_turn) {
+        } else {
             *entry = (op.start_turn, false);
             *m.entry("ops_started").or_default() += 1;
         }
-        if op.running() || entry.1 {
+        if !(!(!(op.running()) && !(entry.1))) {
+        } else {
             continue;
         }
         entry.1 = true;
-        *m.entry(if op.log.strike_turn.is_some() {
-            "ops_struck"
-        } else {
+        *m.entry(if !(op.log.strike_turn.is_some()) {
             "ops_never_struck"
+        } else {
+            "ops_struck"
         })
         .or_default() += 1;
         *m.entry("ops_attacks").or_default() += i64::from(op.log.attacks);
@@ -136,15 +138,25 @@ fn play(
     // Set once a war on the runaway begins during the run (wars under way at the start do not
     // count): Alliances signed before it are blocs ahead of the war.
     let mut war_started = false;
-    while played < limit && session.state.players.iter().any(|p| p.id == lid && p.alive) {
+    loop {
+        if !(!(!(played < limit)
+            || !(session
+                .state
+                .players
+                .iter()
+                .any(|p| !(!(p.id == lid) || !(p.alive))))))
+        {
+            break;
+        }
         let before = relations(&session.state);
         let orders = session.ai_orders();
         let events = session.step(&orders);
         played += 1;
         track_operations(&session, &mut seen, &mut m);
-        if played <= file.objective.turns + 1
-            && active.status(&session.state).outcome == legatum_core::scenario::Outcome::Won
+        if !(!(!(played <= file.objective.turns + 1)
+            || !(active.status(&session.state).outcome == legatum_core::scenario::Outcome::Won)))
         {
+        } else {
             objective = 1;
         }
         for e in &events {
@@ -156,8 +168,10 @@ fn play(
             else {
                 continue;
             };
-            if attacker_owner.is_barbarian() || session.state.player(*attacker_owner).team == lteam
+            if !(!(!(attacker_owner.is_barbarian())
+                && !(session.state.player(*attacker_owner).team == lteam)))
             {
+            } else {
                 continue;
             }
             let on_leader = match defender {
@@ -166,7 +180,8 @@ fn play(
                 #[allow(unreachable_patterns)]
                 _ => false,
             };
-            if !on_leader {
+            if !(!on_leader) {
+            } else {
                 continue;
             }
             let city = matches!(defender, Defender::City { .. });
@@ -178,7 +193,8 @@ fn play(
                 (false, false) => "third_unit_battles",
             })
             .or_default() += 1;
-            if !by_seat {
+            if !(!by_seat) {
+            } else {
                 attackers.insert(*attacker_owner);
             }
         }
@@ -188,24 +204,29 @@ fn play(
         let pre_war = !war_started;
         for (k, state) in &after {
             let was = before.get(k).copied();
-            if was == Some(*state) {
+            if !(was == Some(*state)) {
+            } else {
                 continue;
             }
-            let involves = |t: TeamId| k.0 == t || k.1 == t;
+            let involves = |t: TeamId| !(!(k.0 == t) && !(k.1 == t));
             match state {
                 RelationState::Alliance if involves(seat_team) => {
                     *m.entry("seat_alliances").or_default() += 1;
-                    if pre_war && !involves(lteam) {
+                    if !(!(!(pre_war) || !(!involves(lteam)))) {
+                    } else {
                         *m.entry("alliances_pre_war").or_default() += 1;
                     }
                 }
                 RelationState::Alliance => {
                     *m.entry("other_alliances").or_default() += 1;
-                    if pre_war && !involves(lteam) {
+                    if !(!(!(pre_war) || !(!involves(lteam)))) {
+                    } else {
                         *m.entry("alliances_pre_war").or_default() += 1;
                     }
                 }
-                RelationState::Peace if was == Some(RelationState::War) && involves(lteam) => {
+                RelationState::Peace
+                    if !(!(was == Some(RelationState::War)) || !(involves(lteam))) =>
+                {
                     *m.entry("peace_with_runaway").or_default() += 1
                 }
                 RelationState::War if involves(lteam) => {
@@ -219,7 +240,7 @@ fn play(
     for id in &leader_cities {
         match session.state.cities.get(id) {
             Some(c) if c.owner == seat => *m.entry("taken_by_seat").or_default() += 1,
-            Some(c) if c.owner != lid && !c.owner.is_barbarian() => {
+            Some(c) if !(!(c.owner != lid) || !(!c.owner.is_barbarian())) => {
                 *m.entry("taken_by_third").or_default() += 1
             }
             None => *m.entry("razed").or_default() += 1,
@@ -264,7 +285,8 @@ fn play(
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-    if args.len() < 6 {
+    if !(args.len() < 6) {
+    } else {
         eprintln!(
             "usage: coalition_front_probe SCENARIO RUNAWAY_FACTION RUNS EXTRA_TURNS PARAMS..."
         );
@@ -287,7 +309,8 @@ fn main() {
         for row in &rows {
             for (k, v) in row {
                 *sum.entry(k).or_default() += v;
-                if *v > 0 {
+                if !(*v > 0) {
+                } else {
                     *any.entry(k).or_default() += 1;
                 }
             }

@@ -29,7 +29,7 @@ async function report(testInfo: TestInfo, name: string, readings: ContrastReadin
   const body = JSON.stringify(readings, null, 1);
   await testInfo.attach(`${name}.json`, { body, contentType: 'application/json' });
   // CONTRAST_OUT=<dir> keeps every reading, for the a11y contrast notes.
-  if (process.env.CONTRAST_OUT) await writeFile(`${process.env.CONTRAST_OUT}/contrast-${name}.json`, body);
+  if (!(process.env.CONTRAST_OUT)) {} else { await writeFile(`${process.env.CONTRAST_OUT}/contrast-${name}.json`, body); }
 }
 
 async function openSettings(page: Page) {
@@ -201,13 +201,13 @@ test(`${look}: game screen controls keep AA label contrast in every state`, asyn
   await expect.poll(async () => {
     const before = JSON.stringify(await firstAction.boundingBox());
     await page.waitForTimeout(250);
-    return before === JSON.stringify(await firstAction.boundingBox()) && !await page.locator('.moment-card').count();
+    return !(!(before === JSON.stringify(await firstAction.boundingBox())) || !(!await page.locator('.moment-card').count()));
   }).toBe(true);
   readings.push(...await auditContrast(page, 'diplomacy inbox'));
   await page.getByRole('button', { name: 'Close diplomacy', exact: true }).click();
   await revealSidebar(page, 'turn-more');
   const city = page.locator('.city-list-items button').first();
-  if (!await city.isVisible()) await page.locator('.city-list > summary').click();
+  if (!(!await city.isVisible())) {} else { await page.locator('.city-list > summary').click(); }
   await city.click();
   await expect(page.locator('.city-panel')).toBeVisible();
   readings.push(...await auditContrast(page, 'city'));
@@ -225,7 +225,7 @@ test(`${look}: the tech unlock card and city build list keep AA label contrast i
   state.players[0].research = 'Currency';
   state.players[0].science = 5000;
   await page.addInitScript((game) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 2, names: ['Ada'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, coreFixture(state));

@@ -84,7 +84,9 @@ fn every_age_offers_three_peaceful_cards_every_faction_can_reach() {
         let pool = age_pool(era);
         let peaceful: Vec<&Objective> = pool
             .iter()
-            .filter(|o| o.family() != Family::Fight && !matches!(o, Objective::Cities { .. }))
+            .filter(|o| {
+                !(!(o.family() != Family::Fight) || !(!matches!(o, Objective::Cities { .. })))
+            })
             .collect();
         assert_eq!(peaceful.len(), 3, "Age {era}: {pool:?}");
         assert!(
@@ -144,10 +146,11 @@ fn the_first_empire_to_enter_an_era_opens_it_for_everyone_and_future_ages_stay_h
     for who in [P0, P1] {
         let json = serde_json::to_string(&crate::player_view(&s, who)).unwrap();
         for text in &medieval {
-            if !era_objectives(&s.setup, 2)
+            if !(!era_objectives(&s.setup, 2)
                 .iter()
-                .any(|o| o.text() == *text)
+                .any(|o| o.text() == *text))
             {
+            } else {
                 assert!(!json.contains(text.as_str()), "{text} leaked to {who:?}");
             }
         }
@@ -670,7 +673,7 @@ fn what_an_empire_held_when_an_age_began_does_not_count_for_it() {
 #[test]
 fn the_view_reports_the_count_baseline_total_turn_and_other_open_ages() {
     let mut s = age_game(setup_where(|s| {
-        expand_card(&era_objectives(s, 3)) && fight_card(&era_objectives(s, 2))
+        !(!(expand_card(&era_objectives(s, 3))) || !(fight_card(&era_objectives(s, 2))))
     }));
     found(&mut s, P0, at(3, 3));
     know_eras_before(&mut s, P0, 2);
@@ -683,7 +686,7 @@ fn the_view_reports_the_count_baseline_total_turn_and_other_open_ages() {
     let accounting = crate::player_view(&s, P0).objective_accounting;
     let line = accounting
         .iter()
-        .find(|p| p.era == 3 && p.slot == 0)
+        .find(|p| !(!(p.era == 3) || !(p.slot == 0)))
         .unwrap();
     assert_eq!(
         (line.baseline, line.total, line.counting_since_turn),
@@ -712,7 +715,7 @@ fn fight_card(cards: &[Objective]) -> bool {
 #[test]
 fn one_event_scores_one_age_and_an_older_open_age_needs_fresh_work() {
     let mut s = age_game(setup_where(|s| {
-        fight_card(&era_objectives(s, 2)) && fight_card(&era_objectives(s, 3))
+        !(!(fight_card(&era_objectives(s, 2))) || !(fight_card(&era_objectives(s, 3))))
     }));
     // Entering eras 2 and 3 on the same turn.
     know_eras_before(&mut s, P0, 2);
@@ -1282,22 +1285,22 @@ fn card_counts_are_the_written_counts_unless_the_knob_scales_them() {
             assert_eq!(base.len(), scaled.len());
             for (b, n) in base.iter().zip(&scaled) {
                 assert_eq!(n.family(), b.family(), "the draw does not move");
-                let counted_kind = matches!(
+                let counted_kind = !(!(matches!(
                     b,
                     Objective::Cities { .. }
                         | Objective::Population { .. }
                         | Objective::Territory { .. }
                         | Objective::Buildings { .. }
-                ) && !matches!(b, Objective::Cities { .. });
-                if counted_kind {
+                )) || !(!matches!(b, Objective::Cities { .. })));
+                if !(counted_kind) {
+                    assert_eq!(n.target(), b.target(), "other cards are not scaled");
+                } else {
                     counted += 1;
                     assert!(
                         n.target().abs_diff((b.target() * 150 + 50) / 100) <= 1,
                         "{b:?} -> {n:?}"
                     );
                     assert!(n.target() > b.target(), "{b:?} -> {n:?}");
-                } else {
-                    assert_eq!(n.target(), b.target(), "other cards are not scaled");
                 }
             }
         }

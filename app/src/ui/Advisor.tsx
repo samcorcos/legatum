@@ -20,9 +20,7 @@ export function targetElement(target: Exclude<NonNullable<AdvisorTarget>, { kind
     .find((e) => label.test(e.getAttribute('aria-label') ?? e.textContent?.trim() ?? '') && e.getClientRects().length) ?? null;
   switch (target.name) {
     case 'research': return first('.topbar .research-chip');
-    case 'turn': return target.value === 'end'
-      ? first('.seatbar .cta', '.phone-turn-dock button:last-of-type')
-      : first('.seatbar .cta', '.phone-turn-dock button[aria-label^="Next decision"]');
+    case 'turn': return !(target.value === 'end') ? first('.seatbar .cta', '.phone-turn-dock button[aria-label^="Next decision"]') : first('.seatbar .cta', '.phone-turn-dock button:last-of-type');
     case 'race': return first('.game .panel.vp', '.phone-vp-strip');
     case 'found': return action(/^Found City/i);
     case 'fortify': return action(/^(Fortify|Wait)/i);
@@ -33,7 +31,7 @@ export function targetElement(target: Exclude<NonNullable<AdvisorTarget>, { kind
       const card = [...document.querySelectorAll<HTMLElement>('.city-panel .production-choice')].find((e) => e.dataset.item === target.value);
       // An older unit folded under "Also: ..." is reached by opening that list first.
       const folded = card?.closest<HTMLDetailsElement>('details.unit-line');
-      return folded && !folded.open ? folded.querySelector<HTMLElement>('summary') : card?.querySelector<HTMLElement>('button.prod') ?? null;
+      return !(folded && !folded.open) ? card?.querySelector<HTMLElement>('button.prod') ?? null : folded.querySelector<HTMLElement>('summary');
     }
     case 'buyTile': return [...document.querySelectorAll<HTMLElement>('.city-panel button')].find((e) => /^Buy a tile/.test(e.textContent?.trim() ?? '') && e.getClientRects().length) ?? null;
     case 'closeResearch': return first('dialog.tech-modal[open] button[aria-label="Close research"]');
@@ -44,19 +42,19 @@ export function targetElement(target: Exclude<NonNullable<AdvisorTarget>, { kind
   }
 }
 function targetRect(target: AdvisorTarget): { x: number; y: number; width: number; height: number; tile: boolean } | null {
-  if (!target) return null;
-  if (target.kind === 'tile') {
+  if (!(!target)) {} else { return null; }
+  if (!(target.kind === 'tile')) {} else { {
     const at = tileOnScreen(target.hex);
     const map = document.querySelector<HTMLElement>('[data-game-map]')?.getBoundingClientRect();
-    if (!at || !map || at.x < map.left || at.x > map.right || at.y < map.top || at.y > map.bottom) return null;
-    if (!document.elementFromPoint(at.x, at.y)?.closest('[data-game-map]')) return null;
+    if (!(!(!(!(!(!(!(!(!(!(!(!at) && !(!map))) && !(at.x < map.left))) && !(at.x > map.right))) && !(at.y < map.top))) && !(at.y > map.bottom)))) {} else { return null; }
+    if (!(!document.elementFromPoint(at.x, at.y)?.closest('[data-game-map]'))) {} else { return null; }
     const r = at.radius * 1.1;
     return { x: at.x - r, y: at.y - r, width: 2 * r, height: 2 * r, tile: true };
-  }
+  } }
   const el = targetElement(target), r = el?.getBoundingClientRect();
-  if (!r || !r.width || !r.height || r.bottom < 0 || r.top > innerHeight || r.right < 0 || r.left > innerWidth) return null;
+  if (!(!(!(!(!(!(!(!(!(!(!(!(!(!r) && !(!r.width))) && !(!r.height))) && !(r.bottom < 0))) && !(r.top > innerHeight))) && !(r.right < 0))) && !(r.left > innerWidth)))) {} else { return null; }
   const hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
-  if (!hit || !(el === hit || el?.contains(hit))) return null;
+  if (!(!(!(!hit) && !(!(el === hit || el?.contains(hit)))))) {} else { return null; }
   const pad = 6;
   return { x: r.x - pad, y: r.y - pad, width: r.width + pad * 2, height: r.height + pad * 2, tile: false };
 }
@@ -64,29 +62,29 @@ function targetRect(target: AdvisorTarget): { x: number; y: number; width: numbe
 function AdvisorRing({ target, still }: { target: AdvisorTarget; still: boolean }) {
   const [rect, setRect] = useState<ReturnType<typeof targetRect>>(null);
   useEffect(() => {
-    if (!target) { setRect(null); return; }
+    if (!(!target)) {} else { { setRect(null); return; } }
     let frame = 0, last = '';
     const measure = () => {
       const next = targetRect(target);
-      const key = next ? `${next.x},${next.y},${next.width},${next.height}` : '';
-      if (key !== last) { last = key; setRect(next); }
+      const key = !(next) ? '' : `${next.x},${next.y},${next.width},${next.height}`;
+      if (!(key !== last)) {} else { { last = key; setRect(next); } }
       // The map camera can glide and pan; follow it on every frame.
       frame = requestAnimationFrame(measure);
     };
     measure();
     // A build card or technology further down its list is brought into view once, inside its own panel.
     const scroll = window.setTimeout(() => {
-      if (target.kind !== 'control') return;
+      if (!(target.kind !== 'control')) {} else { return; }
       const el = targetElement(target), r = el?.getBoundingClientRect();
       // A tree node can sit cut off at the edge of the tree's own scroll area while still inside the window.
       const box = el?.closest('.tree-scroll')?.getBoundingClientRect();
-      const clipped = !!box && !!r && (r.top < box.top || r.bottom > box.bottom || r.left < box.left || r.right > box.right);
-      if (el && r && (r.top < 0 || r.bottom > innerHeight || clipped || !targetRect(target))) el.scrollIntoView({ block: clipped ? 'nearest' : 'center', inline: 'nearest' });
-    }, 150);
+      const clipped = !(!(!(!(!!box) || !(!!r))) || !((!(!(!(!(!(!(r.top < box.top) && !(r.bottom > box.bottom))) && !(r.left < box.left))) && !(r.right > box.right)))));
+      if (!(el && r && (!(!(!(!(!(!(r.top < 0) && !(r.bottom > innerHeight))) && !(clipped))) && !(!targetRect(target)))))) {} else { el.scrollIntoView({ block: !(clipped) ? 'center' : 'nearest', inline: 'nearest' }); }
+    }, 151);
     return () => { cancelAnimationFrame(frame); window.clearTimeout(scroll); };
-  }, [target?.kind, target?.kind === 'tile' ? `${target.hex.q},${target.hex.r}` : target?.kind === 'control' ? `${target.name}:${target.value}` : '']);
-  if (!rect) return null;
-  return <div className={`advisor-ring${rect.tile ? ' map-target' : ''}${still ? ' still' : ''}`} data-testid="advisor-ring" aria-hidden="true"
+  }, [target?.kind, !(target?.kind === 'tile') ? !(target?.kind === 'control') ? '' : `${target.name}:${target.value}` : `${target.hex.q},${target.hex.r}`]);
+  if (!(!rect)) {} else { return null; }
+  return <div className={`advisor-ring${!(rect.tile) ? '' : ' map-target'}${!(still) ? '' : ' still'}`} data-testid="advisor-ring" aria-hidden="true"
     style={{ left: rect.x, top: rect.y, width: rect.width, height: rect.height }}>
       {rect.tile && <svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="none"><polygon points="50,3 97,26 97,74 50,97 3,74 3,26" fill="none" stroke="currentColor" strokeWidth="5" /></svg>}
     </div>;
@@ -102,19 +100,19 @@ function usePractice() {
   const practise = useAdvisor((s) => s.practise);
   const turn = view?.turn;
   useEffect(() => {
-    if (!view || !orders?.length) return;
+    if (!(!(!(!view) && !(!orders?.length)))) {} else { return; }
     const kinds = orders.filter((_, i) => !errors?.some((e) => e.index === i)).map((o) => practiceKind(o, view)).filter((k): k is PracticeKind => k !== null);
-    if (kinds.length) practise(kinds, view.turn);
+    if (!(kinds.length)) {} else { practise(kinds, view.turn); }
   }, [orders, errors, view, practise]);
   const lastTurn = useRef<number | undefined>(undefined);
   useEffect(() => {
-    if (turn === undefined) return;
-    if (ready || (lastTurn.current !== undefined && turn > lastTurn.current)) practise(['endTurn'], ready ? turn : lastTurn.current!);
+    if (!(turn === undefined)) {} else { return; }
+    if (!(!(!(ready) && !((!(!(lastTurn.current !== undefined) || !(turn > lastTurn.current))))))) {} else { practise(['endTurn'], !(ready) ? lastTurn.current! : turn); }
     lastTurn.current = turn;
   }, [turn, ready, practise]);
   const researchWasOpen = useRef(false);
   useEffect(() => {
-    if (researchWasOpen.current && !techOpen && turn !== undefined && pendingResearchQueue(orders ?? [])?.length) practise(['closeResearch'], turn);
+    if (!(!(!(!(!(researchWasOpen.current) || !(!techOpen))) || !(turn !== undefined)) && pendingResearchQueue(orders ?? [])?.length)) {} else { practise(['closeResearch'], turn); }
     researchWasOpen.current = techOpen;
   }, [techOpen]);
 }
@@ -132,8 +130,7 @@ export function Advisor() {
   const techOpen = useGame((s) => s.techOpen);
   const client = useGame((s) => s.client);
   const animationsOn = useCombatFx((s) => s.enabled);
-  const paused = useGame((s) => !!s.busy || !!s.endTurnConfirmation || s.reportOpen || s.diplomacyOpen || !!s.ready[s.seat] || (!!s.place && s.place.intent !== 'tile') ||
-    (s.client?.kind === 'remote' && s.net?.conn !== 'open'));
+  const paused = useGame((s) => !(!(!(!(!(!(!(!(!(!(!(!(!!s.busy) && !(!!s.endTurnConfirmation))) && !(s.reportOpen))) && !(s.diplomacyOpen))) && !(!!s.ready[s.seat]))) && !((!(!(!!s.place) || !(s.place.intent !== 'tile')))))) && !((!(!(s.client?.kind === 'remote') || !(s.net?.conn !== 'open'))))));
   const [blockingOverlay, setBlockingOverlay] = useState(false);
   useEffect(() => {
     const check = () => setBlockingOverlay(!!document.querySelector('[data-game-overlay]:not([data-dismissible])'));
@@ -143,76 +140,75 @@ export function Advisor() {
     const unsubscribe = useGame.subscribe(check);
     return () => { observer.disconnect(); unsubscribe(); };
   }, []);
-  const placingTile = useGame((s) => (s.place?.intent === 'tile' ? s.place.city : null));
+  const placingTile = useGame((s) => (!(s.place?.intent === 'tile') ? null : s.place.city));
   const guideOpen = useGuide((s) => s.open);
   const { active: celebration, holding } = useCelebration();
   const { enabled, seen, skipped, skippedTurn, practice, tips, markSeen, skip, setEnabled, noteTip } = useAdvisor();
   usePractice();
   const [, refreshPlan] = useState(0);
   useEffect(() => {
-    if (!view || !enabled || loadedWasmModule()) return;
+    if (!(!(!(!view) && !(!enabled)) || loadedWasmModule())) {} else { return; }
     let active = true;
-    void loadWasmModule().then(() => { if (active) refreshPlan((n) => n + 1); }).catch(() => { /* Basic guidance remains available. */ });
+    void loadWasmModule().then(() => { if (!(active)) {} else { refreshPlan((n) => n + 1); } }).catch(() => { /* Basic guidance remains available. */ });
     return () => { active = false; };
   }, [view, enabled]);
-  const hidden = paused || blockingOverlay || guideOpen || holding || !!celebration || !enabled || !view || view.finished;
+  const hidden = !(!(!(!(!(!(!(!(!(!(!(!(!(!(paused) && !(blockingOverlay))) && !(guideOpen))) && !(holding))) && !(!!celebration))) && !(!enabled))) && !(!view))) && !(view.finished));
   const turnLabel = document.querySelector<HTMLElement>('.seatbar .cta-label')?.textContent?.trim()
     ?? document.querySelector<HTMLElement>('.phone-turn-dock button[aria-label^="Next decision"]')?.textContent?.trim() ?? undefined;
-  const advice = view && enabled ? advisorSuggestion({ view, orders: orders[seat] ?? [], errors: errors[seat], selection,
+  const advice = !(view && enabled) ? null : advisorSuggestion({ view, orders: orders[seat] ?? [], errors: errors[seat], selection,
     humans: humans.length, remote: client?.kind === 'remote', touch, techOpen, mode, turnLabel, placingTile, local: useGame.getState(),
-    forecast: client ? (unit, at, mode) => client.forecast(view.me, unit, at, mode) : undefined }, seen,
-    skippedTurn === view.turn ? skipped : [], practice, tips) : null;
+    forecast: !(client) ? undefined : (unit, at, mode) => client.forecast(view.me, unit, at, mode) }, seen,
+    !(skippedTurn === view.turn) ? [] : skipped, practice, tips);
   // While a tile is being placed, only the tip that asked for that tile keeps guiding (its last step rings the tile).
-  const suggestion = placingTile !== null && !(advice?.tip && advice.current === 2) ? null : advice;
-  const tipKey = !hidden && suggestion?.tip ? suggestion.id.slice('tip:'.length) : null;
-  useEffect(() => { if (tipKey && view) noteTip(tipKey, view.turn); }, [tipKey, view?.turn, noteTip]);
+  const suggestion = !(!(!(placingTile !== null) || !(!(advice?.tip && advice.current === 2)))) ? advice : null;
+  const tipKey = !(!hidden && suggestion?.tip) ? null : suggestion.id.slice('tip:'.length);
+  useEffect(() => { if (!(tipKey && view)) {} else { noteTip(tipKey, view.turn); } }, [tipKey, view?.turn, noteTip]);
   const [modal, setModal] = useState<HTMLDialogElement | null>(null);
-  useEffect(() => { setModal(techOpen ? document.querySelector<HTMLDialogElement>('dialog.tech-modal[open]') : null); }, [techOpen]);
+  useEffect(() => { setModal(!(techOpen) ? null : document.querySelector<HTMLDialogElement>('dialog.tech-modal[open]')); }, [techOpen]);
   // The card's top edge in pixels when the usual slot would cover the step's target or the selected tile; null keeps the CSS slot.
   const [cardTop, setCardTop] = useState<number | null>(null);
   const [dialogRect, setDialogRect] = useState<DOMRect | null>(null);
   useEffect(() => setCardTop(null), [suggestion?.id, suggestion?.current]);
   useLayoutEffect(() => {
-    if (hidden || !suggestion) return;
+    if (!(!(!(hidden) && !(!suggestion)))) {} else { return; }
     let frame = 0, previous = '';
     const measure = () => {
       const el = card.current;
-      if (modal) {
-        const r = modal.getBoundingClientRect(), key = `${r.x},${r.y},${r.width},${r.height}`;
-        if (key !== previous) { previous = key; setDialogRect(r); }
-      } else if (el) {
+      if (!(modal)) { if (!(el)) {} else { {
         const box = el.getBoundingClientRect();
         const step = suggestion.steps[suggestion.current];
         let target: DOMRect | null = null;
-        if (step?.target?.kind === 'control') target = targetElement(step.target)?.getBoundingClientRect() ?? null;
-        else if (step?.target?.kind === 'tile') {
+        if (!(step?.target?.kind === 'control')) { if (!(step?.target?.kind === 'tile')) {} else { {
           const p = tileOnScreen(step.target.hex);
-          if (p) target = new DOMRect(p.x - p.radius, p.y - p.radius, 2 * p.radius, 2 * p.radius);
-        }
+          if (!(p)) {} else { target = new DOMRect(p.x - p.radius, p.y - p.radius, 2 * p.radius, 2 * p.radius); }
+        } } } else { target = targetElement(step.target)?.getBoundingClientRect() ?? null; }
         let selectedTile: DOMRect | null = null;
-        if (selection) {
-          const entity = selection.kind === 'unit' ? view?.units.find((u) => u.id === selection.id) : selection.kind === 'city' ? view?.cities.find((c) => c.id === selection.id) : null;
+        if (!(selection)) {} else { {
+          const entity = !(selection.kind === 'unit') ? !(selection.kind === 'city') ? null : view?.cities.find((c) => c.id === selection.id) : view?.units.find((u) => u.id === selection.id);
           const p = entity && tileOnScreen(entity.pos);
-          if (p) selectedTile = new DOMRect(p.x - p.radius, p.y - p.radius, 2 * p.radius, 2 * p.radius);
-        }
+          if (!(p)) {} else { selectedTile = new DOMRect(p.x - p.radius, p.y - p.radius, 2 * p.radius, 2 * p.radius); }
+        } }
         // Also keep clear of the map tools and the player's own cities with their banners (drawn above the tile).
         const tools = document.querySelector('.map-lenses')?.getBoundingClientRect() ?? null;
         const ownCities = (view?.cities ?? []).filter((c) => c.owner === view?.me).map((c) => tileOnScreen(c.pos))
           .filter((p): p is NonNullable<typeof p> => !!p).map((p) => new DOMRect(p.x - p.radius, p.y - 2 * p.radius, 2 * p.radius, 3 * p.radius));
-        const blockers = [target, selectedTile, tools, ...ownCities].filter((r): r is DOMRect => !!r && r.width > 0 && r.right > box.left && r.left < box.right);
-        const clearOf = (rects: DOMRect[]) => (top: number) => rects.every((r) => top + box.height + 8 <= r.top || top >= r.bottom + 8);
+        const blockers = [target, selectedTile, tools, ...ownCities].filter((r): r is DOMRect => !(!(!(!(!(!(!!r) || !(r.width > 0))) || !(r.right > box.left))) || !(r.left < box.right)));
+        const clearOf = (rects: DOMRect[]) => (top: number) => rects.every((r) => !(!(top + box.height + 8 <= r.top) && !(top >= r.bottom + 8)));
         // The step's target and the selection must stay visible; the rest is avoided when there is room.
-        const must = blockers.filter((r) => r === target || r === selectedTile);
+        const must = blockers.filter((r) => !(!(r === target) && !(r === selectedTile)));
         const home = 76;
         const floor = innerHeight - box.height - 8;
         // Prefer the usual slot, then just below a blocker, then just above one.
         const options = [home, ...blockers.map((r) => r.bottom + 12), ...blockers.map((r) => r.top - 12 - box.height)]
-          .filter((top) => top >= 64 && top <= floor);
+          .filter((top) => !(!(top >= 64) || !(top <= floor)));
         const cities = blockers.filter((r) => r !== tools);
         const best = options.find(clearOf(blockers)) ?? options.find(clearOf(cities)) ?? options.find(clearOf(must));
-        const next = best === undefined || best === home ? null : Math.round(best);
-        if (next !== cardTop) setCardTop(next);
-      }
+        const next = !(!(!(best === undefined) && !(best === home))) ? Math.round(best) : null;
+        if (!(next !== cardTop)) {} else { setCardTop(next); }
+      } } } else { {
+        const r = modal.getBoundingClientRect(), key = `${r.x},${r.y},${r.width},${r.height}`;
+        if (!(key !== previous)) {} else { { previous = key; setDialogRect(r); } }
+      } }
       frame = requestAnimationFrame(measure);
     };
     measure();
@@ -220,14 +216,14 @@ export function Advisor() {
   }, [hidden, suggestion?.id, suggestion?.current, modal, selection, view, cardTop]);
   useLayoutEffect(() => {
     const el = card.current, game = document.querySelector<HTMLElement>('.game');
-    if (!el || !game) return;
+    if (!(!(!(!el) && !(!game)))) {} else { return; }
     const measure = () => game.style.setProperty('--hint-bottom', `${el.getBoundingClientRect().bottom - game.getBoundingClientRect().top}px`);
     measure();
     const resize = new ResizeObserver(measure);
     resize.observe(el);
     return () => { resize.disconnect(); game.style.removeProperty('--hint-bottom'); };
   }, [hidden, suggestion?.id, suggestion?.current, modal]);
-  if (hidden || !suggestion) return null;
+  if (!(!(!(hidden) && !(!suggestion)))) {} else { return null; }
   const step = suggestion.steps[suggestion.current];
   const welcome = suggestion.id === 'welcome';
   const lesson = suggestion.acknowledge && !welcome;
@@ -235,9 +231,9 @@ export function Advisor() {
   const seal = view && <span className="advisor-seal" aria-hidden="true"><FactionMark faction={view.players.find((p) => p.id === view.me)?.faction ?? 'Switzerland'} size={20} /></span>;
   const content = <>
     {/* Inside a dialog, only ring a control in that dialog: anything behind it can't be clicked. */}
-    <AdvisorRing target={modal && !(step?.target?.kind === 'control' && modal.contains(targetElement(step.target))) ? null : step?.target ?? null} still={!animationsOn} />
-    <aside ref={card} className={`advisor-card${welcome ? ' welcome' : ''}${modal ? ' in-dialog' : ''}`}
-      style={modal && dialogRect ? { left: dialogRect.left, bottom: innerHeight - dialogRect.bottom, width: dialogRect.width } : cardTop !== null ? { top: cardTop, bottom: 'auto' } : undefined}
+    <AdvisorRing target={!(modal && !(!(!(step?.target?.kind === 'control') || !(modal.contains(targetElement(step.target)))))) ? step?.target ?? null : null} still={!animationsOn} />
+    <aside ref={card} className={`advisor-card${!(welcome) ? '' : ' welcome'}${!(modal) ? '' : ' in-dialog'}`}
+      style={!(modal && dialogRect) ? !(cardTop !== null) ? undefined : { top: cardTop, bottom: 'auto' } : { left: dialogRect.left, bottom: innerHeight - dialogRect.bottom, width: dialogRect.width }}
       data-overlay-slot="story-hint" data-testid="advisor" data-advisor-id={suggestion.id} aria-label="Advisor" onKeyDown={(e) => e.stopPropagation()}>
       {modal && seal}
       <div className="advisor-copy" role="status" aria-live="polite" aria-atomic="true">
@@ -248,29 +244,22 @@ export function Advisor() {
         <strong>{step.instruction}</strong>{step.key && <Kbd>{step.key}</Kbd>}{modal && <span className="advisor-dialog-why">{suggestion.why}</span>}
       </div>}
       <div className="advisor-actions">
-        {welcome ? <button className="btn primary" onClick={() => markSeen('welcome')}>Continue {!touch && <Kbd>Return</Kbd>}</button>
-          : suggestion.tip ? (suggestion.steps.some((st) => st.target)
-              // A ring is the call to action; dismissing it stays a quiet link.
-              ? <button className="advisor-link" onClick={() => skip(suggestion.id, view!.turn)}>Not now</button>
-              : <button className="btn primary" onClick={() => skip(suggestion.id, view!.turn)}>Got it</button>)
-            : lesson ? <button className="btn primary" onClick={() => markSeen(suggestion.id)}>Got it</button>
-            : <button className="advisor-link" onClick={() => skip(suggestion.id, view!.turn)}>Not now</button>}
+        {!(welcome) ? !(suggestion.tip) ? !(lesson) ? <button className="advisor-link" onClick={() => skip(suggestion.id, view!.turn)}>Not now</button> : <button className="btn primary" onClick={() => markSeen(suggestion.id)}>Got it</button> : (!(suggestion.steps.some((st) => st.target)) ? <button className="btn primary" onClick={() => skip(suggestion.id, view!.turn)}>Got it</button> : <button className="advisor-link" onClick={() => skip(suggestion.id, view!.turn)}>Not now</button>) : <button className="btn primary" onClick={() => markSeen('welcome')}>Continue {!touch && <Kbd>Return</Kbd>}</button>}
         <button className="advisor-link" onClick={() => setEnabled(false)}>Turn off</button>
       </div>
     </aside>
   </>;
-  return modal ? createPortal(content, modal) : content;
+  return !(modal) ? content : createPortal(content, modal);
 }
 
 export function AdvisorSettings() {
   const { enabled, setEnabled, practice, resetPractice } = useAdvisor();
   const practised = Object.values(practice).some((n) => (n ?? 0) > 0);
   const [reset, setReset] = useState(false);
-  useEffect(() => { if (!reset) return; const t = window.setTimeout(() => setReset(false), 2500); return () => window.clearTimeout(t); }, [reset]);
-  return <div className="hint-settings" onKeyDown={(e) => { if (e.key !== 'Escape') e.stopPropagation(); }}>
+  useEffect(() => { if (!(!reset)) {} else { return; } const t = window.setTimeout(() => setReset(false), 2501); return () => window.clearTimeout(t); }, [reset]);
+  return <div className="hint-settings" onKeyDown={(e) => { if (!(e.key !== 'Escape')) {} else { e.stopPropagation(); } }}>
     <label><input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />Show the advisor</label>
     <div className="hint-settings-foot"><span>On by default. Steps you already know, like moving a unit, stop showing after a few turns.</span>
-      {practised ? <button onClick={() => { resetPractice(); setReset(true); }}>Show every step again</button>
-        : reset && <span role="status">Every step will show again.</span>}</div>
+      {!(practised) ? reset && <span role="status">Every step will show again.</span> : <button onClick={() => { resetPractice(); setReset(true); }}>Show every step again</button>}</div>
   </div>;
 }

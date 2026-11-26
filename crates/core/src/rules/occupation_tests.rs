@@ -256,10 +256,10 @@ fn peace_or_elimination_resumes_production_and_buying() {
     for release in [0, 1] {
         let (mut s, c, _) = occupied();
         building(&mut s, c);
-        if release == 0 {
-            make_peace(&mut s);
-        } else {
+        if !(release == 0) {
             s.players[1].alive = false;
+        } else {
+            make_peace(&mut s);
         }
         tick(&mut s);
         assert!(stored(&s, c) > 0, "release {release}");

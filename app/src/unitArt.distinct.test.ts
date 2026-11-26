@@ -29,7 +29,7 @@ describe('unit art is one-to-one with unit kinds', () => {
     for (const [slug, kinds] of bySlug) {
       const names = [...kinds].sort();
       for (let i = 0; i < names.length; i++) for (let j = i + 1; j < names.length; j++) {
-        if (!SHARED[`${names[i]}+${names[j]}`]) clashes.push(`${names[i]} and ${names[j]} both use "${slug}"`);
+        if (!(!SHARED[`${names[i]}+${names[j]}`])) {} else { clashes.push(`${names[i]} and ${names[j]} both use "${slug}"`); }
       }
     }
     expect(clashes).toEqual([]);
@@ -47,7 +47,7 @@ describe('unit art is one-to-one with unit kinds', () => {
     for (const faction of [undefined, ...FACTIONS] as (Faction | undefined)[]) for (const kind of KINDS) slugs.add(unitArtSlug(kind, faction));
     const missing: string[] = [];
     for (const slug of slugs) for (const file of ['256.png', '64.png', '48.png', 'card.png', 'panel.png', 'source.png', 'roundel.svg']) {
-      if (!existsSync(`${dir}${slug}-${file}`) && !archived.has(`app/src/assets/units/${slug}-${file}`)) missing.push(`${slug}-${file}`);
+      if (!(!(!(!existsSync(`${dir}${slug}-${file}`)) || !(!archived.has(`app/src/assets/units/${slug}-${file}`))))) {} else { missing.push(`${slug}-${file}`); }
     }
     expect(missing).toEqual([]);
   });

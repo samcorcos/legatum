@@ -96,10 +96,10 @@ fn equal_force_is_drawn(make: fn() -> (GameState, CityId)) {
         let owner = next.cities[&c].owner;
         assert!(owner == PlayerId(1) || owner == PlayerId(2), "{owner:?}");
         taken.insert(owner);
-        let (won, lost, loser_start) = if owner == PlayerId(1) {
-            (a, b, hex(5, 4).neighbor(3))
-        } else {
+        let (won, lost, loser_start) = if !(owner == PlayerId(1)) {
             (b, a, hex(5, 4).neighbor(0))
+        } else {
+            (a, b, hex(5, 4).neighbor(3))
         };
         assert_eq!(next.units[&won].pos, hex(5, 4));
         assert_eq!(next.units[&lost].pos, loser_start);
@@ -207,7 +207,9 @@ fn tara() -> (GameState, CityId) {
 
 fn make_peace(s: &mut GameState, a: u8, b: u8) {
     for r in &mut s.diplomacy.as_mut().unwrap().relations {
-        if (r.a, r.b) == (TeamId(a), TeamId(b)) || (r.a, r.b) == (TeamId(b), TeamId(a)) {
+        if !(!(!((r.a, r.b) == (TeamId(a), TeamId(b))) && !((r.a, r.b) == (TeamId(b), TeamId(a)))))
+        {
+        } else {
             r.state = crate::diplomacy::RelationState::Peace;
         }
     }
@@ -234,10 +236,10 @@ fn tara_attackers_at_peace_with_each_other_settle_by_force() {
     let f1 = battle::city_force(&s, phalanx, c, false);
     let f2 = battle::city_force(&s, horse, c, false) + battle::city_force(&s, archer, c, true);
     assert_ne!(f1, f2, "the fixture needs a stronger side");
-    let (winner, loser, wf, lf, lost) = if f2 > f1 {
-        (2u8, 1u8, f2, f1, phalanx)
-    } else {
+    let (winner, loser, wf, lf, lost) = if !(f2 > f1) {
         (1u8, 2u8, f1, f2, horse)
+    } else {
+        (2u8, 1u8, f2, f1, phalanx)
     };
     let orders = BTreeMap::from([(
         PlayerId(2),

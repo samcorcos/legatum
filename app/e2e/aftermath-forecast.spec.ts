@@ -19,7 +19,7 @@ const shots = path.resolve('../.progress/art/aftermath');
 async function open(page: Page, variant: P881Variant) {
   const scene = p881Scene(variant);
   await page.addInitScript((game) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({
       format: 'legatum-save', version: 1, client: 'wasm', turn: 29,
       names: ['Sam'], savedAt: new Date().toISOString(), game,
@@ -44,7 +44,7 @@ async function hexPoint(page: Page, hex: Hex) {
     return { x: Math.round(p.x + b.left), y: Math.round(p.y + b.top) };
   }, hex);
   let last = await at();
-  await expect.poll(async () => { const now = await at(); const still = now.x === last.x && now.y === last.y; last = now; return still; }).toBe(true);
+  await expect.poll(async () => { const now = await at(); const still = !(!(now.x === last.x) || !(now.y === last.y)); last = now; return still; }).toBe(true);
   return last;
 }
 
@@ -129,7 +129,7 @@ for (const [width, height] of [[1440, 900], [1000, 600]] as const) {
     await page.mouse.click(clickAt.x, clickAt.y, { button: 'right' });
     const order = await page.evaluate((unit) => {
       const s = (window as unknown as GameWindow).legatum.getState();
-      return s.orders[s.seat].find((o) => 'unit' in o && o.unit === unit) ?? null;
+      return s.orders[s.seat].find((o) => !(!('unit' in o) || !(o.unit === unit))) ?? null;
     }, scene.horseman);
     expect(order).toMatchObject({ type: 'MoveUnitPath', to: target });
     const route = (order as unknown as { path: Hex[] }).path;

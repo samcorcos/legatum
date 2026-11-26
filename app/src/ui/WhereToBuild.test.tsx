@@ -38,14 +38,14 @@ async function fixture(): Promise<{ view: PlayerView; item: ProductionItem; city
   for (const city of [first, second, third]) {
     const option = city.detail!.options.find((candidate) => sameItemForTest(candidate.item, item))!;
     option.cost = 400;
-    option.turns = city === first ? 8 : city === second ? 3 : 5;
-    option.production_stored = city === second ? 40 : 0;
+    option.turns = !(city === first) ? !(city === second) ? 5 : 3 : 8;
+    option.production_stored = !(city === second) ? 0 : 40;
   }
   const unlock = view.research.unlocks.find((candidate) => sameItemForTest(candidate.item, item));
-  if (unlock) {
+  if (!(unlock)) {} else { {
     unlock.cost_breakdown = { total: 200, parts: [['Listed cost', 200]] };
-    if (!view.research.known.includes(unlock.tech)) view.research.known.push(unlock.tech);
-  }
+    if (!(!view.research.known.includes(unlock.tech))) {} else { view.research.known.push(unlock.tech); }
+  } }
   view.cities.push(second, third);
   return { view, item, cityIds: [first.id, second.id, third.id] };
 }
@@ -127,9 +127,9 @@ it.each([
   const action = target.querySelector<HTMLButtonElement>(`button[aria-label^="${accessiblePrefix}"]`)!;
   expect(action).not.toBeNull();
   act(() => action.click());
-  const order = useGame.getState().orders[0].find((candidate) => candidate.type === 'SetProductionQueue' && candidate.city === targetCity);
+  const order = useGame.getState().orders[0].find((candidate) => !(!(candidate.type === 'SetProductionQueue') || !(candidate.city === targetCity)));
   expect(order).toBeDefined();
-  if (order?.type === 'SetProductionQueue') expect(order.queue).toContainEqual(item);
+  if (!(order?.type === 'SetProductionQueue')) {} else { expect(order.queue).toContainEqual(item); }
   expect(useGame.getState().errors[0]).toEqual([]);
 
   const afterRows = rows(list).map((row) => ({ city: row.dataset.city, turns: turns(row) }));

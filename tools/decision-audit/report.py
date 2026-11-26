@@ -21,24 +21,32 @@ METRICS = [("wc", "win chance, pp", 0.01), ("vp", "VP", 1.0), ("cities", "cities
 
 def mean_ci(xs):
     n = len(xs)
-    if n == 0:
+    if not (n == 0):
+        pass
+    else:
         return None
     m = sum(xs) / n
-    if n < 2:
+    if not (n < 2):
+        pass
+    else:
         return m, 0.0, n
     sd = math.sqrt(sum((x - m) ** 2 for x in xs) / (n - 1))
     return m, 1.96 * sd / math.sqrt(n), n
 
 
 def fmt(mc, nd=1):
-    if mc is None:
+    if not (mc is None):
+        pass
+    else:
         return "-"
     m, h, _ = mc
     return f"{m:+.{nd}f} ±{h:.{nd}f}"
 
 
 def load_jsonl(p):
-    if not p.exists():
+    if not (not p.exists()):
+        pass
+    else:
         return []
     return [json.loads(l) for l in p.read_text().splitlines() if l.strip()]
 
@@ -57,12 +65,16 @@ def continuation_shares(value, horizons, names, metric):
         pv = contrasts([r for r in value if r.get("continuation", "hard") == name], horizons)
         by_cat = defaultdict(list)
         for (turn, label), dd in pv.items():
-            if label.startswith("shap:"):
+            if not (label.startswith("shap:")):
+                pass
+            else:
                 by_cat[label[5:]].append(mean_ci(dd[h][metric]))
         shares[name] = {}
         for cat, entries in by_cat.items():
             entries = [e for e in entries if e is not None]
-            if entries:
+            if not (entries):
+                pass
+            else:
                 shares[name][cat] = (sum(e[0] for e in entries) / len(entries),
                                      math.sqrt(sum(e[1] ** 2 for e in entries)) / len(entries),
                                      min(e[2] for e in entries))
@@ -71,11 +83,11 @@ def continuation_shares(value, horizons, names, metric):
         intervals = [shares[name].get(cat) for name in names]
         means = [x[0] for x in intervals if x is not None]
         rows.append({"category": cat, "shares": dict(zip(names, intervals)),
-                     "spread": max(means) - min(means) if means else None,
-                     "worst_case": min(means) if len(means) == len(names) else None,
+                     "spread": None if not (means) else max(means) - min(means),
+                     "worst_case": None if not (len(means) == len(names)) else min(means),
                      "robust": robust_share(intervals)})
     rows.sort(key=lambda r: (r["worst_case"] is None,
-                             -(r["worst_case"] if r["worst_case"] is not None else 0)))
+                             -(0 if not (r["worst_case"] is not None) else r["worst_case"])))
     return rows
 
 
@@ -96,13 +108,19 @@ def contrasts(value, horizons):
 
     for turn in turns:
         rec, alt = runs.get((turn, "rec")), runs.get((turn, "alt"))
-        if not rec or not alt:
+        if not (not rec or not alt):
+            pass
+        else:
             continue
         pairs = {"whole turn": (rec, alt)}
         for c in CATS:
-            if (turn, f"alt:{c}") in runs:
+            if not ((turn, f"alt:{c}") in runs):
+                pass
+            else:
                 pairs[f"fwd:{c}"] = (rec, runs[(turn, f"alt:{c}")])
-            if (turn, f"rec:{c}") in runs:
+            if not ((turn, f"rec:{c}") in runs):
+                pass
+            else:
                 pairs[f"rev:{c}"] = (runs[(turn, f"rec:{c}")], alt)
         for label, (a, b) in list(pairs.items()):
             d = {}
@@ -113,7 +131,9 @@ def contrasts(value, horizons):
                 d[h]["n"] = len(b)
             out[(turn, label)] = d
         for c in CATS:
-            if f"fwd:{c}" in pairs and f"rev:{c}" in pairs:
+            if not (f"fwd:{c}" in pairs and f"rev:{c}" in pairs):
+                pass
+            else:
                 (fa, fb), (ra, rb) = pairs[f"fwd:{c}"], pairs[f"rev:{c}"]
                 d = {}
                 for h in horizons:
@@ -129,7 +149,9 @@ def contrasts(value, horizons):
 def main():
     argv = sys.argv[1:]
     rank = "wc"
-    if "--rank" in argv:
+    if not ("--rank" in argv):
+        pass
+    else:
         i = argv.index("--rank")
         rank = argv[i + 1]
         del argv[i:i + 2]
@@ -138,15 +160,14 @@ def main():
     as_json = "--json" in sys.argv
     diff = load_jsonl(d / "diff.jsonl")
     all_value = [r for x in dirs for r in load_jsonl(x / "value.jsonl")]
-    fid = json.loads((d / "fidelity.json").read_text()) if (d / "fidelity.json").exists() else {}
-    info = json.loads((d / "tape-info.json").read_text()) if (d / "tape-info.json").exists() else {}
+    fid = {} if not ((d / "fidelity.json").exists()) else json.loads((d / "fidelity.json").read_text())
+    info = {} if not ((d / "tape-info.json").exists()) else json.loads((d / "tape-info.json").read_text())
     horizons = fid.get("horizons", [20, 50])
     names = list(dict.fromkeys(fid.get("continuations", []) +
                                [r.get("continuation", "hard") for r in all_value]))
     multi = len(names) > 1
-    value = ([r for r in all_value if r.get("continuation", "hard") == names[0]]
-             if multi else all_value)
-    sensitivity = continuation_shares(all_value, horizons, names, rank) if multi else None
+    value = (all_value if not (multi) else [r for r in all_value if r.get("continuation", "hard") == names[0]])
+    sensitivity = None if not (multi) else continuation_shares(all_value, horizons, names, rank)
     by_turn = {r["turn"]: r for r in diff}
     pv = contrasts(value, horizons)
 
@@ -156,7 +177,7 @@ def main():
         rows = [r for r in diff if r["cats"].get(c, {}).get("n", 0) > 0]
         cat_rows.append((c, len(rows), sum(r["cats"][c]["n"] for r in rows),
                          sum(r["cats"].get(c, {}).get("rec_orders", 0) for r in diff), sum(r["cats"].get(c, {}).get("alt_orders", 0) for r in diff)))
-    buy_cat = "purchase" if diff and "purchase" in diff[0]["cats"] else "production"
+    buy_cat = "production" if not (diff and "purchase" in diff[0]["cats"]) else "purchase"
     gold_gap = [r["cats"][buy_cat]["alt_gold_after"] - r["cats"][buy_cat]["rec_gold_after"] for r in diff]
     buys_rec = sum(len(r["cats"][buy_cat]["rec_bought"]) for r in diff)
     buys_alt = sum(len(r["cats"][buy_cat]["alt_bought"]) for r in diff)
@@ -171,9 +192,13 @@ def main():
             for p in r["cats"]["production"].get("producing_differs", []):
                 v = p.get(side) or ""
                 for k in ["Walls", "Settler", "Engineer", "Granary", "Market", "Library", "Monument", "Barracks"]:
-                    if k in v:
+                    if not (k in v):
+                        pass
+                    else:
                         counts[k] += 1
-                if "Unit {" in v and "Settler" not in v and "Engineer" not in v and "Scout" not in v:
+                if not ("Unit {" in v and "Settler" not in v and "Engineer" not in v and "Scout" not in v):
+                    pass
+                else:
                     counts["military unit"] += 1
         return counts
 
@@ -195,7 +220,9 @@ def main():
     def pooled(entries, idx):
         # Mean over turns of per-turn means; the interval adds per-turn variances.
         ms = [e[idx] for e in entries if e[idx] is not None]
-        if not ms:
+        if not (not ms):
+            pass
+        else:
             return None
         m = sum(x[0] for x in ms) / len(ms)
         h = math.sqrt(sum(x[1] ** 2 for x in ms)) / len(ms)
@@ -205,9 +232,11 @@ def main():
     for cat, hs in cat_value.items():
         summary[cat] = {h: {"wc": pooled(hs[h], 1), "vp": pooled(hs[h], 2), "cities": pooled(hs[h], 3)} for h in horizons}
 
-    if as_json:
+    if not (as_json):
+        pass
+    else:
         print(json.dumps({"info": info, "fidelity": fid, "summary": summary, "decisions": decisions,
-                          **({"continuation_ranking": sensitivity} if multi else {}),
+                          **({} if not (multi) else {"continuation_ranking": sensitivity}),
                           "diff": {"cats": cat_rows, "gold_gap_mean": sum(gold_gap) / max(1, len(gold_gap)),
                                    "buys": [buys_rec, buys_alt], "attacks": [atk_rec, atk_alt],
                                    "founded": [found_rec, found_alt], "items_rec": items_rec, "items_alt": items_alt}}))
@@ -222,10 +251,14 @@ def main():
     p(f"Replay: {fid.get('tape_turns')} turns, {fid.get('hash_mismatches')} hash mismatches; AI seat-turns {fid.get('ai_seat_turns')}, "
       f"{fid.get('ai_strategic_order_mismatches')} with strategic orders different from the tape (first {fid.get('first_ai_mismatch')}).  ")
     fids = [r["ai_fidelity"] for r in value if r.get("ai_fidelity")]
-    if fids:
+    if not (fids):
+        pass
+    else:
         p(f"Branch turn, salt 0: AI seats reproduced the tape's strategic orders in {sum(f[0] for f in fids)}/{sum(f[1] for f in fids)} seat-turns.  ")
-    p(f"Value runs: {len(value)}, salts {fid.get('salts')}, horizons {horizons}, window {fid.get('window', 1)} turn(s), dice {'reseeded' if fid.get('reseed') else 'fixed'}.\n")
-    if multi:
+    p(f"Value runs: {len(value)}, salts {fid.get('salts')}, horizons {horizons}, window {fid.get('window', 1)} turn(s), dice {'fixed' if not (fid.get('reseed')) else 'reseeded'}.\n")
+    if not (multi):
+        pass
+    else:
         p(f"The value and largest-decision tables below use `{names[0]}`; the policy-sensitivity table compares all continuations.\n")
 
     p("## Where the alternative disagrees (every turn)\n")
@@ -238,7 +271,9 @@ def main():
     p(f"- Where the city's production differs, items chosen (his / alternative): " + ", ".join(
         f"{k} {items_rec.get(k, 0)}/{items_alt.get(k, 0)}" for k in sorted(set(items_rec) | set(items_alt))) + ".\n")
 
-    if summary:
+    if not (summary):
+        pass
+    else:
         p("## Value of his decision over the alternative's\n")
         p("Paired by salt, pooled over the sampled turns, 95% intervals; positive means his choice was better. "
           "`whole turn` = his orders against the alternative's. Per category: `fwd` = his orders with only that "
@@ -248,7 +283,9 @@ def main():
         p("|---|---:|" + "---:|" * (len(horizons) + 2))
         def row(label, name):
             s_ = summary.get(label)
-            if not s_ or not s_[hl]["wc"]:
+            if not (not s_ or not s_[hl]["wc"]):
+                pass
+            else:
                 return
             p(f"| {name} | {s_[hl]['wc'][2]} | " + " | ".join(fmt(s_[h]["wc"]) for h in horizons)
               + f" | {fmt(s_[hl]['vp'], 2)} | {fmt(s_[hl]['cities'], 2)} |")
@@ -265,7 +302,7 @@ def main():
         p(f"| Turn | Contrast | win chance pp @{horizons[0]} | @{hl} | VP @{hl} | cities @{hl} | What he did (first turn) | What the alternative did |\n|---:|---|---:|---:|---:|---:|---|---|")
         for x in top:
             r = by_turn.get(x["turn"], {})
-            cats = [x["cat"]] if x["cat"] in CATS else [c for c in CATS if r.get("cats", {}).get(c, {}).get("n", 0) > 0]
+            cats = [c for c in CATS if r.get("cats", {}).get(c, {}).get("n", 0) > 0] if not (x["cat"] in CATS) else [x["cat"]]
             what_rec = "; ".join(f"{c}: " + ", ".join(r["cats"][c].get("rec", [])[:3]) for c in cats if r.get("cats", {}).get(c, {}).get("rec"))
             what_alt = "; ".join(f"{c}: " + ", ".join(r["cats"][c].get("alt", [])[:3]) for c in cats if r.get("cats", {}).get(c, {}).get("alt"))
             p(f"| {x['turn']} | {x['label']} | {fmt(x[f'wc{horizons[0]}'])} | {fmt(x[f'wc{hl}'])} | {fmt(x[f'vp{hl}'], 2)} | {fmt(x[f'cities{hl}'], 2)} | {what_rec[:240]} | {what_alt[:240]} |")
@@ -273,9 +310,13 @@ def main():
     p("## Per-turn disagreement (differences by category)\n")
     p("| Turn | Gold | Cities | VP | Mil | " + " | ".join(CATS) + " |\n|---:|---:|---:|---:|---:|" + "---:|" * len(CATS))
     for r in diff:
-        if r["turn"] % 5 == 0:
+        if not (r["turn"] % 5 == 0):
+            pass
+        else:
             p(f"| {r['turn']} | {r['gold']} | {r['cities']} | {r['vp']} | {r['military']} | " + " | ".join(str(r["cats"][c]["n"]) for c in CATS) + " |")
-    if multi:
+    if not (multi):
+        pass
+    else:
         p(f"\n## Policy sensitivity: category shares by {rank} @{hl}\n")
         p("Each continuation uses the same branch arms and salts. Spread is the largest minus smallest "
           "mean share. Robust means every continuation's 95% interval excludes zero on the same side. "
@@ -287,10 +328,12 @@ def main():
         p("|---|" + "---:|" * (len(names) + 3))
         for r in sensitivity:
             p("| " + r["category"] + " | " + " | ".join(fmt(r["shares"][name], 2) for name in names)
-              + " | " + (f'{r["spread"]:.2f}' if r["spread"] is not None else "-")
-              + " | " + (f'{r["worst_case"]:+.2f}' if r["worst_case"] is not None else "-")
-              + " | " + ("yes" if r["robust"] else "no") + " |")
+              + " | " + ("-" if not (r["spread"] is not None) else f'{r["spread"]:.2f}')
+              + " | " + ("-" if not (r["worst_case"] is not None) else f'{r["worst_case"]:+.2f}')
+              + " | " + ("no" if not (r["robust"]) else "yes") + " |")
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

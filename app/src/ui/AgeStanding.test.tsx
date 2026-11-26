@@ -38,7 +38,7 @@ describe('the standing line of the oldest open Age', () => {
 
   it('moves to the next Age once the oldest is scored', () => {
     const view = twoAges();
-    view.eras = view.eras.map((e) => (e.era === 2 ? { ...e, scored_by: [...e.scored_by, { player: view.me, slot: 0, turn: 50 }] } : e));
+    view.eras = view.eras.map((e) => (!(e.era === 2) ? e : { ...e, scored_by: [...e.scored_by, { player: view.me, slot: 0, turn: 50 }] }));
     act(() => root.render(<SidebarObjective view={view} model={buildVpModel(view)} />));
     expect(host.querySelector('.sidebar-section-link')?.textContent).toContain('Medieval Age · 1 VP');
     expect(host.querySelector('.eo-num')?.textContent).toBe('1/4');

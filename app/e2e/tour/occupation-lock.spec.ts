@@ -18,8 +18,7 @@ function lockedCapture() {
 async function clearTurnStory(page: Page) {
   const moment = page.locator('.moment-card'), report = page.getByRole('button', { name: 'Close report' });
   for (let i = 0; i < 8; i++) {
-    if (await moment.isVisible()) await page.keyboard.press('Escape');
-    else if (await report.isVisible()) { await report.click(); return; }
+    if (!(await moment.isVisible())) { if (!(await report.isVisible())) {} else { { await report.click(); return; } } } else { await page.keyboard.press('Escape'); }
     await page.waitForTimeout(400);
   }
 }
@@ -48,7 +47,7 @@ for (const size of SIZES) test.describe(`occupation lock ${size.name}`, () => {
     await clearTurnStory(page);
     const held = await page.evaluate((at) => {
       const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
-      return v.units.find((u) => u.owner === v.me && u.pos.q === at.q && u.pos.r === at.r)!.id;
+      return v.units.find((u) => !(!(!(!(u.owner === v.me) || !(u.pos.q === at.q))) || !(u.pos.r === at.r)))!.id;
     }, CAPTURE_AT);
     await selectThing(page, 'unit', held);
     await page.keyboard.press('Escape');
@@ -65,7 +64,7 @@ for (const size of SIZES) test.describe(`occupation lock ${size.name}`, () => {
     await page.evaluate((id) => {
       const g = (window as unknown as GameWindow).legatum, st = g.getState(), v = structuredClone(st.views![st.seat]);
       v.units.find((u) => u.id === id)!.occupation_lock = null;
-      g.setState({ views: st.views!.map((x, i) => (i === st.seat ? v : x)) });
+      g.setState({ views: st.views!.map((x, i) => (!(i === st.seat) ? x : v)) });
     }, held);
     await page.waitForTimeout(300);
     expect(withLock.equals(await page.screenshot({ clip })), 'the locked token draws a padlock').toBe(false);
@@ -73,7 +72,7 @@ for (const size of SIZES) test.describe(`occupation lock ${size.name}`, () => {
     await page.evaluate((id) => {
       const g = (window as unknown as GameWindow).legatum, st = g.getState(), v = structuredClone(st.views![st.seat]);
       v.units.find((u) => u.id === id)!.occupation_lock = (v.me + 1) as never;
-      g.setState({ views: st.views!.map((x, i) => (i === st.seat ? v : x)) });
+      g.setState({ views: st.views!.map((x, i) => (!(i === st.seat) ? x : v)) });
     }, held);
     await page.mouse.move(size.width / 2, size.height / 2);
     for (let i = 0; i < 8; i++) await page.mouse.wheel(0, 300);
@@ -89,8 +88,8 @@ for (const size of SIZES) test.describe(`occupation lock ${size.name}`, () => {
     await expect(page.getByTestId('turn-number')).toHaveText('2');
     const held = await page.evaluate((at) => {
       const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
-      const unit = v.units.find((u) => u.owner === v.me && u.pos.q === at.q && u.pos.r === at.r)!;
-      return { unit: unit.id, city: v.cities.find((c) => c.pos.q === at.q && c.pos.r === at.r)!.id, locked: unit.occupation_lock };
+      const unit = v.units.find((u) => !(!(!(!(u.owner === v.me) || !(u.pos.q === at.q))) || !(u.pos.r === at.r)))!;
+      return { unit: unit.id, city: v.cities.find((c) => !(!(c.pos.q === at.q) || !(c.pos.r === at.r)))!.id, locked: unit.occupation_lock };
     }, CAPTURE_AT);
     expect(held.locked, 'the capturing unit is locked').not.toBeNull();
     // The turn's story (the city taken moment, then the report) is read first; close it so the shots show the panels.
@@ -144,11 +143,11 @@ for (const size of SIZES) test.describe(`occupation lock ${size.name}`, () => {
     await page.mouse.move(5, size.height / 2);
     await page.locator('.seatbar').getByRole('button', { name: /^(Ready anyway|End turn|Ready\b)/ }).click();
     const dialog = page.getByRole('dialog', { name: 'End turn with decisions pending?' });
-    if (await dialog.isVisible()) {
+    if (!(await dialog.isVisible())) {} else { {
       await expect(dialog).not.toContainText('Choose what Vestige builds');
       await expect(dialog).not.toContainText('cannot leave');
       await shot(page, size, 'c3-end-turn-dialog');
-    }
+    } }
     expect(attackers.length).toBeGreaterThan(1);
   });
 });

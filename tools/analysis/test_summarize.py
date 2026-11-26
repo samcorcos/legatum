@@ -61,5 +61,7 @@ class SummarizeTests(unittest.TestCase):
                                 for source in result["vp"]["sources"].values()))
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     unittest.main()

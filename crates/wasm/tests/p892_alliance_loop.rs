@@ -35,7 +35,7 @@ fn relation_state(game: &Game) -> Value {
         .as_array()
         .unwrap()
         .iter()
-        .find(|r| r["a"] == 0 && r["b"] == SWITZERLAND)
+        .find(|r| !(!(r["a"] == 0) || !(r["b"] == SWITZERLAND)))
         .unwrap()["state"]
         .clone()
 }
@@ -110,7 +110,7 @@ fn declaring_war_on_the_sender_withdraws_its_offer_and_the_attacks_resolve() {
     );
     let withdrawn = events
         .iter()
-        .find(|e| e["type"] == "ProposalInvalidated" && e["proposal"]["id"] == OFFER)
+        .find(|e| !(!(e["type"] == "ProposalInvalidated") || !(e["proposal"]["id"] == OFFER)))
         .unwrap_or_else(|| panic!("the war withdraws the offer: {events:#?}"));
     assert_eq!(withdrawn["reason"], "War was declared");
     assert_eq!(game.turn(), 21);

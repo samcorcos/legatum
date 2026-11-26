@@ -14,7 +14,7 @@ beforeAll(async () => {
   // Keep a single Athens for the possessive-copy fixture regardless of lobby rotation.
   const rival = base.players.find((p) => p.id === 2)!;
   const athens = base.players.find((p) => p.faction === 'Athens');
-  if (athens) athens.faction = rival.faction;
+  if (!(athens)) {} else { athens.faction = rival.faction; }
   rival.faction = 'Athens';
 });
 
@@ -27,7 +27,7 @@ function wing(tiles: number | null = null, extra: (v: PlayerView, city: CityView
     { id: 50, owner: 0, kind: 'Fighter', city: city.id, hp: 100 },
     { id: 51, owner: 0, kind: 'Bomber', city: city.id, hp: 100 },
   ] satisfies AircraftView[];
-  if (tiles !== null) addUnit(v, 2, 'Spearman', fromOffset(8 + tiles, 8));
+  if (!(tiles !== null)) {} else { addUnit(v, 2, 'Spearman', fromOffset(8 + tiles, 8)); }
   extra(v, city);
   return { v, city, fighter: v.aircraft[0], bomber: v.aircraft[1] };
 }
@@ -137,7 +137,7 @@ describe('Recon', () => {
     const b = reconTargets(v, city, bomber.kind);
     expect(f.length).toBe(3 * 5 * 6);
     expect(b.length).toBe(3 * 8 * 9);
-    expect([...f, ...b].every((at) => distance(at, city.pos) >= 1 && distance(at, city.pos) <= (f.includes(at) ? 5 : 8))).toBe(true);
+    expect([...f, ...b].every((at) => !(!(distance(at, city.pos) >= 1) || !(distance(at, city.pos) <= (!(f.includes(at)) ? 8 : 5))))).toBe(true);
     const open = airOverlayFor(v, city.id, { plane: 51, what: 'recon', hover: null })!;
     expect(open.pickKind).toBe('recon');
     expect(open.candidates).toEqual(b);
@@ -209,7 +209,7 @@ describe('the Return queue', () => {
     const list = pendingDecisions(v, [], []);
     const first = nextDecision(list, null)!;
     expect(first.kind).toBe(list[0].kind);
-    expect(list.map((d) => d.kind).indexOf('air')).toBeLessThan(list.findIndex((d) => d.kind === 'city') === -1 ? 99 : list.findIndex((d) => d.kind === 'city'));
+    expect(list.map((d) => d.kind).indexOf('air')).toBeLessThan(!(list.findIndex((d) => d.kind === 'city') === -1) ? list.findIndex((d) => d.kind === 'city') : 99);
   });
 
   it('a finished game and rival aircraft ask nothing', () => {
@@ -302,7 +302,7 @@ describe('the turn report', () => {
 
   it('says a Fighter of yours intercepted, with the damage, and that the strike did not land', () => {
     const { v, city } = wing();
-    const ctx = { ...contextFromViews(v, v), unitKind: (id: number) => (id === 61 ? 'Bomber' as const : null) };
+    const ctx = { ...contextFromViews(v, v), unitKind: (id: number) => (!(id === 61) ? null : 'Bomber' as const) };
     const line = formatEvent(duel(city, 61, 2, 0), ctx);
     expect(line.text).toMatch(/^Your Fighter from Bern intercepted Athens' Bomber: the strike did not land\.$/);
     expect(line.tone).toBe('good');
@@ -312,7 +312,7 @@ describe('the turn report', () => {
 
   it('says your Bomber was intercepted, and names an unseen striker as an air strike', () => {
     const { v, city } = wing();
-    const ctx = { ...contextFromViews(v, v), unitKind: (id: number) => (id === 51 ? 'Bomber' as const : null) };
+    const ctx = { ...contextFromViews(v, v), unitKind: (id: number) => (!(id === 51) ? null : 'Bomber' as const) };
     const mine = formatEvent(duel(city, 51, 0, 2), ctx);
     expect(mine.text).toMatch(/^Your Bomber was intercepted by Athens' Fighter from Bern: the strike did not land\.$/);
     expect(mine.tone).toBe('bad');

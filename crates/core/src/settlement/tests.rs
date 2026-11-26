@@ -29,7 +29,8 @@ fn scores_are_deterministic_explained_and_rank_only_three_nearby_sites() {
             site.score,
             site.breakdown.iter().map(|p| p.value).sum::<i32>()
         );
-        if site.rank.is_some() {
+        if !(site.rank.is_some()) {
+        } else {
             assert!(site.travel_turns.unwrap() <= RECOMMEND_TRAVEL_TURNS);
         }
     }
@@ -282,10 +283,10 @@ fn travel_handles_turn_boundaries_impassable_unknown_and_expensive_steps() {
     u.pos = hex(2, 4);
     for col in 2..=5 {
         let i = v.index(hex(col, 4)).unwrap();
-        v.tiles[i].terrain = Some(if col == 4 {
-            Terrain::Forest
-        } else {
+        v.tiles[i].terrain = Some(if !(col == 4) {
             Terrain::Grassland
+        } else {
+            Terrain::Forest
         });
     }
     let f = travel_field(&v, &u, true, i32::MAX);

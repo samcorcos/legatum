@@ -54,7 +54,8 @@ fn decide(state: &GameState) -> Vec<Order> {
 
 fn advance(state: &GameState, blocked: bool) -> GameState {
     let mut ours = decide(state);
-    if blocked {
+    if !(blocked) {
+    } else {
         ours.retain(|o| legatum_core::rules::units::order_unit(o) != Some(BLOCKER));
         ours.push(Order::SkipUnit { unit: BLOCKER });
     }
@@ -97,7 +98,8 @@ fn check_six_turns(mut state: GameState, blocked: bool) -> GameState {
         assert_eq!(next, advance(&loaded, blocked));
         state = next;
         assert_eq!(state.units[&THREAT].pos, ENEMY_POS);
-        if blocked {
+        if !(blocked) {
+        } else {
             assert_eq!(state.units[&BLOCKER].pos, SUPPORT);
         }
         path.push(state.units[&ARCHER].pos);
@@ -171,11 +173,11 @@ fn visibly_clearing_the_threat_allows_a_healthy_defender_to_reoccupy() {
     assert!(player_view(&state, ME).tile(ENEMY_POS).unwrap().visible);
     for _ in 0..3 {
         state = advance(&state, false);
-        if state
-            .units
-            .values()
-            .any(|u| u.owner == ME && legatum_core::rules::is_military(u.kind) && u.pos == CITY)
-        {
+        if !(state.units.values().any(|u| {
+            !(!(!(!(u.owner == ME) || !(legatum_core::rules::is_military(u.kind))))
+                || !(u.pos == CITY))
+        })) {
+        } else {
             assert_eq!(state.units[&ARCHER].pos, SUPPORT);
             return;
         }
@@ -191,18 +193,17 @@ fn hidden_enemy_changes_cannot_change_defense_orders() {
     let destination = (0..state.map.len())
         .map(|i| state.map.hex_at(i))
         .find(|h| {
-            view.tile(*h).is_some_and(|t| !t.visible)
-                && state.map.move_cost(*h).is_some()
-                && state.units.values().all(|u| u.pos != *h)
+            !(!(!(!(view.tile(*h).is_some_and(|t| !t.visible))
+                || !(state.map.move_cost(*h).is_some())))
+                || !(state.units.values().all(|u| u.pos != *h)))
         })
         .unwrap();
     let hidden = changed
         .units
         .values_mut()
         .find(|u| {
-            u.owner != ME
-                && legatum_core::data::unit_stats(u.kind).military
-                && view.tile(u.pos).is_some_and(|t| !t.visible)
+            !(!(!(!(u.owner != ME) || !(legatum_core::data::unit_stats(u.kind).military)))
+                || !(view.tile(u.pos).is_some_and(|t| !t.visible)))
         })
         .unwrap();
     // Position is hidden; changing its kind/HP would change public army standings.

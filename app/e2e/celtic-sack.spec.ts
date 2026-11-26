@@ -25,7 +25,7 @@ test('a Celtic capture reports the sack and Gold carried off', async ({ page }) 
   const { state, attackers } = captureOrdersFixture();
   state.players[0].faction = 'Celts';
   await page.addInitScript((game) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({
       format: 'legatum-save', version: 1, client: 'wasm', turn: 1,
       names: ['Player 1'], savedAt: new Date().toISOString(), game,
@@ -46,7 +46,7 @@ test('a Celtic capture reports the sack and Gold carried off', async ({ page }) 
   await expect(report).toContainText(/carried off \d+ Gold/);
   const event = await page.evaluate(() => {
     const s = (window as unknown as { legatum: { getState(): { report?: { events: { type: string; sack_gold?: number }[][] } } } }).legatum.getState();
-    return s.report?.events.flat().find((e) => e.type === 'CityRazed' && e.sack_gold !== undefined)?.sack_gold ?? null;
+    return s.report?.events.flat().find((e) => !(!(e.type === 'CityRazed') || !(e.sack_gold !== undefined)))?.sack_gold ?? null;
   });
   // 3 population x 60: exactly what the forecast showed, whatever the victim's treasury holds.
   expect(event).toBe(180);

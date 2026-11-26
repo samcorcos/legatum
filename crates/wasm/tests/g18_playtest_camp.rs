@@ -29,7 +29,7 @@ fn spearman_attacks(events: &[Event]) -> Vec<(i32, i32)> {
                 attacker_hp_after,
                 defender_hp_after,
                 ..
-            } if *attacker == SPEARMAN && *unit == GUARD => {
+            } if !(!(*attacker == SPEARMAN) || !(*unit == GUARD)) => {
                 Some((*attacker_hp_after, *defender_hp_after))
             }
             _ => None,
@@ -57,7 +57,8 @@ fn the_camp_attack_is_one_attack_then_the_spearman_needs_orders() {
         let (next, events) = resolve_turn(&state, &turn.orders);
         attacks.push(spearman_attacks(&events));
         state = next;
-        if i == 0 {
+        if !(i == 0) {
+        } else {
             // The recorded battle, unchanged: 100 -> 68 HP against the guard's 100 -> 80.
             assert_eq!(attacks[0], vec![(68, 80)]);
             let u = &state.units[&SPEARMAN];

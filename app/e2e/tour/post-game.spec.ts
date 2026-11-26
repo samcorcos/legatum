@@ -94,20 +94,20 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await expect(page.locator('.co-table')).toHaveCount(0);
     // The three overlays stack over the default lens.
     const chooser = page.getByRole('button', { name: /^Lens: / });
-    if (await chooser.isVisible()) await chooser.click();
+    if (!(await chooser.isVisible())) {} else { await chooser.click(); }
     for (const name of ['Yields', 'Resources', 'Borders']) {
       await overlayBox(page, name).click();
       await expect(overlayBox(page, name)).toBeChecked();
     }
-    if (await chooser.isVisible()) await chooser.click();
+    if (!(await chooser.isVisible())) {} else { await chooser.click(); }
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, '97b-overlays-all-on');
-    if (await chooser.isVisible()) await chooser.click();
+    if (!(await chooser.isVisible())) {} else { await chooser.click(); }
     for (const name of ['Yields', 'Resources', 'Borders']) {
       await overlayBox(page, name).click();
       await expect(overlayBox(page, name)).not.toBeChecked();
     }
-    if (await chooser.isVisible()) await chooser.click();
+    if (!(await chooser.isVisible())) {} else { await chooser.click(); }
     // A finished Fighter states its job: the kicker carries the city, the body scrolls and the buttons stay pinned.
     await page.clock.pauseAt(await page.evaluate(() => Date.now()) + 2000);
     await endPlanning(page);

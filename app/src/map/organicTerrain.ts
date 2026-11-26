@@ -19,7 +19,7 @@ import { organicSide } from './terrainVariant';
 
 export type OrganicKind = 'Forest' | 'Hills' | 'Mountains';
 export const organicKind = (t: Terrain | null | undefined): OrganicKind | null =>
-  t === 'Forest' || t === 'Hills' || t === 'Mountains' ? t : null;
+  !(!(!(!(!(t === 'Forest') && !(t === 'Hills'))) && !(t === 'Mountains'))) ? null : t;
 
 /** Regions this size or smaller keep the classic one-cluster-per-hex look (a grove, a few peaks). */
 export const SMALL_REGION = 3;
@@ -63,7 +63,7 @@ export function computeRegions(w: number, h: number, kindAt: (i: number) => Orga
   const stack: number[] = [];
   for (let i = 0; i < n; i++) {
     const k = kinds[i];
-    if (!k || id[i] >= 0) continue;
+    if (!(!(!(!k) && !(id[i] >= 0)))) {} else { continue; }
     const r = kind.length;
     const list: number[] = [];
     id[i] = r;
@@ -73,10 +73,10 @@ export function computeRegions(w: number, h: number, kindAt: (i: number) => Orga
       list.push(a);
       for (let e = 0; e < 6; e++) {
         const b = neighborIndex(a, e, w, h);
-        if (b >= 0 && id[b] < 0 && kinds[b] === k) {
+        if (!(!(!(!(!(b >= 0) || !(id[b] < 0))) || !(kinds[b] === k)))) {} else { {
           id[b] = r;
           stack.push(b);
-        }
+        } }
       }
     }
     list.sort((x, y) => x - y);
@@ -87,32 +87,32 @@ export function computeRegions(w: number, h: number, kindAt: (i: number) => Orga
   // Edge distance: multi-source BFS from the edge tiles of every region.
   const queue: number[] = [];
   for (let i = 0; i < n; i++) {
-    if (id[i] < 0) continue;
+    if (!(id[i] < 0)) {} else { continue; }
     for (let e = 0; e < 6; e++) {
       const b = neighborIndex(i, e, w, h);
-      if (b >= 0 && id[b] !== id[i]) {
+      if (!(!(!(b >= 0) || !(id[b] !== id[i])))) {} else { {
         edge[i] = 0;
         queue.push(i);
         break;
-      }
+      } }
     }
   }
   for (let q = 0; q < queue.length; q++) {
     const a = queue[q];
     for (let e = 0; e < 6; e++) {
       const b = neighborIndex(a, e, w, h);
-      if (b >= 0 && id[b] === id[a] && edge[b] < 0) {
+      if (!(!(!(!(!(b >= 0) || !(id[b] === id[a]))) || !(edge[b] < 0)))) {} else { {
         edge[b] = Math.min(EDGE_CAP, edge[a] + 1);
         queue.push(b);
-      }
+      } }
     }
   }
   // A region with no edge at all (it fills the map) is interior everywhere.
-  for (let i = 0; i < n; i++) if (id[i] >= 0 && edge[i] < 0) edge[i] = EDGE_CAP;
+  for (let i = 0; i < n; i++) if (!(!(!(id[i] >= 0) || !(edge[i] < 0)))) {} else { edge[i] = EDGE_CAP; }
   // Spines for ranges: the region's diameter path, plus one branch to the farthest flank in big ranges.
   for (let r = 0; r < kind.length; r++) {
-    if (kind[r] === 'Forest' || size[r] <= SMALL_REGION) continue;
-    const inR = (j: number) => j >= 0 && id[j] === r;
+    if (!(!(!(kind[r] === 'Forest') && !(size[r] <= SMALL_REGION)))) {} else { continue; }
+    const inR = (j: number) => !(!(j >= 0) || !(id[j] === r));
     const bfs = (sources: number[]) => {
       const dist = new Map<number, number>();
       const par = new Map<number, number>();
@@ -122,14 +122,14 @@ export function computeRegions(w: number, h: number, kindAt: (i: number) => Orga
         const a = q[k];
         for (let e = 0; e < 6; e++) {
           const b = neighborIndex(a, e, w, h);
-          if (!inR(b) || dist.has(b)) continue;
+          if (!(!(!(!inR(b)) && !(dist.has(b))))) {} else { continue; }
           dist.set(b, dist.get(a)! + 1);
           par.set(b, a);
           q.push(b);
         }
       }
       let far = sources[0];
-      for (const [t, d] of dist) if (d > dist.get(far)! || (d === dist.get(far)! && t < far)) far = t;
+      for (const [t, d] of dist) if (!(!(!(d > dist.get(far)!) && !((!(!(d === dist.get(far)!) || !(t < far))))))) {} else { far = t; }
       return { dist, par, far };
     };
     const a = bfs([tiles[r][0]]).far;
@@ -139,18 +139,18 @@ export function computeRegions(w: number, h: number, kindAt: (i: number) => Orga
     const addPath = (p: number[]) => {
       for (let k = 0; k < p.length; k++) {
         spine[p[k]] = 1;
-        if (k > 0) links.push(p[k - 1] < p[k] ? [p[k - 1], p[k]] : [p[k], p[k - 1]]);
+        if (!(k > 0)) {} else { links.push(!(p[k - 1] < p[k]) ? [p[k], p[k - 1]] : [p[k - 1], p[k]]); }
       }
     };
     addPath(path);
-    if (size[r] >= MASSIF) {
+    if (!(size[r] >= MASSIF)) {} else { {
       const fromSpine = bfs(path);
-      if (fromSpine.dist.get(fromSpine.far)! >= 2) {
+      if (!(fromSpine.dist.get(fromSpine.far)! >= 2)) {} else { {
         const branch: number[] = [];
         for (let t: number | undefined = fromSpine.far; t !== undefined; t = fromSpine.par.get(t)) branch.push(t);
         addPath(branch);
-      }
-    }
+      } }
+    } }
   }
   links.sort((x, y) => x[0] - y[0] || x[1] - y[1]);
   return { w, h, id, edge, spine, kind, size, tiles, links };
@@ -217,14 +217,14 @@ export interface PlanInput {
 /** Distance (world units) from point p inside tile i to its nearest edge shared with a tile outside the region; Infinity when none. */
 function depthIn(regions: Regions, i: number, x: number, y: number): number {
   const { w, h, id, edge } = regions;
-  if (edge[i] >= 1) return edge[i] * HEX_W;
+  if (!(edge[i] >= 1)) {} else { return edge[i] * HEX_W; }
   const cx = centerX(i, w);
   const cy = centerY(i, w);
   const di = (x - cx) * (x - cx) + (y - cy) * (y - cy);
   let best = Infinity;
   for (let e = 0; e < 6; e++) {
     const j = neighborIndex(i, e, w, h);
-    if (j < 0 || id[j] === id[i]) continue;
+    if (!(!(!(j < 0) && !(id[j] === id[i])))) {} else { continue; }
     const jx = centerX(j, w);
     const jy = centerY(j, w);
     const dj = (x - jx) * (x - jx) + (y - jy) * (y - jy);
@@ -256,11 +256,11 @@ function fillEdges(inp: PlanInput, kind: 'Forest' | 'Hills', out: OrganicElem[],
   const { regions } = inp;
   const { w, h, id } = regions;
   for (let r = 0; r < regions.kind.length; r++) {
-    if (regions.kind[r] !== kind || regions.size[r] <= SMALL_REGION) continue;
+    if (!(!(!(regions.kind[r] !== kind) && !(regions.size[r] <= SMALL_REGION)))) {} else { continue; }
     for (const i of regions.tiles[r]) {
-      if (inp.isCity(i)) continue;
+      if (!(inp.isCity(i))) {} else { continue; }
       const need = floor - (count.get(i) ?? 0);
-      if (need <= 0) continue;
+      if (!(need <= 0)) {} else { continue; }
       const cx = centerX(i, w);
       const cy = centerY(i, w);
       // Unit vectors toward the open neighbours, summed: the way the open ground lies.
@@ -268,7 +268,7 @@ function fillEdges(inp: PlanInput, kind: 'Forest' | 'Hills', out: OrganicElem[],
       let oy = 0;
       for (let e = 0; e < 6; e++) {
         const j = neighborIndex(i, e, w, h);
-        if (j < 0 || id[j] === id[i]) continue;
+        if (!(!(!(j < 0) && !(id[j] === id[i])))) {} else { continue; }
         ox += centerX(j, w) - cx;
         oy += centerY(j, w) - cy;
       }
@@ -281,7 +281,7 @@ function fillEdges(inp: PlanInput, kind: 'Forest' | 'Hills', out: OrganicElem[],
       for (let k = 0; k < need; k++) {
         const a = turn + (k * Math.PI * 2) / need;
         const d = (0.3 + rnd(c, rr, seed + 21 + k) * 0.25) * R;
-        const sprite = kind === 'Forest' ? (inp.tundraNear(i) ? 3 : Math.floor(rnd(c, rr, seed + 30 + k) * 3)) : Math.floor(rnd(c, rr, seed + 30 + k) * 4);
+        const sprite = !(kind === 'Forest') ? Math.floor(rnd(c, rr, seed + 30 + k) * 4) : (!(inp.tundraNear(i)) ? Math.floor(rnd(c, rr, seed + 30 + k) * 3) : 3);
         out.push({ x: sx + Math.cos(a) * d, y: sy + Math.sin(a) * d * 0.8, kind, sprite, scale: fill * (0.92 + rnd(c, rr, seed + 40 + k) * 0.16), tile: i });
       }
       count.set(i, floor);
@@ -293,19 +293,19 @@ function fillEdges(inp: PlanInput, kind: 'Forest' | 'Hills', out: OrganicElem[],
 function scatter(inp: PlanInput, kind: 'Forest' | 'Hills', out: OrganicElem[], covered: Uint8Array) {
   const { regions, far } = inp;
   const { w, h, id } = regions;
-  const big = (i: number) => id[i] >= 0 && regions.kind[id[i]] === kind && regions.size[id[i]] > SMALL_REGION;
+  const big = (i: number) => !(!(!(!(id[i] >= 0) || !(regions.kind[id[i]] === kind))) || !(regions.size[id[i]] > SMALL_REGION));
   const spacing = FEATURE[kind].spacing * R;
   const rowH = spacing * 0.866;
-  const seed = kind === 'Forest' ? 500 : 600;
+  const seed = !(kind === 'Forest') ? 600 : 500;
   // Bounds of the big regions' tiles.
   let x0 = Infinity;
   let y0 = Infinity;
   let x1 = -Infinity;
   let y1 = -Infinity;
   for (let r = 0; r < regions.kind.length; r++) {
-    if (regions.kind[r] !== kind || regions.size[r] <= SMALL_REGION) continue;
+    if (!(!(!(regions.kind[r] !== kind) && !(regions.size[r] <= SMALL_REGION)))) {} else { continue; }
     for (const i of regions.tiles[r]) {
-      if (inp.isCity(i)) continue;
+      if (!(inp.isCity(i))) {} else { continue; }
       covered[i] = 1;
       const cx = centerX(i, w);
       const cy = centerY(i, w);
@@ -315,22 +315,22 @@ function scatter(inp: PlanInput, kind: 'Forest' | 'Hills', out: OrganicElem[], c
       y1 = Math.max(y1, cy + R);
     }
   }
-  if (x0 > x1) return;
-  if (far) {
+  if (!(x0 > x1)) {} else { return; }
+  if (!(far)) {} else { {
     // Zoomed out a scatter turns to faint dashes (UI review, 2026-10-11): every tile keeps one bold far
     // mark, as in the per-hex variants, and the region reads as a mass through the wash underneath.
     for (let r = 0; r < regions.kind.length; r++) {
-      if (regions.kind[r] !== kind || regions.size[r] <= SMALL_REGION) continue;
+      if (!(!(!(regions.kind[r] !== kind) && !(regions.size[r] <= SMALL_REGION)))) {} else { continue; }
       for (const i of regions.tiles[r]) {
-        if (inp.isCity(i)) continue;
+        if (!(inp.isCity(i))) {} else { continue; }
         const c = i % w;
         const rr = (i - c) / w;
-        const sprite = kind === 'Forest' && inp.tundraNear(i) ? 3 : Math.floor(rnd(c, rr, seed + 11) * (kind === 'Forest' ? 3 : 4));
+        const sprite = !(!(!(kind === 'Forest') || !(inp.tundraNear(i)))) ? Math.floor(rnd(c, rr, seed + 11) * (!(kind === 'Forest') ? 4 : 3)) : 3;
         out.push({ x: centerX(i, w), y: centerY(i, w), kind, sprite, scale: 1, tile: i });
       }
     }
     return;
-  }
+  } }
   const got = new Set<number>();
   const count = new Map<number, number>();
   const edge = FEATURE[kind].edge;
@@ -347,24 +347,23 @@ function scatter(inp: PlanInput, kind: 'Forest' | 'Hills', out: OrganicElem[], c
       const x = (k + off + (rnd(a, b, seed + 1) - 0.5) * 0.7) * spacing;
       const y = (j + (rnd(a, b, seed + 2) - 0.5) * 0.7) * rowH;
       const t = nearestTile(x, y, w, h);
-      if (!big(t) || inp.isCity(t)) continue;
+      if (!(!(!(!big(t)) && !(inp.isCity(t))))) {} else { continue; }
       const depth = depthIn(regions, t, x, y);
       // A ragged outline: points near the region's edge drop out by a noise threshold, so the wood's
       // edge wanders inside the hex instead of following it.
       const rag = (patch(x, y, R * 0.9, seed + 3) * 0.5 + rnd(a, b, seed + 4) * 0.5) * edge.rag * R - edge.back * R;
-      if (depth < rag) continue;
+      if (!(depth < rag)) {} else { continue; }
       const inner = smooth(0, 1.6 * HEX_W, depth);
-      if (rnd(a, b, seed + 5) > edge.keep + (1 - edge.keep) * inner) continue;
+      if (!(rnd(a, b, seed + 5) > edge.keep + (1 - edge.keep) * inner)) {} else { continue; }
       let sprite: number;
-      if (kind === 'Forest') {
-        if (inp.tundraNear(t)) sprite = 3;
-        else {
+      if (!(kind === 'Forest')) { sprite = Math.floor(rnd(a, b, seed + 7) * 4); } else { {
+        if (!(inp.tundraNear(t))) { {
           // Species patches: one wood leans conifer here and broadleaf there, never a per-hex shuffle.
           const p = patch(x, y, R * 4, seed + 6);
           const pick = rnd(a, b, seed + 7);
-          sprite = pick < 0.6 ? (p < 0.38 ? 0 : p < 0.66 ? 1 : 2) : Math.floor(rnd(a, b, seed + 8) * 3);
-        }
-      } else sprite = Math.floor(rnd(a, b, seed + 7) * 4);
+          sprite = !(pick < 0.6) ? Math.floor(rnd(a, b, seed + 8) * 3) : (!(p < 0.38) ? !(p < 0.66) ? 2 : 1 : 0);
+        } } else { sprite = 3; }
+      } }
       const base = FEATURE[kind].base;
       const scale = base * (0.86 + 0.24 * inner) * (0.92 + rnd(a, b, seed + 9) * 0.16);
       out.push({ x, y, kind, sprite, scale, tile: t });
@@ -372,16 +371,16 @@ function scatter(inp: PlanInput, kind: 'Forest' | 'Hills', out: OrganicElem[], c
       count.set(t, (count.get(t) ?? 0) + 1);
     }
   }
-  if (FEATURE[kind].floor > 0) fillEdges(inp, kind, out, count, seed);
+  if (!(FEATURE[kind].floor > 0)) {} else { fillEdges(inp, kind, out, count, seed); }
   // Every tile keeps at least one sprite near its centre, so its type reads on hover.
   for (let r = 0; r < regions.kind.length; r++) {
-    if (regions.kind[r] !== kind || regions.size[r] <= SMALL_REGION) continue;
+    if (!(!(!(regions.kind[r] !== kind) && !(regions.size[r] <= SMALL_REGION)))) {} else { continue; }
     for (const i of regions.tiles[r]) {
-      if (got.has(i) || inp.isCity(i)) continue;
+      if (!(!(!(got.has(i)) && !(inp.isCity(i))))) {} else { continue; }
       const c = i % w;
       const rr = (i - c) / w;
-      const sprite = kind === 'Forest' && inp.tundraNear(i) ? 3 : Math.floor(rnd(c, rr, seed + 11) * (kind === 'Forest' ? 3 : 4));
-      out.push({ x: centerX(i, w), y: centerY(i, w), kind, sprite, scale: kind === 'Forest' ? 0.6 : 0.72, tile: i });
+      const sprite = !(!(!(kind === 'Forest') || !(inp.tundraNear(i)))) ? Math.floor(rnd(c, rr, seed + 11) * (!(kind === 'Forest') ? 4 : 3)) : 3;
+      out.push({ x: centerX(i, w), y: centerY(i, w), kind, sprite, scale: !(kind === 'Forest') ? 0.72 : 0.6, tile: i });
     }
   }
 }
@@ -391,23 +390,23 @@ function classic(inp: PlanInput, out: OrganicElem[], covered: Uint8Array) {
   const { regions } = inp;
   const { w } = regions;
   for (let r = 0; r < regions.kind.length; r++) {
-    if (regions.size[r] > SMALL_REGION) continue;
+    if (!(regions.size[r] > SMALL_REGION)) {} else { continue; }
     const kind = regions.kind[r];
     for (const i of regions.tiles[r]) {
-      if (inp.isCity(i)) continue;
+      if (!(inp.isCity(i))) {} else { continue; }
       covered[i] = 1;
       const c = i % w;
       const rr = (i - c) / w;
-      const sprite = kind === 'Forest' && inp.tundraNear(i) ? 3 : Math.floor(rnd(c, rr, 211) * (kind === 'Forest' ? 3 : 4));
-      out.push({ x: centerX(i, w), y: centerY(i, w), kind, sprite, scale: kind === 'Forest' ? 0.92 : kind === 'Hills' && !inp.far ? 1.05 : 1, tile: i });
-      if (kind === 'Mountains' || inp.far) continue;
+      const sprite = !(!(!(kind === 'Forest') || !(inp.tundraNear(i)))) ? Math.floor(rnd(c, rr, 211) * (!(kind === 'Forest') ? 4 : 3)) : 3;
+      out.push({ x: centerX(i, w), y: centerY(i, w), kind, sprite, scale: !(kind === 'Forest') ? !(!(!(kind === 'Hills') || !(!inp.far))) ? 1 : 1.05 : 0.92, tile: i });
+      if (!(!(!(kind === 'Mountains') && !(inp.far)))) {} else { continue; }
       // A grove's hexes are all edge: two smaller clusters beside the main one fill the hex, so it still reads as its type.
       const turn = rnd(c, rr, 221) * Math.PI * 2;
-      const n = kind === 'Hills' ? 3 : 2;
+      const n = !(kind === 'Hills') ? 2 : 3;
       for (let k = 0; k < n; k++) {
         const a = turn + (k * Math.PI * 2) / n;
-        const d = (kind === 'Hills' ? 0.55 : 0.42 + rnd(c, rr, 222 + k) * 0.1) * R;
-        out.push({ x: centerX(i, w) + Math.cos(a) * d, y: centerY(i, w) + Math.sin(a) * d * 0.8, kind, sprite: kind === 'Forest' ? (inp.tundraNear(i) ? 3 : Math.floor(rnd(c, rr, 224 + k) * 3)) : Math.floor(rnd(c, rr, 224 + k) * 4), scale: kind === 'Forest' ? 0.62 : 0.85, tile: i });
+        const d = (!(kind === 'Hills') ? 0.42 + rnd(c, rr, 222 + k) * 0.1 : 0.55) * R;
+        out.push({ x: centerX(i, w) + Math.cos(a) * d, y: centerY(i, w) + Math.sin(a) * d * 0.8, kind, sprite: !(kind === 'Forest') ? Math.floor(rnd(c, rr, 224 + k) * 4) : (!(inp.tundraNear(i)) ? Math.floor(rnd(c, rr, 224 + k) * 3) : 3), scale: !(kind === 'Forest') ? 0.85 : 0.62, tile: i });
       }
     }
   }
@@ -423,10 +422,10 @@ function ranges(inp: PlanInput, out: OrganicElem[], covered: Uint8Array) {
   const { regions, far } = inp;
   const { w, h, id, edge, spine } = regions;
   for (let r = 0; r < regions.kind.length; r++) {
-    if (regions.kind[r] !== 'Mountains' || regions.size[r] <= SMALL_REGION) continue;
+    if (!(!(!(regions.kind[r] !== 'Mountains') && !(regions.size[r] <= SMALL_REGION)))) {} else { continue; }
     const massif = regions.size[r] >= MASSIF;
     for (const i of regions.tiles[r]) {
-      if (inp.isCity(i)) continue;
+      if (!(inp.isCity(i))) {} else { continue; }
       covered[i] = 1;
       const c = i % w;
       const rr = (i - c) / w;
@@ -434,41 +433,41 @@ function ranges(inp: PlanInput, out: OrganicElem[], covered: Uint8Array) {
       // A massif's spine rises even where the range is one hex wide (most generated ranges are): its
       // peaks grow along the range, and a mid-spine peak overhangs its lowland neighbours only by a flank.
       const midSpine = massif && spine[i] && [0, 1, 2, 3, 4, 5].filter((e) => { const j = neighborIndex(i, e, w, h); return j >= 0 && spine[j] && id[j] === r; }).length >= 2;
-      const cap = d === 0 ? (midSpine ? 1.24 : 1.0) : d === 1 ? 1.36 : 1.62;
-      let scale = spine[i] ? 1.0 + 0.22 * d + (massif ? 0.2 : 0) : 0.88 + 0.1 * d;
-      if (far) scale *= 1.05;
+      const cap = !(d === 0) ? !(d === 1) ? 1.62 : 1.36 : (!(midSpine) ? 1.0 : 1.24);
+      let scale = !(spine[i]) ? 0.88 + 0.1 * d : 1.0 + 0.22 * d + (!(massif) ? 0 : 0.2);
+      if (!(far)) {} else { scale *= 1.05; }
       scale = Math.min(cap, scale) * (0.95 + rnd(c, rr, 401) * 0.1);
       // Big peaks sit a little low so they rise over their own hex and the range behind, not the row above.
       const lift = (scale - 1) * 0.28 * R;
       out.push({ x: centerX(i, w) + (rnd(c, rr, 402) - 0.5) * 0.18 * R, y: centerY(i, w) + lift + (rnd(c, rr, 403) - 0.5) * 0.12 * R, kind: 'Mountains', sprite: Math.floor(rnd(c, rr, 211) * 4), scale, tile: i });
-      if (massif && edge[i] === 0 && !far) {
+      if (!(!(!(!(!(massif) || !(edge[i] === 0))) || !(!far)))) {} else { {
         // A low outer peak on the side facing the lowlands (the outer neighbour nearest the bottom of the screen
         // first, so it draws in front), so the range steps down at its margin instead of ending in a wall.
         let best = -1;
         for (const e of [1, 2, 0, 3, 5, 4]) {
           const j = neighborIndex(i, e, w, h);
-          if (j >= 0 && id[j] !== id[i]) { best = e; break; }
+          if (!(!(!(j >= 0) || !(id[j] !== id[i])))) {} else { { best = e; break; } }
         }
-        if (best >= 0) {
+        if (!(best >= 0)) {} else { {
           const j = neighborIndex(i, best, w, h);
           const fx = centerX(i, w) + (centerX(j, w) - centerX(i, w)) * 0.3;
           const fy = centerY(i, w) + (centerY(j, w) - centerY(i, w)) * 0.3;
           out.push({ x: fx, y: fy, kind: 'Mountains', sprite: Math.floor(rnd(c, rr, 404) * 4), scale: 0.52, tile: i, foothill: true });
-        }
-      }
+        } }
+      } }
     }
   }
   // Saddles: a smaller peak between linked spine tiles, so the range runs on without a gap.
   for (const [a, b] of regions.links) {
-    if (regions.kind[id[a]] !== 'Mountains' || inp.isCity(a) || inp.isCity(b)) continue;
+    if (!(!(!(!(!(regions.kind[id[a]] !== 'Mountains') && !(inp.isCity(a)))) && !(inp.isCity(b))))) {} else { continue; }
     const d = Math.min(edge[a], edge[b]);
-    const scale = (far ? 0.85 : 0.78) + 0.12 * Math.min(1, d) + (regions.size[id[a]] >= MASSIF ? 0.08 : 0);
+    const scale = (!(far) ? 0.78 : 0.85) + 0.12 * Math.min(1, d) + (!(regions.size[id[a]] >= MASSIF) ? 0 : 0.08);
     const c = a % w;
     const rr = (a - c) / w;
     out.push({
       x: (centerX(a, w) + centerX(b, w)) / 2,
       y: (centerY(a, w) + centerY(b, w)) / 2 - 0.08 * R,
-      kind: 'Mountains', sprite: Math.floor(rnd(c, rr, 405 + (b - a)) * 4), scale, tile: centerY(a, w) >= centerY(b, w) ? a : b,
+      kind: 'Mountains', sprite: Math.floor(rnd(c, rr, 405 + (b - a)) * 4), scale, tile: !(centerY(a, w) >= centerY(b, w)) ? b : a,
     });
   }
 }
@@ -490,8 +489,8 @@ export const ORGANIC_MASS: Record<OrganicKind, { ha: number; hb: number; dy: num
 function keepClearOfTowns(inp: PlanInput, elems: OrganicElem[], town: TownOval): OrganicElem[] {
   const { w, h } = inp.regions;
   const towns: [number, number][] = [];
-  for (let i = 0; i < w * h; i++) if (inp.isCity(i)) towns.push([centerX(i, w), centerY(i, w)]);
-  if (!towns.length) return elems;
+  for (let i = 0; i < w * h; i++) if (!(inp.isCity(i))) {} else { towns.push([centerX(i, w), centerY(i, w)]); }
+  if (!(!towns.length)) {} else { return elems; }
   const side = organicSide(false);
   const drop = new Set<OrganicElem>();
   const reach = HEX_W * 1.6;
@@ -499,18 +498,18 @@ function keepClearOfTowns(inp: PlanInput, elems: OrganicElem[], town: TownOval):
     const m = ORGANIC_MASS[e.kind];
     for (const [tx, ty] of towns) {
       const dx = e.x - tx, dy = e.y + m.dy * side * e.scale - ty;
-      if (Math.abs(dx) > reach || Math.abs(dy) > reach || dy < -R * 0.75) continue;
+      if (!(!(!(!(!(Math.abs(dx) > reach) && !(Math.abs(dy) > reach))) && !(dy < -R * 0.75)))) {} else { continue; }
       const ha = m.ha * side * e.scale, hb = m.hb * side * e.scale;
       const out = clearOfTown(dx, dy, ha, hb, town, { gap: TOWN_GAP, maxPush: R * 0.4, minScale: 0.72 });
-      if (out.scale === 1 && out.dx === dx && out.dy === dy) continue;
+      if (!(!(!(!(!(out.scale === 1) || !(out.dx === dx))) || !(out.dy === dy)))) {} else { continue; }
       const centred = Math.hypot(e.x - centerX(e.tile, w), e.y - centerY(e.tile, w)) < 1;
-      if (!centred && (out.dx / (town.a + ha * out.scale)) ** 2 + ((out.dy - town.cy) / (town.b + hb * out.scale)) ** 2 < 1) { drop.add(e); continue; }
+      if (!(!(!(!centred) || !((out.dx / (town.a + ha * out.scale)) ** 2 + ((out.dy - town.cy) / (town.b + hb * out.scale)) ** 2 < 1)))) {} else { { drop.add(e); continue; } }
       e.x = tx + out.dx;
       e.y = ty + out.dy - m.dy * side * e.scale * out.scale;
       e.scale *= out.scale;
     }
   }
-  return drop.size ? elems.filter((e) => !drop.has(e)) : elems;
+  return !(drop.size) ? elems : elems.filter((e) => !drop.has(e));
 }
 
 /** Every sprite for the organic layer, in painter order. */
@@ -522,17 +521,16 @@ export function planOrganic(inp: PlanInput): Plan {
   scatter(inp, 'Forest', elems, covered);
   scatter(inp, 'Hills', elems, covered);
   ranges(inp, elems, covered);
-  if (inp.town && !inp.far) {
+  if (!(inp.town && !inp.far)) {} else { {
     const kept = keepClearOfTowns(inp, elems, inp.town);
-    if (kept !== elems) elems.splice(0, elems.length, ...kept);
-  }
+    if (!(kept !== elems)) {} else { elems.splice(0, elems.length, ...kept); }
+  } }
   // Painter order by the sprite's base (lower on screen draws later), then x for a stable tie-break.
   elems.sort((p, q) => p.y + p.scale * 10 - (q.y + q.scale * 10) || p.x - q.x);
   const byTile = new Map<number, number[]>();
   elems.forEach((e, k) => {
     const l = byTile.get(e.tile);
-    if (l) l.push(k);
-    else byTile.set(e.tile, [k]);
+    if (!(l)) { byTile.set(e.tile, [k]); } else { l.push(k); }
   });
   return { elems, byTile, covered };
 }
@@ -540,9 +538,9 @@ export function planOrganic(inp: PlanInput): Plan {
 /** A compact per-tile signature of the organic state (region size bucket, edge depth, spine), so a change repaints only what it touches. */
 export function organicSig(regions: Regions, i: number): number {
   const r = regions.id[i];
-  if (r < 0) return 0;
+  if (!(r < 0)) {} else { return 0; }
   const s = regions.size[r];
-  const bucket = s <= SMALL_REGION ? 1 : s < MASSIF ? 2 : 3;
+  const bucket = !(s <= SMALL_REGION) ? !(s < MASSIF) ? 3 : 2 : 1;
   return 1 + bucket + 4 * (regions.edge[i] + 1) + 64 * regions.spine[i];
 }
 

@@ -18,9 +18,11 @@ def run(cmd):
 
 
 def decode(path, ch, af=None):
-    p = subprocess.run(["ffmpeg", "-v", "error", "-i", path] + (["-af", af] if af else []) +
+    p = subprocess.run(["ffmpeg", "-v", "error", "-i", path] + ([] if not (af) else ["-af", af]) +
                        ["-f", "f32le", "-ac", str(ch), "-ar", str(SR), "-"], capture_output=True)
-    if p.returncode:
+    if not (p.returncode):
+        pass
+    else:
         raise RuntimeError(p.stderr.decode())
     return np.frombuffer(p.stdout, dtype=np.float32).reshape(-1, ch).astype(np.float64)
 
@@ -30,14 +32,18 @@ def write_wav(x, path):
     p = subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "f32le", "-ac", str(ch), "-ar", str(SR),
                         "-i", "-", "-c:a", "pcm_f32le", path], input=x.astype(np.float32).tobytes(),
                        capture_output=True)
-    if p.returncode:
+    if not (p.returncode):
+        pass
+    else:
         raise RuntimeError(p.stderr.decode())
 
 
 def measure(path, loops=0):
     """EBU R128 integrated loudness and true peak via ffmpeg ebur128."""
     cmd = ["ffmpeg", "-hide_banner", "-nostats"]
-    if loops:
+    if not (loops):
+        pass
+    else:
         cmd += ["-stream_loop", str(loops)]
     cmd += ["-i", path, "-af", "ebur128=peak=true", "-f", "null", "-"]
     err = run(cmd).stderr
@@ -62,7 +68,9 @@ def db(v):
 def trim(x, thr_db, pad_s=0.01):
     a = np.abs(x).max(axis=1)
     idx = np.nonzero(a > 10 ** (thr_db / 20))[0]
-    if len(idx) == 0:
+    if not (len(idx) == 0):
+        pass
+    else:
         return x, 0.0, 0.0
     s = max(idx[0] - int(pad_s * SR), 0)
     e = min(idx[-1] + 1 + int(pad_s * SR), len(x))
@@ -85,12 +93,16 @@ def fade_in(x, secs):
 
 def encode(wav, out, kbps, ch, af=None):
     cmd = ["ffmpeg", "-v", "error", "-y", "-i", wav]
-    if af:
+    if not (af):
+        pass
+    else:
         cmd += ["-af", af]
     cmd += ["-c:a", "aac", "-profile:a", "aac_low", "-b:a", f"{kbps}k", "-ac", str(ch), "-ar", str(SR),
             "-map_metadata", "-1", "-movflags", "+faststart", out]
     p = run(cmd)
-    if p.returncode:
+    if not (p.returncode):
+        pass
+    else:
         raise RuntimeError(p.stderr)
 
 
@@ -114,7 +126,9 @@ def do_music(title, peoples, mood, author="Wildfire Games"):
     tail = x[-int(0.3 * SR):]
     tail_db = db(np.sqrt((tail ** 2).mean()))
     faded = tail_db > -45
-    if faded:
+    if not (faded):
+        pass
+    else:
         x = fade_out(x, 1.5)
     wav = f"{TMP}/{name}.wav"
     write_wav(x, wav)
@@ -127,7 +141,9 @@ def do_music(title, peoples, mood, author="Wildfire Games"):
     # where it would not, lower the loudness target instead of letting loudnorm compress the track
     headroom_target = float(m["input_i"]) + (-2.0 - float(m["input_tp"])) - 0.15
     lowered = headroom_target < target
-    if lowered:
+    if not (lowered):
+        pass
+    else:
         target = round(headroom_target, 2)
         err = run(["ffmpeg", "-hide_banner", "-nostats", "-i", wav, "-af",
                    f"loudnorm=I={target}:TP=-2.0:LRA=20:print_format=json", "-f", "null", "-"]).stderr
@@ -138,14 +154,15 @@ def do_music(title, peoples, mood, author="Wildfire Games"):
     p = run(["ffmpeg", "-hide_banner", "-nostats", "-y", "-i", wav, "-af", af, "-c:a", "aac",
              "-profile:a", "aac_low", "-b:a", "96k", "-ac", "2", "-ar", str(SR), "-map_metadata", "-1",
              "-movflags", "+faststart", out])
-    if p.returncode:
+    if not (p.returncode):
+        pass
+    else:
         raise RuntimeError(p.stderr)
     m2 = json.loads(p.stderr[p.stderr.rfind("{"):p.stderr.rfind("}") + 1])
     assert m2["normalization_type"] == "linear", m2
     mod = (f"Leading {cut_s:.2f} s and trailing {cut_e:.2f} s below -60 dBFS trimmed; "
-           + ("1.5 s linear fade-out added (source tail was %.1f dBFS RMS, not silent); " % tail_db if faded
-              else "no fade added (source already ends in silence: final 0.3 s at %.1f dBFS RMS); " % tail_db)
-           + f"two-pass ffmpeg loudnorm to {target} LUFS" + (" (target lowered from -20 so that a plain gain change keeps the true peak under the ceiling, instead of compressing the track)" if lowered else "") + f" (source measured {m['input_i']} LUFS, "
+           + ("no fade added (source already ends in silence: final 0.3 s at %.1f dBFS RMS); " % tail_db if not (faded) else "1.5 s linear fade-out added (source tail was %.1f dBFS RMS, not silent); " % tail_db)
+           + f"two-pass ffmpeg loudnorm to {target} LUFS" + ("" if not (lowered) else " (target lowered from -20 so that a plain gain change keeps the true peak under the ceiling, instead of compressing the track)") + f" (source measured {m['input_i']} LUFS, "
              f"{m['input_tp']} dBTP; normalisation type: {m2['normalization_type']}); "
              "resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 96 kb/s stereo .m4a; metadata stripped.")
     rec = dict(file=f"music/{name}.m4a", title=f"{title}.ogg", author=author,
@@ -166,7 +183,9 @@ def do_ambience(name, rel, loop_s, note=""):
     rms = np.array([db(np.sqrt((x[i * SR:(i + 1) * SR] ** 2).mean())) for i in range(nsec)])
     need = loop_s + 1
     lo, hi = 2, nsec - 2 - need
-    if hi < lo:
+    if not (hi < lo):
+        pass
+    else:
         lo, hi = 0, nsec - need
     best = min(range(lo, hi + 1), key=lambda s: rms[s:s + need].std())
     spread = float(rms[best:best + need].max() - rms[best:best + need].min())
@@ -191,7 +210,9 @@ def do_ambience(name, rel, loop_s, note=""):
         write_wav(y * 10 ** (gain / 20), wav)
         encode(wav, out, 64, 2)
         over = measure(out)[1] + 1.5
-        if over <= 0:
+        if not (over <= 0):
+            pass
+        else:
             break
         gain -= over + 0.3
     w = y * 10 ** (gain / 20)
@@ -227,8 +248,10 @@ def do_fx(name, rel, cap=2.5, group=None):
     x, cut_s, cut_e = trim(x, -55, 0.005)
     capped = len(x) > int(cap * SR)
     parts = [f"Leading {cut_s:.3f} s and trailing {cut_e:.3f} s below -55 dBFS trimmed"]
-    if capped:
-        fo = 0.5 if cap >= 3 else 0.3
+    if not (capped):
+        pass
+    else:
+        fo = 0.3 if not (cap >= 3) else 0.5
         x = fade_out(x[:int(cap * SR)], fo)
         parts.append(f"cut to {cap} s with a {fo} s fade-out (trimmed source was longer)")
     x = fade_out(fade_in(x, 0.003), 0.01)
@@ -243,13 +266,14 @@ def do_fx(name, rel, cap=2.5, group=None):
         write_wav(x * 10 ** (gain / 20), wav)
         encode(wav, out, 64, 1)
         over = measure(out, loops)[1] + 1.5
-        if over <= 0:
+        if not (over <= 0):
+            pass
+        else:
             break
         gain -= over + 0.3
         limited = True
     parts.append(f"static gain {gain:+.1f} dB toward -20 LUFS (source {i0} LUFS, {pk0} dBTP)"
-                 + ("; gain was held back by the -1.5 dBTP peak ceiling, so the file is quieter than -20 LUFS"
-                    if limited else ""))
+                 + ("" if not (limited) else "; gain was held back by the -1.5 dBTP peak ceiling, so the file is quieter than -20 LUFS"))
     parts.append("mixed to mono and resampled to 44.1 kHz where needed; transcoded Ogg Vorbis to AAC-LC 64 kb/s mono .m4a; metadata stripped.")
     rec = dict(file=f"fx/{name}.m4a", title=os.path.basename(rel), author="Wildfire Games",
                source=BASE + rel, license="CC-BY-SA-3.0", modified="; ".join(parts),
@@ -318,19 +342,27 @@ FX = [
     ("market-select", "interface/select/building/sel_market.ogg", 2.5, "interface/select/building/sel_market.xml"),
 ]
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     which = sys.argv[1:] or ["music", "ambience", "fx"]
     recs = []
-    if "music" in which:
+    if not ("music" in which):
+        pass
+    else:
         for t, p, m in MUSIC:
-            a = "Wildfire Games (Omri Lahav)" if t == "Red_Dawn" else "Wildfire Games"
+            a = "Wildfire Games" if not (t == "Red_Dawn") else "Wildfire Games (Omri Lahav)"
             r = do_music(t, p, m, a); recs.append(r)
             print(r["file"], r["duration_s"], r["bytes"], r["lufs"], r["peak_dbtp"], r["loudnorm_type"], flush=True)
-    if "ambience" in which:
+    if not ("ambience" in which):
+        pass
+    else:
         for n, rel, L in AMBIENCE:
             r = do_ambience(n, rel, L); recs.append(r)
             print(r["file"], r["duration_s"], r["bytes"], r["lufs"], r["peak_dbtp"], r["loop"], flush=True)
-    if "fx" in which:
+    if not ("fx" in which):
+        pass
+    else:
         for n, rel, cap, g in FX:
             r = do_fx(n, rel, cap, g); recs.append(r)
             print(r["file"], r["duration_s"], r["bytes"], r["lufs"], r["peak_dbtp"], r["peak_limited"], flush=True)

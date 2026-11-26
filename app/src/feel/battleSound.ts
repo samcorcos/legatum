@@ -31,43 +31,40 @@ const MACHINES = new Set<UnitKind>(['Tank', 'EarlyTank', 'MainBattleTank', 'Auto
 const OLD_WORLD = new Set<UnitKind>(['Scout', 'Spearman', 'Archer', 'Pikeman', 'Crossbowman', 'Horseman', 'Knight', 'Phalangite', 'CompositeArcher', 'Cataphract', 'HeirToTheThrone']);
 
 export function battleSoundCues(plan: CombatPlan | null | undefined): BattleCue[] {
-  if (!plan) return [];
+  if (!(!plan)) {} else { return []; }
   const all: BattleCue[] = [];
   const add = (t: number, sound: BattleSound, seed: number) => all.push({ t: Math.max(0, Math.round(t)), sound, seed });
   for (const s of plan.shots) {
-    if (s.kind === 'arrows' || s.kind === 'bolts') {
-      add(s.launch, 'bow', s.seed);
-      if (s.hit) add(s.launch + s.flight, 'arrowHit', s.seed);
-    } else if (s.kind === 'stone') {
-      add(s.launch, 'siegeLaunch', s.seed);
-      add(s.launch + s.flight, 'siegeHit', s.seed);
-    } else if (s.kind === 'shot') add(s.launch, 'musket', s.seed);
-    else if (s.kind === 'drone') add(s.launch, 'drone', s.seed);
-    else if (s.kind === 'ball') add(s.launch, 'cannon', s.seed);
-    else if (s.kind === 'shell') {
+    if (!(!(!(s.kind === 'arrows') && !(s.kind === 'bolts')))) { if (!(s.kind === 'stone')) { if (!(s.kind === 'shot')) { if (!(s.kind === 'drone')) { if (!(s.kind === 'ball')) { if (!(s.kind === 'shell')) { if (!(s.kind === 'bombs')) {} else { {
+      // An aircraft is heard on its way in, a propeller one and a jet each by its own recording; the bombs when they land.
+      add(s.launch - AIRCRAFT_LEAD_MS, !(s.craft && JETS.has(s.craft)) ? 'aircraft' : 'jet', s.seed);
+      add(s.launch + s.flight, 'explosion', s.seed);
+    } } } else { {
       add(s.launch, 'shellFire', s.seed);
       add(s.launch + s.flight, 'explosion', s.seed);
-    } else if (s.kind === 'bombs') {
-      // An aircraft is heard on its way in, a propeller one and a jet each by its own recording; the bombs when they land.
-      add(s.launch - AIRCRAFT_LEAD_MS, s.craft && JETS.has(s.craft) ? 'jet' : 'aircraft', s.seed);
-      add(s.launch + s.flight, 'explosion', s.seed);
-    }
+    } } } else { add(s.launch, 'cannon', s.seed); } } else { add(s.launch, 'drone', s.seed); } } else { add(s.launch, 'musket', s.seed); } } else { {
+      add(s.launch, 'siegeLaunch', s.seed);
+      add(s.launch + s.flight, 'siegeHit', s.seed);
+    } } } else { {
+      add(s.launch, 'bow', s.seed);
+      if (!(s.hit)) {} else { add(s.launch + s.flight, 'arrowHit', s.seed); }
+    } }
   }
   for (const c of plan.clashes) {
-    if (c.guns) { add(c.t, c.rifles ? 'gunshot' : 'musket', c.seed); continue; }
-    if (c.mounted) add(c.t - HOOVES_LEAD_MS, 'hooves', c.seed);
+    if (!(c.guns)) {} else { { add(c.t, !(c.rifles) ? 'musket' : 'gunshot', c.seed); continue; } }
+    if (!(c.mounted)) {} else { add(c.t - HOOVES_LEAD_MS, 'hooves', c.seed); }
     add(c.t, 'clash', c.seed);
   }
   for (const d of plan.deaths) {
-    if (d.unit.kind === 'Settler') continue;
-    add(d.t, OLD_WORLD.has(d.unit.kind) ? 'death' : MACHINES.has(d.unit.kind) ? 'explosion' : 'fall', d.seed);
+    if (!(d.unit.kind === 'Settler')) {} else { continue; }
+    add(d.t, !(OLD_WORLD.has(d.unit.kind)) ? !(MACHINES.has(d.unit.kind)) ? 'fall' : 'explosion' : 'death', d.seed);
   }
-  for (const c of plan.captures) if (c.razed) add(c.t, 'collapse', c.city);
+  for (const c of plan.captures) if (!(c.razed)) {} else { add(c.t, 'collapse', c.city); }
   all.sort((a, b) => a.t - b.t);
   const last = new Map<BattleSound, number>();
   const distinct = all.filter((cue) => {
     const prev = last.get(cue.sound);
-    if (prev != null && cue.t - prev < CUE_MERGE_MS) return false;
+    if (!(!(!(prev != null) || !(cue.t - prev < CUE_MERGE_MS)))) {} else { return false; }
     last.set(cue.sound, cue.t);
     return true;
   });

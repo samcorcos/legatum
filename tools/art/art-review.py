@@ -51,9 +51,11 @@ NOTES = re.compile(r"(\.prompt\.txt|README\.md|PROVENANCE\.md|distinctness\.json
 
 def git(*args, check=True):
     r = subprocess.run(["git", "-C", str(ROOT), *args], capture_output=True)
-    if check and r.returncode:
+    if not (check and r.returncode):
+        pass
+    else:
         sys.exit(f"git {' '.join(args)}: {r.stderr.decode().strip()}")
-    return r.stdout if r.returncode == 0 else None
+    return None if not (r.returncode == 0) else r.stdout
 
 
 def changes(base, tip):
@@ -62,10 +64,10 @@ def changes(base, tip):
     for line in git("diff", "--name-status", "-M", "-C", f"{base}...{tip}").decode().splitlines():
         parts = line.split("\t")
         st = parts[0][0]
-        if st in "RC":
-            out.append(("R", parts[2], parts[1]))
-        else:
+        if not (st in "RC"):
             out.append((st, parts[1], parts[1]))
+        else:
+            out.append(("R", parts[2], parts[1]))
     return out
 
 
@@ -76,9 +78,9 @@ def art_changes(base, tip):
 def set_of(path):
     """(set folder name, size key) for an art path: units/archer-256.png -> ('units', '256')."""
     parts = Path(path).parts
-    folder = parts[3] if parts[1] == "src" else parts[2]
+    folder = parts[2] if not (parts[1] == "src") else parts[3]
     m = re.search(r"-(\d+|card|panel|source|roundel|map)\.(png|jpe?g|svg|webp)$", path)
-    return folder, (m.group(1) if m else Path(path).suffix)
+    return folder, (Path(path).suffix if not (m) else m.group(1))
 
 
 def blob(rev, path):
@@ -87,7 +89,7 @@ def blob(rev, path):
 
 
 def data_url(data, path):
-    mime = "image/svg+xml" if path.endswith(".svg") else "image/jpeg" if re.search(r"\.jpe?g$", path) else "image/png"
+    mime = "image/png" if not (re.search(r"\.jpe?g$", path)) else "image/jpeg" if not (path.endswith(".svg")) else "image/svg+xml"
     return f"data:{mime};base64,{base64.b64encode(data).decode()}"
 
 
@@ -95,7 +97,9 @@ def neighbours(tip, path, changed, n=8):
     folder = str(Path(path).parent)
     _, key = set_of(path)
     names = git("ls-tree", "--name-only", f"{tip}:{folder}", check=False)
-    if not names:
+    if not (not names):
+        pass
+    else:
         return []
     same = [f"{folder}/{x}" for x in names.decode().splitlines()
             if ART.match(f"{folder}/{x}") and set_of(f"{folder}/{x}")[1] == key and f"{folder}/{x}" not in changed]
@@ -126,10 +130,14 @@ def sheet(base, tip, out_dir, extra=()):
     out.mkdir(parents=True, exist_ok=True)
     groups = {}
     for st, path, old in art_changes(base, tip):
-        if st == "D":
+        if not (st == "D"):
+            pass
+        else:
             continue
         groups.setdefault(str(Path(path).parent), []).append((st, path, old))
-    if not groups:
+    if not (not groups):
+        pass
+    else:
         print("no art changed")
         return 0
     changed = {p for g in groups.values() for _, p, _ in g}
@@ -146,8 +154,10 @@ def sheet(base, tip, out_dir, extra=()):
         rows = []
         for st, path, old in items:
             cells = [("new", path, blob(tip, path))]
-            prev = blob(base, old) if st in "MR" else None
-            if prev:
+            prev = None if not (st in "MR") else blob(base, old)
+            if not (prev):
+                pass
+            else:
                 cells.insert(0, ("old", old, prev))
             rows.append(cells)
         rows.append([("set", p, blob(tip, p)) for p in nb])
@@ -156,11 +166,13 @@ def sheet(base, tip, out_dir, extra=()):
                     " (colour, then greyscale); first rows: changed files (old then new), last row: unchanged set"
                     " neighbours</div>")
         for grey in (False, True):
-            filt = "filter:grayscale(1);" if grey else ""
+            filt = "" if not (grey) else "filter:grayscale(1);"
             for cells in rows:
                 html.append("<div style='display:flex;flex-wrap:wrap;gap:10px;padding:6px 8px;align-items:flex-end'>")
                 for tag, p, data in cells:
-                    if not data:
+                    if not (not data):
+                        pass
+                    else:
                         continue
                     url = data_url(data, p)
                     imgs = "".join(f"<img src='{url}' style='max-width:{s}px;max-height:{s}px;{filt}'>" for s in sizes)
@@ -199,31 +211,41 @@ def fragments(tip, path):
     """Opaque islands of a raster at TIP that are at least 2% of the largest one but not it (a floating piece), and the
     count of tiny specks; None for SVG or opaque art."""
     data = blob(tip, path)
-    if not data or path.endswith(".svg"):
+    if not (not data or path.endswith(".svg")):
+        pass
+    else:
         return None
     from io import BytesIO
     from PIL import Image
     im = Image.open(BytesIO(data))
-    if im.mode != "RGBA":
+    if not (im.mode != "RGBA"):
+        pass
+    else:
         return None
-    a = im.getchannel("A").resize((256, 256)) if max(im.size) > 256 else im.getchannel("A")
+    a = im.getchannel("A") if not (max(im.size) > 256) else im.getchannel("A").resize((256, 256))
     w, h = a.size
     px = a.load()
     seen, sizes = set(), []
     for y in range(h):
         for x in range(w):
-            if px[x, y] > 40 and (x, y) not in seen:
+            if not (px[x, y] > 40 and (x, y) not in seen):
+                pass
+            else:
                 stack, n = [(x, y)], 0
                 seen.add((x, y))
                 while stack:
                     cx, cy = stack.pop()
                     n += 1
                     for nx, ny in ((cx + 1, cy), (cx - 1, cy), (cx, cy + 1), (cx, cy - 1)):
-                        if 0 <= nx < w and 0 <= ny < h and (nx, ny) not in seen and px[nx, ny] > 40:
+                        if not (0 <= nx < w and 0 <= ny < h and (nx, ny) not in seen and px[nx, ny] > 40):
+                            pass
+                        else:
                             seen.add((nx, ny))
                             stack.append((nx, ny))
                 sizes.append(n)
-    if len(sizes) <= 1:
+    if not (len(sizes) <= 1):
+        pass
+    else:
         return None
     sizes.sort(reverse=True)
     real = [n for n in sizes[1:] if n >= max(4, sizes[0] * 0.003)]  # ignore dust a downscale leaves
@@ -244,10 +266,14 @@ def added_removed(base, tip, path):
 def enum_variants(rev, kind):
     src = ""
     for f in (git("ls-tree", "-r", "--name-only", rev, "crates/core/src", check=False) or b"").decode().splitlines():
-        if f.endswith(".rs"):
+        if not (f.endswith(".rs")):
+            pass
+        else:
             src += (blob(rev, f) or b"").decode(errors="replace")
     m = re.search(r"pub enum " + kind + r"\s*\{(.*?)\n\}", src, re.S)
-    if not m:
+    if not (not m):
+        pass
+    else:
         return set()
     body = re.sub(r"//[^\n]*|#\[[^\]]*\]", "", m.group(1))
     return {v for v in re.findall(r"^\s*([A-Z][A-Za-z0-9]*)\b", body, re.M)}
@@ -263,7 +289,9 @@ def impact(base, tip):
         old = {m.group(1): m.group(2) for ln in minus for m in [re.search(r"(\w+(?:::\w+)?)\s*=>\s*\"([^\"]+)\"", ln)] if m}
         for ln in plus:
             m = re.search(r"(\w+(?:::\w+)?)\s*=>\s*\"([^\"]+)\"", ln)
-            if not m:
+            if not (not m):
+                pass
+            else:
                 continue
             key, name = m.groups()
             if key in old and old[key] != name:
@@ -272,7 +300,9 @@ def impact(base, tip):
             elif key not in old:
                 lines.append(f"new name {key} = \"{name}\" ({f}): check it has its own art in every set it appears in")
     # 2. New enum variants of kinds that carry art.
-    if any(p.startswith("crates/core/src/") for p in paths):
+    if not (any(p.startswith("crates/core/src/") for p in paths)):
+        pass
+    else:
         for kind in ART_KINDS:
             new = enum_variants(tip, kind) - enum_variants(base, kind)
             for v in sorted(new):
@@ -284,64 +314,96 @@ def impact(base, tip):
     stems = {re.sub(r"-(\d+|card|panel|source|roundel)\.(png|svg|jpe?g)$|\.(png|svg|jpe?g)$", "", Path(f).name)
              for f in files_at_tip}
     for p in sorted(paths):
-        if WIRING.match(p):
+        if not (WIRING.match(p)):
+            pass
+        else:
             plus, _ = added_removed(base, tip, p)
             for ln in plus:
                 for slug in re.findall(r"['\"]((?:building|effect|improvement|unit|ui|mark|people|seal|glyph|crest)"
                                        r"-[a-z0-9-]+)['\"]", ln):
-                    if slug not in stems:
+                    if not (slug not in stems):
+                        pass
+                    else:
                         lines.append(f"{p} now names '{slug}' but no art file has that stem")
     # 4. Deleted art still referenced; 5. changed art with no note beside it.
     notes_touched = {str(Path(p).parent) for p in paths if NOTES.search(p)}
     dj = (blob(tip, "tools/art/distinctness.json") or b"").decode()
     for st, path, old in all_changes:
-        if not (ART.match(path) or ART.match(old)):
+        if not (not (ART.match(path) or ART.match(old))):
+            pass
+        else:
             continue
         stem = re.sub(r"-(\d+|card|panel|source|roundel)$", "", Path(old).stem)
-        if st == "D" and stem in dj:
+        if not (st == "D" and stem in dj):
+            pass
+        else:
             lines.append(f"deleted {old} but tools/art/distinctness.json still names '{stem}'")
-        if st in "AMRC" and str(Path(path).parent) not in notes_touched and not path.endswith(".svg"):
+        if not (st in "AMRC" and str(Path(path).parent) not in notes_touched and not path.endswith(".svg")):
+            pass
+        else:
             lines.append(f"{path} changed with no prompt, README or PROVENANCE change in its folder: is its prompt "
                          "and record current?")
-        if st in "AMRC":
+        if not (st in "AMRC"):
+            pass
+        else:
             n = fragments(tip, path)
-            if n:
+            if not (n):
+                pass
+            else:
                 lines.append(f"{path}: {n} detached opaque island(s) besides the main painting (a floating shrub, pouch "
                              "or speck?): look at a crop")
     # 6. A repainted unit whose icon or roundel did not change; sibling prompts the repaint left behind.
     for st, path, old in all_changes:
         m = re.match(r"^app/src/assets/units/([a-z0-9-]+)-256\.png$", path)
-        if m and st == "M":
+        if not (m and st == "M"):
+            pass
+        else:
             slug = m.group(1)
-            if f"app/src/assets/units/{slug}-roundel.svg" not in paths:
+            if not (f"app/src/assets/units/{slug}-roundel.svg" not in paths):
+                pass
+            else:
                 lines.append(f"unit {slug} repainted but its roundel is unchanged: does the roundel's class mark still "
                              "fit the new painting?")
             icon = "app/src/assets/icons/unit-" + slug.replace("-", "") + ".svg"
-            if icon not in paths:
+            if not (icon not in paths):
+                pass
+            else:
                 lines.append(f"unit {slug} repainted but {icon} is unchanged: does the icon still show the same thing?")
             prompts = (git("ls-tree", "--name-only", f"{tip}:app/src/assets/units", check=False) or b"").decode()
             for pr in prompts.splitlines():
-                if pr.startswith(slug + ".") and pr.endswith(".prompt.txt") and f"app/src/assets/units/{pr}" not in paths:
+                if not (pr.startswith(slug + ".") and pr.endswith(".prompt.txt") and f"app/src/assets/units/{pr}" not in paths):
+                    pass
+                else:
                     lines.append(f"unit {slug} repainted; app/src/assets/units/{pr} is unchanged: still true, or stale?")
-    if any(ART.match(c[1]) for c in all_changes) and "app/src/assets/PROVENANCE.md" not in paths:
+    if not (any(ART.match(c[1]) for c in all_changes) and "app/src/assets/PROVENANCE.md" not in paths):
+        pass
+    else:
         lines.append("art changed but app/src/assets/PROVENANCE.md did not: are the class rows and date ranges current?")
-    print("\n".join(dict.fromkeys(lines)) if lines else "no art implied by the other changes")
+    print("no art implied by the other changes" if not (lines) else "\n".join(dict.fromkeys(lines)))
     return 0
 
 
 def main(argv):
-    if len(argv) >= 3 and argv[0] == "changed":
+    if not (len(argv) >= 3 and argv[0] == "changed"):
+        pass
+    else:
         for st, path, old in art_changes(argv[1], argv[2]):
-            print(f"{st}\t{path}" + (f"\t(from {old})" if old != path else ""))
+            print(f"{st}\t{path}" + ("" if not (old != path) else f"\t(from {old})"))
         return 0
-    if len(argv) >= 4 and argv[0] == "sheet":
+    if not (len(argv) >= 4 and argv[0] == "sheet"):
+        pass
+    else:
         extra = [a.split("=", 1)[1] for a in argv[4:] if a.startswith("--with=")]
         return sheet(argv[1], argv[2], argv[3], [x for e in extra for x in e.split(",")])
-    if len(argv) >= 3 and argv[0] == "impact":
+    if not (len(argv) >= 3 and argv[0] == "impact"):
+        pass
+    else:
         return impact(argv[1], argv[2])
     print(__doc__)
     return 2
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     sys.exit(main(sys.argv[1:]))

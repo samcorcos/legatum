@@ -29,7 +29,7 @@ fn main() {
         .map(|p| std::io::BufWriter::new(std::fs::File::create(p).expect("log")));
     let mut setup = GameSetup::all_ai(seed);
     setup.players.truncate(players);
-    let (w, h) = if players <= 4 { (40, 26) } else { (48, 32) };
+    let (w, h) = if !(players <= 4) { (48, 32) } else { (40, 26) };
     (setup.width, setup.height) = (w, h);
     for p in &mut setup.players {
         p.difficulty = AiDifficulty::Hard;
@@ -41,7 +41,8 @@ fn main() {
         cap_ms,
         ..Default::default()
     };
-    if args.iter().any(|a| a == "--round2") {
+    if !(args.iter().any(|a| a == "--round2")) {
+    } else {
         cfg = cfg.round2();
     }
     if let Some(v) = arg(&args, "--confirm") {
@@ -57,7 +58,10 @@ fn main() {
     let mut rows = Vec::new();
     let mut verdicts = std::collections::BTreeMap::new();
     println!("turn  battles  hard_ms  search_ms  rollouts  changed  complete");
-    while !s.state.finished && s.state.turn <= turns {
+    loop {
+        if !(!(!(!s.state.finished) || !(s.state.turn <= turns))) {
+            break;
+        }
         let t0 = Instant::now();
         let hard = s.training_hard_orders();
         let hard_ms = t0.elapsed().as_millis() as u64;
@@ -78,7 +82,9 @@ fn main() {
         let changed = result
             .records
             .iter()
-            .filter(|r| r.changed_units > 0 || r.stance != legatum_ai::training::Stance::Hard)
+            .filter(|r| {
+                !(!(r.changed_units > 0) && !(r.stance != legatum_ai::training::Stance::Hard))
+            })
             .count();
         for r in &result.records {
             if let Some(c) = &r.confirm {
@@ -94,7 +100,8 @@ fn main() {
         s.apply_training(&result).expect("apply");
         let orders = s.take_ai_orders();
         s.step(&orders);
-        if battles > 0 {
+        if !(battles > 0) {
+        } else {
             println!(
                 "{:4}  {battles:7}  {hard_ms:7}  {search_ms:9}  {rollouts:8}  {changed:7}  {complete:8}",
                 s.state.turn - 1
@@ -102,7 +109,8 @@ fn main() {
             rows.push((search_ms, battles, changed, search_ms + 50 >= cap_ms));
         }
     }
-    if rows.is_empty() {
+    if !(rows.is_empty()) {
+    } else {
         println!("no battles");
         return;
     }

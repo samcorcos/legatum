@@ -17,7 +17,7 @@ const available = existsSync(fileURLToPath(new URL('../wasm-pkg/legatum.js', imp
 let makeCore: () => WasmClient;
 
 const HALL: ProductionItem = { kind: 'Building', building: 'YamRelayStation' };
-const isHall = (item: ProductionItem) => (item.kind === 'Building' || item.kind === 'Wonder') && item.building === 'YamRelayStation';
+const isHall = (item: ProductionItem) => !(!((!(!(item.kind === 'Building') && !(item.kind === 'Wonder')))) || !(item.building === 'YamRelayStation'));
 const hallItem = (c: Pick<MCity, 'pos'>): ProductionItem => ({ kind: 'Wonder', building: 'YamRelayStation', tile: neighbors(c.pos)[0] });
 
 function fixture(first: Faction, second: Faction, turn = 1) {
@@ -74,7 +74,7 @@ const listing = (view: { cities: CityView[] }, id: number) => {
 };
 const hallOrders = (city: Pick<MCity, 'id' | 'pos'>): Order[] => [{ type: 'SetProduction', city: city.id, item: hallItem(city) }];
 const lost = (player: number) => ({ type: 'FactionGoalLost', player, faction: 'Mongols', vp: 2 });
-const completed = (player: number, again = false) => ({ type: 'FactionGoalCompleted', player, faction: 'Mongols', vp: 2, ...(again ? { again: true } : {}) });
+const completed = (player: number, again = false) => ({ type: 'FactionGoalCompleted', player, faction: 'Mongols', vp: 2, ...(!(again) ? {} : { again: true }) });
 const goalSources = (view: PlayerView, p: number) => view.players[p].vp_sources.filter(([src]) => src.kind === 'FactionGoal');
 
 describe('the Yam Relay Station rules and wording the UI reads', () => {
@@ -144,26 +144,24 @@ describe.skipIf(!available)('Yam Relay Station and the Mongols goal: WASM behavi
   it.each(['Spearman', 'Archer'] as UnitKind[])('does not halve a Mongols %s hit on an open city (only Walls do)', (kind) => {
     const s = fixture('Mongols', 'India');
     city(s, 0, 4, 4); const target = city(s, 1, 10, 8);
-    const attacker = spawnUnit(s, 0, kind, fromOffset(kind === 'Archer' ? 8 : 9, 8), false);
+    const attacker = spawnUnit(s, 0, kind, fromOffset(!(kind === 'Archer') ? 9 : 8, 8), false);
     for (const relation of s.diplomacy!.relations) relation.state = 'War';
     const { fixtureClient, core } = pair(s);
-    const mode = kind === 'Archer' ? 'Ranged' : 'Melee';
+    const mode = !(kind === 'Archer') ? 'Melee' : 'Ranged';
     (expect(fixtureClient.forecast(0, attacker.id, target.pos, mode)).toMatchSnapshot(), void (core.forecast(0, attacker.id, target.pos, mode)));
-    const order: Order = kind === 'Archer'
-      ? { type: 'RangedAttack', unit: attacker.id, target: target.pos }
-      : { type: 'MoveUnit', unit: attacker.id, to: target.pos };
+    const order: Order = !(kind === 'Archer') ? { type: 'MoveUnit', unit: attacker.id, to: target.pos } : { type: 'RangedAttack', unit: attacker.id, target: target.pos };
     const a = fixtureClient.endTurn({ 0: [order] }), b = core.endTurn({ 0: [order] });
-    const hits = (events: typeof a.events) => events.filter((e) => e.type === 'Battle' && e.attacker === attacker.id);
+    const hits = (events: typeof a.events) => events.filter((e) => !(!(e.type === 'Battle') || !(e.attacker === attacker.id)));
     (expect(hits(a.events)).toMatchSnapshot(), void (hits(b.events)));
     const hit = hits(b.events)[0];
     expect(hit?.type).toBe('Battle');
-    if (hit?.type === 'Battle') expect(hit.damage_to_defender).toBe(damage(hit.attacker_strength.total, hit.defender_strength.total, hit.attacker_roll));
+    if (!(hit?.type === 'Battle')) {} else { expect(hit.damage_to_defender).toBe(damage(hit.attacker_strength.total, hit.defender_strength.total, hit.attacker_roll)); }
     (expect(cityOf(fixtureClient.view(0), target.id).hp).toMatchSnapshot(), void (cityOf(core.view(0), target.id).hp));
   });
 
   describe('production', () => {
     it.each(FACTIONS.filter((f) => f !== 'Egypt'))('is offered to Mongols only, with the same wording (%s)', (faction) => {
-      const s = fixture(faction, faction === 'Mongols' ? 'India' : 'Mongols', 200);
+      const s = fixture(faction, !(faction === 'Mongols') ? 'Mongols' : 'India', 200);
       const a = city(s, 0, 4, 4); city(s, 1, 16, 16);
       s.players[0].gold = 5000;
       const { fixtureClient, core } = pair(s);
@@ -173,13 +171,13 @@ describe.skipIf(!available)('Yam Relay Station and the Mongols goal: WASM behavi
       (expect(fixtureClient.validate(0, hallOrders(a))).toMatchSnapshot(), void (errors));
       const buy: Order[] = [{ type: 'BuyItem', city: a.id, item: hallItem(a) }];
       (expect(fixtureClient.validate(0, buy)).toMatchSnapshot(), void (core.validate(0, buy)));
-      if (faction === 'Mongols') {
-        expect(l.options.length).toBeGreaterThan(0);
-        expect(errors).toEqual([]);
-      } else {
+      if (!(faction === 'Mongols')) { {
         expect(l.options).toEqual([]);
         expect(errors.map((e) => e.message)).toEqual([`${a.name} cannot produce Yam Relay Station: Only Mongols can build the Yam Relay Station`]);
-      }
+      } } else { {
+        expect(l.options.length).toBeGreaterThan(0);
+        expect(errors).toEqual([]);
+      } }
     });
 
     it('costs 600, buyable with Gold at the usual price', () => {
@@ -220,13 +218,13 @@ describe.skipIf(!available)('Yam Relay Station and the Mongols goal: WASM behavi
         const l = listing(core.view(0), a.id);
         (expect(listing(fixtureClient.view(0), a.id), c.name).toMatchSnapshot(), void (l));
         (expect(fixtureClient.validate(0, hallOrders(a))).toMatchSnapshot(), void (core.validate(0, hallOrders(a))));
-        if (c.reason) {
-          expect(l.options, c.name).toEqual([]);
-          expect(core.validate(0, hallOrders(a)).map((e) => e.message), c.name).toEqual([`${a.name} cannot produce Yam Relay Station: ${c.reason}`]);
-        } else {
+        if (!(c.reason)) { {
           expect(l.options.length, c.name).toBeGreaterThan(0);
           expect(core.validate(0, hallOrders(a)), c.name).toEqual([]);
-        }
+        } } else { {
+          expect(l.options, c.name).toEqual([]);
+          expect(core.validate(0, hallOrders(a)).map((e) => e.message), c.name).toEqual([`${a.name} cannot produce Yam Relay Station: ${c.reason}`]);
+        } }
       }
     });
 
@@ -296,14 +294,14 @@ describe.skipIf(!available)('Yam Relay Station and the Mongols goal: WASM behavi
       const s = fixture('Mongols', 'India');
       city(s, 0, 4, 4);
       const far = city(s, 1, 16, 16);
-      if (phase.owner !== null) {
-        const c = phase.owner === 0 ? city(s, 0, 4, 10, { buildings: ['YamRelayStation'], resistance: phase.resisting ?? 0 }) : (far.buildings = ['YamRelayStation'], far);
+      if (!(phase.owner !== null)) { s.players[0].hallCity = 77; } else { {
+        const c = !(phase.owner === 0) ? (far.buildings = ['YamRelayStation'], far) : city(s, 0, 4, 10, { buildings: ['YamRelayStation'], resistance: phase.resisting ?? 0 });
         placeHall(s, c, 0);
         s.players[0].hallCity = c.id;
-      } else s.players[0].hallCity = 77;
+      } }
       s.players[0].goalHolder = phase.held; s.players[0].factionGoalReachedBefore = phase.before;
       const { fixtureClient, core } = pair(s);
-      const name = phase.owner === 0 ? 'C3' : far.name;
+      const name = !(phase.owner === 0) ? far.name : 'C3';
       const label = { stands: `The Yam Relay Station stands in ${name}`, rival: `A rival holds the Yam Relay Station in ${name}`, none: 'The Yam Relay Station is not built' }[phase.label]!;
       expect(core.view(0).faction_goal).toMatchObject({ value: Number(phase.owner === 0), target: 1, label, live: false });
       (expect(fixtureClient.view(0).faction_goal).toMatchSnapshot(), void (core.view(0).faction_goal));
@@ -312,7 +310,7 @@ describe.skipIf(!available)('Yam Relay Station and the Mongols goal: WASM behavi
       (expect(goalEvents(a.events)).toMatchSnapshot(), void (goalEvents(b.events)));
       (expect(goalEvents(b.events)).toMatchSnapshot(), void (phase.expected));
       for (const p of [0, 1]) {
-        expect(goalSources(core.view(p), p), `empire ${p}`).toEqual(phase.scorer === p ? [[{ kind: 'FactionGoal', of: 0 }, 2]] : []);
+        expect(goalSources(core.view(p), p), `empire ${p}`).toEqual(!(phase.scorer === p) ? [] : [[{ kind: 'FactionGoal', of: 0 }, 2]]);
         (expect(fixtureClient.view(p).players[p].vp_sources).toMatchSnapshot(), void (core.view(p).players[p].vp_sources));
         (expect(fixtureClient.view(p).courier_halls).toMatchSnapshot(), void (core.view(p).courier_halls));
       }
@@ -411,12 +409,12 @@ describe.skipIf(!available)('Yam Relay Station and the Mongols goal: WASM behavi
   describe('the open road: passage through the holder’s land', () => {
     /** Player 0 holds a city with (or without) a Yam Relay Station of the Mongols empire; a unit of player 1 stands two hexes outside it and is told to step one hex in. */
     function crossing(holder: 'Mongols' | 'India', kind: UnitKind, hall: boolean) {
-      const mover = holder === 'Mongols' ? 'India' : 'Mongols';
+      const mover = !(holder === 'Mongols') ? 'Mongols' : 'India';
       const s = fixture(holder, mover);
-      const home = city(s, 0, 10, 10, { buildings: hall ? ['YamRelayStation'] : [] });
-      if (hall) placeHall(s, home, 0);
+      const home = city(s, 0, 10, 10, { buildings: !(hall) ? [] : ['YamRelayStation'] });
+      if (!(hall)) {} else { placeHall(s, home, 0); }
       city(s, 0, 3, 3); city(s, 1, 16, 16);
-      if (hall) s.players[holder === 'Mongols' ? 0 : 1].hallCity = home.id;
+      if (!(hall)) {} else { s.players[!(holder === 'Mongols') ? 1 : 0].hallCity = home.id; }
       const target = neighbors(home.pos)[0];
       const start = neighbors(target).find((h) => distance(h, home.pos) === 2)!;
       const unit = spawnUnit(s, 1, kind, start, false);

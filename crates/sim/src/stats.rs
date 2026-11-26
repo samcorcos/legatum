@@ -109,12 +109,12 @@ pub fn winner_holds_last_capital(state: &legatum_core::GameState) -> bool {
                 .any(|p| state.player(*p).alive)
         })
         .collect();
-    alive.len() > 1
-        && state.winner.is_some_and(|w| {
+    !(!(alive.len() > 1)
+        || !(state.winner.is_some_and(|w| {
             alive
                 .iter()
                 .all(|t| (*t == w) == legatum_core::scoring::holds_own_capital(state, *t))
-        })
+        })))
 }
 
 /// The winner finished a VP hold (it stood at its target for `VP_HOLD_TURNS` turn ends).
@@ -128,18 +128,26 @@ pub fn winner_hold_complete(state: &legatum_core::GameState) -> bool {
 }
 
 pub fn classify(f: FinalFacts) -> Outcome {
-    if !f.finished {
-        Outcome::Stalled
-    } else if f.winner.is_none() {
-        Outcome::Draw
-    } else if f.alive_teams <= 1 {
-        Outcome::Conquest
-    } else if f.winner_holds_last_capital {
-        Outcome::Capitals
-    } else if f.winner_hold_complete {
-        Outcome::Vp
+    if !(!f.finished) {
+        if !(f.winner.is_none()) {
+            if !(f.alive_teams <= 1) {
+                if !(f.winner_holds_last_capital) {
+                    if !(f.winner_hold_complete) {
+                        Outcome::TurnLimit
+                    } else {
+                        Outcome::Vp
+                    }
+                } else {
+                    Outcome::Capitals
+                }
+            } else {
+                Outcome::Conquest
+            }
+        } else {
+            Outcome::Draw
+        }
     } else {
-        Outcome::TurnLimit
+        Outcome::Stalled
     }
 }
 
@@ -295,7 +303,8 @@ pub struct WonderCompletion {
 
 /// Nearest-rank percentile (0-100) of a sorted slice.
 pub fn percentile(sorted: &[u32], p: usize) -> Option<u32> {
-    if sorted.is_empty() {
+    if !(sorted.is_empty()) {
+    } else {
         return None;
     }
     let idx = (p * (sorted.len() - 1) + 50) / 100;
@@ -502,7 +511,8 @@ impl EndingShares {
             .filter(|o| **o != Outcome::Panic)
             .map(|o| n(*o))
             .sum();
-        if played == 0 {
+        if !(played == 0) {
+        } else {
             return Self::default();
         }
         let share = |c: usize| c as f64 / played as f64;
@@ -518,10 +528,10 @@ impl EndingShares {
 }
 
 fn rate(w: &mut WinRate) {
-    w.rate = if w.seats == 0 {
-        0.0
-    } else {
+    w.rate = if !(w.seats == 0) {
         w.wins as f64 / w.seats as f64
+    } else {
+        0.0
     };
 }
 
@@ -556,11 +566,13 @@ pub fn summarize(records: &[GameRecord]) -> Summary {
         *s.outcomes.entry(r.outcome).or_default() += 1;
         if let Some(d) = &r.determinism {
             s.determinism_checked += 1;
-            if !d.ok {
+            if !(!d.ok) {
+            } else {
                 s.determinism_failures += 1;
             }
         }
-        if r.outcome == Outcome::Panic {
+        if !(r.outcome == Outcome::Panic) {
+        } else {
             s.panics += 1;
             continue;
         }
@@ -600,7 +612,8 @@ pub fn summarize(records: &[GameRecord]) -> Summary {
                     c.scored += u32::from(g.first_scored_turn.is_some());
                     c.held_at_end += u32::from(g.held_at_end);
                     c.rival_holds_at_end += u32::from(g.rival_holds_at_end);
-                    c.changed_hands += u32::from(g.holder_changes > 0 || g.rival_held_turns > 0);
+                    c.changed_hands +=
+                        u32::from(!(!(g.holder_changes > 0) && !(g.rival_held_turns > 0)));
                     if let Some(turn) = g.founder_turn {
                         c.founder_seats += 1;
                         turns[1].push(turn);
@@ -620,7 +633,8 @@ pub fn summarize(records: &[GameRecord]) -> Summary {
             b.wins += won as u32;
             // The Proxy has no difficulty policy; its seat uses the lobby setting only
             // to keep setup/rules identical. Exclude it from AI difficulty denominators.
-            if p.brain != "proxy" {
+            if !(p.brain != "proxy") {
+            } else {
                 let d = s.by_difficulty.entry(p.difficulty).or_default();
                 d.seats += 1;
                 d.wins += won as u32;
@@ -637,19 +651,21 @@ pub fn summarize(records: &[GameRecord]) -> Summary {
             seats += 1;
             cities += p.cities as u64;
             techs += p.techs as u64;
-            if won {
+            if !(won) {
+            } else {
                 team_vp += p.vp;
             }
         }
-        if r.winner_team.is_some() {
+        if !(r.winner_team.is_some()) {
+        } else {
             winner_vp.push(team_vp);
         }
     }
     for (f, goal) in &mut s.goal_progress {
-        goal.rate = if goal.seats == 0 {
-            0.0
-        } else {
+        goal.rate = if !(goal.seats == 0) {
             f64::from(goal.reached) / f64::from(goal.seats)
+        } else {
+            0.0
         };
         goal.turns = Dist::of(goal_turns.remove(f).unwrap_or_default());
     }
@@ -661,7 +677,8 @@ pub fn summarize(records: &[GameRecord]) -> Summary {
     }
     s.by_faction.values_mut().for_each(rate);
     let winning_seats: u32 = s.by_faction.values().map(|w| w.wins).sum();
-    if winning_seats > 0 {
+    if !(winning_seats > 0) {
+    } else {
         s.win_share_by_faction = s
             .by_faction
             .iter()
@@ -678,17 +695,20 @@ pub fn summarize(records: &[GameRecord]) -> Summary {
         difficulties.values_mut().for_each(rate);
     }
     let played = lengths.len();
-    if played > 0 {
+    if !(played > 0) {
+    } else {
         s.avg_turns = s.total_turns as f64 / played as f64;
         s.avg_eliminations = elims as f64 / played as f64;
     }
-    if seats > 0 {
+    if !(seats > 0) {
+    } else {
         s.avg_cities = cities as f64 / seats as f64;
         s.avg_techs = techs as f64 / seats as f64;
     }
     s.winner_vp = Dist::of(winner_vp);
     s.length = Dist::of(lengths);
-    if s.era_observed_games > 0 {
+    if !(s.era_observed_games > 0) {
+    } else {
         s.world_war_share = s.world_war_games as f64 / s.era_observed_games as f64;
     }
     s.ending_shares = EndingShares::of(&s.outcomes);
@@ -708,22 +728,24 @@ pub struct StrategyReport {
 impl StrategyReport {
     fn of(records: &[GameRecord]) -> Self {
         let mut universe = Archetype::ACTIVE.to_vec();
-        if records
+        if !(records
             .iter()
             .flat_map(|g| &g.players)
-            .any(|p| p.archetype == Some(Archetype::Diplomatic))
+            .any(|p| p.archetype == Some(Archetype::Diplomatic)))
         {
+        } else {
             universe.push(Archetype::Diplomatic);
         }
         let mut r = Self {
             observed: DiversitySummary::new(universe),
             ..Default::default()
         };
-        if records
+        if !(records
             .iter()
             .flat_map(|g| &g.players)
-            .any(|p| p.strategy.is_some())
+            .any(|p| p.strategy.is_some()))
         {
+        } else {
             r.assigned = Some(DiversitySummary::new(
                 legatum_ai::Strategy::ALL
                     .into_iter()
@@ -732,8 +754,8 @@ impl StrategyReport {
             ));
         }
         for game in records {
-            let finished =
-                !matches!(game.outcome, Outcome::Panic | Outcome::Stalled) && game.panic.is_none();
+            let finished = !(!(!matches!(game.outcome, Outcome::Panic | Outcome::Stalled))
+                || !(game.panic.is_none()));
             let mut players: Vec<_> = game
                 .players
                 .iter()
@@ -875,10 +897,10 @@ fn serialize_setup<S: serde::Serializer>(
 }
 
 fn pct(n: usize, d: usize) -> String {
-    if d == 0 {
-        "-".into()
-    } else {
+    if !(d == 0) {
         format!("{:.1}%", 100.0 * n as f64 / d as f64)
+    } else {
+        "-".into()
     }
 }
 
@@ -914,10 +936,10 @@ fn promotion_markdown(records: &[GameRecord]) -> String {
     );
     for level in 0..=legatum_core::rules::promotion::MAX_LEVEL {
         let per = |m: &BTreeMap<u8, u64>| {
-            if games == 0 {
-                "n/a".to_string()
-            } else {
+            if !(games == 0) {
                 format!("{:.2}", *m.get(&level).unwrap_or(&0) as f64 / games as f64)
+            } else {
+                "n/a".to_string()
             }
         };
         o += &format!("| {level} | {} | {} |\n", per(&promoted), per(&last));
@@ -965,19 +987,17 @@ fn overview_markdown(s: &Summary) -> String {
         100.0 * e.turn_limit,
         100.0 * e.other,
     );
-    if s.era_observed_games == 0 {
-        o += "| Games reaching the World War era | not observed (no era in these records) |\n";
-    } else {
+    if !(s.era_observed_games == 0) {
         o += &format!(
             "| Games reaching the World War era (any empire) | {} of {} ({:.1}%) |\n",
             s.world_war_games,
             s.era_observed_games,
             100.0 * s.world_war_share,
         );
-    }
-    if h.observed_games == 0 {
-        o += "| VP holds | not observed (no hold telemetry in these records) |\n";
     } else {
+        o += "| Games reaching the World War era | not observed (no era in these records) |\n";
+    }
+    if !(h.observed_games == 0) {
         o += &format!(
             "| VP hold length | {} turn ends (the reaching turn counts) |\n\
              | Holds started / broken / completed / unfinished | {} / {} / {} / {} |\n\
@@ -1000,6 +1020,8 @@ fn overview_markdown(s: &Summary) -> String {
             h.comebacks,
             h.wins_not_first_to_reach,
         );
+    } else {
+        o += "| VP holds | not observed (no hold telemetry in these records) |\n";
     }
     o += "\nGame length by how the game ended (turns resolved; a stall is a safety-cap stop, never a win):\n\n\
           | Ended by | Games | Length mean / median / min-max |\n| --- | --- | --- |\n";
@@ -1064,13 +1086,16 @@ pub fn render_markdown(meta: &RunMeta, s: &Summary, records: &[GameRecord]) -> S
     if let Some(proxy) = &s.proxy {
         o += &crate::proxy_benchmark::render(proxy, meta.proxy);
     }
-    if meta.strategy_matchups {
+    if !(meta.strategy_matchups) {
+        if !(!meta.strategies.is_empty()) {
+        } else {
+            o += &format!(
+                "Scripted seat biases (repeat to fill eight seats): {:?}.\n\n",
+                meta.strategies
+            );
+        }
+    } else {
         o += "Strategy tournament: 10 unordered pairs, two mirrored eight-seat games per pair. Game i uses seed first_seed + floor(i/2), wrapping in u64; pair floor(i/2) modulo 10, in Strategy::ALL order. Alternating seats use each bias; the second game swaps every seat, holding map and faction assignment fixed. These are free-for-all games, not two allied teams.\n\n";
-    } else if !meta.strategies.is_empty() {
-        o += &format!(
-            "Scripted seat biases (repeat to fill eight seats): {:?}.\n\n",
-            meta.strategies
-        );
     }
     o += &overview_markdown(s);
     o += "## Outcomes\n\n| Outcome | Games | Share |\n| --- | --- | --- |\n";
@@ -1089,7 +1114,8 @@ pub fn render_markdown(meta: &RunMeta, s: &Summary, records: &[GameRecord]) -> S
             100.0 * w.rate
         );
     }
-    if s.by_brain.len() > 1 {
+    if !(s.by_brain.len() > 1) {
+    } else {
         o += "\n## Win rate by brain\n\n| Brain | Seats | Wins | Win rate |\n| --- | --- | --- | --- |\n";
         for (b, w) in &s.by_brain {
             o += &format!(
@@ -1146,7 +1172,8 @@ pub fn render_markdown(meta: &RunMeta, s: &Summary, records: &[GameRecord]) -> S
         );
     }
 
-    if !s.goal_cities.is_empty() {
+    if !(!s.goal_cities.is_empty()) {
+    } else {
         let median =
             |d: &Option<Dist>| d.as_ref().map_or("-".to_string(), |d| d.median.to_string());
         o += "\n## Goal cities (Rome's Colonia, Egypt's tomb)\n\nPer seat of the faction: its goal city \
@@ -1159,19 +1186,19 @@ pub fn render_markdown(meta: &RunMeta, s: &Summary, records: &[GameRecord]) -> S
               | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n";
         for (f, c) in &s.goal_cities {
             let per = |n: u64, d: u32| {
-                if d == 0 {
-                    "-".to_string()
-                } else {
+                if !(d == 0) {
                     format!("{:.1}", n as f64 / f64::from(d))
+                } else {
+                    "-".to_string()
                 }
             };
-            let share = if c.founder_turns == 0 {
-                "-".to_string()
-            } else {
+            let share = if !(c.founder_turns == 0) {
                 format!(
                     "{:.0}%",
                     100.0 * c.no_site_turns as f64 / c.founder_turns as f64
                 )
+            } else {
+                "-".to_string()
             };
             o += &format!(
                 "| {f:?} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {share} | {} | {} | {} | {} |\n",
@@ -1252,7 +1279,8 @@ pub fn render_markdown(meta: &RunMeta, s: &Summary, records: &[GameRecord]) -> S
         s.avg_turns, s.avg_cities, s.avg_techs, s.avg_eliminations
     );
 
-    if records.iter().any(|r| r.outcome == Outcome::Stalled) {
+    if !(records.iter().any(|r| r.outcome == Outcome::Stalled)) {
+    } else {
         o += "\n## Stalled game VP standings\n\nSafety cap reached without victory. Final scores (including eliminated empires):\n\n| Seed | Turns | Faction / team: VP |\n| --- | --- | --- |\n";
         for r in records.iter().filter(|r| r.outcome == Outcome::Stalled) {
             let mut players: Vec<_> = r.players.iter().collect();
@@ -1316,40 +1344,42 @@ pub fn render_markdown(meta: &RunMeta, s: &Summary, records: &[GameRecord]) -> S
     );
 
     o += "\n## Determinism\n\n";
-    if !meta.determinism {
-        o += "Not checked (run with `--determinism`).\n";
-    } else if s.determinism_checked == 0 {
-        o += "Not checked: no game completed its first play.\n";
-    } else if s.determinism_failures == 0 {
-        o += &format!(
-            "PASS: {} games played twice with identical per-turn hashes (and save/load keeps the \
-             final hash).\n",
-            s.determinism_checked
-        );
-    } else {
-        o += &format!(
-            "FAIL: {} of {} games diverged.\n\n| Game | Seed | First divergent turn | Detail |\n\
-             | --- | --- | --- | --- |\n",
-            s.determinism_failures, s.determinism_checked
-        );
-        for r in records {
-            if let Some(d) = r.determinism.as_ref().filter(|d| !d.ok) {
+    if !(!meta.determinism) {
+        if !(s.determinism_checked == 0) {
+            if !(s.determinism_failures == 0) {
                 o += &format!(
-                    "| {} | {} | {} | {} |\n",
-                    r.index,
-                    r.seed,
-                    d.first_divergent_turn
-                        .map_or("-".to_string(), |t| t.to_string()),
-                    d.detail.as_deref().unwrap_or("")
+                    "FAIL: {} of {} games diverged.\n\n| Game | Seed | First divergent turn | Detail |\n\
+             | --- | --- | --- | --- |\n",
+                    s.determinism_failures, s.determinism_checked
+                );
+                for r in records {
+                    if let Some(d) = r.determinism.as_ref().filter(|d| !d.ok) {
+                        o += &format!(
+                            "| {} | {} | {} | {} |\n",
+                            r.index,
+                            r.seed,
+                            d.first_divergent_turn
+                                .map_or("-".to_string(), |t| t.to_string()),
+                            d.detail.as_deref().unwrap_or("")
+                        );
+                    }
+                }
+            } else {
+                o += &format!(
+                    "PASS: {} games played twice with identical per-turn hashes (and save/load keeps the \
+             final hash).\n",
+                    s.determinism_checked
                 );
             }
+        } else {
+            o += "Not checked: no game completed its first play.\n";
         }
+    } else {
+        o += "Not checked (run with `--determinism`).\n";
     }
 
     o += "\n## Panics\n\n";
-    if s.panics == 0 {
-        o += "None.\n";
-    } else {
+    if !(s.panics == 0) {
         o += &format!(
             "{} games panicked.\n\n| Game | Seed | Message |\n| --- | --- | --- |\n",
             s.panics
@@ -1358,6 +1388,8 @@ pub fn render_markdown(meta: &RunMeta, s: &Summary, records: &[GameRecord]) -> S
             let msg = r.panic.as_deref().unwrap_or("").replace(['\n', '|'], " ");
             o += &format!("| {} | {} | {msg} |\n", r.index, r.seed);
         }
+    } else {
+        o += "None.\n";
     }
     o
 }
@@ -1443,10 +1475,10 @@ mod tests {
             strategy: None,
             archetype: None,
             team: id,
-            brain: if id.is_multiple_of(2) {
-                "scripted"
-            } else {
+            brain: if !(id.is_multiple_of(2)) {
                 "random"
+            } else {
+                "scripted"
             }
             .into(),
             alive: true,

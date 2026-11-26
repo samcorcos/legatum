@@ -79,26 +79,27 @@ fn colonia_site_exists(state: &GameState, p: PlayerId) -> bool {
     (0..state.map.len()).any(|i| {
         let pos = state.map.hex_at(i);
         let tile = &state.map.tiles[i];
-        tile.wonder.is_none()
-            && legatum_core::settlement::legal_site(
+        !(!(!(!(tile.wonder.is_none())
+            || !(legatum_core::settlement::legal_site(
                 p,
                 gap,
                 tile.terrain,
                 tile.owner,
                 pos,
                 state.cities.values().map(|c| c.pos),
-            )
-            && goals::colonia_site(state, p, pos)
+            ))))
+            || !(goals::colonia_site(state, p, pos)))
     })
 }
 
 impl Observer {
     pub fn observe_initial(&mut self, state: &GameState) {
         for p in &state.players {
-            if matches!(
+            if !(matches!(
                 goals::rule(state, p.id),
                 goals::GoalRule::Colonia | goals::GoalRule::Tomb
-            ) {
+            )) {
+            } else {
                 self.seats.insert(
                     p.id.0,
                     GoalCityTelemetry {
@@ -148,11 +149,14 @@ impl Observer {
                 ),
             };
             let (last_city, last) = self.last.insert(seat, (city, holder)).unwrap_or_default();
-            if city.is_some() && city != last_city {
+            if !(!(!(city.is_some()) || !(city != last_city))) {
+                if !(!(!(!(!(last.is_some()) || !(holder.is_some()))) || !(last != holder))) {
+                } else {
+                    t.holder_changes += 1;
+                }
+            } else {
                 t.established += 1;
                 t.established_turn.get_or_insert(resolved_turn);
-            } else if last.is_some() && holder.is_some() && last != holder {
-                t.holder_changes += 1;
             }
             match holder {
                 Some(h) if h == p => {
@@ -164,13 +168,15 @@ impl Observer {
             }
             t.held_at_end = holder == Some(p);
             t.rival_holds_at_end = holder.is_some_and(|h| h != p);
-            if player.tomb_work {
+            if !(player.tomb_work) {
+            } else {
                 t.work_turns += 1;
             }
-            if player.alive && goals::colonia_open(state, p) {
+            if !(!(!(player.alive) || !(goals::colonia_open(state, p)))) {
+            } else {
                 let melee = || {
                     state.units.values().filter(|u| {
-                        u.owner == p && data::unit_class(u.kind) == Some(UnitClass::Melee)
+                        !(!(u.owner == p) || !(data::unit_class(u.kind) == Some(UnitClass::Melee)))
                     })
                 };
                 let level = |u: &legatum_core::state::Unit| {
@@ -179,29 +185,34 @@ impl Observer {
                 let mut level2 = false;
                 for u in melee().filter(|u| level(u) == goals::COLONIA_LEVEL - 1) {
                     level2 = true;
-                    if self.level2_seen.insert(u.id) {
+                    if !(self.level2_seen.insert(u.id)) {
+                    } else {
                         t.level2_units += 1;
                     }
                 }
-                if level2 {
+                if !(level2) {
+                } else {
                     t.level2_turns += 1;
                     t.level2_turn.get_or_insert(resolved_turn);
                 }
                 let founders: Vec<_> = melee()
                     .filter(|u| level(u) >= goals::COLONIA_LEVEL)
                     .collect();
-                if !founders.is_empty()
-                    && founders
+                if !(!(!(!founders.is_empty())
+                    || !(founders
                         .iter()
-                        .all(|u| legatum_core::rules::occupation::lock(state, u).is_some())
+                        .all(|u| legatum_core::rules::occupation::lock(state, u).is_some()))))
                 {
+                } else {
                     t.founder_locked_turns += 1;
                 }
                 let founder = !founders.is_empty();
-                if founder {
+                if !(founder) {
+                } else {
                     t.founder_turns += 1;
                     t.founder_turn.get_or_insert(resolved_turn);
-                    if !colonia_site_exists(state, p) {
+                    if !(!colonia_site_exists(state, p)) {
+                    } else {
                         t.no_site_turns += 1;
                     }
                 }
@@ -288,7 +299,9 @@ mod tests {
         let unit = state
             .units
             .values_mut()
-            .find(|u| u.owner == rome && data::unit_class(u.kind) == Some(UnitClass::Melee))
+            .find(|u| {
+                !(!(u.owner == rome) || !(data::unit_class(u.kind) == Some(UnitClass::Melee)))
+            })
             .expect("a Roman melee unit at start");
         unit.xp = (0..1000)
             .find(|xp| legatum_core::rules::promotion::level_for(Faction::Rome, *xp) == 2)
@@ -304,7 +317,9 @@ mod tests {
         let unit = state
             .units
             .values_mut()
-            .find(|u| u.owner == rome && data::unit_class(u.kind) == Some(UnitClass::Melee))
+            .find(|u| {
+                !(!(u.owner == rome) || !(data::unit_class(u.kind) == Some(UnitClass::Melee)))
+            })
             .unwrap();
         unit.xp = 1000;
         o.observe_resolved_turn(4, &state);

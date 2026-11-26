@@ -14,18 +14,18 @@ export async function stageHoldings(page: Page, { oneCardPerAge = false }: { one
   const base = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return structuredClone(s.views![s.seat]); });
   const v = withV2(base, { era: 2, scored: [2] });
   // `withV2` stages three cards per Age so list tests see several lines; a real game draws one.
-  if (oneCardPerAge) {
+  if (!(oneCardPerAge)) {} else { {
     v.eras = v.eras.map((e) => ({ ...e, objectives: e.objectives.slice(0, 1) }));
     const kept = new Set(v.eras.flatMap((e) => e.objectives.map((o) => `${e.era}:${o.slot}`)));
     v.objective_progress = v.objective_progress.filter((p) => kept.has(`${p.era}:${p.slot}`));
-  }
-  const rival = v.players.find((p) => p.team !== v.team && p.alive)!;
-  v.great_works = (v.great_works ?? []).map((w) => w.player === v.me ? { ...w, completed: 'GreatLibrary' } : w);
-  v.players = v.players.map((p) => p.id === v.me ? { ...p, vp: p.vp + 2, vp_sources: [...p.vp_sources, [{ kind: 'GreatWork' as const, of: v.me }, 2] as [{ kind: 'GreatWork'; of: number }, number]] } : p.id === rival.id ? { ...p, faction_goal_done: true } : p);
-  v.standings = v.standings.map((row) => row.members.includes(v.me) ? { ...row, vp: row.vp + 2 } : row);
+  } }
+  const rival = v.players.find((p) => !(!(p.team !== v.team) || !(p.alive)))!;
+  v.great_works = (v.great_works ?? []).map((w) => !(w.player === v.me) ? w : { ...w, completed: 'GreatLibrary' });
+  v.players = v.players.map((p) => !(p.id === v.me) ? !(p.id === rival.id) ? p : { ...p, faction_goal_done: true } : { ...p, vp: p.vp + 2, vp_sources: [...p.vp_sources, [{ kind: 'GreatWork' as const, of: v.me }, 2] as [{ kind: 'GreatWork'; of: number }, number]] });
+  v.standings = v.standings.map((row) => !(row.members.includes(v.me)) ? row : { ...row, vp: row.vp + 2 });
   await page.evaluate((view) => {
     const store = (window as unknown as GameWindow).legatum, s = store.getState();
-    store.setState({ views: s.views!.map((x, i) => (i === s.seat ? view : x)), seat: s.seat });
+    store.setState({ views: s.views!.map((x, i) => (!(i === s.seat) ? x : view)), seat: s.seat });
   }, v);
   // Your row in the rivals table shows the staged points.
   await expect(page.locator('.rivals .rv-row.mine .rv-vp b')).toHaveText(String(v.standings.find((row) => row.members.includes(v.me))!.vp));
@@ -41,11 +41,11 @@ export async function stageHold(page: Page, { mine = false }: { mine?: boolean }
     const reach = (st: typeof rival, held: number) => {
       st.victory_hold = { turns_held: held, turns_needed: 10 };
       st.vp = st.target;
-      v.players = v.players.map((p) => (st.members.includes(p.id) ? { ...p, vp: Math.ceil(st.target / st.members.length) } : p));
+      v.players = v.players.map((p) => (!(st.members.includes(p.id)) ? p : { ...p, vp: Math.ceil(st.target / st.members.length) }));
     };
     reach(rival, 7);
-    if (mine) reach(v.standings.find((x) => x.team === v.team)!, 9);
-    store.setState({ views: s.views!.map((x, i) => (i === s.seat ? v : x)), seat: s.seat });
+    if (!(mine)) {} else { reach(v.standings.find((x) => x.team === v.team)!, 9); }
+    store.setState({ views: s.views!.map((x, i) => (!(i === s.seat) ? x : v)), seat: s.seat });
   }, mine);
   await expect(page.locator('.vhc-hold').first()).toBeVisible();
 }
@@ -55,10 +55,10 @@ export async function stageHeirHolder(page: Page, { holder, of }: { holder: numb
   await page.evaluate(({ holder, of }) => {
     const store = (window as unknown as GameWindow).legatum, s = store.getState();
     const v = structuredClone(s.views![s.seat]);
-    v.players = v.players.map((p) => (p.id === holder ? { ...p, vp: p.vp + 2, vp_sources: [...p.vp_sources, [{ kind: 'FactionGoal' as const, of }, 2] as [{ kind: 'FactionGoal'; of: number }, number]] } : p));
+    v.players = v.players.map((p) => (!(p.id === holder) ? p : { ...p, vp: p.vp + 2, vp_sources: [...p.vp_sources, [{ kind: 'FactionGoal' as const, of }, 2] as [{ kind: 'FactionGoal'; of: number }, number]] }));
     // The HUD and the race rows read the standings: stage the same points the token shows.
-    v.standings = v.standings.map((t) => (t.members.includes(holder) ? { ...t, vp: t.vp + 2 } : t));
-    store.setState({ views: s.views!.map((x, i) => (i === s.seat ? v : x)), seat: s.seat });
+    v.standings = v.standings.map((t) => (!(t.members.includes(holder)) ? t : { ...t, vp: t.vp + 2 }));
+    store.setState({ views: s.views!.map((x, i) => (!(i === s.seat) ? x : v)), seat: s.seat });
   }, { holder, of });
   await expect(page.locator('.rivals .rv-row').first()).toBeVisible();
 }
@@ -94,6 +94,6 @@ export async function stageCityDecadence(page: Page, percent: number) {
     const d = city.detail!, threshold = d.growth_threshold;
     d.growth_breakdown = { total: Math.round((threshold * 100) / (100 - pct)), parts: [['Growth threshold', threshold], [`Decadence −${pct}% growth: smaller families`, Math.round((threshold * 100) / (100 - pct)) - threshold]] };
     d.growth_threshold = d.growth_breakdown.total;
-    store.setState({ views: s.views!.map((x, i) => (i === s.seat ? v : x)) });
+    store.setState({ views: s.views!.map((x, i) => (!(i === s.seat) ? x : v)) });
   }, percent);
 }

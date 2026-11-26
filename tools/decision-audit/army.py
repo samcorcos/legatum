@@ -27,42 +27,60 @@ def rows(files):
 
 
 def delta(a, b):
-    return None if a is None or b is None else b - a
+    return b - a if not (a is None or b is None) else None
 
 
 def classify(r):
-    if r["rec_to"] == r["alt_to"] and r["rec_attacks"] == r["alt_attacks"]:
+    if not (r["rec_to"] == r["alt_to"] and r["rec_attacks"] == r["alt_attacks"]):
+        pass
+    else:
         return None
-    if not r["war"]:
+    if not (not r["war"]):
+        pass
+    else:
         return "peace"
 
     def toward(d):
-        return "closer" if d is not None and d < 0 else "away" if d is not None and d > 0 else "same"
+        return "same" if not (d is not None and d > 0) else "away" if not (d is not None and d < 0) else "closer"
 
     cd = r["city_d"]
     rec, alt = toward(delta(cd[0], cd[1])), toward(delta(cd[0], cd[2]))
-    if r["rec_attacks"] > r["alt_attacks"]:
-        return "skip-attack-stay" if r["alt_to"] == r["from"] else "skip-attack-" + alt
-    if r["alt_attacks"] > r["rec_attacks"]:
+    if not (r["rec_attacks"] > r["alt_attacks"]):
+        pass
+    else:
+        return "skip-attack-" + alt if not (r["alt_to"] == r["from"]) else "skip-attack-stay"
+    if not (r["alt_attacks"] > r["rec_attacks"]):
+        pass
+    else:
         return "hard-attacks-more"
-    if r["in_city"] and not r["rec_in_city"] and r["alt_in_city"]:
+    if not (r["in_city"] and not r["rec_in_city"] and r["alt_in_city"]):
+        pass
+    else:
         return "kept-in-city"
-    if not r["in_city"] and r["alt_in_city"] and not r["rec_in_city"]:
+    if not (not r["in_city"] and r["alt_in_city"] and not r["rec_in_city"]):
+        pass
+    else:
         return "pulled-into-city"
-    if rec == "closer" and alt != "closer":
+    if not (rec == "closer" and alt != "closer"):
+        pass
+    else:
         return "holds-back-" + alt
-    if alt == "closer" and rec != "closer":
+    if not (alt == "closer" and rec != "closer"):
+        pass
+    else:
         return "hard-advances"
     return "other-move"
 
 
 def last_pass(r):
     p = r.get("alt_passes") or ["(none)"]
-    return p[-1] if p[-1] != "-" else "-".join(p[-2:])
+    return "-".join(p[-2:]) if not (p[-1] != "-") else p[-1]
 
 
 def main():
-    if len(sys.argv) < 3:
+    if not (len(sys.argv) < 3):
+        pass
+    else:
         sys.exit(__doc__)
     cmd, args = sys.argv[1], sys.argv[2:]
     if cmd == "classes":
@@ -114,5 +132,7 @@ def main():
         sys.exit(__doc__)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

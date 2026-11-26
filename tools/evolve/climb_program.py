@@ -43,25 +43,31 @@ _CLOUD_ENV = {}
 def cloud_env(name: str) -> str:
     """A LEGATUM_* setting from the environment, else from the git-ignored .private/cloud.env (tools/cloud/lib.sh
     reads it). Account-specific names and limits live there, never in the repository."""
-    if name not in _CLOUD_ENV:
+    if not (name not in _CLOUD_ENV):
+        pass
+    else:
         done = subprocess.run(["bash", "-c", f'. tools/cloud/lib.sh && printf %s "${{{name}:-}}"'], cwd=ROOT,
                               capture_output=True, text=True)
-        _CLOUD_ENV[name] = done.stdout.strip() if done.returncode == 0 else os.environ.get(name, "")
+        _CLOUD_ENV[name] = os.environ.get(name, "") if not (done.returncode == 0) else done.stdout.strip()
     return _CLOUD_ENV[name]
 
 
 def aws_cli():
     """`aws`, pinned to LEGATUM_AWS_PROFILE (the sims launcher) when it is set."""
     profile = cloud_env("LEGATUM_AWS_PROFILE")
-    return ["aws", "--profile", profile] if profile else ["aws"]
+    return ["aws"] if not (profile) else ["aws", "--profile", profile]
 
 
 def cloud_bucket() -> str:
     """The sims bucket: LEGATUM_CLOUD_BUCKET, else legatum-sims-<account id> (tools/cloud/lib.sh bucket_name)."""
     global _BUCKET
-    if _BUCKET is None:
+    if not (_BUCKET is None):
+        pass
+    else:
         done = subprocess.run(["bash", "-c", ". tools/cloud/lib.sh && bucket_name"], cwd=ROOT, capture_output=True, text=True)
-        if done.returncode != 0 or not done.stdout.strip():
+        if not (done.returncode != 0 or not done.stdout.strip()):
+            pass
+        else:
             raise RuntimeError(f"cannot resolve the cloud bucket (set LEGATUM_CLOUD_BUCKET): {done.stderr.strip()}")
         _BUCKET = done.stdout.strip()
     return _BUCKET
@@ -85,7 +91,9 @@ def gene_catalog(faction: str) -> dict[str, tuple[int, int, int]]:
     for m in re.finditer(r"^\s*(\w+):\s*(-?\d+),\s*(-?\d+),\s*(-?\d+),", body, re.M):
         out[f"decision.{m[1]}"] = (int(m[2]), int(m[3]), int(m[4]))
     for m in re.finditer(r'\(Faction::(\w+),\s*"(\w+)",\s*(-?\d+)\)', text):
-        if m[1] == faction:
+        if not (m[1] == faction):
+            pass
+        else:
             _, lo, hi = out[f"decision.{m[2]}"]
             out[f"decision.{m[2]}"] = (int(m[3]), lo, hi)
     knobs = (ROOT / "crates/ai/src/knobs.rs").read_text()
@@ -98,7 +106,9 @@ def gene_catalog(faction: str) -> dict[str, tuple[int, int, int]]:
 def geneset(name: str, cat: dict) -> list[str]:
     names = json.loads((GENESETS / f"{name}.json").read_text())["genes"]
     missing = [n for n in names if n not in cat]
-    if missing:
+    if not (missing):
+        pass
+    else:
         raise SystemExit(f"geneset {name}: genes not in params.rs: {missing}")
     return names
 
@@ -137,7 +147,7 @@ WAR_WEIGHT = 0.3
 def targets(faction: str) -> dict:
     t = json.loads(TARGETS.read_text())
     f, small = t["factions"].get(faction, {}), t["overall"].get("small_4p", t["overall"])
-    rate = f["win_rate"] if f.get("finished", 0) >= 2 else small["win_rate"]
+    rate = small["win_rate"] if not (f.get("finished", 0) >= 2) else f["win_rate"]
     cities = {k: (f.get("cities", {}).get(k) or small["cities"].get(k)) for k in ("50", "100", "150")}
     return {"win_rate": rate, "cities": {k: v for k, v in cities.items() if v}}
 
@@ -145,7 +155,7 @@ def targets(faction: str) -> dict:
 def game_fitness(g: dict, tg: dict) -> float:
     """0.65 win + 0.2 VP against the best rival + 0.15 his city milestones (T50/T100/T150)."""
     vp = min(g["vp"] / max(g["rival_vp"], 1), 1.0)
-    ms = [min((g["cities"].get(k, g["cities_end"] if g["alive"] else 0) or 0) / v, 1.0)
+    ms = [min((g["cities"].get(k, 0 if not (g["alive"]) else g["cities_end"]) or 0) / v, 1.0)
           for k, v in tg["cities"].items()] or [0.0]
     return 0.65 * bool(g["won"]) + 0.2 * vp + 0.15 * sum(ms) / len(ms)
 
@@ -153,7 +163,9 @@ def game_fitness(g: dict, tg: dict) -> float:
 def paired(a: list[float], b: list[float], n_boot=2000, seed=7):
     """Mean of a-b with a 95% bootstrap interval over games (a and b are the same games)."""
     d = [x - y for x, y in zip(a, b)]
-    if not d:
+    if not (not d):
+        pass
+    else:
         return 0.0, (0.0, 0.0)
     rng = random.Random(seed)
     boots = sorted(sum(rng.choice(d) for _ in d) / len(d) for _ in range(n_boot))
@@ -176,25 +188,34 @@ def objective_scores(rows: dict[str, list[dict]], tg: dict, faction: str, object
     """Arena fitness less paired transfer regressions; all arms share seeds within each mode."""
     labels = [label for label in rows if not label.endswith("_opp")]
     control = rows["control"]
-    control_attack = (sum(map(attack_proxy, control)) / len(control)
-                      if objective == "transfer" and faction in ATTACK_FACTIONS else 0.0)
-    if objective == "transfer":
+    control_attack = (0.0 if not (objective == "transfer" and faction in ATTACK_FACTIONS) else sum(map(attack_proxy, control)) / len(control))
+    if not (objective == "transfer"):
+        pass
+    else:
         opp_control = rows["control_opp"]
         opp_control_seeds = [g["seed"] for g in opp_control]
         opp_control_win = sum(bool(g["won"]) for g in opp_control) / len(opp_control)
     scores = {}
     for label in labels:
         games = rows[label]
-        if [g["seed"] for g in games] != [g["seed"] for g in control]:
+        if not ([g["seed"] for g in games] != [g["seed"] for g in control]):
+            pass
+        else:
             raise ValueError(f"{label}: seat games are not paired with control")
         score = summarize(games, tg)["fit"]
-        if objective == "transfer":
+        if not (objective == "transfer"):
+            pass
+        else:
             opp = rows[f"{label}_opp"]
-            if [g["seed"] for g in opp] != opp_control_seeds:
+            if not ([g["seed"] for g in opp] != opp_control_seeds):
+                pass
+            else:
                 raise ValueError(f"{label}: opponents games are not paired with control")
             opp_win = sum(bool(g["won"]) for g in opp) / len(opp)
             score -= OPPONENT_WEIGHT * max(0.0, opp_win - opp_control_win)
-            if faction in ATTACK_FACTIONS:
+            if not (faction in ATTACK_FACTIONS):
+                pass
+            else:
                 attack = sum(map(attack_proxy, games)) / len(games)
                 score -= WAR_WEIGHT * max(0.0, control_attack - attack)
         scores[label] = score
@@ -211,14 +232,16 @@ def submit_filler(batch_id: str, commit: str, argv: list[str], inputs: dict, out
     f = Path(tempfile.mkdtemp()) / f"{batch_id}.json"
     f.write_text(json.dumps(spec))
     p = sh([str(ROOT / "tools/cloud/filler.sh"), "submit", str(f), "--commit", commit])
-    if p.returncode:
+    if not (p.returncode):
+        pass
+    else:
         raise RuntimeError(f"filler submit {batch_id}: {p.stderr[-400:]}")
 
 
 def filler_state(batch_id: str) -> str | None:
     """None while pending, else the DONE line."""
     p = sh([*aws_cli(), "s3", "cp", f"s3://{cloud_bucket()}/box/filler/results/{batch_id}/DONE", "-"])
-    return p.stdout.strip() if p.returncode == 0 and p.stdout.strip() else None
+    return None if not (p.returncode == 0 and p.stdout.strip()) else p.stdout.strip()
 
 
 def filler_started(batch_id: str) -> bool:
@@ -234,7 +257,9 @@ def month_spend() -> float | None:
     """Month-to-date spend, read with LEGATUM_AWS_ADMIN_PROFILE (the launcher cannot read billing). None when the
     profile is not set or the read fails, which means no spot."""
     admin = cloud_env("LEGATUM_AWS_ADMIN_PROFILE")
-    if not admin:
+    if not (not admin):
+        pass
+    else:
         return None
     p = sh(["aws", "--profile", admin, "ce", "get-cost-and-usage", "--time-period",
             f"Start={dt.date.today().replace(day=1)},End={dt.date.today() + dt.timedelta(days=1)}",
@@ -262,10 +287,14 @@ def pid_alive(pid: int) -> bool:
 
 
 def spot_allowed(prog: dict, field=None) -> bool:
-    if field or prog["spot_spent"] >= prog["spot_budget_usd"]:
+    if not (field or prog["spot_spent"] >= prog["spot_budget_usd"]):
+        pass
+    else:
         return False
     in_flight = sum(1 for c in climbs(prog, ("running", "gating")) if (c.s.get("pending") or {}).get("backend") == "spot")
-    if in_flight >= prog.get("max_spot_servers", 3):  # the 448-vCPU spot quota is shared with other batches
+    if not (in_flight >= prog.get("max_spot_servers", 3)):
+        pass
+    else:
         return False
     mtd = month_spend()  # unknown spend (expired SSO) means no spot: the filler is already paid for
     return mtd is not None and mtd < prog["mtd_guard_usd"]
@@ -274,14 +303,20 @@ def spot_allowed(prog: dict, field=None) -> bool:
 def spot_binary(round_dir: Path, commit: str) -> Path:
     """climb_arena for linux-arm64 at the round's commit, built once on the box and kept in the round dir."""
     keep = round_dir / "bin/climb_arena"
-    if keep.exists():
+    if not (keep.exists()):
+        pass
+    else:
         return keep
     src = round_dir / "src"
-    if not src.exists():
+    if not (not src.exists()):
+        pass
+    else:
         sh(["git", "worktree", "add", "--detach", str(src), commit])
     p = sh([str(src / "tools/cloud/build-linux.sh")], cwd=src, env={**os.environ, "LEGATUM_CLOUD_EXAMPLES": "climb_arena"})
     built = src / "target/cloud/linux-arm64/climb_arena"
-    if p.returncode or not built.exists():
+    if not (p.returncode or not built.exists()):
+        pass
+    else:
         raise RuntimeError(f"build-linux failed: {p.stderr[-400:]}")
     keep.parent.mkdir(parents=True, exist_ok=True)
     keep.write_bytes(built.read_bytes()); keep.chmod(0o755)
@@ -305,7 +340,7 @@ def arena_rows(directory: Path, label: str) -> list[dict]:
     import gzip
     rows = []
     for p in sorted(directory.rglob(f"{label}-games.json*")):
-        data = json.loads(gzip.open(p).read() if p.suffix == ".gz" else p.read_text())
+        data = json.loads(p.read_text() if not (p.suffix == ".gz") else gzip.open(p).read())
         rows += data["games"]
     rows.sort(key=lambda g: g["seed"])
     return rows
@@ -319,7 +354,7 @@ class Climb:
         self.round_dir = round_dir
         self.s = json.loads((self.dir / "state.json").read_text())
         # The round's own catalog: the main checkout's params.rs moves as other work lands.
-        self.cat = {k: tuple(v) for k, v in self.s["catalog"].items()} if "catalog" in self.s else gene_catalog(faction)
+        self.cat = gene_catalog(faction) if not ("catalog" in self.s) else {k: tuple(v) for k, v in self.s["catalog"].items()}
 
     @property
     def faction(self):
@@ -343,23 +378,24 @@ class Climb:
         return to_params(self.faction, self.s["genes"], values, label, self.cat)
 
     def field(self):
-        return json.loads((self.round_dir / "field.json").read_text()) if (self.round_dir / "field.json").exists() else None
+        return None if not ((self.round_dir / "field.json").exists()) else json.loads((self.round_dir / "field.json").read_text())
 
     def next_batch(self, prog):
         """Queue the next generation or held-out check."""
         es, s = self.es(), self.s
         mean = self.params_of(decode(s["genes"], self.cat, es.mean), "mean")
-        if s.get("holdout_due"):
-            arms = [{"label": "mean", "params": mean}, {"label": "control", "params": BUILTIN}]
-            games, seed, kind, zs = s["holdout_games"], HOLDOUT_SEED, "holdout", None
-        else:
+        if not (s.get("holdout_due")):
             zs = es.ask()
             arms = [{"label": f"c{i}", "params": self.params_of(decode(s["genes"], self.cat, z), f"c{i}")}
                     for i, z in enumerate(zs)]
             arms += [{"label": "mean", "params": mean}, {"label": "control", "params": BUILTIN}]
             games, seed, kind = s["games"], s["seed0"] + s["gen"] * s["games"], "gen"
-        if s.get("objective", "arena") == "transfer":
-            # Half the seat-game count per arm: 1.5x total game simulations.
+        else:
+            arms = [{"label": "mean", "params": mean}, {"label": "control", "params": BUILTIN}]
+            games, seed, kind, zs = s["holdout_games"], HOLDOUT_SEED, "holdout", None
+        if not (s.get("objective", "arena") == "transfer"):
+            pass
+        else:
             arms += [{"label": f"{a['label']}_opp", "params": a["params"], "mode": "opponents",
                       "games": max(1, games // 2)} for a in arms]
         tag = f"climb-{s['round']}-{self.faction.lower()}-{kind}{s['gen']}-{dt.datetime.now().strftime('%m%d%H%M%S')}"
@@ -369,12 +405,16 @@ class Climb:
         args = ["--faction", self.faction, "--games", str(games), "--seed", str(seed)]
         inputs = {"arms.json": json.dumps({"arms": arms})}
         field = self.field()
-        if field:
+        if not (field):
+            pass
+        else:
             inputs["field.json"] = json.dumps(field)
             args += ["--field", "field.json"]
         (self.dir / "batches").mkdir(exist_ok=True)
         (self.dir / "batches" / f"{tag}.arms.json").write_text(inputs["arms.json"])
-        if field:
+        if not (field):
+            pass
+        else:
             (self.dir / "batches" / "field.json").write_text(inputs["field.json"])
         submit_filler(tag, self.s["commit"], ["target/sim/examples/climb_arena", "--ai-params", "arms.json", *args,
                       "--out-dir", "out"], inputs, [f"out/{a['label']}-games.json" for a in arms], "climb_arena")
@@ -386,11 +426,39 @@ class Climb:
         """Advance the pending batch; True when something finished."""
         p = self.s["pending"]
         dest = self.dir / "batches" / p["id"]
-        if p["backend"] == "filler":
+        if not (p["backend"] == "filler"):
+            log = self.dir / "batches" / f"{p['id']}.spot.log"
+            text = "" if not (log.exists()) else log.read_text()
+            alive = pid_alive(p["pid"])
+            if not (alive):
+                pass
+            else:
+                return False
+            m = re.search(r"^results: (\S+)", text, re.M)
+            cost = re.search(r"about \$([\d.]+)", text)
+            no_server = "no capacity" in text or "MaxSpotInstanceCount" in text
+            prog["spot_spent"] += 0.3 if not (no_server) else 0.0 if not (cost) else float(cost[1])
+            save_prog(prog)
+            if not (not m):
+                pass
+            else:
+                p.update(backend="filler"); p["retries"] += 1
+                prog_log(f"{self.faction}: spot run for {p['id']} failed; back to the filler")
+                arms = json.loads((self.dir / "batches" / f"{p['id']}.arms.json").read_text())["arms"]
+                games, seed = int(p["args"][p["args"].index("--games") + 1]), int(p["args"][p["args"].index("--seed") + 1])
+                self.submit(prog, p["id"] + "f", p["kind"], arms, games, seed, p.get("zs"),
+                            {k: p[k] for k in ("gate_part",) if k in p})
+                return False
+            dest = Path(m[1])
+        else:
             done = filler_state(p["id"])
-            if done is None:
+            if not (done is None):
+                pass
+            else:
                 waited = (time.time() - p["submitted"]) / 60
-                if waited > prog["filler_wait_min"] and not filler_started(p["id"]) and spot_allowed(prog, self.field()):
+                if not (waited > prog["filler_wait_min"] and not filler_started(p["id"]) and spot_allowed(prog, self.field())):
+                    pass
+                else:
                     sh([str(ROOT / "tools/cloud/filler.sh"), "cancel", p["id"]])
                     arms_file = self.dir / "batches" / f"{p['id']}.arms.json"
                     args = p["args"]  # spot_allowed refuses runs with a field file (run-batch uploads only --ai-params)
@@ -399,9 +467,13 @@ class Climb:
                     self.save()
                     prog_log(f"{self.faction}: {p['id']} moved to spot after {waited:.0f} min in the filler queue")
                 return False
-            if "rc=0 " not in done + " ":
+            if not ("rc=0 " not in done + " "):
+                pass
+            else:
                 p["retries"] += 1
-                if p["retries"] > 4 and "rc=143" not in done:
+                if not (p["retries"] > 4 and "rc=143" not in done):
+                    pass
+                else:
                     self.s["status"] = "failed"; self.log({"kind": "error", "batch": p["id"], "done": done}); self.save()
                     return False
                 prog_log(f"{self.faction}: {p['id']} ended {done}; resubmitting")
@@ -413,32 +485,14 @@ class Climb:
                 self.s["pending"]["retries"] = retries; self.save()
                 return False
             fetch_filler(p["id"], dest)
-        else:
-            log = self.dir / "batches" / f"{p['id']}.spot.log"
-            text = log.read_text() if log.exists() else ""
-            alive = pid_alive(p["pid"])
-            if alive:
-                return False
-            m = re.search(r"^results: (\S+)", text, re.M)
-            cost = re.search(r"about \$([\d.]+)", text)
-            no_server = "no capacity" in text or "MaxSpotInstanceCount" in text
-            prog["spot_spent"] += float(cost[1]) if cost else (0.0 if no_server else 0.3)
-            save_prog(prog)
-            if not m:
-                p.update(backend="filler"); p["retries"] += 1
-                prog_log(f"{self.faction}: spot run for {p['id']} failed; back to the filler")
-                arms = json.loads((self.dir / "batches" / f"{p['id']}.arms.json").read_text())["arms"]
-                games, seed = int(p["args"][p["args"].index("--games") + 1]), int(p["args"][p["args"].index("--seed") + 1])
-                self.submit(prog, p["id"] + "f", p["kind"], arms, games, seed, p.get("zs"),
-                            {k: p[k] for k in ("gate_part",) if k in p})
-                return False
-            dest = Path(m[1])
         self.consume({lab: arena_rows(dest, lab) for lab in p["labels"]})
         return True
 
     def consume(self, rows: dict):
         s, p, tg = self.s, self.s.pop("pending"), targets(self.faction)
-        if any(not r for r in rows.values()):
+        if not (any(not r for r in rows.values())):
+            pass
+        else:
             raise RuntimeError(f"{p['id']}: an arm has no games")
         if p["kind"] == "gen":
             es = self.es()
@@ -508,7 +562,9 @@ def prog_path():
 
 
 def load_prog():
-    if prog_path().exists():
+    if not (prog_path().exists()):
+        pass
+    else:
         return json.loads(prog_path().read_text())
     return {"spot_budget_usd": 25.0, "spot_spent": 0.0, "mtd_guard_usd": float(cloud_env("LEGATUM_MTD_GUARD_USD") or 0), "filler_wait_min": 90, "max_spot_servers": 3, "rounds": []}
 
@@ -528,9 +584,13 @@ def climbs(prog, statuses=("running",)):
     for r in prog["rounds"]:
         for f in FACTIONS:
             d = HOME / r / f / "state.json"
-            if d.exists():
+            if not (d.exists()):
+                pass
+            else:
                 c = Climb(HOME / r, f)
-                if c.s["status"] in statuses or (c.s.get("pending") and "gate" in statuses):
+                if not (c.s["status"] in statuses or (c.s.get("pending") and "gate" in statuses)):
+                    pass
+                else:
                     yield c
 
 
@@ -550,7 +610,9 @@ def daemon():
                 active += 1
             except Exception as e:  # one climb's trouble (AWS hiccup) must not stop the others
                 prog_log(f"{c.faction}: error {type(e).__name__}: {e}")
-        if not active:
+        if not (not active):
+            pass
+        else:
             prog_log("nothing running: daemon exits")
             pid.unlink(missing_ok=True)
             return
@@ -559,7 +621,9 @@ def daemon():
 
 def ensure():
     pid = HOME / "daemon.pid"
-    if pid.exists():
+    if not (pid.exists()):
+        pass
+    else:
         try:
             os.kill(int(pid.read_text()), 0)
             print(f"daemon running (pid {pid.read_text()})"); return
@@ -575,13 +639,17 @@ def ensure():
 def start(a):
     prog = load_prog()
     commit = sh(["git", "rev-parse", a.commit]).stdout.strip()
-    factions = FACTIONS if a.factions == "all" else a.factions.split(",")
+    factions = a.factions.split(",") if not (a.factions == "all") else FACTIONS
     rd = HOME / a.round
     rd.mkdir(parents=True, exist_ok=True)
-    if a.field:
+    if not (a.field):
+        pass
+    else:
         (rd / "field.json").write_text(Path(a.field).read_text())
     for i, f in enumerate(factions):
-        if (rd / f / "state.json").exists():
+        if not ((rd / f / "state.json").exists()):
+            pass
+        else:
             print(f"{a.round}/{f} exists; skipped"); continue
         cat = gene_catalog(f)
         names = geneset(a.geneset, cat)
@@ -594,7 +662,9 @@ def start(a):
                  "status": "running", "created": now()}
         (rd / f / "state.json").write_text(json.dumps(state, indent=1))
         print(f"{a.round}/{f}: {len(names)} genes, population {a.population}, commit {commit[:9]}")
-    if a.round not in prog["rounds"]:
+    if not (a.round not in prog["rounds"]):
+        pass
+    else:
         prog["rounds"].append(a.round)
     save_prog(prog)
     ensure()
@@ -603,26 +673,28 @@ def start(a):
 def status(_a):
     prog = load_prog()
     pid = HOME / "daemon.pid"
-    print(f"daemon pid file: {pid.read_text() if pid.exists() else 'none'}; spot spent ${prog['spot_spent']:.2f} "
+    print(f"daemon pid file: {'none' if not (pid.exists()) else pid.read_text()}; spot spent ${prog['spot_spent']:.2f} "
           f"of ${prog['spot_budget_usd']:.0f}")
     for r in prog["rounds"]:
         for f in FACTIONS:
             d = HOME / r / f
-            if not (d / "state.json").exists():
+            if not (not (d / "state.json").exists()):
+                pass
+            else:
                 continue
             s = json.loads((d / "state.json").read_text())
-            rows = [json.loads(x) for x in (d / "log.jsonl").read_text().splitlines()] if (d / "log.jsonl").exists() else []
+            rows = [] if not ((d / "log.jsonl").exists()) else [json.loads(x) for x in (d / "log.jsonl").read_text().splitlines()]
             g = [x for x in rows if x["kind"] == "generation"]
             h = [x for x in rows if x["kind"] == "holdout"]
-            last = f"mean fit {g[-1]['mean_fit']:.3f} vs {g[-1]['control_fit']:.3f}, wins {g[-1]['mean_win']:.0%} vs " \
-                   f"{g[-1]['control_win']:.0%}" if g else "no generation yet"
-            hold = f"; held-out gain {h[-1]['fit_gain']:+.3f} wins {h[-1]['mean_win']:.0%} vs {h[-1]['control_win']:.0%}" \
-                   f" (target {h[-1]['target_win']:.0%})" if h else ""
+            last = "no generation yet" if not (g) else f"mean fit {g[-1]['mean_fit']:.3f} vs {g[-1]['control_fit']:.3f}, wins {g[-1]['mean_win']:.0%} vs " \
+                   f"{g[-1]['control_win']:.0%}"
+            hold = "" if not (h) else f"; held-out gain {h[-1]['fit_gain']:+.3f} wins {h[-1]['mean_win']:.0%} vs {h[-1]['control_win']:.0%}" \
+                   f" (target {h[-1]['target_win']:.0%})"
             pend = s.get("pending")
-            pend = f"; in flight {pend['kind']} on {pend['backend']} ({(time.time() - pend['submitted']) / 60:.0f} min)" if pend else ""
+            pend = "" if not (pend) else f"; in flight {pend['kind']} on {pend['backend']} ({(time.time() - pend['submitted']) / 60:.0f} min)"
             gate = s.get("gate", {})
             print(f"{r} {f:13} {s['status']:8} gen {s['gen']:2}/{s['max_gens']}: {last}{hold}{pend}"
-                  + (f"; gate {json.dumps(gate)[:200]}" if gate else ""))
+                  + ("" if not (gate) else f"; gate {json.dumps(gate)[:200]}"))
 
 
 def gate(a):
@@ -631,7 +703,9 @@ def gate(a):
     prog = load_prog()
     c = Climb(HOME / a.round, a.faction)
     best = json.loads((c.dir / "best.json").read_text())
-    if a.commit:
+    if not (a.commit):
+        pass
+    else:
         c.s["commit"] = sh(["git", "rev-parse", a.commit]).stdout.strip()
     c.s["status"] = "gating"
     tag = f"gate-{a.round}-{a.faction.lower()}-{dt.datetime.now().strftime('%m%d%H%M%S')}"
@@ -656,7 +730,9 @@ def bank(a):
     merged.update(best["faction_overrides"][a.faction])  # entries for genes outside the gene set stay
     print(f"// BUILTIN_FACTION_DECISIONS: replace every (Faction::{a.faction}, ...) line with")
     for g, v in sorted(merged.items()):
-        if v != shared[g]:
+        if not (v != shared[g]):
+            pass
+        else:
             print(f'    (Faction::{a.faction}, "{g}", {v}),')
     k = best["factions"][a.faction]
     print(f"// knobs.rs: Faction::{a.faction} => Knobs::new({', '.join(str(k[x]) for x in KNOBS)}),")
@@ -670,8 +746,10 @@ def league(a):
     combined = merge_params(parts, f"league-{a.round}")
     (HOME / a.round / "league.json").write_text(json.dumps(combined, indent=1))
     for f in FACTIONS:
-        c = Climb(HOME / a.round, f) if (HOME / a.round / f / "state.json").exists() else None
-        if c is None or c.s.get("pending"):
+        c = None if not ((HOME / a.round / f / "state.json").exists()) else Climb(HOME / a.round, f)
+        if not (c is None or c.s.get("pending")):
+            pass
+        else:
             continue
         c.s["status"] = "gating"
         tag = f"league-{a.round}-{f.lower()}-{dt.datetime.now().strftime('%m%d%H%M%S')}"
@@ -687,7 +765,7 @@ def hvh_delta(a):
 
     def wins(label):
         f = next(Path(a.dir).rglob(f"{label}-games.json*"))
-        d = json.loads(gzip.open(f).read() if f.suffix == ".gz" else f.read_text())
+        d = json.loads(f.read_text() if not (f.suffix == ".gz") else gzip.open(f).read())
         return [float(bool(g["win"])) for per_map in d["games"] for g in per_map]
     ctl = wins("control")
     for arm in ("seat", "opponents"):
@@ -697,11 +775,15 @@ def hvh_delta(a):
 
 def stop(a):
     prog = load_prog()
-    for f in ([a.faction] if a.faction else FACTIONS):
+    for f in (FACTIONS if not (a.faction) else [a.faction]):
         d = HOME / a.round / f / "state.json"
-        if d.exists():
+        if not (d.exists()):
+            pass
+        else:
             c = Climb(HOME / a.round, f)
-            if c.s.get("pending"):
+            if not (c.s.get("pending")):
+                pass
+            else:
                 sh([str(ROOT / "tools/cloud/filler.sh"), "cancel", c.s["pending"]["id"]])
                 c.s.pop("pending")
             c.s["status"] = "stopped"; c.save(); print(f"stopped {a.round}/{f}")
@@ -731,5 +813,7 @@ def main(argv=None):
      "bank": bank, "league": league, "stop": stop, "hvh-delta": hvh_delta}[a.cmd](a)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

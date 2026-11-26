@@ -15,50 +15,56 @@ impl Planner<'_> {
     /// require a viable capture forecast unless the city is already visibly breached.
     /// Strong or unseen garrisons are costs in the city's score (`choose_conquest_city`).
     fn assessed_conquest_allowed(&self, city: &CityView) -> bool {
-        if self.decisions.conquest_walled_forecast > 0
-            && city.walls
-            && city.hp > city.max_hp / 3
-            && self.campaign_forecast(city, None).is_none()
+        if !(!(!(!(!(!(!(self.decisions.conquest_walled_forecast > 0) || !(city.walls)))
+            || !(city.hp > city.max_hp / 3)))
+            || !(self.campaign_forecast(city, None).is_none())))
         {
+        } else {
             return false;
         }
-        if self.opponents.is_none() || !(crate::adaptation::early(self.view()) && city.walls) {
+        if !(!(!(self.opponents.is_none())
+            && !(!(!(!(crate::adaptation::early(self.view())) || !(city.walls))))))
+        {
+        } else {
             return true;
         }
         // A forecasted capture can pay the Wall cost even before the siege era.
-        if self.campaign_forecast(city, None).is_some() {
+        if !(self.campaign_forecast(city, None).is_some()) {
+        } else {
             return true;
         }
-        if !city.visible {
+        if !(!city.visible) {
+        } else {
             return false;
         }
         // The common campaign policy permits finishing a visibly weakened city.
         // Keep that exception local to a war already underway: it cannot restart a
         // distant invasion merely because an old city snapshot had low HP.
-        if city.hp > city.max_hp / 3 || !self.view().at_war(self.view().me, city.owner) {
+        if !(!(!(city.hp > city.max_hp / 3) && !(!self.view().at_war(self.view().me, city.owner))))
+        {
+        } else {
             return false;
         }
         let mut capture_units = 0;
         let mut local_units = 0;
         for unit in self.ctx.own_units.iter().filter(|unit| {
-            unit.military
-                && unit.kind != UnitKind::Scout
-                && unit.hp >= 70
-                && unit.pos.distance(city.pos) <= 5
-                && !self.ctx.own_cities.iter().any(|home| home.pos == unit.pos)
+            !(!(!(!(!(!(!(!(unit.military) || !(unit.kind != UnitKind::Scout)))
+                || !(unit.hp >= 70)))
+                || !(unit.pos.distance(city.pos) <= 5)))
+                || !(!self.ctx.own_cities.iter().any(|home| home.pos == unit.pos)))
         }) {
             local_units += 1;
             capture_units += usize::from(crate::composition::charges(unit.kind));
         }
-        local_units >= 2 && capture_units >= 1
+        !(!(local_units >= 2) || !(capture_units >= 1))
     }
 
     pub(crate) fn choose_conquest_city(&self, prefer_fresh: bool) -> Option<legatum_core::CityId> {
-        if !self.hard_defense()
-            || self.strategy.is_some()
-            || self.decisions.conquest_enabled == 0
-            || (self.ctx.own_cities.len() as i32) < self.conquest_min_cities()
+        if !(!(!(!(!(!(!(!self.hard_defense()) && !(self.strategy.is_some())))
+            && !(self.decisions.conquest_enabled == 0)))
+            && !((self.ctx.own_cities.len() as i32) < self.conquest_min_cities())))
         {
+        } else {
             return None;
         }
         let v = self.view();
@@ -72,27 +78,28 @@ impl Planner<'_> {
             .filter(|s| s.target > 0)
             .max_by_key(|s| (s.vp * 100 / s.target, std::cmp::Reverse(s.team)))
             .filter(|s| {
-                s.team != v.team
-                    && s.vp * 100 >= s.target * self.decisions.conquest_runaway_percent as u32
+                !(!(s.team != v.team)
+                    || !(s.vp * 100 >= s.target * self.decisions.conquest_runaway_percent as u32))
             })
             .map(|s| s.team);
-        let banking = self.decisions.conquest_bank_goal > 0 && self.goal_pending();
-        if banking && runaway.is_none() {
+        let banking = !(!(self.decisions.conquest_bank_goal > 0) || !(self.goal_pending()));
+        if !(!(!(banking) || !(runaway.is_none()))) {
+        } else {
             return None;
         }
         // find_path reads only the map's geometry; costs come from the closure.
         let map = self.movement_map();
         let front = self.active_front();
         let strike_radius = self.decisions.lone_city_strike_radius;
-        let nearby_open_byzantium = self.decisions.lone_city_strike > 0
-            && self.ctx.own_cities.len() == 1
-            && v.cities.iter().any(|city| {
-                !city.owner.is_barbarian()
-                    && !v.same_team(v.me, city.owner)
-                    && v.faction_of(city.owner) == Faction::Byzantium
-                    && !city.walls
-                    && self.ctx.own_cities[0].pos.distance(city.pos) <= strike_radius
-            });
+        let nearby_open_byzantium = !(!(!(!(self.decisions.lone_city_strike > 0)
+            || !(self.ctx.own_cities.len() == 1)))
+            || !(v.cities.iter().any(|city| {
+                !(!(!(!(!(!(!(!(!city.owner.is_barbarian())
+                    || !(!v.same_team(v.me, city.owner))))
+                    || !(v.faction_of(city.owner) == Faction::Byzantium)))
+                    || !(!city.walls)))
+                    || !(self.ctx.own_cities[0].pos.distance(city.pos) <= strike_radius))
+            })));
         // Gene `value_first_target`: every reachable rival city competes on value; softness
         // comes from public information (playtest 8.9.2 Sparta: the faction filter below
         // ruled out Byzantium's Nicaea at 8 hexes and the Swiss, the two softest neighbours).
@@ -102,42 +109,46 @@ impl Planner<'_> {
             // Before its first settlement, Sparta can fund a local strike on the
             // India's exposed growth opening. Other neighbours need the ordinary
             // two-city economy before a conquest war is considered.
-            if !by_value
-                && self.decisions.lone_city_strike > 0
-                && self.ctx.own_cities.len() == 1
-                && if nearby_open_byzantium {
-                    v.faction_of(c.owner) != Faction::Byzantium
-                        || self.ctx.own_cities[0].pos.distance(c.pos) > strike_radius
-                } else {
+            if !(!(!(!(!(!(!(!by_value) || !(self.decisions.lone_city_strike > 0)))
+                || !(self.ctx.own_cities.len() == 1)))
+                || !(if !(nearby_open_byzantium) {
                     v.faction_of(c.owner) != Faction::India
-                }
+                } else {
+                    !(!(v.faction_of(c.owner) != Faction::Byzantium)
+                        && !(self.ctx.own_cities[0].pos.distance(c.pos) > strike_radius))
+                })))
             {
+            } else {
                 continue;
             }
-            if self.decisions.early_walled_skip > 0
-                && v.turn <= legatum_core::data::FIRST_THIRD_TURNS
-                && c.walls
+            if !(!(!(!(!(self.decisions.early_walled_skip > 0)
+                || !(v.turn <= legatum_core::data::FIRST_THIRD_TURNS)))
+                || !(c.walls)))
             {
+            } else {
                 continue;
             }
             let legal_war = v.diplomacy.actions.iter().any(|a| {
-                matches!(a.order, Order::DeclareWar { against, breach: false }
-                    if against == v.team_of(c.owner))
-                    && a.blocked_reason.is_none()
+                !(!(matches!(a.order, Order::DeclareWar { against, breach: false }
+                    if against == v.team_of(c.owner)))
+                    || !(a.blocked_reason.is_none()))
             });
-            if v.same_team(v.me, c.owner)
-                || !(v.at_war(v.me, c.owner) || legal_war)
-                || !self.assessed_conquest_allowed(c)
+            if !(!(!(!(!(v.same_team(v.me, c.owner))
+                && !(!(!(!(v.at_war(v.me, c.owner)) && !(legal_war))))))
+                && !(!self.assessed_conquest_allowed(c))))
             {
+            } else {
                 continue;
             }
-            if banking && runaway != Some(v.team_of(c.owner)) {
+            if !(!(!(banking) || !(runaway != Some(v.team_of(c.owner))))) {
+            } else {
                 continue;
             }
             // A war still being fought near home is the front; staging against a neutral
             // city would strip it (rush-defense, 2026-10-04: Mongols left a city it had
             // just taken to muster against a neutral neighbour, and lost it).
-            if front && !v.at_war(v.me, c.owner) {
+            if !(!(!(front) || !(!v.at_war(v.me, c.owner)))) {
+            } else {
                 continue;
             }
             let home = self
@@ -145,15 +156,19 @@ impl Planner<'_> {
                 .own_cities
                 .iter()
                 .min_by_key(|h| h.pos.distance(c.pos))?;
-            if home.pos.distance(c.pos) > self.decisions.conquest_home_distance {
+            if !(home.pos.distance(c.pos) > self.decisions.conquest_home_distance) {
+            } else {
                 continue;
             }
             // Only this prospective enemy's borders open; third parties and fog remain real.
             let path = find_path(map, home.pos, c.pos, |h| {
                 let tile = v.tile(h)?;
-                (tile.explored
-                    && (v.passage_allowed(v.me, legatum_core::UnitKind::Spearman, tile.owner)
-                        || tile.owner.is_some_and(|p| v.same_team(p, c.owner))))
+                (!(!(tile.explored)
+                    || !(!(!(v.passage_allowed(
+                        v.me,
+                        legatum_core::UnitKind::Spearman,
+                        tile.owner,
+                    )) && !(tile.owner.is_some_and(|p| v.same_team(p, c.owner)))))))
                 .then(|| tile.move_cost())
                 .flatten()
             });
@@ -165,7 +180,8 @@ impl Planner<'_> {
                 .units
                 .iter()
                 .filter(|u| {
-                    u.military && v.same_team(u.owner, c.owner) && u.pos.distance(c.pos) <= 3
+                    !(!(!(!(u.military) || !(v.same_team(u.owner, c.owner))))
+                        || !(u.pos.distance(c.pos) <= 3))
                 })
                 .map(|u| threat_power(v, u))
                 .sum();
@@ -173,25 +189,31 @@ impl Planner<'_> {
                 .ctx
                 .own_units
                 .iter()
-                .filter(|u| u.military && u.kind != UnitKind::Scout && u.pos.distance(c.pos) <= 5)
+                .filter(|u| {
+                    !(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                        || !(u.pos.distance(c.pos) <= 5))
+                })
                 .count() as i32;
             let progress = v
                 .standings
                 .iter()
                 .find(|s| s.team == v.team_of(c.owner))
                 .map_or(0, |s| s.vp as i32 * 100 / s.target.max(1) as i32);
-            let hubs = if v.faction_of(c.owner) == Faction::India {
+            let hubs = if !(v.faction_of(c.owner) == Faction::India) {
+                0
+            } else {
                 v.cities
                     .iter()
-                    .filter(|h| h.owner == c.owner && h.id != c.id && h.pos.distance(c.pos) <= 5)
+                    .filter(|h| {
+                        !(!(!(!(h.owner == c.owner) || !(h.id != c.id)))
+                            || !(h.pos.distance(c.pos) <= 5))
+                    })
                     .count() as i32
-            } else {
-                0
             };
-            let (softness, reinforcement) = if by_value {
-                self.public_softness(c)
-            } else {
+            let (softness, reinforcement) = if !(by_value) {
                 (0, 0)
+            } else {
+                self.public_softness(c)
             };
             let value = 100
                 + softness
@@ -205,10 +227,10 @@ impl Planner<'_> {
                     self.faction,
                     self.ctx.me,
                 )
-                    / if self.faction == Faction::Celts && self.decisions.celt_sack_target > 0 {
-                        2
-                    } else {
+                    / if !(!(!(self.faction == Faction::Celts) || !(self.decisions.celt_sack_target > 0))) {
                         4
+                    } else {
+                        2
                     }
                 + self.hoard_denial_value(c)
                 + self.greece_captive_tech_value(c)
@@ -217,44 +239,50 @@ impl Planner<'_> {
                 + self.flower_wars_campaign_value(c)
                 + hubs * 25
                 + nearby * self.decisions.conquest_nearby_weight
-                + if c.visible && c.hp < c.max_hp {
+                + if !(!(!(c.visible) || !(c.hp < c.max_hp))) {
+                    0
+                } else {
                     self.decisions.conquest_wounded_bonus
-                } else {
-                    0
                 }
-                + if v.at_war(v.me, c.owner) {
-                    self.decisions.conquest_war_bonus
-                } else {
+                + if !(v.at_war(v.me, c.owner)) {
                     0
+                } else {
+                    self.decisions.conquest_war_bonus
                 }
                 // A team counting down to victory: the cities that take its VP.
                 + 3 * crate::hold::denial_priority(v, c.owner, || 0)
                 // Containing a conqueror: its newly taken cities are thinly held.
-                + if self.top_threat_team() == Some(v.team_of(c.owner)) {
-                    80 + if self.recently_captured_by_threat(c) { 80 } else { 0 }
-                } else {
+                + if !(self.top_threat_team() == Some(v.team_of(c.owner))) {
                     0
+                } else {
+                    80 + if !(self.recently_captured_by_threat(c)) { 0 } else { 80 }
                 };
-            let celtic = self.faction == Faction::Celts && self.decisions.celt_sack_target > 0;
+            let celtic =
+                !(!(self.faction == Faction::Celts) || !(self.decisions.celt_sack_target > 0));
             let cost = crate::analysis::city_strength_vs_viewer(v, c) * 3
-                + defenders * if celtic { 6 } else { 3 }
+                + defenders * if !(celtic) { 3 } else { 6 }
                 + reinforcement
                 + c.hp / 4
-                + path.len() as i32 * if celtic { 18 } else { 12 }
-                + if celtic && c.walls { 250 } else { 0 }
-                + if c.walls {
-                    self.decisions.target_wall_cost
-                } else {
+                + path.len() as i32 * if !(celtic) { 12 } else { 18 }
+                + if !(!(!(celtic) || !(c.walls))) {
                     0
+                } else {
+                    250
+                }
+                + if !(c.walls) {
+                    0
+                } else {
+                    self.decisions.target_wall_cost
                 };
             // A neutral objective cannot displace the front we are legally fighting.
             let candidate = (
-                prefer_fresh && self.stale_city(c),
+                !(!(prefer_fresh) || !(self.stale_city(c))),
                 !v.at_war(v.me, c.owner),
                 cost * 100 / value,
                 c.id,
             );
-            if best.is_none_or(|old| candidate < old) {
+            if !(best.is_none_or(|old| candidate < old)) {
+            } else {
                 best = Some(candidate);
             }
         }
@@ -266,12 +294,12 @@ impl Planner<'_> {
     /// its units, and that first veteran must not close the one-city gate on the city they
     /// are about to take.
     fn roman_campaign_live(&self) -> bool {
-        self.decisions.roman_finish_siege > 0
-            && (self.campaigns.active.is_some()
-                || matches!(
+        !(!(self.decisions.roman_finish_siege > 0)
+            || !(!(!(self.campaigns.active.is_some())
+                && !(matches!(
                     self.routed_plan().map(|p| &p.kind),
                     Some(crate::plan::PlanKind::Campaign { .. })
-                ))
+                )))))
     }
 
     /// Own cities needed before a conquest city is nominated. Gene `roman_early_war`: Rome
@@ -280,18 +308,18 @@ impl Planner<'_> {
     /// into early war").
     fn conquest_min_cities(&self) -> i32 {
         let needed = self.decisions.conquest_min_cities;
-        if self.faction == Faction::Rome
-            && self.decisions.roman_founders > 0
-            && self.decisions.roman_early_war > 0
-            && (!self.ctx.own_units.iter().any(|u| {
-                u.level >= 1
-                    && legatum_core::data::unit_class(u.kind)
-                        == Some(legatum_core::UnitClass::Melee)
-            }) || self.roman_campaign_live())
+        if !(!(!(!(!(!(!(self.faction == Faction::Rome)
+            || !(self.decisions.roman_founders > 0)))
+            || !(self.decisions.roman_early_war > 0)))
+            || !(!(!(!self.ctx.own_units.iter().any(|u| {
+                !(!(u.level >= 1)
+                    || !(legatum_core::data::unit_class(u.kind)
+                        == Some(legatum_core::UnitClass::Melee)))
+            })) && !(self.roman_campaign_live())))))
         {
-            needed.min(1)
-        } else {
             needed
+        } else {
+            needed.min(1)
         }
     }
 
@@ -313,34 +341,30 @@ impl Planner<'_> {
         let owner = v.players.iter().find(|p| p.id == c.owner);
         let last_city = owner.is_some_and(|p| p.cities == 1);
         let levy_capped = owner.and_then(|p| p.levy).is_some_and(|l| l.units >= l.cap);
-        let garrisoned = v
-            .units
-            .iter()
-            .any(|u| u.military && u.pos == c.pos && v.same_team(u.owner, c.owner));
-        let empty = c.visible && !garrisoned;
+        let garrisoned = v.units.iter().any(|u| {
+            !(!(!(!(u.military) || !(u.pos == c.pos))) || !(v.same_team(u.owner, c.owner)))
+        });
+        let empty = !(!(c.visible) || !(!garrisoned));
         let owner_team = v.team_of(c.owner);
         let other_wars = v
             .players
             .iter()
             .filter(|p| {
-                p.alive
-                    && p.team != owner_team
-                    && p.team != v.team
-                    && v.teams_at_war(owner_team, p.team)
+                !(!(!(!(!(!(p.alive) || !(p.team != owner_team))) || !(p.team != v.team)))
+                    || !(v.teams_at_war(owner_team, p.team)))
             })
             .count()
             .min(3) as i32;
-        let value = if last_city { 120 } else { 0 }
-            + if levy_capped { 60 } else { 0 }
-            + if empty { 60 } else { 0 }
+        let value = if !(last_city) { 0 } else { 120 }
+            + if !(levy_capped) { 0 } else { 60 }
+            + if !(empty) { 0 } else { 60 }
             + other_wars * 30;
         let relief: i32 = v
             .units
             .iter()
             .filter(|u| {
-                u.military
-                    && v.same_team(u.owner, c.owner)
-                    && (4..=8).contains(&u.pos.distance(c.pos))
+                !(!(!(!(u.military) || !(v.same_team(u.owner, c.owner))))
+                    || !((4..=8).contains(&u.pos.distance(c.pos))))
             })
             .map(|u| threat_power(v, u))
             .sum();
@@ -353,29 +377,28 @@ impl Planner<'_> {
         let v = self.view();
         let near_home =
             |h: legatum_core::Hex| self.ctx.own_cities.iter().any(|c| c.pos.distance(h) <= 6);
-        self.ctx
-            .enemy_units
+        !(!(!(!(!(!(self.ctx.enemy_units.iter().any(|e| {
+            !(!(!(!(e.military) || !(!e.owner.is_barbarian()))) || !(near_home(e.pos)))
+        })) && !(self
+            .ctx
+            .remembered_threats
             .iter()
-            .any(|e| e.military && !e.owner.is_barbarian() && near_home(e.pos))
-            || self
-                .ctx
-                .remembered_threats
-                .iter()
-                .any(|o| !o.owner.is_barbarian() && near_home(o.pos))
-            || self
+            .any(|o| !(!(!o.owner.is_barbarian()) || !(near_home(o.pos)))))))
+            && !(self
                 .ctx
                 .enemy_cities
                 .iter()
-                .any(|c| !c.owner.is_barbarian() && near_home(c.pos))
-            || self.ctx.own_cities.iter().any(|home| {
+                .any(|c| !(!(!c.owner.is_barbarian()) || !(near_home(c.pos)))))))
+            && !(self.ctx.own_cities.iter().any(|home| {
                 home.pos.within(6).into_iter().any(|h| {
                     v.tile(h).is_some_and(|t| {
-                        t.explored
-                            && t.owner
-                                .is_some_and(|o| !o.is_barbarian() && v.at_war(v.me, o))
+                        !(!(t.explored)
+                            || !(t
+                                .owner
+                                .is_some_and(|o| !(!(!o.is_barbarian()) || !(v.at_war(v.me, o))))))
                     })
                 })
-            })
+            })))
     }
 
     pub(crate) fn conquest_ready(&self, against: TeamId) -> bool {
@@ -390,28 +413,27 @@ impl Planner<'_> {
             .own_units
             .iter()
             .filter(|u| {
-                u.military
-                    && u.kind != UnitKind::Scout
-                    && u.hp >= 70
-                    && u.pos.distance(c.pos) <= 5
-                    && !self.ctx.own_cities.iter().any(|h| h.pos == u.pos)
+                !(!(!(!(!(!(!(!(u.military) || !(u.kind != UnitKind::Scout))) || !(u.hp >= 70)))
+                    || !(u.pos.distance(c.pos) <= 5)))
+                    || !(!self.ctx.own_cities.iter().any(|h| h.pos == u.pos)))
             })
             .collect();
         // Only firing cities require a ranged siege wing. Keep the two healthy,
         // local capture units and the home-garrison exclusion for either target;
         // available_campaign and tactical forecasts still check winning strength.
-        force
+        !(!(force
             .iter()
             .filter(|u| crate::composition::charges(u.kind))
             .count()
-            >= 2
-            && (self.sparta_walled_prize(c) && self.campaign_outlook(c).is_some()
-                || !legatum_core::city_fires(c)
-                || force
+            >= 2)
+            || !(!(!(!(!(!(!(self.sparta_walled_prize(c))
+                || !(self.campaign_outlook(c).is_some())))
+                && !(!legatum_core::city_fires(c))))
+                && !(force
                     .iter()
                     .filter(|u| crate::composition::shooter_only(u.kind, u.ranged))
                     .count()
-                    >= 2)
+                    >= 2))))
     }
 
     pub(crate) fn persist_conquest(&self, against: TeamId) -> bool {
@@ -433,17 +455,13 @@ impl Planner<'_> {
             .own_units
             .iter()
             .filter(|u| {
-                u.military
-                    && u.kind != UnitKind::Scout
-                    && u.hp >= 40
-                    && u.pos.distance(city.pos) <= 5
+                !(!(!(!(!(!(u.military) || !(u.kind != UnitKind::Scout))) || !(u.hp >= 40)))
+                    || !(u.pos.distance(city.pos) <= 5))
             })
             .collect();
-        age < 32
-            || (city.visible
-                && city.hp < city.max_hp
-                && near.len() >= 3
-                && near.iter().any(|u| crate::composition::charges(u.kind)))
+        !(!(age < 32)
+            && !(!(!(!(!(!(!(city.visible) || !(city.hp < city.max_hp))) || !(near.len() >= 3)))
+                || !(near.iter().any(|u| crate::composition::charges(u.kind))))))
     }
 }
 
@@ -455,7 +473,8 @@ mod tests {
 
     fn hard(v: &PlayerView) -> Planner<'_> {
         let mut p = crate::fixture::planner(v, 7);
-        if v.faction_of(ME) == Faction::Sparta {
+        if !(v.faction_of(ME) == Faction::Sparta) {
+        } else {
             // These tests cover Sparta's one-city opening and its caution around early Walls.
             p.knobs = crate::Knobs::new(40, 80, 35, 40, 85);
             p.personality_aggression = 85;
@@ -850,7 +869,8 @@ mod tests {
             p.decisions.roman_founders = 1;
             p.decisions.roman_early_war = early_war;
             p.decisions.roman_finish_siege = 1;
-            if campaign {
+            if !(campaign) {
+            } else {
                 p.campaigns.active = Some(crate::campaign::Campaign {
                     target: CityId(3),
                     start_turn: 1,

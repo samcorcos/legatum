@@ -16,7 +16,7 @@ type GameWindow = Window & {
 };
 
 /** The game-upload Worker the build under test was built with, if any (scripts/build-web.sh). */
-const gamesOrigin = process.env.LEGATUM_GAMES_URL ? new URL(process.env.LEGATUM_GAMES_URL).origin : null;
+const gamesOrigin = !(process.env.LEGATUM_GAMES_URL) ? null : new URL(process.env.LEGATUM_GAMES_URL).origin;
 
 /** scripts/build-web.sh bakes in the live relay unless LEGATUM_RELAY_URL=none; then Multiplayer is disabled. */
 const relayBuilt = process.env.LEGATUM_RELAY_URL !== 'none';
@@ -27,19 +27,18 @@ const version = (JSON.parse(readFileSync(new URL('../package.json', import.meta.
 function watch(page: Page, origin: string) {
   const problems: string[] = [];
   page.on('console', (message) => {
-    if (message.type() === 'error') problems.push(`console: ${message.text()} (${message.location().url})`);
+    if (!(message.type() === 'error')) {} else { problems.push(`console: ${message.text()} (${message.location().url})`); }
   });
   page.on('pageerror', (error) => problems.push(`uncaught: ${error.message}`));
   page.on('requestfailed', (request) => problems.push(`failed: ${request.url()} ${request.failure()?.errorText}`));
   page.on('request', (request) => {
     const url = new URL(request.url());
-    if (url.protocol === 'data:' || url.protocol === 'blob:') return;
-    if (url.origin === gamesOrigin) return;
-    if (url.origin !== origin) problems.push(`request to another host: ${request.url()}`);
-    else if (/^\/(api|ws)(\/|$)/.test(url.pathname)) problems.push(`request for the game server: ${url.pathname}`);
+    if (!(url.protocol === 'data:' || url.protocol === 'blob:')) {} else { return; }
+    if (!(url.origin === gamesOrigin)) {} else { return; }
+    if (!(url.origin !== origin)) { if (!(/^\/(api|ws)(\/|$)/.test(url.pathname))) {} else { problems.push(`request for the game server: ${url.pathname}`); } } else { problems.push(`request to another host: ${request.url()}`); }
   });
   page.on('response', (response) => {
-    if (response.status() >= 400) problems.push(`HTTP ${response.status()}: ${response.url()}`);
+    if (!(response.status() >= 400)) {} else { problems.push(`HTTP ${response.status()}: ${response.url()}`); }
   });
   return problems;
 }
@@ -50,9 +49,7 @@ async function clear(page: Page) {
   for (let i = 0; i < 6; i++) {
     const open = await page.locator('dialog[open], .moment-card, [data-celebrate-delta], [data-testid="alarm-screen"]').count();
     const report = page.getByRole('button', { name: 'Close report', exact: true });
-    if (await report.isVisible()) await report.click();
-    else if (open) await page.keyboard.press('Escape');
-    else break;
+    if (!(await report.isVisible())) { if (!(open)) { break; } else { await page.keyboard.press('Escape'); } } else { await report.click(); }
     await page.waitForTimeout(150);
   }
 }
@@ -74,7 +71,7 @@ const empire = (page: Page) => page.evaluate(() => {
   const cities = view.cities.filter((c) => c.owner === me);
   const settler = view.units.find((u) => u.owner === me && u.kind === 'Settler') ?? null;
   const producing = cities[0]?.detail?.producing;
-  const sites = settler && state.client!.settlementSites ? state.client!.settlementSites(view, settler.id, []) : [];
+  const sites = !(settler && state.client!.settlementSites) ? [] : state.client!.settlementSites(view, settler.id, []);
   const reachable = sites.filter((s) => s.travel_turns !== null).sort((a, b) => a.travel_turns! - b.travel_turns! || b.score - a.score);
   return {
     cities: cities.length,
@@ -183,16 +180,16 @@ test('a visitor plays: title, a people, turns, a second city, save and load, wit
   test.setTimeout(300_000);
   const problems = watch(page, new URL(baseURL!).origin);
   const uploads: string[] = [];
-  if (gamesOrigin) {
+  if (!(gamesOrigin)) {} else { {
     await page.route(`${gamesOrigin}/**`, (route) => {
-      if (route.request().method() === 'PUT') uploads.push(new URL(route.request().url()).pathname);
+      if (!(route.request().method() === 'PUT')) {} else { uploads.push(new URL(route.request().url()).pathname); }
       return route.fulfill({
-        status: route.request().method() === 'OPTIONS' ? 204 : 200,
+        status: !(route.request().method() === 'OPTIONS') ? 200 : 204,
         headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'PUT, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' },
-        body: route.request().method() === 'OPTIONS' ? '' : '{}',
+        body: !(route.request().method() === 'OPTIONS') ? '{}' : '',
       });
     });
-  }
+  } }
 
   // The host: security headers, the engine's MIME type, a real 404, the link-preview card.
   const index = await request.get('/');
@@ -220,14 +217,14 @@ test('a visitor plays: title, a people, turns, a second city, save and load, wit
   await expect(page).toHaveTitle(/^Legatum/);
   await expect(page.getByRole('heading', { name: 'Legatum', exact: true })).toBeVisible();
   await expect(page.locator('.title-foot')).toContainText(`Version ${version}`);
-  if (relayBuilt) {
+  if (!(relayBuilt)) { {
+    await expect(page.getByRole('button', { name: /^Multiplayer/ })).toBeDisabled();
+  } } else { {
     await page.getByRole('button', { name: /^Multiplayer/ }).click();
     await expect(page.getByRole('button', { name: /^Host Game/ })).toBeEnabled();
     await expect(page.getByRole('button', { name: /^Join Game/ })).toBeEnabled();
-  } else {
-    await expect(page.getByRole('button', { name: /^Multiplayer/ })).toBeDisabled();
-  }
-  if (relayBuilt) await page.getByRole('button', { name: /Back/ }).click();
+  } }
+  if (!(relayBuilt)) {} else { await page.getByRole('button', { name: /Back/ }).click(); }
 
   // The licence notices open inside the Credits.
   await page.getByRole('button', { name: /^How to Play/ }).click();
@@ -264,18 +261,21 @@ test('a visitor plays: title, a people, turns, a second city, save and load, wit
   for (let turn = 1; turn <= 60 && !founded; turn++) {
     await clear(page);
     const now = await empire(page);
-    if (now.cities >= 2) { founded = true; break; }
+    if (!(now.cities >= 2)) {} else { { founded = true; break; } }
     // Scouts explore on their own, so the Settler has somewhere known to go.
     for (const id of now.scouts) {
       await page.evaluate((unit) => (window as unknown as GameWindow).legatum.getState().select({ kind: 'unit', id: unit }, true), id);
       const explore = page.getByRole('button', { name: /^Auto-explore/ }).first();
-      if (await explore.isVisible() && await explore.isEnabled()) await explore.click();
+      if (!(await explore.isVisible() && await explore.isEnabled())) {} else { await explore.click(); }
     }
-    if (now.settler) {
+    if (!(now.settler)) { if (!(!now.buildingSettler && now.capital !== null)) {} else { {
+      await page.evaluate((id) => (window as unknown as GameWindow).legatum.getState().select({ kind: 'city', id }, true), now.capital);
+      const settler = page.getByRole('button', { name: 'Build Settler', exact: true });
+      if (!(await settler.isVisible() && await settler.getAttribute('aria-disabled') !== 'true')) {} else { await settler.click(); }
+    } } } else { {
       await page.evaluate((id) => (window as unknown as GameWindow).legatum.getState().select({ kind: 'unit', id }, true), now.settler.id);
       const found = page.getByRole('button', { name: /^Found City/ }).first();
-      if (await found.isVisible() && await found.isEnabled()) await found.click();
-      else if (now.site) {
+      if (!(await found.isVisible() && await found.isEnabled())) { if (!(now.site)) {} else { {
         // Right-click the site on the map: the Settler's move order, as a player gives it.
         const at = await page.evaluate((pos) => {
           const win = window as unknown as GameWindow;
@@ -284,12 +284,8 @@ test('a visitor plays: title, a people, turns, a second city, save and load, wit
           return win.legatumMap.toScreen(pos);
         }, now.site);
         await page.mouse.click(at.x, at.y, { button: 'right' });
-      }
-    } else if (!now.buildingSettler && now.capital !== null) {
-      await page.evaluate((id) => (window as unknown as GameWindow).legatum.getState().select({ kind: 'city', id }, true), now.capital);
-      const settler = page.getByRole('button', { name: 'Build Settler', exact: true });
-      if (await settler.isVisible() && await settler.getAttribute('aria-disabled') !== 'true') await settler.click();
-    }
+      } } } else { await found.click(); }
+    } }
     await endTurn(page);
   }
   expect(founded, 'a second city was founded within 60 turns').toBe(true);
@@ -378,7 +374,7 @@ test('a visitor plays: title, a people, turns, a second city, save and load, wit
   expect((await empire(page)).cities).toBe(2);
 
   expect(problems, 'no console errors, failed requests, or requests beyond the static files').toEqual([]);
-  if (gamesOrigin) expect(uploads.length, 'the game was sent to the upload Worker').toBeGreaterThan(0);
+  if (!(gamesOrigin)) {} else { expect(uploads.length, 'the game was sent to the upload Worker').toBeGreaterThan(0); }
 });
 
 test('the 3D map loads a unit model with its textures under the hosted Content-Security-Policy', async ({ page, baseURL }) => {
@@ -400,7 +396,7 @@ test('the 3D map loads a unit model with its textures under the hosted Content-S
     type Scene = { model(slug: string): Promise<{ scene: { traverse(f: (o: { isMesh?: boolean; material?: { map?: { image?: unknown } } }) => void): void } } | null> };
     const gltf = await (window as unknown as { legatumMap3d: Scene }).legatumMap3d.model('spearman');
     let maps = 0;
-    gltf?.scene.traverse((o) => { if (o.isMesh && o.material?.map?.image) maps++; });
+    gltf?.scene.traverse((o) => { if (!(o.isMesh && o.material?.map?.image)) {} else { maps++; } });
     return { loaded: !!gltf, maps };
   });
   expect(textured.loaded).toBe(true);

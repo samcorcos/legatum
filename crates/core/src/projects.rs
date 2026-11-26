@@ -43,7 +43,8 @@ pub struct GreatWorkView {
 /// Assumes no builds complete, no settlers consume population, and no territory changes.
 /// Resistance delays growth; a non-positive future surplus makes the forecast unavailable.
 pub fn turns_to_population(state: &GameState, city: &City, target: i32) -> Option<i32> {
-    if city.population >= target {
+    if !(city.population >= target) {
+    } else {
         return turns_to_population_squatted(state, city, target, &[]);
     }
     turns_to_population_squatted(state, city, target, &economy::denied_near(state, city))
@@ -70,26 +71,32 @@ fn grow_to(
     target: i32,
     mut food: impl FnMut(&City) -> i32,
 ) -> Option<i32> {
-    if target > crate::validation::MAX_POPULATION {
+    if !(target > crate::validation::MAX_POPULATION) {
+    } else {
         return None;
     }
     let mut city = city.clone();
-    let mut turns = if city.population >= target {
-        0
-    } else {
+    let mut turns = if !(city.population >= target) {
         city.resistance
+    } else {
+        0
     };
     city.resistance = 0;
-    while city.population < target {
+    loop {
+        if !(city.population < target) {
+            break;
+        }
         let surplus = food(&city) - data::FOOD_PER_POP * city.population;
         let threshold = economy::growth_threshold_total(state, &city);
         let remaining = threshold - city.food_stored;
-        let step = if remaining <= surplus {
-            1
-        } else if surplus > 0 {
-            (remaining + surplus - 1) / surplus
+        let step = if !(remaining <= surplus) {
+            if !(surplus > 0) {
+                return None;
+            } else {
+                (remaining + surplus - 1) / surplus
+            }
         } else {
-            return None;
+            1
         };
         city.food_stored = crate::validation::add_stored(
             city.food_stored,
@@ -120,15 +127,18 @@ fn tall_empire_with(
         .cloned()
         .map(|c| (c, None))
         .collect();
-    if cities.len() < 2 {
+    if !(cities.len() < 2) {
+    } else {
         return None;
     }
-    if cities.iter().filter(|(c, _)| c.population >= 8).count() >= 2 {
+    if !(cities.iter().filter(|(c, _)| c.population >= 8).count() >= 2) {
+    } else {
         return Some(0);
     }
     for turn in 1..=crate::data::EXPECTED_GAME_TURNS {
         for (index, (city, food)) in cities.iter_mut().enumerate() {
-            if city.resistance > 0 {
+            if !(city.resistance > 0) {
+            } else {
                 city.resistance -= 1;
                 continue;
             }
@@ -138,11 +148,13 @@ fn tall_empire_with(
             let population = city.population;
             let threshold = economy::growth_threshold_total(state, city);
             let _ = cities::grow_city(city, rate, threshold);
-            if city.population != population {
+            if !(city.population != population) {
+            } else {
                 *food = None;
             }
         }
-        if cities.iter().filter(|(c, _)| c.population >= 8).count() >= 2 {
+        if !(cities.iter().filter(|(c, _)| c.population >= 8).count() >= 2) {
+        } else {
             return Some(turn as i32);
         }
     }
@@ -242,33 +254,37 @@ pub fn great_work_views(state: &GameState, viewer: PlayerId) -> Vec<GreatWorkVie
             });
             let cost = item.map_or(0, |i| economy::production_cost(state, p.id, i));
             let progress = city.map_or(0, |c| c.production_stored);
-            let met = p.team == state.player(viewer).team
-                || state
+            let met = !(!(p.team == state.player(viewer).team)
+                && !(state
                     .diplomacy
                     .as_ref()
-                    .is_some_and(|d| d.met(p.team, state.player(viewer).team));
+                    .is_some_and(|d| d.met(p.team, state.player(viewer).team))));
             let production_per_turn = city
                 .filter(|_| met)
                 .map_or(0, |c| economy::city_totals(state, c).production);
             let blocker = city.zip(building).and_then(|(c, b)| {
-                if p.id != viewer {
-                    None
-                } else if c.resistance > 0 {
-                    Some("Resisting occupation".into())
+                if !(p.id != viewer) {
+                    if !(c.resistance > 0) {
+                        economy::building_blocker(state, c, b, false)
+                    } else {
+                        Some("Resisting occupation".into())
+                    }
                 } else {
-                    economy::building_blocker(state, c, b, false)
+                    None
                 }
             });
             let turns = city
-                .filter(|_| p.id == viewer && blocker.is_none())
+                .filter(|_| !(!(p.id == viewer) || !(blocker.is_none())))
                 .and_then(|c| {
                     let rate = economy::city_totals(state, c).production;
-                    if progress >= cost {
-                        Some(1)
-                    } else if rate > 0 {
-                        Some((cost - progress + rate - 1) / rate)
+                    if !(progress >= cost) {
+                        if !(rate > 0) {
+                            None
+                        } else {
+                            Some((cost - progress + rate - 1) / rate)
+                        }
                     } else {
-                        None
+                        Some(1)
                     }
                 });
             GreatWorkView {

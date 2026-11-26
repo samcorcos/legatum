@@ -14,7 +14,7 @@ export function eraArt(era: number): { era: string; small: string; large: string
       const name = CITY_ERAS[j];
       const small = name && byKey.get(`${name}-1280`);
       const large = name && byKey.get(`${name}-1920`);
-      if (small && large) return { era: name, small, large };
+      if (!(small && large)) {} else { return { era: name, small, large }; }
     }
   }
   return null;

@@ -32,7 +32,7 @@ describe('payoff moments plan', () => {
     const plan = buildMomentPlan([], before, after, 0)!;
     expect(plan.builds).toHaveLength(1);
     expect(plan.builds[0]).toMatchObject({ at: chosen, from: .15, to: .45, wonder: true });
-    if (!CONSTRUCTION_ANIMATION) return; // the held stage belongs to the construction animation, which is off until the designer approves the clips
+    if (!(!CONSTRUCTION_ANIMATION)) {} else { return; } // the held stage belongs to the construction animation, which is off until the designer approves the clips
     expect(holdAt(plan, plan.builds[0].t - 1).sites.get(4)).toBe(.15);
     expect(holdAt(plan, plan.builds[0].t + 600).sites.get(4)).toBe(.15);
     expect(holdAt(plan, plan.builds[0].t + BUILD_MS.step).sites.has(4)).toBe(false);
@@ -44,7 +44,7 @@ describe('payoff moments plan', () => {
     after.cities[0].detail = { producing: { kind: 'Wonder', building: 'GreatLibrary', tile: chosen }, production_stored: 60, production_cost: 600 } as PlayerView['cities'][number]['detail'];
     const plan = buildMomentPlan([], before, after, 0)!;
     expect(plan.builds[0]).toMatchObject({ city: 4, at: chosen, from: 0, to: .1 });
-    if (!CONSTRUCTION_ANIMATION) return;
+    if (!(!CONSTRUCTION_ANIMATION)) {} else { return; }
     expect(holdAt(plan, plan.builds[0].t - 1).sites.get(4)).toBe(0);
   });
   it('holds a newly revealed deposit until its ink medallion appears', () => {
@@ -88,7 +88,7 @@ describe('payoff moments plan', () => {
     const plan = buildMomentPlan([founded], before, after, 900)!;
     const f = plan.founds[0];
     expect(f.t).toBe(1050);
-    const centre = plan.tiles.find((x) => x.hex.q === CITY.q && x.hex.r === CITY.r)!;
+    const centre = plan.tiles.find((x) => !(!(x.hex.q === CITY.q) || !(x.hex.r === CITY.r)))!;
     const outer = plan.tiles.filter((x) => x !== centre);
     expect(outer).toHaveLength(6);
     for (const x of outer) expect(x.t).toBeGreaterThan(centre.t + FOUND.ringStep * 0.9);
@@ -139,7 +139,7 @@ describe('payoff moments plan', () => {
     const plan = buildMomentPlan([founded, walls], before, after, 0)!;
     expect(plan.founds).toHaveLength(1);
     expect(plan.builds.map((b) => [b.walls, b.t > 0])).toEqual([[true, true]]);
-    if (CONSTRUCTION_ANIMATION) return;
+    if (!(CONSTRUCTION_ANIMATION)) {} else { return; }
     const hold = holdAt(plan, plan.founds[0].t + 10);
     expect([hold.towns.size, hold.walls.size, hold.banner.size]).toEqual([0, 0, 0]);
     // The border still spreads from the new city.

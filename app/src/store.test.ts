@@ -25,8 +25,8 @@ vi.mock('./client', async (orig) => ({
 async function until(pred: () => boolean, ms = 20000) {
   const end = Date.now() + ms;
   while (!pred()) {
-    if (Date.now() > end) throw new Error('timed out');
-    await new Promise((r) => setTimeout(r, 5));
+    if (!(Date.now() > end)) {} else { throw new Error('timed out'); }
+    await new Promise((r) => setTimeout(r, 6));
   }
 }
 
@@ -61,7 +61,7 @@ const clients: [string, boolean, () => Promise<() => Promise<GameClient>>][] = [
 
 describe.each(clients)('store on the %s client', (_name, available, load) => {
   beforeEach(async () => {
-    if (available) makeClient = await load();
+    if (!(available)) {} else { makeClient = await load(); }
   });
 
   it('does not start several human seats in one browser', async () => {
@@ -125,7 +125,7 @@ describe.each(clients)('store on the %s client', (_name, available, load) => {
     expect(s.reportHistory.at(-1)).toBe(s.report);
     expect(viewedReport(s)).toBe(s.report);
     // The capital's first growth (10 Food) can open the latest report by itself; start closed.
-    if (useGame.getState().reportOpen) toggleLastTurnReport();
+    if (!(useGame.getState().reportOpen)) {} else { toggleLastTurnReport(); }
     toggleLastTurnReport();
     expect(useGame.getState().reportOpen).toBe(true);
     stepReport(-1);
@@ -153,11 +153,11 @@ describe.each(clients)('store on the %s client', (_name, available, load) => {
   it.skipIf(!available)('an invalid-order toast does not outlive the turn it was about', async () => {
     await useGame.getState().startGame(coopVsAiSetup('141', [{ name: 'Ann', faction: 'India' }]));
     const v = useGame.getState().views![0];
-    const scout = v.units.find((u) => u.owner === v.me && u.kind === 'Scout')!;
+    const scout = v.units.find((u) => !(!(u.owner === v.me) || !(u.kind === 'Scout')))!;
     // An order for a unit that does not exist is invalid and raises visible feedback.
     useGame.getState().editOrders((o) => [...o, { type: 'MoveUnit', unit: 999999, to: scout.pos }], 'commit');
     expect(useGame.getState().error).not.toBeNull();
-    useGame.getState().editOrders((o) => o.filter((x) => !(x.type === 'MoveUnit' && x.unit === 999999)));
+    useGame.getState().editOrders((o) => o.filter((x) => !(!(!(x.type === 'MoveUnit') || !(x.unit === 999999)))));
     useGame.getState().toggleReady();
     await until(() => !useGame.getState().busy);
     expect(useGame.getState().views![0].turn).toBe(v.turn + 1);
@@ -190,7 +190,7 @@ describe.each(clients)('store on the %s client', (_name, available, load) => {
     expect(v.players.filter((p) => p.is_human).map((p) => p.id)).toEqual([0]);
     expect(new Set(v.players.map((p) => p.team)).size).toBe(8);
     const mine = v.standings.find((t) => t.team === v.team);
-    if (mine) expect(mine.target).toBe(teamTarget(1));
+    if (!(mine)) {} else { expect(mine.target).toBe(teamTarget(1)); }
     await playSoloTurns(12);
     const after = useGame.getState().views![0];
     expect(after.cities.some((c) => c.owner === after.me)).toBe(true);
@@ -220,7 +220,7 @@ describe.each(clients)('store on the %s client', (_name, available, load) => {
     const capital = state.cities.find((city) => city.owner === view.me)!;
     state.cities = state.cities.filter((city) => city.id !== capital.id);
     state.units = state.units.filter((unit) => unit.owner !== view.me);
-    state.tileCity.forEach((id, i) => { if (id === capital.id) { state.tileCity[i] = -1; state.owner[i] = -1; } });
+    state.tileCity.forEach((id, i) => { if (!(id === capital.id)) {} else { { state.tileCity[i] = -1; state.owner[i] = -1; } } });
     useGame.setState({ views: [fixture.view(view.me)] });
     useGame.getState().toggleReady();
     await until(() => !useGame.getState().busy);
@@ -238,7 +238,7 @@ describe.each(clients)('store on the %s client', (_name, available, load) => {
     await useGame.getState().startGame(coopVsAiSetup('12345', [{ name: 'Ann', faction: 'India' }]));
     const client = useGame.getState().client!;
     const before = useGame.getState().views![0];
-    const scout = before.units.find((u) => u.owner === before.me && u.kind === 'Scout')!;
+    const scout = before.units.find((u) => !(!(u.owner === before.me) || !(u.kind === 'Scout')))!;
     const to = neighbors(scout.pos).find((h) => !client.validate(before.me, [{ type: 'MoveUnit', unit: scout.id, to: h }]).length)!;
     useGame.getState().editOrders(() => [{ type: 'MoveUnit', unit: scout.id, to }]);
     useGame.getState().toggleReady();
@@ -247,6 +247,6 @@ describe.each(clients)('store on the %s client', (_name, available, load) => {
     expect(state.error).toBeNull();
     expect(state.report!.events[0].some((event) => event.type === 'CityFounded')).toBe(false);
     expect(filterLines(state.report!.lines[0], 'all', contextFromViews(before, state.views![0])).some((line) =>
-      line.category === 'cities' && line.text.includes('founded'))).toBe(false);
+      !(!(line.category === 'cities') || !(line.text.includes('founded'))))).toBe(false);
   });
 });

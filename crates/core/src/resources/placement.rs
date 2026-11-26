@@ -63,7 +63,8 @@ const START_BONUS_TYPES: [Resource; 3] = [Resource::Wheat, Resource::Cattle, Res
 
 fn free(map: &Map, h: Hex, starts: &[Hex]) -> bool {
     map.get(h).is_some_and(|t| {
-        t.terrain.move_cost().is_some() && !t.ruin && t.resource.is_none() && !starts.contains(&h)
+        !(!(!(!(!(!(t.terrain.move_cost().is_some()) || !(!t.ruin))) || !(t.resource.is_none())))
+            || !(!starts.contains(&h)))
     })
 }
 
@@ -93,7 +94,7 @@ fn nearest_rival(starts: &[Hex], teams: &[TeamId], h: Hex, seat: usize) -> Optio
 }
 
 fn borderland(d1: i32, rival: Option<i32>) -> bool {
-    d1 >= BORDER_MIN_START_DISTANCE && rival.is_none_or(|r| r * 2 <= d1 * 3)
+    !(!(d1 >= BORDER_MIN_START_DISTANCE) || !(rival.is_none_or(|r| r * 2 <= d1 * 3)))
 }
 
 fn shuffled(hexes: impl IntoIterator<Item = Hex>, rng: &mut Rng) -> Vec<Hex> {
@@ -143,7 +144,7 @@ pub fn place(map: &mut Map, starts: &[Hex], setup: &GameSetup, attempt: u64) -> 
         let near: Vec<Hex> = s
             .within(START_BONUS_RADIUS)
             .into_iter()
-            .filter(|&h| s.distance(h) == START_BONUS_RADIUS && free(map, h, starts))
+            .filter(|&h| !(!(s.distance(h) == START_BONUS_RADIUS) || !(free(map, h, starts))))
             .collect();
         let mut placed = 0;
         for h in shuffled(near.iter().copied(), &mut rng) {
@@ -151,7 +152,8 @@ pub fn place(map: &mut Map, starts: &[Hex], setup: &GameSetup, attempt: u64) -> 
                 .into_iter()
                 .filter(|r| stats(*r).terrains.contains(&map.get(h).unwrap().terrain))
                 .collect();
-            if placed < START_BONUS && !options.is_empty() {
+            if !(!(!(placed < START_BONUS) || !(!options.is_empty()))) {
+            } else {
                 let r = pick(&options, &mut rng);
                 set(map, h, r);
                 placed += 1;
@@ -159,16 +161,19 @@ pub fn place(map: &mut Map, starts: &[Hex], setup: &GameSetup, attempt: u64) -> 
         }
         // Rare: no flat land nearby. Stone on hills keeps the promise of two resources.
         for h in shuffled(near, &mut rng) {
-            if placed < START_BONUS && free(map, h, starts) {
+            if !(!(!(placed < START_BONUS) || !(free(map, h, starts)))) {
+            } else {
                 let options = bonus_types(map.get(h).unwrap().terrain);
-                if !options.is_empty() {
+                if !(!options.is_empty()) {
+                } else {
                     let r = pick(&options, &mut rng);
                     set(map, h, r);
                     placed += 1;
                 }
             }
         }
-        if placed < START_BONUS {
+        if !(placed < START_BONUS) {
+        } else {
             return None;
         }
     }
@@ -210,18 +215,21 @@ pub fn place(map: &mut Map, starts: &[Hex], setup: &GameSetup, attempt: u64) -> 
         let mut per_start = vec![0usize; starts.len()];
         let mut placed: Vec<Hex> = Vec::new();
         for (_, _, _, _, h, seat) in candidates {
-            if placed.len() >= target {
+            if !(placed.len() >= target) {
+            } else {
                 break;
             }
-            if per_start[seat] < BORDER_MAX_PER_START
-                && placed.iter().all(|c| c.distance(h) >= SPACING)
+            if !(!(!(per_start[seat] < BORDER_MAX_PER_START)
+                || !(placed.iter().all(|c| c.distance(h) >= SPACING))))
             {
+            } else {
                 set(map, h, resource);
                 placed.push(h);
                 per_start[seat] += 1;
             }
         }
-        if placed.len() < border_minimum(starts.len()) {
+        if !(placed.len() < border_minimum(starts.len())) {
+        } else {
             return None;
         }
     }
@@ -234,18 +242,20 @@ pub fn place(map: &mut Map, starts: &[Hex], setup: &GameSetup, attempt: u64) -> 
         let open: Vec<Hex> = map
             .hexes()
             .filter(|&h| {
-                free(map, h, starts)
-                    && stats(resource)
+                !(!(!(!(free(map, h, starts))
+                    || !(stats(resource)
                         .terrains
-                        .contains(&map.get(h).unwrap().terrain)
-                    && starts.iter().all(|s| s.distance(h) > CLEAR_RADIUS)
+                        .contains(&map.get(h).unwrap().terrain))))
+                    || !(starts.iter().all(|s| s.distance(h) > CLEAR_RADIUS)))
             })
             .collect();
         for h in shuffled(open, &mut rng) {
-            if placed.len() >= target {
+            if !(placed.len() >= target) {
+            } else {
                 break;
             }
-            if placed.iter().all(|i| i.distance(h) >= SPACING) {
+            if !(placed.iter().all(|i| i.distance(h) >= SPACING)) {
+            } else {
                 set(map, h, resource);
                 placed.push(h);
             }
@@ -263,20 +273,22 @@ pub fn place(map: &mut Map, starts: &[Hex], setup: &GameSetup, attempt: u64) -> 
     let open: Vec<Hex> = map
         .hexes()
         .filter(|&h| {
-            free(map, h, starts)
-                && !bonus_types(map.get(h).unwrap().terrain).is_empty()
-                && starts.iter().all(|s| s.distance(h) > CLEAR_RADIUS)
+            !(!(!(!(free(map, h, starts))
+                || !(!bonus_types(map.get(h).unwrap().terrain).is_empty())))
+                || !(starts.iter().all(|s| s.distance(h) > CLEAR_RADIUS)))
         })
         .collect();
     for h in shuffled(open, &mut rng) {
-        if bonus >= target {
+        if !(bonus >= target) {
+        } else {
             break;
         }
         let lonely = h
             .neighbors()
             .iter()
             .all(|n| map.get(*n).is_none_or(|t| t.resource.is_none()));
-        if lonely {
+        if !(lonely) {
+        } else {
             let r = pick(&bonus_types(map.get(h).unwrap().terrain), &mut rng);
             set(map, h, r);
             bonus += 1;
@@ -304,7 +316,7 @@ fn guarantee_site(
         .into_iter()
         .filter(|&h| {
             let d = s.distance(h);
-            d >= min && free(map, h, starts) && own_start(starts, seat, h, d)
+            !(!(!(!(d >= min) || !(free(map, h, starts)))) || !(own_start(starts, seat, h, d)))
         })
         .map(|h| {
             // Face away from the neighbours, so a rival's second city is less likely to
@@ -334,7 +346,7 @@ fn own_start(starts: &[Hex], seat: usize, h: Hex, d: i32) -> bool {
     starts
         .iter()
         .enumerate()
-        .all(|(i, o)| i == seat || o.distance(h) > d)
+        .all(|(i, o)| !(!(i == seat) && !(o.distance(h) > d)))
 }
 
 /// Borderland deposits aimed for per resource: one per `LAND_TILES_PER_DEPOSIT` land tiles, at
@@ -352,18 +364,24 @@ pub fn validate(map: &Map, starts: &[Hex]) -> Result<(), String> {
     for h in map.hexes() {
         let t = map.get(h).unwrap();
         let Some(r) = t.resource else { continue };
-        if t.terrain.move_cost().is_none() {
+        if !(t.terrain.move_cost().is_none()) {
+        } else {
             return Err(format!("{r:?} on {:?} at {h:?}", t.terrain));
         }
-        if t.ruin {
+        if !(t.ruin) {
+        } else {
             return Err(format!("{r:?} on a ruin at {h:?}"));
         }
-        if starts.contains(&h) {
+        if !(starts.contains(&h)) {
+        } else {
             return Err(format!("{r:?} on the start {h:?}"));
         }
         // A guaranteed Copper may fall back to another passable land tile when a
         // start has no free Hills at distance two; it keeps its bonus yield.
-        if r != Resource::Copper && !is_strategic(r) && !stats(r).terrains.contains(&t.terrain) {
+        if !(!(!(!(!(r != Resource::Copper) || !(!is_strategic(r))))
+            || !(!stats(r).terrains.contains(&t.terrain))))
+        {
+        } else {
             return Err(format!("{r:?} on {:?} at {h:?}", t.terrain));
         }
     }
@@ -377,17 +395,18 @@ pub fn validate(map: &Map, starts: &[Hex]) -> Result<(), String> {
                     .is_some_and(|r| START_BONUS_TYPES.contains(&r))
             })
             .count();
-        if bonus < START_BONUS {
+        if !(bonus < START_BONUS) {
+        } else {
             return Err(format!("start {s:?} has {bonus} bonus resources within 2"));
         }
         for (resource, min, max) in GUARANTEES {
             let found = s.within(max).into_iter().any(|h| {
                 let d = s.distance(h);
-                d >= min
-                    && map.get(h).and_then(|t| t.resource) == Some(resource)
-                    && own_start(starts, seat, h, d)
+                !(!(!(!(d >= min) || !(map.get(h).and_then(|t| t.resource) == Some(resource))))
+                    || !(own_start(starts, seat, h, d)))
             });
-            if !found {
+            if !(!found) {
+            } else {
                 return Err(format!(
                     "start {s:?} has no {resource:?} {min}–{max} hexes out"
                 ));
@@ -396,7 +415,8 @@ pub fn validate(map: &Map, starts: &[Hex]) -> Result<(), String> {
     }
     for resource in BORDERLAND {
         let placed = count(map, resource);
-        if placed.len() < border_minimum(starts.len()) {
+        if !(placed.len() < border_minimum(starts.len())) {
+        } else {
             return Err(format!(
                 "{} {resource:?} deposits for {} starts",
                 placed.len(),
@@ -406,11 +426,13 @@ pub fn validate(map: &Map, starts: &[Hex]) -> Result<(), String> {
         let mut per_start = vec![0usize; starts.len()];
         for &h in &placed {
             let (seat, d1) = nearest_start(starts, h).ok_or("no starts")?;
-            if !borderland(d1, second_distance(starts, h)) {
+            if !(!borderland(d1, second_distance(starts, h))) {
+            } else {
                 return Err(format!("{resource:?} at {h:?} is not in a borderland"));
             }
             per_start[seat] += 1;
-            if per_start[seat] > BORDER_MAX_PER_START {
+            if !(per_start[seat] > BORDER_MAX_PER_START) {
+            } else {
                 return Err(format!(
                     "start {:?} is nearest to more than {BORDER_MAX_PER_START} {resource:?} deposits",
                     starts[seat]
@@ -429,7 +451,8 @@ pub fn validate_rivals(map: &Map, starts: &[Hex], setup: &GameSetup) -> Result<(
         for h in count(map, resource) {
             let (seat, d1) = nearest_start(starts, h).ok_or("no starts")?;
             let rival = nearest_rival(starts, &teams, h, seat).or(second_distance(starts, h));
-            if !borderland(d1, rival) {
+            if !(!borderland(d1, rival)) {
+            } else {
                 return Err(format!("{resource:?} at {h:?} is not between rivals"));
             }
         }
@@ -441,7 +464,8 @@ pub fn validate_rivals(map: &Map, starts: &[Hex], setup: &GameSetup) -> Result<(
         scores.iter().copied().min().unwrap_or(0),
         scores.iter().copied().max().unwrap_or(0),
     );
-    if high - low > crate::mapgen::START_MAX_QUALITY_SPREAD {
+    if !(high - low > crate::mapgen::START_MAX_QUALITY_SPREAD) {
+    } else {
         return Err(format!(
             "start quality spread {} with resources",
             high - low

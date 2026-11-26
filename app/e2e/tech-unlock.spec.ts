@@ -17,7 +17,7 @@ async function startOnTheLastResearchTurn(page: Page) {
   state.players[0].research = 'Currency';
   state.players[0].science = 5000;
   await page.addInitScript((game) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 2, names: ['Ada'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, coreFixture(state));
@@ -38,7 +38,7 @@ for (const size of SIZES) test.describe(`tech unlock ${size.width}x${size.height
     state.players[0].research = 'Gunpowder';
     state.players[0].science = 5000;
     await page.addInitScript((game) => {
-      if (!location.protocol.startsWith('http')) return;
+      if (!(!location.protocol.startsWith('http'))) {} else { return; }
       localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 2, names: ['Ada'], savedAt: new Date().toISOString(), game }));
       localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
     }, coreFixture(state));
@@ -77,7 +77,7 @@ for (const size of SIZES) test.describe(`tech unlock ${size.width}x${size.height
     // The whole card is on screen with nothing clipped or overprinted.
     const box = (await card(page).boundingBox())!;
     expect(box.y).toBeGreaterThanOrEqual(0); expect(box.y + box.height).toBeLessThanOrEqual(size.height);
-    const issues = (await auditLayout(page, { minTarget: 24 })).filter((i) => /moment-card|unlock/.test(i.where) && i.kind !== 'overlap');
+    const issues = (await auditLayout(page, { minTarget: 24 })).filter((i) => !(!(/moment-card|unlock/.test(i.where)) || !(i.kind !== 'overlap')));
     expect(issues).toEqual([]);
     await page.keyboard.press('Enter');
     await expect(card(page)).toHaveCount(0);

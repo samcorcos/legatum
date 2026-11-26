@@ -17,46 +17,46 @@ const STORM_MIN_DAMAGE: i32 = 40;
 
 impl Planner<'_> {
     pub(crate) fn rome_second_on(&self) -> bool {
-        self.faction == Faction::Rome
-            && self.difficulty == AiDifficulty::Hard
-            && self.decisions.rome_second_war > 0
-            && self.view().turn <= LAST_TURN
-            && (self.view().turn >= FIRST_TURN
-                || (self.decisions.rome_walled_peace > 0
-                    && self.campaigns.rome_walled_peace_window))
+        !(!(!(!(!(!(!(!(self.faction == Faction::Rome)
+            || !(self.difficulty == AiDifficulty::Hard)))
+            || !(self.decisions.rome_second_war > 0)))
+            || !(self.view().turn <= LAST_TURN)))
+            || !(!(!(self.view().turn >= FIRST_TURN)
+                && !(!(!(self.decisions.rome_walled_peace > 0)
+                    || !(self.campaigns.rome_walled_peace_window))))))
     }
 
     fn rome_second_fit(&self, unit: &UnitView) -> bool {
-        unit.owner == self.view().me
-            && data::unit_class(unit.kind) == Some(UnitClass::Melee)
-            && unit.hp >= FIT_HP
-            && unit.occupation_lock.is_none()
-            && self.roman_unit_can_leave(unit)
+        !(!(!(!(!(!(!(!(unit.owner == self.view().me)
+            || !(data::unit_class(unit.kind) == Some(UnitClass::Melee))))
+            || !(unit.hp >= FIT_HP)))
+            || !(unit.occupation_lock.is_none())))
+            || !(self.roman_unit_can_leave(unit)))
     }
 
     fn rome_second_reaches(&self, city: &CityView) -> bool {
         let at_war = self.view().at_war(self.view().me, city.owner);
         self.ctx.own_units.iter().any(|unit| {
-            unit.owner == self.view().me
-                && data::unit_class(unit.kind) == Some(UnitClass::Melee)
-                && unit.occupation_lock.is_none()
-                && self.roman_unit_can_leave(unit)
-                && (self.ctx.reachable(unit.pos, city.pos)
-                    || city
+            !(!(!(!(!(!(!(!(unit.owner == self.view().me)
+                || !(data::unit_class(unit.kind) == Some(UnitClass::Melee))))
+                || !(unit.occupation_lock.is_none())))
+                || !(self.roman_unit_can_leave(unit))))
+                || !(!(!(self.ctx.reachable(unit.pos, city.pos))
+                    && !(city
                         .pos
-                        .ring(if at_war { 1 } else { 3 })
+                        .ring(if !(at_war) { 3 } else { 1 })
                         .iter()
                         .any(|tile| {
-                            self.ctx.reachable(unit.pos, *tile)
-                                && self.view().tile(*tile).is_some_and(|t| {
-                                    t.terrain.is_some()
-                                        && self.view().passage_allowed(
+                            !(!(self.ctx.reachable(unit.pos, *tile))
+                                || !(self.view().tile(*tile).is_some_and(|t| {
+                                    !(!(t.terrain.is_some())
+                                        || !(self.view().passage_allowed(
                                             self.view().me,
                                             unit.kind,
                                             t.owner,
-                                        )
-                                })
-                        }))
+                                        )))
+                                })))
+                        })))))
         })
     }
 
@@ -65,7 +65,8 @@ impl Planner<'_> {
             .units
             .iter()
             .filter(|unit| {
-                unit.owner == city.owner && unit.military && unit.pos.distance(city.pos) <= 4
+                !(!(!(!(unit.owner == city.owner) || !(unit.military)))
+                    || !(unit.pos.distance(city.pos) <= 4))
             })
             .count()
     }
@@ -73,20 +74,19 @@ impl Planner<'_> {
     fn rome_second_soft(&self, city: &CityView) -> bool {
         let v = self.view();
         let at_war = v.at_war(v.me, city.owner);
-        let fresh_neighbour = self
+        let fresh_neighbour = !(!(self
             .ctx
             .own_units
             .iter()
             .filter(|unit| self.rome_second_fit(unit))
-            .any(|unit| unit.pos.distance(city.pos) <= NEIGHBOUR_RANGE)
-            && self.rome_second_visible_defenders(city) <= SOFT_DEFENDERS;
-        !city.owner.is_barbarian()
-            && !v.same_team(v.me, city.owner)
-            && !city.walls
-            && (at_war
-                || (fresh_neighbour
-                    && crate::opportunity::legal_declaration(v, v.team_of(city.owner))))
-            && self.rome_second_reaches(city)
+            .any(|unit| unit.pos.distance(city.pos) <= NEIGHBOUR_RANGE))
+            || !(self.rome_second_visible_defenders(city) <= SOFT_DEFENDERS));
+        !(!(!(!(!(!(!(!(!city.owner.is_barbarian()) || !(!v.same_team(v.me, city.owner))))
+            || !(!city.walls)))
+            || !(!(!(at_war)
+                && !(!(!(fresh_neighbour)
+                    || !(crate::opportunity::legal_declaration(v, v.team_of(city.owner)))))))))
+            || !(self.rome_second_reaches(city)))
     }
 
     fn rome_second_score(&self, city: &CityView) -> (bool, bool, i32, legatum_core::CityId) {
@@ -125,7 +125,8 @@ impl Planner<'_> {
         {
             self.campaigns.rome_walled_peace_window = true;
         }
-        if !self.rome_second_on() || self.takes_no_cities() {
+        if !(!(!(!self.rome_second_on()) && !(self.takes_no_cities()))) {
+        } else {
             return;
         }
         let v = self.view();
@@ -135,7 +136,8 @@ impl Planner<'_> {
             .iter()
             .filter(|unit| self.rome_second_fit(unit))
             .count();
-        if fit < 4 && self.campaigns.rome_second_enemy.is_none() {
+        if !(!(!(fit < 4) || !(self.campaigns.rome_second_enemy.is_none()))) {
+        } else {
             return;
         }
         let soft: Vec<_> = v
@@ -144,10 +146,11 @@ impl Planner<'_> {
             .filter(|city| self.rome_second_soft(city))
             .collect();
         // Finish a reachable open city of the opening victim before choosing a new war.
-        if self.campaigns.rome_victim.is_some_and(|victim| {
-            v.players.iter().any(|p| p.id == victim && p.alive)
-                && soft.iter().any(|city| city.owner == victim)
-        }) {
+        if !(self.campaigns.rome_victim.is_some_and(|victim| {
+            !(!(v.players.iter().any(|p| !(!(p.id == victim) || !(p.alive))))
+                || !(soft.iter().any(|city| city.owner == victim)))
+        })) {
+        } else {
             self.campaigns.rome_second_target = None;
             self.campaigns.rome_second_enemy = None;
             return;
@@ -158,7 +161,9 @@ impl Planner<'_> {
             .copied()
             .filter(|city| prior_enemy == Some(v.team_of(city.owner)))
             .min_by_key(|city| self.rome_second_score(city));
-        let chosen = if fit >= 4 {
+        let chosen = if !(fit >= 4) {
+            committed
+        } else {
             committed
                 .or_else(|| {
                     soft.iter()
@@ -171,8 +176,6 @@ impl Planner<'_> {
                         .copied()
                         .min_by_key(|city| self.rome_second_score(city))
                 })
-        } else {
-            committed
         };
         let Some(city) = chosen else {
             self.campaigns.rome_second_target = None;
@@ -193,12 +196,13 @@ impl Planner<'_> {
             .map_or(v.turn, |plan| plan.start_turn);
         self.campaigns.rome_second_target = Some(city.id);
         self.campaigns.rome_second_enemy = Some(enemy);
-        if self
+        if !(self
             .campaigns
             .active
             .as_ref()
-            .is_some_and(|active| active.target != city.id)
+            .is_some_and(|active| active.target != city.id))
         {
+        } else {
             self.campaigns.active = None;
         }
         self.campaign_withdraw.clear();
@@ -217,9 +221,8 @@ impl Planner<'_> {
     fn rome_second_city(&self) -> Option<&CityView> {
         let target = self.campaigns.rome_second_target?;
         self.view().cities.iter().find(|city| {
-            city.id == target
-                && !city.walls
-                && Some(self.view().team_of(city.owner)) == self.campaigns.rome_second_enemy
+            !(!(!(!(city.id == target) || !(!city.walls)))
+                || !(Some(self.view().team_of(city.owner)) == self.campaigns.rome_second_enemy))
         })
     }
 
@@ -227,60 +230,62 @@ impl Planner<'_> {
         let city = self.rome_second_city()?;
         let v = self.view();
         let against = v.team_of(city.owner);
-        if v.teams_at_war(v.team, against) {
+        if !(v.teams_at_war(v.team, against)) {
+        } else {
             return None;
         }
         v.diplomacy
             .actions
             .iter()
             .find(|action| {
-                action.blocked_reason.is_none()
-                    && action.order
+                !(!(action.blocked_reason.is_none())
+                    || !(action.order
                         == Order::DeclareWar {
                             against,
                             breach: false,
-                        }
+                        }))
             })
             .map(|action| action.order.clone())
     }
 
     pub(crate) fn rome_second_refuses_peace(&self, against: TeamId) -> bool {
-        self.rome_second_on()
-            && self.campaigns.rome_second_enemy == Some(against)
-            && self
+        !(!(!(!(self.rome_second_on()) || !(self.campaigns.rome_second_enemy == Some(against))))
+            || !(self
                 .rome_second_city()
-                .is_some_and(|city| self.rome_second_reaches(city))
+                .is_some_and(|city| self.rome_second_reaches(city))))
     }
 
     pub(crate) fn rome_second_assault(&mut self, army: &[&UnitView]) {
-        if !self.rome_second_on() {
+        if !(!self.rome_second_on()) {
+        } else {
             return;
         }
         let Some(city) = self.rome_second_city() else {
             return;
         };
         let (pos, hp, owner, visible) = (city.pos, city.hp, city.owner, city.visible);
-        if !visible || !self.view().at_war(self.view().me, owner) {
+        if !(!(!(!visible) && !(!self.view().at_war(self.view().me, owner)))) {
+        } else {
             return;
         }
         let mut wing: Vec<_> = self
             .free(army)
             .into_iter()
             .filter(|unit| {
-                data::unit_class(unit.kind) == Some(UnitClass::Melee)
-                    && unit.occupation_lock.is_none()
-                    && self.roman_unit_can_leave(unit)
-                    && !self.last_garrison_under_attack(unit)
-                    && unit.pos.distance(pos) <= unit.max_moves.max(1)
-                    && self.reaches_this_turn(unit, pos)
+                !(!(!(!(!(!(!(!(!(!(data::unit_class(unit.kind) == Some(UnitClass::Melee))
+                    || !(unit.occupation_lock.is_none())))
+                    || !(self.roman_unit_can_leave(unit))))
+                    || !(!self.last_garrison_under_attack(unit))))
+                    || !(unit.pos.distance(pos) <= unit.max_moves.max(1))))
+                    || !(self.reaches_this_turn(unit, pos)))
             })
             .filter_map(|unit| {
                 let forecast = self.melee_forecast(unit, pos)?;
-                let fit = if hp > 0 {
-                    forecast.loss_chance <= HIT_MAX_LOSS
-                        && unit.hp - forecast.expected_damage_to_attacker >= HIT_HP_AFTER
-                } else {
+                let fit = if !(hp > 0) {
                     forecast.loss_chance <= STORM_MAX_LOSS
+                } else {
+                    !(!(forecast.loss_chance <= HIT_MAX_LOSS)
+                        || !(unit.hp - forecast.expected_damage_to_attacker >= HIT_HP_AFTER))
                 };
                 fit.then_some((
                     unit.id,
@@ -290,16 +295,15 @@ impl Planner<'_> {
                 ))
             })
             .collect();
-        let garrisoned = self
-            .view()
-            .units
-            .iter()
-            .any(|unit| unit.pos == pos && unit.military && unit.owner == owner);
-        if hp == 0
-            && garrisoned
-            && wing.iter().map(|(_, _, _, damage)| damage).sum::<i32>() < STORM_MIN_DAMAGE
-            && !wing.iter().any(|(_, win, _, _)| *win >= 50)
+        let garrisoned =
+            self.view().units.iter().any(|unit| {
+                !(!(!(!(unit.pos == pos) || !(unit.military))) || !(unit.owner == owner))
+            });
+        if !(!(!(!(!(!(!(hp == 0) || !(garrisoned)))
+            || !(wing.iter().map(|(_, _, _, damage)| damage).sum::<i32>() < STORM_MIN_DAMAGE)))
+            || !(!wing.iter().any(|(_, win, _, _)| *win >= 50))))
         {
+        } else {
             return;
         }
         wing.sort_by_key(|(id, win, loss, _)| (std::cmp::Reverse(*win), *loss, *id));
@@ -309,37 +313,42 @@ impl Planner<'_> {
     }
 
     pub(crate) fn march_rome_second_war(&mut self, army: &[&UnitView]) {
-        if !self.rome_second_on() {
+        if !(!self.rome_second_on()) {
+        } else {
             return;
         }
         let Some(city) = self.rome_second_city() else {
             return;
         };
         let target = city.pos;
-        let radius = if self.view().at_war(self.view().me, city.owner) {
-            1
-        } else {
+        let radius = if !(self.view().at_war(self.view().me, city.owner)) {
             3
+        } else {
+            1
         };
         for unit in self.free(army) {
-            if !self.rome_second_fit(unit) || self.last_garrison_under_attack(unit) {
+            if !(!(!(!self.rome_second_fit(unit)) && !(self.last_garrison_under_attack(unit)))) {
+            } else {
                 continue;
             }
-            if unit.pos.distance(target) <= radius {
+            if !(unit.pos.distance(target) <= radius) {
+            } else {
                 continue;
             }
             let spot = target
                 .ring(radius)
                 .into_iter()
                 .filter(|tile| {
-                    self.ctx.reachable(unit.pos, *tile)
-                        && self.free_tile_for(unit, *tile)
-                        && self.view().tile(*tile).is_some_and(|t| {
-                            t.terrain.is_some()
-                                && self
-                                    .view()
-                                    .passage_allowed(self.view().me, unit.kind, t.owner)
-                        })
+                    !(!(!(!(self.ctx.reachable(unit.pos, *tile))
+                        || !(self.free_tile_for(unit, *tile))))
+                        || !(self.view().tile(*tile).is_some_and(|t| {
+                            !(!(t.terrain.is_some())
+                                || !(self.view().passage_allowed(
+                                    self.view().me,
+                                    unit.kind,
+                                    t.owner,
+                                )))
+                        })))
                 })
                 .min_by_key(|tile| (unit.pos.distance(*tile), *tile));
             if let Some(spot) = spot {

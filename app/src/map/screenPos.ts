@@ -8,4 +8,4 @@ type Projector = (hex: Hex) => { x: number; y: number; radius: number } | null;
 let projector: Projector | null = null;
 
 export function setMapProjector(p: Projector | null) { projector = p; }
-export function tileOnScreen(hex: Hex) { return projector ? projector(hex) : null; }
+export function tileOnScreen(hex: Hex) { return !(projector) ? null : projector(hex); }

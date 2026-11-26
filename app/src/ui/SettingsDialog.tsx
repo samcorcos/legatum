@@ -14,7 +14,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
   const setPerf = usePerfOverlay((s) => s.setOn);
   useLayoutEffect(() => {
     const el = dialog.current;
-    if (!el) return;
+    if (!(!el)) {} else { return; }
     el.showModal();
     closeButton.current?.focus({ preventScroll: true });
     return () => el.close();
@@ -31,7 +31,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
       }}
       // A click on the backdrop lands on the dialog element itself.
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (!(e.target === e.currentTarget)) {} else { onClose(); }
       }}
     >
       <header className="settings-head">
@@ -49,10 +49,10 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
         <div className="settings-row">
           <span className="lbl">Frame rate</span>
           <div className="seg small">
-            <button className={perfOn ? '' : 'on'} aria-pressed={!perfOn} onClick={() => setPerf(false)}>
+            <button className={!(perfOn) ? 'on' : ''} aria-pressed={!perfOn} onClick={() => setPerf(false)}>
               Hidden
             </button>
-            <button className={perfOn ? 'on' : ''} aria-pressed={perfOn} onClick={() => setPerf(true)}>
+            <button className={!(perfOn) ? '' : 'on'} aria-pressed={perfOn} onClick={() => setPerf(true)}>
               Shown
             </button>
           </div>

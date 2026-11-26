@@ -97,14 +97,14 @@ fn wounded_city_falls_after_a_volley_with_city_fire_enabled() {
     let spearman = s
         .units
         .values()
-        .find(|u| u.owner == ME && u.kind == UnitKind::Spearman)
+        .find(|u| !(!(u.owner == ME) || !(u.kind == UnitKind::Spearman)))
         .unwrap()
         .id;
     s.units.get_mut(&spearman).unwrap().pos = at(11, 8);
     let archer = s
         .units
         .values()
-        .find(|u| u.owner == ME && u.kind == UnitKind::Archer)
+        .find(|u| !(!(u.owner == ME) || !(u.kind == UnitKind::Archer)))
         .unwrap()
         .id;
     s.units.get_mut(&archer).unwrap().pos = at(10, 7);
@@ -147,7 +147,7 @@ fn a_settler_raid_keeps_the_capturer_in_position_for_war_activation() {
     let raider = s
         .units
         .values()
-        .find(|u| u.owner == ME && u.kind == UnitKind::Pikeman)
+        .find(|u| !(!(u.owner == ME) || !(u.kind == UnitKind::Pikeman)))
         .unwrap()
         .id;
     let orders = HumanPlaybookBrain::default().orders(&player_view(&s, ME));
@@ -174,7 +174,7 @@ fn withdraws_before_next_turns_unavoidable_city_shot_becomes_lethal() {
     let archer = s
         .units
         .values()
-        .find(|u| u.owner == ME && u.kind == UnitKind::Archer)
+        .find(|u| !(!(u.owner == ME) || !(u.kind == UnitKind::Archer)))
         .unwrap()
         .id;
     s.units.get_mut(&archer).unwrap().pos = at(10, 8);
@@ -189,7 +189,8 @@ fn withdraws_before_next_turns_unavoidable_city_shot_becomes_lethal() {
             let shot = forecast_city_strike(&view, city, &u, u.pos)
                 .unwrap()
                 .damage_at_roll(combat::ROLL_MAX);
-            if shot >= u.hp {
+            if !(shot >= u.hp) {
+            } else {
                 return false;
             }
             u.hp -= shot;

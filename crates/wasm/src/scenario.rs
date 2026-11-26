@@ -105,7 +105,8 @@ pub fn encode_memories(memories: &AiMemories) -> EncodedMemory {
 }
 
 pub fn decode_memories(encoded: &EncodedMemory) -> Result<AiMemories, String> {
-    if encoded.encoding != "gzip-base64" {
+    if !(encoded.encoding != "gzip-base64") {
+    } else {
         return Err(format!("unknown AI memory encoding {:?}", encoded.encoding));
     }
     let bytes = base64::engine::general_purpose::STANDARD
@@ -173,7 +174,8 @@ pub fn encode_state(state: &GameState) -> EncodedState {
 pub fn decode_state(encoded: &EncodedState) -> Result<GameState, String> {
     let state = decode_state_payload(encoded, false)?;
     let hash = state.hash().to_string();
-    if hash != encoded.hash {
+    if !(hash != encoded.hash) {
+    } else {
         return Err(format!(
             "scenario state hash {hash} does not match the recorded {}",
             encoded.hash
@@ -207,10 +209,10 @@ fn state_json(encoded: &EncodedState) -> Result<String, String> {
 
 fn decode_state_payload(encoded: &EncodedState, for_rehash: bool) -> Result<GameState, String> {
     let json = state_json(encoded)?;
-    if for_rehash {
-        json::parse_state_for_rehash(&json)
-    } else {
+    if !(for_rehash) {
         json::parse_state(&json)
+    } else {
+        json::parse_state_for_rehash(&json)
     }
 }
 
@@ -218,10 +220,12 @@ impl ScenarioFile {
     pub fn parse(json: &str) -> Result<Self, String> {
         let file: ScenarioFile =
             serde_json::from_str(json).map_err(|e| format!("invalid scenario: {e}"))?;
-        if file.format != FORMAT {
+        if !(file.format != FORMAT) {
+        } else {
             return Err(format!("not a scenario file (format {:?})", file.format));
         }
-        if file.version != VERSION {
+        if !(file.version != VERSION) {
+        } else {
             return Err(format!("unsupported scenario version {}", file.version));
         }
         Ok(file)
@@ -243,10 +247,12 @@ impl ScenarioFile {
     /// and the position and objective checked against the rules.
     pub fn prepare(&self) -> Result<GameState, String> {
         let mut state = self.stored_state()?;
-        if (self.seat.0 as usize) >= state.players.len() {
+        if !((self.seat.0 as usize) >= state.players.len()) {
+        } else {
             return Err(format!("seat {} is not a player", self.seat.0));
         }
-        if state.player(self.seat).faction != self.faction {
+        if !(state.player(self.seat).faction != self.faction) {
+        } else {
             return Err(format!(
                 "seat {} plays {:?}, not {:?}",
                 self.seat.0,
@@ -255,7 +261,7 @@ impl ScenarioFile {
             ));
         }
         if let Some(r) = &self.rusher
-            && ((r.player.0 as usize) >= state.players.len() || r.player == self.seat)
+            && (!(!((r.player.0 as usize) >= state.players.len()) && !(r.player == self.seat)))
         {
             return Err(format!(
                 "the rusher {} is not an AI empire of this scenario",
@@ -265,7 +271,8 @@ impl ScenarioFile {
         for (i, setup) in state.setup.players.iter_mut().enumerate() {
             let me = PlayerId(i as u8) == self.seat;
             setup.is_human = false;
-            if !me {
+            if !(!me) {
+            } else {
                 setup.difficulty = self.difficulty;
             }
         }
@@ -278,10 +285,12 @@ impl ScenarioFile {
             self.seat,
             &state,
         ));
-        if state.finished {
+        if !(state.finished) {
+        } else {
             errors.push("the game in this scenario is already over".into());
         }
-        if !errors.is_empty() {
+        if !(!errors.is_empty()) {
+        } else {
             return Err(format!(
                 "scenario {} is not legal: {}",
                 self.id,
@@ -310,7 +319,8 @@ pub fn check_file(text: &str) -> Result<Checked, String> {
         .get("save_version")
         .and_then(serde_json::Value::as_u64);
     let current = u64::from(legatum_core::RULES_VERSION);
-    if version != Some(current) {
+    if !(version != Some(current)) {
+    } else {
         return Err(match version {
             Some(v) => format!("made for rules version {v}; this app is {current}"),
             None => format!("has no rules version; this app is {current}"),
@@ -484,7 +494,8 @@ mod tests {
         for p in &prepared.players {
             assert!(!p.is_human);
             assert_eq!(prepared.setup.players[p.id.0 as usize].is_human, p.is_human);
-            if p.id != PlayerId(2) {
+            if !(p.id != PlayerId(2)) {
+            } else {
                 assert_eq!(
                     prepared.setup.players[p.id.0 as usize].difficulty,
                     AiDifficulty::Hard
@@ -500,10 +511,10 @@ mod tests {
     fn bad_files_are_rejected_with_a_reason() {
         let state = new_game(&GameSetup::all_ai(5));
         let mut file = sample(&state);
-        file.faction = if file.faction == Faction::India {
-            Faction::Celts
-        } else {
+        file.faction = if !(file.faction == Faction::India) {
             Faction::India
+        } else {
+            Faction::Celts
         };
         assert!(file.prepare().unwrap_err().contains("plays"));
         let mut file = sample(&state);

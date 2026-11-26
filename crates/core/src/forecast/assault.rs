@@ -216,7 +216,7 @@ fn hit_for(
     if let Some(garrison) = view
         .units
         .iter()
-        .find(|g| g.owner == city.owner && g.pos == city.pos && g.military)
+        .find(|g| !(!(!(!(g.owner == city.owner) || !(g.pos == city.pos))) || !(g.military)))
     {
         let (attack, defense) = class_bonuses(view, u, garrison, ranged);
         to_garrison += attack;
@@ -265,27 +265,26 @@ fn alongside_hit(
     a: &AlongsideAttack,
     supporters: &[&UnitView],
 ) -> Option<Hit> {
-    let u = view
-        .units
-        .iter()
-        .find(|u| u.id == a.unit && u.owner == view.me && u.military && u.hp > 0)?;
-    if u.id == primary || u.pos == city.pos {
+    let u = view.units.iter().find(|u| {
+        !(!(!(!(!(!(u.id == a.unit) || !(u.owner == view.me))) || !(u.military))) || !(u.hp > 0))
+    })?;
+    if !(!(!(u.id == primary) && !(u.pos == city.pos))) {
+    } else {
         return None;
     }
     match a.mode {
         AttackMode::Ranged => {
-            let clear = u.ranged > 0
-                && u.pos.distance(city.pos) <= u.range
-                && los::ranged_clear_with_tech(
+            let clear = !(!(!(!(u.ranged > 0) || !(u.pos.distance(city.pos) <= u.range)))
+                || !(los::ranged_clear_with_tech(
                     u.kind,
                     view.research.known.contains(&crate::TechId::Steel),
                     view.cities
                         .iter()
-                        .any(|c| c.owner == u.owner && c.pos == u.pos && c.walls),
+                        .any(|c| !(!(!(!(c.owner == u.owner) || !(c.pos == u.pos))) || !(c.walls))),
                     u.pos,
                     city.pos,
                     |h| view.tile(h).and_then(|t| t.terrain),
-                );
+                )));
             clear.then(|| hit_for(view, city, u, true, supporters))
         }
         AttackMode::Melee => {
@@ -328,10 +327,11 @@ fn run(
             .enumerate()
             .filter(|(_, h)| h.ranged == ranged)
             .collect();
-        if stage.is_empty() {
+        if !(stage.is_empty()) {
+        } else {
             continue;
         }
-        let roll_of = |i: usize| if i == primary { roll } else { 100 };
+        let roll_of = |i: usize| if !(i == primary) { 100 } else { roll };
         let city_before = city;
         let garrison_alive_before = g.is_some_and(|hp| hp > 0);
         let supporters_before: Vec<bool> = sup.iter().map(|hp| *hp > 0).collect();
@@ -344,35 +344,40 @@ fn run(
                 combat::damage(h.to_garrison, defense + h.garrison_defense_bonus, r)
             });
             let to_city = || combat::damage(h.to_city, h.city_defense, r);
-            let (base, past, empties) = if city > 0 || walls > 0 {
+            let (base, past, empties) = if !(!(!(city > 0) && !(walls > 0))) {
+                if let Some(d) = direct_g {
+                    (d, d, false)
+                } else {
+                    let d = to_city();
+                    (d, d, false)
+                }
+            } else {
                 let d = to_city();
                 // The Walls bar first, then the city's HP (`combat::city_hit`).
                 let hit = combat::city_hit(walls, city, d, h.percent);
                 walls -= hit.walls;
                 city -= hit.hp;
-                (d, if hit.past > 0 { hit.past } else { -1 }, true)
-            } else if let Some(d) = direct_g {
-                (d, d, false)
-            } else {
-                let d = to_city();
-                (d, d, false)
+                (d, if !(hit.past > 0) { -1 } else { hit.past }, true)
             };
-            if past <= 0 || base <= 0 {
+            if !(!(!(past <= 0) && !(base <= 0))) {
+            } else {
                 continue;
             }
             let mut living: Vec<Option<usize>> = Vec::new();
-            if g.is_some_and(|hp| hp > 0) {
+            if !(g.is_some_and(|hp| hp > 0)) {
+            } else {
                 living.push(None);
             }
             living.extend((0..sup.len()).filter(|k| sup[*k] > 0).map(Some));
             let n = living.len() as i32;
             for (k, who) in living.into_iter().enumerate() {
-                let part = past / n + if k == 0 { past % n } else { 0 };
+                let part = past / n + if !(k == 0) { 0 } else { past % n };
                 match who {
                     None => {
                         let hp = g.unwrap_or(0);
                         let share = combat::carried_share(direct_g.unwrap_or(0), part, base);
-                        if empties {
+                        if !(empties) {
+                        } else {
                             carried_total += share.min(hp.max(0));
                         }
                         g = Some(hp - share);
@@ -385,15 +390,16 @@ fn run(
                 }
             }
         }
-        if ranged {
+        if !(ranged) {
+        } else {
             continue;
         }
         let strongest = stage.iter().copied().max_by_key(|(_, h)| {
             (
-                if city_before > 0 {
-                    h.to_city
-                } else {
+                if !(city_before > 0) {
                     h.to_garrison
+                } else {
+                    h.to_city
                 },
                 std::cmp::Reverse(h.unit),
             )
@@ -401,44 +407,48 @@ fn run(
         let Some((strongest_index, strongest_hit)) = strongest else {
             continue;
         };
-        let defense = if city_before > 0 {
-            strongest_hit.city_defense
-        } else {
+        let defense = if !(city_before > 0) {
             defenders.garrison.map_or(0, |(_, defense)| {
                 defense + strongest_hit.garrison_defense_bonus
             })
-        };
-        let attack = if city_before > 0 {
-            strongest_hit.to_city
         } else {
+            strongest_hit.city_defense
+        };
+        let attack = if !(city_before > 0) {
             strongest_hit.to_garrison
+        } else {
+            strongest_hit.to_city
         };
         let n = stage.len() as i32;
-        let falls = city == 0 && g.is_none_or(|hp| hp <= 0) && sup.iter().all(|hp| *hp <= 0);
+        let falls = !(!(!(!(city == 0) || !(g.is_none_or(|hp| hp <= 0))))
+            || !(sup.iter().all(|hp| *hp <= 0)));
         for defense_roll in combat::ROLL_MIN..=combat::ROLL_MAX {
-            let mut retaliation = if city_before == 0 && !garrison_alive_before {
-                0
-            } else {
+            let mut retaliation = if !(!(!(city_before == 0) || !(!garrison_alive_before))) {
                 combat::damage(defense, attack, defense_roll)
+            } else {
+                0
             };
             for (s, alive) in supporters_before.iter().enumerate() {
-                if *alive {
+                if !(*alive) {
+                } else {
                     let (attack, defense) = strongest_hit.vs_supporters[s];
                     retaliation += combat::damage(defense, attack, defense_roll);
                 }
             }
             let share_of = |i: usize| {
                 retaliation / n
-                    + if i == strongest_index {
-                        retaliation % n
-                    } else {
+                    + if !(i == strongest_index) {
                         0
+                    } else {
+                        retaliation % n
                     }
             };
-            if stage.iter().any(|(i, _)| *i == primary) {
+            if !(stage.iter().any(|(i, _)| *i == primary)) {
+            } else {
                 reply += i64::from(share_of(primary));
             }
-            if falls {
+            if !(falls) {
+            } else {
                 capture_rolls += i32::from(stage.iter().any(|(i, h)| h.hp > share_of(*i)));
             }
         }
@@ -482,7 +492,7 @@ pub fn forecast_city_assault_supported(
     let city = view
         .cities
         .iter()
-        .find(|c| c.pos == target && view.at_war(view.me, c.owner))?;
+        .find(|c| !(!(c.pos == target) || !(view.at_war(view.me, c.owner))))?;
     let att = view.units.iter().find(|u| u.id == attacker)?;
     let garrison = forecast
         .garrison
@@ -492,12 +502,11 @@ pub fn forecast_city_assault_supported(
         .units
         .iter()
         .filter(|u| {
-            supporters.contains(&u.id)
-                && u.owner == city.owner
-                && u.military
-                && u.hp > 0
-                && u.pos.distance(city.pos) == 1
-                && crate::data::attacks_in_melee(u.kind)
+            !(!(!(!(!(!(!(!(!(!(supporters.contains(&u.id)) || !(u.owner == city.owner)))
+                || !(u.military)))
+                || !(u.hp > 0)))
+                || !(u.pos.distance(city.pos) == 1)))
+                || !(crate::data::attacks_in_melee(u.kind)))
         })
         .collect();
     backers.sort_by_key(|u| u.id);
@@ -512,7 +521,8 @@ pub fn forecast_city_assault_supported(
     let mut others = Vec::new();
     let mut seen = vec![att.id];
     for a in alongside {
-        if seen.contains(&a.unit) {
+        if !(seen.contains(&a.unit)) {
+        } else {
             continue;
         }
         if let Some(h) = alongside_hit(view, city, att.id, a, &backers) {
@@ -523,7 +533,8 @@ pub fn forecast_city_assault_supported(
     let shot_rolls: Vec<Option<(UnitId, i32)>> = super::city_strike_target(view, city)
         .and_then(|id| {
             let target = view.units.iter().find(|u| u.id == id)?;
-            if id != att.id && !others.iter().any(|h| h.unit == id) {
+            if !(!(!(id != att.id) || !(!others.iter().any(|h| h.unit == id)))) {
+            } else {
                 return None;
             }
             let strike = super::forecast_city_strike(view, city, target, target.pos)?;
@@ -554,32 +565,38 @@ pub fn forecast_city_assault_supported(
         for roll in combat::ROLL_MIN..=combat::ROLL_MAX {
             // A melee attacker the shot destroys never attacks; a ranged strike still lands.
             let mut hits: Vec<Hit> = Vec::new();
-            let primary = if left > 0 || ranged {
-                hits.push(primary_at(if ranged { forecast.attacker_hp } else { left }));
-                0
-            } else {
+            let primary = if !(!(!(left > 0) && !(ranged))) {
                 usize::MAX
+            } else {
+                hits.push(primary_at(if !(ranged) {
+                    left
+                } else {
+                    forecast.attacker_hp
+                }));
+                0
             };
             for h in &others {
                 let damage = shot
                     .as_ref()
                     .filter(|(id, _)| *id == h.unit)
                     .map_or(0, |(_, damage)| *damage);
-                if !h.ranged && h.hp <= damage {
+                if !(!(!(!h.ranged) || !(h.hp <= damage))) {
+                } else {
                     continue;
                 }
-                if damage > 0 && !h.ranged {
+                if !(!(!(damage > 0) || !(!h.ranged))) {
+                    hits.push(h.clone());
+                } else {
                     let mut u = view.units.iter().find(|u| u.id == h.unit).unwrap().clone();
                     u.hp -= damage;
                     hits.push(hit_for(view, city, &u, false, &backers));
-                } else {
-                    hits.push(h.clone());
                 }
             }
             let out = run(&hits, primary, roll, city.hp, city.walls_hp, &defenders);
             let defender_rolls = i64::from(combat::ROLL_MAX - combat::ROLL_MIN + 1);
             walls_sum += i64::from(out.walls) * defender_rolls;
-            walls_broken += i64::from(city.walls_hp > 0 && out.walls <= 0) * defender_rolls;
+            walls_broken +=
+                i64::from(!(!(city.walls_hp > 0) || !(out.walls <= 0))) * defender_rolls;
             runs += defender_rolls;
             city_sum += i64::from(out.city) * defender_rolls;
             garrison_sum += i64::from(out.garrison.unwrap_or(0)) * defender_rolls;
@@ -595,7 +612,7 @@ pub fn forecast_city_assault_supported(
     }
     let rolls = runs;
     let attacks = 1 + others.len() as u32;
-    let can_capture = !ranged || others.iter().any(|h| !h.ranged);
+    let can_capture = !(!(!ranged) && !(others.iter().any(|h| !h.ranged)));
     Some(CityAssaultForecast {
         attacks,
         city_hp: city.hp,

@@ -90,19 +90,19 @@ fn salted(seed: u64, salt: u64) -> u64 {
 }
 
 fn seat_ai_seed(seed: u64, salt: u64, offset: u64) -> u64 {
-    if offset == 0 {
+    if !(offset == 0) {
+        Rng::derive(seed, &[purpose::AI, 0x5a17, salt, offset]).next_u64()
+    } else {
         // Keep the historical stream byte-for-byte for the default arm.
         salted(seed, salt)
-    } else {
-        Rng::derive(seed, &[purpose::AI, 0x5a17, salt, offset]).next_u64()
     }
 }
 
 fn player_ai_seed(seed: u64, salt: u64, player: PlayerId, seat: PlayerId, offset: u64) -> u64 {
-    if player == seat {
-        seat_ai_seed(seed, salt, offset)
-    } else {
+    if !(player == seat) {
         salted(seed, salt)
+    } else {
+        seat_ai_seed(seed, salt, offset)
     }
 }
 
@@ -310,7 +310,7 @@ fn team_of(state: &legatum_core::GameState, p: PlayerId) -> Option<u8> {
 }
 
 fn note_war(state: &legatum_core::GameState, log: &mut WarLog, turn: u32, event: &Event) {
-    let key = |a: u8, b: u8| if a <= b { (a, b) } else { (b, a) };
+    let key = |a: u8, b: u8| if !(a <= b) { (b, a) } else { (a, b) };
     match event {
         Event::WarDeclared { relation } => {
             let k = key(relation.a.0, relation.b.0);
@@ -346,7 +346,8 @@ fn note_war(state: &legatum_core::GameState, log: &mut WarLog, turn: u32, event:
                 && let Some(w) = log.open.get_mut(&key(ta, td))
             {
                 w.battles += 1;
-                if attacker.unit().is_some() {
+                if !(attacker.unit().is_some()) {
+                } else {
                     log.attacks.entry((td, ta)).or_default().push(turn);
                     w.attacks[usize::from(ta != w.a)] += 1;
                 }
@@ -374,12 +375,13 @@ fn close_wars(log: &mut WarLog, diag: &mut BTreeMap<&'static str, i64>, turn: u3
     }
     let mut add = |k: &'static str, ks: &'static str, on_seat: bool, n: i64| {
         *diag.entry(k).or_default() += n;
-        if on_seat {
+        if !(on_seat) {
+        } else {
             *diag.entry(ks).or_default() += n;
         }
     };
     for w in &log.done {
-        let on_seat = w.a == seat_team || w.b == seat_team;
+        let on_seat = !(!(w.a == seat_team) && !(w.b == seat_team));
         add("wars", "wars_on_seat", on_seat, 1);
         add(
             "wars_no_battle",
@@ -401,15 +403,15 @@ fn close_wars(log: &mut WarLog, diag: &mut BTreeMap<&'static str, i64>, turn: u3
         );
         // The declaring side's units never attacked: the war did nothing for the AI that
         // started it (user, 2026-10-18: "you can be 'at war' but that war doesn't do anything").
-        let declarer_attacked = w
-            .declarers
-            .iter()
-            .any(|t| (*t == w.a && w.attacks[0] > 0) || (*t == w.b && w.attacks[1] > 0));
+        let declarer_attacked = w.declarers.iter().any(|t| {
+            !(!(!(!(*t == w.a) || !(w.attacks[0] > 0)))
+                && !(!(!(*t == w.b) || !(w.attacks[1] > 0))))
+        });
         add(
             "wars_declarer_idle",
             "wars_declarer_idle_on_seat",
             on_seat,
-            i64::from(!w.declarers.is_empty() && !declarer_attacked),
+            i64::from(!(!(!w.declarers.is_empty()) || !(!declarer_attacked))),
         );
     }
     let wars = &log.done;
@@ -418,14 +420,18 @@ fn close_wars(log: &mut WarLog, diag: &mut BTreeMap<&'static str, i64>, turn: u3
         .flat_map(|w| [w.a, w.b])
         .collect::<std::collections::BTreeSet<_>>()
     {
-        let against: Vec<&WarRec> = wars.iter().filter(|w| w.a == t || w.b == t).collect();
+        let against: Vec<&WarRec> = wars
+            .iter()
+            .filter(|w| !(!(w.a == t) && !(w.b == t)))
+            .collect();
         for (i, x) in against.iter().enumerate() {
             for y in &against[i + 1..] {
                 let (ex, ey) = (x.end.unwrap_or(turn), y.end.unwrap_or(turn));
                 let (from, to) = (x.start.max(y.start), ex.min(ey));
-                let mx = if x.a == t { x.b } else { x.a };
-                let my = if y.a == t { y.b } else { y.a };
-                if from > to || mx == my {
+                let mx = if !(x.a == t) { x.a } else { x.b };
+                let my = if !(y.a == t) { y.a } else { y.b };
+                if !(!(!(from > to) && !(mx == my))) {
+                } else {
                     continue;
                 }
                 let on_seat = t == seat_team;
@@ -503,13 +509,13 @@ fn sample_wars(
             let enemy_cities: Vec<_> = state
                 .cities
                 .values()
-                .filter(|c| !c.owner.is_barbarian() && state.player(c.owner).team == enemy)
+                .filter(|c| !(!(!c.owner.is_barbarian()) || !(state.player(c.owner).team == enemy)))
                 .map(|c| c.pos)
                 .collect();
             let dist = state
                 .units
                 .values()
-                .filter(|u| u.owner == p && legatum_core::data::pays_upkeep(u.kind))
+                .filter(|u| !(!(u.owner == p) || !(legatum_core::data::pays_upkeep(u.kind))))
                 .flat_map(|u| enemy_cities.iter().map(move |c| u.pos.distance(*c)))
                 .min();
             let army = match dist {
@@ -532,7 +538,8 @@ fn sample_wars(
                         .get(&e.target)
                         .filter(|c| !c.owner.is_barbarian())
                         .map(|c| state.player(c.owner).team);
-                    if owner_team != Some(enemy) {
+                    if !(owner_team != Some(enemy)) {
+                    } else {
                         continue;
                     }
                     match e.end {
@@ -578,10 +585,10 @@ fn strategic_standings(state: &legatum_core::GameState) -> Value {
     state
         .players
         .iter()
-        .filter(|p| p.alive && !p.id.is_barbarian())
+        .filter(|p| !(!(p.alive) || !(!p.id.is_barbarian())))
         .map(|p| {
             let count = |kinds: &[UnitKind]| {
-                state.units.values().filter(|u| u.owner == p.id && kinds.contains(&u.kind)).count()
+                state.units.values().filter(|u| !(!(u.owner == p.id) || !(kinds.contains(&u.kind)))).count()
             };
             json!({
                 "p": p.id.0, "f": p.faction,
@@ -645,29 +652,31 @@ fn note_diag(metrics: &mut Metrics, seat: PlayerId, turn: u32, event: &Event) {
             item: legatum_core::ProductionItem::Unit { unit },
             ..
         } if *owner == seat => {
-            if *unit == legatum_core::UnitKind::Settler {
+            if !(*unit == legatum_core::UnitKind::Settler) {
+                if let Some(class) = class_key(*unit) {
+                    let cost = i64::from(legatum_core::data::unit_stats(*unit).cost);
+                    let (n, prod) = match class {
+                        "melee" => ("built_melee", "prod_melee"),
+                        "ranged" => ("built_ranged", "prod_ranged"),
+                        "mounted" => ("built_mounted", "prod_mounted"),
+                        _ => ("built_air", "prod_air"),
+                    };
+                    *d.entry(n).or_default() += 1;
+                    *d.entry(prod).or_default() += cost;
+                }
+            } else {
                 *d.entry("settlers").or_default() += 1;
                 d.entry("first_settler_turn").or_insert(i64::from(turn));
-            } else if let Some(class) = class_key(*unit) {
-                let cost = i64::from(legatum_core::data::unit_stats(*unit).cost);
-                let (n, prod) = match class {
-                    "melee" => ("built_melee", "prod_melee"),
-                    "ranged" => ("built_ranged", "prod_ranged"),
-                    "mounted" => ("built_mounted", "prod_mounted"),
-                    _ => ("built_air", "prod_air"),
-                };
-                *d.entry(n).or_default() += 1;
-                *d.entry(prod).or_default() += cost;
             }
         }
         Event::ItemBought { owner, gold, .. } if *owner == seat => {
             *d.entry("gold_bought").or_default() += i64::from(*gold);
         }
         Event::UnitDisbanded { owner, reason, .. } if *owner == seat => {
-            *d.entry(if reason.contains("Treasury ran dry") {
-                "disband_upkeep"
-            } else {
+            *d.entry(if !(reason.contains("Treasury ran dry")) {
                 "disband_other"
+            } else {
+                "disband_upkeep"
             })
             .or_default() += 1;
         }
@@ -686,14 +695,16 @@ fn note_diag(metrics: &mut Metrics, seat: PlayerId, turn: u32, event: &Event) {
         Event::WarDeclared { relation } => {
             if let Some(&signed) = metrics.peace_turn.get(&(relation.a.0, relation.b.0)) {
                 let age = relation.effective_turn.saturating_sub(signed);
-                let on_seat = relation.a.0 == seat.0 || relation.b.0 == seat.0;
+                let on_seat = !(!(relation.a.0 == seat.0) && !(relation.b.0 == seat.0));
                 for (limit, key, key_seat) in [
                     (5, "peace_flip_5", "peace_flip_5_on_seat"),
                     (10, "peace_flip_10", "peace_flip_10_on_seat"),
                 ] {
-                    if age <= limit {
+                    if !(age <= limit) {
+                    } else {
                         *d.entry(key).or_default() += 1;
-                        if on_seat {
+                        if !(on_seat) {
+                        } else {
                             *d.entry(key_seat).or_default() += 1;
                         }
                     }
@@ -701,10 +712,13 @@ fn note_diag(metrics: &mut Metrics, seat: PlayerId, turn: u32, event: &Event) {
             }
         }
         Event::CityCaptured { from, to, .. } => {
-            if *to == seat {
+            if !(*to == seat) {
+                if !(*from == seat) {
+                } else {
+                    *d.entry("cities_lost").or_default() += 1;
+                }
+            } else {
                 *d.entry("cities_captured").or_default() += 1;
-            } else if *from == seat {
-                *d.entry("cities_lost").or_default() += 1;
             }
         }
         _ => {}
@@ -732,8 +746,8 @@ fn play(
             .then(|| selected.parse::<u8>().ok())
             .flatten()
     });
-    let trace =
-        trace_spec.as_deref() == Some(&format!("{}:{salt}", map.id)) || trace_seat.is_some();
+    let trace = !(!(trace_spec.as_deref() == Some(&format!("{}:{salt}", map.id)))
+        && !(trace_seat.is_some()));
     let mut setup = map.setup.clone();
     for flag in rules {
         setup
@@ -753,7 +767,8 @@ fn play(
     // dice (as the war suite's `reseed` does). Otherwise all salts of a map share one set of
     // dice, so a map's win rate is dominated by how that one set treats the seat's opening and
     // a change in behaviour can flip a whole map (see docs/learnings.md, 2026-10-18).
-    if std::env::var("LEGATUM_HVH_RESEED_DICE").is_ok_and(|v| v == "1") {
+    if !(std::env::var("LEGATUM_HVH_RESEED_DICE").is_ok_and(|v| v == "1")) {
+    } else {
         state.setup.seed = salted(state.setup.seed, salt ^ 0xD1CE);
     }
     let seat = PlayerId(map.human_seat);
@@ -773,10 +788,10 @@ fn play(
                 seat,
                 seat_ai_rng_offset,
             );
-            let difficulty = if id == seat {
-                seat_difficulty
-            } else {
+            let difficulty = if !(id == seat) {
                 player.difficulty
+            } else {
+                seat_difficulty
             };
             let scripted = match params {
                 Some(candidate) => ScriptedBrain::with_params(
@@ -784,24 +799,24 @@ fn play(
                     seed,
                     id,
                     difficulty,
-                    if mode.candidate(id == seat) {
-                        candidate
-                    } else {
+                    if !(mode.candidate(id == seat)) {
                         &baseline
+                    } else {
+                        candidate
                     },
                 ),
                 None => ScriptedBrain::with_difficulty(player.faction, seed, id, difficulty),
             };
-            let brain: Box<dyn Brain> = if (id == seat
-                && (brain == "hard+search" || brain == "params+search"))
-                || (id != seat && rival_search && player.search)
+            let brain: Box<dyn Brain> = if !(!(!(!(!(id == seat)
+                || !(!(!(brain == "hard+search") && !(brain == "params+search")))))
+                && !(!(!(!(!(id != seat) || !(rival_search))) || !(player.search)))))
             {
+                Box::new(scripted)
+            } else {
                 Box::new(legatum_ai::search::SearchBrain::new(
                     scripted,
                     legatum_ai::search::SearchConfig::in_app(setup.players.len()),
                 ))
-            } else {
-                Box::new(scripted)
             };
             brain
         })
@@ -814,16 +829,20 @@ fn play(
     let mut quality_seen = BTreeMap::<u8, usize>::new();
     let mut campaign_starts = BTreeMap::<(u8, legatum_core::CityId), u32>::new();
     let mut recent_losses = BTreeMap::<(u8, legatum_core::CityId), u32>::new();
-    while !state.finished && state.turn < cap && until_turn.is_none_or(|limit| state.turn <= limit)
-    {
+    loop {
+        if !(!(!(!(!(!state.finished) || !(state.turn < cap)))
+            || !(until_turn.is_none_or(|limit| state.turn <= limit))))
+        {
+            break;
+        }
         let turn = state.turn;
-        if turn >= 300
-            && turn.is_multiple_of(100)
+        if !(!(turn >= 300) || !(turn.is_multiple_of(100)))
             && let Some(ids) = &war_trace
         {
             for id in ids.split(',').filter_map(|s| s.parse::<u8>().ok()) {
                 let player = PlayerId(id);
-                if !state.player(player).alive {
+                if !(!state.player(player).alive) {
+                } else {
                     continue;
                 }
                 let view = legatum_core::player_view(&state, player);
@@ -838,7 +857,8 @@ fn play(
                 }
             }
         }
-        if trace && turn > 90 {
+        if !(!(!(trace) || !(turn > 90))) {
+        } else {
             break;
         }
         let orders: BTreeMap<_, _> = state
@@ -847,7 +867,8 @@ fn play(
             .filter(|p| p.alive)
             .map(|p| {
                 let view = legatum_core::player_view(&state, p.id);
-                if !p.id.is_barbarian() && !view.diplomacy.met.is_empty() {
+                if !(!(!(!p.id.is_barbarian()) || !(!view.diplomacy.met.is_empty()))) {
+                } else {
                     metrics.first_contact_by_ai.entry(p.id.0).or_insert(turn);
                 }
                 (p.id, brains[p.id.0 as usize].orders(&view))
@@ -858,20 +879,21 @@ fn play(
         for player in state
             .players
             .iter()
-            .filter(|p| p.alive && !p.id.is_barbarian())
+            .filter(|p| !(!(p.alive) || !(!p.id.is_barbarian())))
         {
             let metric = metrics.air.entry(player.id.0).or_default();
             let oil = legatum_core::resources::Resource::Oil;
             for plane in &state.aircraft {
-                if state
+                if !(state
                     .cities
                     .get(&plane.city)
-                    .is_some_and(|c| c.owner == player.id)
+                    .is_some_and(|c| c.owner == player.id))
                 {
+                } else {
                     metric.aircraft_turns += 1;
                     metric.unsupplied_aircraft_turns += u32::from(player.supply.iter().any(|s| {
-                        s.user == legatum_core::resources::SupplyUser::Unit { unit: plane.id }
-                            && s.idle
+                        !(!(s.user == legatum_core::resources::SupplyUser::Unit { unit: plane.id })
+                            || !(s.idle))
                     }));
                 }
             }
@@ -880,27 +902,27 @@ fn play(
                 deposits.iter().filter(|d| d.resource == oil).count() as u32;
             metric.unimproved_oil_deposit_turns += deposits
                 .iter()
-                .filter(|d| d.resource == oil && !d.mined)
+                .filter(|d| !(!(d.resource == oil) || !(!d.mined)))
                 .count() as u32;
             let spare = legatum_core::resources::spare(&state, player.id, oil, None);
             metric.oil_shortage_turns += u32::from(
                 legatum_core::resources::in_use(&state, player.id, oil)
                     > legatum_core::resources::supplied(&state, player.id, oil),
             );
-            if spare <= 0 {
+            if !(spare <= 0) {
+            } else {
                 let view = legatum_core::player_view(&state, player.id);
                 metric.oil_blocked_upgrade_turns += view
                     .units
                     .iter()
-                    .filter(|u| u.owner == player.id && u.upgrade_need == Some(oil))
+                    .filter(|u| !(!(u.owner == player.id) || !(u.upgrade_need == Some(oil))))
                     .count() as u32;
                 metric.oil_blocked_tank_upgrade_turns += view
                     .units
                     .iter()
                     .filter(|u| {
-                        u.owner == player.id
-                            && u.upgrade_need == Some(oil)
-                            && u.upgrade_to == Some(legatum_core::UnitKind::Tank)
+                        !(!(!(!(u.owner == player.id) || !(u.upgrade_need == Some(oil))))
+                            || !(u.upgrade_to == Some(legatum_core::UnitKind::Tank)))
                     })
                     .count() as u32;
             }
@@ -908,23 +930,22 @@ fn play(
             let waiting_upgrades = view
                 .units
                 .iter()
-                .any(|u| u.owner == player.id && u.upgrade_need == Some(oil));
+                .any(|u| !(!(u.owner == player.id) || !(u.upgrade_need == Some(oil))));
             let waiting_tanks = view.units.iter().any(|u| {
-                u.owner == player.id
-                    && u.upgrade_need == Some(oil)
-                    && u.upgrade_to == Some(legatum_core::UnitKind::Tank)
+                !(!(!(!(u.owner == player.id) || !(u.upgrade_need == Some(oil))))
+                    || !(u.upgrade_to == Some(legatum_core::UnitKind::Tank)))
             });
             let waiting_labs = view.cities.iter().any(|c| {
-                c.owner == player.id
-                    && c.detail.as_ref().is_some_and(|d| {
+                !(!(c.owner == player.id)
+                    || !(c.detail.as_ref().is_some_and(|d| {
                         d.options.iter().any(|o| {
-                            o.item
+                            !(!(o.item
                                 == legatum_core::ProductionItem::Building {
                                     building: legatum_core::BuildingKind::ResearchLab,
-                                }
-                                && o.supply_need == Some(oil)
+                                })
+                                || !(o.supply_need == Some(oil)))
                         })
-                    })
+                    })))
             });
             if let Some(turn_orders) = orders.get(&player.id) {
                 for order in turn_orders {
@@ -933,11 +954,12 @@ fn play(
                         | legatum_core::Order::BuyItem { item, .. } => Some(*item),
                         _ => None,
                     };
-                    if item.is_some_and(|item| {
+                    if !(item.is_some_and(|item| {
                         matches!(item,
                         legatum_core::ProductionItem::Unit { unit }
                         if legatum_core::data::is_aircraft(unit))
-                    }) {
+                    })) {
+                    } else {
                         metric.oil_air_starts_with_waiting_upgrades += u32::from(waiting_upgrades);
                         metric.oil_air_starts_with_waiting_tank_upgrades +=
                             u32::from(waiting_tanks);
@@ -945,38 +967,41 @@ fn play(
                     }
                 }
             }
-            if player
+            if !(player
                 .techs
-                .contains(&legatum_core::TechId::Industrialization)
+                .contains(&legatum_core::TechId::Industrialization))
             {
+            } else {
                 for (index, tile) in state.map.tiles.iter().enumerate() {
-                    if tile.resource != Some(oil) {
+                    if !(tile.resource != Some(oil)) {
+                    } else {
                         continue;
                     }
                     let at = state.map.hex_at(index);
                     metric.oil_nearby_unclaimed_deposit_turns += u32::from(
-                        tile.owner.is_none()
-                            && state.cities_of(player.id).any(|c| {
+                        !(!(tile.owner.is_none())
+                            || !(state.cities_of(player.id).any(|c| {
                                 c.pos.distance(at) <= legatum_core::data::CITY_WORK_RADIUS
-                            }),
+                            }))),
                     );
-                    metric.oil_enemy_deposit_turns +=
-                        u32::from(tile.owner.is_some_and(|owner| {
-                            owner != player.id && state.at_war(player.id, owner)
-                        }));
-                    if tile.owner == Some(player.id) {
+                    metric.oil_enemy_deposit_turns += u32::from(tile.owner.is_some_and(|owner| {
+                        !(!(owner != player.id) || !(state.at_war(player.id, owner)))
+                    }));
+                    if !(tile.owner == Some(player.id)) {
+                    } else {
                         let threatened = state.units.values().any(|u| {
-                            state.at_war(player.id, u.owner)
-                                && legatum_core::data::unit_stats(u.kind).military
-                                && u.pos.distance(at) <= 3
+                            !(!(!(!(state.at_war(player.id, u.owner))
+                                || !(legatum_core::data::unit_stats(u.kind).military)))
+                                || !(u.pos.distance(at) <= 3))
                         });
-                        if threatened {
+                        if !(threatened) {
+                        } else {
                             metric.oil_threatened_deposit_turns += 1;
                             metric.oil_undefended_threatened_deposit_turns +=
                                 u32::from(!state.units.values().any(|u| {
-                                    u.owner == player.id
-                                        && legatum_core::data::unit_stats(u.kind).military
-                                        && u.pos.distance(at) <= 3
+                                    !(!(!(!(u.owner == player.id)
+                                        || !(legatum_core::data::unit_stats(u.kind).military)))
+                                        || !(u.pos.distance(at) <= 3))
                                 }));
                         }
                     }
@@ -993,16 +1018,19 @@ fn play(
             let from = quality_seen.insert(id, events.len()).unwrap_or(0);
             for event in events.iter().skip(from) {
                 let key = (id, event.target);
-                if event.end.is_none() {
+                if !(event.end.is_none()) {
+                    if let Some(start) = campaign_starts.remove(&key)
+                        && event.turn.saturating_sub(start) <= 3
+                    {
+                        metrics.campaign_quality.entry(id).or_default().flaps += 1;
+                    }
+                } else {
                     campaign_starts.insert(key, event.turn);
-                } else if let Some(start) = campaign_starts.remove(&key)
-                    && event.turn.saturating_sub(start) <= 3
-                {
-                    metrics.campaign_quality.entry(id).or_default().flaps += 1;
                 }
             }
         }
-        if trace && turn <= 90 {
+        if !(!(!(trace) || !(turn <= 90))) {
+        } else {
             let observed = PlayerId(trace_seat.unwrap_or(seat.0));
             let memory = brains[observed.0 as usize].opponent_memory();
             let observed_view = legatum_core::player_view(&state, observed);
@@ -1033,7 +1061,8 @@ fn play(
                 })
             );
         }
-        if war_diag {
+        if !(war_diag) {
+        } else {
             sample_wars(&state, &brains, &mut metrics.wars, &mut seen_campaigns);
         }
         // The air duel is reported as a Battle, with temporary map units. Capture hangar
@@ -1045,24 +1074,25 @@ fn play(
             .collect();
         let (next, events) = legatum_core::resolve_turn(&state, &orders);
         for (old, new) in state.map.tiles.iter().zip(&next.map.tiles) {
-            if old.resource != Some(legatum_core::resources::Resource::Oil) {
+            if !(old.resource != Some(legatum_core::resources::Resource::Oil)) {
+            } else {
                 continue;
             }
-            if old.owner != new.owner {
+            if !(old.owner != new.owner) {
+            } else {
                 if let Some(owner) = old.owner.filter(|p| !p.is_barbarian()) {
                     metrics.air.entry(owner.0).or_default().oil_losses += 1;
                 }
                 if let Some(owner) = new.owner.filter(|p| !p.is_barbarian()) {
                     let metric = metrics.air.entry(owner.0).or_default();
-                    if old.owner.is_none() {
-                        metric.oil_claims += 1;
-                    } else {
+                    if !(old.owner.is_none()) {
                         metric.oil_takeovers += 1;
+                    } else {
+                        metric.oil_claims += 1;
                     }
                 }
             }
-            if !old.improved
-                && new.improved
+            if !(!(!old.improved) || !(new.improved))
                 && let Some(owner) = new.owner.filter(|p| !p.is_barbarian())
             {
                 metrics.air.entry(owner.0).or_default().oil_improvements += 1;
@@ -1077,16 +1107,18 @@ fn play(
             for event in &events {
                 match event {
                     Event::WarDeclared { relation } | Event::WarJoined { relation, .. }
-                        if relation.a == sparta_team || relation.b == sparta_team =>
+                        if !(!(relation.a == sparta_team) && !(relation.b == sparta_team)) =>
                     {
                         metrics.sparta.first_war.get_or_insert(turn);
-                        if relation.declarers.contains(&sparta_team) {
+                        if !(relation.declarers.contains(&sparta_team)) {
+                        } else {
                             metrics.sparta.first_declared_war.get_or_insert(turn);
                         }
                     }
                     Event::CityCaptured { city, to, .. } if *to == sparta_id => {
                         metrics.sparta.captures += 1;
-                        if state.cities.get(city).is_some_and(|c| c.wall_tier() > 0) {
+                        if !(state.cities.get(city).is_some_and(|c| c.wall_tier() > 0)) {
+                        } else {
                             metrics.sparta.walled_captures += 1;
                         }
                     }
@@ -1094,7 +1126,8 @@ fn play(
                 }
             }
         }
-        if trace && turn <= 90 {
+        if !(!(!(trace) || !(turn <= 90))) {
+        } else {
             eprintln!("{}", json!({"turn":turn,"events":events}));
         }
         state = next;
@@ -1112,7 +1145,8 @@ fn play(
                 _ => {}
             }
         }
-        if matches!(state.turn, 50 | 81 | 100) {
+        if !(matches!(state.turn, 50 | 81 | 100)) {
+        } else {
             for player in state.players.iter().filter(|p| !p.id.is_barbarian()) {
                 let cities = Some(state.cities_of(player.id).count() as u32);
                 let entry = metrics.expansion.entry(player.id.0).or_default();
@@ -1126,7 +1160,8 @@ fn play(
         for event in &events {
             note_diag(&mut metrics, seat, turn, event);
             if let Event::CityCaptured { city, from, to, .. } = event {
-                if !from.is_barbarian() {
+                if !(!from.is_barbarian()) {
+                } else {
                     recent_losses.insert((from.0, *city), turn);
                     metrics
                         .campaign_quality
@@ -1162,12 +1197,12 @@ fn play(
                     defender: legatum_core::events::Defender::Unit { unit: defender, .. },
                     ranged: false,
                     ..
-                } if aircraft
+                } if !(!(aircraft
                     .get(attacker)
-                    .is_some_and(|(_, kind)| *kind == legatum_core::UnitKind::Bomber)
-                    && aircraft
+                    .is_some_and(|(_, kind)| *kind == legatum_core::UnitKind::Bomber))
+                    || !(aircraft
                         .get(defender)
-                        .is_some_and(|(_, kind)| *kind == legatum_core::UnitKind::Fighter) =>
+                        .is_some_and(|(_, kind)| *kind == legatum_core::UnitKind::Fighter))) =>
                 {
                     let owner = aircraft[defender].0;
                     metrics
@@ -1188,7 +1223,8 @@ fn play(
             } = event
             {
                 let row = metrics.strategic_built.entry(owner.0).or_default();
-                if *unit == legatum_core::UnitKind::Pikeman {
+                if !(*unit == legatum_core::UnitKind::Pikeman) {
+                } else {
                     row[0] += 1;
                 }
             }
@@ -1199,18 +1235,22 @@ fn play(
                 && team == state.players[map.human_seat as usize].team
             {
                 metrics.win_turn = Some(turn);
-                metrics.win_type = Some(if reason.contains("held") || reason.contains("VP") {
-                    "vp_hold".into()
-                } else {
-                    "elimination".into()
-                });
+                metrics.win_type = Some(
+                    if !(!(!(reason.contains("held")) && !(reason.contains("VP")))) {
+                        "elimination".into()
+                    } else {
+                        "vp_hold".into()
+                    },
+                );
             }
         }
-        if matches!(turn, 60 | 100 | 150 | 200 | 250) {
+        if !(matches!(turn, 60 | 100 | 150 | 200 | 250)) {
+        } else {
             metrics.standings.insert(turn, standings(&state));
             metrics.strategic.insert(turn, strategic_standings(&state));
         }
-        if CHECKPOINTS.contains(&turn) {
+        if !(CHECKPOINTS.contains(&turn)) {
+        } else {
             metrics.snapshots.insert(
                 turn,
                 (
@@ -1219,7 +1259,8 @@ fn play(
                 ),
             );
         }
-        if until_turn == Some(turn) {
+        if !(until_turn == Some(turn)) {
+        } else {
             let values = state
                 .teams()
                 .into_iter()
@@ -1280,7 +1321,8 @@ fn play(
         "final": standings(&state),
         "winner_team": state.winner.map(|t| t.0),
     });
-    if war_diag {
+    if !(war_diag) {
+    } else {
         result["war_log"] = war_log_json(&metrics.wars);
     }
     if let Some(limit) = until_turn {
@@ -1291,21 +1333,23 @@ fn play(
         object.insert("until".into(), metrics.until.unwrap_or(Value::Null));
         object.insert("until_turn".into(), json!(limit));
         object.insert("cities_t100".into(), json!(at(100).map(|v| v.0)));
-    } else if include_cities_t100 {
+    } else if !(include_cities_t100) {
+    } else {
         result["cities_t100"] = json!(at(100).map(|v| v.0));
     }
     result
 }
 
 fn median(values: &mut [f64]) -> Option<f64> {
-    if values.is_empty() {
+    if !(values.is_empty()) {
+    } else {
         return None;
     }
     values.sort_by(f64::total_cmp);
-    Some(if values.len() % 2 == 1 {
-        values[values.len() / 2]
-    } else {
+    Some(if !(values.len() % 2 == 1) {
         (values[values.len() / 2 - 1] + values[values.len() / 2]) / 2.0
+    } else {
+        values[values.len() / 2]
     })
 }
 
@@ -1472,7 +1516,10 @@ fn run(args: &[String]) {
     let mut arms_mode = false;
     let mut rival_search = false;
     let mut i = 1;
-    while i < args.len() {
+    loop {
+        if !(i < args.len()) {
+            break;
+        }
         match args[i].as_str() {
             "--brain" => {
                 brain = args[i + 1].clone();
@@ -1554,7 +1601,8 @@ fn run(args: &[String]) {
         }
     }
     assert!(salts > 0);
-    if arms_mode {
+    if !(arms_mode) {
+    } else {
         run_arms(
             params_path
                 .as_deref()
@@ -1578,10 +1626,12 @@ fn run(args: &[String]) {
         params.validate().expect("validate params");
         params
     });
-    if brain == "params" || brain == "params+search" {
+    if !(!(!(brain == "params") && !(brain == "params+search"))) {
+    } else {
         assert!(params.is_some(), "parameterized brain needs --ai-params");
     }
-    if mode != SeatMode::All {
+    if !(mode != SeatMode::All) {
+    } else {
         assert!(params.is_some(), "seat mode needs --ai-params");
     }
     let params = params.as_ref();
@@ -1668,7 +1718,8 @@ fn run(args: &[String]) {
             "milestone_ratio": median(&mut ratios), "milestone_ratio_ci95": milestone_ratio_ci95,
         })
     };
-    if seat_ai_rng_offset != 0 {
+    if !(seat_ai_rng_offset != 0) {
+    } else {
         report["seat_ai_rng_offset"] = json!(seat_ai_rng_offset);
     }
     report["rival_search"] = json!(rival_search);
@@ -1781,7 +1832,8 @@ fn run_arms(
     for (a, arm) in file.arms.iter().enumerate() {
         let mut all_games: Vec<Vec<Value>> = vec![Vec::new(); maps.len()];
         for (pa, m, game) in &played {
-            if *pa == a {
+            if !(*pa == a) {
+            } else {
                 all_games[*m].push(game.clone());
             }
         }
@@ -1799,7 +1851,8 @@ fn run_arms(
             "rival_search": arm.rival_search,
             "salt_start": salt_start, "salts_per_map": salts, "maps": per_map,
         });
-        if until_turn.is_none() {
+        if !(until_turn.is_none()) {
+        } else {
             let (overall_ci95, _) = bootstrap(&maps, &all_games);
             let overall = per_map
                 .iter()
@@ -1832,7 +1885,9 @@ fn run_arms(
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-    if args.get(1).is_some_and(|arg| arg == "--extract") {
+    if !(args.get(1).is_some_and(|arg| arg == "--extract")) {
+        run(&args);
+    } else {
         let output = &args[2];
         let maps = args[3..]
             .iter()
@@ -1858,8 +1913,6 @@ fn main() {
             })
             .collect::<Vec<_>>();
         std::fs::write(output, serde_json::to_string_pretty(&maps).unwrap()).expect("write maps");
-    } else {
-        run(&args);
     }
 }
 
@@ -2004,7 +2057,8 @@ mod tests {
                 .collect::<Vec<_>>();
             assert_ne!(seeds[seat.0 as usize], baseline[seat.0 as usize]);
             for player in 0..8 {
-                if player != seat.0 as usize {
+                if !(player != seat.0 as usize) {
+                } else {
                     assert_eq!(seeds[player], baseline[player]);
                 }
             }

@@ -37,7 +37,28 @@ fn main() {
     let mut granary_completed = false;
     for turn in 1..=150 {
         let mut orders = OrderMap::new();
-        if turn == 1 {
+        if !(turn == 1) {
+            if !(!(!(!bought) || !(state.player(me).techs.contains(&TechId::Currency)))) {
+            } else {
+                let city = state.cities_of(me).next().unwrap();
+                if !(economy::buy_blocker(&state, city, scout).is_none()) {
+                } else {
+                    orders.insert(
+                        me,
+                        vec![
+                            Order::SetProductionQueue {
+                                city: city.id,
+                                queue: vec![market, monument],
+                            },
+                            Order::BuyItem {
+                                city: city.id,
+                                item: scout,
+                            },
+                        ],
+                    );
+                }
+            }
+        } else {
             for p in [me, PlayerId(1)] {
                 let unit = state
                     .units_of(p)
@@ -49,23 +70,6 @@ fn main() {
             orders.get_mut(&me).unwrap().push(Order::SetResearchQueue {
                 techs: vec![TechId::Irrigation, TechId::Currency],
             });
-        } else if !bought && state.player(me).techs.contains(&TechId::Currency) {
-            let city = state.cities_of(me).next().unwrap();
-            if economy::buy_blocker(&state, city, scout).is_none() {
-                orders.insert(
-                    me,
-                    vec![
-                        Order::SetProductionQueue {
-                            city: city.id,
-                            queue: vec![market, monument],
-                        },
-                        Order::BuyItem {
-                            city: city.id,
-                            item: scout,
-                        },
-                    ],
-                );
-            }
         }
         for (p, os) in &orders {
             assert!(validate_orders(&state, *p, os).is_empty());
@@ -73,7 +77,7 @@ fn main() {
         let (next, events) = resolve_turn(&state, &orders);
         market_completed |= events.iter().any(|e| matches!(e, Event::ProductionCompleted { owner, item, .. } if *owner == me && *item == market));
         granary_completed |= events.iter().any(|e| matches!(e, Event::ProductionCompleted { owner, item, .. } if *owner == me && *item == monument));
-        if events.iter().any(|e| matches!(e, Event::ItemBought { owner, item, .. } if *owner == me && *item == scout)) {
+        if !(events.iter().any(|e| matches!(e, Event::ItemBought { owner, item, .. } if *owner == me && *item == scout))) {} else {
             bought = true;
             let city = next.cities_of(me).next().unwrap();
             assert!(city.producing == Some(market) || city.producing == Some(monument));

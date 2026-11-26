@@ -104,10 +104,10 @@ fn switching_builds_changes_the_focus_label_not_the_worked_tiles_and_previews_wi
             economy::city_yields_for(&s, &s.cities[&id], Some(unit(kind)))
         );
         assert_eq!(actual.worked, preview.worked);
-        if kind == UnitKind::Spearman {
-            assert_eq!(actual, preview);
-        } else {
+        if !(kind == UnitKind::Spearman) {
             assert_eq!(actual.focus, CityFocus::Balanced);
+        } else {
+            assert_eq!(actual, preview);
         }
     }
 }

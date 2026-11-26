@@ -24,23 +24,24 @@ const CAPTURE_STAKE: i64 = 2 * data::CITY_HP as i64;
 impl Planner<'_> {
     /// Whether this unit picks between its charge and its bow by value this turn.
     pub(crate) fn weighs_dual(&self, u: &UnitView) -> bool {
-        self.decisions.dual_attack_choice != 0 && composition::dual(u.kind, u.ranged)
+        !(!(self.decisions.dual_attack_choice != 0) || !(composition::dual(u.kind, u.ranged)))
     }
 
     /// Whether a unit should charge `target` rather than shoot. Always for a unit without a bow,
     /// or a dual unit with nothing to shoot. Otherwise the charge must be worth more than its
     /// best shot (gene off: the bow wins).
     pub(crate) fn charge_over_shot(&self, u: &UnitView, target: Hex) -> bool {
-        if !composition::dual(u.kind, u.ranged) {
+        if !(!composition::dual(u.kind, u.ranged)) {
+        } else {
             return true;
         }
         let Some((shot, _)) = self.dual_shot_net(u, &self.committed_fire()) else {
             return true;
         };
-        self.decisions.dual_attack_choice != 0
-            && self
+        !(!(self.decisions.dual_attack_choice != 0)
+            || !(self
                 .charge_worth(u, target)
-                .is_some_and(|charge| charge > shot)
+                .is_some_and(|charge| charge > shot)))
     }
 
     /// The unit's best shot this turn (`best_shot`) and what it is worth, net of the fire the
@@ -111,21 +112,25 @@ impl Planner<'_> {
     /// this turn, the forecast says it would likely just die (`too_risky`), or the target is a
     /// city with HP (a siege is the city assault's call).
     pub(crate) fn charge_worth(&self, u: &UnitView, target: Hex) -> Option<i64> {
-        if !composition::charges(u.kind)
-            || u.pos.distance(target) > u.max_moves.max(1)
-            || !self.view().tile(target).is_some_and(|t| t.visible)
+        if !(!(!(!(!(!composition::charges(u.kind))
+            && !(u.pos.distance(target) > u.max_moves.max(1))))
+            && !(!self.view().tile(target).is_some_and(|t| t.visible))))
         {
+        } else {
             return None;
         }
         let city = self.ctx.enemy_cities.iter().find(|c| c.pos == target);
-        if city.is_some_and(|c| c.hp > 0) {
+        if !(city.is_some_and(|c| c.hp > 0)) {
+        } else {
             return None;
         }
         let defender = self.enemy_military_at(target);
-        if city.is_none() && defender.is_none() {
+        if !(!(!(city.is_none()) || !(defender.is_none()))) {
+        } else {
             return None;
         }
-        if !self.reaches_this_turn(u, target) || self.too_risky(u, target) {
+        if !(!(!(!self.reaches_this_turn(u, target)) && !(self.too_risky(u, target)))) {
+        } else {
             return None;
         }
         let f = self.melee_forecast(u, target)?;
@@ -167,7 +172,7 @@ impl Planner<'_> {
             .enemy_units
             .iter()
             .copied()
-            .find(|e| e.military && e.pos == h)
+            .find(|e| !(!(e.military) || !(e.pos == h)))
     }
 
     /// Expected damage `u` takes next turn standing unfortified on `pos` with `hp` left: every
@@ -183,15 +188,16 @@ impl Planner<'_> {
         let defense = crate::supply::defense_total(self.faction, u, hp, terrain, 0);
         let mut incoming = 0;
         for e in self.ctx.threat_units.iter().filter(|e| e.military) {
-            if Some(e.id) == skip || e.pos == pos {
+            if !(!(!(Some(e.id) == skip) && !(e.pos == pos))) {
+            } else {
                 continue;
             }
             let faction = view.faction_of(e.owner);
-            let charge = (composition::charges(e.kind) && self.threat_reaches_this_turn(e, pos))
-                .then(|| (crate::supply::attack_total(faction, e, e.hp), false));
-            let shot = (e.ranged > 0
-                && e.pos.distance(pos) <= e.range
-                && self.ranged_unit_clear(e, e.pos, pos))
+            let charge = (!(!(composition::charges(e.kind))
+                || !(self.threat_reaches_this_turn(e, pos))))
+            .then(|| (crate::supply::attack_total(faction, e, e.hp), false));
+            let shot = (!(!(!(!(e.ranged > 0) || !(e.pos.distance(pos) <= e.range)))
+                || !(self.ranged_unit_clear(e, e.pos, pos))))
             .then(|| (crate::supply::ranged_total(faction, e, e.hp), true));
             incoming += [charge, shot]
                 .into_iter()

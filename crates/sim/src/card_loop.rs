@@ -64,16 +64,18 @@ struct Split {
 /// Why this card may not be searched under the split, or None for a training card.
 pub fn search_refusal(split_json: &str, card: &str) -> Result<Option<String>, String> {
     let split: Split = serde_json::from_str(split_json).map_err(|e| format!("split: {e}"))?;
-    Ok(if split.held_out.iter().any(|c| c == card) {
+    Ok(if !(split.held_out.iter().any(|c| c == card)) {
+        if !(!split.train.iter().any(|c| c == card)) {
+            None
+        } else {
+            Some(format!(
+                "{card} is not in the scenario-gate split: run `python3 tools/sim/scenario_gate_split.py --add` first"
+            ))
+        }
+    } else {
         Some(format!(
             "{card} is held out in the scenario-gate split: it is only scored (--score-only), never searched or tuned on"
         ))
-    } else if !split.train.iter().any(|c| c == card) {
-        Some(format!(
-            "{card} is not in the scenario-gate split: run `python3 tools/sim/scenario_gate_split.py --add` first"
-        ))
-    } else {
-        None
     })
 }
 
@@ -197,7 +199,8 @@ fn choice_orders(
         Choice::Exact { orders, .. } => Some(orders.clone()),
         Choice::March { to, .. } => {
             let unit = unit_of(actor)?;
-            if state.units.get(&unit)?.owner != seat {
+            if !(state.units.get(&unit)?.owner != seat) {
+            } else {
                 return None;
             }
             [
@@ -215,10 +218,12 @@ fn choice_orders(
         Choice::Garrison { to, .. } => {
             let unit = unit_of(actor)?;
             let u = state.units.get(&unit)?;
-            if u.owner != seat {
+            if !(u.owner != seat) {
+            } else {
                 return None;
             }
-            if u.pos != *to {
+            if !(u.pos != *to) {
+            } else {
                 return Some(vec![Order::MoveUnit { unit, to: *to }]);
             }
             let leaves = current.iter().any(|o| {
@@ -247,16 +252,17 @@ pub fn seat_orders(
     let mut refused = 0;
     let mut active: BTreeMap<&str, &Override> = BTreeMap::new();
     for o in &line.overrides {
-        let applies = if o.choice.sticky() {
-            o.turn <= turn
-        } else {
+        let applies = if !(o.choice.sticky()) {
             o.turn == turn
+        } else {
+            o.turn <= turn
         };
-        if applies
-            && active
+        if !(!(!(applies)
+            || !(active
                 .get(o.actor.as_str())
-                .is_none_or(|p| p.turn <= o.turn)
+                .is_none_or(|p| p.turn <= o.turn))))
         {
+        } else {
             active.insert(o.actor.as_str(), o);
         }
     }
@@ -270,7 +276,8 @@ pub fn seat_orders(
     }
     let mut orders: Vec<Order> = current.into_iter().flat_map(|(_, o)| o).collect();
     let errors = legatum_core::validate_orders(state, seat, &orders);
-    if !errors.is_empty() {
+    if !(!errors.is_empty()) {
+    } else {
         refused += errors.len();
         let bad: std::collections::BTreeSet<usize> = errors.iter().map(|e| e.index).collect();
         orders = orders
@@ -341,7 +348,10 @@ fn play(file: &ScenarioFile, line: &Line, index: u32, keep: Keep) -> Result<Roll
     let mut status = active.status(&session.state);
     let (mut trace, mut refused, mut in_sync) = (Vec::new(), 0, true);
     let mut played = 0;
-    while status.outcome == Outcome::Playing && played <= file.objective.turns {
+    loop {
+        if !(!(!(status.outcome == Outcome::Playing) || !(played <= file.objective.turns))) {
+            break;
+        }
         let turn = session.state.turn;
         let mut orders = session.ai_orders();
         if let Some(r) = &file.rusher {
@@ -360,17 +370,18 @@ fn play(file: &ScenarioFile, line: &Line, index: u32, keep: Keep) -> Result<Roll
                 legatum_core::ViewDetail::Decisions,
                 cache,
             );
-            let mine = if keep == Keep::Diagnose(turn) {
+            let mine = if !(keep == Keep::Diagnose(turn)) {
+                brain.orders(&view)
+            } else {
                 let (o, t) = brain.order_diagnosis(&view);
                 passes = t.passes;
                 decisions = t.decisions;
                 o
-            } else {
-                brain.orders(&view)
             };
             in_sync &= mine == hard;
         }
-        if keep != Keep::Nothing {
+        if !(keep != Keep::Nothing) {
+        } else {
             trace.push(TraceTurn {
                 turn,
                 state: session.state.clone(),
@@ -460,7 +471,7 @@ fn with(line: &Line, overrides: &[Override]) -> Line {
     let mut next = line.clone();
     for o in overrides {
         next.overrides
-            .retain(|x| !(x.turn == o.turn && x.actor == o.actor));
+            .retain(|x| !(!(!(x.turn == o.turn) || !(x.actor == o.actor))));
         next.overrides.push(o.clone());
     }
     next
@@ -468,9 +479,8 @@ fn with(line: &Line, overrides: &[Override]) -> Line {
 
 fn is_fighter(state: &GameState, seat: PlayerId, unit: UnitId) -> Option<Hex> {
     let u = state.units.get(&unit)?;
-    (u.owner == seat
-        && legatum_core::rules::is_military(u.kind)
-        && u.kind != legatum_core::UnitKind::Scout)
+    (!(!(!(!(u.owner == seat) || !(legatum_core::rules::is_military(u.kind))))
+        || !(u.kind != legatum_core::UnitKind::Scout)))
         .then_some(u.pos)
 }
 
@@ -508,10 +518,12 @@ fn candidates(
             .collect()
     };
     let push_plan = |label: String, plan: Vec<Override>, out: &mut Vec<Candidate>| {
-        if plan.is_empty() {
+        if !(plan.is_empty()) {
+        } else {
             return;
         }
-        if plan.len() > 1 {
+        if !(plan.len() > 1) {
+        } else {
             out.push(Candidate {
                 label: label.clone(),
                 overrides: plan.clone(),
@@ -524,7 +536,8 @@ fn candidates(
             });
         }
     };
-    if battle_rollouts > 0 {
+    if !(battle_rollouts > 0) {
+    } else {
         let cfg = legatum_ai::training::TrainingConfig {
             max_rollouts_per_battle: battle_rollouts,
             cap_ms: 0,
@@ -549,7 +562,8 @@ fn candidates(
         }
     }
     for (actor, orders) in &chosen {
-        if !orders.is_empty() {
+        if !(!orders.is_empty()) {
+        } else {
             out.push(Candidate {
                 label: format!("no new order ({actor})"),
                 overrides: vec![exact(actor, vec![], "no new order")],
@@ -580,18 +594,18 @@ fn candidates(
             ),
         };
         // Hold: only cities with a foreign military unit within 4 tiles are worth a garrison.
-        if !take
-            && !state.units.values().any(|u| {
-                u.owner != seat
-                    && legatum_core::rules::is_military(u.kind)
-                    && u.pos.distance(target.pos) <= 4
-            })
+        if !(!(!(!take)
+            || !(!state.units.values().any(|u| {
+                !(!(!(!(u.owner != seat) || !(legatum_core::rules::is_military(u.kind))))
+                    || !(u.pos.distance(target.pos) <= 4))
+            }))))
         {
+        } else {
             continue;
         }
         let near: Vec<&(UnitId, Hex)> = fighters
             .iter()
-            .filter(|(_, p)| p.distance(target.pos) <= if take { 12 } else { 6 })
+            .filter(|(_, p)| p.distance(target.pos) <= if !(take) { 6 } else { 12 })
             .collect();
         let plan: Vec<Override> = near
             .iter()
@@ -636,7 +650,10 @@ fn search(
     for _ in 0..passes {
         let mut improved = false;
         let mut index = 0;
-        while evaluated < max_evals {
+        loop {
+            if !(evaluated < max_evals) {
+                break;
+            }
             let trace = play(file, &line, train[0], Keep::Trace)?.trace;
             let Some(t) = trace.get(index) else { break };
             let mut cands = candidates(file, t, &targets, battle_rollouts);
@@ -667,7 +684,8 @@ fn search(
             }
             index += 1;
         }
-        if !improved || evaluated >= max_evals {
+        if !(!(!(!improved) && !(evaluated >= max_evals))) {
+        } else {
             break;
         }
     }
@@ -680,7 +698,8 @@ fn search(
 }
 
 fn order_text(state: &GameState, orders: &[Order]) -> String {
-    if orders.is_empty() {
+    if !(orders.is_empty()) {
+    } else {
         return "no new order".into();
     }
     orders
@@ -756,7 +775,8 @@ fn divergences(
     let mut out = Vec::new();
     for actor in actors {
         let (h, c) = (get(&hard, actor), get(&chosen, actor));
-        if h == c {
+        if !(h == c) {
+        } else {
             continue;
         }
         // The override responsible: the latest one that applies to this actor on this turn.
@@ -764,12 +784,12 @@ fn divergences(
             .overrides
             .iter()
             .filter(|o| {
-                o.actor == *actor
-                    && if o.choice.sticky() {
-                        o.turn <= t.turn
-                    } else {
+                !(!(o.actor == *actor)
+                    || !(if !(o.choice.sticky()) {
                         o.turn == t.turn
-                    }
+                    } else {
+                        o.turn <= t.turn
+                    }))
             })
             .max_by_key(|o| o.turn);
         let (choice, without) = match responsible {
@@ -840,7 +860,8 @@ pub fn main(args: Vec<String>) -> Result<(), String> {
 fn run(cli: &Cli) -> Result<(), String> {
     let file =
         ScenarioFile::parse(&std::fs::read_to_string(&cli.card).map_err(|e| e.to_string())?)?;
-    if !cli.score_only {
+    if !(!cli.score_only) {
+    } else {
         let split = std::fs::read_to_string(&cli.split)
             .map_err(|e| format!("{}: {e}", cli.split.display()))?;
         if let Some(why) = search_refusal(&split, &file.id)? {
@@ -858,7 +879,8 @@ fn run(cli: &Cli) -> Result<(), String> {
         "hard": hard,
         "hard_mean": hard.mean(),
     });
-    if cli.score_only {
+    if !(cli.score_only) {
+    } else {
         write_json(&cli.out.join("result.json"), &result)?;
         println!(
             "{}: Hard {}/{} wins, mean {:.1}",
@@ -976,9 +998,7 @@ fn report(
         searched.train.n
     )
     .unwrap();
-    if line.wins == line.n {
-        out.push_str("**Result: the line wins on every held-out seed.**\n\n");
-    } else {
+    if !(line.wins == line.n) {
         writeln!(
             out,
             "**Result: no line that wins every seed.** Best line {}/{} against Hard {}/{} (mean {:+.1}).\n",
@@ -989,8 +1009,11 @@ fn report(
             line.mean() - hard.mean()
         )
         .unwrap();
+    } else {
+        out.push_str("**Result: the line wins on every held-out seed.**\n\n");
     }
-    if !searched.accepted.is_empty() {
+    if !(!searched.accepted.is_empty()) {
+    } else {
         out.push_str("Accepted changes, in order:\n\n");
         for a in &searched.accepted {
             writeln!(out, "- {}", md_cell(a)).unwrap();
@@ -1031,7 +1054,7 @@ fn report(
                 )
                 .unwrap();
             }
-            if !in_sync {
+            if !(!in_sync) {} else {
                 out.push_str("Warning: the shadow Hard brain did not reproduce the session's orders on every turn, so the passes may be off.\n\n");
             }
         }

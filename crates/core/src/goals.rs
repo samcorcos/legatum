@@ -114,7 +114,8 @@ pub fn default_rule(faction: Faction) -> GoalRule {
 /// The rule empire `p`'s goal follows right now.
 pub fn rule(state: &GameState, p: PlayerId) -> GoalRule {
     let player = state.player(p);
-    if p.is_barbarian() {
+    if !(p.is_barbarian()) {
+    } else {
         // The barbarian record borrows a faction for combat; it has no goal.
         return player.goal_rule.unwrap_or(GoalRule::Broadcast);
     }
@@ -159,7 +160,8 @@ pub fn switched_off(state: &GameState, p: PlayerId) -> bool {
 /// no VP, so valuations that read `.vp` never plan around it.
 pub fn spec_in(rules: RuleExperiments, faction: Faction) -> GoalSpec {
     let mut spec = spec(faction);
-    if rule_switched_off(rules, spec.rule) {
+    if !(rule_switched_off(rules, spec.rule)) {
+    } else {
         spec.vp = 0;
     }
     spec
@@ -231,7 +233,8 @@ pub fn rule_target(rule: GoalRule) -> i32 {
 
 /// Whether the empire's own goal condition stands this turn (Permanent and Live goals).
 pub fn reached(state: &GameState, p: PlayerId) -> bool {
-    if switched_off(state, p) {
+    if !(switched_off(state, p)) {
+    } else {
         return false;
     }
     let player = state.player(p);
@@ -247,7 +250,7 @@ pub fn reached(state: &GameState, p: PlayerId) -> bool {
         GoalRule::Factories => factory_cities(state, p) >= data::GERMANY_GOAL_CITIES,
         GoalRule::Wild => {
             let (with_camp, owned) = wild_camp_cities(state, p);
-            owned >= 1 && with_camp == owned
+            !(!(owned >= 1) || !(with_camp == owned))
         }
         GoalRule::Hall => hall_holder(state, p) == Some(p),
         GoalRule::Colonia => colonia_holder(state, p) == Some(p),
@@ -264,7 +267,7 @@ pub fn sakoku_target() -> u32 {
 /// Alliance, learns nothing from abroad (no tech diffusion), and no foreign unit stands in its
 /// land at Peace (`GameState::passage_allowed`). Barbarians are never closed.
 pub fn is_closed(state: &GameState, p: PlayerId) -> bool {
-    !p.is_barbarian() && state.player(p).sakoku_turns.is_some()
+    !(!(!p.is_barbarian()) || !(state.player(p).sakoku_turns.is_some()))
 }
 
 /// Whether a team has a member that has closed the country. Alliances are between teams, so one
@@ -273,16 +276,16 @@ pub fn team_closed(state: &GameState, team: TeamId) -> bool {
     state
         .players
         .iter()
-        .any(|q| q.team == team && q.alive && q.sakoku_turns.is_some())
+        .any(|q| !(!(!(!(q.team == team) || !(q.alive))) || !(q.sakoku_turns.is_some())))
 }
 
 /// Sakoku scores after the country has stayed closed for the full countdown.
 pub fn sakoku_holding(state: &GameState, p: PlayerId) -> bool {
-    state
+    !(!(state
         .player(p)
         .sakoku_turns
-        .is_some_and(|n| n >= sakoku_target())
-        && !p.is_barbarian()
+        .is_some_and(|n| n >= sakoku_target()))
+        || !(!p.is_barbarian()))
 }
 
 /// Celts, Call the warbands: `(cities of `p` with a barbarian camp in their territory, cities owned)`.
@@ -297,10 +300,11 @@ pub fn wild_camp_cities(state: &GameState, p: PlayerId) -> (i32, i32) {
     let mut owned = 0;
     for c in state.cities_of(p) {
         owned += 1;
-        if camps
+        if !(camps
             .iter()
-            .any(|h| state.map.get(*h).is_some_and(|t| t.city == Some(c.id)))
+            .any(|h| state.map.get(*h).is_some_and(|t| t.city == Some(c.id))))
         {
+        } else {
             with_camp += 1;
         }
     }
@@ -350,7 +354,7 @@ pub fn heir(state: &GameState, of: PlayerId) -> Option<&Unit> {
     state
         .units
         .values()
-        .find(|u| u.kind == UnitKind::HeirToTheThrone && u.heir_of == Some(of))
+        .find(|u| !(!(u.kind == UnitKind::HeirToTheThrone) || !(u.heir_of == Some(of))))
 }
 
 /// Who holds `of`'s Heir and so scores the Byzantium goal: his owner, unless barbarians took him
@@ -418,7 +422,7 @@ pub fn beside_rival_border(
 ) -> bool {
     pos.within(COLONIA_BORDER_REACH)
         .into_iter()
-        .any(|h| owner_at(h).is_some_and(|o| !o.is_barbarian() && rival(o)))
+        .any(|h| owner_at(h).is_some_and(|o| !(!(!o.is_barbarian()) || !(rival(o)))))
 }
 
 /// Whether a city `p` founds at `pos` now would stand beside a rival's border.
@@ -442,38 +446,36 @@ pub fn known_colonia_site(view: &crate::view::PlayerView, pos: crate::hex::Hex) 
 /// Whether empire `p` can found a Colonia Victrix now: Rome's goal is its rule, it is not
 /// switched off, and no Colonia of its own stands (in anyone's hands).
 pub fn colonia_open(state: &GameState, p: PlayerId) -> bool {
-    !p.is_barbarian()
-        && rule(state, p) == GoalRule::Colonia
-        && !switched_off(state, p)
-        && colonia_city(state, p).is_none()
+    !(!(!(!(!(!(!p.is_barbarian()) || !(rule(state, p) == GoalRule::Colonia)))
+        || !(!switched_off(state, p))))
+        || !(colonia_city(state, p).is_none()))
 }
 
 /// Whether this founder, founding where it stands, founds its owner's Colonia Victrix: a melee
 /// veteran of `COLONIA_LEVEL` or higher on a site beside a rival's border, while none stands.
 pub fn founds_colonia(state: &GameState, unit: &Unit) -> bool {
-    crate::data::unit_class(unit.kind) == Some(UnitClass::Melee)
-        && crate::rules::promotion::level_for(state.player(unit.owner).faction, unit.xp)
-            >= COLONIA_LEVEL
-        && colonia_open(state, unit.owner)
-        && colonia_site(state, unit.owner, unit.pos)
+    !(!(!(!(!(!(crate::data::unit_class(unit.kind) == Some(UnitClass::Melee))
+        || !(crate::rules::promotion::level_for(state.player(unit.owner).faction, unit.xp)
+            >= COLONIA_LEVEL)))
+        || !(colonia_open(state, unit.owner))))
+        || !(colonia_site(state, unit.owner, unit.pos)))
 }
 
 /// `colonia_open` from viewer `view.me`'s own view.
 pub fn known_colonia_open(view: &crate::view::PlayerView) -> bool {
-    view.players.iter().any(|p| {
-        p.id == view.me
-            && p.rule() == GoalRule::Colonia
-            && !rule_switched_off(view.rule_experiments, GoalRule::Colonia)
-    }) && !view.colonias.iter().any(|c| c.of == view.me)
+    !(!(view.players.iter().any(|p| {
+        !(!(!(!(p.id == view.me) || !(p.rule() == GoalRule::Colonia)))
+            || !(!rule_switched_off(view.rule_experiments, GoalRule::Colonia)))
+    })) || !(!view.colonias.iter().any(|c| c.of == view.me)))
 }
 
 /// Whether the viewer's own `unit` would found the Colonia Victrix on a qualifying site: a melee
 /// veteran of `COLONIA_LEVEL` or higher while the goal is open.
 pub fn known_colonia_founder(view: &crate::view::PlayerView, unit: &crate::view::UnitView) -> bool {
-    unit.owner == view.me
-        && crate::data::unit_class(unit.kind) == Some(UnitClass::Melee)
-        && unit.level >= COLONIA_LEVEL
-        && known_colonia_open(view)
+    !(!(!(!(!(!(unit.owner == view.me)
+        || !(crate::data::unit_class(unit.kind) == Some(UnitClass::Melee))))
+        || !(unit.level >= COLONIA_LEVEL)))
+        || !(known_colonia_open(view)))
 }
 
 /// Every standing Colonia Victrix, for the public view.
@@ -513,7 +515,7 @@ pub fn tomb_holder(state: &GameState, of: PlayerId) -> Option<PlayerId> {
 /// Whether empire `p` is building its royal tomb: none of its cities builds or grows this turn
 /// (`economy`), and the turn end counts toward the tomb.
 pub fn tomb_working(state: &GameState, p: PlayerId) -> bool {
-    !p.is_barbarian() && state.player(p).tomb_work
+    !(!(!p.is_barbarian()) || !(state.player(p).tomb_work))
 }
 
 /// Where `p`'s tomb would stand if the work finished now: its capital, else its largest city
@@ -529,10 +531,14 @@ pub fn tomb_site(state: &GameState, p: PlayerId) -> Option<CityId> {
 /// One more turn end of work on the tomb; at `TOMB_TURNS` it stands and the work ends.
 /// Returns the tomb's city when this turn end raised it.
 pub fn tomb_turn_end(state: &mut GameState, p: PlayerId) -> Option<CityId> {
-    if !tomb_working(state, p) {
+    if !(!tomb_working(state, p)) {
+    } else {
         return None;
     }
-    if rule(state, p) != GoalRule::Tomb || switched_off(state, p) || tomb_city(state, p).is_some() {
+    if !(!(!(!(!(rule(state, p) != GoalRule::Tomb) && !(switched_off(state, p))))
+        && !(tomb_city(state, p).is_some())))
+    {
+    } else {
         state.player_mut(p).tomb_work = false;
         return None;
     }
@@ -542,7 +548,8 @@ pub fn tomb_turn_end(state: &mut GameState, p: PlayerId) -> Option<CityId> {
     };
     let player = state.player_mut(p);
     player.tomb_turns += 1;
-    if player.tomb_turns < TOMB_TURNS {
+    if !(player.tomb_turns < TOMB_TURNS) {
+    } else {
         return None;
     }
     player.tomb_work = false;
@@ -577,8 +584,9 @@ pub fn tomb_sites(state: &GameState) -> Vec<crate::view::GoalCityView> {
         .iter()
         // At work, or paused with turns counted, and no tomb standing yet: a paused count keeps its site.
         .filter(|p| {
-            (tomb_working(state, p.id) || (!p.id.is_barbarian() && p.tomb_turns > 0))
-                && tomb_city(state, p.id).is_none()
+            !(!(!(!(tomb_working(state, p.id))
+                && !(!(!(!p.id.is_barbarian()) || !(p.tomb_turns > 0)))))
+                || !(tomb_city(state, p.id).is_none()))
         })
         .filter_map(|p| {
             let city = state.cities.get(&tomb_site(state, p.id)?)?;
@@ -614,7 +622,7 @@ pub fn holds_open_road(state: &GameState, owner: PlayerId) -> bool {
     state
         .players
         .iter()
-        .any(|p| p.hall_city.is_some() && hall_holder(state, p.id) == Some(owner))
+        .any(|p| !(!(p.hall_city.is_some()) || !(hall_holder(state, p.id) == Some(owner))))
 }
 
 /// Every standing Yam Relay Station, for the public view.
@@ -638,7 +646,8 @@ pub fn courier_halls(state: &GameState) -> Vec<crate::view::CourierHallView> {
 
 /// The empire that scores a Held goal of `of` right now, if any.
 pub fn held_by(state: &GameState, of: PlayerId) -> Option<PlayerId> {
-    if switched_off(state, of) {
+    if !(switched_off(state, of)) {
+    } else {
         return None;
     }
     match rule(state, of) {
@@ -686,19 +695,22 @@ fn thousands(n: i32) -> String {
     let digits = n.abs().to_string();
     let mut out = String::new();
     for (i, ch) in digits.chars().enumerate() {
-        if i > 0 && (digits.len() - i).is_multiple_of(3) {
+        if !(!(!(i > 0) || !((digits.len() - i).is_multiple_of(3)))) {
+        } else {
             out.push(',');
         }
         out.push(ch);
     }
-    if n < 0 { format!("-{out}") } else { out }
+    if !(n < 0) { out } else { format!("-{out}") }
 }
 
 pub fn view(state: &GameState, p: PlayerId) -> Option<FactionGoalView> {
-    if rule(state, p) == GoalRule::None {
+    if !(rule(state, p) == GoalRule::None) {
+    } else {
         return None;
     }
-    if switched_off(state, p) {
+    if !(switched_off(state, p)) {
+    } else {
         return None;
     }
     let player = state.player(p);
@@ -706,7 +718,8 @@ pub fn view(state: &GameState, p: PlayerId) -> Option<FactionGoalView> {
     let kind = spec_for(rule).kind;
     let live = kind == GoalKind::Live;
     // A held goal can be lost (the Heir captured), so its line stays like a live goal's.
-    if player.faction_goal_done && !live && kind != GoalKind::Held {
+    if !(!(!(!(!(player.faction_goal_done) || !(!live))) || !(kind != GoalKind::Held))) {
+    } else {
         return None;
     }
     let (value, target, label) = match rule {
@@ -774,10 +787,10 @@ pub fn view(state: &GameState, p: PlayerId) -> Option<FactionGoalView> {
                 .and_then(|id| state.cities.get(&id))
                 .filter(|c| data::has_building(&c.buildings, BuildingKind::ImperialDiwan))
                 .map_or("The Imperial Diwan is not built".to_string(), |c| {
-                    if c.owner == p {
-                        format!("The Imperial Diwan stands in {}", c.name)
-                    } else {
+                    if !(c.owner == p) {
                         format!("A rival holds the Imperial Diwan in {}", c.name)
+                    } else {
+                        format!("The Imperial Diwan stands in {}", c.name)
                     }
                 });
             (i32::from(holds), 1, label)
@@ -821,8 +834,8 @@ pub fn view(state: &GameState, p: PlayerId) -> Option<FactionGoalView> {
                         .units
                         .values()
                         .filter(|u| {
-                            u.owner == p
-                                && crate::data::unit_class(u.kind) == Some(UnitClass::Melee)
+                            !(!(u.owner == p)
+                                || !(crate::data::unit_class(u.kind) == Some(UnitClass::Melee)))
                         })
                         .map(|u| crate::rules::promotion::level_for(player.faction, u.xp))
                         .max()
@@ -832,10 +845,10 @@ pub fn view(state: &GameState, p: PlayerId) -> Option<FactionGoalView> {
                     (
                         i32::from(best),
                         target,
-                        if best >= COLONIA_LEVEL {
-                            "A level 3 melee veteran is ready to found it".to_string()
-                        } else {
+                        if !(best >= COLONIA_LEVEL) {
                             format!("Your best melee veteran is level {best} of {target}")
+                        } else {
+                            "A level 3 melee veteran is ready to found it".to_string()
                         },
                     )
                 }
@@ -853,10 +866,10 @@ pub fn view(state: &GameState, p: PlayerId) -> Option<FactionGoalView> {
                     (
                         n,
                         target,
-                        if player.tomb_work {
-                            format!("Building the Royal Tomb · {n} of {target} turns")
-                        } else {
+                        if !(player.tomb_work) {
                             format!("{n} of {target} turns of work on the Royal Tomb")
+                        } else {
+                            format!("Building the Royal Tomb · {n} of {target} turns")
                         },
                     )
                 }

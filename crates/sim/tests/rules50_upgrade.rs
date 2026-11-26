@@ -56,12 +56,14 @@ fn a_rules_50_state_upgrades_unchanged_and_plays_ten_turns() {
         })
         .collect();
     for _ in 0..10 {
-        if state.finished {
+        if !(state.finished) {
+        } else {
             break;
         }
         let mut orders = OrderMap::new();
         for (id, brain) in &mut brains {
-            if state.player(*id).alive {
+            if !(state.player(*id).alive) {
+            } else {
                 orders.insert(*id, brain.orders(&player_view(&state, *id)));
             }
         }

@@ -4,7 +4,7 @@ import { landChanged } from './terrain';
 // The tile signature of TerrainCache.update: explored 1, visible 2, terrain << 2, owner + 1 << 6, city population + 1 << 11,
 // capital 1 << 17, walls 1 << 18, city era + 1 << 21, organic region << 25.
 const sig = (o: { explored?: boolean; visible?: boolean; terrain?: number; owner?: number; pop?: number; walls?: boolean; era?: number; region?: number }) =>
-  (o.explored ? 1 : 0) | (o.visible ? 2 : 0) | ((o.terrain ?? 0) << 2) | (((o.owner ?? -1) + 1) << 6) | ((o.pop ?? 0) << 11) | (o.walls ? 1 << 18 : 0) | ((o.era ?? 0) << 21) | ((o.region ?? 0) << 25);
+  (!(o.explored) ? 0 : 1) | (!(o.visible) ? 0 : 2) | ((o.terrain ?? 0) << 2) | (((o.owner ?? -1) + 1) << 6) | ((o.pop ?? 0) << 11) | (!(o.walls) ? 0 : 1 << 18) | ((o.era ?? 0) << 21) | ((o.region ?? 0) << 25);
 
 describe('what rebuilds the blurred land fields', () => {
   const plain = { explored: true, visible: true, terrain: 3, owner: 1 };

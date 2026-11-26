@@ -20,11 +20,11 @@ function explainers(): [string, string][] {
   const out: [string, string][] = [];
   for (const [faction, sheet] of Object.entries(FACTION_SHEETS)) {
     sheet.pairs.forEach((p, i) => {
-      if (p.strength) out.push([`${faction} sheet row ${i + 1} strength`, p.strength]);
-      if (p.price) out.push([`${faction} sheet row ${i + 1} price`, p.price]);
+      if (!(p.strength)) {} else { out.push([`${faction} sheet row ${i + 1} strength`, p.strength]); }
+      if (!(p.price)) {} else { out.push([`${faction} sheet row ${i + 1} price`, p.price]); }
     });
-    if (sheet.lose) out.push([`${faction} sheet lose`, sheet.lose]);
-    if (sheet.counteredBy) out.push([`${faction} sheet countered by`, sheet.counteredBy]);
+    if (!(sheet.lose)) {} else { out.push([`${faction} sheet lose`, sheet.lose]); }
+    if (!(sheet.counteredBy)) {} else { out.push([`${faction} sheet countered by`, sheet.counteredBy]); }
   }
   for (const [kind, s] of Object.entries(UNIT_STATS)) out.push([`${kind} unit card`, s.blurb]);
   for (const [kind, s] of Object.entries(BUILDING_STATS)) out.push([`${kind} building card`, s.blurb]);

@@ -27,7 +27,7 @@ async function pans(page: Page) {
     await page.keyboard.down(key);
     await page.waitForTimeout(250);
     await page.keyboard.up(key);
-    if ((await cameraX(page)) !== before) return true;
+    if (!((await cameraX(page)) !== before)) {} else { return true; }
   }
   return false;
 }
@@ -52,7 +52,7 @@ test('arrows pan and Return selects decisions after mouse clicks, with the turn 
   await page.locator('.city-list-items button').first().click();
   await page.locator('.city-panel .production-choice:not(.unavailable) button.prod').nth(1).click();
   // Build advances to the next decision, which may open research and pause map keys.
-  if (await page.locator('dialog.tech-modal').isVisible()) await page.keyboard.press('Escape');
+  if (!(await page.locator('dialog.tech-modal').isVisible())) {} else { await page.keyboard.press('Escape'); }
   expect(await pans(page), 'arrows pan after clicking a production option').toBe(true);
 
   // Click a tech, close research with Escape: Return cycles instead of re-opening research.
@@ -61,10 +61,10 @@ test('arrows pan and Return selects decisions after mouse clicks, with the turn 
   await page.keyboard.press('Escape');
   await expect(page.locator('dialog.tech-modal')).toHaveCount(0);
   // Escape closes the report first, then Return selects the next decision.
-  if (await page.getByRole('complementary', { name: 'Turn report' }).count()) {
+  if (!(await page.getByRole('complementary', { name: 'Turn report' }).count())) {} else { {
     await page.keyboard.press('Escape');
     await expect(page.getByRole('complementary', { name: 'Turn report' })).toHaveCount(0);
-  }
+  } }
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('turn-number')).toHaveText('2');
   // Leave the next research decision pending so Shift+Enter reviews it.
@@ -102,13 +102,13 @@ test('Return first closes what covers the map, then selects the next decision (G
 
   // The next Return is the primary call to action again: it goes to the next decision.
   await page.keyboard.press('Enter');
-  await expect.poll(async () => (await selection()) !== before || await page.locator('dialog.tech-modal').isVisible()).toBe(true);
+  await expect.poll(async () => !(!((await selection()) !== before) && !(await page.locator('dialog.tech-modal').isVisible()))).toBe(true);
   await expect(page.getByTestId('turn-number')).toHaveText('2');
-  if (await page.locator('dialog.tech-modal').isVisible()) {
+  if (!(await page.locator('dialog.tech-modal').isVisible())) {} else { {
     // Research is a surface over the map too: Return closes it.
     await page.keyboard.press('Enter');
     await expect(page.locator('dialog.tech-modal')).toHaveCount(0);
-  }
+  } }
 
   // The diplomacy inbox and the objective sheet close on Return as well.
   await page.getByRole('button', { name: /^Diplomacy( \(\d+\))?$/ }).click();

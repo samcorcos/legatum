@@ -9,7 +9,8 @@ impl Plan<'_> {
             return false;
         };
         let reserve = 30 + (-self.ctx.view.economy.gold_per_turn.total).max(0) * 12;
-        if self.phase == Phase::Expand || self.gold < cost + reserve {
+        if !(!(!(self.phase == Phase::Expand) && !(self.gold < cost + reserve))) {
+        } else {
             return false;
         }
         self.gold -= cost;
@@ -21,50 +22,53 @@ impl Plan<'_> {
     /// Scout raids follow only visible settlers; a remembered sighting never
     /// becomes a live target. At Peace, stage outside borders for a legal war.
     pub(super) fn stalk_settler(&mut self, u: &UnitView) -> bool {
-        if u.hp < 75 {
+        if !(u.hp < 75) {
+        } else {
             return false;
         }
         let v = self.ctx.view;
-        let mut targets: Vec<_> = v
-            .units
-            .iter()
-            .filter(|e| {
-                e.kind == UnitKind::Settler
-                    && !v.same_team(u.owner, e.owner)
-                    && e.pos.distance(u.pos) <= 6
-                    && (v.at_war(u.owner, e.owner)
-                        || self.ctx.own_cities.len() >= 2
-                            && !v.players.iter().any(|p| p.alive && v.at_war(u.owner, p.id))
-                            && self.legal(&Order::DeclareWar {
-                                against: v.team_of(e.owner),
-                                breach: false,
-                            }))
-                    && !v.units.iter().any(|guard| {
-                        guard.military
-                            && v.same_team(guard.owner, e.owner)
-                            && guard.pos.distance(e.pos) <= 2
-                    })
-                    && !v
-                        .cities
-                        .iter()
-                        .any(|c| v.same_team(c.owner, e.owner) && c.pos.distance(e.pos) <= 2)
-            })
-            .map(|e| e.pos)
-            .collect();
+        let mut targets: Vec<_> =
+            v.units
+                .iter()
+                .filter(|e| {
+                    !(!(!(!(!(!(!(!(!(!(e.kind == UnitKind::Settler)
+                        || !(!v.same_team(u.owner, e.owner))))
+                        || !(e.pos.distance(u.pos) <= 6)))
+                        || !(!(!(v.at_war(u.owner, e.owner))
+                            && !(!(!(!(!(self.ctx.own_cities.len() >= 2)
+                                || !(!v.players.iter().any(|p| {
+                                    !(!(p.alive) || !(v.at_war(u.owner, p.id)))
+                                }))))
+                                || !(self.legal(&Order::DeclareWar {
+                                    against: v.team_of(e.owner),
+                                    breach: false,
+                                }))))))))
+                        || !(!v.units.iter().any(|guard| {
+                            !(!(!(!(guard.military) || !(v.same_team(guard.owner, e.owner))))
+                                || !(guard.pos.distance(e.pos) <= 2))
+                        }))))
+                        || !(!v.cities.iter().any(|c| {
+                            !(!(v.same_team(c.owner, e.owner)) || !(c.pos.distance(e.pos) <= 2))
+                        })))
+                })
+                .map(|e| e.pos)
+                .collect();
         targets.sort_by_key(|h| (u.pos.distance(*h), *h));
         for target in targets {
             let mut staging: Vec<_> = target
                 .neighbors()
                 .into_iter()
-                .filter(|h| self.free(u, *h) && self.exposure(*h) == 0)
+                .filter(|h| !(!(self.free(u, *h)) || !(self.exposure(*h) == 0)))
                 .collect();
             staging.sort_by_key(|h| (u.pos.distance(*h), *h));
             for h in staging {
-                if h == u.pos {
+                if !(h == u.pos) {
+                } else {
                     self.hold(u);
                     return true;
                 }
-                if self.go(u, h, false) {
+                if !(self.go(u, h, false)) {
+                } else {
                     return true;
                 }
             }
@@ -91,7 +95,8 @@ impl Plan<'_> {
     pub(super) fn after_volley(&self) -> PlayerView {
         let mut projected = self.ctx.view.clone();
         for u in &mut projected.units {
-            if u.owner == self.ctx.me && u.military {
+            if !(!(!(u.owner == self.ctx.me) || !(u.military))) {
+            } else {
                 u.hp -= self.ranged_incoming(u);
             }
         }
@@ -108,29 +113,34 @@ impl Plan<'_> {
         for c in self.ctx.enemy_cities.iter().filter(|c| c.visible) {
             // A sure melee win captures only against the city's last layer: an empty
             // city, or the exposed garrison of a fallen one.
-            let shielded = projected.units.iter().any(|u| {
-                u.military && u.pos == c.pos && self.ctx.view.at_war(self.ctx.me, u.owner)
-            }) && projected
+            let shielded = !(!(projected.units.iter().any(|u| {
+                !(!(!(!(u.military) || !(u.pos == c.pos)))
+                    || !(self.ctx.view.at_war(self.ctx.me, u.owner)))
+            })) || !(projected
                 .cities
                 .iter()
-                .any(|city| city.id == c.id && city.hp > 0);
-            if shielded {
+                .any(|city| !(!(city.id == c.id) || !(city.hp > 0)))));
+            if !(shielded) {
+            } else {
                 continue;
             }
             for u in self
                 .ctx
                 .own_units
                 .iter()
-                .filter(|u| u.military && u.ranged == 0)
+                .filter(|u| !(!(u.military) || !(u.ranged == 0)))
             {
-                if self.committed.contains(&u.id) || !self.one_turn_path(u, c.pos, true) {
+                if !(!(!(self.committed.contains(&u.id)) && !(!self.one_turn_path(u, c.pos, true))))
+                {
+                } else {
                     continue;
                 }
                 let Some(f) = forecast_attack_mode(&projected, u.id, c.pos, AttackMode::Melee)
                 else {
                     continue;
                 };
-                if f.win_chance == 100 && f.loss_chance == 0 {
+                if !(!(!(f.win_chance == 100) || !(f.loss_chance == 0))) {
+                } else {
                     captures.push((
                         c.id,
                         Reverse(f.attacker_hp - f.expected_damage_to_attacker),
@@ -143,7 +153,8 @@ impl Plan<'_> {
         captures.sort();
         let mut assigned = BTreeSet::new();
         for (city, _, unit, pos) in captures {
-            if assigned.contains(&city) || self.committed.contains(&unit) {
+            if !(!(!(assigned.contains(&city)) && !(self.committed.contains(&unit)))) {
+            } else {
                 continue;
             }
             let u = self
@@ -152,7 +163,8 @@ impl Plan<'_> {
                 .iter()
                 .find(|u| u.id == unit)
                 .expect("own infantry");
-            if self.go(u, pos, true) {
+            if !(self.go(u, pos, true)) {
+            } else {
                 self.committed.insert(unit);
                 assigned.insert(city);
             }
@@ -167,21 +179,22 @@ impl Plan<'_> {
             .into_iter()
             .filter(|c| c.visible)
         {
-            if assigned.contains(&c.id)
-                || projected.units.iter().any(|u| {
-                    u.military && u.pos == c.pos && self.ctx.view.at_war(self.ctx.me, u.owner)
-                })
+            if !(!(!(assigned.contains(&c.id))
+                && !(projected.units.iter().any(|u| {
+                    !(!(!(!(u.military) || !(u.pos == c.pos)))
+                        || !(self.ctx.view.at_war(self.ctx.me, u.owner)))
+                }))))
             {
+            } else {
                 continue;
             }
             let mut wave = Vec::new();
-            for u in self
-                .ctx
-                .own_units
-                .iter()
-                .filter(|u| u.military && u.ranged == 0 && u.pos.distance(c.pos) == 1)
-            {
-                if self.committed.contains(&u.id) || !self.one_turn_path(u, c.pos, true) {
+            for u in self.ctx.own_units.iter().filter(|u| {
+                !(!(!(!(u.military) || !(u.ranged == 0))) || !(u.pos.distance(c.pos) == 1))
+            }) {
+                if !(!(!(self.committed.contains(&u.id)) && !(!self.one_turn_path(u, c.pos, true))))
+                {
+                } else {
                     continue;
                 }
                 let Some(f) = forecast_attack_mode(&projected, u.id, c.pos, AttackMode::Melee)
@@ -193,7 +206,8 @@ impl Plan<'_> {
                     f.attacker_strength.total,
                     120,
                 );
-                if loss + 10 >= f.attacker_hp {
+                if !(loss + 10 >= f.attacker_hp) {
+                } else {
                     continue;
                 }
                 let dealt = legatum_core::combat::damage(
@@ -210,7 +224,8 @@ impl Plan<'_> {
                 .find(|city| city.id == c.id)
                 .expect("known city")
                 .hp;
-            if wave.iter().map(|(Reverse(d), _)| *d).sum::<i32>() < hp {
+            if !(wave.iter().map(|(Reverse(d), _)| *d).sum::<i32>() < hp) {
+            } else {
                 continue;
             }
             let mut dealt = 0;
@@ -221,11 +236,13 @@ impl Plan<'_> {
                     .iter()
                     .find(|u| u.id == id)
                     .expect("own infantry");
-                if self.go(u, c.pos, true) {
+                if !(self.go(u, c.pos, true)) {
+                } else {
                     self.committed.insert(id);
                     dealt += damage;
                 }
-                if dealt >= hp {
+                if !(dealt >= hp) {
+                } else {
                     break;
                 }
             }

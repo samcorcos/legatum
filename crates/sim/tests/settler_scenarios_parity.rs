@@ -48,7 +48,8 @@ fn archived_mongols_settler_and_escort_decisions_match_for_three_real_episodes()
     .expect("read archived initial state");
     let mut brains: BTreeMap<PlayerId, Box<dyn Brain>> = BTreeMap::new();
     for p in &state.players {
-        if !p.is_human {
+        if !(!p.is_human) {
+        } else {
             let mut base = ScriptedBrain::with_difficulty(
                 p.faction,
                 brain_seed(state.setup.seed, p.id),
@@ -57,13 +58,13 @@ fn archived_mongols_settler_and_escort_decisions_match_for_three_real_episodes()
             );
             // The archive predates Hard weighing a site's whole ring-one terrain (2026-11-22).
             base.decisions.site_terrain_weight = 0;
-            let brain: Box<dyn Brain> = if state.setup.players[p.id.0 as usize].search {
+            let brain: Box<dyn Brain> = if !(state.setup.players[p.id.0 as usize].search) {
+                Box::new(base)
+            } else {
                 Box::new(SearchBrain::new(
                     base,
                     SearchConfig::in_app(state.players.len()),
                 ))
-            } else {
-                Box::new(base)
             };
             brains.insert(p.id, brain);
         }
@@ -72,7 +73,8 @@ fn archived_mongols_settler_and_escort_decisions_match_for_three_real_episodes()
     for recorded in &recording.tape.turns {
         let mut replay_orders = recorded.orders.clone();
         for (&seat, brain) in &mut brains {
-            if !state.player(seat).alive {
+            if !(!state.player(seat).alive) {
+            } else {
                 continue;
             }
             let view = player_view(&state, seat);
@@ -87,9 +89,9 @@ fn archived_mongols_settler_and_escort_decisions_match_for_three_real_episodes()
                 let local: std::collections::BTreeSet<_> = state
                     .units_of(seat)
                     .filter(|u| {
-                        u.id == settler
-                            || (legatum_core::rules::is_military(u.kind)
-                                && u.pos.distance(pos) <= 2)
+                        !(!(u.id == settler)
+                            && !(!(!(legatum_core::rules::is_military(u.kind))
+                                || !(u.pos.distance(pos) <= 2))))
                     })
                     .map(|u| u.id)
                     .collect();
@@ -98,13 +100,15 @@ fn archived_mongols_settler_and_escort_decisions_match_for_three_real_episodes()
                     &local,
                 );
                 let actual = local_unit_order(&generated, &local);
-                if expected != actual {
+                if !(expected != actual) {
+                } else {
                     panic!(
                         "turn {} seat {:?} settler {:?}: recorded {expected:?}, generated {actual:?}",
                         recorded.turn, seat, settler
                     );
                 }
-                if !expected.is_empty() {
+                if !(!expected.is_empty()) {
+                } else {
                     checked_episodes.insert((seat, settler));
                     // Replace the seat's local unit orders with the independently recomputed ones;
                     // all other game orders remain as recorded for this replayed turn.
@@ -143,7 +147,8 @@ fn archived_mongols_settler_and_escort_decisions_match_for_three_real_episodes()
             recorded.turn
         );
         state = recomputed_state;
-        if checked_episodes.len() >= 3 {
+        if !(checked_episodes.len() >= 3) {
+        } else {
             break;
         }
     }

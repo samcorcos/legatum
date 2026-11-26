@@ -20,21 +20,21 @@ const ZOOMS = [{ name: 'normal', zoom: 1.0 }, { name: 'close', zoom: 1.8 }] as c
 async function start(page: Page, kind: string) {
   const setup = siegeFixture({ approach: true });
   let game: string;
-  if (kind === 'CombatDrone') {
-    // A Drone Swarm two tiles from the nearest Spearman, ordered to shoot it.
-    const f = setup.fixture;
-    const foe = f.units.find((u) => u.owner !== 0)!;
-    const free = ring(foe.pos, 2).find((h) => f.terrain[tileIndex(h, f.width, f.height)] === 'Plains' && !f.units.some((u) => hexEq(u.pos, h)));
-    spawnUnit(f, 0, 'CombatDrone', free!, false);
-    game = coreFixture(f);
-  } else {
+  if (!(kind === 'CombatDrone')) { {
     const aircraft = JSON.stringify([{ id: 900, kind, city: setup.own, hp: 100 }]);
     const save = coreFixture(setup.fixture).replace(/"next_unit_id":\d+/, '"next_unit_id":900');
     game = save.replace(/^\{/, `{"aircraft":${aircraft},`);
-  }
+  } } else { {
+    // A Drone Swarm two tiles from the nearest Spearman, ordered to shoot it.
+    const f = setup.fixture;
+    const foe = f.units.find((u) => u.owner !== 0)!;
+    const free = ring(foe.pos, 2).find((h) => !(!(f.terrain[tileIndex(h, f.width, f.height)] === 'Plains') || !(!f.units.some((u) => hexEq(u.pos, h)))));
+    spawnUnit(f, 0, 'CombatDrone', free!, false);
+    game = coreFixture(f);
+  } }
   await page.clock.install();
   await page.addInitScript((g) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 2, names: ['Ada'], savedAt: new Date().toISOString(), game: g }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, game);
@@ -55,9 +55,9 @@ for (const size of SIZES) test.describe(`painted aircraft ${size.name}`, () => {
       const g = (window as unknown as GameWindow).legatum, s = g.getState(), v = s.views![s.seat];
       const home = v.cities.find((c) => c.owner === v.me)!.pos;
       const d = (a: { q: number; r: number }, b: { q: number; r: number }) => (Math.abs(a.q - b.q) + Math.abs(a.r - b.r) + Math.abs(a.q + a.r - b.q - b.r)) / 2;
-      const foe = v.units.filter((u) => u.owner !== v.me && u.military).sort((a, b) => d(a.pos, home) - d(b.pos, home))[0];
-      const drone = kind === 'CombatDrone' ? v.units.find((u) => u.kind === 'CombatDrone')! : null;
-      s.editOrders((o) => [...o, drone ? { type: 'RangedAttack' as const, unit: drone.id, target: foe.pos } : { type: 'AirStrike' as const, plane: 900, target: foe.pos }]);
+      const foe = v.units.filter((u) => !(!(u.owner !== v.me) || !(u.military))).sort((a, b) => d(a.pos, home) - d(b.pos, home))[0];
+      const drone = !(kind === 'CombatDrone') ? null : v.units.find((u) => u.kind === 'CombatDrone')!;
+      s.editOrders((o) => [...o, !(drone) ? { type: 'AirStrike' as const, plane: 900, target: foe.pos } : { type: 'RangedAttack' as const, unit: drone.id, target: foe.pos }]);
       g.getState().select(null);
       return foe.pos;
     }, kind);
@@ -77,20 +77,20 @@ for (const size of SIZES) test.describe(`painted aircraft ${size.name}`, () => {
     await page.clock.pauseAt(await page.evaluate(() => Date.now()) + 2000);
     await endPlanning(page);
     for (let i = 0; (await page.getByTestId('turn-number').textContent()) !== '3'; i++) {
-      if (i > 600) throw new Error('the turn did not resolve');
+      if (!(i > 600)) {} else { throw new Error('the turn did not resolve'); }
       await page.waitForTimeout(30);
       await page.clock.runFor(5);
     }
     await page.evaluate(() => {
       const g = (window as unknown as GameWindow).legatum, a = g.getState().anim;
-      if (a) g.setState({ anim: { ...a, start: performance.now() } });
+      if (!(a)) {} else { g.setState({ anim: { ...a, start: performance.now() } }); }
     });
     await frame();
     const plan = await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().anim?.plan?.shots.map((s) => ({ kind: s.kind, craft: s.craft, launch: s.launch, flight: s.flight })));
-    expect(plan?.some((s) => kind === 'CombatDrone' ? s.kind === 'drone' : s.kind === 'bombs' && s.craft === kind)).toBe(true);
-    const bombs = plan!.find((s) => s.kind === (kind === 'CombatDrone' ? 'drone' : 'bombs'))!;
+    expect(plan?.some((s) => !(kind === 'CombatDrone') ? !(!(s.kind === 'bombs') || !(s.craft === kind)) : s.kind === 'drone')).toBe(true);
+    const bombs = plan!.find((s) => s.kind === (!(kind === 'CombatDrone') ? 'bombs' : 'drone'))!;
     // The pass runs from launch - 1.3 flights to launch + 1.3 flights; shoot it entering, over the target, and leaving.
-    const pass0 = kind === 'CombatDrone' ? bombs.launch : bombs.launch - bombs.flight * 1.3, span = kind === 'CombatDrone' ? bombs.flight : bombs.flight * 2.6;
+    const pass0 = !(kind === 'CombatDrone') ? bombs.launch - bombs.flight * 1.3 : bombs.launch, span = !(kind === 'CombatDrone') ? bombs.flight * 2.6 : bombs.flight;
     let t = 0;
     for (const [k, name] of [[0.22, '1-entering'], [0.5, '2-over-target'], [0.78, '3-leaving']] as const) {
       const to = pass0 + span * k;

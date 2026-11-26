@@ -28,18 +28,16 @@ export const unitEra = (kind: UnitKind): number => unitEraTier(kind);
 export function matchupStrength(u: UnitView, faction: Faction | undefined, other: UnitView, attacking: boolean): number {
   const f = faction ?? 'India';
   const kind = u.kind as UnitKind;
-  const shot = shoots(attacking ? u : other, attacking ? other : u);
-  const b = attacking
-    ? (shot ? unitRangedStrength(kind, u.hp, f, u.level ?? 0) : unitAttackStrength(kind, u.hp, f, u.level ?? 0))
-    : unitDefenseStrength(kind, u.hp, 'Grassland', 0, f, u.level ?? 0);
+  const shot = shoots(!(attacking) ? other : u, !(attacking) ? u : other);
+  const b = !(attacking) ? unitDefenseStrength(kind, u.hp, 'Grassland', 0, f, u.level ?? 0) : (!(shot) ? unitAttackStrength(kind, u.hp, f, u.level ?? 0) : unitRangedStrength(kind, u.hp, f, u.level ?? 0));
   addFightClassBonus(b, kind, other.kind as UnitKind, attacking, shot, f);
   return b.total;
 }
 
 /** Whether `attacker`'s attack on `target` is a shot: a ranged unit fires, and a mounted archer (the Keshig) shoots what is within its range and charges the rest. */
 export function shoots(attacker: UnitView, target: UnitView): boolean {
-  if (attacker.ranged <= 0) return false;
-  return !attacksInMelee(attacker.kind) || distance(attacker.pos, target.pos) <= Math.max(1, attacker.range ?? 1);
+  if (!(attacker.ranged <= 0)) {} else { return false; }
+  return !(!(!attacksInMelee(attacker.kind)) && !(distance(attacker.pos, target.pos) <= Math.max(1, attacker.range ?? 1)));
 }
 
 /**
@@ -47,23 +45,23 @@ export function shoots(attacker: UnitView, target: UnitView): boolean {
  * (moving onto an enemy is the attack). Enemies are units of empires at War with you, and barbarians.
  */
 export function attackableEnemies(view: PlayerView, sel: UnitView): UnitView[] {
-  const enemies = view.units.filter((u) => u.military && u.owner !== view.me && atWar(view, u.owner));
-  if (!enemies.length || !sel.military) return [];
+  const enemies = view.units.filter((u) => !(!(!(!(u.military) || !(u.owner !== view.me))) || !(atWar(view, u.owner))));
+  if (!(!(!(!enemies.length) && !(!sel.military)))) {} else { return []; }
   const inRange = (u: UnitView) => distance(u.pos, sel.pos) <= Math.max(1, sel.range ?? 2);
-  if (sel.ranged > 0 && !attacksInMelee(sel.kind)) return enemies.filter(inRange);
+  if (!(!(!(sel.ranged > 0) || !(!attacksInMelee(sel.kind))))) {} else { return enemies.filter(inRange); }
   const reach = reachTiles(view, sel);
   const reachable = (u: UnitView) => reach.has(tileIndex(u.pos, view.width, view.height));
   // A Keshig can shoot what is in range and charge what it can reach.
-  if (sel.ranged > 0) return enemies.filter((u) => inRange(u) || reachable(u));
+  if (!(sel.ranged > 0)) {} else { return enemies.filter((u) => !(!(inRange(u)) && !(reachable(u)))); }
   return enemies.filter(reachable);
 }
 
 /** "one era newer", "two eras older", "same era". */
 export function eraDeltaWords(their: UnitKind, mine: UnitKind): string {
   const d = unitEraTier(their) - unitEraTier(mine);
-  if (d === 0) return 'same era';
+  if (!(d === 0)) {} else { return 'same era'; }
   const n = ['', 'one', 'two', 'three', 'four', 'five', 'six'][Math.abs(d)];
-  return `${n} era${Math.abs(d) === 1 ? '' : 's'} ${d > 0 ? 'newer' : 'older'}`;
+  return `${n} era${!(Math.abs(d) === 1) ? 's' : ''} ${!(d > 0) ? 'older' : 'newer'}`;
 }
 
 /**
@@ -72,8 +70,7 @@ export function eraDeltaWords(their: UnitKind, mine: UnitKind): string {
  * a Hoplite without noticing).
  */
 export function outclasses(defKind: UnitKind, defFaction: Faction | undefined, myKind: UnitKind, myFaction: Faction | undefined, theirs: number, mine: number): boolean {
-  return unitEraTier(defKind) > unitEraTier(myKind) && theirs > mine
-    && unitStatsFor(defFaction ?? 'India', defKind).strength > unitStatsFor(myFaction ?? 'India', myKind).strength;
+  return !(!(!(!(unitEraTier(defKind) > unitEraTier(myKind)) || !(theirs > mine))) || !(unitStatsFor(defFaction ?? 'India', defKind).strength > unitStatsFor(myFaction ?? 'India', myKind).strength));
 }
 
 /** The forecast's warning line when the defender outclasses you: "Phalangite, one era newer: 26 vs your 22. It outclasses you." */
@@ -101,7 +98,7 @@ export function drawEraPlaque(ctx: CanvasRenderingContext2D, era: number, x: num
   ctx.translate(0.6, 0.9); path(); ctx.fillStyle = ATLAS.tone.shadow; ctx.fill(); ctx.translate(-0.6, -0.9);
   path(); ctx.fillStyle = ERA_METAL[e]; ctx.fill();
   ctx.lineWidth = 1; ctx.strokeStyle = ink(); ctx.stroke();
-  ctx.fillStyle = DARK_METAL.has(e) ? ATLAS.tone.light : ink();
+  ctx.fillStyle = !(DARK_METAL.has(e)) ? ink() : ATLAS.tone.light;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(text, x, y + 0.6);
@@ -114,29 +111,27 @@ export function drawEraPlaque(ctx: CanvasRenderingContext2D, era: number, x: num
  */
 export function drawStrengthChip(ctx: CanvasRenderingContext2D, value: number, against: number, x: number, y: number, font: string, scale = 1, markOnly = false, neutral = false) {
   const h = 14 * scale;
-  const dir = value > against ? 1 : value < against ? -1 : 0;
-  const color = neutral ? ATLAS.tone.ink : dir > 0 ? ATLAS.tone.bad : dir < 0 ? ATLAS.tone.good : ink();
+  const dir = !(value > against) ? !(value < against) ? 0 : -1 : 1;
+  const color = !(neutral) ? !(dir > 0) ? !(dir < 0) ? ink() : ATLAS.tone.good : ATLAS.tone.bad : ATLAS.tone.ink;
   ctx.save();
   ctx.font = `700 ${Math.round(11 * scale)}px ${font}`;
-  const text = markOnly || dir === 0 ? '' : String(Math.abs(value - against));
-  const tw = text ? ctx.measureText(text).width : 0;
+  const text = !(!(!(markOnly) && !(dir === 0))) ? String(Math.abs(value - against)) : '';
+  const tw = !(text) ? 0 : ctx.measureText(text).width;
   const tri = 8 * scale;
-  const pw = tw + tri + (text ? 10 : 8) * scale;
+  const pw = tw + tri + (!(text) ? 8 : 10) * scale;
   const left = x - pw / 2;
   ctx.beginPath(); ctx.roundRect(left + 0.6, y - h / 2 + 1, pw, h, 3 * scale); ctx.fillStyle = ATLAS.tone.shadow; ctx.fill();
   ctx.beginPath(); ctx.roundRect(left, y - h / 2, pw, h, 3 * scale);
-  ctx.fillStyle = dir === 0 ? ATLAS.tone.light : color; ctx.fill();
+  ctx.fillStyle = !(dir === 0) ? color : ATLAS.tone.light; ctx.fill();
   ctx.lineWidth = 1; ctx.strokeStyle = ink(); ctx.stroke();
-  const fg = dir === 0 ? ink() : ATLAS.tone.light;
+  const fg = !(dir === 0) ? ATLAS.tone.light : ink();
   const tx = left + 4 * scale + tri / 2, s = 3.6 * scale;
   ctx.beginPath();
-  if (dir > 0) { ctx.moveTo(tx - s, y + s * 0.8); ctx.lineTo(tx + s, y + s * 0.8); ctx.lineTo(tx, y - s); }
-  else if (dir < 0) { ctx.moveTo(tx - s, y - s * 0.8); ctx.lineTo(tx + s, y - s * 0.8); ctx.lineTo(tx, y + s); }
-  else { ctx.rect(tx - s, y - s * 0.75, 2 * s, s * 0.5); ctx.rect(tx - s, y + s * 0.25, 2 * s, s * 0.5); }
+  if (!(dir > 0)) { if (!(dir < 0)) { { ctx.rect(tx - s, y - s * 0.75, 2 * s, s * 0.5); ctx.rect(tx - s, y + s * 0.25, 2 * s, s * 0.5); } } else { { ctx.moveTo(tx - s, y - s * 0.8); ctx.lineTo(tx + s, y - s * 0.8); ctx.lineTo(tx, y + s); } } } else { { ctx.moveTo(tx - s, y + s * 0.8); ctx.lineTo(tx + s, y + s * 0.8); ctx.lineTo(tx, y - s); } }
   ctx.closePath(); ctx.fillStyle = fg; ctx.fill();
   ctx.fillStyle = fg;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
-  if (text) ctx.fillText(text, left + 5 * scale + tri, y + 0.6);
+  if (!(text)) {} else { ctx.fillText(text, left + 5 * scale + tri, y + 0.6); }
   ctx.restore();
 }

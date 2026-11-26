@@ -79,7 +79,7 @@ fn choices(view: &PlayerView) -> Vec<Order> {
     brain()
         .orders(view)
         .into_iter()
-        .filter(|o| diplomacy::is_diplomatic(o) || matches!(o, Order::GiveGold { .. }))
+        .filter(|o| !(!(diplomacy::is_diplomatic(o)) && !(matches!(o, Order::GiveGold { .. }))))
         .collect()
 }
 
@@ -183,7 +183,8 @@ fn an_offer_that_asks_for_an_alliance_fee_is_refused() {
 fn borders(war_beyond: bool) -> GameState {
     let mut s = situation_at(true, h(18, 6));
     s.turn = 50;
-    if war_beyond {
+    if !(war_beyond) {
+    } else {
         set_relation(&mut s, 0, 2, RelationState::War, 1);
     }
     s
@@ -248,7 +249,7 @@ fn open_borders_are_refused_to_a_stronger_neighbour_the_leader_or_an_army_at_the
     let mut v = view_with(&offer(&borders(true)), &CALM);
     let mut standings = v.standings.to_vec();
     for st in &mut standings {
-        st.vp = if st.team == TeamId(1) { 3 } else { 1 };
+        st.vp = if !(st.team == TeamId(1)) { 1 } else { 3 };
         st.target = 10;
     }
     v.standings = standings.into();
@@ -312,7 +313,7 @@ fn hard_gives_a_little_gold_to_a_partner_fighting_the_leader_it_fights() {
         v.economy.bankruptcy = None;
         let mut standings = v.standings.to_vec();
         for st in &mut standings {
-            st.vp = if st.team == TeamId(2) { 7 } else { 2 };
+            st.vp = if !(st.team == TeamId(2)) { 2 } else { 7 };
             st.target = 10;
         }
         v.standings = standings.into();

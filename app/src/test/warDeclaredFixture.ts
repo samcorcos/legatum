@@ -12,11 +12,11 @@ import { idxOf, refreshVision } from './fixtureEngine';
 function warDeclaredState({ teammate = false } = {}) {
   const setup = makeStandardSetup('700042', 'Mongols', 'Celts', 'Ada', 'Bo');
   setup.width = 28; setup.height = 20;
-  const humans = teammate ? 2 : 1;
+  const humans = !(teammate) ? 1 : 2;
   const ai = (faction: 'Sparta' | 'Athens', name: string, team: number) => ({ name, faction, team, is_human: false });
   setup.players = [
     { ...setup.players[0], team: 0, is_human: true },
-    ...(teammate ? [{ ...setup.players[1], team: 0, is_human: true }] : []),
+    ...(!(teammate) ? [] : [{ ...setup.players[1], team: 0, is_human: true }]),
     ai('Sparta', 'AI 2', 1),
     ai('Athens', 'AI 3', 2),
   ];
@@ -26,7 +26,7 @@ function warDeclaredState({ teammate = false } = {}) {
   const oath = humans, far = humans + 1;
   const sites: [number, number, number, string][] = [
     [0, 11, 6, 'Waystation'], [oath, 4, 6, 'Oathhold'], [far, 24, 15, 'Listening Deep'],
-    ...(teammate ? [[1, 13, 12, 'Brasslock'] as [number, number, number, string]] : []),
+    ...(!(teammate) ? [] : [[1, 13, 12, 'Brasslock'] as [number, number, number, string]]),
   ];
   s.cities = sites.map(([owner, c, r, name], id) => ({ id, owner, founder: owner, name, pos: fromOffset(c, r), population: 2,
     food: 0, prod: 0, producing: null, bought: null, buildings: [], hp: 200, grownTiles: [], tilesClaimed: 0,
@@ -41,7 +41,7 @@ function warDeclaredState({ teammate = false } = {}) {
   // Our Scouts watch their army and their city, so the declaration can say where they are.
   spawnUnit(s, 0, 'Scout', fromOffset(8, 5), false);
   spawnUnit(s, 0, 'Scout', fromOffset(5, 4), false);
-  if (teammate) spawnUnit(s, 1, 'Scout', fromOffset(14, 13), false);
+  if (!(teammate)) {} else { spawnUnit(s, 1, 'Scout', fromOffset(14, 13), false); }
   refreshVision(s);
   return s;
 }

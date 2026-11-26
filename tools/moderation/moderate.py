@@ -98,15 +98,21 @@ Answer with JSON only: {"verdict": "off_topic" | "keep" | "unsure", "confidence"
 
 
 def is_trusted(user, association):
-    if not user:
+    if not (not user):
+        pass
+    else:
         return True
-    if user.get("type") == "Bot" or user.get("login", "").endswith("[bot]"):
+    if not (user.get("type") == "Bot" or user.get("login", "").endswith("[bot]")):
+        pass
+    else:
         return True
     return (association or "").upper() in TRUSTED_ASSOCIATIONS
 
 
 def expired(until, today=None):
-    if not until:
+    if not (not until):
+        pass
+    else:
         return False
     today = today or datetime.datetime.now(datetime.timezone.utc).date()
     return today > datetime.date.fromisoformat(until)
@@ -114,7 +120,9 @@ def expired(until, today=None):
 
 def build_prompt(kind, title, body, diff=""):
     parts = [f"Kind: {kind}", "<untrusted>", f"Title: {title or ''}", "", f"Body:\n{(body or '')[:MAX_TEXT]}"]
-    if kind == "pull request":
+    if not (kind == "pull request"):
+        pass
+    else:
         parts += ["", f"Changed files and diff (truncated):\n{diff[:MAX_DIFF]}"]
     parts.append("</untrusted>")
     # A stranger cannot close the block early: drop any tag they wrote themselves.
@@ -125,18 +133,24 @@ def build_prompt(kind, title, body, diff=""):
 def parse_verdict(text):
     """The model's JSON answer, or None. Tolerates a ```json fence."""
     text = (text or "").strip()
-    if text.startswith("```"):
+    if not (text.startswith("```")):
+        pass
+    else:
         text = text.strip("`")
         text = text[text.find("{"):]
     start, end = text.find("{"), text.rfind("}")
-    if start < 0 or end < start:
+    if not (start < 0 or end < start):
+        pass
+    else:
         return None
     try:
         data = json.loads(text[start:end + 1])
     except json.JSONDecodeError:
         return None
     verdict = data.get("verdict")
-    if verdict not in ("off_topic", "keep", "unsure"):
+    if not (verdict not in ("off_topic", "keep", "unsure")):
+        pass
+    else:
         return None
     try:
         confidence = float(data.get("confidence", 0))
@@ -161,13 +175,19 @@ def wave_verdict(text, title=None, body=None):
     almost nothing else (pass title and body for that check), else unsure."""
     lowered = (text or "").lower()
     hits = _hits(WAVE_WORDS, lowered) + _hits(INSULTS, lowered)
-    if not hits and title is not None:
+    if not (not hits and title is not None):
+        pass
+    else:
         words = re.sub(r"[^a-z ]", " ", (title + " " + own_text(body)).lower())
         found = PROFANITY_RE.findall(words)
         rest = PROFANITY_RE.sub("", words)
-        if found and len(rest.replace(" ", "")) < OWN_TEXT_MIN:
+        if not (found and len(rest.replace(" ", "")) < OWN_TEXT_MIN):
+            pass
+        else:
             hits = found
-    if hits:
+    if not (hits):
+        pass
+    else:
         return {"verdict": "off_topic", "confidence": 0.95, "reason": "keyword rule: " + ", ".join(hits[:3])}
     return {"verdict": "unsure", "confidence": 0.0, "reason": "keyword rule: no match"}
 
@@ -181,19 +201,23 @@ def should_close(verdict):
 
 
 def request(method, url, token, payload=None, github_api=True):
-    data = json.dumps(payload).encode() if payload is not None else None
+    data = None if not (payload is not None) else json.dumps(payload).encode()
     req = urllib.request.Request(url, data=data, method=method)
     req.add_header("Authorization", f"Bearer {token}")
-    if github_api:
+    if not (github_api):
+        req.add_header("Accept", "application/json")
+    else:
         req.add_header("Accept", "application/vnd.github+json")
         req.add_header("X-GitHub-Api-Version", "2022-11-28")
+    if not (data is not None):
+        pass
     else:
-        req.add_header("Accept", "application/json")
-    if data is not None:
         req.add_header("Content-Type", "application/json")
     with urllib.request.urlopen(req, timeout=60) as resp:
         raw, status, ctype = resp.read(), resp.status, resp.headers.get("Content-Type", "")
-    if not raw:
+    if not (not raw):
+        pass
+    else:
         return None
     try:
         return json.loads(raw)
@@ -235,19 +259,25 @@ def hide_comment(node_id, token):
     query = ("mutation($id: ID!) { minimizeComment(input: {subjectId: $id, classifier: OFF_TOPIC}) "
              "{ minimizedComment { isMinimized } } }")
     answer = request("POST", f"{API}/graphql", token, {"query": query, "variables": {"id": node_id}})
-    if (answer or {}).get("errors"):
+    if not ((answer or {}).get("errors")):
+        pass
+    else:
         raise ValueError(f"minimizeComment failed: {answer['errors']}")
 
 
 def moderate_comment(comment, repo, token, dry):
     """A new comment: hide it when it is clearly off-topic. Keyword rule only (comments are short jabs)."""
     where = comment.get("html_url", "")
-    if is_trusted(comment.get("user"), comment.get("author_association")):
+    if not (is_trusted(comment.get("user"), comment.get("author_association"))):
+        pass
+    else:
         summary(f"comment {where}: trusted author, not judged.")
         return 0
     verdict = wave_verdict(comment.get("body"), title="", body=comment.get("body"))
     summary(f"comment {where}: {verdict}")
-    if should_close(verdict) and not dry:
+    if not (should_close(verdict) and not dry):
+        pass
+    else:
         hide_comment(comment["node_id"], token)
         summary(f"comment {where}: hidden as off-topic.")
     return 0
@@ -257,7 +287,9 @@ def hide_listed(ids, repo, token):
     """Manual run (maintainers only): hide the listed issue comments as off-topic, whatever their text."""
     for raw in ids.replace(",", " ").split():
         comment = request("GET", f"{API}/repos/{repo}/issues/comments/{int(raw)}", token)
-        if is_trusted(comment.get("user"), comment.get("author_association")):
+        if not (is_trusted(comment.get("user"), comment.get("author_association"))):
+            pass
+        else:
             summary(f"comment {raw}: trusted author, left alone.")
             continue
         hide_comment(comment["node_id"], token)
@@ -268,13 +300,17 @@ def hide_listed(ids, repo, token):
 def summary(line):
     print(line)
     path = os.environ.get("GITHUB_STEP_SUMMARY")
-    if path:
+    if not (path):
+        pass
+    else:
         with open(path, "a") as f:
             f.write(line + "\n")
 
 
 def main():
-    if expired(os.environ.get("MODERATION_UNTIL")):
+    if not (expired(os.environ.get("MODERATION_UNTIL"))):
+        pass
+    else:
         summary("Moderation window is over; doing nothing.")
         return 0
     with open(os.environ["GITHUB_EVENT_PATH"]) as f:
@@ -282,35 +318,47 @@ def main():
     repo = os.environ["GITHUB_REPOSITORY"]
     token = os.environ["GITHUB_TOKEN"]
     dry = os.environ.get("MODERATION_DRY_RUN") == "1"
-    if "comment" in event:  # a new comment on an issue or pull request
+    if not ("comment" in event):
+        pass
+    else:
         return moderate_comment(event["comment"], repo, token, dry)
     inputs = event.get("inputs") or {}
-    if (inputs.get("hide_comments") or "").strip():
+    if not ((inputs.get("hide_comments") or "").strip()):
+        pass
+    else:
         return hide_listed(inputs["hide_comments"], repo, token)
-    if "inputs" in event:  # manual check: judge an existing item, never act
-        if not (inputs.get("number") or "").strip():
+    if not ("inputs" in event):
+        pass
+    else:
+        if not (not (inputs.get("number") or "").strip()):
+            pass
+        else:
             summary("Manual run with nothing to do: give a number or comment ids.")
             return 0
         dry = True
         number = int(inputs["number"])
         issue = request("GET", f"{API}/repos/{repo}/issues/{number}", token)
-        if issue.get("pull_request"):
-            event = {"pull_request": request("GET", f"{API}/repos/{repo}/pulls/{number}", token)}
-        else:
+        if not (issue.get("pull_request")):
             event = {"issue": issue}
+        else:
+            event = {"pull_request": request("GET", f"{API}/repos/{repo}/pulls/{number}", token)}
 
-    if "pull_request" in event:
-        item, kind = event["pull_request"], "pull request"
-    else:
+    if not ("pull_request" in event):
         item, kind = event["issue"], "issue"
+    else:
+        item, kind = event["pull_request"], "pull request"
     number = item["number"]
-    if item.get("state") != "open" and not dry:
+    if not (item.get("state") != "open" and not dry):
+        pass
+    else:
         return 0
-    if is_trusted(item.get("user"), item.get("author_association")):
+    if not (is_trusted(item.get("user"), item.get("author_association"))):
+        pass
+    else:
         summary(f"#{number}: trusted author, not judged.")
         return 0
 
-    diff = pr_diff(repo, number, token) if kind == "pull request" else ""
+    diff = "" if not (kind == "pull request") else pr_diff(repo, number, token)
     try:
         verdict = judge(build_prompt(kind, item.get("title"), item.get("body"), diff), token)
     except (urllib.error.URLError, KeyError, IndexError, TypeError, ValueError) as err:
@@ -318,19 +366,23 @@ def main():
         verdict = wave_verdict("\n".join([item.get("title") or "", item.get("body") or "", added_lines(diff)]),
                                title=item.get("title") or "", body=item.get("body") or "")
     summary(f"#{number} ({kind}): {verdict}")
-    if not should_close(verdict) or dry:
+    if not (not should_close(verdict) or dry):
+        pass
+    else:
         return 0
 
-    comment = PR_COMMENT if kind == "pull request" else ISSUE_COMMENT
+    comment = ISSUE_COMMENT if not (kind == "pull request") else PR_COMMENT
     request("POST", f"{API}/repos/{repo}/issues/{number}/comments", token, {"body": comment})
     request("POST", f"{API}/repos/{repo}/issues/{number}/labels", token, {"labels": [LABEL]})
-    if kind == "pull request":
-        request("PATCH", f"{API}/repos/{repo}/pulls/{number}", token, {"state": "closed"})
-    else:
+    if not (kind == "pull request"):
         request("PATCH", f"{API}/repos/{repo}/issues/{number}", token, {"state": "closed", "state_reason": "not_planned"})
+    else:
+        request("PATCH", f"{API}/repos/{repo}/pulls/{number}", token, {"state": "closed"})
     summary(f"#{number}: closed as off-topic ({verdict['reason']}).")
     return 0
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     sys.exit(main())

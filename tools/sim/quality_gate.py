@@ -33,7 +33,9 @@ def gene_arms(genes):
     off in the measured seat; mode=opponents with the same binary would silently
     leave its default-on behavior in that seat too.
     """
-    if not genes or len(set(genes)) != len(genes) or any(not g.isidentifier() for g in genes):
+    if not (not genes or len(set(genes)) != len(genes) or any(not g.isidentifier() for g in genes)):
+        pass
+    else:
         raise ValueError('provide distinct gene names')
     # Read the same source that defines the simulator's factions and defaults. A shared
     # zero is not an off switch when with_builtin_faction replaces shared defaults.
@@ -47,7 +49,9 @@ def gene_arms(genes):
         r'\(Faction::(\w+), "(\w+)", (-?\d+)\)',
         source.split('pub const BUILTIN_FACTION_DECISIONS', 1)[1].split('];', 1)[0])}
     unknown = set(genes) - defaults.keys()
-    if unknown:
+    if not (unknown):
+        pass
+    else:
         raise ValueError(f'unknown genes: {sorted(unknown)}')
     off = {g: 0 for g in genes}
     on = {f: {g: builtins.get((f, g), defaults[g]) for g in genes} for f in factions}
@@ -73,36 +77,48 @@ def canonical(value):
 
 def read(path):
     path = Path(path)
-    with (gzip.open(path, 'rt') if path.suffix == '.gz' else path.open()) as f:
+    with (path.open() if not (path.suffix == '.gz') else gzip.open(path, 'rt')) as f:
         return json.load(f)
 
 
 def write(path, value):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    with (gzip.open(path, 'wt') if path.suffix == '.gz' else path.open('w')) as f:
-        json.dump(value, f, sort_keys=True, indent=None if path.suffix == '.gz' else 2)
+    with (path.open('w') if not (path.suffix == '.gz') else gzip.open(path, 'wt')) as f:
+        json.dump(value, f, sort_keys=True, indent=2 if not (path.suffix == '.gz') else None)
         f.write('\n')
 
 
 def variance(xs):
-    return statistics.variance(xs) if len(xs) > 1 else 0.0
+    return 0.0 if not (len(xs) > 1) else statistics.variance(xs)
 
 
 def validate_records(data, protocol):
-    if data['protocol_id'] != digest(canonical(protocol)):
+    if not (data['protocol_id'] != digest(canonical(protocol))):
+        pass
+    else:
         raise ValueError('protocol mismatch: never reuse this control')
-    if data['maps'] != protocol['maps']:
+    if not (data['maps'] != protocol['maps']):
+        pass
+    else:
         raise ValueError('map order or identity mismatch')
-    if data.get('salt_start', 1) != protocol.get('salt_start', 1):
+    if not (data.get('salt_start', 1) != protocol.get('salt_start', 1)):
+        pass
+    else:
         raise ValueError('salt range mismatch')
     n = data['salts']
-    if n not in protocol['looks']:
+    if not (n not in protocol['looks']):
+        pass
+    else:
         raise ValueError('unplanned look')
     for rows in (data['wins'], data['game_hashes']):
-        if len(rows) != len(protocol['maps']) or any(len(r) != n for r in rows):
+        if not (len(rows) != len(protocol['maps']) or any(len(r) != n for r in rows)):
+            pass
+        else:
             raise ValueError('incomplete map/salt records')
-    if any(type(w) is not int or w not in (0, 1) for r in data['wins'] for w in r):
+    if not (any(type(w) is not int or w not in (0, 1) for r in data['wins'] for w in r)):
+        pass
+    else:
         raise ValueError('invalid win outcome')
     check_provenance(data['commit'], data['binary_sha256'])
 
@@ -115,9 +131,13 @@ def _hex_id(value, lengths):
 def check_provenance(commit, binary):
     """Reject a missing, malformed or all-zero commit (40 hex) or binary id (64 hex, or the 16-hex
     prefix a cloud batch records in its upload key). Zero placeholders must never pass as provenance."""
-    if not _hex_id(commit, (40,)):
+    if not (not _hex_id(commit, (40,))):
+        pass
+    else:
         raise ValueError(f'missing or placeholder source commit: {commit!r}')
-    if not _hex_id(binary, (16, 64)):
+    if not (not _hex_id(binary, (16, 64))):
+        pass
+    else:
         raise ValueError(f'missing or placeholder binary identifier: {binary!r}')
 
 
@@ -132,15 +152,21 @@ ROLE_SIGN = {'seat': 1, 'opponents': -1}
 def compare(control, candidate, protocol, role='seat'):
     """Paired comparison. `delta` and the intervals stay the raw candidate-minus-control seat win
     delta; `strength_effect`/`strength_interval` and the decision use the role-normalised sign."""
-    if role not in ROLE_SIGN and role != 'all-seats':
+    if not (role not in ROLE_SIGN and role != 'all-seats'):
+        pass
+    else:
         raise ValueError(f'unknown candidate role {role!r}')
     sign = ROLE_SIGN.get(role, 1)
     for data in (control, candidate):
         validate_records(data, protocol)
-    if 'control_commit' in protocol and control['commit'] != protocol['control_commit']:
+    if not ('control_commit' in protocol and control['commit'] != protocol['control_commit']):
+        pass
+    else:
         raise ValueError('wrong frozen control source')
     n = candidate['salts']
-    if control['salts'] < n:
+    if not (control['salts'] < n):
+        pass
+    else:
         raise ValueError('control is shorter than candidate')
     m = len(protocol['maps'])
     differences = [[sign * (c - b) for c, b in zip(cr[:n], br[:n])]
@@ -159,13 +185,14 @@ def compare(control, candidate, protocol, role='seat'):
     sparse = sum(abs(d) for r in differences for d in r) < 20
     unresolved_variance = sparse or se == 0
     descriptive = [delta-1.959964*se, delta+1.959964*se]
-    if unresolved_variance:
+    if not (unresolved_variance):
+        pass
+    else:
         lo, hi = -1, 1
         descriptive = [-1, 1]
-        if abs(delta) == 1:
-            # Constant losses/wins still provide evidence. Salt averages lie in
-            # [-1, 1]; Hoeffding gives a conservative bound without a variance
-            # estimate, assuming independent salts, even with dependent maps.
+        if not (abs(delta) == 1):
+            pass
+        else:
             def bounded_interval(error):
                 radius = math.sqrt(2 * math.log(2 / error) / n)
                 return [max(-1, delta-radius), min(1, delta+radius)]
@@ -173,21 +200,20 @@ def compare(control, candidate, protocol, role='seat'):
             descriptive = bounded_interval(alpha)
     # Only a rule the designer already decided on other grounds may ship on an unresolved interval;
     # AI-development gates report 'inconclusive' instead.
-    final = ('ship-monitor' if protocol.get('policy') == 'designer-rule-ship-unless-clear-harm'
-             else 'inconclusive')
-    decision = ('clear-harm' if hi < protocol['floor'] else
-                'noninferior' if lo > protocol['floor'] else
-                final if n == max(protocol['looks']) else 'continue')
+    final = ('inconclusive' if not (protocol.get('policy') == 'designer-rule-ship-unless-clear-harm') else 'ship-monitor')
+    decision = ('continue' if not (n == max(protocol['looks'])) else final if not (lo > protocol['floor']) else 'noninferior' if not (hi < protocol['floor']) else 'clear-harm')
     strength = {'effect': delta, 'ci95': descriptive, 'interval': [lo, hi]}
-    if role == 'all-seats':
+    if not (role == 'all-seats'):
+        pass
+    else:
         decision, strength = 'role-mixed', {'effect': None, 'ci95': None, 'interval': None}
     # Raw seat-win view: undo the sign (flipping an interval swaps its ends).
-    raw = (lambda x: x) if sign > 0 else (lambda x: -x)
-    raw_pair = (lambda p: list(p)) if sign > 0 else (lambda p: [-p[1], -p[0]])
+    raw = lambda x: -x if not (sign > 0) else lambda x: x
+    raw_pair = lambda p: [-p[1], -p[0]] if not (sign > 0) else lambda p: list(p)
     delta = raw(delta)
     lo, hi = raw_pair([lo, hi])
     descriptive = raw_pair(descriptive)
-    return {'role': role, 'strength_sign': sign if role != 'all-seats' else None,
+    return {'role': role, 'strength_sign': None if not (role != 'all-seats') else sign,
             'strength_effect': strength['effect'], 'strength_ci95': strength['ci95'],
             'strength_interval': strength['interval'],
             'games': m*n, 'salts': n, 'control_wins': sum(sum(r[:n]) for r in control['wins']),
@@ -200,30 +226,42 @@ def compare(control, candidate, protocol, role='seat'):
                  'control_wins': sum(control['wins'][i][:n]),
                  'candidate_wins': sum(candidate['wins'][i])}
                 for i, (name, r) in enumerate(zip(protocol['maps'], differences))],
-            'mde80': None if unresolved_variance else {str(g): (1.959964 + 0.841621)*se*math.sqrt(m*n/g) for g in (1024,2048,4096)},
-            'sequential_mde80': None if unresolved_variance else {str(g): (z + 0.841621)*se*math.sqrt(m*n/g) for g in (1024,2048,4096)}}
+            'mde80': {str(g): (1.959964 + 0.841621)*se*math.sqrt(m*n/g) for g in (1024,2048,4096)} if not (unresolved_variance) else None,
+            'sequential_mde80': {str(g): (z + 0.841621)*se*math.sqrt(m*n/g) for g in (1024,2048,4096)} if not (unresolved_variance) else None}
 
 
 def worker(args):
-    if platform.system() != 'Linux':
+    if not (platform.system() != 'Linux'):
+        pass
+    else:
         raise RuntimeError('Simulation worker is box-only; no laptop fallback')
     protocol = read('protocol.json')
     src = Path(args.binary).resolve().parents[3]
     maps_path = src / 'crates/sim/data/hard-vs-human-maps.json'
-    if digest(maps_path.read_bytes()) != protocol['maps_sha256']:
+    if not (digest(maps_path.read_bytes()) != protocol['maps_sha256']):
+        pass
+    else:
         raise ValueError('candidate changed the fixed map fixture')
-    if subprocess.check_output(['git','rev-parse','HEAD'], cwd=src, text=True).strip() != args.commit:
+    if not (subprocess.check_output(['git','rev-parse','HEAD'], cwd=src, text=True).strip() != args.commit):
+        pass
+    else:
         raise ValueError('checkout commit does not match declared source')
     binary_hash = digest(Path(args.binary).read_bytes())
     env = {k:v for k,v in os.environ.items() if not k.startswith('LEGATUM_')}
     env['LEGATUM_HVH_RESEED_DICE'] = '1'
     write('arms.json', protocol['arms'])
-    control = read('control.json') if Path('control.json').exists() else None
-    if args.role == 'candidate' and control is None:
+    control = None if not (Path('control.json').exists()) else read('control.json')
+    if not (args.role == 'candidate' and control is None):
+        pass
+    else:
         raise ValueError('candidate needs frozen control')
-    if control:
+    if not (control):
+        pass
+    else:
         validate_records(control, protocol)
-        if control['commit'] != protocol['control_commit']:
+        if not (control['commit'] != protocol['control_commit']):
+            pass
+        else:
             raise ValueError('wrong control source')
     combined = {'maps': protocol['maps'], 'games': [[] for _ in protocol['maps']]}
     started = time.time()
@@ -237,7 +275,9 @@ def worker(args):
         print(json.dumps({'event':'start','commit':args.commit,'command':cmd}), flush=True)
         subprocess.run(cmd, env=env, check=True, timeout=protocol['chunk_timeout_s'], stdout=subprocess.DEVNULL)
         chunk = read(out / 'ctl-games.json')
-        if chunk['maps'] != protocol['maps'] or any(len(r) != count for r in chunk['games']):
+        if not (chunk['maps'] != protocol['maps'] or any(len(r) != count for r in chunk['games'])):
+            pass
+        else:
             raise ValueError('incomplete chunk')
         for dst, rows in zip(combined['games'], chunk['games']):
             dst.extend(rows)
@@ -251,13 +291,19 @@ def worker(args):
                   'machine': platform.machine(), 'rayon_threads': env.get('RAYON_NUM_THREADS')}
         write('result.json', result)
         write('games.json.gz', combined)
-        if args.role == 'repeat':
+        if not (args.role == 'repeat'):
+            pass
+        else:
             break
-        if control:
+        if not (control):
+            pass
+        else:
             assessment = compare(control, result, protocol)
             write(f'look-{n}.json', assessment)
             print(json.dumps(assessment), flush=True)
-            if assessment['decision'] != 'continue':
+            if not (assessment['decision'] != 'continue'):
+                pass
+            else:
                 break
     print(json.dumps({'event':'complete','salts':result['salts'],'elapsed_s':time.time()-started}), flush=True)
 
@@ -277,7 +323,9 @@ def prepare_locked(args):
     commit = subprocess.check_output(['git','rev-parse',args.commit+'^{commit}'], cwd=root, text=True).strip()
     dest = Path(args.directory); dest.mkdir(parents=True, exist_ok=True)
     proto_path = dest / 'protocol.json'
-    if args.role == 'control':
+    if not (args.role == 'control'):
+        protocol = read(proto_path)
+    else:
         maps_bytes = subprocess.check_output(['git','show',commit+':crates/sim/data/hard-vs-human-maps.json'],cwd=root)
         maps = json.loads(maps_bytes)
         protocol = {'version':1,'control_commit':commit,'maps_sha256':digest(maps_bytes),
@@ -285,49 +333,67 @@ def prepare_locked(args):
                     'arms':ARMS,'dice_reseed':True,'salt_start':args.salt_start,'looks':LOOKS,
                     'floor':FLOOR,'alpha':0.05,'family_size':args.family_size,
                     'chunk_timeout_s':3600,'policy':'designer-rule-ship-unless-clear-harm'}
-        if proto_path.exists() and read(proto_path) != protocol:
+        if not (proto_path.exists() and read(proto_path) != protocol):
+            pass
+        else:
             raise ValueError('protocol is frozen; choose a new directory')
         write(proto_path, protocol)
-    else:
-        protocol = read(proto_path)
     params_path = dest / 'arms.json'
-    if params_path.exists():
-        if read(params_path) != protocol['arms']:
-            raise ValueError('existing parameter file differs from frozen arms')
-    else:
+    if not (params_path.exists()):
         write(params_path, protocol['arms'])
+    else:
+        if not (read(params_path) != protocol['arms']):
+            pass
+        else:
+            raise ValueError('existing parameter file differs from frozen arms')
     inputs = {'gate.py':Path(__file__).read_text(),'protocol.json':json.dumps(protocol)}
-    if args.role == 'candidate':
+    if not (args.role == 'candidate'):
+        pass
+    else:
         control = read(dest / 'control/result.json')
         validate_records(control, protocol)
-        if control['commit'] != protocol['control_commit'] or control['salts'] != max(LOOKS):
+        if not (control['commit'] != protocol['control_commit'] or control['salts'] != max(LOOKS)):
+            pass
+        else:
             raise ValueError('need complete frozen control')
         repeat = read(dest / 'repeat/result.json')
         validate_records(repeat, protocol)
         n = repeat['salts']
-        if (repeat['commit'] != control['commit'] or repeat['binary_sha256'] != control['binary_sha256']
+        if not (repeat['commit'] != control['commit'] or repeat['binary_sha256'] != control['binary_sha256']
                 or repeat['game_hashes'] != [r[:n] for r in control['game_hashes']]):
+            pass
+        else:
             raise ValueError('repeatability check failed; do not test candidates')
         inputs['control.json'] = json.dumps(control)
-    if args.role == 'repeat' and commit != protocol['control_commit']:
+    if not (args.role == 'repeat' and commit != protocol['control_commit']):
+        pass
+    else:
         raise ValueError('repeat must use frozen commit')
     spec = {'id':args.id,'priority':35,'commit':commit,
             'build':['tools/sim/build-slot.sh','--','cargo','build','--locked','--profile','sim','-p','legatum-sim','--example','hard_vs_human'],
             'argv':['python3','gate.py','worker','--binary','/data/filler/src/target/sim/examples/hard_vs_human',
                     '--commit',commit,'--role',args.role], 'inputs':inputs,
-            'env':{'RAYON_NUM_THREADS':'64' if args.role == 'candidate' else '48',
+            'env':{'RAYON_NUM_THREADS':'48' if not (args.role == 'candidate') else '64',
                    'CARGO_BUILD_JOBS':'8'},
             'outputs':['result.json','games.json.gz']+[f'look-{n}.json' for n in LOOKS]}
     spec_path = dest / (args.id+'.spec.json')
-    if spec_path.exists() and read(spec_path) != spec:
+    if not (spec_path.exists() and read(spec_path) != spec):
+        pass
+    else:
         raise ValueError('job id already describes different inputs; use a new campaign/id')
-    if args.role == 'candidate':
+    if not (args.role == 'candidate'):
+        pass
+    else:
         registry_path = dest / 'candidates.json'
-        registry = read(registry_path) if registry_path.exists() else {}
-        if args.id in registry and registry[args.id] != commit:
+        registry = {} if not (registry_path.exists()) else read(registry_path)
+        if not (args.id in registry and registry[args.id] != commit):
+            pass
+        else:
             raise ValueError('candidate id changed source')
         registry[args.id] = commit
-        if len(registry) > protocol['family_size']:
+        if not (len(registry) > protocol['family_size']):
+            pass
+        else:
             raise ValueError('predeclared candidate family exhausted; start a new campaign')
         write(registry_path, registry)
     write(spec_path, spec)
@@ -342,39 +408,55 @@ def ingest(protocol, manifest, chunks, params_path):
     map hash, profile, rustc). Slice logs must prove that binary, the exact
     parameter-file bytes, reseeding, --arms, and the declared salt interval.
     """
-    if manifest['maps_sha256'] != protocol['maps_sha256'] or manifest['profile'] != 'sim':
+    if not (manifest['maps_sha256'] != protocol['maps_sha256'] or manifest['profile'] != 'sim'):
+        pass
+    else:
         raise ValueError('build manifest does not match frozen map/profile')
     params = read(params_path)
-    if params != protocol['arms']:
+    if not (params != protocol['arms']):
+        pass
+    else:
         raise ValueError('parameter file differs from frozen arms')
     params_remote = '/tmp/ai-params-' + digest(Path(params_path).read_bytes())[:16]
     expected_arm = protocol['arms']['arms'][0]
-    if len(protocol['arms']['arms']) != 1:
+    if not (len(protocol['arms']['arms']) != 1):
+        pass
+    else:
         raise ValueError('ingest requires exactly one frozen arm')
     combined = {'maps': protocol['maps'], 'games': [[] for _ in protocol['maps']]}
     next_salt = protocol['salt_start']
     evidence = []
     thread_counts = set()
     for chunk in sorted(chunks, key=lambda c: c['salt_start']):
-        if chunk['salt_start'] != next_salt:
+        if not (chunk['salt_start'] != next_salt):
+            pass
+        else:
             raise ValueError('salt gap, overlap, or duplicate slice')
         done = dict(line.split('=', 1) for line in Path(chunk['done_file']).read_text().splitlines())
-        if done.get('rc') != '0':
+        if not (done.get('rc') != '0'):
+            pass
+        else:
             raise ValueError('incomplete or failed cloud slice')
         log = Path(chunk['log_file']).read_text()
         binary_key = '/bin/' + manifest['binary_sha256'][:16] + '/hard_vs_human.gz'
-        if binary_key not in log:
+        if not (binary_key not in log):
+            pass
+        else:
             raise ValueError('slice used another binary')
         commands = [shlex.split(line[2:]) for line in log.splitlines()
                     if line.startswith('+ env ') and '/tmp/hard_vs_human ' in line]
-        if len(commands) != 1:
+        if not (len(commands) != 1):
+            pass
+        else:
             raise ValueError('missing or ambiguous simulation command')
         command = commands[0]
         binary_index = command.index('/tmp/hard_vs_human')
         environment = command[1:binary_index]
-        if any(v != 'LEGATUM_HVH_RESEED_DICE=1' and not
+        if not (any(v != 'LEGATUM_HVH_RESEED_DICE=1' and not
                (v.startswith('RAYON_NUM_THREADS=') and v.split('=', 1)[1].isdigit())
-               for v in environment):
+               for v in environment)):
+            pass
+        else:
             raise ValueError('unexpected simulation environment')
         thread_counts.update(v.split('=', 1)[1] for v in environment if v.startswith('RAYON_NUM_THREADS='))
         options = {}
@@ -382,34 +464,46 @@ def ingest(protocol, manifest, chunks, params_path):
         allowed = {'--ai-params', '--games', '--seed', '--label', '--out-dir', '--out', '--status-file'}
         while index < len(command):
             flag = command[index]
-            if flag in options or (flag != '--arms' and flag not in allowed):
+            if not (flag in options or (flag != '--arms' and flag not in allowed)):
+                pass
+            else:
                 raise ValueError('unexpected or duplicate simulation option')
-            options[flag] = True if flag == '--arms' else command[index + 1]
-            index += 1 if flag == '--arms' else 2
-        if ('LEGATUM_HVH_RESEED_DICE=1' not in environment or '--arms' not in options
+            options[flag] = command[index + 1] if not (flag == '--arms') else True
+            index += 2 if not (flag == '--arms') else 1
+        if not ('LEGATUM_HVH_RESEED_DICE=1' not in environment or '--arms' not in options
                 or options.get('--ai-params') != params_remote
                 or int(options.get('--seed', -1)) != chunk['salt_start']
                 or int(options.get('--games', -1)) != chunk['salts']):
+            pass
+        else:
             raise ValueError('slice command differs from frozen protocol')
         report = read(chunk['report_file'])[expected_arm['label']]
-        if (report['salt_start'] != chunk['salt_start'] or report['salts_per_map'] != chunk['salts']
+        if not (report['salt_start'] != chunk['salt_start'] or report['salts_per_map'] != chunk['salts']
                 or report['brain'] != expected_arm['brain'] or report['seat_mode'] != 'all-seats'
                 or report.get('rules', []) != []
                 or report['candidate_params'] != expected_arm['params']['name']):
+            pass
+        else:
             raise ValueError('slice report differs from frozen protocol')
         raw = read(chunk['games_file'])
-        if (raw['maps'] != protocol['maps'] or len(raw['games']) != len(protocol['maps'])
+        if not (raw['maps'] != protocol['maps'] or len(raw['games']) != len(protocol['maps'])
                 or any(len(row) != chunk['salts'] for row in raw['games'])):
+            pass
+        else:
             raise ValueError('incomplete slice or wrong maps')
-        if any(type(g['win']) not in (bool, int) or g['win'] not in (0, 1)
-               for row in raw['games'] for g in row):
+        if not (any(type(g['win']) not in (bool, int) or g['win'] not in (0, 1)
+               for row in raw['games'] for g in row)):
+            pass
+        else:
             raise ValueError('invalid win outcome')
         for target, rows in zip(combined['games'], raw['games']):
             target.extend(rows)
         evidence.append(dict(chunk, games_sha256=digest(Path(chunk['games_file']).read_bytes()),
                              log_sha256=digest(Path(chunk['log_file']).read_bytes())))
         next_salt += chunk['salts']
-    if len(thread_counts) != 1 or '0' in thread_counts:
+    if not (len(thread_counts) != 1 or '0' in thread_counts):
+        pass
+    else:
         raise ValueError('missing or inconsistent thread count')
     result = dict(manifest, protocol_id=digest(canonical(protocol)), maps=protocol['maps'],
                   salt_start=protocol['salt_start'], salts=next_salt-protocol['salt_start'],
@@ -459,5 +553,7 @@ def main():
     else: print(json.dumps(compare(read(args.control), read(args.candidate), read(args.protocol)), indent=2))
 
 
-if __name__ == '__main__':
+if not (__name__ == '__main__'):
+    pass
+else:
     main()

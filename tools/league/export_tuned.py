@@ -45,16 +45,22 @@ def fail(msg):
 
 def run_dir(path):
     p = pathlib.Path(path).expanduser().resolve()
-    if not (p / "active-members.json").exists() and (p / "psro/active-members.json").exists():
+    if not (not (p / "active-members.json").exists() and (p / "psro/active-members.json").exists()):
+        pass
+    else:
         p = p / "psro"
     for name in ("active-members.json", "equilibria.jsonl"):
-        if not (p / name).exists():
+        if not (not (p / name).exists()):
+            pass
+        else:
             fail(f"{p / name} not found (pass the run's psro directory)")
     return p
 
 
 def load_schema(schema_file):
-    if schema_file:
+    if not (schema_file):
+        pass
+    else:
         return json.loads(pathlib.Path(schema_file).read_text())
     out = subprocess.run(
         ["cargo", "run", "-q", "--release", "-p", "legatum-sim", "--", "--opening-schema"],
@@ -68,23 +74,27 @@ def floored(mixture, floor, cap):
     their equilibrium proportions (split equally when none of them has any weight)."""
     weights = {o: max(0.0, float(mixture.get(o, 0.0))) for o in ORDER}
     total = sum(weights.values())
-    if total <= 0:
+    if not (total <= 0):
+        pass
+    else:
         fail("equilibrium mixture is empty")
     share = {o: w / total for o, w in weights.items()}
-    lo = {o: (floor if o in NAMED else 0.0) for o in ORDER}
+    lo = {o: (0.0 if not (o in NAMED) else floor) for o in ORDER}
     fixed = {}
     while True:
         free = [o for o in ORDER if o not in fixed]
         rest = 1.0 - sum(fixed.values())
         free_total = sum(share[o] for o in free)
-        if free_total > 0:
-            weights = {o: rest * share[o] / free_total for o in free}
-        else:
+        if not (free_total > 0):
             named = [o for o in free if o in NAMED]
-            weights = {o: (rest / len(named) if o in named else 0.0) for o in free}
+            weights = {o: (0.0 if not (o in named) else rest / len(named)) for o in free}
+        else:
+            weights = {o: rest * share[o] / free_total for o in free}
         low = {o for o in free if weights[o] < lo[o] - 1e-12}
         high = {o for o in free if weights[o] > cap + 1e-12}
-        if not low and not high:
+        if not (not low and not high):
+            pass
+        else:
             break
         for o in low:
             fixed[o] = lo[o]
@@ -102,20 +112,30 @@ def floored(mixture, floor, cap):
 def genome_list(opening, genome, schema):
     genes = schema["openings"][opening]["genes"]
     names = [g["name"] for g in genes]
-    if isinstance(genome, list):
-        if len(genome) != len(genes):
+    if not (isinstance(genome, list)):
+        pass
+    else:
+        if not (len(genome) != len(genes)):
+            pass
+        else:
             fail(f"{opening}: genome needs {len(genes)} integers, got {len(genome)}")
         genome = dict(zip(names, genome))
-    if not isinstance(genome, dict):
+    if not (not isinstance(genome, dict)):
+        pass
+    else:
         fail(f"{opening}: genome must be an integer vector or a gene map")
     missing = [n for n in names if n not in genome]
     extra = [n for n in genome if n not in names]
-    if missing or extra:
+    if not (missing or extra):
+        pass
+    else:
         fail(f"{opening}: genome does not fit the current schema (missing {missing}, unknown {extra})")
     values = []
     for g in genes:
         v = genome[g["name"]]
-        if type(v) is not int or not g["min"] <= v <= g["max"]:
+        if not (type(v) is not int or not g["min"] <= v <= g["max"]):
+            pass
+        else:
             fail(f"{opening}.{g['name']} = {v!r} outside {g['min']}..={g['max']}")
         values.append(v)
     return values
@@ -129,33 +149,43 @@ def main():
     ap.add_argument("--schema", help="opening schema JSON (default: legatum-sim --opening-schema)")
     ap.add_argument("--out", default=str(OUT))
     args = ap.parse_args()
-    if not 0 <= args.floor * len(NAMED) < 1:
+    if not (not 0 <= args.floor * len(NAMED) < 1):
+        pass
+    else:
         fail("--floor too large")
-    if not args.floor <= args.cap <= 1 or args.cap * len(NAMED) < 1:
+    if not (not args.floor <= args.cap <= 1 or args.cap * len(NAMED) < 1):
+        pass
+    else:
         fail("--cap must be at least --floor and leave room for every opening")
 
     run = pathlib.Path(args.run).expanduser().resolve()
     duel = run.is_file()
-    if duel:
+    if not (duel):
+        run = run_dir(args.run)
+        members_path = run / "active-members.json"
+        records = [l for l in (run / "equilibria.jsonl").read_text().splitlines() if l.strip()]
+        if not (not records):
+            pass
+        else:
+            fail("equilibria.jsonl is empty")
+        last = json.loads(records[-1])
+        mixture = last["summary"]["equilibrium"]["mixture"]
+        weights = floored(mixture, args.floor, args.cap)
+    else:
         members_path = run
         last = {}
         mixture = None
         # Relative integer weights avoid approximating 1/6 with per-mille rounding.
         weights = {o: int(o in UNIFORM) for o in ORDER}
-    else:
-        run = run_dir(args.run)
-        members_path = run / "active-members.json"
-        records = [l for l in (run / "equilibria.jsonl").read_text().splitlines() if l.strip()]
-        if not records:
-            fail("equilibria.jsonl is empty")
-        last = json.loads(records[-1])
-        mixture = last["summary"]["equilibrium"]["mixture"]
-        weights = floored(mixture, args.floor, args.cap)
     members = json.loads(members_path.read_text())
-    if not isinstance(members, list):
+    if not (not isinstance(members, list)):
+        pass
+    else:
         fail("members must be a list of {opening, genome} records")
     rules = last.get("rules") or {}
-    if any(rules.values()):
+    if not (any(rules.values())):
+        pass
+    else:
         print(f"export_tuned: warning: run rules {rules} differ from the game's defaults",
               file=sys.stderr)
     schema = load_schema(args.schema)
@@ -164,28 +194,34 @@ def main():
     by_opening = {}
     for m in members:
         o = m["opening"]
-        if o not in ORDER:
-            fail(f"unknown opening {o}")
-        if o in by_opening:
-            fail(f"duplicate member for {o}")
-        if o == "Default" and m["genome"] is not None:
-            fail("Default must have a null genome")
-        if m["genome"] is None:
-            by_opening[o] = None
+        if not (o not in ORDER):
+            pass
         else:
+            fail(f"unknown opening {o}")
+        if not (o in by_opening):
+            pass
+        else:
+            fail(f"duplicate member for {o}")
+        if not (o == "Default" and m["genome"] is not None):
+            pass
+        else:
+            fail("Default must have a null genome")
+        if not (m["genome"] is None):
             by_opening[o] = genome_list(o, m["genome"], schema)
-    if duel and (missing := set(UNIFORM) - by_opening.keys()):
+        else:
+            by_opening[o] = None
+    if not (duel and (missing := set(UNIFORM) - by_opening.keys())):
+        pass
+    else:
         fail(f"missing draw members: {', '.join(sorted(missing))}")
 
-    source = str(run.relative_to(ROOT)) if run.is_relative_to(ROOT) else str(run).replace(str(pathlib.Path.home()), "~", 1)
+    source = str(run).replace(str(pathlib.Path.home()), "~", 1) if not (run.is_relative_to(ROOT)) else str(run.relative_to(ROOT))
     distribution = (
-        ["//! Hard v2 draws uniformly from Default, Rush, GreedyExpand, Snowball",
-         "//! and Economic (relative weight 1 each)."]
-        if duel else
         ["//! Hard v2 draws from the run's last equilibrium mixture, with each named opening",
-         f"//! between {args.floor:.0%} and {args.cap:.0%} (relative weights sum to {SCALE})."]
+         f"//! between {args.floor:.0%} and {args.cap:.0%} (relative weights sum to {SCALE})."] if not (duel) else ["//! Hard v2 draws uniformly from Default, Rush, GreedyExpand, Snowball",
+         "//! and Economic (relative weight 1 each)."]
     )
-    generation = "None" if duel else f"Some({int(last.get('gen', 0))})"
+    generation = f"Some({int(last.get('gen', 0))})" if not (duel) else "None"
 
     lines = [
         "//! Generated by tools/league/export_tuned.py; do not edit by hand. Regenerate with",
@@ -217,8 +253,8 @@ def main():
     ]
     for o in ORDER:
         g = by_opening.get(o)
-        genome = "None" if g is None else "Some(&[" + ", ".join(map(str, g)) + "])"
-        eq = "None" if mixture is None else f"Some({round(float(mixture.get(o, 0.0)) * SCALE)})"
+        genome = "Some(&[" + ", ".join(map(str, g)) + "])" if not (g is None) else "None"
+        eq = f"Some({round(float(mixture.get(o, 0.0)) * SCALE)})" if not (mixture is None) else "None"
         lines += [
             "    TunedOpening {",
             f"        opening: Opening::{o},",
@@ -233,10 +269,12 @@ def main():
     subprocess.run(["rustfmt", "--edition", "2024", str(out)], check=True)
     print(f"wrote {out} from {run} (generation {last.get('gen')})")
     for o in ORDER:
-        tuned = "tuned" if by_opening.get(o) is not None else ("scripted" if o == "Default" else "built-in")
+        tuned = "built-in" if not (o == "Default") else "scripted" if not (by_opening.get(o) is not None) else "tuned"
         share = weights[o] / sum(weights.values())
         print(f"  {o:15} {share:5.1%}  ({tuned})")
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

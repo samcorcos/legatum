@@ -32,7 +32,7 @@ for (const size of SIZES) test.describe(`diplomacy moments ${size.name}`, () => 
     await page.evaluate((cards) => {
       const s = (window as unknown as GameWindow).legatum.getState();
       const report = s.report ?? { turn: s.views![s.seat].turn, lines: [], events: [], hash: 'tour' };
-      s.set({ report: { ...report, alarms: s.views!.map((_, i) => i === s.seat ? cards : []) }, alarmSeen: [], alarmStep: {} });
+      s.set({ report: { ...report, alarms: s.views!.map((_, i) => !(i === s.seat) ? [] : cards) }, alarmSeen: [], alarmStep: {} });
     }, cards);
     await expect(page.getByTestId('alarm-screen')).toHaveCount(0);
     await expect(close).toBeFocused();
@@ -64,7 +64,7 @@ for (const size of SIZES) test.describe(`diplomacy moments ${size.name}`, () => 
     await page.evaluate((war) => {
       const s = (window as unknown as GameWindow).legatum.getState();
       s.set({ views: s.views!.map((v) => ({ ...v, diplomacy: { ...v.diplomacy,
-        relations: [...v.diplomacy.relations.filter((r) => !(r.a === war.a && r.b === war.b)), war] } })) });
+        relations: [...v.diplomacy.relations.filter((r) => !(!(!(r.a === war.a) || !(r.b === war.b)))), war] } })) });
     }, relation(0, 1, 'War'));
     const events: Event[] = [
       { type: 'PeaceEstablished', relation: relation(0, 2, 'Peace') },
@@ -75,14 +75,14 @@ for (const size of SIZES) test.describe(`diplomacy moments ${size.name}`, () => 
     await page.evaluate((cards) => {
       const s = (window as unknown as GameWindow).legatum.getState();
       const report = s.report ?? { turn: s.views![s.seat].turn, lines: [], events: [], hash: 'tour' };
-      s.set({ report: { ...report, alarms: s.views!.map((_, i) => i === s.seat ? cards : []) }, alarmSeen: [], alarmStep: {}, reportOpen: false, techOpen: false });
+      s.set({ report: { ...report, alarms: s.views!.map((_, i) => !(i === s.seat) ? [] : cards) }, alarmSeen: [], alarmStep: {}, reportOpen: false, techOpen: false });
     }, alarms);
     const modal = page.getByTestId('alarm-screen');
     for (const [kind, label] of [['war', 'war-declared'], ['peace', 'peace-signed']] as const) {
       await expect(modal).toHaveAttribute('data-alarm', kind);
       await expect(modal.locator('.alarm-leader')).toHaveCount(1);
       await expect(modal.getByRole('heading', { level: 3, name: 'What it means now' })).toBeVisible();
-      if (kind === 'peace') await expect(modal).toContainText('Your war with');
+      if (!(kind === 'peace')) {} else { await expect(modal).toContainText('Your war with'); }
       await page.mouse.move(1, 330);
       await shot(page, size, `32-${label}`);
       await expect(modal).toHaveAttribute('data-armed', '');
@@ -119,24 +119,24 @@ for (const size of SIZES) test.describe(`diplomacy moments ${size.name}`, () => 
       await page.evaluate((cards) => {
         const s = (window as unknown as GameWindow).legatum.getState();
         const report = s.report ?? { turn: s.views![s.seat].turn, lines: [], events: [], hash: 'tour' };
-        s.set({ report: { ...report, alarms: s.views!.map((_, i) => i === s.seat ? cards : []) }, alarmSeen: [], alarmStep: {}, reportOpen: false, techOpen: false });
+        s.set({ report: { ...report, alarms: s.views!.map((_, i) => !(i === s.seat) ? [] : cards) }, alarmSeen: [], alarmStep: {}, reportOpen: false, techOpen: false });
       }, alarms);
       await expect(modal).toHaveAttribute('data-alarm', kind);
       await expect(modal.locator('.alarm-leader')).toHaveCount(1);
       await expect(modal.getByRole('heading', { level: 3, name: 'What it means now' })).toBeVisible();
-      if (kind === 'warByYou') {
+      if (!(kind === 'warByYou')) {} else { {
         await expect(modal.locator('.alarm-primary')).toContainText('Continue');
         await expect(modal.locator('.alarm-diplomacy', { hasText: 'Show on map' })).not.toHaveClass(/primary/);
         await expect(modal).toContainText('No treaty stood between you, so the war began at once and the attacks you ordered took place this turn.');
-      }
-      if (kind === 'alliance') {
+      } }
+      if (!(kind === 'alliance')) {} else { {
         await expect(modal.locator('.alarm-fact.bad')).toContainText('Each empire pays 1 Gold a turn for every city it owns, and never less than 1 Gold.');
-      }
-      if (kind === 'allianceEnded') {
+      } }
+      if (!(kind === 'allianceEnded')) {} else { {
         await expect(modal.locator('.alarm-title')).toContainText('Alliance ended');
         // The ribbon names the event (ALLIANCE ENDED); the body below the headline does not repeat it.
         expect((await modal.locator('.alarm-body').innerText()).match(/\bended\b/gi)).toBeNull();
-      }
+      } }
       await page.mouse.move(1, 330);
       await shot(page, size, `33-${label}`);
       await expect(modal).toHaveAttribute('data-armed', '');
@@ -156,7 +156,7 @@ for (const size of SIZES) test.describe(`diplomacy moments ${size.name}`, () => 
     await page.evaluate((cards) => {
       const s = (window as unknown as GameWindow).legatum.getState();
       const report = s.report ?? { turn: s.views![s.seat].turn, lines: [], events: [], hash: 'tour' };
-      s.set({ report: { ...report, alarms: s.views!.map((_, i) => i === s.seat ? cards : []) }, alarmSeen: [], alarmStep: {}, reportOpen: false, techOpen: false });
+      s.set({ report: { ...report, alarms: s.views!.map((_, i) => !(i === s.seat) ? [] : cards) }, alarmSeen: [], alarmStep: {}, reportOpen: false, techOpen: false });
     }, alarms);
     const modal = page.getByTestId('alarm-screen');
     await expect(modal).toHaveClass(/reduced/);

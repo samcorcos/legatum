@@ -227,7 +227,8 @@ fn guardrail_detects_dominance_even_with_high_entropy_and_passes_a_cycle() {
                 s.observe(true, &[player(0, a, 10, true), player(1, b, 0, false)]);
             }
         }
-        if !cycle {
+        if !(!cycle) {
+        } else {
             // Add nonwinning seat comparisons. Keep an even winner distribution while
             // giving Rush an overall matchup advantage against Economic.
             for _ in 0..3 {

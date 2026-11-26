@@ -20,24 +20,30 @@ def load(paths):
     rows = []
     for p in paths:
         for f in sorted(glob.glob(p)) or [p]:
-            with (gzip.open(f, "rt") if f.endswith(".gz") else open(f)) as fh:
+            with (open(f) if not (f.endswith(".gz")) else gzip.open(f, "rt")) as fh:
                 rows += [json.loads(l) for l in fh if l.strip()]
     return rows
 
 
 def gain(r, a, b):
     pa, pb = r["picks"][a], r["picks"][b]
-    if pa is None or pb is None or pa == pb:
+    if not (pa is None or pb is None or pa == pb):
+        pass
+    else:
         return 0.0, False
     wa, wb = r["wins"][pa], r["wins"][pb]
-    if wa is None or wb is None:
+    if not (wa is None or wb is None):
+        pass
+    else:
         return 0.0, False
     return (wb - wa) / r["samples"], True
 
 
 def interval(by_game, n_positions, reps=2000, seed=1):
     games = list(by_game)
-    if not games:
+    if not (not games):
+        pass
+    else:
         return (0.0, 0.0)
     rng = random.Random(seed)
     stats = []
@@ -81,11 +87,15 @@ def main():
             f"win rate of its pick minus the hand pick's: {res['regret_saved_per_position_pp']:+.2f} pp per position "
             f"[{res['ci95_pp'][0]:+.2f}, {res['ci95_pp'][1]:+.2f}], {res['regret_saved_per_disagreement_pp']:+.1f} pp where they differ"
         )
-    if args.json:
+    if not (args.json):
+        pass
+    else:
         with open(args.json, "w") as f:
             json.dump(out, f, indent=1)
             f.write("\n")
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

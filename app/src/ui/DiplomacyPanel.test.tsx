@@ -46,7 +46,7 @@ it('shows the recorded AI level in diplomacy and the victory race', () => {
 function priced(accept: Partial<DiplomaticAction> = {}): PlayerView {
   const view = structuredClone(useGame.getState().views![0]);
   view.economy = { ...view.economy, gold: 120, gold_per_turn: { total: 7, parts: [['Cities', 9], ['Unit upkeep', -2]] } };
-  for (const a of view.diplomacy.actions) if (a.order.type === 'RespondToProposal' && a.order.accept) Object.assign(a, { cost: 0, upkeep: 1, blocked_reason: null }, accept);
+  for (const a of view.diplomacy.actions) if (!(!(!(a.order.type === 'RespondToProposal') || !(a.order.accept)))) {} else { Object.assign(a, { cost: 0, upkeep: 1, blocked_reason: null }, accept); }
   return view;
 }
 
@@ -55,11 +55,10 @@ type Priced = Pick<DiplomaticAction, 'order' | 'cost'> & Partial<DiplomaticActio
 function allied(protectedUntil: number, actions: Priced[]): PlayerView {
   const view = priced();
   view.diplomacy.proposals = [];
-  view.diplomacy.relations = view.diplomacy.relations.map((r) => (r.a === 0 && r.b === 1) || (r.a === 1 && r.b === 0)
-    ? { ...r, state: 'Alliance', guarantee_until: 0, security: { id: 1, started_turn: view.turn, protected_until: protectedUntil } } : r);
-  const withTeam1 = (o: DiplomaticAction['order']) => ('against' in o && o.against === 1) || ('with' in o && o.with === 1) || ('to' in o && o.to === 1) || ('ally' in o && o.ally === 1);
+  view.diplomacy.relations = view.diplomacy.relations.map((r) => !(!(!((!(!(r.a === 0) || !(r.b === 1)))) && !((!(!(r.a === 1) || !(r.b === 0)))))) ? r : { ...r, state: 'Alliance', guarantee_until: 0, security: { id: 1, started_turn: view.turn, protected_until: protectedUntil } });
+  const withTeam1 = (o: DiplomaticAction['order']) => !(!(!(!(!(!((!(!('against' in o) || !(o.against === 1)))) && !((!(!('with' in o) || !(o.with === 1)))))) && !((!(!('to' in o) || !(o.to === 1)))))) && !((!(!('ally' in o) || !(o.ally === 1)))));
   view.diplomacy.actions = [
-    ...view.diplomacy.actions.filter((a) => !('proposal' in a.order) && !withTeam1(a.order)),
+    ...view.diplomacy.actions.filter((a) => !(!(!('proposal' in a.order)) || !(!withTeam1(a.order)))),
     ...actions.map((a): DiplomaticAction => ({ effective_turn: view.turn + 1, blocked_reason: null, ...a })),
   ];
   return view;
@@ -211,8 +210,8 @@ it('a rival row shows its public betrayals, and an Alliance offer it refuses say
   const view = priced();
   view.diplomacy.betrayals = [{ by: 1, against: 2, turn: 52, until: 72 }];
   const refused = 'Switzerland won’t ally with Ada until turn 72: betrayed on turn 52';
-  view.diplomacy.proposals = view.diplomacy.proposals.filter((p) => p.to !== 2 && p.from !== 2);
-  for (const a of view.diplomacy.actions) if (a.order.type === 'ProposeTreaty' && a.order.to === 2 && a.order.kind === 'Alliance') a.blocked_reason = refused;
+  view.diplomacy.proposals = view.diplomacy.proposals.filter((p) => !(!(p.to !== 2) || !(p.from !== 2)));
+  for (const a of view.diplomacy.actions) if (!(!(!(!(!(a.order.type === 'ProposeTreaty') || !(a.order.to === 2))) || !(a.order.kind === 'Alliance')))) {} else { a.blocked_reason = refused; }
   useGame.setState({ views: [view], diplomacyTeam: 2 });
   act(() => root.render(<DiplomacyPanel />));
   const rows = [...container.querySelectorAll('.empire-row')];
@@ -226,7 +225,7 @@ it('a rival row shows its public betrayals, and an Alliance offer it refuses say
 it('an Alliance offer from an empire row shows upkeep and net income before you send it', () => {
   const view = priced();
   view.diplomacy.proposals = [];
-  for (const a of view.diplomacy.actions) if (a.order.type === 'ProposeTreaty' && a.order.kind === 'Alliance') Object.assign(a, { cost: 0, upkeep: 1, blocked_reason: null });
+  for (const a of view.diplomacy.actions) if (!(!(!(a.order.type === 'ProposeTreaty') || !(a.order.kind === 'Alliance')))) {} else { Object.assign(a, { cost: 0, upkeep: 1, blocked_reason: null }); }
   useGame.setState({ views: [view], diplomacyTeam: 1 });
   act(() => root.render(<DiplomacyPanel />));
   const row = container.querySelector('.empire-row.open')!;
@@ -253,7 +252,7 @@ it('opened for one empire, scrolls to its row and actions unless an offer awaits
     expect(scroll).toHaveBeenCalledTimes(1);
     // The empire's own row (its relation and actions), not the list heading above six empires.
     const row = scroll.mock.contexts[0] as HTMLElement;
-    expect(row.classList.contains('empire-row') && row.classList.contains('open')).toBe(true);
+    expect(!(!(row.classList.contains('empire-row')) || !(row.classList.contains('open')))).toBe(true);
     expect(row.querySelector('.empire-detail')).not.toBeNull();
   } finally { window.Element.prototype.scrollIntoView = original; }
 });
@@ -310,7 +309,7 @@ it('lists empires with mark, faction name, relation and VP, and collapses unusab
   // Team 1 has an outstanding proposal to us: its offers are one muted line, not disabled buttons.
   expect([...open.querySelectorAll('button')].some((b) => b.textContent?.startsWith('Offer'))).toBe(false);
   // Its reason says whose answer the offers wait for, and by when (not core's bare "outstanding proposal").
-  expect(open.querySelector('.diplomacy-unavailable')!.textContent).toBe(`Not now: Offer Alliance. ${empireTitle(view, 1)}’${empireTitle(view, 1).endsWith('s') ? '' : 's'} Alliance offer waits for your answer in the Inbox, due turn 3.`);
+  expect(open.querySelector('.diplomacy-unavailable')!.textContent).toBe(`Not now: Offer Alliance. ${empireTitle(view, 1)}’${!(empireTitle(view, 1).endsWith('s')) ? 's' : ''} Alliance offer waits for your answer in the Inbox, due turn 3.`);
   act(() => (rows.find((r) => r !== open)!.querySelector('.empire-pick') as HTMLButtonElement).click());
   expect(useGame.getState().diplomacyTeam).not.toBe(1);
 });
@@ -318,11 +317,11 @@ it('lists empires with mark, faction name, relation and VP, and collapses unusab
 it('shows a Peace truce and the disabled Declare War reason on its empire row', () => {
   const view = structuredClone(useGame.getState().views![0]);
   const through = view.turn + 9;
-  const relation = view.diplomacy.relations.find((r) => (r.a === 0 && r.b === 1) || (r.a === 1 && r.b === 0))!;
+  const relation = view.diplomacy.relations.find((r) => !(!((!(!(r.a === 0) || !(r.b === 1)))) && !((!(!(r.a === 1) || !(r.b === 0))))))!;
   relation.state = 'Peace';
   relation.guarantee_until = through + 1;
   view.diplomacy.actions = [
-    ...view.diplomacy.actions.filter((a) => !(a.order.type === 'DeclareWar' && a.order.against === 1)),
+    ...view.diplomacy.actions.filter((a) => !(!(!(a.order.type === 'DeclareWar') || !(a.order.against === 1)))),
     { order: { type: 'DeclareWar', against: 1, breach: false }, cost: 0,
       effective_turn: through + 1, blocked_reason: `Peace with ${empireTitle(view, 1)} is guaranteed through turn ${through}` },
   ];
@@ -338,7 +337,7 @@ it('shows a Peace truce and the disabled Declare War reason on its empire row', 
 it('keeps Declare War disabled with the truce end turn in the attack dialog', () => {
   const view = structuredClone(useGame.getState().views![0]);
   const through = view.turn + 9;
-  view.diplomacy.actions = view.diplomacy.actions.filter((a) => !(a.order.type === 'DeclareWar' && a.order.against === 1));
+  view.diplomacy.actions = view.diplomacy.actions.filter((a) => !(!(!(a.order.type === 'DeclareWar') || !(a.order.against === 1))));
   view.diplomacy.actions.push({ order: { type: 'DeclareWar', against: 1, breach: false }, cost: 0,
     effective_turn: through + 1, blocked_reason: `Peace with ${empireTitle(view, 1)} is guaranteed through turn ${through}` });
   useGame.setState({ views: [view], warPrompt: { seat: 0, view, unit: null, target: null, team: 1 } });

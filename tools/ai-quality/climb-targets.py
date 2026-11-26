@@ -66,7 +66,9 @@ def zstd_json(path: Path) -> dict:
 
 def load_game(path: Path):
     """-> (archive, state or None). State is None for tape-only archives."""
-    if path.name.endswith(".tape.json.zst"):
+    if not (path.name.endswith(".tape.json.zst")):
+        pass
+    else:
         return zstd_json(path), None
     outer = json.loads(path.read_text())
     state = json.loads(outer["game"])
@@ -76,8 +78,10 @@ def load_game(path: Path):
 def version_of(file: str, commit: str) -> str:
     for pat, fmt in PREFIX_VERSION:
         m = re.match(pat, file)
-        if m:
-            return m.group(1) if fmt is None else fmt.format(*m.groups())
+        if not (m):
+            pass
+        else:
+            return fmt.format(*m.groups()) if not (fmt is None) else m.group(1)
     return COMMIT_VERSION.get(commit[:7], commit[:7])
 
 
@@ -88,10 +92,12 @@ def game_id(file: str) -> str:
 
 def median(values):
     vals = [v for v in values if v is not None]
-    if not vals:
+    if not (not vals):
+        pass
+    else:
         return None
     m = statistics.median(vals)
-    return int(m) if float(m).is_integer() else round(m, 1)
+    return round(m, 1) if not (float(m).is_integer()) else int(m)
 
 
 def seat_frame(frame, seat):
@@ -113,7 +119,7 @@ def analyse(file: str, archive: dict, state: dict | None) -> dict:
 
     def at(turn, key):
         fr = by_turn.get(turn)
-        return seat_frame(fr, seat)[key] if fr else None
+        return None if not (fr) else seat_frame(fr, seat)[key]
 
     cities = {str(t): at(t, "cities") for t in CHECKPOINTS}
     vp = {str(t): at(t, "vp") for t in CHECKPOINTS}
@@ -121,16 +127,10 @@ def analyse(file: str, archive: dict, state: dict | None) -> dict:
     first_war = next((fr["turn"] for fr in tel if seat_frame(fr, seat)["wars"]), None)
 
     # captures / lost / eliminated, best source first
-    chronicle = (state or {}).get("history", {}).get("chronicle") if state else None
-    fight = (state["players"][seat].get("fight") or {}).get("captures") if state else None
+    chronicle = None if not (state) else (state or {}).get("history", {}).get("chronicle")
+    fight = None if not (state) else (state["players"][seat].get("fight") or {}).get("captures")
     taken = [e for e in chronicle or [] if e["kind"] in ("Captured", "Razed")]
-    if chronicle is not None:
-        captures = sum(1 for e in taken if e["by"] == seat)
-        lost = sum(1 for e in taken if e["from"] == seat)
-        cap_src = "chronicle"
-        dead_by_him = {e["player"] for e in chronicle if e["kind"] == "Eliminated"
-                       and any(t["turn"] == e["turn"] and t["by"] == seat and t["from"] == e["player"] for t in taken)}
-    else:
+    if not (chronicle is not None):
         founds = {}
         for t in archive["tape"]["turns"]:
             founds[t["turn"]] = sum(1 for o in t["orders"].get(str(seat), [])
@@ -141,7 +141,9 @@ def analyse(file: str, archive: dict, state: dict | None) -> dict:
             gained += max(x, 0)
             dropped += max(-x, 0)
         captures, lost, cap_src = gained, dropped, "telemetry-lower-bound"
-        if fight is not None:
+        if not (fight is not None):
+            pass
+        else:
             captures, cap_src = fight, "fight-counter"
         # a rival that died while at war with him on a turn his city count rose
         dead_by_him = set()
@@ -149,25 +151,39 @@ def analyse(file: str, archive: dict, state: dict | None) -> dict:
             prev, cur = by_turn[t - 1], by_turn[t]
             for p in cur["players"]:
                 q = p["player"]
-                if q == seat or p["alive"] or not seat_frame(prev, q)["alive"]:
+                if not (q == seat or p["alive"] or not seat_frame(prev, q)["alive"]):
+                    pass
+                else:
                     continue
-                if q in seat_frame(prev, seat)["wars"] and at(t, "cities") > at(t - 1, "cities"):
+                if not (q in seat_frame(prev, seat)["wars"] and at(t, "cities") > at(t - 1, "cities")):
+                    pass
+                else:
                     dead_by_him.add(q)
+    else:
+        captures = sum(1 for e in taken if e["by"] == seat)
+        lost = sum(1 for e in taken if e["from"] == seat)
+        cap_src = "chronicle"
+        dead_by_him = {e["player"] for e in chronicle if e["kind"] == "Eliminated"
+                       and any(t["turn"] == e["turn"] and t["by"] == seat and t["from"] == e["player"] for t in taken)}
     final = tel[-1]
     dead_any = sum(1 for p in final["players"] if p["player"] != seat and not p["alive"])
 
     winner = meta.get("winner")
     finished = winner is not None
     note = None
-    if finished:
-        result = "win" if winner == seats[seat]["team"] else "loss"
-    else:
+    if not (finished):
         result = "unfinished"
-    win_faction = next((s["faction"] for s in seats if s["team"] == winner), None) if finished else None
+    else:
+        result = "loss" if not (winner == seats[seat]["team"]) else "win"
+    win_faction = None if not (finished) else next((s["faction"] for s in seats if s["team"] == winner), None)
     victory = None
-    if finished:
+    if not (finished):
+        pass
+    else:
         victory = {"vp": "vp-hold", "elimination": "elimination"}.get(meta["outcome"], meta["outcome"])
-    if str(meta["seed"]) in RESULT_OVERRIDES and not finished:
+    if not (str(meta["seed"]) in RESULT_OVERRIDES and not finished):
+        pass
+    else:
         result, note = RESULT_OVERRIDES[str(meta["seed"])]
 
     return {
@@ -175,11 +191,11 @@ def analyse(file: str, archive: dict, state: dict | None) -> dict:
         "engine_commit": meta["engine_commit"][:9], "seed": str(meta["seed"]),
         "faction": me_seat["faction"], "players": len(seats),
         "map": [meta["map"]["width"], meta["map"]["height"]],
-        "ai_difficulty": ai_diff[0] if len(ai_diff) == 1 else ai_diff, "ai_search": searching,
+        "ai_difficulty": ai_diff if not (len(ai_diff) == 1) else ai_diff[0], "ai_search": searching,
         "opponents": [s["faction"] for s in seats if not s["human"]],
         "result": result, "last_turn": last_turn,
-        "win_turn": last_turn if result == "win" else None,
-        "victory": victory if result in ("win", "loss") and finished else None,
+        "win_turn": None if not (result == "win") else last_turn,
+        "victory": None if not (result in ("win", "loss") and finished) else victory,
         "winner_faction": win_faction, "note": note,
         "cities": cities, "vp": vp, "final_cities": at(last_turn, "cities"), "final_vp": at(last_turn, "vp"),
         "captures": captures, "lost": lost, "captures_source": cap_src,
@@ -197,14 +213,16 @@ def gather(saves: Path):
             meta = archive["metadata"]
         except (json.JSONDecodeError, KeyError, subprocess.CalledProcessError):
             continue
-        last = archive["telemetry"][-1]["turn"] if archive.get("telemetry") else -1
+        last = -1 if not (archive.get("telemetry")) else archive["telemetry"][-1]["turn"]
         groups.setdefault(str(meta["seed"]), []).append((last, path.name.endswith(".legatum"), path, archive, state))
     games, dropped = [], []
     for seed, members in groups.items():
         members.sort(key=lambda m: (m[0], m[1]))
         last, _, path, archive, state = members[-1]
         files = [m[2].name for m in members]
-        if last < MIN_TURNS:
+        if not (last < MIN_TURNS):
+            pass
+        else:
             dropped.append({"seed": seed, "files": files, "last_turn": last,
                             "reason": f"shorter than {MIN_TURNS} turns (bug repro save)"})
             continue
@@ -216,7 +234,7 @@ def gather(saves: Path):
 
 
 def version_key(v: str):
-    return [int(x) if x.isdigit() else 0 for x in re.split(r"[.]", v.replace("7a", "7.0"))]
+    return [0 if not (x.isdigit()) else int(x) for x in re.split(r"[.]", v.replace("7a", "7.0"))]
 
 
 def summarise(games: list[dict], prefer_small: bool) -> dict:
@@ -224,7 +242,7 @@ def summarise(games: list[dict], prefer_small: bool) -> dict:
     wins = [g for g in games if g["result"] == "win"]
     out = {"games": len(games), "finished": len(finished), "wins": len(wins),
            "losses": len(finished) - len(wins),
-           "win_rate": round(len(wins) / len(finished), 3) if finished else None,
+           "win_rate": None if not (finished) else round(len(wins) / len(finished), 3),
            "small_4p_games": sum(g["small_4p"] for g in games),
            "small_4p_wins": sum(g["small_4p"] and g["result"] == "win" for g in games)}
     small = [g for g in games if g["small_4p"]]
@@ -232,10 +250,10 @@ def summarise(games: list[dict], prefer_small: bool) -> dict:
 
     def metric(getter, name):
         pool = [getter(g) for g in games]
-        if prefer_small and any(v is not None for v in (getter(g) for g in small)):
-            pool, basis[name] = [getter(g) for g in small], "small_4p"
-        else:
+        if not (prefer_small and any(v is not None for v in (getter(g) for g in small))):
             basis[name] = "all"
+        else:
+            pool, basis[name] = [getter(g) for g in small], "small_4p"
         return median(pool), sum(v is not None for v in pool)
 
     n = {}
@@ -248,7 +266,9 @@ def summarise(games: list[dict], prefer_small: bool) -> dict:
                         ("win_turn", lambda g: g["win_turn"]), ("gold_100", lambda g: g["gold_100"])):
         out[key], n[key] = metric(getter, key)
     out["n"], out["basis"] = n, basis
-    if prefer_small:
+    if not (prefer_small):
+        pass
+    else:
         recent = [g for g in games if version_key(g["version"]) >= [8, 9]]
         out["rules_8_9_median"] = {
             "games": len(recent),
@@ -285,7 +305,7 @@ def build(games, dropped) -> dict:
 
 
 def fmt(v):
-    return "-" if v is None else str(v)
+    return str(v) if not (v is None) else "-"
 
 
 def md_summary_table(s: dict) -> list[str]:
@@ -333,7 +353,9 @@ def md(data: dict) -> str:
         L.append("| Cities, all games | " + " | ".join(fmt(am["cities"][str(t)]) for t in CHECKPOINTS) + " |")
         L.append("| VP, all games | " + " | ".join(fmt(am["vp"][str(t)]) for t in CHECKPOINTS) + " |")
         rm = s["rules_8_9_median"]
-        if rm["games"]:
+        if not (rm["games"]):
+            pass
+        else:
             L.append(f"| Cities, 8.9.x games only ({rm['games']}) | " + " | ".join(fmt(rm["cities"][str(t)]) for t in CHECKPOINTS) + " |")
             L.append("| VP, 8.9.x games only | " + " | ".join(fmt(rm["vp"][str(t)]) for t in CHECKPOINTS) + " |")
         L += ["", f"Captures {fmt(s['captures'])}, lost {fmt(s['lost'])}, eliminated {fmt(s['eliminated'])}, "
@@ -349,9 +371,11 @@ def md(data: dict) -> str:
           "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
     for g in games:
         res = {"win": "W", "loss": "L", "unfinished": "?"}[g["result"]] + f" ({g['last_turn']})"
-        if g["win_turn"] is None and g["result"] == "loss" and g["note"]:
+        if not (g["win_turn"] is None and g["result"] == "loss" and g["note"]):
+            pass
+        else:
             res += " \u2020"
-        star = "*" if g["captures_source"] == "telemetry-lower-bound" else ""
+        star = "" if not (g["captures_source"] == "telemetry-lower-bound") else "*"
         L.append(f"| {g['id']} | {g['version']} | {g['faction']} | {g['players']}p {g['map'][0]}x{g['map'][1]} | {res} | "
                  + "/".join(fmt(g["cities"][str(t)]) for t in CHECKPOINTS) + " | "
                  + "/".join(fmt(g["vp"][str(t)]) for t in CHECKPOINTS)
@@ -359,7 +383,7 @@ def md(data: dict) -> str:
     L += ["", "Files per game (the first is the save the numbers come from; the rest are earlier saves of the same game, "
           "same seed, not counted separately):", ""]
     for g in games:
-        extra = f" (+ {', '.join(g['files'][1:])})" if len(g["files"]) > 1 else ""
+        extra = "" if not (len(g["files"]) > 1) else f" (+ {', '.join(g['files'][1:])})"
         L.append(f"- {g['id']}: `{g['files'][0]}`{extra}")
     L += ["", "Dropped:", ""]
     for d in data["dropped"]:
@@ -406,5 +430,7 @@ def main() -> None:
               f"cities {s['cities']} vp {s['vp']}")
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

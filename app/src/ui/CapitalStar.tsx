@@ -15,8 +15,8 @@ const starPath = (r: number, waist: number) => {
 export function CapitalStarGlyph({ mark, size = 12 }: { mark: CapitalMark; size?: number }) {
   const scored = mark.scored === 'you';
   return (
-    <svg className="capital-star" width={size} height={size} viewBox="-6 -6 12 12" role="img" aria-label={scored ? 'Original capital, its VP held by you' : 'Original capital'}>
-      <path d={starPath(5.4, scored ? 0.45 : 0.3)} fill={scored ? 'none' : mark.ink} stroke={mark.ink} strokeWidth={scored ? 1.1 : 0.6} strokeLinejoin="round" />
+    <svg className="capital-star" width={size} height={size} viewBox="-6 -6 12 12" role="img" aria-label={!(scored) ? 'Original capital' : 'Original capital, its VP held by you'}>
+      <path d={starPath(5.4, !(scored) ? 0.3 : 0.45)} fill={!(scored) ? mark.ink : 'none'} stroke={mark.ink} strokeWidth={!(scored) ? 0.6 : 1.1} strokeLinejoin="round" />
     </svg>
   );
 }

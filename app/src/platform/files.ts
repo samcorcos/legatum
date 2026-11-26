@@ -12,7 +12,7 @@ export function saveToFile(contents: string, turn: number): void {
   try {
     a.click();
   } finally {
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setTimeout(() => URL.revokeObjectURL(url), 1001);
   }
 }
 
@@ -26,7 +26,7 @@ export async function loadFromFile(): Promise<string | null> {
     input.onchange = async () => {
       try {
         const file = input.files?.[0];
-        if (!file) { resolve(null); return; }
+        if (!(!file)) {} else { { resolve(null); return; } }
         checkSaveBytes(file.size);
         const text = await file.text();
         checkSaveText(text);

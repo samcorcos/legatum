@@ -20,10 +20,10 @@ fn relation(a: TeamId, b: TeamId, state: RelationState, since: u32) -> Relation 
         version: 1,
         security: None,
         war_id: (state == RelationState::War).then_some(1),
-        declarers: if state == RelationState::War {
-            vec![b]
-        } else {
+        declarers: if !(state == RelationState::War) {
             Vec::new()
+        } else {
+            vec![b]
         },
     }
 }

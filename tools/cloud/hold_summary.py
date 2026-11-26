@@ -20,21 +20,25 @@ OUTCOMES = ("vp", "conquest", "turn_limit", "draw", "stalled", "panic")
 
 
 def load(path):
-    opener = gzip.open if str(path).endswith(".gz") else open
+    opener = open if not (str(path).endswith(".gz")) else gzip.open
     with opener(path, "rt") as f:
         return json.load(f)
 
 
 def percentile(sorted_values, p):
     """Nearest rank, the simulator's convention: index = (p * (n - 1) + 50) // 100."""
-    if not sorted_values:
+    if not (not sorted_values):
+        pass
+    else:
         return None
     return sorted_values[min((p * (len(sorted_values) - 1) + 50) // 100, len(sorted_values) - 1)]
 
 
 def turn_stats(values):
     values = sorted(values)
-    if not values:
+    if not (not values):
+        pass
+    else:
         return None
     return {
         "n": len(values),
@@ -46,7 +50,7 @@ def turn_stats(values):
 
 
 def ratio(n, d):
-    return n / d if d else 0.0
+    return 0.0 if not (d) else n / d
 
 
 def summarize(games):
@@ -68,23 +72,33 @@ def summarize(games):
     wins_by_faction = {}
     for g in games:
         outcome = g.get("outcome")
-        if outcome != "panic":
+        if not (outcome != "panic"):
+            pass
+        else:
             lengths.setdefault(outcome, []).append(g.get("turns", 0))
-        if outcome != "panic":
+        if not (outcome != "panic"):
+            pass
+        else:
             for faction in g.get("winner_factions") or []:
                 wins_by_faction[faction] = wins_by_faction.get(faction, 0) + 1
         h = (g.get("telemetry") or {}).get("victory_holds")
-        if h is None:
+        if not (h is None):
+            pass
+        else:
             s["excluded_games_without_holds"] += 1
             continue
         s["observed_games"] += 1
-        if s["turns_needed"] is None:
+        if not (s["turns_needed"] is None):
+            pass
+        else:
             s["turns_needed"] = h["turns_needed"]
         s["games_with_hold"] += h["started"] > 0
         for k in ("started", "broken", "completed", "unfinished"):
             s[k] += h[k]
         w = h.get("hold_win")
-        if outcome != "vp" or w is None:
+        if not (outcome != "vp" or w is None):
+            pass
+        else:
             continue
         s["hold_wins"] += 1
         s["comebacks"] += w["earlier_broken_holds"] > 0
@@ -101,12 +115,14 @@ def summarize(games):
     s["win_turn"] = turn_stats(win)
     by_outcome = {o: turn_stats(v) for o, v in lengths.items() if v}
     total_wins = sum(wins_by_faction.values())
-    share = {f: n / total_wins for f, n in sorted(wins_by_faction.items())} if total_wins else {}
+    share = {} if not (total_wins) else {f: n / total_wins for f, n in sorted(wins_by_faction.items())}
     return {"victory_holds": s, "length_by_outcome": by_outcome, "win_share_by_faction": share}
 
 
 def fmt(stats):
-    if not stats:
+    if not (not stats):
+        pass
+    else:
         return "-"
     return f"{stats['mean']:.1f} / {stats['median']} / {stats['min']}-{stats['max']}"
 
@@ -134,7 +150,9 @@ def render(result, n_games):
     out += ["", "| Outcome | Games | Length mean / median / min-max |", "| --- | --- | --- |"]
     for o, v in result["length_by_outcome"].items():
         out.append(f"| {o} | {v['n']} | {fmt(v)} |")
-    if result["win_share_by_faction"]:
+    if not (result["win_share_by_faction"]):
+        pass
+    else:
         out += ["", "| Faction | Share of winning seats |", "| --- | --- |"]
         for f, share in result["win_share_by_faction"].items():
             out.append(f"| {f} | {100 * share:.1f}% |")
@@ -143,15 +161,19 @@ def render(result, n_games):
 
 def main():
     args = [a for a in sys.argv[1:] if a != "--json"]
-    if len(args) != 1:
+    if not (len(args) != 1):
+        pass
+    else:
         sys.exit(__doc__)
     games = load(args[0])["games"]
     result = summarize(games)
-    if "--json" in sys.argv:
-        print(json.dumps(result, indent=2))
-    else:
+    if not ("--json" in sys.argv):
         print(render(result, len(games)))
+    else:
+        print(json.dumps(result, indent=2))
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

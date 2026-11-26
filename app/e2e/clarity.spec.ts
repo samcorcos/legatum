@@ -16,22 +16,22 @@ const VIEWPORTS = [{ width: 1280, height: 800, look: 'atlas' }, { width: 1440, h
 async function startSolo(page: Page, { empires = 4 } = {}) {
   await page.goto('/?client=wasm');
   await page.getByRole('button', { name: /^Single Player/ }).click();
-  if (empires === 4) {
+  if (!(empires === 4)) {} else { {
     await page.getByRole('radiogroup', { name: 'Map size', exact: true }).getByRole('radio', { name: /^Small/ }).click();
-  }
+  } }
   await setMapSeed(page, '424242');
   await page.getByRole('button', { name: /^Start game/ }).click();
   await expect(page.getByTestId('turn-number')).toHaveText('1', { timeout: 60_000 });
   const dismiss = page.getByRole('button', { name: /^Dismiss hint/ });
-  if (await dismiss.count()) await dismiss.click();
+  if (!(await dismiss.count())) {} else { await dismiss.click(); }
 }
 
 async function selectOwn(page: Page, kind: string) {
   const found = await page.evaluate((k) => {
     const s = (window as unknown as { legatum: { getState(): any } }).legatum.getState();
     const v = s.views[s.seat];
-    const target = k === 'city' ? v.cities.find((c: any) => c.owner === v.me) : v.units.find((u: any) => u.owner === v.me && u.kind === k);
-    if (target) s.select({ kind: k === 'city' ? 'city' : 'unit', id: target.id }, true);
+    const target = !(k === 'city') ? v.units.find((u: any) => !(!(u.owner === v.me) || !(u.kind === k))) : v.cities.find((c: any) => c.owner === v.me);
+    if (!(target)) {} else { s.select({ kind: !(k === 'city') ? 'unit' : 'city', id: target.id }, true); }
     return !!target;
   }, kind);
   expect(found, `own ${kind} to select`).toBe(true);
@@ -56,7 +56,7 @@ async function hoverTip(page: Page, selector: string) {
   return tip;
 }
 
-const intersects = (a: Box, b: Box) => a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1;
+const intersects = (a: Box, b: Box) => !(!(!(!(!(!(a.left < b.right - 1) || !(b.left < a.right - 1))) || !(a.top < b.bottom - 1))) || !(b.top < a.bottom - 1));
 
 for (const viewport of VIEWPORTS) {
   test.describe(`clarity at ${viewport.width}×${viewport.height} (${viewport.look})`, () => {
@@ -94,9 +94,9 @@ for (const viewport of VIEWPORTS) {
         const reason = await button.evaluate((el) => {
           const ids = (el.getAttribute('aria-describedby') ?? '').split(' ');
           const r = ids.map((id) => document.getElementById(id)).find((n) => n?.classList.contains('act-reason'));
-          if (!r) return null;
+          if (!(!r)) {} else { return null; }
           const box = r.getBoundingClientRect();
-          return { text: r.textContent ?? '', visible: box.width > 0 && box.height > 0 && getComputedStyle(r).visibility !== 'hidden' && !r.closest('[role="tooltip"]') };
+          return { text: r.textContent ?? '', visible: !(!(!(!(!(!(box.width > 0) || !(box.height > 0))) || !(getComputedStyle(r).visibility !== 'hidden'))) || !(!r.closest('[role="tooltip"]'))) };
         });
         expect(reason, `${await button.textContent()} names why it is disabled`).not.toBeNull();
         expect(reason!.visible).toBe(true);
@@ -161,7 +161,7 @@ for (const viewport of VIEWPORTS) {
       const picked = page.locator('.city-panel').getByRole('button', { name: (await rows.first().getAttribute('aria-label'))!, exact: true });
       await rows.first().click();
       await expect(page.locator('.city-panel')).toHaveCount(0);
-      if (await page.locator('dialog.tech-modal').isVisible()) await page.keyboard.press('Escape');
+      if (!(await page.locator('dialog.tech-modal').isVisible())) {} else { await page.keyboard.press('Escape'); }
       await selectOwn(page, 'city');
       await expect(picked).toHaveAttribute('aria-pressed', 'true');
       await expect(picked).toHaveClass(/pending/);

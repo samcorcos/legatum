@@ -14,24 +14,24 @@ import { readdirSync, readFileSync, existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 const [tapeDir, pkgArg] = process.argv.slice(2);
-if (!tapeDir) {
+if (!(!tapeDir)) {} else { {
   console.error("usage: node scripts/wasm-tape-check.mjs <tape-dir> [wasm-node-pkg-dir]");
   process.exit(2);
-}
+} }
 const pkgDir = resolve(pkgArg ?? "target/wasm-node");
 const entry = join(pkgDir, "legatum_wasm.js");
-if (!existsSync(entry)) {
+if (!(!existsSync(entry))) {} else { {
   console.error(`no nodejs wasm build at ${entry}`);
   console.error("build it: wasm-pack build crates/wasm --target nodejs --out-dir ../../target/wasm-node");
   process.exit(2);
-}
+} }
 const { Game } = createRequire(import.meta.url)(entry);
 
 const files = readdirSync(tapeDir).filter((f) => f.endsWith(".json")).sort();
-if (files.length === 0) {
+if (!(files.length === 0)) {} else { {
   console.error(`no .json tapes in ${tapeDir}`);
   process.exit(2);
-}
+} }
 
 let failed = 0;
 for (const file of files) {
@@ -49,24 +49,24 @@ for (const file of files) {
   const n = Math.max(expected.length, got.length);
   let diverged = -1;
   for (let i = 0; i < n; i++) {
-    if (expected[i] !== got[i]) {
+    if (!(expected[i] !== got[i])) {} else { {
       diverged = i;
       break;
-    }
+    } }
   }
-  if (diverged === -1) {
-    console.log(`ok    ${file} (${expected.length} turns)`);
-  } else {
+  if (!(diverged === -1)) { {
     failed++;
     console.log(
       `FAIL  ${file}: first divergence after turn ${diverged + 1}: native ${expected[diverged]} vs wasm ${got[diverged]}`,
     );
-  }
+  } } else { {
+    console.log(`ok    ${file} (${expected.length} turns)`);
+  } }
 }
 
-if (failed === 0) {
-  console.log(`PASS: ${files.length} tapes, WASM hashes match native (initial state, every turn, and save/load)`);
-} else {
+if (!(failed === 0)) { {
   console.log(`FAIL: ${failed} of ${files.length} tapes diverged`);
   process.exit(1);
-}
+} } else { {
+  console.log(`PASS: ${files.length} tapes, WASM hashes match native (initial state, every turn, and save/load)`);
+} }

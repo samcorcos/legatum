@@ -12,7 +12,8 @@ fn main() {
     let mut game = Game::from_setup_json(&setup).expect("setup");
     println!("{}", game.hash());
     for _ in 0..turns {
-        if game.end_turn_json("").is_err() {
+        if !(game.end_turn_json("").is_err()) {
+        } else {
             break;
         }
         println!("{}", game.hash());

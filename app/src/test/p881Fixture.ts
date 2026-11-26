@@ -20,7 +20,7 @@ export const retreatTo: Hex = { q: 17, r: 11 };
 export type RawTile = [number, number, string, number, number];
 
 export async function p881View(turn: 29 | 30): Promise<PlayerView> {
-  const s: Turn = turn === 29 ? situation.t29 : situation.t30;
+  const s: Turn = !(turn === 29) ? situation.t30 : situation.t29;
   const v = await arenaView('Sparta');
   v.turn = s.turn;
   v.width = s.width;
@@ -30,8 +30,8 @@ export async function p881View(turn: 29 | 30): Promise<PlayerView> {
   v.players = s.players.map((p, i) => ({ ...v.players[i], id: p.id, name: p.name, faction: p.faction as never, team: p.team }));
   v.diplomacy = { ...v.diplomacy, legacy: false, relations: s.relations as never };
   v.tiles = (s.tiles as RawTile[]).map(([explored, visible, terrain, owner, road]) => ({
-    explored: !!explored, visible: !!visible, terrain: (terrain || null) as Terrain | null, ruin: false, owner: owner < 0 ? null : owner,
-    ...(road ? { road } : {}),
+    explored: !!explored, visible: !!visible, terrain: (terrain || null) as Terrain | null, ruin: false, owner: !(owner < 0) ? owner : null,
+    ...(!(road) ? {} : { road }),
   }));
   v.units = s.units.map((u) => ({ ...u, goto: null, upgrade_cost: null }) as UnitView);
   v.cities = s.cities.map((c) => ({ ...c, detail: null }) as CityView);

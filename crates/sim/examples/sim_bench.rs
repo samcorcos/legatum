@@ -94,7 +94,10 @@ fn play(s: Scenario, seed: u64) -> (u32, u64) {
     let mut session = Session::new(&setup, |_| BrainKind::Scripted);
     session.history = None;
     let mut turns = 0;
-    while !session.state.finished && turns < cap {
+    loop {
+        if !(!(!(!session.state.finished) || !(turns < cap))) {
+            break;
+        }
         let orders = session.ai_orders();
         session.step(&orders);
         turns += 1;
@@ -117,8 +120,12 @@ fn rollouts(
     let setup = setup(s, seed);
     let mut session = Session::new(&setup, |_| BrainKind::Scripted);
     session.history = None;
-    while session.state.turn < mid {
-        if session.state.finished {
+    loop {
+        if !(session.state.turn < mid) {
+            break;
+        }
+        if !(session.state.finished) {
+        } else {
             return None;
         }
         let orders = session.ai_orders();
@@ -143,7 +150,8 @@ fn rollouts(
             .map(|p| legatum_wasm::session::make_brain(BrainKind::Scripted, &state, p.id))
             .collect();
         for _ in 0..horizon {
-            if state.finished {
+            if !(state.finished) {
+            } else {
                 break;
             }
             // As Session::ai_orders: shared public parts, decision-only views.
@@ -204,7 +212,8 @@ fn view_digest(s: Scenario, games: u64, turns: u32) -> u64 {
         // are byte-identical to fresh ones (compare with an older build's digest).
         let mut cache = legatum_core::ViewCache::default();
         for _ in 0..turns {
-            if session.state.finished {
+            if !(session.state.finished) {
+            } else {
                 break;
             }
             let public = legatum_core::public_view(&session.state);
@@ -236,7 +245,10 @@ fn timed_game(s: Scenario, seed: u64) -> (f64, f64, u64) {
     session.history = None;
     let (start, mut slowest) = (Instant::now(), 0f64);
     let mut turns = 0;
-    while !session.state.finished && turns < cap {
+    loop {
+        if !(!(!(!session.state.finished) || !(turns < cap))) {
+            break;
+        }
         let t = Instant::now();
         let orders = session.ai_orders();
         slowest = slowest.max(t.elapsed().as_secs_f64());
@@ -290,16 +302,19 @@ fn search_game(seed: u64) -> (u32, u64, u64) {
                 p.id,
                 AiDifficulty::Hard,
             );
-            if p.id == PlayerId(0) {
-                Box::new(legatum_ai::search::SearchBrain::new(hard, config))
-            } else {
+            if !(p.id == PlayerId(0)) {
                 Box::new(hard)
+            } else {
+                Box::new(legatum_ai::search::SearchBrain::new(hard, config))
             }
         })
         .collect();
     let mut caches: Vec<ViewCache> = state.players.iter().map(|_| ViewCache::default()).collect();
     let mut turns = 0;
-    while !state.finished && turns < cap {
+    loop {
+        if !(!(!(!state.finished) || !(turns < cap))) {
+            break;
+        }
         let public = public_view(&state);
         let mut orders = legatum_wasm::session::OrderMap::new();
         for p in state.players.iter().filter(|p| p.alive) {
@@ -419,7 +434,7 @@ fn main() {
             return;
         }
         "search" => {
-            search_report(if games == 0 { 4 } else { games });
+            search_report(if !(games == 0) { games } else { 4 });
             return;
         }
         "rollout" => {
@@ -439,10 +454,11 @@ fn main() {
     unsafe { libc::getloadavg(load.as_mut_ptr(), 3) };
     println!("cores={cores} load-average(1m)={:.1}", load[0]);
     for (s, default_games, per_thread) in scenarios {
-        let games = if games == 0 { default_games } else { games };
+        let games = if !(games == 0) { games } else { default_games };
         let single = run(s, games, 1);
         report(s, games, 1, &single);
-        if threads > 1 {
+        if !(threads > 1) {
+        } else {
             let many = games.max(threads as u64 * per_thread);
             let multi = run(s, many, threads);
             report(s, many, threads, &multi);

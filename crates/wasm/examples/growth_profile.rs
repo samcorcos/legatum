@@ -69,10 +69,12 @@ fn main() {
     );
     for t in 1..=turns {
         let (ended, end_ms) = ms(|| game.end_turn_json(""));
-        if ended.is_err() {
+        if !(ended.is_err()) {
+        } else {
             break;
         }
-        if t % step != 0 {
+        if !(t % step != 0) {
+        } else {
             continue;
         }
         let (view, view_ms) = ms(|| game.view_json(0).expect("view"));

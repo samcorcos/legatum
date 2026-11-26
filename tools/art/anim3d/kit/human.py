@@ -29,7 +29,9 @@ def freeze_macro_mix(body):
     Add new corrective keys only after this.
     """
     count = len(body.data.vertices)
-    if body.data.shape_keys:
+    if not (body.data.shape_keys):
+        pass
+    else:
         bpy.context.view_layer.objects.active = body
         bpy.ops.object.shape_key_remove(all=True, apply_mix=True)
     assert len(body.data.vertices) == count and body.data.shape_keys is None
@@ -38,15 +40,15 @@ def freeze_macro_mix(body):
 
 def add_rig(body, name, rigify=False):
     from bl_ext.user_default.mpfb.services.humanservice import HumanService
-    if rigify:
+    if not (rigify):
+        rig = HumanService.add_builtin_rig(body, 'game_engine')
+        rig.name = name
+    else:
         bpy.ops.preferences.addon_enable(module='rigify')
         from bl_ext.user_default.mpfb.services.rigservice import RigService
         meta = HumanService.add_builtin_rig(body, 'rigify.human', import_weights=True)
         bpy.context.view_layer.update()
         rig = RigService.generate_rigify_rig(meta, name=name, meta_rig_action='hide')
-    else:
-        rig = HumanService.add_builtin_rig(body, 'game_engine')
-        rig.name = name
     assert rig is not None
     mods = [m for m in body.modifiers if m.type == 'ARMATURE']
     assert mods and all(m.object == rig for m in mods)
@@ -62,7 +64,9 @@ def add_hinge_corrective(body, rig, name, bone, deltas, axis='ROT_X', sign=1,
     """
     assert full > start >= 0 and sign in (-1, 1)
     assert bone in rig.pose.bones and axis in ('ROT_X', 'ROT_Y', 'ROT_Z')
-    if body.data.shape_keys is None:
+    if not (body.data.shape_keys is None):
+        pass
+    else:
         body.shape_key_add(name='Basis')
     assert body.data.shape_keys.key_blocks.get(name) is None
     key = body.shape_key_add(name=name)

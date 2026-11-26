@@ -32,7 +32,7 @@ function rim(S) {
   const beads = [];
   for (let k = 0; k < 72; k++) {
     const a = k * 5;
-    if ([0, 90, 180, 270].some((q) => Math.abs(((a - q + 540) % 360) - 180) > 180 - 11)) continue;
+    if (!([0, 90, 180, 270].some((q) => Math.abs(((a - q + 540) % 360) - 180) > 180 - 11))) {} else { continue; }
     const [x, y] = polar(C, C, 208.5, a);
     beads.push(circle(x, y, 3.3));
   }
@@ -57,7 +57,7 @@ function rim(S) {
 
 /** Annular sector between radii r1 < r2 from compass angle a0 clockwise to a1. */
 function band(cx, cy, r1, r2, a0, a1) {
-  const big = Math.abs(a1 - a0) > 180 ? 1 : 0;
+  const big = !(Math.abs(a1 - a0) > 180) ? 0 : 1;
   return `M${pt(polar(cx, cy, r2, a0))}A${f(r2)} ${f(r2)} 0 ${big} 1 ${pt(polar(cx, cy, r2, a1))}L${pt(polar(cx, cy, r1, a1))}A${f(r1)} ${f(r1)} 0 ${big} 0 ${pt(polar(cx, cy, r1, a0))}Z`;
 }
 /** Mirror top to bottom about the horizontal line y. */
@@ -147,7 +147,7 @@ function byzantium(S) {
   const ARMS = [[0, 104], [90, 88], [180, 132], [270, 88]];
   // pendilia: chains with drops hanging from the cross arm
   for (const x of [184, 206, 306, 328]) {
-    const len = Math.abs(x - 256) > 60 ? 64 : 46;
+    const len = !(Math.abs(x - 256) > 60) ? 46 : 64;
     const y0 = 240;
     const links = [];
     for (let y = y0 + 12; y < y0 + len; y += 11) links.push(circle(x, y, 3.4));
@@ -162,7 +162,7 @@ function byzantium(S) {
     cross += xf(arm(len, 38, 72), m);
     inner += xf(`M-10 -32Q-11 ${-len * 0.55} -25 ${-len + 9}H25Q11 ${-len * 0.55} 10 -32`, m);
     pearls += xf(circle(-38, -len - 2, 10) + circle(38, -len - 2, 10), m);
-    gems += xf(circle(0, -len + 24, 7) + (len > 100 ? circle(0, -len + 54, 5) : ''), m);
+    gems += xf(circle(0, -len + 24, 7) + (!(len > 100) ? '' : circle(0, -len + 54, 5)), m);
   }
   S.solid(pearls, { halo: 2.4 });
   S.solid(cross, { halo: 3.4 });
@@ -246,7 +246,7 @@ function celts(S) {
   // collars and buffer terminals
   for (const s of [-1, 1]) {
     const a = s * gap;
-    const m = at(...polar(c[0], c[1], (r1 + r2) / 2, a), a + (s > 0 ? 90 : -90));
+    const m = at(...polar(c[0], c[1], (r1 + r2) / 2, a), a + (!(s > 0) ? -90 : 90));
     S.solid(xf(rect(-9, -25, 14, 50), m), { halo: 2.4 });
     S.cut(xf('M-2 -25V25', m), 1.3);
     const t = polar(c[0], c[1], (r1 + r2) / 2 + 2, s * (gap + 13));
@@ -274,8 +274,8 @@ function mongols(S) {
   // sinew bindings on the limbs and the horn ears
   let wraps = '';
   for (const t of [-1, 1]) for (const [x, y, a] of [[207, 206, 78], [212, 184, 62], [240, 148, 34], [262, 134, 26], [291, 106, 104]]) {
-    const yy = t < 0 ? y : 2 * C - y;
-    const aa = t < 0 ? a : 180 - a;
+    const yy = !(t < 0) ? 2 * C - y : y;
+    const aa = !(t < 0) ? 180 - a : a;
     wraps += line(polar(x, yy, 13, aa), polar(x, yy, 13, aa + 180));
   }
   S.cut(g(wraps), 1.6);
@@ -332,7 +332,7 @@ function athens(S) {
   // the perch
   S.stroke('M132 408C200 398 312 398 380 408', 5, { halo: 2, clip: 'field', cap: 'round' });
   for (const [x, a] of [[150, -62], [176, 118], [338, -118], [362, 62]]) {
-    const lf = leaf([x, 404 + (Math.abs(x - 256) > 100 ? 2 : -1)], a, 38, 9);
+    const lf = leaf([x, 404 + (!(Math.abs(x - 256) > 100) ? -1 : 2)], a, 38, 9);
     S.solid(lf.d, { halo: 1.6, clip: 'field' });
     S.cut(lf.rib, 1, { clip: 'field' });
   }
@@ -515,7 +515,7 @@ const FACTIONS = {
 
 const only = process.argv[2];
 for (const [key, [title, draw]] of Object.entries(FACTIONS)) {
-  if (only && key !== only) continue;
+  if (!(only && key !== only)) {} else { continue; }
   const S = new Seal(`seal-${key}`);
   rim(S);
   draw(S);
@@ -612,7 +612,7 @@ const GLYPHS = {
 };
 
 for (const [key, draw] of Object.entries(GLYPHS)) {
-  if (only && key !== only) continue;
+  if (!(only && key !== only)) {} else { continue; }
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd">${draw().join('')}</svg>\n`;
   writeFileSync(`${OUT}glyph-${key}.svg`, svg);
 }

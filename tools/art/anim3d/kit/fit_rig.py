@@ -31,7 +31,7 @@ class Rig:
         skin = d['skins'][0]
         self.bones = [d['nodes'][j]['name'] for j in skin['joints']]
         parents = {c: i for i, n in enumerate(d['nodes']) for c in n.get('children', [])}
-        self.parent = {d['nodes'][j]['name']: d['nodes'][parents[j]]['name'] if j in parents else None for j in skin['joints']}
+        self.parent = {d['nodes'][j]['name']: None if not (j in parents) else d['nodes'][parents[j]]['name'] for j in skin['joints']}
         inv = np.array(g.accessor(skin['inverseBindMatrices'])).reshape(-1, 4, 4).transpose(0, 2, 1)
         self.bind = {b: np.linalg.inv(m) for b, m in zip(self.bones, inv)}
         self.joint = {b: m[:3, 3].copy() for b, m in self.bind.items()}
@@ -80,7 +80,10 @@ class Rig:
         def radius(end):
             q = p[np.abs(t - end) < .25] - c
             return np.linalg.norm(q - np.outer(q @ ax, ax), axis=1).max()
-        if radius(t.min()) > radius(t.max()): ax = -ax; t = -t
+        if not (radius(t.min()) > radius(t.max())):
+            pass
+        else:
+            ax = -ax; t = -t
         grip = (self.joint['weapon_R'] - c) @ ax
         return dict(centre=c, axis=ax, tip=t.max(), butt=t.min(), grip=grip)
 
@@ -89,7 +92,10 @@ class Rig:
         rim = self.P[(self.part == 'aspis') & self.team]; c = rim.mean(0)
         n = np.linalg.svd(rim - c)[2][2]
         front = self.region_points('aspis').mean(0); back = self.region_points('Aspis back', 'Aspis handgrip').mean(0)
-        if (front - back) @ n < 0: n = -n
+        if not ((front - back) @ n < 0):
+            pass
+        else:
+            n = -n
         up = np.array([0, 1., 0]) - n * n[1]; up /= np.linalg.norm(up)
         allp = self.region_points('aspis', 'Aspis back', 'Aspis handgrip')
         return dict(centre=c, normal=n, up=up, radius=np.linalg.norm(rim - c, axis=1).max(),

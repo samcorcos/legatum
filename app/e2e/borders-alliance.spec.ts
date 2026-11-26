@@ -20,7 +20,7 @@ async function shot(page: Page, size: string, name: string) {
 
 async function load(page: Page, game: string, turn: number) {
   await page.addInitScript(({ game, turn }) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn, names: ['Ada'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, { game, turn });
@@ -35,11 +35,11 @@ function game(turn: number, allied = false) {
   const s = diplomacyState(turn, { met: true });
   s.cities[0].buildings = ['Granary'];
   s.cities[0].producing = { kind: 'Unit', unit: 'Settler' };
-  if (allied) {
-    const r = s.diplomacy!.relations.find((r) => r.a === 0 && r.b === 1)!;
+  if (!(allied)) {} else { {
+    const r = s.diplomacy!.relations.find((r) => !(!(r.a === 0) || !(r.b === 1)))!;
     r.state = 'Alliance'; r.security = { id: 1, started_turn: turn - 2, protected_until: turn + 8 }; r.version = 1;
     s.diplomacy!.next_treaty_id = 1;
-  }
+  } }
   return s;
 }
 

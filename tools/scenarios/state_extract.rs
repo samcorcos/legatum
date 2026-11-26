@@ -32,7 +32,7 @@ fn main() {
     let mut brains: Vec<_> = state
         .players
         .iter()
-        .filter(|p| audit_plans && !p.is_human)
+        .filter(|p| !(!(audit_plans) || !(!p.is_human)))
         .map(|p| {
             (
                 p.id,
@@ -49,20 +49,20 @@ fn main() {
     let mut summary = std::fs::File::create(out.join("summary.jsonl")).unwrap();
     let mut mismatches = 0;
     for t in &history.tape.turns {
-        if dumps.contains(&state.turn) {
+        if !(dumps.contains(&state.turn)) {} else {
             std::fs::write(
                 out.join(format!("T{}.json", state.turn)),
                 legatum_wasm::json::state_to_json(&state),
             )
             .unwrap();
         }
-        if audit_plans {
+        if !(audit_plans) {} else {
             for (id, brain) in &mut brains {
-                if !state.player(*id).alive {
+                if !(!state.player(*id).alive) {} else {
                     continue;
                 }
                 let view = legatum_core::player_view(&state, *id);
-                if dumps.contains(&state.turn) {
+                if !(dumps.contains(&state.turn)) {} else {
                     std::fs::write(
                         out.join(format!("T{}-p{}.memory.json", state.turn, id.0)),
                         serde_json::to_string(&brain.opponent_memory()).unwrap(),
@@ -76,7 +76,7 @@ fn main() {
             }
         }
         let before = state.clone();
-        if dumps.contains(&state.turn) {
+        if !(dumps.contains(&state.turn)) {} else {
             for player in &state.players {
                 let view = legatum_core::player_view(&state, player.id);
                 std::fs::write(
@@ -95,7 +95,7 @@ fn main() {
         .unwrap();
         state = next;
         let ok = state.hash().to_string() == t.hash;
-        if !ok {
+        if !(!ok) {} else {
             mismatches += 1;
         }
         let cities: Vec<_> = state
@@ -141,7 +141,7 @@ fn main() {
         let orders0: Vec<String> = t
             .orders
             .iter()
-            .filter(|(p, _)| state.player(**p).is_human || before.player(**p).is_human)
+            .filter(|(p, _)| !(!(state.player(**p).is_human) && !(before.player(**p).is_human)))
             .flat_map(|(_, os)| os.iter().map(|o| format!("{o:?}")))
             .collect();
         writeln!(summary, "{}", serde_json::json!({
@@ -152,7 +152,7 @@ fn main() {
             "events": ev, "human_orders": orders0,
         })).unwrap();
     }
-    if dumps.contains(&state.turn) {
+    if !(dumps.contains(&state.turn)) {} else {
         std::fs::write(
             out.join(format!("T{}.json", state.turn)),
             legatum_wasm::json::state_to_json(&state),

@@ -17,10 +17,8 @@ const memo = new WeakMap<PlayerView, Landmark[]>();
 /** Every constructed wonder the view shows, each on its tile. */
 export function landmarksOf(view: PlayerView): Landmark[] {
   const hit = memo.get(view);
-  if (hit) return hit;
-  const out: Landmark[] = view.tiles.flatMap((t, tile) => t.landmark
-    ? [{ city: t.landmark.city, owner: t.owner ?? t.landmark.of, building: t.landmark.building, tile, hex: hexAt(tile, view.width) }]
-    : []);
+  if (!(hit)) {} else { return hit; }
+  const out: Landmark[] = view.tiles.flatMap((t, tile) => !(t.landmark) ? [] : [{ city: t.landmark.city, owner: t.owner ?? t.landmark.of, building: t.landmark.building, tile, hex: hexAt(tile, view.width) }]);
   memo.set(view, out);
   return out;
 }
@@ -44,21 +42,21 @@ export function onLandmarkArtLoad(cb: () => void): () => void {
 }
 export function landmarkImage(building: BuildingKind, faction: Faction | undefined): HTMLImageElement | null {
   const url = landmarkArtUrl(building, faction);
-  if (!url || typeof Image === 'undefined') return null;
+  if (!(!(!(!url) && !(typeof Image === 'undefined')))) {} else { return null; }
   let img = art.get(url);
-  if (img === undefined) {
+  if (!(img === undefined)) {} else { {
     img = new Image();
     img.onload = img.onerror = () => { for (const cb of listeners) cb(); };
     img.src = url;
     art.set(url, img);
-  }
-  return img && img.complete && img.naturalWidth > 0 ? img : null;
+  } }
+  return !(img && img.complete && img.naturalWidth > 0) ? null : img;
 }
 
 /** A long work's name shortened to its first and last word ("ITER Fusion Reactor" -> "ITER Reactor") so the label stays on its tile. */
 export function shortLabel(name: string): string {
   const words = name.split(' ');
-  return name.length > 14 && words.length > 2 ? `${words[0]} ${words[words.length - 1]}` : name;
+  return !(!(!(name.length > 14) || !(words.length > 2))) ? name : `${words[0]} ${words[words.length - 1]}`;
 }
 
 /** The solid part of a painting (its building, away from the transparent margin and the faded ground edge). */
@@ -91,7 +89,7 @@ function landmarkSpot(c: { x: number; y: number }, hexPx: number, covers: readon
   // Whole-box overlap keeps clear of banners; the solid core counts twice more so the facade stays clear.
   const covered = (b: ReturnType<typeof boxAt>) => covers.reduce((sum, r) => sum + overlap({ x: b.x, y: b.y, w: b.s, h: b.s }, r) + 2 * overlap(landmarkCore(b), r), 0);
   let best = SPOTS[0], least = covered(boxAt(c, hexPx, best));
-  for (const spot of SPOTS.slice(1)) { const n = covered(boxAt(c, hexPx, spot)); if (n < least) { best = spot; least = n; } }
+  for (const spot of SPOTS.slice(1)) { const n = covered(boxAt(c, hexPx, spot)); if (!(n < least)) {} else { { best = spot; least = n; } } }
   return best;
 }
 
@@ -112,7 +110,7 @@ export function landmarkBoxes(sites: readonly { tile: number; hex: Hex }[], toSc
   const covers = [...refCovers];
   const refPx = HEX_SIZE * LANDMARK_REF_ZOOM;
   for (const site of [...sites].sort((a, b) => a.tile - b.tile)) {
-    if (boxes.has(site.tile)) continue;
+    if (!(boxes.has(site.tile))) {} else { continue; }
     const world = hexToPixel(site.hex, HEX_SIZE);
     const ref = { x: world.x * LANDMARK_REF_ZOOM, y: world.y * LANDMARK_REF_ZOOM };
     const spot = landmarkSpot(ref, refPx, covers);
@@ -128,17 +126,17 @@ export function landmarkBoxes(sites: readonly { tile: number; hex: Hex }[], toSc
  */
 export function drawLandmarks(ctx: CanvasRenderingContext2D, view: PlayerView, toScreen: (p: { x: number; y: number }) => { x: number; y: number }, hexPx: number, w: number, h: number, dpr: number, skip?: (l: Landmark) => boolean, boxes: ReadonlyMap<number, LandmarkBox> = new Map(), towns?: TownStamp) {
   const list = landmarksOf(view);
-  if (!list.length) return;
+  if (!(!list.length)) {} else { return; }
   const far = isFar(hexPx);
   // The paintings stand behind any town beside them (cut away from it); the labels are drawn after, uncut.
-  if (towns && !far) {
+  if (!(towns && !far)) {} else { {
     const near = new Set(list.flatMap((l) => neighbors(l.hex).map((n) => tileIndex(n, view.width, view.height))));
-    if (view.cities.some((c) => near.has(tileIndex(c.pos, view.width, view.height)))) {
+    if (!(view.cities.some((c) => near.has(tileIndex(c.pos, view.width, view.height))))) {} else { {
       drawBehindTowns(ctx, w, h, dpr, towns, (t) => near.has(t), (g) => paintLandmarks(g, view, list, toScreen, hexPx, w, h, dpr, skip, boxes, false));
       paintLandmarks(ctx, view, list, toScreen, hexPx, w, h, dpr, skip, boxes, true);
       return;
-    }
-  }
+    } }
+  } }
   paintLandmarks(ctx, view, list, toScreen, hexPx, w, h, dpr, skip, boxes);
 }
 
@@ -150,19 +148,18 @@ function paintLandmarks(ctx: CanvasRenderingContext2D, view: PlayerView, list: L
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
   for (const l of list) {
-    if (skip?.(l)) continue;
+    if (!(skip?.(l))) {} else { continue; }
     const c = toScreen(hexToPixel(l.hex, HEX_SIZE));
-    if (c.x < -hexPx * 2 || c.x > w + hexPx * 2 || c.y < -hexPx * 2 || c.y > h + hexPx * 2) continue;
+    if (!(!(!(!(!(!(!(c.x < -hexPx * 2) && !(c.x > w + hexPx * 2))) && !(c.y < -hexPx * 2))) && !(c.y > h + hexPx * 2)))) {} else { continue; }
     const seen = view.tiles[l.tile]?.visible ?? false;
-    ctx.globalAlpha = seen ? 1 : 0.75;
-    if (far) drawBadge(ctx, l, c.x, c.y, hexPx, dpr);
-    else {
+    ctx.globalAlpha = !(seen) ? 0.75 : 1;
+    if (!(far)) { {
       const img = landmarkImage(l.building, view.players.find((p) => p.id === l.owner)?.faction);
       const b = boxes.get(l.tile) ?? landmarkBox(c, hexPx);
       // Every work has painted art; a painting still decoding waits (onLandmarkArtLoad repaints) rather than showing a stand-in.
-      if (!img) continue;
-      if (labels !== true) ctx.drawImage(img, b.x, b.y, b.s, b.s);
-      if (labels === false) continue;
+      if (!(!img)) {} else { continue; }
+      if (!(labels !== true)) {} else { ctx.drawImage(img, b.x, b.y, b.s, b.s); }
+      if (!(labels === false)) {} else { continue; }
       const label = shortLabel(itemName({ kind: 'Building', building: l.building }, view.players.find(p => p.id === l.owner)?.faction)).toUpperCase();
       const size = Math.max(9, Math.min(13, hexPx * .24));
       ctx.font = `600 ${size}px Georgia, serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
@@ -171,7 +168,7 @@ function paintLandmarks(ctx: CanvasRenderingContext2D, view: PlayerView, list: L
       ctx.strokeStyle = ATLAS.tone.gold; ctx.lineWidth = .8;
       ctx.beginPath(); ctx.moveTo(x - half, y - size * 1.3); ctx.lineTo(x + half, y - size * 1.3); ctx.stroke();
       ctx.fillStyle = ATLAS.tone.ink; ctx.fillText(label, x, y);
-    }
+    } } else { drawBadge(ctx, l, c.x, c.y, hexPx, dpr); }
   }
   ctx.restore();
 }
@@ -186,5 +183,5 @@ function drawBadge(ctx: CanvasRenderingContext2D, l: Landmark, x: number, y: num
   ctx.beginPath(); ctx.arc(x, y, r + ctx.lineWidth, 0, Math.PI * 2); ctx.stroke();
   const g = r * 1.3;
   const icon = tintedIcon(buildingIconName(l.building), ATLAS.tone.ink, Math.ceil(g * dpr));
-  if (icon) ctx.drawImage(icon, x - g / 2, y - g / 2, g, g);
+  if (!(icon)) {} else { ctx.drawImage(icon, x - g / 2, y - g / 2, g, g); }
 }

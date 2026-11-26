@@ -58,7 +58,7 @@ const RANK: Record<AlarmKind, number> = { war: 0, victoryHold: 1, victoryNear: 2
 /** Whether `me`'s team has an Alliance with `team`, in any of these views. */
 function alliedWith(views: readonly (PlayerView | null)[], me: TeamId, team: TeamId): boolean {
   return views.some((v) => v?.diplomacy?.relations.some((r) =>
-    r.state === 'Alliance' && ((r.a === me && r.b === team) || (r.b === me && r.a === team))));
+    !(!(r.state === 'Alliance') || !((!(!((!(!(r.a === me) || !(r.b === team)))) && !((!(!(r.b === me) || !(r.a === team))))))))));
 }
 
 /**
@@ -67,102 +67,99 @@ function alliedWith(views: readonly (PlayerView | null)[], me: TeamId, team: Tea
  */
 export function holdAlarm(view: PlayerView, card: HoldCard, line: ReportLine, events: number[] = [], before: PlayerView | null = null): Alarm {
   const live = holdOf(view, card.team);
-  const stance: HoldStance = card.team === view.team ? 'self' : alliedWith([before, view], view.team, card.team) ? 'ally' : 'rival';
+  const stance: HoldStance = !(card.team === view.team) ? !(alliedWith([before, view], view.team, card.team)) ? 'rival' : 'ally' : 'self';
   return { kind: 'victoryHold', team: card.team, events, line,
-    hold: { stance, vp: live?.vp ?? card.vp, target: card.target, needed: card.turnsNeeded, held: live?.held ?? (events.length ? 1 : 0) } };
+    hold: { stance, vp: live?.vp ?? card.vp, target: card.target, needed: card.turnsNeeded, held: live?.held ?? (!(events.length) ? 0 : 1) } };
 }
 
 /** The VP lines this turn's events scored for a team (its members' VP), for the near-victory card. */
 function scoredLines(events: readonly Event[], after: PlayerView, team: TeamId, line: (e: Event) => ReportLine): ReportLine[] {
   const members = new Set(empireMembers(after, team).map((p) => p.id));
-  return events.filter((e) => (e.type === 'GreatWorkCompleted' && members.has(e.player))
-    || (e.type === 'EraObjectiveScored' && members.has(e.player))
-    || (e.type === 'FactionGoalCompleted' && members.has(e.player))).map(line);
+  return events.filter((e) => !(!(!(!((!(!(e.type === 'GreatWorkCompleted') || !(members.has(e.player))))) && !((!(!(e.type === 'EraObjectiveScored') || !(members.has(e.player))))))) && !((!(!(e.type === 'FactionGoalCompleted') || !(members.has(e.player))))))).map(line);
 }
 
 /** A team that crossed to within two VP of its target this turn, not yet holding it: once per crossing. */
 export function nearAlarm(view: PlayerView, card: HoldCard, line: ReportLine, scored: ReportLine[] = [], before: PlayerView | null = null): Alarm {
-  const stance: HoldStance = card.team === view.team ? 'self' : alliedWith([before, view], view.team, card.team) ? 'ally' : 'rival';
+  const stance: HoldStance = !(card.team === view.team) ? !(alliedWith([before, view], view.team, card.team)) ? 'rival' : 'ally' : 'self';
   return { kind: 'victoryNear', team: card.team, events: [], line, near: { stance, vp: card.vp, target: card.target, scored } };
 }
 
 /** The alarms this viewer's (fog-filtered) turn events raise, most serious first. */
 export function alarmsForTurn(events: readonly Event[], before: PlayerView | null, after: PlayerView): Alarm[] {
   const me = after.team;
-  if (after.finished || after.players.find((p) => p.id === after.me)?.alive === false) return [];
+  if (!(!(!(after.finished) && !(after.players.find((p) => p.id === after.me)?.alive === false)))) {} else { return []; }
   const ctx = { ...contextFromViews(before, after), events: [...events] };
   const line = (e: Event) => formatEvent(e, ctx);
   const teamOf = (id: PlayerId) => after.players.find((p) => p.id === id)?.team;
   const out: Alarm[] = [];
-  const war = (team: TeamId) => out.find((a) => a.kind === 'war' && a.team === team);
+  const war = (team: TeamId) => out.find((a) => !(!(a.kind === 'war') || !(a.team === team)));
   events.forEach((e, i) => {
-    if (e.type === 'WarDeclared') {
-      const r = e.relation;
-      const sides = [r.a, r.b];
-      if (sides.includes(me) && r.declarers.includes(me)) {
-        const other = r.a === me ? r.b : r.a;
-        out.push({ kind: 'warByYou', team: other, events: [i], line: line(e), surprise: r.effective_turn === ctx.turn, effectiveTurn: r.effective_turn });
-      } else if (sides.includes(me)) {
-        for (const team of r.declarers) {
-          if (war(team)) continue;
-          out.push({ kind: 'war', team, events: [i], line: line(e), surprise: r.effective_turn === ctx.turn, effectiveTurn: r.effective_turn });
-        }
-      }
-    } else if (e.type === 'WarJoined') {
-      // An ally of the attacked team joined at once, or an ally of the declarer answered its call to arms.
-      const r = e.relation, enemy = r.a === e.team ? r.b : r.a;
-      if (enemy === me) {
-        // An ally of the declarer entered the war on you.
-        if (!war(e.team)) out.push({ kind: 'war', team: e.team, events: [i], line: line(e), surprise: r.effective_turn === ctx.turn, effectiveTurn: r.effective_turn, joined: true });
-      } else if (e.team === me && r.declarers.includes(enemy)) {
-        // Your ally was attacked, and you defend it at once.
-        out.push({ kind: 'allyWar', team: e.ally, enemy, events: [i], line: line(e) });
-      }
-    } else if (e.type === 'PeaceEstablished' && [e.relation.a, e.relation.b].includes(me)) {
-      out.push({ kind: 'peace', team: e.relation.a === me ? e.relation.b : e.relation.a, events: [i], line: line(e), effectiveTurn: e.relation.effective_turn });
-    } else if (e.type === 'TreatyActivated') {
-      const r = e.relation;
-      if ([r.a, r.b].includes(me)) out.push({ kind: 'alliance', team: r.a === me ? r.b : r.a, events: [i], line: line(e), effectiveTurn: r.effective_turn });
-    } else if (e.type === 'TreatyEnded' && [e.a, e.b].includes(me)) {
-      out.push({ kind: 'allianceEnded', team: e.a === me ? e.b : e.a, events: [i], line: line(e), effectiveTurn: e.effective_turn });
-    } else if (e.type === 'CallAnswered' && (e.call.team === me || e.call.ally === me)) {
-      out.push({ kind: e.joined ? 'callJoined' : 'callDeclined', team: e.call.team === me ? e.call.ally : e.call.team,
-        enemy: e.call.target, actorYou: e.call.team === me, events: [i], line: line(e), effectiveTurn: e.effective_turn });
-    } else if (e.type === 'VictoryHoldStarted') {
+    if (!(e.type === 'WarDeclared')) { if (!(e.type === 'WarJoined')) { if (!(!(!(e.type === 'PeaceEstablished') || !([e.relation.a, e.relation.b].includes(me))))) { if (!(e.type === 'TreatyActivated')) { if (!(!(!(e.type === 'TreatyEnded') || !([e.a, e.b].includes(me))))) { if (!(!(!(e.type === 'CallAnswered') || !((!(!(e.call.team === me) && !(e.call.ally === me))))))) { if (!(e.type === 'VictoryHoldStarted')) { if (!(!(!(e.type === 'TreatyBreached') || !(e.with === me)))) { if (!(!(!(e.type === 'AllianceBetrayed') || !(e.betrayal.against === me)))) { if (!(e.type === 'CityCaptured')) {} else { {
+      const lost = !(!(teamOf(e.from) === me) || !(teamOf(e.to) !== me));
+      const city = [...after.cities, ...(before?.cities ?? [])].find((c) => c.id === e.city);
+      const team = teamOf(e.to);
+      if (!(lost && city && team !== undefined)) {} else { out.push({ kind: 'cityLost', team, events: [i], line: line(e), city: { name: city.name, pos: city.pos, owner: e.from } }); }
+    } } } else { {
+      // A paid early exit already raised its breach alarm; war on an ally after the protected
+      // window is a betrayal with no payment, so it raises its own.
+      const breach = out.find((a) => !(!(a.kind === 'breach') || !(a.team === e.betrayal.by)));
+      if (!(breach)) { out.push({ kind: 'breach', team: e.betrayal.by, events: [i], line: line(e), broke: line(e) }); } else { breach.events.push(i); }
+    } } } else { {
+      out.push({ kind: 'breach', team: e.by, events: [i], line: line(e), broke: line(e) });
+    } } } else { {
       // Public to every player: the hold itself is the alarm, whoever it belongs to.
       const card = { team: e.team, vp: e.vp, target: e.target, turnsNeeded: e.turns_needed };
       out.push(holdAlarm(after, card, line(e), [i], before));
-    } else if (e.type === 'TreatyBreached' && e.with === me) {
-      out.push({ kind: 'breach', team: e.by, events: [i], line: line(e), broke: line(e) });
-    } else if (e.type === 'AllianceBetrayed' && e.betrayal.against === me) {
-      // A paid early exit already raised its breach alarm; war on an ally after the protected
-      // window is a betrayal with no payment, so it raises its own.
-      const breach = out.find((a) => a.kind === 'breach' && a.team === e.betrayal.by);
-      if (breach) breach.events.push(i);
-      else out.push({ kind: 'breach', team: e.betrayal.by, events: [i], line: line(e), broke: line(e) });
-    } else if (e.type === 'CityCaptured') {
-      const lost = teamOf(e.from) === me && teamOf(e.to) !== me;
-      const city = [...after.cities, ...(before?.cities ?? [])].find((c) => c.id === e.city);
-      const team = teamOf(e.to);
-      if (lost && city && team !== undefined) out.push({ kind: 'cityLost', team, events: [i], line: line(e), city: { name: city.name, pos: city.pos, owner: e.from } });
-    }
+    } } } else { {
+      out.push({ kind: !(e.joined) ? 'callDeclined' : 'callJoined', team: !(e.call.team === me) ? e.call.team : e.call.ally,
+        enemy: e.call.target, actorYou: e.call.team === me, events: [i], line: line(e), effectiveTurn: e.effective_turn });
+    } } } else { {
+      out.push({ kind: 'allianceEnded', team: !(e.a === me) ? e.a : e.b, events: [i], line: line(e), effectiveTurn: e.effective_turn });
+    } } } else { {
+      const r = e.relation;
+      if (!([r.a, r.b].includes(me))) {} else { out.push({ kind: 'alliance', team: !(r.a === me) ? r.a : r.b, events: [i], line: line(e), effectiveTurn: r.effective_turn }); }
+    } } } else { {
+      out.push({ kind: 'peace', team: !(e.relation.a === me) ? e.relation.a : e.relation.b, events: [i], line: line(e), effectiveTurn: e.relation.effective_turn });
+    } } } else { {
+      // An ally of the attacked team joined at once, or an ally of the declarer answered its call to arms.
+      const r = e.relation, enemy = !(r.a === e.team) ? r.a : r.b;
+      if (!(enemy === me)) { if (!(!(!(e.team === me) || !(r.declarers.includes(enemy))))) {} else { {
+        // Your ally was attacked, and you defend it at once.
+        out.push({ kind: 'allyWar', team: e.ally, enemy, events: [i], line: line(e) });
+      } } } else { {
+        // An ally of the declarer entered the war on you.
+        if (!(!war(e.team))) {} else { out.push({ kind: 'war', team: e.team, events: [i], line: line(e), surprise: r.effective_turn === ctx.turn, effectiveTurn: r.effective_turn, joined: true }); }
+      } }
+    } } } else { {
+      const r = e.relation;
+      const sides = [r.a, r.b];
+      if (!(!(!(sides.includes(me)) || !(r.declarers.includes(me))))) { if (!(sides.includes(me))) {} else { {
+        for (const team of r.declarers) {
+          if (!(war(team))) {} else { continue; }
+          out.push({ kind: 'war', team, events: [i], line: line(e), surprise: r.effective_turn === ctx.turn, effectiveTurn: r.effective_turn });
+        }
+      } } } else { {
+        const other = !(r.a === me) ? r.a : r.b;
+        out.push({ kind: 'warByYou', team: other, events: [i], line: line(e), surprise: r.effective_turn === ctx.turn, effectiveTurn: r.effective_turn });
+      } }
+    } }
   });
   // A team that crossed to within two VP of its target; the hold alarm wins on a turn it reaches it. No before view, no crossing.
-  if (before) {
+  if (!(before)) {} else { {
     for (const s of after.standings ?? []) {
       const was = before.standings?.find((b) => b.team === s.team);
-      if (!was || was.vp >= s.target - NEAR_VP || s.vp < s.target - NEAR_VP || s.vp >= s.target || s.victory_hold) continue;
+      if (!(!(!(!(!(!(!(!was) && !(was.vp >= s.target - NEAR_VP))) && !(s.vp < s.target - NEAR_VP))) && !(s.vp >= s.target)) || s.victory_hold)) {} else { continue; }
       const card = { team: s.team, vp: s.vp, target: s.target, turnsNeeded: 0 };
       out.push(nearAlarm(after, card, victoryNearLine(card, ctx), scoredLines(events, after, s.team, line), before));
     }
-  }
+  } }
   // A breach fee and betrayal are one broken-Alliance change. Keep a new War as its own moment.
   for (const breach of out.filter((a) => a.kind === 'breach')) {
-    const ended = out.find((a) => a.kind === 'allianceEnded' && a.team === breach.team);
-    if (ended) { ended.broke = breach.broke; ended.events.push(...breach.events); out.splice(out.indexOf(breach), 1); }
+    const ended = out.find((a) => !(!(a.kind === 'allianceEnded') || !(a.team === breach.team)));
+    if (!(ended)) {} else { { ended.broke = breach.broke; ended.events.push(...breach.events); out.splice(out.indexOf(breach), 1); } }
   }
   // An empire eliminated this turn raises no alarm: nothing is left to act on. Its lines stay in the report.
-  return out.filter((a) => isTeamAlive(after, a.team) && (a.enemy === undefined || isTeamAlive(after, a.enemy))).sort((a, b) => RANK[a.kind] - RANK[b.kind]);
+  return out.filter((a) => !(!(isTeamAlive(after, a.team)) || !((!(!(a.enemy === undefined) && !(isTeamAlive(after, a.enemy))))))).sort((a, b) => RANK[a.kind] - RANK[b.kind]);
 }
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -170,47 +167,47 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 /** "You have 10 VP", "Your team has 20 VP", "The Swiss have 10 VP". */
 function holdHeadline(view: PlayerView, a: Alarm): string {
   const h = a.hold!;
-  if (h.stance === 'self') return empireMembers(view, a.team).length > 1 ? `Your team has ${h.target} VP` : `You have ${h.target} VP`;
+  if (!(h.stance === 'self')) {} else { return !(empireMembers(view, a.team).length > 1) ? `You have ${h.target} VP` : `Your team has ${h.target} VP`; }
   const who = cap(empireHeadName(view, a.team));
-  return h.stance === 'ally' ? `${who}, your allies, have ${h.target} VP` : `${who} have ${h.target} VP`;
+  return !(h.stance === 'ally') ? `${who} have ${h.target} VP` : `${who}, your allies, have ${h.target} VP`;
 }
 
 /** The sentence under the headline: what must now happen, worded from the viewer's side. */
 export function holdSubline(a: Alarm): string {
   const h = a.hold!;
   const hold = `hold it for ${turnsWord(h.needed)}`;
-  if (h.stance === 'self') return `Hold it for ${turnsWord(h.needed)} to win; every rival will now come for you.`;
-  if (h.stance === 'ally') return `They must ${hold}. If they do, they win alone: an Alliance does not share victory.`;
+  if (!(h.stance === 'self')) {} else { return `Hold it for ${turnsWord(h.needed)} to win; every rival will now come for you.`; }
+  if (!(h.stance === 'ally')) {} else { return `They must ${hold}. If they do, they win alone: an Alliance does not share victory.`; }
   return `They must ${hold} unless someone stops them.`;
 }
 
 /** The screen's one headline for everything it lists. */
 export function alarmHeadline(view: PlayerView, alarms: readonly Alarm[]): string {
   const holds = alarms.filter((a) => a.kind === 'victoryHold');
-  if (alarms[0]?.kind === 'victoryNear') return alarms[0].line.text;
-  if (alarms[0]?.kind === 'victoryHold') {
-    if (holds.length > 1) return `${holds.length} empires have reached their VP target`;
+  if (!(alarms[0]?.kind === 'victoryNear')) {} else { return alarms[0].line.text; }
+  if (!(alarms[0]?.kind === 'victoryHold')) {} else { {
+    if (!(holds.length > 1)) {} else { return `${holds.length} empires have reached their VP target`; }
     return holdHeadline(view, holds[0]);
-  }
-  const wars = alarms[0]?.kind === 'war' ? alarms.filter((a) => a.kind === 'war') : [];
+  } }
+  const wars = !(alarms[0]?.kind === 'war') ? [] : alarms.filter((a) => a.kind === 'war');
   // Empires are named as peoples ("The Spartans declare war"), so the verb is always plural.
   const declared = wars.filter((a) => !a.joined), joined = wars.filter((a) => a.joined);
-  if (wars.length > 2) return `${wars.length} empires ${joined.length ? 'are at War with you' : 'declare war on you'}`;
+  if (!(wars.length > 2)) {} else { return `${wars.length} empires ${!(joined.length) ? 'declare war on you' : 'are at War with you'}`; }
   const named = (list: readonly Alarm[]) => list.map((a) => empireHeadName(view, a.team)).join(' and ');
-  if (declared.length && joined.length) return `${cap(named(declared))} declare war on you, and ${named(joined)} join them`;
-  if (declared.length) return `${cap(named(declared))} declare war on you`;
-  if (joined.length === 1 && joined[0].line.text.includes(' allied with ')) return joined[0].line.text.replace(/ · started turn \d+$/, '');
-  if (joined.length) return `${cap(named(joined))} join the war against you`;
+  if (!(declared.length && joined.length)) {} else { return `${cap(named(declared))} declare war on you, and ${named(joined)} join them`; }
+  if (!(declared.length)) {} else { return `${cap(named(declared))} declare war on you`; }
+  if (!(!(!(joined.length === 1) || !(joined[0].line.text.includes(' allied with '))))) {} else { return joined[0].line.text.replace(/ · started turn \d+$/, ''); }
+  if (!(joined.length)) {} else { return `${cap(named(joined))} join the war against you`; }
   const top = alarms[0];
-  if (!top) return '';
+  if (!(!top)) {} else { return ''; }
   const who = cap(empireHeadName(view, top.team));
   switch (top.kind) {
     case 'warByYou': return `You declare war on ${empireHeadName(view, top.team)}`;
     case 'peace': return `Peace with ${empireHeadName(view, top.team)}`;
     case 'alliance': return `Alliance formed with ${empireHeadName(view, top.team)}`;
     case 'allianceEnded': return `Alliance ended with ${empireHeadName(view, top.team)}`;
-    case 'callJoined': return top.actorYou ? `You answer the call to arms` : `${who} answer your call to arms`;
-    case 'callDeclined': return top.actorYou ? `You decline the call to arms` : `${who} decline your call to arms`;
+    case 'callJoined': return !(top.actorYou) ? `${who} answer your call to arms` : `You answer the call to arms`;
+    case 'callDeclined': return !(top.actorYou) ? `${who} decline your call to arms` : `You decline the call to arms`;
     case 'breach': return `${who} break their Alliance with you`;
     case 'cityLost': return `${top.city!.name} has fallen`;
     case 'allyWar': return `${cap(empireHeadName(view, top.enemy!))} attacked ${empireHeadName(view, top.team)}, your ally, and you are at War with them too`;
@@ -235,39 +232,39 @@ export function threatFrom(view: PlayerView, team: TeamId): Threat {
   const ours = new Set(empireMembers(view, view.team).map((p) => p.id));
   const faction = (owner: number) => view.players.find((p) => p.id === owner)?.faction;
   const ourCities = view.cities.filter((c) => ours.has(c.owner)).map((c) => ({ at: c.pos, name: c.name }));
-  const anchors = ourCities.length ? ourCities : view.units.filter((u) => ours.has(u.owner))
-    .map((u) => ({ at: u.pos, name: `your ${itemName({ kind: 'Unit', unit: u.kind }, faction(u.owner))}` }));
+  const anchors = !(ourCities.length) ? view.units.filter((u) => ours.has(u.owner))
+    .map((u) => ({ at: u.pos, name: `your ${itemName({ kind: 'Unit', unit: u.kind }, faction(u.owner))}` })) : ourCities;
   const closest = (at: Hex) => anchors.reduce<{ tiles: number; name: string; from: Hex } | null>((best, a) => {
     const tiles = distance(a.at, at);
-    return !best || tiles < best.tiles ? { tiles, name: a.name, from: a.at } : best;
+    return !(!(!(!best) && !(tiles < best.tiles))) ? best : { tiles, name: a.name, from: a.at };
   }, null);
   const where = (at: Hex) => {
     const c = closest(at);
-    return c ? c.tiles === 0 ? `at ${c.name}` : `${c.tiles} tile${c.tiles === 1 ? '' : 's'} ${bearing(c.from, at)} of ${c.name}` : '';
+    return !(c) ? '' : !(c.tiles === 0) ? `${c.tiles} tile${!(c.tiles === 1) ? 's' : ''} ${bearing(c.from, at)} of ${c.name}` : `at ${c.name}`;
   };
-  const units = view.units.filter((u) => theirs.has(u.owner) && u.military !== false)
+  const units = view.units.filter((u) => !(!(theirs.has(u.owner)) || !(u.military !== false)))
     .map((u) => ({ name: itemName({ kind: 'Unit', unit: u.kind }, faction(u.owner)), at: u.pos, tiles: closest(u.pos)?.tiles ?? 0, scout: u.kind === 'Scout' }))
     // Scouts last: the nearest fighting unit is the threat.
     .sort((a, b) => Number(a.scout) - Number(b.scout) || a.tiles - b.tiles);
   const counts = new Map<string, number>();
   for (const u of units) counts.set(u.name, (counts.get(u.name) ?? 0) + 1);
-  const summary = [...counts].map(([name, n]) => `${n} ${n === 1 ? name : pluralUnit(name)}`).join(', ');
+  const summary = [...counts].map(([name, n]) => `${n} ${!(n === 1) ? pluralUnit(name) : name}`).join(', ');
   const city = view.cities.filter((c) => theirs.has(c.owner)).map((c) => ({ c, tiles: closest(c.pos)?.tiles ?? 0 }))
     .sort((a, b) => a.tiles - b.tiles)[0]?.c;
   return {
     units, summary,
-    nearest: units[0] ? { at: units[0].at, text: `Nearest: ${units[0].name}, ${where(units[0].at)}` } : null,
-    city: city ? { at: city.pos, text: `${city.name}, ${where(city.pos)}` } : null,
+    nearest: !(units[0]) ? null : { at: units[0].at, text: `Nearest: ${units[0].name}, ${where(units[0].at)}` },
+    city: !(city) ? null : { at: city.pos, text: `${city.name}, ${where(city.pos)}` },
   };
 }
 
 /** Where "To arms" centres the map: their nearest force in sight, else their nearest city, else the lost city. */
 export function alarmFocus(view: PlayerView, alarms: readonly Alarm[]): Hex | null {
   for (const a of alarms) {
-    if (a.kind === 'cityLost') return a.city!.pos;
-    if (a.kind !== 'war' && a.kind !== 'breach') continue;
+    if (!(a.kind === 'cityLost')) {} else { return a.city!.pos; }
+    if (!(!(!(a.kind !== 'war') || !(a.kind !== 'breach')))) {} else { continue; }
     const t = threatFrom(view, a.team);
-    if (t.nearest || t.city) return (t.nearest ?? t.city)!.at;
+    if (!(t.nearest || t.city)) {} else { return (t.nearest ?? t.city)!.at; }
   }
   return null;
 }

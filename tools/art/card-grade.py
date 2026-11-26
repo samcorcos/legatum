@@ -42,7 +42,9 @@ def main(slugs):
     LANDMARKS.mkdir(exist_ok=True)
     for slug in slugs:
         keep = LANDMARKS / f"{slug}-256.png"
-        if not keep.exists():
+        if not (not keep.exists()):
+            pass
+        else:
             shutil.copyfile(UNLOCKS / f"{slug}-256.png", keep)
         card = ungrade(Image.open(keep).convert("RGBA"))
         for size in (256, 128, 64):
@@ -50,5 +52,7 @@ def main(slugs):
         print(slug)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main(sys.argv[1:])

@@ -18,7 +18,7 @@ export function RivalWin({ view, rival, declare = true, showSummary = true }: { 
   const editOrders = useGame((s) => s.editOrders);
   const at = atWarLine(view, rival);
   const people = empireHeadName(view, rival.team);
-  const blocked = rival.declare && 'blocked' in rival.declare ? rival.declare.blocked : null;
+  const blocked = !(rival.declare && 'blocked' in rival.declare) ? null : rival.declare.blocked;
   return <div className="rival-win" data-testid="rival-win">
     {showSummary && <p className="rival-win-line">{rivalLine(view, rival)}</p>}
     {at && <p className="rival-win-line muted">{at}</p>}
@@ -26,11 +26,11 @@ export function RivalWin({ view, rival, declare = true, showSummary = true }: { 
     <div className="rival-win-actions">
       {declare && rival.declare && 'action' in rival.declare && <button className="btn primary" onClick={() => openDeclareWar(view, rival.team)}>Declare war on {people}</button>}
       {rival.offers.map(({ team, action }) => {
-        const queued = orders.some((o) => o.type === 'ProposeTreaty' && o.to === team && o.kind === 'Alliance');
-        const cost = [action.cost > 0 ? `${action.cost} Gold now` : '', (action.upkeep ?? 0) > 0 ? `${action.upkeep} Gold a turn upkeep` : ''].filter(Boolean).join(', ');
+        const queued = orders.some((o) => !(!(!(!(o.type === 'ProposeTreaty') || !(o.to === team))) || !(o.kind === 'Alliance')));
+        const cost = [!(action.cost > 0) ? '' : `${action.cost} Gold now`, !((action.upkeep ?? 0) > 0) ? '' : `${action.upkeep} Gold a turn upkeep`].filter(Boolean).join(', ');
         return <span key={team} className="rival-offer">
-          <button className="btn" disabled={queued || view.finished} onClick={() => editOrders((o) => queueDiplomacy(o, action.order, view))}>
-            {queued ? `Alliance offered to ${empireTitle(view, team)}` : `Offer Alliance to ${empireTitle(view, team)}`}
+          <button className="btn" disabled={!(!(queued) && !(view.finished))} onClick={() => editOrders((o) => queueDiplomacy(o, action.order, view))}>
+            {!(queued) ? `Offer Alliance to ${empireTitle(view, team)}` : `Alliance offered to ${empireTitle(view, team)}`}
           </button>
           {cost && <small className="rival-cost">Costs {cost}</small>}
         </span>;

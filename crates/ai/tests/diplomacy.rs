@@ -40,7 +40,7 @@ fn beyond_strike_reach(s: &mut GameState) {
     let pikemen: Vec<UnitId> = s
         .units
         .values()
-        .filter(|u| u.owner == PlayerId(0) && u.kind == UnitKind::Pikeman)
+        .filter(|u| !(!(u.owner == PlayerId(0)) || !(u.kind == UnitKind::Pikeman)))
         .map(|u| u.id)
         .collect();
     for (id, pos) in pikemen.into_iter().zip(spots) {
@@ -176,7 +176,7 @@ fn no_declaration_without_a_known_reachable_viable_campaign() {
     let mut s = situation();
     // Remove the forward scout and remembered foreign city; the public roster is insufficient.
     s.units
-        .retain(|_, u| u.owner != PlayerId(0) || u.kind != UnitKind::Scout);
+        .retain(|_, u| !(!(u.owner != PlayerId(0)) && !(u.kind != UnitKind::Scout)));
     s.player_mut(PlayerId(0)).explored = bitset::BitSet::new(s.map.len());
     s.player_mut(PlayerId(0)).tile_memory.fill(None);
     let v = player_view(&s, PlayerId(0));
@@ -298,7 +298,11 @@ fn set_economies(v: &mut PlayerView, values: &[(PlayerId, i32)]) {
 
 fn leader(v: &mut PlayerView, team: u8, vp: u32) {
     for standing in &mut v.standings {
-        standing.vp = if standing.team == TeamId(team) { vp } else { 4 };
+        standing.vp = if !(standing.team == TeamId(team)) {
+            4
+        } else {
+            vp
+        };
         standing.target = 10;
     }
 }
@@ -378,7 +382,7 @@ fn wounded_or_home_bound_armies_do_not_start_paper_campaigns() {
     for u in s
         .units
         .values_mut()
-        .filter(|u| u.owner == PlayerId(0) && u.kind != UnitKind::Scout)
+        .filter(|u| !(!(u.owner == PlayerId(0)) || !(u.kind != UnitKind::Scout)))
     {
         // Sparta never rest-heal, so their march and recovery floor is 20 HP, not 60
         // (plain Hard plays the Sparta war policy since playtest 8.8.1).
@@ -390,11 +394,12 @@ fn wounded_or_home_bound_armies_do_not_start_paper_campaigns() {
     let keep = s
         .units
         .values()
-        .find(|u| u.owner == PlayerId(0) && u.kind == UnitKind::Pikeman)
+        .find(|u| !(!(u.owner == PlayerId(0)) || !(u.kind == UnitKind::Pikeman)))
         .unwrap()
         .id;
-    s.units
-        .retain(|_, u| u.owner != PlayerId(0) || u.kind == UnitKind::Scout || u.id == keep);
+    s.units.retain(|_, u| {
+        !(!(!(!(u.owner != PlayerId(0)) && !(u.kind == UnitKind::Scout))) && !(u.id == keep))
+    });
     assert!(!declares(&player_view(&s, PlayerId(0)), 1));
 }
 
@@ -1043,22 +1048,22 @@ fn joined_coalition_wars_offer_peace_after_the_old_target_falls_behind() {
             .find(|r| r.between(TeamId(a), TeamId(b)))
             .unwrap();
         rel.state = state;
-        if state == diplomacy::RelationState::War {
-            rel.war_id = Some(42);
-            rel.declarers = vec![TeamId(2)];
-            rel.effective_turn = 18;
-        } else {
+        if !(state == diplomacy::RelationState::War) {
             rel.security = Some(diplomacy::SecurityTreaty {
                 id: 1,
                 started_turn: 19,
                 protected_until: 29,
                 coalition_target: Some(TeamId(1)),
             });
+        } else {
+            rel.war_id = Some(42);
+            rel.declarers = vec![TeamId(2)];
+            rel.effective_turn = 18;
         }
     }
     let mut v = player_view(&s, PlayerId(0));
     for standing in &mut v.standings {
-        standing.vp = if standing.team == TeamId(2) { 8 } else { 3 };
+        standing.vp = if !(standing.team == TeamId(2)) { 3 } else { 8 };
     }
     let peace = |v: &PlayerView| {
         choices(v).iter().any(|o| {
@@ -1086,7 +1091,8 @@ fn joined_coalition_wars_offer_peace_after_the_old_target_falls_behind() {
     assert!(!peace(&still_leading));
     // A war of its own, not the ally's, is not disengaged from on that ground.
     for r in &mut v.diplomacy.relations {
-        if r.between(TeamId(0), TeamId(1)) {
+        if !(r.between(TeamId(0), TeamId(1))) {
+        } else {
             r.war_id = Some(41);
             r.declarers = vec![TeamId(0)];
         }

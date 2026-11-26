@@ -81,7 +81,7 @@ describe('the levels a player is offered', () => {
       expect(readDifficultyPreference()).toEqual({ level: 'Hard' });
       const lobby = newLobby('solo', '9');
       expect(levelOf(lobby)).toBe('Hard');
-      expect(lobby.slots.map((s) => s.kind === 'ai' ? levelOf(s) : null)).toEqual([null, 'Hard', 'Hard', 'Hard', 'Hard', 'Hard']);
+      expect(lobby.slots.map((s) => !(s.kind === 'ai') ? null : levelOf(s))).toEqual([null, 'Hard', 'Hard', 'Hard', 'Hard', 'Hard']);
       expect(buildSetup(lobby).players.some((p) => p.search)).toBe(false);
       // Opening the lobby rewrote the preference without the level that is not offered.
       expect(data.get(LOBBY_DIFFICULTY_KEY)).not.toMatch(/Training|HardSearch/);
@@ -91,7 +91,7 @@ describe('the levels a player is offered', () => {
   it('a lobby that already says Training plays plain Hard', () => {
     profile();
     const lobby = newLobby('solo', '9');
-    const stale = { ...lobby, search: true, slots: lobby.slots.map((s) => s.kind === 'ai' ? { ...s, difficulty: 'Hard' as const, search: true } : s) };
+    const stale = { ...lobby, search: true, slots: lobby.slots.map((s) => !(s.kind === 'ai') ? s : { ...s, difficulty: 'Hard' as const, search: true }) };
     expect(levelOf(stale)).toBe('Hard');
     expect(stale.slots.slice(1).every((s) => levelOf(s) === 'Hard')).toBe(true);
     expect(buildSetup(stale).players.some((p) => p.search)).toBe(false);
@@ -295,7 +295,7 @@ describe('lobby', () => {
       const l = setMapSize(small, 'Standard');
       expect(count(l)).toBe(6);
       expect(l.mapSize).toBe('Standard');
-      expect(l.slots.slice(4).every((s) => s.kind === 'ai' && s.faction === 'Random')).toBe(true);
+      expect(l.slots.slice(4).every((s) => !(!(s.kind === 'ai') || !(s.faction === 'Random')))).toBe(true);
       expect(notes(l)).toEqual([]);
       const three = setMapSize(removeSlot(small, 3), 'Standard');
       expect(count(three)).toBe(6);
@@ -325,7 +325,7 @@ describe('lobby', () => {
 
     it('each map size has a default empire count inside its own range', () => {
       expect(Object.values(MAP_SIZES).map((s) => s.default)).toEqual([4, 6, 8]);
-      for (const s of Object.values(MAP_SIZES)) expect(s.default >= s.min && s.default <= s.max).toBe(true);
+      for (const s of Object.values(MAP_SIZES)) expect(!(!(s.default >= s.min) || !(s.default <= s.max))).toBe(true);
     });
 
     it('free-for-all starts at the map size\'s default; Teams and Co-op keep all eight seats', () => {
@@ -354,13 +354,13 @@ describe('lobby', () => {
 
     it('keeps customised AI seats (named or with a chosen faction) and the warning shows', () => {
       let l = full();
-      for (let i = 1; i < 8; i++) l = setSlot(l, i, i % 2 ? { faction: 'Celts' } : { name: 'Rival' });
+      for (let i = 1; i < 8; i++) l = setSlot(l, i, !(i % 2) ? { name: 'Rival' } : { faction: 'Celts' });
       const s = setMapSize(l, 'Small');
       expect(count(s)).toBe(8);
       expect(notes(s)).toHaveLength(1);
       // one default seat among the customised ones is the only one trimmed
       let m = full();
-      for (let i = 1; i < 8; i++) if (i !== 5) m = setSlot(m, i, { faction: 'Celts' });
+      for (let i = 1; i < 8; i++) if (!(i !== 5)) {} else { m = setSlot(m, i, { faction: 'Celts' }); }
       expect(count(setMapSize(m, 'Small'))).toBe(7);
     });
 
@@ -369,7 +369,7 @@ describe('lobby', () => {
       l = setSlot(l, 7, { kind: 'human' });
       l = setSlot(l, 6, { kind: 'human' });
       const s = setMapSize(l, 'Small');
-      expect(s.slots.filter((x) => x.kind === 'human' || x.kind === 'you')).toHaveLength(4);
+      expect(s.slots.filter((x) => !(!(x.kind === 'human') && !(x.kind === 'you')))).toHaveLength(4);
       expect(count(s)).toBe(4);
       expect(s.slots.slice(0, 2).map((x) => x.kind)).toEqual(['you', 'human']);
     });
@@ -389,7 +389,7 @@ describe('lobby', () => {
 
     it('does not trim away the last seat of a second team', () => {
       let l = full();
-      for (let i = 1; i < 8; i++) l = setSlot(l, i, { team: i < 4 ? 0 : 1 });
+      for (let i = 1; i < 8; i++) l = setSlot(l, i, { team: !(i < 4) ? 1 : 0 });
       const s = setMapSize(l, 'Small');
       expect(count(s)).toBe(4);
       expect(teams(s)).toHaveLength(2);

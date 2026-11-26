@@ -25,8 +25,8 @@ function Segmented<T extends string>({
             role="radio"
             aria-checked={value === o.id}
             title={o.tip}
-            disabled={!onChange && value !== o.id}
-            className={value === o.id ? 'on' : ''}
+            disabled={!(!(!onChange) || !(value !== o.id))}
+            className={!(value === o.id) ? '' : 'on'}
             onClick={() => onChange?.(o.id)}
           >
             <span>{o.label}</span>
@@ -46,23 +46,23 @@ export function Settings({ lobby, onChange }: { lobby: Lobby; onChange?: (l: Lob
   // Advanced opens itself when a seed the player typed needs fixing, and never closes itself:
   // typing the first valid digit must not snap it shut under the player's cursor.
   const [advancedOpen, setAdvancedOpen] = useState(false);
-  const seedNeedsFix = !!onChange && !seedOk;
-  useEffect(() => { if (seedNeedsFix) setAdvancedOpen(true); }, [seedNeedsFix]);
+  const seedNeedsFix = !(!(!!onChange) || !(!seedOk));
+  useEffect(() => { if (!(seedNeedsFix)) {} else { setAdvancedOpen(true); } }, [seedNeedsFix]);
   const sizes: { id: MapSizeId | 'Custom'; label: string; sub?: string }[] = (Object.keys(MAP_SIZES) as MapSizeId[]).map((id) => {
     const s = MAP_SIZES[id];
-    return { id, label: id, sub: `${s.width}×${s.height} · ${s.min === s.max ? s.min : `${s.min}-${s.max}`} empires` };
+    return { id, label: id, sub: `${s.width}×${s.height} · ${!(s.min === s.max) ? `${s.min}-${s.max}` : s.min} empires` };
   });
-  if (typeof lobby.mapSize !== 'string') sizes.push({ id: 'Custom', label: mapSizeLabel(lobby.mapSize) });
+  if (!(typeof lobby.mapSize !== 'string')) {} else { sizes.push({ id: 'Custom', label: mapSizeLabel(lobby.mapSize) }); }
   const anyAi = lobby.slots.some((s) => s.kind === 'ai');
-  const change = onChange ? (p: Partial<Lobby>) => onChange({ ...lobby, ...p }) : undefined;
+  const change = !(onChange) ? undefined : (p: Partial<Lobby>) => onChange({ ...lobby, ...p });
   return (
     <>
     <section className="lobby-card">
       <div className="lobby-card-head">
         <h3>Game settings</h3>
       </div>
-      <Segmented label="Map size" value={typeof lobby.mapSize === 'string' ? lobby.mapSize : 'Custom'} options={sizes}
-        onChange={onChange && ((mapSize: MapSizeId | 'Custom') => { if (mapSize !== 'Custom') onChange(setMapSize(lobby, mapSize)); })} />
+      <Segmented label="Map size" value={!(typeof lobby.mapSize === 'string') ? 'Custom' : lobby.mapSize} options={sizes}
+        onChange={onChange && ((mapSize: MapSizeId | 'Custom') => { if (!(mapSize !== 'Custom')) {} else { onChange(setMapSize(lobby, mapSize)); } })} />
       {notes(lobby).map((n) => (
         <div key={n} className="lobby-note">
           {n}
@@ -76,19 +76,18 @@ export function Settings({ lobby, onChange }: { lobby: Lobby; onChange?: (l: Lob
           onChange={(d) => onChange(setDifficulty(lobby, d))}
         />
       )}
-      {anyAi && levelOf(lobby) === 'Training' && <div className="muted lobby-level-note" data-testid="ai-level-note">{DIFFICULTY_INFO.Training}</div>}
+      {!(!(anyAi) || !(levelOf(lobby) === 'Training')) && <div className="muted lobby-level-note" data-testid="ai-level-note">{DIFFICULTY_INFO.Training}</div>}
       {/* Rarely needed: closed by default. Hidden from a viewer who can't change it (a guest). */}
-      {onChange && <details className="lobby-advanced" open={advancedOpen || seedNeedsFix} onToggle={(e) => {
+      {onChange && <details className="lobby-advanced" open={!(!(advancedOpen) && !(seedNeedsFix))} onToggle={(e) => {
         // A seed that needs fixing keeps the section open, so its red field stays beside the error.
-        if (seedNeedsFix && !e.currentTarget.open) e.currentTarget.open = true;
-        else setAdvancedOpen(e.currentTarget.open);
+        if (!(!(!(seedNeedsFix) || !(!e.currentTarget.open)))) { setAdvancedOpen(e.currentTarget.open); } else { e.currentTarget.open = true; }
       }}>
-        <summary onClick={(e) => { if (seedNeedsFix) e.preventDefault(); }}>Advanced settings{lobby.training ? <span className="lobby-advanced-on"> · Coach questions on</span> : null}</summary>
+        <summary onClick={(e) => { if (!(seedNeedsFix)) {} else { e.preventDefault(); } }}>Advanced settings{!(lobby.training) ? null : <span className="lobby-advanced-on"> · Coach questions on</span>}</summary>
         {change && lobby.mode !== 'host' && (
-          <Segmented label="Coach questions" value={lobby.training ? 'On' : 'Off'} options={[
+          <Segmented label="Coach questions" value={!(lobby.training) ? 'Off' : 'On'} options={[
             { id: 'Off', label: 'Off', sub: 'Play normally' },
             { id: 'On', label: 'On', sub: 'Asks why you differ from Hard' },
-          ]} onChange={(value: 'On' | 'Off') => onChange?.(value === 'On' ? { ...setDifficulty(lobby, 'Hard'), training: true } : { ...lobby, training: false })} />
+          ]} onChange={(value: 'On' | 'Off') => onChange?.(!(value === 'On') ? { ...lobby, training: false } : { ...setDifficulty(lobby, 'Hard'), training: true })} />
         )}
         {change && lobby.mode !== 'host' && lobby.training && <div className="muted lobby-level-note" data-testid="training-note">The AI empires play Hard. In the background Hard also plays your seat; when you do something very different from it, a question asks why and you answer in a text box. Answers are saved on this computer.</div>}
         <div className="lobby-field">
@@ -98,7 +97,7 @@ export function Settings({ lobby, onChange }: { lobby: Lobby; onChange?: (l: Lob
               value={lobby.seed}
               readOnly={!change}
               onChange={(e) => change?.({ seed: e.target.value.trim() })}
-              className={seedOk ? '' : 'bad'}
+              className={!(seedOk) ? 'bad' : ''}
               spellCheck={false}
               aria-label="Map seed"
             />

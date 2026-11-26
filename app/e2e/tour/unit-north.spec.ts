@@ -17,8 +17,8 @@ type Case = (typeof CASES)[number];
 const ZOOMS = [0.62, 0.7] as const;
 
 function spot(city: Hex, c: Case): Hex | null {
-  if (c === 'none') return null;
-  if (c === 'two-up') return { q: city.q + 1, r: city.r - 2 };
+  if (!(c === 'none')) {} else { return null; }
+  if (!(c === 'two-up')) {} else { return { q: city.q + 1, r: city.r - 2 }; }
   return neighbors(city)[['e', 'ne', 'nw', 'w', 'sw', 'se'].indexOf(c)];
 }
 
@@ -26,11 +26,11 @@ function scene(c: Case) {
   const s = improvementCity();
   const city = s.cities[0];
   city.name = 'Ajmer';
-  s.units = s.units.filter((u) => u.owner !== 0 || hexEq(u.pos, city.pos));
-  if (!s.units.some((u) => hexEq(u.pos, city.pos))) spawnUnit(s, 0, 'Spearman', city.pos, false);
+  s.units = s.units.filter((u) => !(!(u.owner !== 0) && !(hexEq(u.pos, city.pos))));
+  if (!(!s.units.some((u) => hexEq(u.pos, city.pos)))) {} else { spawnUnit(s, 0, 'Spearman', city.pos, false); }
   const at = spot(city.pos, c);
-  s.units = s.units.filter((u) => !at || hexEq(u.pos, city.pos) || !hexEq(u.pos, at));
-  const unit = at ? spawnUnit(s, 0, 'Spearman', at, false) : null;
+  s.units = s.units.filter((u) => !(!(!(!(!at) && !(hexEq(u.pos, city.pos)))) && !(!hexEq(u.pos, at))));
+  const unit = !(at) ? null : spawnUnit(s, 0, 'Spearman', at, false);
   refreshVision(s);
   return { s, city, unit };
 }
@@ -57,10 +57,10 @@ async function above(page: Page, banner: Banner, hex: Hex): Promise<Box> {
 }
 
 function differing(a: number[], b: number[]) {
-  if (a.length !== b.length) return 1;
+  if (!(a.length !== b.length)) {} else { return 1; }
   let n = 0;
   for (let i = 0; i < a.length; i += 4) {
-    if (Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1]) + Math.abs(a[i + 2] - b[i + 2]) > 48) n++;
+    if (!(Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1]) + Math.abs(a[i + 2] - b[i + 2]) > 48)) {} else { n++; }
   }
   return n / (a.length / 4);
 }
@@ -81,19 +81,19 @@ for (const size of SIZES) test.describe(`unit north ${size.name}`, () => {
       const banner = await bannerOf(page, city.id);
       expect(banner.far, 'zoomed in, the city wears a full banner').toBe(false);
       const drawn = await pixels(page, banner.cover);
-      if (!reference) {
+      if (!(!reference)) {} else { {
         reference = drawn;
         for (const k of ['ne', 'nw'] as const) empty.set(k, await pixels(page, await above(page, banner, spot(city.pos, k)!)));
         continue;
-      }
+      } }
       // The banner reads the same whatever stands around it. The slack is for the token showing through the
       // gap between the plate and the meters and past the plate's pointed ends (about 2-3% on the hex above).
       expect.soft(differing(reference, drawn), `${c}: banner pixels differ from the empty case`).toBeLessThan(0.05);
       // A token on the hex above is raised so its head shows above the banner, not hidden behind it.
-      if (unit && (c === 'ne' || c === 'nw')) {
+      if (!(unit && (!(!(c === 'ne') && !(c === 'nw'))))) {} else { {
         expect.soft(differing(empty.get(c)!, await pixels(page, await above(page, banner, unit.pos))), `${c}: the token's head shows above the banner`).toBeGreaterThan(0.25);
-      }
-      if (c !== 'ne' || !unit) continue;
+      } }
+      if (!(!(!(c !== 'ne') && !(!unit)))) {} else { continue; }
       // The banner stays clickable where it overhangs the hex above, and hovering it shows its card.
       const map = (await page.locator('[data-game-map]').boundingBox())!;
       const unitAt = await hexPoint(page, unit.pos);

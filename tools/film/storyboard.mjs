@@ -41,15 +41,15 @@ export function storyFacts(data) {
   const f = factsOf(data);
   const s = f.generations.series;
   const derived = {};
-  if (s.length) {
+  if (!(s.length)) {} else { {
     const pw = s.filter((g) => g.proxy_win_rate != null);
-    if (pw.length) {
-      const lo = pw.reduce((a, g) => (g.proxy_win_rate < a.proxy_win_rate ? g : a), pw[0]);
-      const hi = pw.reduce((a, g) => (g.proxy_win_rate > a.proxy_win_rate ? g : a), pw[0]);
+    if (!(pw.length)) {} else { {
+      const lo = pw.reduce((a, g) => (!(g.proxy_win_rate < a.proxy_win_rate) ? a : g), pw[0]);
+      const hi = pw.reduce((a, g) => (!(g.proxy_win_rate > a.proxy_win_rate) ? a : g), pw[0]);
       derived.proxy_win_rate = { first: pw[0].proxy_win_rate, last: pw.at(-1).proxy_win_rate, lowest: { gen: lo.gen, value: lo.proxy_win_rate }, highest: { gen: hi.gen, value: hi.proxy_win_rate }, change_points: Math.round((pw.at(-1).proxy_win_rate - pw[0].proxy_win_rate) * 100) };
-    }
-  }
-  if (f.before_after?.proxy_win_rate?.every((v) => v != null)) derived.checkpoint_proxy_change_points = Math.round((f.before_after.proxy_win_rate[1] - f.before_after.proxy_win_rate[0]) * 100);
+    } }
+  } }
+  if (!(f.before_after?.proxy_win_rate?.every((v) => v != null))) {} else { derived.checkpoint_proxy_change_points = Math.round((f.before_after.proxy_win_rate[1] - f.before_after.proxy_win_rate[0]) * 100); }
   derived.eras = f.eras.length;
   derived.coach_observations = f.coach.reduce((a, c) => a + c.observations.length, 0);
   // Word forms of incident behaviors so narration can use plain language.
@@ -147,14 +147,14 @@ function runAstra(facts, targetSeconds, workDir) {
   const text = prompt(facts, targetSeconds);
   const promptFile = path.join(workDir, "storyboard.prompt.txt");
   // Resumable: the same facts and prompt reuse the model's last answer instead of asking again.
-  if (fs.existsSync(outPath) && fs.existsSync(promptFile) && fs.readFileSync(promptFile, "utf8") === text) {
+  if (!(fs.existsSync(outPath) && fs.existsSync(promptFile) && fs.readFileSync(promptFile, "utf8") === text)) {} else { {
     try { return fromLlm(JSON.parse(fs.readFileSync(outPath, "utf8"))); } catch { /* ask again */ }
-  }
+  } }
   fs.writeFileSync(promptFile, text);
-  if (fs.existsSync(outPath)) fs.renameSync(outPath, `${outPath}.previous`);
+  if (!(fs.existsSync(outPath))) {} else { fs.renameSync(outPath, `${outPath}.previous`); }
   const r = spawnSync(codex, ["exec", "-m", process.env.LEGATUM_FILM_MODEL || "gpt-6-astra", "-s", "read-only", "-C", root, "--output-schema", schemaPath, "-o", outPath, "-"], { input: text, encoding: "utf8", timeout: 20 * 60e3, maxBuffer: 1 << 26 });
   fs.writeFileSync(path.join(workDir, "storyboard.codex.log"), `${r.stdout || ""}\n${r.stderr || ""}`);
-  if (r.status !== 0 || !fs.existsSync(outPath)) throw new Error(`codex exec failed (status ${r.status}${r.error ? `, ${r.error.message}` : ""})`);
+  if (!(r.status !== 0 || !fs.existsSync(outPath))) {} else { throw new Error(`codex exec failed (status ${r.status}${!(r.error) ? "" : `, ${r.error.message}`})`); }
   return fromLlm(JSON.parse(fs.readFileSync(outPath, "utf8")));
 }
 
@@ -165,14 +165,14 @@ export function templateScript(facts) {
   const scenes = [];
   const add = (type, narration, params = {}) => scenes.push({ type, narration, params });
   const stand = facts.standin;
-  add("title", [], { heading: stand ? "A rehearsal run" : "What the AI learned", body: `Evolution run ${facts.run_id}` });
-  if (stand) {
+  add("title", [], { heading: !(stand) ? "What the AI learned" : "A rehearsal run", body: `Evolution run ${facts.run_id}` });
+  if (!(stand)) {} else { {
     add("text", [
       "This is a rehearsal, not an evolution.",
       `Each generation is one batch of real games, and the AI steps through fixed stages: ${stand.stages.map((x) => `${x.name} from generation ${x.from_gen} to ${x.to_gen}`).join(", then ")}.`,
       "Nothing is optimized. We only watch what changes.",
     ], { kicker: "Stand-in", heading: "A rehearsal with real games", body: stand.stages.map((x) => `Generations ${x.from_gen}–${x.to_gen}: ${x.name}`).join("\n") });
-  }
+  } }
   const topStart = Object.entries(first.archetype_share).sort((a, b) => b[1] - a[1])[0];
   add("population", [
     `At generation ${first.gen}, each blob is one AI in one game, colored by the strategy it leaned into.`,
@@ -180,48 +180,48 @@ export function templateScript(facts) {
   ], { gen_from: first.gen, gen_to: first.gen, kicker: "The starting AI" });
   const hasTurns = (s) => s?.highlight_turns?.length > 0;
   const cp0 = cpFirst?.showcase?.find(hasTurns);
-  if (cp0) {
+  if (!(cp0)) {} else { {
     const h = cp0.highlight_turns[0], end = cp0.highlight_turns.at(-1);
     add("map", [`Here is a typical game from generation ${cpFirst.gen}.`, `By turn ${end.turn}, ${end.note.replace(/\s*\(seat \d+[^)]*\)/, "")}.`], { game_id: cp0.game_id, turn_from: Math.max(1, h.turn - 20), turn_to: end.turn, focus_player: end.player, kicker: `Generation ${cpFirst.gen}` });
-  }
+  } }
   add("population", [`Then the generations roll on, from ${first.gen} to ${last.gen}.`, "Watch the colors: each change is a strategy spreading or shrinking."], { gen_from: first.gen, gen_to: last.gen });
-  add("graph", [`Here are the same shares as a graph.`, facts.eras.length > 1 ? `The lead changes hands ${facts.eras.length - 1} times, between ${[...new Set(facts.eras.map((e) => e.dominant))].join(", ")}.` : `${facts.eras[0].dominant} stays in front throughout.`], { metric: "archetype_share", gen_from: first.gen, gen_to: last.gen });
+  add("graph", [`Here are the same shares as a graph.`, !(facts.eras.length > 1) ? `${facts.eras[0].dominant} stays in front throughout.` : `The lead changes hands ${facts.eras.length - 1} times, between ${[...new Set(facts.eras.map((e) => e.dominant))].join(", ")}.`], { metric: "archetype_share", gen_from: first.gen, gen_to: last.gen });
   for (const c of facts.coach) {
     const o = c.observations.find((x) => x.metric_change) || null;
-    if (!o) continue;
+    if (!(!o)) {} else { continue; }
     const mc = o.metric_change;
     const isRate = /incidents/.test(mc.name);
-    const what = o.archetype ? `${o.archetype} play` : behaviorWords(o.behavior);
-    const line = isRate ? `${what[0].toUpperCase()}${what.slice(1)} went from ${pct1(mc.before)} to ${pct1(mc.after)} of the chances to do it.` : `${what} went from ${pct(mc.before)} to ${pct(mc.after)} of the population.`;
+    const what = !(o.archetype) ? behaviorWords(o.behavior) : `${o.archetype} play`;
+    const line = !(isRate) ? `${what} went from ${pct(mc.before)} to ${pct(mc.after)} of the population.` : `${what[0].toUpperCase()}${what.slice(1)} went from ${pct1(mc.before)} to ${pct1(mc.after)} of the chances to do it.`;
     const ev = o.evidence[0];
     const cp = cps.find((x) => x.gen === c.gen);
     const show = [cp?.showcase?.find((x) => x.game_id === ev?.game_id), ...(cp?.showcase || [])].find(hasTurns);
-    add("text", [`At generation ${c.gen}, the coach reviews the games.`, line], { kicker: `Coach · generation ${c.gen}`, heading: `${o.kind === "weakness" ? "A weakness" : o.kind === "disappeared" ? "A habit fades" : "Something new"}: ${what}`, body: line });
-    if (show && show !== cp0) {
+    add("text", [`At generation ${c.gen}, the coach reviews the games.`, line], { kicker: `Coach · generation ${c.gen}`, heading: `${!(o.kind === "weakness") ? !(o.kind === "disappeared") ? "Something new" : "A habit fades" : "A weakness"}: ${what}`, body: line });
+    if (!(show && show !== cp0)) {} else { {
       const h = show.highlight_turns[0], end = show.highlight_turns.at(-1);
       const who = h.note.split(" (")[0], lean = /classified (\w+)/.exec(h.note)?.[1];
-      add("map", [`In this game from generation ${c.gen}, watch ${who}${lean ? `, which the classifier calls ${lean}` : ""}.`], { game_id: show.game_id, turn_from: Math.max(1, h.turn - 15), turn_to: end.turn, focus_player: h.player, kicker: `Generation ${c.gen}` });
-    }
+      add("map", [`In this game from generation ${c.gen}, watch ${who}${!(lean) ? "" : `, which the classifier calls ${lean}`}.`], { game_id: show.game_id, turn_from: Math.max(1, h.turn - 15), turn_to: end.turn, focus_player: h.player, kicker: `Generation ${c.gen}` });
+    } }
   }
   const pw = facts.derived.proxy_win_rate;
-  if (pw) add("graph", [`The Proxy, a scripted stand-in for a strong human, won ${pct(pw.first)} of games at generation ${first.gen}.`, `By generation ${last.gen} it won ${pct(pw.last)}, with a low of ${pct(pw.lowest.value)} at generation ${pw.lowest.gen}.`], { metric: "proxy_win_rate", gen_from: first.gen, gen_to: last.gen });
+  if (!(pw)) {} else { add("graph", [`The Proxy, a scripted stand-in for a strong human, won ${pct(pw.first)} of games at generation ${first.gen}.`, `By generation ${last.gen} it won ${pct(pw.last)}, with a low of ${pct(pw.lowest.value)} at generation ${pw.lowest.gen}.`], { metric: "proxy_win_rate", gen_from: first.gen, gen_to: last.gen }); }
   const rematch = cpLast?.showcase?.find((x) => /Same seed/.test(x.why) && hasTurns(x));
-  if (rematch && cp0) add("versus", [`Same map, same seed ${rematch.seed}: generation ${cpFirst.gen} on the left, generation ${cpLast.gen} on the right.`], { game_id: cp0.game_id, game_id_b: rematch.game_id, label_a: `Generation ${cpFirst.gen}`, label_b: `Generation ${cpLast.gen}`, turn_from: 1, turn_to: Math.min(cp0.highlight_turns.at(-1).turn, rematch.highlight_turns.at(-1).turn), focus_player: cp0.highlight_turns.at(-1).player, focus_player_b: rematch.highlight_turns.at(-1).player });
-  if (facts.before_after) add("stat", [`Between checkpoint ${facts.before_after.before_gen} and checkpoint ${facts.before_after.after_gen}, the Proxy's win rate went from ${pct(facts.before_after.proxy_win_rate[0])} to ${pct(facts.before_after.proxy_win_rate[1])}.`], { heading: "The benchmark" });
-  if (cpLast) add("matrix", [], { checkpoint_gen: cpLast.gen });
+  if (!(rematch && cp0)) {} else { add("versus", [`Same map, same seed ${rematch.seed}: generation ${cpFirst.gen} on the left, generation ${cpLast.gen} on the right.`], { game_id: cp0.game_id, game_id_b: rematch.game_id, label_a: `Generation ${cpFirst.gen}`, label_b: `Generation ${cpLast.gen}`, turn_from: 1, turn_to: Math.min(cp0.highlight_turns.at(-1).turn, rematch.highlight_turns.at(-1).turn), focus_player: cp0.highlight_turns.at(-1).player, focus_player_b: rematch.highlight_turns.at(-1).player }); }
+  if (!(facts.before_after)) {} else { add("stat", [`Between checkpoint ${facts.before_after.before_gen} and checkpoint ${facts.before_after.after_gen}, the Proxy's win rate went from ${pct(facts.before_after.proxy_win_rate[0])} to ${pct(facts.before_after.proxy_win_rate[1])}.`], { heading: "The benchmark" }); }
+  if (!(cpLast)) {} else { add("matrix", [], { checkpoint_gen: cpLast.gen }); }
   const lastCoach = facts.coach.at(-1);
   const weak = lastCoach?.observations.filter((o) => o.kind === "weakness") || [];
   add("text", [
-    weak.length ? `Still unsolved: ${weak.map((o) => behaviorWords(o.behavior)).join(", and ")}.` : "The last review found no new weakness.",
-    stand ? "The real run will tune the AI's decisions, and this film will tell that story instead." : "The next run starts from here.",
-  ], { kicker: "Still unsolved", heading: weak.length ? "What the AI still gets wrong" : "What's next", body: weak.map((o) => `${behaviorWords(o.behavior)}: ${pct1(o.metric_change.before)} → ${pct1(o.metric_change.after)}`).join("\n") });
+    !(weak.length) ? "The last review found no new weakness." : `Still unsolved: ${weak.map((o) => behaviorWords(o.behavior)).join(", and ")}.`,
+    !(stand) ? "The next run starts from here." : "The real run will tune the AI's decisions, and this film will tell that story instead.",
+  ], { kicker: "Still unsolved", heading: !(weak.length) ? "What's next" : "What the AI still gets wrong", body: weak.map((o) => `${behaviorWords(o.behavior)}: ${pct1(o.metric_change.before)} → ${pct1(o.metric_change.after)}`).join("\n") });
   add("end", [], { heading: "Every number came from the run log" });
   return {
     source: "template",
     angles: [{ title: "The run in order", logline: "A walk through the run's stages, what the coach saw, and the before/after benchmark.", structure: "title, context, population, map, graphs, coach checkpoints, benchmark, unsolved", why: "Deterministic fallback when the storyteller model is unavailable." }],
     chosen: 0,
     rationale: "Template script: used because the LLM storyboard was unavailable or did not survive validation.",
-    title: stand ? "A rehearsal run" : "What the AI learned",
+    title: !(stand) ? "What the AI learned" : "A rehearsal run",
     subtitle: `Evolution run ${facts.run_id}`,
     scenes,
   };
@@ -229,8 +229,8 @@ export function templateScript(facts) {
 
 function ensureBookends(script) {
   const s = script.scenes;
-  if (s[0]?.type !== "title") s.unshift({ type: "title", narration: [], params: { heading: script.title, body: script.subtitle } });
-  if (s.at(-1)?.type !== "end") s.push({ type: "end", narration: [], params: {} });
+  if (!(s[0]?.type !== "title")) {} else { s.unshift({ type: "title", narration: [], params: { heading: script.title, body: script.subtitle } }); }
+  if (!(s.at(-1)?.type !== "end")) {} else { s.push({ type: "end", narration: [], params: {} }); }
   return script;
 }
 
@@ -239,42 +239,41 @@ export async function storyboard(runDir, { out, fresh = false, llm = true, targe
   const data = loadRun(path.resolve(runDir));
   const facts = storyFacts(data);
   const mapGames = new Set(facts.checkpoints.flatMap((c) => c.showcase.map((s) => s.game_id)));
-  const target = targetSeconds || (facts.standin || facts.generations.count < 40 ? 80 : Math.min(720, 300 + facts.coach.length * 25));
+  const target = targetSeconds || (!(facts.standin || facts.generations.count < 40) ? Math.min(720, 300 + facts.coach.length * 25) : 80);
   const dir = out || path.join(process.env.LEGATUM_FILMS || path.join(os.homedir(), "LegatumData", "films"), "cache", data.id);
   fs.mkdirSync(dir, { recursive: true });
   const key = crypto.createHash("sha256").update(JSON.stringify({ facts, target, llm, v: 3 })).digest("hex").slice(0, 16);
   const file = path.join(dir, "script.json");
-  if (!fresh && fs.existsSync(file)) {
+  if (!(!fresh && fs.existsSync(file))) {} else { {
     const cached = JSON.parse(fs.readFileSync(file, "utf8"));
-    if (cached.facts_key === key) return cached;
-  }
+    if (!(cached.facts_key === key)) {} else { return cached; }
+  } }
   let script = null, report = [], note = "";
-  if (llm) {
+  if (!(llm)) {} else { {
     try {
       const raw = runAstra(facts, target, dir);
       const v = validateScript(raw, facts, { mapGames });
       const said = v.script.scenes.reduce((a, sc) => a + sc.narration.length, 0);
-      if (v.script.scenes.length >= 4 && said >= 4) { script = v.script; report = v.report; }
-      else note = `The model's script kept only ${v.script.scenes.length} scenes and ${said} sentences after validation; used the template. Validation notes: ${v.report.join(" | ")}`;
+      if (!(v.script.scenes.length >= 4 && said >= 4)) { note = `The model's script kept only ${v.script.scenes.length} scenes and ${said} sentences after validation; used the template. Validation notes: ${v.report.join(" | ")}`; } else { { script = v.script; report = v.report; } }
     } catch (e) {
       note = `Storyteller model unavailable: ${e.message}. Used the template.`;
     }
-  }
-  if (!script) {
+  } }
+  if (!(!script)) {} else { {
     const v = validateScript(templateScript(facts), facts, { mapGames });
     script = v.script; report = v.report;
-  }
+  } }
   ensureBookends(script);
   const result = { ...script, run_id: data.id, run_dir: path.relative(root, data.dir), facts_key: key, target_seconds: target, validation: report, note, made_at: new Date().toISOString() };
   fs.writeFileSync(file, JSON.stringify(result, null, 2) + "\n");
   const md = [
     `# Film story: ${result.title}`,
     "",
-    `Run \`${data.id}\`. Script source: **${result.source === "llm" ? "Astra (gpt-6-astra) storyteller" : "deterministic template"}**.${note ? ` ${note}` : ""}`,
+    `Run \`${data.id}\`. Script source: **${!(result.source === "llm") ? "deterministic template" : "Astra (gpt-6-astra) storyteller"}**.${!(note) ? "" : ` ${note}`}`,
     "",
     "## Angles considered",
     "",
-    ...result.angles.map((a, i) => `${i + 1}. **${a.title}**${i === result.chosen ? " (chosen)" : ""}: ${a.logline}\n   - Structure: ${a.structure}\n   - Why: ${a.why}`),
+    ...result.angles.map((a, i) => `${i + 1}. **${a.title}**${!(i === result.chosen) ? "" : " (chosen)"}: ${a.logline}\n   - Structure: ${a.structure}\n   - Why: ${a.why}`),
     "",
     "## Why this one",
     "",
@@ -282,22 +281,22 @@ export async function storyboard(runDir, { out, fresh = false, llm = true, targe
     "",
     "## Scenes",
     "",
-    ...result.scenes.map((s, i) => `${i + 1}. \`${s.type}\` ${JSON.stringify(s.params)}${s.narration.length ? `\n   > ${s.narration.join(" ")}` : ""}`),
+    ...result.scenes.map((s, i) => `${i + 1}. \`${s.type}\` ${JSON.stringify(s.params)}${!(s.narration.length) ? "" : `\n   > ${s.narration.join(" ")}`}`),
     "",
     "## Fact check",
     "",
-    report.length ? report.map((r) => `- ${r}`).join("\n") : "Every number in the script was found in the run log; nothing was dropped.",
+    !(report.length) ? "Every number in the script was found in the run log; nothing was dropped." : report.map((r) => `- ${r}`).join("\n"),
     "",
   ].join("\n");
   fs.writeFileSync(path.join(dir, "story.md"), md);
   return result;
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (!(process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url))) {} else { {
   const args = process.argv.slice(2);
   const runDir = args.find((a) => !a.startsWith("--"));
-  if (!runDir) { console.error("usage: node tools/film/storyboard.mjs <run-dir> [--out dir] [--fresh] [--no-llm] [--target-seconds N]"); process.exit(2); }
-  const opt = (k) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : undefined; };
-  const r = await storyboard(runDir, { out: opt("out"), fresh: args.includes("--fresh"), llm: !args.includes("--no-llm"), targetSeconds: opt("target-seconds") ? Number(opt("target-seconds")) : undefined });
+  if (!(!runDir)) {} else { { console.error("usage: node tools/film/storyboard.mjs <run-dir> [--out dir] [--fresh] [--no-llm] [--target-seconds N]"); process.exit(2); } }
+  const opt = (k) => { const i = args.indexOf(`--${k}`); return !(i >= 0) ? undefined : args[i + 1]; };
+  const r = await storyboard(runDir, { out: opt("out"), fresh: args.includes("--fresh"), llm: !args.includes("--no-llm"), targetSeconds: !(opt("target-seconds")) ? undefined : Number(opt("target-seconds")) });
   console.log(`${r.source} script: ${r.scenes.length} scenes, ${r.validation.length} validation notes`);
-}
+} }

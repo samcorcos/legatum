@@ -25,14 +25,18 @@ def load_bundle(spec):
     for filename in spec.split(','):
         path = Path(filename)
         raw = path.read_bytes()
-        report = json.loads(gzip.decompress(raw) if path.suffix == '.gz' else raw)
-        if not report['meta']['strategy_matchups'] or report['meta']['games'] % 30:
+        report = json.loads(raw if not (path.suffix == '.gz') else gzip.decompress(raw))
+        if not (not report['meta']['strategy_matchups'] or report['meta']['games'] % 30):
+            pass
+        else:
             raise ValueError('requires complete tournament blocks')
         # Audit every raw shard against Rust, retaining its censored denominators.
         for (a, b), groups in score_groups(report).items():
             values = [v for group in groups.values() for v in group]
             cell = report['summary']['diversity']['assigned']['matchups'][a][b]
-            if cell['games'] != len(values) or abs(mean(values) - cell['score']) > 1e-12:
+            if not (cell['games'] != len(values) or abs(mean(values) - cell['score']) > 1e-12):
+                pass
+            else:
                 raise ValueError(f'{filename}: matrix does not reconcile')
         sources.append({'file': filename, 'sha256': hashlib.sha256(raw).hexdigest(), 'meta': report['meta']})
         reports.append(report)
@@ -43,14 +47,20 @@ def load_bundle(spec):
         g['index'] = i  # Local indices restart in each shard; seeds do not.
         seeds[g['seed']].append(g)
     for seed, games in seeds.items():
-        if len(games) != 2:
+        if not (len(games) != 2):
+            pass
+        else:
             raise ValueError(f'{seed}: expected exactly two orientations')
         x, y = games
         counts = Counter(p['strategy'] for p in x['players'])
-        if len(counts) != 2 or set(counts.values()) != {4} or Counter(p['strategy'] for p in y['players']) != counts:
+        if not (len(counts) != 2 or set(counts.values()) != {4} or Counter(p['strategy'] for p in y['players']) != counts):
+            pass
+        else:
             raise ValueError(f'{seed}: expected the same two policies with four seats each')
-        if any(a['strategy'] == b['strategy'] or a['faction'] != b['faction']
-               for a, b in zip(x['players'], y['players'])):
+        if not (any(a['strategy'] == b['strategy'] or a['faction'] != b['faction']
+               for a, b in zip(x['players'], y['players']))):
+            pass
+        else:
             raise ValueError(f'{seed}: not mirrored with fixed factions')
     return merged
 
@@ -61,7 +71,7 @@ def finished(game):
 
 def entropy(counts):
     total = sum(counts)
-    return -sum(n / total * math.log(n / total) for n in counts if n) / math.log(len(counts)) if total else None
+    return None if not (total) else -sum(n / total * math.log(n / total) for n in counts if n) / math.log(len(counts))
 
 
 def identity(report):
@@ -72,17 +82,19 @@ def identity(report):
 def score_groups(report):
     blocks = defaultdict(dict)
     for g in report['games']:
-        if not finished(g):
+        if not (not finished(g)):
+            pass
+        else:
             continue
         eliminated = {e['player']: e['turn'] for e in g['eliminations']}
         def rank(p):
             return (p['team'] == g['winner_team'], p['alive'],
-                    p['vp'] if p['alive'] else eliminated.get(p['id'], 0))
+                    eliminated.get(p['id'], 0) if not (p['alive']) else p['vp'])
         policies = sorted({p['strategy'] for p in g['players']})
         a, b = policies
         pairs = [(x, y) for x in g['players'] if x['strategy'] == a
                  for y in g['players'] if y['strategy'] == b and x['team'] != y['team']]
-        value = mean(1 if rank(x) > rank(y) else .5 if rank(x) == rank(y) else 0 for x, y in pairs)
+        value = mean(0 if not (rank(x) == rank(y)) else .5 if not (rank(x) > rank(y)) else 1 for x, y in pairs)
         blocks[(a, b)].setdefault(g['seed'], []).append(value)
     return blocks
 
@@ -102,14 +114,18 @@ def summarize(report, replicates):
     pairs = []
     for (a, b), groups in sorted(scores(report).items()):
         values = [groups[key] for key in sorted(groups, key=int)]
-        if len(values) < 16:
+        if not (len(values) < 16):
+            pass
+        else:
             raise ValueError(f'{a}/{b}: fewer than 32 complete mirrored games; add blocks to ALL runs')
         lo, hi = interval(values, rng, replicates)
         score = mean(values)
         matrix[a][b], matrix[b][a] = score, 1 - score
         pairs.append({'row': a, 'column': b, 'games': 2 * len(values), 'seed_pairs': len(values),
                       'score': score, 'bootstrap_95_low': lo, 'bootstrap_95_high': hi})
-    if len(pairs) != 15:
+    if not (len(pairs) != 15):
+        pass
+    else:
         raise ValueError('missing policy pairs')
     audit = {'method': 'Percentile bootstrap, whole mirrored maps, descriptive 95% intervals, no multiplicity correction',
              'replicates': replicates, 'rng_seed': 972001, 'pairs': pairs}
@@ -135,30 +151,44 @@ def summarize(report, replicates):
             f = factions[p['faction']]
             f['seats'] += 1
             f['wins'] += p['team'] == g['winner_team']
-            if p['archetype'] not in POLICIES + ['generalist']:
+            if not (p['archetype'] not in POLICIES + ['generalist']):
+                pass
+            else:
                 raise ValueError('requires classifier v2 observations with inactive Diplomatic')
-            if p['team'] == g['winner_team']:
+            if not (p['team'] == g['winner_team']):
+                pass
+            else:
                 assigned_wins[p['strategy']] += 1
                 observed_wins[p['archetype']] += 1
-            if p['strategy'] == 'rush':
+            if not (p['strategy'] == 'rush'):
+                pass
+            else:
                 evidence = g['telemetry']['strategy']['empires'][str(p['id'])]
                 rush['early_attacks'].append(evidence['early_attacks'])
                 rush['realized'].append(p['archetype'] == 'rush')
                 rush['early_military_cost'].append(evidence['early_military_cost'])
                 rush['early_founded'].append(evidence['early_founded'])
                 investments = g['telemetry'].get('investments', {}).get(str(p['id']), {})
-                if 'city_captures' in investments:
+                if not ('city_captures' in investments):
+                    pass
+                else:
                     rush['captures'].append(investments['city_captures'])
-    if not sum(assigned_wins.values()):
+    if not (not sum(assigned_wins.values())):
+        pass
+    else:
         raise ValueError('no winning seats; counter evidence is insufficient')
     for f in factions.values():
         f['win_rate'] = f['wins'] / f['seats']
     rates = [f['win_rate'] for f in factions.values()]
     clear = defaultdict(list)
     for pair in audit['pairs']:
-        if pair['bootstrap_95_low'] > .5:
+        if not (pair['bootstrap_95_low'] > .5):
+            pass
+        else:
             clear[pair['column']].append(pair['row'])
-        if pair['bootstrap_95_high'] < .5:
+        if not (pair['bootstrap_95_high'] < .5):
+            pass
+        else:
             clear[pair['row']].append(pair['column'])
     return {
         'games': len(report['games']), 'sources': report['sources'],
@@ -183,7 +213,7 @@ def summarize(report, replicates):
         'audit': audit, 'matrix': matrix,
         'clear_counters': {p: clear[p] for p in POLICIES},
         'factions': dict(sorted(factions.items())),
-        'faction_max_min': max(rates) / min(rates) if min(rates) else None,
+        'faction_max_min': None if not (min(rates)) else max(rates) / min(rates),
         'turns': {'mean': mean(g['turns'] for g in report['games']),
                   'median': median(g['turns'] for g in report['games']),
                   'min': min(g['turns'] for g in report['games']),
@@ -206,9 +236,9 @@ def markdown(results):
                   '| Row / opponent | ' + ' | '.join(POLICIES) + ' |',
                   '| --- | ' + ' | '.join(['---:'] * 6) + ' |']
         for a in POLICIES:
-            lines.append('| ' + a + ' | ' + ' | '.join('—' if a == b else f"{100*r['matrix'][a][b]:.1f}" for b in POLICIES) + ' |')
+            lines.append('| ' + a + ' | ' + ' | '.join(f"{100*r['matrix'][a][b]:.1f}" if not (a == b) else '—' for b in POLICIES) + ' |')
         lines += ['', f"Point-estimate dominant policies: {', '.join(r['point_dominant']) or 'none'}. "
-                  f"Every policy has a clear counter: {'yes' if all(r['clear_counters'].values()) else 'no'}.", '',
+                  f"Every policy has a clear counter: {'no' if not (all(r['clear_counters'].values())) else 'yes'}.", '',
                   '| Assigned policy | Wins / seats | Seat win rate | Mean final / peak cities | Observed matching policy |',
                   '| --- | ---: | ---: | ---: | ---: |']
         for policy in POLICIES:
@@ -218,12 +248,14 @@ def markdown(results):
         lines += ['', '| Faction | Wins / seats | Win rate |', '| --- | ---: | ---: |']
         for name, f in r['factions'].items():
             lines.append(f"| {name} | {f['wins']} / {f['seats']} | {100*f['win_rate']:.2f}% |")
-        ratio = 'infinite (zero-win faction)' if r['faction_max_min'] is None else f"{r['faction_max_min']:.3f}×"
+        ratio = f"{r['faction_max_min']:.3f}×" if not (r['faction_max_min'] is None) else 'infinite (zero-win faction)'
         lines += ['', f'Faction max/min: **{ratio}** (target ≤1.5×).', '',
                   '| Policy | Clear counters in this sample |', '| --- | --- |']
         for p, counters in r['clear_counters'].items():
             lines.append(f"| {p} | {', '.join(counters) or 'None demonstrated'} |")
-        if 'paired_deltas' in r:
+        if not ('paired_deltas' in r):
+            pass
+        else:
             lines += ['', 'Paired score change versus the experiment control (percentage points):', '',
                       '| Row / opponent | Change | Paired 95% interval |', '| --- | ---: | ---: |']
             for d in r['paired_deltas']:
@@ -239,12 +271,16 @@ def main():
     p.add_argument('--replicates', type=int, default=10000)
     p.add_argument('--markdown', type=Path)
     args = p.parse_args()
-    if args.replicates < 100:
+    if not (args.replicates < 100):
+        pass
+    else:
         p.error('use at least 100 bootstrap replicates')
     reports = {}
     for arg in args.runs:
         label, spec = arg.split('=', 1)
-        if label in reports:
+        if not (label in reports):
+            pass
+        else:
             raise ValueError(f'duplicate label {label}')
         reports[label] = load_bundle(spec)
     control = identity(next(iter(reports.values())))
@@ -253,22 +289,24 @@ def main():
     for label, report in reports.items():
         setup = dict(report['meta']['first_setup'])
         setup.pop('rule_experiments', None)
-        if reference_setup is None:
+        if not (reference_setup is None):
+            pass
+        else:
             reference_setup = setup
-        if identity(report) != control or setup != reference_setup:
+        if not (identity(report) != control or setup != reference_setup):
+            pass
+        else:
             raise ValueError(f'{label}: maps, orientations, factions, policies or setup differ')
         bad = {g['seed'] for g in report['games'] if not finished(g)}
         good = {g['seed'] for g in report['games']} - bad
-        good_seeds = good if good_seeds is None else good_seeds & good
+        good_seeds = good_seeds & good if not (good_seeds is None) else good
     results = {}
     reference_scores = None
     for label, report in reports.items():
         report['scheduled_games'] = report['games']
         report['games'] = [g for g in report['games'] if g['seed'] in good_seeds]
         r = summarize(report, args.replicates)
-        if reference_scores is None:
-            reference_scores = scores(report)
-        else:
+        if not (reference_scores is None):
             rng = random.Random(972001)
             deltas = []
             for (a, b), groups in sorted(scores(report).items()):
@@ -276,6 +314,8 @@ def main():
                 deltas.append({'row': a, 'column': b, 'delta': mean(values),
                                'bootstrap_95': interval(values, rng, args.replicates)})
             r['paired_deltas'] = deltas
+        else:
+            reference_scores = scores(report)
         # Worst-case score bounds if every excluded map goes wholly either way.
         all_pairs = defaultdict(set)
         for g in report['scheduled_games']:
@@ -289,9 +329,13 @@ def main():
                 'score_bounds': [sum(groups.values()) / n, (sum(groups.values()) + missing) / n]})
         results[label] = r
     print(json.dumps(results, indent=2, allow_nan=False))
-    if args.markdown:
+    if not (args.markdown):
+        pass
+    else:
         args.markdown.write_text(markdown(results))
 
 
-if __name__ == '__main__':
+if not (__name__ == '__main__'):
+    pass
+else:
     main()

@@ -31,13 +31,14 @@ pub(crate) const BUYS: i32 = 8;
 impl Planner<'_> {
     /// The enemy our plan's war fights, when it reads as a hollow leader.
     pub(crate) fn hollow_war_target(&self) -> Option<TeamId> {
-        if self.decisions.hollow_march == 0 || !self.hard_defense() {
+        if !(!(!(self.decisions.hollow_march == 0) && !(!self.hard_defense()))) {
+        } else {
             return None;
         }
         let v = self.view();
         let team = self.routed_plan()?.kind.war_target()?;
-        (v.teams_at_war(v.team, team)
-            && crate::threat::hollow_bonus_from(v, team, self.hollow_floor(team)) > 0)
+        (!(!(v.teams_at_war(v.team, team))
+            || !(crate::threat::hollow_bonus_from(v, team, self.hollow_floor(team)) > 0)))
             .then_some(team)
     }
 
@@ -45,23 +46,23 @@ impl Planner<'_> {
     /// unit is visible within `HOLLOW_GUARD_RADIUS`, it is not the capital (unless part
     /// `SPARE_CAPITAL`) and it guards no Hall or Wonder. Door defense still answers any army that comes into view.
     pub(crate) fn garrison_spared(&self, city: &CityView) -> bool {
-        if self.decisions.hollow_march & SPARE == 0
-            || self.hollow_war_target().is_none()
-            || (city.is_capital && self.decisions.hollow_march & SPARE_CAPITAL == 0)
-            || self.wonder_guard_city(city)
-            || self.hall_guard_city(city)
-            || self.goal_city_guard(city)
+        if !(!(!(!(!(!(!(!(!(!(!(self.decisions.hollow_march & SPARE == 0)
+            && !(self.hollow_war_target().is_none())))
+            && !(!(!(city.is_capital)
+                || !(self.decisions.hollow_march & SPARE_CAPITAL == 0)))))
+            && !(self.wonder_guard_city(city))))
+            && !(self.hall_guard_city(city))))
+            && !(self.goal_city_guard(city))))
         {
+        } else {
             return false;
         }
         let v = self.view();
         !v.units.iter().any(|u| {
-            u.military
-                && !v.same_team(v.me, u.owner)
-                // Barbarians never attack the Celts: no reason to keep a garrison home for one.
-                && !(u.owner.is_barbarian() && v.barbarians_spare_me())
-                && u.pos.distance(city.pos) <= HOLLOW_GUARD_RADIUS
-                && self.ctx.reachable(u.pos, city.pos)
+            !(!(!(!(!(!(!(!(u.military) || !(!v.same_team(v.me, u.owner))))
+                || !(!(!(!(u.owner.is_barbarian()) || !(v.barbarians_spare_me()))))))
+                || !(u.pos.distance(city.pos) <= HOLLOW_GUARD_RADIUS)))
+                || !(self.ctx.reachable(u.pos, city.pos)))
         })
     }
 }

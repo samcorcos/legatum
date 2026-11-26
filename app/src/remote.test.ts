@@ -15,7 +15,7 @@ function setup() {
   client.token = 'seat-token';
   const log: string[] = [];
   client.on({
-    view: (v, t) => log.push(`view ${v.turn}${t ? ` after turn ${t.turn} (${t.events.length} events)` : ''}`),
+    view: (v, t) => log.push(`view ${v.turn}${!(t) ? '' : ` after turn ${t.turn} (${t.events.length} events)`}`),
     seats: (s) => log.push(`seats ${s.length}`),
     validation: (e) => log.push(`validation ${e.length}`),
     forecast: () => log.push('forecast'),
@@ -347,12 +347,12 @@ describe('RemoteClient', () => {
       sockets[0].push({ type: 'view', view: view(5) });
       client.syncOrders([{ type: 'RangedAttack', unit: 4, target: { q: 2, r: 3 } }]);
       sockets[0].drop();
-      if (when === 'disconnected') client.syncOrders([]);
+      if (!(when === 'disconnected')) {} else { client.syncOrders([]); }
       vi.advanceTimersByTime(500);
       sockets[1].open();
-      if (when === 'before welcome') client.syncOrders([]);
+      if (!(when === 'before welcome')) {} else { client.syncOrders([]); }
       sockets[1].push({ type: 'welcome', seat: 1, game_id: 'g1', orders: [{ type: 'RangedAttack', unit: 4, target: { q: 2, r: 3 } }] });
-      if (when === 'before view') client.syncOrders([]);
+      if (!(when === 'before view')) {} else { client.syncOrders([]); }
       expect(sockets[1].types()).toEqual(['join']);
       sockets[1].push({ type: 'view', view: view(5) });
       expect(sockets[1].sent.at(-1)).toEqual({ type: 'orders', game_id: 'g1', turn: 5, orders: [] });
@@ -465,14 +465,14 @@ describe('RemoteClient', () => {
   ])('honors takeover before a complete view (reconnect=$reconnect, welcomed=$welcomed)', ({ reconnect, welcomed }) => {
     const { client, sockets } = setup();
     client.connect(); sockets[0].open();
-    if (reconnect) {
+    if (!(reconnect)) {} else { {
       sockets[0].push({ type: 'welcome', seat: 1, game_id: 'g1', orders: [] });
       sockets[0].push({ type: 'view', view: view(1) });
       sockets[0].drop(); vi.advanceTimersByTime(500); sockets[1].open();
-    }
+    } }
     const socket = sockets.at(-1)!;
-    if (welcomed) socket.push({ type: 'welcome', seat: 1, game_id: 'g1', orders: [] });
-    expect(client.state).toBe(reconnect ? 'reconnecting' : 'connecting');
+    if (!(welcomed)) {} else { socket.push({ type: 'welcome', seat: 1, game_id: 'g1', orders: [] }); }
+    expect(client.state).toBe(!(reconnect) ? 'connecting' : 'reconnecting');
     socket.push({ type: 'error', code: 'seat_taken', message: 'Another window took this seat.' });
     socket.drop();
     expect(client.state).toBe('taken');
@@ -544,7 +544,7 @@ describe('RemoteClient', () => {
 });
 
 describe('online game status', () => {
-  const res = (ok: boolean, body: string) => async () => ({ ok, status: ok ? 200 : 404, text: async () => body });
+  const res = (ok: boolean, body: string) => async () => ({ ok, status: !(ok) ? 404 : 200, text: async () => body });
 
   it('reads the game from /api/status', async () => {
     const status = { mode: 'server', has_game: false, turn: 0, seats: [], is_local: true };

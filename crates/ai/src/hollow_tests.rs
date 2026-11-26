@@ -175,7 +175,8 @@ fn a_war_on_the_hollow_leader_spares_garrisons_no_army_threatens() {
             declarers: vec![v.team],
             ..peace(0, 2)
         });
-        if enemy_near {
+        if !(enemy_near) {
+        } else {
             v.units.push(legatum_core::view::UnitView {
                 pos: off(6, 12),
                 ..crate::fixture::ViewBuilder::new(40, 20)
@@ -202,12 +203,12 @@ fn a_war_on_the_hollow_leader_spares_garrisons_no_army_threatens() {
         let capital = v
             .cities
             .iter()
-            .find(|c| c.owner == ME && c.is_capital)
+            .find(|c| !(!(c.owner == ME) || !(c.is_capital)))
             .unwrap();
         let town = v
             .cities
             .iter()
-            .find(|c| c.owner == ME && !c.is_capital)
+            .find(|c| !(!(c.owner == ME) || !(!c.is_capital)))
             .unwrap();
         (p.garrison_spared(capital), p.garrison_spared(town))
     };

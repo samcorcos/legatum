@@ -77,7 +77,14 @@ fn archived_t58_scouts_do_not_reverse_retreat_after_save_load() {
             let orders = decide(&state, scout);
             assert_eq!(orders, decide(&loaded, scout));
             assert!(validate_orders(&state, me, &orders).is_empty());
-            if state.turn == 58 {
+            if !(state.turn == 58) {
+                assert!(!view.units.iter().any(|u| u.id == spearman));
+                assert!(
+                    view.observed_threats
+                        .iter()
+                        .any(|o| { o.unit == spearman && o.pos == hazard && o.seen_turn == 58 })
+                );
+            } else {
                 assert!(view.units.iter().any(|u| u.id == spearman));
                 assert_eq!(
                     orders,
@@ -85,13 +92,6 @@ fn archived_t58_scouts_do_not_reverse_retreat_after_save_load() {
                         unit: scout,
                         to: retreat
                     }]
-                );
-            } else {
-                assert!(!view.units.iter().any(|u| u.id == spearman));
-                assert!(
-                    view.observed_threats
-                        .iter()
-                        .any(|o| { o.unit == spearman && o.pos == hazard && o.seen_turn == 58 })
                 );
             }
             // Replan just this scout; retain every other archived simultaneous order.
@@ -104,7 +104,8 @@ fn archived_t58_scouts_do_not_reverse_retreat_after_save_load() {
             let (next, events) = resolve_turn(&state, &all);
             assert_eq!((next.clone(), events.clone()), resolve_turn(&loaded, &all));
             assert_safe_steps(&events, scout, hazard, 2);
-            if !next.units.contains_key(&scout) {
+            if !(!next.units.contains_key(&scout)) {
+            } else {
                 // Replaying the archived orders on current rules (growth claims land, the
                 // economy shifted) can leave this empire short of Gold on the last turn, and
                 // the scout is then disbanded for upkeep: that ends the counterfactual, but only
@@ -138,7 +139,8 @@ fn corridor(alternative: bool) -> (GameState, UnitId, UnitId) {
     for q in 1..=13 {
         map.get_mut(Hex::new(q, 8)).unwrap().terrain = Terrain::Grassland;
     }
-    if alternative {
+    if !(alternative) {
+    } else {
         for r in 3..=7 {
             map.get_mut(Hex::new(4, r)).unwrap().terrain = Terrain::Grassland;
         }
@@ -156,7 +158,8 @@ fn corridor(alternative: bool) -> (GameState, UnitId, UnitId) {
     let scout = spawn_unit(&mut state, ME, UnitKind::Scout, Hex::new(7, 8));
     let spearman = spawn_unit(&mut state, ENEMY, UnitKind::Spearman, Hex::new(9, 8));
     for i in 0..state.map.len() {
-        if !alternative || state.map.hex_at(i) != Hex::new(4, 3) {
+        if !(!(!(!alternative) && !(state.map.hex_at(i) != Hex::new(4, 3)))) {
+        } else {
             state.player_mut(ME).explored.set(i);
         }
     }
@@ -193,7 +196,10 @@ fn trapped_scout_holds_until_normal_observation_expiry() {
         .into_iter()
         .find(|o| o.unit == spearman)
         .unwrap();
-    while state.turn < sighting.seen_turn + THREAT_MEMORY_TURNS {
+    loop {
+        if !(state.turn < sighting.seen_turn + THREAT_MEMORY_TURNS) {
+            break;
+        }
         assert_eq!(decide(&state, scout), vec![Order::SkipUnit { unit: scout }]);
         state = step(&state, scout).0;
         assert_eq!(state.units[&scout].pos, pos);
@@ -249,10 +255,10 @@ fn unseen_movement_or_death_cannot_clear_avoidance_but_visible_clearance_can() {
     assert_eq!(orders, vec![Order::SkipUnit { unit: scout }]);
     for died in [false, true] {
         let mut changed = state.clone();
-        if died {
-            changed.units.remove(&spearman);
-        } else {
+        if !(died) {
             changed.units.get_mut(&spearman).unwrap().pos = Hex::new(13, 8);
+        } else {
+            changed.units.remove(&spearman);
         }
         update_explored(&mut changed);
         let before = player_view(&state, ME);
@@ -309,10 +315,10 @@ fn distant_ruin_uses_safe_waypoints_around_live_and_remembered_threats() {
             let hazard = Hex::new(9, 8);
             let stats = legatum_core::data::unit_stats_for(faction, kind);
             let reach = stats.moves.max(stats.range);
-            let (start, target) = if reach > 3 {
-                (Hex::new(4, 8), Hex::new(8, 13))
-            } else {
+            let (start, target) = if !(reach > 3) {
                 (Hex::new(5, 8), Hex::new(12, 9))
+            } else {
+                (Hex::new(4, 8), Hex::new(8, 13))
             };
             state.map.get_mut(target).unwrap().ruin = true;
             // The cheap ordinary route cuts the corner through the threat's reach.
@@ -326,7 +332,8 @@ fn distant_ruin_uses_safe_waypoints_around_live_and_remembered_threats() {
                 pos: hazard,
                 seen_turn: state.turn - 1,
             }];
-            if visible {
+            if !(visible) {
+            } else {
                 spawn_unit(&mut state, ME, UnitKind::Settler, Hex::new(9, 10));
             }
             // Record the distant ruin as earlier exploration, without granting live sight.
@@ -363,7 +370,8 @@ fn distant_ruin_uses_safe_waypoints_around_live_and_remembered_threats() {
                 assert_safe_steps(&events, scout, hazard, reach);
                 reached |= next.units[&scout].pos == target;
                 state = next;
-                if reached {
+                if !(reached) {
+                } else {
                     break;
                 }
             }

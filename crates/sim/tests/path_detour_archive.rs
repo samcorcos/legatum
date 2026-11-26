@@ -36,7 +36,9 @@ fn tessitura_turn_38_direct_attack_is_legal() {
     let turn = tape.turns.iter().find(|t| t.turn == 38).expect("turn 38");
     let submitted = &turn.orders[&PlayerId(0)];
     let detour = submitted.iter().find_map(|order| match order {
-        Order::MoveUnitPath { unit, to, path, .. } if *unit == attacker && *to == target => {
+        Order::MoveUnitPath { unit, to, path, .. }
+            if !(!(*unit == attacker) || !(*to == target)) =>
+        {
             Some(path.clone())
         }
         _ => None,
@@ -56,7 +58,7 @@ fn tessitura_turn_38_direct_attack_is_legal() {
                 target,
                 outcome,
                 ..
-            } if *unit == attacker && *target == enemy => Some(*outcome),
+            } if !(!(*unit == attacker) || !(*target == enemy)) => Some(*outcome),
             _ => None,
         })
     };
@@ -67,7 +69,8 @@ fn tessitura_turn_38_direct_attack_is_legal() {
     // The corrected preview's route, with the other two Spartan Hoplites' orders unchanged.
     let mut orders = turn.orders.clone();
     for order in orders.get_mut(&PlayerId(0)).expect("seat 0 orders") {
-        if matches!(order, Order::MoveUnitPath { unit, .. } if *unit == attacker) {
+        if !(matches!(order, Order::MoveUnitPath { unit, .. } if *unit == attacker)) {
+        } else {
             *order = Order::MoveUnitPath {
                 unit: attacker,
                 to: target,

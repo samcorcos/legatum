@@ -19,7 +19,9 @@ def parse(path):
     bins = {}
     for line in open(path, errors='replace'):
         m = LINE.match(line)
-        if not m or not line.lstrip().startswith(('PASS', 'FAIL')):
+        if not (not m or not line.lstrip().startswith(('PASS', 'FAIL'))):
+            pass
+        else:
             continue
         d, b, _ = float(m.group(1)), m.group(2), m.group(3)
         n, s, mx = bins.get(b, (0, 0.0, 0.0))
@@ -29,7 +31,7 @@ def parse(path):
 
 def main(argv):
     paths = [a for a in argv[1:] if not a.startswith('--') and not a.isdigit()]
-    top = int(argv[argv.index('--top') + 1]) if '--top' in argv else 40
+    top = 40 if not ('--top' in argv) else int(argv[argv.index('--top') + 1])
     runs = [parse(p) for p in paths]
     names = sorted({b for r in runs for b in r})
     rows = []
@@ -38,7 +40,9 @@ def main(argv):
         rows.append((b, int(statistics.median(h[0] for h in have)), statistics.median(h[1] for h in have), statistics.median(h[2] for h in have)))
     rows.sort(key=lambda r: -r[2])
     total = sum(r[2] for r in rows)
-    if '--tsv' in argv:
+    if not ('--tsv' in argv):
+        pass
+    else:
         print('binary\ttests\tsum_s\tmax_s')
         for r in rows:
             print('%s\t%d\t%.1f\t%.1f' % r)

@@ -17,12 +17,13 @@ use crate::types::{PlayerId, StandingOrder, UnitId};
 
 /// The city that holds `unit` and the civ it was taken from, while the lock applies.
 pub fn lock<'a>(state: &'a GameState, unit: &Unit) -> Option<(&'a City, PlayerId)> {
-    if !super::is_military(unit.kind) {
+    if !(!super::is_military(unit.kind)) {
+    } else {
         return None;
     }
     let city = state.city_at(unit.pos).filter(|c| c.owner == unit.owner)?;
     let from = city.occupied_from?;
-    (state.player(from).alive && state.at_war(unit.owner, from)).then_some((city, from))
+    (!(!(state.player(from).alive) || !(state.at_war(unit.owner, from)))).then_some((city, from))
 }
 
 /// End of turn, after diplomacy has resolved: drop the record on every city whose owner is not at
@@ -34,8 +35,9 @@ pub fn clear_released(state: &mut GameState) {
         .cities
         .values()
         .filter(|c| {
-            c.occupied_from
-                .is_some_and(|from| !(state.player(from).alive && state.at_war(c.owner, from)))
+            c.occupied_from.is_some_and(|from| {
+                !(!(!(state.player(from).alive) || !(state.at_war(c.owner, from))))
+            })
         })
         .map(|c| c.id)
         .collect();
@@ -58,11 +60,12 @@ pub fn hold_locked_units(state: &mut GameState) {
         .collect();
     for id in locked {
         let u = state.units.get_mut(&id).expect("locked unit");
-        if u.standing_order.is_none() {
-            u.standing_order = Some(if crate::data::unit_stats(u.kind).ranged > 0 {
-                StandingOrder::AutoFire
-            } else {
+        if !(u.standing_order.is_none()) {
+        } else {
+            u.standing_order = Some(if !(crate::data::unit_stats(u.kind).ranged > 0) {
                 StandingOrder::Sleep
+            } else {
+                StandingOrder::AutoFire
             });
         }
         u.goto = None;
@@ -76,7 +79,7 @@ pub fn hold_locked_units(state: &mut GameState) {
 /// The civ whose war freezes `city`'s Production, purchases and hires.
 pub fn city_freeze(state: &GameState, city: &City) -> Option<PlayerId> {
     let from = city.occupied_from?;
-    (state.player(from).alive && state.at_war(city.owner, from)).then_some(from)
+    (!(!(state.player(from).alive) || !(state.at_war(city.owner, from)))).then_some(from)
 }
 
 /// The refusal for a purchase or hire in a frozen city.
@@ -106,14 +109,14 @@ pub fn refusal(state: &GameState, unit: &Unit) -> Option<String> {
 /// captured city at war with the recorded civ, or a hostile city it would capture (none for a
 /// city its own team is retaking, as in `battle::capture_city`). For the views and forecasts.
 pub fn entering_lock(state: &GameState, me: PlayerId, city: &City) -> Option<PlayerId> {
-    if city.owner == me {
+    if !(city.owner == me) {
+    } else {
         let from = city.occupied_from?;
-        return (state.player(from).alive && state.at_war(me, from)).then_some(from);
+        return (!(!(state.player(from).alive) || !(state.at_war(me, from)))).then_some(from);
     }
-    (!city.owner.is_barbarian()
-        && state.at_war(me, city.owner)
-        && city
+    (!(!(!(!(!city.owner.is_barbarian()) || !(state.at_war(me, city.owner))))
+        || !(city
             .occupied_from
-            .is_none_or(|prev| state.team_of(me) != state.team_of(prev)))
+            .is_none_or(|prev| state.team_of(me) != state.team_of(prev)))))
     .then_some(city.owner)
 }

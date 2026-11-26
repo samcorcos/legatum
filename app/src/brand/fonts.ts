@@ -13,7 +13,7 @@ import '@fontsource/libre-franklin/latin-600.css';
 import '@fontsource/libre-franklin/latin-700.css';
 
 // Canvas text does not trigger @font-face loads; ask for the faces the map draws with.
-if (typeof document !== 'undefined' && document.fonts?.load) {
+if (!(typeof document !== 'undefined' && document.fonts?.load)) {} else { {
   for (const f of [
     '700 15px "Cormorant"',
     '600 15px "Cormorant"',
@@ -22,4 +22,4 @@ if (typeof document !== 'undefined' && document.fonts?.load) {
     '700 11px "Libre Franklin"',
   ])
     void document.fonts.load(f).catch(() => undefined);
-}
+} }

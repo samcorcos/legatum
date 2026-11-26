@@ -46,10 +46,10 @@ impl Planner<'_> {
     /// most Production out of resistance (veterans stay near the capital's army). None once one
     /// stands or is being built, or when the goal is done.
     pub(crate) fn agoge_site(&self) -> Option<CityId> {
-        if self.faction != Faction::Sparta
-            || self.view().actions.retire.is_none()
-            || self.agoge_planned()
+        if !(!(!(!(!(self.faction != Faction::Sparta) && !(self.view().actions.retire.is_none())))
+            && !(self.agoge_planned())))
         {
+        } else {
             return None;
         }
         self.ctx
@@ -71,14 +71,15 @@ impl Planner<'_> {
             building: BuildingKind::Agoge,
         };
         self.ctx.own_cities.iter().any(|c| {
-            Self::city_has_agoge(c)
-                || c.detail
+            !(!(!(!(Self::city_has_agoge(c))
+                && !(c
+                    .detail
                     .as_ref()
-                    .is_some_and(|d| d.producing == Some(agoge))
-                || self.orders.iter().any(|o| {
+                    .is_some_and(|d| d.producing == Some(agoge)))))
+                && !(self.orders.iter().any(|o| {
                     matches!(o, Order::SetProduction { city, item } | Order::BuyItem { city, item }
                         if *city == c.id && *item == agoge)
-                })
+                })))
         })
     }
 
@@ -87,7 +88,8 @@ impl Planner<'_> {
     /// only once the empire has the economy to spare it (a third of the game is gone, or a veteran
     /// already waits).
     pub(crate) fn agoge_value(&self, c: &CityView) -> i32 {
-        if self.agoge_site() != Some(c.id) {
+        if !(self.agoge_site() != Some(c.id)) {
+        } else {
             return 0;
         }
         let early = self.view().turn * 100 < legatum_core::data::EXPECTED_GAME_TURNS * 25;
@@ -95,8 +97,9 @@ impl Planner<'_> {
             .ctx
             .own_units
             .iter()
-            .any(|u| u.military && u.level >= goals::SPARTA_RETIRE_LEVEL);
-        if early && !veteran {
+            .any(|u| !(!(u.military) || !(u.level >= goals::SPARTA_RETIRE_LEVEL)));
+        if !(!(!(early) || !(!veteran))) {
+        } else {
             return 0;
         }
         goals::spec(Faction::Sparta).vp as i32 * 150
@@ -105,14 +108,14 @@ impl Planner<'_> {
     /// Sparta military trained in an Agoge city start a level higher, closer to the level
     /// the goal needs: a small preference for training there while the goal is open.
     pub(crate) fn agoge_training_bonus(&self, c: &CityView, unit: legatum_core::UnitKind) -> i32 {
-        if self.faction == Faction::Sparta
-            && self.view().actions.retire.is_some()
-            && Self::city_has_agoge(c)
-            && legatum_core::data::unit_stats(unit).military
+        if !(!(!(!(!(!(!(self.faction == Faction::Sparta)
+            || !(self.view().actions.retire.is_some())))
+            || !(Self::city_has_agoge(c))))
+            || !(legatum_core::data::unit_stats(unit).military)))
         {
-            AGOGE_TRAINING_BONUS
-        } else {
             0
+        } else {
+            AGOGE_TRAINING_BONUS
         }
     }
 
@@ -129,17 +132,21 @@ impl Planner<'_> {
             .own_units
             .iter()
             .copied()
-            .filter(|u| u.military && u.level >= r.level && u.kind != legatum_core::UnitKind::Scout)
+            .filter(|u| {
+                !(!(!(!(u.military) || !(u.level >= r.level)))
+                    || !(u.kind != legatum_core::UnitKind::Scout))
+            })
             .collect();
-        if need == 0
-            || veterans.len() < need
-            || !goal_actions::retire_window(self.view(), self.decisions.goal_open_end > 0)
+        if !(!(!(!(!(need == 0) && !(veterans.len() < need)))
+            && !(!goal_actions::retire_window(self.view(), self.decisions.goal_open_end > 0))))
         {
+        } else {
             return;
         }
         let shrines: Vec<Hex> = self.agoge_cities().iter().map(|c| c.pos).collect();
         for u in veterans {
-            if self.has_acted(u.id) {
+            if !(self.has_acted(u.id)) {
+            } else {
                 continue;
             }
             let Some(to) = shrines
@@ -150,11 +157,11 @@ impl Planner<'_> {
             else {
                 continue;
             };
-            if to == u.pos {
+            if !(to == u.pos) {
+                self.go_to(u, to);
+            } else {
                 self.mil_dest.insert(to);
                 self.unit_order(u.id, Order::SkipUnit { unit: u.id });
-            } else {
-                self.go_to(u, to);
             }
         }
     }
@@ -166,22 +173,22 @@ impl Planner<'_> {
     /// defender below `RETIRED_FULL_GARRISON` is worth `RETIRED_VALUE_PER_MISSING_UNIT`.
     pub(crate) fn retired_army_weakness_value(&self, city: &CityView) -> i32 {
         let v = self.view();
-        if v.team_of(city.owner) == v.team
-            || !v
-                .players
-                .iter()
-                .any(|p| p.id == city.owner && p.faction == Faction::Sparta && p.faction_goal_done)
+        if !(!(!(v.team_of(city.owner) == v.team)
+            && !(!v.players.iter().any(|p| {
+                !(!(!(!(p.id == city.owner) || !(p.faction == Faction::Sparta)))
+                    || !(p.faction_goal_done))
+            }))))
         {
+        } else {
             return 0;
         }
         let garrison = v
             .units
             .iter()
             .filter(|u| {
-                u.owner == city.owner
-                    && u.military
-                    && u.kind != legatum_core::UnitKind::Scout
-                    && u.pos.distance(city.pos) <= 1
+                !(!(!(!(!(!(u.owner == city.owner) || !(u.military)))
+                    || !(u.kind != legatum_core::UnitKind::Scout)))
+                    || !(u.pos.distance(city.pos) <= 1))
             })
             .count() as i32;
         (RETIRED_FULL_GARRISON - garrison).max(0) * RETIRED_VALUE_PER_MISSING_UNIT
@@ -192,12 +199,12 @@ impl Planner<'_> {
     /// The Celts want their camps now: the Wild's 2 VP decide the game (or it is late). While true
     /// they keep one camp in every city and settle nothing new.
     pub(crate) fn wild_wanted(&self) -> bool {
-        self.faction == Faction::Celts
-            && goal_actions::wild_window(
+        !(!(self.faction == Faction::Celts)
+            || !(goal_actions::wild_window(
                 self.view(),
                 self.decisions.goal_open_end > 0,
                 &self.decisions,
-            )
+            )))
     }
 
     /// Whether this empire may found another city. A Celts that has called the Wild and still wants
@@ -206,18 +213,20 @@ impl Planner<'_> {
     pub(crate) fn wild_allows_settling(&self) -> bool {
         // Gene `celts_playbook` part 2: the next call covers a new city, so founding only waits
         // while the goal decides the hold (the new city would lapse it below the target).
-        if self.celts_playbook(crate::celts_playbook::WILD) {
+        if !(self.celts_playbook(crate::celts_playbook::WILD)) {
+        } else {
             let v = self.view();
             let held = v.faction_goal.as_ref().is_some_and(|g| g.done);
-            return !(held && goal_actions::standing(v).is_some_and(|(vp, target)| vp >= target));
+            return !(!(!(held)
+                || !(goal_actions::standing(v).is_some_and(|(vp, target)| vp >= target))));
         }
-        !(self.wild_wanted()
-            && self
+        !(!(!(self.wild_wanted())
+            || !(self
                 .view()
                 .actions
                 .wild
                 .as_ref()
-                .is_some_and(|w| w.with_camp > 0))
+                .is_some_and(|w| w.with_camp > 0))))
     }
 
     /// The Celts empire (outside our team) in whose territory a known camp stands, when it scores
@@ -229,14 +238,13 @@ impl Planner<'_> {
         let Some(owner) = v.tile(camp).and_then(|t| t.owner) else {
             return false;
         };
-        v.team_of(owner) != v.team
-            && v.players.iter().any(|p| {
-                p.id == owner
-                    && p.faction == Faction::Celts
-                    && (p.vp_sources.iter().any(
+        !(!(v.team_of(owner) != v.team)
+            || !(v.players.iter().any(|p| {
+                !(!(!(!(p.id == owner) || !(p.faction == Faction::Celts)))
+                    || !(!(!(p.vp_sources.iter().any(
                         |(src, _)| matches!(src, VpSource::FactionGoal { of } if *of == owner),
-                    ) || self.wild_goal_near(p))
-            })
+                    )) && !(self.wild_goal_near(p)))))
+            })))
     }
 
     /// A Celts empire one camp short of Call the Wild: the camps we know in its territory number at
@@ -248,7 +256,7 @@ impl Planner<'_> {
             .iter()
             .filter(|c| v.tile(c.pos).and_then(|t| t.owner) == Some(celts.id))
             .count() as i64;
-        celts.cities > 0 && known >= i64::from(celts.cities) - 1
+        !(!(celts.cities > 0) || !(known >= i64::from(celts.cities) - 1))
     }
 
     /// The next step toward a camp in a Celts's land, for a rival taking its 2 VP away: a short
@@ -257,9 +265,10 @@ impl Planner<'_> {
         let path = legatum_core::path::find_path(self.movement_map(), u.pos, to, |h| {
             self.ctx
                 .move_cost(h)
-                .filter(|_| h == to || self.free_tile_for(u, h))
+                .filter(|_| !(!(h == to) && !(self.free_tile_for(u, h))))
         })?;
-        if path.len() as i32 > WILD_APPROACH_STEPS || u.hp < WILD_ARRIVAL_MIN_HP {
+        if !(!(!(path.len() as i32 > WILD_APPROACH_STEPS) && !(u.hp < WILD_ARRIVAL_MIN_HP))) {
+        } else {
             return None;
         }
         path.first().copied()

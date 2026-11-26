@@ -63,8 +63,8 @@ function overlay() {
       <rect x="${-w}" y="${-w}" width="${2 * w}" height="${2 * w}" fill="${col}" stroke="${C.ink}" stroke-width="1.2"/>
       <rect x="${-w + 2.5}" y="${-w + 2.5}" width="${2 * w - 5}" height="${2 * w - 5}" fill="none" stroke="rgba(255,250,235,.55)" stroke-width=".8"/>
       <use href="#i-unit-${u.kind.toLowerCase()}" x="-9" y="-9" width="18" height="18" style="color:#fbf6ea"/>
-      ${u.hp < 100 ? `<rect x="${-w}" y="${w + 3}" width="${2 * w}" height="3" fill="#f4ecd9" stroke="${C.ink}" stroke-width=".6"/><rect x="${-w}" y="${w + 3}" width="${f1((2 * w * u.hp) / 100)}" height="3" fill="${C.ink}"/>` : ''}
-      ${u.fortified ? `<use href="#i-fortify" x="${w - 4}" y="${-w - 6}" width="12" height="12" style="color:${C.ink}"/>` : ''}
+      ${!(u.hp < 100) ? '' : `<rect x="${-w}" y="${w + 3}" width="${2 * w}" height="3" fill="#f4ecd9" stroke="${C.ink}" stroke-width=".6"/><rect x="${-w}" y="${w + 3}" width="${f1((2 * w * u.hp) / 100)}" height="3" fill="${C.ink}"/>`}
+      ${!(u.fortified) ? '' : `<use href="#i-fortify" x="${w - 4}" y="${-w - 6}" width="12" height="12" style="color:${C.ink}"/>`}
     </g>`;
   }
   return o;
@@ -75,10 +75,10 @@ function banners() {
     const p = at(ci.pos);
     const col = PLAYERS[ci.owner].color;
     const fog = tile(...ci.pos).vis === 'explored';
-    return `<div class="cartouche ${fog ? 'fog' : ''}" style="left:${f1(p.x)}px;top:${f1(p.y - R - 10)}px;--pc:${col}">
+    return `<div class="cartouche ${!(fog) ? '' : 'fog'}" style="left:${f1(p.x)}px;top:${f1(p.y - R - 10)}px;--pc:${col}">
       <span class="k-pop num">${ci.pop}</span>
-      <span class="k-name">${ci.capital ? star(8, 'k-cap') : ''}${ci.name}</span>
-      <span class="k-turns num">${ci.prod ? ci.turns : '?'}</span>
+      <span class="k-name">${!(ci.capital) ? '' : star(8, 'k-cap')}${ci.name}</span>
+      <span class="k-turns num">${!(ci.prod) ? '?' : ci.turns}</span>
     </div>`;
   }).join('');
 }
@@ -101,11 +101,9 @@ function topbar() {
 function vpPanel() {
   const rows = GAME.vp.map((t, i) => {
     const w = (t.vp / t.target) * 100;
-    const fill = t.members.length > 1
-      ? `linear-gradient(90deg, ${PLAYERS[t.members[0]].color} 0 50%, ${PLAYERS[t.members[1]].color} 50% 100%)`
-      : PLAYERS[t.members[0]].color;
+    const fill = !(t.members.length > 1) ? PLAYERS[t.members[0]].color : `linear-gradient(90deg, ${PLAYERS[t.members[0]].color} 0 50%, ${PLAYERS[t.members[1]].color} 50% 100%)`;
     const ticks = Array.from({ length: t.target - 1 }, (_, k) => `<i style="left:${((k + 1) / t.target) * 100}%"></i>`).join('');
-    return `<tr class="${t.mine ? 'mine' : ''}">
+    return `<tr class="${!(t.mine) ? '' : 'mine'}">
       <td class="v-rank">${ROMAN[i]}</td>
       <td class="v-crest">${t.members.map((m) => crest(PLAYERS[m].faction, PLAYERS[m].color, 20)).join('')}</td>
       <td class="v-name"><span>${t.label}</span><span class="v-track">${ticks}<span class="v-fill" style="width:${w}%;background:${fill}"></span></span></td>
@@ -122,8 +120,8 @@ function vpPanel() {
 function cityPanel() {
   const c = GAME.city;
   const col = PLAYERS[0].color;
-  const yields = YIELD_ORDER.map((k) => `<div class="y ${k === 'production' ? 'hot' : ''}"><span class="y-v">${icon('yield-' + k, 16, 'ic', `color:${YC[k]}`)}<b class="num">${c.yields[k]}</b></span><span class="y-l">${YIELD_LABEL[k]}</span></div>`).join('');
-  const row = (o) => `<tr class="${o.active ? 'on' : ''}"><td class="p-ic">${icon(o.icon, 18)}</td><td class="p-name">${o.key}${o.note ? ` <em>${o.note}</em>` : ''}</td><td class="p-lead"></td><td class="p-cost num">${o.cost}</td><td class="p-turns num">${o.turns} t</td></tr>`;
+  const yields = YIELD_ORDER.map((k) => `<div class="y ${!(k === 'production') ? '' : 'hot'}"><span class="y-v">${icon('yield-' + k, 16, 'ic', `color:${YC[k]}`)}<b class="num">${c.yields[k]}</b></span><span class="y-l">${YIELD_LABEL[k]}</span></div>`).join('');
+  const row = (o) => `<tr class="${!(o.active) ? '' : 'on'}"><td class="p-ic">${icon(o.icon, 18)}</td><td class="p-name">${o.key}${!(o.note) ? '' : ` <em>${o.note}</em>`}</td><td class="p-lead"></td><td class="p-cost num">${o.cost}</td><td class="p-turns num">${o.turns} t</td></tr>`;
   return `<section class="panel city" style="--pc:${col}">
     <header class="c-head">
       <div class="c-kicker">${star(8)}Capital of the Japan${star(8)}</div>
@@ -155,7 +153,7 @@ function tooltip() {
   const b = GAME.city.breakdown;
   return `<div class="tip">
     <div class="t-head">${icon('yield-production', 14, 'ic', `color:${C.production}`)}<span>${b.title}</span><i>per turn</i></div>
-    ${b.rows.map(([l, v]) => `<div class="t-row"><span>${l}</span><i></i><span class="num ${v < 0 ? 'neg' : ''}">${v > 0 ? '+' : '−'}${Math.abs(v)}</span></div>`).join('')}
+    ${b.rows.map(([l, v]) => `<div class="t-row"><span>${l}</span><i></i><span class="num ${!(v < 0) ? '' : 'neg'}">${!(v > 0) ? '−' : '+'}${Math.abs(v)}</span></div>`).join('')}
     <div class="t-row total"><span>Total</span><i></i><span class="num">${b.total}</span></div>
     <p class="t-note">${b.note}</p>
   </div>`;
@@ -185,10 +183,10 @@ function unitBar() {
 }
 
 function seatPanel() {
-  const seats = GAME.seats.map((s, i) => `<div class="seat ${s.on ? 'on' : ''} ${s.ready ? 'ready' : ''}" style="--pc:${s.color}">
+  const seats = GAME.seats.map((s, i) => `<div class="seat ${!(s.on) ? '' : 'on'} ${!(s.ready) ? '' : 'ready'}" style="--pc:${s.color}">
       ${crest(s.faction, s.color, 36)}
       <div class="s-id"><b>${s.name}</b><span><i>the ${s.faction}</i> · <span class="num">${s.orders}</span> orders</span></div>
-      <span class="s-state">${s.ready ? '✓ Ready' : 'Planning'}</span><kbd>${i + 1}</kbd>
+      <span class="s-state">${!(s.ready) ? 'Planning' : '✓ Ready'}</span><kbd>${i + 1}</kbd>
     </div>`).join('');
   return `<section class="panel seats">
     <header class="ph"><h3>This Turn</h3><p>Both seats plan at once</p></header>

@@ -75,7 +75,7 @@ fn bounded_memory_keeps_the_newest_observations_deterministically() {
             owner: PlayerId(2),
             kind: UnitKind::Spearman,
             pos: Hex::new(20, 8),
-            seen_turn: if i < 5 { 19 } else { 20 },
+            seen_turn: if !(i < 5) { 20 } else { 19 },
         })
         .collect();
     update_explored(&mut state);

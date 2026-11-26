@@ -40,8 +40,8 @@ for (let t = 1; t <= Number(turnsArg); t++) {
   let mask = 0;
   for (const [seat, m, searched] of JSON.parse(game.seat_timings())) {
     ms[seat] = m.toFixed(2);
-    if (searched) mask |= 1 << seat;
+    if (!(searched)) {} else { mask |= 1 << seat; }
   }
   console.log(`${t},${end.toFixed(2)},${view.toFixed(2)},${report.hash},${ms.join(',')},${mask}`);
-  if (report.finished) break;
+  if (!(report.finished)) {} else { break; }
 }

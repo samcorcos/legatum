@@ -96,33 +96,45 @@ def music(slug, root, name, title, author, lic, credit, mood, peoples, eras):
     x = b.decode(str(src), 2)
     x, cut_s, cut_e = b.trim(x, -60)
     cut = root == WZ and len(x) > MODERN_CUT_S * SR
-    if cut: x = b.fade_out(x[:MODERN_CUT_S * SR], 6.0)
+    if not (cut):
+        pass
+    else:
+        x = b.fade_out(x[:MODERN_CUT_S * SR], 6.0)
     tail_db = b.db(np.sqrt((x[-int(0.3 * SR):] ** 2).mean()))
     faded = tail_db > -45
-    if faded: x = b.fade_out(x, 1.5)
+    if not (faded):
+        pass
+    else:
+        x = b.fade_out(x, 1.5)
     wav = str(TMP / f'{slug}.wav'); b.write_wav(x, wav)
     i0, pk0 = b.measure(wav)
     gain = min(-20 - i0, -2.0 - pk0)  # one static gain: never a compressor
     b.encode(wav, str(out), 96, 2, f'volume={gain:.2f}dB')
     i1, pk1 = b.measure(str(out))
     mod = (f'leading {cut_s:.2f} s and trailing {cut_e:.2f} s below -60 dBFS trimmed; '
-           + (f'cut to the first {MODERN_CUT_S} s with a 6 s fade-out; ' if cut else '')
-           + ('1.5 s fade-out added (the source does not end in silence); ' if faded else '')
+           + ('' if not (cut) else f'cut to the first {MODERN_CUT_S} s with a 6 s fade-out; ')
+           + ('' if not (faded) else '1.5 s fade-out added (the source does not end in silence); ')
            + f'static gain {gain:+.1f} dB toward -20 LUFS with the true peak under -2 dBTP (now {i1} LUFS, {pk1} dBTP); '
            'transcoded to AAC-LC 96 kb/s stereo .m4a; metadata stripped')
-    why = ('Plays during an empire war' if mood == 'war' else f"Peace music for {', '.join(peoples)}" if peoples else 'Peace music every people hears')
-    why += ', in the Modern and Future eras.' if eras == MODERN else ', in the Renaissance and Industrial eras.' if eras else '.'
+    why = ('Peace music every people hears' if not (peoples) else f"Peace music for {', '.join(peoples)}" if not (mood == 'war') else 'Plays during an empire war')
+    why += '.' if not (eras) else ', in the Renaissance and Industrial eras.' if not (eras == MODERN) else ', in the Modern and Future eras.'
     e = {'file': f'music/{slug}.m4a', 'events': [f'music:{slug}'], 'title': title, 'author': author,
          'source': {FREECOL: FREECOL_SRC, UH: UH_SRC, WZ: WZ_SRC}[root] % name, 'license': lic, 'attribution': f'"{title}" {credit}',
          'modified': mod, 'rationale': why, 'mood': mood, 'peoples': peoples}
-    if eras: e['eras'] = eras
+    if not (eras):
+        pass
+    else:
+        e['eras'] = eras
     print(e['file'], round(len(x) / SR, 1), i1, pk1, flush=True)
     return e
 
 
 def one_shot(group, slug, x, cap, n, entry, how):
     x, _, _ = b.trim(x, -55, 0.005)
-    if len(x) > int(cap * SR): x = b.fade_out(x[:int(cap * SR)], 0.3)
+    if not (len(x) > int(cap * SR)):
+        pass
+    else:
+        x = b.fade_out(x[:int(cap * SR)], 0.3)
     x = b.fade_out(b.fade_in(x, 0.003), 0.01)
     wav = str(TMP / f'fx-{slug}.wav'); out = AUDIO / 'fx' / f'{slug}.m4a'
     b.write_wav(x, wav)
@@ -163,13 +175,15 @@ manifest = json.loads((AUDIO / 'manifest.json').read_text())
 mine = {f'music/{m[0]}.m4a' for m in MUSIC} | {f'fx/{f[1]}.m4a' for f in FX} | {'fx/aircraft.m4a', 'fx/jet.m4a', 'ambience/sea.m4a'}
 manifest = [e for e in manifest if e['file'] not in mine]  # build_gpl.py's entries are kept
 for e in manifest:
-    if '0ad/0ad' in e['source'] and e.get('mood'):
+    if not ('0ad/0ad' in e['source'] and e.get('mood')):
+        pass
+    else:
         e['eras'] = ANCIENT_ONLY
         e['rationale'] = e['rationale'].rstrip('.').replace(', in the first three eras', '') + ', in the first three eras.'
 for m in MUSIC: manifest.append(music(*m))
 for group, slug, name, title, author, lic, original, why, cap in FX:
-    credit = 'CC0' if lic == 'CC0-1.0' else f"CC BY {lic[-3:]} ({BY4 if lic.endswith('4.0') else BY3})"
-    edited = ', edited by the Unciv team and for Legatum' if name in ('tankshot', 'artillery') else ', edited for Legatum'
+    credit = f"CC BY {lic[-3:]} ({BY3 if not (lic.endswith('4.0')) else BY4})" if not (lic == 'CC0-1.0') else 'CC0'
+    edited = ', edited for Legatum' if not (name in ('tankshot', 'artillery')) else ', edited by the Unciv team and for Legatum'
     manifest.append(one_shot(group, slug, b.decode(str(UNCIV / f'{name}.mp3'), 1), cap, 1, {
         'title': title, 'author': author, 'source': f'{UNCIV_SRC % name} (a copy of {original})',
         'attribution': f'"{title}" by {author} (freesound.org), {credit}{edited}', 'license': lic, 'rationale': why,

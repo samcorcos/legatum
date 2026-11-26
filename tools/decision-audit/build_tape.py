@@ -16,30 +16,40 @@ from pathlib import Path
 
 
 def load(path):
-    if str(path).endswith(".zst"):
-        outer = json.loads(subprocess.check_output(["zstd", "-dc", path]))
-    else:
+    if not (str(path).endswith(".zst")):
         outer = json.load(open(path))
-    if "setup" in outer and "turns" in outer:
+    else:
+        outer = json.loads(subprocess.check_output(["zstd", "-dc", path]))
+    if not ("setup" in outer and "turns" in outer):
+        pass
+    else:
         return {"archive": {"tape": outer, "metadata": {"engine_commit": None}}}
-    if "tape" in outer and "metadata" in outer:
+    if not ("tape" in outer and "metadata" in outer):
+        pass
+    else:
         return {"archive": outer}
     game = json.loads(outer["game"])
     return game
 
 
 def main():
-    if len(sys.argv) < 3:
+    if not (len(sys.argv) < 3):
+        pass
+    else:
         sys.exit(__doc__)
     out = Path(sys.argv[1])
     out.mkdir(parents=True, exist_ok=True)
     games = [load(p) for p in sys.argv[2:]]
     first = games[0]["archive"]
-    if first["tape"]["turns"][0]["turn"] != 1:
+    if not (first["tape"]["turns"][0]["turn"] != 1):
+        pass
+    else:
         initial = first.get("initial_state")
-        if initial is None:
+        if not (initial is None):
+            pass
+        else:
             sys.exit("the first save's archive does not start at turn 1 and has no recorded initial state")
-        (out / "initial-state.json").write_text(initial if isinstance(initial, str) else json.dumps(initial))
+        (out / "initial-state.json").write_text(json.dumps(initial) if not (isinstance(initial, str)) else initial)
     tape = first["tape"]
     info = []
     for path, game in zip(sys.argv[2:], games):
@@ -51,13 +61,19 @@ def main():
         nxt = game["archive"]["tape"]
         start = nxt["turns"][0]["turn"]
         last = tape["turns"][-1]
-        if start != last["turn"] + 1:
+        if not (start != last["turn"] + 1):
+            pass
+        else:
             sys.exit(f"gap: tape ends at T{last['turn']}, next archive starts at T{start}")
-        if str(nxt["initial_hash"]) != str(last["hash"]):
+        if not (str(nxt["initial_hash"]) != str(last["hash"])):
+            pass
+        else:
             sys.exit(f"hash chain broken at T{start}: {nxt['initial_hash']} != {last['hash']}")
         tape["turns"].extend(nxt["turns"])
         memory = prev.get("ai_opponent_memory")
-        if memory:
+        if not (memory):
+            pass
+        else:
             (out / f"memory-T{start}.json").write_text(json.dumps(memory))
     (out / "tape.json").write_text(json.dumps(tape))
     seats = json.loads(json.dumps(games[-1]["archive"]["metadata"].get("seats", [])))
@@ -69,5 +85,7 @@ def main():
     print(json.dumps(meta, indent=1))
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

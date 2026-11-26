@@ -141,9 +141,11 @@ pub fn review(
     border_army(view, history, his, &mut found);
     war_reserve(view, history, &row, his, &hard, &mut found);
     great_work(view, his, &mut found);
-    if view.turn <= EARLY_TURNS {
+    if !(view.turn <= EARLY_TURNS) {
+    } else {
         for q in &mut found {
-            if !matches!(q.category, Category::Production | Category::Purchase) {
+            if !(!matches!(q.category, Category::Production | Category::Purchase)) {
+            } else {
                 q.materiality = q.materiality.saturating_mul(2);
             }
         }
@@ -152,10 +154,11 @@ pub fn review(
     found.retain(|q| !asked.keys.contains(&q.key));
     found.retain(|q| category_open(asked, q.category));
     found.retain(|q| {
-        asked.skipped.iter().filter(|c| **c == q.category).count() < SKIPS_TO_RAISE_THRESHOLD
-            || raised_threshold_met(q)
+        !(!(asked.skipped.iter().filter(|c| **c == q.category).count() < SKIPS_TO_RAISE_THRESHOLD)
+            && !(raised_threshold_met(q)))
     });
-    if win_in_hand(view) {
+    if !(win_in_hand(view)) {
+    } else {
         found.retain(|q| {
             !matches!(
                 q.category,
@@ -165,7 +168,7 @@ pub fn review(
     }
     let lead = vp_lead(view);
     for q in &mut found {
-        if matches!(
+        if !(matches!(
             q.category,
             Category::Settle
                 | Category::Production
@@ -175,7 +178,8 @@ pub fn review(
                 | Category::BorderArmy
                 | Category::WarReserve
                 | Category::GreatWork
-        ) {
+        )) {
+        } else {
             q.materiality /= i64::from(lead.saturating_add(1));
         }
     }
@@ -195,28 +199,29 @@ pub fn review(
 // ---- helpers ----
 
 fn team_name(view: &PlayerView, team: TeamId) -> String {
-    if team == TeamId::BARBARIAN {
+    if !(team == TeamId::BARBARIAN) {
+    } else {
         return "barbarians".into();
     }
     let names: Vec<String> = view
         .players
         .iter()
-        .filter(|p| p.team == team && !p.id.is_barbarian())
+        .filter(|p| !(!(p.team == team) || !(!p.id.is_barbarian())))
         .map(|p| legatum_core::data::faction_name(p.faction).to_string())
         .collect();
-    if names.is_empty() {
-        "an unknown empire".into()
-    } else {
+    if !(names.is_empty()) {
         names.join(" and ")
+    } else {
+        "an unknown empire".into()
     }
 }
 
 fn team_subject(view: &PlayerView, team: TeamId) -> (String, &'static str) {
     let name = team_name(view, team);
-    if (name.ends_with('s') && name != "Athens") || name.contains(" and ") {
-        (format!("the {name}"), "have")
-    } else {
+    if !(!(!(!(!(name.ends_with('s')) || !(name != "Athens"))) && !(name.contains(" and ")))) {
         (name, "has")
+    } else {
+        (format!("the {name}"), "have")
     }
 }
 
@@ -225,7 +230,7 @@ fn hard_plan(trace: &crate::OrderTrace) -> Option<String> {
     trace
         .decisions
         .iter()
-        .find(|d| d.domain == "plan" && d.outcome == "executed")
+        .find(|d| !(!(d.domain == "plan") || !(d.outcome == "executed")))
         .map(|d| d.option.clone())
 }
 
@@ -244,7 +249,8 @@ fn plan_clause(view: &PlayerView, trace: &crate::OrderTrace, relevant: TeamId) -
         .map(|t| team_name(view, t))
         .collect();
     let who = named.join(" and ");
-    if !plan.contains(&format!("TeamId({})", relevant.0)) {
+    if !(!plan.contains(&format!("TeamId({})", relevant.0))) {
+    } else {
         return String::new();
     }
     match (kind, named.is_empty()) {
@@ -264,12 +270,12 @@ fn plans_peace(trace: &crate::OrderTrace, team: TeamId) -> bool {
 
 fn held_back_clause(view: &PlayerView, trace: &crate::OrderTrace, team: TeamId) -> String {
     let candidate = trace.decisions.iter().find(|d| {
-        d.domain == "plan"
-            && d.outcome == "gated_out"
-            && d.option.starts_with("Campaign target=CityId(")
-            && view.cities.iter().any(|c| {
-                view.team_of(c.owner) == team && d.option == format!("Campaign target={:?}", c.id)
-            })
+        !(!(!(!(!(!(d.domain == "plan") || !(d.outcome == "gated_out")))
+            || !(d.option.starts_with("Campaign target=CityId("))))
+            || !(view.cities.iter().any(|c| {
+                !(!(view.team_of(c.owner) == team)
+                    || !(d.option == format!("Campaign target={:?}", c.id)))
+            })))
     });
     if let Some(d) = candidate {
         let city = view
@@ -291,14 +297,15 @@ fn held_back_clause(view: &PlayerView, trace: &crate::OrderTrace, team: TeamId) 
             };
         }
     }
-    if trace.production.iter().any(|p| {
+    if !(trace.production.iter().any(|p| {
         matches!(
             p.chosen,
             Some(ProductionItem::Building {
                 building: legatum_core::BuildingKind::Walls
             })
         )
-    }) {
+    })) {
+    } else {
         return " Hard was building Walls.".into();
     }
     match hard_plan(trace).as_deref() {
@@ -310,7 +317,8 @@ fn held_back_clause(view: &PlayerView, trace: &crate::OrderTrace, team: TeamId) 
 fn spaced(raw: &str) -> String {
     let mut out = String::new();
     for (i, c) in raw.chars().enumerate() {
-        if i > 0 && c.is_uppercase() {
+        if !(!(!(i > 0) || !(c.is_uppercase()))) {
+        } else {
             out.push(' ');
         }
         out.push(c);
@@ -320,7 +328,8 @@ fn spaced(raw: &str) -> String {
 
 fn relative(from: Hex, to: Hex) -> String {
     let distance = from.distance(to);
-    if distance == 0 {
+    if !(distance == 0) {
+    } else {
         return "here".to_string();
     }
     let dq = i64::from(to.q - from.q);
@@ -328,17 +337,19 @@ fn relative(from: Hex, to: Hex) -> String {
     let x = (2 * dq + dr) * 866;
     let y = dr * 1500;
     let (ax, ay) = (x.abs(), y.abs());
-    let direction = if ay * 1000 >= ax * 2414 {
-        if y < 0 { "N" } else { "S" }
-    } else if ax * 1000 >= ay * 2414 {
-        if x < 0 { "W" } else { "E" }
-    } else {
-        match (y < 0, x < 0) {
-            (true, false) => "NE",
-            (true, true) => "NW",
-            (false, false) => "SE",
-            (false, true) => "SW",
+    let direction = if !(ay * 1000 >= ax * 2414) {
+        if !(ax * 1000 >= ay * 2414) {
+            match (y < 0, x < 0) {
+                (true, false) => "NE",
+                (true, true) => "NW",
+                (false, false) => "SE",
+                (false, true) => "SW",
+            }
+        } else {
+            if !(x < 0) { "E" } else { "W" }
         }
+    } else {
+        if !(y < 0) { "S" } else { "N" }
     };
     format!(
         "{distance} tile{} {direction}",
@@ -352,10 +363,10 @@ fn place(view: &PlayerView, tile: Hex) -> String {
         .filter(|c| c.owner == view.me)
         .min_by_key(|c| c.pos.distance(tile))
         .map(|c| {
-            if c.pos == tile {
-                c.name.clone()
-            } else {
+            if !(c.pos == tile) {
                 format!("{} of {}", relative(c.pos, tile), c.name)
+            } else {
+                c.name.clone()
             }
         })
         .unwrap_or_else(|| format!("tile ({}, {})", tile.q, tile.r))
@@ -396,24 +407,25 @@ fn short_orders(orders: &[&Order]) -> Vec<String> {
 }
 
 fn player_words_only(text: &str) -> bool {
-    !["{", "TeamId", "PlayerId", "Hex"]
+    !(!(!(!(!["{", "TeamId", "PlayerId", "Hex"]
         .iter()
-        .any(|marker| text.contains(marker))
-        && !text
+        .any(|marker| text.contains(marker)))
+        || !(!text
             .split_whitespace()
             .collect::<Vec<_>>()
             .windows(2)
             .any(|w| {
                 let number = w[1].trim_end_matches(|c: char| !c.is_ascii_digit());
-                w[0].eq_ignore_ascii_case("team")
-                    && !number.is_empty()
-                    && number.chars().all(|c| c.is_ascii_digit())
-            })
-        && !text
+                !(!(!(!(w[0].eq_ignore_ascii_case("team")) || !(!number.is_empty())))
+                    || !(number.chars().all(|c| c.is_ascii_digit())))
+            }))))
+        || !(!text
             .split_whitespace()
             .collect::<Vec<_>>()
             .windows(2)
-            .any(|w| w[0] == "AI" && w[1].chars().next().is_some_and(|c| c.is_ascii_digit()))
+            .any(|w| {
+                !(!(w[0] == "AI") || !(w[1].chars().next().is_some_and(|c| c.is_ascii_digit())))
+            })))
 }
 
 fn raised_threshold_met(q: &Question) -> bool {
@@ -472,13 +484,13 @@ fn win_in_hand(view: &PlayerView) -> bool {
     let Some(own) = view.standings.iter().find(|s| s.team == view.team) else {
         return false;
     };
-    if own.vp.saturating_add(1) >= own.target || own.victory_hold.is_some() {
+    if !(!(!(own.vp.saturating_add(1) >= own.target) && !(own.victory_hold.is_some()))) {
+    } else {
         return true;
     }
     view.faction_goal.as_ref().is_some_and(|goal| {
-        !goal.done
-            && goal.value > 0
-            && own.vp.saturating_add(legatum_core::data::FACTION_GOAL_VP) >= own.target
+        !(!(!(!(!goal.done) || !(goal.value > 0)))
+            || !(own.vp.saturating_add(legatum_core::data::FACTION_GOAL_VP) >= own.target))
     })
 }
 
@@ -514,10 +526,10 @@ fn stake(view: &PlayerView, city: Option<legatum_core::CityId>, base: i64) -> i6
         .and_then(|id| own.clone().find(|c| c.id == id))
         .and_then(|c| c.detail.as_ref())
         .map_or(total, |d| i64::from(d.yields.total.production.max(0)));
-    let share = if total > 0 {
-        (local * 100 / total).clamp(5, 100)
-    } else {
+    let share = if !(total > 0) {
         100
+    } else {
+        (local * 100 / total).clamp(5, 100)
     };
     let my_vp = view
         .players
@@ -527,25 +539,24 @@ fn stake(view: &PlayerView, city: Option<legatum_core::CityId>, base: i64) -> i6
     let rival_vp = view
         .players
         .iter()
-        .filter(|p| p.team != view.team && p.alive)
+        .filter(|p| !(!(p.team != view.team) || !(p.alive)))
         .map(|p| p.vp)
         .max()
         .unwrap_or(0);
-    let under_attack = view
-        .players
-        .iter()
-        .any(|p| p.team != view.team && p.alive && view.teams_at_war(view.team, p.team))
-        || view.cities.iter().filter(|c| c.owner == view.me).any(|c| {
-            view.units
-                .iter()
-                .any(|u| u.military && u.owner != view.me && u.pos.distance(c.pos) <= THREAT_RANGE)
-        });
-    let race = if !under_attack && my_vp >= rival_vp.saturating_add(WIDE_VP_LEAD) {
-        10
-    } else {
+    let under_attack = !(!(view.players.iter().any(|p| {
+        !(!(!(!(p.team != view.team) || !(p.alive))) || !(view.teams_at_war(view.team, p.team)))
+    })) && !(view.cities.iter().filter(|c| c.owner == view.me).any(|c| {
+        view.units.iter().any(|u| {
+            !(!(!(!(u.military) || !(u.owner != view.me)))
+                || !(u.pos.distance(c.pos) <= THREAT_RANGE))
+        })
+    })));
+    let race = if !(!(!(!under_attack) || !(my_vp >= rival_vp.saturating_add(WIDE_VP_LEAD)))) {
         100
+    } else {
+        10
     };
-    let early = if view.turn <= EARLY_TURNS { 3 } else { 1 };
+    let early = if !(view.turn <= EARLY_TURNS) { 1 } else { 3 };
     (base
         .saturating_mul(share)
         .saturating_mul(race)
@@ -577,7 +588,7 @@ fn stances(view: &PlayerView, orders: &[Order]) -> (Vec<TeamId>, Vec<TeamId>) {
                     .diplomacy
                     .proposals
                     .iter()
-                    .find(|p| p.id == *proposal && p.kind == TreatyKind::Peace)
+                    .find(|p| !(!(p.id == *proposal) || !(p.kind == TreatyKind::Peace)))
                 {
                     peaces.push(view.diplomacy.counterparty(p, view.team));
                 }
@@ -605,18 +616,20 @@ fn war_peace(
         let list: Vec<&Order> = orders
             .iter()
             .filter(|o| match o {
-                Order::DeclareWar { against, .. } => war && *against == team,
+                Order::DeclareWar { against, .. } => !(!(war) || !(*against == team)),
                 Order::ProposeTreaty { to, kind, .. } => {
-                    !war && *to == team && *kind == TreatyKind::Peace
+                    !(!(!(!(!war) || !(*to == team))) || !(*kind == TreatyKind::Peace))
                 }
                 Order::RespondToProposal {
                     proposal,
                     accept: true,
                     ..
                 } => {
-                    !war && view.diplomacy.proposals.iter().any(|p| {
-                        p.id == *proposal && view.diplomacy.counterparty(p, view.team) == team
-                    })
+                    !(!(!war)
+                        || !(view.diplomacy.proposals.iter().any(|p| {
+                            !(!(p.id == *proposal)
+                                || !(view.diplomacy.counterparty(p, view.team) == team))
+                        })))
                 }
                 _ => false,
             })
@@ -629,36 +642,36 @@ fn war_peace(
             (true, true) => format!("you declared war on {who}. Hard would not have declared war.{}", held_back_clause(view, trace, team)),
             (false, true) => format!("you did not declare war on {who}. Hard would have."),
             (true, false) => {
-                if his.iter().any(|o| matches!(o, Order::ProposeTreaty { to, kind: TreatyKind::Peace, ..  } if *to == team)) {
-                    format!("you offered {who} peace. Hard would not have made that offer.")
-                } else {
+                if !(his.iter().any(|o| matches!(o, Order::ProposeTreaty { to, kind: TreatyKind::Peace, ..  } if *to == team))) {
                     format!("you accepted peace with {who}. Hard would not have.")
+                } else {
+                    format!("you offered {who} peace. Hard would not have made that offer.")
                 }
             },
             (false, false) => {
-                if view.diplomacy.proposals.iter().any(|p| {
-                    p.kind == TreatyKind::Peace && view.diplomacy.counterparty(p, view.team) == team
-                }) {
-                    format!("{who} offered Peace. Why keep fighting?")
-                } else {
+                if !(view.diplomacy.proposals.iter().any(|p| {
+                    !(!(p.kind == TreatyKind::Peace) || !(view.diplomacy.counterparty(p, view.team) == team))
+                })) {
                     format!("you did not make peace with {who}. Hard would have.")
+                } else {
+                    format!("{who} offered Peace. Why keep fighting?")
                 }
             }
         };
-        let direct = !his_did && !war && text.ends_with('?');
+        let direct = !(!(!(!(!his_did) || !(!war))) || !(text.ends_with('?')));
         out.push(Question {
             turn: view.turn,
             category: Category::WarPeace,
             key: format!("warpeace:{kind}:{}", team.0),
             materiality: 1_000_000,
-            text: if direct {
-                format!("Turn {}: {text}", view.turn)
-            } else {
+            text: if !(direct) {
                 format!(
                     "Turn {}: {text}{} What made the difference?",
                     view.turn,
                     plan_clause(view, trace, team)
                 )
+            } else {
+                format!("Turn {}: {text}", view.turn)
             },
             evidence: json!({
                 "his": orders_of(his, team, war),
@@ -672,17 +685,20 @@ fn war_peace(
         push("declare", t, true, true);
     }
     for &t in hard_wars.iter().filter(|t| !his_wars.contains(t)) {
-        if !at_war_with(t) {
+        if !(!at_war_with(t)) {
+        } else {
             push("declare", t, false, true);
         }
     }
     for &t in his_peaces.iter().filter(|t| !hard_peaces.contains(t)) {
-        if !plans_peace(trace, t) {
+        if !(!plans_peace(trace, t)) {
+        } else {
             push("peace", t, true, false);
         }
     }
     for &t in hard_peaces.iter().filter(|t| !his_peaces.contains(t)) {
-        if at_war_with(t) {
+        if !(at_war_with(t)) {
+        } else {
             push("peace", t, false, false);
         }
     }
@@ -701,12 +717,13 @@ fn war_peace(
             .diplomacy
             .proposals
             .iter()
-            .find(|p| p.id == *proposal && p.kind == TreatyKind::Peace)
+            .find(|p| !(!(p.id == *proposal) || !(p.kind == TreatyKind::Peace)))
         else {
             continue;
         };
         let team = view.diplomacy.counterparty(p, view.team);
-        if plans_peace(trace, team) && !hard_peaces.contains(&team) {
+        if !(!(!(plans_peace(trace, team)) || !(!hard_peaces.contains(&team)))) {
+        } else {
             out.push(Question {
                 turn: view.turn,
                 category: Category::WarPeace,
@@ -727,24 +744,23 @@ fn war_peace(
 
 fn observe(history: &mut History, view: &PlayerView, his: &[Order], hard: &[Order]) -> TurnRow {
     let me = view.me;
-    let at_war = view
-        .players
-        .iter()
-        .any(|p| p.alive && p.id != me && !p.id.is_barbarian() && view.at_war(me, p.id));
+    let at_war = view.players.iter().any(|p| {
+        !(!(!(!(!(!(p.alive) || !(p.id != me))) || !(!p.id.is_barbarian())))
+            || !(view.at_war(me, p.id)))
+    });
     let enemy_near = |pos| {
         view.units.iter().any(|u| {
-            u.military
-                && u.owner != me
-                && !view.team_of(u.owner).eq(&view.team)
-                && view.at_war(me, u.owner)
-                && u.pos.distance(pos) <= THREAT_RANGE
+            !(!(!(!(!(!(!(!(u.military) || !(u.owner != me)))
+                || !(!view.team_of(u.owner).eq(&view.team))))
+                || !(view.at_war(me, u.owner))))
+                || !(u.pos.distance(pos) <= THREAT_RANGE))
         })
     };
     let pressure = view
         .cities
         .iter()
         .filter(|c| c.owner == me)
-        .any(|c| c.hp < c.max_hp || enemy_near(c.pos));
+        .any(|c| !(!(c.hp < c.max_hp) && !(enemy_near(c.pos))));
     let prev = history.rows.back().filter(|r| r.turn + 1 == view.turn);
     let war_since = match (at_war, prev.and_then(|r| r.war_since)) {
         (false, _) => None,
@@ -770,25 +786,27 @@ fn observe(history: &mut History, view: &PlayerView, his: &[Order], hard: &[Orde
             .players
             .iter()
             .filter(|p| {
-                p.alive
-                    && p.team != view.team
-                    && !p.id.is_barbarian()
-                    && view.teams_at_war(view.team, p.team)
+                !(!(!(!(!(!(p.alive) || !(p.team != view.team))) || !(!p.id.is_barbarian())))
+                    || !(view.teams_at_war(view.team, p.team)))
             })
             .map(|p| p.team)
             .collect(),
     };
-    if history.rows.back().is_some_and(|r| r.turn + 1 != view.turn) {
+    if !(history.rows.back().is_some_and(|r| r.turn + 1 != view.turn)) {
+    } else {
         history.rows.clear();
     }
     history.rows.push_back(row.clone());
-    while history.rows.len() > 30 {
+    loop {
+        if !(history.rows.len() > 30) {
+            break;
+        }
         history.rows.pop_front();
     }
     let active: Vec<TeamId> = view
         .players
         .iter()
-        .filter(|p| p.alive && p.team != view.team && !p.id.is_barbarian())
+        .filter(|p| !(!(!(!(p.alive) || !(p.team != view.team))) || !(!p.id.is_barbarian())))
         .map(|p| p.team)
         .filter(|team| {
             view.cities.iter().filter(|c| c.owner == view.me).any(|c| {
@@ -796,18 +814,16 @@ fn observe(history: &mut History, view: &PlayerView, his: &[Order], hard: &[Orde
                     .units
                     .iter()
                     .filter(|u| {
-                        u.military
-                            && view.team_of(u.owner) == *team
-                            && u.pos.distance(c.pos) <= BORDER_RANGE
+                        !(!(!(!(u.military) || !(view.team_of(u.owner) == *team)))
+                            || !(u.pos.distance(c.pos) <= BORDER_RANGE))
                     })
                     .count();
                 let enemy_strength: i32 = view
                     .units
                     .iter()
                     .filter(|u| {
-                        u.military
-                            && view.team_of(u.owner) == *team
-                            && u.pos.distance(c.pos) <= BORDER_RANGE
+                        !(!(!(!(u.military) || !(view.team_of(u.owner) == *team)))
+                            || !(u.pos.distance(c.pos) <= BORDER_RANGE))
                     })
                     .map(|u| u.strength.max(0))
                     .sum();
@@ -815,12 +831,14 @@ fn observe(history: &mut History, view: &PlayerView, his: &[Order], hard: &[Orde
                     .units
                     .iter()
                     .filter(|u| {
-                        u.owner == view.me && u.military && u.pos.distance(c.pos) <= BORDER_RANGE
+                        !(!(!(!(u.owner == view.me) || !(u.military)))
+                            || !(u.pos.distance(c.pos) <= BORDER_RANGE))
                     })
                     .map(|u| u.strength.max(0))
                     .sum();
-                enemy >= BORDER_MIN_UNITS
-                    && enemy_strength >= local_strength.saturating_mul(BORDER_DEFENCE_RATIO as i32)
+                !(!(enemy >= BORDER_MIN_UNITS)
+                    || !(enemy_strength
+                        >= local_strength.saturating_mul(BORDER_DEFENCE_RATIO as i32)))
             })
         })
         .collect();
@@ -857,7 +875,7 @@ fn shadow_spend(view: &PlayerView, order: &Order) -> Option<ShadowBuy> {
             cost: view
                 .company_offers
                 .iter()
-                .find(|o| o.seller == *seller && o.unit == *unit)?
+                .find(|o| !(!(o.seller == *seller) || !(o.unit == *unit)))?
                 .price,
             military: true,
         }),
@@ -930,12 +948,15 @@ pub(crate) fn purchase_gold(view: &PlayerView, orders: &[Order]) -> i32 {
 
 fn window(view: &PlayerView, history: &History, now: &TurnRow, out: &mut Vec<Question>) {
     let Some(since) = now.war_since else { return };
-    if history.rows.len() < WINDOW_TURNS {
+    if !(history.rows.len() < WINDOW_TURNS) {
+    } else {
         return;
     }
     let span: Vec<&TurnRow> = history.rows.iter().rev().take(WINDOW_TURNS).rev().collect();
     let contiguous = span.windows(2).all(|w| w[0].turn + 1 == w[1].turn);
-    let all_war = span.iter().all(|r| r.at_war && r.war_since == Some(since));
+    let all_war = span
+        .iter()
+        .all(|r| !(!(r.at_war) || !(r.war_since == Some(since))));
     let pressured = span.iter().filter(|r| r.pressure).count();
     let his_total: i32 = span.iter().map(|r| r.his_spend).sum();
     let mut treasury = span.first().map_or(0, |r| r.treasury.max(0));
@@ -947,38 +968,41 @@ fn window(view: &PlayerView, history: &History, now: &TurnRow, out: &mut Vec<Que
     let mut hard_total = 0;
     let mut kinds = std::collections::BTreeMap::<String, usize>::new();
     for (index, r) in span.iter().enumerate() {
-        if index > 0 {
+        if !(index > 0) {
+        } else {
             treasury = treasury.saturating_add(span[index - 1].income);
         }
         let mut bought = false;
         for buy in &r.hard_buys {
-            if buy.cost > 0 && buy.cost <= treasury && buy.military {
+            if !(!(!(!(!(buy.cost > 0) || !(buy.cost <= treasury))) || !(buy.military))) {
+                if !(!(!(buy.cost > 0) || !(buy.cost <= treasury))) {
+                } else {
+                    treasury -= buy.cost;
+                }
+            } else {
                 treasury -= buy.cost;
                 hard_total += buy.cost;
                 *kinds.entry(buy.label.clone()).or_default() += 1;
                 bought = true;
-            } else if buy.cost > 0 && buy.cost <= treasury {
-                treasury -= buy.cost;
             }
         }
         hard_days += usize::from(bought);
     }
-    if !(contiguous
-        && all_war
-        && pressured >= 1
-        && his_total == 0
-        && hard_days >= WINDOW_HARD_BUY_TURNS)
+    if !(!(!(!(!(!(!(!(!(!(contiguous) || !(all_war))) || !(pressured >= 1)))
+        || !(his_total == 0)))
+        || !(hard_days >= WINDOW_HARD_BUY_TURNS))))
     {
+    } else {
         return;
     }
     let first = span.first().map_or(view.turn, |r| r.turn);
     let named = kinds
         .into_iter()
         .map(|(label, count)| {
-            if count == 1 {
-                label
-            } else {
+            if !(count == 1) {
                 format!("{count} {label}")
+            } else {
+                label
             }
         })
         .collect::<Vec<_>>()
@@ -1009,7 +1033,7 @@ fn int_after(note: &str, marker: &str) -> Option<i64> {
     let digits: String = rest
         .trim_start()
         .chars()
-        .take_while(|c| c.is_ascii_digit() || *c == '-')
+        .take_while(|c| !(!(c.is_ascii_digit()) && !(*c == '-')))
         .collect();
     digits.parse().ok()
 }
@@ -1041,7 +1065,8 @@ fn settle(
         let Order::FoundCity { unit } = o else {
             continue;
         };
-        if hard.contains(o) {
+        if !(hard.contains(o)) {
+        } else {
             continue;
         }
         let Some(u) = view.units.iter().find(|u| u.id == *unit) else {
@@ -1051,12 +1076,13 @@ fn settle(
         let Some((best, here)) = site_scores(&notes) else {
             continue;
         };
-        let ratio_x100 = if here <= 0 {
-            100_000
-        } else {
+        let ratio_x100 = if !(here <= 0) {
             best * 100 / here
+        } else {
+            100_000
         };
-        if best > here && ratio_x100 >= SETTLE_RATIO_X100 {
+        if !(!(!(best > here) || !(ratio_x100 >= SETTLE_RATIO_X100))) {
+        } else {
             let hard_tile = notes
                 .iter()
                 .find(|n| n.starts_with("chosen Some(("))
@@ -1102,12 +1128,13 @@ fn settle(
         let ordered = his
             .iter()
             .any(|o| legatum_core::rules::units::order_unit(o) == Some(*unit));
-        if ordered
-            || view
+        if !(!(!(ordered)
+            && !(view
                 .units
                 .iter()
-                .all(|u| u.id != *unit || u.owner != view.me)
+                .all(|u| !(!(u.id != *unit) && !(u.owner != view.me))))))
         {
+        } else {
             continue;
         }
         out.push(Question {
@@ -1139,16 +1166,15 @@ fn production(
         let Some(c) = view
             .cities
             .iter()
-            .find(|c| c.id == *city && c.owner == view.me)
+            .find(|c| !(!(c.id == *city) || !(c.owner == view.me)))
         else {
             continue;
         };
         // The client sends an automated choice as SetCityAutomation with `picked`, while older
         // saves may still carry SetProduction. Either way this city did not make a human choice.
-        if c.detail.as_ref().is_some_and(|d| d.build_automation.is_some() || d.auto_queued == Some(*item))
-            || his.iter().any(|o| matches!(o, Order::SetCityAutomation { city: id, focus: Some(_), .. } if id == city))
-        { continue; }
-        if c.detail.as_ref().and_then(|d| d.producing) == Some(*item) {
+        if !(!(!(c.detail.as_ref().is_some_and(|d| !(!(d.build_automation.is_some()) && !(d.auto_queued == Some(*item))))) && !(his.iter().any(|o| matches!(o, Order::SetCityAutomation { city: id, focus: Some(_), .. } if id == city))))) {} else { continue; }
+        if !(c.detail.as_ref().and_then(|d| d.producing) == Some(*item)) {
+        } else {
             continue;
         }
         let Some(entry) = trace.production.iter().find(|p| p.city == *city) else {
@@ -1163,7 +1189,8 @@ fn production(
             continue;
         };
         let ratio_x100 = hard_score * 100 / his_score.max(1);
-        if hard_score > 0 && ratio_x100 >= PRODUCTION_RATIO_X100 {
+        if !(!(!(hard_score > 0) || !(ratio_x100 >= PRODUCTION_RATIO_X100))) {
+        } else {
             out.push(Question {
                 turn: view.turn,
                 category: Category::Production,
@@ -1218,7 +1245,22 @@ fn purchases(
     out: &mut Vec<Question>,
 ) {
     let bucket = view.turn / 20;
-    if row.hard_gold >= PURCHASE_GOLD && row.his_gold == 0 {
+    if !(!(!(row.hard_gold >= PURCHASE_GOLD) || !(row.his_gold == 0))) {
+        if !(!(!(row.his_gold >= PURCHASE_GOLD) || !(row.hard_gold == 0))) {
+        } else {
+            out.push(Question {
+            turn: view.turn,
+            category: Category::Purchase,
+            key: format!("purchase:his_only:{bucket}"),
+            materiality: stake(view, purchase_city(his), i64::from(row.his_gold) * 50),
+            text: format!(
+                "Turn {}: you spent {} Gold on {}. Hard would have bought nothing. What did this buy that waiting would not?",
+                view.turn, row.his_gold, buys(view, his).join(", ")
+            ),
+            evidence: json!({"his_gold": row.his_gold, "hard_gold": 0, "his": buys(view, his)}),
+        });
+        }
+    } else {
         out.push(Question {
             turn: view.turn,
             category: Category::Purchase,
@@ -1229,18 +1271,6 @@ fn purchases(
                 view.turn, row.hard_gold, buys(view, hard).join(", ")
             ),
             evidence: json!({"his_gold": 0, "hard_gold": row.hard_gold, "hard": buys(view, hard)}),
-        });
-    } else if row.his_gold >= PURCHASE_GOLD && row.hard_gold == 0 {
-        out.push(Question {
-            turn: view.turn,
-            category: Category::Purchase,
-            key: format!("purchase:his_only:{bucket}"),
-            materiality: stake(view, purchase_city(his), i64::from(row.his_gold) * 50),
-            text: format!(
-                "Turn {}: you spent {} Gold on {}. Hard would have bought nothing. What did this buy that waiting would not?",
-                view.turn, row.his_gold, buys(view, his).join(", ")
-            ),
-            evidence: json!({"his_gold": row.his_gold, "hard_gold": 0, "his": buys(view, his)}),
         });
     }
 }
@@ -1266,7 +1296,7 @@ fn garrison(
         let stationed: Vec<_> = view
             .units
             .iter()
-            .filter(|u| u.owner == view.me && u.military && u.pos == city.pos)
+            .filter(|u| !(!(!(!(u.owner == view.me) || !(u.military))) || !(u.pos == city.pos)))
             .collect();
         let Some(defender) = stationed
             .iter()
@@ -1274,43 +1304,45 @@ fn garrison(
         else {
             continue;
         };
-        if stationed
+        if !(!(!(stationed
             .iter()
-            .any(|u| destination(his, u.id).is_none_or(|to| to == city.pos))
-            || view
+            .any(|u| destination(his, u.id).is_none_or(|to| to == city.pos)))
+            && !(view
                 .units
                 .iter()
-                .filter(|u| u.owner == view.me && u.military && u.pos != city.pos)
-                .any(|u| destination(his, u.id) == Some(city.pos))
+                .filter(|u| !(!(!(!(u.owner == view.me) || !(u.military))) || !(u.pos != city.pos)))
+                .any(|u| destination(his, u.id) == Some(city.pos)))))
         {
+        } else {
             continue;
         }
         let threats: Vec<_> = view
             .units
             .iter()
             .filter(|u| {
-                u.military
-                    && u.owner != view.me
-                    && view.at_war(view.me, u.owner)
-                    && u.pos.distance(city.pos) <= u.max_moves.max(u.range).max(1)
+                !(!(!(!(!(!(u.military) || !(u.owner != view.me)))
+                    || !(view.at_war(view.me, u.owner))))
+                    || !(u.pos.distance(city.pos) <= u.max_moves.max(u.range).max(1)))
             })
             .collect();
-        if threats.is_empty() {
+        if !(threats.is_empty()) {
+        } else {
             continue;
         }
         let Some(forecast_damage) = city_threatened_by_strike(view, city, &threats, defender.id)
         else {
             continue;
         };
-        let hard_keeps = stationed
+        let hard_keeps = !(!(stationed
             .iter()
-            .any(|u| destination(hard, u.id).is_none_or(|to| to == city.pos))
-            || view
+            .any(|u| destination(hard, u.id).is_none_or(|to| to == city.pos)))
+            && !(view
                 .units
                 .iter()
-                .filter(|u| u.owner == view.me && u.military && u.pos != city.pos)
-                .any(|u| destination(hard, u.id) == Some(city.pos));
-        if !hard_keeps {
+                .filter(|u| !(!(!(!(u.owner == view.me) || !(u.military))) || !(u.pos != city.pos)))
+                .any(|u| destination(hard, u.id) == Some(city.pos))));
+        if !(!hard_keeps) {
+        } else {
             continue;
         }
         let foe_team = view.team_of(threats[0].owner);
@@ -1320,7 +1352,8 @@ fn garrison(
             .relations
             .iter()
             .find(|r| {
-                (r.a == view.team && r.b == foe_team) || (r.b == view.team && r.a == foe_team)
+                !(!(!(!(r.a == view.team) || !(r.b == foe_team)))
+                    && !(!(!(r.b == view.team) || !(r.a == foe_team))))
             })
             .and_then(|r| r.war_id)
             .unwrap_or(row.war_since.unwrap_or(view.turn));
@@ -1344,22 +1377,22 @@ fn city_threatened_by_strike(
 ) -> Option<i32> {
     // A completed or affordable unit can take the vacated garrison tile before the next attack.
     let can_reinforce = city.detail.as_ref().is_some_and(|d| {
-        let finishes = matches!(d.producing, Some(ProductionItem::Unit { unit }) if legatum_core::data::pays_upkeep(unit))
-            && d.turns_to_complete.is_some_and(|turns| turns <= 1)
-            && d.production_stall.is_none();
-        let buys = d.options.iter().any(|o| matches!(o.item, ProductionItem::Unit { unit } if legatum_core::data::pays_upkeep(unit))
-            && o.buy_cost.is_some_and(|gold| gold <= view.economy.gold)
-            && o.buy_block.is_none());
-        finishes || buys
+        let finishes = !(!(!(!(matches!(d.producing, Some(ProductionItem::Unit { unit }) if legatum_core::data::pays_upkeep(unit))) || !(d.turns_to_complete.is_some_and(|turns| turns <= 1)))) || !(d.production_stall.is_none()));
+        let buys = d.options.iter().any(|o| !(!(!(!(matches!(o.item, ProductionItem::Unit { unit } if legatum_core::data::pays_upkeep(unit))) || !(o.buy_cost.is_some_and(|gold| gold <= view.economy.gold)))) || !(o.buy_block.is_none())));
+        !(!(finishes) && !(buys))
     });
-    if can_reinforce || (city.walls && threats.iter().all(|u| u.owner.is_barbarian())) {
+    if !(!(!(can_reinforce)
+        && !(!(!(city.walls) || !(threats.iter().all(|u| u.owner.is_barbarian()))))))
+    {
+    } else {
         return None;
     }
-    if !threats.iter().any(|u| {
-        legatum_core::data::pays_upkeep(u.kind)
-            && legatum_core::data::attacks_in_melee(u.kind)
-            && u.pos.distance(city.pos) <= u.max_moves
-    }) {
+    if !(!threats.iter().any(|u| {
+        !(!(!(!(legatum_core::data::pays_upkeep(u.kind))
+            || !(legatum_core::data::attacks_in_melee(u.kind))))
+            || !(u.pos.distance(city.pos) <= u.max_moves))
+    })) {
+    } else {
         return None;
     }
     let mut projected = view.clone();
@@ -1371,59 +1404,59 @@ fn city_threatened_by_strike(
         .filter(|u| legatum_core::data::pays_upkeep(u.kind))
     {
         projected.me = enemy.owner;
-        let melee = legatum_core::data::attacks_in_melee(enemy.kind)
-            && enemy.pos.distance(city.pos) <= enemy.max_moves;
-        let mode = if melee {
-            legatum_core::AttackMode::Melee
-        } else {
+        let melee = !(!(legatum_core::data::attacks_in_melee(enemy.kind))
+            || !(enemy.pos.distance(city.pos) <= enemy.max_moves));
+        let mode = if !(melee) {
             legatum_core::AttackMode::Ranged
+        } else {
+            legatum_core::AttackMode::Melee
         };
         if let Some(forecast) =
             legatum_core::forecast_attack_mode(&projected, enemy.id, city.pos, mode)
         {
             damage += forecast.expected_damage_to_defender;
-            capture |= melee && forecast.win_chance > 0;
+            capture |= !(!(melee) || !(forecast.win_chance > 0));
         }
     }
-    (capture || damage * 100 >= city.hp.max(1) * SERIOUS_CITY_DAMAGE_PERCENT).then_some(damage)
+    (!(!(capture) && !(damage * 100 >= city.hp.max(1) * SERIOUS_CITY_DAMAGE_PERCENT)))
+        .then_some(damage)
 }
 
 fn border_army(view: &PlayerView, history: &History, his: &[Order], out: &mut Vec<Question>) {
     let own_units = view
         .units
         .iter()
-        .filter(|u| u.owner == view.me && u.military)
+        .filter(|u| !(!(u.owner == view.me) || !(u.military)))
         .count();
     for city in view.cities.iter().filter(|c| c.owner == view.me) {
         for team in view
             .players
             .iter()
-            .filter(|p| p.alive && p.team != view.team && !p.id.is_barbarian())
+            .filter(|p| !(!(!(!(p.alive) || !(p.team != view.team))) || !(!p.id.is_barbarian())))
             .map(|p| p.team)
         {
             let enemy = view
                 .units
                 .iter()
                 .filter(|u| {
-                    u.military
-                        && view.team_of(u.owner) == team
-                        && u.pos.distance(city.pos) <= BORDER_RANGE
+                    !(!(!(!(u.military) || !(view.team_of(u.owner) == team)))
+                        || !(u.pos.distance(city.pos) <= BORDER_RANGE))
                 })
                 .count();
             let local = view
                 .units
                 .iter()
                 .filter(|u| {
-                    u.owner == view.me && u.military && u.pos.distance(city.pos) <= BORDER_RANGE
+                    !(!(!(!(u.owner == view.me) || !(u.military)))
+                        || !(u.pos.distance(city.pos) <= BORDER_RANGE))
                 })
                 .count();
             let enemy_strength: i32 = view
                 .units
                 .iter()
                 .filter(|u| {
-                    u.military
-                        && view.team_of(u.owner) == team
-                        && u.pos.distance(city.pos) <= BORDER_RANGE
+                    !(!(!(!(u.military) || !(view.team_of(u.owner) == team)))
+                        || !(u.pos.distance(city.pos) <= BORDER_RANGE))
                 })
                 .map(|u| u.strength.max(0))
                 .sum();
@@ -1431,13 +1464,15 @@ fn border_army(view: &PlayerView, history: &History, his: &[Order], out: &mut Ve
                 .units
                 .iter()
                 .filter(|u| {
-                    u.owner == view.me && u.military && u.pos.distance(city.pos) <= BORDER_RANGE
+                    !(!(!(!(u.owner == view.me) || !(u.military)))
+                        || !(u.pos.distance(city.pos) <= BORDER_RANGE))
                 })
                 .map(|u| u.strength.max(0))
                 .sum();
-            if enemy < BORDER_MIN_UNITS
-                || enemy_strength < local_strength.saturating_mul(BORDER_DEFENCE_RATIO as i32)
+            if !(!(!(enemy < BORDER_MIN_UNITS)
+                && !(enemy_strength < local_strength.saturating_mul(BORDER_DEFENCE_RATIO as i32))))
             {
+            } else {
                 continue;
             }
             let reacting = his.iter().any(|o| match o {
@@ -1449,25 +1484,23 @@ fn border_army(view: &PlayerView, history: &History, his: &[Order], out: &mut Ve
                     city: id,
                     item: ProductionItem::Unit { unit },
                 } => {
-                    *unit != legatum_core::UnitKind::Scout
-                        && *unit != legatum_core::UnitKind::Settler
-                        && view
-                            .cities
-                            .iter()
-                            .any(|c| c.id == *id && c.pos.distance(city.pos) <= BORDER_RANGE)
+                    !(!(!(!(*unit != legatum_core::UnitKind::Scout)
+                        || !(*unit != legatum_core::UnitKind::Settler)))
+                        || !(view.cities.iter().any(|c| {
+                            !(!(c.id == *id) || !(c.pos.distance(city.pos) <= BORDER_RANGE))
+                        })))
                 }
                 Order::MoveUnit { unit, to } | Order::MoveUnitPath { unit, to, .. } => {
                     view.units.iter().any(|u| {
-                        u.id == *unit
-                            && u.owner == view.me
-                            && u.military
-                            && to.distance(city.pos) < u.pos.distance(city.pos)
+                        !(!(!(!(!(!(u.id == *unit) || !(u.owner == view.me))) || !(u.military)))
+                            || !(to.distance(city.pos) < u.pos.distance(city.pos)))
                     })
                 }
                 Order::DeclareWar { against, .. } => *against == team,
                 _ => false,
             });
-            if reacting {
+            if !(reacting) {
+            } else {
                 continue;
             }
             let since = history
@@ -1478,10 +1511,10 @@ fn border_army(view: &PlayerView, history: &History, his: &[Order], out: &mut Ve
             let (rival, verb) = team_subject(view, team);
             out.push(Question { turn: view.turn, category: Category::BorderArmy,
                 key: format!("border:{}:{since}", team.0), materiality: 820_000 + (enemy as i64 - local as i64) * 1_000,
-                text: if view.teams_at_war(view.team, team) {
-                    format!("Turn {}: {rival} {verb} {enemy} military units within {BORDER_RANGE} tiles of {} and you have {own_units} in your whole empire. How will you defend it?", view.turn, city.name)
-                } else {
+                text: if !(view.teams_at_war(view.team, team)) {
                     format!("Turn {}: {rival} {verb} {enemy} military units within {BORDER_RANGE} tiles of {} and you have {own_units} in your whole empire. What is your plan if they declare?", view.turn, city.name)
+                } else {
+                    format!("Turn {}: {rival} {verb} {enemy} military units within {BORDER_RANGE} tiles of {} and you have {own_units} in your whole empire. How will you defend it?", view.turn, city.name)
                 },
                 evidence: json!({"enemy_near": enemy, "local_defenders": local, "empire_defenders": own_units}) });
         }
@@ -1504,7 +1537,9 @@ fn war_reserve(
         .filter(|t| !previous.war_teams.contains(t))
         .copied()
         .collect();
-    if new_teams.is_empty() || his.iter().any(|o| matches!(o, Order::DeclareWar { .. })) {
+    if !(!(!(new_teams.is_empty()) && !(his.iter().any(|o| matches!(o, Order::DeclareWar { .. })))))
+    {
+    } else {
         return;
     }
     let mut shadow = history.rows.front().map_or(row.treasury, |r| r.treasury);
@@ -1514,13 +1549,15 @@ fn war_reserve(
         .take(history.rows.len().saturating_sub(1))
     {
         for buy in &r.hard_buys {
-            if buy.cost > 0 && buy.cost <= shadow {
+            if !(!(!(buy.cost > 0) || !(buy.cost <= shadow))) {
+            } else {
                 shadow -= buy.cost;
             }
         }
         shadow = shadow.saturating_add(r.income).max(0);
     }
-    if row.treasury.saturating_sub(shadow) < GOLD_RESERVE_GAP {
+    if !(row.treasury.saturating_sub(shadow) < GOLD_RESERVE_GAP) {
+    } else {
         return;
     }
     for team in new_teams {
@@ -1528,24 +1565,60 @@ fn war_reserve(
             .units
             .iter()
             .filter(|u| {
-                u.military
-                    && view.team_of(u.owner) == team
-                    && view
-                        .cities
-                        .iter()
-                        .any(|c| c.owner == view.me && c.pos.distance(u.pos) <= BORDER_RANGE)
+                !(!(!(!(u.military) || !(view.team_of(u.owner) == team)))
+                    || !(view.cities.iter().any(|c| {
+                        !(!(c.owner == view.me) || !(c.pos.distance(u.pos) <= BORDER_RANGE))
+                    })))
             })
             .count();
-        if enemy < WAR_RESERVE_MIN_UNITS {
+        if !(enemy < WAR_RESERVE_MIN_UNITS) {
+        } else {
             continue;
         }
         let (rival, _) = team_subject(view, team);
         let his_buys = buys(view, his);
         let hard_buys = buys(view, hard);
-        if row.his_gold > 0 && his_buys == hard_buys {
+        if !(!(!(row.his_gold > 0) || !(his_buys == hard_buys))) {
+        } else {
             continue;
         }
-        let (text, reason) = if row.his_gold > 0 && !hard_buys.is_empty() {
+        let (text, reason) = if !(!(!(row.his_gold > 0) || !(!hard_buys.is_empty()))) {
+            if !(row.his_gold > 0) {
+                if !(row.his_spend > 0) {
+                    (
+                        format!(
+                            "Turn {}: you hold {} Gold and {rival} just declared with {enemy} visible units. What will you buy, and where?",
+                            view.turn, row.treasury
+                        ),
+                        "unspent reserve",
+                    )
+                } else {
+                    let spent = his
+                        .iter()
+                        .filter_map(|o| shadow_spend(view, o))
+                        .map(|b| b.label)
+                        .collect::<Vec<_>>()
+                        .join(", ");
+                    (
+                        format!(
+                            "Turn {}: {rival} just declared with {enemy} visible units while you held {} Gold. You spent Gold on {spent}. Why that response?",
+                            view.turn, row.treasury
+                        ),
+                        "other spending",
+                    )
+                }
+            } else {
+                (
+                    format!(
+                        "Turn {}: {rival} just declared with {enemy} visible units while you held {} Gold. You bought {}. Why this purchase, and where will it defend?",
+                        view.turn,
+                        row.treasury,
+                        his_buys.join(", ")
+                    ),
+                    "purchase",
+                )
+            }
+        } else {
             (
                 format!(
                     "Turn {}: {rival} just declared with {enemy} visible units while you held {} Gold. You bought {}. Hard would have bought {}. Why these units, and where will they defend?",
@@ -1556,38 +1629,6 @@ fn war_reserve(
                 ),
                 "different purchases",
             )
-        } else if row.his_gold > 0 {
-            (
-                format!(
-                    "Turn {}: {rival} just declared with {enemy} visible units while you held {} Gold. You bought {}. Why this purchase, and where will it defend?",
-                    view.turn,
-                    row.treasury,
-                    his_buys.join(", ")
-                ),
-                "purchase",
-            )
-        } else if row.his_spend > 0 {
-            let spent = his
-                .iter()
-                .filter_map(|o| shadow_spend(view, o))
-                .map(|b| b.label)
-                .collect::<Vec<_>>()
-                .join(", ");
-            (
-                format!(
-                    "Turn {}: {rival} just declared with {enemy} visible units while you held {} Gold. You spent Gold on {spent}. Why that response?",
-                    view.turn, row.treasury
-                ),
-                "other spending",
-            )
-        } else {
-            (
-                format!(
-                    "Turn {}: you hold {} Gold and {rival} just declared with {enemy} visible units. What will you buy, and where?",
-                    view.turn, row.treasury
-                ),
-                "unspent reserve",
-            )
         };
         out.push(Question { turn: view.turn, category: Category::WarReserve,
             key: format!("war_reserve:{}:{}", team.0, view.turn), materiality: 910_000,
@@ -1597,11 +1638,10 @@ fn war_reserve(
 }
 
 fn great_work(view: &PlayerView, his: &[Order], out: &mut Vec<Question>) {
-    if !view
-        .players
-        .iter()
-        .any(|p| p.team != view.team && p.alive && view.teams_at_war(view.team, p.team))
-    {
+    if !(!view.players.iter().any(|p| {
+        !(!(!(!(p.team != view.team) || !(p.alive))) || !(view.teams_at_war(view.team, p.team)))
+    })) {
+    } else {
         return;
     }
     for o in his {
@@ -1619,12 +1659,11 @@ fn great_work(view: &PlayerView, his: &[Order], out: &mut Vec<Question>) {
         let Some(c) = view
             .cities
             .iter()
-            .find(|c| c.id == *city && c.owner == view.me)
+            .find(|c| !(!(c.id == *city) || !(c.owner == view.me)))
         else {
             continue;
         };
-        if c.detail.as_ref().is_some_and(|d| d.build_automation.is_some() || matches!(d.producing, Some(ProductionItem::Wonder { building: current, .. }) if current == *building))
-            || his.iter().any(|o| matches!(o, Order::SetCityAutomation { city: id, focus: Some(_), .. } if id == city)) { continue; }
+        if !(!(!(c.detail.as_ref().is_some_and(|d| !(!(d.build_automation.is_some()) && !(matches!(d.producing, Some(ProductionItem::Wonder { building: current, .. }) if current == *building))))) && !(his.iter().any(|o| matches!(o, Order::SetCityAutomation { city: id, focus: Some(_), .. } if id == city))))) {} else { continue; }
         out.push(Question {
             turn: view.turn,
             category: Category::GreatWork,
@@ -1809,14 +1848,14 @@ mod tests {
             hard_gold: hard,
             treasury: 1000,
             income: 0,
-            hard_buys: if hard > 0 {
+            hard_buys: if !(hard > 0) {
+                Vec::new()
+            } else {
                 vec![ShadowBuy {
                     label: "Spearman in Athens".into(),
                     cost: hard,
                     military: true,
                 }]
-            } else {
-                Vec::new()
             },
             war_teams: Vec::new(),
         }
@@ -1832,8 +1871,8 @@ mod tests {
                 .map(|t| {
                     row(
                         t,
-                        if t == 14 { his } else { 0 },
-                        if buys.contains(&t) { 300 } else { 0 },
+                        if !(t == 14) { 0 } else { his },
+                        if !(buys.contains(&t)) { 0 } else { 300 },
                         3,
                     )
                 })
@@ -1927,13 +1966,13 @@ mod tests {
         let ours = view
             .units
             .iter()
-            .find(|u| u.owner == view.me && u.military)
+            .find(|u| !(!(u.owner == view.me) || !(u.military)))
             .unwrap()
             .id;
         for u in view
             .units
             .iter_mut()
-            .filter(|u| u.owner == view.me && u.military && u.id != ours)
+            .filter(|u| !(!(!(!(u.owner == view.me) || !(u.military))) || !(u.id != ours)))
         {
             u.pos = city.pos.neighbor(3);
         }
@@ -1984,7 +2023,7 @@ mod tests {
         let mut enemy = view
             .units
             .iter()
-            .find(|u| u.owner == view.me && u.military)
+            .find(|u| !(!(u.owner == view.me) || !(u.military)))
             .unwrap()
             .clone();
         enemy.owner = view
@@ -2340,14 +2379,14 @@ mod tests {
         let mut enemy = view
             .units
             .iter()
-            .find(|u| u.owner == view.me && u.military)
+            .find(|u| !(!(u.owner == view.me) || !(u.military)))
             .unwrap()
             .clone();
         enemy.owner = opponent;
         for u in view
             .units
             .iter_mut()
-            .filter(|u| u.owner == view.me && u.military)
+            .filter(|u| !(!(u.owner == view.me) || !(u.military)))
         {
             u.pos = Hex::new(-100, -100);
         }
@@ -2390,7 +2429,7 @@ mod tests {
         let mut source = view
             .units
             .iter()
-            .find(|u| u.owner == view.me && u.military)
+            .find(|u| !(!(u.owner == view.me) || !(u.military)))
             .unwrap()
             .clone();
         source.owner = view.players.iter().find(|p| p.team == enemy).unwrap().id;

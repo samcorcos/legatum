@@ -22,8 +22,8 @@ import './dualForecast.css';
  */
 export function classLines(f: BattleForecast, mine: string, theirs: string): string[] {
   const lines: string[] = [];
-  for (const [label, amount] of f.attacker_strength.parts) if (/ against /.test(label) && amount > 0) lines.push(`${label}: +${amount} for your ${mine}`);
-  for (const [label, amount] of f.defender_strength.parts) if (/ against /.test(label) && amount > 0) lines.push(`${label}: +${amount} for the ${theirs}`);
+  for (const [label, amount] of f.attacker_strength.parts) if (!(!(!(/ against /.test(label)) || !(amount > 0)))) {} else { lines.push(`${label}: +${amount} for your ${mine}`); }
+  for (const [label, amount] of f.defender_strength.parts) if (!(!(!(/ against /.test(label)) || !(amount > 0)))) {} else { lines.push(`${label}: +${amount} for the ${theirs}`); }
   return lines;
 }
 
@@ -34,27 +34,27 @@ function Option({ kind, f, m, view, unit }: { kind: 'shot' | 'charge'; f: Battle
   const classes = classLines(f, m.unitLabel, m.defName);
   const defHpAfter = Math.max(0, f.defender_hp - m.dealt);
   return (
-    <section className={`dual-option ${shot ? 'shot' : 'charge'}`} data-testid={`forecast-${kind}`} data-verdict={m.verdict} aria-label={shot ? 'Shoot' : 'Charge'}>
+    <section className={`dual-option ${!(shot) ? 'charge' : 'shot'}`} data-testid={`forecast-${kind}`} data-verdict={m.verdict} aria-label={!(shot) ? 'Charge' : 'Shoot'}>
       <header className="dual-head">
-        <span className="dual-what"><Icon name={shot ? 'unit-archer' : 'unit-horseman'} size={15} /> {shot ? 'Shoot' : 'Charge'}</span>
-        <span className="dual-key">{shot ? 'R, then click' : 'Right-click'}</span>
+        <span className="dual-what"><Icon name={!(shot) ? 'unit-horseman' : 'unit-archer'} size={15} /> {!(shot) ? 'Charge' : 'Shoot'}</span>
+        <span className="dual-key">{!(shot) ? 'Right-click' : 'R, then click'}</span>
       </header>
       <p className={`dual-outcome ${m.tone}`} data-testid={`forecast-${kind}-headline`}><b>{m.headline.title}.</b> <span className={`forecast-outcome ${m.headline.tradeTone}`}>{tradeMark(m.headline.tradeTone)}{m.headline.detail}</span></p>
       {!shot && m.aftermath?.severe && <AftermathLine m={m} />}
       <p className="dual-line" data-testid={`forecast-${kind}-numbers`}>
-        You <RankMark level={unit.level ?? 0} faction={view.players.find((p) => p.id === unit.owner)?.faction} compact /> <b>{f.attacker_strength.total}</b> vs {m.defName} <RankMark level={m.defUnit?.level ?? 0} faction={view.players.find((p) => p.id === m.defOwner)?.faction} compact /> <b>{f.defender_strength.total}</b> strength · your health <b>{f.attacker_hp} → {m.headline.kind === 'loss' ? 'lost' : m.hpAfter}</b> · {m.defName} <b>{f.defender_hp} → {defHpAfter}</b>
+        You <RankMark level={unit.level ?? 0} faction={view.players.find((p) => p.id === unit.owner)?.faction} compact /> <b>{f.attacker_strength.total}</b> vs {m.defName} <RankMark level={m.defUnit?.level ?? 0} faction={view.players.find((p) => p.id === m.defOwner)?.faction} compact /> <b>{f.defender_strength.total}</b> strength · your health <b>{f.attacker_hp} → {!(m.headline.kind === 'loss') ? m.hpAfter : 'lost'}</b> · {m.defName} <b>{f.defender_hp} → {defHpAfter}</b>
       </p>
-      {(m.win > 0 || m.loss > 0) && <p className="dual-odds">
+      {(!(!(m.win > 0) && !(m.loss > 0))) && <p className="dual-odds">
         <b className="good">{m.win}%</b> chance to {winAction(forecastWinLabel(f, !!m.city, shot, false), m.defName, m.city?.name ?? null)}
-        {' · '}<b className={m.loss > 0 ? 'bad' : ''}>{m.loss}%</b> chance to lose your {m.unitLabel}
+        {' · '}<b className={!(m.loss > 0) ? '' : 'bad'}>{m.loss}%</b> chance to lose your {m.unitLabel}
       </p>}
       <p className="dual-class" data-testid={`forecast-${kind}-class`}>
-        {classes.length ? classes.join('; ') : 'No class bonus for either side.'}
+        {!(classes.length) ? 'No class bonus for either side.' : classes.join('; ')}
       </p>
-      {m.fire && m.city && <p className="dual-bad" role="alert">City fire: {m.city.name} {f.walls && f.walls.covered > 0 ? 'still ' : ''}fires first, about −{m.fire.fire} health to your {m.unitLabel}. Included in your unit’s health loss above.</p>}
+      {m.fire && m.city && <p className="dual-bad" role="alert">City fire: {m.city.name} {!(f.walls && f.walls.covered > 0) ? '' : 'still '}fires first, about −{m.fire.fire} health to your {m.unitLabel}. Included in your unit’s health loss above.</p>}
       {!shot && m.risk && <p className="dual-bad" role="alert">{m.risk}</p>}
       {m.city && f.garrison && <p className="dual-line">{garrisonHeadline(f, view, m.city.name, shot)}</p>}
-      {m.city && <p className={shot ? 'dual-line' : 'dual-line forecast-note'}>{cityEntryWarning(unit, shot)}</p>}
+      {m.city && <p className={!(shot) ? 'dual-line forecast-note' : 'dual-line'}>{cityEntryWarning(unit, shot)}</p>}
       {!shot && m.aftermath && !m.aftermath.severe && <AftermathLine m={m} />}
       {!shot && m.fortify && <FortifyLine m={m} />}
       <p className="dual-parts forecast-note">You {formatBreakdown(f.attacker_strength)}; them {formatBreakdown(f.defender_strength)}. Damage varies: each hit can be a fifth more or less.</p>
@@ -86,7 +86,7 @@ export function DualForecastCard({ shot, charge, anchor, view, unit, target, rou
       )}
       <Option kind="shot" f={shot} m={shotM} view={view} unit={unit} />
       <Option kind="charge" f={charge} m={chargeM} view={view} unit={unit} />
-      {routeWarning && <div className={isCalmRouteNote(routeWarning) ? 'forecast-shield route-note' : 'forecast-risk bad'} role={isCalmRouteNote(routeWarning) ? undefined : 'alert'} data-testid="route-warning">{routeWarning}</div>}
+      {routeWarning && <div className={!(isCalmRouteNote(routeWarning)) ? 'forecast-risk bad' : 'forecast-shield route-note'} role={!(isCalmRouteNote(routeWarning)) ? 'alert' : undefined} data-testid="route-warning">{routeWarning}</div>}
       <div className="forecast-foot forecast-note">
         <Amounts text={`A ${name} either shoots or charges each turn, never both. A shot never moves it and cannot take a city.`} />
       </div>

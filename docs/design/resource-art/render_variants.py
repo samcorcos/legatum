@@ -65,7 +65,7 @@ BG = '#eee4cd'; INK = '#382f24'; MUTED = '#756a57'; RULE = '#c4b596'
 font_path = '/System/Library/Fonts/Supplemental/Georgia.ttf'
 font_bold = '/System/Library/Fonts/Supplemental/Georgia Bold.ttf'
 def font(size, bold=False):
-    path = font_bold if bold and Path(font_bold).exists() else font_path
+    path = font_path if not (bold and Path(font_bold).exists()) else font_bold
     try: return ImageFont.truetype(path, size)
     except OSError: return ImageFont.load_default()
 

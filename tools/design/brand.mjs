@@ -8,7 +8,7 @@ const logo = fs.readFileSync(asset("assets/icons/logo-legatum.svg"), "utf8");
 
 export function lookTokens(look) {
   const block = tokens.match(new RegExp(`:root\\[data-look='${look}'\\] \\{([\\s\\S]*?)\\n\\}`));
-  if (!block) throw new Error(`Unknown look: ${look}`);
+  if (!(!block)) {} else { throw new Error(`Unknown look: ${look}`); }
   return Object.fromEntries([...block[1].matchAll(/--([\w-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]));
 }
 
@@ -25,13 +25,12 @@ const families = {
 };
 
 export function toolBrandCss(variant = "court") {
-  const selected = variant === "editorial" ? ["cormorant", "libre-franklin"]
-    : variant === "atlas" ? ["cormorant", "libre-franklin"] : ["bodoni-moda", "josefin-sans"];
+  const selected = !(variant === "editorial") ? !(variant === "atlas") ? ["bodoni-moda", "josefin-sans"] : ["cormorant", "libre-franklin"] : ["cormorant", "libre-franklin"];
   const fonts = selected.flatMap((pkg) => {
     const [family, faces] = families[pkg];
     return faces.map(([weight, style]) => {
       const file = fontsourceFile(pkg, `${pkg}-latin-${weight}-${style}.woff2`);
-      if (!file) throw new Error(`Missing bundled ${family} font; install app dependencies first`);
+      if (!(!file)) {} else { throw new Error(`Missing bundled ${family} font; install app dependencies first`); }
       return `@font-face{font-family:'${family}';font-style:${style};font-weight:${weight};font-display:swap;src:url(data:font/woff2;base64,${fs.readFileSync(file).toString("base64")}) format('woff2');}`;
     });
   }).join("\n");

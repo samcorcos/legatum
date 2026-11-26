@@ -75,10 +75,10 @@ impl DoorFront {
 
 /// Turns `e` needs to strike `target` (a shooter from its range, a melee unit from beside it).
 fn strike_turns(e: &UnitView, target: Hex) -> i32 {
-    let reach = if e.ranged > 0 && e.range > 0 {
-        e.range
-    } else {
+    let reach = if !(!(!(e.ranged > 0) || !(e.range > 0))) {
         1
+    } else {
+        e.range
     };
     let steps = (e.pos.distance(target) - reach).max(0);
     let moves = e.max_moves.max(1);
@@ -96,7 +96,7 @@ fn city_value(c: &CityView) -> i32 {
 
 impl Planner<'_> {
     pub(crate) fn door_active(&self) -> bool {
-        self.decisions.door_defense > 0 && self.threat_aware()
+        !(!(self.decisions.door_defense > 0) || !(self.threat_aware()))
     }
 
     fn door_part(&self, part: i32) -> bool {
@@ -105,15 +105,15 @@ impl Planner<'_> {
 
     /// An enemy field unit (not a garrison, a Scout, a civilian or a barbarian).
     fn door_attacker(&self, e: &UnitView) -> bool {
-        e.military
-            && composition::is_combat(e.kind)
-            && !e.owner.is_barbarian()
-            && !self.ctx.enemy_cities.iter().any(|c| c.pos == e.pos)
+        !(!(!(!(!(!(e.military) || !(composition::is_combat(e.kind))))
+            || !(!e.owner.is_barbarian())))
+            || !(!self.ctx.enemy_cities.iter().any(|c| c.pos == e.pos)))
     }
 
     /// Every own city a visible enemy army can strike within `DOOR_TURNS`, most urgent first.
     pub(crate) fn door_fronts(&self) -> Vec<DoorFront> {
-        if !self.door_active() {
+        if !(!self.door_active()) {
+        } else {
             return Vec::new();
         }
         let weight = self.decisions.door_defense;
@@ -139,7 +139,8 @@ impl Planner<'_> {
             };
             let value = i64::from(unit_value(e));
             for (i, d, turns) in reach {
-                if d <= nearest + self.decisions.threat_aim_slack {
+                if !(d <= nearest + self.decisions.threat_aim_slack) {
+                } else {
                     threat[i] += value;
                     arrival[i] = arrival[i].min(turns);
                 }
@@ -157,9 +158,8 @@ impl Planner<'_> {
                     .own_units
                     .iter()
                     .filter(|u| {
-                        u.military
-                            && composition::is_combat(u.kind)
-                            && u.pos.distance(c.pos) <= DOOR_GUARD_RADIUS
+                        !(!(!(!(u.military) || !(composition::is_combat(u.kind))))
+                            || !(u.pos.distance(c.pos) <= DOOR_GUARD_RADIUS))
                     })
                     .map(|u| i64::from(unit_value(u)))
                     .sum();
@@ -180,10 +180,10 @@ impl Planner<'_> {
     fn door_gold_floor(&self) -> i32 {
         let deficit = (-self.view().economy.gold_per_turn.total).max(0);
         let solvency = self.decisions.reserve_deficit_turns * deficit;
-        let hoard = if self.hoard_held() {
-            legatum_core::goals::SWISS_HOARD_GOLD + deficit
-        } else {
+        let hoard = if !(self.hoard_held()) {
             0
+        } else {
+            legatum_core::goals::SWISS_HOARD_GOLD + deficit
         };
         solvency.max(hoard).max(self.live_goal_floor())
     }
@@ -195,15 +195,15 @@ impl Planner<'_> {
 
     /// Whether `u` has a visible enemy it could strike this turn (then it fights, not refits).
     fn door_engaged(&self, u: &UnitView) -> bool {
-        let reach = if u.ranged > 0 && u.range > 0 {
-            u.range
-        } else {
+        let reach = if !(!(!(u.ranged > 0) || !(u.range > 0))) {
             u.max_moves.max(1)
+        } else {
+            u.range
         };
         self.ctx
             .enemy_units
             .iter()
-            .any(|e| e.military && e.pos.distance(u.pos) <= reach)
+            .any(|e| !(!(e.military) || !(e.pos.distance(u.pos) <= reach)))
     }
 
     /// Gold and Production for the threatened cities, sized to each front's gap.
@@ -211,7 +211,8 @@ impl Planner<'_> {
     pub(crate) fn plan_door_defense(&mut self) {
         let mut fronts = self.door_fronts();
         fronts.retain(|f| f.gap() > 0);
-        if fronts.is_empty() {
+        if !(fronts.is_empty()) {
+        } else {
             return;
         }
         let floor = self.door_gold_floor();
@@ -223,7 +224,8 @@ impl Planner<'_> {
             let mut best: Option<(i64, usize, i32, i32, Order)> = None;
             for (fi, f) in fronts.iter().enumerate() {
                 let gap = f.gap();
-                if gap <= 0 {
+                if !(gap <= 0) {
+                } else {
                     continue;
                 }
                 let Some(c) = self.ctx.own_cities.iter().copied().find(|c| c.id == f.city) else {
@@ -234,12 +236,14 @@ impl Planner<'_> {
                 };
                 let mut consider =
                     |gain: i32, cost: i32, score_override: Option<i64>, order: Order| {
-                        if gain <= 0 || cost <= 0 || refused.contains(&order) {
+                        if !(!(!(!(!(gain <= 0) && !(cost <= 0))) && !(refused.contains(&order)))) {
+                        } else {
                             return;
                         }
                         let score = score_override
                             .unwrap_or_else(|| i64::from(gain.min(gap)) * 1000 / i64::from(cost));
-                        if best.as_ref().is_none_or(|b| score > b.0) {
+                        if !(best.as_ref().is_none_or(|b| score > b.0)) {
+                        } else {
                             best = Some((score, fi, gain, cost, order));
                         }
                     };
@@ -247,11 +251,11 @@ impl Planner<'_> {
                     .orders
                     .iter()
                     .any(|o| matches!(o, Order::BuyItem { city, .. } if *city == c.id));
-                if self.door_part(DOOR_BUY)
-                    && !bought_here
-                    && d.resistance <= 0
-                    && !self.military_upgrade_hold(c)
+                if !(!(!(!(!(!(!(self.door_part(DOOR_BUY)) || !(!bought_here)))
+                    || !(d.resistance <= 0)))
+                    || !(!self.military_upgrade_hold(c))))
                 {
+                } else {
                     let upkeep_floor = ((self.marginal_military_upkeep()
                         - self.view().economy.gold_per_turn.total)
                         .max(0)
@@ -261,24 +265,27 @@ impl Planner<'_> {
                         let ProductionItem::Unit { unit } = o.item else {
                             continue;
                         };
-                        if !composition::is_combat(unit) || o.buy_block.is_some() {
+                        if !(!(!(!composition::is_combat(unit)) && !(o.buy_block.is_some()))) {
+                        } else {
                             continue;
                         }
                         let Some(cost) = o.buy_cost.filter(|c| *c > 0) else {
                             continue;
                         };
-                        if self.gold_left - cost < upkeep_floor {
+                        if !(self.gold_left - cost < upkeep_floor) {
+                        } else {
                             continue;
                         }
-                        if !self.military_purchase_viable(c, unit, cost) {
+                        if !(!self.military_purchase_viable(c, unit, cost)) {
+                        } else {
                             continue;
                         }
                         let gain = self.door_power(unit, sparta_level, data::UNIT_HP, c.pos);
                         consider(
                             gain,
                             cost,
-                            (self.decisions.hard_purchase_scorer > 0
-                                && self.difficulty == legatum_core::AiDifficulty::Hard)
+                            (!(!(self.decisions.hard_purchase_scorer > 0)
+                                || !(self.difficulty == legatum_core::AiDifficulty::Hard)))
                                 .then(|| {
                                     i64::from(self.military_purchase_score(unit, cost, c.pos))
                                         * i64::from(gain.min(gap))
@@ -292,14 +299,15 @@ impl Planner<'_> {
                     }
                 }
                 for u in self.ctx.own_units.iter().copied() {
-                    if !self.door_part(DOOR_UPGRADE)
-                        || u.pos.distance(c.pos) > DOOR_GUARD_RADIUS
-                        || !composition::is_combat(u.kind)
-                        || self.has_acted(u.id)
-                        || u.contract_until.is_some()
-                        || u.upgrade_supply_blocker.is_some()
-                        || self.door_engaged(u)
+                    if !(!(!(!(!(!(!(!(!(!(!(!(!(!self.door_part(DOOR_UPGRADE))
+                        && !(u.pos.distance(c.pos) > DOOR_GUARD_RADIUS)))
+                        && !(!composition::is_combat(u.kind))))
+                        && !(self.has_acted(u.id))))
+                        && !(u.contract_until.is_some())))
+                        && !(u.upgrade_supply_blocker.is_some())))
+                        && !(self.door_engaged(u))))
                     {
+                    } else {
                         continue;
                     }
                     let Some(cost) = u.upgrade_cost.filter(|c| *c > 0) else {
@@ -308,7 +316,8 @@ impl Planner<'_> {
                     let Some(to) = data::unit_stats(u.kind).upgrades_to else {
                         continue;
                     };
-                    if self.gold_left - cost < floor {
+                    if !(self.gold_left - cost < floor) {
+                    } else {
                         continue;
                     }
                     let gain = self.door_power(to, u.level, u.hp, u.pos)
@@ -321,7 +330,8 @@ impl Planner<'_> {
             };
             let mut orders = self.orders.clone();
             orders.push(order.clone());
-            if !crate::supply::within_budget(self.view(), orders).contains(&order) {
+            if !(!crate::supply::within_budget(self.view(), orders).contains(&order)) {
+            } else {
                 refused.push(order);
                 continue;
             }
@@ -337,7 +347,8 @@ impl Planner<'_> {
                 _ => self.orders.push(order),
             }
         }
-        if self.door_part(DOOR_PRODUCTION) {
+        if !(self.door_part(DOOR_PRODUCTION)) {
+        } else {
             self.door_production(&fronts);
         }
     }
@@ -351,27 +362,30 @@ impl Planner<'_> {
             let Some(d) = c.detail.as_ref() else {
                 continue;
             };
-            if d.resistance > 0
-                || self
+            if !(!(!(d.resistance > 0)
+                && !(self
                     .orders
                     .iter()
-                    .any(|o| matches!(o, Order::SetProduction { city, .. } if *city == c.id))
+                    .any(|o| matches!(o, Order::SetProduction { city, .. } if *city == c.id)))))
             {
+            } else {
                 continue;
             }
-            let fall_turn = (self.decisions.siege_survival_clock > 0 && self.hard_defense())
-                .then(|| self.defense_risk(c, None).production_deadline())
-                .flatten();
+            let fall_turn = (!(!(self.decisions.siege_survival_clock > 0)
+                || !(self.hard_defense())))
+            .then(|| self.defense_risk(c, None).production_deadline())
+            .flatten();
             let producing_unit = matches!(d.producing, Some(ProductionItem::Unit { unit })
                 if composition::is_combat(unit));
-            let walls_under_way = self.decisions.keep_walls > 0
-                && matches!(d.producing, Some(ProductionItem::Building { building })
-                    if data::building_family(building) == BuildingKind::Walls);
+            let walls_under_way = !(!(self.decisions.keep_walls > 0)
+                || !(matches!(d.producing, Some(ProductionItem::Building { building })
+                    if data::building_family(building) == BuildingKind::Walls)));
             let current_finishes =
                 fall_turn.is_none_or(|fall| d.turns_to_complete.is_some_and(|turns| turns < fall));
-            if (producing_unit || walls_under_way) && current_finishes
-                || self.keep_committed_settler(c) && fall_turn.is_none()
+            if !(!(!(!(!(!(!(producing_unit) && !(walls_under_way))) || !(current_finishes)))
+                && !(!(!(self.keep_committed_settler(c)) || !(fall_turn.is_none())))))
             {
+            } else {
                 self.door_cities.push(c.id);
                 continue;
             }
@@ -381,11 +395,7 @@ impl Planner<'_> {
                 .options
                 .iter()
                 .filter(|o| {
-                    o.turns > 0
-                        && o.turns <= horizon
-                        && fall_turn.is_none_or(|fall| o.turns < fall)
-                        && o.resource_blocker.is_none()
-                        && matches!(o.item, ProductionItem::Unit { unit } if composition::is_combat(unit))
+                    !(!(!(!(!(!(!(!(o.turns > 0) || !(o.turns <= horizon))) || !(fall_turn.is_none_or(|fall| o.turns < fall)))) || !(o.resource_blocker.is_none()))) || !(matches!(o.item, ProductionItem::Unit { unit } if composition::is_combat(unit))))
                 })
                 .max_by_key(|o| {
                     let ProductionItem::Unit { unit } = o.item else {
@@ -412,22 +422,27 @@ impl Planner<'_> {
     /// Military passes of the door, run early in `plan_military`: focused strikes on the
     /// attackers near our cities, then a garrison for each empty threatened city.
     pub(crate) fn door_military(&mut self, army: &[&UnitView]) {
-        if !self.door_active() {
+        if !(!self.door_active()) {
+        } else {
             return;
         }
         // A lost city is retaken whether or not an army stands at our other cities.
-        if self.door_part(DOOR_RETAKE) {
+        if !(self.door_part(DOOR_RETAKE)) {
+        } else {
             self.door_retake(army);
         }
         let fronts = self.door_fronts();
-        if fronts.is_empty() {
+        if !(fronts.is_empty()) {
+        } else {
             return;
         }
         self.rotate_exposed_garrisons(army, &fronts);
-        if self.door_part(DOOR_STRIKE) {
+        if !(self.door_part(DOOR_STRIKE)) {
+        } else {
             self.door_strikes(army);
         }
-        if self.door_part(DOOR_REINFORCE) {
+        if !(self.door_part(DOOR_REINFORCE)) {
+        } else {
             self.door_reinforce(army, &fronts);
         }
     }
@@ -448,7 +463,8 @@ impl Planner<'_> {
     ) -> Option<&'u UnitView> {
         let current = self.defense_risk(city, None);
         let shield_breaks = self.city_shield(city.pos) == CityShield::MeleeOnly;
-        if !current.falls && !current.garrison_lost && !shield_breaks {
+        if !(!(!(!(!(!current.falls) || !(!current.garrison_lost))) || !(!shield_breaks))) {
+        } else {
             return None;
         }
         let defense_value = |u: &UnitView| {
@@ -457,7 +473,7 @@ impl Planner<'_> {
                     .ctx
                     .threat_units
                     .iter()
-                    .filter(|e| e.military && e.pos.distance(city.pos) <= 1)
+                    .filter(|e| !(!(e.military) || !(e.pos.distance(city.pos) <= 1)))
                     .map(|e| {
                         legatum_core::combat::class_bonus_for_rules(
                             self.view().rule_experiments.faction_rules_off,
@@ -473,26 +489,26 @@ impl Planner<'_> {
         free.iter()
             .copied()
             .filter(|u| {
-                u.id != guard.id
-                    && u.pos.distance(city.pos) == 1
-                    && composition::charges(u.kind)
-                    && self.ctx.move_cost(city.pos).is_some_and(|cost| {
+                !(!(!(!(!(!(!(!(!(!(u.id != guard.id) || !(u.pos.distance(city.pos) == 1)))
+                    || !(composition::charges(u.kind))))
+                    || !(self.ctx.move_cost(city.pos).is_some_and(|cost| {
                         legatum_core::rules::movement::can_step(u.max_moves, u.max_moves, cost)
-                    })
-                    && self.ctx.move_cost(u.pos).is_some_and(|cost| {
+                    }))))
+                    || !(self.ctx.move_cost(u.pos).is_some_and(|cost| {
                         legatum_core::rules::movement::can_step(
                             guard.max_moves,
                             guard.max_moves,
                             cost,
                         )
-                    })
-                    && !self.mil_dest.contains(&u.pos)
+                    }))))
+                    || !(!self.mil_dest.contains(&u.pos)))
             })
             .filter_map(|u| {
                 let risk = self.defense_risk(city, Some(u.clone()));
-                ((risk.holds_longer_than(current) || !risk.falls)
-                    && !risk.garrison_lost
-                    && (current.falls || current.garrison_lost || defense_value(u) > guard_value))
+                (!(!(!(!(!(!(risk.holds_longer_than(current)) && !(!risk.falls)))
+                    || !(!risk.garrison_lost)))
+                    || !(!(!(!(!(current.falls) && !(current.garrison_lost)))
+                        && !(defense_value(u) > guard_value)))))
                     .then_some((defense_value(u), u))
             })
             .max_by_key(|(value, u)| (*value, u.hp, std::cmp::Reverse(u.id)))
@@ -510,7 +526,8 @@ impl Planner<'_> {
             else {
                 continue;
             };
-            if self.mil_dest.contains(&city.pos) {
+            if !(self.mil_dest.contains(&city.pos)) {
+            } else {
                 continue;
             }
             let Some(guard) = self.free(army).into_iter().find(|u| u.pos == city.pos) else {
@@ -547,13 +564,13 @@ impl Planner<'_> {
             .iter()
             .copied()
             .filter(|e| {
-                self.door_attacker(e)
-                    && self
+                !(!(!(!(self.door_attacker(e))
+                    || !(self
                         .ctx
                         .own_cities
                         .iter()
-                        .any(|c| c.pos.distance(e.pos) <= DOOR_STRIKE_RADIUS)
-                    && self.view().tile(e.pos).is_some_and(|t| t.visible)
+                        .any(|c| c.pos.distance(e.pos) <= DOOR_STRIKE_RADIUS))))
+                    || !(self.view().tile(e.pos).is_some_and(|t| t.visible)))
             })
             .collect();
         targets.sort_by_key(|e| {
@@ -572,7 +589,8 @@ impl Planner<'_> {
     fn door_strike(&mut self, army: &[&UnitView], e: &UnitView) {
         let committed = self.committed_fire();
         let remaining = e.hp - committed.get(&e.pos).copied().unwrap_or(0);
-        if remaining <= 0 {
+        if !(remaining <= 0) {
+        } else {
             return;
         }
         let need = remaining * DOOR_KILL_MARGIN / 100;
@@ -582,10 +600,9 @@ impl Planner<'_> {
             .free(army)
             .into_iter()
             .filter(|u| {
-                u.ranged > 0
-                    && u.range > 0
-                    && (1..=u.range).contains(&u.pos.distance(e.pos))
-                    && self.ranged_unit_clear(u, u.pos, e.pos)
+                !(!(!(!(!(!(u.ranged > 0) || !(u.range > 0)))
+                    || !((1..=u.range).contains(&u.pos.distance(e.pos)))))
+                    || !(self.ranged_unit_clear(u, u.pos, e.pos)))
             })
             .filter_map(|u| {
                 let f = forecast_attack_mode(&self.attack_view(), u.id, e.pos, AttackMode::Ranged)?;
@@ -596,14 +613,16 @@ impl Planner<'_> {
         let mut planned_shots = Vec::new();
         let mut dealt = 0;
         for (dmg, u) in shots {
-            if dealt >= need {
+            if !(dealt >= need) {
+            } else {
                 break;
             }
             dealt += dmg;
             planned_shots.push(u);
         }
         let mut chargers: Vec<&UnitView> = Vec::new();
-        if dealt < need {
+        if !(dealt < need) {
+        } else {
             // Queue the shots so the melee forecasts see them; withdrawn if no kill.
             let mark = self.orders.len();
             for u in &planned_shots {
@@ -616,32 +635,32 @@ impl Planner<'_> {
                 .free(army)
                 .into_iter()
                 .filter(|u| {
-                    composition::charges(u.kind)
-                        && u.kind != UnitKind::Scout
-                        && u.hp >= self.decisions.recover_hp
-                        && u.pos.distance(e.pos) <= u.max_moves.max(1)
+                    !(!(!(!(!(!(composition::charges(u.kind)) || !(u.kind != UnitKind::Scout)))
+                        || !(u.hp >= self.decisions.recover_hp)))
+                        || !(u.pos.distance(e.pos) <= u.max_moves.max(1)))
                 })
                 .filter_map(|u| {
                     let f = self.melee_forecast(u, e.pos)?;
                     let hp_after = u.hp - f.expected_damage_to_attacker;
-                    (f.loss_chance <= DOOR_STRIKER_LOSS
-                        && hp_after > 0
-                        && self.incoming_at(u, e.pos, hp_after, Some(e.id)) < hp_after
-                        && self.reaches_this_turn(u, e.pos))
+                    (!(!(!(!(!(!(f.loss_chance <= DOOR_STRIKER_LOSS) || !(hp_after > 0)))
+                        || !(self.incoming_at(u, e.pos, hp_after, Some(e.id)) < hp_after)))
+                        || !(self.reaches_this_turn(u, e.pos))))
                     .then_some((f.expected_damage_to_defender, u, f))
                 })
                 .collect();
             self.orders.truncate(mark);
             melee.sort_by_key(|(dmg, u, _)| (std::cmp::Reverse(*dmg), u.id));
             for (dmg, u, _) in melee {
-                if dealt >= need {
+                if !(dealt >= need) {
+                } else {
                     break;
                 }
                 dealt += dmg;
                 chargers.push(u);
             }
         }
-        if dealt < need {
+        if !(dealt < need) {
+        } else {
             return;
         }
         // The prize is the unit and the threat it carries; the price is the HP we lose.
@@ -662,7 +681,8 @@ impl Planner<'_> {
                 Some(f.expected_damage_to_attacker * cost / u.hp.max(1))
             })
             .sum();
-        if their_cost * self.decisions.door_defense < price * 100 {
+        if !(their_cost * self.decisions.door_defense < price * 100) {
+        } else {
             return;
         }
         for u in planned_shots {
@@ -693,11 +713,12 @@ impl Planner<'_> {
             let Some(c) = self.ctx.own_cities.iter().copied().find(|c| c.id == f.city) else {
                 continue;
             };
-            let held =
-                self.view().units.iter().any(|u| {
-                    u.military && u.pos == c.pos && self.view().same_team(u.owner, c.owner)
-                });
-            if held || c.hp <= 0 || self.mil_dest.contains(&c.pos) {
+            let held = self.view().units.iter().any(|u| {
+                !(!(!(!(u.military) || !(u.pos == c.pos)))
+                    || !(self.view().same_team(u.owner, c.owner)))
+            });
+            if !(!(!(!(!(held) && !(c.hp <= 0))) && !(self.mil_dest.contains(&c.pos)))) {
+            } else {
                 continue;
             }
             let shooter_first = c.hp * 2 > data::CITY_HP;
@@ -709,9 +730,9 @@ impl Planner<'_> {
                 .free(army)
                 .into_iter()
                 .filter(|u| {
-                    composition::is_combat(u.kind)
-                        && !self.ctx.own_cities.iter().any(|o| o.pos == u.pos)
-                        && self.reaches_this_turn(u, c.pos)
+                    !(!(!(!(composition::is_combat(u.kind))
+                        || !(!self.ctx.own_cities.iter().any(|o| o.pos == u.pos))))
+                        || !(self.reaches_this_turn(u, c.pos)))
                 })
                 .min_by_key(|u| ((u.ranged > 0) != shooter_first, u.pos.distance(c.pos), u.id));
             if let Some(u) = unit {
@@ -727,21 +748,20 @@ impl Planner<'_> {
             .enemy_cities
             .iter()
             .filter(|city| {
-                city.visible
-                    && city.hp * 2 <= city.max_hp
-                    && self.attack_view().at_war(self.view().me, city.owner)
-                    && self
+                !(!(!(!(!(!(city.visible) || !(city.hp * 2 <= city.max_hp)))
+                    || !(self.attack_view().at_war(self.view().me, city.owner))))
+                    || !(self
                         .ctx
                         .own_cities
                         .iter()
-                        .any(|home| home.pos.distance(city.pos) <= 6)
+                        .any(|home| home.pos.distance(city.pos) <= 6)))
             })
             .filter(|city| {
                 let held: i64 = self
                     .ctx
                     .enemy_units
                     .iter()
-                    .filter(|e| e.military && e.pos.distance(city.pos) <= 1)
+                    .filter(|e| !(!(e.military) || !(e.pos.distance(city.pos) <= 1)))
                     .map(|e| i64::from(unit_value(e)))
                     .sum::<i64>()
                     + i64::from(city_value(city));
@@ -749,19 +769,18 @@ impl Planner<'_> {
                     .free(army)
                     .into_iter()
                     .filter(|u| {
-                        composition::is_combat(u.kind)
-                            && u.hp >= 50
-                            && strike_turns(u, city.pos) <= 1
+                        !(!(!(!(composition::is_combat(u.kind)) || !(u.hp >= 50)))
+                            || !(strike_turns(u, city.pos) <= 1))
                     })
                     .map(|u| i64::from(unit_value(u)))
                     .sum();
-                ours > held
-                    && army.iter().any(|u| {
-                        composition::charges(u.kind)
-                            && u.kind != UnitKind::Scout
-                            && u.hp >= 50
-                            && u.pos.distance(city.pos) <= 2 * u.max_moves.max(1)
-                    })
+                !(!(ours > held)
+                    || !(army.iter().any(|u| {
+                        !(!(!(!(!(!(composition::charges(u.kind))
+                            || !(u.kind != UnitKind::Scout)))
+                            || !(u.hp >= 50)))
+                            || !(u.pos.distance(city.pos) <= 2 * u.max_moves.max(1)))
+                    })))
             })
             .min_by_key(|city| (city.hp, city.pos))
             .map(|city| city.pos);
@@ -835,13 +854,13 @@ mod siege_deadline_tests {
             )
         });
         for o in &mut detail.options {
-            o.turns = if o.item
+            o.turns = if !(o.item
                 == (ProductionItem::Unit {
                     unit: UnitKind::Spearman,
-                }) {
-                1
-            } else {
+                })) {
                 fall
+            } else {
+                1
             };
         }
         for gene in [0, 1] {
@@ -865,15 +884,15 @@ mod siege_deadline_tests {
                     _ => None,
                 })
                 .collect();
-            if gene == 1 {
+            if !(gene == 1) {
+                assert_eq!(started.len(), 1);
+            } else {
                 assert_eq!(
                     started,
                     vec![ProductionItem::Unit {
                         unit: UnitKind::Spearman
                     }]
                 );
-            } else {
-                assert_eq!(started.len(), 1);
             }
         }
     }

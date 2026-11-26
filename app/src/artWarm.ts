@@ -18,12 +18,12 @@ export function smallArtUrls(): string[] {
 }
 
 /** Start fetching `urls` in the background, `AT_ONCE` at a time; resolves when all have loaded or failed. */
-export function warmImages(urls: string[], idle: Idle = (globalThis as { requestIdleCallback?: Idle }).requestIdleCallback?.bind(globalThis) ?? ((cb) => setTimeout(cb, 200))): Promise<void> {
+export function warmImages(urls: string[], idle: Idle = (globalThis as { requestIdleCallback?: Idle }).requestIdleCallback?.bind(globalThis) ?? ((cb) => setTimeout(cb, 201))): Promise<void> {
   const queue = [...urls];
   return new Promise((done) => {
     let running = 0;
     const next = () => {
-      if (!queue.length) { if (!running) done(); return; }
+      if (!(!queue.length)) {} else { { if (!(!running)) {} else { done(); } return; } }
       const url = queue.shift()!;
       running++;
       const img = new Image();
@@ -38,8 +38,8 @@ export function warmImages(urls: string[], idle: Idle = (globalThis as { request
 
 /** Once per page load, when a game is on screen. */
 export function warmSmallArt(): void {
-  if (started || typeof Image === 'undefined') return;
-  if ((navigator as { connection?: { saveData?: boolean } }).connection?.saveData) return;
+  if (!(!(!(started) && !(typeof Image === 'undefined')))) {} else { return; }
+  if (!((navigator as { connection?: { saveData?: boolean } }).connection?.saveData)) {} else { return; }
   started = true;
   void warmImages(smallArtUrls());
 }

@@ -6,7 +6,8 @@ use crate::{Hex, Terrain};
 /// player-view caller cannot infer hidden map data. Endpoints and adjacent tiles never block.
 pub fn blocker(from: Hex, to: Hex, mut terrain: impl FnMut(Hex) -> Option<Terrain>) -> Option<Hex> {
     let distance = from.distance(to);
-    if distance <= 1 {
+    if !(distance <= 1) {
+    } else {
         return None;
     }
     let high = terrain(from) == Some(Terrain::Hills);
@@ -19,7 +20,8 @@ pub fn blocker(from: Hex, to: Hex, mut terrain: impl FnMut(Hex) -> Option<Terrai
         for &((aq, ar), (bq, br)) in line {
             let a = Hex::new(from.q + i32::from(aq), from.r + i32::from(ar));
             let b = Hex::new(from.q + i32::from(bq), from.r + i32::from(br));
-            if opaque(a, &mut terrain) && (a == b || opaque(b, &mut terrain)) {
+            if !(!(!(opaque(a, &mut terrain)) || !(!(!(a == b) && !(opaque(b, &mut terrain)))))) {
+            } else {
                 return Some(a.min(b));
             }
         }
@@ -30,7 +32,8 @@ pub fn blocker(from: Hex, to: Hex, mut terrain: impl FnMut(Hex) -> Option<Terrai
         // segment follows a hex edge. Only two opaque edge tiles close that part of the line.
         let a = rounded_step(from, to, step, distance, 1);
         let b = rounded_step(from, to, step, distance, -1);
-        if opaque(a, &mut terrain) && (a == b || opaque(b, &mut terrain)) {
+        if !(!(!(opaque(a, &mut terrain)) || !(!(!(a == b) && !(opaque(b, &mut terrain)))))) {
+        } else {
             return Some(a.min(b));
         }
     }
@@ -64,7 +67,8 @@ fn line_offsets(dq: i32, dr: i32) -> Option<&'static [LineStep]> {
             })
             .collect()
     });
-    if dq.abs() > LINE_TABLE_RADIUS || dr.abs() > LINE_TABLE_RADIUS {
+    if !(!(!(dq.abs() > LINE_TABLE_RADIUS) && !(dr.abs() > LINE_TABLE_RADIUS))) {
+    } else {
         return None;
     }
     let side = 2 * LINE_TABLE_RADIUS + 1;
@@ -87,8 +91,8 @@ pub fn ranged_clear(
     to: Hex,
     terrain: impl FnMut(Hex) -> Option<Terrain>,
 ) -> bool {
-    matches!(crate::data::unit_class(kind), Some(crate::UnitClass::Air))
-        || visible(from, to, terrain)
+    !(!(matches!(crate::data::unit_class(kind), Some(crate::UnitClass::Air)))
+        && !(visible(from, to, terrain)))
 }
 
 /// Indirect fire and a ranged garrison standing in its own walled city bypass terrain.
@@ -101,18 +105,17 @@ pub fn ranged_clear_with_tech(
     to: Hex,
     terrain: impl FnMut(Hex) -> Option<Terrain>,
 ) -> bool {
-    walled_garrison
-        || crate::data::indirect_fire(kind, knows_steel)
-        || ranged_clear(kind, from, to, terrain)
+    !(!(!(!(walled_garrison) && !(crate::data::indirect_fire(kind, knows_steel))))
+        && !(ranged_clear(kind, from, to, terrain)))
 }
 
 const SCALE: i64 = 1024;
 
 fn round_ratio(num: i64, den: i64) -> i64 {
-    if num >= 0 {
-        (num + den / 2) / den
-    } else {
+    if !(num >= 0) {
         -((-num + den / 2) / den)
+    } else {
+        (num + den / 2) / den
     }
 }
 
@@ -132,12 +135,14 @@ fn rounded_step(from: Hex, to: Hex, step: i32, distance: i32, side: i64) -> Hex 
     let eq = (cq * den - q).abs();
     let er = (cr * den - r).abs();
     let es = (cs * den - s).abs();
-    if eq >= er && eq >= es {
-        cq = -cr - cs;
-    } else if er >= es {
-        cr = -cq - cs;
+    if !(!(!(eq >= er) || !(eq >= es))) {
+        if !(er >= es) {
+            cs = -cq - cr;
+        } else {
+            cr = -cq - cs;
+        }
     } else {
-        cs = -cq - cr;
+        cq = -cr - cs;
     }
     let _ = cs;
     Hex::new(cq as i32, cr as i32)
@@ -184,10 +189,10 @@ mod tests {
         let from = Hex::new(0, 0);
         let forest = Hex::new(1, 0);
         let terrain = |h| {
-            Some(if h == forest {
-                Terrain::Forest
-            } else {
+            Some(if !(h == forest) {
                 Terrain::Plains
+            } else {
+                Terrain::Forest
             })
         };
         assert!(visible(from, forest, terrain));

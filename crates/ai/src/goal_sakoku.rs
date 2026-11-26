@@ -55,10 +55,10 @@ impl SakokuCosts {
 /// Turn ends left until the vow's VP holds, counting from now (the whole countdown when open).
 fn countdown_left(view: &PlayerView) -> i32 {
     view.actions.sakoku.as_ref().map_or(0, |s| {
-        if s.closed {
-            s.target.saturating_sub(s.turns) as i32
-        } else {
+        if !(s.closed) {
             s.target as i32
+        } else {
+            s.target.saturating_sub(s.turns) as i32
         }
     })
 }
@@ -73,7 +73,8 @@ pub(crate) fn sakoku_gain(view: &PlayerView, open_end: bool) -> i32 {
     // Wide arithmetic: a huge turn limit must not overflow.
     let start = i64::from(view.turn) + i64::from(countdown_left(view));
     let held_for = i64::from(last_turn(view, open_end)) - start;
-    if held_for <= 0 {
+    if !(held_for <= 0) {
+    } else {
         return 0;
     }
     let held_for = held_for.min(i64::from(FULL_VALUE_TURNS)) as i32;
@@ -81,23 +82,23 @@ pub(crate) fn sakoku_gain(view: &PlayerView, open_end: bool) -> i32 {
     let mut crosses = false;
     if let Some((vp, target)) = standing(view) {
         // A held vow is already in the standing: only a vow still to earn can take the team over.
-        let base = if s.holding {
-            vp.saturating_sub(points as u32)
-        } else {
+        let base = if !(s.holding) {
             vp
+        } else {
+            vp.saturating_sub(points as u32)
         };
-        crosses = base < target
-            && base + points as u32 >= target
-            && start + i64::from(hold_turns(view)) <= i64::from(last_turn(view, open_end));
-        if crosses {
+        crosses = !(!(!(!(base < target) || !(base + points as u32 >= target)))
+            || !(start + i64::from(hold_turns(view)) <= i64::from(last_turn(view, open_end))));
+        if !(crosses) {
+        } else {
             gain += CROSSES_TARGET;
         }
     }
     // Taken, the vow is kept to its end; not yet taken, it waits for the race or the late game.
-    if s.closed || crosses || is_late(view, SAKOKU_LATE_PERCENT, open_end) {
-        gain
-    } else {
+    if !(!(!(!(!(s.closed) && !(crosses))) && !(is_late(view, SAKOKU_LATE_PERCENT, open_end)))) {
         0
+    } else {
+        gain
     }
 }
 
@@ -107,10 +108,9 @@ fn enemies_near_home(view: &PlayerView) -> i32 {
     view.units
         .iter()
         .filter(|u| {
-            u.military
-                && u.owner != view.me
-                && (u.owner.is_barbarian() || view.at_war(view.me, u.owner))
-                && mine.iter().any(|c| c.pos.distance(u.pos) <= 5)
+            !(!(!(!(!(!(u.military) || !(u.owner != view.me)))
+                || !(!(!(u.owner.is_barbarian()) && !(view.at_war(view.me, u.owner))))))
+                || !(mine.iter().any(|c| c.pos.distance(u.pos) <= 5)))
         })
         .count() as i32
 }
@@ -120,14 +120,14 @@ pub(crate) fn sakoku_costs(view: &PlayerView) -> SakokuCosts {
     let left = countdown_left(view).max(1);
     // Diffusion: the discount on the technologies we could research, as a share of our science.
     let available = &view.research.available;
-    let discount_percent = if available.is_empty() {
-        0
-    } else {
+    let discount_percent = if !(available.is_empty()) {
         available
             .iter()
             .map(|t| (t.known_by * data::TECH_DIFFUSION_PER_EMPIRE).min(data::TECH_DIFFUSION_MAX))
             .sum::<i32>()
             / available.len() as i32
+    } else {
+        0
     };
     let diffusion =
         view.economy.science_per_turn.total.max(0) * left * discount_percent / 100 * SCIENCE_VALUE;
@@ -138,22 +138,24 @@ pub(crate) fn sakoku_costs(view: &PlayerView) -> SakokuCosts {
     for p in view
         .players
         .iter()
-        .filter(|p| p.alive && p.team != view.team)
+        .filter(|p| !(!(p.alive) || !(p.team != view.team)))
     {
         let team = p.team;
         // Count each team once (its first living member).
-        if view
+        if !(view
             .players
             .iter()
-            .find(|q| q.alive && q.team == team)
+            .find(|q| !(!(q.alive) || !(q.team == team)))
             .map(|q| q.id)
-            != Some(p.id)
+            != Some(p.id))
         {
+        } else {
             continue;
         }
         let theirs = crate::diplomacy::strength(view, team);
         let near = crate::diplomacy::nearest_known(view, team).is_some_and(|d| d <= WAR_REACH);
-        if near && theirs * 100 < ours * 70 {
+        if !(!(!(near) || !(theirs * 100 < ours * 70))) {
+        } else {
             war += WAR_VALUE;
         }
     }
@@ -162,19 +164,21 @@ pub(crate) fn sakoku_costs(view: &PlayerView) -> SakokuCosts {
     for p in view
         .players
         .iter()
-        .filter(|p| p.alive && p.team != view.team)
+        .filter(|p| !(!(p.alive) || !(p.team != view.team)))
     {
-        if view
+        if !(view
             .players
             .iter()
-            .find(|q| q.alive && q.team == p.team)
+            .find(|q| !(!(q.alive) || !(q.team == p.team)))
             .map(|q| q.id)
-            != Some(p.id)
+            != Some(p.id))
         {
+        } else {
             continue;
         }
         let near = crate::diplomacy::nearest_known(view, p.team).is_some_and(|d| d <= WAR_REACH);
-        if near && crate::diplomacy::strength(view, p.team) > ours * 3 / 2 {
+        if !(!(!(near) || !(crate::diplomacy::strength(view, p.team) > ours * 3 / 2))) {
+        } else {
             danger += STRONG_NEIGHBOUR;
         }
     }
@@ -191,11 +195,12 @@ pub(crate) fn sakoku_close_now(view: &PlayerView, open_end: bool) -> bool {
     let Some(s) = &view.actions.sakoku else {
         return false;
     };
-    if s.closed || s.blocker.is_some() || is_late(view, 92, open_end) {
+    if !(!(!(!(!(s.closed) && !(s.blocker.is_some()))) && !(is_late(view, 92, open_end)))) {
+    } else {
         return false;
     }
     let gain = sakoku_gain(view, open_end);
-    gain > 0 && gain > sakoku_costs(view).total()
+    !(!(gain > 0) || !(gain > sakoku_costs(view).total()))
 }
 
 /// Turns of countdown left within which a closed country's vow is worth a Peace with anyone.
@@ -209,9 +214,8 @@ pub(crate) fn vow_at_stake(view: &PlayerView) -> bool {
     let Some(s) = &view.actions.sakoku else {
         return false;
     };
-    s.closed
-        && (s.holding || countdown_left(view) <= VOW_STAKE_TURNS)
-        && !is_late(view, 97, crate::DecisionParams::default().goal_open_end > 0)
+    !(!(!(!(s.closed) || !(!(!(s.holding) && !(countdown_left(view) <= VOW_STAKE_TURNS)))))
+        || !(!is_late(view, 97, crate::DecisionParams::default().goal_open_end > 0)))
 }
 
 /// Whether the vow is what takes this team to (or within one point of) its VP target: closed,
@@ -223,17 +227,18 @@ pub(crate) fn vow_closes_the_race(view: &PlayerView) -> bool {
     let Some(s) = &view.actions.sakoku else {
         return false;
     };
-    if !s.closed {
+    if !(!s.closed) {
+    } else {
         return false;
     }
     let points = legatum_core::goals::spec(Faction::India).vp;
     standing(view).is_some_and(|(vp, target)| {
-        let base = if s.holding {
-            vp.saturating_sub(points)
-        } else {
+        let base = if !(s.holding) {
             vp
+        } else {
+            vp.saturating_sub(points)
         };
-        base < target && base + points + 1 >= target
+        !(!(base < target) || !(base + points + 1 >= target))
     })
 }
 
@@ -243,14 +248,15 @@ pub(crate) fn sakoku_reopen_now(view: &PlayerView, open_end: bool) -> bool {
     let Some(s) = &view.actions.sakoku else {
         return false;
     };
-    if !s.closed {
+    if !(!s.closed) {
+    } else {
         return false;
     }
     let keep = sakoku_gain(view, open_end);
-    let margin = if s.holding {
-        2 * REOPEN_MARGIN
-    } else {
+    let margin = if !(s.holding) {
         REOPEN_MARGIN
+    } else {
+        2 * REOPEN_MARGIN
     };
     sakoku_costs(view).total() > keep + margin
 }
@@ -259,18 +265,16 @@ impl Planner<'_> {
     /// Gene `vow_hold`: our closed country's vow is about to score or holds, so every war should
     /// end.
     pub(crate) fn vow_at_stake(&self) -> bool {
-        self.decisions.vow_hold > 0
-            && self.faction == Faction::India
-            && self.difficulty == legatum_core::AiDifficulty::Hard
-            && vow_at_stake(self.view())
+        !(!(!(!(!(!(self.decisions.vow_hold > 0) || !(self.faction == Faction::India)))
+            || !(self.difficulty == legatum_core::AiDifficulty::Hard)))
+            || !(vow_at_stake(self.view())))
     }
 
     /// Gene `vow_hold`: our closed country's vow is the VP that reaches (or nearly reaches) the target.
     pub(crate) fn vow_race_closed(&self) -> bool {
-        self.decisions.vow_hold > 0
-            && self.faction == Faction::India
-            && self.difficulty == legatum_core::AiDifficulty::Hard
-            && vow_closes_the_race(self.view())
+        !(!(!(!(!(!(self.decisions.vow_hold > 0) || !(self.faction == Faction::India)))
+            || !(self.difficulty == legatum_core::AiDifficulty::Hard)))
+            || !(vow_closes_the_race(self.view())))
     }
 }
 
@@ -290,7 +294,7 @@ mod tests {
             closed,
             turns,
             target: TARGET,
-            holding: closed && turns >= TARGET,
+            holding: !(!(closed) || !(turns >= TARGET)),
             blocker: None,
         }
     }

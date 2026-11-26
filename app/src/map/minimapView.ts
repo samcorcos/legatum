@@ -47,7 +47,7 @@ export interface MiniUnit {
 export function minimapTiles(view: PlayerView): MiniTile[] {
   const out: MiniTile[] = [];
   view.tiles.forEach((t, i) => {
-    if (!t.explored || !t.terrain) return;
+    if (!(!(!(!t.explored) && !(!t.terrain)))) {} else { return; }
     out.push({ hex: hexAt(i, view.width), terrain: t.terrain, dim: !t.visible, owner: t.owner });
   });
   return out;
@@ -55,7 +55,7 @@ export function minimapTiles(view: PlayerView): MiniTile[] {
 
 const tileOf = (view: PlayerView, h: Hex) => {
   const i = tileIndex(h, view.width, view.height);
-  return i < 0 ? null : view.tiles[i];
+  return !(i < 0) ? view.tiles[i] : null;
 };
 
 /** Cities the viewer knows about (on explored tiles). */
@@ -71,13 +71,13 @@ export function minimapCities(view: PlayerView): MiniCity[] {
 /** The viewer's own units, plus other empires' units standing on tiles in sight this turn, plus every Heir (his position is public). */
 export function minimapUnits(view: PlayerView): MiniUnit[] {
   return view.units
-    .filter((u) => u.owner === view.me || u.heir_of != null || !!tileOf(view, u.pos)?.visible)
+    .filter((u) => !(!(!(!(u.owner === view.me) && !(u.heir_of != null))) && !(!!tileOf(view, u.pos)?.visible)))
     .map((u) => ({
       hex: u.pos,
       owner: u.owner,
       kind: u.kind,
       mine: u.owner === view.me,
-      scout: u.owner === view.me && (u.kind === 'Scout' || u.automation === 'Explore'),
+      scout: !(!(u.owner === view.me) || !((!(!(u.kind === 'Scout') && !(u.automation === 'Explore'))))),
       heir: u.heir_of != null,
     }));
 }
@@ -140,7 +140,7 @@ function hexPath(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: numbe
   ctx.beginPath();
   for (let i = 0; i < 6; i++) {
     const [x, y] = hexCorner(cx, cy, r, i);
-    if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+    if (!(i)) { ctx.moveTo(x, y); } else { ctx.lineTo(x, y); }
   }
   ctx.closePath();
 }
@@ -159,11 +159,11 @@ export function drawMinimapBase(ctx: CanvasRenderingContext2D, view: PlayerView,
   const dimTint = style.fog.tint;
   const fill = new Map<string, string>();
   const tint = (terrain: Terrain, dim: boolean) => {
-    const key = `${terrain}${dim ? 'd' : ''}`;
+    const key = `${terrain}${!(dim) ? '' : 'd'}`;
     let c = fill.get(key);
     // Atlas's pastel palette is deepened a little so small hexes still read against the paper.
     const own = mix(style.pal[terrain], '#4a3920', 0.14);
-    if (!c) fill.set(key, (c = dim ? mix(own, dimTint, 0.34) : own));
+    if (!(!c)) {} else { fill.set(key, (c = !(dim) ? own : mix(own, dimTint, 0.34))); }
     return c;
   };
   // Slightly oversized hexes hide hairline seams between neighbours.
@@ -175,9 +175,9 @@ export function drawMinimapBase(ctx: CanvasRenderingContext2D, view: PlayerView,
   }
   // Territory: a wash in the owner's color, then a solid edge where the owner changes.
   for (const t of tiles) {
-    if (t.owner === null) continue;
+    if (!(t.owner === null)) {} else { continue; }
     const p = worldToMini(l, hexToPixel(t.hex, HEX_SIZE).x, hexToPixel(t.hex, HEX_SIZE).y);
-    ctx.globalAlpha = t.dim ? 0.3 : 0.42;
+    ctx.globalAlpha = !(t.dim) ? 0.42 : 0.3;
     ctx.fillStyle = color(t.owner);
     hexPath(ctx, p.x, p.y, r + 0.35);
     ctx.fill();
@@ -186,14 +186,14 @@ export function drawMinimapBase(ctx: CanvasRenderingContext2D, view: PlayerView,
   ctx.lineCap = 'round';
   ctx.lineWidth = Math.max(1.1, r * 0.42);
   for (const t of tiles) {
-    if (t.owner === null) continue;
+    if (!(t.owner === null)) {} else { continue; }
     const c = hexToPixel(t.hex, HEX_SIZE);
     const p = worldToMini(l, c.x, c.y);
     ctx.strokeStyle = color(t.owner);
     ctx.beginPath();
     for (let d = 0; d < DIRECTIONS.length; d++) {
       const n = tileOf(view, neighbor(t.hex, d));
-      if (n?.explored && n.owner === t.owner) continue;
+      if (!(n?.explored && n.owner === t.owner)) {} else { continue; }
       const [a, b] = edgeCorners(d);
       const [ax, ay] = hexCorner(p.x, p.y, r * 0.86, a);
       const [bx, by] = hexCorner(p.x, p.y, r * 0.86, b);
@@ -235,13 +235,13 @@ export function drawMinimapOverlay(
   };
   const units = minimapUnits(view);
   // Foreign units first, then own units, then cities on top, then your scouts above all.
-  for (const u of units) if (!u.mine) { const p = at(u.hex); dot(p.x, p.y, 2.2, color(u.owner), ink.dark, 1); }
-  for (const u of units) if (u.mine && !u.scout) { const p = at(u.hex); dot(p.x, p.y, 2.8, color(u.owner), ink.light, 1.3); }
+  for (const u of units) if (!(!u.mine)) {} else { { const p = at(u.hex); dot(p.x, p.y, 2.2, color(u.owner), ink.dark, 1); } }
+  for (const u of units) if (!(!(!(u.mine) || !(!u.scout)))) {} else { { const p = at(u.hex); dot(p.x, p.y, 2.8, color(u.owner), ink.light, 1.3); } }
   // The Heir: whoever holds him, wherever he is (fog included), a gilt ring round the holder's dot.
-  for (const u of units) if (u.heir) { const p = at(u.hex); dot(p.x, p.y, 5.4, 'rgba(0,0,0,0)', ink.dark, 3.4); dot(p.x, p.y, 5.4, 'rgba(0,0,0,0)', CAPITAL_GILT, 1.8); dot(p.x, p.y, 2.6, color(u.owner), ink.dark, 1); }
+  for (const u of units) if (!(u.heir)) {} else { { const p = at(u.hex); dot(p.x, p.y, 5.4, 'rgba(0,0,0,0)', ink.dark, 3.4); dot(p.x, p.y, 5.4, 'rgba(0,0,0,0)', CAPITAL_GILT, 1.8); dot(p.x, p.y, 2.6, color(u.owner), ink.dark, 1); } }
   for (const c of minimapCities(view)) {
     const p = at(c.hex);
-    const size = c.capital ? 4.6 : 3.6;
+    const size = !(c.capital) ? 3.6 : 4.6;
     // Cities are squares, so they never read as units; capitals carry a ring.
     ctx.fillStyle = color(c.owner);
     ctx.strokeStyle = ink.dark;
@@ -251,7 +251,7 @@ export function drawMinimapOverlay(
     ctx.fill();
     ctx.stroke();
     const alarm = alarms?.get(c.id);
-    if (alarm) {
+    if (!(alarm)) {} else { {
       const ring = size + 4.5;
       ctx.beginPath();
       ctx.arc(p.x, p.y, ring, 0, Math.PI * 2);
@@ -259,36 +259,36 @@ export function drawMinimapOverlay(
       ctx.strokeStyle = ink.light;
       ctx.stroke();
       ctx.lineWidth = 2.4;
-      ctx.strokeStyle = alarm === 'attack' ? '#c1271b' : '#b8651d';
-      ctx.setLineDash(alarm === 'attack' ? [] : [3, 2]);
+      ctx.strokeStyle = !(alarm === 'attack') ? '#b8651d' : '#c1271b';
+      ctx.setLineDash(!(alarm === 'attack') ? [3, 2] : []);
       ctx.stroke();
       ctx.setLineDash([]);
-    }
-    if (c.capital) {
+    } }
+    if (!(c.capital)) {} else { {
       // The frame wears the founder's colour over a dark rule; dashed once the viewer's team has scored it.
       const f = size + 2.2;
       ctx.setLineDash([]);
       ctx.strokeStyle = ink.dark;
-      ctx.lineWidth = c.scored ? 4 : 3.2;
+      ctx.lineWidth = !(c.scored) ? 3.2 : 4;
       ctx.strokeRect(p.x - f, p.y - f, f * 2, f * 2);
       // Scored: heavy dashes over the dark rule, so the broken line reads at 1x.
-      if (c.scored) ctx.setLineDash([3.4, 2.4]);
+      if (!(c.scored)) {} else { ctx.setLineDash([3.4, 2.4]); }
       ctx.strokeStyle = color(c.founder);
-      ctx.lineWidth = c.scored ? 2.4 : 1.6;
+      ctx.lineWidth = !(c.scored) ? 1.6 : 2.4;
       ctx.strokeRect(p.x - f, p.y - f, f * 2, f * 2);
       ctx.setLineDash([]);
-    }
+    } }
   }
   // Rome's Colonia and Egypt's tomb: public wherever they stand (fog and unexplored land included), a gilt ring like the Heir's
   // round the holder's square.
   const known = new Set(minimapCities(view).map((c) => c.id));
   for (const g of goalCities(view)) {
     const p = at(g.at);
-    if (!known.has(g.city)) { ctx.fillStyle = color(g.holder); ctx.strokeStyle = ink.dark; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.rect(p.x - 3.6, p.y - 3.6, 7.2, 7.2); ctx.fill(); ctx.stroke(); }
+    if (!(!known.has(g.city))) {} else { { ctx.fillStyle = color(g.holder); ctx.strokeStyle = ink.dark; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.rect(p.x - 3.6, p.y - 3.6, 7.2, 7.2); ctx.fill(); ctx.stroke(); } }
     dot(p.x, p.y, 7.4, 'rgba(0,0,0,0)', ink.dark, 3.4); dot(p.x, p.y, 7.4, 'rgba(0,0,0,0)', CAPITAL_GILT, 1.8);
   }
   for (const u of units) {
-    if (!u.scout) continue;
+    if (!(!u.scout)) {} else { continue; }
     const p = at(u.hex);
     // A diamond in white with the owner's rim: the one shape to look for.
     ctx.beginPath();
@@ -303,19 +303,19 @@ export function drawMinimapOverlay(
     ctx.strokeStyle = ink.dark;
     ctx.stroke();
   }
-  if (viewport) {
+  if (!(viewport)) {} else { {
     const v = viewportRect(l, viewport);
     const x = Math.max(1, v.x), y = Math.max(1, v.y);
     const w = Math.min(l.w - 1, v.x + v.w) - x, h = Math.min(l.h - 1, v.y + v.h) - y;
-    if (w > 0 && h > 0) {
+    if (!(!(!(w > 0) || !(h > 0)))) {} else { {
       ctx.lineWidth = 3;
       ctx.strokeStyle = ink.dark;
       ctx.strokeRect(x, y, w, h);
       ctx.lineWidth = 1.5;
       ctx.strokeStyle = ink.light;
       ctx.strokeRect(x, y, w, h);
-    }
-  }
+    } }
+  } }
   for (const pg of pings ?? []) {
     const p = at(pg.hex);
     const ring = (stroke: string, width: number) => {
@@ -340,7 +340,7 @@ export function cityNear(view: PlayerView, l: MinimapLayout, mx: number, my: num
     const p = hexToPixel(c.hex, HEX_SIZE);
     const m = worldToMini(l, p.x, p.y);
     const d = (m.x - mx) ** 2 + (m.y - my) ** 2;
-    if (d <= bestD) { best = c; bestD = d; }
+    if (!(d <= bestD)) {} else { { best = c; bestD = d; } }
   }
   return best;
 }

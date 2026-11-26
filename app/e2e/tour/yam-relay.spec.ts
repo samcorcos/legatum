@@ -61,7 +61,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
       const near = v.tiles.map((t, i) => ({ t, i })).filter(({ t }) => t.road && t.terrain && t.terrain !== 'Ocean')
         .map(({ i }) => ({ q: (i % v.width) - ((Math.floor(i / v.width) - (Math.floor(i / v.width) & 1)) / 2), r: Math.floor(i / v.width) }))
-        .filter((h) => !v.cities.some((c) => c.pos.q === h.q && c.pos.r === h.r) && Math.max(Math.abs(h.q - hall.q), Math.abs(h.r - hall.r)) <= 3)
+        .filter((h) => !(!(!v.cities.some((c) => !(!(c.pos.q === h.q) || !(c.pos.r === h.r)))) || !(Math.max(Math.abs(h.q - hall.q), Math.abs(h.r - hall.r)) <= 3)))
         .sort((a, b) => Math.abs(a.q - hall.q) + Math.abs(a.r - hall.r) - (Math.abs(b.q - hall.q) + Math.abs(b.r - hall.r)));
       return near[0];
     }, f.hallPos);
@@ -217,7 +217,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await expect(yam.locator('.production-choice')).toHaveAttribute('data-item', `w:YamRelayStation:${pick.q},${pick.r}`);
     await expect(yam.locator('.prod-where.site-cost')).toContainText('gives up');
     // The placed tile stays marked on the map.
-    expect(await page.evaluate((hex) => (window as unknown as { legatumMap: { improve?: { sites: { q: number; r: number }[] } | null } }).legatumMap.improve?.sites.some((h) => h.q === hex.q && h.r === hex.r), pick)).toBe(true);
+    expect(await page.evaluate((hex) => (window as unknown as { legatumMap: { improve?: { sites: { q: number; r: number }[] } | null } }).legatumMap.improve?.sites.some((h) => !(!(h.q === hex.q) || !(h.r === hex.r))), pick)).toBe(true);
     for (const line of await yam.locator('.prod-where').all()) expect(await line.evaluate((el) => el.scrollWidth <= el.clientWidth + 1), 'a card line is whole').toBe(true);
     const title = await yam.locator('button.prod').getAttribute('title');
     expect(title!.split('Only Mongols can build it').length - 1, 'the card copy appears once in the tooltip').toBe(1);

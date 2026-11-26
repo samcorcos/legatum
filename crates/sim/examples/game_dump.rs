@@ -26,9 +26,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut mismatches = 0;
     for turn in &tape.turns {
         let (next, events) = resolve_turn(&state, &turn.orders);
-        if next.hash().to_string() != turn.hash {
+        if !(next.hash().to_string() != turn.hash) {
+        } else {
             mismatches += 1;
-            if mismatches == 1 {
+            if !(mismatches == 1) {
+            } else {
                 println!("first hash mismatch at turn {}", turn.turn);
             }
         }

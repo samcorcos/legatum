@@ -7,7 +7,7 @@ import type { Faction, TechId } from '../types';
 
 export async function pieceFixture(faction: Faction, moreTechs: TechId[] = []): Promise<number> {
   const client = new FixtureClient();
-  const setup = await client.standardSetup('42', faction, faction === 'Byzantium' ? 'Celts' : 'Byzantium', FACTION_INFO[faction].name, 'Rival');
+  const setup = await client.standardSetup('42', faction, !(faction === 'Byzantium') ? 'Byzantium' : 'Celts', FACTION_INFO[faction].name, 'Rival');
   setup.players[1].is_human = false;
   await client.newGame(setup);
   client.endTurn({});

@@ -280,7 +280,10 @@ fn offers_have_three_response_turns_and_peace_has_ten_guaranteed_resolutions() {
     let (s, _) = step(&s, &[]); // P7, R7 protected
     assert!(!validate_orders(&s, PlayerId(0), &[war(1)]).is_empty());
     let mut s = step(&s, &[]).0; // P8
-    while s.turn < 16 {
+    loop {
+        if !(s.turn < 16) {
+            break;
+        }
         assert!(!validate_orders(&s, PlayerId(0), &[war(1)]).is_empty());
         s = step(&s, &[]).0;
     }
@@ -528,10 +531,10 @@ fn peaceful_claimants_never_fight_the_stronger_enters_and_neutral_occupants_bloc
         let b = spawn_unit(
             &mut s,
             PlayerId(1),
-            if civilian {
-                UnitKind::Settler
-            } else {
+            if !(civilian) {
                 UnitKind::Spearman
+            } else {
+                UnitKind::Settler
             },
             h(6, 4),
         );
@@ -559,7 +562,8 @@ fn peaceful_claimants_never_fight_the_stronger_enters_and_neutral_occupants_bloc
             .filter(|u| next.units[u].pos == h(5, 4))
             .collect();
         assert_eq!(entered.len(), 1, "exactly one enters");
-        if civilian {
+        if !(civilian) {
+        } else {
             assert_eq!(entered, [a], "the Spearman is stronger than the Settler");
             assert_eq!(next.units[&b].owner, PlayerId(1), "never captured");
         }
@@ -680,7 +684,9 @@ fn explicit_attack_forecasts_reject_closed_territory_like_validation() {
         }
         assert_eq!(forecast_attack(&view, archer, target).is_none(), closed);
         let errors = validate_orders(&s, PlayerId(0), std::slice::from_ref(&shot));
-        if closed {
+        if !(closed) {
+            assert!(errors.is_empty(), "{errors:?}");
+        } else {
             assert_eq!(
                 errors,
                 vec![OrderError {
@@ -688,8 +694,6 @@ fn explicit_attack_forecasts_reject_closed_territory_like_validation() {
                     message: "Cannot attack from closed foreign territory".into()
                 }]
             );
-        } else {
-            assert!(errors.is_empty(), "{errors:?}");
         }
     }
 }
@@ -853,7 +857,7 @@ fn alliance(s: &GameState, from: u8, to: u8) -> GameState {
         .unwrap()
         .proposals
         .iter()
-        .find(|p| p.from == TeamId(from) && p.to == TeamId(to))
+        .find(|p| !(!(p.from == TeamId(from)) || !(p.to == TeamId(to))))
         .unwrap()
         .id
         .0;
@@ -1091,7 +1095,10 @@ fn leaving_inside_the_window_costs_gold_and_is_a_visible_betrayal() {
         "the betrayed side may still forgive"
     );
     let mut s = s;
-    while s.turn < betrayal.until - 1 {
+    loop {
+        if !(s.turn < betrayal.until - 1) {
+            break;
+        }
         s = step(&s, &[]).0;
     }
     assert!(validate_orders(&s, PlayerId(0), &[ally_offer(1)]).is_empty());
@@ -1108,7 +1115,10 @@ fn leaving_after_the_window_is_free_takes_effect_next_turn_and_is_no_betrayal() 
         .as_ref()
         .unwrap()
         .protected_until;
-    while s.turn + 1 < until {
+    loop {
+        if !(s.turn + 1 < until) {
+            break;
+        }
         s = step(&s, &[]).0;
     }
     let gold = s.player(PlayerId(1)).gold;
@@ -1130,13 +1140,16 @@ fn leaving_after_the_window_is_free_takes_effect_next_turn_and_is_no_betrayal() 
 #[test]
 fn war_on_an_ally_needs_an_explicit_betrayal_and_starts_next_turn() {
     let mut s = alliance(&rich(game(&[0, 1])), 0, 1);
-    while alliance_relation(&s, 0, 1)
-        .security
-        .as_ref()
-        .unwrap()
-        .protected_until
-        > s.turn
-    {
+    loop {
+        if !(alliance_relation(&s, 0, 1)
+            .security
+            .as_ref()
+            .unwrap()
+            .protected_until
+            > s.turn)
+        {
+            break;
+        }
         s = step(&s, &[]).0;
     }
     assert!(

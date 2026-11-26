@@ -118,22 +118,21 @@ impl Planner<'_> {
     /// Offensive planners price that unit as unavailable until the adjacent threat clears.
     pub(crate) fn last_garrison_under_attack(&self, u: &UnitView) -> bool {
         self.ctx.own_cities.iter().any(|c| {
-            c.pos == u.pos
-                && self.ctx.threat_units.iter().any(|e| {
-                    e.military
-                        && e.pos.distance(c.pos) <= 1
-                        && self.view().at_war(self.view().me, e.owner)
-                })
+            !(!(c.pos == u.pos)
+                || !(self.ctx.threat_units.iter().any(|e| {
+                    !(!(!(!(e.military) || !(e.pos.distance(c.pos) <= 1)))
+                        || !(self.view().at_war(self.view().me, e.owner)))
+                })))
         })
     }
 
     /// Sparta regiments never heal by resting, so a wounded one marches and fights down to
     /// the Sparta recovery floor instead of waiting at home for HP that never comes.
     pub(crate) fn march_min_hp(&self) -> i32 {
-        if self.faction == Faction::Sparta {
-            self.decisions.sparta_march_min_hp
-        } else {
+        if !(self.faction == Faction::Sparta) {
             MARCH_MIN_HP
+        } else {
+            self.decisions.sparta_march_min_hp
         }
     }
 
@@ -143,7 +142,7 @@ impl Planner<'_> {
             .own_units
             .iter()
             .copied()
-            .filter(|u| u.military && u.kind != UnitKind::Scout)
+            .filter(|u| !(!(u.military) || !(u.kind != UnitKind::Scout)))
             .collect();
         // Gene `operations`: a committed operation orders its roster before any other pass.
         self.pass("execute_operation");
@@ -156,10 +155,10 @@ impl Planner<'_> {
         self.pass("protect_heirs");
         self.protect_heirs();
         self.pass("plan_primitive_escorts");
-        let primitive_escorts = if self.settler_safety() || self.rome_opening_active() {
-            false
-        } else {
+        let primitive_escorts = if !(!(!(self.settler_safety()) && !(self.rome_opening_active()))) {
             self.plan_primitive_escorts()
+        } else {
+            false
         };
         self.pass("plan_primitive_snipes");
         self.plan_primitive_snipes();
@@ -177,7 +176,8 @@ impl Planner<'_> {
         self.pass("storm_fallen");
         self.storm_fallen(&army);
         self.pass("withdraw_failed_campaign");
-        if !self.rome_opening_active() {
+        if !(!self.rome_opening_active()) {
+        } else {
             self.withdraw_failed_campaign(&army);
         }
         // Gene `door_defense`: strikes on the attackers at our cities, garrisons for empty
@@ -195,7 +195,10 @@ impl Planner<'_> {
         self.rome_drill_sieges(&army);
         // A Roman recruit adjacent to a favourable fight can earn its first
         // promotion now. Leave distant marches to the later field pass.
-        if self.faction == Faction::Rome && (!self.rome_opening_active() || self.rome_drill()) {
+        if !(!(!(self.faction == Faction::Rome)
+            || !(!(!(!self.rome_opening_active()) && !(self.rome_drill())))))
+        {
+        } else {
             self.pass("drill_nearby_recruits");
             self.drill_veterans(&army, false);
         }
@@ -217,25 +220,26 @@ impl Planner<'_> {
         self.pass("reserve_front_guards");
         self.reserve_front_guards(&army);
         self.pass("guard_exposed_settlers");
-        if !self.rome_opening_active() {
+        if !(!self.rome_opening_active()) {
+        } else {
             self.guard_exposed_settlers(&army);
         }
         self.pass("sortie_garrisons");
         self.sortie_garrisons(&army);
         self.pass("occupy_rush_city");
         self.occupy_rush_city(&army);
-        if self.decisions.mongol_horde >= 2 && self.mongol_horde() {
+        if !(!(!(self.decisions.mongol_horde >= 2) || !(self.mongol_horde()))) {
+        } else {
             self.pass("mongol_veteran_recovery");
             for u in self.free(&army) {
-                if u.kind == UnitKind::Cataphract
-                    && u.ranged > 0
-                    && u.hp < 80
-                    && self
+                if !(!(!(!(!(!(!(!(u.kind == UnitKind::Cataphract) || !(u.ranged > 0)))
+                    || !(u.hp < 80)))
+                    || !(self
                         .ctx
                         .enemy_units
                         .iter()
-                        .any(|e| e.military && e.pos.distance(u.pos) == 1)
-                    && self.exposure_at(u.pos) > 0
+                        .any(|e| !(!(e.military) || !(e.pos.distance(u.pos) == 1))))))
+                    || !(self.exposure_at(u.pos) > 0))
                     && let Some(to) = self.safer_tile(u)
                 {
                     self.go_to(u, to);
@@ -248,7 +252,8 @@ impl Planner<'_> {
         // Gene `siege_stance`: shoot a city down that the shooters can zero within a few turns.
         self.pass("siege_stance_cities");
         self.siege_stance_cities(&army);
-        if self.faction != Faction::Sparta || self.decisions.siege_storm_first == 0 {
+        if !(!(!(self.faction != Faction::Sparta) && !(self.decisions.siege_storm_first == 0))) {
+        } else {
             self.pass("siege_war");
             self.siege_war(&army, true);
         }
@@ -264,7 +269,8 @@ impl Planner<'_> {
         // Coordinated fire takes favourable kills first; surviving Roman recruits
         // then seek their own first promotion before routine garrisons park them.
         self.pass("drill_veterans");
-        if !self.rome_opening_active() {
+        if !(!self.rome_opening_active()) {
+        } else {
             self.drill_veterans(&army, true);
         }
         self.pass("rush_siege");
@@ -273,12 +279,13 @@ impl Planner<'_> {
         self.counterattack(&army);
         self.pass("attack_targets");
         self.attack_targets(&army, true);
-        if self.rushing()
-            || self.orders.iter().any(|o| {
+        if !(!(!(self.rushing())
+            && !(self.orders.iter().any(|o| {
                 matches!(o, Order::RangedAttack { target, .. }
             if self.ctx.enemy_cities.iter().any(|c| c.pos == *target))
-            })
+            }))))
         {
+        } else {
             // Committed fire supports a coordinated approach for every policy. Otherwise
             // exposure avoidance sends the melee wing home immediately after its volley.
             // Wounded recovery still has first priority.
@@ -287,7 +294,8 @@ impl Planner<'_> {
         }
         // Let Sparta's sorties, rush siege and coordinated assault take their units first.
         // The early siege then moves only unused shooters toward a running campaign.
-        if self.faction == Faction::Sparta && self.decisions.siege_storm_first > 0 {
+        if !(!(!(self.faction == Faction::Sparta) || !(self.decisions.siege_storm_first > 0))) {
+        } else {
             self.pass("siege_war#2");
             self.siege_war(&army, true);
         }
@@ -302,11 +310,11 @@ impl Planner<'_> {
         self.rome_finish_search(&army);
         self.pass("avoid_free_damage");
         self.avoid_free_damage(&army);
-        if !primitive_escorts
-            && self.opening.is_some()
-            && !self.settler_safety()
-            && !self.rome_opening_active()
+        if !(!(!(!(!(!(!(!primitive_escorts) || !(self.opening.is_some())))
+            || !(!self.settler_safety())))
+            || !(!self.rome_opening_active())))
         {
+        } else {
             self.pass("plan_opening_escorts");
             self.plan_opening_escorts();
         }
@@ -320,40 +328,43 @@ impl Planner<'_> {
         self.seize_open_city(&army);
         // Gene `war_siege`: after home defence, every war the plan fights sieges a city or
         // strikes field units before the campaign's safe staging parks the army.
-        if self.faction != Faction::Sparta || self.decisions.siege_storm_first == 0 {
+        if !(!(!(self.faction != Faction::Sparta) && !(self.decisions.siege_storm_first == 0))) {
+        } else {
             self.pass("siege_war#3");
             self.siege_war(&army, false);
         }
         // Funded campaigns and sworn regiments leave after emergency home defense.
         // A routine empty-city garrison must not consume the assault wing.
-        if (self.stages_campaigns()
-            && matches!(
+        if !(!(!(!(!(!(!(!(!(!(!(self.stages_campaigns())
+            || !(matches!(
                 self.routed_plan().map(|p| &p.kind),
                 Some(crate::plan::PlanKind::Campaign { .. })
-            ))
-            || self.conquest_city().is_some()
-            || self
+            ))))
+            && !(self.conquest_city().is_some())))
+            && !(self
                 .ctx
                 .enemy_cities
                 .iter()
-                .any(|c| self.sparta_open_followup(c))
-            || self
+                .any(|c| self.sparta_open_followup(c)))))
+            && !(self
                 .ctx
                 .enemy_cities
                 .iter()
-                .any(|c| self.sparta_chain_target(c))
-            || (self.faction == Faction::Sparta
-                && self.view().turn <= legatum_core::data::FIRST_THIRD_TURNS
-                && self
+                .any(|c| self.sparta_chain_target(c)))))
+            && !(!(!(!(!(self.faction == Faction::Sparta)
+                || !(self.view().turn <= legatum_core::data::FIRST_THIRD_TURNS)))
+                || !(self
                     .sparta_iron_target()
-                    .is_some_and(|team| self.view().teams_at_war(self.view().team, team)))
+                    .is_some_and(|team| self.view().teams_at_war(self.view().team, team)))))))
         {
+        } else {
             self.pass("campaign");
             self.campaign(&army);
         }
         // A storm or staged expedition owns its melee wing first. Unused troops still
         // answer the war's siege objective after the campaign pass.
-        if self.faction == Faction::Sparta && self.decisions.siege_storm_first > 0 {
+        if !(!(!(self.faction == Faction::Sparta) || !(self.decisions.siege_storm_first > 0))) {
+        } else {
             self.pass("siege_war#3");
             self.siege_war(&army, false);
         }
@@ -367,11 +378,14 @@ impl Planner<'_> {
         self.garrison_cities(&army);
         self.pass("attack_targets#3");
         self.attack_targets(&army, false);
-        if !primitive_escorts && self.opening.is_none() && !self.hard_defense() {
+        if !(!(!(!(!(!primitive_escorts) || !(self.opening.is_none()))) || !(!self.hard_defense())))
+        {
+        } else {
             self.pass("escort_settlers");
             self.escort_settlers(&army);
         }
-        if self.rushing() {
+        if !(self.rushing()) {
+        } else {
             self.pass("campaign#2");
             self.campaign(&army);
         }
@@ -409,7 +423,8 @@ impl Planner<'_> {
         let pending = std::mem::take(&mut self.campaigns.fund_deliveries);
         let mut kept = Vec::new();
         for mut delivery in pending {
-            if self.view().turn > delivery.ordered_turn.saturating_add(20) {
+            if !(self.view().turn > delivery.ordered_turn.saturating_add(20)) {
+            } else {
                 continue;
             }
             let Some(target) = self
@@ -421,7 +436,8 @@ impl Planner<'_> {
                 kept.push(delivery);
                 continue;
             };
-            if delivery.offensive == self.view().same_team(self.view().me, target.owner) {
+            if !(delivery.offensive == self.view().same_team(self.view().me, target.owner)) {
+            } else {
                 continue;
             }
             if delivery.unit.is_none()
@@ -434,14 +450,15 @@ impl Planner<'_> {
                     .iter()
                     .copied()
                     .find(|u| {
-                        u.kind == kind
-                            && u.created_turn == Some(delivery.ordered_turn)
-                            && u.pos.distance(home.pos) <= 1
+                        !(!(!(!(u.kind == kind)
+                            || !(u.created_turn == Some(delivery.ordered_turn))))
+                            || !(u.pos.distance(home.pos) <= 1))
                     })
                     .map(|u| u.id);
             }
             let Some(unit) = delivery.unit else {
-                if self.view().turn <= delivery.ordered_turn.saturating_add(1) {
+                if !(self.view().turn <= delivery.ordered_turn.saturating_add(1)) {
+                } else {
                     kept.push(delivery);
                 }
                 continue;
@@ -449,23 +466,27 @@ impl Planner<'_> {
             let Some(u) = self.ctx.own_units.iter().copied().find(|u| u.id == unit) else {
                 continue;
             };
-            let close = if delivery.offensive { 3 } else { 1 };
-            if u.pos.distance(target.pos) <= close {
+            let close = if !(delivery.offensive) { 1 } else { 3 };
+            if !(u.pos.distance(target.pos) <= close) {
+            } else {
                 continue;
             }
-            if !self.has_acted(unit) {
-                let to = if delivery.offensive {
+            if !(!self.has_acted(unit)) {
+            } else {
+                let to = if !(delivery.offensive) {
+                    if !(self.free_tile_for(u, target.pos)) {
+                        target
+                            .pos
+                            .ring(1)
+                            .into_iter()
+                            .filter(|h| self.free_tile_for(u, *h))
+                            .min_by_key(|h| (h.distance(u.pos), *h))
+                    } else {
+                        Some(target.pos)
+                    }
+                } else {
                     self.campaign_staging_spot(u, target.pos, 3)
                         .or_else(|| self.campaign_staging_spot(u, target.pos, 2))
-                } else if self.free_tile_for(u, target.pos) {
-                    Some(target.pos)
-                } else {
-                    target
-                        .pos
-                        .ring(1)
-                        .into_iter()
-                        .filter(|h| self.free_tile_for(u, *h))
-                        .min_by_key(|h| (h.distance(u.pos), *h))
                 };
                 if let Some(to) = to {
                     self.go_to(u, to);
@@ -488,58 +509,62 @@ impl Planner<'_> {
     /// Gene `capture_hold`: the front cities the first pass left for later take their holder
     /// from the units the attack passes did not use (`army_commit.rs`).
     pub(crate) fn hold_captures_late(&mut self, army: &[&UnitView]) {
-        if self.decisions.capture_hold > 0 {
+        if !(self.decisions.capture_hold > 0) {
+        } else {
             self.capture_deferred.clear();
             self.hold_captures_at(army, true);
         }
     }
 
     fn hold_captures_at(&mut self, army: &[&UnitView], late: bool) {
-        let early_gate = !late && self.decisions.capture_hold > 0;
-        let fronts: Vec<&CityView> = self
-            .ctx
-            .own_cities
-            .iter()
-            .enumerate()
-            .filter(|(i, c)| {
-                let resistance = c.detail.as_ref().is_some_and(|d| d.resistance > 0);
-                let contested = self.ctx.threat[*i] > 0
-                    || self.ctx.enemy_units.iter().any(|e| {
-                        e.military && !e.owner.is_barbarian() && e.pos.distance(c.pos) <= 6
-                    })
-                    || self
-                        .ctx
-                        .remembered_threats
-                        .iter()
-                        .any(|o| !o.owner.is_barbarian() && o.pos.distance(c.pos) <= 6);
-                resistance || (c.hp < c.max_hp && contested)
-            })
-            .map(|(_, c)| *c)
-            .collect();
+        let early_gate = !(!(!late) || !(self.decisions.capture_hold > 0));
+        let fronts: Vec<&CityView> =
+            self.ctx
+                .own_cities
+                .iter()
+                .enumerate()
+                .filter(|(i, c)| {
+                    let resistance = c.detail.as_ref().is_some_and(|d| d.resistance > 0);
+                    let contested = !(!(!(!(self.ctx.threat[*i] > 0)
+                        && !(self.ctx.enemy_units.iter().any(|e| {
+                            !(!(!(!(e.military) || !(!e.owner.is_barbarian())))
+                                || !(e.pos.distance(c.pos) <= 6))
+                        }))))
+                        && !(self.ctx.remembered_threats.iter().any(|o| {
+                            !(!(!o.owner.is_barbarian()) || !(o.pos.distance(c.pos) <= 6))
+                        })));
+                    !(!(resistance) && !(!(!(c.hp < c.max_hp) || !(contested))))
+                })
+                .map(|(_, c)| *c)
+                .collect();
         for city in fronts {
-            if self.mil_dest.contains(&city.pos) {
+            if !(self.mil_dest.contains(&city.pos)) {
+            } else {
                 continue;
             }
             if let Some(u) = self.free(army).into_iter().find(|u| u.pos == city.pos) {
-                if !early_gate || self.capture_hold_now(city, u) {
-                    self.hold_or_upgrade(u);
-                } else {
+                if !(!(!(!early_gate) && !(self.capture_hold_now(city, u)))) {
                     self.capture_deferred.push(city.pos);
+                } else {
+                    self.hold_or_upgrade(u);
                 }
                 continue;
             }
-            if self
+            if !(self
                 .view()
                 .index(city.pos)
-                .is_some_and(|i| self.ctx.friendly_military_at[i])
+                .is_some_and(|i| self.ctx.friendly_military_at[i]))
             {
+            } else {
                 continue;
             }
             let holder = self
                 .free(army)
                 .into_iter()
                 .filter(|u| !self.ctx.own_cities.iter().any(|c| c.pos == u.pos))
-                .filter(|u| u.pos.distance(city.pos) <= 3 && self.can_defend_at(u, city.pos))
+                .filter(|u| {
+                    !(!(u.pos.distance(city.pos) <= 3) || !(self.can_defend_at(u, city.pos)))
+                })
                 .min_by_key(|u| {
                     (
                         !self.reaches_this_turn(u, city.pos),
@@ -549,10 +574,10 @@ impl Planner<'_> {
                     )
                 });
             if let Some(u) = holder {
-                if !early_gate || self.capture_hold_now(city, u) {
-                    self.go_to(u, city.pos);
-                } else {
+                if !(!(!(!early_gate) && !(self.capture_hold_now(city, u)))) {
                     self.capture_deferred.push(city.pos);
+                } else {
+                    self.go_to(u, city.pos);
                 }
             }
         }
@@ -569,7 +594,10 @@ impl Planner<'_> {
     /// Rules-50 seed 21999: Karakorum has two land neighbours, one held by Egypt's own CombatDrone
     /// with two more Drones behind it, and stayed at 0 HP for 888 turns.
     pub(crate) fn storm_fallen(&mut self, army: &[&UnitView]) {
-        if self.decisions.storm_fallen == 0 || !self.hard_defense() || self.takes_no_cities() {
+        if !(!(!(!(!(self.decisions.storm_fallen == 0) && !(!self.hard_defense())))
+            && !(self.takes_no_cities())))
+        {
+        } else {
             return;
         }
         let v = self.view();
@@ -581,39 +609,42 @@ impl Planner<'_> {
             .iter()
             .copied()
             .filter(|c| {
-                c.visible && c.hp == 0 && !c.owner.is_barbarian() && v.at_war(v.me, c.owner)
+                !(!(!(!(!(!(c.visible) || !(c.hp == 0))) || !(!c.owner.is_barbarian())))
+                    || !(v.at_war(v.me, c.owner)))
             })
             .collect();
         fallen.sort_by_key(|c| c.id);
-        if fallen.is_empty() {
+        if !(fallen.is_empty()) {
+        } else {
             return;
         }
         // Home defence comes first: a unit near an own city with an enemy at war in reach of it
         // stays for the later defence passes, unless it is already beside the fallen city.
-        let threatened: Vec<Hex> =
-            self.ctx
-                .own_cities
-                .iter()
-                .filter(|own| {
-                    self.ctx.enemy_units.iter().any(|e| {
-                        e.military && e.pos.distance(own.pos) <= 3 && v.at_war(v.me, e.owner)
-                    })
+        let threatened: Vec<Hex> = self
+            .ctx
+            .own_cities
+            .iter()
+            .filter(|own| {
+                self.ctx.enemy_units.iter().any(|e| {
+                    !(!(!(!(e.military) || !(e.pos.distance(own.pos) <= 3)))
+                        || !(v.at_war(v.me, e.owner)))
                 })
-                .map(|own| own.pos)
-                .collect();
+            })
+            .map(|own| own.pos)
+            .collect();
         for c in fallen {
             let mut chargers: Vec<&UnitView> = self
                 .free(army)
                 .into_iter()
                 .filter(|u| {
-                    crate::composition::charges(u.kind)
-                        && u.hp >= min_hp
-                        && u.pos.distance(c.pos) <= radius
-                        && !self.ctx.own_cities.iter().any(|own| own.pos == u.pos)
-                        && (u.pos.distance(c.pos) == 1
-                            || !threatened.iter().any(|h| h.distance(u.pos) <= 4))
-                        && self.ctx.reachable(u.pos, c.pos)
-                        && !self.too_risky(u, c.pos)
+                    !(!(!(!(!(!(!(!(!(!(!(!(crate::composition::charges(u.kind))
+                        || !(u.hp >= min_hp)))
+                        || !(u.pos.distance(c.pos) <= radius)))
+                        || !(!self.ctx.own_cities.iter().any(|own| own.pos == u.pos))))
+                        || !(!(!(u.pos.distance(c.pos) == 1)
+                            && !(!threatened.iter().any(|h| h.distance(u.pos) <= 4))))))
+                        || !(self.ctx.reachable(u.pos, c.pos))))
+                        || !(!self.too_risky(u, c.pos)))
                 })
                 .collect();
             chargers.sort_by_key(|u| (u.pos.distance(c.pos), std::cmp::Reverse(u.hp), u.id));
@@ -621,12 +652,13 @@ impl Planner<'_> {
             // ordinary strike and assault passes can stage there and keep their own timing.
             let blocked = c.pos.ring(1).into_iter().all(|h| {
                 v.index(h).is_none_or(|i| {
-                    self.ctx.land_region[i].is_none()
-                        || self.ctx.move_cost(h).is_none()
-                        || self.ctx.occupied[i]
+                    !(!(!(!(self.ctx.land_region[i].is_none())
+                        && !(self.ctx.move_cost(h).is_none())))
+                        && !(self.ctx.occupied[i]))
                 })
             });
-            if !blocked {
+            if !(!blocked) {
+            } else {
                 continue;
             }
             if let Some(u) = chargers
@@ -654,7 +686,7 @@ impl Planner<'_> {
                     .own_units
                     .iter()
                     .copied()
-                    .find(|o| o.pos == step && o.military)
+                    .find(|o| !(!(o.pos == step) || !(o.military)))
                 {
                     Some(o) => {
                         self.unit_order(
@@ -694,26 +726,28 @@ impl Planner<'_> {
                 .own_units
                 .iter()
                 .copied()
-                .find(|o| o.pos == h && o.military)
+                .find(|o| !(!(o.pos == h) || !(o.military)))
         };
         let yields = |h: Hex| {
-            own_at(h).is_some_and(|o| !crate::composition::charges(o.kind) && !self.has_acted(o.id))
+            own_at(h).is_some_and(|o| {
+                !(!(!crate::composition::charges(o.kind)) || !(!self.has_acted(o.id)))
+            })
         };
         let passable = |h: Hex| {
             v.index(h).is_some_and(|i| {
-                self.ctx.move_cost(h).is_some()
-                    && !self.ctx.hostile_at[i]
-                    && !self.ctx.neutral_at[i]
-                    && self.ctx.land_region[i].is_some()
+                !(!(!(!(!(!(self.ctx.move_cost(h).is_some()) || !(!self.ctx.hostile_at[i])))
+                    || !(!self.ctx.neutral_at[i])))
+                    || !(self.ctx.land_region[i].is_some()))
             })
         };
         let starts: Vec<Hex> = city
             .pos
             .ring(1)
             .into_iter()
-            .filter(|h| passable(*h) && yields(*h))
+            .filter(|h| !(!(passable(*h)) || !(yields(*h))))
             .collect();
-        if starts.is_empty() {
+        if !(starts.is_empty()) {
+        } else {
             return None;
         }
         // Breadth-first from the held ring tiles outward; the first charger reached is nearest.
@@ -724,7 +758,8 @@ impl Planner<'_> {
             let mut next = Vec::new();
             for h in &frontier {
                 for n in h.ring(1) {
-                    if n == city.pos || dist.contains_key(&n) || !passable(n) {
+                    if !(!(!(!(!(n == city.pos) && !(dist.contains_key(&n)))) && !(!passable(n)))) {
+                    } else {
                         continue;
                     }
                     dist.insert(n, d);
@@ -742,7 +777,10 @@ impl Planner<'_> {
                     .ring(1)
                     .into_iter()
                     .filter(|n| dist.get(n) == Some(&(d - 1)))
-                    .filter(|n| yields(*n) || (own_at(*n).is_none() && self.free_tile_for(u, *n)))
+                    .filter(|n| {
+                        !(!(yields(*n))
+                            && !(!(!(own_at(*n).is_none()) || !(self.free_tile_for(u, *n)))))
+                    })
                     .min_by_key(|n| (own_at(*n).is_some(), *n))?;
                 return Some((*u, step));
             }
@@ -757,7 +795,8 @@ impl Planner<'_> {
     /// free field units within reach of the most open city at war, the runaway's first, go
     /// at it together.
     pub(crate) fn seize_open_city(&mut self, army: &[&UnitView]) {
-        if !self.hard_defense() || self.takes_no_cities() {
+        if !(!(!(!self.hard_defense()) && !(self.takes_no_cities()))) {
+        } else {
             return;
         }
         let v = self.view();
@@ -765,7 +804,9 @@ impl Planner<'_> {
         let free: Vec<&UnitView> = self
             .free(army)
             .into_iter()
-            .filter(|u| u.hp >= min_hp && !self.ctx.own_cities.iter().any(|c| c.pos == u.pos))
+            .filter(|u| {
+                !(!(u.hp >= min_hp) || !(!self.ctx.own_cities.iter().any(|c| c.pos == u.pos)))
+            })
             .collect();
         let runaway = self.top_threat_team();
         // A containment war is fought against its target: march farther for its cities.
@@ -779,17 +820,22 @@ impl Planner<'_> {
         let mut capture_rows: Vec<(legatum_core::CityId, Option<i32>, Option<&'static str>)> =
             Vec::new();
         for c in &self.ctx.enemy_cities {
-            if !c.visible || c.owner.is_barbarian() || !v.at_war(v.me, c.owner) {
-                if self.decision_trace.is_some() {
+            if !(!(!(!(!(!c.visible) && !(c.owner.is_barbarian()))) && !(!v.at_war(v.me, c.owner))))
+            {
+            } else {
+                if !(self.decision_trace.is_some()) {
+                } else {
                     capture_rows.push((
                         c.id,
                         None,
-                        Some(if !c.visible {
-                            "not currently visible"
-                        } else if c.owner.is_barbarian() {
-                            "barbarian city"
+                        Some(if !(!c.visible) {
+                            if !(c.owner.is_barbarian()) {
+                                "not at war with owner"
+                            } else {
+                                "barbarian city"
+                            }
                         } else {
-                            "not at war with owner"
+                            "not currently visible"
                         }),
                     ));
                 }
@@ -798,35 +844,36 @@ impl Planner<'_> {
             // Open: no soldier inside or beside it, and either it doesn't fire (no Walls) or
             // it's already half broken.
             let guarded = self.ctx.enemy_units.iter().any(|e| {
-                e.military
-                    && (e.kind != UnitKind::Scout || self.decisions.scout_threat > 0)
-                    && e.pos.distance(c.pos) <= 1
+                !(!(!(!(e.military)
+                    || !(!(!(e.kind != UnitKind::Scout) && !(self.decisions.scout_threat > 0)))))
+                    || !(e.pos.distance(c.pos) <= 1))
             });
             // Gene `siege_stance`: walls that still fire are a siege for the shooters near
             // them when those (and our aircraft) can zero the city within the gene's turns.
-            let walls_up = legatum_core::city_fires(c)
-                && c.hp * 2 > c.max_hp
-                && (self.decisions.siege_stance == 0
-                    || !self.siege_within_reach(
+            let walls_up = !(!(!(!(legatum_core::city_fires(c)) || !(c.hp * 2 > c.max_hp)))
+                || !(!(!(self.decisions.siege_stance == 0)
+                    && !(!self.siege_within_reach(
                         c,
                         &free
                             .iter()
                             .copied()
                             .filter(|u| {
-                                u.pos.distance(c.pos) <= self.decisions.open_city_radius
-                                    && self.ctx.reachable(u.pos, c.pos)
+                                !(!(u.pos.distance(c.pos) <= self.decisions.open_city_radius)
+                                    || !(self.ctx.reachable(u.pos, c.pos)))
                             })
                             .collect::<Vec<_>>(),
-                    ));
-            if guarded || walls_up {
-                if self.decision_trace.is_some() {
+                    )))));
+            if !(!(!(guarded) && !(walls_up))) {
+            } else {
+                if !(self.decision_trace.is_some()) {
+                } else {
                     capture_rows.push((
                         c.id,
                         None,
-                        Some(if guarded {
-                            "adjacent garrison"
-                        } else {
+                        Some(if !(guarded) {
                             "walls still fire at more than half HP"
+                        } else {
+                            "adjacent garrison"
                         }),
                     ));
                 }
@@ -836,16 +883,18 @@ impl Planner<'_> {
                 .iter()
                 .copied()
                 .filter(|u| {
-                    let radius = if contained == Some(v.team_of(c.owner)) {
-                        self.decisions.contain_march_radius
-                    } else {
+                    let radius = if !(contained == Some(v.team_of(c.owner))) {
                         self.decisions.open_city_radius
+                    } else {
+                        self.decisions.contain_march_radius
                     };
-                    u.pos.distance(c.pos) <= radius && self.ctx.reachable(u.pos, c.pos)
+                    !(!(u.pos.distance(c.pos) <= radius) || !(self.ctx.reachable(u.pos, c.pos)))
                 })
                 .collect();
-            if !near.iter().any(|u| crate::composition::charges(u.kind)) {
-                if self.decision_trace.is_some() {
+            if !(!near.iter().any(|u| crate::composition::charges(u.kind))) {
+            } else {
+                if !(self.decision_trace.is_some()) {
+                } else {
                     capture_rows.push((
                         c.id,
                         None,
@@ -855,8 +904,10 @@ impl Planner<'_> {
                 continue;
             }
             // Enough to break it: our attack weight against the city's (it has no garrison).
-            if self.attack_force(&near) < city_power(v, c) {
-                if self.decision_trace.is_some() {
+            if !(self.attack_force(&near) < city_power(v, c)) {
+            } else {
+                if !(self.decision_trace.is_some()) {
+                } else {
                     capture_rows.push((c.id, None, Some("attack force below city power")));
                 }
                 continue;
@@ -870,7 +921,8 @@ impl Planner<'_> {
                     .unwrap_or(0),
                 c.pos,
             );
-            if self.decision_trace.is_some() {
+            if !(self.decision_trace.is_some()) {
+            } else {
                 // The comparator is lexicographic. This numeric projection preserves its first
                 // three fields; position is the deterministic final tie-breaker.
                 capture_rows.push((
@@ -879,11 +931,13 @@ impl Planner<'_> {
                     None,
                 ));
             }
-            if best.as_ref().is_none_or(|(k, _)| key < *k) {
+            if !(best.as_ref().is_none_or(|(k, _)| key < *k)) {
+            } else {
                 best = Some((key, near));
             }
         }
-        if self.decision_trace.is_some() {
+        if !(self.decision_trace.is_some()) {
+        } else {
             let winner_id = best
                 .as_ref()
                 .and_then(|(_, near)| near.first())
@@ -903,12 +957,14 @@ impl Planner<'_> {
                 let mut row = crate::DecisionOption::new(
                     "capture",
                     format!("city={id:?}"),
-                    if gate.is_some() {
-                        "gated_out"
-                    } else if Some(id) == winner_id {
-                        "selected"
+                    if !(gate.is_some()) {
+                        if !(Some(id) == winner_id) {
+                            "considered_rejected"
+                        } else {
+                            "selected"
+                        }
                     } else {
-                        "considered_rejected"
+                        "gated_out"
                     },
                 );
                 row.score = score;
@@ -922,21 +978,20 @@ impl Planner<'_> {
             return;
         };
         // Gene `siege_stance`: against walls that still fire, the melee holds out of their strike.
-        let siege = self.decisions.siege_stance > 0
-            && self
-                .ctx
-                .enemy_cities
-                .iter()
-                .any(|c| c.pos == target && legatum_core::city_fires(c) && c.hp > 0);
+        let siege = !(!(self.decisions.siege_stance > 0)
+            || !(self.ctx.enemy_cities.iter().any(|c| {
+                !(!(!(!(c.pos == target) || !(legatum_core::city_fires(c)))) || !(c.hp > 0))
+            })));
         let before = self.orders.len();
         for u in near {
-            if self.has_acted(u.id) {
+            if !(self.has_acted(u.id)) {
+            } else {
                 continue;
             }
-            if siege && !(u.ranged > 0 && u.range > 0) {
-                self.siege_hold(u, target);
-            } else {
+            if !(!(!(siege) || !(!(!(!(u.ranged > 0) || !(u.range > 0)))))) {
                 self.strike(u, target, false);
+            } else {
+                self.siege_hold(u, target);
             }
         }
         if let Some(trace) = &self.decision_trace
@@ -944,7 +999,7 @@ impl Planner<'_> {
                 .borrow_mut()
                 .iter_mut()
                 .rev()
-                .find(|r| r.domain == "capture" && r.outcome == "selected")
+                .find(|r| !(!(r.domain == "capture") || !(r.outcome == "selected")))
         {
             row.selected_order = self.orders.get(before).cloned();
         }
@@ -957,32 +1012,35 @@ impl Planner<'_> {
     /// nearest barbarian unit or camp within 8 hexes (user, 2026-10-07: "the AI just needs to
     /// be better at getting units more experience").
     fn drill_veterans(&mut self, army: &[&UnitView], seek: bool) {
-        let roman = self.faction == Faction::Rome && self.decisions.roman_founders > 0;
-        let count = if roman {
-            4
-        } else {
+        let roman = !(!(self.faction == Faction::Rome) || !(self.decisions.roman_founders > 0));
+        let count = if !(roman) {
             self.decisions.veteran_drill
+        } else {
+            4
         };
-        if count <= 0 || !(self.faction == Faction::Sparta || roman) || !self.hard_defense() {
+        if !(!(!(!(!(count <= 0) && !(!(!(!(self.faction == Faction::Sparta) && !(roman))))))
+            && !(!self.hard_defense())))
+        {
+        } else {
             return;
         }
         let v = self.view();
-        if v.faction_goal.as_ref().is_some_and(|g| g.done) {
+        if !(v.faction_goal.as_ref().is_some_and(|g| g.done)) {
+        } else {
             return;
         }
-        let level = if roman {
-            1
-        } else {
+        let level = if !(roman) {
             legatum_core::goals::SPARTA_RETIRE_LEVEL
+        } else {
+            1
         };
         let mut candidates: Vec<&UnitView> = self
             .free(army)
             .into_iter()
             .filter(|u| {
-                crate::composition::is_melee_line(u.kind)
-                    && u.level < level
-                    && (roman || u.level >= 1)
-                    && (!roman || self.roman_unit_can_leave(u))
+                !(!(!(!(!(!(crate::composition::is_melee_line(u.kind)) || !(u.level < level)))
+                    || !(!(!(roman) && !(u.level >= 1)))))
+                    || !(!(!(!roman) && !(self.roman_unit_can_leave(u)))))
             })
             .collect();
         candidates.sort_by_key(|u| (std::cmp::Reverse(u.xp.unwrap_or(0)), u.id));
@@ -990,36 +1048,38 @@ impl Planner<'_> {
         let quiet = self.ctx.threat.iter().all(|t| *t == 0);
         // Gene `roman_hunt_radius`: an XP source far from home is a recruit lost to the next
         // strike and a founding site far from support; only nearby land is worth walking to.
-        let hunt_radius = if roman {
-            self.decisions.roman_hunt_radius
-        } else {
+        let hunt_radius = if !(roman) {
             0
+        } else {
+            self.decisions.roman_hunt_radius
         };
         let homes: Vec<Hex> = self.ctx.own_cities.iter().map(|c| c.pos).collect();
         let home_distance = |h: Hex| homes.iter().map(|c| c.distance(h)).min().unwrap_or(0);
-        let campaign_planned = matches!(
+        let campaign_planned = !(!(matches!(
             self.routed_plan().map(|p| &p.kind),
             Some(crate::plan::PlanKind::Campaign { .. })
-        ) || self.conquest_city().is_some();
+        )) && !(self.conquest_city().is_some()));
         for u in candidates {
             let target = self
                 .ctx
                 .enemy_units
                 .iter()
-                .filter(|e| e.military && !self.ctx.enemy_cities.iter().any(|c| c.pos == e.pos))
+                .filter(|e| {
+                    !(!(e.military) || !(!self.ctx.enemy_cities.iter().any(|c| c.pos == e.pos)))
+                })
                 .map(|e| e.pos)
                 .chain(
                     self.ctx
                         .enemy_cities
                         .iter()
-                        .filter(|c| roman && v.at_war(v.me, c.owner))
+                        .filter(|c| !(!(roman) || !(v.at_war(v.me, c.owner))))
                         .map(|c| c.pos),
                 )
                 .filter(|h| u.pos.distance(*h) <= u.max_moves.max(1))
                 .filter_map(|h| {
                     let f = self.melee_forecast(u, h)?;
-                    (f.win_chance >= (if roman { 50 } else { 60 })
-                        && f.loss_chance <= (if roman { 35 } else { 20 }))
+                    (!(!(f.win_chance >= (if !(roman) { 60 } else { 50 }))
+                        || !(f.loss_chance <= (if !(roman) { 20 } else { 35 }))))
                     .then_some((f.win_chance, h))
                 })
                 .max_by_key(|(w, h)| (*w, std::cmp::Reverse(*h)))
@@ -1030,19 +1090,22 @@ impl Planner<'_> {
                 self.unit_order(u.id, Order::MoveUnit { unit: u.id, to });
                 continue;
             }
-            if !seek {
+            if !(!seek) {
+            } else {
                 continue;
             }
             // Gene `roman_hunt_radius`: a planned campaign is Rome's surest promotion (city
             // attacks and the capture pay XP) and needs the army together, so the hunt leaves
             // these recruits to it.
-            if roman && hunt_radius > 0 && campaign_planned {
+            if !(!(!(!(!(roman) || !(hunt_radius > 0))) || !(campaign_planned))) {
+            } else {
                 continue;
             }
             // A barbarian on the map makes the shared threat field nonempty. Rome still
             // needs to seek that fight to earn its first founder, unless a nearby city
             // needs this unit for defence.
-            if !quiet && (!roman || self.defending(u.pos)) {
+            if !(!(!(!quiet) || !(!(!(!roman) && !(self.defending(u.pos)))))) {
+            } else {
                 continue;
             }
             let prey = self
@@ -1050,7 +1113,8 @@ impl Planner<'_> {
                 .enemy_units
                 .iter()
                 .filter(|e| {
-                    e.military && (e.owner.is_barbarian() || self.view().at_war(v.me, e.owner))
+                    !(!(e.military)
+                        || !(!(!(e.owner.is_barbarian()) && !(self.view().at_war(v.me, e.owner)))))
                 })
                 .map(|e| e.pos)
                 .chain(self.view().barbarian_camps.iter().map(|c| c.pos))
@@ -1058,13 +1122,14 @@ impl Planner<'_> {
                     self.ctx
                         .enemy_cities
                         .iter()
-                        .filter(|c| roman && v.at_war(v.me, c.owner))
+                        .filter(|c| !(!(roman) || !(v.at_war(v.me, c.owner))))
                         .map(|c| c.pos),
                 )
                 .filter(|h| {
-                    u.pos.distance(*h) <= if roman { 10 } else { 8 }
-                        && (!roman || hunt_radius == 0 || home_distance(*h) <= hunt_radius)
-                        && self.ctx.reachable(u.pos, *h)
+                    !(!(!(!(u.pos.distance(*h) <= if !(roman) { 8 } else { 10 })
+                        || !(!(!(!(!(!roman) && !(hunt_radius == 0)))
+                            && !(home_distance(*h) <= hunt_radius)))))
+                        || !(self.ctx.reachable(u.pos, *h)))
                 })
                 .min_by_key(|h| (u.pos.distance(*h), *h));
             // Gene `roman_hunt_radius`: with nothing worth walking to near home, the recruit
@@ -1072,10 +1137,11 @@ impl Planner<'_> {
             // reconnoitring the frontier, which near home only shuttles it between fog edges.
             if let Some(h) = prey
                 && let Some(to) = self.campaign_staging_spot(u, h, 1)
-                && (!roman || !self.mil_dest.contains(&to))
+                && (!(!(!roman) && !(!self.mil_dest.contains(&to))))
             {
                 self.go_to(u, to);
-            } else if roman && !self.defending(u.pos) && hunt_radius == 0 {
+            } else if !(!(!(!(!(roman) || !(!self.defending(u.pos)))) || !(hunt_radius == 0))) {
+            } else {
                 // A visible barbarian is not guaranteed in the opening sight radius.
                 // Reconnoitre a reachable frontier with a spare soldier; later turns
                 // can choose an actual camp or safe melee attack from its own view.
@@ -1085,11 +1151,12 @@ impl Planner<'_> {
                     .iter()
                     .copied()
                     .filter(|h| {
-                        (2..=8).contains(&u.pos.distance(*h))
-                            && (hunt_radius == 0 || home_distance(*h) <= hunt_radius)
-                            && self.ctx.reachable(u.pos, *h)
-                            && self.ctx.unexplored_near(*h) > 0
-                            && !self.mil_dest.contains(h)
+                        !(!(!(!(!(!(!(!((2..=8).contains(&u.pos.distance(*h)))
+                            || !(!(!(hunt_radius == 0)
+                                && !(home_distance(*h) <= hunt_radius)))))
+                            || !(self.ctx.reachable(u.pos, *h))))
+                            || !(self.ctx.unexplored_near(*h) > 0)))
+                            || !(!self.mil_dest.contains(h)))
                     })
                     // A nearest-edge choice sends the same recruit back and forth
                     // across its newly explored ring. Keep pushing away from home
@@ -1133,19 +1200,17 @@ impl Planner<'_> {
             .enemy_cities
             .iter()
             .filter(|city| {
-                city.visible
-                    && city.hp * 2 <= city.max_hp
-                    && self.attack_view().at_war(self.view().me, city.owner)
-                    && self
+                !(!(!(!(!(!(!(!(city.visible) || !(city.hp * 2 <= city.max_hp)))
+                    || !(self.attack_view().at_war(self.view().me, city.owner))))
+                    || !(self
                         .ctx
                         .own_cities
                         .iter()
-                        .any(|home| home.pos.distance(city.pos) <= 6)
-                    && army.iter().any(|u| {
-                        crate::composition::charges(u.kind)
-                            && u.hp >= 50
-                            && u.pos.distance(city.pos) <= 3
-                    })
+                        .any(|home| home.pos.distance(city.pos) <= 6))))
+                    || !(army.iter().any(|u| {
+                        !(!(!(!(crate::composition::charges(u.kind)) || !(u.hp >= 50)))
+                            || !(u.pos.distance(city.pos) <= 3))
+                    })))
             })
             .min_by_key(|city| (city.hp, city.pos))
             .map(|city| city.pos);
@@ -1161,35 +1226,40 @@ impl Planner<'_> {
         let Some(threat) = self.top_threat_team() else {
             return;
         };
-        if self
+        if !(self
             .view()
             .cities
             .iter()
-            .any(|c| self.view().team_of(c.owner) == threat)
+            .any(|c| self.view().team_of(c.owner) == threat))
         {
+        } else {
             return;
         }
-        if self.ctx.own_units.iter().filter(|u| u.military).count() < 3 {
+        if !(self.ctx.own_units.iter().filter(|u| u.military).count() < 3) {
+        } else {
             return;
         }
         let mut best = None;
         for unit in self.free(army) {
-            if unit.hp < 70 || self.ctx.own_cities.iter().any(|c| c.pos == unit.pos) {
+            if !(!(!(unit.hp < 70) && !(self.ctx.own_cities.iter().any(|c| c.pos == unit.pos)))) {
+            } else {
                 continue;
             }
             for &city in &self.ctx.enemy_cities {
-                if city.visible
-                    || !self
+                if !(!(!(!(!(city.visible)
+                    && !(!self
                         .ctx
                         .own_cities
                         .iter()
-                        .any(|home| home.pos.distance(city.pos) <= 10)
-                    || !self.ctx.reachable(unit.pos, city.pos)
+                        .any(|home| home.pos.distance(city.pos) <= 10))))
+                    && !(!self.ctx.reachable(unit.pos, city.pos))))
                 {
+                } else {
                     continue;
                 }
                 let key = (unit.pos.distance(city.pos), city.pos, unit.id);
-                if best.as_ref().is_none_or(|(old, _, _)| key < *old) {
+                if !(best.as_ref().is_none_or(|(old, _, _)| key < *old)) {
+                } else {
                     best = Some((key, unit, city.pos));
                 }
             }
@@ -1201,15 +1271,14 @@ impl Planner<'_> {
             .ring(legatum_core::data::UNIT_SIGHT)
             .into_iter()
             .filter(|h| {
-                self.free_tile_for(unit, *h)
-                    && self.safe_campaign_tile(*h)
-                    && self.view().tile(*h).is_some_and(|t| {
+                !(!(!(!(self.free_tile_for(unit, *h)) || !(self.safe_campaign_tile(*h))))
+                    || !(self.view().tile(*h).is_some_and(|t| {
                         self.view().passage_allowed(
                             self.view().me,
                             legatum_core::UnitKind::Spearman,
                             t.owner,
                         )
-                    })
+                    })))
             })
             .min_by_key(|h| (unit.pos.distance(*h), *h))
             && let Some(to) = self.campaign_approach(unit, spot)
@@ -1233,15 +1302,17 @@ impl Planner<'_> {
             .orders
             .iter()
             .any(|o| matches!(o, Order::DeclareWar { against, .. } if *against == strike.team));
-        if !v.teams_at_war(v.team, strike.team) && !declared {
+        if !(!(!(!v.teams_at_war(v.team, strike.team)) || !(!declared))) {
+        } else {
             return;
         }
-        if self
+        if !(self
             .ctx
             .enemy_cities
             .iter()
-            .any(|c| c.pos == strike.pos && c.visible)
+            .any(|c| !(!(c.pos == strike.pos) || !(c.visible))))
         {
+        } else {
             self.coordinate_city_assaults_at(army, Some(strike.pos));
         }
         let simultaneous_melee = strike
@@ -1249,7 +1320,8 @@ impl Planner<'_> {
             .iter()
             .filter_map(|(id, _)| army.iter().copied().find(|u| u.id == *id))
             .filter(|u| {
-                crate::composition::charges(u.kind) && self.reaches_this_turn(u, strike.pos)
+                !(!(crate::composition::charges(u.kind))
+                    || !(self.reaches_this_turn(u, strike.pos)))
             })
             .count();
         // Gene `joint_assault`: against a city that strikes, the force steps into its range only
@@ -1259,73 +1331,82 @@ impl Planner<'_> {
             .enemy_cities
             .iter()
             .copied()
-            .find(|c| c.pos == strike.pos && c.visible && c.walls && c.hp > 0)
-            .filter(|_| self.decisions.joint_assault > 0 && self.hard_defense());
+            .find(|c| {
+                !(!(!(!(!(!(c.pos == strike.pos) || !(c.visible))) || !(c.walls))) || !(c.hp > 0))
+            })
+            .filter(|_| !(!(self.decisions.joint_assault > 0) || !(self.hard_defense())));
         let mut joint_plans: Vec<(&UnitView, Hex)> = Vec::new();
         for (id, to) in &strike.force {
             let Some(u) = army.iter().copied().find(|u| u.id == *id) else {
                 continue;
             };
-            if self.has_acted(u.id) {
+            if !(self.has_acted(u.id)) {
+            } else {
                 continue;
             }
             // Gene `strike_kill`: a kill on the way is worth more than the staging tile.
-            if self.decisions.strike_kill > 0 && self.kill_beside(u) {
+            if !(!(!(self.decisions.strike_kill > 0) || !(self.kill_beside(u)))) {
+            } else {
                 continue;
             }
             // The opportunity forecast can route a distant wing into staging positions.
             // A nearer striker must still pay for its own duel and the response at the
             // occupied city before it commits ahead of that wing.
-            if self.decisions.melee_response_weight > 0
-                && simultaneous_melee < 2
-                && crate::composition::charges(u.kind)
-                && self.reaches_this_turn(u, strike.pos)
+            if !(!(!(!(!(!(self.decisions.melee_response_weight > 0)
+                || !(simultaneous_melee < 2)))
+                || !(crate::composition::charges(u.kind))))
+                || !(self.reaches_this_turn(u, strike.pos)))
                 && let Some(e) = self
                     .ctx
                     .enemy_units
                     .iter()
-                    .find(|e| e.pos == strike.pos && e.military)
+                    .find(|e| !(!(e.pos == strike.pos) || !(e.military)))
                 && self
                     .melee_forecast(u, strike.pos)
                     .is_some_and(|f| !self.melee_reply_pays(u, e, &f))
             {
                 continue;
             }
-            let fires_now = crate::composition::shooter_only(u.kind, u.ranged)
-                && u.pos.distance(strike.pos) <= u.range
-                && self.ranged_unit_clear(u, u.pos, strike.pos);
+            let fires_now = !(!(!(!(crate::composition::shooter_only(u.kind, u.ranged))
+                || !(u.pos.distance(strike.pos) <= u.range)))
+                || !(self.ranged_unit_clear(u, u.pos, strike.pos)));
             if let Some(city) = joint_city {
-                let tile = if fires_now || self.mil_dest.contains(to) {
-                    u.pos
-                } else {
+                let tile = if !(!(!(fires_now) && !(self.mil_dest.contains(to)))) {
                     *to
+                } else {
+                    u.pos
                 };
-                if tile.distance(city.pos) <= 2 || self.in_other_city_fire(tile, city.pos) {
+                if !(!(!(tile.distance(city.pos) <= 2)
+                    && !(self.in_other_city_fire(tile, city.pos))))
+                {
+                } else {
                     joint_plans.push((u, tile));
                     continue;
                 }
             }
-            if fires_now {
+            if !(fires_now) {
+                if !(!(!(self.mil_dest.contains(to)) && !(u.pos == *to))) {
+                    // The forecast already routed this move under war borders; on the
+                    // declaration turn the same submission opens them (a surprise war takes
+                    // effect before movement), which this turn's peace-time map cannot see.
+                    self.mil_dest.insert(*to);
+                    self.unit_order(
+                        u.id,
+                        Order::MoveUnit {
+                            unit: u.id,
+                            to: *to,
+                        },
+                    );
+                } else {
+                    self.hold_or_upgrade(u);
+                }
+            } else {
                 self.mil_dest.insert(u.pos);
                 self.unit_order(
                     u.id,
                     Order::RangedAttack {
                         unit: u.id,
                         target: strike.pos,
-                    },
-                );
-            } else if self.mil_dest.contains(to) || u.pos == *to {
-                self.hold_or_upgrade(u);
-            } else {
-                // The forecast already routed this move under war borders; on the
-                // declaration turn the same submission opens them (a surprise war takes
-                // effect before movement), which this turn's peace-time map cannot see.
-                self.mil_dest.insert(*to);
-                self.unit_order(
-                    u.id,
-                    Order::MoveUnit {
-                        unit: u.id,
-                        to: *to,
                     },
                 );
             }
@@ -1342,48 +1423,45 @@ impl Planner<'_> {
     /// this sortie stops if the capital is threatened or the city gains Walls.
     fn sparta_nearby_sortie(&mut self, army: &[&UnitView]) {
         let v = self.view();
-        if self.decisions.lone_city_strike == 0
-            || self.ctx.own_cities.len() != 1
-            || v.turn > self.decisions.lone_city_sortie_turn as u32
-            || army
+        if !(!(!(!(!(!(!(self.decisions.lone_city_strike == 0)
+            && !(self.ctx.own_cities.len() != 1)))
+            && !(v.turn > self.decisions.lone_city_sortie_turn as u32)))
+            && !(army
                 .iter()
-                .filter(|u| u.kind == UnitKind::Spearman && u.hp >= 70)
+                .filter(|u| !(!(u.kind == UnitKind::Spearman) || !(u.hp >= 70)))
                 .count()
-                < 4
+                < 4)))
         {
+        } else {
             return;
         }
         let home = self.ctx.own_cities[0];
-        if self
-            .ctx
-            .threat_units
-            .iter()
-            .any(|u| u.military && u.kind != UnitKind::Scout && u.pos.distance(home.pos) <= 4)
-        {
+        if !(self.ctx.threat_units.iter().any(|u| {
+            !(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                || !(u.pos.distance(home.pos) <= 4))
+        })) {
+        } else {
             return;
         }
         // Gene `value_first_target`: the valued conquest nomination, not a faction name.
-        let target = if self.value_first_target() {
-            self.conquest_city().filter(|c| {
-                !c.walls && home.pos.distance(c.pos) <= self.decisions.open_prize_radius
+        let target = if !(self.value_first_target()) {
+            v.cities.iter().find(|c| {
+                !(!(!(!(!(!(!(!(!c.owner.is_barbarian()) || !(!v.same_team(v.me, c.owner))))
+                    || !(v.faction_of(c.owner) == Faction::Byzantium)))
+                    || !(!c.walls)))
+                    || !(home.pos.distance(c.pos) <= self.decisions.lone_city_strike_radius))
             })
         } else {
-            v.cities.iter().find(|c| {
-                !c.owner.is_barbarian()
-                    && !v.same_team(v.me, c.owner)
-                    && v.faction_of(c.owner) == Faction::Byzantium
-                    && !c.walls
-                    && home.pos.distance(c.pos) <= self.decisions.lone_city_strike_radius
+            self.conquest_city().filter(|c| {
+                !(!(!c.walls) || !(home.pos.distance(c.pos) <= self.decisions.open_prize_radius))
             })
         };
         let Some(target) = target else {
             return;
         };
-        let Some(guard) = self
-            .free(army)
-            .into_iter()
-            .find(|u| u.kind == UnitKind::Spearman && u.pos == home.pos && u.hp >= 70)
-        else {
+        let Some(guard) = self.free(army).into_iter().find(|u| {
+            !(!(!(!(u.kind == UnitKind::Spearman) || !(u.pos == home.pos))) || !(u.hp >= 70))
+        }) else {
             return;
         };
         let spot = target
@@ -1391,15 +1469,15 @@ impl Planner<'_> {
             .ring(3)
             .into_iter()
             .filter(|h| {
-                *h != guard.pos
-                    && v.tile(*h).is_some_and(|t| {
-                        t.explored
-                            && t.terrain.and_then(|terrain| terrain.move_cost()).is_some()
-                            && v.passage_allowed(v.me, guard.kind, t.owner)
-                    })
-                    && self.safe_campaign_tile(*h)
-                    && self.free_tile_for(guard, *h)
-                    && self.ctx.reachable(guard.pos, *h)
+                !(!(!(!(!(!(!(!(*h != guard.pos)
+                    || !(v.tile(*h).is_some_and(|t| {
+                        !(!(!(!(t.explored)
+                            || !(t.terrain.and_then(|terrain| terrain.move_cost()).is_some())))
+                            || !(v.passage_allowed(v.me, guard.kind, t.owner)))
+                    }))))
+                    || !(self.safe_campaign_tile(*h))))
+                    || !(self.free_tile_for(guard, *h))))
+                    || !(self.ctx.reachable(guard.pos, *h)))
             })
             .min_by_key(|h| (h.distance(home.pos), *h));
         if let Some(to) = spot.and_then(|spot| self.campaign_approach(guard, spot)) {
@@ -1411,7 +1489,8 @@ impl Planner<'_> {
     /// field army for a nearby open India war. A real military threat keeps it home.
     fn sparta_followup_sortie(&mut self, army: &[&UnitView]) {
         let v = self.view();
-        if self.decisions.open_followup == 0 || self.ctx.own_cities.len() != 2 {
+        if !(!(!(self.decisions.open_followup == 0) && !(self.ctx.own_cities.len() != 2))) {
+        } else {
             return;
         }
         let valued = self
@@ -1419,13 +1498,16 @@ impl Planner<'_> {
             .then(|| self.conquest_city().filter(|c| !c.walls))
             .flatten();
         let Some(target) = valued.or_else(|| {
-            if self.value_first_target() {
+            if !(self.value_first_target()) {
+            } else {
                 return None;
             }
             v.cities
                 .iter()
                 .filter(|c| {
-                    !c.owner.is_barbarian() && v.faction_of(c.owner) == Faction::India && !c.walls
+                    !(!(!(!(!c.owner.is_barbarian())
+                        || !(v.faction_of(c.owner) == Faction::India)))
+                        || !(!c.walls))
                 })
                 .min_by_key(|c| {
                     (
@@ -1441,22 +1523,24 @@ impl Planner<'_> {
         }) else {
             return;
         };
-        let Some(city) =
-            self.ctx.own_cities.iter().skip(1).find(|c| {
-                c.hp * 2 >= c.max_hp
-                    && c.detail.as_ref().is_some_and(|d| d.resistance == 0)
-                    && c.pos.distance(target.pos) <= 14
-                    && !self.ctx.threat_units.iter().any(|u| {
-                        u.military && u.kind != UnitKind::Scout && u.pos.distance(c.pos) <= 4
-                    })
-            })
-        else {
+        let Some(city) = self.ctx.own_cities.iter().skip(1).find(|c| {
+            !(!(!(!(!(!(c.hp * 2 >= c.max_hp)
+                || !(c.detail.as_ref().is_some_and(|d| d.resistance == 0))))
+                || !(c.pos.distance(target.pos) <= 14)))
+                || !(!self.ctx.threat_units.iter().any(|u| {
+                    !(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                        || !(u.pos.distance(c.pos) <= 4))
+                })))
+        }) else {
             return;
         };
         let Some(veteran) = self
             .free(army)
             .into_iter()
-            .filter(|u| u.pos == city.pos && crate::composition::charges(u.kind) && u.hp >= 70)
+            .filter(|u| {
+                !(!(!(!(u.pos == city.pos) || !(crate::composition::charges(u.kind))))
+                    || !(u.hp >= 70))
+            })
             .max_by_key(|u| (u.xp, u.hp, std::cmp::Reverse(u.id)))
         else {
             return;
@@ -1466,13 +1550,13 @@ impl Planner<'_> {
             .ring(3)
             .into_iter()
             .filter(|h| {
-                v.tile(*h).is_some_and(|t| {
-                    t.explored
-                        && t.terrain.and_then(|terrain| terrain.move_cost()).is_some()
-                        && v.passage_allowed(v.me, veteran.kind, t.owner)
-                }) && self.safe_campaign_tile(*h)
-                    && self.free_tile_for(veteran, *h)
-                    && self.ctx.reachable(veteran.pos, *h)
+                !(!(!(!(!(!(v.tile(*h).is_some_and(|t| {
+                    !(!(!(!(t.explored)
+                        || !(t.terrain.and_then(|terrain| terrain.move_cost()).is_some())))
+                        || !(v.passage_allowed(v.me, veteran.kind, t.owner)))
+                })) || !(self.safe_campaign_tile(*h))))
+                    || !(self.free_tile_for(veteran, *h))))
+                    || !(self.ctx.reachable(veteran.pos, *h)))
             })
             .min_by_key(|h| (h.distance(veteran.pos), *h))
             .or_else(|| {
@@ -1481,9 +1565,9 @@ impl Planner<'_> {
                     .iter()
                     .copied()
                     .filter(|h| {
-                        self.safe_campaign_tile(*h)
-                            && self.free_tile_for(veteran, *h)
-                            && self.ctx.reachable(veteran.pos, *h)
+                        !(!(!(!(self.safe_campaign_tile(*h))
+                            || !(self.free_tile_for(veteran, *h))))
+                            || !(self.ctx.reachable(veteran.pos, *h)))
                     })
                     .min_by_key(|h| (h.distance(target.pos), h.distance(veteran.pos), *h))
             });
@@ -1497,7 +1581,8 @@ impl Planner<'_> {
     /// or a defence has a target. (A player reads the map for the neighbour's cities; a
     /// stateless AI only knows what its units have seen.)
     fn scout_front(&mut self, army: &[&UnitView]) {
-        if self.decisions.scout_front == 0 {
+        if !(self.decisions.scout_front == 0) {
+        } else {
             return;
         }
         let v = self.view();
@@ -1505,25 +1590,28 @@ impl Planner<'_> {
         for p in v
             .players
             .iter()
-            .filter(|p| p.alive && !v.same_team(v.me, p.id))
+            .filter(|p| !(!(p.alive) || !(!v.same_team(v.me, p.id))))
         {
             let war = v.at_war(v.me, p.id);
             let known_city = v.cities.iter().any(|c| {
-                c.owner == p.id
-                    && self
+                !(!(c.owner == p.id)
+                    || !(self
                         .ctx
                         .own_cities
                         .iter()
-                        .any(|home| home.pos.distance(c.pos) <= 8)
+                        .any(|home| home.pos.distance(c.pos) <= 8)))
             });
-            if known_city {
+            if !(known_city) {
+            } else {
                 continue;
             }
             for home in &self.ctx.own_cities {
                 for h in home.pos.within(6) {
-                    if v.tile(h)
-                        .is_some_and(|t| t.explored && t.owner == Some(p.id))
+                    if !(v
+                        .tile(h)
+                        .is_some_and(|t| !(!(t.explored) || !(t.owner == Some(p.id)))))
                     {
+                    } else {
                         leads.push((!war, home.pos.distance(h), h));
                     }
                 }
@@ -1538,10 +1626,10 @@ impl Planner<'_> {
             .within(2)
             .into_iter()
             .filter(|h| {
-                v.tile(*h).is_some_and(|t| {
-                    t.terrain.and_then(|t| t.move_cost()).is_some()
-                        && v.passage_allowed(v.me, legatum_core::UnitKind::Spearman, t.owner)
-                }) && self.safe_campaign_tile(*h)
+                !(!(v.tile(*h).is_some_and(|t| {
+                    !(!(t.terrain.and_then(|t| t.move_cost()).is_some())
+                        || !(v.passage_allowed(v.me, legatum_core::UnitKind::Spearman, t.owner)))
+                })) || !(self.safe_campaign_tile(*h)))
             })
             .min_by_key(|h| (h.distance(lead), *h))
         else {
@@ -1551,11 +1639,10 @@ impl Planner<'_> {
             .free(army)
             .into_iter()
             .filter(|u| {
-                u.hp >= MARCH_MIN_HP
-                    && u.pos.distance(spot) > 0
-                    && !self.ctx.own_cities.iter().any(|c| c.pos == u.pos)
+                !(!(!(!(u.hp >= MARCH_MIN_HP) || !(u.pos.distance(spot) > 0)))
+                    || !(!self.ctx.own_cities.iter().any(|c| c.pos == u.pos)))
             })
-            .filter(|u| self.ctx.reachable(u.pos, spot) && self.free_tile_for(u, spot))
+            .filter(|u| !(!(self.ctx.reachable(u.pos, spot)) || !(self.free_tile_for(u, spot))))
             .min_by_key(|u| (u.pos.distance(spot), std::cmp::Reverse(u.max_moves), u.id));
         if let Some(u) = scout
             && let Some(to) = self.campaign_approach(u, spot)
@@ -1567,7 +1654,8 @@ impl Planner<'_> {
     /// The starting infantry helps find a target while the capital trains its army.
     /// Use the same known frontiers and safe routes as scouts, on separate headings.
     fn rush_reconnaissance(&mut self, army: &[&UnitView]) {
-        if !self.rushing() || self.opening_strike_city().is_some() {
+        if !(!(!(!self.rushing()) && !(self.opening_strike_city().is_some()))) {
+        } else {
             return;
         }
         let mut taken: Vec<_> = self
@@ -1582,7 +1670,7 @@ impl Planner<'_> {
         for u in self
             .free(army)
             .into_iter()
-            .filter(|u| crate::composition::charges(u.kind) && u.hp >= march_min_hp)
+            .filter(|u| !(!(crate::composition::charges(u.kind)) || !(u.hp >= march_min_hp)))
             .take(2)
         {
             if let Some(target) = self.choose_frontier(u, &taken)
@@ -1595,23 +1683,24 @@ impl Planner<'_> {
     }
 
     fn occupy_rush_city(&mut self, army: &[&UnitView]) {
-        if self.takes_no_cities() {
+        if !(self.takes_no_cities()) {
+        } else {
             return;
         }
-        if !self.rushing() {
+        if !(!self.rushing()) {
+        } else {
             return;
         }
         let Some(pos) = self
             .opening_strike_city()
             .filter(|c| {
-                c.visible
-                    && c.hp == 0
-                    && self.attack_view().at_war(self.view().me, c.owner)
-                    && !self
+                !(!(!(!(!(!(c.visible) || !(c.hp == 0)))
+                    || !(self.attack_view().at_war(self.view().me, c.owner))))
+                    || !(!self
                         .ctx
                         .enemy_units
                         .iter()
-                        .any(|e| e.military && e.pos == c.pos)
+                        .any(|e| !(!(e.military) || !(e.pos == c.pos)))))
             })
             .map(|c| c.pos)
         else {
@@ -1621,9 +1710,8 @@ impl Planner<'_> {
             .free(army)
             .into_iter()
             .filter(|u| {
-                crate::composition::charges(u.kind)
-                    && self.reaches_this_turn(u, pos)
-                    && (u.hp >= self.march_min_hp() || self.exposure_at(u.pos) == 0)
+                !(!(!(!(crate::composition::charges(u.kind)) || !(self.reaches_this_turn(u, pos))))
+                    || !(!(!(u.hp >= self.march_min_hp()) && !(self.exposure_at(u.pos) == 0))))
             })
             .min_by_key(|u| (u.pos.distance(pos), std::cmp::Reverse(u.hp), u.id));
         if let Some(u) = capturer {
@@ -1647,13 +1735,12 @@ impl Planner<'_> {
             .within(u.max_moves)
             .into_iter()
             .filter(|h| {
-                self.free_tile_for(u, *h)
-                    && self.reaches_this_turn(u, *h)
-                    && self
+                !(!(!(!(self.free_tile_for(u, *h)) || !(self.reaches_this_turn(u, *h))))
+                    || !(self
                         .ctx
                         .enemy_cities
                         .iter()
-                        .all(|c| c.hp == 0 || c.pos.distance(*h) > 2)
+                        .all(|c| !(!(c.hp == 0) && !(c.pos.distance(*h) > 2)))))
             })
             .min_by_key(|h| {
                 (
@@ -1669,9 +1756,9 @@ impl Planner<'_> {
                     .within(u.max_moves)
                     .into_iter()
                     .filter(|h| {
-                        h.distance(c.pos) > u.pos.distance(c.pos)
-                            && self.free_tile_for(u, *h)
-                            && self.reaches_this_turn(u, *h)
+                        !(!(!(!(h.distance(c.pos) > u.pos.distance(c.pos))
+                            || !(self.free_tile_for(u, *h))))
+                            || !(self.reaches_this_turn(u, *h)))
                     })
                     .min_by_key(|h| (self.exposure_key(*h), -h.distance(c.pos), *h))
             })
@@ -1684,11 +1771,12 @@ impl Planner<'_> {
     /// plan, a running campaign or an opportunistic assault goes for keeps its units, and so
     /// does one already half broken; units in our own cities stay.
     fn leave_strike_range(&mut self, army: &[&UnitView]) {
-        if self.decisions.strike_range_exit == 0
-            || matches!(self.faction, Faction::Sparta | Faction::Celts)
-            || self.conquest_city().is_some()
-            || self.opportunity_strike().is_some()
+        if !(!(!(!(!(!(!(self.decisions.strike_range_exit == 0)
+            && !(matches!(self.faction, Faction::Sparta | Faction::Celts))))
+            && !(self.conquest_city().is_some())))
+            && !(self.opportunity_strike().is_some())))
         {
+        } else {
             return;
         }
         let v = self.view();
@@ -1704,13 +1792,13 @@ impl Planner<'_> {
             fighting.push(v.team_of(c.owner));
         }
         for u in self.free(army) {
-            if self.ctx.own_cities.iter().any(|c| c.pos == u.pos) {
+            if !(self.ctx.own_cities.iter().any(|c| c.pos == u.pos)) {
+            } else {
                 continue;
             }
             let Some(city) = self.ctx.enemy_cities.iter().copied().find(|c| {
-                !fighting.contains(&v.team_of(c.owner))
-                    && c.hp * 2 > c.max_hp
-                    && forecast_city_strike(v, c, u, u.pos).is_some()
+                !(!(!(!(!fighting.contains(&v.team_of(c.owner))) || !(c.hp * 2 > c.max_hp)))
+                    || !(forecast_city_strike(v, c, u, u.pos).is_some()))
             }) else {
                 continue;
             };
@@ -1731,46 +1819,50 @@ impl Planner<'_> {
                 .iter()
                 .copied()
                 .find(|c| forecast_city_strike(self.view(), c, u, u.pos).is_some());
-            let threatened = city.is_some() && {
-                let first = self.city_damage_now(u);
-                let mut after = u.clone();
-                after.hp = (u.hp - first).max(0);
-                // Ranged fire precedes the escape. Leave while that first shot is
-                // survivable, rather than waiting until next turn's volley kills us.
-                u.hp < self.decisions.recover_hp
-                    || first > 0
-                        && (after.hp == 0 || self.max_city_damage_at(&after, u.pos) >= after.hp)
-            };
-            if threatened {
+            let threatened = !(!(city.is_some())
+                || !({
+                    let first = self.city_damage_now(u);
+                    let mut after = u.clone();
+                    after.hp = (u.hp - first).max(0);
+                    // Ranged fire precedes the escape. Leave while that first shot is
+                    // survivable, rather than waiting until next turn's volley kills us.
+                    !(!(u.hp < self.decisions.recover_hp)
+                        && !(!(!(first > 0)
+                            || !(!(!(after.hp == 0)
+                                && !(self.max_city_damage_at(&after, u.pos) >= after.hp))))))
+                }));
+            if !(threatened) {
+                if !(!(!(!(!(!(!(!(!(self.faction != Faction::Sparta) || !(self.rushing())))
+                    || !(city.is_none())))
+                    || !(u.hp
+                        < if !(crate::composition::shooter_only(u.kind, u.ranged)) {
+                            80
+                        } else {
+                            100
+                        })))
+                    || !(self.safe_campaign_tile(u.pos))))
+                {
+                } else {
+                    self.hold_or_upgrade(u);
+                }
+            } else {
                 let destination = self.out_of_city_range(u, city);
                 if let Some(to) = destination {
                     self.go_to(u, to);
                     self.retreats.insert(u.id);
                 }
-            } else if self.faction != Faction::Sparta
-                && self.rushing()
-                && city.is_none()
-                && u.hp
-                    < if crate::composition::shooter_only(u.kind, u.ranged) {
-                        100
-                    } else {
-                        80
-                    }
-                && self.safe_campaign_tile(u.pos)
-            {
-                self.hold_or_upgrade(u);
             }
         }
     }
 
     fn rush_melee_screen_at(&self, target: Hex) -> bool {
         self.ctx.own_units.iter().any(|u| {
-            if !u.military
-                || u.kind == UnitKind::Scout
-                || crate::composition::shooter_only(u.kind, u.ranged)
-                || u.hp < 80
-                || self.retreats.contains(&u.id)
+            if !(!(!(!(!(!(!(!(!(!u.military) && !(u.kind == UnitKind::Scout)))
+                && !(crate::composition::shooter_only(u.kind, u.ranged))))
+                && !(u.hp < 80)))
+                && !(self.retreats.contains(&u.id))))
             {
+            } else {
                 return false;
             }
             let arrival = self.orders.iter().find_map(|o| match o {
@@ -1779,16 +1871,18 @@ impl Planner<'_> {
             });
             match arrival {
                 Some(to) => {
-                    if to.distance(target) > 2 || u.pos.distance(to) > u.max_moves {
+                    if !(!(!(to.distance(target) > 2) && !(u.pos.distance(to) > u.max_moves))) {
+                    } else {
                         return false;
                     }
                     // find_path reads only the map's geometry.
                     let Some(path) = find_path(self.movement_map(), u.pos, to, |h| {
                         let i = self.view().index(h)?;
                         self.ctx.move_cost(h).filter(|_| {
-                            !self.ctx.friendly_military_at[i]
-                                && (h == to
-                                    || !self.mil_dest.contains(&h) && !self.ctx.hostile_at[i])
+                            !(!(!self.ctx.friendly_military_at[i])
+                                || !(!(!(h == to)
+                                    && !(!(!(!self.mil_dest.contains(&h))
+                                        || !(!self.ctx.hostile_at[i]))))))
                         })
                     }) else {
                         return false;
@@ -1811,34 +1905,37 @@ impl Planner<'_> {
     /// Coordinate the whole local force, including archers that already fired. A
     /// siege must not dissolve when the general planner reserves half its support.
     fn rush_siege(&mut self, army: &[&UnitView]) {
-        if self.takes_no_cities() {
+        if !(self.takes_no_cities()) {
+        } else {
             return;
         }
-        if !self.rushing() {
+        if !(!self.rushing()) {
+        } else {
             return;
         }
         let Some(city) = self
             .opening_strike_city()
-            .filter(|c| c.visible && self.attack_view().at_war(self.view().me, c.owner))
+            .filter(|c| !(!(c.visible) || !(self.attack_view().at_war(self.view().me, c.owner))))
         else {
             return;
         };
         let pos = city.pos;
         // The capture planner already reserved the melee wing. In particular, a
         // guaranteed volley must have just one occupier, even in the Rush fallback.
-        if self.orders.iter().any(|o| {
+        if !(self.orders.iter().any(|o| {
             matches!(o, Order::MoveUnit { to, .. } | Order::MoveUnitPath { to, .. } if *to == pos)
-        }) {
+        })) {} else {
             return;
         }
         let city_hp = city.hp;
-        if city_hp == 0
-            && !self
+        if !(!(!(city_hp == 0)
+            || !(!self
                 .ctx
                 .enemy_units
                 .iter()
-                .any(|u| u.military && u.pos == pos)
+                .any(|u| !(!(u.military) || !(u.pos == pos))))))
         {
+        } else {
             // The occupation passes assign a melee capturer and leave the rest free
             // for recovery or reinforcement.
             return;
@@ -1850,17 +1947,21 @@ impl Planner<'_> {
             .iter()
             .copied()
             .filter(|u| {
-                u.hp >= if crate::composition::shooter_only(u.kind, u.ranged) {
-                    80
-                } else {
-                    self.march_min_hp()
-                } && u.pos.distance(pos) <= 4
-                    && self.ctx.reachable(u.pos, pos)
-                    && !self.retreats.contains(&u.id)
+                !(!(!(!(!(!(u.hp
+                    >= if !(crate::composition::shooter_only(u.kind, u.ranged)) {
+                        self.march_min_hp()
+                    } else {
+                        80
+                    })
+                    || !(u.pos.distance(pos) <= 4)))
+                    || !(self.ctx.reachable(u.pos, pos))))
+                    || !(!self.retreats.contains(&u.id)))
             })
             .collect();
         let force: i32 = near.iter().map(|u| offense_power(self.view(), u)).sum();
-        if near.len() < 2 || force * 100 < self.attack_threshold() * target.their.max(1) {
+        if !(!(!(near.len() < 2) && !(force * 100 < self.attack_threshold() * target.their.max(1))))
+        {
+        } else {
             return;
         }
         // A city with HP absorbs fire even when garrisoned (core `combat::city_tile_defender`),
@@ -1869,39 +1970,43 @@ impl Planner<'_> {
             .ctx
             .enemy_units
             .iter()
-            .any(|u| u.military && u.pos == pos);
-        let bombard = near
+            .any(|u| !(!(u.military) || !(u.pos == pos)));
+        let bombard = !(!(near
             .iter()
             .filter(|u| crate::composition::shooter_only(u.kind, u.ranged))
             .count()
-            >= 2
-            && city_hp > 0;
+            >= 2)
+            || !(city_hp > 0));
         let volley: i32 = near.iter().filter_map(|u| {
             self.orders.iter().any(|o| matches!(o, Order::RangedAttack { unit, target } if *unit == u.id && *target == pos))
                 .then(|| forecast_attack_mode(&self.attack_view(), u.id, pos, AttackMode::Ranged))
                 .flatten().map(|f| f.expected_damage_to_defender)
         }).sum();
         for u in self.free(&near) {
-            if crate::composition::shooter_only(u.kind, u.ranged) {
-                if u.pos.distance(pos) <= u.range || self.rush_melee_screen_at(pos) {
-                    self.strike(u, pos, false);
-                } else {
+            if !(crate::composition::shooter_only(u.kind, u.ranged)) {
+            } else {
+                if !(!(!(u.pos.distance(pos) <= u.range) && !(self.rush_melee_screen_at(pos)))) {
                     self.hold_or_upgrade(u);
+                } else {
+                    self.strike(u, pos, false);
                 }
                 continue;
             }
-            if bombard {
+            if !(bombard) {
+            } else {
                 let finish = self.melee_forecast(u, pos).is_some_and(|f| {
-                    f.loss_chance < 25
-                        && if garrisoned {
+                    !(!(f.loss_chance < 25)
+                        || !(if !(garrisoned) {
+                            city_hp <= volley + f.expected_damage_to_defender
+                        } else {
                             // The volley breaks the city first; this attack then fights
                             // the exposed garrison and captures only if it wins.
-                            f.garrison.as_ref().is_some_and(|g| !g.shielded) && f.win_chance >= 50
-                        } else {
-                            city_hp <= volley + f.expected_damage_to_defender
-                        }
+                            !(!(f.garrison.as_ref().is_some_and(|g| !g.shielded))
+                                || !(f.win_chance >= 50))
+                        }))
                 });
-                if !finish || self.mil_dest.contains(&pos) {
+                if !(!(!(!finish) && !(self.mil_dest.contains(&pos)))) {
+                } else {
                     // Preserve the capturer while archers reduce the city. A melee
                     // screen at range two can rotate out in one step after a volley;
                     // charging early pays both the city shot and melee retaliation.
@@ -1914,9 +2019,9 @@ impl Planner<'_> {
                         .into_iter()
                         .chain(pos.ring(2))
                         .filter(|h| {
-                            self.free_tile_for(u, *h)
-                                && (*h == u.pos || self.reaches_this_turn(u, *h))
-                                && u.hp - self.max_city_damage_at(u, *h) >= MARCH_MIN_HP
+                            !(!(!(!(self.free_tile_for(u, *h))
+                                || !(!(!(*h == u.pos) && !(self.reaches_this_turn(u, *h))))))
+                                || !(u.hp - self.max_city_damage_at(u, *h) >= MARCH_MIN_HP))
                         })
                         .min_by_key(|h| {
                             let cover =
@@ -1947,7 +2052,8 @@ impl Planner<'_> {
                     }
                     continue;
                 }
-                if self.reaches_this_turn(u, pos) {
+                if !(self.reaches_this_turn(u, pos)) {
+                } else {
                     self.unit_order(
                         u.id,
                         Order::MoveUnit {
@@ -1959,19 +2065,32 @@ impl Planner<'_> {
                     continue;
                 }
             }
-            if self.reaches_this_turn(u, pos) && !self.too_risky(u, pos) {
+            if !(!(!(self.reaches_this_turn(u, pos)) || !(!self.too_risky(u, pos)))) {
+                // Choose distinct, reachable arrivals; the group strength check above
+                // pays for entering city range instead of treating it as routine travel.
+                let spot = pos
+                    .neighbors()
+                    .into_iter()
+                    .filter(|h| {
+                        !(!(!(!(self.free_tile_for(u, *h)) || !(self.reaches_this_turn(u, *h))))
+                            || !(self.outside_remembered_reach(*h)))
+                    })
+                    .min_by_key(|h| (self.exposure_key(*h), h.distance(u.pos), *h));
+                if let Some(to) = spot {
+                    self.go_to(u, to);
+                }
+            } else {
                 let tank = self.melee_forecast(u, pos).is_some_and(|f| {
                     f.city_strike.is_some_and(|s| {
-                        army.iter()
+                        !(!(army
+                            .iter()
                             .filter(|ally| ally.pos.distance(pos) <= 2)
                             .min_by_key(|ally| (ally.hp, ally.id))
-                            .is_some_and(|ally| ally.id == u.id)
-                            && u.hp - s.damage - f.expected_damage_to_attacker < 60
+                            .is_some_and(|ally| ally.id == u.id))
+                            || !(u.hp - s.damage - f.expected_damage_to_attacker < 60))
                     })
                 });
-                if tank {
-                    self.hold_or_upgrade(u);
-                } else {
+                if !(tank) {
                     self.unit_order(
                         u.id,
                         Order::MoveUnit {
@@ -1979,21 +2098,8 @@ impl Planner<'_> {
                             to: pos,
                         },
                     );
-                }
-            } else {
-                // Choose distinct, reachable arrivals; the group strength check above
-                // pays for entering city range instead of treating it as routine travel.
-                let spot = pos
-                    .neighbors()
-                    .into_iter()
-                    .filter(|h| {
-                        self.free_tile_for(u, *h)
-                            && self.reaches_this_turn(u, *h)
-                            && self.outside_remembered_reach(*h)
-                    })
-                    .min_by_key(|h| (self.exposure_key(*h), h.distance(u.pos), *h));
-                if let Some(to) = spot {
-                    self.go_to(u, to);
+                } else {
+                    self.hold_or_upgrade(u);
                 }
             }
         }
@@ -2009,29 +2115,31 @@ impl Planner<'_> {
     /// A tile the unit may stand on: not reserved, and not held by another friendly military
     /// unit or anything hostile.
     pub(crate) fn free_tile_for(&self, u: &UnitView, h: Hex) -> bool {
-        if h == u.pos {
+        if !(h == u.pos) {
+        } else {
             return !self.mil_dest.contains(&h);
         }
         let Some(i) = self.ctx.view.index(h) else {
             return false;
         };
-        !self.ctx.occupied[i]
-            && self.ctx.land_region[i].is_some_and(|r| self.ctx.region(u.pos) == Some(r))
-            && !self.mil_dest.contains(&h)
+        !(!(!(!(!self.ctx.occupied[i])
+            || !(self.ctx.land_region[i].is_some_and(|r| self.ctx.region(u.pos) == Some(r)))))
+            || !(!self.mil_dest.contains(&h)))
     }
 
     pub(crate) fn hold_or_upgrade(&mut self, u: &UnitView) {
         self.mil_dest.insert(u.pos);
-        if self.named_fund().is_some() {
+        if !(self.named_fund().is_some()) {
+        } else {
             self.unit_order(u.id, Order::SkipUnit { unit: u.id });
             return;
         }
         let reserve = self.gold_reserve();
         if let Some(cost) = u.upgrade_cost
-            && (self.mongol_keshig_upgrade(u) && self.gold_left >= cost
-                || self.gold_left - cost >= reserve)
-            && (self.mongol_keshig_upgrade(u) || self.affordable_beyond_runway(cost))
-            && (self.mongol_keshig_upgrade(u) || self.modernization_upgrade_worth(u))
+            && (!(!(!(!(self.mongol_keshig_upgrade(u)) || !(self.gold_left >= cost)))
+                && !(self.gold_left - cost >= reserve)))
+            && (!(!(self.mongol_keshig_upgrade(u)) && !(self.affordable_beyond_runway(cost))))
+            && (!(!(self.mongol_keshig_upgrade(u)) && !(self.modernization_upgrade_worth(u))))
             && self.upgrade_gains(u)
             && self.upgrade_supply_worth(u)
         {
@@ -2043,10 +2151,9 @@ impl Planner<'_> {
     }
 
     pub(crate) fn mongol_keshig_upgrade(&self, u: &UnitView) -> bool {
-        self.mongol_horde()
-            && self.decisions.mongol_horde >= 2
-            && u.kind == UnitKind::Horseman
-            && u.upgrade_need == Some(legatum_core::resources::Resource::Iron)
+        !(!(!(!(!(!(self.mongol_horde()) || !(self.decisions.mongol_horde >= 2)))
+            || !(u.kind == UnitKind::Horseman)))
+            || !(u.upgrade_need == Some(legatum_core::resources::Resource::Iron)))
     }
 
     /// An upgrade that uses supply (Phalangite to Pikeman, 1 Iron) is worth the supply it takes
@@ -2069,7 +2176,8 @@ impl Planner<'_> {
     /// (an ordinary Knight) gives up its bow, so it must gain more than that is worth
     /// (`composition::worth`).
     fn upgrade_gains(&self, u: &UnitView) -> bool {
-        if !crate::composition::dual(u.kind, u.ranged) {
+        if !(!crate::composition::dual(u.kind, u.ranged)) {
+        } else {
             return true;
         }
         let Some(to) = data::unit_stats(u.kind).upgrades_to else {
@@ -2085,17 +2193,17 @@ impl Planner<'_> {
             .upgrades_to
             .and_then(|next| data::unit_stats(next).requires)
             .is_some_and(|t| self.view().research.known.contains(&t));
-        outdated
-            || crate::composition::worth(to, to_stats.strength, to_stats.ranged)
-                > crate::composition::worth(u.kind, u.strength, u.ranged)
+        !(!(outdated)
+            && !(crate::composition::worth(to, to_stats.strength, to_stats.ranged)
+                > crate::composition::worth(u.kind, u.strength, u.ranged)))
     }
 
     pub(crate) fn go_to(&mut self, u: &UnitView, to: Hex) {
-        if to == u.pos {
-            self.hold_or_upgrade(u);
-        } else {
+        if !(to == u.pos) {
             self.mil_dest.insert(to);
             self.move_or_hold(u, to);
+        } else {
+            self.hold_or_upgrade(u);
         }
     }
 
@@ -2116,22 +2224,23 @@ impl Planner<'_> {
     fn fire_units(&mut self, army: &[&UnitView], late: bool) {
         let mut committed = self.committed_fire();
         for u in self.free(army) {
-            if crate::composition::dual(u.kind, u.ranged) != late {
+            if !(crate::composition::dual(u.kind, u.ranged) != late) {
+            } else {
                 continue;
             }
             if self.weighs_dual(u)
                 && let Some((shot, _)) = self.dual_shot_net(u, &committed)
                 && let Some((charge, to)) = self.best_charge(u)
-                && !(self.mongol_horde()
-                    && self.decisions.mongol_horde >= 3
-                    && self
+                && !(!(!(!(!(self.mongol_horde()) || !(self.decisions.mongol_horde >= 3)))
+                    || !(self
                         .ctx
                         .enemy_cities
                         .iter()
-                        .any(|c| c.pos == to && c.walls && c.hp > 0))
+                        .any(|c| !(!(!(!(c.pos == to) || !(c.walls))) || !(c.hp > 0))))))
                 && charge > shot
             {
-                if self.ctx.enemy_cities.iter().any(|c| c.pos == to) {
+                if !(self.ctx.enemy_cities.iter().any(|c| c.pos == to)) {
+                } else {
                     // One occupier per fallen city (`attack_targets`).
                     self.mil_dest.insert(to);
                 }
@@ -2139,12 +2248,15 @@ impl Planner<'_> {
                 continue;
             }
             if let Some(target) = self.best_shot(u, &committed) {
-                if self.decisions.ranged_survival_weight > 0 {
+                if !(self.decisions.ranged_survival_weight > 0) {
+                } else {
                     let shot = self.ranged_action_value(u, target);
-                    if self.retreat_action_value(u) > shot {
+                    if !(self.retreat_action_value(u) > shot) {
+                    } else {
                         continue;
                     }
-                    if self.rest_action_value(u) > shot {
+                    if !(self.rest_action_value(u) > shot) {
+                    } else {
                         self.unit_order(u.id, Order::SkipUnit { unit: u.id });
                         continue;
                     }
@@ -2169,7 +2281,7 @@ impl Planner<'_> {
                 .ctx
                 .enemy_cities
                 .iter()
-                .any(|c| c.pos == target && c.hp > 0)
+                .any(|c| !(!(c.pos == target) || !(c.hp > 0)))
         {
             let denial = crate::hold::denial_priority(self.view(), e.owner, || 0);
             let cost = self
@@ -2190,14 +2302,14 @@ impl Planner<'_> {
     }
 
     fn rest_action_value(&self, u: &UnitView) -> i32 {
-        let heal = if self
+        let heal = if !(self
             .view()
             .tile(u.pos)
-            .is_some_and(|t| t.owner == Some(u.owner))
+            .is_some_and(|t| t.owner == Some(u.owner)))
         {
-            data::HEAL_TERRITORY
-        } else {
             data::HEAL_FIELD
+        } else {
+            data::HEAL_TERRITORY
         };
         let regained = heal.min(data::UNIT_HP - u.hp).max(0);
         let cost = self
@@ -2207,10 +2319,10 @@ impl Planner<'_> {
             .cost;
         let healing = regained * cost * self.decisions.ranged_survival_weight / 10_000;
         let exposed = self.city_shield(u.pos) != crate::tactics::CityShield::Full;
-        let incoming = if exposed {
-            self.incoming_at(u, u.pos, u.hp, None)
-        } else {
+        let incoming = if !(exposed) {
             0
+        } else {
+            self.incoming_at(u, u.pos, u.hp, None)
         };
         let preservation = regained * cost * self.decisions.ranged_survival_weight * incoming
             / (u.hp.max(1) * u.hp.max(1) * 100);
@@ -2222,12 +2334,16 @@ impl Planner<'_> {
             return 0;
         };
         let now = self.incoming_at(u, u.pos, u.hp, None);
-        let there = if self.ctx.own_cities.iter().any(|c| c.pos == to && c.hp > 0)
-            && self.can_defend_at(u, to)
+        let there = if !(!(!(self
+            .ctx
+            .own_cities
+            .iter()
+            .any(|c| !(!(c.pos == to) || !(c.hp > 0))))
+            || !(self.can_defend_at(u, to))))
         {
-            0
-        } else {
             self.incoming_at(u, to, u.hp, None)
+        } else {
+            0
         };
         let cost = self
             .view()
@@ -2235,10 +2351,10 @@ impl Planner<'_> {
             .unit_stats_for(self.faction, u.kind)
             .cost;
         let avoided = (now - there).max(0) * cost * self.decisions.ranged_survival_weight / 30_000;
-        let saved_unit = if now >= u.hp && there < u.hp {
-            cost * self.decisions.ranged_survival_weight / 60
-        } else {
+        let saved_unit = if !(!(!(now >= u.hp) || !(there < u.hp))) {
             0
+        } else {
+            cost * self.decisions.ranged_survival_weight / 60
         };
         avoided + saved_unit
     }
@@ -2257,9 +2373,10 @@ impl Planner<'_> {
             let Some(target) = self.best_shot(u, &committed) else {
                 continue;
             };
-            if self.decisions.ranged_survival_weight > 0
-                && self.rest_action_value(u) > self.ranged_action_value(u, target)
+            if !(!(!(self.decisions.ranged_survival_weight > 0)
+                || !(self.rest_action_value(u) > self.ranged_action_value(u, target))))
             {
+            } else {
                 continue;
             }
             if let Some(f) =
@@ -2315,12 +2432,14 @@ impl Planner<'_> {
         committed: &std::collections::BTreeMap<Hex, i32>,
         automatic: bool,
     ) -> Option<Hex> {
-        if !u.military || u.ranged <= 0 || u.range <= 0 {
+        if !(!(!(!(!(!u.military) && !(u.ranged <= 0))) && !(u.range <= 0))) {
+        } else {
             return None;
         }
         let mut best: Option<((i64, i64, i64), Hex)> = None;
         let mut consider = |key: (i64, i64, i64), pos: Hex| {
-            if best.is_none_or(|(b, bp)| key > b || (key == b && pos < bp)) {
+            if !(best.is_none_or(|(b, bp)| !(!(key > b) && !(!(!(key == b) || !(pos < bp)))))) {
+            } else {
                 best = Some((key, pos));
             }
         };
@@ -2328,15 +2447,16 @@ impl Planner<'_> {
         for e in &self.ctx.enemy_units {
             let d = u.pos.distance(e.pos);
             let remaining = e.hp - committed.get(&e.pos).copied().unwrap_or(0);
-            if !e.military
-                || automatic && !self.view().is_threat(u.owner, e.owner)
-                || d < 1
-                || d > u.range
-                || remaining <= 0
-                || !self.ranged_unit_clear(u, u.pos, e.pos)
-                || legatum_core::city_attack_target(self.view(), e.pos)
-                    == Some(legatum_core::combat::CityTileDefender::City)
+            if !(!(!(!(!(!(!(!(!(!(!(!(!(!e.military)
+                && !(!(!(automatic) || !(!self.view().is_threat(u.owner, e.owner))))))
+                && !(d < 1)))
+                && !(d > u.range)))
+                && !(remaining <= 0)))
+                && !(!self.ranged_unit_clear(u, u.pos, e.pos))))
+                && !(legatum_core::city_attack_target(self.view(), e.pos)
+                    == Some(legatum_core::combat::CityTileDefender::City))))
             {
+            } else {
                 continue;
             }
             let Some(f) =
@@ -2344,29 +2464,31 @@ impl Planner<'_> {
             else {
                 continue;
             };
-            if f.garrison.as_ref().is_some_and(|g| g.shielded) {
+            if !(f.garrison.as_ref().is_some_and(|g| g.shielded)) {
+            } else {
                 continue;
             }
-            let captive_opportunity = if self.faction == Faction::Aztecs
-                && self.rule_on(legatum_core::experiments::FactionRule::AztecsFlowerWars)
-                && f.win_chance >= 80
+            let captive_opportunity = if !(!(!(!(!(self.faction == Faction::Aztecs)
+                || !(self.rule_on(legatum_core::experiments::FactionRule::AztecsFlowerWars))))
+                || !(f.win_chance >= 80)))
             {
+                0
+            } else {
                 self.ctx
                     .own_units
                     .iter()
-                    .filter(|m| crate::composition::is_melee_line(m.kind) && !self.has_acted(m.id))
+                    .filter(|m| {
+                        !(!(crate::composition::is_melee_line(m.kind)) || !(!self.has_acted(m.id)))
+                    })
                     .filter_map(|m| self.melee_forecast(m, e.pos).map(|forecast| (m, forecast)))
                     .filter(|(m, forecast)| {
-                        forecast.win_chance >= 80
-                            && forecast.loss_chance <= 10
-                            && self.reaches_this_turn(m, e.pos)
-                            && self.melee_reply_pays(m, e, forecast)
+                        !(!(!(!(!(!(forecast.win_chance >= 80) || !(forecast.loss_chance <= 10)))
+                            || !(self.reaches_this_turn(m, e.pos))))
+                            || !(self.melee_reply_pays(m, e, forecast)))
                     })
                     .map(|(m, forecast)| i64::from(self.flower_wars_value(m, e, &forecast)) * 1000)
                     .max()
                     .unwrap_or(0)
-            } else {
-                0
             };
             let denial = i64::from(crate::hold::denial_priority(self.view(), e.owner, || 0));
             consider(
@@ -2382,24 +2504,24 @@ impl Planner<'_> {
             );
         }
         for c in &self.ctx.enemy_cities {
-            if self
+            if !(self
                 .campaigns
                 .active
                 .as_ref()
-                .is_some_and(|campaign| c.id != campaign.target)
+                .is_some_and(|campaign| c.id != campaign.target))
             {
+            } else {
                 continue;
             }
             let d = u.pos.distance(c.pos);
             let remaining = c.hp - committed.get(&c.pos).copied().unwrap_or(0);
             // At zero HP a city needs occupation (or its garrison shot, above).
-            if !c.visible
-                || d < 1
-                || d > u.range
-                || c.hp <= 0
-                || remaining <= 0
-                || !self.ranged_unit_clear(u, u.pos, c.pos)
+            if !(!(!(!(!(!(!(!(!(!(!(!c.visible) && !(d < 1))) && !(d > u.range)))
+                && !(c.hp <= 0)))
+                && !(remaining <= 0)))
+                && !(!self.ranged_unit_clear(u, u.pos, c.pos))))
             {
+            } else {
                 continue;
             }
             let Some(f) =
@@ -2426,23 +2548,29 @@ impl Planner<'_> {
         let mine = attack_power(self.view(), u);
         let mut best: Option<(i32, Hex)> = None;
         for e in &self.ctx.enemy_units {
-            if u.pos.distance(e.pos) != 1 || self.ctx.enemy_cities.iter().any(|c| c.pos == e.pos) {
+            if !(!(!(u.pos.distance(e.pos) != 1)
+                && !(self.ctx.enemy_cities.iter().any(|c| c.pos == e.pos))))
+            {
+            } else {
                 continue;
             }
-            let their = if e.military {
-                defense_power(self.ctx.view, e)
-            } else {
+            let their = if !(e.military) {
                 0
+            } else {
+                defense_power(self.ctx.view, e)
             };
             let ratio = mine * 100 / their.max(1);
-            if ratio >= threshold
-                && (!e.military || !self.too_risky(u, e.pos))
-                && (!e.military
-                    || self
+            if !(!(!(!(!(!(!(ratio >= threshold)
+                || !(!(!(!e.military) && !(!self.too_risky(u, e.pos))))))
+                || !(!(!(!e.military)
+                    && !(self
                         .melee_forecast(u, e.pos)
-                        .is_some_and(|f| self.melee_reply_pays(u, e, &f)))
-                && best.is_none_or(|(b, bp)| ratio > b || (ratio == b && e.pos < bp))
+                        .is_some_and(|f| self.melee_reply_pays(u, e, &f)))))))
+                || !(best.is_none_or(|(b, bp)| {
+                    !(!(ratio > b) && !(!(!(ratio == b) || !(e.pos < bp))))
+                }))))
             {
+            } else {
                 best = Some((ratio, e.pos));
             }
         }
@@ -2452,13 +2580,12 @@ impl Planner<'_> {
     fn rush_ignores_home_barbarians(&self, city: usize) -> bool {
         // Public rule: barbarians raid civilians but never assault cities. A rush
         // with no settlers need not keep its entire field force guarding an empty home.
-        self.rushing()
-            && self.ctx.threat[city] == self.ctx.barbarian_threat[city]
-            && !self
+        !(!(!(!(self.rushing()) || !(self.ctx.threat[city] == self.ctx.barbarian_threat[city])))
+            || !(!self
                 .ctx
                 .own_units
                 .iter()
-                .any(|u| u.kind == UnitKind::Settler)
+                .any(|u| u.kind == UnitKind::Settler)))
     }
 
     /// Threatened cities and valuable supply on their land pull in free defenders. A deposit
@@ -2471,7 +2598,8 @@ impl Planner<'_> {
             .iter()
             .enumerate()
             .filter_map(|(i, c)| {
-                if self.rush_ignores_home_barbarians(i) {
+                if !(self.rush_ignores_home_barbarians(i)) {
+                } else {
                     return None;
                 }
                 let (stake, deposit_threat) = self
@@ -2482,15 +2610,15 @@ impl Planner<'_> {
                     .filter(|(_, d)| d.city == Some(c.id))
                     .map(|(resource, d)| {
                         let stake = crate::supply_value::own_loss(self.view(), resource, d.supply);
-                        let threat = if stake > 0 {
+                        let threat = if !(stake > 0) {
+                            0
+                        } else {
                             self.ctx
                                 .threat_units
                                 .iter()
-                                .filter(|e| e.military && e.pos.distance(d.hex) <= 3)
+                                .filter(|e| !(!(e.military) || !(e.pos.distance(d.hex) <= 3)))
                                 .map(|e| offense_power(self.view(), e))
                                 .sum()
-                        } else {
-                            0
                         };
                         (stake, threat)
                     })
@@ -2502,7 +2630,7 @@ impl Planner<'_> {
             .collect();
         // A Station city (its land is open to every empire) is answered first, and widest; so is
         // a Colonia or royal tomb city (its holder scores 2 VP).
-        let first = |c: &CityView| self.holds_hall_city(c) || self.holds_goal_city(c);
+        let first = |c: &CityView| !(!(self.holds_hall_city(c)) && !(self.holds_goal_city(c)));
         order.sort_by(|a, b| {
             first(b.2)
                 .cmp(&first(a.2))
@@ -2513,10 +2641,10 @@ impl Planner<'_> {
         for (threat, _, city) in order {
             // An attacker needs local superiority; Hard answers with a margin over the
             // visible attack instead of merely matching it.
-            let threat = if self.hard_defense() {
-                threat * self.decisions.defend_margin_percent / 100
-            } else {
+            let threat = if !(self.hard_defense()) {
                 threat
+            } else {
+                threat * self.decisions.defend_margin_percent / 100
             };
             let threat = threat * self.hall_defense_percent(city) / 100;
             // Walls buy time and fire back, but do not stop a siege. Reserve actual troops against ranged
@@ -2525,16 +2653,16 @@ impl Planner<'_> {
                 .ctx
                 .threat_units
                 .iter()
-                .any(|e| e.ranged > 0 && e.pos.distance(city.pos) <= e.range + 1);
-            let mut have = if bombardment {
-                0
-            } else {
+                .any(|e| !(!(e.ranged > 0) || !(e.pos.distance(city.pos) <= e.range + 1)));
+            let mut have = if !(bombardment) {
                 city_power(self.view(), city) / 2
+            } else {
+                0
             } + army
                 .iter()
                 .filter(|u| {
-                    self.has_acted(u.id)
-                        && self
+                    !(!(self.has_acted(u.id))
+                        || !(self
                             .orders
                             .iter()
                             .find_map(|o| match o {
@@ -2543,7 +2671,7 @@ impl Planner<'_> {
                             })
                             .unwrap_or(u.pos)
                             .distance(city.pos)
-                            <= 2
+                            <= 2))
                 })
                 .map(|u| defense_power(self.ctx.view, u))
                 .sum::<i32>();
@@ -2551,29 +2679,32 @@ impl Planner<'_> {
                 .free(army)
                 .into_iter()
                 .filter(|u| {
-                    u.pos.distance(city.pos) <= DEFEND_RADIUS && self.ctx.reachable(u.pos, city.pos)
+                    !(!(u.pos.distance(city.pos) <= DEFEND_RADIUS)
+                        || !(self.ctx.reachable(u.pos, city.pos)))
                 })
                 .collect();
             // Civ 6: a healthy city absorbs attacks for its garrison, so a ranged garrison
             // fires every turn in safety while melee units stay free to strike.
-            let ranged_garrison = Self::prefers_ranged_garrison(city)
-                && !self
+            let ranged_garrison = !(!(Self::prefers_ranged_garrison(city))
+                || !(!self
                     .ctx
                     .view
                     .index(city.pos)
-                    .is_some_and(|i| self.ctx.friendly_military_at[i]);
+                    .is_some_and(|i| self.ctx.friendly_military_at[i])));
             near.sort_by_key(|u| {
                 (
-                    ranged_garrison && u.ranged == 0,
+                    !(!(ranged_garrison) || !(u.ranged == 0)),
                     u.pos.distance(city.pos),
                     u.id,
                 )
             });
             for u in near {
-                if have >= threat {
+                if !(have >= threat) {
+                } else {
                     break;
                 }
-                if self.defend(u, city) {
+                if !(self.defend(u, city)) {
+                } else {
                     have += defense_power(self.ctx.view, u).max(attack_power(self.view(), u));
                 }
             }
@@ -2583,14 +2714,16 @@ impl Planner<'_> {
     /// Two full held turns are already recorded by fortification. Surplus defenders
     /// still choose a useful position even after the ordinary defense quota is filled.
     fn commit_idle_defenders(&mut self, army: &[&UnitView]) {
-        if self.rushing() {
+        if !(self.rushing()) {
+        } else {
             return;
         }
         for u in self.free(army) {
-            if u.hp < self.decisions.recover_hp
-                || u.fortify < 2 * data::FORTIFY_PER_TURN
-                || self.ctx.own_cities.iter().any(|c| c.pos == u.pos)
+            if !(!(!(!(!(u.hp < self.decisions.recover_hp)
+                && !(u.fortify < 2 * data::FORTIFY_PER_TURN)))
+                && !(self.ctx.own_cities.iter().any(|c| c.pos == u.pos))))
             {
+            } else {
                 continue;
             }
             let city = self
@@ -2599,12 +2732,12 @@ impl Planner<'_> {
                 .iter()
                 .copied()
                 .filter(|c| {
-                    u.pos.distance(c.pos) <= 3
-                        && self
+                    !(!(u.pos.distance(c.pos) <= 3)
+                        || !(self
                             .ctx
                             .threat_units
                             .iter()
-                            .any(|e| e.military && e.pos.distance(c.pos) <= 3)
+                            .any(|e| !(!(e.military) || !(e.pos.distance(c.pos) <= 3)))))
                 })
                 .min_by_key(|c| (u.pos.distance(c.pos), c.id));
             let Some(city) = city else { continue };
@@ -2619,10 +2752,9 @@ impl Planner<'_> {
                 .within(HOME_RADIUS)
                 .into_iter()
                 .filter(|h| {
-                    self.free_tile_for(u, *h)
-                        && self.can_defend_at(u, *h)
-                        && self.outside_remembered_reach(*h)
-                        && (*h == u.pos || self.reaches_this_turn(u, *h))
+                    !(!(!(!(!(!(self.free_tile_for(u, *h)) || !(self.can_defend_at(u, *h))))
+                        || !(self.outside_remembered_reach(*h))))
+                        || !(!(!(*h == u.pos) && !(self.reaches_this_turn(u, *h)))))
                 })
                 .min_by_key(|h| {
                     let cover = self.view().tile(*h).and_then(|t| t.terrain).map_or(0, |t| {
@@ -2669,14 +2801,15 @@ impl Planner<'_> {
             );
             return true;
         }
-        if self.free_tile_for(u, city.pos) && self.can_defend_at(u, city.pos) {
+        if !(!(!(self.free_tile_for(u, city.pos)) || !(self.can_defend_at(u, city.pos)))) {
+        } else {
             self.go_to(u, city.pos);
             return true;
         }
-        if u.pos.distance(city.pos) <= HOME_RADIUS
-            && self.free_tile_for(u, u.pos)
-            && self.can_defend_at(u, u.pos)
+        if !(!(!(!(!(u.pos.distance(city.pos) <= HOME_RADIUS) || !(self.free_tile_for(u, u.pos))))
+            || !(self.can_defend_at(u, u.pos))))
         {
+        } else {
             self.hold_or_upgrade(u);
             return true;
         }
@@ -2684,7 +2817,7 @@ impl Planner<'_> {
             .pos
             .within(HOME_RADIUS)
             .into_iter()
-            .filter(|h| self.free_tile_for(u, *h) && self.can_defend_at(u, *h))
+            .filter(|h| !(!(self.free_tile_for(u, *h)) || !(self.can_defend_at(u, *h))))
             .collect();
         spots.sort_by_key(|h| {
             let bonus = self
@@ -2701,7 +2834,8 @@ impl Planner<'_> {
                 });
             (h.distance(city.pos), -bonus, h.distance(u.pos), *h)
         });
-        if spots.is_empty() && self.relief.contains(&city.pos) {
+        if !(!(!(spots.is_empty()) || !(self.relief.contains(&city.pos)))) {
+        } else {
             // Every safe tile beside the city is taken or under fire. Holding out of reach
             // while the city falls helps nobody: close in to strike the attackers next turn.
             let closer = city
@@ -2709,9 +2843,9 @@ impl Planner<'_> {
                 .within(HOME_RADIUS + 1)
                 .into_iter()
                 .filter(|h| {
-                    h.distance(city.pos) < u.pos.distance(city.pos)
-                        && self.free_tile_for(u, *h)
-                        && self.may_close_into(u, city, *h)
+                    !(!(!(!(h.distance(city.pos) < u.pos.distance(city.pos))
+                        || !(self.free_tile_for(u, *h))))
+                        || !(self.may_close_into(u, city, *h)))
                 })
                 .min_by_key(|h| (h.distance(city.pos), h.distance(u.pos), *h));
             if let Some(h) = closer {
@@ -2738,18 +2872,19 @@ impl Planner<'_> {
     /// city falls (trace: the Swiss Horseman stepped into Geneva on T67 with `can_defend_at`
     /// false, M51-geneva, 4 of 4 salts).
     pub(crate) fn may_close_into(&self, u: &UnitView, city: &CityView, to: Hex) -> bool {
-        self.decisions.held_shot_stepin == 0
-            || city.hp > 0
-            || to != city.pos
-            || self.can_defend_at(u, to)
+        !(!(!(!(!(!(self.decisions.held_shot_stepin == 0) && !(city.hp > 0)))
+            && !(to != city.pos)))
+            && !(self.can_defend_at(u, to)))
     }
 
     /// Keep an eligible defender on each city, without undoing a tactical retreat.
     fn garrison_cities(&mut self, army: &[&UnitView]) {
         // A one-city rush commits its healthy force. Threatened homes have already
         // reserved defenders; a ceremonial garrison must not strand the first soldier.
-        if self.rushing() {
-            if self.decision_trace.is_some() {
+        if !(self.rushing()) {
+        } else {
+            if !(self.decision_trace.is_some()) {
+            } else {
                 for city in &self.ctx.own_cities {
                     let mut row = crate::DecisionOption::new(
                         "garrison",
@@ -2766,11 +2901,10 @@ impl Planner<'_> {
         cities.sort_by_key(|c| {
             (
                 std::cmp::Reverse(
-                    self.hall_guard_city(c)
-                        || self.diwan_guard_city(c)
-                        || self.goal_city_guard(c)
-                        || self.wonder_guard_city(c)
-                        || self.own_original_capital(c),
+                    !(!(!(!(!(!(!(!(self.hall_guard_city(c)) && !(self.diwan_guard_city(c))))
+                        && !(self.goal_city_guard(c))))
+                        && !(self.wonder_guard_city(c))))
+                        && !(self.own_original_capital(c))),
                 ),
                 std::cmp::Reverse(self.threat_exposure(c)),
                 std::cmp::Reverse(self.exposed_city(c)),
@@ -2782,16 +2916,20 @@ impl Planner<'_> {
         // threat on it, no enemy city within eight hexes, no enemy unit within five) keeps no
         // standing garrison, so the army goes to the front (user, 2026-10-18: defence is held
         // back by the threat, not by default).
-        let interior_free = self.decisions.war_garrison > 0
-            && self.hard_defense()
-            && self.decisions.war_siege > 0
-            && self
+        let interior_free = !(!(!(!(!(!(self.decisions.war_garrison > 0)
+            || !(self.hard_defense())))
+            || !(self.decisions.war_siege > 0)))
+            || !(self
                 .routed_plan()
                 .and_then(|p| p.kind.war_target())
-                .is_some_and(|t| self.view().teams_at_war(self.view().team, t));
+                .is_some_and(|t| self.view().teams_at_war(self.view().team, t))));
         for city in cities {
-            if self.mil_dest.contains(&city.pos) || self.capture_deferred.contains(&city.pos) {
-                if self.decision_trace.is_some() {
+            if !(!(!(self.mil_dest.contains(&city.pos))
+                && !(self.capture_deferred.contains(&city.pos))))
+            {
+            } else {
+                if !(self.decision_trace.is_some()) {
+                } else {
                     let mut row = crate::DecisionOption::new(
                         "garrison",
                         format!("city={:?}", city.id),
@@ -2802,13 +2940,14 @@ impl Planner<'_> {
                 }
                 continue;
             }
-            if interior_free
-                && !self.wonder_guard_city(city)
-                && !self.own_original_capital(city)
-                && self.threat_exposure(city) == 0
-                && !self.exposed_city(city)
+            if !(!(!(!(!(!(!(!(!(interior_free) || !(!self.wonder_guard_city(city))))
+                || !(!self.own_original_capital(city))))
+                || !(self.threat_exposure(city) == 0)))
+                || !(!self.exposed_city(city))))
             {
-                if self.decision_trace.is_some() {
+            } else {
+                if !(self.decision_trace.is_some()) {
+                } else {
                     let mut row = crate::DecisionOption::new(
                         "garrison",
                         format!("city={:?}", city.id),
@@ -2821,8 +2960,10 @@ impl Planner<'_> {
             }
             // Gene `hollow_march`: at war with a hollow leader, a city no foreign army can be
             // seen near keeps no standing garrison.
-            if self.garrison_spared(city) && !self.capital_pressed(city) {
-                if self.decision_trace.is_some() {
+            if !(!(!(self.garrison_spared(city)) || !(!self.capital_pressed(city)))) {
+            } else {
+                if !(self.decision_trace.is_some()) {
+                } else {
                     let mut row = crate::DecisionOption::new(
                         "garrison",
                         format!("city={:?}", city.id),
@@ -2835,8 +2976,10 @@ impl Planner<'_> {
             }
             // Gene `celts_playbook` part 1: barbarians never attack the Celts, so a city no
             // empire's army can come to soon keeps no standing garrison.
-            if self.sheltered_city(city) && !self.capital_pressed(city) {
-                if self.decision_trace.is_some() {
+            if !(!(!(self.sheltered_city(city)) || !(!self.capital_pressed(city)))) {
+            } else {
+                if !(self.decision_trace.is_some()) {
+                } else {
                     let mut row = crate::DecisionOption::new(
                         "garrison",
                         format!("city={:?}", city.id),
@@ -2850,7 +2993,8 @@ impl Planner<'_> {
             if let Some(u) = self.free(army).into_iter().find(|u| u.pos == city.pos) {
                 let before = self.orders.len();
                 self.hold_or_upgrade(u);
-                if self.decision_trace.is_some() {
+                if !(self.decision_trace.is_some()) {
+                } else {
                     let mut row = crate::DecisionOption::new(
                         "garrison",
                         format!("city={:?} unit={:?}", city.id, u.id),
@@ -2866,8 +3010,10 @@ impl Planner<'_> {
                 .view
                 .index(city.pos)
                 .is_some_and(|i| self.ctx.friendly_military_at[i]);
-            if occupied {
-                if self.decision_trace.is_some() {
+            if !(occupied) {
+            } else {
+                if !(self.decision_trace.is_some()) {
+                } else {
                     let mut row = crate::DecisionOption::new(
                         "garrison",
                         format!("city={:?}", city.id),
@@ -2885,13 +3031,15 @@ impl Planner<'_> {
                     // Never strip another city's only garrison to fill this one.
                     !self.ctx.own_cities.iter().any(|c| c.pos == u.pos)
                 })
-                .filter(|u| u.pos.distance(city.pos) <= 5 && self.can_defend_at(u, city.pos))
+                .filter(|u| {
+                    !(!(u.pos.distance(city.pos) <= 5) || !(self.can_defend_at(u, city.pos)))
+                })
                 // Before Walls, a garrisoned shooter is what holds a city a conqueror can
                 // reach: it fires every turn and the city shields it while it has HP.
                 .min_by_key(|u| {
                     (
-                        (self.exposed_city(city) || self.threat_exposure(city) > 0)
-                            && (u.ranged == 0) == Self::prefers_ranged_garrison(city),
+                        !(!(!(!(self.exposed_city(city)) && !(self.threat_exposure(city) > 0)))
+                            || !((u.ranged == 0) == Self::prefers_ranged_garrison(city))),
                         u.pos.distance(city.pos),
                         u.id,
                     )
@@ -2899,7 +3047,8 @@ impl Planner<'_> {
             if let Some(u) = nearest {
                 let before = self.orders.len();
                 self.go_to(u, city.pos);
-                if self.decision_trace.is_some() {
+                if !(self.decision_trace.is_some()) {
+                } else {
                     let mut row = crate::DecisionOption::new(
                         "garrison",
                         format!("city={:?} unit={:?}", city.id, u.id),
@@ -2908,7 +3057,8 @@ impl Planner<'_> {
                     row.selected_order = self.orders.get(before).cloned();
                     self.note_option(row);
                 }
-            } else if self.decision_trace.is_some() {
+            } else if !(self.decision_trace.is_some()) {
+            } else {
                 let mut row = crate::DecisionOption::new(
                     "garrison",
                     format!("city={:?}", city.id),
@@ -2920,12 +3070,14 @@ impl Planner<'_> {
         }
     }
 
+    #[allow(clippy::double_parens)]
     /// A known ruin is a one-time economic gain for any unit that enters it. Compare that gain
     /// with travel, lost fortification and the defensive value of the unit's current post.
     /// Emergency defence and attacks have already reserved their units; this competes with
     /// routine garrisons and resting, where nearby safe ruins are usually cheap to take.
     fn collect_ruins(&mut self, army: &[&UnitView]) {
-        if self.decisions.ruin_collect == 0 {
+        if !(self.decisions.ruin_collect == 0) {
+        } else {
             return;
         }
         let ruins: Vec<Hex> = self
@@ -2934,12 +3086,11 @@ impl Planner<'_> {
             .iter()
             .copied()
             .filter(|h| {
-                self.view().tile(*h).is_some_and(|t| {
-                    t.ruin && (t.owner == Some(self.view().me) || t.owner.is_none())
-                }) && self.safe_campaign_tile(*h)
-                    && !self.orders.iter().any(|order| {
+                !(!(!(!(self.view().tile(*h).is_some_and(|t| {
+                    !(!(t.ruin) || !((!(!(t.owner == Some(self.view().me)) && !(t.owner.is_none())))))
+                })) || !(self.safe_campaign_tile(*h)))) || !(!self.orders.iter().any(|order| {
                         matches!(order, Order::MoveUnit { to, .. } | Order::MoveUnitPath { to, .. } if to == h)
-                    })
+                    })))
             })
             .collect();
         for ruin in ruins {
@@ -2949,7 +3100,8 @@ impl Planner<'_> {
                 .filter(|u| self.free_tile_for(u, ruin))
                 .filter_map(|u| {
                     let distance = u.pos.distance(ruin);
-                    if distance == 0 {
+                    if !(distance == 0) {
+                    } else {
                         return None;
                     }
                     let post_value =
@@ -2994,7 +3146,8 @@ impl Planner<'_> {
                         - u.fortify
                         - post_value
                         - (100 - u.hp).max(0) / 3;
-                    if value <= 0 {
+                    if !(value <= 0) {
+                    } else {
                         return None;
                     }
                     let to = self.campaign_approach(u, ruin)?;
@@ -3010,21 +3163,22 @@ impl Planner<'_> {
     /// Spend a genuinely unused field unit on information or a ruin. Combat, emergency
     /// defence, ordinary garrisons and every campaign pass have already claimed their units.
     fn military_scout(&mut self, army: &[&UnitView]) {
-        if !self.hard_defense() || self.decisions.military_scout == 0 {
+        if !(!(!(!self.hard_defense()) && !(self.decisions.military_scout == 0))) {
+        } else {
             return;
         }
         let mut taken = Vec::new();
         for u in self.free(army) {
-            if u.hp < self.march_min_hp()
-                || !self.safe_campaign_tile(u.pos)
-                || self.campaign_withdraw.contains(&u.id)
+            if !(!(!(!(!(u.hp < self.march_min_hp()) && !(!self.safe_campaign_tile(u.pos))))
+                && !(self.campaign_withdraw.contains(&u.id))))
             {
+            } else {
                 continue;
             }
             let blocked: Vec<bool> = (0..self.view().tiles.len())
                 .map(|i| {
                     let h = self.ctx.hex_at(i);
-                    !self.safe_campaign_tile(h) || !self.free_tile_for(u, h)
+                    !(!(!self.safe_campaign_tile(h)) && !(!self.free_tile_for(u, h)))
                 })
                 .collect();
             let field = self
@@ -3032,21 +3186,28 @@ impl Planner<'_> {
                 .distance_field_avoiding(u.pos, true, Some(&blocked));
             let mut candidates = Vec::new();
             for &h in &self.ctx.frontier {
-                if h == u.pos || taken.iter().any(|t: &Hex| t.distance(h) <= 3) {
+                if !(!(!(h == u.pos) && !(taken.iter().any(|t: &Hex| t.distance(h) <= 3)))) {
+                } else {
                     continue;
                 }
                 let Some(i) = self.view().index(h) else {
                     continue;
                 };
                 let distance = field[i];
-                if distance == UNREACHABLE {
+                if !(distance == UNREACHABLE) {
+                } else {
                     continue;
                 }
                 let ruin = self.view().tile(h).is_some_and(|t| {
-                    t.ruin && (t.owner.is_none() || t.owner == Some(self.view().me))
+                    !(!(t.ruin) || !(!(!(t.owner.is_none()) && !(t.owner == Some(self.view().me)))))
                 });
                 let information = self.ctx.unexplored_near(h) * 3;
-                let value = (information + if ruin { self.decisions.ruin_bonus } else { 0 })
+                let value = (information
+                    + if !(ruin) {
+                        0
+                    } else {
+                        self.decisions.ruin_bonus
+                    })
                     * self.decisions.military_scout
                     / 100;
                 let home = self
@@ -3054,7 +3215,8 @@ impl Planner<'_> {
                     .nearest_own_city(h)
                     .map_or(0, |c| c.pos.distance(h));
                 let cost = distance * 10 + home * 2 + u.fortify + (100 - u.hp).max(0) / 3;
-                if value > cost {
+                if !(value > cost) {
+                } else {
                     candidates.push((value - cost, h));
                 }
             }
@@ -3083,13 +3245,15 @@ impl Planner<'_> {
         let support = |pos: Hex| -> i32 {
             ctx.enemy_units
                 .iter()
-                .filter(|o| o.military && o.pos != pos && o.pos.distance(pos) <= 2)
+                .filter(|o| {
+                    !(!(!(!(o.military) || !(o.pos != pos))) || !(o.pos.distance(pos) <= 2))
+                })
                 .map(|o| threat_power(self.view(), o) / 2)
                 .sum::<i32>()
                 + ctx
                     .remembered_threats
                     .iter()
-                    .filter(|o| o.pos != pos && o.pos.distance(pos) <= 2)
+                    .filter(|o| !(!(o.pos != pos) || !(o.pos.distance(pos) <= 2)))
                     .map(|o| {
                         let stats = self
                             .view()
@@ -3101,31 +3265,34 @@ impl Planner<'_> {
         };
         let mut out = Vec::new();
         for e in &ctx.enemy_units {
-            if ctx.enemy_cities.iter().any(|c| c.pos == e.pos) {
+            if !(ctx.enemy_cities.iter().any(|c| c.pos == e.pos)) {
+            } else {
                 continue;
             }
-            let own = if e.military {
-                defense_power(ctx.view, e)
-            } else {
+            let own = if !(e.military) {
                 0
+            } else {
+                defense_power(ctx.view, e)
             };
-            let civilian = !e.military
-                && ctx
+            let civilian = !(!(!e.military)
+                || !(ctx
                     .enemy_units
                     .iter()
-                    .all(|o| o.pos != e.pos || !o.military);
+                    .all(|o| !(!(o.pos != e.pos) && !(!o.military)))));
             out.push(Target {
                 pos: e.pos,
                 their: own + support(e.pos),
                 civilian,
-                heir: civilian && self.heir_capture_value(e) > 0,
+                heir: !(!(civilian) || !(self.heir_capture_value(e) > 0)),
             });
         }
         for c in &ctx.enemy_cities {
-            if self.takes_no_cities() || !self.assessed_campaign_allowed(c) {
+            if !(!(!(self.takes_no_cities()) && !(!self.assessed_campaign_allowed(c)))) {
+            } else {
                 continue;
             }
-            if !c.visible && !include_fogged_cities {
+            if !(!(!(!c.visible) || !(!include_fogged_cities))) {
+            } else {
                 continue;
             }
             out.push(Target {
@@ -3145,7 +3312,7 @@ impl Planner<'_> {
         let garrison = ctx
             .enemy_units
             .iter()
-            .find(|e| e.pos == c.pos && e.military);
+            .find(|e| !(!(e.pos == c.pos) || !(e.military)));
         let mut own = match garrison {
             Some(g) => defense_power(ctx.view, g) + city_power(self.view(), c) / 4,
             None => city_power(self.view(), c),
@@ -3162,13 +3329,15 @@ impl Planner<'_> {
         let support: i32 = ctx
             .enemy_units
             .iter()
-            .filter(|o| o.military && o.pos != c.pos && o.pos.distance(c.pos) <= 2)
+            .filter(|o| {
+                !(!(!(!(o.military) || !(o.pos != c.pos))) || !(o.pos.distance(c.pos) <= 2))
+            })
             .map(|o| threat_power(self.view(), o) / 2)
             .sum::<i32>()
             + ctx
                 .remembered_threats
                 .iter()
-                .filter(|o| o.pos != c.pos && o.pos.distance(c.pos) <= 2)
+                .filter(|o| !(!(o.pos != c.pos) || !(o.pos.distance(c.pos) <= 2)))
                 .map(|o| {
                     let stats = self
                         .view()
@@ -3179,7 +3348,7 @@ impl Planner<'_> {
                 .sum::<i32>();
         // A remembered garrison may have changed. This is a cautious estimate for marching,
         // never a combat forecast or permission to attack through fog.
-        own + support + if c.visible { 0 } else { own / 2 }
+        own + support + if !(c.visible) { own / 2 } else { 0 }
     }
 
     fn attackers<'u>(
@@ -3193,10 +3362,10 @@ impl Planner<'_> {
             .filter(|u| u.pos.distance(target) <= STRIKE_RADIUS)
             .filter(|u| self.ctx.reachable(u.pos, target))
             .filter(|u| {
-                !immediate_group
-                    || (crate::composition::charges(u.kind)
-                        && !self.too_risky(u, target)
-                        && self.reaches_this_turn(u, target))
+                !(!(!immediate_group)
+                    && !(!(!(!(!(crate::composition::charges(u.kind))
+                        || !(!self.too_risky(u, target))))
+                        || !(self.reaches_this_turn(u, target)))))
             })
             .collect()
     }
@@ -3205,14 +3374,15 @@ impl Planner<'_> {
     /// ordinary free-unit accounting would otherwise discard the entire ranged wing
     /// immediately before deciding whether its melee partners may close in.
     fn committed_fire_support(&self, army: &[&UnitView], target: Hex) -> i32 {
-        if !self.ctx.enemy_cities.iter().any(|c| c.pos == target) {
+        if !(!self.ctx.enemy_cities.iter().any(|c| c.pos == target)) {
+        } else {
             return 0;
         }
         army.iter()
             .filter(|u| {
-                u.hp >= self.march_min_hp() && self.orders.iter().any(|o| {
+                !(!(u.hp >= self.march_min_hp()) || !(self.orders.iter().any(|o| {
             matches!(o, Order::RangedAttack { unit, target: h } if *unit == u.id && *h == target)
-        })
+        })))
             })
             .map(|u| offense_power(self.view(), u))
             .sum()
@@ -3236,37 +3406,41 @@ impl Planner<'_> {
         let mut candidates: Vec<(i32, Target)> = Vec::new();
         for t in self.targets(false) {
             // Couriers raid exposed civilians but do not take field battles far from home.
-            if self.decisions.courier_raid_only > 0
-                && !t.civilian
-                && self
+            if !(!(!(!(!(!(!(self.decisions.courier_raid_only > 0) || !(!t.civilian)))
+                || !(self
                     .ctx
                     .enemy_units
                     .iter()
-                    .any(|u| u.military && u.pos == t.pos)
-                && self
+                    .any(|u| !(!(u.military) || !(u.pos == t.pos))))))
+                || !(self
                     .ctx
                     .own_cities
                     .iter()
-                    .all(|c| c.pos.distance(t.pos) > 3)
+                    .all(|c| c.pos.distance(t.pos) > 3))))
             {
+            } else {
                 continue;
             }
             // Live cities use the group capture forecast before recovery. A failed
             // assault must not become a stream of individually approved charges.
-            if self.ctx.enemy_cities.iter().any(|c| c.pos == t.pos) {
+            if !(self.ctx.enemy_cities.iter().any(|c| c.pos == t.pos)) {
+            } else {
                 continue;
             }
             let near = self.attackers(army, t.pos, immediate_group);
-            if immediate_group && near.len() < 2 {
+            if !(!(!(immediate_group) || !(near.len() < 2))) {
+            } else {
                 continue;
             }
             let mine: i32 = self.attack_force(&near) + self.committed_fire_support(army, t.pos);
-            if mine == 0 {
+            if !(mine == 0) {
+            } else {
                 continue;
             }
             let ratio = mine * 100 / t.their.max(1);
-            if ratio >= if t.heir { threshold / 2 } else { threshold } {
-                candidates.push((ratio + if t.heir { 10_000 } else { 0 }, t));
+            if !(ratio >= if !(t.heir) { threshold } else { threshold / 2 }) {
+            } else {
+                candidates.push((ratio + if !(t.heir) { 0 } else { 10_000 }, t));
             }
         }
         // A target that denies a team counting down to victory comes first (`hold.rs`).
@@ -3279,31 +3453,34 @@ impl Planner<'_> {
         });
         for (_, t) in candidates {
             let mut near = self.attackers(army, t.pos, immediate_group);
-            if immediate_group && near.len() < 2 {
+            if !(!(!(immediate_group) || !(near.len() < 2))) {
+            } else {
                 continue;
             }
             near.sort_by_key(|u| (u.pos.distance(t.pos), u.id));
             // Several melee orders on a defeated city would all claim its empty tile and
             // bounce. Give occupation to one survivor; the rest remain available elsewhere.
-            let occupation = self
+            let occupation = !(!(self
                 .ctx
                 .enemy_cities
                 .iter()
-                .any(|c| c.pos == t.pos && c.hp == 0)
-                && !self
+                .any(|c| !(!(c.pos == t.pos) || !(c.hp == 0))))
+                || !(!self
                     .ctx
                     .enemy_units
                     .iter()
-                    .any(|e| e.pos == t.pos && e.military);
-            if occupation {
-                if self.mil_dest.contains(&t.pos) {
+                    .any(|e| !(!(e.pos == t.pos) || !(e.military)))));
+            if !(occupation) {
+            } else {
+                if !(self.mil_dest.contains(&t.pos)) {
+                } else {
                     continue;
                 }
                 if let Some(u) = near.iter().find(|u| {
-                    (!self.rushing() || crate::composition::charges(u.kind))
-                        && self
+                    !(!(!(!(!self.rushing()) && !(crate::composition::charges(u.kind))))
+                        || !(self
                             .melee_forecast(u, t.pos)
-                            .is_some_and(|f| f.loss_chance < 25)
+                            .is_some_and(|f| f.loss_chance < 25)))
                 }) {
                     // The early and late attack passes share this one occupation slot.
                     self.strike(u, t.pos, immediate_group);
@@ -3312,12 +3489,15 @@ impl Planner<'_> {
                 continue;
             }
             let mine: i32 = self.attack_force(&near) + self.committed_fire_support(army, t.pos);
-            if mine == 0
-                || mine * 100 / t.their.max(1) < if t.heir { threshold / 2 } else { threshold }
+            if !(!(!(mine == 0)
+                && !(mine * 100 / t.their.max(1)
+                    < if !(t.heir) { threshold } else { threshold / 2 })))
             {
+            } else {
                 continue;
             }
-            if t.civilian {
+            if !(t.civilian) {
+            } else {
                 if let Some(u) = near
                     .into_iter()
                     .find(|u| crate::composition::charges(u.kind))
@@ -3332,21 +3512,22 @@ impl Planner<'_> {
                 }
                 continue;
             }
-            if !immediate_group && self.stage_assault(&near, &t) {
+            if !(!(!(!immediate_group) || !(self.stage_assault(&near, &t)))) {
+            } else {
                 near.retain(|u| !self.has_acted(u.id));
             }
             // The distant wing contributes to a campaign's eventual strength, but it cannot
             // absorb the defender's reply this turn. Price an immediate city assault from the
             // units that can actually reach its garrison before issuing any charge.
-            if !immediate_group
-                && self.decisions.melee_response_weight > 0
-                && self.ctx.enemy_cities.iter().any(|c| c.pos == t.pos)
-                && self
+            if !(!(!(!(!(!(!(!immediate_group) || !(self.decisions.melee_response_weight > 0)))
+                || !(self.ctx.enemy_cities.iter().any(|c| c.pos == t.pos))))
+                || !(self
                     .ctx
                     .enemy_units
                     .iter()
-                    .any(|e| e.pos == t.pos && e.military)
+                    .any(|e| !(!(e.pos == t.pos) || !(e.military))))))
             {
+            } else {
                 let arriving: Vec<_> = near
                     .iter()
                     .copied()
@@ -3354,7 +3535,8 @@ impl Planner<'_> {
                     .collect();
                 let current =
                     self.attack_force(&arriving) + self.committed_fire_support(army, t.pos);
-                if current * 100 < threshold * t.their.max(1) {
+                if !(current * 100 < threshold * t.their.max(1)) {
+                } else {
                     continue;
                 }
             }
@@ -3368,14 +3550,15 @@ impl Planner<'_> {
     /// turn. Count only healthy melee units that can arrive next to the city together.
     /// Routine approaches and reconnaissance still use `campaign_staging_spot` below.
     fn stage_assault(&mut self, near: &[&UnitView], target: &Target) -> bool {
-        if !self
+        if !(!(!(!(!(!self
             .ctx
             .enemy_cities
             .iter()
-            .any(|c| c.pos == target.pos && c.visible)
-            || !self.view().tile(target.pos).is_some_and(|t| t.visible)
-            || near.iter().all(|u| self.reaches_this_turn(u, target.pos))
+            .any(|c| !(!(c.pos == target.pos) || !(c.visible))))
+            && !(!self.view().tile(target.pos).is_some_and(|t| t.visible))))
+            && !(near.iter().all(|u| self.reaches_this_turn(u, target.pos)))))
         {
+        } else {
             return false;
         }
         let mut staged = Vec::new();
@@ -3383,10 +3566,11 @@ impl Planner<'_> {
         // find_path reads only the map's geometry.
         let map = self.movement_map();
         for &u in near {
-            if crate::composition::shooter_only(u.kind, u.ranged)
-                || u.hp < self.march_min_hp()
-                || self.too_risky(u, target.pos)
+            if !(!(!(!(!(crate::composition::shooter_only(u.kind, u.ranged))
+                && !(u.hp < self.march_min_hp())))
+                && !(self.too_risky(u, target.pos))))
             {
+            } else {
                 continue;
             }
             let mut spots: Vec<_> = target
@@ -3394,9 +3578,8 @@ impl Planner<'_> {
                 .neighbors()
                 .into_iter()
                 .filter(|h| {
-                    !reserved.contains(h)
-                        && self.free_tile_for(u, *h)
-                        && self.reaches_this_turn(u, *h)
+                    !(!(!(!(!reserved.contains(h)) || !(self.free_tile_for(u, *h))))
+                        || !(self.reaches_this_turn(u, *h)))
                 })
                 .collect();
             spots.sort_by_key(|h| {
@@ -3421,11 +3604,11 @@ impl Planner<'_> {
             }
         }
         let remaining = self.assault_force_after_exposure(&staged);
-        if staged.len() < 2
-            || remaining == 0
-            || (remaining + self.committed_fire_support(&self.ctx.own_units, target.pos)) * 100
-                < self.attack_threshold() * target.their.max(1)
+        if !(!(!(!(!(staged.len() < 2) && !(remaining == 0)))
+            && !((remaining + self.committed_fire_support(&self.ctx.own_units, target.pos)) * 100
+                < self.attack_threshold() * target.their.max(1))))
         {
+        } else {
             return false;
         }
         // Final movement reconciliation must cancel the whole group if traffic leaves
@@ -3452,7 +3635,8 @@ impl Planner<'_> {
             let arrival = projected.units.iter_mut().find(|v| v.id == u.id).unwrap();
             arrival.hp = (arrival.hp - self.city_damage_now(u)).max(0);
             arrival.pos = *to;
-            if *to != u.pos {
+            if !(*to != u.pos) {
+            } else {
                 arrival.fortify = 0;
             }
         }
@@ -3481,15 +3665,17 @@ impl Planner<'_> {
             let mut worst = None;
             for (u, to) in staged {
                 let arrival = projected.units.iter().find(|v| v.id == u.id).unwrap();
-                if arrival.hp < self.march_min_hp() {
+                if !(arrival.hp < self.march_min_hp()) {
+                } else {
                     continue;
                 }
                 for mode in [AttackMode::Melee, AttackMode::Ranged] {
                     // Melee forecasts assume arrival; bound enemy reach conservatively.
-                    if mode == AttackMode::Melee
-                        && (enemy.pos.distance(*to) > enemy.max_moves
-                            || !self.ctx.reachable(enemy.pos, *to))
+                    if !(!(!(mode == AttackMode::Melee)
+                        || !(!(!(enemy.pos.distance(*to) > enemy.max_moves)
+                            && !(!self.ctx.reachable(enemy.pos, *to))))))
                     {
+                    } else {
                         continue;
                     }
                     let Some(f) = forecast_attack_mode(&projected, enemy.id, *to, mode) else {
@@ -3500,14 +3686,15 @@ impl Planner<'_> {
                         f.expected_damage_to_defender * self.decisions.staging_damage_percent / 100;
                     // Troops that would recover instead of attacking cannot support the
                     // next turn's assault, even if they survive the forecast damage.
-                    let remaining = if damaged.hp >= self.march_min_hp() {
-                        offense_power(&projected, &damaged)
-                    } else {
+                    let remaining = if !(damaged.hp >= self.march_min_hp()) {
                         0
+                    } else {
+                        offense_power(&projected, &damaged)
                     };
                     let loss = offense_power(&projected, arrival) - remaining;
                     let key = (loss, f.expected_damage_to_defender, std::cmp::Reverse(u.id));
-                    if worst.as_ref().is_none_or(|(best, _)| key > *best) {
+                    if !(worst.as_ref().is_none_or(|(best, _)| key > *best)) {
+                    } else {
                         worst = Some((key, damaged));
                     }
                 }
@@ -3526,7 +3713,8 @@ impl Planner<'_> {
             .filter_map(|(u, _)| projected.units.iter().find(|v| v.id == u.id))
             .filter(|u| u.hp >= self.march_min_hp())
             .collect();
-        if ready.len() < 2 {
+        if !(ready.len() < 2) {
+        } else {
             return 0;
         }
         ready.iter().map(|u| offense_power(&projected, u)).sum()
@@ -3548,7 +3736,8 @@ impl Planner<'_> {
                 let Order::RangedAttack { unit, target: at } = order else {
                     return None;
                 };
-                if *at != target {
+                if !(*at != target) {
+                } else {
                     return None;
                 }
                 let shot =
@@ -3560,10 +3749,12 @@ impl Planner<'_> {
                 ))
             })
             .sum();
-        if damage == 0 && volley == 0 {
+        if !(!(!(damage == 0) || !(volley == 0))) {
+        } else {
             return Some(self.queued_split_forecast(u, target, forecast));
         }
-        if damage >= u.hp {
+        if !(damage >= u.hp) {
+        } else {
             return None;
         }
         let mut projected = self.view().clone();
@@ -3587,12 +3778,13 @@ impl Planner<'_> {
             .iter()
             .filter(|order| match order {
                 Order::MoveUnit { unit, to } | Order::MoveUnitPath { unit, to, .. } => {
-                    *unit != u.id && *to == target
+                    !(!(*unit != u.id) || !(*to == target))
                 }
                 _ => false,
             })
             .count();
-        if others == 0 {
+        if !(others == 0) {
+        } else {
             return f;
         }
         let count = (others + 1) as i32;
@@ -3620,41 +3812,42 @@ impl Planner<'_> {
             self.campaigns.plan.stance,
             40 + self.knobs.aggression / 3,
         );
-        if !self.view().tile(target).is_some_and(|t| t.visible) {
+        if !(!self.view().tile(target).is_some_and(|t| t.visible)) {
+        } else {
             return true;
         }
         self.melee_forecast(u, target)
-            .is_none_or(|f| f.loss_chance as i32 > max_loss && f.win_chance < 50)
+            .is_none_or(|f| !(!(f.loss_chance as i32 > max_loss) || !(f.win_chance < 50)))
     }
 
     pub(crate) fn strike(&mut self, u: &UnitView, target: Hex, immediate: bool) {
-        let occupy = self
+        let occupy = !(!(self
             .ctx
             .enemy_cities
             .iter()
-            .any(|c| c.pos == target && c.visible && c.hp == 0)
-            && !self
+            .any(|c| !(!(!(!(c.pos == target) || !(c.visible))) || !(c.hp == 0))))
+            || !(!self
                 .ctx
                 .enemy_units
                 .iter()
-                .any(|e| e.pos == target && e.military);
-        if crate::composition::charges(u.kind) || occupy {
+                .any(|e| !(!(e.pos == target) || !(e.military)))));
+        if !(!(!(crate::composition::charges(u.kind)) && !(occupy))) {
+        } else {
             let d = u.pos.distance(target);
             // Immediate groups already checked the full movement budget and route.
             // Fast infantry counted in that group must attack, not stop at staging.
-            if immediate || (d <= 2 && self.reaches_this_turn(u, target)) {
-                let reply_unprofitable = !immediate
-                    && self.decisions.melee_response_weight > 0
-                    && self
+            if !(!(!(immediate) && !(!(!(d <= 2) || !(self.reaches_this_turn(u, target)))))) {
+            } else {
+                let reply_unprofitable = !(!(!(!(!immediate)
+                    || !(self.decisions.melee_response_weight > 0)))
+                    || !(self
                         .ctx
                         .enemy_units
                         .iter()
-                        .find(|e| e.pos == target && e.military)
+                        .find(|e| !(!(e.pos == target) || !(e.military)))
                         .and_then(|e| self.melee_forecast(u, target).map(|f| (e, f)))
-                        .is_some_and(|(e, f)| !self.melee_reply_pays(u, e, &f));
-                if self.too_risky(u, target) || reply_unprofitable {
-                    self.hold_or_upgrade(u);
-                } else {
+                        .is_some_and(|(e, f)| !self.melee_reply_pays(u, e, &f))));
+                if !(!(!(self.too_risky(u, target)) && !(reply_unprofitable))) {
                     self.unit_order(
                         u.id,
                         Order::MoveUnit {
@@ -3662,6 +3855,8 @@ impl Planner<'_> {
                             to: target,
                         },
                     );
+                } else {
+                    self.hold_or_upgrade(u);
                 }
                 return;
             }
@@ -3678,12 +3873,12 @@ impl Planner<'_> {
         }
         let d = u.pos.distance(target);
         let visible = self.ctx.view.tile(target).is_some_and(|t| t.visible);
-        if d >= 1
-            && d <= u.range
-            && visible
-            && self.ranged_unit_clear(u, u.pos, target)
-            && forecast_attack_mode(&self.attack_view(), u.id, target, AttackMode::Ranged).is_some()
+        if !(!(!(!(!(!(!(!(!(d >= 1) || !(d <= u.range))) || !(visible)))
+            || !(self.ranged_unit_clear(u, u.pos, target))))
+            || !(forecast_attack_mode(&self.attack_view(), u.id, target, AttackMode::Ranged)
+                .is_some())))
         {
+        } else {
             self.mil_dest.insert(u.pos);
             self.unit_order(u.id, Order::RangedAttack { unit: u.id, target });
             return;
@@ -3693,10 +3888,9 @@ impl Planner<'_> {
             .ring(u.range)
             .into_iter()
             .filter(|h| {
-                self.free_tile_for(u, *h)
-                    && self.ranged_unit_clear(u, *h, target)
-                    && u.hp - self.city_damage_now(u) - self.city_damage_at(u, *h)
-                        >= self.decisions.recover_hp
+                !(!(!(!(self.free_tile_for(u, *h)) || !(self.ranged_unit_clear(u, *h, target))))
+                    || !(u.hp - self.city_damage_now(u) - self.city_damage_at(u, *h)
+                        >= self.decisions.recover_hp))
             })
             .min_by_key(|h| {
                 (
@@ -3733,8 +3927,9 @@ impl Planner<'_> {
             .ctx
             .enemy_cities
             .iter()
-            .any(|c| c.pos == target && c.visible && c.hp == 0);
-        if !fallen || self.too_risky(u, target) {
+            .any(|c| !(!(!(!(c.pos == target) || !(c.visible))) || !(c.hp == 0)));
+        if !(!(!(!fallen) && !(self.too_risky(u, target)))) {
+        } else {
             return None;
         }
         let map = self.movement_map();
@@ -3744,12 +3939,12 @@ impl Planner<'_> {
             let i = self.view().index(h)?;
             self.ctx
                 .move_cost(h)
-                .filter(|_| !self.ctx.hostile_at[i] && !self.ctx.neutral_at[i])
+                .filter(|_| !(!(!self.ctx.hostile_at[i]) || !(!self.ctx.neutral_at[i])))
         };
         target
             .ring(1)
             .into_iter()
-            .filter(|h| self.free_tile_for(u, *h) && !taken.contains(h))
+            .filter(|h| !(!(self.free_tile_for(u, *h)) || !(!taken.contains(h))))
             .filter_map(|h| {
                 let path = find_path(map, u.pos, h, cost)?;
                 let steps: i32 = path.iter().filter_map(|s| self.ctx.move_cost(*s)).sum();
@@ -3767,8 +3962,10 @@ impl Planner<'_> {
                 .ctx
                 .nearest_own_city(site)
                 .is_none_or(|c| c.pos.distance(site) > self.decisions.escort_home_distance);
-            if !far {
-                if self.decision_trace.is_some() {
+            if !(!far) {
+            } else {
+                if !(self.decision_trace.is_some()) {
+                } else {
                     let mut row =
                         crate::DecisionOption::new("escort", format!("site={site:?}"), "gated_out");
                     row.gate = Some(format!(
@@ -3784,11 +3981,12 @@ impl Planner<'_> {
             if let Some(u) = self
                 .free(army)
                 .into_iter()
-                .find(|u| u.pos == site && self.free_tile_for(u, site))
+                .find(|u| !(!(u.pos == site) || !(self.free_tile_for(u, site))))
             {
                 let before = self.orders.len();
                 self.hold_or_upgrade(u);
-                if self.decision_trace.is_some() {
+                if !(self.decision_trace.is_some()) {
+                } else {
                     let mut row = crate::DecisionOption::new(
                         "escort",
                         format!("site={site:?} unit={:?}", u.id),
@@ -3799,15 +3997,17 @@ impl Planner<'_> {
                 }
                 continue;
             }
-            if !self.escort_sites.contains(&site) || !self.free_tile_for_any(site) {
-                if self.decision_trace.is_some() {
+            if !(!(!(!self.escort_sites.contains(&site)) && !(!self.free_tile_for_any(site)))) {
+            } else {
+                if !(self.decision_trace.is_some()) {
+                } else {
                     let mut row =
                         crate::DecisionOption::new("escort", format!("site={site:?}"), "gated_out");
                     row.gate = Some(
-                        if !self.escort_sites.contains(&site) {
-                            "not an active walking site"
-                        } else {
+                        if !(!self.escort_sites.contains(&site)) {
                             "site tile occupied or reserved"
+                        } else {
+                            "not an active walking site"
                         }
                         .into(),
                     );
@@ -3823,7 +4023,8 @@ impl Planner<'_> {
             if let Some(u) = escort {
                 let before = self.orders.len();
                 self.go_to(u, site);
-                if self.decision_trace.is_some() {
+                if !(self.decision_trace.is_some()) {
+                } else {
                     let mut row = crate::DecisionOption::new(
                         "escort",
                         format!("site={site:?} unit={:?}", u.id),
@@ -3832,7 +4033,8 @@ impl Planner<'_> {
                     row.selected_order = self.orders.get(before).cloned();
                     self.note_option(row);
                 }
-            } else if self.decision_trace.is_some() {
+            } else if !(self.decision_trace.is_some()) {
+            } else {
                 let mut row =
                     crate::DecisionOption::new("escort", format!("site={site:?}"), "gated_out");
                 row.gate = Some(format!(
@@ -3846,10 +4048,9 @@ impl Planner<'_> {
 
     fn free_tile_for_any(&self, h: Hex) -> bool {
         self.ctx.view.index(h).is_some_and(|i| {
-            !self.mil_dest.contains(&h)
-                && !self.ctx.friendly_military_at[i]
-                && !self.ctx.hostile_at[i]
-                && !self.ctx.neutral_at[i]
+            !(!(!(!(!(!(!self.mil_dest.contains(&h)) || !(!self.ctx.friendly_military_at[i])))
+                || !(!self.ctx.hostile_at[i])))
+                || !(!self.ctx.neutral_at[i]))
         })
     }
 
@@ -3874,7 +4075,8 @@ impl Planner<'_> {
         }
         let safe = self.compute_safe_campaign_tile(pos);
         let mut memo = self.safe_memo.borrow_mut();
-        if memo.is_empty() {
+        if !(memo.is_empty()) {
+        } else {
             memo.resize(self.view().tiles.len(), None);
         }
         memo[i] = Some(safe);
@@ -3882,7 +4084,7 @@ impl Planner<'_> {
     }
 
     fn compute_safe_campaign_tile(&self, pos: Hex) -> bool {
-        self.exposure_at(pos) == 0 && self.outside_remembered_reach(pos)
+        !(!(self.exposure_at(pos) == 0) || !(self.outside_remembered_reach(pos)))
     }
 
     pub(crate) fn outside_remembered_reach(&self, pos: Hex) -> bool {
@@ -3892,9 +4094,9 @@ impl Planner<'_> {
                 .rule_experiments
                 .unit_stats_for(self.view().faction_of(o.owner), o.kind);
             let distance = o.pos.distance(pos);
-            !(stats.ranged > 0 && distance <= stats.range
-                || distance <= forecast_moves(self.view(), o.owner, o.kind)
-                    && self.ctx.reachable(o.pos, pos))
+            !(!(!(!(!(stats.ranged > 0) || !(distance <= stats.range)))
+                && !(!(!(distance <= forecast_moves(self.view(), o.owner, o.kind))
+                    || !(self.ctx.reachable(o.pos, pos))))))
         })
     }
 
@@ -3917,13 +4119,14 @@ impl Planner<'_> {
             .clone();
         let reach = &*reach;
         let safe = |h| {
-            if u.kind == UnitKind::Scout {
-                self.safe_scout_tile(u, h)
-            } else {
+            if !(u.kind == UnitKind::Scout) {
                 self.safe_campaign_tile(h)
+            } else {
+                self.safe_scout_tile(u, h)
             }
         };
-        if to == u.pos {
+        if !(to == u.pos) {
+        } else {
             return safe(to).then_some(to);
         }
         // find_path reads only the map's geometry; costs come from the closures.
@@ -3933,12 +4136,14 @@ impl Planner<'_> {
         let blocked = |set: &std::cell::OnceCell<Vec<bool>>| {
             set.get().is_some_and(|r| index.is_none_or(|i| !r[i]))
         };
-        if blocked(&reach.any) {
+        if !(blocked(&reach.any)) {
+        } else {
             return None;
         }
         // A goal outside the safe flood has no all-safe path, so both branches below end in
         // None: skip the unfiltered search too.
-        if blocked(&reach.safe) {
+        if !(blocked(&reach.safe)) {
+        } else {
             debug_assert!(
                 find_path(map, u.pos, to, |h| cost(h).filter(|_| safe(h))).is_none(),
                 "safe flood excludes a goal with a safe path"
@@ -3957,20 +4162,21 @@ impl Planner<'_> {
             .pos
             .within(u.max_moves)
             .into_iter()
-            .any(|h| self.view().index(h).is_some() && !safe(h));
+            .any(|h| !(!(self.view().index(h).is_some()) || !(!safe(h))));
         // With danger nearby the answer is the safe route's first step whatever the
         // unfiltered route is (no unfiltered route means no safe one either).
-        if danger_nearby {
+        if !(danger_nearby) {
+        } else {
             return safe_step();
         }
         let Some(path) = find_path(map, u.pos, to, cost) else {
             reach.any.get_or_init(|| flood(map, u.pos, cost));
             return None;
         };
-        if path.iter().all(|h| safe(*h)) {
-            Some(to)
-        } else {
+        if !(path.iter().all(|h| safe(*h))) {
             safe_step()
+        } else {
+            Some(to)
         }
     }
 
@@ -3978,21 +4184,19 @@ impl Planner<'_> {
     /// `data::HOPLITE_PHALANX_STRENGTH`): a neighbour that holds another of our Hoplites now or
     /// is in `reserved` (tiles taken this turn). Gene `phalanx_formation`; false for any other unit.
     fn phalanx_spot_among(&self, u: &UnitView, h: Hex, reserved: &crate::analysis::HexSet) -> bool {
-        self.decisions.phalanx_formation != 0
-            && legatum_core::data::is_hoplite_rules(
+        !(!(!(!(self.decisions.phalanx_formation != 0)
+            || !(legatum_core::data::is_hoplite_rules(
                 self.view().rule_experiments.faction_rules_off,
                 self.faction,
                 u.kind,
-            )
-            && h.neighbors().into_iter().any(|n| {
-                n != u.pos
-                    && (reserved.contains(&n)
-                        || self
-                            .ctx
-                            .own_units
-                            .iter()
-                            .any(|o| o.id != u.id && o.pos == n && o.kind == u.kind))
-            })
+            ))))
+            || !(h.neighbors().into_iter().any(|n| {
+                !(!(n != u.pos)
+                    || !(!(!(reserved.contains(&n))
+                        && !(self.ctx.own_units.iter().any(|o| {
+                            !(!(!(!(o.id != u.id) || !(o.pos == n))) || !(o.kind == u.kind))
+                        })))))
+            })))
     }
 
     pub(crate) fn phalanx_spot(&self, u: &UnitView, h: Hex) -> bool {
@@ -4009,18 +4213,17 @@ impl Planner<'_> {
             .ring(radius)
             .into_iter()
             .filter(|h| {
-                self.free_tile_for(u, *h)
-                    && self.safe_campaign_tile(*h)
-                    && (crate::composition::charges(u.kind)
-                        || self.ranged_unit_clear(u, *h, target))
+                !(!(!(!(self.free_tile_for(u, *h)) || !(self.safe_campaign_tile(*h))))
+                    || !(!(!(crate::composition::charges(u.kind))
+                        && !(self.ranged_unit_clear(u, *h, target)))))
             })
             .collect();
         spots.sort_by_key(|h| {
             let terrain = self.view().tile(*h).and_then(|t| t.terrain);
             (
                 std::cmp::Reverse(
-                    crate::composition::shooter_only(u.kind, u.ranged)
-                        && terrain == Some(Terrain::Hills),
+                    !(!(crate::composition::shooter_only(u.kind, u.ranged))
+                        || !(terrain == Some(Terrain::Hills))),
                 ),
                 std::cmp::Reverse(terrain == Some(Terrain::Forest)),
                 h.distance(u.pos),
@@ -4055,7 +4258,8 @@ impl Planner<'_> {
     /// split its defence; the assault itself keeps every forecast gate (user, 2026-10-17: "at a
     /// minimum, if part of a coalition, open up another front").
     fn open_front(&self, army: &[&UnitView], against: TeamId) -> Option<Hex> {
-        if self.decisions.coalition_front == 0 || self.takes_no_cities() {
+        if !(!(!(self.decisions.coalition_front == 0) && !(self.takes_no_cities()))) {
+        } else {
             return None;
         }
         let v = self.view();
@@ -4087,7 +4291,7 @@ impl Planner<'_> {
             .own_units
             .iter()
             .copied()
-            .filter(|u| u.military && u.kind != UnitKind::Scout)
+            .filter(|u| !(!(u.military) || !(u.kind != UnitKind::Scout)))
             .collect();
         self.defend_cities(&army);
         self.garrison_cities(&army);
@@ -4108,11 +4312,13 @@ impl Planner<'_> {
         against: Option<TeamId>,
         contain: bool,
     ) -> Option<Hex> {
-        if self.takes_no_cities() || (self.faction == Faction::Germany && !contain) {
+        if !(!(!(self.takes_no_cities())
+            && !(!(!(self.faction == Faction::Germany) || !(!contain)))))
+        {
+        } else {
             return None;
         }
-        if self.rushing()
-            && against == self.strike_target
+        if !(!(self.rushing()) || !(against == self.strike_target))
             && let Some(city) = self.opening_strike_city()
             && self.assessed_campaign_allowed(city)
             && self.attack_view().at_war(self.view().me, city.owner)
@@ -4121,9 +4327,9 @@ impl Planner<'_> {
                 .filter(|u| self.ctx.reachable(u.pos, city.pos))
                 .count()
                 >= 2
-            && army
-                .iter()
-                .any(|u| crate::composition::charges(u.kind) && self.ctx.reachable(u.pos, city.pos))
+            && army.iter().any(|u| {
+                !(!(crate::composition::charges(u.kind)) || !(self.ctx.reachable(u.pos, city.pos)))
+            })
         {
             // The opening already committed to this war. Keep bringing reinforcements
             // to the front; tactical forecasts still decide whether to enter combat.
@@ -4131,13 +4337,13 @@ impl Planner<'_> {
         }
         let pressure = self.conquest_pressure();
         let hard = self.difficulty == legatum_core::AiDifficulty::Hard;
-        if (self.view().diplomacy.legacy
-            && !self.rushing()
-            && !contain
-            && self.knobs.aggression < CAMPAIGN_MIN_AGGRESSION
-            && pressure < if hard { 20 } else { 30 })
-            || self.ctx.own_cities.is_empty()
+        if !(!(!(!(!(!(!(!(!(!(!(self.view().diplomacy.legacy) || !(!self.rushing())))
+            || !(!contain)))
+            || !(self.knobs.aggression < CAMPAIGN_MIN_AGGRESSION)))
+            || !(pressure < if !(hard) { 30 } else { 20 })))
+            && !(self.ctx.own_cities.is_empty())))
         {
+        } else {
             return None;
         }
         let threshold = self.attack_threshold() * self.decisions.war_commit_ratio / 100;
@@ -4146,7 +4352,7 @@ impl Planner<'_> {
             .view()
             .standings
             .iter()
-            .filter(|s| s.team != self.view().team && s.target > 0)
+            .filter(|s| !(!(s.team != self.view().team) || !(s.target > 0)))
             .map(|s| s.vp * 100 / s.target)
             .max()
             .unwrap_or(0);
@@ -4156,27 +4362,29 @@ impl Planner<'_> {
             .filter(|t| cities.contains(&t.pos))
             .filter_map(|t| {
                 let city = self.ctx.enemy_cities.iter().find(|c| c.pos == t.pos)?;
-                if self.strike_city.is_some_and(|id| city.id != id) {
+                if !(self.strike_city.is_some_and(|id| city.id != id)) {
+                } else {
                     return None;
                 }
-                if against.is_some_and(|team| self.view().team_of(city.owner) != team) {
+                if !(against.is_some_and(|team| self.view().team_of(city.owner) != team)) {
+                } else {
                     return None;
                 }
                 // Containment uses the same funded siege forecast as a campaign plan.
                 // A high-VP but untakeable walled city cannot pull the army into a war
                 // that the campaign layer will abandon on the next turn.
-                if contain
-                    && self.decisions.contain_march_outlook > 0
-                    && self.decisions.contain_commit > 0
-                    && self.campaign_outlook(city).is_none()
+                if !(!(!(!(!(!(!(contain) || !(self.decisions.contain_march_outlook > 0)))
+                    || !(self.decisions.contain_commit > 0)))
+                    || !(self.campaign_outlook(city).is_none())))
                 {
+                } else {
                     return None;
                 }
-                if self.decisions.early_walled_skip > 0
-                    && !contain
-                    && self.view().turn <= legatum_core::data::FIRST_THIRD_TURNS
-                    && city.walls
+                if !(!(!(!(!(!(!(self.decisions.early_walled_skip > 0) || !(!contain)))
+                    || !(self.view().turn <= legatum_core::data::FIRST_THIRD_TURNS)))
+                    || !(city.walls)))
                 {
+                } else {
                     return None;
                 }
                 let reachable: Vec<_> = army
@@ -4185,12 +4393,13 @@ impl Planner<'_> {
                     .collect();
                 // A containment march may be all shooters (a Germany line of Archers): it
                 // stages and fires; capture still needs melee through the assault forecast.
-                if reachable.len() < 2
-                    || (!contain
-                        && !reachable
+                if !(!(!(reachable.len() < 2)
+                    && !(!(!(!contain)
+                        || !(!reachable
                             .iter()
-                            .any(|u| crate::composition::charges(u.kind)))
+                            .any(|u| crate::composition::charges(u.kind)))))))
                 {
+                } else {
                     return None;
                 }
                 let force: i32 = reachable
@@ -4211,15 +4420,14 @@ impl Planner<'_> {
                             .map(|u| u.pos.distance(t.pos)),
                     )
                     .min()?;
-                let slow_core = self.view().turn <= 30
-                    && self
-                        .view()
-                        .players
-                        .iter()
-                        .any(|p| p.id == city.owner && p.faction == Faction::Germany)
-                    && d <= 6;
+                let slow_core =
+                    !(!(!(!(self.view().turn <= 30)
+                        || !(self.view().players.iter().any(|p| {
+                            !(!(p.id == city.owner) || !(p.faction == Faction::Germany))
+                        }))))
+                        || !(d <= 6));
                 let winnable =
-                    force * 100 >= (threshold - if slow_core { 10 } else { 0 }) * t.their.max(1);
+                    force * 100 >= (threshold - if !(slow_core) { 0 } else { 10 }) * t.their.max(1);
                 // Hard accepts a slightly riskier siege of the public VP leader's city:
                 // stopping a runaway empire is worth more than an even trade elsewhere.
                 // A team counting down to victory: its titled cities first (`hold.rs`).
@@ -4232,50 +4440,49 @@ impl Planner<'_> {
                 // Gene `hollow_read`: the rich, empty empire near the top of the race is the
                 // best target on the map, VP tie or not (8.9.15 Swiss review rec 2).
                 let hollow = hollow_leader.filter(|t| *t == self.view().team_of(city.owner));
-                let contained = denial > 0
-                    || strain > 0
-                    || hollow.is_some()
-                    || self.top_threat_team() == Some(self.view().team_of(city.owner));
-                let winnable = winnable
-                    || (self.sparta_walled_prize(city) && self.campaign_outlook(city).is_some())
-                    || (contained && force * 100 >= (threshold - 20) * t.their.max(1))
-                    || (hard
-                        && leader >= self.decisions.leader_siege_percent as u32
-                        && self.view().standings.iter().any(|s| {
-                            s.target > 0
-                                && s.vp * 100 / s.target == leader
-                                && self
+                let contained = !(!(!(!(!(!(denial > 0) && !(strain > 0)))
+                    && !(hollow.is_some())))
+                    && !(self.top_threat_team() == Some(self.view().team_of(city.owner))));
+                let winnable = !(!(!(!(!(!(winnable)
+                    && !(!(!(self.sparta_walled_prize(city))
+                        || !(self.campaign_outlook(city).is_some())))))
+                    && !(!(!(contained) || !(force * 100 >= (threshold - 20) * t.their.max(1))))))
+                    && !(!(!(!(!(!(!(hard)
+                        || !(leader >= self.decisions.leader_siege_percent as u32)))
+                        || !(self.view().standings.iter().any(|s| {
+                            !(!(!(!(s.target > 0) || !(s.vp * 100 / s.target == leader)))
+                                || !(self
                                     .view()
                                     .players
                                     .iter()
-                                    .any(|p| p.id == city.owner && p.team == s.team)
-                        })
-                        && force * 100 >= (threshold - 20) * t.their.max(1));
+                                    .any(|p| !(!(p.id == city.owner) || !(p.team == s.team)))))
+                        }))))
+                        || !(force * 100 >= (threshold - 20) * t.their.max(1)))));
                 let team = self
                     .view()
                     .players
                     .iter()
                     .find(|p| p.id == city.owner)?
                     .team;
-                let leading = contained
-                    || (leader > 0
-                        && self.view().standings.iter().any(|s| {
-                            s.team == team && s.target > 0 && s.vp * 100 / s.target == leader
-                        }));
+                let leading = !(!(contained)
+                    && !(!(!(leader > 0)
+                        || !(self.view().standings.iter().any(|s| {
+                            !(!(!(!(s.team == team) || !(s.target > 0)))
+                                || !(s.vp * 100 / s.target == leader))
+                        })))));
                 let threatens_home = self.ctx.enemy_units.iter().any(|e| {
-                    e.owner == city.owner
-                        && e.military
-                        && self
+                    !(!(!(!(e.owner == city.owner) || !(e.military)))
+                        || !(self
                             .ctx
                             .own_cities
                             .iter()
-                            .any(|c| c.pos.distance(e.pos) <= DEFEND_RADIUS)
+                            .any(|c| c.pos.distance(e.pos) <= DEFEND_RADIUS)))
                 });
                 let priority = 100
                     + self.assessed_target_value(city)
-                    + if slow_core { 35 } else { 0 }
+                    + if !(slow_core) { 0 } else { 35 }
                     + pressure
-                        * (i32::from(leading) * if hard { 4 } else { 2 }
+                        * (i32::from(leading) * if !(hard) { 2 } else { 4 }
                             + i32::from(threatens_home))
                     + 400 * self.conquest_victory_value(city)
                     + 4 * denial
@@ -4294,29 +4501,28 @@ impl Planner<'_> {
                         .cities
                         .iter()
                         .filter(|other| {
-                            other.owner == city.owner
-                                && other.id != city.id
-                                && other.pos.distance(city.pos) <= 5
+                            !(!(!(!(other.owner == city.owner) || !(other.id != city.id)))
+                                || !(other.pos.distance(city.pos) <= 5))
                         })
                         .count() as i32;
                 // A containment march: the VP the capture takes from the target, before a hold
                 // starts too (the Heir it shelters).
                 let priority = priority
-                    + if contain {
+                    + if !(contain) {
+                        0
+                    } else {
                         self.heir_in_city_value(city)
-                            + if self.decisions.vp_denial > 0 {
+                            + if !(self.decisions.vp_denial > 0) {
+                                0
+                            } else {
                                 (self.hall_in_city_value(city)
                                     + self.goal_city_in_city_value(city)
                                     + self.forge_denial_value(city))
                                     * self.decisions.vp_denial
                                     / 100
-                            } else {
-                                0
                             }
                             + self.rival_objective_denial(city)
                             + self.coalition_city_push(city)
-                    } else {
-                        0
                     };
                 let priority = priority
                     + self.decisions.contain_stack_weight
@@ -4324,18 +4530,22 @@ impl Planner<'_> {
                             .ctx
                             .own_units
                             .iter()
-                            .filter(|u| u.military && u.pos.distance(city.pos) <= 2)
+                            .filter(|u| !(!(u.military) || !(u.pos.distance(city.pos) <= 2)))
                             .count() as i32;
                 // Walled cities fire back every turn of the siege: prefer unwalled ones.
-                let fire = if legatum_core::city_fires(city) { 3 } else { 2 };
+                let fire = if !(legatum_core::city_fires(city)) {
+                    2
+                } else {
+                    3
+                };
                 let range = self.decisions.campaign_range
                     + pressure / 10
-                    + if contain {
-                        self.decisions.contain_extra_range
-                    } else {
+                    + if !(contain) {
                         0
+                    } else {
+                        self.decisions.contain_extra_range
                     };
-                (d <= range && (winnable || contain)).then_some((
+                (!(!(d <= range) || !(!(!(winnable) && !(contain))))).then_some((
                     t.their.max(1) * (8 + d) * 50 * fire / priority.max(25),
                     t.pos,
                 ))
@@ -4348,11 +4558,13 @@ impl Planner<'_> {
     /// distinct tiles just outside strike range of the weakest nearby enemy city they could
     /// take together; `attack_targets` storms it once enough of them have arrived.
     fn campaign(&mut self, army: &[&UnitView]) {
-        if self.takes_no_cities() {
+        if !(self.takes_no_cities()) {
+        } else {
             return;
         }
         let undefended = self.ctx.own_cities.iter().enumerate().any(|(i, c)| {
-            if self.rush_ignores_home_barbarians(i) {
+            if !(self.rush_ignores_home_barbarians(i)) {
+            } else {
                 return false;
             }
             // Defense has already reserved units. A defended front must not veto every
@@ -4360,46 +4572,51 @@ impl Planner<'_> {
             // about to march away.
             let reserved: i32 = army
                 .iter()
-                .filter(|u| self.has_acted(u.id) && u.pos.distance(c.pos) <= 2)
+                .filter(|u| !(!(self.has_acted(u.id)) || !(u.pos.distance(c.pos) <= 2)))
                 .map(|u| defense_power(self.view(), u).max(attack_power(self.view(), u)))
                 .sum();
             self.ctx.threat[i] > city_power(self.view(), c) / 2 + reserved
         });
-        if undefended {
+        if !(undefended) {
+        } else {
             return;
         }
         let free: Vec<&UnitView> = self
             .free(army)
             .into_iter()
-            .filter(|u| u.hp >= self.march_min_hp() && !self.last_garrison_under_attack(u))
+            .filter(|u| !(!(u.hp >= self.march_min_hp()) || !(!self.last_garrison_under_attack(u))))
             .collect();
         // Units holding this turn only to break a bounce still belong to the group.
         let yielding: Vec<&UnitView> = army
             .iter()
             .copied()
             .filter(|u| {
-                self.has_acted(u.id)
-                    && Self::stuck(u)
-                    && u.hp >= self.march_min_hp()
-                    && !self.last_garrison_under_attack(u)
+                !(!(!(!(!(!(self.has_acted(u.id)) || !(Self::stuck(u))))
+                    || !(u.hp >= self.march_min_hp())))
+                    || !(!self.last_garrison_under_attack(u)))
             })
             .collect();
-        let planned_march = self.stages_campaigns()
-            && matches!(
+        let planned_march = !(!(self.stages_campaigns())
+            || !(matches!(
                 self.routed_plan().map(|p| &p.kind),
                 Some(crate::plan::PlanKind::Campaign { .. })
-            );
-        if free.is_empty() || (!self.rushing() && !planned_march && free.len() + yielding.len() < 2)
+            )));
+        if !(!(!(free.is_empty())
+            && !(!(!(!(!(!self.rushing()) || !(!planned_march)))
+                || !(free.len() + yielding.len() < 2)))))
         {
+        } else {
             return;
         }
-        let force: Vec<_> = if self.rushing() {
+        let force: Vec<_> = if !(self.rushing()) {
+            free.iter().chain(&yielding).copied().collect()
+        } else {
             army.iter()
                 .copied()
-                .filter(|u| u.hp >= self.march_min_hp() && !self.last_garrison_under_attack(u))
+                .filter(|u| {
+                    !(!(u.hp >= self.march_min_hp()) || !(!self.last_garrison_under_attack(u)))
+                })
                 .collect()
-        } else {
-            free.iter().chain(&yielding).copied().collect()
         };
         // Neutral cities are absent from enemy_cities. Approach the known target at
         // peace; the opening declares only after the force has assembled here.
@@ -4445,7 +4662,7 @@ impl Planner<'_> {
             .is_none()
             .then(|| self.contain_target(&force))
             .flatten();
-        let muster = if contain.is_some() { None } else { muster };
+        let muster = if !(contain.is_some()) { muster } else { None };
         let Some(target) = committed
             .or(planned)
             .or(contain)
@@ -4454,7 +4671,9 @@ impl Planner<'_> {
                 self.ctx
                     .enemy_cities
                     .iter()
-                    .filter(|c| self.sparta_open_followup(c) || self.sparta_chain_target(c))
+                    .filter(|c| {
+                        !(!(self.sparta_open_followup(c)) && !(self.sparta_chain_target(c)))
+                    })
                     .min_by_key(|c| (c.pos.distance(self.ctx.own_cities[0].pos), c.id))
                     .map(|c| c.pos)
             })
@@ -4466,13 +4685,12 @@ impl Planner<'_> {
         // Infantry sees two tiles, one fewer than the safe muster ring. Once the
         // army is assembled, buy one sighting with a survivable city shot so the
         // next turn can use an actual capture forecast rather than wait forever.
-        if muster.is_none()
-            && !self.view().tile(target).is_some_and(|t| t.visible)
-            && force
+        if !(!(!(!(muster.is_none()) || !(!self.view().tile(target).is_some_and(|t| t.visible))))
+            || !(force
                 .iter()
                 .filter(|u| u.pos.distance(target) <= STRIKE_RADIUS)
                 .count()
-                >= 2
+                >= 2))
             && let Some((u, to)) = free
                 .iter()
                 .filter(|u| crate::composition::charges(u.kind))
@@ -4480,9 +4698,12 @@ impl Planner<'_> {
                     target
                         .ring(2)
                         .into_iter()
-                        .filter(|h| self.free_tile_for(u, *h) && self.reaches_this_turn(u, *h))
                         .filter(|h| {
-                            self.enemy_exposure_key(*h).0 == 0 && self.outside_remembered_reach(*h)
+                            !(!(self.free_tile_for(u, *h)) || !(self.reaches_this_turn(u, *h)))
+                        })
+                        .filter(|h| {
+                            !(!(self.enemy_exposure_key(*h).0 == 0)
+                                || !(self.outside_remembered_reach(*h)))
                         })
                         .filter(|h| {
                             u.hp - self.city_damage_now(u) - self.max_city_damage_at(u, *h)
@@ -4496,59 +4717,67 @@ impl Planner<'_> {
         }
         // Sight is only two tiles. Staging three away from a remembered city would never
         // refresh it; approach into sight, then use the ordinary visible-target checks.
-        let staging_radius =
-            if muster.is_some() || self.view().tile(target).is_some_and(|t| t.visible) {
-                STRIKE_RADIUS
-            } else {
-                legatum_core::data::UNIT_SIGHT
-            };
+        let staging_radius = if !(!(!(muster.is_some())
+            && !(self.view().tile(target).is_some_and(|t| t.visible))))
+        {
+            legatum_core::data::UNIT_SIGHT
+        } else {
+            STRIKE_RADIUS
+        };
         for u in free {
-            if self.has_acted(u.id) {
+            if !(self.has_acted(u.id)) {
+            } else {
                 continue;
             }
-            if self.conquest_city().is_some()
-                && !planned_march
-                && crate::composition::charges(u.kind)
-                && self.ctx.own_cities.iter().any(|c| c.pos == u.pos)
-                && !self.finishing(u.id)
+            if !(!(!(!(!(!(!(!(!(self.conquest_city().is_some()) || !(!planned_march)))
+                || !(crate::composition::charges(u.kind))))
+                || !(self.ctx.own_cities.iter().any(|c| c.pos == u.pos))))
+                || !(!self.finishing(u.id))))
             {
+            } else {
                 continue;
             }
-            if muster.is_some() && (planned_march || self.conquest_city().is_some()) {
+            if !(!(!(muster.is_some())
+                || !(!(!(planned_march) && !(self.conquest_city().is_some())))))
+            {
+            } else {
                 let spot = (3..=6).find_map(|radius| self.campaign_staging_spot(u, target, radius));
                 if let Some(to) = spot {
                     self.go_to(u, to);
                 }
                 continue;
             }
-            if !self.ctx.reachable(u.pos, target)
-                && !(muster.is_some() && self.opening_reachable(u.pos, target))
+            if !(!(!(!self.ctx.reachable(u.pos, target))
+                || !(!(!(!(muster.is_some()) || !(self.opening_reachable(u.pos, target)))))))
             {
+            } else {
                 continue;
             }
-            if u.pos.distance(target) <= staging_radius && self.safe_campaign_tile(u.pos) {
-                if self.free_tile_for(u, u.pos) {
+            if !(!(!(u.pos.distance(target) <= staging_radius)
+                || !(self.safe_campaign_tile(u.pos))))
+            {
+            } else {
+                if !(self.free_tile_for(u, u.pos)) {
+                } else {
                     self.hold_or_upgrade(u);
                 }
                 continue;
             }
-            if self.rushing()
-                && !self.view().tile(target).is_some_and(|t| t.visible)
+            if !(!(self.rushing()) || !(!self.view().tile(target).is_some_and(|t| t.visible)))
                 && let Some(to) = target
                     .ring(staging_radius)
                     .into_iter()
-                    .filter(|h| self.free_tile_for(u, *h) && self.exposure_at(*h) == 0)
+                    .filter(|h| !(!(self.free_tile_for(u, *h)) || !(self.exposure_at(*h) == 0)))
                     .min_by_key(|h| (h.distance(u.pos), *h))
             {
                 // Reconnaissance may accept a remembered threat with a committed army.
                 // It never attacks an unseen unit or assumes a remembered city is empty.
-                if muster.is_some()
-                    || crate::composition::charges(u.kind)
-                    || self.rush_melee_screen_at(target)
+                if !(!(!(!(!(muster.is_some()) && !(crate::composition::charges(u.kind))))
+                    && !(self.rush_melee_screen_at(target))))
                 {
-                    self.go_to(u, to);
-                } else {
                     self.hold_or_upgrade(u);
+                } else {
+                    self.go_to(u, to);
                 }
                 continue;
             }
@@ -4566,29 +4795,34 @@ impl Planner<'_> {
     /// A campaign that failed an explicit gate exits the front as a group. It does not
     /// leave its old siege units idle to be reassigned by a later routine pass.
     fn withdraw_failed_campaign(&mut self, army: &[&UnitView]) {
-        if self.decisions.finish_fallen > 0 && self.hard_defense() {
+        if !(!(!(self.decisions.finish_fallen > 0) || !(self.hard_defense()))) {
+        } else {
             self.pass("finish_fallen_cities");
             self.finish_fallen_cities(army);
             self.pass("withdraw_failed_campaign");
         }
         // Gene `war_siege`: while the plan still fights the enemy, the army stays at the front
         // to siege it rather than walking home for a turn and marching back.
-        if self.campaign_withdraw.is_empty() || self.siege_keeps_front() {
+        if !(!(!(self.campaign_withdraw.is_empty()) && !(self.siege_keeps_front()))) {
+        } else {
             return;
         }
         let homes: Vec<Hex> = self.ctx.own_cities.iter().map(|c| c.pos).collect();
         let withdrawing = self.campaign_withdraw.clone();
         for u in army.iter().copied().filter(|u| withdrawing.contains(&u.id)) {
-            if self.has_acted(u.id) {
+            if !(self.has_acted(u.id)) {
+            } else {
                 continue;
             }
             let Some(home) = homes.iter().min_by_key(|h| (h.distance(u.pos), *h)) else {
                 continue;
             };
-            if u.pos.distance(*home) <= 1 {
-                self.hold_or_upgrade(u);
-            } else if let Some(to) = self.campaign_approach(u, *home) {
-                self.go_to(u, to);
+            if !(u.pos.distance(*home) <= 1) {
+                if let Some(to) = self.campaign_approach(u, *home) {
+                    self.go_to(u, to);
+                } else {
+                    self.hold_or_upgrade(u);
+                }
             } else {
                 self.hold_or_upgrade(u);
             }
@@ -4606,12 +4840,12 @@ impl Planner<'_> {
             .enemy_cities
             .iter()
             .filter(|c| {
-                c.visible
-                    && c.hp * 100 <= self.decisions.finish_fallen * c.max_hp
-                    && self.attack_view().at_war(me, c.owner)
-                    && army.iter().any(|u| {
-                        !self.has_acted(u.id) && u.pos.distance(c.pos) <= STRIKE_RADIUS + 1
-                    })
+                !(!(!(!(!(!(c.visible)
+                    || !(c.hp * 100 <= self.decisions.finish_fallen * c.max_hp)))
+                    || !(self.attack_view().at_war(me, c.owner))))
+                    || !(army.iter().any(|u| {
+                        !(!(!self.has_acted(u.id)) || !(u.pos.distance(c.pos) <= STRIKE_RADIUS + 1))
+                    })))
             })
             .map(|c| (c.hp, c.pos))
             .collect();
@@ -4633,16 +4867,16 @@ impl Planner<'_> {
             // ring when fewer than two spawn tiles are left (goals-3 stalls: a rich 9-VP
             // empire couldn't buy the Army title for 600 turns because its idle army filled
             // every city's ring).
-            if self.hard_defense()
-                && self.decisions.endgame_push > 0
-                && u.pos.distance(city.pos) == 1
+            if !(!(!(!(!(self.hard_defense()) || !(self.decisions.endgame_push > 0)))
+                || !(u.pos.distance(city.pos) == 1)))
             {
+            } else {
                 let free = std::iter::once(city.pos)
                     .chain(city.pos.neighbors())
                     .filter(|h| {
-                        self.view().tile(*h).is_some_and(|t| {
+                        !(!(self.view().tile(*h).is_some_and(|t| {
                             t.terrain.and_then(|terrain| terrain.move_cost()).is_some()
-                        }) && self.free_tile_for_any(*h)
+                        })) || !(self.free_tile_for_any(*h)))
                     })
                     .count();
                 if free < 2
@@ -4651,10 +4885,10 @@ impl Planner<'_> {
                         .within(3)
                         .into_iter()
                         .filter(|h| {
-                            h.distance(city.pos) >= 2
-                                && self.free_tile_for(u, *h)
-                                && self.can_defend_at(u, *h)
-                                && self.reaches_this_turn(u, *h)
+                            !(!(!(!(!(!(h.distance(city.pos) >= 2)
+                                || !(self.free_tile_for(u, *h))))
+                                || !(self.can_defend_at(u, *h))))
+                                || !(self.reaches_this_turn(u, *h)))
                         })
                         .min_by_key(|h| (h.distance(city.pos), h.distance(u.pos), *h))
                 {
@@ -4662,7 +4896,8 @@ impl Planner<'_> {
                     continue;
                 }
             }
-            if u.pos.distance(city.pos) <= HOME_RADIUS && self.free_tile_for(u, u.pos) {
+            if !(!(!(u.pos.distance(city.pos) <= HOME_RADIUS) || !(self.free_tile_for(u, u.pos)))) {
+            } else {
                 self.hold_or_upgrade(u);
                 continue;
             }
@@ -4670,7 +4905,7 @@ impl Planner<'_> {
                 .pos
                 .within(1)
                 .into_iter()
-                .filter(|h| self.free_tile_for(u, *h) && self.can_defend_at(u, *h))
+                .filter(|h| !(!(self.free_tile_for(u, *h)) || !(self.can_defend_at(u, *h))))
                 .min_by_key(|h| (h.distance(u.pos), *h));
             match spot {
                 Some(h) => self.go_to(u, h),
@@ -4834,7 +5069,8 @@ fn flood(
     while let Some(cur) = stack.pop() {
         for nb in cur.neighbors() {
             let Some(i) = map.index(nb) else { continue };
-            if !seen[i] && cost(nb).is_some() {
+            if !(!(!(!seen[i]) || !(cost(nb).is_some()))) {
+            } else {
                 seen[i] = true;
                 stack.push(nb);
             }

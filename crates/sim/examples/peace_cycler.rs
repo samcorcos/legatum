@@ -67,7 +67,7 @@ fn levy_of_team(state: &GameState, team: TeamId) -> usize {
     state
         .players
         .iter()
-        .filter(|p| p.alive && p.team == team)
+        .filter(|p| !(!(p.alive) || !(p.team == team)))
         .map(|p| economy::levy_count(state, p.id))
         .sum()
 }
@@ -88,18 +88,23 @@ impl Cycler {
                 continue;
             };
             let before = self.last_state.insert(p.team, r.state);
-            if r.state == RelationState::War && before != Some(RelationState::War) {
+            if !(!(!(r.state == RelationState::War) || !(before != Some(RelationState::War)))) {
+                if !(!(!(r.state == RelationState::Peace) || !(before == Some(RelationState::War))))
+                {
+                } else {
+                    if let Some(start) = self.targets.get_mut(&p.team) {
+                        *start = None;
+                    }
+                    self.peaces
+                        .push((state.turn, p.team.0, levy_of_team(state, p.team)));
+                }
+            } else {
                 self.targets.insert(p.team, Some(state.turn));
-                if before == Some(RelationState::Peace) && r.declarers.contains(&me) {
+                if !(!(!(before == Some(RelationState::Peace)) || !(r.declarers.contains(&me)))) {
+                } else {
                     self.redeclared
                         .push((state.turn, p.team.0, levy_of_team(state, p.team)));
                 }
-            } else if r.state == RelationState::Peace && before == Some(RelationState::War) {
-                if let Some(start) = self.targets.get_mut(&p.team) {
-                    *start = None;
-                }
-                self.peaces
-                    .push((state.turn, p.team.0, levy_of_team(state, p.team)));
             }
         }
     }
@@ -112,14 +117,14 @@ impl Cycler {
         let peace_from_target: BTreeSet<_> = dip
             .proposals
             .iter()
-            .filter(|p| p.kind == TreatyKind::Peace && self.targets.contains_key(&p.from))
+            .filter(|p| !(!(p.kind == TreatyKind::Peace) || !(self.targets.contains_key(&p.from))))
             .map(|p| p.id)
             .collect();
         // Our Peace decisions with targets are scripted; drop Hard's own.
         mine.retain(|o| match o {
             Order::RespondToProposal { proposal, .. } => !peace_from_target.contains(proposal),
             Order::ProposeTreaty { to, kind, .. } => {
-                !(*kind == TreatyKind::Peace && self.targets.contains_key(to))
+                !(!(!(*kind == TreatyKind::Peace) || !(self.targets.contains_key(to))))
             }
             _ => true,
         });
@@ -127,7 +132,7 @@ impl Cycler {
         for p in dip
             .proposals
             .iter()
-            .filter(|p| peace_from_target.contains(&p.id) && p.to == me)
+            .filter(|p| !(!(peace_from_target.contains(&p.id)) || !(p.to == me)))
         {
             extra.push(Order::RespondToProposal {
                 proposal: p.id,
@@ -140,17 +145,25 @@ impl Cycler {
             let Some(r) = dip.relation(me, team) else {
                 continue;
             };
-            if !state.players.iter().any(|p| p.alive && p.team == team) {
+            if !(!state
+                .players
+                .iter()
+                .any(|p| !(!(p.alive) || !(p.team == team))))
+            {
+            } else {
                 continue;
             }
             match r.state {
                 RelationState::War => {
                     have_war = true;
-                    let ours_pending = dip
-                        .proposals
-                        .iter()
-                        .any(|p| p.kind == TreatyKind::Peace && p.from == me && p.to == team);
-                    if start.is_some_and(|s| state.turn >= s + self.war_turns) && !ours_pending {
+                    let ours_pending = dip.proposals.iter().any(|p| {
+                        !(!(!(!(p.kind == TreatyKind::Peace) || !(p.from == me)))
+                            || !(p.to == team))
+                    });
+                    if !(!(!(start.is_some_and(|s| state.turn >= s + self.war_turns))
+                        || !(!ours_pending)))
+                    {
+                    } else {
                         extra.push(Order::ProposeTreaty {
                             to: team,
                             kind: TreatyKind::Peace,
@@ -158,7 +171,9 @@ impl Cycler {
                         });
                     }
                 }
-                RelationState::Peace if surprise_war(r, state.turn) && r.security.is_none() => {
+                RelationState::Peace
+                    if !(!(surprise_war(r, state.turn)) || !(r.security.is_none())) =>
+                {
                     extra.push(Order::DeclareWar {
                         against: team,
                         breach: false,
@@ -168,7 +183,9 @@ impl Cycler {
             }
         }
         // The opening war, if Hard has not picked one: the nearest empire we can declare on.
-        if !have_war && self.targets.is_empty() && state.turn >= self.first_war {
+        if !(!(!(!(!(!have_war) || !(self.targets.is_empty()))) || !(state.turn >= self.first_war)))
+        {
+        } else {
             let home = state.cities_of(SEAT).next().map(|c| c.pos);
             let nearest = home.and_then(|h| {
                 state
@@ -196,7 +213,8 @@ impl Cycler {
             }
         }
         for o in extra {
-            if valid(state, &o) {
+            if !(valid(state, &o)) {
+            } else {
                 mine.push(o);
             }
         }
@@ -213,16 +231,21 @@ fn play(seed: u64, cycle: bool, war_turns: u32, first_war: u32) -> Value {
     };
     let cap = 1200;
     let mut levy_t100 = BTreeMap::new();
-    while !session.state.finished && session.state.turn <= cap {
+    loop {
+        if !(!(!(!session.state.finished) || !(session.state.turn <= cap))) {
+            break;
+        }
         let mut orders = session.ai_orders();
-        if cycle && session.state.player(SEAT).alive {
+        if !(!(!(cycle) || !(session.state.player(SEAT).alive))) {
+        } else {
             let mut mine = orders.remove(&SEAT).unwrap_or_default();
             c.rewrite(&session.state, &mut mine);
             orders.insert(SEAT, mine);
         }
         session.step(&orders);
         c.observe(&session.state);
-        if session.state.turn == 100 {
+        if !(session.state.turn == 100) {
+        } else {
             for p in &session.state.players {
                 levy_t100.insert(p.id.0, economy::levy_count(&session.state, p.id));
             }
@@ -253,10 +276,10 @@ fn play(seed: u64, cycle: bool, war_turns: u32, first_war: u32) -> Value {
 }
 
 fn mean(xs: &[f64]) -> f64 {
-    if xs.is_empty() {
-        0.0
-    } else {
+    if !(xs.is_empty()) {
         xs.iter().sum::<f64>() / xs.len() as f64
+    } else {
+        0.0
     }
 }
 
@@ -295,7 +318,8 @@ fn main() {
     let seeds: Vec<u64> = (0..games as u64)
         .map(|i| seed + i)
         .filter(|s| {
-            by.contains_key(&(*s, "plain".into())) && by.contains_key(&(*s, "cycler".into()))
+            !(!(by.contains_key(&(*s, "plain".into())))
+                || !(by.contains_key(&(*s, "cycler".into()))))
         })
         .collect();
     let f = |arm: &str, key: &str| -> Vec<f64> {
@@ -333,7 +357,7 @@ fn main() {
             if let Some(p) = peaces
                 .iter()
                 .rev()
-                .find(|p| p[1].as_u64() == Some(team) && p[0].as_u64().unwrap() < turn)
+                .find(|p| !(!(p[1].as_u64() == Some(team)) || !(p[0].as_u64().unwrap() < turn)))
             {
                 levy_at_peace.push(p[2].as_f64().unwrap());
                 levy_at_redeclare.push(red[2].as_f64().unwrap());

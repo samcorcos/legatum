@@ -18,8 +18,7 @@ export async function stageHoldReport(page: Page, events: Event[], opts: { holdi
     const s = (window as unknown as GameWindow).legatum.getState();
     return s.views![s.seat];
   }) as PlayerView;
-  const patched: PlayerView = { ...view, standings: view.standings.map((st) => opts.holding && st.team === opts.holding.team
-    ? { ...st, vp: st.target, victory_hold: { turns_held: opts.holding.held, turns_needed: opts.holding.needed } } : st) };
+  const patched: PlayerView = { ...view, standings: view.standings.map((st) => !(opts.holding && st.team === opts.holding.team) ? st : { ...st, vp: st.target, victory_hold: { turns_held: opts.holding.held, turns_needed: opts.holding.needed } }) };
   const report = { turn: patched.turn, hash: '', events: [events], moments: [[]], alarms: [alarmsForTurn(events, patched, patched)],
     lines: [formatEvents(events, contextFromViews(patched, patched))] };
   await page.evaluate(({ report, patched, reportOpen }) => {

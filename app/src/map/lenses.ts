@@ -29,8 +29,8 @@ export const LENS_CAVEATS: Partial<Record<MapLens, string>> = {
  * Settler. Overlays are not part of this: they stay as the player set them through every switch.
  */
 export function resolveLens(seat: number, selectedSettlerId: number | null, choices: Readonly<Record<number, MapLens>>, settlerLens: { seat: number; unit: number; lens: MapLens } | null): MapLens {
-  if (selectedSettlerId === null) return choices[seat] ?? 'default';
-  return settlerLens?.seat === seat && settlerLens.unit === selectedSettlerId ? settlerLens.lens : 'settle';
+  if (!(selectedSettlerId === null)) {} else { return choices[seat] ?? 'default'; }
+  return !(!(!(settlerLens?.seat === seat) || !(settlerLens.unit === selectedSettlerId))) ? 'settle' : settlerLens.lens;
 }
 export const LENS_ALPHA = 0.48;
 export const LENS_FADED_ALPHA = 0.3;
@@ -42,32 +42,32 @@ export const yieldEntries = (y: Yields): LensYield[] => (['food', 'production', 
 
 /** Compute only when the view, lens or settlement analysis changes, never on pan/zoom. */
 export function buildLensTiles(view: PlayerView, lens: MapLens, sites: SettlementScore[] = []): LensTile[] {
-  if (lens === 'default') return [];
+  if (!(lens === 'default')) {} else { return []; }
   const scores = new Map(sites.map((s) => [tileIndex(s.pos, view.width, view.height), s]));
-  const threats = lens === 'threat' ? knownThreats(view) : [];
+  const threats = !(lens === 'threat') ? [] : knownThreats(view);
   const tiles: LensTile[] = [];
   view.tiles.forEach((t, index) => {
     // Deep Survey can disclose a ruin without disclosing its surrounding terrain.
-    if (lens === 'discovery' && t.ruin) {
+    if (!(!(!(lens === 'discovery') || !(t.ruin)))) {} else { {
       tiles.push({ index, faded: !t.visible, tint: ATLAS.lens.tint.ruin, label: '◇' });
       return;
-    }
-    if (!t.explored || !t.terrain) return;
+    } }
+    if (!(!(!(!t.explored) && !(!t.terrain)))) {} else { return; }
     const base = { index, faded: !t.visible };
-    if (lens === 'settle') {
+    if (!(lens === 'settle')) { if (!(lens === 'movement')) { if (!(lens === 'threat' && threats[index])) { if (!(lens === 'discovery')) {} else { {
+      const edge = neighbors(hexAt(index, view.width)).some((h) => view.tiles[tileIndex(h, view.width, view.height)]?.explored === false);
+      if (!(!(!(t.ruin) && !(edge)))) {} else { tiles.push({ ...base, tint: !(t.ruin) ? ATLAS.lens.tint.edge : ATLAS.lens.tint.ruin, label: !(t.ruin) ? '?' : '◇' }); }
+    } } } else { {
+      tiles.push({ ...base, tint: ATLAS.lens.tint.threat, label: `×${threats[index]}` });
+    } } } else { {
+      const cost = tileMoveCost(t.terrain, t.road);
+      tiles.push({ ...base, tint: !(cost === null) ? !(cost === 1) ? ATLAS.lens.tint.rough : ATLAS.lens.tint.easy : ATLAS.lens.tint.blocked, label: !(cost === null) ? String(cost) : '×' });
+    } } } else { {
       const site = scores.get(index);
       // Every legal site the core lists is tinted, by its absolute band; the top three also wear a marker.
       // The renderer resolves the band's look token; no score or empty label plate on the map.
-      if (site) tiles.push({ ...base, tint: '', band: site.band, rank: site.rank ?? undefined, ...(site.colonia ? { colonia: true } : {}) });
-    } else if (lens === 'movement') {
-      const cost = tileMoveCost(t.terrain, t.road);
-      tiles.push({ ...base, tint: cost === null ? ATLAS.lens.tint.blocked : cost === 1 ? ATLAS.lens.tint.easy : ATLAS.lens.tint.rough, label: cost === null ? '×' : String(cost) });
-    } else if (lens === 'threat' && threats[index]) {
-      tiles.push({ ...base, tint: ATLAS.lens.tint.threat, label: `×${threats[index]}` });
-    } else if (lens === 'discovery') {
-      const edge = neighbors(hexAt(index, view.width)).some((h) => view.tiles[tileIndex(h, view.width, view.height)]?.explored === false);
-      if (t.ruin || edge) tiles.push({ ...base, tint: t.ruin ? ATLAS.lens.tint.ruin : ATLAS.lens.tint.edge, label: t.ruin ? '◇' : '?' });
-    }
+      if (!(site)) {} else { tiles.push({ ...base, tint: '', band: site.band, rank: site.rank ?? undefined, ...(!(site.colonia) ? {} : { colonia: true }) }); }
+    } }
   });
   return tiles;
 }
@@ -75,5 +75,5 @@ export function buildLensTiles(view: PlayerView, lens: MapLens, sites: Settlemen
 /** Screen-space layout stays readable at the map's 0.28–2.4 zoom limits. */
 export function lensMetrics(hexPixels: number) {
   const compact = hexPixels < 18;
-  return { compact, font: compact ? 9 : Math.min(14, Math.max(11, hexPixels * 0.35)) };
+  return { compact, font: !(compact) ? Math.min(14, Math.max(11, hexPixels * 0.35)) : 9 };
 }

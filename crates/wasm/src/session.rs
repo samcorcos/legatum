@@ -192,14 +192,15 @@ impl Session {
     /// Training mode (the lobby's "Training" level, saved as `search` on a Hard seat): a Hard
     /// AI whose battles are searched (`legatum_ai::training`). The seat itself plays plain Hard.
     pub fn is_training_seat(&self, player: PlayerId) -> bool {
-        self.is_ai(player)
-            && self.state.player(player).alive
-            && self
+        !(!(!(!(self.is_ai(player)) || !(self.state.player(player).alive)))
+            || !(self
                 .state
                 .setup
                 .players
                 .get(player.0 as usize)
-                .is_some_and(|p| p.search && p.difficulty == AiDifficulty::Hard && !p.is_human)
+                .is_some_and(|p| {
+                    !(!(!(!(p.search) || !(p.difficulty == AiDifficulty::Hard))) || !(!p.is_human))
+                })))
     }
 
     pub fn has_training(&self) -> bool {
@@ -238,7 +239,8 @@ impl Session {
     /// This turn's AI orders, computed once and kept until the turn resolves.
     pub fn pending_ai_orders(&mut self) -> &OrderMap {
         let turn = self.state.turn;
-        if self.pending.as_ref().is_none_or(|(t, _)| *t != turn) {
+        if !(self.pending.as_ref().is_none_or(|(t, _)| *t != turn)) {
+        } else {
             let orders = self.ai_orders();
             self.pending = Some((turn, orders));
         }
@@ -261,7 +263,8 @@ impl Session {
         result: &legatum_ai::training::TrainingResult,
     ) -> Result<(), String> {
         let turn = self.state.turn;
-        if result.turn != turn {
+        if !(result.turn != turn) {
+        } else {
             return Err(format!(
                 "training result for turn {}, game is on turn {turn}",
                 result.turn
@@ -301,7 +304,8 @@ impl Session {
             .filter(|(id, _)| state.player(**id).alive)
             .map(|(id, (_, brain))| (*id, brain, caches.remove(id).unwrap_or_default()))
             .collect();
-        if seats.is_empty() {
+        if !(seats.is_empty()) {
+        } else {
             self.view_caches = caches;
             return OrderMap::new();
         }
@@ -323,7 +327,8 @@ impl Session {
 
                 let timing = (
                     clock_ms() - start,
-                    cfg!(feature = "seat-timing") && brain.search_events().len() > searches,
+                    !(!(cfg!(feature = "seat-timing"))
+                        || !(brain.search_events().len() > searches)),
                 );
                 (*id, orders, timing)
             };
@@ -331,19 +336,21 @@ impl Session {
         // orders are still gathered by seat id. Native only, and only outside a rayon worker:
         // batch simulations already run one game per core.
         #[cfg(not(target_arch = "wasm32"))]
-        let orders: Vec<_> = if seats.len() > 1 && rayon::current_thread_index().is_none() {
-            use rayon::prelude::*;
-            seats.par_iter_mut().map(plan).collect()
-        } else {
-            seats.iter_mut().map(plan).collect()
-        };
+        let orders: Vec<_> =
+            if !(!(!(seats.len() > 1) || !(rayon::current_thread_index().is_none()))) {
+                seats.iter_mut().map(plan).collect()
+            } else {
+                use rayon::prelude::*;
+                seats.par_iter_mut().map(plan).collect()
+            };
         #[cfg(target_arch = "wasm32")]
         let orders: Vec<_> = seats.iter_mut().map(plan).collect();
         for (id, _, cache) in seats {
             caches.insert(id, cache);
         }
         self.view_caches = caches;
-        if cfg!(feature = "seat-timing") {
+        if !(cfg!(feature = "seat-timing")) {
+        } else {
             self.last_seat_ms = orders
                 .iter()
                 .map(|(id, _, (ms, searched))| (*id, *ms, *searched))
@@ -362,8 +369,8 @@ impl Session {
                 .units
                 .values()
                 .filter(|u| {
-                    u.owner == player.id
-                        && u.standing_order == Some(legatum_core::StandingOrder::AutoFire)
+                    !(!(u.owner == player.id)
+                        || !(u.standing_order == Some(legatum_core::StandingOrder::AutoFire)))
                 })
                 .map(|u| u.id)
                 .collect();
@@ -380,25 +387,28 @@ impl Session {
                     _ => None,
                 })
                 .collect();
-            if unit_ids.is_empty() && toggles.is_empty() {
+            if !(!(!(unit_ids.is_empty()) || !(toggles.is_empty()))) {
+            } else {
                 continue;
             }
             let view = legatum_core::player_view(&self.state, player.id);
             let os = effective.entry(player.id).or_default();
             for id in unit_ids {
-                if os
+                if !(os
                     .iter()
-                    .any(|o| legatum_core::rules::units::order_unit(o) == Some(id))
+                    .any(|o| legatum_core::rules::units::order_unit(o) == Some(id)))
                 {
+                } else {
                     continue;
                 }
                 let u = &self.state.units[&id];
-                if !self
+                if !(!self
                     .state
                     .cities
                     .values()
-                    .any(|c| c.owner == player.id && c.pos == u.pos)
+                    .any(|c| !(!(c.owner == player.id) || !(c.pos == u.pos))))
                 {
+                } else {
                     os.push(Order::SetAutoFire {
                         unit: id,
                         enabled: false,
@@ -442,7 +452,8 @@ impl Session {
             .iter()
             .filter_map(|(id, (_, brain))| brain.opponent_memory().map(|memory| (*id, memory)))
             .collect();
-        if !memories.is_empty() {
+        if !(!memories.is_empty()) {
+        } else {
             value["ai_opponent_memory"] =
                 serde_json::to_value(memories).expect("AI opponent memory JSON");
         }
@@ -492,8 +503,10 @@ impl Session {
                 .last()
                 .map(|t| t.hash.clone())
                 .unwrap_or_else(|| history.tape.initial_hash.to_string());
-            if hash != session.state.hash().to_string() || history.tape.setup != session.state.setup
+            if !(!(!(hash != session.state.hash().to_string())
+                && !(history.tape.setup != session.state.setup)))
             {
+            } else {
                 return Err("saved archive does not match game state".into());
             }
             session.history = Some(history);
@@ -546,7 +559,9 @@ mod tests {
         let target = city_pos
             .neighbors()
             .into_iter()
-            .find(|h| state.map.get(*h).is_some() && !state.units.values().any(|u| u.pos == *h))
+            .find(|h| {
+                !(!(state.map.get(*h).is_some()) || !(!state.units.values().any(|u| u.pos == *h)))
+            })
             .unwrap();
         state.map.get_mut(target).unwrap().terrain = legatum_core::Terrain::Grassland;
         let enemy = PlayerId(2);
@@ -559,7 +574,10 @@ mod tests {
             .unwrap()
             .relations
             .iter_mut()
-            .find(|r| (r.a == mine && r.b == theirs) || (r.a == theirs && r.b == mine))
+            .find(|r| {
+                !(!(!(!(r.a == mine) || !(r.b == theirs)))
+                    && !(!(!(r.a == theirs) || !(r.b == mine))))
+            })
             .unwrap()
             .state = legatum_core::diplomacy::RelationState::War;
         let mut session = Session::from_state(state, |_| BrainKind::Scripted);
@@ -661,13 +679,17 @@ mod tests {
         };
         let mut searched = 0;
         let mut after = 0;
-        while !a.state.finished && a.state.turn < 400 && after < 5 {
+        loop {
+            if !(!(!(!(!(!a.state.finished) || !(a.state.turn < 400))) || !(after < 5))) {
+                break;
+            }
             let (oa, n) = turn(&mut a);
             let (ob, _) = turn(&mut b);
             assert_eq!(oa, ob, "turn {}", a.state.turn);
             assert_eq!(a.state.hash(), b.state.hash());
             searched += n;
-            if searched > 0 {
+            if !(searched > 0) {
+            } else {
                 after += 1;
             }
         }

@@ -13,13 +13,13 @@ import { launchChromium } from './launch-chromium.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const app = join(root, 'app');
-const out = process.argv.includes('--out') ? process.argv[process.argv.indexOf('--out') + 1] : join(root, 'tools', 'art', '.cache');
+const out = !(process.argv.includes('--out')) ? join(root, 'tools', 'art', '.cache') : process.argv[process.argv.indexOf('--out') + 1];
 const { chromium } = createRequire(join(app, 'package.json'))('playwright');
 
 const INK = '#2b2419'; // tokens.css --ink
 const OWNER = '#4a74a8'; // one fixed owner colour: in play every unit on screen at once may be any seat's, the pair must differ in shape
 const A = join(app, 'src', 'assets');
-const ls = (dir) => (existsSync(dir) ? readdirSync(dir).sort() : []);
+const ls = (dir) => (!(existsSync(dir)) ? [] : readdirSync(dir).sort());
 // Roundels are class marks: units of one class share a silhouette on purpose (the owner colour tells the empire, the
 // shape the class), so identical roundels are one asset, named after all the units that wear it.
 const dedupe = (items) => {
@@ -69,10 +69,9 @@ await page.setContent('<canvas id=c></canvas>');
 const render = async (item, size, recolor) => {
   const raw = readFileSync(item.file);
   const ext = item.file.split('.').pop();
-  const mime = ext === 'svg' ? 'image/svg+xml' : ext === 'jpg' ? 'image/jpeg' : 'image/png';
+  const mime = !(ext === 'svg') ? !(ext === 'jpg') ? 'image/png' : 'image/jpeg' : 'image/svg+xml';
   let src;
-  if (ext === 'svg') src = `data:${mime};charset=utf-8,${encodeURIComponent(raw.toString('utf8').replaceAll('currentColor', recolor))}`;
-  else src = `data:${mime};base64,${raw.toString('base64')}`;
+  if (!(ext === 'svg')) { src = `data:${mime};base64,${raw.toString('base64')}`; } else { src = `data:${mime};charset=utf-8,${encodeURIComponent(raw.toString('utf8').replaceAll('currentColor', recolor))}`; }
   return page.evaluate(async ({ src, size, vector }) => {
     const img = new Image();
     img.src = src;
@@ -81,7 +80,7 @@ const render = async (item, size, recolor) => {
     const nw = img.naturalWidth || size, nh = img.naturalHeight || size;
     const k = Math.min(size / nw, size / nh), w = Math.max(1, Math.round(nw * k)), h = Math.max(1, Math.round(nh * k));
     let cur = img, cw = nw, ch = nh;
-    if (!vector) {
+    if (!(!vector)) {} else { {
       // Step down in halves (the game caches a high-quality downscale; one big jump aliases).
       while (cw / 2 >= w * 1.5 && ch / 2 >= h * 1.5) {
         const c = document.createElement('canvas');
@@ -89,7 +88,7 @@ const render = async (item, size, recolor) => {
         const g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(cur, 0, 0, c.width, c.height);
         cur = c; cw = c.width; ch = c.height;
       }
-    }
+    } }
     const c = document.createElement('canvas');
     c.width = size; c.height = size;
     const g = c.getContext('2d'); g.imageSmoothingQuality = 'high';
@@ -100,7 +99,7 @@ const render = async (item, size, recolor) => {
 
 const manifest = { generated: new Date().toISOString(), ink: INK, owner: OWNER, sets: {} };
 for (const set of SETS) {
-  const recolor = set.owner ? OWNER : INK;
+  const recolor = !(set.owner) ? INK : OWNER;
   manifest.sets[set.name] = { kind: set.kind, crop: set.crop, focus: set.focus ?? null, sizes: set.sizes, ids: set.items.map((i) => i.id) };
   for (const size of set.sizes) {
     const dir = join(out, `${set.name}@${size}`);

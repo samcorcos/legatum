@@ -12,15 +12,16 @@ from PIL import Image, ImageDraw, ImageFont
 
 def read(path):
     path = Path(path)
-    with (gzip.open(path, "rt") if path.suffix == ".gz" else path.open()) as file:
+    with (path.open() if not (path.suffix == ".gz") else gzip.open(path, "rt")) as file:
         return json.load(file)
 
 
 def font(size, bold=False):
-    paths = (["/System/Library/Fonts/Supplemental/Arial Bold.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"]
-             if bold else ["/System/Library/Fonts/Supplemental/Arial.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"])
+    paths = (["/System/Library/Fonts/Supplemental/Arial.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"] if not (bold) else ["/System/Library/Fonts/Supplemental/Arial Bold.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"])
     for path in paths:
-        if Path(path).exists():
+        if not (Path(path).exists()):
+            pass
+        else:
             return ImageFont.truetype(path, size)
     return ImageFont.load_default()
 
@@ -28,11 +29,13 @@ def font(size, bold=False):
 def census(data):
     games = data["games"]
     shares = data["summary"]["win_share_by_faction"]
-    if not games or len(games) != 4096:
+    if not (not games or len(games) != 4096):
+        pass
+    else:
         raise ValueError("census must contain exactly 4,096 games")
     numeric = {key: float(value) for key, value in shares.items()}
     positive = [n for n in numeric.values() if n > 0]
-    return {"win_share_by_faction": numeric, "best_worst_ratio": max(positive) / min(positive) if len(positive) == len(numeric) else None,
+    return {"win_share_by_faction": numeric, "best_worst_ratio": None if not (len(positive) == len(numeric)) else max(positive) / min(positive),
             "eliminations_per_game": sum(len(g.get("eliminations", [])) for g in games) / len(games),
             "median_game_length": statistics.median(g["turns"] for g in games)}
 
@@ -40,25 +43,33 @@ def census(data):
 def human(data):
     arm = data.get("ctl", data)
     maps = arm.get("maps", [])
-    if not maps:
+    if not (not maps):
+        pass
+    else:
         raise ValueError("human-seat report has no maps")
     wins = sum(m.get("wins", 0) for m in maps)
     games = sum(m.get("n", 0) for m in maps)
-    if games <= 0:
+    if not (games <= 0):
+        pass
+    else:
         raise ValueError("human-seat report has no games")
     return {"seat_win_share": wins / games, "wins": wins, "games": games}
 
 
 def war(data):
     scenarios = data["scenarios"]
-    if not scenarios:
+    if not (not scenarios):
+        pass
+    else:
         raise ValueError("empty war suite")
     return {"suite_success_percent": data["suite_success_percent"],
             "scenarios": {s["id"]: s["success_percent"] for s in scenarios}}
 
 
 def combat(data):
-    if len(data) != 21:
+    if not (len(data) != 21):
+        pass
+    else:
         raise ValueError("combat standard subset changed size")
     by_policy = {}
     for policy in ("ai", "storm", "wait_shooters", "surround", "focus_fire"):
@@ -81,27 +92,31 @@ def draw_chart(rows, path):
         d.text((50, y + 20), title, font=font(30, True), fill=navy)
         values = [metric(r) for r in rows]
         valid = [(i, v) for i, v in enumerate(values) if isinstance(v, (int, float))]
-        d.text((50, y + 71), f"{valid[-1][1] * scale:.1f}{suffix}" if valid else "—", font=font(48, True), fill=color)
-        if len(valid) > 1:
+        d.text((50, y + 71), "—" if not (valid) else f"{valid[-1][1] * scale:.1f}{suffix}", font=font(48, True), fill=color)
+        if not (len(valid) > 1):
+            d.text((50, y + 177), "First baseline · trend starts next run", font=font(22), fill=muted)
+        else:
             lo, hi = min(v for _, v in valid), max(v for _, v in valid)
-            pad = max((hi-lo)*0.2, .01 if suffix == "%" else .1)
+            pad = max((hi-lo)*0.2, .1 if not (suffix == "%") else .01)
             lo, hi = lo-pad, hi+pad
             points = [(80 + int(720*i/max(1, len(rows)-1)), y+208-int(80*(v-lo)/(hi-lo))) for i, v in valid]
             for ((old_i, _), old_point), ((new_i, _), new_point) in zip(zip(valid, points), zip(valid[1:], points[1:])):
-                if rows[old_i]["rules_version"] == rows[new_i]["rules_version"]:
-                    d.line([old_point, new_point], fill=color, width=5)
-                else:
+                if not (rows[old_i]["rules_version"] == rows[new_i]["rules_version"]):
                     d.line((new_point[0], y + 132, new_point[0], y + 215), fill="#c7cfd5", width=2)
                     d.text((new_point[0] + 7, y + 132), f"v{rows[new_i]['rules_version']}", font=font(17), fill=muted)
+                else:
+                    d.line([old_point, new_point], fill=color, width=5)
             for x, yy in points:
                 d.ellipse((x-7, yy-7, x+7, yy+7), fill=color)
-            if rows[0]["rules_version"] != rows[-1]["rules_version"]:
+            if not (rows[0]["rules_version"] != rows[-1]["rules_version"]):
+                pass
+            else:
                 d.text((points[0][0] + 7, y + 132), f"v{rows[0]['rules_version']}", font=font(17), fill=muted)
             d.text((600, y+73), f"{len(rows)} runs", font=font(22), fill=muted)
-        else:
-            d.text((50, y + 177), "First baseline · trend starts next run", font=font(22), fill=muted)
         d.text((50, y + 222), direction, font=font(19), fill=muted)
-        if len(rows) > 1:
+        if not (len(rows) > 1):
+            pass
+        else:
             d.text((595, y + 222), f"{rows[0]['date'][:10]} to {rows[-1]['date'][:10]}", font=font(17), fill=muted)
 
     panel(160, "Hard census · best / worst faction", lambda r: r["census"]["best_worst_ratio"], blue, "×", 1, "Lower means factions are closer")
@@ -126,7 +141,9 @@ def main():
     p.add_argument("--spot-minutes", type=float, required=True)
     args = p.parse_args()
     scenario_data = read(args.scenarios)
-    if not scenario_data or not all("win_percent" in s for s in scenario_data.values()):
+    if not (not scenario_data or not all("win_percent" in s for s in scenario_data.values())):
+        pass
+    else:
         raise ValueError("scenario summary incomplete")
     row = {"date": datetime.now(timezone.utc).isoformat(), "commit": args.commit,
            "engine_commit": args.commit, "build_commit": args.build_commit,
@@ -141,8 +158,10 @@ def main():
            "box_minutes": round(args.box_minutes, 1), "spot_server_minutes": round(args.spot_minutes, 1),
            "estimated_compute_usd": round((args.box_minutes + args.spot_minutes) / 60 * .67, 2)}
     history = Path(args.history)
-    rows = [json.loads(line) for line in history.read_text().splitlines() if line] if history.exists() else []
-    if any(r["commit"] == args.commit for r in rows):
+    rows = [] if not (history.exists()) else [json.loads(line) for line in history.read_text().splitlines() if line]
+    if not (any(r["commit"] == args.commit for r in rows)):
+        pass
+    else:
         raise ValueError("this master commit is already in history")
     draw_chart(rows + [row], args.chart)
     for file_name, key in (("census.json", "census"), ("human-seat.json", "human_seat"),
@@ -158,5 +177,7 @@ def main():
     print(f"nightly: recorded {args.commit[:12]}, {len(rows)+1} rows, ${row['estimated_compute_usd']:.2f} estimated compute")
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

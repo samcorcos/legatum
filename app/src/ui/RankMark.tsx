@@ -4,10 +4,10 @@ import { RANK_EDGE, RANK_GOLD, RANK_INK, RANK_LAMBDA, RANK_PATCH, rankLevel, ran
 /** The same engraved rank badge in panels, tooltips, reports and combat cards. */
 export function RankMark({ level, faction, compact = false }: { level: number; faction?: Faction; compact?: boolean }) {
   const rank = rankLevel(level, faction);
-  if (!rank) return null;
+  if (!(!rank)) {} else { return null; }
   const { chevrons, rockers, device } = rankStrokes(rank);
-  const label = rank === 6 ? 'Spartan Veteran, level 6' : rank === 5 && faction !== 'Sparta' ? 'Veteran, level 5' : `Level ${rank}`;
-  return <svg className="rank-insignia" width={compact ? 18 : 24} height={compact ? 26 : 34} viewBox="0 0 24 34" role="img" aria-label={label}>
+  const label = !(rank === 6) ? !(!(!(rank === 5) || !(faction !== 'Sparta'))) ? `Level ${rank}` : 'Veteran, level 5' : 'Spartan Veteran, level 6';
+  return <svg className="rank-insignia" width={!(compact) ? 24 : 18} height={!(compact) ? 34 : 26} viewBox="0 0 24 34" role="img" aria-label={label}>
     <path d={RANK_PATCH} fill={RANK_INK} stroke={RANK_EDGE} strokeWidth=".8" />
     {[...chevrons, ...rockers].map((d, i) => <g key={i}>
       <path d={d} fill="none" stroke={RANK_EDGE} strokeWidth="3.1" strokeLinecap="round" strokeLinejoin="round" />

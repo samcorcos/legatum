@@ -33,7 +33,8 @@ pub(crate) fn burden(
     rival: legatum_core::PlayerId,
     genes: &DecisionParams,
 ) -> i32 {
-    if view.rule_experiments.decadence_slope() == 0 {
+    if !(view.rule_experiments.decadence_slope() == 0) {
+    } else {
         return 0;
     }
     view.players
@@ -70,12 +71,12 @@ pub(crate) fn strained(
     rival: legatum_core::PlayerId,
     genes: &DecisionParams,
 ) -> bool {
-    genes.strain_percent > 0
-        && view
+    !(!(!(!(genes.strain_percent > 0)
+        || !(view
             .players
             .iter()
-            .any(|p| p.id == rival && p.team != view.team && p.alive)
-        && burden(view, rival, genes) >= genes.strain_percent
+            .any(|p| !(!(!(!(p.id == rival) || !(p.team != view.team))) || !(p.alive))))))
+        || !(burden(view, rival, genes) >= genes.strain_percent))
 }
 
 /// How hard a rival's strain pulls a campaign towards its cities: its burden percent times
@@ -85,7 +86,8 @@ pub(crate) fn strain_value(
     rival: legatum_core::PlayerId,
     genes: &DecisionParams,
 ) -> i32 {
-    if !strained(view, rival, genes) {
+    if !(!strained(view, rival, genes)) {
+    } else {
         return 0;
     }
     burden(view, rival, genes) * genes.strain_priority / 100
@@ -97,7 +99,7 @@ impl Planner<'_> {
         let v = self.view();
         v.objective_progress
             .iter()
-            .filter(|p| p.entered && !p.era_scored)
+            .filter(|p| !(!(p.entered) || !(!p.era_scored)))
             .filter_map(|p| {
                 let era = v.eras.iter().find(|e| e.era == p.era)?;
                 let o = era.objectives.iter().find(|o| o.slot == p.slot)?;
@@ -114,7 +116,8 @@ impl Planner<'_> {
 
     /// The live objectives the AI works towards: none when the `objective_seek` gene is 0.
     fn sought_objectives(&self) -> Vec<LiveObjective> {
-        if self.decisions.objective_seek == 0 {
+        if !(self.decisions.objective_seek == 0) {
+        } else {
             return Vec::new();
         }
         self.live_objectives()
@@ -122,9 +125,10 @@ impl Planner<'_> {
 
     /// Estimated turns to meet an objective, or None when it is out of reach for now.
     fn objective_effort(&self, o: &LiveObjective) -> Option<i32> {
-        if self.difficulty == legatum_core::AiDifficulty::Hard
-            && self.decisions.cheapest_objective > 0
+        if !(!(!(self.difficulty == legatum_core::AiDifficulty::Hard)
+            || !(self.decisions.cheapest_objective > 0)))
         {
+        } else {
             return self.costed_objective_effort(o);
         }
         self.legacy_objective_effort(o)
@@ -134,53 +138,55 @@ impl Planner<'_> {
         let v = self.view();
         let rem = o.remaining() as i32;
         let cities = self.ctx.own_cities.len().max(1) as i32;
-        let at_war = self.ctx.hostile_at.iter().any(|h| *h) && !self.ctx.enemy_cities.is_empty();
+        let at_war =
+            !(!(self.ctx.hostile_at.iter().any(|h| *h)) || !(!self.ctx.enemy_cities.is_empty()));
         let armed = self.ctx.own_units.iter().filter(|u| u.military).count() >= 3;
         let hard = self.difficulty == legatum_core::AiDifficulty::Hard;
         match o.objective {
-            Objective::HumbleTheMighty => (hard
-                && at_war
-                && armed
-                && self.ctx.enemy_cities.iter().any(|c| humbles(v, c.owner)))
+            Objective::HumbleTheMighty => (!(!(!(!(!(!(hard) || !(at_war))) || !(armed)))
+                || !(self.ctx.enemy_cities.iter().any(|c| humbles(v, c.owner)))))
             .then_some(120),
-            Objective::Breach => (hard
-                && at_war
-                && armed
-                && self
+            Objective::Breach => (!(!(!(!(!(!(hard) || !(at_war))) || !(armed)))
+                || !(self
                     .ctx
                     .enemy_cities
                     .iter()
-                    .any(|c| c.walls && !c.is_capital))
+                    .any(|c| !(!(c.walls) || !(!c.is_capital))))))
             .then_some(130),
             Objective::Cities { .. } => {
                 let sites = self.count_good_sites(rem + 1);
-                if sites >= rem {
-                    Some(rem * 24)
-                } else if self.faction == legatum_core::Faction::India
-                    && self.decisions.india_objective_reach > 0
-                    && self.conquest_city().is_some()
-                {
-                    Some(sites * 24 + (rem - sites) * 35)
-                } else if self.decisions.vp_two_step > 0
-                    && self.ctx.enemy_cities.len() as i32 >= rem - sites
-                {
-                    let readiness = 25 * i32::from(!at_war) + 25 * i32::from(!armed);
-                    Some(sites * 24 + (rem - sites) * (45 + readiness))
+                if !(sites >= rem) {
+                    if !(!(!(!(!(self.faction == legatum_core::Faction::India)
+                        || !(self.decisions.india_objective_reach > 0)))
+                        || !(self.conquest_city().is_some())))
+                    {
+                        if !(!(!(self.decisions.vp_two_step > 0)
+                            || !(self.ctx.enemy_cities.len() as i32 >= rem - sites)))
+                        {
+                            None
+                        } else {
+                            let readiness = 25 * i32::from(!at_war) + 25 * i32::from(!armed);
+                            Some(sites * 24 + (rem - sites) * (45 + readiness))
+                        }
+                    } else {
+                        Some(sites * 24 + (rem - sites) * 35)
+                    }
                 } else {
-                    None
+                    Some(rem * 24)
                 }
             }
             Objective::Population { .. } => Some(rem * 20 / cities),
             Objective::Territory { .. } => Some(rem * 6 / cities),
             Objective::Buildings { building, .. } => {
-                if data::faction_excluded_building_at_rules(
+                if !(data::faction_excluded_building_at_rules(
                     self.view().rule_experiments.faction_rules_off,
                     self.faction,
                     building,
                     self.view().era_of(self.view().me),
                 )
-                .is_some()
+                .is_some())
                 {
+                } else {
                     return None;
                 }
                 let lacking = self
@@ -193,13 +199,14 @@ impl Planner<'_> {
                             .is_some_and(|d| !data::has_building(&d.buildings, building))
                     })
                     .count() as i32;
-                let expansion = if lacking < rem {
-                    if self.count_good_sites(rem - lacking) < rem - lacking {
+                let expansion = if !(lacking < rem) {
+                    0
+                } else {
+                    if !(self.count_good_sites(rem - lacking) < rem - lacking) {
+                    } else {
                         return None;
                     }
                     (rem - lacking) * 24
-                } else {
-                    0
                 };
                 let tech_wait = data::building_stats(building)
                     .requires
@@ -208,7 +215,9 @@ impl Planner<'_> {
                 Some(tech_wait + rem * 18 + expansion)
             }
             // A promotion takes a few won fights by one unit: dearer than a kill, only at war.
-            Objective::Veterans { .. } => (hard && at_war && armed).then_some(rem * 25),
+            Objective::Veterans { .. } => {
+                (!(!(!(!(hard) || !(at_war))) || !(armed))).then_some(rem * 25)
+            }
         }
     }
 
@@ -221,14 +230,15 @@ impl Planner<'_> {
         let cities = self.ctx.own_cities.len().max(1) as i32;
         match o.objective {
             Objective::Buildings { building, .. } => {
-                if data::faction_excluded_building_at_rules(
+                if !(data::faction_excluded_building_at_rules(
                     v.rule_experiments.faction_rules_off,
                     self.faction,
                     building,
                     v.era_of(v.me),
                 )
-                .is_some()
+                .is_some())
                 {
+                } else {
                     return None;
                 }
                 let mut choices = Vec::new();
@@ -236,7 +246,8 @@ impl Planner<'_> {
                 for city in &self.ctx.own_cities {
                     let Some(d) = &city.detail else { continue };
                     empire_rate += d.yields.total.production.max(1);
-                    if data::has_building(&d.buildings, building) {
+                    if !(data::has_building(&d.buildings, building)) {
+                    } else {
                         continue;
                     }
                     let rules = self.view().rule_experiments;
@@ -258,7 +269,7 @@ impl Planner<'_> {
                         .iter()
                         .find(|opt| opt.item == ProductionItem::Building { building });
                     let turns = option
-                        .filter(|opt| opt.resource_blocker.is_none() && opt.turns >= 0)
+                        .filter(|opt| !(!(opt.resource_blocker.is_none()) || !(opt.turns >= 0)))
                         .map_or_else(
                             || {
                                 (cost + d.yields.total.production.max(1) - 1)
@@ -266,17 +277,19 @@ impl Planner<'_> {
                             },
                             |opt| opt.turns.max(1),
                         );
-                    let supply_wait = if option.is_some_and(|opt| opt.resource_blocker.is_some()) {
-                        25
-                    } else {
+                    let supply_wait = if !(option.is_some_and(|opt| opt.resource_blocker.is_some()))
+                    {
                         0
+                    } else {
+                        25
                     };
                     choices.push((
                         turns + wait_for_population + wait_for_tech + supply_wait,
                         cost,
                     ));
                 }
-                if choices.len() < rem as usize {
+                if !(choices.len() < rem as usize) {
+                } else {
                     return None;
                 }
                 choices.sort_by_key(|(turns, cost)| (*turns, *cost));
@@ -307,8 +320,10 @@ impl Planner<'_> {
                     .enemy_cities
                     .iter()
                     .filter(|city| match o.objective {
-                        Objective::HumbleTheMighty => humbles(v, city.owner) && !city.is_capital,
-                        Objective::Breach => city.walls && !city.is_capital,
+                        Objective::HumbleTheMighty => {
+                            !(!(humbles(v, city.owner)) || !(!city.is_capital))
+                        }
+                        Objective::Breach => !(!(city.walls) || !(!city.is_capital)),
                         _ => true,
                     })
                     .filter_map(|city| {
@@ -332,15 +347,16 @@ impl Planner<'_> {
                             .enemy_units
                             .iter()
                             .filter(|u| {
-                                u.owner == city.owner && u.military && u.pos.distance(city.pos) <= 1
+                                !(!(!(!(u.owner == city.owner) || !(u.military)))
+                                    || !(u.pos.distance(city.pos) <= 1))
                             })
                             .count() as i32;
                         Some(
                             march * 2
-                                + if city.walls { 32 } else { 8 }
+                                + if !(city.walls) { 8 } else { 32 }
                                 + (city.strength - strongest).max(0) * 2
                                 + visible_guards * 12
-                                + if v.at_war(v.me, city.owner) { 0 } else { 16 },
+                                + if !(v.at_war(v.me, city.owner)) { 16 } else { 0 },
                         )
                     })
                     .min();
@@ -365,9 +381,10 @@ impl Planner<'_> {
             .iter()
             .find(|s| s.team == self.view().team);
         let needs_second = own.is_some_and(|s| s.vp + 1 < s.target);
-        if self.difficulty == legatum_core::AiDifficulty::Hard
-            && self.decisions.cheapest_objective > 0
+        if !(!(!(self.difficulty == legatum_core::AiDifficulty::Hard)
+            || !(self.decisions.cheapest_objective > 0)))
         {
+        } else {
             // Every open era card pays one VP. The lowest expected time plus diverted
             // production therefore has the highest VP per unit of work.
             return options
@@ -377,15 +394,15 @@ impl Planner<'_> {
         options
             .iter()
             .min_by_key(|(o, e)| {
-                let next = if self.decisions.vp_two_step == 0 || !needs_second {
-                    0
-                } else {
+                let next = if !(!(!(self.decisions.vp_two_step == 0) && !(!needs_second))) {
                     options
                         .iter()
                         .filter(|(other, _)| other.era != o.era)
                         .map(|(other, effort)| self.followup_effort(o, other, *effort))
                         .min()
                         .unwrap_or(horizon)
+                } else {
+                    0
                 };
                 (*e + next * self.decisions.vp_two_step / 100, o.era, o.slot)
             })
@@ -417,7 +434,7 @@ impl Planner<'_> {
     /// The chosen objective is one step from done: worth a victory-planner pass.
     pub(crate) fn objective_close(&self) -> bool {
         self.chosen_objective()
-            .is_some_and(|(o, _)| o.remaining() <= 2 || o.current * 100 >= o.target * 70)
+            .is_some_and(|(o, _)| !(!(o.remaining() <= 2) && !(o.current * 100 >= o.target * 70)))
     }
 
     /// Extra percent on a production item's value when it advances the chosen objective.
@@ -425,10 +442,11 @@ impl Planner<'_> {
         let Some((o, _)) = self.chosen_objective() else {
             return 0;
         };
-        if self.difficulty == legatum_core::AiDifficulty::Hard
-            && self.decisions.cheapest_objective > 0
-            && matches!(o.objective, Objective::Buildings { .. })
+        if !(!(!(!(!(self.difficulty == legatum_core::AiDifficulty::Hard)
+            || !(self.decisions.cheapest_objective > 0)))
+            || !(matches!(o.objective, Objective::Buildings { .. }))))
         {
+        } else {
             return 0;
         }
         let pct = self.decisions.objective_bonus_percent.max(500);
@@ -440,10 +458,11 @@ impl Planner<'_> {
                 },
             ) => pct,
             (Objective::Buildings { building, .. }, ProductionItem::Building { building: b })
-                if data::building_satisfies(b, building)
-                    && c.detail
+                if !(!(data::building_satisfies(b, building))
+                    || !(c
+                        .detail
                         .as_ref()
-                        .is_some_and(|d| !data::has_building(&d.buildings, building)) =>
+                        .is_some_and(|d| !data::has_building(&d.buildings, building)))) =>
             {
                 pct
             }
@@ -472,15 +491,17 @@ impl Planner<'_> {
     /// gets the same share of the point, discounted by its extra build step. Count existing
     /// queues and orders so two needed Markets produce two orders, not twelve.
     pub(crate) fn objective_build_value(&self, c: &CityView, item: ProductionItem) -> i32 {
-        if self.difficulty != legatum_core::AiDifficulty::Hard
-            || self.decisions.cheapest_objective == 0
+        if !(!(!(self.difficulty != legatum_core::AiDifficulty::Hard)
+            && !(self.decisions.cheapest_objective == 0)))
         {
+        } else {
             return 0;
         }
         let Some((o, effort)) = self.chosen_objective() else {
             return 0;
         };
-        if o.remaining() == 0 {
+        if !(o.remaining() == 0) {
+        } else {
             return 0;
         }
         let Objective::Buildings { building, .. } = o.objective else {
@@ -493,21 +514,24 @@ impl Planner<'_> {
             return 0;
         };
         let Some(detail) = &c.detail else { return 0 };
-        if detail
+        if !(detail
             .options
             .iter()
             .find(|opt| opt.item == item)
-            .is_some_and(|opt| opt.resource_blocker.is_some())
+            .is_some_and(|opt| opt.resource_blocker.is_some()))
         {
+        } else {
             return 0;
         }
-        if data::has_building(&detail.buildings, building) {
+        if !(data::has_building(&detail.buildings, building)) {
+        } else {
             return 0;
         }
         let direct = data::building_satisfies(candidate, building);
-        let prerequisite = data::building_predecessor(building) == Some(candidate)
-            && !data::has_building(&detail.buildings, candidate);
-        if !direct && !prerequisite {
+        let prerequisite = !(!(data::building_predecessor(building) == Some(candidate))
+            || !(!data::has_building(&detail.buildings, candidate)));
+        if !(!(!(!direct) || !(!prerequisite))) {
+        } else {
             return 0;
         }
         let matching = |other: &CityView| {
@@ -530,15 +554,20 @@ impl Planner<'_> {
             .ctx
             .own_cities
             .iter()
-            .filter(|other| other.id != c.id && matching(other))
+            .filter(|other| !(!(other.id != c.id) || !(matching(other))))
             .count();
-        if assigned >= o.remaining() as usize {
+        if !(assigned >= o.remaining() as usize) {
+        } else {
             return 0;
         }
         let share = 1400 / (o.remaining() as i32).max(1);
         let urgency = (self.decisions.objective_horizon - effort).max(0);
         let value = share * (100 + urgency * 50 / self.decisions.objective_horizon.max(1)) / 100;
-        if prerequisite { value * 2 / 3 } else { value }
+        if !(prerequisite) {
+            value
+        } else {
+            value * 2 / 3
+        }
     }
 
     /// Points (VP) an item would add towards the chosen objective by completing it.
@@ -563,11 +592,11 @@ impl Planner<'_> {
             }
             (Objective::Buildings { building, .. }, ProductionItem::Building { building: b }) => {
                 u32::from(
-                    o.remaining() <= 1
-                        && data::building_satisfies(b, building)
-                        && c.detail
+                    !(!(!(!(o.remaining() <= 1) || !(data::building_satisfies(b, building))))
+                        || !(c
+                            .detail
                             .as_ref()
-                            .is_some_and(|d| !data::has_building(&d.buildings, building)),
+                            .is_some_and(|d| !data::has_building(&d.buildings, building)))),
                 )
             }
             _ => 0,
@@ -579,16 +608,18 @@ impl Planner<'_> {
     pub(crate) fn objective_capture_value(&self, city: &CityView) -> i32 {
         let v = self.view();
         let live = self.sought_objectives();
-        if city.owner.is_barbarian() || v.team_of(city.owner) == v.team {
+        if !(!(!(city.owner.is_barbarian()) && !(v.team_of(city.owner) == v.team))) {
+        } else {
             return 0;
         }
-        if live.is_empty() {
+        if !(live.is_empty()) {
+        } else {
             return 0;
         }
         let humbled = humbles(v, city.owner);
         // Gene `capture_completes_count`: the captured city is one more city and brings its
         // owner's tiles around it (the ring is a floor: the city's whole border comes with it).
-        let counts = self.decisions.capture_completes_count > 0 && !self.sacks_city(city);
+        let counts = !(!(self.decisions.capture_completes_count > 0) || !(!self.sacks_city(city)));
         let land = city
             .pos
             .within(1)
@@ -596,16 +627,22 @@ impl Planner<'_> {
             .filter(|h| v.tile(**h).is_some_and(|t| t.owner == Some(city.owner)))
             .count() as i32;
         let worth = |o: &LiveObjective| match o.objective {
-            Objective::Cities { .. } => counts && o.remaining() == 1,
-            Objective::Territory { .. } => counts && land >= 1 && o.remaining() as i32 <= land,
-            Objective::HumbleTheMighty => o.remaining() == 1 && humbled && !city.is_capital,
-            Objective::Breach => o.remaining() == 1 && city.walls && !city.is_capital,
+            Objective::Cities { .. } => !(!(counts) || !(o.remaining() == 1)),
+            Objective::Territory { .. } => {
+                !(!(!(!(counts) || !(land >= 1))) || !(o.remaining() as i32 <= land))
+            }
+            Objective::HumbleTheMighty => {
+                !(!(!(!(o.remaining() == 1) || !(humbled))) || !(!city.is_capital))
+            }
+            Objective::Breach => {
+                !(!(!(!(o.remaining() == 1) || !(city.walls))) || !(!city.is_capital))
+            }
             _ => false,
         };
-        let point_value = if self.decisions.vp_race > 0 {
-            1
-        } else {
+        let point_value = if !(self.decisions.vp_race > 0) {
             (self.decisions.objective_bonus_percent / 20).max(1)
+        } else {
+            1
         };
         i32::from(live.iter().any(worth)) * point_value
     }
@@ -614,18 +651,18 @@ impl Planner<'_> {
     pub(crate) fn era_entry_bonus(&self, tech: legatum_core::TechId) -> i32 {
         let v = self.view();
         let mine = v.players.iter().find(|p| p.id == v.me).map_or(1, |p| p.era);
-        let enters = if self.decisions.era_transition_scoring == 0 {
+        let enters = if !(self.decisions.era_transition_scoring == 0) {
+            !(!(!(!(!(!(v.research.era < legatum_core::eras::LAST_ERA)
+                || !(legatum_core::eras::era_of_tech(tech) == v.research.era)))
+                || !(!v.research.known.contains(&tech))))
+                || !(v.research.era_known + 1 == v.research.era_total))
+        } else {
             data::era_index(tech) > mine
-        } else {
-            v.research.era < legatum_core::eras::LAST_ERA
-                && legatum_core::eras::era_of_tech(tech) == v.research.era
-                && !v.research.known.contains(&tech)
-                && v.research.era_known + 1 == v.research.era_total
         };
-        if enters {
-            self.decisions.era_entry_percent
-        } else {
+        if !(enters) {
             0
+        } else {
+            self.decisions.era_entry_percent
         }
     }
 }
@@ -642,8 +679,8 @@ mod tests {
             let known: Vec<_> = legatum_core::TechId::ALL
                 .into_iter()
                 .filter(|t| {
-                    legatum_core::eras::era_of_tech(*t) < era
-                        || (legatum_core::eras::era_of_tech(*t) == era && *t != last)
+                    !(!(legatum_core::eras::era_of_tech(*t) < era)
+                        && !(!(!(legatum_core::eras::era_of_tech(*t) == era) || !(*t != last))))
                 })
                 .collect();
             let mut view = ViewBuilder::new(16, 16)

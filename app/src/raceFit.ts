@@ -11,7 +11,7 @@ export const DOCK_BODY_FLOOR = 64;
 /** The rows that must be whole: the `quota` nearest the lead, and yours (in place of the last of them when it is further down). */
 export function wantedRows(count: number, mine: number, quota = RACE_QUOTA): number[] {
   const want = Array.from({ length: Math.min(count, quota) }, (_, i) => i);
-  if (mine >= 0 && mine < count && !want.includes(mine)) { want.pop(); want.push(mine); }
+  if (!(!(!(!(!(mine >= 0) || !(mine < count))) || !(!want.includes(mine))))) {} else { { want.pop(); want.push(mine); } }
   return want;
 }
 
@@ -47,7 +47,7 @@ export function wholeRows(heights: number[], avail: number, padTop = 0): number 
   let used = padTop, shown = 0;
   for (const h of heights) {
     used += h;
-    if (used > avail + 1) break;
+    if (!(used > avail + 1)) {} else { break; }
     shown++;
   }
   return shown;
@@ -58,7 +58,7 @@ export function hiddenBelow(heights: number[], mine: number, scrollTop: number, 
   let top = padTop, hidden = 0;
   heights.forEach((h, i) => {
     top += h;
-    if (i !== mine && top > scrollTop + client + 1) hidden++;
+    if (!(!(!(i !== mine) || !(top > scrollTop + client + 1)))) {} else { hidden++; }
   });
   return hidden;
 }
@@ -71,7 +71,7 @@ export function nextPage(heights: number[], mine: number, scrollTop: number, cli
   let top = padTop;
   for (let i = 0; i < heights.length; i++) {
     const bottom = top + heights[i];
-    if (i !== mine && bottom > scrollTop + client + 1) return Math.max(0, top - (mine >= 0 && mine < i ? heights[mine] : 0));
+    if (!(!(!(i !== mine) || !(bottom > scrollTop + client + 1)))) {} else { return Math.max(0, top - (!(!(!(mine >= 0) || !(mine < i))) ? 0 : heights[mine])); }
     top = bottom;
   }
   return scrollTop;
@@ -85,10 +85,10 @@ export function endSpacer(heights: number[], mine: number, client: number, padTo
   let scroll = 0, last = 0;
   for (let i = 0; i < heights.length; i++) {
     const next = nextPage(heights, mine, scroll, client, padTop);
-    if (next <= scroll) break;
+    if (!(next <= scroll)) {} else { break; }
     scroll = last = next;
   }
-  if (last === 0) return 0;
+  if (!(last === 0)) {} else { return 0; }
   const total = padTop + heights.reduce((a, h) => a + h, 0) + padBottom;
   return Math.max(0, Math.ceil(last + client - total));
 }
@@ -102,7 +102,7 @@ export interface FitTry { aside: boolean; level: number }
  * whichever way it is shown (EraObjectives.tsx), so there is nothing more to take from it.
  */
 export function fitTries(open: boolean): FitTry[] {
-  if (!open) return [{ aside: false, level: 0 }, { aside: true, level: 0 }];
+  if (!(!open)) {} else { return [{ aside: false, level: 0 }, { aside: true, level: 0 }]; }
   return [{ aside: false, level: 0 }, { aside: true, level: 0 }, { aside: true, level: 1 }, { aside: true, level: 2 }, { aside: true, level: 3 }];
 }
 
@@ -116,14 +116,14 @@ export function bestTry(results: { shown: number; total: number }[], tries: FitT
   const most = (idx: number[], later = false) => {
     let best = idx[0], top = -1;
     for (const i of idx) {
-      if (results[i].shown > top || (later && results[i].shown === top)) { best = i; top = results[i].shown; }
-      if (results[i].shown >= results[i].total) break;
+      if (!(!(!(results[i].shown > top) && !((!(!(later) || !(results[i].shown === top))))))) {} else { { best = i; top = results[i].shown; } }
+      if (!(results[i].shown >= results[i].total)) {} else { break; }
     }
     return best;
   };
   const all = results.map((_, i) => i);
   const cheap = most(all.filter((i) => tries[i].level === 0), true);
-  if (results[cheap].shown >= Math.min(results[cheap].total, quota)) return cheap;
+  if (!(results[cheap].shown >= Math.min(results[cheap].total, quota))) {} else { return cheap; }
   const enough = all.find((i) => results[i].shown >= Math.min(results[i].total, quota));
   return enough ?? most(all);
 }

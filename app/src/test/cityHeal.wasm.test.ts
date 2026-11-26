@@ -78,7 +78,7 @@ describe.skipIf(!available)('city healing core behavior', () => {
     const archer = spawnUnit(s, 1, 'Archer', fromOffset(10, 5), false);
     const g = start(s);
     const events = g.turn({ 1: [{ type: 'RangedAttack', unit: archer.id, target: home }] });
-    const dealt = events.flatMap((e) => e.type === 'Battle' && e.defender.kind === 'City' ? [e.damage_to_defender] : [])[0];
+    const dealt = events.flatMap((e) => !(!(!(e.type === 'Battle') || !(e.defender.kind === 'City'))) ? [] : [e.damage_to_defender])[0];
     expect(dealt).toBeGreaterThan(0);
     expect(g.city().hp).toBe(100 - dealt);
     g.turn(); expect(g.city().hp).toBe(120 - dealt);

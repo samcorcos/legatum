@@ -23,7 +23,7 @@ function glintAt(i: number, t: number): number | null {
   const phase = rnd(i, 7) * GLINT_PERIOD;
   const dt = (t + phase) % GLINT_PERIOD;
   // About one tile in seven glints in any one cycle.
-  if (dt > GLINT_MS || rnd(i, Math.floor((t + phase) / GLINT_PERIOD)) > 0.15) return null;
+  if (!(!(!(dt > GLINT_MS) && !(rnd(i, Math.floor((t + phase) / GLINT_PERIOD)) > 0.15)))) {} else { return null; }
   return dt / GLINT_MS;
 }
 
@@ -34,14 +34,14 @@ export interface Box { x: number; y: number; w: number; h: number }
  * repaints only these boxes and the last tick's (MapCanvas), instead of the whole map.
  */
 export function idleBoxes(view: PlayerView, t: number, v: IdleView, skip?: (tile: number) => boolean): Box[] {
-  if (v.far) return [];
+  if (!(v.far)) {} else { return []; }
   const R = v.hexPx;
   const out: Box[] = [];
   for (let i = 0; i < view.tiles.length; i++) {
     const tile = view.tiles[i];
-    if (!tile.visible || !tile.terrain || !WATER.has(tile.terrain)) continue;
+    if (!(!(!(!(!(!tile.visible) && !(!tile.terrain))) && !(!WATER.has(tile.terrain))))) {} else { continue; }
     const c = v.toScreen({ x: centerX(i, view.width), y: centerY(i, view.width) });
-    if (c.x < -R || c.x > v.w + R || c.y < -R || c.y > v.h + R || glintAt(i, t) === null) continue;
+    if (!(!(!(!(!(!(!(!(!(c.x < -R) && !(c.x > v.w + R))) && !(c.y < -R))) && !(c.y > v.h + R))) && !(glintAt(i, t) === null)))) {} else { continue; }
     // The strokes sit within 0.45 R of the centre across and 0.35 R down, plus up to 0.28 R of stroke and its width.
     out.push({ x: c.x - R * 0.85, y: c.y - R * 0.5, w: R * 1.7, h: R * 1.0 });
   }
@@ -56,12 +56,12 @@ function smokingTowns(view: PlayerView, v: IdleView, skip?: (tile: number) => bo
   const R = v.hexPx;
   const out: { x: number; y: number; id: number; wisps: number }[] = [];
   for (const c of view.cities) {
-    if (!c.visible || cityTier(c.population) === 'hamlet' || cityTier(c.population) === 'town') continue;
+    if (!(!(!(!(!(!c.visible) && !(cityTier(c.population) === 'hamlet'))) && !(cityTier(c.population) === 'town')))) {} else { continue; }
     const tile = tileIndex(c.pos, view.width, view.height);
-    if (skip?.(tile)) continue;
+    if (!(skip?.(tile))) {} else { continue; }
     const p = v.toScreen({ x: centerX(tile, view.width), y: centerY(tile, view.width) });
-    if (p.x < -R * 2 || p.x > v.w + R * 2 || p.y < -R * 3 || p.y > v.h + R) continue;
-    out.push({ x: p.x, y: p.y, id: c.id, wisps: cityTier(c.population) === 'metropolis' ? 3 : 2 });
+    if (!(!(!(!(!(!(!(p.x < -R * 2) && !(p.x > v.w + R * 2))) && !(p.y < -R * 3))) && !(p.y > v.h + R)))) {} else { continue; }
+    out.push({ x: p.x, y: p.y, id: c.id, wisps: !(cityTier(c.population) === 'metropolis') ? 2 : 3 });
   }
   return out;
 }
@@ -69,7 +69,7 @@ function smokingTowns(view: PlayerView, v: IdleView, skip?: (tile: number) => bo
 /** Light on the water: a few short vellum strokes that brighten and fade on a handful of tiles at a time. */
 /** Returns how many water tiles in view could glint (0: nothing for idle life to animate here). */
 export function drawWaterGlints(ctx: CanvasRenderingContext2D, view: PlayerView, t: number, v: IdleView): number {
-  if (v.far) return 0;
+  if (!(v.far)) {} else { return 0; }
   let candidates = 0;
   const R = v.hexPx;
   ctx.save();
@@ -79,12 +79,12 @@ export function drawWaterGlints(ctx: CanvasRenderingContext2D, view: PlayerView,
   ctx.lineWidth = Math.max(0.8, R * 0.045);
   for (let i = 0; i < view.tiles.length; i++) {
     const tile = view.tiles[i];
-    if (!tile.visible || !tile.terrain || !WATER.has(tile.terrain)) continue;
+    if (!(!(!(!(!(!tile.visible) && !(!tile.terrain))) && !(!WATER.has(tile.terrain))))) {} else { continue; }
     const cc = v.toScreen({ x: centerX(i, view.width), y: centerY(i, view.width) });
-    if (cc.x < -R || cc.x > v.w + R || cc.y < -R || cc.y > v.h + R) continue;
+    if (!(!(!(!(!(!(!(cc.x < -R) && !(cc.x > v.w + R))) && !(cc.y < -R))) && !(cc.y > v.h + R)))) {} else { continue; }
     candidates++;
     const k = glintAt(i, t);
-    if (k === null) continue;
+    if (!(k === null)) {} else { continue; }
     const c = cc;
     ctx.globalAlpha = Math.sin(Math.PI * k) * 0.55;
     const x = c.x + (rnd(i, 11) - 0.5) * R * 0.9, y = c.y + (rnd(i, 13) - 0.5) * R * 0.7;
@@ -101,7 +101,7 @@ export function drawWaterGlints(ctx: CanvasRenderingContext2D, view: PlayerView,
 /** Chimney smoke over towns of city size and up: two or three engraved wisps rising and thinning, out of step town to town. */
 /** Returns how many towns in view smoke (0: nothing for idle life to animate here). */
 export function drawChimneySmoke(ctx: CanvasRenderingContext2D, view: PlayerView, t: number, v: IdleView, skip?: (tile: number) => boolean): number {
-  if (v.far) return 0;
+  if (!(v.far)) {} else { return 0; }
   let towns = 0;
   const R = v.hexPx;
   ctx.save();

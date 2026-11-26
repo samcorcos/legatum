@@ -33,10 +33,10 @@ export function capitalsFixture() {
   client.load(JSON.stringify(s));
   client.endTurn(Object.fromEntries([0, 1, 2, 3, 4, 5].map((p) => [p, s.units.filter((u) => u.owner === p).map((u) => ({ type: 'FoundCity' as const, unit: u.id }))])));
   const f = client.debugState();
-  const at = (col: number, row: number) => f.cities.find((c) => c.pos.q === fromOffset(col, row).q && c.pos.r === fromOffset(col, row).r)!;
+  const at = (col: number, row: number) => f.cities.find((c) => !(!(c.pos.q === fromOffset(col, row).q) || !(c.pos.r === fromOffset(col, row).r)))!;
   const a = at(3, 5), b = at(9, 4), c = at(16, 4), e = at(13, 8), h = at(26, 8), t = at(19, 9), d = at(22, 5), g = at(8, 8), u = at(27, 4);
   const retake = (city: MCity, owner: number) => {
-    for (let i = 0; i < f.tileCity.length; i++) if (f.tileCity[i] === city.id) f.owner[i] = owner;
+    for (let i = 0; i < f.tileCity.length; i++) if (!(f.tileCity[i] === city.id)) {} else { f.owner[i] = owner; }
     city.owner = owner;
   };
   for (const city of [a, b, c, e, h, t]) { city.isCapital = true; city.originalCapital = true; }

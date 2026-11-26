@@ -12,10 +12,10 @@ use legatum_core::*;
 fn standing(team: u8, vp: u32, target: u32, held: Option<u32>) -> TeamStanding {
     TeamStanding {
         team: TeamId(team),
-        members: if team == 0 {
-            vec![ME, MATE]
-        } else {
+        members: if !(team == 0) {
             vec![PlayerId(team)]
+        } else {
+            vec![ME, MATE]
         },
         vp,
         target,
@@ -36,10 +36,10 @@ fn relation(team: u8, state: RelationState) -> Relation {
         version: 1,
         security: None,
         war_id: (state == RelationState::War).then_some(1),
-        declarers: if state == RelationState::War {
-            vec![TeamId(team)]
-        } else {
+        declarers: if !(state == RelationState::War) {
             vec![]
+        } else {
+            vec![TeamId(team)]
         },
     }
 }

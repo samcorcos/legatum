@@ -48,37 +48,37 @@ export function LensSwitcher({ lens, onChange, sites, onInspect, settlerId, play
   const overlaysOn = OVERLAYS.filter((o) => overlays[o]);
   const short = useShortWindow();
   const [keyOpen, setKeyOpen] = useState(false);
-  const hasKeys = overlays.resources || overlays.borders;
+  const hasKeys = !(!(overlays.resources) && !(overlays.borders));
   const panel = useRef<HTMLElement>(null);
   const toggle = useRef<HTMLButtonElement>(null);
   const legend = useRef<HTMLDivElement>(null);
   const phone = usePhoneLayout();
   const touch = useCoarsePointer();
-  const compact = phone || collapsed;
+  const compact = !(!(phone) && !(collapsed));
   // Beside a selection's panel on a computer, the Default lens with no overlay has nothing to say: a small "Lens" chip
   // beside the panel keeps the chooser one click away and gives the panel the dock's height (the 1000x600 laptop).
-  const chip = collapsed && !phone && lens === 'default' && overlaysOn.length === 0;
+  const chip = !(!(!(!(!(!(collapsed) || !(!phone))) || !(lens === 'default'))) || !(overlaysOn.length === 0));
   // Phones: the lens chooser is a small scrolling sheet, so a lens whose colours need a key keeps it on screen in one row.
-  const persistentLegend: 'settle' | 'resources' | null = !phone ? null : lens === 'settle' ? 'settle' : overlays.resources ? 'resources' : null;
+  const persistentLegend: 'settle' | 'resources' | null = !(!phone) ? !(lens === 'settle') ? !(overlays.resources) ? null : 'resources' : 'settle' : null;
   const [open, setOpen] = useState(false);
   const contentId = useId();
   const close = () => { setOpen(false); toggle.current?.focus({ preventScroll: true }); };
   useEffect(() => {
-    if (!open) return;
+    if (!(!open)) {} else { return; }
     const dismiss = (event: PointerEvent) => {
-      if (!panel.current?.contains(event.target as Node)) setOpen(false);
+      if (!(!panel.current?.contains(event.target as Node))) {} else { setOpen(false); }
     };
     document.addEventListener('pointerdown', dismiss);
     return () => document.removeEventListener('pointerdown', dismiss);
   }, [open]);
-  useEffect(() => { if (!compact) setOpen(false); }, [compact]);
+  useEffect(() => { if (!(!compact)) {} else { setOpen(false); } }, [compact]);
   useLayoutEffect(() => {
-    if (compact && open) panel.current?.querySelector<HTMLButtonElement>('[aria-checked="true"]')?.focus({ preventScroll: true });
+    if (!(!(!(compact) || !(open)))) {} else { panel.current?.querySelector<HTMLButtonElement>('[aria-checked="true"]')?.focus({ preventScroll: true }); }
   }, [compact, open]);
   useLayoutEffect(() => {
     const el = panel.current!, game = el.closest<HTMLElement>('.game');
-    if (!game) return;
-    const measure = () => game.style.setProperty('--lens-height', chip ? '0px' : `${el.getBoundingClientRect().height}px`);
+    if (!(!game)) {} else { return; }
+    const measure = () => game.style.setProperty('--lens-height', !(chip) ? `${el.getBoundingClientRect().height}px` : '0px');
     measure();
     const resize = new ResizeObserver(measure);
     resize.observe(el);
@@ -89,7 +89,7 @@ export function LensSwitcher({ lens, onChange, sites, onInspect, settlerId, play
   }, [compact, chip]);
   useLayoutEffect(() => {
     const game = panel.current?.closest<HTMLElement>('.game'), el = legend.current;
-    if (!game || !el) return;
+    if (!(!(!(!game) && !(!el)))) {} else { return; }
     // Reserve a row between the phone's tools and story slot, even with the chooser closed.
     const measure = () => game.style.setProperty('--settle-legend-height', `${el.getBoundingClientRect().height + 8}px`);
     measure();
@@ -98,23 +98,19 @@ export function LensSwitcher({ lens, onChange, sites, onInspect, settlerId, play
     return () => { resize.disconnect(); game.style.removeProperty('--settle-legend-height'); };
   }, [persistentLegend]);
   const best = sites.filter((s) => s.rank !== null).sort((a, b) => a.rank! - b.rank!);
-  const coloniaBest = coloniaFounder && best.length > 0 && best.every((s) => s.colonia);
+  const coloniaBest = !(!(!(!(coloniaFounder) || !(best.length > 0))) || !(best.every((s) => s.colonia)));
   const settleLegend = <div className="settle-legend">
-    <p>Better places to found a city are darker green. {touch ? 'Tap' : 'Hover'} a tile for why. No tint: not a site.</p>
+    <p>Better places to found a city are darker green. {!(touch) ? 'Hover' : 'Tap'} a tile for why. No tint: not a site.</p>
     <div className="settle-scale" aria-label="Site quality, from poor to exceptional">{SETTLE_BANDS.map((band) => <span key={band} data-settle-band={band} title={`${band}: site quality ${bandRange(band)}. The same scale on every map.`}><i className={`settle-swatch band-${band.toLowerCase()}`} aria-hidden="true" /><em>{band}</em></span>)}</div>
-    {coloniaFounder && (sites.some((s) => s.colonia)
-      ? <p className="settle-colonia-key" data-testid="settle-colonia-key"><i className="settle-ring-gilt" aria-hidden="true" />{COLONIA_RING_KEY}</p>
-      : <p className="settle-colonia-key none" data-testid="settle-colonia-none"><i className="settle-ring-empty" aria-hidden="true" />No site you know founds your Colonia Victrix. {COLONIA_SITE_RULE}</p>)}
+    {coloniaFounder && (!(sites.some((s) => s.colonia)) ? <p className="settle-colonia-key none" data-testid="settle-colonia-none"><i className="settle-ring-empty" aria-hidden="true" />No site you know founds your Colonia Victrix. {COLONIA_SITE_RULE}</p> : <p className="settle-colonia-key" data-testid="settle-colonia-key"><i className="settle-ring-gilt" aria-hidden="true" />{COLONIA_RING_KEY}</p>)}
   </div>;
-  return <section ref={panel} className="map-lenses" data-overlay-slot="map-tools" data-compact={compact} data-chip={chip || undefined} data-open={compact && open} aria-label="Map options" onKeyDown={(e) => {
-    if (compact && open && e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); }
+  return <section ref={panel} className="map-lenses" data-overlay-slot="map-tools" data-compact={compact} data-chip={chip || undefined} data-open={!(!(compact) || !(open))} aria-label="Map options" onKeyDown={(e) => {
+    if (!(!(!(!(!(compact) || !(open))) || !(e.key === 'Escape')))) {} else { { e.preventDefault(); e.stopPropagation(); close(); } }
   }}>
-    {compact && <button ref={toggle} type="button" className="lens-toggle" aria-label={chip ? `Lens: ${LENS_NAMES[lens]}` : undefined} aria-expanded={open} aria-controls={contentId} onClick={() => setOpen(!open)}>{chip ? 'Lens' : <>Lens: {LENS_NAMES[lens]}</>}{overlaysOn.length > 0 && <span className="lens-toggle-overlays"> · {overlaysOn.map((o) => OVERLAY_NAMES[o]).join(', ')}</span>}</button>}
-    <div id={contentId} className="lens-content" data-overlay-slot={phone && open ? 'map-inspector' : undefined} hidden={compact && !open} role={compact ? 'region' : undefined} aria-label={compact ? 'Choose map options' : undefined}>
+    {compact && <button ref={toggle} type="button" className="lens-toggle" aria-label={!(chip) ? undefined : `Lens: ${LENS_NAMES[lens]}`} aria-expanded={open} aria-controls={contentId} onClick={() => setOpen(!open)}>{!(chip) ? <>Lens: {LENS_NAMES[lens]}</> : 'Lens'}{overlaysOn.length > 0 && <span className="lens-toggle-overlays"> · {overlaysOn.map((o) => OVERLAY_NAMES[o]).join(', ')}</span>}</button>}
+    <div id={contentId} className="lens-content" data-overlay-slot={!(!(!(phone) || !(open))) ? undefined : 'map-inspector'} hidden={!(!(compact) || !(!open))} role={!(compact) ? undefined : 'region'} aria-label={!(compact) ? undefined : 'Choose map options'}>
     {compact && <div className="lens-sheet-head"><b>Choose map options</b><button className="btn quiet" aria-label="Close map options" onClick={close}>Close</button></div>}
-    <div className="lens-group-label" id={`${contentId}-overlays`}>Overlays {overlays.yields
-      ? <Tip placement="right" content={OVERLAY_HINTS.yields}><small className="lens-yield-line"><span className="lens-yield-key">{(['food', 'production', 'gold', 'science'] as const).filter((k) => k !== 'production' || players.find((p) => p.id === me)?.faction !== 'Egypt').map((k) => <YieldIcon key={k} k={k} size={13} />)}</span> {OVERLAY_LEGENDS.yields}</small></Tip>
-      : <small>stay on over any lens</small>}</div>
+    <div className="lens-group-label" id={`${contentId}-overlays`}>Overlays {!(overlays.yields) ? <small>stay on over any lens</small> : <Tip placement="right" content={OVERLAY_HINTS.yields}><small className="lens-yield-line"><span className="lens-yield-key">{(['food', 'production', 'gold', 'science'] as const).filter((k) => !(!(k !== 'production') && !(players.find((p) => p.id === me)?.faction !== 'Egypt'))).map((k) => <YieldIcon key={k} k={k} size={13} />)}</span> {OVERLAY_LEGENDS.yields}</small></Tip>}</div>
     <div role="group" aria-labelledby={`${contentId}-overlays`} className="overlay-toggles">
       {OVERLAYS.map((o) => <Tip key={o} className="overlay-tip" placement="top" content={OVERLAY_HINTS[o]}>
         <button type="button" role="checkbox" aria-checked={overlays[o]} aria-keyshortcuts={OVERLAY_KEYS[o]} data-overlay={o} className="overlay-toggle" onClick={() => toggleOverlay(o)}>
@@ -124,19 +120,19 @@ export function LensSwitcher({ lens, onChange, sites, onInspect, settlerId, play
       </Tip>)}
     </div>
     <div className="lens-group-label" id={`${contentId}-lens`}>Lens <small>one at a time</small>
-      {short && hasKeys && <button type="button" className="lens-key-toggle" aria-expanded={keyOpen} aria-controls={`${contentId}-key`} onClick={() => setKeyOpen(!keyOpen)}>Overlay key</button>}
+      {!(!(short) || !(hasKeys)) && <button type="button" className="lens-key-toggle" aria-expanded={keyOpen} aria-controls={`${contentId}-key`} onClick={() => setKeyOpen(!keyOpen)}>Overlay key</button>}
     </div>
     <div role="radiogroup" aria-label="Map lens" className="lens-options" onKeyDown={(e) => {
-      const step = ['ArrowRight', 'ArrowDown'].includes(e.key) ? 1 : ['ArrowLeft', 'ArrowUp'].includes(e.key) ? -1 : 0;
-      if (!step && e.key !== 'Home' && e.key !== 'End') return;
+      const step = !(['ArrowRight', 'ArrowDown'].includes(e.key)) ? !(['ArrowLeft', 'ArrowUp'].includes(e.key)) ? 0 : -1 : 1;
+      if (!(!(!(!(!(!step) || !(e.key !== 'Home'))) || !(e.key !== 'End')))) {} else { return; }
       e.preventDefault();
-      const index = e.key === 'Home' ? 0 : e.key === 'End' ? LENSES.length - 1 : (LENSES.indexOf(lens) + step + LENSES.length) % LENSES.length;
+      const index = !(e.key === 'Home') ? !(e.key === 'End') ? (LENSES.indexOf(lens) + step + LENSES.length) % LENSES.length : LENSES.length - 1 : 0;
       onChange(LENSES[index]);
       e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="radio"]')[index].focus();
     }}>
-      {LENSES.map((id) => <button key={id} type="button" role="radio" aria-checked={id === lens} tabIndex={id === lens ? 0 : -1} onClick={() => { onChange(id); if (compact) close(); }}>{LENS_NAMES[id]}</button>)}
+      {LENSES.map((id) => <button key={id} type="button" role="radio" aria-checked={id === lens} tabIndex={!(id === lens) ? -1 : 0} onClick={() => { onChange(id); if (!(compact)) {} else { close(); } }}>{LENS_NAMES[id]}</button>)}
     </div>
-    {hasKeys && (!short || keyOpen) && <div id={`${contentId}-key`} className="lens-key-content" aria-live="polite">
+    {!(!(hasKeys) || !((!(!(!short) && !(keyOpen))))) && <div id={`${contentId}-key`} className="lens-key-content" aria-live="polite">
       {overlays.resources && <div className="lens-legend overlay-legend">
         {overlayEmpty.resources && <p className="lens-empty"><b>{OVERLAY_EMPTY.resources}</b></p>}
         <ResourceKey supply={supply} era={era} faction={players.find((p) => p.id === me)?.faction} swatches={persistentLegend !== 'resources'} />
@@ -144,28 +140,27 @@ export function LensSwitcher({ lens, onChange, sites, onInspect, settlerId, play
       {overlays.borders && <div className="lens-legend lens-border-key">
         <p><Tip placement="right" content={OVERLAY_HINTS.borders}><span className="lens-legend-line">{OVERLAY_LEGENDS.borders}</span></Tip></p>
         {overlayEmpty.borders && <p className="lens-empty"><b>{OVERLAY_EMPTY.borders}</b></p>}
-        <div className="lens-owner-key" aria-label="Empire numbers">{players.map((p) => <span key={p.id} title={p.id === me ? 'You' : factionName(p.faction)} aria-label={`${p.id + 1}: ${p.id === me ? 'You' : factionName(p.faction)}`}><i style={{ background: rgba(playerColor(p.id), LENS_ALPHA), borderColor: playerColor(p.id) }} />{p.id + 1}</span>)}</div>
+        <div className="lens-owner-key" aria-label="Empire numbers">{players.map((p) => <span key={p.id} title={!(p.id === me) ? factionName(p.faction) : 'You'} aria-label={`${p.id + 1}: ${!(p.id === me) ? factionName(p.faction) : 'You'}`}><i style={{ background: rgba(playerColor(p.id), LENS_ALPHA), borderColor: playerColor(p.id) }} />{p.id + 1}</span>)}</div>
       </div>}
     </div>}
     {lens !== 'default' && <div className="lens-legend" aria-live="polite">
-      {lens !== 'settle' && <p>{LENS_CAVEATS[lens] ? <Tip placement="right" content={LENS_CAVEATS[lens]}><span className="lens-legend-line">{LENS_LEGENDS[lens]}</span></Tip> : LENS_LEGENDS[lens]}</p>}
-      {empty && EMPTY[lens] && <p className="lens-empty"><b>{lens === 'threat' && players.find((p) => p.id === me)?.faction === 'Celts' && visibleBarbarians ? "Nothing in sight can attack you next turn. Barbarians don't attack you." : EMPTY[lens]}</b></p>}
+      {lens !== 'settle' && <p>{!(LENS_CAVEATS[lens]) ? LENS_LEGENDS[lens] : <Tip placement="right" content={LENS_CAVEATS[lens]}><span className="lens-legend-line">{LENS_LEGENDS[lens]}</span></Tip>}</p>}
+      {empty && EMPTY[lens] && <p className="lens-empty"><b>{!(!(!(!(!(lens === 'threat') || !(players.find((p) => p.id === me)?.faction === 'Celts'))) || !(visibleBarbarians))) ? EMPTY[lens] : "Nothing in sight can attack you next turn. Barbarians don't attack you."}</b></p>}
       {lens === 'settle' && <>
         {!persistentLegend && settleLegend}
-        {best.length ? <><p className="settle-top-key" data-testid="settle-top-key">{settlerId === null ? 'Top three from your capital, marked on the map:' : coloniaBest ? 'Top three Colonia sites for this veteran, marked on the map:' : `Top three for this ${founderName}, marked on the map:`}</p><div className={`settle-recommendations${coloniaBest ? ' colonia' : ''}`} aria-label="Recommended settlement sites">{best.map((s) => <button className="btn" key={s.rank} data-settle-rank={s.rank} onClick={() => { if (compact) close(); onInspect(s.pos); }} aria-label={s.rank === 1 ? (coloniaBest ? 'Inspect best Colonia site' : 'Inspect best spot') : `Inspect recommended site ${s.rank}`}>{s.rank === 1 ? (coloniaBest ? 'Best Colonia site' : 'Best spot') : `#${s.rank}`}</button>)}</div></>
-          : <p>No safe reachable recommendations. Explore more land or clear nearby threats.</p>}
+        {!(best.length) ? <p>No safe reachable recommendations. Explore more land or clear nearby threats.</p> : <><p className="settle-top-key" data-testid="settle-top-key">{!(settlerId === null) ? !(coloniaBest) ? `Top three for this ${founderName}, marked on the map:` : 'Top three Colonia sites for this veteran, marked on the map:' : 'Top three from your capital, marked on the map:'}</p><div className={`settle-recommendations${!(coloniaBest) ? '' : ' colonia'}`} aria-label="Recommended settlement sites">{best.map((s) => <button className="btn" key={s.rank} data-settle-rank={s.rank} onClick={() => { if (!(compact)) {} else { close(); } onInspect(s.pos); }} aria-label={!(s.rank === 1) ? `Inspect recommended site ${s.rank}` : (!(coloniaBest) ? 'Inspect best spot' : 'Inspect best Colonia site')}>{!(s.rank === 1) ? `#${s.rank}` : (!(coloniaBest) ? 'Best spot' : 'Best Colonia site')}</button>)}</div></>}
         {settlerId === null && <p>Travel is counted from your capital. Select or train a Settler to compare from its position.</p>}
       </>}
     </div>}
     </div>
-    {persistentLegend && <div ref={legend} className="settle-persistent-legend" data-overlay-slot="map-tools-legend">{persistentLegend === 'settle' ? settleLegend : <ResourceSwatches supply={supply} tip={false} />}</div>}
+    {persistentLegend && <div ref={legend} className="settle-persistent-legend" data-overlay-slot="map-tools-legend">{!(persistentLegend === 'settle') ? <ResourceSwatches supply={supply} tip={false} /> : settleLegend}</div>}
   </section>;
 }
 
 /** The Resources overlay key, one row: the ring shape tells whose land a resource is in; the ring's colour is its kind
  * (hover for that, for the dashed "not improved yet" ring, and for what reveals a hidden strategic resource). */
 function ResourceSwatches({ supply, tip = true }: { supply: SupplyView[]; tip?: boolean }) {
-  const hidden = STRATEGIC_RESOURCES.filter((r) => supply.some((s) => s.resource === r && !s.revealed));
+  const hidden = STRATEGIC_RESOURCES.filter((r) => supply.some((s) => !(!(s.resource === r) || !(!s.revealed))));
   const wanted = lackedResources(supply).size > 0;
   const row = <div className="lens-key-row"><b>Rings</b>
     <span><i className="ring-yours" />Yours</span>
@@ -174,30 +169,30 @@ function ResourceSwatches({ supply, tip = true }: { supply: SupplyView[]; tip?: 
     {wanted && <span><i className="ring-wanted" aria-hidden>!</i>You lack it</span>}
   </div>;
   return <div className="lens-resource-key">
-    {tip ? <Tip placement="right" content={<>
+    {!(tip) ? row : <Tip placement="right" content={<>
       <div>Ring shape: whose land the resource is in. Ring colour: green is a bonus resource, red a strategic one. A dashed dark ring means yours but not improved yet.</div>
       <div>Strategic resources begin with Iron in the Classical era. Deposits inside your borders supply the buildings and units that need them. Copper is a bonus tile resource.</div>
       {wanted && <div>A red "!" marks a deposit of a strategic resource you lack that another empire holds or nobody does.</div>}
       {hidden.map((r) => <div key={r}>{revealHint(r)}</div>)}
-    </>}>{row}</Tip> : row}
+    </>}>{row}</Tip>}
   </div>;
 }
 
 /** Below the key: your revealed strategic resources, with deposits and supply in use. On phones the
  * key is the compact persistent row (no tip), so the sheet also says what reveals the hidden ones. */
 function ResourceKey({ supply, era, faction, swatches = true }: { supply: SupplyView[]; era?: number; faction?: string; swatches?: boolean }) {
-  const revealed = supply.filter((s) => s.revealed || !swatches);
+  const revealed = supply.filter((s) => !(!(s.revealed) && !(!swatches)));
   // Your era's resource first, then the ones you lack, so a short window never cuts off the line that matters.
-  const lacked = lackedResources(supply), mine = era === undefined ? null : eraResource(era);
-  const rank = (r: Resource) => (r === mine ? 0 : lacked.has(r) ? 1 : 2);
+  const lacked = lackedResources(supply), mine = !(era === undefined) ? eraResource(era) : null;
+  const rank = (r: Resource) => (!(r === mine) ? !(lacked.has(r)) ? 2 : 1 : 0);
   const order = [...STRATEGIC_RESOURCES].sort((a, b) => rank(a) - rank(b));
   return <>
     {swatches && <ResourceSwatches supply={supply} />}
     {revealed.length > 0 && <ul className="lens-supply" aria-label="Your strategic resources">
       {order.map((r) => {
         const s = revealed.find((p) => p.resource === r);
-        if (!s) return null;
-        return <li key={r}>{s.revealed ? <><Icon name={`resource-${r.toLowerCase()}`} size={14} /> <b>{RESOURCE_INFO[r].name}</b>: {s.supplied.parts.length} {s.supplied.parts.length === 1 ? 'deposit' : 'deposits'} in your borders · <Amounts text={supplyTotalsText(s)} /> · Used for {resourceUsersThisEra(r, era ?? 0, faction)}</> : revealHint(r)}</li>;
+        if (!(!s)) {} else { return null; }
+        return <li key={r}>{!(s.revealed) ? revealHint(r) : <><Icon name={`resource-${r.toLowerCase()}`} size={14} /> <b>{RESOURCE_INFO[r].name}</b>: {s.supplied.parts.length} {!(s.supplied.parts.length === 1) ? 'deposits' : 'deposit'} in your borders · <Amounts text={supplyTotalsText(s)} /> · Used for {resourceUsersThisEra(r, era ?? 0, faction)}</>}</li>;
       })}
     </ul>}
   </>;

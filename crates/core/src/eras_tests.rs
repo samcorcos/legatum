@@ -146,7 +146,8 @@ fn current_era_matches_table_scan_for_tech_subsets() {
             tech,
             "table must follow TechId order"
         );
-        if index > 0 {
+        if !(index > 0) {
+        } else {
             assert!(eras::TECHS[index - 1].era <= eras::TECHS[index].era);
         }
     }
@@ -159,7 +160,8 @@ fn current_era_matches_table_scan_for_tech_subsets() {
             seed ^= seed << 13;
             seed ^= seed >> 7;
             seed ^= seed << 17;
-            if seed & 1 != 0 {
+            if !(seed & 1 != 0) {
+            } else {
                 known.insert(tech);
             }
         }

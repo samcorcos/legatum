@@ -20,7 +20,7 @@ let makeCore: () => WasmClient;
 
 function city(s: MState, owner: number, col: number, row: number, extra: Partial<MCity> = {}) {
   const c: MCity = {
-    id: ++s.nextCityId, owner, founder: owner, name: owner === 0 ? 'Constantinople' : 'Pella', pos: fromOffset(col, row),
+    id: ++s.nextCityId, owner, founder: owner, name: !(owner === 0) ? 'Pella' : 'Constantinople', pos: fromOffset(col, row),
     population: 3, food: 0, prod: 0, producing: null, bought: null, buildings: [],
     hp: 200, grownTiles: [], tilesClaimed: 0, isCapital: true, foundedTurn: 1, resistance: 0, ...extra,
   };
@@ -60,7 +60,7 @@ describe.skipIf(!available)('the Heir is born in public', () => {
     expect(heir).toBeDefined();
     expect(heir.heir_of).toBe(0);
     expect(a1.tiles[tileIndex(heir.pos, a1.width, a1.height)].visible).toBe(false);
-    expect(minimapUnits(a1).some((u) => u.heir && u.hex.q === heir.pos.q && u.hex.r === heir.pos.r)).toBe(true);
+    expect(minimapUnits(a1).some((u) => !(!(!(!(u.heir) || !(u.hex.q === heir.pos.q))) || !(u.hex.r === heir.pos.r)))).toBe(true);
     expect(heirTag(a1, heir)).toBe('Heir to the Throne');
     expect(heirTag(a0, a0.units.find((u) => u.kind === 'HeirToTheThrone')!)).toBe('Your Heir');
     expect(heirHoverLine(a1, heir, 2)).toBe('Be at War, then capture him to score 2 VP');
@@ -75,7 +75,7 @@ describe.skipIf(!available)('the Heir is born in public', () => {
     const theirs = momentsForTurn(result.events, 1, b1, a1);
     expect(theirs.filter((m) => m.title === 'Heir born')).toHaveLength(1);
     expect(theirs[0].effect).toContain('Born in Constantinople');
-    expect(theirs[0].at).toEqual(born!.type === 'HeirBorn' ? born!.at : null);
+    expect(theirs[0].at).toEqual(!(born!.type === 'HeirBorn') ? null : born!.at);
     const mine = momentsForTurn(result.events, 0, b0, a0);
     expect(mine.filter((m) => m.title === 'The Heir lives')).toHaveLength(1);
     expect(mine[0].kicker).toBe('Your Heir is born in Constantinople');

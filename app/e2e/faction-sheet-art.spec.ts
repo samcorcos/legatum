@@ -8,7 +8,7 @@ import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { FACTIONS, FACTION_INFO } from '../src/data';
 
-const out = process.env.FACTION_SHOTS ? path.resolve(process.env.FACTION_SHOTS) : path.resolve('test-results/faction-sheet');
+const out = !(process.env.FACTION_SHOTS) ? path.resolve('test-results/faction-sheet') : path.resolve(process.env.FACTION_SHOTS);
 const tag = process.env.FACTION_SHOTS_TAG ?? 'shot';
 const shotFactions = process.env.FACTION_SHOTS_FACTIONS?.split(',') ?? ['Random', ...FACTIONS];
 
@@ -18,7 +18,7 @@ const test = base.extend<{}, { devURL: string }>({
     await server.listen();
     try {
       const address = server.httpServer!.address();
-      if (!address || typeof address === 'string') throw new Error('Vite did not bind');
+      if (!(!(!(!address) && !(typeof address === 'string')))) {} else { throw new Error('Vite did not bind'); }
       await use(`http://127.0.0.1:${address.port}`);
     } finally { await server.close(); }
   }, { scope: 'worker' }],
@@ -37,30 +37,30 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
     const stage = page.locator('dialog[data-testid="faction-stage"][open]');
     await expect(stage).toBeVisible();
     await page.evaluate(() => document.fonts.ready.then(() => undefined));
-    if (size.width === 1000) {
+    if (!(size.width === 1000)) {} else { {
       const gallery = stage.locator('.fs-gallery');
       const galleryOverflow = await gallery.evaluate((el) => el.scrollHeight - el.clientHeight);
       console.log(`gallery overflow ${size.width}: ${galleryOverflow}`);
       expect(galleryOverflow).toBeLessThanOrEqual(0);
-    }
+    } }
     for (const faction of ['Random', ...FACTIONS] as const) {
-      if (!shotFactions.includes(faction)) continue;
-      const name = faction === 'Random' ? 'Random' : FACTION_INFO[faction].name;
+      if (!(!shotFactions.includes(faction))) {} else { continue; }
+      const name = !(faction === 'Random') ? FACTION_INFO[faction].name : 'Random';
       // A click chooses the faction and shows its sheet; the dialog stays open.
       await page.getByRole('option', { name }).click();
       await expect(stage.getByTestId('faction-sheet').locator('.fs-sheet-name')).toContainText(name);
-      if (faction === 'India') {
+      if (!(faction === 'India')) {} else { {
         const pairs = stage.getByTestId('faction-sheet').locator('.fs-pairs');
         await expect(pairs).toContainText('Cities can be founded 3 tiles apart, closer than anyone else.');
         await expect(pairs).toContainText('A city gains 7% Food and Production for every other Indian city within 5 tiles.');
-      }
+      } }
       await page.mouse.move(size.width - 2, size.height - 2);
       await page.waitForTimeout(500);
       const sheet = stage.getByTestId('faction-sheet');
       const over = await sheet.evaluate((el) => el.scrollHeight - el.clientHeight);
       const room = await sheet.evaluate((el) => {
         const facts = el.querySelector('.fs-facts')?.getBoundingClientRect(), box = el.getBoundingClientRect();
-        return facts ? `${Math.round(box.bottom - facts.bottom)}` : '-';
+        return !(facts) ? '-' : `${Math.round(box.bottom - facts.bottom)}`;
       });
       console.log(`overflow ${size.width} ${faction}: ${over} (room under the facts ${room})`);
       await page.screenshot({ path: path.join(out, `${tag}-${faction.toLowerCase()}-${size.width}.png`) });

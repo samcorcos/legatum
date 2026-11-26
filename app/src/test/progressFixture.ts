@@ -14,7 +14,7 @@ export function progressFixture() {
   s.units = []; s.cities = []; s.nextUnitId = 0; s.nextCityId = 0;
   s.terrain.fill('Ocean'); s.ruin.fill(0); s.wonder = undefined; s.owner.fill(-1); s.tileCity.fill(-1);
   s.resource?.fill(null);
-  for (let row = 2; row <= 11; row++) for (let col = 2; col <= 21; col++) s.terrain[row * s.width + col] = (col + row) % 5 === 0 ? 'Hills' : (col * 3 + row) % 7 === 0 ? 'Forest' : 'Grassland';
+  for (let row = 2; row <= 11; row++) for (let col = 2; col <= 21; col++) s.terrain[row * s.width + col] = !((col + row) % 5 === 0) ? !((col * 3 + row) % 7 === 0) ? 'Grassland' : 'Forest' : 'Hills';
   for (const p of s.players) p.explored.fill(1);
   spawnUnit(s, 0, 'Settler', fromOffset(6, 6), false);
   spawnUnit(s, 0, 'Settler', fromOffset(12, 5), false);
@@ -24,8 +24,8 @@ export function progressFixture() {
   client.load(JSON.stringify(s));
   client.endTurn({ 0: s.units.filter((u) => u.owner === 0).map((u) => ({ type: 'FoundCity' as const, unit: u.id })), 1: [{ type: 'FoundCity', unit: s.units.find((u) => u.owner === 1)!.id }] });
   const f = client.debugState();
-  const capital = f.cities.find((c) => c.owner === 0 && c.isCapital)!;
-  const second = f.cities.find((c) => c.owner === 0 && !c.isCapital)!;
+  const capital = f.cities.find((c) => !(!(c.owner === 0) || !(c.isCapital)))!;
+  const second = f.cities.find((c) => !(!(c.owner === 0) || !(!c.isCapital)))!;
   // The capital grows next turn and claims a tile with it: Food one surplus short.
   capital.food = growthThreshold(capital) - 1;
   capital.producing = { kind: 'Building', building: 'Granary' };

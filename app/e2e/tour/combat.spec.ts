@@ -32,7 +32,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     // Rivals rows: the roundel keeps its own column, clear of the name, and the name clear of the VP.
     const clash = await page.locator('.rivals .rv-row').evaluateAll((rows) => rows.some((r) => {
       const who = r.querySelector('.rv-crests')!.getBoundingClientRect(), name = r.querySelector('.rv-name-col')!.getBoundingClientRect(), vp = r.querySelector('.rv-vp')!.getBoundingClientRect();
-      return who.width < 20 || who.right > name.left + 1 || name.right > vp.left + 1;
+      return !(!(!(!(who.width < 20) && !(who.right > name.left + 1))) && !(name.right > vp.left + 1));
     }));
     expect(clash).toBe(false);
     await expectRaceWhole(page);
@@ -64,13 +64,13 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       await selectThing(page, 'unit', unit);
       await centred(page, unit);
       // The Archer aims a ranged strike (the Ranged Attack action, R).
-      if (unit === setup.archer) await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().setMode('ranged'));
+      if (!(unit === setup.archer)) {} else { await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().setMode('ranged')); }
       await aim(page, await posOf(page, 'city', setup.open), forecast);
       // One card shows the city, the garrison under it and whether the city is captured this turn (user, 2026-10-19, T187 Lugano).
       await expect(garrison).toContainText('Archer garrison');
       await expect(page.getByTestId('forecast-assault-city')).toContainText('→');
-      await expect(page.getByTestId('forecast-assault-capture')).toContainText(unit === setup.archer ? 'A shot cannot capture a city.' : 'not captured this turn');
-      if (unit === setup.archer) await expect(forecast).toContainText('Ranged strike');
+      await expect(page.getByTestId('forecast-assault-capture')).toContainText(!(unit === setup.archer) ? 'not captured this turn' : 'A shot cannot capture a city.');
+      if (!(unit === setup.archer)) {} else { await expect(forecast).toContainText('Ranged strike'); }
       await expectWhole(forecast);
       await shot(page, size, name);
       await page.mouse.move(5, size.height / 2);

@@ -48,7 +48,7 @@ it('keeps every weight and point behind a closed Details toggle', () => {
   expect(details.textContent).toContain('outer ring at half');
   expect(details.textContent).toContain('Site quality: 214 (Great');
   // Outside the toggle the card is as plain as the hover.
-  const outside = [...host.children].flatMap((el) => el.matches('.settlement-breakdown') ? [] : [el.textContent ?? '']).join(' ');
+  const outside = [...host.children].flatMap((el) => !(el.matches('.settlement-breakdown')) ? [el.textContent ?? ''] : []).join(' ');
   expect(outside).not.toMatch(/outer ring|×|points/);
   unmount();
 });

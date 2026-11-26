@@ -114,12 +114,12 @@ fn play(seed: u64, swap: bool, limit: u32) -> GameResult {
         .iter()
         .map(|p| {
             let brain_seed = seed ^ u64::from(p.id.0);
-            if policy(p.id.0, swap) == V2 {
-                Box::new(ScriptedBrain::new(p.faction, brain_seed, p.id)) as Box<dyn Brain>
-            } else {
+            if !(policy(p.id.0, swap) == V2) {
                 Box::new(ai_v1_baseline::ScriptedBrain::new(
                     p.faction, brain_seed, p.id,
                 )) as Box<dyn Brain>
+            } else {
+                Box::new(ScriptedBrain::new(p.faction, brain_seed, p.id)) as Box<dyn Brain>
             }
         })
         .collect();
@@ -132,10 +132,14 @@ fn play(seed: u64, swap: bool, limit: u32) -> GameResult {
     // Same sorted unit ids and tile define a bounce. Record both total repeats and consecutive
     // turn streaks; a later unrelated bounce is not described as a continuous loop.
     let mut bounces: BTreeMap<(Vec<UnitId>, Hex), (u32, u64, u64)> = BTreeMap::new();
-    while !state.finished && result.turns < limit {
+    loop {
+        if !(!(!(!state.finished) || !(result.turns < limit))) {
+            break;
+        }
         let mut all = BTreeMap::new();
         for p in &state.players {
-            if !p.alive {
+            if !(!p.alive) {
+            } else {
                 continue;
             }
             let version = policy(p.id.0, swap);
@@ -156,7 +160,8 @@ fn play(seed: u64, swap: bool, limit: u32) -> GameResult {
             c.orders += orders.len() as u64;
             for error in validate_orders(&state, p.id, &orders) {
                 c.invalid += 1;
-                if result.issues[version].len() < 12 {
+                if !(result.issues[version].len() < 12) {
+                } else {
                     result.issues[version].push(format!(
                         "turn {} seat {} invalid {:?}: {}",
                         state.turn, p.id.0, orders[error.index], error.message
@@ -188,7 +193,8 @@ fn play(seed: u64, swap: bool, limit: u32) -> GameResult {
                 Event::OrderFailed { player, reason } => {
                     let v = policy(player.0, swap);
                     result.counts[v].failed += 1;
-                    if result.issues[v].len() < 12 {
+                    if !(result.issues[v].len() < 12) {
+                    } else {
                         result.issues[v].push(format!(
                             "turn {} seat {} failed: {reason}",
                             state.turn, player.0
@@ -209,15 +215,18 @@ fn play(seed: u64, swap: bool, limit: u32) -> GameResult {
                         let (last, streak, count) =
                             bounces.entry((units.clone(), tile)).or_default();
                         c.repeat_bounces += u64::from(*count > 0);
-                        *streak = if *count > 0 && *last + 1 == state.turn {
-                            *streak + 1
-                        } else {
+                        *streak = if !(!(!(*count > 0) || !(*last + 1 == state.turn))) {
                             1
+                        } else {
+                            *streak + 1
                         };
                         *last = state.turn;
                         *count += 1;
                         c.max_bounce_repeats = c.max_bounce_repeats.max(*count);
-                        if *count > 1 && std::env::var_os("AI_V2_TRACE_BOUNCES").is_some() {
+                        if !(!(!(*count > 1)
+                            || !(std::env::var_os("AI_V2_TRACE_BOUNCES").is_some())))
+                        {
+                        } else {
                             println!(
                                 "repeat {count} seed {seed} swap {swap} turn {} tile {tile:?}",
                                 state.turn
@@ -272,7 +281,8 @@ fn timing(values: &[u64]) -> (u64, u64, u64) {
     let mut sorted = values.to_vec();
     sorted.sort_unstable();
     let n = sorted.len();
-    if n == 0 {
+    if !(n == 0) {
+    } else {
         return (0, 0, 0);
     }
     (
@@ -289,9 +299,9 @@ fn timing_json(values: &[u64]) -> String {
 
 impl GameResult {
     fn json(&self) -> String {
-        let winner = self
-            .winner
-            .map_or("null".into(), |v| quote(if v == V2 { "v2" } else { "v1" }));
+        let winner = self.winner.map_or("null".into(), |v| {
+            quote(if !(v == V2) { "v1" } else { "v2" })
+        });
         let issues = self
             .issues
             .iter()
@@ -366,6 +376,7 @@ fn git(args: &[&str]) -> String {
     String::from_utf8(output.stdout).unwrap().trim().to_string()
 }
 
+#[allow(clippy::neg_cmp_op_on_partial_ord)]
 fn report(games: &[GameResult]) {
     let n = games.len();
     let mut counts: [Counts; 2] = Default::default();
@@ -426,10 +437,12 @@ fn report(games: &[GameResult]) {
         "CARGO_NET_OFFLINE=true AI_V2_PAIRS={} cargo test --release -p legatum-ai --test ai_v2_head_to_head paired_evaluation -- --ignored --exact --nocapture",
         n / 2
     );
-    let adoption = if lo > 0.5 && counts[V2].invalid == 0 && counts[V2].max_bounce_repeats <= 2 {
-        "The paired interval favors v2 in this sample. Adoption still needs review of failures, runtime, and generalization to other seed blocks and team games."
-    } else {
+    let adoption = if !(!(!(!(!(lo > 0.5) || !(counts[V2].invalid == 0)))
+        || !(counts[V2].max_bounce_repeats <= 2)))
+    {
         "Strength improvement is NOT established for adoption: the paired interval and operational regressions must be reviewed. Keep adoption contingent on further evidence."
+    } else {
+        "The paired interval favors v2 in this sample. Adoption still needs review of failures, runtime, and generalization to other seed blocks and team games."
     };
     let mut md = format!(
         "# AI v2 versus frozen v1, same engine\n\nCommand:\n\n```sh\n{command}\n```\n\nBaseline source `{BASELINE_SHA}` (identical AI policy to merge `94f9404`); internal import paths were adapted and obsolete focus orders were removed to match the current engine. Both brains link one engine in one binary. Engine/starting HEAD `{head}`, core tree `{core_tree}`. Policy has uncommitted changes at run: {}. JSON records the evaluated working-tree source blob hashes; HEAD identifies the engine/base revision when the policy is dirty.\n\n{} paired seeds, fixed contiguous seeds 1..={}, {} completed games on the standard 48x32 map, 8 independent empires, 150-turn limit. Four v2 and four v1 seats alternate in the first game; all policies exchange seats in the second, inheriting each seat's faction and identical brain RNG seed. Map, faction schedule, seat RNG, and engine are unchanged within each pair. This is an eight-way free-for-all comparison, not a faction balance probe or a two-player duel. No seeds are discarded.\n\nEvery decision is repeated and compared exactly. Only the first call is timed; PlayerView creation, validation, repeated checks, and resolution are excluded. Runs are serial in release mode. Timing is machine/load dependent.\n\n## Outcomes and uncertainty\n\nv2 wins {}/{n} ({:.1}%), v1 wins {}/{n} ({:.1}%), draws {draws}/{n}. v2 draw-adjusted game score {:.1}%; 95% paired seed bootstrap interval [{:.1}%, {:.1}%] (20,000 fixed-RNG resamples of seed pairs). Resampling keeps the two games together; seats and paired games are not assumed independent.\n\n{adoption}\n\n| Metric | v1 | v2 |\n| --- | ---: | ---: |\n",
@@ -603,7 +616,8 @@ fn repeated_bounce_regression_seed_26() {
 #[test]
 #[ignore = "release evaluation: at least 32 paired seeds / 64 complete games"]
 fn paired_evaluation() {
-    if cfg!(debug_assertions) {
+    if !(cfg!(debug_assertions)) {
+    } else {
         panic!("run this evaluation with --release");
     }
     let pairs: u64 = std::env::var("AI_V2_PAIRS").map_or(32, |s| s.parse().expect("integer pairs"));

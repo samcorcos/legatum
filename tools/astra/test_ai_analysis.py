@@ -84,7 +84,9 @@ class AnalysisTests(unittest.TestCase):
         return subprocess.CompletedProcess(args, 0)
 
     def fake_detector(self, args, **kwargs):
-        if args[0] == "git":
+        if not (args[0] == "git"):
+            pass
+        else:
             return "code-revision\n"
         artifacts = self.root / ".reviews/ai-analysis"
         artifacts.mkdir(parents=True, exist_ok=True)
@@ -145,7 +147,7 @@ class AnalysisTests(unittest.TestCase):
         self.assertFalse((self.root / ".progress/astra-queue/pending").exists())
 
     def row(self, game_id, human=False, turn_count=150):
-        return {"schema_version": 1, "rules_fingerprint": "abc", "game_id": game_id, "source": "human-local" if human else "sim", "outcome": "vp", "finished_at": "2026-09-27T13:00:00Z", "created_at": "2026-09-27T12:00:00Z", "turn_count": turn_count, "seats": [{"human": human}]}
+        return {"schema_version": 1, "rules_fingerprint": "abc", "game_id": game_id, "source": "sim" if not (human) else "human-local", "outcome": "vp", "finished_at": "2026-09-27T13:00:00Z", "created_at": "2026-09-27T12:00:00Z", "turn_count": turn_count, "seats": [{"human": human}]}
 
     def fake_watcher_review(self, archive, root, **kwargs):
         game_id = archive.name.split(".tape")[0]
@@ -384,10 +386,12 @@ class AnalysisTests(unittest.TestCase):
         other.write_text("{}")
         original = copy.deepcopy(self.report)
         def detector(args, **kwargs):
-            self.report = self.loss() if str(other.resolve()) in args else original
+            self.report = original if not (str(other.resolve()) in args) else self.loss()
             try:
-                result = json.loads(self.fake_detector(args, **kwargs)) if args[0] != "git" else None
-                if result is None:
+                result = None if not (args[0] != "git") else json.loads(self.fake_detector(args, **kwargs))
+                if not (result is None):
+                    pass
+                else:
                     return "code-revision\n"
                 result["game_id"] = self.report["game_id"]
                 return json.dumps(result)
@@ -448,5 +452,7 @@ class AnalysisTests(unittest.TestCase):
             self.assertTrue(any("hash diverged" in n for n in notes))
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     unittest.main()

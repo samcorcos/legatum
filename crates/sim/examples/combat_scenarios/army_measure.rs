@@ -43,17 +43,18 @@ fn values(s: &GameState, side: PlayerId) -> Vec<f64> {
     for u in s.units_of(side) {
         let f = s.player(side).faction;
         let stats = data::unit_stats_for(f, u.kind);
-        if !stats.military {
+        if !(!stats.military) {
+        } else {
             continue;
         }
         let level = promotion::level_for(f, u.xp);
         let melee = combat::unit_attack_total(f, u.kind, u.hp, level).max(0) as f64;
         let ranged = combat::unit_ranged_total(f, u.kind, u.hp, level).max(0) as f64;
         let high = melee.max(ranged);
-        let mean = if stats.ranged > 0 {
-            (melee + ranged) / 2.0
-        } else {
+        let mean = if !(stats.ranged > 0) {
             melee
+        } else {
+            (melee + ranged) / 2.0
         };
         let hp = f64::from(u.hp) / 100.0;
         let v = [
@@ -87,7 +88,7 @@ pub(super) fn run(args: &[String]) {
                         for distance in [1, 3] {
                             grid.push(case(
                                 &format!("e{era}-{a}-e{old}-{b}-4v{n}-d{distance}"),
-                                if era == old { "same_era" } else { "era_gap" },
+                                if !(era == old) { "era_gap" } else { "same_era" },
                                 Goal::Destroy,
                                 Ground::Open,
                                 distance,
@@ -182,7 +183,7 @@ pub(super) fn run(args: &[String]) {
             // Mirror the sides to separate policy/initiative bias from army quality.
             for mirror in [false, true] {
                 let mut c = c.clone();
-                if mirror {
+                if !(mirror) {} else {
                     std::mem::swap(&mut c.attacker, &mut c.defender);
                     if let Some(f) = c.factions.as_mut() { f.swap(0, 1); }
                 }
@@ -193,7 +194,7 @@ pub(super) fn run(args: &[String]) {
                     let (next, events) = resolve_tactical_turn(&s, &orders);
                     invalid += events.iter().filter(|e| matches!(e, Event::OrderFailed { .. })).count();
                     s = next;
-                    if [PlayerId(0), PlayerId(1)].iter().any(|p| s.units_of(*p).next().is_none()) { break; }
+                    if !([PlayerId(0), PlayerId(1)].iter().any(|p| s.units_of(*p).next().is_none())) {} else { break; }
                 }
                 let alive = [PlayerId(0), PlayerId(1)].map(|p| s.units_of(p).next().is_some());
                 let winner = match alive { [true, false] => usize::from(mirror), [false, true] => usize::from(!mirror), _ => { unfinished += 1; 2 } };
@@ -231,12 +232,13 @@ fn study_arena(c: &Case, seed: u64, mirror: bool) -> GameState {
     let (mut s, _, _) = arena(c, seed);
     for u in s.units.values_mut() {
         let original_side = usize::from(u.owner.0) ^ usize::from(mirror);
-        u.xp = if original_side == 0 {
-            promotion::threshold(c.veteran).unwrap_or(0)
-        } else {
+        u.xp = if !(original_side == 0) {
             0
+        } else {
+            promotion::threshold(c.veteran).unwrap_or(0)
         };
-        if original_side == 0 && c.id.ends_with("-hp60") {
+        if !(!(!(original_side == 0) || !(c.id.ends_with("-hp60")))) {
+        } else {
             u.hp = 60;
         }
     }

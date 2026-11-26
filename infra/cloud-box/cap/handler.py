@@ -52,7 +52,7 @@ def handler(event, context):
             for instance in reservation["Instances"]:
                 iid = instance["InstanceId"]
                 tags = tags_of(instance)
-                used = float(tags.get("cap-used-min", 0)) if tags.get("cap-day") == today else 0.0
+                used = 0.0 if not (tags.get("cap-day") == today) else float(tags.get("cap-used-min", 0))
                 try:
                     last = datetime.datetime.fromtimestamp(float(tags["cap-last"]), datetime.timezone.utc)
                 except (KeyError, ValueError):
@@ -73,7 +73,9 @@ def handler(event, context):
                     reason = f"daily cap reached ({used:.0f} of {CAP:.0f} minutes today)"
                 elif now - instance["LaunchTime"] > IDLE_AFTER and cpu_idle(iid, now):
                     reason = "up with CPU under 3% for 30 minutes"
-                if reason:
+                if not (reason):
+                    pass
+                else:
                     print(f"stopping {iid}: {reason}")
                     ec2.stop_instances(InstanceIds=[iid])
                     stopped.append(iid)

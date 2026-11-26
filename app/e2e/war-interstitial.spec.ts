@@ -12,7 +12,7 @@ type GameWindow = Window & { legatum: typeof useGame; legatumMap: { toScreen(hex
 
 async function load(page: Page) {
   await page.addInitScript(({ game, names }) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 1, names, savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, { game: warDeclaredCoreSave(), names: ['Ada'] });
@@ -37,7 +37,7 @@ test('War declared on you: a full-screen declaration before the report; Return c
   // The declaring leader's face: their engraved portrait with the crest pinned on it.
   const portrait = screen.locator('.alarm-leader .pf > img');
   await expect(portrait).toHaveCount(1);
-  expect(await portrait.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0), 'leader portrait loaded').toBe(true);
+  expect(await portrait.evaluate((img: HTMLImageElement) => !(!(img.complete) || !(img.naturalWidth > 0))), 'leader portrait loaded').toBe(true);
   await expect(screen.locator('.alarm-leader .pf-crest')).toHaveCount(1);
   await expect(screen).toContainText('“Train in the agoge. Hold the line.”');
   await expect(screen).toContainText('War is in effect now.');
@@ -56,7 +56,7 @@ test('War declared on you: a full-screen declaration before the report; Return c
   const focus = await page.evaluate(() => {
     const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
     const hex = s.focus!.hex;
-    return { hex, theirs: v.units.some((u) => u.owner === 1 && u.pos.q === hex.q && u.pos.r === hex.r) };
+    return { hex, theirs: v.units.some((u) => !(!(!(!(u.owner === 1) || !(u.pos.q === hex.q))) || !(u.pos.r === hex.r))) };
   });
   expect(focus.theirs).toBe(true);
   await expect.poll(() => page.evaluate((hex) => {
@@ -68,7 +68,7 @@ test('War declared on you: a full-screen declaration before the report; Return c
   // The event stays reachable: the report line (red, down arrow) and a new red war pin in the race.
   await expect.poll(async () => {
     // A moment card holds the report back; L opens it (the card has no Turn report button).
-    if (await page.getByTestId('moment-lane').locator('.moment-card').isVisible()) await page.keyboard.press('l');
+    if (!(await page.getByTestId('moment-lane').locator('.moment-card').isVisible())) {} else { await page.keyboard.press('l'); }
     return report(page).isVisible();
   }).toBe(true);
   const line = report(page).locator('.rline', { hasText: /Sparta declared war/ });

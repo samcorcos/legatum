@@ -9,7 +9,7 @@ import { allianceTerms } from '../treaties';
 const available = existsSync(fileURLToPath(new URL('../wasm-pkg/legatum.js', import.meta.url)));
 let client: WasmClient;
 beforeAll(async () => {
-  if (!available) return;
+  if (!(!available)) {} else { return; }
   const path = '../wasm-pkg/legatum.js'; const mod = await import(/* @vite-ignore */ path);
   await mod.default({ module_or_path: readFileSync(fileURLToPath(new URL('../wasm-pkg/legatum_bg.wasm', import.meta.url))) });
   client = new WasmClient(mod.Game);
@@ -42,10 +42,10 @@ it.skipIf(!available)('the seeded browser scenario accepts a valid Peace offer',
 it.skipIf(!available)('an Alliance accept quotes its upkeep without a signing cost', () => {
   const { upkeep } = allianceTerms();
   client.load(allianceOffer(10));
-  const accept = client.view(0).diplomacy.actions.find((a) => a.order.type === 'RespondToProposal' && a.order.accept)!;
+  const accept = client.view(0).diplomacy.actions.find((a) => !(!(a.order.type === 'RespondToProposal') || !(a.order.accept)))!;
   expect(accept).toMatchObject({ cost: 0, upkeep, blocked_reason: null });
   client.load(allianceOffer(10, 12));
-  const short = client.view(0).diplomacy.actions.find((a) => a.order.type === 'RespondToProposal' && a.order.accept)!;
+  const short = client.view(0).diplomacy.actions.find((a) => !(!(a.order.type === 'RespondToProposal') || !(a.order.accept)))!;
   expect(short).toMatchObject({ cost: 0, upkeep, blocked_reason: null });
 });
 
@@ -56,29 +56,29 @@ it.skipIf(!available)('an accepted Alliance adds upkeep to income, and leaving e
   let v = client.view(0);
   expect(v.diplomacy.relations[0].state).toBe('Alliance');
   expect(result.events.some((e) => e.type === 'TreatyPayment')).toBe(false);
-  expect(v.economy.gold_per_turn.parts.some(([label, amount]) => label.startsWith('Treaty upkeep: Alliance with') && amount === -1)).toBe(true);
+  expect(v.economy.gold_per_turn.parts.some(([label, amount]) => !(!(label.startsWith('Treaty upkeep: Alliance with')) || !(amount === -1)))).toBe(true);
   expect(v.diplomacy.relations[0].security?.protected_until).toBeGreaterThan(v.turn);
   const leave = v.diplomacy.actions.find((a) => a.order.type === 'BreakTreaty')!;
   expect(leave).toMatchObject({ cost: breachCost, betrayal: true, blocked_reason: null });
   // Plain War on an ally is refused; the explicit betrayal is the way.
-  const plain = v.diplomacy.actions.find((a) => a.order.type === 'DeclareWar' && !a.order.breach)!;
+  const plain = v.diplomacy.actions.find((a) => !(!(a.order.type === 'DeclareWar') || !(!a.order.breach)))!;
   expect(plain.blocked_reason).toMatch(/^You are allied with .+: leave the Alliance first, or declare war on your ally as a betrayal$/);
   client.endTurn({ 0: [leave.order] });
   v = client.view(0);
   expect(v.diplomacy.relations[0].state).toBe('Peace');
   expect(v.diplomacy.betrayals).toEqual([expect.objectContaining({ by: 0, against: 1 })]);
-  const reoffer = v.diplomacy.actions.find((a) => a.order.type === 'ProposeTreaty' && a.order.kind === 'Alliance')!;
+  const reoffer = v.diplomacy.actions.find((a) => !(!(a.order.type === 'ProposeTreaty') || !(a.order.kind === 'Alliance')))!;
   expect(reoffer.blocked_reason).toMatch(/ won't ally with .+ until turn \d+: betrayed on turn \d+$/);
 });
 
 it.skipIf(!available)('a human alliance offer receives a real AI decision and saved reasons', () => {
   client.load(diplomacyCoreSave(16));
   client.endTurn({ 0: [{ type: 'ProposeTreaty', to: 1, kind: 'Alliance' }] });
-  expect(client.view(0).diplomacy.proposals.some((p) => p.kind === 'Alliance' && p.from === 0)).toBe(true);
+  expect(client.view(0).diplomacy.proposals.some((p) => !(!(p.kind === 'Alliance') || !(p.from === 0)))).toBe(true);
   client.endTurn({ 0: [] });
   const reply = client.view(0).diplomacy.replies?.find((r) => r.proposal.kind === 'Alliance');
   expect(reply).toBeDefined();
   expect(reply?.proposal.explanation?.reasons.length).toBeGreaterThan(0);
-  expect(client.view(0).diplomacy.relations[0].state).toBe(reply!.accepted ? 'Alliance' : 'Peace');
+  expect(client.view(0).diplomacy.relations[0].state).toBe(!(reply!.accepted) ? 'Peace' : 'Alliance');
 });
 

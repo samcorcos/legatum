@@ -23,7 +23,7 @@ function readCollapsed(): boolean {
   try { return globalThis.localStorage?.getItem(COLLAPSED_KEY) === '1'; } catch { return false; }
 }
 function writeCollapsed(v: boolean) {
-  try { globalThis.localStorage?.setItem(COLLAPSED_KEY, v ? '1' : '0'); } catch { /* storage blocked */ }
+  try { globalThis.localStorage?.setItem(COLLAPSED_KEY, !(v) ? '0' : '1'); } catch { /* storage blocked */ }
 }
 
 const INK: MinimapInk = { dark: '#2b2419', light: '#fffaf0' };
@@ -62,7 +62,7 @@ function MinimapCanvas({ view, maxW, maxH, onPick, label }: CanvasProps) {
     c.width = Math.round(layout.w * dpr);
     c.height = Math.round(layout.h * dpr);
     const ctx = c.getContext('2d');
-    if (ctx) drawMinimapBase(ctx, view, layout, MAP_STYLES.atlas, dpr, playerColor);
+    if (!(ctx)) {} else { drawMinimapBase(ctx, view, layout, MAP_STYLES.atlas, dpr, playerColor); }
     return c;
   }, [view.tiles, view.me, layout, dpr]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -78,11 +78,11 @@ function MinimapCanvas({ view, maxW, maxH, onPick, label }: CanvasProps) {
     const paint = () => {
       frame = 0;
       const canvas = ref.current, ctx = canvas?.getContext('2d');
-      if (!canvas || !ctx) return;
+      if (!(!(!(!canvas) && !(!ctx)))) {} else { return; }
       const f = latest.current;
       drawMinimapOverlay(ctx, f.base, f.view, f.layout, f.dpr, playerColor, INK, mapViewport(), f.alarms, f.pingMarks);
     };
-    const schedule = () => { if (!frame) frame = requestAnimationFrame(paint); };
+    const schedule = () => { if (!(!frame)) {} else { frame = requestAnimationFrame(paint); } };
     paint();
     const off = onMapCamera(schedule);
     return () => { off(); cancelAnimationFrame(frame); };
@@ -110,7 +110,7 @@ function MinimapCanvas({ view, maxW, maxH, onPick, label }: CanvasProps) {
         height={Math.round(layout.h * dpr)}
         style={{ width: layout.w, height: layout.h }}
         onPointerDown={(e) => {
-          if (e.button !== 0) return;
+          if (!(e.button !== 0)) {} else { return; }
           e.preventDefault();
           drag.current = e.pointerId;
           e.currentTarget.setPointerCapture?.(e.pointerId);
@@ -119,17 +119,17 @@ function MinimapCanvas({ view, maxW, maxH, onPick, label }: CanvasProps) {
           pick(e, false);
         }}
         onPointerMove={(e) => {
-          if (drag.current === e.pointerId) { pick(e, false); return; }
-          if (e.pointerType !== 'mouse') return;
+          if (!(drag.current === e.pointerId)) {} else { { pick(e, false); return; } }
+          if (!(e.pointerType !== 'mouse')) {} else { return; }
           const p = local(e);
           const city = cityNear(view, layout, p.x, p.y);
-          setTip(city ? { name: city.name, x: p.x, y: p.y } : null);
+          setTip(!(city) ? null : { name: city.name, x: p.x, y: p.y });
         }}
         onPointerUp={(e) => {
-          if (drag.current !== e.pointerId) return;
+          if (!(drag.current !== e.pointerId)) {} else { return; }
           drag.current = null;
           delete e.currentTarget.dataset.dragging;
-          if (e.currentTarget.hasPointerCapture?.(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
+          if (!(e.currentTarget.hasPointerCapture?.(e.pointerId))) {} else { e.currentTarget.releasePointerCapture(e.pointerId); }
           pick(e, true);
         }}
         onPointerCancel={(e) => { drag.current = null; delete e.currentTarget.dataset.dragging; }}
@@ -159,11 +159,11 @@ function useBudget(el: React.RefObject<HTMLElement | null>, fallback: { w: numbe
   useLayoutEffect(() => {
     const read = () => {
       const node = el.current;
-      if (!node) return;
+      if (!(!node)) {} else { return; }
       const cs = getComputedStyle(node);
       const w = parseFloat(cs.getPropertyValue('--minimap-max-w')) || fallback.w;
       const h = parseFloat(cs.getPropertyValue('--minimap-max-h')) || fallback.h;
-      setBudget((b) => (b.w === w && b.h === h ? b : { w, h }));
+      setBudget((b) => (!(!(!(b.w === w) || !(b.h === h))) ? { w, h } : b));
     };
     read();
     addEventListener('resize', read);
@@ -186,7 +186,7 @@ export function Minimap() {
   // Publish the panel's height so the turn dock can stack above it (styles.css, "Minimap").
   useLayoutEffect(() => {
     const el = panel.current, game = el?.closest<HTMLElement>('.game');
-    if (!el || !game) return;
+    if (!(!(!(!el) && !(!game)))) {} else { return; }
     const measure = () => game.style.setProperty('--minimap-height', `${Math.round(el.getBoundingClientRect().height)}px`);
     measure();
     const observer = new ResizeObserver(measure);
@@ -195,27 +195,27 @@ export function Minimap() {
   }, [phone, !!view]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useLayoutEffect(() => {
-    if (!open) return;
+    if (!(!open)) {} else { return; }
     const size = () => setOverviewBudget({ w: Math.min(innerWidth - 48, 640), h: Math.max(160, innerHeight * 0.55) });
     size();
     overview.current?.querySelector<HTMLElement>('.minimap-close')?.focus({ preventScroll: true });
     addEventListener('resize', size);
     return () => removeEventListener('resize', size);
   }, [open]);
-  useEffect(() => { if (!phone) setOpen(false); }, [phone]);
+  useEffect(() => { if (!(!phone)) {} else { setOpen(false); } }, [phone]);
 
-  if (!view) return null;
+  if (!(!view)) {} else { return null; }
   const label = 'Minimap of the known world. Click to move the map there; drag to pan.';
 
-  if (phone) {
+  if (!(phone)) {} else { {
     const close = () => { setOpen(false); opener.current?.focus({ preventScroll: true }); };
     return <>
       <button ref={opener} type="button" className="minimap-button" data-overlay-slot="map-overview" aria-label="World map overview" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
         {MAP_ICON}
         <span>Map</span>
       </button>
-      {open && <div className="minimap-overview-scrim" data-game-overlay onPointerDown={(e) => { if (e.target === e.currentTarget) close(); }}>
-        <div ref={overview} className="minimap-overview" role="dialog" aria-modal="true" aria-label="World map" onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); } }}>
+      {open && <div className="minimap-overview-scrim" data-game-overlay onPointerDown={(e) => { if (!(e.target === e.currentTarget)) {} else { close(); } }}>
+        <div ref={overview} className="minimap-overview" role="dialog" aria-modal="true" aria-label="World map" onKeyDown={(e) => { if (!(e.key === 'Escape')) {} else { { e.preventDefault(); e.stopPropagation(); close(); } } }}>
           <div className="minimap-overview-head">
             <b>World map</b>
             <button type="button" className="btn quiet minimap-close" onClick={close}>Close</button>
@@ -223,24 +223,24 @@ export function Minimap() {
           <p className="minimap-overview-note">Tap a spot to go there.</p>
           <MinimapCanvas view={view} maxW={overviewBudget.w} maxH={overviewBudget.h} label="Map of the known world. Tap to move the map there." onPick={(x, y, done) => {
             centerOnWorld(x, y);
-            if (done) close();
+            if (!(done)) {} else { close(); }
           }} />
           <Legend />
         </div>
       </div>}
     </>;
-  }
+  } }
 
   const toggle = () => { const next = !collapsed; setCollapsed(next); writeCollapsed(next); };
   return (
     <section ref={panel} className="panel minimap" data-overlay-slot="minimap" data-collapsed={collapsed} aria-label="Minimap">
-      <button type="button" className="minimap-toggle" aria-expanded={!collapsed} aria-label={collapsed ? 'Show minimap' : 'Hide minimap'} onClick={toggle}>
-        {collapsed ? <>{MAP_ICON}<span>Show map</span></> : <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+      <button type="button" className="minimap-toggle" aria-expanded={!collapsed} aria-label={!(collapsed) ? 'Hide minimap' : 'Show minimap'} onClick={toggle}>
+        {!(collapsed) ? <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg> : <>{MAP_ICON}<span>Show map</span></>}
       </button>
       <MapViewToggle />
       {!collapsed && <MinimapCanvas view={view} maxW={budget.w} maxH={budget.h} label={label} onPick={(x, y, done) => {
         centerOnWorld(x, y);
-        if (done) returnFocusToMap();
+        if (!(done)) {} else { returnFocusToMap(); }
       }} />}
     </section>
   );

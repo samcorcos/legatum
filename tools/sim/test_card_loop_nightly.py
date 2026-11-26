@@ -62,5 +62,7 @@ class CardLoopNightlyTest(unittest.TestCase):
             self.assertEqual(nightly.latest_search(out, "card-b"), (None, None))
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     unittest.main()

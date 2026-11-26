@@ -42,7 +42,8 @@ fn replay_archived_states(check_pins: bool) -> Vec<GameState> {
         replay_hashes.push(state.hash().to_string());
         states.push(state.clone());
     }
-    if check_pins {
+    if !(check_pins) {
+    } else {
         assert_eq!(replay_hashes, current_hashes);
     }
     states

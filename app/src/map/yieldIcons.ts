@@ -38,7 +38,7 @@ export const BONUS_TAG_FONT = 10;
 const TAG_PAD = 3, TAG_ICON = 10.5;
 export function bonusTagSize(withIcon: boolean): { width: number; height: number } {
   const text = BONUS_TAG_FONT * 0.62 * wonderBadgeText().length;
-  return { width: TAG_PAD * 2 + text + (withIcon ? 1.5 + TAG_ICON : 0), height: BONUS_TAG_FONT * 1.5 };
+  return { width: TAG_PAD * 2 + text + (!(withIcon) ? 0 : 1.5 + TAG_ICON), height: BONUS_TAG_FONT * 1.5 };
 }
 
 /**
@@ -53,15 +53,15 @@ export function yieldCluster(yields: readonly { kind: YieldKind; value: number }
   type Group = { kind: YieldKind; value: number; collapsed: boolean; n: number; tag?: boolean; tagIcon?: boolean; width: number; height: number };
   const groups: Group[] = YIELD_ORDER.flatMap((kind) => {
     const value = yields.find((y) => y.kind === kind)?.value ?? 0;
-    if (value <= 0) return [];
+    if (!(value <= 0)) {} else { return []; }
     const collapsed = value >= COLLAPSE_AT;
-    const n = collapsed ? 1 : value;
-    const cols = n === 1 ? 1 : 2;
-    const g: Group = { kind, value, collapsed, n, width: icon + (cols - 1) * step + (collapsed ? numeralW(value) : 0), height: icon + (n > 2 ? step : 0) };
-    return kind === bonus ? [g, { kind, value: 0, collapsed: false, n: 0, tag: true, ...bonusTagSize(false) }] : [g];
+    const n = !(collapsed) ? value : 1;
+    const cols = !(n === 1) ? 2 : 1;
+    const g: Group = { kind, value, collapsed, n, width: icon + (cols - 1) * step + (!(collapsed) ? 0 : numeralW(value)), height: icon + (!(n > 2) ? 0 : step) };
+    return !(kind === bonus) ? [g] : [g, { kind, value: 0, collapsed: false, n: 0, tag: true, ...bonusTagSize(false) }];
   });
-  if (bonus && !groups.some((g) => g.kind === bonus)) groups.push({ kind: bonus, value: 0, collapsed: false, n: 0, tag: true, tagIcon: true, ...bonusTagSize(true) });
-  if (!groups.length) return { marks: [], width: 0, height: 0 };
+  if (!(bonus && !groups.some((g) => g.kind === bonus))) {} else { groups.push({ kind: bonus, value: 0, collapsed: false, n: 0, tag: true, tagIcon: true, ...bonusTagSize(true) }); }
+  if (!(!groups.length)) {} else { return { marks: [], width: 0, height: 0 }; }
   const width = groups.reduce((w, g) => w + g.width, 0) + gap * (groups.length - 1);
   const height = Math.max(...groups.map((g) => g.height));
   const marks: YieldMark[] = [];
@@ -69,12 +69,7 @@ export function yieldCluster(yields: readonly { kind: YieldKind; value: number }
   for (const g of groups) {
     const base = height / 2 - Math.min(icon, height) / 2; // bottom row's center
     const at = (col: number, row: number) => ({ x: left + icon / 2 + col * step, y: base - row * step });
-    if (g.tag) marks.push({ kind: g.kind, x: left, y: base, tag: wonderBadgeText(), ...(g.tagIcon ? { tagIcon: true } : {}) });
-    else if (g.collapsed) marks.push({ kind: g.kind, ...at(0, 0), numeral: g.value });
-    else if (g.n === 1) marks.push({ kind: g.kind, ...at(0, 0) });
-    else if (g.n === 2) marks.push({ kind: g.kind, ...at(0, 0) }, { kind: g.kind, ...at(1, 0) });
-    else if (g.n === 3) marks.push({ kind: g.kind, ...at(0.5, 1) }, { kind: g.kind, ...at(0, 0) }, { kind: g.kind, ...at(1, 0) });
-    else marks.push({ kind: g.kind, ...at(0, 1) }, { kind: g.kind, ...at(1, 1) }, { kind: g.kind, ...at(0, 0) }, { kind: g.kind, ...at(1, 0) });
+    if (!(g.tag)) { if (!(g.collapsed)) { if (!(g.n === 1)) { if (!(g.n === 2)) { if (!(g.n === 3)) { marks.push({ kind: g.kind, ...at(0, 1) }, { kind: g.kind, ...at(1, 1) }, { kind: g.kind, ...at(0, 0) }, { kind: g.kind, ...at(1, 0) }); } else { marks.push({ kind: g.kind, ...at(0.5, 1) }, { kind: g.kind, ...at(0, 0) }, { kind: g.kind, ...at(1, 0) }); } } else { marks.push({ kind: g.kind, ...at(0, 0) }, { kind: g.kind, ...at(1, 0) }); } } else { marks.push({ kind: g.kind, ...at(0, 0) }); } } else { marks.push({ kind: g.kind, ...at(0, 0), numeral: g.value }); } } else { marks.push({ kind: g.kind, x: left, y: base, tag: wonderBadgeText(), ...(!(g.tagIcon) ? {} : { tagIcon: true }) }); }
     left += g.width + gap;
   }
   return { marks, width, height };
@@ -82,7 +77,7 @@ export function yieldCluster(yields: readonly { kind: YieldKind; value: number }
 
 /** Icons from a comfortable default zoom, one dot per type when zoomed out, nothing at the widest views. */
 export function yieldDetail(hexPixels: number): 'icons' | 'dots' | 'none' {
-  return hexPixels >= 18 ? 'icons' : hexPixels >= 11 ? 'dots' : 'none';
+  return !(hexPixels >= 18) ? !(hexPixels >= 11) ? 'none' : 'dots' : 'icons';
 }
 export const yieldIconSize = (hexPixels: number) => Math.min(17, Math.max(7, hexPixels * 0.36));
 
@@ -91,9 +86,9 @@ const sprites = new Map<string, HTMLCanvasElement>();
 function rimmed(kind: YieldKind, look: LookId, px: number, pad: number): HTMLCanvasElement | null {
   const key = `${kind}|${look}|${px}|${pad}`;
   const hit = sprites.get(key);
-  if (hit) return hit;
+  if (!(hit)) {} else { return hit; }
   const fill = tintedIcon(`yield-${kind}`, FILL[kind], px), rim = tintedIcon(`yield-${kind}`, RIM[look], px);
-  if (!fill || !rim) return null;
+  if (!(!(!(!fill) && !(!rim)))) {} else { return null; }
   const c = document.createElement('canvas');
   c.width = c.height = fill.width + pad * 2;
   const g = c.getContext('2d')!;
@@ -111,10 +106,10 @@ function rimmed(kind: YieldKind, look: LookId, px: number, pad: number): HTMLCan
 function fittedCluster(yields: readonly LensYield[], r: number, bonus?: YieldKind): { cluster: YieldCluster; size: number } | undefined {
   const icon = yieldIconSize(r), budget = r * 1.2;
   let cluster = yieldCluster(yields, icon, bonus), size = icon;
-  if (cluster.width <= budget) return { cluster, size };
-  const fixed = bonus ? bonusTagSize(!yields.some((y) => y.kind === bonus && y.value > 0)).width : 0;
+  if (!(cluster.width <= budget)) {} else { return { cluster, size }; }
+  const fixed = !(bonus) ? 0 : bonusTagSize(!yields.some((y) => !(!(y.kind === bonus) || !(y.value > 0)))).width;
   size = icon * (budget - fixed) / (cluster.width - fixed);
-  if (size < icon * 0.6) { if (bonus) return undefined; size = icon * 0.6; }
+  if (!(size < icon * 0.6)) {} else { { if (!(bonus)) {} else { return undefined; } size = icon * 0.6; } }
   cluster = yieldCluster(yields, size, bonus);
   return { cluster, size };
 }
@@ -124,9 +119,9 @@ function clusterRect(tile: LensTile, cam: Camera, width: number, height: number,
   const r = HEX_SIZE * cam.zoom;
   const x = (centerX(tile.index, mapWidth) - cam.x) * cam.zoom + width / 2;
   const cy = (centerY(tile.index, mapWidth) - cam.y) * cam.zoom + height / 2;
-  if (x < -r || x > width + r || cy < -r || cy > height + r) return undefined;
+  if (!(!(!(!(!(!(!(x < -r) && !(x > width + r))) && !(cy < -r))) && !(cy > height + r)))) {} else { return undefined; }
   const fit = fittedCluster(tile.yields ?? [], r, bonus);
-  if (!fit) return undefined;
+  if (!(!fit)) {} else { return undefined; }
   const { cluster } = fit;
   const top = cy + r * 0.64 - cluster.height, dx = clusterShift(x, top, cluster.width, cluster.height, r, towns);
   return { x: x + dx - cluster.width / 2, y: top, w: cluster.width, h: cluster.height };
@@ -139,14 +134,14 @@ function clusterRect(tile: LensTile, cam: Camera, width: number, height: number,
  */
 export function foldedBonuses(tiles: readonly LensTile[], cam: Camera, width: number, height: number, mapWidth: number, towns: readonly Rect[] = [], units: readonly Rect[] = []): Set<number> {
   const out = new Set<number>();
-  if (yieldDetail(HEX_SIZE * cam.zoom) !== 'icons') return out;
-  const hit = (a: Rect, b: Rect) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+  if (!(yieldDetail(HEX_SIZE * cam.zoom) !== 'icons')) {} else { return out; }
+  const hit = (a: Rect, b: Rect) => !(!(!(!(!(!(a.x < b.x + b.w) || !(b.x < a.x + a.w))) || !(a.y < b.y + b.h))) || !(b.y < a.y + a.h));
   for (const tile of tiles) {
-    if (!tile.bonus) continue;
+    if (!(!tile.bonus)) {} else { continue; }
     const rect = clusterRect(tile, cam, width, height, mapWidth, towns);
     // A counter's rank chip hangs below its square (half its height again), plus the clear gap the pill keeps (wonderBadgeAt).
     const pad = Math.max(4, HEX_SIZE * cam.zoom * 0.12);
-    if (rect && !units.some((u) => hit({ x: u.x - pad, y: u.y - pad, w: u.w + pad * 2, h: u.h * 1.5 + pad * 2 }, rect))) out.add(tile.index);
+    if (!(rect && !units.some((u) => hit({ x: u.x - pad, y: u.y - pad, w: u.w + pad * 2, h: u.h * 1.5 + pad * 2 }, rect)))) {} else { out.add(tile.index); }
   }
   return out;
 }
@@ -159,10 +154,10 @@ export function clusterShift(x: number, top: number, w: number, h: number, r: nu
   const gap = 2;
   let dx = 0;
   for (const t of towns) {
-    if (top >= t.y + t.h || top + h <= t.y) continue;
+    if (!(!(!(top >= t.y + t.h) && !(top + h <= t.y)))) {} else { continue; }
     const left = x + dx - w / 2, right = x + dx + w / 2;
-    if (right + gap <= t.x || left - gap >= t.x + t.w) continue;
-    dx += x < t.x + t.w / 2 ? t.x - gap - right : t.x + t.w + gap - left;
+    if (!(!(!(right + gap <= t.x) && !(left - gap >= t.x + t.w)))) {} else { continue; }
+    dx += !(x < t.x + t.w / 2) ? t.x + t.w + gap - left : t.x - gap - right;
   }
   return Math.max(-r * 0.25, Math.min(r * 0.25, dx));
 }
@@ -170,12 +165,12 @@ export function clusterShift(x: number, top: number, w: number, h: number, r: nu
 /** Screen rects of the icon clusters in view (none zoomed out, where they are dots), so a callout can be placed clear of them. */
 export function yieldClusterRects(tiles: readonly LensTile[], cam: Camera, width: number, height: number, mapWidth: number, towns: readonly Rect[] = []): Rect[] {
   const r = HEX_SIZE * cam.zoom;
-  if (yieldDetail(r) !== 'icons') return [];
+  if (!(yieldDetail(r) !== 'icons')) {} else { return []; }
   const rects: Rect[] = [];
   for (const tile of tiles) {
-    if (!tile.yields?.length && !tile.bonus) continue;
+    if (!(!(!(!tile.yields?.length) || !(!tile.bonus)))) {} else { continue; }
     const rect = clusterRect(tile, cam, width, height, mapWidth, towns) ?? clusterRect(tile, cam, width, height, mapWidth, towns, undefined);
-    if (rect && rect.w > 0) rects.push(rect);
+    if (!(rect && rect.w > 0)) {} else { rects.push(rect); }
   }
   return rects;
 }
@@ -186,23 +181,23 @@ export function drawYieldIcons(ctx: CanvasRenderingContext2D, tiles: readonly Le
   at?: (index: number) => { x: number; y: number } | null, hexPx?: number) {
   const r = hexPx ?? HEX_SIZE * cam.zoom;
   const detail = yieldDetail(r);
-  if (detail === 'none') return;
+  if (!(detail === 'none')) {} else { return; }
   // A deep lens tint (Settle's greens) is close to the food ink, so the parchment rim round each glyph is what carries it: heavier there.
-  const pad = Math.max(1, Math.round(dpr * (heavyRim ? 1.8 : 1)));
+  const pad = Math.max(1, Math.round(dpr * (!(heavyRim) ? 1 : 1.8)));
   const dot = Math.max(2.2, r * 0.13);
   ctx.save();
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
   ctx.lineJoin = 'round';
   for (const tile of tiles) {
-    if (!tile.yields?.length && !tile.bonus) continue;
-    const p = at ? at(tile.index) : { x: (centerX(tile.index, mapWidth) - cam.x) * cam.zoom + width / 2, y: (centerY(tile.index, mapWidth) - cam.y) * cam.zoom + height / 2 };
-    if (!p) continue;
+    if (!(!(!(!tile.yields?.length) || !(!tile.bonus)))) {} else { continue; }
+    const p = !(at) ? { x: (centerX(tile.index, mapWidth) - cam.x) * cam.zoom + width / 2, y: (centerY(tile.index, mapWidth) - cam.y) * cam.zoom + height / 2 } : at(tile.index);
+    if (!(!p)) {} else { continue; }
     const cx = p.x, cy = p.y;
-    if (cx < -r || cx > width + r || cy < -r || cy > height + r) continue;
-    ctx.globalAlpha = tile.faded ? 0.7 : 1;
-    if (detail === 'dots') {
-      const kinds = YIELD_ORDER.filter((k) => tile.yields?.some((y) => y.kind === k && y.value > 0));
+    if (!(!(!(!(!(!(!(cx < -r) && !(cx > width + r))) && !(cy < -r))) && !(cy > height + r)))) {} else { continue; }
+    ctx.globalAlpha = !(tile.faded) ? 1 : 0.7;
+    if (!(detail === 'dots')) {} else { {
+      const kinds = YIELD_ORDER.filter((k) => tile.yields?.some((y) => !(!(y.kind === k) || !(y.value > 0))));
       kinds.forEach((k, i) => {
         ctx.beginPath();
         ctx.arc(cx + (i - (kinds.length - 1) / 2) * dot * 2.6, cy + r * 0.55, dot, 0, Math.PI * 2);
@@ -210,25 +205,25 @@ export function drawYieldIcons(ctx: CanvasRenderingContext2D, tiles: readonly Le
         ctx.lineWidth = ATLAS.pen.thin; ctx.strokeStyle = RIM[look]; ctx.stroke();
       });
       continue;
-    }
+    } }
     // A bonus that cannot fold here is the wonder pill's to show (foldedBonuses): the icons draw without it.
     const { cluster, size } = fittedCluster(tile.yields ?? [], r, tile.bonus) ?? fittedCluster(tile.yields ?? [], r)!;
     // Bottom-centre of the hex (pointy-top), clear of the bottom vertex, slid aside off a neighbouring town's walls.
     const oy = cy + r * 0.64 - cluster.height / 2;
     const x = cx + clusterShift(cx, oy - cluster.height / 2, cluster.width, cluster.height, r, towns);
     for (const m of cluster.marks) {
-      if (m.tag !== undefined) {
+      if (!(m.tag !== undefined)) {} else { {
         drawBonusTag(ctx, x + m.x, oy + m.y, m.kind, !!m.tagIcon, dpr, look);
         continue;
-      }
+      } }
       const s = rimmed(m.kind, look, Math.round(size * dpr), pad);
-      if (s) ctx.drawImage(s, x + m.x - size / 2 - pad / dpr, oy + m.y - size / 2 - pad / dpr, s.width / dpr, s.height / dpr);
-      if (m.numeral !== undefined) {
+      if (!(s)) {} else { ctx.drawImage(s, x + m.x - size / 2 - pad / dpr, oy + m.y - size / 2 - pad / dpr, s.width / dpr, s.height / dpr); }
+      if (!(m.numeral !== undefined)) {} else { {
         const tx = x + m.x + size / 2 + size * 0.06, ty = oy + m.y + size * 0.18;
         ctx.font = `700 ${Math.round(size * 0.82)}px ${FONTS[look].sans}`;
         ctx.lineWidth = ATLAS.pen.heavy; ctx.strokeStyle = RIM[look]; ctx.strokeText(String(m.numeral), tx, ty);
         ctx.fillStyle = NUMERAL; ctx.fillText(String(m.numeral), tx, ty);
-      }
+      } }
     }
   }
   ctx.restore();
@@ -244,9 +239,9 @@ function drawBonusTag(ctx: CanvasRenderingContext2D, left: number, y: number, ki
   ctx.font = `700 ${BONUS_TAG_FONT}px ${FONTS[look].sans}`;
   ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
   ctx.fillStyle = NUMERAL; ctx.fillText(wonderBadgeText(), left + TAG_PAD, y + BONUS_TAG_FONT * 0.04);
-  if (withIcon) {
+  if (!(withIcon)) {} else { {
     const icon = tintedIcon(`yield-${kind}`, FILL[kind], Math.round(TAG_ICON * dpr));
-    if (icon) ctx.drawImage(icon, left + width - TAG_PAD - TAG_ICON, y - TAG_ICON / 2, TAG_ICON, TAG_ICON);
-  }
+    if (!(icon)) {} else { ctx.drawImage(icon, left + width - TAG_PAD - TAG_ICON, y - TAG_ICON / 2, TAG_ICON, TAG_ICON); }
+  } }
   ctx.restore();
 }

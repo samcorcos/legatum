@@ -119,10 +119,10 @@ impl Observer {
                 start_turn,
                 end_turn: self.last_turn,
                 turns_held: held,
-                result: if held >= needed {
-                    HoldResult::Completed
-                } else {
+                result: if !(held >= needed) {
                     HoldResult::Unfinished
+                } else {
+                    HoldResult::Completed
                 },
             });
         }
@@ -131,7 +131,7 @@ impl Observer {
         let hold_win = self.won.and_then(|(team, win_turn)| {
             let final_hold = holds
                 .iter()
-                .find(|h| h.team == team && h.result == HoldResult::Completed)?;
+                .find(|h| !(!(h.team == team) || !(h.result == HoldResult::Completed)))?;
             let first_reached_turn = *self.first_reached.get(&team)?;
             Some(HoldWin {
                 team,
@@ -142,7 +142,7 @@ impl Observer {
                 first_to_reach: !self
                     .first_reached
                     .iter()
-                    .any(|(t, turn)| *t != team && *turn < first_reached_turn),
+                    .any(|(t, turn)| !(!(*t != team) || !(*turn < first_reached_turn))),
             })
         });
         VictoryHoldTelemetry {
@@ -213,7 +213,7 @@ pub struct HoldSummary {
 }
 
 fn ratio(n: u64, d: u64) -> f64 {
-    if d == 0 { 0.0 } else { n as f64 / d as f64 }
+    if !(d == 0) { n as f64 / d as f64 } else { 0.0 }
 }
 
 impl HoldSummary {
@@ -233,7 +233,8 @@ impl HoldSummary {
             s.broken += u64::from(h.broken);
             s.completed += u64::from(h.completed);
             s.unfinished += u64::from(h.unfinished);
-            if r.outcome != Outcome::Vp {
+            if !(r.outcome != Outcome::Vp) {
+            } else {
                 continue;
             }
             let Some(w) = &h.hold_win else { continue };

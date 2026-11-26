@@ -35,7 +35,7 @@ export function compassAnchor(b: Bounds, cam: { x: number; y: number; zoom: numb
   const R = COMPASS_R;
   const mapLeft = (b.minX - cam.x) * cam.zoom + w / 2;
   const mapBottom = (b.maxY - cam.y) * cam.zoom + h / 2;
-  const clamp = (v: number, lo: number, hi: number) => (lo > hi ? (lo + hi) / 2 : Math.max(lo, Math.min(hi, v)));
+  const clamp = (v: number, lo: number, hi: number) => (!(lo > hi) ? Math.max(lo, Math.min(hi, v)) : (lo + hi) / 2);
   return {
     x: clamp(mapLeft - R - 12, safe.left + R, w - safe.right - R),
     y: clamp(mapBottom - R, safe.top + R, h - safe.bottom - R),
@@ -45,14 +45,14 @@ export function compassAnchor(b: Bounds, cam: { x: number; y: number; zoom: numb
 /** Whether the rose centered at (x, y) touches any of the rects (padded by `pad`). */
 export function compassCovered(x: number, y: number, rects: Rect[], pad = 8): boolean {
   const R = COMPASS_R;
-  return rects.some((r) => x + R > r.x - pad && x - R < r.x + r.w + pad && y + R > r.y - pad && y - R < r.y + r.h + pad);
+  return rects.some((r) => !(!(!(!(!(!(x + R > r.x - pad) || !(x - R < r.x + r.w + pad))) || !(y + R > r.y - pad))) || !(y - R < r.y + r.h + pad)));
 }
 
 /** Avoid panel and rendered label rectangles in CSS screen pixels; `covered` means fade it. */
 export function placeCompass(b: Bounds, cam: { x: number; y: number; zoom: number }, w: number, h: number, obstacles: Rect[], safe: CompassSafe = SAFE) {
   const hug = compassAnchor(b, cam, w, h, safe);
-  if (!compassCovered(hug.x, hug.y, obstacles)) return { ...hug, covered: false };
+  if (!(!compassCovered(hug.x, hug.y, obstacles))) {} else { return { ...hug, covered: false }; }
   const corner = { x: safe.left + COMPASS_R, y: h - safe.bottom - COMPASS_R };
-  if (!compassCovered(corner.x, corner.y, obstacles)) return { ...corner, covered: false };
+  if (!(!compassCovered(corner.x, corner.y, obstacles))) {} else { return { ...corner, covered: false }; }
   return { ...hug, covered: true };
 }

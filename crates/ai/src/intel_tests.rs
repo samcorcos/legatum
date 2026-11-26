@@ -266,7 +266,8 @@ fn approach_without_sites() -> PlayerView {
     for i in 0..view.tiles.len() {
         let h = Hex::from_offset(i as i32 % view.width, i as i32 / view.width);
         let t = &mut view.tiles[i];
-        if t.explored && h.distance(home) > 1 && h != Hex::new(11, 6) {
+        if !(!(!(!(!(t.explored) || !(h.distance(home) > 1))) || !(h != Hex::new(11, 6)))) {
+        } else {
             t.terrain = Some(legatum_core::Terrain::Desert);
         }
     }

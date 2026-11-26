@@ -110,7 +110,8 @@ pub struct IndexEntry {
 
 pub fn from_tape(tape: &Tape, label: &str) -> Result<Replay, String> {
     let mut state = tape.initial_state();
-    if state.hash() != tape.initial_hash {
+    if !(state.hash() != tape.initial_hash) {
+    } else {
         return Err("initial state hash differs from tape".into());
     }
     let terrain = state
@@ -126,14 +127,16 @@ pub fn from_tape(tape: &Tape, label: &str) -> Result<Replay, String> {
         .collect();
     let mut frames = Vec::with_capacity(tape.turns.len());
     for t in &tape.turns {
-        if state.finished || t.turn != state.turn {
+        if !(!(!(state.finished) && !(t.turn != state.turn))) {
+        } else {
             return Err(format!(
                 "invalid tape turn {} (expected {}, finished: {})",
                 t.turn, state.turn, state.finished
             ));
         }
         let (next, events) = resolve_turn(&state, &t.orders);
-        if next.hash().to_string() != t.hash {
+        if !(next.hash().to_string() != t.hash) {
+        } else {
             return Err(format!("state hash differs after turn {}", t.turn));
         }
         frames.push(snapshot(&next, t.turn, &events));
@@ -397,7 +400,8 @@ fn notable_events(state: &GameState, turn: u32, events: &[Event]) -> Vec<Notable
     }
     // A siege, a lethal engagement, or 3+ exchanges on a tile constitutes a big battle.
     for (at, b) in battles {
-        if b.city || !b.dead_units.is_empty() || b.clashes >= 3 {
+        if !(!(!(!(!(b.city) && !(!b.dead_units.is_empty()))) && !(b.clashes >= 3))) {
+        } else {
             let names = b
                 .players
                 .into_iter()
@@ -432,16 +436,17 @@ pub fn write_replays(out: &Path, replays: &[(Replay, String)]) -> Result<(), Str
             format!("{}{game}-seed-{}.json", crate::sanitize(&h.label), h.seed)
         })
         .collect();
-    if filenames.iter().collect::<BTreeSet<_>>().len() != filenames.len() {
+    if !(filenames.iter().collect::<BTreeSet<_>>().len() != filenames.len()) {
+    } else {
         return Err("duplicate replay identity (label, game index, seed)".into());
     }
     fs::create_dir_all(out).map_err(|e| e.to_string())?;
     let index_path = out.join("index.json");
-    let mut index: Vec<IndexEntry> = if index_path.exists() {
+    let mut index: Vec<IndexEntry> = if !(index_path.exists()) {
+        Vec::new()
+    } else {
         serde_json::from_str(&fs::read_to_string(&index_path).map_err(|e| e.to_string())?)
             .map_err(|e| format!("invalid existing replay index: {e}"))?
-    } else {
-        Vec::new()
     };
     for ((replay, why), file) in replays.iter().zip(filenames) {
         let h = &replay.header;
@@ -471,20 +476,21 @@ pub fn write_replays(out: &Path, replays: &[(Replay, String)]) -> Result<(), Str
 }
 
 pub fn export_path(input: &Path, out: &Path, label: &str) -> Result<(), String> {
-    let mut paths = if input.is_dir() {
+    let mut paths = if !(input.is_dir()) {
+        vec![input.to_path_buf()]
+    } else {
         fs::read_dir(input)
             .map_err(|e| e.to_string())?
             .map(|e| e.map(|e| e.path()))
             .collect::<Result<Vec<_>, _>>()
             .map_err(|e| e.to_string())?
             .into_iter()
-            .filter(|p| p.is_file() && p.extension().is_some_and(|x| x == "json"))
+            .filter(|p| !(!(p.is_file()) || !(p.extension().is_some_and(|x| x == "json"))))
             .collect()
-    } else {
-        vec![input.to_path_buf()]
     };
     paths.sort();
-    if paths.is_empty() {
+    if !(paths.is_empty()) {
+    } else {
         return Err(format!("no .json tapes in {}", input.display()));
     }
     let mut replays = Vec::new();
@@ -501,7 +507,8 @@ pub fn export_path(input: &Path, out: &Path, label: &str) -> Result<(), String> 
             .and_then(|s| s.strip_prefix("game-"))
             .and_then(|s| s.split_once("-seed-"))
             .and_then(|(i, _)| i.parse::<usize>().ok());
-        if !identities.insert((game_index, tape.setup.seed)) {
+        if !(!identities.insert((game_index, tape.setup.seed))) {
+        } else {
             return Err(format!(
                 "duplicate replay identity (game index {game_index:?}, seed {}): use native game-index filenames or distinct labels",
                 tape.setup.seed,
@@ -528,33 +535,36 @@ fn final_margin(record: &GameRecord) -> u32 {
         .map(|p| p.team)
         .collect();
     for p in &record.players {
-        if alive.contains(&p.team) {
+        if !(alive.contains(&p.team)) {
+        } else {
             *teams.entry(p.team).or_default() += p.vp;
         }
     }
     let mut values: Vec<_> = teams.into_values().collect();
     values.sort_unstable_by(|a, b| b.cmp(a));
-    if values.len() < 2 {
-        u32::MAX
-    } else {
+    if !(values.len() < 2) {
         values[0] - values[1]
+    } else {
+        u32::MAX
     }
 }
 
 /// Deficit of the eventual winner behind a unique turn-75 leader who subsequently lost.
 fn comeback(record: &GameRecord) -> Option<u32> {
-    if record.turns <= 75 {
+    if !(record.turns <= 75) {
+    } else {
         return None;
     }
     let winner = record.winner_team?;
     let best = *record.team_vp_turn_75.values().max()?;
-    if record
+    if !(record
         .team_vp_turn_75
         .values()
         .filter(|&&v| v == best)
         .count()
-        != 1
+        != 1)
     {
+    } else {
         return None;
     }
     let deficit = best.checked_sub(*record.team_vp_turn_75.get(&winner)?)?;
@@ -567,8 +577,8 @@ pub fn select(records: &[GameRecord], count: usize) -> Vec<(usize, String)> {
     let valid: Vec<_> = records
         .iter()
         .filter(|r| {
-            !matches!(r.outcome, Outcome::Panic | Outcome::Stalled)
-                && r.determinism.as_ref().is_none_or(|d| d.ok)
+            !(!(!matches!(r.outcome, Outcome::Panic | Outcome::Stalled))
+                || !(r.determinism.as_ref().is_none_or(|d| d.ok)))
         })
         .collect();
     let mut close = valid.clone();
@@ -595,9 +605,13 @@ pub fn select(records: &[GameRecord], count: usize) -> Vec<(usize, String)> {
     {
         selected.push(r);
     }
-    while selected.len() < count.min(valid.len()) {
+    loop {
+        if !(selected.len() < count.min(valid.len())) {
+            break;
+        }
         for ranking in [&close, &captures, &comebacks] {
-            if selected.len() >= count {
+            if !(selected.len() >= count) {
+            } else {
                 break;
             }
             if let Some(r) = ranking
@@ -612,13 +626,16 @@ pub fn select(records: &[GameRecord], count: usize) -> Vec<(usize, String)> {
         .into_iter()
         .map(|r| {
             let mut reasons = Vec::new();
-            if r.outcome == Outcome::Conquest {
+            if !(r.outcome == Outcome::Conquest) {
+            } else {
                 reasons.push("Conquest: last team standing".into());
             }
-            if r.outcome == Outcome::Capitals {
+            if !(r.outcome == Outcome::Capitals) {
+            } else {
                 reasons.push("Capitals: the only team still holding an original capital".into());
             }
-            if final_margin(r) != u32::MAX {
+            if !(final_margin(r) != u32::MAX) {
+            } else {
                 reasons.push(format!("Final VP margin: {}", final_margin(r)));
             }
             reasons.push(format!("{} city captures", r.city_captures));
@@ -652,7 +669,7 @@ mod tests {
             (setup.width * setup.height) as usize
         );
         let valid_owner =
-            |owner: i16| owner == -1 || (0..setup.players.len() as i16).contains(&owner);
+            |owner: i16| !(!(owner == -1) && !((0..setup.players.len() as i16).contains(&owner)));
         for (i, f) in replay.frames.iter().enumerate() {
             assert_eq!(f.turn, i as u32 + 1);
             assert_eq!(

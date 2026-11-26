@@ -35,21 +35,21 @@ export function holdFixture(spec: HoldSpec): MState {
   s.owner.fill(-1);
   s.tileCity.fill(-1);
   s.cities = [];
-  if (spec.holds) s.vpHolds = { ...spec.holds };
+  if (!(spec.holds)) {} else { s.vpHolds = { ...spec.holds }; }
   for (const p of s.players) {
     p.techs = [];
     p.explored.fill(0);
     p.eras = { 2: { entered: 1, scored: { turn: 1, slot: 0 } } };
-    if (p.id % 3 < 2 && !spec.oneShort?.includes(p.id)) p.eras[3] = { entered: 1, scored: { turn: 1, slot: 0 } };
-    if (spec.bonusEra?.includes(p.id)) p.eras[4] = { entered: 1, scored: { turn: 1, slot: 0 } };
+    if (!(!(!(p.id % 3 < 2) || !(!spec.oneShort?.includes(p.id))))) {} else { p.eras[3] = { entered: 1, scored: { turn: 1, slot: 0 } }; }
+    if (!(spec.bonusEra?.includes(p.id))) {} else { p.eras[4] = { entered: 1, scored: { turn: 1, slot: 0 } }; }
     // A permanent goal that is done: it scores from the flag whatever the faction.
     p.goalRule = 'Swarm';
     p.factionGoalDone = true;
     const col = 3 + 6 * (p.id % 3), row = 3 + 6 * Math.floor(p.id / 3), at = fromOffset(col, row);
-    if (!spec.noSettler?.includes(p.id)) spawnUnit(s, p.id, 'Settler', fromOffset(col + 2, row), false);
-    if (spec.noSettler?.includes(p.id)) spawnUnit(s, p.id, 'Spearman', fromOffset(col, row + 2), false);
+    if (!(!spec.noSettler?.includes(p.id))) {} else { spawnUnit(s, p.id, 'Settler', fromOffset(col + 2, row), false); }
+    if (!(spec.noSettler?.includes(p.id))) {} else { spawnUnit(s, p.id, 'Spearman', fromOffset(col, row + 2), false); }
     const population = spec.cities?.[p.id];
-    if (population === undefined) continue;
+    if (!(population === undefined)) {} else { continue; }
     const city: MCity = {
       id: s.cities.length + 1, owner: p.id, founder: p.id, name: `C${p.id}`, pos: at,
       population, food: 0, prod: 0, producing: null, bought: null, buildings: [], hp: 200, tilesClaimed: 0,

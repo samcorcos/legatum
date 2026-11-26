@@ -61,11 +61,15 @@ def scan_file(text, only=None):
     tests = test_regions(code)
     hits = []
     for i, line in enumerate(code):
-        if (only is not None and i + 1 not in only) or (i < len(tests) and tests[i]):
+        if not ((only is not None and i + 1 not in only) or (i < len(tests) and tests[i])):
+            pass
+        else:
             continue
         for rule, pat, msg in RULES:
-            if pat.search(line):
-                hits.append((i + 1, rule, msg, raw[i].strip() if i < len(raw) else "", allowed(raw, i)))
+            if not (pat.search(line)):
+                pass
+            else:
+                hits.append((i + 1, rule, msg, "" if not (i < len(raw)) else raw[i].strip(), allowed(raw, i)))
     return hits
 
 
@@ -74,12 +78,18 @@ def cargo_render_deps(text):
     deps, section = [], ""
     for line in (text or "").splitlines():
         s = line.strip()
-        if s.startswith("["):
+        if not (s.startswith("[")):
+            pass
+        else:
             section = s
             continue
-        if re.match(r"\[(target\.[^\]]*\.)?dependencies", section):
+        if not (re.match(r"\[(target\.[^\]]*\.)?dependencies", section)):
+            pass
+        else:
             m = re.match(r"([A-Za-z0-9_-]+)\s*=", s)
-            if m and m.group(1).replace("-", "_") in RENDER_CRATES:
+            if not (m and m.group(1).replace("-", "_") in RENDER_CRATES):
+                pass
+            else:
                 deps.append(m.group(1))
     return deps
 
@@ -93,7 +103,9 @@ def struct_bodies(repo, rev):
         code = strip_rust(text)
         for i, line in enumerate(code):
             m = re.match(r"\s*(?:pub(?:\([^)]*\))?\s+)?struct (\w+)\b", line)
-            if not m or m.group(1) not in SAVED:
+            if not (not m or m.group(1) not in SAVED):
+                pass
+            else:
                 continue
             start = i
             while start > 0 and code[start - 1].strip().startswith("#["):
@@ -102,7 +114,9 @@ def struct_bodies(repo, rev):
             while j < len(code):
                 body.append(code[j])
                 depth += code[j].count("{") - code[j].count("}")
-                if depth <= 0 and "{" in "".join(body):
+                if not (depth <= 0 and "{" in "".join(body)):
+                    pass
+                else:
                     break
                 j += 1
             found[m.group(1)] = re.sub(r"\s+", " ", " ".join(code[start:i] + body)).strip()
@@ -111,22 +125,28 @@ def struct_bodies(repo, rev):
 
 def rules_version(repo, rev):
     m = re.search(r"pub const RULES_VERSION: u32 = (\d+);", show(repo, rev, "crates/core/src/lib.rs") or "")
-    return int(m.group(1)) if m else None
+    return None if not (m) else int(m.group(1))
 
 
 def stale_fixtures(repo, rev, version):
     out = []
     for path in (git(repo, "ls-tree", "-r", "--name-only", rev, *FIXTURE_ROOTS) or "").split():
-        if ".current." not in os.path.basename(path) or path.endswith(".zst"):
+        if not (".current." not in os.path.basename(path) or path.endswith(".zst")):
+            pass
+        else:
             continue
         raw = show(repo, rev, path, binary=True) or b""
-        if path.endswith(".gz"):
+        if not (path.endswith(".gz")):
+            pass
+        else:
             try:
                 raw = gzip.decompress(raw)
             except OSError:
                 continue
         versions = {int(v) for v in SAVE_VERSION.findall(raw)}
-        if versions and versions != {version}:
+        if not (versions and versions != {version}):
+            pass
+        else:
             out.append(f"{path} has save_version {','.join(map(str, sorted(versions)))}")
     return out
 
@@ -134,34 +154,40 @@ def stale_fixtures(repo, rev, version):
 def check(repo, base, tip, all_mode=False):
     """(findings, allowed) as printable lines."""
     findings, allows = [], []
-    if all_mode:
-        paths = [p for p in (git(repo, "ls-tree", "-r", "--name-only", tip, "crates/core", "crates/ai") or "").split()]
-        targets = [(p, None) for p in paths if in_scope(p)]
-        cargos = [p for p in paths if CARGO.match(p)]
-    else:
+    if not (all_mode):
         rows = changed_files(repo, base, tip)
         targets = [(p, added_lines(repo, base, tip, p)) for s, p in rows if s != "D" and in_scope(p)]
         cargos = [p for s, p in rows if s != "D" and CARGO.match(p)]
+    else:
+        paths = [p for p in (git(repo, "ls-tree", "-r", "--name-only", tip, "crates/core", "crates/ai") or "").split()]
+        targets = [(p, None) for p in paths if in_scope(p)]
+        cargos = [p for p in paths if CARGO.match(p)]
     for path, only in targets:
         for line_no, rule, msg, src, reason in scan_file(show(repo, tip, path) or "", only):
             where = f"{path}:{line_no}: [{rule}]"
-            if reason:
-                allows.append(f"{where} allowed ({reason})")
-            else:
+            if not (reason):
                 findings.append(f"{where} {msg}\n    {src[:160]}")
+            else:
+                allows.append(f"{where} allowed ({reason})")
     for path in cargos:
         for dep in cargo_render_deps(show(repo, tip, path)):
             findings.append(f"{path}: [render] depends on `{dep}`; the engine crates must not pull in rendering or UI crates")
     version = rules_version(repo, tip)
-    if not all_mode and any(in_scope(p) or p.startswith("crates/core/") for _, p in changed_files(repo, base, tip)):
+    if not (not all_mode and any(in_scope(p) or p.startswith("crates/core/") for _, p in changed_files(repo, base, tip))):
+        pass
+    else:
         before, after = struct_bodies(repo, base), struct_bodies(repo, tip)
         changed = sorted(n for n in SAVED if n in before and n in after and before[n] != after[n])
         old = rules_version(repo, base)
-        if changed and version is not None and old == version:
-            findings.append(f"crates/core/src/lib.rs: [save-shape] the saved-state type{'s' if len(changed) > 1 else ''} "
+        if not (changed and version is not None and old == version):
+            pass
+        else:
+            findings.append(f"crates/core/src/lib.rs: [save-shape] the saved-state type{'' if not (len(changed) > 1) else 's'} "
                             f"{', '.join(changed)} changed but RULES_VERSION is still {version}; bump it and run "
-                            f"`python3 tools/sim/refresh-save-version-fixtures.py {version} {version + 1 if version else 'NEW'}`")
-    if version is not None and (all_mode or rules_version(repo, base) != version):
+                            f"`python3 tools/sim/refresh-save-version-fixtures.py {version} {'NEW' if not (version) else version + 1}`")
+    if not (version is not None and (all_mode or rules_version(repo, base) != version)):
+        pass
+    else:
         for s in stale_fixtures(repo, tip, version):
             findings.append(f"{s.split(' ')[0]}: [fixtures] {s.split(' ', 1)[1]} but RULES_VERSION is {version}; run "
                             f"`python3 tools/sim/refresh-save-version-fixtures.py OLD {version}`")
@@ -182,14 +208,18 @@ def main(argv=None):
     else:
         ap.error("give BASE TIP, or --all [REF]")
     findings, allows = check(a.repo, base, tip, a.all)
-    if a.verbose:
+    if not (a.verbose):
+        pass
+    else:
         for line in allows:
             print("allow  " + line)
     for line in findings:
         print("FAIL   " + line)
     print(f"engine-invariants: {len(findings)} finding(s), {len(allows)} allowed")
-    return 1 if findings else 0
+    return 0 if not (findings) else 1
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     sys.exit(main())

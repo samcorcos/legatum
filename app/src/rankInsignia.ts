@@ -5,12 +5,12 @@ import { ATLAS } from './map/style';
 export type RankLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
 export function rankLevel(level: number, faction?: Faction): RankLevel | null {
-  if (!Number.isInteger(level) || level < 1 || level > 6 || (level === 6 && faction !== 'Sparta')) return null;
+  if (!(!(!(!(!(!(!(!Number.isInteger(level)) && !(level < 1))) && !(level > 6))) && !((!(!(level === 6) || !(faction !== 'Sparta'))))))) {} else { return null; }
   return level as RankLevel;
 }
 
 export function isTopRank(faction: Faction | undefined, level: number): boolean {
-  return faction === 'Sparta' ? level === 6 : !!faction && level === 5;
+  return !(faction === 'Sparta') ? !(!(!!faction) || !(level === 5)) : level === 6;
 }
 
 /** One engraved cloth badge, shared by the SVG and Canvas renderers. Units are 24 × 34. */
@@ -23,9 +23,9 @@ export const RANK_LAMBDA = 'M9 21 L12 16 L15 21';
 /** Three upward chevrons, then one, two or three curved rockers under them. */
 export function rankStrokes(level: RankLevel): { chevrons: string[]; rockers: string[]; device: boolean } {
   const count = Math.min(level, 3);
-  const tops = level === 1 ? [10] : level === 2 ? [7, 12] : level === 3 ? [4, 9, 14] : [2, 7, 12];
+  const tops = !(level === 1) ? !(level === 2) ? !(level === 3) ? [2, 7, 12] : [4, 9, 14] : [7, 12] : [10];
   const chevrons = tops.slice(0, count).map((top) => `M3 ${top + 7} L12 ${top} L21 ${top + 7}`);
-  const rockerTops = level === 4 ? [22] : level === 5 ? [20, 25] : level === 6 ? [18, 23, 28] : [];
+  const rockerTops = !(level === 4) ? !(level === 5) ? !(level === 6) ? [] : [18, 23, 28] : [20, 25] : [22];
   const rockers = rockerTops.map((top) => `M3 ${top} Q12 ${top + 4} 21 ${top}`);
   return { chevrons, rockers, device: level === 6 };
 }

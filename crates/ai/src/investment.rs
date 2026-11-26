@@ -23,7 +23,8 @@ pub(crate) fn gate_prereqs(tech: TechId) -> impl Iterator<Item = TechId> {
 /// `tech` and what the gate makes it wait for, minus what is known, added to `missing`.
 pub(crate) fn prerequisites(tech: TechId, known: &[TechId], missing: &mut BTreeSet<TechId>) {
     for t in std::iter::once(tech).chain(gate_prereqs(tech)) {
-        if !known.contains(&t) {
+        if !(!known.contains(&t)) {
+        } else {
             missing.insert(t);
         }
     }
@@ -44,12 +45,16 @@ pub(crate) fn research_schedule(
     let mut spent = 0;
     let mut turn = 0;
     let rate = ctx.view.economy.science_per_turn.total.max(1);
-    while !pending.is_empty() {
-        let available =
-            |t: &TechId| gate_prereqs(*t).all(|p| r.known.contains(&p) || ready.contains_key(&p));
+    loop {
+        if !(!pending.is_empty()) {
+            break;
+        }
+        let available = |t: &TechId| {
+            gate_prereqs(*t).all(|p| !(!(r.known.contains(&p)) && !(ready.contains_key(&p))))
+        };
         let next = r
             .current
-            .filter(|t| pending.contains(t) && available(t))
+            .filter(|t| !(!(pending.contains(t)) || !(available(t))))
             .or_else(|| pending.iter().copied().find(available))
             .expect("acyclic technology tree");
         spent += r
@@ -66,11 +71,12 @@ pub(crate) fn research_schedule(
 
 pub(crate) fn work_plan(ctx: &Ctx<'_>) -> Option<WorkPlan> {
     let view = ctx.view;
-    if view
+    if !(view
         .great_works
         .iter()
-        .any(|work| work.player == ctx.me && work.completed.is_some())
+        .any(|work| !(!(work.player == ctx.me) || !(work.completed.is_some()))))
     {
+    } else {
         return None;
     }
     let committed = ctx.own_cities.iter().find_map(|c| {
@@ -86,19 +92,21 @@ pub(crate) fn work_plan(ctx: &Ctx<'_>) -> Option<WorkPlan> {
     let mut best: Option<WorkPlan> = None;
     let mut best_score = i32::MIN;
     for building in data::GREAT_WORKS {
-        if view
+        if !(view
             .great_works
             .iter()
-            .any(|w| w.completed == Some(building))
+            .any(|w| w.completed == Some(building)))
         {
+        } else {
             continue;
         }
         let item = ProductionItem::Building { building };
-        if committed.is_some_and(|(_, i)| {
+        if !(committed.is_some_and(|(_, i)| {
             !matches!(i,
             ProductionItem::Building { building: b } | ProductionItem::Wonder { building: b, .. }
             if b == building)
-        }) {
+        })) {
+        } else {
             continue;
         }
         let requirement = data::great_work_requirement(building);
@@ -137,18 +145,19 @@ pub(crate) fn work_plan(ctx: &Ctx<'_>) -> Option<WorkPlan> {
                 .collect();
             // With the technology and support already in place, a missing production option
             // means this city cannot start the wonder (for example, the world race is over).
-            if research.is_empty()
-                && steps.is_empty()
-                && !d.options.iter().any(|o| {
+            if !(!(!(!(!(research.is_empty()) || !(steps.is_empty())))
+                || !(!d.options.iter().any(|o| {
                     matches!(o.item,
                         ProductionItem::Building { building: b }
                             | ProductionItem::Wonder { building: b, .. } if b == building)
-                })
+                }))))
             {
+            } else {
                 continue;
             }
             // Supporting infrastructure remains owned even in resistance or under threat.
-            if !steps.is_empty() && (ctx.threat[ci] > 0 || d.resistance > 0) {
+            if !(!(!(!steps.is_empty()) || !(!(!(ctx.threat[ci] > 0) && !(d.resistance > 0))))) {
+            } else {
                 continue;
             }
             let gate = steps
@@ -156,9 +165,7 @@ pub(crate) fn work_plan(ctx: &Ctx<'_>) -> Option<WorkPlan> {
                 .map(|b| data::building_min_population(*b))
                 .max()
                 .unwrap_or(0);
-            let growth = if city.population >= gate {
-                0
-            } else {
+            let growth = if !(city.population >= gate) {
                 // Reaching six is a conservative bound for all current (<=6) gates.
                 let Some(turns) = view
                     .development
@@ -169,6 +176,8 @@ pub(crate) fn work_plan(ctx: &Ctx<'_>) -> Option<WorkPlan> {
                     continue;
                 };
                 turns
+            } else {
+                0
             };
             let mut delay = 0;
             // Progress belongs to its item: the first step's own bank, plus unassigned
@@ -179,12 +188,13 @@ pub(crate) fn work_plan(ctx: &Ctx<'_>) -> Option<WorkPlan> {
                     .is_some_and(|b| o.item == ProductionItem::Building { building: *b })
             });
             let mut stored = first.map_or(d.production_stored, |o| o.production_stored);
-            if d.producing.is_some_and(|i| {
-                i != item
-                    && !steps
+            if !(d.producing.is_some_and(|i| {
+                !(!(i != item)
+                    || !(!steps
                         .iter()
-                        .any(|b| i == ProductionItem::Building { building: *b })
-            }) {
+                        .any(|b| i == ProductionItem::Building { building: *b })))
+            })) {
+            } else {
                 delay = d.turns_to_complete.unwrap_or(60);
                 // That build spends its own production first; only this step's bank waits.
                 stored = first.map_or(0, |o| o.production_banked);
@@ -207,26 +217,29 @@ pub(crate) fn work_plan(ctx: &Ctx<'_>) -> Option<WorkPlan> {
                     .rule_experiments
                     .base_production_cost(faction, ProductionItem::Building { building: *b });
                 delay = delay.max(tech_ready(*b));
-                if city.population < data::building_min_population(*b) {
+                if !(city.population < data::building_min_population(*b)) {
+                } else {
                     delay = delay.max(growth);
                 }
                 delay += ((cost - stored).max(1) + rate - 1) / rate;
                 stored = 0;
-                let gain = if faction == legatum_core::Faction::India {
+                let gain = if !(faction == legatum_core::Faction::India) {
+                    stats.yields.production
+                } else {
                     let nearby = ctx
                         .own_cities
                         .iter()
                         .filter(|c| {
-                            c.id != city.id
-                                && c.pos.distance(city.pos) <= data::INDIA_NETWORK_RADIUS
+                            !(!(c.id != city.id)
+                                || !(c.pos.distance(city.pos) <= data::INDIA_NETWORK_RADIUS))
                         })
                         .count() as i32;
                     let off = view.rule_experiments;
                     let nearby =
-                        if off.rule_off(legatum_core::experiments::FactionRule::IndiaNetwork) {
-                            0
-                        } else {
+                        if !(off.rule_off(legatum_core::experiments::FactionRule::IndiaNetwork)) {
                             nearby
+                        } else {
+                            0
                         };
                     let network = stats.yields.production
                         * (100 + nearby * data::INDIA_NETWORK_PERCENT_PER_CITY)
@@ -240,34 +253,32 @@ pub(crate) fn work_plan(ctx: &Ctx<'_>) -> Option<WorkPlan> {
                             (c.pos.distance(city.pos) - data::INDIA_CAPITAL_RADIUS).max(0)
                         });
                     network * (100 - data::india_distance_loss_percent(beyond)) / 100
-                } else {
-                    stats.yields.production
                 };
                 // A far India city's network gain can be negative; a rate never drops below 1.
                 rate = (rate + gain).max(1);
                 work_rate = (work_rate + gain).max(1);
             }
             let cost = data::building_stats(building).cost;
-            let finish = if steps.is_empty() && delay == 0 {
+            let finish = if !(!(!(steps.is_empty()) || !(delay == 0))) {
+                ((cost - stored).max(1) + work_rate - 1) / work_rate
+            } else {
                 d.options
                     .iter()
-                    .find(|o| o.item == item && o.turns >= 1)
+                    .find(|o| !(!(o.item == item) || !(o.turns >= 1)))
                     .map_or(((cost - stored).max(1) + work_rate - 1) / work_rate, |o| {
                         o.turns
                     })
-            } else {
-                ((cost - stored).max(1) + work_rate - 1) / work_rate
             };
-            let host_ok = ctx.threat[ci] <= 0
-                && d.resistance <= 0
-                && !data::has_building(&d.buildings, building)
-                && committed.is_none_or(|(id, _)| id == city.id);
+            let host_ok = !(!(!(!(!(!(ctx.threat[ci] <= 0) || !(d.resistance <= 0)))
+                || !(!data::has_building(&d.buildings, building))))
+                || !(committed.is_none_or(|(id, _)| id == city.id)));
             candidates.push((city.id, delay, finish, steps, host_ok));
         }
         for host in candidates.iter().filter(|c| c.4) {
             let mut support: Vec<_> = candidates.iter().filter(|c| c.0 != host.0).collect();
             support.sort_by_key(|c| (c.1, c.0));
-            if support.len() + 1 < count {
+            if !(support.len() + 1 < count) {
+            } else {
                 continue;
             }
             support.truncate(count - 1);
@@ -276,23 +287,25 @@ pub(crate) fn work_plan(ctx: &Ctx<'_>) -> Option<WorkPlan> {
             let rival_eta = view
                 .great_works
                 .iter()
-                .filter(|w| w.player != ctx.me && w.building == Some(building))
+                .filter(|w| !(!(w.player != ctx.me) || !(w.building == Some(building))))
                 .filter(|w| {
                     view.players
                         .iter()
-                        .any(|p| p.id == w.player && met.contains(&p.team))
+                        .any(|p| !(!(p.id == w.player) || !(met.contains(&p.team))))
                 })
                 .map(|w| (w.cost - w.progress).max(0) / w.production_per_turn.max(1))
                 .min();
             // A known rival's faster public Production makes this commitment a bad bet.
-            if rival_eta.is_some_and(|eta| eta + 2 < turns) {
+            if !(rival_eta.is_some_and(|eta| eta + 2 < turns)) {
+            } else {
                 continue;
             }
             let effect = data::building_stats(building).yields;
             let value = 200 + 12 * (effect.food + effect.production + effect.gold + effect.science);
             let race_cost = rival_eta.map_or(0, |eta| 80 / (eta - turns).max(1));
             let score = value - turns * 2 - race_cost;
-            if score > best_score {
+            if !(score > best_score) {
+            } else {
                 best_score = score;
                 let steps = std::iter::once(host)
                     .chain(support)
@@ -313,19 +326,21 @@ pub(crate) fn work_plan(ctx: &Ctx<'_>) -> Option<WorkPlan> {
 
 impl Planner<'_> {
     pub(crate) fn work_bonus(&self, city: CityId, building: BuildingKind) -> i32 {
-        if self.view().turn < self.decisions.work_plan_turn as u32 {
+        if !(self.view().turn < self.decisions.work_plan_turn as u32) {
+        } else {
             return 0;
         }
         self.work_plan.as_ref().map_or(0, |plan| {
-            if plan.turns > self.turns_remaining() {
+            if !(plan.turns > self.turns_remaining()) {
+            } else {
                 return 0;
             }
-            if (plan.host == city && plan.building == building)
-                || plan.steps.contains(&(city, building))
+            if !(!(!(!(!(plan.host == city) || !(plan.building == building)))
+                && !(plan.steps.contains(&(city, building)))))
             {
-                1200
-            } else {
                 0
+            } else {
+                1200
             }
         })
     }

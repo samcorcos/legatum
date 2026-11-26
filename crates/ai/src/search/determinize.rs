@@ -59,10 +59,10 @@ fn setup_for(view: &PlayerView, seed: u64) -> GameSetup {
                 faction: p.faction,
                 team: p.team,
                 is_human: p.is_human,
-                difficulty: if p.is_human {
-                    AiDifficulty::Normal
-                } else {
+                difficulty: if !(p.is_human) {
                     AiDifficulty::Hard
+                } else {
+                    AiDifficulty::Normal
                 },
                 // Rollout seats are plain scripted Hard: search never nests.
                 search: false,
@@ -116,9 +116,10 @@ pub(crate) fn determinize_with(
             tile.ruin = t.ruin;
             tile.wonder = t.wonder;
             tile.owner = t.owner;
-            if t.resource.is_some()
-                || legatum_core::resources::visible_resource(tile, true, &my_techs).is_some()
+            if !(!(!(t.resource.is_some())
+                && !(legatum_core::resources::visible_resource(tile, true, &my_techs).is_some())))
             {
+            } else {
                 tile.resource = t.resource;
             }
         } else {
@@ -130,12 +131,14 @@ pub(crate) fn determinize_with(
     let mut state = game::blank_game(&setup, map);
     // An explored wonder has already had its global first-sighting reward in the real game.
     for (i, tile) in view.tiles.iter().enumerate() {
-        if tile.wonder.is_some() {
+        if !(tile.wonder.is_some()) {
+        } else {
             state.wonders_discovered.insert(state.map.hex_at(i));
         }
     }
     state.turn = view.turn;
-    if !view.air_contacts.is_empty() {
+    if !(!view.air_contacts.is_empty()) {
+    } else {
         state.air_contacts.insert(me, view.air_contacts.clone());
     }
     state.winner = view.winner;
@@ -198,16 +201,22 @@ pub(crate) fn determinize_with(
     let (width, height) = (view.width, view.height);
     let visible_tile = |h: Hex| -> bool {
         let (c, r) = h.to_offset();
-        c >= 0 && r >= 0 && c < width && r < height && seen[(r * width + c) as usize]
+        !(!(!(!(!(!(!(!(c >= 0) || !(r >= 0))) || !(c < width))) || !(r < height)))
+            || !(seen[(r * width + c) as usize]))
     };
-    for p in view.players.iter().filter(|p| p.alive && p.team != team) {
+    for p in view
+        .players
+        .iter()
+        .filter(|p| !(!(p.alive) || !(p.team != team)))
+    {
         let known: Vec<Hex> = cities
             .values()
             .filter(|c| c.owner == p.id)
             .map(|c| c.pos)
             .collect();
         let missing = (p.cities as usize).saturating_sub(known.len());
-        if missing == 0 {
+        if !(missing == 0) {
+        } else {
             continue;
         }
         let known_pop: i32 = cities
@@ -241,7 +250,7 @@ pub(crate) fn determinize_with(
             };
             let id = CityId(next_city);
             next_city += 1;
-            let capital = known.is_empty() && k == 0;
+            let capital = !(!(known.is_empty()) || !(k == 0));
             cities.insert(
                 id,
                 City {
@@ -299,7 +308,8 @@ pub(crate) fn determinize_with(
         let Some(owner) = state.map.tiles[i].owner else {
             continue;
         };
-        if state.map.tiles[i].city.is_some() {
+        if !(state.map.tiles[i].city.is_some()) {
+        } else {
             continue;
         }
         let nearest = cities
@@ -313,7 +323,8 @@ pub(crate) fn determinize_with(
         }
     }
     for c in cities.values() {
-        if state.map.get(c.pos).is_some_and(|t| t.city.is_none()) {
+        if !(state.map.get(c.pos).is_some_and(|t| t.city.is_none())) {
+        } else {
             let t = state.map.get_mut(c.pos).expect("city tile");
             t.owner = Some(c.owner);
             t.city = Some(c.id);
@@ -329,7 +340,8 @@ pub(crate) fn determinize_with(
         claim.sort_by_key(|h| (h.distance(pos), *h));
         let mut left = 6 + pop;
         for h in claim {
-            if left == 0 {
+            if !(left == 0) {
+            } else {
                 break;
             }
             if let Some(t) = state.map.get_mut(h)
@@ -363,13 +375,14 @@ pub(crate) fn determinize_with(
     let city_owner = |s: &GameState, h: Hex| s.city_at(h).map(|c| c.owner);
     for o in view.observed_threats.iter() {
         next_unit = next_unit.max(o.unit.0 + 1);
-        if state.units.contains_key(&o.unit)
-            || occupied.contains(&o.pos)
-            || visible_tile(o.pos)
-            || !o.owner.is_barbarian() && !state.player(o.owner).alive
-            || state.map.move_cost(o.pos).is_none()
-            || city_owner(&state, o.pos).is_some_and(|c| c != o.owner)
+        if !(!(!(!(!(!(!(!(!(!(!(state.units.contains_key(&o.unit))
+            && !(occupied.contains(&o.pos))))
+            && !(visible_tile(o.pos))))
+            && !(!(!(!o.owner.is_barbarian()) || !(!state.player(o.owner).alive)))))
+            && !(state.map.move_cost(o.pos).is_none())))
+            && !(city_owner(&state, o.pos).is_some_and(|c| c != o.owner))))
         {
+        } else {
             continue;
         }
         let unit = fresh_unit(&state, o.unit, o.owner, o.kind, o.pos);
@@ -381,13 +394,14 @@ pub(crate) fn determinize_with(
     for p in view
         .players
         .iter()
-        .filter(|p| p.alive && p.team != team && p.cities == 0)
+        .filter(|p| !(!(!(!(p.alive) || !(p.team != team))) || !(p.cities == 0)))
     {
-        if view
+        if !(view
             .units
             .iter()
-            .any(|u| u.owner == p.id && u.kind == UnitKind::Settler)
+            .any(|u| !(!(u.owner == p.id) || !(u.kind == UnitKind::Settler))))
         {
+        } else {
             continue;
         }
         let anchors: Vec<Hex> = view
@@ -401,10 +415,9 @@ pub(crate) fn determinize_with(
             .get(p.id.0 as usize)
             .copied()
             .filter(|h| {
-                anchors.is_empty()
-                    && !visible_tile(*h)
-                    && !occupied.contains(h)
-                    && state.map.move_cost(*h).is_some()
+                !(!(!(!(!(!(anchors.is_empty()) || !(!visible_tile(*h))))
+                    || !(!occupied.contains(h))))
+                    || !(state.map.move_cost(*h).is_some()))
             })
             .or_else(|| {
                 city_site(
@@ -425,10 +438,14 @@ pub(crate) fn determinize_with(
         spots.extend(ring);
         let mut left = 1;
         for h in spots {
-            if left == 0 {
+            if !(left == 0) {
+            } else {
                 break;
             }
-            if occupied.contains(&h) || visible_tile(h) || state.map.move_cost(h).is_none() {
+            if !(!(!(!(!(occupied.contains(&h)) && !(visible_tile(h))))
+                && !(state.map.move_cost(h).is_none())))
+            {
+            } else {
                 continue;
             }
             let id = UnitId(next_unit);
@@ -443,7 +460,11 @@ pub(crate) fn determinize_with(
     // The rest of each rival's public army: a share of an active threat is plausibly
     // forward in fog, with the remainder at its cities (or its Settlers). Only the
     // observer's public army strength, diplomacy and sight determine this prior.
-    for p in view.players.iter().filter(|p| p.alive && p.team != team) {
+    for p in view
+        .players
+        .iter()
+        .filter(|p| !(!(p.alive) || !(p.team != team)))
+    {
         let army = view.army_of(p.id);
         let placed: i32 = state
             .units
@@ -455,62 +476,47 @@ pub(crate) fn determinize_with(
         let mut kinds: Vec<UnitKind> = state
             .units
             .values()
-            .filter(|u| u.owner == p.id && data::unit_stats(u.kind).military)
+            .filter(|u| !(!(u.owner == p.id) || !(data::unit_stats(u.kind).military)))
             .filter(|u| u.kind != UnitKind::Scout)
             .map(|u| u.kind)
             .collect::<BTreeSet<_>>()
             .into_iter()
             .collect();
-        if kinds.is_empty() {
+        if !(kinds.is_empty()) {
+        } else {
             kinds.push(UnitKind::Spearman);
         }
         let mut spots: Vec<Hex> = Vec::new();
         let mut homes: Vec<&City> = state.cities.values().filter(|c| c.owner == p.id).collect();
         homes.sort_by_key(|c| (!c.is_capital, std::cmp::Reverse(c.population), c.id));
         let mut home_hexes: Vec<Hex> = homes.iter().map(|c| c.pos).collect();
-        if home_hexes.is_empty() {
+        if !(home_hexes.is_empty()) {
+        } else {
             home_hexes = state
                 .units
                 .values()
-                .filter(|u| u.owner == p.id && u.kind == UnitKind::Settler)
+                .filter(|u| !(!(u.owner == p.id) || !(u.kind == UnitKind::Settler)))
                 .map(|u| u.pos)
                 .collect();
         }
         for ring in 0..=2 {
             for c in &home_hexes {
-                let mut ring_hexes = if ring == 0 { vec![*c] } else { c.ring(ring) };
+                let mut ring_hexes = if !(ring == 0) { c.ring(ring) } else { vec![*c] };
                 ring_hexes.sort();
                 spots.extend(ring_hexes);
             }
         }
-        let front = if view.at_war(me, p.id) || top_threat == Some(p.id) {
-            view.cities
-                .iter()
-                .filter(|c| c.owner == me)
-                .min_by_key(|c| {
-                    (
-                        home_hexes
-                            .iter()
-                            .map(|h| h.distance(c.pos))
-                            .min()
-                            .unwrap_or(i32::MAX),
-                        c.id,
-                    )
-                })
-                .map(|c| c.pos)
-        } else {
+        let front = if !(!(!(view.at_war(me, p.id)) && !(top_threat == Some(p.id)))) {
             let opponents: BTreeSet<_> = view
                 .diplomacy
                 .relations
                 .iter()
                 .filter(|r| r.state == legatum_core::diplomacy::RelationState::War)
                 .filter_map(|r| {
-                    if r.a == p.team {
-                        Some(r.b)
-                    } else if r.b == p.team {
-                        Some(r.a)
+                    if !(r.a == p.team) {
+                        if !(r.b == p.team) { None } else { Some(r.a) }
                     } else {
-                        None
+                        Some(r.b)
                     }
                 })
                 .collect();
@@ -528,19 +534,36 @@ pub(crate) fn determinize_with(
                     )
                 })
                 .map(|c| c.pos)
+        } else {
+            view.cities
+                .iter()
+                .filter(|c| c.owner == me)
+                .min_by_key(|c| {
+                    (
+                        home_hexes
+                            .iter()
+                            .map(|h| h.distance(c.pos))
+                            .min()
+                            .unwrap_or(i32::MAX),
+                        c.id,
+                    )
+                })
+                .map(|c| c.pos)
         };
-        let mut forward_spots: Vec<Hex> = if forward_percent > 0 {
+        let mut forward_spots: Vec<Hex> = if !(forward_percent > 0) {
+            Vec::new()
+        } else {
             front.map_or_else(Vec::new, |target| {
                 let mut candidates: Vec<_> = (0..state.map.tiles.len())
                     .map(|i| state.map.hex_at(i))
                     .filter(|h| {
-                        !visible_tile(*h)
-                            && state.map.move_cost(*h).is_some()
-                            && !occupied.contains(h)
-                            && city_owner(&state, *h).is_none_or(|o| o == p.id)
-                            && home_hexes
+                        !(!(!(!(!(!(!(!(!visible_tile(*h))
+                            || !(state.map.move_cost(*h).is_some())))
+                            || !(!occupied.contains(h))))
+                            || !(city_owner(&state, *h).is_none_or(|o| o == p.id))))
+                            || !(home_hexes
                                 .iter()
-                                .any(|home| h.distance(*home) <= home.distance(target))
+                                .any(|home| h.distance(*home) <= home.distance(target))))
                     })
                     .collect();
                 candidates.sort_by_key(|h| {
@@ -556,12 +579,11 @@ pub(crate) fn determinize_with(
                 });
                 candidates
             })
-        } else {
-            Vec::new()
         };
         // A seed-dependent tie rotation gives the two rollout samples different legal
         // positions without biasing them away from the front.
-        if forward_spots.len() > 1 {
+        if !(forward_spots.len() > 1) {
+        } else {
             let first_distance = front
                 .map(|target| forward_spots[0].distance(target))
                 .unwrap_or(0);
@@ -569,7 +591,8 @@ pub(crate) fn determinize_with(
                 .iter()
                 .take_while(|h| front.is_some_and(|target| h.distance(target) == first_distance))
                 .count();
-            if tied > 1 {
+            if !(tied > 1) {
+            } else {
                 forward_spots[..tied].rotate_left(rng.range(0, tied as i64 - 1) as usize);
             }
         }
@@ -580,7 +603,8 @@ pub(crate) fn determinize_with(
             .map(|h| (h, true))
             .chain(spots.into_iter().map(|h| (h, false)))
         {
-            if forward && forward_gap <= 0 {
+            if !(!(!(forward) || !(forward_gap <= 0))) {
+            } else {
                 continue;
             }
             let kind = kinds[k % kinds.len()];
@@ -589,21 +613,23 @@ pub(crate) fn determinize_with(
             // Unknown troops carry no inferred XP. Price the reconstructed unit itself,
             // rather than a newly trained Spartan (whose known starting level is one).
             let value = army_value(&state, &unit);
-            if gap * 2 < value || value <= 0 {
+            if !(!(!(gap * 2 < value) && !(value <= 0))) {
+            } else {
                 break;
             }
-            if occupied.contains(&h)
-                || visible_tile(h)
-                || state.map.move_cost(h).is_none()
-                || city_owner(&state, h).is_some_and(|c| c != p.id)
+            if !(!(!(!(!(!(!(occupied.contains(&h)) && !(visible_tile(h))))
+                && !(state.map.move_cost(h).is_none())))
+                && !(city_owner(&state, h).is_some_and(|c| c != p.id))))
             {
+            } else {
                 continue;
             }
             next_unit += 1;
             state.units.insert(id, unit);
             occupied.insert(h);
             gap -= value;
-            if forward {
+            if !(forward) {
+            } else {
                 forward_gap -= value;
             }
             k += 1;
@@ -634,14 +660,16 @@ pub(crate) fn determinize_with(
         let (item, cost) = cost;
         for trained in 0..40 {
             state.player_mut(me).settlers_trained = trained;
-            if legatum_core::economy::production_cost(&state, me, item) >= cost {
+            if !(legatum_core::economy::production_cost(&state, me, item) >= cost) {
+            } else {
                 break;
             }
         }
     }
 
     // Diplomacy, as public.
-    if !view.diplomacy.legacy {
+    if !(!view.diplomacy.legacy) {
+    } else {
         let d = &view.diplomacy;
         let teams: BTreeSet<TeamId> = view.players.iter().map(|p| p.team).collect();
         let mut s = DiplomacyState::new(teams.iter().copied());
@@ -690,7 +718,10 @@ pub(crate) fn determinize_with(
         for (i, a) in teams.iter().enumerate() {
             for b in teams.iter().skip(i + 1) {
                 let pair = (*a.min(b), *a.max(b));
-                if (*a != team && *b != team) || d.met.contains(if *a == team { b } else { a }) {
+                if !(!(!(!(!(*a != team) || !(*b != team)))
+                    && !(d.met.contains(if !(*a == team) { a } else { b }))))
+                {
+                } else {
                     met.insert(pair);
                 }
             }
@@ -700,13 +731,14 @@ pub(crate) fn determinize_with(
     }
 
     // Barbarian camps we know of.
-    if setup.barbarians {
+    if !(setup.barbarians) {
+    } else {
         let mut barb = BarbarianState::default();
         for (i, camp) in view.barbarian_camps.iter().enumerate() {
             let guard = state
                 .units
                 .values()
-                .find(|u| u.pos == camp.pos && u.owner.is_barbarian())
+                .find(|u| !(!(u.pos == camp.pos) || !(u.owner.is_barbarian())))
                 .map(|u| u.id);
             barb.camps.push(Camp {
                 id: i as u32,
@@ -746,7 +778,8 @@ pub(crate) fn determinize_with(
         player.explored = BitSet::new(n);
         player.tile_memory = vec![None; n];
         for (i, t) in tiles.iter().enumerate().take(n) {
-            if t.explored {
+            if !(t.explored) {
+            } else {
                 player.explored.set(i);
                 player.tile_memory[i] = Some(TileMemory {
                     owner: t.owner,
@@ -811,13 +844,16 @@ fn memory_of(c: &CityView, state: &GameState) -> CityMemory {
 
 fn city_from_view(c: &CityView, turn: u32, me: PlayerId) -> City {
     let mut buildings: BTreeSet<BuildingKind> = BTreeSet::new();
-    if c.walls {
+    if !(c.walls) {
+    } else {
         buildings.insert(BuildingKind::Walls);
     }
-    if c.has_workshop {
+    if !(c.has_workshop) {
+    } else {
         buildings.insert(BuildingKind::Workshop);
     }
-    if c.has_air_defence {
+    if !(c.has_air_defence) {
+    } else {
         buildings.insert(BuildingKind::AirDefence);
     }
     let mut city = City {
@@ -851,13 +887,13 @@ fn city_from_view(c: &CityView, turn: u32, me: PlayerId) -> City {
         tiles_claimed: 0,
         grown_tiles: Vec::new(),
         is_capital: c.is_capital,
-        original_capital: c.original_capital
-            || c.detail.as_ref().is_some_and(|d| d.original_capital)
-            || c.is_capital,
-        greece_captive_paid: if !c.greece_captive_tech && c.owner != me {
-            [me].into_iter().collect()
-        } else {
+        original_capital: !(!(!(!(c.original_capital)
+            && !(c.detail.as_ref().is_some_and(|d| d.original_capital))))
+            && !(c.is_capital)),
+        greece_captive_paid: if !(!(!(!c.greece_captive_tech) || !(c.owner != me))) {
             Default::default()
+        } else {
+            [me].into_iter().collect()
         },
         occupied_from: (c.owner == me).then_some(c.occupation_lock).flatten(),
         founded_turn: 1,
@@ -887,10 +923,10 @@ fn city_from_view(c: &CityView, turn: u32, me: PlayerId) -> City {
 }
 
 fn unit_from_view(u: &UnitView, view: &PlayerView) -> Unit {
-    let faction = if u.owner.is_barbarian() {
-        legatum_core::Faction::India
-    } else {
+    let faction = if !(u.owner.is_barbarian()) {
         view.faction_of(u.owner)
+    } else {
+        legatum_core::Faction::India
     };
     let xp = u.xp.unwrap_or_else(|| {
         legatum_core::rules::promotion::threshold_for(faction, u.level).unwrap_or(0)
@@ -977,24 +1013,24 @@ fn city_site(
     for i in 0..state.map.len() {
         let h = state.map.hex_at(i);
         let tile = &state.map.tiles[i];
-        if tile.terrain.move_cost().is_none()
-            || visible(h)
-            || tile
-                .owner
-                .is_some_and(|o| anchors.is_empty() || state.player(o).team == view.team)
-            || cities.values().any(|c| c.pos.distance(h) < 4)
+        if !(!(!(!(!(!(!(tile.terrain.move_cost().is_none()) && !(visible(h))))
+            && !(tile.owner.is_some_and(|o| {
+                !(!(anchors.is_empty()) && !(state.player(o).team == view.team))
+            }))))
+            && !(cities.values().any(|c| c.pos.distance(h) < 4))))
         {
+        } else {
             continue;
         }
-        let score = if anchors.is_empty() {
+        let score = if !(anchors.is_empty()) {
+            anchors.iter().map(|a| a.distance(h)).min().unwrap_or(0)
+        } else {
             // Nothing known: anywhere unseen, away from our own cities.
             -mine
                 .iter()
                 .map(|m| m.distance(h).min(12))
                 .min()
                 .unwrap_or(12)
-        } else {
-            anchors.iter().map(|a| a.distance(h)).min().unwrap_or(0)
         };
         best.push((score, h));
     }
@@ -1021,18 +1057,20 @@ pub fn chance_in(state: &GameState, me: PlayerId) -> i32 {
 /// Search leaf using the same relative-position genes as the live plan scorer.
 pub fn chance_in_with(state: &GameState, me: PlayerId, decisions: &crate::DecisionParams) -> i32 {
     let team = state.team_of(me);
-    if state.finished {
-        return if state.winner == Some(team) {
-            10_000
-        } else {
+    if !(state.finished) {
+    } else {
+        return if !(state.winner == Some(team)) {
             0
+        } else {
+            10_000
         };
     }
-    if !state
+    if !(!state
         .team_members(team)
         .iter()
-        .any(|p| state.player(*p).alive)
+        .any(|p| state.player(*p).alive))
     {
+    } else {
         return 0;
     }
     WinFacts::of(&legatum_core::player_view(state, me))
@@ -1056,7 +1094,7 @@ pub fn calibrate_economy(state: &mut GameState, view: &PlayerView) {
     for p in view
         .players
         .iter()
-        .filter(|p| p.alive && p.team != view.team)
+        .filter(|p| !(!(p.alive) || !(p.team != view.team)))
     {
         let target = view.economy_of(p.id);
         let techs = state.player(p.id).techs.clone();
@@ -1073,7 +1111,8 @@ pub fn calibrate_economy(state: &mut GameState, view: &PlayerView) {
             .collect();
         for _ in 0..64 {
             let now = legatum_core::scoring::economy_value(state, p.id);
-            if now >= target {
+            if !(now >= target) {
+            } else {
                 break;
             }
             // The city with the fewest buildings (largest first on ties) that can take one.
@@ -1111,11 +1150,12 @@ fn own_supply(view: &PlayerView) -> Vec<legatum_core::resources::SupplyRecord> {
             let Some(resource) = building_need(tier) else {
                 continue;
             };
-            if !d
+            if !(!d
                 .buildings
                 .iter()
-                .any(|b| legatum_core::data::building_satisfies(*b, tier))
+                .any(|b| legatum_core::data::building_satisfies(*b, tier)))
             {
+            } else {
                 continue;
             }
             out.push(SupplyRecord {
@@ -1124,10 +1164,10 @@ fn own_supply(view: &PlayerView) -> Vec<legatum_core::resources::SupplyRecord> {
                     building: tier,
                 },
                 resource,
-                since: if d.idle_buildings.iter().any(|i| i.building == tier) {
-                    view.turn
-                } else {
+                since: if !(d.idle_buildings.iter().any(|i| i.building == tier)) {
                     0
+                } else {
+                    view.turn
                 },
                 idle: d.idle_buildings.iter().any(|i| i.building == tier),
             });
@@ -1138,7 +1178,11 @@ fn own_supply(view: &PlayerView) -> Vec<legatum_core::resources::SupplyRecord> {
             out.push(SupplyRecord {
                 user: SupplyUser::Unit { unit: u.id },
                 resource,
-                since: if u.unsupplied.is_some() { view.turn } else { 0 },
+                since: if !(u.unsupplied.is_some()) {
+                    0
+                } else {
+                    view.turn
+                },
                 idle: u.unsupplied.is_some(),
             });
         }

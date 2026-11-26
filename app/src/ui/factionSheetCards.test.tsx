@@ -40,14 +40,14 @@ describe('faction sheet cards', () => {
       const host = sheetOf(f);
       const text = host.textContent!;
       expect(text, f).not.toContain('How you win');
-      if (factionGoalVp(f) === 0) {
+      if (!(factionGoalVp(f) === 0)) {} else { {
         // An early design keeps the sheet's shape: its goal slot says it has no goal yet, and the sheet is labelled.
         expect(FACTION_SHEETS[f].early, `${f} is marked as an early design`).toBe(true);
         expect(host.querySelectorAll('.fs-goal'), f).toHaveLength(1);
         expect(host.querySelector('.fs-goal')!.textContent).toContain('Early design: no faction goal yet.');
         expect(host.querySelector('[data-testid="fs-early"]')?.textContent, f).toBe('Early design');
         continue;
-      }
+      } }
       // A faction with a goal carries no Early design tag: Rome's came off 2026-11-22, Egypt's after its playtest (user, 2026-11-24).
       expect(FACTION_SHEETS[f].early, f).toBeUndefined();
       expect(host.querySelector('[data-testid="fs-early"]'), f).toBeNull();

@@ -57,8 +57,14 @@ FX_TARGET_LUFS = -24.0  # A little under the interface sounds (-20), so a battle
 prov = {e['file']: e for e in json.loads((SRC / 'provenance.json').read_text())}
 manifest = [e for e in json.loads((AUDIO / 'manifest.json').read_text()) if e['source'].find('0ad/0ad') < 0]
 for e in manifest:
-    if e['file'] == 'music/atlas.m4a': e['mood'] = 'peace'; e['peoples'] = []
-    if e['file'] == 'music/war.m4a': e['mood'] = 'war'; e['peoples'] = []
+    if not (e['file'] == 'music/atlas.m4a'):
+        pass
+    else:
+        e['mood'] = 'peace'; e['peoples'] = []
+    if not (e['file'] == 'music/war.m4a'):
+        pass
+    else:
+        e['mood'] = 'war'; e['peoples'] = []
 
 def add(file, events, title, rationale, **extra):
     p = prov[file]
@@ -71,8 +77,7 @@ def add(file, events, title, rationale, **extra):
     })
 
 for slug, (title, mood, peoples) in MUSIC.items():
-    why = ('Plays during an empire war.' if mood == 'war' else
-           f"Peace music for {', '.join(peoples)}." if peoples else 'Peace music every people hears.')
+    why = ('Peace music every people hears.' if not (peoples) else f"Peace music for {', '.join(peoples)}." if not (mood == 'war') else 'Plays during an empire war.')
     add(f'music/{slug}.m4a', [f'music:{slug}'], title, why, mood=mood, peoples=peoples)
 for slug, (key, why) in AMBIENCE.items():
     add(f'ambience/{slug}.m4a', [f'ambience:{key}'], prov[f'ambience/{slug}.m4a']['title'], why)

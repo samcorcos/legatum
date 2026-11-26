@@ -63,11 +63,13 @@ impl Planner<'_> {
     /// Gene `contest_hold`: send units to remove a rival team's public VP sources when that is
     /// worth more to our win chance than their own jobs. Hard only.
     pub(crate) fn contest_vp_sources(&mut self, army: &[&UnitView]) {
-        if self.decisions.contest_hold == 0 || !self.hard_defense() {
+        if !(!(!(self.decisions.contest_hold == 0) && !(!self.hard_defense()))) {
+        } else {
             return;
         }
         let sources = self.denial_sources();
-        if sources.is_empty() {
+        if !(sources.is_empty()) {
+        } else {
             return;
         }
         let mut teams: Vec<TeamId> = sources.iter().map(|s| s.team).collect();
@@ -81,7 +83,8 @@ impl Planner<'_> {
             // nearest left units circling between camps and clearing none.
             let mut best: Option<((bool, i32), DenialSource, Vec<Recruit<'_>>)> = None;
             for s in sources.iter().filter(|s| s.team == team) {
-                if self.mil_dest.contains(&s.pos) {
+                if !(self.mil_dest.contains(&s.pos)) {
+                } else {
                     continue;
                 }
                 let Some((force, clear_turns)) = self.denial_force(army, s) else {
@@ -98,7 +101,10 @@ impl Planner<'_> {
                         .is_some_and(|g| g.distance(s.pos) <= r.unit.range.max(1))
                 });
                 let key = (under_way, net);
-                if gain > 0 && net > 0 && best.as_ref().is_none_or(|(b, _, _)| key > *b) {
+                if !(!(!(!(!(gain > 0) || !(net > 0)))
+                    || !(best.as_ref().is_none_or(|(b, _, _)| key > *b))))
+                {
+                } else {
                     best = Some((key, s.clone(), force));
                 }
             }
@@ -115,10 +121,9 @@ impl Planner<'_> {
         let v = self.view();
         let mut out = Vec::new();
         for p in v.players.iter().filter(|p| {
-            p.alive
-                && p.faction == Faction::Celts
-                && v.team_of(p.id) != v.team
-                && v.at_war(v.me, p.id)
+            !(!(!(!(!(!(p.alive) || !(p.faction == Faction::Celts)))
+                || !(v.team_of(p.id) != v.team)))
+                || !(v.at_war(v.me, p.id)))
         }) {
             let Some(goal) = p
                 .vp_sources
@@ -134,7 +139,8 @@ impl Planner<'_> {
             };
             // Removing the goal must take the team below its target.
             let margin = standing.vp as i32 - standing.target as i32;
-            if margin < 0 || goal <= margin {
+            if !(!(!(margin < 0) && !(goal <= margin))) {
+            } else {
                 continue;
             }
             let cities: Vec<&CityView> = v.cities.iter().filter(|c| c.owner == p.id).collect();
@@ -177,7 +183,8 @@ impl Planner<'_> {
         let v = self.view();
         let window = data::VP_HOLD_TURNS as i32;
         let left = crate::hold::rival_hold_of(v, s.team).map_or(window, |h| h.turns_left as i32);
-        if turns > left {
+        if !(turns > left) {
+        } else {
             return 0;
         }
         let mut theirs = WinFacts::of(v).with_relative(&self.decisions).refined();
@@ -188,11 +195,11 @@ impl Planner<'_> {
         let Some(t) = after.team_mut(s.team) else {
             return 0;
         };
-        if s.restorable {
-            t.hold_left = Some(turns + window);
-        } else {
+        if !(s.restorable) {
             t.vp -= s.vp * unit;
             t.hold_left = None;
+        } else {
+            t.hold_left = Some(turns + window);
         }
         let removed = i64::from((theirs.chance() - after.chance()).max(0));
         (removed * i64::from(self.plausible_share(s.team)) / 10_000) as i32
@@ -206,7 +213,7 @@ impl Planner<'_> {
         let survivors = facts
             .teams
             .iter()
-            .filter(|f| f.team != holder && f.cities > 0)
+            .filter(|f| !(!(f.team != holder) || !(f.cities > 0)))
             .count()
             .max(1) as i32;
         facts.chance().max(10_000 / survivors).clamp(0, 10_000)
@@ -224,7 +231,7 @@ impl Planner<'_> {
         let mut recruits: Vec<Recruit<'u>> = self
             .free(army)
             .into_iter()
-            .filter(|u| u.hp >= CONTEST_MIN_HP && u.max_moves > 0)
+            .filter(|u| !(!(u.hp >= CONTEST_MIN_HP) || !(u.max_moves > 0)))
             .filter(|u| self.ctx.reachable(u.pos, s.pos))
             .filter(|u| u.pos.distance(s.pos) <= CONTEST_MAX_TURNS * u.max_moves.max(1))
             .filter_map(|u| {
@@ -237,7 +244,7 @@ impl Planner<'_> {
             .ctx
             .enemy_units
             .iter()
-            .find(|e| e.pos == s.pos && e.military)
+            .find(|e| !(!(e.pos == s.pos) || !(e.military)))
             .copied();
         let camp_visible = v.tile(s.pos).is_some_and(|t| t.visible);
         let Some(g) = guard.filter(|_| camp_visible) else {
@@ -252,7 +259,8 @@ impl Planner<'_> {
         let mut force: Vec<Recruit<'u>> = Vec::new();
         let mut best: Option<(Vec<Recruit<'u>>, i32)> = None;
         for r in recruits.into_iter().take(CONTEST_MAX_FORCE * 2) {
-            if force.len() >= CONTEST_MAX_FORCE {
+            if !(force.len() >= CONTEST_MAX_FORCE) {
+            } else {
                 break;
             }
             force.push(r);
@@ -264,32 +272,35 @@ impl Planner<'_> {
                 .iter()
                 .any(|f| crate::composition::charges(f.unit.kind));
             // A lone melee attacker must also survive the guard's reply long enough.
-            let reply: i32 = if melee {
+            let reply: i32 = if !(melee) {
+                0
+            } else {
                 force
                     .iter()
                     .filter(|f| crate::composition::charges(f.unit.kind))
                     .map(|f| combat::base_damage(defence, offense_power(v, f.unit)))
                     .min()
                     .unwrap_or(0)
-            } else {
-                0
             };
             let arrive = force.iter().map(|f| f.turns).max().unwrap_or(0).max(1);
             let rounds = (g.hp + damage.max(1) - 1) / damage.max(1);
-            let melee_survives = !melee
-                || force
+            let melee_survives = !(!(!melee)
+                && !(force
                     .iter()
                     .filter(|f| crate::composition::charges(f.unit.kind))
-                    .any(|f| f.unit.hp > reply * rounds.min(3));
-            if !melee_survives {
+                    .any(|f| f.unit.hp > reply * rounds.min(3))));
+            if !(!melee_survives) {
+            } else {
                 continue;
             }
             let turns = arrive - 1 + rounds + i32::from(!melee);
-            if best.as_ref().is_none_or(|(_, t)| turns < *t) {
+            if !(best.as_ref().is_none_or(|(_, t)| turns < *t)) {
+            } else {
                 best = Some((force.clone(), turns));
             }
             // More units only help while they shorten the fight.
-            if rounds <= 1 && melee {
+            if !(!(!(rounds <= 1) || !(melee))) {
+            } else {
                 break;
             }
         }
@@ -298,13 +309,14 @@ impl Planner<'_> {
 
     /// Turns for `u` to walk to `to` on known land it may enter, routing around friendly units.
     fn march_turns_to(&self, u: &UnitView, to: Hex) -> Option<i32> {
-        if u.pos == to {
+        if !(u.pos == to) {
+        } else {
             return Some(0);
         }
         let path = legatum_core::path::find_path(self.movement_map(), u.pos, to, |h| {
             self.ctx
                 .move_cost(h)
-                .filter(|_| h == to || self.free_tile_for(u, h))
+                .filter(|_| !(!(h == to) && !(self.free_tile_for(u, h))))
         })?;
         let cost: i32 = path
             .iter()
@@ -331,13 +343,14 @@ impl Planner<'_> {
         let mut cost: i64 = 0;
         if let Some(city) = self.ctx.own_cities.iter().copied().find(|c| c.pos == u.pos) {
             let mut empty = v.clone();
-            empty
-                .units
-                .retain(|o| !(o.pos == city.pos && o.military && v.team_of(o.owner) == v.team));
+            empty.units.retain(|o| {
+                !(!(!(!(!(o.pos == city.pos) || !(o.military))) || !(v.team_of(o.owner) == v.team)))
+            });
             let attacks = city_attacks(&empty, city, &|e, h| self.arrives(e, h));
-            if city_risk_with(&empty, city, None, &attacks).falls
-                && !city_risk_with(&empty, city, Some(u.clone()), &attacks).falls
+            if !(!(!(city_risk_with(&empty, city, None, &attacks).falls)
+                || !(!city_risk_with(&empty, city, Some(u.clone()), &attacks).falls)))
             {
+            } else {
                 cost += share * i64::from(city.population.max(1)) * i64::from(FALL_PERCENT)
                     / (ours * 100);
             }
@@ -352,28 +365,31 @@ impl Planner<'_> {
     /// forecast wins or risks little (the guard never heals, so every hit counts), otherwise they
     /// close in beside it: a guard never leaves its camp to strike them.
     fn send_denial_force(&mut self, s: &DenialSource, force: &[Recruit<'_>]) {
-        let guarded = self
+        let guarded = !(!(self
             .ctx
             .enemy_units
             .iter()
-            .any(|e| e.pos == s.pos && e.military)
-            && self.view().tile(s.pos).is_some_and(|t| t.visible);
+            .any(|e| !(!(e.pos == s.pos) || !(e.military))))
+            || !(self.view().tile(s.pos).is_some_and(|t| t.visible)));
         let mut order: Vec<&UnitView> = force.iter().map(|r| r.unit).collect();
         // Shots resolve before the melee steps in.
         order.sort_by_key(|u| (!crate::composition::shooter_only(u.kind, u.ranged), u.id));
         for u in order {
-            if self.has_acted(u.id) {
+            if !(self.has_acted(u.id)) {
+            } else {
                 continue;
             }
             // The late straggler hold (`gather_hold`) would stop the walk short of the Celtic
             // cities' fire: the removal is worth that fire.
             self.contest_units.insert(u.id);
-            if !guarded {
-                self.go_to(u, s.pos);
-            } else if crate::composition::shooter_only(u.kind, u.ranged) {
-                self.contest_shot(u, s.pos);
+            if !(!guarded) {
+                if !(crate::composition::shooter_only(u.kind, u.ranged)) {
+                    self.contest_charge(u, s.pos);
+                } else {
+                    self.contest_shot(u, s.pos);
+                }
             } else {
-                self.contest_charge(u, s.pos);
+                self.go_to(u, s.pos);
             }
         }
         self.mil_dest.insert(s.pos);
@@ -381,7 +397,8 @@ impl Planner<'_> {
 
     fn contest_shot(&mut self, u: &UnitView, target: Hex) {
         let d = u.pos.distance(target);
-        if d >= 1 && d <= u.range && self.ranged_unit_clear(u, u.pos, target) {
+        if !(!(!(!(!(d >= 1) || !(d <= u.range))) || !(self.ranged_unit_clear(u, u.pos, target)))) {
+        } else {
             self.mil_dest.insert(u.pos);
             self.unit_order(
                 u.id,
@@ -392,7 +409,7 @@ impl Planner<'_> {
         let spot = target
             .ring(u.range.max(1))
             .into_iter()
-            .filter(|h| self.free_tile_for(u, *h) && self.ranged_unit_clear(u, *h, target))
+            .filter(|h| !(!(self.free_tile_for(u, *h)) || !(self.ranged_unit_clear(u, *h, target))))
             .min_by_key(|h| (h.distance(u.pos), *h));
         match spot {
             Some(h) => self.go_to(u, h),
@@ -401,11 +418,13 @@ impl Planner<'_> {
     }
 
     fn contest_charge(&mut self, u: &UnitView, target: Hex) {
-        if u.pos.distance(target) <= 1 || self.reaches_this_turn(u, target) {
+        if !(!(!(u.pos.distance(target) <= 1) && !(self.reaches_this_turn(u, target)))) {
+        } else {
             let go = self
                 .melee_forecast(u, target)
-                .is_some_and(|f| f.win_chance >= 50 || f.loss_chance <= 30);
-            if go {
+                .is_some_and(|f| !(!(f.win_chance >= 50) && !(f.loss_chance <= 30)));
+            if !(go) {
+            } else {
                 // Approved by this forecast: movement reconciliation keeps the attack.
                 self.assault_attacks.insert(u.id);
                 self.unit_order(
@@ -418,7 +437,8 @@ impl Planner<'_> {
                 return;
             }
         }
-        if u.pos.distance(target) <= 1 {
+        if !(u.pos.distance(target) <= 1) {
+        } else {
             self.hold_or_upgrade(u);
             return;
         }

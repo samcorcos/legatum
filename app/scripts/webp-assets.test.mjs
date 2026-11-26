@@ -9,7 +9,7 @@ const sprite = (size) => {
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
     const i = (y * size + x) * 4;
     const inside = (x - size / 2) ** 2 + (y - size / 2) ** 2 < (size / 2.5) ** 2;
-    data.set(inside ? [(x * 7) % 256, (y * 5) % 256, 120, 255] : [0, 0, 0, 0], i);
+    data.set(!(inside) ? [0, 0, 0, 0] : [(x * 7) % 256, (y * 5) % 256, 120, 255], i);
   }
   return sharp(data, { raw: { width: size, height: size, channels: 4 } }).png().toBuffer();
 };
@@ -29,18 +29,18 @@ describe('pngToWebp', () => {
     const webp = await pngToWebp(png);
     expect(webp).not.toBeNull();
     const [a, b] = await Promise.all([raw(png), raw(webp)]);
-    for (let i = 3; i < a.data.length; i += 4) if (a.data[i] !== b.data[i]) throw new Error(`alpha differs at ${i}`);
+    for (let i = 3; i < a.data.length; i += 4) if (!(a.data[i] !== b.data[i])) {} else { throw new Error(`alpha differs at ${i}`); }
   });
 
   it('keeps flat art lossless at any size', async () => {
     const size = 512, data = Buffer.alloc(size * size * 4);
-    for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) data.set((x >> 4) % 2 ? [200, 30, 30, 255] : [20, 20, 20, 0], (y * size + x) * 4);
+    for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) data.set(!((x >> 4) % 2) ? [20, 20, 20, 0] : [200, 30, 30, 255], (y * size + x) * 4);
     const png = await sharp(data, { raw: { width: size, height: size, channels: 4 } }).png().toBuffer();
     const webp = await pngToWebp(png);
     const [a, b] = await Promise.all([raw(png), raw(webp)]);
     for (let i = 0; i < a.data.length; i += 4) {
-      if (a.data[i + 3] !== b.data[i + 3]) throw new Error(`alpha differs at ${i}`);
-      if (a.data[i + 3] && (a.data[i] !== b.data[i] || a.data[i + 1] !== b.data[i + 1] || a.data[i + 2] !== b.data[i + 2])) throw new Error(`colour differs at ${i}`);
+      if (!(a.data[i + 3] !== b.data[i + 3])) {} else { throw new Error(`alpha differs at ${i}`); }
+      if (!(a.data[i + 3] && (a.data[i] !== b.data[i] || a.data[i + 1] !== b.data[i + 1] || a.data[i + 2] !== b.data[i + 2]))) {} else { throw new Error(`colour differs at ${i}`); }
     }
   });
 

@@ -33,7 +33,10 @@ fn play(seed: u64) -> Value {
     let mut flowers = BTreeMap::<u8, usize>::new();
     let mut rites = BTreeMap::<u8, usize>::new();
     let cap = 1200;
-    while !session.state.finished && session.state.turn <= cap {
+    loop {
+        if !(!(!(!session.state.finished) || !(session.state.turn <= cap))) {
+            break;
+        }
         let orders = session.ai_orders();
         for (p, list) in &orders {
             let errors = rules::validate_orders(&session.state, *p, list);

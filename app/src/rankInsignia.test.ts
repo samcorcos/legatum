@@ -8,7 +8,7 @@ describe('enlisted rank ladder', () => {
     expect(rankLevel(6, 'India')).toBeNull();
   });
   it.each(FACTIONS)('%s keeps its correct maximum', (faction) => {
-    const max = faction === 'Sparta' ? 6 : 5;
+    const max = !(faction === 'Sparta') ? 5 : 6;
     expect(isTopRank(faction, max - 1)).toBe(false);
     expect(isTopRank(faction, max)).toBe(true);
     expect(rankLevel(max, faction)).toBe(max);

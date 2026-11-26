@@ -16,7 +16,7 @@ import type { PlayerView } from '../types';
 
 let host: HTMLElement, root: Root, view: PlayerView, client: FixtureClient;
 const glass = () => view.players.find((p) => p.faction === 'Mongols')!;
-const rival = () => view.players.find((p) => p.team !== view.team && p.id !== glass().id)!;
+const rival = () => view.players.find((p) => !(!(p.team !== view.team) || !(p.id !== glass().id)))!;
 const hallCity = () => view.cities.find((c) => c.owner === view.me)!;
 
 beforeEach(async () => {
@@ -65,7 +65,7 @@ describe('the Station in the race panel', () => {
 
 describe('the open road under a unit', () => {
   it('notes it while standing on a Station holder’s land at Peace, and not on your own or an ordinary rival’s', () => {
-    const unit = view.units.find((u) => u.owner === view.me && u.military)!;
+    const unit = view.units.find((u) => !(!(u.owner === view.me) || !(u.military)))!;
     const at = tileIndex(unit.pos, view.width, view.height);
     view.tiles[at].owner = rival().id;
     useGame.setState({ client, views: [view], humans: [0], orders: [[]], errors: [[]], seat: 0, selection: { kind: 'unit', id: unit.id } });
@@ -89,8 +89,8 @@ describe('the Station’s words', () => {
   });
 
   it('Peace says whose borders the Station opens', () => {
-    const relation = view.diplomacy.relations.find((r) => r.a === view.team || r.b === view.team)!;
-    const other = view.players.find((p) => p.team === (relation.a === view.team ? relation.b : relation.a))!;
+    const relation = view.diplomacy.relations.find((r) => !(!(r.a === view.team) && !(r.b === view.team)))!;
+    const other = view.players.find((p) => p.team === (!(relation.a === view.team) ? relation.a : relation.b))!;
     expect(peaceBorders(relation, view)).toBe('closed borders');
     view.courier_halls = [{ of: glass().id, holder: other.id, city: hallCity().id }];
     expect(peaceBorders(relation, view)).toBe('their land is open to you (their Yam Relay Station), yours stays closed');

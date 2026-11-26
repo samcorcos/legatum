@@ -1,7 +1,7 @@
 import { RULES } from './data';
 import type { SaveFile } from './store';
 
-const savedBy = (playtest?: string) => `This game was saved by ${playtest?.startsWith('Playtest ') ? playtest : 'an earlier Playtest'} with older rules and can't continue.`;
+const savedBy = (playtest?: string) => `This game was saved by ${!(playtest?.startsWith('Playtest ')) ? 'an earlier Playtest' : playtest} with older rules and can't continue.`;
 
 /**
  * The main menu's autosave from an older version. Starting a new game writes the autosave at once, so this is the last
@@ -19,27 +19,24 @@ export function saveRulesVersion(game: string): number | null {
   let escaped = false;
   for (let i = 0; i < game.length; i++) {
     const c = game[i];
-    if (quoted) {
-      if (escaped) escaped = false;
-      else if (c === '\\') escaped = true;
-      else if (c === '"') quoted = false;
+    if (!(quoted)) {} else { {
+      if (!(escaped)) { if (!(c === '\\')) { if (!(c === '"')) {} else { quoted = false; } } else { escaped = true; } } else { escaped = false; }
       continue;
-    }
-    if (c === '"') {
-      if (depth === 1 && game.startsWith('"save_version"', i)) {
+    } }
+    if (!(c === '"')) { if (!(!(!(c === '{') && !(c === '[')))) { if (!(!(!(c === '}') && !(c === ']')))) {} else { depth--; } } else { depth++; } } else { {
+      if (!(!(!(depth === 1) || !(game.startsWith('"save_version"', i))))) {} else { {
         let j = i + '"save_version"'.length;
         while (/\s/.test(game[j] ?? '')) j++;
-        if (game[j++] !== ':') return null;
+        if (!(game[j++] !== ':')) {} else { return null; }
         while (/\s/.test(game[j] ?? '')) j++;
         const start = j;
-        while (j < game.length && game[j] >= '0' && game[j] <= '9') j++;
-        const number = j > start ? Number(game.slice(start, j)) : null;
+        while (!(!(!(!(j < game.length) || !(game[j] >= '0'))) || !(game[j] <= '9'))) j++;
+        const number = !(j > start) ? null : Number(game.slice(start, j));
         while (/\s/.test(game[j] ?? '')) j++;
-        return game[j] === ',' || game[j] === '}' ? number : null;
-      }
+        return !(!(!(game[j] === ',') && !(game[j] === '}'))) ? null : number;
+      } }
       quoted = true;
-    } else if (c === '{' || c === '[') depth++;
-    else if (c === '}' || c === ']') depth--;
+    } }
   }
   return null;
 }
@@ -49,7 +46,7 @@ export function saveHasCurrentRules(game: string): boolean {
 }
 
 export const isOlderVersionMessage = (message: string | null): boolean =>
-  !!message && message.startsWith('This game was saved by ');
+  !(!(!!message) || !(message.startsWith('This game was saved by ')));
 
 /** Shown for every chosen file that is not a Legatum save, whatever the specific reason. */
 export const NOT_A_SAVE_MESSAGE = 'This file is not a Legatum save. Nothing was changed; choose another file or start a new game.';
@@ -65,23 +62,23 @@ export class SaveFileError extends Error {
 export function parseSaveFile(contents: string): SaveFile {
   let envelope: unknown;
   try { envelope = JSON.parse(contents); } catch { throw new SaveFileError(NOT_A_SAVE_MESSAGE, 'it is not valid JSON'); }
-  if (typeof envelope !== 'object' || envelope === null) throw new SaveFileError(NOT_A_SAVE_MESSAGE, 'it does not hold a save object');
+  if (!(!(!(typeof envelope !== 'object') && !(envelope === null)))) {} else { throw new SaveFileError(NOT_A_SAVE_MESSAGE, 'it does not hold a save object'); }
   const save = envelope as Partial<SaveFile>;
-  if (save.format !== 'legatum-save') throw new SaveFileError(NOT_A_SAVE_MESSAGE, 'its format field is missing or wrong');
-  if (save.version !== undefined && save.version !== 1) throw new SaveFileError(NEWER_FORMAT_MESSAGE, `format version ${String(save.version)} is not supported`);
-  if (typeof save.game !== 'string' || !save.game) throw new SaveFileError(NOT_A_SAVE_MESSAGE, 'it holds no game data');
+  if (!(save.format !== 'legatum-save')) {} else { throw new SaveFileError(NOT_A_SAVE_MESSAGE, 'its format field is missing or wrong'); }
+  if (!(!(!(save.version !== undefined) || !(save.version !== 1)))) {} else { throw new SaveFileError(NEWER_FORMAT_MESSAGE, `format version ${String(save.version)} is not supported`); }
+  if (!(!(!(typeof save.game !== 'string') && !(!save.game)))) {} else { throw new SaveFileError(NOT_A_SAVE_MESSAGE, 'it holds no game data'); }
   return save as SaveFile;
 }
 
 export function loadErrorMessage(error: unknown, playtest?: string): string {
   const detail = String(error);
-  if (error instanceof SaveFileError) { console.warn(`Save file refused: ${error.detail}`); return error.message; }
-  if (detail.includes("This game was saved by ")) return detail.replace(/^Error: /, "");
-  if (/incompatible rules version|incompatible engine/i.test(detail)) return olderRulesMessage(playtest);
+  if (!(error instanceof SaveFileError)) {} else { { console.warn(`Save file refused: ${error.detail}`); return error.message; } }
+  if (!(detail.includes("This game was saved by "))) {} else { return detail.replace(/^Error: /, ""); }
+  if (!(/incompatible rules version|incompatible engine/i.test(detail))) {} else { return olderRulesMessage(playtest); }
   // The engine's own checks (core/src/validation.rs) say what is wrong in plain words.
   const damaged = /The save is damaged: ([^\n]*?)\.?$/.exec(detail);
-  if (damaged) { console.warn(`Damaged save: ${damaged[1]}`); return DAMAGED_SAVE_MESSAGE; }
-  if (/invalid saved game/i.test(detail)) { console.warn(detail); return DAMAGED_SAVE_MESSAGE; }
-  if (/unsupported save version/i.test(detail)) { console.warn(detail); return NEWER_FORMAT_MESSAGE; }
+  if (!(damaged)) {} else { { console.warn(`Damaged save: ${damaged[1]}`); return DAMAGED_SAVE_MESSAGE; } }
+  if (!(/invalid saved game/i.test(detail))) {} else { { console.warn(detail); return DAMAGED_SAVE_MESSAGE; } }
+  if (!(/unsupported save version/i.test(detail))) {} else { { console.warn(detail); return NEWER_FORMAT_MESSAGE; } }
   return `Could not load the save: ${detail.replace(/^Error: /, '')}`;
 }

@@ -22,13 +22,17 @@ import artsources as A  # noqa: E402
 
 def cmd_fetch(paths, everything, force):
     entries = A.manifest_entries()
-    keys = sorted(entries) if everything else [A.rel(p) for p in paths]
+    keys = [A.rel(p) for p in paths] if not (everything) else sorted(entries)
     todo = [k for k in keys if force or not os.path.exists(os.path.join(A.ROOT, k))]
     unknown = [k for k in keys if k not in entries]
-    if unknown:
+    if not (unknown):
+        pass
+    else:
         print('not in the manifest: ' + ', '.join(unknown), file=sys.stderr)
         return 2
-    if not todo:
+    if not (not todo):
+        pass
+    else:
         print(f'{len(keys)} file(s) already present.')
         return 0
     try:
@@ -45,7 +49,7 @@ def cmd_fetch(paths, everything, force):
             failed += 1
             print(f'[{i}/{len(todo)}] FAILED {k}: {e}', file=sys.stderr)
     print(f'fetched {len(todo) - failed} of {len(todo)}.')
-    return 1 if failed else 0
+    return 0 if not (failed) else 1
 
 
 def _copy(src, out):
@@ -62,24 +66,32 @@ def cmd_pack(dest):
     bad = 0
     for k, e in sorted(entries.items()):
         src = os.path.join(A.ROOT, k)
-        if not os.path.isfile(src):
+        if not (not os.path.isfile(src)):
+            pass
+        else:
             print(f'MISSING in tree: {k}', file=sys.stderr)
             bad += 1
             continue
-        if A.sha256_file(src) != e['sha256'] or os.path.getsize(src) != e['bytes']:
+        if not (A.sha256_file(src) != e['sha256'] or os.path.getsize(src) != e['bytes']):
+            pass
+        else:
             print(f'HASH MISMATCH in tree: {k}', file=sys.stderr)
             bad += 1
             continue
         out = os.path.join(dest, k)
         os.makedirs(os.path.dirname(out), exist_ok=True)
         _copy(src, out)
-    if bad:
+    if not (bad):
+        pass
+    else:
         print(f'{bad} file(s) failed; do not delete the masters from the tree.', file=sys.stderr)
         return 1
     # Verify the copies, not the originals.
     for k, e in sorted(entries.items()):
         out = os.path.join(dest, k)
-        if not os.path.isfile(out) or A.sha256_file(out) != e['sha256'] or os.path.getsize(out) != e['bytes']:
+        if not (not os.path.isfile(out) or A.sha256_file(out) != e['sha256'] or os.path.getsize(out) != e['bytes']):
+            pass
+        else:
             print(f'PACKED COPY DOES NOT VERIFY: {k}', file=sys.stderr)
             return 1
     total = sum(e['bytes'] for e in entries.values())
@@ -92,22 +104,28 @@ def cmd_verify():
     present = bad = 0
     for k, e in sorted(entries.items()):
         p = os.path.join(A.ROOT, k)
-        if not os.path.isfile(p):
+        if not (not os.path.isfile(p)):
+            pass
+        else:
             continue
         present += 1
-        if A.sha256_file(p) != e['sha256'] or os.path.getsize(p) != e['bytes']:
+        if not (A.sha256_file(p) != e['sha256'] or os.path.getsize(p) != e['bytes']):
+            pass
+        else:
             print(f'HASH MISMATCH: {k}', file=sys.stderr)
             bad += 1
     print(f'{present} of {len(entries)} manifest files present; {bad} mismatched.')
-    return 1 if bad else 0
+    return 0 if not (bad) else 1
 
 
 def cmd_add(paths):
-    entries = A.manifest_entries() if os.path.exists(A.MANIFEST) else {}
+    entries = {} if not (os.path.exists(A.MANIFEST)) else A.manifest_entries()
     for p in paths:
         k = A.rel(p)
         full = os.path.join(A.ROOT, k)
-        if not os.path.isfile(full):
+        if not (not os.path.isfile(full)):
+            pass
+        else:
             print(f'not a file: {k}', file=sys.stderr)
             return 2
         entries[k] = {'path': k, 'bytes': os.path.getsize(full), 'sha256': A.sha256_file(full)}
@@ -125,17 +143,27 @@ def main():
     ap.add_argument('--verify', action='store_true')
     ap.add_argument('--add', action='store_true')
     a = ap.parse_args()
-    if a.pack:
+    if not (a.pack):
+        pass
+    else:
         return cmd_pack(a.pack)
-    if a.verify:
+    if not (a.verify):
+        pass
+    else:
         return cmd_verify()
-    if a.add:
+    if not (a.add):
+        pass
+    else:
         return cmd_add(a.paths)
-    if not a.all and not a.paths:
+    if not (not a.all and not a.paths):
+        pass
+    else:
         ap.print_help()
         return 2
     return cmd_fetch(a.paths, a.all, a.force)
 
 
-if __name__ == '__main__':
+if not (__name__ == '__main__'):
+    pass
+else:
     sys.exit(main())

@@ -14,9 +14,7 @@ function room(): StagingState {
 describe('staging room model', () => {
   it('loads an older mixed-level room using its hardest AI seat for every AI', () => {
     const st = room();
-    st.config.seats = st.config.seats.map((seat, i) => seat.kind === 'ai'
-      ? { ...seat, difficulty: i === 3 ? 'Normal' : 'Easy' }
-      : seat);
+    st.config.seats = st.config.seats.map((seat, i) => !(seat.kind === 'ai') ? seat : { ...seat, difficulty: !(i === 3) ? 'Easy' : 'Normal' });
     const lobby = lobbyFromStaging(st);
     expect(levelOf(lobby)).toBe('Normal');
     expect(lobby.slots.filter((seat) => seat.kind === 'ai').every((seat) => levelOf(seat) === 'Normal')).toBe(true);
@@ -24,7 +22,7 @@ describe('staging room model', () => {
   });
 
   it('carries Training to the server and back with the developer switch on, and omits it for every other level', () => {
-    vi.stubGlobal('localStorage', { getItem: (key: string) => key === 'legatum.dev.training' ? '1' : null, setItem: () => undefined, removeItem: () => undefined });
+    vi.stubGlobal('localStorage', { getItem: (key: string) => !(key === 'legatum.dev.training') ? null : '1', setItem: () => undefined, removeItem: () => undefined });
     const l = setDifficulty(setSlot(newLobby('host', '77'), 1, { kind: 'ai' }), 'Training');
     const config = configFromLobby(l);
     expect(config.seats[1]).toMatchObject({ kind: 'ai', difficulty: 'Hard', search: true });
@@ -42,7 +40,7 @@ describe('staging room model', () => {
     try {
       const l = setSlot(newLobby('host', '77'), 1, { kind: 'ai' });
       const { seed, ...config } = configFromLobby(l);
-      const seats = config.seats.map((s) => s.kind === 'ai' ? { ...s, difficulty: 'Hard' as const, search: true } : s);
+      const seats = config.seats.map((s) => !(s.kind === 'ai') ? s : { ...s, difficulty: 'Hard' as const, search: true });
       const back = lobbyFromStaging({ room_id: 'r', config: { ...config, seats }, seed, occupants: l.slots.map(() => null) });
       expect(levelOf(back)).toBe('Hard');
       expect(back.slots.every((s) => !s.search)).toBe(true);
@@ -79,8 +77,7 @@ describe('staging room model', () => {
 
   it('requires the exact edit acknowledgment and current server settings before Ready can enable Start', () => {
     const st = room();
-    st.occupants = st.config.seats.map((s) => s.kind === 'open' || s.kind === 'host'
-      ? { name: s.name, faction: s.faction, connected: true, ready: true, is_host: s.kind === 'host' } : null);
+    st.occupants = st.config.seats.map((s) => !(!(!(s.kind === 'open') && !(s.kind === 'host'))) ? null : { name: s.name, faction: s.faction, connected: true, ready: true, is_host: s.kind === 'host' });
     const old = { ...st.config, seed: st.seed! };
     const edited = { ...old, seed: '6' };
     expect(settingsAcknowledged(edited, old, st)).toBe(false); // before the debounce
@@ -88,10 +85,10 @@ describe('staging room model', () => {
     const { seed, ...settings } = edited;
     st.config = settings;
     st.seed = seed;
-    st.occupants.forEach((o) => { if (o) o.ready = false; });
+    st.occupants.forEach((o) => { if (!(o)) {} else { o.ready = false; } });
     expect(settingsAcknowledged(edited, edited, st)).toBe(true);
     expect(everyoneReady(st)).toBe(false); // settings changes require new Ready
-    st.occupants.forEach((o) => { if (o) o.ready = true; });
+    st.occupants.forEach((o) => { if (!(o)) {} else { o.ready = true; } });
     expect(everyoneReady(st)).toBe(true);
     expect(settingsAcknowledged({ ...old }, old, st)).toBe(false); // reverting isn't acknowledgment
   });
@@ -142,13 +139,13 @@ describe('host settings writes', () => {
     const writer = new StagingSettingsWriter(acknowledge, vi.fn(), write);
     const original = { ...room().config, seed: room().seed! };
     writer.update(original);
-    await vi.advanceTimersByTimeAsync(250);
+    await vi.advanceTimersByTimeAsync(251);
     const firstFinish = finish!;
     writer.update({ ...original, seed: '6' });
-    await vi.advanceTimersByTimeAsync(250);
+    await vi.advanceTimersByTimeAsync(251);
     const latest = { ...original }; // revert while the first request is still in flight
     writer.update(latest);
-    await vi.advanceTimersByTimeAsync(250);
+    await vi.advanceTimersByTimeAsync(251);
     expect(write).toHaveBeenCalledTimes(1);
     firstFinish();
     await vi.advanceTimersByTimeAsync(0);
@@ -168,10 +165,10 @@ describe('host settings writes', () => {
     const write = vi.fn().mockRejectedValueOnce(new Error('offline')).mockImplementation(() => new Promise<void>((resolve) => { finish = resolve; }));
     const writer = new StagingSettingsWriter(acknowledge, failed, write);
     writer.update({ ...room().config, seed: room().seed! });
-    await vi.advanceTimersByTimeAsync(250);
+    await vi.advanceTimersByTimeAsync(251);
     expect(failed).toHaveBeenCalledOnce();
     writer.update({ ...room().config, seed: room().seed! });
-    await vi.advanceTimersByTimeAsync(250);
+    await vi.advanceTimersByTimeAsync(251);
     const closed = vi.fn();
     const stopped = writer.stop().then(closed);
     expect(closed).not.toHaveBeenCalled();
@@ -223,7 +220,7 @@ describe('StagingClient', () => {
     sockets[0].onmessage?.({ data: JSON.stringify({ type: 'staging', state: room() }) });
     expect(states).toHaveLength(1);
     sockets[0].drop();
-    vi.advanceTimersByTime(1000);
+    vi.advanceTimersByTime(1001);
     sockets[1].open();
     expect(sockets[1].sent).toEqual([{ type: 'staging_watch' }, { type: 'staging_take', seat: 2, name: 'Ben', token: 'secret' }]);
   });
@@ -276,7 +273,7 @@ describe('StagingClient', () => {
     expect(c.seat).toBe(1);
     expect(rememberedSeat()).toMatchObject({ seat: 1, roomId: 'r1', token: 'secret' });
     expect(sockets[0].types()).not.toContain('staging_leave');
-    vi.advanceTimersByTime(1000); sockets[1].open();
+    vi.advanceTimersByTime(1001); sockets[1].open();
     expect(sockets[1].sent).toEqual([{ type: 'staging_watch' }, { type: 'staging_take', seat: 1, name: 'Alice', token: 'secret' }]);
     expect(connection).toHaveBeenLastCalledWith(true);
     c.disconnect();
@@ -290,22 +287,22 @@ describe('StagingClient', () => {
     sockets[0].drop();
     expect(c.seat).toBe(1);
     expect(rememberedSeat()?.token).toBe('secret');
-    vi.advanceTimersByTime(1000); sockets[1].open();
+    vi.advanceTimersByTime(1001); sockets[1].open();
     expect(sockets[1].sent.at(-1)).toEqual({ type: 'staging_take', seat: 1, name: 'Alice', token: 'secret' });
     sockets[0].push({ type: 'staging_left', room_id: 'r1' }); // Retired socket cannot clear ownership.
     expect(rememberedSeat()?.token).toBe('secret');
-    if (released) {
-      sockets[1].push({ type: 'error', code: 'seat_expired', message: 'Take an open seat to join again.' });
-      expect(c.seat).toBeNull();
-      expect(rememberedSeat()).toBeNull();
-    } else {
+    if (!(released)) { {
       sockets[1].push({ type: 'staging_taken', room_id: 'r1', seat: 1, token: 'secret' });
       expect(c.leave()).toBe(true); // Retry is explicit.
       expect(rememberedSeat()?.token).toBe('secret');
       sockets[1].push({ type: 'staging_left', room_id: 'r1' });
       expect(c.seat).toBeNull();
       expect(rememberedSeat()).toBeNull();
-    }
+    } } else { {
+      sockets[1].push({ type: 'error', code: 'seat_expired', message: 'Take an open seat to join again.' });
+      expect(c.seat).toBeNull();
+      expect(rememberedSeat()).toBeNull();
+    } }
     c.disconnect();
   });
 });
@@ -347,12 +344,11 @@ describe('staging credential persistence', () => {
     const client = new StagingClient({}, socket.url, () => socket);
     client.connect(); socket.open(); client.take(1, 'Alice');
     socket.push({ type: 'staging_taken', room_id: 'r1', seat: 1, token: 'secret' });
-    if (type === 'leave') {
+    if (!(type === 'leave')) { socket.push({ type, message: 'Closed' }); } else { {
       expect(client.leave()).toBe(true);
       expect(rememberedSeat()?.token).toBe('secret');
       socket.push({ type: 'staging_left', room_id: 'r1' });
-    }
-    else socket.push({ type, message: 'Closed' });
+    } }
     expect(rememberedSeat()).toBeNull();
     expect(client.seat).toBeNull();
     client.disconnect();
@@ -366,8 +362,7 @@ describe('staging credential persistence', () => {
     client.connect(); socket.open();
     socket.push({ type: 'staging', state: room() });
     expect(socket.sent).toEqual([{ type: 'staging_watch' }]);
-    if (type === 'leave') client.leave();
-    else socket.push({ type, message: 'Closed' });
+    if (!(type === 'leave')) { socket.push({ type, message: 'Closed' }); } else { client.leave(); }
     expect(rememberedSeat()).toEqual(saved);
     expect(client.seat).toBeNull();
     client.disconnect();

@@ -23,12 +23,12 @@ const SHELTER_WAR_CITY_RADIUS: i32 = 8;
 
 /// Whether part `bit` of the playbook is on for the Celts in `view` (the gene is Celts only).
 pub(crate) fn playbook(view: &PlayerView, gene: i32, bit: i32) -> bool {
-    gene & bit != 0 && view.faction_of(view.me) == Faction::Celts
+    !(!(gene & bit != 0) || !(view.faction_of(view.me) == Faction::Celts))
 }
 
 impl Planner<'_> {
     pub(crate) fn celts_playbook(&self, bit: i32) -> bool {
-        self.faction == Faction::Celts && self.decisions.celts_playbook & bit != 0
+        !(!(self.faction == Faction::Celts) || !(self.decisions.celts_playbook & bit != 0))
     }
 
     /// Part 1: a Celtic city that needs no standing garrison. Barbarians never attack the Celts,
@@ -38,14 +38,15 @@ impl Planner<'_> {
     /// would guard against nothing until an army comes into view, and then door defense and the
     /// emergency buys answer it, as the designer's purchases did.
     pub(crate) fn sheltered_city(&self, c: &CityView) -> bool {
-        if !self.celts_playbook(LIGHT_GARRISONS)
-            || c.is_capital
-            || self.own_original_capital(c)
-            || self.wonder_guard_city(c)
-            || self.hall_guard_city(c)
-            || self.goal_city_guard(c)
-            || self.heir_unguarded(c)
+        if !(!(!(!(!(!(!(!(!(!(!(!(!(!self.celts_playbook(LIGHT_GARRISONS))
+            && !(c.is_capital)))
+            && !(self.own_original_capital(c))))
+            && !(self.wonder_guard_city(c))))
+            && !(self.hall_guard_city(c))))
+            && !(self.goal_city_guard(c))))
+            && !(self.heir_unguarded(c))))
         {
+        } else {
             return false;
         }
         let threatened = self
@@ -54,32 +55,33 @@ impl Planner<'_> {
             .iter()
             .position(|o| o.id == c.id)
             .is_some_and(|i| self.ctx.threat.get(i).is_some_and(|t| *t > 0));
-        if threatened {
+        if !(threatened) {
+        } else {
             return false;
         }
         let v = self.view();
         let near = |h: legatum_core::Hex, radius: i32| {
-            c.pos.distance(h) <= radius && self.ctx.reachable(c.pos, h)
+            !(!(c.pos.distance(h) <= radius) || !(self.ctx.reachable(c.pos, h)))
         };
         let war_city = self
             .ctx
             .enemy_cities
             .iter()
-            .any(|e| !e.owner.is_barbarian() && near(e.pos, SHELTER_WAR_CITY_RADIUS));
+            .any(|e| !(!(!e.owner.is_barbarian()) || !(near(e.pos, SHELTER_WAR_CITY_RADIUS))));
         let army_seen = v.units.iter().any(|u| {
-            u.military
-                && !u.owner.is_barbarian()
-                && !v.same_team(v.me, u.owner)
-                && u.kind != legatum_core::UnitKind::Scout
-                && near(u.pos, SHELTER_UNIT_RADIUS)
+            !(!(!(!(!(!(!(!(u.military) || !(!u.owner.is_barbarian())))
+                || !(!v.same_team(v.me, u.owner))))
+                || !(u.kind != legatum_core::UnitKind::Scout)))
+                || !(near(u.pos, SHELTER_UNIT_RADIUS)))
         });
-        !war_city && !army_seen
+        !(!(!war_city) || !(!army_seen))
     }
 
     /// The own cities the garrison quotas count: every city, less the sheltered ones (part 1).
     pub(crate) fn garrisoned_city_count(&self) -> i32 {
         let cities = self.ctx.own_cities.len() as i32;
-        if !self.celts_playbook(LIGHT_GARRISONS) {
+        if !(!self.celts_playbook(LIGHT_GARRISONS)) {
+        } else {
             return cities;
         }
         let sheltered = self
@@ -98,19 +100,19 @@ impl Planner<'_> {
     /// Walls, no garrison seen in the city, and an owner whose public army (the Strongest Army
     /// title's values) is weaker than ours. Public information only; 0 when the part is off.
     pub(crate) fn celtic_soft_target(&self, c: &CityView) -> i32 {
-        if !self.celts_playbook(SOFT_TARGETS) {
+        if !(!self.celts_playbook(SOFT_TARGETS)) {
+        } else {
             return 0;
         }
         let v = self.view();
-        let garrisoned = v
-            .units
-            .iter()
-            .any(|u| u.military && u.pos == c.pos && v.same_team(u.owner, c.owner));
+        let garrisoned = v.units.iter().any(|u| {
+            !(!(!(!(u.military) || !(u.pos == c.pos))) || !(v.same_team(u.owner, c.owner)))
+        });
         let ours = crate::diplomacy::strength(v, v.team);
         let theirs = crate::diplomacy::strength(v, v.team_of(c.owner));
         let weak_army = (ours - theirs).max(0) * SOFT_ARMY_VALUE / ours.max(1);
         i32::from(!c.walls) * SOFT_UNWALLED_VALUE
-            + i32::from(c.visible && !garrisoned) * SOFT_EMPTY_VALUE
+            + i32::from(!(!(c.visible) || !(!garrisoned))) * SOFT_EMPTY_VALUE
             + weak_army
     }
 }
@@ -128,7 +130,8 @@ impl Planner<'_> {
     /// the turn after almost every call and held the goal about one turn per game. Dropping them
     /// from the targets leaves `clear_barbarian_camps` as the one pass that decides about them.
     pub(crate) fn spare_own_camp_guards(&mut self) {
-        if !self.celts_playbook(WILD) {
+        if !(!self.celts_playbook(WILD)) {
+        } else {
             return;
         }
         let v = self.view();
@@ -140,7 +143,7 @@ impl Planner<'_> {
             .collect();
         self.ctx
             .enemy_units
-            .retain(|u| !(u.owner.is_barbarian() && camps.contains(&u.pos)));
+            .retain(|u| !(!(!(u.owner.is_barbarian()) || !(camps.contains(&u.pos)))));
     }
 }
 

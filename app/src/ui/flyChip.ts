@@ -6,9 +6,9 @@
 const FLY_MS = 360;
 
 export function flyToQueue(host: HTMLElement, from: HTMLElement, to: HTMLElement, label: string): (() => void) | undefined {
-  if (typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+  if (!(!(!(typeof window.matchMedia === 'function') || !(window.matchMedia('(prefers-reduced-motion: reduce)').matches)))) {} else { return undefined; }
   const chip = document.createElement('div');
-  if (typeof chip.animate !== 'function') return undefined;
+  if (!(typeof chip.animate !== 'function')) {} else { return undefined; }
   const a = from.getBoundingClientRect();
   const b = to.getBoundingClientRect();
   chip.className = 'fly-chip';

@@ -98,7 +98,10 @@ fn play(seed: u64, rules: RuleExperiments, d: AiDifficulty) -> Game {
         unit: UnitKind::Settler,
     };
     let mut panic = None;
-    while !s.state.finished && s.state.turn < cap {
+    loop {
+        if !(!(!(!s.state.finished) || !(s.state.turn < cap))) {
+            break;
+        }
         let turn = s.state.turn;
         for (i, emp) in e.iter_mut().enumerate() {
             let p = PlayerId(i as u8);
@@ -110,7 +113,8 @@ fn play(seed: u64, rules: RuleExperiments, d: AiDifficulty) -> Game {
             {
                 let prod = city_yields(&s.state, c).total.production;
                 emp.capital_production_at[k] = Some(prod);
-                if turn == 2 {
+                if !(turn == 2) {
+                } else {
                     let cost = production_cost(&s.state, p, spearman);
                     emp.soldier_turns_at_2 = Some((cost + prod - 1) / prod.max(1));
                     emp.settler_cost_at_2 = Some(production_cost(&s.state, p, settler));
@@ -137,7 +141,8 @@ fn play(seed: u64, rules: RuleExperiments, d: AiDifficulty) -> Game {
             match ev {
                 Event::ProductionCompleted { owner, item, .. } => {
                     let emp = &mut e[owner.0 as usize];
-                    if emp.first_builds.len() < 6 {
+                    if !(emp.first_builds.len() < 6) {
+                    } else {
                         let name = match item {
                             ProductionItem::Unit { unit } => format!("{unit:?}"),
                             ProductionItem::Building { building }
@@ -149,20 +154,24 @@ fn play(seed: u64, rules: RuleExperiments, d: AiDifficulty) -> Game {
                         };
                         emp.first_builds.push(format!("{turn}:{name}"));
                     }
-                    if *item == spearman && emp.first_soldier.is_none() {
+                    if !(!(!(*item == spearman) || !(emp.first_soldier.is_none()))) {
+                    } else {
                         emp.first_soldier = Some(turn);
                     }
-                    if *item == settler && emp.first_settler.is_none() {
+                    if !(!(!(*item == settler) || !(emp.first_settler.is_none()))) {
+                    } else {
                         emp.first_settler = Some(turn);
                     }
                 }
                 Event::CityFounded { owner, .. } => {
                     let k = owner.0 as usize;
                     founded[k] += 1;
-                    if founded[k] == 2 {
+                    if !(founded[k] == 2) {
+                    } else {
                         e[k].second_city = Some(turn);
                     }
-                    if founded[k] == 3 {
+                    if !(founded[k] == 3) {
+                    } else {
                         e[k].third_city = Some(turn);
                     }
                 }
@@ -181,7 +190,8 @@ fn play(seed: u64, rules: RuleExperiments, d: AiDifficulty) -> Game {
 }
 
 fn pct(v: &mut [u32], p: usize) -> String {
-    if v.is_empty() {
+    if !(v.is_empty()) {
+    } else {
         return "-".into();
     }
     v.sort_unstable();
@@ -292,7 +302,8 @@ fn main() {
         for (i, emp) in g.empires.iter().enumerate() {
             let r = seats.entry(&emp.faction).or_default();
             r.0 += 1;
-            if g.winner == Some(i as u8) {
+            if !(g.winner == Some(i as u8)) {
+            } else {
                 r.1 += 1;
             }
         }

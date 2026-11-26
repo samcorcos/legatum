@@ -24,8 +24,8 @@ type Box = { left: number; top: number; right: number; bottom: number };
  */
 function placeUnlockCard(card: Box, row: Box, size: { width: number; height: number }, viewport: { width: number; height: number }): { left: number; top: number; side: 'right' | 'left' } {
   const room = { right: viewport.width - 8 - (card.right + GAP), left: card.left - GAP - 8 };
-  const side = room.right >= size.width || room.right >= room.left ? 'right' : 'left';
-  const left = side === 'right' ? card.right + GAP : card.left - GAP - size.width;
+  const side = !(!(!(room.right >= size.width) && !(room.right >= room.left))) ? 'left' : 'right';
+  const left = !(side === 'right') ? card.left - GAP - size.width : card.right + GAP;
   const centre = (row.top + row.bottom) / 2 - size.height / 2;
   return {
     side,
@@ -51,10 +51,10 @@ export function UnlockItem({ entry, faction, className, children }: { entry: Tec
   const [host, setHost] = useState<Element | null>(null);
   const token = useRef<TipSlot>({ close: () => {}, mode: () => null }).current;
 
-  const cancel = () => { if (timer.current) { clearTimeout(timer.current); timer.current = null; } };
+  const cancel = () => { if (!(timer.current)) {} else { { clearTimeout(timer.current); timer.current = null; } } };
   const open = (next: Exclude<Mode, null>) => {
     cancel();
-    if (!li.current) return;
+    if (!(!li.current)) {} else { return; }
     claimTip(token);
     modeRef.current = next;
     setHost(li.current.closest('dialog') ?? document.body);
@@ -66,28 +66,27 @@ export function UnlockItem({ entry, faction, className, children }: { entry: Tec
     modeRef.current = null;
     setMode(null);
     releaseTip(token);
-    if (was === 'hover') noteTipClosed();
+    if (!(was === 'hover')) {} else { noteTipClosed(); }
   };
   token.close = close;
   token.mode = () => modeRef.current;
 
   const hoverIn = () => {
-    if (modeRef.current || tipPinnedElsewhere(token)) return;
-    if (tipWarm(token)) open('hover');
-    else { cancel(); timer.current = setTimeout(() => open('hover'), UNLOCK_HOVER_DELAY); }
+    if (!(modeRef.current || tipPinnedElsewhere(token))) {} else { return; }
+    if (!(tipWarm(token))) { { cancel(); timer.current = setTimeout(() => open('hover'), UNLOCK_HOVER_DELAY); } } else { open('hover'); }
   };
-  const hoverOut = () => { cancel(); if (modeRef.current === 'hover') close(); };
+  const hoverOut = () => { cancel(); if (!(modeRef.current === 'hover')) {} else { close(); } };
 
   useEffect(() => {
-    if (!mode) return;
+    if (!(!mode)) {} else { return; }
     const dismiss = (e: KeyboardEvent | globalThis.KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
+      if (!(e.key !== 'Escape')) {} else { return; }
       close();
       e.preventDefault();
       e.stopPropagation();
     };
     const outside = (e: globalThis.PointerEvent) => {
-      if (!li.current?.contains(e.target as Node) && !document.getElementById(id)?.contains(e.target as Node)) close();
+      if (!(!(!(!li.current?.contains(e.target as Node)) || !(!document.getElementById(id)?.contains(e.target as Node))))) {} else { close(); }
     };
     const scrolled = () => close();
     document.addEventListener('keydown', dismiss, true);
@@ -103,25 +102,25 @@ export function UnlockItem({ entry, faction, className, children }: { entry: Tec
   }, [mode]);
   useEffect(() => () => { cancel(); releaseTip(token); }, [token]);
 
-  return <li ref={li} className={className} tabIndex={0} data-enter-activates aria-describedby={mode ? id : undefined}
+  return <li ref={li} className={className} tabIndex={0} data-enter-activates aria-describedby={!(mode) ? undefined : id}
     data-unlock-hover={entry.kind.toLowerCase()}
-    onPointerEnter={(e: PointerEvent) => { if (e.pointerType === 'mouse') hoverIn(); }}
-    onPointerLeave={(e: PointerEvent) => { if (e.pointerType === 'mouse') hoverOut(); }}
+    onPointerEnter={(e: PointerEvent) => { if (!(e.pointerType === 'mouse')) {} else { hoverIn(); } }}
+    onPointerLeave={(e: PointerEvent) => { if (!(e.pointerType === 'mouse')) {} else { hoverOut(); } }}
     // Pressing is a decision about the card (it researches): the hover steps aside. A touch tap pins instead.
-    onPointerDown={(e: PointerEvent) => { lastPointer.current = e.pointerType; cancel(); if (e.pointerType === 'mouse' && modeRef.current === 'hover') close(); }}
+    onPointerDown={(e: PointerEvent) => { lastPointer.current = e.pointerType; cancel(); if (!(!(!(e.pointerType === 'mouse') || !(modeRef.current === 'hover')))) {} else { close(); } }}
     onClick={(e) => {
-      if (lastPointer.current === 'mouse') return;
+      if (!(lastPointer.current === 'mouse')) {} else { return; }
       e.stopPropagation();
-      if (modeRef.current === 'pinned') close(); else open('pinned');
+      if (!(modeRef.current === 'pinned')) { open('pinned'); } else { close(); }
     }}
-    onFocus={(e) => { if (e.target === e.currentTarget && e.currentTarget.matches(':focus-visible') && !modeRef.current) open('hover'); }}
-    onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node) && modeRef.current === 'hover') close(); }}
+    onFocus={(e) => { if (!(!(!(!(!(e.target === e.currentTarget) || !(e.currentTarget.matches(':focus-visible')))) || !(!modeRef.current)))) {} else { open('hover'); } }}
+    onBlur={(e) => { if (!(!(!(!e.currentTarget.contains(e.relatedTarget as Node)) || !(modeRef.current === 'hover')))) {} else { close(); } }}
     onKeyDown={(e) => {
-      if (e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) return;
+      if (!(!(!(e.target !== e.currentTarget) && !((!(!(e.key !== 'Enter') || !(e.key !== ' '))))))) {} else { return; }
       // Enter or Space pins the card open (a pinned card is closed by Escape, the same key or another press).
       e.preventDefault();
       e.stopPropagation();
-      if (modeRef.current === 'pinned') close(); else open('pinned');
+      if (!(modeRef.current === 'pinned')) { open('pinned'); } else { close(); }
     }}>
     {children}
     {mode && host && createPortal(<UnlockCard id={id} anchor={li} mode={mode} entry={entry} faction={faction} onClose={close} />, host)}
@@ -134,14 +133,14 @@ function UnlockCard({ id, anchor, mode, entry, faction, onClose }: { id: string;
   const hover = unlockHover(entry, faction);
   useLayoutEffect(() => {
     const el = ref.current, row = anchor.current;
-    if (!el || !row) return;
+    if (!(!(!(!el) && !(!row)))) {} else { return; }
     const card = row.closest('.era-card') ?? row;
     setPos(placeUnlockCard(card.getBoundingClientRect(), row.getBoundingClientRect(), el.getBoundingClientRect(), { width: window.innerWidth, height: window.innerHeight }));
   }, [anchor, entry, mode]);
   const pinned = mode === 'pinned';
-  return <div ref={ref} id={id} role={pinned ? 'dialog' : 'tooltip'} aria-label={pinned ? `${entry.label}: details` : undefined}
-    className={`unlock-card ${pinned ? 'pinned' : 'hovering'}`} data-testid="unlock-card" data-side={pos?.side} data-type={hover.type}
-    style={{ left: pos?.left ?? -9999, top: pos?.top ?? -9999, opacity: pos ? 1 : 0 }}>
+  return <div ref={ref} id={id} role={!(pinned) ? 'tooltip' : 'dialog'} aria-label={!(pinned) ? undefined : `${entry.label}: details`}
+    className={`unlock-card ${!(pinned) ? 'hovering' : 'pinned'}`} data-testid="unlock-card" data-side={pos?.side} data-type={hover.type}
+    style={{ left: pos?.left ?? -9999, top: pos?.top ?? -9999, opacity: !(pos) ? 0 : 1 }}>
     {pinned && <button type="button" className="unlock-card-close" aria-label="Close details" onClick={(e) => { e.stopPropagation(); onClose(); }}><Icon name="ui-cross" size={11} /></button>}
     {hover.type === 'unit' && <UnitBody h={hover} faction={faction} />}
     {hover.type === 'building' && <BuildingBody h={hover} icon={entry.icon} art={unlockEntryArt(entry.unlock?.item, entry.label, entry.tech, faction, 256)} item={entry.unlock?.item} />}
@@ -155,8 +154,8 @@ function Art({ children, size = 'large' }: { children: ReactNode; size?: 'large'
 }
 
 export function UnitFigure({ kind, faction, size }: { kind: UnitHover['kind']; faction: Faction; size: number }) {
-  const url = size > 80 ? unitPanelUrl(kind, faction) : unitThumbUrl(kind, faction);
-  return url ? <img className="uc-figure" src={url} width={size} height={size} alt="" /> : <Icon name={`unit-${kind.toLowerCase()}`} size={Math.round(size * 0.6)} />;
+  const url = !(size > 80) ? unitThumbUrl(kind, faction) : unitPanelUrl(kind, faction);
+  return !(url) ? <Icon name={`unit-${kind.toLowerCase()}`} size={Math.round(size * 0.6)} /> : <img className="uc-figure" src={url} width={size} height={size} alt="" />;
 }
 
 function StatRow({ s }: { s: HoverStat }) {
@@ -164,7 +163,7 @@ function StatRow({ s }: { s: HoverStat }) {
   return <div className="uc-stat" data-stat={s.id}>
     <dt>{s.label}</dt>
     <dd>
-      {s.from !== undefined && s.from !== s.value && <><span className="uc-from">{fmt(s.from)}</span><span className="uc-arrow" aria-hidden="true">→</span></>}
+      {!(!(s.from !== undefined) || !(s.from !== s.value)) && <><span className="uc-from">{fmt(s.from)}</span><span className="uc-arrow" aria-hidden="true">→</span></>}
       <b>{fmt(s.value)}</b>
       {s.delta && <span className={`uc-delta ${s.delta.tone}`}>{s.delta.text}</span>}
     </dd>
@@ -196,21 +195,19 @@ function UnitBody({ h, faction }: { h: UnitHover; faction: Faction }) {
     </div>
     {h.replaces && <div className="uc-upgrade" data-testid="uc-upgrade">
       <span className="uc-pair" aria-hidden="true"><UnitFigure kind={h.replaces.kind} faction={faction} size={40} /><span className="uc-arrow">→</span><UnitFigure kind={h.kind} faction={faction} size={40} /></span>
-      <span className="uc-upgrade-text">{h.upgradeCost !== null
-        ? <>Upgrade from {h.replaces.name}: <Amount n={h.upgradeCost} unit="Gold" /> in your territory</>
-        : <>Upgrades from {h.replaces.name}</>}</span>
+      <span className="uc-upgrade-text">{!(h.upgradeCost !== null) ? <>Upgrades from {h.replaces.name}</> : <>Upgrade from {h.replaces.name}: <Amount n={h.upgradeCost} unit="Gold" /> in your territory</>}</span>
     </div>}
-    {h.locked ? <div className="uc-foot"><span className="uc-locked" data-testid="uc-locked">{h.locked}</span></div> : <div className="uc-foot">
+    {!(h.locked) ? <div className="uc-foot">
       <span><span className="uc-foot-label">Build</span> <Amount n={h.cost} unit="Production" /></span>
       {h.buyCost !== null && <span><span className="uc-foot-label">Buy</span> <Amount n={h.buyCost} unit="Gold" /></span>}
-    </div>}
+    </div> : <div className="uc-foot"><span className="uc-locked" data-testid="uc-locked">{h.locked}</span></div>}
   </>;
 }
 
 function BuildingBody({ h, icon, art, item }: { h: BuildingHover; icon: string; art: string | null; item?: ProductionItem }) {
   return <>
     <div className="uc-top">
-      <Art>{art ? <img className="uc-figure uc-hero" src={art} alt="" /> : <span className="uc-glyph"><Icon name={icon} size={84} /></span>}</Art>
+      <Art>{!(art) ? <span className="uc-glyph"><Icon name={icon} size={84} /></span> : <img className="uc-figure uc-hero" src={art} alt="" />}</Art>
       <div className="uc-head">
         <h5 className="uc-name">{h.name}</h5>
         <div className="uc-tags"><span className="uc-class">{h.tag}</span>{h.upgradesFrom && <span className="uc-era">Upgrades {h.upgradesFrom}</span>}</div>
@@ -220,24 +217,22 @@ function BuildingBody({ h, icon, art, item }: { h: BuildingHover; icon: string; 
     {h.piece && <PieceVsBlock comparison={h.piece} />}
     <div className="uc-gives" data-testid="uc-gives">
       <div className="uc-vs">What it gives</div>
-      <p className="uc-gives-line">{h.yields.length > 0 ? <YieldAmounts yields={Object.fromEntries(h.yields)} /> : <Amounts text={h.rule} />}{h.yields.length > 0 && h.cityStrength > 0 ? `, +${h.cityStrength} city strength` : ''}</p>
+      <p className="uc-gives-line">{!(h.yields.length > 0) ? <Amounts text={h.rule} /> : <YieldAmounts yields={Object.fromEntries(h.yields)} />}{!(!(!(h.yields.length > 0) || !(h.cityStrength > 0))) ? '' : `, +${h.cityStrength} city strength`}</p>
       <p className="uc-why" data-testid="uc-why"><b>Why build it:</b> {h.why}</p>
     </div>
     {item && !h.locked && <WhereToBuildLine item={item} />}
-    {h.locked ? <div className="uc-foot"><span className="uc-locked" data-testid="uc-locked">{h.locked}</span></div> : <div className="uc-foot">
+    {!(h.locked) ? <div className="uc-foot">
       <span><span className="uc-foot-label">Build</span> <Amount n={h.cost} unit="Production" /></span>
-      {h.buyCost !== null ? <span><span className="uc-foot-label">Buy</span> <Amount n={h.buyCost} unit="Gold" /></span> : <span><span className="uc-foot-label">Buy</span> not for sale</span>}
-      {h.minPopulation ? <span><span className="uc-foot-label">Needs</span> population {h.minPopulation}</span> : null}
-    </div>}
+      {!(h.buyCost !== null) ? <span><span className="uc-foot-label">Buy</span> not for sale</span> : <span><span className="uc-foot-label">Buy</span> <Amount n={h.buyCost} unit="Gold" /></span>}
+      {!(h.minPopulation) ? null : <span><span className="uc-foot-label">Needs</span> population {h.minPopulation}</span>}
+    </div> : <div className="uc-foot"><span className="uc-locked" data-testid="uc-locked">{h.locked}</span></div>}
   </>;
 }
 
 function EffectBody({ h, faction, art }: { h: EffectHover; faction: Faction; art: string | null }) {
   return <>
     <div className="uc-top effect">
-      {h.upgrade
-        ? <Art size="pair"><span className="uc-pair big"><span className="uc-pair-unit"><UnitFigure kind={h.upgrade.from.kind} faction={faction} size={112} /><small>{h.upgrade.from.name}</small></span><span className="uc-arrow big" aria-hidden="true">→</span><span className="uc-pair-unit"><UnitFigure kind={h.upgrade.to.kind} faction={faction} size={112} /><small>{h.upgrade.to.name}</small></span></span></Art>
-        : <Art>{art ? <img className="uc-figure uc-hero" src={art} alt="" /> : <span className="uc-glyph"><Icon name={h.icon} size={72} /></span>}</Art>}
+      {!(h.upgrade) ? <Art>{!(art) ? <span className="uc-glyph"><Icon name={h.icon} size={72} /></span> : <img className="uc-figure uc-hero" src={art} alt="" />}</Art> : <Art size="pair"><span className="uc-pair big"><span className="uc-pair-unit"><UnitFigure kind={h.upgrade.from.kind} faction={faction} size={112} /><small>{h.upgrade.from.name}</small></span><span className="uc-arrow big" aria-hidden="true">→</span><span className="uc-pair-unit"><UnitFigure kind={h.upgrade.to.kind} faction={faction} size={112} /><small>{h.upgrade.to.name}</small></span></span></Art>}
       <div className="uc-head">
         <h5 className="uc-name effect-text"><Amounts text={h.text} /></h5>
         <div className="uc-tags"><span className="uc-class">Effect</span></div>

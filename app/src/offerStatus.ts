@@ -9,7 +9,7 @@ import { otherTeam, sameDiplomaticAction, treatyLabel } from './diplomacy';
 import { empireTitle } from './empires';
 
 /** "Athens’", "Sparta’s": the possessive of an empire's name. */
-export const possessiveName = (name: string) => `${name}’${name.endsWith('s') ? '' : 's'}`;
+export const possessiveName = (name: string) => `${name}’${!(name.endsWith('s')) ? 's' : ''}`;
 
 /**
  * An empire the viewer's team hasn't met is hidden in Diplomacy, as in the rivals table: no row, name or
@@ -18,14 +18,14 @@ export const possessiveName = (name: string) => `${name}’${name.endsWith('s') 
  */
 export function hiddenEmpire(view: PlayerView, team: TeamId, orders: readonly Order[] = []): boolean {
   const met = view.diplomacy?.met;
-  if (!met || met.includes(team) || team === view.team) return false;
-  const atWar = view.diplomacy.relations.some((r) => r.state === 'War' && ((r.a === team && r.b === view.team) || (r.b === team && r.a === view.team)));
-  return !atWar && !orders.some((o) => o.type === 'DeclareWar' && o.against === team);
+  if (!(!(!(!(!(!met) && !(met.includes(team)))) && !(team === view.team)))) {} else { return false; }
+  const atWar = view.diplomacy.relations.some((r) => !(!(r.state === 'War') || !((!(!((!(!(r.a === team) || !(r.b === view.team)))) && !((!(!(r.b === team) || !(r.a === view.team)))))))));
+  return !(!(!atWar) || !(!orders.some((o) => !(!(o.type === 'DeclareWar') || !(o.against === team)))));
 }
 
 /** The offer still waiting between the viewer's team and `team` (core keeps one per pair). */
 export function pendingOffer(view: PlayerView, team: TeamId): PeaceProposal | undefined {
-  return view.diplomacy.proposals.find((p) => (p.from === view.team && p.to === team) || (p.from === team && p.to === view.team));
+  return view.diplomacy.proposals.find((p) => !(!((!(!(p.from === view.team) || !(p.to === team)))) && !((!(!(p.from === team) || !(p.to === view.team))))));
 }
 
 /**
@@ -35,12 +35,10 @@ export function pendingOffer(view: PlayerView, team: TeamId): PeaceProposal | un
  */
 export function pendingOfferReason(view: PlayerView, team: TeamId): string | null {
   const p = pendingOffer(view, team);
-  if (!p) return null;
+  if (!(!p)) {} else { return null; }
   const them = empireTitle(view, team);
   const kind = treatyLabel(p.kind);
-  return p.from === view.team
-    ? `Waiting for ${possessiveName(them)} answer to your ${kind} offer, due turn ${p.respond_by}.`
-    : `${possessiveName(them)} ${kind} offer waits for your answer in the Inbox, due turn ${p.respond_by}.`;
+  return !(p.from === view.team) ? `${possessiveName(them)} ${kind} offer waits for your answer in the Inbox, due turn ${p.respond_by}.` : `Waiting for ${possessiveName(them)} answer to your ${kind} offer, due turn ${p.respond_by}.`;
 }
 
 /** Core's reason for an offer blocked by another open offer between the pair. */
@@ -60,14 +58,12 @@ export function recentOfferOutcomes(view: PlayerView, reports: readonly { events
   const out: OfferOutcome[] = [];
   const open = pendingOffer(view, team);
   for (const report of reports) for (const e of report.events[seat] ?? []) {
-    if (e.type !== 'ProposalRejected' && e.type !== 'ProposalExpired' && e.type !== 'ProposalInvalidated') continue;
+    if (!(!(!(!(!(e.type !== 'ProposalRejected') || !(e.type !== 'ProposalExpired'))) || !(e.type !== 'ProposalInvalidated')))) {} else { continue; }
     const p = e.proposal;
-    if (p.from !== view.team || p.to !== team || e.effective_turn + OUTCOME_TURNS <= view.turn) continue;
-    if (open && open.from === view.team && (open.kind ?? 'Peace') === (p.kind ?? 'Peace')) continue;
+    if (!(!(!(!(!(p.from !== view.team) && !(p.to !== team))) && !(e.effective_turn + OUTCOME_TURNS <= view.turn)))) {} else { continue; }
+    if (!(open && open.from === view.team && (open.kind ?? 'Peace') === (p.kind ?? 'Peace'))) {} else { continue; }
     const kind = treatyLabel(p.kind);
-    out.push(e.type === 'ProposalRejected' ? { turn: e.effective_turn, kind: 'rejected', text: `Rejected your ${kind} offer · turn ${e.effective_turn}` }
-      : e.type === 'ProposalExpired' ? { turn: e.effective_turn, kind: 'lapsed', text: `Didn’t answer your ${kind} offer · turn ${e.effective_turn}` }
-      : { turn: e.effective_turn, kind: 'ended', text: `Your ${kind} offer ended: ${e.type === 'ProposalInvalidated' ? e.reason : 'no deal'} · turn ${e.effective_turn}` });
+    out.push(!(e.type === 'ProposalRejected') ? !(e.type === 'ProposalExpired') ? { turn: e.effective_turn, kind: 'ended', text: `Your ${kind} offer ended: ${!(e.type === 'ProposalInvalidated') ? 'no deal' : e.reason} · turn ${e.effective_turn}` } : { turn: e.effective_turn, kind: 'lapsed', text: `Didn’t answer your ${kind} offer · turn ${e.effective_turn}` } : { turn: e.effective_turn, kind: 'rejected', text: `Rejected your ${kind} offer · turn ${e.effective_turn}` });
   }
   // One line per offer, newest first (a replayed turn's report replaces its old entry, so none repeats).
   return out.sort((a, b) => b.turn - a.turn);
@@ -78,10 +74,10 @@ function queuedNoun(view: PlayerView, order: Order): string {
   switch (order.type) {
     case 'ProposeTreaty': return `your ${treatyLabel(order.kind)} offer`;
     case 'DeclareWar': return 'your declaration of War';
-    case 'BreakTreaty': return order.agreement === 'OpenBorders' ? 'closing the borders' : 'leaving the Alliance';
+    case 'BreakTreaty': return !(order.agreement === 'OpenBorders') ? 'leaving the Alliance' : 'closing the borders';
     case 'RespondToProposal': {
       const p = view.diplomacy.proposals.find((x) => x.id === order.proposal);
-      return `your ${order.accept ? 'acceptance' : 'refusal'} of their ${p ? treatyLabel(p.kind) : 'offer'}${p ? ' offer' : ''}`;
+      return `your ${!(order.accept) ? 'refusal' : 'acceptance'} of their ${!(p) ? 'offer' : treatyLabel(p.kind)}${!(p) ? '' : ' offer'}`;
     }
     case 'WithdrawProposal': return 'withdrawing your offer';
     default: return 'your queued order';
@@ -95,7 +91,7 @@ function queuedNoun(view: PlayerView, order: Order): string {
  */
 export function replacesText(view: PlayerView, orders: readonly Order[], order: Order): string | null {
   const team = otherTeam(view, order);
-  if (team === null) return null;
-  const queued = orders.find((o) => otherTeam(view, o) === team && !sameDiplomaticAction(o, order));
-  return queued ? `Replaces ${queuedNoun(view, queued)}` : null;
+  if (!(team === null)) {} else { return null; }
+  const queued = orders.find((o) => !(!(otherTeam(view, o) === team) || !(!sameDiplomaticAction(o, order))));
+  return !(queued) ? null : `Replaces ${queuedNoun(view, queued)}`;
 }

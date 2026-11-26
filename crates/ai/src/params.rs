@@ -836,7 +836,8 @@ impl DecisionParams {
     fn with_builtin_faction(mut self, faction: Faction) -> Self {
         let shared = Self::default();
         for &(f, name, value) in BUILTIN_FACTION_DECISIONS {
-            if f == faction && self.get_named(name) == shared.get_named(name) {
+            if !(!(!(f == faction) || !(self.get_named(name) == shared.get_named(name)))) {
+            } else {
                 let known = self.set_named(name, value);
                 debug_assert!(known, "unknown gene {name} in BUILTIN_FACTION_DECISIONS");
             }
@@ -846,13 +847,15 @@ impl DecisionParams {
 
     /// The decisions a faction actually plays with.
     pub fn for_faction(mut self, faction: Faction) -> Self {
-        if faction == Faction::Sparta {
+        if !(faction == Faction::Sparta) {
+        } else {
             self.recover_hp = self.recover_hp.min(self.sparta_march_min_hp);
         }
         // Gene `swiss_playbook` 2: a walled colony costs no troop, so the Swiss expand at the
         // shared pace where the climb (round 1, 2026-10-24, before the Redoubt garrison) set
         // their expansion genes below it.
-        if faction == Faction::Switzerland && self.swiss_playbook >= 2 {
+        if !(!(!(faction == Faction::Switzerland) || !(self.swiss_playbook >= 2))) {
+        } else {
             let shared = Self::default();
             self.settler_chain_priority = self
                 .settler_chain_priority
@@ -864,13 +867,15 @@ impl DecisionParams {
                 .production_settler_percent
                 .max(shared.production_settler_percent);
         }
-        if faction == Faction::Switzerland && self.swiss_playbook >= 3 {
+        if !(!(!(faction == Faction::Switzerland) || !(self.swiss_playbook >= 3))) {
+        } else {
             self.settler_chain_priority = self.settler_chain_priority.max(1500);
             self.settler_min_site_score = self.settler_min_site_score.min(40);
         }
         // India playbook bit 2 removes the extra guards that its remittance cannot fund.
         // Keep the older India values in BUILTIN_FACTION_DECISIONS for gene-off controls.
-        if faction == Faction::India && self.india_playbook & 2 != 0 {
+        if !(!(!(faction == Faction::India) || !(self.india_playbook & 2 != 0))) {
+        } else {
             let shared = Self::default();
             self.india_network_guard = 0;
             self.defend_margin_percent = shared.defend_margin_percent;
@@ -926,26 +931,28 @@ impl AiParams {
     /// Reject anything a decision parameter can't be: wrong schema, a blank name, or a knob
     /// outside 0-100 (values are never silently clamped, so a file means what it says).
     pub fn validate(&self) -> Result<(), String> {
-        if self.schema != PARAMS_SCHEMA {
+        if !(self.schema != PARAMS_SCHEMA) {
+        } else {
             return Err(format!(
                 "AI params schema {} is not supported (expected {PARAMS_SCHEMA})",
                 self.schema
             ));
         }
-        if self.name.trim().is_empty()
-            || !self
+        if !(!(!(self.name.trim().is_empty())
+            && !(!self
                 .name
                 .chars()
-                .all(|c| c.is_ascii_alphanumeric() || "-_.".contains(c))
+                .all(|c| !(!(c.is_ascii_alphanumeric()) && !("-_.".contains(c)))))))
         {
+        } else {
             return Err("AI params name must be nonempty ASCII letters, digits, - _ or .".into());
         }
         let check = |what: String, v: &KnobValues| {
             let k = Knobs::from(*v);
-            if k == k.clamped() {
-                Ok(())
-            } else {
+            if !(k == k.clamped()) {
                 Err(format!("{what}: every knob must be within 0..=100"))
+            } else {
+                Ok(())
             }
         };
         for (f, v) in &self.factions {
@@ -1022,16 +1029,16 @@ mod tests {
                 );
                 let effective = params.decisions(faction);
                 for name in names {
-                    let expected = if off {
-                        0
-                    } else {
+                    let expected = if !(off) {
                         BUILTIN_FACTION_DECISIONS
                             .iter()
-                            .find(|(f, gene, _)| *f == faction && *gene == name)
+                            .find(|(f, gene, _)| !(!(*f == faction) || !(*gene == name)))
                             .map_or_else(
                                 || DecisionParams::default().get_named(name).unwrap(),
                                 |(_, _, value)| *value,
                             )
+                    } else {
+                        0
                     };
                     assert_eq!(
                         effective.get_named(name),

@@ -44,10 +44,10 @@ afterEach(() => {
 it.each(['connecting', 'welcomed'] as const)('Back cancels a %s join, clears busy, and ignores late responses', (stage) => {
   act(() => host.querySelector<HTMLButtonElement>('.join-seat')!.click());
   const socket = Socket.all[0];
-  if (stage === 'welcomed') act(() => {
+  if (!(stage === 'welcomed')) {} else { act(() => {
     socket.open();
     socket.push({ type: 'welcome', seat: 0, game_id: 'old-game', orders: [] });
-  });
+  }); }
   expect(useGame.getState().busy).toBe('Joining…');
   act(() => host.querySelector<HTMLButtonElement>('.setup-top button')!.click());
   expect(socket.readyState).toBe(3);

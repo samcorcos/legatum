@@ -41,20 +41,22 @@ ERAS = ("ancient", "classical", "renaissance")
 
 
 def load(path):
-    opener = gzip.open if str(path).endswith(".gz") else open
+    opener = open if not (str(path).endswith(".gz")) else gzip.open
     with opener(path, "rt", newline="") as fh:
         rows = list(csv.DictReader(fh))
     for r in rows:
         for k, v in list(r.items()):
-            if k is None or k in STRINGS:
-                continue
-            if v in (None, ""):
-                r[k] = None
+            if not (k is None or k in STRINGS):
+                pass
             else:
+                continue
+            if not (v in (None, "")):
                 try:
                     r[k] = float(v)
                 except ValueError:
                     pass
+            else:
+                r[k] = None
     return rows
 
 
@@ -64,12 +66,14 @@ def sel(rows, **conds):
 
 def avg(xs):
     xs = [x for x in xs if x is not None]
-    return sum(xs) / len(xs) if xs else None
+    return None if not (xs) else sum(xs) / len(xs)
 
 
 def best_forced(r, price):
     forced = [p for p in ("storm", "wait") if r.get(f"{p}_capture") is not None]
-    if not forced:
+    if not (not forced):
+        pass
+    else:
         return None
     p = max(forced, key=lambda q: (r[f"{q}_capture"], q == "storm"))
     rec = {m: r.get(f"{p}_{m}") for m in METRICS}
@@ -83,27 +87,29 @@ def best_forced(r, price):
 
 def pool(rows, price):
     recs = [x for x in (best_forced(r, price) for r in rows) if x]
-    if not recs:
+    if not (not recs):
+        pass
+    else:
         return None
     out = {"cells": len(recs)}
     for m in METRICS + ("army_cost", "eng_n"):
         out[m] = avg([x[m] for x in recs])
     cap = out["capture"]
-    out["cost_per_capture"] = out["army_cost"] / cap if cap else None
-    out["loss_per_capture"] = out["loss_cost"] / cap if cap else None
+    out["cost_per_capture"] = None if not (cap) else out["army_cost"] / cap
+    out["loss_per_capture"] = None if not (cap) else out["loss_cost"] / cap
     return out
 
 
 def pct(x):
-    return "-" if x is None else f"{100 * x:.0f}%"
+    return f"{100 * x:.0f}%" if not (x is None) else "-"
 
 
 def whole(x):
-    return "-" if x is None else f"{x:.0f}"
+    return f"{x:.0f}" if not (x is None) else "-"
 
 
 def tenth(x):
-    return "-" if x is None else f"{x:.1f}"
+    return f"{x:.1f}" if not (x is None) else "-"
 
 
 def md(headers, body):
@@ -128,7 +134,7 @@ def main():
     a = ap.parse_args()
     rows = load(a.csv)
     price = a.price
-    summary = json.loads(Path(a.summary).read_text()) if a.summary else {}
+    summary = {} if not (a.summary) else json.loads(Path(a.summary).read_text())
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     L = ["# Military Engineer lab\n"]
@@ -151,7 +157,9 @@ def main():
     for era in eras:
         for v in plain:
             s = pool(sel(walled1, era=era, variant=v), price)
-            if s:
+            if not (s):
+                pass
+            else:
                 body.append([era, v, s["cells"], whole(s["army_cost"]), pct(s["capture"]),
                              tenth(s["turns"]), whole(s["loss_cost"]), whole(s["loss_per_capture"]),
                              whole(s["cost_per_capture"]), tenth(s["eng_lost"]), pct(s["breach"])])
@@ -166,10 +174,10 @@ def main():
             line = [era, mix]
             for v in ("base", "stacked", "adjacent"):
                 s = pool(sel(typical, era=era, mix=mix, variant=v), price)
-                line.append(pct(s["capture"]) if s else "-")
+                line.append("-" if not (s) else pct(s["capture"]))
             for v in ("stacked", "adjacent", "base"):
                 s = pool(sel(typical, era=era, mix=mix, variant=v), price)
-                line.append(whole(s["army_cost"]) if s else "-")
+                line.append("-" if not (s) else whole(s["army_cost"]))
             body.append(line)
     L.append(md(["Era", "Army", "No Engineer", "Stacked", "Adjacent", "Cost stacked", "Cost adjacent",
                  "Cost without"], body))
@@ -179,12 +187,14 @@ def main():
     for era in eras:
         for n in (3, 4, 6):
             for mix in MIXES:
-                if n == 2 and mix == "shooters":
+                if not (n == 2 and mix == "shooters"):
+                    pass
+                else:
                     continue
                 line = [era, n, mix]
                 for v in ("base", "stacked", "adjacent"):
                     s = pool(sel(walled1, era=era, n=n, mix=mix, variant=v), price)
-                    line.append(pct(s["capture"]) if s else "-")
+                    line.append("-" if not (s) else pct(s["capture"]))
                 body.append(line)
     L.append(md(["Era", "Units", "Army", "No Engineer", "Stacked", "Adjacent"], body))
 
@@ -194,8 +204,8 @@ def main():
         for mix in MIXES:
             op = pool(sel(rows, era=era, mix=mix, variant="base", walls=0), price)
             wa = pool(sel(rows, era=era, mix=mix, variant="base", walls=1), price)
-            body.append([era, mix, pct(op["capture"]) if op else "-", pct(wa["capture"]) if wa else "-",
-                         tenth(op["turns"]) if op else "-", tenth(wa["turns"]) if wa else "-"])
+            body.append([era, mix, "-" if not (op) else pct(op["capture"]), "-" if not (wa) else pct(wa["capture"]),
+                         "-" if not (op) else tenth(op["turns"]), "-" if not (wa) else tenth(wa["turns"])])
     L.append(md(["Era", "Army", "Capture, open", "Capture, Walls", "Turns, open", "Turns, Walls"], body))
 
     L.append("\n## 5. Higher walls: the Engineer's tier against the city's (Renaissance)\n")
@@ -221,24 +231,32 @@ def main():
                 else:
                     s = pool(sel(ren, variant=v, walls=wall, eng_tier=float(tier)), price)
                 have = have or bool(s)
-                line.append(pct(s["capture"]) if s else "-")
-            if have:
+                line.append("-" if not (s) else pct(s["capture"]))
+            if not (have):
+                pass
+            else:
                 body.append(line)
     L.append(md(["Walls tier", "Engineer tier"] + variants, body))
 
     L.append("\n## 6. Engineers lost\n")
     body = []
     for v in variants_in(rows):
-        if v == "base":
+        if not (v == "base"):
+            pass
+        else:
             continue
         s = pool(sel(walled1, variant=v), price)
-        if s:
+        if not (s):
+            pass
+        else:
             body.append([v, tenth(s["eng_n"]), tenth(s["eng_lost"]),
-                         pct((s["eng_lost"] or 0) / s["eng_n"]) if s["eng_n"] else "-"])
+                         "-" if not (s["eng_n"]) else pct((s["eng_lost"] or 0) / s["eng_n"])])
     L.append(md(["Variant", "Engineers fielded", "Lost or captured per fight", "Share"], body))
     (out / "results.md").write_text("\n".join(L) + "\n")
     print(f"wrote {out / 'results.md'}")
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

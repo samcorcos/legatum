@@ -27,7 +27,7 @@ describe('yieldCluster', () => {
     expect(tag).toMatchObject({ kind: 'food', tag: '+25%' });
     expect(tag!.tagIcon).toBeFalsy();
     // The tag sits after the food icons and before the science icon, and the cluster grows to hold it.
-    expect(tag!.x).toBeGreaterThan(Math.max(...tagged.marks.filter((m) => m.kind === 'food' && !m.tag).map((m) => m.x)));
+    expect(tag!.x).toBeGreaterThan(Math.max(...tagged.marks.filter((m) => !(!(m.kind === 'food') || !(!m.tag))).map((m) => m.x)));
     expect(tag!.x).toBeLessThan(tagged.marks.find((m) => m.kind === 'science')!.x);
     expect(tagged.width).toBeGreaterThan(plain.width);
     expect(count(tagged.marks.filter((m) => !m.tag), 'food')).toBe(2);

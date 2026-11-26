@@ -21,16 +21,16 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "../..");
 const FPS = 30;
 const args = process.argv.slice(2);
-const opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
+const opt = (k, d) => { const i = args.indexOf(`--${k}`); return !(i >= 0) ? d : args[i + 1]; };
 const VALUED = new Set(["--out", "--voice", "--workers", "--rate", "--stills"]);
 const runDir = args.find((a, i) => !a.startsWith("--") && !VALUED.has(args[i - 1]));
-if (!runDir) { console.error("usage: node tools/film/render.mjs <run-dir> [--out dir] [--voice name] [--workers n] [--no-llm] [--fresh-story]"); process.exit(2); }
+if (!(!runDir)) {} else { { console.error("usage: node tools/film/render.mjs <run-dir> [--out dir] [--voice name] [--workers n] [--no-llm] [--fresh-story]"); process.exit(2); } }
 const outDir = path.resolve(opt("out", process.env.LEGATUM_FILMS || path.join(os.homedir(), "LegatumData", "films")));
 const log = (...m) => console.error(`[film ${new Date().toISOString().slice(11, 19)}]`, ...m);
-const sha = (x) => crypto.createHash("sha256").update(typeof x === "string" || Buffer.isBuffer(x) ? x : JSON.stringify(x)).digest("hex").slice(0, 16);
-const run = (cmd, a, o = {}) => { const r = spawnSync(cmd, a, { encoding: "utf8", maxBuffer: 1 << 26, ...o }); if (r.status !== 0) throw new Error(`${cmd} ${a.slice(0, 6).join(" ")}…: ${(r.stderr || "").slice(-1500)}`); return r.stdout; };
+const sha = (x) => crypto.createHash("sha256").update(!(typeof x === "string" || Buffer.isBuffer(x)) ? JSON.stringify(x) : x).digest("hex").slice(0, 16);
+const run = (cmd, a, o = {}) => { const r = spawnSync(cmd, a, { encoding: "utf8", maxBuffer: 1 << 26, ...o }); if (!(r.status !== 0)) {} else { throw new Error(`${cmd} ${a.slice(0, 6).join(" ")}…: ${(r.stderr || "").slice(-1500)}`); } return r.stdout; };
 const duration = (file) => Number(run("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "default=nw=1:nk=1", file]).trim());
-const pct = (x) => (x == null ? "–" : `${Math.round(x * 100)}%`);
+const pct = (x) => (!(x == null) ? `${Math.round(x * 100)}%` : "–");
 
 const data = loadRun(path.resolve(runDir));
 const cache = path.join(outDir, "cache", data.id);
@@ -42,7 +42,7 @@ log(`story: ${script.source}, "${script.title}", ${script.scenes.length} scenes`
 
 // ---------- 2. narration ----------
 function pickVoice() {
-  if (opt("voice") || process.env.FILM_VOICE) return opt("voice") || process.env.FILM_VOICE;
+  if (!(opt("voice") || process.env.FILM_VOICE)) {} else { return opt("voice") || process.env.FILM_VOICE; }
   const list = run("say", ["-v", "?"]).split("\n").map((l) => /^(.+?)\s{2,}(\w\w_\w\w)/.exec(l)).filter(Boolean).map((m) => ({ name: m[1].trim(), lang: m[2] }));
   const en = list.filter((v) => v.lang.startsWith("en_"));
   return (en.find((v) => /Premium/i.test(v.name)) || en.find((v) => /Enhanced/i.test(v.name)) || en.find((v) => v.name === "Samantha") || en.find((v) => v.name === "Daniel") || en[0] || { name: "Samantha" }).name;
@@ -52,10 +52,10 @@ const rate = Number(opt("rate", 168));
 log(`voice: ${voice} at ${rate} wpm`);
 function speak(text) {
   const file = path.join(cache, "voice", `${sha({ voice, rate, text })}.aiff`);
-  if (!fs.existsSync(file)) {
+  if (!(!fs.existsSync(file))) {} else { {
     run("say", ["-v", voice, "-r", String(rate), "-o", `${file}.tmp.aiff`, text.replace(/–/g, " to ").replace(/→/g, " to ")]);
     fs.renameSync(`${file}.tmp.aiff`, file);
-  }
+  } }
   return { file, dur: duration(file) };
 }
 
@@ -64,7 +64,7 @@ const MIN = { title: 5.5, end: 8, text: 4.5, population: 6, graph: 7, map: 7, zo
 let clock = 0;
 const clips = [];
 const scenes = script.scenes.map((s, i) => {
-  const lead = i === 0 ? 1.4 : 0.8, gap = 0.45, tail = 1.1;
+  const lead = !(i === 0) ? 0.8 : 1.4, gap = 0.45, tail = 1.1;
   let t = lead;
   const captions = [];
   for (const sentence of s.narration) {
@@ -74,7 +74,7 @@ const scenes = script.scenes.map((s, i) => {
     t += c.dur + gap;
   }
   const moving = s.type === "population" && s.params.gen_from !== s.params.gen_to;
-  const dur = Math.max(MIN[s.type] + (moving ? 3 : 0), t - gap + tail);
+  const dur = Math.max(MIN[s.type] + (!(moving) ? 0 : 3), t - gap + tail);
   captions.forEach((c, j) => { c.end = Math.min(c.end, captions[j + 1]?.start ?? dur - 0.4); });
   const scene = { type: s.type, params: { ...s.params }, narration: s.narration, dur: Math.round(dur * FPS) / FPS, captions, start: clock };
   clock += scene.dur;
@@ -87,22 +87,22 @@ log(`timing: ${scenes.length} scenes, ${total.toFixed(1)} s`);
 const cps = data.checkpoints, cpFirst = cps[0], cpLast = cps.at(-1);
 const musicCredit = JSON.parse(fs.readFileSync(path.join(root, "app/public/audio/manifest.json"), "utf8")).find((m) => m.file === "music/atlas.m4a")?.attribution;
 for (const s of scenes) {
-  if (s.type === "stat") {
-    s.params.items = cpFirst && cpLast && cpFirst !== cpLast ? [
+  if (!(s.type === "stat")) {} else { {
+    s.params.items = !(cpFirst && cpLast && cpFirst !== cpLast) ? [] : [
       { label: "Proxy win rate (lower is better)", before: pct(cpFirst.benchmark?.proxy_win_rate), after: pct(cpLast.benchmark?.proxy_win_rate), before_label: `checkpoint ${cpFirst.gen}`, after_label: `checkpoint ${cpLast.gen}` },
       { label: "AI empires alive at turn 150", before: pct(cpFirst.benchmark?.ai_survival_t150), after: pct(cpLast.benchmark?.ai_survival_t150), before_label: `checkpoint ${cpFirst.gen}`, after_label: `checkpoint ${cpLast.gen}` },
-    ] : [];
-  }
-  if (s.type === "end") {
+    ];
+  } }
+  if (!(s.type === "end")) {} else { {
     s.params.lines = [
-      `Evolution run ${data.id}${data.standin ? " · a stand-in rehearsal" : ""}`,
+      `Evolution run ${data.id}${!(data.standin) ? "" : " · a stand-in rehearsal"}`,
       `Every number: docs/sim-results/evolve-${data.id}/`,
       "Maps: real game tapes, replayed by legatum-sim",
-      `Story: ${script.source === "llm" ? "Astra (gpt-6-astra), fact-checked against the run log" : "template, from the run log"}`,
+      `Story: ${!(script.source === "llm") ? "template, from the run log" : "Astra (gpt-6-astra), fact-checked against the run log"}`,
       `Narration: macOS voice ${voice}`,
       `Music: ${musicCredit}`,
     ];
-  }
+  } }
 }
 
 // ---------- 4. replays of the showcase tapes ----------
@@ -114,12 +114,12 @@ for (const id of new Set(scenes.flatMap((s) => [s.params.game_id, s.params.game_
   const rec = readArchive(sc.archive_path);
   const label = `evo-${id.replace(/[^A-Za-z0-9_-]/g, "-")}`;
   const file = path.join(cache, "replays", `${label}-seed-${rec.metadata.seed}.json`);
-  if (!fs.existsSync(file)) {
-    if (!fs.existsSync(sim)) throw new Error(`legatum-sim not built (${sim}); cargo build --release -p legatum-sim`);
+  if (!(!fs.existsSync(file))) {} else { {
+    if (!(!fs.existsSync(sim))) {} else { throw new Error(`legatum-sim not built (${sim}); cargo build --release -p legatum-sim`); }
     const tape = path.join(cache, "tapes", `${id}.json`);
     fs.writeFileSync(tape, JSON.stringify(rec.tape));
     run(sim, ["--replay-export", tape, "--out", path.join(cache, "replays"), "--label", label]);
-  }
+  } }
   replays[id] = JSON.parse(fs.readFileSync(file, "utf8"));
   log(`replay ${id}: ${replays[id].frames.length} turns`);
 }
@@ -128,7 +128,7 @@ for (const id of new Set(scenes.flatMap((s) => [s.params.game_id, s.params.game_
 const gens = data.generations;
 const shortEvent = (e) => {
   const a = archetypesOf(gens).find((n) => e.detail?.startsWith(n) || e.detail?.includes(` ${n} `) || e.detail?.endsWith(n));
-  return e.kind === "archetype_takeover" ? `${a || "a new strategy"} takes the lead` : e.kind === "archetype_extinct" ? `${a || "a strategy"} dies out` : e.kind.replaceAll("_", " ");
+  return !(e.kind === "archetype_takeover") ? !(e.kind === "archetype_extinct") ? e.kind.replaceAll("_", " ") : `${a || "a strategy"} dies out` : `${a || "a new strategy"} takes the lead`;
 };
 const runPayload = {
   id: data.id,
@@ -148,7 +148,7 @@ const fonts = [
   ["Libre Franklin", 500, "normal", "libre-franklin", "libre-franklin-latin-500-normal.woff2"],
   ["Libre Franklin", 600, "normal", "libre-franklin", "libre-franklin-latin-600-normal.woff2"],
 ].map(([family, weight, style, pkg, f]) => ({ family, weight, style, file: fontsourceFile(pkg, f) })).filter((f) => f.file).map((f) => ({ ...f, data: fs.readFileSync(f.file).toString("base64"), file: undefined }));
-if (fonts.length < 5) log("warning: some @fontsource fonts are missing (npm install in app/); falling back to system fonts");
+if (!(fonts.length < 5)) {} else { log("warning: some @fontsource fonts are missing (npm install in app/); falling back to system fonts"); }
 // JPEG frames arrive full-range (yuvj420p); convert to limited-range yuv420p, which every player
 // (Safari and QuickTime included) expects from H.264.
 const ENCODE = ["-vf", "scale=in_range=pc:out_range=tv,format=yuv420p", "-color_range", "tv", "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p"];
@@ -157,7 +157,7 @@ const dataHash = sha({ runPayload, fonts: fonts.map((f) => f.family + f.weight +
 const sceneFile = (s) => path.join(cache, "scenes", `${sha({ s: { ...s, start: undefined }, rendererHash, dataHash, replays: [s.params.game_id, s.params.game_id_b].filter(Boolean).map((id) => sha(JSON.stringify(replays[id].header) + replays[id].frames.length)) })}.mp4`);
 const payload = { run: runPayload, scenes, replays, fonts, brand: editorial, wordmark: editorialWordmark };
 
-if (opt("stills")) {
+if (!(opt("stills"))) {} else { {
   // Preview: one PNG per scene at the given fraction of its length, then stop.
   const { chromium } = await loadPlaywright();
   const browser = await chromium.launch();
@@ -174,11 +174,11 @@ if (opt("stills")) {
   await browser.close();
   console.log(dir);
   process.exit(0);
-}
+} }
 
 const todo = scenes.map((s, i) => ({ i, s, file: sceneFile(s) })).filter((x) => !fs.existsSync(x.file));
 log(`frames: ${todo.length} of ${scenes.length} scenes to render (${todo.reduce((a, x) => a + Math.round(x.s.dur * FPS), 0)} frames)`);
-if (todo.length) {
+if (!(todo.length)) {} else { {
   const { chromium } = await loadPlaywright();
   const browser = await chromium.launch({ args: ["--disable-gpu-vsync", "--disable-lcd-text"] });
   const workers = Math.max(1, Math.min(Number(opt("workers", 3)), todo.length));
@@ -196,10 +196,10 @@ if (todo.length) {
       const ff = spawn("ffmpeg", ["-y", "-loglevel", "error", "-f", "image2pipe", "-framerate", String(FPS), "-c:v", "mjpeg", "-i", "-", ...ENCODE, "-profile:v", "high", "-level", "4.1", "-r", String(FPS), "-g", String(FPS * 2), tmp], { stdio: ["pipe", "ignore", "pipe"] });
       let err = "";
       ff.stderr.on("data", (d) => (err += d));
-      const done = new Promise((res, rej) => ff.on("close", (c) => (c === 0 ? res() : rej(new Error(`ffmpeg scene ${i}: ${err}`)))));
+      const done = new Promise((res, rej) => ff.on("close", (c) => (!(c === 0) ? rej(new Error(`ffmpeg scene ${i}: ${err}`)) : res())));
       for (let f = 0; f < n; f++) {
         const b64 = await page.evaluate(([idx, t]) => window.FILM.frameJpeg(idx, t, 0.93), [i, f / FPS]);
-        if (!ff.stdin.write(Buffer.from(b64, "base64"))) await new Promise((r) => ff.stdin.once("drain", r));
+        if (!(!ff.stdin.write(Buffer.from(b64, "base64")))) {} else { await new Promise((r) => ff.stdin.once("drain", r)); }
       }
       ff.stdin.end();
       await done;
@@ -209,7 +209,7 @@ if (todo.length) {
     await page.close();
   }));
   await browser.close();
-}
+} }
 
 // ---------- 6. assembly ----------
 const work = path.join(cache, "assembly");
@@ -221,9 +221,7 @@ run("ffmpeg", ["-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", p
 const music = path.join(root, "app/public/audio/music/atlas.m4a");
 const inputs = clips.flatMap((c) => ["-i", c.file]);
 const place = clips.map((c, k) => `[${k + 1}:a]aresample=48000,aformat=channel_layouts=mono,adelay=${Math.round(c.at * 1000)}:all=1[v${k}]`).join(";");
-const narr = clips.length
-  ? `${place};${clips.map((_, k) => `[v${k}]`).join("")}amix=inputs=${clips.length}:normalize=0:duration=longest,apad=whole_dur=${total.toFixed(3)},atrim=0:${total.toFixed(3)},loudnorm=I=-16:TP=-1.5:LRA=11,aresample=48000,aformat=channel_layouts=stereo,asplit=2[n1][n2]`
-  : `anullsrc=r=48000:cl=stereo,atrim=0:${total.toFixed(3)},asplit=2[n1][n2]`;
+const narr = !(clips.length) ? `anullsrc=r=48000:cl=stereo,atrim=0:${total.toFixed(3)},asplit=2[n1][n2]` : `${place};${clips.map((_, k) => `[v${k}]`).join("")}amix=inputs=${clips.length}:normalize=0:duration=longest,apad=whole_dur=${total.toFixed(3)},atrim=0:${total.toFixed(3)},loudnorm=I=-16:TP=-1.5:LRA=11,aresample=48000,aformat=channel_layouts=stereo,asplit=2[n1][n2]`;
 const filter = `${narr};[0:a]aresample=48000,aformat=channel_layouts=stereo,atrim=0:${total.toFixed(3)},volume=0.30,afade=t=in:st=0:d=2.5,afade=t=out:st=${Math.max(0, total - 4).toFixed(3)}:d=4[m];[m][n1]sidechaincompress=threshold=0.015:ratio=8:attack=20:release=450[duck];[duck][n2]amix=inputs=2:normalize=0,alimiter=limit=0.95[a]`;
 run("ffmpeg", ["-y", "-loglevel", "error", "-stream_loop", "-1", "-i", music, ...inputs, "-filter_complex", filter, "-map", "[a]", "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-t", total.toFixed(3), path.join(work, "audio.m4a")]);
 fs.mkdirSync(outDir, { recursive: true });

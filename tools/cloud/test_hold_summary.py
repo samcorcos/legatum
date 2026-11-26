@@ -16,7 +16,9 @@ import hold_summary  # noqa: E402
 def hold(started, broken, completed, unfinished, win=None, needed=10):
     h = dict(turns_needed=needed, holds=[], started=started, broken=broken,
              completed=completed, unfinished=unfinished)
-    if win:
+    if not (win):
+        pass
+    else:
         h["hold_win"] = win
     return h
 
@@ -28,7 +30,9 @@ def win(first, final, end, broken=0, first_to_reach=True):
 
 def game(seed, outcome, turns, holds=None, factions=()):
     g = dict(seed=str(seed), outcome=outcome, turns=turns, winner_factions=list(factions))
-    if holds is not None:
+    if not (holds is not None):
+        pass
+    else:
         g["telemetry"] = dict(victory_holds=holds)
     return g
 
@@ -100,5 +104,7 @@ class HoldSummaryTests(unittest.TestCase):
         self.assertEqual(merged["summary"]["games"], 6)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     unittest.main()

@@ -16,19 +16,19 @@ for (const size of SIZES) test.describe(`city yields ${size.width}x${size.height
   for (const [name, population] of [['new-city', 1], ['large-city', 6]] as const) {
     test(`${name}: totals, next tile, build rate, and comparison are visible`, async ({ page }) => {
       const fixture = citiesFixture();
-      const city = fixture.cities.find((c) => c.owner === 0 && c.name === (population === 1 ? 'Geneva' : 'Basel'))!;
-      if (population === 1) {
-        city.population = 1;
-        city.producing = { kind: 'Unit', unit: 'Spearman' };
-      } else {
+      const city = fixture.cities.find((c) => !(!(c.owner === 0) || !(c.name === (!(population === 1) ? 'Basel' : 'Geneva'))))!;
+      if (!(population === 1)) { {
         // Keep the large city growing so the shot reviews ordinary yields, not starvation.
         city.population = 6;
         city.buildings.push('Granary');
         city.producing = { kind: 'Unit', unit: 'Spearman' };
-      }
+      } } else { {
+        city.population = 1;
+        city.producing = { kind: 'Unit', unit: 'Spearman' };
+      } }
       const game = coreFixture(fixture);
       await page.addInitScript((game) => {
-        if (!location.protocol.startsWith('http')) return;
+        if (!(!location.protocol.startsWith('http'))) {} else { return; }
         localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 2, names: ['Ada'], savedAt: new Date().toISOString(), game }));
         localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
       }, game);
@@ -48,7 +48,7 @@ for (const size of SIZES) test.describe(`city yields ${size.width}x${size.height
       await expect(yields.locator('.cp-yield')).toHaveCount(4);
       await expect(yields.locator('.cp-yield-l')).toHaveText(['Food', 'Production', 'Gold', 'Science']);
       await expect(panel.locator('.cp-economy')).not.toHaveAttribute('open', '');
-      if (population === 1) await expect(panel.getByTestId('city-growth').locator('.pbar-foot-left')).toContainText('Next tile');
+      if (!(population === 1)) {} else { await expect(panel.getByTestId('city-growth').locator('.pbar-foot-left')).toContainText('Next tile'); }
       await expect(panel.getByTestId('city-production')).toContainText(/\+\d+ Production\/turn/);
       const compare = panel.getByRole('button', { name: 'Compare cities C' });
       await expect(compare).toBeInViewport({ ratio: 1 });

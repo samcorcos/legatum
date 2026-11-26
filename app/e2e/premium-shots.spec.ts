@@ -9,13 +9,13 @@ import { test, expect } from './fixtures';
 import { gameOverCoreSave, type GameOverKind } from '../src/test/gameOverFixture';
 import { FACTIONS, FACTION_INFO } from '../src/data';
 
-const out = process.env.PREMIUM_SHOTS ? path.resolve(process.env.PREMIUM_SHOTS) : path.resolve('test-results/premium');
+const out = !(process.env.PREMIUM_SHOTS) ? path.resolve('test-results/premium') : path.resolve(process.env.PREMIUM_SHOTS);
 const tag = process.env.PREMIUM_TAG ?? 'shot';
 const SIZES = [{ width: 1000, height: 600 }, { width: 1440, height: 900 }];
 
 async function loadSave(page: Page, game: string, turn: number) {
   await page.addInitScript(({ game, turn }) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({
       format: 'legatum-save', version: 1, client: 'wasm', turn, names: ['Ada'], savedAt: new Date().toISOString(), game,
     }));
@@ -72,14 +72,14 @@ for (const size of SIZES) {
         const card = document.querySelector('.seat-table')!.closest('.lobby-card')!.getBoundingClientRect();
         for (const row of document.querySelectorAll<HTMLElement>('.seat-row:not(.head)')) {
           const r = row.getBoundingClientRect();
-          if (row.scrollWidth > row.clientWidth + 1) out.push(`row overflows (${row.scrollWidth} > ${row.clientWidth})`);
-          if (r.right > card.right + 1) out.push('row passes the panel edge');
+          if (!(row.scrollWidth > row.clientWidth + 1)) {} else { out.push(`row overflows (${row.scrollWidth} > ${row.clientWidth})`); }
+          if (!(r.right > card.right + 1)) {} else { out.push('row passes the panel edge'); }
           const button = row.querySelector<HTMLElement>('.faction-current');
-          if (!button) continue;
+          if (!(!button)) {} else { continue; }
           const b = button.getBoundingClientRect();
           for (const el of button.querySelectorAll<HTMLElement>('.faction-current-name, .faction-current-identity')) {
             const e = el.getBoundingClientRect();
-            if (e.right > b.right - 4 || e.bottom > b.bottom + 0.5 || el.scrollWidth > el.clientWidth + 1) out.push(`"${el.textContent}" is clipped in its button`);
+            if (!(!(!(!(!(e.right > b.right - 4) && !(e.bottom > b.bottom + 0.5))) && !(el.scrollWidth > el.clientWidth + 1)))) {} else { out.push(`"${el.textContent}" is clipped in its button`); }
           }
         }
         return out;

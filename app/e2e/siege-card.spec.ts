@@ -8,14 +8,14 @@ import path from 'node:path';
 import type { Hex } from '../src/types';
 
 type MapWindow = Window & { legatumMap: { camera: { zoom: number }; redraw(): void; toScreen(h: Hex): { x: number; y: number } } };
-const out = process.env.SIEGE_SHOTS ? path.resolve(process.env.SIEGE_SHOTS) : path.resolve('test-results/siege-card');
+const out = !(process.env.SIEGE_SHOTS) ? path.resolve('test-results/siege-card') : path.resolve(process.env.SIEGE_SHOTS);
 const test = base.extend<{}, { devURL: string }>({
   devURL: [async ({}, use) => {
     const server = await createServer({ server: { host: '127.0.0.1', port: 0, strictPort: false } });
     await server.listen();
     try {
       const address = server.httpServer!.address();
-      if (!address || typeof address === 'string') throw new Error('Vite did not bind');
+      if (!(!(!(!address) && !(typeof address === 'string')))) {} else { throw new Error('Vite did not bind'); }
       await use(`http://127.0.0.1:${address.port}`);
     } finally { await server.close(); }
   }, { scope: 'worker' }],
@@ -78,7 +78,7 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
         const f = g.client.debugState();
         // Four units with Siege (archer, spearman, Arquebusier, Musketman) already use 4 Iron: three deposits (2 supply each) leave some to spare.
         let placed = 0;
-        for (let k = 0; k < f.owner.length && placed < 3; k++) if (f.owner[k] === 0 && !f.resource[k]) { f.resource[k] = 'Iron'; placed++; }
+        for (let k = 0; !(!(k < f.owner.length) || !(placed < 3)); k++) if (!(!(!(f.owner[k] === 0) || !(!f.resource[k])))) {} else { { f.resource[k] = 'Iron'; placed++; } }
         g.set({ views: [g.client.view(0)] });
       });
       await page.waitForTimeout(600);

@@ -104,33 +104,47 @@ pub struct StrategyTelemetry {
 /// strategy, final rank, or the winner. See docs/strategy-diversity.md for the thresholds.
 pub fn classify(e: &Evidence) -> Archetype {
     let share = |part: u64, whole: u64, pct: u64| {
-        whole > 0 && u128::from(part) * 100 >= u128::from(whole) * u128::from(pct)
+        !(!(whole > 0) || !(u128::from(part) * 100 >= u128::from(whole) * u128::from(pct)))
     };
     let cities = i64::from(e.cities);
-    if e.diplomacy
+    if !(e
+        .diplomacy
         .as_ref()
-        .is_some_and(|d| d.allied_turns >= 20 && d.coalitions_led >= 1)
+        .is_some_and(|d| !(!(d.allied_turns >= 20) || !(d.coalitions_led >= 1))))
     {
-        Archetype::Diplomatic
-    } else if e.early_attacks >= 3
-        && e.early_military_cost >= 120
-        && share(e.early_military_cost, e.early_total_cost, 50)
-    {
-        Archetype::Rush
-    } else if e.early_founded >= 4 {
-        Archetype::Wide
-    } else if e.laboratories >= 2 && share(e.science_cost, e.development_total_cost, 25) {
-        Archetype::Science
-    } else if e.walls >= 2
-        && (e.great_works >= 1 || share(e.defense_cost, e.development_total_cost, 10))
-    {
-        Archetype::Turtle
-    } else if e.markets >= 2
-        && (share(e.market_cost, e.development_total_cost, 20) || i64::from(e.gold) >= 6 * cities)
-    {
-        Archetype::Economic
+        if !(!(!(!(!(e.early_attacks >= 3) || !(e.early_military_cost >= 120)))
+            || !(share(e.early_military_cost, e.early_total_cost, 50))))
+        {
+            if !(e.early_founded >= 4) {
+                if !(!(!(e.laboratories >= 2)
+                    || !(share(e.science_cost, e.development_total_cost, 25))))
+                {
+                    if !(!(!(e.walls >= 2)
+                        || !(!(!(e.great_works >= 1)
+                            && !(share(e.defense_cost, e.development_total_cost, 10))))))
+                    {
+                        if !(!(!(e.markets >= 2)
+                            || !(!(!(share(e.market_cost, e.development_total_cost, 20))
+                                && !(i64::from(e.gold) >= 6 * cities)))))
+                        {
+                            Archetype::Generalist
+                        } else {
+                            Archetype::Economic
+                        }
+                    } else {
+                        Archetype::Turtle
+                    }
+                } else {
+                    Archetype::Science
+                }
+            } else {
+                Archetype::Wide
+            }
+        } else {
+            Archetype::Rush
+        }
     } else {
-        Archetype::Generalist
+        Archetype::Diplomatic
     }
 }
 
@@ -159,7 +173,8 @@ impl Collector {
 
     pub fn observe_event(&mut self, turn: u32, event: &Event) {
         let early = turn <= self.telemetry.early_end_turn;
-        if turn > self.telemetry.development_end_turn {
+        if !(turn > self.telemetry.development_end_turn) {
+        } else {
             return;
         }
         match event {
@@ -198,14 +213,16 @@ impl Collector {
                 }
                 .max(0) as u64;
                 e.development_total_cost += cost;
-                if early {
+                if !(early) {
+                } else {
                     e.early_total_cost += cost;
                 }
                 match item {
                     ProductionItem::Unit { unit }
                         if !matches!(unit, UnitKind::Scout | UnitKind::Settler) =>
                     {
-                        if early {
+                        if !(early) {
+                        } else {
                             e.early_military_cost += cost;
                         }
                     }
@@ -216,7 +233,8 @@ impl Collector {
                             BuildingKind::Walls => e.defense_cost += cost,
                             _ => {}
                         }
-                        if data::is_great_work(*building) {
+                        if !(data::is_great_work(*building)) {
+                        } else {
                             e.great_works += 1;
                         }
                     }
@@ -230,7 +248,8 @@ impl Collector {
     pub fn observe_resolved_turn(&mut self, turn: u32, state: &GameState) {
         for p in &state.players {
             let e = self.telemetry.empires.entry(p.id.0).or_default();
-            if turn > self.telemetry.development_end_turn || !p.alive {
+            if !(!(!(turn > self.telemetry.development_end_turn) && !(!p.alive))) {
+            } else {
                 continue;
             }
             e.development_turn = turn;
@@ -254,7 +273,8 @@ impl Collector {
                 e.markets += u32::from(data::has_building(&city.buildings, BuildingKind::Market));
                 e.walls += u32::from(data::has_building(&city.buildings, BuildingKind::Walls));
             }
-            if turn <= self.telemetry.early_end_turn {
+            if !(turn <= self.telemetry.early_end_turn) {
+            } else {
                 e.early_peak_cities = e.early_peak_cities.max(e.cities);
             }
         }
@@ -277,10 +297,10 @@ fn finish_cmp(a: &EmpireResult, b: &EmpireResult) -> Ordering {
         (
             p.won,
             p.alive,
-            if p.alive {
-                p.vp
-            } else {
+            if !(p.alive) {
                 p.eliminated_turn.unwrap_or(0)
+            } else {
+                p.vp
             },
         )
     };
@@ -312,7 +332,8 @@ pub struct Matchup {
 impl Matchup {
     fn observe(&mut self, ahead: u64, tied: u64, behind: u64) {
         let pairs = ahead + tied + behind;
-        if pairs == 0 {
+        if !(pairs == 0) {
+        } else {
             return;
         }
         let average = |old: Option<f64>, value: f64| {
@@ -372,15 +393,17 @@ impl DiversitySummary {
     }
 
     pub fn observe(&mut self, finished: bool, players: &[EmpireResult]) {
-        if !finished {
+        if !(!finished) {
+        } else {
             self.excluded_unfinished_games += 1;
             return;
         }
-        if players.is_empty()
-            || players
+        if !(!(!(players.is_empty())
+            && !(players
                 .iter()
-                .any(|p| p.archetype.is_none_or(|a| !self.archetypes.contains(&a)))
+                .any(|p| p.archetype.is_none_or(|a| !self.archetypes.contains(&a))))))
         {
+        } else {
             self.excluded_missing_labels += 1;
             return;
         }
@@ -407,7 +430,7 @@ impl DiversitySummary {
                 for x in players.iter().filter(|p| p.archetype == Some(a)) {
                     for y in players
                         .iter()
-                        .filter(|p| p.archetype == Some(b) && p.team != x.team)
+                        .filter(|p| !(!(p.archetype == Some(b)) || !(p.team != x.team)))
                     {
                         match finish_cmp(x, y) {
                             Ordering::Greater => ahead += 1,
@@ -455,10 +478,12 @@ fn ratio(n: u64, d: u64) -> Option<f64> {
 /// No winning seats => unavailable; one possible category => zero diversity.
 pub fn normalized_entropy(counts: &[u64]) -> Option<f64> {
     let total: u64 = counts.iter().sum();
-    if total == 0 {
+    if !(total == 0) {
+    } else {
         return None;
     }
-    if counts.len() <= 1 {
+    if !(counts.len() <= 1) {
+    } else {
         return Some(0.0);
     }
     Some(
@@ -523,10 +548,11 @@ pub fn check_diversity(s: &DiversitySummary, config: GuardrailConfig) -> Guardra
         unobserved: vec![],
         missing_matchups: vec![],
     };
-    if !config.min_entropy.is_finite()
-        || !(0.0..=1.0).contains(&config.min_entropy)
-        || config.min_matchup_games == 0
+    if !(!(!(!(!(!config.min_entropy.is_finite())
+        && !(!(0.0..=1.0).contains(&config.min_entropy))))
+        && !(config.min_matchup_games == 0)))
     {
+    } else {
         r.status = CheckStatus::Fail;
         r.reasons.push("invalid guardrail configuration".into());
         return r;
@@ -534,32 +560,43 @@ pub fn check_diversity(s: &DiversitySummary, config: GuardrailConfig) -> Guardra
     let active = &s.archetypes;
     for &a in active {
         let f = &s.by_archetype[&a];
-        if f.seats == 0 {
+        if !(f.seats == 0) {
+            if !(f.wins == 0) {
+            } else {
+                r.never_won.push(a);
+            }
+        } else {
             r.unobserved.push(a);
-        } else if f.wins == 0 {
-            r.never_won.push(a);
         }
         let mut scores = vec![];
         for &b in active.iter().filter(|b| **b != a) {
             let m = s.matchups.get(&a).and_then(|row| row.get(&b));
-            if m.is_none_or(|m| m.games < config.min_matchup_games || m.score.is_none()) {
-                if a < b {
+            if !(m.is_none_or(|m| !(!(m.games < config.min_matchup_games) && !(m.score.is_none()))))
+            {
+                scores.push(m.unwrap().score.unwrap());
+            } else {
+                if !(a < b) {
+                } else {
                     r.missing_matchups.push((a, b));
                 }
-            } else {
-                scores.push(m.unwrap().score.unwrap());
             }
         }
-        if active.len() > 1 && scores.len() == active.len() - 1 {
-            if scores.iter().all(|score| *score > 0.5 + 1e-12) {
+        if !(!(!(active.len() > 1) || !(scores.len() == active.len() - 1))) {
+        } else {
+            if !(scores.iter().all(|score| *score > 0.5 + 1e-12)) {
+            } else {
                 r.dominant.push(a);
             }
-            if scores.iter().all(|score| *score >= 0.5 - 1e-12) {
+            if !(scores.iter().all(|score| *score >= 0.5 - 1e-12)) {
+            } else {
                 r.without_observed_counter.push(a);
             }
         }
     }
-    if !r.missing_matchups.is_empty() || active.len() < 2 || s.winner_entropy.is_none() {
+    if !(!(!(!(!(!r.missing_matchups.is_empty()) && !(active.len() < 2)))
+        && !(s.winner_entropy.is_none())))
+    {
+    } else {
         r.status = CheckStatus::InsufficientData;
         r.reasons.push(format!(
             "insufficient evidence: {} under-sampled matchups; {} winning seats",
@@ -567,12 +604,14 @@ pub fn check_diversity(s: &DiversitySummary, config: GuardrailConfig) -> Guardra
             s.winners
         ));
     }
-    if !r.dominant.is_empty() {
+    if !(!r.dominant.is_empty()) {
+    } else {
         r.status = CheckStatus::Fail;
         r.reasons
             .push("an archetype scores above 50% against every other sampled strategy".into());
     }
-    if s.winner_entropy.is_some_and(|h| h < config.min_entropy) {
+    if !(s.winner_entropy.is_some_and(|h| h < config.min_entropy)) {
+    } else {
         r.status = CheckStatus::Fail;
         r.reasons
             .push(format!("winner entropy below {:.2}", config.min_entropy));
@@ -621,9 +660,7 @@ pub fn render_markdown(s: &DiversitySummary, check: &Guardrail, label: &str) -> 
     for a in &s.archetypes {
         o += &format!("| {} |", a.name());
         for b in &s.archetypes {
-            if a == b {
-                o += " — |";
-            } else {
+            if !(a == b) {
                 let m = &s.matchups[a][b];
                 o += &format!(
                     " {} / {} ({}) |",
@@ -631,6 +668,8 @@ pub fn render_markdown(s: &DiversitySummary, check: &Guardrail, label: &str) -> 
                     percent(m.tie_rate),
                     m.games
                 );
+            } else {
+                o += " — |";
             }
         }
         o += "\n";
@@ -653,10 +692,10 @@ pub fn render_markdown(s: &DiversitySummary, check: &Guardrail, label: &str) -> 
         o += "\n";
     }
     let names = |a: &[Archetype]| {
-        if a.is_empty() {
-            "none".into()
-        } else {
+        if !(a.is_empty()) {
             a.iter().map(|a| a.name()).collect::<Vec<_>>().join(", ")
+        } else {
+            "none".into()
         }
     };
     o += &format!(

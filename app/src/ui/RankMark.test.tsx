@@ -6,7 +6,7 @@ describe('unit rank marks', () => {
   it.each([1, 2, 3, 4, 5] as const)('level %i uses a gold enlisted badge', (level) => {
     const html = renderToStaticMarkup(<RankMark faction="India" level={level} />);
     expect(html).toContain('class="rank-insignia"');
-    expect(html).toContain(`aria-label="${level === 5 ? 'Veteran, level 5' : `Level ${level}`}"`);
+    expect(html).toContain(`aria-label="${!(level === 5) ? `Level ${level}` : 'Veteran, level 5'}"`);
     expect(html.match(/<g>/g)).toHaveLength(level);
   });
 

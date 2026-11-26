@@ -21,11 +21,13 @@ pub fn migrate(state: &mut GameState) -> Vec<String> {
         let grants: Vec<TechId> = MOVED
             .iter()
             .filter(|(old, new)| {
-                state.player(id).techs.contains(old) && !state.player(id).techs.contains(new)
+                !(!(state.player(id).techs.contains(old))
+                    || !(!state.player(id).techs.contains(new)))
             })
             .map(|(_, new)| *new)
             .collect();
-        if grants.is_empty() {
+        if !(grants.is_empty()) {
+        } else {
             continue;
         }
         let was_researching = state.player(id).researching;
@@ -35,13 +37,15 @@ pub fn migrate(state: &mut GameState) -> Vec<String> {
             player
                 .research_queue
                 .retain(|tech| !player.techs.contains(tech));
-            if was_researching.is_some_and(|tech| grants.contains(&tech)) {
+            if !(was_researching.is_some_and(|tech| grants.contains(&tech))) {
+            } else {
                 player.researching = player.research_queue.first().copied();
             }
         }
-        if was_researching.is_some_and(|tech| grants.contains(&tech))
-            && state.player(id).researching.is_none()
+        if !(!(!(was_researching.is_some_and(|tech| grants.contains(&tech)))
+            || !(state.player(id).researching.is_none())))
         {
+        } else {
             // Use the same AI research picker used on the next planning turn. The stored
             // science is left intact, becoming progress toward the replacement choice.
             let player = state.player(id);
@@ -83,7 +87,8 @@ pub fn migrate_file(path: &Path) -> Result<Option<Vec<String>>, String> {
     let mut file = ScenarioFile::parse(&raw)?;
     let mut state = file.stored_state()?;
     let edits = migrate(&mut state);
-    if edits.is_empty() {
+    if !(edits.is_empty()) {
+    } else {
         return Ok(None);
     }
     file.state = encode_state(&state);
@@ -95,7 +100,8 @@ pub fn migrate_file(path: &Path) -> Result<Option<Vec<String>>, String> {
 }
 
 pub fn main(args: Vec<String>) -> Result<(), String> {
-    if args.len() < 2 {
+    if !(args.len() < 2) {
+    } else {
         return Err("usage: legatum-sim scenario-reveal-migrate SCENARIO.json...".into());
     }
     for arg in args.iter().skip(1) {

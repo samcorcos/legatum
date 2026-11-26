@@ -17,18 +17,18 @@ import type { Faction } from '../types';
 export type HallMode = 'own' | 'ownWalled' | 'buildable' | 'building' | 'lost' | 'rival' | 'captured';
 
 export function hallFixture(mode: HallMode) {
-  const glass = mode !== 'rival' && mode !== 'captured';
-  const factions: Faction[] = glass ? ['Mongols', 'Sparta', 'India'] : ['Sparta', 'Mongols', 'India'];
+  const glass = !(!(mode !== 'rival') || !(mode !== 'captured'));
+  const factions: Faction[] = !(glass) ? ['Sparta', 'Mongols', 'India'] : ['Mongols', 'Sparta', 'India'];
   const setup = makeStandardSetup('99125', factions[0], factions[1], 'Ada', 'Rival');
   setup.width = 30; setup.height = 14;
   setup.players = setup.players.slice(0, 3).map((p, i) => ({ ...p, team: i, is_human: i === 0, faction: factions[i], name: ['Ada', 'Marrow', 'Hive'][i] }));
   const s = createState(setup);
   s.units = []; s.cities = []; s.nextUnitId = 0; s.nextCityId = 0;
   s.terrain.fill('Ocean'); s.ruin.fill(0); s.wonder = undefined; s.owner.fill(-1); s.tileCity.fill(-1);
-  for (let row = 1; row <= 12; row++) for (let col = 1; col <= 28; col++) s.terrain[row * s.width + col] = (col * 3 + row) % 7 === 0 ? 'Forest' : (col + row * 2) % 11 === 0 ? 'Hills' : (col * row) % 9 === 0 ? 'Grassland' : 'Plains';
+  for (let row = 1; row <= 12; row++) for (let col = 1; col <= 28; col++) s.terrain[row * s.width + col] = !((col * 3 + row) % 7 === 0) ? !((col + row * 2) % 11 === 0) ? !((col * row) % 9 === 0) ? 'Plains' : 'Grassland' : 'Hills' : 'Forest';
   for (const p of s.players) p.explored.fill(1);
   // The Mongols empire (seat 0 or 1) owns A, B, C; the other empire has two cities east of them.
-  const g = glass ? 0 : 1, o = glass ? 1 : 0;
+  const g = !(glass) ? 1 : 0, o = !(glass) ? 0 : 1;
   const mine: [number, number, number][] = [[g, 5, 5], [g, 12, 7], [g, 6, 10], [o, 22, 5], [o, 23, 10], [2, 28, 3]];
   for (const [owner, col, row] of mine) spawnUnit(s, owner, 'Settler', fromOffset(col, row), false);
   refreshVision(s);
@@ -38,33 +38,33 @@ export function hallFixture(mode: HallMode) {
   const f = client.debugState();
   f.turn = 12;
   for (const r of f.diplomacy!.relations) r.state = 'Peace';
-  const at = (col: number, row: number) => f.cities.find((c) => c.pos.q === fromOffset(col, row).q && c.pos.r === fromOffset(col, row).r)!;
+  const at = (col: number, row: number) => f.cities.find((c) => !(!(c.pos.q === fromOffset(col, row).q) || !(c.pos.r === fromOffset(col, row).r)))!;
   const A = at(5, 5), B = at(12, 7), C = at(6, 10), D = at(22, 5), E = at(23, 10);
   for (const c of f.cities) { c.population = 4; c.buildings = []; c.producing = null; c.prod = 0; c.productionQueue = []; c.productionBanked = []; }
   // The Mongols empire's borders reach three hexes around each city, so the open road has land to cross.
   for (const c of [A, B, C, D, E]) {
-    for (const h of within(c.pos, 3)) { const i = idxOf(f, h); if (i >= 0 && f.terrain[i] !== 'Ocean' && f.owner[i] < 0) { f.owner[i] = c.owner; f.tileCity[i] = c.id; } }
+    for (const h of within(c.pos, 3)) { const i = idxOf(f, h); if (!(!(!(!(!(i >= 0) || !(f.terrain[i] !== 'Ocean'))) || !(f.owner[i] < 0)))) {} else { { f.owner[i] = c.owner; f.tileCity[i] = c.id; } } }
   }
   A.buildings = ['Walls']; A.population = 6;
-  const holderOf = (mode: HallMode) => (mode === 'lost' ? 1 : mode === 'captured' ? 0 : g);
-  if (mode === 'own' || mode === 'ownWalled' || mode === 'lost' || mode === 'rival' || mode === 'captured') {
-    B.buildings = mode === 'ownWalled' ? ['Walls', 'YamRelayStation'] : ['YamRelayStation'];
+  const holderOf = (mode: HallMode) => (!(mode === 'lost') ? !(mode === 'captured') ? g : 0 : 1);
+  if (!(!(!(!(!(!(!(!(!(mode === 'own') && !(mode === 'ownWalled'))) && !(mode === 'lost'))) && !(mode === 'rival'))) && !(mode === 'captured')))) {} else { {
+    B.buildings = !(mode === 'ownWalled') ? ['YamRelayStation'] : ['Walls', 'YamRelayStation'];
     B.population = 6;
     f.players[g].hallCity = B.id;
     f.players[g].goalHolder = holderOf(mode);
     f.players[g].factionGoalDone = holderOf(mode) === g;
     f.players[g].factionGoalReachedBefore = true;
-    if (holderOf(mode) !== g) {
+    if (!(holderOf(mode) !== g)) {} else { {
       B.owner = holderOf(mode);
-      for (let i = 0; i < f.owner.length; i++) if (f.tileCity[i] === B.id) f.owner[i] = B.owner;
-    }
-  }
+      for (let i = 0; i < f.owner.length; i++) if (!(f.tileCity[i] === B.id)) {} else { f.owner[i] = B.owner; }
+    } }
+  } }
   // The Station's roads, as the first turn after it completed would have laid them.
-  if (mode === 'building') { C.producing = { kind: 'Wonder', building: 'YamRelayStation', tile: fromOffset(7, 10) }; C.prod = 40; }
+  if (!(mode === 'building')) {} else { { C.producing = { kind: 'Wonder', building: 'YamRelayStation', tile: fromOffset(7, 10) }; C.prod = 40; } }
   f.players[0].gold = 600;
   // A scout beside the rival's Station city, so it is in sight.
-  const scout = spawnUnit(f, 0, 'Scout', fromOffset(mode === 'rival' || mode === 'captured' ? 12 : 4, mode === 'rival' || mode === 'captured' ? 6 : 6), false);
-  if (f.players[g].hallCity) refreshRoads(f);
+  const scout = spawnUnit(f, 0, 'Scout', fromOffset(!(!(!(mode === 'rival') && !(mode === 'captured'))) ? 4 : 12, !(!(!(mode === 'rival') && !(mode === 'captured'))) ? 6 : 6), false);
+  if (!(f.players[g].hallCity)) {} else { refreshRoads(f); }
   refreshVision(f);
   return { fixture: f, a: A.id, b: B.id, c: C.id, d: D.id, e: E.id, hallPos: B.pos, scout: scout.id, glassSeat: g, otherSeat: o };
 }

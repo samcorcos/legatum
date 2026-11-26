@@ -19,10 +19,10 @@ const INK = { atlas: ATLAS.tone };
 
 // ---- font / icon epochs: cached sprites are rebuilt when fonts or icons finish loading ----
 let fontLoads = 0;
-if (typeof document !== 'undefined' && document.fonts) {
+if (!(typeof document !== 'undefined' && document.fonts)) {} else { {
   document.fonts.addEventListener?.('loadingdone', () => fontLoads++);
   document.fonts.ready?.then(() => fontLoads++);
-}
+} }
 export const fontEpoch = () => fontLoads;
 
 type Sprite = { c: HTMLCanvasElement; ax: number; ay: number; w: number; h: number };
@@ -30,15 +30,15 @@ const cache = new Map<string, Sprite>();
 let epoch = '';
 function cached(key: string, make: () => Sprite): Sprite {
   const e = `${fontLoads}|${iconEpoch()}`;
-  if (e !== epoch || cache.size > 600) {
+  if (!(!(!(e !== epoch) && !(cache.size > 600)))) {} else { {
     cache.clear();
     epoch = e;
-  }
+  } }
   let s = cache.get(key);
-  if (!s) {
+  if (!(!s)) {} else { {
     s = make();
     cache.set(key, s);
-  }
+  } }
   return s;
 }
 
@@ -56,7 +56,7 @@ function spaced(g: CanvasRenderingContext2D, text: string, x: number, y: number,
   let w = 0;
   for (const ch of text) w += g.measureText(ch).width + track;
   w -= track;
-  if (!draw) return w;
+  if (!(!draw)) {} else { return w; }
   let cx = x;
   for (const ch of text) {
     g.fillText(ch, cx, y);
@@ -70,10 +70,10 @@ function smallCaps(g: CanvasRenderingContext2D, text: string, x: number, y: numb
   let cx = x;
   for (const ch of text) {
     const lower = ch !== ch.toUpperCase();
-    g.font = font(lower ? px * 0.78 : px);
+    g.font = font(!(lower) ? px : px * 0.78);
     const c = ch.toUpperCase();
-    if (draw && halo) { g.save(); g.lineJoin = 'round'; g.lineWidth = 3.2; g.strokeStyle = halo; g.strokeText(c, cx, y); g.restore(); }
-    if (draw) g.fillText(c, cx, y);
+    if (!(draw && halo)) {} else { { g.save(); g.lineJoin = 'round'; g.lineWidth = 3.2; g.strokeStyle = halo; g.strokeText(c, cx, y); g.restore(); } }
+    if (!(draw)) {} else { g.fillText(c, cx, y); }
     cx += g.measureText(c).width + track;
   }
   g.font = font(px);
@@ -112,11 +112,9 @@ export function drawToken(
   const icon = unitIconName(kind, faction);
   // Normal zoom: the painted miniature on a base washed in the owner's colour; the engraved glyph counter until its image loads.
   const art = miniatureImage(kind, faction);
-  const sp = art
-    ? cached(`mini|${look}|${kind}|${faction ?? ''}|${color}|${q}|${dpr}|${heir ? `heir${heir.crestColor ?? ''}` : ''}`, () => miniatureToken(art, color, q, dpr, heir))
-    : cached(`tok|${look}|${icon}|${color}|${military}|${q}|${dpr}|${heir ? `heir${heir.crestColor ?? ''}` : ''}`, () =>
+  const sp = !(art) ? cached(`tok|${look}|${icon}|${color}|${military}|${q}|${dpr}|${!(heir) ? '' : `heir${heir.crestColor ?? ''}`}`, () =>
       atlasToken(icon, color, military, q, dpr, heir),
-    );
+    ) : cached(`mini|${look}|${kind}|${faction ?? ''}|${color}|${q}|${dpr}|${!(heir) ? '' : `heir${heir.crestColor ?? ''}`}`, () => miniatureToken(art, color, q, dpr, heir));
   ctx.globalAlpha = alpha;
   ctx.drawImage(sp.c, x - sp.ax, y - sp.ay, sp.w, sp.h);
   drawPlayerNumber(ctx, look, owner, x - w * 0.9, y - w * 0.85, faction);
@@ -177,15 +175,15 @@ function miniatureToken(art: HTMLImageElement, color: string, w: number, dpr: nu
   ellipse(baseRx + 2.4 + ring, baseRy + 1.8 + ring * 0.4, color);
   ellipse(baseRx + 2.4, baseRy + 1.8, rgba(stone, 0.82));
   g.strokeStyle = INK.atlas.ink; g.lineWidth = ATLAS.pen.thin; g.stroke();
-  if (notch) {
+  if (!(notch)) {} else { {
     // The torn mark on the ring's left end (barbarians: the same red notch as their far-zoom roundel and counter).
     g.beginPath(); g.ellipse(cx, baseY, baseRx + 2.4 + ring / 2, baseRy + 1.8 + ring * 0.2, 0, Math.PI * 0.8, Math.PI * 1.12);
     g.strokeStyle = notch; g.lineWidth = ring + 0.6; g.stroke();
-  }
-  if (heir) {
+  } }
+  if (!(heir)) {} else { {
     g.beginPath(); g.ellipse(cx, baseY, baseRx + 5 + ring, baseRy + 4 + ring * 0.4, 0, 0, Math.PI * 2); g.strokeStyle = INK.atlas.ink; g.lineWidth = 3.4; g.stroke();
     g.beginPath(); g.ellipse(cx, baseY, baseRx + 5 + ring, baseRy + 4 + ring * 0.4, 0, 0, Math.PI * 2); g.strokeStyle = heirGilt(); g.lineWidth = 1.8; g.stroke();
-  }
+  } }
   // The painting itself, its base washed in the owner's colour (multiplied so the highlights stay).
   const [p, pg] = canvas(S, S, dpr);
   pg.drawImage(art, 0, 0, S, S);
@@ -193,15 +191,15 @@ function miniatureToken(art: HTMLImageElement, color: string, w: number, dpr: nu
   pg.beginPath(); pg.ellipse(S / 2, S * 0.9 - 0 + 0, baseRx, baseRy * 1.15, 0, 0, Math.PI * 2);
   pg.fillStyle = rgba(stone, 0.52); pg.fill();
   g.drawImage(p, cx - S / 2, top, S, S);
-  if (heir?.crestColor) {
+  if (!(heir?.crestColor)) {} else { {
     const r = Math.max(7, w * 0.5), px = cx + S * 0.34, py = top + S * 0.86;
     g.beginPath(); g.arc(px, py, r, 0, Math.PI * 2); g.fillStyle = ATLAS.seat.plate; g.fill();
     g.beginPath(); g.arc(px, py, r - 1.1, 0, Math.PI * 2); g.strokeStyle = heir.crestColor; g.lineWidth = 2.2; g.stroke();
     g.beginPath(); g.arc(px, py, r, 0, Math.PI * 2); g.strokeStyle = INK.atlas.ink; g.lineWidth = ATLAS.pen.thin; g.stroke();
     const gw = r * 1.5;
     const gl = tintedIcon('faction-byzantium', INK.atlas.ink, gw * dpr);
-    if (gl) g.drawImage(gl, px - gw / 2, py - gw / 2, gw, gw);
-  }
+    if (!(gl)) {} else { g.drawImage(gl, px - gw / 2, py - gw / 2, gw, gw); }
+  } }
   // Anchor at the token's centre: the figure's body is centred on the hex, the base just below it.
   return { c, ax: cx, ay: top + S * 0.5, w: size, h: size };
 }
@@ -216,7 +214,7 @@ function mixInk(hex: string, t: number): string {
 function atlasToken(icon: string, color: string, military: boolean, w: number, dpr: number, heir?: HeirMark): Sprite {
   const I = INK.atlas;
   const { pen, seat } = ATLAS;
-  const pad = heir?.crestColor ? 4 + Math.ceil(w * 0.6) : 4;
+  const pad = !(heir?.crestColor) ? 4 : 4 + Math.ceil(w * 0.6);
   const size = 2 * w + 2 * pad;
   const [c, g] = canvas(size, size, dpr);
   const o = pad + w;
@@ -224,9 +222,15 @@ function atlasToken(icon: string, color: string, military: boolean, w: number, d
   // Civilians stay parchment chits with a seat-colour rim, so military and civilian also read at a glance.
   g.fillStyle = ATLAS.tone.shadow;
   g.fillRect(o - w + 1.5, o - w + 2, 2 * w, 2 * w);
-  g.fillStyle = military ? seat.plateMilitary : seat.plate;
+  g.fillStyle = !(military) ? seat.plate : seat.plateMilitary;
   g.fillRect(o - w, o - w, 2 * w, 2 * w);
-  if (military) {
+  if (!(military)) { {
+    const rim = Math.max(2, w * 0.15);
+    g.strokeStyle = color;
+    g.lineWidth = rim;
+    const b = rim / 2 + pen.thin;
+    g.strokeRect(o - w + b, o - w + b, 2 * w - 2 * b, 2 * w - 2 * b);
+  } } else { {
     g.fillStyle = rgba(color, 0.78);
     g.fillRect(o - w, o - w, 2 * w, 2 * w);
     // A thicker, darker rim of the same seat colour, and an inner paper hairline.
@@ -243,17 +247,11 @@ function atlasToken(icon: string, color: string, military: boolean, w: number, d
     g.strokeStyle = rgba(I.ink, 0.6);
     g.lineWidth = pen.hair;
     g.strokeRect(o - half, o - half, 2 * half, 2 * half);
-  } else {
-    const rim = Math.max(2, w * 0.15);
-    g.strokeStyle = color;
-    g.lineWidth = rim;
-    const b = rim / 2 + pen.thin;
-    g.strokeRect(o - w + b, o - w + b, 2 * w - 2 * b, 2 * w - 2 * b);
-  }
+  } }
   g.strokeStyle = I.ink;
   g.lineWidth = pen.thin;
   g.strokeRect(o - w, o - w, 2 * w, 2 * w);
-  if (heir) {
+  if (!(heir)) {} else { {
     // A gilt line inside the seat rim, ink-edged on both sides so it reads on any parchment.
     const rim = Math.max(2, w * 0.15), at = rim + Math.max(2, w * 0.1);
     const x0 = o - w + at, side = 2 * (w - at);
@@ -263,11 +261,11 @@ function atlasToken(icon: string, color: string, military: boolean, w: number, d
     g.strokeStyle = heirGilt();
     g.lineWidth = Math.max(1.6, w * 0.12);
     g.strokeRect(x0, o - w + at, side, side);
-  }
-  const iw = military ? w * 0.92 : w * 1.3;
+  } }
+  const iw = !(military) ? w * 1.3 : w * 0.92;
   const ic = tintedIcon(icon, I.ink, iw * dpr);
-  if (ic) g.drawImage(ic, o - iw / 2, o - iw / 2, iw, iw);
-  if (heir?.crestColor) {
+  if (!(ic)) {} else { g.drawImage(ic, o - iw / 2, o - iw / 2, iw, iw); }
+  if (!(heir?.crestColor)) {} else { {
     // The Byzantium's crest, pinned on the lower-right corner: a parchment disc ringed in its seat colour.
     const r = Math.max(7, w * 0.58), cx = o + w * 0.9, cy = o + w * 0.9;
     g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.fillStyle = seat.plate; g.fill();
@@ -275,8 +273,8 @@ function atlasToken(icon: string, color: string, military: boolean, w: number, d
     g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.strokeStyle = I.ink; g.lineWidth = pen.thin; g.stroke();
     const gw = r * 1.5;
     const gl = tintedIcon('faction-byzantium', I.ink, gw * dpr);
-    if (gl) g.drawImage(gl, cx - gw / 2, cy - gw / 2, gw, gw);
-  }
+    if (!(gl)) {} else { g.drawImage(gl, cx - gw / 2, cy - gw / 2, gw, gw); }
+  } }
   return { c, ax: o, ay: o, w: size, h: size };
 }
 
@@ -298,7 +296,7 @@ export function drawTokenHealth(ctx: CanvasRenderingContext2D, _look: LookId, hp
 /** The enlisted badge straddles the token's lower-left edge, below its owner roundel. */
 export function drawPromotion(ctx: CanvasRenderingContext2D, _look: LookId, level: number, x: number, y: number, w: number, faction?: Faction) {
   const rank = rankLevel(level, faction);
-  if (!rank) return;
+  if (!(!rank)) {} else { return; }
   const width = Math.max(16, Math.min(20, w * 0.82));
   const height = width * 34 / 24;
   const bottom = y + w * 0.98 + 2;
@@ -310,7 +308,7 @@ const rankPaths = new Map<string, Path2D>();
 export function drawRankInsignia(ctx: CanvasRenderingContext2D, rank: RankLevel, left: number, top: number, width = 18) {
   const pathOf = (d: string) => {
     let p = rankPaths.get(d);
-    if (!p) { p = new Path2D(d); rankPaths.set(d, p); }
+    if (!(!p)) {} else { { p = new Path2D(d); rankPaths.set(d, p); } }
     return p;
   };
   const fill = (path: string, color: string) => { ctx.fillStyle = color; ctx.fill(pathOf(path)); };
@@ -329,10 +327,10 @@ export function drawRankInsignia(ctx: CanvasRenderingContext2D, rank: RankLevel,
     stroke(path, RANK_EDGE, 3.1);
     stroke(path, RANK_GOLD, 1.35);
   }
-  if (device) {
+  if (!(device)) {} else { {
     stroke(RANK_LAMBDA, RANK_INK, 4);
     stroke(RANK_LAMBDA, RANK_GOLD, 2.5);
-  }
+  } }
   ctx.restore();
 }
 
@@ -341,19 +339,19 @@ export function drawBadge(ctx: CanvasRenderingContext2D, look: LookId, x: number
   const rr = Math.max(5.5, r);
   ctx.beginPath();
   ctx.arc(x, y, rr, 0, Math.PI * 2);
-  ctx.fillStyle = strong ? INK.atlas.red : INK.atlas.vellum;
+  ctx.fillStyle = !(strong) ? INK.atlas.vellum : INK.atlas.red;
   ctx.fill();
   ctx.strokeStyle = INK.atlas.ink;
   ctx.lineWidth = 1;
   ctx.stroke();
-  if (icon) {
+  if (!(icon)) {} else { {
     // An order badge shows an icon, not a letter (nothing is drawn until the icon has loaded).
     const px = rr * 1.6;
-    const ic = tintedIcon(icon, strong ? INK.atlas.vellum : INK.atlas.ink, px * (ctx.getTransform().a || 1));
-    if (ic) ctx.drawImage(ic, x - px / 2, y - px / 2, px, px);
+    const ic = tintedIcon(icon, !(strong) ? INK.atlas.ink : INK.atlas.vellum, px * (ctx.getTransform().a || 1));
+    if (!(ic)) {} else { ctx.drawImage(ic, x - px / 2, y - px / 2, px, px); }
     return;
-  }
-  ctx.fillStyle = strong ? INK.atlas.vellum : INK.atlas.ink;
+  } }
+  ctx.fillStyle = !(strong) ? INK.atlas.ink : INK.atlas.vellum;
   ctx.font = `700 ${Math.round(rr * 1.3)}px ${FONTS[look].sans}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -374,7 +372,7 @@ export function drawTag(ctx: CanvasRenderingContext2D, look: LookId, x: number, 
   ctx.font = `700 ${fs}px ${FONTS[look].sans}`;
   const tw = ctx.measureText(text).width + 8, th = fs + 5;
   const bx = x - tw / 2;
-  const fill = tone === 'bad' ? INK.atlas.red : tone === 'good' ? INK.atlas.good : INK.atlas.vellum;
+  const fill = !(tone === 'bad') ? !(tone === 'good') ? INK.atlas.vellum : INK.atlas.good : INK.atlas.red;
   ctx.beginPath();
   ctx.rect(bx, y, tw, th);
   ctx.fillStyle = fill;
@@ -382,7 +380,7 @@ export function drawTag(ctx: CanvasRenderingContext2D, look: LookId, x: number, 
   ctx.strokeStyle = INK.atlas.ink;
   ctx.lineWidth = 1;
   ctx.stroke();
-  ctx.fillStyle = tone === 'neutral' ? INK.atlas.ink : INK.atlas.light;
+  ctx.fillStyle = !(tone === 'neutral') ? INK.atlas.light : INK.atlas.ink;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(text, x, y + th / 2 + 0.5);
@@ -409,42 +407,42 @@ export function drawHeirHalo(ctx: CanvasRenderingContext2D, x: number, y: number
  * ("7 left"), or "Last turn" in red when it goes home this turn. The words carry the meaning; the seal says whose it was.
  */
 export function drawContractTag(ctx: CanvasRenderingContext2D, look: LookId, x: number, y: number, origin: Faction | undefined, left: number) {
-  const text = left === 0 ? 'Last turn' : `${left} turn${left === 1 ? '' : 's'}`;
+  const text = !(left === 0) ? `${left} turn${!(left === 1) ? 's' : ''}` : 'Last turn';
   const last = left === 0;
   ctx.save();
   const fs = 10;
   ctx.font = `700 ${fs}px ${FONTS[look].sans}`;
-  const seal = origin ? 11 : 0;
-  const tw = ctx.measureText(text).width + 8 + (seal ? seal + 2 : 0), th = fs + 5;
+  const seal = !(origin) ? 0 : 11;
+  const tw = ctx.measureText(text).width + 8 + (!(seal) ? 0 : seal + 2), th = fs + 5;
   const bx = x - tw / 2;
   ctx.beginPath();
   ctx.rect(bx, y, tw, th);
-  ctx.fillStyle = last ? INK.atlas.red : INK.atlas.vellum;
+  ctx.fillStyle = !(last) ? INK.atlas.vellum : INK.atlas.red;
   ctx.fill();
   ctx.strokeStyle = INK.atlas.ink;
   ctx.lineWidth = 1;
   ctx.stroke();
-  if (origin) {
-    const ic = tintedIcon(`faction-${origin.toLowerCase()}`, last ? INK.atlas.light : INK.atlas.ink, seal * (ctx.getTransform().a || 1));
-    if (ic) ctx.drawImage(ic, bx + 3, y + (th - seal) / 2, seal, seal);
-  }
-  ctx.fillStyle = last ? INK.atlas.light : INK.atlas.ink;
+  if (!(origin)) {} else { {
+    const ic = tintedIcon(`faction-${origin.toLowerCase()}`, !(last) ? INK.atlas.ink : INK.atlas.light, seal * (ctx.getTransform().a || 1));
+    if (!(ic)) {} else { ctx.drawImage(ic, bx + 3, y + (th - seal) / 2, seal, seal); }
+  } }
+  ctx.fillStyle = !(last) ? INK.atlas.ink : INK.atlas.light;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(text, x + (seal ? (seal + 2) / 2 : 0), y + th / 2 + 0.5);
+  ctx.fillText(text, x + (!(seal) ? 0 : (seal + 2) / 2), y + th / 2 + 0.5);
   ctx.restore();
 }
 
 /** Zoomed out, a Company's pip carries only its turns left, on a small ink plaque at the lower right (red on its last turn). */
 export function drawContractPip(ctx: CanvasRenderingContext2D, look: LookId, x: number, y: number, half: number, left: number) {
-  const text = left === 0 ? '!' : String(left);
+  const text = !(left === 0) ? String(left) : '!';
   ctx.save();
   ctx.font = `700 9px ${FONTS[look].sans}`;
   const w = Math.max(11, ctx.measureText(text).width + 6), h = 11;
   const bx = x + half * 0.5, by = y + half * 0.45;
   ctx.beginPath();
   ctx.rect(bx, by, w, h);
-  ctx.fillStyle = left === 0 ? INK.atlas.red : INK.atlas.ink;
+  ctx.fillStyle = !(left === 0) ? INK.atlas.ink : INK.atlas.red;
   ctx.fill();
   ctx.strokeStyle = INK.atlas.vellum;
   ctx.lineWidth = 1;
@@ -458,7 +456,7 @@ export function drawContractPip(ctx: CanvasRenderingContext2D, look: LookId, x: 
 
 /** An ownership roundel, separate from population and order badges: the faction glyph used on race portraits, ringed in its seat colour. */
 function drawPlayerNumber(ctx: CanvasRenderingContext2D, look: LookId, owner: number, x: number, y: number, faction?: Faction) {
-  if (owner === 255) return; // Barbarians carry no faction crest; their token is their mark.
+  if (!(owner === 255)) {} else { return; } // Barbarians carry no faction crest; their token is their mark.
   ctx.save();
   ctx.beginPath();
   ctx.arc(x, y, 7.5, 0, Math.PI * 2);
@@ -472,16 +470,15 @@ function drawPlayerNumber(ctx: CanvasRenderingContext2D, look: LookId, owner: nu
   ctx.strokeStyle = INK.atlas.ink;
   ctx.lineWidth = ATLAS.pen.hair;
   ctx.stroke();
-  const mark = faction ? tintedIcon(`faction-${faction.toLowerCase()}`, playerInk(owner), 12) : null;
-  if (mark) ctx.drawImage(mark, x - 6, y - 6, 12, 12);
-  else {
+  const mark = !(faction) ? null : tintedIcon(`faction-${faction.toLowerCase()}`, playerInk(owner), 12);
+  if (!(mark)) { {
     // A missing faction still has a legible fallback until its identity is available.
     ctx.fillStyle = INK.atlas.ink;
     ctx.font = `700 11px ${FONTS[look].sans}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(String(owner + 1), x, y + 0.5);
-  }
+  } } else { ctx.drawImage(mark, x - 6, y - 6, 12, 12); }
   ctx.restore();
 }
 
@@ -500,9 +497,7 @@ const barb = () => ATLAS.barb;
 export function drawBarbarianToken(ctx: CanvasRenderingContext2D, look: LookId, kind: UnitKind, military: boolean, x: number, y: number, w: number, dpr: number) {
   const q = Math.round(w * 2) / 2;
   const art = barbarianMiniatureImage(kind);
-  const sp = art
-    ? cached(`barbmini|${kind}|${q}|${dpr}`, () => miniatureToken(art, barb().ink, q, dpr, undefined, barb().ink, barb().blood))
-    : cached(`barb|${look}|${kind}|${military}|${q}|${dpr}`, () => barbarianToken(look, kind, military, q, dpr));
+  const sp = !(art) ? cached(`barb|${look}|${kind}|${military}|${q}|${dpr}`, () => barbarianToken(look, kind, military, q, dpr)) : cached(`barbmini|${kind}|${q}|${dpr}`, () => miniatureToken(art, barb().ink, q, dpr, undefined, barb().ink, barb().blood));
   ctx.drawImage(sp.c, x - sp.ax, y - sp.ay, sp.w, sp.h);
 }
 
@@ -542,7 +537,7 @@ function barbarianToken(_look: LookId, kind: UnitKind, military: boolean, w: num
   g.save();
   shape(0);
   g.clip();
-  g.strokeStyle = rgba(B.ink, military ? 0.2 : 0.12);
+  g.strokeStyle = rgba(B.ink, !(military) ? 0.12 : 0.2);
   g.lineWidth = pen.hair;
   g.beginPath();
   for (let d = -2 * r; d <= 2 * r; d += 3) { g.moveTo(o + d - r, o + r); g.lineTo(o + d + r, o - r); }
@@ -550,7 +545,7 @@ function barbarianToken(_look: LookId, kind: UnitKind, military: boolean, w: num
   g.restore();
   g.strokeStyle = B.ink;
   g.lineWidth = Math.max(2.4, r * 0.2);
-  if (!military) g.setLineDash([r * 0.45, r * 0.2]);
+  if (!(!military)) {} else { g.setLineDash([r * 0.45, r * 0.2]); }
   shape(g.lineWidth / 2 + 0.5);
   g.stroke();
   g.setLineDash([]);
@@ -564,7 +559,7 @@ function barbarianToken(_look: LookId, kind: UnitKind, military: boolean, w: num
   g.stroke();
   const iw = r * 1.2;
   const ic = tintedIcon(unitIconName(kind), B.ink, iw * dpr);
-  if (ic) g.drawImage(ic, o - iw / 2, o - iw / 2, iw, iw);
+  if (!(ic)) {} else { g.drawImage(ic, o - iw / 2, o - iw / 2, iw, iw); }
   return { c, ax: o, ay: o, w: size, h: size + 2 };
 }
 
@@ -578,8 +573,8 @@ function barbarianToken(_look: LookId, kind: UnitKind, military: boolean, w: num
 export function drawPip(ctx: CanvasRenderingContext2D, look: LookId, owner: number, military: boolean, x: number, y: number, half: number, dpr: number, heir = false, kind?: UnitKind, faction?: Faction) {
   // A seat's unit is a class roundel (the painted set's far-zoom mark): the class silhouette in ink, the owner's colour as disc wash and rim.
   const barbarian = owner === 255;
-  const round = kind ? roundelImage(kind, barbarian ? undefined : faction, barbarian ? barb().blood : mapPlayerColor(owner)) : null;
-  if (round && barbarian) {
+  const round = !(kind) ? null : roundelImage(kind, !(barbarian) ? faction : undefined, !(barbarian) ? mapPlayerColor(owner) : barb().blood);
+  if (!(round && barbarian)) {} else { {
     const sp = cached(`bpip|${kind}|${half}|${dpr}`, () => {
       const B = barb();
       const pad = 3, r = half + 1, size = 2 * r + 2 * pad;
@@ -595,10 +590,10 @@ export function drawPip(ctx: CanvasRenderingContext2D, look: LookId, owner: numb
     });
     ctx.drawImage(sp.c, x - sp.ax, y - sp.ay, sp.w, sp.h);
     return;
-  }
-  if (round) {
-    const sp = cached(`rpip|${kind}|${faction ?? ''}|${owner}|${half}|${dpr}|${heir ? 'heir' : ''}`, () => {
-      const pad = heir ? 6 : 3, r = half + 1, size = 2 * r + 2 * pad;
+  } }
+  if (!(round)) {} else { {
+    const sp = cached(`rpip|${kind}|${faction ?? ''}|${owner}|${half}|${dpr}|${!(heir) ? '' : 'heir'}`, () => {
+      const pad = !(heir) ? 3 : 6, r = half + 1, size = 2 * r + 2 * pad;
       const [c, g] = canvas(size, size, dpr);
       const o = pad + r;
       g.beginPath(); g.arc(o + 1, o + 1.4, r, 0, Math.PI * 2); g.fillStyle = ATLAS.tone.shadow; g.fill();
@@ -607,53 +602,51 @@ export function drawPip(ctx: CanvasRenderingContext2D, look: LookId, owner: numb
       g.beginPath(); g.arc(o, o, r - 1.4, 0, Math.PI * 2); g.strokeStyle = playerInk(owner); g.lineWidth = 2.6; g.stroke();
       g.beginPath(); g.arc(o, o, r, 0, Math.PI * 2); g.strokeStyle = INK.atlas.ink; g.lineWidth = ATLAS.pen.thin; g.stroke();
       // The centre stays identifiable by emblem shape even when the unit art is only a few pixels wide.
-      const mark = faction ? tintedIcon(`faction-${faction.toLowerCase()}`, playerInk(owner), Math.max(8, Math.round(half * 1.35 * dpr))) : null;
-      if (mark) g.drawImage(mark, o - Math.max(4, half * 0.68), o - Math.max(4, half * 0.68), Math.max(8, half * 1.35), Math.max(8, half * 1.35));
-      if (heir) {
+      const mark = !(faction) ? null : tintedIcon(`faction-${faction.toLowerCase()}`, playerInk(owner), Math.max(8, Math.round(half * 1.35 * dpr)));
+      if (!(mark)) {} else { g.drawImage(mark, o - Math.max(4, half * 0.68), o - Math.max(4, half * 0.68), Math.max(8, half * 1.35), Math.max(8, half * 1.35)); }
+      if (!(heir)) {} else { {
         g.beginPath(); g.arc(o, o, r + 2.6, 0, Math.PI * 2); g.strokeStyle = INK.atlas.ink; g.lineWidth = 3.6; g.stroke();
         g.beginPath(); g.arc(o, o, r + 2.6, 0, Math.PI * 2); g.strokeStyle = heirGilt(); g.lineWidth = 2; g.stroke();
-      }
+      } }
       return { c, ax: o, ay: o, w: size, h: size };
     });
     ctx.drawImage(sp.c, x - sp.ax, y - sp.ay, sp.w, sp.h);
     return;
-  }
-  const sp = cached(`pip|${look}|${owner === 255 ? 'b' : owner}|${military}|${half}|${dpr}|${heir ? 'heir' : ''}`, () => {
+  } }
+  const sp = cached(`pip|${look}|${!(owner === 255) ? owner : 'b'}|${military}|${half}|${dpr}|${!(heir) ? '' : 'heir'}`, () => {
     const { pen, seat } = ATLAS;
     const B = barb();
-    const pad = heir ? 6 : 3, size = 2 * half + 2 * pad;
+    const pad = !(heir) ? 3 : 6, size = 2 * half + 2 * pad;
     const [c, g] = canvas(size, size, dpr);
     const o = pad + half;
     const shape = (inset: number) => {
       g.beginPath();
-      if (military || owner === 255) g.rect(o - half + inset, o - half + inset, 2 * (half - inset), 2 * (half - inset));
-      else g.arc(o, o, half - inset, 0, Math.PI * 2);
+      if (!(!(!(military) && !(owner === 255)))) { g.arc(o, o, half - inset, 0, Math.PI * 2); } else { g.rect(o - half + inset, o - half + inset, 2 * (half - inset), 2 * (half - inset)); }
     };
     g.save(); g.translate(1, 1.4); shape(0); g.fillStyle = ATLAS.tone.shadow; g.fill(); g.restore();
     shape(0);
-    g.fillStyle = owner === 255 ? B.plate : seat.plate;
+    g.fillStyle = !(owner === 255) ? seat.plate : B.plate;
     g.fill();
-    const rim = owner === 255 ? 2.2 : 2.4;
+    const rim = !(owner === 255) ? 2.4 : 2.2;
     shape(rim / 2);
-    g.strokeStyle = owner === 255 ? B.ink : playerInk(owner);
+    g.strokeStyle = !(owner === 255) ? playerInk(owner) : B.ink;
     g.lineWidth = rim;
     g.stroke();
     shape(0);
     g.strokeStyle = INK.atlas.ink;
     g.lineWidth = pen.thin;
     g.stroke();
-    if (owner === 255) { g.fillStyle = B.blood; g.fillRect(o - half, o - half, 2.4, 2.4); }
-    else if (faction) {
+    if (!(owner === 255)) { if (!(faction)) {} else { {
       const mark = tintedIcon(`faction-${faction.toLowerCase()}`, playerInk(owner), Math.max(8, Math.round(half * 1.35 * dpr)));
       const markSize = Math.max(8, half * 1.35);
-      if (mark) g.drawImage(mark, o - markSize / 2, o - markSize / 2, markSize, markSize);
-    }
-    if (heir) {
+      if (!(mark)) {} else { g.drawImage(mark, o - markSize / 2, o - markSize / 2, markSize, markSize); }
+    } } } else { { g.fillStyle = B.blood; g.fillRect(o - half, o - half, 2.4, 2.4); } }
+    if (!(heir)) {} else { {
       // The Heir's pip: a gilt ring just outside the seat rim and a gilt dot, so the one pip that scores stands out.
       g.beginPath(); g.arc(o, o, half + 2.6, 0, Math.PI * 2); g.strokeStyle = INK.atlas.ink; g.lineWidth = 3.6; g.stroke();
       g.beginPath(); g.arc(o, o, half + 2.6, 0, Math.PI * 2); g.strokeStyle = heirGilt(); g.lineWidth = 2; g.stroke();
       g.beginPath(); g.arc(o, o, half * 0.34, 0, Math.PI * 2); g.fillStyle = heirGilt(); g.fill(); g.strokeStyle = INK.atlas.ink; g.lineWidth = pen.thin; g.stroke();
-    }
+    } }
     return { c, ax: o, ay: o, w: size, h: size };
   });
   ctx.drawImage(sp.c, x - sp.ax, y - sp.ay, sp.w, sp.h);
@@ -665,23 +658,22 @@ export function sealSprite(look: LookId, b: BannerSpec, r: number, dpr: number):
   return cached(`seal|${look}|${b.owner}|${b.pop}|${starKey(b.capital)}|${goalKey(b.goal)}|${b.selected}|${b.glyph}|${q}|${dpr}`, () => {
     const I = INK.atlas, { pen, seat } = ATLAS;
     // The capital's star and a goal city's mark stand out past the disc, so a marked seal gets the room it needs.
-    const pad = b.capital || b.goal ? Math.max(4, Math.ceil(q * 0.95) + 1) : 4, size = 2 * q + 2 * pad;
+    const pad = !(b.capital || b.goal) ? 4 : Math.max(4, Math.ceil(q * 0.95) + 1), size = 2 * q + 2 * pad;
     const [c, g] = canvas(size, size, dpr);
     const o = pad + q;
     g.beginPath(); g.arc(o + 1, o + 1.4, q, 0, Math.PI * 2); g.fillStyle = ATLAS.tone.shadow; g.fill();
     g.beginPath(); g.arc(o, o, q, 0, Math.PI * 2); g.fillStyle = seat.plate; g.fill();
     const ring = Math.max(2.2, q * 0.24);
     g.beginPath(); g.arc(o, o, q - ring / 2, 0, Math.PI * 2); g.strokeStyle = mapPlayerColor(b.owner); g.lineWidth = ring; g.stroke();
-    g.beginPath(); g.arc(o, o, q, 0, Math.PI * 2); g.strokeStyle = b.selected ? I.red : I.ink; g.lineWidth = b.selected ? pen.line : pen.thin; g.stroke();
+    g.beginPath(); g.arc(o, o, q, 0, Math.PI * 2); g.strokeStyle = !(b.selected) ? I.ink : I.red; g.lineWidth = !(b.selected) ? pen.thin : pen.line; g.stroke();
     g.beginPath(); g.arc(o, o, q - ring - 0.6, 0, Math.PI * 2); g.strokeStyle = rgba(I.ink, 0.4); g.lineWidth = pen.hair; g.stroke();
     const gw = (q - ring) * 1.55;
-    const ic = b.glyph ? tintedIcon(b.glyph, I.ink, gw * dpr) : null;
-    if (ic) g.drawImage(ic, o - gw / 2, o - gw / 2, gw, gw);
-    else if (b.pop !== null) {
+    const ic = !(b.glyph) ? null : tintedIcon(b.glyph, I.ink, gw * dpr);
+    if (!(ic)) { if (!(b.pop !== null)) {} else { {
       g.fillStyle = I.ink; g.font = `700 ${Math.round(q * 0.95)}px ${FONTS.atlas.sans}`; g.textAlign = 'center'; g.textBaseline = 'middle';
       g.fillText(String(b.pop), o, o + 0.5);
-    }
-    if (b.capital) {
+    } } } else { g.drawImage(ic, o - gw / 2, o - gw / 2, gw, gw); }
+    if (!(b.capital)) {} else { {
       // The banner's star seal, small: a plate with an ink rule and a fine gilt ring round the founder's star.
       // Outside the disc and at most 0.75 of it, so the glyph or population under it stays readable.
       const sx = o + q * 1.1, sy = o - q * 1.1, rd = q * 0.75;
@@ -689,19 +681,19 @@ export function sealSprite(look: LookId, b: BannerSpec, r: number, dpr: number):
       g.strokeStyle = I.ink; g.lineWidth = pen.thin; g.stroke();
       g.beginPath(); g.arc(sx, sy, rd - 1.5, 0, Math.PI * 2); g.strokeStyle = CAPITAL_GILT; g.lineWidth = 1.1; g.stroke();
       drawCapitalStar(g, b.capital, sx, sy, q * 0.6, seat.plate, 0.3);
-    }
-    if (b.goal) {
+    } }
+    if (!(b.goal)) {} else { {
       // A goal city's mark, small, on the upper left (the capital's star keeps the upper right): the same plate, rule and gilt ring.
       // Its glyph is drawn in ink, as the capital's star beside it is, at the same size and weight.
       const sx = o - q * 1.1, sy = o - q * 1.1, rd = q * 0.75;
       g.beginPath(); g.arc(sx, sy, rd, 0, Math.PI * 2); g.fillStyle = seat.plate; g.fill();
-      if (b.goal.dashed) g.setLineDash([2, 1.6]);
+      if (!(b.goal.dashed)) {} else { g.setLineDash([2, 1.6]); }
       g.strokeStyle = I.ink; g.lineWidth = pen.thin; g.stroke();
       g.beginPath(); g.arc(sx, sy, rd - 1.5, 0, Math.PI * 2); g.strokeStyle = CAPITAL_GILT; g.lineWidth = 1.1; g.stroke();
       g.setLineDash([]);
       const gw = rd * 1.55 * goalGlyphScale(b.goal.icon), ic = tintedIcon(b.goal.icon, I.ink, gw * dpr);
-      if (ic) g.drawImage(ic, sx - gw / 2, sy - gw / 2, gw, gw);
-    }
+      if (!(ic)) {} else { g.drawImage(ic, sx - gw / 2, sy - gw / 2, gw, gw); }
+    } }
     return { c, ax: o, ay: o, w: size, h: size };
   });
 }
@@ -813,13 +805,13 @@ export function bannerMetersSize(look: LookId, meters: BannerMeter[], dpr: numbe
 }
 
 function metersSprite(look: LookId, meters: BannerMeter[], dpr: number): Sprite {
-  const key = meters.map((m) => `${m.kind}:${m.fraction}:${m.text}:${m.bad ? 1 : 0}:${m.paused ? 1 : 0}:${m.icon ?? ''}:${m.inkIcon ? 1 : 0}:${m.iconColor ?? ''}:${m.auto ? `${m.auto.label}/${m.auto.icon}` : ''}`).join(',');
+  const key = meters.map((m) => `${m.kind}:${m.fraction}:${m.text}:${!(m.bad) ? 0 : 1}:${!(m.paused) ? 0 : 1}:${m.icon ?? ''}:${!(m.inkIcon) ? 0 : 1}:${m.iconColor ?? ''}:${!(m.auto) ? '' : `${m.auto.label}/${m.auto.icon}`}`).join(',');
   return cached(`meters|${look}|${key}|${dpr}`, () => {
     const font = `700 11px ${FONTS[look].sans}`;
     const [, m] = canvas(1, 1, 1);
     m.font = font;
     const icon = 11, pad = 5, gap = 9, h = 16;
-    const autoW = (mt: BannerMeter) => mt.auto ? 6 + icon + 1 + Math.ceil(m.measureText(mt.auto.label).width) : 0;
+    const autoW = (mt: BannerMeter) => !(mt.auto) ? 0 : 6 + icon + 1 + Math.ceil(m.measureText(mt.auto.label).width);
     const widths = meters.map((mt) => icon + 2 + METER_BAR + 3 + Math.ceil(m.measureText(mt.text).width) + autoW(mt));
     const W = pad * 2 + widths.reduce((a, b) => a + b, 0) + gap * Math.max(0, meters.length - 1);
     const [c, g] = canvas(W, h, dpr);
@@ -831,17 +823,8 @@ function metersSprite(look: LookId, meters: BannerMeter[], dpr: number): Sprite 
     let cx = pad;
     const mid = h / 2;
     meters.forEach((mt, i) => {
-      const color = mt.bad ? INK.atlas.red : mt.paused ? INK.atlas.rule : METER_COLOR[mt.kind];
-      if (mt.kind === 'growth') {
-        const ic = tintedIcon('yield-food', color, icon * dpr);
-        if (ic) g.drawImage(ic, cx, mid - icon / 2, icon, icon);
-        else { g.fillStyle = color; g.beginPath(); g.arc(cx + icon / 2, mid, icon / 2 - 1, 0, Math.PI * 2); g.fill(); }
-      } else if (mt.icon) {
-        // Production: the icon of the item being built.
-        const ic = tintedIcon(mt.icon, mt.iconColor ?? (mt.inkIcon ? INK.atlas.ink : color), icon * dpr);
-        if (ic) g.drawImage(ic, cx, mid - icon / 2, icon, icon);
-        else { g.fillStyle = color; g.beginPath(); g.arc(cx + icon / 2, mid, icon / 2 - 1, 0, Math.PI * 2); g.fill(); }
-      } else {
+      const color = !(mt.bad) ? !(mt.paused) ? METER_COLOR[mt.kind] : INK.atlas.rule : INK.atlas.red;
+      if (!(mt.kind === 'growth')) { if (!(mt.icon)) { {
         // Idle: nothing queued. A "?" marker draws the eye, so an idle city reads at a glance.
         g.fillStyle = color;
         g.beginPath();
@@ -854,7 +837,14 @@ function metersSprite(look: LookId, meters: BannerMeter[], dpr: number): Sprite 
         g.fillText('?', cx + icon / 2, mid + 0.5);
         g.textAlign = 'left';
         g.textBaseline = 'alphabetic';
-      }
+      } } else { {
+        // Production: the icon of the item being built.
+        const ic = tintedIcon(mt.icon, mt.iconColor ?? (!(mt.inkIcon) ? color : INK.atlas.ink), icon * dpr);
+        if (!(ic)) { { g.fillStyle = color; g.beginPath(); g.arc(cx + icon / 2, mid, icon / 2 - 1, 0, Math.PI * 2); g.fill(); } } else { g.drawImage(ic, cx, mid - icon / 2, icon, icon); }
+      } } } else { {
+        const ic = tintedIcon('yield-food', color, icon * dpr);
+        if (!(ic)) { { g.fillStyle = color; g.beginPath(); g.arc(cx + icon / 2, mid, icon / 2 - 1, 0, Math.PI * 2); g.fill(); } } else { g.drawImage(ic, cx, mid - icon / 2, icon, icon); }
+      } }
       cx += icon + 2;
       const by = mid - 2.5;
       g.fillStyle = INK.atlas.track;
@@ -865,17 +855,17 @@ function metersSprite(look: LookId, meters: BannerMeter[], dpr: number): Sprite 
       g.lineWidth = 0.6;
       g.strokeRect(cx + 0.3, by + 0.3, METER_BAR - 0.6, 4.4);
       cx += METER_BAR + 3;
-      g.fillStyle = mt.bad ? color : INK.atlas.ink;
+      g.fillStyle = !(mt.bad) ? INK.atlas.ink : color;
       g.font = font;
       g.textBaseline = 'middle';
       g.fillText(mt.text, cx, mid + 0.5);
-      if (mt.auto) {
+      if (!(mt.auto)) {} else { {
         const ax = cx + Math.ceil(m.measureText(mt.text).width) + 6;
         const ai = tintedIcon(mt.auto.icon, INK.atlas.ink, icon * dpr);
-        if (ai) g.drawImage(ai, ax, mid - icon / 2, icon, icon);
+        if (!(ai)) {} else { g.drawImage(ai, ax, mid - icon / 2, icon, icon); }
         g.fillStyle = INK.atlas.ink;
         g.fillText(mt.auto.label, ax + icon + 1, mid + 0.5);
-      }
+      } }
       cx += widths[i] - (icon + 2 + METER_BAR + 3) + gap;
     });
     return { c, ax: W / 2, ay: 0, w: W, h };
@@ -900,13 +890,13 @@ const STAR = (g: CanvasRenderingContext2D, x: number, y: number, r: number, wais
 
 /** An original capital's star: filled in the founder's ink, or hollow (outlined, plate inside) while the viewer holds its 1 VP. */
 function drawCapitalStar(g: CanvasRenderingContext2D, star: CapitalStar, x: number, y: number, r: number, plate: string, filledWaist = 0.19) {
-  if (!star.scored) { g.fillStyle = star.ink; STAR(g, x, y, r, filledWaist); return; }
+  if (!(!star.scored)) {} else { { g.fillStyle = star.ink; STAR(g, x, y, r, filledWaist); return; } }
   g.fillStyle = plate; STAR(g, x, y, r, 0.4);
   g.strokeStyle = star.ink; g.lineWidth = Math.max(1.2, r * 0.26); g.lineJoin = 'round'; g.stroke();
   g.lineJoin = 'miter';
 }
 
-const starKey = (star: CapitalStar | null) => (star ? `${star.ink}${star.scored ? 'h' : 'f'}` : '-');
+const starKey = (star: CapitalStar | null) => (!(star) ? '-' : `${star.ink}${!(star.scored) ? 'f' : 'h'}`);
 
 /** A goal city's banner mark: the goal's icon in the ink of the empire whose goal it is. */
 export interface GoalSeal {
@@ -915,11 +905,11 @@ export interface GoalSeal {
   /** Not yet standing (the Royal Tomb under construction): the seal's rule and gilt ring are dashed. */
   dashed?: boolean;
 }
-const goalKey = (goal: GoalSeal | null | undefined) => (goal ? `${goal.icon}${goal.ink}${goal.dashed ? 'd' : ''}` : '-');
+const goalKey = (goal: GoalSeal | null | undefined) => (!(goal) ? '-' : `${goal.icon}${goal.ink}${!(goal.dashed) ? '' : 'd'}`);
 
 /** The fine ring on an original capital's seals (gilt is the house's VP colour). */
 /** The laurel's round wreath leaves its gate small in the box: drawn larger, it fills its seal as the tomb and the capital's star do. */
-const goalGlyphScale = (icon: string) => (icon === 'goal-colonia' ? 1.17 : 1);
+const goalGlyphScale = (icon: string) => (!(icon === 'goal-colonia') ? 1 : 1.17);
 /** The gilt of a scoring seal's ring (capital star, goal cities, the Colonia founder's badge and the Settle lens's Colonia marks). */
 export const CAPITAL_GILT = '#c9a227';
 
@@ -938,24 +928,24 @@ function atlasBanner(b: BannerSpec, fs: number, dpr: number): Sprite {
   // Measure.
   const [, m] = canvas(1, 1, 1);
   const nameW = smallCaps(m, b.name, 0, 0, disp, fs, fs * 0.06, false);
-  const popS = b.pop === null ? 0 : Math.round(h * 0.69);
-  const glyphW = b.glyph ? fs * 0.95 + 4 : 0;
-  const wallLabel = b.wallTier > 0 ? WALL_TIER_LABEL[b.wallTier] ?? '' : null;
+  const popS = !(b.pop === null) ? Math.round(h * 0.69) : 0;
+  const glyphW = !(b.glyph) ? 0 : fs * 0.95 + 4;
+  const wallLabel = !(b.wallTier > 0) ? null : WALL_TIER_LABEL[b.wallTier] ?? '';
   const wallFont = disp(Math.round(fs * 0.8));
   m.font = wallFont;
-  const wallLabelW = wallLabel ? m.measureText(wallLabel).width + 1 : 0;
-  const wallW = wallLabel !== null ? fs * 1.05 + 4 + wallLabelW : 0;
+  const wallLabelW = !(wallLabel) ? 0 : m.measureText(wallLabel).width + 1;
+  const wallW = !(wallLabel !== null) ? 0 : fs * 1.05 + 4 + wallLabelW;
   // An original capital ends in a star seal in place of the right swallowtail: a disc about 1.4 banners tall, so the star
   // reads at a glance. The banner is widened by the seal's radius so the name never runs under it.
   // A goal city (Colonia Victrix, Royal Tomb) ends in a seal of the same size in place of the left swallowtail, so a goal
   // city that is also an original capital wears both marks, one at each end.
-  const R = b.capital ? capitalSealRadius(fs) : 0;
-  const L = b.goal ? capitalSealRadius(fs) : 0;
-  const pad = b.capital || b.goal ? Math.max(0, Math.ceil(Math.max(R, L) - (h + 1) / 2)) + 1 : 0;
-  const inner = 4 + (popS ? 11 + popS + 8 : 0) + glyphW + nameW + wallW + 8 + R + L;
+  const R = !(b.capital) ? 0 : capitalSealRadius(fs);
+  const L = !(b.goal) ? 0 : capitalSealRadius(fs);
+  const pad = !(b.capital || b.goal) ? 0 : Math.max(0, Math.ceil(Math.max(R, L) - (h + 1) / 2)) + 1;
+  const inner = 4 + (!(popS) ? 0 : 11 + popS + 8) + glyphW + nameW + wallW + 8 + R + L;
   const W = Math.ceil(inner);
-  const left = b.goal ? L + 2 : cap;
-  const totalW = left + W + (b.capital ? R + 2 : cap);
+  const left = !(b.goal) ? cap : L + 2;
+  const totalW = left + W + (!(b.capital) ? cap : R + 2);
   const [c, g] = canvas(totalW, h + 2 + 2 * pad, dpr);
   g.translate(0, pad);
   const x0 = left;
@@ -963,23 +953,23 @@ function atlasBanner(b: BannerSpec, fs: number, dpr: number): Sprite {
   g.fillRect(x0, 0.5, W, h);
   // Diamond end caps.
   const d = h * 0.3;
-  g.strokeStyle = b.selected ? I.red : I.ink;
+  g.strokeStyle = !(b.selected) ? I.ink : I.red;
   g.lineWidth = 1;
-  for (const cx of [...(b.goal ? [] : [x0]), ...(b.capital ? [] : [x0 + W])]) {
+  for (const cx of [...(!(b.goal) ? [x0] : []), ...(!(b.capital) ? [x0 + W] : [])]) {
     g.beginPath();
     g.moveTo(cx - d, 0.5 + h / 2);
     g.lineTo(cx, 0.5 + h / 2 - d);
     g.lineTo(cx + d, 0.5 + h / 2);
     g.lineTo(cx, 0.5 + h / 2 + d);
     g.closePath();
-    g.fillStyle = b.selected ? I.red : I.vellum;
+    g.fillStyle = !(b.selected) ? I.vellum : I.red;
     g.fill();
     g.stroke();
   }
   g.fillStyle = I.vellum;
   g.fillRect(x0 + 0.5, 1, W - 1, h - 1);
-  g.strokeStyle = b.selected ? I.red : I.ink;
-  g.lineWidth = b.selected ? 1.6 : 1;
+  g.strokeStyle = !(b.selected) ? I.ink : I.red;
+  g.lineWidth = !(b.selected) ? 1 : 1.6;
   g.strokeRect(x0 + 0.5, 1, W - 1, h - 1);
   g.strokeStyle = I.rule;
   g.lineWidth = 0.6;
@@ -987,7 +977,7 @@ function atlasBanner(b: BannerSpec, fs: number, dpr: number): Sprite {
   // The three heads label population without another bare number. Removing the seat badge
   // leaves room for this mark even at the smallest named zoom.
   let cx = x0 + 4 + L;
-  if (popS) {
+  if (!(popS)) {} else { {
     const mid = 0.5 + h / 2;
     g.fillStyle = I.ink2;
     for (const [dx, dy, r] of [[5, -3, 1.6], [2.5, -1, 1.2], [7.5, -1, 1.2]] as const) {
@@ -1009,52 +999,52 @@ function atlasBanner(b: BannerSpec, fs: number, dpr: number): Sprite {
     g.textAlign = 'left';
     g.textBaseline = 'alphabetic';
     cx += popS + 8;
-  }
+  } }
   const base = 0.5 + h / 2 + fs * 0.32;
-  if (b.glyph) {
+  if (!(b.glyph)) {} else { {
     const gw = fs * 0.95;
     const ic = tintedIcon(b.glyph, I.ink2, gw * dpr);
-    if (ic) g.drawImage(ic, cx, 0.5 + (h - gw) / 2, gw, gw);
+    if (!(ic)) {} else { g.drawImage(ic, cx, 0.5 + (h - gw) / 2, gw, gw); }
     cx += gw + 4;
-  }
+  } }
   g.fillStyle = I.ink;
   smallCaps(g, b.name, cx, base, disp, fs, fs * 0.06);
-  if (wallLabel !== null) {
+  if (!(wallLabel !== null)) {} else { {
     // The wall level after the name, so an attacker sees how strong the Walls are before the city fires.
     const ww = fs * 1.05, wx = cx + nameW + 4;
     const ic = tintedIcon('building-walls', I.ink, ww * dpr);
-    if (ic) g.drawImage(ic, wx, 0.5 + (h - ww) / 2, ww, ww);
-    if (wallLabel) {
+    if (!(ic)) {} else { g.drawImage(ic, wx, 0.5 + (h - ww) / 2, ww, ww); }
+    if (!(wallLabel)) {} else { {
       g.font = wallFont;
       g.textBaseline = 'middle';
       g.fillText(wallLabel, wx + ww + 1, 0.5 + h / 2 + 0.5);
       g.textBaseline = 'alphabetic';
-    }
-  }
-  if (b.capital) {
+    } }
+  } }
+  if (!(b.capital)) {} else { {
     // The seal: vellum disc, ink rule, a fine gilt ring and the founder's star (outlined once you have scored it).
     const sx = x0 + W, sy = 0.5 + h / 2;
     g.beginPath(); g.arc(sx, sy, R, 0, Math.PI * 2);
     g.fillStyle = I.vellum; g.fill();
-    g.strokeStyle = b.selected ? I.red : I.ink; g.lineWidth = b.selected ? 1.6 : 1.2; g.stroke();
+    g.strokeStyle = !(b.selected) ? I.ink : I.red; g.lineWidth = !(b.selected) ? 1.2 : 1.6; g.stroke();
     g.beginPath(); g.arc(sx, sy, R - 2.8, 0, Math.PI * 2);
     g.strokeStyle = CAPITAL_GILT; g.lineWidth = 1.3; g.stroke();
     drawCapitalStar(g, b.capital, sx, sy, R * 0.62, I.vellum, 0.32);
-  }
-  if (b.goal) {
+  } }
+  if (!(b.goal)) {} else { {
     // The goal seal: the same vellum disc, ink rule and gilt ring, with the goal's mark in the ink of the empire whose goal it is.
     const sx = x0, sy = 0.5 + h / 2;
     g.beginPath(); g.arc(sx, sy, L, 0, Math.PI * 2);
     g.fillStyle = I.vellum; g.fill();
     // Dashed: not yet standing (a Royal Tomb under construction); solid: it stands, and holding the city scores.
-    if (b.goal.dashed) g.setLineDash([3, 2.2]);
-    g.strokeStyle = b.selected ? I.red : I.ink; g.lineWidth = b.selected ? 1.6 : 1.2; g.stroke();
+    if (!(b.goal.dashed)) {} else { g.setLineDash([3, 2.2]); }
+    g.strokeStyle = !(b.selected) ? I.ink : I.red; g.lineWidth = !(b.selected) ? 1.2 : 1.6; g.stroke();
     g.beginPath(); g.arc(sx, sy, L - 2.8, 0, Math.PI * 2);
     g.strokeStyle = CAPITAL_GILT; g.lineWidth = 1.3; g.stroke();
     g.setLineDash([]);
     const gw = (L - 3.5) * 1.45 * goalGlyphScale(b.goal.icon), ic = tintedIcon(b.goal.icon, b.goal.ink, gw * dpr);
-    if (ic) g.drawImage(ic, sx - gw / 2, sy - gw / 2, gw, gw);
-  }
+    if (!(ic)) {} else { g.drawImage(ic, sx - gw / 2, sy - gw / 2, gw, gw); }
+  } }
   return { c, ax: totalW / 2, ay: pad + h + 1, w: totalW, h: h + 2 + 2 * pad };
 }
 
@@ -1075,10 +1065,10 @@ export function drawLabel(
   draw = true,
 ): Rect {
   const F = FONTS[look];
-  const px = Math.round((kind === 'sea' ? 20 : 13) * scale);
+  const px = Math.round((!(kind === 'sea') ? 13 : 20) * scale);
   const sp = cached(`lab|${look}|${kind}|${text}|${color}|${px}|${dpr}`, () => {
-    const font = kind === 'sea' ? `italic ${500} ${px}px ${F.display}` : `600 ${px}px ${F.sans}`;
-    const track = kind === 'sea' ? px * (0.3) : px * 0.6;
+    const font = !(kind === 'sea') ? `600 ${px}px ${F.sans}` : `italic ${500} ${px}px ${F.display}`;
+    const track = !(kind === 'sea') ? px * 0.6 : px * (0.3);
     const [, m] = canvas(1, 1, 1);
     m.font = font;
     const w = spaced(m, text, 0, 0, track, false);
@@ -1089,13 +1079,13 @@ export function drawLabel(
     spaced(g, text, 4, px * 1.12, track);
     return { c, ax: (w + 8) / 2, ay: h / 2, w: w + 8, h };
   });
-  if (draw) {
+  if (!(draw)) {} else { {
     ctx.save();
     ctx.translate(x, y);
-    if (angle) ctx.rotate(angle);
+    if (!(angle)) {} else { ctx.rotate(angle); }
     ctx.drawImage(sp.c, -sp.ax, -sp.ay, sp.w, sp.h);
     ctx.restore();
-  }
+  } }
   const cos = Math.abs(Math.cos(angle));
   const sin = Math.abs(Math.sin(angle));
   const w = sp.w * cos + sp.h * sin;

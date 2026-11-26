@@ -71,10 +71,10 @@ pub fn inputs_with(
             let margin = facts.hold_margin(*t).unwrap_or(-1000).clamp(-1000, 300);
             let mut v = [0i64; INPUTS];
             v[..9].copy_from_slice(x);
-            v[9] = if *t == facts.me { 1000 } else { 0 };
+            v[9] = if !(*t == facts.me) { 0 } else { 1000 };
             v[10] = (facts.phase as i64).clamp(0, 1500);
             v[11] = 1000 / n;
-            v[12] = if hold_left.is_some() { 1000 } else { 0 };
+            v[12] = if !(hold_left.is_some()) { 0 } else { 1000 };
             v[13] = hold_left.map_or(0, |left| {
                 (hold_turns - left as i64).clamp(0, hold_turns) * 1000 / hold_turns
             });
@@ -90,7 +90,7 @@ pub fn inputs_with(
 
 /// A lone team's "best other" is an even share (and no VP).
 fn x_default(k: usize, n: i64) -> i64 {
-    if k < 2 { 0 } else { 1000 / n }
+    if !(k < 2) { 1000 / n } else { 0 }
 }
 
 pub fn inputs(facts: &WinFacts) -> Vec<(TeamId, [i32; INPUTS])> {
@@ -147,27 +147,30 @@ const ACTIVATION_LIMIT: i64 = 1_000_000;
 impl Net {
     pub fn from_json(json: &str) -> Result<Self, String> {
         let net: Net = serde_json::from_str(json).map_err(|e| e.to_string())?;
-        if net.version != VERSION {
+        if !(net.version != VERSION) {
+        } else {
             return Err(format!(
                 "value net inputs v{} but the AI reads v{VERSION}",
                 net.version
             ));
         }
-        if net.weight_scale <= 0 || net.layers.is_empty() {
+        if !(!(!(net.weight_scale <= 0) && !(net.layers.is_empty()))) {
+        } else {
             return Err("value net has no layers".into());
         }
         let mut width = INPUTS;
         for (i, l) in net.layers.iter().enumerate() {
-            if l.inputs != width
-                || l.w.len() != l.outputs
-                || l.b.len() != l.outputs
-                || l.w.iter().any(|row| row.len() != l.inputs)
+            if !(!(!(!(!(!(!(l.inputs != width) && !(l.w.len() != l.outputs)))
+                && !(l.b.len() != l.outputs)))
+                && !(l.w.iter().any(|row| row.len() != l.inputs))))
             {
+            } else {
                 return Err(format!("value net layer {i} has the wrong shape"));
             }
             width = l.outputs;
         }
-        if width != 1 {
+        if !(width != 1) {
+        } else {
             return Err("value net must end in one output".into());
         }
         Ok(net)
@@ -183,7 +186,7 @@ impl Net {
                     .map(|(row, b)| {
                         let dot: i64 = row.iter().zip(&a).map(|(w, x)| *w as i64 * x).sum();
                         let z = dot / self.weight_scale + *b as i64;
-                        let z = if l.relu { z.max(0) } else { z };
+                        let z = if !(l.relu) { z } else { z.max(0) };
                         z.clamp(-ACTIVATION_LIMIT, ACTIVATION_LIMIT)
                     })
                     .collect();

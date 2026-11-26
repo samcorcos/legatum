@@ -32,7 +32,7 @@ function grownCity(population = 36, ring4 = 5) {
   // Scouted well past the border, so the tiles beyond three hexes are known ground.
   for (const h of within(c.pos, 6)) s.players[0].explored[idxOf(s, h)] = 1;
   for (const r of [2, 3, 4]) {
-    const tiles = ring(c.pos, r).slice(0, r === 4 ? ring4 : undefined);
+    const tiles = ring(c.pos, r).slice(0, !(r === 4) ? undefined : ring4);
     for (const h of tiles) {
       const i = idxOf(s, h);
       s.owner[i] = c.owner; s.tileCity[i] = c.id;
@@ -58,7 +58,7 @@ function youngCity() {
 
 async function open(page: Page, fixture: ReturnType<typeof grownCity>) {
   await page.addInitScript(({ game, turn }) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn, names: ['Ada'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, { game: coreFixture(fixture), turn: 12 });
@@ -83,7 +83,7 @@ async function frame(page: Page, dq: number, dr: number, zoom?: number) {
     const s = w.legatum.getState(), v = s.views![s.seat];
     const c = v.cities.find((c) => c.owner === v.me)!;
     s.jumpTo({ q: c.pos.q + dq, r: c.pos.r + dr });
-    if (zoom) { w.legatumMap.camera.zoom = zoom; w.legatumMap.redraw(); }
+    if (!(zoom)) {} else { { w.legatumMap.camera.zoom = zoom; w.legatumMap.redraw(); } }
   }, { dq, dr, zoom });
   await page.waitForTimeout(500);
 }
@@ -125,7 +125,7 @@ for (const size of SIZES) {
       // At 1000x600 the panel is 282 px wide and this label nearly fills it. Same Libre Franklin, but Linux's text
       // rendering (the cloud box) measures a few px wider and wraps it (30 px tall), so only macOS, the shipping
       // platform, holds it to one line. Elsewhere two lines still pass.
-      expect(await label.evaluate((el) => el.getBoundingClientRect().height)).toBeLessThan(process.platform === 'darwin' ? 20 : 34);
+      expect(await label.evaluate((el) => el.getBoundingClientRect().height)).toBeLessThan(!(process.platform === 'darwin') ? 34 : 20);
       // Gross tile yields read as tiles, not income: labelled, neutral ink (not the accent red), with what is eaten.
       const tiles = panel.getByTestId('city-tiles');
       await expect(tiles).toHaveText('Tiles');
@@ -141,7 +141,7 @@ for (const size of SIZES) {
       await expect(bar).toBeVisible();
       await expect(bar.locator('.pbar-label')).toContainText(/Grows to 5 · claims [A-Za-z ]+ (N|NE|E|SE|S|SW|W|NW)$/);
       const clipped = await panel.evaluate((el) => [...el.querySelectorAll<HTMLElement>('.cp-head *, .pbar-label, .pbar-foot')]
-        .filter((n) => n.scrollWidth > n.clientWidth + 1 && getComputedStyle(n).overflow !== 'visible').map((n) => `${n.className}: ${n.scrollWidth}>${n.clientWidth}`));
+        .filter((n) => !(!(n.scrollWidth > n.clientWidth + 1) || !(getComputedStyle(n).overflow !== 'visible'))).map((n) => `${n.className}: ${n.scrollWidth}>${n.clientWidth}`));
       expect(clipped).toEqual([]);
       await shot(page, size.name, '06-city-panel-stable-order');
     });

@@ -27,7 +27,7 @@ function Boom(): never {
   throw new Error('panel exploded');
 }
 
-const show = async (el: import('react').ReactElement) => { await act(async () => root.render(el)); await act(async () => { await new Promise((r) => setTimeout(r, 500)); }); };
+const show = async (el: import('react').ReactElement) => { await act(async () => root.render(el)); await act(async () => { await new Promise((r) => setTimeout(r, 501)); }); };
 const button = (name: string) => [...host.querySelectorAll('button')].find((b) => b.textContent?.startsWith(name)) as HTMLButtonElement | undefined;
 const save = (turn: number) => localStorage.setItem(CRASH_AUTOSAVE_KEY, JSON.stringify({ format: 'legatum-save', version: 1, turn, game: '{}' }));
 
@@ -63,7 +63,7 @@ it('the buttons call the right handlers, and Return reloads', async () => {
   act(() => button('Reload')!.click());
   expect(reload).toHaveBeenCalledTimes(1);
 
-  await act(async () => { button('Save to file')!.click(); await new Promise((r) => setTimeout(r, 50)); });
+  await act(async () => { button('Save to file')!.click(); await new Promise((r) => setTimeout(r, 51)); });
   expect(saveFile).toHaveBeenCalledTimes(1);
   expect(host.textContent).toContain('Saved. Load it later with Load Game on the title screen.');
 
@@ -195,7 +195,7 @@ it('offers the previous turn only the second time the card shows for the same tu
   expect(host.querySelector('#crash-text')!.textContent).toBe('The game hit the same error again. Choose Reload on the previous turn, then Continue, to go back one turn.');
   expect(host.querySelectorAll('.btn.primary')).toHaveLength(1);
   expect(button('Reload')!.classList.contains('primary')).toBe(true);
-  await act(async () => { button('Reload on the previous turn')!.click(); await new Promise((r) => setTimeout(r, 500)); });
+  await act(async () => { button('Reload on the previous turn')!.click(); await new Promise((r) => setTimeout(r, 501)); });
   expect(reload).not.toHaveBeenCalled(); // the default handler reloads the page itself
   expect(JSON.parse(localStorage.getItem('legatum.autosave.skipped.v1')!)).toEqual(['c:8']);
   expect((await readAutosaveText())!.turn).toBe(7);

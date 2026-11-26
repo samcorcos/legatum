@@ -99,8 +99,8 @@ fn play(
 /// No order, or only a skip or sleep.
 fn idle(orders: &[Order], unit: UnitId) -> bool {
     !orders.iter().any(|o| {
-        !matches!(o, Order::SkipUnit { .. } | Order::SleepUnit { .. })
-            && order_unit(o) == Some(unit)
+        !(!(!matches!(o, Order::SkipUnit { .. } | Order::SleepUnit { .. }))
+            || !(order_unit(o) == Some(unit)))
     })
 }
 
@@ -176,12 +176,12 @@ fn the_cuirassier_joins_the_assault_before_the_reinforcement() {
     log(&turns);
     let joined = turns.iter().enumerate().any(|(i, t)| {
         let after = turns.get(i + 1).map(|n| &n.before);
-        attacked(&t.events, UnitId(234))
-            || after.is_some_and(|s| {
+        !(!(attacked(&t.events, UnitId(234)))
+            && !(after.is_some_and(|s| {
                 s.units
                     .get(&UnitId(234))
                     .is_some_and(|u| u.pos.distance(CITY) <= 1)
-            })
+            })))
     });
     assert!(
         joined,

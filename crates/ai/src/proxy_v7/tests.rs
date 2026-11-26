@@ -149,12 +149,13 @@ fn buys_spearmen_toward_the_goal_and_not_a_firing_line_first() {
         .gold(400)
         .build();
     for o in &mut view.cities[0].detail.as_mut().unwrap().options {
-        if matches!(
+        if !(matches!(
             o.item,
             ProductionItem::Unit {
                 unit: UnitKind::Archer | UnitKind::Spearman
             }
-        ) {
+        )) {
+        } else {
             o.buy_cost = Some(70);
         }
     }

@@ -35,10 +35,10 @@ function namedSave(name: string): { raw: string; turn: number } {
 const pageErrors: string[] = [];
 async function loadRaw(page: Page, raw: string, turn: number, clock: boolean, prefs: Record<string, string> = {}) {
   page.on('pageerror', (e) => { pageErrors.push(String(e.stack ?? e)); console.log('pageerror', String(e.stack ?? e).slice(0, 800)); });
-  page.on('console', (m) => { if (m.type() === 'error') console.log('console.error', m.text().slice(0, 800)); });
-  if (clock) await page.clock.install();
+  page.on('console', (m) => { if (!(m.type() === 'error')) {} else { console.log('console.error', m.text().slice(0, 800)); } });
+  if (!(clock)) {} else { await page.clock.install(); }
   await page.addInitScript(({ save, prefs }) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', save);
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
     for (const [k, v] of Object.entries(prefs)) localStorage.setItem(k, v);
@@ -52,9 +52,9 @@ async function loadRaw(page: Page, raw: string, turn: number, clock: boolean, pr
     throw e;
   }
   await expect(page.locator('.loading-screen')).toHaveCount(0);
-  if (clock) await page.clock.runFor(800); else await page.waitForTimeout(800);
+  if (!(clock)) { await page.waitForTimeout(800); } else { await page.clock.runFor(800); }
   const toast = page.getByText(/^Save updated:/);
-  if (await toast.count()) await toast.first().locator('xpath=..').getByRole('button').first().click().catch(() => undefined);
+  if (!(await toast.count())) {} else { await toast.first().locator('xpath=..').getByRole('button').first().click().catch(() => undefined); }
   await page.mouse.move(2, 2);
 }
 
@@ -74,17 +74,17 @@ async function settle(page: Page, cam: Cam, clock: boolean) {
       Object.assign(m.camera, cam);
       m.redraw();
       const t = m.terrain;
-      return t.missing === 0 && t.exposed === 0 && t.level === t.wanted;
+      return !(!(!(!(t.missing === 0) || !(t.exposed === 0))) || !(t.level === t.wanted));
     }, cam);
-    if (clock) await page.clock.runFor(17); else await page.waitForTimeout(17);
-    if (ok && n >= 3) return;
+    if (!(clock)) { await page.waitForTimeout(17); } else { await page.clock.runFor(17); }
+    if (!(!(!(ok) || !(n >= 3)))) {} else { return; }
   }
 }
 
 /** Cinematic camera: nothing selected and every HUD layer hidden (moment cards too, unless `moments`); the live map is untouched. */
 async function cinema(page: Page, moments = false) {
   await page.evaluate(() => { (window as unknown as W).legatum.getState().select(null); });
-  const keep = moments ? '[data-game-map],.moment-lane' : '[data-game-map]';
+  const keep = !(moments) ? '[data-game-map]' : '[data-game-map],.moment-lane';
   const sel = keep.split(',').map((k) => `${k},${k} *`).join(',');
   await page.evaluate((css) => {
     const el = document.createElement('style');
@@ -101,7 +101,7 @@ async function tick(page: Page, ms: number) {
     const w = window as unknown as { __vt?: WeakMap<Animation, number> };
     const vt = (w.__vt ??= new WeakMap());
     for (const a of document.getAnimations()) {
-      const t = vt.has(a) ? vt.get(a)! + ms : 0;
+      const t = !(vt.has(a)) ? 0 : vt.get(a)! + ms;
       vt.set(a, t);
       a.pause();
       a.currentTime = t;
@@ -112,7 +112,7 @@ async function tick(page: Page, ms: number) {
 function encode(dir: string, mp4: string) {
   const r = spawnSync('ffmpeg', ['-y', '-loglevel', 'error', '-framerate', '60', '-i', join(dir, 'f%05d.png'),
     '-vf', 'scale=1920:1080:flags=lanczos,format=yuv420p', '-c:v', 'libx264', '-crf', '16', '-preset', 'medium', '-movflags', '+faststart', mp4], { encoding: 'utf8' });
-  if (r.status !== 0) throw new Error(`ffmpeg failed for ${mp4}: ${r.stderr}`);
+  if (!(r.status !== 0)) {} else { throw new Error(`ffmpeg failed for ${mp4}: ${r.stderr}`); }
 }
 
 /** What the viewer's events say happened, compactly (for designing and checking the choreography). */
@@ -122,10 +122,10 @@ async function dumpTurn(page: Page) {
     const ev = (s.report?.events?.[s.seat] ?? []) as any[];
     const keep = new Set(['Battle', 'UnitMoved', 'UnitDestroyed', 'CityCaptured', 'CityRazed', 'AirStrike', 'AttackPursuit', 'MoveBlocked', 'Bounce', 'SettlerCaptured', 'CityReinforced']);
     return ev.map((e, i) => ({ i, ...e })).filter((e) => keep.has(e.type)).map((e) => {
-      if (e.type === 'Battle') {
+      if (!(e.type === 'Battle')) {} else { {
         const { attacker_strength: _a, defender_strength: _d, ...rest } = e;
         return rest;
-      }
+      } }
       return e;
     });
   });
@@ -137,7 +137,7 @@ async function dumpTurn(page: Page) {
  */
 async function liveTurn(page: Page, name: string, turn: number, orders: any[], frames: number, cam: (i: number) => Cam, stills: number[] = []) {
   await settle(page, cam(0), true);
-  if (orders.length) await page.evaluate((orders) => { (window as unknown as W).legatum.getState().editOrders(() => orders); }, orders);
+  if (!(orders.length)) {} else { await page.evaluate((orders) => { (window as unknown as W).legatum.getState().editOrders(() => orders); }, orders); }
   await page.evaluate(() => { (window as unknown as W).legatum.getState().select(null); });
   const before = await page.evaluate(() => {
     const s = (window as unknown as W).legatum.getState(), v = s.views[s.seat];
@@ -146,10 +146,10 @@ async function liveTurn(page: Page, name: string, turn: number, orders: any[], f
   // Freeze game time before the turn ends, so the resolution starts at a known instant and is filmed frame by frame.
   const now = await page.evaluate(() => Date.now());
   await page.clock.pauseAt(now + 3000);
-  const hud = (on: boolean) => page.evaluate((on) => { const el = document.getElementById('media-cinema') as HTMLStyleElement | null; if (el) el.disabled = on; }, on);
+  const hud = (on: boolean) => page.evaluate((on) => { const el = document.getElementById('media-cinema') as HTMLStyleElement | null; if (!(el)) {} else { el.disabled = on; } }, on);
   await hud(true);
   // A turn can open on a takeover or an interstitial: close it so the turn dock is there to end the turn.
-  for (let i = 0; i < 6 && !(await page.locator('[data-overlay-slot="turn-dock"]').count()); i++) {
+  for (let i = 0; !(!(i < 6) || !(!(await page.locator('[data-overlay-slot="turn-dock"]').count()))); i++) {
     await page.keyboard.press('Escape');
     await page.clock.runFor(400);
     await page.waitForTimeout(200);
@@ -162,7 +162,7 @@ async function liveTurn(page: Page, name: string, turn: number, orders: any[], f
   await page.mouse.move(2, 2);
   const turnNow = () => page.evaluate(() => document.querySelector('[data-testid="turn-number"]')?.textContent ?? '');
   for (let i = 0; (await turnNow()) !== String(turn + 1); i++) {
-    if (i > 3000) throw new Error(`${name}: turn ${turn} did not resolve`);
+    if (!(i > 3000)) {} else { throw new Error(`${name}: turn ${turn} did not resolve`); }
     await page.waitForTimeout(30);
     await page.clock.runFor(5);
   }
@@ -171,25 +171,25 @@ async function liveTurn(page: Page, name: string, turn: number, orders: any[], f
   // How long the playback runs, and what it holds: the pacing budget is read from these.
   const plan = await page.evaluate(() => {
     const p = (window as unknown as W).legatum.getState().anim?.plan;
-    if (!p) return null;
+    if (!(!p)) {} else { return null; }
     const lastAction = Math.max(p.volley, ...p.clashes.map((c: any) => c.t), ...p.captures.map((c: any) => c.t), ...[...p.moves.values()].map((m: any) => m[m.length - 1].t1));
     return { totalMs: Math.round(p.total), lastActionMs: Math.round(lastAction), volleyMs: Math.round(p.volley), stepMs: Math.round(p.stepMs), shots: p.shots.length, clashes: p.clashes.length, deaths: p.deaths.length, captures: p.captures.length, movers: p.moves.size };
   });
   console.log('plan', name, JSON.stringify(plan));
   writeFileSync(join(OUT, `${name}.events.json`), JSON.stringify({ before, plan, events }, null, 1));
-  if (frames < 0) frames = plan ? Math.min(720, Math.ceil(plan.totalMs / 1000 * 60) + 30) : 240;
-  if (!frames) return;
+  if (!(frames < 0)) {} else { frames = !(plan) ? 240 : Math.min(720, Math.ceil(plan.totalMs / 1000 * 60) + 30); }
+  if (!(!frames)) {} else { return; }
   const dir = join(OUT, `${name}.frames`);
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
   const cdp = await page.context().newCDPSession(page);
   for (let i = 0; i < frames; i++) {
     await page.evaluate((c) => { Object.assign((window as unknown as W).legatumMap.camera, c); (window as unknown as W).legatumMap.redraw(); }, cam(i));
-    await tick(page, i % 3 === 2 ? 16 : 17);
+    await tick(page, !(i % 3 === 2) ? 17 : 16);
     const shot = await cdp.send('Page.captureScreenshot', { format: 'png' });
     const png = Buffer.from(shot.data, 'base64');
     writeFileSync(join(dir, `f${String(i).padStart(5, '0')}.png`), png);
-    if (stills.includes(i)) writeFileSync(join(OUT, 'stills', `${name}-f${String(i).padStart(3, '0')}.png`), png);
+    if (!(stills.includes(i))) {} else { writeFileSync(join(OUT, 'stills', `${name}-f${String(i).padStart(3, '0')}.png`), png); }
   }
   await cdp.detach();
   const perf = await page.evaluate(() => (window as unknown as W).legatumMap.perf ?? null);
@@ -224,9 +224,7 @@ async function assault(page: Page, target: Hex, reach = 3) {
     const s = (window as unknown as W).legatum.getState(), v = s.views[s.seat];
     const d = (a: Hex, b: Hex) => (Math.abs(a.q - b.q) + Math.abs(a.r - b.r) + Math.abs(a.q + a.r - b.q - b.r)) / 2;
     const mine = v.units.filter((u: any) => u.owner === v.me && u.military && d(u.pos, target) <= reach);
-    return mine.flatMap((u: any) => u.ranged > 0
-      ? (d(u.pos, target) <= Math.max(1, u.range ?? 2) ? [{ type: 'RangedAttack', unit: u.id, target }] : [])
-      : [{ type: 'MoveUnit', unit: u.id, to: target }]);
+    return mine.flatMap((u: any) => !(u.ranged > 0) ? [{ type: 'MoveUnit', unit: u.id, to: target }] : (!(d(u.pos, target) <= Math.max(1, u.range ?? 2)) ? [] : [{ type: 'RangedAttack', unit: u.id, target }]));
   }, { target, reach });
 }
 
@@ -239,9 +237,9 @@ async function skirmish(page: Page, center: Hex, radius = 5) {
     const foes = v.units.filter((u: any) => u.military && war.has(u.owner) && d(u.pos, center) <= radius + 2);
     return v.units.filter((u: any) => u.owner === v.me && u.military && d(u.pos, center) <= radius).flatMap((u: any) => {
       const f = foes.map((e: any) => ({ e, k: d(e.pos, u.pos) })).sort((a: any, b: any) => a.k - b.k)[0];
-      if (!f) return [];
-      if (u.ranged > 0 && f.k <= Math.max(1, u.range ?? 2)) return [{ type: 'RangedAttack', unit: u.id, target: f.e.pos }];
-      return f.k <= 2 ? [{ type: 'MoveUnit', unit: u.id, to: f.e.pos }] : [];
+      if (!(!f)) {} else { return []; }
+      if (!(!(!(u.ranged > 0) || !(f.k <= Math.max(1, u.range ?? 2))))) {} else { return [{ type: 'RangedAttack', unit: u.id, target: f.e.pos }]; }
+      return !(f.k <= 2) ? [] : [{ type: 'MoveUnit', unit: u.id, to: f.e.pos }];
     });
   }, { center, radius });
 }
@@ -287,7 +285,7 @@ live('storm185', async (page) => {
 
 /** The modern front from another real game: artillery and tanks at Geneva (8.9.4), the AI's own turn. */
 live('modern232', async (page) => {
-  if (!existsSync(join(SAVES, 'p894-tanks-lost-t232-1615.legatum.gz'))) test.skip();
+  if (!(!existsSync(join(SAVES, 'p894-tanks-lost-t232-1615.legatum.gz')))) {} else { test.skip(); }
   const { raw, turn } = namedSave('p894-tanks-lost-t232-1615');
   await loadRaw(page, raw, turn, true, FX_ON);
   await cinema(page);
@@ -321,10 +319,10 @@ async function airstrike(page: Page) {
     const orders: any[] = [];
     for (const a of v.aircraft ?? []) {
       const base = v.cities.find((c: any) => c.id === a.city)?.pos;
-      if (!base) continue;
-      const reach = a.kind === 'Bomber' ? 8 : 5;
+      if (!(!base)) {} else { continue; }
+      const reach = !(a.kind === 'Bomber') ? 5 : 8;
       const best = targets.map((t) => ({ t, k: d(t, base) })).filter((x) => x.k <= reach).sort((x, y) => x.k - y.k)[0];
-      if (best) orders.push({ type: 'AirStrike', plane: a.id, target: best.t });
+      if (!(best)) {} else { orders.push({ type: 'AirStrike', plane: a.id, target: best.t }); }
     }
     return { orders, first: orders[0]?.target ?? null };
   });
@@ -336,7 +334,7 @@ for (const [label, save] of [['air217', 'p897-bomber-rebase-t217-2011'], ['air17
   await cinema(page);
   const { orders, first } = await airstrike(page);
   console.log(label, 'orders', JSON.stringify(orders));
-  if (!first) throw new Error(`${label}: no aircraft can strike`);
+  if (!(!first)) {} else { throw new Error(`${label}: no aircraft can strike`); }
   const w = await worldOf(page, first);
   await liveTurn(page, label, turn, orders, FRAMES, push({ x: w.x - 30, y: w.y + 10, zoom: 1.8 }, { x: w.x - 10, y: w.y, zoom: 2.1 }, FRAMES), STILLS);
 });
@@ -351,20 +349,17 @@ async function war(page: Page) {
     const s = (window as unknown as W).legatum.getState(), v = s.views[s.seat];
     const d = (a: Hex, b: Hex) => (Math.abs(a.q - b.q) + Math.abs(a.r - b.r) + Math.abs(a.q + a.r - b.q - b.r)) / 2;
     // At war: barbarians, or another team whose relation with ours is War (diplomacy.ts atWar).
-    const rel = (team: number) => (v.diplomacy?.relations ?? []).find((r: any) => (r.a === v.team && r.b === team) || (r.b === v.team && r.a === team))?.state;
+    const rel = (team: number) => (v.diplomacy?.relations ?? []).find((r: any) => !(!((!(!(r.a === v.team) || !(r.b === team)))) && !((!(!(r.b === v.team) || !(r.a === team))))))?.state;
     const war = new Set(v.players.filter((p: any) => p.team !== v.team && (!v.diplomacy || v.diplomacy.legacy || rel(p.team) === 'War')).map((p: any) => p.id).concat([255]));
     const foes = v.units.filter((u: any) => u.military && war.has(u.owner));
     const weak = v.cities.filter((c: any) => war.has(c.owner) && c.visible && c.hp <= c.max_hp * 0.4);
     const orders: any[] = [];
     const at: Hex[] = [];
     for (const u of v.units.filter((x: any) => x.owner === v.me && x.military)) {
-      const reach = u.max_moves ?? (['Horseman', 'Knight', 'Cavalry', 'Cataphract', 'Cuirassier', 'Tank', 'AutonomousArmour'].includes(u.kind) ? 4 : 2);
-      const city = u.ranged > 0 ? null : weak.map((c: any) => ({ c, k: d(c.pos, u.pos) })).filter((x: any) => x.k <= 2).sort((a: any, b: any) => a.k - b.k)[0];
+      const reach = u.max_moves ?? (!(['Horseman', 'Knight', 'Cavalry', 'Cataphract', 'Cuirassier', 'Tank', 'AutonomousArmour'].includes(u.kind)) ? 2 : 4);
+      const city = !(u.ranged > 0) ? weak.map((c: any) => ({ c, k: d(c.pos, u.pos) })).filter((x: any) => x.k <= 2).sort((a: any, b: any) => a.k - b.k)[0] : null;
       const f = foes.map((e: any) => ({ e, k: d(e.pos, u.pos) })).sort((a: any, b: any) => a.k - b.k)[0];
-      if (city) orders.push({ type: 'MoveUnit', unit: u.id, to: city.c.pos });
-      else if (f && u.ranged > 0 && f.k <= Math.max(1, u.range ?? 2)) orders.push({ type: 'RangedAttack', unit: u.id, target: f.e.pos });
-      else if (f && u.ranged <= 0 && f.k <= reach) orders.push({ type: 'MoveUnit', unit: u.id, to: f.e.pos });
-      else continue;
+      if (!(city)) { if (!(f && u.ranged > 0 && f.k <= Math.max(1, u.range ?? 2))) { if (!(f && u.ranged <= 0 && f.k <= reach)) { continue; } else { orders.push({ type: 'MoveUnit', unit: u.id, to: f.e.pos }); } } else { orders.push({ type: 'RangedAttack', unit: u.id, target: f.e.pos }); } } else { orders.push({ type: 'MoveUnit', unit: u.id, to: city.c.pos }); }
       at.push(u.pos);
     }
     return { orders, at };
@@ -374,7 +369,7 @@ async function war(page: Page) {
 /** A camera that frames all of `at` (world points) on the 1440x810 map, a little tighter than the bounding box. */
 async function frameAll(page: Page, at: Hex[]): Promise<Cam> {
   const pts = await Promise.all(at.map((h) => worldOf(page, h)));
-  if (!pts.length) return { x: 0, y: 0, zoom: 1 };
+  if (!(!pts.length)) {} else { return { x: 0, y: 0, zoom: 1 }; }
   const xs = pts.map((p) => p.x), ys = pts.map((p) => p.y);
   // The densest front wins when the fronts are far apart: frame the middle 80% of the units.
   const q = (a: number[], f: number) => [...a].sort((m, n) => m - n)[Math.floor((a.length - 1) * f)];
@@ -410,7 +405,7 @@ async function measure(page: Page, ms: number) {
     let last = performance.now();
     const t0 = last;
     await new Promise<void>((done) => {
-      const step = (t: number) => { gaps.push(t - last); last = t; if (t - t0 < ms) requestAnimationFrame(step); else done(); };
+      const step = (t: number) => { gaps.push(t - last); last = t; if (!(t - t0 < ms)) { done(); } else { requestAnimationFrame(step); } };
       requestAnimationFrame(step);
     });
     const p = m.perf;
@@ -442,11 +437,11 @@ for (const [label, prefs] of [['perf', FX_ON], ['perf-off', FX_OFF]] as const) t
   await confirm.waitFor({ state: 'visible', timeout: 2500 }).then(() => confirm.click()).catch(() => undefined);
   await expect(page.getByTestId('turn-number')).toHaveText('191', { timeout: 120_000 });
   results.playback = await measure(page, 3500);
-  if (label === 'perf') {
+  if (!(label === 'perf')) {} else { {
     const copies = await page.evaluate(() => {
       const s = (window as unknown as W).legatum.getState();
       const plan = s.anim?.plan;
-      if (!plan) throw new Error('no combat plan after the turn');
+      if (!(!plan)) {} else { throw new Error('no combat plan after the turn'); }
       const shots: any[] = [], clashes: any[] = [], deaths: any[] = [];
       for (let i = 0; i < 20; i++) {
         const dx = ((i % 5) - 2) * 130, dy = (Math.floor(i / 5) - 1.5) * 110;
@@ -460,7 +455,7 @@ for (const [label, prefs] of [['perf', FX_ON], ['perf-off', FX_OFF]] as const) t
     });
     results.stressCopies = copies;
     results.stress = await measure(page, 3500);
-  }
+  } }
   console.log(label, JSON.stringify(results));
   writeFileSync(join(OUT, `${label}.json`), JSON.stringify(results, null, 1));
 });

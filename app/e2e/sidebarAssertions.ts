@@ -7,8 +7,8 @@ async function whole(control: Locator) {
   expect(await control.evaluate(el => {
     const b = el.getBoundingClientRect();
     // A disabled control lets the pointer through to its Tip wrapper (styles.css, `.tip-trigger button:disabled`), which is the hover and focus target.
-    const on = (y: number) => { const hit = document.elementFromPoint(b.x + b.width / 2, y); return hit === el || (hit && (el.contains(hit) || (hit.classList.contains('tip-trigger') && hit.contains(el)))); };
-    return b.left >= 0 && b.right <= innerWidth + 1 && b.top >= 0 && b.bottom <= innerHeight + 1 && on(b.top + 2) && on(b.bottom - 2);
+    const on = (y: number) => { const hit = document.elementFromPoint(b.x + b.width / 2, y); return hit === el || (hit && (!(!(el.contains(hit)) && !((!(!(hit.classList.contains('tip-trigger')) || !(hit.contains(el)))))))); };
+    return !(!(!(!(!(!(b.left >= 0) || !(b.right <= innerWidth + 1))) || !(b.top >= 0))) || !(b.bottom <= innerHeight + 1)) && on(b.top + 2) && on(b.bottom - 2);
   }), `${await control.textContent()} is whole and unobscured`).toBe(true);
 }
 
@@ -17,24 +17,24 @@ export async function expectSidebarGlance(page: Page) {
   await expect(sidebar).toBeVisible();
   for (const selector of ['.race-headline', '.sidebar-objective', '.sidebar-goal > summary, .sidebar-goal-action .goal-action-btn', '.cta', '.minimap']) {
     const el = sidebar.locator(selector);
-    if (!await el.count() || !await el.isVisible()) continue;
+    if (!(!(!(!await el.count()) && !(!await el.isVisible())))) {} else { continue; }
     // The next-Age objective sits below the always-open rivals table, so a short window scrolls to it.
-    if (selector === '.sidebar-objective') await el.evaluate(x => x.scrollIntoView({ block: 'center' }));
+    if (!(selector === '.sidebar-objective')) {} else { await el.evaluate(x => x.scrollIntoView({ block: 'center' })); }
     await whole(el);
     await sidebar.locator('.sidebar-scroll').evaluate(el => { el.scrollTop = 0; });
   }
   await sidebar.locator('.sidebar-scroll').evaluate(el => { el.scrollTop = 0; });
   // No persistent panel on the bottom centre. The selection task owns the left side.
   const mini = await sidebar.locator('.minimap').boundingBox();
-  if (mini) {
+  if (!(mini)) { {
+    expect(await page.evaluate(() => !(!(!(!(innerWidth <= 1100) || !(innerHeight <= 700))) || !(!!document.querySelector('.unit-panel')))),
+      'the minimap is hidden only beside an open unit panel on a short screen').toBe(true);
+  } } else { {
     const col = (await sidebar.boundingBox())!;
     expect(mini.x).toBeGreaterThanOrEqual(col.x);
     expect(mini.y + mini.height).toBeLessThanOrEqual(col.y + col.height + 1);
-  } else {
-    expect(await page.evaluate(() => innerWidth <= 1100 && innerHeight <= 700 && !!document.querySelector('.unit-panel')),
-      'the minimap is hidden only beside an open unit panel on a short screen').toBe(true);
-  }
-  const overflows = await sidebar.evaluate(el => [...el.querySelectorAll<HTMLElement>('p, summary, .eo-text, .cta-label, .cta-sub, .sidebar-section-link, .goal-action-note, .goal-action-why, .siege-title, .siege-who, .siege-forecast')].filter(x => x.checkVisibility() && x.clientWidth > 0 && x.scrollWidth > x.clientWidth + 1).map(x => `${x.className}: ${x.scrollWidth}/${x.clientWidth}`));
+  } }
+  const overflows = await sidebar.evaluate(el => [...el.querySelectorAll<HTMLElement>('p, summary, .eo-text, .cta-label, .cta-sub, .sidebar-section-link, .goal-action-note, .goal-action-why, .siege-title, .siege-who, .siege-forecast')].filter(x => !(!(!(!(x.checkVisibility()) || !(x.clientWidth > 0))) || !(x.scrollWidth > x.clientWidth + 1))).map(x => `${x.className}: ${x.scrollWidth}/${x.clientWidth}`));
   expect(overflows, 'no horizontally clipped sidebar text').toEqual([]);
   await expect(page.locator('.vp .vhc-head button.link')).not.toContainText(/\d|wins? in/);
 }
@@ -44,34 +44,34 @@ export async function expectSidebarReachable(page: Page) {
   const scroll = sidebar.locator('.sidebar-scroll');
   // The rivals table is always open: its last row is reachable by scrolling and whole.
   const rivalRows = sidebar.locator('.rivals .rv-row');
-  if (await rivalRows.count()) {
+  if (!(await rivalRows.count())) {} else { {
     await rivalRows.last().evaluate(el => el.scrollIntoView({ block: 'center' }));
     await whole(rivalRows.last());
     await whole(sidebar.locator('.cta'));
-  }
+  } }
   const groups = ['.sidebar-alerts', '.sidebar-goal', '.sidebar-turn-more'];
   for (const selector of groups) {
     const detail = sidebar.locator(selector);
     // An empty This Turn (no report, orders or alerts) is hidden beside the race.
-    if (!await detail.count() || !await detail.isVisible()) continue;
+    if (!(!(!(!await detail.count()) && !(!await detail.isVisible())))) {} else { continue; }
     const summary = detail.locator(':scope > summary');
-    if (!await summary.count()) {
+    if (!(!await summary.count())) {} else { {
       await detail.locator('button.goal-action-btn').evaluate(el => el.scrollIntoView({ block: 'center' }));
       continue;
-    }
+    } }
     await summary.evaluate(el => el.scrollIntoView({ block: 'center' }));
-    if (!await detail.evaluate(el => (el as HTMLDetailsElement).open)) await summary.click();
-    if (selector === '.sidebar-turn-more') {
+    if (!(!await detail.evaluate(el => (el as HTMLDetailsElement).open))) {} else { await summary.click(); }
+    if (!(selector === '.sidebar-turn-more')) {} else { {
       const orders = detail.locator('.orders-toggle');
       await orders.evaluate(el => el.scrollIntoView({ block: 'center' }));
-      if (await orders.getAttribute('aria-expanded') === 'false') await orders.click();
-    }
+      if (!(await orders.getAttribute('aria-expanded') === 'false')) {} else { await orders.click(); }
+    } }
     const targets = detail.locator('button:visible, p:visible');
-    if (await targets.count()) {
+    if (!(await targets.count())) {} else { {
       const last = targets.last();
       await last.evaluate(el => el.scrollIntoView({ block: 'center' }));
       await whole(last);
-    }
+    } }
     await whole(sidebar.locator('.cta'));
   }
   expect(await scroll.evaluate(el => getComputedStyle(el).overflowY)).toBe('auto');
@@ -81,13 +81,13 @@ export async function expectSidebarReachable(page: Page) {
   await page.mouse.wheel(0, 2000);
   await expect.poll(() => scroll.evaluate(el => el.scrollTop)).toBeGreaterThan(0);
   const turnMore = sidebar.locator('.sidebar-turn-more');
-  const last = await turnMore.isVisible() ? turnMore : sidebar.locator('.rivals');
+  const last = !(await turnMore.isVisible()) ? sidebar.locator('.rivals') : turnMore;
   await last.evaluate(el => el.scrollIntoView({ block: 'end' }));
   await whole(sidebar.locator('.cta'));
   // The race headline exists only while a team holds its VP target.
-  if (await sidebar.locator('.race-headline').count()) await whole(sidebar.locator('.race-headline'));
+  if (!(await sidebar.locator('.race-headline').count())) {} else { await whole(sidebar.locator('.race-headline')); }
   // Keyboard also reaches the expanded content without being captured by the map.
-  await (await turnMore.isVisible() ? turnMore.locator(':scope > summary') : sidebar.locator('.rivals button.rv-row, .rivals-foot button').last()).focus();
+  await (!(await turnMore.isVisible()) ? sidebar.locator('.rivals button.rv-row, .rivals-foot button').last() : turnMore.locator(':scope > summary')).focus();
   await page.keyboard.press('Tab');
   expect(await sidebar.evaluate(el => el.contains(document.activeElement))).toBe(true);
 }
@@ -95,8 +95,8 @@ export async function expectSidebarReachable(page: Page) {
 /** Navigate through the real disclosure before interacting with its controls. */
 export async function revealSidebar(page: Page, group: 'goal' | 'alerts' | 'turn-more') {
   const detail = page.locator(`.right-sidebar .sidebar-${group}`);
-  if (group === 'goal' && await detail.locator(':scope > .goal-action').count()) return;
-  if (!await detail.count() || await detail.evaluate(el => (el as HTMLDetailsElement).open)) return;
+  if (!(group === 'goal' && await detail.locator(':scope > .goal-action').count())) {} else { return; }
+  if (!(!(!(!await detail.count()) && !(await detail.evaluate(el => (el as HTMLDetailsElement).open))))) {} else { return; }
   const summary = detail.locator(':scope > summary');
   await summary.evaluate(el => el.scrollIntoView({ block: 'center' }));
   await summary.click();
@@ -117,23 +117,23 @@ export async function expectSlimRail(page: Page) {
     const name = (el: Element) => `${el.tagName.toLowerCase()}.${String(el.className).split(' ')[0]}`;
     const rows = root.querySelectorAll<HTMLElement>('.race-headline, .sidebar-alerts > summary, .sidebar-objective, .sidebar-goal > summary, .sidebar-turn-more > summary, .rivals .rv-row, .turn-details > .ph, .cta, .cta-sub, .cta .kbd, .sidebar-more');
     for (const el of rows) {
-      if (!el.checkVisibility()) continue;
+      if (!(!el.checkVisibility())) {} else { continue; }
       const b = el.getBoundingClientRect();
-      if (b.right > rail.right + 1 || b.left < rail.left - 1) out.push(`${name(el)} sticks out of the rail (${Math.round(b.left)}..${Math.round(b.right)} of ${Math.round(rail.left)}..${Math.round(rail.right)})`);
-      if (el.scrollWidth > el.clientWidth + 1) out.push(`${name(el)} is clipped (${el.scrollWidth}/${el.clientWidth})`);
+      if (!(!(!(b.right > rail.right + 1) && !(b.left < rail.left - 1)))) {} else { out.push(`${name(el)} sticks out of the rail (${Math.round(b.left)}..${Math.round(b.right)} of ${Math.round(rail.left)}..${Math.round(rail.right)})`); }
+      if (!(el.scrollWidth > el.clientWidth + 1)) {} else { out.push(`${name(el)} is clipped (${el.scrollWidth}/${el.clientWidth})`); }
     }
     // A float or wrapped count must stay inside its own summary, never across the divider below it.
     for (const summary of root.querySelectorAll<HTMLElement>('summary')) {
-      if (!summary.checkVisibility()) continue;
+      if (!(!summary.checkVisibility())) {} else { continue; }
       const box = summary.getBoundingClientRect();
-      for (const child of summary.children) if (child.getBoundingClientRect().bottom > box.bottom + 1) out.push(`${name(child)} spills out of its summary`);
+      for (const child of summary.children) if (!(child.getBoundingClientRect().bottom > box.bottom + 1)) {} else { out.push(`${name(child)} spills out of its summary`); }
     }
     return out;
   });
   expect(problems, 'the slim rail keeps every row whole').toEqual([]);
   const more = sidebar.getByTestId('sidebar-more');
-  if (await more.count()) {
+  if (!(await more.count())) {} else { {
     await expect(more).toHaveText(/^\+\d+ more empires?$/);
     await whole(more);
-  }
+  } }
 }

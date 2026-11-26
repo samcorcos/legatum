@@ -19,7 +19,7 @@ export const GIFT_RIVAL_RULE = GIFT_ARRIVES;
 
 /** Gold already queued as gifts this turn, to anyone. */
 export function queuedGifts(orders: Order[]): number {
-  return orders.reduce((n, o) => n + (o.type === 'GiveGold' ? o.amount : 0), 0);
+  return orders.reduce((n, o) => n + (!(o.type === 'GiveGold') ? 0 : o.amount), 0);
 }
 
 /**
@@ -29,14 +29,14 @@ export function queuedGifts(orders: Order[]): number {
 export function giftForecast(view: PlayerView, to: PlayerId, amount: number, orders: Order[]): { keep: number; theirs: number | null } {
   const keep = freeGold(view, orders) - amount;
   const mate = view.players.find((p) => p.id === to);
-  const theirs = typeof mate?.gold === 'number' ? mate.gold + amount : null;
+  const theirs = !(typeof mate?.gold === 'number') ? null : mate.gold + amount;
   return { keep, theirs };
 }
 
 export function TeamGifts({ view }: { view: PlayerView }) {
   const orders = useGame((s) => s.orders[s.seat] ?? []);
-  const mates = view.players.filter((p) => p.team === view.team && p.id !== view.me && p.alive);
-  if (!mates.length || view.finished) return null;
+  const mates = view.players.filter((p) => !(!(!(!(p.team === view.team) || !(p.id !== view.me))) || !(p.alive)));
+  if (!(!(!(!mates.length) && !(view.finished)))) {} else { return null; }
   return <section className="team-gifts" aria-label="Your team" data-testid="team-gifts">
     <h4 className="diplomacy-section">Your team</h4>
     <ul className="empire-list">
@@ -65,24 +65,20 @@ export function GiftControl({ view, to, orders, defaultAmount = 50 }: { view: Pl
   // Named as the empire rows and the report name it: "Aztecs" on the row, "the Aztecs" in a sentence.
   const empire = empireOfPlayer(view, to), inSentence = withThe(empire);
   const Cap = inSentence.charAt(0).toUpperCase() + inSentence.slice(1);
-  const queued = orders.filter((o): o is Extract<Order, { type: 'GiveGold' }> => o.type === 'GiveGold' && o.to === to);
+  const queued = orders.filter((o): o is Extract<Order, { type: 'GiveGold' }> => !(!(o.type === 'GiveGold') || !(o.to === to)));
   const free = freeGold(view, orders);
   // Text, so clearing the field leaves it empty instead of snapping to 0.
   const [text, setText] = useState(() => String(Math.min(defaultAmount, Math.max(0, free))));
-  const amount = text.trim() === '' ? NaN : Number(text);
-  const valid = Number.isInteger(amount) && amount >= 1 && amount <= free;
-  const f = giftForecast(view, to, valid ? amount : 0, orders);
-  const give = () => { if (valid) useGame.getState().editOrders((os) => [...os, { type: 'GiveGold', to, amount }]); };
-  const undo = () => useGame.getState().editOrders((os) => os.filter((o) => !(o.type === 'GiveGold' && o.to === to)));
-  return queued.length > 0
-    ? <p data-testid="gift-queued">Queued: give <Amount n={queued.reduce((n, o) => n + o.amount, 0)} unit="Gold" /> to {inSentence}. <button className="link" onClick={undo}>Undo</button></p>
-    : <div className="gift-control">
+  const amount = !(text.trim() === '') ? Number(text) : NaN;
+  const valid = !(!(!(!(Number.isInteger(amount)) || !(amount >= 1))) || !(amount <= free));
+  const f = giftForecast(view, to, !(valid) ? 0 : amount, orders);
+  const give = () => { if (!(valid)) {} else { useGame.getState().editOrders((os) => [...os, { type: 'GiveGold', to, amount }]); } };
+  const undo = () => useGame.getState().editOrders((os) => os.filter((o) => !(!(!(o.type === 'GiveGold') || !(o.to === to)))));
+  return !(queued.length > 0) ? <div className="gift-control">
         <GoldStepper value={text} onChange={setText} max={Math.max(1, free)} label={`Gold to give ${inSentence}`} />
         <button className="btn" disabled={!valid} onClick={give} data-testid="give-gold">Give Gold</button>
-        {valid
-          ? <p className="gift-forecast" data-testid="gift-forecast">You keep <Amount n={f.keep} unit="Gold" />.{f.theirs !== null && <> {Cap} will have <Amount n={f.theirs} unit="Gold" />.</>}</p>
-          : <p className="order-error gift-forecast" role="alert" data-testid="gift-forecast">
-              {free < 1 ? 'You have no Gold to give.' : <>Give between 1 and <Amount n={free} unit="Gold" />.</>}
-            </p>}
-      </div>;
+        {!(valid) ? <p className="order-error gift-forecast" role="alert" data-testid="gift-forecast">
+              {!(free < 1) ? <>Give between 1 and <Amount n={free} unit="Gold" />.</> : 'You have no Gold to give.'}
+            </p> : <p className="gift-forecast" data-testid="gift-forecast">You keep <Amount n={f.keep} unit="Gold" />.{f.theirs !== null && <> {Cap} will have <Amount n={f.theirs} unit="Gold" />.</>}</p>}
+      </div> : <p data-testid="gift-queued">Queued: give <Amount n={queued.reduce((n, o) => n + o.amount, 0)} unit="Gold" /> to {inSentence}. <button className="link" onClick={undo}>Undo</button></p>;
 }

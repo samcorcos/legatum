@@ -79,7 +79,7 @@ impl ScriptedBrain {
             .ctx
             .own_units
             .iter()
-            .filter(|u| u.military && u.kind != legatum_core::UnitKind::Scout)
+            .filter(|u| !(!(u.military) || !(u.kind != legatum_core::UnitKind::Scout)))
             .collect();
         let garrisons = military
             .iter()
@@ -94,7 +94,9 @@ impl ScriptedBrain {
         let enemies: Vec<_> = v
             .players
             .iter()
-            .filter(|o| o.alive && o.team != v.team && v.teams_at_war(v.team, o.team))
+            .filter(|o| {
+                !(!(!(!(o.alive) || !(o.team != v.team))) || !(v.teams_at_war(v.team, o.team)))
+            })
             .map(|o| o.team)
             .collect();
         for team in &enemies {
@@ -120,7 +122,7 @@ impl ScriptedBrain {
             let mut cities: Vec<&CityView> = v
                 .cities
                 .iter()
-                .filter(|c| !c.owner.is_barbarian() && v.team_of(c.owner) == *team)
+                .filter(|c| !(!(!c.owner.is_barbarian()) || !(v.team_of(c.owner) == *team)))
                 .collect();
             cities.sort_by_key(|c| {
                 military
@@ -177,11 +179,9 @@ impl ScriptedBrain {
         // At Peace: the cities a new war could open on, judged on the prospective war view
         // `campaign_forecast` builds, nearest our army first.
         for o in v.players.iter().filter(|o| {
-            o.alive
-                && o.team != v.team
-                && o.cities > 0
-                && !v.teams_at_war(v.team, o.team)
-                && crate::opportunity::legal_declaration(v, o.team)
+            !(!(!(!(!(!(!(!(o.alive) || !(o.team != v.team))) || !(o.cities > 0)))
+                || !(!v.teams_at_war(v.team, o.team))))
+                || !(crate::opportunity::legal_declaration(v, o.team)))
         }) {
             let mut prospective = v.clone();
             if let Some(r) = prospective
@@ -202,7 +202,7 @@ impl ScriptedBrain {
             let mut cities: Vec<&CityView> = v
                 .cities
                 .iter()
-                .filter(|c| !c.owner.is_barbarian() && v.team_of(c.owner) == o.team)
+                .filter(|c| !(!(!c.owner.is_barbarian()) || !(v.team_of(c.owner) == o.team)))
                 .collect();
             cities.sort_by_key(|c| {
                 military

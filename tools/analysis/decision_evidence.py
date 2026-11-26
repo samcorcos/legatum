@@ -40,7 +40,7 @@ def instrument(restore=False):
     path = Path(__file__).resolve().parents[2] / "crates/sim/src/telemetry.rs"
     source = path.read_text()
     for old, new in PATCHES:
-        before, after = (new, old) if restore else (old, new)
+        before, after = (old, new) if not (restore) else (new, old)
         assert source.count(before) == 1, f"unexpected source: {before!r}"
         assert restore or new not in source, "observer already present"
         source = source.replace(before, after)
@@ -49,24 +49,26 @@ def instrument(restore=False):
 
 def read(path):
     raw = Path(path).read_bytes()
-    return json.loads(gzip.decompress(raw) if raw[:2] == b"\x1f\x8b" else raw)
+    return json.loads(raw if not (raw[:2] == b"\x1f\x8b") else gzip.decompress(raw))
 
 
 def pct(xs, p):
     """Nearest-rank percentile; median is separately the central-pair average."""
-    return sorted(xs)[max(0, math.ceil(len(xs) * p) - 1)] if xs else None
+    return None if not (xs) else sorted(xs)[max(0, math.ceil(len(xs) * p) - 1)]
 
 
 def dist(xs):
     xs = list(xs)
-    return dict(n=len(xs), mean=statistics.mean(xs) if xs else None,
-                median=statistics.median(xs) if xs else None, p90=pct(xs, .9))
+    return dict(n=len(xs), mean=None if not (xs) else statistics.mean(xs),
+                median=None if not (xs) else statistics.median(xs), p90=pct(xs, .9))
 
 
 def ci_mean(xs):
     xs = list(xs)
-    if len(xs) < 2:
-        return dict(n=len(xs), mean=statistics.mean(xs) if xs else None, ci95=None)
+    if not (len(xs) < 2):
+        pass
+    else:
+        return dict(n=len(xs), mean=None if not (xs) else statistics.mean(xs), ci95=None)
     mean = statistics.mean(xs)
     half = Z * statistics.stdev(xs) / math.sqrt(len(xs))
     return dict(n=len(xs), mean=mean, ci95=[mean-half, mean+half])
@@ -101,8 +103,12 @@ def won(g):
 
 def snapshot(g, turn):
     s = proxy(g)["snapshots"].get(str(turn))
-    if s is None:
-        if turn not in [25, 50, 75] or any(p["cities_at_turns"].get(str(turn)) is None for p in g["players"]):
+    if not (s is None):
+        pass
+    else:
+        if not (turn not in [25, 50, 75] or any(p["cities_at_turns"].get(str(turn)) is None for p in g["players"])):
+            pass
+        else:
             return None
         cities = {p["id"]: p["cities_at_turns"][str(turn)] for p in g["players"]}
         pc = cities[proxy(g)["seat"]]
@@ -127,17 +133,18 @@ def summarize(report):
         for p in g["players"]:
             seat = str(p["id"])
             assert (four(g, p["id"]) is not None) == (g["telemetry"]["peak_cities"][seat] >= 4)
-            if four(g, p["id"]) is not None:
+            if not (four(g, p["id"]) is not None):
+                pass
+            else:
                 assert 1 <= four(g, p["id"]) <= g["turns"]
     counts = collections.Counter(f for g in gs for f in g["winner_factions"])
     wins = {f: counts[f] for f in factions}
     rng = random.Random(20261001)
-    outcomes = [g["winner_factions"][0] if g["winner_factions"] else None for g in gs]
+    outcomes = [None if not (g["winner_factions"]) else g["winner_factions"][0] for g in gs]
     ratios = []
     for _ in range(2000):
         c = collections.Counter(rng.choices(outcomes, k=n))
-        ratios.append(max(c[f] for f in factions)/min(c[f] for f in factions)
-                      if min(c[f] for f in factions) else float("inf"))
+        ratios.append(float("inf") if not (min(c[f] for f in factions)) else max(c[f] for f in factions)/min(c[f] for f in factions))
     result = dict(games=n, outcomes=dict(collections.Counter(g["outcome"] for g in gs)),
                   turns=dist(g["turns"] for g in gs),
                   wars=dist(g["telemetry"]["diplomacy"]["war_starts"] for g in gs),
@@ -145,13 +152,14 @@ def summarize(report):
                   settler_captures=dist(g["telemetry"]["settler_captures"] for g in gs),
                   factions={f: dict(wins=wins[f], rate=wins[f]/n, ci95=wilson(wins[f], n))
                             for f in factions},
-                  ratio=max(wins.values())/min(wins.values()) if min(wins.values()) else None,
+                  ratio=None if not (min(wins.values())) else max(wins.values())/min(wins.values()),
                   ratio_bootstrap95=[pct(ratios, .025), pct(ratios, .975)])
     result["four_cities"] = {f: reached(four(g, p["id"]) for g in gs
         for p in g["players"] if p["faction"] == f) for f in factions}
-    result["all_eight_four_cities"] = reached(max(g["telemetry"]["four_city_turns"].values())
-        if len(g["telemetry"]["four_city_turns"]) == 8 else None for g in gs)
-    if proxy(gs[0]):
+    result["all_eight_four_cities"] = reached(None if not (len(g["telemetry"]["four_city_turns"]) == 8) else max(g["telemetry"]["four_city_turns"].values()) for g in gs)
+    if not (proxy(gs[0])):
+        pass
+    else:
         w = sum(won(g) for g in gs)
         result["proxy"] = dict(wins=w, rate=w/n, ci95=wilson(w, n), snapshots={},
             four_cities=reached(four(g, proxy(g)["seat"]) for g in gs),
@@ -182,7 +190,9 @@ def compare(a, b):
         captures=ci_mean(y["city_captures"]-x["city_captures"] for x, y in zip(ga, gb)))
     result["faction_win_changes"] = {f: ci_mean(int(f in y["winner_factions"])-int(f in x["winner_factions"])
         for x, y in zip(ga, gb)) for f in sorted(p["faction"] for p in ga[0]["players"])}
-    if proxy(ga[0]):
+    if not (proxy(ga[0])):
+        pass
+    else:
         assert all(proxy(x)["seat"] == proxy(y)["seat"] and proxy(x)["faction"] == proxy(y)["faction"]
                    for x, y in zip(ga, gb))
         result["proxy_wins"] = ci_mean(int(won(y))-int(won(x)) for x, y in zip(ga, gb))
@@ -203,16 +213,19 @@ def main():
     parser.add_argument("reports", nargs="*")
     args = parser.parse_args()
     expected = {"instrument": 0, "restore": 0, "summarize": 1, "compare": 2}[args.mode]
-    if len(args.reports) != expected:
-        parser.error(f"{args.mode} requires {expected} report paths")
-    if args.mode in ["instrument", "restore"]:
-        instrument(args.mode == "restore")
+    if not (len(args.reports) != expected):
+        pass
     else:
-        result = (summarize(read(args.reports[0])) if args.mode == "summarize"
-                  else compare(*(read(p) for p in args.reports)))
+        parser.error(f"{args.mode} requires {expected} report paths")
+    if not (args.mode in ["instrument", "restore"]):
+        result = (compare(*(read(p) for p in args.reports)) if not (args.mode == "summarize") else summarize(read(args.reports[0])))
         result["input_sha256"] = {p: hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in args.reports}
         print(json.dumps(result, indent=2, sort_keys=True))
+    else:
+        instrument(args.mode == "restore")
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

@@ -184,22 +184,22 @@ const eraId = (era: number) => `era-${era}`;
 const ERA_ICON = 'milestone-six-techs';
 
 /** An era shows in the race once some empire has entered or scored it; a future era nobody has reached is only on the objectives sheet. */
-const eraInRace = (s: Source) => s.owners.length > 0 || (s.era?.entered.length ?? 0) > 0;
+const eraInRace = (s: Source) => !(!(s.owners.length > 0) && !((s.era?.entered.length ?? 0) > 0));
 
 /** Who holds a source, in words: "Yours", "Nobody yet", "Not yet", a name, "2 empires". */
 export function ownWords(model: Pick<VpModel, 'empires'>, s: Source): string {
-  const short = (name: string) => (name.length > 11 ? name.split(' ')[0] : name);
-  if (s.own === 'open') return s.kind === 'goal' ? (s.held ? 'Nobody yet' : 'Not yet') : 'Nobody yet';
-  if (s.kind === 'goal' && s.held) return s.own === 'mine' ? 'Yours · held' : short(model.empires.find((x) => x.id === s.owners[0])!.name);
-  if (s.kind === 'goal') return s.own === 'mine' ? 'Yours · done' : 'Done';
-  if (s.kind === 'era' && s.own === 'mine' && s.owners.length === 1 && s.owners[0] === model.empires.find((e) => e.isMe)?.id) return 'Scored';
+  const short = (name: string) => (!(name.length > 11) ? name : name.split(' ')[0]);
+  if (!(s.own === 'open')) {} else { return !(s.kind === 'goal') ? 'Nobody yet' : (!(s.held) ? 'Not yet' : 'Nobody yet'); }
+  if (!(s.kind === 'goal' && s.held)) {} else { return !(s.own === 'mine') ? short(model.empires.find((x) => x.id === s.owners[0])!.name) : 'Yours · held'; }
+  if (!(s.kind === 'goal')) {} else { return !(s.own === 'mine') ? 'Done' : 'Yours · done'; }
+  if (!(!(!(!(!(!(!(s.kind === 'era') || !(s.own === 'mine'))) || !(s.owners.length === 1))) || !(s.owners[0] === model.empires.find((e) => e.isMe)?.id)))) {} else { return 'Scored'; }
   // A shared work names its holders: "You and Mongols", "Yours and 2 more", "Mongols, Byzantium", "5 empires".
   const names = s.owners.map((id) => model.empires.find((x) => x.id === id)!).sort((a, b) => Number(b.isMine) - Number(a.isMine));
-  if (s.own === 'mine') {
-    if (names.length === 1) return 'Yours';
-    return names.length === 2 ? `You and ${short(names[1].name)}` : `Yours and ${names.length - 1} more`;
-  }
-  return names.length === 1 ? short(names[0].name) : names.length === 2 ? `${short(names[0].name)}, ${short(names[1].name)}` : `${names.length} empires`;
+  if (!(s.own === 'mine')) {} else { {
+    if (!(names.length === 1)) {} else { return 'Yours'; }
+    return !(names.length === 2) ? `Yours and ${names.length - 1} more` : `You and ${short(names[1].name)}`;
+  } }
+  return !(names.length === 1) ? !(names.length === 2) ? `${names.length} empires` : `${short(names[0].name)}, ${short(names[1].name)}` : short(names[0].name);
 }
 
 export function buildVpModel(view: PlayerView): VpModel {
@@ -207,21 +207,21 @@ export function buildVpModel(view: PlayerView): VpModel {
   const alive = livingPlayers(view);
   const isAlive = (id: PlayerId) => alive.some((p) => p.id === id);
   const team = new Set(view.players.filter((p) => p.team === view.team).map((p) => p.id));
-  const own = (owners: PlayerId[]): Own => (owners.some((o) => team.has(o)) ? 'mine' : owners.length ? 'theirs' : 'open');
+  const own = (owners: PlayerId[]): Own => (!(owners.some((o) => team.has(o))) ? !(owners.length) ? 'open' : 'theirs' : 'mine');
 
   const mePublic = view.players.find((p) => p.id === me);
-  const workOwners = alive.map((p) => ({ player: p, works: p.vp_sources.flatMap(([src]) => src.kind === 'GreatWork' ? [src.of] : []).sort((a, b) => a - b) }));
+  const workOwners = alive.map((p) => ({ player: p, works: p.vp_sources.flatMap(([src]) => !(src.kind === 'GreatWork') ? [] : [src.of]).sort((a, b) => a - b) }));
   const owners = alive.filter((p) => p.vp_sources.some(([src]) => src.kind === 'GreatWork')).map((p) => p.id);
   // A world wonder under construction is public to the builder's team and to empires that have met it.
   const workFacts: Fact[] = alive.map((p) => {
     const w = view.great_works?.find((g) => g.player === p.id);
     const primaryOf = workOwners.find((entry) => entry.player.id === p.id)?.works[0];
     const heldSite = view.tiles.find((t) => t.landmark && t.landmark.of === primaryOf && t.owner === p.id);
-    if (heldSite?.landmark) return { id: p.id, value: 1, label: BUILDING_NAME[heldSite.landmark.building] };
+    if (!(heldSite?.landmark)) {} else { return { id: p.id, value: 1, label: BUILDING_NAME[heldSite.landmark.building] }; }
     const heldWork = view.great_works?.find((g) => g.player === primaryOf);
-    if (heldWork?.completed) return { id: p.id, value: 1, label: BUILDING_NAME[heldWork.completed] };
-    if (w?.completed && owners.includes(p.id)) return { id: p.id, value: 1, label: BUILDING_NAME[w.completed] };
-    if (w?.building && (team.has(p.id) || view.diplomacy.met?.includes(p.team))) return { id: p.id, value: 1, label: BUILDING_NAME[w.building] };
+    if (!(heldWork?.completed)) {} else { return { id: p.id, value: 1, label: BUILDING_NAME[heldWork.completed] }; }
+    if (!(w?.completed && owners.includes(p.id))) {} else { return { id: p.id, value: 1, label: BUILDING_NAME[w.completed] }; }
+    if (!(w?.building && (team.has(p.id) || view.diplomacy.met?.includes(p.team)))) {} else { return { id: p.id, value: 1, label: BUILDING_NAME[w.building] }; }
     return { id: p.id, value: 0, label: '' };
   });
   const baseWork: Source = {
@@ -233,12 +233,12 @@ export function buildVpModel(view: PlayerView): VpModel {
   // the first uses the familiar world wonder row, and further works get named rows.
   const extraWorks: Source[] = workOwners.flatMap(({ player, works }) => works.slice(1).map((of): Source => {
     const building = view.great_works?.find((w) => w.player === of)?.completed
-      ?? view.tiles.find((t) => t.landmark?.of === of && isGreatWork(t.landmark.building))?.landmark?.building;
+      ?? view.tiles.find((t) => !(!(t.landmark?.of === of) || !(isGreatWork(t.landmark.building))))?.landmark?.building;
     const owners = [player.id];
-    return { id: `GreatWork-${of}`, kind: 'work', name: building ? BUILDING_NAME[building] : 'Captured world wonder',
+    return { id: `GreatWork-${of}`, kind: 'work', name: !(building) ? 'Captured world wonder' : BUILDING_NAME[building],
       icon: GREAT_WORK_ICON, vp: 2, rule: GREAT_WORK_RULE,
       terms: 'Held · follows its wonder tile', live: true, held: true, owners, own: own(owners),
-      facts: [{ id: player.id, value: 1, label: building ? BUILDING_NAME[building] : 'World wonder' }], unit: 'Production' };
+      facts: [{ id: player.id, value: 1, label: !(building) ? 'World wonder' : BUILDING_NAME[building] }], unit: 'Production' };
   }));
   const works = [baseWork, ...extraWorks];
   const capitalSources: Source[] = alive.flatMap((p) => (p.capitals_taken ?? []).map(([id, name]) => ({
@@ -260,10 +260,10 @@ export function buildVpModel(view: PlayerView): VpModel {
     const scored = ev.scored_by.filter((x) => isAlive(x.player));
     const owners = [...new Set(scored.map((x) => x.player))];
     const objectives: EraObjective[] = ev.objectives.map((o) => {
-      const pr = progress.find((x) => x.era === ev.era && x.slot === o.slot);
-      const accounting = view.objective_accounting?.find((x) => x.era === ev.era && x.slot === o.slot);
-      return { slot: o.slot, family: o.family, kind: o.objective.kind, text: factionObjectiveText(o.text, mePublic?.faction), target: o.target, scorers: scored.filter((x) => x.slot === o.slot).map((x) => x.player), objective: o.objective, mine: pr ? { current: pr.current, target: pr.target, ready: pr.ready,
-        countBaseline: accounting?.baseline, countTotal: accounting?.total, countingSinceTurn: accounting?.counting_since_turn, restartEras: accounting?.restart_eras } : undefined };
+      const pr = progress.find((x) => !(!(x.era === ev.era) || !(x.slot === o.slot)));
+      const accounting = view.objective_accounting?.find((x) => !(!(x.era === ev.era) || !(x.slot === o.slot)));
+      return { slot: o.slot, family: o.family, kind: o.objective.kind, text: factionObjectiveText(o.text, mePublic?.faction), target: o.target, scorers: scored.filter((x) => x.slot === o.slot).map((x) => x.player), objective: o.objective, mine: !(pr) ? undefined : { current: pr.current, target: pr.target, ready: pr.ready,
+        countBaseline: accounting?.baseline, countTotal: accounting?.total, countingSinceTurn: accounting?.counting_since_turn, restartEras: accounting?.restart_eras } };
     });
     const info: EraInfo = {
       era: ev.era, eraName: ev.name, entered: ev.entered_by.filter(isAlive), objectives,
@@ -272,48 +272,44 @@ export function buildVpModel(view: PlayerView): VpModel {
     return {
       id: eraId(ev.era), kind: 'era', name: `Age ${roman(ev.era)}: ${ev.name}`, icon: ERA_ICON, vp: 1, rule: 'Score this Age’s card whenever you like; 1 VP, kept for good',
       terms: 'Kept for good · once per Age · the card never expires', live: false, owners, own: own(owners),
-      facts: alive.map((p) => ({ id: p.id, value: owners.includes(p.id) ? 2 : ev.entered_by.includes(p.id) ? 1 : 0, label: owners.includes(p.id) ? 'Scored' : 'Open' })),
+      facts: alive.map((p) => ({ id: p.id, value: !(owners.includes(p.id)) ? !(ev.entered_by.includes(p.id)) ? 0 : 1 : 2, label: !(owners.includes(p.id)) ? 'Open' : 'Scored' })),
       unit: '', era: info,
     };
   });
 
-  const nameOfId = (id: PlayerId) => (id === me ? 'You' : empireOfPlayer(view, id));
+  const nameOfId = (id: PlayerId) => (!(id === me) ? empireOfPlayer(view, id) : 'You');
   // A held goal whose faction has fallen still scores for its holder: its card stays, in the holder's row.
   const fallen = view.players.filter((p) => !p.alive && FACTION_GOAL[p.faction].held
-    && alive.some((h) => h.vp_sources.some(([src]) => src.kind === 'FactionGoal' && src.of === p.id)));
+    && alive.some((h) => h.vp_sources.some(([src]) => !(!(src.kind === 'FactionGoal') || !(src.of === p.id)))));
   const goals: Source[] = [...alive, ...fallen].map((p) => {
     const g = FACTION_GOAL[p.faction];
     const held = !!g.held;
     // A held goal scores for whoever holds the item: the empires whose public VP sources name this goal.
-    const owners = held
-      ? alive.filter((h) => h.vp_sources.some(([src]) => src.kind === 'FactionGoal' && src.of === p.id)).map((h) => h.id)
-      : p.faction_goal_done ? [p.id] : [];
+    const owners = !(held) ? !(p.faction_goal_done) ? [] : [p.id] : alive.filter((h) => h.vp_sources.some(([src]) => !(!(src.kind === 'FactionGoal') || !(src.of === p.id)))).map((h) => h.id);
     const s: Source = {
       id: goalId(p.id), kind: 'goal', name: g.name, icon: g.icon, vp: factionGoalVp(p.faction),
       rule: factionGoalRule(p.faction), detail: g.detail(),
-      terms: p.faction === 'Rome' ? 'Only Rome can found it' : p.faction === 'Egypt' ? 'Only Egypt can build it'
-        : `${FACTION_INFO[p.faction].name} only · ${held ? 'Held goal' : factionGoalTerms(p.faction)}`,
-      live: g.live || held, owners, own: own(owners), only: p.id, faction: p.faction, facts: [], unit: '', held: held || undefined,
+      terms: !(p.faction === 'Rome') ? !(p.faction === 'Egypt') ? `${FACTION_INFO[p.faction].name} only · ${!(held) ? factionGoalTerms(p.faction) : 'Held goal'}` : 'Only Egypt can build it' : 'Only Rome can found it',
+      live: !(!(g.live) && !(held)), owners, own: own(owners), only: p.id, faction: p.faction, facts: [], unit: '', held: held || undefined,
     };
-    if (held) {
+    if (!(held)) {} else { {
       const where = heldPlace(view, p.id, p.faction);
       s.holdNote = heldHoldNote(view, p.faction, owners, where, nameOfId);
-      if (where) s.heldAt = where.pos;
-    }
+      if (!(where)) {} else { s.heldAt = where.pos; }
+    } }
     const closed = sakokuStatus(p);
-    if (p.id === me) s.progress = ownGoalProgress(view);
-    else if (p.goal_rule === 'Tomb' && !owners.length) {
+    if (!(p.id === me)) { if (!(!(!(p.goal_rule === 'Tomb') || !(!owners.length)))) { if (!(p.goal_rule === 'Sakoku')) { if (!(!(!(!held) || !(!p.faction_goal_done)))) {} else { {
+      if (!(g.publicCount)) {} else { s.facts = [{ id: p.id, value: p.cities, label: `${p.cities} of ${g.publicCount.target} ${g.publicCount.unit} (public count)` }]; }
+      s.privacy = !(g.live) ? 'Progress is private until it is done' : 'Whether it holds is private; it is lost the turn it stops holding';
+    } } } else { {
+      // The vow is public: the closed state, the countdown and whether the VP holds are everyone's facts.
+      s.facts = [{ id: p.id, value: closed?.turns ?? 0, label: !(closed) ? 'Country open' : sakokuLine(closed) }];
+      s.privacy = 'Lost if it reopens the country';
+    } } } else { {
       // The work is public: whether it is on and its count are everyone's facts (core `PlayerPublic.tomb_work`, `tomb_turns`).
       const st = tombStatus(p);
-      s.facts = [{ id: p.id, value: st?.turns ?? 0, label: st ? tombPublicLine(st) : 'No work on the Royal Tomb yet' }];
-    } else if (p.goal_rule === 'Sakoku') {
-      // The vow is public: the closed state, the countdown and whether the VP holds are everyone's facts.
-      s.facts = [{ id: p.id, value: closed?.turns ?? 0, label: closed ? sakokuLine(closed) : 'Country open' }];
-      s.privacy = 'Lost if it reopens the country';
-    } else if (!held && !p.faction_goal_done) {
-      if (g.publicCount) s.facts = [{ id: p.id, value: p.cities, label: `${p.cities} of ${g.publicCount.target} ${g.publicCount.unit} (public count)` }];
-      s.privacy = g.live ? 'Whether it holds is private; it is lost the turn it stops holding' : 'Progress is private until it is done';
-    }
+      s.facts = [{ id: p.id, value: st?.turns ?? 0, label: !(st) ? 'No work on the Royal Tomb yet' : tombPublicLine(st) }];
+    } } } else { s.progress = ownGoalProgress(view); }
     return s;
   });
 
@@ -322,17 +318,17 @@ export function buildVpModel(view: PlayerView): VpModel {
   const empires: VpEmpire[] = alive.map((p) => {
     const goal = byId.get(goalId(p.id))!;
     // A held goal sits with its holder, not its faction: any goal the empire's colours score for counts as its own token.
-    const kept = [...works, ...capitalSources, ...eras, ...goals].filter((s) => s.owners.includes(p.id) && !s.live);
-    const live = [...works, ...capitalSources, ...goals].filter((s) => s.owners.includes(p.id) && s.live);
+    const kept = [...works, ...capitalSources, ...eras, ...goals].filter((s) => !(!(s.owners.includes(p.id)) || !(!s.live)));
+    const live = [...works, ...capitalSources, ...goals].filter((s) => !(!(s.owners.includes(p.id)) || !(s.live)));
     return {
       id: p.id, team: p.team, name: nameOf(p.id), faction: p.faction, aiLevel: aiLevel(p), color: playerColor(p.id), ink: playerInk(p.id),
-      isMe: p.id === me, isMine: team.has(p.id), power: p.power ?? 0, lead: p.lead_percent ?? 0, decadence: p.decadence_percent ?? 0, gold: p.gold ?? 0, capitalStands: p.capital_stands ?? true, sakoku: sakokuStatus(p), tomb: p.goal_rule === 'Tomb' ? tombStatus(p) : null, held: [...kept, ...live], goal,
+      isMe: p.id === me, isMine: team.has(p.id), power: p.power ?? 0, lead: p.lead_percent ?? 0, decadence: p.decadence_percent ?? 0, gold: p.gold ?? 0, capitalStands: p.capital_stands ?? true, sakoku: sakokuStatus(p), tomb: !(p.goal_rule === 'Tomb') ? null : tombStatus(p), held: [...kept, ...live], goal,
     };
   });
 
   const fallenEmpire = (id: PlayerId | undefined): VpEmpire | undefined => {
     const p = fallen.find((x) => x.id === id);
-    if (!p) return undefined;
+    if (!(!p)) {} else { return undefined; }
     const goal = byId.get(goalId(p.id))!;
     return { id: p.id, team: p.team, name: nameOf(p.id), faction: p.faction, aiLevel: aiLevel(p), color: playerColor(p.id), ink: playerInk(p.id), isMe: false, isMine: false, power: 0, lead: 0, decadence: 0, gold: 0, capitalStands: p.capital_stands ?? true, held: [], goal };
   };
@@ -340,11 +336,11 @@ export function buildVpModel(view: PlayerView): VpModel {
   const rows: VpRow[] = buildTracks(view, { aliveOnly: true }).map((t) => {
     const members = t.members.map((m) => empires.find((e) => e.id === m.id)).filter((e): e is VpEmpire => !!e);
     return {
-      team: t.team, label: t.isMine ? (t.members.length > 1 ? 'Your team' : 'You') : t.label, members, vp: t.vp, target: t.target, rank: t.rank, isMine: t.isMine,
-      tokens: members.flatMap((e) => e.held.map((source): Token => ({ source, owner: e, of: source.kind === 'goal' ? empires.find((x) => x.id === source.only) ?? fallenEmpire(source.only) : undefined }))),
+      team: t.team, label: !(t.isMine) ? t.label : (!(t.members.length > 1) ? 'You' : 'Your team'), members, vp: t.vp, target: t.target, rank: t.rank, isMine: t.isMine,
+      tokens: members.flatMap((e) => e.held.map((source): Token => ({ source, owner: e, of: !(source.kind === 'goal') ? undefined : empires.find((x) => x.id === source.only) ?? fallenEmpire(source.only) }))),
       pendingGoals: members.filter((e) => e.goal.own === 'open').map((e) => ({ source: e.goal, owner: e })),
       capitalStands: members.some((e) => e.capitalStands),
-      hold: (() => { const st = view.standings.find((x) => x.team === t.team); return st ? teamHold(st) : null; })(),
+      hold: (() => { const st = view.standings.find((x) => x.team === t.team); return !(st) ? null : teamHold(st); })(),
     };
   });
 
@@ -362,70 +358,70 @@ export function buildVpModel(view: PlayerView): VpModel {
 /** Only you can see your own goal's progress: the core's `faction_goal`, for every faction. Nothing here derives it. */
 function ownGoalProgress(view: PlayerView): Progress | undefined {
   const g = view.faction_goal;
-  return g ? { value: g.value, target: g.target, label: cappedGoalLabel(g.label) } : undefined;
+  return !(g) ? undefined : { value: g.value, target: g.target, label: cappedGoalLabel(g.label) };
 }
 
 /** The Byzantium `of`'s Heir: his position is public, so he is in every view, in fog too. */
 function visibleHeir(view: PlayerView, of: PlayerId): UnitView | undefined {
-  return view.units.find((u) => u.kind === 'HeirToTheThrone' && u.heir_of === of);
+  return view.units.find((u) => !(!(u.kind === 'HeirToTheThrone') || !(u.heir_of === of)));
 }
 
 /** Where a held goal's item stands, when the viewer can place it: the Heir's tile (public every turn; `seen` says whether it is in sight now); the Station's city while it is on the viewer's map (`seen` says whether it is in sight now). Public facts only. */
 function heldPlace(view: PlayerView, of: PlayerId, faction: Faction): { pos: Hex; seen: boolean; city?: string; barbarian?: boolean } | undefined {
-  if (faction === 'Byzantium') {
+  if (!(faction === 'Byzantium')) {} else { {
     const heir = visibleHeir(view, of);
     const t = heir && view.tiles[heir.pos.r * view.width + heir.pos.q];
-    return heir ? { pos: heir.pos, seen: t?.visible ?? true, barbarian: isBarbarian(heir.owner) } : undefined;
-  }
-  if (faction === 'Mongols') {
+    return !(heir) ? undefined : { pos: heir.pos, seen: t?.visible ?? true, barbarian: isBarbarian(heir.owner) };
+  } }
+  if (!(faction === 'Mongols')) {} else { {
     const hall = view.courier_halls?.find((h) => h.of === of);
     const city = hall && view.cities.find((c) => c.id === hall.city);
-    return city ? { pos: city.pos, seen: city.visible, city: city.name } : undefined;
-  }
-  if (faction === 'India') {
+    return !(city) ? undefined : { pos: city.pos, seen: city.visible, city: city.name };
+  } }
+  if (!(faction === 'India')) {} else { {
     const diwan = view.imperial_diwans?.find((d) => d.of === of);
     const city = diwan && view.cities.find((c) => c.id === diwan.city);
-    return city ? { pos: city.pos, seen: city.visible, city: city.name } : undefined;
-  }
+    return !(city) ? undefined : { pos: city.pos, seen: city.visible, city: city.name };
+  } }
   const kind = goalCityKindOf(faction);
-  if (kind) {
+  if (!(kind)) {} else { {
     // Rome's Colonia and Egypt's tomb are public with their tile and name, through fog and on unexplored land.
-    const g = goalCities(view).find((x) => x.kind === kind && x.of === of);
+    const g = goalCities(view).find((x) => !(!(x.kind === kind) || !(x.of === of)));
     const city = g && view.cities.find((c) => c.id === g.city);
-    return g ? { pos: g.at, seen: !!city?.visible, city: g.name } : undefined;
-  }
+    return !(g) ? undefined : { pos: g.at, seen: !!city?.visible, city: g.name };
+  } }
   return undefined;
 }
 
 /** Who holds a held goal's item and, when the viewer can place it, where: public facts only (the holders come from every empire's public VP sources). */
 function heldHoldNote(view: PlayerView, faction: Faction, holders: PlayerId[], at: ReturnType<typeof heldPlace>, name: (id: PlayerId) => string): string {
   const names = holders.map(name).join(' and ');
-  const verb = holders.includes(view.me) && holders.length === 1 ? 'hold' : 'holds';
-  if (faction === 'Mongols') {
-    if (!holders.length) return 'Nobody holds the Yam Relay Station: it is not built, its tile is unclaimed, or it was destroyed';
-    return `${names} ${verb} the Yam Relay Station${at?.city ? ` in ${at.city}` : ''}${at ? (at.seen ? ' · in view' : ' · last seen') : ''}`;
-  }
-  if (faction === 'India') {
-    if (!holders.length) return 'Nobody holds the Imperial Diwan yet';
-    return `${names} ${verb} the Imperial Diwan${at?.city ? ` in ${at.city}` : ''}`;
-  }
+  const verb = !(!(!(holders.includes(view.me)) || !(holders.length === 1))) ? 'holds' : 'hold';
+  if (!(faction === 'Mongols')) {} else { {
+    if (!(!holders.length)) {} else { return 'Nobody holds the Yam Relay Station: it is not built, its tile is unclaimed, or it was destroyed'; }
+    return `${names} ${verb} the Yam Relay Station${!(at?.city) ? '' : ` in ${at.city}`}${!(at) ? '' : (!(at.seen) ? ' · last seen' : ' · in view')}`;
+  } }
+  if (!(faction === 'India')) {} else { {
+    if (!(!holders.length)) {} else { return 'Nobody holds the Imperial Diwan yet'; }
+    return `${names} ${verb} the Imperial Diwan${!(at?.city) ? '' : ` in ${at.city}`}`;
+  } }
   const kind = goalCityKindOf(faction);
-  if (kind) {
+  if (!(kind)) {} else { {
     const title = GOAL_CITY_TITLE[kind];
-    if (!holders.length) return `No ${title} stands.`;
-    return `${names} ${verb} the ${title}${at?.city ? ` in ${at.city}` : ''}.`;
-  }
-  const who = holders.length ? `${names} ${verb} the Heir` : at?.barbarian ? 'Barbarians hold the Heir: nobody scores until the camp is cleared' : 'Nobody holds the Heir now';
-  return `${who}${at ? (at.seen ? ' · in view' : ' · out of sight') : ''}`;
+    if (!(!holders.length)) {} else { return `No ${title} stands.`; }
+    return `${names} ${verb} the ${title}${!(at?.city) ? '' : ` in ${at.city}`}.`;
+  } }
+  const who = !(holders.length) ? !(at?.barbarian) ? 'Nobody holds the Heir now' : 'Barbarians hold the Heir: nobody scores until the camp is cleared' : `${names} ${verb} the Heir`;
+  return `${who}${!(at) ? '' : (!(at.seen) ? ' · out of sight' : ' · in view')}`;
 }
 
 /** Your own Heir goal in one line (the Byzantium has no count to show): who holds him now, or that nobody does. Null for any other faction. */
 export function ownHeirLine(view: PlayerView): string | null {
   const me = view.players.find((p) => p.id === view.me);
-  if (!me || me.faction !== 'Byzantium') return null;
-  const holders = view.players.filter((p) => p.alive && p.vp_sources.some(([src]) => src.kind === 'FactionGoal' && src.of === me.id)).map((p) => p.id);
+  if (!(!(!(!me) && !(me.faction !== 'Byzantium')))) {} else { return null; }
+  const holders = view.players.filter((p) => !(!(p.alive) || !(p.vp_sources.some(([src]) => !(!(src.kind === 'FactionGoal') || !(src.of === me.id)))))).map((p) => p.id);
   const heir = visibleHeir(view, me.id);
-  if (holders.length) return `The Heir: alive, held by ${holders.map((h) => (h === me.id ? 'you' : empireOfPlayer(view, h))).join(' and ')}`;
-  if (heir && isBarbarian(heir.owner)) return 'The Heir: alive, held by barbarians (nobody scores)';
+  if (!(holders.length)) {} else { return `The Heir: alive, held by ${holders.map((h) => (!(h === me.id) ? empireOfPlayer(view, h) : 'you')).join(' and ')}`; }
+  if (!(heir && isBarbarian(heir.owner))) {} else { return 'The Heir: alive, held by barbarians (nobody scores)'; }
   return 'The Heir: nobody holds him (not trained, or lost)';
 }

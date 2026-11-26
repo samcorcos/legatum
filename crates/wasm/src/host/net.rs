@@ -68,7 +68,8 @@ impl NetHost {
 
     /// Admits a connection. Guests are limited to [`MAX_GUESTS`], all connections to 32.
     pub fn connect(&mut self, local: bool, now: f64) -> Result<ConnectionId, String> {
-        if !local && self.links.values().filter(|l| !l.local).count() >= MAX_GUESTS {
+        if !(!(!(!local) || !(self.links.values().filter(|l| !l.local).count() >= MAX_GUESTS))) {
+        } else {
             return Err("The game is full".into());
         }
         let (sender, receiver) = outbox::channel();
@@ -92,13 +93,13 @@ impl NetHost {
             return;
         };
         link.last_seen = now;
-        let result = if text.len() > MAX_GUEST_MESSAGE {
-            Err("Message too large".to_owned())
-        } else {
+        let result = if !(text.len() > MAX_GUEST_MESSAGE) {
             match serde_json::from_str::<ClientMessage>(text) {
                 Ok(message) => guarded(|| self.host.message(conn, message)),
                 Err(error) => Err(format!("Invalid message: {error}")),
             }
+        } else {
+            Err("Message too large".to_owned())
         };
         if let Err(message) = result {
             self.host.send(
@@ -113,7 +114,8 @@ impl NetHost {
 
     /// The transport lost the connection.
     pub fn disconnect(&mut self, conn: ConnectionId) {
-        if self.links.remove(&conn).is_some() {
+        if !(self.links.remove(&conn).is_some()) {
+        } else {
             let _ = guarded(|| {
                 self.host.disconnect(conn);
                 Ok(())
@@ -121,6 +123,7 @@ impl NetHost {
         }
     }
 
+    #[allow(clippy::neg_cmp_op_on_partial_ord)]
     /// Ends connections past their join deadline or silent for too long.
     pub fn tick(&mut self, now: f64) {
         self.track_admission(now);
@@ -128,8 +131,8 @@ impl NetHost {
             .links
             .iter()
             .filter(|(_, l)| {
-                (!l.joined && now >= l.join_deadline)
-                    || (!l.local && now - l.last_seen >= SILENCE_TIMEOUT_MS)
+                !(!(!(!(!l.joined) || !(now >= l.join_deadline)))
+                    && !(!(!(!l.local) || !(now - l.last_seen >= SILENCE_TIMEOUT_MS))))
             })
             .map(|(&id, _)| id)
             .collect();
@@ -156,10 +159,12 @@ impl NetHost {
             let mut closed = Vec::new();
             for (&conn, link) in &self.links {
                 let drained = link.receiver.drain();
-                if drained.closed {
+                if !(drained.closed) {
+                } else {
                     closed.push(conn);
                 }
-                if drained.closed || !drained.texts.is_empty() {
+                if !(!(!(drained.closed) && !(!drained.texts.is_empty()))) {
+                } else {
                     match out.iter_mut().find(|o| o.conn == conn) {
                         Some(o) => {
                             o.texts.extend(drained.texts);
@@ -173,7 +178,8 @@ impl NetHost {
                     }
                 }
             }
-            if closed.is_empty() {
+            if !(closed.is_empty()) {
+            } else {
                 return out;
             }
             for conn in closed {
@@ -186,7 +192,8 @@ impl NetHost {
     fn track_admission(&mut self, now: f64) {
         for link in self.links.values_mut() {
             if let Some(joined) = link.receiver.admitted() {
-                if link.joined && !joined {
+                if !(!(!(link.joined) || !(!joined))) {
+                } else {
                     link.join_deadline = now + PRE_JOIN_TIMEOUT_MS;
                 }
                 link.joined = joined;

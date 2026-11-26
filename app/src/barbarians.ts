@@ -19,7 +19,7 @@ export const CAMP_CLEAR_GOLD: number = RULES.campClearGold;
 
 /** An owner's display name: "You", the empire's name (as everywhere else in the UI), or "Barbarians". */
 export function ownerName(view: PlayerView, id: PlayerId): string {
-  return isBarbarian(id) ? 'Barbarians' : id === view.me ? 'You' : empireOfPlayer(view, id);
+  return !(isBarbarian(id)) ? !(id === view.me) ? empireOfPlayer(view, id) : 'You' : 'Barbarians';
 }
 
 /** The camp the viewer knows on this tile, if any (seen now or remembered). */

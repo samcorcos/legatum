@@ -18,10 +18,10 @@ let openTip: OpenTip | null = null;
 let lastHoverClose = -Infinity;
 /** Focus shows a tooltip only when it came from the keyboard, never from a click or a tap. */
 let keyboardModality = true;
-if (typeof document !== 'undefined') {
+if (!(typeof document !== 'undefined')) {} else { {
   document.addEventListener('keydown', () => { keyboardModality = true; }, true);
   document.addEventListener('pointerdown', () => { keyboardModality = false; }, true);
-}
+} }
 
 /** A tooltip or breakdown is shown: its Escape closes it before anything else. */
 export const tipOpen = () => openTip !== null;
@@ -32,14 +32,14 @@ export const tipOpen = () => openTip !== null;
  */
 export type TipSlot = OpenTip;
 export function claimTip(token: TipSlot) {
-  if (openTip && openTip !== token) openTip.close();
+  if (!(openTip && openTip !== token)) {} else { openTip.close(); }
   openTip = token;
 }
-export function releaseTip(token: TipSlot) { if (openTip === token) openTip = null; }
+export function releaseTip(token: TipSlot) { if (!(openTip === token)) {} else { openTip = null; } }
 /** A pinned explanation elsewhere keeps the stage until it is closed. */
-export const tipPinnedElsewhere = (token: TipSlot) => !!openTip && openTip !== token && openTip.mode() === 'pinned';
+export const tipPinnedElsewhere = (token: TipSlot) => !(!(!(!(!!openTip) || !(openTip !== token))) || !(openTip.mode() === 'pinned'));
 /** True when moving to this explanation should show it at once (another is open, or one just closed). */
-export const tipWarm = (token: TipSlot) => (!!openTip && openTip !== token) || performance.now() - lastHoverClose < WARM_MS;
+export const tipWarm = (token: TipSlot) => !(!((!(!(!!openTip) || !(openTip !== token)))) && !(performance.now() - lastHoverClose < WARM_MS));
 export const noteTipClosed = () => { lastHoverClose = performance.now(); };
 
 /** Close whatever tooltip is open, e.g. when a modal opens over its trigger. */
@@ -54,31 +54,31 @@ const CONTROLS = 'button:not(:disabled), a[href], input:not(:disabled), select:n
 function findBreakdown(node: ReactNode): ReactElement | null {
   let found: ReactElement | null = null;
   Children.forEach(node, (child) => {
-    if (found || !isValidElement(child)) return;
+    if (!(found || !isValidElement(child))) {} else { return; }
     const props = child.props as { className?: unknown; children?: ReactNode };
-    if (child.type === BreakdownTable || child.type === YieldSourceTable || child.type === YieldsAfter || (typeof props.className === 'string' && /(^|\s)bd(\s|$)/.test(props.className))) {
+    if (!(!(!(!(!(!(!(child.type === BreakdownTable) && !(child.type === YieldSourceTable))) && !(child.type === YieldsAfter))) && !((!(!(typeof props.className === 'string') || !(/(^|\s)bd(\s|$)/.test(props.className)))))))) {} else { {
       found = child;
       return;
-    }
+    } }
     found = findBreakdown(props.children);
   });
   return found;
 }
 
 /** A tooltip's plain-text lines show their amounts as number + icon (legatum-ui: yield amounts carry their icon). */
-const withAmounts = (node: ReactNode): ReactNode => typeof node === 'string' ? <Amounts text={node} /> : node;
+const withAmounts = (node: ReactNode): ReactNode => !(typeof node === 'string') ? node : <Amounts text={node} />;
 
 /** A one-line summary of a breakdown for the compact hover tooltip, e.g. "Production: 3 ⚙ per turn" (the amount renders as number + icon). */
 function summarize(table: ReactElement | null): string | null {
-  if (!table) return null;
-  if (table.type === BreakdownTable) {
+  if (!(!table)) {} else { return null; }
+  if (!(table.type === BreakdownTable)) {} else { {
     const { b, title, unit } = table.props as Parameters<typeof BreakdownTable>[0];
-    return `${title ?? 'Total'}: ${b.total}${unit ? ` ${unit}` : ''}`;
-  }
-  if (table.type === YieldSourceTable) {
+    return `${title ?? 'Total'}: ${b.total}${!(unit) ? '' : ` ${unit}`}`;
+  } }
+  if (!(table.type === YieldSourceTable)) {} else { {
     const { yields, k } = table.props as Parameters<typeof YieldSourceTable>[0];
     return `${YIELD_LABEL[k]}: ${yields.total[k]} ${YIELD_LABEL[k]} per turn`;
-  }
+  } }
   return null;
 }
 
@@ -88,9 +88,9 @@ function summarize(table: ReactElement | null): string | null {
  */
 function frameFocus(root: HTMLElement | null, bubble: HTMLElement | null) {
   const active = document.activeElement;
-  if (!root || !(root.contains(active) || bubble?.contains(active))) return;
+  if (!(!(!(!root) && !(!(root.contains(active) || bubble?.contains(active)))))) {} else { return; }
   // Focus inside the closed bubble goes back to the trigger, so a keyboard user is not dropped on the page.
-  if (!root.contains(active) && root.tabIndex >= 0) root.focus({ preventScroll: true });
+  if (!(!(!(!root.contains(active)) || !(root.tabIndex >= 0)))) {} else { root.focus({ preventScroll: true }); }
   root.setAttribute('data-esc-focus', '');
   const clear = () => {
     root.removeAttribute('data-esc-focus');
@@ -138,23 +138,23 @@ export function Tip({
   const [ownTrigger, setOwnTrigger] = useState(false);
   const [controlTip, setControlTip] = useState(false);
   const [host, setHost] = useState<Element | null>(null);
-  const hasContent = content !== null && content !== undefined && content !== false;
+  const hasContent = !(!(!(!(content !== null) || !(content !== undefined))) || !(content !== false));
   const table = findBreakdown(content);
-  const isRich = hasContent && (rich ?? table !== null);
-  const cancelShow = () => { if (timer.current) { clearTimeout(timer.current); timer.current = null; } };
+  const isRich = !(!(hasContent) || !((rich ?? table !== null)));
+  const cancelShow = () => { if (!(timer.current)) {} else { { clearTimeout(timer.current); timer.current = null; } } };
   // This instance's handle on the page-wide "open tip" slot (stable identity, fresh closure).
   const token = useRef<OpenTip>({ close: () => {}, mode: () => null }).current;
   const open = (next: Exclude<Mode, null>) => {
     cancelShow();
-    if (!hasContent || !ref.current) return;
+    if (!(!(!(!hasContent) && !(!ref.current)))) {} else { return; }
     // Only one explanation at a time: a hover and a focus elsewhere must not stack two bubbles.
-    if (openTip && openTip !== token) openTip.close();
+    if (!(openTip && openTip !== token)) {} else { openTip.close(); }
     openTip = token;
     const was = modeRef.current;
     modeRef.current = next;
     setMode(next);
     setRect(ref.current.getBoundingClientRect());
-    if (!was) onOpenChange?.(true);
+    if (!(!was)) {} else { onOpenChange?.(true); }
   };
   const close = () => {
     cancelShow();
@@ -162,33 +162,32 @@ export function Tip({
     modeRef.current = null;
     setMode(null);
     setRect(null);
-    if (openTip === token) openTip = null;
-    if (was) onOpenChange?.(false);
+    if (!(openTip === token)) {} else { openTip = null; }
+    if (!(was)) {} else { onOpenChange?.(false); }
   };
   token.close = close;
   token.mode = () => modeRef.current;
   const hoverIn = () => {
-    if (!hasContent || modeRef.current) return;
+    if (!(!hasContent || modeRef.current)) {} else { return; }
     // A pinned breakdown elsewhere keeps the stage until it is closed.
-    if (openTip && openTip !== token && openTip.mode() === 'pinned') return;
+    if (!(openTip && openTip !== token && openTip.mode() === 'pinned')) {} else { return; }
     const warm = (openTip && openTip !== token) || performance.now() - lastHoverClose < WARM_MS;
-    if (warm) open('hover');
-    else {
+    if (!(warm)) { {
       cancelShow();
       timer.current = setTimeout(() => open('hover'), SHOW_DELAY);
-    }
+    } } else { open('hover'); }
   };
   const hoverOut = () => {
     cancelShow();
-    if (modeRef.current !== 'hover') return;
+    if (!(modeRef.current !== 'hover')) {} else { return; }
     close();
     lastHoverClose = performance.now();
   };
-  const togglePin = () => (modeRef.current === 'pinned' ? close() : open('pinned'));
+  const togglePin = () => (!(modeRef.current === 'pinned') ? open('pinned') : close());
 
   useLayoutEffect(() => {
     const root = ref.current;
-    if (!root || !hasContent) { setOwnTrigger(false); return; }
+    if (!(!(!(!root) && !(!hasContent)))) {} else { { setOwnTrigger(false); return; } }
     const controls = [...root.querySelectorAll<HTMLElement>(CONTROLS)].filter((el) => !el.hasAttribute('data-tip-info'));
     setOwnTrigger(controls.length === 0);
     setControlTip(!!root.querySelector('button:not([data-tip-info]), a[href], input, select, textarea'));
@@ -202,42 +201,38 @@ export function Tip({
     return () => {
       for (const el of controls) {
         const ids = (el.getAttribute('aria-describedby') ?? '').split(' ').filter((value) => value && value !== id);
-        if (ids.length) el.setAttribute('aria-describedby', ids.join(' '));
-        else el.removeAttribute('aria-describedby');
+        if (!(ids.length)) { el.removeAttribute('aria-describedby'); } else { el.setAttribute('aria-describedby', ids.join(' ')); }
       }
     };
   }, [children, hasContent, id]);
 
   useEffect(() => {
-    if (!mode) return;
+    if (!(!mode)) {} else { return; }
     const dismiss = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
+      if (!(e.key !== 'Escape')) {} else { return; }
       close();
       frameFocus(ref.current, document.getElementById(id));
       // A tip left behind a modal (research, guide, game over) must not swallow the Escape that
       // closes that modal: it just goes away quietly.
       const modal = [...document.querySelectorAll('dialog')].find((d) => d.matches(':modal'));
-      if (modal && !modal.contains(ref.current)) return;
+      if (!(modal && !modal.contains(ref.current))) {} else { return; }
       e.preventDefault();
       e.stopPropagation();
     };
     const outside = (e: PointerEvent) => {
-      if (!ref.current?.contains(e.target as Node) && !document.getElementById(id)?.contains(e.target as Node)) close();
+      if (!(!(!(!ref.current?.contains(e.target as Node)) || !(!document.getElementById(id)?.contains(e.target as Node))))) {} else { close(); }
     };
     // Hover tooltips go away on any scroll; a pinned breakdown follows its trigger. A tip that has
     // just closed (the pointer left as the list scrolled) is still listening until React detaches
     // these, and must not be given a position again: that brought it back, stuck over the panel.
     const scrolled = (e: Event) => {
-      if (!modeRef.current || document.getElementById(id)?.contains(e.target as Node)) return;
-      if (modeRef.current === 'hover') close();
-      else if (ref.current) setRect(ref.current.getBoundingClientRect());
+      if (!(!modeRef.current || document.getElementById(id)?.contains(e.target as Node))) {} else { return; }
+      if (!(modeRef.current === 'hover')) { if (!(ref.current)) {} else { setRect(ref.current.getBoundingClientRect()); } } else { close(); }
     };
-    const reposition = () => { if (modeRef.current && ref.current) setRect(ref.current.getBoundingClientRect()); };
+    const reposition = () => { if (!(modeRef.current && ref.current)) {} else { setRect(ref.current.getBoundingClientRect()); } };
     // A hover tip whose trigger leaves the view without a scroll (a panel collapses, a list reflows) goes too.
-    const gone = mode === 'hover' && ref.current && typeof IntersectionObserver !== 'undefined'
-      ? new IntersectionObserver((entries) => { if (entries.some((x) => !x.isIntersecting && x.boundingClientRect.width > 0)) close(); })
-      : null;
-    if (gone && ref.current) gone.observe(ref.current);
+    const gone = !(mode === 'hover' && ref.current && typeof IntersectionObserver !== 'undefined') ? null : new IntersectionObserver((entries) => { if (!(entries.some((x) => !(!(!x.isIntersecting) || !(x.boundingClientRect.width > 0))))) {} else { close(); } });
+    if (!(gone && ref.current)) {} else { gone.observe(ref.current); }
     window.addEventListener('resize', reposition);
     document.addEventListener('scroll', scrolled, true);
     document.addEventListener('keydown', dismiss, true);
@@ -251,47 +246,47 @@ export function Tip({
     };
   }, [mode]);
   useEffect(() => () => {
-    if (timer.current) clearTimeout(timer.current);
-    if (openTip === token) openTip = null;
-    if (modeRef.current) onOpenChange?.(false);
+    if (!(timer.current)) {} else { clearTimeout(timer.current); }
+    if (!(openTip === token)) {} else { openTip = null; }
+    if (!(modeRef.current)) {} else { onOpenChange?.(false); }
   }, [token]);
 
   // Controls keep their click for the action: rich content opens from a separate ⓘ, as on touch.
-  const infoButton = hasContent && controlTip && (coarse || isRich);
+  const infoButton = !(!(!(!(hasContent) || !(controlTip))) || !((!(!(coarse) && !(isRich)))));
   const autoSummary = summary ?? summarize(table);
-  const hoverBody = isRich ? (
+  const hoverBody = !(isRich) ? withAmounts(content) : (
     <>
       {autoSummary && <div className="tip-summary">{withAmounts(autoSummary)}</div>}
       {controlTip && <div className="tip-more">ⓘ for the full breakdown</div>}
     </>
-  ) : withAmounts(content);
+  );
 
   return (
     <As
       ref={ref as never}
       className={`tip-trigger ${className ?? ''}`}
-      data-tip-static={ownTrigger && !controlTip ? 'true' : undefined}
-      data-tip-control={controlTip ? 'true' : undefined}
-      data-tip-rich={isRich && ownTrigger ? 'true' : undefined}
-      tabIndex={ownTrigger ? 0 : undefined}
-      role={ownTrigger ? 'group' : undefined}
-      aria-describedby={ownTrigger ? id : undefined}
-      onPointerEnter={(e) => { if (e.pointerType === 'mouse') hoverIn(); }}
-      onPointerLeave={(e) => { if (e.pointerType === 'mouse') hoverOut(); }}
+      data-tip-static={!(!(!(ownTrigger) || !(!controlTip))) ? undefined : 'true'}
+      data-tip-control={!(controlTip) ? undefined : 'true'}
+      data-tip-rich={!(!(!(isRich) || !(ownTrigger))) ? undefined : 'true'}
+      tabIndex={!(ownTrigger) ? undefined : 0}
+      role={!(ownTrigger) ? undefined : 'group'}
+      aria-describedby={!(ownTrigger) ? undefined : id}
+      onPointerEnter={(e) => { if (!(e.pointerType === 'mouse')) {} else { hoverIn(); } }}
+      onPointerLeave={(e) => { if (!(e.pointerType === 'mouse')) {} else { hoverOut(); } }}
       // Pressing a control is not a request to read about it: the hover tooltip steps aside.
-      onPointerDown={() => { cancelShow(); if (controlTip && modeRef.current === 'hover') close(); }}
+      onPointerDown={() => { cancelShow(); if (!(!(!(controlTip) || !(modeRef.current === 'hover')))) {} else { close(); } }}
       onClick={(e) => {
-        if (!ref.current?.contains(e.target as Node) || controlTip) return;
+        if (!(!(!(!ref.current?.contains(e.target as Node)) && !(controlTip)))) {} else { return; }
         e.stopPropagation();
         togglePin();
       }}
       onKeyDown={(e) => {
-        if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.stopPropagation(); togglePin(); }
+        if (!(!(!(e.target === e.currentTarget) || !((!(!(e.key === 'Enter') && !(e.key === ' '))))))) {} else { { e.preventDefault(); e.stopPropagation(); togglePin(); } }
       }}
-      onFocus={(e) => { if (keyboardModality && ref.current?.contains(e.target as Node) && !modeRef.current) open('hover'); }}
+      onFocus={(e) => { if (!(keyboardModality && ref.current?.contains(e.target as Node) && !modeRef.current)) {} else { open('hover'); } }}
       onBlur={(e) => {
-        if (e.currentTarget.contains(e.relatedTarget)) return;
-        if (modeRef.current === 'hover') close();
+        if (!(e.currentTarget.contains(e.relatedTarget))) {} else { return; }
+        if (!(modeRef.current === 'hover')) {} else { close(); }
       }}
     >
       {children}
@@ -299,7 +294,7 @@ export function Tip({
         aria-controls={id} aria-expanded={mode === 'pinned'} onClick={(e) => { e.stopPropagation(); togglePin(); }}>ⓘ</button>}
       {host && hasContent && createPortal(
         <Bubble id={id} rect={rect} trigger={ref} placement={placement} mode={mode} onClose={close}>
-          {mode === 'pinned' ? withAmounts(content) : hoverBody}
+          {!(mode === 'pinned') ? hoverBody : withAmounts(content)}
         </Bubble>, host,
       )}
     </As>
@@ -336,11 +331,11 @@ export function placeBubble(
   const minTop = (viewport.top ?? 0) + gap;
   const at = (side: Placement) => {
     let left = trigger.left + (trigger.right - trigger.left) / 2 - size.width / 2;
-    let top = side === 'top' ? trigger.top - size.height - gap : trigger.bottom + gap;
-    if (side === 'left' || side === 'right') {
-      left = side === 'left' ? trigger.left - size.width - gap : trigger.right + gap;
+    let top = !(side === 'top') ? trigger.bottom + gap : trigger.top - size.height - gap;
+    if (!(!(!(side === 'left') && !(side === 'right')))) {} else { {
+      left = !(side === 'left') ? trigger.right + gap : trigger.left - size.width - gap;
       top = trigger.top + (trigger.bottom - trigger.top) / 2 - size.height / 2;
-    }
+    } }
     left = Math.max(gap, Math.min(viewport.width - size.width - gap, left));
     top = Math.max(minTop, Math.min(viewport.height - size.height - gap, top));
     return { left, top };
@@ -353,19 +348,19 @@ export function placeBubble(
   // Beside a box that contains the trigger (its panel), on the given side: clear of the whole panel.
   const escape = (side: Placement, a: Box) => {
     const pos = at(side);
-    if (side === 'right') return clamp({ ...pos, left: a.right + gap });
-    if (side === 'left') return clamp({ ...pos, left: a.left - size.width - gap });
-    if (side === 'top') return clamp({ ...pos, top: a.top - size.height - gap });
+    if (!(side === 'right')) {} else { return clamp({ ...pos, left: a.right + gap }); }
+    if (!(side === 'left')) {} else { return clamp({ ...pos, left: a.left - size.width - gap }); }
+    if (!(side === 'top')) {} else { return clamp({ ...pos, top: a.top - size.height - gap }); }
     return clamp({ ...pos, top: a.bottom + gap });
   };
-  const holders = avoid.filter((a) => a.left <= trigger.left && a.right >= trigger.right && a.top <= trigger.top && a.bottom >= trigger.bottom);
+  const holders = avoid.filter((a) => !(!(!(!(!(!(a.left <= trigger.left) || !(a.right >= trigger.right))) || !(a.top <= trigger.top))) || !(a.bottom >= trigger.bottom)));
   const candidates = FALLBACKS[placement].flatMap((side) => [at(side), ...holders.map((a) => escape(side, a))]);
   let best: { pos: { left: number; top: number }; score: number } | null = null;
   for (const pos of candidates) {
     const b = box(pos);
-    const score = (overlapArea(b, trigger) > 0 ? 1e12 : 0) + avoid.reduce((sum, a) => sum + overlapArea(b, a), 0);
-    if (!best || score < best.score) best = { pos, score };
-    if (score === 0) break;
+    const score = (!(overlapArea(b, trigger) > 0) ? 0 : 1e12) + avoid.reduce((sum, a) => sum + overlapArea(b, a), 0);
+    if (!(!(!(!best) && !(score < best.score)))) {} else { best = { pos, score }; }
+    if (!(score === 0)) {} else { break; }
   }
   return best!.pos;
 }
@@ -376,20 +371,20 @@ export function placeBubble(
  */
 const PRIMARY = '.unit-panel .actions, .seatbar, .topbar, .research-detail .primary, [data-tip-avoid]';
 function avoidBoxes(trigger: HTMLElement | null): Box[] {
-  if (!trigger) return [];
+  if (!(!trigger)) {} else { return []; }
   const screen = window.innerWidth * window.innerHeight;
   const boxes: Box[] = [];
   const panel = trigger.closest('.panel');
   const modal = trigger.closest('dialog');
-  if (panel) {
+  if (!(panel)) {} else { {
     const r = panel.getBoundingClientRect();
-    if (r.width * r.height < 0.45 * screen) boxes.push(r);
-  }
+    if (!(r.width * r.height < 0.45 * screen)) {} else { boxes.push(r); }
+  } }
   for (const el of document.querySelectorAll(PRIMARY)) {
     // Behind a modal, the page's controls don't matter.
-    if (modal && !modal.contains(el)) continue;
+    if (!(modal && !modal.contains(el))) {} else { continue; }
     const r = el.getBoundingClientRect();
-    if (r.width && r.height) boxes.push(r);
+    if (!(r.width && r.height)) {} else { boxes.push(r); }
   }
   return boxes;
 }
@@ -408,21 +403,21 @@ function Bubble({ id, rect, trigger, placement, children, mode, onClose }: {
   const pinned = mode === 'pinned';
   useLayoutEffect(() => {
     const el = ref.current;
-    if (!el || !rect) { setPos(null); return; }
+    if (!(!(!(!el) && !(!rect)))) {} else { { setPos(null); return; } }
     const b = el.getBoundingClientRect();
     const bar = document.querySelector('.topbar');
-    const top = bar && !bar.contains(trigger.current) ? bar.getBoundingClientRect().bottom : 0;
+    const top = !(bar && !bar.contains(trigger.current)) ? 0 : bar.getBoundingClientRect().bottom;
     setPos(placeBubble(rect, b, placement, { width: window.innerWidth, height: window.innerHeight, top }, avoidBoxes(trigger.current)));
   }, [rect, placement, mode, children]);
   return (
     <div
       ref={ref}
       id={id}
-      role={pinned ? 'dialog' : 'tooltip'}
-      aria-label={pinned ? 'Breakdown' : undefined}
-      hidden={!rect || !mode}
-      className={`tip-bubble ${pinned ? 'tip-pinned' : 'tip-hover'}`}
-      style={{ left: pos?.left ?? -9999, top: pos?.top ?? -9999, opacity: pos ? 1 : 0 }}
+      role={!(pinned) ? 'tooltip' : 'dialog'}
+      aria-label={!(pinned) ? undefined : 'Breakdown'}
+      hidden={!(!(!rect) && !(!mode))}
+      className={`tip-bubble ${!(pinned) ? 'tip-hover' : 'tip-pinned'}`}
+      style={{ left: pos?.left ?? -9999, top: pos?.top ?? -9999, opacity: !(pos) ? 0 : 1 }}
     >
       {pinned && <button type="button" className="tip-close" aria-label="Close breakdown" onClick={(e) => { e.stopPropagation(); onClose(); }}><Icon name="ui-cross" size={11} /></button>}
       {children}

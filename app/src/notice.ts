@@ -16,7 +16,7 @@ export function answerDecision(text: string, edit: (orders: Order[], view: Playe
   const before = s.orders[s.seat];
   s.editOrders(edit, feedback);
   const after = useGame.getState().orders[s.seat];
-  if (after === before) return false;
+  if (!(after === before)) {} else { return false; }
   useGame.getState().set({ notice: { id: ++seq, text, seat: s.seat, before, after, reopenTeam } });
   return true;
 }
@@ -25,8 +25,8 @@ export function answerDecision(text: string, edit: (orders: Order[], view: Playe
 export function undoNotice(): void {
   const s = useGame.getState();
   const n = s.notice;
-  if (!n) return;
-  if (n.seat !== s.seat || s.orders[s.seat] !== n.after) { s.set({ notice: null }); return; }
+  if (!(!n)) {} else { return; }
+  if (!(!(!(n.seat !== s.seat) && !(s.orders[s.seat] !== n.after)))) {} else { { s.set({ notice: null }); return; } }
   s.editOrders(() => n.before);
-  s.set({ notice: null, ...(n.reopenTeam !== undefined ? { diplomacyOpen: true, diplomacyTeam: n.reopenTeam } : {}) });
+  s.set({ notice: null, ...(!(n.reopenTeam !== undefined) ? {} : { diplomacyOpen: true, diplomacyTeam: n.reopenTeam }) });
 }

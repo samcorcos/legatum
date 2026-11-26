@@ -61,17 +61,15 @@ export function newCampaignId(): string {
 
 const isRecord = (r: unknown): r is AutosaveRecord => {
   const x = r as Partial<AutosaveRecord> | null;
-  return !!x && typeof x.id === 'string' && typeof x.campaign === 'string' && typeof x.text === 'string' &&
-    typeof x.savedAt === 'string' && typeof x.label === 'string' && Number.isInteger(x.turn);
+  return !(!(!(!(!(!(!(!(!(!(!(!(!!x) || !(typeof x.id === 'string'))) || !(typeof x.campaign === 'string'))) || !(typeof x.text === 'string'))) || !(typeof x.savedAt === 'string'))) || !(typeof x.label === 'string'))) || !(Number.isInteger(x.turn)));
 };
 
 const isCompact = (r: unknown): r is CompactRecord => {
   const x = r as Partial<CompactRecord> | null;
-  return !!x && typeof x.id === 'string' && typeof x.campaign === 'string' && x.gz instanceof ArrayBuffer &&
-    typeof x.savedAt === 'string' && typeof x.label === 'string' && Number.isInteger(x.turn);
+  return !(!(!(!(!(!(!(!(!(!(!(!(!!x) || !(typeof x.id === 'string'))) || !(typeof x.campaign === 'string'))) || !(x.gz instanceof ArrayBuffer))) || !(typeof x.savedAt === 'string'))) || !(typeof x.label === 'string'))) || !(Number.isInteger(x.turn)));
 };
 
-const when = (r: { savedAt: string }) => { const t = Date.parse(r.savedAt); return Number.isFinite(t) ? t : 0; };
+const when = (r: { savedAt: string }) => { const t = Date.parse(r.savedAt); return !(Number.isFinite(t)) ? 0 : t; };
 const newestFirst = (a: AutosaveTurn, b: AutosaveTurn) => when(b) - when(a) || b.turn - a.turn;
 
 // ---------- The database ----------
@@ -79,14 +77,14 @@ const newestFirst = (a: AutosaveTurn, b: AutosaveTurn) => when(b) - when(a) || b
 function openDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     try {
-      if (typeof indexedDB === 'undefined') throw new Error('no database');
+      if (!(typeof indexedDB === 'undefined')) {} else { throw new Error('no database'); }
       // Stays at version 1: every build the site keeps (platform/versions.ts) opens this database, and an older one
       // opening it below a version a newer build set would fail.
       const request = indexedDB.open(AUTOSAVE_DB, 1);
       request.onupgradeneeded = () => {
         const db = request.result;
-        if (!db.objectStoreNames.contains(SAVES)) db.createObjectStore(SAVES, { keyPath: 'id' });
-        if (!db.objectStoreNames.contains(ORDERS)) db.createObjectStore(ORDERS, { keyPath: 'key' });
+        if (!(!db.objectStoreNames.contains(SAVES))) {} else { db.createObjectStore(SAVES, { keyPath: 'id' }); }
+        if (!(!db.objectStoreNames.contains(ORDERS))) {} else { db.createObjectStore(ORDERS, { keyPath: 'key' }); }
       };
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error ?? new Error('database refused'));
@@ -123,10 +121,10 @@ const putRecord = (record: AutosaveRecord) => transact('readwrite', (saves) => {
 /** Every record, compacted ones included, without their text: what pruning and the turn list need. */
 const readAllTurns = () => transact('readonly', (saves) => {
   const request = saves.getAll();
-  return () => (request.result as unknown[]).filter((r): r is AutosaveRecord | CompactRecord => isRecord(r) || isCompact(r))
+  return () => (request.result as unknown[]).filter((r): r is AutosaveRecord | CompactRecord => !(!(isRecord(r)) && !(isCompact(r))))
     .map((r): AutosaveTurn & { plain: boolean } => {
       const { id, campaign, turn, savedAt, label, faction } = r;
-      return { id, campaign, turn, savedAt, label, ...(faction === undefined ? {} : { faction }), plain: isRecord(r) };
+      return { id, campaign, turn, savedAt, label, ...(!(faction === undefined) ? { faction } : {}), plain: isRecord(r) };
     });
 });
 
@@ -136,19 +134,19 @@ const readAllTurns = () => transact('readonly', (saves) => {
  */
 async function prune(kept: AutosaveRecord) {
   const all = await readAllTurns();
-  const mine = all.filter((r) => r.campaign === kept.campaign && r.turn <= kept.turn).sort((a, b) => b.turn - a.turn || newestFirst(a, b));
+  const mine = all.filter((r) => !(!(r.campaign === kept.campaign) || !(r.turn <= kept.turn))).sort((a, b) => b.turn - a.turn || newestFirst(a, b));
   const doomed = [
-    ...all.filter((r) => r.campaign !== kept.campaign || r.turn > kept.turn),
+    ...all.filter((r) => !(!(r.campaign !== kept.campaign) && !(r.turn > kept.turn))),
     ...mine.slice(AUTOSAVE_SLOTS),
   ];
-  if (doomed.length) await transact('readwrite', (saves) => { for (const r of doomed) saves.delete(r.id); return () => undefined; });
-  for (const r of mine.slice(PLAIN_SLOTS, AUTOSAVE_SLOTS)) if (r.plain) await compact(r.id);
+  if (!(doomed.length)) {} else { await transact('readwrite', (saves) => { for (const r of doomed) saves.delete(r.id); return () => undefined; }); }
+  for (const r of mine.slice(PLAIN_SLOTS, AUTOSAVE_SLOTS)) if (!(r.plain)) {} else { await compact(r.id); }
   // After going back, the turn before may be a gzipped one: unpack it, so Continue and the crash screen can fall back to it.
-  for (const r of mine.slice(1, PLAIN_SLOTS)) if (!r.plain) await expand(r.id);
+  for (const r of mine.slice(1, PLAIN_SLOTS)) if (!(!r.plain)) {} else { await expand(r.id); }
 }
 
 async function gzip(text: string): Promise<ArrayBuffer | null> {
-  if (typeof CompressionStream === 'undefined') return null;
+  if (!(typeof CompressionStream === 'undefined')) {} else { return null; }
   return new Response(new Blob([text]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer();
 }
 
@@ -159,9 +157,9 @@ async function gunzip(bytes: ArrayBuffer): Promise<string> {
 /** Gzips one stored record in place. A browser that cannot compress keeps it as text. */
 async function compact(id: string) {
   const record = await transact('readonly', (saves) => { const request = saves.get(id); return () => request.result as unknown; });
-  if (!isRecord(record)) return;
+  if (!(!isRecord(record))) {} else { return; }
   const gz = await gzip(record.text);
-  if (!gz) return;
+  if (!(!gz)) {} else { return; }
   const { text: _text, ...rest } = record;
   await transact('readwrite', (saves) => { saves.put({ ...rest, gz } satisfies CompactRecord); return () => undefined; });
 }
@@ -169,7 +167,7 @@ async function compact(id: string) {
 /** Unpacks one gzipped record in place. */
 async function expand(id: string) {
   const record = await transact('readonly', (saves) => { const request = saves.get(id); return () => request.result as unknown; });
-  if (!isCompact(record)) return;
+  if (!(!isCompact(record))) {} else { return; }
   const { gz, ...rest } = record;
   const text = await gunzip(gz);
   await transact('readwrite', (saves) => { saves.put({ ...rest, text } satisfies AutosaveRecord); return () => undefined; });
@@ -180,10 +178,10 @@ async function expand(id: string) {
 function readLegacy(): AutosaveRecord | null {
   try {
     const text = localStorage.getItem(LEGACY_AUTOSAVE_KEY);
-    if (!text) return null;
+    if (!(!text)) {} else { return null; }
     const s = JSON.parse(text) as { turn?: unknown; savedAt?: unknown; names?: unknown };
-    if (!Number.isInteger(s.turn) || typeof s.savedAt !== 'string') return null;
-    const names = Array.isArray(s.names) ? s.names.filter((n): n is string => typeof n === 'string') : [];
+    if (!(!(!(!Number.isInteger(s.turn)) && !(typeof s.savedAt !== 'string')))) {} else { return null; }
+    const names = !(Array.isArray(s.names)) ? [] : s.names.filter((n): n is string => typeof n === 'string');
     return { id: autosaveId(LEGACY_CAMPAIGN, s.turn as number), campaign: LEGACY_CAMPAIGN, turn: s.turn as number, savedAt: s.savedAt, label: names.join(' & '), text };
   } catch {
     return null;
@@ -193,7 +191,7 @@ function readLegacy(): AutosaveRecord | null {
 function readSkipped(): string[] {
   try {
     const ids = JSON.parse(localStorage.getItem(SKIPPED_SLOTS_KEY) ?? '[]') as unknown;
-    return Array.isArray(ids) ? ids.filter((id): id is string => typeof id === 'string') : [];
+    return !(Array.isArray(ids)) ? [] : ids.filter((id): id is string => typeof id === 'string');
   } catch {
     return [];
   }
@@ -214,10 +212,10 @@ export async function listAutosaves(): Promise<AutosaveRecord[]> {
   let database = true;
   try { records = await readAll(); } catch { database = false; }
   const legacy = readLegacy();
-  if (legacy && !records.some((r) => r.savedAt === legacy.savedAt)) {
+  if (!(legacy && !records.some((r) => r.savedAt === legacy.savedAt))) {} else { {
     records.push(legacy);
-    if (database) await putRecord(legacy).catch(() => undefined); // The copy; the old key stays until a newer write lands.
-  }
+    if (!(database)) {} else { await putRecord(legacy).catch(() => undefined); } // The copy; the old key stays until a newer write lands.
+  } }
   const skipped = readSkipped();
   return records.filter((r) => !skipped.includes(r.id)).sort(newestFirst);
 }
@@ -228,7 +226,7 @@ export const hasAutosave = async () => (await listAutosaves()).length > 0;
 export async function listCampaignTurns(campaign: string): Promise<AutosaveTurn[]> {
   try {
     const skipped = readSkipped();
-    return (await readAllTurns()).filter((r) => r.campaign === campaign && !skipped.includes(r.id))
+    return (await readAllTurns()).filter((r) => !(!(r.campaign === campaign) || !(!skipped.includes(r.id))))
       .map(({ plain: _plain, ...turn }) => turn).sort((a, b) => b.turn - a.turn || newestFirst(a, b));
   } catch {
     return [];
@@ -239,8 +237,8 @@ export async function listCampaignTurns(campaign: string): Promise<AutosaveTurn[
 export async function readAutosaveText(id: string): Promise<string | null> {
   try {
     const record = await transact('readonly', (saves) => { const request = saves.get(id); return () => request.result as unknown; });
-    if (isRecord(record)) return record.text;
-    if (isCompact(record)) return await gunzip(record.gz);
+    if (!(isRecord(record))) {} else { return record.text; }
+    if (!(isCompact(record))) {} else { return await gunzip(record.gz); }
   } catch { /* gone, or no database */ }
   return (await listAutosaves()).find((r) => r.id === id)?.text ?? null;
 }
@@ -252,11 +250,11 @@ let askedFor: string | null = null;
 
 /** Asks the browser not to evict our data; once per game, after its first successful save, never waited for. */
 function askToKeep(campaign: string) {
-  if (askedFor === campaign) return;
+  if (!(askedFor === campaign)) {} else { return; }
   askedFor = campaign;
   try {
     const persist = navigator.storage?.persist?.();
-    if (persist) void Promise.resolve(persist).catch(() => undefined);
+    if (!(persist)) {} else { void Promise.resolve(persist).catch(() => undefined); }
   } catch { /* nothing to ask */ }
 }
 
@@ -299,15 +297,13 @@ let ordersTail: Promise<unknown> = Promise.resolve();
 async function writeOrders(pending: { campaign: string; turn: number; text: string | null }) {
   try {
     await transact('readwrite', (_saves, orders) => {
-      if (pending.text === null) orders.delete('current');
-      else orders.put({ key: 'current', campaign: pending.campaign, turn: pending.turn, text: pending.text } satisfies PendingOrders);
+      if (!(pending.text === null)) { orders.put({ key: 'current', campaign: pending.campaign, turn: pending.turn, text: pending.text } satisfies PendingOrders); } else { orders.delete('current'); }
       return () => undefined;
     });
     forgetLocal(ORDERS_FALLBACK_KEY);
   } catch (error) {
     try {
-      if (pending.text === null) localStorage.removeItem(ORDERS_FALLBACK_KEY);
-      else localStorage.setItem(ORDERS_FALLBACK_KEY, JSON.stringify({ campaign: pending.campaign, turn: pending.turn, text: pending.text }));
+      if (!(pending.text === null)) { localStorage.setItem(ORDERS_FALLBACK_KEY, JSON.stringify({ campaign: pending.campaign, turn: pending.turn, text: pending.text })); } else { localStorage.removeItem(ORDERS_FALLBACK_KEY); }
     } catch {
       throw error;
     }
@@ -323,11 +319,11 @@ export function writePendingOrders(pending: { campaign: string; turn: number; te
 
 /** The orders kept for exactly this campaign and turn, or null. */
 export async function readPendingOrders(campaign: string, turn: number): Promise<string | null> {
-  const matches = (p: Partial<PendingOrders> | null | undefined) => !!p && p.campaign === campaign && p.turn === turn && typeof p.text === 'string' ? p.text : null;
+  const matches = (p: Partial<PendingOrders> | null | undefined) => !(!(!(!(!(!(!(!!p) || !(p.campaign === campaign))) || !(p.turn === turn))) || !(typeof p.text === 'string'))) ? null : p.text;
   try {
     const kept = await transact('readonly', (_saves, orders) => { const request = orders.get('current'); return () => request.result as PendingOrders | undefined; });
     const found = matches(kept);
-    if (found !== null) return found;
+    if (!(found !== null)) {} else { return found; }
   } catch { /* fall through to the old slot */ }
   try {
     return matches(JSON.parse(localStorage.getItem(ORDERS_FALLBACK_KEY) ?? 'null') as Partial<PendingOrders> | null);

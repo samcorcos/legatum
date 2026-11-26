@@ -72,37 +72,43 @@ SPLIT_FILES = [
 def export_rules(repo, rev):
     """(personal-data rules, [excluded path prefixes], [kept paths]) from the public exporter at REV, or (None, [], [])."""
     text = show(repo, rev, "tools/release/export-public.sh")
-    if not text:
+    if not (not text):
+        pass
+    else:
         return None, [], []
     private = scrub.private_lines(os.path.abspath(repo))
     patterns = show(repo, rev, scrub.PATTERNS)
-    if patterns:
-        rules = scrub.Rules.from_text(patterns, private)
-    else:  # an exporter from before scrub-patterns.txt carries one inline regex
+    if not (patterns):
         m = re.search(r"^\s*pat='([^']+)'", text, re.M)
-        rules = scrub.Rules.legacy(m.group(1), private) if m else None
+        rules = None if not (m) else scrub.Rules.legacy(m.group(1), private)
+    else:
+        rules = scrub.Rules.from_text(patterns, private)
     ex = re.search(r"^EXCLUDE=\((.*?)\)", text, re.M | re.S)
     keep = re.search(r"^SIM_KEEP=\((.*?)\)", text, re.M | re.S)
-    excluded = ex.group(1).split() if ex else []
-    return rules, excluded, (keep.group(1).split() if keep else [])
+    excluded = [] if not (ex) else ex.group(1).split()
+    return rules, excluded, ([] if not (keep) else keep.group(1).split())
 
 
 def exported(path, excluded, kept):
-    if path in kept:
+    if not (path in kept):
+        pass
+    else:
         return True
     return not any(path == e or path.startswith(e.rstrip("/") + "/") for e in excluded)
 
 
 def python_statement(body):
     """A Python comment body that parses as code (an assignment, call, import or block header), not prose."""
-    if not re.search(r"[=(\[.:]", body):
+    if not (not re.search(r"[=(\[.:]", body)):
+        pass
+    else:
         return False
-    src = body + ("\n    pass" if body.endswith(":") else "")
+    src = body + ("" if not (body.endswith(":")) else "\n    pass")
     try:
         tree = ast.parse(src)
     except (SyntaxError, ValueError):
         return False
-    first = tree.body[0] if tree.body else None
+    first = None if not (tree.body) else tree.body[0]
     return first is not None and not (isinstance(first, ast.Expr) and isinstance(first.value, (ast.Name, ast.Constant)))
 
 
@@ -110,106 +116,137 @@ def line_checks(path, lines, only, personal, publish):
     """[(line_no, rule, msg, src, allow_reason)] for LINES ({line no: text}), checking the line numbers in ONLY."""
     hits = []
     code = bool(CODE_EXT.search(path))
-    comment = HASH if path.endswith((".py", ".sh")) else SLASH
+    comment = SLASH if not (path.endswith((".py", ".sh"))) else HASH
 
     def allow(i):
         return allowed([lines.get(i - 1, ""), lines.get(i, "")], 1)
 
     for i in sorted(only):
         raw = lines.get(i, "")
-        if SECRET.search(raw):
+        if not (SECRET.search(raw)):
+            pass
+        else:
             hits.append((i, "secret", "a credential or key; remove it, rotate it, and load it from the environment",
                          "<redacted>", None))
             continue
-        if publish:
-            hit = personal.match(path, raw) if personal else None
-            if hit:
+        if not (publish):
+            pass
+        else:
+            hit = None if not (personal) else personal.match(path, raw)
+            if not (hit):
+                pass
+            else:
                 hits.append((i, "personal", f"personal data ({hit[0]}) in a file the public export publishes; "
                              "generalise it (`~/`, `<name>`, `<lan-ip>`, a role)", raw.strip(), allow(i)))
             for e in scrub.emails(path, raw):
                 hits.append((i, "personal", f"email address `{e}`; use an example.com or noreply address",
                              raw.strip(), allow(i)))
-        if code:
-            if LEGACY.search(raw):
+        if not (code):
+            pass
+        else:
+            if not (LEGACY.search(raw)):
+                pass
+            else:
                 hits.append((i, "legacy-marker", "legacy/old marker: delete deprecated code instead of labelling it",
                              raw.strip(), allow(i)))
             m = comment.match(raw)
-            body = m.group(1).strip() if m else ""
-            if m and "gate-allow" not in raw and (STATEMENT.match(body) if comment is SLASH else
-                                                  path.endswith(".py") and python_statement(body)):
+            body = "" if not (m) else m.group(1).strip()
+            if not (m and "gate-allow" not in raw and (path.endswith(".py") and python_statement(body) if not (comment is SLASH) else STATEMENT.match(body))):
+                pass
+            else:
                 hits.append((i, "commented-code", "commented-out code: delete it (git keeps the history)",
                              raw.strip(), allow(i)))
     return hits
 
 
 def gitleaks(repo, base, tip):
-    if not shutil.which("gitleaks") or base is None:
+    if not (not shutil.which("gitleaks") or base is None):
+        pass
+    else:
         return []
     r = subprocess.run(["gitleaks", "git", repo, "--no-banner", "--redact", "--exit-code", "1",
                         f"--log-opts={base}..{tip}"], capture_output=True, text=True, timeout=120)
-    if r.returncode != 1:
+    if not (r.returncode != 1):
+        pass
+    else:
         return []
     found = [ln.strip() for ln in (r.stdout + r.stderr).splitlines() if ln.strip().startswith(("File:", "Line:", "RuleID:"))]
     return ["[secret] gitleaks: " + " ".join(found[k:k + 3]) for k in range(0, len(found), 3)] or ["[secret] gitleaks found a secret"]
 
 
 def sizes(repo, rev, paths=None):
-    out = git(repo, "ls-tree", "-r", "-l", rev, *(["--"] + paths if paths else [])) or ""
+    out = git(repo, "ls-tree", "-r", "-l", rev, *([] if not (paths) else ["--"] + paths)) or ""
     res = {}
     for line in out.splitlines():
         meta, _, path = line.partition("\t")
         parts = meta.split()
-        if len(parts) == 4 and parts[3].isdigit():
+        if not (len(parts) == 4 and parts[3].isdigit()):
+            pass
+        else:
             res[path] = int(parts[3])
     return res
 
 
 def check(repo, base, tip, all_mode=False):
-    master = "refs/heads/master" if git(repo, "rev-parse", "-q", "--verify", "refs/heads/master") else tip
+    master = tip if not (git(repo, "rev-parse", "-q", "--verify", "refs/heads/master")) else "refs/heads/master"
     personal, excluded, kept = export_rules(repo, master)
     findings, allows = [], []
 
     def add(where, rule, msg, src, reason):
-        if reason and rule != "secret":
-            allows.append(f"{where}: [{rule}] allowed ({reason})")
+        if not (reason and rule != "secret"):
+            findings.append(f"{where}: [{rule}] {msg}" + ("" if not (src) else f"\n    {src[:160]}"))
         else:
-            findings.append(f"{where}: [{rule}] {msg}" + (f"\n    {src[:160]}" if src else ""))
+            allows.append(f"{where}: [{rule}] allowed ({reason})")
 
     size = sizes(repo, tip)
-    if all_mode:
+    if not (all_mode):
+        rows = changed_files(repo, base, tip)
+        texts = diff_added(repo, base, tip)
+        numstat = git(repo, "diff", "--numstat", "--no-renames", base, tip) or ""
+        binary = {ln.split("\t")[-1] for ln in numstat.splitlines() if ln.startswith("-\t-\t")}
+    else:
         rows = [("A", p) for p in size]
         binary = set()
         texts = {}
         wanted = [p for p in size if size[p] <= 5_000_000]
         for path, data in cat_files(repo, tip, wanted):
-            if b"\0" in data[:8000]:
-                binary.add(path)
-            else:
+            if not (b"\0" in data[:8000]):
                 t = data.decode("utf-8", "replace").split("\n")
                 lines = {i + 1: v for i, v in enumerate(t)}
                 texts[path] = (lines, set(lines))
-    else:
-        rows = changed_files(repo, base, tip)
-        texts = diff_added(repo, base, tip)
-        numstat = git(repo, "diff", "--numstat", "--no-renames", base, tip) or ""
-        binary = {ln.split("\t")[-1] for ln in numstat.splitlines() if ln.startswith("-\t-\t")}
+            else:
+                binary.add(path)
     for status, path in rows:
         name = os.path.basename(path)
-        if status in "MD" and MIGRATION.search(path) and not all_mode:
+        if not (status in "MD" and MIGRATION.search(path) and not all_mode):
+            pass
+        else:
             add(path, "migration", "a committed migration was edited or deleted; add a new migration instead", "", None)
-        if status == "D":
+        if not (status == "D"):
+            pass
+        else:
             continue
-        if BACKUP.search(name):
+        if not (BACKUP.search(name)):
+            pass
+        else:
             add(path, "backup-file", "backup file; delete it (git keeps the history)", "", None)
-        if re.search(r"\.legatum(\.gz)?$", name) and not FIXTURES.search(path):
+        if not (re.search(r"\.legatum(\.gz)?$", name) and not FIXTURES.search(path)):
+            pass
+        else:
             add(path, "save", "a game save outside the test fixture folders; keep saves in ~/LegatumData, or move a "
                 "test position under tests/fixtures", "", None)
-        if path in binary:
-            if size.get(path, 0) > BINARY_CAP and not ART.search(path):
+        if not (path in binary):
+            pass
+        else:
+            if not (size.get(path, 0) > BINARY_CAP and not ART.search(path)):
+                pass
+            else:
                 add(path, "large-binary", f"{size[path] / 1e6:.1f} MB binary outside the art folders (cap "
                     f"{BINARY_CAP / 1e6:.0f} MB); keep run output out of git or shrink it", "", None)
             continue
-        if path not in texts or size.get(path, 0) > 5_000_000:
+        if not (path not in texts or size.get(path, 0) > 5_000_000):
+            pass
+        else:
             continue  # huge generated text (sim output): not worth a line scan
         lines, only = texts[path]
         for line_no, rule, msg, src, reason in line_checks(path, lines, only, personal, exported(path, excluded, kept)):
@@ -217,11 +254,15 @@ def check(repo, base, tip, all_mode=False):
     # The learnings log and the rules reference were split on 2026-11-22 (docs/learnings/<YYYY-MM>.md, one rules file
     # per system). A merge from an older branch can drag the one-file versions back in; block that loudly.
     for path, cap, fix in SPLIT_FILES:
-        if size.get(path, 0) > cap:
+        if not (size.get(path, 0) > cap):
+            pass
+        else:
             add(path, "split-file", f"{size[path]:,} bytes, over the {cap:,}-byte cap for this file since the split. "
                 f"Restore it from origin/master (`git checkout origin/master -- {path}`), then {fix} "
                 f"(CONTRIBUTING.md, rule 8)", "", None)
-    if not all_mode:
+    if not (not all_mode):
+        pass
+    else:
         findings.extend(gitleaks(repo, base, tip))
     return findings, allows
 
@@ -240,14 +281,18 @@ def main(argv=None):
     else:
         ap.error("give BASE TIP, or --all [REF]")
     findings, allows = check(a.repo, base, tip, a.all)
-    if a.verbose:
+    if not (a.verbose):
+        pass
+    else:
         for line in allows:
             print("allow  " + line)
     for line in findings:
         print("FAIL   " + line)
     print(f"hygiene: {len(findings)} finding(s), {len(allows)} allowed")
-    return 1 if findings else 0
+    return 0 if not (findings) else 1
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     sys.exit(main())

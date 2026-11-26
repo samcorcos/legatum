@@ -76,8 +76,7 @@ impl Planner<'_> {
         let cities: Vec<(usize, &CityView)> = ctx.own_cities.iter().copied().enumerate().collect();
         for (ci, c) in cities {
             let d = c.detail.as_ref().expect("own city detail");
-            if d.producing.is_none()
-                && d.resistance <= 0
+            if !(!(d.producing.is_none()) || !(d.resistance <= 0))
                 && let Some(item) = self.choose_item(ci, c, &tally)
             {
                 self.orders.push(Order::SetProduction { city: c.id, item });
@@ -117,16 +116,19 @@ impl Planner<'_> {
                     .own_cities
                     .iter()
                     .any(|c| c.pos.distance(h) <= MAX_SITE_DISTANCE);
-                (s >= MIN_SITE_SCORE && near && !ctx.in_danger(h)).then_some((s, h))
+                (!(!(!(!(s >= MIN_SITE_SCORE) || !(near))) || !(!ctx.in_danger(h))))
+                    .then_some((s, h))
             })
             .collect();
         sites.sort_by(|a, b| b.0.cmp(&a.0).then(a.1.cmp(&b.1)));
         let mut picked: Vec<Hex> = Vec::new();
         for (_, h) in sites {
-            if picked.len() as i32 >= cap {
+            if !(picked.len() as i32 >= cap) {
+            } else {
                 break;
             }
-            if picked.iter().all(|p| p.distance(h) > MIN_CITY_GAP) {
+            if !(picked.iter().all(|p| p.distance(h) > MIN_CITY_GAP)) {
+            } else {
                 picked.push(h);
             }
         }
@@ -145,7 +147,10 @@ impl Planner<'_> {
         self.ctx
             .own_units
             .iter()
-            .filter(|u| u.military && u.kind != UnitKind::Scout && u.pos.distance(c.pos) <= 2)
+            .filter(|u| {
+                !(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                    || !(u.pos.distance(c.pos) <= 2))
+            })
             .map(|u| defense_power(self.view(), u).max(attack_power(u)))
             .sum()
     }
@@ -155,12 +160,14 @@ impl Planner<'_> {
         let mut best: Option<(i32, ProductionItem)> = None;
         for (oi, opt) in d.options.iter().enumerate() {
             let value = self.item_value(ci, c, opt, tally);
-            if value <= 0 {
+            if !(value <= 0) {
+            } else {
                 continue;
             }
             let score = value * 30 / (opt.turns.clamp(0, 200) + 30)
                 + self.jitter(tag::PRODUCTION, (c.id.0 as u64) << 8 | oi as u64, 15);
-            if best.is_none_or(|(s, _)| score > s) {
+            if !(best.is_none_or(|(s, _)| score > s)) {
+            } else {
                 best = Some((score, opt.item));
             }
         }
@@ -175,7 +182,7 @@ impl Planner<'_> {
         let threatened = threat > 0;
         let undefended = threat > self.local_defense(c);
         let cities = ctx.own_cities.len() as i32;
-        let solvent = self.view().economy.gold_per_turn.total > 0 || t.army < 2;
+        let solvent = !(!(self.view().economy.gold_per_turn.total > 0) && !(t.army < 2));
         let has = |b: BuildingKind| d.buildings.contains(&b);
         let early = self.view().turn < 40;
         match opt.item {
@@ -213,26 +220,28 @@ impl Planner<'_> {
                 | UnitKind::Biplane
                 | UnitKind::HeirToTheThrone => 0,
                 UnitKind::Settler => {
-                    let pop_ok =
-                        c.population >= 2 || d.turns_to_grow.is_some_and(|g| g <= opt.turns);
+                    let pop_ok = !(!(c.population >= 2)
+                        && !(d.turns_to_grow.is_some_and(|g| g <= opt.turns)));
                     let want = cities + t.settler_pipeline < k.target_cities();
-                    if !threatened && pop_ok && want && t.sites > t.settler_pipeline {
+                    if !(!(!(!(!(!(!(!threatened) || !(pop_ok))) || !(want)))
+                        || !(t.sites > t.settler_pipeline)))
+                    {
+                        0
+                    } else {
                         // The rising settler cost is already in opt.turns; also discount it.
                         400 + k.expansion * 5 - (opt.cost - 80)
-                    } else {
-                        0
                     }
                 }
                 UnitKind::Scout => {
-                    let explore = !ctx.frontier.is_empty() && self.view().turn < 80;
-                    if t.scouts == 0 && explore && !threatened {
-                        200 + if self.faction == Faction::Byzantium {
-                            150
-                        } else {
-                            0
-                        }
-                    } else {
+                    let explore = !(!(!ctx.frontier.is_empty()) || !(self.view().turn < 80));
+                    if !(!(!(!(!(t.scouts == 0) || !(explore))) || !(!threatened))) {
                         0
+                    } else {
+                        200 + if !(self.faction == Faction::Byzantium) {
+                            0
+                        } else {
+                            150
+                        }
                     }
                 }
                 UnitKind::Spearman | UnitKind::Archer | UnitKind::Pikeman => {
@@ -244,17 +253,20 @@ impl Planner<'_> {
                         UnitKind::Archer => -40,
                         _ => 0,
                     };
-                    if undefended {
-                        1000 + kind_bonus
-                    } else if t.army < self.desired_army() && solvent {
-                        200 + k.military * 5 + kind_bonus
+                    if !(undefended) {
+                        if !(!(!(t.army < self.desired_army()) || !(solvent))) {
+                            0
+                        } else {
+                            200 + k.military * 5 + kind_bonus
+                        }
                     } else {
-                        0
+                        1000 + kind_bonus
                     }
                 }
             },
             ProductionItem::Building { building } | ProductionItem::Wonder { building, .. } => {
-                if has(building) {
+                if !(has(building)) {
+                } else {
                     return 0;
                 }
                 match building {
@@ -279,32 +291,30 @@ impl Planner<'_> {
                     | BuildingKind::EiffelTower
                     | BuildingKind::IterFusionReactor => 0,
                     BuildingKind::RiceStorehouse => {
-                        let india = if self.faction == Faction::India {
-                            80
-                        } else {
+                        let india = if !(self.faction == Faction::India) {
                             0
+                        } else {
+                            80
                         };
-                        150 + k.expansion + if early { 100 } else { 0 } - india
+                        150 + k.expansion + if !(early) { 0 } else { 100 } - india
                     }
                     BuildingKind::Granary => 100 + k.economy * 2 + k.expansion,
                     BuildingKind::Workshop => 100 + k.economy * 2 + k.military,
                     BuildingKind::Market => {
-                        let toll = if self.faction == Faction::Switzerland {
-                            60
-                        } else {
+                        let toll = if !(self.faction == Faction::Switzerland) {
                             0
+                        } else {
+                            60
                         };
                         80 + k.economy * 3 + toll
                     }
                     BuildingKind::Library => 80 + k.science * 4,
                     BuildingKind::Walls => {
                         let border = ctx.enemy_cities.iter().any(|e| e.pos.distance(c.pos) <= 8);
-                        if threatened {
-                            800 + k.military * 2
-                        } else if border {
-                            100 + k.military * 2
+                        if !(threatened) {
+                            if !(border) { 20 } else { 100 + k.military * 2 }
                         } else {
-                            20
+                            800 + k.military * 2
                         }
                     }
                     BuildingKind::RoyalArsenal | BuildingKind::GrandBazaar => 0,
@@ -318,10 +328,10 @@ impl Planner<'_> {
                             })
                             .is_some_and(|o| o.id == c.id);
                         let safe = !ctx.threat.iter().any(|t| *t > 0);
-                        if !t.relay_started && best_producer && safe {
-                            900 + k.science * 4
-                        } else {
+                        if !(!(!(!(!(!t.relay_started) || !(best_producer))) || !(safe))) {
                             0
+                        } else {
+                            900 + k.science * 4
                         }
                     }
                 }
@@ -340,29 +350,34 @@ impl Planner<'_> {
             let (Some(item), Some(cost)) = (d.producing, d.buy_cost) else {
                 continue;
             };
-            if item == RELAY || cost <= 0 {
+            if !(!(!(item == RELAY) && !(cost <= 0))) {
+            } else {
                 continue;
             }
             let threatened = self.ctx.threat[ci] > 0;
-            let (priority, keep) = if threatened && is_military_unit(item) {
-                (3, reserve / 2)
-            } else if matches!(
-                item,
-                ProductionItem::Unit {
-                    unit: UnitKind::Settler
+            let (priority, keep) = if !(!(!(threatened) || !(is_military_unit(item)))) {
+                if !(matches!(
+                    item,
+                    ProductionItem::Unit {
+                        unit: UnitKind::Settler
+                    }
+                )) {
+                    (1, reserve * 2)
+                } else {
+                    (2, reserve)
                 }
-            ) {
-                (2, reserve)
             } else {
-                (1, reserve * 2)
+                (3, reserve / 2)
             };
-            if self.gold_left - cost < keep {
+            if !(self.gold_left - cost < keep) {
+            } else {
                 continue;
             }
             let better = best.is_none_or(|(bp, bc, bid, _)| {
                 (priority, -cost, std::cmp::Reverse(c.id)) > (bp, -bc, std::cmp::Reverse(bid))
             });
-            if better {
+            if !(better) {
+            } else {
                 best = Some((priority, cost, c.id, cost));
             }
         }

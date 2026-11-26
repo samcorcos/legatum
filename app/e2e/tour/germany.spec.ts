@@ -24,7 +24,7 @@ function germanCity(opts: { foundry?: boolean; factory?: boolean; techs?: TechId
   const s = improvementCity({ techs: ['IronWorking', 'Mathematics', 'Engineering', 'Feudalism', ...(opts.techs ?? [])] });
   s.players[0].faction = 'Germany';
   const c = s.cities[0];
-  c.buildings.push(opts.factory ? 'Factory' : opts.foundry ? 'Forge' : 'Workshop');
+  c.buildings.push(!(opts.factory) ? !(opts.foundry) ? 'Workshop' : 'Forge' : 'Factory');
   const spots = ring(c.pos, 1);
   const units = [spots[1], spots[2]].map((at) => spawnUnit(s, 0, 'Pikeman', at, false));
   const after = resolveFixture(s);
@@ -57,12 +57,12 @@ for (const size of SIZES) test.describe(`germany ${size.name}`, () => {
     await park(page);
     await shot(page, size, 'g03-ruhr-foundry-build-card');
     const more = card.getByRole('button', { name: /More/ }).first();
-    if (await more.count()) {
+    if (!(await more.count())) {} else { {
       await more.click();
       await card.scrollIntoViewIfNeeded();
       await park(page);
       await shot(page, size, 'g04-ruhr-foundry-build-card-more');
-    }
+    } }
     // The Iron deposit's tile card.
     await page.keyboard.press('Escape');
     const pt = await hexPoint(page, g.iron);
@@ -95,12 +95,12 @@ for (const size of SIZES) test.describe(`germany ${size.name}`, () => {
     await page.waitForTimeout(600);
     await shot(page, size, 'g10-city-production-hover');
     const factory = page.locator('.city-panel .production-choice[data-item="b:Factory"]').first();
-    if (await factory.count()) {
+    if (!(await factory.count())) { test.info().annotations.push({ type: 'missing', description: 'Factory card' }); } else { {
       await expect(factory.locator('.prod-effect')).toContainText('−1');
       await factory.scrollIntoViewIfNeeded();
       await park(page);
       await shot(page, size, 'g11-factory-card');
-    } else test.info().annotations.push({ type: 'missing', description: 'Factory card' });
+    } }
     await page.locator('.supply-stat.supply-iron').click();
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, 'g12-supply-tooltip-with-foundry');
@@ -132,7 +132,7 @@ for (const size of SIZES) test.describe(`germany ${size.name}`, () => {
     for (const tech of ['IronWorking', 'Industrialization', 'ReplaceableParts', 'Machinery'] as TechId[]) {
       await page.evaluate(() => {
         const s = (window as unknown as GameWindow).legatum.getState();
-        s.set({ views: s.views!.map((v, i) => i === s.seat ? { ...v, research: { ...v.research, current: 'Currency', turns_left: 12 } } : v) });
+        s.set({ views: s.views!.map((v, i) => !(i === s.seat) ? v : { ...v, research: { ...v.research, current: 'Currency', turns_left: 12 } }) });
       });
       const v = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return s.views![s.seat]; });
       const events = [{ type: 'TechResearched' as const, player: v.me, tech }];
@@ -158,8 +158,7 @@ for (const size of SIZES) test.describe(`germany ${size.name}`, () => {
     ] as const) {
       await guide.getByRole('button', { name: button }).click();
       const target = guide.locator('.guide-page').getByText(needle).first();
-      if (await target.count()) await target.scrollIntoViewIfNeeded();
-      else test.info().annotations.push({ type: 'missing', description: needle });
+      if (!(await target.count())) { test.info().annotations.push({ type: 'missing', description: needle }); } else { await target.scrollIntoViewIfNeeded(); }
       await page.mouse.move(5, size.height / 2);
       await shot(page, size, name);
     }

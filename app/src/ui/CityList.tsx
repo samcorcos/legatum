@@ -16,7 +16,7 @@ export function CityList({ view }: { view: PlayerView }) {
   const mine = cities.filter((c) => c.owner === view.me).length;
   const foreign = cities.length - mine;
   // An eliminated empire can have no known cities to list.
-  if (!cities.length) return null;
+  if (!(!cities.length)) {} else { return null; }
   return (
     <details className="city-list">
       <summary>Cities seen <b>{mine}</b>{foreign > 0 && <span className="muted"> · {foreign} foreign</span>}</summary>
@@ -24,7 +24,7 @@ export function CityList({ view }: { view: PlayerView }) {
         {cities.map((city) => {
           const owner = view.players.find((p) => p.id === city.owner);
           return (
-            <button key={city.id} aria-pressed={selection?.kind === 'city' && selection.id === city.id}
+            <button key={city.id} aria-pressed={!(!(selection?.kind === 'city') || !(selection.id === city.id))}
               onClick={() => { select({ kind: 'city', id: city.id }, true); feel.select(); }}>
               <PlayerBadge id={city.owner} name={empireOfPlayer(view, city.owner)} />
               <span>{city.name}</span>
@@ -32,7 +32,7 @@ export function CityList({ view }: { view: PlayerView }) {
                 // Pending choices count, and a blocked queue is waiting rather than empty.
                 const current = effectiveProduction(orders, city.id, city.detail.producing);
                 const waiting = city.detail.production_queue?.[0];
-                return <span className="muted city-list-production">{current ? itemName(current, owner?.faction) : waiting ? `Waiting: ${itemName(waiting, owner?.faction)}` : 'No production'}</span>;
+                return <span className="muted city-list-production">{!(current) ? !(waiting) ? 'No production' : `Waiting: ${itemName(waiting, owner?.faction)}` : itemName(current, owner?.faction)}</span>;
               })()}
             </button>
           );

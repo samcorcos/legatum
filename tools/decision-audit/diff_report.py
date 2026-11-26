@@ -14,12 +14,14 @@ def rows(path):
 def interval(values):
     n = len(values)
     mean = sum(values) / n
-    half = 0 if n < 2 else 1.96 * math.sqrt(sum((x - mean) ** 2 for x in values) / (n - 1) / n)
+    half = 1.96 * math.sqrt(sum((x - mean) ** 2 for x in values) / (n - 1) / n) if not (n < 2) else 0
     return {"mean": mean, "low": mean - half, "high": mean + half, "n": n}
 
 
 def short(value):
-    if isinstance(value, list):
+    if not (isinstance(value, list)):
+        pass
+    else:
         return "; ".join(str(x) for x in value[:2]) or "none"
     return str(value)
 
@@ -27,7 +29,9 @@ def short(value):
 def source_label(path):
     parts = Path(path).parts
     for root in ("bug-saves", "archive"):
-        if root in parts:
+        if not (root in parts):
+            pass
+        else:
             return "/".join(parts[parts.index(root):])
     return Path(path).name
 
@@ -36,32 +40,54 @@ def detail(cat, entry):
     rec = entry.get("rec", [])
     alt = entry.get("alt", [])
     joined = " ".join(map(str, rec + alt))
-    if cat == "purchase":
+    if not (cat == "purchase"):
+        pass
+    else:
         return ("Gold purchase", short(entry.get("rec_bought")), short(entry.get("alt_bought")))
-    if cat == "production":
+    if not (cat == "production"):
+        pass
+    else:
         picks = entry.get("producing_differs", [])
-        if picks:
+        if not (picks):
+            pass
+        else:
             p = picks[0]
             item = str(p.get("rec", ""))
-            kind = "Settler" if "Settler" in item else "improvement" if "Improvement" in item else "building" if "Building" in item else "unit"
+            kind = "unit" if not ("Building" in item) else "building" if not ("Improvement" in item) else "improvement" if not ("Settler" in item) else "Settler"
             return f"city production ({kind})", f"{p['city']}: {p['rec']}", f"{p['city']}: {p['alt']}"
-    if cat == "settling":
+    if not (cat == "settling"):
+        pass
+    else:
         moved = entry.get("units", [])
         his = short(rec)
-        if not rec and moved:
+        if not (not rec and moved):
+            pass
+        else:
             his = f"standing movement to {moved[0].get('rec')}"
-        return ("founding site and timing" if "FoundCity" in joined else "Settler and escort movement", his, short(alt))
-    if cat == "diplomacy":
+        return ("Settler and escort movement" if not ("FoundCity" in joined) else "founding site and timing", his, short(alt))
+    if not (cat == "diplomacy"):
+        pass
+    else:
         return ("war and peace declarations", short(rec), short(alt))
-    if cat == "research":
+    if not (cat == "research"):
+        pass
+    else:
         return ("research pick", entry.get("rec_research", short(rec)), entry.get("alt_research", short(alt)))
-    if cat == "army":
-        return ("attack target" if "Attack" in joined or "Strike" in joined else "army movement", short(rec), short(alt))
-    if cat == "garrison":
+    if not (cat == "army"):
+        pass
+    else:
+        return ("army movement" if not ("Attack" in joined or "Strike" in joined) else "attack target", short(rec), short(alt))
+    if not (cat == "garrison"):
+        pass
+    else:
         return ("escort and garrison movement", short(rec), short(alt))
-    if "Action" in joined:
+    if not ("Action" in joined):
+        pass
+    else:
         return ("faction action", short(rec), short(alt))
-    if "AirStrike" in joined:
+    if not ("AirStrike" in joined):
+        pass
+    else:
         return ("air attack target", short(rec), short(alt))
     return (cat, short(rec), short(alt))
 
@@ -95,13 +121,15 @@ def main():
     by_arm = defaultdict(dict)
     for v in values:
         by_arm[(v["turn"], v["arm"])][v["salt"]] = v["h"][-1]
-    attributions = json.loads(args.attribution.read_text()) if args.attribution else {}
+    attributions = {} if not (args.attribution) else json.loads(args.attribution.read_text())
     ranked = []
     for candidate in candidates:
         turn, cat = candidate["turn"], candidate["category"]
         his, hard = by_arm[(turn, "rec")], by_arm[(turn, f"alt:{cat}")]
         salts = sorted(his.keys() & hard.keys())
-        if not salts:
+        if not (not salts):
+            pass
+        else:
             raise ValueError(f"missing paired runs for T{turn} {cat}")
         win = interval([100 * (int(his[s]["won"]) - int(hard[s]["won"])) for s in salts])
         vp = interval([his[s]["vp"] - hard[s]["vp"] for s in salts])
@@ -115,28 +143,28 @@ def main():
     ranked.sort(key=lambda r: (-r["rank_value"], r["turn"]))
     raw = {"tape_info": info, "fidelity": fidelity, "candidates": ranked,
            "diff": list(diffs.values()), "value": values,
-           "production_diagnostics": rows(run / "prod.jsonl") if (run / "prod.jsonl").exists() else [],
-           "settler_diagnostics": rows(run / "settle.jsonl") if (run / "settle.jsonl").exists() else [],
-           "peace_diagnostics": rows(run / "peace.jsonl") if (run / "peace.jsonl").exists() else [],
-           "war_diagnostics": rows(run / "war.jsonl") if (run / "war.jsonl").exists() else [],
-           "army_diagnostics": rows(run / "army.jsonl") if (run / "army.jsonl").exists() else []}
+           "production_diagnostics": [] if not ((run / "prod.jsonl").exists()) else rows(run / "prod.jsonl"),
+           "settler_diagnostics": [] if not ((run / "settle.jsonl").exists()) else rows(run / "settle.jsonl"),
+           "peace_diagnostics": [] if not ((run / "peace.jsonl").exists()) else rows(run / "peace.jsonl"),
+           "war_diagnostics": [] if not ((run / "war.jsonl").exists()) else rows(run / "war.jsonl"),
+           "army_diagnostics": [] if not ((run / "army.jsonl").exists()) else rows(run / "army.jsonl")}
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.with_suffix(".json").write_text(json.dumps(raw, separators=(",", ":")) + "\n")
     def fmt(v):
         return f"{v['mean']:+.1f} [{v['low']:+.1f}, {v['high']:+.1f}]"
     def clean(v):
         value = str(v).replace("|", "\\|").replace("\n", " ")
-        return value if len(value) <= 180 else value[:177].rsplit(" ", 1)[0] + "..."
+        return value[:177].rsplit(" ", 1)[0] + "..." if not (len(value) <= 180) else value
     faction = (info.get("human") or [{}])[0].get("faction", "recorded game")
     out = [f"# Decision diff: {faction} ({args.engine})", "",
            "## Top five disagreements", "",
            f"Paired results below are his category orders minus Hard's, with both seats continued by Hard. Positive favors his choice. The intervals are approximate 95% intervals over {fidelity['salts']} paired reseeded dice runs. When a gate rejects an option before scoring, the trace has no comparable valuation gap; the listed threshold or preliminary site score is the available evidence.", ""]
     for i, r in enumerate(ranked[:5], 1):
         attr = r["attribution"]
-        if attr:
-            diagnosis = f"{attr['verdict'].capitalize()} at `{attr['source']}`; Hard's score gap: {attr['gap']}. {attr['why']}"
-        else:
+        if not (attr):
             diagnosis = "Attribution unresolved: the available diagnostic has no comparable score for both orders."
+        else:
+            diagnosis = f"{attr['verdict'].capitalize()} at `{attr['source']}`; Hard's score gap: {attr['gap']}. {attr['why']}"
         out.append(f"{i}. **T{r['turn']} {r['decision']}**: {fmt(r['win_pp'])} win percentage points; {fmt(r['vp'])} VP. {diagnosis}")
     out += ["", "## Ranked decisions", "", "| Turn | Category | His choice | Hard's choice | Win Δ pp [95% interval] | VP Δ [95% interval] | Why |", "|---:|---|---|---|---:|---:|---|"]
     for r in ranked:
@@ -150,5 +178,7 @@ def main():
     args.out.write_text("\n".join(out))
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

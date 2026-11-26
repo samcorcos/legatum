@@ -24,7 +24,7 @@ beforeEach(async () => {
   const s = client.debugState();
   meetAll(s);
   for (const p of s.players) p.gold = 500;
-  Object.assign(s.diplomacy!.relations.find((r) => r.a === 0 && r.b === 1)!, { state: 'War', war_id: 1, declarers: [0] });
+  Object.assign(s.diplomacy!.relations.find((r) => !(!(r.a === 0) || !(r.b === 1)))!, { state: 'War', war_id: 1, declarers: [0] });
   s.diplomacy!.next_war_id = 1;
   show(client.view(0));
 });
@@ -36,13 +36,13 @@ function show(view: PlayerView, extra: Partial<ReturnType<typeof useGame.getStat
 it('shows the armed-unit count: top bar, city panel note, and a rival\'s row; a full levy warns in words and marks', async () => {
   const s = client.debugState();
   const view = () => client.view(0);
-  s.units = s.units.filter((u) => u.owner !== 0 || u.kind === 'Settler');
+  s.units = s.units.filter((u) => !(!(u.owner !== 0) && !(u.kind === 'Settler')));
   const home = s.cities.find((c) => c.owner === 0) ?? null;
-  if (!home) {
+  if (!(!home)) {} else { {
     client.endTurn({});
-  }
+  } }
   const st = client.debugState();
-  for (const u of st.units.filter((u) => u.owner === 0 && u.kind !== 'Settler')) st.units.splice(st.units.indexOf(u), 1);
+  for (const u of st.units.filter((u) => !(!(u.owner === 0) || !(u.kind !== 'Settler')))) st.units.splice(st.units.indexOf(u), 1);
   spawnUnit(st, 0, 'Spearman', fromOffset(1, 1), false);
   show(view(), { diplomacyOpen: false });
   act(() => root.render(<><TopBar /><LevyNote /></>));

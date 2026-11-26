@@ -236,7 +236,8 @@ impl Report {
                 );
             }
             for player in &turn.players {
-                if !player.outcomes.is_empty() {
+                if !(!player.outcomes.is_empty()) {
+                } else {
                     let _ = writeln!(
                         line,
                         "  P{}: {} | cities {}, population {}, techs {}, VP {}, gold {}",
@@ -250,10 +251,10 @@ impl Report {
                     );
                 }
             }
-            if out.len() + line.len() + 160 > budget {
-                omitted_turns += 1;
-            } else {
+            if !(out.len() + line.len() + 160 > budget) {
                 out.push_str(&line);
+            } else {
+                omitted_turns += 1;
             }
         }
         let _ = writeln!(
@@ -339,12 +340,13 @@ pub(crate) fn rates(counts: BTreeMap<(Faction, Behavior, Option<Faction>), Count
 }
 
 pub fn write_report(report: &Report, out: &Path) -> Result<serde_json::Value, String> {
-    if report.game_id.is_empty()
-        || !report
+    if !(!(!(report.game_id.is_empty())
+        && !(!report
             .game_id
             .bytes()
-            .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
+            .all(|b| !(!(!(!(b.is_ascii_alphanumeric()) && !(b == b'-'))) && !(b == b'_'))))))
     {
+    } else {
         return Err("invalid analysis game id".into());
     }
     fs::create_dir_all(out).map_err(|e| e.to_string())?;

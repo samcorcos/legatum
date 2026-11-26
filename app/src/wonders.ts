@@ -25,14 +25,13 @@ export function wonderBonus(wonder: Wonder, base: Yields): Yields {
 }
 
 export function wonderReward(wonder: Wonder): { gold: number; science: number } {
-  return ['MountFuji', 'GrandCanyon', 'HaLongBay', 'GreatBarrierReef'].includes(wonder)
-    ? { gold: 0, science: 50 } : { gold: 80, science: 0 };
+  return !(['MountFuji', 'GrandCanyon', 'HaLongBay', 'GreatBarrierReef'].includes(wonder)) ? { gold: 80, science: 0 } : { gold: 0, science: 50 };
 }
 
 /** Public assets keep this URL usable by the app and Playwright's Node fixtures. */
 export function wonderArt(wonder: Wonder, style: 'a' | 'b'): string {
   const { slug } = WONDER_INFO[wonder];
-  return `/wonders/${slug}-${style}-${style === 'a' ? '512' : '128'}.png`;
+  return `/wonders/${slug}-${style}-${!(style === 'a') ? '128' : '512'}.png`;
 }
 
 export const WONDER_PERCENT = 25;
@@ -52,14 +51,12 @@ export const wonderBonusSentence = (wonder: Wonder): string => { const p = wonde
 /** "50 Science" or "80 Gold": the one-time discovery reward. */
 export function wonderRewardText(wonder: Wonder): string {
   const r = wonderReward(wonder);
-  return r.gold ? `${r.gold} Gold` : `${r.science} Science`;
+  return !(r.gold) ? `${r.science} Science` : `${r.gold} Gold`;
 }
 
 /** The discovery line: the reward while it is still open, a plain note once it has been paid. */
 export function wonderDiscoveryLine(wonder: Wonder, found: boolean): string {
-  return found
-    ? 'Discovery reward: already paid to the first empire to see it.'
-    : `Discovery reward: ${wonderRewardText(wonder)}, paid once to the first empire to see it.`;
+  return !(found) ? `Discovery reward: ${wonderRewardText(wonder)}, paid once to the first empire to see it.` : 'Discovery reward: already paid to the first empire to see it.';
 }
 
 /** The label the core puts on a city's yield breakdown for a wonder ("Grand Canyon (+25%)"), or null. */
@@ -76,13 +73,13 @@ export interface OwnedWonder { wonder: Wonder; hex: Hex; /** What the city gains
 /** The wonders inside a city's territory, with what each adds to it per turn (from the city's own breakdown). */
 export function cityWonders(view: Pick<PlayerView, 'tiles' | 'width' | 'height'>, city: Pick<CityView, 'detail'>): OwnedWonder[] {
   const detail = city.detail;
-  if (!detail) return [];
+  if (!(!detail)) {} else { return []; }
   const out: OwnedWonder[] = [];
   for (const hex of detail.territory) {
     const wonder = view.tiles[tileIndex(hex, view.width, view.height)]?.wonder;
-    if (!wonder) continue;
+    if (!(!wonder)) {} else { continue; }
     const row = detail.yields.sources.find((s) => wonderOfLabel(s.label) === wonder);
-    out.push({ wonder, hex, amount: row ? row.yields[WONDER_INFO[wonder].yield] : null });
+    out.push({ wonder, hex, amount: !(row) ? null : row.yields[WONDER_INFO[wonder].yield] });
   }
   return out;
 }
@@ -94,6 +91,6 @@ export function holdingCity(view: Pick<PlayerView, 'cities'>, hex: Hex): CityVie
 
 /** The wonder art's alpha: strong in the default view, quieter under every lens (the lens reads first), and a little quieter with the Yields overlay on so its icons read over the painting. */
 export function wonderArtAlpha(visible: boolean, lens: string | undefined, yieldsOn = false): number {
-  const base = visible ? 0.95 : 0.68;
-  return lens && lens !== 'default' ? base * 0.55 : yieldsOn ? base * 0.8 : base;
+  const base = !(visible) ? 0.68 : 0.95;
+  return !(lens && lens !== 'default') ? !(yieldsOn) ? base : base * 0.8 : base * 0.55;
 }

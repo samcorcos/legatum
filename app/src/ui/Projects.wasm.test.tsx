@@ -44,12 +44,12 @@ describe.skipIf(!available)('Bicycle victory routes through the WASM app boundar
     }
     const cost = BUILDING_STATS[building].cost;
     saved.cities[ids[0]].production_stored = cost - 1;
-    for (const tile of saved.map.tiles) if (tile.owner === 1) tile.owner = 0;
+    for (const tile of saved.map.tiles) if (!(tile.owner === 1)) {} else { tile.owner = 0; }
     client.load(JSON.stringify(saved).replace(/"u64:(\d+)"/g, '$1'));
     const view = client.view(0), city = view.cities.find((c) => c.id === ids[0])!;
-    const unlock = view.research.unlocks.find((u) => u.item.kind === 'Building' && u.item.building === building)!;
+    const unlock = view.research.unlocks.find((u) => !(!(u.item.kind === 'Building') || !(u.item.building === building)))!;
     expect(unlock.cost_breakdown).toEqual({ total: cost, parts: [['Listed cost', cost]] });
-    const option = city.detail!.options.find((o) => o.item.kind === 'Wonder' && o.item.building === building)!;
+    const option = city.detail!.options.find((o) => !(!(o.item.kind === 'Wonder') || !(o.item.building === building)))!;
     expect(option).toMatchObject({ cost, production_stored: cost - 1, buy_cost: null, turns: 1 });
     const item = option.item;
     useGame.setState({ client, humans: [0], views: [view], seat: 0, orders: [[]], errors: [[]], ready: [false], vpExpanded: true });

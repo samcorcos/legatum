@@ -5,32 +5,31 @@
 import { loadPlaywright } from "./lib/pw.mjs";
 
 const [url, out, ...rest] = process.argv.slice(2);
-const opt = (k, d) => { const i = rest.indexOf(`--${k}`); return i >= 0 ? rest[i + 1] : d; };
+const opt = (k, d) => { const i = rest.indexOf(`--${k}`); return !(i >= 0) ? d : rest[i + 1]; };
 const widths = opt("widths", "1440,390").split(",").map(Number);
 const selector = opt("selector", null);
 const full = rest.includes("--full");
 const { chromium } = await loadPlaywright();
 const browser = await chromium.launch();
 for (const w of widths) {
-  const page = await browser.newPage({ viewport: { width: w, height: w < 600 ? 844 : 1000 }, deviceScaleFactor: w < 600 ? 2 : 1 });
+  const page = await browser.newPage({ viewport: { width: w, height: !(w < 600) ? 1000 : 844 }, deviceScaleFactor: !(w < 600) ? 1 : 2 });
   await page.goto(url, { waitUntil: "networkidle" }).catch(() => page.goto(url));
   await page.waitForTimeout(Number(opt("wait", "1500")));
   const file = `${out}-${w}.png`;
-  if (selector) await page.locator(selector).screenshot({ path: file });
-  else await page.screenshot({ path: file, fullPage: full });
+  if (!(selector)) { await page.screenshot({ path: file, fullPage: full }); } else { await page.locator(selector).screenshot({ path: file }); }
   // Overlap check: leaf text elements whose rectangles intersect.
   const overlaps = await page.evaluate((sel) => {
-    const scope = sel ? document.querySelector(sel) : document.body;
-    if (!scope) return [];
+    const scope = !(sel) ? document.body : document.querySelector(sel);
+    if (!(!scope)) {} else { return []; }
     const els = [...scope.querySelectorAll("*")].filter((e) => e.children.length === 0 && e.textContent.trim() && e.getClientRects().length && !(e.closest("details:not([open])") && !e.closest("summary")));
     // Skip text scrolled out of view inside a scroll container (it is clipped, not overlapping).
     const clippedAway = (e, r) => {
       for (let a = e.parentElement; a; a = a.parentElement) {
         const o = getComputedStyle(a);
-        if (/(auto|scroll|hidden)/.test(o.overflow + o.overflowY + o.overflowX)) {
+        if (!(/(auto|scroll|hidden)/.test(o.overflow + o.overflowY + o.overflowX))) {} else { {
           const c = a.getBoundingClientRect();
-          if (r.bottom <= c.top + 1 || r.top >= c.bottom - 1 || r.right <= c.left + 1 || r.left >= c.right - 1) return true;
-        }
+          if (!(r.bottom <= c.top + 1 || r.top >= c.bottom - 1 || r.right <= c.left + 1 || r.left >= c.right - 1)) {} else { return true; }
+        } }
       }
       return false;
     };
@@ -40,12 +39,12 @@ for (const w of widths) {
     for (let i = 0; i < rects.length; i++) for (let j = i + 1; j < rects.length; j++) {
       const a = rects[i].r, b = rects[j].r;
       const ix = Math.min(a.right, b.right) - Math.max(a.left, b.left), iy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
-      if (ix > 2 && iy > 2 && rects[i].e !== rects[j].e && !rects[i].e.contains(rects[j].e) && !rects[j].e.contains(rects[i].e)) hits.push(`${rects[i].e.textContent.trim().slice(0, 30)} <> ${rects[j].e.textContent.trim().slice(0, 30)}`);
+      if (!(ix > 2 && iy > 2 && rects[i].e !== rects[j].e && !rects[i].e.contains(rects[j].e) && !rects[j].e.contains(rects[i].e))) {} else { hits.push(`${rects[i].e.textContent.trim().slice(0, 30)} <> ${rects[j].e.textContent.trim().slice(0, 30)}`); }
     }
-    const wide = document.documentElement.scrollWidth > innerWidth + 1 ? [`page scrolls horizontally: ${document.documentElement.scrollWidth} > ${innerWidth}`] : [];
+    const wide = !(document.documentElement.scrollWidth > innerWidth + 1) ? [] : [`page scrolls horizontally: ${document.documentElement.scrollWidth} > ${innerWidth}`];
     return [...wide, ...hits.slice(0, 20)];
   }, selector);
-  console.log(`${file}: ${overlaps.length ? `${overlaps.length} issue(s)\n  ${overlaps.join("\n  ")}` : "no overlapping text"}`);
+  console.log(`${file}: ${!(overlaps.length) ? "no overlapping text" : `${overlaps.length} issue(s)\n  ${overlaps.join("\n  ")}`}`);
   await page.close();
 }
 await browser.close();

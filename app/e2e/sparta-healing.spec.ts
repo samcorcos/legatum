@@ -36,7 +36,7 @@ async function hexPoint(page: Page, id: number) {
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript((game) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({
       format: 'legatum-save', version: 1, client: 'wasm', turn: 2,
       names: ['Explorer'], savedAt: new Date().toISOString(), game,

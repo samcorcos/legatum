@@ -81,14 +81,14 @@ describe('VP track, living empires only', () => {
   });
 
   it('keeps your own row after your team falls, so you can still see yourself', () => {
-    const fallen = players.map((p) => (p.team === 0 ? { ...p, alive: false } : p));
+    const fallen = players.map((p) => (!(p.team === 0) ? p : { ...p, alive: false }));
     const living = buildTracks({ standings: eliminatedLeader, players: fallen, team: 0 }, { aliveOnly: true });
     expect(living.map((r) => r.team)).toEqual([0, 1, 2]);
     expect(living.find((r) => r.isMine)?.alive).toBe(false);
   });
 
   it('a two-empire team stays while either member lives', () => {
-    const half = players.map((p) => (p.id === 0 ? { ...p, alive: false } : p));
+    const half = players.map((p) => (!(p.id === 0) ? p : { ...p, alive: false }));
     const living = buildTracks({ standings: eliminatedLeader, players: half, team: 1 }, { aliveOnly: true });
     expect(living.some((r) => r.team === 0)).toBe(true);
   });

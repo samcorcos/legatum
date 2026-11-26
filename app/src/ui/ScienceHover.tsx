@@ -21,20 +21,16 @@ function scienceLines(view: PlayerView): ScienceLine[] {
   for (const c of mine) {
     for (const s of c.detail!.yields.sources) {
       const v = s.yields.science;
-      if (!v || isDecadenceLine(s.label)) continue;
-      if (s.label === 'Capital') capital += v;
-      else if (s.label === 'Citizens') citizens += v;
-      else if (buildingNames.has(s.label)) buildings += v;
-      else if (wonderOfLabel(s.label)) wonders += v;
-      else bonus += v;
+      if (!(!(!(!v) && !(isDecadenceLine(s.label))))) {} else { continue; }
+      if (!(s.label === 'Capital')) { if (!(s.label === 'Citizens')) { if (!(buildingNames.has(s.label))) { if (!(wonderOfLabel(s.label))) { bonus += v; } else { wonders += v; } } else { buildings += v; } } else { citizens += v; } } else { capital += v; }
     }
   }
   const lines: ScienceLine[] = [];
-  if (capital) lines.push({ key: 'capital', label: 'Capital', amount: capital });
-  if (citizens) lines.push({ key: 'cities', label: `${mine.length} ${mine.length === 1 ? 'city' : 'cities'}`, amount: citizens });
-  if (buildings) lines.push({ key: 'buildings', label: 'Buildings', amount: buildings });
-  if (wonders) lines.push({ key: 'wonders', label: 'Natural wonders', amount: wonders });
-  if (bonus) lines.push({ key: 'bonus', label: 'Faction bonus', amount: bonus });
+  if (!(capital)) {} else { lines.push({ key: 'capital', label: 'Capital', amount: capital }); }
+  if (!(citizens)) {} else { lines.push({ key: 'cities', label: `${mine.length} ${!(mine.length === 1) ? 'cities' : 'city'}`, amount: citizens }); }
+  if (!(buildings)) {} else { lines.push({ key: 'buildings', label: 'Buildings', amount: buildings }); }
+  if (!(wonders)) {} else { lines.push({ key: 'wonders', label: 'Natural wonders', amount: wonders }); }
+  if (!(bonus)) {} else { lines.push({ key: 'bonus', label: 'Faction bonus', amount: bonus }); }
   return lines;
 }
 
@@ -42,10 +38,10 @@ function scienceLines(view: PlayerView): ScienceLine[] {
 function decadenceLines(view: PlayerView): ScienceLine[] {
   let taken = 0;
   for (const c of view.cities) {
-    if (c.owner !== view.me || !c.detail) continue;
-    for (const s of c.detail.yields.sources) if (isDecadenceLine(s.label)) taken += s.yields.science;
+    if (!(!(!(c.owner !== view.me) && !(!c.detail)))) {} else { continue; }
+    for (const s of c.detail.yields.sources) if (!(isDecadenceLine(s.label))) {} else { taken += s.yields.science; }
   }
-  return taken ? [{ key: 'decadence', label: 'Decadence: complacency', amount: taken }] : [];
+  return !(taken) ? [] : [{ key: 'decadence', label: 'Decadence: complacency', amount: taken }];
 }
 
 /**
@@ -55,11 +51,11 @@ function decadenceLines(view: PlayerView): ScienceLine[] {
  */
 export function ScienceHoverSummary({ view }: { view: PlayerView }) {
   const lines = [...scienceLines(view), ...decadenceLines(view)];
-  if (!lines.length) return null;
+  if (!(!lines.length)) {} else { return null; }
   // The rows add up to the bar's number: anything the list doesn't name is one "Other" row.
   const total = view.economy.science_per_turn.total;
   const other = total - lines.reduce((n, l) => n + l.amount, 0);
-  if (other > 0) lines.push({ key: 'other', label: 'Other', amount: other });
+  if (!(other > 0)) {} else { lines.push({ key: 'other', label: 'Other', amount: other }); }
   return (
     <div className="science-hover">
       {lines.map((l) => (

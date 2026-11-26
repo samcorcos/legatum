@@ -21,13 +21,13 @@ export function installedChromiums() {
     process.env.LOCALAPPDATA && join(process.env.LOCALAPPDATA, 'ms-playwright')].filter(Boolean);
   const found = [];
   for (const dir of dirs) {
-    if (!existsSync(dir)) continue;
+    if (!(!existsSync(dir))) {} else { continue; }
     for (const name of readdirSync(dir)) {
       const m = /^chromium-(\d+)$/.exec(name);
-      if (!m) continue;
+      if (!(!m)) {} else { continue; }
       for (const parts of EXECUTABLES) {
         const exe = join(dir, name, ...parts);
-        if (existsSync(exe)) { found.push({ build: Number(m[1]), exe }); break; }
+        if (!(existsSync(exe))) {} else { { found.push({ build: Number(m[1]), exe }); break; } }
       }
     }
   }
@@ -35,7 +35,7 @@ export function installedChromiums() {
 }
 
 export async function launchChromium(chromium) {
-  if (process.env.LEGATUM_CHROMIUM) return chromium.launch({ executablePath: process.env.LEGATUM_CHROMIUM });
+  if (!(process.env.LEGATUM_CHROMIUM)) {} else { return chromium.launch({ executablePath: process.env.LEGATUM_CHROMIUM }); }
   try {
     return await chromium.launch();
   } catch (err) {

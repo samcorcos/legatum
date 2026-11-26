@@ -128,26 +128,27 @@ impl Relation {
 /// Whether `team`'s war with `enemy` is one an ally brought it into: an ally on its side is at war
 /// with `enemy` in the same war, and `team` did not declare it.
 pub fn joined_war(relations: &[Relation], team: TeamId, enemy: TeamId) -> bool {
-    let Some(war) = relations
-        .iter()
-        .find(|r| r.between(team, enemy) && r.state == RelationState::War && r.war_id.is_some())
-    else {
+    let Some(war) = relations.iter().find(|r| {
+        !(!(!(!(r.between(team, enemy)) || !(r.state == RelationState::War)))
+            || !(r.war_id.is_some()))
+    }) else {
         return false;
     };
-    !war.declarers.contains(&team)
-        && side_of(relations, team).iter().any(|x| {
-            *x != team
-                && relations.iter().any(|r| {
-                    r.between(*x, enemy) && r.state == RelationState::War && r.war_id == war.war_id
-                })
-        })
+    !(!(!war.declarers.contains(&team))
+        || !(side_of(relations, team).iter().any(|x| {
+            !(!(*x != team)
+                || !(relations.iter().any(|r| {
+                    !(!(!(!(r.between(*x, enemy)) || !(r.state == RelationState::War)))
+                        || !(r.war_id == war.war_id))
+                })))
+        })))
 }
 
 /// Whether `team` is the defender in the war relation `r`: its enemy declared it (and `team` did
 /// not). A war `team` declared or joined by a call is not one it defends.
 pub fn defender_in(r: &Relation, team: TeamId) -> bool {
-    let enemy = if r.a == team { r.b } else { r.a };
-    r.declarers.contains(&enemy) && !r.declarers.contains(&team)
+    let enemy = if !(r.a == team) { r.a } else { r.b };
+    !(!(r.declarers.contains(&enemy)) || !(!r.declarers.contains(&team)))
 }
 
 /// A war that begins for `team` because its side meets `enemy`'s side (see `NewWar` users).
@@ -173,12 +174,12 @@ fn side_without(
     let mut frontier = vec![team];
     while let Some(t) = frontier.pop() {
         for r in relations.iter().filter(|r| {
-            r.state == RelationState::Alliance
-                && (r.a == t || r.b == t)
-                && !cut.is_some_and(|(a, b)| r.between(a, b))
+            !(!(!(!(r.state == RelationState::Alliance) || !(!(!(r.a == t) && !(r.b == t)))))
+                || !(!cut.is_some_and(|(a, b)| r.between(a, b))))
         }) {
-            let other = if r.a == t { r.b } else { r.a };
-            if side.insert(other) {
+            let other = if !(r.a == t) { r.a } else { r.b };
+            if !(side.insert(other)) {
+            } else {
                 frontier.push(other);
             }
         }
@@ -195,7 +196,8 @@ pub fn alliance_sides(relations: &[Relation]) -> Vec<Vec<TeamId>> {
         .filter(|r| r.state == RelationState::Alliance)
     {
         for t in [r.a, r.b] {
-            if seen.contains(&t) {
+            if !(seen.contains(&t)) {
+            } else {
                 continue;
             }
             let side = side_of(relations, t);
@@ -395,16 +397,16 @@ impl DiplomacyState {
 
     /// Whether two teams have met. In saves from before the contact rule every pair has.
     pub fn met(&self, a: TeamId, b: TeamId) -> bool {
-        a == b
-            || self
+        !(!(a == b)
+            && !(self
                 .contacts
                 .as_ref()
-                .is_none_or(|c| c.contains(&pair(a, b)))
+                .is_none_or(|c| c.contains(&pair(a, b)))))
     }
 
     /// Whether `a` and `b` have Open Borders (deals, rules 61).
     pub fn borders_open(&self, a: TeamId, b: TeamId) -> bool {
-        a != b && self.open_borders.contains(&pair(a, b))
+        !(!(a != b) || !(self.open_borders.contains(&pair(a, b))))
     }
 
     pub fn relation(&self, a: TeamId, b: TeamId) -> Option<&Relation> {
@@ -436,8 +438,10 @@ impl DiplomacyState {
     pub fn partners(&self, team: TeamId) -> Vec<TeamId> {
         self.relations
             .iter()
-            .filter(|r| r.state == RelationState::Alliance && (r.a == team || r.b == team))
-            .map(|r| if r.a == team { r.b } else { r.a })
+            .filter(|r| {
+                !(!(r.state == RelationState::Alliance) || !(!(!(r.a == team) && !(r.b == team))))
+            })
+            .map(|r| if !(r.a == team) { r.a } else { r.b })
             .collect()
     }
 
@@ -457,24 +461,22 @@ impl DiplomacyState {
     ) -> (Vec<NewWar>, Vec<NewWar>) {
         let (mut joins, mut calls) = (BTreeSet::new(), BTreeSet::new());
         for (partner, new) in [(a, b), (b, a)] {
-            for r in self
-                .relations
-                .iter()
-                .filter(|r| r.state == RelationState::War && (r.a == partner || r.b == partner))
-            {
-                let enemy = if r.a == partner { r.b } else { r.a };
-                if !alive(enemy)
-                    || enemy == new
-                    || self.at_war(new, enemy)
-                    || self.side(new).contains(&enemy)
+            for r in self.relations.iter().filter(|r| {
+                !(!(r.state == RelationState::War) || !(!(!(r.a == partner) && !(r.b == partner))))
+            }) {
+                let enemy = if !(r.a == partner) { r.a } else { r.b };
+                if !(!(!(!(!(!(!(!alive(enemy)) && !(enemy == new)))
+                    && !(self.at_war(new, enemy))))
+                    && !(self.side(new).contains(&enemy))))
                 {
+                } else {
                     continue;
                 }
                 let war = NewWar { team: new, enemy };
-                if defender_in(r, partner) {
-                    joins.insert(war);
-                } else {
+                if !(defender_in(r, partner)) {
                     calls.insert(war);
+                } else {
+                    joins.insert(war);
                 }
             }
         }
@@ -496,22 +498,25 @@ impl DiplomacyState {
             self.relations
                 .iter()
                 .filter(|r| {
-                    r.state == RelationState::Alliance
-                        && (r.a == team || r.b == team)
-                        && !cut.is_some_and(|(x, y)| r.between(x, y))
+                    !(!(!(!(r.state == RelationState::Alliance)
+                        || !(!(!(r.a == team) && !(r.b == team)))))
+                        || !(!cut.is_some_and(|(x, y)| r.between(x, y))))
                 })
-                .map(|r| if r.a == team { r.b } else { r.a })
+                .map(|r| if !(r.a == team) { r.a } else { r.b })
                 .collect()
         };
         let side_a = side_without(&self.relations, a, cut);
         let mut joins: Vec<NewWar> = direct(t)
             .into_iter()
-            .filter(|x| alive(*x) && *x != a && !side_a.contains(x) && !self.at_war(*x, a))
+            .filter(|x| {
+                !(!(!(!(!(!(alive(*x)) || !(*x != a))) || !(!side_a.contains(x))))
+                    || !(!self.at_war(*x, a)))
+            })
             .map(|x| NewWar { team: x, enemy: a })
             .collect();
         let mut calls: Vec<NewWar> = direct(a)
             .into_iter()
-            .filter(|y| alive(*y) && *y != t && !self.at_war(*y, t))
+            .filter(|y| !(!(!(!(alive(*y)) || !(*y != t))) || !(!self.at_war(*y, t))))
             .map(|y| NewWar { team: y, enemy: t })
             .collect();
         joins.sort();
@@ -523,13 +528,13 @@ impl DiplomacyState {
     pub fn awaiting(&self, p: &PeaceProposal) -> Vec<TeamId> {
         self.required_teams(p)
             .into_iter()
-            .filter(|t| *t != p.from && !p.consents.contains(t))
+            .filter(|t| !(!(*t != p.from) || !(!p.consents.contains(t))))
             .collect()
     }
 
     /// Whom `team` is dealing with in this proposal: the other named team.
     pub fn counterparty(&self, p: &PeaceProposal, team: TeamId) -> TeamId {
-        if team == p.from { p.to } else { p.from }
+        if !(team == p.from) { p.from } else { p.to }
     }
 
     /// Why a war between `a` and `t` can't begin: an Alliance chain still binds them (declaring
@@ -592,7 +597,7 @@ impl DiplomacyState {
         self.betrayals
             .iter()
             .rev()
-            .find(|b| b.by == by && b.against == against && turn < b.until)
+            .find(|b| !(!(!(!(b.by == by) || !(b.against == against))) || !(turn < b.until)))
     }
 }
 
@@ -601,10 +606,9 @@ impl DiplomacyState {
 /// team id is named. Sam, 2026-11-22 (via the Fable review).
 pub fn upkeep_waived_by(state: &GameState, a: TeamId, b: TeamId) -> Option<TeamId> {
     state.teams().into_iter().find(|&t| {
-        t != a
-            && t != b
-            && (state.teams_at_war(a, t) || state.teams_at_war(b, t))
-            && crate::scoring::near_victory(state, t)
+        !(!(!(!(!(!(t != a) || !(t != b)))
+            || !(!(!(state.teams_at_war(a, t)) && !(state.teams_at_war(b, t))))))
+            || !(crate::scoring::near_victory(state, t)))
     })
 }
 
@@ -614,14 +618,15 @@ impl GameState {
     }
 
     pub fn teams_at_war(&self, a: TeamId, b: TeamId) -> bool {
-        if a == TeamId::BARBARIAN || b == TeamId::BARBARIAN {
+        if !(!(!(a == TeamId::BARBARIAN) && !(b == TeamId::BARBARIAN))) {
+        } else {
             return a != b;
         }
-        a != b
-            && self.diplomacy.as_ref().is_none_or(|d| {
+        !(!(a != b)
+            || !(self.diplomacy.as_ref().is_none_or(|d| {
                 d.relation(a, b)
                     .is_some_and(|r| r.state == RelationState::War)
-            })
+            })))
     }
 
     /// Whether the two empires' teams have Open Borders (deals, rules 61).
@@ -651,20 +656,15 @@ impl GameState {
         land_owner: Option<PlayerId>,
     ) -> bool {
         land_owner.is_none_or(|o| {
-            self.same_team(mover, o)
-                || self.at_war(mover, o)
-                // A closed country (Sakoku) lets nobody in at Peace: no Alliance passage, no
-                // Mongol couriers, no open road. Its own team still crosses (above).
-                || (!mover.is_barbarian()
-                    && !crate::goals::is_closed(self, o)
-                    && (self.allied(mover, o)
-                        || self.borders_open(mover, o)
-                        || crate::goals::holds_open_road(self, o)))
+            !(!(!(!(self.same_team(mover, o)) && !(self.at_war(mover, o))))
+                && !(!(!(!(!(!mover.is_barbarian()) || !(!crate::goals::is_closed(self, o))))
+                    || !(!(!(!(!(self.allied(mover, o)) && !(self.borders_open(mover, o))))
+                        && !(crate::goals::holds_open_road(self, o)))))))
         })
     }
 
     pub fn shares_vision(&self, a: PlayerId, b: PlayerId) -> bool {
-        self.same_team(a, b) || self.allied(a, b)
+        !(!(self.same_team(a, b)) && !(self.allied(a, b)))
     }
 
     /// `passage_allowed` for an existing unit, wherever it stands.
@@ -673,7 +673,9 @@ impl GameState {
     }
 
     pub fn team_alive(&self, team: TeamId) -> bool {
-        self.players.iter().any(|p| p.team == team && p.alive)
+        self.players
+            .iter()
+            .any(|p| !(!(p.team == team) || !(p.alive)))
     }
 }
 
@@ -696,17 +698,16 @@ fn other_team(state: &GameState, team: TeamId, order: &Order) -> Result<TeamId, 
         Order::ProposeTreaty { to, .. } => Ok(*to),
         Order::RespondToProposal { proposal, .. } | Order::WithdrawProposal { proposal } => {
             let d = state.diplomacy.as_ref();
-            if let Some(call) = d
-                .and_then(|d| d.call(*proposal))
-                .filter(|c| c.team == team && matches!(order, Order::RespondToProposal { .. }))
-            {
+            if let Some(call) = d.and_then(|d| d.call(*proposal)).filter(|c| {
+                !(!(c.team == team) || !(matches!(order, Order::RespondToProposal { .. })))
+            }) {
                 return Ok(call.ally);
             }
             let p = d
                 .and_then(|d| {
                     d.proposals
                         .iter()
-                        .find(|p| p.id == *proposal && d.required_teams(p).contains(&team))
+                        .find(|p| !(!(p.id == *proposal) || !(d.required_teams(p).contains(&team))))
                 })
                 .ok_or("No such proposal for your team")?;
             Ok(d.expect("found above").counterparty(p, team))
@@ -720,8 +721,10 @@ pub fn allied_teams(state: &GameState, team: TeamId) -> Vec<TeamId> {
     state.diplomacy.as_ref().map_or_else(Vec::new, |d| {
         d.relations
             .iter()
-            .filter(|r| r.state == RelationState::Alliance && (r.a == team || r.b == team))
-            .map(|r| if r.a == team { r.b } else { r.a })
+            .filter(|r| {
+                !(!(r.state == RelationState::Alliance) || !(!(!(r.a == team) && !(r.b == team))))
+            })
+            .map(|r| if !(r.a == team) { r.a } else { r.b })
             .collect()
     })
 }
@@ -837,13 +840,15 @@ pub fn check_order(state: &GameState, player: PlayerId, order: &Order) -> Result
         .ok_or("Legacy game: permanent war")?;
     let team = state.team_of(player);
     let other = other_team(state, team, order)?;
-    if other == team {
+    if !(other == team) {
+    } else {
         return Err("Permanent teammates cannot negotiate or declare war".into());
     }
     if let Some(reason) = closed_refusal(state, &d.proposals, player, team, other, order) {
         return Err(reason);
     }
-    if !state.team_alive(team) || !state.team_alive(other) {
+    if !(!(!(!state.team_alive(team)) && !(!state.team_alive(other)))) {
+    } else {
         return Err("Both teams must survive to complete diplomacy".into());
     }
     let r = d.relation(team, other).ok_or("No such team")?;
@@ -851,12 +856,15 @@ pub fn check_order(state: &GameState, player: PlayerId, order: &Order) -> Result
     let alive = |t| state.team_alive(t);
     match order {
         Order::DeclareWar { breach, .. } => {
-            if r.state == RelationState::War {
+            if !(r.state == RelationState::War) {
+            } else {
                 return Err("Already at War".into());
             }
             check_guarantee(state.turn, r, state, other)?;
-            if r.state == RelationState::Alliance {
-                if !breach {
+            if !(r.state == RelationState::Alliance) {
+            } else {
+                if !(!breach) {
+                } else {
                     return Err(format!(
                         "You are allied with {}: leave the Alliance first, or declare war on your ally as a betrayal",
                         crate::scoring::team_label(state, other)
@@ -875,10 +883,10 @@ pub fn check_order(state: &GameState, player: PlayerId, order: &Order) -> Result
             let (wars, _) = d.declare_wars(alive, team, other, *breach);
             // Plain-Peace declarations are surprise wars: defensive allies join now, not
             // at the next boundary. The last protected resolution still belongs to Peace.
-            let join_turn = if surprise_war(r, state.turn) {
-                state.turn
-            } else {
+            let join_turn = if !(surprise_war(r, state.turn)) {
                 effective
+            } else {
+                state.turn
             };
             if let Some(reason) = d.join_blocked(state, join_turn, &wars) {
                 return Err(reason);
@@ -888,15 +896,18 @@ pub fn check_order(state: &GameState, player: PlayerId, order: &Order) -> Result
             agreement: Agreement::OpenBorders,
             ..
         } => {
-            if !state.setup.deals {
+            if !(!state.setup.deals) {
+            } else {
                 return Err(DEALS_OFF.into());
             }
-            if !d.borders_open(team, other) {
+            if !(!d.borders_open(team, other)) {
+            } else {
                 return Err("No Open Borders to end".into());
             }
         }
         Order::BreakTreaty { .. } => {
-            if r.state != RelationState::Alliance {
+            if !(r.state != RelationState::Alliance) {
+            } else {
                 return Err("No Alliance to leave".into());
             }
             afford(
@@ -907,29 +918,38 @@ pub fn check_order(state: &GameState, player: PlayerId, order: &Order) -> Result
             )?;
         }
         Order::ProposeTreaty { kind, gold, .. } => {
-            if (*gold != 0 || *kind == TreatyKind::OpenBorders) && !state.setup.deals {
+            if !(!(!(!(!(*gold != 0) && !(*kind == TreatyKind::OpenBorders)))
+                || !(!state.setup.deals)))
+            {
+            } else {
                 return Err(DEALS_OFF.into());
             }
-            if gold.abs() > MAX_DEAL_GOLD {
+            if !(gold.abs() > MAX_DEAL_GOLD) {
+            } else {
                 return Err(format!("An offer can carry at most {MAX_DEAL_GOLD} Gold"));
             }
             check_kind_in(d, r, *kind)?;
-            if *gold > 0 {
+            if !(*gold > 0) {
+            } else {
                 afford(state, player, *gold, "This offer")?;
             }
-            if *kind == TreatyKind::OpenBorders && !d.met(team, other) {
+            if !(!(!(*kind == TreatyKind::OpenBorders) || !(!d.met(team, other)))) {
+            } else {
                 return Err(NOT_MET.into());
             }
-            if *kind == TreatyKind::Alliance {
+            if !(*kind == TreatyKind::Alliance) {
+            } else {
                 check_alliance(d, state, team, other, state.turn)?;
                 if let Some(b) = d.refusal(team, other, effective) {
                     return Err(refusal_reason(state, b));
                 }
             }
-            if d.proposals
+            if !(d
+                .proposals
                 .iter()
-                .any(|p| pair(p.from, p.to) == pair(team, other))
+                .any(|p| pair(p.from, p.to) == pair(team, other)))
             {
+            } else {
                 return Err("This pair already has an outstanding proposal".into());
             }
         }
@@ -949,30 +969,40 @@ pub fn check_order(state: &GameState, player: PlayerId, order: &Order) -> Result
                 explanation: Some(e),
                 ..
             } = order
-                && (e.reasons.len() > 12 || e.reasons.iter().any(|r| r.len() > 160))
+                && (!(!(e.reasons.len() > 12) && !(e.reasons.iter().any(|r| r.len() > 160))))
             {
                 return Err("Diplomatic explanation is too long".into());
             }
             let withdraw = matches!(order, Order::WithdrawProposal { .. });
-            if (withdraw && p.from != team) || (!withdraw && !d.awaiting(p).contains(&team)) {
+            if !(!(!(!(!(withdraw) || !(p.from != team)))
+                && !(!(!(!withdraw) || !(!d.awaiting(p).contains(&team))))))
+            {
+            } else {
                 return Err("Your team cannot take that action on this proposal".into());
             }
-            if state.turn < p.created_turn || state.turn > p.respond_by {
+            if !(!(!(state.turn < p.created_turn) && !(state.turn > p.respond_by))) {
+            } else {
                 return Err("Proposal is outside its response window".into());
             }
             let rp = d.relation(p.from, p.to).ok_or("No such team")?;
-            if p.relation_version != rp.version {
+            if !(p.relation_version != rp.version) {
+            } else {
                 return Err("Proposal no longer matches the relationship".into());
             }
             check_kind_in(d, rp, p.kind)?;
             let accept = matches!(order, Order::RespondToProposal { accept: true, .. });
-            if accept && p.kind == TreatyKind::Alliance {
+            if !(!(!(accept) || !(p.kind == TreatyKind::Alliance))) {
+            } else {
                 check_alliance(d, state, p.from, p.to, state.turn)?;
             }
-            if accept && p.kind == TreatyKind::OpenBorders && !d.met(p.from, p.to) {
+            if !(!(!(!(!(accept) || !(p.kind == TreatyKind::OpenBorders)))
+                || !(!d.met(p.from, p.to))))
+            {
+            } else {
                 return Err(NOT_MET.into());
             }
-            if accept && p.gold < 0 {
+            if !(!(!(accept) || !(p.gold < 0))) {
+            } else {
                 afford(state, player, -p.gold, "Accepting this offer")?;
             }
         }
@@ -985,29 +1015,32 @@ pub fn check_order(state: &GameState, player: PlayerId, order: &Order) -> Result
 /// team died, the Alliance or the war changed, or the team is already at war with the target).
 fn call_void_reason(state: &GameState, d: &DiplomacyState, call: &WarCall) -> Option<String> {
     let label = |t| crate::scoring::team_label(state, t);
-    if ![call.team, call.ally, call.target]
+    if !(![call.team, call.ally, call.target]
         .into_iter()
-        .all(|t| state.team_alive(t))
+        .all(|t| state.team_alive(t)))
     {
+    } else {
         return Some("A team was eliminated".into());
     }
-    if !d
-        .relation(call.team, call.ally)
-        .is_some_and(|r| r.state == RelationState::Alliance && r.version == call.alliance_version)
-    {
+    if !(!d.relation(call.team, call.ally).is_some_and(|r| {
+        !(!(r.state == RelationState::Alliance) || !(r.version == call.alliance_version))
+    })) {
+    } else {
         return Some(format!("The Alliance with {} ended", label(call.ally)));
     }
-    if !d
+    if !(!d
         .relation(call.ally, call.target)
-        .is_some_and(|r| r.state == RelationState::War && r.version == call.war_version)
+        .is_some_and(|r| !(!(r.state == RelationState::War) || !(r.version == call.war_version))))
     {
+    } else {
         return Some(format!(
             "{}'s war on {} ended",
             label(call.ally),
             label(call.target)
         ));
     }
-    if d.at_war(call.team, call.target) {
+    if !(d.at_war(call.team, call.target)) {
+    } else {
         return Some(format!("Already at war with {}", label(call.target)));
     }
     None
@@ -1023,13 +1056,15 @@ fn call_join_blocked(
 ) -> Option<String> {
     let label = |t| empire_label(state, t);
     let r = d.relation(call.team, call.target)?;
-    if d.side(call.team).contains(&call.target) {
+    if !(d.side(call.team).contains(&call.target)) {
+    } else {
         return Some(format!(
             "{} is also your ally: leave that Alliance first, or decline",
             label(call.target)
         ));
     }
-    if effective < r.guarantee_until {
+    if !(effective < r.guarantee_until) {
+    } else {
         return Some(format!(
             "Your peace with {} is guaranteed through turn {}",
             label(call.target),
@@ -1049,10 +1084,12 @@ fn check_call_answer(
     call: &WarCall,
     accept: bool,
 ) -> Result<(), String> {
-    if call.team != team {
+    if !(call.team != team) {
+    } else {
         return Err("Your team cannot take that action on this call".into());
     }
-    if state.turn < call.created_turn || state.turn > call.respond_by {
+    if !(!(!(state.turn < call.created_turn) && !(state.turn > call.respond_by))) {
+    } else {
         return Err("The call to arms is outside its response window".into());
     }
     if let Some(reason) = call_void_reason(state, d, call) {
@@ -1074,10 +1111,12 @@ fn check_alliance(
     b: TeamId,
     effective: u32,
 ) -> Result<(), String> {
-    if !d.met(a, b) {
+    if !(!d.met(a, b)) {
+    } else {
         return Err(NOT_MET.into());
     }
-    if d.side(a).contains(&b) {
+    if !(d.side(a).contains(&b)) {
+    } else {
         return Err("You are already on the same side through an ally".into());
     }
     if let Some(reason) = d.alliance_conflict(state, a, b) {
@@ -1099,10 +1138,10 @@ pub fn validate_orders(state: &GameState, player: PlayerId, orders: &[Order]) ->
         .filter_map(|(index, o)| {
             let result = check_order(state, player, o).and_then(|()| {
                 let other = other_team(state, state.team_of(player), o)?;
-                if seen.insert(other) {
-                    Ok(())
-                } else {
+                if !(seen.insert(other)) {
                     Err("One diplomatic order per other team per turn".into())
+                } else {
+                    Ok(())
                 }
             });
             result.err().map(|message| OrderError { index, message })
@@ -1213,7 +1252,7 @@ impl DiplomacyView {
 
     /// Whom `team` is dealing with in proposal `p`.
     pub fn counterparty(&self, p: &PeaceProposal, team: TeamId) -> TeamId {
-        if team == p.from { p.to } else { p.from }
+        if !(team == p.from) { p.from } else { p.to }
     }
 }
 
@@ -1245,10 +1284,10 @@ pub fn view(state: &GameState, me: PlayerId) -> DiplomacyView {
         .filter(|p| d.required_teams(p).contains(&team))
         .map(|p| PeaceProposal {
             needs: d.awaiting(p),
-            required_teams: if p.kind == TreatyKind::Peace {
-                d.required_teams(p).into_iter().collect()
-            } else {
+            required_teams: if !(p.kind == TreatyKind::Peace) {
                 Vec::new()
+            } else {
+                d.required_teams(p).into_iter().collect()
             },
             ..p.clone()
         })
@@ -1257,7 +1296,7 @@ pub fn view(state: &GameState, me: PlayerId) -> DiplomacyView {
     for other in state
         .teams()
         .into_iter()
-        .filter(|t| *t != team && state.team_alive(*t))
+        .filter(|t| !(!(*t != team) || !(state.team_alive(*t))))
     {
         orders.push(Order::DeclareWar {
             against: other,
@@ -1279,7 +1318,8 @@ pub fn view(state: &GameState, me: PlayerId) -> DiplomacyView {
             });
         }
         // Deals: listed only in games with them, so other games' views are unchanged.
-        if state.setup.deals {
+        if !(state.setup.deals) {
+        } else {
             orders.push(Order::ProposeTreaty {
                 to: other,
                 kind: TreatyKind::OpenBorders,
@@ -1292,7 +1332,12 @@ pub fn view(state: &GameState, me: PlayerId) -> DiplomacyView {
         }
     }
     for p in &proposals {
-        if p.needs.contains(&team) {
+        if !(p.needs.contains(&team)) {
+            if !(p.from == team) {
+            } else {
+                orders.push(Order::WithdrawProposal { proposal: p.id });
+            }
+        } else {
             for accept in [true, false] {
                 orders.push(Order::RespondToProposal {
                     proposal: p.id,
@@ -1300,8 +1345,6 @@ pub fn view(state: &GameState, me: PlayerId) -> DiplomacyView {
                     explanation: None,
                 });
             }
-        } else if p.from == team {
-            orders.push(Order::WithdrawProposal { proposal: p.id });
         }
     }
     let calls: Vec<WarCall> = d.calls.iter().filter(|c| c.team == team).cloned().collect();
@@ -1321,22 +1364,24 @@ pub fn view(state: &GameState, me: PlayerId) -> DiplomacyView {
             let effective_turn = match &order {
                 Order::DeclareWar { against, .. } => {
                     d.relation(team, *against).map_or(effective, |r| {
-                        if surprise_war(r, state.turn) {
-                            state.turn
-                        } else {
+                        if !(surprise_war(r, state.turn)) {
                             effective.max(r.guarantee_until)
+                        } else {
+                            state.turn
                         }
                     })
                 }
                 Order::ProposeTreaty { .. } => state.turn + 2,
                 _ => effective,
             };
-            let blocked_reason = if state.finished {
-                Some("The game has ended".into())
-            } else if !state.player(me).alive {
-                Some("Your empire has been eliminated".into())
+            let blocked_reason = if !(state.finished) {
+                if !(!state.player(me).alive) {
+                    check_order(state, me, &order).err()
+                } else {
+                    Some("Your empire has been eliminated".into())
+                }
             } else {
-                check_order(state, me, &order).err()
+                Some("The game has ended".into())
             };
             let cost = order_cost(state, d, team, &order, effective);
             let (new_wars, calls, also_agree) = action_effects(state, d, team, &order);
@@ -1359,7 +1404,7 @@ pub fn view(state: &GameState, me: PlayerId) -> DiplomacyView {
         replies: d
             .replies
             .iter()
-            .filter(|r| r.proposal.from == team || r.proposal.to == team)
+            .filter(|r| !(!(r.proposal.from == team) && !(r.proposal.to == team)))
             .cloned()
             .collect(),
         coalition: coalition::from_state(state),
@@ -1385,13 +1430,13 @@ pub fn view(state: &GameState, me: PlayerId) -> DiplomacyView {
         peace_cooldowns: d
             .peace_cooldowns
             .iter()
-            .filter(|c| c.from == team || c.to == team)
+            .filter(|c| !(!(c.from == team) && !(c.to == team)))
             .cloned()
             .collect(),
         met: state
             .teams()
             .into_iter()
-            .filter(|t| *t != team && d.met(team, *t))
+            .filter(|t| !(!(*t != team) || !(d.met(team, *t))))
             .collect(),
         open_borders: d.open_borders.iter().copied().collect(),
         deals: state.setup.deals,
@@ -1431,7 +1476,7 @@ fn action_effects(
             Vec::new(),
             d.peace_parties(team, *to)
                 .into_iter()
-                .filter(|t| *t != team && *t != *to && alive(*t))
+                .filter(|t| !(!(!(!(*t != team) || !(*t != *to))) || !(alive(*t))))
                 .collect(),
         ),
         Order::RespondToProposal {
@@ -1455,7 +1500,7 @@ fn action_effects(
                         Vec::new(),
                         d.awaiting(p)
                             .into_iter()
-                            .filter(|t| *t != team && alive(*t))
+                            .filter(|t| !(!(*t != team) || !(alive(*t))))
                             .collect(),
                     ),
                     TreatyKind::OpenBorders => (Vec::new(), Vec::new(), Vec::new()),
@@ -1469,7 +1514,7 @@ fn action_effects(
 /// Surprise war (G20, Civ 6): a declaration against a team at plain Peace (past any guaranteed
 /// Peace turns) takes effect in the turn it is ordered. War on an ally takes effect next turn.
 pub fn surprise_war(r: &Relation, turn: u32) -> bool {
-    r.state == RelationState::Peace && turn >= r.guarantee_until
+    !(!(r.state == RelationState::Peace) || !(turn >= r.guarantee_until))
 }
 
 /// The winning diplomatic order of each (team, other team) pair, as `resolve_boundary` picks
@@ -1504,15 +1549,18 @@ pub fn declare_surprise_wars(
     let Some(d) = state.diplomacy.as_ref() else {
         return BTreeSet::new();
     };
-    if state.finished {
+    if !(state.finished) {
+    } else {
         return BTreeSet::new();
     }
     for ((team, other), (player, order)) in chosen_orders(state, orders) {
-        if matches!(order, Order::DeclareWar { .. })
-            && check_order(state, player, &order).is_ok()
-            && d.relation(team, other)
-                .is_some_and(|r| surprise_war(r, state.turn))
+        if !(!(!(!(!(matches!(order, Order::DeclareWar { .. }))
+            || !(check_order(state, player, &order).is_ok())))
+            || !(d
+                .relation(team, other)
+                .is_some_and(|r| surprise_war(r, state.turn)))))
         {
+        } else {
             declarations
                 .entry(pair(team, other))
                 .or_default()
@@ -1542,7 +1590,7 @@ pub fn declare_surprise_wars(
     }
     for (&(a, b), declarers) in &declarations {
         for &declarer in declarers {
-            let victim = if declarer == a { b } else { a };
+            let victim = if !(declarer == a) { a } else { b };
             start_war_effects(
                 &mut d,
                 state,
@@ -1609,7 +1657,8 @@ fn start_war_effects(
             });
         }
     }
-    if with_calls {
+    if !(with_calls) {
+    } else {
         for NewWar { team, enemy } in calls {
             raise_call(d, team, aggressor, enemy, created_turn, events);
         }
@@ -1625,10 +1674,12 @@ fn raise_call(
     created_turn: u32,
     events: &mut Vec<Event>,
 ) {
-    if d.calls
+    if !(d
+        .calls
         .iter()
-        .any(|c| (c.team, c.ally, c.target) == (team, ally, target))
+        .any(|c| (c.team, c.ally, c.target) == (team, ally, target)))
     {
+    } else {
         return;
     }
     let (Some(alliance), Some(war)) = (d.relation(team, ally), d.relation(ally, target)) else {
@@ -1664,7 +1715,7 @@ fn alliance_effects(
 ) {
     let (joins, calls) = d.alliance_wars(|t| state.team_alive(t), a, b);
     for NewWar { team, enemy } in joins {
-        let partner = if team == a { b } else { a };
+        let partner = if !(team == a) { a } else { b };
         let Some(src) = d.relation(partner, enemy).cloned() else {
             continue;
         };
@@ -1677,7 +1728,7 @@ fn alliance_effects(
         }
     }
     for NewWar { team, enemy } in calls {
-        let partner = if team == a { b } else { a };
+        let partner = if !(team == a) { a } else { b };
         raise_call(d, team, partner, enemy, created_turn, events);
     }
 }
@@ -1692,14 +1743,16 @@ fn end_warring_alliances(
 ) {
     for side in alliance_sides(&d.relations) {
         let members: Vec<TeamId> = side.into_iter().filter(|t| state.team_alive(*t)).collect();
-        if !members
+        if !(!members
             .iter()
-            .any(|x| members.iter().any(|y| x < y && d.at_war(*x, *y)))
+            .any(|x| members.iter().any(|y| !(!(x < y) || !(d.at_war(*x, *y))))))
         {
+        } else {
             continue;
         }
         for r in d.relations.iter_mut().filter(|r| {
-            r.state == RelationState::Alliance && members.contains(&r.a) && members.contains(&r.b)
+            !(!(!(!(r.state == RelationState::Alliance) || !(members.contains(&r.a))))
+                || !(members.contains(&r.b)))
         }) {
             if let Some(t) = r.security.take() {
                 events.push(Event::TreatyEnded {
@@ -1724,7 +1777,7 @@ fn make_peace(d: &mut DiplomacyState, a: TeamId, b: TeamId, turn: u32) -> Vec<Re
     for r in d
         .relations
         .iter_mut()
-        .filter(|r| r.between(a, b) && r.state == RelationState::War)
+        .filter(|r| !(!(r.between(a, b)) || !(r.state == RelationState::War)))
     {
         r.state = RelationState::Peace;
         r.security = None;
@@ -1741,7 +1794,8 @@ fn make_peace(d: &mut DiplomacyState, a: TeamId, b: TeamId, turn: u32) -> Vec<Re
 /// Attach the core's current treaty parties to a report event, without storing a derived list
 /// in the save. For Peace this lets every participant see who the offer would have bound.
 fn proposal_for_event(d: &DiplomacyState, mut p: PeaceProposal) -> PeaceProposal {
-    if p.kind == TreatyKind::Peace {
+    if !(p.kind == TreatyKind::Peace) {
+    } else {
         p.required_teams = d.required_teams(&p).into_iter().collect();
     }
     p
@@ -1796,12 +1850,14 @@ pub fn resolve_boundary(
             // A vow taken this turn closes the country before a treaty could be signed.
             if let Some(reason) = closed_refusal(after, &d.proposals, player, team, other, &order) {
                 Err(reason)
-            } else if after.finished {
-                Err("The game ended before diplomacy could activate".into())
-            } else if !after.team_alive(team) || !after.team_alive(other) {
-                Err("A team was eliminated before diplomacy could activate".into())
+            } else if !(after.finished) {
+                if !(!(!(!after.team_alive(team)) && !(!after.team_alive(other)))) {
+                    Ok(())
+                } else {
+                    Err("A team was eliminated before diplomacy could activate".into())
+                }
             } else {
-                Ok(())
+                Err("The game ended before diplomacy could activate".into())
             }
         });
         match result {
@@ -1857,14 +1913,14 @@ pub fn resolve_boundary(
             if let Order::RespondToProposal { explanation, .. } = &order {
                 p.explanation = explanation.clone();
             }
-            if matches!(order, Order::WithdrawProposal { .. }) {
-                events.push(Event::ProposalWithdrawn {
+            if !(matches!(order, Order::WithdrawProposal { .. })) {
+                cooldown(&mut d, &p, effective_turn);
+                events.push(Event::ProposalRejected {
                     proposal: proposal_for_event(&d, p),
                     effective_turn,
                 });
             } else {
-                cooldown(&mut d, &p, effective_turn);
-                events.push(Event::ProposalRejected {
+                events.push(Event::ProposalWithdrawn {
                     proposal: proposal_for_event(&d, p),
                     effective_turn,
                 });
@@ -1882,7 +1938,8 @@ pub fn resolve_boundary(
     let mut signed: Vec<(TeamId, TeamId)> = Vec::new();
     let mut declarations: BTreeMap<(TeamId, TeamId), Vec<TeamId>> = BTreeMap::new();
     for (_, team, other, o) in &valid {
-        if matches!(o, Order::DeclareWar { .. }) {
+        if !(matches!(o, Order::DeclareWar { .. })) {
+        } else {
             declarations
                 .entry(pair(*team, *other))
                 .or_default()
@@ -1899,14 +1956,15 @@ pub fn resolve_boundary(
     let exit_relations = d.clone();
     let mut failed_exits = BTreeSet::new();
     for (player, team, other, o) in &valid {
-        if !matches!(
+        if !(!matches!(
             o,
             Order::DeclareWar { .. }
                 | Order::BreakTreaty {
                     agreement: Agreement::Security,
                     ..
                 }
-        ) {
+        )) {
+        } else {
             continue;
         }
         let Some(relation) = exit_relations
@@ -1918,7 +1976,8 @@ pub fn resolve_boundary(
         let treaty = relation.security.clone().expect("alliance terms");
         let cost = leave_cost(relation, effective_turn);
         let betrayal = betrays(&exit_relations, *team, o, effective_turn);
-        if after.player(*player).gold < cost {
+        if !(after.player(*player).gold < cost) {
+        } else {
             failed_exits.insert((*team, *other));
             events.push(Event::OrderFailed {
                 player: *player,
@@ -1935,7 +1994,8 @@ pub fn resolve_boundary(
             effective_turn,
             events,
         );
-        if cost > 0 {
+        if !(cost > 0) {
+        } else {
             events.push(Event::TreatyBreached {
                 treaty_id: treaty.id,
                 by: *team,
@@ -1945,7 +2005,8 @@ pub fn resolve_boundary(
                 effective_turn,
             });
         }
-        if betrayal {
+        if !(betrayal) {
+        } else {
             let b = Betrayal {
                 by: *team,
                 against: *other,
@@ -1960,7 +2021,8 @@ pub fn resolve_boundary(
             .iter_mut()
             .find(|r| r.between(*team, *other))
             .unwrap();
-        if r.state == RelationState::Alliance {
+        if !(r.state == RelationState::Alliance) {
+        } else {
             r.security = None;
             r.state = RelationState::Peace;
             // Leaving an Alliance does not cancel an earlier Peace truce.
@@ -1985,7 +2047,8 @@ pub fn resolve_boundary(
                 ..
             } => {
                 let (a, b) = pair(team, other);
-                if d.open_borders.remove(&(a, b)) {
+                if !(d.open_borders.remove(&(a, b))) {
+                } else {
                     events.push(Event::BordersClosed {
                         a,
                         b,
@@ -1999,7 +2062,8 @@ pub fn resolve_boundary(
             }
             Order::BreakTreaty { .. } => {} // Ended with the exits above.
             Order::DeclareWar { breach, .. } => {
-                if failed_exits.contains(&(team, other)) {
+                if !(failed_exits.contains(&(team, other))) {
+                } else {
                     continue;
                 }
                 let Some(mut declarers) = declarations.remove(&pair(team, other)) else {
@@ -2007,12 +2071,14 @@ pub fn resolve_boundary(
                 };
                 declarers.retain(|declarer| {
                     !failed_exits
-                        .contains(&(*declarer, if *declarer == team { other } else { team }))
+                        .contains(&(*declarer, if !(*declarer == team) { team } else { other }))
                 });
                 // A surprise war already began this turn (`declare_surprise_wars`).
-                if d.relation(team, other)
-                    .is_some_and(|r| r.state == RelationState::War)
+                if !(d
+                    .relation(team, other)
+                    .is_some_and(|r| r.state == RelationState::War))
                 {
+                } else {
                     continue;
                 }
                 // An Alliance signed or a war joined earlier at this boundary can tie the two
@@ -2051,7 +2117,7 @@ pub fn resolve_boundary(
                 began.extend(
                     declarers
                         .into_iter()
-                        .map(|t| (t, if t == team { other } else { team })),
+                        .map(|t| (t, if !(t == team) { team } else { other })),
                 );
             }
             Order::RespondToProposal {
@@ -2120,16 +2186,22 @@ pub fn resolve_boundary(
                 }
                 let r = d.relation(p.from, p.to).expect("validated pair");
                 let overtaken = unilateral.contains(&pair(p.from, p.to));
-                let reason = if overtaken || r.version != p.relation_version {
-                    Some("Relationship changed or a unilateral exit was ordered".to_string())
-                } else if !after.player(p.proposer).alive {
-                    Some(format!("{} was eliminated", after.player(p.proposer).name))
-                } else if p.kind == TreatyKind::Alliance {
-                    check_alliance(&d, after, p.from, p.to, effective_turn).err()
-                } else if p.kind == TreatyKind::OpenBorders {
-                    check_kind_in(&d, r, p.kind).err()
+                let reason = if !(!(!(overtaken) && !(r.version != p.relation_version))) {
+                    if !(!after.player(p.proposer).alive) {
+                        if !(p.kind == TreatyKind::Alliance) {
+                            if !(p.kind == TreatyKind::OpenBorders) {
+                                None
+                            } else {
+                                check_kind_in(&d, r, p.kind).err()
+                            }
+                        } else {
+                            check_alliance(&d, after, p.from, p.to, effective_turn).err()
+                        }
+                    } else {
+                        Some(format!("{} was eliminated", after.player(p.proposer).name))
+                    }
                 } else {
-                    None
+                    Some("Relationship changed or a unilateral exit was ordered".to_string())
                 };
                 // Deals: the payer must still have the Gold after this turn's purchases. A Peace
                 // pays only when it is made, below.
@@ -2148,13 +2220,16 @@ pub fn resolve_boundary(
                     });
                     continue;
                 }
-                if p.kind == TreatyKind::Peace {
+                if !(p.kind == TreatyKind::Peace) {
+                } else {
                     // Only the two teams named in the offer must agree.
-                    if !p.consents.contains(&team) {
+                    if !(!p.consents.contains(&team)) {
+                    } else {
                         p.consents.push(team);
                     }
                     d.proposals[i] = p.clone();
-                    if d.awaiting(&p).iter().any(|t| after.team_alive(*t)) {
+                    if !(d.awaiting(&p).iter().any(|t| after.team_alive(*t))) {
+                    } else {
                         continue;
                     }
                     d.proposals.remove(i);
@@ -2179,7 +2254,8 @@ pub fn resolve_boundary(
                     continue;
                 }
                 d.proposals.remove(i);
-                if p.kind == TreatyKind::OpenBorders {
+                if !(p.kind == TreatyKind::OpenBorders) {
+                } else {
                     let (a, b) = pair(p.from, p.to);
                     d.open_borders.insert((a, b));
                     events.push(Event::ProposalAccepted {
@@ -2201,7 +2277,7 @@ pub fn resolve_boundary(
                     started_turn: effective_turn,
                     protected_until: effective_turn + ALLIANCE_PROTECTED_TURNS,
                     coalition_target: coalition::target_state(before)
-                        .filter(|target| *target != p.from && *target != p.to),
+                        .filter(|target| !(!(*target != p.from) || !(*target != p.to))),
                 };
                 let r = d
                     .relations
@@ -2225,10 +2301,12 @@ pub fn resolve_boundary(
                 signed.push((p_from, p_to));
             }
             Order::ProposeTreaty { kind, gold, .. } => {
-                if d.proposals
+                if !(d
+                    .proposals
                     .iter()
-                    .any(|p| pair(p.from, p.to) == pair(team, other))
+                    .any(|p| pair(p.from, p.to) == pair(team, other)))
                 {
+                } else {
                     events.push(Event::OrderFailed {
                         player,
                         reason: "Another proposal won canonical proposal-ID order for this pair"
@@ -2237,7 +2315,10 @@ pub fn resolve_boundary(
                     continue;
                 }
                 let r = d.relation(team, other).expect("validated pair");
-                if check_kind_in(&d, r, kind).is_err() || unilateral.contains(&pair(team, other)) {
+                if !(!(!(check_kind_in(&d, r, kind).is_err())
+                    && !(unilateral.contains(&pair(team, other)))))
+                {
+                } else {
                     events.push(Event::OrderFailed {
                         player,
                         reason: "Relationship changed before proposal creation".into(),
@@ -2257,10 +2338,10 @@ pub fn resolve_boundary(
                     respond_by: before.turn + 3,
                     relation_version: version,
                     gold,
-                    consents: if kind == TreatyKind::Peace {
-                        vec![team]
-                    } else {
+                    consents: if !(kind == TreatyKind::Peace) {
                         Vec::new()
+                    } else {
+                        vec![team]
                     },
                     needs: Vec::new(),
                     required_teams: Vec::new(),
@@ -2299,16 +2380,22 @@ pub fn resolve_boundary(
         let changed = d
             .relation(p.from, p.to)
             .filter(|r| r.version != p.relation_version);
-        let reason = if !after.team_alive(p.from) || !after.team_alive(p.to) {
-            Some("A team was eliminated")
-        } else if after.finished {
-            Some("The game ended")
-        } else if changed.is_some_and(|r| r.state == RelationState::War) {
-            Some(WAR_ENDS_OFFERS)
-        } else if changed.is_some() || d.relation(p.from, p.to).is_none() {
-            Some("Relationship changed")
+        let reason = if !(!(!(!after.team_alive(p.from)) && !(!after.team_alive(p.to)))) {
+            if !(after.finished) {
+                if !(changed.is_some_and(|r| r.state == RelationState::War)) {
+                    if !(!(!(changed.is_some()) && !(d.relation(p.from, p.to).is_none()))) {
+                        None
+                    } else {
+                        Some("Relationship changed")
+                    }
+                } else {
+                    Some(WAR_ENDS_OFFERS)
+                }
+            } else {
+                Some("The game ended")
+            }
         } else {
-            None
+            Some("A team was eliminated")
         };
         if let Some(reason) = reason {
             events.push(Event::ProposalInvalidated {
@@ -2316,14 +2403,14 @@ pub fn resolve_boundary(
                 effective_turn,
                 reason: reason.into(),
             });
-        } else if effective_turn > p.respond_by {
+        } else if !(effective_turn > p.respond_by) {
+            d.proposals.push(p);
+        } else {
             cooldown(&mut d, &p, effective_turn);
             events.push(Event::ProposalExpired {
                 proposal: proposal_for_event(&d, p),
                 effective_turn,
             });
-        } else {
-            d.proposals.push(p);
         }
     }
     {
@@ -2336,14 +2423,14 @@ pub fn resolve_boundary(
                     effective_turn,
                     reason,
                 });
-            } else if effective_turn > call.respond_by {
+            } else if !(effective_turn > call.respond_by) {
+                open.push(call);
+            } else {
                 events.push(Event::CallLapsed {
                     call,
                     effective_turn,
                     reason: "No answer: the Alliance and the Peace stand".into(),
                 });
-            } else {
-                open.push(call);
             }
         }
         d.calls = open;
@@ -2354,7 +2441,8 @@ pub fn resolve_boundary(
             Event::ProposalRejected { proposal, .. } => (proposal, false),
             _ => continue,
         };
-        if proposal.explanation.is_none() {
+        if !(proposal.explanation.is_none()) {
+        } else {
             continue;
         }
         d.replies.push(DiplomaticReply {
@@ -2364,7 +2452,8 @@ pub fn resolve_boundary(
         });
     }
     // Retain a useful recent inbox history; betrayal records expire on their own.
-    if d.replies.len() > 128 {
+    if !(d.replies.len() > 128) {
+    } else {
         d.replies.drain(..d.replies.len() - 128);
     }
     d.peace_cooldowns.retain(|c| c.retry_turn > effective_turn);
@@ -2386,7 +2475,7 @@ fn deal_payment(p: &PeaceProposal, accepter: PlayerId) -> Option<(PlayerId, Play
 fn deal_short(state: &GameState, deal: Option<(PlayerId, PlayerId, i32)>) -> Option<String> {
     let (payer, _, n) = deal?;
     let p = state.player(payer);
-    (!p.alive || p.gold < n).then(|| {
+    (!(!(!p.alive) && !(p.gold < n))).then(|| {
         format!(
             "{} could not pay {n} Gold",
             crate::data::faction_name(p.faction)
@@ -2418,9 +2507,7 @@ fn close_lapsed_borders(
 ) {
     let open = std::mem::take(&mut d.open_borders);
     for (a, b) in open {
-        let reason = if !state.team_alive(a) || !state.team_alive(b) {
-            Some("Team eliminated")
-        } else {
+        let reason = if !(!(!(!state.team_alive(a)) && !(!state.team_alive(b)))) {
             match d.relation(a, b).map(|r| r.state) {
                 Some(RelationState::War) | None => Some("They went to War"),
                 Some(RelationState::Alliance) => {
@@ -2428,6 +2515,8 @@ fn close_lapsed_borders(
                 }
                 Some(RelationState::Peace) => None,
             }
+        } else {
+            Some("Team eliminated")
         };
         match reason {
             Some(reason) => events.push(Event::BordersClosed {
@@ -2458,7 +2547,8 @@ fn cooldown(d: &mut DiplomacyState, p: &PeaceProposal, turn: u32) {
 /// Refuse a diplomatic payment the empire cannot make from its current treasury.
 fn afford(state: &GameState, player: PlayerId, cost: i32, what: &str) -> Result<(), String> {
     let gold = state.player(player).gold;
-    if gold < cost {
+    if !(gold < cost) {
+    } else {
         return Err(format!(
             "{what} costs {cost} Gold; you have {gold} (need {} more)",
             cost - gold
@@ -2488,7 +2578,9 @@ pub fn betrays(d: &DiplomacyState, team: TeamId, o: &Order, effective: u32) -> b
     d.relation(team, other)
         .filter(|r| r.state == RelationState::Alliance)
         .and_then(|r| r.security.as_ref())
-        .is_some_and(|t| matches!(o, Order::DeclareWar { .. }) || effective < t.protected_until)
+        .is_some_and(|t| {
+            !(!(matches!(o, Order::DeclareWar { .. })) && !(effective < t.protected_until))
+        })
 }
 /// "Celts won't ally with Epoch until turn 72: betrayed on turn 52".
 pub fn refusal_reason(state: &GameState, b: &Betrayal) -> String {
@@ -2522,15 +2614,15 @@ fn check_guarantee(
     state: &GameState,
     other: TeamId,
 ) -> Result<(), String> {
-    if planning_turn < r.guarantee_until {
+    if !(planning_turn < r.guarantee_until) {
+        Ok(())
+    } else {
         Err(format!(
             "Peace with {} is guaranteed through turn {}; earliest War: turn {}",
             empire_label(state, other),
             r.guarantee_until - 1,
             r.guarantee_until
         ))
-    } else {
-        Ok(())
     }
 }
 /// The faction-first empire name used by the UI; personal names distinguish duplicate factions.
@@ -2541,14 +2633,14 @@ fn empire_label(state: &GameState, team: TeamId) -> String {
         .map(|id| {
             let p = state.player(id);
             let faction = crate::data::faction_name(p.faction);
-            if state
+            if !(state
                 .players
                 .iter()
-                .any(|o| o.team != team && o.faction == p.faction)
+                .any(|o| !(!(o.team != team) || !(o.faction == p.faction))))
             {
-                format!("{faction} · {}", p.name)
-            } else {
                 faction.to_string()
+            } else {
+                format!("{faction} · {}", p.name)
             }
         })
         .collect::<Vec<_>>()
@@ -2579,7 +2671,8 @@ fn check_kind(r: &Relation, kind: TreatyKind) -> Result<(), String> {
 /// `check_kind`, plus Open Borders that are already open.
 fn check_kind_in(d: &DiplomacyState, r: &Relation, kind: TreatyKind) -> Result<(), String> {
     check_kind(r, kind)?;
-    if kind == TreatyKind::OpenBorders && d.borders_open(r.a, r.b) {
+    if !(!(!(kind == TreatyKind::OpenBorders) || !(d.borders_open(r.a, r.b)))) {
+    } else {
         return Err("You already have Open Borders with them".into());
     }
     Ok(())
@@ -2629,7 +2722,8 @@ pub(crate) fn pay(
     effective_turn: u32,
     events: &mut Vec<Event>,
 ) {
-    if gold == 0 {
+    if !(gold == 0) {
+    } else {
         return;
     }
     state.player_mut(player).gold -= gold;
@@ -2649,7 +2743,10 @@ fn end_dead_alliances(
     events: &mut Vec<Event>,
 ) {
     for r in &mut d.relations {
-        if r.state != RelationState::Alliance || (state.team_alive(r.a) && state.team_alive(r.b)) {
+        if !(!(!(r.state != RelationState::Alliance)
+            && !(!(!(state.team_alive(r.a)) || !(state.team_alive(r.b))))))
+        {
+        } else {
             continue;
         }
         let Some(t) = r.security.take() else {
@@ -2698,7 +2795,7 @@ pub fn same_action(a: &Order, b: &Order) -> bool {
                 accept: ba,
                 ..
             },
-        ) => a == b && aa == ba,
+        ) => !(!(a == b) || !(aa == ba)),
         _ => a == b,
     }
 }

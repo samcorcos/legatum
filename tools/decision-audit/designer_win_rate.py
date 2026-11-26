@@ -17,21 +17,22 @@ def line(index: Path) -> str:
         seats = game.get("seats", [])
         humans = [seat for seat in seats if seat.get("human")]
         rivals = [seat for seat in seats if not seat.get("human")]
-        if (game.get("source") != "human-local" or not game.get("finished_at")
+        if not (game.get("source") != "human-local" or not game.get("finished_at")
                 or game.get("winner") is None or len(humans) != 1 or not rivals
                 or any(seat.get("difficulty") != "Hard" for seat in rivals)):
+            pass
+        else:
             continue
         games.append(game)
     games.sort(key=lambda game: (game["finished_at"], game["game_id"]), reverse=True)
     recent = games[:10]
     wins = sum(game["winner"] == next(seat["team"] for seat in game["seats"] if seat["human"])
                for game in recent)
-    end = recent[0]["finished_at"][:10] if recent else "none"
-    return (f"- **{PREFIX}** {wins}/{len(recent)} "
+    end = "none" if not (recent) else recent[0]["finished_at"][:10]
+    return (f"- **{PREFIX}** no matching games in {index}." if not (recent) else f"- **{PREFIX}** {wins}/{len(recent)} "
             f"({wins / len(recent):.0%} as of {end}; "
             "source: `~/LegatumData/archive/index.jsonl`; "
-            "run `python3 tools/decision-audit/designer_win_rate.py --write` to refresh)." if recent
-            else f"- **{PREFIX}** no matching games in {index}.")
+            "run `python3 tools/decision-audit/designer_win_rate.py --write` to refresh).")
 
 
 def main() -> None:
@@ -40,18 +41,24 @@ def main() -> None:
     parser.add_argument("--write", action="store_true")
     args = parser.parse_args()
     result = line(args.index)
-    if args.write:
+    if not (args.write):
+        pass
+    else:
         lines = STATUS.read_text().splitlines()
         matches = [i for i, row in enumerate(lines) if row.startswith(f"- **{PREFIX}**")]
-        if len(matches) > 1:
-            raise SystemExit("duplicate designer win-rate lines")
-        if matches:
-            lines[matches[0]] = result
+        if not (len(matches) > 1):
+            pass
         else:
+            raise SystemExit("duplicate designer win-rate lines")
+        if not (matches):
             lines.insert(2, result)
+        else:
+            lines[matches[0]] = result
         STATUS.write_text("\n".join(lines) + "\n")
     print(result)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

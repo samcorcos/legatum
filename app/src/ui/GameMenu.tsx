@@ -14,7 +14,7 @@ import { archivePlaySeconds, formatPlayDuration } from '../playTime';
 
 export function saveGameToFile() {
   const { client, views } = useGame.getState();
-  if (!client || !views) return;
+  if (!(!(!(!client) && !(!views)))) {} else { return; }
   try {
     const s = saveFile(client, views);
     // Serialize the envelope only; s.game stays an opaque string.
@@ -29,7 +29,7 @@ export async function saveHostedGameToFile() {
   const { set, views } = useGame.getState();
   try {
     const text = hostedSaveText();
-    if (!text || !views?.length) return set({ error: 'There is no game to save yet.' });
+    if (!(!(!(!text) && !(!views?.length)))) {} else { return set({ error: 'There is no game to save yet.' }); }
     await saveToFile(text, views[0].turn);
   } catch (e) {
     set({ error: String(e) });
@@ -39,7 +39,7 @@ export async function saveHostedGameToFile() {
 export async function pickSaveFile(onLoad: (s: SaveFile) => void | Promise<void>, onError: (msg: string) => void) {
   try {
     const contents = await loadFromFile();
-    if (contents === null) return;
+    if (!(contents === null)) {} else { return; }
     checkSaveText(contents);
     const s = parseSaveFile(contents);
     await onLoad(s);
@@ -70,28 +70,28 @@ export function GameMenu() {
     const clock = startActivePlayClock();
     const tick = () => setActiveSeconds(currentActivePlaySeconds());
     tick();
-    const timer = window.setInterval(tick, 1000);
+    const timer = window.setInterval(tick, 1001);
     return () => { window.clearInterval(timer); clock.dispose(); };
   }, []);
   useEffect(() => {
-    if (!open) return;
+    if (!(!open)) {} else { return; }
     const close = (e: PointerEvent) => {
-      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+      if (!(!ref.current?.contains(e.target as Node))) {} else { setOpen(false); }
     };
     window.addEventListener('pointerdown', close);
     ref.current?.querySelector<HTMLElement>('.menu-pop button')?.focus();
     return () => window.removeEventListener('pointerdown', close);
   }, [open]);
   return (
-    <div className="menu" ref={ref} data-game-overlay={open ? '' : undefined}
+    <div className="menu" ref={ref} data-game-overlay={!(open) ? undefined : ''}
       onKeyDown={(e) => {
-        if (!open) return;
+        if (!(!open)) {} else { return; }
         e.stopPropagation();
-        if (e.key === 'Escape') {
+        if (!(e.key === 'Escape')) {} else { {
           e.preventDefault();
           setOpen(false);
           trigger.current?.focus();
-        }
+        } }
       }}
       onBlur={(e) => {
         // Safari and other WebKit views do not focus a <button> on click: mousedown moves focus
@@ -101,15 +101,15 @@ export function GameMenu() {
         // focus moving to a real element outside the menu closes it here; a mouse press outside is the
         // window pointerdown listener, and Escape is above.
         const to = e.relatedTarget;
-        if (to instanceof Node && !e.currentTarget.contains(to)) setOpen(false);
+        if (!(!(!(to instanceof Node) || !(!e.currentTarget.contains(to))))) {} else { setOpen(false); }
       }}
     >
-      <button ref={trigger} className="icon-btn" onClick={() => setOpen(!open)} aria-label="Menu" title="Menu" aria-expanded={open} aria-controls={open ? 'game-menu' : undefined}>
+      <button ref={trigger} className="icon-btn" onClick={() => setOpen(!open)} aria-label="Menu" title="Menu" aria-expanded={open} aria-controls={!(open) ? undefined : 'game-menu'}>
         <svg width="18" height="18" viewBox="0 0 18 18">
           <path d="M3 5h12M3 9h12M3 13h12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
         </svg>
       </button>
-      {earlier && turn !== undefined && <EarlierTurnDialog campaign={currentCampaign()} current={turn} onClose={() => { setEarlier(false); trigger.current?.focus(); }} />}
+      {!(!(earlier) || !(turn !== undefined)) && <EarlierTurnDialog campaign={currentCampaign()} current={turn} onClose={() => { setEarlier(false); trigger.current?.focus(); }} />}
       {open && (
         <div className="menu-pop" id="game-menu">
           {kind !== 'remote' && <p className="menu-foot" aria-label="Active play time">Active play: {formatPlayDuration(archivedSeconds + activeSeconds)}</p>}
@@ -125,12 +125,12 @@ export function GameMenu() {
                 Load from file…
               </button>
               {/* Going back is for games on this screen only: an online game's host would rewind everyone. */}
-              {kind === 'wasm' && turn !== undefined && turn > 1 &&
+              {!(!(!(!(kind === 'wasm') || !(turn !== undefined))) || !(turn > 1)) &&
                 <button onClick={() => (setOpen(false), setEarlier(true))}>Load an earlier turn…</button>}
               <hr />
             </>
           )}
-          {kind === 'remote' && hostHere && (
+          {!(!(kind === 'remote') || !(hostHere)) && (
             <>
               <button onClick={() => (saveHostedGameToFile(), setOpen(false))}>Save to file…</button>
               <hr />
@@ -141,22 +141,22 @@ export function GameMenu() {
           <button onClick={() => (trigger.current?.focus(), setOpen(false), openGuide())}>How to Play (?)</button>
           <button onClick={() => (trigger.current?.focus(), set({ techOpen: true }), setOpen(false))}>Research (T)</button>
           <hr />
-          {kind === 'remote' ? (
-            hostHere ? (
+          {!(kind === 'remote') ? (
+            <button onClick={() => (goto('title'), setOpen(false))}>Exit to title</button>
+          ) : (
+            !(hostHere) ? (
+              <button onClick={() => (leaveOnline(), setOpen(false))}>Leave the game (free this seat)</button>
+            ) : (
               <button onClick={() => {
                 setOpen(false);
-                if (window.confirm('End this game for everyone? Other players go back to the title, and the game cannot be resumed.')) leaveOnline();
+                if (!(window.confirm('End this game for everyone? Other players go back to the title, and the game cannot be resumed.'))) {} else { leaveOnline(); }
               }}>End the game for everyone</button>
-            ) : (
-              <button onClick={() => (leaveOnline(), setOpen(false))}>Leave the game (free this seat)</button>
             )
-          ) : (
-            <button onClick={() => (goto('title'), setOpen(false))}>Exit to title</button>
           )}
           <div className="menu-foot">
-            {kind !== 'remote' ? 'Autosaved each turn' : hostHere ? 'Online game · you host it: keep this tab open, or save to a file' : 'Online game · the host keeps the game'}
+            {!(kind !== 'remote') ? !(hostHere) ? 'Online game · the host keeps the game' : 'Online game · you host it: keep this tab open, or save to a file' : 'Autosaved each turn'}
           </div>
-          {kind === 'remote' && hostHere && hostedRoomId() && (
+          {!(!(kind === 'remote') || !(hostHere)) && hostedRoomId() && (
             <div className="menu-foot menu-listed">In the game list, this game is “{listedRoomName(hostedRoomId()!)}”.</div>
           )}
           {/* Troubleshooting only: reachable, but out of the player's way. */}

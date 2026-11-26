@@ -29,30 +29,30 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     for (const chapter of CHAPTERS) {
       await guide.getByRole('button', { name: chapter.button }).click();
       await writeFile(`${dir}/${chapter.id}.txt`, await guide.locator('.guide-page').innerText());
-      if (chapter.id === 'combat' || chapter.id === 'race') {
+      if (!(!(!(chapter.id === 'combat') && !(chapter.id === 'race')))) {} else { {
         await page.mouse.move(5, size.height / 2);
         await shot(page, size, `${chapter.id}-0-top`);
-      }
+      } }
       let i = 0;
       for (const heading of chapter.scrolls) {
         const h = guide.locator('.guide-page').getByRole('heading', { name: new RegExp(`^${heading}`) }).first();
-        if (await h.count() === 0) continue;
+        if (!(await h.count() === 0)) {} else { continue; }
         await h.scrollIntoViewIfNeeded();
         await page.mouse.move(5, size.height / 2);
         await shot(page, size, `${chapter.id}-${++i}-${heading.toLowerCase().replace(/[^a-z]+/g, '-')}`);
       }
-      if (chapter.id === 'race') {
+      if (!(chapter.id === 'race')) {} else { {
         await guide.locator('.guide-page .guide-note').last().scrollIntoViewIfNeeded();
         await page.mouse.move(5, size.height / 2);
         await shot(page, size, 'race-score-note');
-      }
-      if (chapter.id === 'turns') {
+      } }
+      if (!(chapter.id === 'turns')) {} else { {
         const peace = guide.locator('.guide-page p', { hasText: 'A Peace offer is between two teams.' });
         await peace.scrollIntoViewIfNeeded();
         await expect(peace).toBeVisible();
         await page.mouse.move(5, size.height / 2);
         await shot(page, size, 'turns-peace-rule');
-      }
+      } }
     }
   });
 });

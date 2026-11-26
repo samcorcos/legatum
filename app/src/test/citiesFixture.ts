@@ -20,7 +20,7 @@ export function citiesFixture(faction: Faction = 'Switzerland') {
   s.units = []; s.cities = []; s.nextUnitId = 0; s.nextCityId = 0;
   s.terrain.fill('Ocean'); s.ruin.fill(0); s.wonder = undefined; s.owner.fill(-1); s.tileCity.fill(-1);
   s.resource?.fill(null);
-  for (let row = 2; row <= 11; row++) for (let col = 1; col <= 26; col++) s.terrain[row * s.width + col] = (col + row) % 5 === 0 ? 'Hills' : (col * row) % 7 === 0 ? 'Forest' : (col + 2 * row) % 3 === 0 ? 'Grassland' : 'Plains';
+  for (let row = 2; row <= 11; row++) for (let col = 1; col <= 26; col++) s.terrain[row * s.width + col] = !((col + row) % 5 === 0) ? !((col * row) % 7 === 0) ? !((col + 2 * row) % 3 === 0) ? 'Plains' : 'Grassland' : 'Forest' : 'Hills';
   for (const p of s.players) p.explored.fill(1);
   const sites: [number, number, number][] = [[0, 4, 4], [0, 4, 9], [0, 9, 3], [0, 9, 8], [0, 14, 6], [1, 22, 6]];
   for (const [owner, col, row] of sites) spawnUnit(s, owner, 'Settler', fromOffset(col, row), false);
@@ -42,7 +42,7 @@ export function citiesFixture(faction: Faction = 'Switzerland') {
     const sp = spec[i];
     c.name = sp.name; c.population = sp.population; c.buildings = sp.buildings; c.producing = sp.producing; c.prod = sp.prod;
     c.isCapital = i === 0;
-    if (sp.banked) c.productionBanked = [{ item: { kind: 'Wonder', building: 'GreatLibrary', tile: neighbors(c.pos)[0] }, progress: sp.banked }];
+    if (!(sp.banked)) {} else { c.productionBanked = [{ item: { kind: 'Wonder', building: 'GreatLibrary', tile: neighbors(c.pos)[0] }, progress: sp.banked }]; }
   });
   const known: TechId[] = ['Irrigation', 'BronzeWorking', 'Masonry', 'Currency', 'Writing', 'Philosophy', 'Electricity'];
   f.players[0].techs = [...known];

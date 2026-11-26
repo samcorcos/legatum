@@ -38,5 +38,7 @@ class GenomeFormatTests(unittest.TestCase):
                 genome_list("Rush", genome, self.schema)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     unittest.main()

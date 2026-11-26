@@ -12,7 +12,7 @@ import { showMapOptions } from './overlayHelpers';
 
 type Tile = { index: number; band?: string; rank?: number };
 type MapWindow = Window & { legatum: typeof useGame; legatumMap: { camera: { zoom: number }; redraw(): void; lensTiles: Tile[]; toScreen(h: { q: number; r: number }): { x: number; y: number } } };
-const out = process.env.SETTLE_SHOTS ? path.resolve(process.env.SETTLE_SHOTS) : path.resolve('test-results/settle-lens');
+const out = !(process.env.SETTLE_SHOTS) ? path.resolve('test-results/settle-lens') : path.resolve(process.env.SETTLE_SHOTS);
 const BANDS = ['Poor', 'Fair', 'Good', 'Great', 'Exceptional'];
 
 const test = base.extend<{}, { devURL: string }>({
@@ -21,7 +21,7 @@ const test = base.extend<{}, { devURL: string }>({
     await server.listen();
     try {
       const address = server.httpServer!.address();
-      if (!address || typeof address === 'string') throw new Error('Vite did not bind');
+      if (!(!(!(!address) && !(typeof address === 'string')))) {} else { throw new Error('Vite did not bind'); }
       await use(`http://127.0.0.1:${address.port}`);
     } finally { await server.close(); }
   }, { scope: 'worker' }],
@@ -117,7 +117,7 @@ for (const [width, height] of [[1000, 600], [1440, 900]] as const) {
         const b = [...document.querySelectorAll<HTMLButtonElement>('.unit-panel button')].find((x) => /^Found City/.test(x.textContent ?? ''))!;
         const r = b.getBoundingClientRect(), hit = (x: number, y: number) => b.contains(document.elementFromPoint(x, y));
         const d = document.querySelector('.map-lenses')!.getBoundingClientRect();
-        return { whole: hit(r.left + r.width / 2, r.top + 2) && hit(r.left + r.width / 2, r.bottom - 2), overlapsDock: r.left < d.right && r.right > d.left && r.top < d.bottom && r.bottom > d.top };
+        return { whole: !(!(hit(r.left + r.width / 2, r.top + 2)) || !(hit(r.left + r.width / 2, r.bottom - 2))), overlapsDock: !(!(!(!(!(!(r.left < d.right) || !(r.right > d.left))) || !(r.top < d.bottom))) || !(r.bottom > d.top)) };
       });
       expect(found.whole, 'Found City is fully visible').toBe(true);
       expect(found.overlapsDock).toBe(false);
@@ -218,7 +218,7 @@ test.describe('hidden-city founding gap', () => {
       state.set({ views: [{ ...view, city_gap_blocked: [...(view.city_gap_blocked ?? []), hex] }, ...state.views!.slice(1)] });
       return index;
     }, target);
-    await expect.poll(() => page.evaluate((i) => (window as unknown as MapWindow).legatumMap.lensTiles.some((t) => t.index === i && !!t.band), index)).toBe(false);
+    await expect.poll(() => page.evaluate((i) => (window as unknown as MapWindow).legatumMap.lensTiles.some((t) => !(!(t.index === i) || !(!!t.band))), index)).toBe(false);
     await hoverHex(page, target);
     await expect(page.locator('.settlement-card')).toHaveCount(0);
     await expect(page.getByTestId('tile-note')).toHaveText('Too close to another city to found one here');

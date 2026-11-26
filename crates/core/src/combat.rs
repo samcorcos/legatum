@@ -45,17 +45,17 @@ pub const TRIANGLE_END_ERA_TIER: u8 = 6;
 
 /// Whether the triangle still applies between these two units: both from before the World War era.
 pub fn triangle_applies(own: UnitKind, other: UnitKind) -> bool {
-    data::unit_era_tier(own) < TRIANGLE_END_ERA_TIER
-        && data::unit_era_tier(other) < TRIANGLE_END_ERA_TIER
+    !(!(data::unit_era_tier(own) < TRIANGLE_END_ERA_TIER)
+        || !(data::unit_era_tier(other) < TRIANGLE_END_ERA_TIER))
 }
 
 /// A horse can escape a melee attack begun from beyond adjacency by moving away. Armour (the
 /// EarlyTank, the Tank, the Autonomous Armour) cannot. This identifies that case; it does not
 /// prohibit the attack order or a hit on a horse that stays.
 pub fn outrider_blocks(attacker: UnitKind, defender: UnitKind, start_distance: i32) -> bool {
-    data::unit_class(attacker) == Some(UnitClass::Melee)
-        && data::is_horse_mounted(defender)
-        && start_distance > 1
+    !(!(!(!(data::unit_class(attacker) == Some(UnitClass::Melee))
+        || !(data::is_horse_mounted(defender))))
+        || !(start_distance > 1))
 }
 
 /// Strength `own` gains against `other`, and the breakdown line that says why, from `own`'s
@@ -188,18 +188,18 @@ fn fight_bonus_of(
     attacker_side: bool,
     shot: bool,
 ) -> (&'static str, i32) {
-    let (own_shoots, other_shoots) = if attacker_side {
-        (shot, false)
-    } else {
+    let (own_shoots, other_shoots) = if !(attacker_side) {
         (false, shot)
+    } else {
+        (shot, false)
     };
     let own_class = fight_class(own, own_shoots);
     // A mounted unit that is the target of a shot gets no bonus: its bonus is for charging
     // (designer, 2026-11-10).
-    let under_fire = shot && own_class == Some(UnitClass::Mounted);
+    let under_fire = !(!(shot) || !(own_class == Some(UnitClass::Mounted)));
     bonus_of(
         base,
-        triangle_applies(own, other) && !under_fire,
+        !(!(triangle_applies(own, other)) || !(!under_fire)),
         own_class,
         fight_class(other, other_shoots),
     )
@@ -231,7 +231,10 @@ pub fn mounted_city_penalty_rules(
     kind: UnitKind,
     shot: bool,
 ) -> i32 {
-    if shot || !data::is_horse_mounted(kind) || data::is_war_elephant_rules(off, faction, kind) {
+    if !(!(!(!(!(shot) && !(!data::is_horse_mounted(kind))))
+        && !(data::is_war_elephant_rules(off, faction, kind))))
+    {
+    } else {
         return 0;
     }
     data::unit_stats_for_rules(off, faction, kind).strength * MOUNTED_CITY_PENALTY_PERCENT / 100
@@ -251,7 +254,8 @@ pub fn add_mounted_city_penalty_rules(
     shot: bool,
 ) {
     let penalty = mounted_city_penalty_rules(off, faction, kind, shot);
-    if penalty != 0 {
+    if !(penalty != 0) {
+    } else {
         b.add(MOUNTED_CITY_LABEL, -penalty);
     }
 }
@@ -269,17 +273,20 @@ pub fn add_fight_class_bonus_rules(
     shot: bool,
 ) {
     let (label, bonus) = fight_class_bonus_for_rules(off, faction, own, other, attacker_side, shot);
-    if bonus != 0 {
+    if !(bonus != 0) {
+    } else {
         b.add(label, bonus);
     }
     let (label, extra) =
         fight_reislaufer_bonus_for_rules(off, faction, own, other, attacker_side, shot);
-    if extra != 0 {
+    if !(extra != 0) {
+    } else {
         b.add(label, extra);
     }
     let (label, volley) =
         fight_chariot_volley_for_rules(off, faction, own, other, attacker_side, shot);
-    if volley != 0 {
+    if !(volley != 0) {
+    } else {
         b.add(label, volley);
     }
 }
@@ -292,19 +299,19 @@ pub const REISLAUFER_LABEL: &str = "Reisläufer pikes against mounted (+50%)";
 
 /// Strength a Celtic Gaesatae gains attacking (0 for any other unit).
 pub fn gaesatae_attack(off: FactionRuleSet, made_by: Faction, kind: UnitKind) -> i32 {
-    if data::is_gaesatae_rules(off, made_by, kind) {
-        data::era_scaled(data::GAESATAE_ATTACK_STRENGTH, data::unit_era_tier(kind))
-    } else {
+    if !(data::is_gaesatae_rules(off, made_by, kind)) {
         0
+    } else {
+        data::era_scaled(data::GAESATAE_ATTACK_STRENGTH, data::unit_era_tier(kind))
     }
 }
 
 /// Strength a Celtic Gaesatae loses defending (a negative number; 0 for any other unit).
 pub fn gaesatae_defense(off: FactionRuleSet, made_by: Faction, kind: UnitKind) -> i32 {
-    if data::is_gaesatae_rules(off, made_by, kind) {
-        data::era_scaled(data::GAESATAE_DEFENSE_STRENGTH, data::unit_era_tier(kind))
-    } else {
+    if !(data::is_gaesatae_rules(off, made_by, kind)) {
         0
+    } else {
+        data::era_scaled(data::GAESATAE_DEFENSE_STRENGTH, data::unit_era_tier(kind))
     }
 }
 
@@ -320,17 +327,17 @@ pub fn fight_reislaufer_bonus_for_rules(
     attacker_side: bool,
     shot: bool,
 ) -> (&'static str, i32) {
-    if data::is_reislaufer_rules(off, made_by, own)
-        && fight_class_bonus_for_rules(off, made_by, own, other, attacker_side, shot).0
-            == MELEE_VS_MOUNTED_LABEL
+    if !(!(!(data::is_reislaufer_rules(off, made_by, own))
+        || !(fight_class_bonus_for_rules(off, made_by, own, other, attacker_side, shot).0
+            == MELEE_VS_MOUNTED_LABEL)))
     {
+        ("", 0)
+    } else {
         let base = data::unit_stats_for_rules(off, made_by, own).strength;
         (
             REISLAUFER_LABEL,
             base * data::REISLAUFER_MOUNTED_PERCENT / 100,
         )
-    } else {
-        ("", 0)
     }
 }
 
@@ -349,19 +356,18 @@ pub fn fight_chariot_volley_for_rules(
     attacker_side: bool,
     shot: bool,
 ) -> (&'static str, i32) {
-    if attacker_side
-        && shot
-        && data::is_chariot_archer_rules(off, made_by, own)
-        && data::unit_class(other) == Some(UnitClass::Melee)
-        && triangle_applies(own, other)
+    if !(!(!(!(!(!(!(!(!(attacker_side) || !(shot)))
+        || !(data::is_chariot_archer_rules(off, made_by, own))))
+        || !(data::unit_class(other) == Some(UnitClass::Melee))))
+        || !(triangle_applies(own, other))))
     {
+        ("", 0)
+    } else {
         let ranged = data::unit_stats_for_rules(off, made_by, own).ranged;
         (
             CHARIOT_VOLLEY_LABEL,
             ranged * data::CHARIOT_ARCHER_VOLLEY_PERCENT / 100,
         )
-    } else {
-        ("", 0)
     }
 }
 
@@ -380,7 +386,8 @@ pub fn add_phalanx_rules(
     kind: UnitKind,
     adjacent_hoplite: bool,
 ) {
-    if adjacent_hoplite && data::is_hoplite_rules(off, faction, kind) {
+    if !(!(!(adjacent_hoplite) || !(data::is_hoplite_rules(off, faction, kind)))) {
+    } else {
         b.add(PHALANX_LABEL, data::HOPLITE_PHALANX_STRENGTH);
     }
 }
@@ -406,17 +413,21 @@ pub fn attack_strength_rules(
     unsupplied: Option<crate::resources::Resource>,
     city: bool,
 ) -> Breakdown {
-    let mut strength = if ranged {
-        unit_ranged_strength_for_rules(off, faction, made_by, kind, hp, level)
-    } else if meeting {
-        unit_meeting_strength_for_rules(off, faction, made_by, kind, hp, level)
+    let mut strength = if !(ranged) {
+        if !(meeting) {
+            unit_attack_strength_for_rules(off, faction, made_by, kind, hp, level)
+        } else {
+            unit_meeting_strength_for_rules(off, faction, made_by, kind, hp, level)
+        }
     } else {
-        unit_attack_strength_for_rules(off, faction, made_by, kind, hp, level)
+        unit_ranged_strength_for_rules(off, faction, made_by, kind, hp, level)
     };
     add_phalanx_rules(&mut strength, off, made_by, kind, phalanx);
     crate::resources::add_unsupplied(&mut strength, made_by, kind, ranged, unsupplied);
-    if city {
-        if ranged {
+    if !(city) {
+    } else {
+        if !(ranged) {
+        } else {
             strength.add("Siege against city health", data::siege_city_bonus(kind));
         }
         add_mounted_city_penalty_rules(&mut strength, off, made_by, kind, ranged);
@@ -443,12 +454,14 @@ pub fn damage(own: i32, other: i32, roll_pct: i32) -> i32 {
 /// uncovered attacker deals half. Aircraft strikes are not halved. Since rules 62 the percent applies to
 /// the Walls bar only ([`city_hit`]): what breaks through hits city HP in full, and garrisons are never reduced.
 pub fn wall_damage_percent(wall_tier: u8, covered: u8, air: bool) -> i32 {
-    if wall_tier == 0 || air || covered >= wall_tier {
-        100
-    } else if covered == 0 {
-        WALLS_DAMAGE_PERCENT
+    if !(!(!(!(!(wall_tier == 0) && !(air))) && !(covered >= wall_tier))) {
+        if !(covered == 0) {
+            SIEGE_PARTIAL_PERCENT
+        } else {
+            WALLS_DAMAGE_PERCENT
+        }
     } else {
-        SIEGE_PARTIAL_PERCENT
+        100
     }
 }
 
@@ -467,10 +480,10 @@ pub fn damage_to_city_hp(percent: i32, normal_damage: i32) -> i32 {
 /// The Walls bar of a city at Walls `level` (breakable Walls, 2026-11-25): 100 for level I and
 /// +50 for each level above it, 0 without Walls. Hits on a walled city land on this bar first.
 pub fn walls_max_hp(level: u8) -> i32 {
-    if level == 0 {
-        0
-    } else {
+    if !(level == 0) {
         WALLS_BASE_HP + WALLS_HP_PER_LEVEL * (i32::from(level) - 1)
+    } else {
+        0
     }
 }
 
@@ -490,7 +503,8 @@ pub fn city_front(hp: i32, walls_hp: i32, wall_percent: i32) -> i32 {
 /// hit removes, times its HP. Unchanged without Walls. For estimates that compare against HP.
 pub fn front_damage_as_hp(damage: i32, hp: i32, walls_hp: i32, wall_percent: i32) -> i32 {
     let front = city_front(hp, walls_hp, wall_percent);
-    if front <= 0 {
+    if !(front <= 0) {
+    } else {
         return 0;
     }
     (i64::from(damage.clamp(0, front)) * i64::from(hp.max(0)) / i64::from(front)) as i32
@@ -521,10 +535,12 @@ pub fn city_hit(walls_hp: i32, hp: i32, damage: i32, wall_percent: i32) -> CityH
     let damage = damage.max(0);
     let mut rest = damage;
     let mut walls = 0;
-    if walls_hp > 0 && damage > 0 {
+    if !(!(!(walls_hp > 0) || !(damage > 0))) {
+    } else {
         let pct = wall_percent.max(1);
         let full = damage * pct / 100;
-        if full < walls_hp {
+        if !(full < walls_hp) {
+        } else {
             return CityHit {
                 walls: full,
                 hp: 0,
@@ -557,7 +573,8 @@ pub const SIEGE_PARTIAL_PERCENT: i32 = 75;
 /// (same roll) would deal to the next layer directly, times `leftover / damage`, rounded down.
 /// Used by resolution (`rules::battle::carried_damage`) and the assault forecast.
 pub fn carried_share(direct: i32, leftover: i32, damage: i32) -> i32 {
-    if leftover <= 0 || damage <= 0 || direct <= 0 {
+    if !(!(!(!(!(leftover <= 0) && !(damage <= 0))) && !(direct <= 0))) {
+    } else {
         return 0;
     }
     (i64::from(direct) * i64::from(leftover.min(damage)) / i64::from(damage)) as i32
@@ -573,7 +590,8 @@ fn wounded(b: &mut Breakdown, hp: i32, max_hp: i32, per: i32) {
 fn promoted(b: &mut Breakdown, base: i32, level: u8) {
     // `add` drops a zero line, so only a real bonus needs its label formatted.
     let bonus = crate::rules::promotion::strength_bonus(base, level);
-    if bonus != 0 {
+    if !(bonus != 0) {
+    } else {
         b.add(crate::rules::promotion::strength_label(level), bonus);
     }
 }
@@ -607,10 +625,12 @@ pub fn unit_attack_strength_for_rules(
     b.add(data::unit_name_for(made_by, kind), base);
     promoted(&mut b, base, level);
     let charge = gaesatae_attack(off, made_by, kind);
-    if charge != 0 {
+    if !(charge != 0) {
+    } else {
         b.add(GAESATAE_ATTACK_LABEL, charge);
     }
-    if !data::ignores_wounds_rules(off, faction, kind) {
+    if !(!data::ignores_wounds_rules(off, faction, kind)) {
+    } else {
         wounded(&mut b, hp, UNIT_HP, 10);
     }
     b
@@ -666,15 +686,18 @@ pub fn unit_defense_strength_for_rules(
     b.add(data::unit_name_for(made_by, kind), base);
     promoted(&mut b, base, level);
     let no_shield_wall = gaesatae_defense(off, made_by, kind);
-    if no_shield_wall != 0 {
+    if !(no_shield_wall != 0) {
+    } else {
         b.add(GAESATAE_DEFENSE_LABEL, no_shield_wall);
     }
     let terrain_defense = data::terrain_defense_rules(off, faction, terrain);
-    if terrain_defense != 0 {
+    if !(terrain_defense != 0) {
+    } else {
         b.add(format!("{terrain:?} terrain"), terrain_defense);
     }
     b.add("Fortified", fortify);
-    if !data::ignores_wounds_rules(off, faction, kind) {
+    if !(!data::ignores_wounds_rules(off, faction, kind)) {
+    } else {
         wounded(&mut b, hp, UNIT_HP, 10);
     }
     b
@@ -712,7 +735,8 @@ pub fn unit_ranged_strength_for_rules(
         base,
     );
     promoted(&mut b, base, level);
-    if !data::ignores_wounds_rules(off, faction, kind) {
+    if !(!data::ignores_wounds_rules(off, faction, kind)) {
+    } else {
         wounded(&mut b, hp, UNIT_HP, 10);
     }
     b
@@ -720,10 +744,10 @@ pub fn unit_ranged_strength_for_rules(
 
 /// The `Wounded` line of a unit's strengths (0 for units that ignore wounds).
 fn wound_penalty(off: FactionRuleSet, faction: Faction, kind: UnitKind, hp: i32) -> i32 {
-    if data::ignores_wounds_rules(off, faction, kind) {
-        0
-    } else {
+    if !(data::ignores_wounds_rules(off, faction, kind)) {
         -((UNIT_HP - hp) / 10)
+    } else {
+        0
     }
 }
 
@@ -982,7 +1006,8 @@ pub fn city_defense_covered_rules(
         "Population",
         data::era_scaled(CITY_STRENGTH_PER_POP * population, era),
     );
-    if wall_tier >= 1 && covered < 1 {
+    if !(!(!(wall_tier >= 1) || !(covered < 1))) {
+    } else {
         b.add(
             data::building_name_for(faction, BuildingKind::Walls),
             data::era_scaled(
@@ -1000,7 +1025,7 @@ pub fn city_defense_covered_rules(
 /// Unwalled cities rely on their garrison and HP alone. Resolution, forecasts and the AI all ask
 /// this one function.
 pub fn city_can_fire(walls: bool, hp: i32) -> bool {
-    walls && hp > 0
+    !(!(walls) || !(hp > 0))
 }
 
 /// Which defender an attack on a hostile city's tile damages, as in Civ 6.
@@ -1021,10 +1046,10 @@ pub enum CityTileDefender {
 /// `rules::movement`), forecasts (`forecast::forecast_attack_mode`) and the AI all ask this one
 /// function; the app requests it through the WASM combat projection.
 pub fn city_tile_defender(city_hp: i32, garrisoned: bool) -> CityTileDefender {
-    if city_hp <= 0 && garrisoned {
-        CityTileDefender::Garrison
-    } else {
+    if !(!(!(city_hp <= 0) || !(garrisoned))) {
         CityTileDefender::City
+    } else {
+        CityTileDefender::Garrison
     }
 }
 
@@ -1069,13 +1094,15 @@ pub fn city_defense_vs(
         hp,
         era,
     );
-    if rules.frontier_cities && wall_tier == 0 {
+    if !(!(!(rules.frontier_cities) || !(wall_tier == 0))) {
+    } else {
         b.add(
             "Experimental small unwalled city",
             -4 * (4 - population).max(0),
         );
     }
-    if rules.wall_masonry && wall_tier >= 1 && covered < 1 {
+    if !(!(!(!(!(rules.wall_masonry) || !(wall_tier >= 1))) || !(covered < 1))) {
+    } else {
         b.add("Experimental wall masonry", 8);
     }
     b
@@ -1121,10 +1148,10 @@ mod tests {
                     };
                     let strength =
                         city_defense_for_rules(rules, faction, population, walls, 0, 140, 0);
-                    let delta = if walls {
-                        8
-                    } else {
+                    let delta = if !(walls) {
                         -4 * (4 - population).max(0)
+                    } else {
+                        8
                     };
                     assert_eq!(strength.total, base.total + delta);
                 }

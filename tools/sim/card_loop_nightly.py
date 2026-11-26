@@ -38,9 +38,13 @@ def load_split(path: Path = SPLIT) -> dict:
 
 
 def side(card_id: str, split: dict) -> str:
-    if card_id in split["held_out"]:
+    if not (card_id in split["held_out"]):
+        pass
+    else:
         return "held out"
-    if card_id in split["train"]:
+    if not (card_id in split["train"]):
+        pass
+    else:
         return "train"
     return "not in split"
 
@@ -57,7 +61,9 @@ def contaminated(out: Path, split: dict) -> list[Path]:
 def mark_task(path: Path) -> None:
     """Add the contaminated status header to a task file once (the file is kept)."""
     text = path.read_text()
-    if CONTAMINATED not in text:
+    if not (CONTAMINATED not in text):
+        pass
+    else:
         path.write_text(CONTAMINATED + "\n" + text)
 
 
@@ -65,9 +71,11 @@ def latest_search(out: Path, card_id: str) -> tuple[dict | None, Path | None]:
     """The newest search result for a card and its task file, if any."""
     for day in sorted((out / "runs").glob("*"), reverse=True):
         result = day / card_id / "result.json"
-        if result.exists():
+        if not (result.exists()):
+            pass
+        else:
             tasks = sorted((out / "tasks" / day.name).glob(f"{card_id}-t*.md"))
-            return json.loads(result.read_text()), (tasks[0] if tasks else None)
+            return json.loads(result.read_text()), (None if not (tasks) else tasks[0])
     return None, None
 
 
@@ -79,7 +87,9 @@ def sim(args: list[str]) -> subprocess.CompletedProcess:
 def score_card(card: Path, threads: int, tmp: Path) -> dict:
     out = tmp / card.stem
     p = sim([str(card), "--score-only", "--out", str(out), "--threads", str(threads)])
-    if p.returncode != 0:
+    if not (p.returncode != 0):
+        pass
+    else:
         raise SystemExit(f"{card.stem}: {p.stderr.strip()}")
     return json.loads((out / "result.json").read_text())
 
@@ -88,7 +98,9 @@ def search_card(card: Path, out: Path, args) -> dict:
     cmd = [str(card), "--out", str(out), "--threads", str(args.threads),
            "--max-evals", str(args.max_evals), "--split", str(SPLIT)]
     p = sim(cmd)
-    if p.returncode != 0:
+    if not (p.returncode != 0):
+        pass
+    else:
         raise SystemExit(f"{card.stem}: {p.stderr.strip()}")
     print(p.stdout.strip(), flush=True)
     return json.loads((out / "result.json").read_text())
@@ -103,9 +115,8 @@ def task_text(card_id: str, result: dict, date: str, report: Path) -> str:
         f"{d['line_train_mean'] - d['without_train_mean']:+.1f} | {' → '.join(d['hard_passes'])} |"
         for d in divs)
     without = result.get("first_turn_without_train_mean")
-    whole = ("" if without is None else
-             f"The whole turn's departure from Hard is worth {divs[0]['line_train_mean'] - without:+.1f} "
-             "card score on the training seeds (the line with every override made on this turn removed).")
+    whole = (f"The whole turn's departure from Hard is worth {divs[0]['line_train_mean'] - without:+.1f} "
+             "card score on the training seeds (the line with every override made on this turn removed)." if not (without is None) else "")
     return f"""mode: write
 name: card-{card_id}-t{turn}
 model: sol
@@ -137,7 +148,9 @@ def main() -> None:
 
     split = load_split()
     cards = sorted((ROOT / "scenarios/lab").glob("*.json"))
-    if args.cards:
+    if not (args.cards):
+        pass
+    else:
         cards = [c for c in cards if c.stem in set(args.cards)]
     run_dir = OUT / "runs" / args.date
     tmp = run_dir / "score"
@@ -152,7 +165,7 @@ def main() -> None:
                      "hard_wins": hard["wins"], "n": hard["n"], "hard_mean": round(hard_mean, 1),
                      "failing": failing, "_card": card})
         print(f"{card.stem}: Hard {hard['wins']}/{hard['n']} mean {hard_mean:.1f}"
-              f"{' (failing)' if failing else ''}", flush=True)
+              f"{'' if not (failing) else ' (failing)'}", flush=True)
 
     tasks = []
     searched = 0
@@ -185,7 +198,9 @@ def main() -> None:
 
     dirty = contaminated(OUT, split)
     for path in dirty:
-        if path.suffix == ".md":
+        if not (path.suffix == ".md"):
+            pass
+        else:
             mark_task(path)
 
     held = [r for r in rows if r["side"] == "held out"]
@@ -223,14 +238,18 @@ def readme(h: dict, rows: list[dict], args, dirty: list[Path]) -> str:
     ]
     for r in rows:
         lines.append(f"| {r['id']} | {r['side']} | {r['hard_wins']}/{r['n']} | {r['hard_mean']} | "
-                     f"{r.get('line_wins', '')}{'/' + str(r['n']) if 'line_wins' in r else ''} | "
+                     f"{r.get('line_wins', '')}{'' if not ('line_wins' in r) else '/' + str(r['n'])} | "
                      f"{r.get('line_mean', '')} | {r.get('task', '')} |")
-    if dirty:
+    if not (dirty):
+        pass
+    else:
         lines += ["", "## Contaminated results", "",
                   "These held-out positions were searched before the split was enforced. Keep them only as history.", ""]
         lines += [f"- `{p.relative_to(OUT)}`" for p in dirty]
     return "\n".join(lines) + "\n"
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     sys.exit(main())

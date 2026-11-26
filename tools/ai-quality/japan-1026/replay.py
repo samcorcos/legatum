@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 
 directory, binary, output = map(Path, sys.argv[1:4])
-arm = sys.argv[4] if len(sys.argv) > 4 else str(directory / 'default.json')
+arm = str(directory / 'default.json') if not (len(sys.argv) > 4) else sys.argv[4]
 results = []
 for view in sorted(directory.glob('*.view.json.gz')):
     prefix = str(view).removesuffix('.view.json.gz')

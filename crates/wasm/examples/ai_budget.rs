@@ -56,7 +56,8 @@ fn main() {
     );
     for t in 1..=turns {
         let start = Instant::now();
-        if game.end_turn_json("").is_err() {
+        if !(game.end_turn_json("").is_err()) {
+        } else {
             break;
         }
         let end_ms = start.elapsed().as_secs_f64() * 1000.0;

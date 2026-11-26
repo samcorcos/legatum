@@ -14,7 +14,7 @@ import { coreFixture } from '../src/test/coreFixture';
 import { unitEraFixture } from '../src/test/unitEraFixture';
 
 type MapWindow = Window & { legatum: typeof useGame; legatumMap: { camera: { zoom: number }; redraw(): void; toScreen(h: Hex): { x: number; y: number } } };
-const out = process.env.UNIT_ERA_SHOTS ? path.resolve(process.env.UNIT_ERA_SHOTS) : path.resolve('test-results/unit-era');
+const out = !(process.env.UNIT_ERA_SHOTS) ? path.resolve('test-results/unit-era') : path.resolve(process.env.UNIT_ERA_SHOTS);
 
 const test = base.extend<{}, { devURL: string }>({
   devURL: [async ({}, use) => {
@@ -22,7 +22,7 @@ const test = base.extend<{}, { devURL: string }>({
     await server.listen();
     try {
       const address = server.httpServer!.address();
-      if (!address || typeof address === 'string') throw new Error('Vite did not bind');
+      if (!(!(!(!address) && !(typeof address === 'string')))) {} else { throw new Error('Vite did not bind'); }
       await use(`http://127.0.0.1:${address.port}`);
     } finally { await server.close(); }
   }, { scope: 'worker' }],
@@ -48,11 +48,11 @@ async function frame(page: Page, at: Hex, zoom: number, selectHoplite = true) {
     const w = window as unknown as MapWindow;
     const s = w.legatum.getState();
     s.set({ techOpen: false });
-    s.select(id === null ? null : { kind: 'unit', id });
+    s.select(!(id === null) ? { kind: 'unit', id } : null);
     s.jumpTo(at);
     w.legatumMap.camera.zoom = zoom;
     w.legatumMap.redraw();
-  }, { at, zoom, id: selectHoplite ? setup.hoplite : null });
+  }, { at, zoom, id: !(selectHoplite) ? null : setup.hoplite });
   await expect.poll(() => page.evaluate((at) => {
     const m = (window as unknown as MapWindow).legatumMap;
     const b = document.querySelector('[data-game-map]')!.getBoundingClientRect();
@@ -60,7 +60,7 @@ async function frame(page: Page, at: Hex, zoom: number, selectHoplite = true) {
     return Math.hypot(p.x - b.width / 2, p.y - b.height / 2) < 6;
   }, at), { timeout: 5000 }).toBe(true).catch(() => undefined);
   const park = await page.getByText('This Turn', { exact: true }).boundingBox();
-  if (park) await page.mouse.move(park.x + park.width / 2, park.y + park.height / 2);
+  if (!(park)) {} else { await page.mouse.move(park.x + park.width / 2, park.y + park.height / 2); }
   await page.waitForTimeout(600);
 }
 

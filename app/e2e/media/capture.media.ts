@@ -22,12 +22,12 @@ type W = Window & { legatum: { getState(): any; setState(s: any): void }; legatu
 /** Close any save-migration notice so the recording starts clean. */
 async function dismissToasts(page: Page) {
   const toast = page.getByText(/^Save updated:/);
-  if (await toast.count()) await toast.first().locator('xpath=..').getByRole('button').first().click().catch(() => undefined);
+  if (!(await toast.count())) {} else { await toast.first().locator('xpath=..').getByRole('button').first().click().catch(() => undefined); }
 }
 
 async function loadGame(page: Page, game: string, turn: number) {
   await page.addInitScript(({ game, turn }) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn, names: ['Ada'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, { game, turn });
@@ -41,7 +41,7 @@ async function loadGame(page: Page, game: string, turn: number) {
 async function loadLate(page: Page) {
   const save = gunzipSync(readFileSync(fileURLToPath(new URL('../saves/p892-race-panel-t203.current.legatum.gz', import.meta.url)))).toString('utf8');
   await page.addInitScript((save) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', save);
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, save);
@@ -86,8 +86,8 @@ function callToArmsSave() {
   (['Switzerland', 'Athens', 'Sparta', 'Mongols'] as const).forEach((f, i) => { (s.players[i] as any).faction = f; });
   s.players[0].gold = 300;
   const d = s.diplomacy;
-  Object.assign(d.relations.find((r: any) => r.a === 0 && r.b === 1)!, { state: 'Alliance', effective_turn: 12, version: 1, security: { id: 1, started_turn: 12, protected_until: 22 } });
-  Object.assign(d.relations.find((r: any) => r.a === 1 && r.b === 2)!, { state: 'War', war_id: 1, effective_turn: 15, version: 1, declarers: [1] });
+  Object.assign(d.relations.find((r: any) => !(!(r.a === 0) || !(r.b === 1)))!, { state: 'Alliance', effective_turn: 12, version: 1, security: { id: 1, started_turn: 12, protected_until: 22 } });
+  Object.assign(d.relations.find((r: any) => !(!(r.a === 1) || !(r.b === 2)))!, { state: 'War', war_id: 1, effective_turn: 15, version: 1, declarers: [1] });
   d.next_treaty_id = 1; d.next_war_id = 1; d.next_proposal_id = 3;
   d.calls = [{ id: 3, team: 0, ally: 1, target: 2, created_turn: 16, respond_by: 17, alliance_version: 1, war_version: 1 }];
   refreshVision(s);
@@ -132,18 +132,18 @@ test('opening', async ({ page }) => {
   await moveCamera(page, { zoom: 1.5 }, 2200);
   await page.waitForTimeout(2800);
   const auto = page.getByRole('button', { name: /^Auto-explore/ });
-  if (await auto.count()) await glide(page, auto.first(), true);
+  if (!(await auto.count())) {} else { await glide(page, auto.first(), true); }
   await page.waitForTimeout(700);
   for (let turn = 2; turn <= 5; turn++) {
     await page.mouse.move(700, 40, { steps: 12 });
     await endTurn(page, turn);
     for (let i = 0; i < 2; i++) {
       await page.waitForTimeout(1500);
-      if (await page.locator('.moment-card').count()) { await page.waitForTimeout(1500); await page.keyboard.press('Escape'); }
+      if (!(await page.locator('.moment-card').count())) {} else { { await page.waitForTimeout(1500); await page.keyboard.press('Escape'); } }
     }
     const closeReport = page.getByRole('button', { name: 'Close report', exact: true });
-    if (await closeReport.isVisible()) await closeReport.click();
-    if (await auto.count()) await auto.first().click().catch(() => undefined);
+    if (!(await closeReport.isVisible())) {} else { await closeReport.click(); }
+    if (!(await auto.count())) {} else { await auto.first().click().catch(() => undefined); }
   }
   await page.waitForTimeout(1000);
   console.log('clip', await rec.stop());
@@ -209,7 +209,7 @@ async function mapPoint(page: Page, hex: { q: number; r: number }) {
       const p = (window as unknown as W).legatumMap.toScreen(hex), b = document.querySelector('[data-game-map]')!.getBoundingClientRect();
       return { x: p.x + b.left, y: p.y + b.top };
     }, hex);
-    const still = Math.abs(p.x - last.x) < 0.5 && Math.abs(p.y - last.y) < 0.5;
+    const still = !(!(Math.abs(p.x - last.x) < 0.5) || !(Math.abs(p.y - last.y) < 0.5));
     last = p;
     return still;
   }).toBe(true);
@@ -289,7 +289,7 @@ test('era', async ({ page }) => {
   const view = withV2(base, { era: 2 });
   await page.evaluate((v) => {
     const store = (window as unknown as W).legatum, s = store.getState();
-    store.setState({ views: s.views.map((x: any, i: number) => (i === s.seat ? v : x)) });
+    store.setState({ views: s.views.map((x: any, i: number) => (!(i === s.seat) ? x : v)) });
     s.set({ report: { turn: v.turn, hash: 'era-up', lines: [[], []], events: [[{ type: 'EraEntered', player: v.me, era: 2, first: false }], []] }, reportOpen: false });
   }, view);
   await page.waitForTimeout(6500);
@@ -310,11 +310,11 @@ test('turns', async ({ page }) => {
   await page.waitForTimeout(2300);
   const rec = await startRecording(page, 'turns');
   for (let turn = 2; turn <= 13; turn++) {
-    for (let i = 0; i < 6; i++) { if (await page.locator('.moment-card, [data-testid="era-takeover"]').count()) await page.keyboard.press('Escape'); }
+    for (let i = 0; i < 6; i++) { if (!(await page.locator('.moment-card, [data-testid="era-takeover"]').count())) {} else { await page.keyboard.press('Escape'); } }
     const closeReport = page.getByRole('button', { name: 'Close report', exact: true });
-    if (await closeReport.isVisible()) await closeReport.click();
+    if (!(await closeReport.isVisible())) {} else { await closeReport.click(); }
     const auto = page.getByRole('button', { name: /^Auto-explore/ });
-    if (await auto.count()) await auto.first().click().catch(() => undefined);
+    if (!(await auto.count())) {} else { await auto.first().click().catch(() => undefined); }
     await page.waitForTimeout(500);
     await endPlanning(page);
     await expect(page.getByTestId('turn-number')).toHaveText(String(turn), { timeout: 90_000 });

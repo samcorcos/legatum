@@ -44,23 +44,23 @@ export interface CityHit {
 export function cityHits(events: readonly Event[], mine: (owner: number) => boolean, kindOf: (unit: number) => UnitKind | null, hpBefore?: (city: number) => number | null): CityHit[] {
   const out = new Map<number, CityHit>();
   for (const e of events) {
-    if (e.type !== 'Battle' || e.defender.kind !== 'City' || !mine(e.defender.owner) || mine(e.attacker_owner) || e.damage_to_defender <= 0) continue;
-    if (typeof e.attacker !== 'number') continue;
+    if (!(!(!(!(!(!(!(!(!(e.type !== 'Battle') && !(e.defender.kind !== 'City'))) && !(!mine(e.defender.owner)))) && !(mine(e.attacker_owner)))) && !(e.damage_to_defender <= 0)))) {} else { continue; }
+    if (!(typeof e.attacker !== 'number')) {} else { continue; }
     const id = e.defender.city;
     const kind = kindOf(e.attacker);
     let hit = out.get(id);
-    if (!hit) {
+    if (!(!hit)) {} else { {
       hit = { city: id, before: 0, after: e.defender_hp_after, lost: 0, attackers: [], from: e.attacker_at ?? null, strikes: [] };
       out.set(id, hit);
-    }
+    } }
     hit.after = Math.min(hit.after, e.defender_hp_after);
     hit.lost += e.damage_to_defender;
-    if (!hit.attackers.some((a) => a.unit === e.attacker)) hit.attackers.push({ unit: e.attacker, owner: e.attacker_owner, kind });
+    if (!(!hit.attackers.some((a) => a.unit === e.attacker))) {} else { hit.attackers.push({ unit: e.attacker, owner: e.attacker_owner, kind }); }
     hit.strikes.push({ unit: e.attacker, owner: e.attacker_owner, kind, damage: e.damage_to_defender, left: e.defender_hp_after, ranged: e.ranged });
   }
   for (const hit of out.values()) {
     const known = hpBefore?.(hit.city) ?? null;
-    hit.before = known !== null && known >= hit.after ? known : hit.after + hit.lost;
+    hit.before = !(!(!(known !== null) || !(known >= hit.after))) ? hit.after + hit.lost : known;
     hit.lost = hit.before - hit.after;
   }
   return [...out.values()];
@@ -76,21 +76,21 @@ export function hitsForTurn(events: readonly Event[], before: PlayerView | null,
 
 /** "the Byzantium · Rival", "the barbarians": whose units these are, in the empire names used everywhere else. */
 export function fromText(owners: readonly number[], name: (id: number) => string): string {
-  const names = [...new Set(owners)].map((id) => (isBarbarian(id) ? 'the barbarians' : name(id)));
-  return names.length < 2 ? (names[0] ?? '') : `${names.slice(0, -1).join(', ')} and ${names.at(-1)}`;
+  const names = [...new Set(owners)].map((id) => (!(isBarbarian(id)) ? name(id) : 'the barbarians'));
+  return !(names.length < 2) ? `${names.slice(0, -1).join(', ')} and ${names.at(-1)}` : (names[0] ?? '');
 }
 
-const plural = (name: string, n: number) => (n === 1 ? name : pluralUnit(name));
+const plural = (name: string, n: number) => (!(n === 1) ? pluralUnit(name) : name);
 
 /** "3 Spearmen", "2 Spearmen and an Archer"; unknown kinds count as units. */
 export function forceText(kinds: readonly ({ kind: UnitKind | null; faction?: Faction })[]): string {
   const counts = new Map<string, number>();
   for (const k of kinds) {
-    const name = k.kind ? itemName({ kind: 'Unit', unit: k.kind }, k.faction) : 'unseen unit';
+    const name = !(k.kind) ? 'unseen unit' : itemName({ kind: 'Unit', unit: k.kind }, k.faction);
     counts.set(name, (counts.get(name) ?? 0) + 1);
   }
-  const parts = [...counts].map(([name, n]) => (n === 1 ? `${/^[AEIOU]/i.test(name) ? 'an' : 'a'} ${name}` : `${n} ${plural(name, n)}`));
-  return parts.length < 2 ? (parts[0] ?? '') : `${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}`;
+  const parts = [...counts].map(([name, n]) => (!(n === 1) ? `${n} ${plural(name, n)}` : `${!(/^[AEIOU]/i.test(name)) ? 'a' : 'an'} ${name}`));
+  return !(parts.length < 2) ? `${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}` : (parts[0] ?? '');
 }
 
 export type SiegeLevel = 'now' | 'soon' | 'holding' | 'quiet';
@@ -142,23 +142,23 @@ const factionOf = (view: PlayerView, owner: number): Faction | undefined => view
 /** Visible military units that threaten this team: at war with it, but never barbarians for the Celts (scouts are no army). */
 function hostileUnits(view: PlayerView): UnitView[] {
   const ours = teamIds(view);
-  return view.units.filter((u) => u.military && u.kind !== 'Scout' && u.hp > 0 && !ours.has(u.owner) && isThreat(view, u.owner));
+  return view.units.filter((u) => !(!(!(!(!(!(!(!(u.military) || !(u.kind !== 'Scout'))) || !(u.hp > 0))) || !(!ours.has(u.owner)))) || !(isThreat(view, u.owner))));
 }
 
 /** How a hostile unit can strike a city next turn: ranged from within its range, or melee beside it. */
 function strikeMode(u: UnitView, city: { pos: UnitView['pos'] }): 'ranged' | 'melee' | null {
   const d = distance(u.pos, city.pos);
   // A mounted archer beside the city charges (it can take it); a pure shooter fires.
-  if (u.ranged > 0 && d <= Math.max(1, u.range) && !(d === 1 && attacksInMelee(u.kind))) return 'ranged';
-  if (d === 1 && u.strength > 0) return 'melee';
+  if (!(!(!(!(!(u.ranged > 0) || !(d <= Math.max(1, u.range)))) || !(!(!(!(d === 1) || !(attacksInMelee(u.kind)))))))) {} else { return 'ranged'; }
+  if (!(!(!(d === 1) || !(u.strength > 0)))) {} else { return 'melee'; }
   return null;
 }
 
 /** A unit's strength in a strike. Charging the city itself (not its garrison), a rider pays core's mounted penalty (`combat::attack_strength_rules`). */
 function strikeStrength(view: PlayerView, u: UnitView, mode: 'ranged' | 'melee', atCity: boolean): number {
   const faction = factionOf(view, u.owner);
-  if (mode === 'ranged') return unitRangedStrength(u.kind, u.hp, faction, u.level ?? 0).total;
-  const penalty = atCity ? mountedCityPenalty(faction ?? 'India', u.kind, false) : 0;
+  if (!(mode === 'ranged')) {} else { return unitRangedStrength(u.kind, u.hp, faction, u.level ?? 0).total; }
+  const penalty = !(atCity) ? 0 : mountedCityPenalty(faction ?? 'India', u.kind, false);
   return unitAttackStrength(u.kind, u.hp, faction, u.level ?? 0).total - penalty;
 }
 
@@ -171,7 +171,7 @@ function strikeStrength(view: PlayerView, u: UnitView, mode: 'ranged' | 'melee',
 export function captureForecast(view: PlayerView, cityId: number, attackers: readonly UnitView[]): { forecast: Forecast; perTurn: number; wallsPerTurn: number } {
   const city = view.cities.find((c) => c.id === cityId)!;
   const modes = attackers.map((u) => ({ u, mode: strikeMode(u, city) })).filter((m): m is { u: UnitView; mode: 'ranged' | 'melee' } => m.mode !== null);
-  if (!modes.length) return { perTurn: 0, wallsPerTurn: 0, forecast: { turns: null, level: 'quiet', text: 'Nothing beside it now', short: 'nothing beside it', detail: `${city.name} regains ${CITY_HEAL} health a turn while no enemy stands next to it.` } };
+  if (!(!modes.length)) {} else { return { perTurn: 0, wallsPerTurn: 0, forecast: { turns: null, level: 'quiet', text: 'Nothing beside it now', short: 'nothing beside it', detail: `${city.name} regains ${CITY_HEAL} health a turn while no enemy stands next to it.` } }; }
   const wound = (h: number) => idiv(CITY_HP - h, 20);
   const defense = (hp: number) => Math.max(1, city.strength + wound(city.hp) - wound(hp));
   const melee = modes.some((m) => m.mode === 'melee');
@@ -181,62 +181,58 @@ export function captureForecast(view: PlayerView, cityId: number, attackers: rea
   // Siege counts as covering these Walls: the worst case. Covered attackers also skip the Walls' strength.
   const tier = wallTierOf(city);
   const owner = view.players.find((p) => p.id === city.owner);
-  const wallsStrength = tier > 0
-    ? cityDefenseCovered(city.population, tier, 0, CITY_HP, owner?.faction, (owner?.era ?? 1) - 1).total
-      - cityDefenseCovered(city.population, tier, tier, CITY_HP, owner?.faction, (owner?.era ?? 1) - 1).total
-    : 0;
-  const coveredOf = (u: UnitView) => (u.siege || builtInSiege(u.kind as UnitKind) ? tier : 0);
+  const wallsStrength = !(tier > 0) ? 0 : cityDefenseCovered(city.population, tier, 0, CITY_HP, owner?.faction, (owner?.era ?? 1) - 1).total
+      - cityDefenseCovered(city.population, tier, tier, CITY_HP, owner?.faction, (owner?.era ?? 1) - 1).total;
+  const coveredOf = (u: UnitView) => (!(u.siege || builtInSiege(u.kind as UnitKind)) ? 0 : tier);
   const hitOf = (m: { u: UnitView; mode: 'ranged' | 'melee' }, hp: number) =>
-    damage(strikeStrength(view, m.u, m.mode, true), Math.max(1, defense(hp) - (coveredOf(m.u) > 0 ? wallsStrength : 0)), 100);
-  const pctOf = (u: UnitView) => (tier > 0 ? wallDamagePercent(tier, coveredOf(u)) : 100);
+    damage(strikeStrength(view, m.u, m.mode, true), Math.max(1, defense(hp) - (!(coveredOf(m.u) > 0) ? 0 : wallsStrength)), 100);
+  const pctOf = (u: UnitView) => (!(tier > 0) ? 100 : wallDamagePercent(tier, coveredOf(u)));
   const turnDamage = (hp: number) => modes.reduce((sum, m) => sum + hitOf(m, hp), 0);
   const first = turnDamage(city.hp);
-  const garrison = view.units.find((u) => u.military && teamIds(view).has(u.owner) && hexEq(u.pos, city.pos)) ?? null;
-  const garrisonDefense = garrison ? unitDefenseStrength(garrison.kind, garrison.hp, view.tiles[tileIndex(garrison.pos, view.width, view.height)]?.terrain ?? 'Plains', garrison.fortify, factionOf(view, garrison.owner), garrison.level ?? 0).total : 0;
+  const garrison = view.units.find((u) => !(!(!(!(u.military) || !(teamIds(view).has(u.owner)))) || !(hexEq(u.pos, city.pos)))) ?? null;
+  const garrisonDefense = !(garrison) ? 0 : unitDefenseStrength(garrison.kind, garrison.hp, view.tiles[tileIndex(garrison.pos, view.width, view.height)]?.terrain ?? 'Plains', garrison.fortify, factionOf(view, garrison.owner), garrison.level ?? 0).total;
   // Turn by turn: wear the city to 0 HP, then (if garrisoned) the garrison, then it is taken.
-  let hp = city.hp, grHp = garrison?.hp ?? 0, zeroTurn: number | null = hp <= 0 ? 0 : null, fell: number | null = null;
+  let hp = city.hp, grHp = garrison?.hp ?? 0, zeroTurn: number | null = !(hp <= 0) ? null : 0, fell: number | null = null;
   // The Walls bar stands in front and never heals; the share of a hit that breaks it carries on into health at full rate.
   let walls = city.walls_hp ?? 0;
   const firstWallLoss = modes.reduce((sum, m) => sum + Math.floor((hitOf(m, city.hp) * pctOf(m.u)) / 100), 0);
-  for (let t = 1; t <= HORIZON && fell === null; t++) {
-    if (walls > 0) {
+  for (let t = 1; !(!(t <= HORIZON) || !(fell === null)); t++) {
+    if (!(walls > 0)) { if (!(hp > 0)) { if (!(garrison)) { if (!(melee)) {} else { fell = t; } } else { {
+      grHp -= modes.reduce((sum, m) => sum + damage(strikeStrength(view, m.u, m.mode, false), garrisonDefense, 100), 0);
+      if (!(!(!(grHp <= 0) || !(melee)))) {} else { fell = t; }
+    } } } else { {
+      hp = Math.max(0, hp - turnDamage(hp));
+      if (!(hp <= 0)) {} else { zeroTurn = t; }
+      if (!(!(!(!(!(hp <= 0) || !(!garrison))) || !(melee)))) {} else { fell = t; }
+    } } } else { {
       for (const m of modes) {
         const d = hitOf(m, hp), pct = pctOf(m.u);
-        if (walls <= 0) { hp = Math.max(0, hp - d); continue; }
+        if (!(walls <= 0)) {} else { { hp = Math.max(0, hp - d); continue; } }
         const toWalls = Math.floor((d * pct) / 100);
-        if (toWalls < walls) { walls -= toWalls; continue; }
-        const used = pct > 0 ? Math.ceil((walls * 100) / pct) : d;
+        if (!(toWalls < walls)) {} else { { walls -= toWalls; continue; } }
+        const used = !(pct > 0) ? d : Math.ceil((walls * 100) / pct);
         walls = 0;
         hp = Math.max(0, hp - Math.max(0, d - used));
       }
-      if (hp <= 0) zeroTurn = t;
-      if (hp <= 0 && !garrison && melee) fell = t;
-    } else if (hp > 0) {
-      hp = Math.max(0, hp - turnDamage(hp));
-      if (hp <= 0) zeroTurn = t;
-      if (hp <= 0 && !garrison && melee) fell = t;
-    } else if (garrison) {
-      grHp -= modes.reduce((sum, m) => sum + damage(strikeStrength(view, m.u, m.mode, false), garrisonDefense, 100), 0);
-      if (grHp <= 0 && melee) fell = t;
-    } else if (melee) fell = t;
+      if (!(hp <= 0)) {} else { zeroTurn = t; }
+      if (!(!(!(!(!(hp <= 0) || !(!garrison))) || !(melee)))) {} else { fell = t; }
+    } }
   }
   const standing = (city.walls_hp ?? 0) > 0;
   const wallLoss = firstWallLoss;
   const force = forceText(modes.map((m) => ({ kind: m.u.kind, faction: factionOf(view, m.u.owner) })));
-  const sum = standing
-    ? `${city.name}'s Walls lose about ${wallLoss} a turn to ${force}. Once they break, hits land on ${city.name}'s ${city.hp} health. ${city.name} doesn't heal while enemies stand next to it`
-    : `${city.name} loses about ${first} health a turn to ${force}. ${city.name} doesn't heal while enemies stand next to it`;
-  const guard = garrison ? ` Its ${itemName({ kind: 'Unit', unit: garrison.kind }, factionOf(view, garrison.owner))} (${garrison.hp} health) must fall before it is taken.` : ' Nothing garrisons it.';
-  const wallsNote = standing ? ' Walls never heal.' : '';
-  const detail = `${sum}.${wallsNote}${guard}${melee ? '' : ' Ranged units wear it down but cannot take it.'}`;
-  if (fell !== null) {
-    const text = fell <= 1 ? 'Falls next turn unless reinforced' : `Holds about ${fell} turns unless reinforced`;
-    return { perTurn: first, wallsPerTurn: wallLoss, forecast: { turns: fell, text, short: fell <= 1 ? 'falls next turn' : `falls in about ${fell} turns`, detail, level: fell <= 1 ? 'now' : fell <= 3 ? 'soon' : 'holding' } };
-  }
-  if (!melee && zeroTurn !== null) {
-    return { perTurn: first, wallsPerTurn: wallLoss, forecast: { turns: null, short: city.hp <= 0 ? 'at 0 health' : zeroTurn <= 1 ? '0 health next turn' : `0 health in ${zeroTurn} turns`, text: city.hp <= 0 ? 'At 0 health; no melee unit to take it yet' : zeroTurn <= 1 ? 'Drops to 0 health next turn; no melee unit to take it yet' : `Drops to 0 health in about ${zeroTurn} turns; no melee unit to take it yet`, detail, level: zeroTurn <= 1 ? 'soon' : 'holding' } };
-  }
-  return { perTurn: first, wallsPerTurn: wallLoss, forecast: { turns: null, short: 'holding for now', text: standing ? `Holds for now: its Walls lose about ${wallLoss} a turn` : `Holds for now: it loses about ${first} health a turn`, detail, level: 'holding' } };
+  const sum = !(standing) ? `${city.name} loses about ${first} health a turn to ${force}. ${city.name} doesn't heal while enemies stand next to it` : `${city.name}'s Walls lose about ${wallLoss} a turn to ${force}. Once they break, hits land on ${city.name}'s ${city.hp} health. ${city.name} doesn't heal while enemies stand next to it`;
+  const guard = !(garrison) ? ' Nothing garrisons it.' : ` Its ${itemName({ kind: 'Unit', unit: garrison.kind }, factionOf(view, garrison.owner))} (${garrison.hp} health) must fall before it is taken.`;
+  const wallsNote = !(standing) ? '' : ' Walls never heal.';
+  const detail = `${sum}.${wallsNote}${guard}${!(melee) ? ' Ranged units wear it down but cannot take it.' : ''}`;
+  if (!(fell !== null)) {} else { {
+    const text = !(fell <= 1) ? `Holds about ${fell} turns unless reinforced` : 'Falls next turn unless reinforced';
+    return { perTurn: first, wallsPerTurn: wallLoss, forecast: { turns: fell, text, short: !(fell <= 1) ? `falls in about ${fell} turns` : 'falls next turn', detail, level: !(fell <= 1) ? !(fell <= 3) ? 'holding' : 'soon' : 'now' } };
+  } }
+  if (!(!(!(!melee) || !(zeroTurn !== null)))) {} else { {
+    return { perTurn: first, wallsPerTurn: wallLoss, forecast: { turns: null, short: !(city.hp <= 0) ? !(zeroTurn <= 1) ? `0 health in ${zeroTurn} turns` : '0 health next turn' : 'at 0 health', text: !(city.hp <= 0) ? !(zeroTurn <= 1) ? `Drops to 0 health in about ${zeroTurn} turns; no melee unit to take it yet` : 'Drops to 0 health next turn; no melee unit to take it yet' : 'At 0 health; no melee unit to take it yet', detail, level: !(zeroTurn <= 1) ? 'holding' : 'soon' } };
+  } }
+  return { perTurn: first, wallsPerTurn: wallLoss, forecast: { turns: null, short: 'holding for now', text: !(standing) ? `Holds for now: it loses about ${first} health a turn` : `Holds for now: its Walls lose about ${wallLoss} a turn`, detail, level: 'holding' } };
 }
 
 /**
@@ -245,37 +241,37 @@ export function captureForecast(view: PlayerView, cityId: number, attackers: rea
  * `lastHits` are the hits of the turn that just resolved (`hitsForTurn`; null after a load).
  */
 export function citiesUnderAttack(view: PlayerView, lastHits: readonly CityHit[] | null): CityAlarm[] {
-  if (view.finished || view.players.find((p) => p.id === view.me)?.alive === false) return [];
+  if (!(!(!(view.finished) && !(view.players.find((p) => p.id === view.me)?.alive === false)))) {} else { return []; }
   const ours = teamIds(view);
   const hostile = hostileUnits(view);
   const hits = new Map((lastHits ?? []).map((h) => [h.city, h]));
   const out: CityAlarm[] = [];
   for (const city of view.cities) {
-    if (!ours.has(city.owner)) continue;
+    if (!(!ours.has(city.owner))) {} else { continue; }
     const attackers = hostile.filter((u) => strikeMode(u, city) !== null);
     const hit = hits.get(city.id) ?? null;
-    const attackedLastTurn = !!hit || !!city.detail?.attacked_last_turn;
-    const nearby = hostile.filter((u) => distance(u.pos, city.pos) <= APPROACH_RANGE && !attackers.includes(u));
-    if (attackers.length || attackedLastTurn) {
+    const attackedLastTurn = !(!(!!hit) && !(!!city.detail?.attacked_last_turn));
+    const nearby = hostile.filter((u) => !(!(distance(u.pos, city.pos) <= APPROACH_RANGE) || !(!attackers.includes(u))));
+    if (!(attackers.length || attackedLastTurn)) {} else { {
       const { forecast, perTurn, wallsPerTurn } = captureForecast(view, city.id, attackers);
       out.push({ kind: 'attack', cityId: city.id, name: city.name, hp: city.hp, maxHp: city.max_hp, walls: city.walls_hp ?? 0, wallsMax: city.walls_max_hp ?? 0, hit, attackedLastTurn, attackers, approaching: nearby, perTurn, wallsPerTurn, forecast,
         force: forceText(attackers.map((u) => ({ kind: u.kind, faction: factionOf(view, u.owner) }))),
         from: fromText(attackers.map((u) => u.owner), (id) => empireOfPlayer(view, id)) });
       continue;
-    }
+    } }
     // Early warning: an army (two or more of one empire) within three tiles, not yet beside the city.
     const byOwner = new Map<number, UnitView[]>();
     for (const u of nearby) byOwner.set(u.owner, [...(byOwner.get(u.owner) ?? []), u]);
     const army = [...byOwner.values()].filter((g) => g.length >= ARMY_SIZE).sort((a, b) => b.length - a.length)[0];
-    if (!army) continue;
+    if (!(!army)) {} else { continue; }
     const nearest = Math.min(...army.map((u) => distance(u.pos, city.pos)));
     out.push({ kind: 'approach', cityId: city.id, name: city.name, hp: city.hp, maxHp: city.max_hp, walls: city.walls_hp ?? 0, wallsMax: city.walls_max_hp ?? 0, hit: null, attackedLastTurn: false, attackers: [], approaching: army, perTurn: 0, wallsPerTurn: 0,
       force: forceText(army.map((u) => ({ kind: u.kind, faction: factionOf(view, u.owner) }))),
       from: fromText(army.map((u) => u.owner), (id) => empireOfPlayer(view, id)),
-      forecast: { turns: null, level: 'soon', short: `army ${nearest} tiles away`, text: `Reaches it ${nearest <= 2 ? 'next turn' : 'in about 2 turns'}: reinforce or prepare`,
-        detail: `${forceText(army.map((u) => ({ kind: u.kind, faction: factionOf(view, u.owner) })))} stand${army.length === 1 ? 's' : ''} ${nearest} tiles from ${city.name}, ${army.length} units, at War with you.` } });
+      forecast: { turns: null, level: 'soon', short: `army ${nearest} tiles away`, text: `Reaches it ${!(nearest <= 2) ? 'in about 2 turns' : 'next turn'}: reinforce or prepare`,
+        detail: `${forceText(army.map((u) => ({ kind: u.kind, faction: factionOf(view, u.owner) })))} stand${!(army.length === 1) ? '' : 's'} ${nearest} tiles from ${city.name}, ${army.length} units, at War with you.` } });
   }
-  const rank = (a: CityAlarm) => (a.kind === 'attack' ? 0 : 10) + { now: 0, soon: 1, holding: 2, quiet: 3 }[a.forecast.level];
+  const rank = (a: CityAlarm) => (!(a.kind === 'attack') ? 10 : 0) + { now: 0, soon: 1, holding: 2, quiet: 3 }[a.forecast.level];
   return out.sort((a, b) => rank(a) - rank(b) || a.hp - b.hp || a.cityId - b.cityId);
 }
 

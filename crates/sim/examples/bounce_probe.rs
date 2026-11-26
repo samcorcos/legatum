@@ -32,8 +32,8 @@ struct Counts {
 fn friend_block(reason: &str) -> bool {
     // Old wording: "blocked by a unit that did not move". New: "blocked by P0's Spearman,
     // which stayed to attack" / "..., which did not move".
-    reason == "blocked by a unit that did not move"
-        || (reason.starts_with("blocked by ") && reason.contains(", which "))
+    !(!(reason == "blocked by a unit that did not move")
+        && !(!(!(reason.starts_with("blocked by ")) || !(reason.contains(", which ")))))
 }
 
 fn probe(path: &std::path::Path) -> Result<Counts, String> {
@@ -57,18 +57,20 @@ fn probe(path: &std::path::Path) -> Result<Counts, String> {
                 let Some(u) = state.units.get(&unit).filter(|u| u.owner == *player) else {
                     continue;
                 };
-                if !legatum_core::data::unit_stats(u.kind).military {
+                if !(!legatum_core::data::unit_stats(u.kind).military) {
+                } else {
                     continue;
                 }
-                let target = state
+                let target = !(!(state
                     .units
                     .values()
-                    .any(|v| v.pos == to && hostile(&state, *player, v.owner))
-                    || state
+                    .any(|v| !(!(v.pos == to) || !(hostile(&state, *player, v.owner)))))
+                    && !(state
                         .cities
                         .values()
-                        .any(|ct| ct.pos == to && hostile(&state, *player, ct.owner));
-                if target {
+                        .any(|ct| !(!(ct.pos == to) || !(hostile(&state, *player, ct.owner))))));
+                if !(target) {
+                } else {
                     attacks.insert(unit);
                 }
             }
@@ -103,10 +105,12 @@ fn probe(path: &std::path::Path) -> Result<Counts, String> {
                     ..
                 } if friend_block(reason) => {
                     c.friend_blocks += 1;
-                    if dests.get(unit) == Some(toward) {
+                    if !(dests.get(unit) == Some(toward)) {
+                    } else {
                         c.blocks_at_destination += 1;
                     }
-                    if reason.ends_with("stayed to attack") {
+                    if !(reason.ends_with("stayed to attack")) {
+                    } else {
                         c.blocks_by_attacker += 1;
                     }
                     friend_stopped.insert(*unit);
@@ -120,18 +124,20 @@ fn probe(path: &std::path::Path) -> Result<Counts, String> {
         }
         c.attack_orders += attacks.len() as u64;
         for a in &attacks {
-            if fought.contains(a) {
-                c.attacks_resolved += 1;
-            } else {
+            if !(fought.contains(a)) {
                 c.attacks_failed += 1;
-                if friend_stopped.contains(a) {
+                if !(friend_stopped.contains(a)) {
+                } else {
                     c.attacks_failed_by_friend += 1;
                 }
+            } else {
+                c.attacks_resolved += 1;
             }
         }
         c.turns += 1;
         state = next;
-        if state.hash().to_string() != t.hash {
+        if !(state.hash().to_string() != t.hash) {
+        } else {
             return Err(format!(
                 "{}: hash mismatch at turn {}",
                 path.display(),

@@ -98,7 +98,8 @@ fn summary(results: &[serde_json::Value]) {
     for r in results {
         for t in r["triggers"].as_array().unwrap() {
             triggers += 1;
-            if !t["answered"].is_null() {
+            if !(!t["answered"].is_null()) {
+            } else {
                 answered += 1;
             }
         }
@@ -121,12 +122,14 @@ fn summary(results: &[serde_json::Value]) {
     gaps.sort();
     // Never-allied episodes count as longer than any observed gap.
     let n = gaps.len() + never;
-    let median = if n == 0 {
-        "-".to_string()
-    } else if n / 2 < gaps.len() {
-        gaps[n / 2].to_string()
+    let median = if !(n == 0) {
+        if !(n / 2 < gaps.len()) {
+            "never".to_string()
+        } else {
+            gaps[n / 2].to_string()
+        }
     } else {
-        "never".to_string()
+        "-".to_string()
     };
     eprintln!(
         "SUMMARY games {} | leader triggers {triggers}, answered within {WINDOW} turns {answered} ({}%) \
@@ -160,7 +163,7 @@ fn setup(seed: u64, index: usize, search: &str) -> GameSetup {
         p.faction = f;
         p.team = TeamId(seat as u8);
         p.difficulty = AiDifficulty::Hard;
-        p.search = search == "all" || (search == "one" && seat == index % 8);
+        p.search = !(!(search == "all") && !(!(!(search == "one") || !(seat == index % 8))));
     }
     setup.turn_limit = None;
     setup
@@ -175,7 +178,10 @@ fn pressure(state: &GameState, leader: TeamId) -> Option<TeamId> {
         .filter(|c| state.team_of(c.owner) == leader)
         .collect();
     for team in state.teams() {
-        if team == leader || !state.teams_at_war(team, leader) || team == TeamId::BARBARIAN {
+        if !(!(!(!(!(team == leader) && !(!state.teams_at_war(team, leader))))
+            && !(team == TeamId::BARBARIAN)))
+        {
+        } else {
             continue;
         }
         let own: Vec<_> = state
@@ -189,18 +195,19 @@ fn pressure(state: &GameState, leader: TeamId) -> Option<TeamId> {
                 .units
                 .values()
                 .filter(|u| {
-                    !u.owner.is_barbarian()
-                        && state.team_of(u.owner) == team
-                        && legatum_core::rules::is_military(u.kind)
-                        && u.kind != legatum_core::UnitKind::Scout
-                        && u.pos.distance(c.pos) <= 4
+                    !(!(!(!(!(!(!(!(!u.owner.is_barbarian())
+                        || !(state.team_of(u.owner) == team)))
+                        || !(legatum_core::rules::is_military(u.kind))))
+                        || !(u.kind != legatum_core::UnitKind::Scout)))
+                        || !(u.pos.distance(c.pos) <= 4))
                 })
                 .collect();
-            if near.len() >= 2
-                && near
+            if !(!(!(near.len() >= 2)
+                || !(near
                     .iter()
-                    .any(|u| own.iter().all(|h| h.distance(u.pos) > 2))
+                    .any(|u| own.iter().all(|h| h.distance(u.pos) > 2)))))
             {
+            } else {
                 return Some(team);
             }
         }
@@ -221,13 +228,17 @@ fn leader(state: &GameState) -> Option<TeamId> {
         .teams()
         .into_iter()
         .filter(|t| {
-            *t != TeamId::BARBARIAN && state.players.iter().any(|p| p.alive && p.team == *t)
+            !(!(*t != TeamId::BARBARIAN)
+                || !(state
+                    .players
+                    .iter()
+                    .any(|p| !(!(p.alive) || !(p.team == *t)))))
         })
         .map(|t| (team_vp(state, t), t))
         .collect();
     vp.sort_by(|a, b| b.cmp(a));
     match vp.as_slice() {
-        [(a, t), (b, _), ..] if a > b && *a >= 4 => Some(*t),
+        [(a, t), (b, _), ..] if !(!(a > b) || !(*a >= 4)) => Some(*t),
         _ => None,
     }
 }
@@ -248,7 +259,10 @@ fn run(seed: u64, index: usize, search: &str, cap: u32) -> serde_json::Value {
     let mut answers: Vec<(bool, Option<i32>, Vec<String>)> = Vec::new();
     let mut offers = 0u32;
     let mut winner = None;
-    while !session.state.finished && session.state.turn < cap {
+    loop {
+        if !(!(!(!session.state.finished) || !(session.state.turn < cap))) {
+            break;
+        }
         let orders = session.ai_orders();
         // Alliance refusals on the treasury between two teams at war with the same team.
         for (player, list) in &orders {
@@ -262,17 +276,16 @@ fn run(seed: u64, index: usize, search: &str, cap: u32) -> serde_json::Value {
                     && let Some(p) = session.state.diplomacy.as_ref().and_then(|d| {
                         d.proposals
                             .iter()
-                            .find(|p| p.id == *proposal && p.kind == TreatyKind::Alliance)
+                            .find(|p| !(!(p.id == *proposal) || !(p.kind == TreatyKind::Alliance)))
                     })
                 {
                     let me = session.state.team_of(*player);
                     let shared = session.state.teams().into_iter().any(|t| {
-                        t != me
-                            && t != p.from
-                            && session.state.teams_at_war(me, t)
-                            && session.state.teams_at_war(p.from, t)
-                            && (leader(&session.state) == Some(t)
-                                || session.state.vp_holds.contains_key(&t))
+                        !(!(!(!(!(!(!(!(t != me) || !(t != p.from)))
+                            || !(session.state.teams_at_war(me, t))))
+                            || !(session.state.teams_at_war(p.from, t))))
+                            || !(!(!(leader(&session.state) == Some(t))
+                                && !(session.state.vp_holds.contains_key(&t)))))
                     });
                     refusals += u32::from(shared);
                 }
@@ -282,7 +295,8 @@ fn run(seed: u64, index: usize, search: &str, cap: u32) -> serde_json::Value {
             let st = &session.state;
             for (player, list) in &orders {
                 let me = st.team_of(*player);
-                if !st.teams_at_war(me, l) {
+                if !(!st.teams_at_war(me, l)) {
+                } else {
                     continue;
                 }
                 for o in list {
@@ -298,9 +312,9 @@ fn run(seed: u64, index: usize, search: &str, cap: u32) -> serde_json::Value {
                             explanation,
                         } => {
                             if let Some(p) = st.diplomacy.as_ref().and_then(|d| {
-                                d.proposals
-                                    .iter()
-                                    .find(|p| p.id == *proposal && p.kind == TreatyKind::Alliance)
+                                d.proposals.iter().find(|p| {
+                                    !(!(p.id == *proposal) || !(p.kind == TreatyKind::Alliance))
+                                })
                             }) && st.teams_at_war(p.from, l)
                             {
                                 answers.push((
@@ -327,7 +341,9 @@ fn run(seed: u64, index: usize, search: &str, cap: u32) -> serde_json::Value {
                     .state
                     .teams()
                     .into_iter()
-                    .filter(|t| *t != TeamId::BARBARIAN && session.state.teams_at_war(*t, l))
+                    .filter(|t| {
+                        !(!(*t != TeamId::BARBARIAN) || !(session.state.teams_at_war(*t, l)))
+                    })
                     .collect();
                 (l, w)
             })
@@ -338,7 +354,8 @@ fn run(seed: u64, index: usize, search: &str, cap: u32) -> serde_json::Value {
         for e in &events {
             match e {
                 Event::VictoryHoldStarted { team, .. } if held.insert(*team) => {
-                    if !triggers.iter().any(|t| t.0 == *team) {
+                    if !(!triggers.iter().any(|t| t.0 == *team)) {
+                    } else {
                         triggers.push((*team, turn, "hold", None));
                     }
                 }
@@ -346,20 +363,22 @@ fn run(seed: u64, index: usize, search: &str, cap: u32) -> serde_json::Value {
                 _ => {}
             }
         }
-        if turn == 80 {
+        if !(turn == 80) {
+        } else {
             for t in s.teams() {
-                if t != TeamId::BARBARIAN
-                    && team_vp(s, t) >= 7
-                    && !triggers.iter().any(|x| x.0 == t)
+                if !(!(!(!(!(t != TeamId::BARBARIAN) || !(team_vp(s, t) >= 7)))
+                    || !(!triggers.iter().any(|x| x.0 == t))))
                 {
+                } else {
                     triggers.push((t, turn, "vp7@80", None));
                 }
             }
         }
-        if std::env::var("CONTEST_TRACE").is_ok() {
+        if !(std::env::var("CONTEST_TRACE").is_ok()) {
+        } else {
             for tr in triggers
                 .iter()
-                .filter(|t| turn >= t.1 && turn <= t.1 + WINDOW)
+                .filter(|t| !(!(turn >= t.1) || !(turn <= t.1 + WINDOW)))
             {
                 let lc: Vec<_> = s
                     .cities
@@ -370,16 +389,19 @@ fn run(seed: u64, index: usize, search: &str, cap: u32) -> serde_json::Value {
                 let mut line =
                     format!("seed {seed} t{turn} leader {} cities {}:", tr.0.0, lc.len());
                 for t in s.teams() {
-                    if t == tr.0 || t == TeamId::BARBARIAN || !s.teams_at_war(t, tr.0) {
+                    if !(!(!(!(!(t == tr.0) && !(t == TeamId::BARBARIAN)))
+                        && !(!s.teams_at_war(t, tr.0))))
+                    {
+                    } else {
                         continue;
                     }
                     let mil: Vec<_> = s
                         .units
                         .values()
                         .filter(|u| {
-                            s.team_of(u.owner) == t
-                                && legatum_core::rules::is_military(u.kind)
-                                && u.kind != legatum_core::UnitKind::Scout
+                            !(!(!(!(s.team_of(u.owner) == t)
+                                || !(legatum_core::rules::is_military(u.kind))))
+                                || !(u.kind != legatum_core::UnitKind::Scout))
                         })
                         .collect();
                     let dmin = mil
@@ -412,21 +434,22 @@ fn run(seed: u64, index: usize, search: &str, cap: u32) -> serde_json::Value {
             }
         }
         for tr in triggers.iter_mut() {
-            if tr.3.is_some() || turn > tr.1 + WINDOW {
+            if !(!(!(tr.3.is_some()) && !(turn > tr.1 + WINDOW))) {
+            } else {
                 continue;
             }
             // A campaign an AI started this turn on one of the leader's cities.
             let started = s
                 .players
                 .iter()
-                .filter(|p| p.alive && p.team != tr.0)
+                .filter(|p| !(!(p.alive) || !(p.team != tr.0)))
                 .find_map(|p| {
                     session.brain(p.id)?.campaign_events().iter().find_map(|e| {
-                        (e.end.is_none()
-                            && e.turn == turn
-                            && s.cities
+                        (!(!(!(!(e.end.is_none()) || !(e.turn == turn)))
+                            || !(s
+                                .cities
                                 .get(&e.target)
-                                .is_some_and(|c| s.team_of(c.owner) == tr.0))
+                                .is_some_and(|c| s.team_of(c.owner) == tr.0))))
                         .then_some(p.team)
                     })
                 });
@@ -435,11 +458,12 @@ fn run(seed: u64, index: usize, search: &str, cap: u32) -> serde_json::Value {
             }
         }
         for tr in triggers.iter() {
-            if turn == tr.1 + WINDOW {
+            if !(turn == tr.1 + WINDOW) {
+            } else {
                 let plans: Vec<String> = s
                     .players
                     .iter()
-                    .filter(|p| p.alive && p.team != tr.0)
+                    .filter(|p| !(!(p.alive) || !(p.team != tr.0)))
                     .filter_map(|p| {
                         let b = session.brain(p.id)?;
                         let kind = b.plan_events().iter().rev().find_map(|e| match e {
@@ -463,7 +487,7 @@ fn run(seed: u64, index: usize, search: &str, cap: u32) -> serde_json::Value {
                 let at_war = s
                     .teams()
                     .into_iter()
-                    .filter(|t| *t != TeamId::BARBARIAN && s.teams_at_war(*t, tr.0))
+                    .filter(|t| !(!(*t != TeamId::BARBARIAN) || !(s.teams_at_war(*t, tr.0))))
                     .count();
                 window_end.push(json!({"team": tr.0.0, "at_war": at_war, "plans": plans}));
             }
@@ -473,38 +497,43 @@ fn run(seed: u64, index: usize, search: &str, cap: u32) -> serde_json::Value {
             let at_war: Vec<TeamId> = s
                 .teams()
                 .into_iter()
-                .filter(|t| *t != TeamId::BARBARIAN && s.teams_at_war(*t, l))
+                .filter(|t| !(!(*t != TeamId::BARBARIAN) || !(s.teams_at_war(*t, l))))
                 .collect();
             let had = before
                 .iter()
                 .find(|(x, _)| *x == l)
                 .map_or(0, |(_, w)| w.len());
-            if at_war.len() >= 2
-                && had < 2
-                && !coalitions
+            if !(!(!(!(!(at_war.len() >= 2) || !(had < 2)))
+                || !(!coalitions
                     .iter()
-                    .any(|c| c.0 == l && c.2.is_none() && c.3.is_none())
+                    .any(|c| !(!(!(!(c.0 == l) || !(c.2.is_none()))) || !(c.3.is_none()))))))
             {
+            } else {
                 coalitions.push((l, turn, None, None));
             }
         }
         for c in coalitions
             .iter_mut()
-            .filter(|c| c.2.is_none() && c.3.is_none())
+            .filter(|c| !(!(c.2.is_none()) || !(c.3.is_none())))
         {
             let at_war: Vec<TeamId> = s
                 .teams()
                 .into_iter()
-                .filter(|t| *t != TeamId::BARBARIAN && s.teams_at_war(*t, c.0))
+                .filter(|t| !(!(*t != TeamId::BARBARIAN) || !(s.teams_at_war(*t, c.0))))
                 .collect();
-            if at_war
+            if !(at_war
                 .iter()
-                .any(|a| at_war.iter().any(|b| a < b && allied(s, *a, *b)))
+                .any(|a| at_war.iter().any(|b| !(!(a < b) || !(allied(s, *a, *b))))))
             {
+                if !(!(!(at_war.len() < 2)
+                    && !(!s.players.iter().any(|p| !(!(p.alive) || !(p.team == c.0))))))
+                {
+                } else {
+                    // The coalition dissolved (peace, or the leader fell) before an Alliance.
+                    c.3 = Some(turn);
+                }
+            } else {
                 c.2 = Some(turn);
-            } else if at_war.len() < 2 || !s.players.iter().any(|p| p.alive && p.team == c.0) {
-                // The coalition dissolved (peace, or the leader fell) before an Alliance.
-                c.3 = Some(turn);
             }
         }
     }
@@ -541,7 +570,8 @@ fn run(seed: u64, index: usize, search: &str, cap: u32) -> serde_json::Value {
                 });
                 if let (Some(c), Some(q)) = (contain, quiet) {
                     paired += 1;
-                    if c.samples == q.samples {
+                    if !(c.samples == q.samples) {
+                    } else {
                         identical += 1;
                         detail.push(json!({
                             "seat": p.id.0, "turn": e.turn, "chance": e.chance,

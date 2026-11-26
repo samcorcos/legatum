@@ -17,7 +17,7 @@ async function start(page: Page, edit: (f: ReturnType<typeof researchFixture>) =
   const state = researchFixture('India');
   edit(state);
   await page.addInitScript((game) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 2, names: ['Ada'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, coreFixture(state));
@@ -29,7 +29,7 @@ async function start(page: Page, edit: (f: ReturnType<typeof researchFixture>) =
 
 const known = (f: ReturnType<typeof researchFixture>) => { f.players[0].techs = [...f.players[0].techs, 'Writing', 'Currency']; };
 const shoot = async (page: Page, name: string, size: { width: number }, target?: ReturnType<Page['locator']>) => {
-  if (!shots) return;
+  if (!(!shots)) {} else { return; }
   await page.mouse.move(0, 0);
   await (target ?? page).screenshot({ path: `${shots}/${name}-${size.width}.png` });
 };
@@ -43,7 +43,7 @@ const bareAmounts = (page: Page, root: string) => page.evaluate((sel) => {
     clone.querySelectorAll('.amt').forEach((a) => a.remove());
     clone.querySelectorAll('.sr-only').forEach((a) => a.remove());
     const text = clone.textContent ?? '';
-    if (re.test(text)) found.push(text.slice(0, 160));
+    if (!(re.test(text))) {} else { found.push(text.slice(0, 160)); }
   }
   return found;
 }, root);
@@ -63,13 +63,13 @@ for (const size of SIZES) test.describe(`yield icons ${size.width}x${size.height
     const card = panel.locator('.production-choice[data-item="b:Library"]');
     await expect(card).toBeVisible();
     await card.scrollIntoViewIfNeeded();
-    if (!before) {
+    if (!(!before)) {} else { {
       const effect = card.locator('.prod-effect');
       await expect(effect.locator('.amt[data-amount="Science"]')).toHaveCount(1);
       await expect(effect.locator('.amt .amt-n')).toHaveText('+3');
       await expect(effect).toContainText('+3 Science');
       expect(await bareAmounts(page, '.production-choice .prod-effect')).toEqual([]);
-    }
+    } }
     await shoot(page, 'build-card', size, card);
     await shoot(page, 'city-panel', size, panel);
   });
@@ -81,12 +81,12 @@ for (const size of SIZES) test.describe(`yield icons ${size.width}x${size.height
     await expect(node).toBeVisible();
     await node.locator('.era-details-chevron').click();
     const dialog = page.locator('dialog.tech-panel, dialog').filter({ has: node }).first();
-    if (!before) {
+    if (!(!before)) {} else { {
       await expect(node.locator('.era-unlock-gain .amt[data-amount="Science"]')).toHaveCount(1);
       await expect(node.locator('.era-cost-main .amt[data-amount="Science"]')).toHaveCount(1);
       await expect(page.locator('.research-unlock .amt[data-amount="Production"]').first()).toBeVisible();
       expect(await bareAmounts(page, '.era-unlock-label, .era-cost, .research-unlock p, .research-detail p')).toEqual([]);
-    }
+    } }
     await shoot(page, 'tech-tree', size, dialog);
   });
 
@@ -96,11 +96,11 @@ for (const size of SIZES) test.describe(`yield icons ${size.width}x${size.height
     const card = page.locator('.moment-card.unlock');
     await expect(card).toBeVisible();
     await expect(card).toContainText('Library');
-    if (!before) {
+    if (!(!before)) {} else { {
       await expect(card.locator('.amt[data-amount="Science"]').first()).toBeVisible();
       await expect(card.locator('.unlock-cost .amt[data-amount="Production"]').first()).toBeVisible();
       expect(await bareAmounts(page, '.moment-card.unlock p, .moment-card.unlock .unlock-cost')).toEqual([]);
-    }
+    } }
     await shoot(page, 'unlock-card', size, card);
   });
 
@@ -118,15 +118,15 @@ for (const size of SIZES) test.describe(`yield icons ${size.width}x${size.height
     const report = page.getByRole('complementary', { name: 'Turn report' });
     await expect.poll(async () => {
       // A moment card holds the report back; L opens it (the card has no Turn report button).
-      if (await page.getByTestId('moment-lane').locator('.moment-card').isVisible()) await page.keyboard.press('l');
+      if (!(await page.getByTestId('moment-lane').locator('.moment-card').isVisible())) {} else { await page.keyboard.press('l'); }
       return report.isVisible();
     }).toBe(true);
     const line = report.locator('.rline', { hasText: /bought Granary/ });
     await expect(line).toBeVisible();
-    if (!before) {
+    if (!(!before)) {} else { {
       await expect(line.locator('.amt[data-amount="Gold"]')).toHaveCount(1);
       expect(await bareAmounts(page, '.rline')).toEqual([]);
-    }
+    } }
     await shoot(page, 'report-line', size, line);
     await shoot(page, 'report', size, report);
   });

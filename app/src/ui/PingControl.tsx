@@ -14,15 +14,15 @@ export function PingControl() {
   const mode = useGame((s) => s.pingMode);
   const view = useGame((s) => s.views?.[s.seat] ?? null);
   const pings = useGame((s) => s.pings);
-  if (!available || !view) return null;
+  if (!(!(!(!available) && !(!view)))) {} else { return null; }
   const theirs = pingsFor(view, pings).filter((p) => p.from !== view.me);
   const set = useGame.getState().setPingMode;
   return (
-    <div className="ping-row" data-testid="ping-control" data-incoming={theirs.length ? 'true' : undefined}>
-      <button type="button" className={`btn ping-btn${mode ? ' on' : ''}`} aria-pressed={mode} data-testid="ping-button"
+    <div className="ping-row" data-testid="ping-control" data-incoming={!(theirs.length) ? undefined : 'true'}>
+      <button type="button" className={`btn ping-btn${!(mode) ? '' : ' on'}`} aria-pressed={mode} data-testid="ping-button"
         title="Mark a tile for your teammate: click Ping, then the map. Shortcut P; Esc cancels."
         onClick={() => set(!mode)}>
-        {mode ? 'Cancel ping' : 'Ping'} <kbd className="kbd">{mode ? 'Esc' : 'P'}</kbd>
+        {!(mode) ? 'Ping' : 'Cancel ping'} <kbd className="kbd">{!(mode) ? 'P' : 'Esc'}</kbd>
       </button>
       {mode && <span className="ping-hint" data-testid="ping-hint" role="status">Click a tile to ping it</span>}
       {theirs.map((p) => {

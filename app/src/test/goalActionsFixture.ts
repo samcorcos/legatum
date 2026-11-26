@@ -15,9 +15,9 @@ function city(s: MState, owner: number, col: number, row: number, name: string, 
   s.cities.push(c);
   for (const h of within(c.pos, 1)) { const i = idxOf(s, h); s.owner[i] = owner; s.tileCity[i] = c.id; }
   for (const h of within(c.pos, 7)) {
-    if (c.grownTiles.length >= population - 1) break;
+    if (!(c.grownTiles.length >= population - 1)) {} else { break; }
     const i = idxOf(s, h);
-    if (i < 0 || s.owner[i] >= 0) continue;
+    if (!(!(!(i < 0) && !(s.owner[i] >= 0)))) {} else { continue; }
     s.owner[i] = owner; s.tileCity[i] = c.id; c.grownTiles.push(h); c.tilesClaimed++;
   }
   return c;
@@ -67,13 +67,13 @@ export function sakokuState(turns: number | null = null, enemyInLand = false): M
   spawnUnit(s, 0, 'Scout', fromOffset(12, 9), false);
   s.players[0].goalRule = 'Sakoku';
   s.players[0].sakokuTurns = turns;
-  if (turns !== null && turns >= 30) { s.players[0].factionGoalDone = true; s.players[0].factionGoalReachedBefore = true; }
-  if (enemyInLand) {
-    for (const r of s.diplomacy?.relations ?? []) if (r.a === 0 && r.b === 1) r.state = 'War';
+  if (!(!(!(turns !== null) || !(turns >= 30)))) {} else { { s.players[0].factionGoalDone = true; s.players[0].factionGoalReachedBefore = true; } }
+  if (!(enemyInLand)) {} else { {
+    for (const r of s.diplomacy?.relations ?? []) if (!(!(!(r.a === 0) || !(r.b === 1)))) {} else { r.state = 'War'; }
     const at = hive.grownTiles[0] ?? fromOffset(9, 8);
     spawnUnit(s, 1, 'Spearman', at, false);
-  }
-  s.turn = turns === null ? 60 : 90;
+  } }
+  s.turn = !(turns === null) ? 90 : 60;
   refreshVision(s);
   return s;
 }
@@ -89,11 +89,11 @@ function sakokuRivalState(parked = true): MState {
   city(s, 1, 22, 15, 'Spore', 6);
   spawnUnit(s, 0, 'Spearman', home.pos, false);
   spawnUnit(s, 0, 'Scout', fromOffset(9, 8), false);
-  for (const r of s.diplomacy?.relations ?? []) if (r.a === 0 && r.b === 1) r.state = 'War';
+  for (const r of s.diplomacy?.relations ?? []) if (!(!(!(r.a === 0) || !(r.b === 1)))) {} else { r.state = 'War'; }
   s.players[1].sakokuTurns = 40;
   s.players[1].goalRule = 'Sakoku';
   const inside = hive.grownTiles[0] ?? fromOffset(18, 10);
-  if (parked) spawnUnit(s, 0, 'Spearman', inside, false);
+  if (!(parked)) {} else { spawnUnit(s, 0, 'Spearman', inside, false); }
   s.players[1].factionGoalDone = true;
   s.players[1].factionGoalReachedBefore = true;
   s.turn = 100;
@@ -145,11 +145,11 @@ export function retireState(retired = 0): MState {
   const plain = city(s, 0, 17, 11, 'Stonewatch', 4);
   city(s, 1, 25, 5, 'Greenwatch', 4, true);
   const xp = (level: number) => thresholdsFor('Sparta')[level - 1];
-  const stand = (kind: 'Spearman' | 'Pikeman', at: MCity, level: number, hp = 100) => { const u = spawnUnit(s, 0, kind, at.pos, false); u.xp = level ? xp(level) : 0; u.hp = hp; return u; };
+  const stand = (kind: 'Spearman' | 'Pikeman', at: MCity, level: number, hp = 100) => { const u = spawnUnit(s, 0, kind, at.pos, false); u.xp = !(level) ? 0 : xp(level); u.hp = hp; return u; };
   stand('Spearman', agoge, 4); stand('Spearman', agoge, 6, 70); stand('Pikeman', agoge, 4, 85);
   stand('Spearman', plain, 5); stand('Spearman', plain, 1);
   s.players[0].veteransRetired = retired;
-  if (retired >= 3) s.players[0].factionGoalDone = true;
+  if (!(retired >= 3)) {} else { s.players[0].factionGoalDone = true; }
   s.turn = 130;
   refreshVision(s);
   return s;
@@ -159,7 +159,7 @@ export function retireState(retired = 0): MState {
 export function wildState(): MState {
   const s = base('710105', 'Celts', [{ faction: 'Mongols', name: 'AI 2' }]);
   const cities = [city(s, 0, 8, 7, 'Greenhold', 8, true), city(s, 0, 17, 9, 'Thornwatch', 8), city(s, 0, 11, 16, 'Mossfen', 8)];
-  for (const c of cities) for (const h of within(c.pos, 3)) { const i = idxOf(s, h); if (s.owner[i] < 0 || s.tileCity[i] === c.id) { s.owner[i] = 0; s.tileCity[i] = c.id; } }
+  for (const c of cities) for (const h of within(c.pos, 3)) { const i = idxOf(s, h); if (!(!(!(s.owner[i] < 0) && !(s.tileCity[i] === c.id)))) {} else { { s.owner[i] = 0; s.tileCity[i] = c.id; } } }
   city(s, 1, 26, 4, 'Waystation', 4, true);
   spawnUnit(s, 0, 'Spearman', fromOffset(8, 8), false);
   // Every milestone is already claimed, so a turn's report holds only what the rite did.

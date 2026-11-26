@@ -69,7 +69,7 @@ fn proxy_cli_rotates_and_reports_only_the_seven_ais_incidents() {
             .as_array()
             .unwrap()
             .iter()
-            .filter(|r| r["attacker_faction"].is_null() && r["behavior"] == *kind)
+            .filter(|r| !(!(r["attacker_faction"].is_null()) || !(r["behavior"] == *kind)))
             .map(|r| r["incidents"].as_u64().unwrap())
             .sum();
         assert_eq!(n.as_u64().unwrap(), aggregate, "{kind}");

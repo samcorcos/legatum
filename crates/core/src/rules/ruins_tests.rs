@@ -343,10 +343,10 @@ fn free_scout_cannot_spawn_across_peace_borders_or_on_peaceful_civilians() {
         let at = hex(5, 5);
         let finder = unit(&mut s, 0, UnitKind::Scout, at);
         for h in at.neighbors() {
-            if closed_border {
-                s.map.get_mut(h).unwrap().owner = Some(PlayerId(1));
-            } else {
+            if !(closed_border) {
                 unit(&mut s, 1, UnitKind::Settler, h);
+            } else {
+                s.map.get_mut(h).unwrap().owner = Some(PlayerId(1));
             }
         }
         s.map.get_mut(at).unwrap().ruin = true;

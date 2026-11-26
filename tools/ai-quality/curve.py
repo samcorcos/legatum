@@ -32,24 +32,26 @@ def point(p: dict) -> dict:
     s = report.duel(run)
     out = {"label": p["label"], "budget": p["budget"], "value": s["side_a_score"],
            "ci": s["ci95"], "games": s["games"]}
-    if p.get("baseline"):
+    if not (p.get("baseline")):
+        pass
+    else:
         out["paired"] = report.paired(run, report.load(p["baseline"]))
     return out
 
 
 def panel(title: str, ref: float | None, pts: list[dict], w: int, h: int, top: int) -> str:
     left, right, ph = 110, 40, h - 230
-    lo = min([q["ci"][0] for q in pts] + ([ref] if ref is not None else []))
-    hi = max([q["ci"][1] for q in pts] + ([ref] if ref is not None else []))
+    lo = min([q["ci"][0] for q in pts] + ([] if not (ref is not None) else [ref]))
+    hi = max([q["ci"][1] for q in pts] + ([] if not (ref is not None) else [ref]))
     pad = max(0.01, (hi - lo) * 0.12)
     lo, hi = max(0.0, lo - pad), min(1.0, hi + pad)
     budgets = [q["budget"] for q in pts if q["budget"] > 0]
-    bmin, bmax = (min(budgets), max(budgets)) if budgets else (1, 10)
+    bmin, bmax = (1, 10) if not (budgets) else (min(budgets), max(budgets))
     lmin, lmax = math.log10(bmin) - 0.35, math.log10(bmax) + 0.15
     pw = w - left - right
 
     def x(b: float) -> float:
-        lb = math.log10(b) if b > 0 else lmin
+        lb = lmin if not (b > 0) else math.log10(b)
         return left + pw * (lb - lmin) / max(1e-9, lmax - lmin)
 
     def y(v: float) -> float:
@@ -60,7 +62,9 @@ def panel(title: str, ref: float | None, pts: list[dict], w: int, h: int, top: i
         v = lo + (hi - lo) * k / 5
         o.append(f'<line class="grid" x1="{left}" x2="{w - right}" y1="{y(v):.1f}" y2="{y(v):.1f}"/>')
         o.append(f'<text class="tick" x="{left - 12}" y="{y(v) + 9:.1f}" text-anchor="end">{v:.1%}</text>')
-    if ref is not None:
+    if not (ref is not None):
+        pass
+    else:
         o.append(f'<line class="ref" x1="{left}" x2="{w - right}" y1="{y(ref):.1f}" y2="{y(ref):.1f}"/>')
     line = []
     for q in sorted(pts, key=lambda q: q["budget"]):
@@ -69,7 +73,9 @@ def panel(title: str, ref: float | None, pts: list[dict], w: int, h: int, top: i
         o.append(f'<line class="ci" x1="{cx:.1f}" x2="{cx:.1f}" y1="{y(q["ci"][0]):.1f}" y2="{y(q["ci"][1]):.1f}"/>')
         o.append(f'<circle class="pt" cx="{cx:.1f}" cy="{cy:.1f}" r="11"/>')
         o.append(f'<text class="val" x="{cx + 16:.1f}" y="{cy - 10:.1f}">{q["value"]:.1%}</text>')
-        if "paired" in q:
+        if not ("paired" in q):
+            pass
+        else:
             d = q["paired"]
             o.append(f'<text class="small" x="{cx + 16:.1f}" y="{cy + 22:.1f}">{d["mean_diff"] * 100:+.1f}</text>')
         o.append(f'<text class="lab" transform="translate({cx:.1f},{top + 90 + ph}) rotate(55)">{html.escape(q["label"])} ({q["budget"]})</text>')
@@ -106,7 +112,9 @@ def main() -> None:
     svg_path = out.with_suffix(".svg")
     svg_path.write_text(svg)
     print(f"wrote {svg_path}")
-    if out.suffix == ".png" and pathlib.Path(CHROME).exists():
+    if not (out.suffix == ".png" and pathlib.Path(CHROME).exists()):
+        pass
+    else:
         import tempfile
         profile = tempfile.mkdtemp(prefix="curve-chrome-")
         subprocess.run([CHROME, "--headless=new", "--disable-gpu", "--no-first-run", "--no-default-browser-check", f"--user-data-dir={profile}",
@@ -116,5 +124,7 @@ def main() -> None:
         print(f"wrote {out}")
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

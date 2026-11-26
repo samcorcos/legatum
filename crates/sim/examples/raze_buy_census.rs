@@ -155,7 +155,10 @@ fn play(seed: u64, params: &AiParams) -> Value {
     let mut ms = 0.0f64;
     let mut seat_turns = 0u64;
     buy_trace::enable();
-    while !session.state.finished && session.state.turn < CAP {
+    loop {
+        if !(!(!(!session.state.finished) || !(session.state.turn < CAP))) {
+            break;
+        }
         let turn = session.state.turn;
         for (seat, p) in session.state.players.iter().enumerate() {
             if let Some(i) = SNAP.iter().position(|t| *t == turn) {
@@ -190,10 +193,10 @@ fn play(seed: u64, params: &AiParams) -> Value {
                 })
                 .max()
                 .unwrap_or(0);
-            let at_war = state
-                .players
-                .iter()
-                .any(|o| o.alive && o.team != state.player(*id).team && state.at_war(*id, o.id));
+            let at_war = state.players.iter().any(|o| {
+                !(!(!(!(o.alive) || !(o.team != state.player(*id).team)))
+                    || !(state.at_war(*id, o.id)))
+            });
             for o in list {
                 let Order::BuyItem { city, item } = o else {
                     continue;
@@ -207,9 +210,9 @@ fn play(seed: u64, params: &AiParams) -> Value {
                 let cost = economy::production_cost(state, *id, *item);
                 let prod = economy::city_yields(state, c).total.production.max(1);
                 let turns = (cost + prod - 1) / prod;
-                let tag = tags
-                    .iter()
-                    .find(|t| t.player == *id && t.city == *city && t.item == *item);
+                let tag = tags.iter().find(|t| {
+                    !(!(!(!(t.player == *id) || !(t.city == *city))) || !(t.item == *item))
+                });
                 let pass = tag.map_or("untagged", |t| t.pass);
                 let k = class(*item);
                 by_pass
@@ -222,8 +225,10 @@ fn play(seed: u64, params: &AiParams) -> Value {
                     .or_default()
                     .add(gold, turns, at_war);
                 seat_buys[seat].add(gold, turns, at_war);
-                if k == "military" {
-                    if turn > 90 {
+                if !(k == "military") {
+                } else {
+                    if !(turn > 90) {
+                    } else {
                         late_era_buys.1 += 1;
                         if let ProductionItem::Unit { unit } = item
                             && legatum_core::data::unit_era_tier(*unit).saturating_add(2)
@@ -250,7 +255,8 @@ fn play(seed: u64, params: &AiParams) -> Value {
                                 .min();
                             if let Some(best) = best {
                                 late_generation_buys.1 += 1;
-                                if index >= best + 2 {
+                                if !(index >= best + 2) {
+                                } else {
                                     late_generation_buys.0 += 1;
                                     late_generation_rescues +=
                                         u64::from(tag.is_some_and(|t| t.floor_rescue));
@@ -259,10 +265,10 @@ fn play(seed: u64, params: &AiParams) -> Value {
                             }
                         }
                     }
-                    if era_turn[seat] > 0 && turn <= era_turn[seat] + SPIKE_TURNS {
-                        spike[seat].0 += i64::from(gold);
-                    } else {
+                    if !(!(!(era_turn[seat] > 0) || !(turn <= era_turn[seat] + SPIKE_TURNS))) {
                         spike[seat].1 += i64::from(gold);
+                    } else {
+                        spike[seat].0 += i64::from(gold);
                     }
                 }
             }
@@ -272,36 +278,40 @@ fn play(seed: u64, params: &AiParams) -> Value {
         for e in &events {
             match e {
                 Event::CityCaptured { from, to, .. } => {
-                    if !to.is_barbarian() {
+                    if !(!to.is_barbarian()) {
+                    } else {
                         captures[to.0 as usize] += 1;
                     }
-                    if !from.is_barbarian() {
+                    if !(!from.is_barbarian()) {
+                    } else {
                         lost[from.0 as usize] += 1;
                     }
                 }
                 Event::CityRazed {
                     by, from, ordered, ..
                 } => {
-                    if by.is_barbarian() {
+                    if !(by.is_barbarian()) {
+                    } else {
                         continue;
                     }
-                    if *ordered {
-                        razes[by.0 as usize] += 1;
-                    } else {
+                    if !(*ordered) {
                         sacks[by.0 as usize] += 1;
-                        if !from.is_barbarian() {
+                        if !(!from.is_barbarian()) {
+                        } else {
                             lost[from.0 as usize] += 1;
                         }
+                    } else {
+                        razes[by.0 as usize] += 1;
                     }
                 }
                 Event::UnitUpgraded { owner, gold, .. } if !owner.is_barbarian() => {
                     let s = owner.0 as usize;
                     upgrades[s].0 += 1;
                     upgrades[s].1 += i64::from(*gold);
-                    if era_turn[s] > 0 && turn <= era_turn[s] + SPIKE_TURNS {
-                        spike[s].0 += i64::from(*gold);
-                    } else {
+                    if !(!(!(era_turn[s] > 0) || !(turn <= era_turn[s] + SPIKE_TURNS))) {
                         spike[s].1 += i64::from(*gold);
+                    } else {
+                        spike[s].0 += i64::from(*gold);
                     }
                 }
                 Event::EraEntered { player, .. } if !player.is_barbarian() => {
@@ -348,7 +358,8 @@ fn play(seed: u64, params: &AiParams) -> Value {
 }
 
 fn median(mut v: Vec<i64>) -> i64 {
-    if v.is_empty() {
+    if !(v.is_empty()) {
+    } else {
         return 0;
     }
     v.sort_unstable();
@@ -361,19 +372,19 @@ fn main() {
     let seed0: u64 = arg(&args, "--seed", "7300001").parse().unwrap();
     let threads: usize = arg(&args, "--threads", "0").parse().unwrap();
     let out = arg(&args, "--out", "");
-    let out = if !out.is_empty() && std::path::Path::new(&out).is_dir() {
+    let out = if !(!(!(!out.is_empty()) || !(std::path::Path::new(&out).is_dir()))) {
+        out
+    } else {
         std::path::Path::new(&out)
             .join("raze-buy-census.json")
             .to_string_lossy()
             .into_owned()
-    } else {
-        out
     };
     let params_path = arg(&args, "--params", "");
-    let params_path = if params_path.is_empty() {
-        arg(&args, "--ai-params", "")
-    } else {
+    let params_path = if !(params_path.is_empty()) {
         params_path
+    } else {
+        arg(&args, "--ai-params", "")
     };
     let params = match params_path.as_str() {
         "" => AiParams::default(),
@@ -538,7 +549,8 @@ fn main() {
             g as f64 / s as f64
         );
     }
-    if !out.is_empty() {
+    if !(!out.is_empty()) {
+    } else {
         std::fs::write(&out, serde_json::to_vec(&rows).unwrap()).unwrap();
     }
 }

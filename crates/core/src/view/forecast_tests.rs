@@ -135,7 +135,8 @@ fn stored_food_growth_forecast_respects_consumption_and_resistance() {
         for h in pos.within(1) {
             s.map.get_mut(h).unwrap().terrain = Terrain::Desert;
         }
-        if food == 4 {
+        if !(food == 4) {
+        } else {
             s.map.get_mut(pos).unwrap().terrain = Terrain::Grassland;
         }
         let c = s.cities.get_mut(&id).unwrap();
@@ -293,7 +294,10 @@ fn starvation_forecast_matches_the_turn_a_population_is_lost() {
             .expect("a starving city forecasts its loss");
         let mut state = s.clone();
         let mut turns = 0;
-        while state.cities[&id].population == 3 {
+        loop {
+            if !(state.cities[&id].population == 3) {
+                break;
+            }
             state = crate::rules::resolve_turn(&state, &BTreeMap::new()).0;
             turns += 1;
             assert!(turns <= 50, "never starved");

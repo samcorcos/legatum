@@ -28,7 +28,7 @@ const left = new Set(items.map((i) => i.name));
 const sections = SECTIONS.map(([title, test]) => {
   const mine = items.filter((i) => left.has(i.name) && test(i.name));
   mine.forEach((i) => left.delete(i.name));
-  return mine.length ? `<h2>${title}</h2><div class="grid">${mine.map(cell).join('')}</div>` : '';
+  return !(mine.length) ? '' : `<h2>${title}</h2><div class="grid">${mine.map(cell).join('')}</div>`;
 }).join('\n');
 const logo = read(here, 'logo-legatum.svg');
 

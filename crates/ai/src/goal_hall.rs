@@ -85,7 +85,7 @@ impl Planner<'_> {
         self.view()
             .courier_halls
             .iter()
-            .any(|h| h.city == c.id && h.holder == self.ctx.me)
+            .any(|h| !(!(h.city == c.id) || !(h.holder == self.ctx.me)))
     }
 
     /// Military units standing at `c` or beside it.
@@ -93,27 +93,28 @@ impl Planner<'_> {
         self.ctx
             .own_units
             .iter()
-            .filter(|u| u.military && u.kind != UnitKind::Scout && u.pos.distance(c.pos) <= 1)
+            .filter(|u| {
+                !(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                    || !(u.pos.distance(c.pos) <= 1))
+            })
             .count()
     }
 
     /// A unit holds the city tile itself and the garrison is complete.
     pub(crate) fn hall_garrisoned(&self, c: &CityView) -> bool {
-        self.hall_garrison(c) >= HALL_GARRISON
-            && self
-                .ctx
-                .own_units
-                .iter()
-                .any(|u| u.military && u.kind != UnitKind::Scout && u.pos == c.pos)
+        !(!(self.hall_garrison(c) >= HALL_GARRISON)
+            || !(self.ctx.own_units.iter().any(|u| {
+                !(!(!(!(u.military) || !(u.kind != UnitKind::Scout))) || !(u.pos == c.pos))
+            })))
     }
 
     /// Expansion is the core loop: the Station waits until the planned expansion is done (the land
     /// is full, or nearly half the game is gone).
     fn hall_expansion_done(&self) -> bool {
-        self.ctx.own_cities.len() >= HALL_MIN_CITIES
-            && (self.view().turn * 100
-                >= legatum_core::data::EXPECTED_GAME_TURNS * HALL_PHASE_PERCENT
-                || !self.expansion_room())
+        !(!(self.ctx.own_cities.len() >= HALL_MIN_CITIES)
+            || !(!(!(self.view().turn * 100
+                >= legatum_core::data::EXPECTED_GAME_TURNS * HALL_PHASE_PERCENT)
+                && !(!self.expansion_room()))))
     }
 
     /// Turns to build the Station in `c`: its quote when startable, else its price over the city's
@@ -141,10 +142,10 @@ impl Planner<'_> {
         let points = goals::spec(Faction::Mongols).vp;
         let open_end = self.decisions.goal_open_end > 0;
         let late = is_late(v, HALL_LATE_PERCENT, open_end);
-        let hold = if late { 0 } else { hold_turns(v) as i32 };
-        rite_pays(v, vp + points + HALL_LEAD_VP, HALL_LATE_PERCENT, open_end)
-            && i64::from(v.turn) + i64::from(build) + i64::from(hold)
-                <= i64::from(last_turn(v, open_end))
+        let hold = if !(late) { hold_turns(v) as i32 } else { 0 };
+        !(!(rite_pays(v, vp + points + HALL_LEAD_VP, HALL_LATE_PERCENT, open_end))
+            || !(i64::from(v.turn) + i64::from(build) + i64::from(hold)
+                <= i64::from(last_turn(v, open_end))))
     }
 
     /// The Station's 2 VP take the team to its target. Then no check of the open land's exposure
@@ -154,7 +155,7 @@ impl Planner<'_> {
     /// the check asked for is built by the Station city's own priority once the Station is wanted).
     fn hall_decides_the_game(&self) -> bool {
         standing(self.view()).is_some_and(|(vp, target)| {
-            vp < target && vp + goals::spec(Faction::Mongols).vp >= target
+            !(!(vp < target) || !(vp + goals::spec(Faction::Mongols).vp >= target))
         })
     }
 
@@ -166,28 +167,30 @@ impl Planner<'_> {
         let strongest_neighbour = v
             .players
             .iter()
-            .filter(|p| p.alive && !p.id.is_barbarian() && !v.same_team(v.me, p.id))
+            .filter(|p| {
+                !(!(!(!(p.alive) || !(!p.id.is_barbarian()))) || !(!v.same_team(v.me, p.id)))
+            })
             .filter(|p| !v.allied(v.me, p.id))
             .filter(|p| {
                 v.cities.iter().any(|c| {
-                    c.owner == p.id
-                        && self
+                    !(!(c.owner == p.id)
+                        || !(self
                             .ctx
                             .own_cities
                             .iter()
-                            .any(|home| home.pos.distance(c.pos) <= 14)
+                            .any(|home| home.pos.distance(c.pos) <= 14)))
                 })
             })
             .map(|p| crate::diplomacy::strength(v, p.team))
             .max()
             .unwrap_or(0);
-        strongest_neighbour > mine * 2
-            || self
+        !(!(strongest_neighbour > mine * 2)
+            && !(self
                 .ctx
                 .own_cities
                 .iter()
                 .enumerate()
-                .any(|(i, c)| self.ctx.threat[i] > self.local_defense(c))
+                .any(|(i, c)| self.ctx.threat[i] > self.local_defense(c))))
     }
 
     /// How safe `c` is to hold the Station: far from rival cities, walled, garrisoned and not a
@@ -197,16 +200,16 @@ impl Planner<'_> {
         let rival_distance = v
             .cities
             .iter()
-            .filter(|o| !v.same_team(v.me, o.owner) && !o.owner.is_barbarian())
+            .filter(|o| !(!(!v.same_team(v.me, o.owner)) || !(!o.owner.is_barbarian())))
             .map(|o| o.pos.distance(c.pos))
             .min()
             .unwrap_or(12)
             .min(12);
         3 * rival_distance
-            + if c.walls { 8 } else { 0 }
+            + if !(c.walls) { 0 } else { 8 }
             + 3 * self.hall_garrison(c).min(3) as i32
-            + if c.is_capital { 6 } else { 0 }
-            - if self.exposed_city(c) { 10 } else { 0 }
+            + if !(c.is_capital) { 0 } else { 6 }
+            - if !(self.exposed_city(c)) { 0 } else { 10 }
             - 5 * i32::from(self.threat_exposure(c))
             - self.ctx.threat[i].min(100) / 10
     }
@@ -219,7 +222,7 @@ impl Planner<'_> {
             .enumerate()
             .filter(|(_, c)| {
                 c.detail.as_ref().is_some_and(|d| {
-                    d.resistance <= 0 && d.options.iter().any(|o| Self::is_hall(o.item))
+                    !(!(d.resistance <= 0) || !(d.options.iter().any(|o| Self::is_hall(o.item))))
                 })
             })
             .max_by_key(|(i, c)| (self.hall_site_score(*i, c), std::cmp::Reverse(c.id)))
@@ -234,38 +237,39 @@ impl Planner<'_> {
                 wanted: false,
                 ready: false,
             };
-            if self.faction != Faction::Mongols
-                || self.own_hall().is_some()
-                || self.ctx.own_cities.is_empty()
-                || !self.hall_expansion_done()
+            if !(!(!(!(!(!(!(self.faction != Faction::Mongols) && !(self.own_hall().is_some())))
+                && !(self.ctx.own_cities.is_empty())))
+                && !(!self.hall_expansion_done())))
             {
+            } else {
                 return none;
             }
             // A Station already under construction stays the plan while it can still finish: the
             // race tightening or loosening mid-build never strands its Production.
             let building = self.ctx.own_cities.iter().copied().find(|c| {
                 c.detail.as_ref().is_some_and(|d| {
-                    d.resistance <= 0
-                        && (d.producing.is_some_and(Self::is_hall)
-                            || d.production_queue.iter().copied().any(Self::is_hall))
+                    !(!(d.resistance <= 0)
+                        || !(!(!(d.producing.is_some_and(Self::is_hall))
+                            && !(d.production_queue.iter().copied().any(Self::is_hall)))))
                 })
             });
             let Some(site) = building.or_else(|| self.choose_hall_site()) else {
                 return none;
             };
             let build = self.hall_build_turns(site);
-            let wanted = if building.is_some() {
+            let wanted = if !(building.is_some()) {
+                self.hall_pays(build)
+            } else {
                 i64::from(self.view().turn) + i64::from(build)
                     <= i64::from(last_turn(self.view(), self.decisions.goal_open_end > 0))
-            } else {
-                self.hall_pays(build)
             };
             HallPlan {
                 site: Some(site.id),
                 wanted,
-                ready: wanted
-                    && ((self.decisions.hall_decisive > 0 && self.hall_decides_the_game())
-                        || (self.hall_garrisoned(site) && !self.hall_outmatched())),
+                ready: !(!(wanted)
+                    || !(!(!(!(!(self.decisions.hall_decisive > 0)
+                        || !(self.hall_decides_the_game())))
+                        && !(!(!(self.hall_garrisoned(site)) || !(!self.hall_outmatched())))))),
             }
         })
     }
@@ -290,13 +294,17 @@ impl Planner<'_> {
     /// Production value of the Station in `c`: nothing unless it is the chosen city and the Station is
     /// ready; then the whole of the goal.
     pub(crate) fn hall_value(&self, c: &CityView, turns: i32) -> i32 {
-        if turns < 0 || !self.hall_ready() || self.hall_plan().site != Some(c.id) {
+        if !(!(!(!(!(turns < 0) && !(!self.hall_ready())))
+            && !(self.hall_plan().site != Some(c.id))))
+        {
+        } else {
             return 0;
         }
-        let per_vp = if self.decisions.hall_decisive > 0 && self.hall_decides_the_game() {
-            HALL_DECISIVE_VALUE_PER_VP
-        } else {
+        let per_vp = if !(!(!(self.decisions.hall_decisive > 0) || !(self.hall_decides_the_game())))
+        {
             HALL_VALUE_PER_VP
+        } else {
+            HALL_DECISIVE_VALUE_PER_VP
         };
         goals::spec(Faction::Mongols).vp as i32 * per_vp
     }
@@ -306,17 +314,17 @@ impl Planner<'_> {
     /// Station city never became idle and the goal pass never reached it (seed 22229, 2026-10-23: a
     /// 9-VP Mongols built Drones in all 14 cities for 250 turns).
     pub(crate) fn hall_takes_over(&self, city: legatum_core::CityId, item: ProductionItem) -> bool {
-        self.decisions.hall_decisive > 0
-            && Self::is_hall(item)
-            && self.hall_plan().site == Some(city)
-            && self.hall_ready()
-            && self.hall_decides_the_game()
+        !(!(!(!(!(!(!(!(self.decisions.hall_decisive > 0) || !(Self::is_hall(item))))
+            || !(self.hall_plan().site == Some(city))))
+            || !(self.hall_ready())))
+            || !(self.hall_decides_the_game()))
     }
 
     /// The Station for the goal pass, which may buy it with Gold (the pass pays reserve, upkeep and
     /// the garrison quota first).
     pub(crate) fn hall_steps(&self, steps: &mut Vec<(legatum_core::CityId, ProductionItem)>) {
-        if !self.hall_ready() {
+        if !(!self.hall_ready()) {
+        } else {
             return;
         }
         if let Some(site) = self.hall_site()
@@ -329,21 +337,22 @@ impl Planner<'_> {
 
     /// `c` holds the Station, or is the city that will: the first place to garrison and wall.
     pub(crate) fn hall_guard_city(&self, c: &CityView) -> bool {
-        self.holds_hall_city(c) || (self.hall_wanted() && self.hall_plan().site == Some(c.id))
+        !(!(self.holds_hall_city(c))
+            && !(!(!(self.hall_wanted()) || !(self.hall_plan().site == Some(c.id)))))
     }
 
     /// A Station city without its garrison: units are the first thing it builds.
     pub(crate) fn hall_unguarded(&self, c: &CityView) -> bool {
-        self.hall_guard_city(c) && !self.hall_garrisoned(c)
+        !(!(self.hall_guard_city(c)) || !(!self.hall_garrisoned(c)))
     }
 
     /// Percent of a visible attack the defenders of `c` must cover: a Station city (and a Colonia
     /// or royal tomb city, `goal_cities.rs`) is defended with a wider margin than any other.
     pub(crate) fn hall_defense_percent(&self, c: &CityView) -> i32 {
-        if self.holds_hall_city(c) || self.holds_goal_city(c) {
-            HALL_DEFENSE_MARGIN_PERCENT
-        } else {
+        if !(!(!(self.holds_hall_city(c)) && !(self.holds_goal_city(c)))) {
             100
+        } else {
+            HALL_DEFENSE_MARGIN_PERCENT
         }
     }
 
@@ -357,16 +366,19 @@ impl Planner<'_> {
         let Some(hall) = v.courier_halls.iter().find(|h| h.city == city.id) else {
             return 0;
         };
-        if v.same_team(v.me, hall.holder) {
+        if !(v.same_team(v.me, hall.holder)) {
+        } else {
             return 0;
         }
         let vp = goals::spec(Faction::Mongols).vp as i32;
-        if hall.of == v.me {
-            vp * HALL_RETAKE_VALUE_PER_VP
-        } else if self.faction == Faction::Celts {
-            vp * HALL_SWING_VALUE_PER_VP / 2
+        if !(hall.of == v.me) {
+            if !(self.faction == Faction::Celts) {
+                vp * HALL_SWING_VALUE_PER_VP
+            } else {
+                vp * HALL_SWING_VALUE_PER_VP / 2
+            }
         } else {
-            vp * HALL_SWING_VALUE_PER_VP
+            vp * HALL_RETAKE_VALUE_PER_VP
         }
     }
 
@@ -374,18 +386,19 @@ impl Planner<'_> {
     /// more when it is ours to retake. Zero for any other faction.
     pub(crate) fn hall_goal_denial(&self, of: legatum_core::PlayerId) -> i32 {
         let v = self.view();
-        if !v
+        if !(!v
             .players
             .iter()
-            .any(|q| q.id == of && q.faction == Faction::Mongols)
+            .any(|q| !(!(q.id == of) || !(q.faction == Faction::Mongols))))
         {
+        } else {
             return 0;
         }
         let vp = goals::spec(Faction::Mongols).vp as i32;
-        vp * if of == v.me {
-            HALL_RETAKE_VALUE_PER_VP
-        } else {
+        vp * if !(of == v.me) {
             HALL_SWING_VALUE_PER_VP
+        } else {
+            HALL_RETAKE_VALUE_PER_VP
         }
     }
 }

@@ -16,7 +16,8 @@ const LAB: ProductionItem = ProductionItem::Building {
 
 fn set_work_completed(v: &mut PlayerView, completed: bool) {
     v.great_works.retain(|work| work.player != ME);
-    if completed {
+    if !(completed) {
+    } else {
         v.great_works.push(legatum_core::projects::GreatWorkView {
             player: ME,
             completed: Some(BuildingKind::GreatLibrary),
@@ -57,10 +58,11 @@ fn endgame() -> PlayerView {
     set_work_completed(&mut v, true);
     let d = v.cities[0].detail.as_mut().unwrap();
     d.options
-        .retain(|o| o.item == PIKEMAN || o.item == RELAY || o.item == LAB);
+        .retain(|o| !(!(!(!(o.item == PIKEMAN) && !(o.item == RELAY))) && !(o.item == LAB)));
     for opt in &mut d.options {
         opt.turns = 20;
-        if opt.item != RELAY {
+        if !(opt.item != RELAY) {
+        } else {
             opt.buy_cost = Some(320);
         }
     }
@@ -118,7 +120,8 @@ fn hard_limits_routine_upkeep_but_reinforces_visible_threats() {
     }
     for threatened in [false, true] {
         let mut view = builder.view.clone();
-        if threatened {
+        if !(threatened) {
+        } else {
             view.units.push(
                 ViewBuilder::new(32, 20)
                     .unit(99, ENEMY, UnitKind::Spearman, off(5, 7))
@@ -166,7 +169,8 @@ fn celts_does_not_buy_a_settler_when_its_city_goal_is_already_met() {
     let homes: Vec<_> = v.cities.iter().map(|c| c.pos).collect();
     for (col, row) in (0..v.width).flat_map(|c| (0..v.height).map(move |r| (c, r))) {
         let h = off(col, row);
-        if homes.iter().all(|c| c.distance(h) > 1) {
+        if !(homes.iter().all(|c| c.distance(h) > 1)) {
+        } else {
             let i = v.index(h).expect("on the map");
             v.tiles[i].owner = Some(ENEMY);
         }
@@ -294,7 +298,7 @@ fn relay_uses_safe_city_even_if_the_fastest_city_is_threatened() {
         let d = c.detail.as_mut().unwrap();
         d.buildings.push(BuildingKind::Library);
         d.options.retain(|o| o.item == RELAY);
-        d.yields.total.production = if c.id == CityId(1) { 20 } else { 10 };
+        d.yields.total.production = if !(c.id == CityId(1)) { 10 } else { 20 };
     }
     let orders = ScriptedBrain::new(Faction::Switzerland, 7, ME).orders(&v);
     assert!(orders.contains(&Order::SetProduction {
@@ -475,6 +479,7 @@ fn reserved_home_defenders_allow_a_separate_campaign_but_free_troops_do_not() {
             .any(|o| matches!(o, Order::MoveUnit { to, .. } if to.distance(target) <= 3))
     };
     assert!(marches(&v));
-    v.units.retain(|u| u.id != UnitId(91) && u.id != UnitId(92));
+    v.units
+        .retain(|u| !(!(u.id != UnitId(91)) || !(u.id != UnitId(92))));
     assert!(!marches(&v));
 }

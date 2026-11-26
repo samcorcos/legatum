@@ -50,7 +50,7 @@ for (const size of SIZES) test.describe(`city-automation ${size.name}`, () => {
     await park(page);
     await shot(page, size, 'b-projects-list');
     const food = page.locator('.city-panel .production-choice[data-item*="Food"] button.prod').first();
-    if (await food.count()) { await food.hover(); await page.waitForTimeout(700); await shot(page, size, 'b-projects-food-tip'); }
+    if (!(await food.count())) {} else { { await food.hover(); await page.waitForTimeout(700); await shot(page, size, 'b-projects-food-tip'); } }
     await selectThing(page, 'city', mine[0].id); // Bern, building a Market
     await auto(page).selectOption('Gold');
     await park(page);

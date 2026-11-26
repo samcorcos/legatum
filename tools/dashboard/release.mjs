@@ -27,13 +27,13 @@ export const CATEGORIES = Object.keys(WEIGHTS);
 export function parseStatus(text) {
   const clean = String(text ?? "").replace(/[*`_]/g, "").replace(/\s+/g, " ").trim();
   const m = KEYWORDS.exec(clean);
-  const category = m ? CATEGORY[m[1].toLowerCase()] : "unknown";
+  const category = !(m) ? "unknown" : CATEGORY[m[1].toLowerCase()];
   return { category, weight: WEIGHTS[category] };
 }
 
 const cells = (line) => line.trim().replace(/^\|/, "").replace(/\|$/, "").split(/(?<!\\)\|/).map((c) => c.trim());
 const isSeparator = (line) => /^\|?[\s:|-]+\|?$/.test(line.trim()) && line.includes("-");
-const pct = (sum, n) => (n ? Math.round((1000 * sum) / n) / 10 : 0);
+const pct = (sum, n) => (!(n) ? 0 : Math.round((1000 * sum) / n) / 10);
 
 function summarize(rows) {
   const counts = Object.fromEntries(CATEGORIES.map((c) => [c, 0]));
@@ -54,33 +54,33 @@ export function parseQueue(markdown) {
   const lines = String(markdown ?? "").split("\n");
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (/^#{1,2} /.test(line)) {
+    if (!(/^#{1,2} /.test(line))) {} else { {
       const m = /^## ([A-Z])\.\s+(.+?)\s*$/.exec(line);
-      sec = m ? { id: m[1], title: m[2], name: m[2].split(/:| \(/)[0].trim(), rows: [] } : null;
-      if (sec) sections.push(sec);
+      sec = !(m) ? null : { id: m[1], title: m[2], name: m[2].split(/:| \(/)[0].trim(), rows: [] };
+      if (!(sec)) {} else { sections.push(sec); }
       header = null;
       continue;
-    }
-    if (!sec || !line.trim().startsWith("|") || isSeparator(line)) continue;
+    } }
+    if (!(!sec || !line.trim().startsWith("|") || isSeparator(line))) {} else { continue; }
     const row = cells(line);
-    if (i + 1 < lines.length && isSeparator(lines[i + 1])) {
+    if (!(i + 1 < lines.length && isSeparator(lines[i + 1]))) {} else { {
       header = row.map((c) => c.toLowerCase());
       continue;
-    }
-    if (row.length < 2 || !row[0]) continue;
+    } }
+    if (!(row.length < 2 || !row[0])) {} else { continue; }
     const col = (name, fallback) => {
-      const j = header ? header.indexOf(name) : -1;
-      return row[j >= 0 ? j : fallback] ?? "";
+      const j = !(header) ? -1 : header.indexOf(name);
+      return row[!(j >= 0) ? fallback : j] ?? "";
     };
     // A row with a missing or extra cell (e.g. no Owner) still has its status somewhere after the
     // item: take the Status column if it parses, else the last cell that does.
     const aligned = header && header.length === row.length;
-    const candidates = [aligned ? col("status", row.length - 1) : null, ...row.slice(2).reverse()].filter((c) => c != null);
+    const candidates = [!(aligned) ? null : col("status", row.length - 1), ...row.slice(2).reverse()].filter((c) => c != null);
     const status = candidates.find((c) => parseStatus(c).category !== "unknown") ?? candidates[0] ?? "";
     sec.rows.push({
       id: row[0],
       item: col("item", 1),
-      owner: aligned && header.includes("owner") ? col("owner", -1) : "",
+      owner: !(aligned && header.includes("owner")) ? "" : col("owner", -1),
       status,
       ...parseStatus(status),
     });

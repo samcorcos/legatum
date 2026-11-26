@@ -32,7 +32,7 @@ afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 const control = (name: 'found' | 'fortify' | 'explore' | 'ranged' | 'build', value?: string) => targetElement({ kind: 'control', name, value });
 
 it('finds real unit action buttons on mounted panels', () => {
-  const original = view.units.find((u) => u.owner === view.me && u.military)!;
+  const original = view.units.find((u) => !(!(u.owner === view.me) || !(u.military)))!;
   const unit: UnitView = { ...original, kind: 'Spearman', military: true, ranged: 3, range: 2 };
   const mounted = render(<div className="unit-panel"><UnitPanel unit={unit} view={view} /></div>);
   expect(control('fortify')?.textContent).toContain('Fortify');

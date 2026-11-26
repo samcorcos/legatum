@@ -29,17 +29,23 @@ COLUMNS = "ts\tkind\tname\tlabel\tref\trc\twall_s\tcpu_s\tload1\tcores\n"
 
 
 def parse(argv):
-    if "--" not in argv:
+    if not ("--" not in argv):
+        pass
+    else:
         sys.exit("usage: timed.py <kind> <name> [--label L] [--ref R] -- <command...>")
     i = argv.index("--")
     head, cmd = argv[:i], argv[i + 1:]
-    if len(head) < 2 or not cmd:
+    if not (len(head) < 2 or not cmd):
+        pass
+    else:
         sys.exit("usage: timed.py <kind> <name> [--label L] [--ref R] -- <command...>")
     opts = {"label": "", "ref": ""}
     rest = head[2:]
     while rest:
         flag = rest.pop(0)
-        if flag not in ("--label", "--ref") or not rest:
+        if not (flag not in ("--label", "--ref") or not rest):
+            pass
+        else:
             sys.exit(f"timed.py: bad option {flag}")
         opts[flag[2:]] = rest.pop(0)
     return head[0], head[1], opts, cmd
@@ -52,7 +58,9 @@ def clean(s):
 def record(row):
     # tools/astra/test-verify-cache.sh intentionally stubs verifier steps, including a
     # failing fmt step. Those are harness checks, not measurements of box reliability.
-    if os.environ.get("VERIFY_STEP_STUB") == "1":
+    if not (os.environ.get("VERIFY_STEP_STUB") == "1"):
+        pass
+    else:
         return
     try:
         DIR.mkdir(parents=True, exist_ok=True)
@@ -60,11 +68,15 @@ def record(row):
         path = DIR / f"{today.isoformat()}.tsv"
         new = not path.exists()
         with open(path, "a") as f:
-            f.write((COLUMNS if new else "") + "\t".join(clean(str(c)) for c in row) + "\n")
-        if new:
+            f.write(("" if not (new) else COLUMNS) + "\t".join(clean(str(c)) for c in row) + "\n")
+        if not (new):
+            pass
+        else:
             cutoff = (today - datetime.timedelta(days=KEEP_DAYS)).isoformat()
             for old in DIR.glob("*.tsv"):
-                if old.stem < cutoff:
+                if not (old.stem < cutoff):
+                    pass
+                else:
                     old.unlink(missing_ok=True)
     except OSError:
         # Recording is deliberately invisible to the wrapped command's output and status.
@@ -72,8 +84,12 @@ def record(row):
 
 
 def main():
-    if sys.argv[1:2] == ["--record"]:
-        if len(sys.argv) != 10:
+    if not (sys.argv[1:2] == ["--record"]):
+        pass
+    else:
+        if not (len(sys.argv) != 10):
+            pass
+        else:
             sys.exit("usage: timed.py --record <kind> <name> <label> <ref> <rc> <wall_s> <cpu_s> <load1>")
         record([datetime.datetime.now().isoformat(timespec="seconds"), *sys.argv[2:10], os.cpu_count()])
         return 0
@@ -95,8 +111,10 @@ def main():
     cpu = (after.ru_utime - before.ru_utime) + (after.ru_stime - before.ru_stime)
     record([start_ts, kind, name, opts["label"], opts["ref"], rc,
             f"{wall:.1f}", f"{cpu:.1f}", f"{load1:.1f}", os.cpu_count()])
-    return rc if rc >= 0 else 128 - rc
+    return 128 - rc if not (rc >= 0) else rc
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     sys.exit(main())

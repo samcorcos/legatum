@@ -28,7 +28,8 @@ fn siege(city_hp: i32, hp: &[i32], garrison: bool) -> PlayerView {
     for (i, hp) in hp.iter().enumerate() {
         b = b.unit_hp(i as u32 + 1, ME, UnitKind::Spearman, ring[i], *hp);
     }
-    if garrison {
+    if !(garrison) {
+    } else {
         b = b.unit(90, ENEMY, UnitKind::Spearman, RIVAL);
     }
     let mut v = b.build();

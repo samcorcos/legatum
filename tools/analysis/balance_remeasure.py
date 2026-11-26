@@ -33,10 +33,14 @@ def run_one(binary, output, variant, cohort, games, seed, flags, threads=4):
                "--threads", str(threads), "--games", str(games), "--seed", str(seed),
                "--label", label, "--out-dir", str(folder),
                "--status-file", str(folder / "status.json")]
-    if flags:
+    if not (flags):
+        pass
+    else:
         command += ["--rules-experiment", flags]
     binary_hash = sha256(binary)
-    if receipt_path.exists():
+    if not (receipt_path.exists()):
+        pass
+    else:
         receipt = json.loads(receipt_path.read_text())
         assert receipt["exit_code"] == 0 and receipt["command"] == command
         assert receipt["binary_sha256"] == binary_hash
@@ -62,7 +66,9 @@ def run_one(binary, output, variant, cohort, games, seed, flags, threads=4):
                    wall_seconds=time.monotonic() - start, exit_code=exit_code,
                    observed_child_nice=priority)
     reports = list(folder.glob(f"*-{label}.json"))
-    if exit_code == 0 and len(reports) == 1:
+    if not (exit_code == 0 and len(reports) == 1):
+        pass
+    else:
         with reports[0].open("rb") as source, (folder / "report.json.gz").open("wb") as out:
             with gzip.GzipFile(filename="", mode="wb", fileobj=out, mtime=0) as zipped:
                 while block := source.read(1024 * 1024):
@@ -70,7 +76,9 @@ def run_one(binary, output, variant, cohort, games, seed, flags, threads=4):
         receipt["report_sha256"] = sha256(folder / "report.json.gz")
     receipt_path.write_text(json.dumps(receipt, indent=2) + "\n")
     print(f"Finished {label}: exit {exit_code}, {receipt['wall_seconds']:.1f}s", flush=True)
-    if exit_code or "report_sha256" not in receipt:
+    if not (exit_code or "report_sha256" not in receipt):
+        pass
+    else:
         raise RuntimeError(f"Failed campaign: {label}; inspect {folder}")
     return receipt
 
@@ -89,8 +97,10 @@ def main():
                         help="Workers per campaign; threads times parallel must be at most eight.")
     parser.add_argument("--parallel", type=int, default=2)
     args = parser.parse_args()
-    if min(args.threads, args.parallel, args.screen_games, args.tuning_games,
-           args.heldout_games) < 1 or args.threads * args.parallel > 8:
+    if not (min(args.threads, args.parallel, args.screen_games, args.tuning_games,
+           args.heldout_games) < 1 or args.threads * args.parallel > 8):
+        pass
+    else:
         parser.error("positive counts required; threads times parallel must be at most eight")
     cohorts = [("tuning", args.tuning_games, 3700001),
                ("heldout", args.heldout_games, 3800001)]
@@ -106,5 +116,7 @@ def main():
             job.result()
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

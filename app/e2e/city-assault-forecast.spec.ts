@@ -12,11 +12,11 @@ import { assaultFixture } from '../src/test/assaultFixture';
 
 type GameWindow = Window & { legatum: typeof useGame; legatumMap: { toScreen(hex: Hex): { x: number; y: number } } };
 const fx = assaultFixture();
-const shots = process.env.ASSAULT_SHOTS ? path.resolve(process.env.ASSAULT_SHOTS) : path.resolve('../.progress/art/assault');
+const shots = !(process.env.ASSAULT_SHOTS) ? path.resolve('../.progress/art/assault') : path.resolve(process.env.ASSAULT_SHOTS);
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript((game) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({
       format: 'legatum-save', version: 1, client: 'wasm', turn: 2,
       names: ['Explorer'], savedAt: new Date().toISOString(), game,
@@ -38,7 +38,7 @@ async function cityPoint(page: Page, c: Case) {
     return { x: Math.round(p.x + b.left), y: Math.round(p.y + b.top) };
   }, c.city);
   let last = await at();
-  await expect.poll(async () => { const now = await at(); const still = now.x === last.x && now.y === last.y; last = now; return still; }).toBe(true);
+  await expect.poll(async () => { const now = await at(); const still = !(!(now.x === last.x) || !(now.y === last.y)); last = now; return still; }).toBe(true);
   return last;
 }
 

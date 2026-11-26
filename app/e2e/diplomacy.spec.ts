@@ -9,7 +9,7 @@ import { setMapSeed } from './mapSeed';
 /** Continue a saved game at `turn` (advisor off). */
 async function loadSave(page: Page, game: string, turn: number) {
   await page.addInitScript(({ game, turn }) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn, names: ['Ada'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, { game, turn });
@@ -69,7 +69,7 @@ for (const [width, height] of [[1000, 600], [1440, 900]] as const) {
     const line = panel.getByTestId('unmet-empires');
     await expect(line).toHaveText('?1 empire not met yet. Explore to meet them: offers need contact first.');
     await line.scrollIntoViewIfNeeded();
-    if (process.env.LEGATUM_SHOTS) await page.screenshot({ path: `${process.env.LEGATUM_SHOTS}/unmet-offer-${width}x${height}.png` });
+    if (!(process.env.LEGATUM_SHOTS)) {} else { await page.screenshot({ path: `${process.env.LEGATUM_SHOTS}/unmet-offer-${width}x${height}.png` }); }
   });
 }
 
@@ -83,7 +83,7 @@ test('Diplomacy: an outgoing offer never counts in the inbox badge', async ({ pa
   await endPlanning(page);
   await expect(page.getByTestId('turn-number')).toHaveText('2');
   const closeReport = page.getByRole('button', { name: 'Close report', exact: true });
-  if (await closeReport.isVisible()) await closeReport.click();
+  if (!(await closeReport.isVisible())) {} else { await closeReport.click(); }
   // Our Alliance offer is pending with the AI; nothing awaits our response.
   await inbox.click();
   await expect(page.getByRole('complementary', { name: 'Diplomacy', exact: true })).toContainText('Alliance offered to');
@@ -124,7 +124,7 @@ test('Diplomacy: a human offers an alliance and sees the AI decision and its rea
     await endPlanning(page);
     await expect(page.getByTestId('turn-number')).toHaveText(String(turn));
     const close = page.getByRole('button', { name: 'Close report', exact: true });
-    if (await close.isVisible()) await close.click();
+    if (!(await close.isVisible())) {} else { await close.click(); }
   }
   await inbox.click();
   const panel = page.getByRole('complementary', { name: 'Diplomacy', exact: true });
@@ -206,8 +206,7 @@ for (const size of [{ width: 1440, height: 900 }, { width: 1000, height: 600 }])
       await expect(button).toBeVisible();
       await expect.poll(() => button.evaluate((el) => {
         const b = el.getBoundingClientRect(), scroller = el.closest('.report-body')!;
-        return scroller.scrollTop === 0 && b.top >= 0 && b.bottom <= innerHeight && b.right <= innerWidth
-          && el.contains(document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2));
+        return !(!(!(!(!(!(!(!(scroller.scrollTop === 0) || !(b.top >= 0))) || !(b.bottom <= innerHeight))) || !(b.right <= innerWidth))) || !(el.contains(document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2))));
       })).toBe(true);
     }
     await expect(accept).toHaveClass(/primary/);
@@ -240,7 +239,7 @@ for (const size of [{ width: 1440, height: 900 }, { width: 1000, height: 600 }])
     for (const name of ['Accept Alliance', 'Decline']) {
       const button = card.getByRole('button', { name, exact: true });
       await expect(button).toBeVisible();
-      await expect.poll(() => button.evaluate((el) => { const b = el.getBoundingClientRect(); return b.top >= 0 && b.bottom <= innerHeight; })).toBe(true);
+      await expect.poll(() => button.evaluate((el) => { const b = el.getBoundingClientRect(); return !(!(b.top >= 0) || !(b.bottom <= innerHeight)); })).toBe(true);
     }
     await page.screenshot({ path: testInfo.outputPath('alliance-offer.png') });
     await card.locator('details.rules-details summary').click();
@@ -283,7 +282,7 @@ for (const size of [{ width: 1440, height: 900 }, { width: 1000, height: 600 }])
     await expect(decline).not.toHaveClass(/primary/);
     for (const button of [join, decline]) {
       await expect(button).toBeVisible();
-      await expect.poll(() => button.evaluate((el) => { const b = el.getBoundingClientRect(); return b.top >= 0 && b.bottom <= innerHeight; })).toBe(true);
+      await expect.poll(() => button.evaluate((el) => { const b = el.getBoundingClientRect(); return !(!(b.top >= 0) || !(b.bottom <= innerHeight)); })).toBe(true);
     }
     await expect(card).toContainText('Declining keeps your Alliance');
     await expect(card).toContainText('Declining costs nothing');

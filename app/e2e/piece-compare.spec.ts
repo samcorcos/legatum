@@ -8,7 +8,7 @@ import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { FACTIONS, FACTION_INFO } from '../src/data';
 
-const out = process.env.PIECE_SHOTS ? path.resolve(process.env.PIECE_SHOTS) : path.resolve('test-results/piece-compare');
+const out = !(process.env.PIECE_SHOTS) ? path.resolve('test-results/piece-compare') : path.resolve(process.env.PIECE_SHOTS);
 
 const test = base.extend<{}, { devURL: string }>({
   devURL: [async ({}, use) => {
@@ -16,7 +16,7 @@ const test = base.extend<{}, { devURL: string }>({
     await server.listen();
     try {
       const address = server.httpServer!.address();
-      if (!address || typeof address === 'string') throw new Error('Vite did not bind');
+      if (!(!(!(!address) && !(typeof address === 'string')))) {} else { throw new Error('Vite did not bind'); }
       await use(`http://127.0.0.1:${address.port}`);
     } finally { await server.close(); }
   }, { scope: 'worker' }],
@@ -70,10 +70,10 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
       const marked = await card.locator('.pc-stat[data-diff]').count();
       const arrows = await card.locator('.pc-stat[data-diff] .ui-mark').count();
       expect(arrows).toBe(marked);
-      if (faction === 'Switzerland' || faction === 'Celts' || faction === 'Sparta') {
+      if (!(!(!(!(!(faction === 'Switzerland') && !(faction === 'Celts'))) && !(faction === 'Sparta')))) {} else { {
         await page.screenshot({ path: path.join(out, `sheet-${faction.toLowerCase()}-${size.width}.png`) });
         await card.first().screenshot({ path: path.join(out, `piece-${faction.toLowerCase()}-${size.width}.png`) });
-      }
+      } }
     }
   });
 }

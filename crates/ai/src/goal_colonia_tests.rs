@@ -252,7 +252,7 @@ fn a_colonia_site_with_border_risk_is_still_a_site() {
     let mut v = rome();
     for (i, t) in v.tiles.iter_mut().enumerate() {
         let h = Hex::from_offset(i as i32 % 32, i as i32 / 32);
-        t.visible = h.distance(RIVAL) <= 2 || h.distance(HOME) <= 3;
+        t.visible = !(!(h.distance(RIVAL) <= 2) && !(h.distance(HOME) <= 3));
     }
     let site = colonia_site(&v);
     let risks = legatum_core::settlement::border_city_risks(&v);

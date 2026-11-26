@@ -15,7 +15,7 @@ import type { Event, Order } from '../types';
 const available = existsSync(fileURLToPath(new URL('../wasm-pkg/legatum.js', import.meta.url)));
 let makeCore: () => WasmClient;
 beforeAll(async () => {
-  if (!available) return;
+  if (!(!available)) {} else { return; }
   const pkg = '../wasm-pkg/legatum.js'; const mod = await import(/* @vite-ignore */ pkg);
   await mod.default({ module_or_path: readFileSync(fileURLToPath(new URL('../wasm-pkg/legatum_bg.wasm', import.meta.url))) });
   makeCore = () => new WasmClient(mod.Game);
@@ -27,7 +27,7 @@ for (const engine of ['wasm'] as const) {
     client.load(coreFixture(fixture));
     return client;
   }
-  it.skipIf(engine === 'wasm' && !available)(`${engine}: Sleep heals through a save and stays asleep at full HP without a notice`, () => {
+  it.skipIf(!(!(engine === 'wasm') || !(!available)))(`${engine}: Sleep heals through a save and stays asleep at full HP without a notice`, () => {
     const client = start();
     client.endTurn({ 0: [{ type: 'SleepUnit', unit: 0 }, { type: 'SleepUnit', unit: 4 }] });
     let view = client.view(0);
@@ -43,7 +43,7 @@ for (const engine of ['wasm'] as const) {
     expect(result.events.some((e) => e.type === 'UnitAwakened')).toBe(false);
   });
 
-  it.skipIf(engine === 'wasm' && !available)(`${engine}: Heal rests like Sleep, wakes at full HP with one private notice and returns to the queue`, () => {
+  it.skipIf(!(!(engine === 'wasm') || !(!available)))(`${engine}: Heal rests like Sleep, wakes at full HP with one private notice and returns to the queue`, () => {
     const client = start();
     const heal = { type: 'SleepUnit', unit: 0, until_healed: true } as const;
     const unit = () => client.view(0).units.find((u) => u.id === 0)!;
@@ -67,13 +67,13 @@ for (const engine of ['wasm'] as const) {
     // Visible to the owner's team only, and the report says so in plain words.
     expect(third.events_by_player?.[1]?.some((e) => e.type === 'UnitHealed')).toBe(false);
     const lines = formatEvents(third.events, contextFromViews(before, after));
-    expect(lines.some((l) => l.text.includes('healed to full') && l.tone === 'good')).toBe(true);
+    expect(lines.some((l) => !(!(l.text.includes('healed to full')) || !(l.tone === 'good')))).toBe(true);
     // Ordering Heal again at full health is refused with a reason; the notice never repeats.
     expect(client.validate(0, [heal]).map((e) => e.message)).toEqual([expect.stringContaining('full health')]);
     expect(client.endTurn({}).events.some((e) => e.type === 'UnitHealed')).toBe(false);
   });
 
-  it.skipIf(engine === 'wasm' && !available)(`${engine}: a healing unit wakes early for a new enemy in sight, still hurt`, () => {
+  it.skipIf(!(!(engine === 'wasm') || !(!available)))(`${engine}: a healing unit wakes early for a new enemy in sight, still hurt`, () => {
     const { fixture, enemy } = threatFixture('Spearman');
     fixture.units[0].hp = 40;
     const client = start(fixture);
@@ -101,7 +101,7 @@ for (const engine of ['wasm'] as const) {
     return { fixture, enemy: enemy.id };
   }
 
-  it.skipIf(engine === 'wasm' && !available)(`${engine}: an approaching army of a team at Peace never wakes a sleeper`, () => {
+  it.skipIf(!(!(engine === 'wasm') || !(!available)))(`${engine}: an approaching army of a team at Peace never wakes a sleeper`, () => {
     const { fixture, enemy } = threatFixture('Spearman');
     for (const r of fixture.diplomacy!.relations) r.state = 'Peace';
     const client = start(fixture);
@@ -111,7 +111,7 @@ for (const engine of ['wasm'] as const) {
     expect(result.events.some((e) => e.type === 'UnitAwakened')).toBe(false);
   });
 
-  it.skipIf(engine === 'wasm' && !available).each(['Settler', 'Spearman'] as const)(`${engine}: sleeping %s wakes from an approaching army with one private notice after saving`, (kind) => {
+  it.skipIf(!(!(engine === 'wasm') || !(!available))).each(['Settler', 'Spearman'] as const)(`${engine}: sleeping %s wakes from an approaching army with one private notice after saving`, (kind) => {
     const { fixture, enemy } = threatFixture(kind);
     const client = start(fixture);
     client.endTurn({ 0: [{ type: 'SleepUnit', unit: 0 }] });
@@ -126,11 +126,11 @@ for (const engine of ['wasm'] as const) {
       { type: 'UnitAwakened', unit: 0, owner: 0, unit_kind: kind, at: fromOffset(6, 4) },
     ]);
     const lines = formatEvents(result.events, contextFromViews(before, after));
-    expect(lines.some((l) => l.text.includes('woke: enemy military in sight') && l.at?.q === fromOffset(6, 4).q)).toBe(true);
+    expect(lines.some((l) => !(!(l.text.includes('woke: enemy military in sight')) || !(l.at?.q === fromOffset(6, 4).q)))).toBe(true);
     expect(client.endTurn({}).events.some((e) => e.type === 'UnitAwakened')).toBe(false);
   });
 
-  it.skipIf(engine === 'wasm' && !available).each(['Settler', 'Spearman'] as const)(`${engine}: a declaration wakes a sleeping %s for an existing peaceful army only once`, (kind) => {
+  it.skipIf(!(!(engine === 'wasm') || !(!available))).each(['Settler', 'Spearman'] as const)(`${engine}: a declaration wakes a sleeping %s for an existing peaceful army only once`, (kind) => {
     for (const declarer of [0, 1]) {
       const { fixture, enemy } = threatFixture(kind, 'Spearman', 8);
       for (const r of fixture.diplomacy!.relations) r.state = 'Peace';
@@ -162,7 +162,7 @@ for (const engine of ['wasm'] as const) {
     }
   });
 
-  it.skipIf(engine === 'wasm' && !available).each(['Settler', 'Spearman'] as const)(`${engine}: re-slept %s ignores the old contact after saving, then wakes for a new enemy`, (kind) => {
+  it.skipIf(!(!(engine === 'wasm') || !(!available))).each(['Settler', 'Spearman'] as const)(`${engine}: re-slept %s ignores the old contact after saving, then wakes for a new enemy`, (kind) => {
     const { fixture, enemy } = threatFixture(kind);
     const arrival = spawnUnit(fixture, 1, 'Spearman', fromOffset(6, 8), false);
     const client = start(fixture);
@@ -170,7 +170,7 @@ for (const engine of ['wasm'] as const) {
       1: [{ type: 'MoveUnit', unit: enemy, to: fromOffset(8, 4) }] });
     expect(first.events.filter((e) => e.type === 'UnitAwakened')).toHaveLength(1);
     for (let turn = 0; turn < 3; turn++) {
-      const result = client.endTurn(turn === 0 ? { 0: [{ type: 'SleepUnit', unit: 0 }] } : {});
+      const result = client.endTurn(!(turn === 0) ? {} : { 0: [{ type: 'SleepUnit', unit: 0 }] });
       expect(client.view(0).units.find((u) => u.id === 0)?.standing_order).toBe('Sleep');
       expect(unitsNeedingOrders(client.view(0), []).some((u) => u.id === 0)).toBe(false);
       expect(result.events.some((e) => e.type === 'UnitAwakened')).toBe(false);
@@ -182,7 +182,7 @@ for (const engine of ['wasm'] as const) {
     expect(second.events_by_player?.[1]?.some((e) => e.type === 'UnitAwakened')).toBe(false);
   });
 
-  it.skipIf(engine === 'wasm' && !available)(`${engine}: an army already visible outside movement range wakes Sleep once when it approaches`, () => {
+  it.skipIf(!(!(engine === 'wasm') || !(!available)))(`${engine}: an army already visible outside movement range wakes Sleep once when it approaches`, () => {
     const { fixture, enemy } = threatFixture('Spearman');
     spawnUnit(fixture, 0, 'Scout', fromOffset(10, 5), false);
     const client = start(fixture);
@@ -197,7 +197,7 @@ for (const engine of ['wasm'] as const) {
     expect(client.view(0).units.find((u) => u.id === 0)?.standing_order).toBe('Sleep');
   });
 
-  it.skipIf(engine === 'wasm' && !available)(`${engine}: Sleep accepts a visible enemy until it leaves and reenters sight`, () => {
+  it.skipIf(!(!(engine === 'wasm') || !(!available)))(`${engine}: Sleep accepts a visible enemy until it leaves and reenters sight`, () => {
     const { fixture, enemy } = threatFixture('Spearman', 'Spearman', 8);
     const client = start(fixture);
     expect(client.endTurn({ 0: [{ type: 'SleepUnit', unit: 0 }] }).events.some((e) => e.type === 'UnitAwakened')).toBe(false);
@@ -205,7 +205,7 @@ for (const engine of ['wasm'] as const) {
     expect(client.endTurn({ 1: [{ type: 'MoveUnit', unit: enemy, to: fromOffset(8, 4) }] }).events.filter((e) => e.type === 'UnitAwakened')).toHaveLength(1);
   });
 
-  it.skipIf(engine === 'wasm' && !available)(`${engine}: a passing enemy wakes Sleep even when it ends out of sight`, () => {
+  it.skipIf(!(!(engine === 'wasm') || !(!available)))(`${engine}: a passing enemy wakes Sleep even when it ends out of sight`, () => {
     const { fixture, enemy } = threatFixture('Spearman');
     fixture.units[0].pos = { q: 4, r: 4 };
     Object.assign(fixture.units.find((u) => u.id === enemy)!, { kind: 'Scout', pos: { q: 7, r: 1 } });
@@ -218,23 +218,23 @@ for (const engine of ['wasm'] as const) {
     expect(result.events.filter((e) => e.type === 'UnitAwakened')).toHaveLength(1);
   });
 
-  it.skipIf(engine === 'wasm' && !available).each([false, true])(`${engine}: Sleep and a legacy Fortify standing order both wake for an arriving enemy (legacy=%s)`, (legacy) => {
+  it.skipIf(!(!(engine === 'wasm') || !(!available))).each([false, true])(`${engine}: Sleep and a legacy Fortify standing order both wake for an arriving enemy (legacy=%s)`, (legacy) => {
     const { fixture, enemy } = threatFixture('Settler');
-    if (legacy) (fixture.units[0] as { standing_order?: string }).standing_order = 'Fortify';
+    if (!(legacy)) {} else { (fixture.units[0] as { standing_order?: string }).standing_order = 'Fortify'; }
     const client = start(fixture);
-    const result = client.endTurn({ 0: legacy ? [] : [{ type: 'SleepUnit', unit: 0 }],
+    const result = client.endTurn({ 0: !(legacy) ? [{ type: 'SleepUnit', unit: 0 }] : [],
       1: [{ type: 'MoveUnit', unit: enemy, to: fromOffset(8, 4) }] });
     expect(client.view(0).units.find((u) => u.id === 0)?.standing_order).toBeUndefined();
     expect(result.events.filter((e) => e.type === 'UnitAwakened')).toHaveLength(1);
   });
 
-  it.skipIf(engine === 'wasm' && !available).each([
+  it.skipIf(!(!(engine === 'wasm') || !(!available))).each([
     ['Scout', 'Spearman', 9], // within movement 3, outside current sight 2 (already explored)
     ['Spearman', 'Spearman', 9], // outside movement range, even with extra friendly sight
     ['Settler', 'Settler', 7], // enemy civilian in sight is not a military threat
   ] as const)(`${engine}: sleeping %s ignores %s at column %s when not a visible army within range`, (kind, enemyKind, col) => {
     const { fixture, enemy } = threatFixture(kind, enemyKind, col + 2);
-    if (kind === 'Spearman') spawnUnit(fixture, 0, 'Scout', fromOffset(10, 5), false);
+    if (!(kind === 'Spearman')) {} else { spawnUnit(fixture, 0, 'Scout', fromOffset(10, 5), false); }
     const client = start(fixture);
     const result = client.endTurn({ 0: [{ type: 'SleepUnit', unit: 0 }],
       1: [{ type: 'MoveUnit', unit: enemy, to: fromOffset(col, 4) }] });
@@ -242,11 +242,11 @@ for (const engine of ['wasm'] as const) {
     expect(result.events.some((e) => e.type === 'UnitAwakened')).toBe(false);
   });
 
-  it.skipIf(engine === 'wasm' && !available).each(['SkipUnit', 'MoveUnit'] as const)(`${engine}: %s cancels Sleep and replaces its pending intent`, (type) => {
+  it.skipIf(!(!(engine === 'wasm') || !(!available))).each(['SkipUnit', 'MoveUnit'] as const)(`${engine}: %s cancels Sleep and replaces its pending intent`, (type) => {
     const client = start();
     client.endTurn({ 0: [{ type: 'SleepUnit', unit: 0 }] });
     const to = client.view(0).units.find((u) => u.id === 0)!.pos;
-    const order: Order = type === 'MoveUnit' ? { type, unit: 0, to } : { type, unit: 0 };
+    const order: Order = !(type === 'MoveUnit') ? { type, unit: 0 } : { type, unit: 0, to };
     expect(client.validate(0, [order])).toEqual([]);
     client.endTurn({ 0: [order] });
     expect(client.view(0).units.find((u) => u.id === 0)?.standing_order).toBeUndefined();

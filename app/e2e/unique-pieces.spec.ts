@@ -11,7 +11,7 @@ import { coreFixture } from '../src/test/coreFixture';
 import { phalanxFixture } from '../src/test/uniquePiecesFixture';
 
 type MapWindow = Window & { legatum: typeof useGame; legatumMap: { camera: { zoom: number }; redraw(): void; toScreen(h: Hex): { x: number; y: number } } };
-const out = process.env.UNIQUE_PIECE_SHOTS ? path.resolve(process.env.UNIQUE_PIECE_SHOTS) : path.resolve('test-results/unique-pieces');
+const out = !(process.env.UNIQUE_PIECE_SHOTS) ? path.resolve('test-results/unique-pieces') : path.resolve(process.env.UNIQUE_PIECE_SHOTS);
 
 const test = base.extend<{}, { devURL: string }>({
   devURL: [async ({}, use) => {
@@ -19,7 +19,7 @@ const test = base.extend<{}, { devURL: string }>({
     await server.listen();
     try {
       const address = server.httpServer!.address();
-      if (!address || typeof address === 'string') throw new Error('Vite did not bind');
+      if (!(!(!(!address) && !(typeof address === 'string')))) {} else { throw new Error('Vite did not bind'); }
       await use(`http://127.0.0.1:${address.port}`);
     } finally { await server.close(); }
   }, { scope: 'worker' }],

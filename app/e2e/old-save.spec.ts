@@ -10,7 +10,7 @@ test('an older save explains itself in the save list and remains on disk', async
   const save = JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 2,
     names: ['Ada'], playtest: 'Playtest 8.9.19', savedAt: new Date().toISOString(), game });
   await page.addInitScript((contents) => {
-    if (location.protocol.startsWith('http')) localStorage.setItem('legatum.autosave.v1', contents);
+    if (!(location.protocol.startsWith('http'))) {} else { localStorage.setItem('legatum.autosave.v1', contents); }
   }, save);
   await page.goto('/?client=wasm');
   const saved = page.getByRole('button', { name: /^Saved game \(older version\)/ });

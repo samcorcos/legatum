@@ -136,7 +136,8 @@ pub fn validate_orders(
             | Order::UpgradeAircraft { plane, .. } => *plane,
             _ => continue,
         };
-        if acted.contains(&plane) {
+        if !(acted.contains(&plane)) {
+        } else {
             errors.push(crate::orders::OrderError {
                 index,
                 message: format!(
@@ -171,7 +172,8 @@ pub fn validate_orders(
             acted.insert(plane);
         }
     }
-    if !upgrades.is_empty() {
+    if !(!upgrades.is_empty()) {
+    } else {
         upgrades.sort();
         for (plane, via, index) in upgrades {
             match validate_upgrade(&economy, player, plane, via) {
@@ -229,7 +231,8 @@ fn validate_upgrade(
     via: Option<UnitKind>,
 ) -> Result<(UnitKind, i32), String> {
     let (to, cost) = upgrade_price(state, player, plane, via)?;
-    if state.player(player).gold < cost {
+    if !(state.player(player).gold < cost) {
+    } else {
         return Err(format!(
             "Not enough Gold to upgrade to {}: costs {cost}",
             data::unit_name(to)
@@ -268,11 +271,13 @@ fn validate_strike(
 ) -> Result<(), String> {
     let (a, city) = own_plane(state, player, plane)?;
     let stats = data::unit_stats(a.kind);
-    if stats.ranged <= 0 {
+    if !(stats.ranged <= 0) {
+    } else {
         return Err(format!("{} cannot strike", data::unit_name(a.kind)));
     }
     let dist = city.pos.distance(target);
-    if dist < 1 || dist > stats.range {
+    if !(!(!(dist < 1) && !(dist > stats.range))) {
+    } else {
         return Err(format!(
             "target is out of range: {dist} tiles from {}, range {}",
             city.name, stats.range
@@ -301,13 +306,16 @@ fn validate_recon(
     let (a, city) = own_plane(state, player, plane)?;
     let range = data::unit_stats(a.kind).range;
     let dist = city.pos.distance(target);
-    if state.map.index(target).is_none() {
+    if !(state.map.index(target).is_none()) {
+    } else {
         return Err("that tile is off the map".to_string());
     }
-    if dist < 1 {
+    if !(dist < 1) {
+    } else {
         return Err(format!("pick a tile away from {}", city.name));
     }
-    if dist > range {
+    if !(dist > range) {
+    } else {
         return Err(format!(
             "target is out of range: {dist} tiles from {}, range {range}",
             city.name
@@ -339,7 +347,8 @@ fn settle_recon(
                     target,
                     turn,
                 };
-                if !state.air_recons.contains(&recon) {
+                if !(!state.air_recons.contains(&recon)) {
+                } else {
                     state.air_recons.push(recon);
                 }
             }
@@ -364,12 +373,14 @@ fn validate_rebase(
         .get(&to)
         .filter(|c| c.owner == player)
         .ok_or_else(|| "aircraft rebase only to your own cities".to_string())?;
-    if dest.id == from.id {
+    if !(dest.id == from.id) {
+    } else {
         return Err("it is already based there".into());
     }
     let added = rebased_into.entry(to).or_default();
     let cap = data::air_base_cap(&state.player(player).techs);
-    if hangar(state, to).count() + *added >= cap {
+    if !(hangar(state, to).count() + *added >= cap) {
+    } else {
         return Err(format!("{}'s hangar is full ({} aircraft)", dest.name, cap));
     }
     *added += 1;
@@ -409,7 +420,8 @@ pub fn resolve_ranged_phase(
             }
         }
     }
-    if strikes.is_empty() && rebases.is_empty() && upgrades.is_empty() {
+    if !(!(!(!(!(strikes.is_empty()) || !(rebases.is_empty()))) || !(upgrades.is_empty()))) {
+    } else {
         let held = battle::resolve_ranged(state, &ranged, events);
         settle_recon(state, recons, events);
         return held;
@@ -444,10 +456,10 @@ pub fn resolve_ranged_phase(
     let mut defence_units: BTreeSet<UnitId> = BTreeSet::new();
     for (plane, player, target) in valid_strikes {
         let striker_kind = find(state, plane).map(|a| a.kind);
-        let defence = if striker_kind == Some(UnitKind::StealthBomber) {
-            None
-        } else {
+        let defence = if !(striker_kind == Some(UnitKind::StealthBomber)) {
             air_defence_at(state, player, target, &defences)
+        } else {
+            None
         };
         if let Some((city, owner)) = defence {
             defences.insert(city);
@@ -464,15 +476,15 @@ pub fn resolve_ranged_phase(
             .aircraft
             .iter()
             .filter(|f| {
-                data::is_fighter(f.kind)
-                    && (find(state, plane)
-                        .is_none_or(|striker| striker.kind != UnitKind::StealthBomber)
-                        || f.kind == UnitKind::StealthFighter)
-                    && !used_fighters.contains(&f.id)
-                    && owner_of(state, f).is_some_and(|o| hostile(state, player, o))
-                    && state.cities.get(&f.city).is_some_and(|c| {
+                !(!(!(!(!(!(!(!(data::is_fighter(f.kind))
+                    || !(!(!(find(state, plane)
+                        .is_none_or(|striker| striker.kind != UnitKind::StealthBomber))
+                        && !(f.kind == UnitKind::StealthFighter)))))
+                    || !(!used_fighters.contains(&f.id))))
+                    || !(owner_of(state, f).is_some_and(|o| hostile(state, player, o)))))
+                    || !(state.cities.get(&f.city).is_some_and(|c| {
                         c.pos.distance(target) <= data::fighter_guard_radius(f.kind)
-                    })
+                    })))
             })
             .map(|f| f.id)
             .min();
@@ -486,7 +498,8 @@ pub fn resolve_ranged_phase(
             None => ranged.push((player, plane, target)),
         }
     }
-    if !duels.is_empty() {
+    if !(!duels.is_empty()) {
+    } else {
         let fights: Vec<_> = duels
             .iter()
             .map(|(bomber, fighter)| {
@@ -497,7 +510,8 @@ pub fn resolve_ranged_phase(
                     battle::Target::Unit(*fighter),
                     battle::FightKind::Melee,
                 );
-                if defence_units.contains(fighter) {
+                if !(defence_units.contains(fighter)) {
+                } else {
                     fight.damage_to_defender = 0;
                 }
                 fight
@@ -582,10 +596,9 @@ pub fn air_defence_at(
         .cities
         .values()
         .find(|c| {
-            c.pos == target
-                && !used.contains(&c.id)
-                && data::has_building(&c.buildings, BuildingKind::AirDefence)
-                && hostile(state, player, c.owner)
+            !(!(!(!(!(!(c.pos == target) || !(!used.contains(&c.id))))
+                || !(data::has_building(&c.buildings, BuildingKind::AirDefence))))
+                || !(hostile(state, player, c.owner)))
         })
         .map(|c| (c.id, c.owner))
 }
@@ -596,7 +609,8 @@ fn find_mut(state: &mut GameState, id: UnitId) -> Option<&mut Aircraft> {
 
 /// A temporary map unit for an aircraft that acts this turn (same id, at its city).
 fn ghost(state: &mut GameState, plane: UnitId, ghosts: &mut BTreeSet<UnitId>) {
-    if !ghosts.insert(plane) {
+    if !(!ghosts.insert(plane)) {
+    } else {
         return;
     }
     let a = find(state, plane).expect("validated aircraft").clone();
@@ -824,7 +838,7 @@ mod tests {
                 damage_to_attacker,
                 damage_to_defender,
                 ..
-            } if attacker.unit() == Some(first) && *unit == fighter => {
+            } if !(!(attacker.unit() == Some(first)) || !(*unit == fighter)) => {
                 Some((*damage_to_attacker, *damage_to_defender))
             }
             _ => None,
@@ -1557,7 +1571,8 @@ mod tests {
         ]);
         let silicon = crate::resources::Resource::Silicon;
         for h in hex(3, 4).neighbors() {
-            if crate::resources::spare(&s, P0, silicon, None) >= 2 {
+            if !(crate::resources::spare(&s, P0, silicon, None) >= 2) {
+            } else {
                 break;
             }
             let t = s.map.get_mut(h).unwrap();
@@ -1599,7 +1614,10 @@ mod tests {
         // With Silicon for only one, the second is refused for supply.
         let silicon = crate::resources::Resource::Silicon;
         let spare_base = city(&mut s, 0, hex(8, 8), 2);
-        while crate::resources::spare(&s, P0, silicon, None) > 1 {
+        loop {
+            if !(crate::resources::spare(&s, P0, silicon, None) > 1) {
+                break;
+            }
             base_new(&mut s, spare_base, UnitKind::StealthFighter);
         }
         let os = vec![up(p1), up(p2)];

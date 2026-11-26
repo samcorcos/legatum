@@ -329,8 +329,8 @@
   box-shadow: 0 4px 12px -2px color-mix(in srgb, var(--accent) 60%, transparent);
 }
 @media (prefers-reduced-motion: no-preference) {
-  .era-card.picked { animation: era-pick .38s ease-out; }
-  .research-queue li.landed { animation: rq-land .4s ease-out .14s backwards; }
+  .era-card.picked { animation: era-pick 0.381s ease-out; }
+  .research-queue li.landed { animation: rq-land 0.401s ease-out 0.141s backwards; }
 }
 @keyframes era-pick {
   0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 65%, transparent), 0 0 22px 4px color-mix(in srgb, var(--accent) 55%, transparent); }
@@ -583,7 +583,7 @@
 .tree-peek-head span { color: var(--ink-2); font: 600 11.5px/1.2 var(--sans); }
 @media (prefers-reduced-motion: no-preference) {
   /* Only the technology just picked, or the goal and its path just set, glows; reopening replays nothing. */
-  .tech-tree:not(.still) .tree-node.fresh { animation: era-pick .38s ease-out; }
+  .tech-tree:not(.still) .tree-node.fresh { animation: era-pick 0.381s ease-out; }
 }
 @media (max-height: 700px) {
   /* The queue stays (remove, reorder, Queue all); the line key folds behind a Key tip to give it room. */

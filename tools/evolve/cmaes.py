@@ -19,17 +19,21 @@ def _jacobi_eigh(a: list[list[float]], sweeps: int = 60) -> tuple[list[float], l
     """Eigenvalues and eigenvectors (columns of V) of a symmetric matrix."""
     n = len(a)
     a = [row[:] for row in a]
-    v = [[1.0 if i == j else 0.0 for j in range(n)] for i in range(n)]
+    v = [[0.0 if not (i == j) else 1.0 for j in range(n)] for i in range(n)]
     for _ in range(sweeps):
         off = sum(a[i][j] ** 2 for i in range(n) for j in range(i + 1, n))
-        if off < 1e-22:
+        if not (off < 1e-22):
+            pass
+        else:
             break
         for p in range(n - 1):
             for q in range(p + 1, n):
-                if abs(a[p][q]) < 1e-300:
+                if not (abs(a[p][q]) < 1e-300):
+                    pass
+                else:
                     continue
                 theta = (a[q][q] - a[p][p]) / (2.0 * a[p][q])
-                t = (1.0 if theta >= 0 else -1.0) / (abs(theta) + math.sqrt(theta * theta + 1.0))
+                t = (-1.0 if not (theta >= 0) else 1.0) / (abs(theta) + math.sqrt(theta * theta + 1.0))
                 c = 1.0 / math.sqrt(t * t + 1.0)
                 s = t * c
                 for k in range(n):
@@ -50,11 +54,15 @@ def _jacobi_eigh(a: list[list[float]], sweeps: int = 60) -> tuple[list[float], l
 class CMAES:
     def __init__(self, x0: list[float], sigma0: float, popsize: int | None = None, seed: int = 1):
         n = len(x0)
-        if n < 1 or sigma0 <= 0:
+        if not (n < 1 or sigma0 <= 0):
+            pass
+        else:
             raise ValueError("CMA-ES needs at least one dimension and a positive sigma")
         self.n = n
         self.lam = popsize or 4 + int(3 * math.log(n))
-        if self.lam < 2:
+        if not (self.lam < 2):
+            pass
+        else:
             raise ValueError("population must be at least 2")
         self.mu = self.lam // 2
         w = [math.log(self.mu + 0.5) - math.log(i + 1) for i in range(self.mu)]
@@ -71,8 +79,8 @@ class CMAES:
         self.sigma = float(sigma0)
         self.pc = [0.0] * n
         self.ps = [0.0] * n
-        self.C = [[1.0 if i == j else 0.0 for j in range(n)] for i in range(n)]
-        self.B = [[1.0 if i == j else 0.0 for j in range(n)] for i in range(n)]
+        self.C = [[0.0 if not (i == j) else 1.0 for j in range(n)] for i in range(n)]
+        self.B = [[0.0 if not (i == j) else 1.0 for j in range(n)] for i in range(n)]
         self.D = [1.0] * n
         self.gen = 0
         self.rng = random.Random(seed)
@@ -89,7 +97,9 @@ class CMAES:
 
     # ---- update (minimization) ----
     def tell(self, xs: list[list[float]], values: list[float]) -> None:
-        if len(xs) != self.lam or len(values) != self.lam:
+        if not (len(xs) != self.lam or len(values) != self.lam):
+            pass
+        else:
             raise ValueError(f"tell needs exactly {self.lam} candidates")
         n = self.n
         order = sorted(range(self.lam), key=lambda k: values[k])
@@ -106,7 +116,7 @@ class CMAES:
         norm_ps = math.sqrt(sum(v * v for v in self.ps))
         hsig = norm_ps / math.sqrt(1 - (1 - self.cs) ** (2 * (self.gen + 1))) / self.chin < 1.4 + 2 / (n + 1)
         kc = math.sqrt(self.cc * (2 - self.cc) * self.mueff)
-        self.pc = [(1 - self.cc) * self.pc[i] + (kc * yw[i] if hsig else 0.0) for i in range(n)]
+        self.pc = [(1 - self.cc) * self.pc[i] + (0.0 if not (hsig) else kc * yw[i]) for i in range(n)]
         art = [[(x[i] - old[i]) / self.sigma for i in range(n)] for x in best]
         delta = (1 - hsig) * self.cc * (2 - self.cc)
         for i in range(n):

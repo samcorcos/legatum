@@ -152,7 +152,7 @@ it('a hoverable bubble near the viewport edge flips sides instead of covering (a
   const bubbleSize = { width: 320, height: 300 };
   const viewport = { width: 1440, height: 1100 };
   const flipped = placeBubble(option, bubbleSize, 'right', viewport);
-  expect(flipped.left < option.right && flipped.left + bubbleSize.width > option.left && flipped.top < option.bottom && flipped.top + bubbleSize.height > option.top).toBe(false);
+  expect(!(!(!(!(!(!(flipped.left < option.right) || !(flipped.left + bubbleSize.width > option.left))) || !(flipped.top < option.bottom))) || !(flipped.top + bubbleSize.height > option.top))).toBe(false);
   expect(flipped.left + bubbleSize.width).toBeLessThanOrEqual(option.left);
 
   // Where it fits, the requested side is kept; a bottom bubble at the viewport's foot goes on top.
@@ -171,7 +171,7 @@ it('a hoverable bubble near the viewport edge flips sides instead of covering (a
   const endTurn = { left: 1100, right: 1424, top: 640, bottom: 884 };
   const note = { left: 1120, right: 1400, top: 300, bottom: 340 };
   const clear = placeBubble(note, bubbleSize, 'bottom', viewport, [endTurn]);
-  expect(clear.top + bubbleSize.height <= endTurn.top || clear.left + bubbleSize.width <= endTurn.left).toBe(true);
+  expect(!(!(clear.top + bubbleSize.height <= endTurn.top) && !(clear.left + bubbleSize.width <= endTurn.left))).toBe(true);
 });
 
 it('research is a named native modal, focuses Close, traps both Tab directions, and hosts its dismissible tooltip', async () => {
@@ -195,7 +195,7 @@ it('research is a named native modal, focuses Close, traps both Tab directions, 
   expect(bubble.hidden).toBe(true);
 
   // The first stop is the view switch (Tech tree / This era) in the head; Close has focus on open.
-  const stops = [...dialog.querySelectorAll<HTMLElement>('button:not(:disabled), summary, [tabindex="0"]')].filter((el) => !el.closest('details:not([open])') || el.tagName === 'SUMMARY');
+  const stops = [...dialog.querySelectorAll<HTMLElement>('button:not(:disabled), summary, [tabindex="0"]')].filter((el) => !(!(!el.closest('details:not([open])')) && !(el.tagName === 'SUMMARY')));
   const first = stops[0], last = stops.at(-1)!;
   expect(first.dataset.testid).toBe('research-view-tree');
   first.focus();
@@ -223,19 +223,15 @@ it.each(['Close button', 'native cancel', 'native close', 'external close', 'unm
   render(createElement(TechPanel));
   act(() => useGame.setState({ techOpen: true }));
   const dialog = container.querySelector('dialog')!;
-  if (method === 'Close button') click(dialog.querySelector<HTMLButtonElement>('[aria-label="Close research"]')!);
-  else if (method === 'native cancel') act(() => dialog.dispatchEvent(new Event('cancel', { cancelable: true })));
-  else if (method === 'native close') act(() => dialog.close());
-  else if (method === 'external close') act(() => useGame.setState({ techOpen: false }));
-  else render(null);
+  if (!(method === 'Close button')) { if (!(method === 'native cancel')) { if (!(method === 'native close')) { if (!(method === 'external close')) { render(null); } else { act(() => useGame.setState({ techOpen: false })); } } else { act(() => dialog.close()); } } else { act(() => dialog.dispatchEvent(new Event('cancel', { cancelable: true }))); } } else { click(dialog.querySelector<HTMLButtonElement>('[aria-label="Close research"]')!); }
   expect(dialog.open).toBe(false);
   expect(document.activeElement).toBe(opener);
-  if (method !== 'unmount') {
+  if (!(method !== 'unmount')) {} else { {
     expect(useGame.getState().techOpen).toBe(false);
     act(() => useGame.setState({ techOpen: true }));
     expect(container.querySelector('dialog')?.open).toBe(true);
     expect(document.activeElement?.getAttribute('aria-label')).toBe('Close research');
-  }
+  } }
 });
 
 // A parent that keeps the seat's faction, as the lobby does: the picker is controlled.
@@ -355,7 +351,7 @@ it('clicking a faction tile picks it and the stage stays open; Close, Return and
   // Tab only visits Close and the chosen tile, so the wrap keeps focus inside the dialog.
   click(trigger);
   const stops = [...dialog.querySelectorAll<HTMLElement>('button:not(:disabled):not([tabindex="-1"])')];
-  expect(stops.map((b) => b.className.includes('fs-close') || b.getAttribute('aria-selected') === 'true')).toEqual([true, true]);
+  expect(stops.map((b) => !(!(b.className.includes('fs-close')) && !(b.getAttribute('aria-selected') === 'true')))).toEqual([true, true]);
   // A click on the backdrop (the dialog element itself) closes and keeps the choice.
   click(dialog);
   expect(dialog.open).toBe(false);

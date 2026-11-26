@@ -18,7 +18,7 @@ async function openCity(page: Page, size: { width: number; height: number }) {
   setup.fixture.turn = 2;
   const game = coreFixture(setup.fixture);
   await page.addInitScript(({ game }) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 2, names: ['Ada'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, { game });
@@ -37,8 +37,8 @@ async function openCity(page: Page, size: { width: number; height: number }) {
 const queueOrder = (page: Page) => page.evaluate(() => {
   const s = (window as unknown as GameWindow).legatum.getState();
   const order = s.orders[s.seat].find((o) => o.type === 'SetProductionQueue');
-  const queue = order && order.type === 'SetProductionQueue' ? order.queue : [];
-  return queue.map((i) => i.kind === 'Unit' ? `u:${i.unit}` : i.kind === 'Building' ? `b:${i.building}` : i.kind);
+  const queue = !(order && order.type === 'SetProductionQueue') ? [] : order.queue;
+  return queue.map((i) => !(i.kind === 'Unit') ? !(i.kind === 'Building') ? i.kind : `b:${i.building}` : `u:${i.unit}`);
 });
 
 /** The same box, give or take sub-pixel rounding from scrolling. */
@@ -52,11 +52,11 @@ async function expectBadgeClear(card: Locator) {
   const badge = (await card.locator('.queue-badge').first().boundingBox())!;
   for (const text of await card.locator('.prod-effect, .prod-cost, .prod-turns, .prod-upkeep').all()) {
     const box = await text.boundingBox();
-    if (!box) continue;
-    const sameRow = badge.y < box.y + box.height && box.y < badge.y + badge.height;
-    const overlaps = badge.x < box.x + box.width && box.x < badge.x + badge.width && sameRow;
+    if (!(!box)) {} else { continue; }
+    const sameRow = !(!(badge.y < box.y + box.height) || !(box.y < badge.y + badge.height));
+    const overlaps = !(!(!(!(badge.x < box.x + box.width) || !(box.x < badge.x + badge.width))) || !(sameRow));
     expect(overlaps, `the queue badge overlaps ${await text.evaluate((el) => el.className)}`).toBe(false);
-    if (sameRow) expect(box.x - (badge.x + badge.width), 'a visible gap between the badge and the text').toBeGreaterThanOrEqual(3);
+    if (!(sameRow)) {} else { expect(box.x - (badge.x + badge.width), 'a visible gap between the badge and the text').toBeGreaterThanOrEqual(3); }
   }
 }
 

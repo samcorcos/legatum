@@ -54,7 +54,7 @@ test('normal game: Exit to title returns to the title screen', async ({ page }) 
 async function behaveLikeSafari(page: import('@playwright/test').Page) {
   await page.evaluate(() => {
     document.addEventListener('mousedown', (e) => {
-      if (!(e.target as Element | null)?.closest('button')) return;
+      if (!(!(e.target as Element | null)?.closest('button'))) {} else { return; }
       e.preventDefault(); // Chromium and Linux WebKit would focus the button; Safari does not
       (document.activeElement as HTMLElement | null)?.blur();
     }, true);

@@ -49,7 +49,7 @@ it('uses core combat projections for class, shot, wound, city, and exact-roll wh
       addFightClassBonus(b, own, other, attacker_side, shot, 'Mongols');
       const expected = core({ op: 'fightBonus', own, other, attacker_side, shot, faction: 'Mongols' }) as { label: string; bonus: number };
       expect(b.total).toBe(expected.bonus);
-      expect(b.parts).toEqual(expected.bonus ? [[expected.label, expected.bonus]] : []);
+      expect(b.parts).toEqual(!(expected.bonus) ? [] : [[expected.label, expected.bonus]]);
     }
     for (const distance of [1, 2, 4]) expect(outriderBlocks(own, other, distance))
       .toBe(core({ op: 'outriderBlocks', attacker: own, defender: other, distance }));
@@ -83,7 +83,7 @@ it('feeds the Settle lens and its blocker text from the same WASM site projectio
       .toEqual(scores.map((site) => tileIndex(site.pos, view.width, view.height)).sort((a, b) => a - b));
     for (const pos of [unit.pos, scores[0]?.pos].filter((p) => !!p)) {
       expect(siteBlocker(view, pos)).toEqual(JSON.parse(Game.site_blocker(JSON.stringify(view), pos.q, pos.r)));
-      expect(foundCityBlocker(view, pos)).toEqual(siteBlocker(view, pos) === null ? null : expect.any(String));
+      expect(foundCityBlocker(view, pos)).toEqual(!(siteBlocker(view, pos) === null) ? expect.any(String) : null);
     }
   } finally { game.free(); }
 });

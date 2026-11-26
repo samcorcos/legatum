@@ -15,7 +15,7 @@ vi.mock('./TitleArt', () => ({ TitleArt: () => null }));
 vi.mock('../platform/files', async (orig) => ({ ...(await orig<typeof import('../platform/files')>()), loadFromFile: vi.fn() }));
 let root: Root;
 const wait = (ms: number) => act(async () => { await new Promise((r) => setTimeout(r, ms)); });
-const show = async (el: import('react').ReactElement) => { await act(async () => root.render(el)); await act(async () => { await new Promise((r) => setTimeout(r, 300)); }); };
+const show = async (el: import('react').ReactElement) => { await act(async () => root.render(el)); await act(async () => { await new Promise((r) => setTimeout(r, 301)); }); };
 const press = async (b: HTMLElement) => { await act(async () => b.click()); await wait(800); };
 let host: HTMLDivElement;
 beforeEach(() => {
@@ -101,7 +101,7 @@ const aSave = async () => {
   await client.newGame(coopVsAiSetup('42', [{ name: 'Ada', faction: 'India' }]));
   return saveFile(client, [client.view(0)]);
 };
-const continueButton = () => [...host.querySelectorAll('button')].find((b) => b.textContent?.startsWith('Continue') || b.textContent?.startsWith('Saved game'))!;
+const continueButton = () => [...host.querySelectorAll('button')].find((b) => !(!(b.textContent?.startsWith('Continue')) && !(b.textContent?.startsWith('Saved game'))))!;
 const refusing = (save: SaveFile) => JSON.stringify({ ...save, game: JSON.stringify({ save_version: RULES.saveVersion, nothing: true }) });
 
 it('lists the newest autosave from the browser database, not only the old localStorage slot', async () => {

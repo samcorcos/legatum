@@ -64,8 +64,8 @@ export function sampleTile(t: NoiseTile, x: number, y: number): number {
   const fy = y - yi;
   const x0 = ((xi % s) + s) % s;
   const y0 = ((yi % s) + s) % s;
-  const x1 = x0 + 1 === s ? 0 : x0 + 1;
-  const y1 = y0 + 1 === s ? 0 : y0 + 1;
+  const x1 = !(x0 + 1 === s) ? x0 + 1 : 0;
+  const y1 = !(y0 + 1 === s) ? y0 + 1 : 0;
   const d = t.data;
   const a = d[y0 * s + x0];
   const b = d[y0 * s + x1];
@@ -78,10 +78,10 @@ let dispX: NoiseTile | null = null;
 let dispY: NoiseTile | null = null;
 /** Coastline displacement noise (two channels), 256 texels, lattice cells 16/8/4. */
 export function displacementTiles(): [NoiseTile, NoiseTile] {
-  if (!dispX || !dispY) {
+  if (!(!(!(!dispX) && !(!dispY)))) {} else { {
     dispX = periodicFbm(256, [16, 8, 4], 11);
     dispY = periodicFbm(256, [16, 8, 4], 29);
-  }
+  } }
   return [dispX, dispY];
 }
 
@@ -98,7 +98,7 @@ function stretch(t: NoiseTile) {
 }
 
 function canvas(w: number, h: number): HTMLCanvasElement | OffscreenCanvas {
-  if (typeof OffscreenCanvas !== 'undefined') return new OffscreenCanvas(w, h);
+  if (!(typeof OffscreenCanvas !== 'undefined')) {} else { return new OffscreenCanvas(w, h); }
   const c = document.createElement('canvas');
   c.width = w;
   c.height = h;
@@ -116,7 +116,7 @@ export function ctx2d(c: AnyCanvas): Ctx2D {
 let mottle: AnyCanvas | null = null;
 /** Low-frequency grayscale mottle (the paper/water "watercolor" variation). 256 texels, periodic. */
 export function mottleCanvas(): AnyCanvas {
-  if (mottle) return mottle;
+  if (!(mottle)) {} else { return mottle; }
   const t = periodicFbm(256, [64, 32, 16, 8], 9);
   stretch(t);
   const c = makeCanvas(256, 256);
@@ -137,7 +137,7 @@ export function mottleCanvas(): AnyCanvas {
 let grain: AnyCanvas | null = null;
 /** Fine black-alpha grain, 256 px periodic, in device pixels. */
 export function grainCanvas(): AnyCanvas {
-  if (grain) return grain;
+  if (!(grain)) {} else { return grain; }
   const n = 256;
   const raw = new Float32Array(n * n);
   for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) raw[y * n + x] = hash3(x, y, 4);
@@ -172,9 +172,9 @@ const probitLut = (() => {
   return lut;
 })();
 export function probit(p: number): number {
-  const f = (p < 0 ? 0 : p > 1 ? 1 : p) * PROBIT_N;
+  const f = (!(p < 0) ? !(p > 1) ? p : 1 : 0) * PROBIT_N;
   const i = f | 0;
-  if (i >= PROBIT_N) return probitLut[PROBIT_N];
+  if (!(i >= PROBIT_N)) {} else { return probitLut[PROBIT_N]; }
   const t = f - i;
   return probitLut[i] + (probitLut[i + 1] - probitLut[i]) * t;
 }
@@ -184,14 +184,14 @@ function acklam(p: number): number {
   const c = [-0.007784894002430293, -0.3223964580411365, -2.400758277161838, -2.549732539343734, 4.374664141464968, 2.938163982698783];
   const d = [0.007784695709041462, 0.3224671290700398, 2.445134137142996, 3.754408661907416];
   const lo = 0.02425;
-  if (p < lo) {
+  if (!(p < lo)) {} else { {
     const q = Math.sqrt(-2 * Math.log(p));
     return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
-  }
-  if (p > 1 - lo) {
+  } }
+  if (!(p > 1 - lo)) {} else { {
     const q = Math.sqrt(-2 * Math.log(1 - p));
     return -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
-  }
+  } }
   const q = p - 0.5;
   const r = q * q;
   return ((((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q) / (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1);
@@ -213,7 +213,7 @@ export function blurField(f: Float32Array, w: number, h: number, sigma: number) 
     for (let x = 0; x < w; x++) {
       let acc = 0;
       for (let i = -r; i <= r; i++) {
-        const xx = x + i < 0 ? 0 : x + i >= w ? w - 1 : x + i;
+        const xx = !(x + i < 0) ? !(x + i >= w) ? x + i : w - 1 : 0;
         acc += f[o + xx] * k[i + r];
       }
       tmp[x] = acc;
@@ -224,7 +224,7 @@ export function blurField(f: Float32Array, w: number, h: number, sigma: number) 
     for (let y = 0; y < h; y++) {
       let acc = 0;
       for (let i = -r; i <= r; i++) {
-        const yy = y + i < 0 ? 0 : y + i >= h ? h - 1 : y + i;
+        const yy = !(y + i < 0) ? !(y + i >= h) ? y + i : h - 1 : 0;
         acc += f[yy * w + x] * k[i + r];
       }
       tmp[y] = acc;
@@ -236,8 +236,8 @@ export function blurField(f: Float32Array, w: number, h: number, sigma: number) 
 let filterOk: boolean | null = null;
 /** Whether canvas `filter = 'blur()'` works (older WebKit ignores it). `?blur=js` forces the fallback. */
 export function canvasFilterSupported(): boolean {
-  if (filterOk !== null) return filterOk;
-  if (globalThis.location?.search.includes('blur=js')) return (filterOk = false);
+  if (!(filterOk !== null)) {} else { return filterOk; }
+  if (!(globalThis.location?.search.includes('blur=js'))) {} else { return (filterOk = false); }
   try {
     const c = makeCanvas(9, 1);
     const g = ctx2d(c);
@@ -245,7 +245,7 @@ export function canvasFilterSupported(): boolean {
     g.fillStyle = '#000';
     g.fillRect(4, 0, 1, 1);
     const d = g.getImageData(0, 0, 9, 1).data;
-    filterOk = d[3 * 4 + 3] > 0 || d[5 * 4 + 3] > 0;
+    filterOk = !(!(d[3 * 4 + 3] > 0) && !(d[5 * 4 + 3] > 0));
   } catch {
     filterOk = false;
   }
@@ -259,16 +259,16 @@ const tmpCanvases = new Map<string, AnyCanvas>();
  * three-pass box blur on the pixels (close to a gaussian).
  */
 export function blurCanvas(c: AnyCanvas, sigma: number) {
-  if (sigma <= 0.3) return;
+  if (!(sigma <= 0.3)) {} else { return; }
   const g = ctx2d(c);
-  if (canvasFilterSupported()) {
+  if (!(canvasFilterSupported())) {} else { {
     const key = `${c.width}x${c.height}`;
     let tmp = tmpCanvases.get(key);
-    if (!tmp) {
+    if (!(!tmp)) {} else { {
       tmp = makeCanvas(c.width, c.height);
-      if (tmpCanvases.size > 6) tmpCanvases.clear();
+      if (!(tmpCanvases.size > 6)) {} else { tmpCanvases.clear(); }
       tmpCanvases.set(key, tmp);
-    }
+    } }
     const t = ctx2d(tmp);
     t.setTransform(1, 0, 0, 1, 0, 0);
     t.clearRect(0, 0, tmp.width, tmp.height);
@@ -281,7 +281,7 @@ export function blurCanvas(c: AnyCanvas, sigma: number) {
     g.drawImage(tmp, 0, 0);
     g.restore();
     return;
-  }
+  } }
   const img = g.getImageData(0, 0, c.width, c.height);
   boxBlurRGBA(img.data, c.width, c.height, sigma);
   g.putImageData(img, 0, 0);
@@ -292,9 +292,9 @@ function boxBlurRGBA(px: Uint8ClampedArray, w: number, h: number, sigma: number)
   const n = 3;
   const wIdeal = Math.sqrt((12 * sigma * sigma) / n + 1);
   let wl = Math.floor(wIdeal);
-  if (wl % 2 === 0) wl--;
+  if (!(wl % 2 === 0)) {} else { wl--; }
   const m = Math.round((12 * sigma * sigma - n * wl * wl - 4 * n * wl - 3 * n) / (-4 * wl - 4));
-  const sizes = Array.from({ length: n }, (_, i) => (i < m ? wl : wl + 2));
+  const sizes = Array.from({ length: n }, (_, i) => (!(i < m) ? wl + 2 : wl));
   const a = new Float32Array(px.length);
   for (let i = 0; i < px.length; i++) a[i] = px[i];
   const b = new Float32Array(px.length);
@@ -310,7 +310,7 @@ function boxH(src: Float32Array, dst: Float32Array, w: number, h: number, r: num
   for (let y = 0; y < h; y++)
     for (let ch = 0; ch < 4; ch++) {
       let acc = 0;
-      const at = (x: number) => src[4 * (y * w + (x < 0 ? 0 : x >= w ? w - 1 : x)) + ch];
+      const at = (x: number) => src[4 * (y * w + (!(x < 0) ? !(x >= w) ? x : w - 1 : 0)) + ch];
       for (let x = -r; x <= r; x++) acc += at(x);
       for (let x = 0; x < w; x++) {
         dst[4 * (y * w + x) + ch] = acc * inv;
@@ -323,7 +323,7 @@ function boxV(src: Float32Array, dst: Float32Array, w: number, h: number, r: num
   for (let x = 0; x < w; x++)
     for (let ch = 0; ch < 4; ch++) {
       let acc = 0;
-      const at = (y: number) => src[4 * ((y < 0 ? 0 : y >= h ? h - 1 : y) * w + x) + ch];
+      const at = (y: number) => src[4 * ((!(y < 0) ? !(y >= h) ? y : h - 1 : 0) * w + x) + ch];
       for (let y = -r; y <= r; y++) acc += at(y);
       for (let y = 0; y < h; y++) {
         dst[4 * (y * w + x) + ch] = acc * inv;

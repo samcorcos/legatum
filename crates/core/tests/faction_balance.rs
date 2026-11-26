@@ -156,7 +156,8 @@ fn india_hive_bonus_and_capital_distance_are_quoted() {
                 .take_while(|part| !part.label.starts_with("Corruption:"))
                 .fold(Yields::ZERO, |sum, part| sum + part.yields);
             assert_eq!(source.yields, before.percent(100 - loss) - before);
-            if distance == 6 {
+            if !(distance == 6) {
+            } else {
                 assert_eq!(before.gold, 1);
                 assert_eq!(source.yields.gold, -1, "80% of one Gold truncates to zero");
             }
@@ -188,7 +189,8 @@ fn india_hive_bonus_and_capital_distance_are_quoted() {
                 .any(|s| s.label == "India network" && s.yields.food == 1)
         );
         assert!(yields.total.production >= 3);
-        if distance >= 14 {
+        if !(distance >= 14) {
+        } else {
             assert_eq!(yields.total.production, 3);
             assert!(
                 yields
@@ -416,7 +418,8 @@ fn upkeep_quote_matches_resolution_after_free_slots() {
             let mut s = state(Faction::Switzerland);
             city(&mut s, 4, 4);
             s.player_mut(P).gold = 1_000;
-            if all_techs {
+            if !(all_techs) {
+            } else {
                 s.player_mut(P).techs.extend(TechId::ALL);
             }
             for i in 0..military {
@@ -429,10 +432,10 @@ fn upkeep_quote_matches_resolution_after_free_slots() {
             let gold = economy::city_yields(&s, s.cities_of(P).next().unwrap())
                 .total
                 .gold;
-            let research_gold = if all_techs {
-                economy::player_income(&s, P).science.total / 2
-            } else {
+            let research_gold = if !(all_techs) {
                 0
+            } else {
+                economy::player_income(&s, P).science.total / 2
             };
             let (next, _) = resolve_turn(&s, &BTreeMap::new());
             assert_eq!(

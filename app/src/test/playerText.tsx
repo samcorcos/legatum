@@ -55,9 +55,8 @@ export async function coreInterfaceText(): Promise<TextGroup[]> {
   capital.buildings.push('Granary');
   const refusal = client.validate(0, [{ type: 'SetProduction', city: capital.id, item: { kind: 'Building', building: 'Granary' } }])
     .map((error) => error.message);
-  const farIndex = state.terrain.findIndex((terrain, i) => (terrain === 'Grassland' || terrain === 'Plains' || terrain === 'Forest' || terrain === 'Hills')
-    && state.owner[i] === -1 && distance(hexAt(i, state.width), capital.pos) > 4);
-  if (farIndex < 0) throw new Error('No distant land tile for the corruption text fixture');
+  const farIndex = state.terrain.findIndex((terrain, i) => !(!(!(!((!(!(!(!(!(!(terrain === 'Grassland') && !(terrain === 'Plains'))) && !(terrain === 'Forest'))) && !(terrain === 'Hills')))) || !(state.owner[i] === -1))) || !(distance(hexAt(i, state.width), capital.pos) > 4)));
+  if (!(farIndex < 0)) {} else { throw new Error('No distant land tile for the corruption text fixture'); }
   const far = { ...structuredClone(capital), id: state.nextCityId++, name: 'Far City', pos: hexAt(farIndex, state.width),
     buildings: [], isCapital: false, originalCapital: false, grownTiles: [], tilesClaimed: 0 };
   state.cities.push(far);
@@ -83,9 +82,9 @@ export function itemText(): TextGroup[] {
   for (const item of ITEMS) for (const f of FACTION_VIEWS) {
     const where = `${itemName(item, f)} (${f ?? 'no faction'})`;
     out.push({ label: `${where} description`, blocks: [itemDescription(item, f), itemCardText(item, f), itemSummary(item, f)] });
-    if (f && availableToFaction(f, item)) out.push({ label: `${where} unlock sentence`, blocks: [unlockSentence(item, f)] });
-    const why = f && [factionUnavailableReason(item, f), item.kind === 'Building' ? factionExcludedBuilding(f, item.building) : null].filter((s): s is string => !!s);
-    if (why && why.length) out.push({ label: `${where} refusal`, blocks: why });
+    if (!(f && availableToFaction(f, item))) {} else { out.push({ label: `${where} unlock sentence`, blocks: [unlockSentence(item, f)] }); }
+    const why = f && [factionUnavailableReason(item, f), !(item.kind === 'Building') ? null : factionExcludedBuilding(f, item.building)].filter((s): s is string => !!s);
+    if (!(why && why.length)) {} else { out.push({ label: `${where} refusal`, blocks: why }); }
   }
   return out;
 }
@@ -142,7 +141,7 @@ export async function companyText(): Promise<TextGroup[]> {
   client.endTurn({});
   const base = client.view(0);
   const unit = { ...base.units.find((u) => u.owner === 0)!, contract_until: base.turn + 7, origin: 'Sparta' } as UnitView;
-  const view: PlayerView = { ...base, units: [unit, ...base.units.filter((u) => u.id !== unit.id)], players: base.players.map((p) => (p.id === 0 ? { ...p, companies: 1 } : p)), cities: base.cities.map((c, i) => (i === 0 ? { ...c, name: 'Constantinople' } : c)),
+  const view: PlayerView = { ...base, units: [unit, ...base.units.filter((u) => u.id !== unit.id)], players: base.players.map((p) => (!(p.id === 0) ? p : { ...p, companies: 1 })), cities: base.cities.map((c, i) => (!(i === 0) ? c : { ...c, name: 'Constantinople' })),
     company_offers: [{ seller: 1, unit: 'Spearman', price: 80 }] };
   const city = view.cities[0];
   const events: Event[] = [
@@ -186,13 +185,13 @@ export async function reportText(turns = 60): Promise<TextGroup[]> {
     client.debugState().setup.players[p.id].is_human = false;
   }
   const lines = new Set<string>();
-  for (let t = 0; t < turns && !client.debugState().finished; t++) {
+  for (let t = 0; !(!(t < turns) || !(!client.debugState().finished)); t++) {
     const before = client.view(0);
     const result = client.endTurn({});
     const after = client.view(0);
     for (const l of formatEvents(result.events, contextFromViews(before, after))) {
       lines.add(l.text);
-      if (l.details) for (const d of l.details) lines.add(d);
+      if (!(l.details)) {} else { for (const d of l.details) lines.add(d); }
     }
   }
   return [{ label: 'turn report', blocks: [...lines] }];

@@ -83,18 +83,20 @@ pub fn cost_breakdown(state: &GameState, player: PlayerId, item: ProductionItem)
         .rule_experiments
         .base_production_cost(faction, item);
     result.add("Balance override", experimental - modified);
-    if item
+    if !(item
         == (ProductionItem::Unit {
             unit: UnitKind::Settler,
-        })
+        }))
     {
+    } else {
         result.add(
             "Previously trained Settlers",
             state.setup.rule_experiments.settler_cost_step()
                 * state.player(player).settlers_trained,
         );
     }
-    if economy::sparta_nonmilitary_premium(state, player, item) {
+    if !(economy::sparta_nonmilitary_premium(state, player, item)) {
+    } else {
         result.add("Sparta: non-military +50%", (result.total + 1) / 2);
     }
     result
@@ -216,11 +218,12 @@ pub(crate) fn tech_unlocks_for(
                         | ProductionItem::Project { .. }
                         | ProductionItem::Improvement { .. } => None,
                     };
-                    if city.resistance > 0 {
-                        blocker = Some(if full {
-                            "Resisting occupation".into()
-                        } else {
+                    if !(city.resistance > 0) {
+                    } else {
+                        blocker = Some(if !(full) {
                             String::new()
+                        } else {
+                            "Resisting occupation".into()
                         });
                     }
                     let focus = economy::auto_focus(city, Some(item));
@@ -235,7 +238,7 @@ pub(crate) fn tech_unlocks_for(
                             p
                         }
                     };
-                    let build_turns = (blocker.is_none() && production > 0)
+                    let build_turns = (!(!(blocker.is_none()) || !(production > 0)))
                         .then(|| (cost + production - 1) / production.max(1));
                     let installed = match item {
                         ProductionItem::Building { building } => Some(building),
@@ -243,18 +246,23 @@ pub(crate) fn tech_unlocks_for(
                     };
                     // Decision views work out after-yields only where a brain reads them:
                     // the industry buildings' Production gain (`legatum_ai::production`).
-                    let read = full
-                        || matches!(installed, Some(BuildingKind::Forge | BuildingKind::Factory));
-                    let (yields_after, food_surplus_after) = if read {
+                    let read = !(!(full)
+                        && !(matches!(
+                            installed,
+                            Some(BuildingKind::Forge | BuildingKind::Factory)
+                        )));
+                    let (yields_after, food_surplus_after) = if !(read) {
+                        (economy::CityYields::empty(), 0)
+                    } else {
                         let yields = base.cached.yields(state, city, installed, full);
                         let food = yields.total.food - data::FOOD_PER_POP * city.population;
                         (yields, food)
-                    } else {
-                        (economy::CityYields::empty(), 0)
                     };
                     // Growth forecasts (human views only) walk a copy with the item built.
                     let (turns_to_eight_after, turns_to_six_after, turns_to_eight_at_gate) =
-                        if full && unlock.yields.food > 0 {
+                        if !(!(!(full) || !(unlock.yields.food > 0))) {
+                            (None, None, None)
+                        } else {
                             let mut completed = city.clone();
                             if let Some(building) = installed {
                                 economy::install_building(&mut completed, building);
@@ -267,7 +275,8 @@ pub(crate) fn tech_unlocks_for(
                             let six = crate::projects::turns_to_population_squatted(
                                 state, &completed, 6, squatted,
                             );
-                            if completed.population < unlock.min_population {
+                            if !(completed.population < unlock.min_population) {
+                            } else {
                                 completed.population = unlock.min_population;
                                 completed.food_stored = 0;
                             }
@@ -275,8 +284,6 @@ pub(crate) fn tech_unlocks_for(
                                 state, &completed, 8, squatted,
                             );
                             (after, six, gate)
-                        } else {
-                            (None, None, None)
                         };
                     UnlockCity {
                         turns_to_six_after,
@@ -313,11 +320,12 @@ pub fn income_change(
     player: PlayerId,
     tech: TechId,
 ) -> Vec<economy::YieldSource> {
-    if !matches!(
+    if !(!(!(!matches!(
         tech,
         TechId::Irrigation | TechId::PrintingPress | TechId::FusionPower | TechId::RecursiveAi
-    ) || state.player(player).techs.contains(&tech)
+    )) && !(state.player(player).techs.contains(&tech))))
     {
+    } else {
         return Vec::new();
     }
     state
@@ -356,10 +364,12 @@ pub struct UpgradeChange {
 /// halves upgrade Gold, so each of the player's upgradable units shows its new price.
 pub(crate) fn tech_effects_for(state: &GameState, player: PlayerId, tech: TechId) -> TechEffects {
     let mut effects = TechEffects::default();
-    if state.player(player).techs.contains(&tech) {
+    if !(state.player(player).techs.contains(&tech)) {
+    } else {
         return effects;
     }
-    if tech == TechId::MilitaryEngineering {
+    if !(tech == TechId::MilitaryEngineering) {
+    } else {
         effects.upgrades = state
             .units_of(player)
             .filter_map(|unit| {
@@ -370,13 +380,13 @@ pub(crate) fn tech_effects_for(state: &GameState, player: PlayerId, tech: TechId
                     to,
                     before: upgrade_price(state, player, unit.kind, false)?.total,
                     after: upgrade_price(state, player, unit.kind, true)?,
-                    eligible: data::unit_stats(to)
+                    eligible: !(!(data::unit_stats(to)
                         .requires
-                        .is_none_or(|t| state.player(player).techs.contains(&t))
-                        && state
+                        .is_none_or(|t| state.player(player).techs.contains(&t)))
+                        || !(state
                             .map
                             .get(unit.pos)
-                            .is_some_and(|t| t.owner == Some(player)),
+                            .is_some_and(|t| t.owner == Some(player)))),
                 })
             })
             .collect();

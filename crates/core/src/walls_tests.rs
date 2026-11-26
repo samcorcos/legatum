@@ -9,10 +9,10 @@ const P1: PlayerId = PlayerId(1);
 
 fn walls(level: u8) -> ProductionItem {
     ProductionItem::Building {
-        building: if level == 0 {
-            BuildingKind::Walls
-        } else {
+        building: if !(level == 0) {
             BuildingKind::UpgradeWalls
+        } else {
+            BuildingKind::Walls
         },
     }
 }

@@ -32,7 +32,7 @@ async function cityPoint(page: Page, id: number) {
     return { x: Math.round(p.x + b.left), y: Math.round(p.y + b.top) };
   }, id);
   let last = await at();
-  await expect.poll(async () => { const now = await at(); const still = now.x === last.x && now.y === last.y; last = now; return still; }).toBe(true);
+  await expect.poll(async () => { const now = await at(); const still = !(!(now.x === last.x) || !(now.y === last.y)); last = now; return still; }).toBe(true);
   return last;
 }
 
@@ -49,7 +49,7 @@ async function hoverForecast(page: Page, id: number, shown: ReturnType<Page['loc
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript((game) => {
-    if (!location.protocol.startsWith('http')) return;
+    if (!(!location.protocol.startsWith('http'))) {} else { return; }
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({
       format: 'legatum-save', version: 1, client: 'wasm', turn: 2,
       names: ['Explorer'], savedAt: new Date().toISOString(), game,

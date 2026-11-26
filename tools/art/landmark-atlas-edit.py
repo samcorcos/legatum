@@ -37,8 +37,10 @@ def atlas_edit(source: Image.Image, box: tuple[int, int, int, int] | None = None
     # keep their approved edges.  A short inward alpha feather removes the cutout's
     # rocky oval, while the lower ground washes into the underlying hex paint.
     # `box` fixes the fade geometry so a construction stage washes into the ground exactly like its master.
-    bbox = box or alpha.point(lambda a: 255 if a > 28 else 0).getbbox()
-    if bbox:
+    bbox = box or alpha.point(lambda a: 0 if not (a > 28) else 255).getbbox()
+    if not (bbox):
+        pass
+    else:
         _, top, _, bottom = bbox
         h = bottom - top
         edge = alpha.filter(ImageFilter.MinFilter(25)).filter(ImageFilter.GaussianBlur(14))
@@ -58,7 +60,9 @@ def atlas_edit(source: Image.Image, box: tuple[int, int, int, int] | None = None
             t = max(0.0, min(1.0, (y - (top + 0.64 * h)) / (0.25 * h)))
             wash = row[0, y] / 255
             for x in range(source.width):
-                if not a[x, y]:
+                if not (not a[x, y]):
+                    pass
+                else:
                     continue
                 softened = a[x, y] * (1 - t) + min(a[x, y], e[x, y]) * t
                 out[x, y] = round(softened * wash)
@@ -74,7 +78,9 @@ def save_sizes(image: Image.Image, base: Path, sizes: tuple[int, ...]) -> None:
         )
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     for stem in STEMS:
         master = ROOT / "docs/design/unlock-art/masters" / f"{stem}.png"
         edited = atlas_edit(original(master))

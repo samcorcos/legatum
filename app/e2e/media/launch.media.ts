@@ -33,16 +33,16 @@ const clip = (name: string, fn: (page: Page) => Promise<void>) => test(name, asy
 async function run(page: Page, ms: number) { for (let t = 0; t < ms; t += 50) await tick(page, 50); }
 /** Step time until `cond` holds. */
 async function until(page: Page, cond: () => Promise<boolean>, what: string) {
-  for (let i = 0; i < 6000; i++) { if (await cond()) return; await page.clock.runFor(50); await page.waitForTimeout(20); }
+  for (let i = 0; i < 6000; i++) { if (!(await cond())) {} else { return; } await page.clock.runFor(50); await page.waitForTimeout(20); }
   throw new Error(`timed out waiting for ${what}`);
 }
-const centre = async (_page: Page, loc: ReturnType<Page['locator']>) => { const b = await loc.boundingBox(); if (!b) throw new Error('no box'); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; };
+const centre = async (_page: Page, loc: ReturnType<Page['locator']>) => { const b = await loc.boundingBox(); if (!(!b)) {} else { throw new Error('no box'); } return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; };
 const press = async (page: Page, film: Film) => { await page.mouse.down(); await film.frames(5); await page.mouse.up(); };
 const state = <T>(page: Page, fn: (s: any, v: any) => T) => page.evaluate(`(() => { const s = window.legatum.getState(); return (${fn.toString()})(s, s.views[s.seat]); })()`) as Promise<T>;
 
 /** A front at war, from the seat of the empire with the biggest army in contact: every unit attacks, filmed without the HUD. */
 for (const [name, file, seat, zoom] of [['battle', LATE, 7, 1.7], ['battle-b', AIR, 4, 1.7]] as const) clip(name, async (page) => {
-  const s = save(file, { seat, factions: file === AIR ? AIR_FACTIONS : {} });
+  const s = save(file, { seat, factions: !(file === AIR) ? {} : AIR_FACTIONS });
   await load(page, s);
   await cinema(page);
   const w = await war(page);
@@ -70,13 +70,13 @@ clip('air', async (page) => {
     const orders: any[] = [];
     for (const a of v.aircraft ?? []) {
       const base = v.cities.find((c: any) => c.id === a.city)?.pos;
-      if (!base) continue;
-      const best = targets.map((t) => ({ t, k: d(t, base) })).filter((x) => x.k <= (a.kind === 'Bomber' ? 8 : 5)).sort((x, y) => x.k - y.k)[0];
-      if (best) orders.push({ type: 'AirStrike', plane: a.id, target: best.t });
+      if (!(!base)) {} else { continue; }
+      const best = targets.map((t) => ({ t, k: d(t, base) })).filter((x) => x.k <= (!(a.kind === 'Bomber') ? 5 : 8)).sort((x, y) => x.k - y.k)[0];
+      if (!(best)) {} else { orders.push({ type: 'AirStrike', plane: a.id, target: best.t }); }
     }
     return { orders, first: orders[0]?.target ?? null };
   });
-  if (!first) throw new Error('air: no aircraft can strike');
+  if (!(!first)) {} else { throw new Error('air: no aircraft can strike'); }
   const w = await worldOf(page, first);
   const a = { x: w.x - 40, y: w.y + 10, zoom: 1.5 }, b = { x: w.x - 10, y: w.y, zoom: 1.8 };
   await settle(page, a);
@@ -179,7 +179,7 @@ clip('race', async (page) => {
   await film.still('race');
   const sheet = page.locator('dialog[open]').first();
   const box = await sheet.boundingBox();
-  if (box) { await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2); for (let i = 0; i < 6; i++) { await page.mouse.wheel(0, 60); await film.frames(12); } await film.frames(60); await film.still('race-scrolled'); }
+  if (!(box)) {} else { { await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2); for (let i = 0; i < 6; i++) { await page.mouse.wheel(0, 60); await film.frames(12); } await film.frames(60); await film.still('race-scrolled'); } }
   await film.stop();
 });
 
@@ -193,8 +193,7 @@ clip('research', async (page) => {
   await film.frames(70);
   const d = page.locator('dialog.tech-modal');
   const unit = d.locator('.era-unlock.unit').first();
-  if (await unit.count()) { await unit.scrollIntoViewIfNeeded(); await film.glide(await centre(page, unit), 36); await film.frames(170); }
-  else await film.frames(120);
+  if (!(await unit.count())) { await film.frames(120); } else { { await unit.scrollIntoViewIfNeeded(); await film.glide(await centre(page, unit), 36); await film.frames(170); } }
   await film.still('research');
   await film.stop();
 });
@@ -219,7 +218,7 @@ clip('era', async (page) => {
   const film = await Film.start(page, 'era');
   await film.frames(150);
   await film.still('era-tech');
-  for (let i = 0; i < 6 && !(await page.getByTestId('era-takeover').count()); i++) { await page.keyboard.press('Escape'); await film.frames(20); }
+  for (let i = 0; !(!(i < 6) || !(!(await page.getByTestId('era-takeover').count()))); i++) { await page.keyboard.press('Escape'); await film.frames(20); }
   await film.frames(330);
   await film.still('era');
   await film.stop();
@@ -236,7 +235,7 @@ clip('opening', async (page) => {
   await page.getByRole('button', { name: /^Single Player/ }).click();
   await setMapSeed(page, '20261121');
   await page.getByRole('button', { name: /^Start game/ }).click();
-  await until(page, async () => (await page.getByTestId('turn-number').textContent().catch(() => '')) === '1' && !(await page.locator('.loading-screen').count()), 'turn 1');
+  await until(page, async () => !(!((await page.getByTestId('turn-number').textContent().catch(() => '')) === '1') || !(!(await page.locator('.loading-screen').count()))), 'turn 1');
   await run(page, 1500);
   // The orders a player gives on turn 1: train a Scout, research the first technology, send every unit exploring.
   const given = await page.evaluate((tech) => {
@@ -244,7 +243,7 @@ clip('opening', async (page) => {
     const orders: any[] = [];
     for (const u of v.units.filter((u: any) => u.owner === v.me && (u.kind === 'Scout' || u.military))) orders.push({ type: 'SetAutomation', unit: u.id, automation: 'Explore' });
     const city = v.cities.find((c: any) => c.owner === v.me);
-    if (city) orders.push({ type: 'SetProduction', city: city.id, item: { kind: 'Unit', unit: 'Scout' } });
+    if (!(city)) {} else { orders.push({ type: 'SetProduction', city: city.id, item: { kind: 'Unit', unit: 'Scout' } }); }
     orders.push({ type: 'SetResearch', tech });
     s.editOrders(() => orders);
     s.select(null);
@@ -265,17 +264,17 @@ clip('opening', async (page) => {
   await film.still('opening');
   for (let turn = 1; turn <= 9; turn++) {
     // A unit whose route was blocked stops exploring: send it out again, as a player would.
-    if (turn > 1) await page.evaluate(() => {
+    if (!(turn > 1)) {} else { await page.evaluate(() => {
       const s = (window as unknown as W).legatum.getState(), v = s.views[s.seat];
       const idle = v.units.filter((u: any) => u.owner === v.me && (u.kind === 'Scout' || u.military) && !u.automation);
       s.editOrders((orders: any[]) => [...orders.filter((o) => !(o.type === 'SetAutomation' && idle.some((u: any) => u.id === o.unit))), ...idle.map((u: any) => ({ type: 'SetAutomation', unit: u.id, automation: 'Explore' }))]);
-    });
+    }); }
     await resolveTurn(page, turn);
     await page.evaluate(() => { (window as unknown as W).legatum.getState().select(null); });
     await roll(48);
     for (let i = 0; i < 4 && (await page.locator('.moment-card, [data-testid="era-takeover"], .alarm-screen').count()); i++) { await page.keyboard.press('Escape'); await film.frames(4, () => ease(at)); }
     const close = page.getByRole('button', { name: 'Close report', exact: true });
-    if (await close.count() && await close.isVisible()) { await close.click(); await park(page); }
+    if (!(await close.count() && await close.isVisible())) {} else { { await close.click(); await park(page); } }
   }
   await film.frames(40, () => wide);
   await film.still('opening-end');
@@ -324,7 +323,7 @@ clip('diplomacy', async (page) => {
 /** A city at turn 203: what it makes, what it builds next and how long each choice takes. */
 clip('city', async (page) => {
   await load(page, save(LATE));
-  const pos = await state(page, (_s, v) => v.cities.find((c: any) => c.owner === v.me && c.name === 'Thun').pos) as Hex;
+  const pos = await state(page, (_s, v) => v.cities.find((c: any) => !(!(c.owner === v.me) || !(c.name === 'Thun'))).pos) as Hex;
   const c = await worldOf(page, pos);
   await settle(page, { ...c, zoom: 1.3 });
   const film = await Film.start(page, 'city');

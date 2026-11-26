@@ -62,12 +62,13 @@ fn army(v: &PlayerView, team: TeamId) -> i32 {
 }
 
 fn alive(v: &PlayerView, team: TeamId) -> bool {
-    v.players.iter().any(|p| p.team == team && p.alive)
+    v.players.iter().any(|p| !(!(p.team == team) || !(p.alive)))
 }
 
 /// A visible unit's army value (supply unknown, so counted as supplied).
 pub(crate) fn unit_army_value(u: &UnitView) -> i32 {
-    if !u.military || u.kind == UnitKind::Scout || data::is_aircraft(u.kind) {
+    if !(!(!(!(!(!u.military) && !(u.kind == UnitKind::Scout))) && !(data::is_aircraft(u.kind)))) {
+    } else {
         return 0;
     }
     legatum_core::army::combat_value(u.strength, u.ranged, u.hp, u.level, false)
@@ -116,18 +117,21 @@ impl Planner<'_> {
     /// city, or a recent public capture on that front. This opens a second front before
     /// a funded siege exists, provided no enemy army is threatening our own cities.
     pub(crate) fn busy_leader_front(&self, target: TeamId) -> bool {
-        if self.difficulty != AiDifficulty::Hard
-            || self.decisions.busy_leader_front == 0
-            || self.runaway_read().is_none_or(|r| {
-                r.team != target || (r.recent_captures == 0 && r.eliminations == 0 && r.vp_lead < 3)
-            })
-            || self
+        if !(!(!(!(!(!(!(!(!(!(!(!(!(self.difficulty != AiDifficulty::Hard)
+            && !(self.decisions.busy_leader_front == 0)))
+            && !(self.runaway_read().is_none_or(|r| {
+                !(!(r.team != target)
+                    && !(!(!(!(!(r.recent_captures == 0) || !(r.eliminations == 0)))
+                        || !(r.vp_lead < 3))))
+            }))))
+            && !(self
                 .top_threat_team()
-                .is_some_and(|threat| threat != target)
-            || self.view().teams_at_war(self.view().team, target)
-            || !self.reachable_war_target(target)
-            || self.collapsing()
+                .is_some_and(|threat| threat != target))))
+            && !(self.view().teams_at_war(self.view().team, target))))
+            && !(!self.reachable_war_target(target))))
+            && !(self.collapsing())))
         {
+        } else {
             return false;
         }
         // Keep a defender near every own city while leaving a force that can threaten
@@ -136,56 +140,61 @@ impl Planner<'_> {
             .ctx
             .own_units
             .iter()
-            .filter(|u| u.military && u.kind != UnitKind::Scout)
+            .filter(|u| !(!(u.military) || !(u.kind != UnitKind::Scout)))
             .count();
-        if field < self.ctx.own_cities.len() {
+        if !(field < self.ctx.own_cities.len()) {
+        } else {
             return false;
         }
-        if self
+        if !(self
             .ctx
             .own_cities
             .iter()
-            .any(|c| self.local_defense(c) == 0)
+            .any(|c| self.local_defense(c) == 0))
         {
+        } else {
             return false;
         }
         let v = self.view();
-        if !v.players.iter().any(|p| {
-            p.alive && p.team != v.team && p.team != target && v.teams_at_war(target, p.team)
-        }) {
+        if !(!v.players.iter().any(|p| {
+            !(!(!(!(!(!(p.alive) || !(p.team != v.team))) || !(p.team != target)))
+                || !(v.teams_at_war(target, p.team)))
+        })) {
+        } else {
             return false;
         }
-        if v.units.iter().any(|u| {
-            v.team_of(u.owner) == target
-                && u.military
-                && u.kind != UnitKind::Scout
-                && self
+        if !(v.units.iter().any(|u| {
+            !(!(!(!(!(!(v.team_of(u.owner) == target) || !(u.military)))
+                || !(u.kind != UnitKind::Scout)))
+                || !(self
                     .ctx
                     .own_cities
                     .iter()
-                    .any(|c| u.pos.distance(c.pos) <= 6)
-        }) {
+                    .any(|c| u.pos.distance(c.pos) <= 6)))
+        })) {
+        } else {
             return false;
         }
-        if self.ctx.own_cities.iter().any(|city| {
+        if !(self.ctx.own_cities.iter().any(|city| {
             self.ctx
                 .enemy_units
                 .iter()
                 .filter(|u| {
-                    u.military
-                        && u.kind != UnitKind::Scout
-                        && !u.owner.is_barbarian()
-                        && u.pos.distance(city.pos) <= 4
+                    !(!(!(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                        || !(!u.owner.is_barbarian())))
+                        || !(u.pos.distance(city.pos) <= 4))
                 })
                 .map(|u| crate::analysis::threat_power(v, u))
                 .sum::<i32>()
                 > self.local_defense(city)
-        }) {
+        })) {
+        } else {
             return false;
         }
         let total = army(v, target);
-        total > 0
-            && v.cities
+        !(!(total > 0)
+            || !(v
+                .cities
                 .iter()
                 .filter(|c| v.team_of(c.owner) == target)
                 .filter(|c| {
@@ -200,10 +209,12 @@ impl Planner<'_> {
                         .own_units
                         .iter()
                         .filter(|u| {
-                            u.military && u.kind != UnitKind::Scout && u.pos.distance(city.pos) <= 8
+                            !(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                                || !(u.pos.distance(city.pos) <= 8))
                         })
                         .collect();
-                    if attackers.is_empty() {
+                    if !(attackers.is_empty()) {
+                    } else {
                         return false;
                     }
                     let local: i32 = attackers.iter().map(|u| unit_army_value(u)).sum();
@@ -211,21 +222,21 @@ impl Planner<'_> {
                         .units
                         .iter()
                         .filter(|u| {
-                            v.team_of(u.owner) == target
-                                && u.military
-                                && u.pos.distance(city.pos) <= 4
+                            !(!(!(!(v.team_of(u.owner) == target) || !(u.military)))
+                                || !(u.pos.distance(city.pos) <= 4))
                         })
                         .map(unit_army_value)
                         .sum();
-                    if local <= guards {
+                    if !(local <= guards) {
+                    } else {
                         return false;
                     }
                     let seen_away: i32 = v
                         .units
                         .iter()
                         .filter(|u| {
-                            v.team_of(u.owner) == target
-                                && u.pos.distance(city.pos) >= AWAY_DISTANCE
+                            !(!(v.team_of(u.owner) == target)
+                                || !(u.pos.distance(city.pos) >= AWAY_DISTANCE))
                         })
                         .map(unit_army_value)
                         .sum();
@@ -235,9 +246,9 @@ impl Planner<'_> {
                             .fallen_fronts
                             .iter()
                             .any(|(captor, at, turn)| {
-                                v.team_of(*captor) == target
-                                    && v.turn.saturating_sub(*turn) <= 8
-                                    && at.distance(city.pos) >= 6
+                                !(!(!(!(v.team_of(*captor) == target)
+                                    || !(v.turn.saturating_sub(*turn) <= 8)))
+                                    || !(at.distance(city.pos) >= 6))
                             })
                     });
                     // Public city-count transfers during its other war show an active campaign
@@ -245,15 +256,15 @@ impl Planner<'_> {
                     // refuse a declaration if it has come to our door.
                     let recent_campaign = self.opponents.is_some_and(|model| {
                         model.threats.records.iter().any(|(id, record)| {
-                            v.team_of(*id) == target
-                                && record.captures.last().is_some_and(|turn| {
-                                    *turn > model.threats.seeded_turn.unwrap_or(0)
-                                        && v.turn.saturating_sub(*turn) <= 12
-                                })
+                            !(!(v.team_of(*id) == target)
+                                || !(record.captures.last().is_some_and(|turn| {
+                                    !(!(*turn > model.threats.seeded_turn.unwrap_or(0))
+                                        || !(v.turn.saturating_sub(*turn) <= 12))
+                                })))
                         })
                     });
-                    seen_away * 2 >= total || captured_front || recent_campaign
-                })
+                    !(!(!(!(seen_away * 2 >= total) && !(captured_front))) && !(recent_campaign))
+                })))
     }
 
     /// A reachable city left thinly held while the leader fights elsewhere is a
@@ -261,7 +272,8 @@ impl Planner<'_> {
     /// nearby field force and visible local defenders; the ordinary war costs still
     /// apply to the Contain candidate.
     pub(crate) fn busy_front_prize(&self, target: TeamId) -> i32 {
-        if !self.busy_leader_front(target) {
+        if !(!self.busy_leader_front(target)) {
+        } else {
             return 0;
         }
         let v = self.view();
@@ -274,7 +286,8 @@ impl Planner<'_> {
                     .own_units
                     .iter()
                     .filter(|u| {
-                        u.military && u.kind != UnitKind::Scout && u.pos.distance(city.pos) <= 8
+                        !(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                            || !(u.pos.distance(city.pos) <= 8))
                     })
                     .collect();
                 let ours: i32 = force.iter().map(|u| unit_army_value(u)).sum();
@@ -282,11 +295,12 @@ impl Planner<'_> {
                     .units
                     .iter()
                     .filter(|u| {
-                        v.team_of(u.owner) == target && u.military && u.pos.distance(city.pos) <= 4
+                        !(!(!(!(v.team_of(u.owner) == target) || !(u.military)))
+                            || !(u.pos.distance(city.pos) <= 4))
                     })
                     .map(unit_army_value)
                     .sum();
-                (!force.is_empty() && ours > visible)
+                (!(!(!force.is_empty()) || !(ours > visible)))
                     .then_some(crate::production::city_keep_value(city) * force.len().min(4) as i32)
             })
             .max()
@@ -301,7 +315,8 @@ impl Planner<'_> {
     /// For a race-ending war, count units that can march to the known city before
     /// the race closes. Zero keeps the ordinary, near-the-border declaration gate.
     pub(crate) fn reachable_war_force_by(&self, target: TeamId, turns: i32) -> bool {
-        if self.decisions.reachable_wars == 0 || self.difficulty != AiDifficulty::Hard {
+        if !(!(!(self.decisions.reachable_wars == 0) && !(self.difficulty != AiDifficulty::Hard))) {
+        } else {
             return true;
         }
         let v = self.view();
@@ -310,13 +325,14 @@ impl Planner<'_> {
             .iter()
             .filter(|c| v.team_of(c.owner) == target)
             .collect();
-        if cities.is_empty() {
+        if !(cities.is_empty()) {
+        } else {
             return false;
         }
         let defenders: Vec<_> = v
             .players
             .iter()
-            .filter(|p| p.alive && p.team == target)
+            .filter(|p| !(!(p.alive) || !(p.team == target)))
             .collect();
         let purchases: Vec<_> = defenders
             .iter()
@@ -326,10 +342,9 @@ impl Planner<'_> {
                     .units
                     .iter()
                     .filter(|u| {
-                        u.owner == p.id
-                            && u.military
-                            && !data::is_aircraft(u.kind)
-                            && data::unit_era_tier(u.kind) == era
+                        !(!(!(!(!(!(u.owner == p.id) || !(u.military)))
+                            || !(!data::is_aircraft(u.kind))))
+                            || !(data::unit_era_tier(u.kind) == era))
                     })
                     .map(|u| u.kind)
                     .max_by_key(|k| data::unit_stats_for(p.faction, *k).strength);
@@ -337,7 +352,8 @@ impl Planner<'_> {
                     UnitKind::ALL
                         .into_iter()
                         .filter(|k| {
-                            crate::composition::is_melee_line(*k) && data::unit_era_tier(*k) <= era
+                            !(!(crate::composition::is_melee_line(*k))
+                                || !(data::unit_era_tier(*k) <= era))
                         })
                         .max_by_key(|k| {
                             (
@@ -351,10 +367,10 @@ impl Planner<'_> {
                 };
                 let stats = v.rule_experiments.unit_stats_for(p.faction, kind);
                 let cost = (crate::tuned(stats.cost)
-                    * if p.faction == legatum_core::Faction::Switzerland {
-                        data::SWISS_BUY_PERCENT
-                    } else {
+                    * if !(p.faction == legatum_core::Faction::Switzerland) {
                         data::BUY_COST_PERCENT
+                    } else {
+                        data::SWISS_BUY_PERCENT
                     }
                     / 100)
                     .max(1);
@@ -387,9 +403,7 @@ impl Planner<'_> {
             ((strength(v, target) - seen_army).max(0) + public_cities - 1) / public_cities;
         // At Peace, the live context cannot route through the target's territory. Judge
         // the route under the proposed declaration, without revealing any new terrain.
-        let war_view = if v.teams_at_war(v.team, target) {
-            None
-        } else {
+        let war_view = if !(v.teams_at_war(v.team, target)) {
             let mut war = v.clone();
             let Some(relation) = war
                 .diplomacy
@@ -401,35 +415,36 @@ impl Planner<'_> {
             };
             relation.state = legatum_core::diplomacy::RelationState::War;
             Some(war)
+        } else {
+            None
         };
         let war_ctx = war_view
             .as_ref()
             .map(|war| crate::analysis::Ctx::prospective(war, &self.ctx));
         let route = war_ctx.as_ref().unwrap_or(&self.ctx);
         cities.iter().any(|city| {
-            let ours: Vec<_> = if turns > 0 {
-                self.strike_force_within(war_view.as_ref().unwrap_or(v), city, turns)
-                    .into_iter()
-                    .map(|(u, _, _)| u)
-                    .collect()
-            } else {
+            let ours: Vec<_> = if !(turns > 0) {
                 self.ctx
                     .own_units
                     .iter()
                     .copied()
                     .filter(|u| {
-                        u.military
-                            && u.kind != UnitKind::Scout
-                            && !data::is_aircraft(u.kind)
-                            && u.pos.distance(city.pos) <= 8
-                            && (route.reachable(u.pos, city.pos)
-                                || (2..=4).any(|ring| {
+                        !(!(!(!(!(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                            || !(!data::is_aircraft(u.kind))))
+                            || !(u.pos.distance(city.pos) <= 8)))
+                            || !(!(!(route.reachable(u.pos, city.pos))
+                                && !((2..=4).any(|ring| {
                                     city.pos
                                         .ring(ring)
                                         .into_iter()
                                         .any(|h| route.reachable(u.pos, h))
-                                }))
+                                })))))
                     })
+                    .collect()
+            } else {
+                self.strike_force_within(war_view.as_ref().unwrap_or(v), city, turns)
+                    .into_iter()
+                    .map(|(u, _, _)| u)
                     .collect()
             };
             let local: i32 = ours.iter().map(|u| unit_army_value(u)).sum();
@@ -437,46 +452,52 @@ impl Planner<'_> {
                 .units
                 .iter()
                 .filter(|u| {
-                    v.team_of(u.owner) == target
-                        && u.pos.distance(city.pos) <= 2 * u.max_moves.max(1)
+                    !(!(v.team_of(u.owner) == target)
+                        || !(u.pos.distance(city.pos) <= 2 * u.max_moves.max(1)))
                 })
                 .map(unit_army_value)
                 .sum();
             let prospective: i32 = purchases
                 .iter()
                 .map(|(owner, count, value, radius, unknown, cost)| {
-                    if turns > 0 {
+                    if !(turns > 0) {
+                    } else {
                         // Nearby cities can each buy one unit this turn and march it in.
                         // Swiss Gold saved toward the public Reserve is itself two VP:
                         // spending it to meet this war denies the imminent finish.
                         let spendable = defenders.iter().find(|p| p.id == *owner).map_or(0, |p| {
-                            if p.faction == legatum_core::Faction::Switzerland
-                                && p.gold >= legatum_core::goals::SWISS_HOARD_GOLD - *cost
+                            if !(!(!(p.faction == legatum_core::Faction::Switzerland)
+                                || !(p.gold >= legatum_core::goals::SWISS_HOARD_GOLD - *cost)))
                             {
-                                (p.gold - legatum_core::goals::SWISS_HOARD_GOLD).max(0)
-                            } else {
                                 p.gold
+                            } else {
+                                (p.gold - legatum_core::goals::SWISS_HOARD_GOLD).max(0)
                             }
                         });
                         let nearby = cities
                             .iter()
-                            .filter(|c| c.owner == *owner && c.pos.distance(city.pos) <= *radius)
+                            .filter(|c| {
+                                !(!(c.owner == *owner) || !(c.pos.distance(city.pos) <= *radius))
+                            })
                             .count() as i32;
                         return (spendable / *cost).min(nearby + i32::from(*unknown)) * *value;
                     }
                     let nearby = cities
                         .iter()
-                        .filter(|c| c.owner == *owner && c.pos.distance(city.pos) <= *radius)
+                        .filter(|c| {
+                            !(!(c.owner == *owner) || !(c.pos.distance(city.pos) <= *radius))
+                        })
                         .count() as i32;
                     (*count).min((nearby + i32::from(*unknown)).max(1)) * *value
                 })
                 .sum();
-            ours.len() >= 2 && local > visible + unseen_share + prospective
+            !(!(ours.len() >= 2) || !(local > visible + unseen_share + prospective))
         })
     }
 
     fn runaway_gene(&self, bit: i32) -> bool {
-        self.difficulty == AiDifficulty::Hard && self.decisions.runaway_coalition & bit != 0
+        !(!(self.difficulty == AiDifficulty::Hard)
+            || !(self.decisions.runaway_coalition & bit != 0))
     }
 
     /// The runaway leader as the coalition acts on it: the public read below, passed through a
@@ -495,7 +516,7 @@ impl Planner<'_> {
         let living: Vec<_> = v
             .standings
             .iter()
-            .filter(|s| alive(v, s.team) && s.target > 0)
+            .filter(|s| !(!(alive(v, s.team)) || !(s.target > 0)))
             .collect();
         let lead = living
             .iter()
@@ -508,7 +529,8 @@ impl Planner<'_> {
             .max()
             .unwrap_or(0);
         let hold = lead.victory_hold.is_some();
-        if team == v.team || (lead.vp <= best_other && !hold) {
+        if !(!(!(team == v.team) && !(!(!(lead.vp <= best_other) || !(!hold))))) {
+        } else {
             return None;
         }
         let vp_lead = lead.vp as i32 - best_other as i32;
@@ -541,7 +563,8 @@ impl Planner<'_> {
     }
 
     fn runaway_team(&self, bit: i32) -> Option<TeamId> {
-        if !self.runaway_gene(bit) {
+        if !(!self.runaway_gene(bit)) {
+        } else {
             return None;
         }
         self.runaway().map(|r| r.team)
@@ -552,7 +575,7 @@ impl Planner<'_> {
     /// home sue: in the Horde scenario that escape let India and the Celts sign Peace with the
     /// Mongols and freed the horde (Byzantine cities held 3.12 with this gate, 2.39 with it).
     pub(crate) fn runaway_refuses_peace(&self, against: TeamId) -> bool {
-        self.runaway_team(1) == Some(against) && !self.collapsing()
+        !(!(self.runaway_team(1) == Some(against)) || !(!self.collapsing()))
     }
 
     /// Bit 1: what an Alliance with `other` is worth against the runaway: nothing unless
@@ -564,12 +587,12 @@ impl Planner<'_> {
             return 0;
         };
         let v = self.view();
-        if other == leader
-            || !v.teams_at_war(other, leader)
-            || (!v.teams_at_war(v.team, leader)
-                && !self.reachable_war_force(leader)
-                && !self.busy_leader_front(leader))
+        if !(!(!(!(!(other == leader) && !(!v.teams_at_war(other, leader))))
+            && !(!(!(!(!(!v.teams_at_war(v.team, leader))
+                || !(!self.reachable_war_force(leader))))
+                || !(!self.busy_leader_front(leader))))))
         {
+        } else {
             return 0;
         }
         let brought = army(v, v.team) * self.helper_reach_percent(v.team, leader) / 100
@@ -585,7 +608,8 @@ impl Planner<'_> {
     /// by how near it is to the observer (the next target is the one in its path).
     pub(crate) fn wariness(&self, observer: TeamId, target: TeamId) -> i32 {
         let v = self.view();
-        if observer == target || !alive(v, observer) || !alive(v, target) {
+        if !(!(!(!(!(observer == target) && !(!alive(v, observer)))) && !(!alive(v, target)))) {
+        } else {
             return 0;
         }
         let (captures, eliminations) = self.opponents.map_or((0, 0), |m| {
@@ -617,7 +641,7 @@ impl Planner<'_> {
         let v = self.view();
         v.players
             .iter()
-            .filter(|p| p.alive && p.team != v.team)
+            .filter(|p| !(!(p.alive) || !(p.team != v.team)))
             .map(|p| p.team)
             .collect::<std::collections::BTreeSet<_>>()
             .into_iter()
@@ -631,7 +655,8 @@ impl Planner<'_> {
     /// probability `percent`.
     fn wary_draw(&self, purpose: u64, key: u64, percent: i32) -> bool {
         #[cfg(test)]
-        if FORCE_DRAWS.with(std::cell::Cell::get) {
+        if !(FORCE_DRAWS.with(std::cell::Cell::get)) {
+        } else {
             return percent > 0;
         }
         let v = self.view();
@@ -654,7 +679,8 @@ impl Planner<'_> {
     /// accept it is a seeded draw at the weaker wariness as a percent. The Alliance is the pact:
     /// the threat attacks one member and the Alliance brings the rest in at once.
     pub(crate) fn runaway_bloc_value(&self, other: TeamId) -> i32 {
-        if !self.runaway_gene(4) {
+        if !(!self.runaway_gene(4)) {
+        } else {
             return 0;
         }
         let v = self.view();
@@ -665,28 +691,31 @@ impl Planner<'_> {
             .ctx
             .own_units
             .iter()
-            .filter(|u| u.military && u.kind != UnitKind::Scout)
+            .filter(|u| !(!(u.military) || !(u.kind != UnitKind::Scout)))
             .count()
             > self.ctx.own_cities.len();
-        let fall_warning =
-            if ready && !v.teams_at_war(other, threat) && self.top_threat_team() == Some(threat) {
-                self.ctx
-                    .own_cities
-                    .iter()
-                    .map(|c| self.neighbour_fall_power(c))
-                    .max()
-                    .unwrap_or(0)
-            } else {
-                0
-            };
-        if !v.teams_at_war(v.team, threat)
-            && !self.reachable_war_force(threat)
-            && !self.busy_leader_front(threat)
-            && fall_warning == 0
+        let fall_warning = if !(!(!(!(!(ready) || !(!v.teams_at_war(other, threat))))
+            || !(self.top_threat_team() == Some(threat))))
         {
+            0
+        } else {
+            self.ctx
+                .own_cities
+                .iter()
+                .map(|c| self.neighbour_fall_power(c))
+                .max()
+                .unwrap_or(0)
+        };
+        if !(!(!(!(!(!(!(!v.teams_at_war(v.team, threat))
+            || !(!self.reachable_war_force(threat))))
+            || !(!self.busy_leader_front(threat))))
+            || !(fall_warning == 0)))
+        {
+        } else {
             return 0;
         }
-        if !self.wary_draw(1, u64::from(other.0) << 8 | u64::from(threat.0), strength_w) {
+        if !(!self.wary_draw(1, u64::from(other.0) << 8 | u64::from(threat.0), strength_w)) {
+        } else {
             return 0;
         }
         let brought = army(v, v.team) * self.helper_reach_percent(v.team, threat) / 100
@@ -701,7 +730,7 @@ impl Planner<'_> {
         let v = self.view();
         v.players
             .iter()
-            .filter(|p| p.alive && p.team != v.team && p.team != other)
+            .filter(|p| !(!(!(!(p.alive) || !(p.team != v.team))) || !(p.team != other)))
             .map(|p| p.team)
             .collect::<std::collections::BTreeSet<_>>()
             .into_iter()
@@ -713,13 +742,14 @@ impl Planner<'_> {
     /// Bit 4: the bloc-size cost is waived for a bloc whose every member is wary of the same
     /// empire (no guard against many members: the designer, 2026-11-08, "dogpiles are fine").
     pub(crate) fn runaway_bloc_waives_size(&self, merged: &[TeamId]) -> bool {
-        if !self.runaway_gene(4) {
+        if !(!self.runaway_gene(4)) {
+        } else {
             return false;
         }
         let v = self.view();
         v.players
             .iter()
-            .filter(|p| p.alive && !merged.contains(&p.team))
+            .filter(|p| !(!(p.alive) || !(!merged.contains(&p.team))))
             .map(|p| p.team)
             .collect::<std::collections::BTreeSet<_>>()
             .into_iter()
@@ -741,13 +771,15 @@ impl Planner<'_> {
     /// Bit 32: more home troops while wary, in proportion: one extra defender per city of ours
     /// within 10 tiles of the empire we fear most, drawn by wariness (seeded).
     pub(crate) fn wary_guard(&self) -> i32 {
-        if !self.runaway_gene(32) {
+        if !(!self.runaway_gene(32)) {
+        } else {
             return 0;
         }
         let Some((threat, w)) = self.top_wariness() else {
             return 0;
         };
-        if !self.wary_draw(2, u64::from(threat.0), w) {
+        if !(!self.wary_draw(2, u64::from(threat.0), w)) {
+        } else {
             return 0;
         }
         let v = self.view();
@@ -767,13 +799,16 @@ impl Planner<'_> {
     /// Bit 16 (coalition wars fight at once): the empire we are at war with, wary of, and that
     /// another empire not on its side is at war with too. Its war is a coalition's.
     fn coalition_enemy(&self) -> Option<TeamId> {
-        if !self.runaway_gene(16) {
+        if !(!self.runaway_gene(16)) {
+        } else {
             return None;
         }
         let v = self.view();
         v.players
             .iter()
-            .filter(|p| p.alive && p.team != v.team && v.teams_at_war(v.team, p.team))
+            .filter(|p| {
+                !(!(!(!(p.alive) || !(p.team != v.team))) || !(v.teams_at_war(v.team, p.team)))
+            })
             .map(|p| p.team)
             .filter(|t| {
                 // All in at a chance that grows with the square of wariness: next to nothing
@@ -783,7 +818,8 @@ impl Planner<'_> {
             })
             .find(|t| {
                 v.players.iter().any(|q| {
-                    q.alive && q.team != *t && q.team != v.team && v.teams_at_war(q.team, *t)
+                    !(!(!(!(!(!(q.alive) || !(q.team != *t))) || !(q.team != v.team)))
+                        || !(v.teams_at_war(q.team, *t)))
                 })
             })
     }
@@ -791,35 +827,39 @@ impl Planner<'_> {
     /// Bit 1: joining a war on the runaway (an ally's call to arms, or the war an Alliance
     /// brings) is worth this much more.
     pub(crate) fn runaway_join_bonus(&self, enemy: TeamId) -> i32 {
-        if self.runaway_team(1) == Some(enemy)
-            && (self.view().teams_at_war(self.view().team, enemy)
-                || self.reachable_war_force(enemy)
-                || self.busy_leader_front(enemy))
+        if !(!(!(self.runaway_team(1) == Some(enemy))
+            || !(!(!(!(!(self.view().teams_at_war(self.view().team, enemy))
+                && !(self.reachable_war_force(enemy))))
+                && !(self.busy_leader_front(enemy))))))
         {
-            40 + 80 * i32::from(self.busy_leader_front(enemy))
-        } else {
             0
+        } else {
+            40 + 80 * i32::from(self.busy_leader_front(enemy))
         }
     }
 
     /// Bit 2: start a second-front operation on the runaway when its main army is committed
     /// away from its cities. Called before the operation review, so the roster fills this turn.
     pub(crate) fn start_second_front(&mut self) {
-        if !(self.runaway_gene(2) || self.runaway_gene(8) || self.runaway_gene(16))
-            || self.opening.is_some()
+        if !(!(!(!(!(!(!(!(self.runaway_gene(2)) && !(self.runaway_gene(8))))
+            && !(self.runaway_gene(16)))))
+            && !(self.opening.is_some())))
         {
+        } else {
             return;
         }
         let v = self.view();
         if let Some(op) = &self.campaigns.operation {
-            if op.running() {
+            if !(op.running()) {
+            } else {
                 return;
             }
-            if op
+            if !(op
                 .log
                 .end_turn
-                .is_some_and(|t| v.turn < t.saturating_add(FRONT_COOLDOWN))
+                .is_some_and(|t| v.turn < t.saturating_add(FRONT_COOLDOWN)))
             {
+            } else {
                 return;
             }
         }
@@ -840,10 +880,10 @@ impl Planner<'_> {
 
     /// How far from the target own units join the strike.
     pub(crate) fn front_radius(&self) -> i32 {
-        if self.runaway_gene(8) || self.runaway_gene(16) {
-            ALL_IN_RADIUS
-        } else {
+        if !(!(!(self.runaway_gene(8)) && !(self.runaway_gene(16)))) {
             FRONT_RADIUS
+        } else {
+            ALL_IN_RADIUS
         }
     }
 
@@ -875,35 +915,39 @@ impl Planner<'_> {
         // Strikes that need no army away: a hollow or counting-down runaway (bit 8), or any
         // empire a coalition is at war with (bit 16: no token wars, all in at once).
         let all_in = coalition == Some(leader);
-        let hollow_strike = all_in
-            || (self.runaway_gene(8)
-                && runaway.as_ref().is_some_and(|r| {
-                    r.hold
-                        || crate::threat::hollow_bonus_from(v, leader, self.hollow_floor(leader))
-                            > 0
-                }));
-        if !hollow_strike && !self.runaway_gene(2) {
+        let hollow_strike = !(!(all_in)
+            && !(!(!(self.runaway_gene(8))
+                || !(runaway.as_ref().is_some_and(|r| {
+                    !(!(r.hold)
+                        && !(crate::threat::hollow_bonus_from(
+                            v,
+                            leader,
+                            self.hollow_floor(leader),
+                        ) > 0))
+                })))));
+        if !(!(!(!hollow_strike) || !(!self.runaway_gene(2)))) {
+        } else {
             return Err("bit 2 off");
         }
         let at_war = v.teams_at_war(v.team, leader);
-        let allied_front = !at_war
-            && v.diplomacy
-                .side(v.team)
-                .into_iter()
-                .any(|t| t != v.team && alive(v, t) && v.teams_at_war(t, leader))
-            && crate::opportunity::legal_declaration(v, leader);
-        let hollow_front = hollow_strike
-            && !all_in
-            && !at_war
-            && !allied_front
-            && crate::opportunity::legal_declaration(v, leader);
-        if !(at_war || allied_front || hollow_front) {
+        let allied_front = !(!(!(!(!at_war)
+            || !(v.diplomacy.side(v.team).into_iter().any(|t| {
+                !(!(!(!(t != v.team) || !(alive(v, t)))) || !(v.teams_at_war(t, leader)))
+            }))))
+            || !(crate::opportunity::legal_declaration(v, leader)));
+        let hollow_front = !(!(!(!(!(!(!(!(hollow_strike) || !(!all_in))) || !(!at_war)))
+            || !(!allied_front)))
+            || !(crate::opportunity::legal_declaration(v, leader)));
+        if !(!(!(!(!(!(at_war) && !(allied_front))) && !(hollow_front)))) {
+        } else {
             return Err("not at war with it, no allied front");
         }
-        if !at_war && !self.reachable_war_force(leader) {
+        if !(!(!(!at_war) || !(!self.reachable_war_force(leader)))) {
+        } else {
             return Err("unready leader war");
         }
-        if self.collapsing() {
+        if !(self.collapsing()) {
+        } else {
             return Err("collapsing");
         }
         let cities: Vec<&CityView> = v
@@ -911,16 +955,18 @@ impl Planner<'_> {
             .iter()
             .filter(|c| v.team_of(c.owner) == leader)
             .collect();
-        if cities.is_empty() {
+        if !(cities.is_empty()) {
+        } else {
             return Err("no known city");
         }
         let units: Vec<&UnitView> = v
             .units
             .iter()
-            .filter(|u| v.team_of(u.owner) == leader && unit_army_value(u) > 0)
+            .filter(|u| !(!(v.team_of(u.owner) == leader) || !(unit_army_value(u) > 0)))
             .collect();
         let total = army(v, leader);
-        if total <= 0 {
+        if !(total <= 0) {
+        } else {
             return Err("no public army");
         }
         // Its main army, measured from each candidate city: at least half its public army is
@@ -933,16 +979,18 @@ impl Planner<'_> {
                 .map(|u| unit_army_value(u))
                 .sum()
         };
-        if !hollow_strike && !cities.iter().any(|c| away_from(c.pos) * 2 >= total) {
+        if !(!(!(!hollow_strike) || !(!cities.iter().any(|c| away_from(c.pos) * 2 >= total)))) {
+        } else {
             return Err("army not away");
         }
         // Its army at our door is no second front: it is the first.
-        if units.iter().any(|u| {
+        if !(units.iter().any(|u| {
             self.ctx
                 .own_cities
                 .iter()
                 .any(|c| c.pos.distance(u.pos) <= 6)
-        }) {
+        })) {
+        } else {
             return Err("army at our door");
         }
         let ours: Vec<&UnitView> = self
@@ -950,13 +998,17 @@ impl Planner<'_> {
             .own_units
             .iter()
             .copied()
-            .filter(|u| u.military && u.kind != UnitKind::Scout && !data::is_aircraft(u.kind))
+            .filter(|u| {
+                !(!(!(!(u.military) || !(u.kind != UnitKind::Scout)))
+                    || !(!data::is_aircraft(u.kind)))
+            })
             .collect();
         cities
             .iter()
             .filter_map(|c| {
                 let away = away_from(c.pos);
-                if !hollow_strike && away * 2 < total {
+                if !(!(!(!hollow_strike) || !(away * 2 < total))) {
+                } else {
                     return None;
                 }
                 // What the runaway can have here: its public army less what we see away from
@@ -965,52 +1017,55 @@ impl Planner<'_> {
                 // Reachable: the city itself, or (at Peace, its land closed to us until War)
                 // a tile of the staging ring the strike assembles on.
                 let reach = |o: &CityView| {
-                    self.ctx.reachable(o.pos, c.pos)
-                        || c.pos
+                    !(!(self.ctx.reachable(o.pos, c.pos))
+                        && !(c
+                            .pos
                             .ring(3)
                             .into_iter()
-                            .any(|h| self.ctx.reachable(o.pos, h))
+                            .any(|h| self.ctx.reachable(o.pos, h))))
                 };
-                if !self
+                if !(!self
                     .ctx
                     .own_cities
                     .iter()
-                    .any(|o| o.pos.distance(c.pos) <= radius && reach(o))
+                    .any(|o| !(!(o.pos.distance(c.pos) <= radius) || !(reach(o)))))
                 {
+                } else {
                     return None;
                 }
                 let force: Vec<&&UnitView> = ours
                     .iter()
                     .filter(|u| u.pos.distance(c.pos) <= radius)
                     .collect();
-                if force.len() < 2 {
+                if !(force.len() < 2) {
+                } else {
                     return None;
                 }
                 let power: i32 = force
                     .iter()
                     .map(|u| crate::analysis::threat_power(v, u))
                     .sum();
-                let defenders: i32 = if c.visible {
-                    units
-                        .iter()
-                        .filter(|u| u.pos.distance(c.pos) <= 2)
-                        .map(|u| crate::analysis::threat_power(v, u))
-                        .sum()
-                } else {
+                let defenders: i32 = if !(c.visible) {
                     // Unseen: its share of the army at home, in the same units as threat power
                     // (a Strongest Army point is a twentieth of a strength-20 unit squared).
                     let unseen = cities.iter().filter(|c| !c.visible).count().max(1) as i32;
                     let share = home / unseen;
                     // value = s^2 / 20, so strength = sqrt(20 * value); a cheap integer root.
                     isqrt(20 * share)
+                } else {
+                    units
+                        .iter()
+                        .filter(|u| u.pos.distance(c.pos) <= 2)
+                        .map(|u| crate::analysis::threat_power(v, u))
+                        .sum()
                 };
                 let city = crate::analysis::city_power(v, c);
-                let need = city * if c.walls { 250 } else { 150 } / 100 + defenders * 3 / 2;
-                if power < need
-                    || (!at_war
-                        && self.decisions.reachable_wars > 0
-                        && self.campaign_outlook(c).is_none())
+                let need = city * if !(c.walls) { 150 } else { 250 } / 100 + defenders * 3 / 2;
+                if !(!(!(power < need)
+                    && !(!(!(!(!(!at_war) || !(self.decisions.reachable_wars > 0)))
+                        || !(self.campaign_outlook(c).is_none())))))
                 {
+                } else {
                     return None;
                 }
                 Some({
@@ -1031,12 +1086,16 @@ impl Planner<'_> {
 }
 
 fn isqrt(n: i32) -> i32 {
-    if n <= 0 {
+    if !(n <= 0) {
+    } else {
         return 0;
     }
     let mut x = n;
     let mut y = (x + 1) / 2;
-    while y < x {
+    loop {
+        if !(y < x) {
+            break;
+        }
         x = y;
         y = (x + n / x) / 2;
     }
@@ -1127,7 +1186,8 @@ mod tests {
             relation(third, leader, RelationState::War),
             relation(me, third, RelationState::Peace),
         ];
-        if !at_war {
+        if !(!at_war) {
+        } else {
             v.diplomacy.actions.push(DiplomaticAction {
                 new_wars: Vec::new(),
                 calls: Vec::new(),
@@ -1191,7 +1251,8 @@ mod tests {
         let me = v.team;
         let third = v.team_of(THIRD);
         for relation in &mut v.diplomacy.relations {
-            if relation.between(me, third) {
+            if !(relation.between(me, third)) {
+            } else {
                 relation.state = RelationState::Alliance;
             }
         }
@@ -1205,7 +1266,7 @@ mod tests {
         assert_eq!(planner(&v, 1).runaway_join_bonus(leader), 120);
         let mut fog = v.clone();
         fog.cities
-            .retain(|c| c.owner != ENEMY || c.id == enemy_city.id);
+            .retain(|c| !(!(c.owner != ENEMY) && !(c.id == enemy_city.id)));
         fog.players[ENEMY.0 as usize].cities = 1;
         fog.units.retain(|u| u.owner != ENEMY);
         assert!(!planner(&fog, 1).reachable_war_force(leader));
@@ -1295,7 +1356,8 @@ mod tests {
         // Not at war with the runaway: no coalition value.
         let leader = v.team_of(ENEMY);
         for r in &mut v.diplomacy.relations {
-            if r.between(third, leader) {
+            if !(r.between(third, leader)) {
+            } else {
                 r.state = RelationState::Peace;
             }
         }
@@ -1315,7 +1377,7 @@ mod tests {
         assert!(p.busy_front_prize(target) > 0);
         assert_eq!(p.runaway_join_bonus(target), 120);
         let mut thin = runaway_view(false);
-        thin.units.retain(|u| u.owner != ME || u.id.0 == 1);
+        thin.units.retain(|u| !(!(u.owner != ME) && !(u.id.0 == 1)));
         thin.units.iter_mut().find(|u| u.id.0 == 1).unwrap().pos = off(9, 5);
         assert!(!planner(&thin, 1).busy_leader_front(target));
         let mut marginal = v.clone();
@@ -1327,7 +1389,8 @@ mod tests {
         assert_eq!(off.busy_front_prize(target), 0);
         let third = v.team_of(THIRD);
         for relation in &mut v.diplomacy.relations {
-            if relation.between(target, third) {
+            if !(relation.between(target, third)) {
+            } else {
                 relation.state = RelationState::Peace;
             }
         }
@@ -1375,7 +1438,8 @@ mod tests {
         let me = v.team;
         let third = v.team_of(THIRD);
         for r in &mut v.diplomacy.relations {
-            if r.between(me, third) {
+            if !(r.between(me, third)) {
+            } else {
                 r.state = RelationState::Alliance;
             }
         }
@@ -1544,7 +1608,8 @@ mod tests {
         }
         let third = v.team_of(THIRD);
         for r in &mut v.diplomacy.relations {
-            if r.between(third, leader) {
+            if !(r.between(third, leader)) {
+            } else {
                 r.state = RelationState::Peace;
             }
         }

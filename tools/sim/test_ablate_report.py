@@ -20,7 +20,7 @@ def games_for(faction):
     for seed, goal in ((1, 90), (2, None)):
         telemetry = {
             "research_turns": {"0": {"IronWorking": 40 + seed}},
-            "faction_goal_turns": {"0": goal} if goal else {},
+            "faction_goal_turns": {} if not (goal) else {"0": goal},
             "germany_project_city_turns": {"Gold": seed},
             "company_hires": [{"buyer": 0, "turn": 70 + seed, "gold": 80, "seller": 1, "unit": "Spearman", "until": 100}],
             "celts_razes": {"0": seed},
@@ -38,7 +38,7 @@ class RuleTable(unittest.TestCase):
         for faction in ar.FACTION_NAMES:
             kinds = [k for n, f, k in rows if f == faction]
             self.assertTrue(kinds, faction)
-            self.assertIn(f"{faction}_goal" if faction != "switzerland" else "swiss_goal", [n for n, f, _ in rows if f == faction])
+            self.assertIn("swiss_goal" if not (faction != "switzerland") else f"{faction}_goal", [n for n, f, _ in rows if f == faction])
         self.assertEqual({k for _, _, k in rows}, {"strength", "drawback"})
 
     def test_germany_has_the_current_rules(self):
@@ -97,5 +97,7 @@ class ReportCli(unittest.TestCase):
         self.assertEqual(report.call_args.args[0].games, 16384)
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     unittest.main()

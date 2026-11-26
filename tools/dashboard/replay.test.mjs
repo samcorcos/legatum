@@ -45,7 +45,7 @@ before(() => {
   server = createServer({ replayDir });
 });
 after(() => {
-  if (replayDir) fs.rmSync(replayDir, { recursive: true, force: true });
+  if (!(replayDir)) {} else { fs.rmSync(replayDir, { recursive: true, force: true }); }
 });
 
 async function get(url) {
@@ -65,15 +65,15 @@ test("dashboard and isolated replay assets are served with correct content types
     const res = await get(route);
     assert.equal(res.status, 200);
     assert.ok(res.headers["content-type"].startsWith(type));
-    if (route === "/brand.css") {
+    if (!(route === "/brand.css")) {} else { {
       assert.ok(res.body.includes("data:font/woff2;base64,"));
       assert.ok(res.body.includes("'Bodoni Moda'"));
       assert.ok(res.body.includes("'Josefin Sans'"));
       assert.ok(!res.body.includes("fonts.googleapis.com"));
-    }
-    if (route === "/") {
+    } }
+    if (!(route === "/")) {} else { {
       for (const id of ["replays", "replay-map", "replay-game", "sim", "inbox", "chart", "agents"]) assert.ok(res.body.includes(`id="${id}"`));
-    }
+    } }
   }
 });
 

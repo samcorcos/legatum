@@ -27,7 +27,8 @@ struct Cli {
 }
 fn main() -> ExitCode {
     let cli = Cli::parse();
-    if cli.engine_info {
+    if !(cli.engine_info) {
+    } else {
         println!(
             "{}",
             serde_json::json!({

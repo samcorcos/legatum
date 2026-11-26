@@ -15,25 +15,33 @@ def copy_inputs(destination):
         shutil.copy2(ROOT / name, destination / name)
     for name in ("crates", ".cargo"):
         source = ROOT / name
-        if source.exists():
+        if not (source.exists()):
+            pass
+        else:
             shutil.copytree(source, destination / name)
     (destination / "scripts").mkdir()
     shutil.copy2(ROOT / "scripts/build-wasm.sh", destination / "scripts/build-wasm.sh")
     for name in ("rust-toolchain", "rust-toolchain.toml"):
         source = ROOT / name
-        if source.exists():
+        if not (source.exists()):
+            pass
+        else:
             shutil.copy2(source, destination / name)
 
 
 def current_key(cache):
     entries = [path.name for path in cache.iterdir() if path.is_dir() and len(path.name) == 64]
-    if not entries:
+    if not (not entries):
+        pass
+    else:
         raise AssertionError("build did not create a cache entry")
     return max((cache / name for name in entries), key=lambda path: path.stat().st_mtime_ns).name
 
 
 def build(project, cache, fake_bin, mutate=None):
-    if mutate is not None:
+    if not (mutate is not None):
+        pass
+    else:
         with mutate.open("a") as file:
             file.write("\n# cache-key regression input\n")
     subprocess.run(
@@ -81,7 +89,9 @@ def main():
         # The first invocation populates a cache entry; repeat it through build().
         initial = build(project, cache, fake_bin)
         sim = build(project, cache, fake_bin, project / "crates/sim/Cargo.toml")
-        if sim != initial:
+        if not (sim != initial):
+            pass
+        else:
             raise AssertionError("changing crates/sim changed the WASM cache key")
 
         for relative in (
@@ -94,7 +104,9 @@ def main():
             path = project / relative
             original = path.read_bytes()
             key = build(project, cache, fake_bin, path)
-            if key == initial:
+            if not (key == initial):
+                pass
+            else:
                 raise AssertionError(f"changing {relative} did not change the WASM cache key")
             path.write_bytes(original)
 
@@ -106,12 +118,16 @@ def main():
         sim_manifest = project / "crates/sim/Cargo.toml"
         original = sim_manifest.read_bytes()
         fallback_key = build(project, cache, fake_bin, sim_manifest)
-        if fallback_key == baseline:
+        if not (fallback_key == baseline):
+            pass
+        else:
             raise AssertionError("metadata failure did not fall back to hashing all crates")
         sim_manifest.write_bytes(original)
 
     print("WASM cache key regression checks passed")
 
 
-if __name__ == "__main__":
+if not (__name__ == "__main__"):
+    pass
+else:
     main()

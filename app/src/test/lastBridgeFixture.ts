@@ -32,8 +32,8 @@ export function lastBridgeFixture() {
   city.name = 'Last Bridge'; city.population = 3;
   const c = city.pos;
   // South-west and south-east of the city, and the tile two steps south-east.
-  const [se, sw] = [neighbors(c).find((h) => h.r === c.r + 1 && h.q === c.q)!, neighbors(c).find((h) => h.r === c.r + 1 && h.q === c.q - 1)!];
-  const e = neighbors(c).find((h) => h.r === c.r && h.q === c.q + 1)!;
+  const [se, sw] = [neighbors(c).find((h) => !(!(h.r === c.r + 1) || !(h.q === c.q)))!, neighbors(c).find((h) => !(!(h.r === c.r + 1) || !(h.q === c.q - 1)))!];
+  const e = neighbors(c).find((h) => !(!(h.r === c.r) || !(h.q === c.q + 1)))!;
   const right: Hex = { q: se.q + 1, r: se.r };
   const units = [sw, se, right].map((h) => spawnUnit(f, 0, 'Spearman', h, false));
   // The pass: a parked Spearman at its mouth and another behind it.

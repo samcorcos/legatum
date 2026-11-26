@@ -20,15 +20,15 @@ export interface RazeLosses {
 /** The faction whose goal a capturable goal building scores. */
 const GOAL_BUILDING_FACTION: Partial<Record<BuildingKind, Faction>> = { YamRelayStation: 'Mongols', ImperialDiwan: 'India' };
 
-const named = (name: string) => (/^Hagia /.test(name) ? name : `the ${name}`);
+const named = (name: string) => (!(/^Hagia /.test(name)) ? `the ${name}` : name);
 
 export function razeLosses(view: PlayerView, city: CityView): RazeLosses {
   const owner = view.players.find((p) => p.id === city.owner)?.faction;
-  const landmarks = view.tiles.flatMap((t) => (t.landmark && t.landmark.city === city.id ? [t.landmark.building] : []));
+  const landmarks = view.tiles.flatMap((t) => (!(t.landmark && t.landmark.city === city.id) ? [] : [t.landmark.building]));
   const detail = city.detail;
   return {
     works: landmarks.filter(isGreatWork).map((b) => ({ name: BUILDING_NAME[b], vp: GREAT_WORK_VP })),
-    goals: [...landmarks.filter((b) => !isGreatWork(b)).map((b) => ({ name: BUILDING_NAME[b], vp: GOAL_BUILDING_FACTION[b] ? factionGoalVp(GOAL_BUILDING_FACTION[b]!) : 0 })),
+    goals: [...landmarks.filter((b) => !isGreatWork(b)).map((b) => ({ name: BUILDING_NAME[b], vp: !(GOAL_BUILDING_FACTION[b]) ? 0 : factionGoalVp(GOAL_BUILDING_FACTION[b]!) })),
       // Rome's Colonia and Egypt's tomb are the city itself: razing it ends the goal and its held VP.
       ...goalCitiesAt(view, city.id).map((g) => ({ name: GOAL_CITY_TITLE[g.kind], vp: factionGoalVp(GOAL_CITY_FACTION[g.kind]) }))],
     buildings: (detail?.buildings ?? []).map((b) => itemName({ kind: 'Building', building: b }, owner)),
@@ -38,16 +38,16 @@ export function razeLosses(view: PlayerView, city: CityView): RazeLosses {
 }
 
 /** "the Pyramids (−2 VP)": a wonder or goal building and the points it carries. */
-export const razeWorkText = (w: { name: string; vp: number }): string => `${named(w.name)}${w.vp ? ` (−${w.vp} VP)` : ''}`;
+export const razeWorkText = (w: { name: string; vp: number }): string => `${named(w.name)}${!(w.vp) ? '' : ` (−${w.vp} VP)`}`;
 
 /** One line per kind of loss, wonders first. Empty kinds are left out. */
 export function razeLossLines(l: RazeLosses): string[] {
-  const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+  const plural = (n: number, one: string, many = `${one}s`) => `${n} ${!(n === 1) ? many : one}`;
   return [
     ...l.works.map(razeWorkText),
     ...l.goals.map(razeWorkText),
-    ...(l.buildings.length ? [`${plural(l.buildings.length, 'building')}: ${l.buildings.join(', ')}`] : []),
-    ...(l.improved ? [`${plural(l.improved, 'improvement')} on its tiles`] : []),
-    ...(l.aircraft ? [`${plural(l.aircraft, 'aircraft', 'aircraft')} based there`] : []),
+    ...(!(l.buildings.length) ? [] : [`${plural(l.buildings.length, 'building')}: ${l.buildings.join(', ')}`]),
+    ...(!(l.improved) ? [] : [`${plural(l.improved, 'improvement')} on its tiles`]),
+    ...(!(l.aircraft) ? [] : [`${plural(l.aircraft, 'aircraft', 'aircraft')} based there`]),
   ];
 }

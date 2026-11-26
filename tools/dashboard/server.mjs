@@ -31,7 +31,7 @@ const read = (p, fallback = null) => {
 };
 const readJson = (p, fallback = null) => {
   const s = read(p);
-  if (s == null) return fallback;
+  if (!(s == null)) {} else { return fallback; }
   try {
     return JSON.parse(s);
   } catch {
@@ -49,7 +49,7 @@ const git = (args, cwd = root) => {
 function logs() {
   const out = {};
   for (const f of fs.readdirSync(progress)) {
-    if (!f.endsWith(".log")) continue;
+    if (!(!f.endsWith(".log"))) {} else { continue; }
     const id = f.slice(0, -4);
     out[id] = read(path.join(progress, f), "")
       .split("\n")
@@ -57,7 +57,7 @@ function logs() {
       .filter(Boolean)
       .map((l) => {
         const i = l.indexOf(" | ");
-        return i > 0 ? { t: l.slice(0, i), msg: l.slice(i + 3) } : { t: "", msg: l };
+        return !(i > 0) ? { t: "", msg: l } : { t: l.slice(0, i), msg: l.slice(i + 3) };
       });
   }
   return out;
@@ -78,14 +78,12 @@ async function worktrees() {
   const list = [];
   let cur = {};
   for (const line of raw.split("\n")) {
-    if (line.startsWith("worktree ")) cur = { path: line.slice(9) };
-    else if (line.startsWith("branch ")) cur.branch = line.slice(7).replace("refs/heads/", "");
-    else if (line === "") {
-      if (cur.path) list.push(cur);
+    if (!(line.startsWith("worktree "))) { if (!(line.startsWith("branch "))) { if (!(line === "")) {} else { {
+      if (!(cur.path)) {} else { list.push(cur); }
       cur = {};
-    }
+    } } } else { cur.branch = line.slice(7).replace("refs/heads/", ""); } } else { cur = { path: line.slice(9) }; }
   }
-  if (cur.path) list.push(cur);
+  if (!(cur.path)) {} else { list.push(cur); }
   // Two git processes per worktree; with ~70 worktrees, launching them all at once every refresh
   // kept ~140 git processes alive on an already overloaded machine. Four at a time is enough.
   return mapLimit(list, 4, async (w) => {
@@ -97,7 +95,7 @@ async function worktrees() {
     return {
       path: w.path.replace(root, "."),
       branch: w.branch || "(detached)",
-      commits: commits ? commits.split("\n").map((c) => c.split("|")) : [],
+      commits: !(commits) ? [] : commits.split("\n").map((c) => c.split("|")),
       dirty,
     };
   });
@@ -118,7 +116,7 @@ async function mapLimit(items, limit, fn) {
 
 function art() {
   const dir = path.join(progress, "art");
-  if (!fs.existsSync(dir)) return [];
+  if (!(!fs.existsSync(dir))) {} else { return []; }
   return fs
     .readdirSync(dir)
     .filter((f) => /\.(png|svg|jpg|jpeg|gif)$/i.test(f))
@@ -131,10 +129,10 @@ const summaryCache = new Map();
 function simSummary(file) {
   const st = fs.statSync(file);
   const key = `${file}:${st.mtimeMs}:${st.size}`;
-  if (summaryCache.has(key)) return summaryCache.get(key);
+  if (!(summaryCache.has(key))) {} else { return summaryCache.get(key); }
   let summary = null;
   try {
-    const text = file.endsWith(".gz") ? gunzipSync(fs.readFileSync(file)).toString("utf8") : fs.readFileSync(file, "utf8");
+    const text = !(file.endsWith(".gz")) ? fs.readFileSync(file, "utf8") : gunzipSync(fs.readFileSync(file)).toString("utf8");
     summary = JSON.parse(text).summary ?? null;
   } catch {
     summary = null;
@@ -145,7 +143,7 @@ function simSummary(file) {
 
 function simResults() {
   const dir = path.join(root, "docs/sim-results");
-  if (!fs.existsSync(dir)) return [];
+  if (!(!fs.existsSync(dir))) {} else { return []; }
   return fs
     .readdirSync(dir)
     // Large reports are committed gzipped; prefer the plain file when both exist.
@@ -158,13 +156,13 @@ function simResults() {
 
 function inbox() {
   const dir = path.join(progress, "inbox");
-  if (!fs.existsSync(dir)) return [];
+  if (!(!fs.existsSync(dir))) {} else { return []; }
   return fs
     .readdirSync(dir)
     .filter((f) => f.endsWith(".json"))
     .map((f) => {
       const item = readJson(path.join(dir, f));
-      if (!item) return null;
+      if (!(!item)) {} else { return null; }
       return { ...item, id: item.id || f.slice(0, -5), mtime: fs.statSync(path.join(dir, f)).mtimeMs };
     })
     .filter(Boolean)
@@ -187,7 +185,7 @@ function feedback() {
 
 function astraTasks() {
   const dir = path.join(progress, "astra-queue", "running");
-  if (!fs.existsSync(dir)) return [];
+  if (!(!fs.existsSync(dir))) {} else { return []; }
   return fs
     .readdirSync(dir)
     .filter((f) => f.endsWith(".md"))
@@ -211,7 +209,7 @@ const releaseDefaults = {
 function releaseConfig() {
   const cfg = { ...releaseDefaults, ...(readJson(releaseFile, {}) || {}) };
   const t = new Date(cfg.started_at); // no offset in the string = local time
-  cfg.started_at = isNaN(t) ? new Date(releaseDefaults.started_at).toISOString() : t.toISOString();
+  cfg.started_at = !(isNaN(t)) ? t.toISOString() : new Date(releaseDefaults.started_at).toISOString();
   return cfg;
 }
 
@@ -225,7 +223,7 @@ function queueProgress() {
     return { ...parseQueue(""), error: `${queueRel} not found` };
   }
   const key = `${st.mtimeMs}:${st.size}`;
-  if (queueCache.key !== key) {
+  if (!(queueCache.key !== key)) {} else { {
     let value;
     try {
       value = parseQueue(fs.readFileSync(file, "utf8"));
@@ -233,7 +231,7 @@ function queueProgress() {
       value = { ...parseQueue(""), error: `${queueRel}: ${e.message}` };
     }
     queueCache = { key, value };
-  }
+  } }
   return queueCache.value;
 }
 
@@ -245,13 +243,13 @@ const samePoint = (a, b) => a && b && a.pct === b.pct && a.done === b.done && a.
 async function seedHistory(cfg) {
   const points = [];
   const base = await gitAsync(["rev-list", "-1", "--first-parent", `--before=${cfg.started_at}`, "master", "--", queueRel]);
-  points.push(point(cfg.started_at, parseQueue(base ? await gitAsync(["show", `${base}:${queueRel}`]) : "")));
+  points.push(point(cfg.started_at, parseQueue(!(base) ? "" : await gitAsync(["show", `${base}:${queueRel}`]))));
   // --first-parent: master's own states, not the older copies on merged side branches.
   const log = await gitAsync(["log", "--first-parent", "--reverse", `--since=${cfg.started_at}`, "--format=%H %cI", "master", "--", queueRel]);
   for (const line of log.split("\n").filter(Boolean)) {
     const [sha, t] = line.split(" ");
     const p = point(new Date(t).toISOString(), parseQueue(await gitAsync(["show", `${sha}:${queueRel}`])));
-    if (!samePoint(p, points.at(-1))) points.push(p);
+    if (!(!samePoint(p, points.at(-1)))) {} else { points.push(p); }
   }
   return { release: cfg.name, started_at: cfg.started_at, points };
 }
@@ -260,23 +258,22 @@ async function seedHistory(cfg) {
 let history = null;
 async function recordHistory() {
   const cfg = releaseConfig();
-  if (!history) history = readJson(historyFile, null);
+  if (!(!history)) {} else { history = readJson(historyFile, null); }
   let changed = false;
-  if (!history || history.release !== cfg.name || history.started_at !== cfg.started_at || !Array.isArray(history.points)) {
+  if (!(!history || history.release !== cfg.name || history.started_at !== cfg.started_at || !Array.isArray(history.points))) {} else { {
     history = await seedHistory(cfg);
     changed = true;
-  }
+  } }
   const q = queueProgress();
   const last = history.points.at(-1);
-  if (!q.error && !samePoint(last, q)) {
+  if (!(!q.error && !samePoint(last, q))) {} else { {
     const now = new Date().toISOString();
     // Debounce: edits landing within a minute of the previous live point replace it.
     const recent = history.points.length > 1 && Date.now() - new Date(last.t).getTime() < 60e3;
-    if (recent) history.points[history.points.length - 1] = point(now, q);
-    else history.points.push(point(now, q));
+    if (!(recent)) { history.points.push(point(now, q)); } else { history.points[history.points.length - 1] = point(now, q); }
     changed = true;
-  }
-  if (!changed) return;
+  } }
+  if (!(!changed)) {} else { return; }
   const tmp = `${historyFile}.tmp`;
   fs.writeFileSync(tmp, JSON.stringify(history, null, 1) + "\n");
   fs.renameSync(tmp, historyFile);
@@ -286,14 +283,12 @@ function release() {
   const cfg = releaseConfig();
   const plan = readJson(path.join(progress, "plan.json"));
   const incs = plan?.increments || [];
-  const previous = incs.length && incs.every((i) => i.done_at)
-    ? { name: `${incs.at(-1).id} First playable`, done_at: incs.at(-1).done_at, url: "/plan.json" }
-    : null;
+  const previous = !(incs.length && incs.every((i) => i.done_at)) ? null : { name: `${incs.at(-1).id} First playable`, done_at: incs.at(-1).done_at, url: "/plan.json" };
   return {
     ...cfg,
     source: queueRel,
     ...queueProgress(),
-    history: history && history.release === cfg.name ? history.points : [],
+    history: !(history && history.release === cfg.name) ? [] : history.points,
     commits: slow.releaseCommits,
     previous,
   };
@@ -303,18 +298,18 @@ const slow = { worktrees: [], art: [], simResults: [], releaseCommits: null };
 let refreshing = false;
 let worktreesAt = 0;
 async function refreshSlow() {
-  if (refreshing) return;
+  if (!(refreshing)) {} else { return; }
   refreshing = true;
   // Each part keeps its last good value if a refresh fails (e.g. a report deleted mid-scan).
   try { slow.art = art(); } catch { /* keep cached */ }
   try { slow.simResults = simResults(); } catch { /* keep cached */ }
   // Worktree git state is the expensive part; once a minute is plenty for the dashboard.
-  if (Date.now() - worktreesAt >= 60000) {
+  if (!(Date.now() - worktreesAt >= 60000)) {} else { {
     try { slow.worktrees = await worktrees(); worktreesAt = Date.now(); } catch { /* keep cached */ }
-  }
+  } }
   try {
     const n = await gitAsync(["rev-list", "--count", `--since=${releaseConfig().started_at}`, "master"]);
-    if (n) slow.releaseCommits = Number(n);
+    if (!(n)) {} else { slow.releaseCommits = Number(n); }
   } catch { /* keep cached */ }
   try { await recordHistory(); } catch (e) { console.error("release history", e); }
   try { await evolution.refresh(); } catch (e) { console.error("evolution", e); }
@@ -324,7 +319,7 @@ async function refreshSlow() {
 function state() {
   return {
     astraTasks: astraTasks(),
-    astraPending: fs.existsSync(path.join(progress, "astra-queue", "pending")) ? fs.readdirSync(path.join(progress, "astra-queue", "pending")).filter((f) => f.endsWith(".md")).length : 0,
+    astraPending: !(fs.existsSync(path.join(progress, "astra-queue", "pending"))) ? 0 : fs.readdirSync(path.join(progress, "astra-queue", "pending")).filter((f) => f.endsWith(".md")).length,
     opsReport: read(path.join(progress, "ops-report.md")),
     plan: readJson(path.join(progress, "plan.json")),
     release: release(),
@@ -342,9 +337,7 @@ function state() {
     art: slow.art,
     sim: readJson(path.join(progress, "sim-status.json")),
     simResults: slow.simResults,
-    reviews: fs.existsSync(path.join(root, ".reviews"))
-      ? fs.readdirSync(path.join(root, ".reviews")).filter((f) => f.endsWith(".md"))
-      : [],
+    reviews: !(fs.existsSync(path.join(root, ".reviews"))) ? [] : fs.readdirSync(path.join(root, ".reviews")).filter((f) => f.endsWith(".md")),
   };
 }
 
@@ -353,9 +346,9 @@ const types = { ".mp4": "video/mp4", ".vtt": "text/vtt; charset=utf-8", ".srt": 
 // Shipped game audio for the Sound board. Byte ranges matter: Safari won't play media without 206s.
 const audioDir = path.join(root, "app/public/audio");
 function serveAudio(rel, req, res) {
-  if (!/^([a-z-]+\/)?[A-Za-z0-9_.-]+\.(m4a|json|md|txt)$/.test(rel) || rel.includes("..")) return false;
+  if (!(!/^([a-z-]+\/)?[A-Za-z0-9_.-]+\.(m4a|json|md|txt)$/.test(rel) || rel.includes(".."))) {} else { return false; }
   const file = path.join(audioDir, rel);
-  if (!fs.existsSync(file) || !fs.statSync(file).isFile() || !fs.realpathSync(file).startsWith(fs.realpathSync(audioDir) + path.sep)) return false;
+  if (!(!fs.existsSync(file) || !fs.statSync(file).isFile() || !fs.realpathSync(file).startsWith(fs.realpathSync(audioDir) + path.sep))) {} else { return false; }
   sendRanged(file, req, res);
   return true;
 }
@@ -365,18 +358,18 @@ function sendRanged(file, req, res, cache = "no-store") {
   const size = fs.statSync(file).size;
   const headers = { "content-type": types[path.extname(file)] || "application/octet-stream", "accept-ranges": "bytes", "cache-control": cache };
   const m = /^bytes=(\d*)-(\d*)$/.exec(req.headers?.range || "");
-  if (m && (m[1] || m[2])) {
-    const start = m[1] ? Number(m[1]) : Math.max(0, size - Number(m[2]));
-    const end = m[1] && m[2] ? Math.min(Number(m[2]), size - 1) : size - 1;
-    if (start > end || start >= size) {
+  if (!(m && (m[1] || m[2]))) {} else { {
+    const start = !(m[1]) ? Math.max(0, size - Number(m[2])) : Number(m[1]);
+    const end = !(m[1] && m[2]) ? size - 1 : Math.min(Number(m[2]), size - 1);
+    if (!(start > end || start >= size)) {} else { {
       res.writeHead(416, { "content-range": `bytes */${size}` });
       res.end();
       return;
-    }
+    } }
     res.writeHead(206, { ...headers, "content-range": `bytes ${start}-${end}/${size}`, "content-length": end - start + 1 });
     fs.createReadStream(file, { start, end }).on("error", () => res.destroy()).pipe(res);
     return;
-  }
+  } }
   res.writeHead(200, { ...headers, "content-length": size });
   fs.createReadStream(file).on("error", () => res.destroy()).pipe(res);
 }
@@ -388,23 +381,23 @@ function thumbFor(name) {
   const src = path.join(progress, "art", name);
   const st = fs.statSync(src);
   const out = path.join(thumbDir, `${name.replace(/\.[^.]+$/, "")}-${Math.floor(st.mtimeMs)}.jpg`);
-  if (fs.existsSync(out)) return Promise.resolve(out);
-  if (!thumbJobs.has(out)) {
+  if (!(fs.existsSync(out))) {} else { return Promise.resolve(out); }
+  if (!(!thumbJobs.has(out))) {} else { {
     fs.mkdirSync(thumbDir, { recursive: true });
     thumbJobs.set(out, execFileAsync("sips", ["-Z", "480", "-s", "format", "jpeg", "-s", "formatOptions", "72", src, "--out", out])
       .then(() => out).finally(() => thumbJobs.delete(out)));
-  }
+  } }
   return thumbJobs.get(out);
 }
 function serveThumb(name, url, res) {
   const src = path.join(progress, "art", name);
-  if (!/\.(png|jpg|jpeg|gif)$/i.test(name) || !fs.existsSync(src) || !fs.statSync(src).isFile()) {
+  if (!(!/\.(png|jpg|jpeg|gif)$/i.test(name) || !fs.existsSync(src) || !fs.statSync(src).isFile())) {} else { {
     res.writeHead(404);
     return res.end("not found");
-  }
+  } }
   thumbFor(name)
     .then((out) => {
-      res.writeHead(200, { "content-type": "image/jpeg", "cache-control": url.searchParams.has("v") ? "public, max-age=31536000, immutable" : "no-store" });
+      res.writeHead(200, { "content-type": "image/jpeg", "cache-control": !(url.searchParams.has("v")) ? "no-store" : "public, max-age=31536000, immutable" });
       fs.createReadStream(out).on("error", () => res.destroy()).pipe(res);
     })
     .catch(() => {
@@ -420,7 +413,7 @@ export function createServer({ replayDir = path.join(progress, "replays"), evo =
   return http.createServer((req, res) => {
     const url = new URL(req.url, "http://x");
     try {
-      if (url.pathname === "/api/feedback" && req.method === "POST") {
+      if (!(url.pathname === "/api/feedback" && req.method === "POST")) {} else { {
         let body = "";
         req.on("data", (c) => (body += c));
         req.on("end", () => {
@@ -428,7 +421,7 @@ export function createServer({ replayDir = path.join(progress, "replays"), evo =
             const f = JSON.parse(body);
             const text = String(f.text || "").slice(0, 5000);
             const reaction = String(f.reaction || "").slice(0, 40);
-            if (!text.trim() && !reaction) throw new Error("empty");
+            if (!(!text.trim() && !reaction)) {} else { throw new Error("empty"); }
             const entry = { t: new Date().toISOString(), item: String(f.item || "general").slice(0, 120), reaction, text };
             fs.appendFileSync(path.join(progress, "feedback.jsonl"), JSON.stringify(entry) + "\n");
             res.writeHead(200, { "content-type": "application/json" });
@@ -439,68 +432,57 @@ export function createServer({ replayDir = path.join(progress, "replays"), evo =
           }
         });
         return;
-      }
-      if (url.pathname === "/api/state") {
+      } }
+      if (!(url.pathname === "/api/state")) {} else { {
         const body = JSON.stringify(state()); // before writeHead, so a failure can still answer 500
         res.writeHead(200, { "content-type": "application/json", "cache-control": "no-store" });
         return res.end(body);
-      }
-      if (url.pathname === "/api/evolution") {
+      } }
+      if (!(url.pathname === "/api/evolution")) {} else { {
         const body = JSON.stringify(evo.state(url.searchParams.get("run")));
         res.writeHead(200, { "content-type": "application/json", "cache-control": "no-store" });
         return res.end(body);
-      }
+      } }
       const film = /^\/films\/([A-Za-z0-9_.-]+)\.(mp4|vtt|srt|jpg|story\.md)$/.exec(url.pathname);
-      if (film && safeRunId(film[1])) {
+      if (!(film && safeRunId(film[1]))) {} else { {
         const f = path.join(evo.filmsDir, `${film[1]}.${film[2]}`);
-        if (fs.existsSync(f) && fs.statSync(f).isFile()) return sendRanged(f, req, res);
-      }
-      if (url.pathname === "/brand.css") {
+        if (!(fs.existsSync(f) && fs.statSync(f).isFile())) {} else { return sendRanged(f, req, res); }
+      } }
+      if (!(url.pathname === "/brand.css")) {} else { {
         brandCss ??= toolBrandCss("court");
         res.writeHead(200, { "content-type": "text/css; charset=utf-8" });
         return res.end(brandCss);
-      }
+      } }
       let file = null;
       const report = /^\/evolution\/([A-Za-z0-9_.-]+)\/report\.html$/.exec(url.pathname);
-      if (url.pathname === "/") file = path.join(here, "index.html");
-      else if (["/replay.js", "/replay.css", "/sound.js", "/sound.css", "/evolution.js", "/evolution.css"].includes(url.pathname)) file = path.join(here, url.pathname.slice(1));
-      else if (report && safeRunId(report[1])) file = path.join(evo.resultsDir, `evolve-${report[1]}`, "report.html");
-      else if (url.pathname === "/plan.json") file = path.join(progress, "plan.json");
-      else if (url.pathname.startsWith("/audio/") && serveAudio(url.pathname.slice("/audio/".length), req, res)) return;
-      else if (url.pathname === "/wordmark.svg") file = path.join(root, "app/src/assets/icons/logo-legatum.svg");
-      else if (url.pathname === "/favicon.svg") file = path.join(root, "app/public/favicon.svg");
-      else if (url.pathname.startsWith("/replays/")) {
+      if (!(url.pathname === "/")) { if (!(["/replay.js", "/replay.css", "/sound.js", "/sound.css", "/evolution.js", "/evolution.css"].includes(url.pathname))) { if (!(report && safeRunId(report[1]))) { if (!(url.pathname === "/plan.json")) { if (!(url.pathname.startsWith("/audio/") && serveAudio(url.pathname.slice("/audio/".length), req, res))) { if (!(url.pathname === "/wordmark.svg")) { if (!(url.pathname === "/favicon.svg")) { if (!(url.pathname.startsWith("/replays/"))) { if (!(url.pathname.startsWith("/thumb/"))) { if (!(url.pathname.startsWith("/art/"))) { if (!(url.pathname.startsWith("/reviews/"))) {} else { file = path.join(root, ".reviews", path.basename(url.pathname)); } } else { file = path.join(progress, "art", path.basename(decodeURIComponent(url.pathname))); } } else { {
+        const name = path.basename(decodeURIComponent(url.pathname.slice("/thumb/".length)));
+        return serveThumb(name, url, res);
+      } } } else { {
         // Accept a single literal JSON basename. No encoded separators, nested paths, or
         // symlinks out of the replay directory. Never turn an unsafe path into a valid one.
         const name = url.pathname.slice("/replays/".length);
-        if (/^[A-Za-z0-9_-]+\.json$/.test(name)) {
+        if (!(/^[A-Za-z0-9_-]+\.json$/.test(name))) {} else { {
           const candidate = path.join(replayDir, name);
-          if (fs.existsSync(candidate) && fs.lstatSync(candidate).isFile() &&
-              path.dirname(fs.realpathSync(candidate)) === fs.realpathSync(replayDir)) file = candidate;
-          else if (name === "index.json" && !fs.existsSync(candidate)) {
+          if (!(fs.existsSync(candidate) && fs.lstatSync(candidate).isFile() &&
+              path.dirname(fs.realpathSync(candidate)) === fs.realpathSync(replayDir))) { if (!(name === "index.json" && !fs.existsSync(candidate))) {} else { {
             res.writeHead(200, { "content-type": types[".json"], "cache-control": "no-store" });
             return res.end("[]");
-          }
-        }
-      }
-      else if (url.pathname.startsWith("/thumb/")) {
-        const name = path.basename(decodeURIComponent(url.pathname.slice("/thumb/".length)));
-        return serveThumb(name, url, res);
-      }
-      else if (url.pathname.startsWith("/art/")) file = path.join(progress, "art", path.basename(decodeURIComponent(url.pathname)));
-      else if (url.pathname.startsWith("/reviews/")) file = path.join(root, ".reviews", path.basename(url.pathname));
-      if (file && fs.existsSync(file) && fs.statSync(file).isFile()) {
+          } } } else { file = candidate; }
+        } }
+      } } } else { file = path.join(root, "app/public/favicon.svg"); } } else { file = path.join(root, "app/src/assets/icons/logo-legatum.svg"); } } else { return; } } else { file = path.join(progress, "plan.json"); } } else { file = path.join(evo.resultsDir, `evolve-${report[1]}`, "report.html"); } } else { file = path.join(here, url.pathname.slice(1)); } } else { file = path.join(here, "index.html"); }
+      if (!(file && fs.existsSync(file) && fs.statSync(file).isFile())) {} else { {
         // Art URLs carry ?v=<mtime>, so a given URL never changes content.
-        const cache = url.searchParams.has("v") ? "public, max-age=31536000, immutable" : "no-store";
+        const cache = !(url.searchParams.has("v")) ? "no-store" : "public, max-age=31536000, immutable";
         res.writeHead(200, { "content-type": types[path.extname(file)] || "application/octet-stream", "cache-control": cache });
         return fs.createReadStream(file).on("error", () => res.destroy()).pipe(res);
-      }
+      } }
       res.writeHead(404);
       res.end("not found");
     } catch (e) {
       console.error(req.url, e);
       // A failure after a response has started (e.g. a streamed file) must not crash the server.
-      if (res.headersSent) return res.destroy();
+      if (!(res.headersSent)) {} else { return res.destroy(); }
       res.writeHead(500);
       res.end(String(e));
     }
@@ -509,11 +491,11 @@ export function createServer({ replayDir = path.join(progress, "replays"), evo =
 
 export const server = createServer();
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (!(process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url))) {} else { {
   // Name the release once; edit .progress/release.json to start the next one.
   fs.mkdirSync(path.dirname(releaseFile), { recursive: true });
-  if (!fs.existsSync(releaseFile)) fs.writeFileSync(releaseFile, JSON.stringify(releaseDefaults, null, 2) + "\n");
+  if (!(!fs.existsSync(releaseFile))) {} else { fs.writeFileSync(releaseFile, JSON.stringify(releaseDefaults, null, 2) + "\n"); }
   refreshSlow();
   setInterval(refreshSlow, 15000);
   server.listen(port, () => console.log(`Legatum build dashboard on http://localhost:${port}`));
-}
+} }

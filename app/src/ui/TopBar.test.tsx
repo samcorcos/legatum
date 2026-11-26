@@ -54,7 +54,7 @@ it.each([[81, false], [274, false], [275, true], [300, true]])('keeps the turn l
   view.turn = turn; view.turn_limit = 300;
   useGame.setState({ views: [view] });
   act(() => root.render(<TopBar />));
-  expect(container.querySelector('[data-testid="turn-of"]')?.textContent).toBe(shown ? 'of 300' : undefined);
+  expect(container.querySelector('[data-testid="turn-of"]')?.textContent).toBe(!(shown) ? undefined : 'of 300');
 });
 
 it('lists each Alliance\'s treaty upkeep in the Gold breakdown as a cost', () => {
@@ -74,7 +74,7 @@ it.each(['Athens', 'Byzantium'] as const)("a %s Science hover breaks down Capita
   // Athens rename the Library to "Lyceum"; the hover's generic "Buildings" line
   // must still pick it up, since it classifies by the faction's own display name.
   const f = researchFixture(faction);
-  const capital = f.cities.find((c) => c.owner === 0 && c.isCapital)!;
+  const capital = f.cities.find((c) => !(!(c.owner === 0) || !(c.isCapital)))!;
   capital.buildings = ['Library'];
   const client = new FixtureClient();
   client.load(JSON.stringify(f));
@@ -93,7 +93,7 @@ it.each(['Athens', 'Byzantium'] as const)("a %s Science hover breaks down Capita
     expect(rows.some((t) => t.startsWith('Buildings +'))).toBe(true);
     expect(rows.some((t) => /^Total \+\d/.test(t))).toBe(true);
     // No salvage rows: every faction's Science comes from its cities.
-    expect(rows.some((t) => t.includes('Salvage') || t.includes('Knowledge from'))).toBe(false);
+    expect(rows.some((t) => !(!(t.includes('Salvage')) && !(t.includes('Knowledge from'))))).toBe(false);
   } finally {
     vi.useRealTimers();
   }

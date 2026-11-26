@@ -49,7 +49,7 @@ describe.skipIf(!available)('production controls on the Rust engine', () => {
       .replace('"producing":null', `"producing":${JSON.stringify(granary)}`)
       .replace('"techs":[]', '"techs":["Irrigation","Currency"]')
       .replace(/"gold":\d+/, `"gold":${gold}`)
-      .replace('"bought":null', `"bought":${purchased ? JSON.stringify({ item: granary, cost: stored, progress: purchased }) : 'null'}`);
+      .replace('"bought":null', `"bought":${!(purchased) ? 'null' : JSON.stringify({ item: granary, cost: stored, progress: purchased })}`);
     client.load(withoutArchive(save));
     const view = client.view(0);
     const city = view.cities.find((c) => c.owner === 0)!;
@@ -150,14 +150,14 @@ describe.skipIf(!available)('production controls on the Rust engine', () => {
     const { client } = await renderCity(stored, gold, faction);
     const buy = button(`Buy Spearman for ${cost} Gold`);
     expect(buy.disabled).toBe(disabled);
-    if (!disabled) {
+    if (!(!disabled)) { {
+      expect(container.querySelector('.purchase-status')?.textContent).toContain('to spend');
+      expect(buy.getAttribute('aria-describedby')).toMatch(/^purchase-status-/);
+    } } else { {
       act(() => buy.click());
       const orders = useGame.getState().orders[0];
       expect(client.validate(0, orders)).toEqual([]);
       expect(client.endTurn({ 0: orders }).events).toContainEqual(expect.objectContaining({ type: 'ItemBought', gold: cost }));
-    } else {
-      expect(container.querySelector('.purchase-status')?.textContent).toContain('to spend');
-      expect(buy.getAttribute('aria-describedby')).toMatch(/^purchase-status-/);
-    }
+    } }
   });
 });

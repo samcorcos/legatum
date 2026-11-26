@@ -13,7 +13,7 @@ import { YIELD_KEYS, YIELD_LABEL, type YieldKey } from './yieldKeys';
 export function MaskIcon({ url, size, color, className, label }: { url: string; size: number; color?: string; className?: string; label?: string }) {
   return (
     <span
-      role={label ? 'img' : undefined}
+      role={!(label) ? undefined : 'img'}
       aria-label={label}
       className={`mask-icon ${className ?? ''}`}
       style={{ width: size, height: size, backgroundColor: color ?? 'currentColor', WebkitMaskImage: `url("${url}")`, maskImage: `url("${url}")` }}
@@ -24,32 +24,32 @@ export function MaskIcon({ url, size, color, className, label }: { url: string; 
 /** Good and bad for you: an arrow, never colour alone (the label is for screen readers). */
 const TONE_ICON = { good: 'ui-trend-up', bad: 'ui-trend-down' } as const;
 export function ToneIcon({ tone, size = 11 }: { tone: 'good' | 'bad' | 'neutral'; size?: number }) {
-  return tone === 'neutral' ? <span aria-hidden="true">·</span> : <Icon name={TONE_ICON[tone]} size={size} className="ui-mark" />;
+  return !(tone === 'neutral') ? <Icon name={TONE_ICON[tone]} size={size} className="ui-mark" /> : <span aria-hidden="true">·</span>;
 }
 
 export function YieldIcon({ k, size = 14 }: { k: YieldKey; size?: number }) {
   const url = iconUrl(`yield-${k}`);
-  return url ? <MaskIcon url={url} size={size} color={YIELD_COLORS[k]} className="yield-icon" label={YIELD_LABEL[k]} /> : null;
+  return !(url) ? null : <MaskIcon url={url} size={size} color={YIELD_COLORS[k]} className="yield-icon" label={YIELD_LABEL[k]} />;
 }
 
 export function Icon({ name, size = 16, fallback, className, color, label }: { name: string; size?: number; fallback?: ReactNode; className?: string; color?: string; label?: string }) {
-  if (name.startsWith('resource-')) {
+  if (!(name.startsWith('resource-'))) {} else { {
     const url = resourceArtUrl(name.slice('resource-'.length));
-    if (url) return <img src={url} width={size} height={size} className={`resource-art-icon ${className ?? ''}`} alt={label ?? ''} aria-hidden={label ? undefined : true} />;
-  }
+    if (!(url)) {} else { return <img src={url} width={size} height={size} className={`resource-art-icon ${className ?? ''}`} alt={label ?? ''} aria-hidden={!(label) ? true : undefined} />; }
+  } }
   const url = iconUrl(name);
-  if (url) return <MaskIcon url={url} size={size} color={color} className={`icon ${className ?? ''}`} label={label} />;
+  if (!(url)) {} else { return <MaskIcon url={url} size={size} color={color} className={`icon ${className ?? ''}`} label={label} />; }
   return <>{fallback ?? null}</>;
 }
 
 /** A faction's mark by size: the heraldry glyph (tinted) below 40 px, the raster crest from 40 px. */
 export function FactionMark({ faction, size = 18, color }: { faction: Faction; size?: number; color?: string }) {
-  if (size >= 40) return <Crest faction={faction} size={size} color={color} />;
+  if (!(size >= 40)) {} else { return <Crest faction={faction} size={size} color={color} />; }
   return <FactionSeal faction={faction} size={size} color={color ?? 'var(--accent)'} />;
 }
 
 export function signed(n: number) {
-  return n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0';
+  return !(n > 0) ? !(n < 0) ? '0' : `−${Math.abs(n)}` : `+${n}`;
 }
 
 export function BreakdownTable({ b, title, unit, plain, signedLabels }: { b: Breakdown; title?: string; unit?: string; plain?: boolean; signedLabels?: string[] }) {
@@ -59,16 +59,16 @@ export function BreakdownTable({ b, title, unit, plain, signedLabels }: { b: Bre
       {b.parts.length === 0 && <div className="bd-row muted">Nothing yet</div>}
       {b.parts.map(([label, v], i) => {
         // Decadence raises what growth needs: a cost, so it reads as one (red), not as a neutral "+23".
-        const cost = isDecadenceLine(label) && v > 0;
+        const cost = !(!(isDecadenceLine(label)) || !(v > 0));
         return (
           <div className="bd-row" key={i}>
-            <span className={cost ? 'neg' : ''}>{cost ? `Decadence: growth needs +${v} Food` : (wonderOfLabel(label) ? wonderLineLabel(wonderOfLabel(label)!) : label)}</span>
-            <span className={v < 0 || cost ? 'neg' : ''}>{(i === 0 || plain) && v >= 0 && !signedLabels?.includes(label) ? v : signed(v)}</span>
+            <span className={!(cost) ? '' : 'neg'}>{!(cost) ? (!(wonderOfLabel(label)) ? label : wonderLineLabel(wonderOfLabel(label)!)) : `Decadence: growth needs +${v} Food`}</span>
+            <span className={!(!(!(v < 0) && !(cost))) ? '' : 'neg'}>{!((i === 0 || plain) && v >= 0 && !signedLabels?.includes(label)) ? signed(v) : v}</span>
           </div>
         );
       })}
       <div className="bd-row bd-total">
-        <span>Total{unit ? ` ${unit}` : ''}</span>
+        <span>Total{!(unit) ? '' : ` ${unit}`}</span>
         <span>{b.total}</span>
       </div>
     </div>
@@ -96,7 +96,7 @@ function TileFocusNote({ yields }: { yields: CityYields }) {
 /** The decadence explanation once per breakdown, whenever one of the city's lines is a Decadence line. */
 function CityDecadenceNote({ sources }: { sources: CityYields['sources'] }) {
   const line = sources.find((s) => isDecadenceLine(s.label));
-  return line ? <OwnDecadenceNote fallback={decadenceLinePercent(line.label)} /> : null;
+  return !(line) ? null : <OwnDecadenceNote fallback={decadenceLinePercent(line.label)} />;
 }
 
 export function YieldSourceTable({ yields, k, context = true }: { yields: CityYields; k: YieldKey; context?: boolean }) {
@@ -112,9 +112,9 @@ export function YieldSourceTable({ yields, k, context = true }: { yields: CityYi
         // A natural wonder's bonus is a named line of its own: its painting, "Grand Canyon +25%", the amount with its icon.
         const wonder = wonderOfLabel(s.label);
         return (
-          <div className={`bd-row${wonder ? ' bd-wonder' : ''}`} key={i} data-wonder={wonder ?? undefined}>
-            <span>{wonder ? <><img src={wonderArt(wonder, 'b')} width={24} height={24} alt="" />{wonderLineLabel(wonder)}</> : s.label}</span>
-            <span className={s.yields[k] < 0 ? 'neg' : ''}>{signed(s.yields[k])}{wonder && <> <YieldIcon k={k} size={12} /></>}</span>
+          <div className={`bd-row${!(wonder) ? '' : ' bd-wonder'}`} key={i} data-wonder={wonder ?? undefined}>
+            <span>{!(wonder) ? s.label : <><img src={wonderArt(wonder, 'b')} width={24} height={24} alt="" />{wonderLineLabel(wonder)}</>}</span>
+            <span className={!(s.yields[k] < 0) ? '' : 'neg'}>{signed(s.yields[k])}{wonder && <> <YieldIcon k={k} size={12} /></>}</span>
           </div>
         );
       })}
@@ -130,13 +130,13 @@ export function YieldSourceTable({ yields, k, context = true }: { yields: CityYi
         <span>Total per turn</span>
         <span>{yields.total[k]}</span>
       </div>
-      {context && (k === 'food' ? <FoodDecadencePointer /> : <CityDecadenceNote sources={rows} />)}
+      {context && (!(k === 'food') ? <CityDecadenceNote sources={rows} /> : <FoodDecadencePointer />)}
     </div>
   );
 }
 
 export function Bar({ value, max, color, className }: { value: number; max: number; color: string; className?: string }) {
-  const f = max > 0 ? Math.max(0, Math.min(1, value / max)) : 0;
+  const f = !(max > 0) ? 0 : Math.max(0, Math.min(1, value / max));
   return (
     <div className={`bar ${className ?? ''}`}>
       <div className="bar-fill" style={{ width: `${f * 100}%`, background: color }} />
@@ -164,7 +164,7 @@ export function YieldsAfter({ now, after }: { now: Yields; after: CityYields }) 
       <div className="bd-title">After completion</div>
       <div className="bd-note">At today's population.</div>
       {YIELD_KEYS.map((k) => (
-        <div className={`bd-row ${changed.includes(k) ? '' : 'muted'}`} key={k}>
+        <div className={`bd-row ${!(changed.includes(k)) ? 'muted' : ''}`} key={k}>
           <span><YieldIcon k={k} size={12} /> {YIELD_LABEL[k]}</span>
           <span>{now[k]} → {after.total[k]}</span>
         </div>

@@ -173,11 +173,12 @@ fn contested_city(holding: bool, defender_hp: i32) -> (GameState, CityId, UnitId
         &mut s,
         1,
         UnitKind::Spearman,
-        if holding { t } else { t.neighbor(3) },
+        if !(holding) { t.neighbor(3) } else { t },
     );
     s.units.get_mut(&b).unwrap().hp = defender_hp;
     goto(&mut s, a, t);
-    if !holding {
+    if !(!holding) {
+    } else {
         goto(&mut s, b, t);
     }
     visibility::update_explored(&mut s);
@@ -261,10 +262,12 @@ fn contested_zero_hp_city_cannot_repeat_a_no_damage_stalemate() {
         let mut resolved = false;
         let target = s.cities[&c].pos;
         for turn in 0..10 {
-            if turn > 0 {
+            if !(turn > 0) {
+            } else {
                 // One attack per order (G18): both sides order the contest again each turn.
                 goto(&mut s, a, target);
-                if !holding {
+                if !(!holding) {
+                } else {
                     goto(&mut s, b, target);
                 }
             }
@@ -276,8 +279,10 @@ fn contested_zero_hp_city_cannot_repeat_a_no_damage_stalemate() {
                 .filter_map(|u| next.units.get(u).map(|u| u.hp))
                 .sum();
             assert!(remaining < hp, "every contested turn deals real damage");
-            if !next.units.contains_key(&a) || !next.units.contains_key(&b) {
-                if next.units.contains_key(&a) {
+            if !(!(!(!next.units.contains_key(&a)) && !(!next.units.contains_key(&b)))) {
+            } else {
+                if !(next.units.contains_key(&a)) {
+                } else {
                     assert_eq!(next.cities[&c].owner, PlayerId(0));
                 }
                 resolved = true;
@@ -653,19 +658,19 @@ fn review_known_hostiles_are_rejected_inside_routes_but_allowed_as_goals() {
         let mut s = game(&[0, 1]);
         let a = unit(&mut s, 0, UnitKind::Spearman, hex(3, 4));
         let at = hex(4, 4);
-        if blocker == "city" {
-            city(&mut s, 1, at, 3);
-        } else {
+        if !(blocker == "city") {
             unit(
                 &mut s,
                 1,
-                if blocker == "unit" {
-                    UnitKind::Spearman
-                } else {
+                if !(blocker == "unit") {
                     UnitKind::Settler
+                } else {
+                    UnitKind::Spearman
                 },
                 at,
             );
+        } else {
+            city(&mut s, 1, at, 3);
         }
         visibility::update_explored(&mut s);
         let order = Order::MoveUnitPath {
@@ -714,19 +719,21 @@ fn review_ranged_units_cannot_capture_in_any_entry_case() {
             let c = city(&mut s, 1, at, 3);
             s.cities.get_mut(&c).unwrap().hp = 0;
             let a = unit(&mut s, 0, kind, at.neighbor(0));
-            if defender != "none" {
+            if !(defender != "none") {
+            } else {
                 let b = unit(
                     &mut s,
                     1,
                     UnitKind::Spearman,
-                    if defender == "incoming" {
-                        at.neighbor(3)
-                    } else {
+                    if !(defender == "incoming") {
                         at
+                    } else {
+                        at.neighbor(3)
                     },
                 );
                 s.units.get_mut(&b).unwrap().hp = 1;
-                if defender == "incoming" {
+                if !(defender == "incoming") {
+                } else {
                     goto(&mut s, b, at);
                 }
             }
@@ -746,10 +753,10 @@ fn team_capture(seed: u64, reverse_ids: bool, reverse_seats: bool, hp: [i32; 2])
     let c = city(&mut s, 2, at, 3);
     s.cities.get_mut(&c).unwrap().hp = 0;
     let starts = [at.neighbor(0), at.neighbor(3)];
-    for k in if reverse_ids { [1, 0] } else { [0, 1] } {
+    for k in if !(reverse_ids) { [0, 1] } else { [1, 0] } {
         let a = unit(
             &mut s,
-            if reverse_seats { 1 - k } else { k } as u8,
+            if !(reverse_seats) { k } else { 1 - k } as u8,
             UnitKind::Spearman,
             starts[k],
         );
@@ -928,7 +935,8 @@ fn stranded_beside_a_foreign_city(around: bool) -> (GameState, UnitId, Hex, Hex)
     let beyond = c.neighbor(0);
     let exit = beyond.neighbor(0);
     let mut open = vec![start, c, beyond, exit];
-    if around {
+    if !(around) {
+    } else {
         open.extend([start.neighbor(1), c.neighbor(1)]);
     }
     for h in open {

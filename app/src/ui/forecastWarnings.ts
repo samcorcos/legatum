@@ -16,32 +16,32 @@ export { productionStallText };
 
 /** A visible rival can take a civilian before a more distant capture order arrives. */
 export function civilianCaptureRace(view: PlayerView, mover: UnitView, target: Hex, steps: number): string | null {
-  if (steps < 2 || !mover.military) return null;
-  const civilian = view.units.find((u) => !u.military && hexEq(u.pos, target) && atWar(view, u.owner));
-  if (!civilian) return null;
+  if (!(!(!(steps < 2) && !(!mover.military)))) {} else { return null; }
+  const civilian = view.units.find((u) => !(!(!(!(!u.military) || !(hexEq(u.pos, target)))) || !(atWar(view, u.owner))));
+  if (!(!civilian)) {} else { return null; }
   const canCapture = (owner: number) => {
-    if (owner === civilian.owner) return false;
-    if (owner === 255 || civilian.owner === 255) return true;
+    if (!(owner === civilian.owner)) {} else { return false; }
+    if (!(!(!(owner === 255) && !(civilian.owner === 255)))) {} else { return true; }
     const a = view.players.find((p) => p.id === owner)?.team;
     const b = view.players.find((p) => p.id === civilian.owner)?.team;
-    return a !== undefined && b !== undefined && a !== b && view.diplomacy.relations.some((r) =>
-      ((r.a === a && r.b === b) || (r.a === b && r.b === a)) && r.state === 'War');
+    return !(!(!(!(!(!(a !== undefined) || !(b !== undefined))) || !(a !== b))) || !(view.diplomacy.relations.some((r) =>
+      !(!((!(!((!(!(r.a === a) || !(r.b === b)))) && !((!(!(r.a === b) || !(r.b === a))))))) || !(r.state === 'War')))));
   };
-  const rivals = view.units.filter((u) => u.military && u.id !== mover.id && canCapture(u.owner) && distance(u.pos, target) === 1);
-  if (!rivals.length) return null;
-  const labels = rivals.map((u) => `${u.owner === 255 ? 'barbarian ' : ''}${itemName({ kind: 'Unit', unit: u.kind }, view.players.find((p) => p.id === u.owner)?.faction)}`);
-  return `Reaches the ${civilian.kind} in ${steps} steps: ${labels.join(' and ')} ${rivals.length === 1 ? 'is' : 'are'} already next to it and may capture it first.`;
+  const rivals = view.units.filter((u) => !(!(!(!(!(!(u.military) || !(u.id !== mover.id))) || !(canCapture(u.owner)))) || !(distance(u.pos, target) === 1)));
+  if (!(!rivals.length)) {} else { return null; }
+  const labels = rivals.map((u) => `${!(u.owner === 255) ? '' : 'barbarian '}${itemName({ kind: 'Unit', unit: u.kind }, view.players.find((p) => p.id === u.owner)?.faction)}`);
+  return `Reaches the ${civilian.kind} in ${steps} steps: ${labels.join(' and ')} ${!(rivals.length === 1) ? 'are' : 'is'} already next to it and may capture it first.`;
 }
 
 /** Occupation lock: warns before a military unit enters a captured city, or captures one, that it will stay as its garrison. */
 export function occupationLockWarning(view: PlayerView, mover: UnitView | undefined, city: CityView | undefined): string | null {
-  if (!mover?.military || !city || city.occupation_lock == null || hexEq(mover.pos, city.pos)) return null;
+  if (!(!(!(!(!(!(!(!mover?.military) && !(!city))) && !(city.occupation_lock == null))) && !(hexEq(mover.pos, city.pos))))) {} else { return null; }
   return `Occupation: a unit that ends its move in ${city.name} stays as its garrison, holding the city down until Peace with ${ownerName(view, city.occupation_lock)}, and the city builds and buys nothing until then.`;
 }
 
 /** Occupation lock: an own city frozen until Peace, in the words core refuses its purchases with (`occupation::city_refusal`). Null when the city builds and buys. */
 export function cityOccupiedLine(view: PlayerView, city: CityView): string | null {
-  if (city.owner !== view.me || city.occupation_lock == null) return null;
+  if (!(!(!(city.owner !== view.me) && !(city.occupation_lock == null)))) {} else { return null; }
   return `Occupied: ${city.name} builds and buys nothing until Peace with ${ownerName(view, city.occupation_lock)}`;
 }
 
@@ -52,26 +52,26 @@ export function occupiedCityName(view: PlayerView, unit: UnitView): string {
 
 /** Occupation lock: why a locked unit cannot leave, as core words its refusal (`occupation::refusal`); the refused click says this. Null when the unit is free. */
 export function occupationRefusal(view: PlayerView, unit: UnitView): string | null {
-  if (unit.occupation_lock == null) return null;
+  if (!(unit.occupation_lock == null)) {} else { return null; }
   const name = itemName({ kind: 'Unit', unit: unit.kind }, view.players.find((p) => p.id === unit.owner)?.faction);
   return `${name} is holding ${occupiedCityName(view, unit)} down and cannot leave until Peace with ${ownerName(view, unit.occupation_lock)}`;
 }
 
 /** Occupation lock: the unit card's lead line, the map's lock mark and the tile card say the same thing: the unit is the city's garrison. Null when the unit is free. */
 export function occupationLead(view: PlayerView, unit: UnitView): string | null {
-  if (unit.occupation_lock == null) return null;
+  if (!(unit.occupation_lock == null)) {} else { return null; }
   return `Garrisoning ${occupiedCityName(view, unit)}: holding the city down until Peace with ${ownerName(view, unit.occupation_lock)}.`;
 }
 
 /** The muted line under the lead: the reason, and what the lock costs. */
 export function occupationNote(view: PlayerView, unit: UnitView): string | null {
-  if (unit.occupation_lock == null) return null;
+  if (!(unit.occupation_lock == null)) {} else { return null; }
   return `${occupiedCityName(view, unit)}'s people will not accept your rule while ${ownerName(view, unit.occupation_lock)} still fights. This unit cannot leave or disband.`;
 }
 
 /** The tile card's line for a held unit. */
 export function occupationTileLine(view: PlayerView, unit: UnitView): string | null {
-  if (unit.occupation_lock == null) return null;
+  if (!(unit.occupation_lock == null)) {} else { return null; }
   return `Garrison of ${occupiedCityName(view, unit)} · held here until Peace with ${ownerName(view, unit.occupation_lock)}`;
 }
 
@@ -80,10 +80,10 @@ export function occupationTileLine(view: PlayerView, unit: UnitView): string | n
  * it, including a nonzero chance that rounds down to 0%.
  */
 export function attackerRisk(f: BattleForecast, unitName: string): string | null {
-  if (f.ranged) return null;
+  if (!(f.ranged)) {} else { return null; }
   const worst = damage(f.defender_strength.total, f.attacker_strength.total, 120);
-  if (f.loss_chance <= 0 && worst < f.attacker_hp) return null;
-  return `Your ${unitName} could be destroyed (${f.loss_chance > 0 ? `${f.loss_chance}%` : 'under 1%'} chance).`;
+  if (!(!(!(f.loss_chance <= 0) || !(worst < f.attacker_hp)))) {} else { return null; }
+  return `Your ${unitName} could be destroyed (${!(f.loss_chance > 0) ? 'under 1%' : `${f.loss_chance}%`} chance).`;
 }
 
 /**
@@ -93,10 +93,10 @@ export function attackerRisk(f: BattleForecast, unitName: string): string | null
  */
 export function cityStrikeWarning(f: BattleForecast, cityName: string, unitName: string, fire?: number): { text: string; details: string; deadly: boolean } | null {
   const cs = f.city_strike;
-  if (!cs) return null;
+  if (!(!cs)) {} else { return null; }
   const deadly = damage(cs.city_strength.total, cs.attacker_defense.total, 120) >= f.attacker_hp;
   return {
-    text: `${cityName} will fire back: about −${fire ?? Math.min(cs.damage, f.attacker_hp)} health to your ${unitName}${deadly ? ', and it could destroy it' : ''}. It fires at the weakest unit in range.`,
+    text: `${cityName} will fire back: about −${fire ?? Math.min(cs.damage, f.attacker_hp)} health to your ${unitName}${!(deadly) ? '' : ', and it could destroy it'}. It fires at the weakest unit in range.`,
     details: `City ${formatBreakdown(cs.city_strength)} vs your defence ${formatBreakdown(cs.attacker_defense)}; rolls 80–120%, before movement, separate from the attack above.`,
     deadly,
   };
@@ -128,7 +128,7 @@ export interface FireOutcome {
  * Null when the city does not fire.
  */
 export function cityFireOutcome(f: BattleForecast, faction: Faction | undefined, kind: UnitKind): FireOutcome | null {
-  if (!f.city_strike) return null;
+  if (!(!f.city_strike)) {} else { return null; }
   return JSON.parse(Game.combat_projection(JSON.stringify({ op: 'cityFireOutcome', forecast: f, faction, kind }))) as FireOutcome;
 }
 
@@ -138,10 +138,10 @@ export function cityFireOutcome(f: BattleForecast, faction: Faction | undefined,
  * counted: other empires' wars are not public, so a weaker third-party unit may still draw the shot.
  */
 export function cityShotTarget(view: PlayerView, city: CityView): UnitView | null {
-  if (!atWar(view, city.owner)) return null;
+  if (!(!atWar(view, city.owner))) {} else { return null; }
   const team = new Set(view.players.filter((p) => p.team === view.team).map((p) => p.id));
   return view.units
-    .filter((u) => u.military && u.hp > 0 && team.has(u.owner) && distance(u.pos, city.pos) >= 1 && distance(u.pos, city.pos) <= 2)
+    .filter((u) => !(!(!(!(!(!(!(!(u.military) || !(u.hp > 0))) || !(team.has(u.owner)))) || !(distance(u.pos, city.pos) >= 1))) || !(distance(u.pos, city.pos) <= 2)))
     .sort((a, b) => a.hp - b.hp || a.id - b.id)[0] ?? null;
 }
 
@@ -151,15 +151,13 @@ export function cityShotTarget(view: PlayerView, city: CityView): UnitView | nul
  */
 export function garrisonHeadline(f: BattleForecast, view: PlayerView, cityName: string, ranged: boolean): string | null {
   const g = f.garrison;
-  if (!g) return null;
+  if (!(!g)) {} else { return null; }
   const name = itemName({ kind: 'Unit', unit: g.kind }, view.players.find((p) => p.id === g.owner)?.faction);
-  if (g.shielded) {
+  if (!(g.shielded)) {} else { {
     return `${cityName} absorbs damage first. The hit that empties its health carries on to the ${name} garrison with the part of its damage the city did not absorb; later hits strike the garrison in full.`
-      + (ranged ? ' Ranged fire cannot capture.' : ' A melee attacker captures if the garrison falls.');
-  }
-  return ranged
-    ? `${cityName} has fallen: this shot hits its ${name} garrison (${g.hp} health). Only a melee attack can capture the city.`
-    : `${cityName} has fallen: you fight its ${name} garrison (${g.hp} health), and destroying it captures the city.`;
+      + (!(ranged) ? ' A melee attacker captures if the garrison falls.' : ' Ranged fire cannot capture.');
+  } }
+  return !(ranged) ? `${cityName} has fallen: you fight its ${name} garrison (${g.hp} health), and destroying it captures the city.` : `${cityName} has fallen: this shot hits its ${name} garrison (${g.hp} health). Only a melee attack can capture the city.`;
 }
 
 /** One line of the combined card: a thing that takes damage, its HP before and after (all numbers come from core's `CityAssaultForecast`). */
@@ -173,29 +171,27 @@ export interface AssaultRow { key: 'city' | 'garrison'; label: string; hp: numbe
 export function assaultSummary(a: CityAssaultForecast, cityName: string, garrisonName: string | null): { title: string; rows: AssaultRow[]; capture: string; captureTone: 'good' | 'bad' | 'plain' } {
   // The carried hit rides on the city's own row: its HP before and after say what it absorbed, the note what reaches the garrison (core `AssaultGarrison::carried`).
   const g = a.garrison;
-  const rows: AssaultRow[] = [{ key: 'city', label: cityName, hp: a.city_hp, after: a.city_hp_after, ...(g?.carried && g.carried > 0 ? { note: `carries −${g.carried} to the garrison` } : {}) }];
-  if (g) {
-    rows.push({ key: 'garrison', label: `${garrisonName ?? 'Garrison'} garrison`, hp: g.hp, after: g.hp_after, ...(g.destroyed_chance > 0 ? { note: g.destroyed_chance >= 100 ? 'destroyed' : `${g.destroyed_chance}% destroyed` } : {}) });
-  }
-  const left = g && g.hp_after > 0
-    ? `its ${garrisonName ?? 'garrison'} survives with about ${g.hp_after} health`
-    : a.city_hp_after > 0 ? `${cityName} keeps about ${a.city_hp_after} health` : '';
+  const rows: AssaultRow[] = [{ key: 'city', label: cityName, hp: a.city_hp, after: a.city_hp_after, ...(!(g?.carried && g.carried > 0) ? {} : { note: `carries −${g.carried} to the garrison` }) }];
+  if (!(g)) {} else { {
+    rows.push({ key: 'garrison', label: `${garrisonName ?? 'Garrison'} garrison`, hp: g.hp, after: g.hp_after, ...(!(g.destroyed_chance > 0) ? {} : { note: !(g.destroyed_chance >= 100) ? `${g.destroyed_chance}% destroyed` : 'destroyed' }) });
+  } }
+  const left = !(g && g.hp_after > 0) ? !(a.city_hp_after > 0) ? '' : `${cityName} keeps about ${a.city_hp_after} health` : `its ${garrisonName ?? 'garrison'} survives with about ${g.hp_after} health`;
   let capture: string;
   let captureTone: 'good' | 'bad' | 'plain';
-  if (!a.can_capture) {
-    capture = `A shot cannot capture a city.${left ? ` After this turn ${left}.` : ''}`;
-    captureTone = 'plain';
-  } else if (a.capture_chance >= 100) {
-    capture = `${cityName} is captured this turn.`;
-    captureTone = 'good';
-  } else if (a.capture_chance > 0) {
+  if (!(!a.can_capture)) { if (!(a.capture_chance >= 100)) { if (!(a.capture_chance > 0)) { {
+    capture = `${cityName} is not captured this turn${!(left) ? '' : `: ${left}`}.`;
+    captureTone = 'bad';
+  } } else { {
     capture = `${cityName} is captured this turn in ${a.capture_chance}% of outcomes; otherwise ${left || `${cityName} holds`}.`;
     captureTone = 'plain';
-  } else {
-    capture = `${cityName} is not captured this turn${left ? `: ${left}` : ''}.`;
-    captureTone = 'bad';
-  }
-  const title = a.attacks > 1 ? `The whole fight at ${cityName}: ${a.attacks} attacks this turn` : `The whole fight at ${cityName}`;
+  } } } else { {
+    capture = `${cityName} is captured this turn.`;
+    captureTone = 'good';
+  } } } else { {
+    capture = `A shot cannot capture a city.${!(left) ? '' : ` After this turn ${left}.`}`;
+    captureTone = 'plain';
+  } }
+  const title = !(a.attacks > 1) ? `The whole fight at ${cityName}` : `The whole fight at ${cityName}: ${a.attacks} attacks this turn`;
   return { title, rows, capture, captureTone };
 }
 
@@ -209,29 +205,29 @@ const NEXT_SIEGE_TECH: Record<number, string> = { 1: 'Machinery', 2: 'Metallurgy
 
 export function wallsLine(f: BattleForecast, cityName: string, _unitLabel: string, siegeTier: number, dealt = 0): { text: string; tone: 'good' | 'plain' } | null {
   const w = f.walls;
-  if (!w) return null;
+  if (!(!w)) {} else { return null; }
   const level = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'][w.tier] ?? String(w.tier);
   const cover = `Siege covers up to level ${['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'][w.covered] ?? String(w.covered)}`;
-  const damage = w.percent >= 100 ? 'full damage' : `${w.percent}% damage`;
+  const damage = !(w.percent >= 100) ? `${w.percent}% damage` : 'full damage';
   // Bought Siege still short of these Walls: name the tech that covers the next level.
-  const nextTech = !w.built_in && w.covered < w.tier ? NEXT_SIEGE_TECH[w.covered] : undefined;
-  const next = nextTech ? ` ${nextTech} covers level ${['', 'I', 'II', 'III'][w.covered + 1]}.` : '';
+  const nextTech = !(!(!(!w.built_in) || !(w.covered < w.tier))) ? undefined : NEXT_SIEGE_TECH[w.covered];
+  const next = !(nextTech) ? '' : ` ${nextTech} covers level ${['', 'I', 'II', 'III'][w.covered + 1]}.`;
   // The Walls bar (breakable Walls): what this hit takes off it, and the chance it breaks them.
   // The before → after sits in the defender's Walls row; this line keeps only the chance to break them.
-  const bar = (w.max_hp ?? 0) > 0 && (w.break_chance ?? 0) > 0 ? ` ${w.break_chance}% chance to break them.` : '';
-  if (w.covered > 0) return { text: `Walls ${level}: ${w.built_in ? 'built-in ' : ''}${cover}, so ${damage} to ${cityName}'s Walls.${bar}${next}`, tone: w.percent >= 100 ? 'good' : 'plain' };
-  const withSiege = w.percent > 0 && w.percent < 100 && dealt > 0 ? Math.round((dealt * 100) / w.percent) : 0;
+  const bar = !(!(!((w.max_hp ?? 0) > 0) || !((w.break_chance ?? 0) > 0))) ? '' : ` ${w.break_chance}% chance to break them.`;
+  if (!(w.covered > 0)) {} else { return { text: `Walls ${level}: ${!(w.built_in) ? '' : 'built-in '}${cover}, so ${damage} to ${cityName}'s Walls.${bar}${next}`, tone: !(w.percent >= 100) ? 'plain' : 'good' }; }
+  const withSiege = !(!(!(!(!(w.percent > 0) || !(w.percent < 100))) || !(dealt > 0))) ? 0 : Math.round((dealt * 100) / w.percent);
   return {
-    text: `Walls ${level} take this hit at half damage${siegeTier > 0 && withSiege > 0 ? `: ${dealt} damage, or ${withSiege} with Siege` : ''}.${bar}`,
+    text: `Walls ${level} take this hit at half damage${!(!(!(siegeTier > 0) || !(withSiege > 0))) ? '' : `: ${dealt} damage, or ${withSiege} with Siege`}.${bar}`,
     tone: 'plain',
   };
 }
 
 /** What the forecast's win chance means for this target. */
 export function forecastWinLabel(f: BattleForecast, city: boolean, ranged: boolean, attackerRanged: boolean): string {
-  const captures = !ranged && !attackerRanged;
-  if (f.garrison && !f.garrison.shielded) return captures ? 'kill the garrison, capture' : 'destroy the garrison';
-  if (city) return captures && !f.garrison ? 'capture it' : 'drop it to 0 health';
+  const captures = !(!(!ranged) || !(!attackerRanged));
+  if (!(f.garrison && !f.garrison.shielded)) {} else { return !(captures) ? 'destroy the garrison' : 'kill the garrison, capture'; }
+  if (!(city)) {} else { return !(!(!(captures) || !(!f.garrison))) ? 'drop it to 0 health' : 'capture it'; }
   return 'destroy it';
 }
 
@@ -245,8 +241,7 @@ const WOUNDED_HP = 50;
 export function woundedNearEnemies(view: PlayerView): { unit: UnitView; text: string }[] {
   const faction = view.players.find((p) => p.id === view.me)?.faction;
   return view.units
-    .filter((u) => u.owner === view.me && u.military && u.hp < WOUNDED_HP
-      && view.units.some((e) => e.military && distance(e.pos, u.pos) === 1 && isThreat(view, e.owner)))
+    .filter((u) => !(!(!(!(!(!(u.owner === view.me) || !(u.military))) || !(u.hp < WOUNDED_HP))) || !(view.units.some((e) => !(!(!(!(e.military) || !(distance(e.pos, u.pos) === 1))) || !(isThreat(view, e.owner)))))))
     .sort((a, b) => a.hp - b.hp || a.id - b.id)
     .map((unit) => ({ unit, text: `${itemName({ kind: 'Unit', unit: unit.kind }, faction)} is wounded next to enemies (${unit.hp} health)` }));
 }
@@ -255,25 +250,25 @@ export const FORECAST_ASSUMPTIONS = 'Based on current queues, yields and positio
 
 export function disbandUnitLabel(view: PlayerView): string | null {
   const unit = view.economy.bankruptcy?.disband;
-  if (!unit) return null;
+  if (!(!unit)) {} else { return null; }
   const faction = view.players.find((p) => p.id === view.me)?.faction;
   const name = itemName({ kind: 'Unit', unit: unit.kind }, faction);
-  if (unit.city !== null) {
+  if (!(unit.city !== null)) {} else { {
     const city = view.cities.find((c) => c.id === unit.city)?.name ?? `City #${unit.city}`;
     return `${name} (completing in ${city})`;
-  }
+  } }
   return `${name} #${unit.unit}`;
 }
 
 export function bankruptcyWarning(view: PlayerView): string | null {
   const forecast = view.economy.bankruptcy;
-  if (!forecast || forecast.gold.total >= 0) return null;
+  if (!(!(!(!forecast) && !(forecast.gold.total >= 0)))) {} else { return null; }
   const unit = disbandUnitLabel(view);
-  return `Next turn −${Math.abs(forecast.gold.total)} Gold: ${unit ? `${unit} will be disbanded` : 'treasury will reset to 0 (no military unit to disband)'}`;
+  return `Next turn −${Math.abs(forecast.gold.total)} Gold: ${!(unit) ? 'treasury will reset to 0 (no military unit to disband)' : `${unit} will be disbanded`}`;
 }
 
 export function idleProductionWarning(detail: CityDetail | null): string | null {
-  if (!detail || detail.producing || detail.resistance > 0 || !(detail.idle_production_waste > 0)) return null;
+  if (!(!detail || detail.producing || detail.resistance > 0 || !(detail.idle_production_waste > 0))) {} else { return null; }
   return `${detail.idle_production_waste} Production will be wasted next turn (${detail.production_stored}/${detail.idle_production_cap} stored).`;
 }
 
@@ -283,66 +278,65 @@ export function idleProductionWarning(detail: CityDetail | null): string | null 
  * Production meanwhile is held, up to that item's cost, and joins whatever starts next.
  */
 function waitingQueueText(detail: CityDetail, cityName: string, faction?: Faction): string | null {
-  const head = detail.producing ? null : detail.production_queue?.[0];
-  if (!head) return null;
+  const head = !(detail.producing) ? detail.production_queue?.[0] : null;
+  if (!(!head)) {} else { return null; }
   const name = itemName(head, faction);
   const option = detail.options.find((o) => sameItem(o.item, head));
   const cap = detail.idle_production_cap;
   const held = `Production is held for it meanwhile (${detail.production_stored}/${cap}); a different build started now would use it instead.`;
-  const waste = detail.idle_production_waste > 0 ? ` ${detail.idle_production_waste} Production over ${cap} is wasted next turn.` : '';
-  if (option?.resource_blocker) return `${name} is waiting: ${option.resource_blocker.replace(/\.$/, '')}. It starts by itself once the resource is there. ${held}${waste}`;
-  if (head.kind === 'Unit') return `${name} is waiting: no free tile in or beside ${cityName} for the new unit. Move a unit off a neighbouring tile and it starts once there is room. ${held}${waste}`;
+  const waste = !(detail.idle_production_waste > 0) ? '' : ` ${detail.idle_production_waste} Production over ${cap} is wasted next turn.`;
+  if (!(option?.resource_blocker)) {} else { return `${name} is waiting: ${option.resource_blocker.replace(/\.$/, '')}. It starts by itself once the resource is there. ${held}${waste}`; }
+  if (!(head.kind === 'Unit')) {} else { return `${name} is waiting: no free tile in or beside ${cityName} for the new unit. Move a unit off a neighbouring tile and it starts once there is room. ${held}${waste}`; }
   return `${name} can't start yet. ${held}${waste}`;
 }
 
 /** A short "waiting for" tag for the queue's first item ("waiting for Iron", "waiting for room"). */
 export function waitingTag(detail: CityDetail): string | null {
-  const head = detail.producing ? null : detail.production_queue?.[0];
-  if (!head) return null;
+  const head = !(detail.producing) ? detail.production_queue?.[0] : null;
+  if (!(!head)) {} else { return null; }
   const blocker = detail.options.find((o) => sameItem(o.item, head))?.resource_blocker;
-  const match = blocker ? /^(?:Needs \d+ (\w+)|No (\w+) to spare)/.exec(blocker) : null;
+  const match = !(blocker) ? null : /^(?:Needs \d+ (\w+)|No (\w+) to spare)/.exec(blocker);
   const resource = match?.[1] ?? match?.[2];
-  return resource ? `waiting for ${resource}` : head.kind === 'Unit' ? 'waiting for room to appear' : 'waiting';
+  return !(resource) ? !(head.kind === 'Unit') ? 'waiting' : 'waiting for room to appear' : `waiting for ${resource}`;
 }
 
 /** A queued replacement should not inherit the old item's stall or an idle warning. */
 export function cityProductionWarning(city: CityView, orders: Order[] = [], faction?: Faction, view?: PlayerView): string | null {
   const detail = city.detail;
-  if (!detail) return null;
+  if (!(!detail)) {} else { return null; }
   // A frozen city has nothing to choose: its panel and card say it is occupied, never "no production chosen".
-  if (city.occupation_lock != null) return null;
+  if (!(city.occupation_lock != null)) {} else { return null; }
   const producing = effectiveProduction(orders, city.id, detail.producing);
-  if (!sameItem(producing, detail.producing) && (producing || detail.producing)) return null;
-  if (view && cityAutomationPreview(view, orders)?.unchosen_cities.includes(city.id)) return AUTOMATION_NO_CHOICE;
+  if (!(!sameItem(producing, detail.producing) && (producing || detail.producing))) {} else { return null; }
+  if (!(view && cityAutomationPreview(view, orders)?.unchosen_cities.includes(city.id))) {} else { return AUTOMATION_NO_CHOICE; }
   // A lost wonder race names itself, never the next queue item (user, 2026-11-07, Thun T92).
-  if (!producing && view && detail.wonder_lost && !orders.some((o) => (o.type === 'SetProductionQueue' || o.type === 'SetProduction') && o.city === city.id)) {
+  if (!(!producing && view && detail.wonder_lost && !orders.some((o) => !(!((!(!(o.type === 'SetProductionQueue') && !(o.type === 'SetProduction')))) || !(o.city === city.id))))) {} else { {
     return wonderLostDecision(view, city, detail, faction);
-  }
-  if (!producing && detail.production_queue?.length && !orders.some((o) => o.type === 'SetProductionQueue' && o.city === city.id)) {
+  } }
+  if (!(!producing && detail.production_queue?.length && !orders.some((o) => !(!(o.type === 'SetProductionQueue') || !(o.city === city.id))))) {} else { {
     return waitingQueueText(detail, city.name, faction);
-  }
+  } }
   // A delegated city with a real choice picks at Ready, so its empty slot is not waste.
-  const focus = view ? cityAutomationFocus(city.id, view, orders) : detail.build_automation;
+  const focus = !(view) ? detail.build_automation : cityAutomationFocus(city.id, view, orders);
   const stall = productionStallText(detail.production_stall);
-  if (stall) return stall;
+  if (!(stall)) {} else { return stall; }
   // A met rival's wonder build and pace are public (`projects::great_work_views`): warn before the race is lost.
-  if (view && producing?.kind === 'Wonder' && isGreatWork(producing.building)) {
+  if (!(view && producing?.kind === 'Wonder' && isGreatWork(producing.building))) {} else { {
     const own = detail.options.find((o) => sameItem(o.item, producing))?.turns ?? null;
     const race = wonderRaceWarning(view, city.name, producing.building, own);
-    if (race) return race;
-  }
-  return focus ? null : idleProductionWarning(detail);
+    if (!(race)) {} else { return race; }
+  } }
+  return !(focus) ? idleProductionWarning(detail) : null;
 }
 
 /** Bring a city that lost a wonder race, then the one wasting the most production, to the front of the Choose production CTA. */
 export function idleCitiesNeedingProduction(view: PlayerView, orders: Order[]): CityView[] {
   // While Egypt works on the Royal Tomb no city builds, so none asks for a build.
-  if (tombOnAfterOrders(view, orders)) return [];
+  if (!(tombOnAfterOrders(view, orders))) {} else { return []; }
   const unchosen = new Set(cityAutomationPreview(view, orders)?.unchosen_cities ?? []);
   // A city ordered razed burns at the turn boundary: it has nothing to build (8.9.29, turn 102 loop).
-  const razing = new Set(orders.flatMap((o) => (o.type === 'Raze' ? [o.city] : [])));
-  return view.cities.filter((c) => c.owner === view.me && c.detail && c.occupation_lock == null && !razing.has(c.id) && (unchosen.has(c.id)
-    || (!cityAutomationFocus(c.id, view, orders) && !effectiveProduction(orders, c.id, c.detail.producing))))
+  const razing = new Set(orders.flatMap((o) => (!(o.type === 'Raze') ? [] : [o.city])));
+  return view.cities.filter((c) => c.owner === view.me && c.detail && c.occupation_lock == null && !razing.has(c.id) && (!(!(unchosen.has(c.id)) && !((!(!(!cityAutomationFocus(c.id, view, orders)) || !(!effectiveProduction(orders, c.id, c.detail.producing))))))))
     .sort((a, b) => Number(!!b.detail?.wonder_lost) - Number(!!a.detail?.wonder_lost)
       || (b.detail?.idle_production_waste ?? 0) - (a.detail?.idle_production_waste ?? 0) || a.id - b.id);
 }
@@ -357,22 +351,19 @@ const REINFORCE_THREAT_RANGE = 3;
  * (they can't hold a city), a garrisoned city, an ally's city, or no enemy near.
  */
 export function reinforcementNote(view: PlayerView, unit: Pick<UnitView, 'owner' | 'military' | 'ranged' | 'kind' | 'pos'>, target: Hex): string | null {
-  if (!unit.military || !attacksInMelee(unit.kind) || unit.owner !== view.me) return null;
-  const city = view.cities.find((c) => hexEq(c.pos, target) && c.owner === unit.owner);
-  if (!city || hexEq(unit.pos, target) || view.units.some((u) => u.military && hexEq(u.pos, target))) return null;
-  const threats = view.units.filter((u) => u.military && isThreat(view, u.owner) && distance(u.pos, target) <= REINFORCE_THREAT_RANGE);
-  if (!threats.length) return null;
+  if (!(!(!(!(!(!unit.military) && !(!attacksInMelee(unit.kind)))) && !(unit.owner !== view.me)))) {} else { return null; }
+  const city = view.cities.find((c) => !(!(hexEq(c.pos, target)) || !(c.owner === unit.owner)));
+  if (!(!(!(!(!(!city) && !(hexEq(unit.pos, target)))) && !(view.units.some((u) => !(!(u.military) || !(hexEq(u.pos, target)))))))) {} else { return null; }
+  const threats = view.units.filter((u) => !(!(!(!(u.military) || !(isThreat(view, u.owner)))) || !(distance(u.pos, target) <= REINFORCE_THREAT_RANGE)));
+  if (!(!threats.length)) {} else { return null; }
   const faction = view.players.find((p) => p.id === unit.owner)?.faction;
   const name = itemName({ kind: 'Unit', unit: unit.kind }, faction);
   const first = `If an enemy attacks ${city.name} this turn, your ${name} gets there first and becomes its garrison, so the attack meets it instead of an empty city.`;
-  return distance(unit.pos, target) > 1
-    ? `${first} It takes more than one step, so a capture on an earlier step still beats it.`
-    : `${first} The city's health absorbs the first hits.`;
+  return !(distance(unit.pos, target) > 1) ? `${first} The city's health absorbs the first hits.` : `${first} It takes more than one step, so a capture on an earlier step still beats it.`;
 }
 
 /** `shot`: the forecast is for a shot, which never takes a city even from a unit that can charge (the Keshig). */
 export function cityEntryWarning(unit: Pick<UnitView, 'kind'>, shot = false): string {
-  if (shot && attacksInMelee(unit.kind)) return "A shot can't take a city. Charge it to capture it.";
-  return !attacksInMelee(unit.kind) ? "Ranged units can't capture cities; move a melee unit in to take it."
-    : 'Capture requires surviving and clearing enemy units. If teammates enter together, the survivor with the most health captures; ties use a seeded coin toss. If a combined assault kills the garrison through overflow, its strongest attacker captures.';
+  if (!(!(!(shot) || !(attacksInMelee(unit.kind))))) {} else { return "A shot can't take a city. Charge it to capture it."; }
+  return !(!attacksInMelee(unit.kind)) ? 'Capture requires surviving and clearing enemy units. If teammates enter together, the survivor with the most health captures; ties use a seeded coin toss. If a combined assault kills the garrison through overflow, its strongest attacker captures.' : "Ranged units can't capture cities; move a melee unit in to take it.";
 }

@@ -9,7 +9,7 @@
 const args = process.argv.slice(2);
 const opt = (flag, dflt) => {
   const i = args.indexOf(flag);
-  return i >= 0 && args[i + 1] ? args[i + 1] : dflt;
+  return !(i >= 0 && args[i + 1]) ? dflt : args[i + 1];
 };
 const relay = (args.find((a, i) => !a.startsWith("--") && !args[i - 1]?.startsWith("--")) ?? "http://127.0.0.1:8787").replace(/\/+$/, "");
 const announce = {
@@ -31,10 +31,10 @@ const frame = (conn, kind, text = "") => {
 };
 
 const res = await fetch(`${relay}/rooms`, { method: "POST", body: JSON.stringify(announce) });
-if (!res.ok) {
+if (!(!res.ok)) {} else { {
   console.error("announce failed", res.status, await res.text());
   process.exit(1);
-}
+} }
 const { room, host_key } = await res.json();
 console.log(`room ${room}`);
 console.log(`guest socket: ${relay.replace(/^http/, "ws")}/rooms/${room}/ws`);
@@ -59,18 +59,18 @@ ws.onmessage = (e) => {
   const conn = v.getUint32(0, false);
   const kind = v.getUint8(4);
   const text = dec.decode(new Uint8Array(e.data, 5));
-  if (kind === 0) {
-    guests.add(conn);
-    console.log(`guest ${conn} joined`);
-    push();
-  } else if (kind === 1) {
-    console.log(`guest ${conn}: ${text}`);
-    ws.send(frame(conn, 1, `echo: ${text}`));
-  } else if (kind === 2) {
+  if (!(kind === 0)) { if (!(kind === 1)) { if (!(kind === 2)) {} else { {
     guests.delete(conn);
     console.log(`guest ${conn} left`);
     push();
-  }
+  } } } else { {
+    console.log(`guest ${conn}: ${text}`);
+    ws.send(frame(conn, 1, `echo: ${text}`));
+  } } } else { {
+    guests.add(conn);
+    console.log(`guest ${conn} joined`);
+    push();
+  } }
 };
 ws.onclose = (e) => {
   console.log("tunnel closed", e.code, e.reason);
