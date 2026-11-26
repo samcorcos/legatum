@@ -1,0 +1,42 @@
+import { expect, it } from 'vitest';
+import * as THREE from 'three';
+import { refreshMemory } from './refreshMemory';
+import { worldFromArrays } from './world';
+
+it('updates tree, rock, road and city memory attributes from fogged tiles', () => {
+  const world = worldFromArrays(2, 1, new Int8Array([2, 2]), new Uint8Array([2, 1]));
+  const group = new THREE.Group();
+  const instance = (tile: number) => {
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0], 3));
+    geometry.setAttribute('instanceMemory', new THREE.InstancedBufferAttribute(new Float32Array([0]), 1));
+    const mesh = new THREE.InstancedMesh(geometry, new THREE.MeshBasicMaterial(), 1);
+    mesh.userData.memoryTiles = new Int16Array([tile]);
+    group.add(mesh);
+    return geometry.getAttribute('instanceMemory') as THREE.InstancedBufferAttribute;
+  };
+  const tree = instance(0), city = instance(1);
+  const rockGeometry = new THREE.BufferGeometry();
+  rockGeometry.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, 0, 0, 0], 3));
+  rockGeometry.setAttribute('vertexMemory', new THREE.Float32BufferAttribute([0, 0], 1));
+  const rock = new THREE.Mesh(rockGeometry, new THREE.MeshBasicMaterial());
+  rock.userData.memoryTiles = new Int16Array([0, 1]);
+  group.add(rock);
+  const roadGeometry = new THREE.BufferGeometry();
+  roadGeometry.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0], 3));
+  roadGeometry.setAttribute('vertexMemory', new THREE.Float32BufferAttribute([0], 1));
+  const road = new THREE.Mesh(roadGeometry, new THREE.MeshBasicMaterial());
+  road.userData.memoryRoad = { from: new Int16Array([0]), to: new Int16Array([1]), blend: new Float32Array([0.25]) };
+  group.add(road);
+  refreshMemory(group, world);
+  expect(tree.getX(0)).toBe(0);
+  expect(city.getX(0)).toBe(1);
+  expect(rockGeometry.getAttribute('vertexMemory').array).toEqual(new Float32Array([0, 1]));
+  expect(roadGeometry.getAttribute('vertexMemory').getX(0)).toBe(0.25);
+  world.fog.set([1, 2]);
+  refreshMemory(group, world);
+  expect(tree.getX(0)).toBe(1);
+  expect(city.getX(0)).toBe(0);
+  expect(rockGeometry.getAttribute('vertexMemory').array).toEqual(new Float32Array([1, 0]));
+  expect(roadGeometry.getAttribute('vertexMemory').getX(0)).toBe(0.75);
+});
