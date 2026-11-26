@@ -7,13 +7,12 @@ animation accessor are copied byte for byte from
 `units/spearman-0ad/spearman.glb`, so the motion is identical to the approved
 round by construction (checked: all 5 x 87 channels and the inverse binds match).
 
-
 ## Inputs (masters outside git)
 
 The approved rig GLB and the sources this kit was proven on are art masters listed in
 `tools/art/sources-manifest.json`; fetch them with
 `python3 tools/art/fetch-sources.py tools/art/anim3d/units/spearman-0ad/spearman.glb` (and the
-`tools/art/anim3d/sources/...` paths; only the Hoplite Warrior and the 0 A.D. hoplite actor are listed, the second r1 source, `hoplite-tolnay`, is not). `--rig` defaults to that GLB. The three.js review
+`tools/art/anim3d/sources/...` paths; listed: the Hoplite Warrior, the 0 A.D. hoplite actor, the approved rig GLB, the PBR-lane aspis and painted-lane crest GLBs, the two CC BY helmets and tolnaydavid's `hoplite-tolnay` glTF). `--rig` defaults to that GLB. The three.js review
 viewer and recorder (`viewer/record.mjs`) referenced below live on the animation branches
 (`astra/unit-anim-3d-fit`), not on master yet. Manifest entries for third-party masters carry two extra fields, `source` (where the file came from: an author and URL, or an upstream repository and revision) and `license` (an SPDX id such as `CC-BY-4.0` or `CC-BY-SA-3.0`), because these files are not our own work: the credit and licence must travel with them. The fetch tooling ignores both fields. Needs Blender 4.5+ (5.3 used) with numpy;
 `fit_test_source.py` also needs the MPFB 2 extension (`env.sh`).
@@ -61,6 +60,7 @@ replace the stub with a reviewed record before shipping.
 | `--texture-format` | `webp` (default; keeps a 1024 set well under 2 MB) or `jpeg`. |
 | `--smart-uv` | Smart-project a new atlas instead of repacking the source's own UV charts. |
 | `--crest-glb GLB` | Take the strand crest (team region `crest` plus `crest_base`) from another unit GLB on this rig, seated on this helmet's crown. |
+| `--sculpt-override PART=FILE.blend:OBJECT` | Replace PART's LOD0 geometry with a hand-sculpted copy of that LOD0 object (saved from `<work>/fitted-lods.blend`). Vertex count and per-vertex UVs must match, else the run stops; the full-resolution part follows by the sculpt delta (4 nearest LOD0 vertices), so LOD1 and every bake are re-derived. Repeatable. |
 | `--keep PART` | Keep PART at full source topology in LOD0 (thin garments shred when decimated). |
 | `--grade-bronze` | Regrade metallic texels to the painting's warm gold-brown: value from the source, darker cavities (AO), brighter convex edges (baked pointiness), rougher. |
 | `--grade-skin HEX` | Move skin texels' mean to this sRGB colour, keeping 90% of their variation. |
@@ -243,3 +243,182 @@ takes the excess from garments. Garments export as the region part `garment`, an
 part's surface (30% for `body`, whose hidden skin may go). `record.mjs --lod-compare` writes
 `<prefix>-lod-compare.png`. The face plate is hammered dark bronze before the grade; the
 aspis keeps the device only on its outer face, its inner face plain bronze.
+
+## Hoplite Warrior, round r5 (close-up pass)
+
+r4 plus `--keep shield --crest-width 1.9 --knee-smooth`. `kit/closeups.py` renders 2048 px Eevee
+crops (head, LOD1 shield rim, left forearm, knees in idle, walk and attack) and
+`kit/closeup_sheets.py` puts each region beside the painting. LOD1 keeps the aspis's rolled
+rim at LOD0 topology and decimates only the field; rim neutral texels are pale bronze. The
+crest front and the face plate's side, and the greave tops, need hand sculpting:
+`~/LegatumRuns/anim-pilot/fit/r5/*-sculpt.blend`.
+
+## Hand-sculpt round trip
+
+LOD0 is rebuilt deterministically from the same arguments, so a sculpted LOD0 object drops
+back in by vertex index: `--sculpt-override helmet=helmet-crest-sculpt.blend:LOD0-helmet`.
+Proven on unmodified copies of the r5 sculpt files: geometry, weights, UVs, colours, regions,
+JSON and textures identical to r5, 9 of 20,960 tangents one int16 step apart. The ready
+command is `~/LegatumRuns/anim-pilot/fit/r5/rebuild-with-sculpts.sh` (see `SCULPT-README.md`).
+
+## Scripted sculpt experiment (r5)
+
+`kit/scripted_sculpt.py <copy.blend> helmet|greaves` moves vertices only (crest fan and
+grooves, face-plate rear edge onto the dome, greave tops re-profiled with a rim), so
+`--sculpt-override` accepts it; `kit/sculpt/scripted.sh` runs it on fresh `*-scripted.blend`
+copies and rebuilds to `units/spearman-fit-casey-sculpted/`. `--crest-strands N` adds
+horsehair bump to the crest bake. Result: the crest and plate barely change and the greaves
+got worse (pointed front, skin slits); scripting cannot stand in for the sculpt at these
+vertex counts. Use the GUI sculpt of the untouched `*-sculpt.blend` files.
+
+## r5/r6 summary (Hoplite Warrior, for provenance)
+
+**Outputs.** r5: `units/spearman-fit-casey/spearman.glb` (the map's GLB, sha1 0d3a1de3).
+r6: `units/spearman-fit-casey-r6/spearman.glb` (test path). Both validate with the map
+flags (`--lod0-max 30000 --lod-total-max 35000 --max-bytes 3000000 --max-joints 64`), Khronos
+0/0/0/0, and carry the round-6 skeleton and clips byte for byte.
+
+**r5 changes (close-up pass).** Corinthian face plate with two eye slots split by a raised,
+bevelled nasal plus the cheek-guard gap, in geometry; the aspis rim kept at LOD0 topology in
+LOD1 with pale-bronze neutral texels and a 32 px bake margin (no pale sliver); the PBR aspis's
+handgrip no longer imported (it stood off the forearm as flaps); knee weights smoothed.
+Close-up harness: `kit/closeups.py`, `kit/closeup_sheets.py`.
+
+**r6 crest part.** `--crest-mass` builds the crest as its own part (`fit_shells.crest_mass`):
+a lofted mass along a front-to-back arc over the crown that leans back and trails behind the
+neck guard, a teardrop section fuller toward the top, 11 strand grooves in real geometry
+(about 9 mm) following the flow, tufted top edge, streaked near-neutral texture with darker
+roots. 44 x 22 sections, 1,976 triangles in LOD0, decimated to 70 in LOD1 (silhouette kept).
+Rigid on `helmet`, team colour via COLOR_0, baked into the shared atlas, same single material.
+`kit/crest_clearance.py` checks every clip at 30 fps: no contact with the spear shaft or the
+shield disc (no cloak on this model).
+
+**r6 budget trims.** LOD0 stays at 29,497 with the crest kept whole: `--hide-skin-lod0 .015`
+drops skin faces within 1.5 cm under clothing or armour (1,848 faces, never visible), and the
+proportional budget takes the rest from the helmet shell (2,095), skin (3,250) and spear
+shaft (274). LOD1 2,758 (LOD1 also drops hidden skin, 1,030 faces).
+
+**Sculpt round trip.** `--sculpt-override PART=FILE.blend:OBJECT` re-imports hand-sculpted
+LOD0 parts (vertex count and UVs must match); proven on unmodified copies (identical
+geometry). A scripted stand-in (`kit/scripted_sculpt.py`) did not help (greaves got worse) and
+is not used. With the new crest part, a helmet sculpt must be re-saved from an r6 work file.
+
+**Still open.** From the side the face plate reads as a separate visor; the greave tops end in
+pointed, notched edges instead of a rounded knee guard; the bronze is still mottled in places.
+These need hand sculpting/painting, which is not available in this pipeline.
+
+## r7: replacing the helmet and greaves (`--replace-part`)
+
+`kit/fit_replace.py`. The source part should be Y up, facing +Z (glTF convention); fix others
+with `--replace-rot`. `:OBJECT` picks one mesh (prefix match), e.g. dropping a helmet's own plume.
+- **helmet**: deletes the fitted helmet and face plate, then a bounding-shell fit: scaled so its
+  width and depth enclose the head skin with ~8 mm clearance (shell walls taken as 12%), crown just
+  above the head top, then grown 3% at a time until no crown/brow skin pokes out (BVH rays). Rigid
+  on `helmet`; the `--crest-mass` crest is built afterwards on the new shell.
+- **greaves**: deletes source clothing faces on the shins (any vertex in the shin region, so no
+  leftover rim strips), splits a both-legs object at x = 0 (or mirrors a single greave), and fits
+  each to its shin from 7 cm above the ankle to 5 cm over the knee, cross-section from that shin's
+  own skin (2-98 percentile, ~1 cm clearance, at most +12% growth). Skin bulging through is pressed
+  back under it. Weights are direct, not transferred: 100% `leg_X`, easing to 50% `thigh_X` across
+  the knee (a nearest-face transfer picked up the other leg and threw spikes). Its own part `greave`.
+- Credits and licences go into the GLB credit, `asset.extras.replaced_parts` and the stub PROVENANCE.
+
+Placeholder proof: `kit/placeholder_parts.py` writes a CC0 Corinthian-style helmet and greave;
+output `units/spearman-fit-casey-r7-test/` (not committed). Real round r7: the timothyhsu helmet
+(`:helmet_low`) and tolnaydavid's `Leg_armor_low`, output `units/spearman-fit-casey-r7/`:
+
+```sh
+S=~/LegatumRuns/anim-pilot/premium-source; F=~/LegatumRuns/anim-pilot/fit
+fit_source_to_0ad.py -- <r6 arguments without --corinthian> --crest-tail .95 --keep helmet \
+  --replace-part helmet=$S/helmets/pbr_corinthian_helmet.glb:helmet_low \
+  --replace-credit 'helmet=PBR Corinthian Helmet by timothyhsu (Sketchfab), CC BY 4.0' --replace-license helmet=CC-BY-4.0 \
+  --replace-part greaves=$S/hoplite-tolnay/scene.gltf:Leg_armor_low \
+  --replace-credit 'greaves=Hoplite by tolnaydavid (Sketchfab), CC BY 4.0' --replace-license greaves=CC-BY-4.0
+```
+(The full command is `kit/sculpt/r7.sh`.) `kit/crest_clearance.py` must report no contact.
+
+## Round r8 (helmet scale, crest seat, greave finish)
+
+- Helmet: `fit_helmet` now fits the shell at head size (`--helmet-size`, 1.0 = inner width/depth
+  of the shell on the head plus 4 mm); it never grows. `tuck_skin` moves skull and ear skin that
+  pokes through inward (not the face behind the openings, not the neck below the rim). The
+  helmet's inner faces are baked dark (eye and mouth openings show a void). `--helmet-uv-share 2`
+  gives the helmet four times its packed atlas area.
+- Crest: `--crest-shift` moves the arc forward (r8: 3 cm), `--crest-tail .9`.
+- Greaves: `finish_greave` clamps the top to a smoothed arc, adds a rolled rim tube and a kneecap
+  dome; `delete_covered_skin` deletes skin in the greave's angular/height span and sinks the
+  edge skin under it, in the fitted mesh and both LODs.
+- Bronze: the regrade high-passes the source luminance (24 px masked box blur) so fine
+  engraving stays and dirt blotches go; replaced helmet and greaves are always graded as bronze.
+- Checks: `kit/armour_cover_check.py` (skin outside the greave surface per frame, in the shin's
+  moving frame) and `kit/crest_clearance.py`.
+- Still open after three rounds: tolnaydavid's greaves bake pale and their lower edge shows skin
+  slivers (the check still finds up to 21 vertices in walk); the kneecap dome reads as a ball.
+
+## Round r8b (neck, bronze palette)
+
+`tuck_skin` now also tucks jaw and neck skin a horizontal ray shows under the helmet rim
+(toward the neck axis, level), keeping the face behind the eye slots and the nasal gap.
+`--bronze-palette dark,mid,light` (r8b: `4a2c0c,915d20,e5b475`, sampled from
+`spearman-panel.png`), `--bronze-rough .38`, `--bronze-detail .9` and `--bronze-ao .3`
+(darker cavities on metal, metallic at least 0.95). Build: `kit/sculpt/r8b.sh`.
+
+## Round r9 (greave comparison)
+
+- `kit/extract_greaves.py <scan.glb> <out.glb>` cuts greaves out of a fused scan: faces in each
+  leg's shin band (by height fraction, near a trimmed-mean leg axis so capes drop out) whose base
+  colour is not skin, the most upright large piece per side, holes filled, decimated. On the Aegis
+  scan (an AI-generated Tripo model, CC BY 4.0, evaluated and not shipped) only the left greave
+  came out clean; the fit mirrors it.
+- `--no-greave-dome`; export now drops or sinks skin that `armour_cover_check.flagged` finds
+  outside a greave in any walk/attack/idle/hit frame (sinks 5 mm toward the shin axis, up to six
+  passes, then drops what is left). `armour_cover_check.py` checks both LODs and only drawn vertices.
+- r9a (the Aegis greaves, an AI-generated (Tripo) CC BY 4.0 source that was evaluated and not
+  shipped; it is not a shipped source and is not in the manifest) and r9b (tolnaydavid, no dome): both 0 in the check.
+
+## Round r10 (greaves built from the shin)
+
+`--replace-part greaves=built` grows each greave from the fitted shin (`fit_shells.greave_from_skin`):
+an offset sheet (6 mm) of the shin/calf skin from 6 cm above the ankle to just below the knee,
+closed except a narrow back seam, smoothed, two raised embossed ridges, rolled top and bottom rims,
+and a domed oval knee guard with a median ridge and raised border. No third-party source. Built
+greaves are weighted to the shin up to 12 cm above the knee, so the guard rides the shin. Export
+sinks skin flagged by `armour_cover_check.flagged` (both its own bins and bins up to the rims,
+all five clips, with a 2 mm stricter margin), then drops what is left. New
+`kit/greave_shard_check.py` (Blender): ray grids over each shin from six directions, every third
+frame of walk and attack, counting rays whose first hit is skin with a greave less than 2 cm
+behind it. `--skin-max-value` caps pale skin texels.
+
+## Round r11 (one-piece knee guard, knee holes traced)
+
+- The pale "shards" above the knees were holes in the thigh skin, seen through to the far side
+  of the leg. Traced with an ID render built straight from the GLB data (skin pink, garment
+  green, greave yellow; `closeups-r11/id-parts-before-after.png`). Two causes: hidden-skin
+  removal deleted skin merely *near* clothing (just below the skirt hem), and the export dropped
+  skin triangles with any flagged vertex. Now skin counts as hidden only if a ray out along its
+  normal hits a covering shell (`covered_along_normal`), and export sinks flagged skin (up to 20
+  passes) and drops only triangles whose three vertices are all still flagged.
+- `greave_from_skin` now raises the shell's top edge to a point over the kneecap (one piece,
+  `rise` 8.5 cm, `dome` 24 mm) with a median ridge, instead of a separate oval cap.
+
+## Round r12 (cover, LOD1 room, repoussé, skin normals)
+
+- Export now alternates: on even passes (up to 16) it pushes greave vertices within 2.5 cm of
+  flagged skin outward 1.5 mm (capped at 6 mm per vertex), on the others it sinks flagged skin
+  5 mm toward the shin axis; only after 26 passes does it drop triangles whose three vertices are
+  all still flagged. `--lod1-greave-offset` (default 3 mm) inflates the LOD1 greave about the shin
+  axis so the coarser shell clears the coarser skin.
+- Repoussé is baked, not modelled: `greave_from_skin` paints a 512 px height image (a ridge down
+  the shin, a pair of scrolls on the knee guard) used as a bump on the high greave and baked into
+  the normal and colour maps. Gotcha: set the image's colorspace to Non-Color *before*
+  `pixels.foreach_set`; changing it afterwards reloads the buffer and the pattern silently becomes 0.
+- Knee guard point raised (`rise` 10.5 cm); the top rim now rolls outward so a high camera sees
+  less of the inside.
+- `--smooth-skin-normals` transfers custom normals from the undecimated fitted body onto both LOD
+  skins, and skin texels get softer baked AO (0.85 + 0.15 AO). The thigh facets above the knee
+  are still visible in close-ups: they come from the decimated skin's silhouette and baked
+  shading, not only from its normals.
+
+## Round r13 (in progress)
+
+The LOD1 helmet and shield-shard fixes are in progress; this section will be filled in when they land.
