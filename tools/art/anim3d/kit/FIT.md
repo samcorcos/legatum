@@ -336,3 +336,21 @@ fit_source_to_0ad.py -- <r6 arguments without --corinthian> --crest-tail .95 --k
   --replace-credit 'greaves=Hoplite by tolnaydavid (Sketchfab), CC BY 4.0' --replace-license greaves=CC-BY-4.0
 ```
 (The full command is `kit/sculpt/r7.sh`.) `kit/crest_clearance.py` must report no contact.
+
+## Round r8 (helmet scale, crest seat, greave finish)
+
+- Helmet: `fit_helmet` now fits the shell at head size (`--helmet-size`, 1.0 = inner width/depth
+  of the shell on the head plus 4 mm); it never grows. `tuck_skin` moves skull and ear skin that
+  pokes through inward (not the face behind the openings, not the neck below the rim). The
+  helmet's inner faces are baked dark (eye and mouth openings show a void). `--helmet-uv-share 2`
+  gives the helmet four times its packed atlas area.
+- Crest: `--crest-shift` moves the arc forward (r8: 3 cm), `--crest-tail .9`.
+- Greaves: `finish_greave` clamps the top to a smoothed arc, adds a rolled rim tube and a kneecap
+  dome; `delete_covered_skin` deletes skin in the greave's angular/height span and sinks the
+  edge skin under it, in the fitted mesh and both LODs.
+- Bronze: the regrade high-passes the source luminance (24 px masked box blur) so fine
+  engraving stays and dirt blotches go; replaced helmet and greaves are always graded as bronze.
+- Checks: `kit/armour_cover_check.py` (skin outside the greave surface per frame, in the shin's
+  moving frame) and `kit/crest_clearance.py`.
+- Still open after three rounds: tolnaydavid's greaves bake pale and their lower edge shows skin
+  slivers (the check still finds up to 21 vertices in walk); the kneecap dome reads as a ball.

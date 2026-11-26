@@ -141,7 +141,7 @@ def press_under(skin_objs, layer_pts, depth=.008, reach=.02, below=.004):
 
 
 def crest_mass(helmet_pts, ceiling, name='Crest horsehair (procedural)', seg=44, ring=22, ridges=11,
-               height=.17, width=.095, groove=.009, seed=5, tail=1.14):
+               height=.17, width=.095, groove=.009, seed=5, tail=1.14, shift=0.):
     """A horsehair crest as its own part: a lofted mass along a front-to-back arc
     over the helmet crown (a mohawk sweep that trails down at the back), with a
     teardrop section that is fuller toward the top, real strand grooves running
@@ -151,7 +151,7 @@ def crest_mass(helmet_pts, ceiling, name='Crest horsehair (procedural)', seg=44,
     """
     H = helmet_pts; top = H[:, 1].max()
     crown = H[H[:, 1] > top - .11]; zf, zb = crown[:, 2].max(), crown[:, 2].min()
-    zc = (zf + zb) / 2; R = (zf - zb) / 2 * 1.15
+    zc = (zf + zb) / 2 + shift; R = (zf - zb) / 2 * 1.15
     def base_y(z):
         near = H[(np.abs(H[:, 2] - z) < .015) & (np.abs(H[:, 0]) < .03)]
         return (near[:, 1].max() if len(near) else top - .04) - .012
