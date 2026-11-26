@@ -48,6 +48,7 @@ replace the stub with a reviewed record before shipping.
 | `--texture-format` | `webp` (default; keeps a 1024 set well under 2 MB) or `jpeg`. |
 | `--smart-uv` | Smart-project a new atlas instead of repacking the source's own UV charts. |
 | `--crest-glb GLB` | Take the strand crest (team region `crest` plus `crest_base`) from another unit GLB on this rig, seated on this helmet's crown. |
+| `--sculpt-override PART=FILE.blend:OBJECT` | Replace PART's LOD0 geometry with a hand-sculpted copy of that LOD0 object (saved from `<work>/fitted-lods.blend`). Vertex count and per-vertex UVs must match, else the run stops; the full-resolution part follows by the sculpt delta (4 nearest LOD0 vertices), so LOD1 and every bake are re-derived. Repeatable. |
 | `--keep PART` | Keep PART at full source topology in LOD0 (thin garments shred when decimated). |
 | `--grade-bronze` | Regrade metallic texels to the painting's warm gold-brown: value from the source, darker cavities (AO), brighter convex edges (baked pointiness), rougher. |
 | `--grade-skin HEX` | Move skin texels' mean to this sRGB colour, keeping 90% of their variation. |
@@ -239,3 +240,11 @@ crops (head, LOD1 shield rim, left forearm, knees in idle, walk and attack) and
 rim at LOD0 topology and decimates only the field; rim neutral texels are pale bronze. The
 crest front and the face plate's side, and the greave tops, need hand sculpting:
 `~/LegatumRuns/anim-pilot/fit/r5/*-sculpt.blend`.
+
+## Hand-sculpt round trip
+
+LOD0 is rebuilt deterministically from the same arguments, so a sculpted LOD0 object drops
+back in by vertex index: `--sculpt-override helmet=helmet-crest-sculpt.blend:LOD0-helmet`.
+Proven on unmodified copies of the r5 sculpt files: geometry, weights, UVs, colours, regions,
+JSON and textures identical to r5, 9 of 20,960 tangents one int16 step apart. The ready
+command is `~/LegatumRuns/anim-pilot/fit/r5/rebuild-with-sculpts.sh` (see `SCULPT-README.md`).

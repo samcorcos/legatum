@@ -64,6 +64,8 @@ ap.add_argument('--smart-uv', action='store_true', help='smart-project a new atl
 ap.add_argument('--crest-glb', type=Path, help="take the crest (team region 'crest' plus 'crest_base') from another unit GLB on this rig, seated on this helmet's crown")
 ap.add_argument('--crest-width', type=float, default=1.0, help='side-to-side scale of a --crest-glb crest (fuller horsehair)')
 ap.add_argument('--knee-smooth', action='store_true', help='smooth skin weights around the knees (removes weight-transfer creases)')
+ap.add_argument('--sculpt-override', action='append', default=[], metavar='PART=FILE.blend:OBJECT',
+                help='replace the LOD0 geometry of PART with a hand-sculpted copy of that LOD0 object (same vertices and UVs, else the run fails); LOD1 and the bakes are re-derived from it')
 ap.add_argument('--keep', action='append', default=[], metavar='PART', help='keep PART at full source topology in LOD0 (thin garments shred when decimated); repeatable')
 ap.add_argument('--grade-bronze', action='store_true', help='regrade metallic texels toward warm gold-brown bronze: darker recesses, bright worn edges, rougher')
 ap.add_argument('--grade-skin', help="regrade skin texels toward this sRGB hex mean (e.g. b07850 for a tanned tone)")
@@ -694,6 +696,48 @@ bpy.ops.uv.average_islands_scale()
 bpy.ops.uv.pack_islands(margin=.003, rotate=True, shape_method='AABB', merge_overlap=False)
 bpy.ops.object.mode_set(mode='OBJECT')
 report['uv'] = 'source charts repacked' if keep_src_uv else 'smart projection'
+
+
+def vertex_uvs(me, layer):
+    """Per vertex, the sorted set of its corner UVs (rounded): topology-independent."""
+    out = [set() for _ in me.vertices]; uvl = me.uv_layers[layer].data
+    for l in me.loops: out[l.vertex_index].add(tuple(round(x, 4) for x in uvl[l.index].uv))
+    return [sorted(x) for x in out]
+
+
+for spec in args.sculpt_override:
+    # A sculpted LOD0 part (saved from <work>/fitted-lods.blend by hand): same
+    # vertices in the same order and the same UVs, new positions. The LOD0 here is
+    # rebuilt deterministically, so the sculpt's positions drop straight in; the
+    # full-resolution part follows by the sculpt delta of its nearest LOD0 vertices,
+    # so the bakes (normals, AO, colour) see the sculpted shape too.
+    part, rest = spec.split('=', 1); path, obj = rest.rsplit(':', 1)
+    if part not in lod0: raise SystemExit(f'--sculpt-override: no LOD0 part {part!r} (have {sorted(lod0)})')
+    before_objs = set(bpy.data.objects)
+    with bpy.data.libraries.load(path, link=False) as (src_, dst_):
+        if obj not in src_.objects: raise SystemExit(f'--sculpt-override: {obj!r} not in {path}')
+        dst_.objects = [obj]
+    sc = dst_.objects[0]; target = lod0[part]
+    sme, tme = sc.data, target.data
+    if len(sme.vertices) != len(tme.vertices):
+        raise SystemExit(f'--sculpt-override {part}: sculpt has {len(sme.vertices)} vertices, LOD0 has {len(tme.vertices)}; '
+                         'sculpt without remeshing or dyntopo')
+    if 'atlas' not in sme.uv_layers or vertex_uvs(sme, 'atlas') != vertex_uvs(tme, 'atlas'):
+        raise SystemExit(f'--sculpt-override {part}: UVs differ from the LOD0 part; do not edit UVs or reorder vertices')
+    old = co(target); new = np.array([v.co[:] for v in sme.vertices]) @ np.array(sc.matrix_world)[:3, :3].T + np.array(sc.matrix_world)[:3, 3]
+    delta = new - old; moved = np.linalg.norm(delta, axis=1)
+    set_co(target, new)
+    for h in fitted_objects[part]:
+        H_ = co(h); acc = np.zeros_like(H_)
+        for k in range(0, len(H_), 1024):
+            d2 = ((H_[k:k + 1024, None] - old[None]) ** 2).sum(2); idx = np.argsort(d2, 1)[:, :4]
+            w = 1 / (np.sqrt(np.take_along_axis(d2, idx, 1)) + 1e-4); w /= w.sum(1, keepdims=True)
+            acc[k:k + 1024] = (delta[idx] * w[..., None]).sum(1)
+        set_co(h, H_ + acc)
+    bpy.data.objects.remove(sc, do_unlink=True)
+    report.setdefault('sculpt_override', {})[part] = {'file': path, 'object': obj, 'sha256': hashlib.sha256(Path(path).read_bytes()).hexdigest(),
+                                                      'vertices_moved': int((moved > 1e-6).sum()), 'max_move_m': round(float(moved.max()), 5)}
+    log('sculpt override', part, report['sculpt_override'][part])
 # LOD1 is what players see at normal zoom: garments must survive. Skin hidden
 # under clothing or armour goes first (it only pokes through a coarse garment),
 # then the budget favours garments over skin.
