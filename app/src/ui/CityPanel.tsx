@@ -664,7 +664,8 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
           : positions.map((n) => <span className="queue-badge" key={n} title={`Position ${n} in the queue`}>{n}</span>)}</span>
         <span className="prod-cost">{progress ? <span className="prod-progress">{progress}</span> : <>{costInFactionYield(owner?.faction ?? 'India', o.cost)} <YieldIcon k={costYield(owner?.faction ?? 'India') === 'Food' ? 'food' : 'production'} size={11} /></>}{o.supply_need && <span className="prod-supply-need" title={`${needText(o.supply_need)} for as long as it exists. ${supplyRuleText(o.supply_need, view.players.find((p) => p.id === view.me)?.faction)}`}><Amounts text={needText(o.supply_need)} /></span>}</span>
         <span className="prod-turns">{o.turns > 0 ? `${o.turns} turn${o.turns === 1 ? '' : 's'}` : 'No output'}</span>
-        {o.item.kind === 'Unit' && <span className={`prod-upkeep ${o.upkeep ? o.upkeep.free ? 'free' : 'paid' : 'none'}`}><Amounts text={upkeepText(o.upkeep)} />{o.upkeep && o.upkeep.gold_per_turn_after < 0 && <span className="prod-upkeep-after" title="Your total Gold/turn once this unit exists"> → <Amounts text={`${signed(o.upkeep.gold_per_turn_after)} Gold/turn`} /></span>}</span>}
+        {o.item.kind === 'Unit' && o.item.unit === 'Settler' && cityUpkeepForecast(view) ? <span className="prod-upkeep paid" data-testid="settler-city-upkeep"><Amounts text={cityUpkeepForecast(view)!} /></span>
+          : o.item.kind === 'Unit' && <span className={`prod-upkeep ${o.upkeep ? o.upkeep.free ? 'free' : 'paid' : 'none'}`}><Amounts text={upkeepText(o.upkeep)} />{o.upkeep && o.upkeep.gold_per_turn_after < 0 && <span className="prod-upkeep-after" title="Your total Gold/turn once this unit exists"> → <Amounts text={`${signed(o.upkeep.gold_per_turn_after)} Gold/turn`} /></span>}</span>}
         {imp && <span className="prod-upkeep none">No upkeep</span>}
         <span className="prod-go" title={chosen ? 'Chosen: it starts when the turn ends' : undefined}>{placingHere ? 'Cancel' : resourceBlocked ? headOnly ? 'Blocked' : 'Queue →' : chosen ? active ? 'Chosen' : 'Queued' : tombStopped ? 'Queue' : 'Build →'}</span>
       </button>
@@ -672,7 +673,6 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     return <div className={`production-choice ${picked ? ' picked' : ''}${resourceBlocked ? ' supply-blocked' : ''}${site ? ' wonder-site' : ''}`} key={key} data-item={key} data-picked={picked || undefined}
       ref={picked ? (el) => el?.scrollIntoView?.({ block: 'nearest' }) : undefined} {...mapHover}>
       {imp || site ? <div className="tip-trigger">{card}</div> : <Tip as="div" placement="right" summary={description} content={<><p><Amounts text={`${detail} Build time if started now, at current yields; queued items may change it.`} /></p>{vs && <p><Amounts text={comparisonSentence(vs)} /></p>}{upkeepLine && <p><Amounts text={upkeepLine} /></p>}{after && o.item.kind === 'Building' && <><YieldsAfter now={d.yields.total} after={after.yields_after} /><p>Food left over after feeding the population: {after.food_surplus_after}.</p></>}</>}>{card}</Tip>}
-      {o.item.kind === 'Unit' && o.item.unit === 'Settler' && cityUpkeepForecast(view) && <div className="hint" data-testid="settler-city-upkeep">{cityUpkeepForecast(view)}</div>}
       <div className="production-secondary">
         <button className={`queue-add ${flash?.key === key && flash.city === city.id ? 'queued' : ''}`} aria-label={`Queue ${name}`} title={duplicate ? 'Already in the queue' : resourceBlocked && headOnly ? 'Queue it behind another build: it starts once the resource is there' : 'Add to the end of the production queue'} disabled={view.finished || duplicate || queue.length >= 50 || (resourceBlocked && headOnly)} onClick={(event) => unplaced ? startPlace(site!.building, 'queue') : append(o.item, event.currentTarget)}>
           {flash?.key === key && flash.city === city.id ? <><Icon name="ui-check" size={11} className="ui-mark" /> {flash.label}</> : '+ Queue'}
@@ -733,7 +733,6 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
           <span className="prod-go">{u.reason.startsWith('Already built') || hallStands(u.reason) ? 'Built' : isPermanentlyUnavailable(u, faction) ? 'Never available' : 'Not yet'}</span>
         </button>
       </Tip>
-      {u.item.kind === 'Unit' && u.item.unit === 'Settler' && cityUpkeepForecast(view) && <div className="hint" data-testid="settler-city-upkeep">{cityUpkeepForecast(view)}</div>}
       <div className="production-secondary">
         <button className="queue-add" aria-label={`Queue ${name}`} aria-disabled="true" disabled={view.finished} onClick={() => refuse(u)}>+ Queue</button>
         {!(u.item.kind === 'Wonder' && isGreatWork(u.item.building)) && <Tip content={buyReason}>

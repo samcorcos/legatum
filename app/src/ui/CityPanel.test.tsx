@@ -177,7 +177,7 @@ it('shows the next city upkeep on the Settler build card only when it costs Gold
   view.cities.push(...Array.from({ length: 5 }, (_, i) => ({ ...city, id: 100 + i })));
   act(() => root.render(<CityPanel city={city} view={view} />));
   expect(container.querySelector('[data-testid="settler-city-upkeep"]')?.textContent)
-    .toBe('City upkeep: +7 Gold a turn (7th city)');
+    .toBe('City upkeep: −7 Gold a turn (7th city)');
   view.added_city_upkeep = 0;
   act(() => root.render(<CityPanel city={city} view={view} />));
   expect(container.querySelector('[data-testid="settler-city-upkeep"]')).toBeNull();

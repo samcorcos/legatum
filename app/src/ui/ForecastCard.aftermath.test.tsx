@@ -90,7 +90,7 @@ describe('ForecastCard', () => {
     for (let i = 0; i < 6; i++) addCity(v, 0, `Own ${i}`, at(2 + i, 2));
     const forecast = charge(horse, addUnit(v, 2, 'Spearman', at(target.q + 1, target.r)));
     render(<ForecastCard forecast={forecast} ranged={false} view={v} unit={horse} target={city.pos} />);
-    expect(byTestId('capture-city-upkeep').textContent).toBe('City upkeep: +7 Gold a turn (7th city)');
+    expect(byTestId('capture-city-upkeep').textContent).toBe('If you take it: −7 Gold a turn city upkeep (7th city)');
     v.added_city_upkeep = 0;
     render(<ForecastCard forecast={forecast} ranged={false} view={v} unit={horse} target={city.pos} />);
     expect(container.querySelector('[data-testid="capture-city-upkeep"]')).toBeNull();

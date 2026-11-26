@@ -490,7 +490,7 @@ it('shows the city upkeep when founding would add a paid city', async () => {
   view.added_city_upkeep = 7;
   act(() => root.render(<UnitPanel unit={unit} view={view} />));
   expect(container.querySelector('[data-testid="found-city-upkeep"]')?.textContent)
-    .toBe('City upkeep: +7 Gold a turn (7th city)');
+    .toBe('City upkeep: −7 Gold a turn (7th city)');
   view.added_city_upkeep = 0;
   act(() => root.render(<UnitPanel unit={unit} view={view} />));
   expect(container.querySelector('[data-testid="found-city-upkeep"]')).toBeNull();

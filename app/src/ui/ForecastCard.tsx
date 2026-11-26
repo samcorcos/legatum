@@ -19,7 +19,8 @@ import { usePlacedCard, type CardAnchor } from './usePlacedCard';
 import { forecastEraHeadline, outclasses, unitEra } from '../map/unitEra';
 import { EraTab } from './EraTab';
 import { RankMark } from './RankMark';
-import { cityUpkeepForecast } from './cityUpkeepForecast';
+import { captureUpkeepForecast } from './cityUpkeepForecast';
+import { Amounts } from './Amounts';
 
 /**
  * Who defends a target hex, as the viewer knows it. On a city's tile the city defends while it has
@@ -318,7 +319,7 @@ export function ForecastCard({
       {city && !ranged && !(faction === 'Celts' && city.founder !== unit.owner) && goalCityCaptures(view, city.id, unit.owner).map(({ g, vp }) =>
         // A goal city's points go with a capture (Rome's Colonia, Egypt's tomb), the same gilt line as the capital's.
         <div key={g.kind} className="forecast-vp" data-testid={`forecast-goal-${g.kind}`}><RingMedallion icon={GOAL_CITY_ICON[g.kind]} tone="gilt" size={22} /><span>{goalCityCaptureLine(view, g, vp)}</span></div>)}
-      {city && !ranged && attacksInMelee(unit.kind) && city.owner !== unit.owner && !(faction === 'Celts' && city.founder !== unit.owner) && cityUpkeepForecast(view) && <div className="forecast-risk" data-testid="capture-city-upkeep">{cityUpkeepForecast(view)}</div>}
+      {city && !ranged && attacksInMelee(unit.kind) && city.owner !== unit.owner && !(faction === 'Celts' && city.founder !== unit.owner) && captureUpkeepForecast(view) && <div className="forecast-risk" data-testid="capture-city-upkeep"><Amounts text={captureUpkeepForecast(view)!} /></div>}
       {outriderEscapes && <div className="forecast-risk forecast-outrider" data-testid="forecast-outrider">If the {m.defName} moves this turn, it gets away.</div>}
       {m.aftermath?.severe && <AftermathLine m={m} />}
       {m.defUnit?.military && outclasses(m.defUnit.kind as UnitKind, defFaction, unit.kind as UnitKind, faction, f.defender_strength.total, f.attacker_strength.total) && (
@@ -425,7 +426,7 @@ export function ForecastSummary({ forecast: f, ranged, view, unit, target, assau
       {m.aftermath && <div className={`forecast-summary-shield forecast-aftermath${m.aftermath.severe ? ' severe' : ''}`} data-testid="forecast-aftermath" data-risk={m.aftermath.risk}>{m.aftermath.line}</div>}
       {m.fortify && <div className="forecast-summary-shield forecast-fortify" data-testid="forecast-fortify">The odds assume the {m.defName} stays fortified (+{m.fortify.bonus} strength).</div>}
       {m.city && m.assault && <div className={`forecast-summary-shield forecast-assault-capture ${assaultText(m, view)!.captureTone}`} data-testid="forecast-assault">{assaultText(m, view)!.capture}</div>}
-      {m.city && !ranged && attacksInMelee(unit.kind) && m.city.owner !== unit.owner && !(view.players.find((p) => p.id === unit.owner)?.faction === 'Celts' && m.city.founder !== unit.owner) && cityUpkeepForecast(view) && <div className="forecast-summary-shield" data-testid="capture-city-upkeep">{cityUpkeepForecast(view)}</div>}
+      {m.city && !ranged && attacksInMelee(unit.kind) && m.city.owner !== unit.owner && !(view.players.find((p) => p.id === unit.owner)?.faction === 'Celts' && m.city.founder !== unit.owner) && captureUpkeepForecast(view) && <div className="forecast-summary-shield" data-testid="capture-city-upkeep"><Amounts text={captureUpkeepForecast(view)!} /></div>}
       {m.lockWarning && <div className="forecast-summary-shield" data-testid="forecast-occupation-lock">{m.lockWarning}</div>}
       {m.city && !m.assault && f.garrison && <div className="forecast-summary-shield">{garrisonHeadline(f, view, m.city.name, ranged)}</div>}
       {/* The touch card has no room to spare: it names the walls only when Siege changes the fight; the numbers above already show the halving. */}
