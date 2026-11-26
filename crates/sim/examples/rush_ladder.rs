@@ -224,6 +224,8 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
     // Wars declared on the rusher by empires other than the seat, and when.
     let mut joined: BTreeMap<u8, u32> = BTreeMap::new();
     let mut rusher_captures = 0u32;
+    // Every capture of an original capital from its holder: (captor seat, turn).
+    let mut capital_takes: Vec<(u8, u32)> = Vec::new();
     let limit = if args.turns > 0 { args.turns } else { 700 };
     let mut my_capital = None;
     let trace = std::env::var("RL_TRACE").is_ok();
@@ -299,7 +301,12 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
                     lost += 1;
                     first_lost.get_or_insert(turn);
                 }
-                Event::CityCaptured { from, to, .. } => {
+                Event::CityCaptured { from, to, city, .. } => {
+                    if before.cities.get(city).is_some_and(|c| c.original_capital && c.owner == *from)
+                        && before.team_of(*from) != before.team_of(*to)
+                    {
+                        capital_takes.push((to.0, turn));
+                    }
                     if *from == seat {
                         lost += 1;
                         first_lost.get_or_insert(turn);
@@ -346,6 +353,8 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
         "first_join": joined.values().min(),
         "rusher_captures": rusher_captures,
         "builds": builds,
+        "capital_takes": capital_takes,
+        "winners": state.players.iter().filter(|p| state.finished && Some(p.team) == state.winner).map(|p| p.id.0).collect::<Vec<_>>(),
     })
 }
 
