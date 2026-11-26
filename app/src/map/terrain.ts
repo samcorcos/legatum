@@ -12,7 +12,7 @@ import { CITY_CANVAS, CITY_GROUND, WALLED_TOWN_SCALE, townOval, cityArtArrivals,
 import { sitesOf } from './constructionSites';
 import { mapBorderColor, mapPlayerColor, type BorderSpec, type MapStyle } from './style';
 import { getBorderVariant, type BorderVariant } from './borderVariant';
-import { cacheLimit, evictionPlan, fallbackLevels, showLanded, stageFits } from './chunkCache';
+import { cacheLimit, evictionPlan, fallbackLevels, showLanded, stageFits, gestureLevel } from './chunkCache';
 import { drawFeatureArt, drawOrganicSprite, getTerrainVariant, isOrganic, organicSide } from './terrainVariant';
 import { ORGANIC_REACH, SMALL_REGION, computeRegions, organicKind, organicSig, planOrganic, type Plan, type Regions } from './organicTerrain';
 import {
@@ -258,6 +258,8 @@ export class TerrainCache {
   /** The zoom (CSS px per world px) the chunk being rendered is drawn for; set by `renderChunk`. */
   private chunkZoom = 1;
   private lastZoom = NaN;
+  /** Which way the zoom last changed. */
+  private zoomingIn = false;
   /** Chunks that failed to draw (frame of the last failure per key) and how many times; retried after `RETRY_FRAMES`. */
   private failedAt = new Map<string, number>();
   private failures = 0;
@@ -760,19 +762,19 @@ export class TerrainCache {
     const t0 = performance.now();
     let pending = false;
     if (cam.zoom !== this.lastZoom) {
+      if (!Number.isNaN(this.lastZoom)) this.zoomingIn = cam.zoom > this.lastZoom;
       this.lastZoom = cam.zoom;
       this.zoomChangedAt = t0;
     }
     const wanted = TerrainCache.levelFor(eff);
     let level = wanted;
     // Hold the level in use through a zoom gesture, while its chunks still scale to the view without looking
-    // wrong. Past that range, advance one level at a time and only once the held level is complete, so the
-    // level left behind is always a close, finished stand-in for the one being drawn.
+    // wrong. Past that range, go toward the wanted level (see `gestureLevel`), and only once the held level is
+    // complete, so the level left behind is always a finished stand-in for the one being drawn.
     if (wanted !== this.curLevel && this.curLevel >= 0 && t0 - this.zoomChangedAt < ZOOM_HOLD_MS) {
       const ratio = eff / LEVELS[this.curLevel];
       if (ratio > HOLD_SCALE_MIN && ratio < HOLD_SCALE_MAX) level = this.curLevel;
-      else if (this.lastStats.missing > 0) level = this.curLevel;
-      else level = this.curLevel + Math.sign(wanted - this.curLevel);
+      else level = gestureLevel(this.curLevel, wanted, this.lastStats.missing);
       pending = true; // come back once the zoom rests, to settle on the right level
     }
     this.curLevel = level;
@@ -822,11 +824,19 @@ export class TerrainCache {
     const visible = need(level, 0);
     const unseen = visible.some(([cx, cy]) => !this.chunks.has(`${level}:${cx}:${cy}`));
     const bare = level !== OVERVIEW && need(STANDIN, 0).some(([cx, cy]) => !this.chunks.has(`${STANDIN}:${cx}:${cy}`));
-    if (level !== OVERVIEW) enqueue(STANDIN, 0, false);
-    enqueue(level, 0, false);
-    // Zooming out reveals ground no chunk covers yet, so a gesture pre-renders a wider ring.
     const gesture = t0 - this.zoomChangedAt < ZOOM_HOLD_MS;
-    enqueue(level, gesture ? 2 : 1, true);
+    // Where chunks paint slowly, a zoom gesture paints none: a chunk takes longer than the gesture stays at its
+    // level, so each level passed through was a view of chunks nobody saw sharp. The cached levels stand in
+    // (what such a machine showed anyway) and the level the zoom lands on is painted once it rests.
+    const wait = gesture && this.stageMs >= SLOW_STAGE_MS;
+    if (level !== OVERVIEW) enqueue(STANDIN, 0, false);
+    if (!wait) enqueue(level, 0, false);
+    // Zooming out reveals ground no chunk covers yet, so that gesture pre-renders a wider ring. Zooming in
+    // reveals none and leaves this level soon, so it paints no ring at all until the zoom rests: a ring is three
+    // to five times the chunks of the view, and each level passed through painted one.
+    const ringPad = !gesture ? 1 : this.zoomingIn || wait ? 0 : 2;
+    if (ringPad) enqueue(level, ringPad, true);
+    else pending = true; // come back once the zoom rests, for the ring (and the view, where it waited)
     this.queue = queue;
     this.filling = unseen || bare;
     this.wakeAt = pending ? this.zoomChangedAt + ZOOM_HOLD_MS : Infinity;
