@@ -309,6 +309,11 @@ These need hand sculpting/painting, which is not available in this pipeline.
 
 ## r7: replacing the helmet and greaves (`--replace-part`)
 
+> **Historical (r7 to r9b):** the tolnaydavid `hoplite-tolnay` greaves used in r7, r8, r8b and
+> r9b, and their recipes `sculpt/r7.sh`, `r8.sh`, `r8b.sh` and `r9b.sh`, are kept for the record
+> only. That source is not archived and is not needed to rebuild the shipped model: from r10 the
+> greaves are built from the fitted shin (`--replace-part greaves=built`).
+
 `kit/fit_replace.py`. The source part should be Y up, facing +Z (glTF convention); fix others
 with `--replace-rot`. `:OBJECT` picks one mesh (prefix match), e.g. dropping a helmet's own plume.
 - **helmet**: deletes the fitted helmet and face plate, then a bounding-shell fit: scaled so its
