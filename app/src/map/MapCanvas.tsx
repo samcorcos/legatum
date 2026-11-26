@@ -9,7 +9,7 @@ import { isEliminated, useGame } from '../store';
 import type { Hex, PlayerView } from '../types';
 import { distance, hexEq, hexToPixel, pixelToHex, tileIndex, within } from '../hex';
 import { chariotTerrainNote, planTurns, previewRoute, roadBonusNote, routeTurnsText, routeRiskText, routeDangerText, isCalmRouteNote, type PathStep, type RouteRisk } from '../path';
-import { draw, HEX_SIZE, perf, screenToWorld, terrainStats, worldBounds, ambientClipRects, hoverClipBoxes, idleClipBoxes, type Camera, type SelectionRing, type TerritoryOverlay } from './render';
+import { draw, HEX_SIZE, perf, screenToWorld, stepTerrain, terrainLanded, terrainStats, worldBounds, ambientClipRects, hoverClipBoxes, idleClipBoxes, type Camera, type SelectionRing, type TerritoryOverlay } from './render';
 import { fontEpoch } from './sprites';
 import { onIconLoad } from '../icons';
 import { onMapFeatureLoad } from './mapFeatures';
@@ -759,6 +759,8 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     let flightDrawn = false;
     // Whether the last drawn frame had anything for idle life to move (smoke, water) in view.
     let idleInView = true;
+    // The last frame left terrain chunks to paint and nothing else to draw (see `stepTerrain`).
+    let terrainWaiting = false;
     const loop = (t: number) => {
       raf = requestAnimationFrame(loop);
       const f = frame.current;
@@ -808,7 +810,13 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       const smoulder = !still && hasVisibleSmoulder(f.view.cities, cam.current, size.current.w, size.current.h);
       const smoulderTick = smoulder && t - lastSmoulder > 50;
       const hoverMoved = hoverDirty.current && !dirty.current;
-      if (!dirty.current && !hoverMoved && !animating && !pulse && !cueLive && !arrowLive && !pingLive && !celebrating && !siegePulse && !smoulderTick && !idleTick) return;
+      if (!dirty.current && !hoverMoved && !animating && !pulse && !cueLive && !arrowLive && !pingLive && !celebrating && !siegePulse && !smoulderTick && !idleTick) {
+        // Only the terrain wants this frame: paint a stage of it and draw the map once a chunk is whole. Redrawing
+        // the whole map for every stage cost a slow machine more than the painting did.
+        if (!terrainWaiting || !stepTerrain()) return;
+        dirty.current = true;
+      }
+      terrainWaiting = false;
       if (pulse || siegePulse) lastPulse = t;
       // Nothing but the ambient motion wants a frame (the selection pulse, a siege ring breathing, a damaged city's
       // smoke, idle life): repaint just their boxes, with the rest of the map's clock held. A full redraw of a crowded
@@ -984,7 +992,9 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
         placeInspector.current?.();
       }
       // Terrain chunks still rendering, or fonts and icons arriving: keep drawing.
-      if (pending || fontEpoch() !== lastFonts) dirty.current = true;
+      // A clipped frame that finished a chunk has not shown it.
+      if (fontEpoch() !== lastFonts || (pulseOnly && terrainLanded())) dirty.current = true;
+      if (pending) terrainWaiting = true;
       lastFonts = fontEpoch();
     };
     raf = requestAnimationFrame(loop);
