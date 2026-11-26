@@ -230,7 +230,7 @@ export function ScoreLedger({ model, turn, close, closeRef }: { model: VpModel; 
     const isOpen = open === r.id;
     const cells = columns.map(({ e }) => {
       let cell: ReactNode;
-      if (e.unmet) cell = <div className="sl-cell"><span className="sl-unknown-cell" title="Not met yet: hidden until you meet them">?</span></div>;
+      if (e.unmet) cell = <div className="sl-cell"><span className="sl-unknown-cell" title="Not met yet">?</span></div>;
       else if (r.kind === 'work') cell = <WorkCell s={r.s!} e={e} />;
       else if (r.kind === 'capital') cell = <CapitalCell model={model} e={e} />;
       else if (r.kind === 'goal' || r.kind === 'heldGoal') cell = <GoalCell model={model} e={e} held={r.kind === 'heldGoal'} />;
