@@ -2720,6 +2720,13 @@
    "path": "docs/playtests/training-questions-shots/setup-toggle-1000x600.png",
    "bytes": 76715,
    "sha256": "168e2355495451da20d4be901ef3886a74e9ffb50ccfb748386516f09fb6bbe6"
+  },
+  {
+   "path": "tools/art/anim3d/sources/aegis/aegis_sentinel__ancient_blue_hoplite_warrior_v1.glb",
+   "bytes": 39344284,
+   "sha256": "3f8d915b86e554324ede15f7e261a279829c923b965854921a0f2fb3cbc78be9",
+   "source": "https://sketchfab.com/3d-models/a2619fc3c48a420e9b6fe6091031a401 (Aegis Sentinel - Ancient Blue Hoplite Warrior V1 by pixforge.id; AI-generated (Tripo) source)",
+   "license": "CC-BY-4.0"
   }
  ]
 }

@@ -74,6 +74,8 @@ ap.add_argument('--bronze-palette', default='47290f,a67734,f6dc96', help='dark,m
 ap.add_argument('--bronze-rough', type=float, default=.50, help='base roughness of graded bronze (raised edges are 0.2 lower)')
 ap.add_argument('--bronze-detail', type=float, default=1.3, help='gain on the high-passed source luminance (fine detail) in graded bronze')
 ap.add_argument('--bronze-ao', type=float, default=.45, help='AO floor on metal (lower = darker cavities); other surfaces keep 0.45')
+ap.add_argument('--no-greave-dome', action='store_true', help='no kneecap dome on replaced greaves')
+ap.add_argument('--greave-skin-any', action='store_true', help='delete skin faces with ANY vertex under a greave (not only fully covered ones)')
 ap.add_argument('--helmet-size', type=float, default=1.0, help='replacement helmet size relative to an exact head fit')
 ap.add_argument('--helmet-uv-share', type=float, default=1.0, help='scale the helmet UV islands before packing (2 = four times the atlas area)')
 ap.add_argument('--crest-shift', type=float, default=0., help='move the crest arc forward (+) or back (-) along the helmet, metres')
@@ -509,7 +511,7 @@ if args.replace_part:
                 shin = skin[(skin[:, 1] > aj[1]) & (skin[:, 1] < kj[1] + .08) & (np.linalg.norm((skin - kj)[:, [0, 2]], axis=1) < .11)]
                 g, r2 = fit_greave(objs, shin, kj, aj, mirror, name=f'HIGH-layer-greave-{sd}')
                 g['part'] = 'greave'; fitted_objects.setdefault('greave', []).append(g); rep_[sd] = r2
-                extra, r3 = finish_greave(g, kj, aj, shell_material('Greave bronze (generated)', (.62, .43, .2), .35, 1.))
+                extra, r3 = finish_greave(g, kj, aj, shell_material('Greave bronze (generated)', (.62, .43, .2), .35, 1.), with_dome=not args.no_greave_dome)
                 for x in extra: x['part'] = 'greave'; fitted_objects['greave'].append(x)
                 r2.update(r3)
                 r2['covered_skin_faces_deleted'] = delete_covered_skin(fitted_objects['body'], [g] + extra, (aj + (kj - aj) * .05, kj + (kj - aj) / np.linalg.norm(kj - aj) * .06))
@@ -920,7 +922,7 @@ if fitted_objects.get('greave') and 'body' in lod0:
         kj, aj = rig.joint['leg_' + sd], rig.joint['foot_' + sd]
         sh_ = [g_ for g_ in fitted_objects['greave'] if (co(g_)[:, 0].mean() > 0) == (sd == 'L')]
         if sh_:
-            for lod in (lod0, lod1): gone_ += delete_covered_skin([lod['body']], sh_, (aj, kj + (kj - aj) / np.linalg.norm(kj - aj) * .06))
+            for lod in (lod0, lod1): gone_ += delete_covered_skin([lod['body']], sh_, (aj, kj + (kj - aj) / np.linalg.norm(kj - aj) * .06), any_vertex=args.greave_skin_any)
     report['skin_behind_greaves_deleted_lod_faces'] = gone_
 report['triangles'] = {'source': raw, 'lod0': {p: ntris(o) for p, o in lod0.items()}, 'lod1': {p: ntris(o) for p, o in lod1.items()}}
 log('lods', report['triangles'])
@@ -1323,6 +1325,33 @@ def export_lod(lod, mesh_name):
     moved = np.linalg.norm(xyz - before, axis=1)
     rep['max_by_part_m'] = {r['part']: round(float(moved[r['start']:r['start'] + r['count']].max()), 4) for r in regions}
     attrs['POSITION'] = [tuple(map(float, r)) for r in xyz]
+    if any(r['part'] == 'greave' for r in regions):
+        # Skin that shows through a greave in any frame of the clips: drop its triangles
+        # (it is behind the armour). Same test as kit/armour_cover_check.py.
+        from armour_cover_check import flagged
+        part_ = np.empty(len(xyz), object)
+        for r in regions: part_[r['start']:r['start'] + r['count']] = r['part']
+        J_ = np.array(attrs['JOINTS_0']).astype(int); W_ = np.array(attrs['WEIGHTS_0']); T_ = np.array([i[0] for i in idx]).reshape(-1, 3)
+        dropped = 0; sunk = 0
+        inv_ = np.array(rig.g.accessor(rig.g.doc['skins'][0]['inverseBindMatrices'])).reshape(-1, 4, 4).transpose(0, 2, 1)
+        for it in range(8):
+            used_ = np.zeros(len(xyz), bool); used_[T_.ravel()] = True
+            bad_ = flagged(rig.g, xyz, J_, W_, part_, used_, ('walk', 'attack', 'idle', 'hit'))
+            if not bad_: break
+            bl = np.array(sorted(bad_))
+            if it < 6:
+                # Sink flagged skin 5 mm toward its shin axis (bind space): no holes.
+                for sd in 'LR':
+                    kn = rig.joint['leg_' + sd]; an = rig.joint['foot_' + sd]; ax = (kn - an) / np.linalg.norm(kn - an)
+                    m_ = bl[(xyz[bl, 0] > 0) == (sd == 'L')]
+                    q = xyz[m_] - an; h = q @ ax; rad = q - np.outer(h, ax); rn = np.linalg.norm(rad, axis=1, keepdims=True)
+                    xyz[m_] = an + np.outer(h, ax) + rad * np.maximum(rn - .005, .01) / np.maximum(rn, 1e-6)
+                sunk += len(bl); continue
+            badm = np.zeros(len(xyz), bool); badm[bl] = True
+            keep_ = ~badm[T_].any(1); dropped += int((~keep_).sum()); T_ = T_[keep_]
+        attrs['POSITION'] = [tuple(map(float, r)) for r in xyz]
+        idx = [(int(i),) for i in T_.ravel()]
+        rep['skin_under_greaves'] = {'vertex_sinks': sunk, 'triangles_dropped': dropped}
     log(mesh_name, len(idx) // 3, 'triangles; ground fit', rep)
     return {'name': mesh_name, 'attrs': attrs, 'indices': idx, 'regions': regions}, rep
 

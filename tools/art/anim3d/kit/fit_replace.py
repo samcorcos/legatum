@@ -130,7 +130,7 @@ def inner_faces(o, centre, thresh=.3):
     return out
 
 
-def finish_greave(o, knee, ankle, bronze, rim_r=.0045, dome=(.034, .04, .016)):
+def finish_greave(o, knee, ankle, bronze, rim_r=.0045, dome=(.034, .04, .016), with_dome=True):
     """Clean the greave top: smooth its top profile into a level-ish arc, add a rolled
     rim tube along it and a rounded kneecap dome. Returns the new rim and dome objects."""
     P = co(o); u = (knee - ankle) / np.linalg.norm(knee - ankle)
@@ -189,10 +189,12 @@ def finish_greave(o, knee, ankle, bronze, rim_r=.0045, dome=(.034, .04, .016)):
     for i in range(nv):
         for j in range(nu): faces.append((i * w + j, i * w + j + 1, (i + 1) * w + j + 1, (i + 1) * w + j))
     cap = _mesh(o.name + '-kneecap', verts, faces, uvs, bronze)
+    if not with_dome:
+        bpy.data.objects.remove(cap, do_unlink=True); return [rim], {'top_clamped_vertices': int(clamp.sum()), 'rim_points': int(len(pts))}
     return [rim, cap], {'top_clamped_vertices': int(clamp.sum()), 'rim_points': int(len(pts))}
 
 
-def delete_covered_skin(skin_objs, shells, axis_pts, nb=36, nh=16):
+def delete_covered_skin(skin_objs, shells, axis_pts, nb=36, nh=16, any_vertex=False):
     """Delete skin faces lying inside a shell's angular and height span about the
     limb axis (bind pose): that skin is behind the armour, or poking through it."""
     a0, a1 = axis_pts; u = (a1 - a0) / np.linalg.norm(a1 - a0)
@@ -225,7 +227,7 @@ def delete_covered_skin(skin_objs, shells, axis_pts, nb=36, nh=16):
             radial = (q - np.outer(h, u))[pull]; P[pull] = a0 + np.outer(h[pull], u) + radial / r[pull][:, None] * lim[pull][:, None]
             set_co(o, P)
         bm2 = bmesh.new(); bm2.from_mesh(o.data); bm2.verts.ensure_lookup_table()
-        dead = [f for f in bm2.faces if all(c_[v.index] for v in f.verts)]
+        dead = [f for f in bm2.faces if (any if any_vertex else all)(c_[v.index] for v in f.verts)]
         bmesh.ops.delete(bm2, geom=dead, context='FACES'); bm2.to_mesh(o.data); bm2.free(); gone += len(dead)
     return gone
 

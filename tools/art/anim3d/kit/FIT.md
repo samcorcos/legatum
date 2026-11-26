@@ -362,3 +362,14 @@ fit_source_to_0ad.py -- <r6 arguments without --corinthian> --crest-tail .95 --k
 `--bronze-palette dark,mid,light` (r8b: `4a2c0c,915d20,e5b475`, sampled from
 `spearman-panel.png`), `--bronze-rough .38`, `--bronze-detail .9` and `--bronze-ao .3`
 (darker cavities on metal, metallic at least 0.95). Build: `kit/sculpt/r8b.sh`.
+
+## Round r9 (greave comparison)
+
+- `kit/extract_greaves.py <scan.glb> <out.glb>` cuts greaves out of a fused scan: faces in each
+  leg's shin band (by height fraction, near a trimmed-mean leg axis so capes drop out) whose base
+  colour is not skin, the most upright large piece per side, holes filled, decimated. On the Aegis
+  scan only the left greave came out clean; the fit mirrors it.
+- `--no-greave-dome`; export now drops or sinks skin that `armour_cover_check.flagged` finds
+  outside a greave in any walk/attack/idle/hit frame (sinks 5 mm toward the shin axis, up to six
+  passes, then drops what is left). `armour_cover_check.py` checks both LODs and only drawn vertices.
+- r9a (Aegis, AI-generated Tripo source) and r9b (tolnaydavid, no dome): both 0 in the check.
