@@ -5,6 +5,8 @@
 // guest test starts the real relay under wrangler dev (fixtures.ts). Shots land in
 // test-results/screen-tour/<size>/online/.
 import type { Page, Route } from '@playwright/test';
+import { readFileSync, writeFileSync } from 'node:fs';
+import type { SaveFile } from '../../src/store';
 import { E2E_RELAY, expect, testWithFailingRequests } from '../fixtures';
 import { dismissInterstitials, endPlanning } from '../turnActions';
 import { chooseCapitalProduction } from '../opening';
@@ -222,12 +224,11 @@ for (const size of SIZES) testWithFailingRequests.describe(`online screens ${siz
 for (const size of SIZES) testWithFailingRequests.describe(`online co-op ${size.name}`, () => {
   testWithFailingRequests.use({ viewport: { width: size.width, height: size.height } });
 
-  testWithFailingRequests('host room, guest room, both on turn one, game menu', async ({ page: host, browser, baseURL, relay }) => {
+  testWithFailingRequests('host and guest play, then Continue hosts the save and the guest rejoins', async ({ page: host, browser, baseURL, relay }) => {
     testWithFailingRequests.setTimeout(420_000);
     const guestContext = await browser.newContext({ baseURL, viewport: { width: size.width, height: size.height } });
     let guest = await guestContext.newPage();
     expect(relay).toBeTruthy();
-    // The relay keeps rooms for a while after a run: a unique name finds this run's room.
     const hostName = `Ada ${String(Date.now()).slice(-5)}`;
     await noHints(host);
     await noHints(guest);
@@ -322,13 +323,6 @@ for (const size of SIZES) testWithFailingRequests.describe(`online co-op ${size.
       await expect(p.locator('#game-menu')).toHaveCount(0);
     }
 
-    // The host saves the online game to a file (Save to file…, host only).
-    await host.getByRole('button', { name: 'Menu', exact: true }).click();
-    const download = host.waitForEvent('download');
-    await host.getByRole('button', { name: 'Save to file…', exact: true }).click();
-    const savePath = testWithFailingRequests.info().outputPath('online-save.legatum.json');
-    await (await download).saveAs(savePath);
-
     // The seat list (Turn details) as each side sees it.
     for (const [p, name] of [[host, '55b-host-seats'], [guest, '55c-guest-seats']] as const) {
       const details = p.locator('details.sidebar-turn-more').first();
@@ -372,49 +366,43 @@ for (const size of SIZES) testWithFailingRequests.describe(`online co-op ${size.
     await guest.mouse.move(size.width / 2, size.height - 4);
     await shot(guest, size, '57-guest-host-ready');
 
+    // Save after both players advance, so resuming a fresh turn-one game cannot pass.
+    await chooseCapitalProduction(guest);
+    await endPlanning(guest);
+    for (const p of [host, guest]) await expect(p.getByTestId('turn-number')).toHaveText('2', { timeout: 90_000 });
+    await dismissInterstitials(host);
+    await host.getByRole('button', { name: 'Menu', exact: true }).click();
+    const download = host.waitForEvent('download');
+    await host.getByRole('button', { name: 'Save to file…', exact: true }).click();
+    const savePath = testWithFailingRequests.info().outputPath('online-save.legatum.json');
+    await (await download).saveAs(savePath);
+    const saveJson = readFileSync(savePath, 'utf8');
+    const { turn: savedTurn } = JSON.parse(saveJson) as SaveFile;
+    expect(savedTurn).toBe(2);
+
     // The host closes the tab: what the guest sees.
     await host.close();
     await guest.waitForTimeout(8000);
     await guest.mouse.move(size.width / 2, size.height - 4);
     await shot(guest, size, '58-guest-host-gone');
 
-    // Host from a save: a new tab picks the file on the Multiplayer screen, then the guest rejoins.
+    // Keep the standalone file-hosting path covered separately from Continue.
     const host2Context = await browser.newContext({ baseURL, viewport: { width: size.width, height: size.height } });
     const host2 = await host2Context.newPage();
     await noHints(host2);
     // A save with several human players opened with Load Game: Multiplayer opens with Host this save as the primary.
     await host2.goto('/');
-    let loadChooser = host2.waitForEvent('filechooser');
+    const loadChooser = host2.waitForEvent('filechooser');
     await host2.getByRole('button', { name: /^Load Game/ }).click();
     await (await loadChooser).setFiles(savePath);
     await host2.waitForTimeout(1500);
     await host2.mouse.move(5, 5);
     await shot(host2, size, '59-load-multi-human-save');
-    // The same save as the autosave: Continue on the title takes it to Host this save (UI review, 2026-11-25).
-    // The build without online play (Continue disabled with its reason) is covered by TitleScreen.test.tsx: the relay is baked into the build.
-    const saveJson = (await import('node:fs')).readFileSync(savePath, 'utf8');
-    {
-      const ctx = await browser.newContext({ baseURL, viewport: { width: size.width, height: size.height } });
-      const p = await ctx.newPage();
-      await noHints(p);
-      await p.goto('/');
-      await p.evaluate((s) => localStorage.setItem('legatum.autosave.v1', s), saveJson);
-      await p.reload();
-      await expect(p.getByRole('button', { name: /^Continue/ })).toBeVisible();
-      await p.waitForTimeout(1000);
-      await p.mouse.move(5, 5);
-      await shot(p, size, '59b-continue-multi-human-save');
-      await p.getByRole('button', { name: /^Continue/ }).click();
-      await expect(p.getByRole('button', { name: /^Host this save/ })).toBeVisible();
-      await p.mouse.move(5, 5);
-      await shot(p, size, '59c-continue-multi-human-to-host');
-      await ctx.close();
-    }
     await multiplayer(host2);
     await host2.getByLabel('Your name', { exact: true }).fill(hostName);
     // A file that is not a save first: the refusal.
     const junkPath = testWithFailingRequests.info().outputPath('junk.json');
-    (await import('node:fs')).writeFileSync(junkPath, '{"hello":1}');
+    writeFileSync(junkPath, '{"hello":1}');
     let chooser = host2.waitForEvent('filechooser');
     await host2.getByRole('button', { name: /^Host from a save/ }).click();
     await (await chooser).setFiles(junkPath);
@@ -422,11 +410,9 @@ for (const size of SIZES) testWithFailingRequests.describe(`online co-op ${size.
     await host2.mouse.move(5, 5);
     await shot(host2, size, '60-host-from-save-bad-file');
     chooser = host2.waitForEvent('filechooser');
-    const created2 = host2.waitForResponse((r) => r.url().endsWith('/rooms') && r.request().method() === 'POST');
     await host2.getByRole('button', { name: /^Host from a save/ }).click();
     await (await chooser).setFiles(savePath);
-    const listedName2 = ((await (await created2).json()) as { name: string }).name;
-    await expect(host2.getByTestId('turn-number')).toBeVisible({ timeout: 90_000 });
+    await expect(host2.getByTestId('turn-number')).toHaveText(String(savedTurn), { timeout: 90_000 });
     await host2.waitForTimeout(1500);
     await begin(host2);
     await dismissInterstitials(host2);
@@ -435,32 +421,65 @@ for (const size of SIZES) testWithFailingRequests.describe(`online co-op ${size.
     await host2.getByRole('button', { name: 'Menu', exact: true }).click();
     await host2.waitForTimeout(300);
     await shot(host2, size, '62-host-from-save-menu');
-    await host2.keyboard.press('Escape');
+    await host2Context.close();
+
+    const resumedContext = await browser.newContext({ baseURL, viewport: { width: size.width, height: size.height } });
+    const resumedHost = await resumedContext.newPage();
+    await noHints(resumedHost);
+    await resumedHost.goto('/');
+    // Let the app migrate the seeded legacy slot, then reload with only the IndexedDB copy.
+    await resumedHost.evaluate((s) => localStorage.setItem('legatum.autosave.v1', s), saveJson);
+    await resumedHost.reload();
+    const continueSave = resumedHost.getByRole('button', { name: /^Continue/ });
+    await expect(continueSave).toBeEnabled();
+    await resumedHost.evaluate(() => localStorage.removeItem('legatum.autosave.v1'));
+    await resumedHost.reload();
+    await expect(continueSave).toContainText(`Turn ${savedTurn}`);
+    await shot(resumedHost, size, '59b-continue-multi-human-save');
+    let openedFileChooser = false;
+    resumedHost.on('filechooser', () => { openedFileChooser = true; });
+    await continueSave.click();
+    const hostSave = resumedHost.getByRole('button', { name: /^Host this save/ });
+    await expect(hostSave).toBeVisible();
+    await resumedHost.mouse.move(5, 5);
+    await shot(resumedHost, size, '59c-continue-multi-human-to-host');
+    const resumedRoom = resumedHost.waitForResponse((r) => r.url().endsWith('/rooms') && r.request().method() === 'POST');
+    await hostSave.click();
+    const { name: resumedName } = (await (await resumedRoom).json()) as { name: string };
+    await expect(resumedHost.getByTestId('turn-number')).toHaveText(String(savedTurn), { timeout: 90_000 });
+    expect(openedFileChooser).toBe(false);
+    await dismissInterstitials(resumedHost);
 
     const guest2Context = await browser.newContext({ baseURL, viewport: { width: size.width, height: size.height } });
     const guest2 = await guest2Context.newPage();
     await noHints(guest2);
     await multiplayer(guest2);
     await guest2.getByRole('button', { name: /^Join Game/ }).click();
-    const row2 = guest2.locator('.online-room').filter({ hasText: listedName2 });
-    await expect(row2.first()).toBeVisible({ timeout: 20_000 });
+    const row2 = guest2.locator('.online-room').filter({ hasText: resumedName });
+    await expect(row2).toBeVisible({ timeout: 20_000 });
     await guest2.mouse.move(5, 5);
     await shot(guest2, size, '63-guest-list-resumed');
-    await row2.first().getByRole('button', { name: /^Join/ }).click();
-    await guest2.waitForTimeout(3000);
+    await row2.getByRole('button', { name: /^Join/ }).click();
+    const rejoin = guest2.getByRole('button', { name: /Rejoin as Alice/ });
+    await expect(rejoin).toBeEnabled();
     await guest2.mouse.move(5, 5);
     await shot(guest2, size, '64-guest-resumed-arrived');
-    await guest2.getByRole('button', { name: /Rejoin as Alice/ }).click();
-    await expect(guest2.getByTestId('turn-number')).toBeVisible({ timeout: 60_000 });
+    await rejoin.click();
+    await expect(guest2.getByTestId('turn-number')).toHaveText(String(savedTurn), { timeout: 60_000 });
+    const guestSeat = guest2.getByTestId('online-seat-1');
+    await expect(guestSeat).toContainText('You');
+    await expect(guestSeat).toContainText('Alice');
+    await expect(resumedHost.getByTestId('online-seat-1')).toContainText('online');
+    await expect(resumedHost.getByTestId('turn-number')).toHaveText(String(savedTurn));
     await guest2.waitForTimeout(1500);
     await begin(guest2);
     await dismissInterstitials(guest2);
     await guest2.mouse.move(size.width / 2, size.height - 4);
     await shot(guest2, size, '65-guest-resumed-seated');
-    await host2.mouse.move(size.width / 2, size.height - 4);
-    await shot(host2, size, '66-host-resumed-guest-back');
+    await resumedHost.mouse.move(size.width / 2, size.height - 4);
+    await shot(resumedHost, size, '66-host-resumed-guest-back');
     await guest2Context.close();
-    await host2Context.close();
+    await resumedContext.close();
     await guestContext.close();
   });
 });

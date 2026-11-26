@@ -1138,6 +1138,11 @@ export const SWISS_TOLL_POPULATION = RULES.swissTollPopulation;
 export const START_GOLD = RULES.startGold;
 
 const WALL_LEVEL_NUMERALS = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
+/** The visible Walls level, or 0 if the city has no Walls or is not in sight. */
+export function wallTierOf(c: { visible: boolean; walls: boolean; walls_level?: number }): number {
+  return c.visible && c.walls ? (c.walls_level ?? 1) : 0;
+}
+
 /** A Walls level as a Roman numeral ("III"). */
 export const wallLevelLabel = (level: number): string => WALL_LEVEL_NUMERALS[level] ?? String(level);
 /** The build list name of Upgrade Walls for a city at this Walls level (0: no Walls yet). */

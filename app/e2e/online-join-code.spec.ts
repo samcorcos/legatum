@@ -60,7 +60,7 @@ test('Online: a locked game asks the guest for its code, and the host can remove
   await snap(guest, 'guest-code-prompt');
   await guest.getByLabel('Join code', { exact: true }).fill('nope99');
   await take.click();
-  await expect(guest.getByText('That join code is not right.')).toBeVisible();
+  await expect(guest.getByRole('alert')).toHaveText('Wrong code. Check it with the host and try again.');
   await snap(guest, 'guest-code-wrong');
   await expect(host.getByRole('row').nth(2)).not.toContainText('Alice');
 
