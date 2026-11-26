@@ -1,0 +1,9 @@
+# Hard Sparta could not find its neighbour, so it never rushed
+
+A recorded Hard game in which a Sparta player declared on the Celts on turn 12 with two Hoplites and a Scout, and eliminated three one-city rivals by turn 48, was replayed with the Sparta seat as Hard (`crates/sim/examples/offense_ladder.rs --tape`, 32 dice salts). Hard Sparta's first declaration came around turn 29 and it took a capital by turn 50 in 28% of runs. On random maps (300 games) it declared by turn 30 in only 32% of games.
+
+The cause was not the assault but the search. Hard Sparta's Scout circled within about nine hexes of home and missed the Celtic capital nine hexes away; Sparta knew of no rival city until turn 25, so its campaign code had nothing to aim at and the capital built an Archer and a Settler instead of Hoplites. The Roman opening (march, finish, second war) already solves the commitment half; Sparta now plays it (`sparta_rome_opening`), declares with two melee units because Phalanx plus Level 1 makes a pair strong enough (`sparta_opening_ready`), and while no rival city is known it trains Hoplites and sends up to two spare ones to explore within ten hexes (`sparta_opening_search`). On the recorded map the first declaration moved to about turn 18 and the first capture to about turn 22; in paired full games capitals taken by turn 50 went from 17% to 72% and VP share from 0.19 to 0.27.
+
+Also seen in the recording: every eliminated rival (Celts, Mongols, Athens) was still on one city and one or two Spearmen when attacked, and the Mongols' Settler stood unfounded for ten turns. That is a defence and expansion problem, not an offence one.
+
+Partial web recordings (`first_turn` > 1, `initial_state` as a JSON string) replay with `crates/sim/examples/partial_dump.rs RECORD.json OUTDIR`; `game_dump` replays from the setup and cannot read them.

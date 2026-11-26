@@ -59,7 +59,7 @@ const SWITCH_MARGIN: i32 = 3;
 
 impl Planner<'_> {
     pub(crate) fn rome_finish(&self) -> bool {
-        self.faction == Faction::Rome
+        self.conquest_opening_faction()
             && self.difficulty == AiDifficulty::Hard
             && self.decisions.rome_opening_march > 0
             && self.decisions.rome_opening_finish > 0

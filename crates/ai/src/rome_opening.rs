@@ -6,8 +6,15 @@ use legatum_core::view::CityView;
 use legatum_core::{AiDifficulty, Faction, Hex, ProductionItem, UnitClass, data};
 
 impl Planner<'_> {
-    pub(crate) fn rome_opening_active(&self) -> bool {
+    /// Rome, or Sparta with gene `sparta_rome_opening`: the seat plays the committed
+    /// conquest opening (march, finish, second war).
+    pub(crate) fn conquest_opening_faction(&self) -> bool {
         self.faction == Faction::Rome
+            || (self.faction == Faction::Sparta && self.decisions.sparta_rome_opening > 0)
+    }
+
+    pub(crate) fn rome_opening_active(&self) -> bool {
+        self.conquest_opening_faction()
             && self.difficulty == AiDifficulty::Hard
             && self.decisions.rome_opening_march > 0
             && self.view().turn <= self.rome_opening_last_turn()
@@ -36,18 +43,46 @@ impl Planner<'_> {
 
     pub(crate) fn rome_opening_ready(&self, city: &CityView) -> bool {
         let melee = self.rome_opening_melee();
-        melee.len() >= 3
+        // Gene `sparta_opening_ready`: Sparta's veteran Hoplites may strike with fewer.
+        let need = match self.decisions.sparta_opening_ready {
+            n if n > 0 && self.faction == Faction::Sparta => n as usize,
+            _ => 3,
+        };
+        melee.len() >= need
             && melee
                 .iter()
                 .filter(|u| u.pos.distance(city.pos) <= 3)
                 .count()
-                >= 2
+                >= need.min(2)
+    }
+
+    /// Gene `sparta_opening_search`: Sparta's opening has no victim in sight yet.
+    fn sparta_opening_seeking(&self) -> bool {
+        self.faction == Faction::Sparta
+            && self.conquest_opening_faction()
+            && self.difficulty == AiDifficulty::Hard
+            && self.decisions.rome_opening_march > 0
+            && self.decisions.sparta_opening_search > 0
+            && self.campaigns.rome_opening_target.is_none()
+            && self.view().turn <= crate::rome_finish::OPENING_LAST_TURN
     }
 
     pub(crate) fn rome_opening_build(&self, city: &CityView) -> Option<ProductionItem> {
-        if !self.rome_opening_active()
-            || self.view().turn > self.rome_opening_last_turn() - 10
-            || self.rome_opening_melee().len() >= self.rome_opening_melee_goal()
+        // Gene `sparta_opening_search`: the wing is trained while its victim is still sought.
+        let seeking = self.sparta_opening_seeking() && city.is_capital;
+        // Gene `sparta_war_army`: Sparta keeps training melee for its opening and second war
+        // up to this many units.
+        let army = (self.faction == Faction::Sparta
+            && self.conquest_opening_faction()
+            && self.decisions.sparta_war_army > 0)
+            .then_some(self.decisions.sparta_war_army as usize);
+        let second = army.is_some() && self.campaigns.rome_second_target.is_some();
+        let goal = army.map_or(self.rome_opening_melee_goal(), |n| {
+            n.max(self.rome_opening_melee_goal())
+        });
+        if !(self.rome_opening_active() || seeking || second)
+            || (!second && self.view().turn > self.rome_opening_last_turn() - 10)
+            || self.rome_opening_melee().len() >= goal
         {
             return None;
         }
@@ -70,7 +105,7 @@ impl Planner<'_> {
     }
 
     pub(crate) fn choose_rome_opening(&mut self) {
-        if self.faction != Faction::Rome
+        if !self.conquest_opening_faction()
             || self.difficulty != AiDifficulty::Hard
             || self.decisions.rome_opening_march == 0
         {
@@ -167,6 +202,63 @@ impl Planner<'_> {
             breach: false,
             misses: 0,
         });
+    }
+
+    /// Gene `sparta_opening_search`: with no rival city known, up to two melee units that are
+    /// not a city's only defender walk to the nearest unexplored land within the gene's radius
+    /// of the capital, so the opening finds its victim.
+    pub(crate) fn sparta_opening_search(&mut self, army: &[&legatum_core::view::UnitView]) {
+        if !self.sparta_opening_seeking() {
+            return;
+        }
+        let Some(home) = self.ctx.capital().map(|c| c.pos) else {
+            return;
+        };
+        let radius = self.decisions.sparta_opening_search;
+        let land: Vec<Hex> = self
+            .ctx
+            .frontier
+            .iter()
+            .copied()
+            .filter(|h| h.distance(home) <= radius && self.ctx.unexplored_near(*h) > 0)
+            .collect();
+        let alone = |p: &Self, u: &legatum_core::view::UnitView| {
+            p.ctx.own_cities.iter().any(|c| c.pos == u.pos)
+                && p.ctx
+                    .own_units
+                    .iter()
+                    .filter(|o| o.pos == u.pos && o.id != u.id && o.military)
+                    .count()
+                    == 0
+        };
+        let searchers: Vec<_> = self
+            .free(army)
+            .into_iter()
+            .filter(|u| {
+                data::unit_class(u.kind) == Some(UnitClass::Melee) && u.hp >= 50 && !alone(self, u)
+            })
+            .take(2)
+            .collect();
+        let mut taken: Vec<Hex> = Vec::new();
+        for u in searchers {
+            if self.has_acted(u.id) {
+                continue;
+            }
+            let goal = land
+                .iter()
+                .copied()
+                .filter(|h| {
+                    *h != u.pos
+                        && taken.iter().all(|t| t.distance(*h) > 3)
+                        && self.free_tile_for(u, *h)
+                        && self.ctx.reachable(u.pos, *h)
+                })
+                .min_by_key(|h| (u.pos.distance(*h) + h.distance(home), *h));
+            if let Some(goal) = goal {
+                taken.push(goal);
+                self.go_to(u, goal);
+            }
+        }
     }
 
     fn rome_opening_distance(&self, target: Hex) -> i32 {
@@ -356,5 +448,61 @@ mod tests {
         planner.choose_rome_opening();
         assert_eq!(planner.campaigns.rome_opening_target, Some(CityId(2)));
         assert!(planner.rome_opening_ready(planner.rome_opening_city().unwrap()));
+    }
+
+    #[test]
+    fn sparta_plays_the_opening_only_with_its_gene_and_may_strike_with_two() {
+        let mut view = opening_view();
+        view.units.retain(|u| u.id.0 != 3);
+        let knobs = Knobs::for_faction(Faction::Sparta);
+        let mut planner = Planner::new(&view, knobs.clone(), Faction::Sparta, 1);
+        planner.difficulty = AiDifficulty::Hard;
+        planner.decisions.rome_opening_march = 1;
+        planner.decisions.sparta_rome_opening = 0;
+        planner.choose_rome_opening();
+        assert_eq!(planner.campaigns.rome_opening_target, None);
+
+        let mut planner = Planner::new(&view, knobs.clone(), Faction::Sparta, 1);
+        planner.difficulty = AiDifficulty::Hard;
+        planner.decisions.rome_opening_march = 1;
+        planner.decisions.sparta_rome_opening = 1;
+        planner.decisions.sparta_opening_ready = 0;
+        planner.choose_rome_opening();
+        assert_eq!(planner.campaigns.rome_opening_target, Some(CityId(2)));
+        // Rome's rule: three melee. Two Hoplites are not enough without the ready gene.
+        assert!(!planner.rome_opening_ready(planner.rome_opening_city().unwrap()));
+        planner.decisions.sparta_opening_ready = 2;
+        assert!(planner.rome_opening_ready(planner.rome_opening_city().unwrap()));
+    }
+
+    #[test]
+    fn sparta_seeks_a_victim_only_while_none_is_known() {
+        let mut view = opening_view();
+        view.cities.retain(|c| c.owner == ME);
+        let mut planner = Planner::new(
+            &view,
+            Knobs::for_faction(Faction::Sparta),
+            Faction::Sparta,
+            1,
+        );
+        planner.difficulty = AiDifficulty::Hard;
+        planner.decisions.rome_opening_march = 1;
+        planner.decisions.sparta_rome_opening = 1;
+        planner.decisions.sparta_opening_search = 10;
+        planner.choose_rome_opening();
+        assert!(planner.sparta_opening_seeking());
+        let known = opening_view();
+        let mut planner = Planner::new(
+            &known,
+            Knobs::for_faction(Faction::Sparta),
+            Faction::Sparta,
+            1,
+        );
+        planner.difficulty = AiDifficulty::Hard;
+        planner.decisions.rome_opening_march = 1;
+        planner.decisions.sparta_rome_opening = 1;
+        planner.decisions.sparta_opening_search = 10;
+        planner.choose_rome_opening();
+        assert!(!planner.sparta_opening_seeking());
     }
 }
