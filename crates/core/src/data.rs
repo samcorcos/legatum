@@ -169,6 +169,10 @@ pub const SETTLER_BASE_COST: i32 = 70;
 /// discount that kept the first Settler near turn 18 at Standard is no longer needed.
 pub const FIRST_SETTLER_PERCENT: i32 = 100;
 pub const SETTLER_COST_STEP: i32 = 50;
+/// City upkeep (rules 63): an empire's first this many cities are free; past that, every city
+/// it owns costs (cities - this) Gold a turn, so the total grows with the square of its size
+/// and a runaway empire stays catchable.
+pub const CITY_UPKEEP_FREE: i32 = 6;
 /// "Most Advanced" compares science generated over this many recent turns.
 pub const SCIENCE_HISTORY_TURNS: usize = 10;
 /// The Heir's Production cost (provisional, to calibrate): expensive on purpose, and the Byzantium

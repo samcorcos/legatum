@@ -1136,6 +1136,8 @@ export const SWISS_INTEREST_THRESHOLD = RULES.swissInterestThreshold;
 export const SWISS_TOLL_POPULATION = RULES.swissTollPopulation;
 /** Every empire's starting treasury (core `data::START_GOLD`). */
 export const START_GOLD = RULES.startGold;
+/** City upkeep: an empire's first this many cities are free (core `data::CITY_UPKEEP_FREE`). */
+export const CITY_UPKEEP_FREE: number = RULES.cityUpkeepFree;
 
 const WALL_LEVEL_NUMERALS = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
 /** The visible Walls level, or 0 if the city has no Walls or is not in sight. */

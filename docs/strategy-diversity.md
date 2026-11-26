@@ -233,7 +233,8 @@ default. The preceding four flags remain supported. No flag depends on a policy 
 - `city-research`: adds 5% per currently owned city beyond two to the diffusion-adjusted
   research price, rounding the surcharge up. Captured and resisting
   cities count. Losing a city reduces future quotes; stored Science is unchanged.
-- `city-upkeep`: each currently owned city costs `max(city count - 2, 0)` Gold per turn.
+- `city-upkeep` (since rules 63 a real rule with six free cities, not an experiment; the
+  ablation is `no-city-upkeep`): each currently owned city costs `max(city count - 2, 0)` Gold per turn.
   Total administration is therefore 0/0/3/8/15/24 Gold at 1/2/3/4/5/6 cities. It is
   separate from military upkeep, gets no Strategic Logistics discount, and uses the
   existing bankruptcy rules. Per-turn income and upkeep are fixed amounts.
