@@ -347,7 +347,7 @@ export function GuideContent({ section }: { section: GuideSection }) {
         <div className="touch-only"><dt>Drag / pinch / double-tap</dt><dd>Pan with one finger. Pinch to zoom around both fingers. Double-tap a selected unit or an inspection tile to zoom in; a second destination tap confirms its order.</dd></div>
         <div className="touch-only"><dt>Hold a tile</dt><dd>Open its context actions. Use Select here to change selection.</dd></div>
         <div className="touch-only"><dt>Tap a number / ⓘ</dt><dd>Read a breakdown without issuing an action. Close or tap outside to dismiss.</dd></div>
-        <div><dt>Click</dt><dd>Select a unit or city.</dd></div>
+        <div><dt>Click</dt><dd>Select a unit or city. Click the same tile again to switch between the units and the city there. A city’s banner always opens the city.</dd></div>
         <div><dt>Right-click / drag from unit</dt><dd>Give the selected unit a destination or melee target.</dd></div>
         <div><dt>Drag map / WASD / arrows</dt><dd>Pan the map. Scroll to zoom.</dd></div>
         <div><dt>Space</dt><dd>Skip the selected unit or aircraft for this turn. Aircraft return to the order cycle next turn; a Fighter still intercepts while on guard.</dd></div>

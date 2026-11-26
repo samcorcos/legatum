@@ -39,9 +39,9 @@ import { overlayEmpty } from '../map/overlays';
 import { isBarbarian } from '../barbarians';
 import { isColoniaFounder } from '../goalCities';
 import { itemName } from '../data';
-import { drawMarks2d, drawRoute3d, type Marks2dInput } from './marks2d';
+import { bannerCityAt3d, drawMarks2d, drawRoute3d, type BannerHit3d, type Marks2dInput } from './marks2d';
 import { drawPickers3d } from './pickers3d';
-import { pickerClick, useAirPicker, useImproveOverlay, usePlacePicker, useQueuedBuys } from '../map/tilePickers';
+import { pickerClick, pickerOpen, useAirPicker, useImproveOverlay, usePlacePicker, useQueuedBuys } from '../map/tilePickers';
 import { mapPlayerColor } from '../map/style';
 import { cityBuildsFor, cityFocusesFor, pendingMarksFor } from '../map/orderMarks';
 import { alarmedCities } from '../siege';
@@ -53,6 +53,8 @@ import './map3d.css';
 export default function Map3DView() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const marksRef = useRef<HTMLCanvasElement>(null);
+  // The city banners drawn last frame, for one-click clicks on a banner.
+  const bannerHits = useRef<BannerHit3d[]>([]);
   const sceneRef = useRef<MapScene | null>(null);
   const views = useGame((s) => s.views);
   const seat = useGame((s) => s.seat);
@@ -287,7 +289,7 @@ export default function Map3DView() {
     const ctx = cv.getContext('2d');
     if (!ctx) return;
     const known = (c: CityView) => v.tiles[tileIndex(c.pos, v.width, v.height)]?.explored;
-    drawMarks2d(ctx, w, h, dpr, {
+    bannerHits.current = drawMarks2d(ctx, w, h, dpr, {
       ...data, view: v, far: sc.dist > 14,
       cityAt: (c) => (known(c) ? sc.project(c.pos, 0.34) : null),
       unitAt: (u) => sc.unitHead(u.id),
@@ -322,7 +324,8 @@ export default function Map3DView() {
     return { x: e.clientX - r.left, y: e.clientY - r.top };
   };
 
-  const clickHex = (h: Hex) => {
+  // A click on a city banner always opens that city in one click, even with units in it; clicking the hex cycles.
+  const clickHex = (h: Hex, bannerCity: number | null = null) => {
     const s = useGame.getState();
     const v = s.views?.[s.seat];
     if (!v || tileIndex(h, v.width, v.height) < 0) return;
@@ -330,6 +333,7 @@ export default function Map3DView() {
     if (s.mode === 'ranged' && !v.finished && !isEliminated(v)) { rangedSelected(h); return; }
     if (s.mode === 'move' && !v.finished && !isEliminated(v)) { moveSelected(h); return; }
     if (pickerClick(h)) return;
+    if (bannerCity !== null && v.cities.some((c) => c.id === bannerCity)) { s.select({ kind: 'city', id: bannerCity }); feel.select(); return; }
     const here = v.units.filter((u) => hexEq(u.pos, h));
     const city = v.cities.find((c) => hexEq(c.pos, h));
     const unitCands = (own: boolean) => here.filter((u) => (u.owner === v.me) === own)
@@ -375,8 +379,10 @@ export default function Map3DView() {
     drag.current = null;
     if (e.currentTarget.hasPointerCapture?.(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
     if (!d || d.moved) return;
-    const h = sceneRef.current?.pick(d.x, d.y);
-    if (h) clickHex(h);
+    const banner = pickerOpen() ? null : bannerCityAt3d(bannerHits.current, d.x, d.y);
+    const bannerPos = banner !== null ? useGame.getState().views?.[useGame.getState().seat]?.cities.find((c) => c.id === banner)?.pos : undefined;
+    const h = bannerPos ?? sceneRef.current?.pick(d.x, d.y);
+    if (h) clickHex(h, banner);
   };
   const onContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
