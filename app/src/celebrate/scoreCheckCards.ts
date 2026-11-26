@@ -4,10 +4,10 @@
 // Public facts and your own view only. Everything here reads the view; nothing here is a rule.
 import type { BuildingKind, Faction, PlayerId, PlayerView } from '../types';
 import { BUILDING_NAME, BUILDING_STATS, ERA_COUNT, FACTION_GOAL, GREAT_WORK_ICON, GREAT_WORKS, TECH_NAME, buildingIconName, eraName, factionGoalVp, isGreatWork } from '../data';
-import { buildVpModel } from '../vpModel';
+import { UNMET_NAME, buildVpModel } from '../vpModel';
 import { cardNameAndAsk } from '../ageCards';
 import { eraObjectivesFor } from '../eraObjectives';
-import { empireOfPlayer } from '../empires';
+import { empireOfPlayer, UNKNOWN_EMPIRE, unmetTeam } from '../empires';
 import { distance } from '../hex';
 import { roman } from '../brand/roman';
 import { playerColor } from '../theme';
@@ -35,7 +35,7 @@ export interface SheetLine {
   fresh?: boolean;
 }
 
-export interface TrackPiece { id: PlayerId; faction: Faction; color: string; name: string; isMine: boolean }
+export interface TrackPiece { id: PlayerId; faction: Faction; color: string; name: string; isMine: boolean; /** Not met yet: a "?" piece, no crest. */ unmet: boolean }
 export interface TrackSpace { vp: number; pieces: TrackPiece[] }
 
 export interface ScoreCheckCard {
@@ -60,6 +60,11 @@ export interface ScoreCheckCard {
   replay?: boolean;
 }
 
+/** An empire by name, or "Unknown empire" when this seat has not met it. */
+const metName = (view: PlayerView, id: PlayerId) => unmetTeam(view, view.players.find((p) => p.id === id)?.team ?? -1) ? UNKNOWN_EMPIRE : empireOfPlayer(view, id);
+/** A row's name in a sentence: "an unknown empire" for one you haven't met. */
+const rowName = (r: { unmet: boolean; label: string }) => (r.unmet ? UNKNOWN_EMPIRE : r.label);
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const ord = (n: number) => `${n}${n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th'}`;
 const and = (names: string[]) => names.length <= 1 ? names.join('') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
@@ -74,29 +79,29 @@ export function scoreCheckFor(view: PlayerView, era: number, first: PlayerId): S
   const track: TrackSpace[] = Array.from({ length: target + 1 }, (_, vp) => ({ vp, pieces: [] }));
   for (const row of model.rows) {
     const space = track[Math.max(0, Math.min(target, row.vp))];
-    for (const m of row.members) space.pieces.push({ id: m.id, faction: m.faction, color: playerColor(m.id), name: empireOfPlayer(view, m.id), isMine: m.isMine });
+    for (const m of row.members) space.pieces.push({ id: m.id, faction: m.faction, color: playerColor(m.id), name: m.unmet ? UNMET_NAME : empireOfPlayer(view, m.id), isMine: m.isMine, unmet: m.unmet });
   }
 
   const you = mine?.members.length && mine.members.length > 1 ? 'Your team' : 'You';
   let standing = `${you}: ${mine?.vp ?? 0} VP.`;
   let leader = '';
   if (mine) {
-    const tied = model.rows.filter((r) => r !== mine && r.vp === mine.vp && r.rank === mine.rank).map((r) => r.label);
+    const tied = model.rows.filter((r) => r !== mine && r.vp === mine.vp && r.rank === mine.rank).sort((a, b) => Number(a.unmet) - Number(b.unmet)).map(rowName);
     standing = tied.length
       ? `${you}: ${plural(mine.vp, 'VP', 'VP')}, tied ${ord(mine.rank)} with ${and(tied)}.`
       : `${you}: ${plural(mine.vp, 'VP', 'VP')}, ${ord(mine.rank)} of ${model.rows.length}.`;
     const top = model.rows.filter((r) => r.rank === 1);
     const next = model.rows.find((r) => r.rank > 1);
     if (top.length === 1 && top[0] === mine) leader = next ? `${you === 'You' ? 'You lead' : 'Your team leads'} by ${plural(mine.vp - next.vp, 'VP', 'VP')}.` : '';
-    else leader = `${top.length > 1 ? 'Leaders' : 'Leader'}: ${and(top.map((r) => r.label))}, ${plural(top[0].vp, 'VP', 'VP')}.`;
+    else leader = `${top.length > 1 ? 'Leaders' : 'Leader'}: ${and(top.map(rowName))}, ${plural(top[0].vp, 'VP', 'VP')}.`;
   }
   const holding = model.holds[0];
   const hold = holding?.hold
     ? holding.isMine ? `${you} ${you === 'You' ? 'hold' : 'holds'} ${holding.vp} VP and ${you === 'You' ? 'win' : 'wins'} in ${plural(holding.hold.left, 'turn')} if you keep it.`
-      : `${holding.label} ${holding.members.length > 1 ? 'hold' : 'holds'} ${holding.vp} VP and ${holding.members.length > 1 ? 'win' : 'wins'} in ${plural(holding.hold.left, 'turn')} unless someone stops them.`
+      : `${cap(rowName(holding))} ${holding.members.length > 1 ? 'hold' : 'holds'} ${holding.vp} VP and ${holding.members.length > 1 ? 'win' : 'wins'} in ${plural(holding.hold.left, 'turn')} unless someone stops them.`
     : null;
 
-  const opener = first === view.me ? `You reached the ${name} era first.` : `${empireOfPlayer(view, first)} reached the ${name} era first.`;
+  const opener = first === view.me ? `You reached the ${name} era first.` : `${cap(metName(view, first))} reached the ${name} era first.`;
   return { era, name, numeral: roman(era), turn: view.turn, opener, target, track, standing, leader, hold, lines: sheetLines(view, era) };
 }
 
@@ -159,7 +164,7 @@ function capitalLine(view: PlayerView, team: Set<PlayerId>): SheetLine {
   const near = targets[0];
   const keep = held.length ? `Lose ${held.length === 1 ? held[0][1] : 'one'} and you lose its 1 VP.` : '';
   const detail = left === 0 ? (keep || 'You hold every rival capital.')
-    : near ? `Nearest known: ${near.city.name} (${empireOfPlayer(view, near.city.original_capital_of!)}), ${plural(near.from!.d, 'tile')} from your city ${near.from!.name}.`
+    : near ? `Nearest known: ${near.city.name} (${metName(view, near.city.original_capital_of!)}), ${plural(near.from!.d, 'tile')} from your city ${near.from!.name}.`
     : 'No rival capital on your map yet: explore to find them.';
   return { key: 'capitals', name: 'Rival capitals', terms: '1 VP each', boxes, how: left ? 'Take a rival’s original capital' : 'You hold them all', detail, open: left };
 }

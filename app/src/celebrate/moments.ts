@@ -3,7 +3,7 @@ import { ageName, BUILDING_NAME, BUILDING_STATS, factionGoalVp, RULES, TECH_NAME
 import { TECH_QUOTE } from '../techQuotes';
 import { claimedTile, growthUnlocks } from '../milestones';
 import { yieldsText } from '../cityProgress';
-import { empireLocation, empireNameOf, empireOfPlayer, placeName, type EmpireLocation } from '../empires';
+import { empireLocation, empireNameOf, empireOfPlayer, placeName, UNKNOWN_EMPIRE, unmetTeam, type EmpireLocation } from '../empires';
 import { isBarbarian } from '../barbarians';
 import { blockedQueueHead, wonderLostLine } from '../wonderRace';
 import { distance } from '../hex';
@@ -34,6 +34,8 @@ export type Emblem = 'camp' | 'hall' | 'ruin' | 'captured' | 'founded' | 'growth
 export interface Gain { icon: string; text: string }
 export interface Moment {
   id: string; eventIndex: number; tier: Tier; owner: PlayerId; faction: Faction;
+  /** About an empire this seat has not met: the card wears a "?" in place of its crest and never names it. */
+  unknown?: boolean;
   partner: boolean; at: Hex | null; title: string; effect: string; lore: string;
   details: string[]; deltas: { counter: Counter; amount: number }[]; loss?: boolean;
   scout?: { unit: number; to: Hex }; kicker?: string;
@@ -231,6 +233,10 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
   const capital = (owner: number) => [...cities.values()].find((c) => c.owner === owner && c.is_capital)?.pos ?? null;
   const founded = new Map(after.players.map((p) => [p.id, before?.players.find((b) => b.id === p.id)?.cities ?? p.cities]));
   const out: Moment[] = [];
+  // An empire this seat has not met is "an unknown empire", as in Civ: no name, crest or portrait (`unmetTeam`).
+  const unknown = (id: PlayerId) => unmetTeam(after, after.players.find((p) => p.id === id)?.team ?? -1);
+  const empire = (id: PlayerId) => (unknown(id) ? UNKNOWN_EMPIRE : empireOfPlayer(after, id));
+  const Empire = (id: PlayerId) => { const n = empire(id); return n.charAt(0).toUpperCase() + n.slice(1); };
   const push = (index: number, owner: number, value: Omit<Moment, 'id' | 'eventIndex' | 'owner' | 'faction' | 'partner'>) => {
     const player = after.players.find((p) => p.id === owner);
     if (!player || !team.has(owner) || (owner !== viewer && value.tier === 'minor')) return;
@@ -243,7 +249,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
   // A card every empire sees about another empire (a rival's Heir, Colonia or Royal Tomb): it wears that empire's crest.
   const publicCard = (index: number, owner: PlayerId, value: Omit<Moment, 'id' | 'eventIndex' | 'owner' | 'faction' | 'partner'>) => {
     const player = after.players.find((p) => p.id === owner);
-    if (player) out.push({ ...value, id: `${after.turn}:${index}:${owner}`, eventIndex: index, owner, faction: player.faction, partner: false });
+    if (player) out.push({ ...value, id: `${after.turn}:${index}:${owner}`, eventIndex: index, owner, faction: player.faction, partner: false, ...(unknown(owner) ? { unknown: true } : {}) });
   };
   // Where a held goal city stands now, from the public lists (every empire can find it, through fog).
   const goalCityOf = (faction: Faction, holder: PlayerId) => {
@@ -259,16 +265,16 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
       case 'TombStarted': {
         if (team.has(e.player)) break; // Egypt's own team ordered it: the report line is enough.
         const left = Math.max(0, RULES.tombTurns - e.turns);
-        publicCard(i, e.player, { tier: 'major', at: siteOf(e.player) ?? capital(e.player), goalMark: GOAL_CITY_ICON.tomb, title: 'The Royal Tomb', kicker: empireOfPlayer(after, e.player),
-          effect: `${empireOfPlayer(after, e.player)} is building its Royal Tomb${tombSiteOf(e.player) ? ` in ${tombSiteOf(e.player)!.name}` : ''}: ${factionGoalVp('Egypt')} VP to whoever holds the city. ${left} ${left === 1 ? 'turn' : 'turns'} of work left.`,
+        publicCard(i, e.player, { tier: 'major', at: siteOf(e.player) ?? capital(e.player), goalMark: GOAL_CITY_ICON.tomb, title: 'The Royal Tomb', kicker: Empire(e.player),
+          effect: `${Empire(e.player)} is building its Royal Tomb${tombSiteOf(e.player) ? ` in ${tombSiteOf(e.player)!.name}` : ''}: ${factionGoalVp('Egypt')} VP to whoever holds the city. ${left} ${left === 1 ? 'turn' : 'turns'} of work left.`,
           lore: 'The valley falls quiet while the tomb is cut.',
           details: ['Its cities do not build or grow while the work is on. It may pause and keep its count.'], deltas: [] });
         break;
       }
       case 'TombPaused': {
         if (team.has(e.player)) break;
-        publicCard(i, e.player, { tier: 'notable', at: capital(e.player), goalMark: GOAL_CITY_ICON.tomb, title: 'The Royal Tomb', kicker: empireOfPlayer(after, e.player),
-          effect: `${empireOfPlayer(after, e.player)} paused its Royal Tomb at ${e.turns} of ${RULES.tombTurns} turns: its cities build and grow again.`,
+        publicCard(i, e.player, { tier: 'notable', at: capital(e.player), goalMark: GOAL_CITY_ICON.tomb, title: 'The Royal Tomb', kicker: Empire(e.player),
+          effect: `${Empire(e.player)} paused its Royal Tomb at ${e.turns} of ${RULES.tombTurns} turns: its cities build and grow again.`,
           lore: 'The work stops. The count is kept.', details: [], deltas: [] });
         break;
       }
@@ -291,7 +297,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
         if (!player) break;
         const vp = factionGoalVp('Byzantium');
         out.push({ id: `${after.turn}:${i}:${e.owner}`, eventIndex: i, tier: 'major', owner: e.owner, faction: player.faction, partner: false, at: e.at,
-          title: 'Heir born', kicker: 'Byzantium’s Heir',
+          ...(unknown(e.owner) ? { unknown: true } : {}), title: 'Heir born', kicker: unknown(e.owner) ? 'An unknown empire’s Heir' : 'Byzantium’s Heir',
           effect: `Born in ${e.city_name} · be at War, then capture him to score ${vp} VP`, lore: 'An imperial claim walks the land. Whoever holds him scores.',
           details: ['His position is public every turn, on the map and the minimap. Move a military unit onto his tile to capture him: you must be at War with his holder.'],
           deltas: [], unit: { kind: 'HeirToTheThrone', faction: 'Byzantium' } }); break;
@@ -454,7 +460,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
             }
           } else if (!captured) {
             // Every empire is told when a goal city appears, and where: 2 VP to whoever holds it.
-            const who = empireOfPlayer(after, e.player);
+            const who = Empire(e.player);
             publicCard(i, e.player, { goalMark: goalKind === 'tomb' ? 'emblem-tomb' : GOAL_CITY_ICON[goalKind], tier: 'major', at, title, kicker: who,
               effect: goalKind === 'colonia'
                 ? `${who} founded its Colonia Victrix${name ? ` at ${name}` : ''}: ${e.vp} VP to whoever holds it`
@@ -488,7 +494,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
           const hall = after.courier_halls?.find((h) => h.holder === e.player);
           const at = (hall && cities.get(hall.city)?.pos) ?? capital(e.player);
           const named = hall ? cities.get(hall.city)?.name : undefined;
-          const nameOf = (id: number) => empireOfPlayer(after, id);
+          const nameOf = (id: number) => empire(id);
           if (from !== null && from !== e.player) {
             push(i, e.player, { tier: 'major', at, title: 'The Yam Relay Station is taken',
               effect: `+${e.vp} VP · you hold the Yam Relay Station${named ? ` in ${named}` : ''}`, lore: 'The road follows the banner over the city. So do the points.',
@@ -545,7 +551,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
           const again = lostKind === 'colonia' ? 'Rome may found another.' : 'Egypt may build another, from the start.';
           push(i, e.player, { goalMark: GOAL_CITY_ICON[lostKind], tier: 'major', at: (cap && cities.get(cap.city)?.pos) ?? razed?.at ?? capital(e.player), kicker: 'A loss',
             title: to !== null ? `The ${title} is taken` : razed ? `The ${title} is razed` : `The ${title} is lost`,
-            effect: `−${e.vp} VP · ${to !== null ? `${empireOfPlayer(after, to)} took ${city ?? 'its city'}` : razed ? `${city ?? 'its city'} was razed` : 'nobody holds it now'}`,
+            effect: `−${e.vp} VP · ${to !== null ? `${Empire(to)} took ${city ?? 'its city'}` : razed ? `${city ?? 'its city'} was razed` : 'nobody holds it now'}`,
             lore: to !== null ? 'The points follow the banner over the city.' : 'Nothing is left to retake.',
             details: to !== null ? [`Retake ${city ?? 'the city'} and the points return.`] : razed ? [again] : ['Nobody scores it until its city is retaken.'],
             deltas: [{ counter: 'vp', amount: -e.vp }], loss: true });
@@ -555,7 +561,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
           // The clearing is in the same batch; the camp belongs to your nearest city. Fog may hide who did it.
           const cleared = events.find((x): x is Extract<Event, { type: 'BarbarianCampCleared' }> => x.type === 'BarbarianCampCleared' && !team.has(x.by));
           const near = cleared && [...cities.values()].filter((c) => c.owner === e.player).sort((a, b) => distance(a.pos, cleared.at) - distance(b.pos, cleared.at) || a.id - b.id)[0];
-          const clause = cleared ? `${empireOfPlayer(after, cleared.by)} cleared the camp${near ? ` near ${near.name}` : ''}` : 'A rival cleared one of your camps';
+          const clause = cleared ? `${Empire(cleared.by)} cleared the camp${near ? ` near ${near.name}` : ''}` : 'A rival cleared one of your camps';
           push(i, e.player, { tier: 'major', at: cleared?.at ?? capital(e.player), title: 'A warband camp is cleared', kicker: 'A loss', effect: `−${e.vp} VP · ${clause}`,
             lore: 'What you raised, another hand has ended.', details: ['Raise the Warbands again to raise a camp in every city.'], deltas: [{ counter: 'vp', amount: -e.vp }], loss: true, emblem: 'camp' });
           break;
@@ -565,7 +571,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
           const razed = events.some((x) => x.type === 'CityRazed' && x.from === e.player);
           const cap = events.find((x): x is Extract<Event, { type: 'CityCaptured' }> => x.type === 'CityCaptured' && x.from === e.player);
           const lostCity = cap ? cityName(cap.city) : null;
-          const clause = to !== null ? `${empireOfPlayer(after, to)} took ${lostCity ?? 'its city'}, and the station with it` : razed ? 'its city was sacked, and the station with it' : 'the station is gone';
+          const clause = to !== null ? `${Empire(to)} took ${lostCity ?? 'its city'}, and the station with it` : razed ? 'its city was sacked, and the station with it' : 'the station is gone';
           push(i, e.player, { tier: 'major', at: (cap && cities.get(cap.city)?.pos) ?? capital(e.player), title: to !== null ? 'The Yam Relay Station is taken from you' : razed ? 'The Yam Relay Station is sacked' : 'The Yam Relay Station is lost', kicker: 'A loss',
             effect: `−${e.vp} VP · ${clause}`, lore: to !== null ? 'The road follows the banner over the city.' : 'The road is closed again.',
             details: to !== null ? ['The open road went with the city: retake it and the points return.'] : razed ? ['The station is destroyed with its city. It can be built again.'] : ['Nobody scores the Yam Network until its city is retaken.'],
@@ -574,7 +580,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
         if (e.faction !== 'Byzantium') break;
         const to = events.find((x): x is Extract<Event, { type: 'FactionGoalCompleted' }> => x.type === 'FactionGoalCompleted' && x.faction === 'Byzantium')?.player ?? null;
         push(i, e.player, { tier: 'major', at: capital(e.player), title: to === null ? 'The Heir is lost' : 'The Heir is taken from you', kicker: 'A loss',
-          effect: `−${e.vp} VP · ${to === null ? 'the Heir is lost' : `the Heir is held by ${empireOfPlayer(after, to)}`}`, lore: 'What was yours walks under another banner.',
+          effect: `−${e.vp} VP · ${to === null ? 'the Heir is lost' : `the Heir is held by ${empire(to)}`}`, lore: 'What was yours walks under another banner.',
           details: to === null ? ['Nobody scores Byzantium’s goal until the Heir is held again.'] : ['A military unit entering his tile retakes him, and the points return with him.'],
           deltas: [{ counter: 'vp', amount: -e.vp }], loss: true, emblem: 'captured' }); break;
       }
@@ -587,7 +593,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
         if (goalCitiesAt(after, e.city).length && events.some((x) => x.type === 'FactionGoalCompleted' && x.player === e.to && goalCityKindOf(x.faction))) break;
         // A capture is a major moment for the taker; a loss is a sober card of the same weight.
         const city = after.cities.find((c) => c.id === e.city) ?? cities.get(e.city);
-        const nameOf = (id: number) => isBarbarian(id) ? 'Barbarians' : empireOfPlayer(after, id);
+        const nameOf = (id: number) => isBarbarian(id) ? 'Barbarians' : empire(id);
         // A city that holds a world wonder moves its points with it: one card names the wonder and the VP that moved.
         const taken = events.flatMap((x) => x.type === 'GreatWorkCompleted' && x.again && x.player === e.to ? [x] : []);
         const lost = events.flatMap((x) => x.type === 'GreatWorkLost' && x.player === e.from ? [x] : []);
@@ -625,13 +631,13 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
         // One card per lost wonder: the city that was building it, else the first that had it queued or banked.
         const same = events.filter((x): x is Extract<Event, { type: 'WonderRaceLost' }> => x.type === 'WonderRaceLost' && x.owner === e.owner && x.building === e.building);
         if ((same.find((x) => x.active) ?? same[0]) !== e) break;
-        const rival = empireOfPlayer(after, e.winner);
+        const rival = empire(e.winner);
         const detail = after.cities.find((c) => c.id === e.city)?.detail;
         const blocked = detail?.wonder_lost ? blockedQueueHead(detail, faction(e.owner)) : '';
         push(i, e.owner, { tier: 'major', at: cities.get(e.city)?.pos ?? null, title: BUILDING_NAME[e.building], kicker: 'Wonder race lost', place: cityName(e.city), choose: detail?.wonder_lost ? e.city : undefined,
-          effect: `${rival} completed it first`,
+          effect: `${rival.charAt(0).toUpperCase()}${rival.slice(1)} completed it first`,
           lore: 'Another empire raised it before you.',
-          details: [wonderLostLine(rival, e.building, cityName(e.city), e.production, e.gold, e.active ?? true),
+          details: [wonderLostLine(rival.charAt(0).toUpperCase() + rival.slice(1), e.building, cityName(e.city), e.production, e.gold, e.active ?? true),
             ...(detail?.wonder_lost ? [`Choose what ${cityName(e.city)} builds next.${blocked ? ` ${blocked}` : ''}`] : [])],
           deltas: [], loss: true, emblem: 'greatwork' });
         break;
@@ -661,7 +667,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
         // The Station's own loss card names its sacked city. Do not add a second card for that event.
         const hallLoss = events.some((x) => x.type === 'FactionGoalLost' && x.faction === 'Mongols' && x.player === e.from);
         if (after.courier_halls?.some((h) => h.city === e.city) || hallLoss) break;
-        const nameOf = (id: number) => empireOfPlayer(after, id);
+        const nameOf = (id: number) => empire(id);
         const at = cities.get(e.city)?.pos ?? e.at;
         if (team.has(e.by) && !team.has(e.from)) {
           push(i, e.by, { tier: 'major', at, title: cityName(e.city), kicker: e.ordered ? 'A city razed' : RAIDER_SACK_KICKER,
@@ -680,7 +686,7 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
       case 'CapitalTaken': {
         const ours = team.has(e.captor);
         const at = cities.get(e.capital)?.pos ?? null;
-        const who = empireOfPlayer(after, e.captor);
+        const who = empire(e.captor), Who = Empire(e.captor);
         const works = events.filter((x): x is Extract<Event, { type: 'GreatWorkCompleted' }> =>
           x.type === 'GreatWorkCompleted' && x.again && x.player === e.captor &&
           after.tiles.some((t) => t.landmark?.city === e.capital && t.landmark.building === x.building));
@@ -688,19 +694,19 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
         const victim = events.find((x): x is Extract<Event, { type: 'CityCaptured' }> => x.type === 'CityCaptured' && x.city === e.capital)?.from
           ?? events.find((x): x is Extract<Event, { type: 'CityRazed' }> => x.type === 'CityRazed' && x.city === e.capital)?.from
           ?? cities.get(e.capital)?.original_capital_of ?? null;
-        const from = victim !== null ? empireOfPlayer(after, victim) : null;
+        const from = victim !== null ? empire(victim) : null;
         const card = { tier: ours ? 'legendary' as const : 'major' as const, at, title: e.name, kicker: from ? `Original capital taken from ${from}` : 'Original capital taken',
-          effect: `${ours ? '+1 VP while you hold it' : `${who} scores 1 VP while holding it`}${workVp ? ` · +${workVp} held VP from ${works.map((x) => BUILDING_NAME[x.building]).join(' and ')}` : ''}`,
+          effect: `${ours ? '+1 VP while you hold it' : `${Who} scores 1 VP while holding it`}${workVp ? ` · +${workVp} held VP from ${works.map((x) => BUILDING_NAME[x.building]).join(' and ')}` : ''}`,
           lore: ours ? `${e.name}’s gates are yours.` : `${e.name} has fallen to ${who}.`,
           details: ['The point is lost if anyone takes the city or it is razed.',
             ...(workVp ? [`${works.map((x) => BUILDING_NAME[x.building]).join(' and ')} scores ${workVp} VP only while held.`] : [])],
           deltas: ours ? [{ counter: 'vp' as const, amount: 1 + workVp }] : [], emblem: 'captured' as const,
-          ...(victim !== null && faction(victim) ? { frame: faction(victim)! } : {}), seal: 1, ...(ours ? {} : { loss: true }) };
+          ...(victim !== null && faction(victim) && !unknown(victim) ? { frame: faction(victim)! } : {}), seal: 1, ...(ours ? {} : { loss: true }) };
         if (ours) push(i, e.captor, card);
         else {
           const player = after.players.find((p) => p.id === e.captor);
           if (player) out.push({ ...card, id: `${after.turn}:${i}:${e.captor}`, eventIndex: i,
-            owner: e.captor, faction: player.faction, partner: false });
+            owner: e.captor, faction: player.faction, partner: false, ...(unknown(e.captor) ? { unknown: true } : {}) });
         }
         break;
       }

@@ -38,7 +38,7 @@ export interface ReportEmpire {
 }
 
 export interface EraBand {
-  /** 1-based era (2 Classical .. 8 Future). */
+  /** 1-based era (2 Classical .. 9 Future). */
   era: number;
   name: string;
   /** The turn the first empire entered it. */

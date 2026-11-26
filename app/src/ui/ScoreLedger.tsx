@@ -12,7 +12,7 @@ import { Amount } from './Amounts';
 import { Glyph } from './ringMedallion';
 import { CrestMedallion, Star, roman } from '../brand/ornaments';
 import { PortraitRoundel } from './premium';
-import { EraObjectives, FAMILY_ICON, Meter, VpSeal, empireVars } from './vpParts';
+import { EmpireCrest, EraObjectives, FAMILY_ICON, Meter, VpSeal, empireVars } from './vpParts';
 import { holdWords } from './VpHoldings';
 import type { Source, VpEmpire, VpModel, VpRow } from '../vpModel';
 import type { ObjectiveFamily } from '../types';
@@ -24,7 +24,7 @@ const fmt = (n: number) => n.toLocaleString('en-US');
 function Token({ e, icon, of, title, dim }: { e: VpEmpire; icon: string; of?: VpEmpire; title?: string; dim?: boolean }) {
   return <span className={`sl-token${e.isMe ? ' mine' : ''}${dim ? ' dim' : ''}`} style={empireVars(e)} title={title} role="img" aria-label={title}>
     <Glyph name={icon} size={13} />
-    {of && of.id !== e.id && <span className="sl-token-of"><CrestMedallion faction={of.faction} color={of.ink} size={11} /></span>}
+    {of && of.id !== e.id && <span className="sl-token-of"><EmpireCrest e={of} size={11} /></span>}
   </span>;
 }
 
@@ -93,12 +93,18 @@ function eraLine(s: Source): string {
   return s.era!.myScored ? 'You scored this Age.' : 'Every empire sees this card the turn the first empire enters the era, and it never expires.';
 }
 
+/** One line for the empires a detail list leaves out because you haven't met them. */
+function UnmetNote({ model }: { model: VpModel }) {
+  const n = model.empires.filter((e) => e.unmet).length;
+  return n ? <p className="sl-detail-note">{n === 1 ? '1 empire' : `${n} empires`} not met yet. Explore to meet them.</p> : null;
+}
+
 function RowDetail({ model, s, kind }: { model: VpModel; s?: Source; kind: 'work' | 'goal' | 'heldGoal' | 'capital' | 'era' }) {
   if (kind === 'goal' || kind === 'heldGoal') {
     return <div className="sl-detail">
       <p className="sl-detail-rule">{kind === 'heldGoal' ? 'These faction goals score 2 VP while their condition or item is held; they can be lost.' : 'These faction goals score 2 VP once and are kept for good.'}</p>
       <ul className="sl-goals">
-        {model.empires.filter((e) => Boolean(e.goal.live || e.goal.held) === (kind === 'heldGoal')).map((e) => {
+        {model.empires.filter((e) => !e.unmet && Boolean(e.goal.live || e.goal.held) === (kind === 'heldGoal')).map((e) => {
           const g = e.goal;
           const done = g.owners.length > 0;
           return <li key={e.id} className={e.isMe ? 'me' : ''} style={empireVars(e)}>
@@ -114,13 +120,14 @@ function RowDetail({ model, s, kind }: { model: VpModel; s?: Source; kind: 'work
           </li>;
         })}
       </ul>
+      <UnmetNote model={model} />
     </div>;
   }
   if (kind === 'capital') {
     return <div className="sl-detail">
       <p className="sl-detail-rule">Hold a rival's first capital: 1 VP while you hold it. You lose the point if anyone takes the city or you raze it. The Celts keep the point of a capital they sack.</p>
       <ul className="sl-goals">
-        {model.empires.map((e) => {
+        {model.empires.filter((e) => !e.unmet).map((e) => {
           const names = model.capitals.find((c) => c.owner === e.id)?.names ?? [];
           return <li key={e.id} className={e.isMe ? 'me' : ''} style={empireVars(e)}>
             <CrestMedallion faction={e.faction} color={e.ink} size={18} />
@@ -129,6 +136,7 @@ function RowDetail({ model, s, kind }: { model: VpModel; s?: Source; kind: 'work
           </li>;
         })}
       </ul>
+      <UnmetNote model={model} />
     </div>;
   }
   if (!s) return null;
@@ -176,16 +184,18 @@ function rowsOf(model: VpModel): { kept: Row[]; held: Row[]; eras: Row[] } {
 function ColumnHead({ row, e, span, showDecadence }: { row: VpRow; e: VpEmpire; span: number; showDecadence: boolean }) {
   const first = row.members[0].id === e.id;
   const shortName = e.name.replace(/^Switzerland · AI /, 'Swiss · AI ');
-  return <th scope="col" className={`sl-col${e.isMe ? ' mine' : ''}${first ? ' first' : ''}${span > 1 ? ' team' : ''}${row.isMine && span > 1 ? ' own-team' : ''}`} style={empireVars(e)}>
+  // An empire you haven't met shows only its rank and VP, as in the rivals table: no portrait, name, AI level, Gold or decadence.
+  const hide = e.unmet;
+  return <th scope="col" className={`sl-col${e.isMe ? ' mine' : ''}${first ? ' first' : ''}${span > 1 ? ' team' : ''}${row.isMine && span > 1 ? ' own-team' : ''}${hide ? ' unmet' : ''}`} style={hide ? undefined : empireVars(e)}>
     <span className="sl-rank" aria-label={`Rank ${row.rank}`}>{first ? roman(row.rank) : ''}</span>
-    <PortraitRoundel faction={e.faction} size={30} color={e.ink} />
-    <span className="sl-col-name" title={e.name}>{e.isMe ? 'You' : shortName}</span>
-    {e.aiLevel && <small className="sl-ai-level">AI · {e.aiLevel}</small>}
+    {hide ? <EmpireCrest e={e} size={30} /> : <PortraitRoundel faction={e.faction} size={30} color={e.ink} />}
+    <span className="sl-col-name" title={hide ? 'An unknown empire' : e.name}>{e.isMe ? 'You' : hide ? 'Unknown' : shortName}</span>
+    {hide ? <small className="sl-ai-level sl-not-met">Not met yet</small> : e.aiLevel && <small className="sl-ai-level">AI · {e.aiLevel}</small>}
     <span className="sl-col-vp"><b>{row.vp}</b><small>/{row.target} VP</small></span>
-    <span className="sl-gold" title={`${e.isMe ? 'Your' : 'Its'} treasury: every empire's Gold is public`}><Amount n={e.gold} unit="Gold" /></span>
+    {!hide && <span className="sl-gold" title={`${e.isMe ? 'Your' : 'Its'} treasury: every empire's Gold is public`}><Amount n={e.gold} unit="Gold" /></span>}
     {first && <span className="sl-pips" role="img" aria-label={`${row.vp} of ${row.target} VP`}>{Array.from({ length: row.target }, (_, i) => <i key={i} className={i < row.vp ? 'on' : ''} />)}</span>}
     {first && row.hold && <span className={`sl-hold${row.isMine ? ' mine' : ''}`} title={holdWords(row)}>{row.isMine ? (span > 1 ? 'Your team wins in' : 'You win in') : 'Wins in'} {row.hold.left}</span>}
-    {showDecadence && e.decadence > 0 && <span className="sl-decadence" title={`Power ${e.power}; ${e.lead}% above the average empire. Decadence slows city growth ${e.decadence}% and cuts Production, Gold and Science ${e.decadence}%.`}>decadence −{e.decadence}%</span>}
+    {showDecadence && !hide && e.decadence > 0 && <span className="sl-decadence" title={`Power ${e.power}; ${e.lead}% above the average empire. Decadence slows city growth ${e.decadence}% and cuts Production, Gold and Science ${e.decadence}%.`}>decadence −{e.decadence}%</span>}
   </th>;
 }
 
@@ -220,11 +230,12 @@ export function ScoreLedger({ model, turn, close, closeRef }: { model: VpModel; 
     const isOpen = open === r.id;
     const cells = columns.map(({ e }) => {
       let cell: ReactNode;
-      if (r.kind === 'work') cell = <WorkCell s={r.s!} e={e} />;
+      if (e.unmet) cell = <div className="sl-cell" title="Not met yet"><span className="sl-unknown-cell"><EmpireCrest e={e} size={18} /></span></div>;
+      else if (r.kind === 'work') cell = <WorkCell s={r.s!} e={e} />;
       else if (r.kind === 'capital') cell = <CapitalCell model={model} e={e} />;
       else if (r.kind === 'goal' || r.kind === 'heldGoal') cell = <GoalCell model={model} e={e} held={r.kind === 'heldGoal'} />;
       else cell = <EraCell s={r.s!} e={e} />;
-      return <td key={e.id} className={`${e.isMe ? 'mine' : ''}${e.id === columns[0].e.id ? ' first' : ''}`} style={empireVars(e)}>{cell}</td>;
+      return <td key={e.id} className={`${e.isMe ? 'mine' : ''}${e.id === columns[0].e.id ? ' first' : ''}${e.unmet ? ' unmet' : ''}`} style={e.unmet ? undefined : empireVars(e)}>{cell}</td>;
     });
     return <Fragment key={r.id}>
       <tr key={r.id} className={`sl-row k-${r.kind}${isOpen ? ' open' : ''}${r.dim ? ' dim' : ''}`} data-row={r.id}>

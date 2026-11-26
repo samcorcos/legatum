@@ -423,6 +423,18 @@ describe('music', () => {
     fade();
     expect(atlas.paused).toBe(true);
   });
+
+  it('fades out under a film and picks the same track up after it', async () => {
+    sound.installSound();
+    await sound.unlockSound();
+    const [atlas] = FakeAudio.made;
+    sound.setFilmPlaying(true);
+    fade();
+    expect(atlas.paused).toBe(true);
+    sound.setFilmPlaying(false);
+    expect(atlas.paused).toBe(false);
+    expect(FakeAudio.made).toHaveLength(1);
+  });
 });
 
 describe('land sound', () => {

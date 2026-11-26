@@ -34,10 +34,10 @@ struct Cli {
     #[arg(long, default_value_t = 300)]
     max_evals: usize,
     /// Training dice seeds (indices 1..=N) the search selects on.
-    #[arg(long, default_value_t = 6)]
+    #[arg(long, default_value_t = 6, value_parser = clap::value_parser!(u32).range(1..))]
     train_seeds: u32,
     /// Held-out dice seeds (indices 10000..) for the final check; never used to select.
-    #[arg(long, default_value_t = 50)]
+    #[arg(long, default_value_t = 50, value_parser = clap::value_parser!(u32).range(1..))]
     fresh: u32,
     /// Passes over the card's turns.
     #[arg(long, default_value_t = 2)]
@@ -45,7 +45,7 @@ struct Cli {
     /// Battle-search rollouts per battle for the battle-search candidates (0: none).
     #[arg(long, default_value_t = 48)]
     battle_rollouts: u64,
-    #[arg(long, default_value_t = 14)]
+    #[arg(long, default_value_t = 14, value_parser = clap::builder::RangedU64ValueParser::<usize>::new().range(1..))]
     threads: usize,
     /// The one train / held-out card split (the scenario gate's). A held-out or unlisted card is
     /// only scored, never searched.
@@ -1050,6 +1050,17 @@ mod tests {
             "/../../scenarios/lab/swiss-hold-biel.json"
         );
         ScenarioFile::parse(&std::fs::read_to_string(path).unwrap()).unwrap()
+    }
+
+    #[test]
+    fn seed_and_thread_counts_must_be_at_least_one() {
+        use clap::Parser;
+        let base = ["card-loop", "c.json", "--out", "o"];
+        assert!(Cli::try_parse_from(base).is_ok());
+        for flag in ["--train-seeds", "--fresh", "--threads"] {
+            let args = base.iter().copied().chain([flag, "0"]);
+            assert!(Cli::try_parse_from(args).is_err(), "{flag} 0");
+        }
     }
 
     #[test]

@@ -145,6 +145,8 @@ export function checkRecord(id: string, record: unknown, now: number = Date.now(
   const started = gameStartMs(id);
   if (!(started >= FIRST_GAME_MS && started <= now + DAY_MS) || Date.parse(m.created_at) > started + DAY_MS) return "bad start time";
   if (typeof m.engine_commit !== "string" || !ENGINE_RE.test(m.engine_commit)) return "unknown engine";
+  // The winning team (engine `Option<u8>`), stored as listing metadata.
+  if (m.winner !== null && !(Number.isInteger(m.winner) && m.winner >= 0 && m.winner <= 255)) return "bad winner";
   if (!Array.isArray(m.seats) || m.seats.length < 1 || m.seats.length > 9) return "bad seats";
   for (const [i, s] of m.seats.entries()) {
     const name = DEFAULT_NAME_RE.exec(String(s?.name));

@@ -85,10 +85,13 @@ export function PortraitRoundel({ faction, size = 38, color, fallen, className }
       </span>
     );
   }
-  const url = leaderPortraitUrl(faction);
+  // The browser picks by device pixels: the 112 px file where it is enough, the 360 px one on a dense screen or a large roundel.
+  const url = leaderPortraitUrl(faction, true);
+  const large = leaderPortraitUrl(faction);
+  const srcSet = url && large && url !== large ? `${url} 112w, ${large} 360w` : undefined;
   return (
     <span className={`pf-roundel ${fallen ? 'fallen' : ''} ${className ?? ''}`} style={style}>
-      {url && <img src={url} alt="" loading="lazy" draggable={false} />}
+      {url && <img src={url} srcSet={srcSet} sizes={srcSet ? `${size}px` : undefined} alt="" loading="lazy" draggable={false} />}
       <span className="pf-roundel-seal" aria-hidden="true">
         <FactionSeal faction={faction} size={Math.round(size * 0.34)} color="var(--accent)" />
       </span>
@@ -231,8 +234,12 @@ export function PieceCard({
                 {st.yieldKey ? <YieldIcon k={st.yieldKey} size={15} /> : <Icon name={st.icon!} size={15} />}
                 <b>{st.value}</b>
                 {st.label && <small>{st.label}</small>}
-                {d && <small className="pc-was"> ({comparison!.against}: {diffWas(d)})</small>}
-                {d && <ToneIcon tone={d.tone} size={10} />}
+                {d && (
+                  <span className="pc-diff">
+                    <small className="pc-was"> ({comparison!.against}: {diffWas(d)})</small>
+                    <ToneIcon tone={d.tone} size={10} />
+                  </span>
+                )}
               </span>
             );
           })}

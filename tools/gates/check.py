@@ -69,7 +69,8 @@ APP_SOURCE = re.compile(r"^app/src/.*\.tsx?$")
 PROSE = re.compile(r"(['\"`]|>)\s*[A-Z][a-z']*(?:[ ,;:]+[A-Za-z0-9'$%{}.+-]+){4,}")
 COMMENT = re.compile(r"^\s*(//|/?\*)")
 ENGINE = re.compile(r"^crates/(core|ai)/(src/|Cargo\.toml$)")
-ART = re.compile(r"^app/src/assets/.*\.(png|svg|jpe?g|webp)$|^app/public/(wonders|terrain)/"
+# Cinematics (era films) are art too, though art.py has no video check: the art reviewer watches them.
+ART = re.compile(r"^app/src/assets/.*\.(png|svg|jpe?g|webp)$|^app/src/assets/cinematics/|^app/public/(wonders|terrain)/"
                  r"|^tools/art/(distinctness\.(py|json)|render-sets\.mjs)$")
 # The public front door: what a visitor sees first (user, 2026-11-22: a generic boxes-and-arrows README diagram merged
 # with no reviewer because README.md and docs/ count as docs). Its copy and its visuals both get a review.

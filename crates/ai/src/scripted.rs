@@ -395,6 +395,8 @@ impl ScriptedBrain {
         p.pass("dedupe_first_steps");
         p.dedupe_first_steps();
         p.supported_defence_orders();
+        p.pass("guard_capital");
+        p.guard_capital();
         p.pass("enforce_levy");
         p.enforce_levy();
         p.enforce_purchase_generation();

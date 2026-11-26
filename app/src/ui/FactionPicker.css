@@ -343,8 +343,15 @@
   --pc-art: 56px;
   column-gap: 7px;
 }
+/* A stat that wraps hangs its comparison under the value, not under the icon (icon 15px + gap 4px). */
 .fs-sheet .pc-stat {
+  flex-wrap: wrap;
+  row-gap: 1px;
   white-space: nowrap;
+  padding-left: 19px;
+}
+.fs-sheet .pc-stat > :first-child {
+  margin-left: -19px;
 }
 .fs-lower:not(.one) .fs-cards {
   flex: 1 1 auto;

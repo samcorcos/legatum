@@ -17,6 +17,7 @@ import { endPlanning } from './turnActions';
 import { chooseCapitalProduction } from './opening';
 import { stageCityDecadence } from './vpStage';
 import type { PlayerView } from '../src/types';
+import { setMapSeed } from './mapSeed';
 
 type GameWindow = Window & { legatum: typeof useGame };
 
@@ -30,7 +31,7 @@ async function startEightEmpires(page: Page) {
   });
   await page.goto('/?client=wasm');
   await page.getByRole('button', { name: /^Single Player/ }).click();
-  await page.getByLabel('Map seed', { exact: true }).fill('424242');
+  await setMapSeed(page, '424242');
   await page.getByRole('button', { name: /^Start game/ }).click();
   await expect(page.getByTestId('turn-number')).toHaveText('1', { timeout: 60_000 });
   await expect(page.locator('.loading-screen')).toHaveCount(0);

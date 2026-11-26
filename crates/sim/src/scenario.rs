@@ -738,6 +738,12 @@ pub fn run(cli: &Cli) -> Result<(), String> {
     Ok(())
 }
 
+/// A value in hundredths as a decimal, e.g. -125 -> "-1.25". The sign is kept for values between -1 and 0.
+fn hundredths(v: i64) -> String {
+    let a = v.unsigned_abs();
+    format!("{}{}.{:02}", if v < 0 { "-" } else { "" }, a / 100, a % 100)
+}
+
 #[allow(clippy::too_many_arguments)]
 fn markdown(
     file: &ScenarioFile,
@@ -786,11 +792,7 @@ fn markdown(
             won * 100 / n
         );
     }
-    out += &format!(
-        "| Mean | | {}.{:02} |\n\n",
-        dist.mean_x100 / 100,
-        dist.mean_x100.rem_euclid(100)
-    );
+    out += &format!("| Mean | | {} |\n\n", hundredths(dist.mean_x100));
     out += "Outcomes: ";
     out += &outcomes
         .iter()
@@ -871,4 +873,20 @@ pub fn main(args: Vec<String>) -> Result<(), String> {
     use clap::Parser;
     let cli = Cli::try_parse_from(args).map_err(|e| e.to_string())?;
     run(&cli)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{distribution, hundredths};
+
+    #[test]
+    fn mean_keeps_its_sign_below_zero() {
+        assert_eq!(hundredths(distribution(&[0, -1]).mean_x100), "-0.50");
+        assert_eq!(
+            hundredths(distribution(&[-1, -1, -1, -2]).mean_x100),
+            "-1.25"
+        );
+        assert_eq!(hundredths(distribution(&[1, 2]).mean_x100), "1.50");
+        assert_eq!(hundredths(0), "0.00");
+    }
 }

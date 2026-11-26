@@ -14,15 +14,20 @@ const SIZES = [{ width: 1000, height: 600 }, { width: 1280, height: 800 }, { wid
 const shotDir = process.env.LEGATUM_SHOT_DIR ?? 'test-results';
 const MIN_COMPLETE_CHOICES = { 1000: 3, 1280: 5, 1440: 4 } as const;
 
-async function openCity(page: Page, size: { width: number; height: number }, busy: boolean, hp?: number) {
+async function openCity(page: Page, size: { width: number; height: number }, busy: boolean, options: { hp?: number; wealthy?: boolean } = {}) {
   const setup = wallsFixture();
+  for (const player of setup.fixture.players.slice(1)) { player.isHuman = false; setup.fixture.setup.players[player.id].is_human = false; }
   const own = setup.fixture.cities.find((c) => c.id === setup.own)!;
   setup.fixture.players[0].techs = TECHS.filter((t) => ['Irrigation', 'BronzeWorking', 'Masonry', 'Writing', 'Currency'].includes(t));
   Object.assign(own, busy
     ? { population: 4, hp: 140, producing: { kind: 'Unit', unit: 'Spearman' }, prod: 12, productionBanked: [],
       productionQueue: [{ kind: 'Building', building: 'Granary' }, { kind: 'Building', building: 'Workshop' }, { kind: 'Building', building: 'Library' }, { kind: 'Unit', unit: 'Settler' }] }
     : { population: 4, producing: null, prod: 0, productionQueue: [], productionBanked: [] });
-  if (hp !== undefined) own.hp = hp;
+  if (options.hp !== undefined) own.hp = options.hp;
+  if (options.wealthy) {
+    setup.fixture.players[0].gold = 12_345;
+    own.buildings.push('Market', 'Bank', 'StockExchange');
+  }
   setup.fixture.turn = 2;
   const game = coreFixture(setup.fixture);
   await page.addInitScript((game) => {
@@ -54,6 +59,11 @@ const completeChoices = (panel: Locator) => panel.evaluate((el) => {
   return { complete, scrollTop: Math.round(scroller.scrollTop), headH: Math.round(head.height), firstCardTop: Math.round(cards[0]?.top ?? -1), panelTop: Math.round(box.top), panelBottom: Math.round(box.bottom) };
 });
 
+const showPicker = (panel: Locator) => panel.evaluate((el) => {
+  const scroller = el as HTMLElement, head = scroller.querySelector('.cp-head')!.getBoundingClientRect();
+  scroller.scrollTop += scroller.querySelector('.cp-choose-title')!.getBoundingClientRect().top - head.bottom - 4;
+});
+
 for (const size of SIZES) test.describe(`city panel density ${size.width}x${size.height}`, () => {
   for (const busy of [true, false]) test(`${busy ? 'a busy city (queue, healing)' : 'an idle city'}: several complete production choices show`, async ({ page }) => {
     const panel = await openCity(page, size, busy);
@@ -61,10 +71,7 @@ for (const size of SIZES) test.describe(`city panel density ${size.width}x${size
     const tag = busy ? 'busy' : 'idle';
     await page.screenshot({ path: `${shotDir}/city-${tag}-${size.width}x${size.height}.png`, animations: 'disabled' });
     const first = await completeChoices(panel);
-    await panel.evaluate((el) => {
-      const scroller = el as HTMLElement, head = scroller.querySelector('.cp-head')!.getBoundingClientRect();
-      scroller.scrollTop += scroller.querySelector('.cp-choose-title')!.getBoundingClientRect().top - head.bottom - 4;
-    });
+    await showPicker(panel);
     await page.waitForTimeout(200);
     await page.screenshot({ path: `${shotDir}/city-${tag}-scrolled-${size.width}x${size.height}.png`, animations: 'disabled' });
     const scrolled = await completeChoices(panel);
@@ -73,10 +80,42 @@ for (const size of SIZES) test.describe(`city panel density ${size.width}x${size
     expect(scrolled.complete).toBeGreaterThanOrEqual(need);
     if (!busy) expect(first.complete).toBeGreaterThanOrEqual(size.width === 1280 ? 3 : need);
   });
+
+  test('a wealthy idle city keeps the spend and Science project controls on one row', async ({ page }) => {
+    const panel = await openCity(page, size, false, { wealthy: true });
+    const economy = await page.evaluate(() => {
+      const s = (window as unknown as GameWindow).legatum.getState();
+      const { gold, gold_per_turn: income } = s.views![s.seat].economy;
+      return { gold, income: income.total };
+    });
+    expect(economy.gold).toBe(12_345);
+    expect(economy.income).toBeGreaterThanOrEqual(10);
+    await panel.getByRole('combobox', { name: /^Automate / }).selectOption({ label: 'Science project' });
+    await expect(panel.locator('.cp-choose-title')).toHaveText('Chooses at Ready · Science project');
+    await page.evaluate(() => document.fonts.ready.then(() => undefined));
+    await showPicker(panel);
+    const sameRow = await panel.locator('.cp-buyline').evaluate((row) => {
+      const spend = row.querySelector('.purchase-status')!.getBoundingClientRect();
+      const automation = row.querySelector('.cp-automation-inline')!.getBoundingClientRect();
+      return automation.left >= spend.right && automation.top < spend.bottom && spend.top < automation.bottom;
+    });
+    expect(sameRow).toBe(true);
+    expect((await completeChoices(panel)).complete).toBeGreaterThanOrEqual(MIN_COMPLETE_CHOICES[size.width as 1000 | 1280 | 1440]);
+
+    const buy = panel.getByRole('button', { name: /^Buy Scout for / });
+    await buy.click();
+    await expect(buy).toHaveAttribute('aria-pressed', 'true');
+    const fits = await buy.evaluate((button) => {
+      const chip = button.querySelector('.cost-chip')!.getBoundingClientRect();
+      const bounds = button.getBoundingClientRect();
+      return button.scrollWidth === button.clientWidth && chip.left >= bounds.left && chip.right <= bounds.right;
+    });
+    expect(fits).toBe(true);
+  });
 });
 
 for (const size of SIZES) test(`a damaged idle city keeps its healing line on screen under the head as the panel opens at ${size.width}x${size.height}`, async ({ page }) => {
-  const panel = await openCity(page, size, false, 120);
+  const panel = await openCity(page, size, false, { hp: 120 });
   await page.waitForTimeout(500);
   await page.screenshot({ path: `${shotDir}/city-idle-damaged-${size.width}x${size.height}.png`, animations: 'disabled' });
   const rects = await panel.evaluate((el) => {

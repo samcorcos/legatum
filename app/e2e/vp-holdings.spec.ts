@@ -4,6 +4,7 @@ import { test, expect } from './fixtures';
 import { coreFixture } from '../src/test/coreFixture';
 import { progressFixture } from '../src/test/progressFixture';
 import { stageHold, stageHoldings } from './vpStage';
+import { setMapSeed } from './mapSeed';
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => { localStorage.setItem('legatum.dev.no-era-hud', '1'); });
@@ -28,7 +29,7 @@ async function eightEmpires(page: Page) {
   await page.getByRole('button', { name: /^Single Player/ }).click();
   // A new lobby has 6 empires; this table is the full 8, so add the last two.
   for (let i = 0; i < 2; i++) await page.getByRole('button', { name: /^\+ Add an AI empire/ }).click();
-  await page.getByLabel('Map seed', { exact: true }).fill('424242');
+  await setMapSeed(page, '424242');
   await page.getByRole('button', { name: /^Start game/ }).click();
   await expect(page.getByTestId('turn-number')).toHaveText('1', { timeout: 60_000 });
   await expect(page.locator('.loading-screen')).toHaveCount(0);
