@@ -2,3 +2,9 @@
    drawn each frame on a flat canvas over it (marks2d.ts). */
 .map3d-canvas { width: 100%; height: 100%; }
 .map3d-marks { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.map3d-flat-chip {
+  position: absolute; z-index: 5; height: 30px; min-height: 30px; padding: 4px 12px; color: var(--ink); background: var(--tip-bg);
+  border: var(--slip-border); font: 600 13px var(--sans); cursor: pointer;
+}
+@media (hover: hover) { .map3d-flat-chip:hover { color: var(--accent); } }
+.map3d-flat-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

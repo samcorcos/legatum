@@ -26,6 +26,7 @@ import { feel, useCombatFx } from '../feel';
 import { motionStill } from '../ui/motion';
 import { useReducedMotion } from '../ui/useReducedMotion';
 import { MapScene } from './scene';
+import { useMapView } from './mapPrefs';
 import { useMapLens } from '../map/useMapLens';
 import { LensSwitcher } from '../map/LensSwitcher';
 import { CompassRose } from '../map/CompassRose';
@@ -66,11 +67,19 @@ export default function Map3DView() {
   const wrapRef = useRef<HTMLDivElement>(null);
   /** Docked panels the hover cards keep clear of (map-relative px), sampled like the 2D map does. */
   const panels = useRef<{ left: number; top: number; right: number; bottom: number }[]>([]);
+  // The 2D / 3D switch lives on the minimap; when the sidebar has no room for the minimap (the 1000x600 laptop with a
+  // unit selected), a "2D map" chip sits beside the Lens control instead, so the switch is always one click away.
+  const [flatChip, setFlatChip] = useState<{ left: number; bottom: number } | null>(null);
   useEffect(() => {
     const sample = () => {
       const wrap = wrapRef.current;
       if (!wrap) return;
       const o = wrap.getBoundingClientRect();
+      const tab = document.querySelector('.minimap .map-view-toggle')?.getBoundingClientRect();
+      const shown = !!tab && tab.width > 0 && tab.bottom <= window.innerHeight && tab.top >= 0;
+      const lensBox = wrap.querySelector('.map-lenses')?.getBoundingClientRect();
+      const next = shown || !lensBox ? null : { left: Math.round(lensBox.right - o.left + 8), bottom: Math.round(o.bottom - lensBox.bottom) };
+      setFlatChip((old) => (old?.left === next?.left && old?.bottom === next?.bottom ? old : next));
       panels.current = [...document.querySelectorAll('.game .panel, .game .vp, .game .report, .map-lenses, .advisor-card, .topbar')].map((e) => {
         const r = e.getBoundingClientRect();
         return { left: r.left - o.left, top: r.top - o.top, right: r.right - o.left, bottom: r.bottom - o.top };
@@ -416,6 +425,8 @@ export default function Map3DView() {
       />
       <canvas ref={marksRef} className="map3d-marks" aria-hidden="true" />
       <CompassRose ref={compassRef} />
+      {flatChip && <button type="button" className="map3d-flat-chip" style={{ left: flatChip.left, bottom: flatChip.bottom }}
+        aria-label="Show the 2D map (M)" title="Show the 2D map (M)" onClick={() => useMapView.getState().set('2d')}>2D map</button>}
       <LensSwitcher players={view?.players ?? []} me={view?.me} visibleBarbarians={!!view?.units.some((u) => isBarbarian(u.owner))} supply={view?.supply} era={view?.research.era}
         lens={lens} empty={!lensTiles.length}
         overlayEmpty={{ resources: !!view && overlayEmpty(view, 'resources', overlayTiles), borders: !!view && overlayEmpty(view, 'borders', overlayTiles) }}
