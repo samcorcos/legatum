@@ -86,3 +86,10 @@
 - **Face plate:** the rear edge (41 vertices) is pulled onto the dome with 4 cm falloff; the side seam is softer but the plate still reads as a separate visor. Eye slots, nasal and cheek gap unchanged. **Marginal; needs the GUI sculpt.**
 - **Greaves:** tops re-profiled into an arc, relaxed and given a 3 mm rim; the notches are gone but the front now rises to a point at the kneecap, and the relax opened small slits where the skin shows through. **Worse than r5; do not use. Needs the GUI sculpt.**
 - Game size (160 px, 48 px): unchanged from r5.
+
+## r6 crest
+
+(`spearman-fit-casey-r6/spearman.glb`, sha1 08995039; crops in `closeups-r6/r6/` beside `closeups-r6/r5/`)
+
+- **Crest: clearly better than r5.** A dense horsehair mass (1,976 triangles) with geometric strand grooves, a tufted top edge and a backward lean, rooted on the crown, versus r5's hollow, smooth arc. From the side and three-quarter it reads like the painting's crest; from straight on it is a narrow ridge, as on a real crest. The front end is a little blunt. No contact with spear or shield in any clip at 30 fps; LOD1 (70 triangles) keeps the silhouette at 160 px.
+- Unchanged and still open: the face plate's side seam, the greave tops, mottled bronze.
