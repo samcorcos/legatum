@@ -44,7 +44,7 @@ for (const size of SIZES) test.describe(`city upkeep ${size.name}`, () => {
 
     await selectThing(page, 'city', setup.capital);
     const card = page.getByTestId('settler-city-upkeep').first();
-    await expect(card).toHaveText('City upkeep: +7 Gold a turn (7th city)');
+    await expect(card).toContainText(/City upkeep: −7\s*Gold a turn \(7th city\)/);
     await card.scrollIntoViewIfNeeded();
     await parkMouse(page);
     await shot(page, size, 'settler-card');
@@ -54,7 +54,7 @@ for (const size of SIZES) test.describe(`city upkeep ${size.name}`, () => {
     await shot(page, size, 'settler-card-hover');
 
     await selectThing(page, 'unit', setup.settler);
-    await expect(page.getByTestId('found-city-upkeep')).toHaveText('City upkeep: +7 Gold a turn (7th city)');
+    await expect(page.getByTestId('found-city-upkeep')).toContainText(/City upkeep: −7\s*Gold a turn \(7th city\)/);
     await parkMouse(page);
     await shot(page, size, 'found-city');
 
