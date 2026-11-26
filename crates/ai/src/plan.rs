@@ -1433,7 +1433,7 @@ impl Planner<'_> {
         // them per turn on the road (the defender sees it coming).
         // Gene `capture_horizon`: a walled siege without Siege is priced at its slower pace.
         let capture_turns = self.capture_turns(city, f);
-        let p = (capture_odds(capture_turns, f.march) + self.levy_edge_odds(owner)).min(70);
+        let p = capture_odds(capture_turns, f.march).min(70);
         let unit = self.unit_army_value(base);
         let lost_milli = f.losses * 1000 / self.average_unit_cost();
         let common = self.war_footing(base, f.turns, 20);

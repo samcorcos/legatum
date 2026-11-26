@@ -6,7 +6,7 @@
 import {
   FLOWER_WARS, AZTEC_NO_HORSES, BUILDING_STATS, INDIA_CAPITAL_RADIUS, INDIA_NETWORK_PERCENT_PER_CITY, INDIA_NETWORK_RADIUS, INDIA_YIELD_PERCENT_PER_HEX,
   GERMANY_PROJECT_GOLD_PERCENT, GERMANY_PROJECT_SCIENCE_PERCENT, PROJECT_GOLD_PERCENT, PROJECT_SCIENCE_PERCENT, EGYPT_NILE_BUILD_PERCENT,
-  KESHIG_KIND, RULES, SPECIAL_UNIT, TECH_NAME, UNIT_NAME, UNIT_STATS, specialUnitEdge, specialUnitName, companyRule, THIN_LEVIES, THIN_LEVIES_DETAIL, factionGoalVp, itemName, swissInterestRule, swissTollRule, SWISS_CHEAP_BUYS, SWISS_CAPTURE_RULE, unitStatsFor,
+  KESHIG_KIND, RULES, SPECIAL_UNIT, TECH_NAME, UNIT_NAME, UNIT_STATS, specialUnitEdge, specialUnitName, factionGoalVp, itemName, swissInterestRule, swissTollRule, SWISS_CHEAP_BUYS, SWISS_CAPTURE_RULE, unitStatsFor,
 } from './data';
 import { pieceAgainst } from './pieceCompare';
 import type { BuildingKind, Faction, ProductionItem, TechId } from './types';
@@ -151,13 +151,12 @@ export const FACTION_SHEETS: Record<Faction, FactionSheet> = {
     counteredBy: 'Capture the Imperial Diwan to take its points. Contest the compact city network.',
   },
   Byzantium: {
-    identity: 'Armies for hire',
-    lore: 'The eastern Roman Empire held Constantinople for a thousand years. When its thin professional army could not win, it opened the treasury and hired other empires’ armies.',
+    identity: 'The city that holds the empire',
+    lore: 'The eastern Roman Empire held Constantinople for a thousand years. When its thin professional army could not win, it opened the treasury.',
     ratings: { aggression: 2, economy: 3, complexity: 3 },
-    pairs: [
-      { strength: "Hire a Company: buy another empire's special unit with Gold.", strengthDetail: companyRule(), price: THIN_LEVIES, priceDetail: THIN_LEVIES_DETAIL, strengthIcon: 'fortify', priceIcon: 'unit-spearman' },
-    ],
-    counteredBy: 'Outlast every Company: its countdown is public, its upkeep drains the treasury, and an unpaid Company turns barbarian.',
+    // Temporary row: Mercenary Companies and thin levies are retired (2026-11-26); the replacement rule's row is written with that rule.
+    pairs: [{ strength: 'Byzantium’s rule break is being redesigned.', strengthIcon: 'fortify' }],
+    counteredBy: 'Take the Heir.',
   },
   Germany: {
     identity: 'Industry shapes the land',

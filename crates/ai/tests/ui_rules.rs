@@ -3,7 +3,7 @@
 //! the rules, and fail CI if the checked-in snapshot drifts. Refresh with:
 //! UPDATE_UI_RULES=1 cargo test -p legatum-ai --test ui_rules
 use legatum_core::{
-    BuildingKind, Faction, ImprovementKind, Resource, TechId, Terrain, UnitKind, company, data,
+    BuildingKind, Faction, ImprovementKind, Resource, TechId, Terrain, UnitKind, data,
     diplomacy::{ALLIANCE_PROTECTED_TURNS, BETRAYAL_TURNS, PEACE_TRUCE_TURNS, TreatyKind},
     goals, resources,
     rules::promotion,
@@ -503,11 +503,6 @@ fn ui_rules_match_core() {
             "unitFightCap": data::XP_UNIT_FIGHT_CAP,
             "cityAttackXp": data::XP_CITY_ATTACK,
             "cityDefeatedXp": data::XP_CITY_DEFEATED,
-        },
-        "company": {
-            "turns": company::COMPANY_TURNS,
-            "upkeep": company::UPKEEP,
-            "hirePercent": company::HIRE_PERCENT,
         },
         "treaty": {
             "guaranteeTurns": PEACE_TRUCE_TURNS,

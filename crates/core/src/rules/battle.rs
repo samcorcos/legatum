@@ -973,7 +973,7 @@ fn kill_participants(
 }
 
 /// One population per slain military unit per participating Aztec empire, never per attacker.
-/// Economic faction rules belong to the owner, not a hired Company's origin.
+/// Economic faction rules belong to the owner.
 #[allow(clippy::too_many_arguments)]
 fn flower_wars(
     state: &mut GameState,

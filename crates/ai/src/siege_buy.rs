@@ -269,7 +269,7 @@ impl<'a> Planner<'a> {
             .contains(&legatum_core::TechId::MilitaryEngineering);
         let mut refits: Vec<(i32, UnitId)> = force
             .iter()
-            .filter(|u| !data::has_siege(u.kind, u.siege) && u.contract_until.is_none())
+            .filter(|u| !data::has_siege(u.kind, u.siege))
             .filter_map(|u| {
                 if let Some(to) = u.upgrade_to {
                     let cost = u.upgrade_breakdown.as_ref()?.total;

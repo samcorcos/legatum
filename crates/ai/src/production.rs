@@ -1093,7 +1093,6 @@ impl Planner<'_> {
         }
         self.ctx.own_units.iter().any(|u| {
             composition::is_combat(u.kind)
-                && u.contract_until.is_none()
                 && data::unit_stats(u.kind)
                     .upgrades_to
                     .is_some_and(|to| data::unit_stats(to).requires == Some(tech))
@@ -1576,7 +1575,7 @@ impl Planner<'_> {
         self.ctx
             .own_units
             .iter()
-            .filter(|u| legatum_core::data::pays_upkeep(u.kind) && u.contract_until.is_none())
+            .filter(|u| legatum_core::data::pays_upkeep(u.kind))
             .count() as i32
     }
 
@@ -1768,8 +1767,7 @@ impl Planner<'_> {
         let can_assign = |c: &CityView| {
             c.detail.as_ref().is_some_and(|d| {
                 (d.producing.is_none()
-                    || matches!(d.producing, Some(ProductionItem::Project { .. }))
-                    || self.levy_blocks(d.producing))
+                    || matches!(d.producing, Some(ProductionItem::Project { .. })))
                     && d.resistance <= 0
                     && !self
                         .orders
@@ -1827,8 +1825,7 @@ impl Planner<'_> {
                 && matches!(d.producing, Some(ProductionItem::Building { .. }))
                 && d.yields.total.food <= 2 * c.population;
             if (reconsider || abandon_wonder || egypt_stalled || d.producing.is_none()
-                || matches!(d.producing, Some(ProductionItem::Project { .. }))
-                || self.levy_blocks(d.producing))
+                || matches!(d.producing, Some(ProductionItem::Project { .. })))
                 && d.resistance <= 0
                 && !self
                     .orders
@@ -2044,7 +2041,7 @@ impl Planner<'_> {
         picked.len() as i32
     }
 
-    /// Armed units this seat wants, within its thin-levy cap (`levy.rs`).
+    /// Armed units this seat wants.
     pub(crate) fn desired_army(&self) -> i32 {
         let wanted = self.uncapped_army();
         let wanted = if self.faction == Faction::India && self.decisions.india_network_guard > 0 {
@@ -2069,8 +2066,7 @@ impl Planner<'_> {
         } else {
             wanted
         };
-        let wanted = wanted + self.wary_guard();
-        self.levy_now().map_or(wanted, |(_, cap)| wanted.min(cap))
+        wanted + self.wary_guard()
     }
 
     /// Gene `swiss_playbook` 1+: a Hard Swiss city's Alpine Redoubt is its garrison (the
@@ -2471,9 +2467,11 @@ impl Planner<'_> {
             }
         }
         for city in raze {
-            self.orders.retain(|o| !matches!(o,
+            self.orders.retain(|o| {
+                !matches!(o,
                 Order::SetProduction { city: id, .. } | Order::SetProductionQueue { city: id, .. }
-                | Order::BuyItem { city: id, .. } | Order::HireCompany { city: id, .. } if *id == city));
+                | Order::BuyItem { city: id, .. } if *id == city)
+            });
             self.orders.push(Order::Raze { city });
         }
     }

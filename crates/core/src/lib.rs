@@ -9,7 +9,6 @@ pub mod army;
 pub mod bitset;
 pub mod calendar;
 pub mod combat;
-pub mod company;
 pub mod data;
 pub mod diplomacy;
 pub mod economy;

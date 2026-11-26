@@ -53,9 +53,6 @@ fn decisions(state: &GameState, views: &[PlayerView]) -> Orders {
 fn encode(order: &Order) -> Vec<i32> {
     let mut encoded = match *order {
         Order::BuyTile { .. } => panic!("AI seats do not buy tiles"),
-        Order::HireCompany { city, unit, seller } => {
-            [91, city.0 as i32, unit as i32, i32::from(seller.0)]
-        }
         Order::DeclareWar { against, breach } => [9, i32::from(against.0), i32::from(breach), 0],
         Order::BreakTreaty { with, .. } => [14, i32::from(with.0), 0, 0],
         Order::ProposeTreaty { to, kind, .. } => [10, i32::from(to.0), kind as i32, 0],
@@ -146,11 +143,6 @@ fn decode(encoded: impl AsRef<[i32]>) -> Order {
     let city = CityId(a as u32);
     match kind {
         92 => Order::Raze { city },
-        91 => Order::HireCompany {
-            city,
-            unit: legatum_core::UnitKind::ALL[b as usize],
-            seller: legatum_core::PlayerId(c as u8),
-        },
         9 => Order::DeclareWar {
             against: legatum_core::TeamId(a as u8),
             breach: b != 0,

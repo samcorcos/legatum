@@ -121,16 +121,8 @@ pub enum Order {
         city: CityId,
         item: ProductionItem,
     },
-    /// Byzantium only: hire a Mercenary Company (`company`), an armed unit `seller` can field
-    /// now, paid to `seller` in Gold. It appears in the city next turn and goes home when its
-    /// contract ends. Takes the city's one purchase for the turn.
-    HireCompany {
-        city: CityId,
-        unit: UnitKind,
-        seller: PlayerId,
-    },
     /// Buy an unowned tile next to the city's territory, within its work radius, for Gold.
-    /// Shares the city's one purchase per turn with BuyItem and HireCompany.
+    /// Shares the city's one purchase per turn with BuyItem.
     BuyTile {
         city: CityId,
         tile: Hex,

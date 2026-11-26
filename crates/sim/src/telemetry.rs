@@ -77,10 +77,6 @@ pub struct Collector {
     great_work_turns: BTreeMap<u8, BTreeMap<String, u32>>,
     great_works_bought: BTreeMap<u8, u32>,
     barbarians: crate::barbarian_telemetry::BarbarianTelemetry,
-    company_hires: Vec<CompanyHire>,
-    companies_departed: BTreeMap<u8, u32>,
-    companies_turned: BTreeMap<u8, u32>,
-    levies: BTreeMap<u8, LevyTelemetry>,
     celts_razes: BTreeMap<u8, u64>,
     germany_project_city_turns: BTreeMap<String, u64>,
     sparta: Option<SpartaTelemetry>,
@@ -248,29 +244,6 @@ impl Collector {
                     owner, unit_kind, ..
                 } if owner.0 == sparta.seat && data::unit_stats(*unit_kind).military => {
                     sparta.military_destroyed += 1;
-                }
-                Event::CompanyHired {
-                    owner,
-                    seller,
-                    unit,
-                    gold,
-                    until,
-                    ..
-                } => {
-                    self.company_hires.push(CompanyHire {
-                        turn: resolved_turn,
-                        buyer: owner.0,
-                        seller: seller.0,
-                        unit: format!("{unit:?}"),
-                        gold: *gold,
-                        until: *until,
-                    });
-                }
-                Event::CompanyDeparted { owner, .. } => {
-                    *self.companies_departed.entry(owner.0).or_default() += 1;
-                }
-                Event::CompanyTurned { owner, .. } => {
-                    *self.companies_turned.entry(owner.0).or_default() += 1;
                 }
                 _ => {}
             }
@@ -761,30 +734,6 @@ impl Collector {
                     cities: state.cities_of(p.id).count() as u32,
                 });
             }
-            if let Some((units, cap)) = legatum_core::economy::levy(state, p.id).filter(|_| p.alive)
-            {
-                let l = self.levies.entry(p.id.0).or_default();
-                l.turns += 1;
-                l.unit_turns += units as u64;
-                l.cap_turns += cap as u64;
-                let full = units >= cap;
-                l.at_cap_turns += u32::from(full);
-                l.war_at_cap_turns += u32::from(
-                    full && state
-                        .players
-                        .iter()
-                        .any(|q| q.alive && q.team != p.team && state.at_war(p.id, q.id)),
-                );
-                if full {
-                    l.stalled_city_turns += state
-                        .cities_of(p.id)
-                        .filter(|c| {
-                            matches!(c.producing, Some(legatum_core::ProductionItem::Unit { unit })
-                                if legatum_core::data::pays_upkeep(unit))
-                        })
-                        .count() as u32;
-                }
-            }
             let cities = state.cities_of(p.id).count();
             self.peak_cities
                 .entry(p.id.0)
@@ -885,10 +834,6 @@ impl Collector {
             great_works_bought: self.great_works_bought.clone(),
             bounty_gold_received: self.bounty_gold_received.clone(),
             swiss_treasury: self.swiss_treasury.clone(),
-            company_hires: self.company_hires.clone(),
-            companies_departed: self.companies_departed.clone(),
-            companies_turned: self.companies_turned.clone(),
-            levies: self.levies.clone(),
             goal_cities: self.goal_cities.finish(),
             celts_razes: self.celts_razes.clone(),
             upkeep_disbands: self.upkeep_disbands.clone(),
@@ -1171,7 +1116,7 @@ pub struct EmpireFlowTelemetry {
     /// incomplete or lost production. Dynamic Settler pricing makes it an estimate.
     pub completed_production_value: i64,
     /// Upkeep owed after each resolved turn while alive, summed (`economy::upkeep`: military
-    /// beyond the free units, faction modifiers, companies and treaties). Older reports omit it.
+    /// beyond the free units, faction modifiers, and treaties). Older reports omit it.
     #[serde(default)]
     pub upkeep_paid: i64,
 }
@@ -1261,17 +1206,6 @@ pub struct GameTelemetry {
     /// 200 (`SWISS_TREASURY_TURNS`). Absent on reports from before the uncapped-interest rule.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub swiss_treasury: Vec<SwissTreasury>,
-    /// Every Mercenary Company hired this game, in order (`company`).
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub company_hires: Vec<CompanyHire>,
-    /// Companies that served out their contract, and that turned barbarian unpaid, per employer seat.
-    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    pub companies_departed: BTreeMap<u8, u32>,
-    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    pub companies_turned: BTreeMap<u8, u32>,
-    /// Thin levies (`economy::levy`), per Byzantium seat.
-    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    pub levies: BTreeMap<u8, LevyTelemetry>,
     /// Rome's Colonia Victrix and Egypt's royal tomb, per Rome or Egypt seat
     /// (`goal_city_telemetry`). Older reports omit it.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
@@ -1330,32 +1264,6 @@ pub struct GameTelemetry {
     /// individual null turns mean an observed empire never reached that milestone.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub openings: Option<BTreeMap<u8, EmpireOpening>>,
-}
-
-/// A levy-capped empire's armed units against its cap over a game, per resolved turn.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-pub struct LevyTelemetry {
-    pub turns: u32,
-    /// Sum over turns of armed units and of the cap.
-    pub unit_turns: u64,
-    pub cap_turns: u64,
-    /// Turns the empire stood at its cap.
-    pub at_cap_turns: u32,
-    /// City-turns a city's production sat on an armed unit the cap blocked.
-    pub stalled_city_turns: u32,
-    /// Turns the empire was at war while at its cap.
-    pub war_at_cap_turns: u32,
-}
-
-/// One Mercenary Company hired: who paid whom, for what, and when the contract ends.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct CompanyHire {
-    pub turn: u32,
-    pub buyer: u8,
-    pub seller: u8,
-    pub unit: String,
-    pub gold: i32,
-    pub until: u32,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]

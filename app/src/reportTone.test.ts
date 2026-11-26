@@ -61,15 +61,6 @@ const CASES: Record<Event['type'], [string, Event, Tone][]> = {
     ['your Heir', ev({ type: 'HeirBorn', city: 1, owner: 0, city_name: 'Constantinople', at: { q: 3, r: 3 } }), 'good'],
     ['a rival\'s Heir', ev({ type: 'HeirBorn', city: 1, owner: 2, city_name: 'Pella', at: { q: 3, r: 3 } }), 'neutral'],
   ],
-  CompanyHired: [
-    ['you hired', ev({ type: 'CompanyHired', city: 1, owner: 0, seller: 2, unit: 'Spearman', gold: 80, until: 41 }), 'neutral'],
-    ['you sold', ev({ type: 'CompanyHired', city: 1, owner: 2, seller: 0, unit: 'Spearman', gold: 80, until: 41 }), 'good'],
-  ],
-  CompanyDeparted: [['a contract ended', ev({ type: 'CompanyDeparted', unit: 'Spearman', owner: 0, origin: 'Sparta', pos: { q: 3, r: 3 } }), 'neutral']],
-  CompanyTurned: [
-    ['yours turned', ev({ type: 'CompanyTurned', unit: 'Spearman', owner: 0, origin: 'Sparta', pos: { q: 3, r: 3 } }), 'bad'],
-    ['a rival\'s turned', ev({ type: 'CompanyTurned', unit: 'Spearman', owner: 2, origin: 'Sparta', pos: { q: 3, r: 3 } }), 'neutral'],
-  ],
   TreatyActivated: [['alliance', ev({ type: 'TreatyActivated', relation: relation({ state: 'Alliance', guarantee_until: 0, security: { id: 3, started_turn: 12, protected_until: 22 } }) }), 'neutral']],
   BordersOpened: [['open borders', ev({ type: 'BordersOpened', a: 0, b: 2, effective_turn: 12 }), 'neutral']],
   BordersClosed: [['borders closed', ev({ type: 'BordersClosed', a: 0, b: 2, effective_turn: 12, reason: 'They went to War' }), 'neutral']],

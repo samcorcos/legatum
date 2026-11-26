@@ -396,13 +396,6 @@ pub struct Unit {
     /// whoever holds him scores that empire's goal (`goals::heir_holder`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub heir_of: Option<PlayerId>,
-    /// A Mercenary Company only (Byzantium, `company`): the last turn of its contract. The unit
-    /// goes home at the end of that turn's resolution. None for every ordinary unit.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub contract_until: Option<u32>,
-    /// A Mercenary Company only: the faction that sold it.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub origin: Option<Faction>,
 }
 
 fn unit_creation_turn() -> u32 {
@@ -1055,11 +1048,10 @@ impl GameState {
             .unit_moves_for(player.faction, kind)
     }
 
-    /// The faction whose version of `u` it is: its seller for a hired Company (`company`), else
-    /// its owner's own faction. The unit's own stat line, name and rules follow it; faction-wide
-    /// rules follow the owner.
+    /// The faction whose version of `u` it is: its owner's faction. The unit's own stat line,
+    /// name and rules follow it.
     pub fn made_by(&self, u: &Unit) -> Faction {
-        u.origin.unwrap_or_else(|| self.player(u.owner).faction)
+        self.player(u.owner).faction
     }
 
     /// The stats of `u`, as its owner fields it (`made_by` for its own line).

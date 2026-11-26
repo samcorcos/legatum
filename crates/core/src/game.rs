@@ -135,8 +135,6 @@ pub fn unit_with_id(
         attack_revealed_to: Default::default(),
         attack_revealed_turn: None,
         heir_of: None,
-        contract_until: None,
-        origin: None,
         created_turn: state.turn,
     }
 }

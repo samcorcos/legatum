@@ -18,7 +18,7 @@ import { hexEq, toOffset } from './hex';
 import { diplomaticCost, offerLabel, teamName, treatyLabel } from './diplomacy';
 import { ownerName } from './barbarians';
 import { empireOfPlayer, placeName } from './empires';
-import { withArticle, withThe } from './resources';
+import { withThe } from './resources';
 import { aircraftNeedingOrders, type Hold } from './airWing';
 import { isKnownOrderKind } from './orderDecoding';
 import { peaceScope, peaceScopeForAction } from './peaceScope';
@@ -56,7 +56,7 @@ export function pendingAirOrder(orders: Order[], plane: UnitId): Order | undefin
 }
 
 export function orderUnit(o: Order): UnitId | null {
-  return 'unit' in o && o.type !== 'HireCompany' ? o.unit : null;
+  return 'unit' in o ? o.unit : null;
 }
 
 export function orderCity(o: Order): CityId | null {
@@ -117,20 +117,13 @@ export function pendingProduction(orders: Order[], city: CityId): ProductionItem
   return o?.type === 'SetProduction' ? o.item : o?.type === 'SetProductionQueue' ? o.queue[0] ?? null : null;
 }
 
-/** A city has one purchase a turn: a Buy, a tile, or a hire (Byzantium's Mercenary Company). */
-export const isPurchase = (o: Order, city: CityId) => (o.type === 'BuyItem' || o.type === 'HireCompany' || o.type === 'BuyTile') && o.city === city;
+/** A city has one purchase a turn: a Buy or a tile. */
+export const isPurchase = (o: Order, city: CityId) => (o.type === 'BuyItem' || o.type === 'BuyTile') && o.city === city;
 
 export function toggleBuy(orders: Order[], city: CityId, item: ProductionItem): Order[] {
   const buy = orders.find((o) => isPurchase(o, city));
   const rest = orders.filter((o) => !isPurchase(o, city));
   return buy?.type === 'BuyItem' && sameItem(buy.item, item) ? rest : [...rest, { type: 'BuyItem', city, item }];
-}
-
-/** Hire (or, clicked again, cancel) one Company in `city`: it replaces any other purchase there, as a second Buy does. */
-export function toggleHire(orders: Order[], hire: Extract<Order, { type: 'HireCompany' }>): Order[] {
-  const same = orders.some((o) => o.type === 'HireCompany' && o.city === hire.city && o.unit === hire.unit && o.seller === hire.seller);
-  const rest = orders.filter((o) => !isPurchase(o, hire.city));
-  return same ? rest : [...rest, hire];
 }
 
 export type TileOrder = Extract<Order, { type: 'BuyTile' }>;
@@ -317,10 +310,6 @@ export function describeOrder(o: Order, view: PlayerView): string {
       return `${city(o.city)}: ${o.queue.length ? o.queue.map((item, i) => `${i + 1}. ${itemName(item, cityFaction(o.city))}`).join(' → ') : 'clear production queue'}`;
     case 'BuyItem':
       return `${city(o.city)}: buy ${itemName(o.item, cityFaction(o.city))}`;
-    case 'HireCompany': {
-      const price = view.company_offers?.find((x) => x.seller === o.seller && x.unit === o.unit)?.price;
-      return `${city(o.city)}: hire ${withArticle(itemName({ kind: 'Unit', unit: o.unit }, faction(o.seller)))} Company from ${empireOfPlayer(view, o.seller)}${price === undefined ? '' : ` for ${price} Gold`} (${RULES.company.turns} turns)`;
-    }
     case 'BuyTile': {
       const tilePrice = view.cities.find((c) => c.id === o.city)?.detail?.buyable_tiles.find((b) => hexEq(b.tile, o.tile))?.price;
       return `${city(o.city)}: buy the tile at ${coord(o.tile)}${tilePrice === undefined ? '' : ` for ${tilePrice} Gold`}`;

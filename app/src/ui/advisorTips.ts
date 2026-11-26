@@ -62,7 +62,7 @@ function resourceTip(v: PlayerView, touch: boolean, selection: { kind: string; i
     // Only a purchase the city can make now: Gold in hand, no blocker, no tile already ordered there.
     const tileBought = orders.some((o) => o.type === 'BuyTile' && free.some((f) => hexEq(f.pos, o.tile)));
     if (tileBought) continue;
-    const canBuy = (city: CityView) => !city.detail?.buy_tile_blocker && !orders.some((o) => (o.type === 'BuyTile' || o.type === 'BuyItem' || o.type === 'HireCompany') && o.city === city.id);
+    const canBuy = (city: CityView) => !city.detail?.buy_tile_blocker && !orders.some((o) => (o.type === 'BuyTile' || o.type === 'BuyItem') && o.city === city.id);
     const offers = cities.filter(canBuy).flatMap((city) => (city.detail?.buyable_tiles ?? []).filter((b) => b.price <= v.economy.gold).filter((b) => free.some((f) => hexEq(f.pos, b.tile))).map((b) => ({ city, ...b })))
       .sort((a, b) => a.price - b.price);
     if (offers[0]) {

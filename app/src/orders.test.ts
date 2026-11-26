@@ -15,7 +15,6 @@ import {
   setUnitOrder,
   toggleBuy,
   toggleBuyTile,
-  toggleHire,
   pendingTile,
   unitsNeedingOrders,
 } from './orders';
@@ -107,8 +106,6 @@ describe('city orders', () => {
     expect(o).toEqual([{ type: 'BuyItem', city: 3, item: spearman }]);
     o = toggleBuyTile(o, 3, tile);
     expect(o).toEqual([{ type: 'BuyTile', city: 3, tile }]);
-    const hire = { type: 'HireCompany', city: 3, unit: 'Spearman', seller: 1 } as const;
-    expect(toggleBuyTile(toggleHire([], hire), 3, tile)).toEqual([{ type: 'BuyTile', city: 3, tile }]);
     // Other cities are untouched, and clicking the queued tile cancels it.
     o = toggleBuyTile([{ type: 'BuyItem', city: 4, item: spearman }, ...o], 3, tile);
     expect(o).toEqual([{ type: 'BuyItem', city: 4, item: spearman }]);

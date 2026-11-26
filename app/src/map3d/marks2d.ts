@@ -6,12 +6,11 @@ import type { LookId } from '../brand/look';
 import { bannerBarOf, bannerMeters, bannerSpec, drawColoniaSeal, drawFortifyMark, MARK_ICON, type PendingMark } from '../map/render';
 import { drawEraPlaque, plaqueHeight, unitEra } from '../map/unitEra';
 import { siegePropFor, siegePropImage } from '../siegeProps';
-import { contractLeft } from '../company';
 import { heirTag } from '../heir';
 import { isColoniaFounder } from '../goalCities';
 import { isBarbarian } from '../barbarians';
 import type { UnitKind } from '../types';
-import { drawBadge, drawBanner, drawBannerMeters, drawContractTag, drawPromotion, drawTag, drawTokenHealth, FONTS, TOKEN_INK } from '../map/sprites';
+import { drawBadge, drawBanner, drawBannerMeters, drawPromotion, drawTag, drawTokenHealth, FONTS, TOKEN_INK } from '../map/sprites';
 import { drawSiegeBadge, drawSiegeBar, SIEGE_BAR_GAP, WALLS_STONE, WALLS_TRACK } from '../map/siegeMark';
 import type { SiegeLevel } from '../siege';
 import { tombStatus } from '../goalCities';
@@ -58,9 +57,9 @@ export function drawMarks2d(ctx: CanvasRenderingContext2D, w: number, h: number,
     const x = p.x, y = p.y + tw;
     if (u.hp < 100) drawTokenHealth(ctx, LOOK, u.hp, x, y - tw * 2.2, tw);
     if (inp.far) continue;
-    const faction = u.origin ?? factionOf.get(u.owner);
+    const faction = factionOf.get(u.owner);
     // At the figure's feet, as on the 2D miniature's base: the era plaque on the front of the disc (user, 2026-10-11:
-    // tell the eras apart), an Engineer's siege gear on the right, and the Company or Heir tag under it.
+    // tell the eras apart), an Engineer's siege gear on the right, and the Heir tag under it.
     const foot = inp.unitFootAt(u);
     let tagY = foot ? foot.y + tw * 0.55 : y + tw * 2;
     if (foot && u.military && !isBarbarian(u.owner)) {
@@ -71,10 +70,8 @@ export function drawMarks2d(ctx: CanvasRenderingContext2D, w: number, h: number,
     const prop = foot ? siegePropFor(view, u) : null;
     const gear = prop ? siegePropImage(prop) : null;
     if (foot && gear) { const s = tw * 1.5; ctx.drawImage(gear, foot.x + tw * 0.7, foot.y - s * 0.7, s, s); }
-    const contract = contractLeft(u, view);
     const heir = heirTag(view, u);
-    if (contract !== null && contract !== undefined) drawContractTag(ctx, LOOK, x, tagY + 6, u.origin, contract);
-    else if (heir) drawTag(ctx, LOOK, x, tagY + 6, heir, mine ? 'good' : u.owner === u.heir_of ? 'neutral' : 'bad');
+    if (heir) drawTag(ctx, LOOK, x, tagY + 6, heir, mine ? 'good' : u.owner === u.heir_of ? 'neutral' : 'bad');
     if (u.military && u.level) drawPromotion(ctx, LOOK, u.level, x, y, tw, faction);
     // Rome's Colonia founder: the laurel seal over the head, above the health bar.
     if (mine && isColoniaFounder(view, u.id)) drawColoniaSeal(ctx, x - tw * 1.5, y - tw * 2.2, tw * 0.8, dpr);

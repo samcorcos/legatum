@@ -22,7 +22,6 @@ import { PortraitFrame, PortraitRoundel } from './premium';
 import { RingMedallion, TreatyEmblem } from './ringMedallion';
 import { Amount, Amounts } from './Amounts';
 import { GIFT_RIVAL_RULE, GiftControl, TeamGifts } from './GiveGold';
-import { RivalLevy } from './Levy';
 import { aiLevel } from '../aiLevel';
 import { publicRelationsModel } from '../relations';
 import { peaceScope, peaceScopeForAction } from '../peaceScope';
@@ -805,7 +804,6 @@ export function DiplomacyPanel() {
                 {/* A Peace or an Alliance row's own lines state its terms in one sentence; only a War keeps its definition (how a Peace ends it). */}
                 {relation.state === 'War' && treatyDefinition(relation.state) && <p className="treaty-definition"><strong>{relation.state}:</strong> {treatyDefinition(relation.state)}</p>}
                 {relationText(relation, view).map((line) => <p key={line} className={line.startsWith('Protected until') ? 'diplomacy-protected' : undefined}><Amounts text={line} /></p>)}
-                <RivalLevy view={view} team={s.team} />
                 {/* An empire you haven't met: say so once; its Alliance offer shows disabled. */}
                 {unmet && <p className="diplomacy-blocked-reason">{notMetText(unmet.blocked_reason!, empireTitle(view, team))}</p>}
                 {/* Offers that can't be made now say why where they would stand: first, before Give Gold and War. */}

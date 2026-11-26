@@ -1388,11 +1388,6 @@
   "classBonusPercent": 40,
   "coloniaBorderReach": 2,
   "coloniaLevel": 3,
-  "company": {
-    "hirePercent": 100,
-    "turns": 30,
-    "upkeep": 2
-  },
   "decadence": {
     "powerWindowTurns": 50
   },

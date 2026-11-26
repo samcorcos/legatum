@@ -332,9 +332,6 @@ export interface UnitView {
   resting_heal?: Breakdown | null;
   /** An Heir only (public): the Byzantium empire whose goal he carries, whoever holds him now. */
   heir_of?: PlayerId | null;
-  /** A hired Mercenary Company (public): the last turn of its contract (it goes home at the end of that turn) and the faction that sold it. */
-  contract_until?: number;
-  origin?: Faction;
 }
 
 /** Military upkeep effect of building one more of this unit (legatum-ui: every build card shows
@@ -554,10 +551,6 @@ export interface PlayerPublic {
   goal_rule?: GoalRule | null;
   /** The empire's current era, 1-based (1 Ancient .. 8 Future; core `objectives::era_of`): it rises the turn the previous era's last technology lands. Public. */
   era: number;
-  /** Thin levies (Byzantium only, public): armed units fielded and the cap (one per city, plus one). */
-  levy?: LevyView;
-  /** Mercenary Companies this empire fields (public; absent when none). */
-  companies?: number;
   /** Its current Gold, public to every player (0 once dead). */
   gold?: number;
   /** Public economy value: Gold plus Production across its cities (0 once dead). */
@@ -575,12 +568,6 @@ export interface PlayerPublic {
   /** Optional decadence: the percent cut from every yield of this empire's cities. */
   decadence_percent?: number;
 }
-
-/** One seller's Company in the shop (core `company::Offer`): its own special unit, what it costs now in Gold, and why it cannot be hired yet, if so. */
-export interface CompanyOffer { seller: PlayerId; unit: UnitKind; price: number; unavailable?: string }
-
-/** An empire's armed units against its thin-levy cap (core `view::LevyView`). */
-export interface LevyView { units: number; cap: number }
 
 interface EconomyView {
   military_purchases?: number;
@@ -1017,8 +1004,6 @@ export interface PlayerView {
   air_sightings?: AirSightingView[];
   /** Aircraft previously seen in hangars or reported in a battle; the base may be unknown. */
   air_contacts?: AirContactView[];
-  /** Byzantium only, private: every Company it could hire now, by seller and kind (the shop). Sellers at War, unmet or on its team are already left out. */
-  company_offers?: CompanyOffer[];
   great_works?: GreatWorkView[];
   standings: TeamStanding[];
   winner: TeamId | null;
@@ -1111,8 +1096,6 @@ export type Order =
   /** `to`: the line where there is a choice (a Biplane: 'Fighter' or 'Bomber'); omitted for the default line. */
   | { type: 'UpgradeAircraft'; plane: UnitId; to?: UnitKind }
   | { type: 'UpgradeUnit'; unit: UnitId }
-  /** Byzantium only: hire a Mercenary Company of `unit` from `seller` in `city` (core `company`); it takes the city's one purchase for the turn. */
-  | { type: 'HireCompany'; city: CityId; unit: UnitKind; seller: PlayerId }
   | { type: 'BuyTile'; city: CityId; tile: Hex }
   /** Buy Siege for a land military unit in own territory: its attacks on a city ignore enemy Walls, for good (core `rules::siege`). */
   | { type: 'UpgradeSiege'; unit: UnitId }
@@ -1179,12 +1162,6 @@ export type Event =
   | { type: 'CallLapsed'; call: WarCall; effective_turn: number; reason: string }
   /** Byzantium's Heir was born in `city` (public: every empire is told, and his position is public from then on). */
   | { type: 'HeirBorn'; city: CityId; owner: PlayerId; city_name: string; at: Hex }
-  /** Byzantium hired a Mercenary Company: `gold` went to `seller`, and the unit serves until the end of turn `until`. */
-  | { type: 'CompanyHired'; city: CityId; owner: PlayerId; seller: PlayerId; unit: UnitKind; gold: number; until: number }
-  /** A Company's contract ended and it went home from `pos`. */
-  | { type: 'CompanyDeparted'; unit: UnitKind; owner: PlayerId; origin?: Faction | null; pos: Hex }
-  /** An unpaid Company turned barbarian where it stood. */
-  | { type: 'CompanyTurned'; unit: UnitKind; owner: PlayerId; origin?: Faction | null; pos: Hex }
   | { type: 'TreatyActivated'; relation: Relation }
   | { type: 'TreatyEnded'; treaty_id: number; a: TeamId; b: TeamId; effective_turn: number; reason: string }
   | { type: 'BordersOpened'; a: TeamId; b: TeamId; effective_turn: number }

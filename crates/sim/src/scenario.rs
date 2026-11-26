@@ -531,10 +531,6 @@ pub fn describe(state: &GameState, order: &Order) -> (String, String) {
                 .first()
                 .map_or_else(|| "nothing".into(), |t| format!("{t:?}")),
         ),
-        Order::HireCompany { unit, seller, .. } => (
-            "Production".into(),
-            format!("hire a {unit:?} company from player {}", seller.0),
-        ),
         Order::DeclareWar { against, .. } => (
             "Diplomacy".into(),
             format!("declare war on {}", team(against)),

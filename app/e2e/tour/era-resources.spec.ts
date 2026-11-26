@@ -35,7 +35,7 @@ function niterScene() {
   const s = improvementCity({ techs: known([0, 1, 2], ['Gunpowder']) });
   const c = s.cities[0];
   c.buildings.push('Workshop', 'Market');
-  // One Pikeman, so the levy has room and the Musketman card is on offer (blocked by Niter, not by the levy).
+  // One Pikeman, so the Musketman card is on offer (blocked by Niter).
   s.units = s.units.filter((u) => u.owner !== 0 || u.kind === 'Scout');
   spawnUnit(s, 0, 'Pikeman', ring(c.pos, 1)[1], false);
   const foreign = fromOffset(20, 8), free = ring(c.pos, 4)[1];

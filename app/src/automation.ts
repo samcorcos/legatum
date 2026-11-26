@@ -29,7 +29,7 @@ export async function addAutomatedOrders(view: PlayerView, orders: Order[]): Pro
   const json = JSON.stringify(view);
   const plan = (_v: PlayerView, unit: number): Order | null => JSON.parse(wasm.explore_step(json, unit));
   const ids = new Set(units.map((u) => u.id));
-  return [...orders.filter((o) => !('unit' in o && o.type !== 'HireCompany' && ids.has(o.unit))), ...units.map((u): Order =>
+  return [...orders.filter((o) => !('unit' in o && ids.has(o.unit))), ...units.map((u): Order =>
     plan(view, u.id) ?? { type: 'SetAutomation', unit: u.id, automation: null, stop_reason: 'Complete' })];
 }
 

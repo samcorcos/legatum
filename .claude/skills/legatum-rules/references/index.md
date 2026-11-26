@@ -25,7 +25,7 @@ The reference was one file, `game-rules.md`, until 2026-11-22. It is now one fil
 | `victory-and-scoring.md` | VP and the VP target, winning by holding the target, winning by capitals, World Ages (the only era scoring since rules 50), the near-victory warning, decadence (off), the game history record |
 | `map-and-exploration.md` | Balanced founding sites, ruins, vision and sight sharing, revealing attackers |
 | `barbarians.md` | Barbarian camps and raids, Wild camps, barbarians and the Celts, yield denial |
-| `factions.md` | Every faction's rules and goals, special units, Mercenary Companies |
+| `factions.md` | Every faction's rules and goals, special units |
 | `experiments.md` | Simulator-only rule experiments (research cost, faction-rule ablation); World Ages and decadence experiments are in `victory-and-scoring.md`, `walls-cost` is in `units.md` |
 | `ai-hard-genes.md` | AI-only genes and decision rules with their defaults (Hard defence, purchases, campaigns, Settlers, Peace, coalitions, faction playbooks) |
 | `ai-architecture.md` | How the AI is built: views, ScriptedBrain, difficulty, openings, threat response, conquest, proxies, victory goals |

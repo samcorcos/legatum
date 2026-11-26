@@ -4,7 +4,6 @@ import { canEnter } from '../diplomacy';
 import { hexEq, neighbors, tileIndex } from '../hex';
 import { isPurchase, orderUnit, pendingTile } from '../orders';
 import { tilePriceTags } from '../map/buyTilePrices';
-import { pendingHire } from '../company';
 import type { CityView, Order, OrderError, PlayerView, ProductionItem, ProductionOption, Resource } from '../types';
 import { unitNeed } from '../resources';
 
@@ -43,9 +42,6 @@ function disbandFreesSpawn(city: CityView, view: PlayerView, item: ProductionIte
   });
 }
 
-/** One row of Byzantium's shop: its price, why it cannot be hired now (if so), whether it is the pending hire and the treasury it is paid from. */
-export interface HirePreview { price: number; reason: string | null; selected: boolean; gold: number }
-
 const earlierSettlers = (orders: Order[], errors: OrderError[], before: number) => orders.slice(0, before)
   .filter((o, i) => o.type === 'BuyItem' && o.item.kind === 'Unit' && o.item.unit === 'Settler' && !errors.some((e) => e.index === i)).length;
 const quotedBuyCost = (option: ProductionOption, orders: Order[], errors: OrderError[], before: number) => {
@@ -53,10 +49,10 @@ const quotedBuyCost = (option: ProductionOption, orders: Order[], errors: OrderE
   return quote ? Math.floor((quote.production.total + quote.additional_settler_production * earlierSettlers(orders, errors, before)) * quote.gold_percent / 100) : option.buy_cost;
 };
 
-type SpendOrder = Extract<Order, { type: 'UpgradeUnit' | 'UpgradeSiege' | 'UpgradeAircraft' | 'BuyItem' | 'HireCompany' | 'BuyTile' }>;
-const isSpend = (order: Order): order is SpendOrder => ['UpgradeUnit', 'UpgradeSiege', 'UpgradeAircraft', 'BuyItem', 'HireCompany', 'BuyTile'].includes(order.type);
+type SpendOrder = Extract<Order, { type: 'UpgradeUnit' | 'UpgradeSiege' | 'UpgradeAircraft' | 'BuyItem' | 'BuyTile' }>;
+const isSpend = (order: Order): order is SpendOrder => ['UpgradeUnit', 'UpgradeSiege', 'UpgradeAircraft', 'BuyItem', 'BuyTile'].includes(order.type);
 const phase = (order: SpendOrder) => order.type === 'UpgradeUnit' || order.type === 'UpgradeSiege' ? 0
-  : order.type === 'BuyItem' || order.type === 'HireCompany' || order.type === 'BuyTile' ? 1 : 2;
+  : order.type === 'BuyItem' || order.type === 'BuyTile' ? 1 : 2;
 
 /** "you have N", or, when queued orders already reserve part of the treasury, "N left after your queued orders". */
 export const goldOnHand = (gold: number, view: PlayerView) => gold === view.economy.gold ? `you have ${gold}` : `${gold} left after your queued orders`;
@@ -77,7 +73,6 @@ export function pendingSpend(view: PlayerView, orders: Order[], errors: OrderErr
       const option = plane?.upgrade_options?.find((o) => (order.to ? o.via === order.to : true));
       return { gold: option?.cost ?? plane?.upgrade_cost ?? 0, supply: option && plane && unitNeed(option.to) !== unitNeed(plane.kind) ? unitNeed(option.to) : null };
     }
-    if (order.type === 'HireCompany') return { gold: view.company_offers?.find((o) => o.seller === order.seller && o.unit === order.unit)?.price ?? 0, supply: null };
     if (order.type === 'BuyTile') return { gold: view.cities.find((c) => c.id === order.city)?.detail?.buyable_tiles.find((b) => hexEq(b.tile, order.tile))?.price ?? 0, supply: null };
     const option = view.cities.find((c) => c.id === order.city)?.detail?.options.find((o) => sameItem(o.item, order.item));
     if (!option) return { gold: 0, supply: null };
@@ -140,38 +135,20 @@ export function purchasePreviews(client: GameClient | null, city: CityView, view
     // `gold`: the treasury this purchase is paid from (after earlier queued purchases and upgrades).
     return [itemKey(o.item), { cost, reason, selected, breakdown, gold }] as const;
   }));
-  // Byzantium's shop: a row per seller and kind, priced and refused by the same rules (core `company::blocker`).
-  const hires = new Map<string, HirePreview>((view.company_offers ?? []).map((offer) => {
-    const mine = pendingHire(orders, city.id);
-    const selected = mine?.unit === offer.unit && mine.seller === offer.seller;
-    const hire: Order = { type: 'HireCompany', city: city.id, unit: offer.unit, seller: offer.seller };
-    const candidate: Order[] = selected ? orders : [...orders.filter((ord) => !isPurchase(ord, city.id)), hire];
-    const index = selected ? orders.indexOf(mine!) : candidate.length - 1;
-    const gold = spend.available(selected ? mine! : hire, selected ? index : orders.length).gold;
-    // What the view knows about this city's purchase: a unit already bought here blocks the day; a full ring of tiles blocks the spawn.
-    const block = (city.detail?.options ?? []).find((o) => o.item.kind === 'Unit' && (o.buy_block === 'already_bought' || o.buy_block === 'resistance' || (o.buy_block === 'no_spawn_tile' && o.item.unit === offer.unit)))?.buy_blocker ?? null;
-    const reason = offer.unavailable ? offer.unavailable
-      : purchase && !selected ? ONE_PURCHASE
-      : offer.price > gold ? `Not enough Gold: the company costs ${offer.price} Gold; you have ${gold} (need ${offer.price - gold} more)`
-      : local ? local.validate(view.me, candidate).find((e) => e.index === index)?.message ?? null
-      : (selected ? pendingErrors.find((e) => e.index === index)?.message : null) ?? block
-        ?? (offer.price > gold ? `Not enough Gold: the company costs ${offer.price} Gold; you have ${gold} (need ${offer.price - gold} more)` : null);
-    return [`${offer.seller}:${offer.unit}`, { price: offer.price, reason, selected, gold } as HirePreview] as const;
-  }));
-  return { options, hires, gold: spend.gold, buying, hiring: pendingHire(orders, city.id) };
+  return { options, gold: spend.gold, buying };
 }
 
 /**
  * The map's price tags and the city's "Buy a tile" row: each buyable tile with its price, the queued tile, and why this city
  * can buy none. A tag is payable from the treasury less every other queued spend; the city's own queued tile would be
- * replaced, so its Gold counts as free. An item or hire queued here blocks the control instead (`other`).
+ * replaced, so its Gold counts as free. An item queued here blocks the control instead (`other`).
  */
 export function tilePurchasePreview(city: CityView, view: PlayerView, orders: Order[], errors: OrderError[]) {
   const d = city.detail;
   const queued = pendingTile(orders, city.id);
   const spend = pendingSpend(view, orders, errors);
   const own = spend.entries.find((entry) => isPurchase(entry.order, city.id));
-  // A queued tile replaces itself, but never an item or company purchase (the control refuses until that is cancelled).
+  // A queued tile replaces itself, but never an item purchase (the control refuses until that is cancelled).
   const funds = spend.gold + (own?.order.type === 'BuyTile' ? own.gold : 0);
   const blocker = d?.buy_tile_blocker || null;
   const tags = d && !blocker ? tilePriceTags(d.buyable_tiles, funds, queued?.tile ?? null) : [];

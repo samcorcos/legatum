@@ -82,7 +82,6 @@ export function coreFixture(s: MState): string {
       standing_order: u.standing_order ?? null, xp: u.xp ?? 0,
       ...(u.siege ? { siege: true } : {}),
       ...(u.heir_of !== undefined ? { heir_of: u.heir_of } : {}),
-      ...(u.contract_until !== undefined ? { contract_until: u.contract_until, origin: u.origin } : {}),
       ...(u.attack_target !== undefined ? { attack_target: u.attack_target } : {}),
     }])),
     next_unit_id: s.nextUnitId, next_city_id: s.nextCityId,

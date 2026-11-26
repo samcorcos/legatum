@@ -918,8 +918,6 @@ fn unit_from_view(u: &UnitView, view: &PlayerView) -> Unit {
         attack_revealed_to: BTreeSet::new(),
         attack_revealed_turn: None,
         heir_of: u.heir_of,
-        contract_until: u.contract_until,
-        origin: u.origin,
     }
 }
 
@@ -947,8 +945,6 @@ fn fresh_unit(state: &GameState, id: UnitId, owner: PlayerId, kind: UnitKind, po
         attack_revealed_to: BTreeSet::new(),
         attack_revealed_turn: None,
         heir_of: None,
-        contract_until: None,
-        origin: None,
     }
 }
 

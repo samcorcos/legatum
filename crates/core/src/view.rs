@@ -52,10 +52,6 @@ pub struct TileView {
     pub road: u8,
 }
 
-fn is_zero_u32(v: &u32) -> bool {
-    *v == 0
-}
-
 fn is_zero_u8(v: &u8) -> bool {
     *v == 0
 }
@@ -369,12 +365,6 @@ pub struct UnitView {
     /// An Heir only (public): the Byzantium empire whose goal he carries, whoever holds him now.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub heir_of: Option<PlayerId>,
-    /// A hired Mercenary Company (public): the last turn of its contract, and the faction that
-    /// sold it. The countdown is on the unit for everyone (`company`).
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub contract_until: Option<u32>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub origin: Option<Faction>,
 }
 
 /// Military upkeep effect of building one more of this unit, for the production picker card
@@ -919,23 +909,10 @@ pub struct PlayerPublic {
     /// Decadence, the percent cut from every yield of the empire's cities.
     #[serde(default)]
     pub decadence_percent: i32,
-    /// Thin levies (Byzantium only): armed units fielded and the cap. Public.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub levy: Option<LevyView>,
-    /// Hired Mercenary Companies this empire fields (public, like the countdowns on the units).
-    #[serde(default, skip_serializing_if = "is_zero_u32")]
-    pub companies: u32,
 }
 
 fn capital_stands_default() -> bool {
     true
-}
-
-/// An empire's armed units against its thin-levy cap (`data::levy_cap`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct LevyView {
-    pub units: u32,
-    pub cap: u32,
 }
 
 impl PlayerPublic {
@@ -1234,10 +1211,6 @@ pub struct PlayerView {
     /// Rival aircraft this team saw in hangars or battle reports, with last observation turn.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub air_contacts: Vec<crate::state::AirContact>,
-    /// Byzantium only: every Mercenary Company it could hire now, by seller and kind (the shop;
-    /// `company::offers`). Private; empty for other factions.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub company_offers: Vec<crate::company::Offer>,
     #[serde(default)]
     pub great_works: Vec<crate::projects::GreatWorkView>,
     pub standings: Shared<Vec<TeamStanding>>,
@@ -1444,10 +1417,9 @@ impl PlayerView {
         self.player_public(owner).expect("known player").faction
     }
 
-    /// The faction whose version of `u` it is: its seller for a hired Company, else its owner's
-    /// (`GameState::made_by`). Origins are public, like factions.
+    /// The faction whose version of `u` it is: its owner's (`GameState::made_by`).
     pub fn made_by(&self, u: &UnitView) -> Faction {
-        u.origin.unwrap_or_else(|| self.faction_of(u.owner))
+        self.faction_of(u.owner)
     }
 
     /// Barbarians never attack the Celts (`rules::barbarians::spares`): true when the viewer is
@@ -1659,11 +1631,6 @@ pub fn public_view(state: &GameState) -> PublicView {
             } else {
                 0
             },
-            levy: economy::levy(state, p.id).map(|(units, cap)| LevyView {
-                units: units as u32,
-                cap: cap as u32,
-            }),
-            companies: crate::company::count(state, p.id) as u32,
             power: scoring::power(state, p.id),
             lead_percent: scoring::lead_percent(state, p.id),
             decadence_percent: scoring::decadence_percent(state, p.id),
@@ -1819,8 +1786,6 @@ pub(crate) fn order_check_view(state: &GameState, me: PlayerId) -> PlayerView {
                 army: 0,
                 advancement: 0,
                 science: 0,
-                levy: None,
-                companies: 0,
                 power: 0,
                 lead_percent: 0,
                 decadence_percent: 0,
@@ -2129,7 +2094,6 @@ pub fn player_view_cached(
             aircraft: aircraft_views(state, team),
             air_sightings: Vec::new(),
             air_contacts: Vec::new(),
-            company_offers: Vec::new(),
             great_works: Vec::new(),
             standings: Default::default(),
             winner: state.winner,
@@ -2299,7 +2263,6 @@ pub fn player_view_cached(
             })
             .collect(),
         air_contacts: state.air_contacts.get(&me).cloned().unwrap_or_default(),
-        company_offers: crate::company::offers(state, me),
         great_works: crate::projects::great_work_views(state, me),
         standings,
         winner: state.winner,
@@ -2360,8 +2323,6 @@ fn unit_view(state: &GameState, me: PlayerId, u: &Unit) -> UnitView {
         }),
         resting_heal: own.then(|| crate::rules::units::resting_heal(state, u)),
         heir_of: u.heir_of,
-        contract_until: u.contract_until,
-        origin: u.origin,
         upgrade_cost: if own { upgrade_cost(state, u) } else { None },
         upgrade_to: own
             .then(|| crate::rules::units::upgrade_plan(state, u.owner, u.kind).map(|plan| plan.0))

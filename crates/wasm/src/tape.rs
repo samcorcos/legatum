@@ -113,7 +113,6 @@ impl Tape {
                                     | "SetProduction"
                                     | "SetProductionQueue"
                                     | "BuyItem"
-                                    | "HireCompany"
                                     | "BuyTile"
                                     | "SetResearch"
                                     | "SetResearchQueue"
@@ -391,6 +390,25 @@ mod tests {
         );
     }
 
+    /// Mercenary Companies were retired on 2026-11-26: a saved `HireCompany` is dropped on load
+    /// and the rest of the turn's orders are kept.
+    #[test]
+    fn a_retired_hire_company_order_is_dropped_on_tape_load() {
+        let mut json: Value = serde_json::from_str(&sample().to_json()).unwrap();
+        json["turns"][0]["orders"]["0"] = serde_json::json!([
+            { "type": "HireCompany", "city": 19, "unit": "Spearman", "seller": 2 },
+            { "type": "SleepUnit", "unit": 3 }
+        ]);
+        let tape = Tape::from_json(&json.to_string()).unwrap();
+        assert_eq!(
+            tape.turns[0].orders[&PlayerId(0)],
+            vec![Order::SleepUnit {
+                unit: UnitId(3),
+                until_healed: false
+            }]
+        );
+    }
+
     #[test]
     fn retired_claim_objective_action_does_not_prevent_tape_load() {
         let mut json: Value = serde_json::from_str(&sample().to_json()).unwrap();
@@ -514,11 +532,6 @@ mod tests {
                 city: CityId(18),
                 item: settler,
             },
-            Order::HireCompany {
-                city: CityId(19),
-                unit: UnitKind::Settler,
-                seller: PlayerId(2),
-            },
             Order::BuyTile {
                 city: CityId(28),
                 tile: Hex::new(1, 1),
@@ -567,7 +580,7 @@ mod tests {
         ]
     }
 
-    const ORDER_VARIANTS: usize = 33;
+    const ORDER_VARIANTS: usize = 32;
 
     fn variant_index(order: &Order) -> usize {
         match order {
@@ -589,21 +602,20 @@ mod tests {
             Order::SetCityAutomation { .. } => 15,
             Order::SetProductionQueue { .. } => 16,
             Order::BuyItem { .. } => 17,
-            Order::HireCompany { .. } => 18,
-            Order::SetResearch { .. } => 19,
-            Order::SetResearchQueue { .. } => 20,
-            Order::SetScienceConversion { .. } => 21,
-            Order::RangedAttack { .. } => 22,
-            Order::UpgradeUnit { .. } => 23,
-            Order::UpgradeSiege { .. } => 24,
-            Order::AirStrike { .. } => 25,
-            Order::Rebase { .. } => 26,
-            Order::UpgradeAircraft { .. } => 27,
-            Order::Action { .. } => 28,
-            Order::AirRecon { .. } => 29,
-            Order::BuyTile { .. } => 30,
-            Order::GiveGold { .. } => 31,
-            Order::SetResearchGoal { .. } => 32,
+            Order::SetResearch { .. } => 18,
+            Order::SetResearchQueue { .. } => 19,
+            Order::SetScienceConversion { .. } => 20,
+            Order::RangedAttack { .. } => 21,
+            Order::UpgradeUnit { .. } => 22,
+            Order::UpgradeSiege { .. } => 23,
+            Order::AirStrike { .. } => 24,
+            Order::Rebase { .. } => 25,
+            Order::UpgradeAircraft { .. } => 26,
+            Order::Action { .. } => 27,
+            Order::AirRecon { .. } => 28,
+            Order::BuyTile { .. } => 29,
+            Order::GiveGold { .. } => 30,
+            Order::SetResearchGoal { .. } => 31,
         }
     }
 

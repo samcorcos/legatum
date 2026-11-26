@@ -245,7 +245,7 @@ ordinary runs allocate no decision records.
   Gold, and buy before optional city spending. Each intermediate step still requires its
   real Gold, supply and action turn; upgrades preserve XP. After tactical orders, a funded
   unit staging outside own territory may replace a hold with a safe path home, charging
-  round-trip time and lost combat service. Ready-to-retire veterans and hired companies
+  round-trip time and lost combat service. Ready-to-retire veterans
   are excluded. No combat, resource, territory, faction or Strongest Army scoring rule
   changes here. `crates/ai/src/modernization.rs`, `production.rs`, `military.rs`;
   evidence and gate decisions: `docs/sim-results/ai-quality/army-modernization-1026.md`.

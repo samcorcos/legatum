@@ -138,12 +138,6 @@ pub fn visible_events(
                 Event::GoldGiven { from, to, .. } => {
                     teammates.contains(from) || teammates.contains(to)
                 }
-                // The Gold is private to the two empires.
-                Event::CompanyHired { owner, seller, .. } => {
-                    teammates.contains(owner) || teammates.contains(seller)
-                }
-                Event::CompanyDeparted { owner, pos, .. }
-                | Event::CompanyTurned { owner, pos, .. } => teammates.contains(owner) || at(*pos),
                 Event::WonderDiscovered { owner, .. } => teammates.contains(owner),
                 Event::ProposalCreated { proposal }
                 | Event::ProposalAccepted { proposal, .. }

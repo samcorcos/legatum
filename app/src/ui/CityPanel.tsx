@@ -45,9 +45,6 @@ import { CityBorders } from './CityBorders';
 import { ProgressBar } from './ProgressBar';
 import { claimSummary, growthProgress, territoryCounts, yieldsText } from '../cityProgress';
 import { revealBelowStickyHead, revealIdleProductionPicker } from './cityPanelScroll';
-import { LevyNote } from './Levy';
-import { CompanyShop } from './CompanyShop';
-import { canHire } from '../company';
 import { WhereToBuild, WhereToBuildLine } from './WhereToBuild';
 import { TILE_RELEASE_RULE } from './cityTerritoryText';
 
@@ -805,8 +802,6 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     </Tip>
     <div className={`prod-list ${producing ? '' : 'choosing'}`}>{improvementOptions.map((o) => renderOption(o))}</div>
   </section> : null;
-  // Byzantium's shop: only its own cities, never a rival's or a foreign city's panel.
-  const hire = city.owner === view.me && canHire(view) ? <CompanyShop city={city} view={view} hires={purchases.hires} /> : null;
 
   /** Idle with nothing queued: the control sits on the "Choose what ... builds" line, so it never scrolls out of view above the cards and costs no extra row. */
   const idleChoice = city.owner === view.me && !producing && queue.length === 0;
@@ -1047,7 +1042,6 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
 
       {growOption && <><div className="cp-sub">Growth</div><div className="prod-list">{renderOption(growOption)}</div></>}
       <div className="cp-sub"><span>Units</span>{idleChoice && buyTile('inline')}</div>
-      <LevyNote />
       <div className={`prod-list ${producing ? '' : 'choosing'}`}>
         {withUnavailable(unitLines(listOptions, owner?.faction ?? 'India'), (line) => line.main.item, listUnavailable.filter((u) => u.item.kind === 'Unit' && !isPermanentlyUnavailable(u, faction))).map((r) => r.row ? <div key={itemKey(r.row.main.item)}>
           {renderOption(r.row.main, r.row.keeps)}
@@ -1055,7 +1049,6 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
           {r.row.older.length > 0 && <details className="unit-line"><summary>Also: {r.row.older.map((o) => itemName(o.item, owner?.faction)).join(', ')}</summary>{r.row.older.map((o) => renderOption(o))}</details>}
         </div> : renderUnavailable(r.unavailable))}{permanentLine(listUnavailable.filter((u) => u.item.kind === 'Unit'), listOptions.filter((o) => o.item.kind === 'Unit')) && <p className="prod-faction-rule" role="note">{permanentLine(listUnavailable.filter((u) => u.item.kind === 'Unit'), listOptions.filter((o) => o.item.kind === 'Unit'))}</p>}
       </div>
-      {hire}
       <div className="cp-sub">Buildings</div>
       {idleNote}
       <div className={`prod-list ${producing ? '' : 'choosing'}`}>{renderBuildingPicker(listOptions.filter((o) => o.item.kind === 'Building'), listUnavailable.filter((u) => u.item.kind === 'Building'))}</div>
