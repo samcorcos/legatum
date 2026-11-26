@@ -78,6 +78,7 @@ pub struct Collector {
     great_works_bought: BTreeMap<u8, u32>,
     barbarians: crate::barbarian_telemetry::BarbarianTelemetry,
     celts_razes: BTreeMap<u8, u64>,
+    byzantium: BTreeMap<u8, ByzantiumTelemetry>,
     germany_project_city_turns: BTreeMap<String, u64>,
     sparta: Option<SpartaTelemetry>,
     empire_flow: BTreeMap<u8, EmpireFlowTelemetry>,
@@ -287,6 +288,36 @@ impl Collector {
                 by, ordered: false, ..
             } => {
                 *self.celts_razes.entry(by.0).or_default() += 1;
+            }
+            Event::CityOfferMade { buyer, .. } => {
+                self.byzantium.entry(buyer.0).or_default().offers += 1;
+            }
+            Event::CityOfferEnded {
+                buyer,
+                outcome,
+                reason,
+                ..
+            } => {
+                let b = self.byzantium.entry(buyer.0).or_default();
+                match outcome {
+                    legatum_core::buy_city::OfferOutcome::Sold => {
+                        b.purchases += 1;
+                        b.first_purchase_turn.get_or_insert(resolved_turn);
+                    }
+                    legatum_core::buy_city::OfferOutcome::Failed => b.failed += 1,
+                    legatum_core::buy_city::OfferOutcome::Cancelled => {
+                        b.cancelled += 1;
+                        *b.cancel_reasons.entry(cancel_kind(reason)).or_default() += 1;
+                    }
+                }
+            }
+            Event::CapitalFell { player, cities, .. } => {
+                let b = self.byzantium.entry(player.0).or_default();
+                b.collapses += 1;
+                b.cities_lost_to_collapse += cities.len() as u32;
+            }
+            Event::HeirRefuge { player, .. } => {
+                self.byzantium.entry(player.0).or_default().refuges += 1;
             }
             Event::EraEntered { player, era, .. } => {
                 self.era_entries
@@ -836,6 +867,7 @@ impl Collector {
             swiss_treasury: self.swiss_treasury.clone(),
             goal_cities: self.goal_cities.finish(),
             celts_razes: self.celts_razes.clone(),
+            byzantium: self.byzantium.clone(),
             upkeep_disbands: self.upkeep_disbands.clone(),
             city_combat: Some(self.city_combat.clone()),
             germany_project_city_turns: self.germany_project_city_turns.clone(),
@@ -1140,6 +1172,46 @@ pub struct SwissTreasury {
     pub cities: u32,
 }
 
+/// One Byzantium seat's city offers and capital falls (`Collector::observe_event`).
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ByzantiumTelemetry {
+    pub offers: u32,
+    pub purchases: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub first_purchase_turn: Option<u32>,
+    /// The owner raised the price above the escrow.
+    pub failed: u32,
+    pub cancelled: u32,
+    /// Cancellations by kind (`cancel_kind`): war, changed_hands, eliminated, team, gone, other.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub cancel_reasons: BTreeMap<String, u32>,
+    /// Its capital was taken and every other city with it.
+    pub collapses: u32,
+    pub cities_lost_to_collapse: u32,
+    /// Its capital was taken while the Heir sheltered elsewhere.
+    pub refuges: u32,
+}
+
+/// A cancellation reason (core `buy_city`'s public line, "Offer for X called off: <why>. ...")
+/// as a short key.
+fn cancel_kind(reason: &str) -> String {
+    let reason = reason.split_once("called off: ").map_or(reason, |(_, r)| r);
+    let kind = if reason.starts_with("War ") {
+        "war"
+    } else if reason.contains("changed hands") {
+        "changed_hands"
+    } else if reason.contains("eliminated") {
+        "eliminated"
+    } else if reason.contains("team") {
+        "team"
+    } else if reason.contains("gone") {
+        "gone"
+    } else {
+        "other"
+    };
+    kind.into()
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct GameTelemetry {
     /// VP race observations (leaders, lead changes, decadence, era objectives).
@@ -1212,6 +1284,11 @@ pub struct GameTelemetry {
     pub goal_cities: BTreeMap<u8, crate::goal_city_telemetry::GoalCityTelemetry>,
     #[serde(default)]
     pub celts_razes: BTreeMap<u8, u64>,
+    /// Byzantium's Buy a city and the fall of Constantinople, by Byzantium seat (offers it made,
+    /// cities bought, the first purchase's resolved turn, offers failed and cancelled and why,
+    /// collapses and Heir refuges). Older reports omit it.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub byzantium: BTreeMap<u8, ByzantiumTelemetry>,
     /// Units disbanded for unpaid upkeep (`rules::cities::pay_gold`), by owner seat.
     #[serde(default)]
     pub upkeep_disbands: BTreeMap<u8, u64>,
@@ -2290,5 +2367,58 @@ mod tests {
         assert!(!s.scores_reconcile());
         assert_eq!(s.terminal_scores.all_players.reconciliation_failures, 1);
         assert_eq!(s.terminal_scores.all_teams.reconciliation_failures, 1);
+    }
+
+    #[test]
+    fn byzantium_offers_and_collapses_are_counted_per_buyer() {
+        use legatum_core::buy_city::OfferOutcome;
+        use legatum_core::{CityId, PlayerId};
+        let mut c = Collector::default();
+        let (byz, seller) = (PlayerId(1), PlayerId(2));
+        let ended = |outcome, reason: &str| Event::CityOfferEnded {
+            city: CityId(5),
+            buyer: byz,
+            seller,
+            outcome,
+            paid: 0,
+            refund: 0,
+            fee: 0,
+            reason: reason.into(),
+        };
+        for turn in [10, 20] {
+            c.observe_event(
+                turn,
+                &Event::CityOfferMade {
+                    city: CityId(5),
+                    buyer: byz,
+                    seller,
+                    escrow: 300,
+                    ends_turn: turn + 3,
+                },
+            );
+        }
+        c.observe_event(13, &ended(OfferOutcome::Failed, "price rose"));
+        c.observe_event(
+            21,
+            &ended(
+                OfferOutcome::Cancelled,
+                "Offer for C5 called off: War between A and B. The Gold went back.",
+            ),
+        );
+        c.observe_event(30, &ended(OfferOutcome::Sold, "sold"));
+        c.observe_event(
+            40,
+            &Event::CapitalFell {
+                player: byz,
+                captor: seller,
+                capital: CityId(1),
+                cities: vec![CityId(2), CityId(3)],
+            },
+        );
+        let b = &c.byzantium[&1];
+        assert_eq!((b.offers, b.purchases, b.failed, b.cancelled), (2, 1, 1, 1));
+        assert_eq!(b.first_purchase_turn, Some(30));
+        assert_eq!(b.cancel_reasons.get("war"), Some(&1));
+        assert_eq!((b.collapses, b.cities_lost_to_collapse), (1, 2));
     }
 }

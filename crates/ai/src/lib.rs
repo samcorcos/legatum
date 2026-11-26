@@ -18,6 +18,7 @@ mod army_commit;
 mod barbarians;
 #[doc(hidden)]
 pub mod buy_trace;
+mod byzantium;
 mod campaign;
 mod capitals;
 mod celts_playbook;

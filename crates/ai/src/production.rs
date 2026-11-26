@@ -4629,6 +4629,15 @@ impl Planner<'_> {
                         }
                         return GARRISON_FLOOR_VALUE + kind_bonus;
                     }
+                    // The fall of Constantinople (gene `byz_capital_guard`): the capital's
+                    // guards grow with the cities riding on it. Rivals of Byzantium (gene
+                    // `byz_border_guard`): a defender raises a touching city's price.
+                    let guard = self
+                        .byz_capital_garrison_value(c)
+                        .max(self.byz_border_guard_value(c));
+                    if guard > 0 && k.military > 0 && solvent && unit != UnitKind::Scout {
+                        return guard + kind_bonus;
+                    }
                     if !self.mongol_horde()
                         && self.difficulty == legatum_core::AiDifficulty::Hard
                         && cities >= 2
@@ -4749,6 +4758,12 @@ impl Planner<'_> {
                             } else {
                                 40
                             }) + self.agoge_value(c)
+                        }
+                        // The fall of Constantinople: Walls for a capital that carries the empire.
+                        BuildingKind::Walls | BuildingKind::UpgradeWalls
+                            if self.byz_capital_walls_value(c) > 0 =>
+                        {
+                            self.byz_capital_walls_value(c) + k.military * 2
                         }
                         BuildingKind::UpgradeWalls => {
                             // It also repairs a damaged Walls bar, which never heals by itself.

@@ -1492,6 +1492,11 @@ impl Planner<'_> {
         // Below five cities, a capture offers another Foundry slot. Enemy
         // buildings are normally private, so known Foundries need no estimate.
         let own_goal_delay = self.factory_goal_capture_delay(city);
+        // The fall of Constantinople (gene `byz_capital_target`): a Byzantine capital with no
+        // Heir refuge brings every other Byzantine city with it, each at this city's share.
+        let falls = 1 + self.byz_collapse_cities(city).len() as i32
+            * self.decisions.byz_capital_target
+            / 100;
         let mut win = common.clone();
         adjust(&mut win, v.team, |t| {
             t.army -= unit * lost_milli / 1000;
@@ -1524,12 +1529,12 @@ impl Planner<'_> {
             } else {
                 let (goal_taken, _) = self.capture_goal_swing(city);
                 adjust(&mut win, v.team, |t| {
-                    t.cities += 10;
+                    t.cities += 10 * falls;
                     if extent {
                         t.population += (city.population / 2).max(1) * 10;
                         t.territory += land * 10;
                     }
-                    t.economy += captured_economy + supply_gain;
+                    t.economy += captured_economy * falls + supply_gain;
                     t.vp += 100
                         * (self.conquest_victory_value(city)
                             + goal_taken
@@ -1543,12 +1548,12 @@ impl Planner<'_> {
                 adjust(&mut win, owner, |t| t.vp -= 100 * goal_denied);
             }
             adjust(&mut win, owner, |t| {
-                t.cities -= 10;
+                t.cities -= 10 * falls;
                 if extent {
                     t.population -= city.population * 10;
                     t.territory -= land * 10;
                 }
-                t.economy = (t.economy - captured_economy - supply_loss).max(0);
+                t.economy = (t.economy - captured_economy * falls - supply_loss).max(0);
             });
         }
         let mut lose = common.clone();
