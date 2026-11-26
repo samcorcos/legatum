@@ -188,7 +188,7 @@ pub fn upgrade_from_49(json: &str) -> Result<GameState, String> {
     match v.get("save_version").and_then(Value::as_u64) {
         None if carries_rules_49_fields(&v) => upgrade_value_from_49(v),
         None | Some(50) | Some(51) | Some(52) | Some(53) | Some(54) | Some(55) | Some(56)
-        | Some(57) | Some(58) | Some(59) | Some(60) | Some(61) | Some(62) => {
+        | Some(57) | Some(58) | Some(59) | Some(60) | Some(61) | Some(62) | Some(63) => {
             upgrade_value_from_50(v)
         }
         Some(49) => upgrade_value_from_49(v),
@@ -412,7 +412,7 @@ mod tests {
     }
 
     #[test]
-    fn rules_63_saves_round_trip_and_a_version_62_save_is_refused() {
+    fn rules_64_saves_round_trip_and_a_version_63_save_is_refused() {
         // Rules 47: held shots at fallen cities; 48: Egypt's Nile and its Grow project. The save
         // shape only gains the project value, so a city growing on the Nile round-trips at 48,
         // and a 47 save is refused rather than migrated. Rules 49: Egypt starts knowing the Bronze
@@ -429,8 +429,9 @@ mod tests {
         // the research goal adds an optional `Player` field; a 59 save is refused and upgrades.
         // Rules 61: deals, behind an optional switch; the app refuses a 60 save. Rules 62: breakable
         // Walls add the optional `City::walls_damage`; a 61 save is refused and upgrades. Rules 63:
-        // city upkeep; the save shape is unchanged, and a 62 save is refused.
-        assert_eq!(legatum_core::RULES_VERSION, 63);
+        // city upkeep; the save shape is unchanged, and a 62 save is refused. Rules 64: an upgrade
+        // stops at the most advanced form its supply allows; the save shape is unchanged.
+        assert_eq!(legatum_core::RULES_VERSION, 64);
         let mut setup = GameSetup::all_ai(3);
         setup.players[0].faction = legatum_core::Faction::Egypt;
         let mut state = legatum_core::new_game(&setup);
@@ -453,7 +454,7 @@ mod tests {
         );
         assert_eq!(state.cities[&city].producing, Some(grow), "{events:?}");
         let save = state_to_json(&state);
-        assert!(save.contains("\"save_version\":63"));
+        assert!(save.contains("\"save_version\":64"));
         assert!(!save.contains("capitals_taken"));
         assert!(
             state
@@ -464,12 +465,12 @@ mod tests {
         assert!(save.contains("\"Grow\""));
         assert_eq!(parse_state(&save).unwrap(), state);
         let mut old: Value = serde_json::from_str(&save).unwrap();
-        old["save_version"] = Value::from(62);
+        old["save_version"] = Value::from(63);
         assert!(
             parse_state(&old.to_string())
                 .unwrap_err()
                 .contains(&format!(
-                    "incompatible rules version: saved Some(62), current {}",
+                    "incompatible rules version: saved Some(63), current {}",
                     legatum_core::RULES_VERSION
                 ))
         );
