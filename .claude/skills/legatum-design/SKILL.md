@@ -78,6 +78,7 @@ Use a short template: broken rule, flavour-linked constraint, path to 10 VP, vis
 - Every missing Civ 6 system has a recorded reason in the rules reference (`not-in-game.md`) (user, 2026-10-18).
 
 ## Rejected ideas (don't re-propose without new evidence)
+- Guaranteeing every start its own later-era resources (Niter, Coal, Oil, Silicon) or sharing supply between teammates (2026-11-26, issue #196). Uneven deposits are deliberate: a people without Oil must trade, ally or fight for it, so it cannot turtle; real geography is uneven too. If anything, deposits could be more concentrated in a few regions, not spread more evenly.
 - **Player-facing Scenario Lab (Sam, 2026-11-22):** removed from the game because it had not proven useful to him. Keep the existing positions for AI measurement; do not add a title-screen list, briefing, result or feedback workflow.
 - For Humble the mighty's dead card for the leader (owner, 2026-11-22): a default 300-turn limit (no turn limit by default stayed the design until the turn-500 backstop of 2026-11-25, above), a per-empire redraw of a card it cannot score (breaks the one shared card per Age), and leaving it as it was.
 - A fungible production pool that carries over to any item (too exploitable; the user rejected it).
