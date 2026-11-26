@@ -967,6 +967,8 @@ export interface ArmyContribution {
 }
 
 export interface PlayerView {
+  /** Extra Gold per turn if this empire gains one city. */
+  added_city_upkeep?: number;
   army_breakdown?: ArmyContribution[];
   rule_experiments?: RuleSwitches;
   /** The game started with the AI-only teams allied in pairs. Omitted when off. */

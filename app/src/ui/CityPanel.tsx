@@ -2,6 +2,7 @@ import { bearing, empireOfPlayer } from '../empires';
 import { rivalBuilders as rivalsOnWonder, rivalBuilderText } from '../wonderRace';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { purchasePreviews, tilePurchasePreview } from './productionPurchases';
+import { cityUpkeepForecast } from './cityUpkeepForecast';
 import { useGame } from '../store';
 import { AUTOMATION_NO_CHOICE, autoPickReason, cityAutomationFocus, FOCUS_CYCLE, focusLabel, setCityAutomation } from '../automation';
 import type { CityBuildFocus } from '../types';
@@ -671,6 +672,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     return <div className={`production-choice ${picked ? ' picked' : ''}${resourceBlocked ? ' supply-blocked' : ''}${site ? ' wonder-site' : ''}`} key={key} data-item={key} data-picked={picked || undefined}
       ref={picked ? (el) => el?.scrollIntoView?.({ block: 'nearest' }) : undefined} {...mapHover}>
       {imp || site ? <div className="tip-trigger">{card}</div> : <Tip as="div" placement="right" summary={description} content={<><p><Amounts text={`${detail} Build time if started now, at current yields; queued items may change it.`} /></p>{vs && <p><Amounts text={comparisonSentence(vs)} /></p>}{upkeepLine && <p><Amounts text={upkeepLine} /></p>}{after && o.item.kind === 'Building' && <><YieldsAfter now={d.yields.total} after={after.yields_after} /><p>Food left over after feeding the population: {after.food_surplus_after}.</p></>}</>}>{card}</Tip>}
+      {o.item.kind === 'Unit' && o.item.unit === 'Settler' && cityUpkeepForecast(view) && <div className="hint" data-testid="settler-city-upkeep">{cityUpkeepForecast(view)}</div>}
       <div className="production-secondary">
         <button className={`queue-add ${flash?.key === key && flash.city === city.id ? 'queued' : ''}`} aria-label={`Queue ${name}`} title={duplicate ? 'Already in the queue' : resourceBlocked && headOnly ? 'Queue it behind another build: it starts once the resource is there' : 'Add to the end of the production queue'} disabled={view.finished || duplicate || queue.length >= 50 || (resourceBlocked && headOnly)} onClick={(event) => unplaced ? startPlace(site!.building, 'queue') : append(o.item, event.currentTarget)}>
           {flash?.key === key && flash.city === city.id ? <><Icon name="ui-check" size={11} className="ui-mark" /> {flash.label}</> : '+ Queue'}
@@ -731,6 +733,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
           <span className="prod-go">{u.reason.startsWith('Already built') || hallStands(u.reason) ? 'Built' : isPermanentlyUnavailable(u, faction) ? 'Never available' : 'Not yet'}</span>
         </button>
       </Tip>
+      {u.item.kind === 'Unit' && u.item.unit === 'Settler' && cityUpkeepForecast(view) && <div className="hint" data-testid="settler-city-upkeep">{cityUpkeepForecast(view)}</div>}
       <div className="production-secondary">
         <button className="queue-add" aria-label={`Queue ${name}`} aria-disabled="true" disabled={view.finished} onClick={() => refuse(u)}>+ Queue</button>
         {!(u.item.kind === 'Wonder' && isGreatWork(u.item.building)) && <Tip content={buyReason}>

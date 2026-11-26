@@ -39,6 +39,7 @@ import { EraTab } from './EraTab';
 import { coloniaSiteKnown, foundCityUnitBlocker, isFounderCandidate, settlementSite } from '../settlement';
 import { COLONIA_FOUND_LABEL, COLONIA_REACH, COLONIA_SITE_LEAD, isColoniaFounder } from '../goalCities';
 import { UnitImprovements, upgradeCheck } from './UnitImprovements';
+import { cityUpkeepForecast } from './cityUpkeepForecast';
 import { pendingSpend, goldOnHand } from './productionPurchases';
 export { upgradeCheck, upgradeStepBreakdown } from './UnitImprovements';
 import { RingMedallion } from './ringMedallion';
@@ -181,6 +182,7 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
       </button>
       {unit.kind !== 'Scout' && canAutoExplore(unit.kind) && !locked && <button className="btn" disabled={view.finished} aria-pressed={exploring}
         onClick={toggleAutoExploreSelected}>{exploring ? 'Stop auto-explore' : 'Auto-explore'}</button>}
+      {canFound && cityUpkeepForecast(view) && <small className="phone-action-why">{cityUpkeepForecast(view)}</small>}
       <button className="btn" disabled={view.finished} aria-pressed={pending?.type === 'SkipUnit'} onClick={skipSelected}>Skip this turn</button>
     </> : <p className="hint">{teammate ? `Commanded by ${owner?.name}` : stats.blurb}</p>}
   </div>;
@@ -259,6 +261,7 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
               disabled={!!foundBlocked} reason={foundBlocked ?? undefined}
               tip={coloniaHere ? `${COLONIA_SITE_LEAD} This veteran is used up.` : unit.kind === 'Settler' ? `Found a city here, on land you or nobody owns. Cities need ${minCityGap(owner?.faction ?? 'Athens')} tiles between them.` : `Found a city here and consume this level-${unit.level} veteran. Combat resolves first: if this unit is wounded or killed, the city does not appear, and a surviving unit stays. A Legionary starts the city at population 2.`} />
           )}
+          {canFound && cityUpkeepForecast(view) && <div className="hint" data-testid="found-city-upkeep">{cityUpkeepForecast(view)}</div>}
           {movePrimary && !locked && <Action label={mode === 'move' ? 'Cancel targeting' : unit.military && attacksInMelee(unit.kind) ? 'Move or attack' : 'Move'} primary={leads && !coloniaHere}
             onClick={toggleMoveSelected} active={mode === 'move'} hotkey={mode === 'move' ? 'Esc' : undefined} 
             tip="Choose a tile on the map. Your route and combat forecast appear before you click. Esc cancels targeting. You can also right-click a destination, or drag from the unit to plot a path." />}

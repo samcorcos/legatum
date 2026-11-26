@@ -481,6 +481,21 @@ it('keeps Found City available where the site looks legal from what the player k
   expect(useGame.getState().orders[0]).toEqual([{ type: 'FoundCity', unit: unit.id }]);
 });
 
+it('shows the city upkeep when founding would add a paid city', async () => {
+  const { view, unit, capital } = await settlerNearCapital({ q: 4, r: 0 });
+  view.tiles[tileIndex(unit.pos, view.width, view.height)] = {
+    ...view.tiles[tileIndex(unit.pos, view.width, view.height)], owner: null, terrain: 'Plains', explored: true,
+  };
+  view.cities.push(...Array.from({ length: 5 }, (_, i) => ({ ...capital, id: 100 + i })));
+  view.added_city_upkeep = 7;
+  act(() => root.render(<UnitPanel unit={unit} view={view} />));
+  expect(container.querySelector('[data-testid="found-city-upkeep"]')?.textContent)
+    .toBe('City upkeep: +7 Gold a turn (7th city)');
+  view.added_city_upkeep = 0;
+  act(() => root.render(<UnitPanel unit={unit} view={view} />));
+  expect(container.querySelector('[data-testid="found-city-upkeep"]')).toBeNull();
+});
+
 it('lets a full-health Roman veteran found with no Gold and explains the unit cost', async () => {
   const { view, unit } = await settlerNearCapital({ q: 4, r: 0 });
   view.players.find((p) => p.id === view.me)!.faction = 'Rome';

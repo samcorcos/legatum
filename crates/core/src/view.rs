@@ -1145,6 +1145,9 @@ pub struct GoalCityView {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PlayerView {
+    /// Added Gold per turn if this empire gains one city; zero while the next city is free.
+    #[serde(default)]
+    pub added_city_upkeep: i32,
     #[serde(
         default,
         skip_serializing_if = "crate::experiments::RuleExperiments::is_default"
@@ -2094,6 +2097,7 @@ pub fn player_view_cached(
 
     let (Some(income), Some(forecasts)) = (income, forecasts) else {
         return PlayerView {
+            added_city_upkeep: crate::economy::added_city_upkeep(state, me),
             rule_experiments: state.setup.rule_experiments,
             ai_alliances: !state.setup.ai_alliance_pairs().is_empty(),
             diplomacy: crate::diplomacy::view(state, me).into(),
@@ -2237,6 +2241,7 @@ pub fn player_view_cached(
     };
 
     PlayerView {
+        added_city_upkeep: crate::economy::added_city_upkeep(state, me),
         rule_experiments: state.setup.rule_experiments,
         ai_alliances: !state.setup.ai_alliance_pairs().is_empty(),
         diplomacy: crate::diplomacy::view(state, me).into(),
@@ -2916,6 +2921,33 @@ pub(crate) mod tests {
 
     fn city(view: &PlayerView, id: CityId) -> Option<&CityView> {
         view.cities.iter().find(|c| c.id == id)
+    }
+
+    #[test]
+    fn added_city_upkeep_is_in_player_view_json() {
+        let mut s = test_state(40, 24);
+        for i in 0..5 {
+            add_city(&mut s, P0, at(2 + i * 5, 3), 1);
+        }
+        assert_eq!(crate::economy::added_city_upkeep(&s, P0), 0);
+        add_city(&mut s, P0, at(27, 3), 1);
+        assert_eq!(crate::economy::added_city_upkeep(&s, P0), 7);
+        let json = serde_json::to_value(player_view(&s, P0)).unwrap();
+        assert_eq!(json["added_city_upkeep"], 7);
+
+        add_city(&mut s, P0, at(2, 10), 1);
+        assert_eq!(crate::economy::added_city_upkeep(&s, P0), 9);
+        s.setup.rule_experiments.city_upkeep_percent = Some(50);
+        // Rounding applies to each total (7*1/2 = 3, 8*2/2 = 8).
+        assert_eq!(crate::economy::added_city_upkeep(&s, P0), 5);
+        s.setup.rule_experiments.city_upkeep_free = Some(8);
+        assert_eq!(crate::economy::added_city_upkeep(&s, P0), 0);
+        s.setup.rule_experiments.no_city_upkeep = true;
+        assert_eq!(crate::economy::added_city_upkeep(&s, P0), 0);
+        assert_eq!(
+            serde_json::to_value(player_view(&s, P0)).unwrap()["added_city_upkeep"],
+            0
+        );
     }
 
     #[test]

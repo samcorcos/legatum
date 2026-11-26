@@ -182,6 +182,7 @@ impl ViewBuilder {
             .collect();
         let mut b = Self {
             view: PlayerView {
+                added_city_upkeep: 0,
                 army_breakdown: Vec::new(),
                 rule_experiments: legatum_core::experiments::RuleExperiments::default(),
                 ai_alliances: false,
