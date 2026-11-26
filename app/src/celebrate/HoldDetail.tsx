@@ -1,7 +1,7 @@
 // The body of the victory-hold alarm: what the countdown means from the viewer's side, and the
 // countdown itself as a row of pips (one per turn to hold). The rule is stated, never a route:
 // the user rejected suggested ways to score or to stop a rival (legatum-ui, "no suggestions").
-import { empireTitle, empireMembers } from '../empires';
+import { empireMembers, titleIfMet, unmetTeam } from '../empires';
 import { playerColor } from '../theme';
 import type { PlayerView } from '../types';
 import { Amounts } from '../ui/Amounts';
@@ -55,9 +55,9 @@ function HoldMeter({ held, needed, vp, target }: { held: number; needed: number;
 
 export function HoldDetail({ alarm: a, view, named }: { alarm: Alarm; view: PlayerView; named: boolean }) {
   const h = a.hold!;
-  return <section className="alarm-block hold-block" aria-label={named ? empireTitle(view, a.team) : undefined}>
+  return <section className="alarm-block hold-block" aria-label={named ? titleIfMet(view, a.team) : undefined}>
     {named && <>
-      <h2 className="alarm-block-head" style={{ ['--pc' as string]: playerColor(empireMembers(view, a.team)[0]?.id) }}>{empireTitle(view, a.team)}</h2>
+      <h2 className="alarm-block-head" style={{ ['--pc' as string]: playerColor(empireMembers(view, a.team)[0]?.id) }}>{titleIfMet(view, a.team)}</h2>
       <p className="alarm-hold-sub small">{holdSubline(a)}</p>
     </>}
     <div className="alarm-cols hold-cols">
@@ -100,7 +100,8 @@ export function nearFacts(a: Alarm, view: PlayerView): { tone: Tone; text: strin
 /** The plain facts and actions against a rival close to winning; its Declare war is the card's primary, up in the actions row. */
 function RivalAlarmActions({ alarm: a, view }: { alarm: Alarm; view: PlayerView }) {
   const rival = rivalWin(view, a.team);
-  return rival ? <RivalWin view={view} rival={rival} declare={false} /> : null;
+  // An unknown empire's card already says it in the headline; its line would only repeat it.
+  return rival ? <RivalWin view={view} rival={rival} declare={false} showSummary={!unmetTeam(view, a.team)} /> : null;
 }
 
 export function NearDetail({ alarm: a, view }: { alarm: Alarm; view: PlayerView }) {

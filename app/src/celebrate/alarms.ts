@@ -4,7 +4,7 @@
 // and a lost city. Presentation only: every sentence about a rule comes from the turn report's own
 // line for the event (format.ts), so the same rule reads the same on every surface.
 import { itemName, pluralUnit } from '../data';
-import { bearing, empireHeadName, empireMembers, isTeamAlive } from '../empires';
+import { bearing, empireHeadName, empireMembers, isTeamAlive, unmetTeam } from '../empires';
 import { NEAR_VP } from '../rivalWin';
 import { contextFromViews, formatEvent, victoryNearLine, type HoldCard, type ReportLine } from '../format';
 import { distance } from '../hex';
@@ -171,6 +171,7 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 function holdHeadline(view: PlayerView, a: Alarm): string {
   const h = a.hold!;
   if (h.stance === 'self') return empireMembers(view, a.team).length > 1 ? `Your team has ${h.target} VP` : `You have ${h.target} VP`;
+  if (unmetTeam(view, a.team)) return `An unknown empire has ${h.target} VP`;
   const who = cap(empireHeadName(view, a.team));
   return h.stance === 'ally' ? `${who}, your allies, have ${h.target} VP` : `${who} have ${h.target} VP`;
 }

@@ -48,7 +48,7 @@ export function nearestRival(view: PlayerView): RivalWin | null {
 /** "The Swiss are 2 VP from winning." / "The Swiss have 10 VP and are holding it." (peoples are plural, as in the alarms' headlines). */
 export function rivalLine(view: PlayerView, r: RivalWin): string {
   // An empire you haven't met stays unnamed (`unmetTeam`), and takes the singular verb.
-  if (unmetTeam(view, r.team)) return r.left > 0 ? `An empire you haven't met is ${r.left} VP from winning.` : `An empire you haven't met has ${r.target} VP and is holding it.`;
+  if (unmetTeam(view, r.team)) return r.left > 0 ? `An unknown empire is ${r.left} VP from winning.` : `An unknown empire has ${r.target} VP and is holding it.`;
   const name = headNameIfMet(view, r.team).replace(/^the /, 'The ');
   return r.left > 0 ? `${name} are ${r.left} VP from winning.` : `${name} have ${r.target} VP and are holding it.`;
 }

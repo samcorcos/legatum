@@ -47,8 +47,8 @@ describe('the score check model', () => {
     const card = scoreCheckFor(view, 3, celts.id);
     const piece = card.track.flatMap((s) => s.pieces).find((p) => p.id === celts.id)!;
     expect(piece).toMatchObject({ unmet: true, name: 'Unknown empire' });
-    expect(card.standing).toBe('You: 3 VP, tied 2nd with Unknown and Switzerland.');
-    expect(card.opener).toBe('Unknown empire reached the Medieval era first.');
+    expect(card.standing).toBe('You: 3 VP, tied 2nd with Switzerland and an unknown empire.');
+    expect(card.opener).toBe('An unknown empire reached the Medieval era first.');
   });
 
   it('fills your sheet: the scored Age, the new card, the capitals and the held wonder', () => {

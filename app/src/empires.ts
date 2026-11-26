@@ -48,9 +48,23 @@ export function unmetTeam(view: Pick<PlayerView, 'team' | 'diplomacy'>, team: Te
   return !view.diplomacy.relations.some((r) => r.state === 'War' && (r.a === team || r.b === team) && (r.a === view.team || r.b === view.team));
 }
 
-/** What a screen calls an empire it may not have met: "the Swiss", or "an empire you haven't met". */
+/** How a sentence names an empire this seat has not met, as in Civ: no people, crest or portrait. */
+export const UNKNOWN_EMPIRE = 'an unknown empire';
+
+/** `unmetTeam` for one player. */
+export function unmetPlayer(view: Pick<PlayerView, 'team' | 'diplomacy' | 'players'>, id: number): boolean {
+  const p = view.players.find((x) => x.id === id);
+  return !!p && unmetTeam(view, p.team);
+}
+
+/** An empire's title ("India & Byzantium"), or "Unknown empire" when this seat has not met it. */
+export function titleIfMet(view: PlayerView, team: TeamId): string {
+  return unmetTeam(view, team) ? 'Unknown empire' : empireTitle(view, team);
+}
+
+/** What a screen calls an empire it may not have met: "the Swiss", or "an unknown empire". */
 export function headNameIfMet(view: PlayerView, team: TeamId): string {
-  return unmetTeam(view, team) ? 'an empire you haven\'t met' : empireHeadName(view, team);
+  return unmetTeam(view, team) ? UNKNOWN_EMPIRE : empireHeadName(view, team);
 }
 
 /** One player's empire in text ("Switzerland", or "Switzerland · AI 7" when two teams share the faction). */

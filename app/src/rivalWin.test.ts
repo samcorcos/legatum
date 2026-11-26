@@ -17,7 +17,7 @@ describe('rivalWin', () => {
   it('never names a close rival you have not met, unless you are at War with it', () => {
     const v = at(1, 8);
     const hidden = { ...v, diplomacy: { ...v.diplomacy, met: v.diplomacy.met!.filter((t) => t !== 1), relations: v.diplomacy.relations.filter((r) => r.state !== 'War') } };
-    expect(rivalLine(hidden, rivalWin(hidden, 1)!)).toBe("An empire you haven't met is 2 VP from winning.");
+    expect(rivalLine(hidden, rivalWin(hidden, 1)!)).toBe('An unknown empire is 2 VP from winning.');
   });
 
   it('says how far a rival is from winning and nothing for your own team', () => {

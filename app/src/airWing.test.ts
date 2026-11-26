@@ -7,10 +7,12 @@ import { contextFromViews, formatEvent } from './format';
 import { distance, fromOffset, tileIndex } from './hex';
 import { describeOrder } from './orders';
 import type { AircraftView, CityView, Event, Order, PlayerView } from './types';
+import { meetEveryone } from './test/meetEveryone';
 
 let base: PlayerView;
 beforeAll(async () => {
-  base = await arenaView();
+  // Air strikes come from empires at War with you, so every empire is met here.
+  base = meetEveryone(await arenaView());
   // Keep a single Athens for the possessive-copy fixture regardless of lobby rotation.
   const rival = base.players.find((p) => p.id === 2)!;
   const athens = base.players.find((p) => p.faction === 'Athens');

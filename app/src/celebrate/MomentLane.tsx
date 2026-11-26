@@ -11,7 +11,7 @@ import { motionStill } from '../ui/motion';
 import { Icon } from '../ui/bits';
 import { Amounts } from '../ui/Amounts';
 import { PortraitFrame } from '../ui/premium';
-import { VpSeal } from '../ui/vpParts';
+import { EmpireCrest, VpSeal } from '../ui/vpParts';
 import { unitMiniatureUrl } from '../unitArt';
 import { buildingArtSlug, slugUrl } from '../unlockArt';
 import { resourceArtUrl } from '../icons';
@@ -250,9 +250,9 @@ export function MomentLane() {
             : picture ? <img className="moment-wonder-art" src={picture} alt="" /> :
             <span className="moment-crest"><span className="moment-rays" aria-hidden="true" />
               {card.goalMark ? <RingMedallion icon={card.goalMark} tone={card.loss ? 'hollow' : 'gilt'} size={card.tier === 'legendary' ? 72 : 56}
-                  badge={<CrestMedallion faction={card.faction} color={playerColor(card.owner)} size={card.tier === 'legendary' ? 30 : 24} />} />
+                  badge={(card.unknown ? <EmpireCrest e={{ faction: card.faction, ink: playerColor(card.owner), unmet: true }} size={card.tier === 'legendary' ? 30 : 24} /> : <CrestMedallion faction={card.faction} color={playerColor(card.owner)} size={card.tier === 'legendary' ? 30 : 24} />)} />
                 : card.emblem ? <RewardEmblem kind={card.emblem} color={playerColor(card.owner)} size={card.tier === 'legendary' ? 88 : 68} />
-                : <CrestMedallion faction={card.faction} color={playerColor(card.owner)} size={card.tier === 'legendary' ? 64 : 40} />}</span>}
+                : (card.unknown ? <EmpireCrest e={{ faction: card.faction, ink: playerColor(card.owner), unmet: true }} size={card.tier === 'legendary' ? 64 : 40} /> : <CrestMedallion faction={card.faction} color={playerColor(card.owner)} size={card.tier === 'legendary' ? 64 : 40} />)}</span>}
           <h2>{card.title}</h2>
           {card.place && <p className="moment-place">{card.place}</p>}
         </div>

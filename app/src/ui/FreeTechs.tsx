@@ -7,7 +7,7 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { PlayerBadge } from './PlayerBadge';
 import { FACTION_INFO, TECH_NAME } from '../data';
-import { empireOfPlayer, empireTitle } from '../empires';
+import { empireOfPlayer, empireTitle, unmetPlayer } from '../empires';
 import { freeTechTarget, pickState, togglePick } from '../goalActions';
 import { currentEraTechs, eraName, eraNumeral } from './eraResearch';
 import { answerDecision } from '../notice';
@@ -75,6 +75,8 @@ export function FreeTechsPrompt() {
   });
   if (!up || !view || !free) return null;
   const from = free.from !== null ? view.players.find((p) => p.id === free.from) : undefined;
+  // A broadcast from an empire you haven't met: no portrait, people or motto, only "an unknown empire".
+  const hidden = !!from && unmetPlayer(view, from.id);
   const n = freeTechTarget(view);
   const captured = free.captured != null ? view.cities.find((c) => c.id === free.captured)?.name ?? 'a city' : null;
   return <div className="alarm-screen ally signal" role="alertdialog" aria-modal="true" aria-labelledby={title} data-game-overlay data-testid="free-techs-prompt" data-armed={armed ? '' : undefined}>
@@ -82,15 +84,15 @@ export function FreeTechsPrompt() {
       <div className="alarm-crests portraits solo" aria-hidden="true" style={{ ['--pc' as string]: playerInk(from?.id ?? view.me) }}>
         <span className="alarm-banner" />
         <span className="alarm-rays" />
-        {from && <span className="alarm-crest alarm-leader" style={{ ['--pc' as string]: playerColor(from.id) }}>
+        {from && !hidden && <span className="alarm-crest alarm-leader" style={{ ['--pc' as string]: playerColor(from.id) }}>
           <PortraitFrame faction={from.faction} crestSize={46} crestColor={playerColor(from.id)}><PlayerBadge id={from.id} /></PortraitFrame>
         </span>}
       </div>
       <div className="alarm-title">
         <h1 id={title}>Choose {n} {n === 1 ? 'technology' : 'technologies'}</h1>
         {captured && <p className="alarm-empire">You captured {captured} from Athens: choose one free technology.</p>}
-        {from && !captured && <p className="alarm-empire">{empireTitle(view, from.team)} shared its learning: every rival gains {free.pending} free {free.pending === 1 ? 'technology' : 'technologies'} of its own choice.</p>}
-        {from && <p className="alarm-motto">“{FACTION_INFO[from.faction].motto}”</p>}
+        {from && !captured && <p className="alarm-empire">{hidden ? 'An unknown empire' : empireTitle(view, from.team)} shared its learning: every rival gains {free.pending} free {free.pending === 1 ? 'technology' : 'technologies'} of its own choice.</p>}
+        {from && !hidden && <p className="alarm-motto">“{FACTION_INFO[from.faction].motto}”</p>}
       </div>
       <div className="alarm-actions">
         <button ref={primary} className="btn primary alarm-primary" onClick={choose}>
@@ -134,6 +136,7 @@ export function FreeTechPicker() {
   if (!up || !view || !free) return null;
   const research = view.research;
   const from = free.from !== null ? view.players.find((p) => p.id === free.from) : undefined;
+  const hidden = !!from && unmetPlayer(view, from.id);
   const target = freeTechTarget(view);
   const left = target - chosen.length;
   const cost = (t: TechId) => view.research.catalog.find((o) => o.tech === t)?.cost.total ?? null;
@@ -149,10 +152,10 @@ export function FreeTechPicker() {
     onCancel={(e) => { e.preventDefault(); close(); }}
     onKeyDown={(e) => { if (e.key === 'Enter' && left === 0 && !(e.target as HTMLElement).closest('.ftp-tech')) { e.preventDefault(); take(); } }}>
     <header className="ftp-head">
-      {from && <PortraitRoundel faction={from.faction} size={44} color={playerColor(from.id)} />}
+      {from && !hidden && <PortraitRoundel faction={from.faction} size={44} color={playerColor(from.id)} />}
       <div>
         <h2 id={title}>Choose {target} free {target === 1 ? 'technology' : 'technologies'}</h2>
-        <p>{free.captured != null ? 'Spoils of a captured Athenian city. ' : from ? `From ${possessive(empireOfPlayer(view, from.id))} broadcast. ` : ''}Free technologies come from your current era only; later eras open as you finish it.</p>
+        <p>{free.captured != null ? 'Spoils of a captured Athenian city. ' : from ? `From ${hidden ? 'an unknown empire’s' : possessive(empireOfPlayer(view, from.id))} broadcast. ` : ''}Free technologies come from your current era only; later eras open as you finish it.</p>
       </div>
       <div className="ftp-count" role="status" aria-live="polite">
         <span className="ftp-pips" aria-hidden="true">{Array.from({ length: target }, (_, i) => <i key={i} className={i < chosen.length ? 'on' : ''} />)}</span>

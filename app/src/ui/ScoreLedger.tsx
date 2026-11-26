@@ -189,8 +189,8 @@ function ColumnHead({ row, e, span, showDecadence }: { row: VpRow; e: VpEmpire; 
   return <th scope="col" className={`sl-col${e.isMe ? ' mine' : ''}${first ? ' first' : ''}${span > 1 ? ' team' : ''}${row.isMine && span > 1 ? ' own-team' : ''}${hide ? ' unmet' : ''}`} style={hide ? undefined : empireVars(e)}>
     <span className="sl-rank" aria-label={`Rank ${row.rank}`}>{first ? roman(row.rank) : ''}</span>
     {hide ? <EmpireCrest e={e} size={30} /> : <PortraitRoundel faction={e.faction} size={30} color={e.ink} />}
-    <span className="sl-col-name" title={hide ? 'An empire you haven’t met' : e.name}>{e.isMe ? 'You' : hide ? 'Unknown' : shortName}</span>
-    {hide ? <small className="sl-ai-level">Not met yet</small> : e.aiLevel && <small className="sl-ai-level">AI · {e.aiLevel}</small>}
+    <span className="sl-col-name" title={hide ? 'An unknown empire' : e.name}>{e.isMe ? 'You' : hide ? 'Unknown' : shortName}</span>
+    {hide ? <small className="sl-ai-level sl-not-met">Not met yet</small> : e.aiLevel && <small className="sl-ai-level">AI · {e.aiLevel}</small>}
     <span className="sl-col-vp"><b>{row.vp}</b><small>/{row.target} VP</small></span>
     {!hide && <span className="sl-gold" title={`${e.isMe ? 'Your' : 'Its'} treasury: every empire's Gold is public`}><Amount n={e.gold} unit="Gold" /></span>}
     {first && <span className="sl-pips" role="img" aria-label={`${row.vp} of ${row.target} VP`}>{Array.from({ length: row.target }, (_, i) => <i key={i} className={i < row.vp ? 'on' : ''} />)}</span>}
@@ -230,7 +230,7 @@ export function ScoreLedger({ model, turn, close, closeRef }: { model: VpModel; 
     const isOpen = open === r.id;
     const cells = columns.map(({ e }) => {
       let cell: ReactNode;
-      if (e.unmet) cell = <div className="sl-cell"><span className="sl-empty" title="Not met yet">—</span></div>;
+      if (e.unmet) cell = <div className="sl-cell"><span className="sl-unknown-cell" title="Not met yet: hidden until you meet them">?</span></div>;
       else if (r.kind === 'work') cell = <WorkCell s={r.s!} e={e} />;
       else if (r.kind === 'capital') cell = <CapitalCell model={model} e={e} />;
       else if (r.kind === 'goal' || r.kind === 'heldGoal') cell = <GoalCell model={model} e={e} held={r.kind === 'heldGoal'} />;
