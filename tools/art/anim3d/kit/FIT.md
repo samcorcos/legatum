@@ -386,3 +386,15 @@ all five clips, with a 2 mm stricter margin), then drops what is left. New
 `kit/greave_shard_check.py` (Blender): ray grids over each shin from six directions, every third
 frame of walk and attack, counting rays whose first hit is skin with a greave less than 2 cm
 behind it. `--skin-max-value` caps pale skin texels.
+
+## Round r11 (one-piece knee guard, knee holes traced)
+
+- The pale "shards" above the knees were holes in the thigh skin, seen through to the far side
+  of the leg. Traced with an ID render built straight from the GLB data (skin pink, garment
+  green, greave yellow; `closeups-r11/id-parts-before-after.png`). Two causes: hidden-skin
+  removal deleted skin merely *near* clothing (just below the skirt hem), and the export dropped
+  skin triangles with any flagged vertex. Now skin counts as hidden only if a ray out along its
+  normal hits a covering shell (`covered_along_normal`), and export sinks flagged skin (up to 20
+  passes) and drops only triangles whose three vertices are all still flagged.
+- `greave_from_skin` now raises the shell's top edge to a point over the kneecap (one piece,
+  `rise` 8.5 cm, `dome` 24 mm) with a median ridge, instead of a separate oval cap.

@@ -768,6 +768,22 @@ def joined_copy(items, name):
     x = bpy.context.view_layer.objects.active; x.name = name; return x
 
 
+def covered_along_normal(P, Nn, shells, reach):
+    """Skin vertex is hidden only if a ray out along its normal hits a covering shell
+    within `reach`: nearness alone deleted thigh skin just below the skirt hem and
+    left holes (the pale 'shards' seen through to the leg's back faces)."""
+    from mathutils.bvhtree import BVHTree
+    bm_ = bmesh.new()
+    for x in shells: bm_.from_mesh(x.data)
+    bvh = BVHTree.FromBMesh(bm_); bm_.free()
+    out = np.zeros(len(P), bool)
+    for i in range(len(P)):
+        n_ = Vector(Nn[i])
+        if n_.length < 1e-6: continue
+        out[i] = bvh.ray_cast(Vector(P[i]) + n_ * 1e-4, n_.normalized(), reach)[0] is not None
+    return out
+
+
 def budgets(total, parts, keep=()):
     raw = {p: sum(ntris(o) for o in fitted_objects[p]) for p in parts}
     kept = {p: raw[p] for p in parts if p in keep}
@@ -798,6 +814,7 @@ for p in parts:
             d2 = ((P[k:k + 512, None] - Lp[None]) ** 2).sum(2); jx = d2.argmin(1)
             d = np.sqrt(d2[np.arange(len(jx)), jx]); up = ((Lp[jx] - P[k:k + 512]) * Nn[k:k + 512]).sum(1)
             hidden[k:k + 512] = (d < args.hide_skin_lod0) & (up > -.002)
+        hidden &= covered_along_normal(P, Nn, fitted_objects['layer'] + fitted_objects.get('greave', []), .025)
         bm = bmesh.new(); bm.from_mesh(me); bm.verts.ensure_lookup_table()
         dead = [f for f in bm.faces if all(hidden[v.index] for v in f.verts)]
         bmesh.ops.delete(bm, geom=dead, context='FACES'); bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context='VERTS')
@@ -892,6 +909,7 @@ for p in parts:
             d2 = ((P[k:k + 512, None] - Lp[None]) ** 2).sum(2); j = d2.argmin(1)
             d = np.sqrt(d2[np.arange(len(j)), j]); up = ((Lp[j] - P[k:k + 512]) * Nn[k:k + 512]).sum(1)
             hidden[k:k + 512] = (d < .03) & (up > -.004)
+        hidden &= covered_along_normal(P, Nn, cover, .035)
         bm = bmesh.new(); bm.from_mesh(me); bm.verts.ensure_lookup_table()
         dead = [f for f in bm.faces if all(hidden[v.index] for v in f.verts)]
         bmesh.ops.delete(bm, geom=dead, context='FACES'); bm.to_mesh(me); bm.free()
@@ -1348,7 +1366,7 @@ def export_lod(lod, mesh_name):
         J_ = np.array(attrs['JOINTS_0']).astype(int); W_ = np.array(attrs['WEIGHTS_0']); T_ = np.array([i[0] for i in idx]).reshape(-1, 3)
         dropped = 0; sunk = 0
         inv_ = np.array(rig.g.accessor(rig.g.doc['skins'][0]['inverseBindMatrices'])).reshape(-1, 4, 4).transpose(0, 2, 1)
-        for it in range(14):
+        for it in range(24):
             used_ = np.zeros(len(xyz), bool); used_[T_.ravel()] = True
             clips_ = ('walk', 'attack', 'idle', 'hit', 'death')
             bad_ = flagged(rig.g, xyz, J_, W_, part_, used_, clips_, tol=-.002)     # the check's own bins
@@ -1356,7 +1374,7 @@ def export_lod(lod, mesh_name):
             log(mesh_name, 'skin through greaves pass', it, len(bad_))
             if not bad_: break
             bl = np.array(sorted(bad_))
-            if it < 11:
+            if it < 20:
                 # Sink flagged skin 5 mm toward its shin axis (bind space): no holes.
                 for sd in 'LR':
                     kn = rig.joint['leg_' + sd]; an = rig.joint['foot_' + sd]; ax = (kn - an) / np.linalg.norm(kn - an)
@@ -1365,7 +1383,8 @@ def export_lod(lod, mesh_name):
                     xyz[m_] = an + np.outer(h, ax) + rad * np.maximum(rn - .005, .01) / np.maximum(rn, 1e-6)
                 sunk += len(bl); continue
             badm = np.zeros(len(xyz), bool); badm[bl] = True
-            keep_ = ~badm[T_].any(1); dropped += int((~keep_).sum()); T_ = T_[keep_]
+            if os.environ.get('FIT_NO_DROP'): break
+            keep_ = ~badm[T_].all(1); dropped += int((~keep_).sum()); T_ = T_[keep_]
         attrs['POSITION'] = [tuple(map(float, r)) for r in xyz]
         idx = [(int(i),) for i in T_.ravel()]
         rep['skin_under_greaves'] = {'vertex_sinks': sunk, 'triangles_dropped': dropped}

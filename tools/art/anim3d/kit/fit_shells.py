@@ -194,38 +194,45 @@ def crest_mass(helmet_pts, ceiling, name='Crest horsehair (procedural)', seg=44,
 
 
 def greave_from_skin(skin_pts, knee, ankle, bronze, name='HIGH-greave-built', offset=.006, thick=0.,
-                     nt=32, nh=14, seam=.10, ridges=(-.55, .55), knee_cap=True):
+                     nt=32, nh=18, seam=.10, ridges=(-.55, .55), knee_cap=False, rise=.085, dome=.024):
     """A greave grown from the fitted shin itself: an offset shell of the shin/calf
-    skin from just above the ankle to just below the knee, closed except a narrow seam
-    at the back, with rolled top and bottom rims, raised embossed lines, and a domed,
-    ridged knee guard over the kneecap. Returns (objects, report). glTF bind space."""
+    skin from just above the ankle, closed except a narrow seam at the back. Its top
+    edge rises at the front into a pointed knee guard over the kneecap (one piece,
+    domed over the kneecap), with rolled top and bottom rims and raised embossed ridges."""
     u = (knee - ankle) / np.linalg.norm(knee - ankle); L = float(np.linalg.norm(knee - ankle))
     side = np.cross(u, [0, 0, 1.]); side /= np.linalg.norm(side); front = np.cross(side, u)
     q = skin_pts - ankle; h = q @ u; r = np.linalg.norm(q - np.outer(h, u), axis=1)
     th = np.arctan2(q @ side, q @ front)
-    h0, h1 = .06, L - .015
-    sel = (h > h0 - .03) & (h < h1 + .03) & (r < .1)
-    H = np.linspace(h0, h1, nh); T = np.linspace(-np.pi + seam, np.pi - seam, nt)
+    h0, h1 = .06, L - .03
+    T = np.linspace(-np.pi + seam, np.pi - seam, nt)
+    top = h1 + rise * np.maximum(0, np.cos(T)) ** 2.5            # rises to a point at the front
+    S = np.linspace(0, 1, nh)                                    # rows as a fraction of each column
+    Hm = h0 + np.outer(S, top - h0)                              # (nh, nt) heights
+    sel = (h > h0 - .03) & (h < top.max() + .03) & (r < .11)
     R = np.full((nh, nt), np.nan)
-    for i, hh in enumerate(H):
-        for j, tt in enumerate(T):
-            dt = np.abs((th[sel] - tt + np.pi) % (2 * np.pi) - np.pi)
-            m = (np.abs(h[sel] - hh) < (h1 - h0) / nh) & (dt < np.pi / nt * 1.6)
+    for i in range(nh):
+        for j in range(nt):
+            dt = np.abs((th[sel] - T[j] + np.pi) % (2 * np.pi) - np.pi)
+            m = (np.abs(h[sel] - Hm[i, j]) < (top[j] - h0) / nh * 1.2) & (dt < np.pi / nt * 1.6)
             if m.sum() >= 2: R[i, j] = np.percentile(r[sel][m], 92)
-    for _ in range(nh * nt):                                   # fill gaps from neighbours
+    for _ in range(nh * nt):
         miss = np.isnan(R)
         if not miss.any(): break
         Rp = np.pad(R, 1, mode='edge'); nb = np.stack([Rp[:-2, 1:-1], Rp[2:, 1:-1], Rp[1:-1, :-2], Rp[1:-1, 2:]])
         fill = np.nanmean(np.where(np.isnan(nb), np.nan, nb), 0); R[miss] = fill[miss]
     R = np.nan_to_num(R, nan=float(np.nanmedian(R)))
-    for _ in range(3):                                         # smooth: a metal shell, not skin
+    for _ in range(4):
         Rp = np.pad(R, 1, mode='edge'); R = (4 * R + Rp[:-2, 1:-1] + Rp[2:, 1:-1] + Rp[1:-1, :-2] + Rp[1:-1, 2:]) / 8
     R = R + offset
-    # Embossed lines: raised ridges running down the front either side of the shin.
+    # Knee guard: a dome over the kneecap, part of the same sheet.
+    fr = np.maximum(0, np.cos(T))[None, :] ** 3
+    R += dome * np.exp(-((Hm - (L + .005)) / .035) ** 2) * fr
     for rc in ridges:
-        R += .0016 * np.exp(-((T[None, :] - rc) / .06) ** 2)
+        R += .0016 * np.exp(-((T[None, :] - rc) / .06) ** 2) * (Hm < L - .02)
+    R += .0018 * np.exp(-(T[None, :] / .05) ** 2) * (Hm > L - .03)   # median ridge up the guard
+    H = None
     def pt(i, j, extra=0.):
-        return ankle + u * H[i] + (side * math.sin(T[j]) + front * math.cos(T[j])) * (R[i, j] + extra)
+        return ankle + u * Hm[i, j] + (side * math.sin(T[j]) + front * math.cos(T[j])) * (R[i, j] + extra)
     verts, faces, uvs = [], [], []
     for i in range(nh):
         for j in range(nt):
@@ -249,7 +256,7 @@ def greave_from_skin(skin_pts, knee, ankle, bronze, name='HIGH-greave-built', of
         return _mesh(nm, vs, fs, us, bronze)
     for i, nm in ((0, '-rim-bottom'), (nh - 1, '-rim-top')):
         objs.append(tube(np.array([pt(i, j, thick + .0015) for j in range(nt)]), .0035, name + nm))
-    rep = {'height_m': round(h1 - h0, 3), 'radius_mm': [round(float(R.min()) * 1000), round(float(R.max()) * 1000)]}
+    rep = {'height_m': round(float(top.max() - h0), 3), 'guard_rise_m': rise, 'radius_mm': [round(float(R.min()) * 1000), round(float(R.max()) * 1000)]}
     if knee_cap:
         # Knee guard: a domed shield over the kneecap, wider than tall, with a vertical
         # median ridge and a raised border, sitting on the greave top and rising over the knee.
