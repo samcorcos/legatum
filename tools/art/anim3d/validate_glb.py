@@ -298,7 +298,7 @@ def validate(path,limits=None):
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('glb',type=Path);p.add_argument('--output',type=Path)
     p.add_argument('--lod0-max',type=int,help='test-round override of the LOD0 triangle budget (contract: 10000)')
-    p.add_argument('--lod1-max',type=int,help='override of the LOD1 triangle budget (contract: 3000; the 3D map accepts up to 3500 when LOD0+LOD1 stays within --lod-total-max)')
+    p.add_argument('--lod1-max',type=int,help='override of the LOD1 triangle budget (contract: 3000; test rounds may use up to 3500, agreed with the map owner, while LOD0+LOD1 stays within --lod-total-max)')
     p.add_argument('--lod-total-max',type=int,help='test-round cap on LOD0+LOD1 triangles')
     p.add_argument('--max-bytes',type=int,help='test-round GLB size cap (contract: 2000000)')
     p.add_argument('--max-joints',type=int,help='test-round joint cap (contract: 40)')
