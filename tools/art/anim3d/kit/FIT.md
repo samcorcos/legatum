@@ -398,3 +398,21 @@ behind it. `--skin-max-value` caps pale skin texels.
   passes) and drops only triangles whose three vertices are all still flagged.
 - `greave_from_skin` now raises the shell's top edge to a point over the kneecap (one piece,
   `rise` 8.5 cm, `dome` 24 mm) with a median ridge, instead of a separate oval cap.
+
+## Round r12 (cover, LOD1 room, repoussé, skin normals)
+
+- Export now alternates: on even passes (up to 16) it pushes greave vertices within 2.5 cm of
+  flagged skin outward 1.5 mm (capped at 6 mm per vertex), on the others it sinks flagged skin
+  5 mm toward the shin axis; only after 26 passes does it drop triangles whose three vertices are
+  all still flagged. `--lod1-greave-offset` (default 3 mm) inflates the LOD1 greave about the shin
+  axis so the coarser shell clears the coarser skin.
+- Repoussé is baked, not modelled: `greave_from_skin` paints a 512 px height image (a ridge down
+  the shin, a pair of scrolls on the knee guard) used as a bump on the high greave and baked into
+  the normal and colour maps. Gotcha: set the image's colorspace to Non-Color *before*
+  `pixels.foreach_set`; changing it afterwards reloads the buffer and the pattern silently becomes 0.
+- Knee guard point raised (`rise` 10.5 cm); the top rim now rolls outward so a high camera sees
+  less of the inside.
+- `--smooth-skin-normals` transfers custom normals from the undecimated fitted body onto both LOD
+  skins, and skin texels get softer baked AO (0.85 + 0.15 AO). The thigh facets above the knee
+  are still visible in close-ups: they come from the decimated skin's silhouette and baked
+  shading, not only from its normals.

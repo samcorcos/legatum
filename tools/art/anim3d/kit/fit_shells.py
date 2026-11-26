@@ -194,7 +194,7 @@ def crest_mass(helmet_pts, ceiling, name='Crest horsehair (procedural)', seg=44,
 
 
 def greave_from_skin(skin_pts, knee, ankle, bronze, name='HIGH-greave-built', offset=.006, thick=0.,
-                     nt=32, nh=18, seam=.10, ridges=(-.55, .55), knee_cap=False, rise=.085, dome=.024):
+                     nt=32, nh=18, seam=.10, ridges=(-.55, .55), knee_cap=False, rise=.105, dome=.024, repousse=True):
     """A greave grown from the fitted shin itself: an offset shell of the shin/calf
     skin from just above the ankle, closed except a narrow seam at the back. Its top
     edge rises at the front into a pointed knee guard over the kneecap (one piece,
@@ -254,8 +254,35 @@ def greave_from_skin(skin_pts, knee, ankle, bronze, name='HIGH-greave-built', of
             b_ = (a_ + 1) % n
             for k in range(seg): fs.append((a_ * seg + k, a_ * seg + (k + 1) % seg, b_ * seg + (k + 1) % seg, b_ * seg + k))
         return _mesh(nm, vs, fs, us, bronze)
-    for i, nm in ((0, '-rim-bottom'), (nh - 1, '-rim-top')):
-        objs.append(tube(np.array([pt(i, j, thick + .0015) for j in range(nt)]), .0035, name + nm))
+    for i, nm, out_ in ((0, '-rim-bottom', .0015), (nh - 1, '-rim-top', .005)):
+        # The top rim rolls outward so a high camera does not see inside the greave.
+        objs.append(tube(np.array([pt(i, j, thick + out_) for j in range(nt)]), .004 if out_ > .002 else .0035, name + nm))
+    if repousse:
+        # Repousse as baked detail, not geometry: a scroll pair on the knee guard and a
+        # ridge line down the shin, in the shell's own (angle, height) UVs, driving a
+        # bump (normal bake) and darker grooves (colour bake).
+        S_ = 512; v_, u_ = np.mgrid[0:S_, 0:S_] / (S_ - 1); hgt = np.zeros((S_, S_))
+        hgt += np.exp(-((u_ - .5) / .018) ** 2) * (v_ > .08) * (v_ < .72)             # shin ridge
+        for sgn in (-1, 1):                                                         # scroll pair
+            cu, cv = .5 + sgn * .055, .84
+            du, dv = (u_ - cu) * 2.4, v_ - cv; rr = np.hypot(du, dv); aa = np.arctan2(dv, du * sgn)
+            spiral = np.cos(rr * 2 * np.pi / .022 - aa) ; hgt += np.clip(spiral - .55, 0, 1) * 2.2 * (rr < .055)
+        hgt = np.clip(hgt, 0, 1)
+        im = bpy.data.images.new(name + ' repousse', S_, S_, alpha=False)
+        im.colorspace_settings.name = 'Non-Color'   # before writing: changing it reloads the buffer
+        im.pixels.foreach_set(np.concatenate([np.repeat(hgt[..., None], 3, 2), np.ones((S_, S_, 1))], 2).astype(np.float32).ravel())
+        im.pack()
+        m = bronze.copy(); m.name = name + ' bronze'; nt_ = m.node_tree; b_ = nt_.nodes['Principled BSDF']
+        tx = nt_.nodes.new('ShaderNodeTexImage'); tx.image = im
+        bump = nt_.nodes.new('ShaderNodeBump'); bump.inputs['Strength'].default_value = 1.; bump.inputs['Distance'].default_value = .007
+        nt_.links.new(tx.outputs['Color'], bump.inputs['Height']); nt_.links.new(bump.outputs['Normal'], b_.inputs['Normal'])
+        mix = nt_.nodes.new('ShaderNodeMixRGB'); mix.blend_type = 'MULTIPLY'; mix.inputs[0].default_value = .7
+        mix.inputs[1].default_value = tuple(b_.inputs['Base Color'].default_value)
+        inv_ = nt_.nodes.new('ShaderNodeInvert'); nt_.links.new(tx.outputs['Color'], inv_.inputs['Color'])
+        edge_ = nt_.nodes.new('ShaderNodeBump')  # unused placeholder avoided below
+        nt_.nodes.remove(edge_)
+        nt_.links.new(inv_.outputs['Color'], mix.inputs[2]); nt_.links.new(mix.outputs[0], b_.inputs['Base Color'])
+        shell.data.materials[0] = m
     rep = {'height_m': round(float(top.max() - h0), 3), 'guard_rise_m': rise, 'radius_mm': [round(float(R.min()) * 1000), round(float(R.max()) * 1000)]}
     if knee_cap:
         # Knee guard: a domed shield over the kneecap, wider than tall, with a vertical

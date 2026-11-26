@@ -77,6 +77,8 @@ ap.add_argument('--bronze-ao', type=float, default=.45, help='AO floor on metal 
 ap.add_argument('--no-greave-dome', action='store_true', help='no kneecap dome on replaced greaves')
 ap.add_argument('--greave-skin-any', action='store_true', help='delete skin faces with ANY vertex under a greave (not only fully covered ones)')
 ap.add_argument('--skin-max-value', type=float, default=1.4, help='cap on skin brightness relative to its mean (pale patches from texture hidden under source armour)')
+ap.add_argument('--smooth-skin-normals', action='store_true', help='transfer smooth normals from the undecimated fitted skin onto the LOD skin')
+ap.add_argument('--lod1-greave-offset', type=float, default=.003, help='extra radial room for the LOD1 built greaves (m)')
 ap.add_argument('--helmet-size', type=float, default=1.0, help='replacement helmet size relative to an exact head fit')
 ap.add_argument('--helmet-uv-share', type=float, default=1.0, help='scale the helmet UV islands before packing (2 = four times the atlas area)')
 ap.add_argument('--crest-shift', type=float, default=0., help='move the crest arc forward (+) or back (-) along the helmet, metres')
@@ -945,6 +947,25 @@ def enforce(lod, total, keep=()):
 
 
 enforce(lod0, args.lod0, set(args.keep)); enforce(lod1, args.lod1, {'layer', 'greave', 'cloak', 'shield'})
+if args.smooth_skin_normals and 'body' in lod0:
+    # Decimated skin reads as flat planes: carry the undecimated fitted skin's smooth
+    # normals onto both LODs as custom normals (exported as the corner normals).
+    hb_ = joined_copy(fitted_objects['body'], 'normal source')
+    for p_ in hb_.data.polygons: p_.use_smooth = True
+    for lod in (lod0, lod1):
+        o_ = lod['body']
+        for p_ in o_.data.polygons: p_.use_smooth = True
+        m_ = o_.modifiers.new('nrm', 'DATA_TRANSFER'); m_.object = hb_
+        m_.use_loop_data = True; m_.data_types_loops = {'CUSTOM_NORMAL'}; m_.loop_mapping = 'POLYINTERP_NEAREST'
+        active(o_); bpy.ops.object.modifier_apply(modifier=m_.name)
+    bpy.data.objects.remove(hb_, do_unlink=True); report['skin_normals'] = 'transferred from the undecimated fit'
+if built_greaves and 'greave' in lod1:
+    # LOD1's coarser greave gets a little more room over the skin.
+    for sd in 'LR':
+        kn = rig.joint['leg_' + sd]; an = rig.joint['foot_' + sd]; ax = (kn - an) / np.linalg.norm(kn - an)
+        P_ = co(lod1['greave']); m_ = (P_[:, 0] > 0) == (sd == 'L'); q = P_[m_] - an; h = q @ ax
+        rad = q - np.outer(h, ax); P_[m_] += rad / np.maximum(np.linalg.norm(rad, axis=1, keepdims=True), 1e-6) * args.lod1_greave_offset
+        set_co(lod1['greave'], P_)
 if fitted_objects.get('greave') and 'body' in lod0:
     # Skin behind a replaced greave is never seen (and pokes through where the shell is
     # thin): remove it from both LODs, per leg, by the greave's angular/height span.
@@ -1237,6 +1258,10 @@ if helmet_centre is not None and 'helmet' in lod0:
 orm = bpy.data.images.new('orm', N, N, alpha=False); orm.colorspace_settings.name = 'Non-Color'
 o_px = np.ones((N, N, 4), np.float32)
 o_px[..., 0] = px(maps_img['ao'])[..., 0]; o_px[..., 1] = px(maps_img['roughness'])[..., 0]; o_px[..., 2] = px(maps_img['metallic'])[..., 0]
+if args.smooth_skin_normals and 'body' in lod0:
+    # Low-mesh AO on the decimated skin outlines every facet: keep only a trace of it there.
+    skm_ = raster_mask(uv_tris(lod0['body'])) & (o_px[..., 2] < .5)
+    o_px[..., 0] = np.where(skm_, .85 + .15 * o_px[..., 0], o_px[..., 0])
 if args.bronze_ao < .45:  # darker cavities on metal: re-floor its AO
     mt_ = o_px[..., 2] > .8; raw_ = np.clip((o_px[..., 0] - .45) / .55, 0, 1)
     o_px[..., 0] = np.where(mt_, args.bronze_ao + (1 - args.bronze_ao) * raw_, o_px[..., 0])
@@ -1364,9 +1389,9 @@ def export_lod(lod, mesh_name):
         part_ = np.empty(len(xyz), object)
         for r in regions: part_[r['start']:r['start'] + r['count']] = r['part']
         J_ = np.array(attrs['JOINTS_0']).astype(int); W_ = np.array(attrs['WEIGHTS_0']); T_ = np.array([i[0] for i in idx]).reshape(-1, 3)
-        dropped = 0; sunk = 0
+        dropped = 0; sunk = 0; pushed_g = 0
         inv_ = np.array(rig.g.accessor(rig.g.doc['skins'][0]['inverseBindMatrices'])).reshape(-1, 4, 4).transpose(0, 2, 1)
-        for it in range(24):
+        for it in range(30):
             used_ = np.zeros(len(xyz), bool); used_[T_.ravel()] = True
             clips_ = ('walk', 'attack', 'idle', 'hit', 'death')
             bad_ = flagged(rig.g, xyz, J_, W_, part_, used_, clips_, tol=-.002)     # the check's own bins
@@ -1374,7 +1399,22 @@ def export_lod(lod, mesh_name):
             log(mesh_name, 'skin through greaves pass', it, len(bad_))
             if not bad_: break
             bl = np.array(sorted(bad_))
-            if it < 20:
+            if it < 16 and built_greaves and it % 2 == 0:
+                # Push the greave out locally where skin reaches it (at most 6 mm in all).
+                gidx = np.nonzero(part_ == 'greave')[0]
+                if not hasattr(np, '_fit_push'): np._fit_push = {}
+                for sd in 'LR':
+                    kn = rig.joint['leg_' + sd]; an = rig.joint['foot_' + sd]; ax = (kn - an) / np.linalg.norm(kn - an)
+                    gs = gidx[(xyz[gidx, 0] > 0) == (sd == 'L')]; fb = bl[(xyz[bl, 0] > 0) == (sd == 'L')]
+                    if not len(gs) or not len(fb): continue
+                    d2 = np.min(((xyz[gs][:, None] - xyz[fb][None]) ** 2).sum(2), 1); near = gs[d2 < .025 ** 2]
+                    done = np.array([np._fit_push.get((mesh_name, int(i)), 0.) for i in near])
+                    near = near[done < .006]
+                    q = xyz[near] - an; h = q @ ax; rad = q - np.outer(h, ax)
+                    xyz[near] += rad / np.maximum(np.linalg.norm(rad, axis=1, keepdims=True), 1e-6) * .0015
+                    for i in near: np._fit_push[(mesh_name, int(i))] = np._fit_push.get((mesh_name, int(i)), 0.) + .0015
+                pushed_g += 1; continue
+            if it < 26:
                 # Sink flagged skin 5 mm toward its shin axis (bind space): no holes.
                 for sd in 'LR':
                     kn = rig.joint['leg_' + sd]; an = rig.joint['foot_' + sd]; ax = (kn - an) / np.linalg.norm(kn - an)
@@ -1387,7 +1427,7 @@ def export_lod(lod, mesh_name):
             keep_ = ~badm[T_].all(1); dropped += int((~keep_).sum()); T_ = T_[keep_]
         attrs['POSITION'] = [tuple(map(float, r)) for r in xyz]
         idx = [(int(i),) for i in T_.ravel()]
-        rep['skin_under_greaves'] = {'vertex_sinks': sunk, 'triangles_dropped': dropped}
+        rep['skin_under_greaves'] = {'vertex_sinks': sunk, 'greave_push_passes': pushed_g, 'triangles_dropped': dropped}
     log(mesh_name, len(idx) // 3, 'triangles; ground fit', rep)
     return {'name': mesh_name, 'attrs': attrs, 'indices': idx, 'regions': regions}, rep
 
