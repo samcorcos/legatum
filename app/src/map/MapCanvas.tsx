@@ -3,16 +3,14 @@ import { retirePreview, swarmPreview, wildPreview } from '../goalActions';
 import { useCelebration } from '../celebrate/MomentLane';
 import { drawCounterFlights, EFFECT_MS, FLIGHT_MS, type MapCelebration } from '../celebrate/mapEffect';
 import { visibleTilePoint } from '../celebrate/visibleTile';
-import { isExploring } from '../automation';
-import { attacksInMelee, itemName, tileRingPercent } from '../data';
+import { itemName, tileRingPercent } from '../data';
 import { yieldsText } from '../cityProgress';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { isEliminated, useGame } from '../store';
-import type { AlongsideAttack, BattleForecast, CityAssaultForecast, CityBuildFocus, Hex, PlayerView, ProductionItem } from '../types';
-import { cityAutomationFocus, cityAutomationPreview } from '../automation';
+import type { BattleForecast, Hex, PlayerView } from '../types';
 import { distance, hexEq, hexToPixel, pixelToHex, tileIndex, within } from '../hex';
 import { chariotTerrainNote, planTurns, previewRoute, roadBonusNote, routeTurnsText, routeRiskText, routeDangerText, isCalmRouteNote, type PathStep, type RouteRisk } from '../path';
-import { draw, HEX_SIZE, perf, screenToWorld, terrainStats, worldBounds, ambientClipRects, hoverClipBoxes, idleClipBoxes, type Camera, type SelectionRing, type ImproveOverlay, type PendingMark, type TerritoryOverlay } from './render';
+import { draw, HEX_SIZE, perf, screenToWorld, terrainStats, worldBounds, ambientClipRects, hoverClipBoxes, idleClipBoxes, type Camera, type SelectionRing, type ImproveOverlay, type TerritoryOverlay } from './render';
 import { fontEpoch } from './sprites';
 import { onIconLoad } from '../icons';
 import { onMapFeatureLoad } from './mapFeatures';
@@ -47,6 +45,8 @@ import { bannerCityAt, bannerTooltip } from './bannerTooltip';
 import { TileCard } from '../ui/TileCard';
 import { mapPlayerColor } from './style';
 import { shotBlockReason } from '../los';
+import { useBattlePreview } from './battlePreview';
+import { cityBuildsFor, cityFocusesFor, pendingMarksFor } from './orderMarks';
 import { CompassRose } from './CompassRose';
 import { placeCompass as compassPlace, type Rect } from './compass';
 import { gameplayFocusAllowed, gameplayKeyAllowed } from '../gameplayKeys';
@@ -68,7 +68,7 @@ import { alarmedCities } from '../siege';
 import { useCityAlarms } from '../ui/useCityAlarms';
 import { setBorderVariant, type BorderVariant } from './borderVariant';
 import { aircraftAsUnit, airOverlayFor, pickerCandidates } from '../airWing';
-import { pendingProduction, productionQueue, setAirOrder, toggleBuyTile } from '../orders';
+import { productionQueue, setAirOrder, toggleBuyTile } from '../orders';
 import { tilePurchasePreview } from '../ui/productionPurchases';
 
 /** Whether a field the draw loop reads changed between two renders (by identity; the effects flag by value). */
@@ -403,36 +403,9 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     return lines;
   }, [view, orders, orderErrors, ownSel]);
 
-  const pendingMarks = useMemo(() => {
-    const m = new Map<number, PendingMark>();
-    for (const u of view?.units ?? []) if (u.owner === view?.me && isExploring(u, orders)) m.set(u.id, 'explore');
-    for (const [i, o] of orders.entries()) {
-      const u = orderUnit(o);
-      if (u === null) continue;
-      if (UNIT_ACTIONS.has(o.type) && orderErrors?.some((e) => e.index === i)) { m.set(u, 'invalid'); continue; }
-      const mark = (
-        { MoveUnit: 'move', MoveUnitPath: 'move', SleepUnit: 'sleep', SkipUnit: 'skip', FoundCity: 'found', DisbandUnit: 'disband', RangedAttack: 'ranged', UpgradeUnit: 'upgrade', UpgradeSiege: 'upgrade' } as Record<string, PendingMark>
-      )[o.type];
-      if (mark) m.set(u, o.type === 'SleepUnit' && o.until_healed ? 'heal' : mark);
-    }
-    return m;
-  }, [orders, orderErrors, view]);
-  // A delegated city whose focus excludes every build waits for the player: its banner shows the red Build prompt, not "Auto".
-  const cityFocuses = useMemo(() => {
-    const unchosen = new Set(view ? cityAutomationPreview(view, orders)?.unchosen_cities ?? [] : []);
-    return new Map<number, CityBuildFocus | null>((view?.cities ?? []).filter((c) => c.owner === view?.me)
-      .map((c) => [c.id, unchosen.has(c.id) ? null : cityAutomationFocus(c.id, view!, orders)]));
-  }, [view, orders]);
-
-  // A city told what to build this turn shows it on its banner at once, not the red Build prompt until the turn resolves.
-  const cityBuilds = useMemo(() => {
-    const m = new Map<number, ProductionItem>();
-    for (const c of view?.cities ?? []) {
-      const item = c.owner === view?.me ? pendingProduction(orders, c.id) : null;
-      if (item) m.set(c.id, item);
-    }
-    return m;
-  }, [view, orders]);
+  const pendingMarks = useMemo(() => pendingMarksFor(view, orders, orderErrors), [orders, orderErrors, view]);
+  const cityFocuses = useMemo(() => cityFocusesFor(view, orders), [view, orders]);
+  const cityBuilds = useMemo(() => cityBuildsFor(view, orders), [view, orders]);
 
   const rangedTiles = useMemo(() => {
     if (mode !== 'ranged' || !ownSel || !view || !client) return null;
@@ -553,55 +526,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
 
   // Battle forecast when hovering an enemy with a military unit selected.
   const forecastTarget = pingMode ? undefined : activePreview?.target ?? hover?.hex;
-  const blockedShot = mode === 'ranged' && ownSel && view && forecastTarget
-    && distance(ownSel.pos, forecastTarget) <= ownSel.range
-    ? shotBlockReason(view, ownSel.pos, forecastTarget, ownSel.kind) : null;
-  const forecast: BattleForecast | null = useMemo(() => {
-    if (!client || !view || !ownSel || !ownSel.military || !forecastTarget) return null;
-    if (!enemyAt(view, forecastTarget)) return null;
-    if (mode === 'ranged' && (distance(ownSel.pos, forecastTarget) > ownSel.range || blockedShot)) return null;
-    try {
-      return client.forecast(view.me, ownSel.id, forecastTarget, mode === 'ranged' ? 'Ranged' : 'Melee');
-    } catch {
-      return null;
-    }
-  }, [client, view, ownSel, forecastTarget, mode, forecastTick, blockedShot]);
-
-  // The whole fight at an enemy city: core pools this attack with every other attack of yours queued on the same tile this turn.
-  const assault: CityAssaultForecast | null = useMemo(() => {
-    if (!client?.assault || !view || !ownSel || !forecast || !forecastTarget) return null;
-    if (!view.cities.some((c) => hexEq(c.pos, forecastTarget) && atWar(view, c.owner))) return null;
-    const alongside: AlongsideAttack[] = (orders ?? []).flatMap((o): AlongsideAttack[] => {
-      if (o.type === 'RangedAttack') return o.unit !== ownSel.id && hexEq(o.target, forecastTarget) ? [{ unit: o.unit, mode: 'Ranged' }] : [];
-      if (o.type === 'MoveUnit' || o.type === 'MoveUnitPath') return o.unit !== ownSel.id && hexEq(o.to, forecastTarget) ? [{ unit: o.unit, mode: 'Melee' }] : [];
-      return [];
-    });
-    try {
-      return client.assault(view.me, ownSel.id, forecastTarget, forecast.ranged ? 'Ranged' : 'Melee', alongside);
-    } catch {
-      return null;
-    }
-  }, [client, view, ownSel, forecast, forecastTarget, orders, forecastTick]);
-
-  // A Keshig (a mounted archer) shoots or charges. Out of ranged mode, a target it could do both to shows both
-  // forecasts on one card; when the shot is not on offer the card says why, next to the charge.
-  const bow = !!ownSel && ownSel.military && ownSel.ranged > 0 && attacksInMelee(ownSel.kind);
-  const shotWhy: string | null = (() => {
-    if (!bow || mode === 'ranged' || !ownSel || !view || !forecastTarget || !forecast || forecast.ranged) return null;
-    if (distance(ownSel.pos, forecastTarget) > ownSel.range) {
-      return `No shot from here: this unit shoots ${ownSel.range === 1 ? 'only at a target next to it' : `up to ${ownSel.range} tiles`}, and the target is ${distance(ownSel.pos, forecastTarget)} tiles away. Right-click to charge it.`;
-    }
-    if (!rangedEnemyAt(view, forecastTarget)) return 'A shot hits only military units and cities. Right-click to ride onto it.';
-    return shotBlockReason(view, ownSel.pos, forecastTarget, ownSel.kind);
-  })();
-  const shotForecast: BattleForecast | null = useMemo(() => {
-    if (!bow || mode === 'ranged' || shotWhy || !forecast || forecast.ranged || !client || !view || !ownSel || !forecastTarget) return null;
-    try {
-      return client.forecast(view.me, ownSel.id, forecastTarget, 'Ranged');
-    } catch {
-      return null;
-    }
-  }, [client, view, ownSel, forecastTarget, mode, forecastTick, bow, shotWhy, forecast]);
+  const { blockedShot, forecast, assault, shotWhy, shotForecast } = useBattlePreview(client, view, ownSel, forecastTarget, mode, orders, forecastTick);
 
   // Everything the draw loop reads, kept in a ref so the loop never re-subscribes.
   const frame = useRef({

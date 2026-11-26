@@ -1571,7 +1571,7 @@ function drawSelection(ctx: CanvasRenderingContext2D, _look: LookId, S: MapStyle
 interface StrengthCue { sel: UnitView; selFaction?: Faction; targets: Set<number>; neutralBarbarians: boolean }
 
 /** Pending-order badges are icons (the same ones the panels use), each with a plain-text label for accessibility tooling. */
-const MARK_ICON: Record<PendingMark, string> = { explore: 'unit-scout', move: 'mark-move', sleep: 'mark-sleep', heal: 'mark-heal', skip: 'mark-skip', found: 'mark-found', disband: 'ui-cross', ranged: 'unit-archer', upgrade: 'ui-trend-up', invalid: 'mark-invalid' };
+export const MARK_ICON: Record<PendingMark, string> = { explore: 'unit-scout', move: 'mark-move', sleep: 'mark-sleep', heal: 'mark-heal', skip: 'mark-skip', found: 'mark-found', disband: 'ui-cross', ranged: 'unit-archer', upgrade: 'ui-trend-up', invalid: 'mark-invalid' };
 
 /** Occupation lock experiment: a padlock on the token's top-left shoulder (the right is the order badge, the left foot the rank), so a unit a rule holds in place looks held before it is asked to move. */
 function drawLockMark(ctx: CanvasRenderingContext2D, look: LookId, x: number, y: number, w: number) {

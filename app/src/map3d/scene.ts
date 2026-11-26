@@ -450,6 +450,8 @@ export class MapScene {
     }
     return this.env;
   }
+  /** Each drawn unit's group, by unit id (the marks overlay asks where its head is). */
+  private unitGroups = new Map<number, THREE.Group>();
   private squads: { fig: THREE.Object3D; lod0: THREE.Object3D[]; lod1: THREE.Object3D[]; scale: number; x: number; z: number }[] = [];
   /** Reduced motion or the Animations switch off (ui/motion.ts motionStill): models hold their pose. */
   still = false;
@@ -479,6 +481,7 @@ export class MapScene {
     for (const o of [...this.units.children]) this.units.remove(o);
     this.mixers = [];
     this.squads = [];
+    this.unitGroups.clear();
     const byTile = new Map<number, UnitView[]>();
     for (const u of view.units) {
       const i = tileIndexOf(u.pos, wd.w, wd.h);
@@ -494,6 +497,7 @@ export class MapScene {
       list.forEach((u, k) => {
         const g = new THREE.Group();
         g.userData.unit = u.id;
+        this.unitGroups.set(u.id, g);
         const barbarian = isBarbarian(u.owner);
         const team = new THREE.Color(barbarian ? BARBARIAN_COLOR : mapPlayerColor(u.owner));
         const ring = new THREE.Mesh(disc, new THREE.MeshStandardMaterial({ color: team, roughness: 0.55, metalness: 0.15, transparent: true, opacity: 0.85 }));
@@ -698,6 +702,18 @@ export class MapScene {
     const W = el.clientWidth, Hh = el.clientHeight;
     const sx = (v.x + 1) / 2 * W, sy = (1 - v.y) / 2 * Hh;
     return { x: sx, y: sy, radius: Math.abs((e.x - v.x) / 2 * W) };
+  }
+
+  /** The top of a drawn unit's figure on screen (CSS px in the canvas), or null when it isn't drawn or is off camera. */
+  unitHead(id: number): { x: number; y: number; radius: number } | null {
+    const g = this.unitGroups.get(id);
+    if (!g) return null;
+    const grow = 1 + 0.5 * THREE.MathUtils.smoothstep(this.dist, 3, 13);
+    const v = new THREE.Vector3(g.position.x, g.position.y + 0.3 * grow, g.position.z).project(this.camera);
+    if (v.z > 1) return null;
+    const e = new THREE.Vector3(g.position.x + R, g.position.y, g.position.z).project(this.camera);
+    const el = this.renderer.domElement, W = el.clientWidth, Hh = el.clientHeight;
+    return { x: (v.x + 1) / 2 * W, y: (1 - v.y) / 2 * Hh, radius: Math.abs((e.x - v.x) / 2 * W) };
   }
 
   centerOn(hex: Hex) {

@@ -1,17 +1,4 @@
-/* The 3D map: the canvas fills the map area like the 2D map; city banners are HTML placed over it each frame. */
+/* The 3D map: the canvas fills the map area like the 2D map; city banners and unit marks are the 2D map's sprites,
+   drawn each frame on a flat canvas over it (marks2d.ts). */
 .map3d-canvas { width: 100%; height: 100%; }
-.map3d-banners { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-.map3d-banner {
-  position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 6px; padding: 2px 9px 2px 2px;
-  border-radius: 3px; background: linear-gradient(#2c241a, #1d1710); color: #f3e8cc; white-space: nowrap;
-  font: 600 14px/1.2 'Cormorant', Georgia, serif; letter-spacing: 0.02em;
-  border: 1px solid color-mix(in srgb, var(--pc) 70%, #000); box-shadow: 0 2px 6px rgb(0 0 0 / 35%);
-  will-change: transform;
-}
-.map3d-banner .pop {
-  display: grid; place-items: center; min-width: 18px; height: 18px; border-radius: 2px;
-  background: var(--pc); color: #141009; font: 700 11px 'Libre Franklin', system-ui, sans-serif;
-}
-.map3d-banner.mine { border-color: #d4a020; }
-.map3d-banner.far { font-size: 12px; }
-
+.map3d-marks { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
