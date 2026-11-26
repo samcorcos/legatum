@@ -211,6 +211,7 @@ Scouting is now the binding limit for attackers and defenders. AI Sparta's scout
 - **Copy design smells for the user** (from the plain-language pass, fceb3967c), rules that are hard to say in one sentence:
 
 ## AI defence against a melee rush (from the 8.9.4 Sparta T40 review). Start after the war follow-through agent
+> **Update 2026-11-26:** `keep_unit_build` 2 landed (finish a combat unit under way; rusher capital loss by T100 70.0% to 66.0%); always-on army floors (`early_army`), `war_footing`, `capital_keep` and `capital_coalition` were measured and stay off. See `docs/learnings/2026-11/26-survive-the-rush-genes.md` before starting items 1 to 3; the remaining open part is the first-contact reaction and the storm forecast from the defender's side.
 Ideas #23 and #21. The details are in `docs/playtests/reviews/2026-10-18-8.9.4-sparta.md`.
 1. **Count the army at the door:** run the storm forecast from the defender's side. When the visible army can take the city, all production goes to Spearmen against melee (Spearmen beat Archers here), with no Settlers or Granaries (`threat.rs::exposure_to`, `plan_threat_defense`; `production.rs::choose_item`).
 2. **React to a rush faction at first contact,** not at first sight of the army: Walls plus two Spearmen before the next Settler (`threat.rs::watched_exposure`).
