@@ -44,14 +44,15 @@ impl Planner<'_> {
     pub(crate) fn rome_opening_ready(&self, city: &CityView) -> bool {
         let melee = self.rome_opening_melee();
         // Gene `sparta_opening_ready`: Sparta's veteran Hoplites may strike with fewer.
-        let need = match self.decisions.sparta_opening_ready {
-            n if n > 0 && self.faction == Faction::Sparta => n as usize,
-            _ => 3,
+        // They declare from four hexes: a Hoplite pair one march out still strikes first.
+        let (need, reach) = match self.decisions.sparta_opening_ready {
+            n if n > 0 && self.faction == Faction::Sparta => (n as usize, 4),
+            _ => (3, 3),
         };
         melee.len() >= need
             && melee
                 .iter()
-                .filter(|u| u.pos.distance(city.pos) <= 3)
+                .filter(|u| u.pos.distance(city.pos) <= reach)
                 .count()
                 >= need.min(2)
     }
@@ -455,14 +456,14 @@ mod tests {
         let mut view = opening_view();
         view.units.retain(|u| u.id.0 != 3);
         let knobs = Knobs::for_faction(Faction::Sparta);
-        let mut planner = Planner::new(&view, knobs.clone(), Faction::Sparta, 1);
+        let mut planner = Planner::new(&view, knobs, Faction::Sparta, 1);
         planner.difficulty = AiDifficulty::Hard;
         planner.decisions.rome_opening_march = 1;
         planner.decisions.sparta_rome_opening = 0;
         planner.choose_rome_opening();
         assert_eq!(planner.campaigns.rome_opening_target, None);
 
-        let mut planner = Planner::new(&view, knobs.clone(), Faction::Sparta, 1);
+        let mut planner = Planner::new(&view, knobs, Faction::Sparta, 1);
         planner.difficulty = AiDifficulty::Hard;
         planner.decisions.rome_opening_march = 1;
         planner.decisions.sparta_rome_opening = 1;
