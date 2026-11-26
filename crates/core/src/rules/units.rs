@@ -289,19 +289,21 @@ pub fn supplied_upgrade_plan(
 }
 
 /// When the upgrade stops short of the newest researched form for want of supply: that form
-/// and the first sentence of why it can't be supplied (the unit panel's upgrade tooltip).
+/// the resource it needs, and the first sentence of why it can't be supplied (the unit panel's
+/// line under the upgrade, "Musketman needs Niter", and its tooltip).
 pub fn upgrade_held_back(
     state: &GameState,
     player: PlayerId,
     unit: &crate::state::Unit,
-) -> Option<(UnitKind, String)> {
+) -> Option<(UnitKind, crate::resources::Resource, String)> {
     let (newest, _, _) = upgrade_plan(state, player, unit.kind)?;
     let (to, _, _) = supplied_upgrade_plan(state, player, unit, |_| 0)?;
     if to == newest {
         return None;
     }
+    let need = crate::resources::unit_upgrade_need_to(unit, newest)?;
     let reason = crate::resources::upgrade_blocker(state, player, unit, newest, 0)?;
-    Some((newest, supply_headline(&reason)))
+    Some((newest, need, supply_headline(&reason)))
 }
 
 /// The first sentence of a supply refusal, for a tooltip line: "No Niter to spare." or "Needs 1
@@ -2391,8 +2393,8 @@ mod tests {
             check_upgrade(&s, PlayerId(0), a, 1000),
             Ok((UnitKind::Pikeman, 84))
         );
-        let (held, reason) = upgrade_held_back(&s, PlayerId(0), &ua).unwrap();
-        assert_eq!(held, UnitKind::Musketman);
+        let (held, need, reason) = upgrade_held_back(&s, PlayerId(0), &ua).unwrap();
+        assert_eq!((held, need), (UnitKind::Musketman, crate::Resource::Niter));
         assert_eq!(reason, "Needs 1 Niter: you have none yet.");
         let view = crate::view::player_view(&s, PlayerId(0));
         let uv = view.units.iter().find(|u| u.id == a).unwrap();

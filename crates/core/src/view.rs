@@ -386,6 +386,8 @@ pub struct UnitView {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct UpgradeHeldBack {
     pub to: UnitKind,
+    /// The resource it would use and the empire can't spare ("Musketman needs Niter").
+    pub need: crate::resources::Resource,
     /// The first sentence of the supply refusal ("No Niter to spare."); the fix is on the build card.
     pub reason: String,
 }
@@ -2389,7 +2391,7 @@ fn unit_view(state: &GameState, me: PlayerId, u: &Unit) -> UnitView {
         upgrade_held_back: own
             .then(|| crate::rules::units::upgrade_held_back(state, u.owner, u))
             .flatten()
-            .map(|(to, reason)| UpgradeHeldBack { to, reason }),
+            .map(|(to, need, reason)| UpgradeHeldBack { to, need, reason }),
 
         unsupplied: crate::resources::unit_unsupplied(state, u),
         unsupplied_loss: crate::resources::unit_unsupplied(state, u)
