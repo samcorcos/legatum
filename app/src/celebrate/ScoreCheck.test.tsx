@@ -12,6 +12,7 @@ import { scoreCheckFor } from './scoreCheckCards';
 import { ScoreCheck } from './ScoreCheck';
 import { EraUpTakeover } from './EraUpTakeover';
 import type { PlayerView } from '../types';
+import { meetEveryone } from '../test/meetEveryone';
 
 let host: HTMLElement, root: Root, base: PlayerView;
 beforeEach(async () => {
@@ -19,7 +20,7 @@ beforeEach(async () => {
   useGame.setState(useGame.getInitialState(), true);
   const client = new FixtureClient();
   await client.newGame(await client.standardSetup('42', 'India', 'Byzantium', 'Ada', 'Bo'));
-  base = structuredClone(client.view(0));
+  base = meetEveryone(structuredClone(client.view(0)));
   host = document.body.appendChild(document.createElement('div'));
   root = createRoot(host);
 });
@@ -27,7 +28,7 @@ afterEach(() => { act(() => root.unmount()); host.remove(); vi.unstubAllGlobals(
 
 describe('the score check model', () => {
   it('puts every empire on the track at its VP and says where you stand', () => {
-    const view = withScoreCheck(base);
+    const view = meetEveryone(withScoreCheck(base));
     const card = scoreCheckFor(view, 3, view.me);
     expect(card.track).toHaveLength(11);
     expect(card.track[5].pieces.map((p) => p.faction)).toEqual(['Mongols']);
@@ -37,6 +38,17 @@ describe('the score check model', () => {
     expect(card.leader).toBe('Leader: Mongols, 5 VP.');
     expect(card.opener).toBe('You reached the Medieval era first.');
     expect(card.hold).toBeNull();
+  });
+
+  it('an empire you have not met is an unnamed "?" piece, and the lines name it as unknown', () => {
+    const view = withScoreCheck(base);
+    const celts = view.players.find((p) => p.faction === 'Celts')!;
+    view.diplomacy = { ...view.diplomacy, met: [...new Set(view.players.map((p) => p.team))].filter((t) => t !== view.team && t !== celts.team), relations: view.diplomacy.relations.filter((r) => r.state !== 'War') };
+    const card = scoreCheckFor(view, 3, celts.id);
+    const piece = card.track.flatMap((s) => s.pieces).find((p) => p.id === celts.id)!;
+    expect(piece).toMatchObject({ unmet: true, name: 'Unknown empire' });
+    expect(card.standing).toBe('You: 3 VP, tied 2nd with Switzerland and an unknown empire.');
+    expect(card.opener).toBe('An unknown empire reached the Medieval era first.');
   });
 
   it('fills your sheet: the scored Age, the new card, the capitals and the held wonder', () => {

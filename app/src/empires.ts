@@ -37,6 +37,36 @@ export function empireTitle(view: PlayerView, team: TeamId): string {
   return empireNameOf(empireMembers(view, team), view.players) || `Team ${team}`;
 }
 
+/**
+ * A rival team this seat has not met: every screen hides who it is and shows only its VP (the race stays public).
+ * A War names the enemy even before contact. A save from before first contact has no record and treats every empire as met.
+ */
+export function unmetTeam(view: Pick<PlayerView, 'team' | 'diplomacy'>, team: TeamId): boolean {
+  if (team === view.team) return false;
+  const met = view.diplomacy?.met;
+  if (!met || met.includes(team)) return false;
+  return !view.diplomacy.relations.some((r) => r.state === 'War' && (r.a === team || r.b === team) && (r.a === view.team || r.b === view.team));
+}
+
+/** How a sentence names an empire this seat has not met, as in Civ: no people, crest or portrait. */
+export const UNKNOWN_EMPIRE = 'an unknown empire';
+
+/** `unmetTeam` for one player. */
+export function unmetPlayer(view: Pick<PlayerView, 'team' | 'diplomacy' | 'players'>, id: number): boolean {
+  const p = view.players.find((x) => x.id === id);
+  return !!p && unmetTeam(view, p.team);
+}
+
+/** An empire's title ("India & Byzantium"), or "Unknown empire" when this seat has not met it. */
+export function titleIfMet(view: PlayerView, team: TeamId): string {
+  return unmetTeam(view, team) ? 'Unknown empire' : empireTitle(view, team);
+}
+
+/** What a screen calls an empire it may not have met: "the Swiss", or "an unknown empire". */
+export function headNameIfMet(view: PlayerView, team: TeamId): string {
+  return unmetTeam(view, team) ? UNKNOWN_EMPIRE : empireHeadName(view, team);
+}
+
 /** One player's empire in text ("Switzerland", or "Switzerland · AI 7" when two teams share the faction). */
 export function empireOfPlayer(view: Pick<PlayerView, 'players'>, id: number): string {
   const p = view.players.find((x) => x.id === id);

@@ -5,6 +5,7 @@ import { alarmFocus, alarmHeadline, alarmsForTurn, holdAlarm, holdSubline, threa
 import { holdFacts, nearFacts } from './HoldDetail';
 import { formatEvent, contextFromViews } from '../format';
 import { feedbackForTurn } from '../feel/turnFeedback';
+import { meetEveryone } from '../test/meetEveryone';
 
 // Ada (0) and Bo (1) are team 0; the AI empires 2..7 are teams 1..6.
 let view: PlayerView;
@@ -12,9 +13,9 @@ let prev: PlayerView;
 beforeAll(async () => {
   const client = new FixtureClient();
   await client.newGame(await client.standardSetup('42', 'India', 'Byzantium', 'Ada', 'Bo'));
-  prev = client.view(0);
+  prev = meetEveryone(client.view(0));
   client.endTurn({ 0: [], 1: [] });
-  view = client.view(0);
+  view = meetEveryone(client.view(0));
   expect(view.turn).toBe(prev.turn + 1);
 });
 
@@ -166,6 +167,8 @@ describe('victory hold alarm', () => {
     const rival = alarmsForTurn([started(1)], prev, withHold(1));
     expect(rival[0].hold!.stance).toBe('rival');
     expect(alarmHeadline(view, rival)).toBe(`The ${faction(1)} have 10 VP`);
+    const stranger = { ...view, diplomacy: { ...view.diplomacy, met: view.diplomacy.met!.filter((t) => t !== 1), relations: view.diplomacy.relations.filter((r) => r.state !== 'War') } };
+    expect(alarmHeadline(stranger, rival)).toBe('An unknown empire has 10 VP');
     expect(holdSubline(rival[0])).toBe('They must hold it for 10 turns unless someone stops them.');
 
     const allied = withHold(2);

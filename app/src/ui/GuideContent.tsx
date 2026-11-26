@@ -279,7 +279,7 @@ export function GuideContent({ section }: { section: GuideSection }) {
     case 'victory': return <>
       <div className="guide-targets"><div><b>10</b><span>VP · one-empire team</span></div><div><b>20</b><span>VP · two-empire team</span></div><div><b>+10</b><span>target per extra teammate</span></div></div>
       <p>The Victory race in the right panel lists every team, ranked by VP. Each row shows its VP, any War or Alliance you have with it, and its Gold, army points, cities and Science per turn. Every empire can see these numbers. Army points at least {STRONG_ARMY_RATIO} times yours are red. An empire you haven’t met shows only its VP, unless you are at War with it. Click a rival’s row to open Diplomacy with it.</p>
-      <p>Scores are checked after every turn. Teammates combine their points. Open the score ledger from the Victory race’s “Score ledger” link. Its columns show teams and empires in rank order, with your column in gilt and the team’s VP over its first member. Every way to score has a row; open a row for its rule and progress. The ledger shows the actual target and standings for your game.</p>
+      <p>Scores are checked after every turn. Teammates combine their points. Open the score ledger from the Victory race’s “Score ledger” link. Its columns show teams and empires in rank order, with your column in gilt and the team’s VP over its first member. Every way to score has a row; open a row for its rule and progress. The ledger shows the actual target and standings for your game. An empire you have not met shows as Unknown, with only its points.</p>
       <h3>Winning · hold the target</h3>
       <p>Reaching the target is not enough: a team wins by VP only after it <b>holds</b> its target at the end of {HOLD_TURNS} turns in a row. The turn the target is reached counts as the first.</p>
       <p>The moment any team reaches its target, every player gets an alarm and a countdown starts, shown in the Victory race. If that team ends a turn below its target, its count goes back to zero and the turn report says so. The game also ends when only one team survives, or at turn {RULES.defaultTurnLimit}.</p>
@@ -347,7 +347,7 @@ export function GuideContent({ section }: { section: GuideSection }) {
         <div className="touch-only"><dt>Drag / pinch / double-tap</dt><dd>Pan with one finger. Pinch to zoom around both fingers. Double-tap a selected unit or an inspection tile to zoom in; a second destination tap confirms its order.</dd></div>
         <div className="touch-only"><dt>Hold a tile</dt><dd>Open its context actions. Use Select here to change selection.</dd></div>
         <div className="touch-only"><dt>Tap a number / ⓘ</dt><dd>Read a breakdown without issuing an action. Close or tap outside to dismiss.</dd></div>
-        <div><dt>Click</dt><dd>Select a unit or city.</dd></div>
+        <div><dt>Click</dt><dd>Select a unit or city. Click the same tile again to switch between the units and the city there. A city’s banner always opens the city.</dd></div>
         <div><dt>Right-click / drag from unit</dt><dd>Give the selected unit a destination or melee target.</dd></div>
         <div><dt>Drag map / WASD / arrows</dt><dd>Pan the map. Scroll to zoom.</dd></div>
         <div><dt>Space</dt><dd>Skip the selected unit or aircraft for this turn. Aircraft return to the order cycle next turn; a Fighter still intercepts while on guard.</dd></div>
@@ -412,7 +412,7 @@ function Credits() {
   return <>
     <h3>Artwork</h3>
     <p>Legatum’s original artwork is offered under CC BY 4.0 to the extent rights exist. The Niter, Oil and Silicon resource medallions were generated with an OpenAI image model, selected and resized for the game. Their prompts and provenance are in the resource art README.</p>
-    <p>The Spearman on the 3D map is “Hoplite Warrior” by Casey DeDore (<a href="https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013" target="_blank" rel="noreferrer">Sketchfab</a>), <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a>. It moves with the skeleton and animations of {wildfire}, adapted for Legatum. Our adapted model is under CC BY-SA 3.0.</p>
+    <p>The Spearman on the 3D map is “Hoplite Warrior” by Casey DeDore (<a href="https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013" target="_blank" rel="noreferrer">Sketchfab</a>), <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a>. Its helmet is “PBR Corinthian Helmet” by timothyhsu (<a href="https://sketchfab.com/3d-models/793a3eb779454e8db5552ac934f20098" target="_blank" rel="noreferrer">Sketchfab</a>), CC BY 4.0. It moves with the skeleton and animations of {wildfire}, adapted for Legatum. Our adapted model is under CC BY-SA 3.0.</p>
     <h3>Music</h3>
     <p>{title.attribution}. The full piece plays on the title screen and during peaceful play; an intense excerpt plays during an empire war. <a href={title.source} target="_blank" rel="noreferrer">Source</a></p>
     <p>The peoples’ music and the war drums are from {wildfire}, edited for Legatum.</p>
