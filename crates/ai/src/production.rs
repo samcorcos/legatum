@@ -2903,8 +2903,7 @@ impl Planner<'_> {
         };
         let door = door
             .or_else(|| self.war_footing_build(c))
-            .or_else(|| self.early_army_build(c, tally))
-            .or_else(|| self.buildup_build(c));
+            .or_else(|| self.early_army_build(c, tally));
         let routine = door
             .or_else(|| self.rome_opening_build(c))
             .or_else(|| self.choose_item_inner(ci, c, tally));
@@ -3413,32 +3412,6 @@ impl Planner<'_> {
         }
         self.quick_defender(c, false)
             .and_then(|item| self.early_choice(item, "early army floor"))
-    }
-
-    /// Gene `buildup_match`: a neighbour's public army outgrowing ours is answered in kind by
-    /// the cities facing it, from public numbers only.
-    fn buildup_build(&self, c: &CityView) -> Option<ProductionItem> {
-        let pct = self.decisions.buildup_match;
-        if pct == 0 || self.difficulty != AiDifficulty::Hard || self.view().turn >= 60 {
-            return None;
-        }
-        let v = self.view();
-        let ours = v.army_of(v.me);
-        let radius = self.decisions.rival_radius;
-        let outgrown = v.players.iter().any(|p| {
-            let theirs = v.army_of(p.id);
-            p.alive
-                && !p.id.is_barbarian()
-                && !v.same_team(v.me, p.id)
-                && theirs > ours
-                && ours * 100 < theirs * pct
-                && v.cities.iter().any(|o| o.owner == p.id && o.pos.distance(c.pos) <= radius)
-        });
-        if !outgrown {
-            return None;
-        }
-        self.quick_defender(c, false)
-            .and_then(|item| self.early_choice(item, "neighbour build-up: defender"))
     }
 
     /// True when an empire at war with us has a military unit within `radius` of this city.
