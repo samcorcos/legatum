@@ -5,31 +5,28 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import {
   BUILDING_KINDS, CLASS_NOTE, DECADENCE_FOOD_RULE, DECADENCE_RULE, FACTIONS, FACTION_GOAL, FACTION_INFO,
   IMPROVEMENT_KINDS, GREAT_WORK_DESC, GREAT_WORK_RULE, POWER_RULE, SWARM_GOAL,
-  TECHS, TECH_NAME, TECH_STATS, THIN_LEVIES, UNIT_KINDS, availableToFaction, decadenceCurveText,
+  TECHS, TECH_NAME, TECH_STATS, UNIT_KINDS, availableToFaction, decadenceCurveText,
   factionDescription, factionExcludedBuilding, factionGoalTerms, factionUnavailableReason, greatWorkRules, itemCardText,
-  itemDescription, itemName, itemSummary, techCardEffectsFor, companyRule,
+  itemDescription, itemName, itemSummary, techCardEffectsFor,
 } from '../data';
 import { unlockSentence } from '../celebrate/unlockCard';
 import { FACTION_SHEETS } from '../factionSheets';
 import { ALLIANCE_SHARES, TREATY_DEFINITION, allianceTerms } from '../treaties';
 import { TECH_QUOTE } from '../techQuotes';
 import { notMetText, offerLabel, treatyLabel } from '../diplomacy';
-import { COMPANY_UNIT_RULE, contractLine, rosterLine } from '../company';
-import { describeOrder } from '../orders';
 import { CITY_HEAL_RULE, CITY_STRIKE_RULE, contextFromViews, formatEvents } from '../format';
 import { FixtureClient } from './fixtureEngine';
 import { htmlBlocks } from './textArtifacts';
 import { hallCardText } from '../ui/goalText';
 import { FactionSheetView } from '../ui/FactionPicker';
 import { GUIDE_SECTIONS, GuideContent } from '../ui/GuideContent';
-import { LEVY_CHIP_LABEL } from '../ui/Levy';
 import { tileDefenceText } from '../ui/TileCard';
 import { siegeCityHint } from '../ui/UnitPanel';
 import { POSTGAME_ARMY_TEXT } from '../ui/PostGameReport';
 import { TILE_RELEASE_RULE } from '../ui/cityTerritoryText';
 import { tileFocusNoteText } from '../ui/bits';
 import { distance, hexAt } from '../hex';
-import type { Event, Faction, PlayerView, ProductionItem, UnitView } from '../types';
+import type { Event, Faction, PlayerView, ProductionItem } from '../types';
 
 export interface TextGroup { label: string; blocks: string[] }
 
@@ -38,7 +35,6 @@ export function interfaceText(): TextGroup[] {
   return [
     { label: 'city territory', blocks: [TILE_RELEASE_RULE] },
     { label: 'city tile focus', blocks: [tileFocusNoteText('Balanced', 'no active build')] },
-    { label: 'Levy chip', blocks: [LEVY_CHIP_LABEL] },
     { label: 'Hills tile card', blocks: [tileDefenceText(3)] },
     { label: 'unit siege hint', blocks: [siegeCityHint(4)] },
     { label: 'post-game army column', blocks: [POSTGAME_ARMY_TEXT] },
@@ -112,7 +108,7 @@ export function factionText(): TextGroup[] {
   for (const [name, goal] of [...Object.entries(FACTION_GOAL), ['Swarm', SWARM_GOAL]] as const) {
     out.push({ label: `goal ${name}`, blocks: [goal.name, goal.rule(), goal.detail(), goal.liveNote ?? '', goal.action ?? '', goal.unitAction ?? '', goal.heldItem ?? ''].filter(Boolean) });
   }
-  out.push({ label: 'faction rules', blocks: [THIN_LEVIES, hallCardText(), ...Object.values(CLASS_NOTE)] });
+  out.push({ label: 'faction rules', blocks: [hallCardText(), ...Object.values(CLASS_NOTE)] });
   return out;
 }
 
@@ -135,34 +131,21 @@ export function victoryText(): TextGroup[] {
   ];
 }
 
-/** Mercenary Companies: the rule, a unit's contract line, the roster, the order and every report line, for the buyer, the seller and a bystander. */
-export async function companyText(): Promise<TextGroup[]> {
+/** Byzantium's Heir: the report lines for his birth, for his owner and for a rival. */
+export async function heirText(): Promise<TextGroup[]> {
   const client = new FixtureClient();
   await client.newGame(await client.standardSetup('908102', 'Byzantium', 'Sparta', 'AI 1', 'AI 2'));
   client.endTurn({});
   const base = client.view(0);
-  const unit = { ...base.units.find((u) => u.owner === 0)!, contract_until: base.turn + 7, origin: 'Sparta' } as UnitView;
-  const view: PlayerView = { ...base, units: [unit, ...base.units.filter((u) => u.id !== unit.id)], players: base.players.map((p) => (p.id === 0 ? { ...p, companies: 1 } : p)), cities: base.cities.map((c, i) => (i === 0 ? { ...c, name: 'Constantinople' } : c)),
-    company_offers: [{ seller: 1, unit: 'Spearman', price: 80 }] };
+  const unit = base.units.find((u) => u.owner === 0)!;
+  const view: PlayerView = { ...base, cities: base.cities.map((c, i) => (i === 0 ? { ...c, name: 'Constantinople' } : c)) };
   const city = view.cities[0];
   const events: Event[] = [
     { type: 'HeirBorn', city: city.id, owner: 0, city_name: 'Constantinople', at: unit.pos },
     { type: 'HeirBorn', city: city.id, owner: 2, city_name: 'Pella', at: unit.pos },
-    { type: 'CompanyHired', city: city.id, owner: 0, seller: 1, unit: 'Spearman', gold: 80, until: base.turn + 30 },
-    { type: 'CompanyHired', city: city.id, owner: 2, seller: 0, unit: 'Spearman', gold: 80, until: base.turn + 30 },
-    { type: 'CompanyDeparted', unit: 'Spearman', owner: 0, origin: 'Sparta', pos: unit.pos },
-    { type: 'CompanyDeparted', unit: 'Spearman', owner: 2, origin: 'Sparta', pos: unit.pos },
-    { type: 'CompanyTurned', unit: 'Spearman', owner: 0, origin: 'Sparta', pos: unit.pos },
-    { type: 'CompanyTurned', unit: 'Spearman', owner: 2, origin: 'Sparta', pos: unit.pos },
   ];
   const lines = formatEvents(events, contextFromViews(base, view)).flatMap((l) => [l.text, ...(l.details ?? [])]);
-  return [{
-    label: 'mercenary companies', blocks: [
-      companyRule(), COMPANY_UNIT_RULE, contractLine(unit, view), contractLine({ ...unit, contract_until: base.turn }, view), rosterLine(view, 0, 1),
-      describeOrder({ type: 'HireCompany', city: city.id, unit: 'Spearman', seller: 1 }, view),
-      ...lines,
-    ],
-  }];
+  return [{ label: 'Byzantium Heir', blocks: lines }];
 }
 
 /** Diplomacy and treaty text. */

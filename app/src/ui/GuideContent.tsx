@@ -64,7 +64,6 @@ export function GuideContent({ section }: { section: GuideSection }) {
   const decadence = decadenceRules(ruleSwitches);
   const cut = (lead: number) => decadencePercent(lead, decadence);
   const alliance = allianceTerms();
-  const company = RULES.company;
   switch (section) {
     case 'start': return <>
       <p>Lead an empire, explore ruins, found cities and race for victory points (VP): reach your target, then hold it. If you know Civilization VI, the pieces will feel familiar. The difference is timing: everyone’s plans resolve together.</p>
@@ -114,8 +113,6 @@ export function GuideContent({ section }: { section: GuideSection }) {
       <p>If either of you is at War when you sign, the offer lists what changes. The new ally joins at once the wars its partner is defending, and gets a call to arms for the wars its partner started.</p>
       <p>A Peace offer is between two teams. Both must agree. It ends only the war between them. Wars with their allies go on, and both Alliances stay. Making Peace on your own is not a betrayal.</p>
       <p>With a human teammate you can ping. Press Ping at the foot of the right-hand panel, then click a tile. A ring marks it on their map until the turn ends. Your next ping replaces your last. Your teammate gets a Go to ping button that jumps to it. On a touch screen, use Ping this tile on the tile card. Pings are not saved with the game.</p>
-      <p><b>Mercenary Companies (Byzantium):</b> a Byzantine city can hire the special unit of any empire it has met and is not at War with. Each empire sells only its own special unit, and the Company is that empire’s version of it. It has that unit’s name, stats and own rules (the Hoplite’s phalanx, the Keshig’s bow), not the empire’s faction-wide rules. That empire must know the unit’s technology and, for a resource unit, own an improved deposit of its resource. Hiring needs no spare supply and uses no supply slot. The price is {company.hirePercent}% of that version’s Production cost, in Gold, and all of it goes to the seller. It uses the city’s one purchase for the turn. The Company appears next turn at level 1, serves {company.turns} turns, then goes home, and costs <Amount n={company.upkeep} unit="Gold" /> a turn while it stays. It fights and captures like any unit, cannot be upgraded and does not count against thin levies. If Byzantium cannot pay its upkeep, a Company turns on it as a barbarian. Every Company shows its seller and its contract countdown on the map, so everyone can see when it leaves.</p>
-      <p><b>Thin levies (Byzantium):</b> Byzantium fields at most one military unit per city, plus one more. Aircraft count; Scouts don't. Losing a city never disbands units. It only stops you training new ones until you are back under that limit. The top bar, the city panel and the diplomacy panel show the count.</p>
       <p>Before you commit, every diplomatic action shows its Gold cost, its upkeep, when it takes effect and whether it is a betrayal.</p>
       <p>The Relations tab in Diplomacy shows every met empire’s Peace, Alliance and War relationships in one table.</p>
       <h3>Coming from Civilization VI</h3>

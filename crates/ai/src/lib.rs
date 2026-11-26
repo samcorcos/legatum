@@ -22,7 +22,6 @@ mod campaign;
 mod capitals;
 mod celts_playbook;
 mod civilians;
-mod company;
 mod composition;
 mod decisive_buy;
 mod exploration;
@@ -63,7 +62,6 @@ mod hollow_march;
 mod investment;
 mod knobs;
 pub mod learned_macro;
-mod levy;
 mod military;
 mod modernization;
 mod movement;
@@ -151,8 +149,6 @@ mod hard_defense_tests;
 mod hollow_tests;
 #[cfg(test)]
 mod intel_tests;
-#[cfg(test)]
-mod levy_tests;
 #[cfg(test)]
 mod plan_tests;
 #[cfg(test)]
@@ -338,12 +334,12 @@ pub(crate) fn drop_leaving_orders_of_locked_units(view: &PlayerView, orders: &mu
     });
 }
 
-/// Occupation lock: a captured city at war with its victim buys and hires nothing,
+/// Occupation lock: a captured city at war with its victim buys nothing,
 /// and validation refuses it, so the AI never issues one. Its own cities carry the civ in
 /// `CityView::occupation_lock` exactly while they are frozen.
 pub(crate) fn drop_purchases_in_frozen_cities(view: &PlayerView, orders: &mut Vec<Order>) {
     orders.retain(|o| match o {
-        Order::BuyItem { city, .. } | Order::HireCompany { city, .. } => !view
+        Order::BuyItem { city, .. } => !view
             .cities
             .iter()
             .any(|c| c.id == *city && c.owner == view.me && c.occupation_lock.is_some()),

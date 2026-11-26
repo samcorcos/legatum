@@ -219,8 +219,10 @@ pub struct TurnPlayTime {
 mod tape_json {
     use super::*;
 
-    /// Saves from before allies fought together record `CallToArms` orders, and saves from before
-    /// Mercenary Companies record `PayTribute`: orders that no longer exist. Their archive is from other rules and is dropped on load (`compatible`),
+    /// Saves from before allies fought together record `CallToArms` orders, saves from before
+    /// Mercenary Companies record `PayTribute`, and saves from while they existed record
+    /// `HireCompany` (retired 2026-11-26): orders that no longer exist.
+    /// Their archive is from other rules and is dropped on load (`compatible`),
     /// but it has to parse first: forget the retired orders.
     fn drop_retired_orders(tape: &mut serde_json::Value) {
         let turns = tape
@@ -241,7 +243,7 @@ mod tape_json {
                                     .and_then(serde_json::Value::as_str)
                                     .is_some_and(|name| matches!(name, "AidStation" | "Reactor"))
                         };
-                        !matches!(kind, Some("CallToArms" | "PayTribute"))
+                        !matches!(kind, Some("CallToArms" | "PayTribute" | "HireCompany"))
                             && !o.get("item").is_some_and(retired_item)
                     });
                     for order in list {
@@ -774,6 +776,30 @@ mod tests {
         state.vp_holds.insert(TeamId(0), needed);
         recording.update_metadata(&state);
         assert_eq!(recording.metadata.outcome, "vp");
+    }
+
+    /// A saved archive's tape may hold `HireCompany` (Mercenary Companies, retired 2026-11-26):
+    /// it is dropped on load, as `PayTribute` was.
+    #[test]
+    fn a_saved_hire_company_order_is_dropped_when_the_archive_loads() {
+        let setup = GameSetup::standard(42, [Faction::India, Faction::Byzantium]);
+        let mut session = Session::new(&setup, |_| BrainKind::Scripted);
+        session.step(&OrderMap::new());
+        let tape = &session.history.as_ref().unwrap().tape;
+        let mut value: serde_json::Value = serde_json::from_str(&tape.to_json()).unwrap();
+        value["turns"][0]["orders"]["0"] = serde_json::json!([
+            { "type": "HireCompany", "city": 1, "unit": "Spearman", "seller": 1 },
+            { "type": "PayTribute", "to": 1, "amount": 5 },
+            { "type": "SleepUnit", "unit": 3 }
+        ]);
+        let loaded = tape_json::deserialize(value).unwrap();
+        assert_eq!(
+            loaded.turns[0].orders[&PlayerId(0)],
+            vec![Order::SleepUnit {
+                unit: legatum_core::UnitId(3),
+                until_healed: false
+            }]
+        );
     }
 
     #[test]

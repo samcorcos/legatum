@@ -306,13 +306,12 @@ impl Planner<'_> {
     /// What makes a rival city soft, from public information only (gene `value_first_target`):
     /// the value of taking it beyond its yields, and the cost of the owner's visible field army
     /// that could relieve it. A last city ends a rival's whole future economy (winning is
-    /// zero-sum); a seen-empty city or a levy-capped owner can't be reinforced in time; every
+    /// zero-sum); a seen-empty city can't be reinforced in time; every
     /// other war the owner fights splits its defence.
     pub(crate) fn public_softness(&self, c: &CityView) -> (i32, i32) {
         let v = self.view();
         let owner = v.players.iter().find(|p| p.id == c.owner);
         let last_city = owner.is_some_and(|p| p.cities == 1);
-        let levy_capped = owner.and_then(|p| p.levy).is_some_and(|l| l.units >= l.cap);
         let garrisoned = v
             .units
             .iter()
@@ -330,10 +329,7 @@ impl Planner<'_> {
             })
             .count()
             .min(3) as i32;
-        let value = if last_city { 120 } else { 0 }
-            + if levy_capped { 60 } else { 0 }
-            + if empty { 60 } else { 0 }
-            + other_wars * 30;
+        let value = if last_city { 120 } else { 0 } + if empty { 60 } else { 0 } + other_wars * 30;
         let relief: i32 = v
             .units
             .iter()
@@ -601,7 +597,6 @@ mod tests {
 
     #[test]
     fn a_one_city_sparta_picks_the_softest_rival_by_value_not_faction() {
-        use legatum_core::view::LevyView;
         const THIRD: legatum_core::PlayerId = legatum_core::PlayerId(3);
         let mut v = ViewBuilder::new(32, 24)
             .faction(Faction::Sparta)
@@ -614,10 +609,7 @@ mod tests {
             p.cities = v.cities.iter().filter(|c| c.owner == p.id).count() as u32;
             match p.id {
                 ENEMY => p.faction = Faction::India,
-                THIRD => {
-                    p.faction = Faction::Byzantium;
-                    p.levy = Some(LevyView { units: 2, cap: 2 });
-                }
+                THIRD => p.faction = Faction::Byzantium,
                 _ => {}
             }
         }
@@ -625,7 +617,7 @@ mod tests {
         let mut off = hard(&v);
         off.decisions.value_first_target = 0;
         assert_eq!(off.conquest_city().map(|c| c.id), Some(CityId(3)));
-        // By value: Byzantium's last city, levy-capped, two hexes farther, is the softer prize.
+        // By value: Byzantium's last city, two hexes farther, is the softer prize.
         let mut p = hard(&v);
         p.decisions.value_first_target = 1;
         assert_eq!(p.conquest_city().map(|c| c.id), Some(CityId(4)));

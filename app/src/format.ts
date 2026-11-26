@@ -1,5 +1,5 @@
 import { treatyNoun } from './deals';
-import { RESOURCE_INFO, fixClause, idleCountText, idleEntries, withArticle, withThe } from './resources';
+import { RESOURCE_INFO, fixClause, idleCountText, idleEntries, withThe } from './resources';
 import { WONDER_INFO, wonderBonusSentence } from './wonders';
 import { diplomaticTeams, offerLabel } from './diplomacy';
 import { ALLIANCE_SHARES, allianceTerms } from './treaties';
@@ -13,7 +13,7 @@ import { techCardUnlocks, techUnlockSummary } from './ui/techCardUnlocks';
 import { eraName } from './ui/eraResearch';
 import { cardName, cardNameAndAsk } from './ageCards';
 import { CITY_HEAL, CITY_HP, cityCanFire } from './combat';
-import { ageName, BUILDING_NAME, unitIconName, FACTION_ADJECTIVE, FACTION_GOAL, factionGoalVp, RULES, TECH_NAME, CAPTURE_RESISTANCE_TURNS, eraScaled, factionGoalRule, UNIT_NAME, itemName, pluralUnit, wallLevelLabel, wallsUpgradeName } from './data';
+import { ageName, BUILDING_NAME, unitIconName, FACTION_GOAL, factionGoalVp, RULES, TECH_NAME, CAPTURE_RESISTANCE_TURNS, eraScaled, factionGoalRule, UNIT_NAME, itemName, pluralUnit, wallLevelLabel, wallsUpgradeName } from './data';
 import { closeObjectives } from './eraObjectives';
 import { bearing, empireNameOf, empireOfPlayer, empireTitle, PEOPLE_NAME, placeName } from './empires';
 import { CAMP_CLEAR_GOLD, isBarbarian } from './barbarians';
@@ -1194,35 +1194,6 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
         details: ['Every empire is told where he was born. His position is public every turn, on the map and the minimap, and whoever holds him scores the points. To capture him you must be at War with his holder.'],
       });
     }
-    case 'CompanyHired': {
-      const unit = withArticle(unitName(ctx, 0, e.seller, e.unit));
-      const turns = RULES.company.turns;
-      const base = { at: ctx.cityPos(e.city), players: [e.owner, e.seller], weight: 1 as const };
-      if (mine(e.owner)) {
-        return line('economy', `${e.owner === ctx.me ? 'Hired' : `${who(ctx, e.owner)} hired`} ${unit} Company from ${whom(ctx, e.seller)} for ${e.gold} Gold, for ${turns} turns`, {
-          ...base, tone: 'neutral',
-          details: [`The Gold went to ${whom(ctx, e.seller)} in full. The Company serves until the end of turn ${e.until}, then goes home, and costs ${RULES.company.upkeep} Gold a turn while it stays.`],
-        });
-      }
-      return line('economy', `+${e.gold} Gold: ${who(ctx, e.owner)} hired ${unit} Company from you`, { ...base, tone: 'good' });
-    }
-    case 'CompanyDeparted': {
-      const name = unitName(ctx, 0, e.owner, e.unit);
-      const adjective = e.origin ? FACTION_ADJECTIVE[e.origin] : null;
-      const unit = adjective && !name.startsWith(`${adjective} `) ? `${adjective} ${name}` : name;
-      return line('economy', `The ${unit} Company's contract ended${mine(e.owner) ? `: it went home ${at(ctx, e.pos)}` : ''}`, {
-        at: e.pos, players: [e.owner], weight: 1, tone: 'neutral',
-      });
-    }
-    case 'CompanyTurned': {
-      const name = unitName(ctx, 0, e.owner, e.unit);
-      const adjective = e.origin ? FACTION_ADJECTIVE[e.origin] : null;
-      const unit = adjective && !name.startsWith(`${adjective} `) ? `${adjective} ${name}` : name;
-      return line('combat', `Unpaid, ${withArticle(unit)} Company turned on ${whom(ctx, e.owner)} ${at(ctx, e.pos)}`, {
-        at: e.pos, players: [e.owner], weight: 2, tone: toneFor(e.owner, false),
-        details: [`A Mercenary Company costs ${RULES.company.upkeep} Gold a turn. When the treasury cannot pay, a Company is the first thing lost, and it turns barbarian where it stands.`],
-      });
-    }
     case 'ItemBought':
       return line('economy', `${ctx.cityName(e.city)} bought ${builtName(e.item, ctx, e.city, ctx.playerFaction?.(e.owner))} for ${e.gold} Gold`, {
         at: ctx.cityPos(e.city),
@@ -1642,16 +1613,13 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
  * line ("moved 3 hexes to x,y").
  */
 /**
- * A core order refusal in the words a player reads: "Astra can't train a Spearman: you have 3 military units and room for 2."
+ * A core order refusal in the words a player reads: "Astra can't build Walls: ...".
  * Other reasons keep core's wording after the contraction.
  */
 export function plainOrderError(message: string): string {
   const m = /^(?:Queue item \d+: )?(.+?) cannot produce (.+?): (.+)$/s.exec(message);
   if (!m) return message;
   const [, city, item, why] = m;
-  const levy = /^Levies full: (\d+) of (\d+)$/.exec(why);
-  const article = /^[AEIOU]/.test(item) ? 'an' : 'a';
-  if (levy) return `${city} can't train ${article} ${item}: you have ${levy[1]} military units and room for ${levy[2]}.`;
   return `${city} can't build ${item}: ${plainBlocker(why)}.`;
 }
 

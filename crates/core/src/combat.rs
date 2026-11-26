@@ -391,7 +391,7 @@ pub const PHALANX_LABEL: &str = "Phalanx: next to another Hoplite";
 /// Build an attacker's strength in the same order for resolution and both forecasts.
 /// `meeting` is only meaningful for a melee fight; `city` adds the city-specific modifiers.
 /// `faction` is the owner's (its faction-wide rules); `made_by` the faction whose version of the
-/// unit it is (a hired Company is its seller's: the unit's own stat line and rules follow it).
+/// unit it is (always the owner's now).
 #[allow(clippy::too_many_arguments)]
 pub fn attack_strength_rules(
     off: FactionRuleSet,

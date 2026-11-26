@@ -231,9 +231,6 @@ fn scripted_orders_all_validate_and_succeed_in_a_real_game() {
             .filter(|f| {
                 !f.contains("Another proposal won canonical proposal-ID order for this pair")
             })
-            // Two cities of a levy-capped empire can finish armed units in the same turn with
-            // one slot left: simultaneous contention, and the Production stays banked.
-            .filter(|f| !f.contains("Levies full"))
             // Barbarian raiders plan against the start-of-turn state: a shot at a tile whose
             // target moved or died the same turn is simultaneous contention, not an AI order.
             .filter(|f| {

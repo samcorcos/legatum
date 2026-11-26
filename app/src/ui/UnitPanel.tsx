@@ -44,8 +44,6 @@ import { RingMedallion } from './ringMedallion';
 import './unitPanel.css';
 import { Amounts } from './Amounts';
 import { HeirDisbandConfirm, HeirNote } from './HeirNote';
-import { CompanyNote, CompanyTag } from './CompanyNote';
-import { isCompany } from '../company';
 import { FACTION_GOAL, factionGoalVp } from '../data';
 import { clearRetire, pendingRetire, retireEntry } from '../goalActions';
 import { isTopRank } from '../rankInsignia';
@@ -103,8 +101,7 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
   const stats = UNIT_STATS[unit.kind];
   // A mounted unit that also shoots (the Keshig): it charges or shoots, one order a turn.
   const bow = unit.ranged > 0 && attacksInMelee(unit.kind);
-  // A hired Company is its seller's version of the unit (its name and picture follow `origin`).
-  const madeBy = unit.origin ?? owner?.faction;
+  const madeBy = owner?.faction;
   const fromLabel = itemName({ kind: 'Unit', unit: unit.kind }, madeBy);
   const col = playerInk(unit.owner);
   // The Sparta's one-time unit action: a veteran (at RULES.spartaRetireLevel or higher) is offered retirement, valid only in a city with an Agoge.
@@ -133,7 +130,7 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
   const siegeBalance = spend.available(siegeOrder, siegeAt < 0 ? orders?.length ?? 0 : siegeAt);
   const gold = upgradeBalance.gold;
   const siegeGold = siegeBalance.gold;
-  const upgrade = isCompany(unit) ? null : upgradeCheck(unit, view, gold, upgradeBalance.supply);
+  const upgrade = upgradeCheck(unit, view, gold, upgradeBalance.supply);
   const siegeBlocked = unit.siege_offer?.blocker ?? (unit.siege_offer && siegeGold < unit.siege_offer.price.total ? `Needs ${unit.siege_offer.price.total} Gold (${goldOnHand(siegeGold, view)})`
     : unit.siege_offer && SIEGE_USES_IRON && (siegeBalance.supply.get('Iron') ?? 0) >= (view.supply?.find((s) => s.resource === 'Iron')?.spare ?? 0) ? 'No Iron to spare after your queued orders.' : null);
   const roleAction = unit.kind === 'Scout' || unit.kind === 'Settler';
@@ -196,7 +193,6 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
           </div>
           {unit.military && <PromotionLine unit={unit} faction={owner?.faction} />}
           {mine && isColoniaFounder(view, unit.id) && <p className="up-colonia" data-testid="unit-colonia"><Icon name="goal-colonia" size={14} /> Can found your Colonia Victrix{coloniaHere ? ' here' : ''} (+{factionGoalVp('Rome')} VP){coloniaHere ? '' : coloniaSiteKnown(view) === false ? `. No site known yet: it must be within ${COLONIA_REACH} tiles of a rival's land.` : ': gilt rings on the Settle lens mark the sites'}</p>}
-          {isCompany(unit) && <CompanyTag unit={unit} view={view} />}
         </div>
         {status && <div className={`up-status ${broken ? 'bad' : pending ? 'pending' : exploring || unit.goto || standing ? 'standing' : ''}`}><Amounts text={status} />{broken && ' · won’t resolve'}</div>}
         {locked && <p className="up-status-why up-lock" data-testid="occupation-lock"><Icon name="mark-lock" size={14} className="ui-mark" /> {occupationLead(view, unit)}</p>}
@@ -294,7 +290,6 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
       {/* Contextual notes stay in the scrolling side panel. */}
       <div className="up-hints">
         {unit.kind === 'HeirToTheThrone' && <HeirNote unit={unit} view={view} />}
-        {isCompany(unit) && <CompanyNote unit={unit} view={view} />}
         {(unit.siege || builtInSiege(unit.kind as UnitKind)) && <div className="hint" data-testid="siege-note">{siegeNote(view, unit)}</div>}
         {firesIndirect(unit.kind) && <div className="hint">{ARTILLERY_HEADLINE}</div>}
         {closed && <p className="hint warn">Closed foreign territory: no attacks, healing or fortification. Every move must bring this unit closer to an exit.</p>}

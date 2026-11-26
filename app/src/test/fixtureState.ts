@@ -51,9 +51,6 @@ export interface MUnit {
   attack_revealed_turn?: number;
   /** An Heir only (core `Unit::heir_of`): the Byzantium empire whose goal he carries. A captured Heir keeps it. */
   heir_of?: PlayerId;
-  /** A hired Mercenary Company (core `Unit::contract_until`, `origin`): the last turn of its contract and the faction that sold it. Fixtures may arrange these fields before loading them into the core. */
-  contract_until?: number;
-  origin?: Faction;
 }
 
 export interface MCity {

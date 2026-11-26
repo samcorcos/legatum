@@ -12,7 +12,7 @@ This file was split on 2026-11-22. Its text moved verbatim and in its original o
 | Eras and technologies | `research-and-eras.md`, `units.md`, `air.md`, `wonders.md`, `experiments.md` (occupation lock in `combat.md`, City/Settler rules in `cities-and-production.md`) |
 | §3 Economy | `cities-and-production.md` and `economy-and-purchases.md` |
 | §4 Combat | `combat.md` (aircraft promotion in `air.md`) |
-| §5 Diplomacy | `diplomacy.md` (special units and Mercenary Companies in `factions.md`) |
+| §5 Diplomacy | `diplomacy.md` (special units in `factions.md`) |
 | §6 Victory | `victory-and-scoring.md` |
 | §7 Map and exploration | `map-and-exploration.md`, `wonders.md` (natural wonders), `barbarians.md`, `air.md` (aircraft sight) |
 | §8 Factions | `factions.md` |

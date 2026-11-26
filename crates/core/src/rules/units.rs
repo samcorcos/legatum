@@ -260,9 +260,6 @@ pub fn check_upgrade(
     gold: i32,
 ) -> Result<(UnitKind, i32), String> {
     let u = &state.units[&unit];
-    if crate::company::is_company(u) {
-        return Err("a hired Company cannot be upgraded: hire the next one instead".into());
-    }
     let Some(first) = data::unit_stats(u.kind).upgrades_to else {
         return Err(format!("{} has no upgrade", data::unit_name(u.kind)));
     };
@@ -615,8 +612,7 @@ pub fn reset_turn(state: &mut GameState) {
         } else {
             data::ROAD_MOVES
         };
-        u.moves_left =
-            rules.unit_moves_made_by(faction, u.origin.unwrap_or(faction), u.kind) + road;
+        u.moves_left = rules.unit_moves_made_by(faction, faction, u.kind) + road;
         u.acted = false;
         if u.automation.is_some() {
             u.goto = None;

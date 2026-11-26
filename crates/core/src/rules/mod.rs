@@ -379,8 +379,6 @@ pub fn resolve_turn(
     units::finish_automation(&mut s, &plan);
     // 6-10. Cities (including city healing), gold and upkeep, research, borders.
     cities::process_cities(&mut s, &mut events);
-    // A Company's contract ends after its last turn's upkeep is paid.
-    crate::company::expire(&mut s, &mut events);
     cities::process_research(&mut s, &mut events);
     // Empires entering the same era this turn: the first is drawn, not the lowest id.
     crate::eras::draw_same_turn_firsts(&mut s, &mut events);

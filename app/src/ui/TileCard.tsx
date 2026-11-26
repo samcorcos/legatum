@@ -17,7 +17,6 @@ import { BARBARIAN_INK, campAt, CAMP_CLEAR_GOLD, isBarbarian } from '../barbaria
 import { useGame } from '../store';
 import { buildingIconName, factionGoalVp, sameItem, wonderTileText } from '../data';
 import { heirLines } from './HeirNote';
-import { contractLine, isCompany } from '../company';
 import { heirHoverLine, heirTag, isHeir } from '../heir';
 import { atWar } from '../diplomacy';
 import { WONDER_INFO, cityWonders, holdingCity, wonderArt, wonderBonusParts, wonderDiscoveryLine, wonderYieldWord } from '../wonders';
@@ -227,7 +226,6 @@ export function TileCard({ view, hex, anchor, routeWarning, blockedReason, reinf
           {u.owner === view.me && occupationTileLine(view, u) && <div data-testid="tile-lock"><Icon name="mark-lock" size={12} className="ui-mark" /> {occupationTileLine(view, u)}</div>}
           {u.fortify > 0 && ` · resting defence +${u.fortify}`}
           {u.standing_order === 'Heal' && ` · ${sleepOrderText(u, true).toLowerCase()}`}
-          {isCompany(u) && <div className="muted" data-testid="tile-company"><Amounts text={contractLine(u, view)} /></div>}
         </div>
       ))}
       {!t.visible && <div className="tilecard-row muted">Out of sight: owner and city are current; other details may be old.</div>}

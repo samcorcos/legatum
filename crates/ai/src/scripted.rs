@@ -364,7 +364,6 @@ impl ScriptedBrain {
         let mut p = self.planner_through_plan(view, production_trace);
         p.pass("plan");
         p.plan_diplomacy();
-        p.plan_levy_turnover();
         p.pass("execute_snipe");
         p.execute_snipe();
         p.pass("execute_field_strike");
@@ -380,7 +379,6 @@ impl ScriptedBrain {
         p.plan_siege_buys();
         p.plan_cities();
         p.plan_raze();
-        p.plan_company();
         p.pass("plan_settlers");
         p.plan_settlers();
         p.pass("stalk_settlers");
@@ -395,8 +393,6 @@ impl ScriptedBrain {
         p.pass("dedupe_first_steps");
         p.dedupe_first_steps();
         p.supported_defence_orders();
-        p.pass("enforce_levy");
-        p.enforce_levy();
         p.enforce_purchase_generation();
         p.pass("siege_deadline");
         p.enforce_siege_deadlines();

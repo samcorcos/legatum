@@ -88,22 +88,21 @@ export function miniatureImage(kind: UnitKind, faction?: Faction): HTMLImageElem
 
 /**
  * Barbarians' own painted raiders (`barbarian-<slug>`), one per kind the camps field (Spearman, Pikeman, Musketman, Archer,
- * Crossbowman, Scout). Any other kind (a Company that turned barbarian) keeps its ordinary figure on the barbarian base.
+ * Crossbowman, Scout). Any other kind keeps its ordinary figure on the barbarian base.
  */
 export const barbarianArtSlug = (kind: UnitKind): string => miniatures.has(`barbarian-${UNIT_ART[kind]}`) ? `barbarian-${UNIT_ART[kind]}` : UNIT_ART[kind];
 
 /**
- * The miniature URL a map draws for a unit: a barbarian's own raider, else the art of the unit's origin (a hired
- * Company keeps its people's figure) or its owner's faction. Every map renderer picks unit art through this, never
+ * The miniature URL a map draws for a unit: a barbarian's own raider, else the art of its owner's faction. Every map renderer picks unit art through this, never
  * through a seat's colour faction (art review, PR 139).
  */
-export function mapUnitMiniatureUrl(u: { kind: UnitKind; owner: number; origin?: Faction | null }, factionOf: ReadonlyMap<number, Faction>, barbarian: boolean): string | null {
+export function mapUnitMiniatureUrl(u: { kind: UnitKind; owner: number }, factionOf: ReadonlyMap<number, Faction>, barbarian: boolean): string | null {
   return miniatures.get(mapUnitArtSlug(u, factionOf, barbarian)) ?? null;
 }
 
 /** The art slug behind mapUnitMiniatureUrl; the 3D map also keys its unit models by it, so a model stands in only for its own painting. */
-export function mapUnitArtSlug(u: { kind: UnitKind; owner: number; origin?: Faction | null }, factionOf: ReadonlyMap<number, Faction>, barbarian: boolean): string {
-  return barbarian ? barbarianArtSlug(u.kind) : unitArtSlug(u.kind, u.origin ?? factionOf.get(u.owner));
+export function mapUnitArtSlug(u: { kind: UnitKind; owner: number }, factionOf: ReadonlyMap<number, Faction>, barbarian: boolean): string {
+  return barbarian ? barbarianArtSlug(u.kind) : unitArtSlug(u.kind, factionOf.get(u.owner));
 }
 
 /** A barbarian's painted miniature (256 px) once loaded. */

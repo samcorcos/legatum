@@ -404,58 +404,6 @@ export function drawHeirHalo(ctx: CanvasRenderingContext2D, x: number, y: number
   ctx.restore();
 }
 
-/**
- * A hired Company's contract mark (public), centred under its token: the seller's faction seal and the turns of contract left
- * ("7 left"), or "Last turn" in red when it goes home this turn. The words carry the meaning; the seal says whose it was.
- */
-export function drawContractTag(ctx: CanvasRenderingContext2D, look: LookId, x: number, y: number, origin: Faction | undefined, left: number) {
-  const text = left === 0 ? 'Last turn' : `${left} turn${left === 1 ? '' : 's'}`;
-  const last = left === 0;
-  ctx.save();
-  const fs = 10;
-  ctx.font = `700 ${fs}px ${FONTS[look].sans}`;
-  const seal = origin ? 11 : 0;
-  const tw = ctx.measureText(text).width + 8 + (seal ? seal + 2 : 0), th = fs + 5;
-  const bx = x - tw / 2;
-  ctx.beginPath();
-  ctx.rect(bx, y, tw, th);
-  ctx.fillStyle = last ? INK.atlas.red : INK.atlas.vellum;
-  ctx.fill();
-  ctx.strokeStyle = INK.atlas.ink;
-  ctx.lineWidth = 1;
-  ctx.stroke();
-  if (origin) {
-    const ic = tintedIcon(`faction-${origin.toLowerCase()}`, last ? INK.atlas.light : INK.atlas.ink, seal * (ctx.getTransform().a || 1));
-    if (ic) ctx.drawImage(ic, bx + 3, y + (th - seal) / 2, seal, seal);
-  }
-  ctx.fillStyle = last ? INK.atlas.light : INK.atlas.ink;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(text, x + (seal ? (seal + 2) / 2 : 0), y + th / 2 + 0.5);
-  ctx.restore();
-}
-
-/** Zoomed out, a Company's pip carries only its turns left, on a small ink plaque at the lower right (red on its last turn). */
-export function drawContractPip(ctx: CanvasRenderingContext2D, look: LookId, x: number, y: number, half: number, left: number) {
-  const text = left === 0 ? '!' : String(left);
-  ctx.save();
-  ctx.font = `700 9px ${FONTS[look].sans}`;
-  const w = Math.max(11, ctx.measureText(text).width + 6), h = 11;
-  const bx = x + half * 0.5, by = y + half * 0.45;
-  ctx.beginPath();
-  ctx.rect(bx, by, w, h);
-  ctx.fillStyle = left === 0 ? INK.atlas.red : INK.atlas.ink;
-  ctx.fill();
-  ctx.strokeStyle = INK.atlas.vellum;
-  ctx.lineWidth = 1;
-  ctx.stroke();
-  ctx.fillStyle = INK.atlas.vellum;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(text, bx + w / 2, by + h / 2 + 0.5);
-  ctx.restore();
-}
-
 /** An ownership roundel, separate from population and order badges: the faction glyph used on race portraits, ringed in its seat colour. */
 function drawPlayerNumber(ctx: CanvasRenderingContext2D, look: LookId, owner: number, x: number, y: number, faction?: Faction) {
   if (owner === 255) return; // Barbarians carry no faction crest; their token is their mark.

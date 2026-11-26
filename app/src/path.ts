@@ -101,11 +101,11 @@ export function findPath(
 }
 
 /** The unit fields that decide what it pays for terrain. */
-export type Mover = Pick<UnitView, 'kind' | 'owner' | 'max_moves'> & { origin?: UnitView['origin'] };
+export type Mover = Pick<UnitView, 'kind' | 'owner' | 'max_moves'>;
 
-/** Core `GameState::is_chariot_archer`: an Archer Egypt made (its own or a hired Company). */
+/** Core `GameState::is_chariot_archer`: an Archer Egypt fields. */
 export function isChariotArcher(view: PlayerView, u: Mover): boolean {
-  return u.kind === 'Archer' && (u.origin ?? view.players.find((p) => p.id === u.owner)?.faction) === 'Egypt';
+  return u.kind === 'Archer' && view.players.find((p) => p.id === u.owner)?.faction === 'Egypt';
 }
 
 /** The tile card's line for a Chariot Archer hovering rough ground (Forest or Hills without a road): entering takes its whole turn. */

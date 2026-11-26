@@ -728,7 +728,7 @@ fn boundary_production_and_upkeep() {
     let mut state = arena(106, &[0, 1]);
     let p = PlayerId(0);
     let city = add_city(&mut state, p, Hex::new(4, 4));
-    // The Byzantium's levy cap would keep production blocked after the upkeep thins the army.
+    // The Byzantium would keep its own special unit; use Switzerland as a plain faction here.
     state.player_mut(p).faction = legatum_core::Faction::Switzerland;
     state.cities.get_mut(&city).unwrap().production_stored =
         data::unit_stats_for(state.player(p).faction, UnitKind::Spearman).cost;

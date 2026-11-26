@@ -489,30 +489,6 @@ pub enum Event {
         item: ProductionItem,
         gold: i32,
     },
-    /// Byzantium hired a Mercenary Company (`company`): `gold` went to `seller`, and the unit
-    /// serves until the end of turn `until`.
-    CompanyHired {
-        city: CityId,
-        owner: PlayerId,
-        seller: PlayerId,
-        unit: UnitKind,
-        gold: i32,
-        until: u32,
-    },
-    /// A Company's contract ended and it went home from `pos`.
-    CompanyDeparted {
-        unit: UnitKind,
-        owner: PlayerId,
-        origin: Option<Faction>,
-        pos: Hex,
-    },
-    /// An unpaid Company turned barbarian where it stood, at `pos`.
-    CompanyTurned {
-        unit: UnitKind,
-        owner: PlayerId,
-        origin: Option<Faction>,
-        pos: Hex,
-    },
     /// Byzantium's Heir was born in `city` (public: every empire is told, and his position is
     /// public from then on; whoever captures him scores his goal).
     HeirBorn {
