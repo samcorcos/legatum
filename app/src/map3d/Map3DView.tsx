@@ -23,6 +23,8 @@ import { useLandSound } from '../map/useLandSound';
 import { setMapProjector } from '../map/screenPos';
 import { gameplayFocusAllowed, gameplayKeyAllowed } from '../gameplayKeys';
 import { feel, useCombatFx } from '../feel';
+import { cancelBattleSounds, playBattleSounds } from '../feel/sound';
+import { battleSoundCues } from '../feel/battleSound';
 import { motionStill } from '../ui/motion';
 import { useReducedMotion } from '../ui/useReducedMotion';
 import { MapScene } from './scene';
@@ -60,6 +62,12 @@ export default function Map3DView() {
   const stillRef = useRef(still);
   stillRef.current = still;
   useEffect(() => { if (sceneRef.current) sceneRef.current.still = still; }, [still]);
+  const anim = useGame((s) => s.anim);
+  useEffect(() => {
+    if (!anim?.plan || still) return;
+    playBattleSounds(battleSoundCues(anim.plan), performance.now() - anim.start);
+    return cancelBattleSounds;
+  }, [anim, still]);
   const view = views?.[seat] ?? null;
   const [hover, setHover] = useState<Hex | null>(null);
   const client = useGame((s) => s.client);
@@ -168,6 +176,8 @@ export default function Map3DView() {
       notifyMapCamera();
     }
   }, [view]);
+  // The turn's moves and fighting play on the 3D figures (after the new view built them), heard on the 2D map's clock.
+  useEffect(() => { sceneRef.current?.setAnim(still ? null : anim); }, [anim, still]);
 
   // Jump-to requests (turn report lines, the advisor, Cities seen).
   useEffect(() => {
