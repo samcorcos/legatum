@@ -2722,6 +2722,440 @@
    "sha256": "168e2355495451da20d4be901ef3886a74e9ffb50ccfb748386516f09fb6bbe6"
   },
   {
+   "path": "tools/art/anim3d/sources/helmets/pbr_corinthian_helmet.glb",
+   "bytes": 37218840,
+   "sha256": "d6a434389c0a1d0e505a1a82b3816f91ea40b41016989aff1b0eb2602e726cb8",
+   "source": "https://sketchfab.com/3d-models/793a3eb779454e8db5552ac934f20098 (PBR Corinthian Helmet by timothyhsu)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/helmets/pbr_hoplite_helmet.glb",
+   "bytes": 15994104,
+   "sha256": "54ba98b7b02fab71c697b6b6fea6514b056ee5eec1bb591297ecebaffebe17ff",
+   "source": "https://sketchfab.com/3d-models/a20e96b821444a8d86eea4869fe4bc84 (PBR Hoplite Helmet by ferociousindustries.matthias)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/scene.bin",
+   "bytes": 16654584,
+   "sha256": "ec9fdbbe156c5d7a64b6f93feaa15aad654d27fd5c3ddbab638be0aa9834014b",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/scene.gltf",
+   "bytes": 66229,
+   "sha256": "9f0fc3c845817895e9cfd04214a72f5c83dc0da2f528e6d17b16e1ad2f8a8056",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Armor_pieces_baseColor.png",
+   "bytes": 270909,
+   "sha256": "84b8acbcf3284ce887ec0c9fc70b0d3ac4ea8547859ca14001f3a9ea29f6cddc",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Armor_pieces_metallicRoughness.png",
+   "bytes": 256037,
+   "sha256": "1b5d8ba839590f98372769a1e7f717299c15fe9ef9883c46e0a45ee73a76fbb7",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Armor_pieces_normal.png",
+   "bytes": 221520,
+   "sha256": "c9d35ec9628ce9933c18437c829a93eb386f17d8262c1a1fb4140abd7153c29e",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Body_armor_baseColor.png",
+   "bytes": 3280364,
+   "sha256": "62f0ceaac6a39146d820e7ea835ae73b9deae89f9bfadcc18d325a0ec88487fe",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Body_armor_metallicRoughness.png",
+   "bytes": 2207011,
+   "sha256": "1ab838760fb94d26133f0b828b0925088282cb573c53f5384da8735ef39e0655",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Body_armor_normal.png",
+   "bytes": 3090516,
+   "sha256": "bc7a846cd47717880187c74392b338c8bf98bd69598a2ad7a806b761e6b163c1",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Body_baseColor.png",
+   "bytes": 16464868,
+   "sha256": "93730a9cbeb40c50a8b3c8783bfa8b551d5ecb39f36272db2750de1efbaf77ca",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Body_normal.png",
+   "bytes": 11438347,
+   "sha256": "f841c1e15947920a1f22a43f495de3ee59b2f0733958aef5898e6d91ec666e93",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Cape_baseColor.png",
+   "bytes": 1733267,
+   "sha256": "968a10953df43c1856d7a3388e1f451e9eed7a53a22b518469dab6c1700dd0ea",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Cape_metal_baseColor.png",
+   "bytes": 2491098,
+   "sha256": "f7a5a6a6d1e523508a98e1020fe506f03fa9ca97fb735d8b77cba53b8f86821d",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Cape_metal_metallicRoughness.png",
+   "bytes": 2204970,
+   "sha256": "40fcb37ea89754477fef680f7d5d1d53484df5ea3d738c887c60924ca1b2b47e",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Cape_metal_normal.png",
+   "bytes": 1432865,
+   "sha256": "fa0d05b7449f8f46490d9053f860d7374375b420ad14166012d5f3a14dd97baa",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Cape_metallicRoughness.png",
+   "bytes": 86340,
+   "sha256": "d92d6df75942c83beac23b967ba90c70d860cdf55fe87a11a32fbaa6fec0fe8a",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Cape_normal.png",
+   "bytes": 2152161,
+   "sha256": "04563cfc9a964f8469bc1eb5c103376651d5b2fe4952642c6b9ca0c043f1e4ee",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Eyes_baseColor.png",
+   "bytes": 122113,
+   "sha256": "4f2c1d4dc408ae9b56bacd8b02b17f1699857a3e79af4e1a6acbf262a58878d4",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Hand_armor_baseColor.png",
+   "bytes": 699756,
+   "sha256": "c78d4366f357f5f500dc4355de2dad4241341673c1ccea666a50d953296acafd",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Hand_armor_metallicRoughness.png",
+   "bytes": 579002,
+   "sha256": "65743fce3c333146ef3f33e514db5f4e3aff6ca6f48d4f2c2ced901f5d7d3a1f",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Hand_armor_normal.png",
+   "bytes": 625581,
+   "sha256": "a303a27747753d4f91b933df6e10ae14c0b1eb5f79be09c0206ea3b780c0c908",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Helmet_baseColor.png",
+   "bytes": 3216854,
+   "sha256": "eb4d05f6efb90f4ba1a1b822fa73d0be81a03a65c1bf6ec582133cc188e6854c",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Helmet_fur_baseColor.png",
+   "bytes": 383943,
+   "sha256": "4ee59ef0b79cfd81d69b58f44497a24e0ae73482475b6a0aa0b8208e873495df",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Helmet_fur_metallicRoughness.png",
+   "bytes": 4270402,
+   "sha256": "2d18397f9d69f4cab33363a12b67534d2c94b81afbd32ac995433fb1b35a7a2c",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Helmet_fur_normal.png",
+   "bytes": 3097056,
+   "sha256": "a40a98cfa63be1cf699521678a0548e43dfe741c2bd796ac39135378344dd50e",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Helmet_metallicRoughness.png",
+   "bytes": 2678947,
+   "sha256": "805e1493aef99717216f6cdc5c8e9f46a5eb8876a1f87b09b0fa480f473b0866",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Helmet_normal.png",
+   "bytes": 2587391,
+   "sha256": "5c0509bc2cc1343df58c74d5404b9309a09666803a88d74e004a5607d8e15300",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Leg_armor_baseColor.png",
+   "bytes": 3937779,
+   "sha256": "b0f29d065e1070fa86b12e0ebc6775467912f82ac6e8a26fbad13048e88bf2d8",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Leg_armor_metallicRoughness.png",
+   "bytes": 3227592,
+   "sha256": "d51033d086254b23bbdfc1242181344b66d837d1d3e7aae677601b2720f727f6",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Leg_armor_normal.png",
+   "bytes": 3337345,
+   "sha256": "1fd6154872846d290ebd2f6e8154935f4079d078518e2c603e9ddf38ca8ba730",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Rope_baseColor.png",
+   "bytes": 1122873,
+   "sha256": "0b4ba1fbaf3f7eeced7ace1b721ca170937a05de55c5d0488b8a8d5578b96437",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Rope_normal.png",
+   "bytes": 1235406,
+   "sha256": "31c3afe4db18c4af05a84c601d65808aeafdd5b93bf5f35a3d6911aedec18191",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Shield_baseColor.png",
+   "bytes": 2864553,
+   "sha256": "5f121058ce361647ded913352e3358b2b3672edadcde6d23a66cd08f44198171",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Shield_metallicRoughness.png",
+   "bytes": 1968304,
+   "sha256": "4252b1e0b61f1ce932408774d39b8ab31055eb9ebdf4221c6f8fe71e56bdbc3f",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Shield_normal.png",
+   "bytes": 2658548,
+   "sha256": "76473ce1f60a0c37cc44be0bccd11072577e565f3139efc727a1ebc464c14040",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Shield_parts_baseColor.png",
+   "bytes": 292737,
+   "sha256": "dd045c8aa691ca05fcfa769b2a7d30723c1e5196cc19d01f4ec45fc48e7132eb",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Shield_parts_metallicRoughness.png",
+   "bytes": 458538,
+   "sha256": "ead76c6e3ea80217bf1bffdb74f9663d411b4e098b07f897489d0229e01c4316",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Shield_parts_normal.png",
+   "bytes": 406835,
+   "sha256": "f1356aae4deb600175965f92088c54982a763b98304afe9c48ca88f66d6f803d",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Shoes_baseColor.png",
+   "bytes": 5245200,
+   "sha256": "5161eb6be8d5c9c0a94b28984da346266336982354c502b5bbee04d048112193",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Shoes_metallicRoughness.png",
+   "bytes": 1182420,
+   "sha256": "21c48093006475f403a023b9ae19bbefdccddd2b5a862e9b92afab504f9999ad",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Shoes_normal.png",
+   "bytes": 5190933,
+   "sha256": "a8cf2d348175f0fe32179cc1930c388211602f748aaeb80b51dedc57a96f3c60",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Skirt_baseColor.png",
+   "bytes": 4815612,
+   "sha256": "b18261703b89959224df50362f42a44dd604a9b606ec7087610afb140edb16ad",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Skirt_metallicRoughness.png",
+   "bytes": 839896,
+   "sha256": "7e1128acde306d2d21533d371be8511767cceb7cb4374e62dceb5edb7c338d9e",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Skirt_normal.png",
+   "bytes": 6622328,
+   "sha256": "1b3f7d1d2ff1a839b56161897149f87fa8f86de74292afb7d09ae92d05d9b58e",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Spear_baseColor.png",
+   "bytes": 2121914,
+   "sha256": "51e538abec135701ff7c716107c2ec4bc6b6452c2cce6ed62adcf419446495dc",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Spear_metallicRoughness.png",
+   "bytes": 1077246,
+   "sha256": "3f8af43862b2839391a9359c00a8442d82f15bc263debcfa0135b5ad1c9cb1d4",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Spear_normal.png",
+   "bytes": 1599738,
+   "sha256": "c6f4efb19399ae24e47d941c6cf14e139909764eebeaff5835f16cb470d67ed5",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Strapmetal_baseColor.png",
+   "bytes": 40527,
+   "sha256": "9baac17ba826ae0fca8f8ab06d615c8c21729b3270571906da63c489023ec18b",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Strapmetal_metallicRoughness.png",
+   "bytes": 32431,
+   "sha256": "e0fa914febc2f4d2c3637868e6d8629d00b897b54b370fd1c428406c4cc9a330",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Strapmetal_normal.png",
+   "bytes": 51208,
+   "sha256": "d4c4a28e3c1ff052d98f95c9ffe73545a41a0c5521540d12f4e18428c95510e8",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Straps_baseColor.png",
+   "bytes": 5167884,
+   "sha256": "7d4089e059231997dd435ebf179d81833e1fcb52b6b692ef7c04d9fdcf257a12",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Straps_metallicRoughness.png",
+   "bytes": 2445872,
+   "sha256": "c4d72200ba396b3e2ef22e2b3a1c14f0c00d658e4afd3a9cb6968e3d156ee447",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Straps_normal.png",
+   "bytes": 5859742,
+   "sha256": "7563d767d5d517670fec6e5c271e351f37b3125fa515a2689a213fadb5b60c3e",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Sword_baseColor.png",
+   "bytes": 3253998,
+   "sha256": "a575b011cbe5e52d58bbc2d2dbeb8332f4c10762fc5be1806d596888259725d3",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Sword_metallicRoughness.png",
+   "bytes": 2389285,
+   "sha256": "254bd38a3981d7652b5adaf5a02db93375d19b80f836b23b8fcd228ba59052e3",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/Sword_normal.png",
+   "bytes": 3655230,
+   "sha256": "25209fa3cace5ba51fb56a67199efca20653f4250b9b2136180dfde2aa474d85",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/armor_wire_baseColor.png",
+   "bytes": 190631,
+   "sha256": "20b6e1245dc4e5a9009e389e19c8068a287e538d11b55782ce92dbc124865d4e",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/armor_wire_normal.png",
+   "bytes": 190176,
+   "sha256": "4b285d831ec86c353b06b4f42227d79cb33af954fc9e87413e9ad8dc43c9adf5",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/spearstraps_baseColor.png",
+   "bytes": 1324554,
+   "sha256": "f2e825e6a2dfc0680663b5a89d70b3cafe7d1c24dedb4dffb12282f562310198",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/spearstraps_metallicRoughness.png",
+   "bytes": 533941,
+   "sha256": "560e7eb43c59aa27408e5bf723d05ca024c511574a33aa0ff55f5cfc770937c4",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-tolnay/textures/spearstraps_normal.png",
+   "bytes": 1885899,
+   "sha256": "88c1027ed0d70731e83f87f25281e4e7ec9039c4e69aea409cc0a1ceb40b3d94",
+   "source": "https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300 (Hoplite by tolnaydavid; greaves from Leg_armor_low)",
+   "license": "CC-BY-4.0"
+  },
+  {
    "path": "tools/art/anim3d/sources/hoplite-warrior/scene.bin",
    "bytes": 2942752,
    "sha256": "0c6f4c4a56ed106b8a663e1375646b004ff91c13cf6860ff3a5df35588a2708f",
