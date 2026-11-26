@@ -1,11 +1,11 @@
 # A unit's upgrade stops at the most advanced form its supply allows (2026-11-26)
 
-Until rules 62 an upgrade order always aimed at the newest researched unit of the line. A unit whose
+Until rules 63 an upgrade order always aimed at the newest researched unit of the line. A unit whose
 newest form needed a resource the empire lacked could not upgrade at all, even when an older form on
 the same line used a resource it had: a Phalangite with Iron but no Niter was offered only the
 Musketman and stayed a Phalangite.
 
-Rules 63 (`rules::units::supplied_upgrade_plan`) walks back from the newest researched form to the
+Rules 64 (`rules::units::supplied_upgrade_plan`) walks back from the newest researched form to the
 first one whose supply is spare. Points worth knowing:
 
 - Only the final form uses supply (`resources::unit_upgrade_need_to`), so the intermediate steps

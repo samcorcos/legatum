@@ -275,9 +275,15 @@ pub struct RuleExperiments {
     /// +5% research cost per owned city beyond two, rounded up.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub city_research: bool,
-    /// Each owned city costs max(city count - 2, 0) Gold per turn.
+    /// Ablation: no city upkeep (the rule before 63).
     #[serde(skip_serializing_if = "std::ops::Not::not")]
-    pub city_upkeep: bool,
+    pub no_city_upkeep: bool,
+    /// City upkeep in percent of the rule (default 100).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub city_upkeep_percent: Option<u16>,
+    /// Cities free of city upkeep (default `data::CITY_UPKEEP_FREE`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub city_upkeep_free: Option<u8>,
     /// A city cannot buy a military unit while an enemy military unit at War stands within two
     /// tiles of it (Sam, 2026-11-22, via the Fable review; judged on his Swiss and Mongol games).
     #[serde(skip_serializing_if = "std::ops::Not::not")]
@@ -511,7 +517,7 @@ impl RuleExperiments {
         match flag {
             "settler-escalation" => self.settler_escalation = true,
             "city-research" => self.city_research = true,
-            "city-upkeep" => self.city_upkeep = true,
+            "no-city-upkeep" => self.no_city_upkeep = true,
             "expansion-coalitions" => self.expansion_coalitions = true,
             "no-purchase-under-threat" => self.no_purchase_under_threat = true,
             "frontier-cities" => self.frontier_cities = true,
@@ -598,12 +604,22 @@ impl RuleExperiments {
         crate::data::SETTLER_COST_STEP + if self.settler_escalation { 100 } else { 0 }
     }
 
+    /// City upkeep for an empire of `cities` cities: each costs (cities - free) Gold.
     pub fn city_upkeep(self, cities: i32) -> i32 {
-        if self.city_upkeep {
-            cities * (cities - 2).max(0)
-        } else {
-            0
+        if self.no_city_upkeep {
+            return 0;
         }
+        let free = self
+            .city_upkeep_free
+            .map_or(crate::data::CITY_UPKEEP_FREE, i32::from);
+        let percent = i32::from(self.city_upkeep_percent.unwrap_or(100));
+        cities * (cities - free).max(0) * percent / 100
+    }
+
+    /// The cities free of city upkeep.
+    pub fn city_upkeep_free(self) -> i32 {
+        self.city_upkeep_free
+            .map_or(crate::data::CITY_UPKEEP_FREE, i32::from)
     }
 }
 
