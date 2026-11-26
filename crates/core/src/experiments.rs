@@ -124,6 +124,12 @@ faction_rules! {
     // The Chariot Archer (Sam, 2026-11-25): Egypt's Archer, 3 moves, +40% shot against the melee
     // line, and Forest or Hills without a road take its whole turn to enter.
     EgyptChariotArcher => ("egypt_chariot_archer", Egypt, Strength),
+    // Buy a city (rules 63): Byzantium buys a rival's city with Gold, the seller paid, after three
+    // turns' public warning (`buy_city`).
+    ByzantiumBuyCity => ("byzantium_buy_city", Byzantium, Strength),
+    // The fall of Constantinople (rules 63): taking Byzantium's capital takes every Byzantine city
+    // unless its Heir shelters in another (`buy_city::capital_fall`).
+    ByzantiumCollapse => ("byzantium_collapse", Byzantium, Drawback),
 }
 
 impl FactionRule {

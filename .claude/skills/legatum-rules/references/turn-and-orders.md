@@ -16,6 +16,7 @@ diplomacy (`DeclareWar{against,breach}`, `BreakTreaty` = leave an Alliance,
 `UpgradeAircraft`: Eras and technologies, "The air layer"); city (`SetProduction`, `SetProductionQueue`, `BuyItem`, `BuyTile{tile}`
 (Byzantium only), `Raze`, `SetCityAutomation`); research (`SetResearch`, `SetResearchQueue`, `SetResearchGoal`,
 `SetScienceConversion` after the last technology);
+Byzantium's city offer (`BuyCity{city}`, rules 63, `buy_city`: factions.md "Buy a city and the fall of Constantinople"; validated after the turn's city orders, resolved after city orders and actions, settled at the end of turn after diplomacy);
 and **one-time empire actions** through a single variant, `Action { action }` (`orders.rs::Action`,
 serde tag `"action"`: `{"type":"Action","action":{"action":"Sakoku","close":true}}`): `Swarm` (the Aztecs' New Fire),
 `Sakoku{close}` (Japan closes or reopens the country), `Tomb{build}` (Egypt starts or pauses work on the Royal Tomb, rules 54), `Broadcast`,

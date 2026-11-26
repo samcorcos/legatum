@@ -203,6 +203,13 @@ pub enum Order {
         to: PlayerId,
         amount: i32,
     },
+    /// Byzantium only (`buy_city`, rules 63): offer to buy a rival's city. The price leaves the
+    /// treasury into escrow at once and the city changes hands at the end of the third turn after
+    /// this one, unless War or a price rise stops the offer first (`buy_city::blocker` says why
+    /// an order is refused). One offer at a time.
+    BuyCity {
+        city: CityId,
+    },
 }
 
 /// The one-time actions an empire can order (`Order::Action`). One order variant carries them

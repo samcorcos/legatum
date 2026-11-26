@@ -489,6 +489,48 @@ pub enum Event {
         item: ProductionItem,
         gold: i32,
     },
+    /// Byzantium made an offer for a rival's city (`Order::BuyCity`, `buy_city`): `escrow` Gold is
+    /// held and the city changes hands at the end of turn `ends_turn` unless the offer is stopped.
+    /// Seen by both empires' teams and everyone who knows the city.
+    CityOfferMade {
+        city: CityId,
+        buyer: PlayerId,
+        seller: PlayerId,
+        escrow: i32,
+        ends_turn: u32,
+    },
+    /// An offer ended (`buy_city::process_offers`): sold (`paid` Gold to the seller), cancelled
+    /// (`refund` in full) or failed on a price rise (`refund` minus the lost `fee`). `reason` is
+    /// one public line. Seen like `CityOfferMade`.
+    CityOfferEnded {
+        city: CityId,
+        buyer: PlayerId,
+        seller: PlayerId,
+        outcome: crate::buy_city::OfferOutcome,
+        #[serde(default, skip_serializing_if = "crate::orders::is_zero")]
+        paid: i32,
+        #[serde(default, skip_serializing_if = "crate::orders::is_zero")]
+        refund: i32,
+        #[serde(default, skip_serializing_if = "crate::orders::is_zero")]
+        fee: i32,
+        reason: String,
+    },
+    /// Public: the fall of Constantinople. `captor` took Byzantium `player`'s capital and with it
+    /// every city in `cities` (each also reported as its own capture or sack).
+    CapitalFell {
+        player: PlayerId,
+        captor: PlayerId,
+        capital: CityId,
+        cities: Vec<CityId>,
+    },
+    /// Public: `captor` took Byzantium `player`'s capital, but its Heir stood in `refuge`, which
+    /// became the capital; no other city fell.
+    HeirRefuge {
+        player: PlayerId,
+        captor: PlayerId,
+        capital: CityId,
+        refuge: CityId,
+    },
     /// Byzantium's Heir was born in `city` (public: every empire is told, and his position is
     /// public from then on; whoever captures him scores his goal).
     HeirBorn {

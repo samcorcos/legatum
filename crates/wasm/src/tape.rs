@@ -128,6 +128,7 @@ impl Tape {
                                     | "SetScienceConversion"
                                     | "SetCityAutomation"
                                     | "GiveGold"
+                                    | "BuyCity"
                             )
                         );
                         if !known {
@@ -577,10 +578,11 @@ mod tests {
                 to: PlayerId(1),
                 amount: 25,
             },
+            Order::BuyCity { city: CityId(29) },
         ]
     }
 
-    const ORDER_VARIANTS: usize = 32;
+    const ORDER_VARIANTS: usize = 33;
 
     fn variant_index(order: &Order) -> usize {
         match order {
@@ -616,6 +618,7 @@ mod tests {
             Order::BuyTile { .. } => 29,
             Order::GiveGold { .. } => 30,
             Order::SetResearchGoal { .. } => 31,
+            Order::BuyCity { .. } => 32,
         }
     }
 
