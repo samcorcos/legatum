@@ -1829,7 +1829,8 @@ impl Planner<'_> {
                             if data::building_family(building) == BuildingKind::Walls)
                 })
                 && d.turns_to_complete.is_some_and(|t| t > 2)
-                && self.enemy_near(c, 8);
+                && self.enemy_near(c, 8)
+                && (self.decisions.war_footing < 2 || self.footing_outmatched(c));
             let egypt_stalled = self.faction == Faction::Egypt
                 && self.difficulty == AiDifficulty::Hard
                 && self.decisions.egypt_food_buildings > 0
@@ -3384,6 +3385,13 @@ impl Planner<'_> {
             ProductionItem::Unit { unit } if composition::is_combat(unit) => {
                 d.production_stored > 0 && tier(unit) <= tier(now)
             }
+            // Level 2: Walls may still replace it.
+            ProductionItem::Building { building }
+                if self.decisions.keep_unit_build >= 2
+                    && data::building_family(building) == BuildingKind::Walls =>
+            {
+                false
+            }
             _ => true,
         }
     }
@@ -3420,6 +3428,7 @@ impl Planner<'_> {
         if self.decisions.war_footing == 0
             || self.difficulty != AiDifficulty::Hard
             || !self.enemy_near(c, 8)
+            || (self.decisions.war_footing >= 2 && !self.footing_outmatched(c))
         {
             return None;
         }
@@ -3431,6 +3440,20 @@ impl Planner<'_> {
         }
         self.quick_defender(c, true)
             .and_then(|item| self.early_choice(item, "war footing: defender"))
+    }
+
+    /// Level 2 of `war_footing`: only an empire that declared on us, with more force near the
+    /// city than defends it.
+    fn footing_outmatched(&self, c: &CityView) -> bool {
+        let v = self.view();
+        let declared_on_us = v.diplomacy.relations.iter().any(|r| {
+            (r.a == v.team || r.b == v.team)
+                && r.state == legatum_core::diplomacy::RelationState::War
+                && !r.declarers.is_empty()
+                && !r.declarers.contains(&v.team)
+        });
+        let ci = self.ctx.own_cities.iter().position(|o| o.id == c.id);
+        declared_on_us && ci.is_some_and(|ci| self.ctx.threat[ci] > self.local_defense(c))
     }
 
     /// The melee (or, with `ranged`, also ranged) unit with the most strength per turn of

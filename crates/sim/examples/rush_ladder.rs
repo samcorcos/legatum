@@ -141,6 +141,10 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
     let (setup, seat_index) = setup(args, game_seed);
     let seat = PlayerId(seat_index as u8);
     let mut state = legatum_core::new_game(&setup);
+    if args.tape.is_some() && index > 0 {
+        // Same map and lobby, fresh dice per salt (as `hill_suite` does).
+        state.dice_seed = Some(setup.seed ^ index.wrapping_mul(0xD1CE_0000_9E37_79B9));
+    }
     let master = AiParams::builtin();
     let mut brains: Vec<Box<dyn Brain>> = setup
         .players
