@@ -197,7 +197,7 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
             {unitClass(unit.kind as UnitKind) && <> · <Tip content={<ClassTip kind={unit.kind as UnitKind} bow={bow} />} className="up-class">{CLASS_NAME[unitClass(unit.kind as UnitKind)!]}</Tip></>}
             {unit.military && <> · <Tip content={`${eraName(unitEra(unit.kind as UnitKind))} era. Every military miniature wears this numeral on its base, so a newer unit of the same class reads apart on the map.`} className="up-era"><EraTab era={unitEra(unit.kind as UnitKind)} /></Tip></>}
           </div>
-          {cityHere && <p className="up-city" data-testid="unit-open-city">In {cityHere.name} · <button className="link" onClick={() => { useGame.getState().select({ kind: 'city', id: cityHere.id }); feel.select(); }}>Open city</button></p>}
+          {cityHere && <p className="up-city" data-testid="unit-open-city">In {cityHere.name}<span aria-hidden="true"> · </span><button className="link" onClick={() => { useGame.getState().select({ kind: 'city', id: cityHere.id }); feel.select(); }}>Open city</button></p>}
           {unit.military && <PromotionLine unit={unit} faction={owner?.faction} />}
           {mine && isColoniaFounder(view, unit.id) && <p className="up-colonia" data-testid="unit-colonia"><Icon name="goal-colonia" size={14} /> Can found your Colonia Victrix{coloniaHere ? ' here' : ''} (+{factionGoalVp('Rome')} VP){coloniaHere ? '' : coloniaSiteKnown(view) === false ? `. No site known yet: it must be within ${COLONIA_REACH} tiles of a rival's land.` : ': gilt rings on the Settle lens mark the sites'}</p>}
           {isCompany(unit) && <CompanyTag unit={unit} view={view} />}

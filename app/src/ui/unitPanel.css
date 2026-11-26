@@ -7,6 +7,7 @@
 .game .refined-unit-panel .up-kind { font-size: 26px; line-height: 1; overflow-wrap: normal; }
 .game .refined-unit-panel .up-owner { white-space: normal; overflow: visible; font-size: 11px; line-height: 1.5; }
 .game .refined-unit-panel .up-city { margin: 2px 0 0; font-size: 11px; line-height: 1.5; }
+.game .refined-unit-panel .up-city .link { font-size: 13px; padding: 3px 0; outline-offset: 1px; }
 .game .refined-unit-panel .up-status { grid-column: 1 / -1; font-size: 10px; letter-spacing: .08em; margin-top: 2px; }
 .game .refined-unit-panel .up-rank-text { flex-direction: row; flex-wrap: wrap; gap: 3px 8px; }
 .game .refined-unit-panel .up-rank .muted { font-size: 11px; }
