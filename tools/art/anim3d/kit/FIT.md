@@ -294,3 +294,33 @@ is not used. With the new crest part, a helmet sculpt must be re-saved from an r
 **Still open.** From the side the face plate reads as a separate visor; the greave tops end in
 pointed, notched edges instead of a rounded knee guard; the bronze is still mottled in places.
 These need hand sculpting/painting, which is not available in this pipeline.
+
+## r7: replacing the helmet and greaves (`--replace-part`)
+
+`kit/fit_replace.py`. The source part should be Y up, facing +Z (glTF convention); fix others
+with `--replace-rot`. `:OBJECT` picks one mesh (prefix match), e.g. dropping a helmet's own plume.
+- **helmet**: deletes the fitted helmet and face plate, then a bounding-shell fit: scaled so its
+  width and depth enclose the head skin with ~8 mm clearance (shell walls taken as 12%), crown just
+  above the head top, then grown 3% at a time until no crown/brow skin pokes out (BVH rays). Rigid
+  on `helmet`; the `--crest-mass` crest is built afterwards on the new shell.
+- **greaves**: deletes source clothing faces on the shins (any vertex in the shin region, so no
+  leftover rim strips), splits a both-legs object at x = 0 (or mirrors a single greave), and fits
+  each to its shin from 7 cm above the ankle to 5 cm over the knee, cross-section from that shin's
+  own skin (2-98 percentile, ~1 cm clearance, at most +12% growth). Skin bulging through is pressed
+  back under it. Weights are direct, not transferred: 100% `leg_X`, easing to 50% `thigh_X` across
+  the knee (a nearest-face transfer picked up the other leg and threw spikes). Its own part `greave`.
+- Credits and licences go into the GLB credit, `asset.extras.replaced_parts` and the stub PROVENANCE.
+
+Placeholder proof: `kit/placeholder_parts.py` writes a CC0 Corinthian-style helmet and greave;
+output `units/spearman-fit-casey-r7-test/` (not committed). Real round r7: the timothyhsu helmet
+(`:helmet_low`) and tolnaydavid's `Leg_armor_low`, output `units/spearman-fit-casey-r7/`:
+
+```sh
+S=~/LegatumRuns/anim-pilot/premium-source; F=~/LegatumRuns/anim-pilot/fit
+fit_source_to_0ad.py -- <r6 arguments without --corinthian> --crest-tail .95 --keep helmet \
+  --replace-part helmet=$S/helmets/pbr_corinthian_helmet.glb:helmet_low \
+  --replace-credit 'helmet=PBR Corinthian Helmet by timothyhsu (Sketchfab), CC BY 4.0' --replace-license helmet=CC-BY-4.0 \
+  --replace-part greaves=$S/hoplite-tolnay/scene.gltf:Leg_armor_low \
+  --replace-credit 'greaves=Hoplite by tolnaydavid (Sketchfab), CC BY 4.0' --replace-license greaves=CC-BY-4.0
+```
+(The full command is `kit/sculpt/r7.sh`.) `kit/crest_clearance.py` must report no contact.

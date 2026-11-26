@@ -124,7 +124,7 @@ def corinthian(helmet_pts, face_pts, bronze, dark, name='Corinthian face plate',
     return out, {'centre': [0, round(cy, 3), round(cz, 3)], 'radii_m': [round(rx, 3), ry, round(rz, 3)]}
 
 
-def press_under(skin_objs, layer_pts, depth=.008, reach=.02):
+def press_under(skin_objs, layer_pts, depth=.008, reach=.02, below=.004):
     """Skin within reach of a clothing/armour vertex sinks to depth below it (hidden anyway)."""
     moved = 0
     for o in skin_objs:
@@ -134,14 +134,14 @@ def press_under(skin_objs, layer_pts, depth=.008, reach=.02):
         for k in range(0, n, 512):
             d2 = ((P[k:k + 512, None] - layer_pts[None]) ** 2).sum(2); j = d2.argmin(1); d = np.sqrt(d2[np.arange(len(j)), j])
             off = ((layer_pts[j] - P[k:k + 512]) * Nn[k:k + 512]).sum(1)          # layer height above the skin
-            bad = (d < reach) & (off > -.004) & (off < depth)
+            bad = (d < reach) & (off > -below) & (off < depth)  # below: skin already poking out through the layer
             P[k:k + 512][bad] -= Nn[k:k + 512][bad] * (depth - off[bad])[:, None]; moved += int(bad.sum())
         me.vertices.foreach_set('co', P.ravel()); me.update()
     return moved
 
 
 def crest_mass(helmet_pts, ceiling, name='Crest horsehair (procedural)', seg=44, ring=22, ridges=11,
-               height=.17, width=.095, groove=.009, seed=5):
+               height=.17, width=.095, groove=.009, seed=5, tail=1.14):
     """A horsehair crest as its own part: a lofted mass along a front-to-back arc
     over the helmet crown (a mohawk sweep that trails down at the back), with a
     teardrop section that is fuller toward the top, real strand grooves running
@@ -158,14 +158,14 @@ def crest_mass(helmet_pts, ceiling, name='Crest horsehair (procedural)', seg=44,
     hgt = min(height, ceiling - top - .01)
     rng = np.random.default_rng(seed); phase = rng.random(ridges) * 2 * np.pi
     verts, uvs, faces = [], [], []
-    ts = np.linspace(-.02, 1.14, seg + 1)               # 0 front edge, 1 back edge; past 1 trails down the back
+    ts = np.linspace(-.02, tail, seg + 1)               # 0 front edge, 1 back edge; past 1 trails down the back
     for i, t in enumerate(ts):
         a = math.pi * np.clip(t, 0, 1)
         z = zc + R * math.cos(a) - .025 * t              # swept back a little
         yb = base_y(np.clip(z, zb, zf))
         if t > 1: yb -= (t - 1) * .35; z -= (t - 1) * .08   # tail falls behind the neck guard
         if t < 0: yb -= -t * .15
-        env = math.sin(math.pi * np.clip((t + .02) / 1.16, 0, 1)) ** .45
+        env = math.sin(math.pi * np.clip((t + .02) / (tail + .02), 0, 1)) ** .45
         # Fluffy top edge: tufts every few segments.
         h = (.02 + hgt * env * (1 + .12 * t)) * (1 + .06 * math.cos(t * 2 * math.pi * 7 + 1.3))
         w = width * (.55 + .45 * env)
