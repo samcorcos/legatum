@@ -91,7 +91,7 @@ export default function Map3DView() {
       const lensBox = wrap.querySelector('.map-lenses')?.getBoundingClientRect();
       const next = shown || !lensBox ? null : { left: Math.round(lensBox.right - o.left + 8), bottom: Math.round(o.bottom - lensBox.bottom) };
       setFlatChip((old) => (old?.left === next?.left && old?.bottom === next?.bottom ? old : next));
-      panels.current = [...document.querySelectorAll('.game .panel, .game .vp, .game .report, .map-lenses, .advisor-card, .topbar')].map((e) => {
+      panels.current = [...document.querySelectorAll('.game .panel, .game .vp, .game .report, .left-dock > *, .unit-panel, .seatbar, .minimap, .map-lenses, .advisor-card, .topbar')].map((e) => {
         const r = e.getBoundingClientRect();
         return { left: r.left - o.left, top: r.top - o.top, right: r.right - o.left, bottom: r.bottom - o.top };
       });
@@ -260,7 +260,7 @@ export default function Map3DView() {
   // City banners and unit marks: the 2D map's sprites on a flat canvas over the scene, drawn every frame.
   const orderErrors = useGame((s) => s.errors[s.seat]);
   const cityAlarms = useCityAlarms();
-  const marksData = useRef<Omit<Marks2dInput, 'view' | 'cityAt' | 'unitAt' | 'far'> | null>(null);
+  const marksData = useRef<Omit<Marks2dInput, 'view' | 'cityAt' | 'unitAt' | 'unitFootAt' | 'far'> | null>(null);
   marksData.current = useMemo(() => {
     const focuses = cityFocusesFor(view, orders ?? []);
     return {
@@ -291,6 +291,7 @@ export default function Map3DView() {
       ...data, view: v, far: sc.dist > 14,
       cityAt: (c) => (known(c) ? sc.project(c.pos, 0.34) : null),
       unitAt: (u) => sc.unitHead(u.id),
+      unitFootAt: (u) => sc.unitFoot(u.id),
     });
     drawPickers3d(ctx, sc, v, pickRef.current, mapPlayerColor(v.me), panelRects());
     const rt = routeRef.current;

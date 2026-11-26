@@ -789,6 +789,17 @@ export class MapScene {
     return { x: (v.x + 1) / 2 * W, y: (1 - v.y) / 2 * Hh, radius: Math.abs((e.x - v.x) / 2 * W) };
   }
 
+  /** Where a unit's figure stands on screen (the centre of its base disc). */
+  unitFoot(id: number): { x: number; y: number; radius: number } | null {
+    const g = this.unitGroups.get(id);
+    if (!g) return null;
+    const v = g.position.clone().project(this.camera);
+    if (v.z > 1) return null;
+    const e = new THREE.Vector3(g.position.x + R, g.position.y, g.position.z).project(this.camera);
+    const el = this.renderer.domElement, W = el.clientWidth, Hh = el.clientHeight;
+    return { x: (v.x + 1) / 2 * W, y: (1 - v.y) / 2 * Hh, radius: Math.abs((e.x - v.x) / 2 * W) };
+  }
+
   centerOn(hex: Hex) {
     if (!this.world) return;
     const i = tileIndexOf(hex, this.world.w, this.world.h);

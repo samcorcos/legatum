@@ -1469,6 +1469,22 @@ function drawLockMark(ctx: CanvasRenderingContext2D, look: LookId, x: number, y:
   drawBadge(ctx, look, x - w * 0.95, y - w * 0.85, w * 0.55, '', false, 'mark-lock');
 }
 
+/** Rome's Colonia Victrix founder: the laurel on a gilt-ringed seal centred at (cx, cy) (shared with the 3D map). */
+export function drawColoniaSeal(ctx: CanvasRenderingContext2D, cx: number, cy: number, w: number, dpr: number) {
+  const r = Math.max(8, w * 0.42);
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = TOKEN_INK.atlas.paper; ctx.fill();
+  ctx.strokeStyle = TOKEN_INK.atlas.ink; ctx.lineWidth = 1; ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx, cy, r - 1.8, 0, Math.PI * 2); ctx.strokeStyle = CAPITAL_GILT; ctx.lineWidth = 1.3; ctx.stroke();
+  const s = (r - 2) * 1.6, ic = tintedIcon('goal-colonia', TOKEN_INK.atlas.ink, s * dpr);
+  if (ic) ctx.drawImage(ic, cx - s / 2, cy - s / 2, s, s);
+}
+
+/** A fortified unit's mark, 12 px, top-left at (x, y) (shared with the 3D map). */
+export function drawFortifyMark(ctx: CanvasRenderingContext2D, x: number, y: number, dpr: number) {
+  const ic = tintedIcon('fortify', TOKEN_INK.atlas.ink, 14 * dpr);
+  if (ic) ctx.drawImage(ic, x, y, 12, 12);
+}
+
 function drawUnit(ctx: CanvasRenderingContext2D, look: LookId, u: UnitView, x: number, y: number, w: number, dpr: number, mine: boolean, mark: PendingMark | undefined, faction?: Faction, cue?: StrengthCue | null, prop?: SiegeProp | null, hexBox?: { cx: number; half: number }, contract?: number | null, heirLabel?: string | null, colonia = false) {
   if (isBarbarian(u.owner)) drawBarbarianToken(ctx, look, u.kind as UnitKind, u.military, x, y, w, dpr);
   else drawToken(ctx, look, u.kind as UnitKind, mapPlayerColor(u.owner), u.military, x, y, w, dpr, u.owner, 1, faction, u.heir_of == null ? undefined : { crestColor: u.heir_of === u.owner ? undefined : mapPlayerColor(u.heir_of) });
@@ -1493,19 +1509,9 @@ function drawUnit(ctx: CanvasRenderingContext2D, look: LookId, u: UnitView, x: n
   if (u.military && u.level) drawPromotion(ctx, look, u.level, x, y, w, faction);
   // Rome: a veteran that founds the Colonia Victrix wears its laurel on a gilt-ringed seal over the token's head (16 px or more),
   // clear of the owner roundel (upper left) and the order badge (upper right).
-  if (colonia) {
-    const r = Math.max(8, w * 0.42), cx = x, cy = y - w * 1.12;
-    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = TOKEN_INK.atlas.paper; ctx.fill();
-    ctx.strokeStyle = TOKEN_INK.atlas.ink; ctx.lineWidth = 1; ctx.stroke();
-    ctx.beginPath(); ctx.arc(cx, cy, r - 1.8, 0, Math.PI * 2); ctx.strokeStyle = CAPITAL_GILT; ctx.lineWidth = 1.3; ctx.stroke();
-    const s = (r - 2) * 1.6, ic = tintedIcon('goal-colonia', TOKEN_INK.atlas.ink, s * dpr);
-    if (ic) ctx.drawImage(ic, cx - s / 2, cy - s / 2, s, s);
-  }
+  if (colonia) drawColoniaSeal(ctx, x, y - w * 1.12, w, dpr);
   const bx = x + w * 0.95;
-  if (u.fortify > 0) {
-    const ic = tintedIcon('fortify', TOKEN_INK.atlas.ink, 14 * dpr);
-    if (ic) ctx.drawImage(ic, bx - 5, y + w * 0.35, 12, 12);
-  }
+  if (u.fortify > 0) drawFortifyMark(ctx, bx - 5, y + w * 0.35, dpr);
   // The strength cue: an enemy your selected unit could attack this turn carries how much stronger or weaker it is in that fight.
   if (cue?.targets.has(u.id)) drawStrengthChip(ctx, matchupStrength(u, faction, cue.sel, false), matchupStrength(cue.sel, cue.selFaction, u, true), bx + 5, y - w * 0.85 - 5, FONTS[look].sans, 1, false, cue.neutralBarbarians && isBarbarian(u.owner));
   if (mark) drawBadge(ctx, look, bx, y - w * 0.85, w * 0.42, '', true, MARK_ICON[mark]);
