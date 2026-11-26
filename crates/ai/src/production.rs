@@ -1818,13 +1818,24 @@ impl Planner<'_> {
                 city_tally.army -= 1;
                 city_tally.rangers -= i32::from(composition::is_ranged_line(unit));
             }
+            // Gene `war_footing`: a long peacetime build is reconsidered with an enemy army near.
+            let footing = self.decisions.war_footing > 0
+                && self.difficulty == AiDifficulty::Hard
+                && d.producing.is_some_and(|item| {
+                    !is_military_unit(item)
+                        && !matches!(item, ProductionItem::Building { building }
+                            if data::building_family(building) == BuildingKind::Walls)
+                })
+                && d.turns_to_complete.is_some_and(|t| t > 2)
+                && self.enemy_near(c, 8)
+                && (self.decisions.war_footing < 2 || self.footing_outmatched(c));
             let egypt_stalled = self.faction == Faction::Egypt
                 && self.difficulty == AiDifficulty::Hard
                 && self.decisions.egypt_food_buildings > 0
                 && self.view().rule_experiments.egypt_construction()
                 && matches!(d.producing, Some(ProductionItem::Building { .. }))
                 && d.yields.total.food <= 2 * c.population;
-            if (reconsider || abandon_wonder || egypt_stalled || d.producing.is_none()
+            if (reconsider || footing || abandon_wonder || egypt_stalled || d.producing.is_none()
                 || matches!(d.producing, Some(ProductionItem::Project { .. })))
                 && d.resistance <= 0
                 && !self
@@ -1833,6 +1844,7 @@ impl Planner<'_> {
                     .any(|o| matches!(o, Order::SetProduction { city, .. } if *city == c.id))
                 && let Some(item) = self.choose_item(ci, c, &city_tally)
                 && d.producing != Some(item)
+                && !(reconsider && self.keeps_unit_build(d, item))
                 // A tile improvement bought this turn is done: it can't also be set as production.
                 && !self.orders.iter().any(|o| {
                     matches!(o, Order::BuyItem { city, item: bought }
@@ -2887,6 +2899,9 @@ impl Planner<'_> {
         } else {
             None
         };
+        let door = door
+            .or_else(|| self.war_footing_build(c))
+            .or_else(|| self.early_army_build(c, tally));
         let routine = door
             .or_else(|| self.rome_opening_build(c))
             .or_else(|| self.choose_item_inner(ci, c, tally));
@@ -3352,6 +3367,126 @@ impl Planner<'_> {
         {
             last.gates.push((item, gate.into()));
         }
+    }
+
+    /// Gene `keep_unit_build`: a combat unit under way is not swapped for a non-combat item,
+    /// and once it holds Production only for a unit of a later era.
+    fn keeps_unit_build(&self, d: &legatum_core::view::CityDetail, item: ProductionItem) -> bool {
+        if self.decisions.keep_unit_build == 0 || self.difficulty != AiDifficulty::Hard {
+            return false;
+        }
+        let Some(ProductionItem::Unit { unit: now }) = d.producing else {
+            return false;
+        };
+        let tier = |u: UnitKind| data::unit_era_tier(u);
+        match item {
+            ProductionItem::Unit { unit } if composition::is_combat(unit) => {
+                d.production_stored > 0 && tier(unit) <= tier(now)
+            }
+            // Level 2: Walls may still replace it.
+            ProductionItem::Building { building }
+                if self.decisions.keep_unit_build >= 2
+                    && data::building_family(building) == BuildingKind::Walls =>
+            {
+                false
+            }
+            _ => true,
+        }
+    }
+
+    /// Gene `early_army`: the cheapest melee unit while the empire is below its opening floor.
+    fn early_army_build(&self, c: &CityView, tally: &Tally) -> Option<ProductionItem> {
+        let cap = self.decisions.early_army;
+        if cap == 0 || self.difficulty != AiDifficulty::Hard {
+            return None;
+        }
+        let turn = self.view().turn;
+        if turn >= 30 {
+            return None;
+        }
+        let floor = (1 + i32::from(turn >= 3) + i32::from(turn >= 12)).min(cap);
+        if tally.army >= floor {
+            return None;
+        }
+        self.quick_defender(c, false)
+            .and_then(|item| self.early_choice(item, "early army floor"))
+    }
+
+    /// True when an empire at war with us has a military unit within `radius` of this city.
+    fn enemy_near(&self, c: &CityView, radius: i32) -> bool {
+        let v = self.view();
+        v.units.iter().any(|u| {
+            u.military
+                && u.owner != v.me
+                && v.at_war(v.me, u.owner)
+                && u.pos.distance(c.pos) <= radius
+        })
+    }
+
+    /// Gene `war_footing`: an enemy army near the city puts it on a war footing: finish Walls
+    /// under way, otherwise train the strongest defender per turn of training.
+    fn war_footing_build(&self, c: &CityView) -> Option<ProductionItem> {
+        if self.decisions.war_footing == 0
+            || self.difficulty != AiDifficulty::Hard
+            || !self.enemy_near(c, 8)
+            || (self.decisions.war_footing >= 2 && !self.footing_outmatched(c))
+        {
+            return None;
+        }
+        if let Some(item @ ProductionItem::Building { building }) =
+            c.detail.as_ref().and_then(|d| d.producing)
+            && data::building_family(building) == BuildingKind::Walls
+        {
+            return self.early_choice(item, "war footing: finish Walls");
+        }
+        self.quick_defender(c, true)
+            .and_then(|item| self.early_choice(item, "war footing: defender"))
+    }
+
+    /// Level 2 of `war_footing`: only an empire that declared on us, with more force near the
+    /// city than defends it.
+    fn footing_outmatched(&self, c: &CityView) -> bool {
+        let v = self.view();
+        let declared_on_us = v.diplomacy.relations.iter().any(|r| {
+            (r.a == v.team || r.b == v.team)
+                && r.state == legatum_core::diplomacy::RelationState::War
+                && !r.declarers.is_empty()
+                && !r.declarers.contains(&v.team)
+        });
+        let ci = self.ctx.own_cities.iter().position(|o| o.id == c.id);
+        declared_on_us && ci.is_some_and(|ci| self.ctx.threat[ci] > self.local_defense(c))
+    }
+
+    /// The melee (or, with `ranged`, also ranged) unit with the most strength per turn of
+    /// training that this city can start now; with `ranged` false, the cheapest melee unit.
+    fn quick_defender(&self, c: &CityView, ranged: bool) -> Option<ProductionItem> {
+        let rules = self.view().rule_experiments;
+        c.detail
+            .as_ref()?
+            .options
+            .iter()
+            .filter(|o| o.turns > 0 && o.resource_blocker.is_none())
+            .filter_map(|o| match o.item {
+                ProductionItem::Unit { unit }
+                    if composition::is_melee_line(unit)
+                        || (ranged && composition::is_ranged_line(unit)) =>
+                {
+                    Some((o, unit))
+                }
+                _ => None,
+            })
+            .max_by_key(|(o, unit)| {
+                let stats = rules.unit_stats_for(self.faction, *unit);
+                if ranged {
+                    (
+                        stats.strength.max(stats.ranged) * 100 / o.turns.max(1),
+                        -o.cost,
+                    )
+                } else {
+                    (-o.cost, stats.strength)
+                }
+            })
+            .map(|(o, _)| o.item)
     }
 
     fn early_choice(&self, item: ProductionItem, gate: &'static str) -> Option<ProductionItem> {
