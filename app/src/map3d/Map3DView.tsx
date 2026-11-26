@@ -5,9 +5,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Hex } from '../types';
 import { isEliminated, useGame } from '../store';
 import { distance, hexEq, tileIndex } from '../hex';
-import { moveSelected, peacefulAt, peacefulRangedAt, rangedEnemyAt, rangedSelected, selectedOwnUnit, warQueuedNow } from '../commands';
+import { enemyAt, moveSelected, peacefulAt, peacefulRangedAt, rangedEnemyAt, rangedSelected, selectedOwnUnit, warQueuedNow } from '../commands';
 import { pointerIntent, previewDestination } from '../map/intent';
-import { chariotTerrainNote, planTurns, previewRoute, routeDangerText, routeRiskText } from '../path';
+import { chariotTerrainNote, planTurns, previewRoute, routeDangerText, routeRiskText, type PathStep } from '../path';
 import { useBattlePreview } from '../map/battlePreview';
 import { ForecastCard } from '../ui/ForecastCard';
 import { DualForecastCard } from '../ui/DualForecastCard';
@@ -37,7 +37,7 @@ import { overlayEmpty } from '../map/overlays';
 import { isBarbarian } from '../barbarians';
 import { isColoniaFounder } from '../goalCities';
 import { itemName } from '../data';
-import { drawMarks2d, type Marks2dInput } from './marks2d';
+import { drawMarks2d, drawRoute3d, type Marks2dInput } from './marks2d';
 import { cityBuildsFor, cityFocusesFor, pendingMarksFor } from '../map/orderMarks';
 import { alarmedCities } from '../siege';
 import { useCityAlarms } from '../ui/useCityAlarms';
@@ -204,10 +204,11 @@ export default function Map3DView() {
   const pathInfo = useMemo(() => {
     if (!view || !ownSel || !previewTarget || hexEq(previewTarget, ownSel.pos)) return null;
     const { path, risk, danger, crossed } = previewRoute(view, ownSel.pos, previewTarget, orders ?? [], ownSel.id, { avoidEnemyReach: true });
-    if (!path) return { route: [] as Hex[], warning: null as string | null };
+    if (!path) return { route: [] as Hex[], steps: [] as PathStep[], warning: null as string | null };
     const steps = planTurns(view, path, ownSel.pos, ownSel.max_moves, (h) => !!crossed?.some((c) => hexEq(c, h)), ownSel);
     return {
       route: [ownSel.pos, ...path.filter((h) => !hexEq(h, ownSel.pos))],
+      steps,
       warning: [civilianCaptureRace(view, ownSel, previewTarget, steps.length), risk && routeRiskText(view, risk), danger && routeDangerText(danger)].filter(Boolean).join(' ') || null,
     };
   }, [view, ownSel, previewTarget, orders]);
@@ -216,7 +217,7 @@ export default function Map3DView() {
     if (!sc || !view) return;
     const selHex = selection?.kind === 'unit' ? view.units.find((u) => u.id === selection.id)?.pos
       : selection?.kind === 'city' ? view.cities.find((c) => c.id === selection.id)?.pos : null;
-    sc.setOverlays({ hover, selected: selHex ?? null, route: pathInfo?.route ?? [] });
+    sc.setOverlays({ hover, selected: selHex ?? null, route: [] });
   }, [view, hover, pathInfo, selection]);
 
   // Hover cards: the same battle forecast, Peace hint and tile card as the 2D map.
@@ -238,6 +239,9 @@ export default function Map3DView() {
     if (u) avoid.unshift({ left: u.x - at.radius, top: u.y - at.radius * 2, right: u.x + at.radius, bottom: u.y + at.radius });
     return { x: at.x, y: at.y, r: at.radius, avoid };
   })();
+  const routeRef = useRef<{ route: Hex[]; steps: PathStep[]; attack: boolean } | null>(null);
+  routeRef.current = pathInfo && pathInfo.route.length > 1 && view && previewTarget
+    ? { route: pathInfo.route, steps: pathInfo.steps, attack: !!ownSel?.military && !!enemyAt(view, previewTarget) } : null;
   const hoverTile = view && hover ? view.tiles[tileIndex(hover, view.width, view.height)] : null;
 
   // City banners and unit marks: the 2D map's sprites on a flat canvas over the scene, drawn every frame.
@@ -268,6 +272,8 @@ export default function Map3DView() {
       cityAt: (c) => (known(c) ? sc.project(c.pos, 0.34) : null),
       unitAt: (u) => sc.unitHead(u.id),
     });
+    const rt = routeRef.current;
+    if (rt) drawRoute3d(ctx, rt.route.map((hx) => sc.project(hx, 0.02)), rt.steps, rt.attack, performance.now());
     const { lensTiles: lt, yieldTiles, settle } = lensRef.current;
     if (lt.length || yieldTiles.length) {
       // One hex size for the whole view (the one under the camera's target): chips and icons stay one size, as on the 2D map.

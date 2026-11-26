@@ -10,6 +10,9 @@ import type { SiegeLevel } from '../siege';
 import { tombStatus } from '../goalCities';
 import { healthColor } from '../theme';
 import { tintedIcon } from '../icons';
+import { MAP_STYLES } from '../map/style';
+import { roman } from '../brand/roman';
+import type { PathStep } from '../path';
 
 const LOOK: LookId = 'atlas';
 
@@ -86,4 +89,47 @@ export function drawMarks2d(ctx: CanvasRenderingContext2D, w: number, h: number,
       }
     }
   }
+}
+
+/** The selected unit's planned route, as on the 2D map: a dashed ink line rounded through the tile centres, stopping short of
+ *  the destination, with a roundel carrying the turn (in roman numerals) wherever a turn ends. Attack routes are in attack ink. */
+export function drawRoute3d(ctx: CanvasRenderingContext2D, pts: ({ x: number; y: number } | null)[], steps: readonly PathStep[], attack: boolean, time: number) {
+  const S = MAP_STYLES.atlas;
+  const P = pts.filter((p): p is { x: number; y: number } => !!p);
+  if (P.length < 2 || P.length !== pts.length) return;
+  const color = attack ? S.ink.attack : S.ink.route;
+  const last = P[P.length - 1], prev = P[P.length - 2];
+  const d = Math.hypot(last.x - prev.x, last.y - prev.y) || 1;
+  const cut = Math.min(12, d * 0.5);
+  const end = { x: last.x - ((last.x - prev.x) / d) * cut, y: last.y - ((last.y - prev.y) / d) * cut };
+  ctx.save();
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const trace = () => {
+    ctx.beginPath();
+    ctx.moveTo(P[0].x, P[0].y);
+    for (let k = 1; k < P.length - 1; k++) {
+      const m = k === P.length - 2 ? end : { x: (P[k].x + P[k + 1].x) / 2, y: (P[k].y + P[k + 1].y) / 2 };
+      ctx.quadraticCurveTo(P[k].x, P[k].y, m.x, m.y);
+    }
+    if (P.length === 2) ctx.lineTo(end.x, end.y);
+  };
+  // A paper halo first, so the ink reads on dark forest and on light sand alike.
+  trace(); ctx.strokeStyle = S.ink.markerFill; ctx.globalAlpha = 0.75; ctx.lineWidth = 5; ctx.stroke(); ctx.globalAlpha = 1;
+  trace(); ctx.strokeStyle = color; ctx.lineWidth = 2.2;
+  if (S.ink.routeDash) { ctx.setLineDash(S.ink.routeDash); ctx.lineDashOffset = -time / 60; }
+  ctx.stroke(); ctx.setLineDash([]);
+  // The destination: an ink ring where the route ends.
+  ctx.beginPath(); ctx.arc(last.x, last.y, 7, 0, Math.PI * 2); ctx.lineWidth = 2; ctx.strokeStyle = color; ctx.stroke();
+  steps.forEach((st, k) => {
+    if (!st.endsTurn) return;
+    const p = P[k + 1];
+    if (!p) return;
+    ctx.beginPath(); ctx.arc(p.x, p.y, 11, 0, Math.PI * 2); ctx.fillStyle = S.ink.markerFill; ctx.fill();
+    ctx.strokeStyle = color; ctx.lineWidth = 1.4; ctx.stroke();
+    ctx.beginPath(); ctx.arc(p.x, p.y, 8, 0, Math.PI * 2); ctx.lineWidth = 0.6; ctx.stroke();
+    ctx.font = `700 13px ${FONTS[LOOK].display}`;
+    ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(roman(st.turn), p.x, p.y + 1);
+  });
+  ctx.restore();
 }
