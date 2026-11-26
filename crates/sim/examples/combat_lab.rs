@@ -58,7 +58,7 @@ enum Era {
 }
 impl Era {
     const ALL: [Era; 3] = [Era::Ancient, Era::Classical, Era::Renaissance];
-    /// The era (0 Ancient .. 7 Future, `legatum_core::eras`) the cell stands in.
+    /// The era (0 Ancient .. 8 Future, `legatum_core::eras`) the cell stands in.
     fn tier(self) -> u8 {
         match self {
             Era::Ancient => 0,

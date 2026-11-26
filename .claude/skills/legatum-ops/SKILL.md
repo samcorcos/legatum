@@ -32,6 +32,8 @@ Maintained by the `legatum-ops-supervisor` agent; the lead may edit it too. Keep
 - A landed-check must see real commits: a branch that still equals the master it forked from is not "landed" (2026-10-10).
 - Never `pkill -f` or `killall` shared patterns (a hook blocks them); kill by PID. Supervisor kills of other workloads may be denied by the classifier: report PIDs and evidence to the lead, do not retry.
 - Benchmarks in task prompts must cap threads (`tools/sim/hard-vs-human.sh` or `RAYON_NUM_THREADS=4`) (2026-10-10).
+- State truth (2026-11-25): every session's progress checklist must show its true state. RUNNING needs live processes and fresh output; WAITING ON THE MAINTAINER needs a decision card in the thread plus a "Waiting on the maintainer: <what>" ✱ line, posted the moment the block starts, with the exact steps needed; DONE means the result is reported; anything else is STALLED and is a bug. The ops check classifies every queue, lane and session this way and puts anything stalled or mislabelled on the first line of its report.
+- After any session restart (or a context reset), re-arm every background watcher and wait loop at once (they don't survive a restart; on 2026-11-24 a dead download watcher left the anim pilot silently idle for hours) and re-post the current state to the checklist.
 - Product performance (sim speed, AI thinking time, app size and load, CI and test time, flakiness, dead code) belongs to `legatum-perf-supervisor` and its nightly ledger; the ops check tracks turn size, game length, AI quality, rework and system health (user, 2026-10-06; split 2026-11-21).
 
 ## Cloud compute (AWS)

@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { listedGameName } from './listedName';
+import { setMapSeed } from './mapSeed';
 
 // Team pings in an online game: the Ping control shows with a human teammate, a click on the map pings that
 // tile, and the teammate's browser shows the ring with a way to it. Hot seat is gone (2026-11-23), so the host
@@ -16,7 +17,7 @@ async function startOnline(host: Page, guest: Page) {
   const small = host.getByRole('radiogroup', { name: 'Map size', exact: true }).getByRole('radio', { name: /^Small/ });
   await small.click();
   await expect(small).toBeChecked();
-  await host.getByLabel('Map seed', { exact: true }).fill('9001');
+  await setMapSeed(host, '9001');
 
   await guest.goto('/?client=wasm');
   await guest.getByRole('button', { name: /^Multiplayer/ }).click();

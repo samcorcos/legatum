@@ -5,6 +5,7 @@ import { chooseCapitalProduction } from './opening';
 import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { listedGameName } from './listedName';
+import { setMapSeed } from './mapSeed';
 
 async function configureLobby(page: Page, seed: string) {
   const small = page.getByRole('radiogroup', { name: 'Map size', exact: true }).getByRole('radio', { name: /^Small/ });
@@ -15,7 +16,7 @@ async function configureLobby(page: Page, seed: string) {
   await hard.click();
   await expect(hard).toBeChecked();
   await expect(page.getByRole('combobox', { name: /^Seat \d+ AI level$/ })).toHaveCount(0);
-  await page.getByLabel('Map seed', { exact: true }).fill(seed);
+  await setMapSeed(page, seed);
 }
 
 async function expectTurn(page: Page, turn: number) {
@@ -159,7 +160,7 @@ test('Online: host in one browser, a guest joins from the game list, both Ready 
   await expect(guest.getByRole('heading', { name: 'Game room', exact: true })).toBeVisible();
 
   // The guest sees the host's settings: Seat 2 is the one open seat.
-  await expect(guest.getByLabel('Map seed', { exact: true })).toHaveValue('Hidden');
+  await expect(guest.getByLabel('Map seed', { exact: true })).toHaveCount(0);
   await guest.getByRole('row').nth(2).getByRole('button', { name: 'Take seat', exact: true }).click();
   await guest.getByLabel('Your name', { exact: true }).fill('Alice');
   await guest.getByRole('button', { name: /^Ready Lock/ }).click();
@@ -173,12 +174,12 @@ test('Online: host in one browser, a guest joins from the game list, both Ready 
   await expect(guest.getByTestId('online-seat-0')).toContainText('online');
   expect(await host.evaluate(() => {
     const s = (window as unknown as { legatum: typeof import('../src/store').useGame }).legatum.getState();
-    return s.views?.[s.seat]?.ai_alliances;
-  })).toBe(true);
+    return s.views?.[s.seat]?.ai_alliances ?? false;
+  })).toBe(false); // Teams set in the lobby are the only starting partnerships.
   expect(await guest.evaluate(() => {
     const s = (window as unknown as { legatum: typeof import('../src/store').useGame }).legatum.getState();
-    return s.views?.[s.seat]?.ai_alliances;
-  })).toBe(true);
+    return s.views?.[s.seat]?.ai_alliances ?? false;
+  })).toBe(false);
 
   // Team pings travel through the host to the other browser.
   expect(await host.evaluate(() => {

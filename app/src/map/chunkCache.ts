@@ -11,7 +11,7 @@ export const CACHE_SLACK = 16;
  * fat when stretched over the view, which showed as chunk-shaped blotches of fat blue borders (playtest
  * 8.9.2). A chunk drawn for a larger scale only shrinks, so it is fine at any distance.
  */
-const FALLBACK_SPAN = 3;
+export const FALLBACK_SPAN = 3;
 
 export interface CacheEntry {
   key: string;
@@ -54,4 +54,36 @@ export function fallbackLevels(level: number, present: Iterable<number>, overvie
   const near = [...new Set(present)].filter((l) => l >= 0 && l !== level && l !== standIn && (l > level || level - l <= FALLBACK_SPAN));
   near.sort((a, b) => Math.abs(b - level) - Math.abs(a - level) || a - b);
   return out.concat(near);
+}
+
+/**
+ * Whether the terrain cache paints one more stage of a chunk now. A forced caller always gets its first stage (the map
+ * must fill in however slow the machine); after that, and for a caller that is not forced, a stage runs only if it is
+ * expected to end inside the budget, `stageMs` being what a stage has cost lately.
+ */
+export function stageFits(ran: number, force: boolean, spentMs: number, stageMs: number, limitMs: number): boolean {
+  if (force && ran === 0) return true;
+  return spentMs + stageMs <= limitMs;
+}
+
+/**
+ * Whether chunks painted between frames are worth a redraw of the map now. A machine that paints fast shows each one
+ * as it lands. A slow one pays more for the redraw than for the chunk, so it shows them `batchMs` apart, and at once
+ * when the view has no more to come (`more`).
+ */
+export function showLanded(more: boolean, slow: boolean, sinceDrawMs: number, batchMs: number): boolean {
+  return !more || !slow || sinceDrawMs >= batchMs;
+}
+
+/**
+ * The level to draw while a zoom gesture runs and the level in use (`cur`) no longer scales to the view.
+ * Nothing changes until the level in use is complete, so the one left behind is a finished stand-in. Then it
+ * goes straight toward the level the zoom wants and does not stop at each one on the way: every level passed
+ * through was a whole view of chunks painted for a few frames' use. Zooming in, it goes at most `FALLBACK_SPAN`
+ * levels at once, the farthest a coarser level may stand in from; zooming out there is no limit, since a finer
+ * level only shrinks.
+ */
+export function gestureLevel(cur: number, wanted: number, missing: number): number {
+  if (missing > 0 || wanted === cur) return cur;
+  return wanted > cur ? Math.min(wanted, cur + FALLBACK_SPAN) : wanted;
 }

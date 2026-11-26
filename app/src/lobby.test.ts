@@ -15,7 +15,6 @@ import {
   trainingSwitch,
   MAP_SIZES,
   LOBBY_DIFFICULTY_KEY,
-  MAX_TURN_LIMIT,
   newLobby,
   notes,
   slotColorFactions,
@@ -134,20 +133,10 @@ describe('lobby', () => {
     vi.stubGlobal('localStorage', { getItem: () => null, setItem: () => { throw new Error('Storage blocked'); } });
     expect(rememberDifficulty(setDifficulty(newLobby('solo', '5'), 'Easy'))).toBe(false);
   });
-  it('plays every game without a limit by default; preserves explicit limits and VP targets', () => {
-    const l = newLobby('solo', '42');
-    expect(l.turnLimit).toBe(null);
-    for (const turnLimit of [null, 1, 275, MAX_TURN_LIMIT]) {
-      const lobby = { ...l, turnLimit };
-      expect(problems(lobby)).toEqual([]);
-      expect(buildSetup(lobby)).toMatchObject({ turn_limit: turnLimit });
-      expect(teams(lobby).map((t) => t.target)).toEqual(teams(l).map((t) => t.target));
-    }
-  });
-
-  it('rejects empty, fractional, negative, non-finite and overflowing enabled turn limits', () => {
-    for (const turnLimit of [0, -1, 1.5, Infinity, NaN, MAX_TURN_LIMIT + 1]) {
-      expect(problems({ ...newLobby('solo', '42'), turnLimit }).join()).toMatch(/Enter a last turn/);
+  it('every new game ends at the default last turn: no turn limit setting', () => {
+    for (const l of [newLobby('solo', '42'), newLobby('host', '42')]) {
+      expect(buildSetup(l)).toMatchObject({ turn_limit: null });
+      expect(problems(l)).toEqual([]);
     }
   });
   it('single player defaults to a free-for-all on Standard: you + 5 AIs, all on their own teams, one solo target each', () => {

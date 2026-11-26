@@ -2,9 +2,10 @@ import { isBarbarian, ownerName } from '../barbarians';
 import { atWar, barbariansSpareMe, canEnter } from '../diplomacy';
 import { useLayoutEffect } from 'react';
 import { useGame } from '../store';
+import { feel } from '../feel';
 import type { Faction, Order, PlayerView, UnitKind, UnitView } from '../types';
 import { UNSUPPLIED_STRENGTH_PERCENT } from '../resources';
-import { tileIndex } from '../hex';
+import { hexEq, tileIndex } from '../hex';
 import { roadBonusText } from '../path';
 import { siegeCityBonus, siegeTier } from '../combat';
 import { ARTILLERY_HEADLINE, builtInSiege, canAutoExplore, firesIndirect, CLASS_NAME, CLASS_NOTE, attacksInMelee, eraName, minCityGap, RULES, SIEGE_USES_IRON, UNIT_STATS, ignoresWounds, itemName, unitClass, unitEraTier, wallLevelLabel } from '../data';
@@ -80,6 +81,8 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
   const onlyBarbarianStrength = barbarianStrengthKey && strengthTargets.every((u) => isBarbarian(u.owner));
   const closed = mine && !canEnter(view, unit.kind, view.tiles[tileIndex(unit.pos, view.width, view.height)]?.owner ?? null);
   const owner = view.players.find((p) => p.id === unit.owner);
+  // A unit standing in a city: one click opens the city (the hex itself selects the units first).
+  const cityHere = view.cities.find((c) => hexEq(c.pos, unit.pos));
   // Standing on a Yam Relay Station holder's land at Peace: the road is open now and closes if the Station changes hands.
   const roadOwner = mine ? view.tiles[tileIndex(unit.pos, view.width, view.height)]?.owner ?? null : null;
   const onRoad = roadOwner !== null && view.players.find((p) => p.id === roadOwner)?.team !== view.team && !!view.courier_halls?.some((h) => h.holder === roadOwner) && !atWar(view, roadOwner);
@@ -194,6 +197,7 @@ export function UnitPanel({ unit, view, peek = false }: { unit: UnitView; view: 
             {unitClass(unit.kind as UnitKind) && <> · <Tip content={<ClassTip kind={unit.kind as UnitKind} bow={bow} />} className="up-class">{CLASS_NAME[unitClass(unit.kind as UnitKind)!]}</Tip></>}
             {unit.military && <> · <Tip content={`${eraName(unitEra(unit.kind as UnitKind))} era. Every military miniature wears this numeral on its base, so a newer unit of the same class reads apart on the map.`} className="up-era"><EraTab era={unitEra(unit.kind as UnitKind)} /></Tip></>}
           </div>
+          {cityHere && <p className="up-city" data-testid="unit-open-city">In {cityHere.name}<span aria-hidden="true"> · </span><button className="link" onClick={() => { useGame.getState().select({ kind: 'city', id: cityHere.id }); feel.select(); }}>Open city</button></p>}
           {unit.military && <PromotionLine unit={unit} faction={owner?.faction} />}
           {mine && isColoniaFounder(view, unit.id) && <p className="up-colonia" data-testid="unit-colonia"><Icon name="goal-colonia" size={14} /> Can found your Colonia Victrix{coloniaHere ? ' here' : ''} (+{factionGoalVp('Rome')} VP){coloniaHere ? '' : coloniaSiteKnown(view) === false ? `. No site known yet: it must be within ${COLONIA_REACH} tiles of a rival's land.` : ': gilt rings on the Settle lens mark the sites'}</p>}
           {isCompany(unit) && <CompanyTag unit={unit} view={view} />}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CACHE_SLACK, MAX_CHUNKS, cacheLimit, evictionPlan, fallbackLevels, type CacheEntry } from './chunkCache';
+import { CACHE_SLACK, MAX_CHUNKS, cacheLimit, evictionPlan, fallbackLevels, gestureLevel, showLanded, stageFits, type CacheEntry } from './chunkCache';
 
 const entry = (key: string, level: number, used: number, pinned = false): CacheEntry => ({ key, level, used, pinned });
 
@@ -73,5 +73,54 @@ describe('fallbackLevels', () => {
     expect(fallbackLevels(0, [1], OV, SI)).toEqual([1]);
     expect(fallbackLevels(4, [4], OV, SI)).toEqual([SI]);
     expect(fallbackLevels(4, [SI, -1], OV, SI)).toEqual([SI]);
+  });
+});
+
+describe('painting a chunk a stage at a time', () => {
+  it('always paints one stage for a caller that must make progress, however slow a stage is', () => {
+    expect(stageFits(0, true, 0, 400, 7)).toBe(true);
+    expect(stageFits(0, true, 30, 400, 7)).toBe(true);
+  });
+
+  it('stops before the stage that would overrun the budget', () => {
+    expect(stageFits(1, true, 4, 2, 7)).toBe(true);
+    expect(stageFits(3, true, 6, 2, 7)).toBe(false);
+    // A slow machine: one 35 ms stage a frame, never two.
+    expect(stageFits(1, true, 35, 35, 40)).toBe(false);
+  });
+
+  it('paints nothing in a frame whose caller already painted between frames, unless it fits', () => {
+    expect(stageFits(0, false, 35, 35, 40)).toBe(false);
+    expect(stageFits(0, false, 1, 2, 7)).toBe(true);
+  });
+});
+
+describe('showing chunks painted between frames', () => {
+  it('shows each chunk as it lands on a fast machine', () => {
+    expect(showLanded(true, false, 3, 200)).toBe(true);
+  });
+
+  it('shows them a few at a time on a slow machine, and the last ones at once', () => {
+    expect(showLanded(true, true, 60, 200)).toBe(false);
+    expect(showLanded(true, true, 200, 200)).toBe(true);
+    expect(showLanded(false, true, 10, 200)).toBe(true);
+  });
+});
+
+describe('the level a zoom gesture moves to once the held one no longer fits', () => {
+  it('stays until the held level is complete', () => {
+    expect(gestureLevel(2, 6, 3)).toBe(2);
+  });
+
+  it('zooming in goes straight toward the wanted level, as far as the old one can stand in', () => {
+    expect(gestureLevel(2, 4, 0)).toBe(4);
+    expect(gestureLevel(2, 8, 0)).toBe(5);
+    // The level left behind is still a stand-in for the one arrived at.
+    expect(fallbackLevels(gestureLevel(2, 8, 0), [2], 0, 9)).toContain(2);
+  });
+
+  it('zooming out goes to the wanted level at once', () => {
+    expect(gestureLevel(7, 1, 0)).toBe(1);
+    expect(fallbackLevels(1, [7], 0, 9)).toContain(7);
   });
 });

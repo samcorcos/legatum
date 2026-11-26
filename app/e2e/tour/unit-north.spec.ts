@@ -102,7 +102,8 @@ for (const size of SIZES) test.describe(`unit north ${size.name}`, () => {
       await expect(page.getByTestId('banner-tooltip')).toBeVisible();
       await page.mouse.click(map.x + over.x, map.y + over.y);
       const picked = () => page.evaluate(() => (window as unknown as GameWindow).legatum.getState().selection);
-      expect(await picked(), 'a click on the banner never picks the unit behind it').not.toEqual({ kind: 'unit', id: unit.id });
+      // One click on the banner opens the city, even though a garrison stands in it (issue #280).
+      expect(await picked(), 'a click on the banner opens the city, never the unit behind it or the garrison').toEqual({ kind: 'city', id: city.id });
       // The token's top, clear of the banner, still selects the unit.
       const top = { x: unitAt.x, y: Math.round(map.y + banner.cover.y) - 4 };
       await page.evaluate(() => (window as unknown as GameWindow).legatum.getState().select(null));

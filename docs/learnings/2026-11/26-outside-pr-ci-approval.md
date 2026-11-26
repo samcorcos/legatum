@@ -1,0 +1,3 @@
+# Fork pull requests never run CI until a maintainer approves the run (2026-11-26)
+
+A pull request from a first-time contributor's fork leaves every workflow run in `action_required`: no `ci-ok`, no jobs, and the PR's `mergeable_state` reads `unstable`. List them with `gh api "repos/samcorcos/legatum/actions/runs?status=action_required"` and approve one with `POST /repos/samcorcos/legatum/actions/runs/<id>/approve`, only after reading every changed file. Approving is safe for `ci.yml` because it runs on `pull_request`, which gives a fork no secrets and a read-only token. Runs approved for an older head do not cover a new push: approve again.

@@ -2266,7 +2266,7 @@ mod tests {
             legatum_core::experiments::RuleExperiments {
                 settler_escalation: true,
                 city_research: true,
-                city_upkeep: true,
+                no_city_upkeep: true,
                 expansion_coalitions: true,
                 no_purchase_under_threat: true,
                 frontier_cities: true,

@@ -1,0 +1,3 @@
+# 3D map water normals
+
+`map3d/ocean-normal.webp` and `map3d/wave-normal.webp` come from Procedural Texture Online's [Ocean Normal Map](https://proctexture.com/textures/water/normal-maps/ocean-normal-map) and [Wave Normal Map](https://proctexture.com/textures/water/normal-maps/wave-normal-map). Author: Procedural Texture Online. Licence: [CC0](https://proctexture.com/textures/water/normal-maps/ocean-normal-map) as stated on each source page. The original 1024 px normal maps were downloaded from the linked 1K PBR ZIP packs, resized to 512 px, and encoded as WebP at quality 95. Only the normal channels are shipped. The two maps add 55 KB to first load.

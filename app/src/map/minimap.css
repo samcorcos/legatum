@@ -41,7 +41,7 @@
   padding: 0;
   opacity: 0.88;
 }
-/* 3D / flat map switch (map3d/MapViewToggle.tsx): the same tab style, top-left. */
+/* 3D / 2D map switch (map3d/MapViewToggle.tsx): the same tab style, top-left. */
 .minimap:not([data-collapsed='true']) .map-view-toggle {
   position: absolute;
   top: 2px;

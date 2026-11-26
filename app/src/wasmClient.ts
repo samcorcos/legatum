@@ -33,6 +33,7 @@ interface WasmGame {
   forecast(p: number, unit: number, q: number, r: number, mode: AttackMode): string | null | undefined;
   assault(p: number, unit: number, q: number, r: number, mode: AttackMode, alongsideJson: string): string | null | undefined;
   end_turn(humanOrdersJson: string): string;
+  plan_ahead?(): number;
   save(): string;
   hash(): string;
   turn(): number;
@@ -190,6 +191,10 @@ export class WasmClient implements GameClient, TrainingEngine {
 
   endTurn(humanOrders: Record<number, Order[]>): TurnResult {
     return JSON.parse(this.g.end_turn(JSON.stringify(humanOrders)));
+  }
+
+  planAhead(): number {
+    return this.g.plan_ahead?.() ?? 0;
   }
 
   save(): string {

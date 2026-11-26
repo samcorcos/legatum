@@ -181,8 +181,10 @@ export function yieldClusterRects(tiles: readonly LensTile[], cam: Camera, width
 }
 
 /** Draw every yield tile's cluster. Runs before units, cities and routes so they stay on top. */
-export function drawYieldIcons(ctx: CanvasRenderingContext2D, tiles: readonly LensTile[], cam: Camera, width: number, height: number, mapWidth: number, dpr: number, look: LookId, heavyRim = false, towns: readonly Rect[] = []) {
-  const r = HEX_SIZE * cam.zoom;
+export function drawYieldIcons(ctx: CanvasRenderingContext2D, tiles: readonly LensTile[], cam: Camera, width: number, height: number, mapWidth: number, dpr: number, look: LookId, heavyRim = false, towns: readonly Rect[] = [],
+  /** The 3D map: each tile's centre on screen (null off camera) and the hex radius in px, instead of the 2D camera. */
+  at?: (index: number) => { x: number; y: number } | null, hexPx?: number) {
+  const r = hexPx ?? HEX_SIZE * cam.zoom;
   const detail = yieldDetail(r);
   if (detail === 'none') return;
   // A deep lens tint (Settle's greens) is close to the food ink, so the parchment rim round each glyph is what carries it: heavier there.
@@ -194,8 +196,9 @@ export function drawYieldIcons(ctx: CanvasRenderingContext2D, tiles: readonly Le
   ctx.lineJoin = 'round';
   for (const tile of tiles) {
     if (!tile.yields?.length && !tile.bonus) continue;
-    const cx = (centerX(tile.index, mapWidth) - cam.x) * cam.zoom + width / 2;
-    const cy = (centerY(tile.index, mapWidth) - cam.y) * cam.zoom + height / 2;
+    const p = at ? at(tile.index) : { x: (centerX(tile.index, mapWidth) - cam.x) * cam.zoom + width / 2, y: (centerY(tile.index, mapWidth) - cam.y) * cam.zoom + height / 2 };
+    if (!p) continue;
+    const cx = p.x, cy = p.y;
     if (cx < -r || cx > width + r || cy < -r || cy > height + r) continue;
     ctx.globalAlpha = tile.faded ? 0.7 : 1;
     if (detail === 'dots') {

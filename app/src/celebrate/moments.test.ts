@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
+import { meetEveryone } from '../test/meetEveryone';
 import { FixtureClient } from '../test/fixtureEngine';
 import { visible_events_json } from '../wasm-pkg/legatum.js';
 import type { Event, Hex, PlayerView, RuinReward } from '../types';
@@ -19,7 +20,7 @@ beforeAll(async () => {
   const client = new FixtureClient();
   await client.newGame(await client.standardSetup('42', 'India', 'Byzantium', 'Ada', 'Bo'));
   client.endTurn({});
-  view = client.view(0);
+  view = meetEveryone(client.view(0));
   view.economy.bankruptcy = null;
   view.units = view.units.filter((u) => u.owner === 0);
   for (const c of view.cities) if (c.detail) c.detail.yields.total.food = c.population * 2;
@@ -313,6 +314,7 @@ it('a sacked city gives the raider a report-backed card and the victim a sober l
 
   const raiderAfter = structuredClone(after);
   raiderAfter.team = raider.team;
+  meetEveryone(raiderAfter);
   const [sack] = momentsForTurn([event], raider.id, view, raiderAfter);
   expect(sack).toMatchObject({ tier: 'major', owner: raider.id, title: city.name, at: city.pos,
     kicker: 'A city sacked', effect: `Sacked from ${empireOfPlayer(view, victim.id)}`, emblem: 'captured' });
@@ -608,4 +610,28 @@ describe('goal city moments', () => {
     const [card] = momentsForTurn([{ type: 'FactionGoalCompleted', player: 0, faction: 'Rome', vp: 2 }], 0, view, after);
     expect(card).toMatchObject({ tier: 'legendary', title: 'Colonia Victrix', goalMark: 'goal-colonia' });
   });
+});
+
+it('a public card about an empire you have not met calls it "an unknown empire" and wears no crest', () => {
+  const rival = view.players.find((p) => p.team !== view.team)!;
+  const after = structuredClone(view);
+  after.diplomacy.met = after.diplomacy.met!.filter((t) => t !== rival.team);
+  after.diplomacy.relations = after.diplomacy.relations.filter((r) => r.state !== 'War');
+  const [card] = momentsForTurn([{ type: 'TombStarted', player: rival.id, turns: 0 } as Event], view.me, view, after);
+  expect(card).toMatchObject({ unknown: true, kicker: 'An unknown empire' });
+  expect(card.effect).toMatch(/^An unknown empire is building its Royal Tomb/);
+  expect(JSON.stringify({ ...card, faction: undefined })).not.toContain(empireOfPlayer(view, rival.id));
+});
+
+it('the turn report names an empire you have not met as "an unknown empire", capitalised at the start of a line', async () => {
+  const { contextFromViews, formatEvent } = await import('../format');
+  const rival = view.players.find((p) => p.team !== view.team)!;
+  const city = view.cities.find((c) => c.owner === view.me)!;
+  const after = structuredClone(view);
+  after.diplomacy.met = after.diplomacy.met!.filter((t) => t !== rival.team);
+  after.diplomacy.relations = after.diplomacy.relations.filter((r) => r.state !== 'War');
+  const ctx = contextFromViews(view, after);
+  const text = formatEvent({ type: 'WonderRaceLost', owner: view.me, winner: rival.id, building: 'Pyramids', city: city.id, production: 0, gold: 0 } as Event, ctx).text;
+  expect(text).toMatch(/^An unknown empire completed the Pyramids first/);
+  expect(ctx.playerFaction?.(rival.id)).toBeUndefined();
 });

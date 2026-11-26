@@ -111,9 +111,10 @@ describe('event -> sound mapping', () => {
     expect(sound.musicPool({ mood: 'peace', people: null })).toEqual(['music/atlas.m4a', 'music/tale-of-warriors.m4a']);
     expect(sound.musicPool({ mood: 'war', people: 'Rome' })).toEqual(['music/war.m4a', 'music/taiko-1.m4a', 'music/taiko-2.m4a']);
     expect(sound.musicPool({ mood: 'title', people: null })).toEqual(['music/atlas.m4a']);
-    // The Aztecs have music of their own, in every era.
-    expect(sound.musicPool({ mood: 'peace', people: 'Aztecs' }).slice(0, 2)).toEqual(['music/el-dorado.m4a', 'music/lost-city.m4a']);
-    expect(sound.musicPool({ mood: 'peace', people: 'Aztecs', era: 7 }).slice(0, 2)).toEqual(['music/el-dorado.m4a', 'music/lost-city.m4a']);
+    // The Aztecs have music of their own, in every era: four pieces in a Mesoamerican style lead, then two New World pieces.
+    const aztec = ['great-pyramids', 'life-in-forest', 'ritual-traps', 'face-to-face', 'el-dorado', 'lost-city'].map((s) => `music/${s}.m4a`);
+    expect(sound.musicPool({ mood: 'peace', people: 'Aztecs' }).slice(0, 6)).toEqual(aztec);
+    expect(sound.musicPool({ mood: 'peace', people: 'Aztecs', era: 7 }).slice(0, 6)).toEqual(aztec);
     // A peace track never plays in war, and the reverse.
     expect(sound.musicPool({ mood: 'peace', people: 'Rome' }).filter((f) => sound.musicPool({ mood: 'war', people: 'Rome' }).includes(f))).toEqual([]);
   });
@@ -172,7 +173,7 @@ describe('event -> sound mapping', () => {
         expect(t.gain, t.file).toBeLessThanOrEqual(1.6);
       }
     }
-    for (const name of ['gunshot', 'cannon', 'shellFire', 'explosion', 'aircraft', 'jet', 'musket', 'drone'] as const) expect(sound.BATTLE_FILES[name]?.length, name).toBeGreaterThanOrEqual(1);
+    for (const name of ['gunshot', 'cannon', 'shellFire', 'explosion', 'aircraft', 'jet', 'musket', 'drone', 'fall'] as const) expect(sound.BATTLE_FILES[name]?.length, name).toBeGreaterThanOrEqual(1);
     for (const file of Object.values(sound.AMBIENCE_FILES)) expect(fs.existsSync(path.join(AUDIO, file)), file).toBe(true);
     expect(Object.keys(sound.AMBIENCE_FILES).sort()).toEqual(['birds', 'sea', 'snow', 'wind']);
     expect(sound.ambienceFor('Forest')).toBe('birds');
@@ -421,6 +422,18 @@ describe('music', () => {
     soundPrefs.useSound.getState().update({ musicOn: false });
     fade();
     expect(atlas.paused).toBe(true);
+  });
+
+  it('fades out under a film and picks the same track up after it', async () => {
+    sound.installSound();
+    await sound.unlockSound();
+    const [atlas] = FakeAudio.made;
+    sound.setFilmPlaying(true);
+    fade();
+    expect(atlas.paused).toBe(true);
+    sound.setFilmPlaying(false);
+    expect(atlas.paused).toBe(false);
+    expect(FakeAudio.made).toHaveLength(1);
   });
 });
 

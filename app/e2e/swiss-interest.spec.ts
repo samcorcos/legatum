@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import type { useGame } from '../src/store';
+import { setMapSeed } from './mapSeed';
 
 type GameWindow = Window & { legatum: typeof useGame };
 
@@ -45,7 +46,7 @@ for (const size of SIZES) {
       const stage = await chooseSwitzerland(page);
       await page.keyboard.press('Enter');
       await expect(stage).toBeHidden();
-      await page.getByLabel('Map seed', { exact: true }).fill('424242');
+      await setMapSeed(page, '424242');
       await page.getByRole('button', { name: /^Start game/ }).click();
       await expect(page.getByTestId('turn-number')).toHaveText('1', { timeout: 60_000 });
       await expect(page.locator('.loading-screen')).toHaveCount(0);

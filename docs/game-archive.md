@@ -125,7 +125,7 @@ full. Do not clear browser storage before exporting.
 
 An online game's host is the engine in the host's browser tab (`crates/wasm/src/host`); it hands its
 checkpoints and final history to that tab, which files them like a local game (`app/src/net/hosting.ts`,
-`recordGameHistory`). There is no archive server (the native `legatum-server` is gone, 2026-11-22).
+`recordGameHistory`). A build that uploads games takes them with every seat under its default name (`take_public_recordings`, `crates/wasm/src/host/net.rs`), so online and co-op games are uploaded like single-player ones; other builds keep the names as entered. There is no archive server (the native `legatum-server` is gone, 2026-11-22).
 
 ## Analysis, replay and recovery
 

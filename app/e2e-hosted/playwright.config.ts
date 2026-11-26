@@ -27,7 +27,8 @@ const engines = asked.includes('all') ? ENGINES.filter((e) => !(mac && e === 'we
 
 const projects: Project[] = engines.map((browserName) => ({
   name: browserName,
-  use: { browserName },
+  // Headless Chromium draws WebGL (the 3D map) only through SwiftShader, which it no longer enables by default.
+  use: { browserName, ...(browserName === 'chromium' ? { launchOptions: { args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] } } : {}) },
   // Each browser writes its own failure shots.
   outputDir: `../test-results/hosted/${browserName}`,
 }));

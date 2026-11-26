@@ -362,10 +362,80 @@ impl BrowserHost {
     pub fn take_recordings(&mut self) -> String {
         serde_json::to_string(&self.0.take_recordings()).expect("strings serialize")
     }
+
+    /// As `take_recordings`, with every seat under its default name ("Player 1", "AI 2"): the copies a
+    /// build that uploads games keeps and sends, as a single-player game does with `public_archive`.
+    pub fn take_public_recordings(&mut self) -> String {
+        serde_json::to_string(&public_recordings(&self.0.take_recordings()))
+            .expect("strings serialize")
+    }
+}
+
+thread_local! {
+    /// Where the last renamed copy stopped, so the next checkpoint of the same game replays only new turns.
+    static PUBLIC_RESUME: std::cell::RefCell<Option<crate::history::AnonymizedResume>> =
+        const { std::cell::RefCell::new(None) };
+}
+
+/// Each recording with typed names replaced by the defaults. One that cannot be renamed safely (it does not
+/// parse, or a typed name is still quoted somewhere in it) is left out: it must not be uploaded.
+fn public_recordings(recordings: &[String]) -> Vec<String> {
+    recordings
+        .iter()
+        .filter_map(|json| {
+            let recording: crate::history::Recording = serde_json::from_str(json).ok()?;
+            let public = PUBLIC_RESUME
+                .with(|resume| recording.anonymized_resuming(&mut resume.borrow_mut()))
+                .ok()?;
+            serde_json::to_string(&public).ok()
+        })
+        .collect()
 }
 
 /// The rules version a guest must match to join this host (`RoomAnnounce::rules_version`).
 #[wasm_bindgen::prelude::wasm_bindgen]
 pub fn online_rules_version() -> u32 {
     legatum_core::RULES_VERSION
+}
+
+#[cfg(test)]
+mod public_recording_tests {
+    use super::public_recordings;
+    use crate::OrderMap;
+    use crate::history::Recording;
+    use crate::session::{BrainKind, Session};
+    use legatum_core::{Faction, GameSetup};
+
+    #[test]
+    fn public_recordings_carry_default_names_across_checkpoints_and_drop_what_does_not_parse() {
+        let mut setup = GameSetup::standard(42, [Faction::India, Faction::Byzantium]);
+        setup.players.truncate(3);
+        setup.players[0].name = "Dana Smith".into();
+        setup.players[1].name = "Alex".into();
+        setup.players[2].is_human = false;
+        let mut session = Session::new(&setup, |_| BrainKind::Scripted);
+        // Two checkpoints of one game, as an online host hands them over, then a broken one.
+        for turns in [2, 2] {
+            for _ in 0..turns {
+                session.step(&OrderMap::new());
+            }
+            let history = session.history.as_ref().unwrap();
+            let own = serde_json::to_string(history).unwrap();
+            assert!(own.contains("Dana Smith"));
+            let public = public_recordings(&[own, "not a recording".into()]);
+            assert_eq!(public.len(), 1);
+            assert!(!public[0].contains("Dana Smith") && !public[0].contains("\"Alex\""));
+            let recording: Recording = serde_json::from_str(&public[0]).unwrap();
+            let names: Vec<_> = recording
+                .metadata
+                .seats
+                .iter()
+                .map(|s| s.name.as_str())
+                .collect();
+            assert_eq!(names, ["Player 1", "Player 2", "AI 3"]);
+            assert_eq!(recording.metadata.game_id, history.metadata.game_id);
+            // The renamed copy is a whole game of its own: its orders replay to its hashes.
+            recording.replay().unwrap();
+        }
+    }
 }

@@ -5,11 +5,12 @@ private R2 bucket, so the AI's strength can be measured and bugs found (the READ
 promise to players).
 
 - The page (`app/src/platform/gameUpload.ts`) sends `PUT /v1/games/<game id>` with the gzipped record after each
-  of the first five turns, then every five turns, and when the game ends or is abandoned. A later checkpoint replaces the earlier one.
+  of the first five turns, then every five turns, and when the game ends or is abandoned. A later checkpoint replaces the earlier one. An online game is sent by its host's tab, at the host engine's own checkpoints.
 - Every seat is under its default name ("Player 1", "AI 2"): the engine's `public_archive` renames seats and
   replays the orders to recompute the hashes (`Recording::anonymized`). The Worker refuses any other seat name.
 - Stored as `games/<YYYY-MM>/<game id>.json.gz` (the month of the start time in the game id), with custom metadata for listing without downloading:
-  `outcome`, `turns`, `engine`, `winner`, `seats` (`Faction*:Difficulty`, `*` for a human seat).
+  `outcome`, `turns`, `engine`, `winner`, `seats` (`Faction*:Difficulty`, `*` for a human seat). `winner` must be
+  null or the winning team's number (an integer 0 to 255); anything else is answered 422 "bad winner".
 - The record may carry the player's coach-question answers as a top-level `coach_answers` list (at most 2000
   objects with the answer line's own keys, text up to 2000 characters, evidence up to 32,000; the Worker
   refuses anything else, and the app clips answers to fit). It is not part of the engine's `Recording`, which
@@ -26,7 +27,7 @@ promise to players).
   new id and keeps its `created_at`). That start time must fall after 2026-11-01 and not in the future, and it
   names the storage month, so a sender cannot pick the month. Anything else is answered 422.
 - Each game has an upload key: 32 random hex digits the page makes the first time it uploads that game, keeps
-  in the browser's `localStorage` (`legatum.uploadKeys.v1`, the last 200 games) and sends as `X-Upload-Key`.
+  in the browser's `localStorage` (`legatum.uploadKeys.v1`, the 200 games uploaded most recently) and sends as `X-Upload-Key`.
   The Worker stores its SHA-256 as the object's `key` metadata and answers `409` to a checkpoint for that game
   under another key or none, so someone who learns a game id (it is inside every exported save) cannot
   replace the record. The key names a game, never a player. A game stored without a key (an older build, or a

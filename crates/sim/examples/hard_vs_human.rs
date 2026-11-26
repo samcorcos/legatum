@@ -1930,12 +1930,13 @@ mod tests {
         // The Mongols never having Walls (rules 57, 2026-11-22) leaves the Mongol rival open, and the seat wins by elimination at T164.
         // Walls levels (rules 58) and Hard pricing rival Walls net of its Siege move the win to T170.
         // Breakable Walls (rules 62: a Walls bar in front of city health) leave the seat with no win on this tape.
+        // Hard finishing a combat unit under way (keep_unit_build 2, 2026-11-26) leaves two cities at T30 and four at T62.
         assert_eq!(
             first_map_game(true),
             json!({
-                "cities_t30": 3,
+                "cities_t30": 2,
                 "cities_t50": 4,
-                "cities_t62": 5,
+                "cities_t62": 4,
                 "vp_t100": 0,
                 "vp_t60": 0,
                 "win": false,
@@ -1971,17 +1972,18 @@ mod tests {
         // The Mongols never having Walls (rules 57, 2026-11-22) leaves the Mongol rival open, and the seat wins by elimination at T183.
         // Walls levels (rules 58) and Hard pricing rival Walls net of its Siege leave the seat with no win on this tape.
         // Breakable Walls (rules 62), with Hard's siege forecast playing longer while a Walls bar stands, give the seat an elimination win at T162.
+        // Hard finishing a combat unit under way (keep_unit_build 2, 2026-11-26) leaves two cities at T30, four at T62 and no win.
         assert_eq!(
             first_map_game(false),
             json!({
-                "cities_t30": 3,
+                "cities_t30": 2,
                 "cities_t50": 4,
-                "cities_t62": 5,
+                "cities_t62": 4,
                 "vp_t100": 0,
                 "vp_t60": 0,
-                "win": true,
-                "win_turn": 162,
-                "win_type": "elimination",
+                "win": false,
+                "win_turn": null,
+                "win_type": null,
             })
         );
     }

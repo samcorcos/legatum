@@ -2,7 +2,8 @@
 # scripts/build-web.sh copies it into app/dist, and e2e-hosted/serve.mjs applies it in the smoke test).
 # Content-Security-Policy: 'wasm-unsafe-eval' lets the engine compile, 'unsafe-inline' styles are React's
 # style attributes, and connect-src names the online-play relay (scripts/build-web.sh swaps in another one
-# when the build sets one). Strict-Transport-Security keeps a returning browser on https, and
+# when the build sets one). connect-src also allows blob: because the 3D map's model loader (three.js GLTFLoader)
+# reads a model's embedded textures with fetch() on blob: URLs it creates itself; img-src allows blob: for the same images. Strict-Transport-Security keeps a returning browser on https, and
 # Cross-Origin-Opener-Policy stops a page that opened the game from holding a handle to its window.
 /*
   X-Content-Type-Options: nosniff
@@ -11,7 +12,7 @@
   Strict-Transport-Security: max-age=31536000; includeSubDomains
   Cross-Origin-Opener-Policy: same-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://relay.playlegatum.com wss://relay.playlegatum.com; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' blob: https://relay.playlegatum.com wss://relay.playlegatum.com; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'
 
 # Vite names everything under /assets/ by content hash, so a changed file gets a new address.
 /assets/*

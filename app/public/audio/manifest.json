@@ -1314,6 +1314,74 @@
     ]
   },
   {
+    "file": "music/great-pyramids.m4a",
+    "events": [
+      "music:great-pyramids"
+    ],
+    "title": "Great Pyramids",
+    "author": "Alexandr Zhelanov",
+    "source": "https://opengameart.org/content/forgotten-music-of-aztecs (1 Great pyramids.mp3)",
+    "license": "CC-BY-3.0",
+    "attribution": "\"Great Pyramids\" by Alexandr Zhelanov (https://soundcloud.com/alexandr-zhelanov), CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/), edited for Legatum",
+    "modified": "leading 0.15 s and trailing 0.54 s below -60 dBFS trimmed; static gain -4.9 dB toward -20 LUFS with the true peak under -2 dBTP (now -20.1 LUFS, -5.5 dBTP); transcoded to AAC-LC 96 kb/s stereo .m4a; metadata stripped",
+    "rationale": "Peace music for Aztecs.",
+    "mood": "peace",
+    "peoples": [
+      "Aztecs"
+    ]
+  },
+  {
+    "file": "music/life-in-forest.m4a",
+    "events": [
+      "music:life-in-forest"
+    ],
+    "title": "Life in Forest",
+    "author": "Alexandr Zhelanov",
+    "source": "https://opengameart.org/content/forgotten-music-of-aztecs (3  Life in forest.mp3)",
+    "license": "CC-BY-3.0",
+    "attribution": "\"Life in Forest\" by Alexandr Zhelanov (https://soundcloud.com/alexandr-zhelanov), CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/), edited for Legatum",
+    "modified": "leading 0.17 s and trailing 0.64 s below -60 dBFS trimmed; static gain -4.2 dB toward -20 LUFS with the true peak under -2 dBTP (now -20.0 LUFS, -4.3 dBTP); transcoded to AAC-LC 96 kb/s stereo .m4a; metadata stripped",
+    "rationale": "Peace music for Aztecs.",
+    "mood": "peace",
+    "peoples": [
+      "Aztecs"
+    ]
+  },
+  {
+    "file": "music/ritual-traps.m4a",
+    "events": [
+      "music:ritual-traps"
+    ],
+    "title": "Ritual Traps",
+    "author": "Alexandr Zhelanov",
+    "source": "https://opengameart.org/content/ritual-traps (Ritual traps.ogg)",
+    "license": "CC-BY-4.0",
+    "attribution": "\"Ritual Traps\" by Alexandr Zhelanov (https://soundcloud.com/alexandr-zhelanov), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), edited for Legatum",
+    "modified": "leading 0.00 s and trailing 1.20 s below -60 dBFS trimmed; static gain -9.0 dB toward -20 LUFS with the true peak under -2 dBTP (now -20.0 LUFS, -6.8 dBTP); transcoded to AAC-LC 96 kb/s stereo .m4a; metadata stripped",
+    "rationale": "Peace music for Aztecs.",
+    "mood": "peace",
+    "peoples": [
+      "Aztecs"
+    ]
+  },
+  {
+    "file": "music/face-to-face.m4a",
+    "events": [
+      "music:face-to-face"
+    ],
+    "title": "Face to Face",
+    "author": "Alexandr Zhelanov",
+    "source": "https://opengameart.org/content/forgotten-music-of-aztecs (2 Face to face.mp3)",
+    "license": "CC-BY-3.0",
+    "attribution": "\"Face to Face\" by Alexandr Zhelanov (https://soundcloud.com/alexandr-zhelanov), CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/), edited for Legatum",
+    "modified": "leading 0.11 s and trailing 0.00 s below -60 dBFS trimmed; static gain -2.9 dB toward -20 LUFS with the true peak under -2 dBTP (now -20.0 LUFS, -3.9 dBTP); transcoded to AAC-LC 96 kb/s stereo .m4a; metadata stripped",
+    "rationale": "Peace music for Aztecs.",
+    "mood": "peace",
+    "peoples": [
+      "Aztecs"
+    ]
+  },
+  {
     "file": "music/el-dorado.m4a",
     "events": [
       "music:el-dorado"
@@ -1813,6 +1881,48 @@
     "license": "GPL-2.0-or-later",
     "modified": "silence trimmed, cut to at most 2.5 s, 3 ms fade-in and 10 ms fade-out; static gain +5.2 dB (now -31.4 LUFS, -5.1 dBTP); mixed to mono, resampled to 44.1 kHz, encoded as AAC-LC 64 kb/s .m4a; metadata stripped",
     "gain": 1.6
+  },
+  {
+    "file": "fx/soldier-falls-1.m4a",
+    "events": [
+      "fx:fall:1"
+    ],
+    "title": "Soldier falls (human-die-1.ogg)",
+    "author": "Lari Nieminen (zookeeper)",
+    "source": "https://raw.githubusercontent.com/wesnoth/wesnoth/master/data/core/sounds/human-die-1.ogg",
+    "attribution": "\"Soldier falls (human-die-1.ogg)\" by Lari Nieminen (zookeeper), from The Battle for Wesnoth (https://www.wesnoth.org/), GPL v2 or later (https://www.gnu.org/licenses/old-licenses/gpl-2.0.html), edited for Legatum",
+    "rationale": "A soldier of the gunpowder age or later falls.",
+    "license": "GPL-2.0-or-later",
+    "modified": "silence trimmed, cut to at most 1.5 s, 3 ms fade-in and 10 ms fade-out; static gain -4.1 dB (now -19.8 LUFS, -4.2 dBTP); mixed to mono, resampled to 44.1 kHz, encoded as AAC-LC 64 kb/s .m4a; metadata stripped",
+    "gain": 0.61
+  },
+  {
+    "file": "fx/soldier-falls-2.m4a",
+    "events": [
+      "fx:fall:2"
+    ],
+    "title": "Soldier falls (human-die-2.ogg)",
+    "author": "Lari Nieminen (zookeeper)",
+    "source": "https://raw.githubusercontent.com/wesnoth/wesnoth/master/data/core/sounds/human-die-2.ogg",
+    "attribution": "\"Soldier falls (human-die-2.ogg)\" by Lari Nieminen (zookeeper), from The Battle for Wesnoth (https://www.wesnoth.org/), GPL v2 or later (https://www.gnu.org/licenses/old-licenses/gpl-2.0.html), edited for Legatum",
+    "rationale": "A soldier of the gunpowder age or later falls.",
+    "license": "GPL-2.0-or-later",
+    "modified": "silence trimmed, cut to at most 1.5 s, 3 ms fade-in and 10 ms fade-out; static gain -4.1 dB (now -20.8 LUFS, -4.1 dBTP); mixed to mono, resampled to 44.1 kHz, encoded as AAC-LC 64 kb/s .m4a; metadata stripped",
+    "gain": 0.69
+  },
+  {
+    "file": "fx/soldier-falls-3.m4a",
+    "events": [
+      "fx:fall:3"
+    ],
+    "title": "Soldier falls (human-die-3.ogg)",
+    "author": "Lari Nieminen (zookeeper)",
+    "source": "https://raw.githubusercontent.com/wesnoth/wesnoth/master/data/core/sounds/human-die-3.ogg",
+    "attribution": "\"Soldier falls (human-die-3.ogg)\" by Lari Nieminen (zookeeper), from The Battle for Wesnoth (https://www.wesnoth.org/), GPL v2 or later (https://www.gnu.org/licenses/old-licenses/gpl-2.0.html), edited for Legatum",
+    "rationale": "A soldier of the gunpowder age or later falls.",
+    "license": "GPL-2.0-or-later",
+    "modified": "silence trimmed, cut to at most 1.5 s, 3 ms fade-in and 10 ms fade-out; static gain -5.4 dB (now -20.0 LUFS, -5.4 dBTP); mixed to mono, resampled to 44.1 kHz, encoded as AAC-LC 64 kb/s .m4a; metadata stripped",
+    "gain": 0.63
   },
   {
     "file": "fx/drone.m4a",

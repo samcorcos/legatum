@@ -86,7 +86,7 @@ export function ambienceFor(terrain: Terrain | null | undefined): Ambience | nul
 }
 
 export type BattleSound = 'bow' | 'arrowHit' | 'clash' | 'hooves' | 'siegeLaunch' | 'siegeHit' | 'death' | 'collapse'
-  | 'gunshot' | 'cannon' | 'shellFire' | 'explosion' | 'aircraft' | 'jet' | 'musket' | 'drone';
+  | 'gunshot' | 'cannon' | 'shellFire' | 'explosion' | 'aircraft' | 'jet' | 'musket' | 'drone' | 'fall';
 /** Battle sound -> its takes (file and gain). A cue's seed picks the take, so a volley does not machine-gun one sample. */
 export const BATTLE_FILES = SOUND_MANIFEST.reduce((all, e) => {
   for (const ev of e.events) {
@@ -324,12 +324,20 @@ export function setMusicForView(view: Pick<PlayerView, 'team' | 'players' | 'dip
   syncMusic();
 }
 
-/** Fade between tracks, or fade out when hidden or muted. `retry` runs inside a user gesture. */
+let filmPlaying = false;
+/** A cinematic owns the sound: the soundtrack fades out while it plays and back in after. */
+export function setFilmPlaying(on: boolean): void {
+  if (filmPlaying === on) return;
+  filmPlaying = on;
+  syncMusic();
+}
+
+/** Fade between tracks, or fade out when hidden, muted or under a film. `retry` runs inside a user gesture. */
 export function syncMusic(retry = false): void {
   const e = engine;
   if (!e) return;
   try {
-    const want = !hidden() && busGain(useSound.getState(), 'music') > 0;
+    const want = !hidden() && !filmPlaying && busGain(useSound.getState(), 'music') > 0;
     const next = want ? chosen : null;
     if (next === e.active) {
       if (retry && next) { const t = track(e, next); if (t.el.paused && !t.el.ended) void t.el.play().catch(() => {}); }

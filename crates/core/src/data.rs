@@ -169,6 +169,10 @@ pub const SETTLER_BASE_COST: i32 = 70;
 /// discount that kept the first Settler near turn 18 at Standard is no longer needed.
 pub const FIRST_SETTLER_PERCENT: i32 = 100;
 pub const SETTLER_COST_STEP: i32 = 50;
+/// City upkeep (rules 63): an empire with up to this many cities pays none; past that, every city
+/// it owns costs (cities - this) Gold a turn, so the total grows with the square of its size
+/// and a runaway empire stays catchable.
+pub const CITY_UPKEEP_FREE: i32 = 6;
 /// "Most Advanced" compares science generated over this many recent turns.
 pub const SCIENCE_HISTORY_TURNS: usize = 10;
 /// The Heir's Production cost (provisional, to calibrate): expensive on purpose, and the Byzantium
@@ -2065,7 +2069,7 @@ pub fn building_family_yields(faction: Faction, kind: BuildingKind) -> Yields {
 }
 
 /// Era names in order (`crate::eras`). The era index in victory points (the era
-/// objectives) is **1-based** into this list: 1 Ancient .. 8 Future.
+/// objectives) is **1-based** into this list: 1 Ancient .. 9 Future.
 pub const ERA_NAMES: [&str; crate::eras::ERA_COUNT] = crate::eras::ERA_NAMES;
 
 /// Number of eras in the tech tree.

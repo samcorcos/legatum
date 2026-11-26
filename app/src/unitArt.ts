@@ -98,8 +98,12 @@ export const barbarianArtSlug = (kind: UnitKind): string => miniatures.has(`barb
  * through a seat's colour faction (art review, PR 139).
  */
 export function mapUnitMiniatureUrl(u: { kind: UnitKind; owner: number; origin?: Faction | null }, factionOf: ReadonlyMap<number, Faction>, barbarian: boolean): string | null {
-  if (barbarian) return miniatures.get(barbarianArtSlug(u.kind)) ?? null;
-  return unitMiniatureUrl(u.kind, u.origin ?? factionOf.get(u.owner));
+  return miniatures.get(mapUnitArtSlug(u, factionOf, barbarian)) ?? null;
+}
+
+/** The art slug behind mapUnitMiniatureUrl; the 3D map also keys its unit models by it, so a model stands in only for its own painting. */
+export function mapUnitArtSlug(u: { kind: UnitKind; owner: number; origin?: Faction | null }, factionOf: ReadonlyMap<number, Faction>, barbarian: boolean): string {
+  return barbarian ? barbarianArtSlug(u.kind) : unitArtSlug(u.kind, u.origin ?? factionOf.get(u.owner));
 }
 
 /** A barbarian's painted miniature (256 px) once loaded. */
@@ -136,4 +140,9 @@ export function airPlanImage(name: AirPlanName): HTMLImageElement | null {
 /** Start loading the plan sprites a turn's playback will fly, so the first strike of a session shows its aircraft from its first frame. */
 export function warmAirArt(names: AirPlanName[]) {
   for (const n of new Set(names)) airPlanImage(n);
+}
+
+/** Every unit's 64 px card and thumb, for the background fetch (`artWarm.ts`). */
+export function smallUnitArtUrls(): string[] {
+  return [...cards.values(), ...thumbs.values()];
 }

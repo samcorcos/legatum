@@ -19,17 +19,35 @@ unwatched. First seeded 2026-11-22 from a code survey (`addEventListener`, `requ
 | Surface | Trigger | Grows with | Watched by |
 | --- | --- | --- | --- |
 | Download: one 3.9 MB script (unminified size, no code splitting), the engine WASM, 0.4 MB of CSS | first visit, every deploy | features added | `lean_check.py` sizes (bytes only) |
-| About 930 images and 4 MB of audio in the build | first visit; each era, city and unit seen | art added | **unwatched**: nobody knows what a first game downloads, or when |
-| Time from the link to a playable turn 1 (parse, WASM compile, new-game setup, first map draw) | every visit | bundle and WASM size | **unwatched** in players' games; `tools/perf/app-load.sh` exists, last run 2026-10 |
+| About 930 images and 4 MB of audio in the build | first visit; each era, city and unit seen | art added | Each screen's first open: `tools/perf/first-open.cjs`, run nightly by `lean_check.py` (`open.<screen>.*`: files, KB, time until every picture has loaded, oversize pictures), flagged past 40 files, 500 KB, 1 s or any oversize picture. The small paintings (unit cards and thumbs, unlock and resource art at 64 px) are fetched in idle time once a game is on screen (`app/src/artWarm.ts`). Still **unwatched**: what the first turn itself downloads (map art, music) |
+| Time from the link to a playable turn 1 (parse, WASM compile, new-game setup, first map draw) | every visit | bundle and WASM size | `tools/perf/app-load.sh`: 3.30 s median locally (0.38 s to title, 0.82 s from Start game to playable); **unwatched** in players' games |
 | Continue: load a save (`loadClient`, `afterLoad`, first autosave) | Continue, rewind | turns played, save size | `?perf=1` marks only; not in uploads |
 | Title screen art and its animation loop | sitting on the title screen | nothing | **unwatched** (battery on a laptop) |
+
+**Cold-start baseline (2026-11-25, `bc22de14`):** five fresh headless Chromium 159 runs on a Linux
+Xeon VM at 1000×600, serving the optimized WASM and `npm run build` output on loopback. The script
+opens Single Player with the default Standard map and six empires, sets seed `424242`, starts the game,
+and clicks Begin on the people's introduction. It stops when the introduction is gone, turn 1 is
+visible, the 2D map has completed a draw, and the turn control can receive a click. Median phases:
+
+| Phase | Median |
+| --- | ---: |
+| Navigation → title visible | 375 ms |
+| Title → Start game (lobby interaction and seed entry) | 2,124 ms |
+| Start game → introduction | 617 ms |
+| Introduction → playable (including Begin) | 225 ms |
+| Start game → playable | 817 ms |
+| Navigation → playable | 3,296 ms (2,758–3,475 ms) |
+
+The wall-clock times include Playwright interaction and readiness checks, not human decision time.
+Medians are computed separately. This is a local regression benchmark, not a hosted network or device survey.
 
 ## 2. Every frame and every pointer move
 
 | Surface | Trigger | Grows with | Watched by |
 | --- | --- | --- | --- |
 | Map draw (full and clipped frames) | camera, hover, pulses, selection | units, cities, pixels on screen | `frame_times` map draws; `battle-hover.cjs` |
-| Terrain chunk cache (render, stale repaint, field rebuild) | zoom, pan to new ground, each turn | explored land, device pixel ratio | `frame_times` long tasks; `window.legatumMap.terrain` counters |
+| Terrain chunk cache (render, stale repaint, field rebuild) | zoom, pan to new ground, each turn | explored land, device pixel ratio | `frame_times` long tasks; `window.legatumMap.terrain` counters; `tools/perf/terrain-fill.cjs` (fill on a machine without a graphics card; run by hand, not yet in the nightly) |
 | Minimap and world backdrop loops | every frame while the map is up | map size | **unwatched** |
 | React renders on hover and selection (top bar width check, panels, tooltips) | pointer move, select | cities, panel content | `frame_times` input lag, and long tasks less the named causes; no per-component number |
 | Engine calls made while hovering or planning (each one that takes the view parses all of it) | pointer move, select, panels | view size (over 1 MB late) | `frame_times` `long_engine_ms` |
@@ -41,7 +59,7 @@ unwatched. First seeded 2026-11-22 from a code survey (`addEventListener`, `requ
 
 | Surface | Trigger | Grows with | Watched by |
 | --- | --- | --- | --- |
-| Engine step for the whole lobby (`end_turn` in WASM, on the main thread) | End Turn | units, cities, AI empires alive | `native-perf.sh`, `turn_profile`, `growth_profile`; in the browser `?perf=1` only |
+| Engine step for the whole lobby (`end_turn` in WASM, on the main thread; since 2026-11-26 the AI seats plan a seat at a time while the player plans, `plan_ahead`) | End Turn, idle moments in a turn | units, cities, AI empires alive | `native-perf.sh`, `turn_profile`, `growth_profile`; in the browser `?perf=1` only |
 | Reading views, applying the turn, autosave, archive, upload copy | End Turn | view size (1.2 MB late), turns played | `growth_profile`; `?perf=1` |
 | Turn playback and the turn report | after End Turn | events that turn | **unwatched** |
 | Order validation while planning (`validate` per candidate in purchase previews, path search, where-to-build) | opening a panel, hovering a route | cities, candidates, map size | **unwatched** |
@@ -92,3 +110,5 @@ One line per sweep: date, the rows taken, what was measured, what changed in the
   (`long_engine_ms`); long tasks now split into map drawing, terrain painting, engine calls and the rest.
 - 2026-11-25: other browsers measured from 36 players' games: 9 games with no long-task timing drew the map
   at 7 to 42 ms a draw (Chrome: 1 to 2 ms). The user chose to tune for Chrome only and say so on the title screen.
+- 2026-11-25: `app-load.sh` now runs through the first playable turn: 3.30 s median from navigation in
+  local Chromium, with the title, lobby, new-game setup and introduction timed separately.

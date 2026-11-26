@@ -3,6 +3,7 @@ import { test, expect } from './fixtures';
 import { endPlanning } from './turnActions';
 import { auditContrast } from './contrast';
 import { chooseCapitalProduction } from './opening';
+import { setMapSeed } from './mapSeed';
 
 const sizes = [
   { width: 1000, height: 600 },
@@ -14,7 +15,7 @@ const sizes = [
 async function openResearchWithQueue(page: Page) {
   await page.goto('/?client=wasm');
   await page.getByRole('button', { name: /^Single Player/ }).click();
-  await page.getByLabel('Map seed', { exact: true }).fill('424242');
+  await setMapSeed(page, '424242');
   await page.getByRole('button', { name: /^Start game/ }).click();
   await expect(page.getByTestId('turn-number')).toHaveText('1', { timeout: 60_000 });
   const dismiss = page.getByRole('button', { name: /^Dismiss hint/ });

@@ -29,6 +29,8 @@ export interface HostEngine {
   /** The live game's save right now; throws when there is no game. */
   save_game(): string;
   take_recordings(): string;
+  /** As take_recordings, with every seat under its default name: what a build that uploads games keeps and sends. */
+  take_public_recordings?(): string;
   free?(): void;
 }
 
@@ -70,6 +72,8 @@ export interface HostOptions {
   onSave?: (save: string) => void;
   /** A game history to keep in the archive. */
   onRecording?: (json: string) => void;
+  /** Hand over histories with every seat under its default name (a build that uploads games). */
+  publicRecordings?: boolean;
   /** The tunnel's state, and the room it serves (it changes only if the relay forgot the room). */
   onTunnel?: (state: TunnelState, room: RoomKey) => void;
   socket?: (url: string) => TunnelSocket;
@@ -367,7 +371,10 @@ export class BrowserHost {
     }
     const save = this.engine.take_save();
     if (save !== undefined && save !== null) this.options.onSave?.(save);
-    for (const json of JSON.parse(this.engine.take_recordings()) as string[]) this.options.onRecording?.(json);
+    // A build that uploads games takes the copies without typed names (hosting.ts sets `publicRecordings`): the
+    // upload server refuses any other, so an online game's record would otherwise never arrive.
+    const recordings = this.options.publicRecordings && this.engine.take_public_recordings ? this.engine.take_public_recordings() : this.engine.take_recordings();
+    for (const json of JSON.parse(recordings) as string[]) this.options.onRecording?.(json);
     this.push();
   }
 

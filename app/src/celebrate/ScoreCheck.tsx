@@ -2,6 +2,7 @@ import { ageName } from '../data';
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { feel, useCombatFx } from '../feel';
 import { CrestMedallion } from '../brand/ornaments';
+import { EmpireCrest } from '../ui/vpParts';
 import { Icon } from '../ui/bits';
 import { useReducedMotion } from '../ui/useReducedMotion';
 import { eraArt } from './eraArt';
@@ -125,7 +126,7 @@ export function ScoreCheck({ moment, dismiss }: { moment: Moment; dismiss(): voi
         <ol style={{ gridTemplateColumns: `repeat(${card.track.length}, minmax(0, 1fr))` }}>
           {card.track.map((s) => <li key={s.vp} className={`${s.pieces.some((p) => p.isMine) ? 'mine' : ''} ${s.vp === card.target ? 'win' : ''}`} data-vp={s.vp}>
             <span className="sc-pieces">
-              {s.pieces.map((p) => <span key={p.id} className={`sc-piece${p.isMine ? ' mine' : ''}`} data-vp={s.vp} title={`${p.name}: ${s.vp} VP`}><CrestMedallion faction={p.faction} color={p.color} size={CREST} /></span>)}
+              {s.pieces.map((p) => <span key={p.id} className={`sc-piece${p.isMine ? ' mine' : ''}`} data-vp={s.vp} title={`${p.name}: ${s.vp} VP`}>{p.unmet ? <EmpireCrest e={{ faction: p.faction, ink: p.color, unmet: true }} size={CREST} /> : <CrestMedallion faction={p.faction} color={p.color} size={CREST} />}</span>)}
             </span>
             <span className="sc-space">{s.vp === card.target ? `${s.vp} · Win` : s.vp}</span>
           </li>)}

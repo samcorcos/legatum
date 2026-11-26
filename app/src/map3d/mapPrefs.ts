@@ -30,8 +30,3 @@ export const useMapView = create<{ kind: MapViewKind; set(kind: MapViewKind): vo
   toggle: () => get().set(get().kind === '3d' ? '2d' : '3d'),
 }));
 
-/** Tile pickers the 3D map does not draw yet (placing a wonder or buying a tile, an aircraft's target).
- *  While one is open the game shows the flat map, so the lit tiles the panel asks for are on screen. */
-export function needsFlatMap(s: { place: unknown; air: { plane: number | null; what: unknown } }): boolean {
-  return !!s.place || (s.air.plane !== null && !!s.air.what);
-}

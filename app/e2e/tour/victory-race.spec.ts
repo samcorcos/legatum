@@ -12,6 +12,7 @@ import { gameOverCoreSave } from '../../src/test/gameOverFixture';
 import { contextFromViews, formatEvents } from '../../src/format';
 import { factionGoalRule } from '../../src/data';
 import { SIZES, closeLedger, ledgerGoal, loadFixture, openLedger, shot, type GameWindow } from './helpers';
+import { setMapSeed } from '../mapSeed';
 
 // Each test starts from its own save, so tests can run on separate workers.
 test.describe.configure({ mode: 'parallel' });
@@ -112,7 +113,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     });
     await page.goto('/?client=wasm');
     await page.getByRole('button', { name: /^Single Player/ }).click();
-    await page.getByLabel('Map seed', { exact: true }).fill('424242');
+    await setMapSeed(page, '424242');
     await page.getByRole('button', { name: /^Start game/ }).click();
     await expect(page.getByTestId('turn-number')).toHaveText('1', { timeout: 60_000 });
     await expect(page.locator('.loading-screen')).toHaveCount(0);
@@ -153,7 +154,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await page.getByRole('button', { name: /^Single Player/ }).click();
     // A new lobby has 6 empires; this shot is the full table of 8, so add the last two.
     for (let i = 0; i < 2; i++) await page.getByRole('button', { name: /^\+ Add an AI empire/ }).click();
-    await page.getByLabel('Map seed', { exact: true }).fill('424242');
+    await setMapSeed(page, '424242');
     await page.getByRole('button', { name: /^Start game/ }).click();
     await expect(page.getByTestId('turn-number')).toHaveText('1', { timeout: 60_000 });
     await expect(page.locator('.loading-screen')).toHaveCount(0);
@@ -171,7 +172,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     });
     await page.goto('/?client=wasm');
     await page.getByRole('button', { name: /^Single Player/ }).click();
-    await page.getByLabel('Map seed', { exact: true }).fill('424242');
+    await setMapSeed(page, '424242');
     await page.getByRole('button', { name: /^Start game/ }).click();
     await expect(page.getByTestId('turn-number')).toHaveText('1', { timeout: 60_000 });
     await expect(page.locator('.loading-screen')).toHaveCount(0);

@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Adds the GPL audio: Machine Age and World War music, the musket and the drone.
+"""Adds the GPL audio: Machine Age and World War music, the musket, the drone and a falling soldier.
 
 GPL audio from open-source games is allowed for the gaps no CC source a
 cloud session can reach would fill (docs/design/sound-sources.md). Each file is GPL-2.0-or-later
 and stays so after editing; the licence text is app/public/audio/licenses/GPL-2.0-or-later.txt.
 
   Battle for Wesnoth music  GPL v2+  per file in the game's copyrights.csv (author and MD5 of each file)
-  Battle for Wesnoth sound  GPL v2+  thunderstick.ogg and thunderstick-miss.ogg by Richard Kettering (Jetrel)
+  Battle for Wesnoth sound  GPL v2+  thunderstick.ogg and thunderstick-miss.ogg by Richard Kettering (Jetrel);
+                                     human-die-1.ogg to human-die-3.ogg by Lari Nieminen (zookeeper)
   Warzone 2100 sound        GPL v2+  audio/sfx/vehicle/vtol-move.ogg in base.wz (Ubuntu package
                                      warzone2100-data 4.4.2-1build3, debian/copyright: Files: *)
 
@@ -99,6 +100,11 @@ for n, name in enumerate(['thunderstick', 'thunderstick-miss'], 1):
         'title': f'Musket shot ({name}.ogg)', 'author': 'Richard Kettering (Jetrel)', 'source': WES_RAW % f'sounds/{name}.ogg',
         'attribution': f'"Musket shot ({name}.ogg)" by Richard Kettering (Jetrel), from {WES}, {GPL}, edited for Legatum',
         'rationale': 'A musket fires.'}))
+for n in (1, 2, 3):
+    manifest.append(one_shot('fall', f'soldier-falls-{n}', n, WES_SOUND / f'human-die-{n}.ogg', 1.5, {
+        'title': f'Soldier falls (human-die-{n}.ogg)', 'author': 'Lari Nieminen (zookeeper)', 'source': WES_RAW % f'sounds/human-die-{n}.ogg',
+        'attribution': f'"Soldier falls (human-die-{n}.ogg)" by Lari Nieminen (zookeeper), from {WES}, {GPL}, edited for Legatum',
+        'rationale': 'A soldier of the gunpowder age or later falls.'}))
 manifest.append(one_shot('drone', 'drone', 1, WZ_SOUND / 'vtol-move.ogg', 2.5, {
     'title': 'Drone engine (vtol-move.ogg)', 'author': 'the Warzone 2100 Project', 'source': WZ_SRC,
     'attribution': f'"Drone engine (vtol-move.ogg)" by the Warzone 2100 Project (https://wz2100.net/), {GPL}, edited for Legatum',

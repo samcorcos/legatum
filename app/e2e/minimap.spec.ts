@@ -3,6 +3,7 @@ import type { Browser, Page } from '@playwright/test';
 import type { useGame } from '../src/store';
 import { test, expect } from './fixtures';
 import { auditOverlaySlots } from './layoutAudit';
+import { setMapSeed } from './mapSeed';
 
 // Playtest 3, G5: a Civ-style minimap. Desktop and tablets get a corner panel under or beside the
 // turn dock.
@@ -25,7 +26,7 @@ async function start(browser: Browser, baseURL: string | undefined, watchErrors:
   await press(/^Single Player/);
   // A new lobby has 6 empires; these checks are about a full table of 8, so add the last two.
   for (let i = 0; i < 2; i++) await press(/^\+ Add an AI empire/);
-  await page.getByLabel('Map seed', { exact: true }).fill('424242');
+  await setMapSeed(page, '424242');
   await press(/^Start game/);
   await expect(page.getByTestId('turn-number')).toHaveText('1', { timeout: 60_000 });
   await expect(page.locator('.loading-screen')).toHaveCount(0);

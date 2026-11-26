@@ -170,3 +170,12 @@ td.mine .sl-bar i { background: var(--gilt); }
   .sl-detail .vh-objs { gap: 6px; }
 }
 
+
+/* An empire you haven't met: only its rank and VP show; its name reads as unknown, as in the rivals table. */
+.sl-col.unmet .sl-col-name { color: var(--muted); font-style: italic; }
+/* A hidden cell: the column head's dashed "?" disc, smaller, in ink-2 so it reads at both window sizes. */
+.sl-unknown-cell { display: inline-grid; }
+.sl-unknown-cell .vh-unknown { color: var(--ink-2); border-color: var(--ink-2); }
+.sl-col.unmet .sl-not-met { color: var(--muted); font-style: italic; font-weight: 500; }
+/* The column carries no empire colours, so its VP boxes fill in the muted ink. */
+.sl-col.unmet .sl-pips i.on { background: var(--muted); box-shadow: inset 0 0 0 1px var(--muted); }

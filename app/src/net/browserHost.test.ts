@@ -39,6 +39,7 @@ class FakeEngine implements HostEngine {
   start_staging() { return '{"code":"not_ready","message":"Not everyone is ready."}'; }
   take_save() { const s = this.save; this.save = undefined; return s; }
   take_recordings() { const r = JSON.stringify(this.recordings); this.recordings = []; return r; }
+  take_public_recordings() { const r = JSON.stringify(this.recordings.map((x) => `public ${x}`)); this.recordings = []; return r; }
   free() { this.freed = true; }
 }
 
@@ -372,4 +373,14 @@ it('saveGame hands over the live save on demand, or null when there is no game',
   expect(host.saveGame()).toBe('live save');
   engine.live = false;
   expect(host.saveGame()).toBeNull();
+});
+
+it('a build that uploads games takes each history without typed names', async () => {
+  const recordings: string[] = [];
+  const host = new BrowserHost(options({ publicRecordings: true, onRecording: (r) => recordings.push(r) }));
+  await host.start();
+  engine.recordings = ['{"history":1}'];
+  expect((await host.fetch('/api/game', { method: 'POST', body: '{}' })).ok).toBe(true);
+  expect(recordings).toEqual(['public {"history":1}']);
+  host.stop();
 });

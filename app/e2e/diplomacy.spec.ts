@@ -4,6 +4,7 @@ import { endPlanning } from './turnActions';
 import { diplomacyCoreSave, diplomacyState } from '../src/test/diplomacyFixture';
 import { coreFixture } from '../src/test/coreFixture';
 import { callToArmsCoreSave, leaderAllianceOfferCoreSave } from '../src/test/allianceFixture';
+import { setMapSeed } from './mapSeed';
 
 /** Continue a saved game at `turn` (advisor off). */
 async function loadSave(page: Page, game: string, turn: number) {
@@ -95,7 +96,7 @@ test('Diplomacy: the inbox and the advisor share the story area, one at a time (
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto('/?client=wasm');
   await page.getByRole('button', { name: /^Single Player/ }).click();
-  await page.getByLabel('Map seed', { exact: true }).fill('424242');
+  await setMapSeed(page, '424242');
   await page.getByRole('button', { name: /^Start game/ }).click();
   await expect(page.getByTestId('turn-number')).toHaveText('1');
   const hint = page.getByTestId('advisor');

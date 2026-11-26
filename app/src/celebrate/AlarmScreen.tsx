@@ -1,7 +1,8 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Crest } from '../brand/ornaments';
 import { FACTION_INFO, factionName } from '../data';
-import { empireHeadName, empireMembers, empireTitle } from '../empires';
+import { empireMembers, empireTitle, headNameIfMet, unmetTeam } from '../empires';
+import { EmpireCrest } from '../ui/vpParts';
 import { pendingAlarms, useGame } from '../store';
 import { playerColor, playerInk } from '../theme';
 import type { Hex, PlayerView, TeamId } from '../types';
@@ -162,7 +163,9 @@ export function AlarmScreen() {
   const crest = phone ? (members.length > 2 ? 64 : members.length > 1 ? 84 : 108) : members.length > 2 ? 84 : members.length > 1 ? 112 : 164;
   const portraits = members.length <= 2;
   const single = leadTeams.length === 1 && members.length === 1 ? members[0] : null;
-  const primaryLabel = canDeclare ? `Declare war on ${empireHeadName(view, top.team)}` : isRace ? 'See the race' : pending.length > 1 ? 'Continue' : top.kind === 'cityLost' ? `Show ${top.city!.name}` : top.kind === 'war' ? 'Show on map' : 'Continue';
+  // An empire you haven't met (only a race alarm can be about one): a "?" disc, no portrait, people or motto.
+  const hidden = unmetTeam(view, top.team);
+  const primaryLabel = canDeclare ? `Declare war on ${headNameIfMet(view, top.team)}` : isRace ? 'See the race' : pending.length > 1 ? 'Continue' : top.kind === 'cityLost' ? `Show ${top.city!.name}` : top.kind === 'war' ? 'Show on map' : 'Continue';
   const diplomacyTeam = top.kind === 'cityLost' || isRace ? null : top.team;
 
   const art = eraArt(Math.max(0, (single?.era ?? members[0]?.era ?? 1) - 1));
@@ -174,7 +177,7 @@ export function AlarmScreen() {
       <div className={`alarm-crests${portraits ? ` portraits ${members.length > 1 ? 'pair' : 'solo'}` : ''}`} aria-hidden="true" style={{ ['--pc' as string]: playerInk(members[0]?.id) }}>
         <span className="alarm-banner" />
         <span className="alarm-rays" />
-        {members.map((m) => portraits
+        {hidden ? <span className="alarm-crest alarm-unknown"><EmpireCrest e={{ faction: members[0]?.faction ?? 'Rome', ink: 'var(--muted)', unmet: true }} size={crest} /></span> : members.map((m) => portraits
           ? <span key={m.id} className="alarm-crest alarm-leader" style={{ ['--pc' as string]: playerColor(m.id) }}>
             <PortraitFrame faction={m.faction} crestSize={members.length > 1 ? 36 : 46} crestColor={playerColor(m.id)}>
               <PlayerBadge id={m.id} />
@@ -189,7 +192,7 @@ export function AlarmScreen() {
         <Ribbon tone={variant === 'war' || variant === 'loss' ? 'red' : 'gilt'} className="alarm-ribbon">{isHold ? HOLD_KICKER[stance!] : isNear ? NEAR_KICKER[stance!] : KICKER[top.kind as keyof typeof KICKER]}</Ribbon>
         <h1 id={title}>{alarmHeadline(view, lead)}</h1>
         {/* The full empire name only where it adds to the headline (a player's name, a shared faction). */}
-        {leadTeams.some((t) => empireTitle(view, t) !== empireMembers(view, t).map((p) => factionName(p.faction)).join(' & ')) &&
+        {!hidden && leadTeams.some((t) => empireTitle(view, t) !== empireMembers(view, t).map((p) => factionName(p.faction)).join(' & ')) &&
           <p className="alarm-empire">{leadTeams.map((t) => empireTitle(view, t)).join(' · ')}</p>}
         {isHold && lead.length === 1 && <p className="alarm-hold-sub">{holdSubline(top)}</p>}
         {single && !isRace && <p className="alarm-motto">“{FACTION_INFO[single.faction].motto}”</p>}
@@ -199,7 +202,7 @@ export function AlarmScreen() {
         <button ref={primary} className={`btn primary alarm-primary${canDeclare ? ' hostile' : ''}`} onClick={toArms}>
           {primaryLabel}{!touch && <Kbd>Return</Kbd>}
         </button>
-        {nearCity && <button className="btn alarm-diplomacy" onClick={() => close(nearCity.pos)}>Show on map</button>}
+        {nearCity && !hidden && <button className="btn alarm-diplomacy" onClick={() => close(nearCity.pos)}>Show on map</button>}
         {top.kind === 'warByYou' && <button className="btn alarm-diplomacy" onClick={() => close(alarmFocus(view, [top]))}>Show on map</button>}
         {diplomacyTeam !== null && <button className="btn alarm-diplomacy" onClick={() => {
           close();

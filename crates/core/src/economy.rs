@@ -893,7 +893,7 @@ pub fn treaty_upkeep(state: &GameState, p: PlayerId) -> Breakdown {
     b
 }
 
-/// Military upkeep, treaty upkeep and any opt-in city administration cost.
+/// Military upkeep, treaty upkeep and city upkeep.
 pub fn upkeep(state: &GameState, p: PlayerId) -> i32 {
     upkeep_breakdown(state, p).total
 }
@@ -929,10 +929,19 @@ pub(crate) fn upkeep_breakdown_with_military(
         crate::company::count(state, p) as i32 * crate::company::UPKEEP,
     );
     b.add("Treaties", treaty_upkeep(state, p).total);
-    if state.setup.rule_experiments.city_upkeep {
-        b.add("City administration", city_upkeep(state, p));
+    let cities = city_upkeep(state, p);
+    if cities > 0 {
+        b.add(city_upkeep_label(state), cities);
     }
     b
+}
+
+/// The breakdown line for city upkeep.
+pub fn city_upkeep_label(state: &GameState) -> String {
+    format!(
+        "City upkeep (free up to {} cities)",
+        state.setup.rule_experiments.city_upkeep_free()
+    )
 }
 
 pub fn city_upkeep(state: &GameState, p: PlayerId) -> i32 {
@@ -1088,8 +1097,8 @@ pub fn player_income(state: &GameState, p: crate::types::PlayerId) -> PlayerInco
     for (label, amount) in treaties.parts {
         gold.add(format!("Treaty upkeep: {label}"), -amount);
     }
-    if state.setup.rule_experiments.city_upkeep {
-        gold.add("City administration", -administration);
+    if administration > 0 {
+        gold.add(city_upkeep_label(state), -administration);
     }
     PlayerIncome {
         cities,
