@@ -439,3 +439,22 @@ behind it. `--skin-max-value` caps pale skin texels.
   behind, all clips, around the head) and `scrap_rays` (rays around the shoulders and upper arms
   whose first hit is a loose garment or skin island, listed as `scraps`). On r12 LOD0 it reports
   the sleeve scrap and 17,630 scrap rays; r13 LOD0 has 0.
+
+## Round r13b (LOD1 feet, sleeves, budget 3,450)
+
+The 3D map accepts LOD1 up to 3,500 triangles (LOD0+LOD1 up to 35k, file up to 3 MB):
+`validate_glb.py --lod1-max N` overrides the LOD1 budget (contract default stays 3,000).
+`kit/sculpt/r13b.sh` builds with `--lod1 3450` and:
+- `--lod1-part-tris PART=N` (repeatable): fixed LOD1 budgets (layer 1000, greave 462, spear 60,
+  crest 60); with them, skin is built last and gets what is left (138).
+- `--lod1-feet-shell 70`: the sandals are 4,500 LOD0 triangles of thin straps, which collapse
+  decimation shreds into red shards. LOD1 drops sandal and foot-skin faces below
+  `--lod1-feet-height` (9 cm) and adds one closed shell per foot: the LOD0 sandal and foot
+  surfaces voxel-remeshed (8 mm, outer island only), decimated, pushed out 1.5 mm, each face
+  flat-coloured from the nearest LOD0 sandal texel (no UV straddles atlas islands). LOD1 garment
+  weights then come from the LOD0 skin (the LOD1 skin has no feet; without this the shells rode
+  the shin and floated off the legs).
+- `--lod1-sleeve-tris 120`: the generated sleeve shells are decimated on their own (inside the
+  whole garment they broke into white wedges at the shoulder).
+- LOD1 skin islands under five faces are dropped (r13's two-triangle sliver at the left shoulder).
+- `closeups-r13/feet-lod1-id-all-clips.png`: ID renders of the LOD1 feet in all five clips.

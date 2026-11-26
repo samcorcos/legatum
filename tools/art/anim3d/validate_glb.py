@@ -298,11 +298,12 @@ def validate(path,limits=None):
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('glb',type=Path);p.add_argument('--output',type=Path)
     p.add_argument('--lod0-max',type=int,help='test-round override of the LOD0 triangle budget (contract: 10000)')
+    p.add_argument('--lod1-max',type=int,help='override of the LOD1 triangle budget (contract: 3000; the 3D map accepts up to 3500 when LOD0+LOD1 stays within --lod-total-max)')
     p.add_argument('--lod-total-max',type=int,help='test-round cap on LOD0+LOD1 triangles')
     p.add_argument('--max-bytes',type=int,help='test-round GLB size cap (contract: 2000000)')
     p.add_argument('--max-joints',type=int,help='test-round joint cap (contract: 40)')
     args=p.parse_args()
-    limits={k:v for k,v in {'lod0':args.lod0_max,'lod_total':args.lod_total_max,'bytes':args.max_bytes,'joints':args.max_joints}.items() if v}
+    limits={k:v for k,v in {'lod0':args.lod0_max,'lod1':args.lod1_max,'lod_total':args.lod_total_max,'bytes':args.max_bytes,'joints':args.max_joints}.items() if v}
     result=validate(args.glb,limits);result['limits']=dict(LIMITS,**limits);out=json.dumps(result,indent=2);print(out)
     if args.output:args.output.write_text(out+'\n')
     raise SystemExit(0 if result['valid'] else 1)
