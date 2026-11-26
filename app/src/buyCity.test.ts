@@ -1,7 +1,7 @@
 // Byzantium's Buy a city and the fall of Constantinople: the shared words (city panel, tile card, banner, report).
 import { describe, expect, it } from 'vitest';
 import { decodeOrders } from './orderDecoding';
-import { capitalFallLine, cityBuyTileLines, offerChip, offerLines, priceLines, priceText, renameSeats, withBuy, withoutBuy } from './buyCity';
+import { bidChoices, bidLabel, capitalFallLine, cityBuyTileLines, offerChip, offerLines, priceLines, priceText, renameSeats, stopLine, withBuy, withoutBuy } from './buyCity';
 import { contextFromViews, formatEvents } from './format';
 import { promisedGold } from './deals';
 import type { CityView, Event, PlayerView } from './types';
@@ -53,6 +53,19 @@ describe('a running offer', () => {
     expect(seller.options).toBe('Move military units in or build Walls to raise the price, or declare War.');
     expect(offerLines(view(2), offer).head).toBe('Byzantium is buying Pylos from Sparta: it changes hands at the end of turn 14 (3 turns)');
     expect(offerLines(view(0), { ...offer, price_now: 700 }).detail).toContain('the offer fails at the end of this turn and you lose 60 Gold');
+    // An overbid: the seller is told what it takes to stop it.
+    expect(offerLines(view(1), { ...offer, escrow: 900, guards_to_stop: 3, walls_to_stop: 2 }).detail)
+      .toBe('You get the 900 Gold Byzantium offered. If its price rises above 900 Gold (now 600), the offer fails. 3 more military units or 2 Walls levels in or next to it would do that.');
+  });
+  it('lists the bid choices with what stops each, and queues the chosen bid', () => {
+    expect(stopLine({ guards_to_stop: 1, walls_to_stop: 1 })).toBe('Stopped by 1 more military unit or 1 Walls level');
+    expect(stopLine({ guards_to_stop: 5 })).toBe('Stopped by 5 more military units');
+    expect(bidLabel(100)).toBe('Price');
+    expect(bidLabel(150)).toBe('+50%');
+    expect(withBuy([], 3, 900)).toEqual([{ type: 'BuyCity', city: 3, gold: 900 }]);
+    expect(bidChoices({ city: 3, buyer: 0, price: 600, breakdown })).toEqual([{ percent: 100, gold: 600, guards_to_stop: 1 }]);
+    const v = view(0, { city_buys: [{ city: 3, buyer: 0, price: 600, breakdown }] });
+    expect(promisedGold(v, [{ type: 'BuyCity', city: 3, gold: 900 }])).toBe(900);
   });
   it('puts the offer, not the price, on the tile card', () => {
     const v = view(1, { city_offers: [offer], city_buys: [{ city: 3, buyer: 0, price: 600, breakdown }] });
@@ -90,6 +103,10 @@ describe('report lines', () => {
   it('the seller is told what it can do', () => {
     expect(lines(1, [{ type: 'CityOfferMade', city: 3, buyer: 0, seller: 1, escrow: 600, ends_turn: 14 }]))
       .toEqual(['Byzantium is buying Pylos for 600 Gold, at the end of turn 14. Move military units in or build Walls to raise the price, or declare War.']);
+    const notice = formatEvents([{ type: 'CityOfferMade', city: 3, buyer: 0, seller: 1, escrow: 900, price: 600, guards_to_stop: 3, ends_turn: 14 }], contextFromViews(null, view(1)));
+    expect(notice[0].details).toEqual(['If nothing changes, the city goes to Byzantium and you get the 900 Gold. If its price rises above 900 Gold, the offer fails: 3 more military units in or next to it would do that. War calls it off.']);
+    expect(lines(1, [{ type: 'CityOfferMade', city: 3, buyer: 0, seller: 1, escrow: 900, price: 600, ends_turn: 14 }]))
+      .toEqual(['Byzantium is buying Pylos for 900 Gold (its price is 600), at the end of turn 14. Move military units in or build Walls to raise the price, or declare War.']);
     expect(lines(0, [{ type: 'CityOfferMade', city: 3, buyer: 0, seller: 1, escrow: 600, ends_turn: 14 }]))
       .toEqual(['You are buying Pylos for 600 Gold: it changes hands at the end of turn 14']);
   });

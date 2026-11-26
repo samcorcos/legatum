@@ -578,7 +578,10 @@ mod tests {
                 to: PlayerId(1),
                 amount: 25,
             },
-            Order::BuyCity { city: CityId(29) },
+            Order::BuyCity {
+                city: CityId(29),
+                gold: 750,
+            },
         ]
     }
 

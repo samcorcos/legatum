@@ -549,6 +549,7 @@ export const byzantiumBuyCityDetail = (): string => {
     'A city that holds a goal’s VP costs double.',
     `The Gold is held for ${b.offerTurns} turns. Then the city is yours with its population, buildings and land, and its owner gets the Gold.`,
     'War between you calls the offer off and the Gold comes back.',
+    `You may offer more than the price, up to ${b.maxBidPercent}% of it. The owner gets all of it, and it takes more units or Walls to stop.`,
     `If the owner raises the price above your offer, it fails and you lose ${b.failFeePercent}% of the Gold.`,
     'You can make one offer at a time.',
   ].join(' ');

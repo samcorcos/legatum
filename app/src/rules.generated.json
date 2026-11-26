@@ -370,6 +370,7 @@
     "failFeePercent": 10,
     "goalMultiplier": 2,
     "guardPercent": 25,
+    "maxBidPercent": 300,
     "offerTurns": 3,
     "perPopulation": 60,
     "wallsPercent": 50

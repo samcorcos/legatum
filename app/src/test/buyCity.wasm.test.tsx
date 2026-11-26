@@ -58,12 +58,24 @@ describe.skipIf(!available)('Buy a city', () => {
     expect(container.querySelector('[data-testid=buy-city-queued]')!.textContent).toContain('Queued: your offer for Pylos');
     expect(buyIsPrimary(v, pylos, useGame.getState().orders[0])).toBe(false);
 
+    // The bid choices: each says what stops it; picking +50% re-queues the offer at that bid.
+    const bids = buy.bids!;
+    expect(bids.map((b) => b.percent)).toEqual([100, 125, 150, 200]);
+    expect(container.querySelector('[data-testid=buy-city-bid-100]')!.textContent).toContain('Stopped by 1 more military unit');
+    const half = bids.find((b) => b.percent === 150)!;
+    expect(half.guards_to_stop).toBeGreaterThan(1);
+    act(() => container.querySelector<HTMLButtonElement>('[data-testid=buy-city-bid-150]')!.click());
+    expect(useGame.getState().orders[0]).toEqual([{ type: 'BuyCity', city: fx.pylos, gold: half.gold }]);
+    expect(container.querySelector('[data-testid=buy-city-offer]')!.textContent).toContain(`Make an offer (${half.gold} Gold)`);
+
     const before1 = core.view(1);
-    const result = core.endTurn({ 0: [{ type: 'BuyCity', city: fx.pylos }] });
+    const result = core.endTurn({ 0: [{ type: 'BuyCity', city: fx.pylos, gold: half.gold }] });
     const made = result.events.find((e) => e.type === 'CityOfferMade');
-    expect(made).toMatchObject({ city: fx.pylos, buyer: 0, seller: 1, escrow: buy.price });
+    expect(made).toMatchObject({ city: fx.pylos, buyer: 0, seller: 1, escrow: half.gold, price: buy.price });
     const after0 = core.view(0), after1 = core.view(1);
-    expect(after0.city_offers).toEqual([expect.objectContaining({ city: fx.pylos, buyer: 0, seller: 1, escrow: buy.price, turns_left: 3 })]);
+    expect(after0.city_offers).toEqual([expect.objectContaining({ city: fx.pylos, buyer: 0, seller: 1, escrow: half.gold, turns_left: 3 })]);
+    // The bid still holds against as many units as it did, or more if a guard left meanwhile.
+    expect(after0.city_offers![0].guards_to_stop).toBeGreaterThanOrEqual(half.guards_to_stop);
     expect(offerChip(after1, fx.pylos)).toBe('Being bought: 3 turns');
     expect(offerChip(after0, fx.pylos)).toBe('Being bought: 3 turns');
     const sellerLines = formatEvents(result.events, contextFromViews(before1, after1)).map((l) => l.text);
@@ -74,12 +86,15 @@ describe.skipIf(!available)('Buy a city', () => {
     const fx = buyCityState('seller');
     const core = makeCore(); core.load(coreFixture(fx.state));
     const v = core.view(0);
-    expect(v.city_offers).toEqual([{ city: fx.pylos, buyer: 1, seller: 0, escrow: PYLOS_ESCROW, ends_turn: 14, turns_left: 3, price_now: expect.any(Number) }]);
+    expect(v.city_offers).toEqual([{ city: fx.pylos, buyer: 1, seller: 0, escrow: PYLOS_ESCROW, ends_turn: 14, turns_left: 3, price_now: expect.any(Number), guards_to_stop: expect.any(Number), walls_to_stop: expect.any(Number) }]);
+    const stop = v.city_offers![0].guards_to_stop!;
+    expect(stop).toBeGreaterThan(0);
     seat(v);
     const pylos = v.cities.find((c) => c.id === fx.pylos)!;
     act(() => root.render(<CityBuy view={v} city={pylos} />));
     expect(container.querySelector('[data-testid=city-offer]')!.textContent).toContain('Byzantium is buying Pylos: it changes hands at the end of turn 14');
     expect(container.querySelector('[data-testid=city-offer-options]')!.textContent).toBe(SELLER_OPTIONS);
+    expect(container.querySelector('[data-testid=city-offer]')!.textContent).toContain(`${stop} more military unit`);
     expect(container.querySelector('[data-testid=buy-city-offer]')).toBeNull();
   });
 });

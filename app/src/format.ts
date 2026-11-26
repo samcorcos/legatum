@@ -29,7 +29,7 @@ import { eventIcon } from './reportIcons';
 import { HOLD_TURNS, holdRule, turnsWord } from './victoryHold';
 import { isAircraft, isFighter, readyNotice } from './airText';
 import { wonderLostLine } from './wonderRace';
-import { FAIL_FEE_PERCENT, SELLER_OPTIONS, renameSeats } from './buyCity';
+import { FAIL_FEE_PERCENT, SELLER_OPTIONS, renameSeats, stopParts } from './buyCity';
 
 /** Core `MOVE_STOPPED_PREFIX`: the MoveBlocked reason that stops a move after repeated blocked turns. */
 export const MOVE_STOPPED_PREFIX = 'move stopped after 2 blocked turns: ';
@@ -700,8 +700,8 @@ function buyCityLine(e: ByzantineEvent, ctx: ReportContext, mine: (p: PlayerId) 
       if (mine(e.buyer)) return line('cities', `${e.buyer === ctx.me ? 'You are' : `${who(ctx, e.buyer)} is`} buying ${city(e.city)} for ${e.escrow} Gold: it changes hands at the end of turn ${e.ends_turn}`, {
         ...opts, tone: 'good', details: [`The Gold is held until then. War calls the offer off and returns it. If ${whom(ctx, e.seller)} raise${e.seller === ctx.me ? '' : 's'} the price above ${e.escrow} Gold, the offer fails and ${FAIL_FEE_PERCENT}% is lost.`],
       });
-      if (mine(e.seller)) return line('cities', `${who(ctx, e.buyer)} is buying ${city(e.city)} for ${e.escrow} Gold, at the end of turn ${e.ends_turn}. ${SELLER_OPTIONS}`, {
-        ...opts, tone: 'bad', details: [`If nothing changes, the city goes to ${who(ctx, e.buyer)} and ${e.seller === ctx.me ? 'you get' : `${who(ctx, e.seller)} gets`} the ${e.escrow} Gold. If its price rises above ${e.escrow} Gold, the offer fails. War calls it off.`],
+      if (mine(e.seller)) return line('cities', `${who(ctx, e.buyer)} is buying ${city(e.city)} for ${e.escrow} Gold${e.price && e.escrow > e.price ? ` (its price is ${e.price})` : ''}, at the end of turn ${e.ends_turn}. ${SELLER_OPTIONS}`, {
+        ...opts, tone: 'bad', details: [`If nothing changes, the city goes to ${who(ctx, e.buyer)} and ${e.seller === ctx.me ? 'you get' : `${who(ctx, e.seller)} gets`} the ${e.escrow} Gold. If its price rises above ${e.escrow} Gold, the offer fails${e.guards_to_stop ? `: ${stopParts(e.guards_to_stop)} in or next to it would do that` : ''}. War calls it off.`],
       });
       return line('cities', `${who(ctx, e.buyer)} is buying ${city(e.city)} from ${whom(ctx, e.seller)}: it changes hands at the end of turn ${e.ends_turn}`, { ...opts, weight: 1, tone: 'neutral' });
     }

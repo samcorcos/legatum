@@ -44,8 +44,8 @@ export const treatyNoun = (kind: TreatyKind | null | undefined): string =>
 export function promisedGold(view: Pick<PlayerView, 'team' | 'diplomacy'> & Partial<Pick<PlayerView, 'me' | 'city_buys'>>, orders: Order[]): number {
   return orders.reduce((n, o) => {
     if (o.type === 'GiveGold') return n + o.amount;
-    // Byzantium's city offer: its price leaves the treasury into escrow when the turn ends.
-    if (o.type === 'BuyCity') return n + (view.city_buys?.find((b) => b.city === o.city && b.buyer === view.me)?.price ?? 0);
+    // Byzantium's city offer: its bid (or the price) leaves the treasury into escrow when the turn ends.
+    if (o.type === 'BuyCity') return n + (o.gold || (view.city_buys?.find((b) => b.city === o.city && b.buyer === view.me)?.price ?? 0));
     if (o.type === 'ProposeTreaty') return n + Math.max(0, o.gold ?? 0);
     if (o.type === 'RespondToProposal' && o.accept) {
       const p = view.diplomacy?.proposals?.find((x) => x.id === o.proposal);

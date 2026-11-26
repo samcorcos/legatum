@@ -342,6 +342,7 @@ fn ui_rules_match_core() {
             "goalMultiplier": legatum_core::buy_city::GOAL_MULTIPLIER,
             "offerTurns": legatum_core::buy_city::OFFER_TURNS,
             "failFeePercent": legatum_core::buy_city::FAIL_FEE_PERCENT,
+            "maxBidPercent": legatum_core::buy_city::MAX_BID_PERCENT,
         },
         "firstGrowth": data::FIRST_GROWTH,
         "growthBase": data::GROWTH_BASE,

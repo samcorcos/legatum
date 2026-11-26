@@ -8,12 +8,19 @@
 //! left to found), `POP_GOLD` per population beyond the first for the growth turns, the full Gold
 //! price of its buildings (the price charges half), `LAND_GOLD` for its land and output from the
 //! first turn, and `GOAL_GOLD` for a goal's held VP in it. The gene weights that worth against the
-//! price and the chance the owner breaks the offer before the sale (`offer_risk`: its visible
-//! units that can step in or next to the city within the offer's turns, a treasury that can buy a
-//! defender, Walls under way). An offer likely lost (`LIKELY_FAIL`) is never made. The best
-//! positive expected gain is bought now, or the treasury is
-//! held for it (`city_buy_savings`, part of `gold_reserve`) when income pays the rest within
-//! `BANK_TURNS`. No offer while an enemy at War stands near our cities.
+//! bid and the chance the owner breaks the offer before the sale. **The bid** (core lets it run
+//! from the price to `MAX_BID_PERCENT`% of it; all of it goes to the seller): the owner's threat
+//! (`offer_threat`) is the armed units it can add in or next to the city before the sale, from
+//! what we see: its visible units that can get there within the offer's turns, one bought unit a
+//! turn its public treasury pays for, and Walls under way (a level counts as
+//! `WALLS_PERCENT / GUARD_PERCENT` units). Each candidate bid covers the price with 0, 1, 2, ...
+//! more units (`buy_city::defended_price`); the risk (`offer_risk`) grows with the threat the bid
+//! leaves uncovered, plus gene `buy_city_overbid` percent of a unit for what we cannot see. The
+//! candidate with the best expected gain is the bid; an offer likely lost (`LIKELY_FAIL`) is
+//! never made. Of the bids within reach (affordable now, or net income pays the rest within gene
+//! `buy_city_bank_turns`), the best positive gain is bid now if affordable, else the treasury is
+//! held for it (`city_buy_savings`, part of `gold_reserve`). No offer while an enemy at War
+//! stands near our cities.
 //!
 //! **Capital** (gene `byz_capital_guard`). While its capture would take every other city (no
 //! Heir refuge), the capital's wanted garrison and its garrison and Walls value grow with the
@@ -21,8 +28,10 @@
 //! threatened capital sends the Heir to shelter in another city (`goal_forge_heir.rs`).
 //!
 //! **Sellers** (gene `offer_defence`, `defend_city_offers`). When a Byzantium is buying one of our
-//! cities, the cheapest way to lift the price above the escrow before the sale: units that can
-//! reach the city or a tile next to it in time, then a bought unit or Walls in the city. War only
+//! cities, the cheapest way to lift the price above the escrow (the bid) before the sale, counted
+//! by the view's `guards_to_stop`: units that can reach the city or a tile next to it in time,
+//! then a bought unit or Walls in the city, unless even those and a purchase every turn left
+//! cannot reach the count (then no Gold is spent on it). War only
 //! for a city clearly worth more than the war (a goal's VP or a large city, with twice the
 //! buyer's public army); otherwise the Gold is taken. In peace a city whose land touches a
 //! Byzantium's wants a defender (gene `byz_border_guard`).
@@ -31,7 +40,9 @@
 //! every other known Byzantine city as a conquest, campaign or strike target
 //! (`byz_collapse_value`, `byz_collapse_cities`).
 use crate::scripted::Planner;
-use legatum_core::buy_city::{CityBuyView, FAIL_FEE_PERCENT, OFFER_TURNS};
+use legatum_core::buy_city::{
+    self, CityBuyView, FAIL_FEE_PERCENT, GUARD_PERCENT, OFFER_TURNS, WALLS_PERCENT,
+};
 use legatum_core::experiments::FactionRule;
 use legatum_core::view::CityView;
 use legatum_core::{BuildingKind, Faction, Hex, Order, ProductionItem, UnitKind, data};
@@ -42,24 +53,27 @@ const POP_GOLD: i32 = 120;
 const LAND_GOLD: i32 = 100;
 /// Gold for a goal's held VP in the city (it follows the holder).
 const GOAL_GOLD: i32 = 600;
-/// Turns of income the buyer banks toward its best offer.
-const BANK_TURNS: i32 = 10;
 /// Expected-gain bonus per hex between the city and its owner's capital (capped at 10 hexes):
 /// a far city is harder for its owner to reinforce.
 const FAR_GOLD_PER_HEX: i32 = 5;
 /// An offer the owner breaks at least this often (percent) is likely lost: never made.
 const LIKELY_FAIL: i32 = 60;
-/// The breakdown labels (core `buy_city::base_breakdown`, `with_defences`).
-const BUILDINGS_LABEL: &str = "Buildings";
-const GOAL_LABEL: &str = "Holds a goal";
+/// Risk (percent) of an offer that covers every threat we see: a war, an unseen army.
+const BASE_RISK: i32 = 5;
+/// Risk (percent) per armed unit of the owner's threat a bid leaves uncovered.
+const UNCOVERED_RISK: i32 = 45;
+/// Most extra units a bid tries to cover.
+const MAX_COVER: i32 = 8;
 /// Seller: a city at least this big is worth a war (with the army to win it).
 const WAR_CITY_POPULATION: i32 = 8;
 
-/// One appraised buyable city.
+/// One appraised buyable city at one bid.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) struct Appraisal {
     pub city: legatum_core::CityId,
     pub price: i32,
+    /// The Gold offered (the price or more).
+    pub bid: i32,
     /// Gold-equivalent worth, weighted by the gene.
     pub value: i32,
     /// Percent chance the owner breaks the offer.
@@ -94,23 +108,15 @@ impl Planner<'_> {
     /// Gold-equivalent worth of a buyable city (see the module doc).
     pub(crate) fn city_buy_worth(&self, buy: &CityBuyView, city: &CityView) -> i32 {
         let founding = self.settler_gold() * if self.count_good_sites(1) == 0 { 2 } else { 1 };
-        let line = |prefix: &str| {
-            buy.breakdown
-                .parts
-                .iter()
-                .filter(|(label, _)| label.starts_with(prefix))
-                .map(|(_, gold)| *gold)
-                .sum::<i32>()
-        };
-        let buildings = line(BUILDINGS_LABEL) * 100 / legatum_core::buy_city::BUILDING_PERCENT;
-        let goal = if line(GOAL_LABEL) > 0 { GOAL_GOLD } else { 0 };
-        founding + POP_GOLD * (city.population - 1).max(0) + buildings + LAND_GOLD + goal
+        let goal = if buy.holds_goal { GOAL_GOLD } else { 0 };
+        founding + POP_GOLD * (city.population - 1).max(0) + buy.buildings_gold + LAND_GOLD + goal
     }
 
-    /// Percent chance the owner lifts the price above the escrow before the sale, from what we
-    /// see: its units that can reach the city or a tile next to it within the offer's turns, a
-    /// treasury that can buy a defender there, and Walls under way.
-    pub(crate) fn offer_risk(&self, city: &CityView) -> i32 {
+    /// Armed units the owner can add in or next to `city` before a sale, from what we see: its
+    /// visible units that can get there within the offer's turns, one bought unit a turn its
+    /// public treasury pays for, and Walls under way (a level counts as
+    /// `WALLS_PERCENT / GUARD_PERCENT` units).
+    pub(crate) fn offer_threat(&self, city: &CityView) -> i32 {
         let v = self.view();
         let reach = v
             .units
@@ -123,17 +129,41 @@ impl Planner<'_> {
                     && u.pos.distance(city.pos) - 1 <= u.max_moves.max(1) * OFFER_TURNS as i32
             })
             .count() as i32;
-        let defender_gold = self.cheapest_defender_gold();
-        let rich = v
+        let defender_gold = self.cheapest_defender_gold().max(1);
+        let buys = v
             .players
             .iter()
             .find(|p| p.id == city.owner)
-            .is_some_and(|p| p.gold >= defender_gold);
-        let risk = 10
-            + 30 * reach.min(3)
-            + if rich { 55 } else { 0 }
-            + if city.walls_building { 25 } else { 0 };
-        risk.clamp(5, 95)
+            .map_or(0, |p| {
+                (p.gold.max(0) / defender_gold).min(OFFER_TURNS as i32)
+            });
+        let walls = if city.walls_building {
+            WALLS_PERCENT / GUARD_PERCENT
+        } else {
+            0
+        };
+        reach + buys + walls
+    }
+
+    /// Percent chance the owner lifts the price above `bid` before the sale: `BASE_RISK`, plus
+    /// `UNCOVERED_RISK` per unit of `threat` (and gene `buy_city_overbid` percent of a unit for
+    /// what we cannot see) beyond the units the bid absorbs.
+    pub(crate) fn offer_risk(
+        &self,
+        buy: &CityBuyView,
+        city: &CityView,
+        threat: i32,
+        bid: i32,
+    ) -> i32 {
+        let covered = buy_city::guards_to_stop(
+            buy.base_price,
+            i32::from(city.walls_level),
+            buy.guards,
+            buy.holds_goal,
+            bid,
+        ) - 1;
+        let uncovered = (100 * threat + self.decisions.buy_city_overbid - 100 * covered).max(0);
+        (BASE_RISK + UNCOVERED_RISK * uncovered / 100).clamp(BASE_RISK, 95)
     }
 
     /// Our cheapest Gold price of an armed unit: the stand-in for what a seller pays for one more
@@ -152,47 +182,57 @@ impl Planner<'_> {
             .unwrap_or(80)
     }
 
-    /// Every city we could buy, appraised.
+    /// Every city we could buy, appraised at each candidate bid: the price with 0, 1, 2, ... more
+    /// of the owner's units covered (up to the threat, `MAX_COVER` and core's `max_bid`).
     pub(crate) fn city_buy_appraisals(&self) -> Vec<Appraisal> {
         let v = self.view();
         let gene = self.decisions.buy_city_value;
-        v.city_buys
-            .iter()
-            .filter(|b| b.buyer == v.me)
-            .filter_map(|b| {
-                let ready = b.blocker.is_none();
-                let short_of_gold = b
-                    .blocker
-                    .as_deref()
-                    .is_some_and(|r| r.starts_with("Needs ") && b.price > v.economy.gold);
-                if !ready && !short_of_gold {
-                    return None;
+        let mut out = Vec::new();
+        for b in v.city_buys.iter().filter(|b| b.buyer == v.me) {
+            let ready = b.blocker.is_none();
+            let short_of_gold = b.short_of_gold > 0;
+            if !ready && !short_of_gold {
+                continue;
+            }
+            let Some(city) = v.cities.iter().find(|c| c.id == b.city) else {
+                continue;
+            };
+            let value = self.city_buy_worth(b, city) * gene / 100;
+            let threat = self.offer_threat(city);
+            let price = b.price.max(1);
+            let far = v
+                .cities
+                .iter()
+                .find(|c| c.owner == city.owner && c.is_capital)
+                .map_or(0, |cap| {
+                    cap.pos.distance(city.pos).min(10) * FAR_GOLD_PER_HEX
+                });
+            let walls = i32::from(city.walls_level);
+            let mut last = 0;
+            for k in 0..=(threat + 1).min(MAX_COVER) {
+                let bid = buy_city::defended_price(b.base_price, walls, b.guards + k, b.holds_goal)
+                    .max(price);
+                if bid > b.max_bid.max(price) || bid <= last {
+                    break;
                 }
-                let city = v.cities.iter().find(|c| c.id == b.city)?;
-                let value = self.city_buy_worth(b, city) * gene / 100;
-                let risk = self.offer_risk(city);
-                let price = b.price.max(1);
-                let far = v
-                    .cities
-                    .iter()
-                    .find(|c| c.owner == city.owner && c.is_capital)
-                    .map_or(0, |cap| {
-                        cap.pos.distance(city.pos).min(10) * FAR_GOLD_PER_HEX
-                    });
-                let gain = ((100 - risk) * (value - price + far)
-                    - risk * price * FAIL_FEE_PERCENT / 100)
+                last = bid;
+                let risk = self.offer_risk(b, city, threat, bid);
+                let gain = ((100 - risk) * (value - bid + far)
+                    - risk * bid * FAIL_FEE_PERCENT / 100)
                     / 100;
-                Some(Appraisal {
+                out.push(Appraisal {
                     city: b.city,
                     price,
+                    bid,
                     value,
                     risk,
                     gain,
                     ready,
                     short_of_gold,
-                })
-            })
-            .collect()
+                });
+            }
+        }
+        out
     }
 
     /// An enemy at War stands within three hexes of one of our cities: the Gold defends first.
@@ -219,23 +259,33 @@ impl Planner<'_> {
         if v.city_offers.iter().any(|o| o.buyer == v.me) || self.war_at_home() {
             return;
         }
-        let Some(best) = self
+        let good: Vec<Appraisal> = self
             .city_buy_appraisals()
             .into_iter()
             .filter(|a| a.gain > 0 && a.risk < LIKELY_FAIL)
-            .max_by_key(|a| (a.gain, std::cmp::Reverse(a.city)))
-        else {
+            .collect();
+        let key = |a: &&Appraisal| (a.gain, std::cmp::Reverse(a.city), std::cmp::Reverse(a.bid));
+        let gold = self.gold_left;
+        let income = v.economy.gold_per_turn.total;
+        let affordable = |a: &Appraisal| a.ready && a.bid <= gold;
+        // Within reach: affordable now, or income pays the rest within `buy_city_bank_turns`.
+        let reach = |a: &&Appraisal| {
+            let need = a.bid - gold.max(0);
+            affordable(a)
+                || (income > 0
+                    && (need + income - 1) / income <= self.decisions.buy_city_bank_turns)
+        };
+        let Some(best) = good.iter().filter(reach).max_by_key(key).copied() else {
             return;
         };
-        if best.ready && best.price <= self.gold_left {
-            self.orders.push(Order::BuyCity { city: best.city });
-            self.gold_left -= best.price;
-            return;
-        }
-        let income = v.economy.gold_per_turn.total;
-        let need = best.price - self.gold_left.max(0);
-        if income > 0 && need > 0 && (need + income - 1) / income <= BANK_TURNS {
-            self.city_buy_savings = best.price;
+        if affordable(&best) {
+            self.orders.push(Order::BuyCity {
+                city: best.city,
+                gold: best.bid,
+            });
+            self.gold_left -= best.bid;
+        } else {
+            self.city_buy_savings = best.bid;
         }
     }
 
@@ -331,7 +381,7 @@ impl Planner<'_> {
         let offers: Vec<_> = v
             .city_offers
             .iter()
-            .filter(|o| o.seller == v.me && o.price_now <= o.escrow)
+            .filter(|o| o.seller == v.me && o.guards_to_stop > 0)
             .cloned()
             .collect();
         for offer in offers {
@@ -344,14 +394,12 @@ impl Planner<'_> {
             else {
                 continue;
             };
-            let guards = self.own_guards(city.pos);
-            let percent = 100
-                + i32::from(city.walls_level) * legatum_core::buy_city::WALLS_PERCENT
-                + guards * legatum_core::buy_city::GUARD_PERCENT;
-            let step = (offer.price_now * legatum_core::buy_city::GUARD_PERCENT / percent).max(1);
-            let mut need = (offer.escrow - offer.price_now) / step + 1;
-            need -= self.send_guards(city, need, offer.turns_left.max(1) as i32);
-            if need > 0 {
+            let turns = offer.turns_left.max(1) as i32;
+            let mut need = offer.guards_to_stop;
+            need -= self.send_guards(city, need, turns);
+            // Gold only when a purchase now and one each later turn (Walls worth two) can
+            // still close the gap; otherwise keep it.
+            if need > 0 && need <= turns * WALLS_PERCENT / GUARD_PERCENT {
                 need -= self.buy_guard(city, need);
             }
             if need > 0 {
@@ -489,13 +537,10 @@ impl Planner<'_> {
     fn offer_war(&mut self, city: &CityView, buyer: legatum_core::PlayerId) {
         let v = self.view();
         let team = v.team_of(buyer);
-        let holds_goal = v.city_buys.iter().any(|b| {
-            b.city == city.id
-                && b.breakdown
-                    .parts
-                    .iter()
-                    .any(|(label, _)| label.starts_with(GOAL_LABEL))
-        });
+        let holds_goal = v
+            .city_buys
+            .iter()
+            .any(|b| b.city == city.id && b.holds_goal);
         let army =
             |p: legatum_core::PlayerId| v.players.iter().find(|q| q.id == p).map_or(0, |q| q.army);
         let other_war = v

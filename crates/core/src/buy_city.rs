@@ -3,10 +3,12 @@
 //!
 //! # Buy a city
 //!
-//! Byzantium orders `Order::BuyCity { city }` on a rival's city. The order starts an *offer*:
-//! the price ([`price`]) leaves Byzantium's treasury into escrow on the offer
-//! (`Player::city_offer`, a [`CityOffer`]), and the city changes hands at the end of turn
-//! `order turn + OFFER_TURNS`, unless something stops it first.
+//! Byzantium orders `Order::BuyCity { city, gold }` on a rival's city. The order starts an
+//! *offer*: the bid (`gold`, from the price ([`price`]) up to `MAX_BID_PERCENT`% of it; 0 means
+//! the price) leaves Byzantium's treasury into escrow on the offer (`Player::city_offer`, a
+//! [`CityOffer`]), and the city changes hands at the end of turn `order turn + OFFER_TURNS`,
+//! unless something stops it first. All of the escrow goes to the seller on a sale. A higher bid
+//! takes more armed units or Walls to break ([`guards_to_stop`], [`walls_to_stop`]).
 //!
 //! **Who may be bought.** [`blocker`] gives the one refusal used by order validation, resolution
 //! and the view (None means the order is legal now). A city is buyable when:
@@ -18,6 +20,9 @@
 //! - it is not in capture resistance;
 //! - nobody else is already buying it, and the buyer has no other offer running;
 //! - the buyer has the Gold for the price now.
+//!
+//! [`bid_blocker`] adds the bid's own checks (not below the price, not above `MAX_BID_PERCENT`%
+//! of it, and the Gold for it): order validation and resolution use it.
 //!
 //! [`city_blocker`] is the same check without the last two buyer-side conditions (its own running
 //! offer and its treasury): what the city's owner and third parties are shown.
@@ -34,7 +39,7 @@
 //! 1. War between the buyer and the owner, the city gone or with a new owner, the owner now on the
 //!    buyer's team, or either empire eliminated: **cancelled**, escrow refunded in full.
 //! 2. Else, from the turn after the order on, the offer's price now ([`offer_price`]) above the
-//!    escrow: **failed**, the escrow refunded minus `FAIL_FEE_PERCENT`% (the fee goes to nobody).
+//!    escrow (the bid): **failed**, the escrow refunded minus `FAIL_FEE_PERCENT`% (the fee goes to nobody).
 //!    The offer's price keeps the first step (population and buildings) as it was when the offer
 //!    was made and recomputes the rest, so only the owner's defences (Walls, armed units, a goal's
 //!    VP moved in) can break an offer, never the city's own growth.
@@ -62,14 +67,19 @@
 //!
 //! # API for the AI and the UI
 //!
-//! - Order: `Order::BuyCity { city }` (JSON `{"type":"BuyCity","city":7}`).
+//! - Order: `Order::BuyCity { city, gold }` (JSON `{"type":"BuyCity","city":7,"gold":900}`;
+//!   `gold` 0 or left out offers the price).
 //! - State: `Player::city_offer: Option<CityOffer>`.
-//! - View (`PlayerView`): `city_buys` ([`CityBuyView`]: price, breakdown and refusal per city),
-//!   `city_offers` ([`CityOfferView`]: every running offer the viewer may know of) and
+//! - View (`PlayerView`): `city_buys` ([`CityBuyView`]: price, breakdown, refusal, the machine
+//!   fields the AI reads, and for the buyer the bid choices with what stops each),
+//!   `city_offers` ([`CityOfferView`]: every running offer the viewer may know of, with the
+//!   armed units or Walls levels that would stop it) and
 //!   `byzantine_capitals` ([`CapitalFallView`]: each Byzantium's capital and Heir refuge).
 //! - Events: `CityOfferMade`, `CityOfferEnded` (outcome [`OfferOutcome`]), `CapitalFell`
 //!   (the collapse) and `HeirRefuge` (the Heir saved the empire).
-//! - Functions: [`blocker`], [`city_blocker`], [`price`], [`price_breakdown`],
+//! - Functions: [`blocker`], [`bid_blocker`], [`city_blocker`], [`price`], [`price_breakdown`],
+//!   [`defended_price`], [`guards_to_stop`], [`walls_to_stop`], [`max_bid`], [`bid_gold`],
+//!   [`bid_choices`],
 //!   [`base_breakdown`], [`offer_price`] (the number a running offer must stay under), [`offer_on`],
 //!   [`touches`], [`bordering`], [`holds_goal_vp`], [`guards`], [`refuge_city`], [`capital_fall`],
 //!   [`is_buyer`], [`buying_on`], [`collapse_on`].
@@ -99,6 +109,10 @@ pub const GOAL_MULTIPLIER: i32 = 2;
 pub const OFFER_TURNS: u32 = 3;
 /// Share of the escrow lost when an offer fails because the price rose.
 pub const FAIL_FEE_PERCENT: i32 = 10;
+/// The most Byzantium may offer, in percent of the price (an overbid needs more guards to break).
+pub const MAX_BID_PERCENT: i32 = 300;
+/// The bid choices shown to the buyer, in percent of the price (`CityBuyView::bids`).
+pub const BID_STEPS: [i32; 4] = [100, 125, 150, 200];
 
 /// A running offer (`Player::city_offer`). Public: every player who knows the city sees it.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -106,7 +120,7 @@ pub struct CityOffer {
     pub city: CityId,
     /// The city's owner when the offer was made; the Gold goes to it.
     pub seller: PlayerId,
-    /// The Gold held for the sale (the price when the offer was made).
+    /// The Gold held for the sale (the bid: the price when the offer was made, or more).
     pub escrow: i32,
     /// The first step of that price (`base_breakdown`: base, population, buildings). The failure
     /// check keeps it and recomputes only the defences (`offer_price`).
@@ -128,6 +142,19 @@ pub enum OfferOutcome {
     Failed,
 }
 
+/// One bid choice on a city (`CityBuyView::bids`): the Gold, and what it takes to break it.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct BidView {
+    /// Percent of the price (`BID_STEPS`, capped at `MAX_BID_PERCENT`).
+    pub percent: i32,
+    pub gold: i32,
+    /// More armed units in or next to the city that would lift the price above this bid.
+    pub guards_to_stop: i32,
+    /// More Walls levels that would, with today's units; None when Walls alone cannot.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub walls_to_stop: Option<i32>,
+}
+
 /// One city's price for one Byzantium, as the viewer may see it (`PlayerView::city_buys`).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CityBuyView {
@@ -142,6 +169,31 @@ pub struct CityBuyView {
     /// `city_blocker` for everyone else); None when it can.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub blocker: Option<String>,
+    /// Machine fields (the AI reads these, never the text): the price's first step (`BASE`,
+    /// population and buildings), which an offer keeps; the defences multiply it
+    /// ([`defended_price`]).
+    #[serde(default)]
+    pub base_price: i32,
+    /// The full Gold price of its buildings
+    /// (the Walls family left out; the price charges `BUILDING_PERCENT`% of it).
+    #[serde(default)]
+    pub buildings_gold: i32,
+    /// It holds a goal's held VP (the price is multiplied by `GOAL_MULTIPLIER`).
+    #[serde(default)]
+    pub holds_goal: bool,
+    /// Armed units of the owner's team in or next to it now.
+    #[serde(default)]
+    pub guards: i32,
+    /// The buyer's own view only: the Gold it lacks for the price, when only its treasury blocks
+    /// the offer (0 otherwise).
+    #[serde(default, skip_serializing_if = "crate::orders::is_zero")]
+    pub short_of_gold: i32,
+    /// The most the buyer may offer (`MAX_BID_PERCENT`% of the price).
+    #[serde(default)]
+    pub max_bid: i32,
+    /// The buyer's own view only: the bid choices (`BID_STEPS`), each with what stops it.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub bids: Vec<BidView>,
 }
 
 /// A running offer (`PlayerView::city_offers`).
@@ -157,6 +209,13 @@ pub struct CityOfferView {
     /// The offer's price now (`offer_price`: its base when made, with today's Walls, armed units
     /// and goal VP); the offer fails at the end of a turn on which it is above `escrow`.
     pub price_now: i32,
+    /// More armed units in or next to the city that would lift `price_now` above `escrow`
+    /// (0 when it is already above).
+    #[serde(default)]
+    pub guards_to_stop: i32,
+    /// More Walls levels that would, with today's units; None when Walls alone cannot.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub walls_to_stop: Option<i32>,
 }
 
 /// A Byzantium's capital and Heir refuge, public to every player (`PlayerView::byzantine_capitals`).
@@ -242,16 +301,24 @@ pub fn price_breakdown(state: &GameState, c: &City) -> Breakdown {
 
 /// The first step of the price: `BASE`, population and buildings.
 pub fn base_breakdown(state: &GameState, c: &City) -> Breakdown {
-    let rules = state.setup.rule_experiments;
-    let faction = state.player(c.owner).faction;
     let mut b = Breakdown::default();
     b.add("Starting price", BASE);
     b.add(
         format!("Population {} x {PER_POP}", c.population),
         c.population.max(0).saturating_mul(PER_POP),
     );
-    let building_gold: i64 = c
-        .buildings
+    b.add(
+        format!("Buildings: {BUILDING_PERCENT}% of their Gold price"),
+        clamp(building_gold(state, c) * i64::from(BUILDING_PERCENT) / 100),
+    );
+    b
+}
+
+/// The full Gold price of `c`'s buildings, the Walls family left out.
+fn building_gold(state: &GameState, c: &City) -> i64 {
+    let rules = state.setup.rule_experiments;
+    let faction = state.player(c.owner).faction;
+    c.buildings
         .iter()
         .filter(|k| data::building_family(**k) != BuildingKind::Walls)
         .map(|k| {
@@ -260,12 +327,7 @@ pub fn base_breakdown(state: &GameState, c: &City) -> Breakdown {
             ) * i64::from(data::BUY_COST_PERCENT)
                 / 100
         })
-        .sum();
-    b.add(
-        format!("Buildings: {BUILDING_PERCENT}% of their Gold price"),
-        clamp(building_gold * i64::from(BUILDING_PERCENT) / 100),
-    );
-    b
+        .sum()
 }
 
 /// The later steps on top of `base`: Walls and armed units (added together), then the goal
@@ -296,6 +358,66 @@ fn with_defences(state: &GameState, c: &City, mut b: Breakdown) -> Breakdown {
         );
     }
     b
+}
+
+/// The price from its first step `base` with the defences (the same math as the breakdown):
+/// `base + base x (WALLS_PERCENT x walls + GUARD_PERCENT x guards) / 100`, then
+/// `x GOAL_MULTIPLIER` when `goal`.
+pub fn defended_price(base: i32, walls_level: i32, guards: i32, goal: bool) -> i32 {
+    let base = i64::from(base);
+    let percent = i64::from(walls_level) * i64::from(WALLS_PERCENT)
+        + i64::from(guards) * i64::from(GUARD_PERCENT);
+    let total = base + base * percent / 100;
+    clamp(if goal {
+        total * i64::from(GOAL_MULTIPLIER)
+    } else {
+        total
+    })
+}
+
+/// More armed units the owner must add (in or next to the city) so the price from `base` passes
+/// `escrow`: 0 when it is already above. Capped at 99.
+pub fn guards_to_stop(base: i32, walls_level: i32, guards: i32, goal: bool, escrow: i32) -> i32 {
+    (0..=99)
+        .find(|k| defended_price(base, walls_level, guards + k, goal) > escrow)
+        .unwrap_or(99)
+}
+
+/// More Walls levels the owner must add (with today's units) so the price from `base` passes
+/// `escrow`: Some(0) when it is already above, None when even the top level does not.
+pub fn walls_to_stop(
+    base: i32,
+    walls_level: i32,
+    guards: i32,
+    goal: bool,
+    escrow: i32,
+) -> Option<i32> {
+    (0..=(i32::from(data::MAX_WALL_TIER) - walls_level).max(0))
+        .find(|k| defended_price(base, walls_level + k, guards, goal) > escrow)
+}
+
+/// The most a buyer may offer for a city priced `price`.
+pub fn max_bid(price: i32) -> i32 {
+    clamp(i64::from(price) * i64::from(MAX_BID_PERCENT) / 100)
+}
+
+/// The Gold an order's `gold` stands for: 0 (or less) offers the price.
+pub fn bid_gold(price: i32, gold: i32) -> i32 {
+    if gold <= 0 { price } else { gold }
+}
+
+/// The bid choices for a city priced `price`: (percent, Gold) per `BID_STEPS`, capped at
+/// [`max_bid`], without repeats.
+pub fn bid_choices(price: i32) -> Vec<(i32, i32)> {
+    let mut out: Vec<(i32, i32)> = Vec::new();
+    for step in BID_STEPS {
+        let percent = step.min(MAX_BID_PERCENT);
+        let gold = clamp(i64::from(price) * i64::from(percent) / 100);
+        if out.last().is_none_or(|(_, g)| *g < gold) {
+            out.push((percent, gold));
+        }
+    }
+    out
 }
 
 /// What a running offer's city costs now for the failure check: the offer's `base` (population
@@ -469,19 +591,43 @@ fn blocker_with(
     None
 }
 
+/// The refusal for an offer of `gold` (0: the price): [`blocker`], then the bid below the price,
+/// above `MAX_BID_PERCENT`% of it, or above the treasury. None when the offer may be made.
+pub fn bid_blocker(state: &GameState, buyer: PlayerId, city: CityId, gold: i32) -> Option<String> {
+    if let Some(reason) = blocker(state, buyer, city) {
+        return Some(reason);
+    }
+    let cost = price(state, city);
+    let bid = bid_gold(cost, gold);
+    if bid < cost {
+        return Some(format!("The offer is below the price of {cost} Gold"));
+    }
+    let most = max_bid(cost);
+    if bid > most {
+        return Some(format!(
+            "The most you can offer is {most} Gold ({MAX_BID_PERCENT}% of the price)"
+        ));
+    }
+    let have = state.player(buyer).gold;
+    if have < bid {
+        return Some(format!("Needs {bid} Gold: you have {}", have.max(0)));
+    }
+    None
+}
+
 /// Check `player`'s `BuyCity` orders against `state` (the state after this list's city orders, so
 /// earlier purchases have been paid). One offer at a time: a second order in the list is refused.
 pub fn validate_orders(state: &GameState, player: PlayerId, orders: &[Order]) -> Vec<OrderError> {
     let mut errors = Vec::new();
     let mut made = false;
     for (index, order) in orders.iter().enumerate() {
-        let Order::BuyCity { city } = order else {
+        let Order::BuyCity { city, gold } = order else {
             continue;
         };
         let refusal = if made {
             Some("You can make one city offer at a time".into())
         } else {
-            blocker(state, player, *city)
+            bid_blocker(state, player, *city, *gold)
         };
         match refusal {
             Some(message) => errors.push(OrderError { index, message }),
@@ -501,10 +647,10 @@ pub fn apply_orders(
 ) {
     for (player, os) in orders {
         for order in os.iter() {
-            let Order::BuyCity { city } = order else {
+            let Order::BuyCity { city, gold } = order else {
                 continue;
             };
-            if let Some(reason) = blocker(state, *player, *city) {
+            if let Some(reason) = bid_blocker(state, *player, *city, *gold) {
                 events.push(Event::OrderFailed {
                     player: *player,
                     reason: format!("City offer not made: {reason}"),
@@ -513,7 +659,15 @@ pub fn apply_orders(
             }
             let c = &state.cities[city];
             let base = base_breakdown(state, c).total;
-            let escrow = price_breakdown(state, c).total;
+            let price = price_breakdown(state, c).total;
+            let escrow = bid_gold(price, *gold);
+            let guards_to_stop = guards_to_stop(
+                base,
+                i32::from(c.walls_level),
+                guards(state, c),
+                holds_goal_vp(state, c),
+                escrow,
+            );
             let seller = c.owner;
             let started = state.turn;
             let ends_turn = started + OFFER_TURNS;
@@ -532,6 +686,8 @@ pub fn apply_orders(
                 buyer: *player,
                 seller,
                 escrow,
+                price,
+                guards_to_stop,
                 ends_turn,
             });
         }
@@ -928,13 +1084,48 @@ pub fn buy_views(state: &GameState, me: PlayerId, known: &BTreeSet<CityId>) -> V
                 }
                 b
             };
-            let breakdown = price_breakdown(state, c);
+            let base = base_breakdown(state, c);
+            let base_total = base.total;
+            let breakdown = with_defences(state, c, base);
+            let price = breakdown.total;
+            let holds_goal = holds_goal_vp(state, c);
+            let guards = guards(state, c);
+            let walls = i32::from(c.walls_level);
+            let treasury = state.player(buyer).gold;
+            let short_of_gold = if mine
+                && treasury < price
+                && blocker.as_deref().is_some_and(|b| b.starts_with("Needs "))
+            {
+                price - treasury.max(0)
+            } else {
+                0
+            };
+            let bids = if mine {
+                bid_choices(price)
+                    .into_iter()
+                    .map(|(percent, gold)| BidView {
+                        percent,
+                        gold,
+                        guards_to_stop: guards_to_stop(base_total, walls, guards, holds_goal, gold),
+                        walls_to_stop: walls_to_stop(base_total, walls, guards, holds_goal, gold),
+                    })
+                    .collect()
+            } else {
+                Vec::new()
+            };
             out.push(CityBuyView {
                 city: c.id,
                 buyer,
-                price: breakdown.total,
+                price,
                 breakdown,
                 blocker,
+                base_price: base_total,
+                buildings_gold: clamp(building_gold(state, c)),
+                holds_goal,
+                guards,
+                short_of_gold,
+                max_bid: max_bid(price),
+                bids,
             });
         }
     }
@@ -954,14 +1145,25 @@ pub fn offer_views(
         .filter(|(buyer, o)| {
             known.contains(&o.city) || state.same_team(*buyer, me) || state.same_team(o.seller, me)
         })
-        .map(|(buyer, o)| CityOfferView {
-            city: o.city,
-            buyer,
-            seller: o.seller,
-            escrow: o.escrow,
-            ends_turn: o.ends_turn,
-            turns_left: o.ends_turn.saturating_sub(state.turn) + 1,
-            price_now: offer_price(state, o),
+        .map(|(buyer, o)| {
+            let (walls, guards, goal) = state.cities.get(&o.city).map_or((0, 0, false), |c| {
+                (
+                    i32::from(c.walls_level),
+                    self::guards(state, c),
+                    holds_goal_vp(state, c),
+                )
+            });
+            CityOfferView {
+                city: o.city,
+                buyer,
+                seller: o.seller,
+                escrow: o.escrow,
+                ends_turn: o.ends_turn,
+                turns_left: o.ends_turn.saturating_sub(state.turn) + 1,
+                price_now: offer_price(state, o),
+                guards_to_stop: guards_to_stop(o.base, walls, guards, goal, o.escrow),
+                walls_to_stop: walls_to_stop(o.base, walls, guards, goal, o.escrow),
+            }
         })
         .collect()
 }

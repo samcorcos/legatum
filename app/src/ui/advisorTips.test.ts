@@ -44,6 +44,8 @@ describe('situational tips', () => {
     const keep = strategyTip(v, {});
     expect(keep).toMatchObject({ id: `tip:offer:${city.id}:22`, title: `Keep ${city.name}?` });
     expect(keep!.steps[0].instruction).toContain('Move military units in or next to it, or build Walls');
+    v.city_offers = [{ ...v.city_offers[0], guards_to_stop: 2, walls_to_stop: 1 }];
+    expect(strategyTip(v, {})!.steps[0].instruction).toContain('Move 2 more military units in or next to it, or build 1 Walls level');
     v.city_offers = [{ ...v.city_offers[0], price_now: 600 }];
     expect(strategyTip(v, {})?.id ?? '').not.toMatch(/^tip:offer/);
   });
