@@ -1,6 +1,6 @@
 # City upkeep is the catch-up lever that works against a runaway conqueror
 
-2026-11-26. `rush_ladder` with rule experiments per arm (`x.city_upkeep=1` etc.).
+2026-11-26. `rush_ladder` with rule experiments per arm (`x.name=value`). The arms below ran under the experiment names of that day (`city_upkeep` = each city costs cities-2, before the rename to `no_city_upkeep`, `city_upkeep_percent` and `city_upkeep_free`); on master the rule is on and the same arms are `x.city_upkeep_free=2` and `x.city_upkeep_percent=50`.
 
 Why rivals lose to a runaway conqueror (two recorded Rome games, 10 cities at T80, replayed to T80 then all seats Hard): the map is full by T80, so cities change hands only by conquest; the leader runs up to two eras ahead (era 8 vs 6 by T180) and its attacks average 4.3x the defender's strength. Rivals' city counts stay flat at 2-8.
 
