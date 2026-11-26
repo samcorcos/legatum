@@ -160,7 +160,7 @@ test('Online: host in one browser, a guest joins from the game list, both Ready 
   await expect(guest.getByRole('heading', { name: 'Game room', exact: true })).toBeVisible();
 
   // The guest sees the host's settings: Seat 2 is the one open seat.
-  await expect(guest.getByLabel('Map seed', { exact: true })).toHaveValue('Hidden');
+  await expect(guest.getByLabel('Map seed', { exact: true })).toHaveCount(0);
   await guest.getByRole('row').nth(2).getByRole('button', { name: 'Take seat', exact: true }).click();
   await guest.getByLabel('Your name', { exact: true }).fill('Alice');
   await guest.getByRole('button', { name: /^Ready Lock/ }).click();

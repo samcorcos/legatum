@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { offeredLevels, DIFFICULTY_INFO, MAP_SIZES, levelOf, mapSizeLabel, notes, setDifficulty, setMapSize, type AiLevel, type Lobby, type MapSizeId } from '../../lobby';
 import { randomSeed } from './randomSeed';
 
@@ -42,6 +43,11 @@ function Segmented<T extends string>({
 /** Game settings. Without `onChange` it's read-only. */
 export function Settings({ lobby, onChange }: { lobby: Lobby; onChange?: (l: Lobby) => void }) {
   const seedOk = /^\d{1,20}$/.test(lobby.seed);
+  // Advanced opens itself when a seed the player typed needs fixing, and never closes itself:
+  // typing the first valid digit must not snap it shut under the player's cursor.
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const seedNeedsFix = !!onChange && !seedOk;
+  useEffect(() => { if (seedNeedsFix) setAdvancedOpen(true); }, [seedNeedsFix]);
   const sizes: { id: MapSizeId | 'Custom'; label: string; sub?: string }[] = (Object.keys(MAP_SIZES) as MapSizeId[]).map((id) => {
     const s = MAP_SIZES[id];
     return { id, label: id, sub: `${s.width}×${s.height} · ${s.min === s.max ? s.min : `${s.min}-${s.max}`} empires` };
@@ -71,9 +77,9 @@ export function Settings({ lobby, onChange }: { lobby: Lobby; onChange?: (l: Lob
         />
       )}
       {anyAi && levelOf(lobby) === 'Training' && <div className="muted lobby-level-note" data-testid="ai-level-note">{DIFFICULTY_INFO.Training}</div>}
-      {/* Rarely needed: closed by default, opened when the seed you typed needs fixing. */}
-      <details className="lobby-advanced" open={(onChange && !seedOk) || undefined}>
-        <summary>Advanced{lobby.training ? <span className="lobby-advanced-on"> · Coach questions on</span> : null}</summary>
+      {/* Rarely needed: closed by default. Hidden from a viewer who can't change it (a guest). */}
+      {onChange && <details className="lobby-advanced" open={advancedOpen || seedNeedsFix} onToggle={(e) => setAdvancedOpen(e.currentTarget.open)}>
+        <summary>Advanced settings{lobby.training ? <span className="lobby-advanced-on"> · Coach questions on</span> : null}</summary>
         {change && lobby.mode !== 'host' && (
           <Segmented label="Coach questions" value={lobby.training ? 'On' : 'Off'} options={[
             { id: 'Off', label: 'Off', sub: 'Play normally' },
@@ -88,7 +94,7 @@ export function Settings({ lobby, onChange }: { lobby: Lobby; onChange?: (l: Lob
               value={lobby.seed}
               readOnly={!change}
               onChange={(e) => change?.({ seed: e.target.value.trim() })}
-              className={onChange && !seedOk ? 'bad' : ''}
+              className={seedOk ? '' : 'bad'}
               spellCheck={false}
               aria-label="Map seed"
             />
@@ -99,7 +105,7 @@ export function Settings({ lobby, onChange }: { lobby: Lobby; onChange?: (l: Lob
             )}
           </div>
         </div>
-      </details>
+      </details>}
     </section>
     </>
   );

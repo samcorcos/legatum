@@ -27,4 +27,9 @@ describe('game settings', () => {
     const html = renderToStaticMarkup(createElement(Settings, { lobby: { ...newLobby('solo', '42'), seed: 'abc' }, onChange: () => {} }));
     expect(html).toContain('<details class="lobby-advanced" open="">');
   });
+
+  it('hides Advanced from a viewer who cannot change it', () => {
+    const html = renderToStaticMarkup(createElement(Settings, { lobby: newLobby('host', '42') }));
+    expect(html).not.toContain('lobby-advanced');
+  });
 });
