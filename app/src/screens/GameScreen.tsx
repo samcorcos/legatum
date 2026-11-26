@@ -5,7 +5,8 @@ import { CelebrationProvider, MomentLane } from '../celebrate/MomentLane';
 import { AlarmScreen } from '../celebrate/AlarmScreen';
 import { PeopleIntro } from '../celebrate/PeopleIntro';
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { canUse3d, needsFlatMap, useMapView } from '../map3d/mapPrefs';
+import { warmSmallArt } from '../artWarm';
+import { canUse3d, useMapView } from '../map3d/mapPrefs';
 import { useGame } from '../store';
 import { MapCanvas } from '../map/MapCanvas';
 
@@ -64,6 +65,8 @@ export function GameScreen() {
   const away = useGame((s) => awayLine(awayPlayers(s), 'until'));
   const credentialRejected = useGame((s) => s.client?.kind === 'remote' && s.net?.credentialRejected);
 
+  useEffect(() => { warmSmallArt(); }, []);
+
   useEffect(() => {
     window.addEventListener('keydown', handleGameKey);
     // Capture phase: Return and Escape close what covers the map before any panel sees them.
@@ -85,8 +88,7 @@ export function GameScreen() {
   useGoalActionKey();
   const mapKind = useMapView((m) => m.kind);
   const [can3d] = useState(canUse3d);
-  const picking = useGame(needsFlatMap);
-  const show3d = can3d && mapKind === '3d' && !picking;
+  const show3d = can3d && mapKind === '3d';
   if (!views) return null;
   const view = views[seat];
   const unit = selection?.kind === 'unit' ? view.units.find((u) => u.id === selection.id) : null;

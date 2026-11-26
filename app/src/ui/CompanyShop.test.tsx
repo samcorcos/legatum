@@ -75,7 +75,7 @@ it('one click queues the hire on its row, and a second click takes it back', asy
   act(() => hire.click());
   expect(orders()).toEqual([{ type: 'HireCompany', city: expect.any(Number), unit: expect.any(String), seller: 2 }]);
   const status = container.querySelector('.purchase-status')!.textContent!;
-  expect(status).toMatch(/\d+ Gold \([+−]\d+\/turn\) to spend/);
+  expect(status).toMatch(/^\d+ Gold to spend$/);
   expect(container.querySelector('[data-testid="company-row"].chosen')).not.toBeNull();
   // One purchase per city per turn: the other row is greyed, with the reason, until this one is cancelled.
   const other = rows().find((r) => r.dataset.seller === '3')!;

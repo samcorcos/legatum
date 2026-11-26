@@ -1326,7 +1326,7 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
         at: ctx.cityPos(e.capital), players: [e.player], weight: 2, tone: e.player === ctx.me ? 'bad' : 'neutral',
       });
     case 'EraEntered': {
-      // Public, 1-based era (2 Classical .. 8 Future), sent the turn the previous era's last technology landed: every
+      // Public, 1-based era (2 Classical .. 9 Future), sent the turn the previous era's last technology landed: every
       // player sees it, the first empire into an era is a notable line for all; the Age it begins has its own line (`AgeBegan`).
       const named = ctx.eraName?.(e.era);
       const era = named ?? eraName(e.era - 1);

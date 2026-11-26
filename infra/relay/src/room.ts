@@ -134,9 +134,11 @@ export class Room extends DurableObject<Env> {
     const meta = await this.getMeta();
     if (!meta) return json({ error: "no such room" }, 404);
     const url = new URL(request.url);
-    if (url.pathname.endsWith("/api/status")) return this.status();
-    if (url.pathname.endsWith("/host")) return this.acceptHost(request, url, meta);
-    if (url.pathname.endsWith("/ws")) return this.acceptGuest(request, meta);
+    // The Worker routes on the path without trailing slashes (index.ts route), so match the same way.
+    const path = url.pathname.replace(/\/+$/, "");
+    if (path.endsWith("/api/status")) return this.status();
+    if (path.endsWith("/host")) return this.acceptHost(request, url, meta);
+    if (path.endsWith("/ws")) return this.acceptGuest(request, meta);
     return json({ error: "not found" }, 404);
   }
 

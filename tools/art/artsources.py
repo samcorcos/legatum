@@ -88,7 +88,9 @@ def fetch(path, base=None):
     h = hashlib.sha256()
     n = 0
     try:
-        with urllib.request.urlopen(url, timeout=60) as r, open(tmp, 'wb') as out:
+        # r2.dev refuses urllib's default User-Agent with 403, so name the client.
+        req = urllib.request.Request(url, headers={'User-Agent': 'legatum-art-fetch'})
+        with urllib.request.urlopen(req, timeout=60) as r, open(tmp, 'wb') as out:
             for chunk in iter(lambda: r.read(1 << 20), b''):
                 h.update(chunk)
                 n += len(chunk)

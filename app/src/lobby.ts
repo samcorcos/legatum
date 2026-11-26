@@ -1,6 +1,6 @@
 // The game lobby (staging room) as plain data: seats, presets and game settings, and the
 // GameSetup they produce. The Lobby screen renders this; the preference boundary is below.
-import { FACTIONS, RULES } from './data';
+import { FACTIONS } from './data';
 import { MAX_PLAYERS, factionChoiceIndex, teamTarget } from './gameSetup';
 import { colorFactions } from './theme';
 import type { AiDifficulty, Faction, GameSetup, PlayerSetup } from './types';
@@ -31,11 +31,6 @@ export interface Lobby {
   preset: PresetId;
   slots: Slot[];
   mapSize: MapSize;
-  turnLimit: number | null;
-  /** Barbarian camps (core `GameSetup::barbarians`). On for new games; missing reads as on. */
-  barbarians?: boolean;
-  /** The AI-only teams start in Alliances of two (core `GameSetup::ai_alliances`). Co-op turns it on; missing reads as off. */
-  aiAlliances?: boolean;
   seed: string;
   /** Default for new AI seats; setting it applies to every AI seat. */
   difficulty: AiDifficulty;
@@ -44,9 +39,6 @@ export interface Lobby {
   training?: boolean;
 }
 
-/** The largest turn limit the core accepts (a u32 less one). */
-export const MAX_TURN_LIMIT = 4_294_967_294;
-export const validTurnLimit = (limit: number | null): boolean => limit === null || (Number.isInteger(limit) && limit >= 1 && limit <= MAX_TURN_LIMIT);
 
 export const MIN_SEATS = 2;
 /** A level a seat can be recorded with. Players are offered Easy, Normal and Hard only. */
@@ -183,8 +175,6 @@ function ai(i: number, team: number, level: AiLevel): Slot {
  */
 export function applyPreset(l: Lobby, preset: PresetId): Lobby {
   if (preset === 'custom') return { ...l, preset };
-  // Co-op: two humans on one team would face six uncoordinated AIs, so the AIs start allied in pairs.
-  const aiAlliances = preset === 'coop';
   const humans = l.mode === 'solo' ? 1 : 2;
   const keep = l.slots.filter((s) => humanKind(s.kind));
   const slots: Slot[] = [];
@@ -203,12 +193,12 @@ export function applyPreset(l: Lobby, preset: PresetId): Lobby {
       });
     } else slots.push(ai(i, team, levelOf(l)));
   }
-  return { ...l, preset, aiAlliances, slots, mapSize: typeof l.mapSize === 'string' ? recommendedSize(slots.length) : l.mapSize };
+  return { ...l, preset, slots, mapSize: typeof l.mapSize === 'string' ? recommendedSize(slots.length) : l.mapSize };
 }
 
 export function newLobby(mode: LobbyMode, seed: string): Lobby {
   const preference = readDifficultyPreference();
-  const base: Lobby = { mode, preset: 'custom', slots: [], mapSize: 'Standard', turnLimit: null, barbarians: true, seed, ...levelFields(preference?.level ?? 'Hard') };
+  const base: Lobby = { mode, preset: 'custom', slots: [], mapSize: 'Standard', seed, ...levelFields(preference?.level ?? 'Hard') };
   const lobby = applyPreset(base, mode === 'solo' ? 'ffa' : 'coop');
   rememberDifficulty(lobby);
   return lobby;
@@ -379,21 +369,10 @@ export function teams(l: Lobby): TeamSummary[] {
   return out;
 }
 
-/** Teams made only of AI seats: the ones `aiAlliances` puts into pairs. */
-export function aiOnlyTeams(l: Lobby): number {
-  return teams(l).filter((t) => t.slots.every((i) => l.slots[i].kind === 'ai')).length;
-}
-
-/** True when the setup turns AI alliances on: the same condition `buildSetup` uses. */
-export function aiAlliancesOn(l: Lobby): boolean {
-  return !!l.aiAlliances && aiOnlyTeams(l) >= 2;
-}
-
 /** Problems that block starting the game, locally or on the online host. */
 export function problems(l: Lobby): string[] {
   const p: string[] = [];
   const active = l.slots.filter(isActive);
-  if (!validTurnLimit(l.turnLimit)) p.push(`Enter a last turn of 1 or more, or pick Turn ${RULES.defaultTurnLimit}.`);
   if (active.length < MIN_SEATS) p.push('A game needs at least two empires.');
   if (teams(l).length < 2) p.push('Everyone is on one team: put at least one empire on another team.');
   if (active.some((s) => humanKind(s.kind) && !s.name.trim())) p.push('Every human seat needs a name.');
@@ -428,7 +407,8 @@ export function buildSetup(l: Lobby): GameSetup {
     return p;
   });
   const size = mapDimensions(l.mapSize);
-  return { seed: l.seed, width: size.width, height: size.height, players, turn_limit: l.turnLimit, barbarians: l.barbarians !== false, ...(aiAlliancesOn(l) ? { ai_alliances: true } : {}),
+  return { seed: l.seed, width: size.width, height: size.height, players, turn_limit: null, barbarians: true,
+    // Teams chosen in the lobby are the only starting alliances: new setups never set `ai_alliances`.
     // Deals (rules 61): Gold in offers, gifts to met empires, Open Borders. On in every new game; a loaded save keeps its own setup.
     deals: true };
 }

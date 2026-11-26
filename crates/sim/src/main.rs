@@ -124,7 +124,7 @@ struct Cli {
     #[arg(long, default_value_t = 1)]
     seed: u64,
     /// Worker threads (default: all cores).
-    #[arg(long)]
+    #[arg(long, value_parser = clap::builder::RangedU64ValueParser::<usize>::new().range(1..))]
     threads: Option<usize>,
     /// Report label: docs/sim-results/<date>-<label>.md
     #[arg(long, default_value = "run")]
@@ -1055,6 +1055,18 @@ fn retrain(
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn threads_must_be_at_least_one() {
+        use super::*;
+        assert!(Cli::try_parse_from(["sim", "--threads", "0"]).is_err());
+        assert_eq!(
+            Cli::try_parse_from(["sim", "--threads", "2"])
+                .unwrap()
+                .threads,
+            Some(2)
+        );
+    }
+
     #[test]
     fn duel_cli_validates_lobby_and_faction_assignments() {
         use super::*;

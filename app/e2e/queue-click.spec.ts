@@ -13,6 +13,7 @@ type GameWindow = Window & { legatum: typeof useGame };
 
 async function openCity(page: Page, size: { width: number; height: number }) {
   const setup = wallsFixture();
+  for (const player of setup.fixture.players.slice(1)) { player.isHuman = false; setup.fixture.setup.players[player.id].is_human = false; }
   Object.assign(setup.fixture.cities.find((c) => c.id === setup.own)!, { population: 3, buildings: [], producing: null, prod: 0, food: 0, productionQueue: [], productionBanked: [] });
   setup.fixture.turn = 2;
   const game = coreFixture(setup.fixture);

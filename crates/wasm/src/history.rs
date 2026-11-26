@@ -205,6 +205,9 @@ impl TurnFrameTime {
     }
 }
 
+/// The last era in a turn play time's 1-based `era` (`objectives::era_of`): Future.
+const LAST_ERA_1_BASED: u8 = legatum_core::eras::ERA_COUNT as u8;
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct TurnPlayTime {
@@ -363,7 +366,7 @@ impl Recording {
         if time.turn < self.metadata.first_turn
             || time.turn >= self.metadata.first_turn + self.metadata.turn_count
             || time.active_seconds > 86_400
-            || !(1..=7).contains(&time.era)
+            || !(1..=LAST_ERA_1_BASED).contains(&time.era)
             || time.session_id.is_empty()
             || time.session_id.len() > 128
         {
@@ -520,7 +523,7 @@ impl Recording {
             if time.turn < m.first_turn
                 || time.turn >= m.first_turn + m.turn_count
                 || time.active_seconds > 86_400
-                || !(1..=7).contains(&time.era)
+                || !(1..=LAST_ERA_1_BASED).contains(&time.era)
                 || time.session_id.is_empty()
                 || time.session_id.len() > 128
                 || previous_turn.is_some_and(|turn| turn >= time.turn)
@@ -811,6 +814,33 @@ mod tests {
             .remove("turn_times");
         let old = Session::from_save_json(&old_save.to_string(), |_| BrainKind::Scripted).unwrap();
         assert!(old.history.as_ref().unwrap().turn_times.is_empty());
+    }
+
+    #[test]
+    fn turn_play_time_accepts_every_era_through_the_last() {
+        let setup = GameSetup::standard(42, [Faction::India, Faction::Byzantium]);
+        let mut session = Session::new(&setup, |_| BrainKind::Scripted);
+        session.step(&OrderMap::new());
+        let history = session.history.as_mut().unwrap();
+        let time = |era| TurnPlayTime {
+            turn: 1,
+            ended_at: "2026-10-18T12:00:00Z".into(),
+            active_seconds: 74,
+            era,
+            session_id: "playtest-a".into(),
+        };
+        let last = LAST_ERA_1_BASED;
+        assert!(history.record_turn_time(time(0)).is_err());
+        assert!(history.record_turn_time(time(last + 1)).is_err());
+        for era in 1..=last {
+            history.record_turn_time(time(era)).unwrap();
+        }
+        let saved = session.save_json();
+        let loaded = Session::from_save_json(&saved, |_| BrainKind::Scripted).unwrap();
+        assert_eq!(
+            loaded.history.as_ref().unwrap().turn_times,
+            vec![time(last)]
+        );
     }
 
     #[test]

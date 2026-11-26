@@ -58,6 +58,7 @@ import { constructionStage, sitesOf, type ConstructionSite } from './constructio
 import { CONSTRUCTION_ANIMATION, buildPhases } from './momentFx';
 import { drawPingGhost, drawPings, type PingMark } from './pingDraw';
 import { drawMarchDust, drawMomentFx, drawMomentGround, drawRevealed, revealAt, type MomentView } from './momentFxDraw';
+import { drawImproveHot, drawImproveTiles, drawPlaceTiles, drawPriceChips, drawQueuedBuys } from './pickerDraw';
 import { drawAirCandidates, drawAirLabels, drawAirOffscreen, drawAirRings, drawTileCandidates, type AirOverlay } from './airOverlay';
 import { aircraftAsUnit } from '../airWing';
 import { unworkedClaimIndexes } from './unworkedClaims';
@@ -478,68 +479,11 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
 
   // Improvements: the selected city's improvable tiles are outlined (dashed, translucent); tiles it is
   // already improving read solid; the hovered row's tile and the clicked tile are stronger.
-  const I = inp.improve;
-  if (I) {
-    const own = inp.seatColor;
-    const same = (a: Hex | null | undefined, b: Hex) => !!a && a.q === b.q && a.r === b.r;
-    ctx.save();
-    for (const hx of I.candidates) {
-      if (same(I.hover, hx) || same(I.pick, hx)) continue; // drawn above the counters, below
-      const p = hxCenter(hx);
-      ctx.beginPath();
-      hexPath(ctx, p.x, p.y, HEX_SIZE * 0.88);
-      ctx.strokeStyle = rgba(own, 0.6);
-      ctx.lineWidth = 1.4 * px;
-      ctx.setLineDash([2 * px, 3 * px]);
-      ctx.stroke();
-    }
-    for (const hx of I.building) {
-      const p = hxCenter(hx);
-      ctx.beginPath();
-      hexPath(ctx, p.x, p.y, HEX_SIZE * 0.88);
-      ctx.strokeStyle = rgba(own, 0.9);
-      ctx.lineWidth = 2 * px;
-      ctx.setLineDash([]);
-      ctx.stroke();
-    }
-    ctx.setLineDash([]);
-    for (const hx of I.sites) {
-      const p = hxCenter(hx);
-      ctx.beginPath();
-      hexPath(ctx, p.x, p.y, HEX_SIZE * 0.84);
-      ctx.fillStyle = rgba(S.tone.gold, 0.16);
-      ctx.fill();
-      ctx.strokeStyle = rgba(S.tone.paper, 0.95);
-      ctx.lineWidth = 5 * px;
-      ctx.stroke();
-      ctx.strokeStyle = rgba(S.tone.gold, 1);
-      ctx.lineWidth = 2.2 * px;
-      ctx.stroke();
-      ctx.beginPath();
-      hexPath(ctx, p.x, p.y, HEX_SIZE * 0.66);
-      ctx.lineWidth = 1.4 * px;
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
+  if (inp.improve) drawImproveTiles(ctx, inp.improve, inp.seatColor, S, px);
 
   // A tile-chosen build being placed (Civ's district placement): every eligible tile lit, under the
   // counters and banners; the hovered tile's heavy ring is drawn above them, further down.
-  if (inp.place) {
-    const pl = inp.place;
-    if (pl.prices) {
-      // Buying a tile: dim everything but the buyable tiles, which stay lit; the unaffordable ones read dimmer.
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(-1e5, -1e5, 2e5, 2e5);
-      for (const t of pl.prices) { const p = hxCenter(t.tile); hexPath(ctx, p.x, p.y, HEX_SIZE * 0.9); }
-      ctx.fillStyle = rgba(S.tone.ink, 0.22);
-      ctx.fill('evenodd');
-      ctx.restore();
-      drawTileCandidates(ctx, pl.prices.filter((t) => !t.affordable).map((t) => t.tile), null, S.tone.ink, px, 0, 1.4);
-    }
-    drawTileCandidates(ctx, pl.candidates, null, S.tone.gold, px, 0.3, 4.2);
-  }
+  if (inp.place) drawPlaceTiles(ctx, inp.place, S, px);
 
   // Ranged attack range.
   if (inp.rangedTiles) {
@@ -1143,22 +1087,8 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   // The hovered or clicked improvement tile: a heavy ring above the unit counters, so a unit standing
   // on the tile never hides what the picker row points at.
   if (inp.improve && (inp.improve.hover || inp.improve.pick)) {
-    const own = inp.seatColor;
     worldT();
-    ctx.save();
-    ctx.setLineDash([]);
-    for (const hx of [inp.improve.pick, inp.improve.hover]) {
-      if (!hx || !inp.improve.candidates.some((c) => c.q === hx.q && c.r === hx.r)) continue;
-      const p = hxCenter(hx);
-      ctx.beginPath();
-      hexPath(ctx, p.x, p.y, HEX_SIZE * 0.88);
-      ctx.fillStyle = rgba(own, 0.12);
-      ctx.fill();
-      ctx.strokeStyle = rgba(own, 1);
-      ctx.lineWidth = 4.5 * px;
-      ctx.stroke();
-    }
-    ctx.restore();
+    drawImproveHot(ctx, inp.improve, inp.seatColor, px);
     screenT();
   }
 
@@ -1172,51 +1102,12 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   // Gold prices while a tile is being bought (greyed when the treasury cannot pay), and the mark on a queued purchase,
   // above the unit counters so a unit standing on the tile never hides its price.
   const chips = [...(inp.place?.prices ?? []).map((t) => ({ ...t, queued: false })), ...(inp.tileBuys ?? []).map((t) => ({ ...t, affordable: true, queued: true }))];
-  if (chips.length) {
-    const own = inp.seatColor;
+  if (inp.tileBuys?.length) {
     worldT();
-    ctx.save();
-    for (const b of inp.tileBuys ?? []) {
-      const p = hxCenter(b.tile);
-      ctx.beginPath();
-      hexPath(ctx, p.x, p.y, HEX_SIZE * 0.9);
-      ctx.fillStyle = rgba(own, 0.16);
-      ctx.fill();
-      ctx.strokeStyle = rgba(own, 1);
-      ctx.lineWidth = 3 * px;
-      ctx.setLineDash([]);
-      ctx.stroke();
-    }
-    ctx.restore();
+    drawQueuedBuys(ctx, inp.tileBuys, inp.seatColor, px);
     screenT();
   }
-  if (chips.length && hexPx >= 22) {
-    const own = inp.seatColor;
-    ctx.save();
-    ctx.font = `700 ${hexPx >= 40 ? 12 : 10.5}px ${FONTS[look].sans}`;
-    ctx.textBaseline = 'middle';
-    for (const b of chips) {
-      const c = S2(b.tile);
-      const text = String(b.price);
-      const tw = ctx.measureText(text).width + 19, th = 16;
-      const x = c.x - tw / 2, y = c.y + hexPx * 0.42 - th / 2;
-      ctx.fillStyle = b.queued ? own : rgba(S.tone.vellum, 0.96);
-      ctx.fillRect(x, y, tw, th);
-      ctx.strokeStyle = b.affordable ? own : rgba(S.tone.ink, 0.45);
-      ctx.lineWidth = 1;
-      ctx.strokeRect(x + 0.5, y + 0.5, tw - 1, th - 1);
-      ctx.beginPath();
-      ctx.arc(x + 8, y + th / 2, 4.2, 0, Math.PI * 2);
-      ctx.fillStyle = !b.affordable ? rgba(S.tone.ink, 0.35) : S.tone.gold;
-      ctx.fill();
-      ctx.strokeStyle = rgba(S.tone.ink, 0.7);
-      ctx.stroke();
-      ctx.fillStyle = b.queued ? S.tone.vellum : b.affordable ? S.tone.ink : rgba(S.tone.ink, 0.6);
-      ctx.textAlign = 'left';
-      ctx.fillText(text, x + 15, y + th / 2 + 0.5);
-    }
-    ctx.restore();
-  }
+  if (chips.length && hexPx >= 22) drawPriceChips(ctx, chips, S2, hexPx, inp.seatColor, S, FONTS[look].sans);
 
   // The aircraft picker's candidates, above the unit counters so a unit standing on a target never hides it.
   if (inp.air?.pickKind) {
@@ -1571,11 +1462,27 @@ function drawSelection(ctx: CanvasRenderingContext2D, _look: LookId, S: MapStyle
 interface StrengthCue { sel: UnitView; selFaction?: Faction; targets: Set<number>; neutralBarbarians: boolean }
 
 /** Pending-order badges are icons (the same ones the panels use), each with a plain-text label for accessibility tooling. */
-const MARK_ICON: Record<PendingMark, string> = { explore: 'unit-scout', move: 'mark-move', sleep: 'mark-sleep', heal: 'mark-heal', skip: 'mark-skip', found: 'mark-found', disband: 'ui-cross', ranged: 'unit-archer', upgrade: 'ui-trend-up', invalid: 'mark-invalid' };
+export const MARK_ICON: Record<PendingMark, string> = { explore: 'unit-scout', move: 'mark-move', sleep: 'mark-sleep', heal: 'mark-heal', skip: 'mark-skip', found: 'mark-found', disband: 'ui-cross', ranged: 'unit-archer', upgrade: 'ui-trend-up', invalid: 'mark-invalid' };
 
 /** Occupation lock experiment: a padlock on the token's top-left shoulder (the right is the order badge, the left foot the rank), so a unit a rule holds in place looks held before it is asked to move. */
 function drawLockMark(ctx: CanvasRenderingContext2D, look: LookId, x: number, y: number, w: number) {
   drawBadge(ctx, look, x - w * 0.95, y - w * 0.85, w * 0.55, '', false, 'mark-lock');
+}
+
+/** Rome's Colonia Victrix founder: the laurel on a gilt-ringed seal centred at (cx, cy) (shared with the 3D map). */
+export function drawColoniaSeal(ctx: CanvasRenderingContext2D, cx: number, cy: number, w: number, dpr: number) {
+  const r = Math.max(8, w * 0.42);
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = TOKEN_INK.atlas.paper; ctx.fill();
+  ctx.strokeStyle = TOKEN_INK.atlas.ink; ctx.lineWidth = 1; ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx, cy, r - 1.8, 0, Math.PI * 2); ctx.strokeStyle = CAPITAL_GILT; ctx.lineWidth = 1.3; ctx.stroke();
+  const s = (r - 2) * 1.6, ic = tintedIcon('goal-colonia', TOKEN_INK.atlas.ink, s * dpr);
+  if (ic) ctx.drawImage(ic, cx - s / 2, cy - s / 2, s, s);
+}
+
+/** A fortified unit's mark, 12 px, top-left at (x, y) (shared with the 3D map). */
+export function drawFortifyMark(ctx: CanvasRenderingContext2D, x: number, y: number, dpr: number) {
+  const ic = tintedIcon('fortify', TOKEN_INK.atlas.ink, 14 * dpr);
+  if (ic) ctx.drawImage(ic, x, y, 12, 12);
 }
 
 function drawUnit(ctx: CanvasRenderingContext2D, look: LookId, u: UnitView, x: number, y: number, w: number, dpr: number, mine: boolean, mark: PendingMark | undefined, faction?: Faction, cue?: StrengthCue | null, prop?: SiegeProp | null, hexBox?: { cx: number; half: number }, contract?: number | null, heirLabel?: string | null, colonia = false) {
@@ -1602,19 +1509,9 @@ function drawUnit(ctx: CanvasRenderingContext2D, look: LookId, u: UnitView, x: n
   if (u.military && u.level) drawPromotion(ctx, look, u.level, x, y, w, faction);
   // Rome: a veteran that founds the Colonia Victrix wears its laurel on a gilt-ringed seal over the token's head (16 px or more),
   // clear of the owner roundel (upper left) and the order badge (upper right).
-  if (colonia) {
-    const r = Math.max(8, w * 0.42), cx = x, cy = y - w * 1.12;
-    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = TOKEN_INK.atlas.paper; ctx.fill();
-    ctx.strokeStyle = TOKEN_INK.atlas.ink; ctx.lineWidth = 1; ctx.stroke();
-    ctx.beginPath(); ctx.arc(cx, cy, r - 1.8, 0, Math.PI * 2); ctx.strokeStyle = CAPITAL_GILT; ctx.lineWidth = 1.3; ctx.stroke();
-    const s = (r - 2) * 1.6, ic = tintedIcon('goal-colonia', TOKEN_INK.atlas.ink, s * dpr);
-    if (ic) ctx.drawImage(ic, cx - s / 2, cy - s / 2, s, s);
-  }
+  if (colonia) drawColoniaSeal(ctx, x, y - w * 1.12, w, dpr);
   const bx = x + w * 0.95;
-  if (u.fortify > 0) {
-    const ic = tintedIcon('fortify', TOKEN_INK.atlas.ink, 14 * dpr);
-    if (ic) ctx.drawImage(ic, bx - 5, y + w * 0.35, 12, 12);
-  }
+  if (u.fortify > 0) drawFortifyMark(ctx, bx - 5, y + w * 0.35, dpr);
   // The strength cue: an enemy your selected unit could attack this turn carries how much stronger or weaker it is in that fight.
   if (cue?.targets.has(u.id)) drawStrengthChip(ctx, matchupStrength(u, faction, cue.sel, false), matchupStrength(cue.sel, cue.selFaction, u, true), bx + 5, y - w * 0.85 - 5, FONTS[look].sans, 1, false, cue.neutralBarbarians && isBarbarian(u.owner));
   if (mark) drawBadge(ctx, look, bx, y - w * 0.85, w * 0.42, '', true, MARK_ICON[mark]);

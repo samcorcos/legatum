@@ -130,14 +130,15 @@ export function eraScaled(design: number, era: number): number {
 /** Strength a siege unit or Bomber adds against city HP (core `data::siege_city_bonus`, on the era curve). */
 export const siegeBonusOf = (kind: UnitKind): number => UNIT_DATA[kind].siegeBonus;
 
-/** The class a unit belongs to (core `data::unit_class`); null for Scouts and civilians. */
-/** The plural of a unit's display name: "2 Spearmen", "3 Infantry", "4 Combat Drones". */
+/** The plural of a unit's display name: "2 Spearmen", "3 Infantry", "4 Combat Drones", "5 Legionaries". */
 export function pluralUnit(name: string): string {
   if (/(Infantry|Cavalry|Artillery|Armour)$/.test(name)) return name;
   if (/man$/.test(name)) return `${name.slice(0, -3)}men`;
+  if (/[^aeiou]y$/.test(name)) return `${name.slice(0, -1)}ies`;
   return name.endsWith('s') ? name : `${name}s`;
 }
 
+/** The class a unit belongs to (core `data::unit_class`); null for Scouts and civilians. */
 export const unitClass = (kind: UnitKind): UnitClass | null => UNIT_DATA[kind].class;
 /** Core `data::attacks_in_melee`: the melee line, mounted units (the Keshig too, though it can also shoot) and Scouts close in and can take a city; a shooter's charge is a desperate one. */
 /** Core `data::KESHIG_KIND`: the unit the Mongol Keshig is (the Classical mounted slot, the Cataphract's). */
@@ -1137,6 +1138,11 @@ export const SWISS_TOLL_POPULATION = RULES.swissTollPopulation;
 export const START_GOLD = RULES.startGold;
 
 const WALL_LEVEL_NUMERALS = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
+/** The visible Walls level, or 0 if the city has no Walls or is not in sight. */
+export function wallTierOf(c: { visible: boolean; walls: boolean; walls_level?: number }): number {
+  return c.visible && c.walls ? (c.walls_level ?? 1) : 0;
+}
+
 /** A Walls level as a Roman numeral ("III"). */
 export const wallLevelLabel = (level: number): string => WALL_LEVEL_NUMERALS[level] ?? String(level);
 /** The build list name of Upgrade Walls for a city at this Walls level (0: no Walls yet). */

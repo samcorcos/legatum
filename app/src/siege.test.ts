@@ -7,6 +7,7 @@ import { contextFromViews, formatEvents, groupLines } from './format';
 import { fromOffset } from './hex';
 import { useGame } from './store';
 import { unitStatsFor } from './data';
+import { damage, mountedCityPenalty, unitAttackStrength } from './combat';
 import type { Event, PlayerView, UnitKind, UnitView } from './types';
 
 function setup() {
@@ -68,6 +69,22 @@ describe('cities under attack', () => {
     expect(perTurn).toBeGreaterThan(40);
     expect(forecast.detail).toContain('loses about 84 health a turn to 3 Spearmen');
     expect(forecast.detail).toContain('Nothing garrisons it');
+  });
+
+  it('a rider charging the city loses the mounted penalty, as the engine charges it', () => {
+    const { view, own, attackers } = setup();
+    const horseman = unitStatsFor('Byzantium', 'Horseman');
+    const riders = { ...view, units: view.units.map((u) => attackers.includes(u.id) ? { ...u, kind: 'Horseman' as const, strength: horseman.strength, ranged: horseman.ranged, range: horseman.range } : u) };
+    const units = riders.units.filter((u) => attackers.includes(u.id));
+    const city = riders.cities.find((c) => c.id === own)!;
+    const hit = (u: UnitView, penalty: boolean) => {
+      const faction = riders.players.find((p) => p.id === u.owner)?.faction ?? 'India';
+      const strength = unitAttackStrength('Horseman', u.hp, faction, u.level ?? 0).total - (penalty ? mountedCityPenalty(faction, 'Horseman', false) : 0);
+      return damage(strength, Math.max(1, city.strength), 100);
+    };
+    const { perTurn } = captureForecast(riders, own, units);
+    expect(perTurn).toBe(units.reduce((sum, u) => sum + hit(u, true), 0));
+    expect(perTurn).toBeLessThan(units.reduce((sum, u) => sum + hit(u, false), 0));
   });
 
   it('Siege makes the attackers hit the Walls bar in full, not at half', () => {

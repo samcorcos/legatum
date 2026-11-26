@@ -2720,6 +2720,244 @@
    "path": "docs/playtests/training-questions-shots/setup-toggle-1000x600.png",
    "bytes": 76715,
    "sha256": "168e2355495451da20d4be901ef3886a74e9ffb50ccfb748386516f09fb6bbe6"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/scene.bin",
+   "bytes": 2942752,
+   "sha256": "0c6f4c4a56ed106b8a663e1375646b004ff91c13cf6860ff3a5df35588a2708f",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/scene.gltf",
+   "bytes": 34914,
+   "sha256": "257bcce19fcdb01e0c0a7b685d3d791150e790a92c3f035851749f3ac6a9e60f",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/textures/Body_baseColor.png",
+   "bytes": 4153646,
+   "sha256": "164b1ea9713e630e07f186c8475294bab2d0d7700222f3770021a2354fbd0c9d",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/textures/Body_metallicRoughness.png",
+   "bytes": 299012,
+   "sha256": "6fb44cfa2d40ff84cb470ac586640c35a86d93d13ee492afe0bd04523efed048",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/textures/Body_normal.png",
+   "bytes": 4150430,
+   "sha256": "752ffe3334c89bceaadc018e99d3ea3b169df64234e063632d25a9589a106981",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/textures/Eyelash_baseColor.png",
+   "bytes": 22540,
+   "sha256": "2950d7c1c206472b114ebc4b299f4fb6654eb720850e00ba58ac5174cf6bb8de",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/textures/Ground_baseColor.png",
+   "bytes": 105,
+   "sha256": "16608a60d70d957b71b67f5c0a351e4becedbbe09bd87d9378811d5dad46db77",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/textures/Outfit_baseColor.png",
+   "bytes": 2103985,
+   "sha256": "e9c70eb2178ed9ded05da4709291f78de3da3747dff4f959ea6af786de9b1891",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/textures/Outfit_metallicRoughness.png",
+   "bytes": 2934320,
+   "sha256": "0b55f1f65849e74cae76bae3a046df30b48ab938629f35641b1802d22b808d06",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/textures/Outfit_normal.png",
+   "bytes": 4674898,
+   "sha256": "c39de488b9fa577624d9a4efab09bffd9c6ba276123a2d92e34ddeb1545ee111",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/textures/Pedestal_baseColor.png",
+   "bytes": 972402,
+   "sha256": "0f4acb5e47d600c0470368d42a2c2bd688209502590f00aa166b41ec98d925b4",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/textures/Pedestal_metallicRoughness.png",
+   "bytes": 760698,
+   "sha256": "f671b2578da3d2036d538886fee864d47fcac38c1cbf9325d8426f2c7d72c48b",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/textures/Pedestal_normal.png",
+   "bytes": 1046940,
+   "sha256": "b7ed8591578c6805dd9596ad561ad837a7761bebd06bc60b4ca1c5a892124dd5",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/textures/Phalanx_baseColor.png",
+   "bytes": 127715,
+   "sha256": "93a78c4adda80ee51b0f7c9d0ddf234bf45aa01c92f842db975a52a2fe73e347",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/textures/Rain_baseColor.png",
+   "bytes": 2396,
+   "sha256": "114292513f64c35e09af6a2eb69b2c41a07a2b45cba09b51c37e932c03f35c9f",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/textures/Rain_metallicRoughness.png",
+   "bytes": 79,
+   "sha256": "a50d21e1096cb2cf556157f95c59561fc3b083aa2758e4da6f6ec2a06def9ed5",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/textures/Rain_normal.png",
+   "bytes": 3412,
+   "sha256": "74bcdabddc88052ea65b55fc00cc92232c6ecd1b188c1058a7c5b91c4a831fe5",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/textures/Rain_transmission.png",
+   "bytes": 2249,
+   "sha256": "f7a2ee4862a6af399a109c98a19d6ffa0f8f42cb4dff288f3b875f62675bd353",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/textures/Shield_baseColor.png",
+   "bytes": 3167012,
+   "sha256": "0cb9a48d0045f86eb7cab26f74d158e31e9098060510958f18a0b5706de4a658",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/textures/Shield_metallicRoughness.png",
+   "bytes": 7714939,
+   "sha256": "03221f8b5ca5df93aca5a1a402d402f5c8a6af3056e9fdb123013a9158d5ea8f",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/textures/Shield_normal.png",
+   "bytes": 12064833,
+   "sha256": "ef90689ba0d0a7cf85cf26e32fb9030a3120a40332279116b5a11b41e135b60b",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/textures/Spear_baseColor.png",
+   "bytes": 4588773,
+   "sha256": "404d16cff370d02817ff8f31242fee52187ea9231143b8fb654d2d82bb45a44d",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/textures/Spear_metallicRoughness.png",
+   "bytes": 2596827,
+   "sha256": "9eae380f9521ffcb73b61a5f08150cacb6e5b96f216f7f8efe9c39c18c4c42cc",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/textures/Spear_normal.png",
+   "bytes": 2791398,
+   "sha256": "8c45634fbe68b6d3fd6225213eb8f9aa969e624189c21162be4f281ad1effc94",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/textures/Sword_baseColor.png",
+   "bytes": 4269750,
+   "sha256": "6ac0f94d3ad5717a2c106c3b83e57823d81fe6f08d1ca0b36b18c78ac9f467be",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/textures/Sword_metallicRoughness.png",
+   "bytes": 2383165,
+   "sha256": "877ac3dace61b03c934af28068c3450f4b2017e20e652f9728e8ba2a3a86df34",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/textures/Sword_normal.png",
+   "bytes": 3875713,
+   "sha256": "361e84999938a4383539cc5ee73a1ca64fc6275c0e8945733bb8ddb9b28df49c",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/textures/material_baseColor.png",
+   "bytes": 305541,
+   "sha256": "d148ad289cd2a3a5ede6282c51a5d8de14ec7399e844878b68d8cad521b7bc7f",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/textures/material_metallicRoughness.png",
+   "bytes": 63726,
+   "sha256": "8622c4625eb525883c7eab189b8821a80f8ed1d90f5fbf754c586c70fddbc5be",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/hoplite-warrior/textures/material_normal.png",
+   "bytes": 152922,
+   "sha256": "35c16b13c28ebb05b58a74d19028f63d0f22c6abf49f8dfdd7f823941b8ab782",
+   "source": "https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013 (Hoplite Warrior by Casey DeDore)",
+   "license": "CC-BY-4.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/oad/hoplite.blend",
+   "bytes": 2635953,
+   "sha256": "fb73fb845bd7e2d7cb2b8214486fc2ad4ca860ab557362adb3df61dae5056451",
+   "source": "0 A.D. Athenian hoplite actor, Wildfire Games, revision 61a3b9507d974084e6badb88a0826bd89a6d5b8b (imported to Blender)",
+   "license": "CC-BY-SA-3.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/spearman-0ad-painted-r4.glb",
+   "bytes": 1787164,
+   "sha256": "366f770517d06e23499c0adb221e7243f07095e9396b206159ba167f5dc977d3",
+   "source": "Legatum premium painted lane, round 4 (branch astra/unit-anim-3d-spearman-0ad-painted at bdb41206): strand crest used by --crest-glb; derived from the 0 A.D. rig",
+   "license": "CC-BY-SA-3.0"
+  },
+  {
+   "path": "tools/art/anim3d/sources/spearman-0ad-pbr-r4.glb",
+   "bytes": 1836304,
+   "sha256": "6dd1c8b15456b6a97d6341fa6532cf860a331fc1a23e8430ede23178f5bf8622",
+   "source": "Legatum premium PBR lane, round 4 (branch astra/unit-anim-3d-spearman-0ad-pbr at 2f602479): sunburst aspis used by --shield-glb; derived from the 0 A.D. rig",
+   "license": "CC-BY-SA-3.0"
+  },
+  {
+   "path": "tools/art/anim3d/units/spearman-0ad/spearman.glb",
+   "bytes": 578476,
+   "sha256": "84bf794f543fd4a1af2d1b9c2b48c89a6c52533a00d7803e553b49a22513f92c",
+   "source": "Legatum Spearman round 6: the approved 0 A.D. rig and five clips that fit_source_to_0ad.py copies (derived from the 0 A.D. hoplite actor)",
+   "license": "CC-BY-SA-3.0"
   }
  ]
 }

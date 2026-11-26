@@ -44,15 +44,20 @@ const MAX_KEYS = 200;
  * sent with each of its checkpoints. The server remembers its hash and refuses a checkpoint for that game id
  * under any other key, so someone who learns a game's id (it is inside every exported save) cannot replace the
  * record. It names a game, never a player: each game gets its own. Null where the browser keeps no storage;
- * the upload then goes without a key, as older builds do.
+ * the upload then goes without a key, as older builds do. The list keeps the MAX_KEYS games uploaded most
+ * recently, so a game still being played keeps its key however many games start after it.
  */
 export function uploadKey(id: string): string | null {
   try {
     const kept = JSON.parse(localStorage.getItem(KEYS) ?? '[]') as [string, string][];
-    const found = kept.find(([game]) => game === id);
-    if (found) return found[1];
-    const key = Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('');
-    localStorage.setItem(KEYS, JSON.stringify([...kept, [id, key]].slice(-MAX_KEYS)));
+    const found = kept.find(([game]) => game === id)?.[1];
+    const key = found ?? Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('');
+    try {
+      localStorage.setItem(KEYS, JSON.stringify([...kept.filter(([game]) => game !== id), [id, key]].slice(-MAX_KEYS)));
+    } catch {
+      // Storage full: a kept key still goes with the upload; a new one that cannot be kept is not sent.
+      if (!found) return null;
+    }
     return key;
   } catch {
     return null;

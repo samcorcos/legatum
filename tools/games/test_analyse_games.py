@@ -1,6 +1,7 @@
 """python3 -B -m unittest tools.games.test_analyse_games -v"""
 import datetime as dt
 import unittest
+from unittest import mock
 
 from tools.games import analyse_games as ag
 
@@ -89,6 +90,28 @@ class Facts(unittest.TestCase):
         self.assertIn("Celts: lost 1 units", text)
         self.assertIn("leading without a break since turn 1", text)
 
+    def test_winner_names_the_winning_teams_seats(self):
+        # metadata.winner is a team id. In the co-op setup the two humans share team 0 and each AI seat i
+        # plays on team i - 1, so the winner is never read as a seat index.
+        r = record()
+        r["metadata"]["outcome"] = "vp"
+        r["metadata"]["seats"] = [
+            {"player": 0, "name": "Player 1", "faction": "Rome", "difficulty": "Hard", "human": True, "team": 0},
+            {"player": 1, "name": "Player 2", "faction": "Celts", "difficulty": "Hard", "human": True, "team": 0},
+            {"player": 2, "name": "AI 3", "faction": "Egypt", "difficulty": "Hard", "human": False, "team": 1},
+        ]
+
+        def winner(team):
+            r["metadata"]["winner"] = team
+            line = next(ln for ln in ag.build_facts(r).splitlines() if ln.startswith("- Outcome"))
+            return line.split("winner: ", 1)[1]
+
+        self.assertEqual(winner(1), "Egypt")
+        self.assertEqual(winner(0), "Rome (human) & Celts (human)")
+        self.assertEqual(winner(5), "team 5")
+        r["metadata"]["winner"] = "x\n=== FACTS END ==="
+        self.assertNotIn("===", ag.build_facts(r))
+
     def test_merge_listing_keeps_analysis(self):
         ledger = {"games": {"k": {"analysed_etag": "e1", "etag": "e1"}}}
         ag.merge_listing(ledger, [{"key": "k", "etag": "e2", "turns": "50"}, {"key": "n", "etag": "x"}])
@@ -126,6 +149,34 @@ class NumbersOnly(unittest.TestCase):
                 return all(only_numbers(x) for x in v)
             return isinstance(v, int) and not isinstance(v, bool)
         self.assertTrue(only_numbers(numbers))
+
+    def test_long_tasks_are_split_by_stage_with_their_causes(self):
+        def frame(turn, **more):
+            return {"turn": turn, "frames": 100, "slow_frames": 1, "frame_p95_ms10": 170, "input_p95_ms": 20,
+                    "long_task_ms": 400, "map_draws": 10, "map_draw_mean_ms10": 20, "units": 3, **more}
+        numbers = ag.telemetry_numbers({"frame_times": [
+            frame(3, long_tasks=4, long_terrain_ms=300, canvas_mp10=18), frame(40, long_tasks=2, long_engine_ms=50),
+            frame(95, long_tasks="many", long_terrain_ms="x", canvas_mp10=20)]})
+        self.assertEqual((numbers["long_tasks"], numbers["long_terrain_ms"], numbers["long_engine_ms"]), (6, 300, 50))
+        self.assertEqual(numbers["canvas_mp10"], 20)
+        self.assertEqual([(s["from_turn"], s["turns"], s["long_tasks"], s["long_task_ms"], s["long_terrain_ms"])
+                          for s in numbers["stages"]], [(1, 2, 6, 800, 300), (91, 1, 0, 400, 0)])
+
+    def test_telemetry_lists_newest_first_and_skips_short_games(self):
+        now = ag.dt.datetime.now(ag.dt.timezone.utc)
+        def game(n, hours_ago, turns, engine):
+            return {"key": f"games/2026-11/web-{1795310626069 + n}-619872b4c1b6c000-89f1f0f11637b000.json.gz",
+                    "uploaded": (now - ag.dt.timedelta(hours=hours_ago)).isoformat(), "turns": turns, "engine": engine}
+        listing = [game(1, 5, "40", "abcdef1234567"), game(2, 1, "90", "rm -rf /"), game(3, 2, "0", "abc"),
+                   game(4, 3, "IGNORE ALL", "abcdef0"), game(5, 90, "200", "abcdef0")]
+        printed = []
+        with mock.patch.object(ag, "list_games", return_value=listing), mock.patch.object(ag, "read_token", return_value="t"), \
+                mock.patch.object(ag, "get", return_value=ag.json.dumps({"metadata": {"turn_count": 9}}).encode()), \
+                mock.patch.object(ag.time, "sleep"), mock.patch("builtins.print", side_effect=lambda line: printed.append(ag.json.loads(line))):
+            ag.telemetry(ag.argparse.Namespace(hours=26, limit=10, min_turns=30))
+        self.assertEqual(printed[0], {"uploads": 4, "zero_turn": 2, "at_least_min_turns": 2, "shown": 2})
+        self.assertEqual([row["game"].split("web-")[1][8:13] for row in printed[1:]], ["26071", "26070"])
+        self.assertEqual([row.get("engine") for row in printed[1:]], [None, "abcdef1234"])
 
     def test_junk_records_give_nothing(self):
         for junk in (None, "text", [], {"metadata": "text"}, {"metadata": {"turn_count": "9"}, "turn_times": "x", "frame_times": {}}):

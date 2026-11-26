@@ -12,13 +12,17 @@ import { mapPlayerColor } from '../map/style';
 import { mapUnitArtSlug, mapUnitMiniatureUrl } from '../unitArt';
 import { BARBARIAN_COLOR } from '../theme';
 import { isBarbarian } from '../barbarians';
+import { fadeOwn, ownMaterials } from './ownMaterials';
+import { ARC, DEATH_MS, fxUnits, type CombatPlan, type ShotKind } from '../map/combatFx';
 import {
-  CORNERS, R, ROW, buildField, gridFor, hash2, heightAt, refreshFog, rnd, shapeChanged, tileAt, tileX, tileZ, worldFrom,
+  CORNERS, PX, R, ROW, buildField, gridFor, hash2, heightAt, refreshFog, rnd, shapeChanged, tileAt, tileX, tileZ, worldFrom,
   type Field, type World,
 } from './world';
 
 const PARCH = new THREE.Color('#d9c9a3');
 const UP = new THREE.Vector3(0, 1, 0);
+/** Lunges, recoils and flinches read larger on the 3D figures than on the flat tokens (a fifth of a hex was hard to see at working zoom). */
+const LUNGE_3D = 1.6;
 /** Unit art with a finished 3D model (app/public/models/units/<file>.glb), keyed by the art slug the unit's painting
  *  uses (mapUnitArtSlug), so a model only stands in for its own painting: a Spartan or Aztec Spearman and a barbarian
  *  raider keep their own painted figures until they have models. Every other unit stands as its painted miniature.
@@ -37,6 +41,9 @@ export interface Overlays {
   route: Hex[];
 }
 
+/** A hex's centre in world units (the axial maths the 2D map uses, scaled to the 3D map). */
+const hexCentre = (h: Hex) => ({ x: Math.sqrt(3) * (h.q + h.r / 2) * (36 / PX), z: 1.5 * h.r * (36 / PX) });
+
 const tileIndexOf = (h: Hex, w: number, hgt: number) => {
   const [c, r] = toOffset(h);
   return c < 0 || r < 0 || c >= w || r >= hgt ? -1 : r * w + c;
@@ -44,6 +51,8 @@ const tileIndexOf = (h: Hex, w: number, hgt: number) => {
 
 /** Figures turn a little toward their spear side so the weapon reads from the map camera (units thread, 2026-11-25). */
 const DISPLAY_YAW = 0.5;
+/** One figure's mixer: `base` is the looping clip it rests in (idle, or walk while travelling). */
+type Fig = { mx: THREE.AnimationMixer; idle: THREE.AnimationAction; base: THREE.AnimationAction; clips: THREE.AnimationClip[] };
 
 export class MapScene {
   readonly renderer: THREE.WebGLRenderer;
@@ -450,6 +459,8 @@ export class MapScene {
     }
     return this.env;
   }
+  /** Each drawn unit's group, by unit id (the marks overlay asks where its head is). */
+  private unitGroups = new Map<number, THREE.Group>();
   private squads: { fig: THREE.Object3D; lod0: THREE.Object3D[]; lod1: THREE.Object3D[]; scale: number; x: number; z: number }[] = [];
   /** Reduced motion or the Animations switch off (ui/motion.ts motionStill): models hold their pose. */
   still = false;
@@ -479,6 +490,8 @@ export class MapScene {
     for (const o of [...this.units.children]) this.units.remove(o);
     this.mixers = [];
     this.squads = [];
+    this.unitGroups.clear();
+    this.settling.clear();
     const byTile = new Map<number, UnitView[]>();
     for (const u of view.units) {
       const i = tileIndexOf(u.pos, wd.w, wd.h);
@@ -488,40 +501,48 @@ export class MapScene {
       list.push(u);
     }
     const cityAt = new Set(view.cities.map((c) => tileIndexOf(c.pos, wd.w, wd.h)));
-    const disc = new THREE.CylinderGeometry(0.11, 0.115, 0.01, 32);
-    const factionOf = new Map(view.players.map((pl) => [pl.id, pl.faction] as const));
     for (const [i, list] of byTile) {
       list.forEach((u, k) => {
-        const g = new THREE.Group();
-        g.userData.unit = u.id;
-        const barbarian = isBarbarian(u.owner);
-        const team = new THREE.Color(barbarian ? BARBARIAN_COLOR : mapPlayerColor(u.owner));
-        const ring = new THREE.Mesh(disc, new THREE.MeshStandardMaterial({ color: team, roughness: 0.55, metalness: 0.15, transparent: true, opacity: 0.85 }));
-        ring.position.y = 0.004; ring.receiveShadow = true; g.add(ring);
         const off = list.length > 1 ? (k - (list.length - 1) / 2) * 0.24 : 0;
         const x = tileX(i, wd.w) + off, z = tileZ(i, wd.w) + (cityAt.has(i) ? 0.2 : 0.05);
+        const g = this.unitFigure(u, i * 7 + k, seq);
         g.position.set(x, Math.max(0, this.heightAt(x, z)), z);
+        g.userData.home = g.position.clone();
+        this.unitGroups.set(u.id, g);
         this.units.add(g);
-        const slug = MODELS[mapUnitArtSlug(u, factionOf, barbarian)];
-        if (slug) {
-          void this.model(slug).then((gltf) => {
-            if (!gltf || this.disposed || seq !== this.unitSeq) return;
-            this.addSquad(g, gltf, team, i * 7 + k);
-            this.updateLod();
-            this.animating = true;
-          });
-        } else {
-          const url = mapUnitMiniatureUrl(u, factionOf, barbarian);
-          if (url) {
-            const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.texture(url), transparent: true, alphaTest: 0.08 }));
-            sp.scale.set(0.3, 0.3, 1);
-            sp.center.set(0.5, 0.06);
-            sp.position.y = 0.0;
-            g.add(sp);
-          }
-        }
       });
     }
+  }
+
+  private disc = new THREE.CylinderGeometry(0.11, 0.115, 0.01, 32);
+  /** One unit's figure on its owner disc: the unit's 3D model as a squad of three, else its painted miniature. */
+  private unitFigure(u: UnitView, seed: number, seq: number): THREE.Group {
+    const view = this.view!;
+    const g = new THREE.Group();
+    g.userData.unit = u.id;
+    const barbarian = isBarbarian(u.owner);
+    const team = new THREE.Color(barbarian ? BARBARIAN_COLOR : mapPlayerColor(u.owner));
+    const ring = new THREE.Mesh(this.disc, new THREE.MeshStandardMaterial({ color: team, roughness: 0.55, metalness: 0.15, transparent: true, opacity: 0.85 }));
+    ring.position.y = 0.004; ring.receiveShadow = true; g.add(ring);
+    const factionOf = new Map(view.players.map((pl) => [pl.id, pl.faction] as const));
+    const slug = MODELS[mapUnitArtSlug(u, factionOf, barbarian)];
+    if (slug) {
+      void this.model(slug).then((gltf) => {
+        if (!gltf || this.disposed || seq !== this.unitSeq) return;
+        this.addSquad(g, gltf, team, seed);
+        this.updateLod();
+        this.animating = true;
+      });
+    } else {
+      const url = mapUnitMiniatureUrl(u, factionOf, barbarian);
+      if (url) {
+        const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.texture(url), transparent: true, alphaTest: 0.08 }));
+        sp.scale.set(0.3, 0.3, 1);
+        sp.center.set(0.5, 0.06);
+        g.add(sp);
+      }
+    }
+    return g;
   }
 
   /** Unit contract: COLOR_0's red channel is the owner-colour mask (crest, shield rim, cloak trim), not a colour.
@@ -584,11 +605,73 @@ export class MapScene {
         const a = mx.clipAction(idle); a.play(); a.time = hash2(seed, f + 9) * idle.duration;
         mx.update(0); // pose it now, so a still map shows the idle pose, not the bind pose
         this.mixers.push(mx);
+        const figs = (g.userData.figs ??= []) as Fig[];
+        figs.push({ mx, idle: a, base: a, clips: gltf.animations });
       }
     });
   }
 
   // ---------------- overlays ----------------
+
+  private lensMesh: THREE.Mesh | null = null;
+  /** The active lens's wash on the ground: one hex per tile, following the terrain, under units and banners. */
+  setLensWash(tiles: { index: number; color: string; alpha: number }[]) {
+    if (this.lensMesh) { this.scene.remove(this.lensMesh); this.lensMesh.geometry.dispose(); (this.lensMesh.material as THREE.Material).dispose(); this.lensMesh = null; }
+    if (!this.world || !tiles.length) { this.animating = true; return; }
+    const { w } = this.world;
+    const pos: number[] = [], col: number[] = [];
+    const c = new THREE.Color();
+    const S = 0.93, RINGS = 3;
+    for (const t of tiles) {
+      const cx = tileX(t.index, w), cz = tileZ(t.index, w);
+      c.set(t.color);
+      // Each of the six triangles is split into rings so the wash follows hills instead of cutting through them.
+      for (let e = 0; e < 6; e++) {
+        const a = CORNERS[e], b = CORNERS[(e + 1) % 6];
+        const P = (u: number, v: number) => {
+          const x = cx + (a[0] * u + b[0] * v) * S, z = cz + (a[1] * u + b[1] * v) * S;
+          return [x, Math.max(0, this.heightAt(x, z)) + 0.014, z];
+        };
+        for (let i = 0; i < RINGS; i++) for (let j = 0; j < RINGS - i; j++) {
+          const f = (k: number) => k / RINGS;
+          const tri = (p: number[][]) => { for (const q of p) { pos.push(...q); col.push(c.r, c.g, c.b, t.alpha); } };
+          tri([P(f(i), f(j)), P(f(i + 1), f(j)), P(f(i), f(j + 1))]);
+          if (i + j + 1 < RINGS) tri([P(f(i + 1), f(j)), P(f(i + 1), f(j + 1)), P(f(i), f(j + 1))]);
+        }
+      }
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute('color', new THREE.Float32BufferAttribute(col, 4));
+    this.lensMesh = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, side: THREE.DoubleSide }));
+    this.lensMesh.renderOrder = 3;
+    this.scene.add(this.lensMesh);
+    this.animating = true;
+  }
+
+  /** The apparent hex radius in px at the camera's target. */
+  hexPx(): number {
+    const v = this.target.clone().project(this.camera), e = this.target.clone().add(new THREE.Vector3(R, 0, 0)).project(this.camera);
+    return Math.abs((e.x - v.x) / 2 * this.renderer.domElement.clientWidth);
+  }
+
+  /** A 2D-map world point (px) on screen, on the 3D ground: lets the 2D map's own drawing code draw on the 3D map. */
+  projectFlat(x2: number, y2: number, lift = 0.01): { x: number; y: number } | null {
+    if (!this.world) return null;
+    const x = x2 / PX, z = y2 / PX;
+    const v = new THREE.Vector3(x, Math.max(0, this.heightAt(x, z)) + lift, z).project(this.camera);
+    if (v.z > 1) return null;
+    const el = this.renderer.domElement;
+    return { x: (v.x + 1) / 2 * el.clientWidth, y: (1 - v.y) / 2 * el.clientHeight };
+  }
+
+  /** A tile's centre on screen by tile index (the lens chips and badges use it). */
+  projectIndex(i: number, lift = 0) {
+    if (!this.world) return null;
+    const { w } = this.world;
+    const c = Math.floor(i % w), r = Math.floor(i / w);
+    return this.project(fromOffset(c, r), lift);
+  }
 
   setOverlays(o: Overlays) {
     if (!this.world) return;
@@ -700,6 +783,29 @@ export class MapScene {
     return { x: sx, y: sy, radius: Math.abs((e.x - v.x) / 2 * W) };
   }
 
+  /** The top of a drawn unit's figure on screen (CSS px in the canvas), or null when it isn't drawn or is off camera. */
+  unitHead(id: number): { x: number; y: number; radius: number } | null {
+    const g = this.unitGroups.get(id);
+    if (!g) return null;
+    const grow = 1 + 0.5 * THREE.MathUtils.smoothstep(this.dist, 3, 13);
+    const v = new THREE.Vector3(g.position.x, g.position.y + 0.3 * grow, g.position.z).project(this.camera);
+    if (v.z > 1) return null;
+    const e = new THREE.Vector3(g.position.x + R, g.position.y, g.position.z).project(this.camera);
+    const el = this.renderer.domElement, W = el.clientWidth, Hh = el.clientHeight;
+    return { x: (v.x + 1) / 2 * W, y: (1 - v.y) / 2 * Hh, radius: Math.abs((e.x - v.x) / 2 * W) };
+  }
+
+  /** Where a unit's figure stands on screen (the centre of its base disc). */
+  unitFoot(id: number): { x: number; y: number; radius: number } | null {
+    const g = this.unitGroups.get(id);
+    if (!g) return null;
+    const v = g.position.clone().project(this.camera);
+    if (v.z > 1) return null;
+    const e = new THREE.Vector3(g.position.x + R, g.position.y, g.position.z).project(this.camera);
+    const el = this.renderer.domElement, W = el.clientWidth, Hh = el.clientHeight;
+    return { x: (v.x + 1) / 2 * W, y: (1 - v.y) / 2 * Hh, radius: Math.abs((e.x - v.x) / 2 * W) };
+  }
+
   centerOn(hex: Hex) {
     if (!this.world) return;
     const i = tileIndexOf(hex, this.world.w, this.world.h);
@@ -708,10 +814,233 @@ export class MapScene {
     this.placeCamera();
   }
 
+  // ---------------- turn playback: moves, the fighting (map/combatFx.ts plan), the fallen ----------------
+
+  private anim: { start: number; duration: number; paths: Map<number, Hex[]>; plan: CombatPlan | null; ghosts: Map<number, THREE.Group>; fired: Set<string>; visualEnd: number; last?: number } | null = null;
+  private shotPool: THREE.Mesh[] = [];
+  /** Units turning back to their resting facing after a move. */
+  private settling = new Set<THREE.Object3D>();
+
+  /** Play the turn just resolved: the same plan and clock as the 2D map. Null (or a still map) shows units where they ended. */
+  setAnim(a: { start: number; duration: number; paths: Map<number, Hex[]>; plan?: CombatPlan | null } | null) {
+    this.endAnim();
+    if (a && !this.still) this.settling.clear(); // the new playback steers every facing itself
+    if (!a || this.still || !this.world) return;
+    const ghosts = new Map<number, THREE.Group>();
+    for (const [id, u] of a.plan?.ghosts ?? []) {
+      const g = this.unitFigure(u, id * 13, this.unitSeq);
+      const i = tileIndexOf(u.pos, this.world.w, this.world.h);
+      if (i < 0) continue;
+      g.position.set(tileX(i, this.world.w), Math.max(0, this.heightAt(tileX(i, this.world.w), tileZ(i, this.world.w))), tileZ(i, this.world.w) + 0.05);
+      ghosts.set(id, g);
+      this.units.add(g);
+      // Its own transparent materials from the start: the fade never touches a material live figures share, and never
+      // recompiles a shader mid-playback. A squad still loading is given its own when the fall begins.
+      ownMaterials(g);
+    }
+    // The figures are done once the last move, blow, missile and fall are (the plan's tail is for the 2D map's damage cues).
+    const p = a.plan;
+    const visualEnd = p ? Math.max(0, ...[...p.moves.values()].flat().map((m) => m.t1), ...p.clashes.map((c) => c.t + p.stepMs),
+      ...p.shots.map((x) => x.launch + x.flight + 120), ...p.deaths.map((d) => d.t + DEATH_MS)) + 150 : 0;
+    this.anim = { start: a.start, duration: a.duration, paths: a.paths, plan: p ?? null, ghosts, fired: new Set(), visualEnd };
+  }
+
+  private endAnim() {
+    const a = this.anim;
+    if (!a) return;
+    for (const g of a.ghosts.values()) {
+      this.units.remove(g);
+      // The ghost's own material copies go with it (the shared ones stay with the live figures).
+      g.traverse((o) => { const m = (o as THREE.Mesh).material; for (const x of Array.isArray(m) ? m : m ? [m] : []) if (x.userData.ownMaterial) x.dispose(); });
+    }
+    for (const g of this.unitGroups.values()) {
+      const home = g.userData.home as THREE.Vector3 | undefined;
+      if (home) g.position.copy(home);
+      // Upright again, but the facing eases back to rest in frame() rather than snapping.
+      g.rotation.x = 0; g.rotation.z = 0;
+      if (Math.abs(g.rotation.y) > 1e-3) this.settling.add(g); else g.rotation.y = 0;
+      this.setWalk(g, false);
+      delete g.userData.prevBase; delete g.userData.walkUntil; delete g.userData.heading;
+    }
+    for (const m of this.shotPool) m.visible = false;
+    this.anim = null;
+    this.animating = true;
+  }
+
+  /** Play a clip once on every figure of a unit, then back to idle (death holds its last pose). */
+  private playClip(g: THREE.Object3D | undefined, name: 'attack' | 'hit' | 'death') {
+    for (const f of (g?.userData.figs ?? []) as Fig[]) {
+      const clip = f.clips.find((c) => c.name === name);
+      if (!clip) continue;
+      const a = f.mx.clipAction(clip);
+      a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = true;
+      a.crossFadeFrom(f.base, 0.08, false); a.play();
+      if (name !== 'death') {
+        const back = (e: { action: THREE.AnimationAction }) => {
+          if (e.action !== a) return;
+          f.mx.removeEventListener('finished', back);
+          f.base.reset(); f.base.play(); f.base.crossFadeFrom(a, 0.15, false);
+        };
+        f.mx.addEventListener('finished', back);
+      }
+    }
+  }
+
+  /** Walk while a unit travels, idle when it stops: the base clip that attack and hit return to. */
+  private setWalk(g: THREE.Object3D, on: boolean) {
+    if (!!g.userData.walking === on) return;
+    g.userData.walking = on;
+    for (const f of (g.userData.figs ?? []) as Fig[]) {
+      const clip = f.clips.find((c) => c.name === 'walk');
+      if (!clip) continue;
+      const walk = f.mx.clipAction(clip);
+      const next = on ? walk : f.idle, prev = f.base;
+      if (next === prev) continue;
+      next.reset(); next.setLoop(THREE.LoopRepeat, Infinity);
+      if (on) next.time = Math.random() * clip.duration; // figures of a squad out of step
+      next.play(); next.crossFadeFrom(prev, 0.15, false);
+      f.base = next;
+    }
+  }
+
+  /** Track a unit's travel (not its lunges): walk and face the way it goes while it moves, then settle back. */
+  private stepWalk(g: THREE.Object3D, x: number, z: number, t: number, dt: number) {
+    const prev = g.userData.prevBase as { x: number; z: number } | undefined;
+    g.userData.prevBase = { x, z };
+    if (prev) {
+      const dx = x - prev.x, dz = z - prev.z;
+      if (Math.hypot(dx, dz) > 0.0004) { g.userData.walkUntil = t + 90; g.userData.heading = Math.atan2(dx, dz) - DISPLAY_YAW; }
+    }
+    const on = t < ((g.userData.walkUntil as number | undefined) ?? -Infinity);
+    this.setWalk(g, on);
+    const want = on ? ((g.userData.heading as number | undefined) ?? 0) : 0;
+    let d = want - g.rotation.y;
+    d = Math.atan2(Math.sin(d), Math.cos(d));
+    g.rotation.y += d * Math.min(1, dt * 12);
+  }
+
+  private shotMesh(k: number, kind: ShotKind): THREE.Mesh {
+    let m = this.shotPool[k];
+    if (!m) {
+      m = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial({ color: '#6e5536', roughness: 0.7 }));
+      m.castShadow = true;
+      this.shotPool[k] = m;
+      this.scene.add(m);
+    }
+    const want = kind === 'arrows' || kind === 'bolts' ? 'shaft' : 'ball';
+    if (m.userData.shape !== want) {
+      m.geometry.dispose();
+      // A tapered shaft, point forward: thin and short beside the figures (a stick read as a pole at close zoom).
+      m.geometry = want === 'shaft' ? new THREE.CylinderGeometry(0.0006, 0.0018, 0.042, 5).rotateX(Math.PI / 2) : new THREE.SphereGeometry(kind === 'stone' ? 0.016 : 0.01, 8, 6);
+      m.userData.shape = want;
+    }
+    m.visible = true;
+    return m;
+  }
+
+  private stepAnim(now: number) {
+    const a = this.anim;
+    if (!a || !this.world) return;
+    const t = now - a.start;
+    const dt = Math.min(0.05, Math.max(0, (now - (a.last ?? now)) / 1000));
+    a.last = now;
+    const plan = a.plan;
+    if (plan ? t > a.visualEnd : t > a.duration + 50) { this.endAnim(); return; }
+    this.animating = true;
+    const place = (g: THREE.Object3D, x: number, z: number) => g.position.set(x, Math.max(0, this.heightAt(x, z)), z);
+    if (!plan) {
+      // A plain glide (no fighting): every moving unit eases along its path.
+      const k = Math.min(1, Math.max(0, t / a.duration)), e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      for (const [id, path] of a.paths) {
+        const g = this.unitGroups.get(id);
+        if (!g || path.length < 2) continue;
+        const f = e * (path.length - 1), j = Math.min(path.length - 2, Math.floor(f)), r = f - j;
+        const p0 = hexCentre(path[j]), p1 = hexCentre(path[j + 1]);
+        const x = p0.x + (p1.x - p0.x) * r, z = p0.z + (p1.z - p0.z) * r + 0.05;
+        place(g, x, z);
+        this.stepWalk(g, x, z, t, dt);
+      }
+      return;
+    }
+    const fx = fxUnits(plan, t);
+    for (const [id, p] of fx.pos) {
+      const g = this.unitGroups.get(id) ?? a.ghosts.get(id);
+      if (!g) continue;
+      const s = fx.shift.get(id) ?? { x: 0, y: 0 };
+      place(g, (p.x + s.x * LUNGE_3D) / PX, (p.y + s.y * LUNGE_3D) / PX + 0.05);
+      if (!a.ghosts.has(id)) this.stepWalk(g, p.x / PX, p.y / PX, t, dt);
+    }
+    for (const [id, s] of fx.shift) {
+      if (fx.pos.has(id)) continue;
+      const g = this.unitGroups.get(id) ?? a.ghosts.get(id);
+      const home = g?.userData.home as THREE.Vector3 | undefined;
+      if (g && home) place(g, home.x + s.x * LUNGE_3D / PX, home.z + s.y * LUNGE_3D / PX);
+    }
+    // Clips on their beats: the attacker strikes, the defender reels, the fallen fall.
+    for (const c of plan.clashes) {
+      const key = `c${c.attacker}:${c.t}`;
+      if (t >= c.t - 60 && !a.fired.has(key)) {
+        a.fired.add(key);
+        this.playClip(c.attacker != null ? this.unitGroups.get(c.attacker) ?? a.ghosts.get(c.attacker) : undefined, 'attack');
+        if (c.hit && c.defender != null) this.playClip(this.unitGroups.get(c.defender) ?? a.ghosts.get(c.defender), 'hit');
+      }
+    }
+    for (const sh of plan.shots) {
+      const key = `s${sh.shooter}:${sh.launch}:${sh.seed}`;
+      if (t >= sh.launch && sh.shooter != null && !a.fired.has(key)) { a.fired.add(key); this.playClip(this.unitGroups.get(sh.shooter), 'attack'); }
+    }
+    const falling = new Set(fx.ghosts.map((gh) => gh.unit.id));
+    for (const d of plan.deaths) {
+      const g = a.ghosts.get(d.unit.id);
+      if (!g) continue;
+      const key = `d${d.unit.id}`;
+      if (t >= d.t && !a.fired.has(key)) { a.fired.add(key); this.playClip(g, 'death'); }
+      // Gone once its fall is over.
+      g.visible = falling.has(d.unit.id) || t < d.t;
+    }
+    for (const gh of fx.ghosts) {
+      const g = a.ghosts.get(gh.unit.id);
+      if (!g) continue;
+      // A figure without a death clip (a painted miniature) topples and fades instead.
+      if (!(g.userData.figs as unknown[] | undefined)?.length) g.rotation.z = gh.tilt * 0.8;
+      place(g, gh.x / PX, gh.y / PX + 0.05);
+      g.position.y -= gh.sink * 0.004;
+      ownMaterials(g);
+      fadeOwn(g, gh.alpha);
+    }
+    // Missiles in flight: an arc from the shooter to the target.
+    let k = 0;
+    for (const sh of plan.shots) {
+      const u = (t - sh.launch) / sh.flight;
+      if (u < 0 || u > 1) continue;
+      const fx0 = sh.from.x / PX, fz0 = sh.from.y / PX, fx1 = sh.to.x / PX, fz1 = sh.to.y / PX;
+      const dist = Math.hypot(fx1 - fx0, fz1 - fz0);
+      const y0 = Math.max(0, this.heightAt(fx0, fz0)) + 0.14, y1 = Math.max(0, this.heightAt(fx1, fz1)) + 0.08;
+      const arc = ARC[sh.kind] * dist * 4 * u * (1 - u);
+      // Arrows fly as a small volley: a few shafts side by side.
+      const n = sh.kind === 'arrows' ? 4 : 1;
+      for (let j = 0; j < n; j++) {
+        const m = this.shotMesh(k++, sh.kind);
+        const off = (j - (n - 1) / 2) * 0.018;
+        const px = fx0 + (fx1 - fx0) * u + off, pz = fz0 + (fz1 - fz0) * u + off * 0.5, py = y0 + (y1 - y0) * u + arc;
+        m.position.set(px, py, pz);
+        const u2 = Math.min(1, u + 0.02);
+        m.lookAt(fx0 + (fx1 - fx0) * u2 + off, y0 + (y1 - y0) * u2 + ARC[sh.kind] * dist * 4 * u2 * (1 - u2), fz0 + (fz1 - fz0) * u2 + off * 0.5);
+      }
+    }
+    for (; k < this.shotPool.length; k++) this.shotPool[k].visible = false;
+  }
+
   /** Render one frame. Returns false when nothing moved (the caller may skip frames). */
   frame(): boolean {
     const dt = Math.min(0.05, this.clock.getDelta());
     this.uniforms.uTime.value += dt;
+    this.stepAnim(performance.now());
+    for (const g of this.settling) {
+      g.rotation.y += -g.rotation.y * Math.min(1, dt * 12);
+      if (Math.abs(g.rotation.y) < 2e-3) { g.rotation.y = 0; this.settling.delete(g); }
+      this.animating = true;
+    }
     if (!this.still) for (const m of this.mixers) m.update(dt);
     this.renderer.render(this.scene, this.camera);
     const was = this.animating;

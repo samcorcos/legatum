@@ -2,6 +2,7 @@
 // people with the most text on it and the one with the least, then the first turn it gives way to.
 import { test, expect } from '../fixtures';
 import { SIZES, shot } from './helpers';
+import { setMapSeed } from '../mapSeed';
 
 test.describe.configure({ mode: 'parallel' });
 for (const size of SIZES) test.describe(`people intro ${size.name}`, () => {
@@ -13,7 +14,7 @@ for (const size of SIZES) test.describe(`people intro ${size.name}`, () => {
     await page.addInitScript(() => localStorage.setItem('legatum.intro.v1', 'on'));
     await page.goto('/?client=wasm');
     await page.getByRole('button', { name: /^Single Player/ }).click();
-    await page.getByLabel('Map seed', { exact: true }).fill('424242');
+    await setMapSeed(page, '424242');
     await page.getByRole('button', { name: /^Seat 1 faction:/ }).click();
     const stage = page.locator('dialog[data-testid="faction-stage"][open]');
     await stage.getByRole('option', { name: new RegExp(people) }).click();

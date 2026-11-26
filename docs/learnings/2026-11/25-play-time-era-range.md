@@ -1,0 +1,3 @@
+# Play-time recording refused the Modern and Future eras (2026-11-25)
+
+`TurnPlayTime::era` is 1-based (`objectives::era_of`), and `record_turn_time` plus archive validation accepted only 1..=7, a range written before the Machine Age and the new Modern era took the count to nine. A human in era 8 or 9 logged "turn play time was not recorded" every turn and the turn was missing from the saved play time; the nightly e2e caught it as a console error (unlock-density AutonomousSystems, both nightly runs on 2026-11-23 and 2026-11-24). The range now comes from `eras::ERA_COUNT`. Hard-coded era counts go stale whenever an era is added: derive them from `eras`.

@@ -64,7 +64,7 @@ export LEGATUM_ART_SOURCES_URL=https://pub-fb5c281dd12d4ea4bbd38d657cdeb907.r2.d
 python3 tools/art/fetch-sources.py app/src/assets/art/people-athens.png
 ```
 
-`tools/art/sources-manifest.json` lists every master with its size and sha256. The `docs/design` and `docs/playtests` entries are kept in a private archive, so `--all` reports those as missing.
+`tools/art/sources-manifest.json` lists every master with its size and sha256 (a master made by someone else also carries `source` and `license` fields, which the fetch tool ignores). The `docs/design` and `docs/playtests` entries are kept in a private archive, so `--all` reports those as missing.
 
 ## Test
 

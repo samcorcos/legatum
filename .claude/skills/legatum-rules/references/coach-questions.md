@@ -5,7 +5,7 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
 
 ## Coach questions (designer, 2026-11-15; app-side, no rules change)
 
-An option at game setup ("Coach questions" in the lobby's game settings, off by default, sets the AI level to Hard). It changes no rule, no order and no state hash. It is kept in the app's save wrapper (`SaveFile.why`: the toggle, asked keys, last question and skipped categories), not in the game state. It is separate from the "Training" AI level (the battle search for AI seats, `crates/ai/src/training.rs`).
+An option at game setup ("Coach questions" in the lobby's collapsed Advanced settings section, off by default, sets the AI level to Hard). It changes no rule, no order and no state hash. It is kept in the app's save wrapper (`SaveFile.why`: the toggle, asked keys, last question and skipped categories), not in the game state. It is separate from the "Training" AI level (the battle search for AI seats, `crates/ai/src/training.rs`).
 
 When he ends a turn, a shadow `ScriptedBrain` (Hard, its own seed `brain_seed ^ 0x5748595f54524149`, never saved, cold after a load) plans his seat from `player_view` and `legatum_ai::why::review` compares that plan with his submitted orders (`Game::why_review`, read-only on the game). At most one question comes back per turn. Candidates rank by materiality, a question never repeats a key (the standing fact) and never repeats the previous turn's category. What triggers one (`crates/ai/src/why.rs`):
 

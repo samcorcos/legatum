@@ -128,6 +128,35 @@ def sizes(tree):
     return res
 
 
+# A screen's first open, on a fresh browser over a 10 Mbit/s connection (tools/perf/first-open.cjs). Past any of
+# these it is flagged: a player sees pictures trickle in. `oversize` counts pictures over 2.5 times the box they
+# are shown in, which is a missing small version.
+OPEN_LIMITS = {"kb": 500, "requests": 40, "settle_ms": 1000, "oversize": 0}
+
+
+def first_open(tree):
+    """`open.<screen>.<metric>` for every screen the probe can open, from the app `sizes` just built."""
+    out_dir = WORK / "first-open"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    save, report = out_dir / "save-40.json", out_dir / "report.json"
+    try:
+        sh(["cargo", "run", "--release", "-q", "-p", "legatum-wasm", "--example", "turn_profile", "--",
+            "45", "7000001", "csv", str(out_dir / "orders.jsonl"), f"40:{save}"], cwd=tree)
+        sh(["node", str(REPO / "tools/perf/first-open.cjs"), "--dist", str(tree / "app/dist"), "--save", str(save),
+            "--turn", "41", "--out", str(report)], cwd=tree)
+        screens = json.loads(report.read_text())["screens"]
+    except Exception as e:  # the probe must never cost the night its other numbers
+        return {"open.error": str(e)[:200]}
+    res = {}
+    for name, m in screens.items():
+        if "skipped" in m:
+            res[f"open.{name}.skipped"] = 1
+            continue
+        for k in OPEN_LIMITS:
+            res[f"open.{name}.{k}"] = m[k]
+    return res
+
+
 def counts(tree):
     files = sh(["git", "ls-files", "-z"], cwd=tree).split("\0")
     files = [f for f in files if f]
@@ -203,6 +232,7 @@ def main():
     row.update(timings(build_bins(base_tree, "base"), build_bins(head_tree, "head"), a.quick))
     if not a.skip_sizes:
         row.update(sizes(head_tree))
+        row.update(first_open(head_tree))
     row.update(counts(head_tree))
     if a.ci_summary:
         row.update(ci_steps(a.ci_summary))
@@ -228,6 +258,18 @@ def main():
             if not k.startswith("ci."):
                 continue
         print(f"| {k} | {prev.get(k, '')} | {v} | {pct(v, prev.get(k))} |")
+    opened = sorted({k.split(".")[1] for k in row if k.startswith("open.") and k != "open.error"})
+    if opened or "open.error" in row:
+        print("\n| First open of a screen | Files | KB | Settled (ms) | Oversize pictures | |\n| --- | ---: | ---: | ---: | ---: | --- |")
+        if "open.error" in row:
+            print(f"| FLAG: the probe failed: {row['open.error']} | | | | | |")
+        for name in opened:
+            if row.get(f"open.{name}.skipped"):
+                print(f"| {name} | | | | | FLAG: could not be opened (fix the probe's opener) |")
+                continue
+            over = [k for k, top in OPEN_LIMITS.items() if row[f"open.{name}.{k}"] > top]
+            print(f"| {name} | {row[f'open.{name}.requests']} | {row[f'open.{name}.kb']} | {row[f'open.{name}.settle_ms']} | "
+                  f"{row[f'open.{name}.oversize']} | {'FLAG: ' + ', '.join(over) if over else ''} |")
     print(f"\nLedger: {ledger}")
 
 

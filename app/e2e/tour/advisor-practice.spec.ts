@@ -2,6 +2,7 @@
 // Settings shows "Show every step again", and in a game the card still shows builds and research but stays quiet about routine steps.
 import { test, expect } from '../fixtures';
 import { SIZES, shot, type GameWindow } from './helpers';
+import { setMapSeed } from '../mapSeed';
 
 const KNOWN = { enabled: true, seen: ['welcome', 'report'], practice: { move: 3, fortify: 3, skip: 3, explore: 3, endTurn: 3, closeResearch: 3 } };
 
@@ -40,7 +41,7 @@ for (const size of SIZES) test.describe(`advisor practice ${size.name}`, () => {
     await page.addInitScript((k) => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify(k)); sessionStorage.setItem('seeded', '1'); } }, KNOWN);
     await page.goto('/?client=wasm');
     await page.getByRole('button', { name: /^Single Player/ }).click();
-    await page.getByLabel('Map seed', { exact: true }).fill('424242');
+    await setMapSeed(page, '424242');
     await page.getByRole('button', { name: /^Seat 1 faction:/ }).click();
     const stage = page.locator('dialog[data-testid="faction-stage"][open]');
     await stage.getByRole('option', { name: /Athens/ }).click();
