@@ -42,6 +42,11 @@ struct Args {
     /// Play on a recorded game's map and lobby: the human seat becomes Hard and is observed;
     /// `--games` salts the AI brain seeds.
     tape: Option<legatum_core::GameSetup>,
+    /// With `--tape`: replay the recorded orders (the human's and the AIs') for every turn
+    /// before this one, then let the brains play on. Measures how the AI handles a real
+    /// runaway position. The brains still see every replayed turn, so their memory of it holds.
+    handover: u32,
+    recorded: Vec<legatum_wasm::tape::TapeTurn>,
 }
 
 fn arm(spec: &str) -> (String, AiParams) {
@@ -80,6 +85,8 @@ fn parse_args() -> Args {
         out: None,
         all: false,
         tape: None,
+        handover: 0,
+        recorded: Vec::new(),
     };
     while let Some(flag) = it.next() {
         let mut v = || it.next().unwrap_or_else(|| panic!("{flag} needs a value"));
@@ -94,13 +101,12 @@ fn parse_args() -> Args {
             "--storm" => a.storm = v().parse().expect("--storm"),
             "--out" => a.out = Some(v()),
             "--all" => a.all = v() == "1",
+            "--handover" => a.handover = v().parse().expect("--handover"),
             "--tape" => {
                 let text = std::fs::read_to_string(v()).expect("read --tape");
-                a.tape = Some(
-                    legatum_wasm::tape::Tape::from_json(&text)
-                        .expect("tape")
-                        .setup,
-                );
+                let tape = legatum_wasm::tape::Tape::from_json(&text).expect("tape");
+                a.tape = Some(tape.setup);
+                a.recorded = tape.turns;
             }
             other => panic!("unknown argument {other}"),
         }
@@ -152,10 +158,12 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
     let (setup, seat_index) = setup(args, game_seed);
     let seat = PlayerId(seat_index as u8);
     let mut state = legatum_core::new_game(&setup);
-    if args.tape.is_some() && index > 0 {
+    let reseed = args.tape.is_some() && index > 0;
+    if reseed && args.handover == 0 {
         // Same map and lobby, fresh dice per salt (as `hill_suite` does).
         state.dice_seed = Some(setup.seed ^ index.wrapping_mul(0xD1CE_0000_9E37_79B9));
     }
+    let mut mismatches = 0u32;
     let master = AiParams::builtin();
     let mut brains: Vec<Box<dyn Brain>> = setup
         .players
@@ -274,10 +282,27 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
         if let Some(r) = &rusher {
             legatum_wasm::rusher::apply(&mut orders, &state, r);
         }
+        let replaying = state.turn < args.handover;
+        let recorded = if replaying {
+            args.recorded.iter().find(|t| t.turn == state.turn)
+        } else {
+            None
+        };
+        if let Some(t) = recorded {
+            orders = t.orders.clone();
+        }
         let turn = state.turn;
         let (next, events) = legatum_core::resolve_turn(&state, &orders);
         let before = state;
         state = next;
+        if let Some(t) = recorded
+            && state.hash().to_string() != t.hash
+        {
+            mismatches += 1;
+        }
+        if reseed && args.handover > 0 && state.turn == args.handover {
+            state.dice_seed = Some(setup.seed ^ index.wrapping_mul(0xD1CE_0000_9E37_79B9));
+        }
         for event in &events {
             match event {
                 Event::WarDeclared { relation } => {
@@ -353,6 +378,7 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
         "first_join": joined.values().min(),
         "rusher_captures": rusher_captures,
         "builds": builds,
+        "mismatches": mismatches,
         "capital_takes": capital_takes,
         "winners": state.players.iter().filter(|p| state.finished && Some(p.team) == state.winner).map(|p| p.id.0).collect::<Vec<_>>(),
     })
