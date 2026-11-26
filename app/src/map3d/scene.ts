@@ -51,6 +51,8 @@ const tileIndexOf = (h: Hex, w: number, hgt: number) => {
 
 /** Figures turn a little toward their spear side so the weapon reads from the map camera (units thread, 2026-11-25). */
 const DISPLAY_YAW = 0.5;
+/** One figure's mixer: `base` is the looping clip it rests in (idle, or walk while travelling). */
+type Fig = { mx: THREE.AnimationMixer; idle: THREE.AnimationAction; base: THREE.AnimationAction; clips: THREE.AnimationClip[] };
 
 export class MapScene {
   readonly renderer: THREE.WebGLRenderer;
@@ -602,8 +604,8 @@ export class MapScene {
         const a = mx.clipAction(idle); a.play(); a.time = hash2(seed, f + 9) * idle.duration;
         mx.update(0); // pose it now, so a still map shows the idle pose, not the bind pose
         this.mixers.push(mx);
-        const figs = (g.userData.figs ??= []) as { mx: THREE.AnimationMixer; idle: THREE.AnimationAction; clips: THREE.AnimationClip[] }[];
-        figs.push({ mx, idle: a, clips: gltf.animations });
+        const figs = (g.userData.figs ??= []) as Fig[];
+        figs.push({ mx, idle: a, base: a, clips: gltf.animations });
       }
     });
   }
@@ -813,7 +815,7 @@ export class MapScene {
 
   // ---------------- turn playback: moves, the fighting (map/combatFx.ts plan), the fallen ----------------
 
-  private anim: { start: number; duration: number; paths: Map<number, Hex[]>; plan: CombatPlan | null; ghosts: Map<number, THREE.Group>; fired: Set<string>; visualEnd: number } | null = null;
+  private anim: { start: number; duration: number; paths: Map<number, Hex[]>; plan: CombatPlan | null; ghosts: Map<number, THREE.Group>; fired: Set<string>; visualEnd: number; last?: number } | null = null;
   private shotPool: THREE.Mesh[] = [];
 
   /** Play the turn just resolved: the same plan and clock as the 2D map. Null (or a still map) shows units where they ended. */
@@ -851,6 +853,8 @@ export class MapScene {
       const home = g.userData.home as THREE.Vector3 | undefined;
       if (home) g.position.copy(home);
       g.rotation.set(0, 0, 0);
+      this.setWalk(g, false);
+      delete g.userData.prevBase; delete g.userData.walkUntil; delete g.userData.heading;
     }
     for (const m of this.shotPool) m.visible = false;
     this.anim = null;
@@ -859,21 +863,54 @@ export class MapScene {
 
   /** Play a clip once on every figure of a unit, then back to idle (death holds its last pose). */
   private playClip(g: THREE.Object3D | undefined, name: 'attack' | 'hit' | 'death') {
-    for (const f of (g?.userData.figs ?? []) as { mx: THREE.AnimationMixer; idle: THREE.AnimationAction; clips: THREE.AnimationClip[] }[]) {
+    for (const f of (g?.userData.figs ?? []) as Fig[]) {
       const clip = f.clips.find((c) => c.name === name);
       if (!clip) continue;
       const a = f.mx.clipAction(clip);
       a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = true;
-      a.crossFadeFrom(f.idle, 0.08, false); a.play();
+      a.crossFadeFrom(f.base, 0.08, false); a.play();
       if (name !== 'death') {
         const back = (e: { action: THREE.AnimationAction }) => {
           if (e.action !== a) return;
           f.mx.removeEventListener('finished', back);
-          f.idle.reset(); f.idle.play(); f.idle.crossFadeFrom(a, 0.15, false);
+          f.base.reset(); f.base.play(); f.base.crossFadeFrom(a, 0.15, false);
         };
         f.mx.addEventListener('finished', back);
       }
     }
+  }
+
+  /** Walk while a unit travels, idle when it stops: the base clip that attack and hit return to. */
+  private setWalk(g: THREE.Object3D, on: boolean) {
+    if (!!g.userData.walking === on) return;
+    g.userData.walking = on;
+    for (const f of (g.userData.figs ?? []) as Fig[]) {
+      const clip = f.clips.find((c) => c.name === 'walk');
+      if (!clip) continue;
+      const walk = f.mx.clipAction(clip);
+      const next = on ? walk : f.idle, prev = f.base;
+      if (next === prev) continue;
+      next.reset(); next.setLoop(THREE.LoopRepeat, Infinity);
+      if (on) next.time = Math.random() * clip.duration; // figures of a squad out of step
+      next.play(); next.crossFadeFrom(prev, 0.15, false);
+      f.base = next;
+    }
+  }
+
+  /** Track a unit's travel (not its lunges): walk and face the way it goes while it moves, then settle back. */
+  private stepWalk(g: THREE.Object3D, x: number, z: number, t: number, dt: number) {
+    const prev = g.userData.prevBase as { x: number; z: number } | undefined;
+    g.userData.prevBase = { x, z };
+    if (prev) {
+      const dx = x - prev.x, dz = z - prev.z;
+      if (Math.hypot(dx, dz) > 0.0004) { g.userData.walkUntil = t + 90; g.userData.heading = Math.atan2(dx, dz) - DISPLAY_YAW; }
+    }
+    const on = t < ((g.userData.walkUntil as number | undefined) ?? -1);
+    this.setWalk(g, on);
+    const want = on ? ((g.userData.heading as number | undefined) ?? 0) : 0;
+    let d = want - g.rotation.y;
+    d = Math.atan2(Math.sin(d), Math.cos(d));
+    g.rotation.y += d * Math.min(1, dt * 12);
   }
 
   private shotMesh(k: number, kind: ShotKind): THREE.Mesh {
@@ -899,6 +936,8 @@ export class MapScene {
     const a = this.anim;
     if (!a || !this.world) return;
     const t = now - a.start;
+    const dt = Math.min(0.05, Math.max(0, (now - (a.last ?? now)) / 1000));
+    a.last = now;
     const plan = a.plan;
     if (plan ? t > a.visualEnd : t > a.duration + 50) { this.endAnim(); return; }
     this.animating = true;
@@ -911,7 +950,9 @@ export class MapScene {
         if (!g || path.length < 2) continue;
         const f = e * (path.length - 1), j = Math.min(path.length - 2, Math.floor(f)), r = f - j;
         const p0 = hexCentre(path[j]), p1 = hexCentre(path[j + 1]);
-        place(g, p0.x + (p1.x - p0.x) * r, p0.z + (p1.z - p0.z) * r + 0.05);
+        const x = p0.x + (p1.x - p0.x) * r, z = p0.z + (p1.z - p0.z) * r + 0.05;
+        place(g, x, z);
+        this.stepWalk(g, x, z, t, dt);
       }
       return;
     }
@@ -921,6 +962,7 @@ export class MapScene {
       if (!g) continue;
       const s = fx.shift.get(id) ?? { x: 0, y: 0 };
       place(g, (p.x + s.x * LUNGE_3D) / PX, (p.y + s.y * LUNGE_3D) / PX + 0.05);
+      if (!a.ghosts.has(id)) this.stepWalk(g, p.x / PX, p.y / PX, t, dt);
     }
     for (const [id, s] of fx.shift) {
       if (fx.pos.has(id)) continue;
