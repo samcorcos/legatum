@@ -278,6 +278,12 @@ pub struct RuleExperiments {
     /// Each owned city costs max(city count - 2, 0) Gold per turn.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub city_upkeep: bool,
+    /// With `city_upkeep`: the charge in percent (default 100).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub city_upkeep_percent: Option<u16>,
+    /// With `city_upkeep`: cities that are free of it (default 2).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub city_upkeep_free: Option<u8>,
     /// A city cannot buy a military unit while an enemy military unit at War stands within two
     /// tiles of it (Sam, 2026-11-22, via the Fable review; judged on his Swiss and Mongol games).
     #[serde(skip_serializing_if = "std::ops::Not::not")]
@@ -600,7 +606,9 @@ impl RuleExperiments {
 
     pub fn city_upkeep(self, cities: i32) -> i32 {
         if self.city_upkeep {
-            cities * (cities - 2).max(0)
+            let free = i32::from(self.city_upkeep_free.unwrap_or(2));
+            let percent = i32::from(self.city_upkeep_percent.unwrap_or(100));
+            cities * (cities - free).max(0) * percent / 100
         } else {
             0
         }

@@ -29,6 +29,9 @@ const ARMY_AT: [u32; 7] = [10, 20, 30, 40, 50, 60, 75];
 
 struct Args {
     arms: Vec<(String, AiParams)>,
+    /// Per arm: rule experiments (`x.name=value` in `--arm`), applied from the handover turn
+    /// (or from turn 1 without one). Rules, not genes: every seat plays under them.
+    exps: Vec<serde_json::Map<String, Value>>,
     games: u64,
     seed: u64,
     players: usize,
@@ -49,13 +52,26 @@ struct Args {
     recorded: Vec<legatum_wasm::tape::TapeTurn>,
 }
 
-fn arm(spec: &str) -> (String, AiParams) {
+fn arm(spec: &str) -> (String, AiParams, serde_json::Map<String, Value>) {
     let (label, genes) = spec.split_once(':').unwrap_or((spec, ""));
     let mut value = serde_json::to_value(AiParams::builtin()).expect("params json");
+    let mut exps = serde_json::Map::new();
     for kv in genes.split(',').filter(|s| !s.is_empty()) {
         let (k, v) = kv
             .split_once('=')
             .unwrap_or_else(|| panic!("gene {kv}: want name=value"));
+        if let Some(name) = k.strip_prefix("x.") {
+            let parsed: Value = serde_json::from_str(v).unwrap_or(json!(v));
+            exps.insert(
+                name.into(),
+                if v == "1" && name_is_flag(name) {
+                    json!(true)
+                } else {
+                    parsed
+                },
+            );
+            continue;
+        }
         let decisions = value["decisions"]
             .as_object_mut()
             .expect("decisions object");
@@ -68,13 +84,30 @@ fn arm(spec: &str) -> (String, AiParams) {
     let mut p: AiParams = serde_json::from_value(value).expect("params");
     p.name = label.into();
     p.validate().unwrap_or_else(|e| panic!("{label}: {e}"));
-    (label.into(), p)
+    experiments(&exps);
+    (label.into(), p, exps)
+}
+
+/// A boolean experiment (as opposed to a number): `x.city_research=1` means true.
+fn name_is_flag(name: &str) -> bool {
+    serde_json::to_value(legatum_core::experiments::RuleExperiments::default())
+        .ok()
+        .and_then(|v| v.get(name).cloned())
+        .is_none_or(|v| v.is_boolean())
+}
+
+fn experiments(
+    exps: &serde_json::Map<String, Value>,
+) -> legatum_core::experiments::RuleExperiments {
+    serde_json::from_value(Value::Object(exps.clone()))
+        .unwrap_or_else(|e| panic!("rule experiments {exps:?}: {e}"))
 }
 
 fn parse_args() -> Args {
     let mut it = std::env::args().skip(1);
     let mut a = Args {
         arms: Vec::new(),
+        exps: Vec::new(),
         games: 64,
         seed: 1,
         players: 6,
@@ -91,7 +124,11 @@ fn parse_args() -> Args {
     while let Some(flag) = it.next() {
         let mut v = || it.next().unwrap_or_else(|| panic!("{flag} needs a value"));
         match flag.as_str() {
-            "--arm" => a.arms.push(arm(&v())),
+            "--arm" => {
+                let (label, params, exps) = arm(&v());
+                a.arms.push((label, params));
+                a.exps.push(exps);
+            }
             "--games" => a.games = v().parse().expect("--games"),
             "--seed" => a.seed = v().parse().expect("--seed"),
             "--players" => a.players = v().parse().expect("--players"),
@@ -112,7 +149,9 @@ fn parse_args() -> Args {
         }
     }
     if a.arms.is_empty() {
-        a.arms.push(arm("base"));
+        let (label, params, exps) = arm("base");
+        a.arms.push((label, params));
+        a.exps.push(exps);
     }
     assert!((3..=8).contains(&a.players));
     a
@@ -146,6 +185,25 @@ fn setup(args: &Args, game_seed: u64) -> (GameSetup, usize) {
     (setup, (game_seed % args.players as u64) as usize)
 }
 
+/// The arm's experiments over the game's own: fields the arm set win.
+fn merge(
+    game: legatum_core::experiments::RuleExperiments,
+    arm: &legatum_core::experiments::RuleExperiments,
+) -> legatum_core::experiments::RuleExperiments {
+    let mut g = serde_json::to_value(game).expect("experiments json");
+    let a = serde_json::to_value(*arm).expect("experiments json");
+    let d =
+        serde_json::to_value(legatum_core::experiments::RuleExperiments::default()).expect("json");
+    if let (Some(g), Some(a)) = (g.as_object_mut(), a.as_object()) {
+        for (k, v) in a {
+            if d.get(k) != Some(v) {
+                g.insert(k.clone(), v.clone());
+            }
+        }
+    }
+    serde_json::from_value(g).expect("experiments")
+}
+
 fn army(state: &legatum_core::GameState, p: PlayerId) -> usize {
     state
         .units_of(p)
@@ -153,7 +211,12 @@ fn army(state: &legatum_core::GameState, p: PlayerId) -> usize {
         .count()
 }
 
-fn play(args: &Args, params: &AiParams, index: u64) -> Value {
+fn play(
+    args: &Args,
+    params: &AiParams,
+    exps: &legatum_core::experiments::RuleExperiments,
+    index: u64,
+) -> Value {
     let game_seed = args.seed + index;
     let (setup, seat_index) = setup(args, game_seed);
     let seat = PlayerId(seat_index as u8);
@@ -164,6 +227,9 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
         state.dice_seed = Some(setup.seed ^ index.wrapping_mul(0xD1CE_0000_9E37_79B9));
     }
     let mut mismatches = 0u32;
+    if args.handover == 0 {
+        state.setup.rule_experiments = merge(state.setup.rule_experiments, exps);
+    }
     let master = AiParams::builtin();
     let mut brains: Vec<Box<dyn Brain>> = setup
         .players
@@ -361,6 +427,9 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
         {
             mismatches += 1;
         }
+        if args.handover > 0 && state.turn == args.handover {
+            state.setup.rule_experiments = merge(state.setup.rule_experiments, exps);
+        }
         if reseed && args.handover > 0 && state.turn == args.handover {
             state.dice_seed = Some(setup.seed ^ index.wrapping_mul(0xD1CE_0000_9E37_79B9));
         }
@@ -482,7 +551,7 @@ fn main() {
         .par_iter()
         .filter(|&&(a, i)| !done.contains(&(args.arms[a].0.clone(), args.seed + i)))
         .map(|&(a, i)| {
-            let mut row = play(&args, &args.arms[a].1, i);
+            let mut row = play(&args, &args.arms[a].1, &experiments(&args.exps[a]), i);
             row["arm"] = json!(args.arms[a].0);
             let mut out = out.lock().expect("output lock");
             writeln!(out, "{row}").expect("write");
