@@ -77,3 +77,12 @@
 - **Helmet T-opening: improved.** Two eye slots split by a raised, bevelled bronze nasal strip (geometry, so it is in the normal and ORM bakes), and an open gap between the cheek guards below; bronze blotches reduced (source dirt clamped). The crest is lifted clear of the brow and 1.9x wider. **Still needs sculpting:** the crest reads as a flat slab from the front (no strand relief), and from the side the face plate still reads as a separate visor in front of the cheek and ear. Ready file: `~/LegatumRuns/anim-pilot/fit/r5/helmet-crest-sculpt.blend` (see `SCULPT-README.md` there).
 - **Left forearm: fixed.** The flat leather flaps were the PBR aspis's handgrip, sized for the thin 0 A.D. forearm; it is no longer imported. The forearm reads clean in idle and attack (the attack view is still mostly the shield's back).
 - **Knees: partly fixed.** Thigh/shin weights are smoothed within 9 cm of each knee; no creases show in walk or attack. **Still needs sculpting:** the greave tops end in pointed, notched edges instead of a rounded knee guard. Ready file: `~/LegatumRuns/anim-pilot/fit/r5/greaves-sculpt.blend`.
+
+## r5 close-up after-scripted (scripted stand-in for the hand sculpt)
+
+(`spearman-fit-casey-sculpted/spearman.glb`, sha1 7a8f98f8; crops in `closeups-r5/after-scripted/`; three rounds)
+
+- **Crest:** fan a little fuller (upper edge out and back, up to 4.4 cm); the LOD0 crest has only 369 vertices, so geometric 4-6 mm grooves cannot be resolved. Strands were added as bump in the crest bake instead (wave rings along the arc); they show faintly in the three-quarter view, not as relief. From the front it is still a flat slab. **Not fixed: needs the GUI sculpt or a denser crest mesh.**
+- **Face plate:** the rear edge (41 vertices) is pulled onto the dome with 4 cm falloff; the side seam is softer but the plate still reads as a separate visor. Eye slots, nasal and cheek gap unchanged. **Marginal; needs the GUI sculpt.**
+- **Greaves:** tops re-profiled into an arc, relaxed and given a 3 mm rim; the notches are gone but the front now rises to a point at the kneecap, and the relax opened small slits where the skin shows through. **Worse than r5; do not use. Needs the GUI sculpt.**
+- Game size (160 px, 48 px): unchanged from r5.
