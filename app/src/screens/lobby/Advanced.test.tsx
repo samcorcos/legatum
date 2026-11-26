@@ -31,3 +31,13 @@ it('stays open while a new seed is typed after clearing it', () => {
   expect(lobby.seed).toBe('4242');
   expect(details().open).toBe(true);
 });
+
+it('stays open while the seed needs fixing, even when its summary is clicked', () => {
+  let lobby: Lobby = { ...newLobby('solo', '42'), seed: 'abc' };
+  const render = () => act(() => root.render(<Settings lobby={lobby} onChange={(l) => { lobby = l; render(); }} />));
+  render();
+  const details = host.querySelector<HTMLDetailsElement>('details.lobby-advanced')!;
+  expect(details.open).toBe(true);
+  act(() => { details.open = false; details.dispatchEvent(new Event('toggle')); });
+  expect(details.open).toBe(true);
+});

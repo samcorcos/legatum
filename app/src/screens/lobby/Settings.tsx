@@ -78,7 +78,11 @@ export function Settings({ lobby, onChange }: { lobby: Lobby; onChange?: (l: Lob
       )}
       {anyAi && levelOf(lobby) === 'Training' && <div className="muted lobby-level-note" data-testid="ai-level-note">{DIFFICULTY_INFO.Training}</div>}
       {/* Rarely needed: closed by default. Hidden from a viewer who can't change it (a guest). */}
-      {onChange && <details className="lobby-advanced" open={advancedOpen || seedNeedsFix} onToggle={(e) => setAdvancedOpen(e.currentTarget.open)}>
+      {onChange && <details className="lobby-advanced" open={advancedOpen || seedNeedsFix} onToggle={(e) => {
+        // A seed that needs fixing keeps the section open, so its red field stays beside the error.
+        if (seedNeedsFix && !e.currentTarget.open) e.currentTarget.open = true;
+        else setAdvancedOpen(e.currentTarget.open);
+      }}>
         <summary>Advanced settings{lobby.training ? <span className="lobby-advanced-on"> · Coach questions on</span> : null}</summary>
         {change && lobby.mode !== 'host' && (
           <Segmented label="Coach questions" value={lobby.training ? 'On' : 'Off'} options={[
