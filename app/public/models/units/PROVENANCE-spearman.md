@@ -1,7 +1,7 @@
 # spearman.glb: provenance
 
-Shipped on the 3D map (round r12, 2026-11-26; replaces the round r4 file). LOD0 29,430 triangles, LOD1 2,794, 30 joints, one material, 1.97 MB. Licence of the combined asset: CC BY-SA 3.0
-(the 0 A.D. rig and clips are share-alike; the model is CC BY 4.0, which permits this).
+Shipped on the 3D map (round r13b, 2026-11-26; replaces round r12). LOD0 29,429 triangles, LOD1 3,445, 30 joints, one material, 2.0 MB; map limits LOD0 up to 30k, LOD1 up to 3,500, LOD0+LOD1 up to 35k, file up to 3 MB. Licence of the combined asset: CC BY-SA 3.0
+(the 0 A.D. rig and clips are share-alike; the model and the helmet are CC BY 4.0, which permits this).
 
 ## Credits
 
@@ -24,11 +24,26 @@ Shipped on the 3D map (round r12, 2026-11-26; replaces the round r4 file). LOD0 
   `--replace-part helmet=...`, its PBR maps baked into the shared 1024 atlas. Replaces the model's
   helmet and the generated face plate.
 - **Greaves**: built by `kit/fit_shells.greave_from_skin` from the fitted shin itself (offset shell, rolled rims, embossed ridges, domed knee guard); no third-party or AI-generated source.
-- Considered, not used: "PBR Hoplite Helmet" by ferociousindustries.matthias (Sketchfab), CC BY 4.0,
-  https://sketchfab.com/3d-models/a20e96b821444a8d86eea4869fe4bc84 (`pbr_hoplite_helmet.glb`, SHA-256 `54ba98b7b02fab71c697b6b6fea6514b056ee5eec1bb591297ecebaffebe17ff`);
-  the primary helmet passed, so the backup was not needed.
 
 The exact credit is embedded in `asset.copyright` and `asset.extras.credit`.
+
+## Considered, not used
+
+None of these files is in the shipped GLB.
+
+- "PBR Hoplite Helmet" by ferociousindustries.matthias (Sketchfab), CC BY 4.0,
+  https://sketchfab.com/3d-models/a20e96b821444a8d86eea4869fe4bc84 (`pbr_hoplite_helmet.glb`, SHA-256 `54ba98b7b02fab71c697b6b6fea6514b056ee5eec1bb591297ecebaffebe17ff`);
+  the primary helmet passed, so the backup was not needed.
+- "Hoplite" by tolnaydavid (Sketchfab), CC BY 4.0, https://sketchfab.com/3d-models/hoplite-bccbd407bf0e4b0495b352124e222300,
+  object `Leg_armor_low` of `premium-source/hoplite-tolnay/scene.gltf` (SHA-256
+  `9f0fc3c845817895e9cfd04214a72f5c83dc0da2f528e6d17b16e1ad2f8a8056`): the greaves of rounds r7 to r8b and of the
+  r9b candidate. Replaced in r10 by greaves built from the fitted shin.
+- "Aegis Sentinel - Ancient Blue Hoplite Warrior V1" by pixforge.id (Sketchfab), CC BY 4.0, an AI-generated
+  (Tripo) model, https://sketchfab.com/3d-models/a2619fc3c48a420e9b6fe6091031a401
+  (`aegis_sentinel__ancient_blue_hoplite_warrior_v1.glb`, SHA-256
+  `3f8d915b86e554324ede15f7e261a279829c923b965854921a0f2fb3cbc78be9`): greaves of the r9a review candidate only.
+  Never shipped.
+
 
 ## Changes to the model
 
@@ -42,16 +57,17 @@ Round r3 adds generated linen sleeve shells (replacing the torn source sleeves),
 Corinthian face plate with a dark T opening, skin sunk a few millimetres under clothing, and
 curvature-driven edge wear on the bronze. The model's eyes are removed (hidden by the plate).
 
-Round r4 (shipped 2026-11-26 until r12): LOD1 keeps every garment of LOD0 (cuirass, chiton, sleeves, pteruges, skirt, greaves; hidden skin deleted first), the face plate is bronze with a T opening and nose guard, and the aspis is two-sided (sunburst outside, plain bronze inside) with a brighter team rim. LOD0 29,495 triangles, LOD1 2,895; clips unchanged.
 
 Round r5: raised bevelled nasal and split eye slots on the face plate; crest widened and lifted; aspis handgrip not imported (its leather flaps stood off the thicker forearm); LOD1 keeps the aspis rim at LOD0 topology; knee weights smoothed.
 
 Round r6: procedural horsehair crest as its own part.
-Round r7: helmet and greaves replaced by the CC BY parts above; the crest (shorter tail, clear of the spear in walk) sits on the new helmet.
+Round r7: helmet replaced by the timothyhsu helmet above and greaves by tolnaydavid's `Leg_armor_low` (listed under "Considered, not used": replaced again in r10); the crest (shorter tail, clear of the spear in walk) sits on the new helmet.
 Round r8: helmet at head size (skin tucked in, dark interior, bigger atlas share), crest re-seated forward, greave tops clamped with a rolled rim and kneecap dome, skin behind the greaves removed, bronze high-passed against blotches.
 Round r8b: neck skin under the helmet rim tucked in; bronze regraded to the painting's sampled palette (4a2c0c / 915d20 / e5b475), smoother and more metallic, darker cavities.
 Round r10: greaves built from the fitted shin; skin under them sunk until no skin shows through in any frame of any clip.
 Round r11: greave top rises into a one-piece pointed knee guard; skin hidden only where covered along its normal (no holes); export no longer drops partly flagged skin triangles.
 Round r12: greave shell pushed out locally where skin reached it; LOD1 greaves 3 mm roomier; baked repoussé (shin ridge, knee scrolls); higher knee guard point and outward-rolled rim; smooth skin normals from the undecimated fit and softened skin AO.
+Round r13: LOD1 keeps the helmet face and cheek pieces at LOD0 topology (planar-merged only, inner dome shell dropped) and pulls the coarse head skin inside them; a loose scrap of the source sleeve beside the shield-arm sleeve removed; LOD1 budget re-shared (greaves, skin, crest and spear coarser).
+Round r13b: LOD1 budget 3,450 (map limit 3,500); LOD1 sandals and foot skin replaced by one closed leather shell per foot (voxel-remeshed from LOD0, flat-coloured from the sandal texels, weighted from the LOD0 skin); LOD1 sleeves decimated on their own; LOD1 greaves back to 462 triangles, spear and crest 60; loose LOD1 skin slivers (under five faces) dropped.
 
-Rebuild: the fitting kit is on master in `tools/art/anim3d/kit/` (`fit_source_to_0ad.py`, named in the GLB's `extras.fit`; the build is in `FIT.md`, "Real models, round r1" through "Hoplite Warrior, round r4"), and `tools/art/anim3d/validate_glb.py` checks the result. The source files named above (the model, the round 6 rig, the shield lane GLB at `tools/art/anim3d/sources/spearman-0ad-pbr-r4.glb`, and the 0 A.D. `hoplite.blend`; the painted-lane crest GLB `spearman-0ad-painted-r4.glb` is also listed but no longer used since round r6) are listed in `tools/art/sources-manifest.json` with their hashes and licences; `python3 tools/art/fetch-sources.py PATH...` fetches them from the art-sources archive. Rounds r5 to r12 were built on branch `astra/unit-anim-3d-fit` at `985a2247` (`tools/art/anim3d/units/spearman-fit-casey-r12/`). The helmet source (`pbr_corinthian_helmet.glb`, hash above) is downloaded from its Sketchfab page and is not yet in the art-sources archive.
+Rebuild: the fitting kit is on master in `tools/art/anim3d/kit/` (`fit_source_to_0ad.py`, named in the GLB's `extras.fit`; the build is in `FIT.md`, "Real models, round r1" through "Hoplite Warrior, round r4"), and `tools/art/anim3d/validate_glb.py` checks the result. The source files named above (the model, the round 6 rig, the shield lane GLB at `tools/art/anim3d/sources/spearman-0ad-pbr-r4.glb`, and the 0 A.D. `hoplite.blend`; the painted-lane crest GLB `spearman-0ad-painted-r4.glb` is also listed but no longer used since round r6) are listed in `tools/art/sources-manifest.json` with their hashes and licences; `python3 tools/art/fetch-sources.py PATH...` fetches them from the art-sources archive. Rounds r5 to r13b were built on branch `astra/unit-anim-3d-fit` at `45aac188` (`tools/art/anim3d/units/spearman-fit-casey-r13b/`); the kit changes and FIT.md notes for those rounds land separately. The helmet source (`pbr_corinthian_helmet.glb`, hash above) is downloaded from its Sketchfab page and is not yet in the art-sources archive.
