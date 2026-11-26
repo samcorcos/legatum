@@ -83,7 +83,7 @@ export function Settings({ lobby, onChange }: { lobby: Lobby; onChange?: (l: Lob
         if (seedNeedsFix && !e.currentTarget.open) e.currentTarget.open = true;
         else setAdvancedOpen(e.currentTarget.open);
       }}>
-        <summary>Advanced settings{lobby.training ? <span className="lobby-advanced-on"> · Coach questions on</span> : null}</summary>
+        <summary onClick={(e) => { if (seedNeedsFix) e.preventDefault(); }}>Advanced settings{lobby.training ? <span className="lobby-advanced-on"> · Coach questions on</span> : null}</summary>
         {change && lobby.mode !== 'host' && (
           <Segmented label="Coach questions" value={lobby.training ? 'On' : 'Off'} options={[
             { id: 'Off', label: 'Off', sub: 'Play normally' },
