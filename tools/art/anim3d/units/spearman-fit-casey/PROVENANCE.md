@@ -1,6 +1,6 @@
 # spearman-fit-casey/spearman.glb: provenance
 
-Review candidate (round r3, a test with raised map-thread limits: LOD0 up to 30k triangles, about 3 MB), not a shipped unit. Licence of the combined asset: CC BY-SA 3.0
+Review candidate (round r5, a test with raised map-thread limits: LOD0 up to 30k triangles, about 3 MB), not a shipped unit. Licence of the combined asset: CC BY-SA 3.0
 (the 0 A.D. rig and clips are share-alike; the model is CC BY 4.0, which permits this).
 
 ## Credits
@@ -37,3 +37,5 @@ Corinthian face plate with a dark T opening, skin sunk a few millimetres under c
 curvature-driven edge wear on the bronze. The model's eyes are removed (hidden by the plate).
 
 Rebuild: see `tools/art/anim3d/kit/FIT.md` ("Real models, round r1").
+
+Round r5: raised bevelled nasal and split eye slots on the face plate; crest widened and lifted; aspis handgrip not imported (its leather flaps stood off the thicker forearm); LOD1 keeps the aspis rim at LOD0 topology; knee weights smoothed.

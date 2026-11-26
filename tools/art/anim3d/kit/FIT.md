@@ -230,3 +230,12 @@ takes the excess from garments. Garments export as the region part `garment`, an
 part's surface (30% for `body`, whose hidden skin may go). `record.mjs --lod-compare` writes
 `<prefix>-lod-compare.png`. The face plate is hammered dark bronze before the grade; the
 aspis keeps the device only on its outer face, its inner face plain bronze.
+
+## Hoplite Warrior, round r5 (close-up pass)
+
+r4 plus `--keep shield --crest-width 1.9 --knee-smooth`. `kit/closeups.py` renders 2048 px Eevee
+crops (head, LOD1 shield rim, left forearm, knees in idle, walk and attack) and
+`kit/closeup_sheets.py` puts each region beside the painting. LOD1 keeps the aspis's rolled
+rim at LOD0 topology and decimates only the field; rim neutral texels are pale bronze. The
+crest front and the face plate's side, and the greave tops, need hand sculpting:
+`~/LegatumRuns/anim-pilot/fit/r5/*-sculpt.blend`.

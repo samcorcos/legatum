@@ -72,25 +72,28 @@ def sleeve(skin, a, b, length_frac, mat, name, gap=.005, seg=28, ring=.01):
     return _mesh(name, verts, faces, uvs, mat, thickness=.003), (u, ts.max(), float(R.max()))
 
 
-def corinthian(helmet_pts, face_pts, bronze, dark, name='Corinthian face plate', seg=48, rings=26):
-    """Cheek guards to the jaw, a nasal guard, and a dark T opening, closing an open helmet.
+def corinthian(helmet_pts, face_pts, bronze, dark, name='Corinthian face plate', seg=64, rings=34):
+    """Close an open helmet: cheek guards to the jaw, a raised nasal, a dark T opening.
 
-    An ellipsoidal plate in front of the face, from the brow to below the jaw,
-    with the eye band and the gap between the cheek guards cut out, and a dark
-    inner surface behind it so nothing of the face shows through the T.
+    An ellipsoidal plate wrapping the face from over the brow (where it tucks
+    under the dome) to below the jaw and round to the helmet's sides, with two
+    eye slots either side of the nasal and the vertical gap between the cheek
+    guards cut out; a dark inner surface behind it; and a separate raised,
+    bevelled nasal strip so the T's upright catches light in geometry, normals
+    and ORM rather than only in the albedo.
     """
     nose = face_pts[np.argmax(face_pts[:, 2])]
     cy = nose[1] + .025; cz = float(np.median(helmet_pts[:, 2]))
     band = helmet_pts[np.abs(helmet_pts[:, 1] - cy) < .03]
-    rx = float(np.abs(band[:, 0]).max()) if len(band) else .11
+    rx = (float(np.abs(band[:, 0]).max()) if len(band) else .11) + .004
     rz = float(nose[2] - cz) + .016; ry = .15
     def point(az, el, k=1.):
         return (k * rx * math.sin(az) * math.cos(el), cy + k * ry * math.sin(el), cz + k * rz * math.cos(az) * math.cos(el))
-    AZ = np.radians(np.linspace(-105, 105, seg + 1)); EL = np.radians(np.linspace(-62, 32, rings + 1))
+    AZ = np.radians(np.linspace(-120, 120, seg + 1)); EL = np.radians(np.linspace(-62, 55, rings + 1))
     def cut(az, el):
         a, e = abs(math.degrees(az)), math.degrees(el)
-        eye = -2 <= e <= 14 and 6 <= a <= 52
-        mouth = -62 <= e < -2 and a < 11
+        eye = 0 <= e <= 13 and 7.5 <= a <= 50     # two eye slots, split by the nasal
+        mouth = e < -15 and a < 10                 # the gap between the cheek guards
         return eye or mouth
     out = []
     for k, mat, holes, nm in ((1., bronze, True, name), (.975, dark, False, name + ' interior')):
@@ -104,6 +107,20 @@ def corinthian(helmet_pts, face_pts, bronze, dark, name='Corinthian face plate',
                 if holes and cut((AZ[j] + AZ[j + 1]) / 2, (EL[i] + EL[i + 1]) / 2): continue
                 faces.append((i * w + j, (i + 1) * w + j, (i + 1) * w + j + 1, i * w + j + 1))
         out.append(_mesh(nm, verts, faces, uvs, mat, thickness=.003 if holes else 0.))
+    # Raised nasal: a strip 4 mm proud of the plate, bevelled along its edges.
+    verts, uvs, faces = [], [], []
+    els = np.radians(np.linspace(-15, 30, 10)); azs = np.radians([-6.5, -3, 0, 3, 6.5])
+    for i, el in enumerate(els):
+        for j, az in enumerate(azs):
+            lift = 1.035 - .012 * abs(math.degrees(az)) / 6.5      # rounded cross-section
+            verts.append(point(az, el, lift)); uvs.append((j / 4, i / 9))
+    for i in range(9):
+        for j in range(4): faces.append((i * 5 + j, (i + 1) * 5 + j, (i + 1) * 5 + j + 1, i * 5 + j + 1))
+    nas = _mesh(name + ' nasal', verts, faces, uvs, bronze, thickness=.004)
+    bpy.ops.object.select_all(action='DESELECT'); nas.select_set(True); bpy.context.view_layer.objects.active = nas
+    m = nas.modifiers.new('bevel', 'BEVEL'); m.width = .0015; m.segments = 2; m.limit_method = 'ANGLE'
+    bpy.ops.object.modifier_apply(modifier=m.name)
+    out.append(nas)
     return out, {'centre': [0, round(cy, 3), round(cz, 3)], 'radii_m': [round(rx, 3), ry, round(rz, 3)]}
 
 
