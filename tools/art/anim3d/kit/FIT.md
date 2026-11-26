@@ -7,6 +7,16 @@ animation accessor are copied byte for byte from
 `units/spearman-0ad/spearman.glb`, so the motion is identical to the approved
 round by construction (checked: all 5 x 87 channels and the inverse binds match).
 
+## Inputs (masters outside git)
+
+The approved rig GLB and the sources this kit was proven on are art masters listed in
+`tools/art/sources-manifest.json`; fetch them with
+`python3 tools/art/fetch-sources.py tools/art/anim3d/units/spearman-0ad/spearman.glb` (and the
+`tools/art/anim3d/sources/...` paths; listed: the Hoplite Warrior, the 0 A.D. hoplite actor, the approved rig GLB, the PBR-lane aspis and painted-lane crest GLBs, the two CC BY helmets and tolnaydavid's `hoplite-tolnay` glTF). `--rig` defaults to that GLB. The three.js review
+viewer and recorder (`viewer/record.mjs`) referenced below live on the animation branches
+(`astra/unit-anim-3d-fit`), not on master yet. Manifest entries for third-party masters carry two extra fields, `source` (where the file came from: an author and URL, or an upstream repository and revision) and `license` (an SPDX id such as `CC-BY-4.0` or `CC-BY-SA-3.0`), because these files are not our own work: the credit and licence must travel with them. The fetch tooling ignores both fields. Needs Blender 4.5+ (5.3 used) with numpy;
+`fit_test_source.py` also needs the MPFB 2 extension (`env.sh`).
+
 ## Usage
 
 ```sh
@@ -20,6 +30,8 @@ python3 tools/art/anim3d/validate_glb.py tools/art/anim3d/units/spearman-fit/spe
 GLTF_VALIDATOR_MODULE=$HOME/LegatumRuns/anim-pilot/oad/validator/node_modules/gltf-validator \
   node tools/art/anim3d/viewer/validate-khronos.mjs tools/art/anim3d/units/spearman-fit/spearman.glb report.json
 ```
+
+The `viewer/` scripts (`record.mjs`, `validate-khronos.mjs`) live on the `astra/unit-anim-3d-fit` branch, not on master yet.
 
 The run takes under a minute on 3 CPU threads at the 2048 bake size. Heavy outputs
 go to `--work` (default `~/LegatumRuns/anim-pilot/fit/<out stem>/`):
