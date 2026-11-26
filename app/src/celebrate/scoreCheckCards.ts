@@ -4,10 +4,10 @@
 // Public facts and your own view only. Everything here reads the view; nothing here is a rule.
 import type { BuildingKind, Faction, PlayerId, PlayerView } from '../types';
 import { BUILDING_NAME, BUILDING_STATS, ERA_COUNT, FACTION_GOAL, GREAT_WORK_ICON, GREAT_WORKS, TECH_NAME, buildingIconName, eraName, factionGoalVp, isGreatWork } from '../data';
-import { buildVpModel } from '../vpModel';
+import { UNMET_NAME, buildVpModel } from '../vpModel';
 import { cardNameAndAsk } from '../ageCards';
 import { eraObjectivesFor } from '../eraObjectives';
-import { empireOfPlayer } from '../empires';
+import { empireOfPlayer, unmetTeam } from '../empires';
 import { distance } from '../hex';
 import { roman } from '../brand/roman';
 import { playerColor } from '../theme';
@@ -35,7 +35,7 @@ export interface SheetLine {
   fresh?: boolean;
 }
 
-export interface TrackPiece { id: PlayerId; faction: Faction; color: string; name: string; isMine: boolean }
+export interface TrackPiece { id: PlayerId; faction: Faction; color: string; name: string; isMine: boolean; /** Not met yet: a "?" piece, no crest. */ unmet: boolean }
 export interface TrackSpace { vp: number; pieces: TrackPiece[] }
 
 export interface ScoreCheckCard {
@@ -60,6 +60,8 @@ export interface ScoreCheckCard {
   replay?: boolean;
 }
 
+/** An empire by name, or "Unknown empire" when this seat has not met it. */
+const metName = (view: PlayerView, id: PlayerId) => unmetTeam(view, view.players.find((p) => p.id === id)?.team ?? -1) ? UNMET_NAME : empireOfPlayer(view, id);
 const ord = (n: number) => `${n}${n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th'}`;
 const and = (names: string[]) => names.length <= 1 ? names.join('') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
@@ -74,7 +76,7 @@ export function scoreCheckFor(view: PlayerView, era: number, first: PlayerId): S
   const track: TrackSpace[] = Array.from({ length: target + 1 }, (_, vp) => ({ vp, pieces: [] }));
   for (const row of model.rows) {
     const space = track[Math.max(0, Math.min(target, row.vp))];
-    for (const m of row.members) space.pieces.push({ id: m.id, faction: m.faction, color: playerColor(m.id), name: empireOfPlayer(view, m.id), isMine: m.isMine });
+    for (const m of row.members) space.pieces.push({ id: m.id, faction: m.faction, color: playerColor(m.id), name: m.unmet ? UNMET_NAME : empireOfPlayer(view, m.id), isMine: m.isMine, unmet: m.unmet });
   }
 
   const you = mine?.members.length && mine.members.length > 1 ? 'Your team' : 'You';
@@ -96,7 +98,7 @@ export function scoreCheckFor(view: PlayerView, era: number, first: PlayerId): S
       : `${holding.label} ${holding.members.length > 1 ? 'hold' : 'holds'} ${holding.vp} VP and ${holding.members.length > 1 ? 'win' : 'wins'} in ${plural(holding.hold.left, 'turn')} unless someone stops them.`
     : null;
 
-  const opener = first === view.me ? `You reached the ${name} era first.` : `${empireOfPlayer(view, first)} reached the ${name} era first.`;
+  const opener = first === view.me ? `You reached the ${name} era first.` : `${metName(view, first)} reached the ${name} era first.`;
   return { era, name, numeral: roman(era), turn: view.turn, opener, target, track, standing, leader, hold, lines: sheetLines(view, era) };
 }
 
@@ -159,7 +161,7 @@ function capitalLine(view: PlayerView, team: Set<PlayerId>): SheetLine {
   const near = targets[0];
   const keep = held.length ? `Lose ${held.length === 1 ? held[0][1] : 'one'} and you lose its 1 VP.` : '';
   const detail = left === 0 ? (keep || 'You hold every rival capital.')
-    : near ? `Nearest known: ${near.city.name} (${empireOfPlayer(view, near.city.original_capital_of!)}), ${plural(near.from!.d, 'tile')} from your city ${near.from!.name}.`
+    : near ? `Nearest known: ${near.city.name} (${metName(view, near.city.original_capital_of!)}), ${plural(near.from!.d, 'tile')} from your city ${near.from!.name}.`
     : 'No rival capital on your map yet: explore to find them.';
   return { key: 'capitals', name: 'Rival capitals', terms: '1 VP each', boxes, how: left ? 'Take a rival’s original capital' : 'You hold them all', detail, open: left };
 }

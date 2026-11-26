@@ -8,6 +8,7 @@ import { useGame } from '../store';
 import { withV2 } from '../test/vpV2Fixture';
 import { buildVpModel } from '../vpModel';
 import type { VpSource } from '../types';
+import { meetEveryone } from '../test/meetEveryone';
 
 let host: HTMLElement, root: Root;
 beforeEach(async () => {
@@ -16,7 +17,7 @@ beforeEach(async () => {
   useGame.setState(useGame.getInitialState(), true);
   const client = new FixtureClient();
   await client.newGame(await client.standardSetup('42', 'India', 'Byzantium', 'Ada', 'Bo'));
-  const base = client.view(0);
+  const base = meetEveryone(client.view(0));
   const rival = base.players.find((p) => p.team !== base.team)!.id;
   const view = withV2(base, { era: 2, scored: [2] });
   view.players = view.players.map((p) => [view.me, rival].includes(p.id)
@@ -96,3 +97,34 @@ it('an Age scored with a card no longer drawn shows a token beside "scored", nev
   expect(era2.querySelector('.sl-socket[aria-label^="You"]')).toBeNull();
 });
 
+
+it('hides an empire you have not met: only its rank and VP show, no name, crest, goal, Gold or AI level', async () => {
+  const view = useGame.getState().views![0];
+  const rival = view.players.find((p) => p.team !== view.team)!;
+  const { factionName, FACTION_GOAL } = await import('../data');
+  const others = [...new Set(view.players.map((p) => p.team))].filter((t) => t !== view.team);
+  const unmet = { ...view, diplomacy: { ...view.diplomacy, met: others.filter((t) => t !== rival.team), relations: view.diplomacy.relations.filter((r) => r.state !== 'War') } };
+  useGame.setState({ views: [unmet] });
+  act(() => root.render(<ObjectiveSheet />));
+  const col = [...sheet().querySelectorAll<HTMLElement>('th.sl-col')].find((c) => c.classList.contains('unmet'))!;
+  expect(col).toBeTruthy();
+  expect(col.querySelector('.sl-col-name')!.textContent).toBe('Unknown');
+  expect(col.querySelector('.sl-gold')).toBeNull();
+  expect(col.querySelector('.vh-unknown')).not.toBeNull();
+  expect(col.querySelector('.sl-col-vp b')!.textContent).toBe(String(view.standings.find((s) => s.team === rival.team)!.vp));
+  // Open every faction-goal row: the unmet rival's faction and goal appear nowhere in the ledger.
+  for (const id of ['goal', 'held-goal', 'capitals-held']) {
+    const btn = row(id)?.querySelector<HTMLButtonElement>('.sl-row-btn');
+    if (btn && btn.getAttribute('aria-expanded') !== 'true') act(() => btn.click());
+    const text = sheet().textContent!;
+    expect(text).not.toContain(factionName(rival.faction));
+    expect(text).not.toContain(FACTION_GOAL[rival.faction].name);
+  }
+  expect(sheet().textContent).toContain('1 empire not met yet. Explore to meet them.');
+  const model = buildVpModel(unmet);
+  expect(model.empires.find((e) => e.id === rival.id)!.name).toBe('Unknown empire');
+  expect(model.rows.find((r) => r.team === rival.team)!.label).toBe('Unknown');
+  // A War names the enemy even before contact.
+  const atWar = { ...unmet, diplomacy: { ...unmet.diplomacy, relations: [...unmet.diplomacy.relations, { a: view.team, b: rival.team, state: 'War' } as (typeof view.diplomacy.relations)[number]] } };
+  expect(buildVpModel(atWar).empires.find((e) => e.id === rival.id)!.unmet).toBe(false);
+});

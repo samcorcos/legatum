@@ -1,6 +1,6 @@
 import type { PlayerView } from '../types';
 import type { VpModel, VpRow } from '../vpModel';
-import { empireOfPlayer } from '../empires';
+import { empireOfPlayer, empireTitle } from '../empires';
 import { CounterDelta } from '../celebrate/MomentLane';
 import { PortraitRoundel } from './premium';
 import { TreatyEmblem } from './ringMedallion';
@@ -35,14 +35,6 @@ export function teamStats(view: PlayerView, row: VpRow): RivalStats {
   return { gold: sum((p) => p.gold), army: sum((p) => p.army), cities: sum((p) => p.cities), science: sum((p) => p.science) };
 }
 
-/** A rival team this seat has not met: its row hides who it is and everything but its VP (the race stays public). */
-export function unmetTeam(view: PlayerView, row: VpRow): boolean {
-  if (row.isMine) return false;
-  const met = view.diplomacy?.met;
-  // A save from before first contact has no record and treats every empire as met.
-  return !!met && !met.includes(row.team);
-}
-
 /**
  * The rivals table (user, 2026-11-25, after Civ 6's rival list): every empire at a glance, ranked by VP, with its
  * Peace or War and its public Gold, army, cities and Science per turn. An empire you haven't met shows only its VP.
@@ -68,11 +60,10 @@ export function RivalsTable({ view, model, relationOf, onOpen }: {
       {model.rows.map((row) => {
         const s = teamStats(view, row);
         const rel = row.isMine ? null : relationOf(row);
-        // A War, or your own declaration, names the enemy even before contact.
-        const atWarWith = !!rel?.declared || !!view.diplomacy?.relations.some((r) => r.state === 'War' && (r.a === row.team || r.b === row.team) && (r.a === view.team || r.b === view.team));
-        const unmet = unmetTeam(view, row) && !atWarWith;
+        // A War names the enemy even before contact (`unmetTeam`), and so does your own declaration queued this turn.
+        const unmet = row.unmet && !rel?.declared;
         const strong = !row.isMine && !unmet && myArmy >= 0 && s.army > 0 && s.army >= myArmy * STRONG_ARMY_RATIO;
-        const label = row.isMine ? (row.members.length > 1 ? 'Your team' : 'You') : unmet ? 'Unknown' : row.label;
+        const label = row.isMine ? (row.members.length > 1 ? 'Your team' : 'You') : unmet ? 'Unknown' : row.unmet ? empireTitle(view, row.team) : row.label;
         const vp = <span className="rv-num rv-vp" role="cell" data-celebration-counter={row.isMine ? 'vp' : undefined}><b>{row.vp}</b><small>/{row.target}</small>{row.isMine && <CounterDelta counter="vp" />}</span>;
         const cells = unmet
           ? <span className="rv-hidden rv-x" role="cell">Not met yet</span>

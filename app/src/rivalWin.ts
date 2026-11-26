@@ -1,7 +1,7 @@
 // The plain facts and actions a view can offer against a team close to winning: how far it is from the target, who is already at
 // War with it, whether you can declare War on it, and which Alliance offers to its enemies you may make. Read from the viewer's
 // own PlayerView only; every sentence about a rule comes from the diplomacy actions the engine already validated.
-import { empireHeadName, isTeamAlive } from './empires';
+import { headNameIfMet, isTeamAlive, unmetTeam } from './empires';
 import { relationWith, warDeclaration } from './diplomacy';
 import type { DiplomaticAction, PlayerView, TeamId } from './types';
 
@@ -47,11 +47,13 @@ export function nearestRival(view: PlayerView): RivalWin | null {
 
 /** "The Swiss are 2 VP from winning." / "The Swiss have 10 VP and are holding it." (peoples are plural, as in the alarms' headlines). */
 export function rivalLine(view: PlayerView, r: RivalWin): string {
-  const name = empireHeadName(view, r.team).replace(/^the /, 'The ');
+  // An empire you haven't met stays unnamed (`unmetTeam`), and takes the singular verb.
+  if (unmetTeam(view, r.team)) return r.left > 0 ? `An empire you haven't met is ${r.left} VP from winning.` : `An empire you haven't met has ${r.target} VP and is holding it.`;
+  const name = headNameIfMet(view, r.team).replace(/^the /, 'The ');
   return r.left > 0 ? `${name} are ${r.left} VP from winning.` : `${name} have ${r.target} VP and are holding it.`;
 }
 
 /** "At war with them: you, the Celts." (null when nobody is). */
 export function atWarLine(view: PlayerView, r: RivalWin): string | null {
-  return r.atWar.length ? `At war with them: ${r.atWar.map((t) => (t === view.team ? 'you' : empireHeadName(view, t))).join(', ')}.` : null;
+  return r.atWar.length ? `At war with them: ${r.atWar.map((t) => (t === view.team ? 'you' : headNameIfMet(view, t))).join(', ')}.` : null;
 }

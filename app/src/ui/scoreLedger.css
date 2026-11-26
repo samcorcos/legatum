@@ -170,3 +170,7 @@ td.mine .sl-bar i { background: var(--gilt); }
   .sl-detail .vh-objs { gap: 6px; }
 }
 
+
+/* An empire you haven't met: only its rank and VP show; its name reads as unknown, as in the rivals table. */
+.sl-col.unmet .sl-col-name { color: var(--muted); font-style: italic; }
+td.unmet .sl-empty { color: var(--muted); }
