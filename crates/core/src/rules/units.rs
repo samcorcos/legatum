@@ -201,7 +201,8 @@ fn step_price(
     b
 }
 
-/// The newest researched form and every paid step to reach it, by the default line.
+/// The newest researched form and every paid step to reach it, by the default line. A unit's
+/// upgrade may stop earlier for want of strategic supply (`supplied_upgrade_plan`).
 pub fn upgrade_plan(
     state: &GameState,
     player: PlayerId,
@@ -224,10 +225,8 @@ pub fn upgrade_plan_via(
             .then_some(choice)?,
         None => data::unit_stats(from).upgrades_to?,
     };
-    let mut kind = from;
     let mut next = Some(first);
     let mut steps = Vec::new();
-    let mut price = Breakdown::default();
     while let Some(to) = next {
         if data::unit_stats(to)
             .requires
@@ -235,14 +234,74 @@ pub fn upgrade_plan_via(
         {
             break;
         }
+        steps.push(to);
+        next = data::unit_stats(to).upgrades_to;
+    }
+    let to = *steps.last()?;
+    let price = steps_price(state, player, from, &steps);
+    Some((to, steps, price))
+}
+
+/// The summed price of the paid steps from `from` through `steps`.
+fn steps_price(
+    state: &GameState,
+    player: PlayerId,
+    from: UnitKind,
+    steps: &[UnitKind],
+) -> Breakdown {
+    let mut kind = from;
+    let mut price = Breakdown::default();
+    for &to in steps {
         for (label, value) in step_price(state, player, kind, to, false).parts {
             price.add(label, value);
         }
-        steps.push(to);
         kind = to;
-        next = data::unit_stats(kind).upgrades_to;
     }
-    (!steps.is_empty()).then_some((kind, steps, price))
+    price
+}
+
+/// The upgrade this unit takes: the most advanced researched form of its line whose strategic
+/// supply is spare, and every paid step to reach it. Only the final form uses supply, so a
+/// Phalangite with Iron but no Niter stops at the Pikeman while the Musketman waits for Niter.
+/// When no form can be supplied, this is the newest researched one (its shortage is the refusal).
+/// `earlier` counts upgrades earlier in the same order list that use a resource.
+pub fn supplied_upgrade_plan(
+    state: &GameState,
+    player: PlayerId,
+    unit: &crate::state::Unit,
+    earlier: impl Fn(crate::resources::Resource) -> i32,
+) -> Option<(UnitKind, Vec<UnitKind>, Breakdown)> {
+    let (newest, steps, price) = upgrade_plan(state, player, unit.kind)?;
+    for k in (1..=steps.len()).rev() {
+        let to = steps[k - 1];
+        let supplied = crate::resources::unit_upgrade_need_to(unit, to).is_none_or(|need| {
+            crate::resources::upgrade_blocker(state, player, unit, to, earlier(need)).is_none()
+        });
+        if supplied {
+            if k == steps.len() {
+                return Some((newest, steps, price));
+            }
+            let price = steps_price(state, player, unit.kind, &steps[..k]);
+            return Some((to, steps[..k].to_vec(), price));
+        }
+    }
+    Some((newest, steps, price))
+}
+
+/// When the upgrade stops short of the newest researched form for want of supply: that form
+/// and why it can't be supplied (the unit panel names it beside the upgrade it offers).
+pub fn upgrade_held_back(
+    state: &GameState,
+    player: PlayerId,
+    unit: &crate::state::Unit,
+) -> Option<(UnitKind, String)> {
+    let (newest, _, _) = upgrade_plan(state, player, unit.kind)?;
+    let (to, _, _) = supplied_upgrade_plan(state, player, unit, |_| 0)?;
+    if to == newest {
+        return None;
+    }
+    let reason = crate::resources::upgrade_blocker(state, player, unit, newest, 0)?;
+    Some((newest, reason))
 }
 
 pub(crate) fn lowercase_first(s: &str) -> String {
@@ -278,7 +337,8 @@ pub fn check_upgrade(
     if state.map.get(u.pos).and_then(|t| t.owner) != Some(player) {
         return Err("units upgrade only in own territory".into());
     }
-    let (to, _, price) = upgrade_plan(state, player, u.kind).expect("researched upgrade");
+    let (to, _, price) =
+        supplied_upgrade_plan(state, player, u, |_| 0).expect("researched upgrade");
     let cost = price.total;
     if gold < cost {
         return Err(format!("upgrade costs {cost} Gold, you have {gold}"));
@@ -2290,6 +2350,64 @@ mod tests {
                 ..
             }
         )));
+    }
+
+    #[test]
+    fn upgrade_stops_at_the_most_advanced_form_its_supply_allows() {
+        let mut s = game(&[0, 1]);
+        city(&mut s, 0, hex(4, 4), 2);
+        let a = unit(&mut s, 0, UnitKind::Phalangite, hex(4, 5));
+        let b = unit(&mut s, 0, UnitKind::Phalangite, hex(4, 3));
+        let c = unit(&mut s, 0, UnitKind::Phalangite, hex(5, 4));
+        s.player_mut(PlayerId(0)).techs.extend([
+            TechId::Mathematics,
+            TechId::Feudalism,
+            TechId::IronWorking,
+            TechId::Gunpowder,
+        ]);
+        s.player_mut(PlayerId(0)).gold = 1000;
+        s.map.get_mut(hex(4, 4).neighbors()[0]).unwrap().resource = Some(crate::Resource::Iron);
+        let ua = s.units[&a].clone();
+        // No Niter: the Phalangite stops at the Pikeman, which uses the Iron it already has.
+        let (to, steps, price) = supplied_upgrade_plan(&s, PlayerId(0), &ua, |_| 0).unwrap();
+        assert_eq!((to, steps), (UnitKind::Pikeman, vec![UnitKind::Pikeman]));
+        assert_eq!(price.total, 84);
+        assert_eq!(
+            check_upgrade(&s, PlayerId(0), a, 1000),
+            Ok((UnitKind::Pikeman, 84))
+        );
+        let (held, reason) = upgrade_held_back(&s, PlayerId(0), &ua).unwrap();
+        assert_eq!(held, UnitKind::Musketman);
+        assert!(reason.contains("Niter"), "{reason}");
+        let view = crate::view::player_view(&s, PlayerId(0));
+        let uv = view.units.iter().find(|u| u.id == a).unwrap();
+        assert_eq!(uv.upgrade_to, Some(UnitKind::Pikeman));
+        assert_eq!(uv.upgrade_need, None);
+        assert_eq!(uv.upgrade_supply_blocker, None);
+        assert_eq!(uv.upgrade_cost, Some(84));
+        assert_eq!(
+            uv.upgrade_held_back.as_ref().map(|h| h.to),
+            Some(UnitKind::Musketman)
+        );
+
+        // One deposit supplies two Niter: the first two upgrades in the list take it, the third
+        // stops at the Pikeman.
+        s.map.get_mut(hex(4, 4).neighbors()[1]).unwrap().resource = Some(crate::Resource::Niter);
+        let ua = s.units[&a].clone();
+        assert_eq!(
+            supplied_upgrade_plan(&s, PlayerId(0), &ua, |_| 0).map(|p| p.0),
+            Some(UnitKind::Musketman)
+        );
+        assert!(upgrade_held_back(&s, PlayerId(0), &ua).is_none());
+        let list: Vec<Order> = [a, b, c]
+            .into_iter()
+            .map(|unit| Order::UpgradeUnit { unit })
+            .collect();
+        assert!(super::super::validate_orders(&s, PlayerId(0), &list).is_empty());
+        let (next, _) = resolve_units(&s, &orders(0, list));
+        assert_eq!(next.units[&a].kind, UnitKind::Musketman);
+        assert_eq!(next.units[&b].kind, UnitKind::Musketman);
+        assert_eq!(next.units[&c].kind, UnitKind::Pikeman);
     }
 
     #[test]

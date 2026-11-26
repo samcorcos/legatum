@@ -58,7 +58,8 @@ pub mod rules;
 /// 59: Egypt's Chariot Archer replaces its Archer (Sam, 2026-11-25): 3 moves, a shot 40% stronger against the melee line, and Forest or Hills without a road take its whole turn to enter. The Medjay is retired, so Egypt's Spearman is plain (no extra sight). The save shape is unchanged.
 /// 60: The tech tree's research goal: `Order::SetResearchGoal` and `Player::research_goal` (fills an empty research queue toward a later technology). No existing order resolves differently.
 /// 61: Deals (Sam, 2026-11-25), behind GameSetup::deals: Gold in Peace, Alliance and Open Borders offers either way, Gold gifts to any met empire not at War, and Open Borders as a third treaty. The save shape gains optional fields; off, nothing changes.
-pub const RULES_VERSION: u32 = 62;
+/// 63: A unit's upgrade goes to the most advanced researched unit of its line whose strategic supply is spare (`rules::units::supplied_upgrade_plan`), not only the newest researched one: with Iron but no Niter a Phalangite becomes a Pikeman. Save shape unchanged; the view adds `UnitView::upgrade_held_back`.
+pub const RULES_VERSION: u32 = 63;
 pub mod scenario;
 pub mod scoring;
 pub mod settlement;

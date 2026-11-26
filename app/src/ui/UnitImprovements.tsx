@@ -80,6 +80,7 @@ export function UnitImprovements({ unit, view, check, primary, pending, gold, si
         <p>{castrumHeal ? `Castrum restores ${castrumHeal} health, to ${unit.hp + castrumHeal}/100, once for this upgrade order.` : 'Keeps its health and promotions.'} Can act again next turn.</p>
         {unit.siege && builtInSiege(check.to) && <p>Its Siege is built in from then on, so the Iron the bought Siege used is freed.</p>}
         <p>Treasury: <Amounts text={`${gold} Gold → ${gold - (check.cost ?? 0)} Gold`} />.</p>
+        {unit.upgrade_held_back && <p className="upgrade-held-back"><b>Why not {itemName({ kind: 'Unit', unit: unit.upgrade_held_back.to }, faction)}?</b> <Amounts text={unit.upgrade_held_back.reason} /></p>}
         {unit.upgrade_breakdown && <BreakdownTable b={upgradeStepBreakdown(unit.upgrade_breakdown, unit.kind as UnitKind, unit.upgrade_steps?.length ? unit.upgrade_steps : [check.to], faction)} title="Upgrade cost" unit="Gold" plain />}
       </>} />}
     {offer && <ImproveRow label="Siege" effect={`Covers Walls up to level ${['', 'I', 'II', 'III'][siegeTier(view.research.known)]}`}
