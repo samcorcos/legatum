@@ -416,3 +416,26 @@ behind it. `--skin-max-value` caps pale skin texels.
   skins, and skin texels get softer baked AO (0.85 + 0.15 AO). The thigh facets above the knee
   are still visible in close-ups: they come from the decimated skin's silhouette and baked
   shading, not only from its normals.
+
+## Round r13 (LOD1 helmet face, shield-arm scrap)
+
+- `--lod1-helmet-face H D` keeps the Corinthian face and cheek plates (faces below H of the
+  helmet height and in front of D of its depth) at LOD0 topology in LOD1, only planar-merged
+  (`--lod1-helmet-face-dissolve`, degrees, delimited by UV islands and normals, so no vertex
+  moves). Collapse decimation had folded the thin plates into pale shards. The dome is
+  decimated to 100 triangles after its inner shell is dropped (seen only through the face
+  opening, which the kept face covers; otherwise it showed as dark slabs), and LOD1 head skin
+  inside the helmet's footprint is pulled 8 mm toward the head axis. The LOD1 cap is 3,000
+  (contract, no override), so with a kept face the shield (rim kept since r5) and helmet are
+  built first, garments keep their usual share (below about 990 triangles the chiton and skirt
+  collapse), and greaves, skin, crest and spear share the rest. Enforcing the budget on garments
+  instead wiped the skirt.
+- The orange-red shard inside the aspis rim near the shield arm (r5 on) was a 38-triangle island
+  of the source sleeve left beside the generated sleeve shell, its texels on the red chiton.
+  Found with an ID render (`img3d/render.mjs --id --hl`). `--sleeves` now also deletes small
+  source-garment islands around the upper arm that stand more than 2.5 cm off every other
+  garment surface and the new sleeve.
+- `kit/greave_shard_check.py` also counts `helmet_shard_rays` (skin first, helmet less than 2 cm
+  behind, all clips, around the head) and `scrap_rays` (rays around the shoulders and upper arms
+  whose first hit is a loose garment or skin island, listed as `scraps`). On r12 LOD0 it reports
+  the sleeve scrap and 17,630 scrap rays; r13 LOD0 has 0.
