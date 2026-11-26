@@ -31,7 +31,7 @@ from fit_pack import pack
 
 ROOT = Path(os.environ.get('ANIM_ROOT', Path.home() / 'LegatumRuns/anim-pilot'))
 APPROVED = KIT.parent / 'units/spearman-0ad/spearman.glb'
-PART_ORDER = ['body', 'layer', 'cloak', 'helmet', 'shield', 'spear']  # 'layer': clothing over the skin, baked on its own
+PART_ORDER = ['body', 'layer', 'greave', 'cloak', 'helmet', 'crest', 'shield', 'spear']  # 'layer': clothing over the skin, baked on its own
 GROUPS = {'torso': ['hip', 'spine', 'spine1', 'chest', 'neck', 'head', 'shoulder_L', 'shoulder_R'],
           'arm_L': ['shoulder_L', 'arm_L', 'forearm_L', 'hand_L', 'finger_L', 'fingertip_L', 'shield_arm'],
           'arm_R': ['shoulder_R', 'arm_R', 'forearm_R', 'hand_R', 'finger_R', 'fingertip_R', 'weapon_R'],
@@ -62,6 +62,32 @@ ap.add_argument('--texture-format', choices=['jpeg', 'webp'], default='webp', he
 ap.add_argument('--skin', help="regex for the object(s) that are the body's skin; other body objects are layers that follow it (default 'body')")
 ap.add_argument('--smart-uv', action='store_true', help='smart-project a new atlas instead of repacking the source UV charts')
 ap.add_argument('--crest-glb', type=Path, help="take the crest (team region 'crest' plus 'crest_base') from another unit GLB on this rig, seated on this helmet's crown")
+ap.add_argument('--crest-width', type=float, default=1.0, help='side-to-side scale of a --crest-glb crest (fuller horsehair)')
+ap.add_argument('--replace-part', action='append', default=[], metavar='PART=PATH[:OBJECT]',
+                help='swap the fitted helmet (and face plate) or greaves for an external glTF/GLB/FBX mesh; PART is helmet or greaves')
+ap.add_argument('--replace-rot', action='append', default=[], metavar='PART=X,Y,Z',
+                help='rotate a replacement part (degrees about glTF X, Y, Z) before fitting; the source should be Y up, facing +Z')
+ap.add_argument('--replace-credit', action='append', default=[], metavar='PART=TEXT', help='credit for a replacement part (goes into the credit and PROVENANCE)')
+ap.add_argument('--replace-license', action='append', default=[], metavar='PART=ID', help='licence of a replacement part, e.g. CC-BY-4.0 or CC0-1.0')
+ap.add_argument('--crest-mass', action='store_true', help='build the crest as its own dense part: lofted horsehair mass with strand grooves (about 2k triangles)')
+ap.add_argument('--bronze-palette', default='47290f,a67734,f6dc96', help='dark,mid,light sRGB hex for --grade-bronze (r8b: sampled from spearman-panel.png: 4a2c0c,915d20,e5b475)')
+ap.add_argument('--bronze-rough', type=float, default=.50, help='base roughness of graded bronze (raised edges are 0.2 lower)')
+ap.add_argument('--bronze-detail', type=float, default=1.3, help='gain on the high-passed source luminance (fine detail) in graded bronze')
+ap.add_argument('--bronze-ao', type=float, default=.45, help='AO floor on metal (lower = darker cavities); other surfaces keep 0.45')
+ap.add_argument('--no-greave-dome', action='store_true', help='no kneecap dome on replaced greaves')
+ap.add_argument('--greave-skin-any', action='store_true', help='delete skin faces with ANY vertex under a greave (not only fully covered ones)')
+ap.add_argument('--skin-max-value', type=float, default=1.4, help='cap on skin brightness relative to its mean (pale patches from texture hidden under source armour)')
+ap.add_argument('--smooth-skin-normals', action='store_true', help='transfer smooth normals from the undecimated fitted skin onto the LOD skin')
+ap.add_argument('--lod1-greave-offset', type=float, default=.003, help='extra radial room for the LOD1 built greaves (m)')
+ap.add_argument('--helmet-size', type=float, default=1.0, help='replacement helmet size relative to an exact head fit')
+ap.add_argument('--helmet-uv-share', type=float, default=1.0, help='scale the helmet UV islands before packing (2 = four times the atlas area)')
+ap.add_argument('--crest-shift', type=float, default=0., help='move the crest arc forward (+) or back (-) along the helmet, metres')
+ap.add_argument('--crest-tail', type=float, default=1.14, help='how far the crest mass trails down the back (1 = ends at the crown arc)')
+ap.add_argument('--hide-skin-lod0', type=float, default=0, metavar='M', help='drop LOD0 skin faces lying within M metres under clothing or armour (never seen)')
+ap.add_argument('--crest-strands', type=float, default=0, help='horsehair strand relief in the crest normal bake (wave scale; about 12 gives 6-8 mm strands)')
+ap.add_argument('--knee-smooth', action='store_true', help='smooth skin weights around the knees (removes weight-transfer creases)')
+ap.add_argument('--sculpt-override', action='append', default=[], metavar='PART=FILE.blend:OBJECT',
+                help='replace the LOD0 geometry of PART with a hand-sculpted copy of that LOD0 object (same vertices and UVs, else the run fails); LOD1 and the bakes are re-derived from it')
 ap.add_argument('--keep', action='append', default=[], metavar='PART', help='keep PART at full source topology in LOD0 (thin garments shred when decimated); repeatable')
 ap.add_argument('--grade-bronze', action='store_true', help='regrade metallic texels toward warm gold-brown bronze: darker recesses, bright worn edges, rougher')
 ap.add_argument('--grade-skin', help="regrade skin texels toward this sRGB hex mean (e.g. b07850 for a tanned tone)")
@@ -151,8 +177,13 @@ classify(pieces, height0, overrides)
 # cleaner skeleton: loose shells (skirts, cuirass flaps) sprout false limb tips.
 skin_rx = args.skin or r'body'
 if any(p['part'] == 'body' and re.search(skin_rx, p['object'], re.I) for p in pieces):
+    biggest = {}
     for p in pieces:
-        if p['part'] == 'body' and not re.search(skin_rx, p['object'], re.I): p['part'] = 'layer'
+        if p['part'] == 'body': biggest[p['object']] = max(biggest.get(p['object'], 0), len(p['vid']))
+    for p in pieces:
+        if p['part'] != 'body': continue
+        # Small loose pieces of the skin object (bracers, straps) are clothing too.
+        if not re.search(skin_rx, p['object'], re.I) or len(p['vid']) < .03 * biggest[p['object']]: p['part'] = 'layer'
 log('parts', {k: sum(1 for p in pieces if p['part'] == k) for k in set(p['part'] for p in pieces)})
 
 
@@ -435,28 +466,115 @@ if args.press_skin and 'body' in fitted_objects and fitted_objects.get('layer'):
     report['skin_pressed_under_layers'] = press_under(fitted_objects['body'], all_co(fitted_objects['layer']))
     log('skin pressed under layers', report['skin_pressed_under_layers'])
 
+replaced = []; helmet_centre = None
+built_greaves = any(x.startswith('greaves=built') for x in args.replace_part)  # knee guard rides the shin bone
+if args.replace_part:
+    from fit_replace import import_part, fit_helmet, fit_greave, delete_faces, tuck_skin, finish_greave, delete_covered_skin
+    kv = lambda items: dict(x.split('=', 1) for x in items)
+    rots = {k: tuple(float(c) for c in v.split(',')) for k, v in kv(args.replace_rot).items()}
+    credits, licences = kv(args.replace_credit), kv(args.replace_license)
+    for spec in args.replace_part:
+        part, rest = spec.split('=', 1)
+        path, obj = (rest.rsplit(':', 1) if ':' in Path(rest).name else (rest, None))
+        built = part == 'greaves' and path == 'built'   # greaves grown from the fitted shin, no source file
+        new = [] if built else import_part(path, obj, rots.get(part, (0, 0, 0)))
+        skin = all_co(fitted_objects['body'])
+        if part == 'helmet':
+            # The source helmet and any generated face plate go; the crest (built
+            # later from the helmet points) seats on the new shell.
+            for o in fitted_objects.pop('helmet', []): bpy.data.objects.remove(o, do_unlink=True)
+            neck = rig.joint['neck']
+            head = skin[(skin[:, 1] > neck[1] + .01) & (np.linalg.norm(skin - rig.joint['head'], axis=1) < .2)]
+            o, rep_, hcentre = fit_helmet(new, head, size=args.helmet_size); o['part'] = 'helmet'; fitted_objects['helmet'] = [o]
+            # Skin (skull, ears) poking through the shell moves in, the helmet does not grow.
+            rep_['skin_tucked'] = tuck_skin(fitted_objects['body'] + fitted_objects.get('layer', []), o, hcentre)
+            helmet_centre = hcentre
+        elif part == 'greaves':
+            # Old greaves: source clothing on the shin below the knee (not sleeves).
+            def on_shin(P):
+                m = np.zeros(len(P), bool)
+                for sd in 'LR':
+                    kj, aj = rig.joint['leg_' + sd], rig.joint['foot_' + sd]
+                    rel = P - kj; m |= (P[:, 1] > aj[1] + .03) & (P[:, 1] < kj[1] + (.12 if built_greaves else .07)) & (np.hypot(rel[:, 0], rel[:, 2]) < .12)
+                return m
+            layers = [o for o in fitted_objects.get('layer', []) if not o.name.startswith('Sleeve')]
+            rep_ = {'old_greave_faces_removed': delete_faces(layers, on_shin, any_vertex=True)}  # no leftover rim strips
+            if built:
+                from fit_shells import greave_from_skin
+                bz = shell_material('Greave bronze (generated)', (.62, .43, .2), .35, 1.)
+                for sd in 'LR':
+                    kj, aj = rig.joint['leg_' + sd], rig.joint['foot_' + sd]
+                    leg_ = skin[(np.sign(skin[:, 0]) == (1 if sd == 'L' else -1))]
+                    objs_, r2 = greave_from_skin(leg_, kj, aj, bz, name=f'HIGH-greave-built-{sd}')
+                    for x in objs_: x['part'] = 'greave'; fitted_objects.setdefault('greave', []).append(x)
+                    r2['covered_skin_faces_deleted'] = delete_covered_skin(fitted_objects['body'], objs_[:1], (aj + (kj - aj) * .05, kj))
+                    rep_[sd] = r2
+            elif len(new) == 1 and (co(new[0])[:, 0] < -.02).any() and (co(new[0])[:, 0] > .02).any():
+                # One object holding both greaves (as in a full character): split at x = 0.
+                src_ = new[0]; halves = []
+                for keep_pos in (False, True):
+                    x = src_.copy(); x.data = src_.data.copy(); bpy.context.scene.collection.objects.link(x)
+                    bm = bmesh.new(); bm.from_mesh(x.data)
+                    bmesh.ops.delete(bm, geom=[f for f in bm.faces if (f.calc_center_median().x > 0) != keep_pos], context='FACES')
+                    bm.to_mesh(x.data); bm.free(); halves.append(x)
+                bpy.data.objects.remove(src_, do_unlink=True); new = halves
+            sides = sorted(new, key=lambda o: co(o).mean(0)[0])
+            pairs = [] if built else [('R', [sides[0]], False), ('L', [sides[-1]], False)] if len(new) > 1 and co(sides[0]).mean(0)[0] < 0 < co(sides[-1]).mean(0)[0] \
+                else [('L', new, False), ('R', new, True)]
+            for sd, objs, mirror in pairs:
+                kj, aj = rig.joint['leg_' + sd], rig.joint['foot_' + sd]
+                shin = skin[(skin[:, 1] > aj[1]) & (skin[:, 1] < kj[1] + .08) & (np.linalg.norm((skin - kj)[:, [0, 2]], axis=1) < .11)]
+                g, r2 = fit_greave(objs, shin, kj, aj, mirror, name=f'HIGH-layer-greave-{sd}')
+                g['part'] = 'greave'; fitted_objects.setdefault('greave', []).append(g); rep_[sd] = r2
+                extra, r3 = finish_greave(g, kj, aj, shell_material('Greave bronze (generated)', (.62, .43, .2), .35, 1.), with_dome=not args.no_greave_dome)
+                for x in extra: x['part'] = 'greave'; fitted_objects['greave'].append(x)
+                r2.update(r3)
+                r2['covered_skin_faces_deleted'] = delete_covered_skin(fitted_objects['body'], [g] + extra, (aj + (kj - aj) * .05, kj + (kj - aj) / np.linalg.norm(kj - aj) * .06))
+            for o in new: bpy.data.objects.remove(o, do_unlink=True)   # fitted copies were made
+        else:
+            raise SystemExit(f'--replace-part: PART must be helmet or greaves, not {part!r}')
+        info_ = {'part': part, 'file': 'built from the fitted shin' if built else Path(path).name, 'object': obj,
+                 'sha256': None if built else hashlib.sha256(Path(path).read_bytes()).hexdigest(),
+                 'credit': credits.get(part, ''), 'license': licences.get(part, ''), 'fit': rep_}
+        replaced.append(info_); log('replaced', part, info_)
+    report['replaced_parts'] = replaced
+    if args.press_skin and (fitted_objects.get('layer') or fitted_objects.get('greave')):
+        press_under(fitted_objects['body'], all_co(fitted_objects.get('layer', []) + fitted_objects.get('greave', [])))
+        if fitted_objects.get('greave'):  # shin skin bulging through a fitted greave goes back under it
+            report['skin_pressed_under_greaves'] = press_under(fitted_objects['body'], all_co(fitted_objects['greave']), depth=.006, reach=.035, below=.03)
+
 if args.shield_glb:
     # A finished aspis built on this same rig: its vertices rigid to shield_arm are
     # already seated in bind space. Its own materials are baked like the source's.
     for o in fitted_objects.pop('shield', []): bpy.data.objects.remove(o, do_unlink=True)
-    before = set(bpy.data.objects)
-    bpy.ops.import_scene.gltf(filepath=str(args.shield_glb))
-    new_objs = [o for o in bpy.data.objects if o not in before]
-    lod = next(o for o in new_objs if o.type == 'MESH' and o.name.startswith('spearman_LOD0'))
-    me = lod.data.copy(); me.transform(CONV @ lod.matrix_world)
-    gi = lod.vertex_groups['shield_arm'].index
-    bm = bmesh.new(); bm.from_mesh(me); dl = bm.verts.layers.deform.verify()
-    bmesh.ops.delete(bm, geom=[v for v in bm.verts if v[dl].get(gi, 0) < .999], context='VERTS')
-    bm.to_mesh(me); bm.free()
-    for o in new_objs: bpy.data.objects.remove(o, do_unlink=True)
-    # That unit's COLOR_0 is a team mask, not a tint: the glTF importer multiplies
-    # it into the base colour (black where red is 0). Feed the texture directly.
-    for m in me.materials:
-        nt = m.node_tree; bsdf = next(n for n in nt.nodes if n.type == 'BSDF_PRINCIPLED')
-        tex = next((n for n in nt.nodes if n.type == 'TEX_IMAGE' and n.image and n.image.colorspace_settings.name.lower().startswith('srgb')), None)
-        if tex: nt.links.new(tex.outputs['Color'], bsdf.inputs['Base Color'])
+    # Read the aspis straight from the GLB's audited vertex regions (bind space,
+    # same rig): every shield_arm part except the leather handgrip, which was sized
+    # for the 0 A.D. forearm and stands off a thicker one as flat flaps.
+    from validate_glb import GLB as _GLB
+    sg = _GLB(args.shield_glb); smh = sg.doc['meshes'][0]; spr = smh['primitives'][0]
+    SP = np.array(sg.accessor(spr['attributes']['POSITION'])); SUV = np.array(sg.accessor(spr['attributes']['TEXCOORD_0']))
+    SI = np.array([i[0] for i in sg.accessor(spr['indices'])]).reshape(-1, 3)
+    keep_v = np.zeros(len(SP), bool)
+    for r in smh['extras']['vertex_regions']:
+        if r['bone'] == 'shield_arm' and r['part'] != 'Aspis handgrip': keep_v[r['start']:r['start'] + r['count']] = True
+    stri = SI[keep_v[SI].all(1)]; su = np.unique(stri); sr = -np.ones(len(SP), np.int64); sr[su] = np.arange(len(su))
+    me = bpy.data.meshes.new('aspis'); me.from_pydata(SP[su].tolist(), [], sr[stri].tolist()); me.update()
+    suvl = me.uv_layers.new(name='UVMap')
+    for poly in me.polygons:
+        for li in poly.loop_indices:
+            uvv = SUV[su[me.loops[li].vertex_index]]; suvl.data[li].uv = (uvv[0], 1 - uvv[1])
+    stex = sg.doc['textures'][sg.doc['materials'][0]['pbrMetallicRoughness']['baseColorTexture']['index']]
+    simg = sg.doc['images'][stex.get('source', stex.get('extensions', {}).get('EXT_texture_webp', {}).get('source'))]
+    sbv = sg.doc['bufferViews'][simg['bufferView']]
+    sext = {'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp'}[simg['mimeType']]
+    spath = work / f'shield-source-basecolor.{sext}'; spath.write_bytes(sg.bin[sbv.get('byteOffset', 0):sbv.get('byteOffset', 0) + sbv['byteLength']])
+    sm = bpy.data.materials.new('Aspis bronze (source)'); sm.use_nodes = True
+    sb = sm.node_tree.nodes['Principled BSDF']; st = sm.node_tree.nodes.new('ShaderNodeTexImage'); st.image = bpy.data.images.load(str(spath))
+    sm.node_tree.links.new(st.outputs['Color'], sb.inputs['Base Color']); sb.inputs['Metallic'].default_value = 1; sb.inputs['Roughness'].default_value = .4
+    me.materials.append(sm)
+    for poly in me.polygons: poly.use_smooth = True
     sh = bpy.data.objects.new('HIGH-shield-imported', me); bpy.context.scene.collection.objects.link(sh)
-    sh.vertex_groups.clear(); sh['part'] = 'shield'; fitted_objects['shield'] = [sh]
+    sh['part'] = 'shield'; fitted_objects['shield'] = [sh]
     c = co(sh).mean(0); report['shield_glb'] = {'file': args.shield_glb.name, 'centre_offset_m': round(float(np.linalg.norm(c - rig.shield_frame()['centre'])), 4),
                                                'sha256': hashlib.sha256(args.shield_glb.read_bytes()).hexdigest()}
     log('shield from', args.shield_glb.name, report['shield_glb'])
@@ -481,6 +599,11 @@ if args.crest_glb:
     helm_r = [r for r in cm['extras']['vertex_regions'] if r['part'] == 'helmet']
     ptop = max(src_helm[i][1] for r in helm_r for i in range(r['start'], r['start'] + r['count']) if abs(src_helm[i][0]) < .03)
     pos = CP[used] + np.array([0, top - ptop - .004, 0])
+    # A fuller fan: the painting's crest is a thick horsehair mass, not a fin.
+    pos[team_v[used], 0] *= args.crest_width
+    # The crest rises from the crown: lift it clear of the brow and back a little
+    # (its front end hid the eye slots in a front view).
+    pos[team_v[used]] += np.array([0, .035, -.02])
     if pos[:, 1].max() > args.max_height:
         k = (args.max_height - top) / (pos[:, 1].max() - top)
         pos[:, 1] = top + (pos[:, 1] - top) * k
@@ -499,6 +622,19 @@ if args.crest_glb:
         m = bpy.data.materials.new(name + ' material'); m.use_nodes = True
         bsdf = m.node_tree.nodes['Principled BSDF']; tx = m.node_tree.nodes.new('ShaderNodeTexImage'); tx.image = bpy.data.images.load(str(ipath))
         m.node_tree.links.new(tx.outputs['Color'], bsdf.inputs['Base Color']); bsdf.inputs['Roughness'].default_value = .85 if team else .5
+        if team and args.crest_strands:
+            # Horsehair strands in the normal bake: rings about the crest's arc
+            # centre (they follow its front-to-back flow), distorted like hair.
+            nt = m.node_tree; geo = nt.nodes.new('ShaderNodeNewGeometry')
+            sub = nt.nodes.new('ShaderNodeVectorMath'); sub.operation = 'MULTIPLY'; sub.inputs[1].default_value = (0, 1, 1)
+            off = nt.nodes.new('ShaderNodeVectorMath'); off.operation = 'SUBTRACT'
+            off.inputs[1].default_value = (0, float(pos[:, 1].min()), float((pos[:, 2].max() + pos[:, 2].min()) / 2))
+            nt.links.new(geo.outputs['Position'], off.inputs[0]); nt.links.new(off.outputs[0], sub.inputs[0])
+            wave = nt.nodes.new('ShaderNodeTexWave'); wave.wave_type = 'RINGS'; wave.inputs['Scale'].default_value = args.crest_strands
+            wave.inputs['Distortion'].default_value = 4; wave.inputs['Detail'].default_value = 3
+            nt.links.new(sub.outputs[0], wave.inputs['Vector'])
+            bump = nt.nodes.new('ShaderNodeBump'); bump.inputs['Strength'].default_value = .9; bump.inputs['Distance'].default_value = .005
+            nt.links.new(wave.outputs['Fac'], bump.inputs['Height']); nt.links.new(bump.outputs['Normal'], bsdf.inputs['Normal'])
         bsdf.inputs['Metallic'].default_value = 0 if team else .8
         me.materials.append(m)
         for poly in me.polygons: poly.use_smooth = True
@@ -511,6 +647,13 @@ if args.crest_glb:
     report['crest_from'] = {'file': args.crest_glb.name, 'sha256': hashlib.sha256(args.crest_glb.read_bytes()).hexdigest(),
                             'vertices': int(len(used)), 'top_m': round(float(pos[:, 1].max()), 3)}
     log('crest from', report['crest_from'])
+
+if args.crest_mass:
+    from fit_shells import crest_mass
+    cm, crep = crest_mass(all_co(fitted_objects['helmet']), args.max_height, tail=args.crest_tail, shift=args.crest_shift)
+    cm['part'] = 'crest'; fitted_objects['crest'] = [cm]
+    team_rules.append(('crest', r'^Crest horsehair'))
+    report['crest_mass'] = crep; log('crest mass', crep)
 
 if args.add_crest:
     # A horsehair crest arc, front to back over the helmet's crown, as in the
@@ -627,11 +770,27 @@ def joined_copy(items, name):
     x = bpy.context.view_layer.objects.active; x.name = name; return x
 
 
+def covered_along_normal(P, Nn, shells, reach):
+    """Skin vertex is hidden only if a ray out along its normal hits a covering shell
+    within `reach`: nearness alone deleted thigh skin just below the skirt hem and
+    left holes (the pale 'shards' seen through to the leg's back faces)."""
+    from mathutils.bvhtree import BVHTree
+    bm_ = bmesh.new()
+    for x in shells: bm_.from_mesh(x.data)
+    bvh = BVHTree.FromBMesh(bm_); bm_.free()
+    out = np.zeros(len(P), bool)
+    for i in range(len(P)):
+        n_ = Vector(Nn[i])
+        if n_.length < 1e-6: continue
+        out[i] = bvh.ray_cast(Vector(P[i]) + n_ * 1e-4, n_.normalized(), reach)[0] is not None
+    return out
+
+
 def budgets(total, parts, keep=()):
     raw = {p: sum(ntris(o) for o in fitted_objects[p]) for p in parts}
     kept = {p: raw[p] for p in parts if p in keep}
     total -= sum(kept.values()); parts = [p for p in parts if p not in keep]
-    floor = {'spear': 90, 'shield': 300, 'helmet': 250, 'cloak': 200, 'body': 1000, 'layer': 800}
+    floor = {'spear': 90, 'shield': 300, 'helmet': 250, 'crest': 300, 'greave': 1500, 'cloak': 200, 'body': 1000, 'layer': 800}
     weight = {p: raw[p] ** .75 * {'body': 1.6}.get(p, 1) for p in parts}
     share = {p: max(floor.get(p, 100), total * weight[p] / sum(weight.values())) for p in parts}
     scale = total / sum(share.values())
@@ -647,6 +806,21 @@ for p in parts:
     o['mat_names'] = [m.name if m else '' for m in o.data.materials]
     sm = o.data.attributes.new('src_mat', 'INT', 'FACE')
     mi = np.empty(len(o.data.polygons), np.int64); o.data.polygons.foreach_get('material_index', mi); sm.data.foreach_set('value', mi)
+    if p == 'body' and args.hide_skin_lod0 and fitted_objects.get('layer'):
+        # Skin that sits just under clothing or armour is never seen: spend those
+        # triangles on the visible parts (and the crest) instead.
+        Lp = all_co(fitted_objects['layer'] + fitted_objects.get('greave', [])); me = o.data; n = len(me.vertices)
+        P = co(o); Nn = np.empty(n * 3); me.vertices.foreach_get('normal', Nn); Nn = Nn.reshape(-1, 3)
+        hidden = np.zeros(n, bool)
+        for k in range(0, n, 512):
+            d2 = ((P[k:k + 512, None] - Lp[None]) ** 2).sum(2); jx = d2.argmin(1)
+            d = np.sqrt(d2[np.arange(len(jx)), jx]); up = ((Lp[jx] - P[k:k + 512]) * Nn[k:k + 512]).sum(1)
+            hidden[k:k + 512] = (d < args.hide_skin_lod0) & (up > -.002)
+        hidden &= covered_along_normal(P, Nn, fitted_objects['layer'] + fitted_objects.get('greave', []), .025)
+        bm = bmesh.new(); bm.from_mesh(me); bm.verts.ensure_lookup_table()
+        dead = [f for f in bm.faces if all(hidden[v.index] for v in f.verts)]
+        bmesh.ops.delete(bm, geom=dead, context='FACES'); bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context='VERTS')
+        bm.to_mesh(me); bm.free(); report['lod0_hidden_skin_faces_removed'] = len(dead)
     apply_mod(o, 'TRIANGULATE')
     if ntris(o) > b0[p]: apply_mod(o, 'DECIMATE', ratio=b0[p] / ntris(o), use_collapse_triangulate=True)
     lod0[p] = o
@@ -669,16 +843,63 @@ for o in lod0.values():
 bpy.ops.object.mode_set(mode='EDIT'); bpy.ops.mesh.select_all(action='SELECT')
 if not keep_src_uv: bpy.ops.uv.smart_project(angle_limit=math.radians(60), island_margin=.003, area_weight=1.0)
 bpy.ops.uv.average_islands_scale()
+if args.helmet_uv_share != 1 and 'helmet' in lod0:
+    bpy.ops.object.mode_set(mode='OBJECT')
+    hu = lod0['helmet'].data.uv_layers['atlas'].data; a_ = np.empty(len(hu) * 2); hu.foreach_get('uv', a_); a_ = a_.reshape(-1, 2)
+    hu.foreach_set('uv', ((a_ - a_.mean(0)) * args.helmet_uv_share + a_.mean(0)).ravel())
+    bpy.ops.object.mode_set(mode='EDIT'); bpy.ops.mesh.select_all(action='SELECT')
 bpy.ops.uv.pack_islands(margin=.003, rotate=True, shape_method='AABB', merge_overlap=False)
 bpy.ops.object.mode_set(mode='OBJECT')
 report['uv'] = 'source charts repacked' if keep_src_uv else 'smart projection'
+
+
+def vertex_uvs(me, layer):
+    """Per vertex, the sorted set of its corner UVs (rounded): topology-independent."""
+    out = [set() for _ in me.vertices]; uvl = me.uv_layers[layer].data
+    for l in me.loops: out[l.vertex_index].add(tuple(round(x, 4) for x in uvl[l.index].uv))
+    return [sorted(x) for x in out]
+
+
+for spec in args.sculpt_override:
+    # A sculpted LOD0 part (saved from <work>/fitted-lods.blend by hand): same
+    # vertices in the same order and the same UVs, new positions. The LOD0 here is
+    # rebuilt deterministically, so the sculpt's positions drop straight in; the
+    # full-resolution part follows by the sculpt delta of its nearest LOD0 vertices,
+    # so the bakes (normals, AO, colour) see the sculpted shape too.
+    part, rest = spec.split('=', 1); path, obj = rest.rsplit(':', 1)
+    if part not in lod0: raise SystemExit(f'--sculpt-override: no LOD0 part {part!r} (have {sorted(lod0)})')
+    before_objs = set(bpy.data.objects)
+    with bpy.data.libraries.load(path, link=False) as (src_, dst_):
+        if obj not in src_.objects: raise SystemExit(f'--sculpt-override: {obj!r} not in {path}')
+        dst_.objects = [obj]
+    sc = dst_.objects[0]; target = lod0[part]
+    sme, tme = sc.data, target.data
+    if len(sme.vertices) != len(tme.vertices):
+        raise SystemExit(f'--sculpt-override {part}: sculpt has {len(sme.vertices)} vertices, LOD0 has {len(tme.vertices)}; '
+                         'sculpt without remeshing or dyntopo')
+    if 'atlas' not in sme.uv_layers or vertex_uvs(sme, 'atlas') != vertex_uvs(tme, 'atlas'):
+        raise SystemExit(f'--sculpt-override {part}: UVs differ from the LOD0 part; do not edit UVs or reorder vertices')
+    old = co(target); new = np.array([v.co[:] for v in sme.vertices]) @ np.array(sc.matrix_world)[:3, :3].T + np.array(sc.matrix_world)[:3, 3]
+    delta = new - old; moved = np.linalg.norm(delta, axis=1)
+    set_co(target, new)
+    for h in fitted_objects[part]:
+        H_ = co(h); acc = np.zeros_like(H_)
+        for k in range(0, len(H_), 1024):
+            d2 = ((H_[k:k + 1024, None] - old[None]) ** 2).sum(2); idx = np.argsort(d2, 1)[:, :4]
+            w = 1 / (np.sqrt(np.take_along_axis(d2, idx, 1)) + 1e-4); w /= w.sum(1, keepdims=True)
+            acc[k:k + 1024] = (delta[idx] * w[..., None]).sum(1)
+        set_co(h, H_ + acc)
+    bpy.data.objects.remove(sc, do_unlink=True)
+    report.setdefault('sculpt_override', {})[part] = {'file': path, 'object': obj, 'sha256': hashlib.sha256(Path(path).read_bytes()).hexdigest(),
+                                                      'vertices_moved': int((moved > 1e-6).sum()), 'max_move_m': round(float(moved.max()), 5)}
+    log('sculpt override', part, report['sculpt_override'][part])
 # LOD1 is what players see at normal zoom: garments must survive. Skin hidden
 # under clothing or armour goes first (it only pokes through a coarse garment),
 # then the budget favours garments over skin.
-lod1_weight = {'layer': 1.8, 'cloak': 1.0, 'body': 1.0, 'helmet': .6, 'shield': .35, 'spear': .12}
+lod1_weight = {'layer': 1.6, 'greave': .75 if built_greaves else .35, 'cloak': 1.0, 'body': .8, 'helmet': .45, 'crest': .3, 'shield': .7, 'spear': .1}  # the aspis rim shreds below ~500
 wsum_ = sum(lod1_weight.get(p, .5) for p in parts)
 b1 = {p: int(args.lod1 * lod1_weight.get(p, .5) / wsum_) for p in parts}
-cover = [lod0[p] for p in ('layer', 'cloak') if p in lod0]
+cover = [lod0[p] for p in ('layer', 'greave', 'cloak') if p in lod0]
 lod1 = {}
 for p in parts:
     o = joined_copy([lod0[p]], f'LOD1-{p}'); o['part'] = p
@@ -690,11 +911,27 @@ for p in parts:
             d2 = ((P[k:k + 512, None] - Lp[None]) ** 2).sum(2); j = d2.argmin(1)
             d = np.sqrt(d2[np.arange(len(j)), j]); up = ((Lp[j] - P[k:k + 512]) * Nn[k:k + 512]).sum(1)
             hidden[k:k + 512] = (d < .03) & (up > -.004)
+        hidden &= covered_along_normal(P, Nn, cover, .035)
         bm = bmesh.new(); bm.from_mesh(me); bm.verts.ensure_lookup_table()
         dead = [f for f in bm.faces if all(hidden[v.index] for v in f.verts)]
         bmesh.ops.delete(bm, geom=dead, context='FACES'); bm.to_mesh(me); bm.free()
         report['lod1_hidden_skin_faces_removed'] = len(dead)
-    if ntris(o) > b1[p]: apply_mod(o, 'DECIMATE', ratio=b1[p] / ntris(o), use_collapse_triangulate=True)
+    if p == 'shield':
+        # Keep the rolled team rim at LOD0 topology and decimate only the field:
+        # decimated rim faces straddle rim and field texels (pale slivers, red wedges).
+        fr_ = rig.shield_frame(); P_ = co(o); me = o.data
+        q_ = P_ - fr_['centre']; h_ = q_ @ fr_['normal']; r_ = np.linalg.norm(q_ - np.outer(h_, fr_['normal']), axis=1)
+        rim_v = r_ > .86 * r_.max()
+        rim = joined_copy([o], 'LOD1-shield-rim')
+        for obj, drop in ((o, True), (rim, False)):
+            bm = bmesh.new(); bm.from_mesh(obj.data); bm.verts.ensure_lookup_table()
+            dead = [f for f in bm.faces if all(rim_v[v.index] for v in f.verts) == drop]
+            bmesh.ops.delete(bm, geom=dead, context='FACES'); bm.to_mesh(obj.data); bm.free()
+        room = max(60, b1[p] - ntris(rim))
+        if ntris(o) > room: apply_mod(o, 'DECIMATE', ratio=room / ntris(o), use_collapse_triangulate=True)
+        bpy.ops.object.select_all(action='DESELECT'); o.select_set(True); rim.select_set(True)
+        bpy.context.view_layer.objects.active = o; bpy.ops.object.join()
+    elif ntris(o) > b1[p]: apply_mod(o, 'DECIMATE', ratio=b1[p] / ntris(o), use_collapse_triangulate=True)
     lod1[p] = o
 
 
@@ -709,7 +946,37 @@ def enforce(lod, total, keep=()):
             apply_mod(o, 'DECIMATE', ratio=max(.3, 1 - (have - total) * 1.1 / max(1, sum(map(ntris, big)))), use_collapse_triangulate=True)
 
 
-enforce(lod0, args.lod0, set(args.keep)); enforce(lod1, args.lod1, {'layer', 'cloak'})
+enforce(lod0, args.lod0, set(args.keep)); enforce(lod1, args.lod1, {'layer', 'greave', 'cloak', 'shield'})
+if args.smooth_skin_normals and 'body' in lod0:
+    # Decimated skin reads as flat planes: carry the undecimated fitted skin's smooth
+    # normals onto both LODs as custom normals (exported as the corner normals).
+    hb_ = joined_copy(fitted_objects['body'], 'normal source')
+    for p_ in hb_.data.polygons: p_.use_smooth = True
+    for lod in (lod0, lod1):
+        o_ = lod['body']
+        for p_ in o_.data.polygons: p_.use_smooth = True
+        m_ = o_.modifiers.new('nrm', 'DATA_TRANSFER'); m_.object = hb_
+        m_.use_loop_data = True; m_.data_types_loops = {'CUSTOM_NORMAL'}; m_.loop_mapping = 'POLYINTERP_NEAREST'
+        active(o_); bpy.ops.object.modifier_apply(modifier=m_.name)
+    bpy.data.objects.remove(hb_, do_unlink=True); report['skin_normals'] = 'transferred from the undecimated fit'
+if built_greaves and 'greave' in lod1:
+    # LOD1's coarser greave gets a little more room over the skin.
+    for sd in 'LR':
+        kn = rig.joint['leg_' + sd]; an = rig.joint['foot_' + sd]; ax = (kn - an) / np.linalg.norm(kn - an)
+        P_ = co(lod1['greave']); m_ = (P_[:, 0] > 0) == (sd == 'L'); q = P_[m_] - an; h = q @ ax
+        rad = q - np.outer(h, ax); P_[m_] += rad / np.maximum(np.linalg.norm(rad, axis=1, keepdims=True), 1e-6) * args.lod1_greave_offset
+        set_co(lod1['greave'], P_)
+if fitted_objects.get('greave') and 'body' in lod0:
+    # Skin behind a replaced greave is never seen (and pokes through where the shell is
+    # thin): remove it from both LODs, per leg, by the greave's angular/height span.
+    from fit_replace import delete_covered_skin
+    gone_ = 0
+    for sd in 'LR':
+        kj, aj = rig.joint['leg_' + sd], rig.joint['foot_' + sd]
+        sh_ = [g_ for g_ in fitted_objects['greave'] if (co(g_)[:, 0].mean() > 0) == (sd == 'L')]
+        if sh_:
+            for lod in (lod0, lod1): gone_ += delete_covered_skin([lod['body']], sh_, (aj, kj + (kj - aj) / np.linalg.norm(kj - aj) * .06), any_vertex=args.greave_skin_any)
+    report['skin_behind_greaves_deleted_lod_faces'] = gone_
 report['triangles'] = {'source': raw, 'lod0': {p: ntris(o) for p, o in lod0.items()}, 'lod1': {p: ntris(o) for p, o in lod1.items()}}
 log('lods', report['triangles'])
 
@@ -747,11 +1014,21 @@ for lod in (lod0, lod1):
     for p, o in lod.items():
         for b in rig.bones:
             if b not in o.vertex_groups: o.vertex_groups.new(name=b)
-        if p in RIGID or p in ('spear', 'shield', 'helmet'):
-            bone = {'spear': 'weapon_R', 'shield': 'shield_arm', 'helmet': 'helmet'}[p]
+        if p in RIGID or p in ('spear', 'shield', 'helmet', 'crest'):
+            bone = {'spear': 'weapon_R', 'shield': 'shield_arm', 'helmet': 'helmet', 'crest': 'helmet'}[p]
             o.vertex_groups[bone].add(list(range(len(o.data.vertices))), 1., 'REPLACE')
         elif p == 'cloak' and donors['cloak']:
             transfer(o, donors['cloak'])
+        elif p == 'greave':
+            # Greaves are rigid shells on the shin; the top eases onto the thigh across
+            # the knee. Direct weights: a nearest-face transfer picked up the other leg.
+            P_ = co(o)
+            for sd in 'LR':
+                side_ = (P_[:, 0] > 0) if sd == 'L' else (P_[:, 0] <= 0)
+                ky = rig.joint['leg_' + sd][1] + (.12 if built_greaves else 0); tw = np.clip((P_[:, 1] - (ky - .02)) / .08, 0, 1); tw = tw * tw * (3 - 2 * tw) * .5
+                for i in np.nonzero(side_)[0]:
+                    o.vertex_groups['leg_' + sd].add([int(i)], float(1 - tw[i]), 'REPLACE')
+                    if tw[i] > 0: o.vertex_groups['thigh_' + sd].add([int(i)], float(tw[i]), 'REPLACE')
         elif p == 'layer' and 'body' in lod:
             # Clothing takes the weights of the skin under it (already transferred
             # from 0 A.D.), so cloth and skin deform together and do not cross.
@@ -763,6 +1040,22 @@ for lod in (lod0, lod1):
         active(o)
         bpy.ops.object.vertex_group_limit_total(limit=4)
         bpy.ops.object.vertex_group_normalize_all(lock_active=False)
+if args.knee_smooth:
+    # Weight-transfer creases at the knees: relax thigh/shin weights within 9 cm
+    # of each knee joint on skin and clothing, then renormalise to four.
+    for lod in (lod0, lod1):
+        for p in ('body', 'layer', 'greave'):
+            if p not in lod: continue
+            o = lod[p]; P = co(o)
+            near = np.zeros(len(P), bool)
+            for kj in ('leg_L', 'leg_R'): near |= np.linalg.norm(P - rig.joint[kj], axis=1) < .09
+            if not near.any(): continue
+            o.data.vertices.foreach_set('select', near.tolist()); active(o)
+            bpy.ops.object.mode_set(mode='WEIGHT_PAINT'); o.data.use_paint_mask_vertex = True
+            bpy.ops.object.vertex_group_smooth(group_select_mode='ALL', factor=.6, repeat=6, expand=0)
+            o.data.use_paint_mask_vertex = False; bpy.ops.object.mode_set(mode='OBJECT')
+            bpy.ops.object.vertex_group_limit_total(limit=4); bpy.ops.object.vertex_group_normalize_all(lock_active=False)
+    report['knee_weights_smoothed'] = True
 for o in list(bpy.data.objects):
     if o.name.startswith('donor_'): bpy.data.objects.remove(o, do_unlink=True)
 log('weights transferred')
@@ -770,7 +1063,7 @@ log('weights transferred')
 # -------------------------------------------------------------------------- bake
 scene = bpy.context.scene; scene.render.engine = 'CYCLES'; scene.cycles.device = 'CPU'
 scene.cycles.samples = 1; scene.render.threads_mode = 'FIXED'; scene.render.threads = 3
-bake = scene.render.bake; bake.use_selected_to_active = True; bake.margin = 16; bake.target = 'IMAGE_TEXTURES'
+bake = scene.render.bake; bake.use_selected_to_active = True; bake.margin = 32; bake.target = 'IMAGE_TEXTURES'
 diag = float(np.ptp(np.concatenate([co(o) for o in lod0.values()]), 0).max())
 bake.cage_extrusion = .006 * diag; bake.max_ray_distance = .02 * diag
 N = args.bake_size
@@ -899,8 +1192,19 @@ if args.grade_bronze:
     B_ = px(maps_img['basecolor']); M_ = px(maps_img['metallic'])[..., 0]; A_ = px(maps_img['ao'])[..., 0]
     R_ = px(maps_img['roughness']); P_ = px(pimg)[..., 0]
     metal = M_ > .5
+    for p_ in ('greave', 'helmet'):  # replaced armour is bronze whatever its source metallic map says
+        if p_ in lod0: metal |= raster_mask(uv_tris(lod0[p_]))
+    Mt_ = px(maps_img['metallic']); Mt_[metal, :3] = np.maximum(Mt_[metal, :3], .85 if args.bronze_ao >= .45 else .95); maps_img['metallic'].pixels.foreach_set(Mt_.ravel())
     if metal.any():
         lum = B_[..., :3] @ np.array([.2126, .7152, .0722], np.float32); l = lum / max(float(lum[metal].mean()), 1e-3)
+        # Keep fine detail (engraving, embossing, hammer marks), drop the low-frequency
+        # dirt blotches: high-pass the luminance against a masked 24 px box blur.
+        def box(a_, r_=12):
+            c_ = np.cumsum(np.cumsum(np.pad(a_, ((1, 0), (1, 0))), 0), 1); n_ = a_.shape[0]
+            i0 = np.clip(np.arange(n_) - r_, 0, n_); i1 = np.clip(np.arange(n_) + r_ + 1, 0, n_)
+            return c_[i1][:, i1] - c_[i0][:, i1] - c_[i1][:, i0] + c_[i0][:, i0]
+        mf = metal.astype(np.float32); lb = box(l * mf) / np.maximum(box(mf), 1e-6)
+        l = np.clip(1 + (l - lb) * args.bronze_detail, .6, 1.5)
         if 'shield' in lod0:
             # Aspis: the device only on the outer face; the inner face plain bronze;
             # the field lifted from dark brown to mid bronze.
@@ -917,12 +1221,12 @@ if args.grade_bronze:
         for _ in range(2): pe = np.maximum(pe, (np.roll(pe, 1, 0) + np.roll(pe, -1, 0) + np.roll(pe, 1, 1) + np.roll(pe, -1, 1)) / 4 * .9)
         edge = pe ** .8; cav = np.clip((A_ - .45) / .55, 0, 1)
         t_ = np.clip(.08 + .45 * l * (.55 + .45 * cav) + .55 * edge, 0, 1)
-        dark, mid, light = srgb('47290f'), srgb('a67734'), srgb('f6dc96')
+        dark, mid, light = (srgb(c_) for c_ in args.bronze_palette.split(','))
         col = np.where(t_[..., None] < .5, dark + (mid - dark) * (t_[..., None] * 2), mid + (light - mid) * ((t_[..., None] - .5) * 2))
         B_[metal, :3] = col[metal]
-        R_[metal, :3] = np.clip(.50 - .34 * edge[metal] + .16 * (1 - cav[metal]), .14, .8)[:, None]
+        R_[metal, :3] = np.clip(args.bronze_rough - .2 * edge[metal] + .14 * (1 - cav[metal]), .12, .8)[:, None]
         maps_img['basecolor'].pixels.foreach_set(B_.ravel()); maps_img['roughness'].pixels.foreach_set(R_.ravel())
-        report['bronze_grade'] = {'texels': int(metal.sum()), 'palette': ['47290f', 'a67734', 'f6dc96']}
+        report['bronze_grade'] = {'texels': int(metal.sum()), 'palette': args.bronze_palette}
         log('bronze graded', report['bronze_grade'])
 
 if args.grade_skin and 'body' in lod0:
@@ -934,15 +1238,33 @@ if args.grade_skin and 'body' in lod0:
         mean = B_[skin, :3].mean(0); tgt = srgb(args.grade_skin)
         # Hue locked to the target (no grey cast), value from the source's own
         # luminance, plus a little of its original colour variation.
-        lum = B_[skin, :3] @ np.array([.2126, .7152, .0722], np.float32); k_ = np.clip(lum / max(float(lum.mean()), 1e-3), .6, 1.4)
+        lum = B_[skin, :3] @ np.array([.2126, .7152, .0722], np.float32); k_ = np.clip(lum / max(float(lum.mean()), 1e-3), .6, args.skin_max_value)
         B_[skin, :3] = np.clip(.85 * tgt * k_[:, None] + .15 * (tgt + (B_[skin, :3] - mean)), 0, 1)
         maps_img['basecolor'].pixels.foreach_set(B_.ravel())
         report['skin_grade'] = {'texels': int(skin.sum()), 'from_srgb': (mean * 255).round().tolist(), 'to': args.grade_skin}
         log('skin graded', report['skin_grade'])
 
+if helmet_centre is not None and 'helmet' in lod0:
+    # The helmet's inside (seen through the eye and mouth openings) is a dark void.
+    from fit_replace import inner_faces
+    hm = lod0['helmet'].data; ins = set(inner_faces(lod0['helmet'], helmet_centre)); uvl_ = hm.uv_layers['atlas'].data
+    hm.calc_loop_triangles()
+    m_in = raster_mask([[tuple(uvl_[li].uv) for li in t.loops] for t in hm.loop_triangles if t.polygon_index in ins])
+    B_ = px(maps_img['basecolor']); B_[m_in, :3] = (.035, .027, .02); maps_img['basecolor'].pixels.foreach_set(B_.ravel())
+    for nm_, val_ in (('roughness', .95), ('metallic', 0.)):
+        X_ = px(maps_img[nm_]); X_[m_in, :3] = val_; maps_img[nm_].pixels.foreach_set(X_.ravel())
+    report['helmet_interior_texels'] = int(m_in.sum())
+
 orm = bpy.data.images.new('orm', N, N, alpha=False); orm.colorspace_settings.name = 'Non-Color'
 o_px = np.ones((N, N, 4), np.float32)
 o_px[..., 0] = px(maps_img['ao'])[..., 0]; o_px[..., 1] = px(maps_img['roughness'])[..., 0]; o_px[..., 2] = px(maps_img['metallic'])[..., 0]
+if args.smooth_skin_normals and 'body' in lod0:
+    # Low-mesh AO on the decimated skin outlines every facet: keep only a trace of it there.
+    skm_ = raster_mask(uv_tris(lod0['body'])) & (o_px[..., 2] < .5)
+    o_px[..., 0] = np.where(skm_, .85 + .15 * o_px[..., 0], o_px[..., 0])
+if args.bronze_ao < .45:  # darker cavities on metal: re-floor its AO
+    mt_ = o_px[..., 2] > .8; raw_ = np.clip((o_px[..., 0] - .45) / .55, 0, 1)
+    o_px[..., 0] = np.where(mt_, args.bronze_ao + (1 - args.bronze_ao) * raw_, o_px[..., 0])
 orm.pixels.foreach_set(o_px.ravel()); orm.filepath_raw = str(work / 'orm-master.png'); orm.file_format = 'PNG'; orm.save()
 base_px = px(maps_img['basecolor'])
 
@@ -992,10 +1314,13 @@ def team_faces(o, p):
 
 
 # ------------------------------------------------------------------------- export
-names = {'body': 'body', 'layer': 'garment', 'cloak': 'cloak', 'helmet': 'helmet', 'shield': 'aspis', 'spear': 'spear'}
+names = {'body': 'body', 'layer': 'garment', 'greave': 'greave', 'cloak': 'cloak', 'helmet': 'helmet', 'crest': 'crest', 'shield': 'aspis', 'spear': 'spear'}
 team_part = {'crest': 'crest', 'shield rim': 'aspis', 'cloak trim': 'cloak'}
 planes = clip_planes(rig.g)
 log('clip floor planes', len(planes))
+
+
+team_lod0_masks = {}
 
 
 def export_lod(lod, mesh_name):
@@ -1003,6 +1328,16 @@ def export_lod(lod, mesh_name):
     idx = []; regions = []
     for p in parts:
         o = lod[p]; region = team_faces(o, p)
+        if False:
+            # LOD1 shares LOD0's atlas: a face is team exactly where LOD0's team
+            # texels are, so the mask and the neutral texels always agree.
+            me_ = o.data; uvl_ = me_.uv_layers.active.data; region = np.array([''] * len(me_.polygons), dtype=object)
+            for poly in me_.polygons:
+                u_, v_ = np.mean([tuple(uvl_[li].uv) for li in poly.loop_indices], 0)
+                x_, y_ = min(N - 1, max(0, int(u_ * N))), min(N - 1, max(0, int(v_ * N)))
+                for kind_, m_ in team_lod0_masks.items():
+                    if m_[y_, x_]: region[poly.index] = kind_
+
         tattr = o.data.attributes.new('fit_team', 'INT', 'FACE')
         kinds = sorted(set(region.tolist()))
         for i, r in enumerate(region): tattr.data[i].value = kinds.index(r)
@@ -1014,7 +1349,7 @@ def export_lod(lod, mesh_name):
             for poly in me.polygons:
                 if team_of[poly.index]: team_uv.setdefault(team_of[poly.index], []).append([tuple(uvl[li].uv) for li in poly.loop_indices])
         gname = {g.index: g.name for g in o.vertex_groups}
-        bone = {'spear': 'weapon_R', 'shield': 'shield_arm', 'helmet': 'helmet'}.get(p)
+        bone = {'spear': 'weapon_R', 'shield': 'shield_arm', 'helmet': 'helmet', 'crest': 'helmet'}.get(p)
         for kind in kinds:
             start = len(attrs['POSITION']); mapping = {}
             for poly in me.polygons:
@@ -1047,6 +1382,52 @@ def export_lod(lod, mesh_name):
     moved = np.linalg.norm(xyz - before, axis=1)
     rep['max_by_part_m'] = {r['part']: round(float(moved[r['start']:r['start'] + r['count']].max()), 4) for r in regions}
     attrs['POSITION'] = [tuple(map(float, r)) for r in xyz]
+    if any(r['part'] == 'greave' for r in regions):
+        # Skin that shows through a greave in any frame of the clips: drop its triangles
+        # (it is behind the armour). Same test as kit/armour_cover_check.py.
+        from armour_cover_check import flagged
+        part_ = np.empty(len(xyz), object)
+        for r in regions: part_[r['start']:r['start'] + r['count']] = r['part']
+        J_ = np.array(attrs['JOINTS_0']).astype(int); W_ = np.array(attrs['WEIGHTS_0']); T_ = np.array([i[0] for i in idx]).reshape(-1, 3)
+        dropped = 0; sunk = 0; pushed_g = 0
+        inv_ = np.array(rig.g.accessor(rig.g.doc['skins'][0]['inverseBindMatrices'])).reshape(-1, 4, 4).transpose(0, 2, 1)
+        for it in range(30):
+            used_ = np.zeros(len(xyz), bool); used_[T_.ravel()] = True
+            clips_ = ('walk', 'attack', 'idle', 'hit', 'death')
+            bad_ = flagged(rig.g, xyz, J_, W_, part_, used_, clips_, tol=-.002)     # the check's own bins
+            if built_greaves: bad_ |= flagged(rig.g, xyz, J_, W_, part_, used_, clips_, edge=.003, tol=-.002)  # and up to the rims
+            log(mesh_name, 'skin through greaves pass', it, len(bad_))
+            if not bad_: break
+            bl = np.array(sorted(bad_))
+            if it < 16 and built_greaves and it % 2 == 0:
+                # Push the greave out locally where skin reaches it (at most 6 mm in all).
+                gidx = np.nonzero(part_ == 'greave')[0]
+                if not hasattr(np, '_fit_push'): np._fit_push = {}
+                for sd in 'LR':
+                    kn = rig.joint['leg_' + sd]; an = rig.joint['foot_' + sd]; ax = (kn - an) / np.linalg.norm(kn - an)
+                    gs = gidx[(xyz[gidx, 0] > 0) == (sd == 'L')]; fb = bl[(xyz[bl, 0] > 0) == (sd == 'L')]
+                    if not len(gs) or not len(fb): continue
+                    d2 = np.min(((xyz[gs][:, None] - xyz[fb][None]) ** 2).sum(2), 1); near = gs[d2 < .025 ** 2]
+                    done = np.array([np._fit_push.get((mesh_name, int(i)), 0.) for i in near])
+                    near = near[done < .006]
+                    q = xyz[near] - an; h = q @ ax; rad = q - np.outer(h, ax)
+                    xyz[near] += rad / np.maximum(np.linalg.norm(rad, axis=1, keepdims=True), 1e-6) * .0015
+                    for i in near: np._fit_push[(mesh_name, int(i))] = np._fit_push.get((mesh_name, int(i)), 0.) + .0015
+                pushed_g += 1; continue
+            if it < 26:
+                # Sink flagged skin 5 mm toward its shin axis (bind space): no holes.
+                for sd in 'LR':
+                    kn = rig.joint['leg_' + sd]; an = rig.joint['foot_' + sd]; ax = (kn - an) / np.linalg.norm(kn - an)
+                    m_ = bl[(xyz[bl, 0] > 0) == (sd == 'L')]
+                    q = xyz[m_] - an; h = q @ ax; rad = q - np.outer(h, ax); rn = np.linalg.norm(rad, axis=1, keepdims=True)
+                    xyz[m_] = an + np.outer(h, ax) + rad * np.maximum(rn - .005, .01) / np.maximum(rn, 1e-6)
+                sunk += len(bl); continue
+            badm = np.zeros(len(xyz), bool); badm[bl] = True
+            if os.environ.get('FIT_NO_DROP'): break
+            keep_ = ~badm[T_].all(1); dropped += int((~keep_).sum()); T_ = T_[keep_]
+        attrs['POSITION'] = [tuple(map(float, r)) for r in xyz]
+        idx = [(int(i),) for i in T_.ravel()]
+        rep['skin_under_greaves'] = {'vertex_sinks': sunk, 'greave_push_passes': pushed_g, 'triangles_dropped': dropped}
     log(mesh_name, len(idx) // 3, 'triangles; ground fit', rep)
     return {'name': mesh_name, 'attrs': attrs, 'indices': idx, 'regions': regions}, rep
 
@@ -1054,6 +1435,7 @@ def export_lod(lod, mesh_name):
 meshes = []; report['ground_fit'] = {}; team_uv = {}
 for lod, name in ((lod0, 'spearman_LOD0'), (lod1, 'spearman_LOD1')):
     m, rep = export_lod(lod, name); meshes.append(m); report['ground_fit'][name] = rep
+    if name.endswith('LOD0'): team_lod0_masks = {k: raster_mask(v) for k, v in team_uv.items()}
 report['team_regions'] = {m['name']: sorted({r['team'] for r in m['regions'] if r['team']}) for m in meshes}
 # Team areas carry neutral value only (the runtime multiplies in the team colour,
 # README round 6): light for crest and trim, mid grey for the rim so its dark
@@ -1074,9 +1456,19 @@ for kind, tris_ in team_uv.items():
         inside = (w1 >= -.02) & (w2 >= -.02) & (1 - w1 - w2 >= -.02)
         mask[lo[1]:hi[1], lo[0]:hi[0]] |= inside
     if not mask.any(): continue
+    # LOD1's coarser UVs sample a few texels past LOD0's islands: grow the team
+    # area into the empty gutter only, never onto texels other faces use.
+    if 'occupied' not in globals():
+        occupied = raster_mask([t for p_ in parts for t in uv_tris(lod0[p_])])
+    for _ in range(6):
+        grow = mask | np.roll(mask, 1, 0) | np.roll(mask, -1, 0) | np.roll(mask, 1, 1) | np.roll(mask, -1, 1)
+        mask = mask | (grow & ~occupied)
     lum = bp[..., :3] @ np.array([.2126, .7152, .0722], np.float32)
     grey = np.clip(lum / max(float(lum[mask].mean()), 1e-3) * target.get(kind, .75), .15, 1)
-    bp[mask, :3] = grey[mask, None]
+    # Shield rim: pale warm bronze rather than grey. Rim texels sampled by the
+    # neighbouring (non-team) field faces then read as bronze, not as a pale sliver.
+    tint = np.array([1.08, .95, .70], np.float32) if kind == 'shield rim' else np.ones(3, np.float32)
+    bp[mask, :3] = np.clip(grey[mask, None] * tint, 0, 1)
 maps_img['basecolor'].pixels.foreach_set(bp.ravel()); maps_img['basecolor'].update()
 report['team_neutralised_texels'] = {k: len(v) for k, v in team_uv.items()}
 images = []
@@ -1091,11 +1483,12 @@ for name, im in (('basecolor', maps_img['basecolor']), ('normal', maps_img['norm
     small.filepath_raw = str(path); small.file_format = fmt
     small.save(filepath=str(path), quality=args.jpeg_quality)
     images.append((name, mime, path.read_bytes()))
-credit = f'{args.credit}; animation and rig: {OAD_CREDIT}'
+credit = f'{args.credit}; ' + ''.join(f"{r['part']}: {r['credit']}; " for r in replaced if r['credit']) + f'animation and rig: {OAD_CREDIT}'
 pack(rig.g, meshes, images, out, credit, args.license,
      extras={'texture_master_size': args.bake_size, 'texture_delivery': {'encoding': args.texture_format.upper(), 'quality': args.jpeg_quality, 'pixels': args.ship_size},
              'source_model': {'file': args.source.name, 'sha256': report['source_sha256'], 'credit': args.credit},
-             'fit': 'tools/art/anim3d/kit/fit_source_to_0ad.py'},
+             'fit': 'tools/art/anim3d/kit/fit_source_to_0ad.py',
+             'replaced_parts': [{k: r[k] for k in ('part', 'file', 'sha256', 'credit', 'license')} for r in replaced]},
      material_name='Fitted ' + args.source.stem)
 for name in ('LICENSE-ART',):
     if not (out.parent / name).exists() and (args.rig.parent / name).exists(): shutil.copy(args.rig.parent / name, out.parent / name)
@@ -1111,7 +1504,8 @@ Generated by `tools/art/anim3d/kit/fit_source_to_0ad.py`; replace this stub with
 - Changes: unposed to the 0 A.D. bind pose, proportions fitted to the 0 A.D. bone lengths, re-skinned with
   0 A.D. weights, props re-seated, decimated to two LODs, materials baked to one atlas, team mask added.
 - Combined asset licence: {args.license}.
-""")
+""" + ''.join(f"- Replacement {r['part']}: {r['credit'] or '(credit not given)'}, licence {r['license'] or '(not given)'}. "
+              f"File `{r['file']}`, SHA-256 `{r['sha256']}`.\n" for r in replaced))
 report.update(glb=str(out), glb_bytes=out.stat().st_size, seconds=round(time.time() - t0, 1))
 bpy.ops.wm.save_as_mainfile(filepath=str(work / 'fitted-lods.blend'))
 (work / 'fit-report.json').write_text(json.dumps(report, indent=2, default=float) + '\n')
