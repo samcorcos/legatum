@@ -111,6 +111,9 @@ This file holds the current rules, one line each. The user's words, dates, as-bu
 - No "coalition" in the UI; say the plain facts (user, 2026-11-11).
 - A select or chip gets a fixed width only when its longest option fits; when option labels change, check the longest at 1000x600. A reason line never repeats its heading or mentions a queue the city doesn't have. A banner icon that stands for a yield is drawn in that yield's colour, not ink (UI review, 2026-11-22, PR #98).
 
+- A treasury change shown as "before → after" in a narrow chip wraps as one unit, never splitting the arrow from its result (UI review, 2026-11-26).
+- A height-only hide in a forecast card (an `@media (max-height)` rule) may drop only lines another visible row on the card already states; the headline, the red risk row and the Walls row never hide (UI review, 2026-11-26).
+
 ## Look and feel
 
 - Premium means imagery and iconography: painted art, portraits where a leader is the subject, celebrations for rewards, a staged reveal at the end of a game (user, 2026-10-06, 2026-10-17). Art direction lives in `legatum-art`.
