@@ -15,8 +15,8 @@ ap.add_argument('--git-dir', type=Path); ap.add_argument('--git-width', type=int
 a = ap.parse_args()
 paint = Image.open(a.painting).convert('RGB'); W, H = paint.size
 # Crops as fractions of the 1254 px painting master (spearman-source.png).
-REF = {'head': (.43, .18, .64, .38), 'shield': (.53, .40, .76, .70), 'forearm': (.32, .37, .45, .52), 'knees': (.37, .60, .64, .79)}
-REGIONS = {'head': ['head-front', 'head-three', 'head-side', 'head-top'],
+REF = {'head': (.40, .14, .66, .40), 'shield': (.53, .40, .76, .70), 'forearm': (.32, .37, .45, .52), 'knees': (.37, .60, .64, .79)}
+REGIONS = {'head': ['head-front', 'head-three', 'head-side', 'head-top', 'crest-side', 'crest-three'],
            'shield': ['shield-lod1-1.2m', 'shield-lod1-close'],
            'forearm': ['forearm-left-front', 'forearm-left-back', 'forearm-left-attack'],
            'knees': ['knees-front', 'knees-side', 'knees-walk', 'knees-attack']}

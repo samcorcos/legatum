@@ -31,7 +31,7 @@ from fit_pack import pack
 
 ROOT = Path(os.environ.get('ANIM_ROOT', Path.home() / 'LegatumRuns/anim-pilot'))
 APPROVED = KIT.parent / 'units/spearman-0ad/spearman.glb'
-PART_ORDER = ['body', 'layer', 'cloak', 'helmet', 'shield', 'spear']  # 'layer': clothing over the skin, baked on its own
+PART_ORDER = ['body', 'layer', 'cloak', 'helmet', 'crest', 'shield', 'spear']  # 'layer': clothing over the skin, baked on its own
 GROUPS = {'torso': ['hip', 'spine', 'spine1', 'chest', 'neck', 'head', 'shoulder_L', 'shoulder_R'],
           'arm_L': ['shoulder_L', 'arm_L', 'forearm_L', 'hand_L', 'finger_L', 'fingertip_L', 'shield_arm'],
           'arm_R': ['shoulder_R', 'arm_R', 'forearm_R', 'hand_R', 'finger_R', 'fingertip_R', 'weapon_R'],
@@ -63,6 +63,8 @@ ap.add_argument('--skin', help="regex for the object(s) that are the body's skin
 ap.add_argument('--smart-uv', action='store_true', help='smart-project a new atlas instead of repacking the source UV charts')
 ap.add_argument('--crest-glb', type=Path, help="take the crest (team region 'crest' plus 'crest_base') from another unit GLB on this rig, seated on this helmet's crown")
 ap.add_argument('--crest-width', type=float, default=1.0, help='side-to-side scale of a --crest-glb crest (fuller horsehair)')
+ap.add_argument('--crest-mass', action='store_true', help='build the crest as its own dense part: lofted horsehair mass with strand grooves (about 2k triangles)')
+ap.add_argument('--hide-skin-lod0', type=float, default=0, metavar='M', help='drop LOD0 skin faces lying within M metres under clothing or armour (never seen)')
 ap.add_argument('--crest-strands', type=float, default=0, help='horsehair strand relief in the crest normal bake (wave scale; about 12 gives 6-8 mm strands)')
 ap.add_argument('--knee-smooth', action='store_true', help='smooth skin weights around the knees (removes weight-transfer creases)')
 ap.add_argument('--sculpt-override', action='append', default=[], metavar='PART=FILE.blend:OBJECT',
@@ -550,6 +552,13 @@ if args.crest_glb:
                             'vertices': int(len(used)), 'top_m': round(float(pos[:, 1].max()), 3)}
     log('crest from', report['crest_from'])
 
+if args.crest_mass:
+    from fit_shells import crest_mass
+    cm, crep = crest_mass(all_co(fitted_objects['helmet']), args.max_height)
+    cm['part'] = 'crest'; fitted_objects['crest'] = [cm]
+    team_rules.append(('crest', r'^Crest horsehair'))
+    report['crest_mass'] = crep; log('crest mass', crep)
+
 if args.add_crest:
     # A horsehair crest arc, front to back over the helmet's crown, as in the
     # Spearman painting. Generated strands texture; team colour via its material.
@@ -669,7 +678,7 @@ def budgets(total, parts, keep=()):
     raw = {p: sum(ntris(o) for o in fitted_objects[p]) for p in parts}
     kept = {p: raw[p] for p in parts if p in keep}
     total -= sum(kept.values()); parts = [p for p in parts if p not in keep]
-    floor = {'spear': 90, 'shield': 300, 'helmet': 250, 'cloak': 200, 'body': 1000, 'layer': 800}
+    floor = {'spear': 90, 'shield': 300, 'helmet': 250, 'crest': 300, 'cloak': 200, 'body': 1000, 'layer': 800}
     weight = {p: raw[p] ** .75 * {'body': 1.6}.get(p, 1) for p in parts}
     share = {p: max(floor.get(p, 100), total * weight[p] / sum(weight.values())) for p in parts}
     scale = total / sum(share.values())
@@ -685,6 +694,20 @@ for p in parts:
     o['mat_names'] = [m.name if m else '' for m in o.data.materials]
     sm = o.data.attributes.new('src_mat', 'INT', 'FACE')
     mi = np.empty(len(o.data.polygons), np.int64); o.data.polygons.foreach_get('material_index', mi); sm.data.foreach_set('value', mi)
+    if p == 'body' and args.hide_skin_lod0 and fitted_objects.get('layer'):
+        # Skin that sits just under clothing or armour is never seen: spend those
+        # triangles on the visible parts (and the crest) instead.
+        Lp = all_co(fitted_objects['layer']); me = o.data; n = len(me.vertices)
+        P = co(o); Nn = np.empty(n * 3); me.vertices.foreach_get('normal', Nn); Nn = Nn.reshape(-1, 3)
+        hidden = np.zeros(n, bool)
+        for k in range(0, n, 512):
+            d2 = ((P[k:k + 512, None] - Lp[None]) ** 2).sum(2); jx = d2.argmin(1)
+            d = np.sqrt(d2[np.arange(len(jx)), jx]); up = ((Lp[jx] - P[k:k + 512]) * Nn[k:k + 512]).sum(1)
+            hidden[k:k + 512] = (d < args.hide_skin_lod0) & (up > -.002)
+        bm = bmesh.new(); bm.from_mesh(me); bm.verts.ensure_lookup_table()
+        dead = [f for f in bm.faces if all(hidden[v.index] for v in f.verts)]
+        bmesh.ops.delete(bm, geom=dead, context='FACES'); bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context='VERTS')
+        bm.to_mesh(me); bm.free(); report['lod0_hidden_skin_faces_removed'] = len(dead)
     apply_mod(o, 'TRIANGULATE')
     if ntris(o) > b0[p]: apply_mod(o, 'DECIMATE', ratio=b0[p] / ntris(o), use_collapse_triangulate=True)
     lod0[p] = o
@@ -755,7 +778,7 @@ for spec in args.sculpt_override:
 # LOD1 is what players see at normal zoom: garments must survive. Skin hidden
 # under clothing or armour goes first (it only pokes through a coarse garment),
 # then the budget favours garments over skin.
-lod1_weight = {'layer': 1.6, 'cloak': 1.0, 'body': .8, 'helmet': .5, 'shield': .7, 'spear': .1}  # the aspis rim shreds below ~500
+lod1_weight = {'layer': 1.6, 'cloak': 1.0, 'body': .8, 'helmet': .45, 'crest': .3, 'shield': .7, 'spear': .1}  # the aspis rim shreds below ~500
 wsum_ = sum(lod1_weight.get(p, .5) for p in parts)
 b1 = {p: int(args.lod1 * lod1_weight.get(p, .5) / wsum_) for p in parts}
 cover = [lod0[p] for p in ('layer', 'cloak') if p in lod0]
@@ -842,8 +865,8 @@ for lod in (lod0, lod1):
     for p, o in lod.items():
         for b in rig.bones:
             if b not in o.vertex_groups: o.vertex_groups.new(name=b)
-        if p in RIGID or p in ('spear', 'shield', 'helmet'):
-            bone = {'spear': 'weapon_R', 'shield': 'shield_arm', 'helmet': 'helmet'}[p]
+        if p in RIGID or p in ('spear', 'shield', 'helmet', 'crest'):
+            bone = {'spear': 'weapon_R', 'shield': 'shield_arm', 'helmet': 'helmet', 'crest': 'helmet'}[p]
             o.vertex_groups[bone].add(list(range(len(o.data.vertices))), 1., 'REPLACE')
         elif p == 'cloak' and donors['cloak']:
             transfer(o, donors['cloak'])
@@ -1104,7 +1127,7 @@ def team_faces(o, p):
 
 
 # ------------------------------------------------------------------------- export
-names = {'body': 'body', 'layer': 'garment', 'cloak': 'cloak', 'helmet': 'helmet', 'shield': 'aspis', 'spear': 'spear'}
+names = {'body': 'body', 'layer': 'garment', 'cloak': 'cloak', 'helmet': 'helmet', 'crest': 'crest', 'shield': 'aspis', 'spear': 'spear'}
 team_part = {'crest': 'crest', 'shield rim': 'aspis', 'cloak trim': 'cloak'}
 planes = clip_planes(rig.g)
 log('clip floor planes', len(planes))
@@ -1139,7 +1162,7 @@ def export_lod(lod, mesh_name):
             for poly in me.polygons:
                 if team_of[poly.index]: team_uv.setdefault(team_of[poly.index], []).append([tuple(uvl[li].uv) for li in poly.loop_indices])
         gname = {g.index: g.name for g in o.vertex_groups}
-        bone = {'spear': 'weapon_R', 'shield': 'shield_arm', 'helmet': 'helmet'}.get(p)
+        bone = {'spear': 'weapon_R', 'shield': 'shield_arm', 'helmet': 'helmet', 'crest': 'helmet'}.get(p)
         for kind in kinds:
             start = len(attrs['POSITION']); mapping = {}
             for poly in me.polygons:

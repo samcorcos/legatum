@@ -258,3 +258,39 @@ copies and rebuilds to `units/spearman-fit-casey-sculpted/`. `--crest-strands N`
 horsehair bump to the crest bake. Result: the crest and plate barely change and the greaves
 got worse (pointed front, skin slits); scripting cannot stand in for the sculpt at these
 vertex counts. Use the GUI sculpt of the untouched `*-sculpt.blend` files.
+
+## r5/r6 summary (Hoplite Warrior, for provenance)
+
+**Outputs.** r5: `units/spearman-fit-casey/spearman.glb` (the map's GLB, sha1 0d3a1de3).
+r6: `units/spearman-fit-casey-r6/spearman.glb` (test path). Both validate with the map
+flags (`--lod0-max 30000 --lod-total-max 35000 --max-bytes 3000000 --max-joints 64`), Khronos
+0/0/0/0, and carry the round-6 skeleton and clips byte for byte.
+
+**r5 changes (close-up pass).** Corinthian face plate with two eye slots split by a raised,
+bevelled nasal plus the cheek-guard gap, in geometry; the aspis rim kept at LOD0 topology in
+LOD1 with pale-bronze neutral texels and a 32 px bake margin (no pale sliver); the PBR aspis's
+handgrip no longer imported (it stood off the forearm as flaps); knee weights smoothed.
+Close-up harness: `kit/closeups.py`, `kit/closeup_sheets.py`.
+
+**r6 crest part.** `--crest-mass` builds the crest as its own part (`fit_shells.crest_mass`):
+a lofted mass along a front-to-back arc over the crown that leans back and trails behind the
+neck guard, a teardrop section fuller toward the top, 11 strand grooves in real geometry
+(about 9 mm) following the flow, tufted top edge, streaked near-neutral texture with darker
+roots. 44 x 22 sections, 1,976 triangles in LOD0, decimated to 70 in LOD1 (silhouette kept).
+Rigid on `helmet`, team colour via COLOR_0, baked into the shared atlas, same single material.
+`kit/crest_clearance.py` checks every clip at 30 fps: no contact with the spear shaft or the
+shield disc (no cloak on this model).
+
+**r6 budget trims.** LOD0 stays at 29,497 with the crest kept whole: `--hide-skin-lod0 .015`
+drops skin faces within 1.5 cm under clothing or armour (1,848 faces, never visible), and the
+proportional budget takes the rest from the helmet shell (2,095), skin (3,250) and spear
+shaft (274). LOD1 2,758 (LOD1 also drops hidden skin, 1,030 faces).
+
+**Sculpt round trip.** `--sculpt-override PART=FILE.blend:OBJECT` re-imports hand-sculpted
+LOD0 parts (vertex count and UVs must match); proven on unmodified copies (identical
+geometry). A scripted stand-in (`kit/scripted_sculpt.py`) did not help (greaves got worse) and
+is not used. With the new crest part, a helmet sculpt must be re-saved from an r6 work file.
+
+**Still open.** From the side the face plate reads as a separate visor; the greave tops end in
+pointed, notched edges instead of a rounded knee guard; the bronze is still mottled in places.
+These need hand sculpting/painting, which is not available in this pipeline.

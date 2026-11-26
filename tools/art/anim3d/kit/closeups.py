@@ -93,6 +93,8 @@ shoot('head-front', head, FRONT + UP * .05, .42)
 shoot('head-three', head, FRONT + RIGHT * .9 + UP * .1, .42)
 shoot('head-side', head, RIGHT, .42)
 shoot('head-top', head, UP + FRONT * .15, .42)
+shoot('crest-side', head + Vector((0, .02, .12)), RIGHT + FRONT * .15, .62)
+shoot('crest-three', head + Vector((0, .02, .12)), FRONT + RIGHT * .9 + UP * .15, .62)
 show('spearman_LOD1')
 sh = joint('shield_arm')
 # The aspis faces outward (+X) from the left forearm in the clips' guard.
