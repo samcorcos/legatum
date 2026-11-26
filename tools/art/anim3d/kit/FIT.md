@@ -373,3 +373,16 @@ fit_source_to_0ad.py -- <r6 arguments without --corinthian> --crest-tail .95 --k
   outside a greave in any walk/attack/idle/hit frame (sinks 5 mm toward the shin axis, up to six
   passes, then drops what is left). `armour_cover_check.py` checks both LODs and only drawn vertices.
 - r9a (Aegis, AI-generated Tripo source) and r9b (tolnaydavid, no dome): both 0 in the check.
+
+## Round r10 (greaves built from the shin)
+
+`--replace-part greaves=built` grows each greave from the fitted shin (`fit_shells.greave_from_skin`):
+an offset sheet (6 mm) of the shin/calf skin from 6 cm above the ankle to just below the knee,
+closed except a narrow back seam, smoothed, two raised embossed ridges, rolled top and bottom rims,
+and a domed oval knee guard with a median ridge and raised border. No third-party source. Built
+greaves are weighted to the shin up to 12 cm above the knee, so the guard rides the shin. Export
+sinks skin flagged by `armour_cover_check.flagged` (both its own bins and bins up to the rims,
+all five clips, with a 2 mm stricter margin), then drops what is left. New
+`kit/greave_shard_check.py` (Blender): ray grids over each shin from six directions, every third
+frame of walk and attack, counting rays whose first hit is skin with a greave less than 2 cm
+behind it. `--skin-max-value` caps pale skin texels.

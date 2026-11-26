@@ -14,7 +14,7 @@ from pathlib import Path
 import numpy as np
 
 
-def flagged(g, P, J, W, part, used, clips=('walk', 'attack'), per_frame=False):
+def flagged(g, P, J, W, part, used, clips=('walk', 'attack'), per_frame=False, edge=.03, tol=.002):
     """Indices of skin vertices showing through a greave in any frame of `clips`."""
     d = g.doc; skin = d['skins'][0]; bones = [d['nodes'][j]['name'] for j in skin['joints']]
     inv = np.array(g.accessor(skin['inverseBindMatrices'])).reshape(-1, 4, 4).transpose(0, 2, 1)
@@ -40,7 +40,7 @@ def flagged(g, P, J, W, part, used, clips=('walk', 'attack'), per_frame=False):
                 def polar(Z):
                     q = Z - an; h = q @ ax; return np.arctan2(q @ sx, q @ fz), h, np.linalg.norm(q - np.outer(h, ax), axis=1)
                 gt, gh, gr = polar(Y[gm]); st, sh, sr = polar(Y[bi])
-                tb = np.linspace(-np.pi, np.pi, 25); hb = np.linspace(gh.min() + .03, gh.max() - .03, 9)
+                tb = np.linspace(-np.pi, np.pi, 25); hb = np.linspace(gh.min() + edge, gh.max() - edge, 9)
                 rmin = np.full((24, 8), np.inf)
                 ti_g = np.clip(np.digitize(gt, tb) - 1, 0, 23); hj_g = np.digitize(gh, hb) - 1
                 okg = (hj_g >= 0) & (hj_g < 8); np.minimum.at(rmin, (ti_g[okg], hj_g[okg]), gr[okg])
@@ -48,7 +48,7 @@ def flagged(g, P, J, W, part, used, clips=('walk', 'attack'), per_frame=False):
                 ti = np.clip(np.digitize(st, tb) - 1, 0, 23); hj = np.digitize(sh, hb) - 1
                 inside = (hj >= 0) & (hj < 8)
                 lim = np.full(len(st), np.inf); lim[inside] = rmin[ti[inside], hj[inside]]
-                bad = np.isfinite(lim) & (sr > lim + .002) & (sr < .12)
+                bad = np.isfinite(lim) & (sr > lim + tol) & (sr < .12)
                 out.update(bi[bad].tolist()); bad_f += int(bad.sum())
             if bad_f: frames[clip['name']].append((f, bad_f))
     return (out, frames) if per_frame else out

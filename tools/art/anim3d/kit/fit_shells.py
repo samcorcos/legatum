@@ -191,3 +191,85 @@ def crest_mass(helmet_pts, ceiling, name='Crest horsehair (procedural)', seg=44,
     m = material(name + ' material', None, .82, 0., painter)
     o = _mesh(name, verts, faces, uvs, m)
     return o, {'triangles': 2 * seg * ring + 2 * (ring - 2), 'height_m': round(hgt + .02, 3), 'length_m': round(2 * R, 3)}
+
+
+def greave_from_skin(skin_pts, knee, ankle, bronze, name='HIGH-greave-built', offset=.006, thick=0.,
+                     nt=32, nh=14, seam=.10, ridges=(-.55, .55), knee_cap=True):
+    """A greave grown from the fitted shin itself: an offset shell of the shin/calf
+    skin from just above the ankle to just below the knee, closed except a narrow seam
+    at the back, with rolled top and bottom rims, raised embossed lines, and a domed,
+    ridged knee guard over the kneecap. Returns (objects, report). glTF bind space."""
+    u = (knee - ankle) / np.linalg.norm(knee - ankle); L = float(np.linalg.norm(knee - ankle))
+    side = np.cross(u, [0, 0, 1.]); side /= np.linalg.norm(side); front = np.cross(side, u)
+    q = skin_pts - ankle; h = q @ u; r = np.linalg.norm(q - np.outer(h, u), axis=1)
+    th = np.arctan2(q @ side, q @ front)
+    h0, h1 = .06, L - .015
+    sel = (h > h0 - .03) & (h < h1 + .03) & (r < .1)
+    H = np.linspace(h0, h1, nh); T = np.linspace(-np.pi + seam, np.pi - seam, nt)
+    R = np.full((nh, nt), np.nan)
+    for i, hh in enumerate(H):
+        for j, tt in enumerate(T):
+            dt = np.abs((th[sel] - tt + np.pi) % (2 * np.pi) - np.pi)
+            m = (np.abs(h[sel] - hh) < (h1 - h0) / nh) & (dt < np.pi / nt * 1.6)
+            if m.sum() >= 2: R[i, j] = np.percentile(r[sel][m], 92)
+    for _ in range(nh * nt):                                   # fill gaps from neighbours
+        miss = np.isnan(R)
+        if not miss.any(): break
+        Rp = np.pad(R, 1, mode='edge'); nb = np.stack([Rp[:-2, 1:-1], Rp[2:, 1:-1], Rp[1:-1, :-2], Rp[1:-1, 2:]])
+        fill = np.nanmean(np.where(np.isnan(nb), np.nan, nb), 0); R[miss] = fill[miss]
+    R = np.nan_to_num(R, nan=float(np.nanmedian(R)))
+    for _ in range(3):                                         # smooth: a metal shell, not skin
+        Rp = np.pad(R, 1, mode='edge'); R = (4 * R + Rp[:-2, 1:-1] + Rp[2:, 1:-1] + Rp[1:-1, :-2] + Rp[1:-1, 2:]) / 8
+    R = R + offset
+    # Embossed lines: raised ridges running down the front either side of the shin.
+    for rc in ridges:
+        R += .0016 * np.exp(-((T[None, :] - rc) / .06) ** 2)
+    def pt(i, j, extra=0.):
+        return ankle + u * H[i] + (side * math.sin(T[j]) + front * math.cos(T[j])) * (R[i, j] + extra)
+    verts, faces, uvs = [], [], []
+    for i in range(nh):
+        for j in range(nt):
+            verts.append(tuple(pt(i, j))); uvs.append((j / (nt - 1), i / (nh - 1)))
+    for i in range(nh - 1):
+        for j in range(nt - 1):
+            faces.append((i * nt + j, i * nt + j + 1, (i + 1) * nt + j + 1, (i + 1) * nt + j))
+    shell = _mesh(name, verts, faces, uvs, bronze, thickness=thick)   # single-sided sheet: decimates cleanly
+    # Solidify offset=1 pushes outward; pull the shell back so its inner face sits at offset.
+    objs = [shell]
+    def tube(pts, rad, nm, closed=False):
+        vs, fs, us = [], [], []; seg = 6; n = len(pts)
+        for a_, p in enumerate(pts):
+            t = pts[(a_ + 1) % n if closed else min(a_ + 1, n - 1)] - pts[(a_ - 1) % n if closed else max(a_ - 1, 0)]
+            t = t / max(np.linalg.norm(t), 1e-9); b1 = np.cross(t, u); b1 /= max(np.linalg.norm(b1), 1e-9); b2 = np.cross(t, b1)
+            for k in range(seg):
+                ang = 2 * math.pi * k / seg; vs.append(tuple(p + rad * (b1 * math.cos(ang) + b2 * math.sin(ang)))); us.append((a_ / n, k / seg))
+        for a_ in range(n - (0 if closed else 1)):
+            b_ = (a_ + 1) % n
+            for k in range(seg): fs.append((a_ * seg + k, a_ * seg + (k + 1) % seg, b_ * seg + (k + 1) % seg, b_ * seg + k))
+        return _mesh(nm, vs, fs, us, bronze)
+    for i, nm in ((0, '-rim-bottom'), (nh - 1, '-rim-top')):
+        objs.append(tube(np.array([pt(i, j, thick + .0015) for j in range(nt)]), .0035, name + nm))
+    rep = {'height_m': round(h1 - h0, 3), 'radius_mm': [round(float(R.min()) * 1000), round(float(R.max()) * 1000)]}
+    if knee_cap:
+        # Knee guard: a domed shield over the kneecap, wider than tall, with a vertical
+        # median ridge and a raised border, sitting on the greave top and rising over the knee.
+        j0 = int(np.argmin(np.abs(T))); r_top = float(R[-1, j0])
+        kc = knee + front * (r_top + .004) + u * .028
+        W_, Hh, D = .06, .095, .013; nu, nv = 20, 14
+        vs, fs, us = [], [], []
+        for a_ in range(nv + 1):
+            y = -1 + 2 * a_ / nv
+            for b_ in range(nu + 1):
+                x = -1 + 2 * b_ / nu
+                rr = min(1., x * x + y * y)
+                bulge = D * (1 - rr) ** .6 + .003 * math.exp(-(x / .1) ** 2) * (1 - rr) \
+                    + .0025 * math.exp(-((math.sqrt(x * x + y * y) - .82) / .07) ** 2)
+                # ellipse outline: squeeze rows to the cap's oval
+                s_ = math.sqrt(max(0., 1 - y * y))
+                vs.append(tuple(kc + side * (x * s_ * W_) + u * (y * Hh / 2) + front * bulge)); us.append((b_ / nu, a_ / nv))
+        w = nu + 1
+        for a_ in range(nv):
+            for b_ in range(nu): fs.append((a_ * w + b_, a_ * w + b_ + 1, (a_ + 1) * w + b_ + 1, (a_ + 1) * w + b_))
+        cap = _mesh(name + '-kneecap', vs, fs, us, bronze)
+        objs.append(cap); rep['knee_guard'] = {'width_m': 2 * W_, 'height_m': Hh, 'dome_mm': D * 1000}
+    return objs, rep

@@ -76,6 +76,7 @@ ap.add_argument('--bronze-detail', type=float, default=1.3, help='gain on the hi
 ap.add_argument('--bronze-ao', type=float, default=.45, help='AO floor on metal (lower = darker cavities); other surfaces keep 0.45')
 ap.add_argument('--no-greave-dome', action='store_true', help='no kneecap dome on replaced greaves')
 ap.add_argument('--greave-skin-any', action='store_true', help='delete skin faces with ANY vertex under a greave (not only fully covered ones)')
+ap.add_argument('--skin-max-value', type=float, default=1.4, help='cap on skin brightness relative to its mean (pale patches from texture hidden under source armour)')
 ap.add_argument('--helmet-size', type=float, default=1.0, help='replacement helmet size relative to an exact head fit')
 ap.add_argument('--helmet-uv-share', type=float, default=1.0, help='scale the helmet UV islands before packing (2 = four times the atlas area)')
 ap.add_argument('--crest-shift', type=float, default=0., help='move the crest arc forward (+) or back (-) along the helmet, metres')
@@ -464,6 +465,7 @@ if args.press_skin and 'body' in fitted_objects and fitted_objects.get('layer'):
     log('skin pressed under layers', report['skin_pressed_under_layers'])
 
 replaced = []; helmet_centre = None
+built_greaves = any(x.startswith('greaves=built') for x in args.replace_part)  # knee guard rides the shin bone
 if args.replace_part:
     from fit_replace import import_part, fit_helmet, fit_greave, delete_faces, tuck_skin, finish_greave, delete_covered_skin
     kv = lambda items: dict(x.split('=', 1) for x in items)
@@ -472,7 +474,8 @@ if args.replace_part:
     for spec in args.replace_part:
         part, rest = spec.split('=', 1)
         path, obj = (rest.rsplit(':', 1) if ':' in Path(rest).name else (rest, None))
-        new = import_part(path, obj, rots.get(part, (0, 0, 0)))
+        built = part == 'greaves' and path == 'built'   # greaves grown from the fitted shin, no source file
+        new = [] if built else import_part(path, obj, rots.get(part, (0, 0, 0)))
         skin = all_co(fitted_objects['body'])
         if part == 'helmet':
             # The source helmet and any generated face plate go; the crest (built
@@ -490,11 +493,21 @@ if args.replace_part:
                 m = np.zeros(len(P), bool)
                 for sd in 'LR':
                     kj, aj = rig.joint['leg_' + sd], rig.joint['foot_' + sd]
-                    rel = P - kj; m |= (P[:, 1] > aj[1] + .03) & (P[:, 1] < kj[1] + .07) & (np.hypot(rel[:, 0], rel[:, 2]) < .12)
+                    rel = P - kj; m |= (P[:, 1] > aj[1] + .03) & (P[:, 1] < kj[1] + (.12 if built_greaves else .07)) & (np.hypot(rel[:, 0], rel[:, 2]) < .12)
                 return m
             layers = [o for o in fitted_objects.get('layer', []) if not o.name.startswith('Sleeve')]
             rep_ = {'old_greave_faces_removed': delete_faces(layers, on_shin, any_vertex=True)}  # no leftover rim strips
-            if len(new) == 1 and (co(new[0])[:, 0] < -.02).any() and (co(new[0])[:, 0] > .02).any():
+            if built:
+                from fit_shells import greave_from_skin
+                bz = shell_material('Greave bronze (generated)', (.62, .43, .2), .35, 1.)
+                for sd in 'LR':
+                    kj, aj = rig.joint['leg_' + sd], rig.joint['foot_' + sd]
+                    leg_ = skin[(np.sign(skin[:, 0]) == (1 if sd == 'L' else -1))]
+                    objs_, r2 = greave_from_skin(leg_, kj, aj, bz, name=f'HIGH-greave-built-{sd}')
+                    for x in objs_: x['part'] = 'greave'; fitted_objects.setdefault('greave', []).append(x)
+                    r2['covered_skin_faces_deleted'] = delete_covered_skin(fitted_objects['body'], objs_[:1], (aj + (kj - aj) * .05, kj))
+                    rep_[sd] = r2
+            elif len(new) == 1 and (co(new[0])[:, 0] < -.02).any() and (co(new[0])[:, 0] > .02).any():
                 # One object holding both greaves (as in a full character): split at x = 0.
                 src_ = new[0]; halves = []
                 for keep_pos in (False, True):
@@ -504,7 +517,7 @@ if args.replace_part:
                     bm.to_mesh(x.data); bm.free(); halves.append(x)
                 bpy.data.objects.remove(src_, do_unlink=True); new = halves
             sides = sorted(new, key=lambda o: co(o).mean(0)[0])
-            pairs = [('R', [sides[0]], False), ('L', [sides[-1]], False)] if len(new) > 1 and co(sides[0]).mean(0)[0] < 0 < co(sides[-1]).mean(0)[0] \
+            pairs = [] if built else [('R', [sides[0]], False), ('L', [sides[-1]], False)] if len(new) > 1 and co(sides[0]).mean(0)[0] < 0 < co(sides[-1]).mean(0)[0] \
                 else [('L', new, False), ('R', new, True)]
             for sd, objs, mirror in pairs:
                 kj, aj = rig.joint['leg_' + sd], rig.joint['foot_' + sd]
@@ -518,7 +531,8 @@ if args.replace_part:
             for o in new: bpy.data.objects.remove(o, do_unlink=True)   # fitted copies were made
         else:
             raise SystemExit(f'--replace-part: PART must be helmet or greaves, not {part!r}')
-        info_ = {'part': part, 'file': Path(path).name, 'object': obj, 'sha256': hashlib.sha256(Path(path).read_bytes()).hexdigest(),
+        info_ = {'part': part, 'file': 'built from the fitted shin' if built else Path(path).name, 'object': obj,
+                 'sha256': None if built else hashlib.sha256(Path(path).read_bytes()).hexdigest(),
                  'credit': credits.get(part, ''), 'license': licences.get(part, ''), 'fit': rep_}
         replaced.append(info_); log('replaced', part, info_)
     report['replaced_parts'] = replaced
@@ -863,7 +877,7 @@ for spec in args.sculpt_override:
 # LOD1 is what players see at normal zoom: garments must survive. Skin hidden
 # under clothing or armour goes first (it only pokes through a coarse garment),
 # then the budget favours garments over skin.
-lod1_weight = {'layer': 1.6, 'greave': .35, 'cloak': 1.0, 'body': .8, 'helmet': .45, 'crest': .3, 'shield': .7, 'spear': .1}  # the aspis rim shreds below ~500
+lod1_weight = {'layer': 1.6, 'greave': .75 if built_greaves else .35, 'cloak': 1.0, 'body': .8, 'helmet': .45, 'crest': .3, 'shield': .7, 'spear': .1}  # the aspis rim shreds below ~500
 wsum_ = sum(lod1_weight.get(p, .5) for p in parts)
 b1 = {p: int(args.lod1 * lod1_weight.get(p, .5) / wsum_) for p in parts}
 cover = [lod0[p] for p in ('layer', 'greave', 'cloak') if p in lod0]
@@ -972,7 +986,7 @@ for lod in (lod0, lod1):
             P_ = co(o)
             for sd in 'LR':
                 side_ = (P_[:, 0] > 0) if sd == 'L' else (P_[:, 0] <= 0)
-                ky = rig.joint['leg_' + sd][1]; tw = np.clip((P_[:, 1] - (ky - .02)) / .08, 0, 1); tw = tw * tw * (3 - 2 * tw) * .5
+                ky = rig.joint['leg_' + sd][1] + (.12 if built_greaves else 0); tw = np.clip((P_[:, 1] - (ky - .02)) / .08, 0, 1); tw = tw * tw * (3 - 2 * tw) * .5
                 for i in np.nonzero(side_)[0]:
                     o.vertex_groups['leg_' + sd].add([int(i)], float(1 - tw[i]), 'REPLACE')
                     if tw[i] > 0: o.vertex_groups['thigh_' + sd].add([int(i)], float(tw[i]), 'REPLACE')
@@ -1185,7 +1199,7 @@ if args.grade_skin and 'body' in lod0:
         mean = B_[skin, :3].mean(0); tgt = srgb(args.grade_skin)
         # Hue locked to the target (no grey cast), value from the source's own
         # luminance, plus a little of its original colour variation.
-        lum = B_[skin, :3] @ np.array([.2126, .7152, .0722], np.float32); k_ = np.clip(lum / max(float(lum.mean()), 1e-3), .6, 1.4)
+        lum = B_[skin, :3] @ np.array([.2126, .7152, .0722], np.float32); k_ = np.clip(lum / max(float(lum.mean()), 1e-3), .6, args.skin_max_value)
         B_[skin, :3] = np.clip(.85 * tgt * k_[:, None] + .15 * (tgt + (B_[skin, :3] - mean)), 0, 1)
         maps_img['basecolor'].pixels.foreach_set(B_.ravel())
         report['skin_grade'] = {'texels': int(skin.sum()), 'from_srgb': (mean * 255).round().tolist(), 'to': args.grade_skin}
@@ -1334,12 +1348,15 @@ def export_lod(lod, mesh_name):
         J_ = np.array(attrs['JOINTS_0']).astype(int); W_ = np.array(attrs['WEIGHTS_0']); T_ = np.array([i[0] for i in idx]).reshape(-1, 3)
         dropped = 0; sunk = 0
         inv_ = np.array(rig.g.accessor(rig.g.doc['skins'][0]['inverseBindMatrices'])).reshape(-1, 4, 4).transpose(0, 2, 1)
-        for it in range(8):
+        for it in range(14):
             used_ = np.zeros(len(xyz), bool); used_[T_.ravel()] = True
-            bad_ = flagged(rig.g, xyz, J_, W_, part_, used_, ('walk', 'attack', 'idle', 'hit'))
+            clips_ = ('walk', 'attack', 'idle', 'hit', 'death')
+            bad_ = flagged(rig.g, xyz, J_, W_, part_, used_, clips_, tol=-.002)     # the check's own bins
+            if built_greaves: bad_ |= flagged(rig.g, xyz, J_, W_, part_, used_, clips_, edge=.003, tol=-.002)  # and up to the rims
+            log(mesh_name, 'skin through greaves pass', it, len(bad_))
             if not bad_: break
             bl = np.array(sorted(bad_))
-            if it < 6:
+            if it < 11:
                 # Sink flagged skin 5 mm toward its shin axis (bind space): no holes.
                 for sd in 'LR':
                     kn = rig.joint['leg_' + sd]; an = rig.joint['foot_' + sd]; ax = (kn - an) / np.linalg.norm(kn - an)
