@@ -380,3 +380,30 @@ test('a visitor plays: title, a people, turns, a second city, save and load, wit
   expect(problems, 'no console errors, failed requests, or requests beyond the static files').toEqual([]);
   if (gamesOrigin) expect(uploads.length, 'the game was sent to the upload Worker').toBeGreaterThan(0);
 });
+
+test('the 3D map loads a unit model with its textures under the hosted Content-Security-Policy', async ({ page, baseURL }) => {
+  // three.js GLTFLoader fetches a .glb's embedded textures as blob: URLs, which connect-src must allow
+  // (hosted/_headers). Local and CI e2e runs do not serve that header, so only this test catches a CSP gap.
+  const problems = watch(page, new URL(baseURL!).origin);
+  await page.addInitScript(() => {
+    try {
+      localStorage.setItem('legatum.map-view', '3d');
+      localStorage.setItem('legatum.intro.v1', 'off');
+      localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
+    } catch { /* storage blocked: the test still runs on defaults */ }
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: /^Single Player/ }).click();
+  await page.getByRole('button', { name: /^Start game/ }).click();
+  await expect(page.locator('.map3d-canvas')).toBeVisible({ timeout: 60_000 });
+  const textured = await page.evaluate(async () => {
+    type Scene = { model(slug: string): Promise<{ scene: { traverse(f: (o: { isMesh?: boolean; material?: { map?: { image?: unknown } } }) => void): void } } | null> };
+    const gltf = await (window as unknown as { legatumMap3d: Scene }).legatumMap3d.model('spearman');
+    let maps = 0;
+    gltf?.scene.traverse((o) => { if (o.isMesh && o.material?.map?.image) maps++; });
+    return { loaded: !!gltf, maps };
+  });
+  expect(textured.loaded).toBe(true);
+  expect(textured.maps).toBeGreaterThan(0);
+  expect(problems).toEqual([]);
+});

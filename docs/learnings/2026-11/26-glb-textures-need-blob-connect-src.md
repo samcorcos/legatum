@@ -1,0 +1,5 @@
+# A .glb's textures need `blob:` in connect-src (2026-11-26)
+
+The first 3D unit model (PR 265) drew as white, untextured figures on playlegatum.com, while it was textured locally and in every review. three.js GLTFLoader reads a GLB's embedded images by making `blob:` URLs and loading them with `fetch()` (its ImageBitmapLoader path, used in Chromium). `fetch()` is governed by `connect-src`, not `img-src`, and the hosted `_headers` CSP allowed `blob:` only in `img-src`. The browser blocked the fetch and logged "Couldn't load texture blob:…"; the mesh and its animations still loaded, so nothing failed loudly.
+
+Local dev, the vitest suite and CI's e2e do not serve `app/hosted/_headers`, so only the hosted smoke test (`npm run e2e:hosted`, which serves dist with those headers) or the live site sees CSP problems. Fix: `blob:` in `connect-src` (the loader creates these URLs from bytes already fetched from 'self'). `e2e-hosted/hosted.spec.ts` now loads the Spearman model under the hosted CSP and checks it has textures. Any new browser API that fetches (workers, blob/data URLs, new hosts) needs that hosted run before it ships.
