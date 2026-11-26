@@ -12,7 +12,7 @@ import { mapPlayerColor } from '../map/style';
 import { mapUnitArtSlug, mapUnitMiniatureUrl } from '../unitArt';
 import { BARBARIAN_COLOR } from '../theme';
 import { isBarbarian } from '../barbarians';
-import { ARC, fxUnits, type CombatPlan, type ShotKind } from '../map/combatFx';
+import { ARC, DEATH_MS, fxUnits, type CombatPlan, type ShotKind } from '../map/combatFx';
 import {
   CORNERS, PX, R, ROW, buildField, gridFor, hash2, heightAt, refreshFog, rnd, shapeChanged, tileAt, tileX, tileZ, worldFrom,
   type Field, type World,
@@ -20,6 +20,8 @@ import {
 
 const PARCH = new THREE.Color('#d9c9a3');
 const UP = new THREE.Vector3(0, 1, 0);
+/** Lunges, recoils and flinches read larger on the 3D figures than on the flat tokens (a fifth of a hex was hard to see at working zoom). */
+const LUNGE_3D = 1.6;
 /** Unit art with a finished 3D model (app/public/models/units/<file>.glb), keyed by the art slug the unit's painting
  *  uses (mapUnitArtSlug), so a model only stands in for its own painting: a Spartan or Aztec Spearman and a barbarian
  *  raider keep their own painted figures until they have models. Every other unit stands as its painted miniature.
@@ -810,7 +812,7 @@ export class MapScene {
 
   // ---------------- turn playback: moves, the fighting (map/combatFx.ts plan), the fallen ----------------
 
-  private anim: { start: number; duration: number; paths: Map<number, Hex[]>; plan: CombatPlan | null; ghosts: Map<number, THREE.Group>; fired: Set<string> } | null = null;
+  private anim: { start: number; duration: number; paths: Map<number, Hex[]>; plan: CombatPlan | null; ghosts: Map<number, THREE.Group>; fired: Set<string>; visualEnd: number } | null = null;
   private shotPool: THREE.Mesh[] = [];
 
   /** Play the turn just resolved: the same plan and clock as the 2D map. Null (or a still map) shows units where they ended. */
@@ -825,8 +827,14 @@ export class MapScene {
       g.position.set(tileX(i, this.world.w), Math.max(0, this.heightAt(tileX(i, this.world.w), tileZ(i, this.world.w))), tileZ(i, this.world.w) + 0.05);
       ghosts.set(id, g);
       this.units.add(g);
+      // Transparent from the start, so the fall's fade never recompiles a shader mid-playback (a hitch).
+      g.traverse((o) => { const m = (o as THREE.Mesh).material as THREE.Material | undefined; if (m && 'opacity' in m) m.transparent = true; });
     }
-    this.anim = { start: a.start, duration: a.duration, paths: a.paths, plan: a.plan ?? null, ghosts, fired: new Set() };
+    // The figures are done once the last move, blow, missile and fall are (the plan's tail is for the 2D map's damage cues).
+    const p = a.plan;
+    const visualEnd = p ? Math.max(0, ...[...p.moves.values()].flat().map((m) => m.t1), ...p.clashes.map((c) => c.t + p.stepMs),
+      ...p.shots.map((x) => x.launch + x.flight + 120), ...p.deaths.map((d) => d.t + DEATH_MS)) + 150 : 0;
+    this.anim = { start: a.start, duration: a.duration, paths: a.paths, plan: p ?? null, ghosts, fired: new Set(), visualEnd };
   }
 
   private endAnim() {
@@ -865,7 +873,7 @@ export class MapScene {
   private shotMesh(k: number, kind: ShotKind): THREE.Mesh {
     let m = this.shotPool[k];
     if (!m) {
-      m = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial({ color: '#2b2118', roughness: 0.7 }));
+      m = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial({ color: '#6e5536', roughness: 0.7 }));
       m.castShadow = true;
       this.shotPool[k] = m;
       this.scene.add(m);
@@ -873,7 +881,8 @@ export class MapScene {
     const want = kind === 'arrows' || kind === 'bolts' ? 'shaft' : 'ball';
     if (m.userData.shape !== want) {
       m.geometry.dispose();
-      m.geometry = want === 'shaft' ? new THREE.CylinderGeometry(0.004, 0.004, 0.09, 4).rotateX(Math.PI / 2) : new THREE.SphereGeometry(kind === 'stone' ? 0.022 : 0.014, 8, 6);
+      // A tapered shaft, point forward: thin and short beside the figures (a stick read as a pole at close zoom).
+      m.geometry = want === 'shaft' ? new THREE.CylinderGeometry(0.0006, 0.0018, 0.042, 5).rotateX(Math.PI / 2) : new THREE.SphereGeometry(kind === 'stone' ? 0.016 : 0.01, 8, 6);
       m.userData.shape = want;
     }
     m.visible = true;
@@ -885,7 +894,7 @@ export class MapScene {
     if (!a || !this.world) return;
     const t = now - a.start;
     const plan = a.plan;
-    if (plan ? t > plan.total + 150 : t > a.duration + 50) { this.endAnim(); return; }
+    if (plan ? t > a.visualEnd : t > a.duration + 50) { this.endAnim(); return; }
     this.animating = true;
     const place = (g: THREE.Object3D, x: number, z: number) => g.position.set(x, Math.max(0, this.heightAt(x, z)), z);
     if (!plan) {
@@ -905,13 +914,13 @@ export class MapScene {
       const g = this.unitGroups.get(id) ?? a.ghosts.get(id);
       if (!g) continue;
       const s = fx.shift.get(id) ?? { x: 0, y: 0 };
-      place(g, (p.x + s.x) / PX, (p.y + s.y) / PX + 0.05);
+      place(g, (p.x + s.x * LUNGE_3D) / PX, (p.y + s.y * LUNGE_3D) / PX + 0.05);
     }
     for (const [id, s] of fx.shift) {
       if (fx.pos.has(id)) continue;
       const g = this.unitGroups.get(id) ?? a.ghosts.get(id);
       const home = g?.userData.home as THREE.Vector3 | undefined;
-      if (g && home) place(g, home.x + s.x / PX, home.z + s.y / PX);
+      if (g && home) place(g, home.x + s.x * LUNGE_3D / PX, home.z + s.y * LUNGE_3D / PX);
     }
     // Clips on their beats: the attacker strikes, the defender reels, the fallen fall.
     for (const c of plan.clashes) {
@@ -957,7 +966,7 @@ export class MapScene {
       const n = sh.kind === 'arrows' ? 4 : 1;
       for (let j = 0; j < n; j++) {
         const m = this.shotMesh(k++, sh.kind);
-        const off = (j - (n - 1) / 2) * 0.03;
+        const off = (j - (n - 1) / 2) * 0.018;
         const px = fx0 + (fx1 - fx0) * u + off, pz = fz0 + (fz1 - fz0) * u + off * 0.5, py = y0 + (y1 - y0) * u + arc;
         m.position.set(px, py, pz);
         const u2 = Math.min(1, u + 0.02);
