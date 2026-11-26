@@ -20,10 +20,9 @@ import { onLandmarkArtLoad } from './landmarks';
 import { onWonderArtLoad } from './wonderArt';
 import { cancelSelected, promptWar, enemyAt, peacefulAt, peacefulRangedAt, rangedEnemyAt, warQueuedNow, foundCitySelected, sleepSelected, skipSelected, moveSelected, rangedSelected, selectedOwnUnit, toggleRangedMode } from '../commands';
 import { pointerIntent, previewDestination } from './intent';
-import { foundCityBlocker, foundCityUnitBlocker, isFounderCandidate, reservedSettlements, settlementScores, settlementSite } from '../settlement';
-import { buildLensTiles, resolveLens, type MapLens } from './lenses';
-import { buildOverlayTiles, overlayEmpty, useOverlays } from './overlays';
-import { settleTileNote, withProxySettler } from './settleAdvice';
+import { foundCityBlocker, foundCityUnitBlocker, isFounderCandidate, settlementSite } from '../settlement';
+import { overlayEmpty } from './overlays';
+import { settleTileNote } from './settleAdvice';
 import { LensSwitcher } from './LensSwitcher';
 import { isColoniaFounder } from '../goalCities';
 import { cancelBattleSounds, playBattleSounds } from '../feel/sound';
@@ -46,6 +45,7 @@ import { TileCard } from '../ui/TileCard';
 import { mapPlayerColor } from './style';
 import { shotBlockReason } from '../los';
 import { useBattlePreview } from './battlePreview';
+import { useMapLens } from './useMapLens';
 import { cityBuildsFor, cityFocusesFor, pendingMarksFor } from './orderMarks';
 import { CompassRose } from './CompassRose';
 import { placeCompass as compassPlace, type Rect } from './compass';
@@ -217,28 +217,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     if (wildOpen) return wildPreview(view);
     return retirePreview(view, ownSel, retireWeighing);
   }, [swarmOpen, wildOpen, retireWeighing, view, ownSel]);
-  const [lensChoices, setLensChoices] = useState<Record<number, MapLens>>({});
-  const [settlerLens, setSettlerLens] = useState<{ seat: number; unit: number; lens: MapLens } | null>(null);
-  const selectedSettler = view && ownSel && isFounderCandidate(view, ownSel) ? ownSel : null;
-  // Auto-Settle is temporary; it never overwrites a player's chosen lens.
-  const lens = resolveLens(seat, selectedSettler?.id ?? null, lensChoices, settlerLens);
-  // Overlays are the viewer's own and ride through every lens, auto-Settle included.
-  const overlays = useOverlays();
-  useEffect(() => { setSettlerLens(null); }, [seat, selectedSettler?.id]);
-  const setLens = (next: MapLens) => {
-    setLensChoices((choices) => ({ ...choices, [seat]: next }));
-    if (selectedSettler) setSettlerLens({ seat, unit: selectedSettler.id, lens: next });
-  };
-  const settleUnit = selectedSettler ?? (lens === 'settle' ? view?.units.find((u) => u.owner === view.me && isFounderCandidate(view, u)) : null);
-  // No Settler on the map: the lens still marks the explored map, scored for a stand-in Settler at the capital.
-  const proxy = useMemo(() => view && lens === 'settle' && !settleUnit ? withProxySettler(view) : null, [view, lens, settleUnit]);
-  const scoreUnit = settleUnit ?? proxy?.unit ?? null;
-  const scoreView = proxy?.view ?? view;
-  const reserved = useMemo(() => view && scoreUnit ? reservedSettlements(view, scoreUnit.id, orders) : [], [view, scoreUnit, orders]);
-  const sites = useMemo(() => scoreView && scoreUnit && lens === 'settle'
-    ? settlementScores(scoreView, scoreUnit, reserved) : [], [scoreView, scoreUnit, lens, reserved]);
-  const sitesByHex = useMemo(() => new Map(sites.map((s) => [`${s.pos.q},${s.pos.r}`, s])), [sites]);
-  const siteAt = (h: Hex) => sitesByHex.get(`${h.q},${h.r}`);
+  const { lens, setLens, overlays, settleUnit, scoreUnit, scoreView, reserved, sites, sitesByHex, siteAt, lensTiles, overlayTiles } = useMapLens(view, ownSel, seat, orders);
   const inspectedHex = touchInfo?.hex ?? (tileHoverReady ? hover?.hex : null);
   const inspectedScore = inspectedHex ? siteAt(inspectedHex) : undefined;
   const inspectedSite = useMemo(() => {
@@ -246,8 +225,6 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     const site = settlementSite(scoreView, scoreUnit, inspectedScore.pos, reserved);
     return site ? { ...site, rank: inspectedScore.rank } : null;
   }, [scoreView, scoreUnit, inspectedScore, reserved]);
-  const lensTiles = useMemo(() => view ? buildLensTiles(view, lens, sites) : [], [view, lens, sites]);
-  const overlayTiles = useMemo(() => view ? buildOverlayTiles(view, overlays) : { yields: [], borders: [] }, [view, overlays]);
   const placeInspector = useRef<(() => void) | null>(null);
   useLayoutEffect(() => {
     const inspector = inspectorRef.current, wrap = wrapRef.current;

@@ -18,8 +18,24 @@ function settleColors(look: LookId): Record<SiteBand, { color: string; alpha: nu
   })) as Record<SiteBand, { color: string; alpha: number }>;
 }
 
+/** A lens tile's wash (colour and opacity) as the 2D map paints it: the 3D map lays the same wash on its ground. */
+export function lensWash(tiles: readonly LensTile[], look: LookId): (tile: LensTile) => { color: string; alpha: number; rim: boolean } | null {
+  const washes = tiles.some((t) => t.band) ? settleColors(look) : null;
+  const L = MAP_STYLES[look].lens;
+  return (tile) => {
+    if (tile.yields) return null;
+    const tier = tile.band ? washes![tile.band] : null;
+    const fade = tile.faded ? L.faded / L.wash : 1;
+    return { color: tier?.color ?? tile.tint, alpha: tier ? tier.alpha * fade : tile.faded ? LENS_FADED_ALPHA : LENS_ALPHA, rim: !!tile.rank };
+  };
+}
+
 /** `yieldsOn`: the Yields overlay owns the foot of the hex, so lens chips move to the side of the tile. */
-export interface LensDrawOptions { yieldsOn?: boolean; /** The yield icon clusters in view: a recommendation badge keeps off them where it can. */ yieldRects?: readonly Rect[] }
+export interface LensDrawOptions {
+  /** The 3D map: where each tile's centre is on screen (null when off camera) and the hex radius in px, instead of the 2D camera. */
+  at?: (index: number) => { x: number; y: number } | null;
+  hexPx?: number;
+  yieldsOn?: boolean; /** The yield icon clusters in view: a recommendation badge keeps off them where it can. */ yieldRects?: readonly Rect[] }
 
 /** Keep a lens chip clear of banners and map panels, including a neighbouring city's name. */
 export function clearLensChip(x: number, y: number, w: number, h: number, avoid: readonly Rect[]): { x: number; y: number } | null {
@@ -36,7 +52,8 @@ export function clearLensChip(x: number, y: number, w: number, h: number, avoid:
 
 /** Terrain tint below tokens; labels above them, kept inside an occupied hex below its token. */
 export function drawLens(ctx: CanvasRenderingContext2D, tiles: LensTile[], cam: Camera, width: number, height: number, mapWidth: number, dpr: number, look: LookId, pass: 'tint' | 'labels' = 'tint', unitBottoms: ReadonlyMap<number, number> = new Map(), avoid: readonly Rect[] = [], medallionAbove: (index: number) => number = () => 0, opts: LensDrawOptions = {}) {
-  const r = HEX_SIZE * cam.zoom;
+  const r = opts.hexPx ?? HEX_SIZE * cam.zoom;
+  const at = opts.at ?? ((index: number) => ({ x: (centerX(index, mapWidth) - cam.x) * cam.zoom + width / 2, y: (centerY(index, mapWidth) - cam.y) * cam.zoom + height / 2 }));
   const metrics = lensMetrics(r);
   ctx.save();
   // The house VP gilt (the capital seal's ring).
@@ -51,8 +68,9 @@ export function drawLens(ctx: CanvasRenderingContext2D, tiles: LensTile[], cam: 
   for (const tile of tiles) {
     // Yield tiles have no tint or chip: yieldIcons.ts draws their icon clusters.
     if (tile.yields) continue;
-    const x = (centerX(tile.index, mapWidth) - cam.x) * cam.zoom + width / 2;
-    const center = (centerY(tile.index, mapWidth) - cam.y) * cam.zoom + height / 2;
+    const p = at(tile.index);
+    if (!p) continue;
+    const x = p.x, center = p.y;
     let y = center;
     if (x < -r || x > width + r || y < -r || y > height + r) continue;
     if (pass === 'tint') {
@@ -120,7 +138,7 @@ export function drawLens(ctx: CanvasRenderingContext2D, tiles: LensTile[], cam: 
     }
   }
   // A badge keeps off the tokens too, where it can: the units on a recommended site are what a player needs to see.
-  const tokenRects: Rect[] = badges.length ? [...unitBottoms].map(([index, bottom]) => ({ x: (centerX(index, mapWidth) - cam.x) * cam.zoom + width / 2 - r * 0.55, y: (centerY(index, mapWidth) - cam.y) * cam.zoom + height / 2 - r * 0.6, w: r * 1.1, h: bottom + r * 0.6 })) : [];
+  const tokenRects: Rect[] = badges.length ? [...unitBottoms].flatMap(([index, bottom]) => { const p = at(index); return p ? [{ x: p.x - r * 0.55, y: p.y - r * 0.6, w: r * 1.1, h: bottom + r * 0.6 }] : []; }) : [];
   const placed: { x: number; y: number; w: number }[] = [];
   for (const badge of badges.sort((a, b) => a.rank - b.rank)) {
     // A Colonia founder's markers name the Colonia and wear the ring's gilt.

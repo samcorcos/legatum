@@ -26,6 +26,16 @@ import { feel, useCombatFx } from '../feel';
 import { motionStill } from '../ui/motion';
 import { useReducedMotion } from '../ui/useReducedMotion';
 import { MapScene } from './scene';
+import { useMapLens } from '../map/useMapLens';
+import { LensSwitcher } from '../map/LensSwitcher';
+import { CompassRose } from '../map/CompassRose';
+import { compassCovered, COMPASS_R } from '../map/compass';
+import { drawLens, lensWash } from '../map/drawLens';
+import { drawYieldIcons } from '../map/yieldIcons';
+import { overlayEmpty } from '../map/overlays';
+import { isBarbarian } from '../barbarians';
+import { isColoniaFounder } from '../goalCities';
+import { itemName } from '../data';
 import { drawMarks2d, type Marks2dInput } from './marks2d';
 import { cityBuildsFor, cityFocusesFor, pendingMarksFor } from '../map/orderMarks';
 import { alarmedCities } from '../siege';
@@ -168,6 +178,18 @@ export default function Map3DView() {
     if (o?.type === 'MoveUnit' || o?.type === 'MoveUnitPath') return o.to;
     return o ? null : ownSel.goto;
   }, [ownSel, orders]);
+  // Lenses and overlays: the same switcher, choices and tiles as the 2D map; the wash lies on the 3D ground.
+  const { lens, setLens, settleUnit, sites, lensTiles, overlayTiles } = useMapLens(view, ownSel, seat, orders ?? []);
+  const lensRef = useRef({ lensTiles, yieldTiles: overlayTiles.yields, settle: false });
+  lensRef.current = { lensTiles, yieldTiles: overlayTiles.yields, settle: lens === 'settle' };
+  useEffect(() => {
+    const sc = sceneRef.current;
+    if (!sc) return;
+    const wash = lensWash(lensTiles, 'atlas');
+    sc.setLensWash([...lensTiles, ...overlayTiles.borders].flatMap((t) => { const x = wash(t); return x ? [{ index: t.index, color: x.color, alpha: x.alpha }] : []; }));
+  }, [lensTiles, overlayTiles, view]);
+  const compassRef = useRef<HTMLDivElement>(null);
+
   const intent = view && hover && !pingMode ? pointerIntent(view, ownSel, hover, mode) : 'none';
   const previewTarget = pingMode ? null : previewDestination(intent, hover, null, pendingMove);
   const pathInfo = useMemo(() => {
@@ -237,7 +259,24 @@ export default function Map3DView() {
       cityAt: (c) => (known(c) ? sc.project(c.pos, 0.34) : null),
       unitAt: (u) => sc.unitHead(u.id),
     });
+    const { lensTiles: lt, yieldTiles, settle } = lensRef.current;
+    if (lt.length || yieldTiles.length) {
+      // One hex size for the whole view (the one under the camera's target): chips and icons stay one size, as on the 2D map.
+      const hexPx = Math.max(6, sc.hexPx());
+      const at = (i: number) => sc.projectIndex(i);
+      const cam = { x: 0, y: 0, zoom: 1 };
+      if (yieldTiles.length) drawYieldIcons(ctx, yieldTiles, cam, w, h, v.width, dpr, 'atlas', settle, [], at, hexPx);
+      if (lt.length) drawLens(ctx, lt, cam, w, h, v.width, dpr, 'atlas', 'labels', new Map(), panelRects(), () => 0, { at, hexPx, yieldsOn: yieldTiles.length > 0 });
+    }
+    // The compass: north is always up on this map, so it rests in the lower-left corner, hidden when a panel covers it.
+    const cp = compassRef.current;
+    if (cp) {
+      const x = 24 + COMPASS_R, y = h - 24 - COMPASS_R;
+      cp.style.transform = `translate(${x}px, ${y}px)`;
+      cp.classList.toggle('covered', compassCovered(x, y, panelRects()));
+    }
   };
+  const panelRects = () => panels.current.map((p) => ({ x: p.left, y: p.top, w: p.right - p.left, h: p.bottom - p.top }));
 
   // ---- input ----
   const drag = useRef<{ x: number; y: number; ground: { x: number; z: number } | null; moved: boolean } | null>(null);
@@ -376,6 +415,14 @@ export default function Map3DView() {
         onContextMenu={onContextMenu}
       />
       <canvas ref={marksRef} className="map3d-marks" aria-hidden="true" />
+      <CompassRose ref={compassRef} />
+      <LensSwitcher players={view?.players ?? []} me={view?.me} visibleBarbarians={!!view?.units.some((u) => isBarbarian(u.owner))} supply={view?.supply} era={view?.research.era}
+        lens={lens} empty={!lensTiles.length}
+        overlayEmpty={{ resources: !!view && overlayEmpty(view, 'resources', overlayTiles), borders: !!view && overlayEmpty(view, 'borders', overlayTiles) }}
+        collapsed={!!selection} onChange={setLens} sites={sites} settlerId={settleUnit?.id ?? null}
+        coloniaFounder={!!view && !!settleUnit && isColoniaFounder(view, settleUnit.id)}
+        founderName={settleUnit ? itemName({ kind: 'Unit', unit: settleUnit.kind }, view?.players.find((p) => p.id === settleUnit.owner)?.faction) : undefined}
+        onInspect={(hex) => { useGame.getState().jumpTo(hex); setHover(null); }} />
       {cardAnchor && view && peaceHere && <PeaceHint anchor={cardAnchor} team={empireTitle(view, peaceHere.team)} mouse allied={relationWith(view, peaceHere.team)?.state === 'Alliance'} />}
       {cardAnchor && view && ownSel && hover && forecast && (shotForecast
         ? <DualForecastCard shot={shotForecast} charge={forecast} anchor={cardAnchor} view={view} unit={ownSel} target={hover} routeWarning={routeWarningAt(hover)} />

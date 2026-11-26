@@ -594,6 +594,56 @@ export class MapScene {
 
   // ---------------- overlays ----------------
 
+  private lensMesh: THREE.Mesh | null = null;
+  /** The active lens's wash on the ground: one hex per tile, following the terrain, under units and banners. */
+  setLensWash(tiles: { index: number; color: string; alpha: number }[]) {
+    if (this.lensMesh) { this.scene.remove(this.lensMesh); this.lensMesh.geometry.dispose(); (this.lensMesh.material as THREE.Material).dispose(); this.lensMesh = null; }
+    if (!this.world || !tiles.length) { this.animating = true; return; }
+    const { w } = this.world;
+    const pos: number[] = [], col: number[] = [];
+    const c = new THREE.Color();
+    const S = 0.93, RINGS = 3;
+    for (const t of tiles) {
+      const cx = tileX(t.index, w), cz = tileZ(t.index, w);
+      c.set(t.color);
+      // Each of the six triangles is split into rings so the wash follows hills instead of cutting through them.
+      for (let e = 0; e < 6; e++) {
+        const a = CORNERS[e], b = CORNERS[(e + 1) % 6];
+        const P = (u: number, v: number) => {
+          const x = cx + (a[0] * u + b[0] * v) * S, z = cz + (a[1] * u + b[1] * v) * S;
+          return [x, Math.max(0, this.heightAt(x, z)) + 0.014, z];
+        };
+        for (let i = 0; i < RINGS; i++) for (let j = 0; j < RINGS - i; j++) {
+          const f = (k: number) => k / RINGS;
+          const tri = (p: number[][]) => { for (const q of p) { pos.push(...q); col.push(c.r, c.g, c.b, t.alpha); } };
+          tri([P(f(i), f(j)), P(f(i + 1), f(j)), P(f(i), f(j + 1))]);
+          if (i + j + 1 < RINGS) tri([P(f(i + 1), f(j)), P(f(i + 1), f(j + 1)), P(f(i), f(j + 1))]);
+        }
+      }
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute('color', new THREE.Float32BufferAttribute(col, 4));
+    this.lensMesh = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, side: THREE.DoubleSide }));
+    this.lensMesh.renderOrder = 3;
+    this.scene.add(this.lensMesh);
+    this.animating = true;
+  }
+
+  /** The apparent hex radius in px at the camera's target. */
+  hexPx(): number {
+    const v = this.target.clone().project(this.camera), e = this.target.clone().add(new THREE.Vector3(R, 0, 0)).project(this.camera);
+    return Math.abs((e.x - v.x) / 2 * this.renderer.domElement.clientWidth);
+  }
+
+  /** A tile's centre on screen by tile index (the lens chips and badges use it). */
+  projectIndex(i: number, lift = 0) {
+    if (!this.world) return null;
+    const { w } = this.world;
+    const c = Math.floor(i % w), r = Math.floor(i / w);
+    return this.project(fromOffset(c, r), lift);
+  }
+
   setOverlays(o: Overlays) {
     if (!this.world) return;
     const { w, h } = this.world;
