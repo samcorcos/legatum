@@ -260,6 +260,8 @@ export class TerrainCache {
   private lastZoom = NaN;
   /** Which way the zoom last changed. */
   private zoomingIn = false;
+  /** Whether the last `draw` drew another level than the one before it: a clipped frame that did has drawn it in its boxes only. */
+  relevelled = false;
   /** Chunks that failed to draw (frame of the last failure per key) and how many times; retried after `RETRY_FRAMES`. */
   private failedAt = new Map<string, number>();
   private failures = 0;
@@ -777,6 +779,7 @@ export class TerrainCache {
       else level = gestureLevel(this.curLevel, wanted, this.lastStats.missing);
       pending = true; // come back once the zoom rests, to settle on the right level
     }
+    this.relevelled = level !== this.curLevel;
     this.curLevel = level;
 
     // World rect on screen.
