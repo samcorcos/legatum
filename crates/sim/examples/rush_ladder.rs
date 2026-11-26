@@ -48,10 +48,17 @@ fn arm(spec: &str) -> (String, AiParams) {
     let (label, genes) = spec.split_once(':').unwrap_or((spec, ""));
     let mut value = serde_json::to_value(AiParams::builtin()).expect("params json");
     for kv in genes.split(',').filter(|s| !s.is_empty()) {
-        let (k, v) = kv.split_once('=').unwrap_or_else(|| panic!("gene {kv}: want name=value"));
-        let decisions = value["decisions"].as_object_mut().expect("decisions object");
+        let (k, v) = kv
+            .split_once('=')
+            .unwrap_or_else(|| panic!("gene {kv}: want name=value"));
+        let decisions = value["decisions"]
+            .as_object_mut()
+            .expect("decisions object");
         assert!(decisions.contains_key(k), "unknown gene {k}");
-        decisions.insert(k.into(), json!(v.parse::<i64>().expect("integer gene value")));
+        decisions.insert(
+            k.into(),
+            json!(v.parse::<i64>().expect("integer gene value")),
+        );
     }
     let mut p: AiParams = serde_json::from_value(value).expect("params");
     p.name = label.into();
@@ -89,7 +96,11 @@ fn parse_args() -> Args {
             "--all" => a.all = v() == "1",
             "--tape" => {
                 let text = std::fs::read_to_string(v()).expect("read --tape");
-                a.tape = Some(legatum_wasm::tape::Tape::from_json(&text).expect("tape").setup);
+                a.tape = Some(
+                    legatum_wasm::tape::Tape::from_json(&text)
+                        .expect("tape")
+                        .setup,
+                );
             }
             other => panic!("unknown argument {other}"),
         }
@@ -153,7 +164,8 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
         .map(|(i, p)| {
             let id = PlayerId(i as u8);
             let seed = if args.tape.is_some() {
-                legatum_wasm::session::brain_seed(setup.seed, id) ^ index.wrapping_mul(0x9E37_79B9_7F4A_7C15)
+                legatum_wasm::session::brain_seed(setup.seed, id)
+                    ^ index.wrapping_mul(0x9E37_79B9_7F4A_7C15)
             } else {
                 legatum_wasm::session::brain_seed(game_seed, id)
             };
@@ -162,15 +174,20 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
                 seed,
                 id,
                 AiDifficulty::Hard,
-                if id == seat || args.all { params } else { &master },
+                if id == seat || args.all {
+                    params
+                } else {
+                    &master
+                },
             ));
             brain
         })
         .collect();
     // The rusher: the rival whose capital starts nearest the seat.
-    let home = state.capital_of(seat).map(|c| c.pos).or_else(|| {
-        state.units_of(seat).next().map(|u| u.pos)
-    });
+    let home = state
+        .capital_of(seat)
+        .map(|c| c.pos)
+        .or_else(|| state.units_of(seat).next().map(|u| u.pos));
     let rusher = if args.rush {
         let near = (0..args.players)
             .filter(|&i| i != seat_index)
@@ -233,7 +250,12 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
             for c in state.cities_of(seat) {
                 let item = format!("{:?}", c.producing);
                 if last_item.get(&c.id) != Some(&item) {
-                    builds.push(format!("T{} {}: {}", state.turn, c.name, item.replace("Some(", "").replace(")", "")));
+                    builds.push(format!(
+                        "T{} {}: {}",
+                        state.turn,
+                        c.name,
+                        item.replace("Some(", "").replace(")", "")
+                    ));
                     last_item.insert(c.id, item);
                 }
             }
@@ -347,7 +369,11 @@ fn main() {
         .unwrap_or_default();
     let out: std::sync::Mutex<Box<dyn Write + Send>> = std::sync::Mutex::new(match &args.out {
         Some(path) => Box::new(
-            std::fs::OpenOptions::new().create(true).append(true).open(path).expect("open --out"),
+            std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(path)
+                .expect("open --out"),
         ),
         None => Box::new(std::io::stdout()),
     });
@@ -370,7 +396,10 @@ fn main() {
             .lines()
             .filter_map(|l| serde_json::from_str::<Value>(l).ok())
             .filter_map(|g| {
-                let a = args.arms.iter().position(|(label, _)| g["arm"] == json!(label))?;
+                let a = args
+                    .arms
+                    .iter()
+                    .position(|(label, _)| g["arm"] == json!(label))?;
                 Some((a, g))
             })
             .collect();

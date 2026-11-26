@@ -796,10 +796,9 @@ impl Planner<'_> {
             return None;
         }
         let v = self.view();
-        let at_war_elsewhere = v
-            .players
-            .iter()
-            .any(|p| p.alive && !p.id.is_barbarian() && p.team != v.team && v.teams_at_war(v.team, p.team));
+        let at_war_elsewhere = v.players.iter().any(|p| {
+            p.alive && !p.id.is_barbarian() && p.team != v.team && v.teams_at_war(v.team, p.team)
+        });
         if at_war_elsewhere {
             return None;
         }

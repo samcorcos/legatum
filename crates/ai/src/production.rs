@@ -3417,9 +3417,12 @@ impl Planner<'_> {
     /// True when an empire at war with us has a military unit within `radius` of this city.
     fn enemy_near(&self, c: &CityView, radius: i32) -> bool {
         let v = self.view();
-        v.units
-            .iter()
-            .any(|u| u.military && u.owner != v.me && v.at_war(v.me, u.owner) && u.pos.distance(c.pos) <= radius)
+        v.units.iter().any(|u| {
+            u.military
+                && u.owner != v.me
+                && v.at_war(v.me, u.owner)
+                && u.pos.distance(c.pos) <= radius
+        })
     }
 
     /// Gene `war_footing`: an enemy army near the city puts it on a war footing: finish Walls
@@ -3477,7 +3480,10 @@ impl Planner<'_> {
             .max_by_key(|(o, unit)| {
                 let stats = rules.unit_stats_for(self.faction, *unit);
                 if ranged {
-                    (stats.strength.max(stats.ranged) * 100 / o.turns.max(1), -o.cost)
+                    (
+                        stats.strength.max(stats.ranged) * 100 / o.turns.max(1),
+                        -o.cost,
+                    )
                 } else {
                     (-o.cost, stats.strength)
                 }

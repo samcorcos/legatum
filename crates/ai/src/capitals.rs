@@ -267,7 +267,9 @@ impl Planner<'_> {
             .filter(|u| u.military && u.kind != UnitKind::Scout)
             .collect();
         // A charge at an adjacent enemy is a fight, not a departure: let it go.
-        let attack = |to: Hex| to.distance(pos) <= 1 && v.units.iter().any(|e| e.pos == to && e.owner != v.me);
+        let attack = |to: Hex| {
+            to.distance(pos) <= 1 && v.units.iter().any(|e| e.pos == to && e.owner != v.me)
+        };
         let leaves = |orders: &[Order], id: UnitId| {
             orders.iter().any(|o| {
                 matches!(o, Order::MoveUnit { unit, to } | Order::MoveUnitPath { unit, to, .. }
@@ -316,7 +318,9 @@ impl Planner<'_> {
             return;
         };
         let id = u.id;
-        self.orders.retain(|o| !order_moves(o, id) && !matches!(o, Order::RangedAttack { unit, .. } if *unit == id));
+        self.orders.retain(|o| {
+            !order_moves(o, id) && !matches!(o, Order::RangedAttack { unit, .. } if *unit == id)
+        });
         self.orders.push(Order::MoveUnit { unit: id, to: pos });
     }
 }
