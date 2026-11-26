@@ -85,7 +85,7 @@ export function PortraitRoundel({ faction, size = 38, color, fallen, className }
       </span>
     );
   }
-  const url = leaderPortraitUrl(faction);
+  const url = leaderPortraitUrl(faction, size <= 56);
   return (
     <span className={`pf-roundel ${fallen ? 'fallen' : ''} ${className ?? ''}`} style={style}>
       {url && <img src={url} alt="" loading="lazy" draggable={false} />}

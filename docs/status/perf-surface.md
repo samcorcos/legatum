@@ -19,7 +19,7 @@ unwatched. First seeded 2026-11-22 from a code survey (`addEventListener`, `requ
 | Surface | Trigger | Grows with | Watched by |
 | --- | --- | --- | --- |
 | Download: one 3.9 MB script (unminified size, no code splitting), the engine WASM, 0.4 MB of CSS | first visit, every deploy | features added | `lean_check.py` sizes (bytes only) |
-| About 930 images and 4 MB of audio in the build | first visit; each era, city and unit seen | art added | **unwatched**: nobody knows what a first game downloads, or when |
+| About 930 images and 4 MB of audio in the build | first visit; each era, city and unit seen | art added | Each screen's first open: `tools/perf/first-open.cjs`, run nightly by `lean_check.py` (`open.<screen>.*`: files, KB, time until every picture has loaded, oversize pictures), flagged past 40 files, 500 KB, 1 s or any oversize picture. The small paintings (unit cards and thumbs, unlock and resource art at 64 px) are fetched in idle time once a game is on screen (`app/src/artWarm.ts`). Still **unwatched**: what the first turn itself downloads (map art, music) |
 | Time from the link to a playable turn 1 (parse, WASM compile, new-game setup, first map draw) | every visit | bundle and WASM size | **unwatched** in players' games; `tools/perf/app-load.sh` exists, last run 2026-10 |
 | Continue: load a save (`loadClient`, `afterLoad`, first autosave) | Continue, rewind | turns played, save size | `?perf=1` marks only; not in uploads |
 | Title screen art and its animation loop | sitting on the title screen | nothing | **unwatched** (battery on a laptop) |

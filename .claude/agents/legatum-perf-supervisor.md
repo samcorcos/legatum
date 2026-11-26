@@ -19,6 +19,16 @@ the AI, the app, the build and CI, the code and the docs every session loads.
 Before speeding anything up, ask whether it should exist. Order: question, delete, simplify, then
 speed up. A deletion that keeps every test and result identical beats any optimisation.
 
+## Find it before the owner does (user, 2026-11-26)
+A slow first open of the tech tree was reported by hand: its thumbnails trickled in. That is this
+agent's job to find first. What a player sees in the first second of anything (a screen opening, a
+picture appearing, a panel filling in) is performance, the same as frame time. So:
+- Every screen has a row in `tools/perf/first-open.cjs` (`SCREENS`). When a PR on master adds a
+  screen, a dialog or a new family of pictures, add its row the same week (surface sweep).
+- Rows marked **unwatched** in `docs/status/perf-surface.md` are a debt, not a note: take at least
+  one each week, starting with what a player meets soonest.
+- When something a player could notice turns up, fix it and report it fixed; do not wait to be asked.
+
 ## Nightly: measure and flag (cheap, mostly CPU)
 1. `git fetch origin master`. If master hasn't moved since the last ledger row's `head`, write
    nothing and stop with a one-line "no change".
@@ -35,6 +45,12 @@ speed up. A deletion that keeps every test and result identical beats any optimi
    - **Size:** WASM, app JS/CSS, dependency counts, or instruction bytes up at all without a
      reason in the PR. Tracked bytes or docs bytes up by more than 1 MB in a night.
    - **CI:** total time up by more than 10%, or a step newly over 5 minutes.
+   - **First open of a screen:** any FLAG in the "First open" table `lean_check.py` prints (a screen
+     that fetches over 40 files or 500 KB the first time it opens, takes over 1 s until every
+     picture has loaded, or shows a picture over 2.5 times its box). `tools/perf/first-open.cjs
+     --files` lists what a screen fetched. A screen the probe could not open is a broken probe: fix
+     its opener the same night. Fix a flagged screen in a PR without being asked (a smaller file, or
+     add its small files to `app/src/artWarm.ts`).
 5. Budgets only tighten (a ratchet): when a metric improves and stays improved for three nights, the
    new value becomes its budget. Record budgets in the "Budgets" section below.
 6. Report only what changed or broke. A quiet night is a one-line note in the ledger, not a message.

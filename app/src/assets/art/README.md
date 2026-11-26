@@ -32,7 +32,7 @@ Paired, unnamed adult portraits, one for each of the eleven peoples: nine finish
 | Egypt | Egypt | see `people-egypt.prompt.txt` |
 | Rome | Rome | see `people-rome.prompt.txt` |
 
-For the paired portraits, `people-<faction>.png` (archived outside git, not in the tree) is 1024 × 1024, `people-<faction>-512.png` is 512 × 512, and `people-<faction>-360.jpg` is 360 × 360 JPEG quality 88. The `.prompt.txt` file beside each original records its prompt and any final image edit. Japan is not a playable people: its portrait was removed on 2026-11-21 (git history has it), and the older review sheets in `docs/design/historical-factions/` and `docs/design/art-pass-2/` still show it.
+For the paired portraits, `people-<faction>.png` (archived outside git, not in the tree) is 1024 × 1024, `people-<faction>-512.png` is 512 × 512, `people-<faction>-360.jpg` is 360 × 360 JPEG quality 88, and `people-<faction>-112.jpg` is 112 × 112 JPEG quality 88, resized from the 512 px file, for the round portraits of 56 px and under (`leaderPortraitUrl(faction, true)`). The `.prompt.txt` file beside each original records its prompt and any final image edit. Japan is not a playable people: its portrait was removed on 2026-11-21 (git history has it), and the older review sheets in `docs/design/historical-factions/` and `docs/design/art-pass-2/` still show it.
 
 ## Random choice painting (2026-11-22)
 
