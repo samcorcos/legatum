@@ -896,6 +896,10 @@ pub struct Player {
     /// each has used supply and whether it is idle (`resources::update_supply`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub supply: Vec<crate::resources::SupplyRecord>,
+    /// Byzantium's running offer for a rival's city (`buy_city`, `Order::BuyCity`): the Gold in
+    /// escrow and the turn the city changes hands. Public. Omitted when none, so older saves load.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub city_offer: Option<crate::buy_city::CityOffer>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -1045,6 +1049,7 @@ static BARBARIAN_PLAYER: std::sync::LazyLock<Player> = std::sync::LazyLock::new(
     goal_rule: None,
     // Barbarians have no economy: no supply.
     supply: Vec::new(),
+    city_offer: None,
 });
 
 impl GameState {

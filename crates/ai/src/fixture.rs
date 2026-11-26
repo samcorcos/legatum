@@ -272,6 +272,9 @@ impl ViewBuilder {
                 air_sightings: Vec::new(),
                 air_contacts: Vec::new(),
                 company_offers: Vec::new(),
+                city_buys: Vec::new(),
+                city_offers: Vec::new(),
+                byzantine_capitals: Vec::new(),
                 great_works: Vec::new(),
                 standings: Default::default(),
                 winner: None,
@@ -741,6 +744,15 @@ pub fn assert_valid(view: &PlayerView, orders: &[Order]) {
             Order::SetAutoFire { .. } => panic!("AI seats do not set human garrison automation"),
             Order::SetCityAutomation { .. } => panic!("AI seats do not delegate city production"),
             Order::BuyTile { .. } => panic!("AI seats do not buy tiles"),
+            // Buy a city (rules 63): only an offer the view says is legal now.
+            Order::BuyCity { city } => {
+                assert!(
+                    view.city_buys
+                        .iter()
+                        .any(|b| b.city == *city && b.buyer == view.me && b.blocker.is_none()),
+                    "city offer the view refuses: {city:?}"
+                );
+            }
             // Deals (rules 61): Hard's coalition Gold, only with deals on.
             Order::GiveGold { to, amount } => {
                 assert!(

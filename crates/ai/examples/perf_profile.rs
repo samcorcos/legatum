@@ -74,6 +74,7 @@ fn encode(order: &Order) -> Vec<i32> {
         Order::FoundCity { unit } => [2, unit.0 as i32, 0, 0],
         Order::DisbandUnit { unit } => [3, unit.0 as i32, 0, 0],
         Order::Raze { city } => [92, city.0 as i32, 0, 0],
+        Order::BuyCity { city } => [93, city.0 as i32, 0, 0],
         Order::SetProduction { city, item } => match item {
             ProductionItem::Unit { unit } => [4, city.0 as i32, 0, unit as i32],
             ProductionItem::Building { building } => [4, city.0 as i32, 1, building as i32],
@@ -146,6 +147,7 @@ fn decode(encoded: impl AsRef<[i32]>) -> Order {
     let city = CityId(a as u32);
     match kind {
         92 => Order::Raze { city },
+        93 => Order::BuyCity { city },
         91 => Order::HireCompany {
             city,
             unit: legatum_core::UnitKind::ALL[b as usize],

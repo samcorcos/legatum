@@ -58,6 +58,7 @@ pub fn blank_game(setup: &GameSetup, map: Map) -> GameState {
             sakoku_turns: None,
             goal_rule: None,
             supply: Default::default(),
+            city_offer: None,
         })
         .collect();
     GameState {

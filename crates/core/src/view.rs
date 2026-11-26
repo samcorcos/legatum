@@ -1238,6 +1238,20 @@ pub struct PlayerView {
     /// `company::offers`). Private; empty for other factions.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub company_offers: Vec<crate::company::Offer>,
+    /// Buy a city (`buy_city::buy_views`): each city price this viewer may see, with its breakdown
+    /// and refusal. A Byzantium sees every known rival city with its own `buy_city::blocker`;
+    /// anyone else sees the cities a met Byzantium could buy now and its own cities that touch a
+    /// Byzantium's land. Empty with the rule off and in the map-only view.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub city_buys: Vec<crate::buy_city::CityBuyView>,
+    /// Running city offers this viewer may know of: on a city it knows, or bought or sold by its
+    /// team (`buy_city::offer_views`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub city_offers: Vec<crate::buy_city::CityOfferView>,
+    /// The fall of Constantinople, public: each living Byzantium's capital and the city its Heir
+    /// shelters in now, if any (`buy_city::capital_views`). Empty with the rule off.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub byzantine_capitals: Vec<crate::buy_city::CapitalFallView>,
     #[serde(default)]
     pub great_works: Vec<crate::projects::GreatWorkView>,
     pub standings: Shared<Vec<TeamStanding>>,
@@ -2130,6 +2144,9 @@ pub fn player_view_cached(
             air_sightings: Vec::new(),
             air_contacts: Vec::new(),
             company_offers: Vec::new(),
+            city_buys: Vec::new(),
+            city_offers: Vec::new(),
+            byzantine_capitals: crate::buy_city::capital_views(state),
             great_works: Vec::new(),
             standings: Default::default(),
             winner: state.winner,
@@ -2236,6 +2253,10 @@ pub fn player_view_cached(
             .collect(),
     };
 
+    let known_cities: BTreeSet<CityId> = cities.iter().map(|c| c.id).collect();
+    // The map-only view returned above; every other view carries the city prices and offers.
+    let city_buys = crate::buy_city::buy_views(state, me, &known_cities);
+    let city_offers = crate::buy_city::offer_views(state, me, &known_cities);
     PlayerView {
         rule_experiments: state.setup.rule_experiments,
         ai_alliances: !state.setup.ai_alliance_pairs().is_empty(),
@@ -2300,6 +2321,9 @@ pub fn player_view_cached(
             .collect(),
         air_contacts: state.air_contacts.get(&me).cloned().unwrap_or_default(),
         company_offers: crate::company::offers(state, me),
+        city_buys,
+        city_offers,
+        byzantine_capitals: crate::buy_city::capital_views(state),
         great_works: crate::projects::great_work_views(state, me),
         standings,
         winner: state.winner,

@@ -496,6 +496,7 @@ pub fn describe(state: &GameState, order: &Order) -> (String, String) {
         ),
         Order::BuyItem { city: c, item: i } => (city(c), format!("buy {}", item(i))),
         Order::BuyTile { city: c, tile } => (city(c), format!("buy the tile at {}", place(tile))),
+        Order::BuyCity { city: c } => ("Empire".into(), format!("offer to buy {}", city(c))),
         Order::Action { action } => ("Empire".into(), format!("{action:?}")),
         Order::GiveGold { to, amount } => (
             "Empire".into(),
