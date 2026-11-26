@@ -412,7 +412,7 @@ function Credits() {
   return <>
     <h3>Artwork</h3>
     <p>Legatum’s original artwork is offered under CC BY 4.0 to the extent rights exist. The Niter, Oil and Silicon resource medallions were generated with an OpenAI image model, selected and resized for the game. Their prompts and provenance are in the resource art README.</p>
-    <p>The Spearman on the 3D map is “Hoplite Warrior” by Casey DeDore (<a href="https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013" target="_blank" rel="noreferrer">Sketchfab</a>), <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a>. It moves with the skeleton and animations of {wildfire}, adapted for Legatum. Our adapted model is under CC BY-SA 3.0.</p>
+    <p>The Spearman on the 3D map is “Hoplite Warrior” by Casey DeDore (<a href="https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013" target="_blank" rel="noreferrer">Sketchfab</a>), <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a>. Its helmet is “PBR Corinthian Helmet” by timothyhsu (<a href="https://sketchfab.com/3d-models/793a3eb779454e8db5552ac934f20098" target="_blank" rel="noreferrer">Sketchfab</a>), CC BY 4.0. It moves with the skeleton and animations of {wildfire}, adapted for Legatum. Our adapted model is under CC BY-SA 3.0.</p>
     <h3>Music</h3>
     <p>{title.attribution}. The full piece plays on the title screen and during peaceful play; an intense excerpt plays during an empire war. <a href={title.source} target="_blank" rel="noreferrer">Source</a></p>
     <p>The peoples’ music and the war drums are from {wildfire}, edited for Legatum.</p>

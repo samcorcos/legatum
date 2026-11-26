@@ -51,7 +51,10 @@ What this does not cover
   art and must carry its credit. The Spearman
   (spearman.glb) also adapts "Hoplite Warrior" by Casey DeDore
   (https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013), licensed
-  under CC BY 4.0. Credit: "Hoplite Warrior by Casey DeDore (Sketchfab), CC BY 4.0; animation
+  under CC BY 4.0, and its helmet is "PBR Corinthian Helmet" by timothyhsu
+  (https://sketchfab.com/3d-models/793a3eb779454e8db5552ac934f20098), licensed under CC BY 4.0.
+  Credit: "Hoplite Warrior by Casey DeDore (Sketchfab), CC BY 4.0; helmet: PBR Corinthian Helmet
+  by timothyhsu (Sketchfab), CC BY 4.0; animation
   and rig: 0 A.D. art by Wildfire Games, CC BY-SA 3.0; adapted for Legatum". The sources used and
   what we changed are in app/public/models/units/PROVENANCE-<model>.md.
 
