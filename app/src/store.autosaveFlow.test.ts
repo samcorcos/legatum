@@ -38,6 +38,8 @@ const endTurn = async () => {
   const turn = useGame.getState().views![0].turn;
   await useGame.getState().toggleReady();
   await vi.waitFor(() => expect(useGame.getState().views![0].turn).toBe(turn + 1), { timeout: 10000 });
+  // The autosave is written in the task after the new turn's first frame, not in End Turn's own.
+  await new Promise<void>((done) => requestAnimationFrame(() => setTimeout(done, 0)));
   await autosavesSettled();
 };
 const orderSomething = () => {

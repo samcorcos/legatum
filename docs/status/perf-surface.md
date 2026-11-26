@@ -59,7 +59,7 @@ Medians are computed separately. This is a local regression benchmark, not a hos
 
 | Surface | Trigger | Grows with | Watched by |
 | --- | --- | --- | --- |
-| Engine step for the whole lobby (`end_turn` in WASM, on the main thread) | End Turn | units, cities, AI empires alive | `native-perf.sh`, `turn_profile`, `growth_profile`; in the browser `?perf=1` only |
+| Engine step for the whole lobby (`end_turn` in WASM, on the main thread; since 2026-11-26 the AI seats plan a seat at a time while the player plans, `plan_ahead`) | End Turn, idle moments in a turn | units, cities, AI empires alive | `native-perf.sh`, `turn_profile`, `growth_profile`; in the browser `?perf=1` only |
 | Reading views, applying the turn, autosave, archive, upload copy | End Turn | view size (1.2 MB late), turns played | `growth_profile`; `?perf=1` |
 | Turn playback and the turn report | after End Turn | events that turn | **unwatched** |
 | Order validation while planning (`validate` per candidate in purchase previews, path search, where-to-build) | opening a panel, hovering a route | cities, candidates, map size | **unwatched** |

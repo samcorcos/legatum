@@ -397,8 +397,11 @@ impl Session {
             if done.is_empty() {
                 self.last_seat_ms.clear();
             }
-            self.last_seat_ms
-                .extend(orders.iter().map(|(id, _, (ms, searched))| (*id, *ms, *searched)));
+            self.last_seat_ms.extend(
+                orders
+                    .iter()
+                    .map(|(id, _, (ms, searched))| (*id, *ms, *searched)),
+            );
         }
         orders.into_iter().map(|(id, o, _)| (id, o)).collect()
     }

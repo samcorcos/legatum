@@ -126,9 +126,10 @@ interface MoveAnim {
 export const AUTOSAVE_KEY = 'legatum.autosave.v1';
 
 // The opt-in app perf run attributes synchronous turn work without changing normal play.
-/** Deciding AI empires ahead of End Turn: when the first one starts after a turn begins, the pause between empires, and how long one waits for an idle moment. */
+/** Deciding AI empires ahead of End Turn: when the first one starts after a turn begins, the pause between empires, when to look again if the game is busy, and how long one waits for an idle moment. */
 const PLAN_AHEAD_START_MS = 1200;
 const PLAN_AHEAD_GAP_MS = 60;
+const PLAN_AHEAD_RETRY_MS = 500;
 const PLAN_AHEAD_IDLE_TIMEOUT_MS = 1500;
 
 const measureTurn = <T>(name: string, run: () => T): T => {
@@ -755,7 +756,9 @@ export const useGame = create<State>((set, get) => {
     };
     const one = () => {
       const s = get();
-      if (s.client !== client || s.busy || s.screen !== 'game') return;
+      if (s.client !== client) return;
+      // Not now (the game is still opening, or a turn is resolving): look again shortly.
+      if (s.busy || s.screen !== 'game') { next(PLAN_AHEAD_RETRY_MS); return; }
       let left = 0;
       try {
         left = client.planAhead!();
