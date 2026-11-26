@@ -22,7 +22,7 @@ use serde_json::{Value, json};
 use std::collections::BTreeMap;
 use std::io::Write;
 
-const AT: [u32; 6] = [20, 30, 40, 50, 75, 100];
+const AT: [u32; 8] = [20, 30, 40, 50, 75, 100, 125, 150];
 
 struct Args {
     arms: Vec<(String, AiParams)>,
@@ -193,6 +193,9 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
         .min();
     let mut army_at = BTreeMap::new();
     let mut cities_at = BTreeMap::new();
+    let mut pop_at = BTreeMap::new();
+    let mut gold_at = BTreeMap::new();
+    let mut techs_at = BTreeMap::new();
     let mut first_declare = None::<u32>;
     let mut declares: Vec<u32> = Vec::new();
     let mut first_war = None::<u32>;
@@ -207,6 +210,12 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
         if AT.contains(&state.turn) {
             army_at.insert(state.turn, army(&state, seat));
             cities_at.insert(state.turn, state.cities_of(seat).count());
+            pop_at.insert(
+                state.turn,
+                state.cities_of(seat).map(|c| c.population).sum::<i32>(),
+            );
+            gold_at.insert(state.turn, state.player(seat).gold);
+            techs_at.insert(state.turn, state.player(seat).techs.len());
         }
         let orders: BTreeMap<_, _> = state
             .players
@@ -365,6 +374,9 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
         "lost": lost,
         "army_at": army_at,
         "cities_at": cities_at,
+        "pop_at": pop_at,
+        "gold_at": gold_at,
+        "techs_at": techs_at,
         "cities_end": state.cities_of(seat).count(),
     })
 }
