@@ -171,10 +171,12 @@ pub enum Faction {
     Aztecs,
     Egypt,
     Rome,
+    /// Kyivan Rus' (882-1240): marriage alliances, the steppe, the Druzhina and the Lavra.
+    Rus,
 }
 
 impl Faction {
-    pub const ALL: [Faction; 11] = [
+    pub const ALL: [Faction; 12] = [
         Self::Switzerland,
         Self::India,
         Self::Byzantium,
@@ -186,6 +188,7 @@ impl Faction {
         Self::Aztecs,
         Self::Egypt,
         Self::Rome,
+        Self::Rus,
     ];
 }
 

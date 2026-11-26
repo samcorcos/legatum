@@ -28,7 +28,8 @@
 //!   for home; if it gets back alive the camp launches a raid on that city: [`RAID_SIZE`] units
 //!   (melee, ranged, melee) muster at the camp, one per [`RAID_SPAWN_INTERVAL`] turns, and march on it.
 //!   Killing the scout on its way home stops the raid, as in Civ 6. After a raid the camp
-//!   waits [`RAID_COOLDOWN`] turns before its scout reports again (Civ 6's raid throttle).
+//!   waits [`RAID_COOLDOWN`] turns before its scout reports again (Civ 6's raid throttle), or
+//!   [`crate::rus::STEPPE_RAID_COOLDOWN`] after a raid on a Rus' city (the steppe).
 //! - **Raiders** march on the raided city and prowl [`RAID_PROWL`] tiles from it for
 //!   [`RAID_TURNS`] turns, capturing lone civilians and attacking empire units
 //!   in the open for a kill or a clear edge ([`RAID_EDGE`]; ranged raiders shoot them). Like Civ 6 below
@@ -996,9 +997,11 @@ fn muster(state: &mut GameState, barb: &mut BarbarianState) {
     let (melee, ranged) = unit_kinds(state);
     for camp in &mut barb.camps {
         if let Some(raid) = &mut camp.raid {
+            // The steppe: a raid on a Rus' city comes again sooner (`rus::raid_cooldown`).
+            let cooldown = crate::rus::raid_cooldown(state, raid.city, RAID_COOLDOWN);
             if !state.cities.contains_key(&raid.city) || state.turn >= raid.until_turn {
                 camp.raid = None;
-                camp.next_raid_turn = state.turn + RAID_COOLDOWN;
+                camp.next_raid_turn = state.turn + cooldown;
             } else if raid.to_spawn > 0 {
                 if state.turn >= raid.next_spawn_turn && camp.raiders.len() < MAX_RAIDERS {
                     let kind = if raid.to_spawn == 2 { ranged } else { melee };
@@ -1010,7 +1013,7 @@ fn muster(state: &mut GameState, barb: &mut BarbarianState) {
                 }
             } else if camp.raiders.is_empty() {
                 camp.raid = None;
-                camp.next_raid_turn = state.turn + RAID_COOLDOWN;
+                camp.next_raid_turn = state.turn + cooldown;
             }
         }
         if state.turn < camp.next_spawn_turn {

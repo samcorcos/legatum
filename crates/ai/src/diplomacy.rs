@@ -54,6 +54,14 @@ fn slot_limited(view: &PlayerView, to: TeamId) -> bool {
 /// one forecloses another war and costs upkeep; restraint comes from the sum.
 pub const TREATY_HELD_PENALTY: i32 = 6;
 
+/// Kyivan Rus': score an Alliance gains for each special unit it opens to Rus' cities
+/// (`legatum_core::rus::known_new_versions`).
+pub const RUS_VERSION_VALUE: i32 = 20;
+/// Kyivan Rus': score each Alliance gains while the father-in-law of Europe is short of its
+/// count, and the extra for the Alliance that completes it.
+pub const RUS_GOAL_STEP_VALUE: i32 = 15;
+pub const RUS_GOAL_DONE_VALUE: i32 = 40;
+
 /// How much of a rival's army a treaty keeps off us, by how close it is (hexes between the
 /// nearest known cities or units). Distant empires can't threaten us, so an Alliance with them
 /// buys no security.
@@ -657,6 +665,12 @@ impl Planner<'_> {
                     agreement: legatum_core::diplomacy::Agreement::Security,
                 } if !handled.contains(&with)
                     && a.cost == 0
+                    // Kyivan Rus' keep their Alliances unless the partner nears victory, we
+                    // are bankrupt or the partner is the conqueror we contain.
+                    && (!self.rus_keeps_alliances()
+                        || progress(v, with) >= (self.decisions.ally_progress_limit as u32)
+                        || v.economy.bankruptcy.is_some()
+                        || self.containment_target() == Some(with))
                     && (progress(v, with) >= (self.decisions.ally_progress_limit as u32)
                         || v.economy.bankruptcy.is_some()
                         || self.containment_target() == Some(with)
@@ -1403,6 +1417,45 @@ impl Planner<'_> {
         front + campaign
     }
 
+    /// Whether our own goal is the Rus' father-in-law of Europe and is not switched off.
+    fn rus_goal_open(&self) -> bool {
+        let v = self.view();
+        v.players
+            .iter()
+            .any(|p| p.id == v.me && p.rule() == legatum_core::goals::GoalRule::Marriages)
+            && !legatum_core::goals::rule_switched_off(
+                v.rule_experiments,
+                legatum_core::goals::GoalRule::Marriages,
+            )
+    }
+
+    /// Kyivan Rus': what an Alliance with `other` adds under the Rus' own rules. Each special unit
+    /// it opens to our cities is worth `RUS_VERSION_VALUE`; while the goal is short of its count
+    /// the held-treaty penalty is waived and the Alliance is worth `RUS_GOAL_STEP_VALUE`, plus
+    /// `RUS_GOAL_DONE_VALUE` for the one that completes it. Zero for every other faction and for
+    /// rules switched off, so an ablated rule is one the AI plans without.
+    fn rus_alliance_value(&self, other: TeamId, budget: &TreatyBudget) -> i32 {
+        let v = self.view();
+        let units = legatum_core::rus::known_new_versions(v, other).len() as i32;
+        let mut value = RUS_VERSION_VALUE * units;
+        let goal = legatum_core::rus::GOAL_ALLIANCES;
+        if self.rus_goal_open() && budget.held < goal {
+            value += TREATY_HELD_PENALTY * budget.held + RUS_GOAL_STEP_VALUE;
+            if budget.held + 1 >= goal {
+                value += RUS_GOAL_DONE_VALUE;
+            }
+        }
+        value
+    }
+
+    /// Kyivan Rus': whether we keep our Alliances through the ordinary reasons to leave one (a
+    /// lapsed coalition, a war it forecloses). Each ally opens units to our cities and the goal
+    /// needs three at once.
+    fn rus_keeps_alliances(&self) -> bool {
+        let v = self.view();
+        legatum_core::rus::marries(v.rule_experiments, v.faction_of(v.me)) || self.rus_goal_open()
+    }
+
     pub(crate) fn treaty_score(
         &self,
         other: TeamId,
@@ -1575,6 +1628,7 @@ impl Planner<'_> {
                     + self.runaway_alliance_value(other)
                     + self.runaway_bloc_value(other)
                     - warning.min(100) * unready
+                    + self.rus_alliance_value(other, budget)
             }
             TreatyKind::Peace => {
                 // A plan that chose Peace with this team accepts it whatever the score says.

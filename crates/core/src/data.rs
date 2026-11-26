@@ -1304,6 +1304,10 @@ pub const WAR_ELEPHANT_MOVES: i32 = 3;
 pub const REISLAUFER_MOUNTED_PERCENT: i32 = 50;
 /// German Panzer (replaces the Tank): moves gained.
 pub const PANZER_MOVES: i32 = 1;
+/// The Rus' Druzhina (replaces the Knight), the prince's mounted retinue: this much stronger,
+/// this much more Production.
+pub const DRUZHINA_STRENGTH: i32 = 6;
+pub const DRUZHINA_COST: i32 = 20;
 
 /// The unit kind a faction's special unit replaces (`unit_name_for` names it): every faction has
 /// exactly one (user, 2026-11-14). Mercenary Companies sell nothing else (`company`).
@@ -1319,7 +1323,13 @@ pub fn special_unit(faction: Faction) -> UnitKind {
         Faction::Athens => UnitKind::CompositeArcher,
         Faction::Egypt => UnitKind::Archer,
         Faction::Rome => UnitKind::Phalangite,
+        Faction::Rus => UnitKind::Knight,
     }
+}
+
+/// Whether this faction's unit of this kind is a Rus' Druzhina.
+pub fn is_druzhina_rules(off: FactionRuleSet, faction: Faction, kind: UnitKind) -> bool {
+    faction == Faction::Rus && kind == UnitKind::Knight && !off.contains(FactionRule::RusDruzhina)
 }
 
 /// Whether this faction's unit of this kind is an Aztec Eagle Warrior.
@@ -1682,6 +1692,10 @@ pub fn unit_stats_made_by_rules(
             s.moves = WAR_ELEPHANT_MOVES;
         }
         (f, k) if is_panzer_rules(off, f, k) => s.moves += PANZER_MOVES,
+        (f, k) if is_druzhina_rules(off, f, k) => {
+            s.cost += DRUZHINA_COST;
+            s.strength += DRUZHINA_STRENGTH;
+        }
         _ => {}
     }
     apply_faction_wide_unit_stats(off, faction, &mut s);
@@ -1843,6 +1857,7 @@ pub fn unit_name_for(faction: Faction, kind: UnitKind) -> &'static str {
         (Faction::Switzerland, UnitKind::Pikeman) => "Reisläufer",
         (Faction::Germany, UnitKind::Tank) => "Panzer",
         (Faction::Egypt, UnitKind::Archer) => "Chariot Archer",
+        (Faction::Rus, UnitKind::Knight) => "Druzhina",
         _ => unit_name(kind),
     }
 }
@@ -1861,6 +1876,7 @@ pub fn faction_name(faction: Faction) -> &'static str {
         Faction::Aztecs => "Aztecs",
         Faction::Egypt => "Egypt",
         Faction::Rome => "Rome",
+        Faction::Rus => "Kyivan Rus'",
     }
 }
 
@@ -1878,6 +1894,7 @@ pub fn faction_adjective(faction: Faction) -> &'static str {
         Faction::Athens => "Athenian",
         Faction::Aztecs => "Aztec",
         Faction::Rome => "Roman",
+        Faction::Rus => "Rus'",
     }
 }
 
@@ -1986,6 +2003,7 @@ pub fn building_name_for(faction: Faction, kind: BuildingKind) -> &'static str {
         (Faction::India, BuildingKind::Market) => "Revenue Office",
         (Faction::Egypt, BuildingKind::Granary) => "Royal Granary",
         (Faction::Rome, BuildingKind::Walls) => "Castrum",
+        (Faction::Rus, BuildingKind::Library) => "Lavra",
         _ => building_name(kind),
     }
 }

@@ -5,7 +5,8 @@
 //! technologies and post-research Science conversion; the tiles within the work radius;
 //! barbarians holding any of them; and where
 //! its owner's other cities and capital are (capital bonus, India network and distance,
-//! Mongols commerce); and every wonder in the city's territory, including beyond work radius.
+//! Mongols commerce); every wonder in the city's territory, including beyond work radius; and,
+//! for a Rus' Lavra, the Alliances its owner holds.
 //! `CityKey` holds exactly those inputs, compared by value, so an entry is reused only when
 //! every input is unchanged, from any state: a cache can be shared across
 //! turns, seats and even unrelated states (search rollouts) without ever going stale.
@@ -60,6 +61,8 @@ struct CityKey {
     squatted: Vec<Hex>,
     /// The owner's cities (id, position, capital), in id order.
     empire: Vec<(CityId, Hex, bool)>,
+    /// The Lavra's Science from the owner's Alliances (`rus::lavra_science`).
+    lavra: i32,
 }
 
 /// Terrain, resource and improvement of a tile a city's yields read: its centre and the tiles
@@ -112,6 +115,7 @@ impl CityKey {
                 .cities_of(city.owner)
                 .map(|c| (c.id, c.pos, c.is_capital)))
             && self.squatted == economy::denied_near(state, city)
+            && self.lavra == crate::rus::lavra_science(state, city.owner)
     }
 
     fn of(state: &GameState, city: &City) -> Self {
@@ -139,6 +143,7 @@ impl CityKey {
                 .cities_of(city.owner)
                 .map(|c| (c.id, c.pos, c.is_capital))
                 .collect(),
+            lavra: crate::rus::lavra_science(state, city.owner),
         }
     }
 }

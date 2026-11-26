@@ -99,6 +99,7 @@ pub struct Collector {
     sieges: BTreeMap<legatum_core::Hex, (u32, u32)>,
     holds: crate::hold_telemetry::Observer,
     goal_cities: crate::goal_city_telemetry::Observer,
+    rus: crate::rus_telemetry::Observer,
 }
 
 /// Read-only city-combat observations: who declares, garrisons lost, and siege lengths.
@@ -128,6 +129,7 @@ impl Collector {
 
     pub fn observe_initial(&mut self, state: &GameState) {
         self.goal_cities.observe_initial(state);
+        self.rus.observe_initial(state);
         for player in &state.players {
             self.empire_flow
                 .insert(player.id.0, EmpireFlowTelemetry::default());
@@ -165,6 +167,7 @@ impl Collector {
     pub fn observe_event(&mut self, resolved_turn: u32, event: &Event) {
         self.holds.observe_event(resolved_turn, event);
         self.goal_cities.observe_event(resolved_turn, event);
+        self.rus.observe_event(event);
         if let Event::ResourcesRevealed {
             player, resource, ..
         } = event
@@ -551,6 +554,7 @@ impl Collector {
     pub fn observe_resolved_turn(&mut self, resolved_turn: u32, state: &GameState) {
         self.holds.observe_resolved_turn(resolved_turn);
         self.goal_cities.observe_resolved_turn(resolved_turn, state);
+        self.rus.observe_resolved_turn(resolved_turn, state);
         self.borders.observe_resolved_turn(resolved_turn, state);
         for (seat, item) in self.completed_items.drain(..) {
             self.empire_flow
@@ -890,6 +894,7 @@ impl Collector {
             companies_turned: self.companies_turned.clone(),
             levies: self.levies.clone(),
             goal_cities: self.goal_cities.finish(),
+            rus: self.rus.finish(),
             celts_razes: self.celts_razes.clone(),
             upkeep_disbands: self.upkeep_disbands.clone(),
             city_combat: Some(self.city_combat.clone()),
@@ -1276,6 +1281,9 @@ pub struct GameTelemetry {
     /// (`goal_city_telemetry`). Older reports omit it.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub goal_cities: BTreeMap<u8, crate::goal_city_telemetry::GoalCityTelemetry>,
+    /// The Kyivan Rus' kit, per Rus' seat (`rus_telemetry`). Older reports omit it.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub rus: BTreeMap<u8, crate::rus_telemetry::RusTelemetry>,
     #[serde(default)]
     pub celts_razes: BTreeMap<u8, u64>,
     /// Units disbanded for unpaid upkeep (`rules::cities::pay_gold`), by owner seat.

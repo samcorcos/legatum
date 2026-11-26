@@ -7,7 +7,10 @@ fn at(x: i32, y: i32) -> Hex {
 }
 fn state(f: Faction) -> GameState {
     let mut setup = GameSetup::all_ai(3);
-    setup.players.truncate(2);
+    // The Rus' goal holds three Alliances at once, so their fixture seats two more empires.
+    setup
+        .players
+        .truncate(if f == Faction::Rus { 4 } else { 2 });
     setup.players[0].faction = f;
     setup.players[1].faction = Faction::India;
     {
@@ -991,6 +994,14 @@ fn fulfill_goal(s: &mut GameState) {
         Faction::Athens | Faction::Sparta | Faction::Aztecs => {
             s.player_mut(P).faction_goal_done = true
         }
+        // The father-in-law of Europe: Alliances with the three other empires.
+        Faction::Rus => {
+            let me = s.team_of(P);
+            for i in 1..4 {
+                let other = s.team_of(PlayerId(i));
+                s.diplomacy.as_mut().unwrap().start_alliance(me, other);
+            }
+        }
         f => {
             let n = if f == Faction::Germany { 5 } else { 3 };
             for i in 0..n {
@@ -1042,6 +1053,7 @@ fn every_goal_requires_own_state_out_of_resistance_and_awards_its_vp_once() {
                 | Faction::India
                 | Faction::Egypt
                 | Faction::Rome
+                | Faction::Rus
         ) && !action_goal
         {
             // A city in resistance still counts for Germany's Foundry total and
@@ -1149,6 +1161,20 @@ fn goal_thresholds_do_not_accept_nearly_complete_empires_or_allied_territory() {
             Faction::Mongols => {
                 // A rival holds the Station's city: Mongols itself no longer scores.
                 s.cities.values_mut().next().unwrap().owner = PlayerId(1);
+            }
+            Faction::Rus => {
+                // One ally leaves: two Alliances are one short of three.
+                let (me, other) = (s.team_of(P), s.team_of(PlayerId(3)));
+                let r = s
+                    .diplomacy
+                    .as_mut()
+                    .unwrap()
+                    .relations
+                    .iter_mut()
+                    .find(|r| r.between(me, other))
+                    .unwrap();
+                r.state = legatum_core::diplomacy::RelationState::Peace;
+                r.security = None;
             }
         }
         assert!(!goals::reached(&s, P), "{f:?}");

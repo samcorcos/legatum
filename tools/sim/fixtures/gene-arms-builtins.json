@@ -101,6 +101,14 @@
             "india_playbook": 0,
             "swiss_playbook": 0,
             "walls_garrison": 0
+          },
+          "Rus": {
+            "army_war_extra": 0,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 0
           }
         },
         "name": "genes-off",
@@ -208,6 +216,14 @@
             "india_playbook": 0,
             "swiss_playbook": 0,
             "walls_garrison": 0
+          },
+          "Rus": {
+            "army_war_extra": 0,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 0
           }
         },
         "name": "seat-genes-off",
@@ -301,6 +317,14 @@
             "walls_garrison": 1
           },
           "Egypt": {
+            "army_war_extra": 1,
+            "aztecs_playbook": 0,
+            "celts_playbook": 0,
+            "india_playbook": 0,
+            "swiss_playbook": 0,
+            "walls_garrison": 1
+          },
+          "Rus": {
             "army_war_extra": 1,
             "aztecs_playbook": 0,
             "celts_playbook": 0,

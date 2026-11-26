@@ -15,6 +15,7 @@ export const FACTIONS: readonly string[] = [
   "Aztecs",
   "Egypt",
   "Rome",
+  "Kyivan Rus'",
 ];
 
 export const DIFFICULTIES: readonly string[] = ["Easy", "Normal", "Hard"];

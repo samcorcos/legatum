@@ -145,6 +145,7 @@ fn country(f: Faction) -> &'static str {
         Faction::Aztecs => "Aztecs",
         Faction::Egypt => "Egypt",
         Faction::Rome => "Rome",
+        Faction::Rus => "Rus",
     }
 }
 

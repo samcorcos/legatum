@@ -35,6 +35,7 @@ pub mod resources;
 pub mod rng;
 pub mod roads;
 pub mod rules;
+pub mod rus;
 /// Increment whenever game rules or the serialized save shape changes.
 /// 40: World Age Veterans card replaces Demobilise (designer, 2026-11-15): `ClaimObjective` removed.
 /// 41: Egypt joins; Food constructs ordinary buildings, with no faction goal.

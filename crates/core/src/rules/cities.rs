@@ -1290,7 +1290,13 @@ fn complete_item(
             let Some(tile) = spawn_tile(state, owner, c.pos, unit) else {
                 return false;
             };
+            // Marriage alliances: a Rus' unit is an ally's version when the ally fields one
+            // (`rus::version_for`), priced the same way (`economy::production_cost`).
+            let version = crate::rus::version_for(state, owner, unit);
             let uid = game::spawn_unit(state, owner, unit, tile);
+            if version.is_some() {
+                state.units.get_mut(&uid).expect("just spawned").origin = version;
+            }
             if unit == UnitKind::HeirToTheThrone {
                 state.units.get_mut(&uid).expect("just spawned").heir_of = Some(owner);
                 events.push(Event::HeirBorn {

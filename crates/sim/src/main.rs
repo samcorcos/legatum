@@ -13,6 +13,7 @@ mod primitive_telemetry;
 mod proxy_benchmark;
 mod replay;
 mod runner;
+mod rus_telemetry;
 mod scenario;
 mod scenario_build;
 mod scenario_check;

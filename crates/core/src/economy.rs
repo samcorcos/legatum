@@ -825,6 +825,21 @@ fn yields_base<const FULL: bool>(
             );
             y.add("Mongols: long-road commerce", Yields::new(0, 0, gold, 0));
         }
+        // The Lavra: the Rus' Library adds Science for each Alliance held (`rus`).
+        Faction::Rus if data::has_building(&city.buildings, BuildingKind::Library) => {
+            let science = crate::rus::lavra_science(state, city.owner);
+            if science > 0 {
+                y.add(
+                    || {
+                        format!(
+                            "Lavra: {} Alliances",
+                            crate::rus::alliances(state, city.owner)
+                        )
+                    },
+                    Yields::new(0, 0, 0, science),
+                );
+            }
+        }
         _ => {}
     }
     if knows(TechId::RecursiveAi) {
@@ -1201,11 +1216,11 @@ fn undiscounted_production_cost(
     if matches!(item, ProductionItem::Project { .. }) {
         return 0;
     }
-    let player = state.player(owner);
+    // A Rus' city pays an ally's price for the ally's version (`rus::cost_faction`).
     let faction_cost = state
         .setup
         .rule_experiments
-        .base_production_cost(player.faction, item)
+        .base_production_cost(crate::rus::cost_faction(state, owner, item), item)
         + if item
             == (ProductionItem::Unit {
                 unit: UnitKind::Settler,
@@ -1390,7 +1405,7 @@ pub fn buy_quote(state: &GameState, city: &City, item: ProductionItem) -> Option
             state
                 .setup
                 .rule_experiments
-                .unit_stats_for(player.faction, unit)
+                .unit_stats_for(crate::rus::cost_faction(state, city.owner, item), unit)
                 .cost,
         ),
         ProductionItem::Building { building } | ProductionItem::Wonder { building, .. } => (
@@ -1422,7 +1437,7 @@ pub fn buy_quote(state: &GameState, city: &City, item: ProductionItem) -> Option
             state
                 .setup
                 .rule_experiments
-                .base_production_cost(player.faction, item)
+                .base_production_cost(crate::rus::cost_faction(state, city.owner, item), item)
                 - adjusted
         },
     );

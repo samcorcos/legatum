@@ -55,6 +55,9 @@ pub enum GoalRule {
     Colonia,
     /// Egypt: hold the royal tomb, which every city stops to build (Held).
     Tomb,
+    /// Kyivan Rus', the father-in-law of Europe: hold Alliances with `rus::GOAL_ALLIANCES`
+    /// peoples at once (Live).
+    Marriages,
 }
 
 /// Switzerland: the treasury a hoard needs.
@@ -108,6 +111,7 @@ pub fn default_rule(faction: Faction) -> GoalRule {
         Faction::Aztecs => GoalRule::Swarm,
         Faction::Egypt => GoalRule::Tomb,
         Faction::Rome => GoalRule::Colonia,
+        Faction::Rus => GoalRule::Marriages,
     }
 }
 
@@ -142,6 +146,7 @@ pub fn goal_switch(rule: GoalRule) -> Option<FactionRule> {
         GoalRule::Sakoku => None,
         GoalRule::Colonia => Some(FactionRule::RomeGoal),
         GoalRule::Tomb => Some(FactionRule::EgyptGoal),
+        GoalRule::Marriages => Some(FactionRule::RusGoal),
     }
 }
 
@@ -206,6 +211,8 @@ pub fn spec_for(rule: GoalRule) -> GoalSpec {
         GoalRule::Colonia => goal(GoalKind::Held, 1, "Colonia Victrix held"),
         // The royal tomb: held, not counted.
         GoalRule::Tomb => goal(GoalKind::Held, 1, "Royal Tomb held"),
+        // The father-in-law of Europe: live, Alliances held at once.
+        GoalRule::Marriages => goal(GoalKind::Live, crate::rus::GOAL_ALLIANCES, "Alliances held"),
     }
 }
 
@@ -252,6 +259,7 @@ pub fn reached(state: &GameState, p: PlayerId) -> bool {
         GoalRule::Hall => hall_holder(state, p) == Some(p),
         GoalRule::Colonia => colonia_holder(state, p) == Some(p),
         GoalRule::Tomb => tomb_holder(state, p) == Some(p),
+        GoalRule::Marriages => crate::rus::alliances(state, p) >= crate::rus::GOAL_ALLIANCES,
     }
 }
 
@@ -861,6 +869,15 @@ pub fn view(state: &GameState, p: PlayerId) -> Option<FactionGoalView> {
                     )
                 }
             }
+        }
+        GoalRule::Marriages => {
+            let held = crate::rus::alliances(state, p);
+            let target = crate::rus::GOAL_ALLIANCES;
+            (
+                held.min(target),
+                target,
+                format!("{held} of {target} Alliances held at once"),
+            )
         }
     };
     Some(FactionGoalView {

@@ -124,6 +124,14 @@ faction_rules! {
     // The Chariot Archer (Sam, 2026-11-25): Egypt's Archer, 3 moves, +40% shot against the melee
     // line, and Forest or Hills without a road take its whole turn to enter.
     EgyptChariotArcher => ("egypt_chariot_archer", Egypt, Strength),
+    // Kyivan Rus' (`rus`): units trained in Rus' cities are an ally's special version, camps
+    // that raid Rus' cities raid again sooner, the Druzhina replaces the Knight, the Lavra (the
+    // Library) adds Science per Alliance, and the goal holds three Alliances at once.
+    RusMarriage => ("rus_marriage", Rus, Strength),
+    RusSteppe => ("rus_steppe", Rus, Drawback),
+    RusDruzhina => ("rus_druzhina", Rus, Strength),
+    RusLavra => ("rus_lavra", Rus, Strength),
+    RusGoal => ("rus_goal", Rus, Strength),
 }
 
 impl FactionRule {

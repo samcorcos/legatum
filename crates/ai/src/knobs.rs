@@ -55,6 +55,8 @@ impl Knobs {
             Faction::Aztecs => Knobs::new(75, 65, 60, 55, 65),
             Faction::Egypt => Knobs::new(70, 55, 45, 90, 35),
             Faction::Rome => Knobs::new(75, 65, 55, 55, 65),
+            // Alliances cost Gold and the steppe raids often: a funded, defensive empire.
+            Faction::Rus => Knobs::new(60, 60, 55, 70, 35),
         }
     }
 
