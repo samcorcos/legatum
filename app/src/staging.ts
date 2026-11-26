@@ -145,8 +145,10 @@ export function canTakeSeat(st: StagingState, seat: number): boolean {
 export function settingsAcknowledged(config: StagingConfig, acknowledged: StagingConfig | null, state: StagingState | null): boolean {
   const host = state?.occupants[0];
   // Barbarians default to on: servers and configs may omit the flag, so compare it normalized.
+  // The turn limit is left out: new lobbies always send none, and a room saved with a custom last
+  // turn keeps it until the host's next edit rather than blocking Start.
   const canon = (c: Omit<StagingConfig, 'seed'> | undefined) => c && JSON.stringify({
-    width: c.width, height: c.height, turn_limit: c.turn_limit, barbarians: c.barbarians !== false, ai_alliances: c.ai_alliances === true, seats: c.seats,
+    width: c.width, height: c.height, barbarians: c.barbarians !== false, ai_alliances: c.ai_alliances === true, seats: c.seats,
   });
   const { seed, ...settings } = config;
   return config === acknowledged && !!host?.connected &&

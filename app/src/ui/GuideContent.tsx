@@ -78,7 +78,7 @@ export function GuideContent({ section }: { section: GuideSection }) {
       <h3>Make the lobby yours</h3>
       <p>Set names, factions, human or AI seats, and team numbers; close unwanted seats. The same team means shared vision, shared victory and no friendly attacks. Other teams start at Peace, with closed borders. Open Diplomacy from the Victory race to negotiate or declare War.</p>
       <p>Pick a map size and AI level; Advanced holds the map seed. Every empire’s first city gets the same Food and Production from its start tile and the tiles next to it: 8 of each. What lies farther out differs, so scout for your next resources. Most games end between turn 140 and 220, when an empire reaches the VP target. Movement, combat and yields follow the rules described below.</p>
-      <p>A game ends at turn {RULES.defaultTurnLimit}. Then the team with the most VP wins. Every game has barbarians. The lobby shows each team’s victory target. Hard AI makes better decisions, but it never gets extra resources.</p>
+      <p>A game ends at turn {RULES.defaultTurnLimit}. Then the team with the most VP wins. New games always have barbarians. The lobby shows each team’s victory target. Hard AI makes better decisions, but it never gets extra resources.</p>
       <div className="guide-note">If you join a waiting room, take a seat, choose your name and faction, then press Ready. The host starts once everyone is ready. If the host has already started, choose a seat in the running game.</div>
     </>;
     case 'turns': return <>
@@ -127,7 +127,7 @@ export function GuideContent({ section }: { section: GuideSection }) {
         <li><b>Unlike Civilization VI,</b> barbarians never assault or take cities, and they never heal.</li>
         <li><b>The Celts</b> are the one empire barbarians never attack: they leave Celtic units, cities and Settlers alone, and never raid a Celtic city.</li>
       </ul>
-      <p>Barbarians can be turned off in the game settings. The Celtic goal Raise the Warbands still raises camps when barbarians are off. Borders never disperse those camps, and Celtic players get no Gold for clearing them.</p>
+      <p>Some games saved earlier have barbarians off. In those, the Celtic goal Raise the Warbands still raises camps. Borders never disperse those camps, and Celtic players get no Gold for clearing them.</p>
     </>;
     case 'cities': return <>
       <h3>Raze a captured city</h3>
