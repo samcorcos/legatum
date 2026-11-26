@@ -3,14 +3,13 @@ import { retirePreview, swarmPreview, wildPreview } from '../goalActions';
 import { useCelebration } from '../celebrate/MomentLane';
 import { drawCounterFlights, EFFECT_MS, FLIGHT_MS, type MapCelebration } from '../celebrate/mapEffect';
 import { visibleTilePoint } from '../celebrate/visibleTile';
-import { itemName, tileRingPercent } from '../data';
-import { yieldsText } from '../cityProgress';
+import { itemName } from '../data';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { isEliminated, useGame } from '../store';
-import type { BattleForecast, Hex, PlayerView } from '../types';
+import type { Hex, PlayerView } from '../types';
 import { distance, hexEq, hexToPixel, pixelToHex, tileIndex, within } from '../hex';
 import { chariotTerrainNote, planTurns, previewRoute, roadBonusNote, routeTurnsText, routeRiskText, routeDangerText, isCalmRouteNote, type PathStep, type RouteRisk } from '../path';
-import { draw, HEX_SIZE, perf, screenToWorld, terrainStats, worldBounds, ambientClipRects, hoverClipBoxes, idleClipBoxes, type Camera, type SelectionRing, type ImproveOverlay, type TerritoryOverlay } from './render';
+import { draw, HEX_SIZE, perf, screenToWorld, terrainStats, worldBounds, ambientClipRects, hoverClipBoxes, idleClipBoxes, type Camera, type SelectionRing, type TerritoryOverlay } from './render';
 import { fontEpoch } from './sprites';
 import { onIconLoad } from '../icons';
 import { onMapFeatureLoad } from './mapFeatures';
@@ -18,7 +17,7 @@ import { onCityArtLoad } from './cityArt';
 import { onImprovementArtLoad } from './improvementArt';
 import { onLandmarkArtLoad } from './landmarks';
 import { onWonderArtLoad } from './wonderArt';
-import { cancelSelected, promptWar, enemyAt, peacefulAt, peacefulRangedAt, rangedEnemyAt, warQueuedNow, foundCitySelected, sleepSelected, skipSelected, moveSelected, rangedSelected, selectedOwnUnit, toggleRangedMode } from '../commands';
+import { cancelSelected, enemyAt, peacefulAt, peacefulRangedAt, rangedEnemyAt, warQueuedNow, foundCitySelected, sleepSelected, skipSelected, moveSelected, rangedSelected, selectedOwnUnit, toggleRangedMode } from '../commands';
 import { pointerIntent, previewDestination } from './intent';
 import { foundCityBlocker, foundCityUnitBlocker, isFounderCandidate, settlementSite } from '../settlement';
 import { overlayEmpty } from './overlays';
@@ -46,6 +45,7 @@ import { mapPlayerColor } from './style';
 import { shotBlockReason } from '../los';
 import { useBattlePreview } from './battlePreview';
 import { useMapLens } from './useMapLens';
+import { pickerClick, pickerOpen, useAirPicker, useImproveOverlay, usePlacePicker, useQueuedBuys } from './tilePickers';
 import { cityBuildsFor, cityFocusesFor, pendingMarksFor } from './orderMarks';
 import { CompassRose } from './CompassRose';
 import { placeCompass as compassPlace, type Rect } from './compass';
@@ -67,9 +67,6 @@ import { notifyMapCamera, registerMapCamera, takeMapHandoff } from './camera';
 import { alarmedCities } from '../siege';
 import { useCityAlarms } from '../ui/useCityAlarms';
 import { setBorderVariant, type BorderVariant } from './borderVariant';
-import { aircraftAsUnit, airOverlayFor, pickerCandidates } from '../airWing';
-import { productionQueue, setAirOrder, toggleBuyTile } from '../orders';
-import { tilePurchasePreview } from '../ui/productionPurchases';
 
 /** Whether a field the draw loop reads changed between two renders (by identity; the effects flag by value). */
 const NO_PINGS: PingMark[] = [];
@@ -425,81 +422,12 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     return { claim: territory.claimHover ? d.next_claim?.tile ?? null : null };
   }, [territory.claimHover, selection, view]);
   // A queued tile purchase keeps a mark on its tile, so the map stays clean otherwise.
-  const tileBuys = useMemo(() => {
-    if (!view || view.finished) return [];
-    return orders.flatMap((o) => {
-      if (o.type !== 'BuyTile') return [];
-      const city = view.cities.find((c) => c.id === o.city && c.owner === view.me);
-      const price = city?.detail?.buyable_tiles.find((b) => hexEq(b.tile, o.tile))?.price;
-      return price === undefined ? [] : [{ tile: o.tile, price }];
-    });
-  }, [view, orders]);
+  const tileBuys = useQueuedBuys(view, orders);
 
-  // The selected own city's improvable tiles, for the Improvements group of its production picker.
-  const improve = useGame((s) => s.improve);
-  const improveOverlay = useMemo((): ImproveOverlay | null => {
-    if (selection?.kind !== 'city' || !view || view.finished) return null;
-    const d = view.cities.find((c) => c.id === selection.id && c.owner === view.me)?.detail;
-    if (!d) return null;
-    const tiles = d.options.flatMap((o) => o.item.kind === 'Improvement' ? [o.item.tile] : []);
-    // Tiles it is improving, and the tile a placed Yam Relay Station or Great Work will stand on (queued in the orders too).
-    const queued = productionQueue(orders ?? [], selection.id, d.producing, d.production_queue ?? []);
-    const building = queued.flatMap((item) => item?.kind === 'Improvement' ? [item.tile] : []);
-    const sites = queued.flatMap((item) => item?.kind === 'Wonder' ? [item.tile] : []);
-    if (!tiles.length && !building.length && !sites.length) return null;
-    return { candidates: tiles, building, sites, hover: improve.hover, pick: improve.pick };
-  }, [selection, view, improve, orders]);
-
-  // A tile-chosen build being placed from the selected city's panel: its eligible tiles, and what the hovered one gives up.
-  const place = useGame((s) => s.place);
-  const placeSites = useMemo(() => {
-    if (!place || selection?.kind !== 'city' || selection.id !== place.city || !view || view.finished) return null;
-    const d = view.cities.find((c) => c.id === place.city && c.owner === view.me)?.detail;
-    if (!d) return null;
-    const faction = view.players.find((p) => p.id === view.me)?.faction;
-    const own = view.cities.find((c) => c.id === place.city);
-    if (place.intent === 'tile') {
-      // Buying a tile: every buyable tile is lit with its price; the ones the treasury cannot pay are dimmer.
-      const preview = own ? tilePurchasePreview(own, view, orders, orderErrors) : null;
-      return { name: 'tile', city: own?.name ?? '', sites: (preview?.tags ?? []).map((t) => ({ tile: t.tile, lost: null, price: t.price, ring: t.ring, reason: t.reason, base: d.tile_base_price, funds: preview!.funds, queued: t.queued })) };
-    }
-    const sites = d.options.flatMap((o) => o.item.kind === 'Wonder' && o.item.building === place.building ? [{ tile: o.item.tile, lost: o.wonder?.lost ?? null, price: 0, ring: 0, reason: null, base: 0, funds: 0, queued: false }] : []);
-    return { name: itemName({ kind: 'Building', building: place.building! }, faction), city: '', sites };
-  }, [place, selection, view, orders, orderErrors]);
-  const placeHover = placeSites && hover ? placeSites.sites.find((x) => hexEq(x.tile, hover.hex)) ?? null : null;
-  const placeOverlay = useMemo(() => placeSites ? placeSites.sites.some((x) => x.price > 0)
-    ? { candidates: placeSites.sites.filter((x) => !x.reason).map((x) => x.tile), hover: placeHover && !placeHover.reason ? placeHover.tile : null,
-      prices: placeSites.sites.map((x) => ({ tile: x.tile, price: x.price, affordable: !x.reason })) }
-    : { candidates: placeSites.sites.map((x) => x.tile), hover: placeHover?.tile ?? null } : null, [placeSites, placeHover]);
-  // Buying a tile: an affordable lit tile says what a click does; an unaffordable one is refused in place, in red, on the tile card.
-  const placeRefusal = placeSites?.name === 'tile' && hover && placeHover && placeHover.reason
-    ? `Costs ${placeHover.price} Gold. You have ${placeHover.funds} Gold, ${placeHover.price - placeHover.funds} short.` : undefined;
-  const placeNote = !placeSites || !hover || placeRefusal ? undefined : placeHover && placeHover.price > 0
-    ? placeHover.queued ? 'Queued for this turn. Click to cancel it.'
-      : `Click to buy for ${placeHover.price} Gold. ${placeSites.city}'s next tile costs ${placeHover.base} Gold${placeHover.ring > 1 ? `, and one ${placeHover.ring} tiles from the city costs ${tileRingPercent(placeHover.ring) - 100}% more` : ''}.`
-    : placeSites.name === 'tile' ? 'Not a tile this city can buy. Click a lit tile, or press Esc to cancel.'
-    : placeHover
-    ? `${placeSites.name} here gives up ${placeHover.lost ? yieldsText(placeHover.lost) : 'this tile\'s yield'}. Click to place it here.`
-    : `The ${placeSites.name} can't go here. Click a lit tile, or press Esc to cancel.`;
-
-  // The selected own city's aircraft: their range rings, and the strike or rebase picker's candidates.
-  const air = useGame((s) => s.air);
-  const airOverlay = useMemo(() => {
-    if (!view || !selection) return null;
-    const cityId = selection.kind === 'city' ? selection.id : selection.kind === 'air' ? view.aircraft?.find((a) => a.id === selection.id)?.city : null;
-    return cityId == null ? null : airOverlayFor(view, cityId, air, orders, orderErrors);
-  }, [selection, view, air, orders, orderErrors]);
-  // Hovering a strike candidate on the map shows the same forecast card a ground unit's shot does.
-  const airShot = useMemo(() => {
-    if (!view || !airOverlay || airOverlay.pickKind !== 'strike' || !hover || !airOverlay.candidates.some((c) => hexEq(c, hover.hex))) return null;
-    const plane = (view.aircraft ?? []).find((a) => a.id === air.plane && a.owner === view.me);
-    const city = plane && view.cities.find((c) => c.id === plane.city);
-    return plane && city ? { plane, unit: aircraftAsUnit(plane, city) } : null;
-  }, [view, airOverlay, hover, air.plane]);
-  const airForecast: BattleForecast | null = useMemo(() => {
-    if (!client || !view || !airShot || !hover || pingMode) return null;
-    try { return client.forecast(view.me, airShot.plane.id, hover.hex, 'Ranged'); } catch { return null; }
-  }, [client, view, airShot, hover, forecastTick, pingMode]);
+  // Tile pickers: a city's improvable tiles, placing a wonder or buying a tile, an aircraft's target (shared with the 3D map).
+  const improveOverlay = useImproveOverlay(view, selection, orders);
+  const { placeOverlay, placeNote, placeRefusal } = usePlacePicker(view, selection, orders, orderErrors, hover?.hex);
+  const { airOverlay, airShot, airForecast } = useAirPicker(client, view, selection, orders, orderErrors, hover?.hex, forecastTick, pingMode);
 
   // Battle forecast when hovering an enemy with a military unit selected.
   const forecastTarget = pingMode ? undefined : activePreview?.target ?? hover?.hex;
@@ -1125,8 +1053,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
   // banner's city wins where the banner overhangs the hex above, then a token raised clear of a banner
   // (its head pokes above its own hex), then the hex (except while picking a tile or a plane's target).
   const targetAtScreen = (sx: number, sy: number): Hex => {
-    const s = useGame.getState();
-    if (s.place || (s.air.plane !== null && s.air.what)) return hexAtScreen(sx, sy);
+    if (pickerOpen()) return hexAtScreen(sx, sy);
     return bannerCityAt(bannerHits.current, sx, sy)?.pos
       ?? liftedHits.current.findLast(({ rect: r }) => sx >= r.x && sx <= r.x + r.w && sy >= r.y && sy <= r.y + r.h)?.hex
       ?? hexAtScreen(sx, sy);
@@ -1156,55 +1083,8 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       moveSelected(h);
       return;
     }
-    // Placing a tile-chosen build: a lit tile is the pick (the city panel turns it into the order);
-    // any other click cancels the placement and acts as usual. Buying a tile queues its order here.
-    if (s.place) {
-      const own = s.selection?.kind === 'city' && s.selection.id === s.place.city ? v.cities.find((c) => c.id === s.place!.city && c.owner === v.me) : undefined;
-      if (s.place.intent === 'tile') {
-        const tag = own ? tilePurchasePreview(own, v, s.orders[s.seat], s.errors[s.seat]).tags.find((t) => hexEq(t.tile, h)) : undefined;
-        if (!v.finished && own && tag?.affordable) {
-          s.set({ place: null });
-          s.editOrders((ord) => toggleBuyTile(ord, own.id, h), 'purchase');
-          feel.select();
-          return;
-        }
-        // A lit tile the treasury cannot pay is refused in place: the mode stays open and the tile card (still under the cursor) says why.
-        if (own && tag) return;
-      } else if (!v.finished && own?.detail?.options.some((o) => o.item.kind === 'Wonder' && o.item.building === s.place!.building && hexEq(o.item.tile, h))) {
-        s.set({ place: { ...s.place, pick: h } });
-        feel.select();
-        return;
-      }
-      s.set({ place: null });
-    }
-    // The aircraft picker is open on the selected city: a click on one of its ringed candidates orders it.
-    if ((s.selection?.kind === 'city' || s.selection?.kind === 'air') && s.air.plane !== null && s.air.what) {
-      const city = v.cities.find((c) => c.id === (s.selection!.kind === 'city' ? s.selection!.id : v.aircraft?.find((a) => a.id === s.air.plane)?.city) && c.owner === v.me);
-      const plane = (v.aircraft ?? []).find((a) => a.id === s.air.plane && a.owner === v.me);
-      const pick = city && plane ? pickerCandidates(v, city, plane, s.air.what, s.orders[s.seat] ?? []).find((c) => hexEq(c.at, h)) : undefined;
-      if (plane && pick?.peaceTeam !== undefined && !v.finished) {
-        // A team at Peace: ask about War first, as for a ground unit's shot; the strike goes in with the declaration.
-        s.set({ air: { plane: null, what: null, hover: null } });
-        promptWar(pick.peaceTeam, plane.id, h, true, true);
-        return;
-      }
-      if (plane && pick && !v.finished) {
-        s.editOrders((ord) => setAirOrder(ord, s.air.what === 'strike' ? { type: 'AirStrike', plane: plane.id, target: h } : s.air.what === 'recon' ? { type: 'AirRecon', plane: plane.id, target: h } : { type: 'Rebase', plane: plane.id, to: pick.city!.id }), 'commit');
-        s.set({ air: { plane: null, what: null, hover: null } });
-        return;
-      }
-    }
-    // A selected city's improvable tile (with none of your units on it): the click picks it, and its
-    // row in the Improvements group lights up.
-    if (s.selection?.kind === 'city') {
-      const own = v.cities.find((c) => c.id === s.selection!.id && c.owner === v.me);
-      const standing = v.units.some((u) => hexEq(u.pos, h) && u.owner === v.me);
-      if (!standing && own?.detail?.options.some((o) => o.item.kind === 'Improvement' && hexEq(o.item.tile, h))) {
-        s.set({ improve: { ...s.improve, pick: h } });
-        feel.select();
-        return;
-      }
-    }
+    // Placing a wonder or buying a tile, an aircraft's target, a selected city's improvable tile.
+    if (pickerClick(h)) return;
     const here = v.units.filter((u) => hexEq(u.pos, h));
     const city = v.cities.find((c) => hexEq(c.pos, h));
     // Cycle: own units on the tile, then the city (a foreign city's card before its garrison), then other units.

@@ -649,6 +649,16 @@ export class MapScene {
     return Math.abs((e.x - v.x) / 2 * this.renderer.domElement.clientWidth);
   }
 
+  /** A 2D-map world point (px) on screen, on the 3D ground: lets the 2D map's own drawing code draw on the 3D map. */
+  projectFlat(x2: number, y2: number, lift = 0.01): { x: number; y: number } | null {
+    if (!this.world) return null;
+    const x = x2 / PX, z = y2 / PX;
+    const v = new THREE.Vector3(x, Math.max(0, this.heightAt(x, z)) + lift, z).project(this.camera);
+    if (v.z > 1) return null;
+    const el = this.renderer.domElement;
+    return { x: (v.x + 1) / 2 * el.clientWidth, y: (1 - v.y) / 2 * el.clientHeight };
+  }
+
   /** A tile's centre on screen by tile index (the lens chips and badges use it). */
   projectIndex(i: number, lift = 0) {
     if (!this.world) return null;

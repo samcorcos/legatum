@@ -58,6 +58,7 @@ import { constructionStage, sitesOf, type ConstructionSite } from './constructio
 import { CONSTRUCTION_ANIMATION, buildPhases } from './momentFx';
 import { drawPingGhost, drawPings, type PingMark } from './pingDraw';
 import { drawMarchDust, drawMomentFx, drawMomentGround, drawRevealed, revealAt, type MomentView } from './momentFxDraw';
+import { drawImproveHot, drawImproveTiles, drawPlaceTiles, drawPriceChips, drawQueuedBuys } from './pickerDraw';
 import { drawAirCandidates, drawAirLabels, drawAirOffscreen, drawAirRings, drawTileCandidates, type AirOverlay } from './airOverlay';
 import { aircraftAsUnit } from '../airWing';
 import { unworkedClaimIndexes } from './unworkedClaims';
@@ -478,68 +479,11 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
 
   // Improvements: the selected city's improvable tiles are outlined (dashed, translucent); tiles it is
   // already improving read solid; the hovered row's tile and the clicked tile are stronger.
-  const I = inp.improve;
-  if (I) {
-    const own = inp.seatColor;
-    const same = (a: Hex | null | undefined, b: Hex) => !!a && a.q === b.q && a.r === b.r;
-    ctx.save();
-    for (const hx of I.candidates) {
-      if (same(I.hover, hx) || same(I.pick, hx)) continue; // drawn above the counters, below
-      const p = hxCenter(hx);
-      ctx.beginPath();
-      hexPath(ctx, p.x, p.y, HEX_SIZE * 0.88);
-      ctx.strokeStyle = rgba(own, 0.6);
-      ctx.lineWidth = 1.4 * px;
-      ctx.setLineDash([2 * px, 3 * px]);
-      ctx.stroke();
-    }
-    for (const hx of I.building) {
-      const p = hxCenter(hx);
-      ctx.beginPath();
-      hexPath(ctx, p.x, p.y, HEX_SIZE * 0.88);
-      ctx.strokeStyle = rgba(own, 0.9);
-      ctx.lineWidth = 2 * px;
-      ctx.setLineDash([]);
-      ctx.stroke();
-    }
-    ctx.setLineDash([]);
-    for (const hx of I.sites) {
-      const p = hxCenter(hx);
-      ctx.beginPath();
-      hexPath(ctx, p.x, p.y, HEX_SIZE * 0.84);
-      ctx.fillStyle = rgba(S.tone.gold, 0.16);
-      ctx.fill();
-      ctx.strokeStyle = rgba(S.tone.paper, 0.95);
-      ctx.lineWidth = 5 * px;
-      ctx.stroke();
-      ctx.strokeStyle = rgba(S.tone.gold, 1);
-      ctx.lineWidth = 2.2 * px;
-      ctx.stroke();
-      ctx.beginPath();
-      hexPath(ctx, p.x, p.y, HEX_SIZE * 0.66);
-      ctx.lineWidth = 1.4 * px;
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
+  if (inp.improve) drawImproveTiles(ctx, inp.improve, inp.seatColor, S, px);
 
   // A tile-chosen build being placed (Civ's district placement): every eligible tile lit, under the
   // counters and banners; the hovered tile's heavy ring is drawn above them, further down.
-  if (inp.place) {
-    const pl = inp.place;
-    if (pl.prices) {
-      // Buying a tile: dim everything but the buyable tiles, which stay lit; the unaffordable ones read dimmer.
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(-1e5, -1e5, 2e5, 2e5);
-      for (const t of pl.prices) { const p = hxCenter(t.tile); hexPath(ctx, p.x, p.y, HEX_SIZE * 0.9); }
-      ctx.fillStyle = rgba(S.tone.ink, 0.22);
-      ctx.fill('evenodd');
-      ctx.restore();
-      drawTileCandidates(ctx, pl.prices.filter((t) => !t.affordable).map((t) => t.tile), null, S.tone.ink, px, 0, 1.4);
-    }
-    drawTileCandidates(ctx, pl.candidates, null, S.tone.gold, px, 0.3, 4.2);
-  }
+  if (inp.place) drawPlaceTiles(ctx, inp.place, S, px);
 
   // Ranged attack range.
   if (inp.rangedTiles) {
@@ -1143,22 +1087,8 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   // The hovered or clicked improvement tile: a heavy ring above the unit counters, so a unit standing
   // on the tile never hides what the picker row points at.
   if (inp.improve && (inp.improve.hover || inp.improve.pick)) {
-    const own = inp.seatColor;
     worldT();
-    ctx.save();
-    ctx.setLineDash([]);
-    for (const hx of [inp.improve.pick, inp.improve.hover]) {
-      if (!hx || !inp.improve.candidates.some((c) => c.q === hx.q && c.r === hx.r)) continue;
-      const p = hxCenter(hx);
-      ctx.beginPath();
-      hexPath(ctx, p.x, p.y, HEX_SIZE * 0.88);
-      ctx.fillStyle = rgba(own, 0.12);
-      ctx.fill();
-      ctx.strokeStyle = rgba(own, 1);
-      ctx.lineWidth = 4.5 * px;
-      ctx.stroke();
-    }
-    ctx.restore();
+    drawImproveHot(ctx, inp.improve, inp.seatColor, px);
     screenT();
   }
 
@@ -1172,51 +1102,12 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   // Gold prices while a tile is being bought (greyed when the treasury cannot pay), and the mark on a queued purchase,
   // above the unit counters so a unit standing on the tile never hides its price.
   const chips = [...(inp.place?.prices ?? []).map((t) => ({ ...t, queued: false })), ...(inp.tileBuys ?? []).map((t) => ({ ...t, affordable: true, queued: true }))];
-  if (chips.length) {
-    const own = inp.seatColor;
+  if (inp.tileBuys?.length) {
     worldT();
-    ctx.save();
-    for (const b of inp.tileBuys ?? []) {
-      const p = hxCenter(b.tile);
-      ctx.beginPath();
-      hexPath(ctx, p.x, p.y, HEX_SIZE * 0.9);
-      ctx.fillStyle = rgba(own, 0.16);
-      ctx.fill();
-      ctx.strokeStyle = rgba(own, 1);
-      ctx.lineWidth = 3 * px;
-      ctx.setLineDash([]);
-      ctx.stroke();
-    }
-    ctx.restore();
+    drawQueuedBuys(ctx, inp.tileBuys, inp.seatColor, px);
     screenT();
   }
-  if (chips.length && hexPx >= 22) {
-    const own = inp.seatColor;
-    ctx.save();
-    ctx.font = `700 ${hexPx >= 40 ? 12 : 10.5}px ${FONTS[look].sans}`;
-    ctx.textBaseline = 'middle';
-    for (const b of chips) {
-      const c = S2(b.tile);
-      const text = String(b.price);
-      const tw = ctx.measureText(text).width + 19, th = 16;
-      const x = c.x - tw / 2, y = c.y + hexPx * 0.42 - th / 2;
-      ctx.fillStyle = b.queued ? own : rgba(S.tone.vellum, 0.96);
-      ctx.fillRect(x, y, tw, th);
-      ctx.strokeStyle = b.affordable ? own : rgba(S.tone.ink, 0.45);
-      ctx.lineWidth = 1;
-      ctx.strokeRect(x + 0.5, y + 0.5, tw - 1, th - 1);
-      ctx.beginPath();
-      ctx.arc(x + 8, y + th / 2, 4.2, 0, Math.PI * 2);
-      ctx.fillStyle = !b.affordable ? rgba(S.tone.ink, 0.35) : S.tone.gold;
-      ctx.fill();
-      ctx.strokeStyle = rgba(S.tone.ink, 0.7);
-      ctx.stroke();
-      ctx.fillStyle = b.queued ? S.tone.vellum : b.affordable ? S.tone.ink : rgba(S.tone.ink, 0.6);
-      ctx.textAlign = 'left';
-      ctx.fillText(text, x + 15, y + th / 2 + 0.5);
-    }
-    ctx.restore();
-  }
+  if (chips.length && hexPx >= 22) drawPriceChips(ctx, chips, S2, hexPx, inp.seatColor, S, FONTS[look].sans);
 
   // The aircraft picker's candidates, above the unit counters so a unit standing on a target never hides it.
   if (inp.air?.pickKind) {

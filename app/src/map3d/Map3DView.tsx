@@ -40,6 +40,9 @@ import { isBarbarian } from '../barbarians';
 import { isColoniaFounder } from '../goalCities';
 import { itemName } from '../data';
 import { drawMarks2d, drawRoute3d, type Marks2dInput } from './marks2d';
+import { drawPickers3d } from './pickers3d';
+import { pickerClick, useAirPicker, useImproveOverlay, usePlacePicker, useQueuedBuys } from '../map/tilePickers';
+import { mapPlayerColor } from '../map/style';
 import { cityBuildsFor, cityFocusesFor, pendingMarksFor } from '../map/orderMarks';
 import { alarmedCities } from '../siege';
 import { useCityAlarms } from '../ui/useCityAlarms';
@@ -268,6 +271,13 @@ export default function Map3DView() {
       selectedCity: selection?.kind === 'city' ? selection.id : null,
     };
   }, [view, orders, orderErrors, cityAlarms, selection]);
+  // Tile pickers: a city's improvable tiles, placing a wonder or buying a tile, an aircraft's target (the 2D map's own).
+  const improveOverlay = useImproveOverlay(view, selection, orders);
+  const { placeOverlay, placeNote, placeRefusal } = usePlacePicker(view, selection, orders, orderErrors, hover);
+  const { airOverlay, airShot, airForecast } = useAirPicker(client, view, selection, orders, orderErrors, hover, forecastTick, pingMode);
+  const tileBuys = useQueuedBuys(view, orders);
+  const pickRef = useRef({ improveOverlay, placeOverlay, airOverlay, tileBuys });
+  pickRef.current = { improveOverlay, placeOverlay, airOverlay, tileBuys };
   const drawMarks = () => {
     const sc = sceneRef.current, cv = marksRef.current, data = marksData.current;
     const v = useGame.getState().views?.[useGame.getState().seat];
@@ -282,6 +292,7 @@ export default function Map3DView() {
       cityAt: (c) => (known(c) ? sc.project(c.pos, 0.34) : null),
       unitAt: (u) => sc.unitHead(u.id),
     });
+    drawPickers3d(ctx, sc, v, pickRef.current, mapPlayerColor(v.me), panelRects());
     const rt = routeRef.current;
     if (rt) drawRoute3d(ctx, rt.route.map((hx) => sc.project(hx, 0.02)), rt.steps, rt.attack, performance.now());
     const { lensTiles: lt, yieldTiles, settle } = lensRef.current;
@@ -317,6 +328,7 @@ export default function Map3DView() {
     if (s.pingMode) { s.sendPing(h); return; }
     if (s.mode === 'ranged' && !v.finished && !isEliminated(v)) { rangedSelected(h); return; }
     if (s.mode === 'move' && !v.finished && !isEliminated(v)) { moveSelected(h); return; }
+    if (pickerClick(h)) return;
     const here = v.units.filter((u) => hexEq(u.pos, h));
     const city = v.cities.find((c) => hexEq(c.pos, h));
     const unitCands = (own: boolean) => here.filter((u) => (u.owner === v.me) === own)
@@ -455,10 +467,13 @@ export default function Map3DView() {
         ? <DualForecastCard shot={shotForecast} charge={forecast} anchor={cardAnchor} view={view} unit={ownSel} target={hover} routeWarning={routeWarningAt(hover)} />
         : <ForecastCard forecast={forecast} anchor={cardAnchor} ranged={forecast.ranged} view={view} unit={ownSel} target={hover} routeWarning={forecast.ranged ? undefined : routeWarningAt(hover)} bowNote={shotWhy ?? undefined} assault={assault} />)}
       {/* One card at a time: a forecast or the Peace hint is the decision here, so the tile card waits. */}
-      {cardAnchor && view && hover && !forecast && !peaceHere && tileHoverReady && hoverTile?.explored && (
+      {cardAnchor && view && hover && !forecast && airForecast && airShot && (
+        <ForecastCard forecast={airForecast} anchor={cardAnchor} ranged view={view} unit={airShot.unit} target={hover} />
+      )}
+      {cardAnchor && view && hover && !forecast && !airForecast && !peaceHere && tileHoverReady && hoverTile?.explored && (
         <TileCard view={view} hex={hover} anchor={cardAnchor} blockedReason={blockedShot || undefined} routeWarning={ownSel ? routeWarningAt(hover) : undefined}
           reinforcement={ownSel ? reinforcementNote(view, ownSel, hover) ?? undefined : undefined}
-          note={ownSel ? chariotTerrainNote(view, ownSel, hover) : undefined} />
+          note={placeNote ?? (ownSel ? chariotTerrainNote(view, ownSel, hover) : undefined)} refusal={placeRefusal} />
       )}
     </div>
   );
