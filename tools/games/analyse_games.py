@@ -14,7 +14,7 @@ Every run (launchd, every 15 minutes; tools/games/install-mac.sh):
 Heavy work (engine builds) waits for mains power, the Mac's battery rule. Standard library only.
 
 Usage: analyse_games.py poll [--home DIR] [--force] [--only KEY] [--no-review] [--dry-run]
-       analyse_games.py telemetry [--hours N] [--limit N]  (numbers only, for agents; see telemetry_numbers)
+       analyse_games.py telemetry [--hours N] [--limit N] [--min-turns N]  (numbers only, for agents; see telemetry_numbers)
        analyse_games.py facts RECORD.json[.gz] [--events events.jsonl] [--narrative n.md]  (facts.md to stdout)
 """
 from __future__ import annotations
@@ -28,6 +28,8 @@ import re
 import shutil
 import subprocess
 import sys
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from collections import Counter, defaultdict
@@ -132,9 +134,16 @@ def list_games(base: str, token: str) -> list[dict]:
             return games
 
 
-def download(base: str, token: str, key: str) -> dict:
-    raw = get(f"{base}/v1/read/games/{urllib.parse.quote(key, safe='')}", token)
+def game_url(base: str, key: str) -> str:
+    return f"{base}/v1/read/games/{urllib.parse.quote(key, safe='')}"
+
+
+def json_or_gzip(raw: bytes):
     return json.loads(gzip.decompress(raw) if raw[:2] == b"\x1f\x8b" else raw)
+
+
+def download(base: str, token: str, key: str) -> dict:
+    return json_or_gzip(get(game_url(base, key), token))
 
 
 # ---------------------------------------------------------------- engine (built at the game's commit)
@@ -249,6 +258,7 @@ FRAME_FIELDS = ("turn", "frames", "slow_frames", "frame_p95_ms10", "input_p95_ms
 
 
 LONG_CAUSES = (("long_draw_ms", "map drawing"), ("long_terrain_ms", "terrain painting"), ("long_engine_ms", "engine calls"))
+STAGES = ((1, 45), (46, 90), (91, 135), (136, 200), (201, 10_000))  # turn ranges the telemetry numbers are split by
 
 
 def long_causes(frames: list[dict], long_ms: int) -> str:
@@ -327,16 +337,49 @@ def telemetry_numbers(record) -> dict:
                                                       "map_draw_mean_ms10", "units")},
                                  **{k: f[k] for k in ("cities", "zoom100", "canvas_mp10") if whole(f.get(k)) is not None}}
                                 for f in worst])
+        # Long tasks by stage of the game, with what filled them (records from 2026-11-24 say), so a build or a
+        # stage that stalls shows without reading the record. A game with long_task_ms 0 everywhere is a
+        # browser without long-task timing, not a smooth game.
+        out["long_tasks"] = sum(whole(f.get("long_tasks")) or 0 for f in frames)
+        for key, _ in LONG_CAUSES:
+            out[key] = sum(whole(f.get(key)) or 0 for f in frames)
+        sizes = [f["canvas_mp10"] for f in frames if whole(f.get("canvas_mp10")) is not None]
+        if sizes:
+            out["canvas_mp10"] = sizes[-1]
+        out["stages"] = []
+        for first, last in STAGES:
+            rows = [f for f in frames if first <= f["turn"] <= last]
+            if rows:
+                out["stages"].append({"from_turn": first, "turns": len(rows),
+                                      **{k: sum(whole(f.get(k)) or 0 for f in rows)
+                                         for k in ("frames", "slow_frames", "long_tasks", "long_task_ms",
+                                                   *(c for c, _ in LONG_CAUSES))}})
     return out
 
 
+ENGINE_RE = re.compile(r"^[0-9a-f]{7,40}$")
+
+
+def get_patiently(url: str, token: str) -> bytes:
+    """`get`, waiting out the Worker's rate limit: a night's uploads are hundreds of requests."""
+    for attempt in range(5):
+        try:
+            return get(url, token)
+        except urllib.error.HTTPError as e:
+            if e.code not in (429, 503) or attempt == 4:
+                raise
+            time.sleep(5 * (attempt + 1))
+    raise OSError("unreachable")
+
+
 def telemetry(args) -> int:
-    """Print one JSON line of checked numbers per recently uploaded game. This is the only way an agent with
-    tools reads players' games (`.claude/agents/legatum-perf-supervisor.md`)."""
+    """Print one JSON line of checked numbers per recently uploaded game, newest first, after one line that
+    counts the uploads. This is the only way an agent with tools reads players' games
+    (`.claude/agents/legatum-perf-supervisor.md`)."""
     base = os.environ.get("LEGATUM_GAMES_URL", DEFAULT_URL).rstrip("/")
     token = read_token()
     since = dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=args.hours)
-    shown = 0
+    recent = []
     for g in list_games(base, token):
         key = g.get("key")
         try:
@@ -345,15 +388,23 @@ def telemetry(args) -> int:
             uploaded = None
         if not isinstance(key, str) or not GAME_KEY_RE.match(key) or not uploaded or uploaded < since:
             continue
-        if shown >= args.limit:
-            break
+        # The listing's fields are text an uploader chose: only digits count as a turn count.
+        turns = g.get("turns")
+        turns = int(turns) if isinstance(turns, str) and turns.isdigit() and len(turns) <= 5 else whole(turns, 10_000) or 0
+        recent.append((uploaded, key, turns, g.get("engine")))
+    recent.sort(reverse=True)
+    wanted = [r for r in recent if r[2] >= args.min_turns]
+    print(json.dumps({"uploads": len(recent), "zero_turn": sum(1 for r in recent if r[2] == 0),
+                      "at_least_min_turns": len(wanted), "shown": min(len(wanted), args.limit)}, sort_keys=True))
+    for _, key, _, engine in wanted[:args.limit]:
         try:
-            numbers = telemetry_numbers(download(base, token, key))
+            numbers = telemetry_numbers(json_or_gzip(get_patiently(game_url(base, key), token)))
         except (OSError, ValueError, EOFError):
             numbers = {"unreadable": 1}
-        # The key passed GAME_KEY_RE: digits, hex and fixed words only.
-        print(json.dumps({"game": key, **numbers}, sort_keys=True))
-        shown += 1
+        # The key passed GAME_KEY_RE and the engine ENGINE_RE: digits, hex and fixed words only.
+        build = {"engine": engine[:10]} if isinstance(engine, str) and ENGINE_RE.match(engine) else {}
+        print(json.dumps({"game": key, **build, **numbers}, sort_keys=True))
+        time.sleep(0.1)
     return 0
 
 
@@ -788,7 +839,8 @@ def main() -> int:
             x.add_argument("--reason", required=True, help="one line, kept in the ledger and the index")
     t = sub.add_parser("telemetry", help="checked numbers only, one JSON line per recently uploaded game")
     t.add_argument("--hours", type=int, default=26, help="games uploaded in the last N hours")
-    t.add_argument("--limit", type=int, default=200, help="at most this many games")
+    t.add_argument("--limit", type=int, default=500, help="at most this many games, newest first")
+    t.add_argument("--min-turns", type=int, default=0, help="skip games shorter than this (most uploads never pass turn 1)")
     f = sub.add_parser("facts")
     f.add_argument("record")
     f.add_argument("--events")
