@@ -11,6 +11,7 @@ import { isColoniaFounder } from '../goalCities';
 import { isBarbarian } from '../barbarians';
 import type { UnitKind } from '../types';
 import { drawBadge, drawBanner, drawBannerMeters, drawPromotion, drawTag, drawTokenHealth, FONTS, TOKEN_INK } from '../map/sprites';
+import { offerChip, offerOn, offerTone } from '../buyCity';
 import { drawSiegeBadge, drawSiegeBar, SIEGE_BAR_GAP, WALLS_STONE, WALLS_TRACK } from '../map/siegeMark';
 import type { SiegeLevel } from '../siege';
 import { tombStatus } from '../goalCities';
@@ -98,6 +99,9 @@ export function drawMarks2d(ctx: CanvasRenderingContext2D, w: number, h: number,
     const fs = inp.far ? 11 : Math.round(Math.max(11, Math.min(15, p.radius * 0.4)) * 2) / 2;
     const meters = !inp.far && c.owner === view.me && c.visible ? bannerMeters(c, faction, inp.focusOf(c), inp.builds.get(c.id) ?? null, myTomb) : [];
     const r = drawBanner(ctx, LOOK, spec, p.x, p.y, fs, dpr, c.visible ? 1 : 0.85);
+    // Byzantium buying the city: the same public countdown chip as the 2D banner.
+    const chip = offerChip(view, c.id);
+    if (chip) drawTag(ctx, LOOK, p.x, r.y - 17, chip, offerTone(view, offerOn(view, c.id)!));
     const level = inp.siege.get(c.id);
     const bar = bannerBarOf(c, c.hp);
     if (level) {

@@ -9,12 +9,13 @@ import { itemName } from '../data';
 import { empireOfPlayer } from '../empires';
 import type { CityView, Hex, Order, PlayerView, Resource } from '../types';
 import type { AdvisorStep, Suggestion } from './advisorModel';
+import { OFFER_TURNS, myOffer, queuedBuy } from '../buyCity';
 
 /**
  * Turns before a tip of the same kind may show again (and only if its situation still holds). Each repeat of a kind
  * doubles its wait, so advice the player chose not to follow fades instead of nagging.
  */
-export const TIP_COOLDOWN = { army: 25, resource: 20, gold: 20 } as const;
+export const TIP_COOLDOWN = { army: 25, resource: 20, gold: 20, buy: 20, offer: 1 } as const;
 /** Turns between any two different tips, so advice never piles up. (An enemy army at a city is This Turn's alarm, not a tip.) */
 export const TIP_GAP = 4;
 /** Turn last shown, per tip key; `#<kind>` counts how often that kind has shown this game. */
@@ -101,6 +102,33 @@ function goldTip(v: PlayerView, touch: boolean, selection: { kind: string; id: n
     steps: [{ instruction: `${click(touch)} ${city.name}.`, target: tile(city.pos) }, { instruction: 'Buy what it needs most.', target: null }] };
 }
 
+/** Byzantium: a rival city it can buy now with the Gold it has (core `buy_city`), cheapest first. */
+function buyTip(v: PlayerView, touch: boolean, selection: { kind: string; id: number } | null, orders: readonly Order[]): Tip | null {
+  if (myOffer(v) || queuedBuy(orders)) return null;
+  const best = (v.city_buys ?? []).filter((b) => b.buyer === v.me && !b.blocker && b.price <= v.economy.gold)
+    .sort((a, b) => a.price - b.price || a.city - b.city)[0];
+  const city = best && v.cities.find((c) => c.id === best.city);
+  if (!best || !city) return null;
+  const owner = empireOfPlayer(v, city.owner);
+  const inCity = selection?.kind === 'city' && selection.id === city.id;
+  return { key: 'buy', kind: 'buy', title: `You can buy ${city.name}`,
+    why: `${city.name} touches your land and costs ${best.price} Gold. ${owner} gets the Gold, and the city is yours in ${OFFER_TURNS} turns.`,
+    current: inCity ? 1 : 0,
+    steps: [{ instruction: `${click(touch)} ${city.name}.`, target: tile(city.pos) },
+      { instruction: `${click(touch)} Make an offer.`, target: { kind: 'control', name: 'buyCity' } }] };
+}
+
+/** A city of yours that Byzantium is buying: what stops it, while the offer still holds (one tip per offer). */
+function offerTip(v: PlayerView): Tip | null {
+  const o = (v.city_offers ?? []).find((x) => x.seller === v.me && x.price_now <= x.escrow);
+  const city = o && v.cities.find((c) => c.id === o.city);
+  if (!o || !city) return null;
+  const buyer = empireOfPlayer(v, o.buyer);
+  return { key: `offer:${o.city}:${o.ends_turn}`, kind: 'offer', title: `Keep ${city.name}?`,
+    why: `${buyer} is buying ${city.name} for ${o.escrow} Gold, at the end of turn ${o.ends_turn}. If its price rises above ${o.escrow} Gold, the offer fails; War calls it off.`,
+    steps: [{ instruction: 'Move military units in or next to it, or build Walls. To let it go, do nothing: you get the Gold.', target: tile(city.pos) }] };
+}
+
 /** The tip to show now, or null. A tip already shown this turn keeps showing until the player dismisses it. */
 export function strategyTip(view: PlayerView, saved: TipLog, touch = false, selection: { kind: string; id: number } | null = null, orders: readonly Order[] = [], placingTile: number | null = null): Suggestion | null {
   if (view.turn < 3) return null;
@@ -116,7 +144,7 @@ export function strategyTip(view: PlayerView, saved: TipLog, touch = false, sele
     if (view.turn - lastOfKind(tip.kind) < wait) return false;
     return view.turn - lastOther(tip.key) >= TIP_GAP;
   };
-  const tips = [armyTip(view), resourceTip(view, touch, selection, orders, placingTile), goldTip(view, touch, selection)].filter((t): t is Tip => !!t);
+  const tips = [offerTip(view), armyTip(view), resourceTip(view, touch, selection, orders, placingTile), buyTip(view, touch, selection, orders), goldTip(view, touch, selection)].filter((t): t is Tip => !!t);
   const tip = tips.find((t) => shownThisTurn(t.key)) ?? tips.find(ready);
   if (!tip) return null;
   return { id: `tip:${tip.key}`, title: tip.title, why: tip.why, steps: tip.steps, current: tip.current ?? 0, acknowledge: true, tip: true };

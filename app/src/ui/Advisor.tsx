@@ -36,6 +36,7 @@ export function targetElement(target: Exclude<NonNullable<AdvisorTarget>, { kind
       return folded && !folded.open ? folded.querySelector<HTMLElement>('summary') : card?.querySelector<HTMLElement>('button.prod') ?? null;
     }
     case 'buyTile': return [...document.querySelectorAll<HTMLElement>('.city-panel button')].find((e) => /^Buy a tile/.test(e.textContent?.trim() ?? '') && e.getClientRects().length) ?? null;
+    case 'buyCity': return first('[data-testid="buy-city-offer"]');
     case 'closeResearch': return first('dialog.tech-modal[open] button[aria-label="Close research"]');
     // The tech tree's node for it, or on the This era view its card's Research now.
     case 'tech': return [...document.querySelectorAll<HTMLElement>('dialog.tech-modal .tree-node')].find((e) => e.dataset.tech === target.value)

@@ -53,6 +53,10 @@ export function eventIcon(e: Event, faction?: (player: number) => Faction | unde
     case 'BarbarianCampCleared': return 'emblem-camp';
     case 'ResourcesRevealed': case 'SupplyShortage': return `resource-${e.resource.toLowerCase()}`;
     case 'HeirBorn': return 'unit-heirtothethrone';
+    case 'CityOfferMade': return 'yield-gold';
+    case 'CityOfferEnded': return e.outcome === 'Sold' ? 'emblem-captured' : 'yield-gold';
+    case 'CapitalFell': return 'emblem-captured';
+    case 'HeirRefuge': return 'unit-heirtothethrone';
     case 'WarDeclared': case 'WarJoined': case 'CallToArms': case 'CallAnswered': case 'CallLapsed': return 'unit-spearman';
     case 'PeaceEstablished': case 'TreatyActivated': return 'treaty-peace';
     case 'TreatyEnded': case 'TreatyBreached': case 'AllianceBetrayed': return 'ui-alert';

@@ -14,6 +14,7 @@ import { capitalStar } from '../capitalMark';
 import { hexToPixel, tileIndex } from '../hex';
 import { healthColor, playerInk, rgba } from '../theme';
 import { GOAL_CITY_ICON, goalCities, goalSealFor, isColoniaFounder, tombChip, tombStatus, type GoalCityKind, type TombStatus } from '../goalCities';
+import { offerChip, offerOn, offerTone } from '../buyCity';
 import type { PathStep } from '../path';
 import { tintedIcon } from '../icons';
 import type { LookId } from '../brand/look';
@@ -942,6 +943,11 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   for (const { c, far } of banners) {
     if (far && focusOf(c)) drawTag(ctx, look, far.x, far.y - far.seal.ay - 15, 'Auto', 'neutral');
   }
+  // Byzantium buying a city: a public countdown chip, above its seal zoomed out and above its banner zoomed in (below).
+  for (const { c, far } of banners) {
+    const chip = far ? offerChip(view, c.id) : null;
+    if (far && chip) drawTag(ctx, look, far.x, far.y - far.seal.ay - (focusOf(c) ? 31 : 15), chip, offerTone(view, offerOn(view, c.id)!));
+  }
 
   // Zoomed in, every banner above the units; a city under attack also wears its alarm: a ring
   // (steady under reduced motion) and a siege badge, on top of the banner or seal at both zoom levels.
@@ -959,6 +965,8 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
       if (drawAlpha <= 0.01) continue;
       if (motion && motion.sx !== 1) { ctx.save(); ctx.translate(x, 0); ctx.scale(motion.sx, 1); ctx.translate(-x, 0); }
       const r = drawBanner(ctx, look, spec, x, y + (motion?.dy ?? 0), fs, dpr, drawAlpha);
+      const chip = offerChip(view, c.id);
+      if (chip) drawTag(ctx, look, x, r.y - 17, chip, offerTone(view, offerOn(view, c.id)!), drawAlpha);
       const hpNow = cityHp(c);
       if (level) {
         const barY = r.y + r.h + SIEGE_BAR_GAP;
