@@ -127,7 +127,9 @@ The 3D map's unit models (`app/public/models/units/`) are third-party art adapte
 CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), as `LICENSE-ART` says:
 
 - **Spearman** (`spearman.glb`): "Hoplite Warrior" by Casey DeDore (Sketchfab,
-  https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013), CC BY 4.0; skeleton and
+  https://sketchfab.com/3d-models/hoplite-warrior-62d5291dd0454cb28a29a37056a59013), CC BY 4.0; helmet "PBR
+  Corinthian Helmet" by timothyhsu (Sketchfab, https://sketchfab.com/3d-models/793a3eb779454e8db5552ac934f20098),
+  CC BY 4.0; skeleton and
   animations from 0 A.D., Copyright Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0. Refitted,
   re-skinned, re-textured and given a team-colour mask for Legatum; the details are in
   `app/public/models/units/PROVENANCE-spearman.md`.

@@ -4,12 +4,13 @@ import { buildVpModel, ownWords } from './vpModel';
 import { withV2 } from './test/vpV2Fixture';
 import { FACTION_GOAL, FACTION_INFO, decadencePercent, factionGoalRule } from './data';
 import type { PlayerView, VpSource } from './types';
+import { meetEveryone } from './test/meetEveryone';
 
 async function eightEmpireView(): Promise<PlayerView> {
   const client = new FixtureClient();
   const setup = await client.standardSetup('42', 'India', 'Byzantium', 'Ada', 'Bo');
   await client.newGame(setup);
-  return structuredClone(client.view(0));
+  return meetEveryone(structuredClone(client.view(0)));
 }
 
 function awardWorks(view: PlayerView, owners: number[]) {

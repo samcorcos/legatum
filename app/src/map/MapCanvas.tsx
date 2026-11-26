@@ -1069,7 +1069,12 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     dirty.current = true;
   };
 
-  const clickHex = (h: Hex, allowRanged = true) => {
+  // A city banner under a screen point (not while picking a tile): clicking a banner always opens that city, in one click,
+  // even with units standing in it. Clicking the hex itself still cycles the units there and the city.
+  const bannerCityIdAt = (sx: number, sy: number): number | null =>
+    pickerOpen() ? null : bannerCityAt(bannerHits.current, sx, sy)?.id ?? null;
+
+  const clickHex = (h: Hex, allowRanged = true, bannerCity: number | null = null) => {
     const s = useGame.getState();
     const v = s.views?.[s.seat];
     if (!v || tileIndex(h, v.width, v.height) < 0) return;
@@ -1085,6 +1090,11 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     }
     // Placing a wonder or buying a tile, an aircraft's target, a selected city's improvable tile.
     if (pickerClick(h)) return;
+    if (bannerCity !== null && v.cities.some((c) => c.id === bannerCity)) {
+      s.select({ kind: 'city', id: bannerCity });
+      feel.select();
+      return;
+    }
     const here = v.units.filter((u) => hexEq(u.pos, h));
     const city = v.cities.find((c) => hexEq(c.pos, h));
     // Cycle: own units on the tile, then the city (a foreign city's card before its garrison), then other units.
@@ -1153,7 +1163,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       return;
     }
     // Long-press inspects without executing a ranged order or cycling away from the selected unit.
-    if (!context) clickHex(hex, false);
+    if (!context) clickHex(hex, false, bannerCityIdAt(point.x, point.y));
     setTouchInfo(context || !phone ? { hex, context, placement: point.y > size.current.h / 2 ? 'top' : 'bottom' } : null);
   };
 
@@ -1190,7 +1200,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       const hex = targetAtScreen(intent.point.x, intent.point.y);
       if (mode === 'normal' && lens === 'settle' && siteAt(hex)) {
         setTouchInfo({ hex, context: false, placement: intent.point.y > size.current.h / 2 ? 'top' : 'bottom' });
-      } else clickHex(hex);
+      } else clickHex(hex, true, bannerCityIdAt(intent.point.x, intent.point.y));
     } else touchHex(intent.point, false);
   };
 

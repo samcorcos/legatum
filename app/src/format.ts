@@ -15,7 +15,7 @@ import { cardName, cardNameAndAsk } from './ageCards';
 import { CITY_HEAL, CITY_HP, cityCanFire } from './combat';
 import { ageName, BUILDING_NAME, unitIconName, FACTION_GOAL, factionGoalVp, RULES, TECH_NAME, CAPTURE_RESISTANCE_TURNS, eraScaled, factionGoalRule, UNIT_NAME, itemName, pluralUnit, wallLevelLabel, wallsUpgradeName } from './data';
 import { closeObjectives } from './eraObjectives';
-import { bearing, empireNameOf, empireOfPlayer, empireTitle, PEOPLE_NAME, placeName } from './empires';
+import { bearing, empireNameOf, empireOfPlayer, empireTitle, PEOPLE_NAME, placeName, UNKNOWN_EMPIRE, unmetPlayer, unmetTeam } from './empires';
 import { CAMP_CLEAR_GOLD, isBarbarian } from './barbarians';
 import { STRENGTH_PERCENT } from './promotion';
 import { distance, hexEq } from './hex';
@@ -183,14 +183,16 @@ export function contextFromViews(before: PlayerView | null, after: PlayerView): 
   const team = after.players.filter((p) => p.team === after.team).map((p) => p.id);
   return {
     me: after.me,
-    playerFaction: (id) => players.get(id)?.faction,
+    // An unmet empire's faction stays hidden: its units and buildings take their generic names.
+    playerFaction: (id) => (unmetPlayer(after, id) ? undefined : players.get(id)?.faction),
     eraName: (era) => after.eras?.find((x) => x.era === era)?.name,
     ageCard: (era, slot) => after.eras?.find((x) => x.era === era)?.objectives.find((o) => o.slot === slot)?.objective,
     techUnlocks: (tech) => techCardUnlocks(after.research, tech, players.get(after.me)?.faction ?? 'India').filter((u) => u.kind !== 'Effect').map(techUnlockSummary),
     team,
     teamId: after.team,
     teamPlayers: (team) => after.players.filter((p) => p.team === team).map((p) => p.id),
-    empireName: (team) => empireTitle(after, team),
+    // An empire this seat has not met is "an unknown empire" in every line, as in Civ (`unmetTeam`).
+    empireName: (team) => (unmetTeam(after, team) ? UNKNOWN_EMPIRE : empireTitle(after, team)),
     treatyKind: (id) => treaties.get(id) ?? null,
     allied: (t) => [before, after].some((v) => v?.diplomacy?.relations.some((r) =>
       r.state === 'Alliance' && ((r.a === after.team && r.b === t) || (r.b === after.team && r.a === t)))),
@@ -198,9 +200,9 @@ export function contextFromViews(before: PlayerView | null, after: PlayerView): 
       .filter((r) => r.state === 'War' && (r.a === a || r.b === a || r.a === b || r.b === b)
         && !((r.a === a && r.b === b) || (r.a === b && r.b === a)))
       .map((r): [number, number] => [r.a, r.b]),
-    teamName: (team) => (team === after.team ? 'you' : empireTitle(after, team)),
-    playerName: (id) => (id === null ? 'nobody' : isBarbarian(id) ? 'Barbarians' : (players.get(id)?.name ?? `Empire ${id}`)),
-    empireOf: (id) => (isBarbarian(id) ? 'Barbarians' : empireOfPlayer(after, id)),
+    teamName: (team) => (team === after.team ? 'you' : unmetTeam(after, team) ? UNKNOWN_EMPIRE : empireTitle(after, team)),
+    playerName: (id) => (id === null ? 'nobody' : isBarbarian(id) ? 'Barbarians' : unmetPlayer(after, id) ? UNKNOWN_EMPIRE : (players.get(id)?.name ?? `Empire ${id}`)),
+    empireOf: (id) => (isBarbarian(id) ? 'Barbarians' : unmetPlayer(after, id) ? UNKNOWN_EMPIRE : empireOfPlayer(after, id)),
     renamePlayers: (text) => renamePlayers(after, text),
     renameSubject: (text) => renameSubject(after, text),
     renameSeats: (text) => renameSeats(after, text),
@@ -289,7 +291,8 @@ function line(
   text: string,
   opts: Partial<Omit<ReportLine, 'category' | 'text'>> = {},
 ): ReportLine {
-  return { category, text, details: [], at: null, players: [], weight: 0, tone: 'neutral', ...opts };
+  // A line that opens with an unmet empire starts with a capital, like every other line.
+  return { category, text: text.replace(/^an unknown empire/, 'An unknown empire'), details: [], at: null, players: [], weight: 0, tone: 'neutral', ...opts };
 }
 
 /** Detail for pursuit lines: attack orders last one turn (G18). */
@@ -762,7 +765,8 @@ export function victoryNearLine(near: HoldCard, ctx: ReportContext): ReportLine 
   const own = near.team === ctx.teamId, ally = !own && !!ctx.allied?.(near.team);
   const peoples = (ctx.teamPlayers?.(near.team) ?? []).map((id) => ctx.playerFaction?.(id)).filter((f): f is Faction => !!f).map((f) => `the ${PEOPLE_NAME[f]}`);
   const named = peoples.length ? peoples.join(' and ') : empireLabel(ctx, near.team);
-  const subject = own ? ((ctx.teamPlayers?.(near.team).length ?? 1) > 1 ? 'Your team is' : 'You are') : `${named.charAt(0).toUpperCase()}${named.slice(1)} are`;
+  const unknown = named === UNKNOWN_EMPIRE;
+  const subject = own ? ((ctx.teamPlayers?.(near.team).length ?? 1) > 1 ? 'Your team is' : 'You are') : `${named.charAt(0).toUpperCase()}${named.slice(1)} ${unknown ? 'is' : 'are'}`;
   return line('victory', `${subject} ${near.target - near.vp} VP from victory: ${near.vp} of ${near.target}`, {
     weight: 2, tone: own ? 'good' : ally ? 'neutral' : 'bad', icon: 'vp', empire: near.team,
     details: [NEAR_RULE],

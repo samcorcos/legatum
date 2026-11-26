@@ -179,3 +179,6 @@
 .vp-row .relation-badge.war.new { border-color: transparent; box-shadow: inset 0 0 0 1px var(--bad); }
 @keyframes alarm-badge { 50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--bad) 35%, transparent); } }
 @media (prefers-reduced-motion: reduce) { .relation-badge.war.new { animation: none; } }
+
+/* An empire you haven't met: the "?" disc on a panel disc, framed like a crest, so it reads on any banner colour. */
+.alarm-unknown .vh-unknown { background: var(--panel); color: var(--ink); border: 3px dashed var(--ink-2); box-shadow: 0 0 0 2px var(--frame), 0 8px 26px #0007; }

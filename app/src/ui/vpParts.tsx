@@ -23,16 +23,23 @@ export function VpSeal({ vp, className }: { vp: number; className?: string }) {
 
 /** An owner's control marker: their crest on a disc in their colour (TI4's control token). */
 export function Marker({ e, size = 20, title }: { e: VpEmpire; size?: number; title?: string }) {
-  return <span className={`vh-marker${e.isMine ? ' mine' : ''}`} style={{ ...empireVars(e), ['--ms' as string]: `${size}px` }} title={title ?? e.name}>
-    <CrestMedallion faction={e.faction} color={e.ink} size={size} />
+  return <span className={`vh-marker${e.isMine ? ' mine' : ''}`} style={{ ...(e.unmet ? {} : empireVars(e)), ['--ms' as string]: `${size}px` }} title={title ?? e.name}>
+    <EmpireCrest e={e} size={size} />
   </span>;
+}
+
+/** An empire's crest, or a dashed "?" for one this seat has not met: its faction stays hidden. */
+export function EmpireCrest({ e, size }: { e: Pick<VpEmpire, 'faction' | 'ink' | 'unmet'>; size: number }) {
+  return e.unmet
+    ? <span className="vh-unknown" style={{ ['--us' as string]: `${size}px` }} aria-hidden="true">?</span>
+    : <CrestMedallion faction={e.faction} color={e.ink} size={size} />;
 }
 
 /** An empty socket: nobody's marker here yet. */
 export function Socket({ size = 20, e }: { size?: number; e?: VpEmpire }) {
   // With an empire: its crest, faded until earned, so an empty circle is never ownerless.
-  return <span className={`vh-socket${e ? ' owned' : ''}`} style={{ ...(e ? empireVars(e) : {}), ['--ms' as string]: `${size}px` }} title={e ? `${e.name}: not yet` : undefined}>
-    {e && <CrestMedallion faction={e.faction} color={e.ink} size={Math.round(size * 0.8)} />}
+  return <span className={`vh-socket${e ? ' owned' : ''}`} style={{ ...(e && !e.unmet ? empireVars(e) : {}), ['--ms' as string]: `${size}px` }} title={e ? `${e.name}: not yet` : undefined}>
+    {e && <EmpireCrest e={e} size={Math.round(size * 0.8)} />}
   </span>;
 }
 
