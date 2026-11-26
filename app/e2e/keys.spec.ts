@@ -14,6 +14,7 @@ async function startSolo(page: Page) {
   await page.getByLabel('Map seed', { exact: true }).fill('424242');
   await page.getByRole('button', { name: /^Start game/ }).click();
   await expect(page.getByTestId('turn-number')).toHaveText('1');
+  await page.getByTestId('advisor').getByRole('button', { name: 'Turn off', exact: true }).click();
 }
 
 const cameraX = (page: Page) => page.evaluate(() => (window as unknown as { legatumMap: { camera: { x: number } } }).legatumMap.camera.x);
@@ -33,7 +34,6 @@ async function pans(page: Page) {
 test('arrows pan and Return selects decisions after mouse clicks, with the turn report open, and after research', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await startSolo(page);
-  await page.getByRole('button', { name: /^Dismiss hint/ }).click();
   await chooseCapitalProduction(page);
   expect(await pans(page), 'arrows pan after choosing capital production').toBe(true);
   await endPlanning(page);
@@ -83,7 +83,6 @@ test('arrows pan and Return selects decisions after mouse clicks, with the turn 
 test('Return first closes what covers the map, then selects the next decision (G15)', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await startSolo(page);
-  await page.getByRole('button', { name: /^Dismiss hint/ }).click();
   await chooseCapitalProduction(page);
   await endPlanning(page);
   await expect(page.getByTestId('turn-number')).toHaveText('2');
@@ -136,7 +135,6 @@ test('Return first closes what covers the map, then selects the next decision (G
 test('the map does not shift under a mouse that is already moving to the next click', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await startSolo(page);
-  await page.getByRole('button', { name: /^Dismiss hint/ }).click();
   type W = { legatum: { getState(): { seat: number; views: { me: number; units: { owner: number; pos: { q: number; r: number } }[] }[]; select(s: null): void } };
     legatumMap: { camera: { x: number; y: number; zoom: number }; toScreen(h: { q: number; r: number }): { x: number; y: number }; redraw(): void } };
   // Put the unit at the left edge of the map, where the opening unit panel crowds it and the layout nudge wants to move the camera.

@@ -234,8 +234,12 @@ export function PieceCard({
                 {st.yieldKey ? <YieldIcon k={st.yieldKey} size={15} /> : <Icon name={st.icon!} size={15} />}
                 <b>{st.value}</b>
                 {st.label && <small>{st.label}</small>}
-                {d && <small className="pc-was"> ({comparison!.against}: {diffWas(d)})</small>}
-                {d && <ToneIcon tone={d.tone} size={10} />}
+                {d && (
+                  <span className="pc-diff">
+                    <small className="pc-was"> ({comparison!.against}: {diffWas(d)})</small>
+                    <ToneIcon tone={d.tone} size={10} />
+                  </span>
+                )}
               </span>
             );
           })}

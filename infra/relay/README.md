@@ -138,7 +138,8 @@ turned off (`"workers_dev": false`), so the custom domains, and the rule, are th
   and cannot tell a seat token from any other text.
 - `POST /rooms` needs no account, and CORS stays open (`*`) because an origin check stops no one who
   scripts requests. What bounds a stranger is the limits table above: one address can hold 2 rooms and
-  make 6 every 10 minutes, so filling the 64-room lobby takes 32 addresses, and `LOBBY_OPEN=0` stops new rooms
+  make 6 every 10 minutes, and one network 8 rooms, so filling the 256-room lobby takes 128 addresses on at least
+  32 networks, and `LOBBY_OPEN=0` stops new rooms
   at once if it happens. Someone with many addresses can still fill it; then tighten the edge
   rule above (lower the limit) or add a shared secret on `POST /rooms`.
 

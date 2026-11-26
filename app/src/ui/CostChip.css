@@ -36,6 +36,10 @@
 .btn-buy .cost-chip { padding: 1px 4px; }
 /* The Buy column is about 76 px wide: a four-digit price drops under BUY instead of spilling out. */
 .production-secondary .btn-buy { flex-wrap: nowrap; gap: 2px 3px; letter-spacing: 0.04em; }
+.production-secondary .btn-buy.active { flex-wrap: wrap; }
+.production-secondary .btn-buy.active .cost-chip { max-width: 100%; }
+.production-secondary .btn-buy.active .cost-part { min-width: 0; flex-wrap: wrap; justify-content: center; row-gap: 1px; }
+.production-secondary .btn-buy.active .cost-after { white-space: normal; }
 
 /* A button that spends: its label, then the chip. */
 .btn.spends, .act.spends { display: inline-flex; align-items: center; justify-content: center; gap: 10px; }

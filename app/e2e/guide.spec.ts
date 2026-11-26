@@ -4,6 +4,14 @@ import { test, expect } from './fixtures';
 
 const guide = (page: Page) => page.getByRole('dialog', { name: 'How to Play', exact: true });
 
+async function openGameSettings(page: Page) {
+  await page.getByRole('button', { name: 'Menu', exact: true }).click();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  const settings = page.getByRole('dialog', { name: 'Settings', exact: true });
+  await expect(settings).toBeVisible();
+  return settings;
+}
+
 async function openSolo(page: Page) {
   await page.goto('/?client=wasm');
   await page.getByRole('button', { name: /^Single Player/ }).click();
@@ -80,17 +88,20 @@ test('in-game guide contains keys; advisor moves on and its switch persists', as
   await advisor.getByRole('button', { name: 'Not now' }).click();
   await expect(advisor).not.toHaveAttribute('data-advisor-id', first!);
   await expect(page.getByTestId('turn-number')).toHaveText('1');
-  await page.getByRole('button', { name: 'Menu', exact: true }).click();
-  await page.getByLabel('Show the advisor').uncheck();
+  const settings = await openGameSettings(page);
+  const advisorSwitch = settings.getByRole('checkbox', { name: 'Show the advisor', exact: true });
+  await advisorSwitch.uncheck();
+  await page.keyboard.press('Escape');
+  await expect(settings).not.toBeVisible();
   await expect(advisor).toHaveCount(0);
   await page.reload();
   // The game in progress resumes; the switch stayed off across the reload.
   await page.getByRole('button', { name: /^Continue/ }).click();
   await expect(page.getByTestId('turn-number')).toHaveText('1');
   await expect(advisor).toHaveCount(0);
-  await page.getByRole('button', { name: 'Menu', exact: true }).click();
-  await expect(page.getByLabel('Show the advisor')).not.toBeChecked();
-  await page.getByLabel('Show the advisor').check();
+  await openGameSettings(page);
+  await expect(advisorSwitch).not.toBeChecked();
+  await advisorSwitch.check();
   await page.keyboard.press('Escape');
   await expect(advisor).toBeVisible();
 });

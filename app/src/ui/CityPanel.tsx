@@ -818,7 +818,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     ? autoPickReason(autoPick, buildFocus, city, view)
     : buildFocus === 'Military' || buildFocus === 'Economy' ? `Your queue goes first. When it empties, the city picks ${buildFocus === 'Economy' ? 'an' : 'a'} ${buildFocus} build.` : buildFocus === 'Food' && owner?.faction === 'Egypt' ? 'Your queue goes first. When it empties, the city runs Grow.' : `Your queue goes first. When it empties, the city runs its ${focusLabel(buildFocus, owner?.faction)}.`}</p> : null;
   const automationRow = city.owner === view.me ? <section className="cp-automation" aria-label="City building automation">
-    <label htmlFor={`city-automation-${city.id}`}>Automate <kbd className="kbd" title="I: on or off with your last focus. Shift+I: next focus.">I</kbd></label>
+    <label htmlFor={`city-automation-${city.id}`}>Auto <kbd className="kbd" title="I: on or off with your last focus. Shift+I: next focus.">I</kbd></label>
     {autoSelect}
     {autoReason}
   </section> : null;
@@ -1035,10 +1035,10 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       {tombStopped && <p className="hint" data-testid="city-tomb-picker">You can still buy with Gold.</p>}
       <div className="cp-buyline">
         <div className="purchase-status" id={`purchase-status-${city.id}`} role="status">
-          <Tip content="Gold available for purchases this turn."><span><Amount n={purchases.gold} unit="Gold" /> ({signed(view.economy.gold_per_turn.total)}/turn) to spend</span></Tip>
+          <Tip content={`Gold available for purchases this turn. Gold/turn: ${signed(view.economy.gold_per_turn.total)}.`}><span><Amount n={purchases.gold} unit="Gold" /> to spend</span></Tip>
         </div>
         {idleChoice && <div className="cp-automation-inline" role="group" aria-label="City building automation">
-          <label htmlFor={`city-automation-${city.id}`}>Automate <kbd className="kbd" title="I: on or off with your last focus. Shift+I: next focus.">I</kbd></label>{autoSelect}
+          <label htmlFor={`city-automation-${city.id}`}>Auto <kbd className="kbd" title="I: on or off with your last focus. Shift+I: next focus.">I</kbd></label>{autoSelect}
         </div>}
       </div>
       {idleChoice && buyTile('row')}

@@ -245,6 +245,12 @@ def seat_label(seats: list[dict], p) -> str:
     return f"{clip(s.get('faction'), 24)}{' (human)' if s.get('human') else ''}"
 
 
+def winner_label(seats: list[dict], team) -> str:
+    """The winning team's seats (`metadata.winner` is a team id, not a seat index)."""
+    won = [seat_label(seats, i) for i, s in enumerate(seats) if s.get("team") == team]
+    return " & ".join(won) or f"team {clip(team, 8)}"
+
+
 def relation_pair(rel) -> str:
     if isinstance(rel, dict):
         a = rel.get("a", rel.get("team_a", rel.get("declarers")))
@@ -423,7 +429,7 @@ def build_facts(record: dict, events: list[dict] | None = None, narrative: str |
     L.append(f"# Facts: {clip(m.get('game_id'), 64)}")
     L.append("")
     L.append(f"- Outcome: **{m['outcome']}** after {m['turn_count']} turns; winner: "
-             f"{seat_label(seats, m['winner']) if m.get('winner') is not None else 'none'}")
+             f"{winner_label(seats, m['winner']) if m.get('winner') is not None else 'none'}")
     L.append(f"- Engine: `{m.get('engine_commit', '?')}`; started {m.get('created_at', '?')}; replay: {replay_note}")
     L.append("- Seats: " + "; ".join(f"{i}: {clip(s.get('faction'), 24)} {'HUMAN' if s.get('human') else clip(s.get('difficulty'), 12)}"
                                      for i, s in enumerate(seats)))

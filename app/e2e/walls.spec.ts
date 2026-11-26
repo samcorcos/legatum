@@ -11,6 +11,8 @@ import { wallsFixture } from '../src/test/wallsFixture';
 
 type GameWindow = Window & { legatum: typeof useGame; legatumMap: { toScreen(hex: Hex): { x: number; y: number } } };
 const setup = wallsFixture();
+// One human seat: a save with more than one opens hosting on Continue, not the game.
+for (const player of setup.fixture.players.slice(1)) { player.isHuman = false; setup.fixture.setup.players[player.id].is_human = false; }
 const shots = path.resolve('../.progress/art/walls');
 
 async function selectCity(page: Page, id: number) {
@@ -101,9 +103,10 @@ for (const [width, height] of [[1440, 900], [1000, 600]] as const) {
     const split = (await card.locator('.fside-split').innerText()).match(/−(\d+) city fire, −(\d+) attack/)!.map(Number);
     expect(split[1]).toBeGreaterThan(0);
     expect(hp[2]).toBe(hp[1] - split[1] - split[2]);
-    // The red risk row sits above the odds, not among the footnotes.
-    const risk = (await page.getByTestId('forecast-city-fire').boundingBox())!, odds = (await card.locator('.forecast-odds').boundingBox())!;
-    expect(risk.y).toBeLessThan(odds.y);
+    // The red risk row sits above the strength tables, not among the footnotes. (The odds row is
+    // absent here: breakable Walls leave neither side a chance to be destroyed in one attack.)
+    const risk = (await page.getByTestId('forecast-city-fire').boundingBox())!, tables = (await card.locator('.forecast-bd').boundingBox())!;
+    expect(risk.y).toBeLessThan(tables.y);
     // The whole card is inside the window.
     await page.waitForTimeout(200);
     const box = (await card.boundingBox())!;

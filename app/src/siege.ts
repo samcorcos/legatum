@@ -4,7 +4,7 @@
 // Public numbers only: the player's fogged view (city HP and defense, visible units, war status)
 // plus last turn's visible events and `CityDetail.attacked_last_turn` (which survives a save).
 import { isThreat } from './diplomacy';
-import { CITY_HEAL, CITY_HP, cityDefenseCovered, damage, idiv, unitAttackStrength, unitDefenseStrength, unitRangedStrength, wallDamagePercent } from './combat';
+import { CITY_HEAL, CITY_HP, cityDefenseCovered, damage, idiv, mountedCityPenalty, unitAttackStrength, unitDefenseStrength, unitRangedStrength, wallDamagePercent } from './combat';
 import { wallTierOf } from './map/cityArt';
 import { attacksInMelee, builtInSiege, itemName, pluralUnit } from './data';
 import { distance, hexEq, tileIndex } from './hex';
@@ -155,9 +155,12 @@ function strikeMode(u: UnitView, city: { pos: UnitView['pos'] }): 'ranged' | 'me
   return null;
 }
 
-function strikeStrength(view: PlayerView, u: UnitView, mode: 'ranged' | 'melee'): number {
+/** A unit's strength in a strike. Charging the city itself (not its garrison), a rider pays core's mounted penalty (`combat::attack_strength_rules`). */
+function strikeStrength(view: PlayerView, u: UnitView, mode: 'ranged' | 'melee', atCity: boolean): number {
   const faction = factionOf(view, u.owner);
-  return (mode === 'ranged' ? unitRangedStrength(u.kind, u.hp, faction, u.level ?? 0) : unitAttackStrength(u.kind, u.hp, faction, u.level ?? 0)).total;
+  if (mode === 'ranged') return unitRangedStrength(u.kind, u.hp, faction, u.level ?? 0).total;
+  const penalty = atCity ? mountedCityPenalty(faction ?? 'India', u.kind, false) : 0;
+  return unitAttackStrength(u.kind, u.hp, faction, u.level ?? 0).total - penalty;
 }
 
 /**
@@ -185,7 +188,7 @@ export function captureForecast(view: PlayerView, cityId: number, attackers: rea
     : 0;
   const coveredOf = (u: UnitView) => (u.siege || builtInSiege(u.kind as UnitKind) ? tier : 0);
   const hitOf = (m: { u: UnitView; mode: 'ranged' | 'melee' }, hp: number) =>
-    damage(strikeStrength(view, m.u, m.mode), Math.max(1, defense(hp) - (coveredOf(m.u) > 0 ? wallsStrength : 0)), 100);
+    damage(strikeStrength(view, m.u, m.mode, true), Math.max(1, defense(hp) - (coveredOf(m.u) > 0 ? wallsStrength : 0)), 100);
   const pctOf = (u: UnitView) => (tier > 0 ? wallDamagePercent(tier, coveredOf(u)) : 100);
   const turnDamage = (hp: number) => modes.reduce((sum, m) => sum + hitOf(m, hp), 0);
   const first = turnDamage(city.hp);
@@ -214,7 +217,7 @@ export function captureForecast(view: PlayerView, cityId: number, attackers: rea
       if (hp <= 0) zeroTurn = t;
       if (hp <= 0 && !garrison && melee) fell = t;
     } else if (garrison) {
-      grHp -= modes.reduce((sum, m) => sum + damage(strikeStrength(view, m.u, m.mode), garrisonDefense, 100), 0);
+      grHp -= modes.reduce((sum, m) => sum + damage(strikeStrength(view, m.u, m.mode, false), garrisonDefense, 100), 0);
       if (grHp <= 0 && melee) fell = t;
     } else if (melee) fell = t;
   }

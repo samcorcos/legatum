@@ -1,7 +1,13 @@
 import { expect, it } from 'vitest';
 import {
-  DEFAULT_DECADENCE_SLOPE, ERA_NAMES, ageName, BUILDING_KINDS, BUILDING_STATS, DECADENCE_RULE, RULES, decadenceCurveText, decadencePercent, decadenceRules, isProductionBuilding,
+  DEFAULT_DECADENCE_SLOPE, ERA_NAMES, ageName, BUILDING_KINDS, BUILDING_STATS, DECADENCE_RULE, RULES, decadenceCurveText, decadencePercent, decadenceRules, isProductionBuilding, itemName, pluralUnit,
 } from './data';
+
+it('writes unit plurals the way the turn report and alarms say them', () => {
+  expect(itemName({ kind: 'Unit', unit: 'Phalangite' }, 'Rome')).toBe('Legionary');
+  expect(['Legionary', 'Spearman', 'Infantry', 'Archer', 'Combat Drones'].map(pluralUnit))
+    .toEqual(['Legionaries', 'Spearmen', 'Infantry', 'Archers', 'Combat Drones']);
+});
 
 it('derives German Industry cost eligibility from each building stat line', () => {
   expect(BUILDING_KINDS.filter(isProductionBuilding)).toEqual(['Workshop', 'Pyramids', 'Forge', 'Factory']);
