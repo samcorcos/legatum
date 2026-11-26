@@ -12,7 +12,7 @@ round by construction (checked: all 5 x 87 channels and the inverse binds match)
 The approved rig GLB and the sources this kit was proven on are art masters listed in
 `tools/art/sources-manifest.json`; fetch them with
 `python3 tools/art/fetch-sources.py tools/art/anim3d/units/spearman-0ad/spearman.glb` (and the
-`tools/art/anim3d/sources/...` paths; listed: the Hoplite Warrior, the 0 A.D. hoplite actor, the approved rig GLB, the PBR-lane aspis and painted-lane crest GLBs, the two CC BY helmets and tolnaydavid's `hoplite-tolnay` glTF). `--rig` defaults to that GLB. The three.js review
+`tools/art/anim3d/sources/...` paths; listed: the Hoplite Warrior, the 0 A.D. hoplite actor, the approved rig GLB, the PBR-lane aspis and painted-lane crest GLBs, and the CC BY timothyhsu helmet `helmets/pbr_corinthian_helmet.glb`; tolnaydavid's `hoplite-tolnay` is not listed and not needed, see r7). `--rig` defaults to that GLB. The three.js review
 viewer and recorder (`viewer/record.mjs`) referenced below live on the animation branches
 (`astra/unit-anim-3d-fit`), not on master yet. Manifest entries for third-party masters carry two extra fields, `source` (where the file came from: an author and URL, or an upstream repository and revision) and `license` (an SPDX id such as `CC-BY-4.0` or `CC-BY-SA-3.0`), because these files are not our own work: the credit and licence must travel with them. The fetch tooling ignores both fields. Needs Blender 4.5+ (5.3 used) with numpy;
 `fit_test_source.py` also needs the MPFB 2 extension (`env.sh`).
@@ -449,8 +449,9 @@ behind it. `--skin-max-value` caps pale skin texels.
 
 ## Round r13b (LOD1 feet, sleeves, budget 3,450)
 
-The 3D map accepts LOD1 up to 3,500 triangles (LOD0+LOD1 up to 35k, file up to 3 MB):
-`validate_glb.py --lod1-max N` overrides the LOD1 budget (contract default stays 3,000).
+The test rounds run with LOD1 up to 3,500 triangles (LOD0+LOD1 up to 35k, file up to 3 MB; the map code in
+`app/src/map3d/scene.ts` enforces no triangle cap, only the LOD0/LOD1 switch): `validate_glb.py --lod1-max N`
+overrides the LOD1 budget (contract default stays 3,000).
 `kit/sculpt/r13b.sh` builds with `--lod1 3450` and:
 - `--lod1-part-tris PART=N` (repeatable): fixed LOD1 budgets (layer 1000, greave 462, spear 60,
   crest 60); with them, skin is built last and gets what is left (138).
