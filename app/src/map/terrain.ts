@@ -61,7 +61,7 @@ const STANDIN_ZOOM = 0.62;
 /**
  * While the camera's zoom is changing, the level in use stays put (its chunks scaled by at most this much
  * either way) until the zoom has rested for `ZOOM_HOLD_MS`. Switching level on every crossing of a 1.4x step
- * needs a whole new set of chunks, drawn one or two a frame, so a pinch or wheel zoom showed patches of
+ * needs a whole new set of chunks, drawn a stage a frame, so a pinch or wheel zoom showed patches of
  * stand-in (soft, wrong coast) the whole time it ran (playtest 8.9.3).
  */
 /** Frames before a chunk that failed to draw is tried again. */
