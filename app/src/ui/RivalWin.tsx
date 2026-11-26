@@ -1,6 +1,6 @@
 import { useGame } from '../store';
 import { queueDiplomacy } from '../diplomacy';
-import { empireHeadName, empireTitle } from '../empires';
+import { empireTitle, headNameIfMet } from '../empires';
 import { atWarLine, rivalLine, type RivalWin as Rival } from '../rivalWin';
 import { Amounts } from './Amounts';
 import type { PlayerView } from '../types';
@@ -17,7 +17,7 @@ export function RivalWin({ view, rival, declare = true, showSummary = true }: { 
   const set = useGame((s) => s.set);
   const editOrders = useGame((s) => s.editOrders);
   const at = atWarLine(view, rival);
-  const people = empireHeadName(view, rival.team);
+  const people = headNameIfMet(view, rival.team);
   const blocked = rival.declare && 'blocked' in rival.declare ? rival.declare.blocked : null;
   return <div className="rival-win" data-testid="rival-win">
     {showSummary && <p className="rival-win-line">{rivalLine(view, rival)}</p>}

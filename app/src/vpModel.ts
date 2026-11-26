@@ -13,12 +13,16 @@ import {
 import { roman } from './brand/roman';
 import { isBarbarian } from './barbarians';
 import { cappedGoalLabel } from './ui/goalText';
-import { empireOfPlayer, livingPlayers } from './empires';
+import { empireOfPlayer, livingPlayers, unmetTeam } from './empires';
+
 import { playerColor, playerInk } from './theme';
 import { buildTracks, teamHold, type TeamHold } from './vp';
 import { sakokuLine, sakokuStatus, type SakokuStatus } from './sakoku';
 import { goalCities, GOAL_CITY_TITLE, goalCityKindOf, tombPublicLine, tombStatus, type TombStatus } from './goalCities';
 import { aiLevel } from './aiLevel';
+
+/** How every score screen names an empire this seat has not met. */
+export const UNMET_NAME = 'Unknown empire';
 
 type SourceKind = 'work' | 'goal' | 'era' | 'capital';
 /** From the viewer's side: mine (or my team's), a rival's, or nobody's yet. */
@@ -113,6 +117,8 @@ export interface VpEmpire {
   ink: string;
   /** This seat. */
   isMe: boolean;
+  /** A rival this seat has not met: screens show only its VP, never its name, crest, goal, Gold or AI level (`unmetTeam`). Its `name` is already "Unknown empire". */
+  unmet: boolean;
   /** This seat or its team-mate. */
   isMine: boolean;
   /** Sakoku: this empire has closed the country (public), with its countdown. */
@@ -144,6 +150,8 @@ export interface VpRow {
   target: number;
   rank: number;
   isMine: boolean;
+  /** A rival team this seat has not met: its `label` is already "Unknown" and screens hide everything but its VP. */
+  unmet: boolean;
   /** Everything the row's empires hold, member by member. */
   tokens: Token[];
   /** Goals not done yet: their crests close the row, dashed. */
@@ -208,6 +216,9 @@ export function buildVpModel(view: PlayerView): VpModel {
   const isAlive = (id: PlayerId) => alive.some((p) => p.id === id);
   const team = new Set(view.players.filter((p) => p.team === view.team).map((p) => p.id));
   const own = (owners: PlayerId[]): Own => (owners.some((o) => team.has(o)) ? 'mine' : owners.length ? 'theirs' : 'open');
+  // An empire this seat has not met is named only as unknown, everywhere the model names it.
+  const teamOf = (id: PlayerId) => view.players.find((p) => p.id === id)?.team ?? -1;
+  const hidden = (id: PlayerId) => unmetTeam(view, teamOf(id));
 
   const mePublic = view.players.find((p) => p.id === me);
   const workOwners = alive.map((p) => ({ player: p, works: p.vp_sources.flatMap(([src]) => src.kind === 'GreatWork' ? [src.of] : []).sort((a, b) => a - b) }));
@@ -243,12 +254,12 @@ export function buildVpModel(view: PlayerView): VpModel {
   const works = [baseWork, ...extraWorks];
   const capitalSources: Source[] = alive.flatMap((p) => (p.capitals_taken ?? []).map(([id, name]) => ({
     id: `capital-${p.id}-${id}`, kind: 'capital' as const, name, icon: 'city', vp: 1,
-    rule: `${empireOfPlayer(view, p.id)} holds the original capital ${name}: 1 VP while holding it`,
+    rule: `${hidden(p.id) ? UNMET_NAME : empireOfPlayer(view, p.id)} holds the original capital ${name}: 1 VP while holding it`,
     terms: 'Held · follows the city', live: true, held: true,
     owners: [p.id], own: own([p.id]), facts: [{ id: p.id, value: 1, label: name }], unit: '',
   })).concat((p.capitals_sacked ?? []).map(([id, name]) => ({
     id: `capital-sacked-${p.id}-${id}`, kind: 'capital' as const, name, icon: 'city', vp: 1,
-    rule: `${empireOfPlayer(view, p.id)} sacked the original capital ${name}: 1 VP, kept for good`,
+    rule: `${hidden(p.id) ? UNMET_NAME : empireOfPlayer(view, p.id)} sacked the original capital ${name}: 1 VP, kept for good`,
     terms: 'Kept · the city is gone', live: false, held: false,
     owners: [p.id], own: own([p.id]), facts: [{ id: p.id, value: 1, label: name }], unit: '',
   }))));
@@ -277,7 +288,7 @@ export function buildVpModel(view: PlayerView): VpModel {
     };
   });
 
-  const nameOfId = (id: PlayerId) => (id === me ? 'You' : empireOfPlayer(view, id));
+  const nameOfId = (id: PlayerId) => (id === me ? 'You' : hidden(id) ? UNMET_NAME : empireOfPlayer(view, id));
   // A held goal whose faction has fallen still scores for its holder: its card stays, in the holder's row.
   const fallen = view.players.filter((p) => !p.alive && FACTION_GOAL[p.faction].held
     && alive.some((h) => h.vp_sources.some(([src]) => src.kind === 'FactionGoal' && src.of === p.id)));
@@ -326,7 +337,7 @@ export function buildVpModel(view: PlayerView): VpModel {
     const live = [...works, ...capitalSources, ...goals].filter((s) => s.owners.includes(p.id) && s.live);
     return {
       id: p.id, team: p.team, name: nameOf(p.id), faction: p.faction, aiLevel: aiLevel(p), color: playerColor(p.id), ink: playerInk(p.id),
-      isMe: p.id === me, isMine: team.has(p.id), power: p.power ?? 0, lead: p.lead_percent ?? 0, decadence: p.decadence_percent ?? 0, gold: p.gold ?? 0, capitalStands: p.capital_stands ?? true, sakoku: sakokuStatus(p), tomb: p.goal_rule === 'Tomb' ? tombStatus(p) : null, held: [...kept, ...live], goal,
+      isMe: p.id === me, unmet: hidden(p.id), isMine: team.has(p.id), power: p.power ?? 0, lead: p.lead_percent ?? 0, decadence: p.decadence_percent ?? 0, gold: p.gold ?? 0, capitalStands: p.capital_stands ?? true, sakoku: sakokuStatus(p), tomb: p.goal_rule === 'Tomb' ? tombStatus(p) : null, held: [...kept, ...live], goal,
     };
   });
 
@@ -334,13 +345,13 @@ export function buildVpModel(view: PlayerView): VpModel {
     const p = fallen.find((x) => x.id === id);
     if (!p) return undefined;
     const goal = byId.get(goalId(p.id))!;
-    return { id: p.id, team: p.team, name: nameOf(p.id), faction: p.faction, aiLevel: aiLevel(p), color: playerColor(p.id), ink: playerInk(p.id), isMe: false, isMine: false, power: 0, lead: 0, decadence: 0, gold: 0, capitalStands: p.capital_stands ?? true, held: [], goal };
+    return { id: p.id, team: p.team, name: nameOf(p.id), faction: p.faction, aiLevel: aiLevel(p), color: playerColor(p.id), ink: playerInk(p.id), isMe: false, unmet: hidden(p.id), isMine: false, power: 0, lead: 0, decadence: 0, gold: 0, capitalStands: p.capital_stands ?? true, held: [], goal };
   };
 
   const rows: VpRow[] = buildTracks(view, { aliveOnly: true }).map((t) => {
     const members = t.members.map((m) => empires.find((e) => e.id === m.id)).filter((e): e is VpEmpire => !!e);
     return {
-      team: t.team, label: t.isMine ? (t.members.length > 1 ? 'Your team' : 'You') : t.label, members, vp: t.vp, target: t.target, rank: t.rank, isMine: t.isMine,
+      team: t.team, label: t.isMine ? (t.members.length > 1 ? 'Your team' : 'You') : unmetTeam(view, t.team) ? 'Unknown' : t.label, members, unmet: unmetTeam(view, t.team), vp: t.vp, target: t.target, rank: t.rank, isMine: t.isMine,
       tokens: members.flatMap((e) => e.held.map((source): Token => ({ source, owner: e, of: source.kind === 'goal' ? empires.find((x) => x.id === source.only) ?? fallenEmpire(source.only) : undefined }))),
       pendingGoals: members.filter((e) => e.goal.own === 'open').map((e) => ({ source: e.goal, owner: e })),
       capitalStands: members.some((e) => e.capitalStands),

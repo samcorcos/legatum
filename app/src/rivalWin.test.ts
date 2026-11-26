@@ -2,17 +2,24 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { FixtureClient } from './test/fixtureEngine';
 import type { PlayerView } from './types';
 import { atWarLine, nearestRival, rivalLine, rivalWin } from './rivalWin';
+import { meetEveryone } from './test/meetEveryone';
 
 let view: PlayerView;
 beforeAll(async () => {
   const client = new FixtureClient();
   await client.newGame(await client.standardSetup('42', 'India', 'Byzantium', 'Ada', 'Bo'));
-  view = client.view(0);
+  view = meetEveryone(client.view(0));
 });
 
 const at = (team: number, vp: number): PlayerView => ({ ...view, standings: view.standings.map((s) => (s.team === team ? { ...s, vp, target: 10 } : s)) });
 
 describe('rivalWin', () => {
+  it('never names a close rival you have not met, unless you are at War with it', () => {
+    const v = at(1, 8);
+    const hidden = { ...v, diplomacy: { ...v.diplomacy, met: v.diplomacy.met!.filter((t) => t !== 1), relations: v.diplomacy.relations.filter((r) => r.state !== 'War') } };
+    expect(rivalLine(hidden, rivalWin(hidden, 1)!)).toBe('An unknown empire is 2 VP from winning.');
+  });
+
   it('says how far a rival is from winning and nothing for your own team', () => {
     const v = at(1, 8);
     expect(rivalWin(v, v.team)).toBeNull();

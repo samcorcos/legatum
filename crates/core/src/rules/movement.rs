@@ -3298,3 +3298,7 @@ mod held_shot_tests;
 #[cfg(test)]
 #[path = "peaceful_contest_tests.rs"]
 mod peaceful_contest_tests;
+
+#[cfg(test)]
+#[path = "ranged_capture_tests.rs"]
+mod ranged_capture_tests;
