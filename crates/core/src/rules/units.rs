@@ -289,7 +289,7 @@ pub fn supplied_upgrade_plan(
 }
 
 /// When the upgrade stops short of the newest researched form for want of supply: that form
-/// and why it can't be supplied (the unit panel names it beside the upgrade it offers).
+/// and the first sentence of why it can't be supplied (the unit panel's upgrade tooltip).
 pub fn upgrade_held_back(
     state: &GameState,
     player: PlayerId,
@@ -301,7 +301,22 @@ pub fn upgrade_held_back(
         return None;
     }
     let reason = crate::resources::upgrade_blocker(state, player, unit, newest, 0)?;
-    Some((newest, reason))
+    Some((newest, supply_headline(&reason)))
+}
+
+/// The first sentence of a supply refusal, for a tooltip line: "No Niter to spare." or "Needs 1
+/// Niter: you have none yet." The fix is on the unit's build card.
+fn supply_headline(reason: &str) -> String {
+    let first = reason
+        .split(". ")
+        .next()
+        .unwrap_or(reason)
+        .trim_end_matches('.');
+    let first = match first.split_once(" to spare:") {
+        Some((head, _)) => format!("{head} to spare"),
+        None => first.to_string(),
+    };
+    format!("{first}.")
 }
 
 pub(crate) fn lowercase_first(s: &str) -> String {
@@ -2378,7 +2393,7 @@ mod tests {
         );
         let (held, reason) = upgrade_held_back(&s, PlayerId(0), &ua).unwrap();
         assert_eq!(held, UnitKind::Musketman);
-        assert!(reason.contains("Niter"), "{reason}");
+        assert_eq!(reason, "Needs 1 Niter: you have none yet.");
         let view = crate::view::player_view(&s, PlayerId(0));
         let uv = view.units.iter().find(|u| u.id == a).unwrap();
         assert_eq!(uv.upgrade_to, Some(UnitKind::Pikeman));
@@ -2408,6 +2423,18 @@ mod tests {
         assert_eq!(next.units[&a].kind, UnitKind::Musketman);
         assert_eq!(next.units[&b].kind, UnitKind::Musketman);
         assert_eq!(next.units[&c].kind, UnitKind::Pikeman);
+    }
+
+    #[test]
+    fn supply_headline_keeps_the_first_sentence() {
+        assert_eq!(
+            supply_headline("No Niter to spare: all 2 of your Niter are in use. Bring another."),
+            "No Niter to spare."
+        );
+        assert_eq!(
+            supply_headline("Needs 1 Niter: you have none yet. Claim a deposit."),
+            "Needs 1 Niter: you have none yet."
+        );
     }
 
     #[test]

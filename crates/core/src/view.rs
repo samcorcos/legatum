@@ -386,7 +386,7 @@ pub struct UnitView {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct UpgradeHeldBack {
     pub to: UnitKind,
-    /// The supply refusal, in the build card's words ("Needs 1 Niter: you have none yet. ...").
+    /// The first sentence of the supply refusal ("No Niter to spare."); the fix is on the build card.
     pub reason: String,
 }
 
