@@ -247,6 +247,23 @@ export function worldBounds(view: PlayerView) {
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
 const roman = (n: number) => ROMAN[n - 1] ?? String(n);
 
+/** How long a frame may spend painting terrain chunks before the rest of the map is drawn. */
+const TERRAIN_BUDGET_MS = 7;
+let lastTerrain: TerrainCache | null = null;
+
+/**
+ * Paints a little more of the terrain the last `draw` was still waiting on, without drawing the map. Returns true when
+ * the map should be drawn: a chunk landed, or there is nothing more to paint from here.
+ */
+export function stepTerrain(): boolean {
+  return lastTerrain ? lastTerrain.step(TERRAIN_BUDGET_MS) : true;
+}
+
+/** Whether the last `draw` finished a terrain chunk: a clipped frame that did has not shown it yet. */
+export function terrainLanded(): boolean {
+  return !!lastTerrain && lastTerrain.landed > 0;
+}
+
 // ---- performance probe (read by tests and the perf script via window.legatumMap.perf) ----
 export const perf = { frames: 0, partialFrames: 0, drawMs: 0, maxMs: 0, workMs: 0, buildMs: 0, updateMs: 0, measureFrames: false, fxFrames: 0, fxMs: 0, fxMaxMs: 0, momentFrames: 0, momentMs: 0, momentMaxMs: 0, reset() { this.frames = 0; this.partialFrames = 0; this.drawMs = 0; this.maxMs = 0; this.workMs = 0; this.fxFrames = 0; this.fxMs = 0; this.fxMaxMs = 0; this.momentFrames = 0; this.momentMs = 0; this.momentMaxMs = 0; } };
 
@@ -280,7 +297,8 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   terrain.setArtFade(artFadeFor(inp.lens, overlays));
   const moments = inp.moments ?? null;
   terrain.setHold(moments?.hold ?? null);
-  const pending = terrain.draw(ctx, cam, w, h, 7);
+  lastTerrain = terrain;
+  const pending = terrain.draw(ctx, cam, w, h, TERRAIN_BUDGET_MS);
   // During combat playback the HP bars drop as each blow lands (combatFx.ts), not all at once.
   const fxNow = inp.fx;
   const cityHp = (c: CityView) => (fxNow ? hpAt(fxNow.plan, `c${c.id}`, fxNow.t) : undefined) ?? c.hp;

@@ -42,6 +42,11 @@ struct Args {
     /// Play on a recorded game's map and lobby: the human seat becomes Hard and is observed;
     /// `--games` salts the AI brain seeds.
     tape: Option<legatum_core::GameSetup>,
+    /// With `--tape`: replay the recorded orders (the human's and the AIs') for every turn
+    /// before this one, then let the brains play on. Measures how the AI handles a real
+    /// runaway position. The brains still see every replayed turn, so their memory of it holds.
+    handover: u32,
+    recorded: Vec<legatum_wasm::tape::TapeTurn>,
 }
 
 fn arm(spec: &str) -> (String, AiParams) {
@@ -80,6 +85,8 @@ fn parse_args() -> Args {
         out: None,
         all: false,
         tape: None,
+        handover: 0,
+        recorded: Vec::new(),
     };
     while let Some(flag) = it.next() {
         let mut v = || it.next().unwrap_or_else(|| panic!("{flag} needs a value"));
@@ -94,13 +101,12 @@ fn parse_args() -> Args {
             "--storm" => a.storm = v().parse().expect("--storm"),
             "--out" => a.out = Some(v()),
             "--all" => a.all = v() == "1",
+            "--handover" => a.handover = v().parse().expect("--handover"),
             "--tape" => {
                 let text = std::fs::read_to_string(v()).expect("read --tape");
-                a.tape = Some(
-                    legatum_wasm::tape::Tape::from_json(&text)
-                        .expect("tape")
-                        .setup,
-                );
+                let tape = legatum_wasm::tape::Tape::from_json(&text).expect("tape");
+                a.tape = Some(tape.setup);
+                a.recorded = tape.turns;
             }
             other => panic!("unknown argument {other}"),
         }
@@ -152,10 +158,12 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
     let (setup, seat_index) = setup(args, game_seed);
     let seat = PlayerId(seat_index as u8);
     let mut state = legatum_core::new_game(&setup);
-    if args.tape.is_some() && index > 0 {
+    let reseed = args.tape.is_some() && index > 0;
+    if reseed && args.handover == 0 {
         // Same map and lobby, fresh dice per salt (as `hill_suite` does).
         state.dice_seed = Some(setup.seed ^ index.wrapping_mul(0xD1CE_0000_9E37_79B9));
     }
+    let mut mismatches = 0u32;
     let master = AiParams::builtin();
     let mut brains: Vec<Box<dyn Brain>> = setup
         .players
@@ -224,6 +232,12 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
     // Wars declared on the rusher by empires other than the seat, and when.
     let mut joined: BTreeMap<u8, u32> = BTreeMap::new();
     let mut rusher_captures = 0u32;
+    // Every capture of an original capital from its holder: (captor seat, turn).
+    let mut capital_takes: Vec<(u8, u32)> = Vec::new();
+    // After a handover: how the rivals fight the seat (attacks each way, city hits, losses,
+    // rival units pressing the seat's cities, army sizes every 10 turns).
+    let mut front: BTreeMap<&str, i64> = BTreeMap::new();
+    let mut armies: Vec<(u32, usize, usize)> = Vec::new();
     let limit = if args.turns > 0 { args.turns } else { 700 };
     let mut my_capital = None;
     let trace = std::env::var("RL_TRACE").is_ok();
@@ -272,10 +286,84 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
         if let Some(r) = &rusher {
             legatum_wasm::rusher::apply(&mut orders, &state, r);
         }
+        let replaying = state.turn < args.handover;
+        let recorded = if replaying {
+            args.recorded.iter().find(|t| t.turn == state.turn)
+        } else {
+            None
+        };
+        if let Some(t) = recorded {
+            orders = t.orders.clone();
+        }
         let turn = state.turn;
         let (next, events) = legatum_core::resolve_turn(&state, &orders);
         let before = state;
         state = next;
+        if args.handover > 0 && turn >= args.handover {
+            let seat_cities: Vec<_> = before.cities_of(seat).map(|c| c.pos).collect();
+            let pressing = before
+                .units
+                .values()
+                .filter(|u| u.owner != seat && !u.owner.is_barbarian() && is_military(u.kind))
+                .filter(|u| before.teams_at_war(before.team_of(u.owner), my_team))
+                .filter(|u| seat_cities.iter().any(|c| c.distance(u.pos) <= 3))
+                .count();
+            *front.entry("pressing_unit_turns").or_default() += pressing as i64;
+            if (turn - args.handover).is_multiple_of(10) {
+                let rivals: usize = before
+                    .players
+                    .iter()
+                    .filter(|p| p.alive && p.id != seat && !p.id.is_barbarian())
+                    .filter(|p| before.teams_at_war(p.team, my_team))
+                    .map(|p| army(&before, p.id))
+                    .sum();
+                armies.push((turn, army(&before, seat), rivals));
+            }
+            for event in &events {
+                match event {
+                    Event::Battle {
+                        attacker_owner, at, ..
+                    } => {
+                        let defender_seat = before
+                            .cities
+                            .values()
+                            .any(|c| c.pos == *at && c.owner == seat)
+                            || before
+                                .units
+                                .values()
+                                .any(|u| u.pos == *at && u.owner == seat);
+                        let city = before.cities.values().any(|c| c.pos == *at);
+                        if *attacker_owner == seat {
+                            *front.entry("seat_attacks").or_default() += 1;
+                        } else if defender_seat && !attacker_owner.is_barbarian() {
+                            *front.entry("rival_attacks").or_default() += 1;
+                            if city {
+                                *front.entry("rival_city_hits").or_default() += 1;
+                            }
+                        }
+                    }
+                    Event::UnitDestroyed { owner, .. } => {
+                        if *owner == seat {
+                            *front.entry("seat_units_lost").or_default() += 1;
+                        } else if !owner.is_barbarian() {
+                            *front.entry("rival_units_lost").or_default() += 1;
+                        }
+                    }
+                    Event::PeaceEstablished { .. } => {
+                        *front.entry("peaces").or_default() += 1;
+                    }
+                    _ => {}
+                }
+            }
+        }
+        if let Some(t) = recorded
+            && state.hash().to_string() != t.hash
+        {
+            mismatches += 1;
+        }
+        if reseed && args.handover > 0 && state.turn == args.handover {
+            state.dice_seed = Some(setup.seed ^ index.wrapping_mul(0xD1CE_0000_9E37_79B9));
+        }
         for event in &events {
             match event {
                 Event::WarDeclared { relation } => {
@@ -299,7 +387,15 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
                     lost += 1;
                     first_lost.get_or_insert(turn);
                 }
-                Event::CityCaptured { from, to, .. } => {
+                Event::CityCaptured { from, to, city, .. } => {
+                    if before
+                        .cities
+                        .get(city)
+                        .is_some_and(|c| c.original_capital && c.owner == *from)
+                        && before.team_of(*from) != before.team_of(*to)
+                    {
+                        capital_takes.push((to.0, turn));
+                    }
                     if *from == seat {
                         lost += 1;
                         first_lost.get_or_insert(turn);
@@ -346,6 +442,11 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
         "first_join": joined.values().min(),
         "rusher_captures": rusher_captures,
         "builds": builds,
+        "mismatches": mismatches,
+        "front": front,
+        "armies": armies,
+        "capital_takes": capital_takes,
+        "winners": state.players.iter().filter(|p| state.finished && Some(p.team) == state.winner).map(|p| p.id.0).collect::<Vec<_>>(),
     })
 }
 

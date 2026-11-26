@@ -111,8 +111,8 @@ should be looking out for proactively?" Yes: this class is the first thing to hu
   real screen (the headless leftover was hover redrawing the whole map, fixed 2026-11-22, plus software
   rendering, which says nothing about a GPU: judge it from players' `frame_times` at high `canvas_mp10`); new
   terrain chunks while panning or zooming at DPR 2 (four times the chunks per screen; the per-turn field rebuild
-  and part of the coast pass went 2026-11-22, a wheel zoom still renders every level it passes through); End Turn
-  as one main-thread task (engine step, views, autosave); the top bar measuring its width after every render; the engine save going through a JSON value tree; the save text being escaped again inside the autosave
+  and part of the coast pass went 2026-11-22, a wheel zoom still renders every level it passes through; chunks are painted a stage per frame since 2026-11-26, so on a machine without a graphics card judge the fill with `tools/perf/terrain-fill.cjs`, see `docs/learnings/2026-11/26-terrain-chunks-in-stages.md`); End Turn
+  as one main-thread task (the AI plans ahead while the player plans and the autosave runs after the new turn's first frame since 2026-11-26, `docs/learnings/2026-11/26-end-turn-plans-ai-ahead.md`; the first End Turn after a load is still 148 to 156 ms, and check any new work added to End Turn); the top bar measuring its width after every render; the engine save going through a JSON value tree; the save text being escaped again inside the autosave
   envelope; the 1.2 MB view parsed per seat per turn; report, notice and history lists that only grow;
   anything in `app/src` that maps over `view.units`, `view.cities` or `view.tiles` inside a render or a
   pointer handler; AI planning per unit pair.

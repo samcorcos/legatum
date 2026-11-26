@@ -1,6 +1,6 @@
 # Third-party notices
 
-Legatum's own code is MIT (`LICENSE`) and its art is CC BY 4.0 (`LICENSE-ART`), except the 3D map's unit models (CC BY-SA 3.0, see Art below). It builds on the open-source
+Legatum's own code is MIT (`LICENSE`) and its art is CC BY 4.0 (`LICENSE-ART`), except the 3D map's unit models (CC BY-SA 3.0) and its CC0 trees and textures (see Art below). It builds on the open-source
 components below, each under its own licence. Last audited 2026-11-22 with `cargo metadata` on the Cargo workspace
 and the licence fields of `app/package-lock.json`. No dependency is GPL, LGPL-only or AGPL,
 none is unlicensed, and none comes from git or from a path outside this repository.
@@ -133,6 +133,16 @@ CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/), as `LICENSE-ART`
   animations from 0 A.D., Copyright Wildfire Games (https://www.wildfiregames.com/), CC BY-SA 3.0. Refitted,
   re-skinned, re-textured and given a team-colour mask for Legatum; the details are in
   `app/public/models/units/PROVENANCE-spearman.md`.
+
+The 3D map's trees, rock surface and water normal maps are third-party files under CC0 1.0 (no attribution
+required; courtesy credit is given), kept apart from the CC BY-SA 3.0 unit models:
+
+- **Trees** (`app/public/models/trees/*.glb`, seven files): Kenney, Nature Kit (https://kenney.nl/assets/nature-kit).
+  Source and mirror in `app/public/models/PROVENANCE-trees.md`.
+- **Rock surface** (`app/public/textures/map3d/rock-strata.webp`): "Rock 06" by Rob Tuytel, Poly Haven
+  (https://polyhaven.com/a/rock_06), resized and WebP encoded. `app/public/textures/PROVENANCE-rock.md`.
+- **Water normals** (`app/public/textures/map3d/ocean-normal.webp`, `wave-normal.webp`): Procedural Texture
+  Online, Ocean Normal Map and Wave Normal Map, resized and WebP encoded. `app/public/textures/PROVENANCE-water.md`.
 
 ## Notices in distributed builds
 

@@ -12,7 +12,7 @@ import { CITY_CANVAS, CITY_GROUND, WALLED_TOWN_SCALE, townOval, cityArtArrivals,
 import { sitesOf } from './constructionSites';
 import { mapBorderColor, mapPlayerColor, type BorderSpec, type MapStyle } from './style';
 import { getBorderVariant, type BorderVariant } from './borderVariant';
-import { cacheLimit, evictionPlan, fallbackLevels } from './chunkCache';
+import { cacheLimit, evictionPlan, fallbackLevels, showLanded, stageFits } from './chunkCache';
 import { drawFeatureArt, drawOrganicSprite, getTerrainVariant, isOrganic, organicSide } from './terrainVariant';
 import { ORGANIC_REACH, SMALL_REGION, computeRegions, organicKind, organicSig, planOrganic, type Plan, type Regions } from './organicTerrain';
 import {
@@ -61,7 +61,7 @@ const STANDIN_ZOOM = 0.62;
 /**
  * While the camera's zoom is changing, the level in use stays put (its chunks scaled by at most this much
  * either way) until the zoom has rested for `ZOOM_HOLD_MS`. Switching level on every crossing of a 1.4x step
- * needs a whole new set of chunks, drawn one or two a frame, so a pinch or wheel zoom showed patches of
+ * needs a whole new set of chunks, drawn a stage a frame, so a pinch or wheel zoom showed patches of
  * stand-in (soft, wrong coast) the whole time it ran (playtest 8.9.3).
  */
 /** Frames before a chunk that failed to draw is tried again. */
@@ -84,6 +84,10 @@ const BLANK_CHECK_EVERY = flushDeferredChunkDraws ? 6 : 24;
 const scaleOf = (lv: number) => (lv === STANDIN ? LEVELS[OVERVIEW] : LEVELS[lv]);
 /** Time a frame may spend rendering chunks while some visible chunk has never been drawn (the veil would show through). */
 const FILL_BUDGET_MS = 40;
+/** A chunk stage this slow means canvases are drawn on the CPU (a stage is 1 to 2 ms with a graphics card). */
+const SLOW_STAGE_MS = 5;
+/** On such a machine a redraw of the whole map costs as much as half a chunk, so chunks painted between frames are shown at most this often. */
+const LAND_BATCH_MS = 200;
 /** Feature art strength under the Settle lens, and a little under the Yields overlay (the biome colour stays; the trees, peaks and region wash recede). */
 const ART_FADE = 0.38;
 const ART_FADE_OVERLAY = 0.72;
@@ -115,6 +119,24 @@ const TERRAIN_IDX: Record<Terrain, number> = {
 const isWater = (t: Terrain | null) => t === 'Ocean' || t === 'Coast';
 /** Organic underlay under a range: a cool stone grey, so a massif reads as rock rather than a brown shadow. */
 const ROCK = '#a39c8c';
+
+/** A chunk waiting to be painted, in the order the last draw wants it. */
+interface Queued {
+  key: string;
+  lv: number;
+  cx: number;
+  cy: number;
+  /** In the ring round the view, painted ahead of need: started only while the frame has time to spare. */
+  ring: boolean;
+}
+
+/** The chunk being painted, a stage at a time, on a canvas the cache does not show until it is whole. */
+interface Job extends Queued {
+  canvas: AnyCanvas;
+  steps: Generator<void, void, void>;
+  out: { awaits: Set<string> | null };
+  artEpoch: number;
+}
 
 interface Chunk {
   canvas: AnyCanvas;
@@ -259,6 +281,27 @@ export class TerrainCache {
   lastWorkMs = 0;
   /** Chunks rendered since this cache was built (the perf and regression hook). */
   private renders = 0;
+  /** The chunk in the middle of being painted (see `advance`), and the chunks the last draw still wants, in order. */
+  private job: Job | null = null;
+  private queue: Queued[] = [];
+  /** Whether the last draw's chunks may use the longer fill budget (a visible chunk or a stand-in was missing). */
+  private filling = false;
+  /** The slowest recent stage of a chunk, in ms: what one more stage is expected to cost on this machine. */
+  private stageMs = 0;
+  /** A canvas left over when a repainted chunk swapped in its new one, kept for the next repaint. */
+  private spare: AnyCanvas | null = null;
+  private probe: AnyCanvas | null = null;
+  /** Whether `step` ran since the last draw: the caller paints between frames, so a draw need not force a stage. */
+  private stepped = false;
+  /** How long that `step` painted for: the draw that follows it in the same frame has that much less of the budget. */
+  private stepMs = 0;
+  /** When a draw is needed whatever `step` does (a zoom gesture coming to rest), as a `performance.now()` time. */
+  private wakeAt = Infinity;
+  /** Chunks that landed in `step` since the last draw, and when that draw was. */
+  private unshown = 0;
+  private drawnAt = 0;
+  /** Chunks the last `draw` call showed for the first time. */
+  landed = 0;
   /** After the last draw: cached chunks, renders so far, visible chunks still missing or stale, how many are visible, and how many visible chunks show only the soft stand-in layer; also the pinned set and the limit it sets, stale and evicted chunks, art arrivals (`epochs`) and the repaints they caused (`artRenders`). */
   lastStats = { chunks: 0, renders: 0, missing: 0, visible: 0, exposed: 0, level: -1, wanted: -1, failures: 0, pinned: 0, limit: 0, stale: 0, evictions: 0, workMs: 0, epochs: 0, artRenders: 0 };
   private evictions = 0;
@@ -301,6 +344,7 @@ export class TerrainCache {
     const v = mode === 'lens' ? ART_FADE : mode === 'overlay' ? ART_FADE_OVERLAY : 1;
     if (v === this.artFade) return;
     this.artFade = v;
+    this.cancelJob();
     for (const ch of this.chunks.values()) ch.stale = true;
   }
 
@@ -370,6 +414,7 @@ export class TerrainCache {
     this.wallAt = wallAt;
     this.ownerEra = ownerEra;
     if (!dirty) return;
+    this.cancelJob();
     if (regions) {
       const isCity = (i: number) => cityAt.has(i);
       const tundraNear = (i: number) => [0, 1, 2, 3, 4, 5].some((e) => { const j = neighborIndex(i, e, this.w, this.h); return j >= 0 && view.tiles[j].explored && view.tiles[j].terrain === 'Tundra'; });
@@ -396,7 +441,10 @@ export class TerrainCache {
     for (const i of new Set([...prev.era.keys(), ...next.era.keys()])) if (prev.era.get(i) !== next.era.get(i)) add(i);
     for (const i of new Set([...prev.owner.keys(), ...next.owner.keys()])) if (prev.owner.has(i) !== next.owner.has(i) || prev.owner.get(i) !== next.owner.get(i)) add(i);
     this.hold = next;
-    if (changed.length) this.staleNear(changed);
+    if (changed.length) {
+      this.cancelJob();
+      this.staleNear(changed);
+    }
   }
 
   private hold: TerrainHold = NO_HOLD;
@@ -750,8 +798,12 @@ export class TerrainCache {
       return out;
     };
 
-    // Work: overview first (the fallback), then visible chunks nearest the center, then a ring.
-    const work = (lv: number, pad: number, force: boolean, budget: number) => {
+    // The chunks to paint, in order: the stand-in layer first (so a view is never blank), then the view nearest the
+    // centre first, then a ring round it. A visible chunk that was never drawn is on a stand-in until it is, so
+    // those get the longer fill budget.
+    const queue: Queued[] = [];
+    const queued = new Set<string>();
+    const enqueue = (lv: number, pad: number, ring: boolean) => {
       const cells = need(lv, pad);
       const cw = CHUNK / scaleOf(lv);
       cells.sort(
@@ -760,49 +812,36 @@ export class TerrainCache {
           Math.hypot((b[0] + 0.5) * cw - cam.x, (b[1] + 0.5) * cw - cam.y),
       );
       for (const [cx, cy] of cells) {
-        const ch = this.chunks.get(`${lv}:${cx}:${cy}`);
-        if (ch && !ch.stale) continue;
-        if (performance.now() - t0 > budget && !(force && !ch)) {
-          pending = true;
-          return;
-        }
         const key = `${lv}:${cx}:${cy}`;
-        if ((this.failedAt.get(key) ?? -Infinity) > this.frame - RETRY_FRAMES) continue;
-        try {
-          this.renderChunk(lv, cx, cy);
-          // Every chunk is opaque, so a transparent centre means the platform did not give the canvas a backing store.
-          // A readback stalls the GPU, so only one chunk in BLANK_CHECK_EVERY is sampled; a blank one audits the rest of the level.
-          if (this.renders % BLANK_CHECK_EVERY === 0 && this.isBlank(this.chunks.get(key)!)) {
-            this.auditLevel = lv;
-            throw new Error('blank chunk');
-          }
-          this.failedAt.delete(key);
-        } catch (e) {
-          // Never leave a half-drawn or blank chunk marked as drawn: drop it, free memory, and try again shortly.
-          this.dropChunk(key);
-          this.failedAt.set(key, this.frame);
-          this.failures++;
-          pending = true;
-          if (this.failures <= 3) console.warn('legatum: terrain chunk', key, 'failed:', e);
-          continue;
-        }
-        force = false;
+        const ch = this.chunks.get(key);
+        if ((ch && !ch.stale) || queued.has(key)) continue;
+        queued.add(key);
+        queue.push({ key, lv, cx, cy, ring });
       }
     };
-    // The stand-in layer first (so a view is never blank), then the view. A visible chunk that was never
-    // drawn is on a stand-in until it is, so those fill in faster than a refresh.
     const visible = need(level, 0);
     const unseen = visible.some(([cx, cy]) => !this.chunks.has(`${level}:${cx}:${cy}`));
-    if (level !== OVERVIEW) work(STANDIN, 0, true, need(STANDIN, 0).some(([cx, cy]) => !this.chunks.has(`${STANDIN}:${cx}:${cy}`)) ? Math.max(budgetMs, FILL_BUDGET_MS) : budgetMs);
-    work(level, 0, true, unseen ? Math.max(budgetMs, FILL_BUDGET_MS) : budgetMs);
+    const bare = level !== OVERVIEW && need(STANDIN, 0).some(([cx, cy]) => !this.chunks.has(`${STANDIN}:${cx}:${cy}`));
+    if (level !== OVERVIEW) enqueue(STANDIN, 0, false);
+    enqueue(level, 0, false);
+    // Zooming out reveals ground no chunk covers yet, so a gesture pre-renders a wider ring.
+    const gesture = t0 - this.zoomChangedAt < ZOOM_HOLD_MS;
+    enqueue(level, gesture ? 2 : 1, true);
+    this.queue = queue;
+    this.filling = unseen || bare;
+    this.wakeAt = pending ? this.zoomChangedAt + ZOOM_HOLD_MS : Infinity;
+    // A caller that paints between frames (`step`) is not made to paint in this one too; any other is, a stage a
+    // draw, so the map always fills in.
+    const force = !this.stepped;
+    this.landed = this.unshown + this.advance(t0 - (this.stepped ? this.stepMs : 0), budgetMs, force);
+    this.stepped = false;
+    this.unshown = 0;
+    this.drawnAt = t0;
+    if (this.job || this.queue.length) pending = true;
     if (this.auditLevel >= 0) {
       for (const [key, ch] of [...this.chunks]) if (ch.level === this.auditLevel && !ch.stale && this.isBlank(ch)) this.dropChunk(key);
       this.auditLevel = -1;
     }
-    // Zooming out reveals ground no chunk covers yet, so a gesture pre-renders a wider ring.
-    const gesture = t0 - this.zoomChangedAt < ZOOM_HOLD_MS;
-    if (performance.now() - t0 < budgetMs * 0.6) work(level, gesture ? 2 : 1, false, budgetMs);
-    else pending = true;
 
     // Blit: the stand-ins (the stand-in layer, then any other cached level close in scale) only while a visible
     // chunk of the current level is missing, then the current level.
@@ -823,6 +862,8 @@ export class TerrainCache {
         // A previous-level chunk from an earlier turn would show borders and fog as they were, so it is skipped
         // (the stand-in layer is refreshed every turn and is better than nothing even for a frame or two).
         if (!ch || (standIn && ch.stale && lv !== STANDIN)) continue;
+        // A stand-in chunk that covers no gap would be clipped away whole.
+        if (standIn && !gapRects.some((r) => cx * cw < r[2] && (cx + 1) * cw > r[0] && cy * cw < r[3] && (cy + 1) * cw > r[1])) continue;
         // Stand-ins count as use only where they cover a gap, or a zoom-out would pin its whole old level and push the current one out.
         if (!standIn) ch.used = this.frame;
         else if (lv !== STANDIN && gapRects.some((r) => cx * cw < r[2] && (cx + 1) * cw > r[0] && cy * cw < r[3] && (cy + 1) * cw > r[1])) ch.used = this.frame;
@@ -839,7 +880,16 @@ export class TerrainCache {
       const present = new Set<number>();
       for (const c of this.chunks.values()) if (c.level !== level && !c.stale) present.add(c.level);
       const layers = fallbackLevels(level, present, OVERVIEW, STANDIN);
+      // Stand-ins are drawn only where a chunk is missing: the current level's chunks are opaque and cover the
+      // rest, so drawing every stand-in level across the whole view was work nobody saw.
+      const sxg = (x: number) => Math.round(((x - cam.x) * cam.zoom + w / 2) * dpr);
+      const syg = (y: number) => Math.round(((y - cam.y) * cam.zoom + h / 2) * dpr);
+      ctx.save();
+      ctx.beginPath();
+      for (const [gx0, gy0, gx1, gy1] of gapRects) ctx.rect(sxg(gx0), syg(gy0), sxg(gx1) - sxg(gx0), syg(gy1) - syg(gy0));
+      ctx.clip();
       for (const lv of layers) blit(lv, true);
+      ctx.restore();
       // Gaps with no real chunk of any other level under them show only the soft stand-in layer.
       const cwv = CHUNK / scaleOf(level);
       for (const [cx, cy] of gaps) {
@@ -921,24 +971,148 @@ export class TerrainCache {
     g.drawImage(soft.canvas as CanvasImageSource, cx, cy, cx1 - cx, cy1 - cy, cx / k + soft.ox, cy / k + soft.oy, (cx1 - cx) / k, (cy1 - cy) / k);
   }
 
-  private renderChunk(lv: number, cx: number, cy: number) {
-    const key = `${lv}:${cx}:${cy}`;
-    let ch = this.chunks.get(key);
-    if (!ch) {
-      ch = { canvas: makeCanvas(CHUNK, CHUNK), level: lv, cx, cy, stale: false, used: this.frame, awaits: null, byArt: false };
-      this.chunks.set(key, ch);
+  /**
+   * Paint between frames: a stage or more of the chunks the last draw wanted, without drawing the map. Returns true
+   * when the caller should draw: a chunk landed, or nothing more can be done from here.
+   *
+   * A chunk costs 5 to 10 ms on a machine with a graphics card and 150 ms and more on one that draws canvases on the
+   * CPU, where a chunk a frame made every frame of a fill a long task and the map's own redraw (another 30 ms there)
+   * was paid once per chunk on top. Painting a stage per frame, and redrawing only when a chunk is whole, keeps input
+   * answered while the map fills in.
+   */
+  step(budgetMs: number): boolean {
+    if (!this.job && !this.queue.length) return true;
+    const t0 = performance.now();
+    if (t0 >= this.wakeAt) return true;
+    this.stepped = true;
+    this.unshown += this.advance(t0, budgetMs, true);
+    const now = performance.now();
+    this.stepMs = now - t0;
+    if (!this.job && !this.queue.length) return true;
+    // Nothing new to show: a chunk still in flight, or chunks of the ring, which is out of sight.
+    if (!this.unshown) return false;
+    // Where drawing the map is itself slow, finished chunks are shown a few at a time.
+    const more = (!!this.job && !this.job.ring) || this.queue.some((q) => !q.ring);
+    return showLanded(more, this.stageMs >= SLOW_STAGE_MS, now - this.drawnAt, LAND_BATCH_MS);
+  }
+
+  /** Drop the chunk being painted: what it was painting from has changed. It is still missing or stale, so it is queued again. */
+  private cancelJob() {
+    if (!this.job) return;
+    this.recycle(this.job.canvas);
+    this.job = null;
+  }
+
+  /**
+   * On a machine that draws canvases on the CPU, make `c` do the drawing it has queued now, so a stage's cost falls
+   * in its own frame. Chrome queues canvas calls and runs them when the canvas is next read, which was the frame that
+   * shows the finished chunk: that one frame then paid for the whole chunk. Using the canvas as a source runs the
+   * queue without reading pixels back. A machine with a graphics card (cheap stages) is left alone.
+   */
+  private settle(c: AnyCanvas) {
+    if (this.stageMs < SLOW_STAGE_MS) return;
+    if (!this.probe) this.probe = makeCanvas(1, 1);
+    ctx2d(this.probe).drawImage(c as CanvasImageSource, 0, 0, 1, 1, 0, 0, 1, 1);
+  }
+
+  private recycle(c: AnyCanvas) {
+    if (!this.spare) this.spare = c;
+    else c.width = c.height = 0;
+  }
+
+  /**
+   * Paint queued chunks, a stage at a time, until one more stage would overrun the budget counted from `t0`
+   * (`force`: one stage runs whatever the budget). Returns how many chunks of the view landed (the ring is out of sight).
+   */
+  private advance(t0: number, budgetMs: number, force: boolean): number {
+    let landed = 0;
+    let ran = 0;
+    const limit = this.filling ? Math.max(budgetMs, FILL_BUDGET_MS) : budgetMs;
+    for (;;) {
+      const spent = performance.now() - t0;
+      if (!this.job) {
+        const next = this.queue[0];
+        if (!next) break;
+        const ch = this.chunks.get(next.key);
+        if ((ch && !ch.stale) || (this.failedAt.get(next.key) ?? -Infinity) > this.frame - RETRY_FRAMES) {
+          this.queue.shift();
+          continue;
+        }
+        // The ring is painted ahead of need, with time to spare only.
+        if (next.ring && spent >= budgetMs * 0.6 && !(force && !ran)) break;
+        this.queue.shift();
+        const canvas = this.spare ?? makeCanvas(CHUNK, CHUNK);
+        this.spare = null;
+        const out = { awaits: null };
+        this.job = { ...next, canvas, out, artEpoch: cityArtEpoch(), steps: this.paintChunk(canvas, next.lv, next.cx, next.cy, out) };
+      }
+      const job: Job = this.job;
+      if (!stageFits(ran, force, spent, this.stageMs, job.ring ? budgetMs : limit)) break;
+      const s0 = performance.now();
+      let done = false;
+      try {
+        done = !!job.steps.next().done;
+        if (done) {
+          this.land(job);
+          if (!job.ring) landed++;
+        }
+      } catch (e) {
+        // Never leave a half-drawn or blank chunk marked as drawn: drop it, free memory, and try again shortly.
+        this.job = null;
+        if (done) this.dropChunk(job.key);
+        else this.recycle(job.canvas);
+        this.failedAt.set(job.key, this.frame);
+        this.failures++;
+        if (this.failures <= 3) console.warn('legatum: terrain chunk', job.key, 'failed:', e);
+      }
+      ran++;
+      this.stageMs = Math.max(performance.now() - s0, this.stageMs * 0.9);
+    }
+    return landed;
+  }
+
+  /** A painted chunk takes its place in the cache: a repaint swaps canvases, so the old picture shows until the new one is whole. */
+  private land(job: Job) {
+    this.job = null;
+    let ch = this.chunks.get(job.key);
+    if (ch) {
+      const old = ch.canvas;
+      ch.canvas = job.canvas;
+      this.recycle(old);
+    } else {
+      ch = { canvas: job.canvas, level: job.lv, cx: job.cx, cy: job.cy, stale: false, used: this.frame, awaits: null, byArt: false };
+      this.chunks.set(job.key, ch);
     }
     if (ch.byArt) this.artRenders++;
     ch.stale = false;
     ch.byArt = false;
-    ch.awaits = null;
+    ch.awaits = job.out.awaits;
     ch.used = this.frame;
     this.renders++;
+    // Sprites that arrived while the chunk was being painted: it may have drawn a town without one.
+    if (ch.awaits && job.artEpoch !== cityArtEpoch()) {
+      for (const key of cityArtArrivals(job.artEpoch)) ch.awaits.delete(key);
+      if (!ch.awaits.size) ch.stale = ch.byArt = true;
+    }
+    this.failedAt.delete(job.key);
+    // Every chunk is opaque, so a transparent centre means the platform did not give the canvas a backing store.
+    // A readback stalls the GPU, so only one chunk in BLANK_CHECK_EVERY is sampled; a blank one audits the rest of the level.
+    if (this.renders % BLANK_CHECK_EVERY === 0 && this.isBlank(ch)) {
+      this.auditLevel = job.lv;
+      throw new Error('blank chunk');
+    }
+  }
+
+  /**
+   * Paints one chunk onto `canvas`, yielding between stages so `advance` can stop at a frame's budget. The scratch
+   * canvases belong to the chunk in flight, so only one is painted at a time.
+   */
+  private *paintChunk(canvas: AnyCanvas, lv: number, cx: number, cy: number, out: { awaits: Set<string> | null }): Generator<void, void, void> {
     const s = scaleOf(lv);
     const cw = CHUNK / s;
     const x0 = cx * cw;
     const y0 = cy * cw;
-    const g = ctx2d(ch.canvas);
+    const g = ctx2d(canvas);
     g.setTransform(1, 0, 0, 1, 0, 0);
     g.globalAlpha = 1;
     g.globalCompositeOperation = 'source-over';
@@ -980,6 +1154,8 @@ export class TerrainCache {
       this.coastPixels(sc.mask, sc.lines, x0, y0, s);
       g.setTransform(1, 0, 0, 1, 0, 0);
       g.drawImage(sc.lines as CanvasImageSource, 0, 0);
+      yield this.settle(canvas);
+      this.chunkZoom = zoom;
 
       // 4-6. Land: color field, relief, mottle, grain, clipped to the mask.
       const lg = ctx2d(sc.land);
@@ -1020,6 +1196,8 @@ export class TerrainCache {
       lg.drawImage(sc.mask as CanvasImageSource, 0, 0);
       lg.globalCompositeOperation = 'source-over';
       g.drawImage(sc.land as CanvasImageSource, 0, 0);
+      yield this.settle(canvas);
+      this.chunkZoom = zoom;
 
       world(g);
       // 7. Grid: each shared edge once, land edges darker than sea edges. Organic terrain draws it over
@@ -1031,6 +1209,8 @@ export class TerrainCache {
         this.drawOrganic(g, tiles, s);
         this.drawGrid(g, tiles, px);
       }
+      yield this.settle(canvas);
+      this.chunkZoom = zoom;
       // Remembered towns sit under the fog wash with their land; towns in sight are drawn after the territory tint (below).
       const waiting = traceCityArt(() => this.drawTowns(g, tiles, s, false));
       // 10. Fog: desaturate and wash explored-but-unseen hexes.
@@ -1055,12 +1235,14 @@ export class TerrainCache {
         g.globalCompositeOperation = 'source-over';
         g.globalAlpha = 1;
       }
+      yield this.settle(canvas);
+      this.chunkZoom = zoom;
       // 11. Current territory above the fog tint; the later hatch still marks unseen land.
       this.drawTerritory(g, tiles, x0, y0, s, px);
       // Towns in sight above the territory tint: under it a town came out paler than the farms round it (improvements are
       // drawn later, in screen space), and at a 0.18 seat-colour tint a grown city read as a few grey roofs.
       for (const k of traceCityArt(() => this.drawTowns(g, tiles, s, true))) waiting.add(k);
-      ch.awaits = waiting.size ? waiting : null;
+      out.awaits = waiting.size ? waiting : null;
       // 12. Fog hatch and the edge of current vision.
       if (anyFog) {
         const hatch = this.pattern(g, `hatch:${S.fog.hatch}`, () => hatchTile(S.fog.hatch, Math.round(6 * this.dpr), 1));
@@ -1079,8 +1261,15 @@ export class TerrainCache {
       }
     }
 
+    if (anyExplored) {
+      yield this.settle(canvas);
+      this.chunkZoom = zoom;
+    }
     // 13. The unexplored veil (and everything off the map): the chunk minus explored hexes.
-    {
+    // Organic terrain removes the explored hexes as one union, so a chunk inside the map whose every hex in
+    // reach is explored has an empty veil: skip its fill, blur and blit, a third of a chunk's cost on a
+    // machine that draws canvases on the CPU (most of a late game's map is such chunks).
+    if (!this.veilIsEmpty(x0, y0, cw, s)) {
       const sc = this.scratchCanvases();
       const bg = ctx2d(sc.band);
       bg.setTransform(1, 0, 0, 1, 0, 0);
@@ -1132,6 +1321,20 @@ export class TerrainCache {
     // next chunk's coast, water on land (playtest 8.9.4: "random water elements where they shouldn't be", T36). Without the
     // readback about half of the fresh loads in real WebKit on a Mac show it, with it none of 11 did (tools/ui/webkit-mac).
     if (flushDeferredChunkDraws) g.getImageData(0, 0, 1, 1);
+    else this.settle(canvas);
+  }
+
+  /** Whether the unexplored veil of the chunk at `x0, y0` (world size `cw`, scale `s`) has nothing in it, blur reach included. */
+  private veilIsEmpty(x0: number, y0: number, cw: number, s: number): boolean {
+    if (!this.organic) return false; // the classic veil keeps a sliver between explored hexes
+    const b = this.bounds;
+    // How far the blur can carry veil into the chunk, in world units.
+    const reach = (3 * this.style.unexploredBlur * this.dpr + 2) / s;
+    // Every row covers x from half a hex inside the bounds, and the rows' points leave y uncovered for half a hex size.
+    if (x0 - reach < b.minX + HEX_W / 2 || x0 + cw + reach > b.maxX - HEX_W / 2) return false;
+    if (y0 - reach < b.minY + HEX_SIZE / 2 || y0 + cw + reach > b.maxY - HEX_SIZE / 2) return false;
+    const m = reach + HEX_SIZE;
+    return tilesInRect(x0 - m, y0 - m, x0 + cw + m, y0 + cw + m, this.w, this.h).every((i) => this.tiles[i].explored);
   }
 
   /** Adds boundary edges of tiles where `inside` holds and the neighbor does not (and `want(nb)`). */

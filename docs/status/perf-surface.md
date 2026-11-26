@@ -47,7 +47,7 @@ Medians are computed separately. This is a local regression benchmark, not a hos
 | Surface | Trigger | Grows with | Watched by |
 | --- | --- | --- | --- |
 | Map draw (full and clipped frames) | camera, hover, pulses, selection | units, cities, pixels on screen | `frame_times` map draws; `battle-hover.cjs` |
-| Terrain chunk cache (render, stale repaint, field rebuild) | zoom, pan to new ground, each turn | explored land, device pixel ratio | `frame_times` long tasks; `window.legatumMap.terrain` counters |
+| Terrain chunk cache (render, stale repaint, field rebuild) | zoom, pan to new ground, each turn | explored land, device pixel ratio | `frame_times` long tasks; `window.legatumMap.terrain` counters; `tools/perf/terrain-fill.cjs` (fill on a machine without a graphics card; run by hand, not yet in the nightly) |
 | Minimap and world backdrop loops | every frame while the map is up | map size | **unwatched** |
 | React renders on hover and selection (top bar width check, panels, tooltips) | pointer move, select | cities, panel content | `frame_times` input lag, and long tasks less the named causes; no per-component number |
 | Engine calls made while hovering or planning (each one that takes the view parses all of it) | pointer move, select, panels | view size (over 1 MB late) | `frame_times` `long_engine_ms` |
@@ -59,7 +59,7 @@ Medians are computed separately. This is a local regression benchmark, not a hos
 
 | Surface | Trigger | Grows with | Watched by |
 | --- | --- | --- | --- |
-| Engine step for the whole lobby (`end_turn` in WASM, on the main thread) | End Turn | units, cities, AI empires alive | `native-perf.sh`, `turn_profile`, `growth_profile`; in the browser `?perf=1` only |
+| Engine step for the whole lobby (`end_turn` in WASM, on the main thread; since 2026-11-26 the AI seats plan a seat at a time while the player plans, `plan_ahead`) | End Turn, idle moments in a turn | units, cities, AI empires alive | `native-perf.sh`, `turn_profile`, `growth_profile`; in the browser `?perf=1` only |
 | Reading views, applying the turn, autosave, archive, upload copy | End Turn | view size (1.2 MB late), turns played | `growth_profile`; `?perf=1` |
 | Turn playback and the turn report | after End Turn | events that turn | **unwatched** |
 | Order validation while planning (`validate` per candidate in purchase previews, path search, where-to-build) | opening a panel, hovering a route | cities, candidates, map size | **unwatched** |
