@@ -522,3 +522,28 @@ it.each(['upgrade', 'siege', 'move'] as const)('emphasizes exactly one useful ac
   if (choice === 'move') expect(useGame.getState().mode).toBe('move');
   else expect(useGame.getState().orders[0]).toContainEqual({ type: choice === 'upgrade' ? 'UpgradeUnit' : 'UpgradeSiege', unit: unit.id });
 });
+
+it('a unit standing in a city offers Open city, which selects the city in one click', async () => {
+  const client = new FixtureClient();
+  await client.newGame(await client.standardSetup('42', 'India', 'Byzantium', 'Ada', 'Bo'));
+  const view: PlayerView = structuredClone(client.view(0));
+  const unit = view.units.find((u) => u.owner === view.me && u.military)!;
+  const city = view.cities.find((c) => c.owner === view.me) ?? view.cities[0];
+  expect(city).toBeTruthy();
+  unit.pos = { ...city.pos };
+  useGame.setState({ views: [view], seat: 0, selection: { kind: 'unit', id: unit.id } });
+  act(() => root.render(<UnitPanel unit={unit} view={view} />));
+  const line = container.querySelector('[data-testid="unit-open-city"]');
+  expect(line?.textContent).toContain(`In ${city.name}`);
+  act(() => (line!.querySelector('button') as HTMLButtonElement).click());
+  expect(useGame.getState().selection).toEqual({ kind: 'city', id: city.id });
+});
+
+it('a unit outside any city has no Open city line', async () => {
+  const client = new FixtureClient();
+  await client.newGame(await client.standardSetup('42', 'India', 'Byzantium', 'Ada', 'Bo'));
+  const view: PlayerView = structuredClone(client.view(0));
+  const unit = view.units.find((u) => u.owner === view.me && !view.cities.some((c) => c.pos.q === u.pos.q && c.pos.r === u.pos.r))!;
+  act(() => root.render(<UnitPanel unit={unit} view={view} />));
+  expect(container.querySelector('[data-testid="unit-open-city"]')).toBeNull();
+});

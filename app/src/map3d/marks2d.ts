@@ -42,7 +42,16 @@ export interface Marks2dInput {
   far: boolean;
 }
 
-export function drawMarks2d(ctx: CanvasRenderingContext2D, w: number, h: number, dpr: number, inp: Marks2dInput) {
+/** A city banner as drawn this frame, in screen pixels: the banner and its meters, for clicks on the banner. */
+export interface BannerHit3d { city: number; parts: { x: number; y: number; w: number; h: number }[] }
+
+/** Banner hit areas drawn last win: the topmost banner under a point, or null. */
+export function bannerCityAt3d(hits: readonly BannerHit3d[], x: number, y: number): number | null {
+  return hits.findLast((b) => b.parts.some((r) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h))?.city ?? null;
+}
+
+export function drawMarks2d(ctx: CanvasRenderingContext2D, w: number, h: number, dpr: number, inp: Marks2dInput): BannerHit3d[] {
+  const hits: BannerHit3d[] = [];
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, w, h);
   const { view } = inp;
@@ -101,17 +110,19 @@ export function drawMarks2d(ctx: CanvasRenderingContext2D, w: number, h: number,
     const fs = inp.far ? 11 : Math.round(Math.max(11, Math.min(15, p.radius * 0.4)) * 2) / 2;
     const meters = !inp.far && c.owner === view.me && c.visible ? bannerMeters(c, faction, inp.focusOf(c), inp.builds.get(c.id) ?? null, myTomb) : [];
     const r = drawBanner(ctx, LOOK, spec, p.x, p.y, fs, dpr, c.visible ? 1 : 0.85);
+    const parts = [r];
+    hits.push({ city: c.id, parts });
     const level = inp.siege.get(c.id);
     const bar = bannerBarOf(c, c.hp);
     if (level) {
       const barY = r.y + r.h + SIEGE_BAR_GAP;
       drawSiegeBar(ctx, p.x, barY, Math.min(Math.max(r.w - 8, 64), 128), bar.value, bar.max, FONTS[LOOK].sans, true, bar.walls);
-      if (meters.length) drawBannerMeters(ctx, LOOK, meters, p.x, barY + 16, dpr);
+      if (meters.length) parts.push(drawBannerMeters(ctx, LOOK, meters, p.x, barY + 16, dpr));
       drawSiegeBadge(ctx, r.x + r.w, r.y, 11, dpr);
       continue;
     }
     const hurt = c.visible && bar.value < bar.max;
-    if (meters.length) drawBannerMeters(ctx, LOOK, meters, p.x, r.y + r.h + (hurt ? 6 : 1), dpr);
+    if (meters.length) parts.push(drawBannerMeters(ctx, LOOK, meters, p.x, r.y + r.h + (hurt ? 6 : 1), dpr));
     if (hurt) {
       const f = Math.max(0, bar.value / bar.max);
       const bw = Math.min(r.w - 16, 72), bx = p.x - bw / 2, by = r.y + r.h + 1;
@@ -124,6 +135,7 @@ export function drawMarks2d(ctx: CanvasRenderingContext2D, w: number, h: number,
       }
     }
   }
+  return hits;
 }
 
 /** The selected unit's planned route, as on the 2D map: a dashed ink line rounded through the tile centres, stopping short of
