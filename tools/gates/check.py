@@ -27,6 +27,8 @@ By changed path:
   UI                      legatum-ui-reviewer
   what the advisor teaches  legatum-advisor-reviewer  (controls, turn flow, orders and the rules its advice and
                                                reasons state: ADVISOR_IMPACT; or the advisor itself)
+  how the game plays      legatum-design-reviewer  (turn rules, the rules version, map generation, goals, scoring,
+                                               objectives, eras: DESIGN_IMPACT)
   art, or art-related code  legatum-art-reviewer  (art files, or the names/kinds/wiring that art depends on:
                                                ART_IMPACT)
   public front door       legatum-docs-reviewer and legatum-art-reviewer  (README.md, docs/media/, the link-preview
