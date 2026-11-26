@@ -1007,6 +1007,13 @@ impl Planner<'_> {
             decisions.retain(|existing| !matches!(existing, Order::DeclareWar { .. }));
             decisions.push(order);
         }
+        if !decisions
+            .iter()
+            .any(|o| matches!(o, Order::DeclareWar { .. }))
+            && let Some(order) = self.capital_coalition_declaration()
+        {
+            decisions.push(order);
+        }
         // Deals (rules 61): Hard's coalition Gold to a partner fighting the leader.
         if deals && let Some(gift) = self.plan_coalition_gift() {
             decisions.push(gift);

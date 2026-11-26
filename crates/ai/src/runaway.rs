@@ -26,7 +26,7 @@ use crate::diplomacy::{nearest_known, strength};
 use crate::operation::{Operation, OperationKind};
 use crate::scripted::Planner;
 use legatum_core::view::{CityView, UnitView};
-use legatum_core::{AiDifficulty, CityId, PlayerView, TeamId, UnitKind, data};
+use legatum_core::{AiDifficulty, CityId, Order, PlayerView, TeamId, UnitKind, data};
 
 /// A runaway's army this far from every one of its known cities is committed elsewhere.
 pub(crate) const AWAY_DISTANCE: i32 = 8;
@@ -784,6 +784,58 @@ impl Planner<'_> {
             .find(|t| {
                 v.players.iter().any(|q| {
                     q.alive && q.team != *t && q.team != v.team && v.teams_at_war(q.team, *t)
+                })
+            })
+    }
+
+    /// Gene `capital_coalition`: whoever takes an empire's capital makes its neighbours declare.
+    /// Public information only: the captured capital on the map and the captor's recent
+    /// public captures.
+    pub(crate) fn capital_coalition_declaration(&self) -> Option<Order> {
+        if self.decisions.capital_coalition == 0 || self.difficulty != AiDifficulty::Hard {
+            return None;
+        }
+        let v = self.view();
+        let at_war_elsewhere = v
+            .players
+            .iter()
+            .any(|p| p.alive && !p.id.is_barbarian() && p.team != v.team && v.teams_at_war(v.team, p.team));
+        if at_war_elsewhere {
+            return None;
+        }
+        let recent = |team: TeamId| {
+            self.opponents.is_some_and(|model| {
+                model.threats.records.iter().any(|(id, record)| {
+                    v.team_of(*id) == team
+                        && record
+                            .captures
+                            .last()
+                            .is_some_and(|turn| v.turn.saturating_sub(*turn) <= 15)
+                })
+            })
+        };
+        let captors: std::collections::BTreeSet<TeamId> = v
+            .cities
+            .iter()
+            .filter(|c| c.original_capital)
+            .filter_map(|c| {
+                let founder = c.original_capital_of?;
+                let captor = v.team_of(c.owner);
+                (captor != v.team_of(founder) && captor != v.team && !c.owner.is_barbarian())
+                    .then_some(captor)
+            })
+            .collect();
+        captors
+            .into_iter()
+            .filter(|t| recent(*t))
+            .filter(|t| self.helper_reach_percent(v.team, *t) > 0)
+            .filter(|t| army(v, v.team) * 2 >= army(v, *t))
+            .find_map(|t| {
+                v.diplomacy.actions.iter().find_map(|action| {
+                    (action.blocked_reason.is_none()
+                        && !action.betrayal
+                        && matches!(action.order, Order::DeclareWar { against, breach: false } if against == t))
+                        .then(|| action.order.clone())
                 })
             })
     }

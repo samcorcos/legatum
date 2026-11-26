@@ -11,7 +11,7 @@
 use crate::scripted::Planner;
 use crate::winchance::WinFacts;
 use legatum_core::view::{CityView, UnitView};
-use legatum_core::{Hex, TeamId, UnitKind};
+use legatum_core::{AiDifficulty, Hex, Order, TeamId, UnitId, UnitKind};
 
 /// VP-equivalents of taking the last standing rival capital: the game ends in our favour.
 pub(crate) const WIN_VP: i32 = 10;
@@ -237,6 +237,101 @@ impl Planner<'_> {
             self.go_to(u, pos);
         }
     }
+}
+
+impl Planner<'_> {
+    /// Gene `capital_keep`: with an enemy army near, the capital keeps a defender. Runs after
+    /// every unit pass, so it reads the final orders: a unit moving or charging out of the
+    /// capital is held if it is the last one inside, and an empty capital calls the nearest
+    /// free unit. Shots do not move a unit, so a shooter inside may still fire.
+    pub(crate) fn guard_capital(&mut self) {
+        if self.decisions.capital_keep == 0 || self.difficulty != AiDifficulty::Hard {
+            return;
+        }
+        let v = self.view();
+        let Some(capital) = self.ctx.own_cities.iter().copied().find(|c| c.is_capital) else {
+            return;
+        };
+        let pos = capital.pos;
+        let enemy_near = v.units.iter().any(|u| {
+            u.military && u.owner != v.me && v.at_war(v.me, u.owner) && u.pos.distance(pos) <= 6
+        });
+        if !enemy_near {
+            return;
+        }
+        let army: Vec<&UnitView> = self
+            .ctx
+            .own_units
+            .iter()
+            .copied()
+            .filter(|u| u.military && u.kind != UnitKind::Scout)
+            .collect();
+        // A charge at an adjacent enemy is a fight, not a departure: let it go.
+        let attack = |to: Hex| to.distance(pos) <= 1 && v.units.iter().any(|e| e.pos == to && e.owner != v.me);
+        let leaves = |orders: &[Order], id: UnitId| {
+            orders.iter().any(|o| {
+                matches!(o, Order::MoveUnit { unit, to } | Order::MoveUnitPath { unit, to, .. }
+                    if *unit == id && *to != pos && !attack(*to))
+                    || matches!(o, Order::FoundCity { unit } | Order::DisbandUnit { unit } if *unit == id)
+            })
+        };
+        let inside: Vec<&UnitView> = army.iter().copied().filter(|u| u.pos == pos).collect();
+        if !inside.is_empty() {
+            if inside.iter().any(|u| !leaves(&self.orders, u.id)) {
+                return;
+            }
+            // Keep the strongest defender: a melee unit (it blocks capture), then HP.
+            let keep = inside
+                .iter()
+                .max_by_key(|u| (u.ranged == 0, u.hp, u.id))
+                .expect("a unit inside");
+            let id = keep.id;
+            self.orders.retain(|o| !order_moves(o, id));
+            self.orders.push(Order::SkipUnit { unit: id });
+            return;
+        }
+        // Units already ordered into the capital count.
+        if army.iter().any(|u| {
+            self.orders.iter().any(|o| {
+                matches!(o, Order::MoveUnit { unit, to } | Order::MoveUnitPath { unit, to, .. }
+                    if *unit == u.id && *to == pos)
+            }) && u.pos.distance(pos) <= 1
+        }) {
+            return;
+        }
+        let sole_garrison = |u: &UnitView| {
+            self.ctx.own_cities.iter().any(|c| c.pos == u.pos)
+                && army.iter().filter(|o| o.pos == u.pos).count() < 2
+        };
+        let enemy_on = |h: Hex| v.units.iter().any(|e| e.pos == h && e.owner != v.me);
+        if enemy_on(pos) {
+            return;
+        }
+        let Some(u) = army
+            .iter()
+            .copied()
+            .filter(|u| u.pos.distance(pos) <= 3 && u.moves_left > 0 && !sole_garrison(u))
+            .min_by_key(|u| (u.pos.distance(pos), u.ranged > 0, u.id))
+        else {
+            return;
+        };
+        let id = u.id;
+        self.orders.retain(|o| !order_moves(o, id) && !matches!(o, Order::RangedAttack { unit, .. } if *unit == id));
+        self.orders.push(Order::MoveUnit { unit: id, to: pos });
+    }
+}
+
+/// Orders that move, found with, or spend this unit's turn (not shots).
+fn order_moves(o: &Order, id: UnitId) -> bool {
+    matches!(o,
+        Order::MoveUnit { unit, .. }
+        | Order::MoveUnitPath { unit, .. }
+        | Order::SleepUnit { unit, .. }
+        | Order::SkipUnit { unit }
+        | Order::FoundCity { unit }
+        | Order::DisbandUnit { unit }
+        | Order::SetAutomation { unit, .. }
+        if *unit == id)
 }
 
 #[cfg(test)]
