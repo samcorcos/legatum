@@ -78,6 +78,13 @@ ap.add_argument('--no-greave-dome', action='store_true', help='no kneecap dome o
 ap.add_argument('--greave-skin-any', action='store_true', help='delete skin faces with ANY vertex under a greave (not only fully covered ones)')
 ap.add_argument('--skin-max-value', type=float, default=1.4, help='cap on skin brightness relative to its mean (pale patches from texture hidden under source armour)')
 ap.add_argument('--smooth-skin-normals', action='store_true', help='transfer smooth normals from the undecimated fitted skin onto the LOD skin')
+ap.add_argument('--lod1-helmet-face', type=float, nargs=2, metavar=('HEIGHT', 'DEPTH'),
+                help='keep the helmet face and cheek pieces at LOD0 topology in LOD1: faces below HEIGHT (fraction of the helmet height) and in front of DEPTH (fraction of its depth, back to front)')
+ap.add_argument('--lod1-helmet-face-dissolve', type=float, default=8., help='planar-dissolve angle (degrees) for the kept LOD1 helmet face')
+ap.add_argument('--lod1-part-tris', action='append', default=[], metavar='PART=N', help='fixed LOD1 triangle budget for a part (with --lod1-helmet-face; skin takes what is left)')
+ap.add_argument('--lod1-feet-shell', type=int, metavar='TRIS', help='replace the LOD1 sandals and foot skin by one closed leather shell per foot of about TRIS triangles (thin straps shred under collapse decimation)')
+ap.add_argument('--lod1-feet-height', type=float, default=.09, help='sandal/foot cut height for --lod1-feet-shell (m)')
+ap.add_argument('--lod1-sleeve-tris', type=int, metavar='TRIS', help='decimate the generated sleeve shells on their own to TRIS triangles in LOD1 (both sleeves)')
 ap.add_argument('--lod1-greave-offset', type=float, default=.003, help='extra radial room for the LOD1 built greaves (m)')
 ap.add_argument('--helmet-size', type=float, default=1.0, help='replacement helmet size relative to an exact head fit')
 ap.add_argument('--helmet-uv-share', type=float, default=1.0, help='scale the helmet UV islands before packing (2 = four times the atlas area)')
@@ -437,6 +444,29 @@ if args.sleeves and 'body' in fitted_objects:
                 # arm (same distance from the bone axis) must stay.
                 if .035 < tt < tmax + .03 and rr < rmax + .015 and c[0] * np.sign(a[0]) > -.005: dead.append(f)
             bmesh.ops.delete(bm, geom=dead, context='FACES'); bm.to_mesh(lo_.data); bm.free(); removed += len(dead)
+            # Torn scraps of the source sleeve left loose beside the new shell (r12's
+            # red shard at the shield arm): small islands wholly around the upper arm and
+            # standing off (> 2.5 cm) from every other garment surface and the new sleeve.
+            bm = bmesh.new(); bm.from_mesh(lo_.data); bm.faces.ensure_lookup_table(); bm.verts.ensure_lookup_table(); seen = set(); dead = []
+            from mathutils.kdtree import KDTree
+            for f0 in bm.faces:
+                if f0.index in seen: continue
+                comp, st = [], [f0]
+                while st:
+                    f = st.pop()
+                    if f.index in seen: continue
+                    seen.add(f.index); comp.append(f); st.extend(y for e in f.edges for y in e.link_faces if y.index not in seen)
+                if len(comp) > 300: continue
+                c = np.array([f.calc_center_median() for f in comp]) - a; tt = c @ u; rr = np.linalg.norm(c - np.outer(tt, u), axis=1)
+                if not ((tt > -.03) & (tt < tmax + .06) & (rr < rmax + .08) & (c[:, 0] * np.sign(a[0]) > -.005)).all(): continue
+                mine = {v.index for f in comp for v in f.verts}
+                rest = [v.co for v in bm.verts if v.index not in mine] + [v.co for v in o.data.vertices]
+                kd = KDTree(len(rest))
+                for i_, q_ in enumerate(rest): kd.insert(q_, i_)
+                kd.balance()
+                if max(kd.find(bm.verts[i_].co)[2] for i_ in mine) > .025: dead += comp
+            bmesh.ops.delete(bm, geom=dead, context='FACES'); bm.to_mesh(lo_.data); bm.free(); removed += len(dead)
+            report.setdefault('sleeve_scraps_removed', {})[side] = report.get('sleeve_scraps_removed', {}).get(side, 0) + len(dead)
     report['sleeves'] = {'fraction': args.sleeves, 'source_faces_removed': removed}
     log('sleeves rebuilt', report['sleeves'])
 NEXT = {'arm_L': 'forearm_L', 'forearm_L': 'hand_L', 'arm_R': 'forearm_R', 'forearm_R': 'hand_R',
@@ -898,11 +928,57 @@ for spec in args.sculpt_override:
 # then the budget favours garments over skin.
 lod1_weight = {'layer': 1.6, 'greave': .75 if built_greaves else .35, 'cloak': 1.0, 'body': .8, 'helmet': .45, 'crest': .3, 'shield': .7, 'spear': .1}  # the aspis rim shreds below ~500
 wsum_ = sum(lod1_weight.get(p, .5) for p in parts)
+
+
+def helmet_face_mask(o):
+    P_ = co(o); lo_, hi_ = P_.min(0), P_.max(0); Cf = np.array([pl.center for pl in o.data.polygons])
+    return (Cf[:, 1] < lo_[1] + args.lod1_helmet_face[0] * (hi_[1] - lo_[1])) & (Cf[:, 2] > lo_[2] + args.lod1_helmet_face[1] * (hi_[2] - lo_[2]))
+
+
 b1 = {p: int(args.lod1 * lod1_weight.get(p, .5) / wsum_) for p in parts}
-cover = [lod0[p] for p in ('layer', 'greave', 'cloak') if p in lod0]
-lod1 = {}
-for p in parts:
+cover = [lod0[p] for p in ('layer', 'greave', 'cloak') + (('helmet',) if args.lod1_helmet_face else ()) if p in lod0]
+lod1 = {}; helmet_face_tris = 0
+order_ = parts
+if args.lod1_helmet_face and 'helmet' in parts:
+    # The kept helmet face and the kept aspis rim are fixed costs: build those parts
+    # first (dome at 100 triangles), then share what is left of the budget.
+    # Each later part's share is recomputed from what is actually left (garments
+    # resist collapse and overshoot their share).
+    # Garments keep their usual share (below ~990 the chiton and skirt collapse);
+    # greaves, skin, crest and spear share what is left, greaves first.
+    order_ = [p for p in ('shield', 'helmet', 'layer') if p in parts] + [p for p in parts if p not in ('shield', 'helmet', 'layer')]; b1['helmet'] = 100
+    rest_weight = {'greave': 1.2, 'body': .6, 'crest': .3, 'spear': .1}
+fixed1 = {k: int(v) for k, v in (x.split('=') for x in args.lod1_part_tris)}
+if fixed1:
+    # Fixed budgets first, skin last with whatever is left.
+    order_ = [p for p in order_ if p != 'body'] + (['body'] if 'body' in parts else []); b1.update(fixed1)
+extra1 = (2 * args.lod1_feet_shell if args.lod1_feet_shell else 0)
+for p in order_:
+    if p == 'body' and fixed1:
+        b1[p] = args.lod1 - extra1 - sum(ntris(o_) for o_ in lod1.values())
+    elif args.lod1_helmet_face and p not in ('shield', 'helmet', 'layer') and p not in fixed1:
+        left_ = args.lod1 - sum(ntris(o_) for o_ in lod1.values()); w_ = sum(rest_weight.get(q, .5) for q in order_ if q not in lod1)
+        b1[p] = int(left_ * rest_weight.get(p, .5) / w_)
     o = joined_copy([lod0[p]], f'LOD1-{p}'); o['part'] = p
+    if p in ('body', 'layer') and args.lod1_feet_shell:
+        # Sandals and foot skin are replaced below by one closed shell per foot.
+        bm = bmesh.new(); bm.from_mesh(o.data)
+        bmesh.ops.delete(bm, geom=[f for f in bm.faces if f.calc_center_median().y < args.lod1_feet_height], context='FACES'); bm.to_mesh(o.data); bm.free()
+    if p == 'layer' and args.lod1_sleeve_tris:
+        # The generated sleeve shells decimate cleanly on their own; inside the whole
+        # garment they shred into white wedges at the shoulder.
+        sl_idx = [i for i, nm in enumerate(lod0['layer']['mat_names']) if 'sleeve' in nm.lower()]
+        smv = np.empty(len(o.data.polygons), np.int64); o.data.attributes['src_mat'].data.foreach_get('value', smv); is_sl = np.isin(smv, sl_idx)
+        sl = joined_copy([o], 'LOD1-sleeves')
+        for obj, drop in ((o, True), (sl, False)):
+            bm = bmesh.new(); bm.from_mesh(obj.data); bm.faces.ensure_lookup_table()
+            bmesh.ops.delete(bm, geom=[f for f in bm.faces if bool(is_sl[f.index]) == drop], context='FACES'); bm.to_mesh(obj.data); bm.free()
+        log('lod1 layer before', {'sleeves': ntris(sl), 'rest': ntris(o), 'budget': b1[p]})
+        if ntris(sl) > args.lod1_sleeve_tris: apply_mod(sl, 'DECIMATE', ratio=args.lod1_sleeve_tris / ntris(sl), use_collapse_triangulate=True)
+        if ntris(o) > b1[p] - ntris(sl): apply_mod(o, 'DECIMATE', ratio=(b1[p] - ntris(sl)) / ntris(o), use_collapse_triangulate=True)
+        report['lod1_layer_split'] = {'sleeves': ntris(sl), 'rest': ntris(o)}; log('lod1 layer split', report['lod1_layer_split'])
+        bpy.ops.object.select_all(action='DESELECT'); o.select_set(True); sl.select_set(True)
+        bpy.context.view_layer.objects.active = o; bpy.ops.object.join(); o = bpy.context.view_layer.objects.active
     if p == 'body' and cover:
         Lp = np.concatenate([co(c) for c in cover]); me = o.data; n = len(me.vertices)
         P = co(o); Nn = np.empty(n * 3); me.vertices.foreach_get('normal', Nn); Nn = Nn.reshape(-1, 3)
@@ -931,8 +1007,100 @@ for p in parts:
         if ntris(o) > room: apply_mod(o, 'DECIMATE', ratio=room / ntris(o), use_collapse_triangulate=True)
         bpy.ops.object.select_all(action='DESELECT'); o.select_set(True); rim.select_set(True)
         bpy.context.view_layer.objects.active = o; bpy.ops.object.join()
+    elif p == 'helmet' and args.lod1_helmet_face:
+        # Collapse decimation folds the thin Corinthian face and cheek plates into
+        # pale shards with skin behind them: keep that region at LOD0 topology (as
+        # the aspis rim) and decimate only the dome.
+        face_f = helmet_face_mask(o)
+        face = joined_copy([o], 'LOD1-helmet-face')
+        for obj, drop in ((o, True), (face, False)):
+            bm = bmesh.new(); bm.from_mesh(obj.data); bm.faces.ensure_lookup_table()
+            dead = [f for f in bm.faces if bool(face_f[f.index]) == drop]
+            bmesh.ops.delete(bm, geom=dead, context='FACES'); bm.to_mesh(obj.data); bm.free()
+        # Planar dissolve only merges near-coplanar faces inside UV islands: no vertex
+        # moves, so nothing folds into a shard.
+        bm = bmesh.new(); bm.from_mesh(face.data)
+        bmesh.ops.dissolve_limit(bm, angle_limit=math.radians(args.lod1_helmet_face_dissolve), use_dissolve_boundaries=False, verts=bm.verts[:], edges=bm.edges[:], delimit={'UV', 'NORMAL'})
+        bmesh.ops.triangulate(bm, faces=bm.faces[:]); bm.to_mesh(face.data); bm.free()
+        helmet_face_tris = ntris(face)
+        # The dome's inner shell is only seen through the face opening, which the kept
+        # face covers: drop it so the dome budget goes to the outside (no dark slabs).
+        cen_ = co(o).mean(0); bm = bmesh.new(); bm.from_mesh(o.data)
+        inner = [f for f in bm.faces if np.dot(np.array(f.normal), np.array(f.calc_center_median()) - cen_) < 0]
+        bmesh.ops.delete(bm, geom=inner, context='FACES'); bm.to_mesh(o.data); bm.free()
+        report['lod1_helmet_inner_faces_dropped'] = len(inner)
+        if ntris(o) > b1[p]: apply_mod(o, 'DECIMATE', ratio=b1[p] / ntris(o), use_collapse_triangulate=True)
+        bpy.ops.object.select_all(action='DESELECT'); o.select_set(True); face.select_set(True)
+        bpy.context.view_layer.objects.active = o; bpy.ops.object.join()
+        report['lod1_helmet_face_tris_kept'] = helmet_face_tris
+    elif p == 'layer' and args.lod1_sleeve_tris: pass
     elif ntris(o) > b1[p]: apply_mod(o, 'DECIMATE', ratio=b1[p] / ntris(o), use_collapse_triangulate=True)
     lod1[p] = o
+if args.lod1_feet_shell:
+    # One closed leather shell per foot: LOD0 sandal and foot surfaces voxel-remeshed,
+    # decimated, pushed out 1.5 mm, each face flat-coloured from the nearest LOD0
+    # sandal texel (no UV straddles islands).
+    from mathutils.bvhtree import BVHTree
+    from mathutils import Vector
+    h_ = args.lod1_feet_height
+    sand = lod0['layer']; sme_ = sand.data; sme_.calc_loop_triangles(); suv_ = sme_.uv_layers['atlas'].data
+    SP = co(sand); tris_ = [lt for lt in sme_.loop_triangles if SP[list(lt.vertices)][:, 1].mean() < h_]
+    sbvh = BVHTree.FromPolygons([tuple(v) for v in SP], [tuple(lt.vertices) for lt in tris_])
+    shells_ = []
+    for sd in (1, -1):
+        Pts, Fs = [], []
+        for src_ in (lod0['layer'], lod0['body']):
+            Q = co(src_); me_ = src_.data; me_.calc_loop_triangles()
+            for lt in me_.loop_triangles:
+                vv = list(lt.vertices)
+                if Q[vv][:, 1].mean() < h_ and np.sign(Q[vv][:, 0].mean()) == sd: Fs.append([len(Pts) + k for k in range(3)]); Pts += [tuple(Q[v]) for v in vv]
+        me_ = bpy.data.meshes.new(f'LOD1-foot-{sd}'); me_.from_pydata(Pts, [], Fs); me_.update()
+        f_ = bpy.data.objects.new(me_.name, me_); bpy.context.scene.collection.objects.link(f_)
+        apply_mod(f_, 'REMESH', mode='VOXEL', voxel_size=.008); apply_mod(f_, 'TRIANGULATE')
+        # Keep the outer surface only (the remesh also wraps strap gaps and inner pockets).
+        bm = bmesh.new(); bm.from_mesh(f_.data); bm.faces.ensure_lookup_table(); seen = set(); isl_ = []
+        for f0 in bm.faces:
+            if f0.index in seen: continue
+            comp, st = [], [f0]
+            while st:
+                f = st.pop()
+                if f.index in seen: continue
+                seen.add(f.index); comp.append(f); st.extend(y for e in f.edges for y in e.link_faces if y.index not in seen)
+            isl_.append(comp)
+        isl_.sort(key=len); bmesh.ops.delete(bm, geom=[f for c_ in isl_[:-1] for f in c_], context='FACES'); bm.to_mesh(f_.data); bm.free()
+        if ntris(f_) > args.lod1_feet_shell: apply_mod(f_, 'DECIMATE', ratio=args.lod1_feet_shell / ntris(f_), use_collapse_triangulate=True)
+        apply_mod(f_, 'TRIANGULATE')
+        bm = bmesh.new(); bm.from_mesh(f_.data); bm.normal_update()
+        for v in bm.verts: v.co += v.normal * .0015
+        bm.to_mesh(f_.data); bm.free()
+        for m_ in lod1['layer'].data.materials: f_.data.materials.append(m_)
+        uvl_ = f_.data.uv_layers.new(name='atlas')
+        for pl in f_.data.polygons:
+            hit = sbvh.find_nearest(Vector(pl.center))
+            lt = tris_[hit[2]]; A = np.array([SP[v] for v in lt.vertices]); q = np.array(hit[0])
+            T_ = np.array([A[1] - A[0], A[2] - A[0]]).T; bc = np.linalg.lstsq(T_, q - A[0], rcond=None)[0]
+            U = np.array([suv_[l].uv[:] for l in lt.loops]); uv_ = U[0] + bc[0] * (U[1] - U[0]) + bc[1] * (U[2] - U[0])
+            for li in pl.loop_indices: uvl_.data[li].uv = uv_
+        sa = f_.data.attributes.new('src_mat', 'INT', 'FACE')
+        shells_.append(f_)
+    report['lod1_feet_shell_tris'] = [ntris(f_) for f_ in shells_]; log('lod1 feet shells', report['lod1_feet_shell_tris'])
+    bpy.ops.object.select_all(action='DESELECT'); lod1['layer'].select_set(True)
+    for f_ in shells_: f_.select_set(True)
+    bpy.context.view_layer.objects.active = lod1['layer']; bpy.ops.object.join(); lod1['layer'] = bpy.context.view_layer.objects.active
+if 'body' in lod1:
+    # Decimation leaves tiny loose skin islands (r13's two-triangle sliver at the left
+    # shoulder): drop islands of fewer than five faces.
+    bm = bmesh.new(); bm.from_mesh(lod1['body'].data); bm.faces.ensure_lookup_table(); seen = set(); dead = []
+    for f0 in bm.faces:
+        if f0.index in seen: continue
+        comp, st = [], [f0]
+        while st:
+            f = st.pop()
+            if f.index in seen: continue
+            seen.add(f.index); comp.append(f); st.extend(y for e in f.edges for y in e.link_faces if y.index not in seen)
+        if len(comp) < 5: dead += comp
+    bmesh.ops.delete(bm, geom=dead, context='FACES'); bm.to_mesh(lod1['body'].data); bm.free()
+    report['lod1_skin_islands_dropped_faces'] = len(dead)
 
 
 def enforce(lod, total, keep=()):
@@ -946,7 +1114,15 @@ def enforce(lod, total, keep=()):
             apply_mod(o, 'DECIMATE', ratio=max(.3, 1 - (have - total) * 1.1 / max(1, sum(map(ntris, big)))), use_collapse_triangulate=True)
 
 
-enforce(lod0, args.lod0, set(args.keep)); enforce(lod1, args.lod1, {'layer', 'greave', 'cloak', 'shield'})
+enforce(lod0, args.lod0, set(args.keep)); enforce(lod1, args.lod1, {'layer', 'greave', 'cloak', 'shield'} | ({'helmet'} if helmet_face_tris else set()) | set(fixed1))
+if helmet_face_tris and 'body' in lod1:
+    # LOD1's coarse head skin pokes through the kept cheek plates in walk and death:
+    # pull head skin inside the helmet's footprint 8 mm in toward the head axis.
+    H_ = co(lod0['helmet']); hc_ = H_.mean(0); P_ = co(lod1['body'])
+    inside = (P_[:, 1] > H_[:, 1].min()) & (np.abs(P_[:, 0] - hc_[0]) < (H_[:, 0].max() - H_[:, 0].min()) / 2) & (np.abs(P_[:, 2] - hc_[2]) < (H_[:, 2].max() - H_[:, 2].min()) / 2)
+    rad_ = P_[inside] - hc_; rad_[:, 1] = 0; nr_ = np.linalg.norm(rad_, axis=1, keepdims=True)
+    P_[inside] -= rad_ / np.maximum(nr_, 1e-6) * np.minimum(.008, nr_ * .5); set_co(lod1['body'], P_)
+    report['lod1_head_skin_sunk_vertices'] = int(inside.sum())
 if args.smooth_skin_normals and 'body' in lod0:
     # Decimated skin reads as flat planes: carry the undecimated fitted skin's smooth
     # normals onto both LODs as custom normals (exported as the corner normals).
@@ -1032,7 +1208,8 @@ for lod in (lod0, lod1):
         elif p == 'layer' and 'body' in lod:
             # Clothing takes the weights of the skin under it (already transferred
             # from 0 A.D.), so cloth and skin deform together and do not cross.
-            transfer(o, lod['body'])
+            # LOD1 foot shells have no skin under them in LOD1: take the LOD0 skin's.
+            transfer(o, lod0['body'] if (lod is lod1 and args.lod1_feet_shell) else lod['body'])
         else:
             for chain in order: transfer(o, donors[chain], 'grp_' + chain)
         for g in list(o.vertex_groups):
