@@ -52,6 +52,7 @@ REVIEWERS = {
     "ui": "legatum-ui-reviewer",
     "art": "legatum-art-reviewer",
     "advisor": "legatum-advisor-reviewer",
+    "design": "legatum-design-reviewer",
 }
 
 TESTS = re.compile(r"^crates/[^/]+/tests/|_tests\.rs$|/tests\.rs$|^app/e2e/|\.test\.tsx?$|^app/src/test/|/__snapshots__/")
@@ -98,12 +99,17 @@ ADVISOR_IMPACT = re.compile(r"^app/src/ui/(advisor|Advisor)\w*\.(ts|tsx|css)$|^a
                             r"|^crates/core/src/(orders|data|turn|game|view)\.rs$|^crates/core/src/rules/(cities|units|movement|battle)\.rs$"
                             r"|^crates/wasm/src/lib\.rs$")
 
+# How the game plays: the rules version, the turn rules, victory and scoring, eras and map generation. The design
+# reviewer checks the change against the pillars and settled decisions (2026-11-26). AI code is left to the hill-climb
+# gate and its measurements.
+DESIGN_IMPACT = re.compile(r"^crates/core/src/(lib|mapgen|goals|scoring|objectives|eras)\.rs$"
+                           r"|^crates/core/src/resources/placement\.rs$|^crates/core/src/rules/")
 
 def classify(repo, base, tip, files=None):
     """{'code','ui','copy','engine','art','artimpact','scenario': [paths]} for BASE..TIP. A branch whose only code is AI measurement
     files is `scenario`: those files are not `code` or `copy` (the scenario check covers them instead)."""
     files = files if files is not None else [p for s, p in changed_files(repo, base, tip)]
-    out = {k: [] for k in ("code", "ui", "copy", "engine", "art", "artimpact", "advisor", "scenario", "front")}
+    out = {k: [] for k in ("code", "ui", "copy", "engine", "art", "artimpact", "advisor", "design", "scenario", "front")}
     scen = [f for f in files if f.startswith("scenarios/") and f.endswith(".json")]
     lab_only = bool(scen) and all(LAB_SCENARIO.match(f) for f in files if not NON_CODE.search(f))
     if lab_only:
@@ -129,6 +135,8 @@ def classify(repo, base, tip, files=None):
             out["artimpact"].append(f)
         if ADVISOR_IMPACT.search(f) and not test:
             out["advisor"].append(f)
+        if DESIGN_IMPACT.search(f) and not test:
+            out["design"].append(f)
         if FRONT.search(f):
             out["front"].append(f)
     return out
@@ -180,6 +188,9 @@ def required_reviews(kinds):
         # The advisor teaches controls and rules: a change to them updates the advisor before merge (user, 2026-11-22).
         out.append(("advisor", REVIEWERS["advisor"], "what the advisor teaches may have changed: "
                     + ", ".join(kinds["advisor"][:4])))
+    if kinds.get("design"):
+        out.append(("design", REVIEWERS["design"], "how the game plays may have changed: "
+                    + ", ".join(kinds["design"][:4])))
     return out
 
 
