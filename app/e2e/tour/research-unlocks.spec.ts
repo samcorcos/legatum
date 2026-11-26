@@ -3,7 +3,7 @@
 import type { Page } from '@playwright/test';
 import type { TechId } from '../../src/types';
 import { test, expect } from '../fixtures';
-import { endPlanning } from '../turnActions';
+import { endPlanning, skipEraFilm } from '../turnActions';
 import { coreFixture } from '../../src/test/coreFixture';
 import { researchFixture } from '../../src/test/researchFixture';
 import { eraTechs } from '../../src/data';
@@ -166,6 +166,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       await p.keyboard.press('Escape');
       // The era-up is the full-screen takeover (e2e/era-takeover.spec.ts has its own checks and shots).
       const era = p.getByTestId('era-takeover');
+      await skipEraFilm(p);
       await expect(era).toContainText('The Classical Era');
       await expect(era).toContainText('5 to go');
       await p.waitForTimeout(3200);
@@ -412,6 +413,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
         await shot(p, size, '96-egypt-unlock-writing');
         await p.keyboard.press('Escape');
         const era = p.getByTestId('era-takeover');
+        await skipEraFilm(p);
         await expect(era).toContainText('The Classical Era');
         await p.waitForTimeout(3200);
         await shot(p, size, '97-egypt-era-up');

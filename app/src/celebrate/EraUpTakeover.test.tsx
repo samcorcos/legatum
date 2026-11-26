@@ -8,6 +8,8 @@ import type { PlayerView } from '../types';
 import { momentsForTurn, type Moment } from './moments';
 import { EraUpTakeover } from './EraUpTakeover';
 import { eraArt } from './eraArt';
+import { eraCinematic, resetEraFilms } from './eraCinematic';
+import { useCombatFx } from '../feel/combatFxPreferences';
 import { settleResearch } from './researchSettled';
 
 let view: PlayerView;
@@ -19,6 +21,7 @@ beforeAll(async () => {
 
 let root: Root, host: HTMLDivElement;
 beforeEach(() => {
+  resetEraFilms();
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   document.body.innerHTML = '';
   host = document.body.appendChild(document.createElement('div'));
@@ -77,5 +80,36 @@ describe('the era-up takeover', () => {
     expect(host.querySelector('[data-testid=era-takeover]')?.getAttribute('data-primary')).toBe('continue');
     expect(host.querySelector('[data-primary-action]')?.textContent).toContain('Continue');
     expect(host.querySelector('[data-testid=era-up-choose]')).toBeNull();
+  });
+  it('the Classical era opens with its film; any key skips the film but leaves the card up', () => {
+    expect(eraCinematic(1)).toMatch(/classical.*\.mp4/);
+    expect(eraCinematic(0)).toBeNull();
+    const dismiss = render(enter());
+    const film = () => host.querySelector('[data-testid=era-cinematic]');
+    expect(film()?.querySelector('video')?.getAttribute('src')).toBe(eraCinematic(1));
+    expect(host.querySelector('[data-testid=era-takeover]')?.classList.contains('filming')).toBe(true);
+    act(() => { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })); });
+    expect(film()).toBeNull();
+    expect(dismiss).not.toHaveBeenCalled();
+    expect(host.querySelector('[data-testid=era-takeover]')?.classList.contains('filming')).toBe(false);
+    expect(document.activeElement).toBe(host.querySelector('[data-primary-action]'));
+  });
+
+  it('Skip ends the film, it plays once per era, and with animations off there is no film at all', () => {
+    render(enter());
+    act(() => host.querySelector<HTMLButtonElement>('.et-skip')!.click());
+    expect(host.querySelector('[data-testid=era-cinematic]')).toBeNull();
+    // Reopening the takeover (the report's "Show score check") shows the card, not the film again.
+    act(() => root.unmount()); root = createRoot(host);
+    render(enter());
+    expect(host.querySelector('[data-testid=era-cinematic]')).toBeNull();
+    expect(host.querySelector('[data-testid=era-takeover]')).not.toBeNull();
+    act(() => root.unmount()); root = createRoot(host);
+    resetEraFilms();
+    act(() => useCombatFx.setState({ enabled: false }));
+    try {
+      render(enter());
+      expect(host.querySelector('[data-testid=era-cinematic]')).toBeNull();
+    } finally { act(() => useCombatFx.setState({ enabled: true })); }
   });
 });

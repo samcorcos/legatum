@@ -1,5 +1,15 @@
 import { expect, type Page } from '@playwright/test';
 
+/** An era with a film (e2e/era-takeover.spec.ts) opens with it; Skip ends it and leaves the takeover's card. */
+export async function skipEraFilm(page: Page) {
+  // The film renders with the takeover, so wait for the takeover before asking whether there is one.
+  await expect(page.getByTestId('era-takeover')).toBeVisible();
+  const film = page.getByTestId('era-cinematic');
+  if (!(await film.isVisible())) return;
+  await film.getByRole('button', { name: /^Skip/ }).click();
+  await expect(film).toHaveCount(0);
+}
+
 /** Escape closes the current turn's interstitial queue, as it does for a player. */
 export async function dismissInterstitials(page: Page) {
   const screen = page.getByTestId('alarm-screen');
@@ -12,7 +22,7 @@ export async function dismissInterstitials(page: Page) {
     const age = page.locator('[data-testid="era-takeover"], [data-testid="score-check"]').first();
     if (!(await age.isVisible())) break;
     // The takeover's primary may open Research; "Later" (Escape) leaves it, as a player planning elsewhere would.
-    if (await age.getAttribute('data-testid') === 'era-takeover') await page.keyboard.press('Escape');
+    if (await age.getAttribute('data-testid') === 'era-takeover') { await skipEraFilm(page); await page.keyboard.press('Escape'); }
     else await age.locator('[data-primary-action]').click();
     await expect(age).toHaveCount(0);
   }

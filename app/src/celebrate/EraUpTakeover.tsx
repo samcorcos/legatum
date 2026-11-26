@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { feel, useCombatFx } from '../feel';
 import { Icon } from '../ui/bits';
 import { useReducedMotion } from '../ui/useReducedMotion';
@@ -10,6 +10,9 @@ import { itemArtUrl } from '../unlockArt';
 /** A new piece's painted miniature (null while unpainted: the row keeps its icon). */
 const bringArt = (b: EraBring) => itemArtUrl(b.item, b.faction, 128);
 import { eraArt } from './eraArt';
+import { eraCinematic, eraFilmPlayed, markEraFilmPlayed } from './eraCinematic';
+import { busGain } from '../feel/sound';
+import { useSound } from '../feel/soundPreferences';
 import { chooseResearch } from './UnlockMoment';
 import './eraTakeover.css';
 
@@ -39,8 +42,13 @@ export function EraUpTakeover({ moment, dismiss }: { moment: Moment; dismiss(): 
   const animationsOn = useCombatFx((s) => s.enabled);
   const reduced = motionOff || !animationsOn;
   const art = eraArt(card.era);
+  const [fresh] = useState(() => !eraFilmPlayed(card.era));
+  const film = reduced || !fresh ? null : eraCinematic(card.era);
+  const [filmDone, setFilmDone] = useState(false);
+  const endFilm = useCallback(() => setFilmDone(true), []);
+  const playing = !!film && !filmDone;
   const primary = useRef<HTMLButtonElement>(null);
-  useEffect(() => { primary.current?.focus({ preventScroll: true }); }, [moment.id]);
+  useEffect(() => { if (!playing) primary.current?.focus({ preventScroll: true }); }, [moment.id, playing]);
   const shown = card.brings.slice(0, BRING_SHOWN);
   const more = card.brings.length - shown.length;
   const remaining = card.techs.filter((t) => !t.known).length;
@@ -48,8 +56,9 @@ export function EraUpTakeover({ moment, dismiss }: { moment: Moment; dismiss(): 
   const to = card.cities.to, from = card.cities.from;
   const urlOf = (era: number) => { const stem = cityStem(era, tier); return stem ? cityUrl(stem, 128) : null; };
   const toUrl = urlOf(to.era), fromUrl = from ? urlOf(from.era) : null;
-  return <div key={moment.id} className={`era-takeover ${reduced ? 'reduced' : ''}`} role="dialog" aria-modal="true" aria-label={`The ${card.eraName} era begins`}
+  return <div key={moment.id} className={`era-takeover ${reduced ? 'reduced' : ''} ${playing ? 'filming' : ''}`} role="dialog" aria-modal="true" aria-label={`The ${card.eraName} era begins`}
     data-testid="era-takeover" data-era={card.era} data-primary={card.primary} data-tier={moment.tier}>
+    {playing && <EraCinematic src={film!} era={card.era} title={`The ${card.eraName} Era`} done={endFilm} />}
     <div className="et-art" aria-hidden="true">
       {art && <img src={art.small} srcSet={`${art.small} 1280w, ${art.large} 1920w`} sizes="100vw" alt="" draggable={false} />}
     </div>
@@ -94,5 +103,33 @@ export function EraUpTakeover({ moment, dismiss }: { moment: Moment; dismiss(): 
           {card.primary === 'research' ? 'Choose research' : 'Continue'} <span className="kbd">Return</span></button>
       </div>
     </footer>
+  </div>;
+}
+
+/**
+ * The era's film, full screen over the takeover before its card animates in. Any key, a click or Skip ends it, and the
+ * card then plays as usual; Return and Esc only skip the film here, they never close the card underneath. It plays at
+ * the effects volume (silent when sound is off) and never under reduced motion or with animations off (the caller
+ * passes no film then). A film that cannot play (missing codec, blocked autoplay) just ends.
+ */
+function EraCinematic({ src, era, title, done }: { src: string; era: number; title: string; done(): void }) {
+  const video = useRef<HTMLVideoElement>(null);
+  const gain = useSound((s) => busGain(s, 'sfx'));
+  useEffect(() => { if (video.current) { video.current.volume = gain; video.current.muted = gain === 0; } }, [gain]);
+  useEffect(() => {
+    markEraFilmPlayed(era);
+    const v = video.current;
+    // Autoplay with sound can be refused; then try it silent, and give up quietly if even that fails.
+    v?.play()?.catch(() => { v.muted = true; return v.play(); }).catch(done);
+    const key = (e: KeyboardEvent) => {
+      if (e.repeat || ['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) return;
+      e.preventDefault(); e.stopImmediatePropagation(); done();
+    };
+    window.addEventListener('keydown', key, true);
+    return () => window.removeEventListener('keydown', key, true);
+  }, [done, era]);
+  return <div className="et-cine" data-testid="era-cinematic" onClick={done}>
+    <video ref={video} src={src} playsInline preload="auto" onEnded={done} onError={done} aria-label={title} />
+    <button className="btn quiet et-skip" onClick={(e) => { e.stopPropagation(); done(); }}>Skip <span className="kbd">Esc</span></button>
   </div>;
 }

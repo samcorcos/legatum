@@ -4,7 +4,7 @@ import { mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
-import { endPlanning } from './turnActions';
+import { endPlanning, skipEraFilm } from './turnActions';
 import { coreFixture } from '../src/test/coreFixture';
 import { researchFixture } from '../src/test/researchFixture';
 import { TECHS } from '../src/data';
@@ -65,6 +65,7 @@ async function intoTakeover(page: Page) {
   await expect(page.locator('.moment-card.unlock')).toBeVisible();
   await page.keyboard.press('Escape'); // the Writing unlock card first, then the era
   await expect(takeover(page)).toBeVisible();
+  await skipEraFilm(page); // the Classical film first (its own test below)
 }
 
 for (const size of SIZES) test.describe(`era takeover ${size.width}x${size.height}`, () => {
@@ -183,9 +184,28 @@ for (const size of SIZES) test.describe(`era takeover ${size.width}x${size.heigh
     await expect(page.locator('dialog.tech-modal').getByTestId('era-badge')).toContainText('Classical era');
   });
 
+  test('the Classical era opens with its film: it fills the screen, Skip is plain to see, any key ends it and leaves the card', async ({ page }) => {
+    await load(page, eraUpState());
+    await endPlanning(page);
+    await expect(page.locator('.moment-card.unlock')).toBeVisible();
+    await page.keyboard.press('Escape');
+    const film = page.getByTestId('era-cinematic');
+    await expect(film).toBeVisible();
+    expect(await film.boundingBox()).toMatchObject({ x: 0, y: 0, width: size.width, height: size.height });
+    await expect(film.getByRole('button', { name: /^Skip/ })).toBeVisible();
+    await expect.poll(() => film.locator('video').evaluate((v: HTMLVideoElement) => v.currentTime), { timeout: 5000 }).toBeGreaterThan(0.5);
+    await shot(page, size, 'era-film-classical');
+    const turn = await page.getByTestId('turn-number').innerText();
+    await page.keyboard.press('Escape');
+    await expect(film).toHaveCount(0);
+    await expect(takeover(page)).toBeVisible();
+    await expect(page.getByTestId('turn-number')).toHaveText(turn);
+  });
+
   test('reduced motion: no animation, the finished scene stands at once', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await intoTakeover(page);
+    await expect(page.getByTestId('era-cinematic')).toHaveCount(0);
     const names = await takeover(page).locator('.et-title, .et-seal, .et-col, .et-foot, .et-art img').evaluateAll((els) => els.map((el) => getComputedStyle(el).animationName));
     expect(names.every((n) => n === 'none')).toBe(true);
     await expect(takeover(page).locator('.et-foot')).toBeVisible();
