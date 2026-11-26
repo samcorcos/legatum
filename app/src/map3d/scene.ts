@@ -5,19 +5,35 @@ import * as THREE from 'three';
 import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { buildCityKit, districtTiles } from './cityKit';
+import { removeRockShards } from './removeRockShards';
 import type { Hex, PlayerView, UnitView } from '../types';
 import { fromOffset, toOffset } from '../hex';
 import { neighborIndex } from '../map/grid';
+import { ColdField } from './coldField';
+import { RebuildTimer } from './rebuildPerf';
+import { viewDelta } from './rebuildDelta';
+import { refreshFogTiles } from './incrementalFog';
+import { refreshTerrainTiles } from './incrementalTerrain';
+import { refreshReliefTiles } from './incrementalRelief';
+import { terrainNormals, refreshTerrainNormals } from './terrainNormals';
+import { makeEdges, makeBorders } from './staticEdges';
+import { refreshMemory } from './refreshMemory';
 import { mapPlayerColor } from '../map/style';
 import { mapUnitArtSlug, mapUnitMiniatureUrl } from '../unitArt';
 import { BARBARIAN_COLOR } from '../theme';
+import { createFlora, floraClearings, shadeRelief, FloraCache, type FloraRender } from './flora';
 import { isBarbarian } from '../barbarians';
 import { fadeOwn, ownMaterials } from './ownMaterials';
 import { ARC, DEATH_MS, fxUnits, type CombatPlan, type ShotKind } from '../map/combatFx';
+import { terrainMaterial } from './terrainMaterial';
+import { addMemoryWash, remembered } from './memoryWash';
 import {
-  CORNERS, PX, R, ROW, buildField, gridFor, hash2, heightAt, refreshFog, rnd, shapeChanged, tileAt, tileX, tileZ, worldFrom,
+  CORNERS, PX, R, ROW, hash2, heightAt, tileAt, tileX, tileZ, worldFrom,
   type Field, type World,
 } from './world';
+import { MapWater } from './water';
+import { MapAtmosphere, MapPost } from './post';
 
 const PARCH = new THREE.Color('#d9c9a3');
 const UP = new THREE.Vector3(0, 1, 0);
@@ -62,12 +78,29 @@ export class MapScene {
   readonly target = new THREE.Vector3();
   dist = 13;
   private sun = new THREE.DirectionalLight('#fff1d6', 2.4);
+  private water: MapWater;
+  private atmosphere: MapAtmosphere;
+  private post: MapPost;
   private uniforms = { uTime: { value: 0 }, uParch: { value: PARCH } };
   private world: World | null = null;
   private field: Field | null = null;
+  private baseField: Field | null = null;
   private terrain: THREE.Mesh | null = null;
   private static_ = new THREE.Group();
+  private roadMesh: THREE.Object3D | null = null;
+  private cityMeshes: THREE.Object3D[] = [];
   private dynamic = new THREE.Group();
+  private flora: FloraRender | null = null;
+  private floraCache = new FloraCache();
+  private floraKey = '';
+  /** Time spent rebuilding this lane's procedural meshes, separate from the existing terrain rebuild. */
+  floraBuildMs = 0;
+  lastBuildProfile: Record<string, number> = {};
+  private staticProfile: Record<string, number> = {};
+  private coldField = new ColdField((field, base, workerMs, complete) => this.finishCold(field, base, workerMs, complete));
+  private borderMesh: THREE.Mesh | null = null;
+  private lensInput: { index: number; color: string; alpha: number }[] = [];
+  private overlayInput: Overlays | null = null;
   private units = new THREE.Group();
   private hoverRing: THREE.Mesh;
   private selRing: THREE.Mesh;
@@ -87,11 +120,9 @@ export class MapScene {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.05;
-    this.scene.background = PARCH.clone();
-    this.scene.fog = new THREE.Fog(PARCH, 30, 70);
-    this.scene.add(new THREE.HemisphereLight('#dfe9f2', '#6b5a3e', 1.1));
+    this.atmosphere = new MapAtmosphere(this.scene, this.renderer, this.sun, PARCH);
+    this.water = new MapWater(this.scene, this.uniforms);
+    this.post = new MapPost(this.renderer);
     const sun = this.sun;
     sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
@@ -107,6 +138,7 @@ export class MapScene {
 
   dispose() {
     this.disposed = true;
+    this.coldField.dispose();
     this.scene.traverse((o) => {
       const m = o as THREE.Mesh;
       m.geometry?.dispose();
@@ -115,11 +147,15 @@ export class MapScene {
     });
     for (const t of this.textures.values()) t.dispose();
     this.env?.dispose();
+    this.water.dispose();
+    this.atmosphere.dispose();
+    this.post.dispose();
     this.renderer.dispose();
   }
 
   resize(w: number, h: number) {
     this.renderer.setSize(w, h, false);
+    this.post.resize(w, h);
     this.camera.aspect = w / Math.max(1, h);
     this.camera.updateProjectionMatrix();
     this.animating = true;
@@ -127,30 +163,120 @@ export class MapScene {
 
   // ---------------- world ----------------
 
-  /** Build or update everything from a new view. Cheap when only fog, borders or units changed. */
+  forceRebuild() {
+    this.coldField.cancel();
+    this.world = null;
+    this.field = null;
+    this.baseField = null;
+    this.view = null;
+    this.floraKey = '';
+    this.floraCache.clear();
+  }
+
+  whenReady(): Promise<number> { return this.coldField.whenReady(); }
+
+  private finishCold(field: Field, base: Field, workerMs: number, complete: () => number | null): void {
+    if (this.disposed) return;
+    const applyStart = performance.now();
+    this.field = field;
+    this.baseField = base;
+    base.fog = field.fog;
+    base.shore = field.shore;
+    base.materials = field.materials;
+    const timer = new RebuildTimer();
+    this.buildTerrain(); timer.mark('terrainMs');
+    this.buildStatic(true); timer.mark('staticMs');
+    this.lastBuildProfile.floraMs = this.floraBuildMs;
+    this.buildUnits(); timer.mark('unitsMs');
+    if (this.lensInput.length) this.setLensWash(this.lensInput);
+    if (this.overlayInput) this.setOverlays(this.overlayInput);
+    this.animating = true;
+    Object.assign(this.lastBuildProfile, timer.spans, this.staticProfile, {
+      workerMs: Math.round(workerMs * 10) / 10,
+      applyMs: Math.round((performance.now() - applyStart) * 10) / 10,
+    });
+    requestAnimationFrame(() => {
+      if (this.disposed) return;
+      this.frame();
+      const wallMs = complete();
+      if (wallMs !== null) this.lastBuildProfile.wallToVisibleMs = wallMs;
+    });
+  }
+
+  /** Build or update everything from the fogged PlayerView. */
   setView(view: PlayerView) {
+    if (view === this.view && this.coldField.pending) return;
+    if (view === this.view && this.world && this.field) {
+      this.lastBuildProfile = { sameView: 0 };
+      return;
+    }
+    const timer = new RebuildTimer();
     const next = worldFrom(view);
-    const rebuild = !this.world || !this.field || shapeChanged(this.world, next);
+    const previous = this.world;
+    const priorView = this.view;
+    timer.mark('worldMs');
+    const sameDimensions = this.world?.w === next.w && this.world?.h === next.h;
+    const changedTerrain: number[] = [];
+    if (sameDimensions) for (let i = 0; i < next.cls.length; i++) if (this.world!.cls[i] !== next.cls[i]) changedTerrain.push(i);
+    const rebuild = !this.world || !this.field || !sameDimensions || changedTerrain.length > 16;
+    if (rebuild) this.floraCache.clear();
+    else if (changedTerrain.length) this.floraCache.invalidate(next, changedTerrain);
+    const delta = !rebuild && this.view ? viewDelta(this.view, view, this.world!, next) : null;
     this.world = next;
     this.view = view;
     if (rebuild) {
-      this.field = buildField(next, gridFor(next));
-      this.buildTerrain();
-    } else {
-      refreshFog(next, this.field!);
-      const attr = (this.terrain!.geometry.getAttribute('fogv') as THREE.BufferAttribute);
-      (attr.array as Float32Array).set(this.field!.fog); attr.needsUpdate = true;
-      this.updateWaterInfo();
+      this.field = null;
+      this.lastBuildProfile = timer.spans;
+      this.coldField.request(next);
+      timer.mark('dispatchMs');
+      this.lastBuildProfile.dispatchMs = timer.spans.dispatchMs;
+      return;
     }
-    this.buildStatic();
-    this.buildUnits();
+    if (changedTerrain.length) {
+      // Resample the changed base vertices, then apply connected ridges to that base.
+      // Re-sculpting an already sculpted field would double the mountain height.
+      refreshTerrainTiles(next, this.baseField!, changedTerrain);
+      const f = this.field!, base = this.baseField!;
+      const dirty = refreshReliefTiles(next, base, f, changedTerrain);
+      refreshTerrainNormals(f.pos, (this.terrain!.geometry.getAttribute('normal') as THREE.BufferAttribute).array as Float32Array, f.grid.nx, f.grid.nz, dirty);
+      for (const name of ['position', 'color', 'normal', 'shorev', 'terrainWeights']) (this.terrain!.geometry.getAttribute(name) as THREE.BufferAttribute).needsUpdate = true;
+      this.water.update(f, dirty);
+    }
+    if (delta!.fogTiles.length) {
+      const dirty = refreshFogTiles(next, this.field!, delta!.fogTiles);
+      (this.terrain!.geometry.getAttribute('fogv') as THREE.BufferAttribute).needsUpdate = true;
+      this.water.update(this.field!, dirty);
+      refreshMemory(this.static_, next);
+    }
+    timer.mark('fieldMs');
+    this.staticProfile = {};
+    this.floraBuildMs = 0;
+    if (changedTerrain.length || delta!.staticChanged || delta!.fogTiles.some((i) => !previous!.fog[i] !== !next.fog[i])) {
+      const revealed = delta!.fogTiles.filter((i) => !previous!.fog[i] !== !next.fog[i]);
+      const roadNear = revealed.some((i) => (view.tiles[i]?.road ?? 0) > 0 || view.cities.some((c) => tileIndexOf(c.pos, next.w, next.h) === i));
+      const cityNear = view.cities.some((c, index) => {
+        const j = tileIndexOf(c.pos, next.w, next.h);
+        return revealed.includes(j) || (priorView && priorView.cities[index]
+          && districtTiles(priorView, previous!, priorView.cities[index]).join(',') !== districtTiles(view, next, c).join(','));
+      });
+      this.buildStatic(false, !delta!.staticChanged && !roadNear, !delta!.staticChanged && !cityNear);
+    }
+    else if (delta!.ownersChanged) {
+      this.rebuildBorders();
+      if (view.cities.some((c) => c.population >= 4 && this.cityOwnerChangedNear(c, previous!, next))) this.rebuildCities();
+    }
+    timer.mark('staticMs');
+    this.lastBuildProfile = { ...timer.spans, ...this.staticProfile };
+    this.lastBuildProfile.floraMs = this.floraBuildMs;
+    this.buildUnits(); timer.mark('unitsMs');
+    this.lastBuildProfile.unitsMs = timer.spans.unitsMs;
     this.animating = true;
   }
 
   private buildTerrain() {
     const f = this.field!;
     const { nx, nz } = f.grid;
-    if (this.terrain) { this.scene.remove(this.terrain); this.terrain.geometry.dispose(); }
+    if (this.terrain) { this.scene.remove(this.terrain); this.terrain.geometry.dispose(); (this.terrain.material as THREE.Material).dispose(); }
     const idx = new Uint32Array((nx - 1) * (nz - 1) * 6);
     let p = 0;
     for (let zi = 0; zi < nz - 1; zi++) for (let xi = 0; xi < nx - 1; xi++) {
@@ -161,195 +287,100 @@ export class MapScene {
     g.setAttribute('position', new THREE.BufferAttribute(f.pos, 3));
     g.setAttribute('color', new THREE.BufferAttribute(f.col, 3));
     g.setAttribute('fogv', new THREE.BufferAttribute(f.fog, 1));
+    g.setAttribute('shorev', new THREE.Uint8BufferAttribute(f.shore, 1, true));
+    g.setAttribute('terrainWeights', new THREE.Uint8BufferAttribute(f.materials, 4, true));
     g.setIndex(new THREE.BufferAttribute(idx, 1));
-    g.computeVertexNormals();
-    const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0 });
-    mat.onBeforeCompile = (sh) => {
-      Object.assign(sh.uniforms, this.uniforms);
-      sh.vertexShader = sh.vertexShader
-        .replace('#include <common>', '#include <common>\nattribute float fogv; varying float vFog; varying vec3 vW;')
-        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvFog = fogv; vW = (modelMatrix * vec4(position, 1.0)).xyz;');
-      sh.fragmentShader = sh.fragmentShader
-        .replace('#include <common>', '#include <common>\nuniform vec3 uParch; varying float vFog; varying vec3 vW;')
-        .replace('#include <dithering_fragment>', `#include <dithering_fragment>
-          {
-            vec2 p = vW.xz * 18.0; vec2 ip = floor(p), fp = fract(p); fp = fp * fp * (3.0 - 2.0 * fp);
-            #define HH(q) fract(sin(dot(q, vec2(12.9898, 78.233))) * 43758.5453)
-            float g1 = mix(mix(HH(ip), HH(ip + vec2(1, 0)), fp.x), mix(HH(ip + vec2(0, 1)), HH(ip + vec2(1, 1)), fp.x), fp.y);
-            float st = sin(vW.x * 60.0 + sin(vW.z * 7.0) * 3.0) * 0.5 + 0.5;
-            gl_FragColor.rgb *= 0.965 + 0.05 * g1 + 0.03 * st;
-          }
-          float seen = smoothstep(0.62, 0.95, vFog);
-          float known = smoothstep(0.12, 0.42, vFog);
-          vec3 c = gl_FragColor.rgb;
-          float l = dot(c, vec3(0.299, 0.587, 0.114));
-          c = mix(mix(vec3(l), c, 0.35) * 0.85 + uParch * 0.18, c, seen);
-          float hatch = smoothstep(0.35, 0.5, abs(fract((vW.x + vW.z) * 9.0) - 0.5));
-          c = mix(uParch * (0.93 + 0.07 * hatch), c, known);
-          gl_FragColor.rgb = c;`);
+    g.setAttribute('normal', new THREE.BufferAttribute(terrainNormals(f.pos, nx, nz), 3));
+    const mat = terrainMaterial(PARCH);
+    const compileTerrain = mat.onBeforeCompile;
+    mat.onBeforeCompile = (shader, renderer) => {
+      compileTerrain(shader, renderer);
+      shader.fragmentShader = shadeRelief(shader.fragmentShader);
     };
     this.terrain = new THREE.Mesh(g, mat);
     this.terrain.receiveShadow = true;
     this.terrain.castShadow = true;
     this.scene.add(this.terrain);
-    this.buildWater();
+    this.water.rebuild(f);
   }
 
-  private water: THREE.Mesh | null = null;
-  private waterInfo: THREE.DataTexture | null = null;
-
-  private updateWaterInfo() {
-    const f = this.field!, tex = this.waterInfo!;
-    const data = tex.image.data as Uint8Array;
-    for (let k = 0; k < f.height.length; k++) {
-      data[k * 4] = Math.max(0, Math.min(255, -f.height[k] * 400));
-      data[k * 4 + 1] = Math.round(f.fog[k] * 255);
-      data[k * 4 + 3] = 255;
-    }
-    tex.needsUpdate = true;
+  private cityOwnerChangedNear(city: PlayerView['cities'][number], before: World, after: World): boolean {
+    const i = tileIndexOf(city.pos, after.w, after.h);
+    if (i < 0) return false;
+    return Array.from({ length: 6 }, (_, e) => neighborIndex(i, e, after.w, after.h))
+      .some((j) => j >= 0 && before.owner[j] !== after.owner[j]);
   }
 
-  private buildWater() {
-    const f = this.field!, { nx, nz, x0, z0, step } = f.grid;
-    if (this.water) { this.scene.remove(this.water); this.water.geometry.dispose(); (this.water.material as THREE.Material).dispose(); this.waterInfo?.dispose(); }
-    this.waterInfo = new THREE.DataTexture(new Uint8Array(nx * nz * 4), nx, nz, THREE.RGBAFormat);
-    this.waterInfo.magFilter = THREE.LinearFilter; this.waterInfo.minFilter = THREE.LinearFilter;
-    this.updateWaterInfo();
-    const wdt = (nx - 1) * step, dep = (nz - 1) * step;
-    const fog = this.scene.fog as THREE.Fog;
-    const mat = new THREE.ShaderMaterial({
-      transparent: true,
-      fog: true,
-      uniforms: {
-        ...this.uniforms, uInfo: { value: this.waterInfo }, uBox: { value: new THREE.Vector4(x0, z0, wdt, dep) },
-        fogColor: { value: fog.color }, fogNear: { value: fog.near }, fogFar: { value: fog.far },
-      },
-      vertexShader: `varying vec3 vW;
-        #include <fog_pars_vertex>
-        void main() { vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; vec4 mvPosition = viewMatrix * w; gl_Position = projectionMatrix * mvPosition;
-        #include <fog_vertex>
-        }`,
-      fragmentShader: `uniform sampler2D uInfo; uniform vec4 uBox; uniform float uTime; uniform vec3 uParch; varying vec3 vW;
-        #include <fog_pars_fragment>
-        float h1(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-        float n1(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h1(i), h1(i + vec2(1, 0)), f.x), mix(h1(i + vec2(0, 1)), h1(i + vec2(1, 1)), f.x), f.y); }
-        void main() {
-          vec4 inf = texture2D(uInfo, (vW.xz - uBox.xy) / uBox.zw);
-          float depth = inf.r, fogv = inf.g;
-          vec3 c = mix(vec3(0.36, 0.62, 0.60), vec3(0.10, 0.26, 0.34), smoothstep(0.02, 0.55, depth));
-          float w1 = n1(vW.xz * 6.0 + vec2(uTime * 0.25, uTime * 0.18)), w2 = n1(vW.xz * 13.0 - vec2(uTime * 0.3, 0.0));
-          c += smoothstep(0.72, 0.95, w1 * 0.6 + w2 * 0.4) * 0.10;
-          float foam = (1.0 - smoothstep(0.0, 0.05, depth)) * (0.55 + 0.45 * sin(uTime * 1.6 + depth * 90.0 + w1 * 4.0));
-          c = mix(c, vec3(0.93, 0.92, 0.86), clamp(foam, 0.0, 1.0) * 0.75);
-          float a = mix(0.55, 0.92, smoothstep(0.0, 0.3, depth));
-          float seen = smoothstep(0.62, 0.95, fogv), known = smoothstep(0.12, 0.42, fogv);
-          float l = dot(c, vec3(0.299, 0.587, 0.114));
-          c = mix(mix(vec3(l), c, 0.35) * 0.85 + uParch * 0.18, c, seen);
-          c = mix(uParch, c, known); a = mix(1.0, a, known);
-          gl_FragColor = vec4(c, a);
-          #include <fog_fragment>
-        }`,
-    });
-    this.water = new THREE.Mesh(new THREE.PlaneGeometry(wdt, dep).rotateX(-Math.PI / 2), mat);
-    this.water.position.set(x0 + wdt / 2, 0, z0 + dep / 2);
-    this.scene.add(this.water);
+  private rebuildCities() {
+    for (const mesh of this.cityMeshes) { this.static_.remove(mesh); disposeTree(mesh); }
+    this.cityMeshes = buildCityKit(this.view!, this.world!, (x, z) => this.heightAt(x, z));
+    this.static_.add(...this.cityMeshes);
   }
 
   heightAt(x: number, z: number) { return this.field ? heightAt(this.field, x, z) : 0; }
 
   /** Grid, borders, forests, roads, fields and towns: everything that changes only when a turn resolves. */
-  private buildStatic() {
+  private buildStatic(rebuild: boolean, keepRoad = false, keepCities = false) {
+    const started = performance.now();
     const wd = this.world!, view = this.view!;
-    const { w, h } = wd;
-    for (const o of [...this.static_.children]) { this.static_.remove(o); disposeTree(o); }
-    const H = (x: number, z: number) => Math.max(0, this.heightAt(x, z));
-    // Hex grid on known land, and borders on the owned side of each edge.
-    const gp: number[] = [], bp: number[] = [], bc: number[] = [];
-    for (let i = 0; i < w * h; i++) {
-      if (!wd.fog[i]) continue;
-      const cx = tileX(i, w), cz = tileZ(i, w);
-      for (let e = 0; e < 6; e++) {
-        const n = neighborIndex(i, e, w, h);
-        const a = CORNERS[e], b = CORNERS[(e + 1) % 6];
-        const ax = cx + a[0], az = cz + a[1], bx = cx + b[0], bz = cz + b[1];
-        const land = wd.cls[i] > 1 || (n >= 0 && wd.cls[n] > 1);
-        if (land && (n < 0 || n > i || !wd.fog[n])) {
-          for (let k = 0; k < 4; k++) {
-            const t0 = k / 4, t1 = (k + 1) / 4;
-            const x0 = ax + (bx - ax) * t0, z0 = az + (bz - az) * t0, x1 = ax + (bx - ax) * t1, z1 = az + (bz - az) * t1;
-            gp.push(x0, H(x0, z0) + 0.012, z0, x1, H(x1, z1) + 0.012, z1);
-          }
-        }
-        const o = wd.owner[i];
-        if (o >= 0 && (n < 0 || wd.owner[n] !== o)) {
-          const c = new THREE.Color(mapPlayerColor(o));
-          const P = (t: number, ins: number) => {
-            const x = ax + (bx - ax) * t, z = az + (bz - az) * t;
-            const xx = x + (cx - x) * ins / R, zz = z + (cz - z) * ins / R;
-            return [xx, Math.max(0.005, this.heightAt(xx, zz)) + 0.02, zz];
-          };
-          for (let k = 0; k < 5; k++) {
-            const t0 = k / 5, t1 = (k + 1) / 5;
-            const p0 = P(t0, 0.01), p1 = P(t1, 0.01), q0 = P(t0, 0.11), q1 = P(t1, 0.11);
-            bp.push(...p0, ...q0, ...p1, ...p1, ...q0, ...q1);
-            for (let v = 0; v < 6; v++) { const outer = v === 0 || v === 2 || v === 3; bc.push(c.r, c.g, c.b, outer ? 1 : 0); }
-          }
-        }
-      }
+    const clear = floraClearings(view);
+    // The forest depends on known tiles and city clearings. Unit clearings update its
+    // matrices in place, so an ordinary view refresh does not rebuild the instances.
+    const floraKey = `${Array.from(wd.fog, (f) => Number(f > 0)).join('')}/${wd.cls.join(',')}/${[...clear.cityTiles].sort((a, b) => a - b).join(',')}`;
+    const reuseFlora = !rebuild && this.flora !== null && this.floraKey === floraKey;
+    const reuseRoad = !rebuild && keepRoad && this.roadMesh !== null;
+    const reuseCities = !rebuild && keepCities && this.cityMeshes.length > 0;
+    const retained = new Set<THREE.Object3D>([
+      ...(reuseFlora ? [this.flora!.group] : []),
+      ...(reuseRoad ? [this.roadMesh!] : []),
+      ...(reuseCities ? this.cityMeshes : []),
+    ]);
+    for (const o of [...this.static_.children]) {
+      this.static_.remove(o);
+      if (!retained.has(o)) disposeTree(o);
     }
-    const gg = new THREE.BufferGeometry(); gg.setAttribute('position', new THREE.Float32BufferAttribute(gp, 3));
-    const grid = new THREE.LineSegments(gg, new THREE.LineBasicMaterial({ color: '#2e2416', transparent: true, opacity: 0.16, depthWrite: false }));
-    const bg = new THREE.BufferGeometry(); bg.setAttribute('position', new THREE.Float32BufferAttribute(bp, 3)); bg.setAttribute('color', new THREE.Float32BufferAttribute(bc, 4));
-    const borders = new THREE.Mesh(bg, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, side: THREE.DoubleSide }));
-    borders.renderOrder = 2;
+    const H = (x: number, z: number) => Math.max(0, this.heightAt(x, z));
+    const { grid, borders } = makeEdges(wd, (x, z) => this.heightAt(x, z));
+    this.borderMesh = borders;
     this.static_.add(grid, borders);
-    this.static_.add(...this.trees(), this.roads(), ...this.towns(view));
+    const edgesMs = performance.now() - started;
+    if (!reuseFlora) {
+      const floraStart = performance.now();
+      this.flora = createFlora(wd, H, clear, this.floraCache);
+      this.floraKey = floraKey;
+      this.floraBuildMs = performance.now() - floraStart;
+    } else {
+      this.flora!.clearUnits(clear.units);
+      this.floraBuildMs = 0;
+    }
+    removeRockShards(this.flora!.group);
+    this.flora!.update(this.uniforms.uTime.value, this.still, this.dist);
+    const floraMs = performance.now() - started - edgesMs;
+    this.roadMesh = reuseRoad ? this.roadMesh! : this.roads();
+    const roadsMs = performance.now() - started - edgesMs - floraMs;
+    this.cityMeshes = reuseCities ? this.cityMeshes : buildCityKit(view, wd, (x, z) => this.heightAt(x, z));
+    this.static_.add(this.flora!.group, this.roadMesh, ...this.cityMeshes);
+    this.staticProfile = { edgesMs, floraMs, roadsMs, citiesMs: performance.now() - started - edgesMs - floraMs - roadsMs,
+      ...(!reuseFlora ? {
+        floraPlacementsMs: this.flora!.profile.placementsMs,
+        floraInstancesMs: this.flora!.profile.instancesMs,
+        floraFloorMs: this.flora!.profile.floorMs,
+        floraRocksMs: this.flora!.profile.rocksMs,
+      } : {}) };
+
   }
 
-  private trees(): THREE.Object3D[] {
-    const wd = this.world!, { w, h } = wd;
-    const pts: { x: number; y: number; z: number; s: number; pine: boolean; i: number }[] = [];
-    const cityAt = new Set(this.view!.cities.map((c) => tileIndexOf(c.pos, w, h)));
-    for (let i = 0; i < w * h; i++) {
-      if (!wd.fog[i] || cityAt.has(i)) continue;
-      const c = wd.cls[i];
-      const forest = c === 4, sparse = (c === 2 || c === 3) && rnd(i, 3) < 0.35, hills = c === 5 && rnd(i, 4) < 0.5;
-      if (!forest && !sparse && !hills) continue;
-      const n = forest ? 14 : 3;
-      for (let k = 0; k < n; k++) {
-        const a = rnd(i, 100 + k) * Math.PI * 2, d = Math.sqrt(rnd(i, 200 + k)) * R * 0.82;
-        const x = tileX(i, w) + Math.cos(a) * d, z = tileZ(i, w) + Math.sin(a) * d, y = this.heightAt(x, z);
-        if (y < 0.02) continue;
-        pts.push({ x, y, z, s: 0.75 + rnd(i, 300 + k) * 0.55, pine: rnd(i, 400 + k) < (wd.cls[i] === 7 ? 0.95 : 0.5), i });
-      }
-    }
-    const out: THREE.Object3D[] = [];
-    const pine = new THREE.ConeGeometry(0.045, 0.16, 7).translate(0, 0.1, 0);
-    const trunk = new THREE.CylinderGeometry(0.008, 0.01, 0.04, 5).translate(0, 0.02, 0);
-    const leafy = new THREE.IcosahedronGeometry(0.055, 1).scale(1, 0.85, 1).translate(0, 0.085, 0);
-    const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), v3 = new THREE.Vector3(), grey = new THREE.Color();
-    const mk = (geo: THREE.BufferGeometry, list: typeof pts, color: string, vary: number) => {
-      if (!list.length) return;
-      const im = new THREE.InstancedMesh(geo, new THREE.MeshStandardMaterial({ color: '#fff', roughness: 0.9, flatShading: true }), list.length);
-      list.forEach((p, j) => {
-        q.setFromAxisAngle(UP, p.x * 13.1);
-        m4.compose(v3.set(p.x, p.y, p.z), q, sc.set(p.s, p.s, p.s)); im.setMatrixAt(j, m4);
-        const c = new THREE.Color(color).multiplyScalar(1 - vary / 2 + hash2(j, 9) * vary);
-        if (this.world!.fog[p.i] === 1) { const l = c.r * 0.3 + c.g * 0.59 + c.b * 0.11; c.lerp(grey.setRGB(l, l, l), 0.6); }
-        im.setColorAt(j, c);
-      });
-      im.castShadow = true; im.receiveShadow = true; out.push(im);
-    };
-    const pines = pts.filter((p) => p.pine), leafs = pts.filter((p) => !p.pine);
-    mk(pine, pines, '#3f5f34', 0.35); mk(trunk, pines, '#5a4632', 0.2); mk(leafy, leafs, '#5f7f3a', 0.4); mk(trunk.clone(), leafs, '#5a4632', 0.2);
-    return out;
+  private rebuildBorders() {
+    if (this.borderMesh) { this.static_.remove(this.borderMesh); disposeTree(this.borderMesh); }
+    this.borderMesh = makeBorders(this.world!, (x, z) => this.heightAt(x, z));
+    this.static_.add(this.borderMesh);
   }
 
   private roads(): THREE.Object3D {
     const wd = this.world!, view = this.view!, { w, h } = wd;
     const cityAt = new Set(view.cities.map((c) => tileIndexOf(c.pos, w, h)));
     const isRoad = (i: number) => wd.fog[i] > 0 && ((view.tiles[i]?.road ?? 0) > 0 || cityAt.has(i));
-    const rp: number[] = [];
+    const rp: number[] = [], rm: number[] = [], from: number[] = [], to: number[] = [], blend: number[] = [];
     for (let i = 0; i < w * h; i++) {
       if (!isRoad(i)) continue;
       for (let e = 0; e < 3; e++) {
@@ -361,69 +392,22 @@ export class MapScene {
           const P = (t: number, s: number) => { const x = x0 + dx * t + px * s, z = z0 + dz * t + pz * s; return [x, this.heightAt(x, z) + 0.008, z]; };
           const a = P(k / 8, 1), b = P(k / 8, -1), c = P((k + 1) / 8, 1), d = P((k + 1) / 8, -1);
           rp.push(...a, ...b, ...c, ...c, ...b, ...d);
+          const memory = remembered(wd.fog[i]) * (1 - k / 8) + remembered(wd.fog[n]) * (k / 8);
+          const nextMemory = remembered(wd.fog[i]) * (1 - (k + 1) / 8) + remembered(wd.fog[n]) * ((k + 1) / 8);
+          rm.push(memory, memory, nextMemory, nextMemory, memory, nextMemory);
+          from.push(i, i, i, i, i, i);
+          to.push(n, n, n, n, n, n);
+          blend.push(k / 8, k / 8, (k + 1) / 8, (k + 1) / 8, k / 8, (k + 1) / 8);
         }
       }
     }
-    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(rp, 3)); g.computeVertexNormals();
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(rp, 3)); g.setAttribute('vertexMemory', new THREE.Float32BufferAttribute(rm, 1)); g.computeVertexNormals();
     const roads = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: '#9b8461', roughness: 1, polygonOffset: true, polygonOffsetFactor: -2 }));
+    roads.userData.memoryRoad = { from: Int16Array.from(from), to: Int16Array.from(to), blend: Float32Array.from(blend) };
+    roads.material.onBeforeCompile = (shader) => addMemoryWash(shader, 'vertexMemory');
+    roads.material.customProgramCacheKey = () => 'map-roads-memory-v1';
     roads.receiveShadow = true;
     return roads;
-  }
-
-  /** Stand-in towns until the culture kits land: houses by population, a keep (capitals taller), walls. */
-  private towns(view: PlayerView): THREE.Object3D[] {
-    const wd = this.world!, { w, h } = wd;
-    type P = { x: number; y: number; z: number; ry: number; s: number; o?: number; len?: number };
-    const houses: P[] = [], towers: P[] = [], walls: P[] = [], fields: P[] = [];
-    for (let i = 0; i < w * h; i++) {
-      const t = view.tiles[i];
-      if (!wd.fog[i] || !t?.improvement || !(wd.cls[i] === 2 || wd.cls[i] === 3 || wd.cls[i] === 6)) continue;
-      const rot = rnd(i, 5) * Math.PI;
-      for (let k = -3; k <= 3; k++) {
-        const ox = -Math.sin(rot) * k * 0.06, oz = Math.cos(rot) * k * 0.06;
-        const x = tileX(i, w) + ox, z = tileZ(i, w) + oz;
-        fields.push({ x, y: this.heightAt(x, z) + 0.004, z, ry: rot, s: 1, o: (k + 3 + i) % 4 });
-      }
-    }
-    for (const c of view.cities) {
-      const i = tileIndexOf(c.pos, w, h);
-      if (i < 0 || !wd.fog[i]) continue;
-      const x0 = tileX(i, w), z0 = tileZ(i, w);
-      const n = Math.min(26, 10 + c.population * 1.5) | 0;
-      for (let k = 0; k < n; k++) {
-        const a = k * 2.399 + rnd(i, k) * 0.6, d = 0.08 + Math.sqrt(k / n) * 0.33;
-        const x = x0 + Math.cos(a) * d, z = z0 + Math.sin(a) * d;
-        houses.push({ x, y: this.heightAt(x, z), z, ry: Math.round(rnd(i, 50 + k) * 2) * (Math.PI / 6) + 0.1, s: 0.8 + rnd(i, 60 + k) * 0.5 });
-      }
-      towers.push({ x: x0, y: this.heightAt(x0, z0), z: z0, ry: 0, s: c.is_capital ? 1.25 : 0.85, o: c.owner });
-      if (c.walls) for (let e = 0; e < 6; e++) {
-        const a = CORNERS[e], b = CORNERS[(e + 1) % 6], f = 0.78;
-        const mx = x0 + ((a[0] + b[0]) / 2) * f, mz = z0 + ((a[1] + b[1]) / 2) * f;
-        walls.push({ x: mx, y: this.heightAt(mx, mz), z: mz, ry: -Math.atan2(b[1] - a[1], b[0] - a[0]), s: 1, len: R * f });
-      }
-    }
-    const out: THREE.Object3D[] = [];
-    const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), v = new THREE.Vector3(), sv = new THREE.Vector3();
-    const inst = (geo: THREE.BufferGeometry, list: P[], color: (p: P, j: number) => THREE.Color, scale?: (p: P) => THREE.Vector3, shadow = true) => {
-      if (!list.length) return;
-      const im = new THREE.InstancedMesh(geo, new THREE.MeshStandardMaterial({ color: '#fff', roughness: 0.85 }), list.length);
-      list.forEach((p, j) => {
-        q.setFromAxisAngle(UP, p.ry);
-        m4.compose(v.set(p.x, p.y, p.z), q, scale ? scale(p) : sv.set(p.s, p.s, p.s));
-        im.setMatrixAt(j, m4); im.setColorAt(j, color(p, j));
-      });
-      im.castShadow = shadow; im.receiveShadow = true; out.push(im);
-    };
-    const plaster = ['#e7dcc4', '#dccfae', '#efe6d2', '#d2c3a0'].map((c) => new THREE.Color(c));
-    const tiles = ['#a4553a', '#b4643f', '#93492f', '#b8734e'].map((c) => new THREE.Color(c));
-    const crops = ['#c9b35a', '#8fa04a', '#b7984f', '#a7b25c'].map((c) => new THREE.Color(c));
-    inst(new THREE.BoxGeometry(0.068, 0.05, 0.085).translate(0, 0.025, 0), houses, (_p, j) => plaster[j % 4]);
-    inst(new THREE.CylinderGeometry(0.0001, 0.056, 0.04, 4, 1).rotateY(Math.PI / 4).scale(0.85, 1, 1.05).translate(0, 0.069, 0), houses.map((p) => ({ ...p, y: p.y + (p.s - 1) * 0.03 })), (_p, j) => tiles[(j * 7) % 4]);
-    inst(new THREE.CylinderGeometry(0.032, 0.038, 0.16, 8).translate(0, 0.08, 0), towers, () => new THREE.Color('#cfc3a8'));
-    inst(new THREE.ConeGeometry(0.045, 0.06, 8).translate(0, 0.19, 0), towers, (p) => new THREE.Color(mapPlayerColor(p.o)).multiplyScalar(0.8));
-    inst(new THREE.BoxGeometry(1, 0.05, 0.022).translate(0, 0.025, 0), walls, () => new THREE.Color('#b9ad94'), (p) => sv.set(p.len!, 1, 1));
-    inst(new THREE.BoxGeometry(0.46, 0.012, 0.045), fields, (p) => crops[p.o!], undefined, false);
-    return out;
   }
 
   // ---------------- units ----------------
@@ -616,6 +600,7 @@ export class MapScene {
   private lensMesh: THREE.Mesh | null = null;
   /** The active lens's wash on the ground: one hex per tile, following the terrain, under units and banners. */
   setLensWash(tiles: { index: number; color: string; alpha: number }[]) {
+    this.lensInput = tiles;
     if (this.lensMesh) { this.scene.remove(this.lensMesh); this.lensMesh.geometry.dispose(); (this.lensMesh.material as THREE.Material).dispose(); this.lensMesh = null; }
     if (!this.world || !tiles.length) { this.animating = true; return; }
     const { w } = this.world;
@@ -674,6 +659,7 @@ export class MapScene {
   }
 
   setOverlays(o: Overlays) {
+    this.overlayInput = o;
     if (!this.world) return;
     const { w, h } = this.world;
     const ring = (mesh: THREE.Mesh, hex: Hex | null, lift: number, inner: number, outer: number) => {
@@ -726,12 +712,14 @@ export class MapScene {
     this.camera.position.set(this.target.x, this.target.y + this.dist * Math.cos(t), this.target.z + this.dist * Math.sin(t));
     this.camera.lookAt(this.target);
     this.camera.updateMatrixWorld();
-    this.sun.position.set(this.target.x - 6, 10, this.target.z - 5);
+    this.sun.position.set(this.target.x - 8, 8, this.target.z - 6);
     this.sun.target.position.copy(this.target);
-    const sh = Math.min(16, Math.max(5, this.dist * 1.1));
+    const sh = Math.min(16, Math.max(3.8, this.dist * 0.92));
     Object.assign(this.sun.shadow.camera, { left: -sh, right: sh, top: sh, bottom: -sh });
     this.sun.shadow.camera.updateProjectionMatrix();
     this.updateLod();
+    this.flora?.update(this.uniforms.uTime.value, this.still, this.dist);
+    this.atmosphere.update(this.dist);
     this.animating = true;
   }
 
@@ -1036,13 +1024,14 @@ export class MapScene {
     const dt = Math.min(0.05, this.clock.getDelta());
     this.uniforms.uTime.value += dt;
     this.stepAnim(performance.now());
+    this.flora?.update(this.uniforms.uTime.value, this.still, this.dist);
     for (const g of this.settling) {
       g.rotation.y += -g.rotation.y * Math.min(1, dt * 12);
       if (Math.abs(g.rotation.y) < 2e-3) { g.rotation.y = 0; this.settling.delete(g); }
       this.animating = true;
     }
     if (!this.still) for (const m of this.mixers) m.update(dt);
-    this.renderer.render(this.scene, this.camera);
+    this.post.render(this.scene, this.camera);
     const was = this.animating;
     this.animating = false;
     return was;

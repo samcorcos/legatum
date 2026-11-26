@@ -2722,6 +2722,13 @@
    "sha256": "168e2355495451da20d4be901ef3886a74e9ffb50ccfb748386516f09fb6bbe6"
   },
   {
+   "path": "tools/art/anim3d/sources/helmets/pbr_corinthian_helmet.glb",
+   "bytes": 37218840,
+   "sha256": "d6a434389c0a1d0e505a1a82b3816f91ea40b41016989aff1b0eb2602e726cb8",
+   "source": "https://sketchfab.com/3d-models/793a3eb779454e8db5552ac934f20098 (PBR Corinthian Helmet by timothyhsu)",
+   "license": "CC-BY-4.0"
+  },
+  {
    "path": "tools/art/anim3d/sources/hoplite-warrior/scene.bin",
    "bytes": 2942752,
    "sha256": "0c6f4c4a56ed106b8a663e1375646b004ff91c13cf6860ff3a5df35588a2708f",

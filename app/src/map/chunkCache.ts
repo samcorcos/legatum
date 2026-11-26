@@ -55,3 +55,22 @@ export function fallbackLevels(level: number, present: Iterable<number>, overvie
   near.sort((a, b) => Math.abs(b - level) - Math.abs(a - level) || a - b);
   return out.concat(near);
 }
+
+/**
+ * Whether the terrain cache paints one more stage of a chunk now. A forced caller always gets its first stage (the map
+ * must fill in however slow the machine); after that, and for a caller that is not forced, a stage runs only if it is
+ * expected to end inside the budget, `stageMs` being what a stage has cost lately.
+ */
+export function stageFits(ran: number, force: boolean, spentMs: number, stageMs: number, limitMs: number): boolean {
+  if (force && ran === 0) return true;
+  return spentMs + stageMs <= limitMs;
+}
+
+/**
+ * Whether chunks painted between frames are worth a redraw of the map now. A machine that paints fast shows each one
+ * as it lands. A slow one pays more for the redraw than for the chunk, so it shows them `batchMs` apart, and at once
+ * when the view has no more to come (`more`).
+ */
+export function showLanded(more: boolean, slow: boolean, sinceDrawMs: number, batchMs: number): boolean {
+  return !more || !slow || sinceDrawMs >= batchMs;
+}

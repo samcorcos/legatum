@@ -57,10 +57,17 @@ What this does not cover
   by timothyhsu (Sketchfab), CC BY 4.0; animation
   and rig: 0 A.D. art by Wildfire Games, CC BY-SA 3.0; adapted for Legatum". The sources used and
   what we changed are in app/public/models/units/PROVENANCE-<model>.md.
+- The 3D map's trees, rock surface and water normal maps are third-party files released under CC0 1.0,
+  not covered by this licence and needing no attribution (courtesy credit is given): seven tree models
+  from Kenney's Nature Kit (app/public/models/trees/), "Rock 06" by Rob Tuytel / Poly Haven
+  (app/public/textures/map3d/rock-strata.webp), and the Ocean and Wave normal maps by Procedural Texture
+  Online (app/public/textures/map3d/ocean-normal.webp, wave-normal.webp). Sources are in
+  app/public/models/PROVENANCE-trees.md, app/public/textures/PROVENANCE-rock.md and
+  app/public/textures/PROVENANCE-water.md.
 
 How the art was made
 --------------------
-All of the 2D art is AI-generated (the 3D unit models above are the exception). Most of it was generated with OpenAI image models (through
+All of the 2D art is AI-generated (the 3D unit models, trees, rock surface and water normal maps above are the exceptions). Most of it was generated with OpenAI image models (through
 ChatGPT and the Codex image tool) from prompts, many of which are stored beside the files in
 the source tree (`*.prompt.txt`). The results were then selected, cropped, resized and
 composed for the game. The full-size masters of several sets are in this repository beside
