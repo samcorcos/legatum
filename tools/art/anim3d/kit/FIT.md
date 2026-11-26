@@ -248,3 +248,13 @@ back in by vertex index: `--sculpt-override helmet=helmet-crest-sculpt.blend:LOD
 Proven on unmodified copies of the r5 sculpt files: geometry, weights, UVs, colours, regions,
 JSON and textures identical to r5, 9 of 20,960 tangents one int16 step apart. The ready
 command is `~/LegatumRuns/anim-pilot/fit/r5/rebuild-with-sculpts.sh` (see `SCULPT-README.md`).
+
+## Scripted sculpt experiment (r5)
+
+`kit/scripted_sculpt.py <copy.blend> helmet|greaves` moves vertices only (crest fan and
+grooves, face-plate rear edge onto the dome, greave tops re-profiled with a rim), so
+`--sculpt-override` accepts it; `kit/sculpt/scripted.sh` runs it on fresh `*-scripted.blend`
+copies and rebuilds to `units/spearman-fit-casey-sculpted/`. `--crest-strands N` adds
+horsehair bump to the crest bake. Result: the crest and plate barely change and the greaves
+got worse (pointed front, skin slits); scripting cannot stand in for the sculpt at these
+vertex counts. Use the GUI sculpt of the untouched `*-sculpt.blend` files.

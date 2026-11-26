@@ -63,6 +63,7 @@ ap.add_argument('--skin', help="regex for the object(s) that are the body's skin
 ap.add_argument('--smart-uv', action='store_true', help='smart-project a new atlas instead of repacking the source UV charts')
 ap.add_argument('--crest-glb', type=Path, help="take the crest (team region 'crest' plus 'crest_base') from another unit GLB on this rig, seated on this helmet's crown")
 ap.add_argument('--crest-width', type=float, default=1.0, help='side-to-side scale of a --crest-glb crest (fuller horsehair)')
+ap.add_argument('--crest-strands', type=float, default=0, help='horsehair strand relief in the crest normal bake (wave scale; about 12 gives 6-8 mm strands)')
 ap.add_argument('--knee-smooth', action='store_true', help='smooth skin weights around the knees (removes weight-transfer creases)')
 ap.add_argument('--sculpt-override', action='append', default=[], metavar='PART=FILE.blend:OBJECT',
                 help='replace the LOD0 geometry of PART with a hand-sculpted copy of that LOD0 object (same vertices and UVs, else the run fails); LOD1 and the bakes are re-derived from it')
@@ -523,6 +524,19 @@ if args.crest_glb:
         m = bpy.data.materials.new(name + ' material'); m.use_nodes = True
         bsdf = m.node_tree.nodes['Principled BSDF']; tx = m.node_tree.nodes.new('ShaderNodeTexImage'); tx.image = bpy.data.images.load(str(ipath))
         m.node_tree.links.new(tx.outputs['Color'], bsdf.inputs['Base Color']); bsdf.inputs['Roughness'].default_value = .85 if team else .5
+        if team and args.crest_strands:
+            # Horsehair strands in the normal bake: rings about the crest's arc
+            # centre (they follow its front-to-back flow), distorted like hair.
+            nt = m.node_tree; geo = nt.nodes.new('ShaderNodeNewGeometry')
+            sub = nt.nodes.new('ShaderNodeVectorMath'); sub.operation = 'MULTIPLY'; sub.inputs[1].default_value = (0, 1, 1)
+            off = nt.nodes.new('ShaderNodeVectorMath'); off.operation = 'SUBTRACT'
+            off.inputs[1].default_value = (0, float(pos[:, 1].min()), float((pos[:, 2].max() + pos[:, 2].min()) / 2))
+            nt.links.new(geo.outputs['Position'], off.inputs[0]); nt.links.new(off.outputs[0], sub.inputs[0])
+            wave = nt.nodes.new('ShaderNodeTexWave'); wave.wave_type = 'RINGS'; wave.inputs['Scale'].default_value = args.crest_strands
+            wave.inputs['Distortion'].default_value = 4; wave.inputs['Detail'].default_value = 3
+            nt.links.new(sub.outputs[0], wave.inputs['Vector'])
+            bump = nt.nodes.new('ShaderNodeBump'); bump.inputs['Strength'].default_value = .9; bump.inputs['Distance'].default_value = .005
+            nt.links.new(wave.outputs['Fac'], bump.inputs['Height']); nt.links.new(bump.outputs['Normal'], bsdf.inputs['Normal'])
         bsdf.inputs['Metallic'].default_value = 0 if team else .8
         me.materials.append(m)
         for poly in me.polygons: poly.use_smooth = True
