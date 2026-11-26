@@ -1005,12 +1005,58 @@ export interface PlayerView {
   /** Aircraft previously seen in hangars or reported in a battle; the base may be unknown. */
   air_contacts?: AirContactView[];
   great_works?: GreatWorkView[];
+  /** Byzantium's Buy a city (core `buy_city::buy_views`): a Byzantine viewer gets every known rival city with its own refusal; any other viewer gets the cities a met Byzantium could buy now, and its own cities that touch Byzantine land. Absent with the rule off. */
+  city_buys?: CityBuyView[];
+  /** Every running city offer the viewer may know of (core `buy_city::offer_views`). */
+  city_offers?: CityOfferView[];
+  /** Each living Byzantium's capital and Heir refuge, public (core `buy_city::capital_views`). Absent with the fall of Constantinople off. */
+  byzantine_capitals?: CapitalFallView[];
   standings: TeamStanding[];
   winner: TeamId | null;
   finished: boolean;
   /** The game's public record (core `history::GameHistory`), present only once the game is finished. */
   history?: GameHistory | null;
 }
+
+// ---- buy_city.rs ----
+
+/** One city's price for one Byzantium (core `buy_city::CityBuyView`). */
+export interface CityBuyView {
+  city: CityId;
+  /** The Byzantium that would buy it. */
+  buyer: PlayerId;
+  price: number;
+  /** Every line of the price; the parts sum to `price`. */
+  breakdown: Breakdown;
+  /** Why the buyer cannot make the offer now; absent when it can. */
+  blocker?: string | null;
+}
+
+/** A running offer (core `buy_city::CityOfferView`). */
+export interface CityOfferView {
+  city: CityId;
+  buyer: PlayerId;
+  seller: PlayerId;
+  /** The Gold held for the sale. */
+  escrow: number;
+  /** The city changes hands at the end of this turn. */
+  ends_turn: number;
+  /** Turn ends left before the sale, counting this one (1 on the last turn). */
+  turns_left: number;
+  /** The offer's price now; the offer fails at the end of a turn on which it is above `escrow`. */
+  price_now: number;
+}
+
+/** A Byzantium's capital and Heir refuge (core `buy_city::CapitalFallView`). */
+export interface CapitalFallView {
+  player: PlayerId;
+  /** Take it and you take every Byzantine city, unless `refuge`. */
+  capital: CityId | null;
+  /** The other Byzantine city the Heir stands in now, which would become the capital. */
+  refuge?: CityId | null;
+}
+
+export type OfferOutcome = 'Sold' | 'Cancelled' | 'Failed';
 
 // ---- history.rs ----
 
@@ -1101,7 +1147,9 @@ export type Order =
   | { type: 'UpgradeSiege'; unit: UnitId }
   | { type: 'Action'; action: GameAction }
   /** Give Gold to a living teammate (core `rules::gifts`): it moves after this turn's purchases, capped at the Gold left then. */
-  | { type: 'GiveGold'; to: PlayerId; amount: number };
+  | { type: 'GiveGold'; to: PlayerId; amount: number }
+  /** Byzantium only: offer to buy a rival's city (core `buy_city`). The price leaves the treasury into escrow; the city changes hands after 3 turns unless the offer is stopped. */
+  | { type: 'BuyCity'; city: CityId };
 
 /**
  * A one-time empire action (core `orders::Action`, serde tag "action"). One order carries them
@@ -1162,6 +1210,14 @@ export type Event =
   | { type: 'CallLapsed'; call: WarCall; effective_turn: number; reason: string }
   /** Byzantium's Heir was born in `city` (public: every empire is told, and his position is public from then on). */
   | { type: 'HeirBorn'; city: CityId; owner: PlayerId; city_name: string; at: Hex }
+  /** Byzantium made an offer for a rival's city: `escrow` Gold is held and the city changes hands at the end of turn `ends_turn` unless the offer is stopped. */
+  | { type: 'CityOfferMade'; city: CityId; buyer: PlayerId; seller: PlayerId; escrow: number; ends_turn: number }
+  /** An offer ended: sold (`paid` to the seller), cancelled (`refund` in full) or failed on a price rise (`refund` minus the lost `fee`). */
+  | { type: 'CityOfferEnded'; city: CityId; buyer: PlayerId; seller: PlayerId; outcome: OfferOutcome; paid?: number; refund?: number; fee?: number; reason: string }
+  /** The fall of Constantinople: `captor` took Byzantium's capital and with it every city in `cities`. */
+  | { type: 'CapitalFell'; player: PlayerId; captor: PlayerId; capital: CityId; cities: CityId[] }
+  /** `captor` took Byzantium's capital, but its Heir stood in `refuge`, which became the capital. */
+  | { type: 'HeirRefuge'; player: PlayerId; captor: PlayerId; capital: CityId; refuge: CityId }
   | { type: 'TreatyActivated'; relation: Relation }
   | { type: 'TreatyEnded'; treaty_id: number; a: TeamId; b: TeamId; effective_turn: number; reason: string }
   | { type: 'BordersOpened'; a: TeamId; b: TeamId; effective_turn: number }

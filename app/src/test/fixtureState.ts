@@ -124,6 +124,8 @@ export interface MPlayer {
   tombTurns?: number;
   /** Core `Player::tomb_city`: the Royal Tomb's city, including after capture. */
   tombCity?: CityId | null;
+  /** Core `Player::city_offer`: Byzantium's running offer for a rival's city (`buy_city::CityOffer`). */
+  cityOffer?: { city: CityId; seller: PlayerId; escrow: number; base: number; started: number; ends_turn: number } | null;
   /** Free technologies a rival's broadcast left this empire to choose (core `free_techs_pending`). */
   freeTechsPending?: number;
   /** Whose broadcast granted them. */

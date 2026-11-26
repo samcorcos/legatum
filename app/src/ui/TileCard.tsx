@@ -27,6 +27,7 @@ import { pendingProduction, sleepOrderText } from '../orders';
 import { capitalMark, replacementTileLine } from '../capitalMark';
 import { CapitalNote, ReplacementNote } from './CapitalStar';
 import { GOAL_CITY_ICON, goalCities, goalCitiesAt, goalCityLine, tombSiteAt, tombSiteLine } from '../goalCities';
+import { cityBuyTileLines } from '../buyCity';
 
 /** "Mongol Scout", but a faction's own piece already carries its name ("Spartan Hoplite"). */
 const ownedName = (adjective: string, unit: string) => unit.startsWith(`${adjective} `) ? unit : `${adjective} ${unit}`;
@@ -190,6 +191,8 @@ export function TileCard({ view, hex, anchor, routeWarning, blockedReason, reinf
         return mark ? <div className="tilecard-row"><CapitalNote view={view} mark={mark} testId="tile-capital" /></div>
           : replaced && <div className="tilecard-row"><ReplacementNote text={replaced} testId="tile-replacement" /></div>;
       })()}
+      {city && cityBuyTileLines(view, city).map((l) => <div key={l.key} className={`tilecard-row${l.tone ? ` ${l.tone}` : ''}`} data-testid={`tile-${l.key}`}>
+        {l.icon && <><Icon name={l.icon} size={14} /> </>}<Amounts text={l.text} /></div>)}
       {city && goalCitiesAt(view, city.id).map((g) => <div key={g.kind} className="tilecard-row tilecard-goal-city" data-testid={`tile-goal-${g.kind}`}><Icon name={GOAL_CITY_ICON[g.kind]} size={14} /> <Amounts text={goalCityLine(view, g)} /></div>)}
       {city && (() => { const site = tombSiteAt(view, city.id); return site ? <div className="tilecard-row tilecard-goal-city planned" data-testid="tile-goal-tomb-site"><Icon name={GOAL_CITY_ICON.tomb} size={14} /> {tombSiteLine(view, site)}</div> : null; })()}
       {/* Production is private (pillar 6): only your own city's banner meter gets this tooltip line. */}

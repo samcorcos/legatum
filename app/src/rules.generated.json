@@ -364,6 +364,16 @@
       }
     }
   },
+  "buyCity": {
+    "base": 150,
+    "buildingPercent": 50,
+    "failFeePercent": 10,
+    "goalMultiplier": 2,
+    "guardPercent": 25,
+    "offerTurns": 3,
+    "perPopulation": 60,
+    "wallsPercent": 50
+  },
   "calendarLabels": [
     "4000 BC",
     "4000 BC",

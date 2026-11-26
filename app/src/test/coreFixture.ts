@@ -49,6 +49,7 @@ export function coreFixture(s: MState): string {
         ...(p.tombWork ? { tomb_work: true } : {}),
         ...(p.tombTurns ? { tomb_turns: p.tombTurns } : {}),
         ...(p.tombCity !== undefined && p.tombCity !== null ? { tomb_city: p.tombCity } : {}),
+        ...(p.cityOffer ? { city_offer: p.cityOffer } : {}),
         ...(p.freeTechsPending ? { free_techs_pending: p.freeTechsPending } : {}),
         ...(p.veteransRetired ? { veterans_retired: p.veteransRetired } : {}),
         ...(p.sakokuTurns !== undefined && p.sakokuTurns !== null ? { sakoku_turns: p.sakokuTurns } : {}),

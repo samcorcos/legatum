@@ -41,6 +41,8 @@ import { Amount, Amounts, Quantity } from './Amounts';
 import { ResourceReason, openResourceChip } from './ResourceReason';
 import type { AmountUnit } from './amountParts';
 import { ForeignCityActions } from './ForeignCityActions';
+import { CityBuy } from './CityBuy';
+import { capitalFallLine } from '../buyCity';
 import { CityBorders } from './CityBorders';
 import { ProgressBar } from './ProgressBar';
 import { claimSummary, growthProgress, territoryCounts, yieldsText } from '../cityProgress';
@@ -257,6 +259,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
 
   // Egypt's Royal Tomb work: none of its cities builds or grows (core `economy`), and every panel says so.
   const tombStopped = city.owner === view.me && tombWorking(view);
+  const fallLine = capitalFallLine(view, city);
   // Healing, fire and bounty scroll with the list instead of riding in the sticky head: the head stays a name and three numbers, so the build cards keep the room.
   const status = (
     <>
@@ -266,6 +269,10 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
         <Icon name={GOAL_CITY_ICON[g.kind]} size={16} /><span>{goalCityLine(view, g)}</span>
       </div>)}
       {tombStopped && <div className="cp-capital cp-goal-city cp-tomb-work" data-testid="city-tomb-work"><Icon name="goal-royal-tomb" size={16} /><span>{TOMB_CITY_NOTE}</span></div>}
+      {/* The fall of Constantinople: a Byzantine capital (or the Heir's refuge) says what taking it does, to everyone. */}
+      {fallLine && <div className="cp-capital cp-goal-city" data-testid="city-capital-fall"><Icon name="unit-heirtothethrone" size={16} /><span>{fallLine}</span></div>}
+      {/* Your own city: an offer running on it, or what a Byzantium would pay for it now. */}
+      {city.owner === view.me && <CityBuy view={view} city={city} />}
       {(fire || heal || bounty !== null || city.greece_captive_at_risk) && <div className="cp-status">
         {heal && <Tip as="div" className="cp-healing-wrap" content={CITY_HEAL_RULE}>
           <ProgressBar className="cp-healing" testId="city-heal" name="City healing"

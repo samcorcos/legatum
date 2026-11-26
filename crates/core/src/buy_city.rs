@@ -245,7 +245,7 @@ pub fn base_breakdown(state: &GameState, c: &City) -> Breakdown {
     let rules = state.setup.rule_experiments;
     let faction = state.player(c.owner).faction;
     let mut b = Breakdown::default();
-    b.add("Base price", BASE);
+    b.add("Starting price", BASE);
     b.add(
         format!("Population {} x {PER_POP}", c.population),
         c.population.max(0).saturating_mul(PER_POP),
@@ -283,7 +283,7 @@ fn with_defences(state: &GameState, c: &City, mut b: Breakdown) -> Breakdown {
     );
     b.add(
         format!(
-            "{guards} armed unit{} in or next to it: +{guard_percent}%",
+            "{guards} military unit{} in or next to it: +{guard_percent}%",
             if guards == 1 { "" } else { "s" }
         ),
         clamp(both_gold - walls_gold),
@@ -306,7 +306,10 @@ pub fn offer_price(state: &GameState, offer: &CityOffer) -> i32 {
         return 0;
     };
     let mut base = Breakdown::default();
-    base.add("Base price when the offer was made", offer.base);
+    base.add(
+        "Population and buildings when the offer was made",
+        offer.base,
+    );
     with_defences(state, c, base).total
 }
 

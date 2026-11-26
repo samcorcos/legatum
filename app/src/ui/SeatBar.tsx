@@ -32,6 +32,7 @@ import { useScrollHint } from './useScrollHint';
 import { useRowsBelow } from './useRowsBelow';
 import { counted } from '../plural';
 import { foreignCityChoice } from './ForeignCityActions';
+import { buyIsPrimary } from './CityBuy';
 import { Amounts } from './Amounts';
 import { SiegeAlerts } from './SiegeAlerts';
 import { useCityAlarms } from './useCityAlarms';
@@ -315,7 +316,7 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
   const selectedCity = selection?.kind === 'city' ? view.cities.find((c) => c.id === selection.id) : undefined;
   const selectedOwnUnit = (selection?.kind === 'unit' && view.units.some((u) => u.id === selection.id && u.owner === view.me))
     || (selection?.kind === 'air' && !!view.aircraft?.some((a) => a.id === selection.id && a.owner === view.me));
-  const stepped = returnOwned || (!!selectedCity && !!foreignCityChoice(view, selectedCity, attacker, orders[seat])?.canAttack && !next?.issue)
+  const stepped = returnOwned || (!!selectedCity && (!!foreignCityChoice(view, selectedCity, attacker, orders[seat])?.canAttack || buyIsPrimary(view, selectedCity, orders[seat] ?? [])) && !next?.issue)
     // A selected unit's card holds the primary while the turn's call to action is routine (turnLead.ts).
     || (selectedOwnUnit && cta.kind === 'todo' && unitCardLeads(decisions, selection));
   return (

@@ -29,6 +29,7 @@ import { eventIcon } from './reportIcons';
 import { HOLD_TURNS, holdRule, turnsWord } from './victoryHold';
 import { isAircraft, isFighter, readyNotice } from './airText';
 import { wonderLostLine } from './wonderRace';
+import { FAIL_FEE_PERCENT, SELLER_OPTIONS, renameSeats } from './buyCity';
 
 /** Core `MOVE_STOPPED_PREFIX`: the MoveBlocked reason that stops a move after repeated blocked turns. */
 export const MOVE_STOPPED_PREFIX = 'move stopped after 2 blocked turns: ';
@@ -127,6 +128,8 @@ export interface ReportContext {
   empireOf?(id: PlayerId): string;
   /** Rewrites raw player names inside core's text ("AI 3's Scout") the same way. */
   renamePlayers?(text: string): string;
+  /** Rewrites every raw player name in a core reason to its empire ("War between AI 1 and AI 2"). */
+  renameSeats?(text: string): string;
   /** Rewrites a leading raw player subject in core reasons ("Player 1 was eliminated"). */
   renameSubject?(text: string): string;
   /** A tile by the nearest known city ("2 tiles NE of Brasslock"), or null when none is near. */
@@ -200,6 +203,7 @@ export function contextFromViews(before: PlayerView | null, after: PlayerView): 
     empireOf: (id) => (isBarbarian(id) ? 'Barbarians' : empireOfPlayer(after, id)),
     renamePlayers: (text) => renamePlayers(after, text),
     renameSubject: (text) => renameSubject(after, text),
+    renameSeats: (text) => renameSeats(after, text),
     place: (hex) => placeName(after, hex, Infinity),
     unitKind: (id) => units.get(id) ?? null,
     turn: before?.turn ?? after.turn - 1,
@@ -680,6 +684,67 @@ function goalCityGoalLine(e: GoalEvent, ctx: ReportContext): ReportLine {
 }
 
 /** Format one event, with its report icon. UnitMoved steps are collapsed by `formatEvents`. */
+type ByzantineEvent = Extract<Event, { type: 'CityOfferMade' | 'CityOfferEnded' | 'CapitalFell' | 'HeirRefuge' }>;
+
+/** Byzantium's Buy a city and the fall of Constantinople (core `buy_city`): the offer, its end, and a fallen capital. */
+function buyCityLine(e: ByzantineEvent, ctx: ReportContext, mine: (p: PlayerId) => boolean): ReportLine {
+  const city = (id: number) => ctx.cityName(id);
+  // Core reasons name players by seat: say their empire instead.
+  const plain = (text: string) => ctx.renameSeats?.(text) ?? text;
+  switch (e.type) {
+    case 'CityOfferMade': {
+      const opts = { at: ctx.cityPos(e.city), players: [e.buyer, e.seller], weight: 2 as const, icon: 'yield-gold' };
+      if (mine(e.buyer)) return line('cities', `${e.buyer === ctx.me ? 'You are' : `${who(ctx, e.buyer)} is`} buying ${city(e.city)} for ${e.escrow} Gold: it changes hands at the end of turn ${e.ends_turn}`, {
+        ...opts, tone: 'good', details: [`The Gold is held until then. War calls the offer off and returns it. If ${whom(ctx, e.seller)} raise${e.seller === ctx.me ? '' : 's'} the price above ${e.escrow} Gold, the offer fails and ${FAIL_FEE_PERCENT}% is lost.`],
+      });
+      if (mine(e.seller)) return line('cities', `${who(ctx, e.buyer)} is buying ${city(e.city)} for ${e.escrow} Gold, at the end of turn ${e.ends_turn}. ${SELLER_OPTIONS}`, {
+        ...opts, tone: 'bad', details: [`If nothing changes, the city goes to ${who(ctx, e.buyer)} and ${e.seller === ctx.me ? 'you get' : `${who(ctx, e.seller)} gets`} the ${e.escrow} Gold. If its price rises above ${e.escrow} Gold, the offer fails. War calls it off.`],
+      });
+      return line('cities', `${who(ctx, e.buyer)} is buying ${city(e.city)} from ${whom(ctx, e.seller)}: it changes hands at the end of turn ${e.ends_turn}`, { ...opts, weight: 1, tone: 'neutral' });
+    }
+    case 'CityOfferEnded': {
+      const opts = { at: ctx.cityPos(e.city), players: [e.buyer, e.seller], weight: 2 as const, icon: 'yield-gold' };
+      if (e.outcome === 'Sold') {
+        const paid = e.paid ?? 0;
+        return line('cities', mine(e.buyer) ? `${who(ctx, e.buyer)} bought ${city(e.city)} from ${whom(ctx, e.seller)} for ${paid} Gold`
+          : mine(e.seller) ? `${who(ctx, e.buyer)} bought ${city(e.city)} from ${whom(ctx, e.seller)}: ${e.seller === ctx.me ? 'you get' : `${who(ctx, e.seller)} gets`} ${paid} Gold`
+          : `${who(ctx, e.buyer)} bought ${city(e.city)} from ${whom(ctx, e.seller)} for ${paid} Gold`, {
+          ...opts, tone: mine(e.buyer) ? 'good' : mine(e.seller) ? 'bad' : 'neutral', icon: 'emblem-captured',
+          details: ['A bought city keeps its population, buildings and land. Units of other empires inside it moved out.'],
+        });
+      }
+      const offerOf = `${possessive(ctx, e.buyer)} offer for ${city(e.city)}`;
+      if (e.outcome === 'Cancelled') {
+        const why = /called off: (.+?)\. The Gold went back\.$/.exec(e.reason)?.[1];
+        return line('cities', `${offerOf} was called off${why ? `: ${plain(why)}` : ''}`, {
+          ...opts, weight: mine(e.buyer) || mine(e.seller) ? 2 : 1, tone: mine(e.seller) ? 'good' : 'neutral',
+          details: [mine(e.buyer) ? `All ${e.refund ?? 0} Gold came back.` : `The ${e.refund ?? 0} Gold went back to ${who(ctx, e.buyer)}.`],
+        });
+      }
+      const rose = /price rose to (\d+) Gold/.exec(e.reason)?.[1];
+      const fee = e.fee ?? 0, refund = e.refund ?? 0;
+      return line('cities', `${offerOf} failed: ${rose ? `its price rose to ${rose} Gold` : 'its price rose above the offer'}. ${mine(e.seller) ? `${city(e.city)} stays ${e.seller === ctx.me ? 'yours' : `with ${who(ctx, e.seller)}`}` : mine(e.buyer) ? `${fee} Gold was lost` : `${city(e.city)} stays with ${who(ctx, e.seller)}`}`, {
+        ...opts, weight: mine(e.buyer) || mine(e.seller) ? 2 : 1, tone: mine(e.seller) ? 'good' : mine(e.buyer) ? 'bad' : 'neutral',
+        details: [mine(e.buyer) ? `${refund} Gold came back; ${fee} Gold (${FAIL_FEE_PERCENT}%) was lost.` : `${who(ctx, e.buyer)} got ${refund} Gold back and lost ${fee} Gold.`],
+      });
+    }
+    case 'CapitalFell': {
+      const n = e.cities.length;
+      const names = e.cities.map(city);
+      return line('combat', `${who(ctx, e.captor)} took ${city(e.capital)} and with it every city of ${whom(ctx, e.player)}${n ? `: ${n} more ${n === 1 ? 'city' : 'cities'}` : ''}`, {
+        at: ctx.cityPos(e.capital), players: [e.player, e.captor], weight: 2, icon: 'emblem-captured',
+        tone: mine(e.captor) ? 'good' : mine(e.player) ? 'bad' : 'neutral',
+        details: [...(n ? [`Also taken: ${names.join(', ')}.`] : []), 'Taking a Byzantine capital takes every Byzantine city, unless the Heir shelters in another one.'],
+      });
+    }
+    case 'HeirRefuge':
+      return line('combat', `${who(ctx, e.captor)} took ${city(e.capital)}, but ${e.player === ctx.me ? 'your' : `${possessiveOf(who(ctx, e.player))}`} Heir shelters in ${city(e.refuge)}: it is the capital now, and no other city fell`, {
+        at: ctx.cityPos(e.refuge), players: [e.player, e.captor], weight: 2, icon: 'unit-heirtothethrone',
+        tone: mine(e.player) ? 'good' : 'neutral',
+      });
+  }
+}
+
 export function formatEvent(e: Event, ctx: ReportContext): ReportLine {
   const l = formatEventLine(e, ctx);
   return l.icon ? l : { ...l, icon: eventIcon(e, (p) => ctx.playerFaction?.(p), (p) => ctx.team.includes(p)) };
@@ -1194,6 +1259,8 @@ function formatEventLine(e: Event, ctx: ReportContext): ReportLine {
         details: ['Every empire is told where he was born. His position is public every turn, on the map and the minimap, and whoever holds him scores the points. To capture him you must be at War with his holder.'],
       });
     }
+    case 'CityOfferMade': case 'CityOfferEnded': case 'CapitalFell': case 'HeirRefuge':
+      return buyCityLine(e, ctx, mine);
     case 'ItemBought':
       return line('economy', `${ctx.cityName(e.city)} bought ${builtName(e.item, ctx, e.city, ctx.playerFaction?.(e.owner))} for ${e.gold} Gold`, {
         at: ctx.cityPos(e.city),
