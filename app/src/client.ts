@@ -31,6 +31,12 @@ export interface GameClient {
   assault?(player: number, unit: number, target: Hex, mode: AttackMode, alongside: AlongsideAttack[]): CityAssaultForecast | null;
   /** Human orders keyed by seat; the client adds the AI orders and resolves the turn. */
   endTurn(humanOrders: Record<number, Order[]>): TurnResult;
+  /**
+   * Decide one more AI empire's orders for this turn now, while the player plans, and return how many empires are
+   * still to decide. End Turn uses what is decided and decides the rest, so the game is the same however often this
+   * is called. Local engine only.
+   */
+  planAhead?(): number;
   save(): string;
   /** Restore a game from save() output. May need the client to be initialized (see createClient). */
   load(json: string): void;

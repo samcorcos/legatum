@@ -989,6 +989,13 @@ impl Game {
         js(guard(|| self.end_turn_json(human_orders_json)))
     }
 
+    /// Plan one more AI empire's orders for this turn while the human plans, and return how many
+    /// are still to plan (see `Session::plan_ahead`). End Turn uses what is planned and plans
+    /// the rest, so calling this any number of times, or never, plays the same game.
+    pub fn plan_ahead(&mut self) -> Result<u32, JsError> {
+        js(guard(|| Ok(self.session.plan_ahead() as u32)))
+    }
+
     /// The id training log lines are filed under: the archive's game id.
     pub fn training_game_id(&self) -> String {
         self.session

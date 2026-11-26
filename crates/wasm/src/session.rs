@@ -107,6 +107,9 @@ pub struct Session {
     /// Training mode: the AI seats' orders for `turn`, computed once at the start of the turn
     /// (so the search can run while the human plans), with the searched battles applied.
     pending: Option<(u32, OrderMap)>,
+    /// The AI seats planned so far for `turn`, a seat at a time while the human plans
+    /// (`plan_ahead`); becomes `pending` once every seat is in.
+    planned: Option<(u32, OrderMap)>,
     /// Searched engagements waiting for their realised outcome.
     pub outcomes: legatum_ai::training::OutcomeTracker,
     /// Training mode: this turn's battle search when it runs here (WASM, in slices).
@@ -151,6 +154,7 @@ impl Session {
             cached_hash: Cell::new(Some(initial_hash)),
             last_seat_ms: Vec::new(),
             pending: None,
+            planned: None,
             outcomes: Default::default(),
             training_run: None,
             why: BTreeMap::new(),
@@ -239,10 +243,44 @@ impl Session {
     pub fn pending_ai_orders(&mut self) -> &OrderMap {
         let turn = self.state.turn;
         if self.pending.as_ref().is_none_or(|(t, _)| *t != turn) {
-            let orders = self.ai_orders();
+            // Seats planned ahead keep their orders; the rest are planned now.
+            let mut orders = match self.planned.take() {
+                Some((t, planned)) if t == turn => planned,
+                _ => OrderMap::new(),
+            };
+            let rest = self.plan_seats(&orders, usize::MAX);
+            orders.extend(rest);
             self.pending = Some((turn, orders));
         }
         &self.pending.as_ref().expect("pending orders").1
+    }
+
+    /// Plan one more AI seat's orders for this turn, ahead of End Turn, and return how many
+    /// seats are still to plan. A seat decides from the state at the start of the turn, which
+    /// nothing changes until the turn resolves, so its orders are the ones End Turn would
+    /// have computed; End Turn then only resolves. The app calls this while the human plans.
+    pub fn plan_ahead(&mut self) -> usize {
+        let turn = self.state.turn;
+        if self.state.finished || self.pending.as_ref().is_some_and(|(t, _)| *t == turn) {
+            return 0;
+        }
+        let mut orders = match self.planned.take() {
+            Some((t, planned)) if t == turn => planned,
+            _ => OrderMap::new(),
+        };
+        let next = self.plan_seats(&orders, 1);
+        orders.extend(next);
+        let left = self
+            .brains
+            .keys()
+            .filter(|id| self.state.player(**id).alive && !orders.contains_key(id))
+            .count();
+        if left == 0 {
+            self.pending = Some((turn, orders));
+        } else {
+            self.planned = Some((turn, orders));
+        }
+        left
     }
 
     /// Hard's orders this turn for every training seat: what the battle search starts from.
@@ -286,19 +324,30 @@ impl Session {
     pub fn take_ai_orders(&mut self) -> OrderMap {
         match self.pending.take() {
             Some((turn, orders)) if turn == self.state.turn => orders,
-            _ => self.ai_orders(),
+            _ => self.pending_ai_orders_owned(),
         }
+    }
+
+    fn pending_ai_orders_owned(&mut self) -> OrderMap {
+        self.pending_ai_orders();
+        self.pending.take().expect("pending orders").1
     }
 
     /// Orders for every alive AI player, each computed from that player's own view.
     pub fn ai_orders(&mut self) -> OrderMap {
+        self.plan_seats(&OrderMap::new(), usize::MAX)
+    }
+
+    /// Orders for up to `limit` alive AI seats that `done` has no orders for, in seat order.
+    fn plan_seats(&mut self, done: &OrderMap, limit: usize) -> OrderMap {
         let state = &self.state;
         let mut caches = std::mem::take(&mut self.view_caches);
         // Each alive AI seat with its brain and view cache, in seat order.
         let mut seats: Vec<_> = self
             .brains
             .iter_mut()
-            .filter(|(id, _)| state.player(**id).alive)
+            .filter(|(id, _)| state.player(**id).alive && !done.contains_key(id))
+            .take(limit)
             .map(|(id, (_, brain))| (*id, brain, caches.remove(id).unwrap_or_default()))
             .collect();
         if seats.is_empty() {
@@ -344,10 +393,12 @@ impl Session {
         }
         self.view_caches = caches;
         if cfg!(feature = "seat-timing") {
-            self.last_seat_ms = orders
-                .iter()
-                .map(|(id, _, (ms, searched))| (*id, *ms, *searched))
-                .collect();
+            // Seats planned ahead were timed in earlier calls this turn.
+            if done.is_empty() {
+                self.last_seat_ms.clear();
+            }
+            self.last_seat_ms
+                .extend(orders.iter().map(|(id, _, (ms, searched))| (*id, *ms, *searched)));
         }
         orders.into_iter().map(|(id, o, _)| (id, o)).collect()
     }
@@ -815,6 +866,37 @@ mod tests {
         let mut session = Session::new(&GameSetup::all_ai(seed), |_| BrainKind::Scripted);
         play(&mut session, turns);
         session
+    }
+
+    #[test]
+    fn planning_ai_seats_ahead_a_seat_at_a_time_plays_the_same_game() {
+        let mut plain = scripted_game(7_100_021, 0);
+        let mut ahead = scripted_game(7_100_021, 0);
+        let seats = ahead.brains.len();
+        assert!(seats > 2, "the test needs several AI seats");
+        for turn in 0..25 {
+            // Plan some seats ahead, all of them, or none: End Turn must not care which.
+            let steps = match turn % 3 {
+                0 => seats + 2,
+                1 => 2,
+                _ => 0,
+            };
+            let mut left = seats;
+            for _ in 0..steps {
+                let now = ahead.plan_ahead();
+                assert!(now <= left, "a step never adds seats to plan");
+                left = now;
+            }
+            if steps > seats {
+                assert_eq!(left, 0);
+            }
+            let want = plain.ai_orders();
+            let got = ahead.take_ai_orders();
+            assert_eq!(got, want, "turn {turn}");
+            plain.step(&want);
+            ahead.step(&got);
+            assert_eq!(ahead.state_hash(), plain.state_hash(), "turn {turn}");
+        }
     }
 
     #[test]

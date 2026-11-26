@@ -126,6 +126,11 @@ interface MoveAnim {
 export const AUTOSAVE_KEY = 'legatum.autosave.v1';
 
 // The opt-in app perf run attributes synchronous turn work without changing normal play.
+/** Deciding AI empires ahead of End Turn: when the first one starts after a turn begins, the pause between empires, and how long one waits for an idle moment. */
+const PLAN_AHEAD_START_MS = 1200;
+const PLAN_AHEAD_GAP_MS = 60;
+const PLAN_AHEAD_IDLE_TIMEOUT_MS = 1500;
+
 const measureTurn = <T>(name: string, run: () => T): T => {
   if (typeof window === 'undefined' || new URLSearchParams(window.location.search).get('perf') !== '1') return run();
   const start = performance.now();
@@ -725,7 +730,78 @@ export const useGame = create<State>((set, get) => {
     const first = nextUnitNeedingOrders(views[0], [], null);
     if (first) get().select({ kind: first.kind, id: first.id }, true);
     startTraining();
+    startPlanningAhead();
   };
+
+  // The AI empires decide while the player plans: one empire per idle moment (client.planAhead), so End Turn only has
+  // to resolve. Deciding them all inside End Turn was two thirds of its freeze late in a game.
+  let planAheadTimer: ReturnType<typeof setTimeout> | null = null;
+  let planAheadIdle: number | null = null;
+  const stopPlanningAhead = () => {
+    if (planAheadTimer !== null) clearTimeout(planAheadTimer);
+    if (planAheadIdle !== null && typeof cancelIdleCallback === 'function') cancelIdleCallback(planAheadIdle);
+    planAheadTimer = planAheadIdle = null;
+  };
+  const startPlanningAhead = () => {
+    stopPlanningAhead();
+    const client = get().client;
+    if (!client || client.kind !== 'wasm' || typeof client.planAhead !== 'function') return;
+    const next = (delay: number) => {
+      planAheadTimer = setTimeout(() => {
+        planAheadTimer = null;
+        if (typeof requestIdleCallback === 'function') planAheadIdle = requestIdleCallback(() => { planAheadIdle = null; one(); }, { timeout: PLAN_AHEAD_IDLE_TIMEOUT_MS });
+        else one();
+      }, delay);
+    };
+    const one = () => {
+      const s = get();
+      if (s.client !== client || s.busy || s.screen !== 'game') return;
+      let left = 0;
+      try {
+        left = client.planAhead!();
+      } catch (e) {
+        // A failure here would have been End Turn's: restore the engine and let End Turn meet it, where the
+        // player is told and offered a way on. Nothing more is decided ahead this turn.
+        console.error('legatum: deciding an AI empire ahead of End Turn failed', e);
+        if (lastGood) { try { client.load(lastGood); } catch { /* End Turn reports it */ } }
+        return;
+      }
+      if (left > 0) next(PLAN_AHEAD_GAP_MS);
+    };
+    // After the turn's playback has had the frames to itself.
+    next(PLAN_AHEAD_START_MS);
+  };
+
+  // The autosave is written in the task after the new turn is drawn, not in End Turn's own: making the save text
+  // and storing it was a quarter to a half of that task late in a game. Whatever needs the save to be current
+  // (the next End Turn, the page going away) writes it first.
+  let autosaveDue: GameClient | null = null;
+  let autosaveFrame: number | null = null;
+  let autosaveTimer: ReturnType<typeof setTimeout> | null = null;
+  const flushAutosave = () => {
+    const client = autosaveDue;
+    autosaveDue = null;
+    if (autosaveFrame !== null) cancelAnimationFrame(autosaveFrame);
+    if (autosaveTimer !== null) clearTimeout(autosaveTimer);
+    autosaveFrame = autosaveTimer = null;
+    const views = get().views;
+    if (!client || get().client !== client || !views) return;
+    const saved = measureTurn('writeAutosave', () => writeAutosave(client, views));
+    measureTurn('remember', () => remember(client, saved));
+  };
+  const queueAutosave = (client: GameClient) => {
+    autosaveDue = client;
+    // A hidden page gets no frames (a game resolving to its end in a background tab): write at once.
+    if (typeof requestAnimationFrame !== 'function' || typeof document === 'undefined' || document.hidden) { flushAutosave(); return; }
+    autosaveFrame = requestAnimationFrame(() => {
+      autosaveFrame = null;
+      autosaveTimer = setTimeout(flushAutosave, 0);
+    });
+  };
+  if (typeof window !== 'undefined') {
+    window.addEventListener('pagehide', flushAutosave);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) flushAutosave(); });
+  }
 
   /** Training mode: the search behind this turn's AI orders, and its result for the report. */
   let trainingDriver: TrainingDriver | null = null;
@@ -1083,6 +1159,8 @@ export const useGame = create<State>((set, get) => {
     if (!client || !views) return;
     const endedAt = new Date().toISOString();
     const activeSeconds = currentActivePlaySeconds();
+    stopPlanningAhead();
+    flushAutosave();
     set({ busy: 'Resolving turn…' });
     // Training mode: the AI's searched orders must be in before the turn resolves. The search
     // has run while he planned; the progress card covers whatever is left (at most the cap).
@@ -1134,7 +1212,7 @@ export const useGame = create<State>((set, get) => {
           }
         }
         console.error('legatum: end turn failed', e);
-        if (recovered) startTraining();
+        if (recovered) { startTraining(); startPlanningAhead(); }
         // The engine is deterministic: the same orders from the same state fail the same way. The second
         // failure on one turn offers a way out instead of the same message again.
         const key = `${views[0].turn}:${lastGood ?? ''}`;
@@ -1181,9 +1259,9 @@ export const useGame = create<State>((set, get) => {
       resetActivePlayTurn();
       const nextViews = measureTurn('readViews', () => readViews(client, humans));
       measureTurn('applyTurn', () => applyTurn(views, nextViews, result));
-      const saved = measureTurn('writeAutosave', () => writeAutosave(client, get().views!));
-      measureTurn('remember', () => remember(client, saved));
+      queueAutosave(client);
       startTraining();
+      startPlanningAhead();
     }
   };
 
