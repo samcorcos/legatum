@@ -28,8 +28,10 @@ const ROOFS = [
 
 function styleOf(faction: Faction | undefined): Style {
   if (faction === 'Aztecs') return 4;
-  if (faction === 'Mongols' || faction === 'India') return 3;
-  if (faction === 'Egypt' || faction === 'Byzantium') return 2;
+  // Karakorum had Chinese-style halls; India's flat roofs and courtyards sit with the Nile/Near East kit; Byzantium is
+  // Mediterranean stone and tile.
+  if (faction === 'Mongols') return 3;
+  if (faction === 'Egypt' || faction === 'India') return 2;
   if (faction === 'Germany' || faction === 'Celts' || faction === 'Switzerland') return 1;
   return 0;
 }
