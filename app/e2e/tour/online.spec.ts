@@ -11,6 +11,7 @@ import { E2E_RELAY, expect, testWithFailingRequests } from '../fixtures';
 import { dismissInterstitials, endPlanning } from '../turnActions';
 import { chooseCapitalProduction } from '../opening';
 import { SIZES, shot, type GameWindow } from './helpers';
+import { setMapSeed } from '../mapSeed';
 
 const noHints = (p: Page) => p.addInitScript(() => {
   if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
@@ -245,7 +246,7 @@ for (const size of SIZES) testWithFailingRequests.describe(`online co-op ${size.
     await shot(host, size, '40-host-room-waiting');
     const small = host.getByRole('radiogroup', { name: 'Map size', exact: true }).getByRole('radio', { name: /^Small/ });
     await small.click();
-    await host.getByLabel('Map seed', { exact: true }).fill('20240926');
+    await setMapSeed(host, '20240926');
     await host.evaluate(() => { (document.activeElement as HTMLElement | null)?.blur(); for (const el of document.querySelectorAll('*')) if (el.scrollTop) el.scrollTop = 0; });
 
     await multiplayer(guest);

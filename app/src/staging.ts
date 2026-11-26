@@ -89,10 +89,8 @@ export function configFromLobby(l: Lobby): StagingConfig {
     seed: l.seed,
     width: size.width,
     height: size.height,
-    turn_limit: l.turnLimit,
-    // Omitted when on (the server's default), so default rooms keep their old config shape.
-    ...(l.barbarians === false ? { barbarians: false } : {}),
-    ...(l.aiAlliances ? { ai_alliances: true } : {}),
+    // Every new game ends at the default last turn with barbarians on (omitted: the server's default).
+    turn_limit: null,
     // Deals are on in every new game, online too (the host's WASM passes it to the setup).
     deals: true,
     seats: l.slots.map((s) => ({ kind: KIND[s.kind], name: s.name, faction: s.faction, team: s.team, difficulty: s.kind === 'ai' ? l.difficulty : s.difficulty, ...(s.kind === 'ai' && levelOf(l) === 'Training' ? { search: true } : {}) })),
@@ -114,9 +112,6 @@ export function lobbyFromStaging(st: StagingState, includeOccupants = true): Lob
     preset: 'custom',
     seed: st.seed ?? 'Hidden',
     mapSize,
-    turnLimit: c.turn_limit ?? null,
-    barbarians: c.barbarians !== false,
-    aiAlliances: c.ai_alliances === true,
     ...levelFields(level),
     slots: c.seats.map((s, i) => {
       const o = includeOccupants ? st.occupants[i] : null;
@@ -150,8 +145,10 @@ export function canTakeSeat(st: StagingState, seat: number): boolean {
 export function settingsAcknowledged(config: StagingConfig, acknowledged: StagingConfig | null, state: StagingState | null): boolean {
   const host = state?.occupants[0];
   // Barbarians default to on: servers and configs may omit the flag, so compare it normalized.
+  // The turn limit is left out: new lobbies always send none, and a room saved with a custom last
+  // turn keeps it until the host's next edit rather than blocking Start.
   const canon = (c: Omit<StagingConfig, 'seed'> | undefined) => c && JSON.stringify({
-    width: c.width, height: c.height, turn_limit: c.turn_limit, barbarians: c.barbarians !== false, ai_alliances: c.ai_alliances === true, seats: c.seats,
+    width: c.width, height: c.height, barbarians: c.barbarians !== false, ai_alliances: c.ai_alliances === true, seats: c.seats,
   });
   const { seed, ...settings } = config;
   return config === acknowledged && !!host?.connected &&

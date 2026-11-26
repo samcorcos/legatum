@@ -421,3 +421,41 @@ select.lobby-select option {
 .seat-row .faction-current .pf-roundel {
   --ring: var(--pc);
 }
+
+/* Advanced settings (coach questions, map seed): closed by default. A control, not a field label. */
+.lobby-advanced {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--rule);
+}
+.lobby-advanced > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+  padding: 4px 0;
+  list-style: none;
+  font: 600 15px/1.2 var(--sans);
+  color: var(--accent);
+  cursor: pointer;
+}
+.lobby-advanced > summary::-webkit-details-marker { display: none; }
+.lobby-advanced > summary::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 120ms ease;
+}
+.lobby-advanced[open] > summary::before { transform: rotate(45deg); }
+@media (hover: hover) {
+  .lobby-advanced > summary:hover { text-decoration: underline; text-underline-offset: 3px; }
+}
+.lobby-advanced > summary:focus-visible { outline-offset: 2px; }
+.lobby-advanced[open] > summary { margin-bottom: 12px; }
+.lobby-advanced-on {
+  font-weight: 400;
+  color: var(--muted);
+}

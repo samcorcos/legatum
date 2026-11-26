@@ -283,7 +283,6 @@ it.each([
   }
 
   expect(container.querySelector<HTMLInputElement>('[aria-label="Map seed"]')?.value).toBe(seed);
-  expect(container.querySelector<HTMLInputElement>('#turn-limit')?.value).toBe('333');
   expect(container.querySelector('[aria-label="Map size"] [aria-checked="true"]')?.textContent).toContain(size);
   expect(container.querySelector('[aria-label="Seat 4 AI level"]')).toBeNull();
   expect(container.textContent).toContain('Alice');
@@ -303,25 +302,12 @@ it.each([
   await act(async () => vi.advanceTimersByTimeAsync(250));
   expect(posted).toEqual([]);
 
-  // An unrelated host edit must retain the exact dimensions and configured seat defaults.
-  const turnLimitOff = [...container.querySelectorAll<HTMLButtonElement>('[aria-label="Turn limit"] button')]
-    .find((button) => button.textContent?.startsWith('Turn '))!;
-  await act(async () => turnLimitOff.click());
-  expect(start.disabled).toBe(true);
-  expect(posted).toEqual([]);
-  await act(async () => vi.advanceTimersByTimeAsync(250));
-  // A room is a game not yet started: the edit also turns deals on (rules 61), like every new game.
-  expect(posted).toEqual([{ ...saved, turn_limit: null, deals: true }]);
-  expect(start.disabled).toBe(true);
-  await act(async () => settingsResponse.resolve());
-  expect(start.disabled).toBe(true); // A response alone is not the current server snapshot.
-  await act(async () => sockets[0].push({ type: 'staging', state: { ...privateRoom, config: { ...config, turn_limit: null } } }));
-  expect(start.disabled).toBe(false);
   if (size.startsWith('Custom')) {
     const standard = [...container.querySelectorAll<HTMLButtonElement>('[aria-label="Map size"] button')]
       .find((b) => b.textContent?.startsWith('Standard'))!;
     await act(async () => standard.click());
     await act(async () => vi.advanceTimersByTimeAsync(250));
+    await act(async () => settingsResponse.resolve());
     // Standard suits 5-8 empires and the room has 3, so it is raised to Standard's default of 6.
     // New seats inherit the restored Hard level.
     const seats: StagingConfig['seats'] = [...saved.seats,

@@ -52,6 +52,8 @@ try {
       await solo.click();
       const size = page.getByRole('radiogroup', { name: 'Map size', exact: true });
       await expect(size.getByRole('radio', { name: /^Standard/ })).toBeChecked();
+      // The map seed lives under the lobby's collapsed Advanced settings.
+      await page.locator('details.lobby-advanced > summary').click();
       await page.getByRole('textbox', { name: 'Map seed', exact: true }).fill(seed);
       const start = performance.now();
       await page.getByRole('button', { name: /^Start game/ }).click();

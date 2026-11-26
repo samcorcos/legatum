@@ -3,6 +3,7 @@ import { endPlanning } from './turnActions';
 import { chooseCapitalProduction } from './opening';
 import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
+import { setMapSeed } from './mapSeed';
 
 // The user's report: "sometimes when I press the arrows the map doesn't move, and sometimes when I
 // press Return the turn doesn't end." Clicked buttons kept focus and the turn report blocked keys.
@@ -11,7 +12,7 @@ async function startSolo(page: Page) {
   await page.goto('/?client=wasm');
   await page.getByRole('button', { name: /^Single Player/ }).click();
   await page.getByRole('radiogroup', { name: 'Map size', exact: true }).getByRole('radio', { name: /^Small/ }).click();
-  await page.getByLabel('Map seed', { exact: true }).fill('424242');
+  await setMapSeed(page, '424242');
   await page.getByRole('button', { name: /^Start game/ }).click();
   await expect(page.getByTestId('turn-number')).toHaveText('1');
   await page.getByTestId('advisor').getByRole('button', { name: 'Turn off', exact: true }).click();
