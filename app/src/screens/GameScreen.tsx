@@ -5,6 +5,7 @@ import { CelebrationProvider, MomentLane } from '../celebrate/MomentLane';
 import { AlarmScreen } from '../celebrate/AlarmScreen';
 import { PeopleIntro } from '../celebrate/PeopleIntro';
 import { lazy, Suspense, useEffect, useState } from 'react';
+import { warmSmallArt } from '../artWarm';
 import { canUse3d, useMapView } from '../map3d/mapPrefs';
 import { useGame } from '../store';
 import { MapCanvas } from '../map/MapCanvas';
@@ -63,6 +64,8 @@ export function GameScreen() {
   const conn = useGame((s) => (s.client?.kind === 'remote' ? s.net?.conn : null));
   const away = useGame((s) => awayLine(awayPlayers(s), 'until'));
   const credentialRejected = useGame((s) => s.client?.kind === 'remote' && s.net?.credentialRejected);
+
+  useEffect(() => { warmSmallArt(); }, []);
 
   useEffect(() => {
     window.addEventListener('keydown', handleGameKey);

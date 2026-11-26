@@ -1,6 +1,7 @@
 // A new player's advisor at both desktop sizes. Each shot keeps the live recommendation and its ring together.
 import { test, expect } from '../fixtures';
 import { SIZES, shot, type GameWindow } from './helpers';
+import { setMapSeed } from '../mapSeed';
 
 test.describe.configure({ mode: 'parallel' });
 for (const size of SIZES) test.describe(`first run with advisor ${size.name}`, () => {
@@ -11,7 +12,7 @@ for (const size of SIZES) test.describe(`first run with advisor ${size.name}`, (
     await page.addInitScript((view) => { try { localStorage.setItem('legatum.research-view.v1', view); } catch { /* blocked */ } }, onTree ? 'tree' : 'era');
     await page.goto('/?client=wasm');
     await page.getByRole('button', { name: /^Single Player/ }).click();
-    await page.getByLabel('Map seed', { exact: true }).fill('424242');
+    await setMapSeed(page, '424242');
     await page.getByRole('button', { name: /^Seat 1 faction:/ }).click();
     const stage = page.locator('dialog[data-testid="faction-stage"][open]');
     await stage.getByRole('option', { name: /Athens/ }).click();

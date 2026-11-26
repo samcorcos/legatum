@@ -3,7 +3,7 @@
 Part of the Legatum rules reference (index: `index.md`). Answers: How do barbarian camps, raids and the Celtic exceptions work?
 Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the original section headings are kept inside.
 
-**Barbarians** (toggle, default **on**): camps from turn `FIRST_CAMP_TURN` = 10 (a third of the target at once, then one more every 12 turns; one camp per 120 land tiles), at least 6 hexes from cities and other camps;
+**Barbarians** (always on in new games since 2026-11-26; `GameSetup::barbarians` off survives only in old saves, tests and Proxy benchmarks): camps from turn `FIRST_CAMP_TURN` = 10 (a third of the target at once, then one more every 12 turns; one camp per 120 land tiles), at least 6 hexes from cities and other camps;
 each has a guard, a scout, up to `MAX_RAIDERS` = 4 raiders. A scout that sees a city and gets home alive triggers a 3-unit raid (melee, ranged, melee, one mustered per 2 turns) prowling
 2 tiles from the city for 12 turns, then a 30-turn cooldown. Raiders capture lone civilians, fight units in the open (never a Celtic unit or civilian: the Celts are spared, below), but
 **never assault/capture a city, never heal** (explicit "this game has no pillage" comment). Ranged

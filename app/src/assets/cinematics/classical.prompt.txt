@@ -1,0 +1,11 @@
+Classical era cinematic (app/src/assets/cinematics/classical.mp4), 2026-11-26.
+Made with Google Flow (flow.google.com), model Omni Flash 1.2, two 8-second 720p text-to-video shots, then cut together with a 0.6 s cross-fade, faded in and out, and re-encoded (H.264 CRF 27, AAC 96k) with ffmpeg:
+  ffmpeg -i shot1.mp4 -i shot2.mp4 -filter_complex "[0:v]fade=t=in:st=0:d=0.6,settb=AVTB[v0];[1:v]settb=AVTB[v1];[v0][v1]xfade=transition=fade:duration=0.6:offset=7.4,fade=t=out:st=14.6:d=0.9,format=yuv420p[v];[0:a][1:a]acrossfade=d=0.6,afade=t=in:d=0.6,afade=t=out:st=14.4:d=1.1[a]" -map "[v]" -map "[a]" -c:v libx264 -crf 25 -movflags +faststart -c:a aac -b:a 96k cut.mp4
+  ffmpeg -i cut.mp4 -c:v libx264 -preset slow -crf 27 -movflags +faststart -c:a copy classical.mp4
+The 720p shot masters are archived outside git.
+
+Shot 1 ("Greek trireme leaving harbour"):
+Cinematic low tracking shot at golden hour. A Greek trireme rows out of a busy Classical-era marble harbour toward camera, three banks of oars dipping in unison and splashing, sail filling with wind, sailors shouting. Crowds wave from the stone quay; the Parthenon-style temple glows on the acropolis behind. The camera glides alongside the hull, then cranes up to reveal the whole city and sea. Styled like a classical oil painting brought to life: visible brushwork, warm ochre, terracotta and mineral-blue palette, atmospheric haze, epic film score mood. No text, no modern objects.
+
+Shot 2 ("Workers building temple in city"):
+Cinematic closing shot, same Classical Greek city at golden hour. On the acropolis, workers with ropes and a wooden crane lower the last marble column drum into place on a gleaming new temple; citizens, priests and soldiers in bronze helmets cheer and raise olive branches. The camera starts close on the straining ropes and hands, then cranes up and pulls back past the temple pediment to reveal the whole city, harbour with triremes, and the sea glowing under a warm sunset sky, leaving calm open sky in the upper third. Historically grounded, epic and triumphant, soft painterly light and atmospheric haze. No text, no modern objects.

@@ -48,6 +48,30 @@ it('sends one random upload key per game, the same for every checkpoint of that 
   expect(uploadKey(ID)).toBe(keys[0]);
 });
 
+it('a game that is still uploading keeps its key however many newer games start', async () => {
+  const kept = new Map<string, string>();
+  vi.stubGlobal('localStorage', { getItem: (k: string) => kept.get(k) ?? null, setItem: (k: string, v: string) => { kept.set(k, v); } });
+  const { uploadKey } = await import('./gameUpload');
+  const game = (n: number) => `web-${1795310626070 + n}-${n.toString(16).padStart(16, '0')}-0000000000000000`;
+  const first = uploadKey(ID);
+  for (let n = 1; n <= 300; n++) {
+    uploadKey(game(n));
+    // The long game's checkpoint every 50 new games.
+    if (n % 50 === 0) expect(uploadKey(ID)).toBe(first);
+  }
+});
+
+it('a kept key is still sent when the browser storage is full', async () => {
+  const kept = new Map<string, string>();
+  const storage = { getItem: (k: string) => kept.get(k) ?? null, setItem: (k: string, v: string) => { kept.set(k, v); } };
+  vi.stubGlobal('localStorage', storage);
+  const { uploadKey } = await import('./gameUpload');
+  const first = uploadKey(ID);
+  storage.setItem = () => { throw new Error('QuotaExceededError'); };
+  expect(uploadKey(ID)).toBe(first);
+  expect(uploadKey('web-1795310626070-0000000000000001-0000000000000002')).toBeNull();
+});
+
 it('uploads without a key where the browser keeps no storage, and drops a game locked to another key', async () => {
   const fetch = vi.fn().mockResolvedValue(new Response('{}', { status: 409 }));
   vi.stubGlobal('fetch', fetch);

@@ -3194,6 +3194,8 @@ dialog.settings-modal {
   .forecast:has(.forecast-assault) details.forecast-strike { display: none; }
   /* The plain "Walls halve this attack" line also yields: the strength table shows Walls, and the covered (green) line stays. */
   .forecast:has(.forecast-assault) .forecast-walls:not(.good) { display: none; }
+  /* The defender's Walls bar adds two rows to the sides, so a walled city's card yields the same two lines as the whole-fight card. */
+  .forecast:has(.fside-walls-bar) :is(details.forecast-strike, .forecast-walls:not(.good)) { display: none; }
   .forecast-foot { padding-bottom: 8px; }
   /* Standing caveats (visible positions, capture rules, pursuit) are in the Guide; at this height
      they would push the card past the window, so the numbers and risks keep the room. */
@@ -4220,13 +4222,12 @@ dialog.gameover::backdrop {
 /* A placement card's instruction wraps in a narrow nested section (world wonders at 1000x600), never truncates. */
 .production-choice .prod-name .prod-where.place-where { white-space: normal; }
 .cp-sub-note { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--ink-3, var(--muted)); }
-.cp-buyline { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 2px 8px; margin: 3px 14px; border-block: 1px solid var(--rule); }
+.cp-buyline { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 2px 4px; margin: 3px 10px; border-block: 1px solid var(--rule); }
 .purchase-status { margin: 3px 14px; padding: 4px 0; border-block: 1px solid var(--rule); font-size: 11px; line-height: 1.35; color: var(--ink-2); }
 .cp-buyline .purchase-status { margin: 0; border: 0; }
-/* "Automate" shares the spend line; the focus menu sizes to its longest label ("Science project") and wraps to its own row when narrow. */
+/* Keep the focus menu at its natural width so "Science project" fits. */
 .cp-buyline .cp-automation-inline { gap: 3px; font-size: 11px; }
 .cp-buyline .cp-automation-inline select { width: auto; max-width: 100%; padding: 2px 2px; }
-.cp-buyline { column-gap: 6px; }
 .purchase-status button { border: 0; background: none; color: var(--accent); text-decoration: underline; cursor: pointer; }
 .production-choice { display: grid; grid-template-columns: minmax(0, 1fr) 92px; background: var(--field); }
 .building-line { display: grid; gap: 2px; }
@@ -4313,6 +4314,11 @@ dialog.gameover::backdrop {
 .production-secondary .queue-add.queued .icon { vertical-align: -1px; }
 .production-secondary .tip-trigger { display: block; }
 .production-refusal { grid-column: 1 / -1; padding: 3px 6px 5px; border-top: 1px solid var(--rule-2); color: var(--ink-2); font: 500 11px/1.25 var(--sans); }
+@media (min-width: 701px) and (max-height: 800px) {
+  .city-panel .prod-list { gap: 3px; }
+  .city-panel .production-choice .prod { min-height: 50px; padding-block: 3px; row-gap: 1px; }
+  .city-panel .production-secondary button { min-height: 24px; }
+}
 @media (hover: hover) {
   .production-secondary button:hover:not(:disabled) {
     background: var(--panel-2);

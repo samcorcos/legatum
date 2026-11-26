@@ -6,7 +6,7 @@ import { mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
-import { endPlanning } from './turnActions';
+import { endPlanning, skipEraFilm } from './turnActions';
 import { auditLayout } from './layoutAudit';
 import { coreFixture } from '../src/test/coreFixture';
 import { researchFixture } from '../src/test/researchFixture';
@@ -208,6 +208,7 @@ for (const size of SIZES) test.describe(`era research ${size.width}x${size.heigh
     // The era-up is the full-screen takeover (e2e/era-takeover.spec.ts has its own checks and shots).
     const era = page.getByTestId('era-takeover');
     await expect(era).toBeVisible();
+    await skipEraFilm(page);
     await expect(era).toContainText('The Classical Era');
     await expect(era).toContainText('No research is set');
     await page.waitForTimeout(3200);

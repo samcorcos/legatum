@@ -169,6 +169,16 @@ describe("host tunnel", () => {
     expect((await call(`/rooms/${"q".repeat(16)}/api/status`)).status).toBe(404);
   });
 
+  it("answers a room path with a trailing slash like the path without one", async () => {
+    const { j } = await create();
+    expect((await call(`/rooms/${j.room}/api/status/`)).status).toBe(503);
+    const host = await connect(`/rooms/${j.room}/host/?key=${j.host_key}`);
+    const guest = await connect(`/rooms/${j.room}/ws/`);
+    expect(await host.nextFrame()).toMatchObject({ kind: 0 });
+    guest.ws.close(1000);
+    host.ws.close(1000);
+  });
+
   it("forwards summary frames to the lobby and ignores invalid ones", async () => {
     const { room, host } = await hostedRoom();
     const s = { players: 6, humans: 2, open_seats: 1, phase: "playing", turn: 12 };

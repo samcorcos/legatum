@@ -20,6 +20,11 @@ for (const [path, url] of Object.entries(files)) {
   bySlug.set(m[1], entry);
 }
 
+/** Every unlock's 64 px painting, for the background fetch (`artWarm.ts`). */
+export function thumbArtUrls(): string[] {
+  return [...bySlug.values()].flatMap((e) => (e[64] ? [e[64]] : []));
+}
+
 /** The file for `slug` at `size`, else the nearest larger, else the nearest smaller; null if unpainted. */
 export function slugUrl(slug: string, size: UnlockArtSize): string | null {
   const entry = bySlug.get(slug);

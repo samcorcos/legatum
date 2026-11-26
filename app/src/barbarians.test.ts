@@ -80,12 +80,8 @@ it('reports camps, scouts, raids and clearing in the turn report', () => {
   expect(battle.tone).toBe('bad');
 });
 
-it('new games have barbarians on; the setting reaches the setup and stays out of default rooms', () => {
-  const lobby = newLobby('solo', '42');
-  expect(lobby.barbarians).toBe(true);
-  expect(buildSetup(lobby).barbarians).toBe(true);
-  expect(buildSetup({ ...lobby, barbarians: false }).barbarians).toBe(false);
-  expect(buildSetup({ ...lobby, barbarians: undefined }).barbarians).toBe(true);
+it('every new game has barbarians on: no setting, and default rooms keep their old shape', () => {
+  expect(buildSetup(newLobby('solo', '42')).barbarians).toBe(true);
+  expect(buildSetup(newLobby('host', '42')).barbarians).toBe(true);
   expect('barbarians' in configFromLobby(newLobby('host', '42'))).toBe(false);
-  expect(configFromLobby({ ...newLobby('host', '42'), barbarians: false }).barbarians).toBe(false);
 });

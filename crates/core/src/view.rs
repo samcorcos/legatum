@@ -880,7 +880,7 @@ pub struct PlayerPublic {
     /// use [`PlayerPublic::rule`]).
     #[serde(default)]
     pub goal_rule: Option<crate::goals::GoalRule>,
-    /// The empire's current era, **1-based** (1 Ancient .. 8 Future; `ResearchView::era` is the
+    /// The empire's current era, **1-based** (1 Ancient .. 9 Future; `ResearchView::era` is the
     /// same era 0-based). Public. It rises the turn the previous era's last technology lands.
     #[serde(default)]
     pub era: u8,

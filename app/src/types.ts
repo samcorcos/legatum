@@ -549,7 +549,7 @@ export interface PlayerPublic {
   tomb_turns?: number;
   /** The rule this empire's goal follows (core `goals::GoalRule`; public). */
   goal_rule?: GoalRule | null;
-  /** The empire's current era, 1-based (1 Ancient .. 8 Future; core `objectives::era_of`): it rises the turn the previous era's last technology lands. Public. */
+  /** The empire's current era, 1-based (1 Ancient .. 9 Future; core `objectives::era_of`): it rises the turn the previous era's last technology lands. Public. */
   era: number;
   /** Its current Gold, public to every player (0 once dead). */
   gold?: number;
@@ -1228,7 +1228,7 @@ export type Event =
   | { type: 'ProductionCompleted'; city: CityId; owner: PlayerId; item: ProductionItem }
   | { type: 'MegaprojectStarted'; city: CityId; owner: PlayerId; building: BuildingKind }
   | { type: 'TechResearched'; player: PlayerId; tech: TechId }
-  /** An empire entered an era, the turn the previous era's last technology landed (public). `era` is 1-based (2 Classical .. 8 Future); `first`: first empire into it. */
+  /** An empire entered an era, the turn the previous era's last technology landed (public). `era` is 1-based (2 Classical .. 9 Future); `first`: first empire into it. */
   | { type: 'EraEntered'; player: PlayerId; era: number; first: boolean }
   | { type: 'ResearchQueueAdvanced'; player: PlayerId; next: TechId | null }
   | { type: 'TileClaimed'; city: CityId; owner: PlayerId; tile: Hex }

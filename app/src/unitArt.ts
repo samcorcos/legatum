@@ -140,3 +140,8 @@ export function airPlanImage(name: AirPlanName): HTMLImageElement | null {
 export function warmAirArt(names: AirPlanName[]) {
   for (const n of new Set(names)) airPlanImage(n);
 }
+
+/** Every unit's 64 px card and thumb, for the background fetch (`artWarm.ts`). */
+export function smallUnitArtUrls(): string[] {
+  return [...cards.values(), ...thumbs.values()];
+}

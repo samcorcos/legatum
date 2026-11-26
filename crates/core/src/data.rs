@@ -2050,7 +2050,7 @@ pub fn building_family_yields(faction: Faction, kind: BuildingKind) -> Yields {
 }
 
 /// Era names in order (`crate::eras`). The era index in victory points (the era
-/// objectives) is **1-based** into this list: 1 Ancient .. 8 Future.
+/// objectives) is **1-based** into this list: 1 Ancient .. 9 Future.
 pub const ERA_NAMES: [&str; crate::eras::ERA_COUNT] = crate::eras::ERA_NAMES;
 
 /// Number of eras in the tech tree.

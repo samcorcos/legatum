@@ -49,6 +49,18 @@ describe("game uploads", () => {
     expect((await put({ ...record(), coach_answers: Array.from({ length: 2001 }, () => ({})) })).status).toBe(422);
   });
 
+  it("stores a winning team and refuses a winner that is not one", async () => {
+    const withWinner = (winner: unknown) => {
+      const r = record();
+      return { ...r, metadata: { ...r.metadata, outcome: "vp", winner } };
+    };
+    expect((await put(withWinner(0))).status).toBe(200);
+    expect((await env.GAMES.get(`games/2026-11/${ID}.json.gz`))?.customMetadata?.winner).toBe("0");
+    for (const bad of ["x", "1", { a: 1 }, -1, 1.5, 256, "x".repeat(5000)]) {
+      expect((await put(withWinner(bad))).status).toBe(422);
+    }
+  });
+
   it("accepts rewinds as a short list of earlier-turn jumps and refuses anything else", async () => {
     const rewind = { at: "2026-11-22T19:10:00.000Z", from_turn: 42, to_turn: 39 };
     expect((await put({ ...record(), rewinds: [rewind] })).status).toBe(200);

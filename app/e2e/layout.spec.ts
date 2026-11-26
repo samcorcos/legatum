@@ -161,9 +161,9 @@ test.describe(`${look} look`, () => {
       const bar = (await dock.boundingBox())!;
       expect(scroller.y + scroller.height).toBeLessThanOrEqual(bar.y + 0.5);
       expect(bar.y + bar.height).toBeLessThanOrEqual(size.height + 0.5);
-      // Scrolled to the end, the map seed shows whole above the dock.
+      // Scrolled to the end, the Advanced settings line shows whole above the dock.
       await page.locator('.lobby-inner').evaluate((el) => el.scrollTo(0, el.scrollHeight));
-      const seed = (await page.getByLabel('Map seed', { exact: true }).boundingBox())!;
+      const seed = (await page.locator('details.lobby-advanced > summary').boundingBox())!;
       expect(seed.y + seed.height).toBeLessThanOrEqual(bar.y);
       // The summary line fits inside the button, at this size and a range of widths above it.
       for (const width of [size.width, size.width + 81, 1920]) {

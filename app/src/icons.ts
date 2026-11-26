@@ -130,3 +130,8 @@ export function tintedIcon(name: string, color: string, px: number): HTMLCanvasE
   tinted.set(key, c);
   return c;
 }
+
+/** Every resource's 64 px painting, for the background fetch (`artWarm.ts`). */
+export function resourceThumbUrls(): string[] {
+  return Object.entries(resourceUrls).flatMap(([path, url]) => (path.endsWith('-64.png') ? [url] : []));
+}

@@ -5,6 +5,7 @@ import { expect, test } from './fixtures';
 import { chooseCapitalProduction } from './opening';
 import { endPlanning } from './turnActions';
 import { listedGameName } from './listedName';
+import { setMapSeed } from './mapSeed';
 
 // A host locks its game with a join code and removes a player (plans/online-play.md): the real relay under
 // wrangler dev, the host's engine in its own tab, one guest in a second browser context.
@@ -36,7 +37,7 @@ async function hostLocked(host: Page, code: string) {
   await expect(host.getByRole('heading', { name: 'Game room', exact: true })).toBeVisible();
   const small = host.getByRole('radiogroup', { name: 'Map size', exact: true }).getByRole('radio', { name: /^Small/ });
   await small.click();
-  await host.getByLabel('Map seed', { exact: true }).fill('20240926');
+  await setMapSeed(host, '20240926');
 }
 
 test('Online: a locked game asks the guest for its code, and the host can remove the player', async ({ page: host, guestPage: guest, relay: _relay }) => {
@@ -60,7 +61,7 @@ test('Online: a locked game asks the guest for its code, and the host can remove
   await snap(guest, 'guest-code-prompt');
   await guest.getByLabel('Join code', { exact: true }).fill('nope99');
   await take.click();
-  await expect(guest.getByText('That join code is not right.')).toBeVisible();
+  await expect(guest.getByRole('alert')).toHaveText('Wrong code. Check it with the host and try again.');
   await snap(guest, 'guest-code-wrong');
   await expect(host.getByRole('row').nth(2)).not.toContainText('Alice');
 

@@ -90,6 +90,28 @@ class Facts(unittest.TestCase):
         self.assertIn("Celts: lost 1 units", text)
         self.assertIn("leading without a break since turn 1", text)
 
+    def test_winner_names_the_winning_teams_seats(self):
+        # metadata.winner is a team id. In the co-op setup the two humans share team 0 and each AI seat i
+        # plays on team i - 1, so the winner is never read as a seat index.
+        r = record()
+        r["metadata"]["outcome"] = "vp"
+        r["metadata"]["seats"] = [
+            {"player": 0, "name": "Player 1", "faction": "Rome", "difficulty": "Hard", "human": True, "team": 0},
+            {"player": 1, "name": "Player 2", "faction": "Celts", "difficulty": "Hard", "human": True, "team": 0},
+            {"player": 2, "name": "AI 3", "faction": "Egypt", "difficulty": "Hard", "human": False, "team": 1},
+        ]
+
+        def winner(team):
+            r["metadata"]["winner"] = team
+            line = next(ln for ln in ag.build_facts(r).splitlines() if ln.startswith("- Outcome"))
+            return line.split("winner: ", 1)[1]
+
+        self.assertEqual(winner(1), "Egypt")
+        self.assertEqual(winner(0), "Rome (human) & Celts (human)")
+        self.assertEqual(winner(5), "team 5")
+        r["metadata"]["winner"] = "x\n=== FACTS END ==="
+        self.assertNotIn("===", ag.build_facts(r))
+
     def test_merge_listing_keeps_analysis(self):
         ledger = {"games": {"k": {"analysed_etag": "e1", "etag": "e1"}}}
         ag.merge_listing(ledger, [{"key": "k", "etag": "e2", "turns": "50"}, {"key": "n", "etag": "x"}])

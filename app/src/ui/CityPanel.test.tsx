@@ -390,7 +390,9 @@ it('memoizes speculative validation and keeps the city head to its Gold line', a
   act(() => root.render(<CityPanel city={city} view={view} />));
   expect(validate).not.toHaveBeenCalled();
   const status = container.querySelector('.purchase-status')!.textContent!;
-  expect(status).toMatch(/\d+ Gold \([+−]\d+\/turn\) to spend/);
+  expect(status).toMatch(/^\d+ Gold to spend$/);
+  act(() => container.querySelector<HTMLElement>('.purchase-status .tip-trigger')!.click());
+  expect(document.querySelector('.tip-bubble:not([hidden])')?.textContent).toMatch(/Gold available for purchases this turn\. Gold\/turn: [+−]\d+\./);
   expect(status).not.toMatch(/need more Gold|Settler needs population 2/);
   expect(container.querySelectorAll('.production-choice .buy-need, .production-choice .hint')).toHaveLength(0);
 });

@@ -16,6 +16,7 @@ import { turnReportFixture } from '../../src/test/turnReportFixture';
 import { supplyCity } from '../../src/test/supplyFixture';
 import { diplomacyState } from '../../src/test/diplomacyFixture';
 import { SIZES, closeReportIfOpen, dismissCelebrations, expectReasonsFit, hexPoint, loadFixture, mapSettled, openReport, selectThing, shot, type GameWindow } from './helpers';
+import { setMapSeed } from '../mapSeed';
 
 // Each test starts from its own save, so tests can run on separate workers.
 test.describe.configure({ mode: 'parallel' });
@@ -133,7 +134,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await page.getByRole('button', { name: /^Single Player/ }).click();
     const small = page.getByRole('radiogroup', { name: 'Map size', exact: true }).getByRole('radio', { name: /^Small/ });
     await small.click();
-    await page.getByLabel('Map seed', { exact: true }).fill('424242');
+    await setMapSeed(page, '424242');
     await page.getByRole('button', { name: /^Start game/ }).click();
     await expect(page.getByTestId('turn-number')).toHaveText('1', { timeout: 60_000 });
     await expect(page.locator('.loading-screen')).toHaveCount(0);

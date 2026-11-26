@@ -281,6 +281,8 @@
 .pc-stat.good b { color: var(--good); }
 .pc-stat.bad b { color: var(--bad); }
 .pc-stat .pc-was { font-size: 12px; color: var(--ink-2); }
+/* The standard item's number and the arrow stay together when a narrow card wraps them under the number. */
+.pc-diff { display: inline-flex; align-items: center; gap: 4px; }
 .pc-stat .ui-mark { margin-left: 1px; }
 .pc-stat.good .ui-mark { color: var(--good); }
 .pc-stat.bad .ui-mark { color: var(--bad); }

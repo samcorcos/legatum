@@ -76,9 +76,12 @@ const randomPortrait = import.meta.glob<string>('../assets/art/random-choice-360
 /** The Random choice's painting on the faction sheet: a still life of cast knucklebones on an unfinished chart (no people of its own). */
 export const RANDOM_PORTRAIT_URL: string | null = Object.values(randomPortrait)[0] ?? null;
 
-/** The paired historical people portrait (360 px JPEG) for a faction. */
-export function leaderPortraitUrl(faction: string): string | null {
-  return pick(portraits, faction);
+const smallPortraits = import.meta.glob<string>('../assets/art/people-*-112.jpg', { eager: true, query: '?url', import: 'default' });
+
+/** The paired historical people portrait for a faction: the 360 px JPEG, or the 112 px one, which a
+ * roundel offers beside it so the browser picks by device pixels (a 22 px roundel must not fetch a 70 KB painting). */
+export function leaderPortraitUrl(faction: string, small = false): string | null {
+  return (small ? pick(smallPortraits, faction) : null) ?? pick(portraits, faction);
 }
 
 function crestUrl(faction: string): string | null {

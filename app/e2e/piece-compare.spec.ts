@@ -30,7 +30,7 @@ const SAYS: Record<(typeof FACTIONS)[number], string[]> = {
   India: ['Revenue Office replaces Market', '+3 Gold', 'half the Gold the city makes', 'War Elephant replaces Knight', '(Knight: 42)', 'only India can build it'],
   Rome: ['50 health'],
   Byzantium: ['(Pikeman: 152)', '(Pikeman: 32)'],
-  Germany: ['(Forge: +3)', '(Forge: 0)', 'Panzer replaces Tank', '(Tank: 5)'],
+  Germany: ['Ruhr Foundry replaces Forge', '(Forge: +3)', 'Panzer replaces Tank', '(Tank: 5)'],
   Celts: ['Gaesatae replaces Phalangite', '+8 strength when attacking.', '−5 strength when defending.'],
   Mongols: ['(Cataphract: 150)', '(Cataphract: 0)', 'Shoots or charges each turn, never both', 'Yam Relay Station only Mongols can build it'],
   Sparta: ['+5 strength next to another Hoplite (the phalanx).', 'It is lost on upgrade.', 'Agoge only Sparta can build it', 'start one level higher'],

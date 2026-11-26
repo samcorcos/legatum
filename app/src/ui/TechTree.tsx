@@ -78,11 +78,12 @@ export function goalForecast(view: PlayerView, goal: TechId, columns: TechId[][]
 
 const W = 188, GAP = 70;
 
+// The thumbs are 34 px or smaller: the 64 px files, which `artWarm.ts` has already fetched.
 function unlockArt(entry: TechCardUnlock, faction: Faction): string | null {
   const unit = entry.upgrades[0]?.to ?? (entry.unlock?.item && typeof entry.unlock.item === 'object' && 'Unit' in entry.unlock.item ? (entry.unlock.item as { Unit: UnitKind }).Unit : undefined);
-  if (unit) return unitCardUrl(unit, faction) ?? itemArtUrl({ Unit: unit } as never, faction, 128);
+  if (unit) return unitCardUrl(unit, faction) ?? itemArtUrl({ Unit: unit } as never, faction, 64);
   if (entry.icon.startsWith('resource-')) return null;
-  return unlockEntryArt(entry.unlock?.item, entry.label, entry.tech, faction, 128);
+  return unlockEntryArt(entry.unlock?.item, entry.label, entry.tech, faction, 64);
 }
 
 interface Props {
@@ -251,7 +252,7 @@ function TreeNode({ t, view, faction, pos, w, h, compact, queueIndex, slot, goal
         : goal ? <span className="tn-goal">Goal</span> : null}
     </span>
     <span className="tn-art">
-      {entries.slice(0, 3).map((e, i) => { const url = unlockArt(e, faction); return <span key={i} className="tn-thumb">{url ? <img src={url} alt="" draggable={false} /> : <Icon name={e.icon} size={compact ? 16 : 20} />}</span>; })}
+      {entries.slice(0, 3).map((e, i) => { const url = unlockArt(e, faction); return <span key={i} className="tn-thumb">{url ? <img src={url} alt="" width={34} height={34} decoding="async" draggable={false} /> : <Icon name={e.icon} size={compact ? 16 : 20} />}</span>; })}
       {entries.length > 3 && <span className="tn-more">+{entries.length - 3}</span>}
     </span>
     <span className="tn-foot">{isKnown ? (skipped ? 'Not needed' : '')

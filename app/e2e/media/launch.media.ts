@@ -10,6 +10,7 @@ import { test } from '../fixtures';
 import { FACTION_INFO, eraTechs } from '../../src/data';
 import { OUT, installCursor, wanted } from './recorder';
 import { Film, busiest, cinema, frameAll, load, pagePoint, park, playbackMs, push, resolveTurn, save, settle, snap, tick, war, worldOf, type Cam, type Hex, type W } from './stepped';
+import { setMapSeed } from '../mapSeed';
 
 // 1280x720 CSS px at 1.5x is a crisp 1920x1080 frame, with interface text large enough to read on a phone.
 test.use({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1.5 });
@@ -233,7 +234,7 @@ clip('opening', async (page) => {
   }, { 'legatum.combat-fx': JSON.stringify({ enabled: true }) });
   await page.goto('/?client=wasm');
   await page.getByRole('button', { name: /^Single Player/ }).click();
-  await page.getByLabel('Map seed', { exact: true }).fill('20261121');
+  await setMapSeed(page, '20261121');
   await page.getByRole('button', { name: /^Start game/ }).click();
   await until(page, async () => (await page.getByTestId('turn-number').textContent().catch(() => '')) === '1' && !(await page.locator('.loading-screen').count()), 'turn 1');
   await run(page, 1500);

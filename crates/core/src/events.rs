@@ -565,7 +565,7 @@ pub enum Event {
         tech: TechId,
     },
     /// An empire finished the last technology of its era and entered the next (`eras`). Public.
-    /// `era` is the era entered, **1-based** like the VP model (2 Classical .. 8 Future; the
+    /// `era` is the era entered, **1-based** like the VP model (2 Classical .. 9 Future; the
     /// view's `ResearchView::era` is 0-based). `first` is set for the first empire into that era (`GameState::era_firsts`): the UI
     /// and AI treat it as the big moment. The full-screen era-up takeover (phase C) keys off
     /// this event for the receiving player.
