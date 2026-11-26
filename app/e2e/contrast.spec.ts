@@ -7,6 +7,7 @@ import { test, expect } from './fixtures';
 import { auditContrast, type ContrastReading } from './contrast';
 import { coreFixture } from '../src/test/coreFixture';
 import { researchFixture } from '../src/test/researchFixture';
+import { setMapSeed } from './mapSeed';
 
 // A5 (plans/playtest-feedback.md): hovering a button could wash out its label ("Found City" went
 // nearly invisible). Every control on the title, Settings, lobby and game screens is measured from
@@ -168,7 +169,7 @@ test(`${look}: game screen controls keep AA label contrast in every state`, asyn
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: /^Single Player/ }).click();
   await page.getByRole('radiogroup', { name: 'Map size', exact: true }).getByRole('radio', { name: /^Small/ }).click();
-  await page.getByLabel('Map seed', { exact: true }).fill('424242');
+  await setMapSeed(page, '424242');
   await page.getByRole('button', { name: /^Start game/ }).click();
   await expect(page.getByTestId('turn-number')).toHaveText('1');
   const readings: ContrastReading[] = [];

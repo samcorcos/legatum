@@ -1,5 +1,4 @@
-import { RULES } from '../../data';
-import { aiOnlyTeams, offeredLevels, DIFFICULTY_INFO, MAP_SIZES, MAX_TURN_LIMIT, levelOf, mapSizeLabel, notes, setDifficulty, setMapSize, type AiLevel, type Lobby, type MapSizeId, validTurnLimit } from '../../lobby';
+import { offeredLevels, DIFFICULTY_INFO, MAP_SIZES, levelOf, mapSizeLabel, notes, setDifficulty, setMapSize, type AiLevel, type Lobby, type MapSizeId } from '../../lobby';
 import { randomSeed } from './randomSeed';
 
 const LEVEL_SUB: Record<AiLevel, string> = { Easy: 'Forgiving', Normal: 'Standard', Hard: 'Ruthless', Training: 'Research tool' };
@@ -63,26 +62,6 @@ export function Settings({ lobby, onChange }: { lobby: Lobby; onChange?: (l: Lob
           {n}
         </div>
       ))}
-      <Segmented label="Turn limit" value={lobby.turnLimit === null ? 'Off' : 'On'} options={[
-        { id: 'Off', label: `Turn ${RULES.defaultTurnLimit}`, sub: 'Most VP wins' },
-        { id: 'On', label: 'Custom', sub: 'Choose the last turn' },
-      ]} onChange={change && ((value: 'Off' | 'On') => change({ turnLimit: value === 'Off' ? null : (lobby.turnLimit ?? 300) }))} />
-      {lobby.turnLimit !== null && <div className="lobby-field">
-        <label className="lbl" htmlFor="turn-limit">Last turn</label>
-        <input id="turn-limit" type="number" min={1} max={MAX_TURN_LIMIT} step={1}
-          value={lobby.turnLimit || ''} readOnly={!change} aria-invalid={!validTurnLimit(lobby.turnLimit)}
-          onChange={(e) => change?.({ turnLimit: Number(e.target.value) })} />
-      </div>}
-      <Segmented label="Barbarians" value={lobby.barbarians === false ? 'Off' : 'On'} options={[
-        { id: 'On', label: 'On', sub: 'Camps raid cities' },
-        { id: 'Off', label: 'Off', sub: 'No barbarians' },
-      ]} onChange={change && ((value: 'On' | 'Off') => change({ barbarians: value === 'On' }))} />
-      {aiOnlyTeams(lobby) >= 2 && (
-        <Segmented label="AI alliances" value={lobby.aiAlliances ? 'On' : 'Off'} options={[
-          { id: 'On', label: 'On', sub: 'AI empires start allied in pairs' },
-          { id: 'Off', label: 'Off', sub: 'Each AI empire starts alone' },
-        ]} onChange={change && ((value: 'On' | 'Off') => change({ aiAlliances: value === 'On' }))} />
-      )}
       {anyAi && onChange && (
         <Segmented
           label="AI level"
@@ -91,32 +70,36 @@ export function Settings({ lobby, onChange }: { lobby: Lobby; onChange?: (l: Lob
           onChange={(d) => onChange(setDifficulty(lobby, d))}
         />
       )}
-      {change && lobby.mode !== 'host' && (
-        <Segmented label="Coach questions" value={lobby.training ? 'On' : 'Off'} options={[
-          { id: 'Off', label: 'Off', sub: 'Play normally' },
-          { id: 'On', label: 'On', sub: 'Asks why you differ from Hard' },
-        ]} onChange={(value: 'On' | 'Off') => onChange?.(value === 'On' ? { ...setDifficulty(lobby, 'Hard'), training: true } : { ...lobby, training: false })} />
-      )}
-      {change && lobby.mode !== 'host' && lobby.training && <div className="muted lobby-level-note" data-testid="training-note">The AI empires play Hard. In the background Hard also plays your seat; when you do something very different from it, a question asks why and you answer in a text box. Answers are saved on this computer.</div>}
       {anyAi && levelOf(lobby) === 'Training' && <div className="muted lobby-level-note" data-testid="ai-level-note">{DIFFICULTY_INFO.Training}</div>}
-      <div className="lobby-field">
-        <div className="lbl">Map seed</div>
-        <div className="seed">
-          <input
-            value={lobby.seed}
-            readOnly={!change}
-            onChange={(e) => change?.({ seed: e.target.value.trim() })}
-            className={onChange && !seedOk ? 'bad' : ''}
-            spellCheck={false}
-            aria-label="Map seed"
-          />
-          {change && (
-            <button className="icon-btn" onClick={() => change({ seed: randomSeed() })} title="New random map" aria-label="New random map">
-              ⟳
-            </button>
-          )}
+      {/* Rarely needed: closed by default, opened when the seed you typed needs fixing. */}
+      <details className="lobby-advanced" open={(onChange && !seedOk) || undefined}>
+        <summary>Advanced{lobby.training ? <span className="lobby-advanced-on"> · Coach questions on</span> : null}</summary>
+        {change && lobby.mode !== 'host' && (
+          <Segmented label="Coach questions" value={lobby.training ? 'On' : 'Off'} options={[
+            { id: 'Off', label: 'Off', sub: 'Play normally' },
+            { id: 'On', label: 'On', sub: 'Asks why you differ from Hard' },
+          ]} onChange={(value: 'On' | 'Off') => onChange?.(value === 'On' ? { ...setDifficulty(lobby, 'Hard'), training: true } : { ...lobby, training: false })} />
+        )}
+        {change && lobby.mode !== 'host' && lobby.training && <div className="muted lobby-level-note" data-testid="training-note">The AI empires play Hard. In the background Hard also plays your seat; when you do something very different from it, a question asks why and you answer in a text box. Answers are saved on this computer.</div>}
+        <div className="lobby-field">
+          <div className="lbl">Map seed</div>
+          <div className="seed">
+            <input
+              value={lobby.seed}
+              readOnly={!change}
+              onChange={(e) => change?.({ seed: e.target.value.trim() })}
+              className={onChange && !seedOk ? 'bad' : ''}
+              spellCheck={false}
+              aria-label="Map seed"
+            />
+            {change && (
+              <button className="icon-btn" onClick={() => change({ seed: randomSeed() })} title="New random map" aria-label="New random map">
+                ⟳
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      </details>
     </section>
     </>
   );

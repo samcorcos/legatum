@@ -5,6 +5,7 @@ import { chooseCapitalProduction } from './opening';
 import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { listedGameName } from './listedName';
+import { setMapSeed } from './mapSeed';
 
 async function configureLobby(page: Page, seed: string) {
   const small = page.getByRole('radiogroup', { name: 'Map size', exact: true }).getByRole('radio', { name: /^Small/ });
@@ -15,7 +16,7 @@ async function configureLobby(page: Page, seed: string) {
   await hard.click();
   await expect(hard).toBeChecked();
   await expect(page.getByRole('combobox', { name: /^Seat \d+ AI level$/ })).toHaveCount(0);
-  await page.getByLabel('Map seed', { exact: true }).fill(seed);
+  await setMapSeed(page, seed);
 }
 
 async function expectTurn(page: Page, turn: number) {

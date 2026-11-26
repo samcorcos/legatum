@@ -3,6 +3,7 @@ import { coreFixture } from '../src/test/coreFixture';
 import { explorationFixture } from '../src/test/explorationFixture';
 import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
+import { setMapSeed } from './mapSeed';
 
 // In-game clarity regressions from the first playtest (plans/playtest-feedback.md A6, A7, A10–A12,
 // A14, A15, F4, F10): notes never drawn over each other, tooltips that never block or cover what
@@ -18,7 +19,7 @@ async function startSolo(page: Page, { empires = 4 } = {}) {
   if (empires === 4) {
     await page.getByRole('radiogroup', { name: 'Map size', exact: true }).getByRole('radio', { name: /^Small/ }).click();
   }
-  await page.getByLabel('Map seed', { exact: true }).fill('424242');
+  await setMapSeed(page, '424242');
   await page.getByRole('button', { name: /^Start game/ }).click();
   await expect(page.getByTestId('turn-number')).toHaveText('1', { timeout: 60_000 });
   const dismiss = page.getByRole('button', { name: /^Dismiss hint/ });

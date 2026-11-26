@@ -12,7 +12,6 @@ import { Tip } from '../ui/Tip';
 import { HexBackdrop } from './HexBackdrop';
 import {
   activeCount,
-  aiAlliancesOn,
   buildSetup,
   mapSizeLabel,
   newLobby,
@@ -26,7 +25,7 @@ import {
   type LobbyMode,
 } from '../lobby';
 import { closeStaging, configFromLobby, everyoneReady, lobbyFromStaging, withOccupants, stagingEnabled, startStaging, settingsAcknowledged, StagingSettingsWriter, type StagingConfig } from '../staging';
-import { effectiveTurnLimit } from '../data';
+import { RULES } from '../data';
 import { HOLD_TURNS, turnsWord } from '../victoryHold';
 import { Amount } from '../ui/Amounts';
 import { SeatsTable } from './lobby/SeatsTable';
@@ -173,7 +172,7 @@ export function LobbyScreen() {
       <button className="btn big primary lobby-go" disabled={blockers.length > 0 || !!busy} onClick={start}>
         {busy ? busy : mode === 'host' && !room ? 'Host the game' : 'Start game'}
         <span className="btn-sub">
-          {activeCount(lobby)} empires · {mapSizeLabel(lobby.mapSize).toLowerCase()} map{lobby.barbarians === false ? ' · no barbarians' : ''}{aiAlliancesOn(lobby) ? ' · AI empires allied in pairs' : ''}
+          {activeCount(lobby)} empires · {mapSizeLabel(lobby.mapSize).toLowerCase()} map
         </span>
       </button>
       {replacing && <ReplaceGameDialog saved={replacing} onCancel={() => setReplacing(null)}
@@ -282,7 +281,7 @@ export function Victory({ lobby }: { lobby: Lobby }) {
         <h3>Victory</h3>
       </div>
       <p className="lobby-victory-lede">
-        A team wins by reaching its VP target and holding it for {HOLD_TURNS} turns; otherwise the most VP at turn {effectiveTurnLimit(lobby.turnLimit)}. Teammates share vision and victory.
+        A team wins by reaching its VP target and holding it for {HOLD_TURNS} turns; otherwise the most VP at turn {RULES.defaultTurnLimit}. Teammates share vision and victory.
       </p>
       <div className="team-targets">
         {ts.map((t) => (

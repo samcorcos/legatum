@@ -2,6 +2,7 @@ import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { endPlanning } from './turnActions';
 import { chooseCapitalProduction } from './opening';
+import { setMapSeed } from './mapSeed';
 
 // How long End Turn takes in the real app (the WASM engine in the page, one thread) for plain
 // Hard and Training, by player count. A measurement, not a gate: it runs only with
@@ -40,7 +41,7 @@ for (const size of sizes) {
       for (let seat = size.seats + 1; seat <= 4; seat++) await page.getByLabel(`Seat ${seat} type`, { exact: true }).selectOption('closed');
       await page.getByRole('radiogroup', { name: 'AI level', exact: true })
         .getByRole('radio', { name: level === 'Hard' ? /^Hard/ : /^Training/ }).click();
-      await page.getByLabel('Map seed', { exact: true }).fill('7100003');
+      await setMapSeed(page, '7100003');
       await page.getByRole('button', { name: /^Start game/ }).click();
       await expect(page.getByTestId('turn-number')).toHaveText('1');
       await chooseCapitalProduction(page);

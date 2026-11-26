@@ -7,20 +7,24 @@ import { RULES } from '../data';
 import { Victory } from './LobbyScreen';
 
 describe('game settings', () => {
-  it('defaults to the turn-500 limit', () => {
-    const lobby = newLobby('solo', '42');
+  it('has no turn limit, barbarians or AI alliances setting; the game ends at the default last turn', () => {
+    const lobby = newLobby('host', '42');
     const html = renderToStaticMarkup(createElement(Settings, { lobby, onChange: () => {} }));
     expect(buildSetup(lobby)).not.toHaveProperty('speed');
-    expect(html).toMatch(new RegExp(`aria-checked="true"[^>]*><span>Turn ${RULES.defaultTurnLimit}</span>`));
+    for (const gone of ['Turn limit', 'Barbarians', 'AI alliances']) expect(html).not.toContain(`aria-label="${gone}"`);
     expect(renderToStaticMarkup(createElement(Victory, { lobby }))).toContain(`the most VP at turn ${RULES.defaultTurnLimit}.`);
   });
 
-  it('keeps explicit numeric turn limits', () => {
-    const lobby = { ...newLobby('host', '42'), turnLimit: 333 };
-    const html = renderToStaticMarkup(createElement(Settings, { lobby }));
-    expect(html).toMatch(/aria-checked="true"[^>]*><span>On<\/span>/);
-    expect(html).toContain('value="333"');
-    expect(html).toContain('readOnly=""');
-    expect(renderToStaticMarkup(createElement(Victory, { lobby }))).toContain('most VP at turn 333');
+  it('keeps coach questions and the map seed in a closed Advanced section', () => {
+    const html = renderToStaticMarkup(createElement(Settings, { lobby: newLobby('solo', '42'), onChange: () => {} }));
+    const adv = html.slice(html.indexOf('<details class="lobby-advanced"'));
+    expect(adv).toMatch(/^<details class="lobby-advanced">/);
+    expect(adv).toContain('aria-label="Coach questions"');
+    expect(adv).toContain('aria-label="Map seed"');
+  });
+
+  it('opens Advanced when the map seed needs fixing', () => {
+    const html = renderToStaticMarkup(createElement(Settings, { lobby: { ...newLobby('solo', '42'), seed: 'abc' }, onChange: () => {} }));
+    expect(html).toContain('<details class="lobby-advanced" open="">');
   });
 });

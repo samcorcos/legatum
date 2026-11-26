@@ -89,10 +89,8 @@ export function configFromLobby(l: Lobby): StagingConfig {
     seed: l.seed,
     width: size.width,
     height: size.height,
-    turn_limit: l.turnLimit,
-    // Omitted when on (the server's default), so default rooms keep their old config shape.
-    ...(l.barbarians === false ? { barbarians: false } : {}),
-    ...(l.aiAlliances ? { ai_alliances: true } : {}),
+    // Every new game ends at the default last turn with barbarians on (omitted: the server's default).
+    turn_limit: null,
     // Deals are on in every new game, online too (the host's WASM passes it to the setup).
     deals: true,
     seats: l.slots.map((s) => ({ kind: KIND[s.kind], name: s.name, faction: s.faction, team: s.team, difficulty: s.kind === 'ai' ? l.difficulty : s.difficulty, ...(s.kind === 'ai' && levelOf(l) === 'Training' ? { search: true } : {}) })),
@@ -114,9 +112,6 @@ export function lobbyFromStaging(st: StagingState, includeOccupants = true): Lob
     preset: 'custom',
     seed: st.seed ?? 'Hidden',
     mapSize,
-    turnLimit: c.turn_limit ?? null,
-    barbarians: c.barbarians !== false,
-    aiAlliances: c.ai_alliances === true,
     ...levelFields(level),
     slots: c.seats.map((s, i) => {
       const o = includeOccupants ? st.occupants[i] : null;
