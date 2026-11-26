@@ -97,15 +97,25 @@ def tuck_skin(skin_objs, shell, centre, gap=.004, reach=.05, front_cone=50, step
         P = co(o); changed = False
         for i, p in enumerate(P):
             q = Vector(p)
-            if p[1] < rim_y: continue                     # neck and jaw below the helmet rim stay put
+            if p[1] < rim_y - .07: continue              # well below the rim: shoulders, chest
             if bvh.find_nearest(q, reach)[0] is None: continue
             d = q - c
             if d.length < 1e-6: continue
-            if d.normalized().z > cos_f and p[1] < centre[1] + .05: continue
+            dn = d.normalized()
+            if dn.z > cos_f and centre[1] - .035 < p[1] < centre[1] + .05: continue    # face behind the eye slots
+            if dn.z > math.cos(math.radians(14)) and p[1] >= rim_y - .07: continue     # behind the nasal/mouth gap
+            if p[1] < rim_y + .03:
+                # At and below the rim (jaw, neck): only skin a horizontal ray shows is under the shell.
+                hd = Vector((d.x, 0, d.z))
+                if hd.length < 1e-6 or bvh.ray_cast(q, hd.normalized(), .1)[0] is None: continue
+                c = Vector((centre[0], p[1], centre[2]))   # tuck toward the neck axis, level
+            else:
+                c = Vector(centre)
             for _ in range(steps):
                 hit = bvh.ray_cast(q, (q - c).normalized(), .15)
                 if hit[0] is not None and hit[3] >= gap: break
                 q = c + (q - c) * .985
+            c = Vector(centre)
             if (q - Vector(p)).length > 1e-6: P[i] = q; changed = True; moved += 1
         if changed: set_co(o, P)
     return moved

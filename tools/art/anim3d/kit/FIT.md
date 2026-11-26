@@ -354,3 +354,11 @@ fit_source_to_0ad.py -- <r6 arguments without --corinthian> --crest-tail .95 --k
   moving frame) and `kit/crest_clearance.py`.
 - Still open after three rounds: tolnaydavid's greaves bake pale and their lower edge shows skin
   slivers (the check still finds up to 21 vertices in walk); the kneecap dome reads as a ball.
+
+## Round r8b (neck, bronze palette)
+
+`tuck_skin` now also tucks jaw and neck skin a horizontal ray shows under the helmet rim
+(toward the neck axis, level), keeping the face behind the eye slots and the nasal gap.
+`--bronze-palette dark,mid,light` (r8b: `4a2c0c,915d20,e5b475`, sampled from
+`spearman-panel.png`), `--bronze-rough .38`, `--bronze-detail .9` and `--bronze-ao .3`
+(darker cavities on metal, metallic at least 0.95). Build: `kit/sculpt/r8b.sh`.

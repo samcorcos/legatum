@@ -70,6 +70,10 @@ ap.add_argument('--replace-rot', action='append', default=[], metavar='PART=X,Y,
 ap.add_argument('--replace-credit', action='append', default=[], metavar='PART=TEXT', help='credit for a replacement part (goes into the credit and PROVENANCE)')
 ap.add_argument('--replace-license', action='append', default=[], metavar='PART=ID', help='licence of a replacement part, e.g. CC-BY-4.0 or CC0-1.0')
 ap.add_argument('--crest-mass', action='store_true', help='build the crest as its own dense part: lofted horsehair mass with strand grooves (about 2k triangles)')
+ap.add_argument('--bronze-palette', default='47290f,a67734,f6dc96', help='dark,mid,light sRGB hex for --grade-bronze (r8b: sampled from spearman-panel.png: 4a2c0c,915d20,e5b475)')
+ap.add_argument('--bronze-rough', type=float, default=.50, help='base roughness of graded bronze (raised edges are 0.2 lower)')
+ap.add_argument('--bronze-detail', type=float, default=1.3, help='gain on the high-passed source luminance (fine detail) in graded bronze')
+ap.add_argument('--bronze-ao', type=float, default=.45, help='AO floor on metal (lower = darker cavities); other surfaces keep 0.45')
 ap.add_argument('--helmet-size', type=float, default=1.0, help='replacement helmet size relative to an exact head fit')
 ap.add_argument('--helmet-uv-share', type=float, default=1.0, help='scale the helmet UV islands before packing (2 = four times the atlas area)')
 ap.add_argument('--crest-shift', type=float, default=0., help='move the crest arc forward (+) or back (-) along the helmet, metres')
@@ -1135,7 +1139,7 @@ if args.grade_bronze:
     metal = M_ > .5
     for p_ in ('greave', 'helmet'):  # replaced armour is bronze whatever its source metallic map says
         if p_ in lod0: metal |= raster_mask(uv_tris(lod0[p_]))
-    Mt_ = px(maps_img['metallic']); Mt_[metal, :3] = np.maximum(Mt_[metal, :3], .85); maps_img['metallic'].pixels.foreach_set(Mt_.ravel())
+    Mt_ = px(maps_img['metallic']); Mt_[metal, :3] = np.maximum(Mt_[metal, :3], .85 if args.bronze_ao >= .45 else .95); maps_img['metallic'].pixels.foreach_set(Mt_.ravel())
     if metal.any():
         lum = B_[..., :3] @ np.array([.2126, .7152, .0722], np.float32); l = lum / max(float(lum[metal].mean()), 1e-3)
         # Keep fine detail (engraving, embossing, hammer marks), drop the low-frequency
@@ -1145,7 +1149,7 @@ if args.grade_bronze:
             i0 = np.clip(np.arange(n_) - r_, 0, n_); i1 = np.clip(np.arange(n_) + r_ + 1, 0, n_)
             return c_[i1][:, i1] - c_[i0][:, i1] - c_[i1][:, i0] + c_[i0][:, i0]
         mf = metal.astype(np.float32); lb = box(l * mf) / np.maximum(box(mf), 1e-6)
-        l = np.clip(1 + (l - lb) * 1.3, .55, 1.6)
+        l = np.clip(1 + (l - lb) * args.bronze_detail, .6, 1.5)
         if 'shield' in lod0:
             # Aspis: the device only on the outer face; the inner face plain bronze;
             # the field lifted from dark brown to mid bronze.
@@ -1162,12 +1166,12 @@ if args.grade_bronze:
         for _ in range(2): pe = np.maximum(pe, (np.roll(pe, 1, 0) + np.roll(pe, -1, 0) + np.roll(pe, 1, 1) + np.roll(pe, -1, 1)) / 4 * .9)
         edge = pe ** .8; cav = np.clip((A_ - .45) / .55, 0, 1)
         t_ = np.clip(.08 + .45 * l * (.55 + .45 * cav) + .55 * edge, 0, 1)
-        dark, mid, light = srgb('47290f'), srgb('a67734'), srgb('f6dc96')
+        dark, mid, light = (srgb(c_) for c_ in args.bronze_palette.split(','))
         col = np.where(t_[..., None] < .5, dark + (mid - dark) * (t_[..., None] * 2), mid + (light - mid) * ((t_[..., None] - .5) * 2))
         B_[metal, :3] = col[metal]
-        R_[metal, :3] = np.clip(.50 - .34 * edge[metal] + .16 * (1 - cav[metal]), .14, .8)[:, None]
+        R_[metal, :3] = np.clip(args.bronze_rough - .2 * edge[metal] + .14 * (1 - cav[metal]), .12, .8)[:, None]
         maps_img['basecolor'].pixels.foreach_set(B_.ravel()); maps_img['roughness'].pixels.foreach_set(R_.ravel())
-        report['bronze_grade'] = {'texels': int(metal.sum()), 'palette': ['47290f', 'a67734', 'f6dc96']}
+        report['bronze_grade'] = {'texels': int(metal.sum()), 'palette': args.bronze_palette}
         log('bronze graded', report['bronze_grade'])
 
 if args.grade_skin and 'body' in lod0:
@@ -1199,6 +1203,9 @@ if helmet_centre is not None and 'helmet' in lod0:
 orm = bpy.data.images.new('orm', N, N, alpha=False); orm.colorspace_settings.name = 'Non-Color'
 o_px = np.ones((N, N, 4), np.float32)
 o_px[..., 0] = px(maps_img['ao'])[..., 0]; o_px[..., 1] = px(maps_img['roughness'])[..., 0]; o_px[..., 2] = px(maps_img['metallic'])[..., 0]
+if args.bronze_ao < .45:  # darker cavities on metal: re-floor its AO
+    mt_ = o_px[..., 2] > .8; raw_ = np.clip((o_px[..., 0] - .45) / .55, 0, 1)
+    o_px[..., 0] = np.where(mt_, args.bronze_ao + (1 - args.bronze_ao) * raw_, o_px[..., 0])
 orm.pixels.foreach_set(o_px.ravel()); orm.filepath_raw = str(work / 'orm-master.png'); orm.file_format = 'PNG'; orm.save()
 base_px = px(maps_img['basecolor'])
 
