@@ -375,6 +375,8 @@ impl ScriptedBrain {
         p.pass("execute_hold");
         p.execute_hold();
         p.pass("cities");
+        p.defend_city_offers();
+        p.plan_city_purchase();
         p.operation_buys();
         p.plan_siege_buys();
         p.plan_cities();
@@ -1165,6 +1167,8 @@ pub(crate) struct Planner<'a> {
     pub faction_goal_savings: i32,
     /// Gold set aside for the Siege the war on a walled city still needs (`siege_buy.rs`).
     pub siege_savings: i32,
+    /// Byzantium: Gold banked toward its best city offer (`byzantium.rs`).
+    pub city_buy_savings: i32,
     /// `exposure_key` per tile index: it reads only the view and the fixed enemy lists.
     pub(crate) exposure_memo: std::cell::RefCell<Vec<Option<(i32, i32)>>>,
     /// `safe_campaign_tile` per tile index (it reads the same fixed facts as `exposure_key`).
@@ -1355,6 +1359,7 @@ impl<'a> Planner<'a> {
             gold_left: view.economy.gold,
             faction_goal_savings: 0,
             siege_savings: 0,
+            city_buy_savings: 0,
             exposure_memo: Default::default(),
             safe_memo: Default::default(),
             settler_intercept: Default::default(),
@@ -1539,6 +1544,7 @@ impl<'a> Planner<'a> {
         self.ordinary_gold_reserve()
             .max(self.faction_goal_savings)
             .max(self.siege_savings)
+            .max(self.city_buy_savings)
             + self.modernization_savings
             + self.operation_reserve()
     }
