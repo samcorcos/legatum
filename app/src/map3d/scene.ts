@@ -12,6 +12,7 @@ import { mapPlayerColor } from '../map/style';
 import { mapUnitArtSlug, mapUnitMiniatureUrl } from '../unitArt';
 import { BARBARIAN_COLOR } from '../theme';
 import { isBarbarian } from '../barbarians';
+import { fadeOwn, ownMaterials } from './ownMaterials';
 import { ARC, DEATH_MS, fxUnits, type CombatPlan, type ShotKind } from '../map/combatFx';
 import {
   CORNERS, PX, R, ROW, buildField, gridFor, hash2, heightAt, refreshFog, rnd, shapeChanged, tileAt, tileX, tileZ, worldFrom,
@@ -827,8 +828,9 @@ export class MapScene {
       g.position.set(tileX(i, this.world.w), Math.max(0, this.heightAt(tileX(i, this.world.w), tileZ(i, this.world.w))), tileZ(i, this.world.w) + 0.05);
       ghosts.set(id, g);
       this.units.add(g);
-      // Transparent from the start, so the fall's fade never recompiles a shader mid-playback (a hitch).
-      g.traverse((o) => { const m = (o as THREE.Mesh).material as THREE.Material | undefined; if (m && 'opacity' in m) m.transparent = true; });
+      // Its own transparent materials from the start: the fade never touches a material live figures share, and never
+      // recompiles a shader mid-playback. A squad still loading is given its own when the fall begins.
+      ownMaterials(g);
     }
     // The figures are done once the last move, blow, missile and fall are (the plan's tail is for the 2D map's damage cues).
     const p = a.plan;
@@ -840,7 +842,11 @@ export class MapScene {
   private endAnim() {
     const a = this.anim;
     if (!a) return;
-    for (const g of a.ghosts.values()) { this.units.remove(g); }
+    for (const g of a.ghosts.values()) {
+      this.units.remove(g);
+      // The ghost's own material copies go with it (the shared ones stay with the live figures).
+      g.traverse((o) => { const m = (o as THREE.Mesh).material; for (const x of Array.isArray(m) ? m : m ? [m] : []) if (x.userData.ownMaterial) x.dispose(); });
+    }
     for (const g of this.unitGroups.values()) {
       const home = g.userData.home as THREE.Vector3 | undefined;
       if (home) g.position.copy(home);
@@ -951,7 +957,8 @@ export class MapScene {
       if (!(g.userData.figs as unknown[] | undefined)?.length) g.rotation.z = gh.tilt * 0.8;
       place(g, gh.x / PX, gh.y / PX + 0.05);
       g.position.y -= gh.sink * 0.004;
-      g.traverse((o) => { const m = (o as THREE.Mesh).material as THREE.Material | undefined; if (m && 'opacity' in m) { m.transparent = true; m.opacity = gh.alpha; } });
+      ownMaterials(g);
+      fadeOwn(g, gh.alpha);
     }
     // Missiles in flight: an arc from the shooter to the target.
     let k = 0;

@@ -77,9 +77,15 @@ export function drawMarks2d(ctx: CanvasRenderingContext2D, w: number, h: number,
     else if (heir) drawTag(ctx, LOOK, x, tagY + 6, heir, mine ? 'good' : u.owner === u.heir_of ? 'neutral' : 'bad');
     if (u.military && u.level) drawPromotion(ctx, LOOK, u.level, x, y, tw, faction);
     // Rome's Colonia founder: the laurel seal over the head, above the health bar.
-    if (mine && isColoniaFounder(view, u.id)) drawColoniaSeal(ctx, x, y - tw * 3.4, tw, dpr);
+    if (mine && isColoniaFounder(view, u.id)) drawColoniaSeal(ctx, x - tw * 1.5, y - tw * 2.2, tw * 0.8, dpr);
     const bx = x + tw * 0.95, by = y - tw * 0.85;
-    if (u.fortify > 0) drawFortifyMark(ctx, bx - 5, y + tw * 0.35, dpr);
+    // Fortified: on a paper disc beside the order badge, clear of the figures' armour.
+    if (u.fortify > 0) {
+      const fx = bx, fy = by + tw * 0.95;
+      ctx.beginPath(); ctx.arc(fx, fy, 8, 0, Math.PI * 2); ctx.fillStyle = TOKEN_INK.atlas.paper; ctx.fill();
+      ctx.strokeStyle = TOKEN_INK.atlas.ink; ctx.lineWidth = 1; ctx.stroke();
+      drawFortifyMark(ctx, fx - 6, fy - 6, dpr);
+    }
     const mark = inp.marks.get(u.id);
     if (mark) drawBadge(ctx, LOOK, bx, by, tw * 0.42, '', true, MARK_ICON[mark]);
     else if (mine && u.unsupplied) drawBadge(ctx, LOOK, bx, by, tw * 0.42, '', true, 'ui-alert');
