@@ -309,7 +309,7 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
                 .filter(|u| seat_cities.iter().any(|c| c.distance(u.pos) <= 3))
                 .count();
             *front.entry("pressing_unit_turns").or_default() += pressing as i64;
-            if (turn - args.handover) % 10 == 0 {
+            if (turn - args.handover).is_multiple_of(10) {
                 let rivals: usize = before
                     .players
                     .iter()
@@ -321,9 +321,17 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
             }
             for event in &events {
                 match event {
-                    Event::Battle { attacker_owner, at, .. } => {
-                        let defender_seat = before.cities.values().any(|c| c.pos == *at && c.owner == seat)
-                            || before.units.values().any(|u| u.pos == *at && u.owner == seat);
+                    Event::Battle {
+                        attacker_owner, at, ..
+                    } => {
+                        let defender_seat = before
+                            .cities
+                            .values()
+                            .any(|c| c.pos == *at && c.owner == seat)
+                            || before
+                                .units
+                                .values()
+                                .any(|u| u.pos == *at && u.owner == seat);
                         let city = before.cities.values().any(|c| c.pos == *at);
                         if *attacker_owner == seat {
                             *front.entry("seat_attacks").or_default() += 1;
@@ -380,7 +388,10 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
                     first_lost.get_or_insert(turn);
                 }
                 Event::CityCaptured { from, to, city, .. } => {
-                    if before.cities.get(city).is_some_and(|c| c.original_capital && c.owner == *from)
+                    if before
+                        .cities
+                        .get(city)
+                        .is_some_and(|c| c.original_capital && c.owner == *from)
                         && before.team_of(*from) != before.team_of(*to)
                     {
                         capital_takes.push((to.0, turn));
