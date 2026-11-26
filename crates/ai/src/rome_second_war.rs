@@ -17,11 +17,15 @@ const STORM_MIN_DAMAGE: i32 = 40;
 
 impl Planner<'_> {
     pub(crate) fn rome_second_on(&self) -> bool {
-        self.faction == Faction::Rome
+        self.conquest_opening_faction()
             && self.difficulty == AiDifficulty::Hard
             && self.decisions.rome_second_war > 0
             && self.view().turn <= LAST_TURN
             && (self.view().turn >= FIRST_TURN
+                || (self.faction == Faction::Sparta
+                    && self.decisions.sparta_second_war_from > 0
+                    && self.view().turn >= self.decisions.sparta_second_war_from as u32
+                    && !self.rome_opening_active())
                 || (self.decisions.rome_walled_peace > 0
                     && self.campaigns.rome_walled_peace_window))
     }
