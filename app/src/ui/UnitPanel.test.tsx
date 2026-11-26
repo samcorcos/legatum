@@ -563,3 +563,14 @@ it('a unit outside any city has no Open city line', async () => {
   act(() => root.render(<UnitPanel unit={unit} view={view} />));
   expect(container.querySelector('[data-testid="unit-open-city"]')).toBeNull();
 });
+
+it('says why the upgrade stops short of the newest researched unit', async () => {
+  const { view, unit, client } = await spearman({ tech: true, owned: true, gold: 200 });
+  unit.upgrade_held_back = { to: 'Pikeman', need: 'Niter', reason: 'Needs 1 Niter: you have none yet.' };
+  useGame.setState({ client, views: [view], humans: [0], orders: [[]], errors: [[]], seat: 0 });
+  act(() => root.render(<UnitPanel unit={unit} view={view} />));
+  const button = [...container.querySelectorAll<HTMLButtonElement>('button.act')].find((b) => b.textContent?.startsWith('Upgrade to Phalangite'))!;
+  expect(button.disabled).toBe(false);
+  // One quiet line under the upgrade row names the newer unit and the resource it needs.
+  expect(container.querySelector('.upgrade-held-back')?.textContent).toBe('Pikeman needs Niter');
+});
