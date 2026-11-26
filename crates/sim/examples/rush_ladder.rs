@@ -234,6 +234,10 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
     let mut rusher_captures = 0u32;
     // Every capture of an original capital from its holder: (captor seat, turn).
     let mut capital_takes: Vec<(u8, u32)> = Vec::new();
+    // After a handover: how the rivals fight the seat (attacks each way, city hits, losses,
+    // rival units pressing the seat's cities, army sizes every 10 turns).
+    let mut front: BTreeMap<&str, i64> = BTreeMap::new();
+    let mut armies: Vec<(u32, usize, usize)> = Vec::new();
     let limit = if args.turns > 0 { args.turns } else { 700 };
     let mut my_capital = None;
     let trace = std::env::var("RL_TRACE").is_ok();
@@ -295,6 +299,55 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
         let (next, events) = legatum_core::resolve_turn(&state, &orders);
         let before = state;
         state = next;
+        if args.handover > 0 && turn >= args.handover {
+            let seat_cities: Vec<_> = before.cities_of(seat).map(|c| c.pos).collect();
+            let pressing = before
+                .units
+                .values()
+                .filter(|u| u.owner != seat && !u.owner.is_barbarian() && is_military(u.kind))
+                .filter(|u| before.teams_at_war(before.team_of(u.owner), my_team))
+                .filter(|u| seat_cities.iter().any(|c| c.distance(u.pos) <= 3))
+                .count();
+            *front.entry("pressing_unit_turns").or_default() += pressing as i64;
+            if (turn - args.handover) % 10 == 0 {
+                let rivals: usize = before
+                    .players
+                    .iter()
+                    .filter(|p| p.alive && p.id != seat && !p.id.is_barbarian())
+                    .filter(|p| before.teams_at_war(p.team, my_team))
+                    .map(|p| army(&before, p.id))
+                    .sum();
+                armies.push((turn, army(&before, seat), rivals));
+            }
+            for event in &events {
+                match event {
+                    Event::Battle { attacker_owner, at, .. } => {
+                        let defender_seat = before.cities.values().any(|c| c.pos == *at && c.owner == seat)
+                            || before.units.values().any(|u| u.pos == *at && u.owner == seat);
+                        let city = before.cities.values().any(|c| c.pos == *at);
+                        if *attacker_owner == seat {
+                            *front.entry("seat_attacks").or_default() += 1;
+                        } else if defender_seat && !attacker_owner.is_barbarian() {
+                            *front.entry("rival_attacks").or_default() += 1;
+                            if city {
+                                *front.entry("rival_city_hits").or_default() += 1;
+                            }
+                        }
+                    }
+                    Event::UnitDestroyed { owner, .. } => {
+                        if *owner == seat {
+                            *front.entry("seat_units_lost").or_default() += 1;
+                        } else if !owner.is_barbarian() {
+                            *front.entry("rival_units_lost").or_default() += 1;
+                        }
+                    }
+                    Event::PeaceEstablished { .. } => {
+                        *front.entry("peaces").or_default() += 1;
+                    }
+                    _ => {}
+                }
+            }
+        }
         if let Some(t) = recorded
             && state.hash().to_string() != t.hash
         {
@@ -379,6 +432,8 @@ fn play(args: &Args, params: &AiParams, index: u64) -> Value {
         "rusher_captures": rusher_captures,
         "builds": builds,
         "mismatches": mismatches,
+        "front": front,
+        "armies": armies,
         "capital_takes": capital_takes,
         "winners": state.players.iter().filter(|p| state.finished && Some(p.team) == state.winner).map(|p| p.id.0).collect::<Vec<_>>(),
     })
