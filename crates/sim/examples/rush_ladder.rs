@@ -89,11 +89,12 @@ fn arm(spec: &str) -> (String, AiParams, serde_json::Map<String, Value>) {
 }
 
 /// A boolean experiment (as opposed to a number): `x.city_research=1` means true.
+/// True when the experiment field takes a boolean: `x.flag=1` then means `true`, while numeric
+/// fields such as `city_upkeep_free` keep the number (defaults skip every field when serialized,
+/// so probe by deserializing a `true`).
 fn name_is_flag(name: &str) -> bool {
-    serde_json::to_value(legatum_core::experiments::RuleExperiments::default())
-        .ok()
-        .and_then(|v| v.get(name).cloned())
-        .is_none_or(|v| v.is_boolean())
+    serde_json::from_value::<legatum_core::experiments::RuleExperiments>(json!({ name: true }))
+        .is_ok()
 }
 
 fn experiments(

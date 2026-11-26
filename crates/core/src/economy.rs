@@ -939,7 +939,7 @@ pub(crate) fn upkeep_breakdown_with_military(
 /// The breakdown line for city upkeep.
 pub fn city_upkeep_label(state: &GameState) -> String {
     format!(
-        "City upkeep (cities beyond {})",
+        "City upkeep (free up to {} cities)",
         state.setup.rule_experiments.city_upkeep_free()
     )
 }

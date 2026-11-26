@@ -111,7 +111,7 @@ def summarize(path):
                     rec["spend"]["upkeep"] -= amount
                 elif label.startswith("Treaty upkeep:"):
                     rec["spend"]["treaties"] -= amount
-                elif label == "City administration" or label.startswith("Overreach:"):
+                elif label in ("City administration", "City upkeep") or label.startswith("City upkeep (") or label.startswith("Overreach:"):
                     rec["spend"]["upkeep"] -= amount
             for cat, value in spending[player].items():
                 rec["spend"][cat] += value

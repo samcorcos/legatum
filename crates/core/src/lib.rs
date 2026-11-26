@@ -58,7 +58,7 @@ pub mod rules;
 /// 59: Egypt's Chariot Archer replaces its Archer (Sam, 2026-11-25): 3 moves, a shot 40% stronger against the melee line, and Forest or Hills without a road take its whole turn to enter. The Medjay is retired, so Egypt's Spearman is plain (no extra sight). The save shape is unchanged.
 /// 60: The tech tree's research goal: `Order::SetResearchGoal` and `Player::research_goal` (fills an empty research queue toward a later technology). No existing order resolves differently.
 /// 61: Deals (Sam, 2026-11-25), behind GameSetup::deals: Gold in Peace, Alliance and Open Borders offers either way, Gold gifts to any met empire not at War, and Open Borders as a third treaty. The save shape gains optional fields; off, nothing changes.
-/// 63: City upkeep: an empire's first six cities are free; past that each city it owns costs (cities - 6) Gold a turn, shown as "City upkeep (cities beyond 6)" in the Gold breakdown. The save shape is unchanged.
+/// 63: City upkeep: an empire with up to six cities pays nothing; past that every city it owns (the first six too) costs (cities - 6) Gold a turn, shown as "City upkeep (free up to 6 cities)" in the Gold breakdown. The save shape is unchanged.
 pub const RULES_VERSION: u32 = 63;
 pub mod scenario;
 pub mod scoring;
