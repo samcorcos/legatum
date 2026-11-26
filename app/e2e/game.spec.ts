@@ -174,12 +174,12 @@ test('Online: host in one browser, a guest joins from the game list, both Ready 
   await expect(guest.getByTestId('online-seat-0')).toContainText('online');
   expect(await host.evaluate(() => {
     const s = (window as unknown as { legatum: typeof import('../src/store').useGame }).legatum.getState();
-    return s.views?.[s.seat]?.ai_alliances;
-  })).toBe(true);
+    return s.views?.[s.seat]?.ai_alliances ?? false;
+  })).toBe(false); // Teams set in the lobby are the only starting partnerships.
   expect(await guest.evaluate(() => {
     const s = (window as unknown as { legatum: typeof import('../src/store').useGame }).legatum.getState();
-    return s.views?.[s.seat]?.ai_alliances;
-  })).toBe(true);
+    return s.views?.[s.seat]?.ai_alliances ?? false;
+  })).toBe(false);
 
   // Team pings travel through the host to the other browser.
   expect(await host.evaluate(() => {
