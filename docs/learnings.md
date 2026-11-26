@@ -57,6 +57,7 @@ To find the full entry for a line, search `docs/learnings/` for the words in the
 - Compare against current master, not the base the branch started from. A rule or opponent landing moves the benchmark without any seat-AI change. [2026-09, 2026-10]
 - A benchmark opponent must first reproduce the result it stands in for. [2026-09]
 - Terrain chunks are painted a stage per frame, and the map redraws only when a chunk lands, because on a CPU-drawn canvas one chunk is 90 to 200 ms and Chrome queues canvas calls until the canvas is read; drop the chunk in flight whenever its inputs change (`tools/perf/terrain-fill.cjs`). [2026-11]
+- The AI seats plan a seat at a time in idle callbacks while the player plans (`Session::plan_ahead`, local web game only: never on a session whose `ai_orders` the host or sims call), and the autosave is written after the new turn's first frame, so End Turn is no longer one 130-300 ms task; the game played is identical. [2026-11]
 - Cloud-container timings vary about 6% run to run; compare base and head built side by side, interleaved, best of three (`tools/perf/lean_check.py`). [2026-11]
 - Sim JSON reports are committed only as `.md` plus `gzip -9` JSON; raw `docs/sim-results/*.json` is gitignored. Run logs have leaked account details into git: scrub before committing. [2026-09, 2026-11]
 - Measure faction identity per faction, never in aggregate (pillar 8 is about the best and worst faction). [2026-10]

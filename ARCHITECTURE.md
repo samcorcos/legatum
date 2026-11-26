@@ -76,7 +76,7 @@ Orders are simultaneous: nobody acts "first", and each unit, city or research sl
 2. The host adds human orders to the resulting `OrderMap`.
 3. `Session::step(&orders)` calls `resolve_turn`, replaces the state and appends to the optional recording.
 
-The WASM `Game` type in `crates/wasm/src/lib.rs` wraps a `Session` for JavaScript. Its `end_turn_json` validates that the submitted orders belong to human seats, adds AI orders, resolves the turn, and returns the events each human seat is allowed to see (`crates/core/src/event_visibility.rs` filters the report per viewer) along with the new state hash.
+The WASM `Game` type in `crates/wasm/src/lib.rs` wraps a `Session` for JavaScript. Its `end_turn_json` validates that the submitted orders belong to human seats, adds AI orders (those `Game::plan_ahead` already planned, one seat per call while the player plans in the local web game, and a plan of the rest; the orders and the resulting state are the same however many were planned ahead), resolves the turn, and returns the events each human seat is allowed to see (`crates/core/src/event_visibility.rs` filters the report per viewer) along with the new state hash.
 
 ## Determinism
 

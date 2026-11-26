@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CACHE_SLACK, MAX_CHUNKS, cacheLimit, evictionPlan, fallbackLevels, showLanded, stageFits, type CacheEntry } from './chunkCache';
+import { CACHE_SLACK, MAX_CHUNKS, cacheLimit, evictionPlan, fallbackLevels, gestureLevel, showLanded, stageFits, type CacheEntry } from './chunkCache';
 
 const entry = (key: string, level: number, used: number, pinned = false): CacheEntry => ({ key, level, used, pinned });
 
@@ -104,5 +104,23 @@ describe('showing chunks painted between frames', () => {
     expect(showLanded(true, true, 60, 200)).toBe(false);
     expect(showLanded(true, true, 200, 200)).toBe(true);
     expect(showLanded(false, true, 10, 200)).toBe(true);
+  });
+});
+
+describe('the level a zoom gesture moves to once the held one no longer fits', () => {
+  it('stays until the held level is complete', () => {
+    expect(gestureLevel(2, 6, 3)).toBe(2);
+  });
+
+  it('zooming in goes straight toward the wanted level, as far as the old one can stand in', () => {
+    expect(gestureLevel(2, 4, 0)).toBe(4);
+    expect(gestureLevel(2, 8, 0)).toBe(5);
+    // The level left behind is still a stand-in for the one arrived at.
+    expect(fallbackLevels(gestureLevel(2, 8, 0), [2], 0, 9)).toContain(2);
+  });
+
+  it('zooming out goes to the wanted level at once', () => {
+    expect(gestureLevel(7, 1, 0)).toBe(1);
+    expect(fallbackLevels(1, [7], 0, 9)).toContain(7);
   });
 });
