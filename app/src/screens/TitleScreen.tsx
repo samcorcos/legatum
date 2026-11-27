@@ -347,7 +347,7 @@ function MultiplayerMenu({ hostSave, onBack }: { hostSave: SaveFile | null; onBa
                       else void hostOnline();
                     }}
                   />
-                  <span className="mp-hint">{codeNote ?? 'Friends type this code to take a seat.'}</span>
+                  <span className="mp-hint">{codeNote ?? (code ? 'Friends type this code to take a seat.' : 'Add a code if you want to lock your game.')}</span>
                 </label>
                 <div className="mp-door-fill" />
                 {hostSave ? (

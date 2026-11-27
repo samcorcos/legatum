@@ -26,7 +26,7 @@ export function OnlineLobbyScreen() {
           <button className="btn quiet" onClick={() => goto('title')}>
             ← Back
           </button>
-          <h2>Open games</h2>
+          <h2>Hosted games</h2>
           <div />
         </div>
         <p className="setup-lede">Pick a game to join. The list updates by itself.</p>

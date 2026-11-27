@@ -36,7 +36,6 @@ export function InviteCard({ room, code }: { room: string; code: string | null }
   return (
     <section className="invite-card" aria-labelledby="invite-name">
       <div className="invite-id">
-        <div className="invite-kicker">Invite friends</div>
         <div id="invite-name" className="invite-name">{listedRoomName(room)}</div>
       </div>
       <div className="invite-how">

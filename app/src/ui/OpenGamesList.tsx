@@ -17,7 +17,7 @@ type Load = { kind: 'loading' } | { kind: 'ready'; rooms: RoomInfo[] } | { kind:
 
 /**
  * The games other players are hosting, each with its own Join button. The list refreshes by itself while it is shown.
- * The Open games screen shows every game; the Multiplayer menu's Join door shows the first few (`limit`) in a
+ * The Hosted games screen shows every game; the Multiplayer menu's Join door shows the first few (`limit`) in a
  * compact form and reports how many there are, so its Join Game button can say so.
  */
 export function OpenGamesList({ limit, onCount }: { limit?: number; onCount?: (n: number | null) => void }) {

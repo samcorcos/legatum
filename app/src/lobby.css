@@ -384,14 +384,7 @@ select.lobby-select option {
   border: var(--frame-pad) solid transparent;
   border-image: var(--frame-image);
 }
-.invite-kicker {
-  font: 600 10px/1 var(--sans);
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--kicker-color);
-}
 .invite-name {
-  margin-top: 4px;
   font: var(--display-weight) 30px/1.05 var(--display);
   /* Lining figures: the number tells two games apart, and an old-style 0 reads as o. */
   font-variant-numeric: lining-nums;
