@@ -10,6 +10,12 @@ import { useGame } from '../store';
 import type { PlayerView } from '../types';
 import { GUIDE_SECTIONS, GuideContent } from './GuideContent';
 
+it('distinguishes routine plans from situational advice', () => {
+  const controls = renderToStaticMarkup(<GuideContent section="controls" />);
+  expect(controls).toContain('Its routine recommendations draw on a strong AI empire’s plan; situational tips respond to what you can see.');
+  expect(controls).toContain('Ongoing situations may prompt another tip later, with a longer wait each time.');
+});
+
 it('explains Peace, Alliance and War with Gold costs from the core snapshot', () => {
   const start = renderToStaticMarkup(<GuideContent section="start" />);
   const turns = renderToStaticMarkup(<GuideContent section="turns" />);

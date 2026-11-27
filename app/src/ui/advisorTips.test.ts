@@ -34,7 +34,7 @@ describe('situational tips', () => {
     const plan: Order[] = [{ type: 'SetProduction', city: city.id, item: build }];
     const people = ownerName(v, r.id);
     expect(strategyTip(v, {}, false, null, [], null, {}, events, plan)).toEqual({
-      id: `tip:war:${city.id}`, title: `${people} declared war`, why: `${people} has 0 military units near ${city.name}.`,
+      id: `tip:war:${city.id}`, title: `${people} declared war`, why: `${people} declared war on your team. Defend ${city.name}.`,
       steps: [{ instruction: `Click ${city.name}.`, target: { kind: 'tile', hex: city.pos } },
         { instruction: `Build ${itemName(build, v.players.find((p) => p.id === v.me)?.faction)}.`, target: { kind: 'control', name: 'build', value: itemKey(build) } }],
       current: 0, acknowledge: true, tip: true,
@@ -81,7 +81,7 @@ describe('situational tips', () => {
     v.diplomacy.relations = [{ ...v.diplomacy.relations[0], a: v.team, b: r.team, state: 'War' }];
     unit.hp = 39;
     const name = itemName({ kind: 'Unit', unit: unit.kind }, v.players.find((p) => p.id === v.me)?.faction);
-    expect(strategyTip(v, {})).toEqual({ id: `tip:heal:${unit.id}`, title: `Pull your ${name} back to heal`,
+    expect(strategyTip(v, {})).toEqual({ id: `tip:heal:${unit.id}`, title: `Heal your ${name}`,
       why: 'Units heal faster in your territory. A badly hurt unit can die in one attack.',
       steps: [{ instruction: `Click your ${name}.`, target: { kind: 'tile', hex: unit.pos } },
         { instruction: `Use Heal, or move toward ${mine(v).name}.`, target: { kind: 'control', name: 'heal' } }],
@@ -91,6 +91,7 @@ describe('situational tips', () => {
     v.turn += TIP_COOLDOWN.heal;
     expect(strategyTip(v, { [`heal:${unit.id}`]: 20, '#heal': 1 })?.id).toBe(`tip:heal:${unit.id}`);
     unit.resting_heal = { total: 0, parts: [] };
+    expect(strategyTip(v, {})?.title).toBe(`Pull your ${name} back to heal`);
     expect(strategyTip(v, {})?.steps[1]).toEqual({ instruction: `Right-click ${mine(v).name} to move there.`, target: { kind: 'tile', hex: mine(v).pos } });
     unit.resting_heal = null;
     expect(strategyTip(v, {})?.steps[1]).toEqual({ instruction: `Right-click ${mine(v).name} to move there.`, target: { kind: 'tile', hex: mine(v).pos } });
@@ -103,6 +104,19 @@ describe('situational tips', () => {
     unit.occupation_lock = null;
     v.diplomacy.relations[0].state = 'Peace';
     expect(strategyTip(v, {})?.id).not.toBe(`tip:heal:${unit.id}`);
+  });
+
+  it('chooses a Food building from its completion bonus, not its core build preview', async () => {
+    const v = await game();
+    const city = mine(v), detail = city.detail!;
+    const granary = detail.options.find((o) => o.item.kind === 'Building' && o.item.building === 'Granary')!;
+    const previewFood = granary.yields.total.food;
+    city.population = Math.max(2, Math.floor(previewFood / 2) + 1);
+    detail.yields = { ...detail.yields, total: { ...detail.yields.total, food: previewFood } };
+    expect(granary.yields.total.food).toBe(detail.yields.total.food);
+    expect(strategyTip(v, {})).toMatchObject({ id: `tip:food:${city.id}`,
+      steps: [{ instruction: `Click ${city.name}.`, target: { kind: 'tile', hex: city.pos } },
+        { instruction: 'Build Granary.', target: { kind: 'control', name: 'build', value: 'b:Granary' } }] });
   });
 
   it('points a starving city at an available Food build and stops when its net Food recovers', async () => {

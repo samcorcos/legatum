@@ -82,7 +82,8 @@ function warTip(v: PlayerView, touch: boolean, selection: { kind: string; id: nu
   const build = item?.kind === 'Unit' && UNIT_STATS[item.unit].military && city.detail?.options.some((o) => itemKey(o.item) === itemKey(item) && !o.resource_blocker) ? item : null;
   const fallback = city.detail?.options.find((o) => o.item.kind === 'Unit' && UNIT_STATS[o.item.unit].military && !o.resource_blocker)?.item;
   return { key: `war:${city.id}`, kind: 'war', title: closest ? `Defend ${city.name}` : `${people} declared war`,
-    why: `${people} has ${count} military ${count === 1 ? 'unit' : 'units'} near ${city.name}.`,
+    why: count === 0 ? `${people} declared war on your team. Defend ${city.name}.`
+      : `${people} has ${count} military ${count === 1 ? 'unit' : 'units'} near ${city.name}.`,
     current: selection?.kind === 'city' && selection.id === city.id ? 1 : 0,
     steps: [{ instruction: `${click(touch)} ${city.name}.`, target: tile(city.pos) },
       { instruction: build ? `Build ${itemName(build, v.players.find((p) => p.id === v.me)?.faction)}.` : 'Build a military unit.',
@@ -97,7 +98,7 @@ function healTip(v: PlayerView, touch: boolean, selection: { kind: string; id: n
   const name = itemName({ kind: 'Unit', unit: unit.kind }, v.players.find((p) => p.id === v.me)?.faction);
   const city = nearest(ownCities(v), unit.pos);
   const canHealHere = (unit.resting_heal?.total ?? 0) > 0;
-  return { key: `heal:${unit.id}`, kind: 'heal', title: `Pull your ${name} back to heal`,
+  return { key: `heal:${unit.id}`, kind: 'heal', title: canHealHere ? `Heal your ${name}` : `Pull your ${name} back to heal`,
     why: 'Units heal faster in your territory. A badly hurt unit can die in one attack.',
     current: selection?.kind === 'unit' && selection.id === unit.id ? 1 : 0,
     steps: [{ instruction: `${click(touch)} your ${name}.`, target: tile(unit.pos) },
@@ -117,10 +118,9 @@ function foodTip(v: PlayerView, touch: boolean, selection: { kind: string; id: n
     const yields = changed ? producing ? selected?.yields ?? detail.yields : detail.idle_yields ?? detail.yields : detail.yields;
     if (yields.total.food - 2 * city.population >= 0) continue;
     const faction = v.players.find((p) => p.id === v.me)?.faction;
-    const option = detail.options.find((o) => o.item.kind === 'Building' && faction && (buildingStatsFor(faction, o.item.building).yields.food ?? 0) > 0
-      && o.yields.total.food > yields.total.food)
+    const option = detail.options.find((o) => o.item.kind === 'Building' && faction && (buildingStatsFor(faction, o.item.building).yields.food ?? 0) > 0)
       ?? detail.options.find((o) => o.item.kind === 'Project' && o.item.project === 'Food' && o.yields.total.food > yields.total.food)
-      ?? detail.options.find((o) => o.item.kind === 'Improvement' && o.yields.total.food > yields.total.food);
+      ?? detail.options.find((o) => o.item.kind === 'Improvement' && (o.improvement?.gain.food ?? 0) > 0);
     if (!option) continue;
     const name = itemName(option.item, v.players.find((p) => p.id === v.me)?.faction);
     return { key: `food:${city.id}`, kind: 'food', title: `${city.name} is starving`,
