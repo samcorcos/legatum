@@ -3716,3 +3716,68 @@ fn research_goal_fills_an_empty_queue_across_eras_and_clears_once_known() {
     let clear = Order::SetResearchGoal { tech: None };
     assert!(validate_city_order(&s, P0, &clear).is_ok());
 }
+
+#[test]
+fn india_revenue_office_build_card_forecasts_the_gold_a_court_stops_keeping() {
+    let mut s = test_game(&[(Faction::India, 0)]);
+    let capital = found(&mut s, P0, at(5, 5));
+    let office = found(&mut s, P0, at(12, 5));
+    let court = found(&mut s, P0, at(5, 12));
+    city_mut(&mut s, office)
+        .buildings
+        .insert(BuildingKind::Market);
+    // A Gold wonder (not a Market-family building, which would count as an Office) gives the
+    // court some Gold to keep.
+    city_mut(&mut s, court)
+        .buildings
+        .insert(BuildingKind::EiffelTower);
+
+    let kept = economy::city_totals(&s, city(&s, court)).gold;
+    assert!(kept > 0);
+    // The forecast matches the Gold the court holds back today: with the remittance drawback
+    // off, the empire's income rises by exactly that amount (the Office city already sends all).
+    let with_court = economy::player_income(&s, P0).gold.total;
+    s.setup
+        .rule_experiments
+        .faction_rules_off
+        .insert(FactionRule::IndiaRemittance);
+    assert_eq!(economy::player_income(&s, P0).gold.total - with_court, kept);
+    s.setup
+        .rule_experiments
+        .faction_rules_off
+        .remove(FactionRule::IndiaRemittance);
+    assert_eq!(
+        economy::revenue_office_remittance_gain(&s, city(&s, court)),
+        kept
+    );
+    // No forecast for the capital (it keeps all its Gold) or a city that already has an Office.
+    assert_eq!(
+        economy::revenue_office_remittance_gain(&s, city(&s, capital)),
+        0
+    );
+    assert_eq!(
+        economy::revenue_office_remittance_gain(&s, city(&s, office)),
+        0
+    );
+    let view = crate::view::player_view(&s, P0);
+    let own = |id| view.cities.iter().find(|c| c.id == id).unwrap();
+    assert_eq!(own(court).revenue_office_remittance_gain, Some(kept));
+    assert_eq!(own(capital).revenue_office_remittance_gain, None);
+
+    s.setup
+        .rule_experiments
+        .faction_rules_off
+        .insert(FactionRule::IndiaOfficeFull);
+    assert_eq!(
+        economy::revenue_office_remittance_gain(&s, city(&s, court)),
+        kept / 2
+    );
+    s.setup
+        .rule_experiments
+        .faction_rules_off
+        .insert(FactionRule::IndiaRemittance);
+    assert_eq!(
+        economy::revenue_office_remittance_gain(&s, city(&s, court)),
+        0
+    );
+}

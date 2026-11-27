@@ -509,6 +509,7 @@ impl ViewBuilder {
             has_workshop: false,
             has_air_defence: false,
             revenue_office_upkeep_savings: None,
+            revenue_office_remittance_gain: None,
             occupation_lock: None,
             construction: None,
             walls_building: false,
