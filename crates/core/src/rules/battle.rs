@@ -973,7 +973,7 @@ fn kill_participants(
 }
 
 /// One population per slain military unit per participating Aztec empire, never per attacker.
-/// Economic faction rules belong to the owner, not a hired Company's origin.
+/// Economic faction rules belong to the owner.
 #[allow(clippy::too_many_arguments)]
 fn flower_wars(
     state: &mut GameState,
@@ -1462,7 +1462,9 @@ fn end_orders_into_city(state: &mut GameState, city_pos: Hex, captor: PlayerId) 
 }
 
 /// A melee attacker took the city: it changes hands and hostile military units are destroyed.
-/// Civilians remain for movement's capture pass.
+/// Civilians remain for movement's capture pass. Taking a Byzantium's capital takes every other
+/// city of that empire too, unless its Heir shelters in one (`buy_city::capital_fall`, the fall of
+/// Constantinople).
 pub fn capture_city(
     state: &mut GameState,
     city: CityId,
@@ -1475,6 +1477,48 @@ pub fn capture_city(
     if captor.is_barbarian() {
         return;
     }
+    let fall = crate::buy_city::capital_fall(state, city, captor);
+    capture_one(state, city, captor, events);
+    match fall {
+        None => {}
+        Some(crate::buy_city::CapitalFall::Refuge {
+            byz,
+            capital,
+            refuge,
+        }) => {
+            if let Some(c) = state.cities.get_mut(&refuge).filter(|c| c.owner == byz) {
+                c.is_capital = true;
+            }
+            events.push(Event::HeirRefuge {
+                player: byz,
+                captor,
+                capital,
+                refuge,
+            });
+        }
+        Some(crate::buy_city::CapitalFall::Collapse {
+            byz,
+            capital,
+            cities,
+        }) => {
+            events.push(Event::CapitalFell {
+                player: byz,
+                captor,
+                capital,
+                cities: cities.clone(),
+            });
+            for other in cities {
+                // Each through the ordinary capture path, in city-id order.
+                if state.cities.get(&other).is_some_and(|c| c.owner == byz) {
+                    capture_one(state, other, captor, events);
+                }
+            }
+        }
+    }
+}
+
+/// One city's capture (`capture_city` without the fall of Constantinople).
+fn capture_one(state: &mut GameState, city: CityId, captor: PlayerId, events: &mut Vec<Event>) {
     // Pay once per city and captor, including a Celtic capture that immediately sacks it.
     let captive_from = if greece_captive_available(state, city, captor) {
         let from = state.cities[&city].owner;

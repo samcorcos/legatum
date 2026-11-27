@@ -1,0 +1,104 @@
+// @vitest-environment happy-dom
+// Byzantium's Buy a city against the real engine: the view's price reaches the city panel, Make an offer queues
+// `BuyCity`, the turn starts the offer, and the seller reads the countdown and what it can do.
+import { existsSync, readFileSync } from 'node:fs';
+import { fileURLToPath, URL as NodeURL } from 'node:url';
+import { act } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { WasmClient } from '../wasmClient';
+import { coreFixture } from './coreFixture';
+import { buyCityState, PYLOS_ESCROW } from './buyCityState';
+import { useGame } from '../store';
+import { CityBuy, buyIsPrimary } from '../ui/CityBuy';
+import { contextFromViews, formatEvents } from '../format';
+import { offerChip } from '../buyCity';
+import type { PlayerView } from '../types';
+
+const available = existsSync(fileURLToPath(new NodeURL('../wasm-pkg/legatum.js', import.meta.url)));
+let makeCore: () => WasmClient;
+let container: HTMLDivElement, root: Root;
+
+describe.skipIf(!available)('Buy a city', () => {
+  beforeAll(async () => {
+    const mod = await import(/* @vite-ignore */ '../wasm-pkg/legatum.js');
+    await mod.default({ module_or_path: readFileSync(fileURLToPath(new NodeURL('../wasm-pkg/legatum_bg.wasm', import.meta.url))) });
+    makeCore = () => new WasmClient(mod.Game);
+  });
+  beforeEach(() => {
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    container = document.body.appendChild(document.createElement('div')); root = createRoot(container);
+    useGame.setState(useGame.getInitialState(), true);
+  });
+  afterEach(() => { act(() => root.unmount()); container.remove(); vi.unstubAllGlobals(); });
+
+  const seat = (view: PlayerView) => useGame.setState({ views: [view], humans: [0], orders: [[]], errors: [[]], ready: [false], seat: 0 });
+
+  it('Byzantium sees the price with every line, queues the offer, and the turn starts it in public', () => {
+    const fx = buyCityState('buyer');
+    const core = makeCore(); core.load(coreFixture(fx.state));
+    const v = core.view(0);
+    const buy = v.city_buys!.find((b) => b.city === fx.pylos && b.buyer === 0)!;
+    expect(buy.blocker ?? null).toBeNull();
+    expect(buy.breakdown.parts.reduce((n, [, x]) => n + x, 0)).toBe(buy.price);
+    expect(buy.breakdown.parts.map(([l]) => l).join(' | ')).not.toMatch(/armed|Base price/);
+    // Its capital is never for sale, and the fall is public.
+    expect(v.byzantine_capitals).toEqual([{ player: 0, capital: fx.constantinople }]);
+
+    seat(v);
+    const pylos = v.cities.find((c) => c.id === fx.pylos)!;
+    expect(buyIsPrimary(v, pylos, [])).toBe(true);
+    act(() => root.render(<CityBuy view={v} city={pylos} />));
+    const button = container.querySelector<HTMLButtonElement>('[data-testid=buy-city-offer]')!;
+    expect(button.textContent).toBe(`Make an offer (${buy.price} Gold)`);
+    expect(button.className).toContain('primary');
+    // The price's lines are on its hover (a Tip around the title), not in the panel: title, bids, button, then the rule.
+    expect(container.querySelector('.city-buy .bd')).toBeNull();
+    expect(container.querySelector('.city-buy-title')!.textContent).toContain(`Buy for ${buy.price}`);
+    expect(container.querySelector('.city-buy-rule')!.textContent).toContain('you lose 10% of your offer');
+    act(() => button.click());
+    expect(useGame.getState().orders[0]).toEqual([{ type: 'BuyCity', city: fx.pylos }]);
+    expect(container.querySelector('[data-testid=buy-city-queued]')!.textContent).toContain('Queued: your offer for Pylos');
+    expect(buyIsPrimary(v, pylos, useGame.getState().orders[0])).toBe(false);
+
+    // The bid choices: each says what stops it; picking +50% re-queues the offer at that bid.
+    const bids = buy.bids!;
+    expect(bids.map((b) => b.percent)).toEqual([100, 150, 200, 300]);
+    expect(container.querySelector('[data-testid=buy-city-bid-100]')!.textContent).toContain('Stopped by 1 more military unit');
+    const half = bids.find((b) => b.percent === 150)!;
+    expect(half.guards_to_stop).toBeGreaterThan(1);
+    act(() => container.querySelector<HTMLButtonElement>('[data-testid=buy-city-bid-150]')!.click());
+    expect(useGame.getState().orders[0]).toEqual([{ type: 'BuyCity', city: fx.pylos, gold: half.gold }]);
+    expect(container.querySelector('[data-testid=buy-city-offer]')!.textContent).toContain(`Make an offer (${half.gold} Gold)`);
+
+    const before1 = core.view(1);
+    const result = core.endTurn({ 0: [{ type: 'BuyCity', city: fx.pylos, gold: half.gold }] });
+    const made = result.events.find((e) => e.type === 'CityOfferMade');
+    expect(made).toMatchObject({ city: fx.pylos, buyer: 0, seller: 1, escrow: half.gold, price: buy.price });
+    const after0 = core.view(0), after1 = core.view(1);
+    expect(after0.city_offers).toEqual([expect.objectContaining({ city: fx.pylos, buyer: 0, seller: 1, escrow: half.gold, turns_left: 3 })]);
+    // The bid still holds against as many units as it did, or more if a guard left meanwhile.
+    expect(after0.city_offers![0].guards_to_stop).toBeGreaterThanOrEqual(half.guards_to_stop);
+    expect(offerChip(after1, fx.pylos)).toBe('Being bought: 3 turns');
+    expect(offerChip(after0, fx.pylos)).toBe('Being bought: 3 turns');
+    const sellerLines = formatEvents(result.events, contextFromViews(before1, after1)).map((l) => l.text);
+    expect(sellerLines.some((t) => t.startsWith('Byzantium will buy Pylos for'))).toBe(true);
+  });
+
+  it('the seller sees the countdown, the Gold offered and what it can do on its own city', () => {
+    const fx = buyCityState('seller');
+    const core = makeCore(); core.load(coreFixture(fx.state));
+    const v = core.view(0);
+    expect(v.city_offers).toEqual([{ city: fx.pylos, buyer: 1, seller: 0, escrow: PYLOS_ESCROW, ends_turn: 14, turns_left: 3, price_now: expect.any(Number), guards_to_stop: expect.any(Number), walls_to_stop: expect.any(Number) }]);
+    const stop = v.city_offers![0].guards_to_stop!;
+    expect(stop).toBeGreaterThan(0);
+    seat(v);
+    const pylos = v.cities.find((c) => c.id === fx.pylos)!;
+    act(() => root.render(<CityBuy view={v} city={pylos} />));
+    expect(container.querySelector('[data-testid=city-offer]')!.textContent).toContain('Byzantium is buying Pylos: it changes hands at the end of turn 14');
+    expect(container.querySelector('[data-testid=city-offer]')!.textContent).toContain('Byzantium pays you 600 Gold for Pylos at the end of turn 14. To keep it, move');
+    expect(container.querySelector('[data-testid=city-offer-declare-war]')!.textContent).toBe('Declare War…');
+    expect(container.querySelector('[data-testid=city-offer]')!.textContent).toContain(`${stop} more military unit`);
+    expect(container.querySelector('[data-testid=buy-city-offer]')).toBeNull();
+  });
+});

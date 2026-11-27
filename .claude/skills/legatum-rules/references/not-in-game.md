@@ -22,14 +22,14 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
 | Road-laying units / tile-by-tile road building | **Absent** — roads come only from the Yam Relay Station (the Courier Hall, §8) and the Roadworks building (`roads::extend_roadworks`) |
 | Military Engineer, Forts | **Removed 2026-10-22** — Siege is a Gold upgrade on an ordinary unit (§4); units laying roads or building Forts are roadmap only |
 | City-states | **Absent** |
-| Tech trading | **Absent** — only passive diffusion (−10% per other living empire that knows it, max −50%), which a closed Japan (Sakoku, §8) does not get |
+| Tech trading | **Absent** — only passive diffusion (−10% per other living empire that knows it, max −50%); a closed country (Sakoku) gets none |
 | Tech boosts (Eurekas) | **Removed 2026-10-17** — a technology's price depends only on the table and diffusion |
-| Endless / repeatable technologies | **Absent** — after the 40th technology Science converts to Gold, Food or Production at 50% (Eras and technologies) |
+| Endless / repeatable technologies | **Absent** — after all technologies are known, Science converts to Gold, Food or Production at 50% (Eras and technologies) |
 | Relocating/moving a city | **Absent** |
 | Influence (or any culture-like currency) | **Removed 2026-10-03** — borders grow per city (§3); treaties cost Gold (§5) |
 | Pacts, notice periods, hidden trust, call commitments | **Removed 2026-10-03** — Peace, Alliance or War; betrayal is one visible record (§5) |
 | Alliance signing fee, free shared wars | **Removed** — Alliances cost Gold per turn only (2026-10-31); allies defend at once and answer an ally's offensive war by choice (calls to arms, 2026-10-23, §5) |
-| Bought peace / tribute | **Removed 2026-10-22** — Byzantium hires Mercenary Companies instead (§5) |
+| Bought peace / tribute | **Removed 2026-10-22** — Mercenary Companies replaced it, and were retired 2026-11-26 for Buy a city |
 | Game speeds (Quick) and the opening price ramp | **Removed** (2026-10-10 and 2026-10-22) — one pace, listed prices (§3 Default pacing) |
 | Celtic homeland damage and hidden hunters | **Removed 2026-10-23** — every unit on a seen tile is seen (§7) |
 | Multi-step/attack-then-move orders | **Absent** — one order/unit/turn; a move onto an enemy fuses into one attack and ends the turn. The Keshig picks a shot or a charge each turn; no shoot-and-move, no hit-and-run |

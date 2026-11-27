@@ -19,7 +19,6 @@ import {
   objectiveCloseLines,
   settlerSiteLines,
   upkeepText,
-  plainOrderError,
   type ReportContext,
 } from './format';
 
@@ -883,10 +882,6 @@ describe('objectiveCloseLines', () => {
     // The next turn it is still one away: the line does not repeat.
     expect(objectiveCloseLines(after, after)).toEqual([]);
   });
-});
-
-it('says a full military-unit cap in words, not a fraction', () => {
-  expect(plainOrderError('Astra cannot produce Spearman: Levies full: 3 of 2')).toBe("Astra can't train a Spearman: you have 3 military units and room for 2.");
 });
 
 it('the Royal Tomb standing wears its engraved emblem on the report line, for its owner and for rivals', () => {

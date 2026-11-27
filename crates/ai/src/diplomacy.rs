@@ -640,6 +640,21 @@ impl Planner<'_> {
                 handled.insert(call.ally);
             }
         }
+        // Peace we sign this turn: an Alliance offer to a team still at War with one of these
+        // would carry us straight back into that guaranteed Peace, so the offer could never be
+        // accepted (the core withdraws it at the boundary). Don't make it.
+        let peace_now: BTreeSet<TeamId> = v
+            .diplomacy
+            .proposals
+            .iter()
+            .filter(|p| p.kind == TreatyKind::Peace)
+            .filter(|p| {
+                decisions.iter().any(|o| {
+                    matches!(o, Order::RespondToProposal { proposal, accept: true, .. } if *proposal == p.id)
+                })
+            })
+            .map(|p| v.diplomacy.counterparty(p, v.team))
+            .collect();
         let mut offers = Vec::new();
         let mut declarations = Vec::new();
         // Deals (rules 61): Open Borders partners that have become a threat.
@@ -696,6 +711,11 @@ impl Planner<'_> {
                 }
                 Order::ProposeTreaty { to, kind, .. } if !handled.contains(&to) => {
                     if oath_target == Some(to) && kind == TreatyKind::Alliance {
+                        continue;
+                    }
+                    if kind == TreatyKind::Alliance
+                        && peace_now.iter().any(|&enemy| v.teams_at_war(to, enemy))
+                    {
                         continue;
                     }
                     if (kind == TreatyKind::Alliance && !alliance_acquainted(v))

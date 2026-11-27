@@ -296,7 +296,6 @@ impl Planner<'_> {
                         || u.pos.distance(c.pos) > DOOR_GUARD_RADIUS
                         || !composition::is_combat(u.kind)
                         || self.has_acted(u.id)
-                        || u.contract_until.is_some()
                         || u.upgrade_supply_blocker.is_some()
                         || self.door_engaged(u)
                     {

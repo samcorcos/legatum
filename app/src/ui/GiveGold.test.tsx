@@ -47,7 +47,14 @@ it('gives Gold to a teammate only, named as the empire rows name it, with the fo
   const orders = useGame.getState().orders[0];
   expect(orders).toEqual([{ type: 'GiveGold', to: 1, amount: 50 }]);
   expect(describeOrder(orders[0], view)).toBe('Give 50 Gold to the Aztecs');
-  expect(container.querySelector('[data-testid=gift-queued]')!.textContent).toContain('give 50 Gold to the Aztecs');
+  const ready = container.querySelector('[data-testid=gift-queued]')!;
+  expect(ready.textContent?.trim()).toBe('Gift: you give 50 Gold to the Aztecs when you end the turn. Cancel');
+  expect(ready.querySelector('strong')?.textContent).toBe('Gift:');
+  expect(ready.querySelector('.diplomacy-queued-check')).toBeTruthy();
+  expect(document.activeElement).toBe(ready.querySelector('button'));
+  act(() => (ready.querySelector('button') as HTMLButtonElement).click());
+  expect(useGame.getState().orders[0]).toEqual([]);
+  expect(container.querySelector('[data-testid=give-gold]')).toBeTruthy();
 });
 
 it('an empty field stays empty and an amount out of range is an alert', () => {

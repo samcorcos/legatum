@@ -134,7 +134,7 @@ for (const size of sizes) for (const look of ['atlas'] as const) test.describe(`
     const box = overlayBox(page, 'Yields');
     if (size.touch) await box.tap(); else await box.click();
     await expect(box).toBeChecked();
-    await expect(page.locator('.lens-yield-line')).toContainText('1 icon per point');
+    await expect(page.locator('.lens-yield-line')).toContainText('One icon per point');
     for (const lens of ['Settle', 'Default']) {
       await openLenses();
       await assertDockClear();

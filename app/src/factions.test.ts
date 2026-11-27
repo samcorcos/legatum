@@ -17,7 +17,7 @@ describe('faction content and setup', () => {
     const revenueOffice = itemDescription(FACTION_PIECES.India.item, 'India');
     expect(revenueOffice).toContain('60 Production');
     expect(revenueOffice).toContain('+3 Gold');
-    expect(revenueOffice).toContain('sends you all its Gold');
+    expect(revenueOffice).toContain('60 Production, +3 Gold');
     const legionary = itemDescription(FACTION_PIECES.Byzantium.item, 'Byzantium');
     expect(legionary).toContain('162 Production');
     expect(legionary).toContain('84 Gold');
@@ -77,7 +77,6 @@ describe('faction content and setup', () => {
     expect(FACTION_INFO.Celts.goal).toContain('the territory of each Celtic city');
     expect(FACTION_INFO.Sparta.weakness).toContain('50% more Production');
     expect(FACTION_INFO.Byzantium.goal).toContain('Whoever holds him scores 2 VP');
-    expect(FACTION_INFO.Byzantium.weakness).toContain('at most one military unit per city, plus one');
     expect(FACTION_INFO.Switzerland.ability).toContain('Each city earns +1 Gold for every 2 population. Every 100 Gold in your treasury earns +1 Gold a turn in interest.');
     expect(FACTION_INFO.Switzerland.rule).not.toMatch(/pair|max 5|up to \+5|per 100 Gold held/i);
     expect(FACTION_INFO.India.weakness).toContain('Non-capital cities send no Gold');
@@ -151,10 +150,5 @@ describe('faction-accurate items', () => {
     expect(availableToFaction('Byzantium', library)).toBe(true);
     expect(greatWorkRequirement('GreatLibrary')).toEqual(['Library', 1]);
     expect(greatWorkRequirement('RoyalArsenal')).toEqual(['Factory', 1]);
-  });
-
-  it('states the Byzantium Company rule from the generated numbers, in plain words', () => {
-    expect(FACTION_INFO.Byzantium.ability).toBe('Hire a Company: the special unit of an empire you have met and are not at War with, as that empire fields it. You pay its Production cost in Gold, and the seller keeps it.');
-    expect(FACTION_INFO.Byzantium.weakness).toBe("Thin levies: you can field at most one military unit per city, plus one more. Aircraft count; Scouts don't. Losing a city never disbands units, but you can't raise new ones until you are back under the limit.");
   });
 });

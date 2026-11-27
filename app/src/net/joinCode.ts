@@ -12,5 +12,5 @@ export function typedJoinCode(raw: string): string {
 /** A short plain note when the host's code cannot be used, else null. An empty box means an open game. */
 export function joinCodeProblem(code: string): string | null {
   if (code === '') return null;
-  return code.length < JOIN_CODE_MIN ? `A join code needs at least ${JOIN_CODE_MIN} letters or digits.` : null;
+  return code.length < JOIN_CODE_MIN ? `A private code needs at least ${JOIN_CODE_MIN} letters or digits.` : null;
 }

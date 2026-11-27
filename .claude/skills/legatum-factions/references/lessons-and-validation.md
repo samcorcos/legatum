@@ -25,7 +25,7 @@ Moved verbatim from SKILL.md on 2026-11-22 (original order kept). The current ru
 Aggregate numbers like "captures per game" mislead: some factions should capture nothing, others should live by conquest. Report per faction, against its identity:
 - Sparta and Mongols: captures per game, and the turn of their first war and first capture.
 - Switzerland: interest earned, Great Works bought, and bounty exposure.
-- Byzantium: Companies hired (per game, kind, seller, Gold paid), Companies alive at expiry, turned barbarian, Gold income against upkeep.
+- Byzantium: the Companies telemetry was removed with the rule (retired 2026-11-26, replaced by Buy a city).
 - India: cluster density, network bonus, Revenue Office coverage and Gold remitted.
 
 India's current AI prices a provincial Revenue Office by the Gold it begins remitting, values the Imperial Diwan as a held goal, researches Currency for both, guards the Diwan's city, targets a rival Diwan for its transferable VP, and avoids queuing an upkeep-paying troop when its treasury has under ten turns of runway.

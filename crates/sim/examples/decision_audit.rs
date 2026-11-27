@@ -378,10 +378,7 @@ fn unit_cat(state: &GameState, seat: PlayerId, unit: UnitId) -> usize {
 fn order_cat(state: &GameState, seat: PlayerId, o: &Order) -> usize {
     match o {
         Order::SetProduction { .. } | Order::SetProductionQueue { .. } => 0,
-        Order::BuyItem { .. }
-        | Order::HireCompany { .. }
-        | Order::UpgradeUnit { .. }
-        | Order::UpgradeSiege { .. } => 7,
+        Order::BuyItem { .. } | Order::UpgradeUnit { .. } | Order::UpgradeSiege { .. } => 7,
         Order::SetResearch { .. } | Order::SetResearchQueue { .. } => 1,
         Order::Action {
             action: Action::ChooseFreeTechs { .. },

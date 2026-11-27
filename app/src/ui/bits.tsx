@@ -61,7 +61,7 @@ export function BreakdownTable({ b, title, unit, plain, signedLabels }: { b: Bre
         // Decadence raises what growth needs: a cost, so it reads as one (red), not as a neutral "+23".
         const cost = isDecadenceLine(label) && v > 0;
         return (
-          <div className="bd-row" key={i}>
+          <div className={`bd-row${v === 0 ? ' muted' : ''}`} key={i}>
             <span className={cost ? 'neg' : ''}>{cost ? `Decadence: growth needs +${v} Food` : (wonderOfLabel(label) ? wonderLineLabel(wonderOfLabel(label)!) : label)}</span>
             <span className={v < 0 || cost ? 'neg' : ''}>{(i === 0 || plain) && v >= 0 && !signedLabels?.includes(label) ? v : signed(v)}</span>
           </div>

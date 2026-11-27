@@ -4,6 +4,7 @@
 import { Star } from '../brand/ornaments';
 import { DECADENCE_FOOD_RULE, POWER_RULE, decadenceCurveText, decadenceRules, type DecadenceRules } from '../data';
 import { Icon } from './bits';
+import { Tip } from './Tip';
 import { sakokuChip, sakokuLine } from '../sakoku';
 import { tombChip, tombPublicLine, tombShort } from '../goalCities';
 import { empireVars } from './vpParts';
@@ -17,10 +18,10 @@ export function CapitalChip({ row, nameOf }: { row: VpRow; nameOf: (e: VpEmpire)
   const title = row.capitalStands
     ? `${who}: an original capital of its own still stands.${detail}`
     : `${who}: every original capital of its own has been taken or razed, so it cannot win by holding the last capital unless it retakes one. It can still win by VP.`;
-  return <span className={`vhc-capital${row.capitalStands ? '' : ' fallen'}`} title={title} data-testid="capital-chip" data-team={row.team} data-stands={row.capitalStands ? 'true' : 'false'}
+  return <Tip hoverOnly content={title}><span className={`vhc-capital${row.capitalStands ? '' : ' fallen'}`} data-testid="capital-chip" data-team={row.team} data-stands={row.capitalStands ? 'true' : 'false'}
     aria-label={`${who}: original capital ${row.capitalStands ? 'standing' : 'fallen'}`}>
     <Star size={9} />{row.capitalStands ? 'Capital' : 'Capital fallen'}
-  </span>;
+  </span></Tip>;
 }
 
 /** A legacy Sakoku scenario's public vow, with its countdown and full rule. */
@@ -30,10 +31,10 @@ export function ClosedChip({ members }: { members: VpEmpire[] }) {
   return <>{closed.map((m) => {
     const st = m.sakoku!;
     const title = `${m.isMe ? 'You have' : `${m.name} has`} closed the country (Sakoku): ${(() => { const l = sakokuLine(st); return l.charAt(0).toLowerCase() + l.slice(1); })()}. While closed it can't declare war or ally, learns nothing from abroad, and nobody may cross its land at Peace.`;
-    return <span key={m.id} className={`vhc-closed${st.holding ? ' holding' : st.left === 0 ? ' blocked' : ''}`} title={title} data-testid="closed-chip" data-owner={m.id}
+    return <Tip key={m.id} hoverOnly content={title}><span className={`vhc-closed${st.holding ? ' holding' : st.left === 0 ? ' blocked' : ''}`} data-testid="closed-chip" data-owner={m.id}
       aria-label={`${m.isMe ? 'Your country is' : `${m.name} is`} closed: ${sakokuLine(st)}`}>
       <Icon name="ui-sakoku" size={11} />{sakokuChip(st)}
-    </span>;
+    </span></Tip>;
   })}</>;
 }
 
@@ -46,10 +47,10 @@ export function TombChip({ members }: { members: VpEmpire[] }) {
     const title = m.isMe
       ? `${tombShort(st)}. ${st.working ? 'None of your cities builds or grows while the work is on.' : 'Paused: your cities build and grow; the count is kept.'}`
       : `${m.name}: ${tombPublicLine(st)}`;
-    return <span key={m.id} className={`vhc-closed vhc-tomb${st.working ? ' working' : ''}`} title={title} data-testid="tomb-chip" data-owner={m.id}
+    return <Tip key={m.id} hoverOnly content={title}><span className={`vhc-closed vhc-tomb${st.working ? ' working' : ''}`} data-testid="tomb-chip" data-owner={m.id}
       aria-label={`${m.isMe ? 'Your' : `${m.name}'s`} ${tombShort(st)}${st.working ? '' : ', paused'}`}>
       <Icon name="goal-royal-tomb" size={11} />{tombChip(st)}
-    </span>;
+    </span></Tip>;
   })}</>;
 }
 
@@ -66,9 +67,9 @@ export function LeadChip({ members, rules = decadenceRules() }: { members: VpEmp
       : `That is too little to cut any yield yet.`}`;
   };
   const title = ahead.map(says).join(' ') + ` ${POWER_RULE} ${decadenceCurveText(rules)}`;
-  return <span className="vhc-lead" title={title} data-testid="lead-chip" aria-label={`Power ${top.lead}% above the average empire`}>
+  return <Tip hoverOnly content={title}><span className="vhc-lead" data-testid="lead-chip" aria-label={`Power ${top.lead}% above the average empire`}>
     +{top.lead}%
-  </span>;
+  </span></Tip>;
 }
 
 /** The rate that lead costs: every yield of the row's empire cut by this percent (a red chip with a down arrow, since colour is never alone). */
@@ -79,9 +80,9 @@ export function DecadenceChip({ members, rules = decadenceRules() }: { members: 
   const top = cut.reduce((a, b) => (b.decadence > a.decadence ? b : a));
   const title = cut.map((m) => `${m.isMe ? 'Your' : `${m.name}'s`} cities grow ${m.decadence}% slower (smaller families) and lose ${m.decadence}% of their Production (sloth), Gold (luxury) and Science (complacency).`).join(' ')
     + ` ${DECADENCE_FOOD_RULE}`;
-  return <span className="vhc-decadence" title={title} data-testid="decadence-chip" aria-label={`Decadence: growth ${top.decadence}% slower, Production, Gold and Science cut by ${top.decadence}%`}>
+  return <Tip hoverOnly content={title}><span className="vhc-decadence" data-testid="decadence-chip" aria-label={`Decadence: growth ${top.decadence}% slower, Production, Gold and Science cut by ${top.decadence}%`}>
     <Icon name="ui-trend-down" size={9} className="ui-mark" />{top.decadence}%
-  </span>;
+  </span></Tip>;
 }
 
 /** What a race row says about the relation with its empire: a pin on the roundel, the words in its tooltip and name. */

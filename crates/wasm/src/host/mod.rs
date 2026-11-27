@@ -111,8 +111,8 @@ impl Gate {
     fn error(&self) -> Option<ServerMessage> {
         let (code, message) = match self {
             Self::Open => return None,
-            Self::NeedCode => ("join_code_needed", "This game needs a join code."),
-            Self::Wrong | Self::Lockout => ("wrong_join_code", "That join code is not right."),
+            Self::NeedCode => ("join_code_needed", "This game needs a private code."),
+            Self::Wrong | Self::Lockout => ("wrong_join_code", "That private code is not right."),
         };
         Some(ServerMessage::Error {
             code: Some(code),
@@ -296,7 +296,7 @@ impl Host {
             {
                 Some(c.to_ascii_uppercase())
             }
-            Some(_) => return Err("A join code is 4 to 12 letters or digits.".into()),
+            Some(_) => return Err("A private code is 4 to 12 letters or digits.".into()),
         };
         Ok(())
     }
@@ -661,7 +661,7 @@ impl Host {
                         self.close_connection(
                             connection,
                             "too_many_codes",
-                            "Too many wrong join codes.",
+                            "Too many wrong private codes. Check the code with the host, then join again.",
                         );
                     }
                     return Ok(());
@@ -1159,7 +1159,7 @@ impl Host {
                             self.close_connection(
                                 connection,
                                 "too_many_codes",
-                                "Too many wrong join codes.",
+                                "Too many wrong private codes. Check the code with the host, then join again.",
                             );
                         }
                         return;
@@ -2151,7 +2151,7 @@ mod tests {
         assert_eq!(error_code(&wrong).as_deref(), Some("wrong_join_code"));
         assert_eq!(
             wrong.iter().find(|m| m["type"] == "error").unwrap()["message"],
-            "That join code is not right."
+            "That private code is not right."
         );
         assert!(host.game.as_ref().unwrap().seats[1].token.is_none());
         // A code that is far too long is wrong, not a crash.

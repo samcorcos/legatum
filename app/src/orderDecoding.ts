@@ -4,9 +4,9 @@ import type { Order } from './types';
 const ORDER_KINDS = new Set<Order['type']>([
   'DeclareWar', 'BreakTreaty', 'ProposeTreaty', 'RespondToProposal', 'WithdrawProposal',
   'SetAutomation', 'SetAutoFire', 'MoveUnit', 'MoveUnitPath', 'SleepUnit', 'SkipUnit', 'FoundCity',
-  'DisbandUnit', 'SetProduction', 'SetProductionQueue', 'SetCityAutomation', 'BuyItem', 'HireCompany', 'BuyTile',
+  'DisbandUnit', 'SetProduction', 'SetProductionQueue', 'SetCityAutomation', 'BuyItem', 'BuyTile',
   'SetResearch', 'SetResearchQueue', 'SetResearchGoal', 'SetScienceConversion', 'RangedAttack', 'AirStrike', 'AirRecon', 'Rebase', 'UpgradeAircraft',
-  'UpgradeUnit', 'UpgradeSiege', 'Action', 'GiveGold',
+  'UpgradeUnit', 'UpgradeSiege', 'Action', 'GiveGold', 'BuyCity',
 ]);
 
 export function isKnownOrderKind(kind: unknown): kind is Order['type'] {

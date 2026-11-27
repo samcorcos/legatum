@@ -14,6 +14,7 @@ import { capitalStar } from '../capitalMark';
 import { hexToPixel, tileIndex } from '../hex';
 import { healthColor, playerInk, rgba } from '../theme';
 import { GOAL_CITY_ICON, goalCities, goalSealFor, isColoniaFounder, tombChip, tombStatus, type GoalCityKind, type TombStatus } from '../goalCities';
+import { offerOn, offerTone } from '../buyCity';
 import type { PathStep } from '../path';
 import { tintedIcon } from '../icons';
 import type { LookId } from '../brand/look';
@@ -31,10 +32,9 @@ import type { SiegeLevel } from '../siege';
 import { miniatureImage } from '../unitArt';
 import { siegePropFor, siegePropImage, siegePropRect, type SiegeProp } from '../siegeProps';
 import { attackableEnemies, drawEraPlaque, drawStrengthChip, matchupStrength, plaqueHeight, unitEra } from './unitEra';
-import { contractLeft } from '../company';
 import { heirTag } from '../heir';
 import { rankLevel } from '../rankInsignia';
-import { FONTS, type BannerSpec, type GoalSeal, bannerMetersSize, bannerRect, drawBadge, drawBanner, drawBannerMeters, type BannerMeter, barbarianMiniature, drawBarbarianToken, drawContractPip, drawContractTag, drawHeirHalo, drawLabel, drawPip, drawPromotion, drawRankInsignia, drawSprite, drawTag, drawToken, drawTokenHealth, miniatureGeometry, nameSprite, sealSprite, TOKEN_INK, capitalSealRadius, CAPITAL_GILT } from './sprites';
+import { FONTS, type BannerSpec, type GoalSeal, bannerMetersSize, bannerRect, drawBadge, drawBanner, drawBannerMeters, type BannerMeter, barbarianMiniature, drawBarbarianToken, drawHeirHalo, drawLabel, drawOfferCoin, drawPip, drawPromotion, drawRankInsignia, drawSprite, drawTag, drawToken, drawTokenHealth, miniatureGeometry, nameSprite, sealSprite, TOKEN_INK, capitalSealRadius, CAPITAL_GILT } from './sprites';
 import { mapFeatureImage, RUIN_MASS } from './mapFeatures';
 import { BARBARIAN, isBarbarian } from '../barbarians';
 import type { Rect } from './compass';
@@ -933,8 +933,6 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
       if (u.occupation_lock != null) lockMarks.push({ x, y, w: tw });
       const farHeir = heirTag(view, u);
       if (farHeir) drawTag(ctx, look, x, y + tw + (u.hp < 100 ? 9 : 4), farHeir, u.owner === view.me ? 'good' : u.owner === u.heir_of ? 'neutral' : 'bad');
-      const farLeft = contractLeft(u, view);
-      if (farLeft !== null) drawContractPip(ctx, look, x, y, tw, farLeft);
       // Far zoom keeps only the strength cue's direction: a small rising or falling mark beside the roundel.
       if (strengthCue?.targets.has(u.id)) {
         const theirs = matchupStrength(u, factionOf.get(u.owner), strengthCue.sel, false), yours = matchupStrength(strengthCue.sel, strengthCue.selFaction, u, true);
@@ -943,7 +941,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
       continue;
     }
     if (u.occupation_lock != null) lockMarks.push({ x, y, w: tw });
-    drawUnit(ctx, look, u, x, y, tw, dpr, u.owner === view.me, inp.pendingMarks.get(u.id), u.origin ?? factionOf.get(u.owner), strengthCue, siegePropFor(view, u), hexBox, contractLeft(u, view), heirTag(view, u), u.owner === view.me && isColoniaFounder(view, u.id));
+    drawUnit(ctx, look, u, x, y, tw, dpr, u.owner === view.me, inp.pendingMarks.get(u.id), factionOf.get(u.owner), strengthCue, siegePropFor(view, u), hexBox, heirTag(view, u), u.owner === view.me && isColoniaFounder(view, u.id));
     if (stack.length > 2 && stack[0].id === u.id) drawBadge(ctx, look, x - tw, y - tw, tw * 0.45, String(stack.length), true);
   }
   // A natural wonder's bonus pill that a resting counter would hide goes above the units (still under the banners).
@@ -975,6 +973,11 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   for (const { c, far } of banners) {
     if (far && focusOf(c)) drawTag(ctx, look, far.x, far.y - far.seal.ay - 15, 'Auto', 'neutral');
   }
+  // Byzantium buying a city: a public countdown chip, above its seal zoomed out and above its banner zoomed in (below).
+  for (const { c, far } of banners) {
+    const offer = far ? offerOn(view, c.id) : undefined;
+    if (far && offer) drawOfferCoin(ctx, look, far.x + sealRadius(hexPx) * 0.9, far.y + sealRadius(hexPx) * 0.5, offer.turns_left, offerTone(view, offer));
+  }
 
   // Zoomed in, every banner above the units; a city under attack also wears its alarm: a ring
   // (steady under reduced motion) and a siege badge, on top of the banner or seal at both zoom levels.
@@ -992,6 +995,8 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
       if (drawAlpha <= 0.01) continue;
       if (motion && motion.sx !== 1) { ctx.save(); ctx.translate(x, 0); ctx.scale(motion.sx, 1); ctx.translate(-x, 0); }
       const r = drawBanner(ctx, look, spec, x, y + (motion?.dy ?? 0), fs, dpr, drawAlpha);
+      const offer = offerOn(view, c.id);
+      if (offer) drawOfferCoin(ctx, look, level ? r.x : r.x + r.w, r.y + r.h / 2, offer.turns_left, offerTone(view, offer), drawAlpha);
       const hpNow = cityHp(c);
       if (level) {
         const barY = r.y + r.h + SIEGE_BAR_GAP;
@@ -1546,7 +1551,7 @@ export function drawFortifyMark(ctx: CanvasRenderingContext2D, x: number, y: num
   if (ic) ctx.drawImage(ic, x, y, 12, 12);
 }
 
-function drawUnit(ctx: CanvasRenderingContext2D, look: LookId, u: UnitView, x: number, y: number, w: number, dpr: number, mine: boolean, mark: PendingMark | undefined, faction?: Faction, cue?: StrengthCue | null, prop?: SiegeProp | null, hexBox?: { cx: number; half: number }, contract?: number | null, heirLabel?: string | null, colonia = false) {
+function drawUnit(ctx: CanvasRenderingContext2D, look: LookId, u: UnitView, x: number, y: number, w: number, dpr: number, mine: boolean, mark: PendingMark | undefined, faction?: Faction, cue?: StrengthCue | null, prop?: SiegeProp | null, hexBox?: { cx: number; half: number }, heirLabel?: string | null, colonia = false) {
   if (isBarbarian(u.owner)) drawBarbarianToken(ctx, look, u.kind as UnitKind, u.military, x, y, w, dpr);
   else drawToken(ctx, look, u.kind as UnitKind, mapPlayerColor(u.owner), u.military, x, y, w, dpr, u.owner, 1, faction, u.heir_of == null ? undefined : { crestColor: u.heir_of === u.owner ? undefined : mapPlayerColor(u.heir_of) });
   // A unit an Engineer covers wears its siege gear in front of its feet, on the hex's right side and always inside the hex: the
@@ -1581,10 +1586,8 @@ function drawUnit(ctx: CanvasRenderingContext2D, look: LookId, u: UnitView, x: n
   else if (mine && u.standing_order) drawBadge(ctx, look, bx, y - w * 0.85, w * 0.38, '', false, u.standing_order === 'Heal' ? 'mark-heal' : u.standing_order === 'AutoFire' ? 'mark-autofire' : 'mark-sleep');
   else if (mine && u.goto) drawBadge(ctx, look, bx, y - w * 0.85, w * 0.38, '', false, 'mark-move');
   const tagY = y + w * 1.04 + (u.hp < 100 ? 10 : 4) + (mini ? w * 0.3 : 0) + Math.max(0, drop - (mini ? w * 0.8 : 0));
-  // A hired Company wears its seller's seal and its turns of contract left, for every viewer (the countdown is public).
-  if (contract !== null && contract !== undefined) drawContractTag(ctx, look, x, tagY, u.origin, contract);
   // Byzantium's Heir says whose he is and who holds him, so a rival knows whom to look for.
-  else if (heirLabel) drawTag(ctx, look, x, tagY, heirLabel, mine ? 'good' : u.owner === u.heir_of ? 'neutral' : 'bad');
+  if (heirLabel) drawTag(ctx, look, x, tagY, heirLabel, mine ? 'good' : u.owner === u.heir_of ? 'neutral' : 'bad');
 }
 
 /** A warning roundel on the friend's tile that may stop the previewed route: "!" in attack ink. */

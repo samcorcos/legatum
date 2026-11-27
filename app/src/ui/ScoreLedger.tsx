@@ -8,6 +8,7 @@ import { ageName } from '../data';
 import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useGame } from '../store';
 import { Icon } from './bits';
+import { Tip } from './Tip';
 import { Amount } from './Amounts';
 import { Glyph } from './ringMedallion';
 import { CrestMedallion, Star, roman } from '../brand/ornaments';
@@ -22,14 +23,16 @@ const fmt = (n: number) => n.toLocaleString('en-US');
 
 /** A point marker: the empire's ink and the source's icon. */
 function Token({ e, icon, of, title, dim }: { e: VpEmpire; icon: string; of?: VpEmpire; title?: string; dim?: boolean }) {
-  return <span className={`sl-token${e.isMe ? ' mine' : ''}${dim ? ' dim' : ''}`} style={empireVars(e)} title={title} role="img" aria-label={title}>
+  const token = <span className={`sl-token${e.isMe ? ' mine' : ''}${dim ? ' dim' : ''}`} style={empireVars(e)} role="img" aria-label={title}>
     <Glyph name={icon} size={13} />
     {of && of.id !== e.id && <span className="sl-token-of"><EmpireCrest e={of} size={11} /></span>}
   </span>;
+  return title ? <Tip hoverOnly content={title}>{token}</Tip> : token;
 }
 
 function Socket({ title, faint }: { title?: string; faint?: boolean }) {
-  return <span className={`sl-socket${faint ? ' faint' : ''}`} title={title} role="img" aria-label={title} />;
+  const socket = <span className={`sl-socket${faint ? ' faint' : ''}`} role="img" aria-label={title} />;
+  return title ? <Tip hoverOnly content={title}>{socket}</Tip> : socket;
 }
 
 function WorkCell({ s, e }: { s: Source; e: VpEmpire }) {
