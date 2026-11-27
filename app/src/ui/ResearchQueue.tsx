@@ -51,7 +51,7 @@ export function ResearchQueue({ view, orders, slotCount, landed }: { view: Playe
         {!idle && <button className="btn quiet research-queue-clear" disabled={disabled} aria-label="Clear research queue" onClick={() => editQueue(view, [])}>Clear queue</button>}
       </span>
     </div>
-    <div className="research-queue-slots">
+    <div className="research-queue-slots" role="region" aria-label="Queued technology slots" tabIndex={0}>
     <ol role="list">{slots.map((slot, i) => <li role="listitem" key={slot.tech} className={`${i === 0 ? 'first' : ''}${landed === slot.tech ? ' landed' : ''}`} data-tech={slot.tech}>
       <span className="rq-number">{i + 1}</span>
       <b className="rq-name" title={TECH_NAME[slot.tech]}>{TECH_NAME[slot.tech]}</b>

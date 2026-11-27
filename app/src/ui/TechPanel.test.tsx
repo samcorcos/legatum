@@ -272,6 +272,10 @@ it('the queue strip keeps the same slots, so queueing never changes its height',
   clickCard(card(b), { shiftKey: true });
   clickCard(card(c), { shiftKey: true });
   expect(slotCount()).toBe(slots);
+  const strip = container.querySelector<HTMLElement>('.research-queue-slots')!;
+  expect(strip.getAttribute('role')).toBe('region');
+  expect(strip.getAttribute('aria-label')).toBe('Queued technology slots');
+  expect(strip.tabIndex).toBe(0);
   expect(container.querySelectorAll('.research-queue li')).toHaveLength(3);
   expect(container.querySelectorAll('.research-queue-slots .rq-ghost')).toHaveLength(slots - 3);
   click(container.querySelector('[data-testid="queue-rest"]') ?? document.body);

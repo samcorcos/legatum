@@ -6,7 +6,7 @@ import { FixtureClient } from '../test/fixtureEngine';
 import { itemKey } from '../data';
 import { useGame } from '../store';
 import type { PlayerView, UnitView } from '../types';
-import { Advisor, targetElement } from './Advisor';
+import { Advisor, garrisonCardCity, targetElement, tileCardBlocker, tileCardTops } from './Advisor';
 import { useAdvisor } from './advisorModel';
 import { CityPanel } from './CityPanel';
 import { UnitPanel } from './UnitPanel';
@@ -30,6 +30,26 @@ beforeEach(async () => {
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 const control = (name: 'found' | 'fortify' | 'explore' | 'ranged' | 'build', value?: string) => targetElement({ kind: 'control', name, value });
+
+it('places a tile card beyond one hex radius on the side away from the tile', () => {
+  const lower = tileCardBlocker(500, 450, 40);
+  expect([lower.left, lower.top, lower.right, lower.bottom]).toEqual([420, 370, 580, 530]);
+  expect(tileCardTops(lower, 140, 600)).toEqual([218, 542]);
+  const upper = tileCardBlocker(500, 150, 40);
+  expect(tileCardTops(upper, 140, 600)).toEqual([242, -82]);
+});
+
+it('protects a held city while the garrison card points at Diplomacy', () => {
+  const city = view.cities.find((c) => c.owner === view.me)!;
+  const unit = view.units.find((u) => u.owner === view.me)!;
+  city.occupation_lock = view.players.find((p) => p.team !== view.team)!.id;
+  unit.pos = city.pos;
+  unit.occupation_lock = city.occupation_lock;
+  expect(garrisonCardCity('garrisonLock', view)).toBe(city);
+  expect(garrisonCardCity('other', view)).toBeNull();
+  unit.occupation_lock = null;
+  expect(garrisonCardCity('garrisonLock', view)).toBeNull();
+});
 
 it('finds the queue strip and each current or future add-to-queue control', () => {
   const mounted = render(<dialog className="tech-modal" open>

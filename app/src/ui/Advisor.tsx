@@ -4,6 +4,7 @@ import { useCelebration } from '../celebrate/MomentLane';
 import { useCombatFx } from '../feel';
 import { tileOnScreen } from '../map/screenPos';
 import { useGame } from '../store';
+import type { PlayerView } from '../types';
 import { loadWasmModule, loadedWasmModule } from '../wasmClient';
 import { FactionMark } from './bits';
 import { Kbd } from './index';
@@ -76,6 +77,24 @@ function targetRect(target: AdvisorTarget): { x: number; y: number; width: numbe
   if (!hit || !(el === hit || el?.contains(hit))) return null;
   const pad = 6;
   return { x: r.x - pad, y: r.y - pad, width: r.width + pad * 2, height: r.height + pad * 2, tile: false };
+}
+
+/** Leave one hex radius beyond the target tile when placing the card. */
+export function tileCardBlocker(x: number, y: number, radius: number): DOMRect {
+  return new DOMRect(x - 2 * radius, y - 2 * radius, 4 * radius, 4 * radius);
+}
+
+/** Try the side of a tile facing away from the middle of the window first. */
+export function tileCardTops(target: DOMRect, cardHeight: number, windowHeight: number): number[] {
+  const above = target.top - 12 - cardHeight;
+  const below = target.bottom + 12;
+  return target.top + target.height / 2 >= windowHeight / 2 ? [above, below] : [below, above];
+}
+
+export function garrisonCardCity(suggestionId: string, view: PlayerView | undefined) {
+  if (suggestionId !== 'garrisonLock' || !view) return null;
+  const unit = view.units.find((u) => u.owner === view.me && u.occupation_lock != null);
+  return unit ? view.cities.find((c) => c.pos.q === unit.pos.q && c.pos.r === unit.pos.r) ?? null : null;
 }
 
 function AdvisorRing({ target, still }: { target: AdvisorTarget; still: boolean }) {
@@ -210,7 +229,7 @@ export function Advisor() {
         if (step?.target?.kind === 'control') target = targetElement(step.target)?.getBoundingClientRect() ?? null;
         else if (step?.target?.kind === 'tile') {
           const p = tileOnScreen(step.target.hex);
-          if (p) target = new DOMRect(p.x - p.radius, p.y - p.radius, 2 * p.radius, 2 * p.radius);
+          if (p) target = tileCardBlocker(p.x, p.y, p.radius);
         }
         let selectedTile: DOMRect | null = null;
         if (selection) {
@@ -218,19 +237,25 @@ export function Advisor() {
           const p = entity && tileOnScreen(entity.pos);
           if (p) selectedTile = new DOMRect(p.x - p.radius, p.y - p.radius, 2 * p.radius, 2 * p.radius);
         }
+        // The garrison lesson points at Diplomacy, but its held city must remain visible too.
+        const heldCity = garrisonCardCity(suggestion.id, view);
+        const heldAt = heldCity && tileOnScreen(heldCity.pos);
+        const heldTile = heldAt ? tileCardBlocker(heldAt.x, heldAt.y, heldAt.radius) : null;
         // Also keep clear of the map tools and the player's own cities with their banners (drawn above the tile).
         const tools = document.querySelector('.map-lenses')?.getBoundingClientRect() ?? null;
         // A city under offer also wears its countdown coin on the banner, so it is kept clear too, whoever owns it.
         const ownCities = (view?.cities ?? []).filter((c) => c.owner === view?.me || view?.city_offers?.some((o) => o.city === c.id)).map((c) => tileOnScreen(c.pos))
           .filter((p): p is NonNullable<typeof p> => !!p).map((p) => new DOMRect(p.x - 1.3 * p.radius, p.y - 2.3 * p.radius, 2.6 * p.radius, 3.3 * p.radius));
-        const blockers = [target, selectedTile, tools, ...ownCities].filter((r): r is DOMRect => !!r && r.width > 0 && r.right > box.left && r.left < box.right);
+        const blockers = [target, selectedTile, heldTile, tools, ...ownCities].filter((r): r is DOMRect => !!r && r.width > 0 && r.right > box.left && r.left < box.right);
         const clearOf = (rects: DOMRect[]) => (top: number) => rects.every((r) => top + box.height + 8 <= r.top || top >= r.bottom + 8);
         // The step's target and the selection must stay visible; the rest is avoided when there is room.
-        const must = blockers.filter((r) => r === target || r === selectedTile);
+        const must = blockers.filter((r) => r === target || r === selectedTile || r === heldTile);
         const home = 76;
         const floor = innerHeight - box.height - 8;
-        // Prefer the usual slot, then just below a blocker, then just above one.
-        const options = [home, ...blockers.map((r) => r.bottom + 12), ...blockers.map((r) => r.top - 12 - box.height)]
+        // A tile target takes the side away from the middle of the window; other steps keep the usual slot.
+        const tileToClear = step?.target?.kind === 'tile' ? target : heldTile;
+        const tileTops = tileToClear ? tileCardTops(tileToClear, box.height, innerHeight) : [];
+        const options = [...tileTops, home, ...blockers.map((r) => r.bottom + 12), ...blockers.map((r) => r.top - 12 - box.height)]
           .filter((top) => top >= 64 && top <= floor);
         const cities = blockers.filter((r) => r !== tools);
         const best = options.find(clearOf(blockers)) ?? options.find(clearOf(cities)) ?? options.find(clearOf(must));
@@ -238,7 +263,7 @@ export function Advisor() {
         // No height clears every banner: slide to the map's left edge at the usual height when that does.
         let nextLeft: number | null = null;
         // Judged for the CSS slot (the centre), not the card's current place, so it cannot flip back and forth.
-        const every = [target, selectedTile, ...ownCities].filter((r): r is DOMRect => !!r && r.width > 0);
+        const every = [target, selectedTile, heldTile, ...ownCities].filter((r): r is DOMRect => !!r && r.width > 0);
         const slot = innerWidth / 2 - box.width / 2;
         const atSlot = every.filter((r) => r.right > slot && r.left < slot + box.width);
         const slotOptions = [home, ...atSlot.map((r) => r.bottom + 12), ...atSlot.map((r) => r.top - 12 - box.height)].filter((top) => top >= 64 && top <= floor);
