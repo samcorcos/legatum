@@ -33,17 +33,19 @@ function choose(detail = 0, shiftKey = false) {
   act(() => { button.focus(); button.dispatchEvent(new MouseEvent('click', { bubbles: true, detail, shiftKey })); });
 }
 
-it('sets a distinct building focus without replacing the current production order', () => {
-  const select = host.querySelector<HTMLSelectElement>('select[aria-label^="Automate "]')!;
-  act(() => { select.value = 'Science'; select.dispatchEvent(new Event('change', { bubbles: true })); });
-  expect(useGame.getState().orders[0]).toContainEqual({ type: 'SetCityAutomation', city: useGame.getState().views![0].cities[0].id, focus: 'Science' });
+it('toggles economic automation without replacing the current production order', () => {
+  const toggle = host.querySelector<HTMLButtonElement>('button[aria-label^="Automate "]')!;
+  act(() => toggle.click());
+  expect(toggle.getAttribute('aria-pressed')).toBe('true');
+  expect(host.querySelector('select[aria-label^="Automate "]')).toBeNull();
+  expect(useGame.getState().orders[0]).toContainEqual({ type: 'SetCityAutomation', city: useGame.getState().views![0].cities[0].id, focus: 'Economy' });
   expect(useGame.getState().orders[0].some((o) => o.type === 'SetProduction' || o.type === 'SetProductionQueue')).toBe(false);
   // An idle city has no queue: the heading names the focus, and no reason line repeats it.
   expect(host.textContent).not.toContain('Your queue goes first');
   // An automated idle city is not asking for a choice: the heading says when it chooses, and the control stays beside the gold line, in view.
   const title = host.querySelector('.cp-choose-title')!;
-  expect(title.textContent).toBe('Chooses at Ready · Science project');
-  expect(host.querySelector('.cp-automation-inline select[aria-label^="Automate "]')).not.toBeNull();
+  expect(title.textContent).toBe('Chooses economic investments at Ready');
+  expect(host.querySelector('.cp-automation-inline button[aria-label^="Automate "]')).not.toBeNull();
 });
 
 for (const [input, detail] of [['keyboard', 0], ['mouse', 1]] as const) {

@@ -17,7 +17,6 @@ dialog.co-sheet::backdrop { background: var(--scrim); }
 .co-close { flex: none; }
 .co-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; }
 .co-automation { display: flex; flex: none; align-items: center; gap: 8px; padding: 7px 14px; border-bottom: 1px solid var(--rule); font: 600 12px/1.2 var(--sans); }
-.co-automation select { min-height: 30px; padding: 3px 8px; border: 1px solid var(--rule-2); background: var(--panel-2); color: var(--ink); font: inherit; cursor: pointer; }
 .co-automation .btn { min-height: 30px; }
 .co-select { width: 30px; padding-inline: 3px !important; text-align: center !important; }
 .co-select input { width: 24px; height: 24px; margin: 0; cursor: pointer; accent-color: var(--accent); }

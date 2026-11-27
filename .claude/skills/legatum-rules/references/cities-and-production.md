@@ -27,27 +27,12 @@ The Settle lens, settler preview, Found City blocker and AI site scoring use the
 
 **Default pacing (2026-10-22).** The capital gets +2 Production (like Civ 6's Palace). There is no opening ramp: until 2026-10-22 every Production price phased in from half the listed price on turn 0 to the full price on turn 100 (`economy::ramp_price`, the old speed surcharge); it was removed with the game-speed layer ("delete any leftover machinery", user 2026-10-21) and the early prices were retuned instead so the opening holds: the Settler costs 70 (+50 per Settler trained) and the early buildings and improvements cost what the ramp made them cost in the first third (Granary and Brood Hall 50, Workshop and Market 60, Library 80, Walls 100 (raised 2026-11-06), Farm/Pasture/Quarry 30, Mine 40); units are at their listed prices (a Spearman is 80 from turn 1, 40 before). 8-player Hard, 400 games, seed 5200001: first Settler median T18 and second city T25 before and after (`docs/sim-results/2026-10-22-opening-ramp-removal.md`); the games run about 8% shorter (309 to 285 turns on average) because the cheap early buildings stay cheap. City strike is default, but since 2026-10-03 only walled cities fire (§4). Older notes in this file about T16/T24 or T21/T29 describe earlier tunings; the numbers above are the measured ones. Individual factions can be later than these aggregate medians. See `docs/sim-results/2026-10-04-production-banking-validation.md` for per-faction measurements of the earlier tuning. Verify exact constants in crates/core/src/data.rs and economy.rs.
 
-**City building automation (2026-10-31; focuses redesigned rules 55, Sam 2026-11-22).** A human may set each owned city's saved
-`City.build_automation` to Military, Economy, Gold, Science or Food (`CityBuildFocus`; Balanced is gone and old
-"Balanced" JSON reads as Economy) with
-`Order::SetCityAutomation`. Its optional `picked` item is refused when it names a tile off the map
-(2026-11-22: the pick is stored on the city as sent, and an online guest could otherwise make the save unloadable). This is separate from the city's
-tile claim focus. At Ready the client sends its own fogged `PlayerView` to WASM and
-`ai::city_automation_choice_with_pipeline`, which values available production using Hard's item values
-(`ai/production.rs::automated_choice`; it no longer calls the AI's own `choose_item`).
-- **Gold, Science, Food (streams):** the city runs that project and nothing else, even with no garrison or an enemy
-  next door (`CityBuildFocus::stream`). Nile Egypt has no Food project, so its Food stream runs Grow.
-- **Military:** combat land units first, each with a value of at least 1 even when Hard would see no use for one. It never
-  trains a unit when a better unit of the same line is buildable now, strategic resources included
-  (`composition::best_buildable_in_line`, `outdated_by_buildable`: an option with no `resource_blocker`); without Iron the
-  Spearman is the best melee unit left and stays allowed. Among the allowed units the newest generation wins
-  (`composition::quality`), value decides within it. Buildings fill in only when no unit can start or be funded (`troop_unfunded`).
-- **Economy:** buildings, Great Works and improvements; never a unit of any kind.
-- Neither Military nor Economy builds Settlers, Scouts or other civilians (expansion and exploring are the player's call).
-  When nothing is left, they run a project: Gold while the treasury's per-turn total is 0 or less, or once every technology
-  is known, otherwise Science (`Planner::idle_project`). With no active build, the choice becomes a `SetProduction` order. If the
-current build is forecast to finish this turn and the queue is empty, the choice is
-queued behind it with `SetProductionQueue`. An existing player queue takes precedence.
+**City building automation (2026-11-27).** **Automate** (`I`) toggles economic delegation for a city; Cities applies the same toggle to selected cities in bulk. There is no focus dropdown or Shift+I focus cycle. Existing saved non-null focuses are read as active economic automation by the client and WASM planner; their enum values remain readable for older saves (`app/src/automation.ts::cityAutomationFocus`, `wasm/src/lib.rs::city_automation_orders_json`).
+
+At Ready the client supplies its own fogged view. The economic chooser considers buildings and tile improvements, favoring Gold, then Science and Production, with growth where it helps the city develop. It never trains units or spends Gold. The Hard AI's empire planner is separate (`ai::city_automation_choice_with_pipeline`). A Gold project is the income fallback when further investments are not worthwhile. Manual build queues take precedence; a new choice queues behind a build finishing this turn. Automation never replaces an unfinished manual build.
+
+`Order::SetCityAutomation` stores the setting and optional chosen item. A pick outside the map is refused. This setting is separate from automatic tile-claim priorities.
+
 If the chooser finds no build for a city that needs a choice, Ready stops before turn resolution
 and puts that city in the normal Choose production queue. The city keeps automation on; a manual
 production order handles this turn. When WASM is loaded, the city warns before Ready from the

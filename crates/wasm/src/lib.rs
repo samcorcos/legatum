@@ -1313,6 +1313,53 @@ mod tests {
     }
 
     #[test]
+    fn saved_legacy_city_focuses_delegate_economics_without_training_units() {
+        use legatum_core::{CityBuildFocus, ProductionItem};
+        let setup = standard_setup_json("7", "India", "Byzantium", "A", "B").unwrap();
+        let game = Game::from_setup_json(&setup).unwrap();
+        let mut view: legatum_core::PlayerView =
+            serde_json::from_str(&game.view_json(0).unwrap()).unwrap();
+        let id = view.cities.iter().find(|c| c.owner == view.me).unwrap().id;
+        for focus in [
+            CityBuildFocus::Military,
+            CityBuildFocus::Gold,
+            CityBuildFocus::Science,
+            CityBuildFocus::Food,
+        ] {
+            let detail = view
+                .cities
+                .iter_mut()
+                .find(|c| c.id == id)
+                .unwrap()
+                .detail
+                .as_mut()
+                .unwrap();
+            detail.producing = None;
+            detail.production_queue.clear();
+            detail.build_automation = Some(focus);
+            let plan: CityAutomationPlan = serde_json::from_str(
+                &city_automation_orders_json(&to_json(&view).unwrap(), "[]").unwrap(),
+            )
+            .unwrap();
+            assert!(plan.unchosen_cities.is_empty());
+            assert!(plan.orders.iter().any(|o| matches!(
+                o,
+                Order::SetCityAutomation {
+                    focus: Some(CityBuildFocus::Economy),
+                    ..
+                }
+            )));
+            assert!(!plan.orders.iter().any(|o| matches!(
+                o,
+                Order::SetProduction {
+                    item: ProductionItem::Unit { .. },
+                    ..
+                } | Order::BuyItem { .. }
+            )));
+        }
+    }
+
+    #[test]
     fn delegated_city_with_every_option_excluded_asks_for_a_manual_choice() {
         use legatum_core::{CityBuildFocus, UnitKind};
         let setup = standard_setup_json("7", "India", "Byzantium", "A", "B").unwrap();
@@ -2139,7 +2186,9 @@ pub fn city_automation_orders_json(view_json: &str, orders_json: &str) -> Result
                 _ => None,
             })
             .unwrap_or(detail.build_automation);
-        let Some(focus) = focus else { continue };
+        let Some(_) = focus else { continue };
+        // Older saved focuses are active automation too; the single control now delegates economics.
+        let focus = legatum_core::CityBuildFocus::Economy;
         let changing = orders.iter().any(|o| matches!(o, Order::SetCityAutomation { city: id, focus: next, .. } if *id == city.id && *next != detail.build_automation));
         let replacing_automatic_tail = changing
             && detail.production_queue.len() == 1

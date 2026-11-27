@@ -21,7 +21,7 @@ export function revealIdleProductionPicker(scroller: HTMLElement, minVisibleCard
   // A damaged city's healing line (or why it is not healing) sits under the head: never scroll it away on open.
   const healing = scroller.querySelector<HTMLElement>('.cp-healing-wrap');
   if (healing) delta = Math.min(delta, healing.getBoundingClientRect().top - edge);
-  // Nor the red production warning ("Nothing here fits its automation focus"): it is the reason for the choice.
+  // Nor the red production warning ("No economic build is available"): it is the reason for the choice.
   const warning = scroller.querySelector<HTMLElement>('.production-warning');
   if (warning) delta = Math.min(delta, warning.getBoundingClientRect().top - edge);
   if (Math.abs(delta) < 1) return false;

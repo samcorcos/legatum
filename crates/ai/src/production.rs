@@ -6878,6 +6878,9 @@ pub fn city_automation_choice_with_pipeline(
     focus: CityBuildFocus,
     planned: &[ProductionItem],
 ) -> Option<ProductionItem> {
+    if focus == CityBuildFocus::Economy {
+        return crate::economic_automation::choose(view, city, planned);
+    }
     let faction = view.players.iter().find(|p| p.id == view.me)?.faction;
     let brain =
         crate::scripted::ScriptedBrain::with_difficulty(faction, 0, view.me, AiDifficulty::Hard);

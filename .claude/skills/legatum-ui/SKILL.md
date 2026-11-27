@@ -211,7 +211,7 @@ Every word a player reads (sheets, cards, the Guide, tooltips, breakdowns, repor
 | at Peace, at War, Alliance | treaty states, capitalised | at peace, at war |
 | supply | the Iron or Coal your deposits give; each building or unit that needs it uses 1 while it exists ("Iron 5 / 6") | stockpile, stored Iron/Coal, Iron per turn, Coal per turn |
 | interest | Swiss Gold earned from the treasury | treasury bonus |
-| Gold project, Science project, Food project | what a city runs instead of building, turning part of its Production (Egypt: its Food-made build progress) into Gold, Science or Food; every empire since 2026-11-22 (Food: rules 55, not Egypt). The automation menu names its stream focuses by these project names | Industry project, Industry: Gold (a copy test bans "Industry project") |
+| Gold project, Science project, Food project | what a city runs instead of building, turning part of its Production (Egypt: its Food-made build progress) into Gold, Science or Food; every empire since 2026-11-22 (Food: rules 55, not Egypt). | Industry project, Industry: Gold (a copy test bans "Industry project") |
 | Grow | Egypt's project that grows a city with its surplus Food instead of building (2026-11-21); "surplus Food" is Food beyond 2 per population | growth project, grow mode |
 | offer | Byzantium's bid for a rival's city, held in escrow for 3 turns ("Make an offer", "the owner gets all the Gold you offer"); the price is the lowest offer | bid (in player text), bribe, payment |
 | melee units | the Melee line class (Warrior, Spearman and their upgrades); "Melee line" in the class name | foot soldiers, infantry as a class (a copy test bans "foot soldier"; plain-language review 2026-11-25) |

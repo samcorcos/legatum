@@ -8,6 +8,8 @@ import { loadWasmModule, loadedWasmModule } from '../wasmClient';
 import { FactionMark } from './bits';
 import { Kbd } from './index';
 import { useGuide } from './guideState';
+import { useOverlays } from '../map/overlays';
+import { discoveriesUsed } from './advisorDiscovery';
 import { pendingResearchQueue } from '../orders';
 import { advisorSuggestion, practiceKind, useAdvisor, type AdvisorTarget, type PracticeKind } from './advisorModel';
 import { useCoarsePointer } from './useCoarsePointer';
@@ -31,6 +33,20 @@ export function targetElement(target: Exclude<NonNullable<AdvisorTarget>, { kind
     case 'fortify': return action(/^(Fortify|Wait)/i);
     case 'skip': return action(/^Skip/i);
     case 'explore': return action(/^Auto-explore/i);
+    case 'heal': return action(/^Heal/i);
+    case 'upgrade': return action(/^Upgrade to /i);
+    case 'siege': return action(/^Siege/i);
+    case 'cities': return first('[data-testid="cities-button"]');
+    case 'mapYields': return first('.map-lenses [data-overlay="yields"]', '.map-lenses .lens-toggle');
+    case 'airRecon': return action(/^Recon/i);
+    case 'ping': return first('[data-testid="ping-button"]');
+    case 'autoFire': return action(/^Auto-fire from city/i);
+    case 'automate': return first('.city-panel [data-advisor="automate"]');
+    case 'queueBuild': {
+      const card = [...document.querySelectorAll<HTMLElement>('.city-panel .production-choice')].find((e) => e.dataset.item === target.value);
+      const folded = card?.closest<HTMLDetailsElement>('details.unit-line');
+      return folded && !folded.open ? folded.querySelector<HTMLElement>('summary') : card?.querySelector<HTMLElement>('button.queue-add, button.upgrade-queue') ?? null;
+    }
     case 'ranged': return action(/^Ranged attack/i);
     case 'build': {
       const card = [...document.querySelectorAll<HTMLElement>('.city-panel .production-choice')].find((e) => e.dataset.item === target.value);
@@ -117,12 +133,16 @@ function usePractice() {
   const ready = useGame((s) => !!s.ready[s.seat]);
   const techOpen = useGame((s) => s.techOpen);
   const practise = useAdvisor((s) => s.practise);
+  const markSeen = useAdvisor((s) => s.markSeen);
   const turn = view?.turn;
   useEffect(() => {
     if (!view || !orders?.length) return;
     const kinds = orders.filter((_, i) => !errors?.some((e) => e.index === i)).map((o) => practiceKind(o, view)).filter((k): k is PracticeKind => k !== null);
     if (kinds.length) practise(kinds, view.turn);
-  }, [orders, errors, view, practise]);
+    for (const id of discoveriesUsed(orders.filter((_, i) => !errors?.some((e) => e.index === i)))) {
+      if (!useAdvisor.getState().seen.includes(id)) markSeen(id, view.turn);
+    }
+  }, [orders, errors, view, practise, markSeen]);
   const lastTurn = useRef<number | undefined>(undefined);
   useEffect(() => {
     if (turn === undefined) return;
@@ -164,8 +184,9 @@ export function Advisor() {
   const placingTile = useGame((s) => (s.place?.intent === 'tile' ? s.place.city : null));
   const guideOpen = useGuide((s) => s.open);
   const { active: celebration, holding } = useCelebration();
-  const { enabled, seen, skipped, skippedTurn, practice, tips, locks, markSeen, skip, setEnabled, noteTip, observeLocks } = useAdvisor();
+  const { enabled, seen, skipped, skippedTurn, practice, tips, locks, discoveryTurn, markSeen, skip, setEnabled, noteTip, observeLocks } = useAdvisor();
   usePractice();
+  const overlays = useOverlays();
   useEffect(() => { if (view) observeLocks(view); }, [view, observeLocks]);
   const [, refreshPlan] = useState(0);
   useEffect(() => {
@@ -179,7 +200,7 @@ export function Advisor() {
     ?? document.querySelector<HTMLElement>('.phone-turn-dock button[aria-label^="Next decision"]')?.textContent?.trim() ?? undefined;
   // Nothing to plan while the card is hidden (a takeover, the Guide, a paused game): the plan runs the engine.
   const advice = view && !hidden ? advisorSuggestion({ view, orders: orders[seat] ?? [], errors: errors[seat], selection,
-    humans: humans.length, remote: client?.kind === 'remote', touch, techOpen, mode, turnLabel, placingTile, local: useGame.getState(),
+    humans: humans.length, remote: client?.kind === 'remote', canPing: useGame.getState().canPing(), discoveryTurn, yieldsVisible: overlays.yields, touch, techOpen, mode, turnLabel, placingTile, local: useGame.getState(),
     researchQueueDrained: report?.events[seat]?.some((event) => event.type === 'ResearchQueueAdvanced' && event.player === view.me && event.next === null),
     forecast: client ? (unit, at, mode) => client.forecast(view.me, unit, at, mode) : undefined }, seen,
     skippedTurn === view.turn ? skipped : [], practice, tips, locks) : null;
@@ -290,7 +311,7 @@ export function Advisor() {
               // A ring is the call to action; dismissing it stays a quiet link.
               ? <button className="advisor-link" onClick={() => skip(suggestion.id, view!.turn)}>Not now</button>
               : <button className="btn primary" onClick={() => skip(suggestion.id, view!.turn)}>Got it</button>)
-            : lesson ? <button className="btn primary" onClick={() => markSeen(suggestion.id)}>Got it</button>
+            : lesson ? <button className="btn primary" onClick={() => markSeen(suggestion.id, view!.turn)}>Got it</button>
             : <button className="advisor-link" onClick={() => skip(suggestion.id, view!.turn)}>Not now</button>}
         <button className="advisor-link" onClick={() => setEnabled(false)}>Turn off</button>
       </div>
