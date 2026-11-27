@@ -2393,6 +2393,8 @@ mod tests {
                     buyer: byz,
                     seller,
                     escrow: 300,
+                    price: 300,
+                    guards_to_stop: 1,
                     ends_turn: turn + 3,
                 },
             );

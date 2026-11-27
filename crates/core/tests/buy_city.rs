@@ -124,7 +124,11 @@ fn world() -> World {
 }
 
 fn buy(city: CityId) -> Order {
-    Order::BuyCity { city }
+    Order::BuyCity { city, gold: 0 }
+}
+
+fn bid(city: CityId, gold: i32) -> Order {
+    Order::BuyCity { city, gold }
 }
 
 fn errors(s: &GameState, p: PlayerId, orders: &[Order]) -> Vec<String> {
@@ -251,9 +255,9 @@ fn eligibility_refusals() {
 fn the_price_adds_population_buildings_walls_guards_and_doubles_for_a_goal() {
     let mut w = world();
     let rules = w.s.setup.rule_experiments;
-    // Population 4: 150 + 4 x 60.
-    assert_eq!(buy_city::price(&w.s, w.target), 150 + 4 * 60);
-    // A Granary adds half its Gold price.
+    // Population 4: 75 + 4 x 25.
+    assert_eq!(buy_city::price(&w.s, w.target), 75 + 4 * 25);
+    // A Granary adds a fifth of its Gold price.
     let granary = rules.base_production_cost(
         Faction::Switzerland,
         ProductionItem::Building {
@@ -266,12 +270,12 @@ fn the_price_adds_population_buildings_walls_guards_and_doubles_for_a_goal() {
         .unwrap()
         .buildings
         .insert(BuildingKind::Granary);
-    let base = 150 + 4 * 60 + granary * 50 / 100;
+    let base = 75 + 4 * 25 + granary * 20 / 100;
     assert_eq!(buy_city::price(&w.s, w.target), base);
-    // Walls level 2 (+100%) and one armed unit next to it (+25%), added together.
+    // Walls level 2 (+50%) and one armed unit next to it (+20%), added together.
     w.s.cities.get_mut(&w.target).unwrap().walls_level = 2;
     spawn_unit(&mut w.s, SELLER, UnitKind::Spearman, h(7, 5));
-    let defended = base * (100 + 2 * 50 + 25) / 100;
+    let defended = base * (100 + 2 * 25 + 20) / 100;
     assert_eq!(buy_city::price(&w.s, w.target), defended);
     // Byzantium's own units and civilians do not count.
     spawn_unit(&mut w.s, BYZ, UnitKind::Spearman, h(5, 4));
@@ -326,7 +330,7 @@ fn a_price_rise_above_the_escrow_fails_the_offer_for_a_ten_percent_fee() {
     let w = world();
     let (s, _) = step(&w.s, &[(BYZ, vec![buy(w.target)])]);
     let escrow = s.player(BYZ).city_offer.as_ref().unwrap().escrow;
-    // The seller moves a Spearman next to the city: +25%.
+    // The seller moves a Spearman next to the city: +20%.
     let mut s = s;
     spawn_unit(&mut s, SELLER, UnitKind::Spearman, h(7, 5));
     let (control, _) = {
@@ -493,6 +497,179 @@ fn views_show_prices_to_byzantium_and_to_the_owner_of_a_touching_city() {
     assert_eq!(caps.len(), 1);
     assert_eq!(caps[0].capital, Some(w.byz_capital));
     assert_eq!(caps[0].refuge, None);
+}
+
+#[test]
+fn an_overbid_is_held_in_full_takes_more_guards_to_break_and_all_goes_to_the_seller() {
+    let w = world();
+    let price = buy_city::price(&w.s, w.target);
+    assert_eq!(price, 175);
+    let gold = price * 150 / 100;
+    assert!(errors(&w.s, BYZ, &[bid(w.target, gold)]).is_empty());
+    let (control, _) = step(&w.s, &[]);
+    let (s, events) = step(&w.s, &[(BYZ, vec![bid(w.target, gold)])]);
+    assert_eq!(s.player(BYZ).gold, control.player(BYZ).gold - gold);
+    assert_eq!(s.player(BYZ).city_offer.as_ref().unwrap().escrow, gold);
+    assert!(events.iter().any(|e| matches!(
+        e,
+        Event::CityOfferMade { escrow, price: p, guards_to_stop: 3, .. } if *escrow == gold && *p == price
+    )));
+    // +50%: two armed units (+20% each) stay under it (245 of 262); a third breaks it.
+    let o = player_view(&s, SELLER)
+        .city_offers
+        .into_iter()
+        .find(|o| o.city == w.target)
+        .unwrap();
+    assert_eq!(
+        (o.escrow, o.guards_to_stop, o.walls_to_stop),
+        (gold, 3, Some(3))
+    );
+    let mut s = s;
+    spawn_unit(&mut s, SELLER, UnitKind::Spearman, h(7, 5));
+    spawn_unit(&mut s, SELLER, UnitKind::Spearman, h(5, 5));
+    let o = player_view(&s, SELLER)
+        .city_offers
+        .into_iter()
+        .find(|o| o.city == w.target)
+        .unwrap();
+    assert_eq!((o.price_now, o.guards_to_stop), (price * 140 / 100, 1));
+    let seller_gold = s.player(SELLER).gold;
+    let (after, events) = run_out(s.clone());
+    let (outcome, paid, ..) = ended(&events).unwrap();
+    assert_eq!(
+        (outcome, paid),
+        (OfferOutcome::Sold, gold),
+        "two guards do not stop it"
+    );
+    assert_eq!(after.cities[&w.target].owner, BYZ);
+    assert!(
+        after.player(SELLER).gold >= seller_gold + gold - 50,
+        "all of the bid is paid"
+    );
+    // A third guard does.
+    spawn_unit(&mut s, SELLER, UnitKind::Spearman, h(6, 4));
+    let (_, events) = run_out(s);
+    let (outcome, _, refund, fee, _) = ended(&events).unwrap();
+    assert_eq!(outcome, OfferOutcome::Failed);
+    assert_eq!(
+        (refund, fee),
+        (gold - gold / 10, gold / 10),
+        "the fee is 10% of the bid"
+    );
+}
+
+#[test]
+fn a_bid_below_the_price_above_the_cap_or_the_treasury_is_refused() {
+    let w = world();
+    let price = buy_city::price(&w.s, w.target);
+    let below = errors(&w.s, BYZ, &[bid(w.target, price - 1)]);
+    assert_eq!(below.len(), 1);
+    assert!(below[0].contains("below the price"), "{below:?}");
+    let most = price * buy_city::MAX_BID_PERCENT / 100;
+    assert!(errors(&w.s, BYZ, &[bid(w.target, most)]).is_empty());
+    let above = errors(&w.s, BYZ, &[bid(w.target, most + 1)]);
+    assert!(above[0].contains("The most you can offer"), "{above:?}");
+    let mut s = w.s.clone();
+    s.player_mut(BYZ).gold = price + 10;
+    let poor = errors(&s, BYZ, &[bid(w.target, price + 50)]);
+    assert!(poor[0].starts_with("Needs "), "{poor:?}");
+    let (after, events) = step(&s, &[(BYZ, vec![bid(w.target, price + 50)])]);
+    assert!(after.player(BYZ).city_offer.is_none());
+    assert!(
+        events
+            .iter()
+            .any(|e| matches!(e, Event::OrderFailed { player: BYZ, .. }))
+    );
+}
+
+#[test]
+fn an_order_without_gold_offers_the_price_and_old_json_still_reads() {
+    let w = world();
+    let old: Order =
+        serde_json::from_str(&format!(r#"{{"type":"BuyCity","city":{}}}"#, w.target.0)).unwrap();
+    assert_eq!(old, buy(w.target));
+    assert_eq!(
+        serde_json::to_string(&buy(w.target)).unwrap(),
+        format!(r#"{{"type":"BuyCity","city":{}}}"#, w.target.0),
+        "gold 0 is left out, so old tapes hash the same"
+    );
+    let (s, _) = step(&w.s, &[(BYZ, vec![old])]);
+    assert_eq!(
+        s.player(BYZ).city_offer.as_ref().unwrap().escrow,
+        buy_city::price(&w.s, w.target)
+    );
+}
+
+#[test]
+fn the_view_carries_machine_fields_and_the_bid_choices_with_what_stops_each() {
+    let mut w = world();
+    let granary = w.s.setup.rule_experiments.base_production_cost(
+        Faction::Switzerland,
+        ProductionItem::Building {
+            building: BuildingKind::Granary,
+        },
+    ) * data::BUY_COST_PERCENT
+        / 100;
+    w.s.cities
+        .get_mut(&w.target)
+        .unwrap()
+        .buildings
+        .insert(BuildingKind::Granary);
+    spawn_unit(&mut w.s, SELLER, UnitKind::Spearman, h(7, 5));
+    let v = player_view(&w.s, BYZ);
+    let row = v.city_buys.iter().find(|b| b.city == w.target).unwrap();
+    assert_eq!(row.buildings_gold, granary);
+    assert_eq!(
+        (row.holds_goal, row.guards, row.short_of_gold),
+        (false, 1, 0)
+    );
+    assert_eq!(row.max_bid, row.price * 3);
+    let percents: Vec<i32> = row.bids.iter().map(|b| b.percent).collect();
+    assert_eq!(percents, vec![100, 125, 150, 200]);
+    for b in &row.bids {
+        assert_eq!(b.gold, row.price * b.percent / 100);
+        let base = buy_city::base_breakdown(&w.s, &w.s.cities[&w.target]).total;
+        assert_eq!(
+            b.guards_to_stop,
+            buy_city::guards_to_stop(base, 0, 1, false, b.gold)
+        );
+        assert!(
+            buy_city::defended_price(base, 0, 1 + b.guards_to_stop, false) > b.gold
+                && buy_city::defended_price(base, 0, b.guards_to_stop, false) <= b.gold,
+            "the smallest number of more units that breaks it"
+        );
+    }
+    assert_eq!(
+        row.bids[0].guards_to_stop, 1,
+        "at the price, one more unit breaks it"
+    );
+    // The defended price matches the breakdown.
+    let c = &w.s.cities[&w.target];
+    assert_eq!(
+        buy_city::defended_price(buy_city::base_breakdown(&w.s, c).total, 0, 1, false),
+        row.price
+    );
+    // Only the buyer sees the bid choices; the owner sees the machine fields.
+    let own = player_view(&w.s, SELLER);
+    let seen = own.city_buys.iter().find(|b| b.city == w.target).unwrap();
+    assert!(seen.bids.is_empty());
+    assert_eq!(seen.guards, 1);
+    // Short of Gold: the machine field says by how much.
+    let mut s = w.s.clone();
+    s.player_mut(BYZ).gold = 100;
+    let v = player_view(&s, BYZ);
+    let row = v.city_buys.iter().find(|b| b.city == w.target).unwrap();
+    assert_eq!(row.short_of_gold, row.price - 100);
+    // A goal in it.
+    spawn_unit(&mut s, SELLER, UnitKind::HeirToTheThrone, h(6, 5));
+    let v = player_view(&s, BYZ);
+    assert!(
+        v.city_buys
+            .iter()
+            .find(|b| b.city == w.target)
+            .unwrap()
+            .holds_goal
+    );
 }
 
 // The fall of Constantinople.

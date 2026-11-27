@@ -489,14 +489,21 @@ pub enum Event {
         item: ProductionItem,
         gold: i32,
     },
-    /// Byzantium made an offer for a rival's city (`Order::BuyCity`, `buy_city`): `escrow` Gold is
-    /// held and the city changes hands at the end of turn `ends_turn` unless the offer is stopped.
-    /// Seen by both empires' teams and everyone who knows the city.
+    /// Byzantium made an offer for a rival's city (`Order::BuyCity`, `buy_city`): `escrow` Gold
+    /// (the bid) is held and the city changes hands at the end of turn `ends_turn` unless the
+    /// offer is stopped. `price` is the city's price then (the bid is that or more). Seen by both
+    /// empires' teams and everyone who knows the city.
     CityOfferMade {
         city: CityId,
         buyer: PlayerId,
         seller: PlayerId,
         escrow: i32,
+        #[serde(default, skip_serializing_if = "crate::orders::is_zero")]
+        price: i32,
+        /// More armed units in or next to the city that would break the offer then
+        /// (`buy_city::guards_to_stop`).
+        #[serde(default, skip_serializing_if = "crate::orders::is_zero")]
+        guards_to_stop: i32,
         ends_turn: u32,
     },
     /// An offer ended (`buy_city::process_offers`): sold (`paid` Gold to the seller), cancelled

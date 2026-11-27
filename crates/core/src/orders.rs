@@ -203,12 +203,15 @@ pub enum Order {
         to: PlayerId,
         amount: i32,
     },
-    /// Byzantium only (`buy_city`, rules 63): offer to buy a rival's city. The price leaves the
+    /// Byzantium only (`buy_city`, rules 63): offer `gold` for a rival's city, from its price up
+    /// to `buy_city::MAX_BID_PERCENT`% of it (0 or left out: the price). The Gold leaves the
     /// treasury into escrow at once and the city changes hands at the end of the third turn after
-    /// this one, unless War or a price rise stops the offer first (`buy_city::blocker` says why
-    /// an order is refused). One offer at a time.
+    /// this one, unless War or a price rise above the offer stops it first
+    /// (`buy_city::bid_blocker` says why an order is refused). One offer at a time.
     BuyCity {
         city: CityId,
+        #[serde(default, skip_serializing_if = "is_zero")]
+        gold: i32,
     },
 }
 

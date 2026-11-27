@@ -126,7 +126,13 @@ function offerTip(v: PlayerView): Tip | null {
   const buyer = empireOfPlayer(v, o.buyer);
   return { key: `offer:${o.city}:${o.ends_turn}`, kind: 'offer', title: `Keep ${city.name}?`,
     why: `${buyer} is buying ${city.name} for ${o.escrow} Gold, at the end of turn ${o.ends_turn}. If its price rises above ${o.escrow} Gold, the offer fails; War calls it off.`,
-    steps: [{ instruction: 'Move military units in or next to it, or build Walls. To let it go, do nothing: you get the Gold.', target: tile(city.pos) }] };
+    steps: [{ instruction: `${keepSteps(o.guards_to_stop ?? 0, o.walls_to_stop)}. To let it go, do nothing: you get the Gold.`, target: tile(city.pos) }] };
+}
+
+/** "Move 2 more military units in or next to it, or build 1 Walls level": what breaks the offer. */
+function keepSteps(g: number, w?: number | null): string {
+  if (!g) return 'Move military units in or next to it, or build Walls';
+  return `Move ${g} more military unit${g === 1 ? '' : 's'} in or next to it, or build ${w ? `${w} Walls level${w === 1 ? '' : 's'}` : 'Walls'}`;
 }
 
 /** The tip to show now, or null. A tip already shown this turn keeps showing until the player dismisses it. */

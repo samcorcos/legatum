@@ -1,7 +1,7 @@
 //! Byzantium's Buy a city and the fall of Constantinople, both sides (`byzantium.rs`).
 use crate::fixture::{ENEMY, ME, ViewBuilder, off};
 use crate::scripted::Planner;
-use legatum_core::buy_city::{CapitalFallView, CityBuyView, CityOfferView};
+use legatum_core::buy_city::{self, CapitalFallView, CityBuyView, CityOfferView};
 use legatum_core::diplomacy::{DiplomaticAction, Relation, RelationState};
 use legatum_core::view::PlayerView;
 use legatum_core::{Breakdown, CityId, Faction, Order, PlayerId, ProductionItem, UnitId, UnitKind};
@@ -35,6 +35,34 @@ fn buy(city: u32, buyer: PlayerId, price: i32, blocker: Option<&str>) -> CityBuy
         price,
         breakdown: breakdown(price),
         blocker: blocker.map(Into::into),
+        base_price: price,
+        buildings_gold: 0,
+        holds_goal: false,
+        guards: 0,
+        short_of_gold: 0,
+        max_bid: price * buy_city::MAX_BID_PERCENT / 100,
+        bids: Vec::new(),
+    }
+}
+
+/// A running offer on `city` for `escrow` whose price is `price_now` (no armed unit near it).
+fn offer(
+    city: u32,
+    buyer: PlayerId,
+    seller: PlayerId,
+    escrow: i32,
+    price_now: i32,
+) -> CityOfferView {
+    CityOfferView {
+        city: CityId(city),
+        buyer,
+        seller,
+        escrow,
+        ends_turn: 62,
+        turns_left: 2,
+        price_now,
+        guards_to_stop: buy_city::guards_to_stop(price_now, 0, 0, false, escrow),
+        walls_to_stop: buy_city::walls_to_stop(price_now, 0, 0, false, escrow),
     }
 }
 
@@ -56,8 +84,21 @@ fn buyer_view(price: i32, gold: i32) -> PlayerView {
     v.economy.gold_per_turn = breakdown(20);
     v.players[ENEMY.0 as usize].gold = 0;
     let blocker = (gold < price).then(|| format!("Needs {price} Gold: you have {gold}"));
-    v.city_buys = vec![buy(11, ME, price, blocker.as_deref())];
+    let mut row = buy(11, ME, price, blocker.as_deref());
+    row.short_of_gold = (price - gold).max(0);
+    v.city_buys = vec![row];
     v
+}
+
+/// A rival Spearman at column `col` on row 4 (the bought city is at (14, 4)).
+fn rival_unit(v: &mut PlayerView, id: u32, col: i32) {
+    v.units.push(
+        ViewBuilder::new(40, 24)
+            .unit(id, ENEMY, UnitKind::Spearman, off(col, 4))
+            .build()
+            .units[0]
+            .clone(),
+    );
 }
 
 fn planner(v: &PlayerView) -> Planner<'_> {
@@ -70,10 +111,17 @@ fn buys(p: &Planner<'_>) -> Vec<CityId> {
     p.orders
         .iter()
         .filter_map(|o| match o {
-            Order::BuyCity { city } => Some(*city),
+            Order::BuyCity { city, .. } => Some(*city),
             _ => None,
         })
         .collect()
+}
+
+fn bid_of(p: &Planner<'_>) -> Option<i32> {
+    p.orders.iter().find_map(|o| match o {
+        Order::BuyCity { gold, .. } => Some(*gold),
+        _ => None,
+    })
 }
 
 #[test]
@@ -82,9 +130,11 @@ fn byzantium_buys_a_cheap_undefended_city_and_gene_zero_never_buys() {
     let mut p = planner(&v);
     p.plan_city_purchase();
     assert_eq!(buys(&p), vec![CityId(11)]);
+    let bid = bid_of(&p).unwrap();
+    assert!((390..=600).contains(&bid), "{bid}");
     assert_eq!(
         p.gold_left,
-        600 - 390,
+        600 - bid,
         "the escrow is taken from this turn's Gold"
     );
 
@@ -96,21 +146,43 @@ fn byzantium_buys_a_cheap_undefended_city_and_gene_zero_never_buys() {
 
 #[test]
 fn byzantium_banks_toward_an_offer_income_pays_within_ten_turns() {
-    // 390 Gold at 20 a turn: 100 now leaves 15 turns, too far; 250 leaves 7.
+    // 390 Gold (the bid may be more) at 20 a turn: 100 now leaves too many turns; 450 does not.
     let far = buyer_view(390, 100);
     let mut p = planner(&far);
     p.plan_city_purchase();
     assert_eq!(p.city_buy_savings, 0);
 
-    let near = buyer_view(390, 250);
+    let mut near = buyer_view(390, 450);
+    // A rival unit in reach: the best bid covers it, which is more than the treasury.
+    rival_unit(&mut near, 95, 19);
     let mut p = planner(&near);
     p.plan_city_purchase();
-    assert!(buys(&p).is_empty());
-    assert_eq!(p.city_buy_savings, 390);
+    assert!(buys(&p).is_empty(), "{:?}", p.orders);
+    assert!(p.city_buy_savings > 390, "{}", p.city_buy_savings);
     assert!(
-        p.gold_reserve() >= 390,
+        p.gold_reserve() >= p.city_buy_savings,
         "routine purchases leave the banked Gold"
     );
+}
+
+#[test]
+fn byzantium_overbids_to_cover_the_units_the_owner_can_bring() {
+    let mut v = buyer_view(390, 2000);
+    rival_unit(&mut v, 95, 19);
+    let p = planner(&v);
+    let a = p.city_buy_appraisals();
+    assert_eq!(a[0].bid, 390);
+    assert!(a[0].risk >= 50, "{a:?}");
+    let covering = a
+        .iter()
+        .find(|x| x.bid == buy_city::defended_price(390, 0, 2, false))
+        .expect("a bid covering two units");
+    assert!(covering.risk < a[0].risk, "{a:?}");
+    let mut p = planner(&v);
+    p.plan_city_purchase();
+    let bid = bid_of(&p).expect("an offer");
+    assert!(bid > 390, "the owner's unit is covered: {bid}");
+    assert!(bid <= 390 * buy_city::MAX_BID_PERCENT / 100);
 }
 
 #[test]
@@ -118,13 +190,7 @@ fn byzantium_skips_an_offer_the_owner_can_break_or_one_that_costs_more_than_it_i
     // Three rival units within the offer's reach and a treasury to buy a guard.
     let mut v = buyer_view(390, 600);
     for (i, col) in [17, 18, 19].into_iter().enumerate() {
-        v.units.push(
-            ViewBuilder::new(40, 24)
-                .unit(90 + i as u32, ENEMY, UnitKind::Spearman, off(col, 4))
-                .build()
-                .units[0]
-                .clone(),
-        );
+        rival_unit(&mut v, 90 + i as u32, col);
     }
     v.players[ENEMY.0 as usize].gold = 500;
     let p = planner(&v);
@@ -144,15 +210,7 @@ fn byzantium_skips_an_offer_the_owner_can_break_or_one_that_costs_more_than_it_i
 #[test]
 fn byzantium_makes_no_offer_while_one_runs_or_war_is_at_home() {
     let mut v = buyer_view(390, 600);
-    v.city_offers.push(CityOfferView {
-        city: CityId(10),
-        buyer: ME,
-        seller: ENEMY,
-        escrow: 400,
-        ends_turn: 62,
-        turns_left: 2,
-        price_now: 400,
-    });
+    v.city_offers.push(offer(10, ME, ENEMY, 400, 400));
     let mut p = planner(&v);
     p.plan_city_purchase();
     assert!(buys(&p).is_empty());
@@ -260,15 +318,9 @@ fn seller_view(escrow: i32, price_now: i32) -> PlayerView {
         .build();
     peace(&mut v, ME, ENEMY);
     v.economy.gold = 0;
-    v.city_offers.push(CityOfferView {
-        city: CityId(5),
-        buyer: ENEMY,
-        seller: ME,
-        escrow,
-        ends_turn: v.turn + 2,
-        turns_left: 2,
-        price_now,
-    });
+    let mut o = offer(5, ENEMY, ME, escrow, price_now);
+    o.ends_turn = v.turn + 2;
+    v.city_offers.push(o);
     v.city_buys = vec![buy(5, ENEMY, price_now, None)];
     v
 }
@@ -327,6 +379,16 @@ fn a_seller_with_no_unit_in_reach_buys_a_guard_in_the_city() {
                 unit: UnitKind::Spearman
             }
         }),
+        "{:?}",
+        p.orders
+    );
+    // An overbid no purchase in the turns left can reach: the Gold is kept.
+    let mut v2 = v.clone();
+    v2.city_offers[0] = offer(5, ENEMY, ME, 330 * 3, 330);
+    let mut p = planner(&v2);
+    p.defend_city_offers();
+    assert!(
+        !p.orders.iter().any(|o| matches!(o, Order::BuyItem { .. })),
         "{:?}",
         p.orders
     );

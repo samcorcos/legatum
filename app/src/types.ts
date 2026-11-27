@@ -1030,6 +1030,31 @@ export interface CityBuyView {
   breakdown: Breakdown;
   /** Why the buyer cannot make the offer now; absent when it can. */
   blocker?: string | null;
+  /** The price's first step (base, population, buildings); an offer keeps it. */
+  base_price?: number;
+  /** The full Gold price of its buildings (Walls left out). */
+  buildings_gold?: number;
+  /** It holds a goal's held VP (the price doubles). */
+  holds_goal?: boolean;
+  /** Armed units of the owner's team in or next to it now. */
+  guards?: number;
+  /** The buyer's own view: Gold it lacks for the price when only its treasury blocks the offer. */
+  short_of_gold?: number;
+  /** The most the buyer may offer (core `MAX_BID_PERCENT` of the price). */
+  max_bid?: number;
+  /** The buyer's own view: the bid choices, each with what stops it. */
+  bids?: BidView[];
+}
+
+/** One bid choice on a city (core `buy_city::BidView`). */
+export interface BidView {
+  /** Percent of the price (100 is the price). */
+  percent: number;
+  gold: number;
+  /** More military units in or next to the city that would lift its price above this bid. */
+  guards_to_stop: number;
+  /** More Walls levels that would; absent when Walls alone cannot. */
+  walls_to_stop?: number | null;
 }
 
 /** A running offer (core `buy_city::CityOfferView`). */
@@ -1045,6 +1070,10 @@ export interface CityOfferView {
   turns_left: number;
   /** The offer's price now; the offer fails at the end of a turn on which it is above `escrow`. */
   price_now: number;
+  /** More military units in or next to the city that would lift `price_now` above `escrow` (0: already above). */
+  guards_to_stop?: number;
+  /** More Walls levels that would; absent when Walls alone cannot. */
+  walls_to_stop?: number | null;
 }
 
 /** A Byzantium's capital and Heir refuge (core `buy_city::CapitalFallView`). */
@@ -1149,7 +1178,8 @@ export type Order =
   /** Give Gold to a living teammate (core `rules::gifts`): it moves after this turn's purchases, capped at the Gold left then. */
   | { type: 'GiveGold'; to: PlayerId; amount: number }
   /** Byzantium only: offer to buy a rival's city (core `buy_city`). The price leaves the treasury into escrow; the city changes hands after 3 turns unless the offer is stopped. */
-  | { type: 'BuyCity'; city: CityId };
+  /** `gold`: the offer, from the price up to 300% of it; absent or 0 offers the price. */
+  | { type: 'BuyCity'; city: CityId; gold?: number };
 
 /**
  * A one-time empire action (core `orders::Action`, serde tag "action"). One order carries them
@@ -1211,7 +1241,7 @@ export type Event =
   /** Byzantium's Heir was born in `city` (public: every empire is told, and his position is public from then on). */
   | { type: 'HeirBorn'; city: CityId; owner: PlayerId; city_name: string; at: Hex }
   /** Byzantium made an offer for a rival's city: `escrow` Gold is held and the city changes hands at the end of turn `ends_turn` unless the offer is stopped. */
-  | { type: 'CityOfferMade'; city: CityId; buyer: PlayerId; seller: PlayerId; escrow: number; ends_turn: number }
+  | { type: 'CityOfferMade'; city: CityId; buyer: PlayerId; seller: PlayerId; escrow: number; price?: number; guards_to_stop?: number; ends_turn: number }
   /** An offer ended: sold (`paid` to the seller), cancelled (`refund` in full) or failed on a price rise (`refund` minus the lost `fee`). */
   | { type: 'CityOfferEnded'; city: CityId; buyer: PlayerId; seller: PlayerId; outcome: OfferOutcome; paid?: number; refund?: number; fee?: number; reason: string }
   /** The fall of Constantinople: `captor` took Byzantium's capital and with it every city in `cities`. */

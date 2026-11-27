@@ -4,7 +4,7 @@
 // `byzantine_capitals` and says them in the player's terms.
 import { RULES } from './data';
 import { empireOfPlayer } from './empires';
-import type { Breakdown, CityBuyView, CityOfferView, CityView, CapitalFallView, Order, PlayerView } from './types';
+import type { BidView, Breakdown, CityBuyView, CityOfferView, CityView, CapitalFallView, Order, PlayerView } from './types';
 
 /** Core `buy_city` constants (exported with the rules). */
 export const BUY_CITY = RULES.buyCity;
@@ -48,8 +48,31 @@ export function myOffer(view: Pick<PlayerView, 'me'> & Partial<Pick<PlayerView, 
 export const queuedBuy = (orders: readonly Order[]): Extract<Order, { type: 'BuyCity' }> | undefined =>
   orders.find((o): o is Extract<Order, { type: 'BuyCity' }> => o.type === 'BuyCity');
 
-/** Queue an offer for `city`, replacing any other queued offer (core takes one at a time). */
-export const withBuy = (orders: readonly Order[], city: number): Order[] => [...orders.filter((o) => o.type !== 'BuyCity'), { type: 'BuyCity', city }];
+/** Queue an offer of `gold` (absent: the price) for `city`, replacing any other queued offer (core takes one at a time). */
+export const withBuy = (orders: readonly Order[], city: number, gold?: number): Order[] =>
+  [...orders.filter((o) => o.type !== 'BuyCity'), gold ? { type: 'BuyCity', city, gold } : { type: 'BuyCity', city }];
+
+/** The Gold a queued offer holds: its bid, or the city's price when it names none. */
+export function offerGold(view: Pick<PlayerView, 'me'> & Partial<Pick<PlayerView, 'city_buys'>>, o: Extract<Order, { type: 'BuyCity' }>): number {
+  return o.gold || (myCityBuy(view, o.city)?.price ?? 0);
+}
+
+/** A bid choice's name: "Price", "+25%". */
+export const bidLabel = (percent: number): string => (percent === 100 ? 'Price' : `+${percent - 100}%`);
+
+/** What breaks an offer, in one run: "2 more military units or 1 Walls level". */
+export function stopParts(guards: number, walls?: number | null): string {
+  const units = `${guards} more military unit${guards === 1 ? '' : 's'}`;
+  return walls ? `${units} or ${walls} Walls level${walls === 1 ? '' : 's'}` : units;
+}
+
+/** One line under a bid choice: "Stopped by 2 more military units or 1 Walls level". */
+export const stopLine = (b: Pick<BidView, 'guards_to_stop' | 'walls_to_stop'>): string => `Stopped by ${stopParts(b.guards_to_stop, b.walls_to_stop)}`;
+
+/** The buyer's bid choices for a city (core `CityBuyView::bids`); just the price when the view has none. */
+export function bidChoices(buy: CityBuyView): BidView[] {
+  return buy.bids?.length ? buy.bids : [{ percent: 100, gold: buy.price, guards_to_stop: 1 }];
+}
 /** Drop the queued offer. */
 export const withoutBuy = (orders: readonly Order[]): Order[] => orders.filter((o) => o.type !== 'BuyCity');
 
@@ -58,7 +81,7 @@ export function priceLines(b: Breakdown): [string, number][] {
   return b.parts.filter(([, v], i) => i === 0 || v !== 0).map(([label, v]) => [label.replace(/ x (\d)/, ' × $1').replace(/: x(\d)/, ': ×$1'), v]);
 }
 
-/** One line for a hover: "540 Gold (Base price 150, Population 4 × 60 +240, …)". */
+/** One line for a hover: "275 Gold (Starting price 75, Population 4 × 25 +100, …)". */
 export function priceText(b: Breakdown): string {
   const parts = priceLines(b).map(([l, v], i) => (i === 0 ? `${l} ${v}` : `${l} +${v}`));
   return `${b.total} Gold${parts.length > 1 ? ` (${parts.join(', ')})` : ''}`;
@@ -90,12 +113,14 @@ function offerText(view: Pick<PlayerView, 'me' | 'team' | 'players' | 'cities'>,
   const city = view.cities.find((c) => c.id === o.city)?.name ?? 'this city';
   const when = `at the end of turn ${o.ends_turn}`;
   const breaking = o.price_now > o.escrow;
+  // What stops it, when the view says (core `guards_to_stop`, `walls_to_stop`).
+  const stop = o.guards_to_stop ? ` ${stopParts(o.guards_to_stop, o.walls_to_stop)} in or next to it would do that.` : '';
   if (o.buyer === view.me) {
     return {
       bar: `Buying ${city}: yours ${when}`,
       detail: breaking
         ? `Its price rose to ${o.price_now} Gold, above your ${o.escrow} Gold offer: the offer fails at the end of this turn and you lose ${Math.floor(o.escrow * FAIL_FEE_PERCENT / 100)} Gold.`
-        : `You offered ${o.escrow} Gold. If its price rises above that (now ${o.price_now}), the offer fails and you lose ${Math.floor(o.escrow * FAIL_FEE_PERCENT / 100)} Gold.`,
+        : `You offered ${o.escrow} Gold. If its price rises above that (now ${o.price_now}), the offer fails and you lose ${Math.floor(o.escrow * FAIL_FEE_PERCENT / 100)} Gold.${stop}`,
     };
   }
   const buyer = empireOfPlayer(view, o.buyer);
@@ -104,7 +129,7 @@ function offerText(view: Pick<PlayerView, 'me' | 'team' | 'players' | 'cities'>,
       bar: `${buyer} is buying ${city}: it changes hands ${when}`,
       detail: breaking
         ? `You raised its price to ${o.price_now} Gold, above ${buyer}'s ${o.escrow} Gold offer: the offer fails at the end of this turn.`
-        : `You get the ${o.escrow} Gold ${buyer} offered. If its price rises above ${o.escrow} Gold (now ${o.price_now}), the offer fails.`,
+        : `You get the ${o.escrow} Gold ${buyer} offered. If its price rises above ${o.escrow} Gold (now ${o.price_now}), the offer fails.${stop}`,
       options: SELLER_OPTIONS,
     };
   }

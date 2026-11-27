@@ -740,12 +740,15 @@ pub fn assert_valid(view: &PlayerView, orders: &[Order]) {
             Order::SetCityAutomation { .. } => panic!("AI seats do not delegate city production"),
             Order::BuyTile { .. } => panic!("AI seats do not buy tiles"),
             // Buy a city (rules 63): only an offer the view says is legal now.
-            Order::BuyCity { city } => {
+            Order::BuyCity { city, gold } => {
                 assert!(
-                    view.city_buys
-                        .iter()
-                        .any(|b| b.city == *city && b.buyer == view.me && b.blocker.is_none()),
-                    "city offer the view refuses: {city:?}"
+                    view.city_buys.iter().any(|b| b.city == *city
+                        && b.buyer == view.me
+                        && b.blocker.is_none()
+                        && *gold >= b.price
+                        && *gold <= b.max_bid
+                        && *gold <= view.economy.gold),
+                    "city offer the view refuses: {city:?} for {gold}"
                 );
             }
             // Deals (rules 61): Hard's coalition Gold, only with deals on.

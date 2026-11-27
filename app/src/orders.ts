@@ -322,8 +322,8 @@ export function describeOrder(o: Order, view: PlayerView): string {
     case 'SetScienceConversion': return `Convert Science to ${o.to}`;
     case 'GiveGold': return `Give ${o.amount} Gold to ${withThe(empireOfPlayer(view, o.to))}`;
     case 'BuyCity': {
-      const price = view.city_buys?.find((b) => b.city === o.city && b.buyer === view.me)?.price;
-      return `Make an offer for ${city(o.city)}${price === undefined ? '' : ` · ${price} Gold`} · starts when the turn ends`;
+      const gold = o.gold || view.city_buys?.find((b) => b.city === o.city && b.buyer === view.me)?.price;
+      return `Make an offer for ${city(o.city)}${gold === undefined ? '' : ` · ${gold} Gold`} · starts when the turn ends`;
     }
     case 'Action':
       switch (o.action.action) {

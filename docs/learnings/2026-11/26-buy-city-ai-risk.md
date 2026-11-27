@@ -18,3 +18,7 @@
   treasury blocks the offer) and the price breakdown labels "Buildings" and "Holds a goal". A
   rewording in core `buy_city.rs` silently disables banking, building worth and goal worth; a
   structured blocker or breakdown kind in `CityBuyView` would remove the dependency.
+
+Corrected 2026-11-26 (overbid change, `26-buy-city-overbid.md`): the AI no longer reads strings;
+`CityBuyView` carries machine fields and `CityOfferView::guards_to_stop` gives the seller's count
+directly, so the base-from-`price_now` derivation above is no longer used.
