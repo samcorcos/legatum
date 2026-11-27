@@ -84,7 +84,7 @@ it('asking for Gold queues a negative amount, and paying more than you have is r
   expect(button('Offer Alliance')!.querySelector('[data-gain-chip]')!.textContent).toContain('+50');
   act(() => button('Offer Alliance')!.click());
   expect(orders()).toEqual([{ type: 'ProposeTreaty', to: 1, kind: 'Alliance', gold: -50 }]);
-  act(() => button('Offer Alliance')!.click());
+  act(() => (container.querySelector('[data-testid=diplomacy-queued] button') as HTMLButtonElement).click());
   act(() => button('You pay')!.click());
   expect(container.querySelector('[data-testid=deal-forecast]')!.getAttribute('role')).toBe('alert');
   expect(text()).toContain('You have 30 Gold, so offer at most 30.');
