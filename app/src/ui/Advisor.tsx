@@ -41,6 +41,19 @@ export function targetElement(target: Exclude<NonNullable<AdvisorTarget>, { kind
     case 'buyTile': return [...document.querySelectorAll<HTMLElement>('.city-panel button')].find((e) => /^Buy a tile/.test(e.textContent?.trim() ?? '') && e.getClientRects().length) ?? null;
     case 'buyCity': return first('[data-testid="buy-city-offer"]');
     case 'closeResearch': return first('dialog.tech-modal[open] button[aria-label="Close research"]');
+    case 'researchQueue': return first('dialog.tech-modal[open] .research-queue');
+    case 'queueTech': {
+      const modal = document.querySelector<HTMLElement>('dialog.tech-modal[open]');
+      const visible = (el: HTMLElement) => !!el.getClientRects().length && !el.closest('[hidden]');
+      const card = [...(modal?.querySelectorAll<HTMLElement>('.era-card') ?? [])].find((el) => el.dataset.tech === target.value && visible(el));
+      const cardButton = card && [...card.querySelectorAll<HTMLElement>('button')].find((el) => el.dataset.testid === 'queue-add' || el.textContent?.trim().startsWith('+ Queue'));
+      if (cardButton) return cardButton;
+      const node = [...(modal?.querySelectorAll<HTMLElement>('.tree-node') ?? [])].find((el) => el.dataset.tech === target.value && visible(el));
+      const nodeButton = node && [...node.querySelectorAll<HTMLElement>('button')].find((el) => el.textContent?.trim().startsWith('+ Queue'));
+      if (nodeButton) return nodeButton;
+      if (node && window.matchMedia?.('(pointer: coarse)').matches) return first('dialog.tech-modal[open] [data-testid="research-view-era"]');
+      return node ?? null;
+    }
     // The tech tree's node for it, or on the This era view its card's Research now.
     case 'tech': return [...document.querySelectorAll<HTMLElement>('dialog.tech-modal .tree-node')].find((e) => e.dataset.tech === target.value)
       ?? [...document.querySelectorAll<HTMLElement>('dialog.tech-modal .era-card')]
@@ -134,6 +147,7 @@ export function Advisor() {
   const selection = useGame((s) => s.selection);
   const mode = useGame((s) => s.mode);
   const techOpen = useGame((s) => s.techOpen);
+  const report = useGame((s) => s.report);
   const client = useGame((s) => s.client);
   const animationsOn = useCombatFx((s) => s.enabled);
   const paused = useGame((s) => !!s.busy || !!s.endTurnConfirmation || s.reportOpen || s.diplomacyOpen || !!s.ready[s.seat] || (!!s.place && s.place.intent !== 'tile') ||
@@ -166,6 +180,7 @@ export function Advisor() {
   // Nothing to plan while the card is hidden (a takeover, the Guide, a paused game): the plan runs the engine.
   const advice = view && !hidden ? advisorSuggestion({ view, orders: orders[seat] ?? [], errors: errors[seat], selection,
     humans: humans.length, remote: client?.kind === 'remote', touch, techOpen, mode, turnLabel, placingTile, local: useGame.getState(),
+    researchQueueDrained: report?.events[seat]?.some((event) => event.type === 'ResearchQueueAdvanced' && event.player === view.me && event.next === null),
     forecast: client ? (unit, at, mode) => client.forecast(view.me, unit, at, mode) : undefined }, seen,
     skippedTurn === view.turn ? skipped : [], practice, tips, locks) : null;
   // While a tile is being placed, only the tip that asked for that tile keeps guiding (its last step rings the tile).

@@ -31,6 +31,24 @@ afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 const control = (name: 'found' | 'fortify' | 'explore' | 'ranged' | 'build', value?: string) => targetElement({ kind: 'control', name, value });
 
+it('finds the queue strip and each current or future add-to-queue control', () => {
+  const mounted = render(<dialog className="tech-modal" open>
+    <div className="research-queue">Research queue</div>
+    <article className="era-card" data-tech="Masonry"><button data-testid="queue-add">+ Queue</button></article>
+  </dialog>);
+  const queueTarget = (value: string) => targetElement({ kind: 'control', name: 'queueTech', value });
+  expect(targetElement({ kind: 'control', name: 'researchQueue' })?.className).toBe('research-queue');
+  expect(queueTarget('Masonry')?.getAttribute('data-testid')).toBe('queue-add');
+  expect(queueTarget('Writing')).toBeNull();
+  mounted.rerender(<dialog className="tech-modal tree-mode" open><div className="tree-node" data-tech="Masonry">Masonry</div></dialog>);
+  expect(queueTarget('Masonry')?.className).toBe('tree-node');
+  vi.stubGlobal('matchMedia', () => ({ matches: true, addEventListener: () => {}, removeEventListener: () => {} }));
+  mounted.rerender(<dialog className="tech-modal tree-mode" open><button data-testid="research-view-era">This era</button><div className="tree-node" data-tech="Masonry">Masonry</div></dialog>);
+  expect(queueTarget('Masonry')?.textContent).toBe('This era');
+  mounted.rerender(<dialog className="tech-modal tree-mode" open><div className="tree-node" data-tech="Masonry"><button>+ Queue Masonry</button></div></dialog>);
+  expect(queueTarget('Masonry')?.textContent).toBe('+ Queue Masonry');
+});
+
 it('finds real unit action buttons on mounted panels', () => {
   const original = view.units.find((u) => u.owner === view.me && u.military)!;
   const unit: UnitView = { ...original, kind: 'Spearman', military: true, ranged: 3, range: 2 };

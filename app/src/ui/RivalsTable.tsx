@@ -8,6 +8,7 @@ import { bordersOpen } from '../deals';
 import { empireVars } from './vpParts';
 import { Icon } from './bits';
 import { Tip } from './Tip';
+import { HOLD_TURNS } from '../victoryHold';
 import { CapitalChip, ClosedChip, DecadenceChip, LeadChip, TombChip, type RowRelation } from './VpHoldings';
 import './rivals.css';
 
@@ -38,7 +39,7 @@ export function teamStats(view: PlayerView, row: VpRow): RivalStats {
 
 /** What each column of the rivals table counts: the hover text on its icon (an icon alone never explains itself). */
 export const COLUMN_TIPS = {
-  vp: (target: number) => <><b>Victory points (VP)</b><div>The first team to hold {target} VP for 10 turns wins.</div></>,
+  vp: (target: number) => <><b>Victory points (VP)</b><div>The first team to hold {target} VP for {HOLD_TURNS} turns wins.</div></>,
   gold: <><b>Gold</b><div>Gold in the treasury.</div></>,
   army: <><b>Army points</b><div>The fighting strength of all its units. Red: {STRONG_ARMY_RATIO} times yours or more.</div></>,
   cities: <><b>Cities</b><div>How many cities it owns.</div></>,
@@ -93,7 +94,7 @@ export function RivalsTable({ view, model, relationOf, onOpen }: {
             {!unmet && row.members.length > MAX_CRESTS && <Tip hoverOnly className="rv-more" content={row.members.map((m) => empireOfPlayer(view, m.id)).join(', ')}>+{row.members.length - MAX_CRESTS + 1}</Tip>}
           </span>
           <span className="rv-name-col">
-            {nameTip ? <Tip hoverOnly content={nameTip}><span className="rv-name">{keepSuffix(label)}</span></Tip> : <span className="rv-name">{keepSuffix(label)}</span>}
+            {nameTip ? <Tip hoverOnly placement="top" content={nameTip}><span className="rv-name">{keepSuffix(label)}</span></Tip> : <span className="rv-name">{keepSuffix(label)}</span>}
             {rel && !unmet && <Tip hoverOnly content={rel.title}><span className={`rv-rel ${rel.kind}${rel.declared ? ' declared' : ''}${rel.isNew ? ' new' : ''}`} data-relation={rel.text}>
               <TreatyEmblem kind={rel.kind === 'war' ? 'War' : rel.kind === 'alliance' ? 'Alliance' : 'Peace'} size={12} /><span className="rv-rel-text">{rel.text}</span>
             </span></Tip>}
