@@ -118,21 +118,44 @@ Default stance is **skeptical**, never polite rubber-stamping. Read the **full d
 1. **Philosophy & game alignment:** Does this fit `CLAUDE.md`'s 11 pillars, `.claude/agents/legatum-design-reviewer.md`, and `.claude/skills/legatum-design/SKILL.md` (no contradicted decisions or re-proposed rejected ideas; serves explore -> expand -> build -> compete)?
 2. **Simplicity & anti-bloat (Pillar 1 / 3 / 9):** Does this earn its complexity? Reject scope creep, speculative abstractions, unnecessary settings/flags, and UI clutter. Prefer deleting or simplifying over adding knobs.
 3. **Correctness & security:** Full diff checked for bugs, determinism violations (`crates/core`), missing tests (fail-before / pass-after), secrets/personal data, or unsafe patterns.
-4. **Gates & CI:** Confirm `ci-ok` is `SUCCESS` on the **exact** head commit SHA, and every reviewer required by `tools/gates/check.py` (docs, plain-language, UI, art, advisor, design) has a `PASS` comment naming that exact head SHA.
+4. **Gates & CI:** Confirm `ci-ok` is `SUCCESS` on the **exact** head commit SHA, and every reviewer required by `tools/gates/check.py` (docs, plain-language, UI, art, advisor, design) has a canonical `PASS` comment naming that exact head SHA. Confirm the required `peer-review` check passes before merging.
 
-Post a signed comment in this exact format:
+Post a review as a **top-level PR conversation comment** using this exact format (no enclosing code fence). Replace the family and full 40-character lowercase SHA; include only specialist roles actually performed. A specialist-only review can omit `peer: PASS`. Keep verdict lines together above the blank line, followed by nonempty findings:
 
-```markdown
-Peer-review (<reviewer_agent> reviewing <author_agent>) at <full_head_sha>
+```text
+Legatum review: gemini at <full_head_sha>
+peer: PASS
+legatum-docs-reviewer: PASS
 
-- **Philosophy & alignment:** <specific check against CLAUDE.md pillars / legatum-design>
-- **Simplicity & anti-bloat:** <does it earn its complexity? any scope creep or deletable code?>
-- **Correctness & tests:** <diff findings and test coverage>
-- **Gates & CI:** `ci-ok` <status> at `<short_sha>`; `tools/gates/check.py` required reviewers: <list / satisfied>
-- **Verdict:** <PASS — merging | REQUEST CHANGES — blockers listed | NEEDS HUMAN — reason>
+Philosophy & alignment: <specific checks against the pillars and settled decisions>
+Simplicity & anti-bloat: <what was simplified or why the remaining complexity is needed>
+Correctness & tests: <findings and evidence>
+Gates & CI: ci-ok passed at <full_head_sha>; required reviewers: <roles / satisfied>
+Written by Gemini (Google).
 ```
 
-*(If your review also fulfills a required reviewer role from `tools/gates/check.py` that you actually executed — e.g. `legatum-docs-reviewer`, `legatum-design-reviewer`, `legatum-plain-language-reviewer` — name that role and the exact head SHA explicitly in the comment so `check.py --pr-comments` recognizes it.)*
+Use `FAIL` instead of `PASS` for blocking findings. Name the applicable role(s), or `peer` for the overall peer review. The lead may relay a specialist's actual verdict under the lead's family; doing so does not make it independent peer approval. A review covers only that commit; never copy an old verdict onto a new SHA without reviewing the changes.
+
+“Signed” means attributed to the declared model family, not a cryptographic signature. All contributing families must have `author:<family>` labels, including after a handoff. The peer must differ from **every** contributing family; specialist reviews may come from an author's family.
+
+### Required `peer-review` check
+
+The `Peer review` workflow publishes a check named `peer-review` on the current PR head. Once configured as required alongside `ci-ok`, GitHub blocks ordinary merges until both pass. Labels such as `needs-review` route work; they do not approve a PR. GitHub may still display a disabled merge control, and administrator bypass settings are unchanged.
+
+The evaluator reads current comments on PR open/reopen, new commits, relevant PR/label changes, and comment creation/edit/deletion. It accepts only the canonical format above, posted by the configured trusted GitHub account (`samcorcos`), and only verdicts naming the exact current SHA. It requires every specialist listed by the trusted default branch's `tools/gates/check.py` plus an independent peer PASS. For each family/role the most recently updated verdict wins; outstanding FAIL verdicts block until that family clears them. `changes-requested` also blocks until addressed and removed. Removing or editing an approval causes reevaluation; as with CI, event processing is asynchronous.
+
+`check.py --pr-comments` remains a legacy specialist sanity check with permissive matching; it cannot certify the required `peer-review` check or independent approval. Only top-level conversation comments count; inline comments, formal review bodies, labels, abbreviated SHAs, quoted examples, and older free-form signed comments do not. Agents must post the canonical comment after actually performing the review. Model identity remains self-declared because accounts are shared: this is an accidental-merge safeguard, not proof of which model ran. Do not create a separate “approved” label.
+
+The write-enabled workflow checks out `master` and reads PR git objects as data; it never executes code from the PR. It reads all comment pages, marks the check in progress before evaluating, fails the initialized check on evaluation errors, and checks for changes before publishing success. A GitHub outage before the check can be initialized cannot revoke an earlier passing result; wait for successful reevaluation before merging after a review changes. Its check does not replace `ci-ok`, the five guardrails, human-only merge decisions, or a substantive review. Governance/security PRs can pass the check but must still be merged by the maintainer. Forks, unknown author families, and branches outside the agent naming convention remain blocked for explicit human handling; this gate does not add an outside-contributor approval protocol.
+
+**One-time activation (maintainer):**
+
+1. Review and merge the workflow PR under the existing human-only policy. The new workflow must be on `master` before its comment triggers can run; do not require a nonexistent check for this bootstrap PR.
+2. In **Actions → Peer review → Run workflow**, choose `master` and enter an open agent PR number. Confirm its `peer-review` check appears on the PR. It should fail if required approvals are absent. Repeat for existing open PRs; future PR events initialize it automatically.
+3. In **Settings → Rules → Rulesets → [Protect master](https://github.com/samcorcos/legatum/settings/rules/27857382)**, enable **Require status checks to pass**, preserve all existing required checks including `ci-ok`, and add **`peer-review`**, selecting GitHub Actions as its source where available. Save without changing administrator bypass behavior.
+4. Verify an unreviewed PR reports merging blocked by `peer-review`. After genuine current-commit approvals arrive, verify the check passes and ordinary merging becomes available when all other requirements pass. A new commit must require new reviews.
+
+If a run fails or a comment was posted using an Actions `GITHUB_TOKEN` (which does not trigger another Actions workflow), use the same **Run workflow** control to reevaluate current state. Do not rerun an old approval or remove the required check to treat a missing review as passed. Repository administration permission is required to change required checks; merging this code alone does not activate branch protection.
 
 ### 4. Prevent concurrent merge races
 Before merging:
