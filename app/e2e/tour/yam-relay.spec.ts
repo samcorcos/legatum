@@ -1,6 +1,6 @@
 // Screen tour, the Yam Relay Station and roads. One of the domain slices of the old e2e/screen-tour.spec.ts; run it alone with
 // `npx playwright test e2e/tour/yam-relay`. Shots land in test-results/screen-tour/<size>/yam-relay/.
-import { test, expect } from '../fixtures';
+import { test, expect, soloContext } from '../fixtures';
 import { coreFixture } from '../../src/test/coreFixture';
 import { roadsFixture } from '../../src/test/roadsFixture';
 import { hallFixture } from '../../src/test/hallFixture';
@@ -167,7 +167,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await shot(page, size, '95s-hall-build-card-retake');
   });
 
-  test('Yam Relay Station: the build card (available, locked while building elsewhere) and its completion moment', async ({ page, browser }) => {
+  test('Yam Relay Station: the build card (available, locked while building elsewhere) and its completion moment', async ({ page, browser, baseURL }) => {
     test.setTimeout(180_000);
     const f = hallFixture('buildable');
     f.fixture.players[0].gold = 2000;
@@ -176,7 +176,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     const card = page.locator('.city-panel .production-choice[data-item^="w:YamRelayStation:"]').first();
     await card.scrollIntoViewIfNeeded();
     await expect(card.locator('.prod-cost')).toContainText(/\d{3}/);
-    await expect(card).toContainText('every empire may cross all of the holder\'s land at Peace');
+    await expect(card).toContainText('It lays roads to every city on the map, and whoever holds its tile scores 2 VP.');
     await expect(card.locator('.btn-buy')).toBeVisible();
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, '95t-hall-build-card-available');
@@ -242,7 +242,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     ]);
     await expect(page.locator('.moment-card').first()).toContainText('The Yam Network');
     await shot(page, size, '95u-hall-built-moment');
-    const context = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+    const context = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
     try {
       const p = await context.newPage();
       const g = await openHall(p, 'building');

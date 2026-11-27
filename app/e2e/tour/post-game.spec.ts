@@ -1,6 +1,6 @@
 // Screen tour, the end of the game and the 8.9.4 features. One of the domain slices of the old e2e/screen-tour.spec.ts; run it alone with
 // `npx playwright test e2e/tour/post-game`. Shots land in test-results/screen-tour/<size>/post-game/.
-import { test, expect } from '../fixtures';
+import { test, expect, soloContext } from '../fixtures';
 import { endPlanning } from '../turnActions';
 import { overlayBox } from '../overlayHelpers';
 import { coreFixture } from '../../src/test/coreFixture';
@@ -16,7 +16,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
   test.use({ viewport: { width: size.width, height: size.height } });
 
 
-  test('game over: victory, team victory, a rival\'s victory and defeat', async ({ page, browser }) => {
+  test('game over: victory, team victory, a rival\'s victory and defeat', async ({ page, browser, baseURL }) => {
     test.setTimeout(120_000);
     await loadFixture(page, gameOverCoreSave('victory'), 164);
     await expect(page.locator('dialog.gameover')).toBeVisible();
@@ -26,7 +26,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await shot(page, size, '26-victory');
 
     for (const [kind, name] of [['team-victory', '26b-victory-team'], ['rival-victory', '26c-defeat-rival-victory'], ['defeat', '27-defeat']] as const) {
-      const context = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+      const context = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
       try {
         const p = await context.newPage();
         await loadFixture(p, gameOverCoreSave(kind), 164);
@@ -41,10 +41,10 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
 
   // The end of a game with its recorded history (real end states of the user's own games): the reveal, then the
   // post-game report's four tabs, for a win and for a game lost to the AI.
-  test('end of game: the reveal and the post-game report, won and lost', async ({ browser }) => {
+  test('end of game: the reveal and the post-game report, won and lost', async ({ browser, baseURL }) => {
     test.setTimeout(240_000);
     for (const [fixture, prefix] of [['swiss-win', '26d'], ['rival-win', '26j']] as const) {
-      const context = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+      const context = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
       try {
         const p = await context.newPage();
         const { game, turn } = postGameSave(fixture);

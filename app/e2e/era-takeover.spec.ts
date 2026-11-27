@@ -123,6 +123,9 @@ for (const size of SIZES) test.describe(`era takeover ${size.width}x${size.heigh
     await expect(t.getByTestId('era-up-objectives')).toHaveCount(0);
     await expect(t).not.toContainText('Victory points open now');
     await page.keyboard.press('Enter');
+    // Choose research is the era card's primary; its panel opens ahead of the next held card.
+    await expect(page.locator('dialog.tech-modal')).toBeVisible();
+    await page.keyboard.press('Escape');
     const check = page.getByTestId('score-check');
     await expect(check).toBeVisible();
     await expect(check.locator('.sc-kicker')).toHaveText('The Medieval Age begins · Turn 92');
@@ -156,6 +159,8 @@ for (const size of SIZES) test.describe(`era takeover ${size.width}x${size.heigh
     await stageScoreCheck(page);
     await expect(takeover(page)).toBeVisible();
     await page.keyboard.press('Enter');
+    await expect(page.locator('dialog.tech-modal')).toBeVisible();
+    await page.keyboard.press('Escape');
     const check = page.getByTestId('score-check');
     await expect(check).toBeVisible();
     const coach = check.getByTestId('score-coach');

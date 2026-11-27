@@ -13,6 +13,9 @@ type GameWindow = Window & { legatum: typeof useGame };
 export async function stageHoldings(page: Page, { oneCardPerAge = false }: { oneCardPerAge?: boolean } = {}) {
   const base = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return structuredClone(s.views![s.seat]); });
   const v = withV2(base, { era: 2, scored: [2] });
+  // These ledger cases inspect every empire's named holdings. Meeting each team is part of
+  // the staged view; an unmet rival deliberately shows only a question mark in the live UI.
+  v.diplomacy.met = [...new Set(v.players.map((p) => p.team))].filter((t) => t !== v.team);
   // `withV2` stages three cards per Age so list tests see several lines; a real game draws one.
   if (oneCardPerAge) {
     v.eras = v.eras.map((e) => ({ ...e, objectives: e.objectives.slice(0, 1) }));

@@ -211,25 +211,26 @@ test(`${look} look: every faction sheet fits at 1000x600 with no internal scroll
   }
 });
 
-// Era overhaul: the top bar's era chip and the research screen fit the window in a two-human game too
-// (the second seat adds a row to the dock and a second research state).
+// The era chip and research screen fit with an AI teammate as well as rival empires.
 for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }]) {
-  test(`${size.width}×${size.height} two humans: the era chip and the research screen fit`, async ({ page }) => {
+  test(`${size.width}×${size.height} with an AI teammate: the era chip and the research screen fit`, async ({ page }) => {
     const { researchFixture } = await import('../src/test/researchFixture');
     const { coreFixture } = await import('../src/test/coreFixture');
     await page.setViewportSize(size);
     const fixture = researchFixture('India');
-    fixture.players.forEach((p, i) => { p.isHuman = i < 2; fixture.setup.players[i].is_human = i < 2; });
+    fixture.players.forEach((p, i) => { p.isHuman = i === 0; fixture.setup.players[i].is_human = i === 0; });
+    fixture.players[1].team = fixture.players[0].team;
+    fixture.setup.players[1].team = fixture.setup.players[0].team;
     fixture.players[0].research = 'Masonry'; fixture.players[0].research_queue = ['Masonry', 'Writing'];
     await page.addInitScript((game) => {
       if (!location.protocol.startsWith('http')) return;
-      localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 2, names: ['Ada', 'Bo'], savedAt: new Date().toISOString(), game }));
+      localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 2, names: ['Ada'], savedAt: new Date().toISOString(), game }));
       localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
     }, coreFixture(fixture));
     await page.goto('/?client=wasm');
     await page.getByRole('button', { name: /^Continue/ }).click();
     await expect(page.getByTestId('turn-number')).toHaveText('2');
-    await expect(page.locator('.seatbar .local-seat')).toHaveCount(2);
+    await expect(page.locator('.seatbar .local-seat')).toHaveCount(0);
     const chip = page.getByTestId('era-chip');
     await expect(chip).toContainText('Ancient');
     const bar = (await page.locator('.topbar').boundingBox())!, box = (await chip.boundingBox())!;

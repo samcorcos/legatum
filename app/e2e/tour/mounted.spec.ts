@@ -4,7 +4,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import type { TechId } from '../../src/types';
-import { test, expect } from '../fixtures';
+import { test, expect, soloContext } from '../fixtures';
 import { coreFixture } from '../../src/test/coreFixture';
 import { researchFixture } from '../../src/test/researchFixture';
 import { wallsFixture } from '../../src/test/wallsFixture';
@@ -133,7 +133,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     }
   });
 
-  test('mounted production picker: the Horseman, Cataphract and Knight build cards in a city', async ({ browser }) => {
+  test('mounted production picker: the Horseman, Cataphract and Knight build cards in a city', async ({ browser, baseURL }) => {
     test.setTimeout(240_000);
     const era0 = TECHS.filter((t) => TECH_ERA[t] === 0);
     const sets: [string, TechId[], string, string][] = [
@@ -143,7 +143,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     ];
     const texts: string[] = [];
     for (const [label, techs, unit, name] of sets) {
-      const context = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+      const context = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
       try {
         const p = await context.newPage();
         const f = researchFixture('India');

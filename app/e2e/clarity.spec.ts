@@ -105,7 +105,7 @@ for (const viewport of VIEWPORTS) {
       }
       // The founded capital puts the opening Spearman in friendly territory;
       // the remaining upgrade blocker is its technology requirement.
-      expect(reasons).toContain('Research Mathematics first');
+      expect(reasons).toContain('Needs Mathematics');
     });
 
     test('the research dialog fits, its forecast shows in full, and capital Science is available (A11, A12)', async ({ page }) => {

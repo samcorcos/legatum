@@ -72,8 +72,8 @@ for (const size of SIZES) test.describe(`tech unlock ${size.width}x${size.height
     await expect(card(page)).toContainText('No research is set.');
     await expect(card(page).getByRole('button', { name: /^Choose research/ })).toBeVisible();
     await expect(card(page).getByRole('button', { name: /^Later/ })).toBeVisible();
-    // One live Return primary: the dock's own Return badge steps back while the card owns Return.
-    await expect(page.locator('.seatbar .cta .kbd').first()).toHaveCSS('visibility', 'hidden');
+    // One live Return primary: the dock omits its badge while the card owns Return.
+    await expect(page.locator('.seatbar .cta .kbd')).toHaveCount(0);
     // The whole card is on screen with nothing clipped or overprinted.
     const box = (await card(page).boundingBox())!;
     expect(box.y).toBeGreaterThanOrEqual(0); expect(box.y + box.height).toBeLessThanOrEqual(size.height);

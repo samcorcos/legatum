@@ -103,7 +103,7 @@ export async function revealSidebar(page: Page, group: 'goal' | 'alerts' | 'turn
 }
 
 /**
- * The slim 196 px rail (1000x600 with the unit panel open, the commonest state there) is its own layout: every row
+ * The slim 200 px rail (1000x600 with the unit panel open, the commonest state there) is its own layout: every row
  * stays inside the rail, a summary's count never spills out of its row onto the next (8.9.14 review: "0/3 · +2"
  * wrapped across the divider), and a race list cut by the column says "+N more".
  */

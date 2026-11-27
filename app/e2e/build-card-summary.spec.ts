@@ -18,7 +18,7 @@ for (const size of SIZES) {
         const state = researchFixture('India');
         const city = state.cities.find((c) => c.owner === 0 && c.isCapital)!;
         city.buildings = [];
-        if (era === 'modern') state.players[0].techs = TECHS.slice(0, TECHS.indexOf('Flight') + 1);
+        if (era === 'modern') state.players[0].techs = TECHS.slice(0, TECHS.indexOf('AirPower') + 1);
         await loadFixture(page, coreFixture(state), 2);
         await selectThing(page, 'city', city.id);
         const panel = page.locator('.city-panel');
@@ -38,7 +38,7 @@ for (const size of SIZES) {
 
         const fighter = panel.locator('.production-choice[data-item="u:Fighter"]');
         if (era === 'modern') {
-          await expect(fighter.locator('.prod-effect')).toContainText('Guards 4 tiles');
+          await expect(fighter.locator('.prod-effect')).toContainText('Guards 4 tiles against air strikes');
           for (const item of ['Fighter', 'Bomber']) {
             const summary = panel.locator(`.production-choice[data-item="u:${item}"] .production-more > summary`);
             expect(await summary.evaluate((el) => el.scrollWidth <= el.clientWidth + 1), `${item} summary fits at ${size.width}x${size.height}`).toBe(true);
@@ -48,11 +48,11 @@ for (const size of SIZES) {
           await more.focus();
           await page.keyboard.press('Enter');
           await expect(fighter.locator('.production-more-text')).toBeVisible();
-          await expect(fighter.locator('.production-more-text')).toContainText('Wait stops it asking each turn');
+          await expect(fighter.locator('.production-more-text')).toContainText('Its strikes take no retaliation');
           await more.click();
           await expect(fighter.locator('.production-more-text')).toBeHidden();
           await fighter.getByRole('button', { name: 'Build Fighter' }).hover();
-          await expect(page.locator('[role="tooltip"]:not([hidden])')).toContainText('Wait stops it asking each turn');
+          await expect(page.locator('[role="tooltip"]:not([hidden])')).toContainText('Its strikes take no retaliation');
         }
         // More shares the summary's first line; a long summary wraps whole onto a second, never an ellipsis, and never leaves More alone.
         const lines = await panel.locator('.production-choice .production-more > summary').evaluateAll((els) => els.filter((el) => el.getBoundingClientRect().height > 0).map((el) => {

@@ -2,7 +2,7 @@
 // `npx playwright test e2e/tour/research-unlocks`. Shots land in test-results/screen-tour/<size>/research-unlocks/.
 import type { Page } from '@playwright/test';
 import type { TechId } from '../../src/types';
-import { test, expect } from '../fixtures';
+import { test, expect, soloContext } from '../fixtures';
 import { endPlanning, skipEraFilm } from '../turnActions';
 import { coreFixture } from '../../src/test/coreFixture';
 import { researchFixture } from '../../src/test/researchFixture';
@@ -19,7 +19,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
   test.use({ viewport: { width: size.width, height: size.height } });
 
 
-  test('research panel by faction: Byzantium, Mongol stepping stone, Switzerland, Athens', async ({ page, browser }) => {
+  test('research panel by faction: Byzantium, Mongol stepping stone, Switzerland, Athens', async ({ page, browser, baseURL }) => {
     test.setTimeout(120_000);
     const research = page.locator('dialog.tech-modal');
     const openResearch = async (p: Page) => {
@@ -50,7 +50,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
 
     // The Mongols never raise Walls (rules 57): Masonry's card lists only its Quarry bonus for them.
     {
-      const context0 = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+      const context0 = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
       try {
         const p = await context0.newPage();
         await loadFixture(p, coreFixture(researchFixture('Mongols')), 2);
@@ -69,7 +69,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       ['Switzerland', 'Masonry', 'Alpine Redoubt', '62-research-switzerland'],
       ['Athens', 'Writing', 'Lyceum', '63-research-athens'],
     ] as const) {
-      const context = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+      const context = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
       try {
         const p = await context.newPage();
         await loadFixture(p, coreFixture(researchFixture(faction)), 2);
@@ -82,7 +82,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     }
   });
 
-  test('Science hover: the capital, cities and buildings, for Byzantium and a faction with a renamed Library', async ({ page, browser }) => {
+  test('Science hover: the capital, cities and buildings, for Byzantium and a faction with a renamed Library', async ({ page, browser, baseURL }) => {
     // A University and Writing so the buildings line has something to add (legatum-ui: "Yield
     // hovers show where the number comes from").
     const byzantium = researchFixture('Byzantium');
@@ -99,7 +99,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await expect(hover).not.toContainText(/salvage|camp|knowledge from/i);
     await shot(page, size, '64-science-hover-byzantium');
 
-    const context = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+    const context = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
     try {
       const p = await context.newPage();
       const normal = researchFixture('Athens');
@@ -136,7 +136,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await shot(page, size, '90b-research-world-age-open');
   });
 
-  test('eras: the research screen with a forecast, the era-up card and a rival\'s era notice', async ({ page }) => {
+  test('eras: the research screen with a forecast, the era-up card and a rival\'s era notice', async ({ page, browser, baseURL }) => {
     test.setTimeout(120_000);
     // Ancient: two techs known, Currency and Writing discounted by diffusion, Masonry researching with Writing queued behind it.
     const ancient = researchFixture('India');
@@ -152,7 +152,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await research.getByRole('button', { name: 'Close research', exact: true }).click();
 
     // Entering the Classical era: the unlock card first, then the era card with the five techs and the choice to make.
-    const context = await page.context().browser()!.newContext({ viewport: { width: size.width, height: size.height } });
+    const context = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
     try {
       const p = await context.newPage();
       const finishing = researchFixture('India');
@@ -186,7 +186,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     } finally { await context.close(); }
   });
 
-  test('tech unlock card: every own tech, with a building to show or a stepping stone to continue from', async ({ page, browser }) => {
+  test('tech unlock card: every own tech, with a building to show or a stepping stone to continue from', async ({ page, browser, baseURL }) => {
     test.setTimeout(180_000);
     // Stages the report AND sets the same research in the store, so the card and the top bar agree.
     const unlockReport = async (p: Page, tech: TechId, researching = true) => {
@@ -302,9 +302,9 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     for (const [faction, tech, text, file] of [
       ['Byzantium', 'Writing', 'Build a Library in any city', '80f-unlock-card-library'],
       ['Switzerland', 'BronzeWorking', 'Build a Workshop in any city: +2 Production', '80c-unlock-card-switzerland'],
-      ['Mongols', 'Masonry', 'Quarries +1 Production', '80d-unlock-card-stepping-stone'],
+      ['Mongols', 'Masonry', 'Quarries upgrade: Deep Quarry (+1 Production)', '80d-unlock-card-stepping-stone'],
     ] as const) {
-      const context = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+      const context = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
       try {
         const p = await context.newPage();
         await loadFixture(p, coreFixture(researchFixture(faction)), 2);
@@ -318,7 +318,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       } finally { await context.close(); }
     }
     // The common real case: the engine finishes the last queued tech, so nothing is set to research next.
-    const context = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+    const context = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
     try {
       const p = await context.newPage();
       const state = researchFixture('India');
@@ -348,7 +348,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
   });
 
 
-  test('Egypt skips Bronze Working: four Ancient cards, counts without it, its unlock and era-up cards', async ({ page, browser }) => {
+  test('Egypt skips Bronze Working: four Ancient cards, counts without it, its unlock and era-up cards', async ({ page, browser, baseURL }) => {
     test.setTimeout(150_000);
     const research = page.locator('dialog.tech-modal');
     // Turn 1 as Egypt: Bronze Working is known from the start (it gives Egypt nothing) and is not on the screen.
@@ -367,7 +367,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await shot(page, size, '93b-research-egypt-later-eras');
     // Compare: India on turn 1 with nothing known.
     {
-      const context = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+      const context = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
       try {
         const p = await context.newPage();
         const india = researchFixture('India');
@@ -382,7 +382,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     }
     // Egypt's Machinery card: the Workshop/Forge/Factory Production line is gone, Hagia Sophia stays.
     {
-      const context = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+      const context = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
       try {
         const p = await context.newPage();
         const mid = researchFixture('Egypt');
@@ -398,7 +398,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     }
     // Egypt finishes the Ancient era with four technologies: the unlock card, then the era-up.
     {
-      const context = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+      const context = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
       try {
         const p = await context.newPage();
         const finishing = researchFixture('Egypt');

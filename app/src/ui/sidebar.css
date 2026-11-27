@@ -97,7 +97,7 @@ h3.sidebar-section-link { margin: 0 0 5px; }
 }
 /* On a short laptop screen with the unit dock open, keep the race headline and turn action in a slim rail. */
 @media (min-width: 961px) and (max-width: 1100px) and (max-height: 700px) {
-  .game:has(.unit-panel) { --race-width: 196px; }
+  .game:has(.unit-panel) { --race-width: 200px; }
   .game:has(.unit-panel) .right-sidebar .sidebar-scroll { flex: none; height: 88px; overflow: hidden; }
   .game:has(.unit-panel) .right-sidebar:has(.sidebar-goal-action) .sidebar-scroll { height: 125px; }
   .game:has(.unit-panel) .right-sidebar .minimap { display: none; }

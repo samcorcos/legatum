@@ -9,5 +9,5 @@ test('the Mongol faction sheet states the Medieval-era Siege limit in one plain 
   const sheet = stage.getByTestId('faction-sheet');
   await expect(sheet).toContainText('buy no Siege before the Medieval era.');
   await expect(sheet).not.toContainText('capture a city with a Workshop');
-  await expect(sheet).toContainText('You never build Walls');
+  await expect(sheet).toContainText('You never build or upgrade Walls');
 });

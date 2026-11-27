@@ -6,7 +6,7 @@ import { coreFixture } from '../src/test/coreFixture';
 import { researchFixture } from '../src/test/researchFixture';
 
 const sizes = [{ width: 1000, height: 600 }, { width: 1440, height: 900 }];
-const eras = ['ancient', 'classical', 'medieval', 'renaissance', 'industrial', 'modern', 'future'];
+const eras = ['ancient', 'classical', 'medieval', 'renaissance', 'industrial', 'machine-age', 'world-war', 'modern', 'future'];
 const shots = process.env.TECH_CARD_SHOTS ?? '../docs/design/tech-cards/final';
 
 for (const size of sizes) for (const [era, name] of eras.entries()) {
@@ -87,10 +87,11 @@ for (const size of sizes) for (const [era, name] of eras.entries()) {
       // A rule that only describes a unit this card unlocks lives on that unit's row, so Stealth Technology is two units (with their upgrade paths) and one rule.
       const stealth = dialog.locator('.era-card[data-tech="StealthTechnology"] .era-unlock');
       await expect(stealth).toHaveCount(3);
-      await expect(stealth.nth(0)).toContainText('Stealth Fighter');
-      await expect(stealth.nth(0)).toContainText('strikes 7 tiles, guards 5 · uses Silicon');
-      await expect(stealth.nth(1)).toContainText('strikes 10 tiles; only Stealth Fighters stop it · uses Silicon');
-      await expect(stealth.nth(0)).toContainText('From Fighter');
+      await expect(stealth.nth(0)).toContainText('Stealth Bomber');
+      await expect(stealth.nth(0)).toContainText('strikes 10 tiles; only Stealth Fighters stop it · uses Silicon');
+      await expect(stealth.nth(1)).toContainText('Stealth Fighter');
+      await expect(stealth.nth(1)).toContainText('strikes 7 tiles, guards 5 · uses Silicon');
+      await expect(stealth.nth(1)).toContainText('From Jet Fighter');
       await expect(stealth.nth(2)).toContainText('Hangars hold 3 aircraft');
       await expect(dialog.locator('.era-card[data-tech="StealthTechnology"]')).not.toContainText('can upgrade');
     }

@@ -9,7 +9,9 @@ import { SIZES, loadFixture, shot } from './helpers';
 test.describe.configure({ mode: 'parallel' });
 
 const oldSave = (playtest?: string) => {
-  const game = coreFixture(wallsFixture().fixture).replace(/"save_version":\d+/, '"save_version":5');
+  const fixture = wallsFixture().fixture;
+  fixture.players.forEach((p, i) => { p.isHuman = i === 0; fixture.setup.players[i].is_human = i === 0; });
+  const game = coreFixture(fixture).replace(/"save_version":\d+/, '"save_version":5');
   return JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 2, names: ['Ada'], ...(playtest ? { playtest } : {}), savedAt: new Date().toISOString(), game });
 };
 
@@ -21,7 +23,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await page.addInitScript((contents) => { if (location.protocol.startsWith('http')) localStorage.setItem('legatum.autosave.v1', contents); }, save);
     await page.goto('/?client=wasm');
     await expect(page.getByRole('button', { name: /^Saved game \(older version\)/ })).toBeDisabled();
-    await expect(page.getByRole('alert')).toHaveText("This game was saved by Playtest 8.9.20 with older rules and can't continue. Starting a new game replaces the autosave.");
+    await expect(page.locator('.title-notice')).toHaveText("This game was saved by Playtest 8.9.20 with older rules and can't continue. Starting a new game replaces the autosave.");
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, '01-old-autosave-title');
   });
@@ -41,7 +43,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     const chooser = page.waitForEvent('filechooser');
     await page.getByRole('button', { name: /^Load Game/ }).click();
     (await chooser).setFiles({ name: 'old.legatum', mimeType: 'application/json', buffer: Buffer.from(oldSave('Playtest 8.9.19')) });
-    await expect(page.getByRole('alert')).toContainText("older rules and can't continue. The file is not changed.");
+    await expect(page.locator('.title-notice')).toContainText("older rules and can't continue. The file is not changed.");
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, '03-load-old-file-refused');
     await expect(page.locator('.loading-screen')).toHaveCount(0);
@@ -66,14 +68,16 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await page.addInitScript((contents) => { if (location.protocol.startsWith('http')) localStorage.setItem('legatum.autosave.v1', contents); }, JSON.stringify(save));
     await page.goto('/?client=wasm');
     await page.getByRole('button', { name: /^Continue/ }).click();
-    await expect(page.getByRole('alert')).toContainText('This save file is damaged');
+    await expect(page.locator('.title-notice')).toContainText('This save file is damaged');
     await expect(page.getByRole('button', { name: /^Saved game \(unreadable\)/ })).toBeDisabled();
     await shot(page, size, '05-unreadable-autosave');
   });
 
   const damagedFile = (turn: number) => {
     const env = JSON.parse(oldSave()) as { game: string };
-    env.game = coreFixture(wallsFixture().fixture).replace(/"turn":\d+/, `"turn":${turn}`);
+    const fixture = wallsFixture().fixture;
+    fixture.players.forEach((p, i) => { p.isHuman = i === 0; fixture.setup.players[i].is_human = i === 0; });
+    env.game = coreFixture(fixture).replace(/"turn":\d+/, `"turn":${turn}`);
     return JSON.stringify(env);
   };
   const loadTitle = async (page: import('@playwright/test').Page, name: string, buffer: Buffer) => {
@@ -86,12 +90,12 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
 
   test('Load Game with a file that is not a save, and with a damaged save', async ({ page }) => {
     await loadTitle(page, 'notes.legatum', Buffer.from('this is not json'));
-    await expect(page.getByRole('alert')).toHaveText('This file is not a Legatum save. Nothing was changed; choose another file or start a new game.');
+    await expect(page.locator('.title-notice')).toHaveText('This file is not a Legatum save. Nothing was changed; choose another file or start a new game.');
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, '06-load-not-a-save');
     await page.reload();
     await loadTitle(page, 'damaged.legatum', Buffer.from(damagedFile(0)));
-    await expect(page.getByRole('alert')).toHaveText("This save file is damaged and can't be loaded. Your save file is kept; choose another file or start a new game.");
+    await expect(page.locator('.title-notice')).toHaveText("This save file is damaged and can't be loaded. Your save file is kept; choose another file or start a new game.");
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, '07-load-damaged-save');
   });
@@ -102,7 +106,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     const chooser = page.waitForEvent('filechooser');
     await page.getByRole('button', { name: /^Load from file/ }).click();
     (await chooser).setFiles({ name: 'damaged.legatum', mimeType: 'application/json', buffer: Buffer.from(damagedFile(0)) });
-    await expect(page.getByRole('alert')).toContainText("This save file is damaged and can't be loaded. Your save file is kept; choose another file or start a new game. Your current game is unchanged.");
+    await expect(page.locator('.game-error-toast')).toContainText("This save file is damaged and can't be loaded. Your save file is kept; choose another file or start a new game. Your current game is unchanged.");
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, '08-load-damaged-in-game');
   });

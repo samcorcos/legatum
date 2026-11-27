@@ -30,10 +30,11 @@ const test = base.extend<{}, { devURL: string }>({
 });
 
 const setup = unitEraFixture();
+setup.fixture.players.forEach((p, i) => { p.isHuman = i === 0; setup.fixture.setup.players[i].is_human = i === 0; });
 
 async function open(page: Page) {
   await page.addInitScript(({ game }) => {
-    localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 60, names: ['Leonidas', 'Pericles'], savedAt: new Date().toISOString(), game }));
+    localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 60, names: ['Leonidas'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
   }, { game: coreFixture(setup.fixture) });
   await page.goto('/?client=wasm');
