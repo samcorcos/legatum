@@ -14,10 +14,11 @@ How multiple independent coding agents (Claude, ChatGPT/Codex, Gemini) work on `
 If the maintainer says something like *"read the multi-agent instructions and follow them"*, execute these steps immediately without waiting to be asked:
 
 1. **Identify yourself:** pick your canonical agent ID — `claude`, `chatgpt`, or `gemini` (used for branch prefixes `<agent>/<slug>` and labels `author:<agent>`, `claimed:<agent>`, `reviewing:<agent>`).
-2. **Set up your staggered hourly recurring heartbeat:**
+2. **Set up and register your staggered hourly recurring heartbeat:**
    - Schedule: `claude` at **`:05`**, `chatgpt` at **`:25`**, `gemini` at **`:45`** every hour.
-   - If your platform provides a tool to create recurring/scheduled tasks or automations (for example, ChatGPT/Codex scheduled tasks or Claude scheduled tasks), **check whether one already exists for `samcorcos/legatum`, and if not, create it automatically** using the Copy-paste heartbeat prompt below with your agent ID filled in.
-   - If your environment has no scheduling tool, do not silently skip it — give the maintainer the exact 2-line setup instructions and pre-filled prompt for your platform so they can enable it in 10 seconds.
+   - Check [docs/ops/automations.md](automations.md) (and your platform's scheduler) first so you do not create a duplicate loop.
+   - If your platform provides a cloud scheduling tool (for example, Claude scheduled tasks), create it automatically using the Copy-paste heartbeat prompt below with your agent ID filled in, and record it in [docs/ops/automations.md](automations.md).
+   - If your environment has no cloud scheduling tool, either give the maintainer the exact 2-line setup instructions or (in a cloud VM Remote Agent session) run a background `:45` wakeup timer with live state recorded in `.progress/automations.json` (gitignored) and documented in [docs/ops/automations.md](automations.md).
 3. **Sync and inspect the board:** run `git fetch origin`, `gh pr list --state open --limit 30`, and `gh issue list --state open --label agent:ready --limit 30`.
 4. **Run your first heartbeat immediately** following the priority order (`1 -> 6`) below, and report back concisely what you scheduled and what action you took (or `idle`).
 
@@ -28,6 +29,8 @@ Because each provider runs independently (no cross-vendor agent calls), run a **
 - **Claude:** every hour at `:05`
 - **ChatGPT / Codex:** every hour at `:25`
 - **Gemini:** every hour at `:45`
+
+Every active loop is tracked in [docs/ops/automations.md](automations.md) (plus gitignored `.progress/automations.json` for live VM timer state).
 
 On each heartbeat, pull `origin/master` and take the **first actionable item** in this priority order (unblocking merges always beats starting new WIP; if nothing is actionable, exit quietly in seconds with zero PR/issue noise):
 
@@ -45,7 +48,7 @@ Anyone running Claude, ChatGPT/Codex, and Gemini on a GitHub repo can replicate 
 1. **GitHub repository ruleset (`Protect master`):** Enable a branch ruleset on the default branch that blocks deletions and force-pushes, requires a pull request, requires a single aggregated CI status check (`ci-ok` from GitHub Actions), and turns on **Require branches to be up to date before merging** (`strict_required_status_checks_policy: true`). This mechanically prevents two agents from merging back-to-back PRs that were never tested together.
 2. **Claude (`:05` hourly — runs in the cloud):** In `claude.ai` (or Claude Code Desktop), open **Scheduled** -> **New task** -> **Set up manually** (formerly Routines). Attach the `samcorcos/legatum` repo (and any needed connectors), choose **Schedule -> Hourly at `:05`**, and paste the heartbeat prompt below with `claude`.
 3. **ChatGPT / Codex (`:25` hourly):** In the ChatGPT/Codex desktop app, create a **Scheduled task** (formerly Codex Automations) targeting `samcorcos/legatum` set to **Hourly at `:25`** with the heartbeat prompt below using `chatgpt`. Note: desktop scheduled tasks require the machine to stay awake; for laptop-closed execution, schedule `codex cloud exec` or `codex exec` on an always-on host.
-4. **Gemini / Antigravity (`:45` hourly):** In the Antigravity app, open **Automations** (formerly Scheduled Tasks) -> **New automation**, select the `samcorcos/legatum` project, set **Hourly at `:45`**, and paste the heartbeat prompt below with `gemini`. Each run creates a sidebar conversation you can step into if `needs-human` is raised.
+4. **Gemini / Antigravity (`:45` hourly):** Note that Antigravity's desktop **Automations** tab (`~/.gemini/config/sidecars/`) runs locally on **This computer** and stops when your laptop sleeps. For laptop-closed cloud execution, run the `:45` heartbeat inside a Google-managed **Remote Agent** session (using `/schedule` where supported, or an in-session background timer tracked in `.progress/automations.json`) and record its status in [docs/ops/automations.md](automations.md).
 
 ### Copy-paste heartbeat prompt (for each agent's recurring schedule)
 
