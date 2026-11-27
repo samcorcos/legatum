@@ -115,6 +115,7 @@ export function Tip({
   summary,
   rich,
   onOpenChange,
+  hoverOnly,
 }: {
   content: ReactNode;
   children: ReactNode;
@@ -127,6 +128,11 @@ export function Tip({
   rich?: boolean;
   /** Fires whenever the tooltip or breakdown opens or closes (e.g. to highlight related map tiles). */
   onOpenChange?: (open: boolean) => void;
+  /**
+   * A short name for an icon or chip that sits inside a larger control (a rivals row that opens Diplomacy) or
+   * beside a label that already says it to a screen reader: hover shows it, but it takes no focus and no click.
+   */
+  hoverOnly?: boolean;
 }) {
   const id = useId();
   const coarse = useCoarsePointer();
@@ -188,7 +194,7 @@ export function Tip({
 
   useLayoutEffect(() => {
     const root = ref.current;
-    if (!root || !hasContent) { setOwnTrigger(false); return; }
+    if (!root || !hasContent || hoverOnly) { setOwnTrigger(false); setHost(root && hasContent ? root.closest('dialog') ?? document.body : null); return; }
     const controls = [...root.querySelectorAll<HTMLElement>(CONTROLS)].filter((el) => !el.hasAttribute('data-tip-info'));
     setOwnTrigger(controls.length === 0);
     setControlTip(!!root.querySelector('button:not([data-tip-info]), a[href], input, select, textarea'));
@@ -206,7 +212,7 @@ export function Tip({
         else el.removeAttribute('aria-describedby');
       }
     };
-  }, [children, hasContent, id]);
+  }, [children, hasContent, id, hoverOnly]);
 
   useEffect(() => {
     if (!mode) return;
@@ -275,12 +281,13 @@ export function Tip({
       data-tip-rich={isRich && ownTrigger ? 'true' : undefined}
       tabIndex={ownTrigger ? 0 : undefined}
       role={ownTrigger ? 'group' : undefined}
-      aria-describedby={ownTrigger ? id : undefined}
+      aria-describedby={ownTrigger || hoverOnly ? id : undefined}
       onPointerEnter={(e) => { if (e.pointerType === 'mouse') hoverIn(); }}
       onPointerLeave={(e) => { if (e.pointerType === 'mouse') hoverOut(); }}
       // Pressing a control is not a request to read about it: the hover tooltip steps aside.
       onPointerDown={() => { cancelShow(); if (controlTip && modeRef.current === 'hover') close(); }}
       onClick={(e) => {
+        if (hoverOnly) { if (modeRef.current) close(); return; }
         if (!ref.current?.contains(e.target as Node) || controlTip) return;
         e.stopPropagation();
         togglePin();
@@ -298,7 +305,7 @@ export function Tip({
       {infoButton && <button type="button" className="tip-info" data-tip-info aria-label="Show explanation"
         aria-controls={id} aria-expanded={mode === 'pinned'} onClick={(e) => { e.stopPropagation(); togglePin(); }}>ⓘ</button>}
       {host && hasContent && createPortal(
-        <Bubble id={id} rect={rect} trigger={ref} placement={placement} mode={mode} onClose={close}>
+        <Bubble id={id} rect={rect} trigger={ref} placement={placement} mode={mode} onClose={close} near={hoverOnly}>
           {mode === 'pinned' ? withAmounts(content) : hoverBody}
         </Bubble>, host,
       )}
@@ -375,11 +382,12 @@ export function placeBubble(
  * primary controls (unit actions, the This Turn panel with End turn) and the top bar's readouts.
  */
 const PRIMARY = '.unit-panel .actions, .seatbar, .topbar, .research-detail .primary, [data-tip-avoid]';
-function avoidBoxes(trigger: HTMLElement | null): Box[] {
+function avoidBoxes(trigger: HTMLElement | null, near = false): Box[] {
   if (!trigger) return [];
   const screen = window.innerWidth * window.innerHeight;
   const boxes: Box[] = [];
-  const panel = trigger.closest('.panel');
+  // A short hover-only label sits right beside its icon, even over its own panel.
+  const panel = near ? null : trigger.closest('.panel');
   const modal = trigger.closest('dialog');
   if (panel) {
     const r = panel.getBoundingClientRect();
@@ -388,13 +396,15 @@ function avoidBoxes(trigger: HTMLElement | null): Box[] {
   for (const el of document.querySelectorAll(PRIMARY)) {
     // Behind a modal, the page's controls don't matter.
     if (modal && !modal.contains(el)) continue;
+    // A hover-only label may cover the area it sits in (the sidebar), never a control elsewhere.
+    if (near && el.contains(trigger)) continue;
     const r = el.getBoundingClientRect();
     if (r.width && r.height) boxes.push(r);
   }
   return boxes;
 }
 
-function Bubble({ id, rect, trigger, placement, children, mode, onClose }: {
+function Bubble({ id, rect, trigger, placement, children, mode, onClose, near }: {
   id: string;
   rect: DOMRect | null;
   trigger: { current: HTMLElement | null };
@@ -402,6 +412,7 @@ function Bubble({ id, rect, trigger, placement, children, mode, onClose }: {
   children: ReactNode;
   mode: Mode;
   onClose: () => void;
+  near?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
@@ -412,7 +423,7 @@ function Bubble({ id, rect, trigger, placement, children, mode, onClose }: {
     const b = el.getBoundingClientRect();
     const bar = document.querySelector('.topbar');
     const top = bar && !bar.contains(trigger.current) ? bar.getBoundingClientRect().bottom : 0;
-    setPos(placeBubble(rect, b, placement, { width: window.innerWidth, height: window.innerHeight, top }, avoidBoxes(trigger.current)));
+    setPos(placeBubble(rect, b, placement, { width: window.innerWidth, height: window.innerHeight, top }, avoidBoxes(trigger.current, near)));
   }, [rect, placement, mode, children]);
   return (
     <div

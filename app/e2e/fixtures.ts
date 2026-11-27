@@ -3,7 +3,7 @@ import { access, mkdtemp, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { test as base, expect, type BrowserContext, type Page } from '@playwright/test';
+import { test as base, expect, type Browser, type BrowserContext, type BrowserContextOptions, type Page } from '@playwright/test';
 // @ts-expect-error plain .mjs helper without types
 import { startStaticServer } from '../e2e-hosted/serve.mjs';
 
@@ -99,6 +99,15 @@ export const soloAutosaves = () => {
     return write.call(this, key, value);
   };
 };
+
+/** A separate local-game context gets the same save and intro setup as the page fixture. */
+export async function soloContext(browser: Browser, options: BrowserContextOptions = {}): Promise<BrowserContext> {
+  const context = await browser.newContext(options);
+  await context.addInitScript(skipPeopleIntro);
+  await context.addInitScript(soloAutosaves);
+  await context.addInitScript(closeMeetingPlates);
+  return context;
+}
 
 type Fixtures = {
   meetings: 'close' | 'show';

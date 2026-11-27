@@ -33,18 +33,6 @@ for (const size of SIZES) test.describe(`text city terms ${size.name}`, () => {
     await shot(page, size, 'hills-tile-defence');
   });
 
-  test('Byzantium Levy chip', async ({ page }) => {
-    const setup = progressFixture();
-    setup.fixture.players[0].faction = 'Byzantium';
-    setup.fixture.setup.players[0].faction = 'Byzantium';
-    await loadFixture(page, coreFixture(setup.fixture), 2);
-    const levy = page.locator('.levy-counter');
-    await expect(levy).toContainText('0 / 3');
-    await levy.hover();
-    await expect(page.locator('.tip-bubble').filter({ hasText: 'Military units 0 / 3' })).toBeVisible();
-    await shot(page, size, 'levy-military-units');
-  });
-
   test('post-game army column', async ({ page }) => {
     const { game, turn } = postGameSave('swiss-win');
     await loadFixture(page, game, turn);

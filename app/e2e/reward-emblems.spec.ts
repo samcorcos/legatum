@@ -86,7 +86,7 @@ for (const [width, height] of [[1000, 600], [1440, 900]] as const) {
           await expect(vignette).toHaveAttribute('src', new RegExp(`moment-${VIGNETTES[kind]}-104\\.png`));
           await expect(vignette).toBeVisible();
           expect(await vignette.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBe(104);
-          expect(await vignette.evaluate((image) => image.getBoundingClientRect().width)).toBe(104);
+          expect(await vignette.evaluate((image) => image.getBoundingClientRect().width)).toBe(height <= 700 ? 76 : 104);
         } else await expect(vignette).toHaveCount(0);
         if (kind === 'lost') {
           await expect(card).toHaveClass(/\bloss\b/);

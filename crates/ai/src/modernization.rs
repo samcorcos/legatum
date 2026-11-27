@@ -180,7 +180,6 @@ impl Planner<'_> {
     /// and pays every step.
     fn refit(&self, u: &UnitView) -> Option<(i32, i32, i32)> {
         if !composition::is_combat(u.kind)
-            || u.contract_until.is_some()
             || u.upgrade_supply_blocker.is_some()
             || self.view().actions.retire.as_ref().is_some_and(|r| {
                 r.veterans

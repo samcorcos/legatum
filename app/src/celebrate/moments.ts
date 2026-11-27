@@ -584,9 +584,44 @@ export function momentsForTurn(events: readonly Event[], viewer: PlayerId, befor
           details: to === null ? ['Nobody scores Byzantium’s goal until the Heir is held again.'] : ['A military unit entering his tile retakes him, and the points return with him.'],
           deltas: [{ counter: 'vp', amount: -e.vp }], loss: true, emblem: 'captured' }); break;
       }
+      // Byzantium's Buy a city (core `buy_city`): a sale is never just a report line, for the buyer or the seller.
+      case 'CityOfferEnded': {
+        if (e.outcome !== 'Sold') break;
+        const paid = e.paid ?? 0;
+        const city = after.cities.find((c) => c.id === e.city) ?? cities.get(e.city);
+        const d = city?.detail;
+        if (team.has(e.buyer) && !team.has(e.seller)) {
+          push(i, e.buyer, { tier: 'major', at: city?.pos ?? null, title: cityName(e.city), effect: `Bought from ${empire(e.seller)} for ${paid} Gold`, kicker: 'A city bought',
+            lore: 'The banners changed. The city remains.', deltas: [], emblem: 'captured',
+            details: [
+              ...(city ? [`Population ${city.population}.`] : []),
+              ...(d?.buildings.length ? [`Buildings kept: ${d.buildings.map((b) => itemName({ kind: 'Building', building: b }, faction(e.buyer))).join(', ')}.`] : []),
+              'A bought city does not resist: it produces from the first turn.',
+            ] });
+        } else if (team.has(e.seller) && !team.has(e.buyer)) {
+          push(i, e.seller, { tier: 'major', at: city?.pos ?? null, title: cityName(e.city), effect: `${empire(e.buyer).charAt(0).toUpperCase()}${empire(e.buyer).slice(1)} bought it: you got ${paid} Gold`, kicker: 'A city sold',
+            lore: 'What was built there answers to another now.', details: ['Buying it back is up to you, and the price is theirs.'], deltas: [{ counter: 'gold', amount: paid }], loss: true, emblem: 'captured' });
+        }
+        break;
+      }
+      // The fall of Constantinople: the capital and every other city of an empire taken at once.
+      case 'CapitalFell': {
+        const names = [e.capital, ...e.cities].map(cityName);
+        const gain = team.has(e.captor) && !team.has(e.player);
+        const loss = team.has(e.player) && !team.has(e.captor);
+        if (!gain && !loss) break;
+        const who = gain ? e.captor : e.player;
+        push(i, who, { tier: 'major', at: cities.get(e.capital)?.pos ?? null, title: cityName(e.capital), kicker: gain ? 'The fall of Constantinople' : 'Constantinople has fallen',
+          effect: gain ? `Taken from ${empire(e.player)} with ${e.cities.length} more ${e.cities.length === 1 ? 'city' : 'cities'}` : `Taken by ${empire(e.captor)}${e.cities.length ? ` with every other city of yours` : ''}`,
+          lore: gain ? 'One capital, the whole empire.' : 'With the capital, every city fell.',
+          details: [`Cities taken: ${names.join(', ')}.`], deltas: [], loss: !gain, emblem: 'captured' });
+        break;
+      }
       case 'CityCaptured': {
         // The held capital point has its own Tier A card for every viewer.
         if (events.some((x) => x.type === 'CapitalTaken' && x.capital === e.city) && team.has(e.to)) break;
+        // The fall of Constantinople is told once, by its own card, not once for each city it took.
+        if (events.some((x) => x.type === 'CapitalFell' && (x.capital === e.city || x.cities.includes(e.city)))) break;
         // The Yam Relay Station's city is told by the Station's own moment (the road and the points went with it).
         if (after.courier_halls?.some((h) => h.city === e.city)) break;
         // A goal city's capture is told by the goal's own card (the points went with it).

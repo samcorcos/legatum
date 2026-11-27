@@ -236,6 +236,12 @@ pub fn validate_orders(state: &GameState, player: PlayerId, orders: &[Order]) ->
     errors.extend(city_errors);
     errors.extend(actions::validate_actions(state, player, orders));
     errors.extend(gifts::validate_gifts(state, player, orders));
+    // A city offer is paid after the turn's purchases, so it sees the Gold they leave.
+    errors.extend(crate::buy_city::validate_orders(
+        &after_cities,
+        player,
+        orders,
+    ));
     // An air strike resolves in the same ranged phase, so it sees the same surprise wars.
     errors.extend(air::validate_orders(
         ranged_state.as_ref().unwrap_or(state),
@@ -331,6 +337,8 @@ pub fn resolve_turn(
     for (p, os) in &orders {
         actions::apply_actions(&mut s, *p, os, &mut events);
     }
+    // Byzantium's city offers are paid after the purchases and before any gift.
+    crate::buy_city::apply_orders(&mut s, &orders, &mut events);
     // Gifts between teammates move after every purchase, so a teammate spends them next turn.
     gifts::apply_gifts(&mut s, &orders, &mut events);
     // 2. Ranged attacks.
@@ -383,8 +391,6 @@ pub fn resolve_turn(
     units::finish_automation(&mut s, &plan);
     // 6-10. Cities (including city healing), gold and upkeep, research, borders.
     cities::process_cities(&mut s, &mut events);
-    // A Company's contract ends after its last turn's upkeep is paid.
-    crate::company::expire(&mut s, &mut events);
     cities::process_research(&mut s, &mut events);
     // Empires entering the same era this turn: the first is drawn, not the lowest id.
     crate::eras::draw_same_turn_firsts(&mut s, &mut events);
@@ -399,6 +405,8 @@ pub fn resolve_turn(
     // 11. Scoring, then the next turn.
     scoring::update_with_capture_snapshot(&mut s, &mut events, &capture_vp);
     crate::diplomacy::resolve_boundary(state, &mut s, &orders, &mut events);
+    // City offers settle after diplomacy, so a War declared this turn calls them off.
+    crate::buy_city::process_offers(&mut s, &mut events);
     // An attack reveal lasts one planning turn.
     visibility::expire_attack_reveals(&mut s);
     // Newly allied sight must enter observation memory before its sources can disappear.

@@ -64,9 +64,9 @@ faction_rules! {
     IndiaCorruption => ("india_corruption", India, Drawback),
     IndiaRemittance => ("india_remittance", India, Drawback),
     IndiaGoal => ("india_goal", India, Strength),
-    ByzantiumCompanies => ("byzantium_companies", Byzantium, Strength),
-    ByzantiumLevy => ("byzantium_levy", Byzantium, Drawback),
-    ByzantiumTagmatic => ("byzantium_tagmatic", Byzantium, Strength),
+    // Keep bits 14 and 15 vacant: retired Byzantium Mercenary Companies and thin levies
+    // (retired 2026-11-26, replaced by Buy a city).
+    ByzantiumTagmatic = 16 => ("byzantium_tagmatic", Byzantium, Strength),
     // Keep bit 17 vacant: retired Byzantium Scriptorium occupied it in saved rule masks.
     ByzantiumGoal = 18 => ("byzantium_goal", Byzantium, Strength),
     GermanyRuhrProduction => ("germany_ruhr_production", Germany, Strength),
@@ -126,6 +126,12 @@ faction_rules! {
     EgyptChariotArcher => ("egypt_chariot_archer", Egypt, Strength),
     IndiaOfficeUpkeep => ("india_office_upkeep", India, Strength),
     IndiaOfficeFull => ("india_office_full", India, Strength),
+    // Buy a city (rules 66): Byzantium buys a rival's city with Gold, the seller paid, after three
+    // turns' public warning (`buy_city`).
+    ByzantiumBuyCity => ("byzantium_buy_city", Byzantium, Strength),
+    // The fall of Constantinople (rules 66): taking Byzantium's capital takes every Byzantine city
+    // unless its Heir shelters in another (`buy_city::capital_fall`).
+    ByzantiumCollapse => ("byzantium_collapse", Byzantium, Drawback),
 }
 
 impl FactionRule {
@@ -255,6 +261,8 @@ impl<'de> Deserialize<'de> for FactionRuleSet {
                     | "celts_ambusher"
                     | "mongols_peace_passage"
                     | "sparta_slow_heal"
+                    | "byzantium_companies"
+                    | "byzantium_levy"
             ) {
                 continue;
             }

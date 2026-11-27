@@ -4289,6 +4289,8 @@ impl Planner<'_> {
                     + self.hoard_denial_value(city)
                     + self.greece_captive_tech_value(city)
                     + 100 * (self.capital_capture_vp(city) + self.capital_race_vp(city))
+                // The fall of Constantinople: the capital takes every Byzantine city.
+                + self.byz_collapse_value(city)
                     + self.swarm_weakness_value(city)
                     + self.flower_wars_campaign_value(city)
                     + 15 * self

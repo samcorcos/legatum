@@ -28,7 +28,10 @@ const test = base.extend<{}, { devURL: string }>({
 async function boot(page: Page, size: { width: number; height: number }) {
   await mkdir(out, { recursive: true });
   await page.addInitScript(() => {
-    if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
+    if (location.protocol.startsWith('http')) {
+      localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
+      localStorage.setItem('legatum.research-view.v1', 'era');
+    }
   });
   await page.setViewportSize(size);
   await page.goto('/?client=wasm');

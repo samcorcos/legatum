@@ -186,7 +186,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     | Event::SpartaKillHeal { .. }
                     | Event::ItemBought { .. }
                     | Event::ProductionCompleted { .. }
-                    | Event::CompanyHired { .. }
             );
             if keep {
                 let s = format!("{e:?}");

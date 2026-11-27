@@ -55,7 +55,7 @@ async function start(page: Page, opts: { enemies?: boolean; planes?: readonly { 
     setup.fixture.cities.push(target);
     return target;
   })() : null;
-  if (producing) { own.producing = { kind: 'Unit', unit: producing }; own.prod = 400; setup.fixture.players[0].techs.push('Flight'); }
+  if (producing) { own.producing = { kind: 'Unit', unit: producing }; own.prod = 400; setup.fixture.players[0].techs.push('Flight', 'AirPower'); }
   const aircraft = JSON.stringify([...planes.map((p) => ({ id: p.id, kind: p.kind, city: setup.own, hp: 100 })), ...(destination ? [{ id: 902, kind: 'Bomber', city: destination.id, hp: 100 }] : [])]);
   // The save holds u64 bitsets that JSON.parse would round, so the hangar is added as text.
   // Saves are validated: aircraft ids may not exceed the next unit id.
@@ -131,7 +131,7 @@ for (const size of SIZES) {
       const bomber = plane(page, 900);
       await expect(bomber).toContainText('no targets within 8 tiles');
       await expect(bomber).toContainText('No enemy unit or city is visible within 8 tiles of Waypost Seven');
-      await expect(bomber.getByRole('button')).toHaveText(['Wait for targetF', 'Skip this turnSpace', 'Rebase…R']);
+      await expect(bomber.getByRole('button')).toHaveText(['Recon…A', 'Wait for targetF', 'Skip this turnSpace', 'Rebase…R']);
       await expect(bomber.getByRole('button', { name: /Rebase/ })).toBeDisabled();
       await shot(page, size.name, 'queue-idle-bomber');
       await bomber.locator('button[aria-keyshortcuts="Space"]').click();

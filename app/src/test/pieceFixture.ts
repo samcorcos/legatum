@@ -3,6 +3,7 @@
 import { FixtureClient } from './fixtureEngine';
 import { useGame } from '../store';
 import { FACTION_INFO } from '../data';
+import { coreFixture } from './coreFixture';
 import type { Faction, TechId } from '../types';
 
 export async function pieceFixture(faction: Faction, moreTechs: TechId[] = []): Promise<number> {
@@ -14,6 +15,7 @@ export async function pieceFixture(faction: Faction, moreTechs: TechId[] = []): 
   const state = client.debugState();
   const techs: TechId[] = ['BronzeWorking', 'Masonry', 'Writing', 'IronWorking', 'Feudalism', 'Chivalry', ...moreTechs];
   state.players[0].techs.push(...techs.filter((t) => !state.players[0].techs.includes(t)));
+  client.load(coreFixture(state));
   const view = client.view(0);
   const city = view.cities.find((c) => c.owner === 0)!;
   useGame.setState({ client, humans: [0], views: [view], screen: 'game', booted: true, seat: 0,

@@ -18,7 +18,11 @@ export async function stageHoldReport(page: Page, events: Event[], opts: { holdi
     const s = (window as unknown as GameWindow).legatum.getState();
     return s.views![s.seat];
   }) as PlayerView;
-  const patched: PlayerView = { ...view, standings: view.standings.map((st) => opts.holding && st.team === opts.holding.team
+  // These alarm cases name their rival or ally. The staged turn has already met
+  // those teams, as a real report would before showing their named holdings.
+  const patched: PlayerView = { ...view,
+    diplomacy: { ...view.diplomacy, met: [...new Set(view.players.map((p) => p.team))].filter((t) => t !== view.team) },
+    standings: view.standings.map((st) => opts.holding && st.team === opts.holding.team
     ? { ...st, vp: st.target, victory_hold: { turns_held: opts.holding.held, turns_needed: opts.holding.needed } } : st) };
   const report = { turn: patched.turn, hash: '', events: [events], moments: [[]], alarms: [alarmsForTurn(events, patched, patched)],
     lines: [formatEvents(events, contextFromViews(patched, patched))] };

@@ -62,15 +62,21 @@ for (const [kind, c] of [['unwalled', fx.open], ['walled', fx.walled]] as const)
       await expect(page.getByTestId('forecast-assault-garrison')).toContainText('garrison');
       await expect(page.getByTestId('forecast-attacker-hp')).toContainText('→');
       const alone = (await page.getByTestId('forecast-assault-garrison').innerText()).match(/→\s*(\d+)/)![1];
+      const wallsAlone = kind === 'walled' ? (await page.getByTestId('forecast-defender-walls').innerText()).match(/→\s*(\d+)/)![1] : null;
       await expect(block).toContainText('The whole fight at');
       await page.screenshot({ path: path.join(shots, `assault-${kind}-alone-${width}.png`) });
-      // Queue the second Spearman on the same city: the card pools both, and more of the excess reaches the garrison.
+      // Queue the second Spearman on the same city: the card pools both. Standing Walls
+      // absorb the extra damage before the garrison's health can fall.
       await page.evaluate(({ unit, to }) => {
         (window as unknown as GameWindow).legatum.getState().editOrders((o) => [...o, { type: 'MoveUnit', unit, to }]);
       }, { unit: c.second, to: c.pos });
       await expect(block).toContainText('2 attacks this turn');
       const pooled = (await page.getByTestId('forecast-assault-garrison').innerText()).match(/→\s*(\d+)/)![1];
-      expect(Number(pooled)).toBeLessThan(Number(alone));
+      if (kind === 'walled') {
+        const wallsPooled = (await page.getByTestId('forecast-defender-walls').innerText()).match(/→\s*(\d+)/)![1];
+        expect(Number(wallsPooled)).toBeLessThan(Number(wallsAlone));
+        expect(Number(pooled)).toBeLessThanOrEqual(Number(alone));
+      } else expect(Number(pooled)).toBeLessThan(Number(alone));
       await expect(page.getByTestId('forecast-assault-capture')).toBeVisible();
       // The whole card is inside the window, never cut off.
       await page.waitForTimeout(200);

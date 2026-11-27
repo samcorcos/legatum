@@ -23,7 +23,7 @@ const sizes = [
 ];
 for (const size of sizes) for (const look of ['atlas'] as const) test.describe(`${look} ${size.name}`, () => {
   test.use({ viewport: { width: size.width, height: size.height }, hasTouch: size.touch, isMobile: size.touch });
-  test('lenses stay reachable with the turn-one production hint', async ({ page }, testInfo) => {
+  test('lenses stay reachable with the turn-one advisor', async ({ page }, testInfo) => {
     test.setTimeout(120_000);
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
@@ -32,7 +32,9 @@ for (const size of sizes) for (const look of ['atlas'] as const) test.describe(`
     await page.getByRole('button', { name: /^Single Player/ }).click();
     await page.getByRole('button', { name: /^Start game/ }).click();
     await expect(page.getByTestId('turn-number')).toHaveText('1');
-    await expect(page.getByTestId('first-game-hint')).toContainText('Pick production');
+    await expect(page.getByTestId('advisor')).toContainText('Your advisor will guide you');
+    await page.getByTestId('advisor').getByRole('button', { name: /^Continue/ }).click();
+    await expect(page.getByTestId('advisor')).toBeVisible();
     // Select the starting Scout to exercise reachable unit actions alongside the capital hint.
     await page.evaluate(async () => {
       const storeSource = '/src/store.ts';
@@ -54,7 +56,7 @@ for (const size of sizes) for (const look of ['atlas'] as const) test.describe(`
         const a = panel.getBoundingClientRect();
         const visible = (el: Element) => el.getBoundingClientRect().height > 0 && getComputedStyle(el).visibility !== 'hidden';
         const intersects = (a: DOMRect, b: DOMRect) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
-        const issues = [...document.querySelectorAll('.first-game-hint, .topbar, .unit-panel, .vp, .seatbar, .phone-selection-slot, .phone-turn-dock, .phone-vp-strip')]
+        const issues = [...document.querySelectorAll('.advisor-card, .topbar, .unit-panel, .vp, .seatbar, .phone-selection-slot, .phone-turn-dock, .phone-vp-strip')]
           .filter((el) => visible(el) && intersects(a, el.getBoundingClientRect())).map((el) => el.className);
         if (a.left < 0 || a.right > innerWidth || a.top < 0 || a.bottom > innerHeight) issues.push('offscreen');
         const unit = document.querySelector('.phone-selection-slot, .unit-panel')!.getBoundingClientRect();
@@ -64,7 +66,7 @@ for (const size of sizes) for (const look of ['atlas'] as const) test.describe(`
           if (!visible(el)) continue;
           const b = el.getBoundingClientRect();
           if (b.left < 0 || b.right > innerWidth || b.top < 0 || b.bottom > innerHeight) issues.push(`${el.className} offscreen`);
-          for (const other of document.querySelectorAll('.first-game-hint, .topbar, .unit-panel, .vp, .seatbar, .phone-selection-slot, .phone-turn-dock, .phone-vp-strip, .map-lenses, .lens-content')) {
+          for (const other of document.querySelectorAll('.advisor-card, .topbar, .unit-panel, .vp, .seatbar, .phone-selection-slot, .phone-turn-dock, .phone-vp-strip, .map-lenses, .lens-content')) {
             if (!visible(other) || other.contains(el)) continue;
             if (intersects(b, other.getBoundingClientRect())) issues.push(`${el.className} overlaps ${other.className}`);
           }
@@ -145,7 +147,7 @@ for (const size of sizes) for (const look of ['atlas'] as const) test.describe(`
         await expect(group).toBeHidden();
       } else await expect(radio).toBeChecked();
       if (lens === 'Settle') await assertSettleLegend();
-      await expect(page.getByTestId('first-game-hint')).toBeVisible();
+      await expect(page.getByTestId('advisor')).toBeVisible();
       await page.mouse.move(1, 1);
       await assertDockClear();
       await page.screenshot({ path: testInfo.outputPath(`${look}-${size.width}-${lens.toLowerCase()}.png`) });

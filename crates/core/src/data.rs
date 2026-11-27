@@ -1310,7 +1310,7 @@ pub const REISLAUFER_MOUNTED_PERCENT: i32 = 50;
 pub const PANZER_MOVES: i32 = 1;
 
 /// The unit kind a faction's special unit replaces (`unit_name_for` names it): every faction has
-/// exactly one (user, 2026-11-14). Mercenary Companies sell nothing else (`company`).
+/// exactly one (user, 2026-11-14).
 pub fn special_unit(faction: Faction) -> UnitKind {
     match faction {
         Faction::Switzerland => UnitKind::Pikeman,
@@ -1650,9 +1650,9 @@ pub fn unit_stats_for_rules(off: FactionRuleSet, faction: Faction, kind: UnitKin
     unit_stats_made_by_rules(off, faction, faction, kind)
 }
 
-/// `unit_stats_for_rules` for a unit whose owner is of `faction` but which `made_by` made: a
-/// hired Company is its seller's own version of the unit (`company`). The unit's own stat line
-/// follows `made_by`; faction-wide rules (the Mongol move) follow the owner `faction`.
+/// `unit_stats_for_rules` for a unit whose owner is of `faction` but which `made_by` made. The
+/// unit's own stat line follows `made_by`; faction-wide rules (the Mongol move) follow the owner
+/// `faction`.
 pub fn unit_stats_made_by_rules(
     off: FactionRuleSet,
     faction: Faction,
@@ -1788,21 +1788,6 @@ pub fn terrain_defense_rules(off: FactionRuleSet, faction: Faction, terrain: Ter
     } else {
         terrain.defense_bonus()
     }
-}
-
-/// Thin levies (Byzantium, 2026-10-10): at most one armed unit per city, plus this
-/// many. Scouts and civilians never count (`pays_upkeep`).
-pub const LEVY_EXTRA: usize = 1;
-
-/// The most armed units a faction may field with `cities` cities, if it is capped at all.
-pub fn levy_cap(faction: Faction, cities: usize) -> Option<usize> {
-    levy_cap_rules(FactionRuleSet::EMPTY, faction, cities)
-}
-
-/// `levy_cap` with the faction rules in `off` switched off (ablation).
-pub fn levy_cap_rules(off: FactionRuleSet, faction: Faction, cities: usize) -> Option<usize> {
-    (faction == Faction::Byzantium && !off.contains(FactionRule::ByzantiumLevy))
-        .then_some(cities + LEVY_EXTRA)
 }
 
 /// Whether this kind counts toward the empire's unit upkeep and its free allowance: armed

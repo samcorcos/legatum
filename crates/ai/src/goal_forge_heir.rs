@@ -9,6 +9,9 @@ use legatum_core::{
 
 const LAST_FACTORY_VALUE_PER_VP: i32 = 1500;
 const HEIR_SWING_VALUE_PER_VP: i32 = 100;
+/// The fall of Constantinople: what a threatened capital counts against our own Heir sheltering
+/// there (in the units of `heir_refuge`: a city threat or an exposed road).
+const HEIR_CAPITAL_PENALTY: i32 = 300;
 
 impl Planner<'_> {
     fn city_has_factory(&self, c: &CityView) -> bool {
@@ -259,7 +262,14 @@ impl Planner<'_> {
     }
 
     /// Where the Heir shelters: the safest own city in reach, preferring walls and a garrison.
+    /// The fall of Constantinople (gene `byz_capital_guard`): while our capital carries other
+    /// cities and a rival can reach it, the capital counts `HEIR_CAPITAL_PENALTY` against our
+    /// own Heir's shelter there, so he moves to another city (his refuge keeps the empire if the
+    /// capital falls) unless the road there is more exposed than that.
     fn heir_refuge(&self, heir: &UnitView) -> Option<(Hex, bool)> {
+        let avoid = self
+            .byz_capital_threatened()
+            .filter(|_| heir.heir_of.is_none_or(|of| of == self.ctx.me));
         self.ctx
             .own_cities
             .iter()
@@ -279,7 +289,13 @@ impl Planner<'_> {
                     })
                     .count() as i32;
                 (
-                    -(self.ctx.threat[*i]).min(1000) - self.heir_journey_risk(heir, c.pos),
+                    -(self.ctx.threat[*i]).min(1000)
+                        - self.heir_journey_risk(heir, c.pos)
+                        - if avoid == Some(c.id) {
+                            HEIR_CAPITAL_PENALTY
+                        } else {
+                            0
+                        },
                     i32::from(c.walls),
                     garrison.min(3),
                     i32::from(c.pos == heir.pos),

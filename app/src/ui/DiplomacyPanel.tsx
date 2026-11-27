@@ -10,6 +10,7 @@ import { GoldStepper } from './GoldStepper';
 import { answerDecision } from '../notice';
 import { pendingDecisions } from '../turnFlow';
 import { topDismissible } from '../gameplayKeys';
+import { Tip } from './Tip';
 import { Icon, Kbd } from './bits';
 import { useCoarsePointer } from './useCoarsePointer';
 import { empireMembers, empireOfPlayer, empireTitle, isTeamAlive, unitsNearOurs } from '../empires';
@@ -23,7 +24,6 @@ import { RingMedallion, TreatyEmblem } from './ringMedallion';
 import { Amount, Amounts } from './Amounts';
 import { GIFT_RIVAL_RULE, GiftControl, TeamGifts } from './GiveGold';
 import { QueuedDiplomacyLine, useJustQueued } from './QueuedDiplomacyLine';
-import { RivalLevy } from './Levy';
 import { aiLevel } from '../aiLevel';
 import { publicRelationsModel } from '../relations';
 import { peaceScope, peaceScopeForAction } from '../peaceScope';
@@ -810,7 +810,6 @@ export function DiplomacyPanel() {
                 {/* A Peace or an Alliance row's own lines state its terms in one sentence; only a War keeps its definition (how a Peace ends it). */}
                 {relation.state === 'War' && treatyDefinition(relation.state) && <p className="treaty-definition"><strong>{relation.state}:</strong> {treatyDefinition(relation.state)}</p>}
                 {relationText(relation, view).map((line) => <p key={line} className={line.startsWith('Protected until') ? 'diplomacy-protected' : undefined}><Amounts text={line} /></p>)}
-                <RivalLevy view={view} team={s.team} />
                 {/* An empire you haven't met: say so once; its Alliance offer shows disabled. */}
                 {unmet && <p className="diplomacy-blocked-reason">{notMetText(unmet.blocked_reason!, empireTitle(view, team))}</p>}
                 {/* Offers that can't be made now say why where they would stand: first, before Give Gold and War. */}
@@ -856,10 +855,10 @@ function RelationsView({ view }: { view: PlayerView }) {
           <th scope="row" title={empire.name}>{mark(empire.team)}<span>{empire.name}</span></th>
           {model.cells[row].map((cell) => <td key={cell.b} className={cell.state === 'Self' ? 'relations-self' : undefined}>
             {cell.state === 'Self' ? <span role="img" aria-label={`${empire.name}, itself`} title={empire.name} />
-              : cell.state === 'Unknown' ? <span className="relations-unknown" title={cell.title} aria-label={cell.title}>?</span>
-                : cell.state === 'War' ? <span className="relations-cell war" title={cell.title} aria-label={cell.title}><TreatyEmblem kind="War" size={23} /></span>
-                  : cell.state === 'Alliance' ? <span className="relations-cell alliance" title={cell.title} aria-label={cell.title}><TreatyEmblem kind="Alliance" size={23} /></span>
-                    : <span className="relations-cell" title={cell.title} aria-label={cell.title}><TreatyEmblem kind="Peace" size={23} /></span>}
+              : cell.state === 'Unknown' ? <Tip hoverOnly content={cell.title}><span className="relations-unknown" aria-label={cell.title}>?</span></Tip>
+                : cell.state === 'War' ? <Tip hoverOnly content={cell.title}><span className="relations-cell war" aria-label={cell.title}><TreatyEmblem kind="War" size={23} /></span></Tip>
+                  : cell.state === 'Alliance' ? <Tip hoverOnly content={cell.title}><span className="relations-cell alliance" aria-label={cell.title}><TreatyEmblem kind="Alliance" size={23} /></span></Tip>
+                    : <Tip hoverOnly content={cell.title}><span className="relations-cell" aria-label={cell.title}><TreatyEmblem kind="Peace" size={23} /></span></Tip>}
           </td>)}
         </tr>)}</tbody>
       </table>

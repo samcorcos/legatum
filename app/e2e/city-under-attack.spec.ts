@@ -170,7 +170,7 @@ for (const size of SIZES) test.describe(`city under attack ${size.name}`, () => 
     const card = page.locator(`.seatbar .siege-card[data-city="${setup.own}"]`);
     await expect(card).toBeVisible();
     // A save has no turn report: the card says only what the city's own record says.
-    await expect(card.locator('.siege-lost')).toHaveText('Took damage last turn');
+    await expect(card.locator('.siege-lost')).toHaveText('Hit last turn');
     await expect(card.locator('.siege-num')).toHaveText('120/200 health');
     await expect(card.locator('.siege-forecast')).toHaveText('Holds about 2 turns unless reinforced');
     await expect(card.locator('.siege-head')).toContainText(/Waypost Seven is under attack · .+/);

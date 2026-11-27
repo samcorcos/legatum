@@ -31,7 +31,10 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
     test.setTimeout(90_000);
     await mkdir(out, { recursive: true });
     await page.addInitScript(() => {
-      if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
+      if (location.protocol.startsWith('http')) {
+        localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
+        localStorage.setItem('legatum.research-view.v1', 'era');
+      }
     });
     await page.setViewportSize(size);
     await page.goto('/?client=wasm');
@@ -69,7 +72,10 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
     test.setTimeout(90_000);
     await mkdir(out, { recursive: true });
     await page.addInitScript(() => {
-      if (location.protocol.startsWith('http')) localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
+      if (location.protocol.startsWith('http')) {
+        localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
+        localStorage.setItem('legatum.research-view.v1', 'era');
+      }
     });
     await page.setViewportSize(size);
     await page.goto('/?client=wasm');

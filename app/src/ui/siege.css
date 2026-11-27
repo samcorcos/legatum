@@ -76,3 +76,6 @@
   0% { box-shadow: 0 0 0 2px var(--panel), 0 0 0 3px var(--siege), 0 0 0 3px color-mix(in srgb, var(--siege) 55%, transparent); }
   70%, 100% { box-shadow: 0 0 0 2px var(--panel), 0 0 0 3px var(--siege), 0 0 0 11px transparent; }
 }
+
+/* A city Byzantium is buying: the same card as an approaching army, with the offer's own sentence. */
+.offer-card-text { margin: 0; font-size: 13px; line-height: 1.35; color: var(--ink); }

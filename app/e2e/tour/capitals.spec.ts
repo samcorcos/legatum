@@ -6,7 +6,7 @@ import type { Page } from '@playwright/test';
 import { test, expect } from '../fixtures';
 import { coreFixture } from '../../src/test/coreFixture';
 import { capitalsFixture } from '../../src/test/capitalsFixture';
-import { SIZES, hexPoint, loadFixture, posOf, selectThing, shot, type GameWindow } from './helpers';
+import { SIZES, hexPoint, loadFixture, meetEveryone, posOf, selectThing, shot, type GameWindow } from './helpers';
 
 type MapWindow = GameWindow & { legatumMap: { camera: { zoom: number }; redraw(): void } };
 
@@ -52,6 +52,7 @@ for (const size of SIZES) test.describe(`original capitals ${size.name}`, () => 
   test('the map marks every state at the default zoom: own, rival-held, captured, scored, teammate-scored, replacement', async ({ page }) => {
     const setup = capitalsFixture();
     await loadFixture(page, coreFixture(setup.fixture), 2);
+    await meetEveryone(page);
     // The view says exactly what the rules say.
     const flags = await page.evaluate(() => {
       const s = (window as unknown as GameWindow).legatum.getState(), v = s.views![s.seat];
@@ -90,6 +91,7 @@ for (const size of SIZES) test.describe(`original capitals ${size.name}`, () => 
   test('the banner tooltip explains population, owner, name and star at both zooms', async ({ page }) => {
     const setup = capitalsFixture();
     await loadFixture(page, coreFixture(setup.fixture), 2);
+    await meetEveryone(page);
     for (const [id, part, name] of [
       [setup.own, 'India', 'own'], [setup.held, 'Byzantium', 'rival'],
       [setup.teammateOwn, 'Aztecs', 'allied'], [setup.captured, 'Original capital of Switzerland', 'captured'],
@@ -97,7 +99,7 @@ for (const size of SIZES) test.describe(`original capitals ${size.name}`, () => 
       await frame(page, id, 0.9);
       const tip = await hoverBanner(page, id);
       await expect(tip).toContainText(`Population 3 · ${part === 'Original capital of Switzerland' ? 'Byzantium' : part}`);
-      if (name === 'captured') await expect(tip).toContainText('Original capital of Switzerland · each rival that captures it scores +1 VP, once');
+      if (name === 'captured') await expect(tip).toContainText('Original capital of Switzerland · a rival scores 1 VP while holding it');
       const tipBox = (await tip.boundingBox())!, sideBox = (await page.locator('.right-sidebar').boundingBox())!;
       expect(tipBox.x + tipBox.width, 'banner tooltip stays clear of the sidebar').toBeLessThanOrEqual(sideBox.x + 1);
       await shot(page, size, `c09-banner-tip-${name}`);
@@ -110,26 +112,27 @@ for (const size of SIZES) test.describe(`original capitals ${size.name}`, () => 
   test('hover text: held, captured, scored, teammate-scored, own and replacement', async ({ page }) => {
     const setup = capitalsFixture();
     await loadFixture(page, coreFixture(setup.fixture), 2);
+    await meetEveryone(page);
     await frame(page, setup.captured, 0.9);
 
     let card = await hoverTile(page, setup.captured);
-    await expect(card.getByTestId('tile-capital')).toHaveText("Switzerland's original capital. Capture it to score +1 VP, kept for good. Each empire scores it once.");
+    await expect(card.getByTestId('tile-capital')).toHaveText("Switzerland's original capital. Hold it to score 1 VP.");
     await shot(page, size, 'c10-tile-captured-capital');
 
     await frame(page, setup.scored, 0.9);
     card = await hoverTile(page, setup.scored);
-    await expect(card.getByTestId('tile-capital')).toHaveText("Germany's original capital. You scored its +1 VP when you took it; taking it again scores nothing.");
+    await expect(card.getByTestId('tile-capital')).toHaveText("Germany's original capital. You score 1 VP while you hold it.");
     await shot(page, size, 'c11-tile-scored-capital');
 
     // Your teammate scored it: the star stays filled, and the line says you still can.
     await frame(page, setup.teammateScored, 0.9);
     card = await hoverTile(page, setup.teammateScored);
-    await expect(card.getByTestId('tile-capital')).toHaveText("Mongols' original capital. Your teammate scored it. If a rival takes it, you can score it by capturing it yourself.");
+    await expect(card.getByTestId('tile-capital')).toHaveText("Mongols' original capital. Your teammate scores 1 VP while holding it.");
     await shot(page, size, 'c12-tile-teammate-scored-capital');
 
     await frame(page, setup.own, 0.9);
     card = await hoverTile(page, setup.own);
-    await expect(card.getByTestId('tile-capital')).toHaveText('Your original capital. Each rival that captures it scores +1 VP.');
+    await expect(card.getByTestId('tile-capital')).toHaveText('Your original capital. A rival scores 1 VP while it holds it.');
     // The full stop after the VP icon is not swallowed: the icon leaves its own width to the text that follows.
     const stop = await card.getByTestId('tile-capital').locator('.amt-icon').evaluate((el) => {
       const r = el.getBoundingClientRect(), after = document.createRange();
@@ -156,6 +159,7 @@ for (const size of SIZES) test.describe(`original capitals ${size.name}`, () => 
   test('the city panel head: dots on ordinary kickers, the star only on original capitals, tooltips beside the head', async ({ page }) => {
     const setup = capitalsFixture();
     await loadFixture(page, coreFixture(setup.fixture), 2);
+    await meetEveryone(page);
     const panel = page.locator('.city-panel');
 
     await selectThing(page, 'city', setup.captured);
@@ -165,13 +169,13 @@ for (const size of SIZES) test.describe(`original capitals ${size.name}`, () => 
     await shot(page, size, 'c20-panel-captured-capital');
 
     await selectThing(page, 'city', setup.scored);
-    await expect(panel.getByTestId('city-capital')).toContainText('You scored its +1 VP when you took it');
-    await expect(panel.locator('.cp-kicker .capital-star').first()).toHaveAttribute('aria-label', 'Original capital, already scored');
+    await expect(panel.getByTestId('city-capital')).toContainText('You score 1 VP while you hold it');
+    await expect(panel.locator('.cp-kicker .capital-star').first()).toHaveAttribute('aria-label', 'Original capital, its VP held by you');
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, 'c21-panel-scored-capital');
 
     await selectThing(page, 'city', setup.teammateScored);
-    await expect(panel.getByTestId('city-capital')).toContainText('Your teammate scored it. If a rival takes it');
+    await expect(panel.getByTestId('city-capital')).toContainText('Your teammate scores 1 VP while holding it');
     await expect(panel.locator('.cp-kicker .capital-star').first()).toHaveAttribute('aria-label', 'Original capital');
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, 'c22-panel-teammate-scored-capital');
@@ -183,7 +187,7 @@ for (const size of SIZES) test.describe(`original capitals ${size.name}`, () => 
     const star = panel.locator('.cp-kicker .capital-star').first();
     await star.hover();
     const tip = page.getByRole('tooltip');
-    await expect(tip).toContainText('Your original capital. Each rival that captures it scores +1 VP.');
+    await expect(tip).toContainText('Your original capital. A rival scores 1 VP while it holds it.');
     const sb = (await star.boundingBox())!, tb = (await tip.boundingBox())!;
     // It opens to the right of the head (past the panel's own edge), level with the star: never down over the Lens box.
     expect(tb.x, 'the tooltip is to the right of the star').toBeGreaterThan(sb.x + sb.width);
@@ -215,7 +219,7 @@ for (const size of SIZES) test.describe(`original capitals ${size.name}`, () => 
     const heading = guide.locator('.guide-page').getByRole('heading', { name: /^Original capitals/ });
     await heading.scrollIntoViewIfNeeded();
     await expect(heading).toContainText('+1');
-    await expect(guide.locator('.guide-page')).toContainText('A hollow star means you have already scored it.');
+    await expect(guide.locator('.guide-page')).toContainText('A hollow star means you hold it now.');
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, 'c30-guide-original-capitals');
   });

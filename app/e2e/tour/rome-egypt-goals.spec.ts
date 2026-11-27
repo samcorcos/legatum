@@ -1,7 +1,7 @@
 // Screen tour, Rome's Colonia Victrix and Egypt's Royal Tomb: the goal row in each state, the level 3 announcement,
 // the Settle lens's gilt rings, a rival's view of each goal city, the tomb's work, the faction sheets and How to Play.
 // Run alone with `npx playwright test e2e/tour/rome-egypt-goals`. Shots land in test-results/screen-tour/<size>/rome-egypt-goals/.
-import { test, expect } from '../fixtures';
+import { test, expect, soloContext } from '../fixtures';
 import { coreFixture } from '../../src/test/coreFixture';
 import { goalCitiesFixture, type GoalCityMode } from '../../src/test/goalCitiesFixture';
 import { SIZES, aim, dismissCelebrations, frameHall, hexPoint, ledgerGoal, loadFixture, meetEveryone, selectThing, shot, stageHallReport, type GameWindow } from './helpers';
@@ -24,8 +24,8 @@ async function away(page: Page, h: number) {
 }
 
 // One more state in a fresh window of the same size.
-async function withMode(browser: Browser, size: { width: number; height: number }, mode: GoalCityMode, fn: (p: Page, f: ReturnType<typeof goalCitiesFixture>) => Promise<void>) {
-  const context = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+async function withMode(browser: Browser, baseURL: string | undefined, size: { width: number; height: number }, mode: GoalCityMode, fn: (p: Page, f: ReturnType<typeof goalCitiesFixture>) => Promise<void>) {
+  const context = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
   try {
     const p = await context.newPage();
     await fn(p, await open(p, mode));
@@ -35,7 +35,7 @@ async function withMode(browser: Browser, size: { width: number; height: number 
 for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
   test.use({ viewport: { width: size.width, height: size.height } });
 
-  test('Rome: the goal row before, ready and held', async ({ page, browser }) => {
+  test('Rome: the goal row before, ready and held', async ({ page, browser, baseURL }) => {
     test.setTimeout(150_000);
     await open(page, 'romeBefore');
     const row = page.locator('[data-goal-action="Colonia"]');
@@ -45,7 +45,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await away(page, size.height);
     await shot(page, size, 'r01-rome-row-before');
     for (const [mode, state, name] of [['romeReady', 'ready', 'r02-rome-row-ready'], ['romeHeld', 'held', 'r03-rome-row-held'], ['romeLost', 'lost', 'r04-rome-row-lost']] as const) {
-      const context = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+      const context = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
       try {
         const p = await context.newPage();
         await open(p, mode);
@@ -155,7 +155,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await shot(page, size, 'e06-egypt-pause-confirm');
   });
 
-  test('Egypt seen by a rival: the work under way, then the standing tomb', async ({ page, browser }) => {
+  test('Egypt seen by a rival: the work under way, then the standing tomb', async ({ page, browser, baseURL }) => {
     test.setTimeout(150_000);
     const f = await open(page, 'egyptRival');
     // The fixture's seat has not met Egypt; the tomb chip shows only in a met rival's row.
@@ -172,7 +172,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await expect(chip).toHaveText('6/15');
     await away(page, size.height);
     await shot(page, size, 'e08-rival-tomb-work-race');
-    const context = await browser.newContext({ viewport: { width: size.width, height: size.height } });
+    const context = await soloContext(browser, { baseURL, viewport: { width: size.width, height: size.height } });
     try {
       const p = await context.newPage();
       const g = await open(p, 'tombRival');
@@ -193,7 +193,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     } finally { await context.close(); }
   });
 
-  test('Rome: your own Colonia, a third empire holding it, and a veteran with no site or off the rings', async ({ page, browser }) => {
+  test('Rome: your own Colonia, a third empire holding it, and a veteran with no site or off the rings', async ({ page, browser, baseURL }) => {
     test.setTimeout(240_000);
     const f = await open(page, 'romeHeld');
     await frameHall(page, f.coloniaPos, 1.25);
@@ -201,7 +201,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await stageHallReport(page, [{ type: 'FactionGoalCompleted', player: 0, faction: 'Rome', vp: 2 }]);
     await expect(page.locator('.moment-card').first()).toContainText('Colonia Victrix');
     await shot(page, size, 'r16-own-colonia-founded-card');
-    await withMode(browser, size, 'coloniaThird', async (p, g) => {
+    await withMode(browser, baseURL, size, 'coloniaThird', async (p, g) => {
       await frameHall(p, g.coloniaPos, 1.25);
       await shot(p, size, 'r17-third-empire-holds-colonia-banner');
       // Rome's goal line in the Score ledger: held by the third empire.
@@ -209,7 +209,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       await shot(p, size, 'r18-third-empire-holds-colonia-race');
     });
     for (const [mode, name] of [['romeNoSite', 'r19-rome-no-site-lens'], ['romeOffRing', 'r20-rome-veteran-off-ring']] as const) {
-      await withMode(browser, size, mode, async (p, g) => {
+      await withMode(browser, baseURL, size, mode, async (p, g) => {
         await selectThing(p, 'unit', g.veteran!);
         const settle = p.getByRole('radio', { name: 'Settle', exact: true });
         if (!await settle.isVisible()) await p.getByRole('button', { name: /^Lens: Settle/ }).click();
@@ -222,13 +222,13 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     }
   });
 
-  test('Egypt: the planned tomb on the map, the row paused, standing and lost, and your own tomb', async ({ page, browser }) => {
+  test('Egypt: the planned tomb on the map, the row paused, standing and lost, and your own tomb', async ({ page, browser, baseURL }) => {
     test.setTimeout(240_000);
     const f = await open(page, 'egyptWork');
     // Your capital: the dashed tomb seal, the capital star and the tomb count in place of production.
     await frameHall(page, f.capitalPos, 1.25);
     await shot(page, size, 'e13-own-tomb-site-banner');
-    await withMode(browser, size, 'egyptRival', async (p, g) => {
+    await withMode(browser, baseURL, size, 'egyptRival', async (p, g) => {
       await frameHall(p, g.capitalPos, 1.25);
       await shot(p, size, 'e14-rival-tomb-site-banner');
       const spot = await hexPoint(p, g.capitalPos);
@@ -237,7 +237,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       await expect(p.getByTestId('tile-goal-tomb-site')).toContainText("Egypt's Royal Tomb will stand here in 9 turns: 2 VP to whoever holds the city.");
       await shot(p, size, 'e15-rival-tomb-site-hover');
     });
-    await withMode(browser, size, 'egyptRivalPaused', async (p, g) => {
+    await withMode(browser, baseURL, size, 'egyptRivalPaused', async (p, g) => {
       await frameHall(p, g.capitalPos, 1.25);
       const spot = await hexPoint(p, g.capitalPos);
       await p.mouse.move(spot.x - 3, spot.y - 3);
@@ -246,7 +246,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       await shot(p, size, 'e21-rival-paused-tomb-site-hover');
     });
     for (const [mode, name] of [['egyptPaused', 'e16-egypt-row-paused'], ['egyptHeld', 'e17-egypt-row-standing'], ['tombLost', 'e18-egypt-row-rival-holds']] as const) {
-      await withMode(browser, size, mode, async (p) => {
+      await withMode(browser, baseURL, size, mode, async (p) => {
         const row = p.locator('[data-goal-action="Tomb"]');
         await expect(row).toBeVisible();
         await row.scrollIntoViewIfNeeded();
@@ -254,7 +254,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
         await shot(p, size, name);
       });
     }
-    await withMode(browser, size, 'egyptHeld', async (p, g) => {
+    await withMode(browser, baseURL, size, 'egyptHeld', async (p, g) => {
       await frameHall(p, g.capitalPos, 1.25);
       await shot(p, size, 'e19-own-tomb-banner');
       await stageHallReport(p, [{ type: 'FactionGoalCompleted', player: 0, faction: 'Egypt', vp: 2 }]);
