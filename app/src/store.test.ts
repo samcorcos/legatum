@@ -92,7 +92,7 @@ describe.each(clients)('store on the %s client', (_name, available, load) => {
     await useGame.getState().loadSave(oldSave);
     expect(useGame.getState().client).toBe(previous);
     expect(useGame.getState().error).toContain('Open Multiplayer and choose Host a saved game');
-    expect(useGame.getState().error).toContain('they can then rejoin online');
+    expect(useGame.getState().error).toContain('they can then join the newly hosted game');
   });
 
   it.skipIf(!available)('only auto-opens the report for diplomacy involving the viewer team', async () => {
