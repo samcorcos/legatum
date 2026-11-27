@@ -186,7 +186,7 @@ export function howToWin(v: PlayerView): Suggestion {
   const mine = v.standings.find((s) => s.team === v.team);
   const target = mine?.target ?? 10, team = (mine?.members.length ?? 1) > 1 ? ' with your team' : '';
   return { id: 'howToWin', title: 'How to win', current: 0, acknowledge: true,
-    why: `Get ${target} victory points (VP)${team} and keep them for ${HOLD_TURNS} turns. If nobody does, the most VP at turn ${effectiveTurnLimit(v.turn_limit)} wins.`,
+    why: `Get ${target} victory points (VP)${team} and keep them for ${HOLD_TURNS} turns. If nobody does by turn ${effectiveTurnLimit(v.turn_limit)}, the most VP then wins.`,
     steps: [{ instruction: 'Score VP with Age cards, rival capitals, world wonders and your faction goal. The Victory race shows the score.', target: control('race') }] };
 }
 

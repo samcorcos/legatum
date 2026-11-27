@@ -163,9 +163,9 @@ export function ScoreCheck({ moment, dismiss }: { moment: Moment; dismiss(): voi
         {coach ? <aside className="sc-coach" aria-label="Advisor" data-testid="score-coach">
           <h3>{myFaction && <FactionMark faction={myFaction} size={20} />}<span>How to win</span></h3>
           <ul>
-            <li>Each square is 1 victory point (VP). Filled squares are yours.</li>
+            <li>On your sheet, each square is 1 victory point (VP). Filled squares are yours.</li>
             {card.lines.some((l) => l.fresh) && <li>The gold square is this Age’s new card. Do what it says to score 1 VP.</li>}
-            <li>Hold <b>{card.target} VP</b> for <b>{HOLD_TURNS} turns</b> to win. If nobody does, the most VP at turn {card.turnLimit} wins.</li>
+            <li>Hold <b>{card.target} VP</b> for <b>{HOLD_TURNS} turns</b> to win. If nobody does by turn {card.turnLimit}, the most VP then wins.</li>
           </ul>
         </aside> : <span />}
         <button ref={primary} className="btn primary" data-primary-action onClick={() => { feel.select(); dismiss(); }}>Continue <span className="kbd">Return</span></button>

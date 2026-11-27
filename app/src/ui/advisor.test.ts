@@ -167,7 +167,7 @@ describe('one decision at a time', () => {
     view.turn = 3;
     const win = advisorSuggestion(ctx(), ['welcome', 'report'], []);
     expect(win).toMatchObject({ id: 'howToWin', acknowledge: true, steps: [{ target: { kind: 'control', name: 'race' } }] });
-    expect(win?.why).toBe('Get 20 victory points (VP) with your team and keep them for 10 turns. If nobody does, the most VP at turn 500 wins.');
+    expect(win?.why).toBe('Get 20 victory points (VP) with your team and keep them for 10 turns. If nobody does by turn 500, the most VP then wins.');
     expect(win?.steps[0].instruction).toContain('Age cards, rival capitals, world wonders and your faction goal');
     expect(advisorSuggestion(ctx(), ['welcome', 'report', 'howToWin'], [])?.id).not.toBe('howToWin');
   });
