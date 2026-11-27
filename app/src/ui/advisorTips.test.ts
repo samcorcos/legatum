@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { FixtureClient } from '../test/fixtureEngine';
 import { hexAt, neighbors, distance, tileIndex } from '../hex';
-import type { Order, PlayerView, SupplyView } from '../types';
+import type { Event, Order, PlayerView, SupplyView } from '../types';
 import { advisorSuggestion } from './advisorModel';
 import { strategyTip, TIP_COOLDOWN, TIP_GAP } from './advisorTips';
 import { ownerName } from '../barbarians';
+import { itemKey, itemName } from '../data';
 
 async function game(turn = 20): Promise<PlayerView> {
   const client = new FixtureClient();
@@ -21,6 +22,104 @@ const iron = (over: Partial<SupplyView> = {}): SupplyView => ({ resource: 'Iron'
   supplied: { total: 0, parts: [] }, used: { total: 0, parts: [] }, spare: 0, ...over });
 
 describe('situational tips', () => {
+  it('warns about a war declared on the team and an exposed city, using a military Hard build', async () => {
+    const v = await game();
+    const city = mine(v), r = rival(v);
+    const relation = { ...v.diplomacy.relations[0], a: v.team, b: r.team, state: 'War' as const, declarers: [r.team] };
+    v.diplomacy.relations = [relation];
+    const events: Event[] = [{ type: 'WarDeclared', relation }];
+    const unit = v.units.find((u) => u.owner === v.me && u.military)!;
+    v.units.filter((u) => u.owner === v.me && u.military).forEach((u) => { u.pos = neighbors(city.pos)[0]; });
+    const build = city.detail!.options.find((o) => o.item.kind === 'Unit' && o.item.unit !== 'Scout')!.item;
+    const plan: Order[] = [{ type: 'SetProduction', city: city.id, item: build }];
+    const people = ownerName(v, r.id);
+    expect(strategyTip(v, {}, false, null, [], null, {}, events, plan)).toEqual({
+      id: `tip:war:${city.id}`, title: `${people} declared war`, why: `${people} has 0 military units near ${city.name}.`,
+      steps: [{ instruction: `Click ${city.name}.`, target: { kind: 'tile', hex: city.pos } },
+        { instruction: `Build ${itemName(build, v.players.find((p) => p.id === v.me)?.faction)}.`, target: { kind: 'control', name: 'build', value: itemKey(build) } }],
+      current: 0, acknowledge: true, tip: true,
+    });
+    expect(strategyTip(v, {}, false, null, [], null, {}, events, [])?.steps[1].instruction).toBe('Build a military unit.');
+    expect(strategyTip(v, {}, false, null, [], null, {}, [], plan)?.id).not.toBe(`tip:war:${city.id}`);
+    const enemy = { ...unit, id: unit.id + 9000, owner: r.id, kind: 'Spearman' as const, pos: v.tiles.map((_, i) => hexAt(i, v.width)).find((pos) => distance(pos, city.pos) === 4)! };
+    v.units.push(enemy);
+    expect(strategyTip(v, {}, false, null, [], null, {}, [], plan)).toMatchObject({
+      id: `tip:war:${city.id}`, title: `Defend ${city.name}`, why: `${people} has 1 military unit near ${city.name}.`,
+    });
+    unit.pos = city.pos;
+    expect(strategyTip(v, {}, false, null, [], null, {}, [], plan)?.id).not.toBe(`tip:war:${city.id}`);
+    unit.pos = neighbors(city.pos)[0];
+    r.army = 100;
+    expect(strategyTip(v, {}, false, null, [], null, {}, [], plan)?.id).toBe('tip:army');
+    r.army = 0;
+    expect(strategyTip(v, { [`war:${city.id}`]: v.turn - 1, '#war': 1 }, false, null, [], null, {}, [], plan)?.id).not.toBe(`tip:war:${city.id}`);
+    v.turn += TIP_COOLDOWN.war;
+    expect(strategyTip(v, { [`war:${city.id}`]: 20, '#war': 1 }, false, null, [], null, {}, [], plan)?.id).toBe(`tip:war:${city.id}`);
+    enemy.pos = neighbors(city.pos)[0];
+    expect(strategyTip(v, {}, false, null, [], null, {}, [], plan)?.id).not.toBe(`tip:war:${city.id}`);
+    enemy.pos = v.tiles.map((_, i) => hexAt(i, v.width)).find((pos) => distance(pos, city.pos) === 3)!;
+    v.units.push({ ...enemy, id: enemy.id + 1 });
+    expect(strategyTip(v, {}, false, null, [], null, {}, [], plan)?.id).not.toBe(`tip:war:${city.id}`);
+    v.diplomacy.relations[0].state = 'Peace';
+    expect(strategyTip(v, {}, false, null, [], null, {}, [], plan)?.id).not.toBe(`tip:war:${city.id}`);
+  });
+
+  it('suggests Heal for a badly hurt unlocked unit near a visible enemy', async () => {
+    const v = await game();
+    const r = rival(v), unit = v.units.find((u) => u.owner === v.me && u.military)!;
+    const enemy = { ...unit, id: unit.id + 9000, owner: r.id, kind: 'Spearman' as const, pos: neighbors(mine(v).pos)[0] };
+    v.units.push(enemy);
+    v.diplomacy.relations = [{ ...v.diplomacy.relations[0], a: v.team, b: r.team, state: 'War' }];
+    unit.hp = 39;
+    const name = itemName({ kind: 'Unit', unit: unit.kind }, v.players.find((p) => p.id === v.me)?.faction);
+    expect(strategyTip(v, {})).toEqual({ id: `tip:heal:${unit.id}`, title: `Pull your ${name} back to heal`,
+      why: 'Units heal faster in your territory. A badly hurt unit can die in one attack.',
+      steps: [{ instruction: `Click your ${name}.`, target: { kind: 'tile', hex: unit.pos } },
+        { instruction: `Use Heal, or move toward ${mine(v).name}.`, target: { kind: 'control', name: 'heal' } }],
+      current: 0, acknowledge: true, tip: true });
+    expect(strategyTip(v, {}, false, { kind: 'unit', id: unit.id })?.current).toBe(1);
+    expect(strategyTip(v, { [`heal:${unit.id}`]: v.turn - 1, '#heal': 1 })?.id).not.toBe(`tip:heal:${unit.id}`);
+    v.turn += TIP_COOLDOWN.heal;
+    expect(strategyTip(v, { [`heal:${unit.id}`]: 20, '#heal': 1 })?.id).toBe(`tip:heal:${unit.id}`);
+    unit.resting_heal = { total: 0, parts: [] };
+    expect(strategyTip(v, {})?.steps[1]).toEqual({ instruction: `Move toward ${mine(v).name} to heal.`, target: { kind: 'tile', hex: mine(v).pos } });
+    unit.resting_heal = null;
+    unit.hp = 40;
+    expect(strategyTip(v, {})?.id).not.toBe(`tip:heal:${unit.id}`);
+    unit.hp = 39;
+    unit.occupation_lock = r.id;
+    expect(strategyTip(v, {})?.id).not.toBe(`tip:heal:${unit.id}`);
+    unit.occupation_lock = null;
+    v.diplomacy.relations[0].state = 'Peace';
+    expect(strategyTip(v, {})?.id).not.toBe(`tip:heal:${unit.id}`);
+  });
+
+  it('points a starving city at an available Food build and stops when its net Food recovers', async () => {
+    const v = await game();
+    const city = mine(v), detail = city.detail!;
+    city.population = 2;
+    const granary = detail.options.find((o) => o.item.kind === 'Building' && o.item.building === 'Granary')!;
+    detail.yields = { ...detail.yields, total: { ...detail.yields.total, food: 0 } };
+    granary.yields = { ...granary.yields, total: { ...granary.yields.total, food: 2 } };
+    expect(strategyTip(v, {})).toEqual({ id: `tip:food:${city.id}`, title: `${city.name} is starving`,
+      why: `${city.name} loses Food each turn and will shrink.`,
+      steps: [{ instruction: `Click ${city.name}.`, target: { kind: 'tile', hex: city.pos } },
+        { instruction: 'Build Granary.', target: { kind: 'control', name: 'build', value: 'b:Granary' } }],
+      current: 0, acknowledge: true, tip: true });
+    expect(strategyTip(v, {}, false, { kind: 'city', id: city.id })?.current).toBe(1);
+    expect(strategyTip(v, { [`food:${city.id}`]: v.turn - 1, '#food': 1 })?.id).not.toBe(`tip:food:${city.id}`);
+    v.turn += TIP_COOLDOWN.food;
+    expect(strategyTip(v, { [`food:${city.id}`]: 20, '#food': 1 })?.id).toBe(`tip:food:${city.id}`);
+    city.population = 1;
+    expect(strategyTip(v, {})?.why).toBe(`${city.name} needs more Food but cannot shrink below 1 population.`);
+    city.population = 2;
+    detail.yields.total.food = 2 * city.population;
+    expect(strategyTip(v, {})?.id).not.toBe(`tip:food:${city.id}`);
+    detail.yields.total.food = 0;
+    detail.options = [];
+    expect(strategyTip(v, {})?.id).not.toBe(`tip:food:${city.id}`);
+  });
+
   it('suggests Peace for two locked units, but only with a living rival still at War', async () => {
     const v = await game();
     const r = rival(v), city = mine(v), unit = v.units.find((u) => u.owner === v.me)!;

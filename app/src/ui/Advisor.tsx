@@ -29,6 +29,7 @@ export function targetElement(target: Exclude<NonNullable<AdvisorTarget>, { kind
     case 'diplomacy': return first('.game .panel.vp .rivals-foot button', '.game .panel.vp .rivals button.rv-row');
     case 'found': return action(/^Found City/i);
     case 'fortify': return action(/^(Fortify|Wait)/i);
+    case 'heal': return action(/^Heal/i);
     case 'skip': return action(/^Skip/i);
     case 'explore': return action(/^Auto-explore/i);
     case 'ranged': return action(/^Ranged attack/i);
@@ -181,6 +182,7 @@ export function Advisor() {
   const advice = view && !hidden ? advisorSuggestion({ view, orders: orders[seat] ?? [], errors: errors[seat], selection,
     humans: humans.length, remote: client?.kind === 'remote', touch, techOpen, mode, turnLabel, placingTile, local: useGame.getState(),
     researchQueueDrained: report?.events[seat]?.some((event) => event.type === 'ResearchQueueAdvanced' && event.player === view.me && event.next === null),
+    events: report?.turn === view.turn - 1 ? report.events[seat] : [],
     forecast: client ? (unit, at, mode) => client.forecast(view.me, unit, at, mode) : undefined }, seen,
     skippedTurn === view.turn ? skipped : [], practice, tips, locks) : null;
   // While a tile is being placed, only the tip that asked for that tile keeps guiding (its last step rings the tile).

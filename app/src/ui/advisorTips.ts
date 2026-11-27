@@ -5,11 +5,12 @@
  * cooldown per key, a gap between any two tips, and a tip shows only while its situation still holds.
  */
 import { distance, hexAt, hexEq } from '../hex';
-import { itemName } from '../data';
+import { buildingStatsFor, itemKey, itemName, UNIT_STATS } from '../data';
 import { empireOfPlayer } from '../empires';
 import { ownerName } from '../barbarians';
-import { atWar } from '../diplomacy';
-import type { CityView, Hex, Order, PlayerView, Resource } from '../types';
+import { atWar, isThreat } from '../diplomacy';
+import { citiesUnderAttack } from '../siege';
+import type { CityView, Event, Hex, Order, PlayerView, Resource } from '../types';
 import type { AdvisorStep, Suggestion } from './advisorModel';
 import { OFFER_TURNS, keepPhrase, myOffer, queuedBuy, wallsInTime, withoutBuy } from '../buyCity';
 import { freeGold } from '../deals';
@@ -18,7 +19,7 @@ import { freeGold } from '../deals';
  * Turns before a tip of the same kind may show again (and only if its situation still holds). Each repeat of a kind
  * doubles its wait, so advice the player chose not to follow fades instead of nagging.
  */
-export const TIP_COOLDOWN = { army: 25, resource: 20, gold: 20, buy: 20, offer: 1, garrison: 25 } as const;
+export const TIP_COOLDOWN = { army: 25, war: 30, heal: 15, food: 20, resource: 20, gold: 20, buy: 20, offer: 1, garrison: 25 } as const;
 /** Turns between any two different tips, so advice never piles up. (An enemy army at a city is This Turn's alarm, not a tip.) */
 export const TIP_GAP = 4;
 /** Turn last shown, per tip key; `#<kind>` counts how often that kind has shown this game. */
@@ -51,6 +52,77 @@ function armyTip(v: PlayerView): Tip | null {
   return { key: 'army', kind: 'army', title: 'Build up your army',
     why: `Army points: ${name} ${teamArmy(rival.team)}, you ${mine}. They are close to you, and a weak army invites an attack.`,
     steps: [{ instruction: 'Build military units, or Walls in your border cities.', target: null }] };
+}
+
+function warTip(v: PlayerView, touch: boolean, selection: { kind: string; id: number } | null, events: readonly Event[], plan: readonly Order[] | null): Tip | null {
+  if (armyTip(v)) return null;
+  const cities = ownCities(v).filter((city) => city.occupation_lock == null);
+  const alarmed = new Set(citiesUnderAttack(v, null).map((a) => a.cityId));
+  const eligible = cities.filter((city) => !alarmed.has(city.id));
+  const exposed = eligible.filter((city) =>
+    !v.units.some((u) => u.military && v.players.some((p) => p.id === u.owner && p.team === v.team) && hexEq(u.pos, city.pos)));
+  if (!eligible.length) return null;
+  const declaration = events.find((e) => e.type === 'WarDeclared' && [e.relation.a, e.relation.b].includes(v.team)
+    && !e.relation.declarers.includes(v.team) && e.relation.declarers.length > 0);
+  const declaredTeam = declaration?.type === 'WarDeclared' ? declaration.relation.declarers[0] : null;
+  const enemies = v.units.filter((u) => u.military && u.hp > 0 && isThreat(v, u.owner) && v.players.some((p) => p.id === u.owner && p.team !== v.team));
+  const threats = exposed.flatMap((city) => enemies.filter((u) => distance(u.pos, city.pos) <= 6)
+    .map((u) => ({ city, unit: u, d: distance(u.pos, city.pos) })));
+  if (!declaration && !threats.length) return null;
+  const closest = [...threats].sort((a, b) => a.d - b.d || a.city.id - b.city.id)[0];
+  const city = closest?.city ?? eligible[0];
+  const owner = closest?.unit.owner ?? v.players.find((p) => p.team === declaredTeam)?.id;
+  if (owner == null) return null;
+  const people = empireOfPlayer(v, owner);
+  const count = enemies.filter((u) => v.players.find((p) => p.id === u.owner)?.team === v.players.find((p) => p.id === owner)?.team
+    && distance(u.pos, city.pos) <= 6).length;
+  const item = plan?.flatMap((o) => (o.type === 'SetProduction' || o.type === 'SetProductionQueue') && o.city === city.id
+    ? o.type === 'SetProduction' ? [o.item] : o.queue : []).find((i) => i.kind === 'Unit' && UNIT_STATS[i.unit].military);
+  const build = item?.kind === 'Unit' && UNIT_STATS[item.unit].military && city.detail?.options.some((o) => itemKey(o.item) === itemKey(item)) ? item : null;
+  const fallback = city.detail?.options.find((o) => o.item.kind === 'Unit' && UNIT_STATS[o.item.unit].military)?.item;
+  return { key: `war:${city.id}`, kind: 'war', title: closest ? `Defend ${city.name}` : `${people} declared war`,
+    why: `${people} has ${count} military ${count === 1 ? 'unit' : 'units'} near ${city.name}.`,
+    current: selection?.kind === 'city' && selection.id === city.id ? 1 : 0,
+    steps: [{ instruction: `${click(touch)} ${city.name}.`, target: tile(city.pos) },
+      { instruction: build ? `Build ${itemName(build, v.players.find((p) => p.id === v.me)?.faction)}.` : 'Build a military unit.',
+        target: build || fallback ? { kind: 'control', name: 'build', value: itemKey(build ?? fallback!) } : null }] };
+}
+
+function healTip(v: PlayerView, touch: boolean, selection: { kind: string; id: number } | null): Tip | null {
+  const enemies = v.units.filter((u) => u.military && u.hp > 0 && isThreat(v, u.owner) && rivalTeam(v, u.owner));
+  const unit = v.units.filter((u) => u.owner === v.me && u.military && u.hp < 40 && u.occupation_lock == null
+    && enemies.some((enemy) => distance(u.pos, enemy.pos) <= 3)).sort((a, b) => a.hp - b.hp || a.id - b.id)[0];
+  if (!unit) return null;
+  const name = itemName({ kind: 'Unit', unit: unit.kind }, v.players.find((p) => p.id === v.me)?.faction);
+  const city = nearest(ownCities(v), unit.pos);
+  const canHealHere = unit.resting_heal?.total !== 0;
+  return { key: `heal:${unit.id}`, kind: 'heal', title: `Pull your ${name} back to heal`,
+    why: 'Units heal faster in your territory. A badly hurt unit can die in one attack.',
+    current: selection?.kind === 'unit' && selection.id === unit.id ? 1 : 0,
+    steps: [{ instruction: `${click(touch)} your ${name}.`, target: tile(unit.pos) },
+      { instruction: canHealHere ? city ? `Use Heal, or move toward ${city.name}.` : 'Use Heal or move into your territory.'
+        : city ? `Move toward ${city.name} to heal.` : 'Move into your territory to heal.',
+        target: canHealHere ? { kind: 'control', name: 'heal' } : city ? tile(city.pos) : null }] };
+}
+
+function foodTip(v: PlayerView, touch: boolean, selection: { kind: string; id: number } | null): Tip | null {
+  for (const city of ownCities(v)) {
+    const detail = city.detail;
+    if (!detail || detail.yields.total.food - 2 * city.population >= 0 || city.occupation_lock != null) continue;
+    const faction = v.players.find((p) => p.id === v.me)?.faction;
+    const option = detail.options.find((o) => o.item.kind === 'Building' && faction && (buildingStatsFor(faction, o.item.building).yields.food ?? 0) > 0
+      && o.yields.total.food > detail.yields.total.food)
+      ?? detail.options.find((o) => o.item.kind === 'Project' && o.item.project === 'Food' && o.yields.total.food > detail.yields.total.food)
+      ?? detail.options.find((o) => o.item.kind === 'Improvement' && o.yields.total.food > detail.yields.total.food);
+    if (!option) continue;
+    const name = itemName(option.item, v.players.find((p) => p.id === v.me)?.faction);
+    return { key: `food:${city.id}`, kind: 'food', title: `${city.name} is starving`,
+      why: city.population > 1 ? `${city.name} loses Food each turn and will shrink.` : `${city.name} needs more Food but cannot shrink below 1 population.`,
+      current: selection?.kind === 'city' && selection.id === city.id ? 1 : 0,
+      steps: [{ instruction: `${click(touch)} ${city.name}.`, target: tile(city.pos) },
+        { instruction: `${option.item.kind === 'Project' ? 'Choose' : 'Build'} ${name}.`, target: { kind: 'control', name: 'build', value: itemKey(option.item) } }] };
+  }
+  return null;
 }
 
 function garrisonTip(v: PlayerView, locks: LockLog): Tip | null {
@@ -149,7 +221,7 @@ function offerTip(v: PlayerView): Tip | null {
 }
 
 /** The tip to show now, or null. A tip already shown this turn keeps showing until the player dismisses it. */
-export function strategyTip(view: PlayerView, saved: TipLog, touch = false, selection: { kind: string; id: number } | null = null, orders: readonly Order[] = [], placingTile: number | null = null, locks: LockLog = {}): Suggestion | null {
+export function strategyTip(view: PlayerView, saved: TipLog, touch = false, selection: { kind: string; id: number } | null = null, orders: readonly Order[] = [], placingTile: number | null = null, locks: LockLog = {}, events: readonly Event[] = [], plan: readonly Order[] | null = null): Suggestion | null {
   if (view.turn < 3) return null;
   // A log from a later turn than now belongs to another game: start clean (noteTip clears it when the next tip shows).
   const log: TipLog = Object.entries(saved).some(([k, t]) => !k.startsWith('#') && t > view.turn) ? {} : saved;
@@ -163,7 +235,7 @@ export function strategyTip(view: PlayerView, saved: TipLog, touch = false, sele
     if (view.turn - lastOfKind(tip.kind) < wait) return false;
     return view.turn - lastOther(tip.key) >= TIP_GAP;
   };
-  const tips = [offerTip(view), garrisonTip(view, locks), armyTip(view), resourceTip(view, touch, selection, orders, placingTile), buyTip(view, touch, selection, orders), goldTip(view, touch, selection)].filter((t): t is Tip => !!t);
+  const tips = [offerTip(view), garrisonTip(view, locks), armyTip(view), warTip(view, touch, selection, events, plan), healTip(view, touch, selection), foodTip(view, touch, selection), resourceTip(view, touch, selection, orders, placingTile), buyTip(view, touch, selection, orders), goldTip(view, touch, selection)].filter((t): t is Tip => !!t);
   const tip = tips.find((t) => shownThisTurn(t.key)) ?? tips.find(ready);
   if (!tip) return null;
   return { id: `tip:${tip.key}`, title: tip.title, why: tip.why, steps: tip.steps, current: tip.current ?? 0, acknowledge: true, tip: true };

@@ -15,11 +15,11 @@ import { YIELD_LABEL, type YieldKey } from './yieldKeys';
 import { strategyTip, tipKind, type TipLog } from './advisorTips';
 import type { LockLog } from './advisorTips';
 import { occupiedCityName } from './forecastWarnings';
-import type { BattleForecast, CityView, Hex, Order, OrderError, PlayerView, TechId, UnitView } from '../types';
+import type { BattleForecast, CityView, Event, Hex, Order, OrderError, PlayerView, TechId, UnitView } from '../types';
 
 /** Keep the old key: disabling first-game hints also disables the advisor. */
 export const ADVISOR_KEY = 'legatum.first-game-hints.v2';
-export type AdvisorTarget = { kind: 'tile'; hex: Hex } | { kind: 'control'; name: 'research' | 'turn' | 'race' | 'diplomacy' | 'found' | 'fortify' | 'explore' | 'skip' | 'ranged' | 'build' | 'tech' | 'queueTech' | 'researchQueue' | 'closeResearch' | 'buyTile' | 'buyCity'; value?: string } | null;
+export type AdvisorTarget = { kind: 'tile'; hex: Hex } | { kind: 'control'; name: 'research' | 'turn' | 'race' | 'diplomacy' | 'found' | 'fortify' | 'heal' | 'explore' | 'skip' | 'ranged' | 'build' | 'tech' | 'queueTech' | 'researchQueue' | 'closeResearch' | 'buyTile' | 'buyCity'; value?: string } | null;
 export interface AdvisorStep { instruction: string; key?: string; target: AdvisorTarget }
 export interface Suggestion { id: string; title: string; why: string; steps: AdvisorStep[]; current: number; acknowledge?: boolean; tip?: boolean }
 export interface AdvisorContext {
@@ -37,6 +37,8 @@ export interface AdvisorContext {
   forecast?: (unit: number, at: Hex, mode: 'Melee' | 'Ranged') => BattleForecast | null;
   /** Supplying a plan makes the decision logic pure and easy to test. Undefined reads the loaded WASM. */
   plan?: Order[] | null;
+  /** Visible events from the turn just resolved. */
+  events?: Event[];
   turnLabel?: string;
   /** The city whose Buy a tile placement is open, if any: the advisor guides the last click there. */
   placingTile?: number | null;
@@ -272,7 +274,7 @@ export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], 
   }
   // Situational advice comes before the routine decisions, but never interrupts a unit or panel already in hand.
   if (seen.includes('welcome') && !ctx.techOpen) {
-    const tip = strategyTip(v, tips, ctx.touch, ctx.selection, validOrders(ctx), ctx.placingTile ?? null, locks);
+    const tip = strategyTip(v, tips, ctx.touch, ctx.selection, validOrders(ctx), ctx.placingTile ?? null, locks, ctx.events ?? [], plan);
     if (tip && !skipped.includes(tip.id) && (!ctx.selection || tip.current > 0)) return tip;
   }
   // Follow the screen: the open Research panel or the selected city or unit is the decision in hand.
