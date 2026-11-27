@@ -2979,7 +2979,7 @@ fn india_revenue_office_upkeep_and_remittance_have_separate_ablations() {
     let with_office = economy::player_income(&s, P0);
     assert!(
         with_office.gold.parts.iter().any(|(label, amount)| label
-            .contains("Revenue Office pays its upkeep")
+            .contains("no upkeep (Revenue Office)")
             && *amount == 0)
     );
     assert!(
@@ -2987,7 +2987,7 @@ fn india_revenue_office_upkeep_and_remittance_have_separate_ablations() {
             .parts
             .iter()
             .any(
-                |(label, amount)| label.contains("Revenue Office pays its upkeep") && *amount == 0
+                |(label, amount)| label.contains("no upkeep (Revenue Office)") && *amount == 0
             )
     );
 
@@ -3002,7 +3002,7 @@ fn india_revenue_office_upkeep_and_remittance_have_separate_ablations() {
             .gold
             .parts
             .iter()
-            .any(|(label, _)| label.contains("Revenue Office pays its upkeep"))
+            .any(|(label, _)| label.contains("no upkeep (Revenue Office)"))
     );
     s.setup
         .rule_experiments

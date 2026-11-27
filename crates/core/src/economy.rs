@@ -935,7 +935,7 @@ pub(crate) fn upkeep_breakdown_with_military(
     }
     for city in exempt_india_cities(state, p) {
         b.parts
-            .push((format!("{}: Revenue Office pays its upkeep", city.name), 0));
+            .push((format!("{}: no upkeep (Revenue Office)", city.name), 0));
     }
     b
 }
@@ -1139,7 +1139,7 @@ pub fn player_income(state: &GameState, p: crate::types::PlayerId) -> PlayerInco
     }
     for city in exempt_india_cities(state, p) {
         gold.parts
-            .push((format!("{}: Revenue Office pays its upkeep", city.name), 0));
+            .push((format!("{}: no upkeep (Revenue Office)", city.name), 0));
     }
     PlayerIncome {
         cities,
