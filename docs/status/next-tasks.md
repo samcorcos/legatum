@@ -202,7 +202,7 @@ A Civ-style interstitial at the start of the turn for every change in state betw
 - At 1000x600, 8 px of map shows below the report; the timeline needs a scroll fade; the Statistics tab has empty space at 1440x900.
 
 ## Faction changes the user approved on 2026-10-17. Build in this order
-3. **Byzantium: Mercenary Companies (DONE, landed 2026-10-23; retired 2026-11-26 and replaced by Buy a city and the fall of Constantinople, rules 65; the Theodosian Walls kit was dropped)** (design in `docs/design/research/mercenaries-and-faction-changes-2026-10-17.md`, contracts 30 turns, can capture, Gold to the seller). Retire bought peace and Hire an army. The AI must use them. Gate with the human-seat benchmark and the war suite. Opus to design the details, Sonnet to build.
+3. **Byzantium: Mercenary Companies (DONE, landed 2026-10-23; retired 2026-11-26 and replaced by Buy a city and the fall of Constantinople, rules 66; the Theodosian Walls kit was dropped)** (design in `docs/design/research/mercenaries-and-faction-changes-2026-10-17.md`, contracts 30 turns, can capture, Gold to the seller). Retire bought peace and Hire an army. The AI must use them. Gate with the human-seat benchmark and the war suite. Opus to design the details, Sonnet to build.
 4. **Germany: -1 move only outside its own land and roads** (trial; must read as one plain sentence). Luna. (SUPERSEDED 2026-11-05: the movement drawback was dropped altogether in the Germany rework, RULES_VERSION 13; the drawback is now −2 Food in Ruhr Foundry cities. The first-building discount was cut 2026-11-07, RULES_VERSION 22, branch `land/germany-discount-cut`.)
 
 ## AI scouting (found by the AI war package, 10-17). After phase 2
@@ -231,7 +231,7 @@ At most about 5 Claude agents at once. Start each when a slot frees, in this ord
 2. **War and peace interstitials** (UI; reuse the post-game reveal art).
 3. **AI defence against a melee rush:** count the army at the door and build Spearmen; react to a rush faction at first contact; campaign hysteresis; counterattack a thin rusher capital.
 4. **Coach Swiss fixes:** no peace with a team in its victory hold; a two-step VP planner (#26); the Celts' sack campaigns (#25, if `ai-war-followthrough` didn't fold them in).
-5. **Byzantine Mercenary Companies (DONE 2026-10-23; retired 2026-11-26 and replaced by Buy a city, rules 65; the Theodosian Walls kit was dropped)** (design in `docs/design/research/mercenaries-and-faction-changes-2026-10-17.md`; 30-turn contracts; can capture; Gold to the seller). Retire bought peace and Hire an army. Opus to design the details, Sonnet to build.
+5. **Byzantine Mercenary Companies (DONE 2026-10-23; retired 2026-11-26 and replaced by Buy a city, rules 66; the Theodosian Walls kit was dropped)** (design in `docs/design/research/mercenaries-and-faction-changes-2026-10-17.md`; 30-turn contracts; can capture; Gold to the seller). Retire bought peace and Hire an army. Opus to design the details, Sonnet to build.
 6. **Military Engineer AI genes on:** after the Engineer lands, train against the user's next playtest. Plus the "Hold Athens" and Therapne scenarios unhidden.
 7. **AI optimization stage 1 and 2:** per-faction overrides (Luna), a full-game score term, an opening-army or muster knob, then per-faction climbs on the box filler.
 

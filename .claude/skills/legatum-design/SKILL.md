@@ -67,7 +67,7 @@ Current principles and decisions, one line each with date and who. The user's fu
 - Resolution order when a defender slips into a besieged city: slip in, then ranged, then melee (user, 2026-11-21).
 - Saves from other rules versions are refused; no migrations (user, 2026-10-31). The hosted site opens an old game in the build that made it.
 - Going back a turn is allowed in local games (Sam, 2026-11-22): save-scumming is acceptable, because training should learn only from moves the player meant. Menu → Load an earlier turn opens any of the last 10 autosaved turns; the uploaded record keeps only the line played on and lists each rewind (`rewinds`). Online games cannot go back (the host would rewind everyone).
-- Byzantium: Buy a city (a bordering rival's non-capital city, public price, Gold in escrow to the seller, 3-turn public countdown; owner can raise the price or declare War), paid for by the fall of Constantinople (take the capital, take every city, unless the Heir shelters elsewhere). Replaces Mercenary Companies and thin levies (2026-11-26, rules 65).
+- Byzantium: Buy a city (a bordering rival's non-capital city, public price, Gold in escrow to the seller, 3-turn public countdown; owner can raise the price or declare War), paid for by the fall of Constantinople (take the capital, take every city, unless the Heir shelters elsewhere). Replaces Mercenary Companies and thin levies (2026-11-26, rules 66).
 - Rules freeze: lifted 2026-11-11 (user). Talk before building tech-tree changes (user, 2026-11-01).
 
 ## How to propose
