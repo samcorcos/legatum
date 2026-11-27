@@ -117,3 +117,24 @@ it('marks a refused join code on the code box in the game room instead of a seco
   sockets[0].push({ type: 'error', code: 'join_code_needed', message: 'This game needs a private code.' });
   expect(useGame.getState().error).toBe('This game needs a private code.');
 });
+
+it('stops claiming the seat after too many wrong codes and says so in the code box', () => {
+  vi.useFakeTimers();
+  try {
+    useGame.setState({ net: { status: { mode: 'server', has_game: false, turn: 0, seats: [], is_local: false, staging: null }, mySeat: null, seats: [], conn: 'closed' } });
+    useGame.getState().enterStaging();
+    sockets[0].open();
+    useGame.getState().setJoinCodeText('WOLF41');
+    useGame.getState().takeStagingSeat(1, 'Ana');
+    const lockout = 'Too many wrong private codes. Check the code with the host, then join again.';
+    sockets[0].push({ type: 'error', code: 'too_many_codes', message: lockout });
+    expect(useGame.getState()).toMatchObject({ error: null, stagingSeat: null, joinCodeRejected: 'WOLF41', joinCodeLockout: lockout });
+    // The reconnect watches the room again but does not resend the refused claim.
+    sockets[0].drop();
+    vi.advanceTimersByTime(1000);
+    sockets[1].open();
+    expect(sockets[1].types()).not.toContain('staging_take');
+  } finally {
+    vi.useRealTimers();
+  }
+});

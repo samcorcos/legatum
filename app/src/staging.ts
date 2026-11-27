@@ -432,7 +432,7 @@ export class StagingClient {
           this.events.seatLost?.(msg.message);
           break;
         }
-        if (msg.code === 'join_code_needed' || msg.code === 'wrong_join_code') {
+        if (msg.code === 'join_code_needed' || msg.code === 'wrong_join_code' || msg.code === 'too_many_codes') {
           // The claim failed: stop asking for this seat until the player tries again.
           this.seat = null;
           this.token = undefined;
