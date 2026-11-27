@@ -625,7 +625,7 @@ fn the_view_carries_machine_fields_and_the_bid_choices_with_what_stops_each() {
     );
     assert_eq!(row.max_bid, row.price * 3);
     let percents: Vec<i32> = row.bids.iter().map(|b| b.percent).collect();
-    assert_eq!(percents, vec![100, 125, 150, 200]);
+    assert_eq!(percents, vec![100, 150, 200, 300]);
     for b in &row.bids {
         assert_eq!(b.gold, row.price * b.percent / 100);
         let base = buy_city::base_breakdown(&w.s, &w.s.cities[&w.target]).total;

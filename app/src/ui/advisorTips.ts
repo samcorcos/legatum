@@ -9,7 +9,7 @@ import { itemName } from '../data';
 import { empireOfPlayer } from '../empires';
 import type { CityView, Hex, Order, PlayerView, Resource } from '../types';
 import type { AdvisorStep, Suggestion } from './advisorModel';
-import { OFFER_TURNS, myOffer, queuedBuy, withoutBuy } from '../buyCity';
+import { OFFER_TURNS, keepPhrase, myOffer, queuedBuy, wallsInTime, withoutBuy } from '../buyCity';
 import { freeGold } from '../deals';
 
 /**
@@ -119,6 +119,8 @@ function buyTip(v: PlayerView, touch: boolean, selection: { kind: string; id: nu
       { instruction: `${click(touch)} Make an offer.`, target: { kind: 'control', name: 'buyCity' } }] };
 }
 
+const sentence = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
+
 /** A city of yours that Byzantium is buying: what stops it, while the offer still holds (shown every turn the offer holds, never held back by the tip gap). */
 function offerTip(v: PlayerView): Tip | null {
   const o = (v.city_offers ?? []).find((x) => x.seller === v.me && x.price_now <= x.escrow);
@@ -127,13 +129,7 @@ function offerTip(v: PlayerView): Tip | null {
   const buyer = empireOfPlayer(v, o.buyer);
   return { key: `offer:${o.city}:${o.ends_turn}`, kind: 'offer', title: `Keep ${city.name}?`,
     why: `${buyer} is buying ${city.name} for ${o.escrow} Gold, at the end of turn ${o.ends_turn}. If its price rises above ${o.escrow} Gold, the offer fails; War calls it off.`,
-    steps: [{ instruction: `${keepSteps(o.guards_to_stop ?? 0, o.walls_to_stop)}. To let it go, do nothing: you get the Gold.`, target: tile(city.pos) }] };
-}
-
-/** "Move 2 more military units in or next to it, or build 1 Walls level": what breaks the offer. */
-function keepSteps(g: number, w?: number | null): string {
-  if (!g) return 'Move military units in or next to it, or build Walls';
-  return `Move ${g} more military unit${g === 1 ? '' : 's'} in or next to it, or build ${w ? `${w} Walls level${w === 1 ? '' : 's'}` : 'Walls'}`;
+    steps: [{ instruction: `${sentence(keepPhrase(o.guards_to_stop ?? 0, wallsInTime(v, o)))}. To let it go, do nothing: you get the Gold.`, target: tile(city.pos) }] };
 }
 
 /** The tip to show now, or null. A tip already shown this turn keeps showing until the player dismisses it. */

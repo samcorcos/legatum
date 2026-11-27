@@ -35,6 +35,7 @@ import { foreignCityChoice } from './ForeignCityActions';
 import { buyIsPrimary } from './CityBuy';
 import { Amounts } from './Amounts';
 import { SiegeAlerts } from './SiegeAlerts';
+import { OfferAlerts } from './OfferAlerts';
 import { useCityAlarms } from './useCityAlarms';
 
 class OrderListBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
@@ -254,6 +255,7 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
       <div ref={body} className={`turn-body${bodyScrolls ? ' scrolls' : ''}`}>
       {/* A city under attack is the turn's first concern: its card leads the body, outside the collapsed details. */}
       <SiegeAlerts />
+      <OfferAlerts />
       {!race && <><GoalActionRow /><FactionGoalProgressLine view={view} /></>}
       <details className="sidebar-turn-more" open={!race || hostCanOpenSeat || undefined}><summary hidden={!race}>Turn details · {counted(orders[seat].length + automated.length, 'order')}</summary>
       <AirWatch view={view} />

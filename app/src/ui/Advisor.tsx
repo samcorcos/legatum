@@ -171,8 +171,10 @@ export function Advisor() {
   useEffect(() => { setModal(techOpen ? document.querySelector<HTMLDialogElement>('dialog.tech-modal[open]') : null); }, [techOpen]);
   // The card's top edge in pixels when the usual slot would cover the step's target or the selected tile; null keeps the CSS slot.
   const [cardTop, setCardTop] = useState<number | null>(null);
+  // When no height clears a city's banner, the card's centre moves to the left edge of the map instead (null: the CSS slot).
+  const [cardLeft, setCardLeft] = useState<number | null>(null);
   const [dialogRect, setDialogRect] = useState<DOMRect | null>(null);
-  useEffect(() => setCardTop(null), [suggestion?.id, suggestion?.current]);
+  useEffect(() => { setCardTop(null); setCardLeft(null); }, [suggestion?.id, suggestion?.current]);
   useLayoutEffect(() => {
     if (hidden || !suggestion) return;
     let frame = 0, previous = '';
@@ -198,8 +200,9 @@ export function Advisor() {
         }
         // Also keep clear of the map tools and the player's own cities with their banners (drawn above the tile).
         const tools = document.querySelector('.map-lenses')?.getBoundingClientRect() ?? null;
-        const ownCities = (view?.cities ?? []).filter((c) => c.owner === view?.me).map((c) => tileOnScreen(c.pos))
-          .filter((p): p is NonNullable<typeof p> => !!p).map((p) => new DOMRect(p.x - p.radius, p.y - 2 * p.radius, 2 * p.radius, 3 * p.radius));
+        // A city under offer also wears its countdown coin on the banner, so it is kept clear too, whoever owns it.
+        const ownCities = (view?.cities ?? []).filter((c) => c.owner === view?.me || view?.city_offers?.some((o) => o.city === c.id)).map((c) => tileOnScreen(c.pos))
+          .filter((p): p is NonNullable<typeof p> => !!p).map((p) => new DOMRect(p.x - 1.3 * p.radius, p.y - 2.3 * p.radius, 2.6 * p.radius, 3.3 * p.radius));
         const blockers = [target, selectedTile, tools, ...ownCities].filter((r): r is DOMRect => !!r && r.width > 0 && r.right > box.left && r.left < box.right);
         const clearOf = (rects: DOMRect[]) => (top: number) => rects.every((r) => top + box.height + 8 <= r.top || top >= r.bottom + 8);
         // The step's target and the selection must stay visible; the rest is avoided when there is room.
@@ -211,14 +214,27 @@ export function Advisor() {
           .filter((top) => top >= 64 && top <= floor);
         const cities = blockers.filter((r) => r !== tools);
         const best = options.find(clearOf(blockers)) ?? options.find(clearOf(cities)) ?? options.find(clearOf(must));
-        const next = best === undefined || best === home ? null : Math.round(best);
+        let next = best === undefined || best === home ? null : Math.round(best);
+        // No height clears every banner: slide to the map's left edge at the usual height when that does.
+        let nextLeft: number | null = null;
+        // Judged for the CSS slot (the centre), not the card's current place, so it cannot flip back and forth.
+        const every = [target, selectedTile, ...ownCities].filter((r): r is DOMRect => !!r && r.width > 0);
+        const slot = innerWidth / 2 - box.width / 2;
+        const atSlot = every.filter((r) => r.right > slot && r.left < slot + box.width);
+        const slotOptions = [home, ...atSlot.map((r) => r.bottom + 12), ...atSlot.map((r) => r.top - 12 - box.height)].filter((top) => top >= 64 && top <= floor);
+        if (atSlot.length && !slotOptions.find(clearOf(atSlot))) {
+          const left = 16;
+          const free = every.every((r) => left + box.width + 8 <= r.left || left >= r.right + 8 || home + box.height + 8 <= r.top || home >= r.bottom + 8);
+          if (free) { nextLeft = left + box.width / 2; next = null; }
+        }
         if (next !== cardTop) setCardTop(next);
+        if (nextLeft !== cardLeft) setCardLeft(nextLeft);
       }
       frame = requestAnimationFrame(measure);
     };
     measure();
     return () => cancelAnimationFrame(frame);
-  }, [hidden, suggestion?.id, suggestion?.current, modal, selection, view, cardTop]);
+  }, [hidden, suggestion?.id, suggestion?.current, modal, selection, view, cardTop, cardLeft]);
   useLayoutEffect(() => {
     const el = card.current, game = document.querySelector<HTMLElement>('.game');
     if (!el || !game) return;
@@ -238,7 +254,7 @@ export function Advisor() {
     {/* Inside a dialog, only ring a control in that dialog: anything behind it can't be clicked. */}
     <AdvisorRing target={modal && !(step?.target?.kind === 'control' && modal.contains(targetElement(step.target))) ? null : step?.target ?? null} still={!animationsOn} />
     <aside ref={card} className={`advisor-card${welcome ? ' welcome' : ''}${modal ? ' in-dialog' : ''}`}
-      style={modal && dialogRect ? { left: dialogRect.left, bottom: innerHeight - dialogRect.bottom, width: dialogRect.width } : cardTop !== null ? { top: cardTop, bottom: 'auto' } : undefined}
+      style={modal && dialogRect ? { left: dialogRect.left, bottom: innerHeight - dialogRect.bottom, width: dialogRect.width } : cardTop !== null || cardLeft !== null ? { ...(cardTop !== null ? { top: cardTop, bottom: 'auto' } : {}), ...(cardLeft !== null ? { left: cardLeft } : {}) } : undefined}
       data-overlay-slot="story-hint" data-testid="advisor" data-advisor-id={suggestion.id} aria-label="Advisor" onKeyDown={(e) => e.stopPropagation()}>
       {modal && seal}
       <div className="advisor-copy" role="status" aria-live="polite" aria-atomic="true">

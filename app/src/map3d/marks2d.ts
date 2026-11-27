@@ -10,8 +10,8 @@ import { heirTag } from '../heir';
 import { isColoniaFounder } from '../goalCities';
 import { isBarbarian } from '../barbarians';
 import type { UnitKind } from '../types';
-import { drawBadge, drawBanner, drawBannerMeters, drawPromotion, drawTag, drawTokenHealth, FONTS, TOKEN_INK } from '../map/sprites';
-import { offerChip, offerOn, offerTone } from '../buyCity';
+import { drawBadge, drawBanner, drawBannerMeters, drawOfferCoin, drawPromotion, drawTag, drawTokenHealth, FONTS, TOKEN_INK } from '../map/sprites';
+import { offerOn, offerTone } from '../buyCity';
 import { drawSiegeBadge, drawSiegeBar, SIEGE_BAR_GAP, WALLS_STONE, WALLS_TRACK } from '../map/siegeMark';
 import type { SiegeLevel } from '../siege';
 import { tombStatus } from '../goalCities';
@@ -110,9 +110,9 @@ export function drawMarks2d(ctx: CanvasRenderingContext2D, w: number, h: number,
     const r = drawBanner(ctx, LOOK, spec, p.x, p.y, fs, dpr, c.visible ? 1 : 0.85);
     const parts = [r];
     hits.push({ city: c.id, parts });
-    // Byzantium buying the city: the same public countdown chip as the 2D banner.
-    const chip = offerChip(view, c.id);
-    if (chip) drawTag(ctx, LOOK, p.x, r.y - 17, chip, offerTone(view, offerOn(view, c.id)!));
+    // Byzantium buying the city: the same public countdown coin as the 2D banner, on the banner's end (the siege badge takes the other).
+    const offer = offerOn(view, c.id);
+    if (offer) drawOfferCoin(ctx, LOOK, inp.siege.get(c.id) ? r.x : r.x + r.w, r.y + r.h / 2, offer.turns_left, offerTone(view, offer));
     const level = inp.siege.get(c.id);
     const bar = bannerBarOf(c, c.hp);
     if (level) {

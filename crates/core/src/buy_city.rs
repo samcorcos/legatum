@@ -112,7 +112,7 @@ pub const FAIL_FEE_PERCENT: i32 = 10;
 /// The most Byzantium may offer, in percent of the price (an overbid needs more guards to break).
 pub const MAX_BID_PERCENT: i32 = 300;
 /// The bid choices shown to the buyer, in percent of the price (`CityBuyView::bids`).
-pub const BID_STEPS: [i32; 4] = [100, 125, 150, 200];
+pub const BID_STEPS: [i32; 4] = [100, 150, 200, 300];
 
 /// A running offer (`Player::city_offer`). Public: every player who knows the city sees it.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -308,7 +308,7 @@ pub fn base_breakdown(state: &GameState, c: &City) -> Breakdown {
         c.population.max(0).saturating_mul(PER_POP),
     );
     b.add(
-        format!("Buildings: {BUILDING_PERCENT}% of their Gold price"),
+        "Buildings".to_string(),
         clamp(building_gold(state, c) * i64::from(BUILDING_PERCENT) / 100),
     );
     b

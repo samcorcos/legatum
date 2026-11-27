@@ -1,7 +1,7 @@
 // Byzantium's Buy a city and the fall of Constantinople: the shared words (city panel, tile card, banner, report).
 import { describe, expect, it } from 'vitest';
 import { decodeOrders } from './orderDecoding';
-import { bidChoices, bidLabel, capitalFallLine, cityBuyTileLines, offerChip, offerLines, priceLines, priceText, renameSeats, stopLine, withBuy, withoutBuy } from './buyCity';
+import { bidChoices, bidLabel, capitalFallLine, cityBuyTileLines, offerChip, offerLines, priceLines, renameSeats, stopLine, wallsInTime, withBuy, withoutBuy } from './buyCity';
 import { contextFromViews, formatEvents } from './format';
 import { promisedGold } from './deals';
 import type { CityView, Event, PlayerView } from './types';
@@ -12,7 +12,7 @@ const players = [
   { id: 2, name: 'AI 3', faction: 'India', team: 2 },
 ];
 const cityOf = (id: number, owner: number, name: string, extra: Partial<CityView> = {}) => ({ id, owner, name, pos: { q: id, r: 0 }, is_capital: false, visible: true, population: 4, ...extra } as unknown as CityView);
-const breakdown = { total: 600, parts: [['Starting price', 150], ['Population 4 x 60', 240], ['Buildings: 50% of their Gold price', 90], ['Walls level 0: +0%', 0], ['1 military unit in or next to it: +25%', 120]] as [string, number][] };
+const breakdown = { total: 600, parts: [['Starting price', 150], ['Population 4 x 60', 240], ['Buildings', 90], ['Walls level 0: +0%', 0], ['1 military unit in or next to it: +25%', 120]] as [string, number][] };
 const view = (me: number, over: Partial<PlayerView> = {}) => ({
   me, team: me, turn: 12, players, economy: { gold: 1000 }, diplomacy: { relations: [], proposals: [], actions: [] },
   cities: [cityOf(1, 0, 'Constantinople', { is_capital: true }), cityOf(2, 0, 'Nicaea'), cityOf(3, 1, 'Pylos'), cityOf(4, 1, 'Sparta', { is_capital: true })],
@@ -22,8 +22,7 @@ const view = (me: number, over: Partial<PlayerView> = {}) => ({
 
 describe('the price', () => {
   it('lists the lines that add something, in the player\'s figures', () => {
-    expect(priceLines(breakdown)).toEqual([['Starting price', 150], ['Population 4 × 60', 240], ['Buildings: 50% of their Gold price', 90], ['1 military unit in or next to it: +25%', 120]]);
-    expect(priceText(breakdown)).toBe('600 Gold (Starting price 150, Population 4 × 60 +240, Buildings: 50% of their Gold price +90, 1 military unit in or next to it: +25% +120)');
+    expect(priceLines(breakdown)).toEqual([['Starting price', 150], ['Population 4 × 60', 240], ['Buildings', 90], ['1 military unit in or next to it: +25%', 120]]);
   });
   it('names players by their empire, never their seat', () => {
     expect(renameSeats(view(0), 'You are at War with AI 2')).toBe('You are at War with Sparta');
@@ -50,12 +49,19 @@ describe('a running offer', () => {
     expect(offerLines(view(0), offer).head).toBe('Buying Pylos: yours at the end of turn 14 (3 turns)');
     const seller = offerLines(view(1), offer);
     expect(seller.head).toBe('Byzantium is buying Pylos: it changes hands at the end of turn 14 (3 turns)');
-    expect(seller.options).toBe('Move military units in or build Walls to raise the price, or declare War.');
+    expect(seller.detail).toBe('Byzantium pays you 600 Gold for Pylos at the end of turn 14. To keep it, move military units in or next to it, or declare War.');
     expect(offerLines(view(2), offer).head).toBe('Byzantium is buying Pylos from Sparta: it changes hands at the end of turn 14 (3 turns)');
     expect(offerLines(view(0), { ...offer, price_now: 700 }).detail).toContain('the offer fails at the end of this turn and you lose 60 Gold');
-    // An overbid: the seller is told what it takes to stop it.
-    expect(offerLines(view(1), { ...offer, escrow: 900, guards_to_stop: 3, walls_to_stop: 2 }).detail)
-      .toBe('You get the 900 Gold Byzantium offered. If its price rises above 900 Gold (now 600), the offer fails. It fails if 3 more military units come in or next to it, or 2 Walls levels are built.');
+    // An overbid: the seller is told what it takes to stop it, Walls only when a level can finish in time.
+    const overbid = { ...offer, escrow: 900, guards_to_stop: 3, walls_to_stop: 2 };
+    expect(offerLines(view(1), overbid).detail)
+      .toBe('Byzantium pays you 900 Gold for Pylos at the end of turn 14. To keep it, move 3 more military units in or next to it, or declare War.');
+    const walled = (turns: number) => view(1, { cities: [cityOf(3, 1, 'Pylos', { detail: { options: [{ item: { kind: 'Building', building: 'Walls' }, turns }] } as unknown as CityView['detail'] })] });
+    expect(wallsInTime(walled(1), overbid)).toBe(2);
+    expect(wallsInTime(walled(2), overbid)).toBeNull();
+    expect(offerLines(walled(1), overbid).detail).toContain('move 3 more military units in or next to it, build 2 Walls levels, or declare War.');
+    expect(offerLines(view(0), overbid).detail)
+      .toBe('You pay 900 Gold for Pylos at the end of turn 14. It fails (you lose 90 Gold) if 3 more military units come in or next to it, or 2 Walls levels are built.');
   });
   it('lists the bid choices with what stops each, and queues the chosen bid', () => {
     expect(stopLine({ guards_to_stop: 1, walls_to_stop: 1 })).toBe('Stopped by 1 more military unit or 1 Walls level');
@@ -70,7 +76,8 @@ describe('a running offer', () => {
   it('puts the offer, not the price, on the tile card', () => {
     const v = view(1, { city_offers: [offer], city_buys: [{ city: 3, buyer: 0, price: 600, breakdown }] });
     const lines = cityBuyTileLines(v, v.cities[2]);
-    expect(lines.map((l) => l.key)).toEqual(['city-offer', 'city-offer-options']);
+    expect(lines.map((l) => l.key)).toEqual(['city-offer']);
+    expect(lines[0].text).toBe('Byzantium pays you 600 Gold for Pylos at the end of turn 14. To keep it, move military units in or next to it, or declare War.');
     expect(lines[0].tone).toBe('bad');
   });
 });
@@ -78,19 +85,21 @@ describe('a running offer', () => {
 describe('the price on the tile card', () => {
   it('Byzantium reads the price and the refusal; a capital shows no price', () => {
     const v = view(0, { city_buys: [{ city: 3, buyer: 0, price: 600, breakdown }, { city: 4, buyer: 0, price: 900, breakdown, blocker: 'Sparta is a capital' }] });
-    expect(cityBuyTileLines(v, v.cities[2])[0].text).toMatch(/^Buy for 600 Gold \(Starting price 150/);
+    expect(cityBuyTileLines(v, v.cities[2])[0].text).toBe('Buy for 600 Gold. Click the city to make an offer.');
+    const war = view(0, { city_buys: [{ city: 3, buyer: 0, price: 600, breakdown, blocker: 'You are at War with AI 2' }] });
+    expect(cityBuyTileLines(war, war.cities[2])[0].text).toBe('Make Peace with Sparta to buy it.');
     expect(cityBuyTileLines(v, v.cities[3])).toEqual([]);
   });
   it('the owner reads what Byzantium would pay and how to raise it', () => {
     const v = view(1, { city_buys: [{ city: 3, buyer: 0, price: 600, breakdown }] });
-    expect(cityBuyTileLines(v, v.cities[2])[0].text).toMatch(/^Byzantium can buy this city for 600 Gold .*Military units and Walls raise the price\.$/);
+    expect(cityBuyTileLines(v, v.cities[2])[0].text).toBe('Byzantium can buy this city for 600 Gold. Military units and Walls raise the price.');
   });
 });
 
 describe('the fall of Constantinople', () => {
   it('is public on the capital, and the refuge says what it saves', () => {
     expect(capitalFallLine(view(1, { byzantine_capitals: [{ player: 0, capital: 1 }] }), 1)).toBe('Take it and you take every Byzantine city.');
-    expect(capitalFallLine(view(0, { byzantine_capitals: [{ player: 0, capital: 1 }] }), 1)).toBe('Lose this city and you lose every city, unless the Heir shelters in another one.');
+    expect(capitalFallLine(view(0, { byzantine_capitals: [{ player: 0, capital: 1 }] }), 1)).toBe('Lose this city and you lose every city, unless your Heir is in another of your cities.');
     const refuge = { byzantine_capitals: [{ player: 0, capital: 1, refuge: 2 }] };
     expect(capitalFallLine(view(1, refuge), 1)).toBe("Byzantium's capital. Its Heir shelters in Nicaea: take this city and only this city falls.");
     expect(capitalFallLine(view(1, refuge), 2)).toBe("Byzantium's Heir shelters here: if Constantinople falls, this city becomes the capital and nothing else falls.");
@@ -102,11 +111,11 @@ describe('report lines', () => {
   const lines = (me: number, events: Event[]) => formatEvents(events, contextFromViews(null, view(me))).map((l) => l.text);
   it('the seller is told what it can do', () => {
     expect(lines(1, [{ type: 'CityOfferMade', city: 3, buyer: 0, seller: 1, escrow: 600, ends_turn: 14 }]))
-      .toEqual(['Byzantium is buying Pylos for 600 Gold, at the end of turn 14. Move military units in or build Walls to raise the price, or declare War.']);
+      .toEqual(['Byzantium will buy Pylos for 600 Gold at the end of turn 14.']);
     const notice = formatEvents([{ type: 'CityOfferMade', city: 3, buyer: 0, seller: 1, escrow: 900, price: 600, guards_to_stop: 3, ends_turn: 14 }], contextFromViews(null, view(1)));
-    expect(notice[0].details).toEqual(['If nothing changes, the city goes to Byzantium and you get the 900 Gold. If its price rises above 900 Gold, the offer fails: 3 more military units in or next to it would do that. War calls it off.']);
+    expect(notice[0].details).toEqual(['To keep it, move 3 more military units in or next to it, or declare War. If nothing changes, you get the 900 Gold and the city goes to Byzantium.']);
     expect(lines(1, [{ type: 'CityOfferMade', city: 3, buyer: 0, seller: 1, escrow: 900, price: 600, ends_turn: 14 }]))
-      .toEqual(['Byzantium is buying Pylos for 900 Gold (its price is 600), at the end of turn 14. Move military units in or build Walls to raise the price, or declare War.']);
+      .toEqual(['Byzantium will buy Pylos for 900 Gold (its price is 600) at the end of turn 14.']);
     expect(lines(0, [{ type: 'CityOfferMade', city: 3, buyer: 0, seller: 1, escrow: 600, ends_turn: 14 }]))
       .toEqual(['You are buying Pylos for 600 Gold: it changes hands at the end of turn 14']);
   });

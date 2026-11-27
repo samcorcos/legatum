@@ -12,7 +12,7 @@ import { buyCityState, PYLOS_ESCROW } from './buyCityState';
 import { useGame } from '../store';
 import { CityBuy, buyIsPrimary } from '../ui/CityBuy';
 import { contextFromViews, formatEvents } from '../format';
-import { offerChip, SELLER_OPTIONS } from '../buyCity';
+import { offerChip } from '../buyCity';
 import type { PlayerView } from '../types';
 
 const available = existsSync(fileURLToPath(new NodeURL('../wasm-pkg/legatum.js', import.meta.url)));
@@ -52,7 +52,10 @@ describe.skipIf(!available)('Buy a city', () => {
     const button = container.querySelector<HTMLButtonElement>('[data-testid=buy-city-offer]')!;
     expect(button.textContent).toBe(`Make an offer (${buy.price} Gold)`);
     expect(button.className).toContain('primary');
-    expect(container.querySelector('.bd')!.textContent).toContain('Starting price');
+    // The price's lines are on its hover (a Tip around the title), not in the panel: title, bids, button, then the rule.
+    expect(container.querySelector('.city-buy .bd')).toBeNull();
+    expect(container.querySelector('.city-buy-title')!.textContent).toContain(`Buy for ${buy.price}`);
+    expect(container.querySelector('.city-buy-rule')!.textContent).toContain('you lose 10% of your offer');
     act(() => button.click());
     expect(useGame.getState().orders[0]).toEqual([{ type: 'BuyCity', city: fx.pylos }]);
     expect(container.querySelector('[data-testid=buy-city-queued]')!.textContent).toContain('Queued: your offer for Pylos');
@@ -60,7 +63,7 @@ describe.skipIf(!available)('Buy a city', () => {
 
     // The bid choices: each says what stops it; picking +50% re-queues the offer at that bid.
     const bids = buy.bids!;
-    expect(bids.map((b) => b.percent)).toEqual([100, 125, 150, 200]);
+    expect(bids.map((b) => b.percent)).toEqual([100, 150, 200, 300]);
     expect(container.querySelector('[data-testid=buy-city-bid-100]')!.textContent).toContain('Stopped by 1 more military unit');
     const half = bids.find((b) => b.percent === 150)!;
     expect(half.guards_to_stop).toBeGreaterThan(1);
@@ -79,7 +82,7 @@ describe.skipIf(!available)('Buy a city', () => {
     expect(offerChip(after1, fx.pylos)).toBe('Being bought: 3 turns');
     expect(offerChip(after0, fx.pylos)).toBe('Being bought: 3 turns');
     const sellerLines = formatEvents(result.events, contextFromViews(before1, after1)).map((l) => l.text);
-    expect(sellerLines.some((t) => t.startsWith('Byzantium is buying Pylos') && t.endsWith(SELLER_OPTIONS))).toBe(true);
+    expect(sellerLines.some((t) => t.startsWith('Byzantium will buy Pylos for'))).toBe(true);
   });
 
   it('the seller sees the countdown, the Gold offered and what it can do on its own city', () => {
@@ -93,7 +96,8 @@ describe.skipIf(!available)('Buy a city', () => {
     const pylos = v.cities.find((c) => c.id === fx.pylos)!;
     act(() => root.render(<CityBuy view={v} city={pylos} />));
     expect(container.querySelector('[data-testid=city-offer]')!.textContent).toContain('Byzantium is buying Pylos: it changes hands at the end of turn 14');
-    expect(container.querySelector('[data-testid=city-offer-options]')!.textContent).toBe(SELLER_OPTIONS);
+    expect(container.querySelector('[data-testid=city-offer]')!.textContent).toContain('Byzantium pays you 600 Gold for Pylos at the end of turn 14. To keep it, move');
+    expect(container.querySelector('[data-testid=city-offer-declare-war]')!.textContent).toBe('Declare War…');
     expect(container.querySelector('[data-testid=city-offer]')!.textContent).toContain(`${stop} more military unit`);
     expect(container.querySelector('[data-testid=buy-city-offer]')).toBeNull();
   });

@@ -389,6 +389,25 @@ export function drawTag(ctx: CanvasRenderingContext2D, look: LookId, x: number, 
   ctx.restore();
 }
 
+/**
+ * Byzantium's offer on a city: a gilt coin with the turns left, set on the banner's end (its centre on the edge, so
+ * it never reaches the units on the next tile). The ring says whose side it is from the viewer's seat.
+ */
+export function drawOfferCoin(ctx: CanvasRenderingContext2D, look: LookId, x: number, y: number, turnsLeft: number, tone: 'good' | 'bad' | 'neutral', alpha = 1) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  const r = 8.5;
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = '#e6c56c'; ctx.fill();
+  ctx.lineWidth = 2.5; ctx.strokeStyle = tone === 'bad' ? INK.atlas.red : tone === 'good' ? INK.atlas.good : INK.atlas.ink; ctx.stroke();
+  ctx.lineWidth = 1; ctx.strokeStyle = INK.atlas.ink;
+  ctx.beginPath(); ctx.arc(x, y, r + 1.2, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = INK.atlas.ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = `700 11px ${FONTS[look].sans}`;
+  ctx.fillText(String(turnsLeft), x, y + 0.5);
+  ctx.restore();
+}
+
 /** Under Byzantium's Heir on a tile nobody of yours can see: a gilt halo, so he reads as "here" over the fog (his position is public). */
 export function drawHeirHalo(ctx: CanvasRenderingContext2D, x: number, y: number, w: number) {
   ctx.save();

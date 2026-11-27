@@ -537,7 +537,7 @@ const BYZANTIUM_LEGIONARY = uniquePieceText(UNIQUE_PIECE.Byzantium);
 /** Byzantium's rule break, Buy a city (core `buy_city`, rules 65): the card's rule; the Guide prints `byzantiumBuyCityDetail`. */
 export const BYZANTIUM_BUY_CITY = `Buy a rival’s city with Gold. The owner gets the Gold and ${RULES.buyCity.offerTurns} turns’ warning.`;
 /** Its price, the fall of Constantinople (core `buy_city::capital_fall`). */
-export const BYZANTIUM_COLLAPSE = 'Lose your capital and you lose every city, unless the Heir shelters in another one.';
+export const BYZANTIUM_COLLAPSE = 'Lose your capital and you lose every city, unless your Heir is in another of your cities.';
 /** The fine print of Buy a city, from core's constants (the Guide and the faction tooltip). */
 export const byzantiumBuyCityDetail = (): string => {
   const b = RULES.buyCity;
