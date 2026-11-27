@@ -1,4 +1,4 @@
-# Mountain alpha coverage needs high and low overlap (2026-11-26)
+# Mountain alpha coverage needs high and low overlap (2026-11-27)
 
 The shipped mountain sprites are opaque across the middle but taper at the top and end before the bottom of a hex. A main peak and spine saddles can therefore look continuous across a range while leaving grass visible inside individual impassable tiles. The gap also appears in pairs, which have no spine.
 
