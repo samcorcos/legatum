@@ -111,9 +111,9 @@ it('marks a refused join code on the code box in the game room instead of a seco
   useGame.getState().enterStaging();
   sockets[0].open();
   useGame.getState().setJoinCodeText('WOLF41');
-  sockets[0].push({ type: 'error', code: 'wrong_join_code', message: 'That join code is not right.' });
+  sockets[0].push({ type: 'error', code: 'wrong_join_code', message: 'That private code is not right.' });
   expect(useGame.getState()).toMatchObject({ error: null, joinCodeRejected: 'WOLF41', net: { locked: true } });
   // Other refusals still show as the room's notice.
-  sockets[0].push({ type: 'error', code: 'join_code_needed', message: 'This game needs a join code.' });
-  expect(useGame.getState().error).toBe('This game needs a join code.');
+  sockets[0].push({ type: 'error', code: 'join_code_needed', message: 'This game needs a private code.' });
+  expect(useGame.getState().error).toBe('This game needs a private code.');
 });

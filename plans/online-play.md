@@ -70,11 +70,11 @@ every relay answer carries `X-Content-Type-Options: nosniff`.
 ### Join code, one seat per connection and Remove (2026-11-22 security review)
 
 The lobby is public, so a stranger could open a listed game, take every open seat and never press Ready, and the host
-could not remove a connected player. The owner chose a short code typed once, not join links, and the game still
-shows in the list.
+could not remove a connected player. The owner chose a short code typed once to lock a seat, and the game still shows in the list. Invite links
+(2026-11-27) identify a game but never carry or bypass its code.
 
-- **Join code (optional).** The host types 4 to 12 letters or digits in the "Lock with a code" box in the
-  Host door, used by Host Game and Host from a save (empty = an open game). The code lives only in the host engine
+- **Join code (optional).** The host types 4 to 12 letters or digits in the "Private code · optional" field in the
+  Host door, used by Host Game and Host a saved game (empty = an open game). The code lives only in the host engine
   (`BrowserHost.set_join_code`, `crates/wasm/src/host/mod.rs`) and in the host tab's `sessionStorage`
   (`legatum.online.joincode`, next to the room key, so a host reload keeps the game locked; a reload that cannot find
   the code does not reopen the game unlocked). It is never in a `Status`, `Summary`, staging state, view, save, game
@@ -84,7 +84,7 @@ shows in the list.
   returned in every `/lobby` row. The lobby shows a lock mark and the word "Locked" on those rows.
 - **Where the code travels:** an optional `code` string (the guest's UI sends at most 32 characters) on the guest's seat
   claims, `game_take` and `staging_take`. A claim on a locked game without the right code is refused with
-  `join_code_needed` ("This game needs a join code.") or `wrong_join_code` ("That join code is not right."). A
+  `join_code_needed` ("This game needs a private code.") or `wrong_join_code` ("That private code is not right."). A
   rejoin with the seat's own credential (`join`, or `staging_take` with its token) needs no code, and the host's own
   connection never needs it. After 5 wrong codes from one connection the host closes it (terminal error
   `too_many_codes`); a missing code is not a strike. The guest types the code once in an inline box on the seat screen; it
@@ -123,7 +123,7 @@ the player sees in the app. Player text never says "relay", "socket" or an HTTP 
 | Relay unreachable | no answer | Host: "Could not open your game. Check your internet connection and try again." |
 | 4 guest sockets per address per room | WebSocket close 1013, reason "too many connections from one address" | Guest: "Too many people on your internet connection have joined this game. Close any extra windows, then pick your seat again." The app stops retrying. Close 1013 for "host not connected" or "room is full" reconnects as usual. |
 | Per-socket message and byte budgets | WebSocket close 4029 | Guest: "You are sending too much, too fast. Pausing for 30 seconds, then reconnecting." One retry; a second 4029 before any game state arrives stops it with "You are still sending too much, too fast. Wait a minute, then pick your seat again." The host's own tunnel just reconnects. |
-| The list never shows a typed name | every room listed as two fixed words and a number from its id ("Amber Harbour 07", `listedName`) | Host: the name box is only "Your name" (it names the host's seat, never the list entry). Once the room is open, the game room shows a line under the subtitle that says "In the game list, this game is “Amber Harbour 07”." The same line is in the host's in-game menu foot and the Online chip's tip (`GameMenu.tsx`, `TopBar.tsx`). (`app/src/net/roomName.ts` mirrors the Worker's rule). `GET /lobby` also rebuilds the name from the id for rows an older relay stored, and leaves out rows whose build label fails `buildOk` |
+| The list never shows a typed name | every room listed as two fixed words and a number from its id ("Amber Harbour 07", `listedName`) | Host: the name box is only "Your name" (it names the host's seat, never the list entry). Once the room is open, the game room shows an invite band above the seats with the listed name, the private code when locked, and Copy invite link. The same line is in the host's in-game menu foot and the Online chip's tip (`GameMenu.tsx`, `TopBar.tsx`). (`app/src/net/roomName.ts` mirrors the Worker's rule). `GET /lobby` also rebuilds the name from the id for rows an older relay stored, and leaves out rows whose build label fails `buildOk` |
 | 60 s host heartbeat | room leaves the list | The app's tunnel sends a ping every 20 s, so nothing shows; a host whose tab sleeps drops off the list |
 
 When the relay forgets a room while the host's tunnel is down, the host announces a new room; if that is refused, the
@@ -180,8 +180,8 @@ already). The host's own in-tab connection never sees chunks.
   like a local game's. Resumed seats get fresh credentials: the host reclaims its seat, guests take theirs again.
 - Save to file and host from a save: the host's game menu offers Save to file, which writes the engine's current
   save (`BrowserHost.save_game`) in the normal `legatum-save` envelope with `online: true`. The engine save is the
-  same format as a solo save, so Load from file opens it as a solo game too. Title > Multiplayer > Host from a
-  save picks a file and calls `hostOnlineFromSave`, which starts a new room with `new BrowserHost(save)`
+  same format as a solo save, so Load from file opens it as a solo game too. Title > Multiplayer > Host a saved
+  game picks a file and calls `hostOnlineFromSave`, which starts a new room with `new BrowserHost(save)`
   (`startHosting`'s `fromSave`; an unreadable chosen save is an error, never a fresh game). Seat names carry
   over. Seat credentials are not saved. `open_guest_seats` opens every seat but seat 0 (the host's, which
   `hostOnlineFromSave` takes at once), so guests join from the list and take their old seat with its saved name. A new room has a new id and key.
@@ -199,14 +199,14 @@ already). The host's own in-tab connection never sees chunks.
 
 ## UI (`app/src`)
 
-- **Multiplayer menu** (2026-11-25): one "Your name" field (used for hosting and for the seat you take), then two doors side by side: Host (join code, Host Game, Host from a save) and Join (Join Game).
+- **Multiplayer menu** (2026-11-25): one "Your name" field (used for hosting and for the seat you take), then two doors side by side: Host (optional private code, Host Game or Host this save, and a saved-game link) and Join (the first two hosted games and Join Game).
 - **Multiplayer > Host Game**: starts the in-tab host and lands in the
   existing staging room. In a running game the host's menu item is **End the game for everyone** (after a confirm);
   it sends `bye`, closes the room and returns to the title. A guest's item is **Leave the game (free this seat)**.
 - **Multiplayer > Join Game**: a lobby list from `GET /lobby` (refresh every 3 s): the listed name (never a typed one),
-  players, open seats, "Waiting in lobby" or "Turn N", and "Locked" with a lock mark for a game with a join code. One
-  primary action per row: **Join**. On a locked game the seat screen asks for the code once ("Join code", seat buttons
-  wait for it). A row whose
+  players, open seats, "Waiting in lobby" or "Turn N", and "Locked" with a lock mark for a game with a private code. One
+  primary action per row: **Join**. On a locked game the seat screen asks for the code once ("Private code", seat buttons
+  wait for it). The Hosted games screen shows the full list; the Multiplayer menu's Join door shows its first two rows. A row whose
   `build` differs from this build's (both known) shows "This game is on version X and you have Y. Update the
   older one to play together."; one whose `rules_version` or `protocol` differs, or whose build is unknown, shows
   "This game is on a different version from yours. Update both to the newest to play together." The note comes first
