@@ -108,7 +108,11 @@ for (const size of SIZES) test.describe(`first run with advisor ${size.name}`, (
         && techRing.y <= nodeBox.y && techRing.y + techRing.height >= nodeBox.y + nodeBox.height, 'the ring surrounds the tree node').toBe(true);
       await node.click();
     } else await tech.getByRole('button', { name: 'Research now' }).first().click();
-    // With research chosen, the advisor's next step is closing the panel, and its ring is on Close.
+    // The queue lesson comes first and rings another technology in the open panel.
+    await expect(card).toHaveAttribute('data-advisor-id', 'researchQueue');
+    await expect(ring).toBeVisible();
+    await card.getByRole('button', { name: 'Got it' }).click();
+    // With the lesson acknowledged, the advisor rings Close.
     await expect(card).toHaveAttribute('data-advisor-id', 'closeResearch');
     await expect(ring).toBeVisible();
     const close = (await tech.getByRole('button', { name: 'Close research' }).boundingBox())!;

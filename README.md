@@ -49,7 +49,7 @@ These are the design rules the project holds itself to. Where the game falls sho
 - **Eleven peoples, each with a goal.** Switzerland, India, Byzantium (an early design: its rule kit is under review), Germany, the Celts, the Mongols, Sparta, Athens, the Aztecs, Egypt and Rome each have a signature strength, a drawback that pays for it and a faction goal worth 2 VP. <!-- peoples-count -->
 - **An AI that plays by your rules.** Easy, Normal and Hard get no extra yields, no cheaper costs, no stronger units and no extra sight. Each AI empire plans from the same fogged view a player in its seat would have. A harder level decides better. The exact scope is under [What the AI can see and do](#what-the-ai-can-see-and-do).
 - **Strategy with a counter.** Rushing, expanding wide, turtling, building an economy and playing diplomatically are each designed to have an answer, so the best plan depends on your people, the map and your neighbours. Expansion, by settling or by conquest, is the core loop. Staying small is deliberately weak.
-- **Close to the end.** A leader can pull ahead, but each technology costs less for every other empire that already knows it, a public warning names whoever is closest to winning, and the Hard AI will go to war to contain them.
+- **Close to the end.** A leader can pull ahead, but tech diffusion can cut a technology's cost by up to 50% when other empires know it, a public warning names whoever is closest to winning, and the Hard AI will go to war to contain them.
 - **The next action is obvious.** The aim is one clear primary button on each screen and a reason on anything you cannot do.
 
 ## See it
@@ -134,7 +134,7 @@ New to the game? How to Play in the app covers the rules, and [docs/rules/](docs
 
 Legatum is one deterministic Rust engine, `legatum-core` (`crates/core`), with thin hosts around it, so there is only one copy of the rules:
 
-- **The browser game** (`app/`) is a TypeScript interface and a 2D hex renderer, with the engine compiled to WebAssembly (`crates/wasm`) and running in the page.
+- **The browser game** (`app/`) is a TypeScript interface with a 2D hex renderer and an optional 3D map, with the engine compiled to WebAssembly (`crates/wasm`) and running in the page.
 - **Online games** run in the host player's tab, in that same engine; a small relay passes messages between players.
 - **The simulation runner** (`legatum-sim`, `crates/sim`) plays AI-only games in parallel on every core.
 - **The AI** (`crates/ai`) reads the same view a player in its seat would have and returns orders, like any other player.

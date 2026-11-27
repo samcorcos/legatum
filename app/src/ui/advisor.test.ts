@@ -235,18 +235,31 @@ describe('research queue advice', () => {
   it('teaches the queue once after the first pick or when completed research drains it', async () => {
     const { view, ctx } = await opening();
     const tech = view.research.available[0].tech;
+    const nextTech = view.research.available[1].tech;
+    const nextName = TECH_NAME[nextTech];
     const chosen: Order[] = [{ type: 'SetResearchQueue', techs: [tech] }];
     const lesson = advisorSuggestion({ ...ctx(chosen), techOpen: true }, ['welcome'], []);
     expect(lesson).toEqual({ id: 'researchQueue', title: 'Queue your research', acknowledge: true, current: 1,
-      why: 'Add several technologies so research never stops between turns. The first in line is researched first.',
+      why: 'Queue more technologies to keep researching after the current one.',
       steps: [{ instruction: 'Click Research at the top.', target: { kind: 'control', name: 'research', value: undefined } },
-        { instruction: 'Add more technologies to this queue.', target: { kind: 'control', name: 'researchQueue', value: undefined } }] });
+        { instruction: `Shift-click ${nextName} in the tree, or click + Queue on ${nextName}.`, target: { kind: 'control', name: 'queueTech', value: nextTech } }] });
+    expect(advisorSuggestion({ ...ctx(chosen), techOpen: true, touch: true }, ['welcome'], [])?.steps[1])
+      .toEqual({ instruction: `Tap This era, then + Queue on ${nextName}.`, target: { kind: 'control', name: 'queueTech', value: nextTech } });
     expect(advisorSuggestion({ ...ctx(chosen), techOpen: true }, ['welcome', 'researchQueue'], [])?.id).not.toBe('researchQueue');
     expect(advisorSuggestion({ ...ctx(chosen), techOpen: true }, ['welcome'], ['researchQueue'])?.id).not.toBe('researchQueue');
     expect(advisorSuggestion(ctx(), ['welcome'], [])?.id).not.toBe('researchQueue');
     view.turn = 2;
-    expect(advisorSuggestion({ ...ctx(), researchQueueDrained: true }, ['welcome', 'report'], [])).toMatchObject({ id: 'researchQueue', current: 0 });
+    expect(advisorSuggestion({ ...ctx(), researchQueueDrained: true }, ['welcome', 'report'], [])).toEqual({
+      id: 'researchQueue', title: 'Queue your research', acknowledge: true, current: 0,
+      why: 'Queue more technologies to keep researching after the current one.',
+      steps: [{ instruction: 'Click Research at the top.', target: { kind: 'control', name: 'research', value: undefined } },
+        { instruction: `Shift-click ${TECH_NAME[tech]} in the tree, or click + Queue on ${TECH_NAME[tech]}.`, target: { kind: 'control', name: 'queueTech', value: tech } }],
+    });
     expect(advisorSuggestion({ ...ctx(), researchQueueDrained: true }, ['welcome', 'report', 'researchQueue'], [])?.id).not.toBe('researchQueue');
+    view.research.available = [view.research.available[0]];
+    expect(advisorSuggestion({ ...ctx(chosen), techOpen: true }, ['welcome'], [])?.id).not.toBe('researchQueue');
+    view.research.available = [];
+    expect(advisorSuggestion({ ...ctx(), researchQueueDrained: true }, ['welcome', 'report'], [])?.id).not.toBe('researchQueue');
   });
 
   it('uses visible threat or a resource reveal only when the technology provides it', async () => {
@@ -254,15 +267,15 @@ describe('research queue advice', () => {
     const rival = view.players.find((p) => p.team !== view.team)!;
     view.players = view.players.map((p) => p.id === rival.id ? { ...p, army: 100 } : p);
     view.units.push({ ...unit, id: 9001, owner: rival.id, pos: city.pos, military: true });
-    expect(advisorWhy({ type: 'SetResearch', tech: 'Masonry' }, view)).toBe('Enemies are near: Masonry unlocks Walls.');
+    expect(advisorWhy({ type: 'SetResearch', tech: 'Masonry' }, view)).toBe('Rival units are near your cities: Masonry unlocks Walls.');
     expect(advisorWhy({ type: 'SetResearch', tech: 'IronWorking' }, view)).toBe('Iron Working shows Iron on the map.');
     view.units = view.units.filter((u) => u.id !== 9001);
-    expect(advisorWhy({ type: 'SetResearch', tech: 'Masonry' }, view)).not.toMatch(/^Enemies are near/);
+    expect(advisorWhy({ type: 'SetResearch', tech: 'Masonry' }, view)).not.toMatch(/^Rival units are near your cities/);
     view.players = view.players.map((p) => p.id === rival.id ? { ...p, era: view.research.era + 2 } : p);
     view.cities.push({ ...city, id: 9002, owner: rival.id });
-    expect(advisorWhy({ type: 'SetResearch', tech: 'Masonry' }, view)).toBe('A rival is ahead: Masonry unlocks Walls.');
+    expect(advisorWhy({ type: 'SetResearch', tech: 'Masonry' }, view)).toBe('A rival is ahead in research: Masonry unlocks Walls.');
     view.players = view.players.map((p) => p.id === rival.id ? { ...p, era: view.research.era + 1 } : p);
-    expect(advisorWhy({ type: 'SetResearch', tech: 'Masonry' }, view)).not.toMatch(/^A rival is ahead/);
+    expect(advisorWhy({ type: 'SetResearch', tech: 'Masonry' }, view)).not.toMatch(/^A rival is ahead in research/);
   });
 });
 
