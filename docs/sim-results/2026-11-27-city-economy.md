@@ -48,6 +48,8 @@ The corrected Egyptian young fertile case produces **884 Gold / 458 Science**, a
 
 There is no universal winner. On young plains in Egypt, automation yields 629 Gold and 305 Science; production-first yields 650 Gold and 261 Science. On late hills in Germany, automation yields 1,386 Gold / 520 Science / 2,945 Production, while growth-first yields 934 / 544 / 3,447. These are useful tradeoffs, not regressions hidden inside a single aggregate score. The candidate achieves the most Gold (ties included) in 16/16 Byzantine, 14/16 Egyptian, 14/16 German and 14/16 Indian positions; each count includes the two relocated copies of each archetype.
 
+After the Round 1 revision excluded World Wonders from automation, the full 256-row matrix was rerun on implementation commit `0f29183e673b20b54f1d557c5f017e32a5b8735a`. The CSV is byte-for-byte identical to the recorded final matrix, including all outputs and first picks; the tables and comparisons above still describe the final policy. This does not establish that Wonder exclusion is neutral outside these controlled positions.
+
 Raw data: [baseline](2026-11-27-city-economy-baseline.csv), [rejected Grow model](2026-11-27-city-economy-rejected-grow.csv), [final four-faction matrix](2026-11-27-city-economy.csv).
 
 ## Reproduce
