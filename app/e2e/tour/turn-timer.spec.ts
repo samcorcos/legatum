@@ -40,6 +40,8 @@ for (const size of SIZES) test(`multiplayer turn timer ${size.name}`, async ({ p
     await expect(guest.getByTestId('turn-number')).toHaveText('2');
     await expect(host.getByRole('timer')).toContainText('Turn ends in 0:');
     await host.setViewportSize({ width: 390, height: 844 });
+    await expect(host.locator('.phone-turn-dock')).toBeVisible();
+    await host.waitForTimeout(400);
     await host.screenshot({ path: `test-results/turn-timer-phone-${size.name}.png` });
     await expect(host.getByRole('timer').first()).toBeVisible();
   } finally { await guestContext.close(); }
