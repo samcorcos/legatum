@@ -7158,7 +7158,12 @@ exports[`WASM purchase behavior > Full-tree quotes and faction effects match WAS
 
 exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for India 2`] = `
 {
-  "parts": [],
+  "parts": [
+    [
+      "A: no upkeep (Revenue Office)",
+      0,
+    ],
+  ],
   "total": 0,
 }
 `;
@@ -7700,7 +7705,12 @@ exports[`WASM purchase behavior > Full-tree quotes and faction effects match WAS
 
 exports[`WASM purchase behavior > Full-tree quotes and faction effects match WASM for India 82`] = `
 {
-  "parts": [],
+  "parts": [
+    [
+      "A: no upkeep (Revenue Office)",
+      0,
+    ],
+  ],
   "total": 0,
 }
 `;

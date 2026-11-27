@@ -10,7 +10,7 @@ Moved verbatim from `game-rules.md` on 2026-11-22, in the original order; the or
 | Granary | 50 | +2 Food | — (turn 1) |
 | Workshop | 60 | +2 Production | Bronze Working |
 | Market | 60 | +3 Gold | Currency |
-| Revenue Office (India's Market) | 60 | +3 Gold; non-capital city remits half its gross Gold to the treasury | Currency |
+| Revenue Office (India's Market) | 60 | +3 Gold; waives its city's upkeep (rules 65); a non-capital city remits all its Gold to the treasury | Currency |
 | Imperial Diwan (India) | 300 | Held goal: its city holder scores 2 VP; build once every owned city has a Revenue Office | Currency |
 | Walls | 100 (rule experiment `walls-cost=N` overrides this base price; the Swiss Redoubt adds 20, so it costs 120 by default) | +10 city strength (more each era); **the city fires** (only walled cities do, §4) | Masonry |
 | Library | 80 | +3 Science | Writing |

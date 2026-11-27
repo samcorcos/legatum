@@ -27,7 +27,7 @@ const test = base.extend<{}, { devURL: string }>({
 const SAYS: Record<(typeof FACTIONS)[number], string[]> = {
   Aztecs: ['Eagle Warrior replaces Spearman', '(Spearman: 20)'],
   Switzerland: ['(Walls: 100)', '(Walls: +10)', '+50% of its strength against mounted units'],
-  India: ['Revenue Office replaces Market', '+3 Gold', 'half the Gold the city makes', 'War Elephant replaces Knight', '(Knight: 42)', 'only India can build it'],
+  India: ['Revenue Office replaces Market', '+3 Gold', 'sends all its Gold to your treasury', 'War Elephant replaces Knight', '(Knight: 42)', 'only India can build it'],
   Rome: ['50 health'],
   Byzantium: ['(Pikeman: 152)', '(Pikeman: 32)'],
   Germany: ['Ruhr Foundry replaces Forge', '(Forge: +3)', 'Panzer replaces Tank', '(Tank: 5)'],
