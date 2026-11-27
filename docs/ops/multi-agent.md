@@ -95,8 +95,16 @@ Split parallel work across disjoint lanes whenever possible:
 | `changes-requested` | Peer reviewer found blocking issues; author should address them (max 2 rounds). |
 | `status:handoff` | WIP pushed to a branch with a Handoff Comment; ready for another agent to continue. |
 | `mode:bakeoff` | Multiple agents solve the same issue on separate Draft PRs from the same base commit for comparison. |
-| `needs-human` | Requires the maintainer (human-only governance/security fence, unsettled design question, outside PR, or 2+ failed review rounds). |
+| `needs-human` | Requires the maintainer (human-only governance/security fence, unsettled design question, outside PR, or 2+ failed review rounds). Direct notification is mandatory; see below. |
 | `lane:core` / `lane:ai` / `lane:ui` / `lane:docs` | Primary area touched (determines collision risk). |
+
+### Human escalation: notify the maintainer directly
+
+Whenever work needs human input or action, including every `needs-human` escalation, **assign the relevant issue or PR to `samcorcos`, or post a comment that directly mentions `@samcorcos`**. A label or an agent-chat status alone is not a handoff. Make the notification on GitHub so the maintainer can find the request in assigned work or notifications.
+
+The issue body or comment must state the concrete blocker, the decision or action needed, and the agent's recommendation where useful. For a human-only PR, say what requires human review and whether checks are complete. Finish all work that can proceed independently before handing over a reviewable result.
+
+Notify once when escalating. On later heartbeats, check the existing assignment/comments and do not repeat the same mention for an unchanged blocker. Notify again only when the requested action materially changes. If assignment fails, use the direct mention; if neither succeeds, report that GitHub notification failed rather than claiming the handoff is complete. This notification rule does not waive any merge guardrail.
 
 ## Two-key peer review & peer merge (the 5 guardrails)
 
@@ -107,7 +115,7 @@ Because Claude, ChatGPT, and Gemini may authenticate via the same GitHub user, e
 - Before claiming a review (`needs-review` -> add `reviewing:<self>`), verify **`my_agent != author_agent`**. Never review or merge your own model family's PR.
 
 ### 2. Human-only fence (never peer-merged by agents)
-Do **not** merge autonomously — review if helpful, then label `needs-human` and stop — if a PR matches **any** of these:
+Do **not** merge autonomously — review if helpful, then label `needs-human`, notify the maintainer directly as above, and stop — if a PR matches **any** of these:
 - **Outside / fork PR:** `headRepositoryOwner != samcorcos` or branch is not an agent branch (`claude/*`, `chatgpt/*`, `gemini/*`).
 - **Governance or security paths:** touches `.github/workflows/`, `tools/gates/`, `infra/`, `SECURITY.md`, `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, or `docs/ops/multi-agent.md`.
 - **Unsettled design / new mechanic** that requires reading the private Design Doc and has no Claude `legatum-design-reviewer` verdict or maintainer sign-off.
@@ -147,7 +155,7 @@ Before merging:
 ### 5. Max 2 review rounds (no infinite ping-pong)
 - If blocking issues are found: swap `needs-review` + `reviewing:<self>` -> `changes-requested` and list concrete blockers.
 - When the author fixes them and CI is green on the new head SHA, the author swaps `changes-requested` -> `needs-review`.
-- If a PR still fails peer review after **2 rounds**, stop iterating, swap to `needs-human`, and summarize the disagreement concisely for the maintainer.
+- If a PR still fails peer review after **2 rounds**, stop iterating, swap to `needs-human`, and summarize the disagreement with a direct maintainer notification as above.
 
 ## Other work modes
 
