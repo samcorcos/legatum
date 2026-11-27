@@ -1,33 +1,30 @@
-# Automations and recurring loops registry
+# Automation schedule directory
 
-Single source of truth for every recurring agent loop, scheduled job, and repository automation running on `samcorcos/legatum`.
+Concise directory of where recurring agent heartbeats and repository automations are configured and how to inspect, pause, or stop them.
 
-## Rules (for all agents)
+> **Not a live status board:** GitHub issues, labels, and PRs are the coordination source of truth. This file is a directory of intended schedules and control locations; verify live running state directly in each platform's scheduler (items not directly inspectable from git are marked *unverified from repo*).
 
-1. **Register every loop here.** Whenever you create, change, pause, or stop a recurring schedule or background wakeup loop, update this file in the same PR (or note it in your PR) so Claude, ChatGPT/Codex, Gemini, and the maintainer share one accurate picture.
-2. **Track live VM runtime state in `.progress/automations.json` (gitignored).** Never commit per-tick timestamps to git. Instead, any agent running an in-session background wakeup timer writes its current armed/paused state, next due UTC timestamp, and last action to `.progress/automations.json` on every tick and reads it back after context compaction or session resume so a stopped loop is caught immediately.
-3. **Never duplicate a running loop.** Check this table (and your platform's scheduler list) before creating a new recurring task.
-4. **Stop means stop.** When the maintainer says stop, cancel every running background timer/schedule you control immediately and report what stopped and what (if anything) is still running elsewhere.
-5. **Public-repo hygiene.** Never record account IDs, machine names, secrets, or provider quota/budget numbers here.
+## Rules
 
-## Agent heartbeats
+1. **Check the actual scheduler first** before creating a new recurring task so you do not create duplicates.
+2. **Update this directory** when an agent's intended cadence, scheduler location, or stop procedure changes.
+3. **Stop means stop:** when the maintainer says stop, cancel any recurring schedule or active timer you control immediately and report what stopped and what must be paused in another platform's UI.
+4. **Public-repo hygiene:** never record account IDs, machine names, secrets, or provider quota/budget numbers here.
 
-Follow the protocol in [docs/ops/multi-agent.md](multi-agent.md).
+## Agent heartbeat directory
 
-| Name | Agent | Platform & runtime | Laptop closed? | Cadence | Status | How to pause or stop |
-| --- | --- | --- | --- | --- | --- | --- |
-| Claude hourly heartbeat | `claude` | Claude cloud scheduled task (`claude.ai` -> Scheduled) | Yes (cloud) | Hourly at `:05` | Planned / maintainer-enabled | Pause or delete in `claude.ai` -> Scheduled |
-| ChatGPT / Codex hourly heartbeat | `chatgpt` | ChatGPT/Codex scheduled task (desktop app or always-on `codex exec`) | Only on always-on host; desktop app requires awake machine | Hourly at `:25` | Planned / maintainer-enabled | Pause or delete in ChatGPT/Codex -> Scheduled tasks |
-| Gemini hourly heartbeat | `gemini` | Antigravity Remote Agent cloud VM (in-thread `:45` wakeup timer, state in `.progress/automations.json`) | Yes (cloud VM; runs inside the active Remote Agent session) | Hourly at `:45` | Active (since 2026-11-27) | Reply `stop` in the active Antigravity Remote Agent thread |
+Protocol: [docs/ops/multi-agent.md](multi-agent.md).
 
-## Repository and CI automations (GitHub)
+| Agent | Intended cadence | Scheduler / runtime location | How to inspect, pause, or stop |
+| --- | --- | --- | --- |
+| `claude` | Hourly at `:05` | Claude cloud scheduled tasks (`claude.ai` -> **Scheduled**, formerly Routines); cloud-hosted *(live state unverified from repo)* | Open `claude.ai` -> **Scheduled** and pause or delete the Legatum task |
+| `chatgpt` | Hourly at `:25` | ChatGPT / Codex scheduled tasks (configured in the maintainer's ChatGPT/Codex environment; laptop-closed execution depends on host/cloud runtime, *unverified from repo*) | Open ChatGPT/Codex **Scheduled tasks** and pause or delete the Legatum task |
+| `gemini` | Hourly at `:45` | Antigravity desktop **Automations** (`~/.gemini/config/sidecars/`, local to **This computer** — pauses on sleep), or Antigravity **Remote Agent** `/schedule` where supported *(live state unverified from repo; plain VM shell timers are not durable across timeouts)* | Open Antigravity **Automations** to pause/delete local jobs, or reply `stop` in any active Remote Agent session |
 
-| Name | Workflow / config | Trigger / cadence | Status | Purpose / notes |
-| --- | --- | --- | --- | --- |
-| CI + static gates (`ci-ok`) | `.github/workflows/ci.yml` | Every PR and push to `master` | Active | Required by `Protect master` ruleset (with strict up-to-date branch check) |
-| Deploy web preview / prod | `.github/workflows/deploy-web.yml` | Push to `master` & manual dispatch | Active | Builds WASM + web app and deploys static site to Cloudflare Pages |
-| Nightly full Playwright E2E | `.github/workflows/e2e-nightly.yml` | Daily at `09:17 UTC` (`17 9 * * *`) | Active | Runs full `app/e2e` suite against built site + relay |
-| Issue & PR moderation | `.github/workflows/moderate.yml` | New outside issues, PRs, comments | Active until `2026-12-09` | Auto-closes/hides off-topic wave posts; delete workflow + `tools/moderation/moderate.py` after `MODERATION_UNTIL` |
-| Game uploads Worker CI | `.github/workflows/games.yml` | Changes under `infra/games/**` | Active | Tests and deploys the game-upload Cloudflare Worker |
-| Online relay Worker CI | `.github/workflows/relay.yml` | Changes under `infra/relay/**` | Active | Tests and deploys the multiplayer relay Cloudflare Worker |
-| Dependency updates | `.github/dependabot.yml` | Scheduled by GitHub Dependabot | Active | Opens dependency bump PRs for `app/`, Rust crates, and Actions |
+## Repository automations (GitHub)
+
+GitHub-hosted workflows and dependency updates live directly in their config files (do not duplicate their schedules here):
+
+- [`.github/workflows/`](../../.github/workflows/) — CI (`ci.yml` / `ci-ok`), web deploy (`deploy-web.yml`), nightly E2E (`e2e-nightly.yml`), temporary moderation (`moderate.yml`), and Cloudflare Workers (`games.yml`, `relay.yml`).
+- [`.github/dependabot.yml`](../../.github/dependabot.yml) — scheduled dependency update PRs.
+- [GitHub Actions tab](https://github.com/samcorcos/legatum/actions) — inspect live runs or disable workflows.
