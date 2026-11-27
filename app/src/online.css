@@ -337,8 +337,8 @@ div.seat {
 .title-screen:has(.title-resume) .mp-once {
   display: none;
 }
-/* A short window (1000x600) keeps the menu above the title footer even with Resume and a notice: the Host door
-   drops its "Once you host" line and the Join door lists two games. */
+/* A short window (1000x600) keeps the menu above the title footer even with Resume and a notice: the doors drop
+   their ledes and "Once you host", and the Join door lists two games. */
 @media (max-height: 700px) {
   .mp-once {
     display: none;
@@ -347,11 +347,14 @@ div.seat {
     display: none;
   }
   .mp-door {
-    gap: 8px;
-    padding: 12px 16px 10px;
+    gap: 6px;
+    padding: 10px 16px 8px;
   }
   .mp-name {
-    margin-bottom: 8px;
+    margin-bottom: 6px;
+  }
+  .mp-name .lobby-input {
+    height: 32px;
   }
   .mp-door-lede {
     display: none;

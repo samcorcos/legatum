@@ -366,12 +366,12 @@ function MultiplayerMenu({ hostSave, onBack }: { hostSave: SaveFile | null; onBa
                 {hostSave ? (
                   <button className="mp-door-link" disabled={busy || !!codeNote} onClick={hostOnline}>
                     {hosting === 'starting' ? <><span className="spinner" /> Opening your game…</>
-                      : hosting === 'failed' ? (refusal ? retryLine(refusal.kind, refusal.retryAfterS) : 'Try hosting a new game again') : 'Host a new game instead'}
+                      : 'Host a new game instead'}
                   </button>
                 ) : (
                   <button className="mp-door-link" disabled={busy || !!codeNote} onClick={hostFromSave}>
                     {resuming === 'starting' ? <><span className="spinner" /> Opening your saved game…</>
-                      : resuming === 'failed' ? 'Try the saved game again…' : 'Host a saved game…'}
+                      : 'Host a saved game…'}
                   </button>
                 )}
               </section>
