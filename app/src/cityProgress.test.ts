@@ -2,7 +2,6 @@
 import { expect, it } from 'vitest';
 import { claimSummary, growthProgress, productionProgress, territoryCounts } from './cityProgress';
 import { bannerMeters } from './map/render';
-import { YIELD_FILL } from './map/yieldIcons';
 import { FixtureClient } from './test/fixtureEngine';
 import { progressFixture } from './test/progressFixture';
 import type { CityDetail, CityView, PlayerView, ProductionOption } from './types';
@@ -128,15 +127,17 @@ it('production meter shows a distinct "choose" state for an idle city', () => {
   expect(bannerMeters(city).find((m) => m.kind === 'production')).toEqual({ kind: 'production', fraction: 0, text: 'Build', bad: true, icon: null });
 });
 
-it('an automated idle city shows its focus on the banner, not the red "Build" prompt', () => {
+it('an automated idle city shows the economic automation mark for current and saved focuses', () => {
   const { city } = cityWithDetail({ producing: null, production_queue: [] });
-  expect(bannerMeters(city, undefined, 'Science').find((m) => m.kind === 'production'))
-    .toEqual({ kind: 'production', fraction: 0, text: 'Auto', paused: true, icon: 'yield-science', iconColor: YIELD_FILL.science });
+  for (const focus of ['Economy', 'Science', 'Military', 'Gold', 'Food'] as const) {
+    expect(bannerMeters(city, undefined, focus).find((m) => m.kind === 'production'))
+      .toEqual({ kind: 'production', fraction: 0, text: 'Auto', paused: true, icon: 'building-workshop', inkIcon: true });
+  }
 });
 
 it('an automated city that is building carries the Auto mark inside its meter strip', () => {
   const { city } = cityWithDetail({ producing: { kind: 'Unit', unit: 'Scout' }, production_cost: 60, production_stored: 10, turns_to_complete: 3 });
-  expect(bannerMeters(city, undefined, 'Gold').find((m) => m.kind === 'production')).toMatchObject({ icon: 'unit-scout', auto: { label: 'Auto', icon: 'yield-gold' } });
+  expect(bannerMeters(city, undefined, 'Gold').find((m) => m.kind === 'production')).toMatchObject({ icon: 'unit-scout', auto: { label: 'Auto', icon: 'building-workshop' } });
   expect(bannerMeters(city).find((m) => m.kind === 'production')!.auto).toBeUndefined();
 });
 

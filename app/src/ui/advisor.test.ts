@@ -68,6 +68,21 @@ describe('one decision at a time', () => {
     expect(advisorSuggestion(ctx(unitDone), ['welcome'], [])?.title).toBeTruthy();
   });
 
+  it('never lets a discovery cooldown suppress core onboarding', async () => {
+    const { view, city, unit, tech, plan, ctx } = await opening();
+    const paused = (context: AdvisorContext) => ({ ...context, discoveryTurn: view.turn });
+    expect(advisorSuggestion(paused(ctx()), [], [])?.id).toBe('welcome');
+    expect(advisorSuggestion(paused(ctx()), ['welcome'], [])?.id).toBe(`city:${city.id}`);
+    expect(advisorSuggestion(paused(ctx([plan[0]])), ['welcome'], [])?.id).toBe(`unit:${unit.id}`);
+    const project: Order = { type: 'SetProduction', city: city.id, item: { kind: 'Project', project: 'Gold' } };
+    expect(advisorSuggestion({ ...ctx([project]), techOpen: true }, ['welcome'], [])?.id).toBe('research');
+    const researched = { ...ctx([project, { type: 'SetResearch', tech }]), techOpen: true };
+    expect(advisorSuggestion(paused(researched), ['welcome'], [])?.id).toBe('researchQueue');
+    expect(advisorSuggestion(paused(researched), ['welcome', 'researchQueue'], [])?.id).toBe('closeResearch');
+    const allDone: Order[] = [project, { type: 'SetResearch', tech }, ...view.units.filter((u) => u.owner === view.me).map((u): Order => ({ type: 'SkipUnit', unit: u.id }))];
+    expect(advisorSuggestion(paused(ctx(allDone)), ['welcome'], [])?.id).toBe('endTurn');
+  });
+
   it('follows the screen: the open Research panel or the selected unit comes first', async () => {
     const { city, unit, plan, ctx } = await opening();
     expect(advisorSuggestion({ ...ctx([plan[0]]), techOpen: true }, ['welcome'], [])?.id).toBe('research');
@@ -187,7 +202,7 @@ describe('one decision at a time', () => {
   it('online, it says Ready, as the turn button does', async () => {
     const { view, plan, ctx } = await opening();
     const orders: Order[] = [plan[0], plan[2], ...view.units.filter((u) => u.owner === view.me).map((u) => ({ type: 'SkipUnit' as const, unit: u.id }))];
-    expect(advisorSuggestion({ ...ctx(orders), remote: true }, ['welcome'], [])).toMatchObject({ id: 'endTurn', steps: [{ instruction: 'Click Ready.' }] });
+    expect(advisorSuggestion({ ...ctx(orders), remote: true }, ['welcome'], [])).toMatchObject({ id: 'endTurn', why: 'Your orders are set. The turn ends when everyone is ready or the timer runs out.', steps: [{ instruction: 'Click Ready.' }] });
     expect(advisorSuggestion(ctx(orders), ['welcome'], [])).toMatchObject({ steps: [{ instruction: 'Click End turn.' }] });
   });
 
@@ -235,11 +250,11 @@ describe('research queue advice', () => {
     expect(first?.steps).toEqual([
       { instruction: 'Click Research at the top.', key: 'T', target: { kind: 'control', name: 'research', value: undefined } },
       { instruction: `Click ${names[0]}.`, target: { kind: 'control', name: 'tech', value: techs[0] } },
-      { instruction: `Shift-click ${names[1]} in the tree, or click + Queue.`, target: { kind: 'control', name: 'queueTech', value: techs[1] } },
-      { instruction: `Shift-click ${names[2]} in the tree, or click + Queue.`, target: { kind: 'control', name: 'queueTech', value: techs[2] } },
+      { instruction: `Click + Queue on ${names[1]}, or Shift-click it in the tree.`, target: { kind: 'control', name: 'queueTech', value: techs[1] } },
+      { instruction: `Click + Queue on ${names[2]}, or Shift-click it in the tree.`, target: { kind: 'control', name: 'queueTech', value: techs[2] } },
     ]);
     expect(advisorSuggestion({ ...open(), touch: true }, seen, [])?.steps[2].instruction)
-      .toBe(`Tap This era, then + Queue on ${names[1]}.`);
+      .toBe(`Tap + Queue on ${names[1]}.`);
     const one = [{ type: 'SetResearchQueue' as const, techs: techs.slice(0, 1) }];
     expect(advisorSuggestion(open(one), seen, [])).toMatchObject({ id: 'research', title: expectedTitle, current: 2 });
     const two = [{ type: 'SetResearchQueue' as const, techs: techs.slice(0, 2) }];
@@ -270,11 +285,11 @@ describe('research queue advice', () => {
     const chosen: Order[] = [{ type: 'SetResearchQueue', techs: [tech] }];
     const lesson = advisorSuggestion({ ...ctx(chosen), techOpen: true }, ['welcome'], []);
     expect(lesson).toEqual({ id: 'researchQueue', title: 'Queue your research', acknowledge: true, current: 1,
-      why: 'Queue more technologies to keep researching after the current one.',
+      why: 'Queued technologies keep research moving. For a later era, review the earlier technologies before choosing Queue all in order.',
       steps: [{ instruction: 'Click Research at the top.', target: { kind: 'control', name: 'research', value: undefined } },
-        { instruction: `Shift-click ${nextName} in the tree, or click + Queue on ${nextName}.`, target: { kind: 'control', name: 'queueTech', value: nextTech } }] });
+        { instruction: `Click + Queue on ${nextName}, or Shift-click it in the tree.`, target: { kind: 'control', name: 'queueTech', value: nextTech } }] });
     expect(advisorSuggestion({ ...ctx(chosen), techOpen: true, touch: true }, ['welcome'], [])?.steps[1])
-      .toEqual({ instruction: `Tap This era, then + Queue on ${nextName}.`, target: { kind: 'control', name: 'queueTech', value: nextTech } });
+      .toEqual({ instruction: `Tap + Queue on ${nextName}.`, target: { kind: 'control', name: 'queueTech', value: nextTech } });
     expect(advisorSuggestion({ ...ctx(chosen), techOpen: true }, ['welcome', 'researchQueue'], [])?.id).not.toBe('researchQueue');
     expect(advisorSuggestion({ ...ctx(chosen), techOpen: true }, ['welcome'], ['researchQueue'])?.id).not.toBe('researchQueue');
     expect(advisorSuggestion(ctx(), ['welcome'], [])?.id).not.toBe('researchQueue');
@@ -283,7 +298,7 @@ describe('research queue advice', () => {
       id: 'researchQueue', title: 'Queue your research', acknowledge: true, current: 0,
       why: 'Choose a technology to resume research.',
       steps: [{ instruction: 'Click Research at the top.', target: { kind: 'control', name: 'research', value: undefined } },
-        { instruction: `Shift-click ${TECH_NAME[tech]} in the tree, or click + Queue on ${TECH_NAME[tech]}.`, target: { kind: 'control', name: 'queueTech', value: tech } }],
+        { instruction: `Click + Queue on ${TECH_NAME[tech]}, or Shift-click it in the tree.`, target: { kind: 'control', name: 'queueTech', value: tech } }],
     });
     expect(advisorSuggestion({ ...ctx(), researchQueueDrained: true }, ['welcome', 'report', 'researchQueue'], [])?.id).not.toBe('researchQueue');
     view.research.available = [view.research.available[0]];

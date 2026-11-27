@@ -1,0 +1,257 @@
+case,policy,gold,science,production,population,improvements,first_pick
+Byzantium-young-fertile-11,automation,284,312,344,10,2,Building { building: Market }
+Byzantium-young-fertile-11,gold-first,284,354,312,10,2,Building { building: Market }
+Byzantium-young-fertile-11,growth-first,103,295,340,11,4,Building { building: Granary }
+Byzantium-young-fertile-11,production-first,170,288,384,10,4,Improvement { improvement: Quarry; tile: Hex { q: 3; r: 8 } }
+Byzantium-young-fertile-29,automation,284,312,344,10,2,Building { building: Market }
+Byzantium-young-fertile-29,gold-first,284,354,312,10,2,Building { building: Market }
+Byzantium-young-fertile-29,growth-first,103,295,340,11,4,Building { building: Granary }
+Byzantium-young-fertile-29,production-first,170,288,384,10,4,Improvement { improvement: Quarry; tile: Hex { q: 16; r: 14 } }
+Egypt-young-fertile-11,automation,884,458,2254,8,3,Building { building: Granary }
+Egypt-young-fertile-11,gold-first,836,282,2186,1,3,Building { building: Market }
+Egypt-young-fertile-11,growth-first,846,276,2216,1,3,Building { building: Granary }
+Egypt-young-fertile-11,production-first,848,276,2212,1,3,Building { building: Granary }
+Egypt-young-fertile-29,automation,884,458,2254,8,3,Building { building: Granary }
+Egypt-young-fertile-29,gold-first,836,282,2186,1,3,Building { building: Market }
+Egypt-young-fertile-29,growth-first,846,276,2216,1,3,Building { building: Granary }
+Egypt-young-fertile-29,production-first,848,276,2212,1,3,Building { building: Granary }
+Germany-young-fertile-11,automation,284,335,312,10,2,Building { building: Market }
+Germany-young-fertile-11,gold-first,284,353,312,10,2,Building { building: Market }
+Germany-young-fertile-11,growth-first,103,295,340,10,4,Building { building: Granary }
+Germany-young-fertile-11,production-first,170,284,384,10,4,Improvement { improvement: Quarry; tile: Hex { q: 3; r: 8 } }
+Germany-young-fertile-29,automation,284,335,312,10,2,Building { building: Market }
+Germany-young-fertile-29,gold-first,284,353,312,10,2,Building { building: Market }
+Germany-young-fertile-29,growth-first,103,295,340,10,4,Building { building: Granary }
+Germany-young-fertile-29,production-first,170,284,384,10,4,Improvement { improvement: Quarry; tile: Hex { q: 16; r: 14 } }
+India-young-fertile-11,automation,284,319,344,10,2,Building { building: Market }
+India-young-fertile-11,gold-first,284,361,312,10,2,Building { building: Market }
+India-young-fertile-11,growth-first,103,302,340,11,4,Building { building: Granary }
+India-young-fertile-11,production-first,170,295,384,11,4,Improvement { improvement: Quarry; tile: Hex { q: 8; r: 10 } }
+India-young-fertile-29,automation,284,319,344,10,2,Building { building: Market }
+India-young-fertile-29,gold-first,284,361,312,10,2,Building { building: Market }
+India-young-fertile-29,growth-first,103,302,340,11,4,Building { building: Granary }
+India-young-fertile-29,production-first,170,295,384,11,4,Improvement { improvement: Quarry; tile: Hex { q: 16; r: 14 } }
+Byzantium-young-hills-11,automation,542,293,1294,3,4,Building { building: Market }
+Byzantium-young-hills-11,gold-first,542,298,1296,3,4,Building { building: Market }
+Byzantium-young-hills-11,growth-first,507,281,1368,3,4,Building { building: Granary }
+Byzantium-young-hills-11,production-first,523,281,1366,3,4,Improvement { improvement: Quarry; tile: Hex { q: 3; r: 8 } }
+Byzantium-young-hills-29,automation,542,293,1294,3,4,Building { building: Market }
+Byzantium-young-hills-29,gold-first,542,298,1296,3,4,Building { building: Market }
+Byzantium-young-hills-29,growth-first,507,281,1368,3,4,Building { building: Granary }
+Byzantium-young-hills-29,production-first,523,281,1366,3,4,Improvement { improvement: Quarry; tile: Hex { q: 16; r: 14 } }
+Egypt-young-hills-11,automation,329,195,578,1,3,Building { building: Granary }
+Egypt-young-hills-11,gold-first,265,165,226,1,1,Building { building: Market }
+Egypt-young-hills-11,growth-first,320,204,610,1,3,Building { building: Granary }
+Egypt-young-hills-11,production-first,329,195,578,1,3,Building { building: Granary }
+Egypt-young-hills-29,automation,329,195,578,1,3,Building { building: Granary }
+Egypt-young-hills-29,gold-first,265,165,226,1,1,Building { building: Market }
+Egypt-young-hills-29,growth-first,320,204,610,1,3,Building { building: Granary }
+Egypt-young-hills-29,production-first,329,195,578,1,3,Building { building: Granary }
+Germany-young-hills-11,automation,753,294,1218,3,4,Building { building: Market }
+Germany-young-hills-11,gold-first,750,295,1270,3,4,Building { building: Market }
+Germany-young-hills-11,growth-first,731,279,1344,3,4,Building { building: Granary }
+Germany-young-hills-11,production-first,745,276,1334,3,4,Improvement { improvement: Quarry; tile: Hex { q: 3; r: 8 } }
+Germany-young-hills-29,automation,753,294,1218,3,4,Building { building: Market }
+Germany-young-hills-29,gold-first,750,295,1270,3,4,Building { building: Market }
+Germany-young-hills-29,growth-first,731,279,1344,3,4,Building { building: Granary }
+Germany-young-hills-29,production-first,745,276,1334,3,4,Improvement { improvement: Quarry; tile: Hex { q: 16; r: 14 } }
+India-young-hills-11,automation,548,297,1322,3,4,Building { building: Market }
+India-young-hills-11,gold-first,551,303,1324,3,4,Building { building: Market }
+India-young-hills-11,growth-first,514,287,1394,4,4,Building { building: Granary }
+India-young-hills-11,production-first,531,284,1388,4,4,Improvement { improvement: Quarry; tile: Hex { q: 8; r: 10 } }
+India-young-hills-29,automation,548,297,1322,3,4,Building { building: Market }
+India-young-hills-29,gold-first,551,303,1324,3,4,Building { building: Market }
+India-young-hills-29,growth-first,514,287,1394,4,4,Building { building: Granary }
+India-young-hills-29,production-first,531,284,1388,4,4,Improvement { improvement: Quarry; tile: Hex { q: 16; r: 14 } }
+Byzantium-young-plains-11,automation,434,348,920,6,4,Building { building: Market }
+Byzantium-young-plains-11,gold-first,434,348,920,6,4,Building { building: Market }
+Byzantium-young-plains-11,growth-first,380,330,988,7,4,Building { building: Granary }
+Byzantium-young-plains-11,production-first,406,326,1002,7,4,Improvement { improvement: Quarry; tile: Hex { q: 3; r: 8 } }
+Byzantium-young-plains-29,automation,434,348,920,6,4,Building { building: Market }
+Byzantium-young-plains-29,gold-first,434,348,920,6,4,Building { building: Market }
+Byzantium-young-plains-29,growth-first,380,330,988,7,4,Building { building: Granary }
+Byzantium-young-plains-29,production-first,406,326,1002,7,4,Improvement { improvement: Quarry; tile: Hex { q: 16; r: 14 } }
+Egypt-young-plains-11,automation,629,305,1368,2,3,Building { building: Granary }
+Egypt-young-plains-11,gold-first,637,270,1390,1,3,Building { building: Market }
+Egypt-young-plains-11,growth-first,647,264,1460,1,3,Building { building: Granary }
+Egypt-young-plains-11,production-first,650,261,1452,1,3,Building { building: Granary }
+Egypt-young-plains-29,automation,629,305,1368,2,3,Building { building: Granary }
+Egypt-young-plains-29,gold-first,637,270,1390,1,3,Building { building: Market }
+Egypt-young-plains-29,growth-first,647,264,1460,1,3,Building { building: Granary }
+Egypt-young-plains-29,production-first,650,261,1452,1,3,Building { building: Granary }
+Germany-young-plains-11,automation,565,349,851,6,4,Building { building: Market }
+Germany-young-plains-11,gold-first,569,345,916,6,4,Building { building: Market }
+Germany-young-plains-11,growth-first,530,327,979,6,4,Building { building: Granary }
+Germany-young-plains-11,production-first,559,320,991,6,4,Improvement { improvement: Quarry; tile: Hex { q: 3; r: 8 } }
+Germany-young-plains-29,automation,565,349,851,6,4,Building { building: Market }
+Germany-young-plains-29,gold-first,569,345,916,6,4,Building { building: Market }
+Germany-young-plains-29,growth-first,530,327,979,6,4,Building { building: Granary }
+Germany-young-plains-29,production-first,559,320,991,6,4,Improvement { improvement: Quarry; tile: Hex { q: 16; r: 14 } }
+India-young-plains-11,automation,438,357,933,7,4,Building { building: Market }
+India-young-plains-11,gold-first,437,356,936,7,4,Building { building: Market }
+India-young-plains-11,growth-first,386,335,1003,7,4,Building { building: Granary }
+India-young-plains-11,production-first,412,333,1019,7,4,Improvement { improvement: Quarry; tile: Hex { q: 8; r: 10 } }
+India-young-plains-29,automation,438,357,933,7,4,Building { building: Market }
+India-young-plains-29,gold-first,437,356,936,7,4,Building { building: Market }
+India-young-plains-29,growth-first,386,335,1003,7,4,Building { building: Granary }
+India-young-plains-29,production-first,412,333,1019,7,4,Improvement { improvement: Quarry; tile: Hex { q: 16; r: 14 } }
+Byzantium-established-fertile-11,automation,284,398,344,12,2,Building { building: Market }
+Byzantium-established-fertile-11,gold-first,284,440,312,12,2,Building { building: Market }
+Byzantium-established-fertile-11,growth-first,103,380,340,12,4,Building { building: Granary }
+Byzantium-established-fertile-11,production-first,170,374,384,12,4,Improvement { improvement: Quarry; tile: Hex { q: 3; r: 8 } }
+Byzantium-established-fertile-29,automation,284,398,344,12,2,Building { building: Market }
+Byzantium-established-fertile-29,gold-first,284,440,312,12,2,Building { building: Market }
+Byzantium-established-fertile-29,growth-first,103,380,340,12,4,Building { building: Granary }
+Byzantium-established-fertile-29,production-first,170,374,384,12,4,Improvement { improvement: Quarry; tile: Hex { q: 16; r: 14 } }
+Egypt-established-fertile-11,automation,1019,462,2746,6,3,Building { building: Granary }
+Egypt-established-fertile-11,gold-first,1011,465,2736,6,3,Building { building: Market }
+Egypt-established-fertile-11,growth-first,1015,459,2746,6,3,Building { building: Granary }
+Egypt-established-fertile-11,production-first,1019,459,2746,6,3,Building { building: Granary }
+Egypt-established-fertile-29,automation,1019,462,2746,6,3,Building { building: Granary }
+Egypt-established-fertile-29,gold-first,1011,465,2736,6,3,Building { building: Market }
+Egypt-established-fertile-29,growth-first,1015,459,2746,6,3,Building { building: Granary }
+Egypt-established-fertile-29,production-first,1019,459,2746,6,3,Building { building: Granary }
+Germany-established-fertile-11,automation,284,422,312,11,2,Building { building: Market }
+Germany-established-fertile-11,gold-first,284,440,312,11,2,Building { building: Market }
+Germany-established-fertile-11,growth-first,103,380,340,12,4,Building { building: Granary }
+Germany-established-fertile-11,production-first,170,371,384,12,4,Improvement { improvement: Quarry; tile: Hex { q: 3; r: 8 } }
+Germany-established-fertile-29,automation,284,422,312,11,2,Building { building: Market }
+Germany-established-fertile-29,gold-first,284,440,312,11,2,Building { building: Market }
+Germany-established-fertile-29,growth-first,103,380,340,12,4,Building { building: Granary }
+Germany-established-fertile-29,production-first,170,371,384,12,4,Improvement { improvement: Quarry; tile: Hex { q: 16; r: 14 } }
+India-established-fertile-11,automation,284,404,344,12,2,Building { building: Market }
+India-established-fertile-11,gold-first,284,446,312,12,2,Building { building: Market }
+India-established-fertile-11,growth-first,103,385,340,13,4,Building { building: Granary }
+India-established-fertile-11,production-first,170,380,384,12,4,Improvement { improvement: Quarry; tile: Hex { q: 8; r: 10 } }
+India-established-fertile-29,automation,284,404,344,12,2,Building { building: Market }
+India-established-fertile-29,gold-first,284,446,312,12,2,Building { building: Market }
+India-established-fertile-29,growth-first,103,385,340,13,4,Building { building: Granary }
+India-established-fertile-29,production-first,170,380,384,12,4,Improvement { improvement: Quarry; tile: Hex { q: 16; r: 14 } }
+Byzantium-established-hills-11,automation,565,328,1398,3,4,Building { building: Granary }
+Byzantium-established-hills-11,gold-first,552,313,1334,3,4,Building { building: Market }
+Byzantium-established-hills-11,growth-first,544,313,1452,3,4,Building { building: Granary }
+Byzantium-established-hills-11,production-first,539,293,1400,3,4,Improvement { improvement: Quarry; tile: Hex { q: 3; r: 8 } }
+Byzantium-established-hills-29,automation,565,328,1398,3,4,Building { building: Granary }
+Byzantium-established-hills-29,gold-first,552,313,1334,3,4,Building { building: Market }
+Byzantium-established-hills-29,growth-first,544,313,1452,3,4,Building { building: Granary }
+Byzantium-established-hills-29,production-first,539,293,1400,3,4,Improvement { improvement: Quarry; tile: Hex { q: 16; r: 14 } }
+Egypt-established-hills-11,automation,60,184,0,3,0,Project { project: Gold }
+Egypt-established-hills-11,gold-first,60,184,0,3,0,Project { project: Gold }
+Egypt-established-hills-11,growth-first,60,184,0,3,0,Project { project: Gold }
+Egypt-established-hills-11,production-first,60,184,0,3,0,Project { project: Gold }
+Egypt-established-hills-29,automation,60,184,0,3,0,Project { project: Gold }
+Egypt-established-hills-29,gold-first,60,184,0,3,0,Project { project: Gold }
+Egypt-established-hills-29,growth-first,60,184,0,3,0,Project { project: Gold }
+Egypt-established-hills-29,production-first,60,184,0,3,0,Project { project: Gold }
+Germany-established-hills-11,automation,795,328,1316,3,4,Building { building: Granary }
+Germany-established-hills-11,gold-first,764,310,1306,3,4,Building { building: Market }
+Germany-established-hills-11,growth-first,790,313,1440,3,4,Building { building: Granary }
+Germany-established-hills-11,production-first,766,289,1368,3,4,Improvement { improvement: Quarry; tile: Hex { q: 3; r: 8 } }
+Germany-established-hills-29,automation,795,328,1316,3,4,Building { building: Granary }
+Germany-established-hills-29,gold-first,764,310,1306,3,4,Building { building: Market }
+Germany-established-hills-29,growth-first,790,313,1440,3,4,Building { building: Granary }
+Germany-established-hills-29,production-first,766,289,1368,3,4,Improvement { improvement: Quarry; tile: Hex { q: 16; r: 14 } }
+India-established-hills-11,automation,577,346,1482,4,4,Building { building: Granary }
+India-established-hills-11,gold-first,577,338,1418,4,4,Building { building: Market }
+India-established-hills-11,growth-first,559,336,1532,4,4,Building { building: Granary }
+India-established-hills-11,production-first,560,321,1482,4,4,Improvement { improvement: Quarry; tile: Hex { q: 8; r: 10 } }
+India-established-hills-29,automation,577,346,1482,4,4,Building { building: Granary }
+India-established-hills-29,gold-first,577,338,1418,4,4,Building { building: Market }
+India-established-hills-29,growth-first,559,336,1532,4,4,Building { building: Granary }
+India-established-hills-29,production-first,560,321,1482,4,4,Improvement { improvement: Quarry; tile: Hex { q: 16; r: 14 } }
+Byzantium-late-fertile-11,automation,434,824,1240,15,6,Building { building: Market }
+Byzantium-late-fertile-11,gold-first,432,846,1054,14,4,Improvement { improvement: Mine; tile: Hex { q: 4; r: 6 } }
+Byzantium-late-fertile-11,growth-first,237,546,1187,16,6,Improvement { improvement: Mine; tile: Hex { q: 4; r: 8 } }
+Byzantium-late-fertile-11,production-first,213,536,1581,15,6,Improvement { improvement: Mine; tile: Hex { q: 4; r: 8 } }
+Byzantium-late-fertile-29,automation,434,824,1240,15,6,Building { building: Market }
+Byzantium-late-fertile-29,gold-first,432,846,1054,14,4,Improvement { improvement: Mine; tile: Hex { q: 17; r: 12 } }
+Byzantium-late-fertile-29,growth-first,237,546,1187,16,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 14 } }
+Byzantium-late-fertile-29,production-first,213,536,1581,15,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 14 } }
+Egypt-late-fertile-11,automation,1213,1070,3768,10,3,Building { building: Granary }
+Egypt-late-fertile-11,gold-first,1049,1162,3224,10,5,Improvement { improvement: Mine; tile: Hex { q: 4; r: 6 } }
+Egypt-late-fertile-11,growth-first,1122,1032,3596,10,5,Building { building: Granary }
+Egypt-late-fertile-11,production-first,1130,1014,3556,10,5,Improvement { improvement: Mine; tile: Hex { q: 4; r: 8 } }
+Egypt-late-fertile-29,automation,1213,1070,3768,10,3,Building { building: Granary }
+Egypt-late-fertile-29,gold-first,1049,1162,3224,10,5,Improvement { improvement: Mine; tile: Hex { q: 17; r: 12 } }
+Egypt-late-fertile-29,growth-first,1122,1032,3596,10,5,Building { building: Granary }
+Egypt-late-fertile-29,production-first,1130,1014,3556,10,5,Improvement { improvement: Mine; tile: Hex { q: 17; r: 14 } }
+Germany-late-fertile-11,automation,793,697,1236,15,6,Building { building: Market }
+Germany-late-fertile-11,gold-first,432,846,1054,14,4,Improvement { improvement: Mine; tile: Hex { q: 4; r: 6 } }
+Germany-late-fertile-11,growth-first,201,545,1187,16,6,Improvement { improvement: Mine; tile: Hex { q: 4; r: 8 } }
+Germany-late-fertile-11,production-first,217,522,1760,14,6,Improvement { improvement: Mine; tile: Hex { q: 4; r: 8 } }
+Germany-late-fertile-29,automation,793,697,1236,15,6,Building { building: Market }
+Germany-late-fertile-29,gold-first,432,846,1054,14,4,Improvement { improvement: Mine; tile: Hex { q: 17; r: 12 } }
+Germany-late-fertile-29,growth-first,201,545,1187,16,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 14 } }
+Germany-late-fertile-29,production-first,217,522,1760,14,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 14 } }
+India-late-fertile-11,automation,434,828,1240,15,6,Building { building: Market }
+India-late-fertile-11,gold-first,432,851,1054,14,4,Improvement { improvement: Mine; tile: Hex { q: 9; r: 8 } }
+India-late-fertile-11,growth-first,237,548,1187,16,6,Improvement { improvement: Mine; tile: Hex { q: 9; r: 10 } }
+India-late-fertile-11,production-first,213,539,1581,16,6,Improvement { improvement: Mine; tile: Hex { q: 9; r: 10 } }
+India-late-fertile-29,automation,434,828,1240,15,6,Building { building: Market }
+India-late-fertile-29,gold-first,432,851,1054,14,4,Improvement { improvement: Mine; tile: Hex { q: 17; r: 12 } }
+India-late-fertile-29,growth-first,237,548,1187,16,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 14 } }
+India-late-fertile-29,production-first,213,539,1581,16,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 14 } }
+Byzantium-late-hills-11,automation,842,649,2956,7,6,Improvement { improvement: Pasture; tile: Hex { q: 5; r: 6 } }
+Byzantium-late-hills-11,gold-first,714,555,2848,6,6,Improvement { improvement: Mine; tile: Hex { q: 4; r: 6 } }
+Byzantium-late-hills-11,growth-first,650,509,3361,7,6,Improvement { improvement: Mine; tile: Hex { q: 4; r: 8 } }
+Byzantium-late-hills-11,production-first,626,462,3035,6,6,Improvement { improvement: Mine; tile: Hex { q: 4; r: 8 } }
+Byzantium-late-hills-29,automation,842,649,2956,7,6,Improvement { improvement: Pasture; tile: Hex { q: 18; r: 12 } }
+Byzantium-late-hills-29,gold-first,714,555,2848,6,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 12 } }
+Byzantium-late-hills-29,growth-first,650,509,3361,7,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 14 } }
+Byzantium-late-hills-29,production-first,626,462,3035,6,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 14 } }
+Egypt-late-hills-11,automation,60,256,0,3,0,Project { project: Gold }
+Egypt-late-hills-11,gold-first,60,256,0,3,0,Project { project: Gold }
+Egypt-late-hills-11,growth-first,60,256,0,3,0,Project { project: Gold }
+Egypt-late-hills-11,production-first,60,256,0,3,0,Project { project: Gold }
+Egypt-late-hills-29,automation,60,256,0,3,0,Project { project: Gold }
+Egypt-late-hills-29,gold-first,60,256,0,3,0,Project { project: Gold }
+Egypt-late-hills-29,growth-first,60,256,0,3,0,Project { project: Gold }
+Egypt-late-hills-29,production-first,60,256,0,3,0,Project { project: Gold }
+Germany-late-hills-11,automation,1386,520,2945,7,6,Improvement { improvement: Pasture; tile: Hex { q: 5; r: 6 } }
+Germany-late-hills-11,gold-first,1051,535,2868,5,6,Improvement { improvement: Mine; tile: Hex { q: 4; r: 6 } }
+Germany-late-hills-11,growth-first,934,544,3447,6,6,Improvement { improvement: Mine; tile: Hex { q: 4; r: 8 } }
+Germany-late-hills-11,production-first,1071,435,3165,5,6,Improvement { improvement: Mine; tile: Hex { q: 4; r: 8 } }
+Germany-late-hills-29,automation,1386,520,2945,7,6,Improvement { improvement: Pasture; tile: Hex { q: 18; r: 12 } }
+Germany-late-hills-29,gold-first,1051,535,2868,5,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 12 } }
+Germany-late-hills-29,growth-first,934,544,3447,6,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 14 } }
+Germany-late-hills-29,production-first,1071,435,3165,5,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 14 } }
+India-late-hills-11,automation,739,698,3251,7,6,Improvement { improvement: Pasture; tile: Hex { q: 10; r: 8 } }
+India-late-hills-11,gold-first,695,605,2999,6,6,Improvement { improvement: Mine; tile: Hex { q: 9; r: 8 } }
+India-late-hills-11,growth-first,673,516,3391,7,6,Improvement { improvement: Mine; tile: Hex { q: 9; r: 10 } }
+India-late-hills-11,production-first,613,514,3167,6,6,Improvement { improvement: Mine; tile: Hex { q: 9; r: 10 } }
+India-late-hills-29,automation,739,698,3251,7,6,Improvement { improvement: Pasture; tile: Hex { q: 18; r: 12 } }
+India-late-hills-29,gold-first,695,605,2999,6,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 12 } }
+India-late-hills-29,growth-first,673,516,3391,7,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 14 } }
+India-late-hills-29,production-first,613,514,3167,6,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 14 } }
+Byzantium-late-plains-11,automation,548,991,2523,11,6,Improvement { improvement: Pasture; tile: Hex { q: 5; r: 6 } }
+Byzantium-late-plains-11,gold-first,486,1007,2371,9,6,Improvement { improvement: Mine; tile: Hex { q: 4; r: 6 } }
+Byzantium-late-plains-11,growth-first,349,600,2687,12,6,Improvement { improvement: Mine; tile: Hex { q: 4; r: 8 } }
+Byzantium-late-plains-11,production-first,426,657,3002,11,6,Improvement { improvement: Mine; tile: Hex { q: 4; r: 8 } }
+Byzantium-late-plains-29,automation,548,991,2523,11,6,Improvement { improvement: Pasture; tile: Hex { q: 18; r: 12 } }
+Byzantium-late-plains-29,gold-first,486,1007,2371,9,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 12 } }
+Byzantium-late-plains-29,growth-first,349,600,2687,12,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 14 } }
+Byzantium-late-plains-29,production-first,426,657,3002,11,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 14 } }
+Egypt-late-plains-11,automation,664,872,2078,10,3,Building { building: Granary }
+Egypt-late-plains-11,gold-first,451,868,900,10,4,Improvement { improvement: Mine; tile: Hex { q: 4; r: 6 } }
+Egypt-late-plains-11,growth-first,558,844,1992,10,5,Building { building: Granary }
+Egypt-late-plains-11,production-first,513,802,1894,10,5,Improvement { improvement: Mine; tile: Hex { q: 4; r: 8 } }
+Egypt-late-plains-29,automation,664,872,2078,10,3,Building { building: Granary }
+Egypt-late-plains-29,gold-first,451,868,900,10,4,Improvement { improvement: Mine; tile: Hex { q: 17; r: 12 } }
+Egypt-late-plains-29,growth-first,558,844,1992,10,5,Building { building: Granary }
+Egypt-late-plains-29,production-first,513,802,1894,10,5,Improvement { improvement: Mine; tile: Hex { q: 17; r: 14 } }
+Germany-late-plains-11,automation,1274,806,2418,10,6,Improvement { improvement: Pasture; tile: Hex { q: 5; r: 6 } }
+Germany-late-plains-11,gold-first,486,989,2387,6,6,Improvement { improvement: Mine; tile: Hex { q: 4; r: 6 } }
+Germany-late-plains-11,growth-first,365,608,2791,12,6,Improvement { improvement: Mine; tile: Hex { q: 4; r: 8 } }
+Germany-late-plains-11,production-first,532,574,3030,9,6,Improvement { improvement: Mine; tile: Hex { q: 4; r: 8 } }
+Germany-late-plains-29,automation,1274,806,2418,10,6,Improvement { improvement: Pasture; tile: Hex { q: 18; r: 12 } }
+Germany-late-plains-29,gold-first,486,989,2387,6,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 12 } }
+Germany-late-plains-29,growth-first,365,608,2791,12,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 14 } }
+Germany-late-plains-29,production-first,532,574,3030,9,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 14 } }
+India-late-plains-11,automation,577,1043,2631,12,6,Improvement { improvement: Pasture; tile: Hex { q: 10; r: 8 } }
+India-late-plains-11,gold-first,487,1078,2498,10,6,Improvement { improvement: Mine; tile: Hex { q: 9; r: 8 } }
+India-late-plains-11,growth-first,363,640,2720,13,6,Improvement { improvement: Mine; tile: Hex { q: 9; r: 10 } }
+India-late-plains-11,production-first,445,716,3078,12,6,Improvement { improvement: Mine; tile: Hex { q: 9; r: 10 } }
+India-late-plains-29,automation,577,1043,2631,12,6,Improvement { improvement: Pasture; tile: Hex { q: 18; r: 12 } }
+India-late-plains-29,gold-first,487,1078,2498,10,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 12 } }
+India-late-plains-29,growth-first,363,640,2720,13,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 14 } }
+India-late-plains-29,production-first,445,716,3078,12,6,Improvement { improvement: Mine; tile: Hex { q: 17; r: 14 } }

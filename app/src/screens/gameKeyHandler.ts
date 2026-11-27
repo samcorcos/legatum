@@ -5,7 +5,7 @@ import { pendingDecisions } from '../turnFlow';
 import { useAdvisor } from '../ui/advisorModel';
 import { toggleOverlay } from '../map/overlays';
 import { airState, rebaseOptions, reconBlocker } from '../airWing';
-import { cityAutomationFocus, lastAutomationFocus, nextAutomationFocus, setCityAutomation } from '../automation';
+import { cityAutomationFocus, setCityAutomation } from '../automation';
 import {
   toggleAutoExploreSelected,
   cancelSelected,
@@ -124,7 +124,7 @@ export function handleGameKey(e: KeyboardEvent) {
       if (view && city) {
         e.preventDefault();
         const focus = cityAutomationFocus(city.id, view, s.orders[s.seat]);
-        s.editOrders((orders) => setCityAutomation(orders, city.id, e.shiftKey ? nextAutomationFocus(focus) : focus ? null : lastAutomationFocus()));
+        s.editOrders((orders) => setCityAutomation(orders, city.id, focus ? null : 'Economy'));
       }
       break;
     }

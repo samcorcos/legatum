@@ -540,6 +540,54 @@ impl Game {
         ))
     }
 
+    pub fn player_settlement_sites_json(
+        &self,
+        player: u8,
+        unit: u32,
+        reserved_json: &str,
+    ) -> Result<String, String> {
+        let p = self.check_player(player)?;
+        let view = self.forecast_view(p);
+        settlement_sites_for_view(&view, unit, reserved_json)
+    }
+
+    pub fn player_settlement_site_json(
+        &self,
+        player: u8,
+        unit: u32,
+        q: i32,
+        r: i32,
+        reserved_json: &str,
+    ) -> Result<String, String> {
+        let p = self.check_player(player)?;
+        let view = self.forecast_view(p);
+        settlement_site_for_view(&view, unit, q, r, reserved_json)
+    }
+
+    pub fn player_site_blocker_json(&self, player: u8, q: i32, r: i32) -> Result<String, String> {
+        let p = self.check_player(player)?;
+        let view = self.forecast_view(p);
+        site_blocker_for_view(&view, q, r)
+    }
+
+    pub fn player_site_blockers_json(&self, player: u8) -> Result<String, String> {
+        let p = self.check_player(player)?;
+        let view = self.forecast_view(p);
+        site_blockers_for_view(&view)
+    }
+
+    pub fn player_units_can_reach_json(
+        &self,
+        player: u8,
+        units_json: &str,
+        q: i32,
+        r: i32,
+    ) -> Result<String, String> {
+        let p = self.check_player(player)?;
+        let view = self.forecast_view(p);
+        units_can_reach_for_view(&view, units_json, q, r)
+    }
+
     /// Resolve the turn. `human_orders_json` maps human player ids to their orders; missing
     /// humans submit nothing. AI players' orders are computed here.
     pub fn end_turn_json(&mut self, human_orders_json: &str) -> Result<String, String> {
@@ -752,6 +800,76 @@ impl Game {
     }
 }
 
+fn settlement_sites_for_view(
+    view: &PlayerView,
+    unit: u32,
+    reserved_json: &str,
+) -> Result<String, String> {
+    let reserved: Vec<Hex> = serde_json::from_str(reserved_json).map_err(|e| e.to_string())?;
+    let sites = view
+        .units
+        .iter()
+        .find(|u| u.id == UnitId(unit))
+        .map(|u| legatum_core::settlement::settlement_scores(view, u, &reserved))
+        .unwrap_or_default();
+    to_json(&sites)
+}
+
+fn settlement_site_for_view(
+    view: &PlayerView,
+    unit: u32,
+    q: i32,
+    r: i32,
+    reserved_json: &str,
+) -> Result<String, String> {
+    let reserved: Vec<Hex> = serde_json::from_str(reserved_json).map_err(|e| e.to_string())?;
+    let site = view
+        .units
+        .iter()
+        .find(|u| u.id == UnitId(unit))
+        .and_then(|u| {
+            legatum_core::settlement::settlement_site(view, u, &reserved, Hex::new(q, r))
+        });
+    to_json(&site)
+}
+
+fn site_blocker_for_view(view: &PlayerView, q: i32, r: i32) -> Result<String, String> {
+    to_json(&legatum_core::settlement::site_blocker(
+        view,
+        Hex::new(q, r),
+    ))
+}
+
+fn site_blockers_for_view(view: &PlayerView) -> Result<String, String> {
+    to_json(&legatum_core::settlement::site_blockers(view))
+}
+
+fn units_can_reach_for_view(
+    view: &PlayerView,
+    units_json: &str,
+    q: i32,
+    r: i32,
+) -> Result<String, String> {
+    let ids: Vec<u32> = serde_json::from_str(units_json).map_err(|e| e.to_string())?;
+    let Some(index) = view.index(Hex::new(q, r)) else {
+        return to_json(&Vec::<u32>::new());
+    };
+    let mut alone = view.clone();
+    let reach: Vec<u32> = ids
+        .into_iter()
+        .filter(|&id| {
+            let Some(unit) = view.units.iter().find(|u| u.id == UnitId(id)) else {
+                return false;
+            };
+            let mut unit = unit.clone();
+            unit.ranged = 0;
+            alone.units = vec![unit].into();
+            legatum_core::settlement::known_threats(&alone)[index] > 0
+        })
+        .collect();
+    to_json(&reach)
+}
+
 // ---- JavaScript surface ----
 
 struct CachedView {
@@ -807,15 +925,19 @@ impl Game {
         js(guard(|| {
             let view: legatum_core::PlayerView =
                 serde_json::from_str(view_json).map_err(|e| e.to_string())?;
-            let reserved: Vec<Hex> =
-                serde_json::from_str(reserved_json).map_err(|e| e.to_string())?;
-            let sites = view
-                .units
-                .iter()
-                .find(|u| u.id == UnitId(unit))
-                .map(|u| legatum_core::settlement::settlement_scores(&view, u, &reserved))
-                .unwrap_or_default();
-            to_json(&sites)
+            settlement_sites_for_view(&view, unit, reserved_json)
+        }))
+    }
+
+    /// Live-game counterpart to `settlement_sites` using the cached `PlayerView` (no >1 MB JSON round-trip).
+    pub fn player_settlement_sites(
+        &self,
+        player: u8,
+        unit: u32,
+        reserved_json: &str,
+    ) -> Result<String, JsError> {
+        js(guard(|| {
+            self.player_settlement_sites_json(player, unit, reserved_json)
         }))
     }
 
@@ -851,16 +973,21 @@ impl Game {
         js(guard(|| {
             let view: legatum_core::PlayerView =
                 serde_json::from_str(view_json).map_err(|e| e.to_string())?;
-            let reserved: Vec<Hex> =
-                serde_json::from_str(reserved_json).map_err(|e| e.to_string())?;
-            let site = view
-                .units
-                .iter()
-                .find(|u| u.id == UnitId(unit))
-                .and_then(|u| {
-                    legatum_core::settlement::settlement_site(&view, u, &reserved, Hex::new(q, r))
-                });
-            to_json(&site)
+            settlement_site_for_view(&view, unit, q, r, reserved_json)
+        }))
+    }
+
+    /// Live-game counterpart to `settlement_site` using the cached `PlayerView`.
+    pub fn player_settlement_site(
+        &self,
+        player: u8,
+        unit: u32,
+        q: i32,
+        r: i32,
+        reserved_json: &str,
+    ) -> Result<String, JsError> {
+        js(guard(|| {
+            self.player_settlement_site_json(player, unit, q, r, reserved_json)
         }))
     }
 
@@ -870,11 +997,13 @@ impl Game {
         js(guard(|| {
             let view: legatum_core::PlayerView =
                 serde_json::from_str(view_json).map_err(|e| e.to_string())?;
-            to_json(&legatum_core::settlement::site_blocker(
-                &view,
-                Hex::new(q, r),
-            ))
+            site_blocker_for_view(&view, q, r)
         }))
+    }
+
+    /// Live-game counterpart to `site_blocker` using the cached `PlayerView`.
+    pub fn player_site_blocker(&self, player: u8, q: i32, r: i32) -> Result<String, JsError> {
+        js(guard(|| self.player_site_blocker_json(player, q, r)))
     }
 
     /// `site_blocker` for every tile, in tile-index order: one view parse answers every hover on that view.
@@ -882,8 +1011,13 @@ impl Game {
         js(guard(|| {
             let view: legatum_core::PlayerView =
                 serde_json::from_str(view_json).map_err(|e| e.to_string())?;
-            to_json(&legatum_core::settlement::site_blockers(&view))
+            site_blockers_for_view(&view)
         }))
+    }
+
+    /// Live-game counterpart to `site_blockers` using the cached `PlayerView`.
+    pub fn player_site_blockers(&self, player: u8) -> Result<String, JsError> {
+        js(guard(|| self.player_site_blockers_json(player)))
     }
 
     /// Threat tint from the fogged view, using the same reach calculation as settlement advice.
@@ -906,24 +1040,20 @@ impl Game {
         js(guard(|| {
             let view: legatum_core::PlayerView =
                 serde_json::from_str(view_json).map_err(|e| e.to_string())?;
-            let ids: Vec<u32> = serde_json::from_str(units_json).map_err(|e| e.to_string())?;
-            let Some(index) = view.index(Hex::new(q, r)) else {
-                return to_json(&Vec::<u32>::new());
-            };
-            let mut alone = view.clone();
-            let reach: Vec<u32> = ids
-                .into_iter()
-                .filter(|&id| {
-                    let Some(unit) = view.units.iter().find(|u| u.id == UnitId(id)) else {
-                        return false;
-                    };
-                    let mut unit = unit.clone();
-                    unit.ranged = 0;
-                    alone.units = vec![unit].into();
-                    legatum_core::settlement::known_threats(&alone)[index] > 0
-                })
-                .collect();
-            to_json(&reach)
+            units_can_reach_for_view(&view, units_json, q, r)
+        }))
+    }
+
+    /// Live-game counterpart to `units_can_reach` using the cached `PlayerView`.
+    pub fn player_units_can_reach(
+        &self,
+        player: u8,
+        units_json: &str,
+        q: i32,
+        r: i32,
+    ) -> Result<String, JsError> {
+        js(guard(|| {
+            self.player_units_can_reach_json(player, units_json, q, r)
         }))
     }
 
@@ -1310,6 +1440,53 @@ mod tests {
         old.as_object_mut().unwrap().remove("build_automation");
         let legacy: legatum_core::state::City = serde_json::from_value(old).unwrap();
         assert_eq!(legacy.build_automation, None);
+    }
+
+    #[test]
+    fn saved_legacy_city_focuses_delegate_economics_without_training_units() {
+        use legatum_core::{CityBuildFocus, ProductionItem};
+        let setup = standard_setup_json("7", "India", "Byzantium", "A", "B").unwrap();
+        let game = Game::from_setup_json(&setup).unwrap();
+        let mut view: legatum_core::PlayerView =
+            serde_json::from_str(&game.view_json(0).unwrap()).unwrap();
+        let id = view.cities.iter().find(|c| c.owner == view.me).unwrap().id;
+        for focus in [
+            CityBuildFocus::Military,
+            CityBuildFocus::Gold,
+            CityBuildFocus::Science,
+            CityBuildFocus::Food,
+        ] {
+            let detail = view
+                .cities
+                .iter_mut()
+                .find(|c| c.id == id)
+                .unwrap()
+                .detail
+                .as_mut()
+                .unwrap();
+            detail.producing = None;
+            detail.production_queue.clear();
+            detail.build_automation = Some(focus);
+            let plan: CityAutomationPlan = serde_json::from_str(
+                &city_automation_orders_json(&to_json(&view).unwrap(), "[]").unwrap(),
+            )
+            .unwrap();
+            assert!(plan.unchosen_cities.is_empty());
+            assert!(plan.orders.iter().any(|o| matches!(
+                o,
+                Order::SetCityAutomation {
+                    focus: Some(CityBuildFocus::Economy),
+                    ..
+                }
+            )));
+            assert!(!plan.orders.iter().any(|o| matches!(
+                o,
+                Order::SetProduction {
+                    item: ProductionItem::Unit { .. },
+                    ..
+                } | Order::BuyItem { .. }
+            )));
+        }
     }
 
     #[test]
@@ -1997,6 +2174,49 @@ mod bicycle_two_tests {
             assert!(!view.cities.iter().filter_map(|c|c.detail.as_ref()).flat_map(|d|&d.options).any(|o|matches!(o.item,ProductionItem::Wonder{building:b,..} if data::is_great_work(b))));
         }
     }
+
+    #[test]
+    fn player_settlement_methods_match_static_view_json_queries() {
+        let setup = standard_setup_json("42", "Athens", "Rome", "P1", "P2").unwrap();
+        let mut g = Game::from_setup_json(&setup).unwrap();
+        let start_pos = g.session.state.cities.values().next().unwrap().pos;
+        let settler_id = spawn_unit(
+            &mut g.session.state,
+            PlayerId(0),
+            UnitKind::Settler,
+            start_pos,
+        );
+        g.invalidate_view();
+        let view_json = g.view_json(0).unwrap();
+        let view: legatum_core::PlayerView = serde_json::from_str(&view_json).unwrap();
+        let unit_id = settler_id.0;
+        let pos = start_pos;
+        let reserved = "[]";
+        assert_eq!(
+            g.player_settlement_sites_json(0, unit_id, reserved)
+                .unwrap(),
+            settlement_sites_for_view(&view, unit_id, reserved).unwrap()
+        );
+        assert_eq!(
+            g.player_settlement_site_json(0, unit_id, pos.q, pos.r, reserved)
+                .unwrap(),
+            settlement_site_for_view(&view, unit_id, pos.q, pos.r, reserved).unwrap()
+        );
+        assert_eq!(
+            g.player_site_blocker_json(0, pos.q, pos.r).unwrap(),
+            site_blocker_for_view(&view, pos.q, pos.r).unwrap()
+        );
+        assert_eq!(
+            g.player_site_blockers_json(0).unwrap(),
+            site_blockers_for_view(&view).unwrap()
+        );
+        let ids_json = to_json(&vec![unit_id]).unwrap();
+        assert_eq!(
+            g.player_units_can_reach_json(0, &ids_json, pos.q, pos.r)
+                .unwrap(),
+            units_can_reach_for_view(&view, &ids_json, pos.q, pos.r).unwrap()
+        );
+    }
 }
 
 /// Stateless planning for local and online clients. The only input is the seat's fogged view.
@@ -2139,7 +2359,9 @@ pub fn city_automation_orders_json(view_json: &str, orders_json: &str) -> Result
                 _ => None,
             })
             .unwrap_or(detail.build_automation);
-        let Some(focus) = focus else { continue };
+        let Some(_) = focus else { continue };
+        // Older saved focuses are active automation too; the single control now delegates economics.
+        let focus = legatum_core::CityBuildFocus::Economy;
         let changing = orders.iter().any(|o| matches!(o, Order::SetCityAutomation { city: id, focus: next, .. } if *id == city.id && *next != detail.build_automation));
         let replacing_automatic_tail = changing
             && detail.production_queue.len() == 1

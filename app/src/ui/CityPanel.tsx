@@ -4,8 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode }
 import { purchasePreviews, tilePurchasePreview } from './productionPurchases';
 import { cityUpkeepForecast } from './cityUpkeepForecast';
 import { useGame } from '../store';
-import { AUTOMATION_NO_CHOICE, autoPickReason, cityAutomationFocus, FOCUS_CYCLE, focusLabel, setCityAutomation } from '../automation';
-import type { CityBuildFocus } from '../types';
+import { AUTOMATION_NO_CHOICE, cityAutomationFocus, cityAutomationPreview, setCityAutomation } from '../automation';
 import type { BuildingKind, CityView, Faction, Order, PlayerView, ProductionItem, ProductionOption, Resource, ImprovementKind, UnavailableOption } from '../types';
 import { comparisonSentence, pieceAgainst, pieceComparison } from '../pieceCompare';
 import { PieceVsLine } from './PieceVs';
@@ -53,15 +52,6 @@ import { TILE_RELEASE_RULE } from './cityTerritoryText';
 
 const lowerFirst = (text: string) => text.charAt(0).toLowerCase() + text.slice(1);
 const upperFirst = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
-
-/** What each automatic-build focus does, for the select's tooltip. */
-const FOCUS_TIP: Record<CityBuildFocus, string> = {
-  Military: 'Trains the newest military units your strategic resources allow, never outdated ones. Spends no Gold.',
-  Economy: 'Builds buildings and improvements, never units. Spends no Gold.',
-  Gold: 'Runs the Gold project and builds nothing else.',
-  Science: 'Runs the Science project and builds nothing else.',
-  Food: 'Runs the Food project and builds nothing else.',
-};
 
 /** How Build and + Queue work, and what happens to progress when you switch (one rule, one wording). */
 const BUILD_RULE = 'Build replaces the current item. Its progress stays banked with it in this city and resumes when you build it again; it never moves to another item. Production not yet assigned (overflow, or stored while idle) joins whatever starts next. + Queue or Shift-click adds to the queue. Greyed-out items can\'t be built here yet: hover one for why.';
@@ -131,10 +121,9 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
   const [notice, setNotice] = useState<{ city: number; key: string; text: string; tone: 'good' | 'bad' } | null>(null);
   const orders = useGame((s) => s.orders[s.seat]);
   const buildFocus = cityAutomationFocus(city.id, view, orders);
-  const pendingAuto = orders.findLast((o) => o.type === 'SetCityAutomation' && o.city === city.id);
-  const pendingBuild = orders.some((o) => (o.type === 'SetProduction' || o.type === 'SetProductionQueue') && o.city === city.id);
-  const autoPick = pendingAuto?.type === 'SetCityAutomation' && pendingAuto.picked ? pendingAuto.picked
-    : !pendingBuild && buildFocus === city.detail?.build_automation ? city.detail?.last_auto_pick : null;
+  const automationPlan = buildFocus ? cityAutomationPreview(view, orders) : null;
+  const plannedPick = automationPlan?.orders.findLast((o) => o.type === 'SetCityAutomation' && o.city === city.id);
+  const autoPick = plannedPick?.type === 'SetCityAutomation' ? plannedPick.picked : null;
   const errors = useGame((s) => s.errors[s.seat]);
   const client = useGame((s) => s.client);
   const editOrders = useGame((s) => s.editOrders);
@@ -822,15 +811,13 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
 
   /** Idle with nothing queued: the control sits on the "Choose what ... builds" line, so it never scrolls out of view above the cards and costs no extra row. */
   const idleChoice = city.owner === view.me && !producing && queue.length === 0;
-  const autoSelect = <select id={`city-automation-${city.id}`} aria-label={`Automate ${city.name}`} title={buildFocus ? buildFocus === 'Food' && owner?.faction === 'Egypt' ? 'Runs Grow and builds nothing else.' : FOCUS_TIP[buildFocus] : 'Pick a focus: the city picks its builds or runs a project. Spends no Gold.'} value={buildFocus ?? ''}
-    disabled={view.finished} onChange={(e) => editOrders((list) => setCityAutomation(list, city.id, (e.target.value || null) as CityBuildFocus | null))}>
-    <option value="">Off</option>{FOCUS_CYCLE.map((f) => <option key={f} value={f}>{focusLabel(f, owner?.faction)}</option>)}
-  </select>;
-  const autoReason = buildFocus && productionWarning !== AUTOMATION_NO_CHOICE ? <p className="cp-automation-reason">{autoPick
-    ? autoPickReason(autoPick, buildFocus, city, view)
-    : buildFocus === 'Military' || buildFocus === 'Economy' ? `Your queue goes first. When it empties, the city picks ${buildFocus === 'Economy' ? 'an' : 'a'} ${buildFocus} build.` : buildFocus === 'Food' && owner?.faction === 'Egypt' ? 'Your queue goes first. When it empties, the city runs Grow.' : `Your queue goes first. When it empties, the city runs its ${focusLabel(buildFocus, owner?.faction)}.`}</p> : null;
+  const autoSelect = <button type="button" className="btn" id={`city-automation-${city.id}`} data-advisor="automate"
+    aria-label={`Automate ${city.name}`} aria-pressed={!!buildFocus} title="Chooses economic buildings and tile improvements. Your queue goes first."
+    disabled={view.finished} onClick={() => editOrders((list) => setCityAutomation(list, city.id, buildFocus ? null : 'Economy'))}>
+    Automate <kbd className="kbd">I</kbd>
+  </button>;
+  const autoReason = buildFocus && !idleChoice ? <p className="cp-automation-reason">Your queue goes first. When it empties, the city chooses economic investments.</p> : null;
   const automationRow = city.owner === view.me ? <section className="cp-automation" aria-label="City building automation">
-    <label htmlFor={`city-automation-${city.id}`}>Auto <kbd className="kbd" title="I: on or off with your last focus. Shift+I: next focus.">I</kbd></label>
     {autoSelect}
     {autoReason}
   </section> : null;
@@ -1044,7 +1031,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
       {occupiedLine ? <><p className="hint warn" data-testid="city-occupied">{occupiedLine}. Food, Gold and Science continue.</p></> : <>
       <div className="cp-block production-choose-block">
         {/* How Build and Queue differ is one hover away, so the choices start right under the title. */}
-        <Tip as="div" className="cp-choose-title" content={owner?.faction === 'Egypt' ? EGYPT_BUILD_RULE : BUILD_RULE}>{buildFocus && idleChoice && productionWarning !== AUTOMATION_NO_CHOICE ? `Chooses at Ready · ${focusLabel(buildFocus, owner?.faction)}` : tombStopped ? 'Queue for after the tomb' : `Choose what ${city.name} builds`}</Tip>
+        <Tip as="div" className="cp-choose-title" content={owner?.faction === 'Egypt' ? EGYPT_BUILD_RULE : BUILD_RULE}>{buildFocus && idleChoice && productionWarning !== AUTOMATION_NO_CHOICE ? 'Chooses economic investments at Ready' : tombStopped ? 'Queue for after the tomb' : `Choose what ${city.name} builds`}</Tip>
       </div>
       {tombStopped && <p className="hint" data-testid="city-tomb-picker">You can still buy with Gold.</p>}
       <div className="cp-buyline">
@@ -1052,11 +1039,16 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
           <Tip content={`Gold available for purchases this turn. Gold/turn: ${signed(view.economy.gold_per_turn.total)}.`}><span><Amount n={purchases.gold} unit="Gold" /> to spend</span></Tip>
         </div>
         {idleChoice && <div className="cp-automation-inline" role="group" aria-label="City building automation">
-          <label htmlFor={`city-automation-${city.id}`}>Auto <kbd className="kbd" title="I: on or off with your last focus. Shift+I: next focus.">I</kbd></label>{autoSelect}
+          {autoSelect}
         </div>}
       </div>
       {idleChoice && buyTile('row')}
-      {idleChoice && autoPick && autoReason && <div className="cp-block cp-auto-note">{autoReason}</div>}
+      {idleChoice && autoPick && <div className="cp-block cp-auto-note">
+        {itemName(autoPick, owner?.faction)}: {autoPick.kind === 'Project' && autoPick.project === 'Gold'
+          ? 'earn Gold while further investment would not pay back soon enough.'
+          : autoPick.kind === 'Project' ? 'grow sooner to work another tile.'
+            : 'invest in income and useful growth, allowing for build time.'}
+      </div>}
 
 
       {growOption && <><div className="cp-sub">Growth</div><div className="prod-list">{renderOption(growOption)}</div></>}

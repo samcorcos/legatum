@@ -28,6 +28,8 @@ export interface Slot {
 
 export interface Lobby {
   mode: LobbyMode;
+  /** Multiplayer planning time; absent or zero means unlimited. */
+  turnTimerSeconds?: number;
   preset: PresetId;
   slots: Slot[];
   mapSize: MapSize;

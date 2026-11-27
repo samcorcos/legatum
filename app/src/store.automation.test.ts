@@ -113,7 +113,7 @@ it('stops Ready for an automated city with no build and accepts a manual order w
   expect(s.views![0].turn).toBe(before.turn);
   expect(s.ready[0]).toBe(false);
   expect(s.selection).toEqual({ kind: 'city', id: city.id });
-  expect(pendingDecisions(blocked, s.orders[0], s.errors[0], s).find((d) => d.kind === 'city' && d.id === city.id)?.label).toContain('Nothing here fits its automation focus');
+  expect(pendingDecisions(blocked, s.orders[0], s.errors[0], s).find((d) => d.kind === 'city' && d.id === city.id)?.label).toContain('No economic build is available');
   expect(s.orders[0]).toContainEqual({ type: 'SetCityAutomation', city: city.id, focus: 'Science' });
   s.editOrders((orders) => [...orders, { type: 'SetProduction', city: city.id, item: { kind: 'Unit', unit: 'Spearman' } }]);
   await useGame.getState().toggleReady();

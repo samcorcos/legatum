@@ -91,14 +91,13 @@ it('keeps the other rows in order after a production choice', async () => {
   expect(after.filter((id) => id !== targetId)).toEqual(idsBefore.filter((id) => id !== targetId));
 });
 
-it('sets different focuses in bulk and stops without changing production', async () => {
+it('automates economic investment in bulk and stops without changing production', async () => {
   const view = await openOverview();
   const ids = rowIds().slice(0, 2);
   for (const id of ids) act(() => host.querySelector<HTMLInputElement>(`[data-city="${id}"] input[type=checkbox]`)!.click());
-  const focus = host.querySelector<HTMLSelectElement>('select[aria-label="Building focus for selected cities"]')!;
-  act(() => { focus.value = 'Gold'; focus.dispatchEvent(new Event('change', { bubbles: true })); });
+  expect(host.querySelector('select[aria-label="Building focus for selected cities"]')).toBeNull();
   act(() => [...host.querySelectorAll<HTMLButtonElement>('.co-automation button')].find((b) => b.textContent === 'Automate')!.click());
-  for (const id of ids) expect(useGame.getState().orders[0]).toContainEqual({ type: 'SetCityAutomation', city: id, focus: 'Gold' });
+  for (const id of ids) expect(useGame.getState().orders[0]).toContainEqual({ type: 'SetCityAutomation', city: id, focus: 'Economy' });
   expect(host.querySelectorAll('.co-auto-badge')).toHaveLength(2);
   expect(host.querySelectorAll('[data-testid="city-auto-wait"]')).toHaveLength(2);
   act(() => [...host.querySelectorAll<HTMLButtonElement>('.co-automation button')].find((b) => b.textContent === 'Stop automating')!.click());
