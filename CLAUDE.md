@@ -53,4 +53,5 @@ Each kind of knowledge lives in exactly one place. Don't duplicate design conten
 
 ## Maintainer operations
 
-Codex/Astra lanes, Codex and Claude budgets, and model routing (including when Fable is allowed): `docs/ops/maintainer.md`.
+- Codex/Astra lanes, Codex and Claude budgets, and model routing (including when Fable is allowed): `docs/ops/maintainer.md`.
+- Multi-agent coordination across Claude, ChatGPT/Codex and Gemini (GitHub labels, Draft PR claim locks, disjoint lanes, `mode:bakeoff`, `status:handoff` comments, cross-model reviews): `docs/ops/multi-agent.md`.
