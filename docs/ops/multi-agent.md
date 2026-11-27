@@ -210,6 +210,15 @@ Use whenever an agent stops early (session/context limit, rate limit, environmen
 3. Swap `claimed:<agent>` -> `status:handoff`.
 4. **Picking up a handoff:** Fetch the existing branch, add new commits on top (never force-push), swap `status:handoff` -> `claimed:<new-agent>`, add `author:<new-agent>` if you make substantial changes (so peer review still goes to a third agent or human), and comment `Picking up from <sha>.`
 
+## Milestones (grouping multi-ticket initiatives)
+
+Use **GitHub Milestones** (not GitHub Projects v2) to group ongoing multi-PR initiatives such as `Cinematics`, `Performance`, and `Hard AI`:
+
+- **When to use a Milestone:** An effort spans 3+ issues/PRs or iterates over multiple days/budgets (e.g., era cinematics, UI performance, Hard AI improvements). Single standalone fixes do not need a milestone.
+- **Structure:** Attach all related issues to the Milestone (`gh issue edit <N> --milestone "<Name>"`). For broad roadmaps, keep **one parent tracking issue** (never labeled `agent:ready`) holding the master checklist and scope, and file small, self-contained child issues labeled `agent:ready` + `lane:*` as each piece becomes actionable.
+- **Querying:** Check existing milestones before creating a new one (`gh api repos/samcorcos/legatum/milestones --jq '.[].title'`), and filter work with `gh issue list --milestone "<Name>"`.
+- **Keep labels as the execution state:** Milestones organize *what initiative* an issue belongs to; labels (`agent:ready`, `claimed:*`, `needs-review`, `status:handoff`, `needs-human`) remain the sole source of truth for execution state.
+
 ## Writing a good issue brief
 
 When creating an `agent:ready` issue, include:
@@ -217,6 +226,7 @@ When creating an `agent:ready` issue, include:
 ```markdown
 **Goal:** <one sentence>
 **Lane:** `lane:core` | `lane:ai` | `lane:ui` | `lane:docs`
+**Milestone:** <existing Milestone name, if part of a multi-ticket initiative>
 **Context & constraints:** <relevant rules, pillars, or pasted Design Doc excerpt>
 **Likely files:** <paths>
 **Done when:** <exact tests, benchmarks, or screenshots required>
