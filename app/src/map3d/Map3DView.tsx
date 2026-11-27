@@ -35,8 +35,6 @@ import { CompassRose } from '../map/CompassRose';
 import { compassCovered, COMPASS_R } from '../map/compass';
 import { drawLens, lensWash } from '../map/drawLens';
 import { drawYieldIcons } from '../map/yieldIcons';
-import { overlayEmpty } from '../map/overlays';
-import { isBarbarian } from '../barbarians';
 import { isColoniaFounder } from '../goalCities';
 import { itemName } from '../data';
 import { bannerCityAt3d, drawMarks2d, drawRoute3d, type BannerHit3d, type Marks2dInput } from './marks2d';
@@ -210,8 +208,8 @@ export default function Map3DView() {
     const sc = sceneRef.current;
     if (!sc) return;
     const wash = lensWash(lensTiles, 'atlas');
-    sc.setLensWash([...lensTiles, ...overlayTiles.borders].flatMap((t) => { const x = wash(t); return x ? [{ index: t.index, color: x.color, alpha: x.alpha }] : []; }));
-  }, [lensTiles, overlayTiles, view]);
+    sc.setLensWash(lensTiles.flatMap((t) => { const x = wash(t); return x ? [{ index: t.index, color: x.color, alpha: x.alpha }] : []; }));
+  }, [lensTiles, view]);
   const compassRef = useRef<HTMLDivElement>(null);
 
   const intent = view && hover && !pingMode ? pointerIntent(view, ownSel, hover, mode) : 'none';
@@ -462,9 +460,8 @@ export default function Map3DView() {
       <CompassRose ref={compassRef} />
       {flatChip && <button type="button" className="map3d-flat-chip" style={{ left: flatChip.left, bottom: flatChip.bottom }}
         aria-label="Show the 2D map (M)" title="Show the 2D map (M)" onClick={() => useMapView.getState().set('2d')}>2D map</button>}
-      <LensSwitcher players={view?.players ?? []} me={view?.me} visibleBarbarians={!!view?.units.some((u) => isBarbarian(u.owner))} supply={view?.supply} era={view?.research.era}
-        lens={lens} empty={!lensTiles.length}
-        overlayEmpty={{ resources: !!view && overlayEmpty(view, 'resources', overlayTiles), borders: !!view && overlayEmpty(view, 'borders', overlayTiles) }}
+      <LensSwitcher players={view?.players ?? []} me={view?.me}
+        lens={lens}
         collapsed={!!selection} onChange={setLens} sites={sites} settlerId={settleUnit?.id ?? null}
         coloniaFounder={!!view && !!settleUnit && isColoniaFounder(view, settleUnit.id)}
         founderName={settleUnit ? itemName({ kind: 'Unit', unit: settleUnit.kind }, view?.players.find((p) => p.id === settleUnit.owner)?.faction) : undefined}

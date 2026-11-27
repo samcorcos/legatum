@@ -6,8 +6,7 @@ import { CVD, deltaE00, labOf, type Vision } from '../test/cvd';
 import { ATLAS } from './style';
 
 const GROUPS: Record<string, Record<string, string>> = {
-  'Resource categories (lens legend and far-zoom marks)': { Bonus: ATLAS.resources.bonus, Strategic: ATLAS.resources.strategic },
-  'Movement lens': { easy: ATLAS.lens.tint.easy, rough: ATLAS.lens.tint.rough, blocked: ATLAS.lens.tint.blocked },
+  'Resource categories for far-zoom marks': { Bonus: ATLAS.resources.bonus, Strategic: ATLAS.resources.strategic },
 };
 
 describe('lens markers are distinct for colour-blind sight', () => {

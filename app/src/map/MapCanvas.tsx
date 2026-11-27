@@ -20,14 +20,12 @@ import { onWonderArtLoad } from './wonderArt';
 import { cancelSelected, enemyAt, peacefulAt, peacefulRangedAt, rangedEnemyAt, warQueuedNow, foundCitySelected, sleepSelected, skipSelected, moveSelected, rangedSelected, selectedOwnUnit, toggleRangedMode } from '../commands';
 import { pointerIntent, previewDestination } from './intent';
 import { foundCityBlocker, foundCityUnitBlocker, isFounderCandidate, settlementSite } from '../settlement';
-import { overlayEmpty } from './overlays';
 import { settleTileNote } from './settleAdvice';
 import { LensSwitcher } from './LensSwitcher';
 import { isColoniaFounder } from '../goalCities';
 import { cancelBattleSounds, playBattleSounds } from '../feel/sound';
 import { useLandSound } from './useLandSound';
 import { battleSoundCues } from '../feel/battleSound';
-import { isBarbarian } from '../barbarians';
 import { SettlementCard, SettlementDetails } from './SettlementCard';
 import { PING_PULSE_MS, pingsFor } from '../teamPing';
 import type { PingMark } from './pingDraw';
@@ -459,7 +457,6 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     lensTiles,
     overlays,
     yieldTiles: overlayTiles.yields,
-    borderTiles: overlayTiles.borders,
     cues: null as { list: MapCue[]; start: number } | null,
     arrow: null as { from: Hex | null; to: Hex; start: number } | null,
     pings: livePings,
@@ -470,7 +467,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     celebration,
     siege,
   });
-  const nextFrame = { anchoringPreview: !!activePreview, lens, lensTiles, overlays, yieldTiles: overlayTiles.yields, borderTiles: overlayTiles.borders, view, selUnit, selection, pathInfo, pathAttack, pendingLines, pendingMarks, cityFocuses, cityBuilds, rangedTiles, goalPreview, territoryOverlay, tileBuys, improveOverlay, placeOverlay, airOverlay, hover, hoverSelect: intent === 'select', pingArmed: pingMode, cues, arrow, pings: livePings, anim, seat, reducedMotion, combatFx: { enabled: combatFx.enabled }, celebration, siege };
+  const nextFrame = { anchoringPreview: !!activePreview, lens, lensTiles, overlays, yieldTiles: overlayTiles.yields, view, selUnit, selection, pathInfo, pathAttack, pendingLines, pendingMarks, cityFocuses, cityBuilds, rangedTiles, goalPreview, territoryOverlay, tileBuys, improveOverlay, placeOverlay, airOverlay, hover, hoverSelect: intent === 'select', pingArmed: pingMode, cues, arrow, pings: livePings, anim, seat, reducedMotion, combatFx: { enabled: combatFx.enabled }, celebration, siege };
   // Redraw only when something the map draws changed: a render for a card or a panel leaves the canvas alone.
   // A change of the tile under the pointer alone repaints only the hover mark and the route (hoverClipBoxes).
   if (hoverOnlyChange(frame.current, nextFrame)) hoverDirty.current = true;
@@ -919,7 +916,6 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
         lensTiles: f.lensTiles,
         overlays: f.overlays,
         yieldTiles: f.yieldTiles,
-        borderTiles: f.borderTiles,
         lensAvoid: panels.current,
         selectedUnit: f.selection?.kind === 'unit' ? f.selection.id : null,
         selectedAir: f.selection?.kind === 'air' ? f.selection.id : null,
@@ -1349,7 +1345,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
         {bannerTooltip(view, hoveredBanner.city)}
       </div>}
       <CompassRose ref={compassRef} />
-      <LensSwitcher players={view?.players ?? []} me={view?.me} visibleBarbarians={!!view?.units.some((u) => isBarbarian(u.owner))} supply={view?.supply} era={view?.research.era} lens={lens} empty={!lensTiles.length} overlayEmpty={{ resources: !!view && overlayEmpty(view, 'resources', overlayTiles), borders: !!view && overlayEmpty(view, 'borders', overlayTiles) }} collapsed={!!selection} onChange={(next) => { clearTouch(); setLens(next); }} sites={sites} settlerId={settleUnit?.id ?? null} coloniaFounder={!!view && !!settleUnit && isColoniaFounder(view, settleUnit.id)} founderName={settleUnit ? itemName({ kind: 'Unit', unit: settleUnit.kind }, view?.players.find((p) => p.id === settleUnit.owner)?.faction) : undefined} onInspect={(hex) => {
+      <LensSwitcher players={view?.players ?? []} me={view?.me} lens={lens} collapsed={!!selection} onChange={(next) => { clearTouch(); setLens(next); }} sites={sites} settlerId={settleUnit?.id ?? null} coloniaFounder={!!view && !!settleUnit && isColoniaFounder(view, settleUnit.id)} founderName={settleUnit ? itemName({ kind: 'Unit', unit: settleUnit.kind }, view?.players.find((p) => p.id === settleUnit.owner)?.faction) : undefined} onInspect={(hex) => {
         useGame.getState().jumpTo(hex);
         setHover(null);
         setTapPreview(null);

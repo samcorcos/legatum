@@ -78,7 +78,7 @@ async function open(page: Page, game: string, yields: boolean) {
   await page.addInitScript(({ game, yields }) => {
     localStorage.setItem('legatum.autosave.v1', JSON.stringify({ format: 'legatum-save', version: 1, client: 'wasm', turn: 12, names: ['Ada'], savedAt: new Date().toISOString(), game }));
     localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify({ enabled: false, seen: [] }));
-    localStorage.setItem('legatum.map-overlays.v1', JSON.stringify({ yields, resources: false, borders: false }));
+    localStorage.setItem('legatum.map-overlays.v1', JSON.stringify({ yields }));
   }, { game, yields });
   await page.goto('/?client=wasm');
   await page.getByRole('button', { name: /^Continue/ }).click();

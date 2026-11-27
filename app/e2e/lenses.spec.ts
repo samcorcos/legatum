@@ -129,22 +129,19 @@ for (const size of sizes) for (const look of ['atlas'] as const) test.describe(`
       await page.locator('.phone-sheet-handle').click();
       await expect(page.locator('.phone-sheet')).toHaveAttribute('data-detent', 'peek');
     }
-    // Every overlay on: each lens is then checked with Yields, Resources and Borders stacked over it.
+    // Yields stays on over both lenses.
     await openLenses();
-    for (const overlay of ['Yields', 'Resources', 'Borders']) {
-      const box = overlayBox(page, overlay);
-      if (size.touch) await box.tap(); else await box.click();
-      await expect(box).toBeChecked();
-    }
-    await expect(page.locator('.lens-group-label').first()).toContainText('1 icon per point');
-    for (const lens of ['Settle', 'Movement', 'Threat', 'Discovery', 'Default']) {
+    const box = overlayBox(page, 'Yields');
+    if (size.touch) await box.tap(); else await box.click();
+    await expect(box).toBeChecked();
+    await expect(page.locator('.lens-yield-line')).toContainText('1 icon per point');
+    for (const lens of ['Settle', 'Default']) {
       await openLenses();
       await assertDockClear();
       const radio = group.getByRole('radio', { name: lens, exact: true });
       if (size.touch) await radio.tap(); else await radio.click();
       if (await toggle.isVisible()) {
-        await expect(toggle).toHaveText(new RegExp(`^Lens: ${lens} · Yields, Resources, Borders$`));
-        await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+        await expect(toggle).toHaveText(new RegExp(`^Lens: ${lens} · Yields$`));
         await expect(group).toBeHidden();
       } else await expect(radio).toBeChecked();
       if (lens === 'Settle') await assertSettleLegend();
@@ -159,7 +156,7 @@ for (const size of sizes) for (const look of ['atlas'] as const) test.describe(`
     await page.keyboard.press('ArrowRight');
     await expect(group.getByRole('radio', { name: 'Settle', exact: true })).toBeChecked();
     await expect(group.getByRole('radio', { name: 'Settle', exact: true })).toBeFocused();
-    await expect(overlayBox(page, 'Yields')).toBeChecked(); // the overlays stayed on through every lens
+    await expect(overlayBox(page, 'Yields')).toBeChecked(); // Yields stayed on through both lenses
     if (phone) { await page.keyboard.press('Escape'); await expect(toggle).toBeFocused(); }
     await expect(page.getByTestId('turn-number')).toHaveText('1');
     for (const zoom of [0.28, 2.4, 0.9]) {

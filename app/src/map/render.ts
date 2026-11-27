@@ -38,8 +38,8 @@ import { mapFeatureImage, RUIN_MASS } from './mapFeatures';
 import { BARBARIAN, isBarbarian } from '../barbarians';
 import type { Rect } from './compass';
 import type { LensTile, MapLens } from './lenses';
-import { drawLens, drawOwnerOverlay } from './drawLens';
-import { artFadeFor, DEFAULT_OVERLAYS, ownerWashScale, type OverlaySet } from './overlays';
+import { drawLens } from './drawLens';
+import { artFadeFor, DEFAULT_OVERLAYS, type OverlaySet } from './overlays';
 import { drawYieldIcons, foldedBonuses, yieldClusterRects, YIELD_FILL } from './yieldIcons';
 import { drawImprovements } from './improvementArt';
 import { drawResourceIcons, medallionTop, resourceDetail, STACK_LIFT, type Cover } from './resourceIcons';
@@ -106,11 +106,10 @@ export interface RenderInput {
   hover: Hex | null;
   lens?: MapLens;
   lensTiles?: LensTile[];
-  /** The stackable overlays (Yields, Resources, Borders) on top of whichever lens is showing. */
+  /** Yields can stack over either lens. */
   overlays?: OverlaySet;
-  /** Their tiles: yield clusters, and owned land for the Borders overlay. */
+  /** Yield clusters. */
   yieldTiles?: LensTile[];
-  borderTiles?: LensTile[];
   /** Screen rects of panels over the map: lens badges move clear of them. */
   lensAvoid?: readonly Rect[];
   /** Battle result cues (damage, losses) over hexes, already faded for this frame. */
@@ -357,8 +356,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   if (moments && momentView) drawMomentGround(ctx, moments.plan, moments.t, momentView);
   if (idleView) idleLive += drawChimneySmoke(ctx, view, idleT, idleView, moments ? (tile) => moments.hold.towns.has(tile) : undefined);
   if (inp.lensTiles?.length) drawLens(ctx, inp.lensTiles, cam, w, h, view.width, dpr, look);
-  // Overlays draw over the lens tint, so a lens never hides them: owned land first, then the yield icons on top of both.
-  if (inp.borderTiles?.length) drawOwnerOverlay(ctx, inp.borderTiles, cam, w, h, view.width, dpr, look, 'tint', ownerWashScale(inp.lens));
+  // Yield icons draw over the Settle tint, so the lens does not hide them.
   // Tile yields sit under every unit and banner: quiet enough to leave on.
   // A neighbour's medallion, yield cluster or wonder badge never sits on a town (or its walls): they keep clear of its footprint.
   const townCovers = cityArtCovers(view, toScreen, z, hexPx);
@@ -378,7 +376,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   const iconView = moments?.hold.resources.size
     ? { ...view, tiles: view.tiles.map((tile, i) => moments.hold.resources.has(i) ? { ...tile, resource: null } : tile) }
     : view;
-  drawResourceIcons(ctx, iconView, cam, w, h, dpr, look, bannerCovers, overlays.resources, townCovers);
+  drawResourceIcons(ctx, iconView, cam, w, h, dpr, look, bannerCovers, townCovers);
   // A natural wonder's bonus, on its tile: above the lens tint and yield icons, under units and banners (folded or as its pill).
   const wonderPillsOverUnits = drawWonderBadges(ctx, view, cam, w, h, dpr, overlays.yields, [...bannerCovers, ...townCovers], tokenCovers, folded);
 
@@ -399,7 +397,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   const ownSel = selUnit && selUnit.owner === view.me ? selUnit : null;
 
   // Movement reach: a wash plus an edge.
-  if ((!inp.lens || inp.lens === 'default' || inp.lens === 'movement') && ownSel && !inp.rangedTiles && ownSel.max_moves > 0 && !inp.unitPos.size) {
+  if ((!inp.lens || inp.lens === 'default') && ownSel && !inp.rangedTiles && ownSel.max_moves > 0 && !inp.unitPos.size) {
     const reach = reachOf(view, ownSel);
     if (reach.size) {
       ctx.beginPath();
@@ -1037,11 +1035,6 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     ctx.restore();
   }
 
-  if (inp.borderTiles?.length) {
-    // Owner numbers keep off tiles that hold a token or a city (they carry their own) or a resource medallion (its ring is there). The square badge is not a unit's round owner roundel.
-    const busy = new Set([...unitBottoms.keys(), ...view.cities.map((c) => tileIndex(c.pos, W, H)), ...view.tiles.flatMap((t, i) => t.resource && t.explored ? [i] : [])]);
-    drawOwnerOverlay(ctx, inp.borderTiles, cam, w, h, W, dpr, look, 'labels', ownerWashScale(inp.lens), busy);
-  }
   if (inp.lensTiles?.length) {
     const medallions = resourceDetail(hexPx) === 'medallions';
     const cityAt = new Set(view.cities.map((c) => tileIndex(c.pos, W, H)));
