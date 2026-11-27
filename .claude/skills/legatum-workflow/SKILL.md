@@ -11,6 +11,8 @@ Current rules only, one line each with the date and who. Detail, the user's full
 
 ## Source of truth, merging and gates
 
+- Heartbeat parallelism (user, 2026-11-27): select up to three independent tasks per run in priority order and work on them in parallel where supported. Count active tasks across overlapping runs toward the same per-agent three-task ceiling; isolate worktrees and target directories, retain visible claims and the lane:core serialization rule, and serialize merges. Details and the scheduler prompt live in `docs/ops/multi-agent.md`.
+
 - GitHub `samcorcos/legatum` is the source of truth, one line on `master`: branch from a freshly fetched `origin/master`, PR into `master`, CI, merge on GitHub; never push to `master` directly (user, 2026-11-21).
 - Multi-agent coordination (Claude, ChatGPT/Codex, Gemini): coordinate through public GitHub issues/labels; turn every direct implementation request from the maintainer in chat into a GitHub Issue (`claimed:<agent>` + `lane:*`) and a Draft PR (`author:<agent>`) immediately as a visible lock, keep `lane:core` (`RULES_VERSION`) serialized to one active PR, and use `needs-review` / `mode:bakeoff` / `status:handoff` per `docs/ops/multi-agent.md` (user, 2026-11-27).
 - "CI is green" means the hosted GitHub Actions checks pass on the PR's head (Actions is back on since the repo went public, 2026-11-22). `tools/ci/local-ci.sh` runs the same steps (app tests with `CI=true`, as Actions sets it, so obsolete snapshots fail locally too, plus the browser smoke tests of `e2e-smoke`) and stays the fallback when Actions is unavailable, with its summary table posted as a PR comment (user, 2026-11-21).
