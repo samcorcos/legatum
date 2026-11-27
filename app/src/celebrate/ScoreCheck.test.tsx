@@ -12,6 +12,7 @@ import { scoreCheckFor } from './scoreCheckCards';
 import { ScoreCheck } from './ScoreCheck';
 import { EraUpTakeover } from './EraUpTakeover';
 import type { PlayerView } from '../types';
+import { useAdvisor } from '../ui/advisorModel';
 import { meetEveryone } from '../test/meetEveryone';
 
 let host: HTMLElement, root: Root, base: PlayerView;
@@ -152,5 +153,34 @@ describe('the takeover', () => {
     expect(t.querySelectorAll('[data-primary-action]')).toHaveLength(1);
     act(() => t.querySelector<HTMLButtonElement>('[data-primary-action]')!.click());
     expect(dismiss).toHaveBeenCalledOnce();
+  });
+});
+
+describe('the advisor on the score check', () => {
+  const show = (view: PlayerView) => {
+    const m = momentsForTurn([{ type: 'AgeBegan', era: 3, first: view.me }], view.me, base, view)[0];
+    act(() => root.render(<ScoreCheck key={Math.random()} moment={m} dismiss={vi.fn()} />));
+    return host.querySelector('[data-testid=score-coach]');
+  };
+  afterEach(() => useAdvisor.setState({ enabled: true, seen: [] }));
+
+  it('says how to win on the first two score checks, then lets the sheet speak', () => {
+    useAdvisor.setState({ enabled: true, seen: ['welcome'] });
+    const view = withScoreCheck(base);
+    const coach = show(view);
+    expect(coach?.textContent).toContain('Each square is 1 victory point (VP). Filled squares are yours.');
+    expect(coach?.textContent).toContain('The gold square is this Age’s new card.');
+    expect(coach?.textContent).toContain('Hold 10 VP for 10 turns to win. If nobody does, the most VP at turn 500 wins.');
+    // The one primary is still Continue; showing the note counts it, however the check is closed.
+    expect(host.querySelectorAll('[data-primary-action]')).toHaveLength(1);
+    expect(useAdvisor.getState().seen).toContain('scoreHelp1');
+    expect(show(view)).not.toBeNull();
+    expect(useAdvisor.getState().seen).toContain('scoreHelp2');
+    expect(show(view)).toBeNull();
+  });
+
+  it('stays off with the advisor off', () => {
+    useAdvisor.setState({ enabled: false, seen: [] });
+    expect(show(withScoreCheck(base))).toBeNull();
   });
 });

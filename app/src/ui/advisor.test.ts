@@ -159,13 +159,17 @@ describe('one decision at a time', () => {
     expect(advisorSuggestion(ctx(orders), ['welcome'], [])).toMatchObject({ steps: [{ instruction: 'Click End turn.' }] });
   });
 
-  it('shows report once after turn one and the VP lesson around turn eight', async () => {
+  it('shows report once after turn one and how to win from turn three', async () => {
     const { view, ctx } = await opening();
     view.turn = 2;
     expect(advisorSuggestion(ctx(), ['welcome'], [])?.id).toBe('report');
-    view.turn = 8;
-    expect(advisorSuggestion(ctx(), ['welcome', 'report'], [])?.id).toBe('race');
-    expect(advisorSuggestion(ctx(), ['welcome', 'report', 'race'], [])?.id).not.toBe('race');
+    expect(advisorSuggestion(ctx(), ['welcome', 'report'], [])?.id).not.toBe('howToWin');
+    view.turn = 3;
+    const win = advisorSuggestion(ctx(), ['welcome', 'report'], []);
+    expect(win).toMatchObject({ id: 'howToWin', acknowledge: true, steps: [{ target: { kind: 'control', name: 'race' } }] });
+    expect(win?.why).toBe('Get 20 victory points (VP) with your team and keep them for 10 turns. If nobody does, the most VP at turn 500 wins.');
+    expect(win?.steps[0].instruction).toContain('Age cards, rival capitals, world wonders and your faction goal');
+    expect(advisorSuggestion(ctx(), ['welcome', 'report', 'howToWin'], [])?.id).not.toBe('howToWin');
   });
 
   it('never invents battle odds', async () => {

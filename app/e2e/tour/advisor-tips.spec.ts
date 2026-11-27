@@ -6,10 +6,10 @@ import { SIZES, shot, type GameWindow } from './helpers';
 import type { PlayerView } from '../../src/types';
 import { setMapSeed } from '../mapSeed';
 
-const KNOWN = { enabled: true, seen: ['welcome', 'report', 'race'], practice: { move: 3, fortify: 3, skip: 3, explore: 3, endTurn: 3, closeResearch: 3 } };
+const KNOWN = { enabled: true, seen: ['welcome', 'report', 'howToWin'], practice: { move: 3, fortify: 3, skip: 3, explore: 3, endTurn: 3, closeResearch: 3 } };
 
-async function start(page: Page) {
-  await page.addInitScript((k) => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify(k)); sessionStorage.setItem('seeded', '1'); } }, KNOWN);
+async function start(page: Page, known = KNOWN) {
+  await page.addInitScript((k) => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('legatum.first-game-hints.v2', JSON.stringify(k)); sessionStorage.setItem('seeded', '1'); } }, known);
   await page.goto('/?client=wasm');
   await page.getByRole('button', { name: /^Single Player/ }).click();
   await setMapSeed(page, '424242');
@@ -118,5 +118,24 @@ for (const size of SIZES) test.describe(`advisor tips ${size.name}`, () => {
     await expect(card.getByRole('button', { name: 'Got it' })).toBeVisible();
     await park(page, size.height);
     await shot(page, size, '08-army-tip');
+  });
+
+  test('how to win: the target, the hold, the last turn and the four ways to score', async ({ page }) => {
+    test.setTimeout(120_000);
+    await start(page, { ...KNOWN, seen: ['welcome', 'report'] });
+    await page.evaluate(() => {
+      const g = (window as unknown as GameWindow).legatum, s = g.getState();
+      g.setState({ views: s.views!.map((x, i) => (i === s.seat ? { ...x, turn: 3 } : x)) });
+      s.select(null);
+    });
+    const card = page.locator('[data-testid="advisor"][data-advisor-id="howToWin"]');
+    await expect(card).toBeVisible();
+    await expect(card).toContainText('Get 10 victory points (VP) and keep them for 10 turns.');
+    await expect(card).toContainText('Age cards, rival capitals, world wonders and your faction goal');
+    await expect(page.getByTestId('advisor-ring')).toBeVisible();
+    await park(page, size.height);
+    await shot(page, size, '09-how-to-win');
+    await card.getByRole('button', { name: 'Got it' }).click();
+    await expect(card).toHaveCount(0);
   });
 });
