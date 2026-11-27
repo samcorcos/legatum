@@ -40,6 +40,15 @@ describe('situational tips', () => {
       current: 0, acknowledge: true, tip: true,
     });
     expect(strategyTip(v, {}, false, null, [], null, {}, events, [])?.steps[1].instruction).toBe('Build a military unit.');
+    const planned = city.detail!.options.find((o) => itemKey(o.item) === itemKey(build))!;
+    planned.resource_blocker = 'Needs Iron';
+    const blocked = strategyTip(v, {}, false, null, [], null, {}, events, plan)!.steps[1];
+    expect(blocked.instruction).toBe('Build a military unit.');
+    expect(blocked.target).not.toEqual({ kind: 'control', name: 'build', value: itemKey(build) });
+    city.detail!.options.filter((o) => o.item.kind === 'Unit').forEach((o) => { o.resource_blocker = 'Needs Iron'; });
+    expect(strategyTip(v, {}, false, null, [], null, {}, events, plan)!.steps[1].target).toBeNull();
+    planned.resource_blocker = null;
+    city.detail!.options.forEach((o) => { o.resource_blocker = null; });
     expect(strategyTip(v, {}, false, null, [], null, {}, [], plan)?.id).not.toBe(`tip:war:${city.id}`);
     const enemy = { ...unit, id: unit.id + 9000, owner: r.id, kind: 'Spearman' as const, pos: v.tiles.map((_, i) => hexAt(i, v.width)).find((pos) => distance(pos, city.pos) === 4)! };
     v.units.push(enemy);
@@ -82,8 +91,10 @@ describe('situational tips', () => {
     v.turn += TIP_COOLDOWN.heal;
     expect(strategyTip(v, { [`heal:${unit.id}`]: 20, '#heal': 1 })?.id).toBe(`tip:heal:${unit.id}`);
     unit.resting_heal = { total: 0, parts: [] };
-    expect(strategyTip(v, {})?.steps[1]).toEqual({ instruction: `Move toward ${mine(v).name} to heal.`, target: { kind: 'tile', hex: mine(v).pos } });
+    expect(strategyTip(v, {})?.steps[1]).toEqual({ instruction: `Right-click ${mine(v).name} to move there.`, target: { kind: 'tile', hex: mine(v).pos } });
     unit.resting_heal = null;
+    expect(strategyTip(v, {})?.steps[1]).toEqual({ instruction: `Right-click ${mine(v).name} to move there.`, target: { kind: 'tile', hex: mine(v).pos } });
+    expect(strategyTip(v, {}, true)?.steps[1]).toEqual({ instruction: `Tap ${mine(v).name}, then tap it again.`, target: { kind: 'tile', hex: mine(v).pos } });
     unit.hp = 40;
     expect(strategyTip(v, {})?.id).not.toBe(`tip:heal:${unit.id}`);
     unit.hp = 39;

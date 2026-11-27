@@ -55,6 +55,9 @@ it('finds real unit action buttons on mounted panels', () => {
   const mounted = render(<div className="unit-panel"><UnitPanel unit={unit} view={view} /></div>);
   expect(control('fortify')?.textContent).toContain('Fortify');
   expect(control('ranged')?.textContent).toContain('Ranged Attack');
+  mounted.rerender(<div className="unit-panel"><UnitPanel unit={{ ...unit, hp: 39, resting_heal: { total: 20, parts: [] } }} view={view} /></div>);
+  const heal = screen.getByRole('button', { name: /^Heal/i });
+  expect(targetElement({ kind: 'control', name: 'heal' })).toBe(heal);
   mounted.rerender(<div className="unit-panel"><UnitPanel unit={{ ...unit, kind: 'Settler', military: false, ranged: 0 }} view={view} /></div>);
   expect(control('found')?.textContent).toContain('Found City');
   expect(control('fortify')?.textContent).toContain('Wait');

@@ -78,8 +78,8 @@ function warTip(v: PlayerView, touch: boolean, selection: { kind: string; id: nu
     && distance(u.pos, city.pos) <= 6).length;
   const item = plan?.flatMap((o) => (o.type === 'SetProduction' || o.type === 'SetProductionQueue') && o.city === city.id
     ? o.type === 'SetProduction' ? [o.item] : o.queue : []).find((i) => i.kind === 'Unit' && UNIT_STATS[i.unit].military);
-  const build = item?.kind === 'Unit' && UNIT_STATS[item.unit].military && city.detail?.options.some((o) => itemKey(o.item) === itemKey(item)) ? item : null;
-  const fallback = city.detail?.options.find((o) => o.item.kind === 'Unit' && UNIT_STATS[o.item.unit].military)?.item;
+  const build = item?.kind === 'Unit' && UNIT_STATS[item.unit].military && city.detail?.options.some((o) => itemKey(o.item) === itemKey(item) && !o.resource_blocker) ? item : null;
+  const fallback = city.detail?.options.find((o) => o.item.kind === 'Unit' && UNIT_STATS[o.item.unit].military && !o.resource_blocker)?.item;
   return { key: `war:${city.id}`, kind: 'war', title: closest ? `Defend ${city.name}` : `${people} declared war`,
     why: `${people} has ${count} military ${count === 1 ? 'unit' : 'units'} near ${city.name}.`,
     current: selection?.kind === 'city' && selection.id === city.id ? 1 : 0,
@@ -95,13 +95,13 @@ function healTip(v: PlayerView, touch: boolean, selection: { kind: string; id: n
   if (!unit) return null;
   const name = itemName({ kind: 'Unit', unit: unit.kind }, v.players.find((p) => p.id === v.me)?.faction);
   const city = nearest(ownCities(v), unit.pos);
-  const canHealHere = unit.resting_heal?.total !== 0;
+  const canHealHere = (unit.resting_heal?.total ?? 0) > 0;
   return { key: `heal:${unit.id}`, kind: 'heal', title: `Pull your ${name} back to heal`,
     why: 'Units heal faster in your territory. A badly hurt unit can die in one attack.',
     current: selection?.kind === 'unit' && selection.id === unit.id ? 1 : 0,
     steps: [{ instruction: `${click(touch)} your ${name}.`, target: tile(unit.pos) },
       { instruction: canHealHere ? city ? `Use Heal, or move toward ${city.name}.` : 'Use Heal or move into your territory.'
-        : city ? `Move toward ${city.name} to heal.` : 'Move into your territory to heal.',
+        : city ? touch ? `Tap ${city.name}, then tap it again.` : `Right-click ${city.name} to move there.` : 'Move into your territory to heal.',
         target: canHealHere ? { kind: 'control', name: 'heal' } : city ? tile(city.pos) : null }] };
 }
 
