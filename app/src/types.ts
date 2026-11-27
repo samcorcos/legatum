@@ -272,7 +272,7 @@ interface IdleBuilding {
 }
 
 export type Automation = 'Explore';
-/** Military and Economy pick builds; Gold, Science and Food run that project (core `CityBuildFocus`). */
+/** Saved legacy focuses remain readable; the Automate control always delegates Economy. */
 export type CityBuildFocus = 'Military' | 'Economy' | 'Gold' | 'Science' | 'Food';
 export type StandingOrder = 'Sleep' | 'Heal' | 'AutoFire';
 export type ExploreStopReason = 'Complete' | 'Threatened' | 'Damaged' | 'Blocked';

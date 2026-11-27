@@ -29,9 +29,10 @@ Input: a branch or PR number. Read the diff (`git diff origin/master...<branch>`
    - Is every new number visible with a breakdown and forecast (pillar 5)? Does the AI get harder only by deciding better (pillar 6)?
    - For a faction: one rule broken, a story-true drawback that pushes further into the style, no flat number tweaks, every tech still gives it something.
    - Does it keep turns the same size (pillar 3) and the race visible (pillar 4)? Does it keep the game competitive to the end without erasing a deserved lead (pillar 11)?
-3. Note missing evidence: a balance or pacing claim with no sim behind it, or an AI change not measured on the hill-climb ladder.
-4. Verdict: **PASS** (fits the intent), **PASS with notes** (fits; list the follow-ups), or **FAIL** (contradicts a settled decision or a pillar; name it and say what would fix it). A design choice the sources don't settle is not a FAIL: list it under "Needs the designer" as a numbered question with your recommendation.
-5. Post one PR comment whose first line is `legatum-design-reviewer: <PASS|FAIL> at <full head sha>`, then the summary. Only when the caller asks you to post; otherwise report back.
+3. **Feature discovery (required on every gameplay review).** For each mechanic or convenience, including optional ones, ask when a normal player would learn that it exists and how to use it. Name a realistic situation, the advisor trigger, and the actionable target/test; a tooltip or a rare Hard AI choice alone is insufficient. Check `docs/design/advisor-discovery.md` and request the advisor reviewer when a trigger, explanation or control needs updating. Include late-game Automate and Auto-explore in this check; learned lessons must stay quiet and urgent decisions take precedence. Record missing coverage as a finding, not as presumed knowledge.
+4. Note missing evidence: a balance or pacing claim with no sim behind it, or an AI change not measured on the hill-climb ladder.
+5. Verdict: **PASS** (fits the intent), **PASS with notes** (fits; list the follow-ups), or **FAIL** (contradicts a settled decision or a pillar; name it and say what would fix it). A design choice the sources don't settle is not a FAIL: list it under "Needs the designer" as a numbered question with your recommendation.
+6. Post one PR comment whose first line is `legatum-design-reviewer: <PASS|FAIL> at <full head sha>`, then the summary. Only when the caller asks you to post; otherwise report back.
 
 ## Mode B: an outside issue or pull request that proposes a design change
 

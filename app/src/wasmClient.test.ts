@@ -72,3 +72,69 @@ it('keeps the live game when replacement construction or loading fails', async (
   client.load('{}');
   expect(freed).toEqual([Number(original)]);
 });
+
+it('routes live-view settlement and reach queries through WasmGame instance methods and caches repeated calls', async () => {
+  const { settlementScores, settlementSite, siteBlocker, unitsCanReach } = await import('./settlement');
+  const playerSettlementSites = vi.fn(() => '[]');
+  const playerSettlementSite = vi.fn(() => JSON.stringify({ pos: { q: 1, r: 1 }, score: 42, quality: 'Good', band: 'Good', border_risk: false, rank: 1, travel_turns: 0, breakdown: [] }));
+  const playerSiteBlockers = vi.fn(() => JSON.stringify([null, null, null, null]));
+  const playerUnitsCanReach = vi.fn(() => '[9]');
+  const staticSites = vi.fn(() => '[]');
+  const staticSite = vi.fn(() => 'null');
+  const staticBlocker = vi.fn(() => 'null');
+
+  class FakeGame {
+    static load() { return new FakeGame(); }
+    static standard_setup() { return '{}'; }
+    static settlement_sites = staticSites;
+    static settlement_site = staticSite;
+    static site_blocker = staticBlocker;
+    view() { return JSON.stringify({ me: 0, width: 2, height: 2, units: [], cities: [], players: [], tiles: [] }); }
+    validate() { return '[]'; }
+    forecast() { return 'null'; }
+    assault() { return 'null'; }
+    player_settlement_sites = playerSettlementSites;
+    player_settlement_site = playerSettlementSite;
+    player_site_blocker = vi.fn(() => 'null');
+    player_site_blockers = playerSiteBlockers;
+    player_units_can_reach = playerUnitsCanReach;
+    end_turn() { return '{}'; }
+    save() { return '{}'; }
+    hash() { return '0'; }
+    turn() { return 1; }
+    archive() { return '{}'; }
+    fork_archive() {}
+  }
+
+  const client = new WasmClient(FakeGame);
+  client.load('{}');
+  const v = client.view(0);
+  const unit = { id: 3, pos: { q: 1, r: 1 } } as never;
+  const enemy = { id: 9, pos: { q: 0, r: 0 } } as never;
+
+  expect(siteBlocker(v, { q: 0, r: 0 })).toBeNull();
+  expect(siteBlocker(v, { q: 1, r: 0 })).toBeNull();
+  expect(playerSiteBlockers).toHaveBeenCalledTimes(1);
+
+  expect(settlementScores(v, unit, [])).toEqual([]);
+  expect(settlementScores(v, unit, [])).toEqual([]);
+  expect(playerSettlementSites).toHaveBeenCalledTimes(1);
+
+  expect(settlementSite(v, unit, { q: 1, r: 1 }, [])?.score).toBe(42);
+  expect(settlementSite(v, unit, { q: 1, r: 1 }, [])?.score).toBe(42);
+  expect(playerSettlementSite).toHaveBeenCalledTimes(1);
+
+  expect([...unitsCanReach(v, [enemy], { q: 1, r: 1 })]).toEqual([9]);
+  expect([...unitsCanReach(v, [enemy], { q: 1, r: 1 })]).toEqual([9]);
+  expect(playerUnitsCanReach).toHaveBeenCalledTimes(1);
+
+  // Client methods also use instance methods for live views and fall back for detached views.
+  client.settlementSites(v, 3, []);
+  client.settlementSite(v, 3, { q: 1, r: 1 }, []);
+  expect(staticSites).not.toHaveBeenCalled();
+  expect(staticSite).not.toHaveBeenCalled();
+
+  client.endTurn({});
+  client.settlementSites(v, 3, []);
+  expect(staticSites).toHaveBeenCalledTimes(1);
+});

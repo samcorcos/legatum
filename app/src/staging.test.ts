@@ -425,3 +425,13 @@ describe('staging credential persistence', () => {
     client.disconnect();
   });
 });
+
+it('waits for the timer setting to be acknowledged and hydrates it for guests', () => {
+  const st = room();
+  st.occupants[0] = { name: st.config.seats[0].name, faction: st.config.seats[0].faction, connected: true, ready: true, is_host: true };
+  const edited = { ...st.config, seed: st.seed!, turn_timer_seconds: 120 };
+  expect(settingsAcknowledged(edited, edited, st)).toBe(false);
+  st.config.turn_timer_seconds = 120;
+  expect(settingsAcknowledged(edited, edited, st)).toBe(true);
+  expect(lobbyFromStaging(st).turnTimerSeconds).toBe(120);
+});
