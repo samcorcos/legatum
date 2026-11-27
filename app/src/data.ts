@@ -488,7 +488,7 @@ export const KESHIG_SHOT_LIMIT = 'A shot never moves it and cannot take a city.'
 const UNIQUE_PIECE: Record<Exclude<Faction, 'Aztecs' | 'Celts'>, UniquePiece> & { Aztecs: null; Celts: null } = {
   Aztecs: null,
   Switzerland: { name: 'Alpine Redoubt', replaces: 'Walls', cost: 120, effect: '+15 city strength, more each era', requires: 'Masonry', rules: [] },
-  India: { name: 'Revenue Office', replaces: 'Market', cost: 60, effect: '+3 Gold; sends you all its Gold', requires: 'Currency', rules: ['Only India can build the Imperial Diwan after every owned city has one.'] },
+  India: { name: 'Revenue Office', replaces: 'Market', cost: 60, effect: '+3 Gold', requires: 'Currency', rules: ['Only India can build the Imperial Diwan after every owned city has one.'] },
   // The Tagmatic Soldier is the Pikeman plus 4 design strength on the era curve, read from the stats so a retuned curve follows (a getter, as the Keshig's).
   get Byzantium(): UniquePiece {
     return { name: 'Tagmatic Soldier', replaces: 'Pikeman', cost: 162, effect: `${unitStatsFor('Byzantium', 'Pikeman').strength} strength, 2 moves`, requires: 'Feudalism', rules: ['Phalangite upgrade costs 84 Gold.'] };

@@ -66,7 +66,7 @@ const PIECES: Partial<Record<Faction, Record<string, PieceSpec>>> = {
     'u:Pikeman': { against: unit('Pikeman'), rules: [{ text: `+${RULES.specialUnitNumbers.reislauferMountedPercent}% of its strength against mounted units, on top of the usual bonus.`, tone: 'good' }] },
   },
   India: {
-    'b:Market': { against: building('Market'), rules: [{ text: 'Outside your capital, it sends all its Gold to your treasury.', tone: 'good' }] },
+    'b:Market': { against: building('Market'), rules: [{ text: 'Its city pays no city upkeep and, outside your capital, sends all its Gold to your treasury.', tone: 'good' }] },
     'u:Knight': { against: unit('Knight'), rules: [{ text: 'No strength penalty charging a city.', tone: 'good' }] },
   },
   Byzantium: {
