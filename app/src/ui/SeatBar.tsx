@@ -293,14 +293,17 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
       {resolvingToEnd ? 'Stop' : 'Resolve to the end'}
     </button>
   );
-  if (phone && phoneDetails) return <div className="phone-turn-details">{details}{observerControl}</div>;
+  const countdown = remote && !view.finished && net?.turnSecondsLeft != null && <div className="turn-countdown" role="timer">
+    {disconnected ? 'Timer unavailable · reconnecting' : `Turn ends in ${Math.floor(net.turnSecondsLeft / 60)}:${String(net.turnSecondsLeft % 60).padStart(2, '0')}`}
+  </div>;
+  if (phone && phoneDetails) return <div className="phone-turn-details">{countdown}{details}{observerControl}</div>;
   // Pillar 9: one primary on screen. A selected unit or city of ours shows its own primary action
   // in the sheet above, and the open diplomacy inbox has its Accept, so the turn row steps back
   // until the selection or the inbox is closed.
   const stepBack = returnOwned || diplomacyOpen || (!!selection && (selection.kind === 'unit' ? view.units : selection.kind === 'air' ? view.aircraft ?? [] : view.cities)
     .some((x) => x.id === selection.id && x.owner === view.me));
   if (phone) return <div className="phone-turn-dock" data-overlay-slot="turn-dock" data-pending-decisions={decisions.length}>
-    <button className="btn" onClick={onOpenDetails} aria-controls="phone-sheet-content">This Turn</button>
+    <button className="btn" onClick={onOpenDetails} aria-controls="phone-sheet-content" aria-label="This Turn">{remote && !view.finished && net?.turnSecondsLeft != null ? <span role="timer">Turn · {disconnected ? "—" : `${Math.floor(net.turnSecondsLeft / 60)}:${String(net.turnSecondsLeft % 60).padStart(2, "0")}`}</span> : "This Turn"}</button>
     {/* While a decision is pending, Next names it, is the primary call to action, and goes where its
         label says (the CTA's decision, as on desktop), not to whatever follows the selection. */}
     <button className={`btn${cta.kind === 'todo' && !stepBack ? ' primary' : ''}`} onClick={() => (cta.kind === 'todo' ? cta.onClick() : nextDecision())} aria-label={`Next decision: ${cta.label}`}
@@ -328,6 +331,7 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
         {empiresBelow > 0 && <button type="button" className="sidebar-more" data-testid="sidebar-more" onClick={() => sidebarScroll.current?.scrollBy({ top: sidebarScroll.current.clientHeight * 0.8, behavior: 'smooth' })}>+{empiresBelow} more {empiresBelow === 1 ? 'empire' : 'empires'}</button>}
       </div>
       <EndTurnConfirmation onConfirm={confirmEndTurn} />
+      {countdown}
       <button className={`cta ${cta.kind}${next?.kind === 'diplomacy' && view.diplomacy?.calls?.some((c) => c.id === next.id) ? ' cta-call' : ''}${stepped ? ' stepped' : ''}${cta.label === 'Choose production' ? ` cta-production${automationNeedsChoice ? ' cta-long' : ''}` : cta.sub.length > 32 || next?.kind === 'siege' ? ' cta-long' : ''}`} onClick={cta.onClick} disabled={!!busy || (view.finished && cta.kind !== 'todo') || disconnected || cta.disabled}>
         <span className="cta-label">{cta.label}</span>
         <span className="cta-sub">

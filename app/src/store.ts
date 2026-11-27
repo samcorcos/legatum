@@ -90,6 +90,7 @@ export interface NetState {
   /** Set once this browser has joined a seat. */
   mySeat: Seat | null;
   seats: SeatStatus[];
+  turnSecondsLeft?: number | null;
   conn: ConnState;
   /** The last join was refused; only an explicit loopback action may replace its token. */
   credentialRejected?: boolean;
@@ -1037,11 +1038,11 @@ export const useGame = create<State>((set, get) => {
         if (conn === 'open') readyObserver();
       },
       // In online play this browser has exactly one local seat (index 0).
-      seats: (seats) => {
+      seats: (seats, secondsLeft) => {
         if (!live()) return;
         const me = seats.find((x) => x.seat === rc.seat);
         if (me && active()) set({ ready: [me.ready] });
-        setNet({ seats });
+        setNet({ seats, turnSecondsLeft: secondsLeft ?? null });
         queueMicrotask(readyObserver);
       },
       // A teammate's ping: only this turn's, only from someone on this team.
