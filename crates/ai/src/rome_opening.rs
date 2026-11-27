@@ -3,7 +3,7 @@ use crate::analysis::city_power;
 use crate::plan::{Plan, PlanKind};
 use crate::scripted::Planner;
 use legatum_core::view::CityView;
-use legatum_core::{AiDifficulty, Faction, Hex, ProductionItem, UnitClass, data};
+use legatum_core::{AiDifficulty, Faction, Hex, ProductionItem, UnitClass, UnitKind, data};
 
 impl Planner<'_> {
     /// Rome, or Sparta with gene `sparta_rome_opening`: the seat plays the committed
@@ -43,6 +43,26 @@ impl Planner<'_> {
 
     pub(crate) fn rome_opening_ready(&self, city: &CityView) -> bool {
         let melee = self.rome_opening_melee();
+        if self.faction == Faction::Sparta
+            && self.decisions.sparta_scout_declare > 0
+            && city.visible
+            && !city.walls
+            && self
+                .view()
+                .units
+                .iter()
+                .filter(|u| u.owner == city.owner && u.military && u.pos == city.pos)
+                .count()
+                == 1
+            && melee.iter().any(|u| u.pos.distance(city.pos) == 1)
+            && self
+                .ctx
+                .own_units
+                .iter()
+                .any(|u| u.kind == UnitKind::Scout && u.hp > 0 && u.pos.distance(city.pos) == 1)
+        {
+            return true;
+        }
         // Gene `sparta_opening_ready`: Sparta's veteran Hoplites may strike with fewer.
         // They declare from four hexes: a Hoplite pair one march out still strikes first.
         let (need, reach) = match self.decisions.sparta_opening_ready {
@@ -58,7 +78,7 @@ impl Planner<'_> {
     }
 
     /// Gene `sparta_opening_search`: Sparta's opening has no victim in sight yet.
-    fn sparta_opening_seeking(&self) -> bool {
+    pub(crate) fn sparta_opening_seeking(&self) -> bool {
         self.faction == Faction::Sparta
             && self.conquest_opening_faction()
             && self.difficulty == AiDifficulty::Hard
@@ -216,6 +236,8 @@ impl Planner<'_> {
             return;
         };
         let radius = self.decisions.sparta_opening_search;
+        let centre = Hex::from_offset(self.view().width / 2, self.view().height / 2);
+        let direct = home.distance(centre);
         let land: Vec<Hex> = self
             .ctx
             .frontier
@@ -254,7 +276,13 @@ impl Planner<'_> {
                         && self.free_tile_for(u, *h)
                         && self.ctx.reachable(u.pos, *h)
                 })
-                .min_by_key(|h| (u.pos.distance(*h) + h.distance(home), *h));
+                .min_by_key(|h| {
+                    let cost = u.pos.distance(*h) + h.distance(home);
+                    let toward_centre = self.decisions.sparta_center_search > 0
+                        && h.distance(home) + h.distance(centre) <= direct + 4
+                        && h.distance(centre) < direct;
+                    (cost - if toward_centre { 12 } else { 0 }, *h)
+                });
             if let Some(goal) = goal {
                 taken.push(goal);
                 self.go_to(u, goal);
@@ -350,7 +378,7 @@ mod tests {
     use crate::Knobs;
     use crate::fixture::{ENEMY, ME, ViewBuilder, off};
     use legatum_core::diplomacy::{DiplomaticAction, Relation, RelationState};
-    use legatum_core::{CityId, Order, PlayerView, TeamId, UnitKind};
+    use legatum_core::{CityId, Order, PlayerId, PlayerView, TeamId, UnitId, UnitKind};
 
     fn opening_view() -> PlayerView {
         let mut view = ViewBuilder::new(28, 18)
@@ -474,6 +502,98 @@ mod tests {
         assert!(!planner.rome_opening_ready(planner.rome_opening_city().unwrap()));
         planner.decisions.sparta_opening_ready = 2;
         assert!(planner.rome_opening_ready(planner.rome_opening_city().unwrap()));
+    }
+
+    #[test]
+    fn sparta_scout_declaration_needs_one_visible_garrison_and_two_adjacent_units() {
+        let mut view = opening_view();
+        view.units.retain(|u| u.id.0 <= 2);
+        view.units[0].pos = off(9, 8);
+        view.units[1].kind = UnitKind::Scout;
+        view.units[1].pos = off(9, 9);
+        let mut guard = view.units[0].clone();
+        guard.id = UnitId(4);
+        guard.owner = ENEMY;
+        guard.pos = off(10, 8);
+        view.units.push(guard);
+        let mut planner = Planner::new(
+            &view,
+            Knobs::for_faction(Faction::Sparta),
+            Faction::Sparta,
+            1,
+        );
+        planner.difficulty = AiDifficulty::Hard;
+        planner.decisions.sparta_rome_opening = 1;
+        planner.decisions.sparta_scout_declare = 1;
+        planner.choose_rome_opening();
+        assert!(planner.rome_opening_ready(planner.rome_opening_city().unwrap()));
+        planner.decisions.sparta_scout_declare = 0;
+        assert!(!planner.rome_opening_ready(planner.rome_opening_city().unwrap()));
+    }
+
+    #[test]
+    fn sparta_chains_to_a_capital_after_its_victim_is_gone() {
+        let mut view = opening_view();
+        view.turn = 45;
+        view.cities
+            .iter_mut()
+            .find(|c| c.id == CityId(2))
+            .unwrap()
+            .is_capital = true;
+        let mut planner = Planner::new(
+            &view,
+            Knobs::for_faction(Faction::Sparta),
+            Faction::Sparta,
+            1,
+        );
+        planner.difficulty = AiDifficulty::Hard;
+        planner.decisions.sparta_rome_opening = 1;
+        planner.decisions.sparta_chain_opening = 1;
+        planner.campaigns.rome_victim = Some(PlayerId(99));
+        planner.choose_rome_opening();
+        assert_eq!(planner.campaigns.rome_opening_target, Some(CityId(2)));
+        planner.decisions.sparta_chain_opening = 0;
+        assert!(!planner.rome_opening_active());
+    }
+
+    #[test]
+    fn sparta_does_not_chain_after_peace_with_a_living_victim() {
+        let mut view = opening_view();
+        view.turn = 45;
+        view.diplomacy.relations[0].state = RelationState::Peace;
+        let mut planner = Planner::new(
+            &view,
+            Knobs::for_faction(Faction::Sparta),
+            Faction::Sparta,
+            1,
+        );
+        planner.difficulty = AiDifficulty::Hard;
+        planner.decisions.sparta_rome_opening = 1;
+        planner.decisions.sparta_chain_opening = 1;
+        planner.campaigns.rome_victim = Some(ENEMY);
+        planner.campaigns.rome_walled_peace_window = true;
+        planner.choose_rome_opening();
+        assert_eq!(planner.campaigns.rome_opening_target, None);
+    }
+
+    #[test]
+    fn sparta_living_victim_can_keep_the_opening_through_turn_sixty() {
+        let mut view = opening_view();
+        view.turn = 55;
+        let mut planner = Planner::new(
+            &view,
+            Knobs::for_faction(Faction::Sparta),
+            Faction::Sparta,
+            1,
+        );
+        planner.difficulty = AiDifficulty::Hard;
+        planner.decisions.sparta_rome_opening = 1;
+        planner.campaigns.rome_victim = Some(ENEMY);
+        planner.decisions.sparta_finish_60 = 1;
+        assert_eq!(planner.rome_victim(), Some(ENEMY));
+        assert_eq!(planner.rome_opening_last_turn(), 60);
+        planner.decisions.sparta_finish_60 = 0;
+        assert_eq!(planner.rome_victim(), None);
     }
 
     #[test]

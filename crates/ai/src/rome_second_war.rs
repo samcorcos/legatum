@@ -21,6 +21,9 @@ impl Planner<'_> {
             && self.difficulty == AiDifficulty::Hard
             && self.decisions.rome_second_war > 0
             && self.view().turn <= LAST_TURN
+            && !(self.faction == Faction::Sparta
+                && self.decisions.sparta_finish_60 > 0
+                && self.rome_opening_active())
             && (self.view().turn >= FIRST_TURN
                 || (self.faction == Faction::Sparta
                     && self.decisions.sparta_second_war_from > 0
