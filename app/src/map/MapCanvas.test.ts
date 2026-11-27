@@ -605,7 +605,7 @@ it('keeps the settlement card route over friendly units and gives mouse-specific
 it('fetches a breakdown only for an inspected site, caches it across hover movement, and keeps hover compact', () => {
   vi.useFakeTimers();
   const { view: v, settler } = settlerAtLegalSite();
-  const site = { ...settlementSite(v, settler, settler.pos, [])!, score: 100, breakdown: [{ label: 'Food', value: 120 }, { label: 'Travel', value: -20 }, { label: 'No effect', value: 0 }] };
+  const site = { ...settlementSite({ ...v }, settler, settler.pos, [])!, score: 100, breakdown: [{ label: 'Food', value: 120 }, { label: 'Travel', value: -20 }, { label: 'No effect', value: 0 }] };
   const detail = vi.spyOn(Game, 'settlement_site').mockReturnValue(JSON.stringify(site));
   act(() => useGame.setState({ selection: { kind: 'unit', id: settler.id } }));
   expect(detail).not.toHaveBeenCalled();

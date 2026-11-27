@@ -9,6 +9,20 @@ How multiple independent coding agents (Claude, ChatGPT/Codex, Gemini) work on `
 - **Draft PR = claim lock.** Claiming work creates a visible Draft PR immediately so every other agent sees what is in flight via `gh pr list`.
 - **Two-key peer merge (`reviewer != author`).** No agent merges its own PR. When Agent A finishes a PR and CI is green, it marks the PR `needs-review` + `author:<A>`. A **different model family** (`B != A`) performs an adversarial code + philosophy/anti-bloat review and merges the PR on GitHub if it passes all gates and is outside the human-only fence.
 
+### Visible attribution (all agents)
+
+GitHub's authenticated account is not the model identity: agents may share the maintainer's credentials. Every agent-authored issue or PR body and every substantive comment must visibly name its author, for example `Written by ChatGPT (OpenAI; agent: chatgpt)`, `Written by Gemini (Google; agent: gemini)`, or `Written by Claude (Anthropic; agent: claude)`. Existing signed peer-review headers satisfy this when they identify the reviewer; distinguish authorship from review and preserve earlier contributors' attribution. Include an exact model version only when the session actually exposes it; never infer it from the account or another agent's post. Keep `author:<agent>` labels as well.
+
+Add the appropriate Git commit trailer to commits containing that agent's work, including the final squash message:
+
+```text
+Co-authored-by: ChatGPT (OpenAI) <noreply@openai.com>
+Co-authored-by: Gemini (Google) <noreply@google.com>
+Co-authored-by: Claude (Anthropic) <noreply@anthropic.com>
+```
+
+Use only the lines for agents that actually contributed; never copy all three by default or claim another model reviewed work it did not review. These are project attribution conventions, not proof of an authenticated provider account or a guaranteed linked GitHub profile. Native tooling may add equivalent attribution automatically; check the result and add missing attribution explicitly through the GitHub body/comment and Git commit message. Do not rewrite published history solely to add attribution.
+
 ## First-time onboarding (when told to follow these instructions)
 
 If the maintainer says something like *"read the multi-agent instructions and follow them"*, execute these steps immediately without waiting to be asked:
@@ -95,8 +109,16 @@ Split parallel work across disjoint lanes whenever possible:
 | `changes-requested` | Peer reviewer found blocking issues; author should address them (max 2 rounds). |
 | `status:handoff` | WIP pushed to a branch with a Handoff Comment; ready for another agent to continue. |
 | `mode:bakeoff` | Multiple agents solve the same issue on separate Draft PRs from the same base commit for comparison. |
-| `needs-human` | Requires the maintainer (human-only governance/security fence, unsettled design question, outside PR, or 2+ failed review rounds). |
+| `needs-human` | Requires the maintainer (human-only governance/security fence, unsettled design question, outside PR, or 2+ failed review rounds). Direct notification is mandatory; see below. |
 | `lane:core` / `lane:ai` / `lane:ui` / `lane:docs` | Primary area touched (determines collision risk). |
+
+### Human escalation: notify the maintainer directly
+
+Whenever work needs human input or action, including every `needs-human` escalation, **assign the relevant issue or PR to `samcorcos`, or post a comment that directly mentions `@samcorcos`**. A label or an agent-chat status alone is not a handoff. Make the notification on GitHub so the maintainer can find the request in assigned work or notifications.
+
+The issue body or comment must state the concrete blocker, the decision or action needed, and the agent's recommendation where useful. For a human-only PR, say what requires human review and whether checks are complete. Finish all work that can proceed independently before handing over a reviewable result.
+
+Notify once when escalating. On later heartbeats, check the existing assignment/comments and do not repeat the same mention for an unchanged blocker. Notify again only when the requested action materially changes. If assignment fails, use the direct mention; if neither succeeds, report that GitHub notification failed rather than claiming the handoff is complete. This notification rule does not waive any merge guardrail.
 
 ## Two-key peer review & peer merge (the 5 guardrails)
 
@@ -107,7 +129,7 @@ Because Claude, ChatGPT, and Gemini may authenticate via the same GitHub user, e
 - Before claiming a review (`needs-review` -> add `reviewing:<self>`), verify **`my_agent != author_agent`**. Never review or merge your own model family's PR.
 
 ### 2. Human-only fence (never peer-merged by agents)
-Do **not** merge autonomously — review if helpful, then label `needs-human` and stop — if a PR matches **any** of these:
+Do **not** merge autonomously — review if helpful, then label `needs-human`, notify the maintainer directly as above, and stop — if a PR matches **any** of these:
 - **Outside / fork PR:** `headRepositoryOwner != samcorcos` or branch is not an agent branch (`claude/*`, `chatgpt/*`, `gemini/*`).
 - **Governance or security paths:** touches `.github/workflows/`, `tools/gates/`, `infra/`, `SECURITY.md`, `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, or `docs/ops/multi-agent.md`.
 - **Unsettled design / new mechanic** that requires reading the private Design Doc and has no Claude `legatum-design-reviewer` verdict or maintainer sign-off.
@@ -146,8 +168,9 @@ Before merging:
 
 ### 5. Max 2 review rounds (no infinite ping-pong)
 - If blocking issues are found: swap `needs-review` + `reviewing:<self>` -> `changes-requested` and list concrete blockers.
+- Keep `author:<agent>` on the PR. Address the author by canonical agent ID in the review and give an actionable revision checklist; that author's next heartbeat picks up its own `changes-requested` PR under priority 2. There is no assumed GitHub bot account to @mention for a model. Use `status:handoff` instead when transferring unfinished implementation to a different agent, with the Handoff Comment below. Neither label bypasses a human-only merge fence.
 - When the author fixes them and CI is green on the new head SHA, the author swaps `changes-requested` -> `needs-review`.
-- If a PR still fails peer review after **2 rounds**, stop iterating, swap to `needs-human`, and summarize the disagreement concisely for the maintainer.
+- If a PR still fails peer review after **2 rounds**, stop iterating, swap to `needs-human`, and summarize the disagreement with a direct maintainer notification as above.
 
 ## Other work modes
 
