@@ -61,10 +61,11 @@ it('an empire at Peace: offers lead under one Gold field whose forecast names th
   expect(container.querySelector('[data-testid=deal-forecast]')!.textContent).toBe('You pay 40 Gold when they accept. You have 120 Gold.');
   act(() => button('Offer Open Borders')!.click());
   expect(orders()).toEqual([{ type: 'ProposeTreaty', to: 1, kind: 'OpenBorders', gold: 40 }]);
-  // Queued: the button stays pressed, and the sentence-plus-Undo line gifts use says what is queued.
-  expect(button('Offer Open Borders')!.getAttribute('aria-pressed')).toBe('true');
-  expect(container.querySelector('[data-testid=diplomacy-queued]')!.textContent).toBe('Queued: Offer Open Borders. You pay 40 Gold if they accept. Undo');
-  // Undo removes the queued offer whatever Gold it carries.
+  // Queued: the button gives way to a "ready" line with its own Cancel, so a second click can't
+  // silently take the offer back.
+  expect(button('Offer Open Borders')).toBeFalsy();
+  expect(container.querySelector('[data-testid=diplomacy-queued]')!.textContent!.trim()).toBe('Offer ready: it is sent when you end the turn. You pay 40 Gold if they accept. Cancel');
+  // Cancel removes the queued offer whatever Gold it carries.
   act(() => (container.querySelector('[data-testid=diplomacy-queued] button') as HTMLButtonElement).click());
   expect(orders()).toEqual([]);
   // Friendly actions first, then Give Gold, then Declare War last.
@@ -83,7 +84,7 @@ it('asking for Gold queues a negative amount, and paying more than you have is r
   expect(button('Offer Alliance')!.querySelector('[data-gain-chip]')!.textContent).toContain('+50');
   act(() => button('Offer Alliance')!.click());
   expect(orders()).toEqual([{ type: 'ProposeTreaty', to: 1, kind: 'Alliance', gold: -50 }]);
-  act(() => button('Offer Alliance')!.click());
+  act(() => (container.querySelector('[data-testid=diplomacy-queued] button') as HTMLButtonElement).click());
   act(() => button('You pay')!.click());
   expect(container.querySelector('[data-testid=deal-forecast]')!.getAttribute('role')).toBe('alert');
   expect(text()).toContain('You have 30 Gold, so offer at most 30.');

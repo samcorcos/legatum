@@ -169,13 +169,13 @@ for (const [width, height] of [[1000, 600], [1440, 900]] as const) {
       await open(page, query);
       await mkdir(shots!, { recursive: true });
       const lens = async (name: string) => {
-        const overlay = ['Yields', 'Resources'].includes(name);
+        const overlay = name === 'Yields';
         await lensRadio(page, overlay ? 'Default' : name).click();
-        for (const o of ['Yields', 'Resources']) await setOverlay(page, o, o === name);
+        for (const o of ['Yields']) await setOverlay(page, o, o === name);
         await page.mouse.move(60, (page.viewportSize()?.height ?? 900) - 107);
         await page.waitForTimeout(1500);
       };
-      for (const name of ['Default', 'Settle', 'Resources', 'Yields']) {
+      for (const name of ['Default', 'Settle', 'Yields']) {
         await frame(page, sc.deep, 0.9, name === 'Settle' ? sc.settler.id : undefined);
         await lens(name);
         await page.screenshot({ path: `${shots}/lens-${prefix}-${name.toLowerCase()}-${width}x${height}.png`, animations: 'disabled' });

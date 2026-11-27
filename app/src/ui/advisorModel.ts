@@ -1,7 +1,7 @@
 /** The advisor explains one decision from a Hard plan made from this seat's own view. */
 import { create } from 'zustand';
 import { advisorOrders } from '../automation';
-import { buildingStatsFor, itemKey, itemName, TECH_NAME, wallsRepairing, wallsUpgradeName } from '../data';
+import { buildingStatsFor, effectiveTurnLimit, itemKey, itemName, TECH_NAME, wallsRepairing, wallsUpgradeName } from '../data';
 import { WALLS_HP_PER_LEVEL } from '../combat';
 import { isThreat } from '../diplomacy';
 import { distance, hexEq } from '../hex';
@@ -181,12 +181,22 @@ function unitSuggestion(ctx: AdvisorContext, unit: UnitView, order?: Order): Sug
   return action ? { ...base, title: action.title, steps: [first, { instruction: action.instruction, key: ctx.touch ? undefined : action.key, target: action.target }] } : null;
 }
 
+/** The early lesson on winning: the target, the hold, the last turn and the four ways to score. */
+export function howToWin(v: PlayerView): Suggestion {
+  const mine = v.standings.find((s) => s.team === v.team);
+  const target = mine?.target ?? 10, team = (mine?.members.length ?? 1) > 1 ? ' with your team' : '';
+  return { id: 'howToWin', title: 'How to win', current: 0, acknowledge: true,
+    why: `Get ${target} victory points (VP)${team} and keep them for ${HOLD_TURNS} turns. If nobody does by turn ${effectiveTurnLimit(v.turn_limit)}, the most VP then wins.`,
+    steps: [{ instruction: 'Score VP with Age cards, rival capitals, world wonders and your faction goal. The Victory race shows the score.', target: control('race') }] };
+}
+
 export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], skipped: readonly string[], practice: Practice = {}, tips: TipLog = {}): Suggestion | null {
   const v = ctx.view;
   if (v.finished || v.players.find((p) => p.id === v.me)?.alive === false) return null;
   if (v.turn === 1 && !seen.includes('welcome')) return { id: 'welcome', title: 'Your advisor will guide you', why: "I'll suggest what to do each turn and show you where to click.", steps: [], current: 0, acknowledge: true };
   if (v.turn > 1 && seen.includes('welcome') && !seen.includes('report')) return { id: 'report', title: 'Read the Turn report', why: 'The Turn report lists battles, discoveries and failed orders.', steps: [{ instruction: 'Press L to open it.', key: ctx.touch ? undefined : 'L', target: null }], current: 0, acknowledge: true };
-  if (v.turn >= 8 && !seen.includes('race')) return { id: 'race', title: 'Win the victory race', why: `Reach your team’s VP target and hold it for ${HOLD_TURNS} turns to win.`, steps: [{ instruction: 'Look at the Victory race.', target: control('race') }], current: 0, acknowledge: true };
+  // How to win, early: before the first score check, so a new player knows what VP are for.
+  if (v.turn >= 3 && seen.includes('report') && !seen.includes('howToWin')) return howToWin(v);
   const plan = ctx.plan === undefined ? advisorOrders(v) : ctx.plan;
   const orders = validOrders(ctx);
   const decisions = pendingDecisions(v, orders, ctx.errors ?? [], ctx.local);

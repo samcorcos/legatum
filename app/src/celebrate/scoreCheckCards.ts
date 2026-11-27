@@ -3,7 +3,7 @@
 // filled for what you have and empty for what is still open, with one line on how to win the next one.
 // Public facts and your own view only. Everything here reads the view; nothing here is a rule.
 import type { BuildingKind, Faction, PlayerId, PlayerView } from '../types';
-import { BUILDING_NAME, BUILDING_STATS, ERA_COUNT, FACTION_GOAL, GREAT_WORK_ICON, GREAT_WORKS, TECH_NAME, buildingIconName, eraName, factionGoalVp, isGreatWork } from '../data';
+import { BUILDING_NAME, BUILDING_STATS, ERA_COUNT, FACTION_GOAL, GREAT_WORK_ICON, GREAT_WORKS, TECH_NAME, buildingIconName, effectiveTurnLimit, eraName, factionGoalVp, isGreatWork } from '../data';
 import { UNMET_NAME, buildVpModel } from '../vpModel';
 import { cardNameAndAsk } from '../ageCards';
 import { eraObjectivesFor } from '../eraObjectives';
@@ -47,6 +47,8 @@ export interface ScoreCheckCard {
   /** "You reached the Renaissance era first." */
   opener: string;
   target: number;
+  /** The last turn: the most VP then wins. */
+  turnLimit: number;
   /** Spaces 0..target; a team past its target stands on the last space. */
   track: TrackSpace[];
   /** "You: 3 VP, tied 2nd with Celts and Switzerland." */
@@ -102,7 +104,7 @@ export function scoreCheckFor(view: PlayerView, era: number, first: PlayerId): S
     : null;
 
   const opener = first === view.me ? `You reached the ${name} era first.` : `${cap(metName(view, first))} reached the ${name} era first.`;
-  return { era, name, numeral: roman(era), turn: view.turn, opener, target, track, standing, leader, hold, lines: sheetLines(view, era) };
+  return { era, name, numeral: roman(era), turn: view.turn, opener, target, turnLimit: effectiveTurnLimit(view.turn_limit), track, standing, leader, hold, lines: sheetLines(view, era) };
 }
 
 function sheetLines(view: PlayerView, era: number): SheetLine[] {

@@ -17,6 +17,7 @@ import { GOAL_CITY_ICON, goalCities, goalSealFor, isColoniaFounder, tombChip, to
 import type { PathStep } from '../path';
 import { tintedIcon } from '../icons';
 import type { LookId } from '../brand/look';
+import { SELECT_HALO, SELECT_INK, selectionBreath, selectionBurst } from './selectionMark';
 import { MAP_STYLES, mapBorderColor, mapPlayerColor, type MapStyle } from './style';
 import { TerrainCache, TOWN_OVAL } from './terrain';
 import { getBorderVariant } from './borderVariant';
@@ -38,8 +39,8 @@ import { mapFeatureImage, RUIN_MASS } from './mapFeatures';
 import { BARBARIAN, isBarbarian } from '../barbarians';
 import type { Rect } from './compass';
 import type { LensTile, MapLens } from './lenses';
-import { drawLens, drawOwnerOverlay } from './drawLens';
-import { artFadeFor, DEFAULT_OVERLAYS, ownerWashScale, type OverlaySet } from './overlays';
+import { drawLens } from './drawLens';
+import { artFadeFor, DEFAULT_OVERLAYS, type OverlaySet } from './overlays';
 import { drawYieldIcons, foldedBonuses, yieldClusterRects, YIELD_FILL } from './yieldIcons';
 import { drawImprovements } from './improvementArt';
 import { drawResourceIcons, medallionTop, resourceDetail, STACK_LIFT, type Cover } from './resourceIcons';
@@ -103,14 +104,15 @@ export interface RenderInput {
   time: number;
   /** The clock the selection pulse reads, when it must run ahead of `time` (a pulse-only frame freezes `time` so the rest of the map does not move). */
   pulseTime?: number;
+  /** Milliseconds since the selection changed, while its burst plays (null with motion off or once it is over). */
+  selectBurstMs?: number | null;
   hover: Hex | null;
   lens?: MapLens;
   lensTiles?: LensTile[];
-  /** The stackable overlays (Yields, Resources, Borders) on top of whichever lens is showing. */
+  /** Yields can stack over either lens. */
   overlays?: OverlaySet;
-  /** Their tiles: yield clusters, and owned land for the Borders overlay. */
+  /** Yield clusters. */
   yieldTiles?: LensTile[];
-  borderTiles?: LensTile[];
   /** Screen rects of panels over the map: lens badges move clear of them. */
   lensAvoid?: readonly Rect[];
   /** Battle result cues (damage, losses) over hexes, already faded for this frame. */
@@ -357,8 +359,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   if (moments && momentView) drawMomentGround(ctx, moments.plan, moments.t, momentView);
   if (idleView) idleLive += drawChimneySmoke(ctx, view, idleT, idleView, moments ? (tile) => moments.hold.towns.has(tile) : undefined);
   if (inp.lensTiles?.length) drawLens(ctx, inp.lensTiles, cam, w, h, view.width, dpr, look);
-  // Overlays draw over the lens tint, so a lens never hides them: owned land first, then the yield icons on top of both.
-  if (inp.borderTiles?.length) drawOwnerOverlay(ctx, inp.borderTiles, cam, w, h, view.width, dpr, look, 'tint', ownerWashScale(inp.lens));
+  // Yield icons draw over the Settle tint, so the lens does not hide them.
   // Tile yields sit under every unit and banner: quiet enough to leave on.
   // A neighbour's medallion, yield cluster or wonder badge never sits on a town (or its walls): they keep clear of its footprint.
   const townCovers = cityArtCovers(view, toScreen, z, hexPx);
@@ -378,7 +379,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   const iconView = moments?.hold.resources.size
     ? { ...view, tiles: view.tiles.map((tile, i) => moments.hold.resources.has(i) ? { ...tile, resource: null } : tile) }
     : view;
-  drawResourceIcons(ctx, iconView, cam, w, h, dpr, look, bannerCovers, overlays.resources, townCovers);
+  drawResourceIcons(ctx, iconView, cam, w, h, dpr, look, bannerCovers, townCovers);
   // A natural wonder's bonus, on its tile: above the lens tint and yield icons, under units and banners (folded or as its pill).
   const wonderPillsOverUnits = drawWonderBadges(ctx, view, cam, w, h, dpr, overlays.yields, [...bannerCovers, ...townCovers], tokenCovers, folded);
 
@@ -399,7 +400,7 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   const ownSel = selUnit && selUnit.owner === view.me ? selUnit : null;
 
   // Movement reach: a wash plus an edge.
-  if ((!inp.lens || inp.lens === 'default' || inp.lens === 'movement') && ownSel && !inp.rangedTiles && ownSel.max_moves > 0 && !inp.unitPos.size) {
+  if ((!inp.lens || inp.lens === 'default') && ownSel && !inp.rangedTiles && ownSel.max_moves > 0 && !inp.unitPos.size) {
     const reach = reachOf(view, ownSel);
     if (reach.size) {
       ctx.beginPath();
@@ -770,9 +771,10 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
   }
 
   // Selection mark under the token (unit or hangar aircraft), else city.
-  const pulse = 0.75 + 0.25 * Math.sin((inp.pulseTime ?? inp.time) / 300);
+  const pulse = selectionBreath(inp.pulseTime ?? inp.time, !inp.pulseTime);
+  const burst = inp.selectBurstMs != null ? selectionBurst(inp.selectBurstMs) : null;
   let ring: SelectionRing | null = null;
-  const ringAt = (x: number, y: number): void => { ring = { x, y, r: selectionRadius(hexPx) + 3.5 + 1.6 }; };
+  const ringAt = (x: number, y: number): void => { ring = { x, y, r: selectionReach(hexPx, inp.selectBurstMs != null) }; };
   // Zoomed in, a token behind a city banner is raised (bannerLift): its selection mark goes with it.
   const liftCovers = banners.filter((b) => !b.far).map((b) => b.cover);
   const cityHexes = new Set(view.cities.map((c) => `${c.pos.q},${c.pos.r}`));
@@ -781,15 +783,15 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     const wp = inp.unitPos.get(selUnit.id) ?? hxCenter(selUnit.pos);
     const p = worldToScreen(cam, w, h, wp.x, wp.y);
     if (!isFar(hexPx)) p.y -= liftOf(selUnit, p.x, p.y);
-    drawSelection(ctx, look, S, p.x, p.y, hexPx, pulse);
+    drawSelection(ctx, p.x, p.y, hexPx, pulse, burst);
     ringAt(p.x, p.y);
   } else if (inp.selectedAir != null && !inp.fx?.plan.shots.some((s) => s.shooter === inp.selectedAir && aircraftPassProgress(s, inp.fx!.t) != null)) {
     const plane = view.aircraft?.find((a) => a.id === inp.selectedAir);
     const home = plane && view.cities.find((c) => c.id === plane.city);
-    if (home) { const p = S2(home.pos); drawSelection(ctx, look, S, p.x, p.y, hexPx, pulse); ringAt(p.x, p.y); }
+    if (home) { const p = S2(home.pos); drawSelection(ctx, p.x, p.y, hexPx, pulse, burst); ringAt(p.x, p.y); }
   } else if (selCity) {
     const p = S2(selCity.pos);
-    drawSelection(ctx, look, S, p.x, p.y, hexPx, pulse);
+    drawSelection(ctx, p.x, p.y, hexPx, pulse, burst);
     ringAt(p.x, p.y);
   }
 
@@ -1037,11 +1039,6 @@ export function draw(ctx: CanvasRenderingContext2D, inp: RenderInput): { pending
     ctx.restore();
   }
 
-  if (inp.borderTiles?.length) {
-    // Owner numbers keep off tiles that hold a token or a city (they carry their own) or a resource medallion (its ring is there). The square badge is not a unit's round owner roundel.
-    const busy = new Set([...unitBottoms.keys(), ...view.cities.map((c) => tileIndex(c.pos, W, H)), ...view.tiles.flatMap((t, i) => t.resource && t.explored ? [i] : [])]);
-    drawOwnerOverlay(ctx, inp.borderTiles, cam, w, h, W, dpr, look, 'labels', ownerWashScale(inp.lens), busy);
-  }
   if (inp.lensTiles?.length) {
     const medallions = resourceDetail(hexPx) === 'medallions';
     const cityAt = new Set(view.cities.map((c) => tileIndex(c.pos, W, H)));
@@ -1462,20 +1459,56 @@ export function ambientClipRects(ring: SelectionRing | null, ambient: readonly R
   return out;
 }
 
-function drawSelection(ctx: CanvasRenderingContext2D, _look: LookId, S: MapStyle, x: number, y: number, hexPx: number, pulse: number) {
+/** How far the selection mark reaches from its centre (screen CSS pixels), halo included; while the burst plays, its widest ring. */
+function selectionReach(hexPx: number, bursting: boolean): number {
+  const edge = hexPx * 0.97 + selectionHalo(hexPx) / 2;
+  return Math.max(selectionRadius(hexPx) + 4, bursting ? edge * 2.4 + 2 : edge) + 1;
+}
+const selectionHalo = (hexPx: number) => Math.max(3, Math.min(6, hexPx * 0.2));
+
+/** The selection: a bright white tile edge on a dark halo, a breathing wash, a ring round the token, and the burst when it changes (see selectionMark.ts). */
+function drawSelection(ctx: CanvasRenderingContext2D, x: number, y: number, hexPx: number, pulse: number, burst: { scale: number; alpha: number } | null) {
   const r = selectionRadius(hexPx);
+  const halo = selectionHalo(hexPx), line = halo * 0.5;
   ctx.save();
   ctx.translate(x, y);
-  ctx.strokeStyle = S.ink.select;
-  ctx.globalAlpha = 0.55 + 0.45 * pulse;
-  ctx.lineWidth = 1.6;
+  ctx.lineJoin = 'round';
   ctx.beginPath();
-  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  hexPath(ctx, 0, 0, hexPx * 0.97);
+  ctx.fillStyle = SELECT_INK;
+  ctx.globalAlpha = 0.12 + 0.16 * pulse;
+  ctx.fill();
+  ctx.globalAlpha = 0.9;
+  ctx.strokeStyle = SELECT_HALO;
+  ctx.lineWidth = halo;
   ctx.stroke();
-  ctx.lineWidth = 0.8;
+  ctx.globalAlpha = 0.8 + 0.2 * pulse;
+  ctx.strokeStyle = SELECT_INK;
+  ctx.lineWidth = line;
+  ctx.stroke();
+  // A ring round the token itself, so the unit (not just its tile) is marked.
   ctx.beginPath();
-  ctx.arc(0, 0, r + 3.5, 0, Math.PI * 2);
+  ctx.arc(0, 0, r + 1.5, 0, Math.PI * 2);
+  ctx.globalAlpha = 0.85;
+  ctx.strokeStyle = SELECT_HALO;
+  ctx.lineWidth = line + 1.6;
   ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = SELECT_INK;
+  ctx.lineWidth = line;
+  ctx.stroke();
+  if (burst) {
+    ctx.beginPath();
+    hexPath(ctx, 0, 0, hexPx * 0.97 * burst.scale);
+    ctx.globalAlpha = burst.alpha * 0.8;
+    ctx.strokeStyle = SELECT_HALO;
+    ctx.lineWidth = halo;
+    ctx.stroke();
+    ctx.globalAlpha = burst.alpha;
+    ctx.strokeStyle = SELECT_INK;
+    ctx.lineWidth = line;
+    ctx.stroke();
+  }
   ctx.restore();
 }
 

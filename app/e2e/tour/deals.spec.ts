@@ -66,8 +66,8 @@ for (const size of SIZES) test.describe(`deals ${size.name}`, () => {
     await page.mouse.move(4, size.height / 2);
     await shot(page, size, 'd1d-you-ask');
     await panel.getByRole('button', { name: 'Offer Open Borders', exact: true }).click();
-    await expect(panel.getByRole('button', { name: 'Queued: Offer Open Borders', exact: true })).toHaveAttribute('aria-pressed', 'true');
-    await expect(panel.getByTestId('diplomacy-queued')).toHaveText('Queued: Offer Open Borders. You ask 40 Gold. Undo');
+    await expect(panel.getByRole('button', { name: 'Offer Open Borders', exact: true })).toHaveCount(0);
+    await expect(panel.getByTestId('diplomacy-queued')).toHaveText('Offer ready: it is sent when you end the turn. You ask 40 Gold. Cancel');
     const errors = await page.evaluate(() => { const s = (window as unknown as GameWindow).legatum.getState(); return { orders: s.orders[s.seat], errors: s.errors[s.seat] }; });
     expect(errors.orders).toEqual([{ type: 'ProposeTreaty', to: 1, kind: 'OpenBorders', gold: -40 }]);
     expect.soft(errors.errors, 'the offer validates').toEqual([]);

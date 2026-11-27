@@ -346,6 +346,19 @@ it('shows every Buy price as a spend chip on the button, and the chosen buy agai
   expect(chosen.textContent).toBe(`Costs ${price} Gold (${view.economy.gold} → ${after < 0 ? `−${-after}, debt` : after})`);
 });
 
+it('a queued Buy is named under Now producing with its price and when it arrives, and Cancel takes it back', async () => {
+  const { city } = await renderCity('Switzerland', 5000);
+  expect(container.querySelector('[data-testid="pending-purchase"]')).toBeNull();
+  const buy = container.querySelector<HTMLButtonElement>('.production-choice[data-item="u:Spearman"] .btn-buy')!;
+  const price = Number(buy.getAttribute('aria-label')!.match(/for (\d+) Gold/)![1]);
+  act(() => buy.click());
+  const line = container.querySelector('[data-testid="pending-purchase"]')!;
+  expect(line.textContent).toContain(`Buying Spearman for ${price} Gold. It arrives when the turn ends.`);
+  act(() => line.querySelector('button')!.click());
+  expect(useGame.getState().orders[0].some((o) => o.type === 'BuyItem' && o.city === city.id)).toBe(false);
+  expect(container.querySelector('[data-testid="pending-purchase"]')).toBeNull();
+});
+
 it('a Buy names the city in a notice with Undo, and Undo takes the purchase back (misclick guard)', async () => {
   const { city } = await renderCity('Switzerland', 5000);
   const buy = container.querySelector<HTMLButtonElement>('.production-choice[data-item="u:Spearman"] .btn-buy')!;

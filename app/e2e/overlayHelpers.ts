@@ -6,9 +6,9 @@ export async function showMapOptions(page: Page) {
   if (await toggle.isVisible() && await toggle.getAttribute('aria-expanded') !== 'true') await toggle.click();
 }
 
-/** The map panel's overlay toggles (Yields, Resources, Borders): checkboxes in the "Overlays" group. */
+/** Yields checkbox in the map lens bar. */
 export const overlayBox = (page: Page, name: string) =>
-  page.getByRole('group', { name: /^Overlays/ }).getByRole('checkbox', { name: new RegExp(`^${name}`) });
+  page.locator('.map-lenses').getByRole('checkbox', { name: new RegExp(`^${name}`) });
 
 /** The panel's lens radios (one at a time). */
 export const lensRadio = (page: Page, name: string | RegExp) =>

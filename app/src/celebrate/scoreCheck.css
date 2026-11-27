@@ -76,3 +76,12 @@
 
 /* The primary's focus ring is gilt on a takeover, never the default red that reads as a warning. */
 .score-check [data-primary-action]:focus-visible, .score-check [data-primary-action]:focus { outline: 2px solid var(--gilt, #c9a24a); outline-offset: 3px; }
+
+/* The advisor's lesson on reading the sheet (first score checks, advisor on): a parchment note beside Continue. */
+.sc-coach { flex: 1 1 auto; max-width: 640px; padding: 8px 14px 9px; color: var(--ink); background: var(--panel); border: 1px solid var(--frame);
+  outline: 1px solid rgb(230 195 110 / .7); outline-offset: -4px; box-shadow: 0 8px 26px rgb(0 0 0 / .45); text-shadow: none; }
+.sc-coach h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 3px; font: 700 14px/1.25 var(--sans); }
+.sc-coach h3 > :first-child { flex: none; }
+.sc-coach ul { margin: 0; padding-left: 18px; font: 400 12.5px/1.4 var(--sans); }
+.sc-coach b { font-variant-numeric: lining-nums; }
+.sc-foot:has(.sc-coach) { align-items: flex-end; }

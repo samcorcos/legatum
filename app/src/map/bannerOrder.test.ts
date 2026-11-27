@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { bannerLift, neutralBarbarianCue } from './render';
 import { BARBARIAN } from '../barbarians';
-import { clearLensChip } from './drawLens';
 import { bannerCityAt } from './bannerTooltip';
 
 describe('banner legibility', () => {
@@ -22,13 +21,6 @@ describe('banner legibility', () => {
     expect(bannerCityAt(hits, 200, 60)).toMatchObject({ id: 2 });
     expect(bannerCityAt(hits, 110, 95)).toBeUndefined();
     expect(bannerCityAt([{ ...hits[0], far: true }], 110, 85)).toBeUndefined();
-  });
-
-  it('moves a Threat chip away from a neighbouring banner name', () => {
-    const banner = { x: 90, y: 70, w: 160, h: 48 };
-    const chip = clearLensChip(200, 100, 28, 16, [banner]);
-    expect(chip).not.toBeNull();
-    expect(chip!.x + 14 <= banner.x || chip!.x - 14 >= banner.x + banner.w || chip!.y + 8 <= banner.y || chip!.y - 8 >= banner.y + banner.h).toBe(true);
   });
 
   it('uses neutral strength marks only for barbarians seen by the Celts', () => {

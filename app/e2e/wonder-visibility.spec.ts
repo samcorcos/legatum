@@ -31,7 +31,7 @@ const test = base.extend<{}, { devURL: string }>({
 });
 
 const SIZES = [{ name: '1000x600', width: 1000, height: 600 }, { name: '1440x900', width: 1440, height: 900 }] as const;
-const LENSES = ['Default', 'Yields', 'Resources', 'Settle', 'Borders', 'Movement', 'Threat', 'Discovery'] as const;
+const LENSES = ['Default', 'Yields', 'Settle'] as const;
 
 async function load(page: Page, size: { width: number; height: number }) {
   const errors: string[] = [];
@@ -59,16 +59,16 @@ async function load(page: Page, size: { width: number; height: number }) {
 const park = (page: Page) => page.mouse.move(page.viewportSize()!.width < 1200 ? 820 : 1263, page.viewportSize()!.width < 1200 ? 355 : 345);
 
 const pageErrors = new WeakMap<Page, string[]>();
-/** One view per name: a lens alone, or (Yields, Resources, Borders) the plain map with that one overlay on. */
+/** One view per name: a lens alone, or Yields the plain map with that one overlay on. */
 async function pickLens(page: Page, lens: string) {
-  const overlay = ['Yields', 'Resources', 'Borders'].includes(lens);
+  const overlay = lens === 'Yields';
   const radio = page.getByRole('radiogroup', { name: 'Map lens', exact: true }).getByRole('radio', { name: overlay ? 'Default' : lens, exact: true });
   try {
     await showMapOptions(page);
     await radio.click();
     await showMapOptions(page);
     await expect(radio).toBeChecked();
-    for (const name of ['Yields', 'Resources', 'Borders']) await setOverlay(page, name, name === lens);
+    for (const name of ['Yields']) await setOverlay(page, name, name === lens);
   } catch (e) {
     await mkdir(SHOTS, { recursive: true });
     await page.screenshot({ path: join(SHOTS, `failure-${lens.toLowerCase()}.png`) });
@@ -154,7 +154,7 @@ for (const size of SIZES) {
       // The release check runs many browser workers at once. A view swap can be observed before
       // the map's next paint under load; retry the complete with/without comparison, never a pixel.
       await expect.poll(async () => {
-        const m = await measure(page, ring, lens === 'Default' || lens === 'Resources');
+        const m = await measure(page, ring, lens === 'Default');
         const problems: string[] = [];
         if (m.tiles <= 2) problems.push(`${lens}: only ${m.tiles} explored neighbours`);
         if (m.withWonder.badge <= 60) problems.push(`${lens}: wonder badge pixels ${m.withWonder.badge}`);
@@ -162,7 +162,7 @@ for (const size of SIZES) {
           if (m.without.yields.reduce((a, b) => a + b, 0) <= 20) problems.push('Yields: the neighbours show no yield icons to compare');
           m.withWonder.yields.forEach((n, i) => { if (n < Math.floor(m.without.yields[i] * 0.95)) problems.push(`Yields: neighbour ${i} icon pixels ${n} < ${m.without.yields[i]}`); });
         }
-        if (lens === 'Default' || lens === 'Resources') {
+        if (lens === 'Default') {
           m.withWonder.discs.forEach((rgb, i) => rgb.forEach((c, ch) => { if (Math.abs(c - m.without.discs[i][ch]) >= 6) problems.push(`${lens}: neighbour ${i} medallion channel ${ch}: ${c.toFixed(0)} vs ${m.without.discs[i][ch].toFixed(0)}`); }));
         }
         return problems;

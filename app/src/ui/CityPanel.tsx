@@ -483,6 +483,10 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
     feel.invalid();
     setNotice({ city: city.id, key: itemKey(u.item), tone: 'bad', text: `Can't build ${itemName(u.item, faction)} yet: ${lowerFirst(why.short)}.${why.growth ? ` ${why.growth}.` : ''}` });
   };
+  // A queued purchase is said under "Now producing": it lands only when the turn ends, so the panel names what the Gold buys.
+  const pendingBuy = (orders ?? []).find((o): o is Extract<Order, { type: 'BuyItem' }> => o.type === 'BuyItem' && o.city === city.id);
+  const pendingBuyPrice = pendingBuy ? purchases.options.get(itemKey(pendingBuy.item))?.cost ?? null : null;
+  const pendingBuyText = pendingBuy ? `Buying ${itemName(pendingBuy.item, faction)}${pendingBuyPrice === null ? '' : ` for ${pendingBuyPrice} Gold`}. It arrives when the turn ends.` : null;
   // Switching banks the old item's progress with it; the new item starts from its own bank.
   const oldItem = d.producing;
   // Said only when progress moves somewhere: an old build's banks, or a new one resuming or carrying some.
@@ -984,6 +988,7 @@ export function CityPanel({ city, view, peek = false }: { city: CityView; view: 
           value={storedProduction} max={waitingCap !== null ? Math.max(1, waitingCap) : pendingQueue ? producing ? option?.cost ?? d.production_cost ?? 1 : d.idle_production_cap : d.production_cost ?? d.idle_production_cap} />
 
         {switchNote && <div className="production-switch" data-testid="production-switch" role="status"><Amounts text={`${switchNote}.`} /></div>}
+        {pendingBuy && <div className="production-switch" data-testid="pending-purchase" role="status"><Amounts text={pendingBuyText!} />{' '}<button className="btn quiet" disabled={view.finished} onClick={() => editOrders((ord) => toggleBuy(ord, city.id, pendingBuy.item))}>Cancel</button></div>}
         {egyptBuilding && !tombStopped && <div className="production-switch" data-testid="egypt-construction" role="status">{`${city.name}'s ${nileSurplus} surplus Food goes into the ${producing ? itemName(producing, owner?.faction) : 'build'} this turn, so ${city.name} doesn't grow.`}{growOption && <>{' '}<button className="btn quiet" data-testid="egypt-grow-instead" disabled={view.finished} onClick={() => buildNow(growOption.item)}>Grow instead →</button></>}</div>}
         {parkedText && <div className="production-choose" data-testid="production-choose"><b>Choose a new build.</b> <Amounts text={parkedText} /></div>}
         {productionWarning && <Tip as="div" className="production-warning" content={FORECAST_ASSUMPTIONS}><Amounts text={productionWarning} /></Tip>}

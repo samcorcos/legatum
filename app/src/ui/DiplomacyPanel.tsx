@@ -191,9 +191,12 @@ function Action({ action, view, orders, compact = false, gold = 0 }: { action: D
     <CostChip id={chipId} spends={spends} when={offer ? 'if accepted' : undefined} />
   </button>;
   if (compact) return button;
+  // Once queued, the full card swaps its button for a plain "ready" line with its own Cancel, so a
+  // second click on the same button can't silently take the order back.
   const queuedLine = queued && <p className="diplomacy-queued" data-testid="diplomacy-queued">
-    <Amounts text={`Queued: ${label}.${queuedGold > 0 ? ` You pay ${queuedGold} Gold if they accept.` : queuedGold < 0 ? ` You ask ${-queuedGold} Gold.` : ''}`} />{' '}
-    <button className="link" onClick={undo}>Undo</button></p>;
+    <Icon name="ui-check" size={13} className="ui-mark" />{' '}
+    <Amounts text={`${offer ? 'Offer ready: it is sent' : `${label} is ready: it happens`} when you end the turn.${queuedGold > 0 ? ` You pay ${queuedGold} Gold if they accept.` : queuedGold < 0 ? ` You ask ${-queuedGold} Gold.` : ''}`} />{' '}
+    <button className="link" onClick={undo}>Cancel</button></p>;
   const lines = action.blocked_reason ? [] : actionLines(action, view);
   // One diplomatic order per empire per turn: say in place which queued order this one replaces.
   const replaces = !queued && !action.blocked_reason && !view.finished ? replacesText(view, orders, action.order) : null;
@@ -201,8 +204,7 @@ function Action({ action, view, orders, compact = false, gold = 0 }: { action: D
   const definition = action.order.type === 'ProposeTreaty' ? treatyDefinition(action.order.kind) : null;
   return <div className="diplomacy-action">
     {definition && <p className="treaty-definition"><strong>{action.order.type === 'ProposeTreaty' && treatyLabel(action.order.kind)}:</strong> {definition}</p>}
-    {button}
-    {queuedLine}
+    {queued ? queuedLine : button}
     {replaces && <p className="diplomacy-replaces" data-testid="diplomacy-replaces"><Icon name="ui-alert" size={12} className="ui-mark" /> {replaces}</p>}
     {join && <p className="diplomacy-join-war" data-testid="join-war"><Icon name="unit-spearman" size={13} className="ui-mark" /> {join}</p>}
     {/* A blocked action's reason is stated once for its empire row, not under each button. */}

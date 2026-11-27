@@ -164,18 +164,10 @@ export function handleGameKey(e: KeyboardEvent) {
     case 'L':
       toggleLastTurnReport();
       break;
-    // Map overlays (R is the ranged attack, so Resources takes O).
+    // Yields overlay.
     case 'y':
     case 'Y':
       toggleOverlay('yields');
-      break;
-    case 'o':
-    case 'O':
-      toggleOverlay('resources');
-      break;
-    case 'n':
-    case 'N':
-      toggleOverlay('borders');
       break;
     case '[':
     case ']':

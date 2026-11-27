@@ -118,7 +118,8 @@ test('Diplomacy: a human offers an alliance and sees the AI decision and its rea
   await expect(offer.locator('.cost-chip')).toHaveCount(0);
   await expect(page.getByText(/Upkeep \d+ Gold\/turn/).first()).toBeVisible();
   await offer.click();
-  await expect(page.getByRole('button', { name: /Queued: Offer Alliance/ })).toBeVisible();
+  await expect(page.getByTestId('diplomacy-queued')).toContainText('Offer ready: it is sent when you end the turn.');
+  await expect(page.getByRole('button', { name: 'Offer Alliance', exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Close diplomacy', exact: true }).click();
   for (const turn of [17, 18]) {
     await endPlanning(page);

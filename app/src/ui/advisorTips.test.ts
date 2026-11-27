@@ -110,9 +110,9 @@ describe('situational tips', () => {
     const v = await game(30);
     v.economy.gold = 400;
     const ctx = { view: v, orders: [], selection: null, humans: 1, touch: false, plan: [] };
-    expect(advisorSuggestion(ctx, ['welcome', 'report', 'race'], [])?.id).toBe('tip:gold');
+    expect(advisorSuggestion(ctx, ['welcome', 'report', 'howToWin'], [])?.id).toBe('tip:gold');
     const unit = v.units.find((u) => u.owner === v.me)!;
-    expect(advisorSuggestion({ ...ctx, selection: { kind: 'unit', id: unit.id } }, ['welcome', 'report', 'race'], [])?.id).not.toBe('tip:gold');
-    expect(advisorSuggestion(ctx, ['welcome', 'report', 'race'], ['tip:gold'])?.id).not.toBe('tip:gold');
+    expect(advisorSuggestion({ ...ctx, selection: { kind: 'unit', id: unit.id } }, ['welcome', 'report', 'howToWin'], [])?.id).not.toBe('tip:gold');
+    expect(advisorSuggestion(ctx, ['welcome', 'report', 'howToWin'], ['tip:gold'])?.id).not.toBe('tip:gold');
   });
 });

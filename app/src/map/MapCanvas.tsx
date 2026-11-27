@@ -20,14 +20,12 @@ import { onWonderArtLoad } from './wonderArt';
 import { cancelSelected, enemyAt, peacefulAt, peacefulRangedAt, rangedEnemyAt, warQueuedNow, foundCitySelected, sleepSelected, skipSelected, moveSelected, rangedSelected, selectedOwnUnit, toggleRangedMode } from '../commands';
 import { pointerIntent, previewDestination } from './intent';
 import { foundCityBlocker, foundCityUnitBlocker, isFounderCandidate, settlementSite } from '../settlement';
-import { overlayEmpty } from './overlays';
 import { settleTileNote } from './settleAdvice';
 import { LensSwitcher } from './LensSwitcher';
 import { isColoniaFounder } from '../goalCities';
 import { cancelBattleSounds, playBattleSounds } from '../feel/sound';
 import { useLandSound } from './useLandSound';
 import { battleSoundCues } from '../feel/battleSound';
-import { isBarbarian } from '../barbarians';
 import { SettlementCard, SettlementDetails } from './SettlementCard';
 import { PING_PULSE_MS, pingsFor } from '../teamPing';
 import type { PingMark } from './pingDraw';
@@ -63,6 +61,7 @@ import { atWar, relationWith } from '../diplomacy';
 import { emptyGesture, gestureStep, isDoubleTap, LONG_PRESS_MS, zoomCamera, type GestureEvent, type Point, type Tap } from './gestures';
 import { sameOrderContext, tapOrder, type TapOrder } from './tapOrders';
 import { coord, setUnitOrder } from '../orders';
+import { SELECT_BURST_MS } from './selectionMark';
 import { notifyMapCamera, registerMapCamera, takeMapHandoff } from './camera';
 import { alarmedCities } from '../siege';
 import { useCityAlarms } from '../ui/useCityAlarms';
@@ -459,7 +458,6 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     lensTiles,
     overlays,
     yieldTiles: overlayTiles.yields,
-    borderTiles: overlayTiles.borders,
     cues: null as { list: MapCue[]; start: number } | null,
     arrow: null as { from: Hex | null; to: Hex; start: number } | null,
     pings: livePings,
@@ -470,7 +468,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     celebration,
     siege,
   });
-  const nextFrame = { anchoringPreview: !!activePreview, lens, lensTiles, overlays, yieldTiles: overlayTiles.yields, borderTiles: overlayTiles.borders, view, selUnit, selection, pathInfo, pathAttack, pendingLines, pendingMarks, cityFocuses, cityBuilds, rangedTiles, goalPreview, territoryOverlay, tileBuys, improveOverlay, placeOverlay, airOverlay, hover, hoverSelect: intent === 'select', pingArmed: pingMode, cues, arrow, pings: livePings, anim, seat, reducedMotion, combatFx: { enabled: combatFx.enabled }, celebration, siege };
+  const nextFrame = { anchoringPreview: !!activePreview, lens, lensTiles, overlays, yieldTiles: overlayTiles.yields, view, selUnit, selection, pathInfo, pathAttack, pendingLines, pendingMarks, cityFocuses, cityBuilds, rangedTiles, goalPreview, territoryOverlay, tileBuys, improveOverlay, placeOverlay, airOverlay, hover, hoverSelect: intent === 'select', pingArmed: pingMode, cues, arrow, pings: livePings, anim, seat, reducedMotion, combatFx: { enabled: combatFx.enabled }, celebration, siege };
   // Redraw only when something the map draws changed: a render for a card or a panel leaves the canvas alone.
   // A change of the tile under the pointer alone repaints only the hover mark and the route (hoverClipBoxes).
   if (hoverOnlyChange(frame.current, nextFrame)) hoverDirty.current = true;
@@ -748,6 +746,9 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     let lastIdle = -Infinity;
     // The selection ring as the last frame drew it, and the clock of the last frame that drew more than the ring.
     let lastRing: SelectionRing | null = null;
+    // The selection the last frame drew, and when it changed (its burst plays from then).
+    let lastSel = '';
+    let selAt = -Infinity;
     // The smoke and siege-ring boxes the last full frame drew: what an ambient-only frame repaints.
     let lastAmbient: Rect[] = [];
     // Idle life's clock, and where it painted last (an idle tick repaints those boxes and the new ones).
@@ -767,6 +768,9 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       if (!f.view) return;
       // Combat playback (combatFx.ts) replaces the plain glide while it runs: it moves units round by round after the volley.
       const still = motionStill(f.reducedMotion, f.combatFx.enabled);
+      const selKey = f.selection ? `${f.selection.kind}:${f.selection.id}` : '';
+      if (selKey !== lastSel) { lastSel = selKey; selAt = selKey ? t : -Infinity; }
+      const selectBurstMs = !still && t - selAt < SELECT_BURST_MS ? t - selAt : null;
       const plan = !still ? f.anim?.plan ?? null : null;
       const fxT = plan && f.anim ? (t - f.anim.start) : -1;
       const fxRunning = !!plan && fxLive(plan, fxT);
@@ -912,6 +916,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
         dpr: size.current.dpr,
         time: still ? 0 : drawT,
         pulseTime: still ? 0 : t,
+        selectBurstMs,
         hover: f.hover?.hex ?? null,
         hoverSelect: f.hoverSelect,
         pingArmed: f.pingArmed,
@@ -919,7 +924,6 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
         lensTiles: f.lensTiles,
         overlays: f.overlays,
         yieldTiles: f.yieldTiles,
-        borderTiles: f.borderTiles,
         lensAvoid: panels.current,
         selectedUnit: f.selection?.kind === 'unit' ? f.selection.id : null,
         selectedAir: f.selection?.kind === 'air' ? f.selection.id : null,
@@ -1349,7 +1353,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
         {bannerTooltip(view, hoveredBanner.city)}
       </div>}
       <CompassRose ref={compassRef} />
-      <LensSwitcher players={view?.players ?? []} me={view?.me} visibleBarbarians={!!view?.units.some((u) => isBarbarian(u.owner))} supply={view?.supply} era={view?.research.era} lens={lens} empty={!lensTiles.length} overlayEmpty={{ resources: !!view && overlayEmpty(view, 'resources', overlayTiles), borders: !!view && overlayEmpty(view, 'borders', overlayTiles) }} collapsed={!!selection} onChange={(next) => { clearTouch(); setLens(next); }} sites={sites} settlerId={settleUnit?.id ?? null} coloniaFounder={!!view && !!settleUnit && isColoniaFounder(view, settleUnit.id)} founderName={settleUnit ? itemName({ kind: 'Unit', unit: settleUnit.kind }, view?.players.find((p) => p.id === settleUnit.owner)?.faction) : undefined} onInspect={(hex) => {
+      <LensSwitcher players={view?.players ?? []} me={view?.me} lens={lens} collapsed={!!selection} onChange={(next) => { clearTouch(); setLens(next); }} sites={sites} settlerId={settleUnit?.id ?? null} coloniaFounder={!!view && !!settleUnit && isColoniaFounder(view, settleUnit.id)} founderName={settleUnit ? itemName({ kind: 'Unit', unit: settleUnit.kind }, view?.players.find((p) => p.id === settleUnit.owner)?.faction) : undefined} onInspect={(hex) => {
         useGame.getState().jumpTo(hex);
         setHover(null);
         setTapPreview(null);

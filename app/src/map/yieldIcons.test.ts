@@ -44,7 +44,7 @@ describe('yieldCluster', () => {
   });
 
   it('folds the bonus only where the pill fits in the hex and no unit sits on the cluster', () => {
-    const tile: LensTile = { index: 0, tint: '', faded: false, yields: [{ kind: 'food', value: 2 }, { kind: 'production', value: 1 }], bonus: 'production' };
+    const tile: LensTile = { index: 0, faded: false, yields: [{ kind: 'food', value: 2 }, { kind: 'production', value: 1 }], bonus: 'production' };
     const at = (zoom: number) => ({ x: centerX(0, 10), y: centerY(0, 10), zoom });
     // Close in, it fits; at a normal zoom the readable pill is wider than the hex allows, so the tile keeps its wonder pill.
     expect(foldedBonuses([tile], at(1.6), 800, 600, 10).has(0)).toBe(true);
@@ -95,7 +95,7 @@ describe('zoom levels', () => {
   it('draws no chip or text for ordinary yields and nothing at all at far zoom', () => {
     const calls: string[] = [];
     const ctx = new Proxy({}, { get: (t, k) => (t as Record<PropertyKey, unknown>)[k] ?? ((..._: unknown[]) => { calls.push(String(k)); }), set: (t, k, v) => { (t as Record<PropertyKey, unknown>)[k] = v; return true; } }) as CanvasRenderingContext2D;
-    const tiles: LensTile[] = [{ index: 0, tint: '#000', faded: false, yields: [{ kind: 'food', value: 2 }, { kind: 'production', value: 1 }] }];
+    const tiles: LensTile[] = [{ index: 0, faded: false, yields: [{ kind: 'food', value: 2 }, { kind: 'production', value: 1 }] }];
     drawYieldIcons(ctx, tiles, { x: 0, y: 0, zoom: 0.9 }, 800, 600, 12, 2, 'atlas');
     expect(calls).not.toContain('fillRect');
     expect(calls).not.toContain('fillText');
