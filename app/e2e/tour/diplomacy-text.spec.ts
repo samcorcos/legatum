@@ -66,13 +66,11 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     state.diplomacy!.proposals = [{ id: 17, kind: 'Peace', from: 1, to: 0, proposer: 1,
       created_turn: 86, respond_by: 88, relation_version: relation(0, 1).version, consents: [1] }];
     await loadFixture(page, coreFixture(state), 86);
-    await page.getByRole('button', { name: /Respond to offer/ }).first().click();
-    const card = page.locator('.offer-card');
+    const card = page.getByTestId('peace-talks');
     await expect(card).toBeVisible();
-    await expect(card.locator('.offer-scope')).toContainText('Ends your war with Byzantium.');
-    await expect(card.locator('.offer-scope')).toContainText('Your war with Sparta continues.');
-    await expect(card.getByRole('button', { name: /Accept Peace with Byzantium/ })).toBeVisible();
-    await expect(card.getByRole('button', { name: /Decline Peace with Byzantium/ })).toBeVisible();
+    await expect(card).toContainText('Your war with Sparta continues.');
+    await expect(card.getByRole('button', { name: 'Accept Peace' })).toBeVisible();
+    await expect(card.getByRole('button', { name: 'Refuse, fight on' })).toBeVisible();
     await page.mouse.move(5, size.height / 2);
     await shot(page, size, '03-peace-offer-two-empires');
   });

@@ -127,8 +127,8 @@ test('G2 desktop: hover says At Peace; right-click asks to declare War; confirm 
   await expect(dialog).toBeVisible();
   await expect(dialog).toContainText('Costs no Gold.');
   // The target's leader sits beside the decision, under a red ribbon.
-  await expect(dialog.locator('.war-prompt-hero .pf > img')).toHaveCount(1);
-  await expect(dialog.locator('.war-prompt-hero .rb')).toHaveText('Switzerland');
+  await expect(dialog.locator('.pt-people .pf > img')).toHaveCount(1);
+  await expect(dialog.locator('.pt-banner')).toHaveText('Switzerland');
   await expect(dialog).toContainText('War starts now. Your Spearman attacks this turn.');
   await expect(dialog).toContainText('pursues it');
   await expect(dialog.locator('.btn.primary')).toHaveCount(1);
@@ -136,7 +136,7 @@ test('G2 desktop: hover says At Peace; right-click asks to declare War; confirm 
   // G16: a surprise war at Peace spends nothing, so its button carries no cost chip.
   await expect(dialog.locator('.btn.primary .cost-chip')).toHaveCount(0);
   if (shots) { await dialog.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished))); await page.screenshot({ path: `${shots}/dialog-desktop.png` }); }
-  await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await dialog.getByRole('button', { name: 'Keep the Peace', exact: true }).click();
   await expect(dialog).toHaveCount(0);
   expect(await orders(page)).toEqual([]);
   // G19: D cancels too (declaring has no key).

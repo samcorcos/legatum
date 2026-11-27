@@ -42,6 +42,24 @@ const SCREENS = [
   { name: 'city', open: (p) => p.evaluate(() => { const s = window.legatum.getState(); const c = s.views[s.seat].cities.find((x) => x.owner === s.views[s.seat].me); s.select({ kind: 'city', id: c.id }); }), ready: '.city-panel' },
   { name: 'cities_list', open: (p) => p.getByTestId('cities-button').click(), ready: '[role="dialog"], dialog[open]' },
   { name: 'diplomacy', open: (p) => p.evaluate(() => window.legatum.setState({ diplomacyOpen: true })), ready: '.diplomacy-panel' },
+  { name: 'peace_offer', open: (p) => p.evaluate(() => {
+    const s = window.legatum.getState(), v = s.views[s.seat];
+    const offer = v.diplomacy.proposals.find((x) => (x.kind ?? 'Peace') === 'Peace' && (x.needs ?? []).includes(v.team));
+    if (!offer) throw Error('no incoming Peace offer in this save');
+    window.legatum.setState({ diplomacyTakeover: { mode: 'offer', id: offer.id } });
+  }), ready: '[data-testid="peace-talks"]' },
+  { name: 'peace_terms', open: (p) => p.evaluate(() => {
+    const s = window.legatum.getState(), v = s.views[s.seat];
+    const war = v.diplomacy.relations.find((r) => r.state === 'War' && (r.a === v.team || r.b === v.team));
+    if (!war) throw Error('no War for Peace terms in this save');
+    window.legatum.setState({ diplomacyTakeover: { mode: 'terms', team: war.a === v.team ? war.b : war.a } });
+  }), ready: '[data-testid="peace-talks"]' },
+  { name: 'war_declaration', open: (p) => p.evaluate(() => {
+    const s = window.legatum.getState(), v = s.views[s.seat];
+    const peace = v.diplomacy.relations.find((r) => r.state !== 'War' && (r.a === v.team || r.b === v.team));
+    if (!peace) throw Error('no Peace for a declaration in this save');
+    window.legatum.setState({ diplomacyTakeover: { mode: 'war', team: peace.a === v.team ? peace.b : peace.a } });
+  }), ready: '[data-testid="war-takeover"]' },
   { name: 'score_ledger', open: (p) => p.getByRole('region', { name: 'Victory race', exact: true }).getByRole('button', { name: 'Score ledger', exact: true }).click(), ready: '[role="dialog"], dialog[open]' },
   { name: 'guide', open: (p) => p.keyboard.press('?'), ready: '[role="dialog"], dialog[open]' },
 ];

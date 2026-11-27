@@ -5,6 +5,8 @@ description: This skill should be used when designing, building or reviewing any
 
 # Legatum UI preferences
 
+- War and peace are full-screen moments (peace talks, declarations), in the first-contact plate's language.
+
 Pillars 5 (no hidden math) and 9 (the next action is always obvious) from CLAUDE.md govern everything here.
 
 

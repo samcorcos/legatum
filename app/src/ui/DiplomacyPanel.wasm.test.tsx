@@ -7,6 +7,8 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { WasmClient } from '../wasmClient';
 import { useGame } from '../store';
 import { DiplomacyPanel } from './DiplomacyPanel';
+import { CelebrationProvider } from '../celebrate/MomentLane';
+import { PeaceTalks } from '../celebrate/PeaceTalks';
 import { VpTrack } from './VpTrack';
 import { contextFromViews, formatEvents } from '../format';
 import { createState, meetAll } from '../test/fixtureEngine';
@@ -40,11 +42,12 @@ describe.skipIf(!available)('diplomacy controls on the Rust engine', () => {
     const state = createState(setup); meetAll(state); client.load(coreFixture(state));
     useGame.setState({ client, humans: [0, 1], views: [client.view(0), client.view(1)], seat: 0,
       orders: [[], []], errors: [[], []], ready: [false, false], diplomacyOpen: true, diplomacyTeam: 1 });
-    act(() => root.render(<><VpTrack /><DiplomacyPanel /></>));
+    act(() => root.render(<CelebrationProvider><VpTrack /><DiplomacyPanel /><PeaceTalks /></CelebrationProvider>));
     return client;
   }
   function click(text: string) {
-    const button = [...container.querySelectorAll<HTMLButtonElement>('button')].find((b) => (b.getAttribute('aria-label') ?? b.textContent)?.startsWith(text));
+    const scope = container.querySelector('[data-testid="war-takeover"], [data-testid="peace-talks"]') ?? container;
+    const button = [...scope.querySelectorAll<HTMLButtonElement>('button')].find((b) => (b.getAttribute('aria-label') ?? b.textContent)?.startsWith(text));
     expect(button).toBeDefined();
     act(() => button!.click());
   }
@@ -54,6 +57,7 @@ describe.skipIf(!available)('diplomacy controls on the Rust engine', () => {
   it('forecasts a queued surprise declaration that takes effect this turn (G20)', async () => {
     const client = await start();
     expect(container.textContent).toContain('Takes effect this turn');
+    click('Declare War');
     click('Declare War');
     expect(container.textContent).toContain('Queued: Declare War');
     expect(client.view(0).diplomacy.relations[0].state).toBe('Peace');
@@ -70,6 +74,7 @@ describe.skipIf(!available)('diplomacy controls on the Rust engine', () => {
     const client = await start();
     client.endTurn({ 0: [{ type: 'DeclareWar', against: 1 }] }); refresh(client);
     click('Offer Peace');
+    click('Send terms to');
     const sent = useGame.getState().orders[0];
     expect(client.validate(0, sent)).toEqual([]);
     client.endTurn({ 0: sent }); refresh(client, 1);
@@ -82,9 +87,9 @@ describe.skipIf(!available)('diplomacy controls on the Rust engine', () => {
     expect(client.view(1).diplomacy.relations[0].state).toBe('War');
     client.endTurn({ 1: accepted }); refresh(client, 1);
     expect(container.textContent).toContain('Earliest War: turn 14');
-    const war = [...container.querySelectorAll<HTMLButtonElement>('button')].find((b) => (b.getAttribute('aria-label') ?? b.textContent) === 'Declare War');
-    expect(war?.disabled).toBe(true);
-    expect(war?.parentElement?.textContent).toContain('guaranteed through turn 13');
+    click('Declare War');
+    expect(container.querySelector('[data-testid="war-takeover"]')?.textContent).toContain('guaranteed through turn 13');
+    expect([...container.querySelectorAll('[data-testid="war-takeover"] button')].some((b) => b.textContent === 'Declare War')).toBe(false);
   });
   it('declines an offer without ending the war', async () => {
     const client = await start();

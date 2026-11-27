@@ -26,7 +26,7 @@ function allianceOfferSave(gold = 1000) {
   return coreFixture(state);
 }
 
-test('Diplomacy: an incoming Peace offer opens the inbox and resolves next turn', async ({ page }) => {
+test('Diplomacy: an incoming Peace offer opens peace talks and resolves next turn', async ({ page }) => {
   const state = diplomacyState(3);
   Object.assign(state.diplomacy!.relations[0], {
     state: 'War', war_id: 1, effective_turn: 1, version: 1, declarers: [0],
@@ -40,10 +40,11 @@ test('Diplomacy: an incoming Peace offer opens the inbox and resolves next turn'
   await expect(page.locator('.rv-row .rv-rel.war')).toBeVisible();
   await expect(inbox).toHaveText('Diplomacy (1)');
   await expect(page.getByRole('button', { name: /^Respond to offer/ })).toBeVisible();
-  await inbox.click();
-  const accept = page.getByRole('button', { name: /^Accept Peace with Switzerland/ });
+  const talks = page.getByTestId('peace-talks');
+  await expect(talks).toBeVisible();
+  const accept = talks.getByRole('button', { name: 'Accept Peace' });
   await expect(accept).toHaveClass(/primary/);
-  await expect(page.getByRole('button', { name: /^Decline Peace with Switzerland/ })).not.toHaveClass(/primary/);
+  await expect(talks.getByRole('button', { name: 'Refuse, fight on' })).not.toHaveClass(/primary/);
   await accept.click();
   // G17: answering the only offer closes the inbox and confirms it over the map.
   await expect(page.getByRole('complementary', { name: 'Diplomacy', exact: true })).toHaveCount(0);

@@ -49,7 +49,7 @@ function declineLabel(p: PeaceProposal | undefined, view: PlayerView): string {
   return isPeace(p) ? `Decline ${peaceScope(view, p!).subject}` : 'Decline';
 }
 
-type ForYou = { tone: 'cost' | 'gain' | 'note'; text: string; icon?: string };
+export type ForYou = { tone: 'cost' | 'gain' | 'note'; text: string; icon?: string };
 
 /**
  * A term of a treaty as a medallion row (the faction sheet's language): a red ring and a falling
@@ -183,9 +183,14 @@ function Action({ action, view, orders, compact = false, gold = 0 }: { action: D
   // A compact button (decision cards) still says it is queued; the full one stays pressed with the
   // sentence-plus-Undo line under it that gifts use.
   const text = queued && compact ? `Queued: ${label} · undo` : label;
+  const opensPlate = action.order.type === 'DeclareWar' || (action.order.type === 'ProposeTreaty' && action.order.kind === 'Peace');
   const button = <button className={`btn${spends.length || asks ? ' spends' : ''}`}
-    aria-label={queued ? `Queued: ${label}` : label} aria-describedby={spends.length ? chipId : undefined} aria-pressed={queued} disabled={!!action.blocked_reason || view.finished || (!queued && short)}
-    onClick={() => queued ? undo() : useGame.getState().editOrders((orders) => queueDiplomacy(orders, withDealGold(action.order, deal), view))}>
+    aria-label={queued ? `Queued: ${label}` : label} aria-describedby={spends.length ? chipId : undefined} aria-pressed={queued} disabled={view.finished || (!opensPlate && (!!action.blocked_reason || (!queued && short)))}
+    onClick={() => queued ? undo() : action.order.type === 'ProposeTreaty' && action.order.kind === 'Peace'
+      ? useGame.getState().set({ diplomacyTakeover: { mode: 'terms', team: action.order.to } })
+      : action.order.type === 'DeclareWar'
+        ? useGame.getState().set({ diplomacyTakeover: { mode: 'war', team: action.order.against } })
+        : useGame.getState().editOrders((orders) => queueDiplomacy(orders, withDealGold(action.order, deal), view))}>
     <span>{text}</span>
     {asks > 0 && <GainChip amount={asks} when="if accepted" />}
     <CostChip id={chipId} spends={spends} when={offer ? 'if accepted' : undefined} />
@@ -249,9 +254,9 @@ export function DealGold({ view, orders, gold, onChange }: { view: PlayerView; o
 function EmpireActions({ actions, view, forecastView, orders, team }: { actions: DiplomaticAction[]; view: PlayerView; forecastView: PlayerView; orders: Order[]; team: TeamId }) {
   const [gold, setGold] = useState(0);
   const deals = dealsOn(view);
-  const offers = deals && actions.some((a) => a.order.type === 'ProposeTreaty' && !a.blocked_reason
+  const offers = deals && actions.some((a) => a.order.type === 'ProposeTreaty' && a.order.kind !== 'Peace' && !a.blocked_reason
     && !orders.some((o) => sameDiplomaticAction(o, a.order)));
-  const one = (a: DiplomaticAction) => <Action key={JSON.stringify(a.order)} action={a} view={forecastView} orders={orders} gold={a.order.type === 'ProposeTreaty' ? gold : 0} />;
+  const one = (a: DiplomaticAction) => <Action key={JSON.stringify(a.order)} action={a} view={forecastView} orders={orders} gold={a.order.type === 'ProposeTreaty' && a.order.kind !== 'Peace' ? gold : 0} />;
   if (!deals) return <>{actions.map(one)}</>;
   const proposals = actions.filter((a) => a.order.type === 'ProposeTreaty');
   const endings = actions.filter((a) => a.order.type === 'BreakTreaty');
@@ -334,7 +339,7 @@ function offerMeaning(p: PeaceProposal): ReactNode {
 }
 
 /** Deals: an offer's Gold as a term for the viewer, or nothing. */
-function goldTerm(p: PeaceProposal, view: PlayerView): ForYou[] {
+export function goldTerm(p: PeaceProposal, view: PlayerView): ForYou[] {
   const g = goldForViewer(view, p);
   return g > 0 ? [{ tone: 'gain', text: `You get ${g} Gold.`, icon: 'yield-gold' }]
     : g < 0 ? [{ tone: 'cost', text: `You pay ${-g} Gold.`, icon: 'yield-gold' }] : [];
@@ -344,7 +349,7 @@ function goldTerm(p: PeaceProposal, view: PlayerView): ForYou[] {
  * The concrete consequences for the viewer, costs first (red −: the Gold, the promise not to
  * attack, the protected window), then gains (green +).
  */
-function offerForecast(p: PeaceProposal, view: PlayerView, accept: DiplomaticAction | undefined): ForYou[] {
+export function offerForecast(p: PeaceProposal, view: PlayerView, accept: DiplomaticAction | undefined): ForYou[] {
   if (p.kind === 'OpenBorders') return [
     ...goldTerm(p, view),
     { tone: 'gain', text: 'Your units may enter their land', icon: 'mark-move' },
@@ -378,7 +383,7 @@ function offerForecast(p: PeaceProposal, view: PlayerView, accept: DiplomaticAct
 }
 
 /** The offer's headline names its proposer; the scope line gives the pairwise effect. */
-function offerHeadline(p: PeaceProposal, view: PlayerView): string {
+export function offerHeadline(p: PeaceProposal, view: PlayerView): string {
   return incomingOfferHeadline(empireTitle(view, p.from), p);
 }
 
@@ -389,7 +394,7 @@ const RESOLUTION_RULE = 'Decisions take effect after this turn’s resolution. Q
  * G17: answering completes the decision. Queue the reply, confirm it over the map with Undo, then
  * go to the next offer still awaiting a reply, or close the inbox so the map shows.
  */
-function respondToOffer(p: PeaceProposal, action: DiplomaticAction, forecastView: PlayerView): void {
+export function respondToOffer(p: PeaceProposal, action: DiplomaticAction, forecastView: PlayerView): void {
   const accepting = action.order.type === 'RespondToProposal' && action.order.accept;
   const what = offerLabel(p);
   const other = proposalCounterparty(forecastView, p, forecastView.team);
@@ -528,6 +533,7 @@ function OfferCard({ p, view, forecastView, orders, current, ending }: {
       </div>
     </div>
     {scope && <p className="offer-scope">{[`Ends your war with ${empireTitle(view, proposalCounterparty(view, p, view.team))}.`, scope.reason].filter(Boolean).join(' ')}</p>}
+    {scope && !ending && !queuedAccept && !queuedDecline && <button className="link" onClick={() => useGame.getState().set({ diplomacyTakeover: { mode: 'offer', id: p.id } })}>Open peace talks</button>}
     {kind === 'Alliance' && termBlock}
     {/* The immediate costs lead, then Accept and Decline stay visible at 1000x600.
         The longer payment rule and other details stay folded below. */}
@@ -809,9 +815,9 @@ export function DiplomacyPanel() {
                 {/* An empire you haven't met: say so once; its Alliance offer shows disabled. */}
                 {unmet && <p className="diplomacy-blocked-reason">{notMetText(unmet.blocked_reason!, empireTitle(view, team))}</p>}
                 {/* Offers that can't be made now say why where they would stand: first, before Give Gold and War. */}
-                <Unavailable actions={teamActions.filter((a) => a.blocked_reason && !blockedByContact(a) && a.order.type === 'ProposeTreaty')} view={view} team={s.team} />
-                <EmpireActions key={s.team} team={s.team} actions={teamActions.filter((a) => !a.blocked_reason || blockedByContact(a))} view={view} forecastView={forecastView} orders={orders} />
-                <Unavailable actions={teamActions.filter((a) => a.blocked_reason && !blockedByContact(a) && a.order.type !== 'ProposeTreaty')} view={view} team={s.team} />
+                <Unavailable actions={teamActions.filter((a) => a.blocked_reason && !blockedByContact(a) && a.order.type === 'ProposeTreaty' && a.order.kind !== 'Peace')} view={view} team={s.team} />
+                <EmpireActions key={s.team} team={s.team} actions={teamActions.filter((a) => !a.blocked_reason || blockedByContact(a) || a.order.type === 'DeclareWar' || (a.order.type === 'ProposeTreaty' && a.order.kind === 'Peace'))} view={view} forecastView={forecastView} orders={orders} />
+                <Unavailable actions={teamActions.filter((a) => a.blocked_reason && !blockedByContact(a) && a.order.type !== 'ProposeTreaty' && a.order.type !== 'DeclareWar')} view={view} team={s.team} />
               </div>}
             </li>;
           })}

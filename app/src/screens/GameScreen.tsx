@@ -2,10 +2,11 @@ import { awayLine, awayPlayers } from '../awayPlayers';
 import { TrainingCard } from '../ui/Training';
 import { WhyCard } from '../ui/WhyCard';
 import { CelebrationProvider, MomentLane } from '../celebrate/MomentLane';
+import { PeaceTalks } from '../celebrate/PeaceTalks';
 import { AlarmScreen } from '../celebrate/AlarmScreen';
 import { PeopleIntro } from '../celebrate/PeopleIntro';
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { warmSmallArt } from '../artWarm';
+import { warmDiplomacyArt, warmSmallArt } from '../artWarm';
 import { canUse3d, useMapView } from '../map3d/mapPrefs';
 import { useGame } from '../store';
 import { MapCanvas } from '../map/MapCanvas';
@@ -66,6 +67,7 @@ export function GameScreen() {
   const credentialRejected = useGame((s) => s.client?.kind === 'remote' && s.net?.credentialRejected);
 
   useEffect(() => { warmSmallArt(); }, []);
+  useEffect(() => { if (views?.[seat]) warmDiplomacyArt(views[seat]); }, [views, seat]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleGameKey);
@@ -102,6 +104,7 @@ export function GameScreen() {
       <div className="seat-frame" />
       <TopBar />
       <MomentLane />
+      <PeaceTalks />
       <ObjectiveSheet />
       <aside className="right-sidebar paper-grain" aria-label="Empire sidebar"><SeatBar race={<VpTrack />} /><Minimap /><PingControl /></aside>
       <div className="command-docks">

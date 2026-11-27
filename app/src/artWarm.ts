@@ -5,9 +5,13 @@
 import { resourceThumbUrls } from './icons';
 import { smallUnitArtUrls } from './unitArt';
 import { thumbArtUrls } from './unlockArt';
+import { leaderPortraitUrl } from './brand/ornaments';
+import { eraArt } from './celebrate/eraArt';
+import type { PlayerView } from './types';
 
 const AT_ONCE = 4;
 let started = false;
+const diplomacyWarmed = new Set<string>();
 /** Kept so the browser does not drop a fetch whose image nobody holds. */
 const held: HTMLImageElement[] = [];
 
@@ -42,4 +46,15 @@ export function warmSmallArt(): void {
   if ((navigator as { connection?: { saveData?: boolean } }).connection?.saveData) return;
   started = true;
   void warmImages(smallArtUrls());
+}
+
+/** Warm the pictures a peace or War plate may show after the game reaches the map. */
+export function warmDiplomacyArt(view: PlayerView): void {
+  if (typeof Image === 'undefined' || (navigator as { connection?: { saveData?: boolean } }).connection?.saveData) return;
+  const era = eraArt((view.players.find((p) => p.id === view.me)?.era ?? 1) - 1);
+  const met = new Set(view.diplomacy.met ?? view.players.map((p) => p.team));
+  const urls = [era?.small, ...view.players.filter((p) => p.team === view.team || met.has(p.team)).map((p) => leaderPortraitUrl(p.faction))]
+    .filter((url): url is string => !!url && !diplomacyWarmed.has(url));
+  for (const url of urls) diplomacyWarmed.add(url);
+  if (urls.length) void warmImages(urls);
 }

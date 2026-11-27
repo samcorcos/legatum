@@ -95,12 +95,11 @@ for (const size of SIZES) test.describe(`deals ${size.name}`, () => {
       const offer: PeaceProposal = { id: 1, from: 1, to: 0, proposer: 1, kind: 'Peace', created_turn: TURN, respond_by: TURN + 1, relation_version: 1, gold: -40, consents: [1] };
       d.proposals = [offer];
     }), TURN);
-    await page.getByRole('button', { name: /Respond to offer/ }).first().click();
-    const card = page.locator('.offer-card');
+    const card = page.getByTestId('peace-talks');
     await expect(card).toBeVisible();
-    await expect(card.locator('.offer-headline')).toContainText('asks 40 Gold for Peace');
-    await expect(card.locator('.offer-for-you')).toContainText('You pay 40 Gold.');
-    await expect(card.locator('.offer-for-you')).not.toContainText('You have 120 Gold');
+    await expect(card).toContainText('asks 40 Gold for Peace');
+    await expect(card).toContainText('You pay 40 Gold.');
+    await expect(card).not.toContainText('You have 120 Gold');
     await page.mouse.move(4, size.height / 2);
     await shot(page, size, 'd4-incoming-peace-asks-gold');
   });

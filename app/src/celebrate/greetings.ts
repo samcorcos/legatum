@@ -29,3 +29,32 @@ export const GREETING: Record<Faction, Greeting> = {
   Switzerland: { line: 'The Confederates greet you. Come as a guest and the passes are open. Come as an army and they are not.' },
   India: { native: 'Namaste.', meaning: 'I bow to you.', line: 'The court of Hindustan greets you. Many peoples live under one emperor here. There is room for one more friend.' },
 };
+
+/** Short lines spoken by the other people at the peace table and on receiving a declaration. */
+export const PEACE_OFFER: Record<Faction, string> = {
+  Rome: 'Let the Senate set its seal to peace, and our soldiers return to their fields.',
+  Athens: 'Let reason settle what spears could not. We offer a peace both cities can keep.',
+  Sparta: 'Enough. Let each people hold what is theirs, and put down the spear.',
+  Egypt: 'The river has carried enough grief. Let our lands prosper in peace.',
+  Byzantium: 'A wise ruler knows when to close a war. Let our envoys finish it.',
+  Aztecs: 'The tribute of battle has been paid. Let our peoples lay down their shields.',
+  Mongols: 'The road ahead is long. Let our riders leave your lands in peace.',
+  Celts: 'Let the fires burn for guests again, and no longer for war.',
+  Germany: 'Our princes have spent enough on war. Let the borders stand in peace.',
+  Switzerland: 'Our cantons ask for quiet in the valleys. Let us agree to peace.',
+  India: 'Let the court record an end to this war, and our people tend their fields.',
+};
+
+export const WAR_REPLY: Record<Faction, string> = {
+  Rome: 'The Senate will remember who crossed the border first.',
+  Athens: 'Our assembly will answer your march with ships and spears.',
+  Sparta: 'Come, then. We will meet you in the field.',
+  Egypt: 'The Two Lands will stand before your army.',
+  Byzantium: 'The walls of the City have heard such threats before.',
+  Aztecs: 'Our warriors will meet yours beneath their banners.',
+  Mongols: 'Our riders will carry word of your choice across the steppe.',
+  Celts: 'You will find every hearth defended.',
+  Germany: 'Our princes will answer your declaration together.',
+  Switzerland: 'The passes are narrow, and we know every one.',
+  India: 'The court has heard your challenge. Our armies will answer.',
+};

@@ -7,7 +7,7 @@ import { warPromptCoreSave } from '../src/test/warPromptFixture';
 
 // Playtest 6: an Archer ordered to fire on a city of an empire at Peace showed an order icon on the
 // map, then "Fix unit order: no enemy unit or city to attack there". Civ-style, attacking a team at
-// Peace now asks "Declare War on …?" first: Return declares and keeps the attack (the surprise war
+// Peace now asks "Declare War on …?" first: Return keeps the Peace; confirming keeps the attack (the surprise war
 // opens before ranged fire), Esc drops it. Clicking a foreign city opens its card with Declare War,
 // diplomacy, and "Attack with" the unit that was selected. The Fix-order card's sentence wraps
 // inside the card at the user's window sizes.
@@ -68,16 +68,16 @@ async function aimAtCity(page: Page) {
   await page.mouse.click(city.x, city.y, { button: 'right' });
 }
 
-test('ranged attack on a city at Peace asks to declare War; Esc drops it, Return declares and fires this turn', async ({ page }) => {
+test('ranged attack on a city at Peace asks to declare War; Esc and Return keep Peace, confirming fires this turn', async ({ page }) => {
   await page.setViewportSize({ width: 1000, height: 600 });
   const archer = await start(page);
   await aimAtCity(page);
   const dialog = page.getByRole('dialog', { name: 'Declare War on Switzerland?' });
   await expect(dialog).toBeVisible();
-  await expect(dialog).toContainText("can't fire on their Harmonia yet");
+  await expect(dialog).toContainText('their Harmonia');
   await expect(dialog).toContainText('War starts now.');
   await expect(dialog).toContainText('fires on their Harmonia this turn');
-  await expect(dialog).toContainText('Costs no Gold.');
+  await expect(dialog.getByRole('button', { name: 'Keep the Peace' })).toBeFocused();
   await expect(dialog.locator('.btn.primary')).toHaveAccessibleName('Declare War and attack');
   // Nothing looks accepted while the decision is open.
   expect(await orders(page)).toEqual([]);
@@ -89,6 +89,11 @@ test('ranged attack on a city at Peace asks to declare War; Esc drops it, Return
   await aimAtCity(page);
   await expect(dialog).toBeVisible();
   await page.keyboard.press('Enter');
+  await expect(dialog).toHaveCount(0);
+  expect(await orders(page)).toEqual([]);
+  await aimAtCity(page);
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: 'Declare War and attack' }).click();
   await expect(dialog).toHaveCount(0);
   await expect.poll(() => orders(page)).toEqual([
     { type: 'DeclareWar', against: 1, breach: false },
@@ -179,11 +184,11 @@ test('clicking a foreign city opens its card: Declare War asks first, Attack wit
   if (shots) { await settle(page); await page.screenshot({ path: `${shots}/prompt-city-1000x600.png` }); }
   await page.keyboard.press('Escape');
   expect(await orders(page)).toEqual([]);
-  // Attack with the Archer: confirm with Return.
+  // Attack with the Archer: confirm with the declaration button.
   await attack.click();
   await expect(dialog).toBeVisible();
   await expect(dialog.locator('.btn.primary')).toHaveAccessibleName('Declare War and attack');
-  await page.keyboard.press('Enter');
+  await dialog.getByRole('button', { name: 'Declare War and attack' }).click();
   await expect.poll(() => orders(page)).toEqual([
     { type: 'DeclareWar', against: 1, breach: false },
     { type: 'RangedAttack', unit: archer, target: CITY },

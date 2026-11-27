@@ -315,7 +315,7 @@ it('lists empires with mark, faction name, relation and VP, and collapses unusab
   expect(useGame.getState().diplomacyTeam).not.toBe(1);
 });
 
-it('shows a Peace truce and the disabled Declare War reason on its empire row', () => {
+it('opens the War plate for a protected Peace and shows the refusal there', () => {
   const view = structuredClone(useGame.getState().views![0]);
   const through = view.turn + 9;
   const relation = view.diplomacy.relations.find((r) => (r.a === 0 && r.b === 1) || (r.a === 1 && r.b === 0))!;
@@ -331,11 +331,12 @@ it('shows a Peace truce and the disabled Declare War reason on its empire row', 
   const row = container.querySelector('.empire-row.open')!;
   expect(row.querySelector('.empire-relation')!.textContent).toContain(`truce through turn ${through}`);
   const war = [...row.querySelectorAll('button')].find((b) => b.getAttribute('aria-label') === 'Declare War') as HTMLButtonElement;
-  expect(war.disabled).toBe(true);
-  expect(war.parentElement!.textContent).toContain(`guaranteed through turn ${through}`);
+  expect(war.disabled).toBe(false);
+  act(() => war.click());
+  expect(useGame.getState().diplomacyTakeover).toEqual({ mode: 'war', team: 1 });
 });
 
-it('keeps Declare War disabled with the truce end turn in the attack dialog', () => {
+it('shows the truce refusal with no Declare War button in the attack takeover', () => {
   const view = structuredClone(useGame.getState().views![0]);
   const through = view.turn + 9;
   view.diplomacy.actions = view.diplomacy.actions.filter((a) => !(a.order.type === 'DeclareWar' && a.order.against === 1));
@@ -343,10 +344,10 @@ it('keeps Declare War disabled with the truce end turn in the attack dialog', ()
     effective_turn: through + 1, blocked_reason: `Peace with ${empireTitle(view, 1)} is guaranteed through turn ${through}` });
   useGame.setState({ views: [view], warPrompt: { seat: 0, view, unit: null, target: null, team: 1 } });
   act(() => root.render(<DeclareWarPrompt />));
-  const dialog = container.querySelector('dialog')!;
-  const war = [...dialog.querySelectorAll('button')].find((b) => b.textContent === 'Declare War') as HTMLButtonElement;
-  expect(war.disabled).toBe(true);
-  expect(war.parentElement!.textContent).toContain(`guaranteed through turn ${through}`);
+  const dialog = container.querySelector('[data-testid="war-takeover"]')!;
+  const war = [...dialog.querySelectorAll('button')].find((b) => b.textContent === 'Declare War');
+  expect(war).toBeUndefined();
+  expect(dialog.textContent).toContain(`guaranteed through turn ${through}`);
 });
 
 it('shows an empire on the map from its known location', () => {

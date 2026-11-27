@@ -16,19 +16,16 @@ for (const size of SIZES) test.describe(`capture and Peace clarity ${size.name}`
       created_turn: 50, respond_by: 52, relation_version: relation.version, consents: [1] }];
     save.diplomacy.next_proposal_id = 8;
     await loadFixture(page, JSON.stringify(save), 50);
-    await page.getByRole('button', { name: /Respond to offer/ }).first().click();
-    const card = page.locator('.offer-card');
-    await expect(card.locator('.offer-scope')).toContainText('Ends your war with Byzantium.');
-    await expect(card.locator('.offer-scope')).toContainText('Your war with Sparta continues.');
-    await expect(card.getByRole('button', { name: /^Accept Peace with Byzantium/ })).toBeVisible();
-    await expect(card.getByRole('button', { name: /^Decline Peace with Byzantium/ })).toBeVisible();
+    const card = page.getByTestId('peace-talks');
+    await expect(card).toContainText('Your war with Sparta continues.');
+    await expect(card.getByRole('button', { name: 'Accept Peace' })).toBeVisible();
+    await expect(card.getByRole('button', { name: 'Refuse, fight on' })).toBeVisible();
     const layout = await card.evaluate((el) => {
-      const buttons = [...el.querySelectorAll<HTMLButtonElement>('.offer-actions button')];
-      const rows = [...el.querySelectorAll<HTMLElement>('.offer-for-you li')];
+      const buttons = [...el.querySelectorAll<HTMLButtonElement>('.pt-actions button')];
       return { buttons: buttons.map((b) => ({ height: b.getBoundingClientRect().height, line: parseFloat(getComputedStyle(b).lineHeight) })),
-        lastRowBottom: rows.at(-1)?.getBoundingClientRect().bottom ?? 0, viewport: innerHeight };
+        lastRowBottom: buttons.at(-1)?.getBoundingClientRect().bottom ?? 0, viewport: innerHeight };
     });
-    expect(layout.buttons).toHaveLength(2);
+    expect(layout.buttons).toHaveLength(3);
     for (const button of layout.buttons) expect(button.height).toBeLessThan(button.line * 2 + 20);
     expect(layout.lastRowBottom).toBeLessThanOrEqual(layout.viewport);
     await shot(page, size, 'peace-card');

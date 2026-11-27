@@ -203,7 +203,8 @@ export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], 
   const firstUnanswered = decisions.findIndex((d, i) => !handled(d.kind) && (firstHandled < 0 || i < firstHandled) && !skipped.includes(`answer:${d.kind}:${'id' in d ? d.id : ''}`));
   if (firstUnanswered >= 0) {
     const d = decisions[firstUnanswered], id = `answer:${d.kind}:${'id' in d ? d.id : ''}`;
-    return { id, title: 'Answer this first', why: d.label, current: 0,
+    const peace = d.kind === 'diplomacy' && v.diplomacy.proposals.some((p) => p.id === d.id && (p.kind ?? 'Peace') === 'Peace');
+    return { id, title: peace ? 'Answer the peace talks' : 'Answer this first', why: d.label, current: 0,
       steps: [{ instruction: `${ctx.touch ? 'Tap' : 'Click'} ${ctx.turnLabel ?? d.label}.`, target: control('turn') }] };
   }
   // Situational advice comes before the routine decisions, but never interrupts a unit or panel already in hand.

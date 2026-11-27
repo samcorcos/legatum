@@ -29,6 +29,10 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await expect(inbox).toBeVisible();
     await expect(inbox.getByRole('button', { name: 'Declare War', exact: true })).toBeVisible();
     await shot(page, size, '16-diplomacy-inbox');
+    await inbox.getByRole('button', { name: 'Declare War', exact: true }).click();
+    await expect(page.getByTestId('war-takeover')).toBeVisible();
+    await shot(page, size, '16a-declare-war-from-diplomacy');
+    await page.getByTestId('war-takeover').getByRole('button', { name: 'Keep the Peace' }).click();
 
     // An incoming Alliance offer: one decision card.
     const offer = await browser.newContext({ viewport: { width: size.width, height: size.height } });
@@ -84,6 +88,20 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
       await expect(dialog).toBeVisible();
       await shot(p3, size, '18-declare-war');
     } finally { await war.close(); }
+  });
+
+  test('peace terms use the full-screen plate', async ({ page }) => {
+    const state = diplomacyState(16, { met: true });
+    const relation = state.diplomacy!.relations.find((r) => r.a === 0 && r.b === 1)!;
+    Object.assign(relation, { state: 'War', war_id: 1, effective_turn: 10, version: 1, declarers: [1] });
+    state.diplomacy!.next_war_id = 1;
+    await loadFixture(page, coreFixture(state), 16);
+    await page.getByRole('button', { name: /^Diplomacy/ }).click();
+    await page.getByRole('button', { name: /^Offer Peace/ }).click();
+    const terms = page.getByTestId('peace-talks');
+    await expect(terms).toContainText('You give');
+    await expect(terms).toContainText('You demand');
+    await shot(page, size, '16b-peace-terms');
   });
 
   test('treaties: first contact in the inbox, then an accepted Alliance and Peace in the report', async ({ page }) => {
@@ -215,7 +233,7 @@ for (const size of SIZES) test.describe(`screen tour ${size.name}`, () => {
     await card.getByRole('button', { name: /^Attack with/ }).click();
     await expect(dialog).toBeVisible();
     await shot(page, size, '38-ranged-war-prompt');
-    await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await dialog.getByRole('button', { name: 'Keep the Peace', exact: true }).click();
     await expect(dialog).toHaveCount(0);
 
     // A stale ranged order on a team at Peace: the Fix order call to action.
