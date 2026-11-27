@@ -1636,7 +1636,7 @@ impl<'a> Planner<'a> {
                     let stake = crate::production::city_keep_value(c)
                         * self.decisions.walled_defense_percent.max(warning)
                         / 100;
-                    let option = d
+                    let candidates: Vec<_> = d
                         .options
                         .iter()
                         .filter(|o| {
@@ -1645,6 +1645,17 @@ impl<'a> Planner<'a> {
                                 || crate::composition::is_ranged_line(unit))
                         })
                         .filter(|o| o.turns > 0)
+                        .collect();
+                    let floor = self.modern_floor(candidates.iter().filter_map(|o| match o.item {
+                        ProductionItem::Unit { unit } => Some(unit),
+                        _ => None,
+                    }));
+                    let option = candidates
+                        .into_iter()
+                        .filter(|o| match o.item {
+                            ProductionItem::Unit { unit } => data::unit_era_tier(unit) >= floor,
+                            _ => true,
+                        })
                         .max_by_key(|o| {
                             let ProductionItem::Unit { unit } = o.item else {
                                 unreachable!()
@@ -1657,14 +1668,18 @@ impl<'a> Planner<'a> {
                                     unit,
                                 )),
                             );
-                            let stats = self
-                                .view()
-                                .rule_experiments
-                                .unit_stats_for(self.faction, unit);
                             // A counterfactual garrison that survives the forecast saves the
                             // city's stake. Defence strength still ranks imperfect answers.
                             let saved = if after.falls { 0 } else { stake };
-                            let strength = stats.strength.max(stats.ranged);
+                            let strength = if self.decisions.modern_army > 0 {
+                                self.modernization_power(unit, 0, data::UNIT_HP, false, c.pos)
+                            } else {
+                                let stats = self
+                                    .view()
+                                    .rule_experiments
+                                    .unit_stats_for(self.faction, unit);
+                                stats.strength.max(stats.ranged)
+                            };
                             (saved + strength * 2) * 100 / o.turns.max(1) - o.cost
                         });
                     if let Some(option) = option

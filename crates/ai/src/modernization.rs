@@ -491,7 +491,7 @@ impl Planner<'_> {
     /// while such units outnumber the empire's cities. It still pays upkeep and loses every
     /// fight; the cities each keep one as a body. Never one in reach of an enemy at war.
     pub(crate) fn retire_obsolete(&mut self) {
-        if self.decisions.modern_army < 2 {
+        if self.decisions.modern_army < 2 || self.difficulty != legatum_core::AiDifficulty::Hard {
             return;
         }
         let v = self.view();
