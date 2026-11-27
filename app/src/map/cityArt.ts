@@ -198,8 +198,8 @@ export const CITY_GROUND = { x0: 18, x1: 493, bottom: 454, middle: 335 };
  * ring's back half is drawn first, then the town, then the front half (`WALL_CUT`). Every era's ring leaves this much room.
  */
 export const WALLED_TOWN_SCALE = 0.78;
-/** A wall and its enclosed town change size together; the town keeps its measured building scale. */
-export const wallDrawScale = (townScale: number) => townScale / WALLED_TOWN_SCALE;
+/** Keep the ring within 1.4 hex widths; its enclosed town shrinks with it above the cap. */
+export const wallDrawScale = (townScale: number) => Math.min(1, townScale / WALLED_TOWN_SCALE);
 /** Where a wall ring is cut into back and front (canvas y): the ground oval's middle. */
 export const WALL_CUT = CITY_GROUND.middle;
 /**

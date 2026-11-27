@@ -4,7 +4,7 @@
 // strokes, fills, clipped drawImage calls of art already on the map, and a one-off engraving of each sprite (`inkOf`),
 // so a turn with many moments stays cheap; nothing here uses filters, shadowBlur or per-frame canvases.
 import type { Faction, PlayerView } from '../types';
-import { cityDrawDrop, cityDrawScale, cityImage, cityStem, cityTier, drawCityCanvas, markStem, spriteSize, walledTown, wallDrawScale, CITY_CANVAS, CITY_GROUND, WALL_CUT } from './cityArt';
+import { cityDrawDrop, cityDrawScale, cityImage, cityStem, cityTier, drawCityCanvas, markStem, spriteSize, walledTown, wallDrawScale, WALLED_TOWN_SCALE, CITY_CANVAS, CITY_GROUND, WALL_CUT } from './cityArt';
 import { CITY_DROP, CITY_WORLD } from './terrain';
 import { buildingIconName, itemName } from '../data';
 import { tintedIcon } from '../icons';
@@ -299,7 +299,7 @@ function drawGrow(ctx: CanvasRenderingContext2D, g: FxGrow, t: number, v: Moment
   if (!sprite) return;
   // Clipped to the ring's court like the cached town (`walledTown`, drawn in the ring's full frame); unclipped and scaled until the ring loads.
   const fitted = ring ? walledTown(sprite.img, ring) : null;
-  const box = townBox(c, v.zoom, fitted ? ringScale : townScale, drop);
+  const box = townBox(c, v.zoom, fitted ? ringScale : !v.far && city.ring ? ringScale * WALLED_TOWN_SCALE : townScale, drop);
   const k = Math.min(1, dt / GROW_MS);
   const s = 0.96 + 0.04 * easeOut(clamp01(k / 0.7));
   const bw = box.s * s, bx = c.x - (c.x - box.x) * s, by = box.y + box.s * (1 - s) * 0.85;

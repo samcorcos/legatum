@@ -8,7 +8,7 @@
 // grid, glyphs, towns, fog, territory, fog hatch, unexplored veil, known edge.
 import type { CityView, PlayerView, Terrain } from '../types';
 import { PLAYER_BORDER_DASH, rgba } from '../theme';
-import { CITY_CANVAS, CITY_GROUND, townOval, cityArtArrivals, cityDrawDrop, cityDrawScale, drawCityCanvas, cityArtEpoch, cityImage, cityStem, cityTier, footingsStem, walledTown, markStem, ringEraOf, spriteSize, traceCityArt, wallDrawScale, wallStem } from './cityArt';
+import { CITY_CANVAS, CITY_GROUND, WALLED_TOWN_SCALE, townOval, cityArtArrivals, cityDrawDrop, cityDrawScale, drawCityCanvas, cityArtEpoch, cityImage, cityStem, cityTier, footingsStem, walledTown, markStem, ringEraOf, spriteSize, traceCityArt, wallDrawScale, wallStem } from './cityArt';
 import { sitesOf } from './constructionSites';
 import { mapBorderColor, mapPlayerColor, type BorderSpec, type MapStyle } from './style';
 import { getBorderVariant, type BorderVariant } from './borderVariant';
@@ -1869,7 +1869,7 @@ export class TerrainCache {
     // Clipped to the ring's court, so no house stands on a rampart; until the ring loads, just the scaled town.
     const fitted = img && ring ? walledTown(img, ring) : null;
     if (fitted) this.drawSprite(g, fitted, 'all', ringScale, drop);
-    else if (img) this.drawSprite(g, img, 'all', townScale, drop);
+    else if (img) this.drawSprite(g, img, 'all', ringScale * WALLED_TOWN_SCALE, drop);
     if (ring) this.drawSprite(g, ring, 'front', ringScale, drop);
   }
 
