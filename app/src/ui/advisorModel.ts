@@ -1,5 +1,6 @@
 /** The advisor explains one decision from a Hard plan made from this seat's own view. */
 import { create } from 'zustand';
+import { DISCOVERY_IDS, discoverySuggestion } from './advisorDiscovery';
 import { advisorOrders } from '../automation';
 import { buildingStatsFor, effectiveTurnLimit, itemKey, itemName, TECH_NAME, wallsRepairing, wallsUpgradeName } from '../data';
 import { WALLS_HP_PER_LEVEL } from '../combat';
@@ -19,7 +20,7 @@ import type { BattleForecast, CityView, Hex, Order, OrderError, PlayerView, Tech
 
 /** Keep the old key: disabling first-game hints also disables the advisor. */
 export const ADVISOR_KEY = 'legatum.first-game-hints.v2';
-export type AdvisorTarget = { kind: 'tile'; hex: Hex } | { kind: 'control'; name: 'research' | 'turn' | 'race' | 'diplomacy' | 'found' | 'fortify' | 'explore' | 'skip' | 'ranged' | 'build' | 'tech' | 'queueTech' | 'researchQueue' | 'closeResearch' | 'buyTile' | 'buyCity'; value?: string } | null;
+export type AdvisorTarget = { kind: 'tile'; hex: Hex } | { kind: 'control'; name: 'research' | 'turn' | 'race' | 'diplomacy' | 'found' | 'fortify' | 'explore' | 'skip' | 'ranged' | 'build' | 'tech' | 'queueTech' | 'researchQueue' | 'closeResearch' | 'buyTile' | 'buyCity' | 'automate' | 'queueBuild' | 'heal' | 'autoFire' | 'upgrade' | 'airRecon' | 'ping' | 'siege' | 'mapYields' | 'cities'; value?: string } | null;
 export interface AdvisorStep { instruction: string; key?: string; target: AdvisorTarget }
 export interface Suggestion { id: string; title: string; why: string; steps: AdvisorStep[]; current: number; acknowledge?: boolean; tip?: boolean }
 export interface AdvisorContext {
@@ -30,6 +31,11 @@ export interface AdvisorContext {
   humans: number;
   /** An online game: the turn button reads Ready even with one human in this browser. */
   remote?: boolean;
+  /** True only when the live transport and a human teammate support map pings. */
+  canPing?: boolean;
+  /** Optional lessons pause for the rest of a turn after one is learned. */
+  discoveryTurn?: number;
+  yieldsVisible?: boolean;
   touch: boolean;
   techOpen?: boolean;
   mode?: string;
@@ -259,6 +265,10 @@ export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], 
   const firstUnanswered = decisions.findIndex((d, i) => !handled(d.kind) && (firstHandled < 0 || i < firstHandled) && !skipped.includes(`answer:${d.kind}:${'id' in d ? d.id : ''}`));
   if (firstUnanswered >= 0) {
     const d = decisions[firstUnanswered], id = `answer:${d.kind}:${'id' in d ? d.id : ''}`;
+    if (d.kind === 'air' && ctx.selection?.kind === 'air' && ctx.selection.id === d.id) {
+      const discovery = discoverySuggestion({ ...ctx, orders, errors: [] }, seen, skipped, practice);
+      if (discovery?.id === 'airOperations') return discovery;
+    }
     return { id, title: 'Answer this first', why: d.label, current: 0,
       steps: [{ instruction: `${ctx.touch ? 'Tap' : 'Click'} ${ctx.turnLabel ?? d.label}.`, target: control('turn') }] };
   }
@@ -274,6 +284,10 @@ export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], 
   if (seen.includes('welcome') && !ctx.techOpen) {
     const tip = strategyTip(v, tips, ctx.touch, ctx.selection, validOrders(ctx), ctx.placingTile ?? null, locks);
     if (tip && !skipped.includes(tip.id) && (!ctx.selection || tip.current > 0)) return tip;
+  }
+  if (seen.includes('welcome')) {
+    const discovery = discoverySuggestion({ ...ctx, orders, errors: [] }, seen, skipped, practice);
+    if (discovery) return discovery;
   }
   // Follow the screen: the open Research panel or the selected city or unit is the decision in hand.
   const inHand = (d: (typeof decisions)[number]) => (d.kind === 'research' && ctx.techOpen)
@@ -336,7 +350,8 @@ function savePreferences({ enabled, seen, practice, tips, locks }: AdvisorPrefer
 interface AdvisorState extends AdvisorPreferences {
   skippedTurn: number;
   skipped: string[];
-  markSeen(id: string): void;
+  markSeen(id: string, turn?: number): void;
+  discoveryTurn: number;
   /** Turn-scoped, so a routine done twice in one turn counts once. */
   practisedTurn: number;
   practised: PracticeKind[];
@@ -349,7 +364,7 @@ interface AdvisorState extends AdvisorPreferences {
   setEnabled(enabled: boolean): void;
 }
 export const useAdvisor = create<AdvisorState>((set) => ({
-  ...readAdvisorPreferences(), skippedTurn: -1, skipped: [], practisedTurn: -1, practised: [],
+  ...readAdvisorPreferences(), discoveryTurn: -1, skippedTurn: -1, skipped: [], practisedTurn: -1, practised: [],
   practise: (kinds, turn) => set((s) => {
     const done = s.practisedTurn === turn ? s.practised : [];
     const fresh = [...new Set(kinds)].filter((k) => !done.includes(k));
@@ -360,7 +375,7 @@ export const useAdvisor = create<AdvisorState>((set) => ({
     savePreferences(next);
     return next;
   }),
-  markSeen: (id) => set((s) => { if (s.seen.includes(id)) return s; const next = { ...s, seen: [...s.seen, id] }; savePreferences(next); return next; }),
+  markSeen: (id, turn) => set((s) => { if (s.seen.includes(id)) return s; const next = { ...s, seen: [...s.seen, id], discoveryTurn: turn !== undefined && DISCOVERY_IDS.some((known) => known === id) ? turn : s.discoveryTurn }; savePreferences(next); return next; }),
   skip: (id, turn) => set((s) => ({ skippedTurn: turn, skipped: [...(s.skippedTurn === turn ? s.skipped : []), id] })),
   noteTip: (key, turn) => set((s) => {
     if (s.tips[key] === turn) return s;

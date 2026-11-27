@@ -68,6 +68,21 @@ describe('one decision at a time', () => {
     expect(advisorSuggestion(ctx(unitDone), ['welcome'], [])?.title).toBeTruthy();
   });
 
+  it('never lets a discovery cooldown suppress core onboarding', async () => {
+    const { view, city, unit, tech, plan, ctx } = await opening();
+    const paused = (context: AdvisorContext) => ({ ...context, discoveryTurn: view.turn });
+    expect(advisorSuggestion(paused(ctx()), [], [])?.id).toBe('welcome');
+    expect(advisorSuggestion(paused(ctx()), ['welcome'], [])?.id).toBe(`city:${city.id}`);
+    expect(advisorSuggestion(paused(ctx([plan[0]])), ['welcome'], [])?.id).toBe(`unit:${unit.id}`);
+    const project: Order = { type: 'SetProduction', city: city.id, item: { kind: 'Project', project: 'Gold' } };
+    expect(advisorSuggestion({ ...ctx([project]), techOpen: true }, ['welcome'], [])?.id).toBe('research');
+    const researched = { ...ctx([project, { type: 'SetResearch', tech }]), techOpen: true };
+    expect(advisorSuggestion(paused(researched), ['welcome'], [])?.id).toBe('researchQueue');
+    expect(advisorSuggestion(paused(researched), ['welcome', 'researchQueue'], [])?.id).toBe('closeResearch');
+    const allDone: Order[] = [project, { type: 'SetResearch', tech }, ...view.units.filter((u) => u.owner === view.me).map((u): Order => ({ type: 'SkipUnit', unit: u.id }))];
+    expect(advisorSuggestion(paused(ctx(allDone)), ['welcome'], [])?.id).toBe('endTurn');
+  });
+
   it('follows the screen: the open Research panel or the selected unit comes first', async () => {
     const { city, unit, plan, ctx } = await opening();
     expect(advisorSuggestion({ ...ctx([plan[0]]), techOpen: true }, ['welcome'], [])?.id).toBe('research');
