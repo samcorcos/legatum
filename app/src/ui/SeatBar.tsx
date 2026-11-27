@@ -303,7 +303,7 @@ export function SeatBar({ phoneDetails = false, onOpenDetails, race }: { phoneDe
   const stepBack = returnOwned || diplomacyOpen || (!!selection && (selection.kind === 'unit' ? view.units : selection.kind === 'air' ? view.aircraft ?? [] : view.cities)
     .some((x) => x.id === selection.id && x.owner === view.me));
   if (phone) return <div className="phone-turn-dock" data-overlay-slot="turn-dock" data-pending-decisions={decisions.length}>
-    <button className="btn" onClick={onOpenDetails} aria-controls="phone-sheet-content">This Turn{remote && !view.finished && net?.turnSecondsLeft != null && <span role="timer"> · {disconnected ? "—" : `${Math.floor(net.turnSecondsLeft / 60)}:${String(net.turnSecondsLeft % 60).padStart(2, "0")}`}</span>}</button>
+    <button className="btn" onClick={onOpenDetails} aria-controls="phone-sheet-content" aria-label="This Turn">{remote && !view.finished && net?.turnSecondsLeft != null ? <span role="timer">Turn · {disconnected ? "—" : `${Math.floor(net.turnSecondsLeft / 60)}:${String(net.turnSecondsLeft % 60).padStart(2, "0")}`}</span> : "This Turn"}</button>
     {/* While a decision is pending, Next names it, is the primary call to action, and goes where its
         label says (the CTA's decision, as on desktop), not to whatever follows the selection. */}
     <button className={`btn${cta.kind === 'todo' && !stepBack ? ' primary' : ''}`} onClick={() => (cta.kind === 'todo' ? cta.onClick() : nextDecision())} aria-label={`Next decision: ${cta.label}`}
