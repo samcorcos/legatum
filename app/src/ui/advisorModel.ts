@@ -56,7 +56,7 @@ function researchWhy(order: Extract<Order, { type: 'SetResearch' | 'SetResearchQ
     && (isThreat(view, u.owner) || (view.players.find((p) => p.id === u.owner)?.army ?? 0) > (view.players.find((p) => p.id === view.me)?.army ?? 0)));
   const ahead = view.players.some((p) => p.alive && otherSide(view, p.id) && p.era > view.research.era + 1
     && view.cities.some((c) => c.owner === p.id && ownCities(view).some((own) => distance(c.pos, own.pos) <= 12)));
-  if (military && (nearArmy || ahead)) return `${nearArmy ? 'Rival units are near your cities' : 'A rival is ahead in research'}: ${TECH_NAME[tech]} unlocks ${military.label}.`;
+  if (military && (nearArmy || ahead)) return `${nearArmy ? 'A rival unit is near one of your cities' : 'A rival is ahead in research'}: ${TECH_NAME[tech]} unlocks ${military.label}.`;
   const resource = revealedByTech(tech)[0];
   if (resource) return `${TECH_NAME[tech]} shows ${resource} on the map.`;
   const unlock = unlocks.find((u) => u.kind !== 'Effect');
@@ -233,7 +233,7 @@ export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], 
       nextTech &&
       ((ctx.techOpen && queue.length === 1) || (ctx.researchQueueDrained && queue.length === 0))) {
     return { id: 'researchQueue', title: 'Queue your research', acknowledge: true, current: ctx.techOpen ? 1 : 0,
-      why: 'Queue more technologies to keep researching after the current one.',
+      why: queue.length ? 'Queue more technologies to keep researching after the current one.' : 'Choose a technology to resume research.',
       steps: [{ instruction: `${ctx.touch ? 'Tap' : 'Click'} Research at the top.`, target: control('research') },
         { instruction: ctx.touch ? `Tap This era, then + Queue on ${TECH_NAME[nextTech]}.`
           : `Shift-click ${TECH_NAME[nextTech]} in the tree, or click + Queue on ${TECH_NAME[nextTech]}.`, target: control('queueTech', nextTech) }] };

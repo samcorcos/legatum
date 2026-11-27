@@ -110,6 +110,7 @@ for (const size of SIZES) test.describe(`first run with advisor ${size.name}`, (
     } else await tech.getByRole('button', { name: 'Research now' }).first().click();
     // The queue lesson comes first and rings another technology in the open panel.
     await expect(card).toHaveAttribute('data-advisor-id', 'researchQueue');
+    await expect(card.locator('.advisor-copy p')).toHaveText('Queue more technologies to keep researching after the current one.');
     await expect(ring).toBeVisible();
     await card.getByRole('button', { name: 'Got it' }).click();
     // With the lesson acknowledged, the advisor rings Close.

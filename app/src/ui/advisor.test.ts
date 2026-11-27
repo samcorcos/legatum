@@ -251,7 +251,7 @@ describe('research queue advice', () => {
     view.turn = 2;
     expect(advisorSuggestion({ ...ctx(), researchQueueDrained: true }, ['welcome', 'report'], [])).toEqual({
       id: 'researchQueue', title: 'Queue your research', acknowledge: true, current: 0,
-      why: 'Queue more technologies to keep researching after the current one.',
+      why: 'Choose a technology to resume research.',
       steps: [{ instruction: 'Click Research at the top.', target: { kind: 'control', name: 'research', value: undefined } },
         { instruction: `Shift-click ${TECH_NAME[tech]} in the tree, or click + Queue on ${TECH_NAME[tech]}.`, target: { kind: 'control', name: 'queueTech', value: tech } }],
     });
@@ -267,10 +267,10 @@ describe('research queue advice', () => {
     const rival = view.players.find((p) => p.team !== view.team)!;
     view.players = view.players.map((p) => p.id === rival.id ? { ...p, army: 100 } : p);
     view.units.push({ ...unit, id: 9001, owner: rival.id, pos: city.pos, military: true });
-    expect(advisorWhy({ type: 'SetResearch', tech: 'Masonry' }, view)).toBe('Rival units are near your cities: Masonry unlocks Walls.');
+    expect(advisorWhy({ type: 'SetResearch', tech: 'Masonry' }, view)).toBe('A rival unit is near one of your cities: Masonry unlocks Walls.');
     expect(advisorWhy({ type: 'SetResearch', tech: 'IronWorking' }, view)).toBe('Iron Working shows Iron on the map.');
     view.units = view.units.filter((u) => u.id !== 9001);
-    expect(advisorWhy({ type: 'SetResearch', tech: 'Masonry' }, view)).not.toMatch(/^Rival units are near your cities/);
+    expect(advisorWhy({ type: 'SetResearch', tech: 'Masonry' }, view)).not.toMatch(/^A rival unit is near one of your cities/);
     view.players = view.players.map((p) => p.id === rival.id ? { ...p, era: view.research.era + 2 } : p);
     view.cities.push({ ...city, id: 9002, owner: rival.id });
     expect(advisorWhy({ type: 'SetResearch', tech: 'Masonry' }, view)).toBe('A rival is ahead in research: Masonry unlocks Walls.');
