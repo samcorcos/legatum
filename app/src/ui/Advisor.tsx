@@ -9,7 +9,7 @@ import { FactionMark } from './bits';
 import { Kbd } from './index';
 import { useGuide } from './guideState';
 import { pendingResearchQueue } from '../orders';
-import { advisorSuggestion, practiceKind, useAdvisor, type AdvisorTarget, type PracticeKind } from './advisorModel';
+import { advisorSuggestion, eraEntryFromReport, practiceKind, useAdvisor, type AdvisorTarget, type PracticeKind } from './advisorModel';
 import { useCoarsePointer } from './useCoarsePointer';
 import './Advisor.css';
 
@@ -148,6 +148,7 @@ export function Advisor() {
   const mode = useGame((s) => s.mode);
   const techOpen = useGame((s) => s.techOpen);
   const report = useGame((s) => s.report);
+  const reportHistory = useGame((s) => s.reportHistory);
   const client = useGame((s) => s.client);
   const animationsOn = useCombatFx((s) => s.enabled);
   const paused = useGame((s) => !!s.busy || !!s.endTurnConfirmation || s.reportOpen || s.diplomacyOpen || !!s.ready[s.seat] || (!!s.place && s.place.intent !== 'tile') ||
@@ -181,8 +182,7 @@ export function Advisor() {
   const advice = view && !hidden ? advisorSuggestion({ view, orders: orders[seat] ?? [], errors: errors[seat], selection,
     humans: humans.length, remote: client?.kind === 'remote', touch, techOpen, mode, turnLabel, placingTile, local: useGame.getState(),
     researchQueueDrained: report?.events[seat]?.some((event) => event.type === 'ResearchQueueAdvanced' && event.player === view.me && event.next === null),
-    eraUp: report?.turn === view.turn ? report.events[seat]?.flatMap((event) =>
-      event.type === 'EraEntered' && event.player === view.me ? [{ era: event.era, hash: report.hash }] : []).at(-1) : undefined,
+    eraUp: eraEntryFromReport(report, view, seat, reportHistory),
     forecast: client ? (unit, at, mode) => client.forecast(view.me, unit, at, mode) : undefined }, seen,
     skippedTurn === view.turn ? skipped : [], practice, tips, locks) : null;
   // While a tile is being placed, only the tip that asked for that tile keeps guiding (its last step rings the tile).

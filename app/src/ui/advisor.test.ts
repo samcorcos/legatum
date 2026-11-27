@@ -6,7 +6,8 @@ import type { Order, TechId } from '../types';
 import { TECH_NAME } from '../data';
 import { itemName } from '../data';
 import { ownerName } from '../barbarians';
-import { advisorSuggestion, advisorWhy, practiceKind, PRACTICE_TURNS, readAdvisorPreferences, useAdvisor, type AdvisorContext } from './advisorModel';
+import { advisorSuggestion, advisorWhy, eraEntryFromReport, practiceKind, PRACTICE_TURNS, readAdvisorPreferences, useAdvisor, type AdvisorContext } from './advisorModel';
+import type { TurnReport } from '../store';
 
 async function opening() {
   const client = new FixtureClient();
@@ -73,7 +74,7 @@ describe('one decision at a time', () => {
       current: 0, acknowledge: true,
     });
     view.research.known = view.research.known.filter((known) => known !== tech);
-    expect(advisorSuggestion(next, ['welcome', 'report', 'howToWin'], [])?.id).not.toMatch(/^era:/);
+    expect(advisorSuggestion(next, ['welcome', 'report', 'howToWin'], [])?.why).toBe('Choose a Classical era technology.');
   });
 
   it('points at Research when the Hard plan starts with a new-era technology', async () => {
@@ -91,6 +92,49 @@ describe('one decision at a time', () => {
       steps: [{ instruction: 'Click Research to choose a technology.', target: { kind: 'control', name: 'research', value: undefined } }],
       current: 0, acknowledge: true,
     });
+  });
+
+  it('reads an era event from the resolved report and its following view', async () => {
+    const { view, ctx } = await opening();
+    view.turn = 8;
+    view.research.era = 1;
+    view.research.era_name = 'Classical';
+    const report = { turn: 7, hash: 'resolved-seven', events: [[{ type: 'EraEntered', player: view.me, era: 2, first: true }]] } as TurnReport;
+    const eraUp = eraEntryFromReport(report, view, 0);
+    expect(eraUp).toEqual({ era: 2, hash: 'resolved-seven' });
+    expect(advisorSuggestion({ ...ctx([], null, []), eraUp }, ['welcome', 'report', 'howToWin'], [])?.id)
+      .toBe(`era:${view.me}:2:resolved-seven`);
+    expect(eraEntryFromReport({ ...report, turn: 8 }, view, 0)).toBeUndefined();
+    view.turn = 9;
+    expect(eraEntryFromReport(null, view, 0, [report])).toEqual(eraUp);
+  });
+
+  it('uses the planned technology effect when it unlocks no unit or building', async () => {
+    const { view, ctx } = await opening();
+    view.turn = 8;
+    view.research.era = 1;
+    view.research.era_name = 'Classical';
+    const next = { ...ctx([], null, [{ type: 'SetResearch', tech: 'CodeOfLaws' }]), eraUp: { era: 2, hash: 'laws' } };
+    expect(advisorSuggestion(next, ['welcome', 'report', 'howToWin'], [])).toEqual({
+      id: `era:${view.me}:2:laws`, title: "Classical era: what's new",
+      why: 'Research Code of Laws: Each city claims its best tile 2 tiles out.',
+      steps: [{ instruction: 'Click Research to choose a technology.', target: { kind: 'control', name: 'research', value: undefined } }],
+      current: 0, acknowledge: true,
+    });
+  });
+
+  it('waits for Research to close and urgent choices to be answered', async () => {
+    const { view, ctx } = await opening();
+    view.turn = 8;
+    view.research.era = 1;
+    view.research.era_name = 'Classical';
+    const next = { ...ctx([], null, []), eraUp: { era: 2, hash: 'waiting' } };
+    const seen = ['welcome', 'report', 'howToWin'];
+    expect(advisorSuggestion({ ...next, techOpen: true }, seen, [])?.id).not.toMatch(/^era:/);
+    view.actions = { ...view.actions, free_techs: { pending: 1, from: null, choices: [] } };
+    expect(advisorSuggestion(next, seen, [])?.id).toBe('answer:freeTechs:');
+    view.actions.free_techs = null;
+    expect(advisorSuggestion(next, seen, [])?.id).toBe(`era:${view.me}:2:waiting`);
   });
 
   it('teaches the first locked garrison once, using the rival and city names', async () => {

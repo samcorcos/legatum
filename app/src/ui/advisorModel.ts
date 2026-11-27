@@ -16,6 +16,7 @@ import { strategyTip, tipKind, type TipLog } from './advisorTips';
 import type { LockLog } from './advisorTips';
 import { occupiedCityName } from './forecastWarnings';
 import type { BattleForecast, CityView, Hex, Order, OrderError, PlayerView, TechId, UnitView } from '../types';
+import type { TurnReport } from '../store';
 
 /** Keep the old key: disabling first-game hints also disables the advisor. */
 export const ADVISOR_KEY = 'legatum.first-game-hints.v2';
@@ -238,8 +239,9 @@ function newEraSuggestion(ctx: AdvisorContext, plan: Order[] | null): Suggestion
   const plannedTechs = plan?.flatMap((order) => order.type === 'SetResearch' ? [order.tech]
     : order.type === 'SetResearchQueue' ? order.techs : []) ?? [];
   const tech = plannedTechs.find((planned) => eraTechs.has(planned) && !known.has(planned)) ?? null;
-  const unlocks = tech ? techCardUnlocks(v.research, tech, factionOf(v))
-    .filter((entry) => entry.kind === 'Unit' || entry.kind === 'Building').slice(0, item ? 1 : 2) : [];
+  const techChoices = tech ? techCardUnlocks(v.research, tech, factionOf(v)) : [];
+  const unlocks = techChoices.filter((entry) => entry.kind === 'Unit' || entry.kind === 'Building').slice(0, item ? 1 : 2);
+  const effect = techChoices.find((entry) => entry.kind === 'Effect')?.label;
   const fallback = [...new Set(newlyKnown.map((unlock) => unlock.name))].slice(0, 3);
   const fallbackNames = fallback.length === 3 ? `${fallback[0]}, ${fallback[1]} and ${fallback[2]}` : fallback.join(' and ');
   const buildName = item ? itemName(item, factionOf(v)) : null;
@@ -247,12 +249,25 @@ function newEraSuggestion(ctx: AdvisorContext, plan: Order[] | null): Suggestion
     ? `Build ${buildName} in ${city.name}. Research ${TECH_NAME[tech]} for ${unlocks[0].label}.`
     : buildName && city ? `You can now build ${buildName} in ${city.name}.`
       : tech && unlocks.length ? `Research ${TECH_NAME[tech]} for ${unlocks.map((entry) => entry.label).join(' and ')}.`
-        : fallback.length ? `This era brings ${fallbackNames}.` : null;
-  if (!why) return null;
+        : tech ? effect ? `Research ${TECH_NAME[tech]}: ${effect}.` : `Research ${TECH_NAME[tech]} next.`
+          : fallback.length ? `This era brings ${fallbackNames}.` : `Choose a ${v.research.era_name} era technology.`;
   return { id: `era:${v.me}:${eraUp.era}:${eraUp.hash}`, title: `${v.research.era_name} era: what's new`, why,
     steps: [city && buildName ? { instruction: `${ctx.touch ? 'Tap' : 'Click'} ${city.name} to build ${buildName}.`, target: tile(city.pos) }
       : { instruction: `${ctx.touch ? 'Tap' : 'Click'} Research to choose a technology.`, target: control('research') }],
     current: 0, acknowledge: true };
+}
+
+/** The report names the turn just resolved; its view has already advanced. */
+export function eraEntryFromReport(report: Pick<TurnReport, 'turn' | 'events' | 'hash'> | null, view: PlayerView, seat: number,
+  history: readonly Pick<TurnReport, 'turn' | 'events' | 'hash'>[] = []): AdvisorContext['eraUp'] {
+  const recent = report?.turn === view.turn - 1 ? [report] : [];
+  for (const resolved of [...history, ...recent].reverse()) {
+    if (resolved.turn >= view.turn) continue;
+    const entry = resolved.events[seat]?.flatMap((event) => event.type === 'EraEntered' && event.player === view.me
+      && event.era === view.research.era + 1 ? [{ era: event.era, hash: resolved.hash }] : []).at(-1);
+    if (entry) return entry;
+  }
+  return undefined;
 }
 
 export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], skipped: readonly string[], practice: Practice = {}, tips: TipLog = {}, locks: LockLog = {}): Suggestion | null {
@@ -263,10 +278,11 @@ export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], 
   // How to win, early: before the first score check, so a new player knows what VP are for.
   if (v.turn >= 3 && seen.includes('report') && !seen.includes('howToWin')) return howToWin(v);
   const plan = ctx.plan === undefined ? advisorOrders(v) : ctx.plan;
-  const era = newEraSuggestion(ctx, plan);
-  if (era && !seen.includes(era.id)) return era;
   const orders = validOrders(ctx);
   const decisions = pendingDecisions(v, orders, ctx.errors ?? [], ctx.local);
+  const urgentDecision = decisions.some((d) => d.kind !== 'city' && d.kind !== 'unit' && d.kind !== 'research');
+  const era = newEraSuggestion(ctx, plan);
+  if (era && !seen.includes(era.id) && !ctx.techOpen && !urgentDecision) return era;
   const choice = plan?.find((o): o is Extract<Order, { type: 'SetResearch' | 'SetResearchQueue' }> => o.type === 'SetResearch' || o.type === 'SetResearchQueue');
   const queue = effectiveResearchQueue(orders, v.research);
   const nextTech = v.research.available.find((option) => !queue.includes(option.tech))?.tech;
