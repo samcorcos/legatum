@@ -11,7 +11,8 @@
 | [design/](design/) | Design notes and art-direction records, with prompts. |
 | [research/](research/) | Background research on 4X design. |
 | [sound-qa.md](sound-qa.md), [celebration-sound-qa.md](celebration-sound-qa.md) | Measured audio levels of the shipped sounds. |
+| [ops/multi-agent.md](ops/multi-agent.md) | How Claude, ChatGPT/Codex, and Gemini coordinate autonomously on this repo via GitHub Issues, Draft PR locks, two-key cross-model peer merge, and staggered hourly heartbeats. |
 
 Build and contribution instructions are in [../CONTRIBUTING.md](../CONTRIBUTING.md).
 
-The development layer is public too: `CLAUDE.md` and `.claude/` (skills, agents, hooks) record how the project is run with AI agents; `docs/learnings.md` is a short digest of the engineering log, whose full archive is `docs/learnings/` (one file per entry; the older month files are closed) (`engineering-notes.md` is the curated version); `docs/ops/`, `docs/status/` and `tools/` hold the operations side (cloud build box, spot simulations, test gates).
+The development layer is public too: `CLAUDE.md`, `AGENTS.md`, `GEMINI.md` and `.claude/` (skills, agents, hooks) record how the project is run with AI agents; `docs/learnings.md` is a short digest of the engineering log, whose full archive is `docs/learnings/` (one file per entry; the older month files are closed) (`engineering-notes.md` is the curated version); `docs/ops/`, `docs/status/` and `tools/` hold the operations side (multi-agent coordination, cloud build box, spot simulations, test gates).

@@ -11,11 +11,11 @@ How multiple independent coding agents (Claude, ChatGPT/Codex, Gemini) work on `
 
 ## Autonomous heartbeat (recurring check)
 
-Because each provider runs independently (no cross-vendor agent calls), run a **recurring hourly check** inside each agent's own scheduler with **staggered minutes** so two agents rarely inspect GitHub at the same second and a `needs-review` PR is normally picked up within ~20 minutes:
+Because each provider runs independently (no cross-vendor agent calls), run a **recurring hourly check** inside each agent's own scheduler with **staggered minutes** (offset past `:00` to avoid top-of-the-hour scheduler congestion). Two agents rarely inspect GitHub at the same second, and a `needs-review` PR is normally picked up within ~20 minutes:
 
-- **Claude:** every hour at `:00`
-- **ChatGPT / Codex:** every hour at `:20`
-- **Gemini:** every hour at `:40`
+- **Claude:** every hour at `:05`
+- **ChatGPT / Codex:** every hour at `:25`
+- **Gemini:** every hour at `:45`
 
 On each heartbeat, pull `origin/master` and take the **first actionable item** in this priority order (unblocking merges always beats starting new WIP; if nothing is actionable, exit quietly in seconds with zero PR/issue noise):
 
@@ -25,6 +25,15 @@ On each heartbeat, pull `origin/master` and take the **first actionable item** i
 4. **Pick up a paused handoff:** `gh issue list --state open --label status:handoff` (or PRs with `status:handoff`).
 5. **Claim new work:** `gh issue list --state open --label agent:ready` in a lane that does not collide with open PRs (respecting the `lane:core` 1-PR lock).
 6. **Exit cleanly if idle:** do not invent speculative features or refactors just to stay busy (Pillar 1: anti-bloat). If nothing in 1–5 is actionable, report `idle` and stop.
+
+### How to set this up (reproducing this 3-agent architecture)
+
+Anyone running Claude, ChatGPT/Codex, and Gemini on a GitHub repo can replicate this setup in four steps:
+
+1. **GitHub repository ruleset (`Protect master`):** Enable a branch ruleset on the default branch that blocks deletions and force-pushes, requires a pull request, requires a single aggregated CI status check (`ci-ok` from GitHub Actions), and turns on **Require branches to be up to date before merging** (`strict_required_status_checks_policy: true`). This mechanically prevents two agents from merging back-to-back PRs that were never tested together.
+2. **Claude (`:05` hourly — runs in the cloud):** In `claude.ai` (or Claude Code Desktop), open **Scheduled** -> **New task** -> **Set up manually** (formerly Routines). Attach the `samcorcos/legatum` repo (and any needed connectors), choose **Schedule -> Hourly at `:05`**, and paste the heartbeat prompt below with `claude`.
+3. **ChatGPT / Codex (`:25` hourly):** In the ChatGPT/Codex desktop app, create a **Scheduled task** (formerly Codex Automations) targeting `samcorcos/legatum` set to **Hourly at `:25`** with the heartbeat prompt below using `chatgpt`. Note: desktop scheduled tasks require the machine to stay awake; for laptop-closed execution, schedule `codex cloud exec` or `codex exec` on an always-on host.
+4. **Gemini / Antigravity (`:45` hourly):** In the Antigravity app, open **Automations** (formerly Scheduled Tasks) -> **New automation**, select the `samcorcos/legatum` project, set **Hourly at `:45`**, and paste the heartbeat prompt below with `gemini`. Each run creates a sidebar conversation you can step into if `needs-human` is raised.
 
 ### Copy-paste heartbeat prompt (for each agent's recurring schedule)
 
