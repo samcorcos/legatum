@@ -5,6 +5,7 @@ import os
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -96,6 +97,55 @@ class Reviews(unittest.TestCase):
         design = dict(KINDS, code=["crates/core/src/rules/cities.rs"], copy=[], ui=[],
                       design=["crates/core/src/rules/cities.rs"])
         self.assertIn("legatum-design-reviewer", [r for _, r, _ in check.required_reviews(design)])
+
+    def test_prose_stops_at_closing_quotes(self):
+        # Object literals and short quoted identifiers must not match across a closing quote.
+        non_prose = [
+            "kind: 'Mountains', sprite, scale, tile: i",
+            "const a = 'Rome', b = 'Athens', c = 'Sparta', d = 'Carthage', e = 'Egypt';",
+            "name: \"Stone\", count: 1, tile: i, next: j",
+            "label: `Iron`, x: 1, y: 2, z: 3, w: 4",
+            "// Select a tile to found your new city here.",
+        ]
+        for line in non_prose:
+            self.assertFalse(check.adds_prose(({1: line}, {1})), f"unexpected PROSE match: {line}")
+
+        # Real 5+ word sentences inside quotes or JSX text must still match.
+        real_prose = [
+            "const msg = 'Select a tile to found your city.';",
+            "const msg = 'You don\\'t have enough gold to build this.';",
+            'const msg = "Move your settler to a fertile river valley.";',
+            'const msg = `Your city of ${name} has grown to size ${size}.`;',
+            "<p>Click any tile to inspect its yield.</p>",
+        ]
+        for line in real_prose:
+            self.assertTrue(check.adds_prose(({1: line}, {1})), f"expected PROSE match: {line}")
+
+    def test_readme_prose_edit_does_not_require_art_reviewer(self):
+        prose_diff = {"README.md": ({1: "Legatum is a historical 4X strategy game."}, {1})}
+        with mock.patch.object(check, "diff_added", return_value=prose_diff):
+            kinds = check.classify(".", "HEAD", "HEAD", ["README.md"])
+        self.assertEqual(kinds["front"], ["README.md"])
+        self.assertEqual(kinds["frontmedia"], [])
+        self.assertEqual([r for _, r, _ in check.required_reviews(kinds)], ["legatum-docs-reviewer"])
+
+    def test_readme_media_ref_or_front_media_requires_art_reviewer(self):
+        for line in [
+            "![Banner](docs/media/banner.jpg)",
+            '<img src="app/public/og.jpg" alt="Legatum" />',
+            "Watch the clip at docs/media/intro.mp4",
+        ]:
+            media_diff = {"README.md": ({1: line}, {1})}
+            with mock.patch.object(check, "diff_added", return_value=media_diff):
+                kinds = check.classify(".", "HEAD", "HEAD", ["README.md"])
+            self.assertEqual(kinds["frontmedia"], ["README.md"], f"expected frontmedia for: {line}")
+            self.assertEqual([r for _, r, _ in check.required_reviews(kinds)],
+                             ["legatum-docs-reviewer", "legatum-art-reviewer"])
+
+        og = check.classify(".", "HEAD", "HEAD", ["app/public/og.jpg"])
+        self.assertEqual(og["frontmedia"], ["app/public/og.jpg"])
+        self.assertEqual([r for _, r, _ in check.required_reviews(og)],
+                         ["legatum-docs-reviewer", "legatum-ui-reviewer", "legatum-art-reviewer"])
 
 
 if __name__ == "__main__":
