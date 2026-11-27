@@ -40,11 +40,18 @@ describe('one decision at a time', () => {
     const name = itemName({ kind: 'Unit', unit: unit.kind }, view.players.find((p) => p.id === view.me)!.faction);
     expect(advisorSuggestion(ctx(), seen, [])).toEqual({
       id: 'garrisonLock', title: `Your ${name} holds ${city.name}`,
-      why: `Units in a city you conquer stay as its garrison until Peace with ${people}. ${city.name} builds nothing until then.`,
-      steps: [{ instruction: `Make Peace with ${people} in Diplomacy, or take their last city, to free it.`, target: { kind: 'control', name: 'diplomacy', value: undefined } }],
+      why: `Your military units in ${city.name} stay as its garrison until Peace with ${people}. ${city.name} builds nothing until then.`,
+      steps: [{ instruction: `Make Peace with ${people} in Diplomacy to free your garrison.`, target: { kind: 'control', name: 'diplomacy', value: undefined } }],
       current: 0, acknowledge: true,
     });
     expect(advisorSuggestion(ctx(), [...seen, 'garrisonLock'], [])?.id).not.toBe('garrisonLock');
+    expect(advisorSuggestion({ ...ctx(), techOpen: true }, seen, [])?.id).not.toBe('garrisonLock');
+    expect(advisorSuggestion(ctx([], { kind: 'unit', id: unit.id }), seen, [])?.id).not.toBe('garrisonLock');
+    expect(advisorSuggestion(ctx([], { kind: 'city', id: city.id }), seen, [])?.id).not.toBe('garrisonLock');
+    expect(advisorSuggestion({ ...ctx([{ type: 'SetResearch', tech: view.research.available[0].tech }]), techOpen: true }, seen, [])?.id).toBe('closeResearch');
+    view.actions = { ...view.actions, free_techs: { pending: 1, from: null, choices: [] } };
+    expect(advisorSuggestion({ ...ctx(), turnLabel: 'Choose 1 free technology' }, seen, [])?.id).toBe('answer:freeTechs:');
+    view.actions.free_techs = { pending: 0, from: null, choices: [] };
     unit.occupation_lock = null;
     expect(advisorSuggestion(ctx(), seen, [])?.id).not.toBe('garrisonLock');
   });

@@ -140,6 +140,24 @@ it('rings the Make an offer button of a city purchase', () => {
   expect(targetElement({ kind: 'control', name: 'buyCity' })?.textContent).toBe('Make an offer (400 Gold)');
 });
 
+it('targets desktop Diplomacy and leaves the phone lesson without a ring', () => {
+  const desktop = render(<div className="game"><section className="panel vp"><footer className="rivals-foot"><button>Diplomacy</button></footer></section></div>);
+  expect(targetElement({ kind: 'control', name: 'diplomacy' })?.textContent).toBe('Diplomacy');
+  desktop.unmount();
+  const rival = view.players.find((p) => p.team !== view.team)!;
+  const city = view.cities.find((c) => c.owner === view.me)!;
+  const unit = view.units.find((u) => u.owner === view.me && u.military)!;
+  unit.pos = city.pos;
+  unit.occupation_lock = rival.id;
+  city.occupation_lock = rival.id;
+  view.turn = 5;
+  useAdvisor.setState({ seen: ['welcome', 'report', 'howToWin'], skipped: [] });
+  render(<><button className="phone-vp-strip">Victory race</button><Advisor /></>);
+  expect(screen.getByTestId('advisor').dataset.advisorId).toBe('garrisonLock');
+  expect(targetElement({ kind: 'control', name: 'diplomacy' })).toBeNull();
+  expect(screen.queryByTestId('advisor-ring')).toBeNull();
+});
+
 it('while a tile is being placed, shows only the tip that asked for it', () => {
   useAdvisor.setState({ seen: ['welcome', 'report', 'howToWin'], tips: {} });
   const city = view.cities.find((c) => c.owner === view.me)!;

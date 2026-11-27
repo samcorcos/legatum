@@ -25,6 +25,7 @@ export function targetElement(target: Exclude<NonNullable<AdvisorTarget>, { kind
       : first('.seatbar .cta', '.phone-turn-dock button[aria-label^="Next decision"]');
     // The rivals table, not the whole panel: the panel's centre can sit under the turn button.
     case 'race': return first('.game .panel.vp .rivals', '.phone-vp-strip');
+    // Phones have no persistent Diplomacy control; the lesson stays readable without a ring.
     case 'diplomacy': return first('.game .panel.vp .rivals-foot button', '.game .panel.vp .rivals button.rv-row');
     case 'found': return action(/^Found City/i);
     case 'fortify': return action(/^(Fortify|Wait)/i);

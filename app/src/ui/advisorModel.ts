@@ -200,14 +200,6 @@ export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], 
   if (v.turn > 1 && seen.includes('welcome') && !seen.includes('report')) return { id: 'report', title: 'Read the Turn report', why: 'The Turn report lists battles, discoveries and failed orders.', steps: [{ instruction: 'Press L to open it.', key: ctx.touch ? undefined : 'L', target: null }], current: 0, acknowledge: true };
   // How to win, early: before the first score check, so a new player knows what VP are for.
   if (v.turn >= 3 && seen.includes('report') && !seen.includes('howToWin')) return howToWin(v);
-  const garrison = ownUnits(v).find((u) => u.occupation_lock != null);
-  if (garrison && !seen.includes('garrisonLock')) {
-    const city = occupiedCityName(v, garrison), people = ownerName(v, garrison.occupation_lock!);
-    return { id: 'garrisonLock', title: `Your ${unitName(v, garrison)} holds ${city}`,
-      why: `Units in a city you conquer stay as its garrison until Peace with ${people}. ${city} builds nothing until then.`,
-      steps: [{ instruction: `Make Peace with ${people} in Diplomacy, or take their last city, to free it.`, target: control('diplomacy') }],
-      current: 0, acknowledge: true };
-  }
   const plan = ctx.plan === undefined ? advisorOrders(v) : ctx.plan;
   const orders = validOrders(ctx);
   const decisions = pendingDecisions(v, orders, ctx.errors ?? [], ctx.local);
@@ -226,6 +218,14 @@ export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], 
     const d = decisions[firstUnanswered], id = `answer:${d.kind}:${'id' in d ? d.id : ''}`;
     return { id, title: 'Answer this first', why: d.label, current: 0,
       steps: [{ instruction: `${ctx.touch ? 'Tap' : 'Click'} ${ctx.turnLabel ?? d.label}.`, target: control('turn') }] };
+  }
+  const garrison = ownUnits(v).find((u) => u.occupation_lock != null);
+  if (garrison && !seen.includes('garrisonLock') && !ctx.techOpen && !ctx.selection) {
+    const city = occupiedCityName(v, garrison), people = ownerName(v, garrison.occupation_lock!);
+    return { id: 'garrisonLock', title: `Your ${unitName(v, garrison)} holds ${city}`,
+      why: `Your military units in ${city} stay as its garrison until Peace with ${people}. ${city} builds nothing until then.`,
+      steps: [{ instruction: `Make Peace with ${people} in Diplomacy to free your garrison.`, target: control('diplomacy') }],
+      current: 0, acknowledge: true };
   }
   // Situational advice comes before the routine decisions, but never interrupts a unit or panel already in hand.
   if (seen.includes('welcome') && !ctx.techOpen) {
