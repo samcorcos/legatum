@@ -60,7 +60,7 @@ describe('what a faction piece does differently from the item it replaces', () =
     const c = compare('India');
     expect(c.mode).toBe('replaces');
     expect(c.against).toBe('Market');
-    expect(summaryText(c)).toContain('all the Gold the city makes');
+    expect(summaryText(c)).toContain('sends all its Gold to your treasury');
   });
 
   it('says it plainly in running text: only what changes, gains first', () => {
