@@ -34,7 +34,7 @@ for (const size of [{ width: 1000, height: 600 }, { width: 1440, height: 900 }])
       await expect(page.locator('.lens-bar button')).toHaveText(['Default', 'Settle', 'YieldsY']);
       await expect(overlayBox(page, 'Yields')).not.toBeChecked();
       await overlayBox(page, 'Yields').click();
-      await expect(page.locator('.lens-yield-line')).toContainText('1 icon per point');
+      await expect(page.locator('.lens-yield-line')).toContainText('One icon per point');
       for (const lens of ['Settle', 'Default']) {
         await showMapOptions(page);
         await lensRadio(page, lens).click();
