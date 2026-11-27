@@ -87,8 +87,8 @@ export function miniatureImage(kind: UnitKind, faction?: Faction): HTMLImageElem
 }
 
 /**
- * Barbarians' own painted raiders (`barbarian-<slug>`), one per kind the camps field (Spearman, Pikeman, Musketman, Archer,
- * Crossbowman, Scout). Any other kind keeps its ordinary figure on the barbarian base.
+ * Barbarians' own painted raiders (`barbarian-<slug>`) for every kind with a matching painting.
+ * Any other kind keeps its ordinary figure on the barbarian base.
  */
 export const barbarianArtSlug = (kind: UnitKind): string => miniatures.has(`barbarian-${UNIT_ART[kind]}`) ? `barbarian-${UNIT_ART[kind]}` : UNIT_ART[kind];
 

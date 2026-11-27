@@ -4,7 +4,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { FACTIONS, UNIT_STATS } from './data';
-import { unitArtSlug } from './unitArt';
+import { barbarianArtSlug, unitArtSlug } from './unitArt';
 import type { Faction, UnitKind } from './types';
 
 const KINDS = Object.keys(UNIT_STATS) as UnitKind[];
@@ -17,6 +17,13 @@ const archived = new Set<string>((JSON.parse(readFileSync(new URL('../../tools/a
 const SHARED: Record<string, string> = {};
 
 describe('unit art is one-to-one with unit kinds', () => {
+  it.each(['Arquebusier', 'Rifleman', 'FieldCannon', 'TrenchInfantry', 'Howitzer', 'Infantry', 'Artillery', 'MechanisedInfantry', 'RocketArtillery'] as UnitKind[])
+    ('uses the new raider painting for %s', (kind) => {
+      const slug = barbarianArtSlug(kind);
+      expect(slug).toBe(`barbarian-${unitArtSlug(kind)}`);
+      for (const size of ['256', '64', '48', 'card', 'panel']) expect(existsSync(`${dir}${slug}-${size}.png`)).toBe(true);
+    });
+
   it('gives every unit kind (and every faction piece) its own art slug', () => {
     const bySlug = new Map<string, Set<UnitKind>>();
     for (const faction of [undefined, ...FACTIONS] as (Faction | undefined)[]) {
