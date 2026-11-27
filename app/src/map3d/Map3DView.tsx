@@ -232,7 +232,7 @@ export default function Map3DView() {
     if (!sc || !view) return;
     const selHex = selection?.kind === 'unit' ? view.units.find((u) => u.id === selection.id)?.pos
       : selection?.kind === 'city' ? view.cities.find((c) => c.id === selection.id)?.pos : null;
-    sc.setOverlays({ hover, selected: selHex ?? null, route: [] });
+    sc.setOverlays({ hover, selected: selHex ?? null, selectedKey: selection ? `${selection.kind}:${selection.id}` : undefined, route: [] });
   }, [view, hover, pathInfo, selection]);
 
   // Hover cards: the same battle forecast, Peace hint and tile card as the 2D map.

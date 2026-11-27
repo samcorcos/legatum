@@ -63,6 +63,7 @@ import { atWar, relationWith } from '../diplomacy';
 import { emptyGesture, gestureStep, isDoubleTap, LONG_PRESS_MS, zoomCamera, type GestureEvent, type Point, type Tap } from './gestures';
 import { sameOrderContext, tapOrder, type TapOrder } from './tapOrders';
 import { coord, setUnitOrder } from '../orders';
+import { SELECT_BURST_MS } from './selectionMark';
 import { notifyMapCamera, registerMapCamera, takeMapHandoff } from './camera';
 import { alarmedCities } from '../siege';
 import { useCityAlarms } from '../ui/useCityAlarms';
@@ -748,6 +749,9 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
     let lastIdle = -Infinity;
     // The selection ring as the last frame drew it, and the clock of the last frame that drew more than the ring.
     let lastRing: SelectionRing | null = null;
+    // The selection the last frame drew, and when it changed (its burst plays from then).
+    let lastSel = '';
+    let selAt = -Infinity;
     // The smoke and siege-ring boxes the last full frame drew: what an ambient-only frame repaints.
     let lastAmbient: Rect[] = [];
     // Idle life's clock, and where it painted last (an idle tick repaints those boxes and the new ones).
@@ -767,6 +771,9 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
       if (!f.view) return;
       // Combat playback (combatFx.ts) replaces the plain glide while it runs: it moves units round by round after the volley.
       const still = motionStill(f.reducedMotion, f.combatFx.enabled);
+      const selKey = f.selection ? `${f.selection.kind}:${f.selection.id}` : '';
+      if (selKey !== lastSel) { lastSel = selKey; selAt = selKey ? t : -Infinity; }
+      const selectBurstMs = !still && t - selAt < SELECT_BURST_MS ? t - selAt : null;
       const plan = !still ? f.anim?.plan ?? null : null;
       const fxT = plan && f.anim ? (t - f.anim.start) : -1;
       const fxRunning = !!plan && fxLive(plan, fxT);
@@ -912,6 +919,7 @@ export function MapCanvas({ inspectRequest }: { inspectRequest?: Hex | null }) {
         dpr: size.current.dpr,
         time: still ? 0 : drawT,
         pulseTime: still ? 0 : t,
+        selectBurstMs,
         hover: f.hover?.hex ?? null,
         hoverSelect: f.hoverSelect,
         pingArmed: f.pingArmed,
