@@ -230,30 +230,40 @@ function newEraSuggestion(ctx: AdvisorContext, plan: Order[] | null): Suggestion
   const known = new Set(v.research.known);
   const newlyKnown = v.research.unlocks.filter((unlock) => eraTechs.has(unlock.tech) && known.has(unlock.tech)
     && (unlock.item.kind === 'Unit' || unlock.item.kind === 'Building'));
-  const build = plan?.find((order) => {
+  const builds = plan?.filter((order) => {
     const item = order.type === 'SetProduction' ? order.item : order.type === 'SetProductionQueue' ? order.queue[0] : null;
     return item && newlyKnown.some((unlock) => itemKey(unlock.item) === itemKey(item));
-  });
+  }) ?? [];
+  const build = builds[0];
   const item = build?.type === 'SetProduction' ? build.item : build?.type === 'SetProductionQueue' ? build.queue[0] : null;
   const city = build && 'city' in build ? v.cities.find((c) => c.id === build.city && c.owner === v.me) : null;
   const plannedTechs = plan?.flatMap((order) => order.type === 'SetResearch' ? [order.tech]
     : order.type === 'SetResearchQueue' ? order.techs : []) ?? [];
   const tech = plannedTechs.find((planned) => eraTechs.has(planned) && !known.has(planned)) ?? null;
   const techChoices = tech ? techCardUnlocks(v.research, tech, factionOf(v)) : [];
-  const unlocks = techChoices.filter((entry) => entry.kind === 'Unit' || entry.kind === 'Building').slice(0, item ? 1 : 2);
+  const plannedBuilds = builds.flatMap((order) => {
+    const choice = order.type === 'SetProduction' ? order.item : order.type === 'SetProductionQueue' ? order.queue[0] : null;
+    return choice ? [itemName(choice, factionOf(v))] : [];
+  });
+  const techUnlocks = techChoices.filter((entry) => entry.kind === 'Unit' || entry.kind === 'Building').map((entry) => entry.label);
   const effect = techChoices.find((entry) => entry.kind === 'Effect')?.label;
-  const fallback = [...new Set(newlyKnown.map((unlock) => unlock.name))].slice(0, 3);
-  const fallbackNames = fallback.length === 3 ? `${fallback[0]}, ${fallback[1]} and ${fallback[2]}` : fallback.join(' and ');
+  const names = [...new Set([...plannedBuilds, ...techUnlocks, ...newlyKnown.map((unlock) => unlock.name)])].slice(0, 3);
+  const joinNames = (items: string[]) => items.length === 3 ? `${items[0]}, ${items[1]} and ${items[2]}` : items.join(' and ');
   const buildName = item ? itemName(item, factionOf(v)) : null;
-  const why = buildName && city && tech && unlocks.length
-    ? `Build ${buildName} in ${city.name}. Research ${TECH_NAME[tech]} for ${unlocks[0].label}.`
-    : buildName && city ? `You can now build ${buildName} in ${city.name}.`
-      : tech && unlocks.length ? `Research ${TECH_NAME[tech]} for ${unlocks.map((entry) => entry.label).join(' and ')}.`
-        : tech ? effect ? `Research ${TECH_NAME[tech]}: ${effect}.` : `Research ${TECH_NAME[tech]} next.`
-          : fallback.length ? `This era brings ${fallbackNames}.` : `Choose a ${v.research.era_name} era technology.`;
+  const otherNames = names.filter((name) => name !== buildName);
+  const researchNames = tech ? techUnlocks.filter((name) => otherNames.includes(name)).slice(0, buildName ? 2 : 3) : [];
+  const extraNames = otherNames.filter((name) => !researchNames.includes(name));
+  const queuedTech = v.research.queue?.[0] ?? v.research.current;
+  const why = buildName && city
+    ? researchNames.length && extraNames.length ? `This era brings ${joinNames(names)}.`
+      : `You can now build ${buildName} in ${city.name}.${researchNames.length ? ` Research ${TECH_NAME[tech!]} for ${joinNames(researchNames)}.` : tech && effect ? ` Research ${TECH_NAME[tech]}: ${effect}.` : extraNames.length ? ` This era also brings ${joinNames(extraNames)}.` : ''}`
+    : tech && researchNames.length ? `Research ${TECH_NAME[tech]} for ${joinNames(researchNames)}.${extraNames.length ? ` This era also brings ${joinNames(extraNames)}.` : ''}`
+      : tech ? effect ? `Research ${TECH_NAME[tech]}: ${effect}.` : `Research ${TECH_NAME[tech]} next.`
+        : names.length ? `This era brings ${joinNames(names)}.`
+          : queuedTech ? `Your next technology is ${TECH_NAME[queuedTech]}.` : `Choose a ${v.research.era_name} era technology.`;
   return { id: `era:${v.me}:${eraUp.era}:${eraUp.hash}`, title: `${v.research.era_name} era: what's new`, why,
     steps: [city && buildName ? { instruction: `${ctx.touch ? 'Tap' : 'Click'} ${city.name} to build ${buildName}.`, target: tile(city.pos) }
-      : { instruction: `${ctx.touch ? 'Tap' : 'Click'} Research to choose a technology.`, target: control('research') }],
+      : { instruction: queuedTech ? `${ctx.touch ? 'Tap' : 'Click'} Research to review ${TECH_NAME[queuedTech]}.` : `${ctx.touch ? 'Tap' : 'Click'} Research to choose a technology.`, target: control('research') }],
     current: 0, acknowledge: true };
 }
 
@@ -282,7 +292,7 @@ export function advisorSuggestion(ctx: AdvisorContext, seen: readonly string[], 
   const decisions = pendingDecisions(v, orders, ctx.errors ?? [], ctx.local);
   const urgentDecision = decisions.some((d) => d.kind !== 'city' && d.kind !== 'unit' && d.kind !== 'research');
   const era = newEraSuggestion(ctx, plan);
-  if (era && !seen.includes(era.id) && !ctx.techOpen && !urgentDecision) return era;
+  if (era && !seen.includes(era.id) && !ctx.techOpen && !ctx.selection && !urgentDecision) return era;
   const choice = plan?.find((o): o is Extract<Order, { type: 'SetResearch' | 'SetResearchQueue' }> => o.type === 'SetResearch' || o.type === 'SetResearchQueue');
   const queue = effectiveResearchQueue(orders, v.research);
   const nextTech = v.research.available.find((option) => !queue.includes(option.tech))?.tech;

@@ -48,13 +48,53 @@ describe('one decision at a time', () => {
     const seen = ['welcome', 'report', 'howToWin'];
     const card = advisorSuggestion(next, seen, []);
     expect(card).toEqual({ id: `era:${view.me}:2:new-game-turn`, title: "Classical era: what's new",
-      why: `Build Walls in ${city.name}. Research ${TECH_NAME[tech]} for Spearman.`,
+      why: `You can now build Walls in ${city.name}. Research ${TECH_NAME[tech]} for Spearman.`,
       steps: [{ instruction: `Click ${city.name} to build Walls.`, target: { kind: 'tile', hex: city.pos } }],
       current: 0, acknowledge: true });
     expect(advisorSuggestion(next, [...seen, card!.id], [])?.id).not.toBe(card!.id);
     expect(advisorSuggestion({ ...next, eraUp: undefined }, seen, [])?.id).not.toBe(card!.id);
     expect(advisorSuggestion({ ...next, eraUp: { era: 1, hash: 'first' } }, seen, [])?.id).not.toMatch(/^era:/);
     expect(advisorSuggestion({ ...next, eraUp: { era: 3, hash: 'other' } }, seen, [])?.id).not.toMatch(/^era:/);
+  });
+
+  it('adds a second known unlock to a single planned build', async () => {
+    const { view, city, ctx } = await opening();
+    view.turn = 8;
+    view.research.era = 1;
+    view.research.era_name = 'Classical';
+    const tech = view.research.catalog.find((option) => option.era === 1)!.tech;
+    const base = view.research.unlocks[0]!;
+    view.research.known = [...view.research.known, tech];
+    view.research.unlocks = [
+      { ...base, tech, item: { kind: 'Building', building: 'Walls' }, name: 'Walls' },
+      { ...base, tech, item: { kind: 'Unit', unit: 'Spearman' }, name: 'Spearman' },
+    ];
+    const next = { ...ctx([], null, [{ type: 'SetProduction', city: city.id, item: { kind: 'Building', building: 'Walls' } }]), eraUp: { era: 2, hash: 'single-build' } };
+    const card = advisorSuggestion(next, ['welcome', 'report', 'howToWin'], []);
+    expect(card?.why).toBe(`You can now build Walls in ${city.name}. This era also brings Spearman.`);
+    expect(card?.steps).toEqual([{ instruction: `Click ${city.name} to build Walls.`, target: { kind: 'tile', hex: city.pos } }]);
+    expect(advisorSuggestion(next, ['welcome', 'report', 'howToWin', card!.id], [])?.id).not.toBe(card!.id);
+  });
+
+  it('names three distinct choices from a build and planned research', async () => {
+    const { view, city, ctx } = await opening();
+    view.turn = 8;
+    view.research.era = 1;
+    view.research.era_name = 'Classical';
+    const [knownTech, tech] = view.research.catalog.filter((option) => option.era === 1).map((option) => option.tech);
+    const base = view.research.unlocks[0]!;
+    view.research.known = [...view.research.known, knownTech];
+    view.research.unlocks = [
+      { ...base, tech: knownTech, item: { kind: 'Building', building: 'Walls' }, name: 'Walls' },
+      { ...base, tech, item: { kind: 'Unit', unit: 'Spearman' }, name: 'Spearman' },
+      { ...base, tech, item: { kind: 'Unit', unit: 'Archer' }, name: 'Archer' },
+    ];
+    const next = { ...ctx([], null, [
+      { type: 'SetProduction', city: city.id, item: { kind: 'Building', building: 'Walls' } },
+      { type: 'SetResearch', tech },
+    ]), eraUp: { era: 2, hash: 'three' } };
+    expect(advisorSuggestion(next, ['welcome', 'report', 'howToWin'], [])?.why)
+      .toBe(`You can now build Walls in ${city.name}. Research ${TECH_NAME[tech]} for Spearman and Archer.`);
   });
 
   it('uses known new units and buildings when the plan has no new-era choice', async () => {
@@ -66,13 +106,16 @@ describe('one decision at a time', () => {
     const base = view.research.unlocks[0]!;
     view.research.known = [...view.research.known, tech];
     view.research.unlocks = [{ ...base, tech, item: { kind: 'Unit', unit: 'Spearman' }, name: 'Spearman' },
-      { ...base, tech, item: { kind: 'Building', building: 'Walls' }, name: 'Walls' }];
+      { ...base, tech, item: { kind: 'Building', building: 'Walls' }, name: 'Walls' },
+      { ...base, tech, item: { kind: 'Unit', unit: 'Archer' }, name: 'Archer' }];
     const next = { ...ctx([], null, []), eraUp: { era: 2, hash: 'fallback' }, touch: true };
     expect(advisorSuggestion(next, ['welcome', 'report', 'howToWin'], [])).toEqual({
-      id: `era:${view.me}:2:fallback`, title: "Classical era: what's new", why: 'This era brings Spearman and Walls.',
+      id: `era:${view.me}:2:fallback`, title: "Classical era: what's new", why: 'This era brings Spearman, Walls and Archer.',
       steps: [{ instruction: 'Tap Research to choose a technology.', target: { kind: 'control', name: 'research', value: undefined } }],
       current: 0, acknowledge: true,
     });
+    view.research.unlocks = view.research.unlocks.slice(0, 1);
+    expect(advisorSuggestion(next, ['welcome', 'report', 'howToWin'], [])?.why).toBe('This era brings Spearman.');
     view.research.known = view.research.known.filter((known) => known !== tech);
     expect(advisorSuggestion(next, ['welcome', 'report', 'howToWin'], [])?.why).toBe('Choose a Classical era technology.');
   });
@@ -121,16 +164,35 @@ describe('one decision at a time', () => {
       steps: [{ instruction: 'Click Research to choose a technology.', target: { kind: 'control', name: 'research', value: undefined } }],
       current: 0, acknowledge: true,
     });
+    expect(advisorSuggestion(next, ['welcome', 'report', 'howToWin', `era:${view.me}:2:laws`], [])?.id).not.toMatch(/^era:/);
+  });
+
+  it('reviews queued research instead of asking the player to choose it again', async () => {
+    const { view, ctx } = await opening();
+    view.turn = 8;
+    view.research.era = 1;
+    view.research.era_name = 'Classical';
+    const tech = view.research.catalog.find((option) => option.era === 1)!.tech;
+    view.research.queue = [tech];
+    const next = { ...ctx([], null, []), eraUp: { era: 2, hash: 'queued' } };
+    expect(advisorSuggestion(next, ['welcome', 'report', 'howToWin'], [])).toEqual({
+      id: `era:${view.me}:2:queued`, title: "Classical era: what's new",
+      why: `Your next technology is ${TECH_NAME[tech]}.`,
+      steps: [{ instruction: `Click Research to review ${TECH_NAME[tech]}.`, target: { kind: 'control', name: 'research', value: undefined } }],
+      current: 0, acknowledge: true,
+    });
   });
 
   it('waits for Research to close and urgent choices to be answered', async () => {
-    const { view, ctx } = await opening();
+    const { view, city, unit, ctx } = await opening();
     view.turn = 8;
     view.research.era = 1;
     view.research.era_name = 'Classical';
     const next = { ...ctx([], null, []), eraUp: { era: 2, hash: 'waiting' } };
     const seen = ['welcome', 'report', 'howToWin'];
     expect(advisorSuggestion({ ...next, techOpen: true }, seen, [])?.id).not.toMatch(/^era:/);
+    expect(advisorSuggestion({ ...next, selection: { kind: 'city', id: city.id } }, seen, [])?.id).not.toMatch(/^era:/);
+    expect(advisorSuggestion({ ...next, selection: { kind: 'unit', id: unit.id } }, seen, [])?.id).not.toMatch(/^era:/);
     view.actions = { ...view.actions, free_techs: { pending: 1, from: null, choices: [] } };
     expect(advisorSuggestion(next, seen, [])?.id).toBe('answer:freeTechs:');
     view.actions.free_techs = null;

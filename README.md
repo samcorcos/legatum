@@ -73,7 +73,7 @@ These clips are recorded from the running game.
 
 <p align="center">
   <img src="docs/media/loop-era.webp" alt="Finishing Printing Press opens a card, and entering the Industrial era takes over the screen." width="880">
-  <br><sub><b>Eras you feel.</b> Entering one is a celebrated moment: new units and buildings, the Age card that scores its victory point, and your cities rebuilt in the new style.</sub>
+  <br><sub><b>Eras you feel.</b> Entering one opens the next technologies and changes your cities’ look. The first empire to reach an era reveals a World Age card for everyone.</sub>
 </p>
 
 <table align="center">
